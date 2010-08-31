@@ -92,7 +92,7 @@ int readDM3(int img_select,bool isStack=false)
     swap = (isLE^header->byteOrder);
 
     if ( header->fileVersion!=3 )
-        REPORT_ERROR(6001, "readDM3: Input file is not Digital Micrograph 3 format.");
+        REPORT_ERROR(ERR_IO_NOREAD, "readDM3: Input file is not Digital Micrograph 3 format.");
 
     xmippFREAD(&header->sorted, sizeof(char), 1, fimg, false);
     xmippFREAD(&header->open, sizeof(char), 1, fimg, false);
@@ -180,7 +180,7 @@ int readDM3(int img_select,bool isStack=false)
         if (dataHeaders[0].imageHeight != dataHeaders[i].imageHeight || \
             dataHeaders[0].imageWidth != dataHeaders[i].imageWidth  || \
             dataHeaders[0].dataType != dataHeaders[i].dataType)
-            REPORT_ERROR(6001, "readDM3: images in DM3 file with different \
+            REPORT_ERROR(ERR_IMG_NOREAD, "readDM3: images in DM3 file with different \
                          dimensions and data types are not currently supported. Try to read them individually.");
     }
 
@@ -198,7 +198,7 @@ int readDM3(int img_select,bool isStack=false)
     {
         data.setDimensions(_xDim, _yDim, 1, _nDim);
         if (_nDim>1)
-            REPORT_ERROR(6001, "readDM3: Reading multiple \
+            REPORT_ERROR(ERR_IO_NOREAD, "readDM3: Reading multiple \
                          images at once in DM3 file are not currently supported. Try to read them individually.");
     }
     else
@@ -636,7 +636,7 @@ void printDM3(MetaData MD)
 */
 int writeDM3(int img_select, bool isStack=false, int mode=WRITE_OVERWRITE)
 {
-    REPORT_ERROR(6001, "ERROR: writeDM3 is not implemented.");
+    REPORT_ERROR(ERR_IO_NOWRITE, "ERROR: writeDM3 is not implemented.");
     return(-1);
 }
 

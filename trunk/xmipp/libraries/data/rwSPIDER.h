@@ -118,11 +118,11 @@ int  readSPIDER(int img_select,bool isStack=false)
 
     FILE        *fimg;
     if ( ( fimg = fopen(filename.c_str(), "r") ) == NULL )
-        REPORT_ERROR(1,(std::string)"rwSPIDER: cannot read image:" + filename);
+        REPORT_ERROR(ERR_IO_NOTOPEN,(std::string)"rwSPIDER: cannot read image:" + filename);
 
     SPIDERhead* header = new SPIDERhead;
     if ( fread( header, SPIDERSIZE, 1, fimg ) < 1 )
-        REPORT_ERROR(1,"rwSPIDER: cannot allocate memory for header");
+        REPORT_ERROR(ERR_IO_NOREAD,"rwSPIDER: cannot allocate memory for header");
 
     swap = 0;
 
@@ -139,7 +139,7 @@ int  readSPIDER(int img_select,bool isStack=false)
     }
 
     if(header->labbyt != header->labrec*header->lenbyt)
-        REPORT_ERROR(1,(std::string)"Invalid Spider file:  " + filename);
+        REPORT_ERROR(ERR_IO_NOTFILE,(std::string)"Invalid Spider file:  " + filename);
 
     offset = (int) header->labbyt;
     DataType datatype  = Float;
@@ -236,7 +236,7 @@ int  readSPIDER(int img_select,bool isStack=false)
         {
             Num  << img_select;
             Num2 << _nDim;
-            REPORT_ERROR(1,(std::string)"readSpider: Image number " + Num.str() +
+            REPORT_ERROR(ERR_INDEX_OUTOFBOUNDS,(std::string)"readSpider: Image number " + Num.str() +
                          " exceeds stack size " + Num2.str());
         }
         offset += offset;
@@ -250,7 +250,7 @@ int  readSPIDER(int img_select,bool isStack=false)
             if(isStack)
             {
                 if ( fread( header, SPIDERSIZE, 1, fimg ) < 1 )
-                    REPORT_ERROR(3,"rwSPIDER: cannot read multifile header information");
+                    REPORT_ERROR(ERR_IO_NOREAD,"rwSPIDER: cannot read multifile header information");
                 hend = (char *) header + extent;
                 if ( swap )
                     for ( b = (char *) header; b<hend; b+=4 )
@@ -479,12 +479,12 @@ int  writeSPIDER(int select_img=-1, bool isStack=false, int mode=WRITE_OVERWRITE
     if (mode==WRITE_OVERWRITE || (!_exists && mode==WRITE_APPEND))//open in overwrite mode
     {
         if ( ( fimg = fopen(filename.c_str(), "w") ) == NULL )
-            REPORT_ERROR(1,(std::string)"Cannot create file " + filename);
+            REPORT_ERROR(ERR_IO_NOTOPEN,(std::string)"Cannot create file " + filename);
     }
     else //open in append mode
     {
         if ( ( fimg = fopen(filename.c_str(), "r+") ) == NULL )
-            REPORT_ERROR(1,(std::string)"Cannot create file " + filename);
+            REPORT_ERROR(ERR_IO_NOTOPEN,(std::string)"Cannot create file " + filename);
     }
     /*
      * BLOCK HEADER IF NEEDED
@@ -552,7 +552,7 @@ int  writeSPIDER(int select_img=-1, bool isStack=false, int mode=WRITE_OVERWRITE
     fcntl(fileno(fimg), F_SETLK, &fl); /* locked */
     int cerr = fclose(fimg);
     if( cerr !=0 )
-        REPORT_ERROR(1,(std::string)"Can not close file "+ filename);
+        REPORT_ERROR(ERR_IO_NOCLOSED,(std::string)"Can not close file "+ filename);
 
     freeMemory(fdata, datasize);
     freeMemory(header, (int)labbyt*sizeof(char));

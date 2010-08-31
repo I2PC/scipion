@@ -130,7 +130,7 @@ void FourierTransformer::setReal(MultidimArray<double> &input)
                                           (fftw_complex*) MULTIDIM_ARRAY(fFourier), MULTIDIM_ARRAY(*fReal),
                                           FFTW_ESTIMATE);
         if (fPlanForward == NULL || fPlanBackward == NULL)
-            REPORT_ERROR(1, "FFTW plans cannot be created");
+            REPORT_ERROR(ERR_PLANS_NOCREATE, "FFTW plans cannot be created");
         delete [] N;
         dataPtr=MULTIDIM_ARRAY(*fReal);
         pthread_mutex_unlock(&fftw_plan_mutex);
@@ -187,7 +187,7 @@ void FourierTransformer::setReal(MultidimArray<std::complex<double> > &input)
         fPlanBackward = fftw_plan_dft(ndim, N, (fftw_complex*) MULTIDIM_ARRAY(fFourier),
                                       (fftw_complex*) MULTIDIM_ARRAY(*fComplex), FFTW_BACKWARD, FFTW_ESTIMATE);
         if (fPlanForward == NULL || fPlanBackward == NULL)
-            REPORT_ERROR(1, "FFTW plans cannot be created");
+            REPORT_ERROR(ERR_PLANS_NOCREATE, "FFTW plans cannot be created");
         delete [] N;
         complexDataPtr=MULTIDIM_ARRAY(*fComplex);
         pthread_mutex_unlock(&fftw_plan_mutex);
@@ -212,7 +212,7 @@ void FourierTransformer::Transform(int sign)
         else if (fComplex!= NULL)
             size = MULTIDIM_SIZE(*fComplex);
         else
-            REPORT_ERROR(-1,"No complex nor real data defined");
+            REPORT_ERROR(ERR_UNCLASSIFIED,"No complex nor real data defined");
         FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(fFourier)
             DIRECT_MULTIDIM_ELEM(fFourier,n) /= size;
 
@@ -318,7 +318,7 @@ void frc_dpr(MultidimArray< double > & m1,
              bool skipdpr)
 {
     if (!m1.sameShape(m2))
-        REPORT_ERROR(1,"MultidimArrays have different shapes!");
+        REPORT_ERROR(ERR_MULTIDIM_SIZE,"MultidimArrays have different shapes!");
 
     MultidimArray< std::complex< double > > FT1;
     FourierTransformer transformer1;

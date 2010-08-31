@@ -45,7 +45,7 @@ void Whole2Half(const MultidimArray<std::complex<double> > &in,
         // 2D
         // This assumes squared images...
         int ldim = (int)(YSIZE(in) / 2) + 1;
-        
+
         out.initZeros(ldim, XSIZE(in));
         // Fill first column only half
         for (int j = 0; j < ldim; j++)
@@ -56,12 +56,12 @@ void Whole2Half(const MultidimArray<std::complex<double> > &in,
                 dAij(out, i, j) = dAij(in, i, j);
     }
     else
-        REPORT_ERROR(1,"ERROR: Whole2Half only implemented for 1D and 2D multidimArrays");
+        REPORT_ERROR(ERR_MULTIDIM_DIM,"ERROR: Whole2Half only implemented for 1D and 2D multidimArrays");
 
 }
 
 /** Convert half -> whole of (centro-symmetric) Fourier transforms 2D. -- */
-void Half2Whole(const MultidimArray<std::complex<double> > &in, 
+void Half2Whole(const MultidimArray<std::complex<double> > &in,
 		MultidimArray<std::complex<double> > &out, int oridim)
 {
     if (in.getDim() == 1)
@@ -122,7 +122,7 @@ void RealImag2Complex(const MultidimArray< double > & real,
 void FourierTransform(const MultidimArray<double> &in,
                       MultidimArray< std::complex<double> > &out)
 {
-    
+
     if ( in.getDim() == 1 )
     {
         // 1D
@@ -218,10 +218,10 @@ void FourierTransform(const MultidimArray<std::complex<double> > &in,
     out.resize(N);
 
     GetCaS(MULTIDIM_ARRAY(cas), N);
-    Complex2RealImag(MULTIDIM_ARRAY(in), MULTIDIM_ARRAY(re), 
+    Complex2RealImag(MULTIDIM_ARRAY(in), MULTIDIM_ARRAY(re),
 		     MULTIDIM_ARRAY(im), N);
     DftRealImaginaryToRealImaginary(MULTIDIM_ARRAY(re), MULTIDIM_ARRAY(im),
-				    MULTIDIM_ARRAY(tmpre), MULTIDIM_ARRAY(tmpim), 
+				    MULTIDIM_ARRAY(tmpre), MULTIDIM_ARRAY(tmpim),
 				    MULTIDIM_ARRAY(cas), N);
     RealImag2Complex(MULTIDIM_ARRAY(re), MULTIDIM_ARRAY(im),
                      MULTIDIM_ARRAY(out), N);
@@ -239,10 +239,10 @@ void InverseFourierTransform(const MultidimArray< std::complex<double> > &in,
     out.resize(N);
 
     GetCaS(MULTIDIM_ARRAY(cas), N);
-    Complex2RealImag(MULTIDIM_ARRAY(in), MULTIDIM_ARRAY(re), 
+    Complex2RealImag(MULTIDIM_ARRAY(in), MULTIDIM_ARRAY(re),
 		     MULTIDIM_ARRAY(im), N);
     InvDftRealImaginaryToRealImaginary(MULTIDIM_ARRAY(re), MULTIDIM_ARRAY(im),
-				       MULTIDIM_ARRAY(tmpre), MULTIDIM_ARRAY(tmpim), 
+				       MULTIDIM_ARRAY(tmpre), MULTIDIM_ARRAY(tmpim),
 				       MULTIDIM_ARRAY(cas), N);
     RealImag2Complex(MULTIDIM_ARRAY(re), MULTIDIM_ARRAY(im),
                      MULTIDIM_ARRAY(out), N);
@@ -358,7 +358,7 @@ void CenterOriginFFT(MultidimArray< std::complex< double > > & v, bool forward)
     else if ( v.getDim() == 2)
     {
         // 2D
-        
+
         double xshift = -(double)(int)(XSIZE(v) / 2);
         double yshift = -(double)(int)(YSIZE(v) / 2);
         if (forward)
@@ -373,7 +373,7 @@ void CenterOriginFFT(MultidimArray< std::complex< double > > & v, bool forward)
         }
     }
     else if ( v.getDim() == 3)
-    { 
+    {
         // 3D
         double xshift = -(double)(int)(XSIZE(v) / 2);
         double yshift = -(double)(int)(YSIZE(v) / 2);
@@ -390,6 +390,6 @@ void CenterOriginFFT(MultidimArray< std::complex< double > > & v, bool forward)
         }
     }
     else
-        REPORT_ERROR(1,"CenterOriginFFT ERROR: only valis for 1D or 2D or 3D");
+        REPORT_ERROR(ERR_MULTIDIM_DIM,"CenterOriginFFT ERROR: only valis for 1D or 2D or 3D");
 }
 

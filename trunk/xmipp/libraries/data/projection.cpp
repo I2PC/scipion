@@ -553,7 +553,7 @@ void project_Crystal_SimpleGrid(Image<double> &vol, const SimpleGrid &grid,
 
     // Check that it is a blob volume .......................................
     if (basis.type != Basis::blobs)
-        REPORT_ERROR(1, "project_Crystal_SimpleGrid: Cannot project other than "
+        REPORT_ERROR(ERR_VALUE_INCORRECT, "project_Crystal_SimpleGrid: Cannot project other than "
                      "blob volumes");
 
     // Compute the deformed direction of projection .........................

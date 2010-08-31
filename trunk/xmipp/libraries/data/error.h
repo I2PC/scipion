@@ -59,7 +59,7 @@
  * {
  * ...
  * if (...)
- *     REPORT_ERROR(6001, "Volume too small to be stored");
+ *     REPORT_ERROR(ERR_MULTIDIM_SIZE, "Volume too small to be stored");
  * ...
  * }
  *
@@ -110,23 +110,45 @@
  */
 enum ErrorType
 {
+    ERR_MEM_BADREQUEST,     ///< Bad ammount of memory requested.
     ERR_MEM_NOTENOUGH,    ///< There is not enough memory for allocation.
+    ERR_MEM_NOTDEALLOC,     ///< Memory has not been deallocated.
 
+    ERR_IMG_NOREAD,         ///< Cannot read image from file.
+    ERR_IMG_NOWRITE,        ///< Cannot write image to file.
+
+    ERR_IO,               ///< Input/Output general error.
+    ERR_IO_NOCLOSED,      ///< File cannot be closed.
     ERR_IO_NOTEXIST,      ///< File or directory does not exists.
+    ERR_IO_NOTOPEN,       ///< File cannot be open.
     ERR_IO_NOPERM,        ///< Insufficient permissions to perform operation.
     ERR_IO_NOREAD,        ///< Couldn't read from file.
     ERR_IO_NOWRITE,       ///< Couldn't write to file.
     ERR_IO_NOTFILE,       ///< It is not a file.
     ERR_IO_NOTDIR,        ///< It is not a directory.
+    ERR_IO_NOPATH,       ///< Enviroment PATH cannot be read.
+    ERR_IO_SIZE,          ///< Incorrect file size.
 
     ERR_ARG_INCORRECT,    ///< Incorrect argument received.
     ERR_ARG_MISSING,      ///< Argument missing.
 
     ERR_TYPE_INCORRECT,   ///< Incorrect type received.
 
+    ERR_VALUE_EMPTY,        ///< Empty value.
+    ERR_VALUE_INCORRECT,   ///< Incorrect value received.
+    ERR_VALUE_NOTSET,      ///< Value has not been set.
+
+    ERR_GRID,              ///< Grid general error.
+    ERR_GRID_SIZE,          ///< Incorrect number of GRID volumes or shapes
+
     ERR_MATRIX,            ///< Matrix error.
+    ERR_MATRIX_DIM,         ///< Problem with matrix dimensions.
     ERR_MATRIX_EMPTY,     ///< The matrix is empty.
     ERR_MATRIX_SIZE,      ///< Problem with matrix size.
+
+    ERR_MULTIDIM_DIM,       ///< Incorrect MultidimArray dimensions
+    ERR_MULTIDIM_SIZE,      ///< Incorrect MultidimArray dimensions size
+    ERR_MULTIDIM_EMPTY,     ///< MultidimArray is empty.
 
     ERR_MD,                 ///< MetaData error.
     ERR_MD_NOACTIVE,        ///< No active object in MetaData.
@@ -134,10 +156,20 @@ enum ErrorType
     ERR_MD_BADLABEL,        ///< Unexpected label.
     ERR_MD_SQL,             ///< Error in SQL of MetaData operations.
 
+    ERR_MMAP,               ///< Global mmap error.
+    ERR_MMAP_NOTADDR,        ///< Map addressing of file has failed.
+
     ERR_INDEX_OUTOFBOUNDS,///< Index out of bounds.
 
     ERR_DEBUG_TEST,       ///< Just an error for debugging purpose.
-    ERR_DEBUG_IMPOSIBLE   ///< Just for debugging, situation that can't happens
+    ERR_DEBUG_IMPOSIBLE,   ///< Just for debugging, situation that can't happens
+    ERR_UNCLASSIFIED,       ///<Just to locate unclassified errors.
+    ERR_NOT_IMPLEMENTED,    ///< Case or algorithm not implemented yet.
+
+    ERR_THREADS_NOTINIT,    /// Threads cannot be initiated.
+
+    ERR_PLANS_NOCREATE      ///< FFT Plan cannot be created.
+
 };
 
 /** Show message and exit

@@ -91,7 +91,7 @@ void Basis::read(const FileName &fn)
 {
     FILE *fh;
     if ((fh = fopen(fn.c_str(), "r")) == NULL)
-        REPORT_ERROR(3005,
+        REPORT_ERROR(ERR_IO_NOTOPEN,
                      (std::string)"Basis::read: There is a problem "
                      "opening the file " + fn);
 
@@ -121,7 +121,7 @@ void Basis::usage() const
 void Basis::set_sampling_rate(double _Tm)
 {
     if (_Tm == 0)
-        REPORT_ERROR(1, "Basis::set_sampling_rate: Sampling rate cannot be 0");
+        REPORT_ERROR(ERR_VALUE_INCORRECT, "Basis::set_sampling_rate: Sampling rate cannot be 0");
     Tm = _Tm;
     blob.radius /= Tm;
 }

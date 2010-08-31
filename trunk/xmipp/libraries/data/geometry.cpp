@@ -646,7 +646,7 @@ void Euler_matrix2angles(const Matrix2D<double> &A, double &alpha,
     double abs_sb, sign_sb;
 
     if (MAT_XSIZE(A) != 3 || MAT_YSIZE(A) != 3)
-        REPORT_ERROR(1102, "Euler_matrix2angles: The Euler matrix is not 3x3");
+        REPORT_ERROR(ERR_MATRIX_SIZE, "Euler_matrix2angles: The Euler matrix is not 3x3");
 
     abs_sb = sqrt(A(0, 2) * A(0, 2) + A(1, 2) * A(1, 2));
     if (abs_sb > 16*FLT_EPSILON)

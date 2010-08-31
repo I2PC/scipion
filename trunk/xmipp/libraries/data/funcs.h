@@ -126,7 +126,7 @@ public:
  *      J. Opt. Soc. Am. _21_, 449 (2004)
  *
  *  The I0 version can be tabulated and interpolated upon
- *  demand, but the max error needs to be checked.  The 
+ *  demand, but the max error needs to be checked.  The
  *  "vtable" parameter corresponds to the maximum value of x
  *  for which the I0 window is non-zero.  Setting "vtable"
  *  different from "v" corresponds to a change in units of x.
@@ -135,7 +135,7 @@ public:
  *  intervals.
  *
  *  The get_kbsinh_win and get_kbi0_win functions return
- *  single-argument function objects, which is what a 
+ *  single-argument function objects, which is what a
  *  generic routine is likely to want.
  *
  * @code
@@ -246,7 +246,7 @@ double cdf_gauss(double x);
 
 /** Cumulative distribution function for a t-distribution
  *
- * This function returns the value of the CDF of a univariate t-distribution 
+ * This function returns the value of the CDF of a univariate t-distribution
  * with k degrees of freedom  at the point t.
  *  Adapted by Sjors from: http://www.alglib.net/specialfunctions/distributions/student.php
  */
@@ -254,16 +254,16 @@ double cdf_tstudent(int k, double t);
 
 /** Cumulative distribution function for a Snedecor's F-distribution.
  *
- * This function returns the value of the CDF of a univariate Snedecor's 
- * F-distribution 
+ * This function returns the value of the CDF of a univariate Snedecor's
+ * F-distribution
  * with d1, d2 degrees of freedom  at the point x.
  */
 double cdf_FSnedecor(int d1, int d2, double x);
 
 /** Inverse Cumulative distribution function for a Snedecor's F-distribution.
  *
- * This function returns the value of the ICDF of a univariate Snedecor's 
- * F-distribution 
+ * This function returns the value of the ICDF of a univariate Snedecor's
+ * F-distribution
  * with d1, d2 degrees of freedom with probability p, i.e., it returns
  * x such that CDF(d1,d2,x)=p
  */
@@ -1088,7 +1088,7 @@ int exists(const FileName& fn);
 int existsTrim(const FileName& fn);
 
 /** This function raised an ERROR if the filename if not empty and if
- * the corresponding file does not exist. 
+ * the corresponding file does not exist.
  * This may be useful to have a better (killing) control on (mpi-regulated) jobs
  *
  * @code
@@ -1602,7 +1602,7 @@ public:
         in.seekg(0, std::ios::end); // End of file
         std::streampos sp = in.tellg(); // Size of file
         if (sp < Number_of_Numbers * Type_size)
-            REPORT_ERROR(1, (std::string) "Marsaglia::Init: File " + fn_in +
+            REPORT_ERROR(ERR_IO_SIZE, (std::string) "Marsaglia::Init: File " + fn_in +
                          "is too small");
         else
         {
@@ -1639,7 +1639,7 @@ public:
     void Marsaglia_log()
     {
         if (typeid(float) != typeid(T) && typeid(double) != typeid(T))
-            REPORT_ERROR(1,
+            REPORT_ERROR(ERR_TYPE_INCORRECT,
                          "Marsaglia: I do not know how to calculate integer logs");
 
         for (int hh = 0; hh < Number_of_Numbers; hh++)
@@ -1730,7 +1730,7 @@ private:
         unsigned int* int_random_vector;
         long long MaxInteger;
         if (sizeof(float) != sizeof(int))
-            REPORT_ERROR(1,
+            REPORT_ERROR(ERR_TYPE_INCORRECT,
                          "Marsaglia: I do not know how to make the float correction");
         MaxInteger = (long long) pow(2.0, sizeof(unsigned int) * 8.0);
         int_random_vector = (unsigned int*) random_vector;

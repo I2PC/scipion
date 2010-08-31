@@ -39,7 +39,7 @@ void XRayPSF::read(const FileName &fn)
         return;
     }
     if ((fh_param = fopen(fn.c_str(), "r")) == NULL)
-        REPORT_ERROR(1,
+        REPORT_ERROR(ERR_IO_NOTOPEN,
                      (std::string)"XmippXROTF::read: There is a problem "
                      "opening the file " + fn);
 
@@ -60,7 +60,7 @@ void XRayPSF::read(const FileName &fn)
     catch (XmippError XE)
     {
         std::cout << XE << std::endl;
-        REPORT_ERROR(1, (std::string)"There is an error reading " + fn);
+        REPORT_ERROR(ERR_IO_NOREAD, (std::string)"There is an error reading " + fn);
     }
     fclose(fh_param);
 }
@@ -71,7 +71,7 @@ void XRayPSF::write(const FileName &fn)
     std::ofstream fh_param;
     fh_param.open(fn.c_str());
     if (!fh_param)
-        REPORT_ERROR(1, (std::string)"Xmipp_CTF::write: Cannot open " + fn +
+        REPORT_ERROR(ERR_IO_NOTOPEN, (std::string)"Xmipp_CTF::write: Cannot open " + fn +
                      " for output");
     fh_param << *this << std::endl;
     fh_param.close();

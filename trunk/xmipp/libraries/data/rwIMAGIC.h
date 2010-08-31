@@ -107,13 +107,13 @@ int  readIMAGIC(int img_select)
     // open and read the header file
     FILE  *fhed;
     if ( ( fhed = fopen(headername.c_str(), "r") ) == NULL )
-        REPORT_ERROR(1,(std::string)"readIMAGIC: header file " +headername+ " does not exist");
+        REPORT_ERROR(ERR_IO_NOTOPEN,(std::string)"readIMAGIC: header file " +headername+ " does not exist");
     ;
 
     IMAGIChead* header = new IMAGIChead;
 
     if ( fread( header, IMAGICSIZE, 1, fhed ) < 1 )
-        REPORT_ERROR(1,(std::string)"readIMAGIC: header file " +headername+ " cannot be read");
+        REPORT_ERROR(ERR_IO_NOREAD,(std::string)"readIMAGIC: header file " +headername+ " cannot be read");
     ;
 
     // Determine byte order and swap bytes if from little-endian machine
@@ -140,7 +140,7 @@ int  readIMAGIC(int img_select)
     {
         Num  << img_select;
         Num2 << _nDim;
-        REPORT_ERROR(1,(std::string)"readImagic: Image number " + Num.str() +
+        REPORT_ERROR(ERR_INDEX_OUTOFBOUNDS,(std::string)"readImagic: Image number " + Num.str() +
                      " exceeds stack size " + Num2.str());
     }
 
@@ -236,7 +236,7 @@ int  readIMAGIC(int img_select)
 
     FILE        *fimg;
     if ( ( fimg = fopen(filename.c_str(), "r") ) == NULL )
-        REPORT_ERROR(1,(std::string)"readIMAGIC: image file " +filename+ " does not exist");
+        REPORT_ERROR(ERR_IO_NOTOPEN,(std::string)"readIMAGIC: image file " +filename+ " does not exist");
 
     int pad=0;
     readData(fimg, img_select, datatype, pad );
@@ -309,7 +309,7 @@ int  writeIMAGIC(int img_select=-1, int mode=WRITE_OVERWRITE)
               typeid(T) == typeid(std::complex<double>) )
         strcpy(header->type,"COMP");
     else
-        REPORT_ERROR(1,"ERROR write IMAGIC image: invalid typeid(T)");
+        REPORT_ERROR(ERR_TYPE_INCORRECT,"ERROR write IMAGIC image: invalid typeid(T)");
 
     size_t datasize, datasize_n;
     datasize_n = Xdim*Ydim*Zdim;
@@ -349,16 +349,16 @@ int  writeIMAGIC(int img_select=-1, int mode=WRITE_OVERWRITE)
     if (mode==WRITE_OVERWRITE || (!_exists && mode==WRITE_APPEND))//open in overwrite mode
     {
         if ( ( fhed = fopen(headername.c_str(), "w") ) == NULL )
-            REPORT_ERROR(1,(std::string)"Cannot create file " + filename);
+            REPORT_ERROR(ERR_IO_NOTOPEN,(std::string)"Cannot create file " + filename);
         if ( ( fimg = fopen(filename.c_str(), "w") ) == NULL )
-            REPORT_ERROR(1,(std::string)"Cannot create file " + filename);
+            REPORT_ERROR(ERR_IO_NOTOPEN,(std::string)"Cannot create file " + filename);
     }
     else //open in append mode
     {
         if ( ( fhed = fopen(headername.c_str(), "r+") ) == NULL )
-            REPORT_ERROR(1,(std::string)"Cannot create file " + filename);
+            REPORT_ERROR(ERR_IO_NOTOPEN,(std::string)"Cannot create file " + filename);
         if ( ( fimg = fopen(filename.c_str(), "r+") ) == NULL )
-            REPORT_ERROR(1,(std::string)"Cannot create file " + filename);
+            REPORT_ERROR(ERR_IO_NOTOPEN,(std::string)"Cannot create file " + filename);
     }
 
 

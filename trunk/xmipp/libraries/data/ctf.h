@@ -455,7 +455,7 @@ public:
                       MultidimArray < std::complex<double> > &CTF) const
     {
         if ( ZSIZE(sample_image) > 1 )
-            REPORT_ERROR(1,"ERROR: Generate_CTF only works with 2D sample images, not 3D."); 
+            REPORT_ERROR(ERR_MULTIDIM_DIM,"ERROR: Generate_CTF only works with 2D sample images, not 3D.");
         Generate_CTF(YSIZE(sample_image), XSIZE(sample_image), CTF);
         STARTINGX(CTF) = STARTINGX(sample_image);
         STARTINGY(CTF) = STARTINGY(sample_image);

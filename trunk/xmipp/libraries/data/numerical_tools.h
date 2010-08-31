@@ -28,7 +28,7 @@
 #ifndef _NUMERICAL_TOOLS_HH
 #define _NUMERICAL_TOOLS_HH
 
-#include "numerical_recipes.h" 
+#include "numerical_recipes.h"
 #include "matrix1d.h"
 #include "matrix2d.h"
 #include "multidim_array.h"
@@ -70,7 +70,7 @@ void randomPermutation(int N, MultidimArray<int>& result);
   *
   * The option show forces the routine to show the convergence path
   *
-  * If your function needs extra parameters you can pass them through 
+  * If your function needs extra parameters you can pass them through
   * the void pointer prm. If you don't need this feature set it to NULL.
   *
   * Example of use:
@@ -88,7 +88,7 @@ void randomPermutation(int N, MultidimArray<int>& result);
 void powellOptimizer(Matrix1D< double >& p,
                      int i0, int n,
                      double(*f)(double* , void *),
-                     void *prm, 
+                     void *prm,
                      double ftol,
                      double& fret,
                      int& iter,
@@ -115,11 +115,11 @@ class GaussianInterpolator {
 public:
     /** Constructor.
         xmax is the maximum value considered by the interpolator.
-        N is the number of samples between 0 and xmax. 
+        N is the number of samples between 0 and xmax.
         If normalize is set to true, then the factor 1/sqrt(2*PI)
         is introduced. */
     void initialize(double xmax, int N, bool normalize=true);
-    
+
     /** Value */
     inline double getValue(double x) const {
         x=ABS(x);
@@ -205,7 +205,7 @@ void leastSquare(const Matrix2D< double >& C, const Matrix1D< double >& d,
  * @ingroup NumericalTools
  *
  * @code
- * min Norm(A*x-d) + lambda * norm (G*x) 
+ * min Norm(A*x-d) + lambda * norm (G*x)
  * @endcode
  *
  * Give an empty G matrix (NULL matrix) if G is the identity matrix
@@ -222,16 +222,16 @@ template<typename T>
 void solve(const Matrix2D<T>& A, const Matrix1D<T>& b, Matrix1D<T>& result)
 {
     if (MAT_XSIZE(A) == 0)
-        REPORT_ERROR(1108, "Solve: Matrix is empty");
+        REPORT_ERROR(ERR_MATRIX_EMPTY, "Solve: Matrix is empty");
 
     if (MAT_XSIZE(A) != MAT_YSIZE(A))
-        REPORT_ERROR(1109, "Solve: Matrix is not squared");
+        REPORT_ERROR(ERR_MATRIX_SIZE, "Solve: Matrix is not squared");
 
     if (MAT_XSIZE(A) != b.size())
-        REPORT_ERROR(1102, "Solve: Different sizes of Matrix and Vector");
+        REPORT_ERROR(ERR_MATRIX_SIZE, "Solve: Different sizes of Matrix and Vector");
 
     if (b.isRow())
-        REPORT_ERROR(1107, "Solve: Not correct vector shape");
+        REPORT_ERROR(ERR_MATRIX_DIM, "Solve: Not correct vector shape");
 
     // Perform LU decomposition and then solve
     Matrix1D< int > indx;
@@ -250,16 +250,16 @@ void solveBySVD(const Matrix2D< T >& A, const Matrix1D< T >& b,
                   Matrix1D< double >& result, double tolerance)
 {
     if (A.Xdim() == 0)
-        REPORT_ERROR(1108, "Solve: Matrix is empty");
+        REPORT_ERROR(ERR_MATRIX_EMPTY, "Solve: Matrix is empty");
 
     if (A.Xdim() != A.Ydim())
-        REPORT_ERROR(1109, "Solve: Matrix is not squared");
+        REPORT_ERROR(ERR_MATRIX_SIZE, "Solve: Matrix is not squared");
 
     if (A.Xdim() != b.size())
-        REPORT_ERROR(1102, "Solve: Different sizes of Matrix and Vector");
+        REPORT_ERROR(ERR_MATRIX_SIZE, "Solve: Different sizes of Matrix and Vector");
 
     if (b.isRow())
-        REPORT_ERROR(1107, "Solve: Not correct vector shape");
+        REPORT_ERROR(ERR_MATRIX_DIM, "Solve: Not correct vector shape");
 
     // First perform de single value decomposition
     // Xmipp interface that calls to svdcmp of numerical recipes
@@ -290,13 +290,13 @@ template<typename T>
 void solve(const Matrix2D<T>& A, const Matrix2D<T>& b, Matrix2D<T>& result)
 {
     if (A.Xdim() == 0)
-        REPORT_ERROR(1108, "Solve: Matrix is empty");
+        REPORT_ERROR(ERR_MATRIX_EMPTY, "Solve: Matrix is empty");
 
     if (A.Xdim() != A.Ydim())
-        REPORT_ERROR(1109, "Solve: Matrix is not squared");
+        REPORT_ERROR(ERR_MATRIX_SIZE, "Solve: Matrix is not squared");
 
     if (A.Ydim() != b.Ydim())
-        REPORT_ERROR(1102, "Solve: Different sizes of A and b");
+        REPORT_ERROR(ERR_MATRIX_SIZE, "Solve: Different sizes of A and b");
 
     // Solve
     result = b;
@@ -356,7 +356,7 @@ typedef void(DESolver::*StrategyFunction)(int);
   * private:
   *    int count;
   * };
-  *  
+  *
   * // Optimizer use:
   *        AlignmentSolver solver(length,length*Npop);
   *        solver.Setup(MULTIDIM_ARRAY(min_allowed),
@@ -365,13 +365,13 @@ typedef void(DESolver::*StrategyFunction)(int);
   *        double current_energy=solver.Energy();
   *        double* bestSolution=solver.Solution();
   * @endcode
-  */  
+  */
 class DESolver
 {
 public:
     /// Empty constructor
     DESolver(int dim, int popSize);
-    
+
     /// Destructor
     ~DESolver(void);
 

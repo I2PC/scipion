@@ -2,8 +2,8 @@
 
 //test
 template<>
-void Image< std::complex< double > >::castPage2T(char * page, 
-                                                 std::complex<double> * ptrDest, 
+void Image< std::complex< double > >::castPage2T(char * page,
+                                                 std::complex<double> * ptrDest,
                                                  DataType datatype,
                                                  size_t pageSize)
 {
@@ -36,16 +36,16 @@ void Image< std::complex< double > >::castPage2T(char * page,
     default:
     {
         std::cerr<<"Datatype= "<<datatype<<std::endl;
-        REPORT_ERROR(16," ERROR: cannot cast datatype to std::complex<double>");
+        REPORT_ERROR(ERR_TYPE_INCORRECT," ERROR: cannot cast datatype to std::complex<double>");
         break;
     }
-    }    
+    }
 
 }
 
 template<>
-void Image< std::complex< double > >::castPage2Datatype(std::complex<double> * srcPtr, 
-                                                        char * page, 
+void Image< std::complex< double > >::castPage2Datatype(std::complex<double> * srcPtr,
+                                                        char * page,
                                                         DataType datatype,
                                                         size_t pageSize)
 {
@@ -77,7 +77,7 @@ void Image< std::complex< double > >::castPage2Datatype(std::complex<double> * s
     default:
     {
         std::cerr<<"Datatype= "<<datatype<<std::endl;
-        REPORT_ERROR(16," ERROR: cannot cast datatype to complex<double>");
+        REPORT_ERROR(ERR_TYPE_INCORRECT," ERROR: cannot cast datatype to complex<double>");
         break;
     }
     }

@@ -61,7 +61,7 @@ void translation2DMatrix(const Matrix1D<double> &v,
                          Matrix2D< double > &result)
 {
     if (VEC_XSIZE(v) != 2)
-        REPORT_ERROR(1002, "Translation2D_matrix: vector is not in R2");
+        REPORT_ERROR(ERR_MATRIX_SIZE, "Translation2D_matrix: vector is not in R2");
 
     result.initIdentity(3);
     MAT_ELEM(result,0, 2) = XX(v);
@@ -110,7 +110,7 @@ void rotation3DMatrix(double ang, char axis, Matrix2D< double > &result,
         MAT_ELEM(result,0, 0) = 1;
         break;
     default:
-        REPORT_ERROR(1105, "rotation3DMatrix: Unknown axis");
+        REPORT_ERROR(ERR_VALUE_INCORRECT, "rotation3DMatrix: Unknown axis");
     }
 }
 
@@ -119,7 +119,7 @@ void alignWithZ(const Matrix1D<double> &axis, Matrix2D<double>& result,
                 bool homogeneous)
 {
     if (axis.size() != 3)
-        REPORT_ERROR(1002, "alignWithZ: Axis is not in R3");
+        REPORT_ERROR(ERR_MATRIX_SIZE, "alignWithZ: Axis is not in R3");
     if (homogeneous)
     {
         result.initZeros(4,4);
@@ -176,7 +176,7 @@ void rotation3DMatrix(double ang, const Matrix1D<double> &axis,
 void translation3DMatrix(const Matrix1D<double> &v, Matrix2D<double> &result)
 {
     if (VEC_XSIZE(v) != 3)
-        REPORT_ERROR(1002, "Translation3D_matrix: vector is not in R3");
+        REPORT_ERROR(ERR_MATRIX_SIZE, "Translation3D_matrix: vector is not in R3");
 
     result.initIdentity(4);
     MAT_ELEM(result,0, 3) = XX(v);
@@ -189,7 +189,7 @@ void scale3DMatrix(const Matrix1D<double> &sc, Matrix2D<double>& result,
                    bool homogeneous)
 {
     if (VEC_XSIZE(sc) != 3)
-        REPORT_ERROR(1002, "Scale3D_matrix: vector is not in R3");
+        REPORT_ERROR(ERR_MATRIX_SIZE, "Scale3D_matrix: vector is not in R3");
 
     if (homogeneous)
     {
@@ -252,7 +252,7 @@ void produceSplineCoefficients(int SplineDegree,
                                const MultidimArray< std::complex<double> > &V1)
 {
     // TODO Implement
-    REPORT_ERROR(222,"Spline coefficients of a complex matrix is not implemented.");
+    REPORT_ERROR(ERR_NOT_IMPLEMENTED,"Spline coefficients of a complex matrix is not implemented.");
 }
 
 void produceImageFromSplineCoefficients(int SplineDegree,
@@ -273,7 +273,7 @@ void produceImageFromSplineCoefficients(int SplineDegree,
                       BasicSpline, CardinalSpline, SplineDegree,
                       MirrorOnBounds, DBL_EPSILON, &Status);
     if (Status)
-        REPORT_ERROR(1201, "Error in ImageFromSplineCoefficients...");
+        REPORT_ERROR(ERR_UNCLASSIFIED, "Error in ImageFromSplineCoefficients...");
 
 }
 

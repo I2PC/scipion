@@ -131,7 +131,7 @@ int readMRC(int img_select, bool isStack=false)
 
     // Convert VAX floating point types if necessary
     if ( header->amin > header->amax )
-        REPORT_ERROR(1,"readMRC: amin > max: VAX floating point conversion unsupported");
+        REPORT_ERROR(ERR_UNCLASSIFIED,"readMRC: amin > max: VAX floating point conversion unsupported");
     int _xDim,_yDim,_zDim;
     unsigned long int _nDim;
     _xDim = (int) header->nx;
@@ -149,7 +149,7 @@ int readMRC(int img_select, bool isStack=false)
         {
             Num  << img_select;
             Num2 << _nDim;
-            REPORT_ERROR(1,(std::string)"readImagic: Image number " + Num.str() +
+            REPORT_ERROR(ERR_INDEX_OUTOFBOUNDS,(std::string)"readImagic: Image number " + Num.str() +
                          " exceeds stack size " + Num2.str());
         }
     }
@@ -319,7 +319,7 @@ int writeMRC(int img_select, bool isStack=false, int mode=WRITE_OVERWRITE)
               typeid(T) == typeid(std::complex<double>) )
         header->mode = 4;
     else
-        REPORT_ERROR(1,"ERROR write MRC image: invalid typeid(T)");
+        REPORT_ERROR(ERR_TYPE_INCORRECT,"ERROR write MRC image: invalid typeid(T)");
 
     //Set this to zero till we decide if we want to update it
     header->mx = 0;//(int) (ua/ux + 0.5);
@@ -396,12 +396,12 @@ int writeMRC(int img_select, bool isStack=false, int mode=WRITE_OVERWRITE)
     if (mode==WRITE_OVERWRITE || (!_exists && mode==WRITE_APPEND))//open in overwrite mode
     {
         if ( ( fimg = fopen(filename.c_str(), "w") ) == NULL )
-            REPORT_ERROR(1,(std::string)"Cannot create file " + filename);
+            REPORT_ERROR(ERR_IO_NOTOPEN,(std::string)"Cannot create file " + filename);
     }
     else //open in append mode
     {
         if ( ( fimg = fopen(filename.c_str(), "r+") ) == NULL )
-            REPORT_ERROR(1,(std::string)"Cannot create file " + filename);
+            REPORT_ERROR(ERR_IO_NOTOPEN,(std::string)"Cannot create file " + filename);
     }
 
     //BLOCK

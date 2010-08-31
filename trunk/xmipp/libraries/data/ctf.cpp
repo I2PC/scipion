@@ -114,7 +114,7 @@ void CTFDescription::read(const FileName &fn, bool disable_if_not_K)
     {
         FILE *fh_param;
         if ((fh_param = fopen(fn.c_str(), "r")) == NULL)
-            REPORT_ERROR(1,
+            REPORT_ERROR(ERR_IO_NOTOPEN,
                          (std::string)"XmippCTF::read: There is a problem "
                          "opening the file " + fn);
 
@@ -183,7 +183,7 @@ void CTFDescription::read(const FileName &fn, bool disable_if_not_K)
         catch (XmippError XE)
         {
             std::cout << XE << std::endl;
-            REPORT_ERROR(1, (std::string)"There is an error reading " + fn);
+            REPORT_ERROR(ERR_IO_NOREAD, (std::string)"There is an error reading " + fn);
         }
         fclose(fh_param);
     }
@@ -444,7 +444,7 @@ void CTFDescription::Apply_CTF(MultidimArray < std::complex<double> > &FFTI) con
     Matrix1D<int>    idx(2);
     Matrix1D<double> freq(2);
     if ( ZSIZE(FFTI) > 1 )
-        REPORT_ERROR(1,"ERROR: Apply_CTF only works on 2D images, not 3D.");
+        REPORT_ERROR(ERR_MULTIDIM_DIM,"ERROR: Apply_CTF only works on 2D images, not 3D.");
 
     FOR_ALL_ELEMENTS_IN_ARRAY2D(FFTI)
     {

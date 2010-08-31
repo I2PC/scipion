@@ -133,7 +133,7 @@ void SimpleGrid::prepare_grid()
     }
     catch (XmippError error)
     {
-        REPORT_ERROR(3001, "The grid vectors are not a true 3D coordinate system");
+        REPORT_ERROR(ERR_UNCLASSIFIED, "The grid vectors are not a true 3D coordinate system");
     }
     lowest.setCol();
     highest.setCol();

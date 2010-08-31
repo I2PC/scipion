@@ -40,7 +40,7 @@ template <class T> void ask_Tvector(T* &v, int nl, int nh)
     if (nh - nl + 1 > 1)
     {
         v = (T *)malloc((unsigned)(nh - nl + 1) * sizeof(T));
-        if (!v) REPORT_ERROR(1, "allocation failure in vector()");
+        if (!v) REPORT_ERROR(ERR_MEM_NOTENOUGH, "allocation failure in vector()");
         v -= nl;
     }
     else v = NULL;
@@ -67,13 +67,13 @@ template <class T> void ask_Tmatrix(T ** &m, int nrl, int nrh,
     if (nrh - nrl + 1 > 1 && nch - ncl + 1 > 1)
     {
         m = (T **) malloc((unsigned)(nrh - nrl + 1) * sizeof(T*));
-        if (!m) REPORT_ERROR(1, "allocation failure 1 in matrix()");
+        if (!m) REPORT_ERROR(ERR_MEM_NOTENOUGH, "allocation failure 1 in matrix()");
         m -= nrl;
 
         for (int i = nrl;i <= nrh;i++)
         {
             m[i] = (T *) malloc((unsigned)(nch - ncl + 1) * sizeof(T));
-            if (!m[i]) REPORT_ERROR(1, "allocation failure 2 in matrix()");
+            if (!m[i]) REPORT_ERROR(ERR_MEM_NOTENOUGH, "allocation failure 2 in matrix()");
             m[i] -= ncl;
         }
     }
@@ -103,19 +103,19 @@ template <class T> void ask_Tvolume(T *** &m, int nsl, int nsh, int nrl,
     if (nsh - nsl + 1 > 1 && nrh - nrl + 1 > 1 && nch - ncl + 1 > 1)
     {
         m = (T ***) malloc((unsigned)(nsh - nsl + 1) * sizeof(T**));
-        if (!m) REPORT_ERROR(1, "allocation failure 1 in matrix()");
+        if (!m) REPORT_ERROR(ERR_MEM_NOTENOUGH, "allocation failure 1 in matrix()");
         m -= nsl;
 
         for (int k = nsl;k <= nsh;k++)
         {
             m[k] = (T **) malloc((unsigned)(nrh - nrl + 1) * sizeof(T*));
-            if (!m[k]) REPORT_ERROR(1, "allocation failure 2 in matrix()");
+            if (!m[k]) REPORT_ERROR(ERR_MEM_NOTENOUGH, "allocation failure 2 in matrix()");
             m[k] -= nrl;
 
             for (int i = nrl;i <= nrh;i++)
             {
                 m[k][i] = (T *) malloc((unsigned)(nch - ncl + 1) * sizeof(T));
-                if (!m[k][i]) REPORT_ERROR(1, "allocation failure 2 in matrix()");
+                if (!m[k][i]) REPORT_ERROR(ERR_MEM_NOTENOUGH, "allocation failure 2 in matrix()");
                 m[k][i] -= ncl;
             }
         }
@@ -142,7 +142,7 @@ template <class T> void free_Tvolume(T *** &m, int nsl, int nsh,
 
 
 /** Allocates memory.
- * Adapted from Bsofts bfree 
+ * Adapted from Bsofts bfree
  *
  * It is called exactly like malloc, with the following enhancements:
  *
@@ -154,10 +154,10 @@ template <class T> void free_Tvolume(T *** &m, int nsl, int nsh,
  *
  * returns char* : a pointer to the memory (NULL on failure)
  */
-char* askMemory(unsigned long size); 
+char* askMemory(unsigned long size);
 
 /** Frees allocated memory.
- * Adapted from Bsofts bfree 
+ * Adapted from Bsofts bfree
  *
  * It is called exactly like free, with the following enhancements:
  *  - If freeing fails an error message is printed.

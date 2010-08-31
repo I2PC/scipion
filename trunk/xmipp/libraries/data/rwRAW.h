@@ -50,7 +50,7 @@ int readRAW(int img_select,bool isStack=false)
     fn_inf = filename.add_extension("inf");
     FILE *fh_inf = fopen(fn_inf.c_str(), "r");
     if (!fh_inf)
-        REPORT_ERROR(1, (std::string)"Micrograph::open_micrograph: Cannot find " +
+        REPORT_ERROR(ERR_IO_NOTOPEN, (std::string)"Micrograph::open_micrograph: Cannot find " +
                      fn_inf);
     _xDim = textToInteger(getParameter(fh_inf, "Xdim"));
     _yDim = textToInteger(getParameter(fh_inf, "Ydim"));
@@ -106,7 +106,7 @@ int readRAW(int img_select,bool isStack=false)
         datatype = Float;
         break;
     default:
-        REPORT_ERROR(1, "Micrograph::open_micrograph: depth is not 8, 16 nor 32");
+        REPORT_ERROR(ERR_TYPE_INCORRECT, "rwRAW::read: depth is not 8, 16 nor 32");
     }
 
     MDMainHeader.removeObjects();
@@ -176,7 +176,7 @@ int writeRAW(int img_select, bool isStack=false, int mode=WRITE_OVERWRITE)
 
     // Volumes and stacks are not supported
     if (Zdim > 1 || Ndim > 1)
-        REPORT_ERROR(1000, "ERROR: rwRAW does not support neither volumes nor stacks.");
+        REPORT_ERROR(ERR_INDEX_OUTOFBOUNDS, "rwRAW::read: does not support neither volumes nor stacks.");
 
 
     DataType wDType;
@@ -218,7 +218,7 @@ int writeRAW(int img_select, bool isStack=false, int mode=WRITE_OVERWRITE)
         _is_signed = false;
     }
     else
-        REPORT_ERROR(1000,(std::string)"ERROR: rwRAW does not write from " + typeid(T).name() + "type.");
+        REPORT_ERROR(ERR_TYPE_INCORRECT,(std::string)"ERROR: rwRAW does not write from " + typeid(T).name() + "type.");
 
     _depth = gettypesize(wDType);
 
@@ -228,7 +228,7 @@ int writeRAW(int img_select, bool isStack=false, int mode=WRITE_OVERWRITE)
     fn_inf = filename.add_extension("inf");
     FILE *fh_inf = fopen(fn_inf.c_str(), "w");
     if (!fh_inf)
-        REPORT_ERROR(1, (std::string)"rwRAW::write: Error opening file " + fn_inf);
+        REPORT_ERROR(ERR_IO_NOTOPEN, (std::string)"rwRAW::write: Error opening file " + fn_inf);
 
     fprintf(fh_inf,"# Bits per sample\n");
     fprintf(fh_inf,"bitspersample= %d\n",_depth*8);
@@ -252,13 +252,13 @@ int writeRAW(int img_select, bool isStack=false, int mode=WRITE_OVERWRITE)
         fprintf(fh_inf,"endianess = little\n");
 
     if (fclose(fh_inf)!=0)
-        REPORT_ERROR(6001, "rwRAW::write: Error creating output info file.");
+        REPORT_ERROR(ERR_IO_NOCLOSED, "rwRAW::write: Error creating output info file.");
 
 
     /* Write Image file ==================================*/
     FILE  *fimg;
     if ( ( fimg = fopen(filename.c_str(), "w") ) == NULL )
-        REPORT_ERROR(1,(std::string)"Cannot create file " + filename);
+        REPORT_ERROR(ERR_IO_NOTOPEN,(std::string)"Cannot create file " + filename);
 
     size_t datasize_n;
     datasize_n = Xdim*Ydim*Zdim;
@@ -266,7 +266,7 @@ int writeRAW(int img_select, bool isStack=false, int mode=WRITE_OVERWRITE)
     writePageAsDatatype(fimg, wDType, datasize_n);
 
     if( fclose(fimg) !=0 )
-        REPORT_ERROR(1,(std::string)"Can not close file "+ filename);
+        REPORT_ERROR(ERR_IO_NOCLOSED,(std::string)"Can not close file "+ filename);
 
     return(0);
 }

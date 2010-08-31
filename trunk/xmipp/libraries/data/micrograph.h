@@ -309,7 +309,7 @@ public:
     float operator()(int x, int y) const
     {
         if (y < 0 || y >= Ydim || x < 0 || x >= Xdim)
-            // COSS: REPORT_ERROR(1, "Micrograph::(): index out of range");
+            // COSS: REPORT_ERROR(ERR_INDEX_OUTOFBOUNDS, "Micrograph::(): index out of range");
 	    return 0;
         if (__depth == 8)
         {
@@ -349,7 +349,7 @@ public:
             }
             return retval;
         }
-        else REPORT_ERROR(1, "Micrograph::(): depth is not 8, 16 or 32");
+        else REPORT_ERROR(ERR_TYPE_INCORRECT, "Micrograph::(): depth is not 8, 16 or 32");
     }
 
     /** Micrograph max min*/
@@ -401,7 +401,7 @@ public:
                     for (int j = 0; j < Xdim; j++, tmp++)
                     {
                         unsigned short int retval=um16[tmp];
-                        if (__reversed) 
+                        if (__reversed)
                         {
 	                   unsigned char *ptr=(unsigned char *)&retval, temp;
 	                   SWAP(*ptr,*(ptr+1),temp);
@@ -422,7 +422,7 @@ public:
                 for (int j = 0; j < Xdim; j++, tmp++)
                 {
                     float retval=m32[tmp];
-                    if (__reversed) 
+                    if (__reversed)
                     {
 	               unsigned char *ptr=(unsigned char *)&retval, temp;
 	               SWAP(*ptr,*(ptr+3),temp);
@@ -435,21 +435,21 @@ public:
             Dmin = (double)_min;
             Dmax = (double)_Max;
         }
-        else REPORT_ERROR(1, "Micrograph::(): depth is not 8, 16 or 32");
+        else REPORT_ERROR(ERR_TYPE_INCORRECT, "Micrograph::(): depth is not 8, 16 or 32");
     }
 
     /** Pixel access for writing. */
     void set_val(int x, int y, double new_val)
     {
         if (y < 0 || y >= Ydim || x < 0 || x >= Xdim)
-            REPORT_ERROR(1, "Micrograph::set_val: index out of range");
+            REPORT_ERROR(ERR_INDEX_OUTOFBOUNDS, "Micrograph::set_val: index out of range");
         if (__depth == 8) m8[y*Xdim+x] = (unsigned char) new_val;
         else if (__depth == 16 && __is_signed) m16[y*Xdim+x] =
                 (short int) new_val;
         else if (__depth == 16 && !__is_signed) um16[y*Xdim+x] =
                 (unsigned short int) new_val;
         else if (__depth == 32) m32[y*Xdim+x] = (float) new_val;
-        else REPORT_ERROR(1, "Micrograph::set_val: depth is not 8, 16 or 32");
+        else REPORT_ERROR(ERR_TYPE_INCORRECT, "Micrograph::set_val: depth is not 8, 16 or 32");
     }
 
     /** Pixel value with 8 bits. */
@@ -458,7 +458,7 @@ public:
         if (!__scaling_valid) return(unsigned char)(*this)(x, y);
         else return(unsigned char)(__a*(*this)(x, y) + __b);
     }
-    
+
     /** Get the linear transformation for scaling micrographs */
     void getLinearTransformatioVal8(double &a, double &b) const;
 
@@ -493,7 +493,7 @@ public:
     Particle_coords & coord(int n)
     {
         if (n < 0 || n > ParticleNo())
-            REPORT_ERROR(1, "Micrograph::coord(): index out of range");
+            REPORT_ERROR(ERR_INDEX_OUTOFBOUNDS, "Micrograph::coord(): index out of range");
         return coords[n];
     }
 
@@ -523,7 +523,7 @@ public:
     std::string & get_label(int n)
     {
         if (n < 0 || n > LabelNo())
-            REPORT_ERROR(1, "Micrograph::get_label(): index out of range");
+            REPORT_ERROR(ERR_INDEX_OUTOFBOUNDS, "Micrograph::get_label(): index out of range");
         return labels[n];
     }
 

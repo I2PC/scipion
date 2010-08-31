@@ -276,7 +276,7 @@ void Feature::read_common(char *line)
                   &(YY(Center)),
                   &(ZZ(Center)));
     if (stat != 6)
-        REPORT_ERROR(3003,
+        REPORT_ERROR(ERR_IO_NOREAD,
                      (std::string)"Error when reading common part of feature: " + line);
     Type = straux;
 }
@@ -287,7 +287,7 @@ void Sphere::read_specific(char *line)
     int stat;
     stat = sscanf(line, "%*s %*c %*f %*f %*f %*f %lf", &radius);
     if (stat != 1)
-        REPORT_ERROR(3003, (std::string)"Error when reading a sphere:" + line);
+        REPORT_ERROR(ERR_IO_NOREAD, (std::string)"Error when reading a sphere:" + line);
     prepare();
 }
 
@@ -297,7 +297,7 @@ void Blob::read_specific(char *line)
     int stat;
     stat = sscanf(line, "%*s %*c %*f %*f %*f %*f %lf %lf %d", &radius, &alpha, &m);
     if (stat != 3)
-        REPORT_ERROR(3003, (std::string)"Error when reading a blob:" + line);
+        REPORT_ERROR(ERR_IO_NOREAD, (std::string)"Error when reading a blob:" + line);
     prepare();
 }
 
@@ -307,7 +307,7 @@ void Gaussian::read_specific(char *line)
     int stat;
     stat = sscanf(line, "%*s %*c %*f %*f %*f %*f %lf", &sigma);
     if (stat != 1)
-        REPORT_ERROR(3003, (std::string)"Error when reading a Gaussian:" + line);
+        REPORT_ERROR(ERR_IO_NOREAD, (std::string)"Error when reading a Gaussian:" + line);
     prepare();
 }
 
@@ -318,7 +318,7 @@ void Cylinder::read_specific(char *line)
     stat = sscanf(line, "%*s %*c %*f %*f %*f %*f %lf %lf %lf %lf %lf %lf", &xradius,
                   &yradius, &height, &rot, &tilt, &psi);
     if (stat != 6)
-        REPORT_ERROR(3003, (std::string)"Error when reading a cylinder:" + line);
+        REPORT_ERROR(ERR_IO_NOREAD, (std::string)"Error when reading a cylinder:" + line);
     prepare();
 }
 
@@ -329,7 +329,7 @@ void DCylinder::read_specific(char *line)
     stat = sscanf(line, "%*s %*c %*f %*f %*f %*f %lf %lf %lf %lf %lf %lf",
                   &radius, &height, &separation, &rot, &tilt, &psi);
     if (stat != 6)
-        REPORT_ERROR(3003, (std::string)"Error when reading a double cylinder:" + line);
+        REPORT_ERROR(ERR_IO_NOREAD, (std::string)"Error when reading a double cylinder:" + line);
     prepare();
 }
 
@@ -340,7 +340,7 @@ void Cube::read_specific(char *line)
     stat = sscanf(line, "%*s %*c %*f %*f %*f %*f %lf %lf %lf %lf %lf %lf",
                   &xdim, &ydim, &zdim, &rot, &tilt, &psi);
     if (stat != 6)
-        REPORT_ERROR(3003, (std::string)"Error when reading a cube" + line);
+        REPORT_ERROR(ERR_IO_NOREAD, (std::string)"Error when reading a cube" + line);
     prepare();
 }
 
@@ -351,7 +351,7 @@ void Ellipsoid::read_specific(char *line)
     stat = sscanf(line, "%*s %*c %*f %*f %*f %*f %lf %lf %lf %lf %lf %lf",
                   &xradius, &yradius, &zradius, &rot, &tilt, &psi);
     if (stat != 6)
-        REPORT_ERROR(3003, (std::string)"Error when reading an ellipsoid" + line);
+        REPORT_ERROR(ERR_IO_NOREAD, (std::string)"Error when reading an ellipsoid" + line);
     prepare();
 }
 
@@ -362,7 +362,7 @@ void Cone::read_specific(char *line)
     stat = sscanf(line, "%*s %*c %*f %*f %*f %*f %lf %lf %lf %lf %lf", &radius, &height,
                   &rot, &tilt, &psi);
     if (stat != 5)
-        REPORT_ERROR(3003, (std::string)"Error when reading a cone" + line);
+        REPORT_ERROR(ERR_IO_NOREAD, (std::string)"Error when reading a cone" + line);
     prepare();
 }
 
@@ -1491,7 +1491,7 @@ Feature *Feature::background(int back_mode, double back_param) const
         return encircle(back_param);
         break;
     default:
-        REPORT_ERROR(3006, "Feature::background: mode not supported");
+        REPORT_ERROR(ERR_VALUE_INCORRECT, "Feature::background: mode not supported");
         break;
     }
 }
@@ -1913,7 +1913,7 @@ void Phantom::read(const FileName &fn_phantom, bool apply_scale)
 
 // Open Volume Description File
     if ((fh_phantom = fopen(fn_phantom.c_str(), "r")) == NULL)
-        REPORT_ERROR(3003, (std::string)"Phantom::read: Cannot open the phantom file: "
+        REPORT_ERROR(ERR_IO_NOTOPEN, (std::string)"Phantom::read: Cannot open the phantom file: "
                      + fn_phantom);
     fn = fn_phantom;
 
@@ -1931,7 +1931,7 @@ void Phantom::read(const FileName &fn_phantom, bool apply_scale)
             stat = sscanf(line, "%d %d %d %lf %lf", &xdim, &ydim, &zdim,
                           &Background_Density, &scale);
             if (stat < 4)
-                REPORT_ERROR(3003, "Phantom::read: check the volume"
+                REPORT_ERROR(ERR_IO_NOREAD, "Phantom::read: check the volume"
                              " dimensions and global density in volume description file");
             if (stat == 4) scale = 1;
             if (apply_scale)
@@ -1949,7 +1949,7 @@ void Phantom::read(const FileName &fn_phantom, bool apply_scale)
         stat = sscanf(line, "%s", straux);
         feat_type = straux;
         if (stat != 1)
-            REPORT_ERROR(3003,
+            REPORT_ERROR(ERR_IO_NOREAD,
                          (std::string)"Phantom::read: Not correct feature type" + line);
 
         if (feat_type == "sph")
@@ -2009,7 +2009,7 @@ void Phantom::read(const FileName &fn_phantom, bool apply_scale)
             con->read_specific(line);
         }
         else
-            REPORT_ERROR(3003, (std::string)"Phantom::read: Unknown feature type: " + line);
+            REPORT_ERROR(ERR_IO_NOREAD, (std::string)"Phantom::read: Unknown feature type: " + line);
 
         // Scale and Store feature
         if (apply_scale)
@@ -2048,7 +2048,7 @@ void Phantom::write(const FileName &fn_phantom)
 
 // Open Volume Description File
     if ((fh_phantom = fopen(fn_phantom.c_str(), "w")) == NULL)
-        REPORT_ERROR(3003, (std::string)"Phantom::write: Cannot open the phantom file "
+        REPORT_ERROR(ERR_IO_NOTOPEN, (std::string)"Phantom::write: Cannot open the phantom file "
                      + fn_phantom + " for output");
 
 // Write global comment and size
@@ -2132,7 +2132,7 @@ void Phantom::label(MultidimArray<double> &V)
 // Always suppose CC grid
 void Phantom::sketch_in(MultidimArray<double> &V, int clean, double colour)
 {
-    if (clean) 
+    if (clean)
     {
         V.resize(zdim, ydim, xdim);
         V.setXmippOrigin();
@@ -2156,7 +2156,7 @@ void Phantom::rotate(const Matrix2D<double> &E)
 void Phantom::selfApplyGeometry(const Matrix2D<double> &A, int inv)
 {
     if ((MAT_XSIZE(A) != 4) || (MAT_YSIZE(A) != 4))
-        REPORT_ERROR(1102, "Apply_geom3D: geometrical transformation is not 4x4");
+        REPORT_ERROR(ERR_MATRIX_SIZE, "Apply_geom3D: geometrical transformation is not 4x4");
     if (A.isIdentity()) return;
     Matrix2D<double> T;
     if (inv == IS_INV) T = A.inv();
@@ -2222,7 +2222,7 @@ const
 {
     if (z0 != zdim)
         if (z0 < FIRST_XMIPP_INDEX(zdim) || z0 > LAST_XMIPP_INDEX(zdim))
-            REPORT_ERROR(1, "Phantom::surface: z0 outside phantom");
+            REPORT_ERROR(ERR_INDEX_OUTOFBOUNDS, "Phantom::surface: z0 outside phantom");
 #ifdef DEBUG
     std::cout << "Direction: " << direction << std::endl;
     std::cout << "z0:        " << z0        << std::endl;
@@ -2230,7 +2230,7 @@ const
 #endif
 
     Matrix1D<double> aux1(3), aux2(3), aux3(3), r(3);
-    if (XSIZE((*P)()) == 0) 
+    if (XSIZE((*P)()) == 0)
     {
         (*P)().resize(ydim, xdim);
         (*P)().setXmippOrigin();

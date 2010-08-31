@@ -160,7 +160,7 @@ void normalize_tomography(MultidimArray<double> &I, double tilt, double &mui,
             else if (tiltMask)
                 I(i,j)=0;
     }
-    
+
     // Prepare values for returning
     mui=avg;
     sigmai=sqrt(meanVariance);
@@ -208,7 +208,7 @@ void normalize_NewXmipp2(MultidimArray<double> &I, const MultidimArray<int> &bg_
 
 void normalize_ramp(MultidimArray<double> &I, const MultidimArray<int> &bg_mask)
 {
-    
+
     // Only 2D ramps implemented
     I.checkDimension(2);
 
@@ -262,7 +262,7 @@ void normalize_remove_neighbours(MultidimArray<double> &I,
     // Fit a least squares plane through the background pixels
     allpoints.clear();
     I.setXmippOrigin();
-    
+
     // Get initial statistics
     computeStats_within_binary_mask(bg_mask, I, minbg, maxbg, avgbg,stddevbg);
 
@@ -289,7 +289,7 @@ void normalize_remove_neighbours(MultidimArray<double> &I,
         A2D_ELEM(I, i, j) -= pA * j + pB * i + pC;
     }
 
-    // Get std.dev. of the background pixels within +/- threshold*sigma 
+    // Get std.dev. of the background pixels within +/- threshold*sigma
     FOR_ALL_ELEMENTS_IN_ARRAY2D(I)
     {
         if (A2D_ELEM(bg_mask, i, j))
@@ -298,7 +298,7 @@ void normalize_remove_neighbours(MultidimArray<double> &I,
 	    {
 		N++;
 		sum1 +=  (double) A2D_ELEM(I, i, j);
-		sum2 += ((double) A2D_ELEM(I, i, j)) * 
+		sum2 += ((double) A2D_ELEM(I, i, j)) *
 		    ((double) A2D_ELEM(I, i, j));
 	    }
 	}
@@ -307,7 +307,7 @@ void normalize_remove_neighbours(MultidimArray<double> &I,
     aux = sum1 / (double) N;
     newstddev = sqrt(ABS(sum2 / N - aux*aux) * N / (N - 1));
 
-    // Replace pixels outside +/- threshold*sigma by samples from 
+    // Replace pixels outside +/- threshold*sigma by samples from
     // a gaussian with avg-plane and newstddev
     FOR_ALL_ELEMENTS_IN_ARRAY2D(I)
     {
@@ -358,7 +358,7 @@ void Normalize_parameters::read(int argc, char** argv)
     else if (aux == "Tomography0")
         method = TOMOGRAPHY0;
     else
-        REPORT_ERROR(1, "Normalize: Unknown normalizing method");
+        REPORT_ERROR(ERR_VALUE_INCORRECT, "Normalize: Unknown normalizing method");
 
     // Invert contrast?
     invert_contrast = checkParameter(argc, argv, "-invert");
@@ -391,9 +391,9 @@ void Normalize_parameters::read(int argc, char** argv)
             enable_mask = false;
             int i = paremeterPosition(argc, argv, "-background");
             if (i + 2 >= argc)
-                REPORT_ERROR(1,
+                REPORT_ERROR(ERR_ARG_MISSING,
                              "Normalize: Not enough parameters after -background");
-            
+
             aux = argv[i + 1];
             r  = textToInteger(argv[i + 2]);
 
@@ -402,7 +402,7 @@ void Normalize_parameters::read(int argc, char** argv)
             else if (aux == "circle")
                 background_mode = CIRCLE;
             else
-                REPORT_ERROR(1, "Normalize: Unknown background mode");
+                REPORT_ERROR(ERR_VALUE_INCORRECT, "Normalize: Unknown background mode");
         }
 
         // Default is NOT to apply inverse transformation from image header to the mask
@@ -413,7 +413,7 @@ void Normalize_parameters::read(int argc, char** argv)
     {
         int i = paremeterPosition(argc, argv, "-prm");
         if (i + 4 >= argc)
-            REPORT_ERROR(1,
+            REPORT_ERROR(ERR_ARG_MISSING,
                          "Normalize_parameters::read: Not enough parameters after -prm");
 
         a0 = textToFloat(argv[i + 1]);
@@ -453,7 +453,7 @@ void Normalize_parameters::produce_side_info()
         // backup a copy of the mask for apply_geo mode
         bg_mask_bck = bg_mask;
     }
-        
+
 //#define DEBUG
 #ifdef DEBUG
 		Image<int> tt;
@@ -472,7 +472,7 @@ void Normalize_parameters::produce_side_info()
                 SF.removeObjects(MDValueEQ(MDL_ENABLED, -1));
             } catch (XmippError XE)
             {
-                REPORT_ERROR(1,(std::string)"There is a problem opening the metadata"+
+                REPORT_ERROR(ERR_IO_NOTOPEN,(std::string)"There is a problem opening the metadata"+
                     fn_in+". Make sure it is a correct metadata file");
             }
             double bestTilt=1000;
@@ -491,8 +491,8 @@ void Normalize_parameters::produce_side_info()
                 }
             }
             if (bestImage=="")
-                REPORT_ERROR(1,"Cannot find the image at 0 degrees");
-            
+                REPORT_ERROR(ERR_VALUE_EMPTY,"Cannot find the image at 0 degrees");
+
             // Compute the mu0 and sigma0 for this image
         Image<double> I;
         I.read(bestImage);
@@ -615,7 +615,7 @@ void Normalize_parameters::apply_geo_mask(Image<double>& img)
     img().checkDimension(2);
 
     MultidimArray< double > tmp;
-    // get copy of the mask 
+    // get copy of the mask
     tmp.resize(bg_mask_bck);
     typeCast(bg_mask_bck, tmp);
 
@@ -633,7 +633,7 @@ void Normalize_parameters::apply(Image<double> &img)
     double a, b;
     if (invert_contrast)
 	img() *= -1.;
-    
+
     if (remove_black_dust || remove_white_dust)
     {
         double avg, stddev, min, max, zz;

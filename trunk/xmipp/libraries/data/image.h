@@ -464,7 +464,7 @@ public:
                     MD.setValue(*strIt,vv);
                     break;
                 default:
-                    REPORT_ERROR(-1, "Image.read: Unknown label type");
+                    REPORT_ERROR(ERR_MD_BADLABEL, "Image.read: Unknown label type");
                 }
             }//close for activeLabels
         }
@@ -537,7 +537,7 @@ public:
 #undef DEBUG
         // Check that image is not empty
         if (getSize() < 1)
-            REPORT_ERROR(1,"write Image ERROR: image is empty!");
+            REPORT_ERROR(ERR_MULTIDIM_EMPTY,"write Image ERROR: image is empty!");
 
         // CHECK FOR INCONSISTENCIES BETWEEN data.xdim and x, etc???
         int Xdim, Ydim, Zdim, Ndim;
@@ -547,12 +547,12 @@ public:
         Image<T> auxI;
         replaceNsize=0;//reset replaceNsize in case image is reused
         if(select_img==-1 && mode==WRITE_REPLACE)
-            REPORT_ERROR(1,"writeSPIDER: Please specify object to be replaced");
+            REPORT_ERROR(ERR_VALUE_INCORRECT,"writeSPIDER: Please specify object to be replaced");
         else if(!_exists && mode==WRITE_REPLACE)
         {
             std:: stringstream replace_number;
             replace_number << select_img;
-            REPORT_ERROR(1,(std::string)"Cannot replace object number: "
+            REPORT_ERROR(ERR_IO_NOTEXIST,(std::string)"Cannot replace object number: "
                          + replace_number.str()
                          + " in file " +filename
                          + ". It does not exist");
@@ -568,12 +568,12 @@ public:
                Ydim!=_Ydim ||
                Zdim!=_Zdim
               )
-                REPORT_ERROR(1,"write: target and source objects have different size");
+                REPORT_ERROR(ERR_MULTIDIM_SIZE,"write: target and source objects have different size");
             if(mode==WRITE_REPLACE && select_img>_Ndim)
-                REPORT_ERROR(1,"write: cannot replace image stack is not large enough");
+                REPORT_ERROR(ERR_VALUE_INCORRECT,"write: cannot replace image stack is not large enough");
             if(auxI.replaceNsize <1 &&
                (mode==WRITE_REPLACE || mode==WRITE_APPEND))
-                REPORT_ERROR(1,"write: output file is not an stack");
+                REPORT_ERROR(ERR_IO,"write: output file is not an stack");
         }
         else if(!_exists && mode==WRITE_APPEND)
         {
@@ -611,7 +611,7 @@ public:
         if ( err < 0 )
         {
             std::cerr<<" Filename = "<<filename<<" Extension= "<<ext_name<<std::endl;
-            REPORT_ERROR(10,"Error writing file");
+            REPORT_ERROR(ERR_IO_NOWRITE,"Error writing file");
         }
         //unlock file
     }
@@ -624,7 +624,7 @@ public:
         switch (datatype)
         {
         case Unknown_Type:
-            REPORT_ERROR(12,"ERROR: datatype is Unknown_Type");
+            REPORT_ERROR(ERR_TYPE_INCORRECT,"ERROR: datatype is Unknown_Type");
         case UChar:
             {
                 if (typeid(T) == typeid(unsigned char))
@@ -752,7 +752,7 @@ public:
         default:
                 {
                     std::cerr<<"Datatype= "<<datatype<<std::endl;
-                    REPORT_ERROR(16," ERROR: cannot cast datatype to T");
+                    REPORT_ERROR(ERR_TYPE_INCORRECT," ERROR: cannot cast datatype to T");
                     break;
                 }
             }
@@ -825,7 +825,7 @@ public:
         default:
                 {
                     std::cerr<<"outputDatatype= "<<datatype<<std::endl;
-                    REPORT_ERROR(16," ERROR: cannot cast T to outputDatatype");
+                    REPORT_ERROR(ERR_TYPE_INCORRECT," ERROR: cannot cast T to outputDatatype");
                     break;
                 }
             }
@@ -839,7 +839,7 @@ public:
         switch (datatype)
         {
         case Unknown_Type:
-            REPORT_ERROR(12,"ERROR: datatype is Unknown_Type");
+            REPORT_ERROR(ERR_TYPE_INCORRECT,"ERROR: datatype is Unknown_Type");
         case UChar:
             {
                 if (typeid(T) == typeid(unsigned char))
@@ -915,7 +915,7 @@ public:
         default:
             {
                 std::cerr<<"Datatype= "<<datatype<<std::endl;
-                REPORT_ERROR(16," ERROR: cannot cast datatype to T");
+                REPORT_ERROR(ERR_TYPE_INCORRECT," ERROR: cannot cast datatype to T");
                 break;
             }
         }
@@ -1006,20 +1006,20 @@ public:
         {
             if ( NSIZE(data) > 1 )
             {
-                REPORT_ERROR(22,"Image Class::ReadData: mmap with multiple \
+                REPORT_ERROR(ERR_MMAP,"Image Class::ReadData: mmap with multiple \
                              images file not compatible. Try selecting a unique image.");
             }
 
             fclose(fimg);
 
             if ( ( mFd = open(filename.c_str(), O_RDWR, S_IREAD | S_IWRITE) ) == -1 )
-                REPORT_ERROR(20,"Image Class::ReadData: Error opening the image file.");
+                REPORT_ERROR(ERR_IO_NOTOPEN,"Image Class::ReadData: Error opening the image file.");
 
             char * map;
             mappedSize = pagesize+offset;
 
             if ( (map = (char*) mmap(0,mappedSize, PROT_READ | PROT_WRITE, MAP_SHARED, mFd, 0)) == (void*) -1 )
-                REPORT_ERROR(21,"Image Class::ReadData: mmap of image file failed.");
+                REPORT_ERROR(ERR_MMAP_NOTADDR,"Image Class::ReadData: mmap of image file failed.");
             data.data = reinterpret_cast<T*> (map+offset);
         }
         else

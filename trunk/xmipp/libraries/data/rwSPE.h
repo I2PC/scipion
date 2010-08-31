@@ -41,7 +41,7 @@ int readSPE(int img_select,bool isStack=false)
 
     FILE        *fimg;
     if ( ( fimg = fopen(filename.c_str(), "r") ) == NULL )
-        REPORT_ERROR(ERR_IMG_NOREAD,"readSPE: error opening image file.");
+        REPORT_ERROR(ERR_IO_NOTOPEN,"readSPE: error opening image file.");
 
     short int aux;
     fseek(fimg,42,SEEK_SET);

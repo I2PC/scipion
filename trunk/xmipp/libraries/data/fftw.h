@@ -35,7 +35,7 @@
 /** @defgroup FourierW FFTW Fourier transforms
   * @ingroup DataLibrary
   */
- 
+
 /** Fourier Transformer class.
  * @ingroup FourierW
  *
@@ -89,8 +89,8 @@ public:
     /** Set Number of threads
      * This function, which should be called once, performs any
      * one-time initialization required to use threads on your
-     * system. 
-     * 
+     * system.
+     *
      *  The nthreads argument indicates the number of threads you
      *  want FFTW to use (or actually, the maximum number). All
      *  plans subsequently created with any planner routine will use
@@ -108,7 +108,7 @@ public:
             threadsSetOn=true;
             nthreads = tNumber;
             if(fftw_init_threads()==0)
-                REPORT_ERROR(3008, (std::string)"FFTW cannot init threads (setThreadsNumber)");
+                REPORT_ERROR(ERR_THREADS_NOTINIT, (std::string)"FFTW cannot init threads (setThreadsNumber)");
             fftw_plan_with_nthreads(nthreads);
         }
     }
@@ -140,7 +140,7 @@ public:
 
         threadsSetOn=false;
     }
-    
+
     /** Compute the Fourier transform of a MultidimArray, 2D and 3D.
         If getCopy is false, an alias to the transformed data is returned.
         This is a faster option since a copy of all the data is avoided,
@@ -266,7 +266,7 @@ public:
             break;
         case 2:
             FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY2D(fFourier)
-                DIRECT_A2D_ELEM(fFourier,i,j) = DIRECT_A2D_ELEM(V,i,j); 
+                DIRECT_A2D_ELEM(fFourier,i,j) = DIRECT_A2D_ELEM(V,i,j);
             break;
         case 3:
             FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY3D(fFourier)
@@ -400,7 +400,7 @@ void correlation_vector(const MultidimArray< T > & m1,
  *
  *  The results are the same as the previous ones but this function
  *  is threadsafe while the previous one is not.
- *  
+ *
  *  It is assumed that the two vectors v1, and v2 are of the same size. */
 template <class T>
 void correlation_vector_no_Fourier(const MultidimArray<T> &v1, const MultidimArray<T> &v2,
@@ -494,7 +494,7 @@ void frc_dpr(MultidimArray< double > & m1,
 /** Scale matrix using Fourier transform
  * @ingroup FourierOperations
  * Ydim and Xdim define the output size, Mpmem is the matrix to scale
- */ 
+ */
 void selfScaleToSizeFourier(int Ydim, int Xdim, MultidimArray<double>& Mpmem, int nthreads=1);
 
 #define POWER_SPECTRUM 0
@@ -524,7 +524,7 @@ void multiplyBySpectrum(MultidimArray<double> &Min,
                         MultidimArray<double> &spectrum,
                         bool leave_origin_intact=false);
 
-/** Perform a whitening of the amplitude/power spectrum of a 3D map 
+/** Perform a whitening of the amplitude/power spectrum of a 3D map
  * @ingroup FourierOperations
     If leave_origin_intact==true, the origin pixel will remain untouched
 */

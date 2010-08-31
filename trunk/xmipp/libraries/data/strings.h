@@ -1,5 +1,5 @@
 /***************************************************************************
- * 
+ *
  * Authors:     J.R. Bilbao-Castro (jrbcast@ace.ual.es)
  *
  * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
@@ -165,7 +165,7 @@ long long textToLongLong(const char* str,
  * minimum width is used.
  *
  * @code
- * REPORT_ERROR(1602, "Value not recognised " + floatToString(val));
+ * REPORT_ERROR(ERR_VALUE_INCORRECT, "Value not recognised " + floatToString(val));
  * @endcode
  */
 std::string floatToString(float F, int _width = 8, int _prec = 0);
@@ -177,7 +177,7 @@ std::string floatToString(float F, int _width = 8, int _prec = 0);
  * positions.
  *
  * @code
- * REPORT_ERROR(1602, "Error reading key " + integerToString(key));
+ * REPORT_ERROR(ERR_VALUE_INCORRECT, "Error reading key " + integerToString(key));
  * @endcode
  */
 std::string integerToString(int I, int _width = 0, char fill_with = '0');

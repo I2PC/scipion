@@ -74,7 +74,7 @@ template <typename T>
 void FFT_idx2digfreq(T& v, const Matrix1D< int >& idx, Matrix1D< double >& freq)
 {
     if (idx.size() < 1 || idx.size() > 3)
-        REPORT_ERROR(1, "FFT_idx2digfreq: Index is not of the correct size");
+        REPORT_ERROR(ERR_MATRIX_SIZE, "FFT_idx2digfreq: Index is not of the correct size");
 
     freq.resize(idx.size());
 
@@ -96,7 +96,7 @@ template <typename T>
 void digfreq2FFT_idx(T& v, const Matrix1D< double >& freq, Matrix1D< int >& idx)
 {
     if (freq.size() < 1 || freq.size() > 3)
-        REPORT_ERROR(1, "digfreq2FFT_idx: freq is not of the correct size");
+        REPORT_ERROR(ERR_MATRIX_SIZE, "digfreq2FFT_idx: freq is not of the correct size");
 
     idx.resize(freq.size());
 
@@ -139,12 +139,12 @@ inline void contfreq2digfreq(const Matrix1D< double >& contfreq,
 /** @name Format conversions
  */
 //@{
-/** Conversion from whole -> half 
+/** Conversion from whole -> half
  */
 void Whole2Half(const MultidimArray< std::complex < double > > & in,
                 MultidimArray< std::complex < double > > & out);
 
-/** Conversion from half -> whole 
+/** Conversion from half -> whole
  */
 void Half2Whole(const MultidimArray< std::complex < double > > & in,
                 MultidimArray< std::complex< double > > & out,
@@ -167,13 +167,13 @@ void RealImag2Complex(const MultidimArray< double > & real,
  *
  *  The theoretical relationship between the Fourier transform of a discrete
  *  signal and the Fourier transform of the continuous signal is
- *  
+ *
  *  X(e^jw)=1/T*X_c(jw/T)
- *  
+ *
  *  Xmipp is not computing X(e^jw) but samples from it so that
- *  
+ *
  *  X(e^jw)=N*X_XMIPP[k]
- *  
+ *
  *  where N is the length of the signal being transformed and X_XMIPP[k]
  *  is the k-th sample.
  *
@@ -183,17 +183,17 @@ void RealImag2Complex(const MultidimArray< double > & real,
  * @code
  * #include <data/matrix1d.h>
  * #include <data/fft.h>
- * 
+ *
  * double discreteTransform(double w, int N1) {
  *    if (w==0) return 2*N1+1;
  *    else return sin(w*(N1+0.5))/sin(0.5*w);
  * }
- * 
+ *
  * double continuousTransform(double W, double T1) {
  *    if (W==0) return 2*T1;
  *    else return 2*sin(W*T1)/W;
  * }
- * 
+ *
  * int main() {
  *     try {
  *     	 MultidimArray<double> x(65);
@@ -201,24 +201,24 @@ void RealImag2Complex(const MultidimArray< double > & real,
  * 	 double T=0.5;
  * 	 double T1=6;
  * 	 int N1=(int)CEIL(T1/T);
- * 
+ *
  * 	 // Fill x with a pulse from -N1 to N1 (-T1 to T1 in continuous)
  * 	 FOR_ALL_ELEMENTS_IN_ARRAY1D(x)
  * 	    if (ABS(i)<=N1) x(i)=1;
- * 
+ *
  * 	 // Compute the Fourier transform
  * 	 MultidimArray< std::complex<double> > X;
  * 	 MultidimArray<double> Xmag;
  * 	 FourierTransform(x,X);
  * 	 FFT_magnitude(X,Xmag);
- * 
+ *
  * 	 // Compute the frequency axes
  * 	 MultidimArray<double> contfreq(XSIZE(X)), digfreq(XSIZE(X));
  *          FOR_ALL_ELEMENTS_IN_ARRAY1D(X)
  *              FFT_IDX2DIGFREQ(i,XSIZE(X),digfreq(i));
  * 	 digfreq*=2*PI;
  * 	 contfreq=digfreq/T;
- * 
+ *
  * 	 // Show all Fourier transforms
  * 	 FOR_ALL_ELEMENTS_IN_ARRAY1D(X) {
  * 	     if (digfreq(i)>=0)
@@ -271,11 +271,11 @@ void CenterFFT(MultidimArray< T >& v, bool forward)
         // 1D
         MultidimArray< T > aux;
         int l, shift;
-        
+
         l = XSIZE(v);
         aux.resize(l);
         shift = (int)(l / 2);
-        
+
         if (!forward)
             shift = -shift;
 
@@ -283,7 +283,7 @@ void CenterFFT(MultidimArray< T >& v, bool forward)
         for (int i = 0; i < l; i++)
         {
             int ip = i + shift;
-            
+
             if (ip < 0)
                 ip += l;
             else if (ip >= l)
@@ -301,12 +301,12 @@ void CenterFFT(MultidimArray< T >& v, bool forward)
         // 2D
         MultidimArray< T > aux;
         int l, shift;
-        
+
         // Shift in the X direction
         l = XSIZE(v);
         aux.resize(l);
         shift = (int)(l / 2);
-        
+
         if (!forward)
             shift = -shift;
 
@@ -316,43 +316,43 @@ void CenterFFT(MultidimArray< T >& v, bool forward)
             for (int j = 0; j < l; j++)
             {
                 int jp = j + shift;
-                
+
                 if (jp < 0)
                     jp += l;
                 else if (jp >= l)
                     jp -= l;
-                
+
                 aux(jp) = DIRECT_A2D_ELEM(v, i, j);
             }
-            
+
             // Copy the vector
             for (int j = 0; j < l; j++)
                 DIRECT_A2D_ELEM(v, i, j) = DIRECT_A1D_ELEM(aux, j);
         }
-        
+
         // Shift in the Y direction
         l = YSIZE(v);
         aux.resize(l);
         shift = (int)(l / 2);
-        
+
         if (!forward)
             shift = -shift;
-        
+
         for (int j = 0; j < XSIZE(v); j++)
         {
             // Shift the input in an auxiliar vector
             for (int i = 0; i < l; i++)
             {
                 int ip = i + shift;
-                
+
                 if (ip < 0)
                     ip += l;
                 else if (ip >= l)
                     ip -= l;
-                
+
                 aux(ip) = DIRECT_A2D_ELEM(v, i, j);
             }
-            
+
             // Copy the vector
             for (int i = 0; i < l; i++)
                 DIRECT_A2D_ELEM(v, i, j) = DIRECT_A1D_ELEM(aux, i);
@@ -368,7 +368,7 @@ void CenterFFT(MultidimArray< T >& v, bool forward)
         l = XSIZE(v);
         aux.resize(l);
         shift = (int)(l / 2);
-        
+
         if (!forward)
             shift = -shift;
 
@@ -387,7 +387,7 @@ void CenterFFT(MultidimArray< T >& v, bool forward)
 
                     aux(jp) = DIRECT_A3D_ELEM(v, k, i, j);
                 }
-                
+
                 // Copy the vector
                 for (int j = 0; j < l; j++)
                     DIRECT_A3D_ELEM(v, k, i, j) = DIRECT_A1D_ELEM(aux, j);
@@ -397,10 +397,10 @@ void CenterFFT(MultidimArray< T >& v, bool forward)
         l = YSIZE(v);
         aux.resize(l);
         shift = (int)(l / 2);
-        
+
         if (!forward)
             shift = -shift;
-        
+
         for (int k = 0; k < ZSIZE(v); k++)
             for (int j = 0; j < XSIZE(v); j++)
             {
@@ -408,28 +408,28 @@ void CenterFFT(MultidimArray< T >& v, bool forward)
                 for (int i = 0; i < l; i++)
                 {
                     int ip = i + shift;
-                    
+
                     if (ip < 0)
                         ip += l;
                     else if (ip >= l)
                         ip -= l;
-                    
+
                     aux(ip) = DIRECT_A3D_ELEM(v, k, i, j);
                 }
-                
+
                 // Copy the vector
                 for (int i = 0; i < l; i++)
                     DIRECT_A3D_ELEM(v, k, i, j) = DIRECT_A1D_ELEM(aux, i);
             }
-        
+
         // Shift in the Z direction
         l = ZSIZE(v);
         aux.resize(l);
         shift = (int)(l / 2);
-        
+
         if (!forward)
             shift = -shift;
-        
+
         for (int i = 0; i < YSIZE(v); i++)
             for (int j = 0; j < XSIZE(v); j++)
             {
@@ -441,17 +441,17 @@ void CenterFFT(MultidimArray< T >& v, bool forward)
                         kp += l;
                     else if (kp >= l)
                         kp -= l;
-                    
+
                     aux(kp) = DIRECT_A3D_ELEM(v, k, i, j);
                 }
-                
+
                 // Copy the vector
                 for (int k = 0; k < l; k++)
                     DIRECT_A3D_ELEM(v, k, i, j) = DIRECT_A1D_ELEM(aux, k);
             }
     }
     else
-        REPORT_ERROR(1,"CenterFFT ERROR: Dimension should be 1, 2 or 3");
+        REPORT_ERROR(ERR_MULTIDIM_DIM,"CenterFFT ERROR: Dimension should be 1, 2 or 3");
 }
 
 /** FFT shift 1D

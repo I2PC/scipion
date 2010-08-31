@@ -3,7 +3,7 @@
  * Authors: Sjors H.W. Scheres (scheres@cnb.csic.es)
  *
  *  This code is strongly based on ideas by Pawel Penczek & Zhengfan
- *  Yang as implemented in SPARX at the University of Texas - Houston 
+ *  Yang as implemented in SPARX at the University of Texas - Houston
  *  Medical School
  *
  *  see P. A. Penczek, R. Renka, and H. Schomberg,
@@ -296,7 +296,7 @@ public:
 
     /** Number of rings access
      *
-     * This function is used to know the number of rings in the polar. 
+     * This function is used to know the number of rings in the polar.
      *
      * @code
      * std::cout << "Number of rings: " << P.getRingNo() << std::endl;
@@ -309,9 +309,9 @@ public:
 
     /** Mode access
      *
-     * This function is used to know the "mode" of the polar. 
+     * This function is used to know the "mode" of the polar.
      *
-     * There are two modes: 
+     * There are two modes:
      * FULL_CIRCLES = 0 (used for asymmetric functions)
      * HALF_CIRCLES = 0 (used for symmetric functions, e.g. Fourier transforms)
      *
@@ -326,7 +326,7 @@ public:
 
     /** Oversample access
      *
-     * This function is used to know the oversampling factor of the polar. 
+     * This function is used to know the oversampling factor of the polar.
      *
      * Oversample = 1 means there is no oversampling
      * Oversample > 1 means oversampling
@@ -474,7 +474,7 @@ public:
         else if (mode == HALF_CIRCLES)
             twopi = PI;
         else
-            REPORT_ERROR(1,"Incorrect mode for computeSum");
+            REPORT_ERROR(ERR_VALUE_INCORRECT,"Incorrect mode for computeSum");
 
         for (int i = 0; i < rings.size(); i++)
         {
@@ -505,7 +505,7 @@ public:
         else if (mode == HALF_CIRCLES)
             twopi = PI;
         else
-            REPORT_ERROR(1,"Incorrect mode for computeSum2");
+            REPORT_ERROR(ERR_VALUE_INCORRECT,"Incorrect mode for computeSum2");
 
         for (int i = 0; i < rings.size(); i++)
         {
@@ -545,7 +545,7 @@ public:
 
         // Only for full circles for now!
         if (mode != FULL_CIRCLES)
-            REPORT_ERROR(1,"VoronoiArea only implemented for FULL_CIRCLES mode of Polar");
+            REPORT_ERROR(ERR_VALUE_INCORRECT,"VoronoiArea only implemented for FULL_CIRCLES mode of Polar");
         else
             twopi = 2.*PI;
 
@@ -625,7 +625,7 @@ public:
         else if (mode == HALF_CIRCLES)
             twopi = PI;
         else
-            REPORT_ERROR(1,"Incorrect mode for getPolarFromCartesian");
+            REPORT_ERROR(ERR_VALUE_INCORRECT,"Incorrect mode for getPolarFromCartesian");
 
 
         // Limits of the matrix (not oversized!)
@@ -696,12 +696,12 @@ public:
  *
  *  Note that the Polar_fftw_plans may be re-used for polars of the same size
  * They should initially be calculated as in the example below
- * 
+ *
  * @code
  * MultidimArray<double> angles, corr;
  * Polar_fftw_plans plans;
  * Polar<std::complex<double> > F1, F2;
- * 
+ *
  * M1.calculateFftwPlans(plans); // M1 is a Polar<double>
  * fourierTransformRings(M1, F1, plans, false);
  * fourierTransformRings(M1, F2, plans, true);// complex conjugated
@@ -721,12 +721,12 @@ void fourierTransformRings(Polar<double > & in,
  *
  * Note that the Polar_fftw_plans may be re-used for polars of the same size
  * They should initially be calculated as in the example below
- * 
+ *
  * @code
  * MultidimArray<double> angles, corr;
  * Polar_fftw_plans plans;
  * Polar<std::complex<double> > F1, F2;
- * 
+ *
  * M1.calculateFftwPlans(plans); // M1 is a Polar<double>
  * fourierTransformRings(M1, F1, plans);
  * inverseFourierTransformRings(F1, M1, plans);
@@ -743,20 +743,20 @@ void inverseFourierTransformRings(Polar<std::complex<double> > & in,
  *
  *  This function returns the rotational cross-correlation
  *  function of two complex Polars M1 and M2 using the
- *  cross-correlation convolution theorem. 
+ *  cross-correlation convolution theorem.
  *
  *  Note that the local_transformer should have corr (with the right size)
  *  already in its fReal, and a Fourier Transform already calculated
- * 
+ *
  * @code
  * MultidimArray<double> angles, corr;
  * FourierTransformer local_transformer;
  * Polar_fftw_plans plans;
  * Polar<std::complex<double> > F1, F2;
- * 
+ *
  * // M1 and M2 are already Polar<double>
  *
- * M1.calculateFftwPlans(plans); 
+ * M1.calculateFftwPlans(plans);
  * fourierTransformRings(M1, F1, plans, false);
  * fourierTransformRings(M1, F2, plans, true);// complex conjugated
  * corr.resize(M1.getSampleNoOuterRing());

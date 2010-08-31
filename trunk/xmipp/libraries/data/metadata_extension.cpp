@@ -89,7 +89,7 @@ void ImgSize(const MetaData &MD, int &Xdim, int &Ydim, int &Zdim, int &Ndim)
 
     }
     else
-        REPORT_ERROR(-1, "Can not read image size from empty metadata");
+        REPORT_ERROR(ERR_MD_NOOBJ, "Can not read image size from empty metadata");
 }
 
 void ImgSize(const FileName &filename, int &Xdim, int &Ydim, int &Zdim, int &Ndim)

@@ -41,19 +41,19 @@ int SymList::read_sym_file(FileName fn_sym, double accuracy)
     Matrix1D<double> axis(3), shift(3);
     int pgGroup, pgOrder;
     std::vector<std::string> fileContent;
-    
+
     //check if reserved word
-    
+
     // Open file ---------------------------------------------------------
     if ((fpoii = fopen(fn_sym.c_str(), "r")) == NULL)
     {
         //check if reserved word and return group and order
         if (isSymmetryGroup(fn_sym, pgGroup, pgOrder))
-        { 
+        {
 	    fill_symmetry_class(fn_sym, pgGroup, pgOrder,fileContent);
         }
         else
-            REPORT_ERROR(3005, (std::string)"SymList::read_sym_file:Can't open file: "
+            REPORT_ERROR(ERR_IO_NOTOPEN, (std::string)"SymList::read_sym_file:Can't open file: "
                      + " or do not recognize symmetry group" + fn_sym);
     }
     else
@@ -65,7 +65,7 @@ int SymList::read_sym_file(FileName fn_sym, double accuracy)
 	}
         fclose(fpoii);
     }
-    
+
     //reset space_group
     space_group = 0;
     // Count the number of symmetries ------------------------------------
@@ -377,7 +377,7 @@ void SymList::get_shift(int i, Matrix1D<double> &shift) const
 void SymList::set_shift(int i, const Matrix1D<double> &shift)
 {
     if (shift.size() != 3)
-        REPORT_ERROR(1002, "SymList::add_shift: Shift vector is not 3x1");
+        REPORT_ERROR(ERR_MATRIX_SIZE, "SymList::add_shift: Shift vector is not 3x1");
     __shift(i, 0) = XX(shift);
     __shift(i, 1) = YY(shift);
     __shift(i, 2) = ZZ(shift);
@@ -386,7 +386,7 @@ void SymList::set_shift(int i, const Matrix1D<double> &shift)
 void SymList::add_shift(const Matrix1D<double> &shift)
 {
     if (shift.size() != 3)
-        REPORT_ERROR(1002, "SymList::add_shift: Shift vector is not 3x1");
+        REPORT_ERROR(ERR_MATRIX_SIZE, "SymList::add_shift: Shift vector is not 3x1");
     int i = MAT_YSIZE(__shift);
     __shift.resize(i + 1, 3);
     set_shift(i, shift);
@@ -397,7 +397,7 @@ void SymList::add_matrices(const Matrix2D<double> &L, const Matrix2D<double> &R,
                            int chain_length)
 {
     if (MAT_XSIZE(L) != 4 || MAT_YSIZE(L) != 4 || MAT_XSIZE(R) != 4 || MAT_YSIZE(R) != 4)
-        REPORT_ERROR(1002, "SymList::add_matrix: Transformation matrix is not 4x4");
+        REPORT_ERROR(ERR_MATRIX_SIZE, "SymList::add_matrix: Transformation matrix is not 4x4");
     if (TrueSymsNo() == SymsNo())
     {
         __L.resize(MAT_YSIZE(__L) + 4, 4);
@@ -689,7 +689,7 @@ void symmetrize_crystal_vectors(Matrix1D<double> &aint,
                 break;
             }//switch P4 end
         break;
-    case(sym_P422):     REPORT_ERROR(1, "Group P422 not implemented");
+    case(sym_P422):     REPORT_ERROR(ERR_NOT_IMPLEMENTED, "Group P422 not implemented");
         break;
     case(sym_P42_12):
                     switch (sym_no)
@@ -2071,7 +2071,7 @@ bool SymList::isSymmetryGroup(FileName fn_sym, int &pgGroup, int &pgOrder)
 
    //remove path
    FileName fn_sym_tmp;
-   fn_sym_tmp=fn_sym.remove_directories(); 
+   fn_sym_tmp=fn_sym.remove_directories();
    int mySize=fn_sym_tmp.size();
    bool return_true;
    return_true=false;
@@ -2082,7 +2082,7 @@ bool SymList::isSymmetryGroup(FileName fn_sym, int &pgGroup, int &pgOrder)
       pgGroup=-1;
       pgOrder=-1;
       return false;
-   }   
+   }
    //get the group character by character
    G1=toupper((fn_sym_tmp.c_str())[0]);
    G2=toupper((fn_sym_tmp.c_str())[1]);
@@ -2092,7 +2092,7 @@ bool SymList::isSymmetryGroup(FileName fn_sym, int &pgGroup, int &pgOrder)
            G4=toupper((fn_sym.c_str())[3]);
    }
    else
-       G4='\0';    
+       G4='\0';
    //CN
    if (mySize==2 && G1=='C' && isdigit(G2))
    {
@@ -2335,13 +2335,13 @@ bool SymList::isSymmetryGroup(FileName fn_sym, int &pgGroup, int &pgOrder)
 #ifdef DEBUG7
 std::cerr << "pgGroup" << pgGroup << " pgOrder " << pgOrder << std::endl;
 #endif
-#undef DEBUG7 
-   
+#undef DEBUG7
+
    return return_true;
 }
 void SymList::fill_symmetry_class(const FileName &symmetry, int pgGroup, int pgOrder,
    std::vector<std::string> &fileContent)
-{   
+{
     std::ostringstream line1;
     std::ostringstream line2;
     std::ostringstream line3;
@@ -2500,15 +2500,15 @@ void SymList::fill_symmetry_class(const FileName &symmetry, int pgGroup, int pgO
     if (line4.str().size()>0)
 	fileContent.push_back(line4.str());
     //#define DEBUG5
-    #ifdef DEBUG5 
+    #ifdef DEBUG5
         for (int n=0; n<fileContent.size(); n++)
             std::cerr << fileContent[n] << std::endl;
-	std::cerr << "fileContent.size()" << fileContent.size() << std::endl;    
+	std::cerr << "fileContent.size()" << fileContent.size() << std::endl;
     #endif
-    #undef DEBUG5   
+    #undef DEBUG5
 }
 double SymList::non_redundant_evald_sphere(int pgGroup, int pgOrder)
-{   
+{
     if (pgGroup == pg_CN)
     {
         return 4.*PI/pgOrder;
@@ -2608,9 +2608,9 @@ double SymList::non_redundant_evald_sphere(int pgGroup, int pgOrder)
     else
     {
         std::cerr << "ERROR: Symmetry group, order=" << pgGroup
-                                                     << " " 
-                                                     <<  pgOrder  
-                                                     << "is not known" 
+                                                     << " "
+                                                     <<  pgOrder
+                                                     << "is not known"
                                                      << std::endl;
         exit(0);
     }

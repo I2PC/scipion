@@ -148,7 +148,7 @@ DataType datatypeTIFF(TIFFDirHead dHead)
         break;
     default:
         datatype = Unknown_Type;
-        //        REPORT_ERROR(1000,"rwTIFF: Unsupported TIFF sample format.");
+        //        REPORT_ERROR(ERR_TYPE_INCORRECT,"rwTIFF: Unsupported TIFF sample format.");
         break;
     }
     return datatype;
@@ -173,7 +173,7 @@ int readTIFF(int img_select, bool isStack=false)
     TIFFSetWarningHandler(NULL); // Switch off warning messages
 
     if ((tif = TIFFOpen(filename.c_str(), "r")) == NULL)
-        REPORT_ERROR(1501,"rwTIFF: There is a problem opening the TIFF file.");
+        REPORT_ERROR(ERR_IO_NOTOPEN,"rwTIFF: There is a problem opening the TIFF file.");
 
 
     char*  tif_buf = NULL;
@@ -193,15 +193,15 @@ int readTIFF(int img_select, bool isStack=false)
     do
     {
         if (TIFFGetField(tif, TIFFTAG_BITSPERSAMPLE,  &dhRef.bitsPerSample) == 0)
-            REPORT_ERROR(10,"rwTIFF: Error reading TIFFTAG_BITSPERSAMPLE");
+            REPORT_ERROR(ERR_IO_NOREAD,"rwTIFF: Error reading TIFFTAG_BITSPERSAMPLE");
         if (TIFFGetField(tif, TIFFTAG_SAMPLESPERPIXEL,&dhRef.samplesPerPixel) == 0)
-            REPORT_ERROR(10,"rwTIFF: Error reading TIFFTAG_SAMPLESPERPIXEL");
+            REPORT_ERROR(ERR_IO_NOREAD,"rwTIFF: Error reading TIFFTAG_SAMPLESPERPIXEL");
         if (TIFFGetField(tif, TIFFTAG_IMAGEWIDTH,     &dhRef.imageWidth) == 0)
-            REPORT_ERROR(10,"rwTIFF: Error reading TIFFTAG_IMAGEWIDTH");
+            REPORT_ERROR(ERR_IO_NOREAD,"rwTIFF: Error reading TIFFTAG_IMAGEWIDTH");
         if (TIFFGetField(tif, TIFFTAG_IMAGELENGTH,    &dhRef.imageLength) == 0)
-            REPORT_ERROR(10,"rwTIFF: Error reading TIFFTAG_IMAGELENGTH");
+            REPORT_ERROR(ERR_IO_NOREAD,"rwTIFF: Error reading TIFFTAG_IMAGELENGTH");
         if (TIFFGetField(tif, TIFFTAG_SUBFILETYPE,    &dhRef.subFileType) == 0)
-            REPORT_ERROR(10,"rwTIFF: Error reading TIFFTAG_SUBFILETYPE");
+            REPORT_ERROR(ERR_IO_NOREAD,"rwTIFF: Error reading TIFFTAG_SUBFILETYPE");
         TIFFGetField(tif, TIFFTAG_SAMPLEFORMAT,   &dhRef.imageSampleFormat);
         TIFFGetField(tif, TIFFTAG_RESOLUTIONUNIT, &dhRef.resUnit);
         TIFFGetField(tif, TIFFTAG_XRESOLUTION,    &dhRef.xTiffRes);
@@ -222,7 +222,7 @@ int readTIFF(int img_select, bool isStack=false)
         {
             if (dirHead[0].imageLength != dirHead[i].imageLength || \
                 dirHead[0].imageWidth != dirHead[i].imageWidth)
-                REPORT_ERROR(6001, "readTIFF: images in TIFF file with different dimensions are not currently supported. Try to read them individually.");
+                REPORT_ERROR(ERR_IMG_NOREAD, "readTIFF: images in TIFF file with different dimensions are not currently supported. Try to read them individually.");
         }
     }
 
@@ -396,8 +396,6 @@ int readTIFF(int img_select, bool isStack=false)
 */
 int writeTIFF(int img_select, bool isStack=false, int mode=WRITE_OVERWRITE, int imParam=NULL)
 {
-    //    REPORT_ERROR(6001, "ERROR: writeTIFF is not implemented.");
-    //    return(-1);
 
 #undef DEBUG
     //#define DEBUG
@@ -414,10 +412,10 @@ int writeTIFF(int img_select, bool isStack=false, int mode=WRITE_OVERWRITE, int 
 
     // Volumes are not supported
     if (Zdim > 1)
-        REPORT_ERROR(1000, "rwTIFF: ERROR, volumes are not supported.");
+        REPORT_ERROR(ERR_MULTIDIM_DIM, "writeTIFF does not support volumes.");
     // TIFF cannot open a file to read/write at the same time, so the must be overwritten
     if (mode |= WRITE_OVERWRITE)
-        REPORT_ERROR(1000, "rwTIFF: ERROR, TIFF cannot modify an existing file, only overwrite it.");
+        REPORT_ERROR(ERR_VALUE_INCORRECT, "writeTIFF: LIBTIFF cannot modify an existing file, only overwrite it.");
 
     TIFFDirHead dhMain; // Main header
 
@@ -462,7 +460,7 @@ int writeTIFF(int img_select, bool isStack=false, int mode=WRITE_OVERWRITE, int 
             dhMain.imageSampleFormat = SAMPLEFORMAT_UINT;
         }
         else
-            REPORT_ERROR(1000,(std::string)"ERROR: rwTIFF does not write from " + typeid(T).name() + "type.");
+            REPORT_ERROR(ERR_TYPE_INCORRECT,(std::string)"writeTIFF does not write from " + typeid(T).name() + "type.");
     }
     else
     {
@@ -481,7 +479,7 @@ int writeTIFF(int img_select, bool isStack=false, int mode=WRITE_OVERWRITE, int 
             dhMain.imageSampleFormat = SAMPLEFORMAT_IEEEFP;
             break;
         default:
-            REPORT_ERROR(1001,"rwTIFF: Error, unknown TIFF output format.");
+            REPORT_ERROR(ERR_TYPE_INCORRECT,"rwTIFF: Error, unknown TIFF output format.");
         }
     }
 
@@ -517,7 +515,7 @@ int writeTIFF(int img_select, bool isStack=false, int mode=WRITE_OVERWRITE, int 
     TIFF* tif;
 
     if ((tif = TIFFOpen(filename.c_str(), "w")) == NULL)
-        REPORT_ERROR(1501,"rwTIFF: There is a problem opening the TIFF file.");
+        REPORT_ERROR(ERR_IO_NOTOPEN,"writeTIFF: There is a problem opening the TIFF file.");
 
     char*  tif_buf;
 

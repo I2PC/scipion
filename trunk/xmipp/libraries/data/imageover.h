@@ -169,10 +169,10 @@ public:
     void over2img(double v, double u, int& iv, int& iu) const
     {
         if (v < overvmin || v > overvmax)
-            REPORT_ERROR(1505, "ImgeOver::over2img: v out of range");
+            REPORT_ERROR(ERR_VALUE_INCORRECT, "ImgeOver::over2img: v out of range");
 
         if (u < overumin || u > overumax)
-            REPORT_ERROR(1505, "ImgeOver::over2img: u out of range");
+            REPORT_ERROR(ERR_VALUE_INCORRECT, "ImgeOver::over2img: u out of range");
 
         iu = (int) ROUND((((u) - overumin) * uistep));
         iv = (int) ROUND((((v) - overvmin) * vistep));
@@ -206,10 +206,10 @@ public:
     void img2over(int iv, int iu, double &v, double &u) const
     {
         if (iu < 0 || iu > XSIZE(data))
-            REPORT_ERROR(1505, "ImageOver::img2over: iu out of range");
+            REPORT_ERROR(ERR_VALUE_INCORRECT, "ImageOver::img2over: iu out of range");
 
         if (iv < 0 || iv > YSIZE(data))
-            REPORT_ERROR(1505, "ImageOver::img2over: iv out of range");
+            REPORT_ERROR(ERR_VALUE_INCORRECT, "ImageOver::img2over: iv out of range");
 
         u = (double) overumin + iu / (double) uistep;
         v = (double) overvmin + iv / (double) vistep;
@@ -242,10 +242,10 @@ public:
     double operator()(double v, double u) const
     {
         if (v < overvmin || v > overvmax)
-            REPORT_ERROR(1505, "ImgeOver::over2img: v out of range");
+            REPORT_ERROR(ERR_VALUE_INCORRECT, "ImgeOver::over2img: v out of range");
 
         if (u < overumin || u > overumax)
-            REPORT_ERROR(1505, "ImgeOver::over2img: u out of range");
+            REPORT_ERROR(ERR_VALUE_INCORRECT, "ImgeOver::over2img: u out of range");
 
         int iu, iv;
         OVER2IMG(*this, v, u, iv, iu);

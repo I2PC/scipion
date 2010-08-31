@@ -242,13 +242,13 @@ void applyGeometry(int SplineDegree,
 {
 
     if (&V1 == &V2)
-        REPORT_ERROR(1101,"ApplyGeometry: Input array cannot be the same as output array");
+        REPORT_ERROR(ERR_VALUE_INCORRECT,"ApplyGeometry: Input array cannot be the same as output array");
 
     if ( V1.getDim()==2 && ((MAT_XSIZE(A) != 3) || (MAT_YSIZE(A) != 3)) )
-        REPORT_ERROR(1102,"ApplyGeometry: 2D transformation matrix is not 3x3");
+        REPORT_ERROR(ERR_MATRIX_SIZE,"ApplyGeometry: 2D transformation matrix is not 3x3");
 
     if ( V1.getDim()==3 && ((MAT_XSIZE(A) != 4) || (MAT_YSIZE(A) != 4)) )
-        REPORT_ERROR(1103,"ApplyGeometry: 3D transformation matrix is not 4x4");
+        REPORT_ERROR(ERR_MATRIX_SIZE,"ApplyGeometry: 3D transformation matrix is not 4x4");
 
     if (A.isIdentity())
     {
@@ -751,7 +751,7 @@ void produceSplineCoefficients(int SplineDegree,
                       CardinalSpline, BasicSpline, SplineDegree,
                       MirrorOffBounds, DBL_EPSILON, &Status);
     if (Status)
-        REPORT_ERROR(1200, "Error in produceSplineCoefficients...");
+        REPORT_ERROR(ERR_UNCLASSIFIED, "Error in produceSplineCoefficients...");
 }
 
 // Special case for complex arrays
@@ -795,7 +795,7 @@ void rotate(int SplineDegree,
         rotation3DMatrix(ang, axis, tmp);
     }
     else
-        REPORT_ERROR(1,"rotate ERROR: rotate only valid for 2D or 3D arrays");
+        REPORT_ERROR(ERR_MULTIDIM_DIM,"rotate ERROR: rotate only valid for 2D or 3D arrays");
 
     applyGeometry(SplineDegree, V2, V1, tmp, IS_NOT_INV, wrap, outside);
 }
@@ -839,7 +839,7 @@ void translate(int SplineDegree,
     else if (V1.getDim()==3)
         translation3DMatrix(v, tmp);
     else
-        REPORT_ERROR(1,"translate ERROR: translate only valid for 2D or 3D arrays");
+        REPORT_ERROR(ERR_MULTIDIM_DIM,"translate ERROR: translate only valid for 2D or 3D arrays");
 
     applyGeometry(SplineDegree, V2, V1, tmp, IS_NOT_INV, wrap, outside);
 }
@@ -928,7 +928,7 @@ void scaleToSize(int SplineDegree,
         V2.resize(1, Zdim, Ydim, Xdim);
     }
     else
-        REPORT_ERROR(1,"scaleToSize ERROR: scaleToSize only valid for 2D or 3D arrays");
+        REPORT_ERROR(ERR_MULTIDIM_DIM,"scaleToSize ERROR: scaleToSize only valid for 2D or 3D arrays");
 
     applyGeometry(SplineDegree, V2, V1, tmp, IS_NOT_INV, WRAP, (T)0);
 }
@@ -1050,7 +1050,7 @@ void reduceBSpline(int SplineDegree,
     const char *splineType="Centered Spline";
     if (GetPyramidFilter(splineType, SplineDegree,
                          g, &ng, h, &nh, &IsCentered))
-        REPORT_ERROR(1, "Unable to load the filter coefficients");
+        REPORT_ERROR(ERR_UNCLASSIFIED, "Unable to load the filter coefficients");
 
     MultidimArray< double>  aux;
     typeCast(V1, aux);
@@ -1089,7 +1089,7 @@ void reduceBSpline(int SplineDegree,
                   MULTIDIM_ARRAY(V2), g, ng, IsCentered);
     }
     else
-        REPORT_ERROR(1,"reduceBSpline ERROR: only valid for 2D or 3D arrays");
+        REPORT_ERROR(ERR_MULTIDIM_DIM,"reduceBSpline ERROR: only valid for 2D or 3D arrays");
 
 
 }
@@ -1114,7 +1114,7 @@ void expandBSpline(int SplineDegree,
     // Get the filter
     if (GetPyramidFilter("Centered Spline", SplineDegree, g, &ng, h, &nh,
                          &IsCentered))
-        REPORT_ERROR(1, "Unable to load the filter coefficients");
+        REPORT_ERROR(ERR_UNCLASSIFIED, "Unable to load the filter coefficients");
 
     MultidimArray< double > aux;
     typeCast(V1, aux);
@@ -1132,7 +1132,7 @@ void expandBSpline(int SplineDegree,
                   MULTIDIM_ARRAY(V2), h, nh, IsCentered);
     }
     else
-        REPORT_ERROR(1,"expandBSpline ERROR: only valid for 2D or 3D arrays");
+        REPORT_ERROR(ERR_MULTIDIM_DIM,"expandBSpline ERROR: only valid for 2D or 3D arrays");
 }
 
 /** Does a radial average of a 2D/3D image, around the voxel where is the origin.

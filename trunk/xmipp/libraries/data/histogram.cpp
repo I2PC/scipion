@@ -110,7 +110,7 @@ void Histogram1D::write(const FileName &fn)
     std::ofstream  fh;
     fh.open(fn.c_str(), std::ios::out);
     if (!fh)
-        REPORT_ERROR(1, (std::string)"Histogram1D::write: File " + fn +
+        REPORT_ERROR(ERR_IO_NOTOPEN, (std::string)"Histogram1D::write: File " + fn +
                      " cannot be openned for output");
     fh << *this;
     fh.close();
@@ -129,7 +129,7 @@ double Histogram1D::percentil(double percent_mass)
 
     // Check it is a correct mass
     if (percent_mass > 100)
-        REPORT_ERROR(2001, "Asked for a percentil greater than 100");
+        REPORT_ERROR(ERR_VALUE_INCORRECT, "Asked for a percentil greater than 100");
 
     // Trivial cases
     if (percent_mass == 0)
@@ -276,11 +276,11 @@ double detectability_error(const Histogram1D &h1, const Histogram1D &h2)
 double KLDistance(const Histogram1D& h1, const Histogram1D& h2)
 {
     if (XSIZE(h1)!=XSIZE(h2))
-        REPORT_ERROR(1,"KLDistance: Histograms of different sizes");
-    
+        REPORT_ERROR(ERR_MULTIDIM_SIZE,"KLDistance: Histograms of different sizes");
+
     double retval=0;
     FOR_ALL_ELEMENTS_IN_ARRAY1D(h1)
-        if (h2(i)!=0.0 && h1(i)!=0.0) retval += h1(i)*log10(h1(i)/h2(i)); 
+        if (h2(i)!=0.0 && h1(i)!=0.0) retval += h1(i)*log10(h1(i)/h2(i));
     return retval;
 }
 
@@ -312,7 +312,7 @@ int IrregularHistogram1D::val2Index(double value)
     int binsNo = XSIZE(__binsRightLimits);
     for (int i = 0; i < binsNo; i++)
         if(value <= __binsRightLimits(i)) return i;
-    
+
     //In case the value is greater, we return the last bin
     return binsNo - 1;
 }
@@ -436,7 +436,7 @@ void Histogram2D::write(const FileName &fn)
     std::ofstream  fh;
     fh.open(fn.c_str(), std::ios::out);
     if (!fh)
-        REPORT_ERROR(1, (std::string)"histogram2D::write: File " + fn + " cannot be openned for output");
+        REPORT_ERROR(ERR_IO_NOTOPEN, (std::string)"histogram2D::write: File " + fn + " cannot be openned for output");
     fh << *this;
     fh.close();
 }

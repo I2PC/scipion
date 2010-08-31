@@ -1,5 +1,5 @@
 /***************************************************************************
- * 
+ *
  * Authors:     J.R. Bilbao-Castro (jrbcast@ace.ual.es)
  *
  * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
@@ -373,7 +373,7 @@ void checkAngle(const std::string& str)
     if (str == "psi")
         return;
 
-    REPORT_ERROR(1,
+    REPORT_ERROR(ERR_VALUE_INCORRECT,
                  static_cast< std::string >(
                      "checkAngle: Not recognized angle type: " + str));
 }

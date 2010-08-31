@@ -50,7 +50,7 @@ void RaisedCosineMask(MultidimArray<double> &mask,
 }
 
 void RaisedCrownMask(MultidimArray<double> &mask,
-                     double r1, double r2, double pix_width, int mode, 
+                     double r1, double r2, double pix_width, int mode,
                      double x0, double y0, double z0)
 {
     RaisedCosineMask(mask, r1 - pix_width, r1 + pix_width, OUTSIDE_MASK, x0, y0, z0);
@@ -84,7 +84,7 @@ void KaiserMask(MultidimArray<double> &mask, double delta, double Deltaw)
     // "Draw" Kaiser window
     if (YSIZE(mask)==1 && ZSIZE(mask)==1)
     {
-        // 1D 
+        // 1D
         mask.resize(2*M + 1);
     }
     else if (ZSIZE(mask)==1)
@@ -132,7 +132,7 @@ void SincKaiserMask(MultidimArray<double> &mask,
     mask *= kaiser;
 }
 
-void BlackmanMask(MultidimArray<double> &mask, int mode, 
+void BlackmanMask(MultidimArray<double> &mask, int mode,
                   double x0, double y0, double z0)
 {
     double Xdim2 = XMIPP_MAX(1, (XSIZE(mask) - 1) * (XSIZE(mask) - 1));
@@ -148,7 +148,7 @@ void BlackmanMask(MultidimArray<double> &mask, int mode,
 }
 
 void SincBlackmanMask(MultidimArray<double> &mask,
-                      double omega, double power_percentage, int mode, 
+                      double omega, double power_percentage, int mode,
                       double x0, double y0, double z0)
 {
     MultidimArray<double> blackman;
@@ -159,13 +159,13 @@ void SincBlackmanMask(MultidimArray<double> &mask,
     {
         // 2D
         mask.resize(N, N);
-        blackman.resize(N, N); 
+        blackman.resize(N, N);
     }
     else
     {
         // 3D
-        mask.resize(N, N, N); 
-        blackman.resize(N, N, N); 
+        mask.resize(N, N, N);
+        blackman.resize(N, N, N);
     }
     mask.setXmippOrigin();
     SincMask(mask,omega,INNER_MASK,x0,y0,z0);
@@ -190,7 +190,7 @@ void BinaryCircularMask(MultidimArray<int> &mask,
 }
 
 void BlobCircularMask(MultidimArray<double> &mask,
-                      double r1, blobtype blob, int mode, 
+                      double r1, blobtype blob, int mode,
                       double x0, double y0, double z0)
 {
     FOR_ALL_ELEMENTS_IN_ARRAY3D(mask)
@@ -232,7 +232,7 @@ void BinaryCrownMask(MultidimArray<int> &mask,
 }
 
 void BlobCrownMask(MultidimArray<double> &mask,
-                   double r1, double r2, blobtype blob, int mode, 
+                   double r1, double r2, blobtype blob, int mode,
                    double x0, double y0, double z0)
 {
     MultidimArray<double> aux;
@@ -241,7 +241,7 @@ void BlobCrownMask(MultidimArray<double> &mask,
     {
         BlobCircularMask(mask, r1, blob,
                          OUTSIDE_MASK, x0, y0, z0);
-        BlobCircularMask(aux, r2, blob, 
+        BlobCircularMask(aux, r2, blob,
                          INNER_MASK, x0, y0, z0);
         FOR_ALL_ELEMENTS_IN_ARRAY3D(mask)
         {
@@ -252,7 +252,7 @@ void BlobCrownMask(MultidimArray<double> &mask,
     {
         BlobCircularMask(mask, r1, blob,
                          INNER_MASK, x0, y0, z0);
-        BlobCircularMask(aux, r2, blob, 
+        BlobCircularMask(aux, r2, blob,
                          OUTSIDE_MASK, x0, y0, z0);
         FOR_ALL_ELEMENTS_IN_ARRAY3D(mask)
         {
@@ -283,7 +283,7 @@ void GaussianMask(MultidimArray<double> &mask,
                   double sigma, int mode, double x0, double y0, double z0)
 {
     double sigma2 = sigma * sigma;
-    
+
     double K = 1. / pow(sqrt(2.*PI)*sigma,(double)mask.getDim());
 
     FOR_ALL_ELEMENTS_IN_ARRAY3D(mask)
@@ -607,7 +607,7 @@ void Mask_Params::read(int argc, char **argv)
     if (i != -1)
     {
         if (i + 3 >= argc)
-            REPORT_ERROR(1, "Mask: Not enough parameters after -center");
+            REPORT_ERROR(ERR_UNCLASSIFIED, "Mask: Not enough parameters after -center");
         x0 = textToFloat(argv[i+1]);
         y0 = textToFloat(argv[i+2]);
         z0 = textToFloat(argv[i+3]);
@@ -1070,8 +1070,8 @@ void Mask_Params::generate_mask(bool apply_geo)
 	blobtype blob;
     if (type==BLOB_CIRCULAR_MASK || type==BLOB_CROWN_MASK)
     {
-        blob.radius = blob_radius; 
-        blob.order = blob_order; 
+        blob.radius = blob_radius;
+        blob.order = blob_order;
         blob.alpha = blob_alpha;
     }
 

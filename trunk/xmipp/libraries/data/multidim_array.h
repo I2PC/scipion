@@ -765,7 +765,7 @@ public:
             return;
         }
         if(data!=NULL)
-            REPORT_ERROR(1001, "do not allocate space for an image if you have not deallocate it first");
+            REPORT_ERROR(ERR_MEM_NOTDEALLOC, "do not allocate space for an image if you have not deallocate it first");
 
         ndim=_ndim;
         zdim=_zdim;
@@ -787,9 +787,9 @@ public:
     void coreAllocate()
     {
         if(data!=NULL)
-            REPORT_ERROR(1001, "do not allocate space for an image if you have not deallocate it first");
+            REPORT_ERROR(ERR_MEM_NOTDEALLOC, "do not allocate space for an image if you have not deallocate it first");
         if (nzyxdim < 0)
-            REPORT_ERROR(1,"coreAllocate:Cannot allocate a negative number of bytes");
+            REPORT_ERROR(ERR_MEM_BADREQUEST,"coreAllocate:Cannot allocate a negative number of bytes");
 
         if (mmapOn)
         {
@@ -798,22 +798,22 @@ public:
 
 
             if ( ( mFd = open(mapFile.c_str(),  O_RDWR | O_CREAT | O_TRUNC,S_IRUSR|S_IWUSR|S_IRGRP|S_IWGRP) ) == -1 )
-                REPORT_ERROR(20,"MultidimArray::coreAllocate: Error creating map file.");
+                REPORT_ERROR(ERR_IO_NOTOPEN,"MultidimArray::coreAllocate: Error creating map file.");
 
             if ((lseek(mFd, nzyxdim*sizeof(T), SEEK_SET) == -1)|| (::write(mFd,"",1) == -1))// Use of :: to call write from global space due to confict with multidimarray::write
             {
                 close(mFd);
-                REPORT_ERROR(20,"MultidimArray::coreAllocate: Error 'stretching' the map file.");
+                REPORT_ERROR(ERR_IO_NOWRITE,"MultidimArray::coreAllocate: Error 'stretching' the map file.");
             }
 
             if ( (data = (T*) mmap(0,nzyxdim*sizeof(T), PROT_READ | PROT_WRITE, MAP_SHARED, mFd, 0)) == (void*) -1 )
-                REPORT_ERROR(21,"MultidimArray::coreAllocate: mmap failed.");
+                REPORT_ERROR(ERR_MMAP_NOTADDR,"MultidimArray::coreAllocate: mmap failed.");
         }
         else
         {
             data = new T [nzyxdim];
             if (data == NULL)
-                REPORT_ERROR(1001, "Allocate: No space left");
+                REPORT_ERROR(ERR_MEM_NOTENOUGH, "Allocate: No space left");
         }
     }
 
@@ -828,7 +828,7 @@ public:
         if(data!=NULL)
             return;
         if (nzyxdim < 0)
-            REPORT_ERROR(1,"coreAllocateReuse:Cannot allocate a negative number of bytes");
+            REPORT_ERROR(ERR_MEM_BADREQUEST,"coreAllocateReuse:Cannot allocate a negative number of bytes");
 
         if (mmapOn)
         {
@@ -836,20 +836,20 @@ public:
             mapFile = mapFile.add_extension("tmp");
 
             if ( ( mFd = open(mapFile.c_str(),  O_RDWR | O_CREAT | O_TRUNC,S_IRUSR|S_IWUSR|S_IRGRP|S_IWGRP) ) == -1 )
-                REPORT_ERROR(20,"MultidimArray::coreAllocateReuse: Error creating map file.");
+                REPORT_ERROR(ERR_IO_NOTOPEN,"MultidimArray::coreAllocateReuse: Error creating map file.");
             if ((lseek(mFd, nzyxdim*sizeof(T), SEEK_SET) == -1) || (::write(mFd,"",1) == -1))// Use of :: to call write from global space due to confict with multidimarray::write
             {
                 close(mFd);
-                REPORT_ERROR(20,"MultidimArray::coreAllocateReuse: Error 'stretching' the map file.");
+                REPORT_ERROR(ERR_IO_NOWRITE,"MultidimArray::coreAllocateReuse: Error 'stretching' the map file.");
             }
 
             if ( (data = (T*) mmap(0,nzyxdim*sizeof(T), PROT_READ | PROT_WRITE, MAP_SHARED, mFd, 0)) == (void*) -1 )
-                REPORT_ERROR(21,"MultidimArray::coreAllocateReuse: mmap failed.");
+                REPORT_ERROR(ERR_MMAP_NOTADDR,"MultidimArray::coreAllocateReuse: mmap failed.");
         }
         else
             data = new T [nzyxdim];
         if (data == NULL)
-            REPORT_ERROR(1001, "Allocate: No space left");
+            REPORT_ERROR(ERR_MEM_NOTENOUGH, "Allocate: No space left");
     }
 
     /** Sets mmap.
@@ -1030,22 +1030,22 @@ public:
                 newMapFile = newMapFile.add_extension("tmp");
 
                 if ( ( new_mFd = open(newMapFile.c_str(),  O_RDWR | O_CREAT | O_TRUNC,S_IRUSR|S_IWUSR|S_IRGRP|S_IWGRP) ) == -1 )
-                    REPORT_ERROR(20,"MultidimArray::resize: Error creating map file.");
+                    REPORT_ERROR(ERR_IO_NOTOPEN,"MultidimArray::resize: Error creating map file.");
                 if ((lseek(new_mFd, NZYXdim*sizeof(T)-1, SEEK_SET) == -1) || (::write(new_mFd,"",1) == -1))
                 {
                     close(new_mFd);
-                    REPORT_ERROR(20,"MultidimArray::resize: Error 'stretching' the map file.");
+                    REPORT_ERROR(ERR_IO_NOWRITE,"MultidimArray::resize: Error 'stretching' the map file.");
                 }
 
                 if ( (new_data = (T*) mmap(0,NZYXdim*sizeof(T), PROT_READ | PROT_WRITE, MAP_SHARED, new_mFd, 0)) == (void*) -1 )
-                    REPORT_ERROR(21,"MultidimArray::resize: mmap failed.");
+                    REPORT_ERROR(ERR_MMAP_NOTADDR,"MultidimArray::resize: mmap failed.");
             }
             else
                 new_data = new T [NZYXdim];
         }
         catch (std::bad_alloc &)
         {
-            REPORT_ERROR(1001, "Allocate: No space left");
+            REPORT_ERROR(ERR_MEM_NOTENOUGH, "Allocate: No space left");
         }
 
         // Copy needed elements, fill with 0 if necessary
@@ -1229,7 +1229,7 @@ public:
                 T init_value = 0, unsigned long n = 0)
     {
         if (this->ndim >1)
-            REPORT_ERROR(1,"stack windowing not implemented");
+            REPORT_ERROR(ERR_MULTIDIM_DIM,"stack windowing not implemented");
         if (this->zdim >1)
         {//call 3Dwindow
             window( z0,  y0,  x0,
@@ -1459,7 +1459,7 @@ public:
     {
         if (r.size() < 1)
         {
-            REPORT_ERROR(1, "Outside: index vector has not got enough components");
+            REPORT_ERROR(ERR_MATRIX_SIZE, "Outside: index vector has not got enough components");
         }
         else if (r.size()==1)
         {
@@ -1477,7 +1477,7 @@ public:
                     ZZ(r) < STARTINGZ(*this) || ZZ(r) > FINISHINGZ(*this));
         }
         else
-            REPORT_ERROR(2,"Outside: index vector has too many components");
+            REPORT_ERROR(ERR_MATRIX_SIZE,"Outside: index vector has too many components");
     }
 
     /** Returns Y dimension.
@@ -1591,7 +1591,7 @@ public:
     bool isCorner(const Matrix1D< double >& v) const
     {
         if (v.size() < 2)
-            REPORT_ERROR(1, "isCorner: index vector has got not enough components");
+            REPORT_ERROR(ERR_MATRIX_SIZE, "isCorner: index vector has got not enough components");
 
         else if (XSIZE(*this)==2)
             return ((XX(v) == STARTINGX(*this)  && YY(v) == STARTINGY(*this))  ||
@@ -1608,7 +1608,7 @@ public:
                     (XX(v) == FINISHINGX(*this) && YY(v) == STARTINGY(*this)  && ZZ(v) == FINISHINGZ(*this))  ||
                     (XX(v) == FINISHINGX(*this) && YY(v) == FINISHINGY(*this) && ZZ(v) == FINISHINGZ(*this)));
         else
-            REPORT_ERROR(1, "isCorner: index vector has too many components");
+            REPORT_ERROR(ERR_MATRIX_SIZE, "isCorner: index vector has too many components");
     }
     //@}
 
@@ -1763,7 +1763,7 @@ public:
         }
 
         if (n > NSIZE(*this))
-            REPORT_ERROR(1," Multidimarray getImage: n larger than NSIZE");
+            REPORT_ERROR(ERR_INDEX_OUTOFBOUNDS," Multidimarray getImage: n larger than NSIZE");
 
         M.resize(1, ZSIZE(*this), YSIZE(*this), XSIZE(*this));
         FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY3D(M)
@@ -1798,7 +1798,7 @@ public:
         {
         case 'Z':
             if (k < STARTINGZ(*this) || k > FINISHINGZ(*this))
-                REPORT_ERROR(1203,
+                REPORT_ERROR(ERR_INDEX_OUTOFBOUNDS,
                              "Slice: Multidim subscript (k) out of range");
 
             k = k - STARTINGZ(*this);
@@ -1810,7 +1810,7 @@ public:
             break;
         case 'Y':
             if (k < STARTINGY(*this) || k > FINISHINGY(*this))
-                REPORT_ERROR(1203,
+                REPORT_ERROR(ERR_INDEX_OUTOFBOUNDS,
                              "Slice: Multidim subscript (i) out of range");
 
             k = k - STARTINGY(*this);
@@ -1822,7 +1822,7 @@ public:
             break;
         case 'X':
             if (k < STARTINGX(*this) || k > FINISHINGX(*this))
-                REPORT_ERROR(1203,
+                REPORT_ERROR(ERR_INDEX_OUTOFBOUNDS,
                              "Slice: Multidim subscript (j) out of range");
 
             k = k - STARTINGX(*this);
@@ -1833,7 +1833,7 @@ public:
             STARTINGY(M) = STARTINGZ(*this);
             break;
         default:
-            REPORT_ERROR(1205,
+            REPORT_ERROR(ERR_VALUE_INCORRECT,
                          (std::string) "Slice: not supported axis " + axis);
         }
     }
@@ -1854,11 +1854,11 @@ public:
             return;
 
         if (k < STARTINGZ(*this) || k > FINISHINGZ(*this))
-            REPORT_ERROR(1203,
+            REPORT_ERROR(ERR_INDEX_OUTOFBOUNDS,
                          "setSlice: MultidimArray subscript (k) out of range");
 
         if (v.rowNumber() != YSIZE(*this) || v.colNumber() != XSIZE(*this))
-            REPORT_ERROR(1202,
+            REPORT_ERROR(ERR_MULTIDIM_DIM,
                          "setSlice: MultidimArray dimensions different from the matrix ones");
 
         k = k - STARTINGZ(*this);
@@ -1886,7 +1886,7 @@ public:
         }
 
         if (j < 0 || j >= xdim)
-            REPORT_ERROR(1103,"getCol: Matrix subscript (j) greater than matrix dimension");
+            REPORT_ERROR(ERR_INDEX_OUTOFBOUNDS,"getCol: Matrix subscript (j) greater than matrix dimension");
 
         v.resize(ydim);
         for (int i = 0; i < ydim; i++)
@@ -1905,13 +1905,13 @@ public:
     void setCol(int j, const MultidimArray<T>& v)
     {
         if (xdim == 0 || ydim == 0)
-            REPORT_ERROR(1, "setCol: Target matrix is empty");
+            REPORT_ERROR(ERR_MULTIDIM_EMPTY, "setCol: Target matrix is empty");
 
         if (j < 0 || j>= xdim)
-            REPORT_ERROR(1103, "setCol: Matrix subscript (j) out of range");
+            REPORT_ERROR(ERR_INDEX_OUTOFBOUNDS, "setCol: Matrix subscript (j) out of range");
 
         if (v.xdim != ydim)
-            REPORT_ERROR(1102,
+            REPORT_ERROR(ERR_MULTIDIM_SIZE,
                          "setCol: Vector dimension different from matrix one");
 
         for (int i = 0; i < ydim; i++)
@@ -1938,7 +1938,7 @@ public:
         }
 
         if (i < 0 || i >= ydim)
-            REPORT_ERROR(1103, "getRow: Matrix subscript (i) greater than matrix dimension");
+            REPORT_ERROR(ERR_INDEX_OUTOFBOUNDS, "getRow: Matrix subscript (i) greater than matrix dimension");
 
         v.resize(xdim);
         for (int j = 0; j < xdim; j++)
@@ -1956,13 +1956,13 @@ public:
     void setRow(int i, const MultidimArray<T>& v)
     {
         if (xdim == 0 || ydim == 0)
-            REPORT_ERROR(1, "setRow: Target matrix is empty");
+            REPORT_ERROR(ERR_MULTIDIM_EMPTY, "setRow: Target matrix is empty");
 
         if (i < 0 || i >= ydim)
-            REPORT_ERROR(1103, "setRow: Matrix subscript (i) out of range");
+            REPORT_ERROR(ERR_INDEX_OUTOFBOUNDS, "setRow: Matrix subscript (i) out of range");
 
         if (v.xdim != xdim)
-            REPORT_ERROR(1102,
+            REPORT_ERROR(ERR_MULTIDIM_SIZE,
                          "setRow: Vector dimension different from matrix one");
 
         for (int j = 0; j < xdim; j++)
@@ -3090,7 +3090,7 @@ public:
                                     char operation)
     {
         if (!op1.sameShape(op2))
-            REPORT_ERROR(1007,
+            REPORT_ERROR(ERR_MULTIDIM_SIZE,
                          (std::string) "Array_by_array: different shapes (" +
                          operation + ")");
         if (result.data == NULL || !result.sameShape(op1))
@@ -3525,7 +3525,7 @@ public:
             slope = (maxF - minF) / (steps - 1);
         }
         else
-            REPORT_ERROR(1005, "Init_linear: Mode not supported (" + mode +
+            REPORT_ERROR(ERR_VALUE_INCORRECT, "Init_linear: Mode not supported (" + mode +
                          ")");
 
         if (steps == 0)
@@ -3570,7 +3570,7 @@ public:
             FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY_ptr(*this,n,ptr)
             *ptr = static_cast< T >(rnd_gaus(op1, op2));
         else
-            REPORT_ERROR(1005,
+            REPORT_ERROR(ERR_VALUE_INCORRECT,
                          static_cast< std::string >("InitRandom: Mode not supported (" +
                                                     mode + ")"));
     }
@@ -3618,7 +3618,7 @@ public:
             FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY_ptr(*this,n,ptr)
             *ptr += static_cast< T >(rnd_student_t(df, op1, op2));
         else
-            REPORT_ERROR(1005,
+            REPORT_ERROR(ERR_VALUE_INCORRECT,
                          static_cast< std::string >("AddNoise: Mode not supported (" +
                                                     mode + ")"));
     }
@@ -3880,7 +3880,7 @@ public:
         else if (type == "range")
             mode = 5;
         else
-            REPORT_ERROR(1005,
+            REPORT_ERROR(ERR_VALUE_INCORRECT,
                          static_cast< std::string >("Threshold: mode not supported (" +
                                                     type + ")"));
 
@@ -3942,7 +3942,7 @@ public:
         else if (type == "range")
             mode = 5;
         else
-            REPORT_ERROR(1005,
+            REPORT_ERROR(ERR_VALUE_INCORRECT,
                          static_cast< std::string >("CountThreshold: mode not supported (" +
                                                     type + ")"));
 
@@ -4099,7 +4099,7 @@ public:
                     MultidimArray<T>& result)
     {
         if (!v1.sameShape(v2))
-            REPORT_ERROR(1007, "MAX: arrays of different shape");
+            REPORT_ERROR(ERR_MULTIDIM_SIZE, "MAX: arrays of different shape");
 
         result.resize(v1);
         FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(result)
@@ -4118,7 +4118,7 @@ public:
                     MultidimArray<T>& result)
     {
         if (!v1.sameShape(v2))
-            REPORT_ERROR(1007, "MIN: arrays of different shape");
+            REPORT_ERROR(ERR_MULTIDIM_SIZE, "MIN: arrays of different shape");
 
         result.resize(v1);
         FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(result)
@@ -4336,7 +4336,7 @@ public:
         fh_gplot.open((static_cast<std::string>("PPP") + fn_tmp +
                        ".gpl").c_str());
         if (!fh_gplot)
-            REPORT_ERROR(1,
+            REPORT_ERROR(ERR_IO_NOTOPEN,
                          static_cast<std::string>("vector::showWithGnuPlot: Cannot open PPP")
                          + fn_tmp + ".gpl for output");
         fh_gplot << "set xlabel \"" + xlabel + "\"\n";
@@ -4373,7 +4373,7 @@ public:
         std::ofstream out;
         out.open(fn.c_str(), std::ios::out);
         if (!out)
-            REPORT_ERROR(1,
+            REPORT_ERROR(ERR_IO_NOTOPEN,
                          static_cast< std::string >("MultidimArray::write: File " + fn
                                                     + " cannot be opened for output"));
 

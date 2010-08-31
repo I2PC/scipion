@@ -26,15 +26,15 @@
 
 
 
-void fourierTransformRings(Polar<double > & in, 
-                           Polar<std::complex<double> > &out, 
+void fourierTransformRings(Polar<double > & in,
+                           Polar<std::complex<double> > &out,
                            Polar_fftw_plans &plans,
                            bool conjugated)
 {
     MultidimArray<std::complex<double> > Fring;
     out.clear();
     for (int iring = 0; iring < in.getRingNo(); iring++)
-    { 
+    {
 
         plans.arrays[iring] = in.rings[iring];
         (plans.transformers[iring]).FourierTransform();
@@ -48,14 +48,14 @@ void fourierTransformRings(Polar<double > & in,
     out.ring_radius = in.ring_radius;
 }
 
-void inverseFourierTransformRings(Polar<std::complex<double> > & in, 
-                                  Polar<double > &out, 
+void inverseFourierTransformRings(Polar<std::complex<double> > & in,
+                                  Polar<double > &out,
                                   Polar_fftw_plans &plans,
                                   bool conjugated)
 {
     out.clear();
     for (int iring = 0; iring < in.getRingNo(); iring++)
-    { 
+    {
         (plans.transformers[iring]).setFourier(in.rings[iring]);
 	(plans.transformers[iring]).inverseFourierTransform(); // fReal points to plans.arrays[iring]
         out.rings.push_back(plans.arrays[iring]);
@@ -66,14 +66,14 @@ void inverseFourierTransformRings(Polar<std::complex<double> > & in,
 
 void rotationalCorrelation(const Polar<std::complex<double> > &M1,
 			   const Polar<std::complex<double> > &M2,
-                           MultidimArray<double> &angles, 
+                           MultidimArray<double> &angles,
                            FourierTransformer &local_transformer)
 {
 
     MultidimArray<std::complex<double> > Fsum;
     int nrings = M1.getRingNo();
     if (nrings != M2.getRingNo())
-	REPORT_ERROR(1,"rotationalCorrelation: polar structures have unequal number of rings!");
+	REPORT_ERROR(ERR_VALUE_INCORRECT,"rotationalCorrelation: polar structures have unequal number of rings!");
 
     // Fsum should already be set with the right size in the local_transformer
     // (i.e. through a FourierTransform of corr)
@@ -83,7 +83,7 @@ void rotationalCorrelation(const Polar<std::complex<double> > &M1,
     // Multiply M1 and M2 over all rings and sum
     // Assume M2 is already complex conjugated!
     for (int iring = 0; iring < nrings; iring++)
-    { 
+    {
 	double w = (2.* PI * M1.ring_radius[iring]);
         for (int i = 0; i < M1.getSampleNo(iring); i++)
 	    Fsum(i) += w * M1(iring,i) * M2(iring,i);
@@ -132,7 +132,7 @@ double best_rotation(const Polar< std::complex<double> > &I1,
 {
     MultidimArray<double> angles;
     rotationalCorrelation(I1,I2,angles,local_transformer);
-    
+
     // Compute the maximum of correlation (inside local_transformer)
     const MultidimArray<double> &corr=local_transformer.getReal();
     int imax=0;
@@ -145,7 +145,7 @@ double best_rotation(const Polar< std::complex<double> > &I1,
             maxval = *ptr;
             imax=n;
         }
-    
+
     // Return the corresponding angle
     return angles(imax);
 }

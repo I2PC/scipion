@@ -109,7 +109,7 @@ int readTIA(int img_select,bool isStack=false, double dStddev=5)
 
     // Check data type
     if (header->DATA_TYPE_ID != 16674)
-        REPORT_ERROR(6001, "ERROR: readTIA only processes images in real space");
+        REPORT_ERROR(ERR_TYPE_INCORRECT, "ERROR: readTIA only processes images in real space");
 
     fseek(fimg, header->OFFSET_ARRAY_OFFSET, SEEK_SET);
     header->pDATA_OFFSET = (int *) askMemory(header->NUMBER_IMAGES * sizeof(int));
@@ -143,7 +143,7 @@ int readTIA(int img_select,bool isStack=false, double dStddev=5)
             if (dataHeaders[0].IMAGE_HEIGHT != dataHeaders[i].IMAGE_HEIGHT || \
                 dataHeaders[0].IMAGE_WIDTH != dataHeaders[i].IMAGE_WIDTH  || \
                 dataHeaders[0].DATA_TYPE != dataHeaders[i].DATA_TYPE)
-                REPORT_ERROR(6001, "readTIA: images in TIA file with different dimensions and data types are not supported");
+                REPORT_ERROR(ERR_IMG_NOREAD, "readTIA: images in TIA file with different dimensions and data types are not supported");
         }
         _xDim = (int) dataHeaders[0].IMAGE_WIDTH;
         _yDim = (int) dataHeaders[0].IMAGE_HEIGHT;
@@ -320,7 +320,7 @@ int readTIA(int img_select,bool isStack=false, double dStddev=5)
 */
 int writeTIA(int img_select, bool isStack=false, int mode=WRITE_OVERWRITE)
 {
-    REPORT_ERROR(6001, "ERROR: writeTIA is not implemented.");
+    REPORT_ERROR(ERR_IMG_NOWRITE, "ERROR: writeTIA is not implemented.");
     return(-1);
 }
 

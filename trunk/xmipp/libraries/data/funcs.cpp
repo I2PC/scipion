@@ -629,14 +629,14 @@ void wait_until_stable_size(const FileName &fn,
         return;
     struct stat info1, info2;
     if (stat(fn.c_str(), &info1))
-        REPORT_ERROR(1,
+        REPORT_ERROR(ERR_UNCLASSIFIED,
                      (std::string)"wait_until_stable_size: Cannot get size of file " + fn);
     off_t size1 = info1.st_size;
     do
     {
         usleep(time_step);
         if (stat(fn.c_str(), &info2))
-            REPORT_ERROR(1,
+            REPORT_ERROR(ERR_UNCLASSIFIED,
                          (std::string)"wait_until_stable_size: Cannot get size of file " + fn);
         off_t size2 = info2.st_size;
         if (size1 == size2)
@@ -654,10 +654,10 @@ void create_empty_file(const FileName &fn, unsigned long long size,
     unsigned char * buffer = (unsigned char*) calloc(sizeof(unsigned char),
                              block_size);
     if (buffer == NULL)
-        REPORT_ERROR(1, "create_empty_file: No memory left");
+        REPORT_ERROR(ERR_MEM_NOTENOUGH, "create_empty_file: No memory left");
     FILE * fd = fopen(fn.c_str(), "w");
     if (fd == NULL)
-        REPORT_ERROR(1, (std::string)"create_empty_file: Cannot open file" + fn);
+        REPORT_ERROR(ERR_IO_NOTOPEN, (std::string)"create_empty_file: Cannot open file" + fn);
     for (unsigned long i = 0; i < size / block_size; i++)
         fwrite(buffer, sizeof(unsigned char), block_size, fd);
     fwrite(buffer, sizeof(unsigned char), size % block_size, fd);
@@ -671,7 +671,7 @@ FileName xmippBaseDir()
     std::vector<std::string> directories;
     int number_directories = splitString(path, ":", directories);
     if (number_directories == 0)
-        REPORT_ERROR(1, "xmippBaseDir::Cannot find Xmipp Base directory");
+        REPORT_ERROR(ERR_IO_NOPATH, "xmippBaseDir::Cannot find Xmipp Base directory");
     bool found = false;
     int i;
     for (i = 0; i < number_directories; i++)
@@ -688,7 +688,7 @@ FileName xmippBaseDir()
     if (found)
         return directories[i].substr(0, directories[i].length() - 4);
     else
-        REPORT_ERROR(1, "xmippBaseDir::Cannot find Xmipp Base directory");
+        REPORT_ERROR(ERR_IO_NOPATH, "xmippBaseDir::Cannot find Xmipp Base directory");
 }
 
 // Constructor with root, number and extension .............................
@@ -993,7 +993,7 @@ FileName FileName::get_file_format() const
 FileName FileName::remove_file_format() const
 {
     if ( find("#", 0) > -1 )
-        REPORT_ERROR(1,"Not implemented for raw data");
+        REPORT_ERROR(ERR_IO,"Not implemented for raw data");
     size_t found=rfind(":");
     if (found!=std::string::npos)
         return substr(0, found);
@@ -1025,7 +1025,7 @@ bool FileName::isMetaData(bool failIfNotExists) const
 
         if (infile.fail()) {
 			if (failIfNotExists)
-		 	    REPORT_ERROR( 200, (std::string) "File " + *this + " does not exist." );
+		 	    REPORT_ERROR( ERR_IO_NOTEXIST, (std::string) "File " + *this + " does not exist." );
 			else
 				return false;
         }

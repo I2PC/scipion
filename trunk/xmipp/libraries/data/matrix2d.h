@@ -906,7 +906,7 @@ public:
         std::ofstream fhOut;
         fhOut.open(fn.c_str());
         if (!fhOut)
-            REPORT_ERROR(ERR_IO_NOWRITE,(std::string)"write: Cannot open "+fn+" for output");
+            REPORT_ERROR(ERR_IO_NOTOPEN,(std::string)"write: Cannot open "+fn+" for output");
         fhOut << *this;
         fhOut.close();
     }
@@ -996,7 +996,7 @@ public:
 
         // If matrix is not a vector, produce an error
         if (!(mdimx == 1 || mdimy == 1))
-            REPORT_ERROR(ERR_MATRIX,
+            REPORT_ERROR(ERR_MATRIX_DIM,
                          "toVector: Matrix cannot be converted to vector");
 
         // Look at shape and copy values
@@ -1119,7 +1119,7 @@ public:
                          "setRow: Vector dimension different from matrix one");
 
         if (!v.isRow())
-            REPORT_ERROR(ERR_MATRIX, "setRow: Not a row vector in assignment");
+            REPORT_ERROR(ERR_MATRIX_DIM, "setRow: Not a row vector in assignment");
 
         for (int j = 0; j < mdimx; j++)
             MAT_ELEM(*this,i, j) = VEC_ELEM(v,j);
@@ -1147,7 +1147,7 @@ public:
                          "setCol: Vector dimension different from matrix one");
 
         if (!v.isCol())
-            REPORT_ERROR(ERR_MATRIX, "setCol: Not a column vector in assignment");
+            REPORT_ERROR(ERR_MATRIX_DIM, "setCol: Not a column vector in assignment");
 
         for (int i = 0; i < mdimy; i++)
             MAT_ELEM(*this,i, j) = VEC_ELEM(v,i);
@@ -1168,7 +1168,7 @@ public:
             REPORT_ERROR(ERR_MATRIX_EMPTY, "determinant: Matrix is empty");
 
         if (mdimx != mdimy)
-            REPORT_ERROR(ERR_MATRIX, "determinant: Matrix is not squared");
+            REPORT_ERROR(ERR_MATRIX_SIZE, "determinant: Matrix is not squared");
 
         for (int i = 0; i < mdimy; i++)
         {
@@ -1312,7 +1312,7 @@ Matrix1D<T> Matrix1D<T>::operator*(const Matrix2D<T>& M)
         REPORT_ERROR(ERR_MATRIX_SIZE, "Not compatible sizes in matrix by vector");
 
     if (!isRow())
-        REPORT_ERROR(ERR_MATRIX, "Vector is not a row");
+        REPORT_ERROR(ERR_MATRIX_DIM, "Vector is not a row");
 
     result.initZeros(MAT_XSIZE(M));
     for (int j = 0; j < MAT_XSIZE(M); j++)

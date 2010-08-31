@@ -43,18 +43,18 @@ void Bilib_DWT(const MultidimArray<double> &input,
                MultidimArray<double> &result, int iterations, int isign)
 {
     if (iterations < 1)
-        REPORT_ERROR(1, "Bilib_DWT: iterations must be >=1");
+        REPORT_ERROR(ERR_INDEX_OUTOFBOUNDS, "Bilib_DWT: iterations must be >=1");
     int size_multiple = (int)pow(2.0, (double) iterations);
     if (XSIZE(input) % size_multiple != 0)
-        REPORT_ERROR(1,
+        REPORT_ERROR(ERR_MULTIDIM_SIZE,
                      (std::string)"Bilib_DWT: Xsize must be a multiple of " +
                      integerToString(size_multiple));
     if (YSIZE(input) > 1 && YSIZE(input) % size_multiple != 0)
-        REPORT_ERROR(1,
+        REPORT_ERROR(ERR_MULTIDIM_SIZE,
                      (std::string)"Bilib_DWT 2D: Ysize must be a multiple of " +
                      integerToString(size_multiple));
     if (ZSIZE(input) > 1 && ZSIZE(input) % size_multiple != 0)
-        REPORT_ERROR(1,
+        REPORT_ERROR(ERR_MULTIDIM_SIZE,
                      (std::string)"Bilib_DWT 3D: Zsize must be a multiple of " +
                      integerToString(size_multiple));
 
@@ -65,7 +65,7 @@ void Bilib_DWT(const MultidimArray<double> &input,
     else if (isign == -1)
         TW.Operation = "Synthesis";
     else
-        REPORT_ERROR(1, (std::string)"waveletTransform: unrecognized isign");
+        REPORT_ERROR(ERR_VALUE_INCORRECT, (std::string)"waveletTransform: unrecognized isign");
     TW.Filter = "Orthonormal Spline";
     TW.BoundaryConditions = "Mirror";
     TW.Order = "1";
@@ -286,7 +286,7 @@ void clean_quadrant2D(MultidimArray<double> &I, int scale, const std::string &qu
     Matrix1D<int> corner1(2), corner2(2);
     Matrix1D<double> r(2);
     SelectDWTBlock(scale, I, quadrant, XX(corner1), XX(corner2), YY(corner1), YY(corner2));
-    FOR_ALL_ELEMENTS_IN_ARRAY2D_BETWEEN(corner1, corner2) 
+    FOR_ALL_ELEMENTS_IN_ARRAY2D_BETWEEN(corner1, corner2)
         I(r) = 0;
 }
 
@@ -704,7 +704,7 @@ void bayesian_wiener_filtering2D(MultidimArray<double> &WI,
 
 //#define DEBUG
 Matrix1D<double> bayesian_wiener_filtering3D(MultidimArray<double> &WI, int allowed_scale,
-                                                  double SNR0, double SNRF, bool white_noise, 
+                                                  double SNR0, double SNRF, bool white_noise,
                                                   int tell, bool denoise)
 {
     /*Calculate the power of the wavelet transformed image */

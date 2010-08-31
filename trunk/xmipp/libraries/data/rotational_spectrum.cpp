@@ -236,7 +236,7 @@ void Rotational_Spectrum::compute_rotational_spectrum(
     // Read the information from the Cylindrical Wave Decomposition .........
     if ((c = (double *) calloc(5191, sizeof(double))) == NULL ||
         (s = (double *) calloc(5191, sizeof(double))) == NULL)
-        REPORT_ERROR(1, "compute_rotational_spectrum::no memory");
+        REPORT_ERROR(ERR_MEM_NOTENOUGH, "compute_rotational_spectrum::no memory");
 
     int ir     = cwd.ir;
     int numin  = cwd.numin;
@@ -256,10 +256,10 @@ void Rotational_Spectrum::compute_rotational_spectrum(
     m = (int)((rh - rl) / dr + 1);
     for (i = 1; i <= n; i++)
         if ((e[i] = (double *) calloc(m + 1, sizeof(double))) == NULL)
-            REPORT_ERROR(1, "compute_rotational_spectrum::no memory");
+            REPORT_ERROR(ERR_MEM_NOTENOUGH, "compute_rotational_spectrum::no memory");
     if ((rv = (double *) calloc(m + 1, sizeof(double))) == NULL ||
         (st = (double *) calloc(m + 1, sizeof(double))) == NULL)
-        REPORT_ERROR(1, "compute_rotational_spectrum::no memory");
+        REPORT_ERROR(ERR_MEM_NOTENOUGH, "compute_rotational_spectrum::no memory");
 
     // Computations .........................................................
     if (numin == 0)
@@ -302,17 +302,17 @@ void Rotational_Spectrum::compute_rotational_spectrum(
     else
         ncol = 1 + ncol / ndr;
     if (ncol == 0)
-        REPORT_ERROR(1, "compute_rotational_spectrum::Incorrect data");
+        REPORT_ERROR(ERR_VALUE_INCORRECT, "compute_rotational_spectrum::Incorrect data");
 
     nvez = (ncol - 1) / 13 + 1;
     for (i = 1; i <= n; i++)
         if ((ep[i] = (double *) calloc(ncol + 1, sizeof(double))) == NULL ||
             (erp[i] = (double *) calloc(ncol + 1, sizeof(double))) == NULL)
-            REPORT_ERROR(1, "compute_rotational_spectrum::no memory");
+            REPORT_ERROR(ERR_MEM_NOTENOUGH, "compute_rotational_spectrum::no memory");
     if ((rp1 = (double *) calloc(ncol + 1, sizeof(double))) == NULL ||
         (rp2 = (double *) calloc(ncol + 1, sizeof(double))) == NULL ||
         (sp  = (double *) calloc(ncol + 1, sizeof(double))) == NULL)
-        REPORT_ERROR(1, "compute_rotational_spectrum::no memory");
+        REPORT_ERROR(ERR_MEM_NOTENOUGH, "compute_rotational_spectrum::no memory");
     for (k = 1; k <= ncol; k++)
     {
         irk = ir1 + (k - 1) * ndr - 1;

@@ -889,7 +889,7 @@ void compute_hist(const MultidimArray<T>
                   int no_steps2)
 {
     if (!v1.sameShape(v2))
-        REPORT_ERROR(1, "compute_hist: v1 and v2 are of different shape");
+        REPORT_ERROR(ERR_MULTIDIM_SIZE, "compute_hist: v1 and v2 are of different shape");
 
     hist.init(m1, M1, no_steps1, m2, M2, no_steps2);
 

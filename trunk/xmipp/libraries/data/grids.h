@@ -512,7 +512,7 @@ public:
     const SimpleGrid & operator()(int n) const
     {
         if (n>LG.size())
-            REPORT_ERROR(3002, "The Grid hasn't got so many Simple Grids");
+            REPORT_ERROR(ERR_VALUE_INCORRECT, "The Grid hasn't got so many Simple Grids");
         return LG[n];
     }
 
@@ -527,7 +527,7 @@ public:
     SimpleGrid& operator()(int n)
     {
         if (n>LG.size())
-            REPORT_ERROR(3002, "The Grid hasn't got so many Simple Grids");
+            REPORT_ERROR(ERR_VALUE_INCORRECT, "The Grid hasn't got so many Simple Grids");
         return LG[n];
     }
 
@@ -966,7 +966,7 @@ public:
     Image<T> & operator()(int n)
     {
         if (n>LV.size())
-            REPORT_ERROR(3002, "The Grid Volume hasn't got so many Simple Volumes");
+            REPORT_ERROR(ERR_VALUE_INCORRECT, "The Grid Volume hasn't got so many Simple Volumes");
         return *(LV[n]);
     }
 
@@ -981,7 +981,7 @@ public:
     const Image<T> & operator()(int n) const
     {
         if (n>LV.size())
-            REPORT_ERROR(3002, "The Grid Volume hasn't got so many Simple Volumes");
+            REPORT_ERROR(ERR_VALUE_INCORRECT, "The Grid Volume hasn't got so many Simple Volumes");
         return *(LV[n]);
     }
 
@@ -1079,7 +1079,7 @@ public:
     Image<T> * Vol_aux; \
     \
     if (VolumesNo()!=GV.VolumesNo()) \
-        REPORT_ERROR(3004,(std::string)"GridVolume::"+op+": Different number of subvolumes");\
+        REPORT_ERROR(ERR_GRID_SIZE,(std::string)"GridVolume::"+op+": Different number of subvolumes");\
     \
     result.G = G;\
     result.LV.reserve(VolumesNo());\
@@ -1091,7 +1091,7 @@ public:
             result.LV.push_back(Vol_aux); \
         } catch (XmippError XE) {\
             std::cout << XE; \
-            REPORT_ERROR(3004,(std::string)"GridVolume::"+op+": Different shape of volume " +\
+            REPORT_ERROR(ERR_GRID_SIZE,(std::string)"GridVolume::"+op+": Different shape of volume " +\
                          integerToString(i)); \
         } \
     } \
@@ -1140,14 +1140,14 @@ public:
 
 #define GRIDVOL_BY_GRIDVOLASSIG(op) \
     if (VolumesNo()!=GV.VolumesNo()) \
-        REPORT_ERROR(3004,(std::string)"GridVolume::"+op+"=: Different number of subvolumes");\
+        REPORT_ERROR(ERR_GRID_SIZE,(std::string)"GridVolume::"+op+"=: Different number of subvolumes");\
     \
     for (int i=0; i<VolumesNo(); i++) { \
         try { \
             arrayByArray((*this)(i)(),GV(i)(),(*this)(i)(),op); \
         } catch (XmippError XE) {\
             std::cout << XE; \
-            REPORT_ERROR(3004,(std::string)"GridVolume::"+op+"=: Different shape of volume " +\
+            REPORT_ERROR(ERR_GRID_SIZE,(std::string)"GridVolume::"+op+"=: Different shape of volume " +\
                          integerToString(i)); \
         } \
     }
@@ -1287,7 +1287,7 @@ public:
                 // We use a trick to save the grid information in the volume
                 // If the following if is true the trick can not be used
                 if ((sizeof(float) != sizeof(int)))
-                    REPORT_ERROR(1,
+                    REPORT_ERROR(ERR_TYPE_INCORRECT,
                                  "GridVolume is integer and (sizeof(float)!= sizeof(int)");
 
                 for (i = 0; i < 3; i++)
@@ -1311,7 +1311,7 @@ public:
                 PACK_INT(STARTINGX(this_vol()));
             }
             else
-                REPORT_ERROR(1, "GridVolume must be double or int\n");
+                REPORT_ERROR(ERR_TYPE_INCORRECT, "GridVolume must be double or int\n");
 
             sli++;
 
@@ -1352,7 +1352,7 @@ public:
         // We use a trick to save the grid information in the volume
         // If the following if is true the trick can not be used
         if ((typeid(T) == typeid(int)) && (sizeof(float) != sizeof(int)))
-            REPORT_ERROR(1,"Error: GridVolume is integer and (sizeof(float)!= sizeof(int)");
+            REPORT_ERROR(ERR_TYPE_INCORRECT,"Error: GridVolume is integer and (sizeof(float)!= sizeof(int)");
 
         // Allocate memory ......................................................
         sG.basis.resize(3, 3);
@@ -1408,7 +1408,7 @@ public:
                     // We use a trick to save the grid information in the volume
                     // If the following if is true the trick can not be used
                     if ((sizeof(float) != sizeof(int)))
-                        REPORT_ERROR(1,
+                        REPORT_ERROR(ERR_TYPE_INCORRECT,
                                      "GridVolume is integer and (sizeof(float)!= sizeof(int)");
 
                     for (i = 0; i < 3; i++)

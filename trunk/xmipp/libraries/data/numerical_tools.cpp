@@ -30,7 +30,7 @@ void randomPermutation(int N, MultidimArray<int>& result)
     MultidimArray<double> aux;
     aux.resize(N);
     aux.initRandom(0,1);
-    
+
     result=aux.indexSort();
     result-=1;
 }
@@ -86,11 +86,11 @@ double solveNonNegative(const Matrix2D<double> &C, const Matrix1D<double> &d,
                     Matrix1D<double> &result)
 {
     if (C.Xdim() == 0)
-        REPORT_ERROR(1108, "Solve_nonneg: Matrix is empty");
+        REPORT_ERROR(ERR_MATRIX_EMPTY, "Solve_nonneg: Matrix is empty");
     if (C.Ydim() != d.size())
-        REPORT_ERROR(1102, "Solve_nonneg: Different sizes of Matrix and Vector");
+        REPORT_ERROR(ERR_MATRIX_SIZE, "Solve_nonneg: Different sizes of Matrix and Vector");
     if (d.isRow())
-        REPORT_ERROR(1107, "Solve_nonneg: Not correct vector shape");
+        REPORT_ERROR(ERR_MATRIX_DIM, "Solve_nonneg: Not correct vector shape");
 
     Matrix2D<double> Ct;
 	Ct=C.transpose();
@@ -106,7 +106,7 @@ double solveNonNegative(const Matrix2D<double> &C, const Matrix1D<double> &d,
     if (success == 1)
         std::cerr << "Warning, too many iterations in nnls\n";
     else if (success == 2)
-        REPORT_ERROR(1, "Solve_nonneg: Not enough memory");
+        REPORT_ERROR(ERR_MEM_NOTENOUGH, "Solve_nonneg: Not enough memory");
     return rnorm;
 }
 
@@ -130,9 +130,9 @@ void evaluateQuadratic(const Matrix1D<double> &x, const Matrix1D<double> &c,
                     const Matrix2D<double> &H, double &val, Matrix1D<double> &grad)
 {
     if (x.size() != c.size())
-        REPORT_ERROR(1102, "Eval_quadratic: Not compatible sizes in x and c");
+        REPORT_ERROR(ERR_MATRIX_SIZE, "Eval_quadratic: Not compatible sizes in x and c");
     if (H.Xdim() != x.size())
-        REPORT_ERROR(1102, "Eval_quadratic: Not compatible sizes in x and H");
+        REPORT_ERROR(ERR_MATRIX_SIZE, "Eval_quadratic: Not compatible sizes in x and H");
 
     // H*x, store in grad
     grad.initZeros(x.size());
@@ -178,7 +178,7 @@ void quadraticProgramming_obj32(int nparam, int j, double* x, double* fj, void* 
     Matrix2D<double> result;
     result = 0.5 * X.transpose() * in->C * X + in->D.transpose() * X;
 
-    *fj = result(0, 0);    
+    *fj = result(0, 0);
 }
 
 /* To calculate the value of the jth constraint */
@@ -323,16 +323,16 @@ void leastSquare(const Matrix2D<double> &C, const Matrix1D<double> &d,
             Matrix1D<double> &x)
 {
     // Convert d to Matrix2D for multiplication
-    Matrix2D<double> P;    
+    Matrix2D<double> P;
     P.fromVector(d);
     P = -2 * P.transpose() * C;
     P = P.transpose();
-    
+
     //Convert back to vector for passing it to quadraticProgramming
     Matrix1D<double> newd;
     P.toVector(newd);
 
-    quadraticProgramming(C.transpose()*C, newd, A, b, Aeq, beq, bl, bu, x);    
+    quadraticProgramming(C.transpose()*C, newd, A, b, Aeq, beq, bl, bu, x);
 }
 
 /* Regularized least squares ----------------------------------------------- */
@@ -431,7 +431,7 @@ void DESolver::Setup(double min[], double max[],
 		population[i*nDim+j] = rnd_unif(min[j], max[j]);
 		//Element(population, i, j) = rnd_unif(min[j], max[j]);
 	}
-	
+
         popEnergy[i] = 1.0E20;
     }
 

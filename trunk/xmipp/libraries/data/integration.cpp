@@ -30,7 +30,7 @@ double integrateNewtonCotes(double(*f)(double),
                             double a, double b, int N)
 {
     if (N < 2 || N > 9)
-        REPORT_ERROR(1, "integrateNewtonCotes: N must be greater than 1");
+        REPORT_ERROR(ERR_VALUE_INCORRECT, "integrateNewtonCotes: N must be greater than 1");
     double h = (b - a) / (N - 1);
     Matrix1D<double> fx(N);
     for (int i = 0; i < N; i++)
@@ -133,7 +133,7 @@ double Romberg::operator()()
         s[j+1] = s[j];
         h[j+1] = h[j] / 9.0;
     }
-    REPORT_ERROR(1,"Too many steps in routine Romberg");
+    REPORT_ERROR(ERR_UNCLASSIFIED ,"Too many steps in routine Romberg");
     return 0.0;
 }
 

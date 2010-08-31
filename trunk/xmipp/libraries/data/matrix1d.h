@@ -387,7 +387,7 @@ public:
         vdim=_vdim;
         vdata = new T [vdim];
         if (vdata == NULL)
-            REPORT_ERROR(1001, "Allocate: No space left");
+            REPORT_ERROR(ERR_MEM_NOTENOUGH, "Allocate: No space left");
     }
 
     /** Core deallocate.
@@ -432,7 +432,7 @@ public:
         }
         catch (std::bad_alloc &)
         {
-			REPORT_ERROR(1001, "Allocate: No space left");
+			REPORT_ERROR(ERR_MEM_NOTENOUGH, "Allocate: No space left");
         }
 
 		// Copy needed elements, fill with 0 if necessary
@@ -685,7 +685,7 @@ public:
     void operator+=(const Matrix1D<T>& op1) const
     {
         if (vdim != op1.vdim)
-            REPORT_ERROR(1102, "Not same sizes in vector summation");
+            REPORT_ERROR(ERR_MATRIX_SIZE, "Not same sizes in vector summation");
 
         for (int i = 0; i < vdim; i++)
         	vdata[i] += op1.vdata[i];
@@ -710,7 +710,7 @@ public:
     void operator-=(const Matrix1D<T>& op1) const
     {
         if (vdim != op1.vdim)
-            REPORT_ERROR(1102, "Not same sizes in vector summation");
+            REPORT_ERROR(ERR_MATRIX_SIZE, "Not same sizes in vector summation");
 
         for (int i = 0; i < vdim; i++)
         	vdata[i] -= op1.vdata[i];
@@ -1118,7 +1118,7 @@ public:
         fh_gplot.open((static_cast<std::string>("PPP") + fn_tmp +
             ".gpl").c_str());
         if (!fh_gplot)
-            REPORT_ERROR(1,
+            REPORT_ERROR(ERR_UNCLASSIFIED,
             static_cast<std::string>("vector::showWithGnuPlot: Cannot open PPP")
                 + fn_tmp + ".gpl for output");
         fh_gplot << "set xlabel \"" + xlabel + "\"\n";
@@ -1156,7 +1156,7 @@ public:
         in.open(fn.c_str(), std::ios::in);
 
         if (!in)
-            REPORT_ERROR(1,
+            REPORT_ERROR(ERR_IO_NOTOPEN,
                          static_cast< std::string >("MultidimArray::read: File " +
                                                     fn + " not found"));
 
@@ -1215,7 +1215,7 @@ public:
         std::ofstream out;
         out.open(fn.c_str(), std::ios::out);
         if (!out)
-            REPORT_ERROR(1,
+            REPORT_ERROR(ERR_IO_NOTOPEN,
                          static_cast< std::string >("Matrix1D::write: File " + fn
                                                     + " cannot be opened for output"));
 
@@ -1289,7 +1289,7 @@ public:
  T dotProduct(const Matrix1D< T >& v1, const Matrix1D< T >& v2)
  {
      if (!v1.sameShape(v2))
-         REPORT_ERROR(1002, "Dot product: vectors of different size or shape");
+         REPORT_ERROR(ERR_MATRIX_SIZE, "Dot product: vectors of different size or shape");
 
      T accumulate = 0;
      for (int j = 0; j < v1.vdim; j++)
@@ -1315,10 +1315,10 @@ public:
  Matrix1D< T > vectorProduct(const Matrix1D< T >& v1, const Matrix1D< T >& v2)
  {
      if (v1.vdim != 3 || v2.vdim != 3)
-         REPORT_ERROR(1002, "Vector_product: vectors are not in R3");
+         REPORT_ERROR(ERR_MATRIX_SIZE, "Vector_product: vectors are not in R3");
 
      if (v1.isRow() != v2.isRow())
-         REPORT_ERROR(1007, "Vector_product: vectors are of different shape");
+         REPORT_ERROR(ERR_MATRIX_SIZE, "Vector_product: vectors are of different shape");
 
      Matrix1D< T > result(3);
      XX(result) = YY(v1) * ZZ(v2) - ZZ(v1) * YY(v2);
@@ -1359,7 +1359,7 @@ public:
  {
      T temp;
      if (!v1.sameShape(v2))
-         REPORT_ERROR(1007,
+         REPORT_ERROR(ERR_MATRIX_SIZE,
                       "sortTwoVectors: vectors are not of the same shape");
 
      for (int j = 0; j < v1.vdim; j++)
