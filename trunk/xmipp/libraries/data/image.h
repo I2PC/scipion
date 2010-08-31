@@ -299,12 +299,13 @@ public:
 
     /** Specific read functions for different file formats
       */
-#include "rwSPIDER.h"
-#include "rwMRC.h"
-#include "rwIMAGIC.h"
-#include "rwTIA.h"
 #include "rwDM3.h"
+#include "rwIMAGIC.h"
+#include "rwMRC.h"
 #include "rwRAW.h"
+#include "rwSPIDER.h"
+#include "rwSPE.h"
+#include "rwTIA.h"
 #include "rwTIFF.h"
 
     /** Is this file an image
@@ -418,6 +419,8 @@ public:
             err = readRAW(select_img,false);
         else if (ext_name.contains("tif") || ext_name.contains("tiff"))//TIFF
             err = readTIFF(select_img,false);
+        else if (ext_name.contains("spe"))//SPE
+            err = readSPE(select_img,false);
         else
             err = readSPIDER(select_img,true);
 
@@ -600,6 +603,8 @@ public:
             writeRAW(select_img,false,mode);
         else if (ext_name.contains("tif") || ext_name.contains("tiff"))
             writeTIFF(select_img,isStack,mode,imParam);
+        else if (ext_name.contains("spe"))
+            writeSPE(select_img,isStack,mode);
         else
             err = writeSPIDER(select_img,isStack,mode);
 

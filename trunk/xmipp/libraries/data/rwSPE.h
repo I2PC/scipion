@@ -35,79 +35,37 @@
 */
 int readSPE(int img_select,bool isStack=false)
 {
-#undef DEBUG
-    //#define DEBUG
-#ifdef DEBUG
-    printf("DEBUG readSPE: Reading SPE file\n");
-#endif
 
-    int _xDim,_yDim,_zDim, __depth;
-    unsigned long int _nDim;
-    bool __is_signed;
+    int xDim,yDim,zDim, depth;
+    unsigned long int nDim;
 
-    FileName fn_inf;
+    FILE        *fimg;
+    if ( ( fimg = fopen(filename.c_str(), "r") ) == NULL )
+        REPORT_ERROR(ERR_IMG_NOREAD,"readSPE: error opening image file.");
 
-    fn_inf = filename.add_extension("inf");
-    FILE *fh_inf = fopen(fn_inf.c_str(), "r");
-    if (!fh_inf)
-        REPORT_ERROR(1, (std::string)"Micrograph::open_micrograph: Cannot find " +
-                     fn_inf);
-    _xDim = textToInteger(getParameter(fh_inf, "Xdim"));
-    _yDim = textToInteger(getParameter(fh_inf, "Ydim"));
-    __depth = textToInteger(getParameter(fh_inf, "bitspersample"));
-    if (checkParameter(fh_inf, "offset"))
-        offset = textToInteger(getParameter(fh_inf, "offset"));
-    else
-        offset = 0;
-    if (checkParameter(fh_inf, "is_signed"))
-        __is_signed = (getParameter(fh_inf, "is_signed") == "true" ||
-                       getParameter(fh_inf, "is_signed") == "TRUE");
-    else
-        __is_signed = false;
-    if (checkParameter(fh_inf, "endianess"))
-        if(getParameter(fh_inf, "endianess") == "big" || getParameter(fh_inf, "endianess") == "BIG")
-            swap = true;
-        else
-            swap = false;
+    short int aux;
+    fseek(fimg,42,SEEK_SET);
+    xmippFREAD(&aux, sizeof(short int), 1, fimg, swap );
+    xDim = aux;
+    fseek(fimg,656,SEEK_SET);
+    xmippFREAD(&aux, sizeof(short int), 1, fimg, swap );
+    yDim = aux;
 
-    if (IsBigEndian())
-        swap = !swap;
-
-    fclose(fh_inf);
-
-    _zDim = (int) 1;
-    _nDim = (int) 1;
+    zDim = (int) 1;
+    nDim = (int) 1;
 
     // Map the parameters
-    data.setDimensions(_xDim, _yDim, _zDim, _nDim);
+    data.setDimensions(xDim, yDim, zDim, nDim);
 
     unsigned long   imgStart=0;
-    unsigned long   imgEnd =_nDim;
+    unsigned long   imgEnd =nDim;
     if (img_select != -1)
     {
         imgStart=img_select;
         imgEnd=img_select+1;
     }
 
-    DataType datatype;
-
-    switch ( __depth )
-    {
-    case 8:
-        datatype = UChar;
-        break;
-    case 16:
-        if (__is_signed)
-            datatype = Short;
-        else
-            datatype = UShort;
-        break;
-    case 32:
-        datatype = Float;
-        break;
-    default:
-        REPORT_ERROR(1, "Micrograph::open_micrograph: depth is not 8, 16 nor 32");
-    }
+    DataType datatype = UShort;
 
     MDMainHeader.removeObjects();
     MDMainHeader.setColumnFormat(false);
@@ -118,7 +76,7 @@ int readSPE(int img_select,bool isStack=false)
 
     if( dataflag == -2 )
     {
-        //        fclose(fimg);
+        fclose(fimg);
         return 0;
     }
 
@@ -136,17 +94,7 @@ int readSPE(int img_select,bool isStack=false)
         MD.setValue(MDL_FLIP,     falseb);
     }
 
-    //#define DEBUG
-#ifdef DEBUG
-
-    MDMainHeader.write(std::cerr);
-    MD.write(std::cerr);
-#endif
-
-    FILE        *fimg;
-    if ( ( fimg = fopen(filename.c_str(), "r") ) == NULL )
-        return(-1);
-
+    offset = 4100;
     size_t pad = 0;
 
     readData(fimg, img_select, datatype, pad);
@@ -162,113 +110,7 @@ int readSPE(int img_select,bool isStack=false)
 */
 int writeSPE(int img_select, bool isStack=false, int mode=WRITE_OVERWRITE)
 {
-    //#define DEBUG
-#ifdef DEBUG
-    printf("DEBUG writeSPE: Writing SPE file\n");
-    printf("DEBUG writeSPE: File %s\n", filename.c_str());
-#endif
-#undef DEBUG
-
-    int Xdim = XSIZE(data);
-    int Ydim = YSIZE(data);
-    int Zdim = ZSIZE(data);
-    int Ndim = NSIZE(data);
-
-    int _depth;
-    bool _is_signed;
-
-    // Volumes and stacks are not supported
-    if (Zdim > 1 || Ndim > 1)
-        REPORT_ERROR(1000, "ERROR: rwSPE does not support neither volumes nor stacks.");
-
-
-    DataType wDType;
-
-    if (typeid(T)==typeid(double)||typeid(T)==typeid(float))
-    {
-        wDType = Float;
-        _is_signed = true;
-    }
-    else if (typeid(T)==typeid(int))
-    {
-        wDType = Int;
-        _is_signed = true;
-    }
-    else if (typeid(T)==typeid(unsigned int))
-    {
-        wDType = UInt;
-        _is_signed = false;
-
-    }
-    else if (typeid(T)==typeid(short))
-    {
-        wDType = Short;
-        _is_signed = true;
-    }
-    else if (typeid(T)==typeid(unsigned short))
-    {
-        wDType = UShort;
-        _is_signed = false;
-    }
-    else if (typeid(T)==typeid(char))
-    {
-        wDType = SChar;
-        _is_signed = true;
-    }
-    else if (typeid(T)==typeid(unsigned char))
-    {
-        wDType = UChar;
-        _is_signed = false;
-    }
-    else
-        REPORT_ERROR(1000,(std::string)"ERROR: rwSPE does not write from " + typeid(T).name() + "type.");
-
-    _depth = gettypesize(wDType);
-
-    /* Write INF file ==================================*/
-    FileName fn_inf;
-    fn_inf = filename.add_extension("inf");
-    FILE *fh_inf = fopen(fn_inf.c_str(), "w");
-    if (!fh_inf)
-        REPORT_ERROR(1, (std::string)"rwSPE::write: Error opening file " + fn_inf);
-
-    fprintf(fh_inf,"# Bits per sample\n");
-    fprintf(fh_inf,"bitspersample= %d\n",_depth*8);
-    fprintf(fh_inf,"# Samples per pixel\n");
-    fprintf(fh_inf,"samplesperpixel= 1\n");
-    fprintf(fh_inf,"# Image width\n");
-    fprintf(fh_inf,"Xdim= %d\n", Xdim);
-    fprintf(fh_inf,"# Image length\n");
-    fprintf(fh_inf,"Ydim= %d\n",Ydim);
-    fprintf(fh_inf,"# offset in bytes (zero by default)\n");
-    fprintf(fh_inf,"offset= 0\n");
-    fprintf(fh_inf,"# Is a signed or Unsigned int (by default true)\n");
-    if (_is_signed)
-        fprintf(fh_inf,"is_signed = true\n");
-    else
-        fprintf(fh_inf,"is_signed = false\n");
-    fprintf(fh_inf,"# Byte order\n");
-    if (IsBigEndian())
-        fprintf(fh_inf,"endianess = big\n");
-    else
-        fprintf(fh_inf,"endianess = little\n");
-
-    if (fclose(fh_inf)!=0)
-        REPORT_ERROR(6001, "rwSPE::write: Error creating output info file.");
-
-    /* Write Image file ==================================*/
-    FILE  *fimg;
-    if ( ( fimg = fopen(filename.c_str(), "w") ) == NULL )
-        REPORT_ERROR(1,(std::string)"Cannot create file " + filename);
-
-    size_t datasize, datasize_n;
-    datasize_n = Xdim*Ydim*Zdim;
-
-    writePageAsDatatype(fimg, wDType, datasize_n);
-
-    if( fclose(fimg) !=0 )
-        REPORT_ERROR(1,(std::string)"Can not close file "+ filename);
-
-    return(0);
+    REPORT_ERROR(ERR_IMG_NOWRITE, "writeSPE is not implemented.");
+    return(-1);
 }
 #endif /* RWSPE_H_ */
