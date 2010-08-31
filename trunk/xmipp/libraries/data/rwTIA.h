@@ -169,19 +169,19 @@ int readTIA(int img_select,bool isStack=false, double dStddev=5)
 
     DataType datatype;
     //    dataHeaders[0].isSigned = false;
-    int TIA_DT;
+    int tiaDT;
     if (img_select==-1)
     {
-        TIA_DT = dataHeaders[0].DATA_TYPE;
+        tiaDT = dataHeaders[0].DATA_TYPE;
         offset = header->pDATA_OFFSET[0] + TIAdataSIZE;
     }
     else
     {
-        TIA_DT = dataHeaders[img_select].DATA_TYPE;
+        tiaDT = dataHeaders[img_select].DATA_TYPE;
         offset = header->pDATA_OFFSET[img_select] + TIAdataSIZE;
     }
 
-    switch ( TIA_DT )
+    switch ( tiaDT )
     {
     case 1:
         datatype = UChar;

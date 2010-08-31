@@ -233,7 +233,7 @@ int readTIFF(int img_select, bool isStack=false)
     {
     case RESUNIT_NONE:
         {
-            xRes = yRes = zeroD;
+            xRes = yRes = -1;
             break;
         }
     case RESUNIT_INCH:
@@ -485,8 +485,10 @@ int writeTIFF(int img_select, bool isStack=false, int mode=WRITE_OVERWRITE, int 
         }
     }
 
+    int nBytes = gettypesize(wDType);
+
     /* Set TIFF image properties */
-    dhMain.bitsPerSample = (unsigned short int) gettypesize(wDType)*8;
+    dhMain.bitsPerSample = (unsigned short int) nBytes*8;
     dhMain.samplesPerPixel = 1;
     dhMain.imageWidth = Xdim;
     dhMain.imageLength = Ydim;
@@ -496,28 +498,23 @@ int writeTIFF(int img_select, bool isStack=false, int mode=WRITE_OVERWRITE, int 
 
     if (MDMainHeader.firstObject() != NO_OBJECTS_STORED)
     {
-        if(MDMainHeader.getValue(MDL_SAMPLINGRATEX, aux))
-            dhMain.xTiffRes = (float) 1e8/aux;
-        if(MDMainHeader.getValue(MDL_SAMPLINGRATEX, aux))
-            dhMain.yTiffRes = (float) 1e8/aux;
+        (MDMainHeader.getValue(MDL_SAMPLINGRATEX, aux)) ? dhMain.xTiffRes = (float) 1e8/aux \
+                : dhMain.xTiffRes = 0 ;
+        (MDMainHeader.getValue(MDL_SAMPLINGRATEX, aux)) ? dhMain.yTiffRes = (float) 1e8/aux \
+                : dhMain.yTiffRes = 0;
     }
 
     unsigned long   imgStart=0;
     unsigned long   imgEnd = Ndim;
 
     size_t bufferSize, datasize_n;
-    bufferSize = Xdim*Ydim;
+    bufferSize = Xdim*nBytes;
     datasize_n = Xdim*Ydim*Zdim;
-    //    datasize = datasize_n * gettypesize(Float);
-    //    tdata_t scanline = (tsize_t) Xdim;
-
 
     /*
      * OPEN FILE
      */
     TIFF* tif;
-
-    //    TIFFSetWarningHandler(NULL); // Switch off warning messages
 
     if ((tif = TIFFOpen(filename.c_str(), "w")) == NULL)
         REPORT_ERROR(1501,"rwTIFF: There is a problem opening the TIFF file.");
