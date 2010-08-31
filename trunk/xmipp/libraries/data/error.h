@@ -110,7 +110,7 @@
  */
 enum ErrorType
 {
-    ERR_MEM_BADREQUEST,     ///< Bad ammount of memory requested.
+    ERR_MEM_BADREQUEST,     ///< Bad amount of memory requested.
     ERR_MEM_NOTENOUGH,    ///< There is not enough memory for allocation.
     ERR_MEM_NOTDEALLOC,     ///< Memory has not been deallocated.
 
