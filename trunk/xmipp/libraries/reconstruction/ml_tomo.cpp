@@ -3083,7 +3083,7 @@ void Prog_ml_tomo_prm::writeOutputFiles(const int iter,
     fn_tmp = fn_base + ".fsc";
     fh.open((fn_tmp).c_str(), std::ios::out);
     if (!fh)
-        REPORT_ERROR(1, (std::string)"Prog_ml_tomo_prm: Cannot write file: " + fn_tmp);
+        REPORT_ERROR(ERR_IO_NOTOPEN, (std::string)"Cannot write file: " + fn_tmp);
 
     fh <<"# freq. FSC refno 1-n... \n";
     for (int idx = 1; idx < hdim + 1; idx++)
