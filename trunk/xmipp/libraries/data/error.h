@@ -112,6 +112,7 @@ enum ErrorType
 {
     ERR_ARG_INCORRECT,      ///< Incorrect argument received.
     ERR_ARG_MISSING,        ///< Argument missing.
+    ERR_ARG_DEPENDENCE,     ///< Error with some arguments dependecies
 
     ERR_DEBUG_TEST,         ///< Just an error for debugging purpose.
     ERR_DEBUG_IMPOSIBLE,    ///< Just for debugging, situation that can't happens
@@ -217,7 +218,6 @@ void _Xmipp_error(const ErrorType nerr, const std::string& what,
 #define REPORT_ERROR(nerr, ErrormMsg) throw XmippError(nerr, ErrormMsg, __FILE__, __LINE__)
 /** Report error without any extra message */
 //#define REPORT_ERROR(nerr) throw XmippError((ErrorType)nerr, "", __FILE__, __LINE__)
-
 
 /** Exception class
  *
