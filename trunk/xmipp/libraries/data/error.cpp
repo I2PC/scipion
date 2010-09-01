@@ -86,7 +86,8 @@ char * XmippError::getDefaultMessage(ErrorType e)
         return " Incorrect argument received";
     case ERR_ARG_MISSING:
         return " Argument missing";
-
+    case ERR_ARG_DEPENDENCE:
+        return "Error with some arguments dependecies";
     case ERR_DEBUG_TEST:
         return " Just an error for debugging purpose";
     case ERR_DEBUG_IMPOSIBLE:
