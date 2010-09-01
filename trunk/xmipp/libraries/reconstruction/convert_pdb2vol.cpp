@@ -79,8 +79,7 @@ void Prog_PDBPhantom_Parameters::produceSideInfo()
         std::ifstream fh_pdb;
         fh_pdb.open(fn_pdb.c_str());
         if (!fh_pdb)
-            REPORT_ERROR(1, (std::string)"ProduceSideInfo:"
-                         "Cannot open " + fn_pdb + " for reading");
+            REPORT_ERROR(ERR_IO_NOTEXIST, fn_pdb);
         while (!fh_pdb.eof())
         {
             // Read an ATOM line
@@ -255,8 +254,7 @@ void Prog_PDBPhantom_Parameters::create_protein_at_high_sampling_rate()
     std::ifstream fh_pdb;
     fh_pdb.open(fn_pdb.c_str());
     if (!fh_pdb)
-        REPORT_ERROR(1, (std::string)"Prog_PDBPhantom_Parameters::protein_geometry:"
-                     "Cannot open " + fn_pdb + " for reading");
+        REPORT_ERROR(ERR_IO_NOTEXIST, fn_pdb);
 
     // Process all lines of the file
     int col=1;
@@ -374,8 +372,7 @@ void Prog_PDBPhantom_Parameters::blob_properties() const
     std::ofstream fh_out;
     fh_out.open((fn_out + "_Fourier_profile.txt").c_str());
     if (!fh_out)
-        REPORT_ERROR(1, (std::string)"Prog_PDBPhantom_Parameters::blob_properties:"
-                     " Cannot open " + fn_out + "_Fourier_profile.txt for output");
+        REPORT_ERROR(ERR_IO_NOWRITE, fn_out);
     fh_out << "# Freq(1/A) 10*log10(|Blob(f)|^2) Ts=" << highTs << std::endl;
     for (double w = 0; w < 1.0 / (2*highTs); w += 1.0 / (highTs * 500))
     {
@@ -397,8 +394,7 @@ void Prog_PDBPhantom_Parameters::create_protein_using_scattering_profiles()
     std::ifstream fh_pdb;
     fh_pdb.open(fn_pdb.c_str());
     if (!fh_pdb)
-        REPORT_ERROR(1, (std::string)"Prog_PDBPhantom_Parameters::create_protein_using_scattering_profiles:"
-                     "Cannot open " + fn_pdb + " for reading");
+        REPORT_ERROR(ERR_IO_NOTEXIST, fn_pdb);
 
     // Process all lines of the file
     while (!fh_pdb.eof())
