@@ -66,9 +66,9 @@ void CorrectPhaseParams::run()
     {
         FileName fnProjection, fnCTF;
         if (!ctfdat.getValue(MDL_IMAGE,fnProjection))
-        	REPORT_ERROR(1,(std::string)"Cannot find images in "+fnCtfdat);
+        	REPORT_ERROR(ERR_MD_NOOBJ,(std::string)"Cannot find images in "+fnCtfdat);
         if (!ctfdat.getValue(MDL_CTFMODEL,fnCTF))
-        	REPORT_ERROR(1,(std::string)"Cannot find CTF for "+fnProjection);
+        	REPORT_ERROR(ERR_MD_NOOBJ,(std::string)"Cannot find CTF for "+fnProjection);
 
         // Read input image and compute its Fourier transform
         Image<double> I;
