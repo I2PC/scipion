@@ -30,9 +30,7 @@
 #include <cerrno>
 
 // Get parameters from the command line ====================================
-char *getParameter(int argc, char **argv, const char *param,
-                const char *option, int _errno, const std::string &errmsg,
-                int exit)
+char *getParameter(int argc, char **argv, const char *param, const char *option)
 {
     int i = 0;
 
@@ -42,47 +40,22 @@ char *getParameter(int argc, char **argv, const char *param,
         return(argv[i+1]);
     else
         if (option == NULL)
-        {
-            std::string auxstr;
-            if (_errno == -1)
-            {
-                _errno = 2104;
-                auxstr = (std::string)"Argument " + param + " not found or invalid argument";
-            }
-            else
-            {
-                auxstr = errmsg;
-            }
-            if (exit)
-                EXIT_ERROR(_errno, auxstr);
-            else
-                REPORT_ERROR(_errno, auxstr);
-        }
+            REPORT_ERROR(ERR_ARG_MISSING, param);
 
     return((char *) option);
 }
 
 // Get 2 parameters ========================================================
 bool getTwoDoubleParams(int argc, char **argv, const char *param,
-                         double &v1, double &v2, double v1_def, double v2_def,
-                         int _errno, const std::string & errmsg, int exit)
+                        double &v1, double &v2, double v1_def, double v2_def)
 {
     bool retval;
     int i = paremeterPosition(argc, argv, param);
     if (i != -1)
     {
         if (i + 2 >= argc)
-        {
-            std::string msg;
-            if (errmsg == "")
-                msg = (std::string)"Not enough arguments after " + *param;
-            else
-                msg = errmsg;
-            if (exit)
-                EXIT_ERROR(_errno, errmsg);
-            else
-                REPORT_ERROR(_errno, errmsg);
-        }
+            REPORT_ERROR(ERR_ARG_MISSING,
+                             (std::string)"Not enough arguments after " + *param);
         v1 = textToFloat(argv[i+1]);
         v2 = textToFloat(argv[i+2]);
         retval = true;
@@ -98,26 +71,16 @@ bool getTwoDoubleParams(int argc, char **argv, const char *param,
 
 // Get 3 parameters ========================================================
 bool getThreeDoubleParams(int argc, char **argv, const char *param,
-                         double &v1, double &v2, double &v3,
-                         double v1_def, double v2_def, double v3_def,
-                         int _errno, const std::string & errmsg, int exit)
+                          double &v1, double &v2, double &v3,
+                          double v1_def, double v2_def, double v3_def)
 {
     bool retval;
     int i = paremeterPosition(argc, argv, param);
     if (i != -1)
     {
         if (i + 3 >= argc)
-        {
-            std::string msg;
-            if (errmsg == "")
-                msg = (std::string)"Not enough arguments after " + *param;
-            else
-                msg = errmsg;
-            if (exit)
-                EXIT_ERROR(_errno, errmsg);
-            else
-                REPORT_ERROR(_errno, errmsg);
-        }
+            REPORT_ERROR(ERR_ARG_MISSING,
+                             (std::string)"Not enough arguments after " + *param);
         v1 = textToFloat(argv[i+1]);
         v2 = textToFloat(argv[i+2]);
         v3 = textToFloat(argv[i+3]);
@@ -175,10 +138,7 @@ int numComponents(const std::string &str)
 }
 
 // Get float vector ========================================================
-Matrix1D<double> getVectorParameter(int argc, char **argv, const char *param,
-                                  int dim, int _errno,
-                                  const std::string & errmsg,
-                                  int exit)
+Matrix1D<double> getVectorParameter(int argc, char **argv, const char *param, int dim)
 {
     Matrix1D<double> aux;
     bool count_dimensionality = (dim == -1);
@@ -189,49 +149,14 @@ Matrix1D<double> getVectorParameter(int argc, char **argv, const char *param,
         if (count_dimensionality)
             return aux;
         else
-        {
-            std::string auxstr;
-            if (_errno == -1)
-            {
-                _errno = 2104;
-                auxstr = (std::string)"Argument " + param + " not found or invalid argument";
-            }
-            else
-            {
-                auxstr=errmsg;
-            }
-            if (exit)
-                EXIT_ERROR(_errno, auxstr);
-            else
-                REPORT_ERROR(_errno, auxstr);
-        }
+            REPORT_ERROR(ERR_ARG_MISSING, param);
     pos++;
     if (*(argv[pos]) != '[')
     {
-        try
-        {
-            double d = textToFloat(argv[pos]);
-            aux.resize(1);
-            aux(0) = d;
-            return aux;
-        }
-        catch (XmippError XE)
-        {
-            std::string auxstr;
-            if (_errno == -1)
-            {
-                _errno = 2104;
-                auxstr = (std::string)"Argument " + param + " not found or invalid argument";
-            }
-            else
-            {
-                auxstr=errmsg;
-            }
-            if (exit)
-                EXIT_ERROR(_errno, auxstr);
-            else
-                REPORT_ERROR(_errno, auxstr);
-        }
+		double d = textToFloat(argv[pos]);
+		aux.resize(1);
+		aux(0) = d;
+		return aux;
     }
 
     std::string vector;
@@ -242,22 +167,7 @@ Matrix1D<double> getVectorParameter(int argc, char **argv, const char *param,
         if (vector[vector.length()-1] == ']')
             finished = true;
         if (++pos == argc && !finished)
-        {
-            std::string auxstr;
-            if (_errno == -1)
-            {
-                _errno = 2104;
-                auxstr = (std::string)"Argument " + param + " not found or invalid argument";
-            }
-            else
-            {
-                auxstr=errmsg;
-            }
-            if (exit)
-                EXIT_ERROR(_errno, auxstr);
-            else
-                REPORT_ERROR(_errno, auxstr);
-        }
+            REPORT_ERROR(ERR_ARG_INCORRECT, param);
     }
 
     // Remove brackets
@@ -303,66 +213,11 @@ Matrix1D<double> getVectorParameter(int argc, char **argv, const char *param,
     return aux;
 }
 
-// Specific command line ===================================================
-void specificCommandLine(const std::string &prog_name, int argc, char **argv,
-                           int &argcp, char ***argvp)
-{
-    int i = 1;
-    // Look for the program name
-    while (i < argc)
-        if (prog_name == argv[i])
-            break;
-        else
-            i++;
-    // If not found, exit
-    if (i == argc)
-    {
-        argcp = 0;
-        return;
-    }
-
-    // Check that following token is '('
-    i++;
-    if (i == argc || strcmp(argv[i], "(") != 0)
-    {
-        argcp = 0;
-        return;
-    }
-
-    // The specific command line starts here
-    *argvp = &argv[i];
-    argcp = 1;
-
-    // Look for ')'
-    i++;
-    if (i == argc)
-    {
-        argcp = 0;
-        return;
-    }
-    while (i < argc)
-    {
-        if (strcmp(argv[i], ")") != 0)
-        {
-            i++;
-            argcp++;
-        }
-        else
-            break;
-    }
-    // If ')' not found exit
-    if (i == argc)
-    {
-        argcp = 0;
-        return;
-    }
-}
-
 // Generate command line ===================================================
 #define INSIDE_WORD  1
 #define OUTSIDE_WORD 2
 void generateCommandLine(const std::string &command_line, int &argcp,
-                           char ** &argvp, char* &copy)
+                         char ** &argvp, char* &copy)
 {
     int L = command_line.length();
 
@@ -454,56 +309,8 @@ void generateCommandLine(const std::string &command_line, int &argcp,
     }
 }
 
-// Generate command line from file =========================================
-bool generateCommandLine(FILE *fh, const char *param, int &argcp,
-                           char ** &argvp, char* &copy)
-{
-    long actual_pos = ftell(fh);
-    fseek(fh, 0, SEEK_SET);
-
-    char    line[201];
-    char   *retval;
-    bool found = false;
-
-    // Read lines
-    while (fgets(line, 200, fh) != NULL && !found)
-    {
-        if (line[0] == 0)
-            continue;
-        if (line[0] == '#')
-            continue;
-        if (line[0] == ';')
-            continue;
-        if (line[0] == '\n')
-            continue;
-
-        int i = 0;
-        while (line[i] != 0 && line[i] != '=')
-            i++;
-        if (line[i] == '=')
-        {
-            line[i] = 0;
-            if (strcmp(line, param) == 0)
-            {
-                retval = line + i + 1;
-                found = true;
-                break;
-            }
-        }
-    }
-    fseek(fh, actual_pos, SEEK_SET);
-    if (!found)
-        return false;
-
-    std::string artificial_line;
-    artificial_line = (std::string)"-" + param + " " + retval;
-    generateCommandLine(artificial_line, argcp, argvp, copy);
-    return true;
-}
-
 // Get "parameter" from file ===============================================
-std::string getParameter(FILE *fh, const char *param, int skip, const char *option,
-                 int _errno, const std::string &errmsg, int exit)
+std::string getParameter(FILE *fh, const char *param, int skip, const char *option)
 {
     long actual_pos = ftell(fh);
     fseek(fh, 0, SEEK_SET);
@@ -550,22 +357,7 @@ std::string getParameter(FILE *fh, const char *param, int skip, const char *opti
     fseek(fh, actual_pos, SEEK_SET);
     if (!found)
         if (option == NULL)
-        {
-            std::string auxstr;
-            if (_errno == -1)
-            {
-                _errno = 2104;
-                auxstr = (std::string)"Argument " + param + " not found or invalid argument";
-            }
-            else
-            {
-                auxstr=errmsg;
-            }
-            if (exit)
-                EXIT_ERROR(_errno, auxstr);
-            else
-                REPORT_ERROR(_errno, auxstr);
-        }
+        	REPORT_ERROR(ERR_ARG_INCORRECT, param);
         else
             return option;
     else
@@ -609,30 +401,4 @@ bool checkParameter(FILE *fh, const char *param)
     }
     fseek(fh, actual_pos, SEEK_SET);
     return found && retval != "No" && retval != "NO" && retval != "no";
-}
-
-// Get vector param from file ==============================================
-Matrix1D<double> getVectorParameter(FILE *fh, const char *param,
-                                  int dim, int _errno, 
-                                  const std::string &errmsg, int exit)
-{
-    int    argcp;
-    char **argvp = NULL;
-    char  *copy = NULL;
-    Matrix1D<double> retval;
-    if (!generateCommandLine(fh, param, argcp, argvp, copy))
-        if (dim == -1)
-            return retval;
-        else if (exit)
-            EXIT_ERROR(_errno, errmsg);
-        else
-            REPORT_ERROR(_errno, errmsg);
-    else
-    {
-        retval = getVectorParameter(argcp, argvp, ((std::string)"-" + param).c_str(), dim,
-                                  _errno, errmsg, exit);
-        delete copy;
-        return retval;
-    }
-    return retval;
 }

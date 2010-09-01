@@ -257,10 +257,7 @@ void readFloatList(const char* str,
 char* getParameter(int argc,
                 char** argv,
                 const char* param,
-                const char* option = NULL,
-                int _errno = -1,
-                const std::string & errmsg = "",
-                int exit = 0);
+                const char* option = NULL);
 
 /** Get two float parameters after a flag from the command line.
  *
@@ -275,10 +272,7 @@ bool getTwoDoubleParams(int argc,
                          double& v1,
                          double& v2,
                          double v1_def,
-                         double v2_def,
-                         int _errno = 2104,
-                         const std::string & errmsg = "",
-                         int exit = 0);
+                         double v2_def);
 
 /** Get 3 float parameters after a flag from the command line.
  *
@@ -295,10 +289,7 @@ bool getThreeDoubleParams(int argc,
                          double& v3,
                          double v1_def,
                          double v2_def,
-                         double v3_def,
-                         int _errno = 2104,
-                         const std::string& errmsg = "",
-                         int exit = 0);
+                         double v3_def);
 
 /** Get boolean parameters from the command line.
  *
@@ -369,102 +360,7 @@ int numComponents(const std::string& str);
 Matrix1D< double > getVectorParameter(int argc,
                                       char** argv,
                                       const char* param,
-                                      int dim = 2,
-                                      int _errno = -1,
-                                      const std::string & errmsg = "",
-                                      int exit = 0);
-
-/** Get specific command line.
- *
- * This function allows to pass command line parameters to several programs
- * which are integrated in a single program. It assumes that the command line is
- * a compound line like this
- *
- * @code
- * whole_process prog1 ( -i in_file1 -o out_file1 ) prog2 ( -i out_file1 )
- * @endcode
- *
- * In this example, a single program "whole_process" is compund of 2 programs
- * ("prog1" and "prog2"). The parameters for prog1 are within the brackets after
- * prog1 (notice that spaces around brackets are very important), and then the
- * output of program 1 is the input of program 2.
- *
- * This function returns new argc and argv such that prog1 parameters could be
- * read from this new command line.
- *
- * @code
- * int argcp;
- * char** argvp;
- *
- * specificCommandLine("prog1", argc, argv, argcp, &argvp);
- *
- * if (argcp == 0)
- *     EXIT_ERROR(1, "No parameters for prog1");
- *
- * prog1_parameters.read(argcp, argvp);
- * @endcode
- *
- * If the program name is not found or the corresponding brackets then argcp==0
- */
-void specificCommandLine(const std::string& prog_name,
-                           int argc,
-                           char** argv,
-                           int& argcp,
-                           char*** argvp);
-
-/** Generate argc and argv for a string.
- *
- * Given a string this function makes a copy of the string and divides it into
- * tokens such that they can be used as argc and argv, as if it were a command
- * line.
- *
- * The string copy remains in "copy" and it can be freed by disposing this
- * variable.
- *
- * argvp[0] (normally the program name) is set to any value, in this case to
- * "autom", standing for "automatically generated".
- *
- * argcp==0 if now valid command line is provided, ie, the line is empty or only
- * with blanks.
- *
- * Next time the function is called it checks that argv and copy are empty
- * (pointing to NULL), if they aren't then firstly the associated memory is
- * freed.
- *
- * @code
- * int argcp;
- * char** argvp;
- * char* copy;
- *
- * copy = NULL;
- * argvp = NULL;
- *
- * string command_line = "-i input_file -o output_file";
- *
- * generateCommandLine(command_line, argcp, &argvp, &copy);
- *
- * if (argcp != 0)
- *     read_parameters(argcp, argvp);
- * @endcode
- */
-void generateCommandLine(const std::string& command_line,
-                           int& argcp,
-                           char**& argvp,
-                           char*& copy);
-
-/** Generate articial command line from a file.
- *
- * The copy variable must be destroyed outside by "delete copy". This function
- * takes "input_file=<input_file>" and turns it into "-input_file <input_file>"
- * The appropiate argc, argv are also returned.
- *
- * Returns TRUE if the parameter is found in the file, and FALSE if it is not
- */
-bool generateCommandLine(FILE* fh,
-                           const char* param,
-                           int& argcp,
-                           char**& argvp,
-                           char*& copy);
+                                      int dim = 2);
 
 /** Get parameter from file.
  *
@@ -488,10 +384,7 @@ bool generateCommandLine(FILE* fh,
 std::string getParameter(FILE* fh,
                       const char* param,
                       int skip = 0,
-                      const char* option = NULL,
-                      int _errno = -1,
-                      const std::string & errmsg = "",
-                      int exit = 0);
+                      const char* option = NULL);
 
 /** Check if a parameter is present in a file.
  *
@@ -501,17 +394,6 @@ std::string getParameter(FILE* fh,
  * function returns FALSE
  */
 bool checkParameter(FILE* fh, const char* param);
-
-/** Get float vector from a file.
- *
- * The same as before but reading is done from a file
- */
-Matrix1D< double > getVectorParameter(FILE* fh,
-                                    const char* param,
-                                    int dim = 2,
-                                    int _errno = -1,
-                                    const std::string & errmsg = "",
-                                    int exit = 0);
 //@}
 //@}
 #endif
