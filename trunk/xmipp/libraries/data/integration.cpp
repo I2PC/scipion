@@ -112,7 +112,7 @@ double Trapeze::Trap(int n)
 
 //**********************************************************
 // Implementation of the integral using the Romberg method
-//**********************************************************
+//**********************************************************mask.cpp to adapt
 #define JMAXP 30
 #define K 5
 
@@ -133,7 +133,7 @@ double Romberg::operator()()
         s[j+1] = s[j];
         h[j+1] = h[j] / 9.0;
     }
-    REPORT_ERROR(ERR_UNCLASSIFIED ,"Too many steps in routine Romberg");
+    REPORT_ERROR(ERR_NUMERICAL,"Too many steps in routine Romberg");
     return 0.0;
 }
 

@@ -82,20 +82,38 @@ char * XmippError::getDefaultMessage(ErrorType e)
 {
     switch (e)
     {
+    case ERR_MEM_BADREQUEST:
+        return " Bad amount of memory requested.";
     case ERR_MEM_NOTENOUGH:
         return " There is not enough memory for allocation.";
+    case ERR_MEM_NOTDEALLOC:
+        return " Memory has not been deallocated.";
+    case ERR_IMG_NOREAD:
+        return " Image cannot be read from file.";
+    case ERR_IMG_NOWRITE:
+        return " Image cannot be written to file.";
+    case ERR_IO:
+        return " Input/output general error.";
+    case ERR_IO_NOCLOSED:
+            return " File cannot be closed.";
+    case ERR_IO_NOPATH:
+        return " Environment PATH cannot be read.";
+    case ERR_IO_NOPERM:
+        return " Insufficient permissions to perform operation.";
+    case ERR_IO_NOREAD:
+            return " Couldn't read from file";
+    case ERR_IO_NOTDIR:
+            return " It is not a directory";
     case ERR_IO_NOTEXIST:
         return " File or directory does not exists";
-    case ERR_IO_NOPERM:
-        return " Insufficient permissions to perform operation";
-    case ERR_IO_NOREAD:
-        return " Couldn't read from file";
-    case ERR_IO_NOWRITE:
-        return " Couldn't write to file";
     case ERR_IO_NOTFILE:
         return " It is not a file";
-    case ERR_IO_NOTDIR:
-        return " It is not a directory";
+    case ERR_IO_NOTOPEN:
+        return "File cannot be open.";
+    case ERR_IO_NOWRITE:
+            return " Couldn't write to file";
+    case ERR_IO_SIZE:
+        return " Incorrect file size.";
     case ERR_ARG_INCORRECT:
         return " Incorrect argument received";
     case ERR_ARG_MISSING:
@@ -125,7 +143,7 @@ char * XmippError::getDefaultMessage(ErrorType e)
     case ERR_DEBUG_IMPOSIBLE:
         return " Just for debugging: situation that can't happens";
     default:
-      return "Unrecognized error code";
+        return "Unrecognized error code";
     }
 }
 

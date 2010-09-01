@@ -117,6 +117,17 @@ enum ErrorType
     ERR_IMG_NOREAD,         ///< Cannot read image from file.
     ERR_IMG_NOWRITE,        ///< Cannot write image to file.
 
+    ERR_IO,               ///< Input/Output general error.
+    ERR_IO_NOCLOSED,      ///< File cannot be closed.
+    ERR_IO_NOTEXIST,      ///< File or directory does not exists.
+    ERR_IO_NOTOPEN,       ///< File cannot be open.
+    ERR_IO_NOPERM,        ///< Insufficient permissions to perform operation.
+    ERR_IO_NOREAD,        ///< Couldn't read from file.
+    ERR_IO_NOWRITE,       ///< Couldn't write to file.
+    ERR_IO_NOTFILE,       ///< It is not a file.
+    ERR_IO_NOTDIR,        ///< It is not a directory.
+    ERR_IO_NOPATH,        ///< Environment PATH cannot be read.
+    ERR_IO_SIZE,          ///< Incorrect file size.
     ERR_IO,                 ///< Input/Output general error.
     ERR_IO_NOCLOSED,        ///< File cannot be closed.
     ERR_IO_NOTEXIST,        ///< File or directory does not exists.
@@ -159,7 +170,9 @@ enum ErrorType
     ERR_MMAP,               ///< Global mmap error.
     ERR_MMAP_NOTADDR,       ///< Map addressing of file has failed.
 
-    ERR_INDEX_OUTOFBOUNDS,	///< Index out of bounds.
+    ERR_NUMERICAL,          ///< Error related to numerical calculation.
+
+    ERR_INDEX_OUTOFBOUNDS,///< Index out of bounds.
 
     ERR_DEBUG_TEST,       	///< Just an error for debugging purpose.
     ERR_DEBUG_IMPOSIBLE,   	///< Just for debugging, situation that can't happens
@@ -202,7 +215,7 @@ void _Xmipp_error(const ErrorType nerr, const std::string& what,
  *     REPORT_ERROR(ERR_DEBUG_TEST, "Error 1");
  * @endcode
  */
-#define REPORT_ERROR(nerr, ErrormMsg) throw XmippError(nerr, ErrormMsg, __FILE__, __LINE__)
+#define REPORT_ERROR(nerr, ErrormMsg) throw XmippError((ErrorType)nerr, ErrormMsg, __FILE__, __LINE__)
 /** Report error without any extra message */
 //#define REPORT_ERROR(nerr) throw XmippError((ErrorType)nerr, "", __FILE__, __LINE__)
 
