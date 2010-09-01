@@ -872,7 +872,7 @@ void Prog_tomograph_alignment::produceSideInfo()
             if (linesRead<affineTransformations.size()-1 && line!="")
             {
                 std::vector< double > data;
-                readFloatList(line.c_str(), 8, data, 1, "Error reading affine line", 1);
+                readFloatList(line.c_str(), 8, data);
                 double tilt=data[0];
                 int i=0;
                 double bestDistance=ABS(tilt-tiltList[0]);
