@@ -489,7 +489,7 @@ void Prog_MLFalign2D_prm::produceSideInfo(int rank)
             // FIXME: make astigmatic CTFs non-astigmatic here!!
             if (ABS(ctf.DeltafV - ctf.DeltafU) >1.)
             {
-                REPORT_ERROR(1, "Prog_MLFalign2D-ERROR%% Only non-astigmatic CTFs are allowed!");
+                REPORT_ERROR(ERR_NUMERICAL, "Prog_MLFalign2D-ERROR%% Only non-astigmatic CTFs are allowed!");
             }
             ctf.K = 1.;
             ctf.enable_CTF = true;
@@ -503,9 +503,9 @@ void Prog_MLFalign2D_prm::produceSideInfo(int rank)
             else
             {
                 if (sampling != ctf.Tm)
-                    REPORT_ERROR(1, "Prog_MLFalign2D-ERROR%% Different sampling rates in CTF parameter files!");
+                    REPORT_ERROR(ERR_NUMERICAL, "Prog_MLFalign2D-ERROR%% Different sampling rates in CTF parameter files!");
                 if (Q0 != ctf.Q0 )
-                    REPORT_ERROR(1, "Prog_MLFalign2D-ERROR%% Avoid different Q0 values in the CTF parameter files!");
+                    REPORT_ERROR(ERR_NUMERICAL, "Prog_MLFalign2D-ERROR%% Avoid different Q0 values in the CTF parameter files!");
             }
             Maux.resize(dim, dim);
             FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY2D(Maux)
@@ -561,7 +561,7 @@ void Prog_MLFalign2D_prm::produceSideInfo(int rank)
             }
         }
         else
-            REPORT_ERROR(1, "Please provide -ref or -nref larger than zero");
+            REPORT_ERROR(ERR_INDEX_OUTOFBOUNDS, "Please provide -ref or -nref larger than zero");
     }
 }
 
@@ -773,7 +773,7 @@ void Prog_MLFalign2D_prm::produceSideInfo2(int nr_vols, int size, int rank)
         fn_tmp += ".noise";
         fh.open((fn_tmp).c_str(), std::ios::in);
         if (!fh)
-            REPORT_ERROR(1, (std::string)"Prog_MLFalign2D_prm: Cannot read file: " + fn_tmp);
+            REPORT_ERROR(ERR_IO_NOTOPEN, (std::string)"Prog_MLFalign2D_prm: Cannot read file: " + fn_tmp);
         else
         {
             for (int irr = 0; irr < hdim; irr++)
@@ -782,7 +782,7 @@ void Prog_MLFalign2D_prm::produceSideInfo2(int nr_vols, int size, int rank)
                 if (ABS(aux - ((double)irr/(sampling*dim)) ) > 0.01 )
                 {
                     std::cerr<<"aux= "<<aux<<" resol= "<<(double)irr/(sampling*dim)<<std::endl;
-                    REPORT_ERROR(1, (std::string)"Prog_MLFalign2D_prm: Wrong format: " + fn_tmp);
+                    REPORT_ERROR(ERR_NUMERICAL, (std::string)"Prog_MLFalign2D_prm: Wrong format: " + fn_tmp);
                 }
                 fh >> aux;
                 dAi(Vsig[ifocus], irr) = aux;
@@ -917,7 +917,7 @@ void Prog_MLFalign2D_prm::estimateInitialNoiseSpectra()
             fn_tmp += ".noise";
             fh.open((fn_tmp).c_str(), std::ios::out);
             if (!fh)
-                REPORT_ERROR(1, (std::string)"Prog_MLFalign2D_prm: Cannot write file: " + fn_tmp);
+                REPORT_ERROR(ERR_IO_NOTOPEN, (std::string)"Prog_MLFalign2D_prm: Cannot write file: " + fn_tmp);
             for (int irr = 0; irr < hdim; irr++)
             {
                 fh << (double)irr/(sampling*dim) << " " << dAi(Vsig[ifocus], irr) << "\n";
@@ -1023,7 +1023,7 @@ void Prog_MLFalign2D_prm::updateWienerFilters(MultidimArray<double> &spectral_si
 
     // Check that at least some frequencies have non-zero SSNR...
     if (maxres == 0)
-        REPORT_ERROR(1, "Prog_MLFalign2D_prm: All frequencies have zero spectral SNRs... (increase -reduce_snr) ");
+        REPORT_ERROR(ERR_VALUE_INCORRECT, "Prog_MLFalign2D_prm: All frequencies have zero spectral SNRs... (increase -reduce_snr) ");
 
     if (do_ctf_correction)
     {
@@ -1074,7 +1074,7 @@ void Prog_MLFalign2D_prm::updateWienerFilters(MultidimArray<double> &spectral_si
             fn_tmp += ".ssnr";
             fh.open((fn_tmp).c_str(), std::ios::out);
             if (!fh)
-                REPORT_ERROR(3008, (std::string)"Prog_MLFalign2D_prm: Cannot write file: " + fn_tmp);
+                REPORT_ERROR(ERR_IO_NOTOPEN, (std::string)"Prog_MLFalign2D_prm: Cannot write file: " + fn_tmp);
             fh  << "#  Resol      SSNR       CTF    Wiener    signal     noise       Ang" << std::endl;
             for (int irr = 0; irr < hdim; irr++)
             {
@@ -1769,7 +1769,7 @@ void Prog_MLFalign2D_prm::processOneImage(const MultidimArray<double> &Mimg,
                 if (point_trans < 0 || point_trans > dim2)
                 {
                     std::cerr<<"point_trans = "<<point_trans<<" ix= "<<ix<<" iy= "<<iy<<std::endl;
-                    REPORT_ERROR(1,"mlf_align2d BUG: point_trans < 0");
+                    REPORT_ERROR(ERR_INDEX_OUTOFBOUNDS,"mlf_align2d BUG: point_trans < 0");
                 }
                 if (iflip < nr_nomirror_flips)
                 {
@@ -1988,7 +1988,7 @@ void Prog_MLFalign2D_prm::processOneImage(const MultidimArray<double> &Mimg,
                                 if (point_trans < 0 || point_trans > dim2)
                                 {
                                     std::cerr<<"point_trans = "<<point_trans<<" ix= "<<ix<<" iy= "<<iy<<std::endl;
-                                    REPORT_ERROR(1,"mlf_align2d BUG: point_trans < 0 or > dim2");
+                                    REPORT_ERROR(ERR_INDEX_OUTOFBOUNDS,"mlf_align2d BUG: point_trans < 0 or > dim2");
                                 }
                                 pdf = fracpdf * A2D_ELEM(P_phi, iy, ix);
                                 if (pdf > 0)
@@ -2171,7 +2171,7 @@ void Prog_MLFalign2D_prm::processOneImage(const MultidimArray<double> &Mimg,
             else if (df==30)
                 ksone(aux_array, 2*nr_points_prob, &lcdf_tstudent_mlf30, &KSD, &KSprob);
             else
-                REPORT_ERROR(1,"KS-test for t-distribution only implemented for df=1,3,6,9 or 30!");
+                REPORT_ERROR(ERR_VALUE_INCORRECT,"KS-test for t-distribution only implemented for df=1,3,6,9 or 30!");
         }
         else
         {
@@ -2202,7 +2202,7 @@ void Prog_MLFalign2D_prm::processOneImage(const MultidimArray<double> &Mimg,
             std::ofstream fh_hist;
             fh_hist.open((fn_hist).c_str(), std::ios::out);
             if (!fh_hist)
-                REPORT_ERROR(1, (std::string)"Cannot write histogram file "+ fn_hist);
+                REPORT_ERROR(ERR_IO_NOTOPEN, (std::string)"Cannot write histogram file "+ fn_hist);
             FOR_ALL_ELEMENTS_IN_ARRAY1D(hist)
             {
                 hist.index2val(i, val);
@@ -2917,7 +2917,7 @@ void Prog_MLFalign2D_prm::writeOutputFiles(const int iter, double &sumw_allrefs,
         fn_tmp = fn_base + "_avg.hist";
         fh_hist.open((fn_tmp).c_str(), std::ios::out);
         if (!fh_hist)
-            REPORT_ERROR(1, (std::string)"Cannot write histogram file "+ fn_tmp);
+            REPORT_ERROR(ERR_IO_NOTOPEN, (std::string)"Cannot write histogram file "+ fn_tmp);
         sumhist /= (sumhist.sum()*sumhist.step_size);
         FOR_ALL_ELEMENTS_IN_ARRAY1D(sumhist)
         {
@@ -2934,7 +2934,7 @@ void Prog_MLFalign2D_prm::writeOutputFiles(const int iter, double &sumw_allrefs,
         fn_tmp = fn_base + "_resol.hist";
         fh_hist.open((fn_tmp).c_str(), std::ios::out);
         if (!fh_hist)
-            REPORT_ERROR(1, (std::string)"Cannot write histogram file "+ fn_tmp);
+            REPORT_ERROR(ERR_IO_NOTOPEN, (std::string)"Cannot write histogram file "+ fn_tmp);
         FOR_ALL_ELEMENTS_IN_ARRAY1D(sumhist)
         {
             sumhist.index2val(i, val);
@@ -2968,7 +2968,7 @@ void Prog_MLFalign2D_prm::writeOutputFiles(const int iter, double &sumw_allrefs,
             fn_tmp += ".noise";
             fh.open((fn_tmp).c_str(), std::ios::out);
             if (!fh)
-                REPORT_ERROR(1, (std::string)"Prog_MLFalign2D_prm: Cannot write file: " + fn_tmp);
+                REPORT_ERROR(ERR_IO_NOTOPEN, (std::string)"Prog_MLFalign2D_prm: Cannot write file: " + fn_tmp);
             for (int irr = 0; irr < hdim; irr++)
             {
                 fh << irr/(sampling*dim) << " " << dAi(Vsig[ifocus], irr) << "\n";
