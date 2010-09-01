@@ -172,7 +172,7 @@ bool check_for_operation(int argc, char **argv, char *operation,
         {
             // check if we have a number using textToFloat
             // If a problem exist, textToFloat will throw an exception, catched by the main function
-            double dummy = textToFloat(fn, 2101, "One of the parameters is neither a number nor a file\n\n");
+            double dummy = textToFloat(fn);
             operand_type = NUMBER;
         }
 

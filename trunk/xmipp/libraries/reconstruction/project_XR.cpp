@@ -97,86 +97,66 @@ void Projection_XR_Parameters::read(const FileName &fn_proj_param)
         switch (lineNo)
         {
         case 0:
-            fnPhantom = firstWord(line, 3007,
-                                  "Projection_XR_Parameters::read: Phantom name not found");
+            fnPhantom = firstWord(line);
             lineNo = 1;
             break;
         case 1:
             fnProjectionSeed =
-                firstWord(line, 3007,
-                          "Projection_XR_Parameters::read: Error in Projection seed");
+                firstWord(line);
             // Next two parameters are optional
             auxstr = nextToken();
             if (auxstr != NULL)
                 starting =
-                    textToInteger(auxstr, 3007,
-                                  "Projection_XR_Parameters::read: Error in First "
-                                  "projection number");
+                    textToInteger(auxstr);
             fn_projection_extension = nextToken();
             lineNo = 2;
             break;
         case 2:
-            proj_Xdim = textToInteger(firstToken(line), 3007,
-                                      "Projection_XR_Parameters::read: Error in X dimension");
-            proj_Ydim = textToInteger(nextToken(), 3007,
-                                      "Projection_XR_Parameters::read: Error in Y dimension");
+            proj_Xdim = textToInteger(firstToken(line));
+            proj_Ydim = textToInteger(nextToken());
             lineNo = 3;
             break;
         case 3:
-            axisRot = textToDouble(firstToken(line), 3007,
-                                   "Projection_XR_Parameters::read: Error in axisRot");
-            axisTilt = textToDouble(nextToken(), 3007,
-                                    "Projection_XR_Parameters::read: Error in axisTilt");
+            axisRot = textToFloat(firstToken(line));
+            axisTilt = textToFloat(nextToken());
             lineNo = 4;
             break;
         case 4:
             raxis.resize(3);
-            XX(raxis) = textToDouble(firstToken(line), 3007,
-                                     "Projection_XR_Parameters::read: Error in X component of raxis");
-            YY(raxis) = textToDouble(nextToken(), 3007,
-                                     "Projection_XR_Parameters::read: Error in Y component of raxis");
-            ZZ(raxis) = textToDouble(nextToken(), 3007,
-                                     "Projection_XR_Parameters::read: Error in Z component of raxis");
+            XX(raxis) = textToFloat(firstToken(line));
+            YY(raxis) = textToFloat(nextToken());
+            ZZ(raxis) = textToFloat(nextToken());
             lineNo = 5;
             break;
         case 5:
-            tilt0 = textToDouble(firstToken(line), 3007,
-                                 "Projection_XR_Parameters::read: Error in tilt0");
-            tiltF = textToDouble(nextToken(), 3007,
-                                 "Projection_XR_Parameters::read: Error in tiltF");
-            tiltStep = textToDouble(nextToken(), 3007,
-                                    "Projection_XR_Parameters::read: Error in tiltStep");
+            tilt0 = textToFloat(firstToken(line));
+            tiltF = textToFloat(nextToken());
+            tiltStep = textToFloat(nextToken());
             lineNo = 6;
             break;
         case 6:
-            Nangle_dev = textToFloat(firstWord(line), 3007,
-                                     "Projection_XR_Parameters::read: Error in angular noise");
+            Nangle_dev = textToFloat(firstWord(line));
             auxstr = nextToken();
             if (auxstr != NULL)
-                Nangle_avg = textToFloat(auxstr, 3007,
-                                         "Projection_XR_Parameters::read: Error in angular bias");
+                Nangle_avg = textToFloat(auxstr);
             else
                 Nangle_avg = 0;
             lineNo = 7;
             break;
         case 7:
-            Npixel_dev = textToFloat(firstWord(line), 3007,
-                                     "Projection_XR_Parameters::read: Error in pixel noise");
+            Npixel_dev = textToFloat(firstWord(line));
             auxstr = nextToken();
             if (auxstr != NULL)
-                Npixel_avg = textToFloat(auxstr, 3007,
-                                         "Projection_XR_Parameters::read: Error in pixel bias");
+                Npixel_avg = textToFloat(auxstr);
             else
                 Npixel_avg = 0;
             lineNo = 8;
             break;
         case 8:
-            Ncenter_dev = textToFloat(firstWord(line), 3007,
-                                      "Projection_XR_Parameters::read: Error in center noise");
+            Ncenter_dev = textToFloat(firstWord(line));
             auxstr = nextToken();
             if (auxstr != NULL)
-                Ncenter_avg = textToFloat(auxstr, 3007,
-                                          "Projection_XR_Parameters::read: Error in center bias");
+                Ncenter_avg = textToFloat(auxstr);
             else
                 Ncenter_avg = 0;
             lineNo = 9;
@@ -384,6 +364,7 @@ void project_xr_Volume_offCentered(PROJECT_XR_Side_Info &side, XRayPSF &psf, Pro
         << xend - xinit +1<< "," << yend - yinit +1 << ") " << std::endl;
 
 #if DEBUG
+
         std::cout <<"yoffsetN "<< yOffsetN <<std::endl;
         std::cout <<"xoffsetN "<< xOffsetN <<std::endl;
         std::cout <<"yinit    " << yinit  <<std::endl;
@@ -393,6 +374,7 @@ void project_xr_Volume_offCentered(PROJECT_XR_Side_Info &side, XRayPSF &psf, Pro
         std::cout <<"zinit    "   << zinit  <<std::endl;
         std::cout <<"zend     "    << zend  <<std::endl;
 #endif
+
     }
 
 

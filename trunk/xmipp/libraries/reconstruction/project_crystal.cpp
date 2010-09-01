@@ -67,46 +67,37 @@ void Crystal_Projection_Parameters::read(const FileName &fn_crystal, double scal
         switch (lineNo)
         {
         case 0:
-            crystal_Xdim = textToInteger(firstToken(line), 3007,
-                                         "Prog_Project_Crystal::read: Error in Crystal X dimension");
-            crystal_Ydim = textToInteger(nextToken(), 3007,
-                                         "Prog_Project_Crystal::read: Error in Crystal Y dimension");
+            crystal_Xdim = textToInteger(firstToken(line));
+            crystal_Ydim = textToInteger(nextToken());
             lineNo++;
             crystal_Xdim = ROUND(scale * crystal_Xdim);
             crystal_Ydim = ROUND(scale * crystal_Ydim);
             break;
         case 1:
             a.resize(3);
-            XX(a) = scale * textToFloat(firstToken(line), 3007,
-                                        "Prog_Project_Crystal::read: Error in X component of a");
-            YY(a) = scale * textToFloat(nextToken(), 3007,
-                                        "Prog_Project_Crystal::read: Error in Y component of a");
+            XX(a) = scale * textToFloat(firstToken(line));
+            YY(a) = scale * textToFloat(nextToken());
             ZZ(a) = 0;
             lineNo++;
             break;
         case 2:
             b.resize(3);
-            XX(b) = scale * textToFloat(firstToken(line), 3007,
-                                        "Prog_Project_Crystal::read: Error in X component of b");
-            YY(b) = scale * textToFloat(nextToken(), 3007,
-                                        "Prog_Project_Crystal::read: Error in Y component of b");
+            XX(b) = scale * textToFloat(firstToken(line));
+            YY(b) = scale * textToFloat(nextToken());
             ZZ(b) = 0;
             lineNo++;
             break;
         case 3:
-            Nshift_dev = scale * textToFloat(firstWord(line), 3007,
-                                             "Prog_Project_Parameters::read: Error in magnitude shift noise");
+            Nshift_dev = scale * textToFloat(firstWord(line));
             auxstr = nextToken();
             if (auxstr != NULL)
-                Nshift_avg = scale * textToFloat(auxstr, 3007,
-                                                 "Prog_Project_Parameters::read: Error in magnitude shift bias");
+                Nshift_avg = scale * textToFloat(auxstr);
             else
                 Nshift_avg = 0;
             lineNo++;
             break;
         case 4:
-            disappearing_th = textToFloat(firstToken(line), 3007,
-                                          "Prog_Project_Crystal::read: Error in disappearing threshold");
+            disappearing_th = textToFloat(firstToken(line));
             lineNo++;
             break;
         case 5:

@@ -313,22 +313,16 @@ std::string nextToken(const std::string& str, int& i);
  * word is substituted by a NULL character (as it uses the function firstToken.
  * Further word readings should use the function read_nextWord
  */
-char* firstWord(char* str,
-                int _errno = 2106,
-                const std::string & errmsg = "first word: String not found",
-                int exit = 0);
+char* firstWord(char* str);
 
 /** Get non empty string (STL).
  *
  * Same as the previous function but for STL strings
  */
-inline char* firstWord(std::string& str,
-                       int _errno = 2106,
-                       std::string errmsg = "first word: String not found",
-                       int exit = 0)
+inline char* firstWord(std::string& str)
 {
     // FIXME C-style cast
-    return firstWord((char*) str.c_str(), _errno, errmsg, exit);
+    return firstWord((char*) str.c_str());
 }
 
 /** Get next non empty string.
@@ -336,11 +330,9 @@ inline char* firstWord(std::string& str,
  * This is the same as the nextToken, but an exception is thrown or an exit
  * error produced if the word is empty
  */
-inline char* nextWord(int _errno = 2106,
-                      std::string errmsg = "next word: String not found",
-                      int exit = 0)
+inline char* nextWord()
 {
-    return firstWord((char*) NULL, _errno, errmsg, exit);
+    return firstWord((char*) NULL);
 }
 
 /** Tokenize a string and return a list of tokens
