@@ -64,7 +64,7 @@ void Projection_Tomography_Parameters::read(const FileName &fn_proj_param)
     char    *auxstr;
 
     if ((fh_param = fopen(fn_proj_param.c_str(), "r")) == NULL)
-        REPORT_ERROR(3005,
+        REPORT_ERROR(ERR_IO_NOTOPEN,
                      (std::string)"Projection_Tomography_Parameters::read: There is a problem "
                      "opening the file " + fn_proj_param);
     while (fgets(line, 200, fh_param) != NULL)
@@ -145,7 +145,7 @@ void Projection_Tomography_Parameters::read(const FileName &fn_proj_param)
         } /* switch end */
     } /* while end */
     if (lineNo != 9)
-        REPORT_ERROR(3007, (std::string)"Projection_Tomography_Parameters::read: I "
+        REPORT_ERROR(ERR_ARG_MISSING, (std::string)"Projection_Tomography_Parameters::read: I "
                      "couldn't read all parameters from file " + fn_proj_param);
     fclose(fh_param);
 }

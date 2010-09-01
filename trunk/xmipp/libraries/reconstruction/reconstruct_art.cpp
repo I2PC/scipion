@@ -206,7 +206,7 @@ void ART_single_step(
     if (fn_ctf != "" && !prm.unmatched)
     {
         if (prm.basis.type != Basis::blobs)
-            REPORT_ERROR(1, "ART_single_step: This way of correcting for the CTF "
+            REPORT_ERROR(ERR_VALUE_INCORRECT, "ART_single_step: This way of correcting for the CTF "
                          "only works with blobs");
         // It is a description of the CTF
         ctf.FilterShape = ctf.FilterBand = CTF;
@@ -297,7 +297,7 @@ void ART_single_step(
         std::cout << "---------------------------------------------\n";
         delete A;
     }
-    
+
     // Refine ..............................................................
     if (refine)
     {
@@ -393,5 +393,5 @@ void finish_ART_iterations(const Basic_ART_Parameters &prm,
 void apply_symmetry(GridVolume &vol_in, GridVolume *vol_out,
                     const Plain_ART_Parameters &eprm, int grid_type)
 {
-    REPORT_ERROR(1, "apply_symmetry: Function not implemented for single particles");
+    REPORT_ERROR(ERR_NOT_IMPLEMENTED, "apply_symmetry: Function not implemented for single particles");
 }

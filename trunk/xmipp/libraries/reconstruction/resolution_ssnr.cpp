@@ -118,7 +118,7 @@ void Prog_SSNR_prm::produce_side_info()
             N.read(fn_N);
             N().setXmippOrigin();
             if (!S().sameShape(N()))
-                REPORT_ERROR(1,
+                REPORT_ERROR(ERR_MULTIDIM_SIZE,
                              "SSNR: Signal and Noise volumes are not of the same size");
         }
         else
@@ -126,7 +126,7 @@ void Prog_SSNR_prm::produce_side_info()
             SF_Sth.read(fn_S);
             SF_Nth.read(fn_N);
             if (SF_Sth.size() != SF_Nth.size())
-                REPORT_ERROR(1,
+                REPORT_ERROR(ERR_MD_OBJECTNUMBER,
                              "SSNR: the number of projections in both selfiles is different");
         }
 
@@ -138,15 +138,15 @@ void Prog_SSNR_prm::produce_side_info()
         ImgSize(SF_N, nXdim, nYdim);
         if (sYdim != nYdim || sYdim != YSIZE(S()) ||
             sXdim != nXdim || sXdim != XSIZE(S()))
-            REPORT_ERROR(1,
+            REPORT_ERROR(ERR_MULTIDIM_SIZE,
                          "SSNR: conflict among the projection/projection sizes "
                          "or projection/volume");
 
         if (SF_S.size() != SF_N.size())
-            REPORT_ERROR(1,
+            REPORT_ERROR(ERR_MD_OBJECTNUMBER,
                          "SSNR: the number of projections in both selfiles is different");
         if (XSIZE(S()) == 0 && SF_Sth.size() != SF_S.size())
-            REPORT_ERROR(1,
+            REPORT_ERROR(ERR_MULTIDIM_SIZE,
                          "SSNR: the number of projections in both selfiles is different");
 
         if (fn_out_images == "")

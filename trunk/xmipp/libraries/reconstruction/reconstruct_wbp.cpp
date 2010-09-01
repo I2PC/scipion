@@ -114,7 +114,7 @@ void Prog_WBP_prm::produce_Side_info()
             }
         }
         if (SF.size() == 0)
-            REPORT_ERROR(1,"there is no input file with weight!=0");
+            REPORT_ERROR(ERR_MD_OBJECTNUMBER,"there is no input file with weight!=0");
     }
     else
         SF.read(fn_sel);
@@ -164,7 +164,7 @@ void Prog_WBP_prm::get_angles_for_image(const FileName &fn, double &rot, double 
             SF.getValue(MDL_WEIGHT,weight);
         }
         else
-            REPORT_ERROR(1, (std::string)"Cannot find " + fn + " in docfile " + fn_doc);
+            REPORT_ERROR(ERR_MD_NOOBJ, (std::string)"Cannot find " + fn + " in docfile " + fn_doc);
     }
 }
 

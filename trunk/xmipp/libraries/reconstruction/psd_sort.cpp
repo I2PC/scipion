@@ -136,7 +136,7 @@ void Prog_Sort_PSD_Parameters::run() {
 	std::ofstream fhOut;
 	fhOut.open(fnOut.c_str());
 	if (!fhOut)
-		REPORT_ERROR(1,(std::string)"Cannot open "+fnOut+" for output");
+		REPORT_ERROR(ERR_IO_NOTOPEN,(std::string)"Cannot open "+fnOut+" for output");
 	FOR_ALL_ELEMENTS_IN_ARRAY1D(idx) {
 		int ii = idx(i) - 1;
 		fhOut << filenames[ii] << " \t" << correlation(ii) << std::endl;

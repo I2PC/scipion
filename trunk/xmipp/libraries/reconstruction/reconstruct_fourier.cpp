@@ -123,7 +123,7 @@ void Prog_RecFourier_prm::produce_Side_info()
     {
         DF.read(fn_doc);
         if (SF.size() != DF.size())
-            REPORT_ERROR(1, "docfile and corresponding selfile have unequal (active) entries");
+            REPORT_ERROR(ERR_MD_OBJECTNUMBER, "docfile and corresponding selfile have unequal (active) entries");
     }
 
     // Ask for memory for the output volume and its Fourier transform
@@ -135,7 +135,7 @@ void Prog_RecFourier_prm::produce_Side_info()
     int Ydim=YSIZE(I());
     int Xdim=XSIZE(I());
     if (Ydim!=Xdim)
-        REPORT_ERROR(1,"This algorithm only works for squared images");
+        REPORT_ERROR(ERR_MULTIDIM_SIZE,"This algorithm only works for squared images");
     imgSize=Xdim;
     volPadSizeX = volPadSizeY = volPadSizeZ=Xdim*padding_factor_vol;
     Vout().initZeros(volPadSizeZ,volPadSizeY,volPadSizeX);
@@ -241,7 +241,7 @@ void Prog_RecFourier_prm::get_angles_for_image(const FileName &fn, double &rot,
         // COSS (*docfile).getValue(MDL_WEIGHT,weight);
     }
     else
-        REPORT_ERROR(1, (std::string)"Prog_RecFourier_prm: Cannot find " + fn + " in docfile " + fn_doc);
+        REPORT_ERROR(ERR_MD_NOOBJ, (std::string)"Prog_RecFourier_prm: Cannot find " + fn + " in docfile " + fn_doc);
 }
 
 void * Prog_RecFourier_prm::processImageThread( void * threadArgs )

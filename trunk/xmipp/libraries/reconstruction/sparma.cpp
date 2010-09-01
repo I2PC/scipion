@@ -49,7 +49,7 @@ void ARMA_parameters::read(const FileName &InputFile)
     // Read the parameters file to get every one
     FILE *file;
     if ((file = fopen(InputFile.c_str(), "r")) == NULL)
-        REPORT_ERROR(1, (std::string)"ARMA_parameters::read: There is a problem "
+        REPORT_ERROR(ERR_IO_NOTOPEN, (std::string)"ARMA_parameters::read: There is a problem "
                      "opening the file " + InputFile);
 
     fn_in        = getParameter(file, "image", 0, "");
@@ -70,7 +70,7 @@ void ARMA_parameters::write(const FileName &fn_prm, bool rewrite)
     if (!rewrite) fh_param.open(fn_prm.c_str(), std::ios::app);
     else          fh_param.open(fn_prm.c_str(), std::ios::out);
     if (!fh_param)
-        REPORT_ERROR(1, (std::string)"ARMA_parameters::write: There is a problem "
+        REPORT_ERROR(ERR_IO_NOTOPEN, (std::string)"ARMA_parameters::write: There is a problem "
                      "opening the file " + fn_prm);
     fh_param << "# ARMA parameters\n";
     if (fn_in != "")

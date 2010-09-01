@@ -63,14 +63,14 @@ void build_recons_info(MetaData &selfile, MetaData &selctf,
             selctf.firstObject();
             int numctf = truectf * (SL.SymsNo() + 1);
             if (numctf != numIMG)
-                REPORT_ERROR(9696, "Number of CTF and image files differ");
+                REPORT_ERROR(ERR_VALUE_INCORRECT, "Number of CTF and image files differ");
         }
     }
 
     if (IMG_Inf != NULL)
         delete [] IMG_Inf;
     if ((IMG_Inf = new Recons_info[numIMG]) == NULL)
-        REPORT_ERROR(3008, "Build_Recons_Info: No memory for the sorting");
+        REPORT_ERROR(ERR_MEM_NOTENOUGH, "Build_Recons_Info: No memory for the sorting");
 
     int i = 0; // It will account for the number of valid projections processed
     std::cerr << "Reading angle information ...\n";
@@ -240,7 +240,7 @@ void VariabilityClass::finishAnalysis()
         std::ofstream fh_dat;
         fh_dat.open("PPP.dat");
         if (!fh_dat)
-            REPORT_ERROR(1, "VariabilityClass::finishAnalysis: "
+            REPORT_ERROR(ERR_IO_NOTOPEN, "VariabilityClass::finishAnalysis: "
                          "Cannot open PPP.dat for output");
         fh_dat << NFEATURES << " " << nmax << std::endl;
         std::vector< Matrix1D<double> > v;
@@ -306,7 +306,7 @@ void VariabilityClass::finishAnalysis()
 #define GET_RESULTS(fh,fn,avg,cov,N,idx) \
     fh.open(fn);\
     if (!fh) \
-        REPORT_ERROR(1,(std::string)"VariabilityClass::finishAnalysis: " \
+        REPORT_ERROR(ERR_IO_NOTOPEN,(std::string)"VariabilityClass::finishAnalysis: " \
                      "Cannot open "+fn+" for input"); \
     n_previous=-1; \
     while (!fh.eof()) { \

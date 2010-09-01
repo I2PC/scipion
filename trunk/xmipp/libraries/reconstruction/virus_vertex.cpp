@@ -185,7 +185,7 @@ void VirusVertex::processAngles()
                 proj.setWeight(weight);
             }
             else
-                REPORT_ERROR(1, (std::string)"Cannot find " + fn_img + " in docfile " + fn_doc);
+                REPORT_ERROR(ERR_MD_NOOBJ, (std::string)"Cannot find " + fn_img + " in docfile " + fn_doc);
         }
         Matrix2D<double> A;
         Matrix1D<double> projected_point(3);
@@ -342,7 +342,7 @@ void VirusVertex::assignSymmetryMatricesToVertex()
         }
     }
     if (sixty>60)
-        REPORT_ERROR(1, (std::string)"assignSymmetryMatricesToVertex: more than 60 symmetries " );
+        REPORT_ERROR(ERR_INDEX_OUTOFBOUNDS, (std::string)"assignSymmetryMatricesToVertex: more than 60 symmetries " );
 }
 /* Main program ------------------------------------------------------------ */
 void VirusVertex::run()

@@ -38,7 +38,7 @@ void Prog_tomo_extract_subvolume_prm::read(int argc, char **argv)
     {
         int i = paremeterPosition(argc, argv, "-center");
         if (i + 3 >= argc)
-            REPORT_ERROR(1, "Not enough parameters after -center");
+            REPORT_ERROR(ERR_ARG_MISSING, "Not enough parameters after -center");
         center_ref.resize(3);
         XX(center_ref) = textToFloat(argv[i+1]);
         YY(center_ref) = textToFloat(argv[i+2]);
@@ -113,7 +113,7 @@ void Prog_tomo_extract_subvolume_prm::produceSideInfo()
 
     // Setup symmetry
     if (!SL.isSymmetryGroup(fn_sym, symmetry, sym_order))
-        REPORT_ERROR(3005, (std::string)"tomo_extract_subvolume: Invalid symmetry" +  fn_sym);
+        REPORT_ERROR(ERR_NUMERICAL, (std::string)"tomo_extract_subvolume: Invalid symmetry" +  fn_sym);
     SL.read_sym_file(fn_sym);
 
     // Check which symmetry operators give unique output points
@@ -148,7 +148,7 @@ void Prog_tomo_extract_subvolume_prm::produceSideInfo()
         }
         if (is_uniq)
         {
-            centers_subvolumes.push_back(newcenter);               
+            centers_subvolumes.push_back(newcenter);
             rotations_subvolumes.push_back(R);
         }
     }
@@ -179,7 +179,7 @@ void Prog_tomo_extract_subvolume_prm::processImages(int imgno_start, int imgno_e
         }
         else
         {
-            REPORT_ERROR(1,"BUG: no comment in DF where expected....");
+            REPORT_ERROR(ERR_MD_NOOBJ,"BUG: no comment in DF where expected....");
         }
 
         rot = DL[0];
@@ -195,7 +195,7 @@ void Prog_tomo_extract_subvolume_prm::processImages(int imgno_start, int imgno_e
 
         x0 = FIRST_XMIPP_INDEX(size);
         xF = LAST_XMIPP_INDEX(size);
-        
+
         // Tomo_Extract each of the unique subvolumes
         for (int i = 0; i < centers_subvolumes.size(); i++)
         {
@@ -229,7 +229,7 @@ void Prog_tomo_extract_subvolume_prm::processImages(int imgno_start, int imgno_e
             DFout.append_comment(fn_out);
             DFout.append_line(DLout);
         }
-        
+
     }
 
 }

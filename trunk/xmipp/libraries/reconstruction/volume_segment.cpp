@@ -90,7 +90,7 @@ void Prog_segment_prm::produce_side_info()
     if (voxel_mass == -1 && !en_threshold && !otsu)
     {
         if ((dalton_mass == -1 && aa_mass == -1) || sampling_rate == -1)
-            REPORT_ERROR(1, "Prog_segment_prm: No way to compute voxel mass");
+            REPORT_ERROR(ERR_VALUE_INCORRECT, "Prog_segment_prm: No way to compute voxel mass");
         if (dalton_mass != -1)
             voxel_mass = dalton_mass * 1.207 / sampling_rate3;
         else
@@ -246,7 +246,7 @@ void probabilistic_solvent(Image<double> *V_in, Image<double> *V_out)
     }
     else
     {
-        REPORT_ERROR(1, "Prog_segment_prm: empty solvent or protein region");
+        REPORT_ERROR(ERR_NUMERICAL, "Prog_segment_prm: empty solvent or protein region");
     }
 
     // Terwilliger-like calculation of P(x|solv) & P(x|prot)
@@ -334,7 +334,7 @@ void Prog_segment_prm::segment(Image<double> &mask)
         // Terwilliger-like calculation of P(solv|x) through P(x|solv) & P(x|prot)
         probabilistic_solvent(&V, &mask);
     }
-    
+
     // Save mask if necessary
     if (fn_mask != "" && (ok || do_prob))
         mask.write(fn_mask);
