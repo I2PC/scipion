@@ -47,7 +47,8 @@ void Prog_angular_class_average_prm::read(int argc, char **argv)
     {
         limitR = textToFloat(getParameter(argc, argv, "-limitR"));
         if (limitR < -100. || limitR > 100.)
-            REPORT_ERROR(1,"limitR should be a percentage: provide values between -100 and 100.");
+            REPORT_ERROR(ERR_VALUE_INCORRECT,
+                         "limitR should be a percentage: provide values between -100 and 100.");
         if (limitR > 0.)
             do_limitR0 = true;
         else if (limitR < 0.)
@@ -208,7 +209,8 @@ void Prog_angular_class_average_prm::produceSideInfo()
         if (XSIZE(Mwien) != paddim)
         {
             std::cerr<<"image size= "<<dim<<" padding factor= "<<pad<<" padded image size= "<<paddim<<" Wiener filter size= "<<XSIZE(Mwien)<<std::endl;
-            REPORT_ERROR(1,"Incompatible padding factor for this Wiener filter");
+            REPORT_ERROR(ERR_VALUE_INCORRECT,
+                         "Incompatible padding factor for this Wiener filter");
         }
     }
     // Set ring defaults
@@ -621,8 +623,8 @@ void Prog_angular_class_average_prm::processOneClass(int &dirno,
     // Re-alignment of the class
     if (nr_iter > 0)
     {
-    	SFclass=SFclass1;
-    	SFclass.unionDistinct(SFclass2);
+        SFclass=SFclass1;
+        SFclass.unionDistinct(SFclass2);
         avg() = avg1() + avg2();
         w = w1 + w2;
         avg.setWeight(w);
@@ -712,7 +714,7 @@ void Prog_angular_class_average_prm::writeToDisc(Image<double> avg,
         if (ROUND(w) != SF.size())
         {
             std::cerr<<" w = "<< w <<" SF.size()= "<< SF.size() <<" dirno = "<<dirno<<std::endl;
-            REPORT_ERROR(1,"Selfile and average weight do not correspond!");
+            REPORT_ERROR(ERR_MD_OBJECTNUMBER,"Selfile and average weight do not correspond!");
         }
     }
 }
@@ -723,7 +725,7 @@ void Prog_angular_class_average_prm::addClassAverage(int dirno,
         double w1,
         double w2)
 {
-	double rot, tilt;
+    double rot, tilt;
     FileName fn_tmp;
 
     DFlib.getValue(MDL_ANGLEROT,rot,dirno);
@@ -786,10 +788,10 @@ void Prog_angular_class_average_prm::finalWriteToDisc()
     fn_tmp=fn_out+"_classes.doc";
     if (do_add && exists(fn_tmp))
     {
-		MetaData MDaux;
-		MDaux.read(fn_tmp);
-		MDaux.unionAll(SFclasses);
-		SFclasses.aggregate(MDaux, AGGR_SUM, MDL_IMAGE, MDL_WEIGHT, MDL_SUM);
+        MetaData MDaux;
+        MDaux.read(fn_tmp);
+        MDaux.unionAll(SFclasses);
+        SFclasses.aggregate(MDaux, AGGR_SUM, MDL_IMAGE, MDL_WEIGHT, MDL_SUM);
     }
     SFclasses.write(fn_tmp);
     if (do_split)
@@ -797,19 +799,19 @@ void Prog_angular_class_average_prm::finalWriteToDisc()
         fn_tmp=fn_out1+"_classes.doc";
         if (do_add && exists(fn_tmp))
         {
-    		MetaData MDaux;
-    		MDaux.read(fn_tmp);
-    		MDaux.unionAll(SFclasses1);
-    		SFclasses1.aggregate(MDaux, AGGR_SUM,MDL_IMAGE,MDL_WEIGHT,MDL_SUM);
+            MetaData MDaux;
+            MDaux.read(fn_tmp);
+            MDaux.unionAll(SFclasses1);
+            SFclasses1.aggregate(MDaux, AGGR_SUM,MDL_IMAGE,MDL_WEIGHT,MDL_SUM);
         }
         SFclasses1.write(fn_tmp);
         fn_tmp=fn_out2+"_classes.doc";
         if (do_add && exists(fn_tmp))
         {
-    		MetaData MDaux;
-    		MDaux.read(fn_tmp);
-    		MDaux.unionAll(SFclasses2);
-    		SFclasses2.aggregate(MDaux, AGGR_SUM,MDL_IMAGE,MDL_WEIGHT,MDL_SUM);
+            MetaData MDaux;
+            MDaux.read(fn_tmp);
+            MDaux.unionAll(SFclasses2);
+            SFclasses2.aggregate(MDaux, AGGR_SUM,MDL_IMAGE,MDL_WEIGHT,MDL_SUM);
         }
         SFclasses2.write(fn_tmp);
     }

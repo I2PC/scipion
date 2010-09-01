@@ -381,8 +381,8 @@ void ART_single_step(
 {
     // Only works for blob volumes .............................................
     if (prm.basis.type != Basis::blobs)
-        REPORT_ERROR(1,
-                     "ART_single_step: This function only works with blob volumes");
+        REPORT_ERROR(ERR_VALUE_INCORRECT,
+                     "This function only works with blob volumes");
 
     // Compute lattice vectors to be used ......................................
     Matrix1D<double> aint, bint, shift;

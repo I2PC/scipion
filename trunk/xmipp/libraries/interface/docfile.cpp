@@ -613,7 +613,7 @@ double DocFile::operator()(int k, int i)
     std::vector< DocLine >::iterator aux = find(k);
 
     if (aux == m.end())
-        REPORT_ERROR(1604, "DocFile::operator(): The given key (" + integerToString(k)
+        REPORT_ERROR(ERR_DOCFILE, "DocFile::operator(): The given key (" + integerToString(k)
                      + ") is not in the file");
 
     return (*aux)[i];
@@ -681,7 +681,7 @@ void DocFile::get_angles1(int k, double& rot, double& tilt, double& psi,
     std::vector< DocLine >::iterator it = find(k);
 
     if (it == m.end())
-        REPORT_ERROR(1604, "DocFile::get_angles1(): The given key (" +
+        REPORT_ERROR(ERR_DOCFILE, "DocFile::get_angles1(): The given key (" +
                      integerToString(k) + ") is not in the file");
 
     switch (ang1[0])
@@ -735,7 +735,7 @@ void DocFile::get_angles2(int k, double& rot, double& tilt, double &psi,
 {
     std::vector< DocLine >::iterator it = find(k);
     if (it == m.end())
-        REPORT_ERROR(1604, "DocFile::get_angles2(): The given key (" + integerToString(k)
+        REPORT_ERROR(ERR_DOCFILE, "DocFile::get_angles2(): The given key (" + integerToString(k)
                      + ") is not in the file");
 
     switch (ang1[0])
@@ -789,7 +789,7 @@ void DocFile::set_angles(int k, double rot, double tilt, double psi,
 {
     std::vector< DocLine >::iterator it = find(k);
     if (it == m.end())
-        REPORT_ERROR(1604, "DocFile::set_angles(): The given key (" +
+        REPORT_ERROR(ERR_DOCFILE, "DocFile::set_angles(): The given key (" +
                      integerToString(k) + ") is not in the file");
 
     switch (ang1[0])
@@ -848,7 +848,7 @@ void DocFile::get_image(int key, Image<double> &I, bool apply_geo)
     if (get_current_line().Is_comment())
         fn_img = ((get_current_line()).get_text()).erase(0, 3);
     else
-        REPORT_ERROR(1,"The docfile provided is not of type Alignment");
+        REPORT_ERROR(ERR_DOCFILE,"The docfile provided is not of type Alignment");
 
     // Read actual image
     I.read(fn_img);
@@ -880,7 +880,7 @@ FileName DocFile::get_imagename(int key)
     if (get_current_line().Is_comment())
         fn_img = ((get_current_line()).get_text()).erase(0, 3);
     else
-        REPORT_ERROR(1,"The docfile provided is not of type Alignment");
+        REPORT_ERROR(ERR_DOCFILE,"The docfile provided is not of type Alignment");
     return fn_img;
 }
 
@@ -903,7 +903,7 @@ void DocFile::set(int k, int i, double val)
 {
     std::vector< DocLine >::iterator it = find(k);
     if (it == m.end())
-        REPORT_ERROR(1604, "DocFile::set(): The given key (" + integerToString(k)
+        REPORT_ERROR(ERR_DOCFILE, "DocFile::set(): The given key (" + integerToString(k)
                      + ") is not in the file");
 
     it->set(i, val);
@@ -1328,7 +1328,7 @@ void DocFile::merge(DocFile& DF, int mode, int sumcol)
                 }
             case(DOCMERGE_ERROR):
                             std::cerr<<"image name = "<<fn_img;
-                REPORT_ERROR(1,"Image occured in two docfiles to be merged");
+                REPORT_ERROR(ERR_DOCFILE,"Image occured in two docfiles to be merged");
             }
         }
         else
@@ -1410,7 +1410,7 @@ void DocFile::setCol(int c, Matrix1D< double >& v)
     renum();
 
     if (VEC_XSIZE(v) < m.size())
-        REPORT_ERROR(1605, "DocFile::setCol(): Column assignment not complete");
+        REPORT_ERROR(ERR_DOCFILE, "DocFile::setCol(): Column assignment not complete");
 }
 
 int read_Euler_document_file(FileName name, std::string ang1, std::string ang2,
@@ -1490,7 +1490,7 @@ void get_subset_docfile(DocFile& DFin, MetaData& SF, DocFile& DFout)
     if (DL.Is_comment())
         fn_tmp = DL.get_text();
     if (strstr(fn_tmp.c_str(), "Headerinfo") == NULL)
-        REPORT_ERROR(1607,"Input docfile is not of NewXmipp-style");
+        REPORT_ERROR(ERR_DOCFILE,"Input docfile is not of NewXmipp-style");
     else
         // append the same header to DFout
         DFout.append_comment(fn_tmp.without(" ; "));
@@ -1505,7 +1505,7 @@ void get_subset_docfile(DocFile& DFin, MetaData& SF, DocFile& DFout)
             DFout.append_line(DL);
         }
         else
-            REPORT_ERROR(1608, (std::string)"Docfile: Cannot find " + fn_tmp + " in docfile ");
+            REPORT_ERROR(ERR_DOCFILE, (std::string)"Docfile: Cannot find " + fn_tmp + " in docfile ");
     }
 }
 

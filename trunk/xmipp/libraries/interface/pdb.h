@@ -213,7 +213,7 @@ public:
             idx=6;
             break;
         default:
-            REPORT_ERROR(1,(std::string)
+            REPORT_ERROR(ERR_VALUE_INCORRECT,(std::string)
                          "AtomInterpolator::getAtomIndex: Atom "+atom+" unknown");
         }
         return idx;

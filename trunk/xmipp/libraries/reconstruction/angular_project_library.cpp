@@ -238,7 +238,8 @@ void Prog_angular_project_library_Parameters::run()
     //process the symmetry file
     //only checks symmetry and set pg_order and pg_group, no memory allocation
     if (!mysampling.SL.isSymmetryGroup(fn_sym, symmetry, sym_order))
-         REPORT_ERROR(3005, (std::string)"angular_project_library::run Invalid symmetry" +  fn_sym);
+         REPORT_ERROR(ERR_VALUE_INCORRECT,
+        		 (std::string)"Invalid symmetry" +  fn_sym);
     if(perturb_projection_vector!=0)
         {
         int my_seed;
@@ -270,7 +271,8 @@ void Prog_angular_project_library_Parameters::run()
     //======================
     //recompute symmetry with neigh symmetry 
     if (!mysampling.SL.isSymmetryGroup(fn_sym_neigh, symmetry, sym_order))
-          REPORT_ERROR(3005, (std::string)"angular_project_library::run Invalid neig symmetry" +  fn_sym_neigh);
+          REPORT_ERROR(ERR_VALUE_INCORRECT,
+        		  (std::string)"Invalid neig symmetry" +  fn_sym_neigh);
     mysampling.SL.read_sym_file(fn_sym_neigh);
     mysampling.fill_L_R_repository();
     //precompute product between symmetry matrices and experimental data

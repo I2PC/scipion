@@ -413,7 +413,7 @@ public:
     {
         int imax = XSIZE(lambda_list);
         if (imax == 0)
-            REPORT_ERROR(1, "Basic_art: There are no lambdas\n");
+            REPORT_ERROR(ERR_MULTIDIM_SIZE, "Basic_art: There are no lambdas\n");
         if (n >= imax) return lambda_list(imax -1);
         else         return lambda_list(n);
     }
@@ -426,7 +426,7 @@ public:
     {
         int imax = XSIZE(kappa_list);
         if (imax == 0)
-            REPORT_ERROR(1, "Basic_art: There are no kappas\n");
+            REPORT_ERROR(ERR_MULTIDIM_SIZE, "Basic_art: There are no kappas\n");
         if (n >= imax) return kappa_list(imax -1);
         else         return kappa_list(n);
     }
