@@ -179,7 +179,8 @@ void Prog_angular_projection_matching_prm::produceSideInfo()
     Image<double> imgRef;
     imgRef.read(fnt);
     if (!imgRef().sameShape(img()))
-        REPORT_ERROR(1,"Check that the reference volume and the experimental images are of the same size");
+        REPORT_ERROR(ERR_MULTIDIM_SIZE,
+                     "Check that the reference volume and the experimental images are of the same size");
 
     // Set padding dimension
     paddim=ROUND(pad*dim);
@@ -262,7 +263,7 @@ void Prog_angular_projection_matching_prm::produceSideInfo()
     }
     catch (std::bad_alloc&)
     {
-        REPORT_ERROR(1,"Error allocating memory in produceSideInfo");
+        REPORT_ERROR(ERR_MEM_BADREQUEST,"Error allocating memory in produceSideInfo");
     }
 
     // CTF stuff
@@ -276,7 +277,8 @@ void Prog_angular_projection_matching_prm::produceSideInfo()
             if (XSIZE(Mctf) != paddim)
             {
                 std::cerr<<"image size= "<<dim<<" padding factor= "<<pad<<" padded image size= "<<paddim<<" Wiener filter size= "<<XSIZE(Mctf)<<std::endl;
-                REPORT_ERROR(1,"Incompatible padding factor for this CTF filter");
+                REPORT_ERROR(ERR_VALUE_INCORRECT,
+                             "Incompatible padding factor for this CTF filter");
             }
         }
         else
@@ -286,7 +288,8 @@ void Prog_angular_projection_matching_prm::produceSideInfo()
             ctf.read(fn_ctf);
             if (ABS(ctf.DeltafV - ctf.DeltafU) >1.)
             {
-                REPORT_ERROR(1, "ERROR%% Only non-astigmatic CTFs are allowed!");
+                REPORT_ERROR(ERR_VALUE_INCORRECT,
+                             "ERROR!! Only non-astigmatic CTFs are allowed!");
             }
             ctf.enable_CTF = true;
             ctf.Produce_Side_Info();
@@ -582,7 +585,7 @@ void Prog_angular_projection_matching_prm::translationallyAlignOneImage(Multidim
         double &maxcorr)
 {
 
-	MultidimArray<double> Mtrans,Mimg,Mref;
+    MultidimArray<double> Mtrans,Mimg,Mref;
     int refno;
     Mtrans.setXmippOrigin();
     Mimg.setXmippOrigin();

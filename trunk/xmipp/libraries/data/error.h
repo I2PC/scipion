@@ -116,6 +116,8 @@ enum ErrorType
     ERR_DEBUG_TEST,         ///< Just an error for debugging purpose.
     ERR_DEBUG_IMPOSIBLE,    ///< Just for debugging, situation that can't happens
 
+    ERR_DOCFILE,            ///< Error in docfile format
+
     ERR_GRID,               ///< Grid general error.
     ERR_GRID_SIZE,          ///< Incorrect number of GRID volumes or shapes
 

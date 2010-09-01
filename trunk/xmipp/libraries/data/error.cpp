@@ -92,6 +92,9 @@ char * XmippError::getDefaultMessage(ErrorType e)
     case ERR_DEBUG_IMPOSIBLE:
         return " Just for debugging: situation that can't happens";
 
+    case ERR_DOCFILE:
+        return " Error in docfile format";
+
     case ERR_GRID:
         return " Grid general error";
     case ERR_GRID_SIZE:

@@ -56,7 +56,7 @@ double& DocLine::operator[](int i)
     if (i+1 > data.size())
     {
         std::cout << "Docline=" << *this << std::endl;
-        REPORT_ERROR(1604, "Trying to access to non-existing element " +
+        REPORT_ERROR(ERR_DOCFILE, "Trying to access to non-existing element " +
                      integerToString(i) + " of a document line");
     }
 
@@ -68,7 +68,7 @@ double DocLine::operator[](int i) const
     if (i+1 > data.size())
     {
         std::cout << "Docline=" << *this << std::endl;
-        REPORT_ERROR(1604, "Trying to access to non-existing element " +
+        REPORT_ERROR(ERR_DOCFILE, "Trying to access to non-existing element " +
                      integerToString(i) + " of a document line");
     }
 
@@ -101,7 +101,7 @@ void DocLine::set(const Matrix1D< double >& v)
 
     data.reserve(VEC_XSIZE(v));
     FOR_ALL_ELEMENTS_IN_MATRIX1D(v)
-        data.push_back(VEC_ELEM(v, i));
+    data.push_back(VEC_ELEM(v, i));
 }
 
 void DocLine::clear()
@@ -174,16 +174,14 @@ void DocLine::read(std::istream& in)
         text = "";
         int i = 0;
 
-        key = textToInteger(nextToken(line, i), 1602, "Error reading key");
-        param_no = textToInteger(nextToken(line, i), 1602,
-                                 "Error reading number parameters");
+        key = textToInteger(nextToken(line, i));
+        param_no = textToInteger(nextToken(line, i));
         std::string auxline = line;
 
         try
         {
             // Try unfixed mode first
-            readFloatList(line, i, param_no, data, 1602,
-                          "Error reading doc file line");
+            readFloatList(line, i, param_no, data);
         }
         catch (XmippError e)
         {
@@ -381,26 +379,21 @@ void DocFile::read(const FileName& name, int overriding)
     // Open file
     in.open(name.c_str(), std::ios::in);
     if (!in)
-        REPORT_ERROR(1601, "DocFile::read: File " + name + " not found");
+        REPORT_ERROR(ERR_DOCFILE, "DocFile::read: File " + name + " not found");
 
     // Read each line and keep it in the list of the DocFile object
     in.peek();
     while (!in.eof())
     {
-#ifndef _NO_EXCEPTION
         try
         {
-#endif
             temp.read(in);
-#ifndef _NO_EXCEPTION
-
         }
         catch (XmippError e)
         {
             std::cout << "Doc File: Line " << line_no <<
             " is skipped due to an error\n";
         }
-#endif
 
         switch (temp.line_type)
         {
@@ -446,7 +439,7 @@ void DocFile::write(const FileName& name)
     // Open file
     out.open(fn_doc.c_str(), std::ios::out);
     if (!out)
-        REPORT_ERROR(1603, "DocFile::write: File " + fn_doc +
+        REPORT_ERROR(ERR_IO_NOWRITE, "DocFile::write: File " + fn_doc +
                      " cannot be written");
 
     // Read each line and keep it in the list of the SelFile object
@@ -524,7 +517,7 @@ void DocFile::get_selfile(MetaData& sel)
 
     if ((*current_line).Is_comment())
         if (strstr(((*current_line).get_text()).c_str(), "Headerinfo") == NULL)
-            REPORT_ERROR(1605,
+            REPORT_ERROR(ERR_DOCFILE,
                          "DocFile::get_selfile: Docfile is of non-NewXmipp type!");
 
     sel.clear();
@@ -567,9 +560,7 @@ int DocFile::getColNumberFromHeader(const char * pattern)
     {
         header = (*current_line).get_text();
         if (strstr(header.c_str(), "Headerinfo") == NULL)
-        {
-            REPORT_ERROR(1606,"DocFile:: docfile is of non-NewXmipp type!");
-        }
+            REPORT_ERROR(ERR_DOCFILE,"DocFile:: docfile is of non-NewXmipp type!");
         else
         {
             std::vector<std::string> tokens;
@@ -634,7 +625,8 @@ void DocFile::get_angles(int k, double& rot, double& tilt, double& psi,
     std::vector< DocLine >::iterator it = find(k);
 
     if (it == m.end())
-        REPORT_ERROR(1604, "DocFile::get_angles(): The given key (" + integerToString(k)
+        REPORT_ERROR(ERR_VALUE_INCORRECT,
+                     "DocFile::get_angles(): The given key (" + integerToString(k)
                      + ") is not in the file");
 
     switch (ang1[0])
@@ -874,7 +866,7 @@ void DocFile::get_image(int key, Image<double> &I, bool apply_geo)
     {
         Matrix2D<double> A = I.getTransformationMatrix(true);
         if (!A.isIdentity())
-        	selfApplyGeometry(BSPLINE3, I(), A, IS_INV, WRAP);
+            selfApplyGeometry(BSPLINE3, I(), A, IS_INV, WRAP);
     }
 }
 
@@ -1475,8 +1467,8 @@ void select_images(DocFile& doc, MetaData& sel, int col, bool en_limit0,
 
     FOR_ALL_OBJECTS_IN_METADATA(sel)
     {
-    	int enabled;
-    	sel.getValue(MDL_ENABLED,enabled);
+        int enabled;
+        sel.getValue(MDL_ENABLED,enabled);
         if (enabled)
         {
             if (en_limit0 && doc(col) < limit0 || en_limitF && doc(col) > limitF)

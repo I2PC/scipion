@@ -43,11 +43,11 @@ void Prog_angular_distance_prm::read(int argc, char **argv)
 void Prog_angular_distance_prm::show()
 {
     std::cout << "Angular docfile 1: " << fn_ang1       << std::endl
-              << "Angular docfile 2: " << fn_ang2       << std::endl
-              << "Angular output   : " << fn_ang_out    << std::endl
-              << "Symmetry file    : " << fn_sym        << std::endl
-              << "Check mirrors    : " << check_mirrors << std::endl
-              << "Object rotation  : " << object_rotation<<std::endl
+    << "Angular docfile 2: " << fn_ang2       << std::endl
+    << "Angular output   : " << fn_ang_out    << std::endl
+    << "Symmetry file    : " << fn_sym        << std::endl
+    << "Check mirrors    : " << check_mirrors << std::endl
+    << "Object rotation  : " << object_rotation<<std::endl
     ;
 }
 
@@ -55,26 +55,30 @@ void Prog_angular_distance_prm::show()
 void Prog_angular_distance_prm::usage()
 {
     std::cerr << "   -ang1 <DocFile 1>         : Angular document file 1\n"
-              << "   -ang2 <DocFile 2>         : Angular document file 2\n"
-              << "  [-o <DocFile out>]         : Merge dcfile. If not given it is\n"
-              << "                               not generated\n"
-              << "  [-sym <symmetry file>]     : Symmetry file if any\n"
-              << "  [-check_mirrors]           : Check if mirrored axes give better\n"
-              << "  [-object_rotation]         : Use object rotations rather than projection directions\n"
-              << "                               fit (Spider, APMQ)\n"
+    << "   -ang2 <DocFile 2>         : Angular document file 2\n"
+    << "  [-o <DocFile out>]         : Merge dcfile. If not given it is\n"
+    << "                               not generated\n"
+    << "  [-sym <symmetry file>]     : Symmetry file if any\n"
+    << "  [-check_mirrors]           : Check if mirrored axes give better\n"
+    << "  [-object_rotation]         : Use object rotations rather than projection directions\n"
+    << "                               fit (Spider, APMQ)\n"
     ;
 }
 
 // Produce side information ================================================
 void Prog_angular_distance_prm::produce_side_info()
 {
-    if (fn_ang1 != "") DF1.read(fn_ang1);
-    if (fn_ang2 != "") DF2.read(fn_ang2);
-    if (fn_sym != "") SL.read_sym_file(fn_sym);
+    if (fn_ang1 != "")
+        DF1.read(fn_ang1);
+    if (fn_ang2 != "")
+        DF2.read(fn_ang2);
+    if (fn_sym != "")
+        SL.read_sym_file(fn_sym);
 
     // Check that both docfiles are of the same length
     if (DF1.size() != DF2.size())
-        REPORT_ERROR(1, "Angular_distance: Input Docfiles with different number of entries");
+        REPORT_ERROR(ERR_MD_OBJECTNUMBER,
+                     "Angular_distance: Input Docfiles with different number of entries");
 }
 
 // 2nd angle set -----------------------------------------------------------
@@ -101,20 +105,24 @@ double Prog_angular_distance_prm::second_angle_set(double rot1, double tilt1,
     double N = 0;
     for (int i = 0; i < 3; i++)
     {
-        if (projdir_mode && i != 2) continue;
+        if (projdir_mode && i != 2)
+            continue;
         E1.getRow(i, v1);
         E2.getRow(i, v2);
         double dist = RAD2DEG(acos(CLIP(dotProduct(v1, v2), -1, 1)));
         axes_dist += dist;
         N++;
 #ifdef DEBUG
+
         std::cout << "d(" << i << ")=" << dist << " ";
 #endif
+
     }
     axes_dist /= N;
 
 
 #ifdef DEBUG
+
     std::cout << "-->" << axes_dist << std::endl;
 #endif
 
@@ -189,6 +197,7 @@ double Prog_angular_distance_prm::check_symmetries(double rot1, double tilt1,
 #ifdef DEBUG
     std::cout << "   Best=" << best_ang_dist << std::endl;
 #endif
+
     rot2 = best_rot2;
     tilt2 = best_tilt2;
     psi2 = best_psi2;
@@ -198,7 +207,7 @@ double Prog_angular_distance_prm::check_symmetries(double rot1, double tilt1,
 //#define DEBUG
 // Compute distance --------------------------------------------------------
 void Prog_angular_distance_prm::compute_distance(double &angular_distance,
-    double &shift_distance)
+        double &shift_distance)
 {
     MetaData DF_out;
     angular_distance = 0;
@@ -206,9 +215,9 @@ void Prog_angular_distance_prm::compute_distance(double &angular_distance,
 
     DF1.firstObject();
     DF2.firstObject();
-    
+
     MultidimArray<double> rot_diff, tilt_diff, psi_diff, vec_diff,
-        X_diff, Y_diff, shift_diff;
+    X_diff, Y_diff, shift_diff;
     rot_diff.resize(DF1.size());
     tilt_diff.resize(rot_diff);
     psi_diff.resize(rot_diff);
@@ -287,7 +296,8 @@ void Prog_angular_distance_prm::compute_distance(double &angular_distance,
         shift_distance += shift_diff(i);
         DF_out.addObject();
         DF_out.setValue(MDL_COMMENT,output);
-        FileName fnImg; DF1.getValue(MDL_IMAGE,fnImg);
+        FileName fnImg;
+        DF1.getValue(MDL_IMAGE,fnImg);
         DF_out.setValue(MDL_IMAGE,fnImg);
 
         // Move to next data line
