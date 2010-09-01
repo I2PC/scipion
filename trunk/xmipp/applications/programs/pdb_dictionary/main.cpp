@@ -41,7 +41,7 @@ void extractTrainingPatches(const FileName &fnPDB, int patchSize,
     pdbconverter.fn_out="";
     pdbconverter.Ts=Ts;
     pdbconverter.run();
-    
+
     // Filter the volume to the final resolution
     MultidimArray<double> V0=pdbconverter.Vlow();
     FourierMask Filter1;
@@ -92,7 +92,7 @@ void extractTrainingPatches(const FileName &fnPDB, int patchSize,
                 int k1=ROUND(k0/2.0);
                 int i1=ROUND(i0/2.0);
                 int j1=ROUND(j0/2.0);
-                
+
                 int idx=0;
                 double avg0=0;
                 // Copy the pixels at level 0
@@ -119,7 +119,7 @@ void extractTrainingPatches(const FileName &fnPDB, int patchSize,
                             idx++;
                         }
                 avg1/=N1_3;
-                
+
                 // Copy the pixels at level 0R
                 double avg0R=0;
                 for (int kk=-L0; kk<=L0; kk++)
@@ -263,7 +263,7 @@ int main(int argc, char *argv[])
         // Define variables
         MetaData SF(fnSel);
         std::vector< Matrix1D<double> > training;
-        
+
         // Extract training patches
         FOR_ALL_OBJECTS_IN_METADATA(SF)
         {
@@ -272,12 +272,12 @@ int main(int argc, char *argv[])
             extractTrainingPatches(fnPDB, patchSize, step, Ts, resolution1,
                 resolution2, training);
         }
-        
+
         // Initialize the dictionary
         int N=VEC_XSIZE(training[0]);
         Matrix2D<double> D;
         D.initZeros(N,dictSize);
-        
+
         if (!initRandom)
         {
             // Fill the columns choosing one of the data samples randomly
@@ -332,7 +332,7 @@ int main(int argc, char *argv[])
         std::ofstream fhOut;
         fhOut.open(fnOut.c_str());
         if (!fhOut)
-            REPORT_ERROR(1,(std::string)"Cannot open "+fnOut+" for output");
+            REPORT_ERROR(ERR_IO_NOTOPEN,(std::string)"Cannot open "+fnOut+" for output");
         fhOut << S << " " << " " << lambda << " " << dictSize << " " << N
               << " " << patchSize << std::endl << D << std::endl;
         fhOut.close();

@@ -553,9 +553,9 @@ void QtMainWidgetMark::generated(bool _this_is_tilted,
         int s2 = SFTilted.size();
 
         if (s1 != s2)
-            REPORT_ERROR(2,"Error: different lengths of 'tilted' and 'untilted' metadatas...");
+            REPORT_ERROR(ERR_MD_OBJECTNUMBER,"Error: different lengths of 'tilted' and 'untilted' metadatas...");
         if (s1 == 0)
-			REPORT_ERROR(2,"Error: empty selfiles...");
+			REPORT_ERROR(ERR_MD_NOOBJ,"Error: empty selfiles...");
 
         FOR_ALL_OBJECTS_IN_METADATA2(SFUntilted, SFTilted)
         {

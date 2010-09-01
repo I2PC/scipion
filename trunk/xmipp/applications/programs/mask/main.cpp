@@ -55,7 +55,7 @@ int main(int argc, char **argv)
     // Read arguments --------------------------------------------------------
     try
     {
-        fn_input     = getParameter(argc, argv, "-i", NULL, 1, "Mask: Input file not found");
+        fn_input     = getParameter(argc, argv, "-i", NULL);
         fn_out       = getParameter(argc, argv, "-o", "");
         oext         = getParameter(argc, argv, "-oext", "");
         save_mask    = checkParameter(argc, argv, "-save_mask");
@@ -71,7 +71,7 @@ int main(int argc, char **argv)
         {
             fn_mask  = getParameter(argc, argv, "-create_mask");
             if (fn_mask[0] == '-')
-                REPORT_ERROR(1, "Mask: the output mask filename is missing");
+                REPORT_ERROR(ERR_IO_NOTEXIST, "Mask: the output mask filename is missing");
         }
         mask_prm.read(argc, argv);
         str_subs_val = getParameter(argc, argv, "-substitute", "0");
@@ -100,7 +100,7 @@ int main(int argc, char **argv)
 
         // Mask a selection file ------------------------------------------------
         if (create_mask && Nimg>1)
-            EXIT_ERROR(1, "Mask: Cannot create a mask for a selection file\n");
+            REPORT_ERROR(ERR_MD_NOOBJ, "Mask: Cannot create a mask for a selection file\n");
 
         // Initialize progress bar
         time_config();
@@ -143,7 +143,7 @@ int main(int argc, char **argv)
             if (apply_geo)
             {
                 if (mask_prm.x0 + mask_prm.y0 != 0.)
-                    REPORT_ERROR(1, "Mask: -center option cannot be combined with apply_geo; use -dont_apply_geo");
+                    REPORT_ERROR(ERR_ARG_INCORRECT, "Mask: -center option cannot be combined with apply_geo; use -dont_apply_geo");
                 else
                     // Read geometric transformation from the image and store for mask
                     mask_prm.mask_geo = image.getTransformationMatrix();

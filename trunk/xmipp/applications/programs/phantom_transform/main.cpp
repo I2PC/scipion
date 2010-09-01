@@ -56,7 +56,7 @@ public:
             Euler_mode = true;
             int i = paremeterPosition(argc, argv, "-euler");
             if (i + 3 >= argc)
-                REPORT_ERROR(1, "Not enough parameters after -euler");
+                REPORT_ERROR(ERR_ARG_MISSING, "Not enough parameters after -euler");
             rot  = textToFloat(argv[i+1]);
             tilt = textToFloat(argv[i+2]);
             psi  = textToFloat(argv[i+3]);

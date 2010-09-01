@@ -44,7 +44,7 @@ int main(int argc, char *argv[])
         // Crystal
         crystal_mode = checkParameter(argc, argv, "-crystal");
         if (crystal_mode)
-        	REPORT_ERROR(1,"crystal art temporarily deactivated.");
+        	REPORT_ERROR(ERR_NOT_IMPLEMENTED,"crystal art temporarily deactivated.");
 //        	crystal_art_prm.read(argc, argv, art_prm);
     }
     catch (XmippError &XE)

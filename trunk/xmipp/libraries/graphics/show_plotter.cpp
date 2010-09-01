@@ -245,7 +245,7 @@ void Plotter::setCurveData1D(int id, const MultidimArray<double> &X,
                            const MultidimArray<double> &Y)
 {
     if (XSIZE(X) != XSIZE(Y))
-        REPORT_ERROR(1, "Plotter::setCurveData: X and Y have different sizes");
+        REPORT_ERROR(ERR_MULTIDIM_SIZE, "Plotter::setCurveData: X and Y have different sizes");
     MultidimArray<double> data(XSIZE(Y), 2);
     FOR_ALL_ELEMENTS_IN_ARRAY1D(Y)
     {

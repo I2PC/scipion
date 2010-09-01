@@ -139,7 +139,7 @@ int main(int argc, char **argv)
         else if (check_for_operation(argc, argv, "-which_min", fn_2, operand_type2))
             operation = OPERATE_WHICH_MIN;
         else
-            REPORT_ERROR(1, "No valid operation specified");
+            REPORT_ERROR(ERR_VALUE_INCORRECT, "No valid operation specified");
 
         compute(operation, operand_type1, operand_type2, fn_1, fn_2, fn_out);
     }

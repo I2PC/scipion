@@ -29,7 +29,7 @@
 #include <classification/kSVD.h>
 #include <fstream>
 
-double projectOntoDictionary(const Matrix2D<double> &D, 
+double projectOntoDictionary(const Matrix2D<double> &D,
     double lambda, int S, double lambdaDictionary,
     bool restore, int patchSize,
     MultidimArray<double> &Vin, MultidimArray<double> &Vout)
@@ -55,7 +55,7 @@ double projectOntoDictionary(const Matrix2D<double> &D,
     D2=D1=D;
     D1.submatrix(0,0,dim1-1,MAT_XSIZE(D)-1);
     D2.submatrix(dim1,0,MAT_YSIZE(D)-1,MAT_XSIZE(D)-1);
-    
+
     // Readjust the columns of each dictionary so that they are
     // again unitary
     Matrix1D<double> normD1;  normD1.initZeros(MAT_XSIZE(D1));
@@ -66,7 +66,7 @@ double projectOntoDictionary(const Matrix2D<double> &D,
         for (int i=0; i<N0; i++)
             VEC_ELEM(normD10,j)+=MAT_ELEM(D1,i,j)*MAT_ELEM(D1,i,j);
         VEC_ELEM(normD1,j)=VEC_ELEM(normD10,j);
-        
+
         // Compute the norm of the rest of the vector
         for (int i=N0; i<MAT_YSIZE(D1); i++)
             VEC_ELEM(normD1,j)+=MAT_ELEM(D1,i,j)*MAT_ELEM(D1,i,j);
@@ -84,7 +84,7 @@ double projectOntoDictionary(const Matrix2D<double> &D,
             MAT_ELEM(D2,i,j)*=normD2j;
     }
     std::cout << "Fin\n";
-    
+
     // Check if LASSO
     Matrix2D<double> DtD, DtDlambda, DtDlambdaInv;
     if (S==0)
@@ -120,7 +120,7 @@ double projectOntoDictionary(const Matrix2D<double> &D,
                 int k1=ROUND(k0/2.0);
                 int i1=ROUND(i0/2.0);
                 int j1=ROUND(j0/2.0);
-                
+
                 int idx=0;
                 double avg0=0;
                 // Copy the pixels at level 0
@@ -147,7 +147,7 @@ double projectOntoDictionary(const Matrix2D<double> &D,
                             idx++;
                         }
                 avg1/=N0_3;
-                
+
                 // Substract the mean
                 for (idx=0; idx<N0; idx++)
                     VEC_ELEM(v1,idx)-=avg0;
@@ -170,7 +170,7 @@ double projectOntoDictionary(const Matrix2D<double> &D,
                             for (int i=0; i<MAT_YSIZE(D2); i++)
                                 VEC_ELEM(vp2,i)+=MAT_ELEM(D2,i,j)*VEC_ELEM(alpha,j);
                     }
-                
+
                 if (proceed)
                 {
                     if (vp1.module()!=0)
@@ -269,7 +269,7 @@ int main(int argc, char *argv[])
         std::ifstream fhDict;
         fhDict.open(fnDict.c_str());
         if (!fhDict)
-            REPORT_ERROR(1,(std::string)"Cannot open "+fnDict+" for output");
+            REPORT_ERROR(ERR_IO_NOTOPEN,(std::string)"Cannot open "+fnDict+" for output");
         int S, dictSize, N;
         double lambdaDictionary;
         fhDict >> S >> lambdaDictionary >> dictSize >> N >> patchSize;
@@ -278,17 +278,17 @@ int main(int argc, char *argv[])
         FOR_ALL_ELEMENTS_IN_MATRIX2D(D)
             fhDict >> D(i,j);
         fhDict.close();
-        
+
         // Read the volume
         Image<double> Vin;
         Vin.read(fnIn);
-        
+
         // Project the volume
         Image<double> Vout;
         double error=projectOntoDictionary(D,lambda,S,lambdaDictionary,
             restore, patchSize, Vin(),Vout());
         std::cout << "Projection error= " << error << std::endl;
-        
+
         // And write results
         if (fnOut!="") Vout.write(fnOut);
         else Vout.write(fnIn);

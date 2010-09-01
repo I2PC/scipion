@@ -86,7 +86,7 @@ int main(int argc, char **argv)
         {
             enable_substitute = true;
             if (i + 2 >= argc)
-                EXIT_ERROR(1, "Threshold: Not enough parameters behind -substitute\n");
+                REPORT_ERROR(ERR_ARG_DEPENDENCE, "Threshold: Not enough parameters behind -substitute\n");
             str_old_val = argv[i+1];
             str_new_val = argv[i+2];
             accuracy = textToFloat(getParameter(argc, argv, "-accuracy", "0"));
@@ -97,7 +97,7 @@ int main(int argc, char **argv)
         {
             enable_random_substitute = true;
             if (i + 3 >= argc)
-                EXIT_ERROR(1, "Threshold: Not enough parameters behind -substitute\n");
+                REPORT_ERROR(ERR_ARG_DEPENDENCE, "Threshold: Not enough parameters behind -substitute\n");
             old_val = textToFloat(argv[i+1]);
             avg_val = textToFloat(argv[i+2]);
             sig_val = textToFloat(argv[i+3]);
@@ -156,7 +156,7 @@ int main(int argc, char **argv)
         {
             Vdist.read(fn_dist);
             if (fn_label == "")
-                EXIT_ERROR(1, "Threshold: You must supply a label volume\n");
+                REPORT_ERROR(ERR_ARG_MISSING, "Threshold: You must supply a label volume\n");
             Vlabel.read(fn_label);
             FOR_ALL_ELEMENTS_IN_ARRAY3D(MULTIDIM_ARRAY(Vdist))
             {

@@ -56,7 +56,7 @@ int main(int argc, char **argv)
             }
             else
             {
-                REPORT_ERROR(1, "Please provide -ref or -nref");
+                REPORT_ERROR(ERR_ARG_MISSING, "Please provide -ref or -nref");
             }
         }
         prm.produceSideInfo2();

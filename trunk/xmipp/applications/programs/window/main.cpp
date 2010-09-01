@@ -75,7 +75,7 @@ public:
                 wrong_parameters = 1;
         }
         if (wrong_parameters == -1)
-            REPORT_ERROR(1, "incompatible options");
+            REPORT_ERROR(ERR_ARG_INCORRECT, "incompatible options");
 
         if (checkParameter(argc, argv, "-size"))
         {
@@ -97,7 +97,7 @@ public:
                 sizeX = textToInteger(argv[i+1]);
             }
             else
-                REPORT_ERROR(1, "Not enough parameters after -size");
+                REPORT_ERROR(ERR_ARG_DEPENDENCE, "Not enough parameters after -size");
 
             x0 = FIRST_XMIPP_INDEX(sizeX);
             y0 = FIRST_XMIPP_INDEX(sizeY);
@@ -113,7 +113,7 @@ public:
             // Get r0
             int i = paremeterPosition(argc, argv, "-r0");
             if (i + 2 >= argc)
-                REPORT_ERROR(1, "Not enough parameters after -r0");
+                REPORT_ERROR(ERR_ARG_DEPENDENCE, "Not enough parameters after -r0");
             else
             {
                 x0 = textToInteger(argv[i+1]);
@@ -132,9 +132,9 @@ public:
             // Get rF
             i = paremeterPosition(argc, argv, "-rF");
             if (i == -1)
-                REPORT_ERROR(1, "-rF not present");
+                REPORT_ERROR(ERR_ARG_MISSING, "-rF not present");
             if (i + 2 >= argc)
-                REPORT_ERROR(1, "Not enough parameters after -rF");
+                REPORT_ERROR(ERR_ARG_DEPENDENCE, "Not enough parameters after -rF");
             else
             {
                 xF = textToInteger(argv[i+1]);
@@ -172,11 +172,11 @@ public:
                 cropX = textToInteger(argv[i+1]);
             }
             else
-                REPORT_ERROR(1, "Not enough parameters after -crop");
+                REPORT_ERROR(ERR_ARG_DEPENDENCE, "Not enough parameters after -crop");
         }
 
         else
-            REPORT_ERROR(1, "Unknown windowing type");
+            REPORT_ERROR(ERR_ARG_INCORRECT, "Unknown windowing type");
     }
 
     void show()

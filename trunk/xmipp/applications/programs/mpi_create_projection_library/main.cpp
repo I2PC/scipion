@@ -32,7 +32,7 @@
 #include <iostream>
 #include <sstream>
 #include <fstream>
-#include <iomanip.h>  
+#include <iomanip.h>
 
 #include <data/args.h>
 #include <reconstruction/create_projection_library.h>
@@ -51,19 +51,19 @@ class Prog_mpi_create_projection_library_Parameters:Prog_create_projection_libra
 
         /** Number of Procesors **/
         int nProcs;
-        
+
         /** Dvide the job in this number block with this number of images */
         int mpi_job_size;
 
         /** Number of jobs **/
         int numberOfJobs;
-        
+
         /** computing node number. Master=0 */
         int rank;
 
         /** status after am MPI call */
         MPI_Status status;
-                
+
         /** verbose mode on/off.  */
         bool verbose;
 
@@ -110,7 +110,7 @@ class Prog_mpi_create_projection_library_Parameters:Prog_create_projection_libra
     void preRun()
     {
         int my_seed;
-        if (rank == 0) 
+        if (rank == 0)
         {
             show();
 	    //randon numbers must be the same in all nodes
@@ -129,8 +129,8 @@ class Prog_mpi_create_projection_library_Parameters:Prog_create_projection_libra
     //all ranks
     mysampling.SetSampling(sampling);
 	if (!mysampling.SL.isSymmetryGroup(fn_sym, symmetry, sym_order))
-	     REPORT_ERROR(3005, (std::string)"create_projection_library::run Invalid symmetry" +  fn_sym);//set sampling must go before set noise
-    if(angular_distance_bool!=0)	
+	     REPORT_ERROR(ERR_NUMERICAL, (std::string)"create_projection_library::run Invalid symmetry" +  fn_sym);//set sampling must go before set noise
+    if(angular_distance_bool!=0)
         mysampling.SetNeighborhoodRadius(angular_distance);//irelevant
 
     //true -> half_sphere
@@ -142,14 +142,14 @@ class Prog_mpi_create_projection_library_Parameters:Prog_create_projection_libra
     mysampling.fill_exp_data_projection_direction_by_L_R(FnexperimentalImages);
 
     mysampling.remove_redundant_points(symmetry, sym_order);
-    if (FnexperimentalImages.size() > 0 && 
+    if (FnexperimentalImages.size() > 0 &&
         remove_points_far_away_from_experimental_data_bool)
-        {	
+        {
         mysampling.remove_points_far_away_from_experimental_data(FnexperimentalImages);
         }
 
 	/* save files */
-        if (rank == 0) 
+        if (rank == 0)
         {
            if(compute_closer_sampling_point_bool)
 	           {
@@ -160,15 +160,15 @@ class Prog_mpi_create_projection_library_Parameters:Prog_create_projection_libra
             //mysampling.create_sym_file(symmetry, sym_order);
             mysampling.create_asym_unit_file(output_file_root);
         }
-        
-        if (rank != 0) 
+
+        if (rank != 0)
         {
         inputVol.read(input_volume);
         inputVol().setXmippOrigin();
         Xdim = XSIZE(inputVol());
         Ydim = YSIZE(inputVol());
-        }        
-        if (rank == 0) 
+        }
+        if (rank == 0)
         {
             if (compute_neighbors_bool)
                 {
@@ -176,26 +176,26 @@ class Prog_mpi_create_projection_library_Parameters:Prog_create_projection_libra
 	            mysampling.save_sampling_file(output_file_root,false);
                 }
 	    }
-        //release some memory    
+        //release some memory
         mysampling.exp_data_projection_direction_by_L_R.clear();
 
         if (mpi_job_size != -1)
-        {   
+        {
             numberOfJobs = ceil((double)(mysampling.no_redundant_sampling_points_angles.size())/mpi_job_size);
         }
         else
-        {   
+        {
             numberOfJobs=nProcs-1;//one node is the master
             mpi_job_size=ceil((double)mysampling.no_redundant_sampling_points_angles.size()/numberOfJobs);
-        } 
-           
+        }
+
         //only one node will write in the console
         verbose=false;
         if (rank == 1)
         {
             if(quiet)
                 verbose=false;
-            else    
+            else
                 verbose = true;
             #define DEBUG
             #ifdef DEBUG
@@ -205,11 +205,11 @@ class Prog_mpi_create_projection_library_Parameters:Prog_create_projection_libra
             #endif
             #undef DEBUG
         }
-        
+
     }
     /* Run --------------------------------------------------------------------- */
     void run()
-    {   
+    {
         if (rank == 0)
         {
             int stopTagsSent =0;
@@ -234,7 +234,7 @@ std::cerr << "Mr_f received TAG_FREEWORKER from worker " <<  status.MPI_SOURCE <
                             status.MPI_SOURCE,
                             TAG_WORKFORWORKER,
                             MPI_COMM_WORLD);
-                    i++; //increase job number       
+                    i++; //increase job number
 //#define DEBUG
 #ifdef DEBUG
 std::cerr << "Ms_f sent TAG_WORKFORWORKER to worker " <<  status.MPI_SOURCE << std::endl;
@@ -246,9 +246,9 @@ std::cerr << "Sent jobNo " <<  i << std::endl;
                     {
                     std::cerr << "M_f Received unknown TAG" << std::endl;
                     exit(0);
-                    }           
+                    }
             }
-            
+
 
         //send TAG_STOP
         while (stopTagsSent < (nProcs-1))
@@ -262,7 +262,7 @@ std::cerr << "Sent jobNo " <<  i << std::endl;
     #undef DEBUG
             MPI_Send(0, 0, MPI_INT, status.MPI_SOURCE, TAG_STOP, MPI_COMM_WORLD);
             stopTagsSent++;
-            }         
+            }
         //only rank 0 create sel file
         if(rank==0)
             {
@@ -272,14 +272,14 @@ std::cerr << "Sent jobNo " <<  i << std::endl;
 
             for (int mypsi=0;mypsi<360;mypsi += psi_sampling)
                for (int i=0;i<=mysampling.no_redundant_sampling_points_angles.size()-1;i++)
-               { 
+               {
                 fn_temp.compose(output_file_root, ++myCounter,"xmp");
                 mySF.insert(fn_temp);
                }
-            fn_temp=output_file_root+".sel";   
-            mySF.write(fn_temp);         
+            fn_temp=output_file_root+".sel";
+            mySF.write(fn_temp);
             }
-        
+
         }
         else
         {
@@ -315,19 +315,19 @@ std::cerr << "Wr" << rank << " " << "TAG_STOP" << std::endl;
                     break;
                     }
                 if (status.MPI_TAG == TAG_WORKFORWORKER)
-                //there is still some work to be done    
+                //there is still some work to be done
                     {
                     //get the jobs number
                     MPI_Recv(&jobNumber, 1, MPI_INT, 0, TAG_WORKFORWORKER, MPI_COMM_WORLD, &status);
-#ifdef DEBUG  
+#ifdef DEBUG
 std::cerr << "Wr" << rank << " " << "TAG_WORKFORWORKER" << std::endl;
-    std::cerr <<    "jobNumber "  << jobNumber << std::endl;  
+    std::cerr <<    "jobNumber "  << jobNumber << std::endl;
 #endif
 #undef DEBUG
                     // Process all images
                      project_angle_vector(jobNumber*mpi_job_size,
-                     XMIPP_MIN((jobNumber+1)* mpi_job_size -1 , 
-                                mysampling.no_redundant_sampling_points_angles.size()-1), 
+                     XMIPP_MIN((jobNumber+1)* mpi_job_size -1 ,
+                                mysampling.no_redundant_sampling_points_angles.size()-1),
                                 verbose);
                     //get yor next task
                     }
@@ -335,7 +335,7 @@ std::cerr << "Wr" << rank << " " << "TAG_WORKFORWORKER" << std::endl;
                    {
                    std::cerr << "3) Received unknown TAG I quit" << std::endl;
                    exit(0);
-                   }           
+                   }
             }
         }
         MPI_Finalize();
@@ -360,7 +360,7 @@ std::cerr << "0\n";
     }
     //size of the mpi block, number of images
     //mpi_job_size=!checkParameter(argc,argv,"-mpi_job_size","-1");
-   
+
     Prog_mpi_create_projection_library_Parameters prm;
     try
     {
@@ -383,7 +383,7 @@ std::cerr << "0\n";
         std::cerr << XE;
         exit(1);
     }
-    
+
     exit(0);
 }
 

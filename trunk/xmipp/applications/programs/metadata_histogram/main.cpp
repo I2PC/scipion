@@ -59,7 +59,7 @@ int main(int argc, char *argv[])
         if ((i = paremeterPosition(argc, argv, "-range")) != -1)
         {
             if (i + 2 >= argc)
-                EXIT_ERROR(1, "Metadata Histogram: Not enough parameters behind -range\n");
+                REPORT_ERROR(ERR_PARAM_MISSING, "Metadata Histogram: Not enough parameters behind -range\n");
             m = textToFloat(argv[i+1]);
             M = textToFloat(argv[i+2]);
             automatic_range = false;
@@ -71,7 +71,7 @@ int main(int argc, char *argv[])
         if ((i = paremeterPosition(argc, argv, "-range2")) != -1)
         {
             if (i + 2 >= argc)
-                EXIT_ERROR(1, "Metadata Histogram: Not enough parameters behind -range2\n");
+                REPORT_ERROR(ERR_PARAM_MISSING, "Metadata Histogram: Not enough parameters behind -range2\n");
             m2 = textToFloat(argv[i+1]);
             M2 = textToFloat(argv[i+2]);
             automatic_range2 = false;
@@ -81,18 +81,18 @@ int main(int argc, char *argv[])
 
         // Check columns are possible
         if (col == MDL_UNDEFINED)
-            EXIT_ERROR(1, "Metadata Histogram: Column for histogram not valid");
+            REPORT_ERROR(ERR_MD_UNDEFINED, "Metadata Histogram: Column for histogram not valid");
         else if (!MDL::isDouble(col))
-            EXIT_ERROR(1, "Metadata Histogram: Column type for histogram should be double");
+            REPORT_ERROR(ERR_MD_BADTYPE, "Metadata Histogram: Column type for histogram should be double");
 
         if (col2 == MDL_UNDEFINED && col2String != "")
-            EXIT_ERROR(1, "Metadata Histogram: Column 2 for histogram not valid");
+            REPORT_ERROR(ERR_MD_UNDEFINED, "Metadata Histogram: Column 2 for histogram not valid");
 
         // Check if the 2D histogram must be an image
         if (col2 != MDL_UNDEFINED)
         {
             if (!MDL::isDouble(col2))
-                EXIT_ERROR(1, "Metadata Histogram: Column 2 type for histogram should be double");
+                REPORT_ERROR(ERR_MD_BADTYPE, "Metadata Histogram: Column 2 type for histogram should be double");
             fn_img = getParameter(argc, argv, "-img", "");
             generate_img = (fn_img != "");
         }

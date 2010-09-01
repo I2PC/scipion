@@ -94,7 +94,7 @@ void ShowSpectra::readDatFile(const FileName &_fn)
 {
     std::ifstream fh_in(_fn.c_str());
     if (!fh_in)
-        REPORT_ERROR(1, (std::string)"ShowSpectra::readFile: Cannot open" + _fn);
+        REPORT_ERROR(ERR_IO_NOTOPEN, (std::string)"ShowSpectra::readFile: Cannot open" + _fn);
     V = new ClassicTrainingVectors(fh_in);
     fh_in.close();
 
@@ -107,7 +107,7 @@ void ShowSpectra::initFromVectors()
 {
     listSize = V->size();
     if (listSize == 0)
-        REPORT_ERROR(1, "ShowSpectra::readFile: Input file is empty");
+        REPORT_ERROR(ERR_IO_SIZE, "ShowSpectra::readFile: Input file is empty");
     imgnames        = new FileName[listSize];
     selstatus       = new bool[listSize];
     initContents();
@@ -490,19 +490,19 @@ SpectraFilter::SpectraFilter(int min, int max,
     // Allocate memory
     __current_values = new float[__N];
     if (!__current_values)
-        REPORT_ERROR(1, "SpectraFilter: Cannot allocate memory");
+        REPORT_ERROR(ERR_MEM_NOTENOUGH, "SpectraFilter: Cannot allocate memory");
     __scroll_min = new QScrollBar *[__N];
     if (!__scroll_min)
-        REPORT_ERROR(1, "SpectraFilter: Cannot allocate memory");
+        REPORT_ERROR(ERR_MEM_NOTENOUGH, "SpectraFilter: Cannot allocate memory");
     __scroll_max = new QScrollBar *[__N];
     if (!__scroll_max)
-        REPORT_ERROR(1, "SpectraFilter: Cannot allocate memory");
+        REPORT_ERROR(ERR_MEM_NOTENOUGH, "SpectraFilter: Cannot allocate memory");
     __label_min = new QLabel *[__N];
     if (!__label_min)
-        REPORT_ERROR(1, "SpectraFilter: Cannot allocate memory");
+        REPORT_ERROR(ERR_MEM_NOTENOUGH, "SpectraFilter: Cannot allocate memory");
     __label_max = new QLabel *[__N];
     if (!__label_max)
-        REPORT_ERROR(1, "SpectraFilter: Cannot allocate memory");
+        REPORT_ERROR(ERR_MEM_NOTENOUGH, "SpectraFilter: Cannot allocate memory");
 
     // Set this window caption
     setCaption("Spectra Filter");

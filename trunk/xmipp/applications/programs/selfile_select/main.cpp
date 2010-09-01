@@ -72,7 +72,7 @@ int main(int argc, char *argv[])
             // Non-NewXmipp type document file
             std::cerr << "Docfile is of non-NewXmipp type. " << std::endl;
             if (fn_SF == "")
-                REPORT_ERROR(1, "Select images: Please provide the corresponding selfile as well.");
+                REPORT_ERROR(ERR_ARG_MISSING, "Select images: Please provide the corresponding selfile as well.");
             SF.read(fn_SF);
         }
         else DF.get_selfile(SF);
@@ -80,10 +80,10 @@ int main(int argc, char *argv[])
         // Actually select images
         if (SF.ImgNo(SelLine::ACTIVE) + SF.ImgNo(SelLine::DISCARDED) !=
             DF.dataLineNo())
-            REPORT_ERROR(1, "Select images: SelFile and DocFile do not have the "
+            REPORT_ERROR(ERR_MD_OBJECTNUMBER, "Select images: SelFile and DocFile do not have the "
                          "same number of lines");
         if (col >= DF.FirstLine_colNumber())
-            REPORT_ERROR(1, "Select images: Column not valid for this DocFile");
+            REPORT_ERROR(ERR_ARG_INCORRECT, "Select images: Column not valid for this DocFile");
         select_images(DF, SF, col, en_limit0, limit0, en_limitF, limitF);
 
         // Cleaning

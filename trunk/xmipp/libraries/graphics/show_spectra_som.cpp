@@ -64,7 +64,7 @@ void ShowSpectraSOM::initWithFile(const FileName &_fn_root,
 
     std::ifstream fh_in(_fn_dat.c_str());
     if (!fh_in)
-        REPORT_ERROR(1, (std::string)"ShowSpectra::readFile: Cannot open" + _fn_dat);
+        REPORT_ERROR(ERR_IO_NOTOPEN, (std::string)"ShowSpectra::readFile: Cannot open" + _fn_dat);
     Vdat = new ClassicTrainingVectors(fh_in);
     fh_in.close();
 
@@ -156,7 +156,7 @@ void ShowSpectraSOM::readSOMFiles(const FileName &_fn_root)
             fh_class >> dim >> topol >> NumCols >> NumRows >> neigh;
             listSize = NumCols * NumRows;
             if (listSize == 0)
-                REPORT_ERROR(1, "ShowSpectraSOM::readFile: Input file is empty");
+                REPORT_ERROR(ERR_IO_SIZE, "ShowSpectraSOM::readFile: Input file is empty");
             getline(fh_class, line);
 
             if (infStr == "")

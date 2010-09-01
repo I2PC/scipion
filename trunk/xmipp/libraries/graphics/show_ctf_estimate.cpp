@@ -199,7 +199,7 @@ void AssignCTFViewer::okToProceed()
     std::ofstream fh_adjust_param;
     fh_adjust_param.open(fn_random.c_str());
     if (!fh_adjust_param)
-        REPORT_ERROR(1, "ShowSel::recomputeCTFmodel: Cannot open "
+        REPORT_ERROR(ERR_IO_NOTOPEN, "ShowSel::recomputeCTFmodel: Cannot open "
                      "file for output");
 
     // Write adjust_CTF parameters

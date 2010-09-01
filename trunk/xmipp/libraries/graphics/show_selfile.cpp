@@ -142,7 +142,7 @@ void ShowSel::readObject(MetaData &SF, double _minGray, double _maxGray)
 		SF.removeObjects(MDValueEQ(MDL_ENABLED, -1));
 	listSize        = SF.size();
     if (listSize == 0)
-        REPORT_ERROR(1, "ShowSel::readFile: Input selfile is empty");
+        REPORT_ERROR(ERR_IO_SIZE, "ShowSel::readFile: Input selfile is empty");
     imgnames        = new FileName[listSize];
     selstatus       = new bool[listSize];
     initContents();
@@ -527,7 +527,7 @@ void ShowSel::writeSelFile(MetaData &_SF, bool overwrite)
 #ifdef QT3_SUPPORT
          QString newfilename = Q3FileDialog::getSaveFileName(
 #else
-         QString newfilename = QFileDialog::getSaveFileName(    
+         QString newfilename = QFileDialog::getSaveFileName(
 #endif
                                   selfile_fn.c_str(), "*.sel", this, "Sel files");
         if (!newfilename.isEmpty())
@@ -733,7 +733,7 @@ void ShowSel::editCTFmodel()
         }
         else
         {
-            REPORT_ERROR(1, "ShowSel::editCTFmodel: This function is intended"
+            REPORT_ERROR(ERR_VALUE_INCORRECT, "This function is intended"
                          " only for micrograph averages");
         }
     }
@@ -815,7 +815,7 @@ void ShowSel::recomputeCTFmodel()
         }
         else
         {
-            REPORT_ERROR(1, "ShowSel::recomputeCTFmodel: This function is intended"
+            REPORT_ERROR(ERR_VALUE_INCORRECT, " This function is intended"
                          " only for micrograph averages");
         }
     }

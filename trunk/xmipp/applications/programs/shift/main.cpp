@@ -48,7 +48,7 @@ public:
         center_mass = checkParameter(argc, argv, "-center_mass");
 
         if (fnShift=="" && fnScale=="" && !center_mass)
-            REPORT_ERROR(1, "Shift_Scale:: Cannot find -shift or -scale");
+            REPORT_ERROR(ERR_ARG_MISSING, "Shift_Scale:: Cannot find -shift or -scale");
         Docfile = (fnShift!="" && fnShift.isMetaData(false)) ||
         		  (fnScale!="" && fnScale.isMetaData(false));
         if (Docfile)

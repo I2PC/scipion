@@ -108,7 +108,7 @@ void ShowVol::readFile(const FileName &_fn,
         break;
     }
     if (listSize == 0)
-        REPORT_ERROR(1, "ShowVol::readFile: Input volume is empty");
+        REPORT_ERROR(ERR_MULTIDIM_EMPTY, "ShowVol::readFile: Input volume is empty");
     initContents();
 }
 

@@ -56,7 +56,7 @@ public:
             operation = SHARPENING;
             int i = paremeterPosition(argc, argv, "-sharp");
             if (i+2>=argc)
-                REPORT_ERROR(1,"Not enough parameters after -sharp");
+                REPORT_ERROR(ERR_ARG_MISSING,"Not enough parameters after -sharp");
             width=textToFloat(argv[i+1]);
             strength=textToFloat(argv[i+2]);
         }
@@ -139,7 +139,7 @@ bool process_img(Image<double> &img, const Prog_parameters *prm)
             closing2D(img(), retval(), eprm->neig, eprm->count, eprm->size);
             break;
         case SHARPENING:
-            REPORT_ERROR(1,"Sharpening has not been implemented for images");
+            REPORT_ERROR(ERR_NOT_IMPLEMENTED,"Sharpening has not been implemented for images");
     }
 
     img() = retval();

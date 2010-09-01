@@ -125,7 +125,7 @@ int main(int argc, char **argv)
             std::ifstream fh_ang;
             fh_ang.open(fn_ang.c_str());
             if (!fh_ang)
-                REPORT_ERROR(1, (std::string)"Scissor: Cannot open file" + fn_ang);
+                REPORT_ERROR(ERR_IO_NOTOPEN, (std::string)"Scissor: Cannot open file" + fn_ang);
             std::string aux;
             getline(fh_ang, aux);
             double alpha_u, alpha_t, tilt_angle;

@@ -150,6 +150,8 @@ enum ErrorType
     ERR_MD_BADLABEL,        ///< Unexpected label.
     ERR_MD_SQL,             ///< Error in SQL of MetaData operations.
     ERR_MD_OBJECTNUMBER,    ///< Incorrect number of objects in Metadata
+    ERR_MD_BADTYPE,         ///< Bad label type.
+    ERR_MD_UNDEFINED,       ///< Undefined label.
 
     ERR_MEM_BADREQUEST,     ///< Bad amount of memory requested.
     ERR_MEM_NOTENOUGH,      ///< There is not enough memory for allocation.

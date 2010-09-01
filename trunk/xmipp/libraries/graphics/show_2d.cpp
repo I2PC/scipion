@@ -765,7 +765,7 @@ bool ImageViewer::loadImage(const char *fileName,
                     generateFFTImage(tmpImage());
                     options->setItemEnabled(sfft, true);
                 }
-                else REPORT_ERROR(1, "ImageViewer::loadImage: Unknown format");
+                else REPORT_ERROR(ERR_VALUE_INCORRECT, "ImageViewer::loadImage: Unknown format");
 
                 tmpImage().setXmippOrigin();
                 minGray = _minGray;

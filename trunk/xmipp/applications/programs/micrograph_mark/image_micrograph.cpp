@@ -86,7 +86,7 @@ void QtImageMicrograph::loadImage()
         // Copy that piece of the micrograph in an intermidiate piece of memory
         byte *ptr, *piece = new byte[image()->width() * image()->height()];
         if (piece == NULL)
-            REPORT_ERROR(1, "QtImageMicrograph::loadImage: Cannot allocate memory");
+            REPORT_ERROR(ERR_MEM_NOTENOUGH, "QtImageMicrograph::loadImage: Cannot allocate memory");
         ptr = piece;
         for (mY = mY0; mY < mYF; mY++)
             for (mX = mX0; mX < mXF; mX++)
@@ -141,7 +141,7 @@ void QtImageMicrograph::drawEllipse(int _x, int _y, int _color, float _ellipse_r
     {
         QPen pen(__col.col(_color), 2);
         __paint->setPen(pen);
-	if (_type == MARK_CIRCLE) 
+	if (_type == MARK_CIRCLE)
 	{
 	    __paint->drawEllipse(ROUND(mX - _ellipse_radius / __zoom),
 				 ROUND(mY - _ellipse_radius / __zoom),
@@ -155,7 +155,7 @@ void QtImageMicrograph::drawEllipse(int _x, int _y, int _color, float _ellipse_r
 	}
 	else
 	{
-            REPORT_ERROR(1, "QtImageMicrograph::drawEllipse: unrecognized type");
+            REPORT_ERROR(ERR_VALUE_INCORRECT, "QtImageMicrograph::drawEllipse: unrecognized type");
 	}
     }
 }
@@ -220,7 +220,7 @@ void QtImageMicrograph::mouseReleaseEvent(QMouseEvent *e)
     int mX, mY;
     imageToMicrograph(e->pos().x(), e->pos().y(), mX, mY);
 
-    if (e->button() == Qt::RightButton) 
+    if (e->button() == Qt::RightButton)
     {
         int coord = getMicrograph()->search_coord_near(mX, mY, 10);
         if (coord != -1) movingMark(coord);

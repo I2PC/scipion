@@ -82,8 +82,8 @@ class Prog_MPI_Run_Parameters
 
     /** Replace substrings of a std::string by other std::strings */
     std::string replaceAll(
-      std::string result, 
-      const std::string& replaceWhat, 
+      std::string result,
+      const std::string& replaceWhat,
       const std::string& replaceWithWhat)
     {
       while(1)
@@ -131,7 +131,7 @@ class Prog_MPI_Run_Parameters
             std::ifstream fh_in;
             fh_in.open(fn_commands.c_str());
             if (!fh_in)
-                REPORT_ERROR(1, (std::string)"Cannot open " + fn_commands);
+                REPORT_ERROR(ERR_IO_NOTOPEN, (std::string)"Cannot open " + fn_commands);
             std::string line;
             int number_of_node_waiting = 0; // max is nprocs -1
             while (!fh_in.eof())

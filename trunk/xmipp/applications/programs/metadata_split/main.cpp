@@ -53,7 +53,7 @@ int main(int argc, char **argv)
             sortLabelStr = getParameter(argc, argv, "-l","objId");
         sortLabel = MDL::str2Label(sortLabelStr);
         if (sortLabel == MDL_UNDEFINED)
-            REPORT_ERROR(-1, (std::string)"Unrecognized label '" + sortLabelStr + "'");
+            REPORT_ERROR(ERR_MD_UNDEFINED, (std::string)"Unrecognized label '" + sortLabelStr + "'");
         if (fn_root == "")
             fn_root = fn_in.without_extension();
         SFin.read(fn_in);

@@ -48,7 +48,7 @@ int main(int argc, char **argv)
     // Read arguments --------------------------------------------------------
     try
     {
-        fn_input = getParameter(argc, argv, "-i", NULL, 1, "Scale: Input file not found");
+        fn_input = getParameter(argc, argv, "-i", NULL);
         fn_out   = getParameter(argc, argv, "-o", "");
         fn_oext  = getParameter(argc, argv, "-oext", "");
         if (fn_input.isMetaData())
@@ -57,7 +57,7 @@ int main(int argc, char **argv)
         {
             factor=textToFloat(getParameter(argc, argv, "-factor"));
             if (factor<=0)
-                REPORT_ERROR(1,"Factor must be a positive number");
+                REPORT_ERROR(ERR_VALUE_INCORRECT,"Factor must be a positive number");
         }
         else
         {

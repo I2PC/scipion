@@ -60,7 +60,7 @@ int main(int argc, char **argv)
         fnAutomaticModel = getParameter(argc, argv, "-auto", "");
         autoSelect = checkParameter(argc, argv, "-autoSelect");
         if (fnRawTilted!="" && autoSelect)
-            REPORT_ERROR(1,"Automatic particle picking cannot be performed on tilt pairs");
+            REPORT_ERROR(ERR_VALUE_INCORRECT,"Automatic particle picking cannot be performed on tilt pairs");
         numThreads = textToInteger(getParameter(argc, argv, "-thr","1"));
     }
     catch (XmippError XE)

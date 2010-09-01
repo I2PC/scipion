@@ -30,7 +30,7 @@ bool process_img(Image<double> &img, const Prog_parameters *prm)
 {
     Prog_Microscope_Parameters *eprm = (Prog_Microscope_Parameters *) prm;
     if (ZSIZE(img())!=1)
-    	REPORT_ERROR(1,"This process is not intended for volumes");
+    	REPORT_ERROR(ERR_MULTIDIM_DIM,"This process is not intended for volumes");
     eprm->apply(img());
     return true;
 }

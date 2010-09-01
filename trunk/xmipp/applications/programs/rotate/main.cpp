@@ -59,7 +59,7 @@ public:
             Euler_mode = true;
             int i = paremeterPosition(argc, argv, "-euler");
             if (i + 3 >= argc)
-                REPORT_ERROR(1, "Not enough parameters after -euler");
+                REPORT_ERROR(ERR_ARG_MISSING, "Not enough parameters after -euler");
             rot  = textToFloat(argv[i+1]);
             tilt = textToFloat(argv[i+2]);
             psi  = textToFloat(argv[i+3]);
@@ -179,7 +179,7 @@ bool process_img(Image<double> &img, const Prog_parameters *prm)
     else if (img().getDim()==3)
         AA=eprm->A3D;
     else
-        REPORT_ERROR(1,"Cannot rotate this image, wrong dimension...");
+        REPORT_ERROR(ERR_MULTIDIM_DIM,"Cannot rotate this image, wrong dimension...");
 
     if (eprm->write_matrix)
         std::cerr<<"Transformation matrix = "<<AA<<std::endl;

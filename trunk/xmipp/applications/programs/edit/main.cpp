@@ -30,7 +30,7 @@ int main(int argc, char ** argv)
     try
     {
         ifirst = paremeterPosition(argc, argv, "-i");
-        if (ifirst == -1 && argc != 1) REPORT_ERROR(1, "Edit: Cannot find -i");
+        if (ifirst == -1 && argc != 1) REPORT_ERROR(ERR_ARG_MISSING, "Edit: Cannot find -i");
         remove = checkParameter(argc, argv, "-remove");
     }
     catch (XmippError XE)

@@ -156,7 +156,7 @@ void ShowSOM::readSOMFiles(const FileName &_fn_root)
             fh_class >> dim >> topol >> NumCols >> NumRows >> neigh;
             listSize = NumCols * NumRows;
             if (listSize == 0)
-                REPORT_ERROR(1, "ShowSOM::readFile: Input file is empty");
+                REPORT_ERROR(ERR_IO_SIZE, "ShowSOM::readFile: Input file is empty");
             getline(fh_class, line);
 
             if (infStr == "")

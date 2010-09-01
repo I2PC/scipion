@@ -53,7 +53,7 @@ public:
 bool process_img(Image<double> &img, const Prog_parameters *prm)
 {
 	if (ZSIZE(img())!=1)
-		REPORT_ERROR(1,"This program is not intended for volumes");
+		REPORT_ERROR(ERR_MULTIDIM_DIM,"This program is not intended for volumes");
     Markhan_parameters *eprm = (Markhan_parameters *) prm;
     MultidimArray<double> aux = img();
     for (int i = 1; i < eprm->symmetry; i++)
