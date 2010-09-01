@@ -110,7 +110,7 @@ void Denoising_parameters::produce_side_info()
     else if (DWT_type == "DAUB20")
         set_DWT_type(DAUB20);
     else
-        REPORT_ERROR(1, "Denoising::produce_side_info: Unknown DWT type");
+        REPORT_ERROR(ERR_VALUE_INCORRECT, "Unknown DWT type");
 }
 
 // Show --------------------------------------------------------------------
@@ -210,10 +210,10 @@ void Denoising_parameters::denoise(MultidimArray<double> &img)
         {
             double size2 = log10((double)XSIZE(img)) / log10(2.0);
             if (ABS(size2 - ROUND(size2)) > 1e-6)
-                REPORT_ERROR(1, "Denoising::denoise: Input image must be of a size power of 2");
+                REPORT_ERROR(ERR_MULTIDIM_SIZE, "Input image must be of a size power of 2");
             size2 = log10((double)YSIZE(img)) / log10(2.0);
             if (ABS(size2 - ROUND(size2)) > 1e-6)
-                REPORT_ERROR(1, "Denoising::denoise: Input image must be of a size power of 2");
+                REPORT_ERROR(ERR_MULTIDIM_SIZE, "Input image must be of a size power of 2");
             DWT(img, img);
         }
         double th;
@@ -272,13 +272,13 @@ void Denoising_parameters::denoise(MultidimArray<double> &img)
         }
         double size2 = log10((double)XSIZE(img)) / log10(2.0);
         if (ABS(size2 - ROUND(size2)) > 1e-6)
-            REPORT_ERROR(1, "Denoising::denoise: Input volume must be of a size power of 2");
+            REPORT_ERROR(ERR_MULTIDIM_SIZE, "Input volume must be of a size power of 2");
         size2 = log10((double)YSIZE(img)) / log10(2.0);
         if (ABS(size2 - ROUND(size2)) > 1e-6)
-            REPORT_ERROR(1, "Denoising::denoise: Input volume must be of a size power of 2");
+            REPORT_ERROR(ERR_MULTIDIM_SIZE, "Input volume must be of a size power of 2");
         size2 = log10((double)ZSIZE(img)) / log10(2.0);
         if (ABS(size2 - ROUND(size2)) > 1e-6)
-            REPORT_ERROR(1, "Denoising::denoise: Input volume must be of a size power of 2");
+            REPORT_ERROR(ERR_MULTIDIM_SIZE, "Input volume must be of a size power of 2");
 
         DWT(img, img);
         double th;
