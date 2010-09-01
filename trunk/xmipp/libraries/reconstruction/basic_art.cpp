@@ -209,7 +209,7 @@ void Basic_ART_Parameters::default_values()
     refine         = CHECK_PARAM("refine"); \
     if (CHECK_PARAM("noisy_reconstruction")) { \
         if (parallel_mode!=ART) \
-            REPORT_ERROR(1,"Basic_ART_Parameters::read: Noisy reconstructions" \
+            REPORT_ERROR(ERR_ARG_INCORRECT,"Basic_ART_Parameters::read: Noisy reconstructions" \
                          " can only be done for ART"); \
         else noisy_reconstruction=true; \
     }
@@ -231,7 +231,7 @@ void Basic_ART_Parameters::read(int argc, char **argv)
     {
         int i = paremeterPosition(argc, argv, "-output_size");
         if (i + 3 >= argc)
-            REPORT_ERROR(1, "Not enough parameters after -output_size");
+            REPORT_ERROR(ERR_ARG_MISSING, "Not enough parameters after -output_size");
         Zoutput_volume_size = textToInteger(argv[i+1]);
         Youtput_volume_size = textToInteger(argv[i+2]);
         Xoutput_volume_size = textToInteger(argv[i+3]);
@@ -255,9 +255,7 @@ void Basic_ART_Parameters::read(const FileName &fn)
 {
     FILE *fh;
     if ((fh = fopen(fn.c_str(), "r")) == NULL)
-        REPORT_ERROR(3005,
-                     (std::string)"Basic_ART_Parameters::read: There is a problem "
-                     "opening the file " + fn);
+        REPORT_ERROR(ERR_IO_NOTEXIST,fn);
 
     GET_ART_PARAMS;
     if (CHECK_PARAM("output_size"))
@@ -267,7 +265,7 @@ void Basic_ART_Parameters::read(const FileName &fn)
         generateCommandLine(fh, "output_size", argcp, argvp, copy);
         int i = paremeterPosition(argcp, argvp, "-output_size");
         if (i + 3 >= argcp)
-            REPORT_ERROR(1, "Not enough parameters after -output_size");
+            REPORT_ERROR(ERR_ARG_MISSING, "Not enough parameters after -output_size");
         Zoutput_volume_size = textToInteger(argvp[i+1]);
         Youtput_volume_size = textToInteger(argvp[i+2]);
         Xoutput_volume_size = textToInteger(argvp[i+3]);
@@ -546,8 +544,7 @@ void Basic_ART_Parameters::produce_Side_Info(GridVolume &vol_basis0, int level,
         fh_hist = new std::ofstream;
         fh_hist->open((fn_root + ".hist").c_str(), std::ios::out);
         if (!fh_hist)
-            REPORT_ERROR(3008, (std::string)"Produce_Basic_ART_Side_Info: Cannot open file "
-                         + fn_root + ".hist");
+            REPORT_ERROR(ERR_IO_NOWRITE, fn_root + ".hist");
     }
 
     /* Get True Image number and projection size ------------------------------- */
@@ -575,7 +572,7 @@ void Basic_ART_Parameters::produce_Side_Info(GridVolume &vol_basis0, int level,
         }
         trueIMG = selfile.size();
         if (trueIMG == 0)
-            REPORT_ERROR(3008, "Produce_Basic_ART_Side_Info: No images !!");
+            REPORT_ERROR(ERR_MD_OBJECTNUMBER, "Produce_Basic_ART_Side_Info: No images !!");
         int idum;
         ImgSize(selfile, projXdim, projYdim, idum, idum);
     }
@@ -586,7 +583,7 @@ void Basic_ART_Parameters::produce_Side_Info(GridVolume &vol_basis0, int level,
         selctf.read(fn_ctf);
         selctf.removeObjects(MDValueEQ(MDL_ENABLED, -1));
         if (selctf.size() != selfile.size())
-            REPORT_ERROR(1, "Basic_ART_Parameters: The number of images in "
+            REPORT_ERROR(ERR_MD_OBJECTNUMBER, "Basic_ART_Parameters: The number of images in "
                          "the ctf and original selfiles do not match");
     }
 
@@ -652,10 +649,8 @@ void Basic_ART_Parameters::produce_Side_Info(GridVolume &vol_basis0, int level,
             read_proj().setXmippOrigin();
             weight = read_proj.weight();
             if (weight < 0)
-            {
-                REPORT_ERROR(1, "BASIC_ART: negative weight not set correctly!");
-                exit(1);
-            }
+                REPORT_ERROR(ERR_VALUE_INCORRECT,
+                		     "BASIC_ART: negative weight not set correctly!");
             sum_weight += weight;
             /*
             read_proj().initZeros();

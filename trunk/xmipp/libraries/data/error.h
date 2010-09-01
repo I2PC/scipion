@@ -168,6 +168,8 @@ enum ErrorType
 
     ERR_PLANS_NOCREATE,     ///< FFT Plan cannot be created.
 
+    ERR_SELFILE,            ///< Error in docfile format
+
     ERR_THREADS_NOTINIT,    ///< Threads cannot be initiated.
 
     ERR_TYPE_INCORRECT,     ///< Incorrect type received.

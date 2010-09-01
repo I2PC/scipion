@@ -183,6 +183,9 @@ char * XmippError::getDefaultMessage(ErrorType e)
     case ERR_PLANS_NOCREATE:
         return " FFT plan cannot be created.";
 
+    case ERR_SELFILE:
+        return " Error in selfile format";
+
     case ERR_THREADS_NOTINIT:
         return " Threads cannot be initiated.";
 

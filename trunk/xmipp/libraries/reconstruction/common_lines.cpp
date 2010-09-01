@@ -493,7 +493,7 @@ void CommonLine_Parameters::writeResults()
     std::ofstream fh_out;
     fh_out.open(fn_out.c_str());
     if (!fh_out)
-        REPORT_ERROR(1,(std::string)"Cannot open "+fn_out+" for writing");
+        REPORT_ERROR(ERR_IO_NOWRITE,fn_out);
     for (int j=1; j<Nimg; j++)
         for (int i=0; i<j; i++)
         {

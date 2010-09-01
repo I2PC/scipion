@@ -55,7 +55,7 @@ bool getTwoDoubleParams(int argc, char **argv, const char *param,
     {
         if (i + 2 >= argc)
             REPORT_ERROR(ERR_ARG_MISSING,
-                             (std::string)"Not enough arguments after " + *param);
+                         (std::string)"Not enough arguments after " + *param);
         v1 = textToFloat(argv[i+1]);
         v2 = textToFloat(argv[i+2]);
         retval = true;
@@ -80,7 +80,7 @@ bool getThreeDoubleParams(int argc, char **argv, const char *param,
     {
         if (i + 3 >= argc)
             REPORT_ERROR(ERR_ARG_MISSING,
-                             (std::string)"Not enough arguments after " + *param);
+                         (std::string)"Not enough arguments after " + *param);
         v1 = textToFloat(argv[i+1]);
         v2 = textToFloat(argv[i+2]);
         v3 = textToFloat(argv[i+3]);
@@ -153,10 +153,10 @@ Matrix1D<double> getVectorParameter(int argc, char **argv, const char *param, in
     pos++;
     if (*(argv[pos]) != '[')
     {
-		double d = textToFloat(argv[pos]);
-		aux.resize(1);
-		aux(0) = d;
-		return aux;
+        double d = textToFloat(argv[pos]);
+        aux.resize(1);
+        aux(0) = d;
+        return aux;
     }
 
     std::string vector;
@@ -211,6 +211,27 @@ Matrix1D<double> getVectorParameter(int argc, char **argv, const char *param, in
     aux(i) = textToFloat(vector.substr(start_copy, vector.length()));
 
     return aux;
+}
+
+// Get vector param from file ==============================================
+Matrix1D<double> getVectorParameter(FILE *fh, const char *param, int dim)
+{
+    int argcp;
+    char **argvp = NULL;
+    char *copy = NULL;
+    Matrix1D<double> retval;
+    if (!generateCommandLine(fh, param, argcp, argvp, copy))
+        if (dim == -1)
+            return retval;
+        else
+            REPORT_ERROR(ERR_ARG_MISSING, param);
+    else
+    {
+        retval = getVectorParameter(argcp, argvp, ((std::string)"-" + param).c_str(), dim);
+        delete copy;
+        return retval;
+    }
+    return retval;
 }
 
 // Generate command line ===================================================
@@ -357,7 +378,7 @@ std::string getParameter(FILE *fh, const char *param, int skip, const char *opti
     fseek(fh, actual_pos, SEEK_SET);
     if (!found)
         if (option == NULL)
-        	REPORT_ERROR(ERR_ARG_INCORRECT, param);
+            REPORT_ERROR(ERR_ARG_INCORRECT, param);
         else
             return option;
     else

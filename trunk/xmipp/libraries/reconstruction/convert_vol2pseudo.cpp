@@ -125,7 +125,7 @@ void Prog_Convert_Vol2Pseudo::produceSideInfo()
     sigma/=sampling;
 
     if (intensityColumn!="occupancy" && intensityColumn!="Bfactor")
-        REPORT_ERROR(1,(std::string)"Unknown column: "+intensityColumn);
+        REPORT_ERROR(ERR_VALUE_INCORRECT,(std::string)"Unknown column: "+intensityColumn);
 
     Vin.read(fnVol);
     Vin().setXmippOrigin();
@@ -740,7 +740,7 @@ void Prog_Convert_Vol2Pseudo::writeResults()
     FILE *fhOut=NULL;
     fhOut=fopen((fnOut+".pdb").c_str(),"w");
     if (!fhOut)
-        REPORT_ERROR(1,(std::string)"Cannot open "+fnOut+".pdb for output");
+        REPORT_ERROR(ERR_IO_NOWRITE,fnOut+".pdb");
     int nmax=atoms.size();
     int col=1;
     if (intensityColumn=="Bfactor") col=2;

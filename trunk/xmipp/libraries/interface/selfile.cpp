@@ -129,7 +129,7 @@ std::istream& operator >> (std::istream& o, SelLine &SFL)
             SFL.number = label;
         }
         else
-            REPORT_ERROR(1552, "Format error when reading Selection line");
+            REPORT_ERROR(ERR_SELFILE, "Format error when reading Selection line");
     }
     return o;
 }
@@ -250,7 +250,7 @@ void SelFile::read(const FileName &sel_name, int overriding)
         // Read normal selfile
         fh_sel.open(sel_name.c_str(), std::ios::in);
         if (!fh_sel)
-            REPORT_ERROR(1551, (std::string)"SelFile::read: File " + sel_name + " not found");
+            REPORT_ERROR(ERR_IO_NOTEXIST, sel_name);
 
         // Read each line and keep it in the list of the SelFile object
         fh_sel.peek();
@@ -332,7 +332,7 @@ void SelFile::write(const FileName &sel_name)
         // Open file
         fh_sel.open(fn_sel.c_str(), std::ios::out);
         if (!fh_sel)
-            REPORT_ERROR(1553, "SelFile::write: File " + fn_sel + " cannot be written");
+            REPORT_ERROR(ERR_IO_NOWRITE, fn_sel);
 
         // Read each line and keep it in the list of the SelFile object
         while (current != last)
@@ -814,11 +814,11 @@ void SelFile::insert(const SelLine &_selline)
 {
     if (_selline.line_type != SelLine::DATALINE &&
         _selline.line_type != SelLine::COMMENT)
-        REPORT_ERROR(1552, "SelFile::insert(SelLine): SelLine type not valid");
+        REPORT_ERROR(ERR_SELFILE, "SelFile::insert(SelLine): SelLine type not valid");
     if (_selline.line_type == SelLine::DATALINE)
         if (_selline.label != SelLine::DISCARDED &&
             _selline.label != SelLine::ACTIVE)
-            REPORT_ERROR(1552, "SelFile::insert(SelLine): SelLine label not valid");
+            REPORT_ERROR(ERR_SELFILE, "SelFile::insert(SelLine): SelLine label not valid");
 
     // Sjors 18sep06: added next line
     if (_selline.label != SelLine::DISCARDED)

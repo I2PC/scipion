@@ -34,7 +34,8 @@
 #include "matrix1d.h"
 #include "strings.h"
 
-template <typename T> class Matrix1D;
+template <typename T>
+class Matrix1D;
 
 /** @defgroup Arguments Arguments parsing
  *  @ingroup DataLibrary
@@ -106,7 +107,7 @@ template <typename T> class Matrix1D;
  */
 template <typename T>
 void readFloatList(const char* str,
-                     int N, std::vector< T >& v)
+                   int N, std::vector< T >& v)
 {
     T valueF;
     char* token;
@@ -115,9 +116,9 @@ void readFloatList(const char* str,
     for (int i = 0; i < N; i++)
     {
         if (token == NULL)
-        	REPORT_ERROR(ERR_VALUE_INCORRECT, "Cannot convert string into a list of numbers");
+            REPORT_ERROR(ERR_VALUE_INCORRECT, "Cannot convert string into a list of numbers");
 
-            valueF = (T) textToFloat(token);
+        valueF = (T) textToFloat(token);
         v.push_back(valueF);
 
         if (i != N - 1)
@@ -129,12 +130,9 @@ void readFloatList(const char* str,
  */
 template <typename T>
 void readFloatList(const std::string& str,
-                     int& i,
-                     int N,
-                     std::vector< T >& v,
-                     int _errno = 2105,
-                     std::string errmsg = "Error reading list",
-                     int exit = 0)
+                   int& i,
+                   int N,
+                   std::vector< T >& v)
 {
     T valueF;
     std::string token;
@@ -143,22 +141,8 @@ void readFloatList(const std::string& str,
     for (int j = 0; j < N; j++)
     {
         if (token == "")
-        {
-            // CO: Should not report other error than the required one
-            // std::cout << "Read float list: Number of true parameters doesn't \
-            // coincide\n";
-            REPORT_ERROR(_errno, errmsg);
-        }
-
-        try
-        {
-            valueF = (T) textToFloat(token.c_str());
-        }
-        catch (XmippError)
-        {
-            REPORT_ERROR(_errno, errmsg);
-        }
-
+            REPORT_ERROR(ERR_VALUE_INCORRECT, "Cannot convert string into list of floats");
+        valueF = (T) textToFloat(token.c_str());
         v.push_back(valueF);
 
         if (j != N - 1)
@@ -170,11 +154,11 @@ void readFloatList(const std::string& str,
  */
 template <typename T>
 void readFloatList(const char* str,
-                     int N,
-                     Matrix1D< T >& v,
-                     int _errno = 2105,
-                     std::string errmsg = "Error reading floating list",
-                     int exit = 0)
+                   int N,
+                   Matrix1D< T >& v,
+                   int _errno = 2105,
+                   std::string errmsg = "Error reading floating list",
+                   int exit = 0)
 {
     T valueF;
     char* token;
@@ -239,9 +223,9 @@ void readFloatList(const char* str,
  * @endcode
  */
 char* getParameter(int argc,
-                char** argv,
-                const char* param,
-                const char* option = NULL);
+                   char** argv,
+                   const char* param,
+                   const char* option = NULL);
 
 /** Get two float parameters after a flag from the command line.
  *
@@ -251,12 +235,12 @@ char* getParameter(int argc,
  * found
  */
 bool getTwoDoubleParams(int argc,
-                         char** argv,
-                         const char* param,
-                         double& v1,
-                         double& v2,
-                         double v1_def,
-                         double v2_def);
+                        char** argv,
+                        const char* param,
+                        double& v1,
+                        double& v2,
+                        double v1_def,
+                        double v2_def);
 
 /** Get 3 float parameters after a flag from the command line.
  *
@@ -266,14 +250,14 @@ bool getTwoDoubleParams(int argc,
  * found
  */
 bool getThreeDoubleParams(int argc,
-                         char** argv,
-                         const char* param,
-                         double& v1,
-                         double& v2,
-                         double& v3,
-                         double v1_def,
-                         double v2_def,
-                         double v3_def);
+                          char** argv,
+                          const char* param,
+                          double& v1,
+                          double& v2,
+                          double& v3,
+                          double v1_def,
+                          double v2_def,
+                          double v3_def);
 
 /** Get boolean parameters from the command line.
  *
@@ -346,6 +330,66 @@ Matrix1D< double > getVectorParameter(int argc,
                                       const char* param,
                                       int dim = 2);
 
+/** Get float vector.
+ *
+ * Same as the previous function but from a file.
+ */
+Matrix1D<double> getVectorParameter(FILE *fh, const char *param, int dim=2);
+
+/** Generate argc and argv for a string.
+*
+* Given a string this function makes a copy of the string and divides it into
+* tokens such that they can be used as argc and argv, as if it were a command
+* line.
+*
+* The string copy remains in "copy" and it can be freed by disposing this
+* variable.
+*
+* argvp[0] (normally the program name) is set to any value, in this case to
+* "autom", standing for "automatically generated".
+*
+* argcp==0 if now valid command line is provided, ie, the line is empty or only
+* with blanks.
+*
+* Next time the function is called it checks that argv and copy are empty
+* (pointing to NULL), if they aren't then firstly the associated memory is
+* freed.
+*
+* @code
+* int argcp;
+* char** argvp;
+* char* copy;
+*
+* copy = NULL;
+* argvp = NULL;
+*
+* string command_line = "-i input_file -o output_file";
+*
+* generateCommandLine(command_line, argcp, &argvp, &copy);
+*
+* if (argcp != 0)
+* read_parameters(argcp, argvp);
+* @endcode
+*/
+void generateCommandLine(const std::string& command_line,
+                         int& argcp,
+                         char**& argvp,
+                         char*& copy);
+
+/** Generate articial command line from a file.
+*
+* The copy variable must be destroyed outside by "delete copy". This function
+* takes "input_file=<input_file>" and turns it into "-input_file <input_file>"
+* The appropiate argc, argv are also returned.
+*
+* Returns TRUE if the parameter is found in the file, and FALSE if it is not
+*/
+bool generateCommandLine(FILE* fh,
+                         const char* param,
+                         int& argcp,
+                         char**& argvp,
+                         char*& copy);
+
 /** Get parameter from file.
  *
  * Parameters are supposed to be identified with an =, so any line which doesn't
@@ -366,9 +410,9 @@ Matrix1D< double > getVectorParameter(int argc,
  * the command line getParameter
  */
 std::string getParameter(FILE* fh,
-                      const char* param,
-                      int skip = 0,
-                      const char* option = NULL);
+                         const char* param,
+                         int skip = 0,
+                         const char* option = NULL);
 
 /** Check if a parameter is present in a file.
  *
