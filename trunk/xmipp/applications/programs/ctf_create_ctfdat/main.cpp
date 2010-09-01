@@ -89,7 +89,8 @@ int main(int argc, char **argv)
             ctf.enable_CTFnoise = false;
 
             if (SFsel.size() != DFdef.size())
-                REPORT_ERROR(1,"Selfile -1 and docfile -doc have unequal number of entries! ");
+                REPORT_ERROR(ERR_MD_OBJECTNUMBER,
+                             "Selfile -1 and docfile -doc have unequal number of entries! ");
 
             FOR_ALL_OBJECTS_IN_METADATA(DFdef)
             {
@@ -114,7 +115,8 @@ int main(int argc, char **argv)
 
         // For both modes
         if (SFsel.size() != SFctf.size())
-            REPORT_ERROR(1,"Selfiles of options -i and -ctfs have unequal number of entries! ");
+            REPORT_ERROR(ERR_MD_OBJECTNUMBER,
+                         "Selfiles of options -i and -ctfs have unequal number of entries! ");
         SFctf.firstObject();
         FOR_ALL_OBJECTS_IN_METADATA(SFsel)
         {

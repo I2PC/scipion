@@ -60,7 +60,7 @@ int main(int argc, char *argv[])
             fn_in = getParameter(argc, argv, "-blobs");
         }
         else
-            REPORT_ERROR(1, "Voxels22blobs: Not recognised input file type");
+            REPORT_ERROR(ERR_ARG_INCORRECT, "Not recognised input file type");
         fn_out = getParameter(argc, argv, "-o");
         lambda             = textToFloat(getParameter(argc, argv, "-l",    "0.05"));
         final_error        = textToFloat(getParameter(argc, argv, "-final_error", "0.01"));

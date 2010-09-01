@@ -46,7 +46,7 @@ int main(int argc, char **argv)
         	fn_vol=fn_img;
 
         if (fn_root=="" && fn_stack=="" && fn_vol=="")
-            REPORT_ERROR(1,"image_convert: Please, provide one output");
+            REPORT_ERROR(ERR_ARG_MISSING,"Please, provide one output");
     }
     catch (XmippError XE)
     {
@@ -83,7 +83,8 @@ int main(int argc, char **argv)
                 int Xdim, Ydim, Zdim, Ndim;
                 ImgSize(SF, Xdim, Ydim, Zdim, Ndim);
                 if (Zdim!=1 || Ndim!=1)
-                    REPORT_ERROR(1,"image_convert: Only 2D images can be converted into volumes");
+                    REPORT_ERROR(ERR_MULTIDIM_DIM,
+                    		"Only 2D images can be converted into volumes");
                 out().coreAllocate(1,SF.size(),Ydim,Xdim);
                 int k=0;
                 FOR_ALL_OBJECTS_IN_METADATA(SF)

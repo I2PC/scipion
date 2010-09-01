@@ -53,9 +53,8 @@ public:
             prmb.mode = BFACTOR_AUTO;
         }
         else
-        {
-            REPORT_ERROR(1,"Please provide -auto, -adhoc <B> or -ref <fn_ref> option");
-        }
+            REPORT_ERROR(ERR_ARG_MISSING,
+            		"Please provide -auto, -adhoc <B> or -ref <fn_ref> option");
         prmb.sampling_rate = textToFloat(getParameter(argc, argv, "-sampling"));
         prmb.apply_maxres = textToFloat(getParameter(argc, argv, "-maxres"));
         prmb.fit_minres = textToFloat(getParameter(argc, argv, "-fit_minres","15"));
