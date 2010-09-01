@@ -128,7 +128,7 @@ void CtfGroupParams::produceSideInfo()
     SF.read(fn_sel);
     ImgSize(SF,dim,ydim);
     if ( dim != ydim )
-        REPORT_ERROR(1,"ctfgroup ERROR%% Only squared images are allowed!");
+        REPORT_ERROR(ERR_MULTIDIM_SIZE,"Only squared images are allowed!");
 
     paddim = ROUND(pad*dim);
     Mctf.resize(paddim,paddim);
@@ -199,9 +199,8 @@ void CtfGroupParams::produceSideInfo()
                         is_first=false;
                     }
                     else if (pixel_size != ctf.Tm)
-                    {
-                        REPORT_ERROR(1,"ctf_group: Can not mix CTFs with different sampling rates!");
-                    }
+                        REPORT_ERROR(ERR_VALUE_INCORRECT,
+                        		"Cannot mix CTFs with different sampling rates!");
                     if (!do_discard_anisotropy || isIsotropic(ctf))
                     {
                         avgdef = (ctf.DeltafU + ctf.DeltafV)/2.;
@@ -233,7 +232,7 @@ void CtfGroupParams::produceSideInfo()
             }
         }
         if (!found)
-            REPORT_ERROR(1, "ctf_group ERROR%% Did not find image "+fnt+" in the CTFdat file");
+            REPORT_ERROR(ERR_MD_NOOBJ, "Did not find image "+fnt+" in the CTFdat file");
         imgno++;
         if (imgno % c == 0)
             progress_bar(imgno);
