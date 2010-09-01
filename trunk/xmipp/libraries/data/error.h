@@ -166,6 +166,8 @@ enum ErrorType
 
     ERR_NUMERICAL,          ///< Error related to numerical calculation.
 
+    ERR_PARAM_MISSING,      ///< Parameter missing.
+
     ERR_PLANS_NOCREATE,     ///< FFT Plan cannot be created.
 
     ERR_SELFILE,            ///< Error in docfile format

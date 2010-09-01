@@ -562,8 +562,8 @@ ReconsSources = [
 
 #    'project_XR.cpp',
 #    'project_crystal.cpp',
-#    'projection_real_shears.cpp',
 #    'psd_enhance.cpp',
+    'projection_real_shears.cpp',
     'projectTomography.cpp',
     'psd_sort.cpp',
     'radon.cpp',
