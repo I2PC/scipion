@@ -330,6 +330,53 @@ void generateCommandLine(const std::string &command_line, int &argcp,
     }
 }
 
+// Generate command line from file =========================================
+bool generateCommandLine(FILE *fh, const char *param, int &argcp,
+                         char ** &argvp, char* &copy)
+{
+    long actual_pos = ftell(fh);
+    fseek(fh, 0, SEEK_SET);
+
+    char line[201];
+    char *retval;
+    bool found = false;
+
+    // Read lines
+    while (fgets(line, 200, fh) != NULL && !found)
+    {
+        if (line[0] == 0)
+            continue;
+        if (line[0] == '#')
+            continue;
+        if (line[0] == ';')
+            continue;
+        if (line[0] == '\n')
+            continue;
+
+        int i = 0;
+        while (line[i] != 0 && line[i] != '=')
+            i++;
+        if (line[i] == '=')
+        {
+            line[i] = 0;
+            if (strcmp(line, param) == 0)
+            {
+                retval = line + i + 1;
+                found = true;
+                break;
+            }
+        }
+    }
+    fseek(fh, actual_pos, SEEK_SET);
+    if (!found)
+        return false;
+
+    std::string artificial_line;
+    artificial_line = (std::string)"-" + param + " " + retval;
+    generateCommandLine(artificial_line, argcp, argvp, copy);
+    return true;
+}
+
 // Get "parameter" from file ===============================================
 std::string getParameter(FILE *fh, const char *param, int skip, const char *option)
 {
