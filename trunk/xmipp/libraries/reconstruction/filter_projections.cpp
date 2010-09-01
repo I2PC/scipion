@@ -34,7 +34,7 @@
 void Prog_Filter_Projections_Parameters::read(int argc, char **argv)
 {
     if (argc==1)
-        REPORT_ERROR(1,"No filtering criteria provided");
+        REPORT_ERROR(ERR_ARG_MISSING,"No filtering criteria provided");
 
     fn_in=getParameter(argc,argv,"-i");
     fn_out=getParameter(argc,argv,"-o");
@@ -48,7 +48,7 @@ void Prog_Filter_Projections_Parameters::read(int argc, char **argv)
             percentil_score=textToFloat(argv[i+2]);
         }
         else
-            REPORT_ERROR(1,"Not enough arguments after -filter_score");
+            REPORT_ERROR(ERR_ARG_MISSING,"Not enough arguments after -filter_score");
     }
     else
     {
@@ -65,7 +65,7 @@ void Prog_Filter_Projections_Parameters::read(int argc, char **argv)
             percentil_cost=textToFloat(argv[i+2]);
         }
         else
-            REPORT_ERROR(1,"Not enough arguments after -filter_cost");
+            REPORT_ERROR(ERR_ARG_MISSING,"Not enough arguments after -filter_cost");
     }
     else
     {
@@ -83,7 +83,7 @@ void Prog_Filter_Projections_Parameters::read(int argc, char **argv)
             shiftLimit=textToFloat(argv[i+3]);
         }
         else
-            REPORT_ERROR(1,"Not enough arguments after -filter_movement");
+            REPORT_ERROR(ERR_ARG_MISSING,"Not enough arguments after -filter_movement");
     }
     else
     {
@@ -102,7 +102,7 @@ void Prog_Filter_Projections_Parameters::read(int argc, char **argv)
             percentil_normalization=textToFloat(argv[i+4]);
         }
         else
-            REPORT_ERROR(1,"Not enough arguments after -filter_normalization");
+            REPORT_ERROR(ERR_ARG_MISSING,"Not enough arguments after -filter_normalization");
     }
     else
     {
@@ -160,14 +160,16 @@ void Prog_Filter_Projections_Parameters::produce_side_info()
     {
         DF_score.read(fn_score);
         if (Nimg!=DF_score.size())
-            REPORT_ERROR(1,"The number of images in score docfile is not the same as in the input docfile");
+            REPORT_ERROR(ERR_MD_OBJECTNUMBER,
+            		"The number of images in score docfile is not the same as in the input docfile");
     }
 
     if (percentil_cost>0)
     {
         DF_cost.read(fn_cost);
         if (Nimg!=DF_cost.size())
-            REPORT_ERROR(1,"The number of images in cost docfile is not the same as in the input docfile");
+            REPORT_ERROR(ERR_MD_OBJECTNUMBER,
+            		"The number of images in cost docfile is not the same as in the input docfile");
     }
 
     if (angleLimit>0)
@@ -175,7 +177,8 @@ void Prog_Filter_Projections_Parameters::produce_side_info()
         DF_movement0.read(fn_movement0);
         angleLimit=DEG2RAD(angleLimit);
         if (Nimg!=DF_movement0.size())
-            REPORT_ERROR(1,"The number of images in movement docfile is not the same as in the input docfile");
+            REPORT_ERROR(ERR_MD_OBJECTNUMBER,
+            		"The number of images in movement docfile is not the same as in the input docfile");
     }
 
     if (percentil_normalization>0)
