@@ -112,8 +112,7 @@ void computePDBgeometry(const std::string &fnPDB,
     std::ifstream fh_pdb;
     fh_pdb.open(fnPDB.c_str());
     if (!fh_pdb)
-        REPORT_ERROR(1, (std::string)"computePDBgeometry:"
-                     "Cannot open " + fnPDB + " for reading");
+        REPORT_ERROR(ERR_IO_NOTEXIST, fnPDB);
 
     // Process all lines of the file
     int col=1;
@@ -196,13 +195,11 @@ void applyGeometry(const std::string &fn_in, const std::string &fn_out,
     std::ifstream fh_in;
     fh_in.open(fn_in.c_str());
     if (!fh_in)
-        REPORT_ERROR(1, (std::string)"applyGeometry:"
-                     "Cannot open " + fn_in + " for reading");
+        REPORT_ERROR(ERR_IO_NOTEXIST, fn_in);
     std::ofstream fh_out;
     fh_out.open(fn_out.c_str());
     if (!fh_out)
-        REPORT_ERROR(1, (std::string)"applyGeometry:"
-                     "Cannot open " + fn_out + " for writing");
+        REPORT_ERROR(ERR_IO_NOWRITE, fn_out);
 
     // Process all lines of the file
     while (!fh_in.eof())
@@ -265,8 +262,7 @@ void PDBPhantom::read(const FileName &fnPDB)
     std::ifstream fh_in;
     fh_in.open(fnPDB.c_str());
     if (!fh_in)
-        REPORT_ERROR(1, (std::string)"PDBPhantom::read:"
-                     "Cannot open " + fnPDB + " for reading");
+        REPORT_ERROR(ERR_IO_NOTEXIST, fnPDB);
 
     // Process all lines of the file
     while (!fh_in.eof())
@@ -412,7 +408,7 @@ void atomDescriptors(const std::string &atom, Matrix1D<double> &descriptors)
         descriptors(10)=76.7309; // b5
     }
     else
-        REPORT_ERROR(1,(std::string)"atomDescriptors: Unknown atom "+atom);
+        REPORT_ERROR(ERR_VALUE_INCORRECT,(std::string)"atomDescriptors: Unknown atom "+atom);
 }
 
 /* Electron form factor in Fourier ----------------------------------------- */

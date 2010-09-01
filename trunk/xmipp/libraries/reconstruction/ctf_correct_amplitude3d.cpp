@@ -185,7 +185,7 @@ void CorrectAmplitude3DParams::generateWienerFilters()
         fn_tmp.compose(fn_tmp, ii+1, "txt");
         fh.open((fn_tmp).c_str(), std::ios::out);
         if (!fh)
-            REPORT_ERROR(1, (std::string)"Error: Cannot write file: " + fn_tmp);
+            REPORT_ERROR(ERR_IO_NOWRITE, fn_tmp);
         for (int step = 0; step < nr_steps; step++)
         {
             res = (step * sqrt(3.) ) /

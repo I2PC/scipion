@@ -104,7 +104,7 @@ void Prog_correct_bfactor_prm::get_snr_weights(std::vector<double> &snr)
 
     fh.open((fn_fsc).c_str(), std::ios::in);
     if (!fh)
-        REPORT_ERROR(3008, (std::string)"Prog_correct_bfactor_prm: Cannot read file: " + fn_fsc);
+        REPORT_ERROR(ERR_IO_NOTEXIST, fn_fsc);
 
     // Count the number of lines
     fh.peek();
@@ -124,7 +124,7 @@ void Prog_correct_bfactor_prm::get_snr_weights(std::vector<double> &snr)
     if (line_no != xsize/2)
     {
         std::cerr<<"line_no = "<<line_no <<" neq xsize/2= "<<xsize/2<<std::endl;
-        REPORT_ERROR(1,"ERROR: invalid FSC file");
+        REPORT_ERROR(ERR_VALUE_INCORRECT,"ERROR: invalid FSC file");
     }
 }
 
@@ -195,7 +195,7 @@ void  Prog_correct_bfactor_prm::write_guinierfile(FileName fn_guinier,
     std::ofstream fh;
     fh.open((fn_guinier).c_str(), std::ios::out);
     if (!fh)
-        REPORT_ERROR(3008, (std::string)"Prog_correct_bfactor_prm: Cannot write file: " + fn_guinier);
+        REPORT_ERROR(ERR_IO_NOWRITE, fn_guinier);
 
     fh << "# 1/d^2   lnF     weighted-lnF   corrected-lnF   (model)\n";
     for (int i = 0; i < guinierin.size(); i++)

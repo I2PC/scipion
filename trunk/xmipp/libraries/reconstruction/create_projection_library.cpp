@@ -48,7 +48,7 @@ void Prog_create_projection_library_Parameters::read(int argc, char **argv)
     if(angular_distance_bool)
     {
         if(!checkParameter(argc, argv, "-experimental_images"))
-            REPORT_ERROR(1,"1-Docfile with experimental images euler angles is missing");
+            REPORT_ERROR(ERR_ARG_MISSING,"1-Docfile with experimental images euler angles is missing");
         FnexperimentalImages = getParameter(argc, argv, "-experimental_images","");
         angular_distance = textToFloat(getParameter(argc, argv,"-angular_distance"));
     }
@@ -56,7 +56,7 @@ void Prog_create_projection_library_Parameters::read(int argc, char **argv)
     if(compute_closer_sampling_point_bool)
     {
         if(!checkParameter(argc, argv, "-experimental_images"))
-            REPORT_ERROR(1,"2-Docfile with experimental images euler angles is missing");
+            REPORT_ERROR(ERR_ARG_MISSING,"2-Docfile with experimental images euler angles is missing");
         FnexperimentalImages = getParameter(argc, argv, "-experimental_images","");
     }
     quiet = checkParameter(argc, argv,"-quiet");
@@ -70,11 +70,11 @@ void Prog_create_projection_library_Parameters::read(int argc, char **argv)
     if(remove_points_far_away_from_experimental_data_bool)
     {
         if(!checkParameter(argc, argv, "-experimental_images"))
-             REPORT_ERROR(1,"3-Docfile with experimental images euler angles is missing");
+             REPORT_ERROR(ERR_ARG_MISSING,"3-Docfile with experimental images euler angles is missing");
         FnexperimentalImages = getParameter(argc, argv, "-experimental_images","");
     }
     if (angular_distance_bool==false && compute_neighbors_bool==true)
-       REPORT_ERROR(1,"If -compute_neighbors requires -angular_distance");
+       REPORT_ERROR(ERR_ARG_MISSING,"If -compute_neighbors requires -angular_distance");
 }
 
 /* Usage ------------------------------------------------------------------- */
@@ -203,7 +203,7 @@ void Prog_create_projection_library_Parameters::run()
     mysampling.SetSampling(sampling);
     srand ( time(NULL) );
     if (!mysampling.SL.isSymmetryGroup(fn_sym, symmetry, sym_order))
-         REPORT_ERROR(3005, (std::string)"create_projection_library::run Invalid symmetry" +  fn_sym);
+         REPORT_ERROR(ERR_VALUE_INCORRECT, (std::string)"Invalid symmetry" +  fn_sym);
     if (perturb_projection_vector!=0)
     {
         int my_seed;
