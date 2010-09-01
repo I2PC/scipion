@@ -117,17 +117,6 @@ enum ErrorType
     ERR_IMG_NOREAD,         ///< Cannot read image from file.
     ERR_IMG_NOWRITE,        ///< Cannot write image to file.
 
-    ERR_IO,               ///< Input/Output general error.
-    ERR_IO_NOCLOSED,      ///< File cannot be closed.
-    ERR_IO_NOTEXIST,      ///< File or directory does not exists.
-    ERR_IO_NOTOPEN,       ///< File cannot be open.
-    ERR_IO_NOPERM,        ///< Insufficient permissions to perform operation.
-    ERR_IO_NOREAD,        ///< Couldn't read from file.
-    ERR_IO_NOWRITE,       ///< Couldn't write to file.
-    ERR_IO_NOTFILE,       ///< It is not a file.
-    ERR_IO_NOTDIR,        ///< It is not a directory.
-    ERR_IO_NOPATH,        ///< Environment PATH cannot be read.
-    ERR_IO_SIZE,          ///< Incorrect file size.
     ERR_IO,                 ///< Input/Output general error.
     ERR_IO_NOCLOSED,        ///< File cannot be closed.
     ERR_IO_NOTEXIST,        ///< File or directory does not exists.
