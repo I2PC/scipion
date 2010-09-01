@@ -63,7 +63,7 @@ int main(int argc, char **argv)
             if (!local)
             {
                 if (i + 3 >= argc)
-                    REPORT_ERROR(1, "findcenter3D: Not enough parameters behind -rot");
+                    REPORT_ERROR(ERR_ARG_MISSING, "Not enough parameters behind -rot");
                 rot0    = textToFloat(argv[i+1]);
                 rotF    = textToFloat(argv[i+2]);
                 step_rot = textToFloat(argv[i+3]);
@@ -82,7 +82,7 @@ int main(int argc, char **argv)
             if (!local)
             {
                 if (i + 3 >= argc)
-                    REPORT_ERROR(1, "findcenter3D: Not enough parameters behind -tilt");
+                    REPORT_ERROR(ERR_ARG_MISSING, "Not enough parameters behind -tilt");
                 tilt0    = textToFloat(argv[i+1]);
                 tiltF    = textToFloat(argv[i+2]);
                 step_tilt = textToFloat(argv[i+3]);
@@ -181,8 +181,7 @@ int main(int argc, char **argv)
             {
                 fh_out.open(fn_output.c_str());
                 if (!fh_out)
-                    REPORT_ERROR(1,(std::string)"Cannot open "+fn_output+
-                                 " for output");
+                    REPORT_ERROR(ERR_IO_NOWRITE,fn_output);
             }
             std::cout << "Symmetry axis (rot,tilt)= " << best_rot << " "
             << best_tilt << " --> ";
