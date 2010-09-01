@@ -144,7 +144,7 @@ void SF_main(int argc, char **argv,
     try
     {
         if (!exists(prm->fn_in))
-            EXIT_ERROR(ERR_IO_NOTEXIST,
+            REPORT_ERROR(ERR_IO_NOTEXIST,
                        (std::string)argv[0] + ": " + prm->fn_in + " doesn't exist");
         bool success;
 

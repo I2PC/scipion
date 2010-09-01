@@ -195,17 +195,6 @@ enum ErrorType
 void _Xmipp_error(const ErrorType nerr, const std::string& what,
                   const std::string &file, const long line);
 
-/** Show message and exit
- *
- * This macro shows the given message and exits with the error code.
- *
- * @code
- * if (...)
- *     EXIT_ERROR(ERR_DEBUG_TEST, "Error 1");
- * @endcode
- */
-#define EXIT_ERROR(nerr, ErrormMsg) _Xmipp_error(nerr, ErrormMsg, __FILE__, __LINE__)
-
 /** Show message and throw exception
  *
  * This macro shows the given message and exits with the error code.
