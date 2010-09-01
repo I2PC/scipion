@@ -77,7 +77,7 @@ int main(int argc, char *argv[])
         angles.read(fn_ang);
         int AngleNo = angles.size();
         if (AngleNo == 0 || !angles.containsLabel(MDL_ANGLEROT))
-            EXIT_ERROR(1, "Angular distribution: Input file doesn't contain angular information");
+            REPORT_ERROR(ERR_MD_BADLABEL, "Input file doesn't contain angular information");
 
         if (angles.containsLabel(MDL_WEIGHT))
         {
@@ -168,7 +168,7 @@ int main(int argc, char *argv[])
             std::ofstream fh_bild;
             fh_bild.open(fn_bild.c_str(), std::ios::out);
             if (!fh_bild)
-                EXIT_ERROR(1, (std::string)"Ang_distribution: Cannot open " + fn_ps + " for output");
+                REPORT_ERROR(ERR_IO_NOWRITE, fn_ps);
             fh_bild << ".color 1 0 0" << std::endl;
 
             for (int i = 0; i < AngleNo; i++)
@@ -196,7 +196,7 @@ int main(int argc, char *argv[])
             std::ofstream fh_ps;
             fh_ps.open(fn_ps.c_str(), std::ios::out);
             if (!fh_ps)
-                EXIT_ERROR(1, (std::string)"Ang_distribution: Cannot open " + fn_ps + " for output");
+                REPORT_ERROR(ERR_IO_NOWRITE, fn_ps);
 
             fh_ps << "%%!PS-Adobe-2.0\n";
             fh_ps << "%% Creator: Angular Distribution\n";

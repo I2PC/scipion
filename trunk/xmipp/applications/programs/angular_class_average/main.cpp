@@ -109,7 +109,8 @@ int main(int argc, char **argv)
                     {
                         //FIXME: The next line has no sense since the MDL_IMAGE is string
                         // and 'this_image' is of type int...
-                        REPORT_ERROR(-99, "The next line has no sense since the MDL_IMAGE is string \
+                        REPORT_ERROR(ERR_UNCLASSIFIED,
+                        		"The next line has no sense since the MDL_IMAGE is string \
                                      and 'this_image' is of type int...");
                         prm.DF.gotoFirstObject(MDValueEQ(MDL_IMAGE,this_image));
 
