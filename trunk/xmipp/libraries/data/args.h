@@ -106,10 +106,7 @@ template <typename T> class Matrix1D;
  */
 template <typename T>
 void readFloatList(const char* str,
-                     int N, std::vector< T >& v,
-                     int _errno = 2105,
-                     std::string errmsg = "Error reading list",
-                     int exit = 0)
+                     int N, std::vector< T >& v)
 {
     T valueF;
     char* token;
@@ -118,22 +115,9 @@ void readFloatList(const char* str,
     for (int i = 0; i < N; i++)
     {
         if (token == NULL)
-        {
-            // CO: Should not report other error than the required one
-            // std::cout << "Read float list: Number of true parameters doesn't \
-            // coincide\n";
-            REPORT_ERROR(_errno, errmsg);
-        }
+        	REPORT_ERROR(ERR_VALUE_INCORRECT, "Cannot convert string into a list of numbers");
 
-        try
-        {
             valueF = (T) textToFloat(token);
-        }
-        catch (XmippError)
-        {
-            REPORT_ERROR(_errno, errmsg);
-        }
-
         v.push_back(valueF);
 
         if (i != N - 1)

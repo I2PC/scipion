@@ -830,7 +830,7 @@ void Prog_tomograph_alignment::produceSideInfo()
         }
         progress_bar(Nimg);
         if (!nonZeroTilt)
-            REPORT_ERROR(1,"Tilt angles have not been assigned to the input selfile");
+            REPORT_ERROR(ERR_VALUE_NOTSET,"Tilt angles have not been assigned to the input selfile");
     }
 
     // Read images at original scale
@@ -840,7 +840,7 @@ void Prog_tomograph_alignment::produceSideInfo()
         SForig.removeObjects(MDValueEQ(MDL_ENABLED, -1));
 
         if (SForig.size()!=SF.size())
-            REPORT_ERROR(1,"The number of images in both selfiles (-i and -iorig) is different");
+            REPORT_ERROR(ERR_MD_OBJECTNUMBER,"The number of images in both selfiles (-i and -iorig) is different");
     }
 
     // Fill the affine transformations with empty matrices
@@ -862,7 +862,7 @@ void Prog_tomograph_alignment::produceSideInfo()
         std::ifstream fhIn;
         fhIn.open((fnRoot+"_transformations.txt").c_str());
         if (!fhIn)
-            REPORT_ERROR(1,(std::string)"Cannot open "+
+            REPORT_ERROR(ERR_IO_NOTEXIST,(std::string)"Cannot open "+
                          fnRoot+"_transformations.txt");
         int linesRead=0;
         while (!fhIn.eof())
@@ -1676,7 +1676,7 @@ void Prog_tomograph_alignment::generateLandmarkSet()
             << " ( " << ((double) includedPoints)/chainList.size() << " )\n";
         }
         else
-            REPORT_ERROR(1,"There are no landmarks meeting this threshold. Try to lower it");
+            REPORT_ERROR(ERR_VALUE_INCORRECT,"There are no landmarks meeting this threshold. Try to lower it");
     }
     else
     {
@@ -2097,7 +2097,7 @@ void Prog_tomograph_alignment::writeLandmarkSet(const FileName &fnLandmark) cons
     std::ofstream fhOut;
     fhOut.open(fnLandmark.c_str());
     if (!fhOut)
-        REPORT_ERROR(1,(std::string)"Cannot open "+fnLandmark+" for output");
+        REPORT_ERROR(ERR_IO_NOWRITE,(std::string)"Cannot open "+fnLandmark+" for output");
     fhOut << "Point     x       y       slice   color "
     << MAT_YSIZE(allLandmarksX) << " " << MAT_XSIZE(allLandmarksX) << std::endl;
     for (int i=0; i<MAT_XSIZE(allLandmarksX); i++)
@@ -2121,13 +2121,13 @@ void Prog_tomograph_alignment::readLandmarkSet(const FileName &fnLandmark)
     std::ifstream fhIn;
     fhIn.open(fnLandmark.c_str());
     if (!fhIn)
-        REPORT_ERROR(1,(std::string)"Cannot open "+fnLandmark+" for input");
+        REPORT_ERROR(ERR_IO_NOTEXIST,(std::string)"Cannot open "+fnLandmark+" for input");
     std::string dummyStr;
     int Nlandmark;
     fhIn >> dummyStr >> dummyStr >> dummyStr >> dummyStr >> dummyStr
     >> Nlandmark >> Nimg;
     if (Nlandmark<=0)
-        REPORT_ERROR(1,(std::string)"No landmarks are found in "+fnLandmark);
+        REPORT_ERROR(ERR_VALUE_INCORRECT,(std::string)"No landmarks are found in "+fnLandmark);
     allLandmarksX.resize(Nlandmark,Nimg);
     allLandmarksY.resize(Nlandmark,Nimg);
     allLandmarksX.initConstant(XSIZE(*img[0]));
@@ -2162,7 +2162,7 @@ void Prog_tomograph_alignment::writeTransformations(
     std::ofstream fhOut;
     fhOut.open(fnTransformations.c_str());
     if (!fhOut)
-        REPORT_ERROR(1,(std::string)"Cannot open "+fnTransformations+" for output");
+        REPORT_ERROR(ERR_IO_NOWRITE,(std::string)"Cannot open "+fnTransformations+" for output");
     int imax=affineTransformations.size();
     int counter=0;
     for (int i=0; i<imax; i++)
@@ -2222,7 +2222,7 @@ void Prog_tomograph_alignment::alignImages(const Alignment &alignment)
             z0N++;
         }
     if (z0N==0)
-        REPORT_ERROR(1,"There is no landmark at 0 degrees");
+        REPORT_ERROR(ERR_VALUE_INCORRECT,"There is no landmark at 0 degrees");
     z0/=z0N;
     std::cout << "Average height of the landmarks at 0 degrees=" << z0
     << std::endl;
@@ -2557,7 +2557,8 @@ void Prog_tomograph_alignment::run()
     std::ofstream fh_out;
     fh_out.open((fnRoot+"_alignment.txt").c_str());
     if (!fh_out)
-        REPORT_ERROR(1,(std::string)"Cannot open "+fnRoot+"_alignment.txt for output");
+        REPORT_ERROR(ERR_IO_NOWRITE,
+                     (std::string)"Cannot open "+fnRoot+"_alignment.txt for output");
     fh_out << *bestPreviousAlignment;
     fh_out.close();
 

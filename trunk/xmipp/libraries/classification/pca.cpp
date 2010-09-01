@@ -262,7 +262,7 @@ void PCAAnalyzer::reset(ClassicTrainingVectors const &ts, std::vector<unsigned> 
         listener->OnProgress(50);
 
 
-    REPORT_ERROR(1, "too many Jacobi iterations");
+    REPORT_ERROR(ERR_NUMERICAL, "too many Jacobi iterations");
 }
 
 /* Prepare for correlation ------------------------------------------------- */
@@ -338,7 +338,7 @@ int PCAAnalyzer::Dimension_for_variance(double th_var)
 void PCAAnalyzer::Project(FeatureVector &input, FeatureVector &output)
 {
     if (input.size() != eigenvec[0].size())
-        REPORT_ERROR(1, "PCA_project: vectors are not of the same size");
+        REPORT_ERROR(ERR_MULTIDIM_DIM, "PCA_project: vectors are not of the same size");
 
     int size = input.size();
     output.resize(D);
