@@ -177,8 +177,8 @@ void Prog_mlf_tomo_prm::produce_Side_info()
     // Get image size
     SF.go_beginning();
     vol.read(SF.NextImg());
-    if (XSIZE(vol()) != YSIZE(vol())) REPORT_ERROR(1, "ERROR% unequal dimensions: Only cubic volumes are allowed!");
-    if (XSIZE(vol()) != ZSIZE(vol())) REPORT_ERROR(1, "ERROR% unequal dimensions: Only cubic volumes are allowed!");
+    if (XSIZE(vol()) != YSIZE(vol())) REPORT_ERROR(ERR_MULTIDIM_SIZE, "ERROR% unequal dimensions: Only cubic volumes are allowed!");
+    if (XSIZE(vol()) != ZSIZE(vol())) REPORT_ERROR(ERR_MULTIDIM_SIZE, "ERROR% unequal dimensions: Only cubic volumes are allowed!");
     dim = XSIZE(vol());
     dim3 = (double)dim * dim * dim;
     Faux_real.resize(dim, dim, dim);
@@ -306,9 +306,9 @@ void Prog_mlf_tomo_prm::produce_Side_info()
     resmask.setXmippOrigin();
     resmask2.resize(dim, dim, dim);
     resmask2.setXmippOrigin();
-    if (highres > 0.5) REPORT_ERROR(1, "Highres should be lower than 0.5!");
+    if (highres > 0.5) REPORT_ERROR(ERR_VALUE_INCORRECT, "Highres should be lower than 0.5!");
     if (highres < 0) highres = 0.5;
-    if (lowres > 0.5) REPORT_ERROR(1, "Lowres should be lower than 0.5!");
+    if (lowres > 0.5) REPORT_ERROR(ERR_VALUE_INCORRECT, "Lowres should be lower than 0.5!");
     if (lowres < 0) lowres = 0;
     resol_max = ROUND(highres * dim);
     resol_min = ROUND(lowres * dim);
@@ -529,7 +529,7 @@ void Prog_mlf_tomo_prm::estimate_initial_sigma2()
                         Vsum[ires] += 1.;
                     }
                 }
-                else REPORT_ERROR(1, fn_vol + " not found in document file");
+                else REPORT_ERROR(ERR_MD_NOOBJ, fn_vol + " not found in document file");
                 if (verb > 0) if (imgno % c == 0) progress_bar(imgno);
             }
             if (verb > 0) progress_bar(nn);
@@ -568,7 +568,7 @@ void Prog_mlf_tomo_prm::estimate_initial_sigma2()
             }
 
         }
-        else REPORT_ERROR(1, "-MLF mode requires the definition of missing wedges and the use of a docfile");
+        else REPORT_ERROR(ERR_VALUE_INCORRECT, "-MLF mode requires the definition of missing wedges and the use of a docfile");
     }
 
 }
@@ -1179,7 +1179,7 @@ void Prog_mlf_tomo_prm::update_parameters(std::vector<Matrix3D<double> > &wsum_F
 	for (int i = 0; i < resol_max; i++)
 	{
 	    // STILL ADD A TERM FOR THE IMPUTATION HERE!!!
-	    
+
 
 	    // Factor 2 because of 2D-Gaussian in Fourier space!
 	    if (sum_nonzero_pixels[i] > 0.)
@@ -1252,7 +1252,7 @@ void Prog_mlf_tomo_prm::solvent_flattening(std::vector<Matrix3D<double> > &Mref,
     solv.read(fn_solvent);
     solv().setXmippOrigin();
     if (XSIZE(solv()) != dim || YSIZE(solv()) != dim || ZSIZE(solv()) != dim)
-        REPORT_ERROR(12, "mlf_tomo-solvent_flattening: solvent mask is not of right dimensions");
+        REPORT_ERROR(ERR_MULTIDIM_SIZE, "mlf_tomo-solvent_flattening: solvent mask is not of right dimensions");
 
     solvavg = 0., sumsolv = 0.;
     for (int refno = 0;refno < nr_ref; refno++)
