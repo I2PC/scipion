@@ -206,7 +206,7 @@ void _Xmipp_error(const ErrorType nerr, const std::string& what,
  *     REPORT_ERROR(ERR_DEBUG_TEST, "Error 1");
  * @endcode
  */
-#define REPORT_ERROR(nerr, ErrormMsg) throw XmippError((ErrorType)nerr, ErrormMsg, __FILE__, __LINE__)
+#define REPORT_ERROR(nerr, ErrormMsg) throw XmippError(nerr, ErrormMsg, __FILE__, __LINE__)
 /** Report error without any extra message */
 //#define REPORT_ERROR(nerr) throw XmippError((ErrorType)nerr, "", __FILE__, __LINE__)
 
