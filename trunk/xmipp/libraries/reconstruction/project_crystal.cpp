@@ -52,7 +52,7 @@ void Crystal_Projection_Parameters::read(const FileName &fn_crystal, double scal
     char    *auxstr;
 
     if ((fh_param = fopen(fn_crystal.c_str(), "r")) == NULL)
-        REPORT_ERROR(3005,
+        REPORT_ERROR(ERR_IO_NOTOPEN,
                      (std::string)"Prog_Project_Parameters::read: There is a problem "
                      "opening the file " + fn_crystal);
 
@@ -115,7 +115,7 @@ void Crystal_Projection_Parameters::read(const FileName &fn_crystal, double scal
         } /* switch end */
     } /* while end */
     if (lineNo != 7 && lineNo != 6)
-        REPORT_ERROR(3007, (std::string)"Prog_Project_Crystal::read: I "
+        REPORT_ERROR(ERR_PARAM_MISSING, (std::string)"Prog_Project_Crystal::read: I "
                      "couldn't read all parameters from file " + fn_crystal);
 
     fclose(fh_param);
@@ -127,7 +127,7 @@ void Crystal_Projection_Parameters::write(const FileName &fn_crystal)
     FILE *fh_param;
 
     if ((fh_param = fopen(fn_crystal.c_str(), "w")) == NULL)
-        REPORT_ERROR(3005,
+        REPORT_ERROR(ERR_IO_NOTOPEN,
                      (std::string)"Prog_Project_Parameters::write: There is a problem "
                      "opening the file " + fn_crystal + " for output");
 
@@ -486,7 +486,7 @@ void find_crystal_limits(
     int &iamin, int &iamax, int &ibmin, int &ibmax)
 {
     if (a.module() < MIN_MODULE || b.module() < MIN_MODULE)
-        REPORT_ERROR(1, "find_crystal_limits: one of the lattice vectors is "
+        REPORT_ERROR(ERR_MATRIX_SIZE, "find_crystal_limits: one of the lattice vectors is "
                      "extremely small");
 
     // Compute area to cover

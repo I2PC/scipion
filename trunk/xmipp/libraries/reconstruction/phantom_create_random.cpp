@@ -309,7 +309,7 @@ void ROUT_random_phantom(const Prog_Random_Phantom_Parameters &prm,
     if (prm.N_stats == -1)
     {
         if (side.voxel_mode)
-            REPORT_ERROR(1, "Random_phantom: Cannot generate a random realization"
+            REPORT_ERROR(ERR_VALUE_INCORRECT, "Random_phantom: Cannot generate a random realization"
                          " of a voxel phantom");
         // Generate realization and write to disk
         generate_realization_of_random_phantom(prm, side, Realization);
