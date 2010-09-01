@@ -39,7 +39,7 @@ void Prog_ml_tomo_prm::read(int argc, char **argv)
 
     if (checkParameter(argc, argv, "-restart"))
     {
-        REPORT_ERROR(1,"restart procedure temporarily de-activated.... sorry!");
+        REPORT_ERROR(ERR_DEBUG_TEST,"restart procedure temporarily de-activated.... sorry!");
         /*
            std::string comment;
            FileName fn_sel;
@@ -376,14 +376,14 @@ void Prog_ml_tomo_prm::produceSideInfo()
     // Get original dimension
     ImgSize(MDimg, xdim, ydim, zdim, ndim);
     if (xdim != ydim || xdim != zdim)
-        REPORT_ERROR(1,"ml_tomo ERROR%: only cubic volumes are allowed");
+        REPORT_ERROR(ERR_MULTIDIM_SIZE, "Only cubic volumes are allowed");
     oridim = xdim;
 
     // Downscaled dimension
     if (dim < 0)
         dim = oridim;
     if (dim > oridim)
-        REPORT_ERROR(1,"Error: dim should be smaller than the size of the images");
+        REPORT_ERROR(ERR_MULTIDIM_DIM, "dim should be smaller than the size of the images");
     // Keep both dim and oridim even or uneven
     if (oridim % 2 != dim % 2)
         dim++;
@@ -394,7 +394,7 @@ void Prog_ml_tomo_prm::produceSideInfo()
     sigma_offset *= scale_factor;
 
     if (regF > reg0)
-        REPORT_ERROR(1,"regF should be smaller than reg0!");
+        REPORT_ERROR(ERR_VALUE_INCORRECT,"regF should be smaller than reg0!");
     reg_current = reg0;
 
     // Make real-space masks
@@ -417,10 +417,10 @@ void Prog_ml_tomo_prm::produceSideInfo()
     else
     {
         if (!dont_align)
-            REPORT_ERROR(1,"ERROR: option -mask is only valid in combination with -dont_align");
+            REPORT_ERROR(ERR_ARG_DEPENDENCE,"option -mask is only valid in combination with -dont_align");
         Imask.read(fn_mask);
         if (Imask().computeMin() < 0. || Imask().computeMax() > 1.)
-            REPORT_ERROR(1,"ERROR: mask should have values within the range [0,1]");
+            REPORT_ERROR(ERR_VALUE_INCORRECT,"mask should have values within the range [0,1]");
         Imask().setXmippOrigin();
         reScaleVolume(Imask(),true);
         // Remove any borders from the mask (to prevent problems rotating it later on)
@@ -475,14 +475,14 @@ void Prog_ml_tomo_prm::produceSideInfo()
     if (dont_align || do_only_average || dont_rotate)
     {
         if (!mdimg_contains_angles)
-            REPORT_ERROR(1,"Options -dont_align, -dont_rotate and -only_average require that angle information is present in -i metadatafile");
+            REPORT_ERROR(ERR_ARG_MISSING,"Options -dont_align, -dont_rotate and -only_average require that angle information is present in -i metadatafile");
         ang_search = -1.;
     }
     else
     {
         mysampling.SetSampling(angular_sampling);
         if (!mysampling.SL.isSymmetryGroup(fn_sym, symmetry, sym_order))
-            REPORT_ERROR(3005, (std::string)"ml_refine3d::run Invalid symmetry" +  fn_sym);
+            REPORT_ERROR(ERR_VALUE_INCORRECT, (std::string)"Invalid symmetry" +  fn_sym);
         mysampling.SL.read_sym_file(fn_sym);
         // Check whether we are using symmetry
         if (mysampling.SL.SymsNo() > 0)
@@ -497,7 +497,7 @@ void Prog_ml_tomo_prm::produceSideInfo()
                 std::cerr<<"      Note that -dont_limit_psirange option is not allowed.... "<<std::endl;
             }
             if (!do_limit_psirange && ang_search > 0.)
-                REPORT_ERROR(1,"ml_tomo: ERROR: exhaustive psi-angle search only allowed for C1 symmetry");
+                REPORT_ERROR(ERR_ARG_INCORRECT,"exhaustive psi-angle search only allowed for C1 symmetry");
         }
         mysampling.fill_L_R_repository();
         // by default max_tilt= +91., min_tilt= -91.
@@ -1195,7 +1195,7 @@ void Prog_ml_tomo_prm::getMissingRegion(MultidimArray<double> &Mmissing,
     }
     else
     {
-        REPORT_ERROR(1,"bug: unrecognized type of missing region");
+        REPORT_ERROR(ERR_ARG_INCORRECT,"bug: unrecognized type of missing region");
     }
 
     //#define DEBUG_WEDGE
@@ -1706,7 +1706,7 @@ void Prog_ml_tomo_prm::expectationSingleImage(MultidimArray<double> &Mimg, int i
     if (do_mask)
     {
         if (!dont_align)
-            REPORT_ERROR(1,"BUG: !dont_align and do_mask cannot coincide at this stage...");
+            REPORT_ERROR(ERR_DEBUG_IMPOSIBLE,"BUG: !dont_align and do_mask cannot coincide at this stage...");
         MultidimArray<double> Mmask;
         A_rot = (all_angle_info[opt_angno]).A;
         A_rot_inv = A_rot.inv();
@@ -2085,7 +2085,7 @@ void Prog_ml_tomo_prm::maxConstrainedCorrSingleImage(
     if (do_mask)
     {
         if (!dont_align)
-            REPORT_ERROR(1,"BUG: !dont_align and do_mask cannot coincide at this stage...");
+            REPORT_ERROR(ERR_DEBUG_IMPOSIBLE,"BUG: !dont_align and do_mask cannot coincide at this stage...");
         MultidimArray<double> Mmask;
         A_rot = (all_angle_info[opt_angno]).A;
         A_rot_inv = A_rot.inv();

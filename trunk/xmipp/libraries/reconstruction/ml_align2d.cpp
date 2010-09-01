@@ -1088,7 +1088,7 @@ void Prog_MLalign2D_prm::createThreads()
 
         if (result != 0)
         {
-            REPORT_ERROR(result, "ERROR CREATING THREAD");
+            REPORT_ERROR(ERR_THREADS_NOTINIT, "");
         }
     }
 
@@ -2575,7 +2575,7 @@ void Model_MLalign2D::combineModel(Model_MLalign2D model, int sign)
 {
     if (n_ref != model.n_ref)
     {
-        REPORT_ERROR(5000, "Can not add models with different 'n_ref'");
+        REPORT_ERROR(ERR_VALUE_INCORRECT, "Can not add models with different 'n_ref'");
         exit(1);
     }
 
@@ -2685,9 +2685,9 @@ void Model_MLalign2D::updateSigmaOffset(double wsum_sigma_offset)
     }
     sigma_offset = sqrt(wsum_sigma_offset / (2. * sumw_allrefs));
     if (wsum_sigma_offset < 0.)
-        REPORT_ERROR(-111, "updateSigmaOffset: sqrt of negative 'wsum_sigma_offset'");
+        REPORT_ERROR(ERR_VALUE_INCORRECT, "sqrt of negative 'wsum_sigma_offset'");
     if (sumw_allrefs < 0.)
-        REPORT_ERROR(-111, "updateSigmaOffset: sqrt of negative 'wsum_sigma_offset'");
+        REPORT_ERROR(ERR_VALUE_INCORRECT, "sqrt of negative 'wsum_sigma_offset'");
 }//close function updateSigmaOffset
 
 void Model_MLalign2D::updateSigmaNoise(double wsum_sigma_noise)
@@ -2703,7 +2703,7 @@ void Model_MLalign2D::updateSigmaNoise(double wsum_sigma_noise)
     }
     double sigma_noise2 = wsum_sigma_noise / (sum * dim * dim);
     if (sigma_noise2 < 0.)
-        REPORT_ERROR(-111, "updateSigmaNoise: sqrt of negative 'sigma_noise2'");
+        REPORT_ERROR(ERR_VALUE_INCORRECT, "sqrt of negative 'sigma_noise2'");
     sigma_noise = sqrt(sigma_noise2);
 }//close function updateSigmaNoise
 
