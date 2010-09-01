@@ -110,13 +110,19 @@
  */
 enum ErrorType
 {
-    ERR_MEM_BADREQUEST,     ///< Bad amount of memory requested.
-    ERR_MEM_NOTENOUGH,      ///< There is not enough memory for allocation.
-    ERR_MEM_NOTDEALLOC,     ///< Memory has not been deallocated.
-    ERR_MEM_NULLPOINTER,    ///< Null pointer passed as parameter
+    ERR_ARG_INCORRECT,      ///< Incorrect argument received.
+    ERR_ARG_MISSING,        ///< Argument missing.
+
+    ERR_DEBUG_TEST,         ///< Just an error for debugging purpose.
+    ERR_DEBUG_IMPOSIBLE,    ///< Just for debugging, situation that can't happens
+
+    ERR_GRID,               ///< Grid general error.
+    ERR_GRID_SIZE,          ///< Incorrect number of GRID volumes or shapes
 
     ERR_IMG_NOREAD,         ///< Cannot read image from file.
     ERR_IMG_NOWRITE,        ///< Cannot write image to file.
+
+    ERR_INDEX_OUTOFBOUNDS,  ///< Index out of bounds.
 
     ERR_IO,                 ///< Input/Output general error.
     ERR_IO_NOCLOSED,        ///< File cannot be closed.
@@ -130,26 +136,10 @@ enum ErrorType
     ERR_IO_NOPATH,          ///< Environment PATH cannot be read.
     ERR_IO_SIZE,            ///< Incorrect file size.
 
-    ERR_ARG_INCORRECT,      ///< Incorrect argument received.
-    ERR_ARG_MISSING,        ///< Argument missing.
-
-    ERR_TYPE_INCORRECT,     ///< Incorrect type received.
-
-    ERR_VALUE_EMPTY,        ///< Empty value.
-    ERR_VALUE_INCORRECT,   	///< Incorrect value received.
-    ERR_VALUE_NOTSET,      	///< Value has not been set.
-
-    ERR_GRID,              	///< Grid general error.
-    ERR_GRID_SIZE,          ///< Incorrect number of GRID volumes or shapes
-
-    ERR_MATRIX,            	///< Matrix error.
+    ERR_MATRIX,             ///< Matrix error.
     ERR_MATRIX_DIM,         ///< Problem with matrix dimensions.
-    ERR_MATRIX_EMPTY,     	///< The matrix is empty.
-    ERR_MATRIX_SIZE,      	///< Problem with matrix size.
-
-    ERR_MULTIDIM_DIM,       ///< Incorrect MultidimArray dimensions
-    ERR_MULTIDIM_SIZE,      ///< Incorrect MultidimArray dimensions size
-    ERR_MULTIDIM_EMPTY,     ///< MultidimArray is empty.
+    ERR_MATRIX_EMPTY,       ///< The matrix is empty.
+    ERR_MATRIX_SIZE,        ///< Problem with matrix size.
 
     ERR_MD,                 ///< MetaData error.
     ERR_MD_NOACTIVE,        ///< No active object in MetaData.
@@ -157,22 +147,33 @@ enum ErrorType
     ERR_MD_BADLABEL,        ///< Unexpected label.
     ERR_MD_SQL,             ///< Error in SQL of MetaData operations.
 
+    ERR_MEM_BADREQUEST,     ///< Bad amount of memory requested.
+    ERR_MEM_NOTENOUGH,      ///< There is not enough memory for allocation.
+    ERR_MEM_NOTDEALLOC,     ///< Memory has not been deallocated.
+    ERR_MEM_NULLPOINTER,    ///< Null pointer passed as parameter
+
     ERR_MMAP,               ///< Global mmap error.
     ERR_MMAP_NOTADDR,       ///< Map addressing of file has failed.
 
+    ERR_MULTIDIM_DIM,       ///< Incorrect MultidimArray dimensions
+    ERR_MULTIDIM_SIZE,      ///< Incorrect MultidimArray size
+    ERR_MULTIDIM_EMPTY,     ///< MultidimArray is empty.
+
+    ERR_NOT_IMPLEMENTED,    ///< Case or algorithm not implemented yet.
+
     ERR_NUMERICAL,          ///< Error related to numerical calculation.
 
-    ERR_INDEX_OUTOFBOUNDS,///< Index out of bounds.
-
-    ERR_DEBUG_TEST,       	///< Just an error for debugging purpose.
-    ERR_DEBUG_IMPOSIBLE,   	///< Just for debugging, situation that can't happens
-    ERR_UNCLASSIFIED,       ///< Just to locate unclassified errors.
-    ERR_NOT_IMPLEMENTED,    ///< Case or algorithm not implemented yet.
+    ERR_PLANS_NOCREATE,     ///< FFT Plan cannot be created.
 
     ERR_THREADS_NOTINIT,    ///< Threads cannot be initiated.
 
-    ERR_PLANS_NOCREATE      ///< FFT Plan cannot be created.
+    ERR_TYPE_INCORRECT,     ///< Incorrect type received.
 
+    ERR_UNCLASSIFIED,       ///< Just to locate unclassified errors.
+
+    ERR_VALUE_EMPTY,        ///< Empty value.
+    ERR_VALUE_INCORRECT,    ///< Incorrect value received.
+    ERR_VALUE_NOTSET        ///< Value has not been set.
 };
 
 /** Show message and exit
@@ -183,7 +184,7 @@ enum ErrorType
  *
  */
 void _Xmipp_error(const ErrorType nerr, const std::string& what,
-    const std::string &file, const long line);
+                  const std::string &file, const long line);
 
 /** Show message and exit
  *
@@ -220,9 +221,9 @@ class XmippError
 {
 
 private:
-  //Variables to hold stack info
-  char ** strings;
-  size_t size;
+    //Variables to hold stack info
+    char ** strings;
+    size_t size;
 
 public:
     /** Error code */
@@ -239,7 +240,7 @@ public:
 
     /** Constructor */
     XmippError(const ErrorType nerr, const std::string& what,
-        const std::string &fileArg, const long lineArg);
+               const std::string &fileArg, const long lineArg);
     /** Destructor */
     ~XmippError();
     /** Function to print the Stack calls */

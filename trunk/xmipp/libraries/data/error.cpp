@@ -82,30 +82,41 @@ char * XmippError::getDefaultMessage(ErrorType e)
 {
     switch (e)
     {
-    case ERR_MEM_BADREQUEST:
-        return " Bad amount of memory requested.";
-    case ERR_MEM_NOTENOUGH:
-        return " There is not enough memory for allocation";
-    case ERR_MEM_NULLPOINTER:
-        return " Null pointer passed as parameter";
-    case ERR_MEM_NOTDEALLOC:
-        return " Memory has not been deallocated.";
+    case ERR_ARG_INCORRECT:
+        return " Incorrect argument received";
+    case ERR_ARG_MISSING:
+        return " Argument missing";
+
+    case ERR_DEBUG_TEST:
+        return " Just an error for debugging purpose";
+    case ERR_DEBUG_IMPOSIBLE:
+        return " Just for debugging: situation that can't happens";
+
+    case ERR_GRID:
+        return " Grid general error";
+    case ERR_GRID_SIZE:
+        return " Incorrect number of GRID volumes or shapes.";
+
     case ERR_IMG_NOREAD:
         return " Image cannot be read from file.";
     case ERR_IMG_NOWRITE:
         return " Image cannot be written to file.";
+
+    case ERR_INDEX_OUTOFBOUNDS:
+        return " Index out of bounds";
+
     case ERR_IO:
         return " Input/output general error.";
     case ERR_IO_NOCLOSED:
-            return " File cannot be closed.";
+        return " File cannot be closed.";
     case ERR_IO_NOPATH:
         return " Environment PATH cannot be read.";
     case ERR_IO_NOPERM:
         return " Insufficient permissions to perform operation.";
     case ERR_IO_NOREAD:
-            return " Couldn't read from file";
+        return " Couldn't read from file";
     case ERR_IO_NOTDIR:
-            return " It is not a directory";
+        return " It is not a directory";
     case ERR_IO_NOTEXIST:
         return " File or directory does not exists";
     case ERR_IO_NOTFILE:
@@ -113,37 +124,76 @@ char * XmippError::getDefaultMessage(ErrorType e)
     case ERR_IO_NOTOPEN:
         return "File cannot be open.";
     case ERR_IO_NOWRITE:
-            return " Couldn't write to file";
+        return " Couldn't write to file";
     case ERR_IO_SIZE:
         return " Incorrect file size.";
-    case ERR_ARG_INCORRECT:
-        return " Incorrect argument received";
-    case ERR_ARG_MISSING:
-        return " Argument missing";
-    case ERR_TYPE_INCORRECT:
-        return " Incorrect type received";
+
     case ERR_MATRIX:
         return " Matrix error";
+    case ERR_MATRIX_DIM:
+        return " Incorrect matrix dimensions.";
     case ERR_MATRIX_EMPTY:
         return " The matrix is empty";
     case ERR_MATRIX_SIZE:
-        return " Problem with matrix size";
+        return " Incorrect matrix size";
+
     case ERR_MD:
         return " MetaData error";
+    case ERR_MD_BADLABEL:
+        return " Unexpected label";
     case ERR_MD_NOACTIVE:
         return " No active object in MetaData";
     case ERR_MD_NOOBJ:
         return " No exist requested object";
-    case ERR_MD_BADLABEL:
-        return " Unexpected label";
     case ERR_MD_SQL:
         return " Error in SQL of MetaData operations";
-    case ERR_INDEX_OUTOFBOUNDS:
-        return " Index out of bounds";
-    case ERR_DEBUG_TEST:
-        return " Just an error for debugging purpose";
-    case ERR_DEBUG_IMPOSIBLE:
-        return " Just for debugging: situation that can't happens";
+
+    case ERR_MEM_BADREQUEST:
+        return " Bad amount of memory requested.";
+    case ERR_MEM_NOTENOUGH:
+        return " There is not enough memory for allocation.";
+    case ERR_MEM_NOTDEALLOC:
+        return " Memory has not been deallocated.";
+    case ERR_MEM_NULLPOINTER:
+         return " Null pointer passed as parameter";
+
+    case ERR_MMAP:
+        return " Global mmap error.";
+    case ERR_MMAP_NOTADDR:
+        return " Map addressing of file has failed.";
+
+    case ERR_MULTIDIM_DIM:
+        return " Incorrect MultidimArray dimensions.";
+    case ERR_MULTIDIM_EMPTY:
+        return " MultidimArray is empty.";
+    case ERR_MULTIDIM_SIZE:
+        return " Incorrect MultidimArray size.";
+
+    case ERR_NOT_IMPLEMENTED:
+        return " Algorithm not implemented yet.";
+
+    case ERR_NUMERICAL:
+        return " Error related to numerical calculation.";
+
+    case ERR_PLANS_NOCREATE:
+        return " FFT plan cannot be created.";
+
+    case ERR_THREADS_NOTINIT:
+        return " Threads cannot be initiated.";
+
+    case ERR_TYPE_INCORRECT:
+        return " Incorrect type received";
+
+    case ERR_UNCLASSIFIED:
+        return " Not classified error.";
+
+    case ERR_VALUE_EMPTY:
+        return " Empty value.";
+    case ERR_VALUE_INCORRECT:
+        return " Incorrect received value.";
+    case ERR_VALUE_NOTSET:
+        return " Value has not been set.";
+
     default:
         return "Unrecognized error code";
     }
