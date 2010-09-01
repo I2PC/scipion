@@ -145,6 +145,8 @@ char * XmippError::getDefaultMessage(ErrorType e)
         return " MetaData error";
     case ERR_MD_BADLABEL:
         return " Unexpected label";
+    case ERR_MD_BADTYPE:
+        return " Bad label type.";
     case ERR_MD_NOACTIVE:
         return " No active object in MetaData";
     case ERR_MD_NOOBJ:
