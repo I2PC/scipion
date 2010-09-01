@@ -41,7 +41,7 @@ void Prog_assign_CTF_prm::read(const FileName &fn_prm, bool do_not_read_files)
     // Read specific parameters for this program from input file
     FILE *fh_param;
     if ((fh_param = fopen(fn_prm.c_str(), "r")) == NULL)
-        REPORT_ERROR(1, (std::string)"assign_CTF: There is a problem "
+        REPORT_ERROR(ERR_IO_NOTOPEN, (std::string)"assign_CTF: There is a problem "
                      "opening the file " + fn_prm);
 
     reversed          = checkParameter(fh_param, "reverse endian");
@@ -92,7 +92,7 @@ void Prog_assign_CTF_prm::write(const FileName &fn_prm,
     std::ofstream fh_param;
     fh_param.open(fn_prm.c_str(), std::ios::out);
     if (!fh_param)
-        REPORT_ERROR(1, (std::string)"assign_CTF: There is a problem "
+        REPORT_ERROR(ERR_IO_NOTOPEN, (std::string)"assign_CTF: There is a problem "
                      "opening the file " + fn_prm + " for write");
     fh_param << "# Assign CTF parameters\n";
     std::string aux;
@@ -280,7 +280,7 @@ void Prog_assign_CTF_prm::process()
         // Check if sel file is empty
         if (SF.size() == 0)
         {
-            REPORT_ERROR(1, (std::string)"Prog_assign_CTF_prm: sel file " + SF.getFilename() +
+            REPORT_ERROR(ERR_MD_OBJECTNUMBER, (std::string)"Prog_assign_CTF_prm: sel file " + SF.getFilename() +
                          "is empty ");
         }
 
@@ -462,7 +462,7 @@ void Prog_assign_CTF_prm::process()
         if (!micrograph_averaging)
         {
             if (bootstrapN!=-1)
-                REPORT_ERROR(1,
+                REPORT_ERROR(ERR_VALUE_INCORRECT,
                              "Bootstrapping is only available for micrograph averages");
 
             FileName piece_fn, piece_fn_root;
@@ -595,7 +595,7 @@ void Prog_assign_CTF_prm::process()
             PosFile.close();
             PosFile.open(picked_fn.c_str());
             if (!PosFile)
-                REPORT_ERROR(1, (std::string)"Prog_assign_CTF_prm::process: Could not open " +
+                REPORT_ERROR(ERR_IO_NOTOPEN, (std::string)"Prog_assign_CTF_prm::process: Could not open " +
                              picked_fn + " for reading");
         }
         FOR_ALL_OBJECTS_IN_METADATA(SF)
