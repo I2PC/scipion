@@ -204,7 +204,7 @@ void Prog_Refine3d_prm::read(int argc, char ** argv, int &argc2, char ** &argv2)
 
     // Checks
     if (lowpass > 0.5)
-        REPORT_ERROR(1, "Digital frequency for low-pass filter should be smaller than 0.5");
+        REPORT_ERROR(ERR_VALUE_INCORRECT, "Digital frequency for low-pass filter should be smaller than 0.5");
 
 }
 
@@ -312,7 +312,7 @@ void Prog_Refine3d_prm::show()
         // Also open and fill history file
         fh_hist.open((fn_root + ".hist").c_str(), std::ios::app);
         if (!fh_hist)
-            REPORT_ERROR(3008, (std::string)"Prog_Refine3d: Cannot open file " + fn_root + ".hist");
+            REPORT_ERROR(ERR_IO_NOTOPEN, (std::string)"Prog_Refine3d: Cannot open file " + fn_root + ".hist");
 
         fh_hist << " -----------------------------------------------------------------" << std::endl;
         fh_hist << " | Read more about this program in the following publication:    |" << std::endl;
@@ -360,7 +360,7 @@ void Prog_Refine3d_prm::produceSideInfo(int rank)
         fn_sym_loc=fn_sym;
 
     if (!mysampling.SL.isSymmetryGroup(fn_sym_loc, symmetry, sym_order))
-        REPORT_ERROR(3005, (std::string)"ml_refine3d::run Invalid symmetry" +  fn_sym_loc);
+        REPORT_ERROR(ERR_NUMERICAL, (std::string)"ml_refine3d::run Invalid symmetry" +  fn_sym_loc);
     mysampling.SL.read_sym_file(fn_sym_loc);
     mysampling.Compute_sampling_points(true, tilt_rangeF, tilt_range0);
     mysampling.remove_redundant_points_exhaustive(symmetry, sym_order, true, 0.75 * angular);
@@ -537,7 +537,7 @@ void Prog_Refine3d_prm::reconstruction(int argc, char **argv,
     if (reconstruct_fourier)
     {
 
-        REPORT_ERROR(1,"temporarily deactivated option for -fourier; until newimage and metadata done");
+        REPORT_ERROR(ERR_NOT_IMPLEMENTED,"temporarily deactivated option for -fourier; until newimage and metadata done");
 
         /*
            // read command line (fn_sym, angular etc.)
@@ -914,7 +914,7 @@ void Prog_Refine3d_prm::post_process_volumes(int argc, char **argv)
 
     // Use local sampling because of symmask
     if (!locsampling.SL.isSymmetryGroup(fn_sym, symmetry, sym_order))
-        REPORT_ERROR(3005, (std::string)"ml_refine3d::run Invalid symmetry" +  fn_sym);
+        REPORT_ERROR(ERR_NUMERICAL, (std::string)"ml_refine3d::run Invalid symmetry" +  fn_sym);
     locsampling.SL.read_sym_file(fn_sym);
 
     if ( !(fn_sym == "c1" || fn_sym == "C1" ) || (lowpass > 0) ||
@@ -943,7 +943,7 @@ void Prog_Refine3d_prm::post_process_volumes(int argc, char **argv)
                     Vsymmask.read(fn_symmask);
                     Vsymmask().setXmippOrigin();
                     if (Vsymmask().computeMax() > 1. || Vsymmask().computeMin() < 0.)
-                        REPORT_ERROR(1, "ERROR: sym_mask should have values between 0 and 1!");
+                        REPORT_ERROR(ERR_VALUE_INCORRECT, "ERROR: sym_mask should have values between 0 and 1!");
                     FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY3D(Vsymmask())
                     {
                         in = dAkij(Vsymmask(), k, i, j);
@@ -1004,7 +1004,7 @@ void Prog_Refine3d_prm::post_process_volumes(int argc, char **argv)
                     // C. Read user-provided solvent mask from disc
                     Vsolv.read(fn_solv);
                     if (Vsolv().computeMax() > 1. || Vsolv().computeMin() < 0.)
-                        REPORT_ERROR(1, "ERROR: solvent mask should have values between 0 and 1!");
+                        REPORT_ERROR(ERR_VALUE_INCORRECT, "ERROR: solvent mask should have values between 0 and 1!");
                 }
                 // Binarize Vsolv, avoiding buggy Vsolv().binarize()
                 if (do_deblob_solvent || dilate_solvent > 0)
