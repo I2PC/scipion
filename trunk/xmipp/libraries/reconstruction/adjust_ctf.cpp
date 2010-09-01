@@ -461,8 +461,7 @@ void Adjust_CTF_Parameters::read(const FileName &fn_param)
 {
     FILE *fh_param;
     if ((fh_param = fopen(fn_param.c_str(), "r")) == NULL)
-        REPORT_ERROR(1, (std::string)"Prog_Adjust_CTF::read: There is a problem "
-                     "opening the file " + fn_param);
+        REPORT_ERROR(ERR_IO_NOTEXIST, fn_param);
 
     fn_psd = getParameter(fh_param, "psd", 0, "");
     fn_similar_model = getParameter(fh_param, "similar_model", 0, "");
@@ -506,8 +505,7 @@ void Adjust_CTF_Parameters::write(const FileName &fn_prm, bool rewrite)
     if (!rewrite) fh_param.open(fn_prm.c_str(), std::ios::app);
     else          fh_param.open(fn_prm.c_str(), std::ios::out);
     if (!fh_param)
-        REPORT_ERROR(1, (std::string)"Adjust_CTF_Parameters::write: There is a problem "
-                     "opening the file " + fn_prm);
+        REPORT_ERROR(ERR_IO_NOTEXIST, fn_prm);
     fh_param << "# Adjust CTF parameters\n";
     if (fn_psd != "")
         fh_param << "psd="               << fn_psd                  << std::endl;
@@ -763,11 +761,11 @@ void save_intermediate_results(const FileName &fn_root, bool
     plotY.open((fn_root + "Y.txt").c_str());
     plot_radial.open((fn_root + "_radial.txt").c_str());
     if (!plotX)
-        REPORT_ERROR(1, "save_intermediate_results::Cannot open plot file for writing\n");
+        REPORT_ERROR(ERR_IO_NOWRITE, "save_intermediate_results::Cannot open plot file for writing\n");
     if (!plotY)
-        REPORT_ERROR(1, "save_intermediate_results::Cannot open plot file for writing\n");
+        REPORT_ERROR(ERR_IO_NOWRITE, "save_intermediate_results::Cannot open plot file for writing\n");
     if (!plot_radial)
-        REPORT_ERROR(1, "save_intermediate_results::Cannot open plot file for writing\n");
+        REPORT_ERROR(ERR_IO_NOWRITE, "save_intermediate_results::Cannot open plot file for writing\n");
     plotX << "# freq_dig freq_angstrom background ctf2 enhanced\n";
     plotY << "# freq_dig freq_angstrom background ctf2 enhanced\n";
     plot_radial << "# freq_dig freq_angstrom background ctf2 enhanced\n";

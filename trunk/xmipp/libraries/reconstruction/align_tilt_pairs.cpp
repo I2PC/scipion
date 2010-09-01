@@ -38,7 +38,7 @@ void Prog_centilt_prm::read(int argc, char **argv)
     fn_sel = getParameter(argc, argv, "-t");
     SFt.read(fn_sel);
     if (SFu.size() != SFt.size())
-        REPORT_ERROR(1, "Unequal number of active images in untilted and tilted metadata files");
+        REPORT_ERROR(ERR_MD_OBJECTNUMBER, "Unequal number of active images in untilted and tilted metadata files");
     // Extension if not to overwrite input images
     oext = getParameter(argc, argv, "-oext", "");
     // Write out document file?
@@ -190,7 +190,7 @@ void Prog_centilt_prm::centilt()
     FileName file_name;
 
     if (SFu.size() != SFt.size())
-        REPORT_ERROR(-1, "Error: different metadata lengths in 'centilt'");
+        REPORT_ERROR(ERR_MD_OBJECTNUMBER, "Error: different metadata lengths in 'centilt'");
 
     FOR_ALL_OBJECTS_IN_METADATA2(SFu, SFt)
     {

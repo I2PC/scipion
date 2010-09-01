@@ -70,7 +70,7 @@ void Prog_align2d_prm::read(int argc, char **argv)
     if (Ro == 0)
         Ro = (int)Xdim / 2;
     if (Ro <= Ri)
-        REPORT_ERROR(1, "Align2D: Rout should be larger than Rin");
+        REPORT_ERROR(ERR_ARG_INCORRECT, "Align2D: Rout should be larger than Rin");
     // Expected resolution and sampling rate (for filtering)
     if (do_filter = checkParameter(argc, argv, "-filter"))
     {
@@ -164,7 +164,7 @@ bool Prog_align2d_prm::align_rot(Image<double> &img, const MultidimArray<double>
     mask.resize(img());
     mask.setXmippOrigin();
     if (Rout <= Rin)
-        REPORT_ERROR(1, "Align2d_rot: Rout <= Rin");
+        REPORT_ERROR(ERR_ARG_INCORRECT, "Align2d_rot: Rout <= Rin");
     BinaryCrownMask(mask, Rin, Rout, INNER_MASK);
 
     Mimg.resize(img());
@@ -369,7 +369,7 @@ bool Prog_align2d_prm::align_complete_search(Image<double> &img, const MultidimA
     applyGeometry(LINEAR, Mimg, img(), A, IS_INV, DONT_WRAP, outside);
 
     if (Rout <= Rin)
-        REPORT_ERROR(1, "Align2d: Rout <= Rin");
+        REPORT_ERROR(ERR_VALUE_INCORRECT, "Align2d: Rout <= Rin");
     BinaryCrownMask(mask, Rin, Rout, INNER_MASK);
     apply_binary_mask(mask, Mref, Mref2);
 
@@ -672,7 +672,7 @@ void Prog_align2d_prm::calc_correlation(const MultidimArray<double> &Mref, const
     Maux.setXmippOrigin();
     mask.setXmippOrigin();
     if (Rout <= Rin)
-        REPORT_ERROR(1, "Align2d: Rout <= Rin");
+        REPORT_ERROR(ERR_VALUE_INCORRECT, "Align2d: Rout <= Rin");
     BinaryCrownMask(mask, Rin, Rout, INNER_MASK);
 
     for (int imgno = 0; imgno < n_images; imgno++)

@@ -147,6 +147,8 @@ char * XmippError::getDefaultMessage(ErrorType e)
         return " No exist requested object";
     case ERR_MD_SQL:
         return " Error in SQL of MetaData operations";
+    case ERR_MD_OBJECTNUMBER:
+    	return " Bad number of objects in MetaData";
 
     case ERR_MEM_BADREQUEST:
         return " Bad amount of memory requested.";
