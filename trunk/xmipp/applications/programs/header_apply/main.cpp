@@ -55,7 +55,7 @@ public:
 bool process_img(Image<double> &img, const Prog_parameters *prm)
 {
     if (ZSIZE(img())!=1 || NSIZE(img())!=1)
-        REPORT_ERROR(1,"This program is intended only for images");
+        REPORT_ERROR(ERR_MULTIDIM_DIM,"This program is intended only for images");
 
     Headerapply_parameters *eprm = (Headerapply_parameters *) prm;
     MultidimArray<double> Maux;

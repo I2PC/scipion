@@ -57,7 +57,7 @@ int main(int argc, char *argv[])
         {
             int i=paremeterPosition(argc,argv,"-tiltSeries");
             if (i+2>=argc)
-                REPORT_ERROR(1,"Not enough parameters after -tiltSeries");
+                REPORT_ERROR(ERR_ARG_MISSING,"Not enough parameters after -tiltSeries");
             firstAngle=textToFloat(argv[i+1]);
             angularStep=textToFloat(argv[i+2]);
         }

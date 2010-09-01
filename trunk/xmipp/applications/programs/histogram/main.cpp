@@ -57,7 +57,7 @@ int main(int argc, char **argv)
         if ((i = paremeterPosition(argc, argv, "-range")) != -1)
         {
             if (i + 2 >= argc)
-                EXIT_ERROR(1, "Histogram: Not enough parameters behind -range\n");
+                REPORT_ERROR(ERR_ARG_MISSING, "Not enough parameters behind -range\n");
             m = textToFloat(argv[i+1]);
             M = textToFloat(argv[i+2]);
             automatic_range = false;
@@ -66,7 +66,7 @@ int main(int argc, char **argv)
             automatic_range = true;
 
         if (fn_sel!="" && automatic_range)
-            REPORT_ERROR(1,"Error: only use selfile in combination with fixed range!");
+            REPORT_ERROR(ERR_ARG_INCORRECT,"Only use selfile in combination with fixed range!");
 
         mask_prm.read(argc, argv);
     }
