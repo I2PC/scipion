@@ -144,7 +144,8 @@ void SF_main(int argc, char **argv,
     try
     {
         if (!exists(prm->fn_in))
-            EXIT_ERROR(1, (std::string)argv[0] + ": " + prm->fn_in + " doesn't exist");
+            EXIT_ERROR(ERR_IO_NOTEXIST,
+                       (std::string)argv[0] + ": " + prm->fn_in + " doesn't exist");
         bool success;
 
         FileName fn_out;
@@ -206,7 +207,7 @@ void SF_main(int argc, char **argv,
                             /*
                             if (prm->apply_geo) {
                               std::cerr << "BUG: apply_geo and each_image_produces_an_output should not co-exist"
-                            	<< " the only exception is the apply_geo program";
+                             << " the only exception is the apply_geo program";
                         }
                             */
                             if (prm->fn_out.isInStack())
@@ -296,9 +297,9 @@ void SF_main(int argc, char **argv,
                     if (prm->each_image_produces_an_output)
                     {
                         /*       if (prm->apply_geo) {
-                        		std::cerr << "BUG: apply_geo and each_image_produces_an_output should not co-exist"
-                        			 << " the only exception is the apply_geo program";
-                        	   }
+                          std::cerr << "BUG: apply_geo and each_image_produces_an_output should not co-exist"
+                            << " the only exception is the apply_geo program";
+                            }
                         */
                         img.write(fn_out);
                     }
