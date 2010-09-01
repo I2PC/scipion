@@ -37,7 +37,8 @@ void Prog_downsample_prm::read(int argc, char **argv, bool do_not_read_files)
     }
     bitsMp         = textToInteger(getParameter(argc, argv, "-output_bits", "32"));
     if (bitsMp != 8 && bitsMp != 16 && bitsMp != 32)
-        REPORT_ERROR(1, "Downsample: you must specify 8, 16 or 32 bits only");
+        REPORT_ERROR(ERR_ARG_INCORRECT,
+                     "Downsample: you must specify 8, 16 or 32 bits only");
     nThreads   = textToInteger(getParameter(argc, argv, "-thr", "1"));
 
     if (checkParameter(argc, argv, "-fourier"))
@@ -62,7 +63,7 @@ void Prog_downsample_prm::read(int argc, char **argv, bool do_not_read_files)
         {
             kernel_mode = KER_RECTANGLE;
             if (i + 2 >= argc)
-                REPORT_ERROR(1, "Downsample: Not enough parameters after rectangle");
+                REPORT_ERROR(ERR_ARG_MISSING, "Downsample: Not enough parameters after rectangle");
             Yrect = textToInteger(argv[i+2]);
             Xrect = textToInteger(argv[i+3]);
         }
@@ -70,16 +71,18 @@ void Prog_downsample_prm::read(int argc, char **argv, bool do_not_read_files)
         {
             kernel_mode = KER_CIRCLE;
             if (i + 2 >= argc)
-                REPORT_ERROR(1, "Downsample: Not enough parameters after circle");
+                REPORT_ERROR(ERR_ARG_MISSING, "Downsample: Not enough parameters after circle");
             r = textToFloat(argv[i+2]);
         }
         else if (aux == "gaussian")
         {
             kernel_mode = KER_GAUSSIAN;
             if (i + 3 >= argc)
-                REPORT_ERROR(1, "Downsample: Not enough parameters after gaussian");
+                REPORT_ERROR(ERR_ARG_MISSING,
+                             "Downsample: Not enough parameters after gaussian");
             if (Xstep != Ystep)
-                REPORT_ERROR(1, "Downsample: You cannot apply different steps in this mode");
+                REPORT_ERROR(ERR_ARG_INCORRECT,
+                             "Downsample: You cannot apply different steps in this mode");
             r = textToFloat(argv[i+2]);
             sigma = textToFloat(argv[i+3]);
         }
@@ -91,14 +94,16 @@ void Prog_downsample_prm::read(int argc, char **argv, bool do_not_read_files)
         {
             kernel_mode = KER_SINC;
             if (i + 3 >= argc)
-                REPORT_ERROR(1, "Downsample: Not enough parameters after sinc");
+                REPORT_ERROR(ERR_ARG_MISSING,
+                             "Downsample: Not enough parameters after sinc");
             if (Xstep != Ystep)
-                REPORT_ERROR(1, "Downsample: You cannot apply different steps in this mode");
+                REPORT_ERROR(ERR_ARG_INCORRECT,
+                             "Downsample: You cannot apply different steps in this mode");
             delta = textToFloat(argv[i+2]);
             Deltaw = textToFloat(argv[i+3]);
         }
         else
-            REPORT_ERROR(1, "Downsample: Unknown kernel mode");
+            REPORT_ERROR(ERR_ARG_INCORRECT, "Downsample: Unknown kernel mode");
     }
     else
     {
@@ -113,7 +118,7 @@ void Prog_downsample_prm::read(int argc, char **argv, bool do_not_read_files)
             delta = 0.02;
             Deltaw = 1.0 / 10.0;
             do_fourier=false;
-        }    
+        }
     }
     reversed = checkParameter(argc, argv, "-reverse_endian");
 }
@@ -122,16 +127,16 @@ void Prog_downsample_prm::read(int argc, char **argv, bool do_not_read_files)
 void Prog_downsample_prm::usage() const
 {
     std::cerr << "  [-output_bits <bits=32>]   : Must be 8, 16 or 32 bits\n"
-              << "   -Xstep <xstep>            : Look at the documentation\n"
-              << "  [-Ystep <ystep=xstep>]\n"
-              << "  [-fourier <factor=0.3333>] : work in fourier space, factor < 1\n"
-              << "  [-thr <number_of_threads>]: Number of threads used in the Fourier transform\n"
-              << "  [-kernel rectangle <Ydim> <Xdim>]\n"
-              << "  [-kernel circle    <r>]\n"
-              << "  [-kernel gaussian  <r> <sigma>]\n"
-              << "  [-kernel pick]\n"
-              << "  [-kernel sinc <delta=0.02> <Deltaw=0.1>]\n"
-              << "  [-reverse_endian]       : Reverse endian\n"
+    << "   -Xstep <xstep>            : Look at the documentation\n"
+    << "  [-Ystep <ystep=xstep>]\n"
+    << "  [-fourier <factor=0.3333>] : work in fourier space, factor < 1\n"
+    << "  [-thr <number_of_threads>]: Number of threads used in the Fourier transform\n"
+    << "  [-kernel rectangle <Ydim> <Xdim>]\n"
+    << "  [-kernel circle    <r>]\n"
+    << "  [-kernel gaussian  <r> <sigma>]\n"
+    << "  [-kernel pick]\n"
+    << "  [-kernel sinc <delta=0.02> <Deltaw=0.1>]\n"
+    << "  [-reverse_endian]       : Reverse endian\n"
     ;
 }
 #ifdef NEVERDEFINED
@@ -195,7 +200,7 @@ void Prog_downsample_prm::generate_kernel()
         kernel.initConstant(1);
         break;
     case KER_SINC:
-    	SeparableSincKaiserMask2D(kernel, (1.0 / Xstep), delta, Deltaw);
+        SeparableSincKaiserMask2D(kernel, (1.0 / Xstep), delta, Deltaw);
         break;
     }
     kernel.setXmippOrigin();
@@ -212,7 +217,7 @@ void Prog_downsample_prm::generate_kernel()
 void Prog_downsample_prm::create_empty_output_file()
 {
     std::cerr << "Creating empty downsampled file ...\n";
-    if (do_fourier) 
+    if (do_fourier)
     {
         Ypdim = FLOOR((double)Ydim *scale);
         Xpdim = FLOOR((double)Xdim *scale);
@@ -223,18 +228,17 @@ void Prog_downsample_prm::create_empty_output_file()
         Xpdim = FLOOR(Xdim / Xstep);
     }
     create_empty_file(fn_downsampled, ((unsigned long long)Ypdim)*
-      	 Xpdim*bitsMp / 8);
+                      Xpdim*bitsMp / 8);
 
     std::ofstream fh_downsample_inf;
     fh_downsample_inf.open((fn_downsampled + ".inf").c_str());
     if (!fh_downsample_inf)
-        REPORT_ERROR(1, (std::string)"Downsample: Cannot open " + fn_downsampled +
-                     ".inf");
+        REPORT_ERROR(ERR_IO_NOWRITE, fn_downsampled +".inf");
     fh_downsample_inf << "# Generated by Downsample\n";
     fh_downsample_inf << "# Original file: " << fn_micrograph << std::endl;
     if(!do_fourier)
         fh_downsample_inf << "# Ystep x Xstep: " << Ystep << " x "
-                          << Xstep << std::endl;
+        << Xstep << std::endl;
     if(do_fourier)
         fh_downsample_inf << "# scale : " << scale << std::endl;
     fh_downsample_inf << "# Image width\n";
@@ -263,12 +267,14 @@ void Prog_downsample_prm::close_input_micrograph()
 // Downsample micrograph ---------------------------------------------------
 void Prog_downsample_prm::Downsample() const
 {
-    try {
+    try
+    {
         Micrograph Mp;
         Mp.open_micrograph(fn_downsampled, reversed);
         downsample(M, Xstep, Ystep, kernel, Mp,do_fourier,nThreads);
         Mp.close_micrograph();
-    } catch (XmippError XE)
+    }
+    catch (XmippError XE)
     {
         if (exists(fn_downsampled))
             unlink(fn_downsampled.c_str());
