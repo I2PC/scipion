@@ -180,6 +180,8 @@ char * XmippError::getDefaultMessage(ErrorType e)
     case ERR_NUMERICAL:
         return " Error related to numerical calculation.";
 
+    case ERR_PARAM_INCORRECT:
+        return " Parameter incorrect.";
     case ERR_PARAM_MISSING:
         return " Parameter missing.";
 

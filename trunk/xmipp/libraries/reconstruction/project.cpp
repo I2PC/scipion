@@ -85,7 +85,7 @@ int translate_randomness(char * str)
         return ANGLE_RANGE_RANDOM;
     if (strcmp(str, "even") == 0)
         return ANGLE_EVENLY;
-    REPORT_ERROR(3007,
+    REPORT_ERROR(ERR_PARAM_INCORRECT,
                  (std::string)"Prog_Project_Parameters::read: Not recognized randomness: "
                  + str);
 }
@@ -98,7 +98,7 @@ void Projection_Parameters::read(const FileName &fn_proj_param)
     char    *auxstr;
 
     if ((fh_param = fopen(fn_proj_param.c_str(), "r")) == NULL)
-        REPORT_ERROR(3005,
+        REPORT_ERROR(ERR_IO_NOTOPEN,
                      (std::string)"Prog_Project_Parameters::read: There is a problem "
                      "opening the file " + fn_proj_param);
     while (fgets(line, 200, fh_param) != NULL)
@@ -137,7 +137,7 @@ void Projection_Parameters::read(const FileName &fn_proj_param)
             if (fn_angle == "NULL")
                 ;
             else if (!exists(fn_angle))
-                REPORT_ERROR(3007, (std::string)"Prog_Project_Parameters::read: "
+                REPORT_ERROR(ERR_IO_NOTEXIST, (std::string)"Prog_Project_Parameters::read: "
                              "file " + fn_angle + " doesn't exist");
             lineNo = 4;
             break;
@@ -260,7 +260,7 @@ void Projection_Parameters::read(const FileName &fn_proj_param)
         } /* switch end */
     } /* while end */
     if (lineNo != 12)
-        REPORT_ERROR(3007, (std::string)"Prog_Project_Parameters::read: I "
+        REPORT_ERROR(ERR_PARAM_MISSING, (std::string)"Prog_Project_Parameters::read: I "
                      "couldn't read all parameters from file " + fn_proj_param);
     fclose(fh_param);
 }
@@ -271,7 +271,7 @@ void Projection_Parameters::write(const FileName &fn_proj_param) const
     FILE *fh_param;
 
     if ((fh_param = fopen(fn_proj_param.c_str(), "w")) == NULL)
-        REPORT_ERROR(3005,
+        REPORT_ERROR(ERR_IO_NOTOPEN,
                      (std::string)"Prog_Project_Parameters::write: There is a problem "
                      "opening the file " + fn_proj_param + " for output");
 
