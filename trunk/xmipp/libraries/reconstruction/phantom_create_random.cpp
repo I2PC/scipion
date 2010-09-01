@@ -96,20 +96,20 @@ void Random_Phantom_Side_Info::produce_Side_Info(
 
         // Check that it meets the conditions
         if (Random.FeatNo() % 2 != 0)
-            EXIT_ERROR(1, (std::string)"Random_phantom: The number of features in " +
+            REPORT_ERROR(ERR_VALUE_INCORRECT, (std::string)"The number of features in " +
                        prm.fn_random + " is not a multiple of 2");
 
         if (Random.FeatNo() == 0)
-            EXIT_ERROR(1, (std::string)"Random_phantom: There is no phantom in " +
+        	REPORT_ERROR(ERR_VALUE_NOTSET, (std::string)"Random_phantom: There is no phantom in " +
                        prm.fn_random);
 
         for (int i = 1; i <= Random.FeatNo(); i += 2)
         {
             if (Random(i)->Type != Random(i + 1)->Type)
-                EXIT_ERROR(1, (std::string)"Random_phantom: Feature number " + integerToString(i) +
+            	REPORT_ERROR(ERR_VALUE_INCORRECT, (std::string)"Random_phantom: Feature number " + integerToString(i) +
                            " is not of the same type as " + integerToString(i + 1));
             if (Random(i)->Add_Assign != Random(i + 1)->Add_Assign)
-                EXIT_ERROR(1, (std::string)"Random_phantom: Feature number " + integerToString(i) +
+            	REPORT_ERROR(ERR_VALUE_INCORRECT, (std::string)"Random_phantom: Feature number " + integerToString(i) +
                            " is not of the same +/= behaviour as " + integerToString(i + 1));
         }
     }
