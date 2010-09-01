@@ -117,100 +117,48 @@ void trim(std::string& str)
         str.clear();
 }
 
-/* NOTE: not a very safe implemenation but standard c functions do not retrieve
- * more than 6 significative digits */
-double textToDouble(const char* str, int _errno, std::string errmsg, int exit)
+float textToFloat(const char* str)
 {
-    double retval;
-    int ok;
-
     if (str == NULL)
-        if (exit)
-            EXIT_ERROR(_errno, errmsg);
-        else
-            REPORT_ERROR(_errno, errmsg);
+        REPORT_ERROR(ERR_MEM_NULLPOINTER, "Cannot be converted into float");
 
-    ok = sscanf(str, "%lf", &retval);
-
-    if (ok)
-        return retval;
-
-    if (exit)
-        EXIT_ERROR(_errno, errmsg);
-    else
-        REPORT_ERROR(_errno, errmsg);
-
-    return 0;
-}
-
-float textToFloat(const char* str, int _errno, std::string errmsg, int exit)
-{
     float retval;
-    int ok;
-
-    if (str == NULL)
-        if (exit)
-            EXIT_ERROR(_errno, errmsg);
-        else
-            REPORT_ERROR(_errno, errmsg);
-
-    ok = sscanf(str, "%f", &retval);
+    int ok = sscanf(str, "%f", &retval);
 
     if (ok)
         return retval;
-
-    if (exit)
-        EXIT_ERROR(_errno, errmsg);
-    else
-        REPORT_ERROR(_errno, errmsg);
+    REPORT_ERROR(ERR_VALUE_INCORRECT, "Conversion to float error");
 
     return 0;
 }
 
-int textToInteger(const char* str, int _errno, std::string errmsg, int exit)
+int textToInteger(const char* str)
 {
+    if (str == NULL)
+        REPORT_ERROR(ERR_MEM_NULLPOINTER, "Cannot be converted into int");
+
     int retval;
-    int ok;
-
-    if (str == NULL)
-        if (exit)
-            EXIT_ERROR(_errno, errmsg);
-        else
-            REPORT_ERROR(_errno, errmsg);
-
-    ok = sscanf(str, "%d", &retval);
+    int ok = sscanf(str, "%d", &retval);
 
     if (ok)
         return retval;
-
-    if (exit)
-        EXIT_ERROR(_errno, errmsg);
-    else
-        REPORT_ERROR(_errno, errmsg);
+    REPORT_ERROR(ERR_VALUE_INCORRECT, "Conversion to int error");
 
     return 0;
 }
 
-long long textToLongLong(const char* str, int _errno, std::string errmsg, int exit)
+long long textToLongLong(const char* str)
 {
-    long long int retval;
-    int ok;
-
     if (str == NULL)
-        if (exit)
-            EXIT_ERROR(_errno, errmsg);
-        else
-            REPORT_ERROR(_errno, errmsg);
+        REPORT_ERROR(ERR_MEM_NULLPOINTER, "Cannot be converted into long long int");
 
-    ok = sscanf(str, "%lld", &retval);
+    long long int retval;
+    int ok = sscanf(str, "%lld", &retval);
 
     if (ok)
         return retval;
+    REPORT_ERROR(ERR_VALUE_INCORRECT, "Conversion to long long int error");
 
-    if (exit)
-        EXIT_ERROR(_errno, errmsg);
-    else
-        REPORT_ERROR(_errno, errmsg);
     return 0;
 }
 
@@ -326,26 +274,17 @@ std::string integerToString(int I, int _width, char fill_with)
         return static_cast< std::string >(aux);
 }
 
-int textToInt(const char* str, int _errno, std::string errmsg, int exit)
+int charToInt(const char* str)
 {
-    char readval;
-    int ok;
-
     if (str == NULL)
-        if (exit)
-            EXIT_ERROR(_errno, errmsg);
-        else
-            REPORT_ERROR(_errno, errmsg);
+        REPORT_ERROR(ERR_MEM_NULLPOINTER, "Cannot convert NULL into int");
 
-    ok = sscanf(str, "%c", &readval);
+    char readval;
+    int ok = sscanf(str, "%c", &readval);
 
     if (ok)
         return readval - 48;
-
-    if (exit)
-        EXIT_ERROR(_errno, errmsg);
-    else
-        REPORT_ERROR(_errno, errmsg);
+    REPORT_ERROR(ERR_VALUE_INCORRECT, "Conversion to int error");
 
     return 0;
 }
@@ -515,7 +454,7 @@ std::string nextToken(const std::string &str, int &i)
 }
 
 // Get word ================================================================
-char *firstWord(char *str, int _errno, const std::string &errmsg, int exit)
+char *firstWord(char *str)
 {
     char *token;
 
@@ -527,10 +466,7 @@ char *firstWord(char *str, int _errno, const std::string &errmsg, int exit)
 
     // Check that there is something
     if (token == NULL)
-        if (exit)
-            EXIT_ERROR(_errno, errmsg);
-        else
-            REPORT_ERROR(_errno, errmsg);
+        REPORT_ERROR(ERR_VALUE_EMPTY, "Empty token");
 
     return token;
 }

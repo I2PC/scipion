@@ -128,11 +128,11 @@ int SymList::read_sym_file(FileName fn_sym, double accuracy)
             auxstr = nextToken();
             fold = textToInteger(auxstr);
             auxstr = nextToken();
-            XX(axis) = textToDouble(auxstr);
+            XX(axis) = textToFloat(auxstr);
             auxstr = nextToken();
-            YY(axis) = textToDouble(auxstr);
+            YY(axis) = textToFloat(auxstr);
             auxstr = nextToken();
-            ZZ(axis) = textToDouble(auxstr);
+            ZZ(axis) = textToFloat(auxstr);
             ang_incr = 360. / fold;
             L.initIdentity();
             for (j = 1, rot_ang = ang_incr; j < fold; j++, rot_ang += ang_incr)

@@ -624,14 +624,14 @@ void Mask_Params::read(int argc, char **argv)
         return;
     }
     if (i + 1 >= argc)
-        REPORT_ERROR(3000, "Mask_Params: -mask with no mask_type");
+        REPORT_ERROR(ERR_ARG_MISSING, "Mask_Params: -mask with no mask_type");
     // Circular mask ........................................................
     if (strcmp(argv[i+1], "circular") == 0)
     {
         if (i + 2 >= argc)
-            REPORT_ERROR(3000, "Mask_Params: circular mask with no radius");
+            REPORT_ERROR(ERR_ARG_MISSING, "Mask_Params: circular mask with no radius");
         if (!(allowed_data_types & INT_MASK))
-            REPORT_ERROR(3000, "Mask_Params: binary masks are not allowed");
+            REPORT_ERROR(ERR_ARG_INCORRECT, "Mask_Params: binary masks are not allowed");
         R1 = textToFloat(argv[i+2]);
         if (R1 < 0)
         {
@@ -641,16 +641,16 @@ void Mask_Params::read(int argc, char **argv)
         else if (R1 > 0)
             mode = OUTSIDE_MASK;
         else
-            REPORT_ERROR(3000, "Mask_Params: circular mask with radius 0");
+            REPORT_ERROR(ERR_ARG_INCORRECT, "Mask_Params: circular mask with radius 0");
         type = BINARY_CIRCULAR_MASK;
         // Circular DWT mask ....................................................
     }
     else if (strcmp(argv[i+1], "DWT_circular") == 0)
     {
         if (i + 5 >= argc)
-            REPORT_ERROR(3000, "Mask_Params: DWT circular mask with not enough parameters");
+            REPORT_ERROR(ERR_ARG_MISSING, "Mask_Params: DWT circular mask with not enough parameters");
         if (!(allowed_data_types & INT_MASK))
-            REPORT_ERROR(3000, "Mask_Params: binary masks are not allowed");
+            REPORT_ERROR(ERR_ARG_INCORRECT, "Mask_Params: binary masks are not allowed");
         R1 = ABS(textToFloat(argv[i+2]));
         smin = textToInteger(argv[i+3]);
         smax = textToInteger(argv[i+4]);
@@ -661,9 +661,9 @@ void Mask_Params::read(int argc, char **argv)
     else if (strcmp(argv[i+1], "rectangular") == 0)
     {
         if (i + 3 >= argc)
-            REPORT_ERROR(3000, "Mask_Params: rectangular mask needs at least two dimensions");
+            REPORT_ERROR(ERR_ARG_MISSING, "Mask_Params: rectangular mask needs at least two dimensions");
         if (!(allowed_data_types & INT_MASK))
-            REPORT_ERROR(3000, "Mask_Params: binary masks are not allowed");
+            REPORT_ERROR(ERR_ARG_INCORRECT, "Mask_Params: binary masks are not allowed");
         Xrect = textToInteger(argv[i+2]);
         Yrect = textToInteger(argv[i+3]);
         if (i + 4 < argc)
@@ -684,16 +684,16 @@ void Mask_Params::read(int argc, char **argv)
         else if (Xrect > 0 && Yrect > 0 && Zrect >= 0)
             mode = OUTSIDE_MASK;
         else
-            REPORT_ERROR(3000, "Mask_Params: cannot determine mode for rectangle");
+            REPORT_ERROR(ERR_ARG_INCORRECT, "Mask_Params: cannot determine mode for rectangle");
         type = BINARY_FRAME_MASK;
         // Cone mask ............................................................
     }
     else if (strcmp(argv[i+1], "cone") == 0)
     {
         if (i + 2 >= argc)
-            REPORT_ERROR(3000, "Mask_Params: cone mask needs one angle");
+            REPORT_ERROR(ERR_ARG_MISSING, "Mask_Params: cone mask needs one angle");
         if (!(allowed_data_types & INT_MASK))
-            REPORT_ERROR(3000, "Mask_Params: binary masks are not allowed");
+            REPORT_ERROR(ERR_ARG_INCORRECT, "Mask_Params: binary masks are not allowed");
         R1 = textToFloat(argv[i+2]);
         if (R1 < 0)
         {
@@ -708,9 +708,9 @@ void Mask_Params::read(int argc, char **argv)
     else if (strcmp(argv[i+1], "wedge") == 0)
     {
         if (i + 3 >= argc)
-            REPORT_ERROR(3000, "Mask_Params: wedge mask needs two angles");
+            REPORT_ERROR(ERR_ARG_MISSING, "Mask_Params: wedge mask needs two angles");
         if (!(allowed_data_types & DOUBLE_MASK))
-            REPORT_ERROR(3000, "Mask_Params: binary masks are not allowed");
+            REPORT_ERROR(ERR_ARG_INCORRECT, "Mask_Params: binary masks are not allowed");
         R1 = textToFloat(argv[i+2]);
         R2 = textToFloat(argv[i+3]);
         type = BINARY_WEDGE_MASK;
@@ -719,9 +719,9 @@ void Mask_Params::read(int argc, char **argv)
     else if (strcmp(argv[i+1], "crown") == 0)
     {
         if (i + 3 >= argc)
-            REPORT_ERROR(3000, "Mask_Params: crown mask needs two radii");
+            REPORT_ERROR(ERR_ARG_MISSING, "Mask_Params: crown mask needs two radii");
         if (!(allowed_data_types & INT_MASK))
-            REPORT_ERROR(3000, "Mask_Params: binary masks are not allowed");
+            REPORT_ERROR(ERR_ARG_INCORRECT, "Mask_Params: binary masks are not allowed");
         R1 = textToFloat(argv[i+2]);
         R2 = textToFloat(argv[i+3]);
         if (R1 < 0 && R2 < 0)
@@ -733,16 +733,16 @@ void Mask_Params::read(int argc, char **argv)
         else if (R1 > 0 && R2 > 0)
             mode = OUTSIDE_MASK;
         else
-            REPORT_ERROR(3000, "Mask_Params: cannot determine mode for crown");
+            REPORT_ERROR(ERR_ARG_INCORRECT, "Mask_Params: cannot determine mode for crown");
         type = BINARY_CROWN_MASK;
         // Cylinder mask ........................................................
     }
     else if (strcmp(argv[i+1], "cylinder") == 0)
     {
         if (i + 3 >= argc)
-            REPORT_ERROR(3000, "Mask_Params: cylinder mask needs a radius and a height");
+            REPORT_ERROR(ERR_ARG_MISSING, "Mask_Params: cylinder mask needs a radius and a height");
         if (!(allowed_data_types & INT_MASK))
-            REPORT_ERROR(3000, "Mask_Params: binary masks are not allowed");
+            REPORT_ERROR(ERR_ARG_INCORRECT, "Mask_Params: binary masks are not allowed");
         R1 = textToFloat(argv[i+2]);
         H = textToFloat(argv[i+3]);
         if (R1 < 0 && H < 0)
@@ -754,16 +754,16 @@ void Mask_Params::read(int argc, char **argv)
         else if (R1 > 0 && H > 0)
             mode = OUTSIDE_MASK;
         else
-            REPORT_ERROR(3000, "Mask_Params: cannot determine mode for cylinder");
+            REPORT_ERROR(ERR_ARG_INCORRECT, "Mask_Params: cannot determine mode for cylinder");
         type = BINARY_CYLINDER_MASK;
         // Gaussian mask ........................................................
     }
     else if (strcmp(argv[i+1], "gaussian") == 0)
     {
         if (i + 2 >= argc)
-            REPORT_ERROR(3000, "Mask_Params: gaussian mask needs a sigma");
+            REPORT_ERROR(ERR_ARG_MISSING, "Mask_Params: gaussian mask needs a sigma");
         if (!(allowed_data_types & DOUBLE_MASK))
-            REPORT_ERROR(3000, "Mask_Params: continuous masks are not allowed");
+            REPORT_ERROR(ERR_ARG_INCORRECT, "Mask_Params: continuous masks are not allowed");
         sigma = textToFloat(argv[i+2]);
         if (sigma < 0)
         {
@@ -778,9 +778,9 @@ void Mask_Params::read(int argc, char **argv)
     else if (strcmp(argv[i+1], "raised_cosine") == 0)
     {
         if (i + 3 >= argc)
-            REPORT_ERROR(3000, "Mask_Params: raised_cosine mask needs two radii");
+            REPORT_ERROR(ERR_ARG_MISSING, "Mask_Params: raised_cosine mask needs two radii");
         if (!(allowed_data_types & INT_MASK))
-            REPORT_ERROR(3000, "Mask_Params: continuous masks are not allowed");
+            REPORT_ERROR(ERR_ARG_INCORRECT, "Mask_Params: continuous masks are not allowed");
         R1 = textToFloat(argv[i+2]);
         R2 = textToFloat(argv[i+3]);
         if (R1 < 0 && R2 < 0)
@@ -792,16 +792,16 @@ void Mask_Params::read(int argc, char **argv)
         else if (R1 > 0 && R2 > 0)
             mode = OUTSIDE_MASK;
         else
-            REPORT_ERROR(3000, "Mask_Params: cannot determine mode for raised_cosine");
+            REPORT_ERROR(ERR_ARG_INCORRECT, "Mask_Params: cannot determine mode for raised_cosine");
         type = RAISED_COSINE_MASK;
         // Raised crown mask ....................................................
     }
     else if (strcmp(argv[i+1], "raised_crown") == 0)
     {
         if (i + 4 >= argc)
-            REPORT_ERROR(3000, "Mask_Params: raised_crown mask needs two radii & a width");
+            REPORT_ERROR(ERR_ARG_MISSING, "Mask_Params: raised_crown mask needs two radii & a width");
         if (!(allowed_data_types & INT_MASK))
-            REPORT_ERROR(3000, "Mask_Params: continuous masks are not allowed");
+            REPORT_ERROR(ERR_ARG_INCORRECT, "Mask_Params: continuous masks are not allowed");
         R1 = textToFloat(argv[i+2]);
         R2 = textToFloat(argv[i+3]);
         pix_width = textToFloat(argv[i+4]);
@@ -814,16 +814,16 @@ void Mask_Params::read(int argc, char **argv)
         else if (R1 > 0 && R2 > 0)
             mode = OUTSIDE_MASK;
         else
-            REPORT_ERROR(3000, "Mask_Params: cannot determine mode for raised_cosine");
+            REPORT_ERROR(ERR_ARG_INCORRECT, "Mask_Params: cannot determine mode for raised_cosine");
         type = RAISED_CROWN_MASK;
         // Blob circular mask ....................................................
     }
     else if (strcmp(argv[i+1], "blob_circular") == 0)
     {
         if (i + 3 >= argc)
-            REPORT_ERROR(3000, "Mask_Params: blob_circular mask needs one radius and a width");
+            REPORT_ERROR(ERR_ARG_MISSING, "Mask_Params: blob_circular mask needs one radius and a width");
         if (!(allowed_data_types & INT_MASK))
-            REPORT_ERROR(3000, "Mask_Params: continuous masks are not allowed");
+            REPORT_ERROR(ERR_ARG_INCORRECT, "Mask_Params: continuous masks are not allowed");
         R1 = textToFloat(argv[i+2]);
         double aux = textToFloat(argv[i+3]);
         blob_radius= ABS(aux);
@@ -832,7 +832,7 @@ void Mask_Params::read(int argc, char **argv)
         else if (aux > 0)
             mode = OUTSIDE_MASK;
         else
-            REPORT_ERROR(3000, "Mask_Params: cannot determine mode for blob_circular");
+            REPORT_ERROR(ERR_ARG_INCORRECT, "Mask_Params: cannot determine mode for blob_circular");
         type = BLOB_CIRCULAR_MASK;
         blob_order= textToFloat(getParameter(argc, argv, "-m", "2."));
         blob_alpha= textToFloat(getParameter(argc, argv, "-a", "10.4"));
@@ -842,9 +842,9 @@ void Mask_Params::read(int argc, char **argv)
      else if (strcmp(argv[i+1], "blob_crown") == 0)
     {
         if (i + 4 >= argc)
-            REPORT_ERROR(3000, "Mask_Params: blob_crown mask needs two radii and a with");
+            REPORT_ERROR(ERR_ARG_MISSING, "Mask_Params: blob_crown mask needs two radii and a with");
         if (!(allowed_data_types & INT_MASK))
-            REPORT_ERROR(3000, "Mask_Params: continuous masks are not allowed");
+            REPORT_ERROR(ERR_ARG_INCORRECT, "Mask_Params: continuous masks are not allowed");
         R1 = textToFloat(argv[i+2]);
         R2 = textToFloat(argv[i+3]);
         double aux = textToFloat(argv[i+4]);
@@ -854,7 +854,7 @@ void Mask_Params::read(int argc, char **argv)
         else if (aux > 0)
             mode = OUTSIDE_MASK;
         else
-            REPORT_ERROR(3000, "Mask_Params: cannot determine mode for blob_crown");
+            REPORT_ERROR(ERR_ARG_INCORRECT, "Mask_Params: cannot determine mode for blob_crown");
         type = BLOB_CROWN_MASK;
         blob_order= textToFloat(getParameter(argc, argv, "-m", "2."));
         blob_alpha= textToFloat(getParameter(argc, argv, "-a", "10.4"));
@@ -870,9 +870,9 @@ void Mask_Params::read(int argc, char **argv)
     else if (strcmp(argv[i+1], "sinc") == 0)
     {
         if (i + 2 >= argc)
-            REPORT_ERROR(3000, "Mask_Params: sinc mask needs a frequency");
+            REPORT_ERROR(ERR_ARG_MISSING, "Mask_Params: sinc mask needs a frequency");
         if (!(allowed_data_types & INT_MASK))
-            REPORT_ERROR(3000, "Mask_Params: binary masks are not allowed");
+            REPORT_ERROR(ERR_ARG_INCORRECT, "Mask_Params: binary masks are not allowed");
         omega = textToFloat(argv[i+2]);
         if (omega < 0)
         {
@@ -1131,7 +1131,7 @@ void Mask_Params::generate_mask(bool apply_geo)
         imask.setXmippOrigin();
         break;
     default:
-        REPORT_ERROR(3000, "Mask_Params::generate_mask: Unknown mask type :"
+        REPORT_ERROR(ERR_VALUE_INCORRECT, "Mask_Params::generate_mask: Unknown mask type :"
                      + integerToString(type));
     }
 
@@ -1141,12 +1141,12 @@ void Mask_Params::generate_mask(bool apply_geo)
         {
         case INT_MASK:
             if (ZSIZE(imask) > 1)
-                REPORT_ERROR(1,"Error: apply_geo only implemented for 2D masks");
+                REPORT_ERROR(ERR_NOT_IMPLEMENTED,"Error: apply_geo only implemented for 2D masks");
 	    apply_geo_binary_2D_mask(imask, mask_geo);
             break;
         case DOUBLE_MASK:
             if (ZSIZE(dmask) > 1)
-                REPORT_ERROR(1,"Error: apply_geo only implemented for 2D masks");
+                REPORT_ERROR(ERR_NOT_IMPLEMENTED,"Error: apply_geo only implemented for 2D masks");
 	    apply_geo_cont_2D_mask(dmask, mask_geo);
             break;
         }

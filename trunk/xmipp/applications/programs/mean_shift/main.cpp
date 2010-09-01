@@ -302,9 +302,9 @@ int main(int argc, char **argv)
         if ( checkParameter( argc, argv, "-o") )
             outputFile = getParameter( argc, argv, "-o");
         if  ( checkParameter( argc, argv, "-hr") )
-            sigma_r = textToDouble( getParameter( argc, argv, "-hr") );
+            sigma_r = textToFloat( getParameter( argc, argv, "-hr") );
         if  ( checkParameter( argc, argv, "-hs") )
-            sigma_s = textToDouble( getParameter( argc, argv, "-hs") );
+            sigma_s = textToFloat( getParameter( argc, argv, "-hs") );
         if  ( checkParameter( argc, argv, "-fast") )
             fast = true;
         else

@@ -113,6 +113,7 @@ enum ErrorType
     ERR_MEM_BADREQUEST,     ///< Bad amount of memory requested.
     ERR_MEM_NOTENOUGH,      ///< There is not enough memory for allocation.
     ERR_MEM_NOTDEALLOC,     ///< Memory has not been deallocated.
+    ERR_MEM_NULLPOINTER,    ///< Null pointer passed as parameter
 
     ERR_IMG_NOREAD,         ///< Cannot read image from file.
     ERR_IMG_NOWRITE,        ///< Cannot write image to file.

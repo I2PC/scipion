@@ -85,7 +85,9 @@ char * XmippError::getDefaultMessage(ErrorType e)
     case ERR_MEM_BADREQUEST:
         return " Bad amount of memory requested.";
     case ERR_MEM_NOTENOUGH:
-        return " There is not enough memory for allocation.";
+        return " There is not enough memory for allocation";
+    case ERR_MEM_NULLPOINTER:
+        return " Null pointer passed as parameter";
     case ERR_MEM_NOTDEALLOC:
         return " Memory has not been deallocated.";
     case ERR_IMG_NOREAD:

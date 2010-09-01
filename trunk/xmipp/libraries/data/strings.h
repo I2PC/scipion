@@ -84,40 +84,18 @@ std::string unescape( const std::string& str );
  */
 int bestPrecision(float F, int _width);
 
-/** String (char*) to double conversion.
- *
- * @code
- * double key = textToDouble(firstToken(line), 1602, "Error reading key");
- * @endcode
- */
-double textToDouble(const char* str,
-                    int _errno = 2101,
-                    std::string errmsg = "Error in textToDouble",
-                    int exit = 0);
-
 /** String (char*) to float conversion.
  *
  * @code
  * float key = textToFloat(firstToken(line), 1602, "Error reading key");
  * @endcode
  */
-float textToFloat(const char* str,
-                  int _errno = 2101,
-                  std::string errmsg = "Error in textToFloat",
-                  int exit = 0);
+float textToFloat(const char* str);
 
-/** String (STL) to float conversion.
- *
- * @code
- * float key = textToFloat(str, 1602, "Error reading key");
- * @endcode
- */
-inline float textToFloat(const std::string& str,
-                         int _errno = 2101,
-                         std::string errmsg = "Error in textToFloat",
-                         int exit = 0)
+/** String (std::string) to integer conversion. */
+inline float textToFloat(const std::string& str)
 {
-    return textToFloat(str.c_str(), _errno, errmsg, exit);
+	return textToFloat(str.c_str());
 }
 
 /** String (char*) to integer conversion.
@@ -126,23 +104,12 @@ inline float textToFloat(const std::string& str,
  * int param_no = textToInteger(nextToken(), 1602, "Error reading number parameters")
  * @endcode
  */
-int textToInteger(const char* str,
-                  int _errno = 2102,
-                  std::string errmsg = "Error in textToInteger",
-                  int exit = 0);
+int textToInteger(const char* str);
 
-/** String (STL) to integer conversion.
- *
- * @code
- * int param_no = textToInteger(str, 1602, "Error reading number parameters")
- * @endcode
- */
-inline int textToInteger(const std::string& str,
-                         int _errno = 2102,
-                         std::string errmsg = "Error in textToInteger",
-                         int exit = 0)
+/** String (std::string) to integer conversion. */
+inline int textToInteger(const std::string& str)
 {
-    return textToInteger(str.c_str(), _errno, errmsg, exit);
+	return textToInteger(str.c_str());
 }
 
 /** String (char*) to long long integer conversion.
@@ -152,10 +119,7 @@ inline int textToInteger(const std::string& str,
  *     parameters")
  * @endcode
  */
-long long textToLongLong(const char* str,
-                         int _errno = 2102,
-                         std::string errmsg = "Error in AtoL",
-                         int exit = 0);
+long long textToLongLong(const char* str);
 
 /** Float to string conversion.
  *
@@ -193,10 +157,7 @@ std::string integerToString(int I, int _width = 0, char fill_with = '0');
  * int param_no = textToInt(token, 1602, "Error reading number parameters");
  * @endcode
  */
-int textToInt(const char* str,
-              int _errno = 2103,
-              std::string errmsg = "Error in textToInt",
-              int exit = 0);
+ int charToInt(const char* str);
 
 /** String to string with given length conversion.
  *
