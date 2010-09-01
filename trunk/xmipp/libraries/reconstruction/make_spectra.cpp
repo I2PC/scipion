@@ -89,7 +89,7 @@ void Prog_make_spectra_prm::finish_processing()
     fh_out.open(fn_out.c_str());
 
     if (!fh_out)
-        REPORT_ERROR(1, (std::string)"Prog_make_spectra_prm::finish_processing: "
+        REPORT_ERROR(ERR_IO_NOTOPEN, (std::string)"Prog_make_spectra_prm::finish_processing: "
                      "Cannot open" + fn_out + " for output");
     if (Harmonics.size() != 0)
     {
