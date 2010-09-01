@@ -23,22 +23,22 @@
  *  e-mail address 'xmipp@cnb.csic.es'
  ***************************************************************************/
 
-#ifndef RWRAW_H_
-#define RWRAW_H_
+#ifndef RWINF_H_
+#define RWINF_H_
 
-///@defgroup Raw Raw File format
+///@defgroup INF INF File format
 ///@ingroup ImageFormats
 
 // I/O prototypes
-/** Raw Reader
-  * @ingroup Raw
+/** INF Reader
+  * @ingroup INF
 */
-int readRAW(int img_select,bool isStack=false)
+int readINF(int img_select,bool isStack=false)
 {
 #undef DEBUG
     //#define DEBUG
 #ifdef DEBUG
-    printf("DEBUG readRAW: Reading RAW file\n");
+    printf("DEBUG readINF: Reading INF file\n");
 #endif
 
     int _xDim,_yDim,_zDim, __depth;
@@ -106,7 +106,7 @@ int readRAW(int img_select,bool isStack=false)
         datatype = Float;
         break;
     default:
-        REPORT_ERROR(ERR_TYPE_INCORRECT, "rwRAW::read: depth is not 8, 16 nor 32");
+        REPORT_ERROR(ERR_TYPE_INCORRECT, "rwINF::read: depth is not 8, 16 nor 32");
     }
 
     MDMainHeader.removeObjects();
@@ -154,15 +154,15 @@ int readRAW(int img_select,bool isStack=false)
     return(0);
 }
 
-/** Raw Writer
-  * @ingroup Raw
+/** INF Writer
+  * @ingroup INF
 */
-int writeRAW(int img_select, bool isStack=false, int mode=WRITE_OVERWRITE)
+int writeINF(int img_select, bool isStack=false, int mode=WRITE_OVERWRITE)
 {
     //#define DEBUG
 #ifdef DEBUG
-    printf("DEBUG writeRAW: Writing RAW file\n");
-    printf("DEBUG writeRAW: File %s\n", filename.c_str());
+    printf("DEBUG writeINF: Writing INF file\n");
+    printf("DEBUG writeINF: File %s\n", filename.c_str());
 #endif
 #undef DEBUG
 
@@ -176,7 +176,7 @@ int writeRAW(int img_select, bool isStack=false, int mode=WRITE_OVERWRITE)
 
     // Volumes and stacks are not supported
     if (Zdim > 1 || Ndim > 1)
-        REPORT_ERROR(ERR_INDEX_OUTOFBOUNDS, "rwRAW::read: does not support neither volumes nor stacks.");
+        REPORT_ERROR(ERR_INDEX_OUTOFBOUNDS, "rwINF::read: does not support neither volumes nor stacks.");
 
 
     DataType wDType;
@@ -218,7 +218,7 @@ int writeRAW(int img_select, bool isStack=false, int mode=WRITE_OVERWRITE)
         _is_signed = false;
     }
     else
-        REPORT_ERROR(ERR_TYPE_INCORRECT,(std::string)"ERROR: rwRAW does not write from " + typeid(T).name() + "type.");
+        REPORT_ERROR(ERR_TYPE_INCORRECT,(std::string)"ERROR: rwINF does not write from " + typeid(T).name() + "type.");
 
     _depth = gettypesize(wDType);
 
@@ -228,7 +228,7 @@ int writeRAW(int img_select, bool isStack=false, int mode=WRITE_OVERWRITE)
     fn_inf = filename.add_extension("inf");
     FILE *fh_inf = fopen(fn_inf.c_str(), "w");
     if (!fh_inf)
-        REPORT_ERROR(ERR_IO_NOTOPEN, (std::string)"rwRAW::write: Error opening file " + fn_inf);
+        REPORT_ERROR(ERR_IO_NOTOPEN, (std::string)"rwINF::write: Error opening file " + fn_inf);
 
     fprintf(fh_inf,"# Bits per sample\n");
     fprintf(fh_inf,"bitspersample= %d\n",_depth*8);
@@ -252,7 +252,7 @@ int writeRAW(int img_select, bool isStack=false, int mode=WRITE_OVERWRITE)
         fprintf(fh_inf,"endianess = little\n");
 
     if (fclose(fh_inf)!=0)
-        REPORT_ERROR(ERR_IO_NOCLOSED, "rwRAW::write: Error creating output info file.");
+        REPORT_ERROR(ERR_IO_NOCLOSED, "rwINF::write: Error creating output info file.");
 
 
     /* Write Image file ==================================*/
@@ -271,4 +271,4 @@ int writeRAW(int img_select, bool isStack=false, int mode=WRITE_OVERWRITE)
     return(0);
 }
 
-#endif /* RWRAW_H_ */
+#endif /* RWINF_H_ */

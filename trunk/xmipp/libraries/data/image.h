@@ -302,7 +302,7 @@ public:
 #include "rwDM3.h"
 #include "rwIMAGIC.h"
 #include "rwMRC.h"
-#include "rwRAW.h"
+#include "rwINF.h"
 #include "rwSPIDER.h"
 #include "rwSPE.h"
 #include "rwTIA.h"
@@ -415,8 +415,8 @@ public:
             err = readTIA(select_img,false, imParam);
         else if (ext_name.contains("dm3"))//DM3
             err = readDM3(select_img,false);
-        else if (ext_name.contains("raw"))//RAW
-            err = readRAW(select_img,false);
+        else if (ext_name.contains("inf"))//RAW
+            err = readINF(select_img,false);
         else if (ext_name.contains("tif") || ext_name.contains("tiff"))//TIFF
             err = readTIFF(select_img,false);
         else if (ext_name.contains("spe"))//SPE
@@ -599,8 +599,8 @@ public:
             writeDM3(select_img,false,mode);
         else if (ext_name.contains("ser"))
             writeTIA(select_img,false,mode);
-        else if (ext_name.contains("raw"))
-            writeRAW(select_img,false,mode);
+        else if (ext_name.contains("inf"))
+            writeINF(select_img,false,mode);
         else if (ext_name.contains("tif") || ext_name.contains("tiff"))
             writeTIFF(select_img,isStack,mode,imParam);
         else if (ext_name.contains("spe"))
