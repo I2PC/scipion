@@ -549,7 +549,7 @@ ReconsSources = [
     'make_spectra.cpp',
     'micrograph_phase_flipping.cpp',
     'micrograph_downsample.cpp',
-#    'ml_align2d.cpp',
+    'ml_align2d.cpp',
 ###    'ml_align3d.cpp',
     'mlf_align2d.cpp',
     'ml_refine3d.cpp',

@@ -40,13 +40,12 @@ int main(int argc, char **argv) {
     MetaData          SF_out;
     DocFile           DF;
     Matrix1D<float>   aux;
-    int               selline;
     bool              newsel_style;
     bool              from_metadata;
 
 // Check command line ------------------------------------------------------
 try {
-   if (argc<2) REPORT_ERROR(1,"Adapt for Spider: Not enough parameters");
+   if (argc<2) REPORT_ERROR(ERR_ARG_MISSING,"Adapt for Spider: Not enough parameters");
    command=argv[1];
 
    fn_out=getParameter(argc, argv, "-o");
@@ -64,7 +63,8 @@ try {
       fn_sel=getParameter(argc, argv, "-i");
       if ((i=paremeterPosition(argc,argv,"-order"))!=-1) {
          if (i+3>=argc)
-            REPORT_ERROR(1,"Adapt for Spider: Not enough parameters behind -ang\n");
+            REPORT_ERROR(ERR_ARG_MISSING,
+            		"Adapt for Spider: Not enough parameters behind -ang\n");
          ang1=argv[i+1];
          ang2=argv[i+2];
          ang3=argv[i+3];

@@ -49,37 +49,45 @@ public:
         {
             gaussian = true;
             int i = paremeterPosition(argc, argv, "-gaussian");
-            if (i + 1 >= argc) REPORT_ERROR(1, "Not enough parameters after -gaussian");
+            if (i + 1 >= argc)
+                REPORT_ERROR(ERR_ARG_MISSING,
+                             "Not enough parameters after -gaussian");
             noise_stddev = textToFloat(argv[i+1]);
             if (i + 2 < argc)
             {
                 noise_avg = textToFloat(argv[i+2]);
             }
-            else noise_avg = 0;
+            else
+                noise_avg = 0;
         }
         else if (checkParameter(argc, argv, "-student"))
         {
             student = true;
             int i = paremeterPosition(argc, argv, "-student");
-            if (i + 2 >= argc) REPORT_ERROR(1, "Not enough parameters after -student");
+            if (i + 2 >= argc)
+                REPORT_ERROR(ERR_ARG_MISSING,
+                             "Not enough parameters after -student");
             df = textToFloat(argv[i+1]);
             noise_stddev = textToFloat(argv[i+2]);
             if (i + 3 < argc)
             {
                 noise_avg = textToFloat(argv[i+3]);
             }
-            else noise_avg = 0;
+            else
+                noise_avg = 0;
         }
         else if (checkParameter(argc, argv, "-uniform"))
         {
             uniform = true;
             int i = paremeterPosition(argc, argv, "-uniform");
-            if (i + 2 >= argc) REPORT_ERROR(1, "Not enough parameters after -uniform");
+            if (i + 2 >= argc)
+                REPORT_ERROR(ERR_ARG_MISSING,
+                             "Not enough parameters after -uniform");
             noise_min = textToFloat(argv[i+1]);
             noise_max = textToFloat(argv[i+2]);
         }
         else
-            REPORT_ERROR(1, "Unknown noise type");
+            REPORT_ERROR(ERR_ARG_INCORRECT, "Unknown noise type");
     }
 
     void show()
@@ -90,11 +98,11 @@ public:
             << "Noise stddev=" << noise_stddev << std::endl;
         else if (student)
             std::cout << "Degrees of freedom= "<<df<< std::endl
-                      << "Noise avg=" << noise_avg << std::endl
-                      << "Noise stddev=" << noise_stddev << std::endl;
+            << "Noise avg=" << noise_avg << std::endl
+            << "Noise stddev=" << noise_stddev << std::endl;
         else if (uniform)
             std::cout << "Noise min=" << noise_min << std::endl
-                      << "Noise max=" << noise_max << std::endl;
+            << "Noise max=" << noise_max << std::endl;
         if (do_limit0)
             std::cout << "Crop noise histogram below=" << limit0 << std::endl;
         if (do_limitF)
@@ -104,12 +112,12 @@ public:
     void usage()
     {
         Prog_parameters::usage();
-        std::cerr 
-            << "  [-gaussian <stddev> [<avg>=0]] : Gaussian noise parameters\n"
-            << "  [-student <df> <stddev> [<avg>=0]] : t-student noise parameters\n"
-            << "  [-uniform  <min> <max>]   : Uniform noise parameters\n"
-            << "  [-limit0 <float> ]        : Crop noise histogram below this value \n"
-            << "  [-limitF <float> ]        : Crop noise histogram above this value \n";
+        std::cerr
+        << "  [-gaussian <stddev> [<avg>=0]] : Gaussian noise parameters\n"
+        << "  [-student <df> <stddev> [<avg>=0]] : t-student noise parameters\n"
+        << "  [-uniform  <min> <max>]   : Uniform noise parameters\n"
+        << "  [-limit0 <float> ]        : Crop noise histogram below this value \n"
+        << "  [-limitF <float> ]        : Crop noise histogram above this value \n";
     }
 };
 
@@ -124,14 +132,14 @@ bool process_img(Image<double> &img, const Prog_parameters *prm)
         img().addNoise(eprm->noise_min, eprm->noise_max, "uniform");
     if (eprm->do_limit0)
         FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY3D(img())
-        {
-            dAkij(img(),k,i,j) = XMIPP_MAX(dAkij(img(),k,i,j),eprm->limit0);
-        }
+    {
+        dAkij(img(),k,i,j) = XMIPP_MAX(dAkij(img(),k,i,j),eprm->limit0);
+    }
     if (eprm->do_limitF)
         FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY3D(img())
-        {
-            dAkij(img(),k,i,j) = XMIPP_MIN(dAkij(img(),k,i,j),eprm->limitF);
-        }
+    {
+        dAkij(img(),k,i,j) = XMIPP_MIN(dAkij(img(),k,i,j),eprm->limitF);
+    }
 
     return true;
 }
