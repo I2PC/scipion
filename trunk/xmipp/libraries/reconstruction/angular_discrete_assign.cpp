@@ -44,7 +44,10 @@ void Prog_angular_predict_prm::read(int argc, char **argv)
 {
     extended_usage = checkParameter(argc, argv, "-more_help");
     if (extended_usage)
-        REPORT_ERROR(1, "");
+    {
+        usage();
+        more_usage();
+    }
     fn_ref = getParameter(argc, argv, "-ref");
     fn_exp = getParameter(argc, argv, "-i");
     fn_out_ang = getParameter(argc, argv, "-oang");
@@ -132,7 +135,7 @@ void Prog_angular_predict_prm::produce_side_info(int rank)
     int refYdim, refXdim;
     ImgSize(SF_ref,refYdim, refXdim);
     if (refYdim != NEXT_POWER_OF_2(refYdim) || refXdim != NEXT_POWER_OF_2(refXdim))
-        REPORT_ERROR(1, "Prog_angular_predict_prm::produce_side_info: "
+        REPORT_ERROR(ERR_MULTIDIM_SIZE,
                      "reference images must be of a size that is power of 2");
 
     // Produce side info of the angular distance computer
@@ -358,7 +361,7 @@ double Prog_angular_predict_prm::predict_rot_tilt_angles(Image<double> &I,
 {
     if (XSIZE(I()) != NEXT_POWER_OF_2(XSIZE(I())) ||
         YSIZE(I()) != NEXT_POWER_OF_2(YSIZE(I())))
-        REPORT_ERROR(1, "Prog_angular_predict_prm::predict_rot_tilt_angles: "
+        REPORT_ERROR(ERR_MULTIDIM_SIZE,
                      "experimental images must be of a size that is power of 2");
 
     // Build initial candidate list
