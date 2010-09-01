@@ -74,7 +74,7 @@ void FourierMask::read(int argc, char **argv)
     // Filter shape .........................................................
     int i = paremeterPosition(argc, argv, "-fourier_mask");
     if (i + 1 >= argc)
-        REPORT_ERROR(3000, "FourierMask: -fourier_mask with no mask_type");
+        REPORT_ERROR(ERR_ARG_MISSING, "FourierMask: -fourier_mask with no mask_type");
     if (i == -1)
     {
         // The default is to use raised_cosine with width 0.02
@@ -84,14 +84,14 @@ void FourierMask::read(int argc, char **argv)
     else if (strcmp(argv[i+1], "raised_cosine") == 0)
     {
         if (i + 2 >= argc)
-            REPORT_ERROR(3000, "FourierMask: Raised cosine needs a number of pixels");
+            REPORT_ERROR(ERR_ARG_MISSING, "FourierMask: Raised cosine needs a number of pixels");
         raised_w = textToFloat(argv[i+2]);
         FilterShape = RAISED_COSINE;
     }
     else if (strcmp(argv[i+1], "wedge") == 0)
     {
         if (i + 3 >= argc)
-            REPORT_ERROR(3000, "FourierMask: Wedge needs two angle parameters");
+            REPORT_ERROR(ERR_ARG_MISSING, "FourierMask: Wedge needs two angle parameters");
         w1 = textToFloat(argv[i+2]);
         w2 = textToFloat(argv[i+3]);
         FilterShape = WEDGE;
@@ -100,7 +100,7 @@ void FourierMask::read(int argc, char **argv)
     else if (strcmp(argv[i+1], "cone") == 0)
     {
         if (i + 2 >= argc)
-            REPORT_ERROR(3000, "FourierMask: Cone needs one angle parameter");
+            REPORT_ERROR(ERR_ARG_MISSING, "FourierMask: Cone needs one angle parameter");
         w1 = textToFloat(argv[i+2]);
         FilterShape = CONE;
         do_generate_3dmask = true;
@@ -118,7 +118,7 @@ void FourierMask::read(int argc, char **argv)
     else if (strcmp(argv[i+1], "ctf") == 0)
     {
         if (i + 2 >= argc)
-            REPORT_ERROR(3000, "FourierMask: CTF needs a CTF file");
+            REPORT_ERROR(ERR_ARG_MISSING, "FourierMask: CTF needs a CTF file");
         FilterShape = FilterBand = CTF;
         ctf.enable_CTFnoise = false;
         ctf.read(argv[i+2]);
@@ -127,7 +127,7 @@ void FourierMask::read(int argc, char **argv)
     else if (strcmp(argv[i+1], "ctfpos") == 0)
     {
         if (i + 2 >= argc)
-            REPORT_ERROR(3000, "FourierMask: CTF needs a CTF file");
+            REPORT_ERROR(ERR_ARG_MISSING, "FourierMask: CTF needs a CTF file");
         FilterShape = FilterBand = CTFPOS;
         ctf.enable_CTFnoise = false;
         ctf.read(argv[i+2]);
@@ -137,16 +137,16 @@ void FourierMask::read(int argc, char **argv)
     else if (strcmp(argv[i+1], "bfactor") == 0)
     {
         if (i + 2 >= argc)
-            REPORT_ERROR(3000, "FourierMask: Bfactor needs a Bfactor in Ang^2");
+            REPORT_ERROR(ERR_ARG_MISSING, "FourierMask: Bfactor needs a Bfactor in Ang^2");
         FilterShape = FilterBand = BFACTOR;
         w1 = textToFloat(argv[i+2]);
         if (!checkParameter(argc, argv, "-sampling"))
-            REPORT_ERROR(3000, "FourierMask: Bfactor needs a -sampling argument");
+            REPORT_ERROR(ERR_ARG_MISSING, "FourierMask: Bfactor needs a -sampling argument");
         w2 = textToFloat(getParameter(argc, argv, "-sampling"));
     }
 
     else
-        REPORT_ERROR(3000, "FourierMask: Unknown filter type");
+        REPORT_ERROR(ERR_ARG_INCORRECT, "FourierMask: Unknown filter type");
 
     // Filter band ..........................................................
     if (checkParameter(argc, argv, "-low_pass"))
@@ -162,13 +162,13 @@ void FourierMask::read(int argc, char **argv)
     else if (checkParameter(argc, argv, "-band_pass"))
     {
         if (!getTwoDoubleParams(argc, argv, "-band_pass", w1, w2, 0, 0))
-            REPORT_ERROR(3000, "FourierMask: Not enough parameters after -band_pass");
+            REPORT_ERROR(ERR_ARG_INCORRECT, "Not enough parameters after -band_pass");
         FilterBand = BANDPASS;
     }
     else if (checkParameter(argc, argv, "-stop_band"))
     {
         if (!getTwoDoubleParams(argc, argv, "-stop_band", w1, w2, 0, 0))
-            REPORT_ERROR(3000, "FourierMask: Not enough parameters after -stop_band");
+            REPORT_ERROR(ERR_ARG_INCORRECT, "Not enough parameters after -stop_band");
         FilterBand = STOPBAND;
     }
 
