@@ -1009,7 +1009,7 @@ bool FileName::isMetaData(bool failIfNotExists) const
     found=this->find(':');
     if (found!=std::string::npos)
         return false;
-    found=this->find('%');
+    found=this->find('#');
     if (found!=std::string::npos)
         return false;
     FileName ext = get_file_format();

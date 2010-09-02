@@ -303,6 +303,7 @@ public:
 #include "rwIMAGIC.h"
 #include "rwMRC.h"
 #include "rwINF.h"
+#include "rwRAW.h"
 #include "rwSPIDER.h"
 #include "rwSPE.h"
 #include "rwTIA.h"
@@ -391,6 +392,12 @@ public:
 
         filename = filename.remove_file_format();
 
+        if(ext_name.contains("inf"))
+            filename = filename.without_extension();
+        else if (ext_name.contains("raw") && exists(filename.add_extension("inf")))
+            ext_name = "inf";
+
+
 #undef DEBUG
         //#define DEBUG
 #ifdef DEBUG
@@ -415,8 +422,10 @@ public:
             err = readTIA(select_img,false, imParam);
         else if (ext_name.contains("dm3"))//DM3
             err = readDM3(select_img,false);
-        else if (ext_name.contains("inf"))//RAW
+        else if (ext_name.contains("inf"))//RAW with INF file
             err = readINF(select_img,false);
+        else if (ext_name.contains("raw"))//RAW without INF file
+            err = readRAW(select_img,false);
         else if (ext_name.contains("tif") || ext_name.contains("tiff"))//TIFF
             err = readTIFF(select_img,false);
         else if (ext_name.contains("spe"))//SPE
@@ -1308,6 +1317,19 @@ public:
         return (dummy);
     }
 
+    /** Data type
+        *
+        * @code
+        * std::cout << "datatype= " << dataType() << std::endl;
+        * @endcode
+        */
+    int dataType(const long int n = -1) const
+    {
+        int dummy=1.;
+        MDMainHeader.getValue(MDL_DATATYPE,dummy,n);
+        return (dummy);
+    }
+
     /** Sampling RateX
     *
     * @code
@@ -1496,6 +1518,27 @@ public:
             o << "TRUE"  << std::endl;
         else
             o << "FALSE" << std::endl;
+
+        o << "Data type    : ";
+        switch (I.dataType())
+        {
+        case Unknown_Type:      o << "Undefined data type"; break;
+        case UChar:             o << "Unsigned character or byte type"; break;
+        case SChar:             o << "Signed character (for CCP4)"; break;
+        case UShort:            o << "Unsigned integer (2-byte)"; break;
+        case Short:             o << "Signed integer (2-byte)"; break;
+        case UInt:              o << "Unsigned integer (4-byte)"; break;
+        case Int:               o << "Signed integer (4-byte)"; break;
+        case Long:              o << "Signed integer (4 or 8 byte, depending on system)"; break;
+        case Float:             o << "Floating point (4-byte)"; break;
+        case Double:            o << "Double precision floating point (8-byte)"; break;
+        case ComplexShort:      o << "Complex two-byte integer (4-byte)"; break;
+        case ComplexInt:        o << "Complex integer (8-byte)"; break;
+        case ComplexFloat:      o << "Complex floating point (8-byte)"; break;
+        case ComplexDouble:     o << "Complex floating point (16-byte)"; break;
+        case Bool:              o << "Boolean (1-byte?)"; break;
+        }
+        o << std::endl;
 
         o << "dimensions   : " << NSIZE(I()) << " x " << ZSIZE(I()) << " x " << YSIZE(I()) << " x " << XSIZE(I());
         o << "  (noObjects x slices x rows x columns)" << std::endl;

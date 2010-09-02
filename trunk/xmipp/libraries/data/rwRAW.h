@@ -1,0 +1,157 @@
+/***************************************************************************
+ * Authors:     Joaquin Oton (joton@cnb.csic.es)
+ *
+ *
+ * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
+ * 02111-1307  USA
+ *
+ *  All comments concerning this program package may be sent to the
+ *  e-mail address 'xmipp@cnb.csic.es'
+ ***************************************************************************/
+
+#ifndef RWRAW_H_
+#define RWRAW_H_
+
+///@defgroup RAW RAW File format
+///@ingroup ImageFormats
+
+// I/O prototypes
+/** RAW Reader
+  * @ingroup RAW
+*/
+int readRAW(int img_select,bool isStack=false)
+{
+#undef DEBUG
+    //#define DEBUG
+#ifdef DEBUG
+    printf("DEBUG readRAW: Reading RAW file\n");
+#endif
+
+    int _xDim,_yDim,_zDim, __depth;
+    unsigned long int _nDim;
+
+
+    size_t found;
+    FileName infolist;
+    std::vector<std::string> info;
+
+
+    found = filename.find_first_of("#");
+    infolist = filename.substr(found+1);
+    filename = filename.substr(0,found);
+    infolist.to_lowercase();
+    splitString(infolist,",",info, false);
+
+    if (info.size() < 4)
+        REPORT_ERROR(ERR_ARG_MISSING, (std::string) " Cannot open file " + filename +
+                     ". Not enough header arguments.");
+
+
+    _xDim = textToInteger(info[0]);
+    _yDim = textToInteger(info[1]);
+    offset = textToInteger(info[2]);
+
+    DataType datatype;
+
+    if(info[3]=="uchar")
+        datatype = UChar;
+    else if (info[3]=="char")
+        datatype = SChar;
+    else if (info[3]=="ushort")
+        datatype = UShort;
+    else if (info[3]=="short")
+        datatype = Short;
+    else if (info[3]=="uint")
+        datatype = UInt;
+    else if (info[3]=="int")
+        datatype = Int;
+    else if (info[3]=="long")
+        datatype = Long;
+    else if (info[3]=="float")
+        datatype = Float;
+    else if (info[3]=="double")
+        datatype = Double;
+
+
+    if(info.size() == 5)
+        swap = true;
+    else
+        swap = false;
+
+
+    _zDim = (int) 1;
+    _nDim = (int) 1;
+
+    // Map the parameters
+    data.setDimensions(_xDim, _yDim, _zDim, _nDim);
+
+    unsigned long   imgStart=0;
+    unsigned long   imgEnd =_nDim;
+    if (img_select != -1)
+    {
+        imgStart=img_select;
+        imgEnd=img_select+1;
+    }
+
+
+    MDMainHeader.removeObjects();
+    MDMainHeader.setColumnFormat(false);
+    MDMainHeader.addObject();
+    MDMainHeader.setValue(MDL_SAMPLINGRATEX,(double) -1);
+    MDMainHeader.setValue(MDL_SAMPLINGRATEY,(double) -1);
+    MDMainHeader.setValue(MDL_DATATYPE,(int)datatype);
+
+    if( dataflag < 0 )
+        return 0;
+
+    MD.removeObjects();
+    for ( i=imgStart; i<imgEnd; i++ )
+        //for(int i=0;i< Ndim;i++)
+    {
+        MD.addObject();
+        MD.setValue(MDL_ORIGINX, zeroD);
+        MD.setValue(MDL_ORIGINY, zeroD);
+        MD.setValue(MDL_ORIGINZ,  zeroD);
+        MD.setValue(MDL_ANGLEROT, zeroD);
+        MD.setValue(MDL_ANGLETILT,zeroD);
+        MD.setValue(MDL_ANGLEPSI, zeroD);
+        MD.setValue(MDL_WEIGHT,   oneD);
+        MD.setValue(MDL_FLIP,     falseb);
+    }
+
+    //#define DEBUG
+#ifdef DEBUG
+    MDMainHeader.write(std::cerr);
+    MD.write(std::cerr);
+#endif
+
+    FILE        *fimg;
+    if ( ( fimg = fopen(filename.c_str(), "r") ) == NULL )
+        return(-1);
+
+    size_t pad = 0;
+
+    readData(fimg, img_select, datatype, pad);
+
+    if ( !mmapOn )
+        fclose(fimg);
+
+    return(0);
+}
+
+
+#endif /* RWINF_H_ */
