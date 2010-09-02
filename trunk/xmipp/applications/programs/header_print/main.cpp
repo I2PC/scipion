@@ -64,7 +64,7 @@ int main(int argc, char *argv[])
         FOR_ALL_OBJECTS_IN_METADATA(SF)
         {
             FileName fn_img;
-            SF.getValue( MDL_IMAGE, fn_img); 
+            SF.getValue( MDL_IMAGE, fn_img);
             if (fn_img=="") break;
             std::cout << "FileName     : " << fn_img << std::endl;
 
@@ -84,6 +84,9 @@ int main(int argc, char *argv[])
 /* Usage ------------------------------------------------------------------- */
 void Usage()
 {
+    std::cout << SVN_REV << std::endl;
+
+
     printf("Purpose:\n");
     printf(" Print information from the header of 2D-images.\n");
     printf("Usage:\n");

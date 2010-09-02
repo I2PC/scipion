@@ -3,15 +3,15 @@
 # basic setup, import all environment and custom tools
 import os
 import SCons.Script
-env = Environment(ENV = os.environ,
-      tools = ['default', 'disttar'],
-      toolpath = ['scons/ToolsFromWiki'])
+env = Environment(ENV=os.environ,
+      tools=['default', 'disttar'],
+      toolpath=['scons/ToolsFromWiki'])
 
 # avoid cruft in top dir
 base_dir = 'build'
 if not os.path.exists(base_dir):
     Execute(Mkdir(base_dir))
-base_dir +=  '/'
+base_dir += '/'
 
 # use only one signature file
 env.SConsignFile(base_dir + 'SCons.dblite')
@@ -86,9 +86,9 @@ env['CCFLAGS'] = Split(env['CCFLAGS'])
 env['CXXFLAGS'] = Split(env['CXXFLAGS'])
 
 # These defaults are needed for both the custom tests and the compilation
-env.SetDefault(LIBS = '')
-env.SetDefault(LIBPATH = '')
-env.SetDefault(CPPPATH = '')
+env.SetDefault(LIBS='')
+env.SetDefault(LIBPATH='')
+env.SetDefault(CPPPATH='')
 
 # This is required for both modes
 env['STATIC_FLAG'] = '-static'
@@ -107,10 +107,10 @@ if (ARGUMENTS['mode'] == 'configure'):
         lastCXX = context.env['CXX']
 
         # TODO Replace() also here?
-        context.env.Append(LIBS = mpi_lib, LIBPATH = mpi_libpath,
-                           CPPPATH = mpi_inc)
-        context.env.Replace(LINK = context.env['MPI_LINKERFORPROGRAMS'])
-        context.env.Replace(CC = mpi_cc, CXX = mpi_cxx)
+        context.env.Append(LIBS=mpi_lib, LIBPATH=mpi_libpath,
+                           CPPPATH=mpi_inc)
+        context.env.Replace(LINK=context.env['MPI_LINKERFORPROGRAMS'])
+        context.env.Replace(CC=mpi_cc, CXX=mpi_cxx)
 
         # Test only C++ mpi compiler
         ret = context.TryLink('''
@@ -126,11 +126,11 @@ if (ARGUMENTS['mode'] == 'configure'):
         # NOTE: We don't want MPI flags for not-mpi programs (always revert)
         # env['mpi'] remains 1 so those can be enabled again when needed
 
-        context.env.Replace(LIBS = lastLIBS)
-        context.env.Replace(LIBPATH = lastLIBPATH)
-        context.env.Replace(CPPPATH = lastCPPPATH)
-        context.env.Replace(CC = lastCC)
-        context.env.Replace(CXX = lastCXX)
+        context.env.Replace(LIBS=lastLIBS)
+        context.env.Replace(LIBPATH=lastLIBPATH)
+        context.env.Replace(CPPPATH=lastCPPPATH)
+        context.env.Replace(CC=lastCC)
+        context.env.Replace(CXX=lastCXX)
 
         context.Result(ret)
         return ret
@@ -149,22 +149,22 @@ if (ARGUMENTS['mode'] == 'configure'):
 
     # static?
     if int(env['static']):
-        env.Append(CCFLAGS = '$STATIC_FLAG')
-        env.Append(LINKFLAGS = '$STATIC_FLAG')
+        env.Append(CCFLAGS='$STATIC_FLAG')
+        env.Append(LINKFLAGS='$STATIC_FLAG')
 
     # osx?
     if env['PLATFORM'] == 'darwin':
-        env.Append(CCFLAGS = '-m64')
-        env.Append(CXXFLAGS = '-m64')
-        env.Append(LINKFLAGS = '-m64')
+        env.Append(CCFLAGS='-m64')
+        env.Append(CXXFLAGS='-m64')
+        env.Append(LINKFLAGS='-m64')
 
     # QT
     if int(env['gui']):
         if int(env['QT4']):
             print '* QT4 selected!'
             # FIXME /usr/lib/qt4
-            env['QTDIR']=''
-            env['QT_LIB']=''
+            env['QTDIR'] = ''
+            env['QT_LIB'] = ''
         else:
             print '* QT3 selected!'
 
@@ -201,7 +201,7 @@ if (ARGUMENTS['mode'] == 'configure'):
 
         # FIXME Copy() does not work well (adds twice the library, 'qt' ...)
         # envQT.Replace(QT_LIB = env['QT_LIB'])
-        envQT.Replace(LINK = env['LINKERFORPROGRAMS'])
+        envQT.Replace(LINK=env['LINKERFORPROGRAMS'])
 
         confQT = Configure(envQT, {}, config_dir, config_log)
 
@@ -224,16 +224,16 @@ if (ARGUMENTS['mode'] == 'configure'):
             env['mpi'] = 0
 
     # Java
-    if env['JNI_CPPPATH']=='' and int(env['java'])==1:
+    if env['JNI_CPPPATH'] == '' and int(env['java']) == 1:
         import sys
         sys.path.append("scons/ToolsFromWiki")
         import ConfigureJNI
         if not ConfigureJNI.ConfigureJNI(env):
-            env['java']=0
+            env['java'] = 0
             print '* Did not find JNI header. Disabling ...'
         else:
             print '* JNI header found: '
-            env['JNI_CPPPATH']=env['JNI_CPPPATH'][0]
+            env['JNI_CPPPATH'] = env['JNI_CPPPATH'][0]
             print env['JNI_CPPPATH']
 
     # MATLAB
@@ -249,10 +249,10 @@ if (ARGUMENTS['mode'] == 'configure'):
     # SQLite
     # It is ugly to call configure from scons, but I do not know how to do it otherwise
     # create configuration file for sqlite
-    finalSQLiteFlags= env['SQLITEFLAGS']
+    finalSQLiteFlags = env['SQLITEFLAGS']
 
     if env['PLATFORM'] == 'darwin':
-        finalSQLiteFlags+=" CFLAGS=-m64"
+        finalSQLiteFlags += " CFLAGS=-m64"
     if not GetOption("help"):
     	if os.path.exists('external/sqlite-3.6.23/Makefile'):
 	        command = 'cd external/sqlite-3.6.23;  make distclean>/dev/null'
@@ -263,14 +263,14 @@ if (ARGUMENTS['mode'] == 'configure'):
             os.system("export CFLAGS='-DSQLITE_ENABLE_UPDATE_DELETE_LIMIT=1' ;cd external/sqlite-3.6.23;./configure " + finalSQLiteFlags)
 	else:
             print "* Configuring SQLite (see build/sqlite_configure.log for details) ... "
-            print "cd external/sqlite-3.6.23;./configure "  + finalSQLiteFlags
+            print "cd external/sqlite-3.6.23;./configure " + finalSQLiteFlags
             os.system("cd external/sqlite-3.6.23;./configure " + finalSQLiteFlags + " > ../../build/sqlite_configure.log ")
 
 
     # FFTW
     # It is ugly to call configure from scons, but I do not know how to do it otherwise
     # create configuration file for fftw
-    finalFFTWFlags= env['FFTWFLAGS']
+    finalFFTWFlags = env['FFTWFLAGS']
     if not GetOption("help"):
     	if os.path.exists('external/fftw-3.2.2/Makefile'):
 	        command = 'cd external/fftw-3.2.2;  make distclean>/dev/null'
@@ -278,16 +278,16 @@ if (ARGUMENTS['mode'] == 'configure'):
 	        os.system(command)
 
     if not int(env['static']):
-        finalFFTWFlags+=" --enable-shared"
+        finalFFTWFlags += " --enable-shared"
 
     if env['PLATFORM'] == 'darwin':
-        finalFFTWFlags+=" CFLAGS='-m64'"
+        finalFFTWFlags += " CFLAGS='-m64'"
 
-    installdir=os.getcwd()
-    installdir+="/lib"
+    installdir = os.getcwd()
+    installdir += "/lib"
 
-    finalFFTWFlags+=" --prefix="
-    finalFFTWFlags+=installdir
+    finalFFTWFlags += " --prefix="
+    finalFFTWFlags += installdir
 
     if int(env['verbose_fftw']):
         print "* Configuring FFTW ... "
@@ -300,7 +300,7 @@ if (ARGUMENTS['mode'] == 'configure'):
     # TIFF
     # It is ugly to call configure from scons, but I do not know how to do it otherwise
     # create configuration file for fftw
-    finalTIFFFlags= env['TIFFFLAGS']
+    finalTIFFFlags = env['TIFFFLAGS']
     if not GetOption("help"):
         if os.path.exists('external/tiff-3.9.4/Makefile'):
             command = 'cd external/tiff-3.9.4;  make distclean>/dev/null'
@@ -308,16 +308,16 @@ if (ARGUMENTS['mode'] == 'configure'):
             os.system(command)
 
     if not int(env['static']):
-        finalTIFFFlags+=" --enable-shared"
+        finalTIFFFlags += " --enable-shared"
 
     if env['PLATFORM'] == 'darwin':
-        finalTIFFFlags+=" CFLAGS='-m64'"
+        finalTIFFFlags += " CFLAGS='-m64'"
 
-    installdir=os.getcwd()
-    installdir+="/lib"
+    installdir = os.getcwd()
+    installdir += "/lib"
 
-    finalTIFFFlags+=" --prefix="
-    finalTIFFFlags+=installdir
+    finalTIFFFlags += " --prefix="
+    finalTIFFFlags += installdir
 
     if int(env['verbose_tiff']):
         print "* Configuring TIFF ... "
@@ -341,43 +341,49 @@ elif (ARGUMENTS['mode'] == 'compile'):
 
     # debug?
     if int(env['debug']):
-        env.Append(CXXFLAGS = ['-g'])
+        env.Append(CXXFLAGS=['-g'])
         #required for print stack trace
-        env.Append(CXXFLAGS = ['-rdynamic'])
-        env.Append(CXXFLAGS = ['-O0'])
-        env.Append(CXXFLAGS = ['-pg'])
-        env.Append(CCFLAGS = ['-g'])
-        env.Append(CCFLAGS = ['-pg'])
-        env.Append(LINKFLAGS = ['-pg'])
+        env.Append(CXXFLAGS=['-rdynamic'])
+        env.Append(CXXFLAGS=['-O0'])
+        env.Append(CXXFLAGS=['-pg'])
+        env.Append(CCFLAGS=['-g'])
+        env.Append(CCFLAGS=['-pg'])
+        env.Append(LINKFLAGS=['-pg'])
     else:
         # "safe" optimization
-        env.Append(CXXFLAGS = ['-O2'])
-        env.Append(CCFLAGS = ['-O2'])
-        env.Append(LINKFLAGS = ['-s'])
+        env.Append(CXXFLAGS=['-O2'])
+        env.Append(CCFLAGS=['-O2'])
+        env.Append(LINKFLAGS=['-s'])
 
     if env['PLATFORM'] == 'darwin':
-        env.Append(CXXFLAGS = ['-m64'])
-        env.Append(CCFLAGS = ['-m64'])
-        env.Append(LINKFLAGS = ['-m64'])
+        env.Append(CXXFLAGS=['-m64'])
+        env.Append(CCFLAGS=['-m64'])
+        env.Append(LINKFLAGS=['-m64'])
 
+
+    stdout_handle = os.popen('svnversion -n .')
+    svnver = stdout_handle.read()
+    print svnver
+    env.Append(CXXFLAGS="-D'SVN_REV=\""+ svnver +"\"'")
+    env.Append(CCFLAGS="-D'SVN_REV=\""+ svnver +"\"'")
 
     # Add threads
-    env.Append(LINKFLAGS = ['-pthread'])
-    env.Append(CXXFLAGS  = ['-pthread'])
-    env.Append(CCFLAGS   = ['-pthread'])
+    env.Append(LINKFLAGS=['-pthread'])
+    env.Append(CXXFLAGS=['-pthread'])
+    env.Append(CCFLAGS=['-pthread'])
 
     # warnings?
     if int(env['warn']):
-        env.Append(CXXFLAGS = ['-Wall'])
+        env.Append(CXXFLAGS=['-Wall'])
     else:
-        env.Append(CXXFLAGS = ['-w'])
+        env.Append(CXXFLAGS=['-w'])
         # TODO suppress linker warnings too... what's the flag?
         # env.Append(LINKFLAGS = ['-Wl,???'])
 
     # fast?
     # COSS' work. I dont like this. Classic debug vs release (asolano)
     if int(env['fast']):
-        env.Append(CXXFLAGS = ['-O3', '-fomit-frame-pointer', '-ffast-math',
+        env.Append(CXXFLAGS=['-O3', '-fomit-frame-pointer', '-ffast-math',
                    '-finline-functions', '-funroll-loops'])
 
     # verbosity (for $SCONS_VERSION < 0.96.2 option has no effect)
@@ -398,11 +404,11 @@ elif (ARGUMENTS['mode'] == 'compile'):
 
     # SWIG
     if int(env['swig']):
-        swigBuilder = Builder(action=env['SWIG']+' -python -c++ -o $TARGET $SOURCE',
+        swigBuilder = Builder(action=env['SWIG'] + ' -python -c++ -o $TARGET $SOURCE',
                      suffix='.cc',
                      src_suffix='.i')
         env.Append(BUILDERS={'i2cc': swigBuilder})
-        swigBuilder = Builder(action=env['SWIG']+' -java -c++ -o $TARGET $SOURCE; javac libraries/data/swig/*.java',
+        swigBuilder = Builder(action=env['SWIG'] + ' -java -c++ -o $TARGET $SOURCE; javac libraries/data/swig/*.java',
                      suffix='.cc',
                      src_suffix='.i')
         env.Append(BUILDERS={'i2java': swigBuilder})
