@@ -978,7 +978,7 @@ FileName FileName::get_file_format() const
 {
     int first;
     FileName result;
-    if ( find("#", 0) > -1 )
+    if (find("#") != std::string::npos)
         return "raw";
     else if ( (first = rfind(":"))!=std::string::npos)
         result = substr(first + 1) ;
@@ -1023,11 +1023,12 @@ bool FileName::isMetaData(bool failIfNotExists) const
         std::ifstream infile(data(), std::ios_base::in);
         std::string line;
 
-        if (infile.fail()) {
-			if (failIfNotExists)
-		 	    REPORT_ERROR( ERR_IO_NOTEXIST, (std::string) "File " + *this + " does not exist." );
-			else
-				return false;
+        if (infile.fail())
+        {
+            if (failIfNotExists)
+                REPORT_ERROR( ERR_IO_NOTEXIST, (std::string) "File " + *this + " does not exist." );
+            else
+                return false;
         }
 
         // Search for xmipp_3,
