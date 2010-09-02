@@ -596,7 +596,7 @@ int existsTrim(const FileName &fn)
         auxF       =       fn.substr(found+1) ;
     else
         auxF=fn;
-    found=auxF.find_first_of("%");
+    found=auxF.find_first_of("#");
     if ( found!=std::string::npos)
         auxF = auxF.substr(0, found);
     found=auxF.find_first_of(":");

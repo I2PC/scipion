@@ -26,6 +26,52 @@
 #ifndef RWRAW_H_
 #define RWRAW_H_
 
+///@defgroup RAW RAW Data type
+///@ingroup ImageFormats
+
+// I/O prototypes
+/** RAW Reader
+  * @ingroup RAW
+*/
+
+DataType datatypeRAW(std::string strDT)
+{
+    DataType datatype;
+
+    if(strDT=="uchar")
+        datatype = UChar;
+    else if (strDT=="char")
+        datatype = SChar;
+    else if (strDT=="ushort")
+        datatype = UShort;
+    else if (strDT=="short")
+        datatype = Short;
+    else if (strDT=="uint")
+        datatype = UInt;
+    else if (strDT=="int")
+        datatype = Int;
+    else if (strDT=="long")
+        datatype = Long;
+    else if (strDT=="float")
+        datatype = Float;
+    else if (strDT=="double")
+        datatype = Double;
+    else if (strDT=="cshort")
+        datatype = ComplexShort;
+    else if (strDT=="cint")
+        datatype = ComplexInt;
+    else if (strDT=="cfloat")
+        datatype = ComplexFloat;
+    else if (strDT=="cdouble")
+        datatype = ComplexDouble;
+    else if (strDT=="bool")
+        datatype = Bool;
+    else
+        datatype = Unknown_Type;
+
+    return datatype;
+}
+
 ///@defgroup RAW RAW File format
 ///@ingroup ImageFormats
 
@@ -33,6 +79,7 @@
 /** RAW Reader
   * @ingroup RAW
 */
+
 int readRAW(int img_select,bool isStack=false)
 {
 #undef DEBUG
@@ -41,14 +88,14 @@ int readRAW(int img_select,bool isStack=false)
     printf("DEBUG readRAW: Reading RAW file\n");
 #endif
 
-    int _xDim,_yDim,_zDim, __depth;
+    int _xDim,_yDim,_zDim;
     unsigned long int _nDim;
-
+    int rPos;
 
     size_t found;
     FileName infolist;
     std::vector<std::string> info;
-
+    DataType datatype;
 
     found = filename.find_first_of("#");
     infolist = filename.substr(found+1);
@@ -56,45 +103,34 @@ int readRAW(int img_select,bool isStack=false)
     infolist.to_lowercase();
     splitString(infolist,",",info, false);
 
-    if (info.size() < 4)
+    if (info.size() < 5)
         REPORT_ERROR(ERR_ARG_MISSING, (std::string) " Cannot open file " + filename +
                      ". Not enough header arguments.");
 
-
     _xDim = textToInteger(info[0]);
     _yDim = textToInteger(info[1]);
-    offset = textToInteger(info[2]);
 
-    DataType datatype;
-
-    if(info[3]=="uchar")
-        datatype = UChar;
-    else if (info[3]=="char")
-        datatype = SChar;
-    else if (info[3]=="ushort")
-        datatype = UShort;
-    else if (info[3]=="short")
-        datatype = Short;
-    else if (info[3]=="uint")
-        datatype = UInt;
-    else if (info[3]=="int")
-        datatype = Int;
-    else if (info[3]=="long")
-        datatype = Long;
-    else if (info[3]=="float")
-        datatype = Float;
-    else if (info[3]=="double")
-        datatype = Double;
-
-
-    if(info.size() == 5)
-        swap = true;
+    if (atoi(info[3].c_str()) == 0) // Check if zdim is not included
+    {
+        rPos = 2;
+        _zDim = 1;
+    }
     else
-        swap = false;
+    {
+        rPos = 3;
+        _zDim = textToInteger(info[2]);
+    }
 
-
-    _zDim = (int) 1;
+    offset = textToInteger(info[rPos]);
+    datatype = datatypeRAW(info[rPos+1]);
     _nDim = (int) 1;
+
+    // Check the reverse argument
+    if (info.back() == "r")
+            swap = true;
+        else
+            swap = false;
+
 
     // Map the parameters
     data.setDimensions(_xDim, _yDim, _zDim, _nDim);
@@ -106,7 +142,6 @@ int readRAW(int img_select,bool isStack=false)
         imgStart=img_select;
         imgEnd=img_select+1;
     }
-
 
     MDMainHeader.removeObjects();
     MDMainHeader.setColumnFormat(false);
