@@ -112,8 +112,9 @@ int readDM3(int img_select,bool isStack=false)
     for (int n=1;n<=header->nTags;n++)
         readTagDM3(fimg, header, parentID, nodeID, isLE);
 
-//#define DEBUG
+    //#define DEBUG
 #ifdef DEBUG
+
     header->tags.write("images.txt");
     printDM3(header->tags);
 #endif
@@ -223,12 +224,6 @@ int readDM3(int img_select,bool isStack=false)
     MDMainHeader.setValue(MDL_SAMPLINGRATEY,(double)dataHeaders[0].pixelHeight);
     MDMainHeader.setValue(MDL_DATATYPE,(int)datatype);
 
-    if( dataflag < 0 )
-    {
-        fclose(fimg);
-        return 0;
-    }
-
     MD.removeObjects();
     for ( i=imgStart; i<imgEnd; i++ )
     {
@@ -247,6 +242,12 @@ int readDM3(int img_select,bool isStack=false)
     offset = (unsigned long) dataHeaders[imgStart].headerSize;
     size_t pad = 0;
 
+    if( dataflag < 0 )
+    {
+        fclose(fimg);
+        return 0;
+    }
+
 
     //#define DEBUG
 #ifdef DEBUG
@@ -260,7 +261,7 @@ int readDM3(int img_select,bool isStack=false)
     readData(fimg, img_select, datatype, pad);
 
     if ( !mmapOn )
-    	fclose(fimg);
+        fclose(fimg);
 
     return(0);
 }
