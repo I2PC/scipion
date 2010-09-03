@@ -84,8 +84,9 @@ int main(int argc, char *argv[])
 /* Usage ------------------------------------------------------------------- */
 void Usage()
 {
+#ifdef SVN_REV
     std::cout << SVN_REV << std::endl;
-
+#endif
 
     printf("Purpose:\n");
     printf(" Print information from the header of 2D-images.\n");
