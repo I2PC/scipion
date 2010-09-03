@@ -204,9 +204,9 @@ int  readIMAGIC(int img_select)
 
     // Get the header information
     if ( img_select > -1 )
-        fseek( fhed, 0, SEEK_SET );
-    else
         fseek( fhed, img_select * IMAGICSIZE, SEEK_SET );
+    else
+        fseek( fhed, 0, SEEK_SET );
 
     MD.removeObjects();
     for ( i=0; i<Ndim; i++ )
