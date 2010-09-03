@@ -23,6 +23,8 @@ import org.apache.commons.cli.Options;
 import table.JFrameImagesTable;
 import window.ProjectionWindow;
 import window.iAnalyzer;
+import java.io.File;
+import java.io.IOException;
 
 /*
  * To change this template, choose Tools | Templates
@@ -65,10 +67,23 @@ public class Xmipp_Projections_Explorer implements PlugIn, UniverseListener, iAn
         if (IJ.isMacro() && !Macro.getOptions().isEmpty()) { // From macro.
             // "string" is used when called from another plugin or installed command.
             // "Macro.getOptions()" used when called from a run("command", arg) macro function.
-            String argsList[] = processArgs(Macro.getOptions());
+            String argsList[] = processArgs(Macro.getOptions().trim());
 
-            fileVolume = argsList[INDEX_VOLUME];
-            fileEulerAngles = argsList[INDEX_EULER_ANGLES];
+//            fileVolume = argsList[INDEX_VOLUME];
+//            fileEulerAngles = argsList[INDEX_EULER_ANGLES];
+
+            try {
+                fileVolume = (new File(argsList[INDEX_VOLUME])).getCanonicalPath();
+                fileEulerAngles = (new File(argsList[INDEX_EULER_ANGLES])).getCanonicalPath();
+            } catch (IOException ioex) {
+                ioex.printStackTrace();
+            }
+            /*            if (!fileVolume.startsWith(File.separator)) {
+            fileVolume = (new File(fileVolume)).getAbsolutePath();//System.getProperty("user.dir") + File.separator + fileVolume;
+            }
+            if (!fileEulerAngles.startsWith(File.separator)) {
+            fileEulerAngles = System.getProperty("user.dir") + File.separator + fileEulerAngles;
+            }*/
         } else {    // From menu.
             JFrameLoad frameLoad = new JFrameLoad();
 
@@ -79,6 +94,8 @@ public class Xmipp_Projections_Explorer implements PlugIn, UniverseListener, iAn
                 fileEulerAngles = frameLoad.getEulerAnglesFile();
             }
         }
+//        System.out.println("Volume: [" + fileVolume + "]");
+//        System.out.println("Euler : [" + fileEulerAngles + "]");
 
         if (fileVolume != null && fileEulerAngles != null) {
             run(fileVolume, fileEulerAngles);

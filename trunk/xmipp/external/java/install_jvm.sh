@@ -18,8 +18,8 @@ Linux)
 	esac;;
 esac
 
-# If JAVA_HOME is not set...
-test -z "$JAVA_HOME" && JAVA_HOME="$XMIPP_BASE"/external/java/"$platform"
+# Sets JAVA_HOME...
+JAVA_HOME="$XMIPP_BASE"/external/java/"$platform"
 
 # Creates a symbolic link to the java virtual machine
 test -e $JVM && rm $JVM
