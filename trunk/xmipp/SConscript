@@ -626,17 +626,14 @@ AddLibrary('XmippRecons_Interface', '#libraries/reconstruction',
 
 # ImageJ plugins.
 # Installs jvm
-print 'Installing JVM...'
-JAVA_HOME = 'external/java/jvm'
-os.system("external/java/install_jvm.sh")
-
-# Checks if jvm exists, otherwise the compilation will be halted if jvm is missing.
-if os.path.exists(JAVA_HOME):
-	AddImageJPlugin('Xmipp_IO', 'libraries/graphicsj/Xmipp_IO', 'external/imagej/plugins')
-	AddImageJPlugin('Xmipp_Projections_Explorer', 'libraries/graphicsj/Xmipp_Projections_Explorer', 'external/imagej/plugins')
-	AddImageJPlugin('Xmipp_Browser', 'libraries/graphicsj/Xmipp_Browser', 'external/imagej/plugins')
-else:
-	print 'WARNING: JVM is missing. ImageJ plugins won\'t be generated. Please, check your xmipp installation.'
+if int(env['java']):
+    print 'Installing JVM...'
+    JAVA_HOME = 'external/java/jvm'
+    os.system("external/java/install_jvm.sh")
+    # Checks if jvm exists, otherwise the compilation will be halted if jvm is missing.
+    AddImageJPlugin('Xmipp_IO', 'libraries/graphicsj/Xmipp_IO', 'external/imagej/plugins')
+    AddImageJPlugin('Xmipp_Projections_Explorer', 'libraries/graphicsj/Xmipp_Projections_Explorer', 'external/imagej/plugins')
+    AddImageJPlugin('Xmipp_Browser', 'libraries/graphicsj/Xmipp_Browser', 'external/imagej/plugins')
 
 # --- Programs
 
