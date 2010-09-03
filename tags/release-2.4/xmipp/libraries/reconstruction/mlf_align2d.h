@@ -360,8 +360,12 @@ public:
 			  Matrix1D<double> &spectral_signal, 
                           int refs_per_class=1);
 
+
     /// check convergence
     bool checkConvergence(std::vector<double> &conv);
+
+    /// write docfile with shifts for centered references
+    void writeCenteredDocfile(const DocFile &DFo);
 
     /// Write out reference images, selfile and logfile
     void writeOutputFiles(const int iter, DocFile &DFo,

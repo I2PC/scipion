@@ -1639,7 +1639,7 @@ void Prog_MLFalign2D_prm::fourierTranslate2D(const std::vector<double> &in,
 {
     double xx, yy, xxshift, yyshift, dotp;
     double a, b, c, d, ac, bd, ab_cd;
-    xxshift = -trans(0) / (double)dim;
+    xxshift = -trans(0) / (double) dim;
     yyshift = -trans(1) / (double)dim;
 
     for (int i = 0; i < nr_points_2d; i++)
@@ -1720,8 +1720,10 @@ void Prog_MLFalign2D_prm::calculateFourierOffsets(const Matrix2D<double> &Mimg,
                 {
                     for (int iflip = iflip_start; iflip < iflip_stop; iflip++)
                     {
-                        trans(0) = dxx * DIRECT_MAT_ELEM(F[iflip], 0, 0) + dyy * DIRECT_MAT_ELEM(F[iflip], 0, 1);
-                        trans(1) = dxx * DIRECT_MAT_ELEM(F[iflip], 1, 0) + dyy * DIRECT_MAT_ELEM(F[iflip], 1, 1);
+//                        trans(0) = dxx * DIRECT_MAT_ELEM(F[iflip], 0, 0) + dyy * DIRECT_MAT_ELEM(F[iflip], 0, 1);
+//                        trans(1) = dxx * DIRECT_MAT_ELEM(F[iflip], 1, 0) + dyy * DIRECT_MAT_ELEM(F[iflip], 1, 1);
+                        trans(0) = dxx * DIRECT_MAT_ELEM(F[iflip], 0, 0) + dyy * DIRECT_MAT_ELEM(F[iflip], 1, 0);
+                        trans(1) = dxx * DIRECT_MAT_ELEM(F[iflip], 0, 1) + dyy * DIRECT_MAT_ELEM(F[iflip], 1, 1);
                         fourierTranslate2D(Fimg_flip,trans,out,iflip*dnr_points_2d);
                     }
                     MAT_ELEM(Moffsets, ROUND(dyy), ROUND(dxx)) = count;
@@ -1732,8 +1734,10 @@ void Prog_MLFalign2D_prm::calculateFourierOffsets(const Matrix2D<double> &Mimg,
                 {
                     for (int iflip = iflip_start; iflip < iflip_stop; iflip++)
                     {
-                        trans(0) = dxx * DIRECT_MAT_ELEM(F[iflip], 0, 0) + dyy * DIRECT_MAT_ELEM(F[iflip], 0, 1);
-                        trans(1) = dxx * DIRECT_MAT_ELEM(F[iflip], 1, 0) + dyy * DIRECT_MAT_ELEM(F[iflip], 1, 1);
+//                        trans(0) = dxx * DIRECT_MAT_ELEM(F[iflip], 0, 0) + dyy * DIRECT_MAT_ELEM(F[iflip], 0, 1);
+//                        trans(1) = dxx * DIRECT_MAT_ELEM(F[iflip], 1, 0) + dyy * DIRECT_MAT_ELEM(F[iflip], 1, 1);
+                        trans(0) = dxx * DIRECT_MAT_ELEM(F[iflip], 0, 0) + dyy * DIRECT_MAT_ELEM(F[iflip], 1, 0);
+                        trans(1) = dxx * DIRECT_MAT_ELEM(F[iflip], 0, 1) + dyy * DIRECT_MAT_ELEM(F[iflip], 1, 1);
                         fourierTranslate2D(Fimg_flip,trans,out,iflip*dnr_points_2d);
                     }
                     MAT_ELEM(Moffsets_mirror, ROUND(dyy), ROUND(dxx)) = count;
@@ -2478,7 +2482,7 @@ void Prog_MLFalign2D_prm::sumOverAllImages(SelFile &SF, std::vector< ImageXmippT
     FileName fn_img, fn_trans;
     std::vector<double> Fref, Fwsum_imgs, Fwsum_ctfimgs, dum;
     std::vector<double> allref_offsets, pdf_directions(n_ref);
-    Matrix1D<double> dataline(11), opt_offsets(2), trans(2);
+    Matrix1D<double> dataline(11), opt_offsets(2);
 
     float old_phi = -999., old_theta = -999.;
     double opt_psi, opt_flip, opt_scale, maxcorr, maxweight2;
@@ -2493,7 +2497,6 @@ void Prog_MLFalign2D_prm::sumOverAllImages(SelFile &SF, std::vector< ImageXmippT
     nn = SF.ImgNo();
     if (verb > 0) init_progress_bar(nn);
     c = XMIPP_MAX(1, nn / 60);
-    trans.initZeros();
 
     // Set all weighted sums to zero
     sumw.clear();
@@ -2639,8 +2642,8 @@ void Prog_MLFalign2D_prm::sumOverAllImages(SelFile &SF, std::vector< ImageXmippT
             dataline(0) = Iref[opt_refno].Phi();     // rot
             dataline(1) = Iref[opt_refno].Theta();   // tilt
             dataline(2) = opt_psi + 360.;            // psi
-            dataline(3) = trans(0) + opt_offsets(0); // Xoff
-            dataline(4) = trans(1) + opt_offsets(1); // Yoff
+            dataline(3) = opt_offsets(0);            // Xoff
+            dataline(4) = opt_offsets(1);            // Yoff
             dataline(5) = (double)(opt_refno + 1);   // Ref
             dataline(6) = opt_flip;                  // Mirror
             dataline(7) = maxcorr;                   // P_max/P_tot or Corr
@@ -2856,6 +2859,47 @@ void Prog_MLFalign2D_prm::updateParameters(std::vector<Matrix2D<double> > &wsum_
 	}
     }
     spectral_signal /= (double)n_ref;
+
+}
+
+void Prog_MLFalign2D_prm::writeCenteredDocfile(const DocFile &DFo)
+{
+    // Center each reference based on center-of-mass
+    DocFile DFcen;
+
+    DFcen = DFo;
+    for (int refno=0;refno<n_ref; refno++)
+    {
+        Matrix2D<double> Ixy = Iref[refno](); 
+        Ixy.selfReverseX(); 
+        Ixy.selfReverseY(); 
+        Ixy.setXmippOrigin();
+
+        double shiftX, shiftY;
+        best_shift(Iref[refno](), Ixy, shiftX, shiftY);
+        shiftX /= 2.; 
+        shiftY /= 2.;
+
+        DFcen.go_beginning();
+        double psi, newx, newy;
+
+        for (int n = 0; n < DFcen.dataLineNo(); n++)
+        {
+            DFcen.adjust_to_data_line();
+            if ((refno + 1) == (int)DFo(5))
+            {
+                psi = DFcen(2);
+                newx =  shiftX*COSD(psi) + shiftY*SIND(psi);
+                newy =  -shiftX*SIND(psi) + shiftY*COSD(psi);
+                DFcen.set(3, DFcen(3) - newx);
+                DFcen.set(4, DFcen(4) - newy);
+            }
+            DFcen.next();
+        }
+    }
+    FileName fn_cen;
+    fn_cen = fn_root + "_cen.doc";
+    DFcen.write(fn_cen);
 
 }
 
