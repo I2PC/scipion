@@ -361,11 +361,10 @@ elif (ARGUMENTS['mode'] == 'compile'):
         env.Append(LINKFLAGS=['-m64'])
 
 
-    stdout_handle = os.popen('svnversion -n .')
-    svnver = stdout_handle.read()
-    print svnver
-    env.Append(CXXFLAGS="-D'SVN_REV=\""+ svnver +"\"'")
-    env.Append(CCFLAGS="-D'SVN_REV=\""+ svnver +"\"'")
+# stdout_handle = os.popen('svnversion -n .')
+#    svnver = stdout_handle.read()
+#    env.Append(CXXFLAGS="-D'SVN_REV=\""+ svnver +"\"'")
+#    env.Append(CCFLAGS="-D'SVN_REV=\""+ svnver +"\"'")
 
     # Add threads
     env.Append(LINKFLAGS=['-pthread'])
