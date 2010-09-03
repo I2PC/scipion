@@ -23,10 +23,11 @@ else
 	    ERROR=1
 	fi
 
-	if [ $# -gt 4 ]
+	if [ $# -gt 1 ]
 	then
-	    MACRO_ARGS="$2 $3 $4 $5"
+	    WORKDIR="$2"
 	else
+	    WORKDIR=`pwd`
 	    ERROR=`expr $ERROR + 2`
 	fi
 
@@ -40,10 +41,10 @@ else
 		then
 			echo "Not enough arguments."
 		fi
-		echo "Usage: xmipp_projection_explorer <Memory size> -vol <volume_file> -angles <angles_file>"
+		echo "Usage: xmipp_browserj <Memory size> <work_directory>. Example: xmipp_browserj 1024m $HOME"
 	fi
 
 	export LD_LIBRARY_PATH=$XMIPP_BASE/lib
 	IMAGEJ_HOME=$XMIPP_BASE/external/imagej
-	$JAVA_HOME/bin/java -Xmx$MEM -Dplugins.dir=$IMAGEJ_HOME/plugins/ -jar $IMAGEJ_HOME/ij.jar -macro $IMAGEJ_HOME/macros/xmippExplorer.txt "$MACRO_ARGS"
+	$JAVA_HOME/bin/java -Xmx$MEM -Dplugins.dir=$IMAGEJ_HOME/plugins/ -jar $IMAGEJ_HOME/ij.jar -macro $IMAGEJ_HOME/macros/xmippBrowser.txt "$WORKDIR"
 fi

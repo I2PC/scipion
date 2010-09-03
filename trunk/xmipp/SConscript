@@ -290,8 +290,11 @@ def AddSwigPythonLibrary(name, basedir, sourceList, includes, libpath=[], libs=[
 def AddSwigJavaLibrary(name, basedir, sourceList, includes, libpath=[], libs=[]):
     # Create wrapper
     # setup
+    env.AppendENVPath('PATH', 'external/java/jvm/bin')
+
     basedirswig = AddLastSlash(basedir+"/swig")
     libprefix = os.path.join(env['prefix'], 'lib')
+
     if int(env['swig']):
 
         # Build wrapper
@@ -337,19 +340,6 @@ def AddImageJPlugin(name, pluginDir, outDir):
         		shutil.copy(lib_item, outDir)
 			libsStr = libsStr + ':' + lib_item
 
-    # ...to create the full classpath
-    env = Environment()
-    env['JAVACFLAGS'] = '-classpath external/imagej/ij.jar:' + libsStr +\
-           os.pathsep.join(env['JAVACLASSPATH'])
-
-    buildClasses=env.Java(buildDir,sourceDir)
-    env['JARFLAGS'] = '-Mcf'    # Default "cf". "M" = Do not add a manifest file.
-    buildJar=env.Jar(target=outDir+'/'+name+'.jar',
-        source=buildDir,
-        JARCHDIR=buildDir)
-
-    env.Default(buildClasses)
-
     # Clears "buildDir"
     if os.path.exists(buildDir):
 	shutil.rmtree(buildDir)
@@ -361,8 +351,32 @@ def AddImageJPlugin(name, pluginDir, outDir):
     if os.path.exists(resourcesDir):
 	    shutil.copytree(resourcesDir, buildDir+'resources/')
 
-    outMacrosDir = outDir+'/../macros/'
+    # Compiles
+    java_home = 'external/java/jvm/'
+    java_headers = os.path.join(java_home, 'include')
+    java_libs = os.path.join(java_home, 'lib')
+
+    # Adds javac and jar to PATH
+    env = Environment(tools = ['javac', 'jar'])
+    env.AppendENVPath('PATH', java_home + '/bin')
+
+    env['JAVA_HOME'] = java_home
+    env['JNI_CPPPATH'] = java_headers
+    env['JNI_LIBPATH'] = java_libs
+    env['JAVACFLAGS'] = '-classpath external/imagej/ij.jar' + libsStr +\
+           os.pathsep.join(env['JAVACLASSPATH'])
+
+    env['JARFLAGS'] = '-Mcf'    # Default "cf". "M" = Do not add a manifest file.
+    buildJar=env.Jar(target=outDir + '/' + name + '.jar',
+        source = buildDir,
+        JARCHDIR = buildDir)
+
+    buildClasses=env.Java(buildDir,sourceDir)
+
+    env.Default(buildClasses)
+
     # Copies macros to ImageJ/macros folder (if any).
+    outMacrosDir = outDir + '/../macros/'
     if os.path.exists(macrosDir) and len(os.listdir(macrosDir)) > 0:
 	for f in os.listdir(macrosDir):
 		macro_item = os.path.join(macrosDir, f)
@@ -507,6 +521,7 @@ SwigDataSources = ['libraries/data/swig/swigXmippData.i']
 SwigJavaDataSources = ['libraries/data/swig/swigXmippDataJava.i']
 AddSwigPythonLibrary('XmippData', 'libraries/data', SwigDataSources, ['#'],
     [], ['XmippData'])
+
 if int(env['java']):
     AddSwigJavaLibrary('XmippDataJava', 'libraries/data', SwigJavaDataSources, ['#'],
         [], ['XmippData'])
@@ -609,13 +624,19 @@ AddLibrary('XmippInterface', 'libraries/interface', InterfaceSources,
 AddLibrary('XmippRecons_Interface', '#libraries/reconstruction',
            ReconsInterfaceSources, ['#libraries', '#external', '#'],['lib'],['XmippExternal','XmippData','XmippRecons','XmippInterface'])
 
-# ImageJ plugins. Check if there is java compiler, otherwise the compilation will be halted if jvm is missing.
-if env.Detect('javac') and env.Detect('jar'):
+# ImageJ plugins.
+# Installs jvm
+print 'Installing JVM...'
+JAVA_HOME = 'external/java/jvm'
+os.system("external/java/install_jvm.sh")
+
+# Checks if jvm exists, otherwise the compilation will be halted if jvm is missing.
+if os.path.exists(JAVA_HOME):
 	AddImageJPlugin('Xmipp_IO', 'libraries/graphicsj/Xmipp_IO', 'external/imagej/plugins')
 	AddImageJPlugin('Xmipp_Projections_Explorer', 'libraries/graphicsj/Xmipp_Projections_Explorer', 'external/imagej/plugins')
 	AddImageJPlugin('Xmipp_Browser', 'libraries/graphicsj/Xmipp_Browser', 'external/imagej/plugins')
 else:
-	print 'WARNING: \'javac\' and/or \'jar\' are missing. ImageJ plugins won\'t be generated. Please, check your java jdk.'
+	print 'WARNING: JVM is missing. ImageJ plugins won\'t be generated. Please, check your xmipp installation.'
 
 # --- Programs
 
@@ -766,6 +787,7 @@ AddBatch('protocols', 'applications/scripts/protocols')
 AddBatch('gui', 'applications/scripts/protocols')
 AddBatch('showj', 'applications/scripts/showj','.sh')
 AddBatch('projections_explorerj', 'applications/scripts/projections_explorerj','.sh')
+AddBatch('browserj', 'applications/scripts/browserj','.sh')
 # AddBatch('convert_tia2raw', 'applications/programs/convert_tia2raw')
 AddBatch('move_along_NMAmode', 'applications/scripts/move_along_NMAmode','.pl')
 
@@ -884,7 +906,7 @@ if int(env['gui']):
             sources + extra,
             CPPPATH = envQT['CPPPATH'] + includes + [env['CPPPATH']],
             LIBPATH = envQT['LIBPATH'] + libpath + [env['LIBPATH']],
-            LIBS = envQT['LIBS'] + libs + [env['LIBS']],
+            LIBS = envQT['LIBS'] + libs + [env['LIBS']]+TIFFLibs,
             CXXFLAGS = cxxflags + [env['CXXFLAGS']],
             LINKFLAGS = linkflags + [env['LINKFLAGS']],
             LINK = env['LINKERFORPROGRAMS']
