@@ -231,7 +231,11 @@ class RCT_class:
         else:
             # Check that no mirror option was used
             lastitername=ml2d_abs_rootname+'_it'+str(lastiter).zfill(6)
-            self.lastdocfile=lastitername+'.doc'
+            if os.path.exists(ml2d_abs_rootname+'_cen.doc'):
+                print 'Using ',ml2d_abs_rootname,'_cen.doc'
+                self.lastdocfile=ml2d_abs_rootname+'_cen.doc'
+            else:
+                self.lastdocfile=lastitername+'.doc'
             lastlogfile=lastitername+'.log'
             fh=open(lastlogfile,'r')
             lines=fh.readlines()
