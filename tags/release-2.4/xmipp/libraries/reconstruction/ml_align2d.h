@@ -265,6 +265,9 @@ public:
     /// check convergence
     bool checkConvergence(std::vector<double> &conv);
 
+    /// write docfile with shifts for centered references
+    void writeCenteredDocfile(const DocFile &DFo);
+
     /// Write out reference images, selfile and logfile
     void writeOutputFiles(const int iter, DocFile &DFo,
                           double &sumw_allrefs, double &LL, double &avefracweight,

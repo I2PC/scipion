@@ -111,6 +111,9 @@ int main(int argc, char **argv)
         } // end loop iterations
         prm.writeOutputFiles(-1, DFo, sumw_allrefs, LL, sumcorr, conv);
 
+        // Also write a docfile with shifts that center all references to their center-of-mass
+        prm.writeCenteredDocfile(DFo);
+
     }
     catch (Xmipp_error XE)
     {

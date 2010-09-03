@@ -1734,6 +1734,47 @@ bool Prog_MLalign2D_prm::checkConvergence(std::vector<double> &conv)
 #endif
     return converged;
 }
+// 
+void Prog_MLalign2D_prm::writeCenteredDocfile(const DocFile &DFo)
+{
+    // Center each reference based on center-of-mass
+    DocFile DFcen;
+
+    DFcen = DFo;
+    for (int refno=0;refno<n_ref; refno++)
+    {
+        Matrix2D<double> Ixy = Iref[refno](); 
+        Ixy.selfReverseX(); 
+        Ixy.selfReverseY(); 
+        Ixy.setXmippOrigin();
+
+        double shiftX, shiftY;
+        best_shift(Iref[refno](), Ixy, shiftX, shiftY);
+        shiftX /= 2.; 
+        shiftY /= 2.;
+
+        DFcen.go_beginning();
+        double psi, newx, newy;
+
+        for (int n = 0; n < DFcen.dataLineNo(); n++)
+        {
+            DFcen.adjust_to_data_line();
+            if ((refno + 1) == (int)DFo(5))
+            {
+                psi = DFcen(2);
+                newx =  shiftX*COSD(psi) + shiftY*SIND(psi);
+                newy =  -shiftX*SIND(psi) + shiftY*COSD(psi);
+                DFcen.set(3, DFcen(3) - newx);
+                DFcen.set(4, DFcen(4) - newy);
+            }
+            DFcen.next();
+        }
+    }
+    FileName fn_cen;
+    fn_cen = fn_root + "_cen.doc";
+    DFcen.write(fn_cen);
+
+}
 
 void Prog_MLalign2D_prm::writeOutputFiles(const int iter, DocFile &DFo,
                                           double &sumw_allrefs, double &LL, double &avefracweight, 
