@@ -109,7 +109,7 @@ int readMRC(int img_select, bool isStack=false)
     MRChead*        header = (MRChead *) askMemory(sizeof(MRChead));
     if ( fread( header, MRCSIZE, 1, fimg ) < 1 )
     {
-    	fclose(fimg);
+        fclose(fimg);
         return(-2);
     }
 
@@ -157,13 +157,24 @@ int readMRC(int img_select, bool isStack=false)
         replaceNsize=0;
 
     // Map the parameters
-    if (isStack && img_select==-1)
-        data.setDimensions(_xDim, _yDim, 1, _nDim);
-    else if(isStack && img_select!=-1)
-        data.setDimensions(_xDim, _yDim, 1, 1);
+    if (dataflag<0)
+    {
+        if (isStack && img_select==-1)
+            data.setDimensions(_xDim, _yDim, 1, _nDim);
+        else if(isStack && img_select!=-1)
+            data.setDimensions(_xDim, _yDim, 1, 1);
+        else
+            data.setDimensions(_xDim, _yDim, _zDim,1);
+    }
     else
-        data.setDimensions(_xDim, _yDim, _zDim,1);
-
+    {
+        if (isStack && img_select==-1)
+            data.resize(_xDim, _yDim, 1, _nDim);
+        else if(isStack && img_select!=-1)
+            data.resize(_xDim, _yDim, 1, 1);
+        else
+            data.resize(_xDim, _yDim, _zDim,1);
+    }
     unsigned long   imgStart=0;
     unsigned long   imgEnd =_nDim;
     if (img_select != -1)

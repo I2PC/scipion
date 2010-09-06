@@ -181,29 +181,50 @@ int  readSPIDER(int img_select,bool isStack=false)
     // Only handle stacks of images not of volumes
     if(!isStack)
     {
-        data.setDimensions( //setDimensions do not allocate data
-            (int) _xDim,
-            (int) _yDim,
-            (int) _zDim,
-            (unsigned long int)1 );
+        if (dataflag<0)
+            data.setDimensions( //setDimensions do not allocate data
+                (int) _xDim,
+                (int) _yDim,
+                (int) _zDim,
+                (unsigned long int)1 );
+        else
+            data.resize( //setDimensions do not allocate data
+                (int) _xDim,
+                (int) _yDim,
+                (int) _zDim,
+                (unsigned long int)1 );
     }
     else
     {
         if(img_select==-1)
         {
-            data.setDimensions(
-                (int) _xDim,
-                (int) _yDim,
-                (int) _zDim,
-                (unsigned long int)_nDim );
+            if (dataflag<0)
+                data.setDimensions(
+                    (int) _xDim,
+                    (int) _yDim,
+                    (int) _zDim,
+                    (unsigned long int)_nDim );
+            else
+                data.resize(
+                    (int) _xDim,
+                    (int) _yDim,
+                    (int) _zDim,
+                    (unsigned long int)_nDim );
         }
         else
         {
-            data.setDimensions(
-                (int) _xDim,
-                (int) _yDim,
-                (int) _zDim,
-                (unsigned long int) 1 );
+            if (dataflag<0)
+                data.setDimensions(
+                    (int) _xDim,
+                    (int) _yDim,
+                    (int) _zDim,
+                    (unsigned long int) 1 );
+            else
+                data.resize(
+                    (int) _xDim,
+                    (int) _yDim,
+                    (int) _zDim,
+                    (unsigned long int) 1 );
         }
     }
 

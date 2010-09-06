@@ -269,7 +269,10 @@ int readTIFF(int img_select, bool isStack=false)
         _zDim = (int) 1;
         _nDim = (int) 1;
     }
-    data.setDimensions(_xDim, _yDim, 1, _nDim);
+    if (dataflag<0)
+        data.setDimensions(_xDim, _yDim, 1, _nDim);
+    else
+        data.resize(_xDim, _yDim, 1, _nDim);
 
     unsigned long   imgStart=0;
     unsigned long   imgEnd =_nDim;

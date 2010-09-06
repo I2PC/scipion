@@ -197,13 +197,16 @@ int readDM3(int img_select,bool isStack=false)
     // Map the parameters
     if (img_select==-1)
     {
-        data.setDimensions(_xDim, _yDim, 1, _nDim);
         if (_nDim>1)
             REPORT_ERROR(ERR_IO_NOREAD, "readDM3: Reading multiple \
                          images at once in DM3 file are not currently supported. Try to read them individually.");
     }
     else
-        data.setDimensions(_xDim, _yDim, 1, 1);
+        _nDim=1;
+    if (dataflag<0)
+    	data.setDimensions(_xDim, _yDim, 1, _nDim);
+    else
+    	data.resize(_xDim, _yDim, 1, _nDim);
 
     unsigned long   imgStart=0;
     unsigned long   imgEnd =_nDim;

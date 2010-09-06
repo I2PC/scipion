@@ -146,11 +146,18 @@ int  readIMAGIC(int img_select)
 
     if( img_select > -1)
         _nDim=1;
-    data.setDimensions( //setDimensions do not allocate data
-        _xDim,
-        _yDim,
-        _zDim,
-        _nDim );
+    if (dataflag<0)   // Don't read the individual header
+        data.setDimensions( //setDimensions do not allocate data
+            _xDim,
+            _yDim,
+            _zDim,
+            _nDim );
+    else
+        data.resize( //setDimensions do not allocate data
+            _xDim,
+            _yDim,
+            _zDim,
+            _nDim );
     replaceNsize=_nDim;
     DataType datatype;
 
@@ -242,7 +249,7 @@ int  readIMAGIC(int img_select)
     readData(fimg, img_select, datatype, pad );
 
     if ( !mmapOn )
-    	fclose(fimg);
+        fclose(fimg);
     fclose(fhed);
 
     return(0);

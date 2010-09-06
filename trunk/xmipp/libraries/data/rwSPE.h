@@ -55,7 +55,10 @@ int readSPE(int img_select,bool isStack=false)
     nDim = (int) 1;
 
     // Map the parameters
-    data.setDimensions(xDim, yDim, zDim, nDim);
+    if (dataflag<0)
+        data.setDimensions(xDim, yDim, zDim, nDim);
+    else
+        data.resize(xDim, yDim, zDim, nDim);
 
     unsigned long   imgStart=0;
     unsigned long   imgEnd =nDim;

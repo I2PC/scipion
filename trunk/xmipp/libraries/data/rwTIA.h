@@ -157,7 +157,10 @@ int readTIA(int img_select,bool isStack=false, double dStddev=5)
     }
 
     // Map the parameters
-    data.setDimensions(_xDim, _yDim, 1, _nDim);
+    if (dataflag<0)
+        data.setDimensions(_xDim, _yDim, 1, _nDim);
+    else
+        data.resize(_xDim, _yDim, 1, _nDim);
 
     unsigned long   imgStart=0;
     unsigned long   imgEnd =_nDim;
@@ -310,7 +313,7 @@ int readTIA(int img_select,bool isStack=false, double dStddev=5)
     }
 
     if ( !mmapOn )
-    	fclose(fimg);
+        fclose(fimg);
 
     return(0);
 }
