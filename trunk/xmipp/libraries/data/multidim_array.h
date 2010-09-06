@@ -1296,6 +1296,9 @@ public:
                         A3D_ELEM(result, k, i, j) = init_value;
 
         *this = result;
+        STARTINGZ(*this) = z0;
+        STARTINGY(*this) = y0;
+        STARTINGX(*this) = x0;
     }
 
     /** Put a 2D window to the nth matrix
@@ -1331,6 +1334,8 @@ public:
             A2D_ELEM(result, i, j) = init_value;
 
         *this = result;
+        STARTINGY(*this) = y0;
+        STARTINGX(*this) = x0;
     }
 
     /** Put a 1D window to the nth vector
@@ -1359,6 +1364,7 @@ public:
                 A1D_ELEM(result, j) = init_value;
 
         *this = result;
+        STARTINGX(*this) = x0;
     }
 
     /** Print shape of multidimensional array.
