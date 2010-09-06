@@ -1720,8 +1720,6 @@ void Prog_MLFalign2D_prm::calculateFourierOffsets(const Matrix2D<double> &Mimg,
                 {
                     for (int iflip = iflip_start; iflip < iflip_stop; iflip++)
                     {
-//                        trans(0) = dxx * DIRECT_MAT_ELEM(F[iflip], 0, 0) + dyy * DIRECT_MAT_ELEM(F[iflip], 0, 1);
-//                        trans(1) = dxx * DIRECT_MAT_ELEM(F[iflip], 1, 0) + dyy * DIRECT_MAT_ELEM(F[iflip], 1, 1);
                         trans(0) = dxx * DIRECT_MAT_ELEM(F[iflip], 0, 0) + dyy * DIRECT_MAT_ELEM(F[iflip], 1, 0);
                         trans(1) = dxx * DIRECT_MAT_ELEM(F[iflip], 0, 1) + dyy * DIRECT_MAT_ELEM(F[iflip], 1, 1);
                         fourierTranslate2D(Fimg_flip,trans,out,iflip*dnr_points_2d);
@@ -1734,8 +1732,6 @@ void Prog_MLFalign2D_prm::calculateFourierOffsets(const Matrix2D<double> &Mimg,
                 {
                     for (int iflip = iflip_start; iflip < iflip_stop; iflip++)
                     {
-//                        trans(0) = dxx * DIRECT_MAT_ELEM(F[iflip], 0, 0) + dyy * DIRECT_MAT_ELEM(F[iflip], 0, 1);
-//                        trans(1) = dxx * DIRECT_MAT_ELEM(F[iflip], 1, 0) + dyy * DIRECT_MAT_ELEM(F[iflip], 1, 1);
                         trans(0) = dxx * DIRECT_MAT_ELEM(F[iflip], 0, 0) + dyy * DIRECT_MAT_ELEM(F[iflip], 1, 0);
                         trans(1) = dxx * DIRECT_MAT_ELEM(F[iflip], 0, 1) + dyy * DIRECT_MAT_ELEM(F[iflip], 1, 1);
                         fourierTranslate2D(Fimg_flip,trans,out,iflip*dnr_points_2d);
@@ -1873,6 +1869,8 @@ void Prog_MLFalign2D_prm::processOneImage(const Matrix2D<double> &Mimg,
                 irefmir = FLOOR(iflip / nr_nomirror_flips) * n_ref + refno;
                 ix = ROUND(opt_offsets_ref[2*irefmir]);
                 iy = ROUND(opt_offsets_ref[2*irefmir+1]);
+                ix = intWRAP(ix, Moffsets.startingX(), Moffsets.finishingX());
+                iy = intWRAP(iy, Moffsets.startingY(), Moffsets.finishingY());
                 Pmax_refmir[irefmir] = 0.;
                 if (iflip < nr_nomirror_flips) 
 		{ 
@@ -1884,7 +1882,7 @@ void Prog_MLFalign2D_prm::processOneImage(const Matrix2D<double> &Mimg,
 		}
 		if (point_trans < 0 || point_trans > dim2)
 		{
-		    std::cerr<<"point_trans = "<<point_trans<<" ix= "<<ix<<" iy= "<<iy<<std::endl;
+		    std::cerr<<"first loop point_trans = "<<point_trans<<" ix= "<<ix<<" iy= "<<iy<<std::endl;
 		    REPORT_ERROR(1,"mlf_align2d BUG: point_trans < 0");
 		}
                 if (iflip < nr_nomirror_flips) 
@@ -2086,7 +2084,7 @@ void Prog_MLFalign2D_prm::processOneImage(const Matrix2D<double> &Mimg,
                                 else point_trans = MAT_ELEM(Moffsets_mirror, iy, ix);
 				if (point_trans < 0 || point_trans > dim2)
 				{
-				    std::cerr<<"point_trans = "<<point_trans<<" ix= "<<ix<<" iy= "<<iy<<std::endl;
+				    std::cerr<<"second loop point_trans = "<<point_trans<<" ix= "<<ix<<" iy= "<<iy<<std::endl;
 				    REPORT_ERROR(1,"mlf_align2d BUG: point_trans < 0 or > dim2");
 				}
 				pdf = fracpdf * MAT_ELEM(P_phi, iy, ix);
