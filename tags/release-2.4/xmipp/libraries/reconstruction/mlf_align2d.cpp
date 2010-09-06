@@ -2869,8 +2869,7 @@ void Prog_MLFalign2D_prm::writeCenteredDocfile(const DocFile &DFo)
     for (int refno=0;refno<n_ref; refno++)
     {
         Matrix2D<double> Ixy = Iref[refno](); 
-        Ixy.selfReverseX(); 
-        Ixy.selfReverseY(); 
+        Ixy.selfRotate(180., WRAP);
         Ixy.setXmippOrigin();
 
         double shiftX, shiftY;
@@ -2879,18 +2878,22 @@ void Prog_MLFalign2D_prm::writeCenteredDocfile(const DocFile &DFo)
         shiftY /= 2.;
 
         DFcen.go_beginning();
-        double psi, newx, newy;
+        double psi, newx, newy, oldx, oldy;
 
         for (int n = 0; n < DFcen.dataLineNo(); n++)
         {
             DFcen.adjust_to_data_line();
-            if ((refno + 1) == (int)DFo(5))
+            if ((refno + 1) == (int)DFcen(5))
             {
                 psi = DFcen(2);
+                oldx = DFcen(3);
+                oldy = DFcen(4);
                 newx =  shiftX*COSD(psi) + shiftY*SIND(psi);
                 newy =  -shiftX*SIND(psi) + shiftY*COSD(psi);
-                DFcen.set(3, DFcen(3) - newx);
-                DFcen.set(4, DFcen(4) - newy);
+                newx = oldx - newx;
+                newy = oldy - newy;
+                DFcen.set(3, newx);
+                DFcen.set(4, newy);
             }
             DFcen.next();
         }
