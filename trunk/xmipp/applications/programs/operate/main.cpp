@@ -819,47 +819,9 @@ void forcePositive(int operand_type1, const FileName &fn_1,
         Image<double> out;
         out.read(fn_1);
 
-        bool negativeRemaining;
-
         if (out().zdim==1) // IMAGE
         {
-            do
-            {
-            	negativeRemaining=false;
-
-                FOR_ALL_ELEMENTS_IN_ARRAY2D(out())
-                if (out(i, j)<=0)
-                {
-                    std::vector<double> neighbours;
-                    for (int ii=-2; ii<=2; ii++)
-                    {
-                        int iii=i+ii;
-                        if (iii<0 || iii>=YSIZE(out()))
-                            continue;
-                        for (int jj=-2; jj<=2; jj++)
-                        {
-                            int jjj=j+jj;
-                            if (jjj<0 || jjj>=XSIZE(out()))
-                                continue;
-                            double val=out(iii,jjj);
-                            if (val>0)
-                                neighbours.push_back(val);
-                        }
-                    }
-                    int N=neighbours.size();
-                    if (N==0)
-                        negativeRemaining=true;
-                    else
-                    {
-                        std::sort(neighbours.begin(),neighbours.end());
-                        if (N%2==0)
-                            out(i,j)=0.5*(neighbours[N/2-1]+neighbours[N/2]);
-                        else
-                            out(i,j)=neighbours[N/2];
-                    }
-                }
-            }
-            while (negativeRemaining);
+        	forcePositive(out());
             out.setShifts(0., 0.);
             out.setEulerAngles(0., 0., 0.);
             if (fn_out=="")
@@ -870,50 +832,7 @@ void forcePositive(int operand_type1, const FileName &fn_1,
         }
         else // VOLUME
         {
-            do
-            {
-            	negativeRemaining=false;
-
-                FOR_ALL_ELEMENTS_IN_ARRAY3D(out())
-                if (out(k, i, j)<=0)
-                {
-                    std::vector<double> neighbours;
-                    for (int kk=-2; kk<=2; kk++)
-                    {
-                        int kkk=k+kk;
-                        if (kkk<0 || kkk>=ZSIZE(out()))
-                            continue;
-                        for (int ii=-2; ii<=2; ii++)
-                        {
-                            int iii=i+ii;
-                            if (iii<0 || iii>=YSIZE(out()))
-                                continue;
-                            for (int jj=-2; jj<=2; jj++)
-                            {
-                                int jjj=j+jj;
-                                if (jjj<0 || jjj>=XSIZE(out()))
-                                    continue;
-                                double val=out(kkk,iii,jjj);
-                                if (val>0)
-                                    neighbours.push_back(val);
-                            }
-                        }
-                        int N=neighbours.size();
-                        if (N==0)
-                            negativeRemaining=true;
-                        else
-                        {
-                            std::sort(neighbours.begin(),neighbours.end());
-                            if (N%2==0)
-                                out(k,i,j)=0.5*(neighbours[N/2-1]+
-                                                neighbours[N/2]);
-                            else
-                                out(k,i,j)=neighbours[N/2];
-                        }
-                    }
-                }
-            }
-            while (negativeRemaining);
+        	forcePositive(out());
             if (fn_out=="")
                 out.write(fn_1);
             else
