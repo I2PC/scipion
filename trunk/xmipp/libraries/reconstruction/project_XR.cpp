@@ -436,7 +436,7 @@ int ROUT_XR_project(Prog_Project_XR_Parameters &prm,
     side.produce_Side_Info(proj_prm, prm);
 
 
-    psf.adjustParam(side.phantomVol);
+//    psf.adjustParam(side.phantomVol);
 
     // Project
     int ProjNo = 0;

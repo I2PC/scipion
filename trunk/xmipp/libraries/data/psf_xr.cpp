@@ -263,6 +263,8 @@ void XRayPSF::generateOTF(MultidimArray<double> &Im)
 void XRayPSF::adjustParam(Image<double> &vol)
 {
 
+    produceSideInfo();
+
     Nox = vol().xdim;
     Noy = vol().ydim;
 
@@ -405,7 +407,7 @@ void project_xr(XRayPSF &psf, Image<double> &vol, Image<double> &imOut, int idxS
     Image<double> _Im(imOut);
 #endif
 
-    //    init_progress_bar(vol().zdim-1);
+        init_progress_bar(vol().zdim-1);
 
     for (int k=((vol()).zinit); k<=((vol()).zinit + (vol()).zdim - 1); k++)
     {
@@ -493,6 +495,7 @@ void project_xr(XRayPSF &psf, Image<double> &vol, Image<double> &imOut, int idxS
         imOut().window(-ROUND(psf.Noy/2)+1,-ROUND(psf.Nox/2)+1,ROUND(psf.Noy/2)-1,ROUND(psf.Nox/2)-1);
         break;
     }
+    imOut().setXmippOrigin();
     //    imOut.write("psfxr-imout2.spi");
 
 }
