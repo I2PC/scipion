@@ -28,7 +28,7 @@
 
 // Show a complex array ---------------------------------------------------
 std::ostream& operator<<(std::ostream& ostrm,
-    const MultidimArray< std::complex<double> >& v)
+                         const MultidimArray< std::complex<double> >& v)
 {
     if (v.xdim == 0)
         ostrm << "NULL MultidimArray\n";
@@ -37,10 +37,12 @@ std::ostream& operator<<(std::ostream& ostrm,
 
     for (int l = 0; l < NSIZE(v); l++)
     {
-        if (NSIZE(v)>1) ostrm << "Image No. " << l << std::endl;
+        if (NSIZE(v)>1)
+            ostrm << "Image No. " << l << std::endl;
         for (int k = STARTINGZ(v); k <= FINISHINGZ(v); k++)
         {
-            if (ZSIZE(v)>1) ostrm << "Slice No. " << k << std::endl;
+            if (ZSIZE(v)>1)
+                ostrm << "Slice No. " << k << std::endl;
             for (int i = STARTINGY(v); i <= FINISHINGY(v); i++)
             {
                 for (int j = STARTINGX(v); j <= FINISHINGX(v); j++)
@@ -53,6 +55,100 @@ std::ostream& operator<<(std::ostream& ostrm,
     return ostrm;
 }
 
+/** Force positive -------------------------------------------------------- */
+void forcePositive(MultidimArray<double> &V)
+{
+    bool negativeRemaining;
 
+    if (V.getDim()==2) // IMAGE
+    {
+        do
+        {
+            negativeRemaining=false;
 
+            FOR_ALL_ELEMENTS_IN_ARRAY2D(V)
+            if (V(i, j)<=0)
+            {
+                std::vector<double> neighbours;
+                for (int ii=-2; ii<=2; ii++)
+                {
+                    int iii=i+ii;
+                    if (iii<0 || iii>=YSIZE(V))
+                        continue;
+                    for (int jj=-2; jj<=2; jj++)
+                    {
+                        int jjj=j+jj;
+                        if (jjj<0 || jjj>=XSIZE(V))
+                            continue;
+                        double val=V(iii,jjj);
+                        if (val>0)
+                            neighbours.push_back(val);
+                    }
+                }
+                int N=neighbours.size();
+                if (N==0)
+                    negativeRemaining=true;
+                else
+                {
+                    std::sort(neighbours.begin(),neighbours.end());
+                    if (N%2==0)
+                        V(i,j)=0.5*(neighbours[N/2-1]+neighbours[N/2]);
+                    else
+                        V(i,j)=neighbours[N/2];
+                }
+            }
+        }
+        while (negativeRemaining);
+    }
+    else if (V.getDim()==3) // VOLUME
+    {
+        do
+        {
+            negativeRemaining=false;
 
+            FOR_ALL_ELEMENTS_IN_ARRAY3D(V)
+            if (V(k, i, j)<=0)
+            {
+                std::vector<double> neighbours;
+                for (int kk=-2; kk<=2; kk++)
+                {
+                    int kkk=k+kk;
+                    if (kkk<0 || kkk>=ZSIZE(V))
+                        continue;
+                    for (int ii=-2; ii<=2; ii++)
+                    {
+                        int iii=i+ii;
+                        if (iii<0 || iii>=YSIZE(V))
+                            continue;
+                        for (int jj=-2; jj<=2; jj++)
+                        {
+                            int jjj=j+jj;
+                            if (jjj<0 || jjj>=XSIZE(V))
+                                continue;
+                            double val=V(kkk,iii,jjj);
+                            if (val>0)
+                                neighbours.push_back(val);
+                        }
+                    }
+                    int N=neighbours.size();
+                    if (N==0)
+                        negativeRemaining=true;
+                    else
+                    {
+                        std::sort(neighbours.begin(),neighbours.end());
+                        if (N%2==0)
+                            V(k,i,j)=0.5*(neighbours[N/2-1]+
+                                          neighbours[N/2]);
+                        else
+                            V(k,i,j)=neighbours[N/2];
+                    }
+                }
+            }
+        }
+        while (negativeRemaining);
+    }
+    else
+    {
+        REPORT_ERROR(ERR_NOT_IMPLEMENTED,"");
+    }
+}

@@ -4508,6 +4508,11 @@ void typeCast(const MultidimArray<T1>& v1,  MultidimArray<T2>& v2, long n = -1)
 
 }
 
+/** Force positive.
+ *  A median filter is applied at those negative values. Positive values are untouched.
+ */
+void forcePositive(MultidimArray<double> &V);
+
 /** MultidimArray equality.*/
 template<typename T>
 bool operator==(const MultidimArray<T>& op1, const MultidimArray<T>& op2)
