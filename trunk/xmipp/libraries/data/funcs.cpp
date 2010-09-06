@@ -35,6 +35,7 @@
 #include <complex>
 #include <fstream>
 #include <typeinfo>
+#include <dirent.h>
 
 /* Numerical functions ----------------------------------------------------- */
 // Kaiser-Bessel constructor
@@ -585,6 +586,7 @@ int exists(const FileName &fn)
     fclose(aux);
     return 1;
 }
+
 /* Check if a file exists remove leading @ and tailing : */
 int existsTrim(const FileName &fn)
 {
@@ -606,6 +608,32 @@ int existsTrim(const FileName &fn)
         return 0;
     fclose(aux);
     return 1;
+}
+
+/* List of files within a directory ---------------------------------------- */
+void getdir(const std::string &dir, std::vector<std::string> &files)
+{
+	files.clear();
+
+    DIR *dp;
+    struct dirent *dirp;
+    if ((dp  = opendir(dir.c_str())) == NULL)
+    	REPORT_ERROR(ERR_IO_NOTEXIST,dir);
+
+    while ((dirp = readdir(dp)) != NULL)
+    	if (strcmp(dirp->d_name,".")!=0 && strcmp(dirp->d_name,"..")!=0)
+           files.push_back(std::string(dirp->d_name));
+    closedir(dp);
+}
+
+/* Is directory ------------------------------------------------------------ */
+bool isDirectory (const FileName &fn)
+{
+    struct stat st_buf;
+    int status = stat (fn.c_str(), &st_buf);
+    if (status != 0)
+    	REPORT_ERROR(ERR_UNCLASSIFIED,(std::string)"Cannot determine status of "+fn);
+    return (S_ISDIR (st_buf.st_mode));
 }
 
 /* Exit program if filename is not empry and file does not exist ----------- */

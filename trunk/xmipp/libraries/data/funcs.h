@@ -1077,6 +1077,9 @@ public:
  */
 int exists(const FileName& fn);
 
+/** True if the path is a directory */
+bool isDirectory (const FileName &fn);
+
 /** True if the file exists in the current directory
  *  Remove leading xx@ and tailing :xx
  *
@@ -1086,6 +1089,9 @@ int exists(const FileName& fn);
  * @endcode
  */
 int existsTrim(const FileName& fn);
+
+/** Return the list of files within a directory. */
+void getdir(const std::string &dir, std::vector<std::string> &files);
 
 /** This function raised an ERROR if the filename if not empty and if
  * the corresponding file does not exist.
