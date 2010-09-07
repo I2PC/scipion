@@ -110,9 +110,12 @@
  */
 enum ErrorType
 {
+    ERR_ARG_BADCMDLINE,     ///< Errors on command line parameters.
     ERR_ARG_INCORRECT,      ///< Incorrect argument received.
     ERR_ARG_MISSING,        ///< Argument missing.
     ERR_ARG_DEPENDENCE,     ///< Error with some arguments dependecies
+
+    ERR_PROG_NOTDEF,        ///< Requiered function not implemented
 
     ERR_DEBUG_TEST,         ///< Just an error for debugging purpose.
     ERR_DEBUG_IMPOSIBLE,    ///< Just for debugging, situation that can't happens

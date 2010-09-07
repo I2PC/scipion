@@ -53,7 +53,7 @@ XmippError::XmippError(const ErrorType nerr, const std::string &what,
 //Object Destructor
 XmippError::~XmippError()
 {
-    free(strings);
+    //free(strings);
 }
 
 void XmippError::printStackTrace(std::ostream& o)
@@ -82,12 +82,17 @@ char * XmippError::getDefaultMessage(ErrorType e)
 {
     switch (e)
     {
+      case ERR_ARG_BADCMDLINE:
+        return "Errors on command line parameters";
     case ERR_ARG_INCORRECT:
         return " Incorrect argument received";
     case ERR_ARG_MISSING:
         return " Argument missing";
     case ERR_ARG_DEPENDENCE:
         return "Error with some arguments dependecies";
+
+    case ERR_PROG_NOTDEF:
+      return "Requiered function not implemented in derived class";
     case ERR_DEBUG_TEST:
         return " Just an error for debugging purpose";
     case ERR_DEBUG_IMPOSIBLE:
