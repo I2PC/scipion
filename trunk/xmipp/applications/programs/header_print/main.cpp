@@ -27,72 +27,82 @@
 #include <data/args.h>
 #include <data/image.h>
 #include <data/metadata.h>
+#include <data/program.h>
 
-void Usage();
+/* PROGRAM ----------------------------------------------------------------- */
 
-/* MAIN -------------------------------------------------------------------- */
-int main(int argc, char *argv[])
+class ProgHeaderPrint: public XmippProgram
 {
+private:
     Image<double>      img;
     FileName        fn_input;
     MetaData SF;
 
-    try
+protected:
+    void defineParams()
     {
-        fn_input = getParameter(argc, argv, "-i");
+        addParamsLine("xmipp_header_print");
+        addParamsLine("       :Print information from the header of 2D-images.");
+        addParamsLine(" -i <metadata>   :metaDataFile with images or individual image");
+        addParamsLine(" alias --input;");
+    }
+
+    void readParams()
+    {
+        fn_input = getParam("-i");
         if (!fn_input.isMetaData())
         {
             SF.addObject();
             SF.setValue( MDL_IMAGE, fn_input);
             SF.setValue( MDL_ENABLED, 1);
         }
-        else {
-            SF.read( fn_input ,NULL);
+        else
+        {
+            SF.read(fn_input, NULL);
             SF.removeObjects(MDValueEQ(MDL_ENABLED, -1));
         }
     }
-    catch (XmippError XE)
+public:
+    void run()
     {
-        std::cout << XE;
-        Usage();
-    }
-
-    try
-    {
-        std::cout << " Printing the header ... " << std::endl;
-
-        FOR_ALL_OBJECTS_IN_METADATA(SF)
+        try
         {
-            FileName fn_img;
-            SF.getValue( MDL_IMAGE, fn_img);
-            if (fn_img=="") break;
-            std::cout << "FileName     : " << fn_img << std::endl;
+            std::cout << " Printing the header ... " << std::endl;
 
-            img.read(fn_img, false, -1, false);
+            FOR_ALL_OBJECTS_IN_METADATA(SF)
+            {
+                FileName fn_img;
+                SF.getValue( MDL_IMAGE, fn_img);
+                if (fn_img=="")
+                    break;
+                std::cout << "FileName     : " << fn_img << std::endl;
 
-            std::cout << img;
-	    std::cout << std::endl;
+                img.read(fn_img, false, -1, false);
+                std::cout << img;
+                std::cout << std::endl;
+            }
+
         }
-
-    }
-    catch (XmippError XE)
-    {
-        std::cout << XE;
+        catch (XmippError xe)
+        {
+            std::cout << xe;
+        }
     }
 }
+;// end of class ProgHeaderPrint
 
-/* Usage ------------------------------------------------------------------- */
-void Usage()
+/* MAIN -------------------------------------------------------------------- */
+int main(int argc, char *argv[])
 {
-#ifdef SVN_REV
-    std::cout << SVN_REV << std::endl;
-#endif
-
-    printf("Purpose:\n");
-    printf(" Print information from the header of 2D-images.\n");
-    printf("Usage:\n");
-    printf("   header_print \n");
-    printf("    -i                                   : metaDataFile with images or individual image\n");
-    exit(1);
+    try
+    {
+        ProgHeaderPrint program;
+        program.read(argc, argv);
+        program.run();
+    }
+    catch (XmippError xe)
+    {
+        std::cerr << xe;
+    }
 }
 
