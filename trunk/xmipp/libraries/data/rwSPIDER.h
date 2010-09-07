@@ -160,11 +160,12 @@ int  readSPIDER(int img_select,bool isStack=false)
     else
         isStack = false;
     int _xDim,_yDim,_zDim;
-    unsigned long int _nDim;
+    unsigned long int _nDim, _nDimSet;
     _xDim = (int) header->nsam;
     _yDim = (int) header->nrow;
     _zDim = (int) header->nslice;
     _nDim = 1;
+
     if(isStack)
     {
         _nDim = (unsigned long int) header->maxim;
@@ -180,53 +181,17 @@ int  readSPIDER(int img_select,bool isStack=false)
     // Map the parameters, REad the whole object (-1) or a slide
     // Only handle stacks of images not of volumes
     if(!isStack)
-    {
-        if (dataflag<0)
-            data.setDimensions( //setDimensions do not allocate data
-                (int) _xDim,
-                (int) _yDim,
-                (int) _zDim,
-                (unsigned long int)1 );
-        else
-            data.resize( //setDimensions do not allocate data
-                (int) _xDim,
-                (int) _yDim,
-                (int) _zDim,
-                (unsigned long int)1 );
-    }
+        _nDimSet = 1;
     else
     {
         if(img_select==-1)
-        {
-            if (dataflag<0)
-                data.setDimensions(
-                    (int) _xDim,
-                    (int) _yDim,
-                    (int) _zDim,
-                    (unsigned long int)_nDim );
-            else
-                data.resize(
-                    (int) _xDim,
-                    (int) _yDim,
-                    (int) _zDim,
-                    (unsigned long int)_nDim );
-        }
+            _nDimSet = _nDim;
         else
-        {
-            if (dataflag<0)
-                data.setDimensions(
-                    (int) _xDim,
-                    (int) _yDim,
-                    (int) _zDim,
-                    (unsigned long int) 1 );
-            else
-                data.resize(
-                    (int) _xDim,
-                    (int) _yDim,
-                    (int) _zDim,
-                    (unsigned long int) 1 );
-        }
+            _nDimSet = 1;
     }
+
+    data.setDimensions(_xDim, _yDim, _zDim, _nDimSet);
+
 
     if (isStack && dataflag<0)   // Don't read the individual header
     {                            // and the data if not necessary

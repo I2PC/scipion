@@ -146,18 +146,13 @@ int  readIMAGIC(int img_select)
 
     if( img_select > -1)
         _nDim=1;
-    if (dataflag<0)   // Don't read the individual header
-        data.setDimensions( //setDimensions do not allocate data
-            _xDim,
-            _yDim,
-            _zDim,
-            _nDim );
-    else
-        data.resize( //setDimensions do not allocate data
-            _xDim,
-            _yDim,
-            _zDim,
-            _nDim );
+
+    data.setDimensions( //setDimensions do not allocate data
+        _xDim,
+        _yDim,
+        _zDim,
+        _nDim );
+
     replaceNsize=_nDim;
     DataType datatype;
 

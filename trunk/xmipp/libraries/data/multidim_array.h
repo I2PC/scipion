@@ -626,8 +626,12 @@ public:
 
     //Alloc memory or map to a file
     bool     mmapOn;
+    // Mapped File name
     FileName mapFile;
+    //Mapped file handler
     int      mFd;
+    // Number of elements in NZYX in allocated memory
+    unsigned long int nzyxdimAlloc;
 
 public:
     /// @name Constructors
@@ -750,6 +754,7 @@ public:
         ydim=zdim=ndim=1;
         zinit=yinit=xinit=0;
         data=NULL;
+        nzyxdimAlloc = 0;
         destroyData=true;
         mmapOn = false;
         mFd=0;
@@ -815,6 +820,7 @@ public:
             if (data == NULL)
                 REPORT_ERROR(ERR_MEM_NOTENOUGH, "Allocate: No space left");
         }
+        nzyxdimAlloc = nzyxdim;
     }
 
     /** Core allocate without dimensions.
@@ -825,31 +831,37 @@ public:
      */
     void coreAllocateReuse()
     {
-        if(data!=NULL)
+        if(data != NULL && nzyxdim <= nzyxdimAlloc)
             return;
+        else if (nzyxdim > nzyxdimAlloc)
+            coreDeallocate();
+
         if (nzyxdim < 0)
             REPORT_ERROR(ERR_MEM_BADREQUEST,"coreAllocateReuse:Cannot allocate a negative number of bytes");
 
         if (mmapOn)
-        {
-            mapFile.init_random(8);
-            mapFile = mapFile.add_extension("tmp");
-
-            if ( ( mFd = open(mapFile.c_str(),  O_RDWR | O_CREAT | O_TRUNC,S_IRUSR|S_IWUSR|S_IRGRP|S_IWGRP) ) == -1 )
-                REPORT_ERROR(ERR_IO_NOTOPEN,"MultidimArray::coreAllocateReuse: Error creating map file.");
-            if ((lseek(mFd, nzyxdim*sizeof(T), SEEK_SET) == -1) || (::write(mFd,"",1) == -1))// Use of :: to call write from global space due to confict with multidimarray::write
             {
-                close(mFd);
-                REPORT_ERROR(ERR_IO_NOWRITE,"MultidimArray::coreAllocateReuse: Error 'stretching' the map file.");
-            }
+                mapFile.init_random(8);
+                mapFile = mapFile.add_extension("tmp");
 
-            if ( (data = (T*) mmap(0,nzyxdim*sizeof(T), PROT_READ | PROT_WRITE, MAP_SHARED, mFd, 0)) == (void*) -1 )
-                REPORT_ERROR(ERR_MMAP_NOTADDR,"MultidimArray::coreAllocateReuse: mmap failed.");
-        }
-        else
-            data = new T [nzyxdim];
-        if (data == NULL)
-            REPORT_ERROR(ERR_MEM_NOTENOUGH, "Allocate: No space left");
+                if ( ( mFd = open(mapFile.c_str(),  O_RDWR | O_CREAT | O_TRUNC,S_IRUSR|S_IWUSR|S_IRGRP|S_IWGRP) ) == -1 )
+                    REPORT_ERROR(ERR_IO_NOTOPEN,"MultidimArray::coreAllocateReuse: Error creating map file.");
+                if ((lseek(mFd, nzyxdim*sizeof(T), SEEK_SET) == -1) || (::write(mFd,"",1) == -1))// Use of :: to call write from global space due to confict with multidimarray::write
+                {
+                    close(mFd);
+                    REPORT_ERROR(ERR_IO_NOWRITE,"MultidimArray::coreAllocateReuse: Error 'stretching' the map file.");
+                }
+
+                if ( (data = (T*) mmap(0,nzyxdim*sizeof(T), PROT_READ | PROT_WRITE, MAP_SHARED, mFd, 0)) == (void*) -1 )
+                    REPORT_ERROR(ERR_MMAP_NOTADDR,"MultidimArray::coreAllocateReuse: mmap failed.");
+            }
+            else
+            {
+                data = new T [nzyxdim];
+                if (data == NULL)
+                    REPORT_ERROR(ERR_MEM_NOTENOUGH, "Allocate: No space left");
+            }
+        nzyxdimAlloc = nzyxdim;
     }
 
     /** Sets mmap.
@@ -871,7 +883,7 @@ public:
         {
             if (mmapOn)
             {
-                munmap(data,nzyxdim*sizeof(T));
+                munmap(data,nzyxdimAlloc*sizeof(T));
                 close(mFd);
                 remove(mapFile.c_str());
             }
@@ -879,6 +891,7 @@ public:
                 delete[] data;
         }
         data=NULL;
+        nzyxdimAlloc = 0;
     }
 
     /** Alias a multidimarray.
@@ -994,8 +1007,7 @@ public:
      */
     void resize(unsigned long int Ndim, int Zdim, int Ydim, int Xdim)
     {
-        if (Xdim == XSIZE(*this) && Ydim == YSIZE(*this) &&
-            Zdim == ZSIZE(*this) && Ndim == NSIZE(*this) && data !=NULL)
+        if (Ndim*Zdim*Ydim*Xdim == nzyxdimAlloc && data != NULL)
             return;
 
         if (Xdim <= 0 || Ydim <= 0 || Zdim <= 0 || Ndim <= 0)
@@ -1080,6 +1092,7 @@ public:
         nzyxdim = Ndim * zyxdim;
         mFd = new_mFd;
         mapFile = newMapFile;
+        nzyxdimAlloc = nzyxdim;
     }
 
     /** Resize a single 3D image
@@ -2678,7 +2691,7 @@ public:
         unsigned long int n;
         FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY_ptr(*this,n,ptr)
         {
-        	T val=*ptr;
+            T val=*ptr;
             if (val < minval)
                 minval = static_cast< double >(val);
             else if (val > maxval)
@@ -2723,7 +2736,7 @@ public:
         unsigned long int n;
         FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY_ptr(*this,n,ptr)
         {
-        	double val=static_cast< double >(*ptr);
+            double val=static_cast< double >(*ptr);
             avg += val;
             stddev += val * val;
         }
@@ -2757,8 +2770,8 @@ public:
         unsigned long int n;
         FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY_ptr(*this,n,ptr)
         {
-        	T Tval=*ptr;
-        	double val=static_cast< double >(Tval);
+            T Tval=*ptr;
+            double val=static_cast< double >(Tval);
             avg += val;
             stddev += val * val;
 
@@ -3466,8 +3479,8 @@ public:
      */
     inline void initZeros(unsigned long int Ndim, int Zdim, int Ydim, int Xdim)
     {
-    	if (xdim!=Xdim || ydim!=Ydim || zdim!=Zdim || ndim!=Ndim)
-    		resize(Ndim, Zdim,Ydim,Xdim);
+        if (xdim!=Xdim || ydim!=Ydim || zdim!=Zdim || ndim!=Ndim)
+            resize(Ndim, Zdim,Ydim,Xdim);
         memset(data,0,nzyxdim*sizeof(T));
     }
 
@@ -4407,9 +4420,9 @@ public:
     {
         if (&op1 != this)
         {
-        	if (data == NULL || !sameShape(op1))
-        		resize(op1);
-        	memcpy(data,op1.data,MULTIDIM_SIZE(op1)*sizeof(T));
+            if (data == NULL || !sameShape(op1))
+                resize(op1);
+            memcpy(data,op1.data,MULTIDIM_SIZE(op1)*sizeof(T));
         }
         return *this;
     }

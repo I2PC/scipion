@@ -203,10 +203,9 @@ int readDM3(int img_select,bool isStack=false)
     }
     else
         _nDim=1;
-    if (dataflag<0)
-    	data.setDimensions(_xDim, _yDim, 1, _nDim);
-    else
-    	data.resize(_xDim, _yDim, 1, _nDim);
+
+    data.setDimensions(_xDim, _yDim, 1, _nDim);
+
 
     unsigned long   imgStart=0;
     unsigned long   imgEnd =_nDim;
@@ -244,6 +243,7 @@ int readDM3(int img_select,bool isStack=false)
 
     offset = (unsigned long) dataHeaders[imgStart].headerSize;
     size_t pad = 0;
+    delete header;
 
     if( dataflag < 0 )
     {
@@ -259,7 +259,6 @@ int readDM3(int img_select,bool isStack=false)
     MD.write(std::cerr);
 #endif
 
-    delete header;
 
     readData(fimg, img_select, datatype, pad);
 

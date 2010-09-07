@@ -157,10 +157,7 @@ int readTIA(int img_select,bool isStack=false, double dStddev=5)
     }
 
     // Map the parameters
-    if (dataflag<0)
-        data.setDimensions(_xDim, _yDim, 1, _nDim);
-    else
-        data.resize(_xDim, _yDim, 1, _nDim);
+    data.setDimensions(_xDim, _yDim, 1, _nDim);
 
     unsigned long   imgStart=0;
     unsigned long   imgEnd =_nDim;

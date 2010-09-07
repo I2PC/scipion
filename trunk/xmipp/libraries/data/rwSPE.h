@@ -36,8 +36,8 @@
 int readSPE(int img_select,bool isStack=false)
 {
 
-    int xDim,yDim,zDim, depth;
-    unsigned long int nDim;
+    int _xDim,_yDim,_zDim;
+    unsigned long int _nDim;
 
     FILE        *fimg;
     if ( ( fimg = fopen(filename.c_str(), "r") ) == NULL )
@@ -46,22 +46,19 @@ int readSPE(int img_select,bool isStack=false)
     short int aux;
     fseek(fimg,42,SEEK_SET);
     xmippFREAD(&aux, sizeof(short int), 1, fimg, swap );
-    xDim = aux;
+    _xDim = aux;
     fseek(fimg,656,SEEK_SET);
     xmippFREAD(&aux, sizeof(short int), 1, fimg, swap );
-    yDim = aux;
+    _yDim = aux;
 
-    zDim = (int) 1;
-    nDim = (int) 1;
+    _zDim = (int) 1;
+    _nDim = (int) 1;
 
     // Map the parameters
-    if (dataflag<0)
-        data.setDimensions(xDim, yDim, zDim, nDim);
-    else
-        data.resize(xDim, yDim, zDim, nDim);
+    data.setDimensions(_xDim, _yDim, _zDim, _nDim);
 
     unsigned long   imgStart=0;
-    unsigned long   imgEnd =nDim;
+    unsigned long   imgEnd =_nDim;
     if (img_select != -1)
     {
         imgStart=img_select;

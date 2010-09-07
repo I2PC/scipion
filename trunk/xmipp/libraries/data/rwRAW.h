@@ -133,10 +133,7 @@ int readRAW(int img_select,bool isStack=false)
 
 
     // Map the parameters
-    if (dataflag<0)
     	data.setDimensions(_xDim, _yDim, _zDim, _nDim);
-    else
-    	data.resize(_xDim, _yDim, _zDim, _nDim);
 
     unsigned long   imgStart=0;
     unsigned long   imgEnd =_nDim;
@@ -182,7 +179,6 @@ int readRAW(int img_select,bool isStack=false)
         return(-1);
 
     size_t pad = 0;
-
     readData(fimg, img_select, datatype, pad);
 
     if ( !mmapOn )
