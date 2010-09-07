@@ -533,6 +533,9 @@ public:
         if ( found!=std::string::npos)
             filename   = filename.substr(0, found);
 
+        if(ext_name.contains("inf"))
+            filename = filename.without_extension();
+
         //#define DEBUG
 #ifdef DEBUG
 
@@ -608,7 +611,7 @@ public:
             writeDM3(select_img,false,mode);
         else if (ext_name.contains("ser"))
             writeTIA(select_img,false,mode);
-        else if (ext_name.contains("inf"))
+        else if (ext_name.contains("raw") || ext_name.contains("inf"))
             writeINF(select_img,false,mode);
         else if (ext_name.contains("tif") || ext_name.contains("tiff"))
             writeTIFF(select_img,isStack,mode,imParam);
