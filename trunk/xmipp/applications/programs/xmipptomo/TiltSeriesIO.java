@@ -41,20 +41,26 @@ import ij.process.ShortProcessor;
 import java.awt.image.ColorModel;
 import java.io.BufferedOutputStream;
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.DataOutputStream;
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.PrintWriter;
 import java.io.RandomAccessFile;
+import java.io.Writer;
+import java.util.Iterator;
 import java.util.Properties;
 
 /**
  * Collection of methods for handling I/O
  * - make all methods static?
  */
-public class TiltSeriesOpener {
+public class TiltSeriesIO {
 
 	public static int MRC_HEADER_SIZE = 1024;
 	private boolean resize=true;
@@ -136,7 +142,7 @@ public class TiltSeriesOpener {
 		}
 	}
 	
-	public TiltSeriesOpener(boolean resize){
+	public TiltSeriesIO(boolean resize){
 		this.resize=resize;
 	}
 	
@@ -284,8 +290,12 @@ public class TiltSeriesOpener {
 		model.lastImageLoaded();
 		
 		// read tilt angles
-		String tltFilePath=path.replace(".mrc", ".tlt");
-		readTlt(tltFilePath,model);
+		String tltFilePath=getTltPath(path);
+		try{
+			readTlt(tltFilePath,model);
+		}catch(FileNotFoundException ex){
+			// model.emptyTiltAngles(model.getNumberOfProjections());
+		}
 	}
 	
 	private void writeMRC(TomoData model){
@@ -306,7 +316,10 @@ public class TiltSeriesOpener {
 		} catch (IOException ioe) {
 			Xmipp_Tomo.debug("TiltSeriesOpener.writeMRC" + ioe);
 		}
-		// write tilt file (pending)
+		
+		// write tilt file
+		String tltFilePath=getTltPath(model.getFilePath());
+		writeTlt(tltFilePath,model);
 	}
 	
 	private ByteHeader createMRCHeader(TomoData model, boolean littleEndian){
@@ -445,6 +458,44 @@ public class TiltSeriesOpener {
 		}
 	}
 	
+	/**
+	 * .tlt syntax: one float angle per line, stored as text
+	 * @param tltFilePath
+	 * @param model
+	 * @throws java.io.IOException
+	 */
+	public void writeTlt(String tltFilePath,TomoData model) throws IllegalArgumentException{
+		if ( (tltFilePath == null) || ("".equals(tltFilePath))) {
+			throw new IllegalArgumentException("Null path");
+		}	
+		
+		File f=new File(tltFilePath);
+		
+		/* Extra checks for files that already exist, and hence are going to be "rewritten"
+		if (!f.isFile()) {
+			throw new IllegalArgumentException("Path is a directory: " + tltFilePath);
+		}
+		if (!f.canWrite()) {
+			throw new IllegalArgumentException("File cannot be written: " + tltFilePath);
+		}*/
+
+		//Writer output = new BufferedWriter(new FileWriter(f));
+		PrintWriter output=null;
+		try {
+			output=new PrintWriter(f);
+			Iterator <Float>i=model.getTiltAnglesIterator();
+			do{
+				output.println(i.next());
+			}while(i.hasNext());
+				
+		}catch (FileNotFoundException ex){
+			Xmipp_Tomo.debug("writeTlt - file not found");
+		}finally {
+			output.close();
+		}
+
+	}
+	
 	
 	// code from FileOpener - due to access modifiers restrictions...
 	private void setCalibration(ImagePlus imp,FileInfo fi,FileOpener fo) {
@@ -525,6 +576,10 @@ public class TiltSeriesOpener {
 					imp.setOpenAsHyperStack(true);
 			}
 		}
+	}
+	
+	private String getTltPath(String path){
+		return path.replace(".mrc", ".tlt");
 	}
 	
 	/************** Helper methods to convert numbers extracted from Properties ****/

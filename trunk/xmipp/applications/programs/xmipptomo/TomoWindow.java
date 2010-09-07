@@ -40,7 +40,7 @@ import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-
+import java.util.LinkedList;
 import javax.swing.BoxLayout;
 import javax.swing.JButton;
 import javax.swing.JFrame;
@@ -58,9 +58,11 @@ import javax.swing.JTextField;
  * 			DialogListener to capture GenericDialogs
  */
 /** Protocol for adding new buttons to the workflow/UI:
- *  - set the label in Buttons enum as static String, and its corresponding ImageJ command (if any)
- *  - run addButton 
- *  - update actionPerformed method
+ *  - declare the button - its label and its corresponding ImageJ command (if any), from the plugin class
+ *  - if the button runs a plugin, update the code in actionRunIjCommand()
+ *  - include it in its menu list (for example, buttonsMenuFile)
+ *  - update ActionThread.run
+ *  - set a proper enable/disable cycle along user interaction (tipically start disabled, enable it when user can click it) 
  */
 public class TomoWindow extends JFrame implements WindowListener, AdjustmentListener,MouseMotionListener,ActionListener, PropertyChangeListener,DialogListener{
 	// for serialization only - just in case
@@ -75,20 +77,55 @@ public class TomoWindow extends JFrame implements WindowListener, AdjustmentList
 	// miliseconds to wait for a Plugin dialog to display (so the dialog capture can start)
 	private static int WAIT_FOR_DIALOG=800;
 	
-	// labels of buttons and their associated commands (if any)
-	private static enum Buttons {
-		CMD_LOAD("Load",""),CMD_SAVE("Save",""),
-		CMD_GAUSSIAN("Gaussian",GaussianPlugin.COMMAND),CMD_MEDIAN("Median", MedianPlugin.COMMAND),CMD_SUB_BACKGROUND("Bandpass - substract background",LowPassPlugin.COMMAND),
-		CMD_APPLY("Apply",""),
-		CMD_PRINT_WORKFLOW("Print workflow","");
-
-		private final String label;
-		private final String imageJCmd;
-		
-		Buttons(String l,String cmd) { this.label=l;this.imageJCmd=cmd;}
-		public String label(){return label;}
-		public String imageJCmd(){return imageJCmd;}
-	};
+	// Buttons declaration
+	private static Button LOAD=new Button("Load", "",true),
+	SAVE=new Button("Save","", false),
+	DEFINE_TILT=new Button("Set tilt angles","",false),
+	GAUSSIAN=new Button("Gaussian",GaussianPlugin.COMMAND, false),
+	MEDIAN=new Button("Median", MedianPlugin.COMMAND, false),
+	SUB_BACKGROUND=new Button("Substract background",BackgroundSubstractPlugin.COMMAND, false),
+	ENHANCE_CONTRAST=new Button("Enhance contrast",ContrastEnhancePlugin.COMMAND, false),
+	APPLY=new Button("Apply","", false),
+	PRINT_WORKFLOW=new Button("Print workflow","", false);
+	
+	// Lists of buttons for each menu tab
+	private static java.util.List<Button> buttonsMenuFile = new LinkedList<Button>(){
+		{
+			add(LOAD);
+			add(SAVE);
+			add(DEFINE_TILT);
+		}
+	};	
+	
+	private static java.util.List<Button> buttonsMenuPreproc = new LinkedList<Button>(){
+		{
+			add(GAUSSIAN);
+			add(MEDIAN);
+			add(SUB_BACKGROUND);
+			add(ENHANCE_CONTRAST);
+			add(APPLY);
+		}
+	};	
+	
+	private static java.util.List<Button> buttonsMenuDebug = new LinkedList<Button>(){
+		{
+			add(PRINT_WORKFLOW);
+		}
+	};	
+	
+	// which buttons to enable after loading a file
+	private static java.util.List<Button> buttonsEnabledAfterLoad = new LinkedList<Button>(){
+		{
+			add(SAVE);
+			add(DEFINE_TILT);
+			add(GAUSSIAN);
+			add(MEDIAN);
+			add(SUB_BACKGROUND);
+			add(ENHANCE_CONTRAST);
+			add(APPLY);
+			add(PRINT_WORKFLOW);
+		}
+	};	
 	
 	// Menu labels
 	private enum Menu {
@@ -146,7 +183,7 @@ public class TomoWindow extends JFrame implements WindowListener, AdjustmentList
 		
 		public void run() {
 			try{
-				new TiltSeriesOpener(resize).read(dataModel);
+				new TiltSeriesIO(resize).read(dataModel);
 			}catch (FileNotFoundException ex){
 				Xmipp_Tomo.debug("ImportDataThread.run - " + ex.getMessage());
 			}catch (IOException ex){
@@ -172,17 +209,23 @@ public class TomoWindow extends JFrame implements WindowListener, AdjustmentList
 		
 		public void run() {
 			// select proper action method based on button's label
-			if (command.equals(Buttons.CMD_LOAD.label())){
+			if (command.equals(LOAD.label())){
 				tw.actionLoad();
-			}else if (command.equals(Buttons.CMD_GAUSSIAN.label())){
-				tw.actionRunIjCmd(Buttons.CMD_GAUSSIAN.label(), Buttons.CMD_GAUSSIAN.imageJCmd());
-			}else if (command.equals(Buttons.CMD_MEDIAN.label())){
-				tw.actionRunIjCmd(Buttons.CMD_MEDIAN.label(), Buttons.CMD_MEDIAN.imageJCmd());
-			}else if (command.equals(Buttons.CMD_SUB_BACKGROUND.label())){
-				tw.actionRunIjCmd(Buttons.CMD_SUB_BACKGROUND.label(), Buttons.CMD_SUB_BACKGROUND.imageJCmd());
-			}else if (command.equals(Buttons.CMD_APPLY.label())){
+			}else if (command.equals(SAVE.label())){
+				tw.actionSave();
+			}else if (command.equals(DEFINE_TILT.label())){
+				tw.actionSetTilt();	
+			}else if (command.equals(GAUSSIAN.label())){
+				tw.actionRunIjCmd(GAUSSIAN.label(), GAUSSIAN.imageJCmd());
+			}else if (command.equals(MEDIAN.label())){
+				tw.actionRunIjCmd(MEDIAN.label(), MEDIAN.imageJCmd());
+			}else if (command.equals(SUB_BACKGROUND.label())){
+				tw.actionRunIjCmd(SUB_BACKGROUND.label(), SUB_BACKGROUND.imageJCmd());
+			}else if (command.equals(ENHANCE_CONTRAST.label())){
+				tw.actionRunIjCmd(ENHANCE_CONTRAST.label(), ENHANCE_CONTRAST.imageJCmd());
+			}else if (command.equals(APPLY.label())){
 				tw.actionApply();
-			}else if (command.equals(Buttons.CMD_PRINT_WORKFLOW.label())){
+			}else if (command.equals(PRINT_WORKFLOW.label())){
 				Xmipp_Tomo.printWorkflow();
 			}
 		}
@@ -224,6 +267,7 @@ public class TomoWindow extends JFrame implements WindowListener, AdjustmentList
 	 * Create a window with its main panels (but no data/model available) and show it
 	 */
 	public TomoWindow(){
+		
 		// set this window as listener of general keyboard&mouse events
  		addWindowListener(this);
  		// EXIT_ON_CLOSE finishes ImageJ too...
@@ -241,11 +285,33 @@ public class TomoWindow extends JFrame implements WindowListener, AdjustmentList
 	/** Add button to a panel
 	 * @param label
 	 */
-	void addButton(String label,Container panel) {
-		Button b = new Button(label);
+	private JButton addButton(String label,Container panel) {
+		JButton b = new JButton(label);
 		b.addActionListener(this);
 		// b.addKeyListener(IJ.getInstance());
 		panel.add(b); 
+		// probably the iteration can be more efficient 
+		/* for(Button button:Button.values())
+			if(button.label().equals(label))
+				button.setButton(b); */
+		return b;
+	}
+	
+	void addButton(String label,Container panel,boolean enabled) {
+		addButton(label, panel).setEnabled(enabled);
+	}
+	
+	/*void addButton(Button button,Container panel,boolean enabled) {
+		addButton(button, panel);
+		button.setEnabled(enabled);
+	}*/
+	
+	private void addButton(Button button,Container panel) {
+		JButton b = new JButton(button.label());
+		b.addActionListener(this);
+		// b.addKeyListener(IJ.getInstance());
+		panel.add(b); 
+		button.setButton(b);
 	}
 	
 	/** 
@@ -349,27 +415,37 @@ public class TomoWindow extends JFrame implements WindowListener, AdjustmentList
 				
 	}
 	
+	/**
+	 * Add menu tabs populated with their buttons (specified in the lists at the beginning of the class)
+	 */
 	private void addMenuTabs(){
 		// File
 		// ButtonTabComponent file_tab=new ButtonTabComponent(menuPanel), preproc_tab=new ButtonTabComponent(menuPanel);
 		JPanel fileTabPanel=new JPanel(false); // false = no double buffer (flicker)
 		//menuPanel.setMnemonicAt(0, KeyEvent.VK_1);
-		addButton(Buttons.CMD_LOAD.label(),fileTabPanel);
-		addButton(Buttons.CMD_SAVE.label(),fileTabPanel);
+		for(Button b:buttonsMenuFile)
+			addButton(b,fileTabPanel);
+		/*addButton(LOAD,fileTabPanel);
+		addButton(SAVE,fileTabPanel,false);*/
 		menuPanel.addTab(Menu.FILE.toString(),fileTabPanel); // try to add the tab when it's ready (all controls inside)
 
 		// Preprocessing
 		JPanel preprocTabPanel=new JPanel();
-		addButton(Buttons.CMD_GAUSSIAN.label(),preprocTabPanel);
-		addButton(Buttons.CMD_MEDIAN.label(),preprocTabPanel);
-		addButton(Buttons.CMD_SUB_BACKGROUND.label(),preprocTabPanel);
-		addButton(Buttons.CMD_APPLY.label(),preprocTabPanel);
+		for(Button b:buttonsMenuPreproc)
+			addButton(b,preprocTabPanel);
+		/*addButton(GAUSSIAN,preprocTabPanel,false);
+		addButton(MEDIAN,preprocTabPanel,false);
+		addButton(SUB_BACKGROUND,preprocTabPanel,false);
+		addButton(ENHANCE_CONTRAST,preprocTabPanel,false);
+		addButton(APPLY,preprocTabPanel,false); */
 		menuPanel.addTab(Menu.PREPROC.toString(),preprocTabPanel);
 		
 		// Debugging
 		if(Xmipp_Tomo.TESTING == 1){
 			JPanel debugTabPanel=new JPanel();
-			addButton(Buttons.CMD_PRINT_WORKFLOW.label(),debugTabPanel);
+			for(Button b:buttonsMenuDebug)
+				addButton(b,debugTabPanel);
+			// addButton(PRINT_WORKFLOW,debugTabPanel,false);
 			menuPanel.addTab(Menu.DEBUG.toString(),debugTabPanel);
 		}
 	}
@@ -462,6 +538,17 @@ public class TomoWindow extends JFrame implements WindowListener, AdjustmentList
 		addView();
 		addControls();
 		addUserAction(new UserAction(getWindowId(),"Load",getModel().getFileName()));
+		
+		// enable buttons
+		for(Button b: buttonsEnabledAfterLoad)
+			b.setEnabled(true);
+	}
+	
+	private void actionSave(){
+		String path= dialogSave();
+		if((path == null) || ("".equals(path)))
+			return;
+		saveFile(getModel(),path);
 	}
 	
 	private void actionRunIjCmd(String label,String cmd){
@@ -473,18 +560,25 @@ public class TomoWindow extends JFrame implements WindowListener, AdjustmentList
 		
 		setChangeSaved(false);
 		
-		if(cmd.equals(Buttons.CMD_GAUSSIAN.imageJCmd()))
+		if(cmd.equals(GAUSSIAN.imageJCmd()))
 			setPlugin(new GaussianPlugin());
-		else if(cmd.equals(Buttons.CMD_MEDIAN.imageJCmd()))
+		else if(cmd.equals(MEDIAN.imageJCmd()))
 			setPlugin(new MedianPlugin());
-		else if(cmd.equals(Buttons.CMD_SUB_BACKGROUND.imageJCmd()))
-			setPlugin(new LowPassPlugin());
+		else if(cmd.equals(SUB_BACKGROUND.imageJCmd()))
+			setPlugin(new BackgroundSubstractPlugin());
+		else if(cmd.equals(ENHANCE_CONTRAST.imageJCmd()))
+			setPlugin(new ContrastEnhancePlugin());
 		
 		(new Thread(new DialogCaptureThread(this))).start();
 		
 		WindowManager.setTempCurrentImage(getModel().getImage());
-		IJ.run(cmd);
-
+		try{
+			IJ.run(cmd);
+		}catch (Exception ex){
+			//catch java.lang.RuntimeException: Macro canceled
+			Xmipp_Tomo.debug("actionRunIjCmd - action canceled");
+			return;
+		}
 		refreshImageCanvas();
 		
 		setStatus("Done");
@@ -530,6 +624,25 @@ public class TomoWindow extends JFrame implements WindowListener, AdjustmentList
 		
 		// write 
 		saveFile(originalModel, path);
+	}
+	
+	private void actionSetTilt(){
+		GenericDialog gd=new GenericDialog("Tilt angles");
+		gd.addMessage("Please fill either start and end angles, or start and step");
+		gd.addNumericField("Start angle", 0.0, 1);
+		gd.addNumericField("End angle", 0.0, 1);
+		gd.addNumericField("Step", 0.0, 1);
+		gd.showDialog();
+		if (gd.wasCanceled())
+			return;
+		double start=gd.getNextNumber();
+		double end=gd.getNextNumber();
+		double step=gd.getNextNumber();
+		if(step == 0.0)
+			// use start & end
+			getModel().setTiltAngles(start, end);
+		else
+			getModel().setTiltAnglesStep(start, step);
 	}
 	
 	private void captureDialog(){
@@ -756,10 +869,15 @@ public class TomoWindow extends JFrame implements WindowListener, AdjustmentList
         	return Xmipp_Tomo.ExitValues.NO;
 	}
 	
+	private void alert(String message){
+		IJ.error("Xmipp_tomo", message);
+	}
+	
+
 	private void saveFile(TomoData model,String path){
 		setStatus("Saving...");
 		model.setFile(path);
-		new TiltSeriesOpener(false).write(model);
+		new TiltSeriesIO(false).write(model);
 		setStatus("Done");
 		setChangeSaved(true);
 	}

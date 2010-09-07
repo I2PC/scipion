@@ -31,6 +31,7 @@ import ij.process.ImageProcessor;
 
 import java.awt.Component;
 import java.io.File;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Vector;
 import java.util.concurrent.Semaphore;
@@ -52,7 +53,7 @@ public class TomoData extends Component {
 
 	
 	// maybe it's better to move currentProjection to the viewer - in case different views can show different slices
-	private int currentProjection=0;
+	private int currentProjection=1;
 	
 	private boolean resized=false;
 	
@@ -65,7 +66,7 @@ public class TomoData extends Component {
 	private ImagePlus imp=null;
 
 	// by now use a vector to store the angles
-	java.util.List <Float> tiltAngles=new Vector<Float> (); //imp.getStackSize());
+	java.util.List <Float> tiltAngles=null;
 	
 	// This class also saves the models of the texfields of its views, one Document per textfield
 	private Document tiltTextModel=null;
@@ -131,6 +132,10 @@ public class TomoData extends Component {
 		return tiltAngles;
 	}
 	
+	public Iterator<Float> getTiltAnglesIterator(){
+		return tiltAngles.iterator();
+	}
+	
 	/**
 	 * @return null if tilt is undefined, tilt value otherwise
 	 * 
@@ -149,23 +154,78 @@ public class TomoData extends Component {
 	
 	// tiltangles list -> 0..N-1
 	private Float getTiltAngle(int i){
+		if(tiltAngles == null)
+			return null;
 		return getTiltAngles().get(i-1);
 	}
 	
-	// tiltangles list -> 0..N-1
+	
+	/**
+	 * @param i angle index - from 1 to numberOfProjections
+	 * @param t tilt angle
+	 */
 	private void setTiltAngle(int i, float t){
+		// tiltangles list -> 0..N-1
+		
+		// set() below needs a non-empty vector (size > 0)
+		if(tiltAngles == null){
+			Vector <Float> v = new Vector<Float>();
+			v.setSize(getNumberOfProjections());
+			tiltAngles=v;
+		}
+			
 		getTiltAngles().set(i-1, new Float(t));
+		if(i==getCurrentProjection())
+			setTiltText(t);
+	}
+	
+	public void setTiltAnglesStep(double start, double step){
+		float t=(float)start;
+		for(int i=1;i<=getNumberOfProjections();i++){
+			setTiltAngle(i, (float)Math.ceil(t));
+			t+=step;
+		}
+		// setCurrentTilt(getCurrentTilt());
+	}
+	
+	public void setTiltAngles(double start, double end){
+		double step= (Math.abs(end-start) / (getNumberOfProjections() - 1));
+		setTiltAnglesStep(start, step);
+	}
+	
+	/**
+	 * See if the new tilt angle series fits the number of projections 
+	 * @param start
+	 * @param end
+	 * @param step
+	 */
+	public boolean checkTiltAngles(double start,double end, double step){
+		int seriesCount=(int) (Math.abs(end-start) / step);
+		if (seriesCount != getNumberOfProjections())
+			return false;
+		return true;
 	}
 	
 	public void setCurrentTilt(float t){
 		setTiltAngle(getCurrentProjection(),t);
 	}
+
 	
 	// method for loading the angles in sequence (it assumes an implicit order) 
 	public void addTiltAngle(Float t){
-		tiltAngles.add(t);
+		// add() below needs an empty vector
+		if(tiltAngles == null)
+			tiltAngles = new Vector<Float>();
+			
+		getTiltAngles().add(t);
+		if(tiltAngles.size() == getCurrentProjection())
+			setTiltText(t);
 	}
 	
+	// prepare tilt angles array for later manual setting
+	/* public void emptyTiltAngles(int count){
+		tiltAngles=new Vector<Float> (count);
+	}*/
 	
 	// there may be no tilts defined - change tilt to Float (so it can handle nulls)
 	private float getInitialTilt(){
