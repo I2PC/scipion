@@ -54,27 +54,27 @@ XmippProgram::~XmippProgram()
 
 void XmippProgram::defineParams()
 {
-  REPORT_ERROR(ERR_PROG_NOTDEF, "function 'defineParams'");
+    REPORT_ERROR(ERR_PROG_NOTDEF, "function 'defineParams'");
 }
 
 void XmippProgram::readParams()
 {
-  REPORT_ERROR(ERR_PROG_NOTDEF, "function 'readParams'");
+    REPORT_ERROR(ERR_PROG_NOTDEF, "function 'readParams'");
 }
 
 void XmippProgram::read(int argc, char ** argv)
 {
-  if (progLexer == NULL || progDef == NULL)
-    init();
+    if (progLexer == NULL || progDef == NULL)
+        init();
 
-  if (argc == 1)
-    usage();
+    if (argc == 1)
+        usage();
 
     try
     {
-      //TODO: Check if the command line is correct
-      progDef->read(argc, argv);
-      //TODO: Check if only requested help message
+        //TODO: Check if the command line is correct
+        progDef->read(argc, argv);
+        //TODO: Check if only requested help message
         this->readParams();
 
     }
@@ -93,7 +93,17 @@ void XmippProgram::addParamsLine(const char * line)
 
 const char * XmippProgram::getParam(const char * param, int arg)
 {
-  return progDef->getParam(param, arg);
+    return progDef->getParam(param, arg);
+}
+
+int XmippProgram::getIntParam(const char * param, int arg)
+{
+    return textToInteger(progDef->getParam(param, arg));
+}
+
+double XmippProgram::getDoubleParam(const char * param, int arg)
+{
+    return textToFloat(progDef->getParam(param, arg));
 }
 
 const char * XmippProgram::name()
@@ -103,14 +113,14 @@ const char * XmippProgram::name()
 
 void XmippProgram::usage()
 {
-  ConsolePrinter cp;
-  cp.printProgram(*progDef);
-  exit(1);
+    ConsolePrinter cp;
+    cp.printProgram(*progDef);
+    exit(1);
 }
 
 void XmippProgram::extendedUsage()
 {
-  ConsolePrinter cp;
-  cp.printProgram(*progDef, 1);
-  exit(1);
+    ConsolePrinter cp;
+    cp.printProgram(*progDef, 1);
+    exit(1);
 }

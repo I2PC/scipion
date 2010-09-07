@@ -28,6 +28,7 @@
 
 #include "argsparser.h"
 #include "error.h"
+#include "strings.h"
 
 /** This class represent an Xmipp Program.
  * It have some of the basic functionalities of
@@ -58,6 +59,8 @@ protected:
 
   /** Get the argument of this param, first start at 0 position */
   const char * getParam(const char * param, int arg = 0);
+  int getIntParam(const char * param, int arg = 0);
+  double getDoubleParam(const char * param, int arg = 0);
 
 public:
   /** @name Public common functions
