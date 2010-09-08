@@ -14,6 +14,7 @@ import javax.swing.ImageIcon;
 import javax.swing.JLabel;
 import javax.swing.JTable;
 import javax.swing.UIManager;
+import javax.swing.border.BevelBorder;
 import javax.swing.border.Border;
 import javax.swing.table.TableCellRenderer;
 
@@ -23,8 +24,14 @@ import javax.swing.table.TableCellRenderer;
  */
 public class ImagesTableRenderer extends JLabel implements TableCellRenderer {
 
+    protected final static Border BORDER_ENABLED = BorderFactory.createBevelBorder(BevelBorder.RAISED);
+    protected final static Border BORDER_DISABLED = null;//BorderFactory.createBevelBorder(EtchedBorder.LOWERED);
     protected final static Border BORDER_SELECTED = BorderFactory.createLineBorder(Color.RED, 1);
     protected final static Border BORDER_FOCUSED = BorderFactory.createLineBorder(Color.RED, 3);
+    protected final static Border BORDER_ENABLED_SELECTED = BorderFactory.createCompoundBorder(BORDER_ENABLED, BORDER_SELECTED);
+    protected final static Border BORDER_ENABLED_FOCUSED = BorderFactory.createCompoundBorder(BORDER_ENABLED, BORDER_FOCUSED);
+    protected final static Border BORDER_DISABLED_SELECTED = BorderFactory.createCompoundBorder(BORDER_DISABLED, BORDER_SELECTED);
+    protected final static Border BORDER_DISABLED_FOCUSED = BorderFactory.createCompoundBorder(BORDER_DISABLED, BORDER_FOCUSED);
     protected final static Color BACKGROUND = UIManager.getColor("Table.background");
     protected final static Color BACKGROUND_SELECTED = UIManager.getColor("Table.selectionBackground");
     protected final static Color FOREGROUND = UIManager.getColor("Table.foreground");
@@ -66,20 +73,24 @@ public class ImagesTableRenderer extends JLabel implements TableCellRenderer {
                 setText(null);
             }
 
-            if (item.isSelected()) {    // If is selected...
-                if (hasFocus) {    // ...and focused as well.
-                    setBorder(BORDER_FOCUSED);
-                    setBackground(BACKGROUND_SELECTED);
-                    setForeground(FOREGROUND_SELECTED);
-                } else {    // ...otherwise.
-                    setBorder(BORDER_SELECTED);
-                    setBackground(BACKGROUND_SELECTED);
-                    setForeground(FOREGROUND_SELECTED);
+            if (item.enabled) {
+                if (item.selected) {
+                    setBorder(BORDER_ENABLED_SELECTED);
+                } else if (hasFocus) {
+                    setBorder(BORDER_ENABLED_FOCUSED);
+                } else {
+                    setBorder(BORDER_ENABLED);
                 }
             } else {
-                setBorder(null);
-                setBackground(BACKGROUND);
-                setForeground(FOREGROUND);
+                setIcon(ICONS_MANAGER.DISABLED_ITEM);
+
+                if (item.selected) {
+                    setBorder(BORDER_DISABLED_SELECTED);
+                } else if (hasFocus) {
+                    setBorder(BORDER_DISABLED_FOCUSED);
+                } else {
+                    setBorder(BORDER_DISABLED);
+                }
             }
         } else {
             setIcon(null);

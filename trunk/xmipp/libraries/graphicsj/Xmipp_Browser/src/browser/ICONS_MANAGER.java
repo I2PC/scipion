@@ -26,6 +26,7 @@ public class ICONS_MANAGER {
     public final static String PATH_IMAGEJ_FILE_TYPE = PATH_ICONS + "ij-file.png";
     public final static String PATH_IMAGEJ_XMIPP_SELFILE_TYPE = PATH_ICONS + "selfile.png";
     public final static String PATH_MISSING_ITEM = PATH_ICONS + "missing.png";
+    public final static String PATH_DISABLED_ITEM = PATH_ICONS + "disabled.png";
     public static ImageIcon FILTERING_ALERT;
     public static ImageIcon PARENT_DIRECTORY;
     public static ImageIcon REFRESH_DIRECTORY;
@@ -35,6 +36,7 @@ public class ICONS_MANAGER {
     public static ImageIcon XMIPP_SELFILE_TYPE;
     public static ImageIcon UNKNOWN_FILE_TYPE;
     public static ImageIcon MISSING_ITEM;
+    public static ImageIcon DISABLED_ITEM;
 
     public ICONS_MANAGER() {
         FILTERING_ALERT = new ImageIcon(getClass().getResource(PATH_FILTERING_ALERT));
@@ -46,5 +48,6 @@ public class ICONS_MANAGER {
         XMIPP_SELFILE_TYPE = new ImageIcon(getClass().getResource(PATH_IMAGEJ_XMIPP_SELFILE_TYPE));
         UNKNOWN_FILE_TYPE = new ImageIcon(getClass().getResource(PATH_UNKNOWN_FILE_TYPE));
         MISSING_ITEM = new ImageIcon(getClass().getResource(PATH_MISSING_ITEM));
+        DISABLED_ITEM = new ImageIcon(getClass().getResource(PATH_DISABLED_ITEM));
     }
 }

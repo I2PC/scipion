@@ -17,7 +17,8 @@ import xmipp.Spider_Reader;
  */
 public class TableImageItem extends ImageItem {
 
-    protected boolean selected = false;
+    public boolean enabled = true;
+    public boolean selected = false;
     protected double zoom = 1.0;
     protected boolean normalized = false;
     protected ImagesTableModel imagesTableModel;
@@ -107,14 +108,6 @@ public class TableImageItem extends ImageItem {
         }
 
         return ip;
-    }
-
-    public void setSelected(boolean selected) {
-        this.selected = selected;
-    }
-
-    public boolean isSelected() {
-        return selected;
     }
 
     public int getThumbnailWidth() {

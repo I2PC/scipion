@@ -125,7 +125,7 @@ public class ImagesTableModel extends AbstractTableModel {
         TableImageItem item = (TableImageItem) getValueAt(row, col);
 
         if (item != null) {
-            item.setSelected(!item.isSelected());
+            item.selected = !item.selected;
 
             if (selectedItems.contains(item)) {
                 selectedItems.remove(item);
@@ -139,8 +139,21 @@ public class ImagesTableModel extends AbstractTableModel {
         return data;
     }
 
-    public Vector<TableImageItem> getSelectedItems() {
+    public Vector<TableImageItem> getAllSelectedItems() {
         return selectedItems;
+    }
+
+    public Vector<TableImageItem> getSelectedItems() {
+        Vector<TableImageItem> enabledItems = new Vector<TableImageItem>();
+
+        for (int i = 0; i < selectedItems.size(); i++) {
+            TableImageItem tableImageItem = selectedItems.elementAt(i);
+            if (tableImageItem.enabled) {
+                enabledItems.add(tableImageItem);
+            }
+        }
+
+        return enabledItems;
     }
 
     public double getMin() {
@@ -156,8 +169,9 @@ public class ImagesTableModel extends AbstractTableModel {
     public void setSelected(int index) {
         clearSelection();
 
-        data.elementAt(index).setSelected(true);
-        selectedItems.add(data.elementAt(index));
+        TableImageItem item = data.elementAt(index);
+        item.selected = true;
+        selectedItems.add(item);
     }
 
     public void selectAll() {
@@ -166,7 +180,7 @@ public class ImagesTableModel extends AbstractTableModel {
         for (int i = 0; i < getSize(); i++) {
             TableImageItem item = data.elementAt(i);
 
-            item.setSelected(true);
+            item.selected = true;
             selectedItems.add(item);
         }
     }
@@ -181,7 +195,7 @@ public class ImagesTableModel extends AbstractTableModel {
 
     public void clearSelection() {
         for (int i = 0; i < selectedItems.size(); i++) {
-            selectedItems.elementAt(i).setSelected(false);
+            selectedItems.elementAt(i).selected = false;
         }
 
         selectedItems.clear();

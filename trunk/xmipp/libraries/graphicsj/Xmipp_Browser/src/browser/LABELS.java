@@ -85,6 +85,13 @@ public class LABELS {
     public final static String LABEL_HEIGHT = "Height: ";
     public final static String LABEL_NSLICES = "Slices: ";
     public final static String LABEL_LOAD_PREVIEW = "Load preview";
+    public final static String LABEL_TABLE_DISABLE = "Disable";
+    public final static String LABEL_TABLE_ENABLE = "Enable";
+    public final static String LABEL_TABLE_ENABLE_ALL = "Enable All";
+    public final static String LABEL_TABLE_DISABLE_ALL = "Disable All";
+    public final static String LABEL_TABLE_SAVE_AS_IMAGES = "Save as images";
+    public final static String LABEL_TABLE_SAVE_AS_STACK = "Save as stack";
+    public final static String LABEL_TABLE_SAVE_AS_SELFILE = "Save as selfile";
     /**
      * Labels for images panel
      */
@@ -107,5 +114,5 @@ public class LABELS {
     public final static String MESSAGE_MEMORY_ERROR(long fileSize, long maxMemory) {
         return "File size (" + FileBrowser.getFileSizeString(fileSize) + ") is bigger than available memory (" + FileBrowser.getFileSizeString(maxMemory) + ")";
     }
-    public final static String MESSAGE_NO_ITEMS_SELECTED = "No items selected";
+    public final static String MESSAGE_NO_ITEMS_SELECTED = "No items selected (or not enabled)";
 }

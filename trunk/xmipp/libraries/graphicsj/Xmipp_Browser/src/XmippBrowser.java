@@ -50,10 +50,6 @@ public class XmippBrowser implements PlugIn {
             // "Macro.getOptions()" used when called from a run("command", arg) macro function.
             //String argsList[] = processArgs(Macro.getOptions());
 
-            /*for (int i = 0; i < argsList.length; i++) {
-            System.out.println(i + ": " + argsList[i]);
-            }*/
-
             work_dir = Macro.getOptions().trim();
             //System.out.println("[" + work_dir + "]");
 

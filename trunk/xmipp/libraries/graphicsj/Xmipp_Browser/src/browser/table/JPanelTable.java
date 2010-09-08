@@ -16,13 +16,20 @@ import browser.imageitems.FileImageItem;
 import browser.imageitems.ImageItem;
 import browser.imageitems.SelFileItem;
 import browser.windows.ImagesWindowFactory;
+import ij.IJ;
 import ij.ImagePlus;
+import ij.ImageStack;
 import java.awt.Dimension;
 import java.awt.Rectangle;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.util.Vector;
+import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
+import javax.swing.JPopupMenu;
+import javax.swing.JSeparator;
 import javax.swing.ListSelectionModel;
 
 /**
@@ -35,6 +42,15 @@ public class JPanelTable extends javax.swing.JPanel {
     protected ImagesTableRenderer tableRenderer;
     protected ImagesTableColumnModel columnModel;
     protected final static int CACHE_CONST = 2;
+    protected JPopupMenu jPopupMenu = new JPopupMenu();
+    protected JMenuItem jmiEnable = new JMenuItem(LABELS.LABEL_TABLE_ENABLE);
+    protected JMenuItem jmiDisable = new JMenuItem(LABELS.LABEL_TABLE_DISABLE);
+    protected JMenuItem jmiEnableAll = new JMenuItem(LABELS.LABEL_TABLE_ENABLE_ALL);
+    protected JMenuItem jmiDisableAll = new JMenuItem(LABELS.LABEL_TABLE_DISABLE_ALL);
+    protected JMenuItem jmiSaveAsImages = new JMenuItem(LABELS.LABEL_TABLE_SAVE_AS_IMAGES);
+    protected JMenuItem jmiSaveAsStack = new JMenuItem(LABELS.LABEL_TABLE_SAVE_AS_STACK);
+    protected JMenuItem jmiSaveAsSelfile = new JMenuItem(LABELS.LABEL_TABLE_SAVE_AS_SELFILE);
+    private Vector<TableImageItem> selectedItems;    // Currently selected items (used when right-click)
 
     /** Creates new form JPanelTable */
     public JPanelTable() {
@@ -56,15 +72,134 @@ public class JPanelTable extends javax.swing.JPanel {
 
         jtImages.setSelectionMode(ListSelectionModel.SINGLE_INTERVAL_SELECTION);
 
+        jPopupMenu.add(jmiEnable);
+        jPopupMenu.add(jmiDisable);
+        jPopupMenu.add(new JSeparator());
+        jPopupMenu.add(jmiDisableAll);
+        jPopupMenu.add(jmiEnableAll);
+        jPopupMenu.add(new JSeparator());
+        jPopupMenu.add(new JSeparator());
+        jPopupMenu.add(jmiSaveAsImages);
+        jPopupMenu.add(jmiSaveAsStack);
+        jPopupMenu.add(jmiSaveAsSelfile);
+
+        jmiEnable.addActionListener(new ActionListener() {
+
+            public void actionPerformed(ActionEvent e) {
+                enableItems(true, selectedItems);
+            }
+        });
+
+        jmiDisable.addActionListener(new ActionListener() {
+
+            public void actionPerformed(ActionEvent e) {
+                enableItems(false, selectedItems);
+            }
+        });
+
+        jmiEnableAll.addActionListener(new ActionListener() {
+
+            public void actionPerformed(ActionEvent e) {
+                enableItems(true, tableModel.getItems());
+            }
+        });
+
+        jmiDisableAll.addActionListener(new ActionListener() {
+
+            public void actionPerformed(ActionEvent e) {
+                enableItems(false, tableModel.getItems());
+            }
+        });
+
+        jmiSaveAsImages.addActionListener(new ActionListener() {
+
+            public void actionPerformed(ActionEvent e) {
+                selectedItems = tableModel.getSelectedItems();
+
+                if (selectedItems.size() > 0) {
+                    for (int i = 0; i < selectedItems.size(); i++) {
+                        IJ.run(selectedItems.elementAt(i).getImagePlus(), "Spider writer", "");
+                    }
+                } else {
+                    JOptionPane.showMessageDialog(getParent(), LABELS.MESSAGE_NO_ITEMS_SELECTED);
+                }
+            }
+        });
+
+        jmiSaveAsStack.addActionListener(new ActionListener() {
+
+            public void actionPerformed(ActionEvent e) {
+                selectedItems = tableModel.getSelectedItems();
+
+                if (selectedItems != null) {
+                    if (selectedItems.size() > 0) {
+                        int w = selectedItems.elementAt(0).getImagePlus().getWidth();
+                        int h = selectedItems.elementAt(0).getImagePlus().getHeight();
+                        ImageStack stack = new ImageStack(w, h, selectedItems.size());
+
+                        for (int i = 0; i < selectedItems.size(); i++) {
+                            ImagePlus ip = selectedItems.elementAt(i).getImagePlus();
+                            stack.setPixels(ip.getProcessor().getPixels(), i + 1);
+                        }
+
+                        ImagePlus ip = new ImagePlus("", stack);
+                        IJ.run(ip, "Spider writer", "");
+                    } else {
+                        JOptionPane.showMessageDialog(getParent(), LABELS.MESSAGE_NO_ITEMS_SELECTED);
+                    }
+                }
+            }
+        });
+
+        jmiSaveAsSelfile.addActionListener(new ActionListener() {
+
+            public void actionPerformed(ActionEvent e) {
+                selectedItems = tableModel.getSelectedItems();
+
+                if (selectedItems != null) {
+                    if (selectedItems.size() > 0) {
+                        int w = selectedItems.elementAt(0).getImagePlus().getWidth();
+                        int h = selectedItems.elementAt(0).getImagePlus().getHeight();
+                        ImageStack stack = new ImageStack(w, h, selectedItems.size());
+
+                        for (int i = 0; i < selectedItems.size(); i++) {
+                            ImagePlus ip = selectedItems.elementAt(i).getImagePlus();
+                            stack.setPixels(ip.getProcessor().getPixels(), i + 1);
+                        }
+
+                        ImagePlus ip = new ImagePlus("", stack);
+                        IJ.run(ip, "Sel writer", "");
+                    } else {
+                        JOptionPane.showMessageDialog(getParent(), LABELS.MESSAGE_NO_ITEMS_SELECTED);
+                    }
+                }
+            }
+        });
+
         jtImages.addMouseListener(new MouseAdapter() {
 
             @Override
             public void mouseClicked(MouseEvent e) {
-                if (e.getClickCount() > 1) {
-                    openSelection();
+                if (e.getButton() == MouseEvent.BUTTON1) {  // Left click.
+                    if (e.getClickCount() > 1) {
+                        openSelection();
+                    }
+                } else if (e.getButton() == MouseEvent.BUTTON3) {  // Right click.
+                    selectedItems = tableModel.getAllSelectedItems();
+
+                    if (selectedItems != null) {
+                        jPopupMenu.show(e.getComponent(), e.getX(), e.getY());
+                    }
                 }
             }
         });
+    }
+
+    private void enableItems(boolean enable, Vector<TableImageItem> items) {
+        for (int i = 0; i < items.size(); i++) {
+            items.elementAt(i).enabled = enable;
+        }
+        jtImages.repaint();
     }
 
     private void openSelection() {
@@ -293,16 +428,18 @@ public class JPanelTable extends javax.swing.JPanel {
     }// </editor-fold>//GEN-END:initComponents
 
     private void jtImagesMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_jtImagesMouseClicked
-        int col = jtImages.columnAtPoint(evt.getPoint());
-        int row = jtImages.rowAtPoint(evt.getPoint());
+        if (evt.getButton() != MouseEvent.BUTTON2) {
+            int col = jtImages.columnAtPoint(evt.getPoint());
+            int row = jtImages.rowAtPoint(evt.getPoint());
 
-        // Ctrl adds items to selection, otherwise previous ones are removed.
-        if (!evt.isControlDown()) {
-            tableModel.clearSelection();
+            // Ctrl adds items to selection, otherwise previous ones are removed.
+            if (!evt.isControlDown()) {
+                tableModel.clearSelection();
+            }
+
+            tableModel.toggleSelected(row, col);
+            jtImages.repaint();
         }
-
-        tableModel.toggleSelected(row, col);
-        jtImages.repaint();
     }//GEN-LAST:event_jtImagesMouseClicked
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JScrollPane jspTable;
