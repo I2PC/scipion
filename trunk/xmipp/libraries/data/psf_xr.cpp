@@ -26,7 +26,8 @@
 #include "psf_xr.h"
 #include "args.h"
 #include "fft.h"
-#include "mask.h"
+//#include "mask.h"
+
 
 /* Read -------------------------------------------------------------------- */
 void XRayPSF::read(const FileName &fn)
@@ -381,17 +382,92 @@ void lensPD(MultidimArray<std::complex<double> > &Im, double Flens, double lambd
 
     }
 }
+
+//Some global variables
+Mutex mutex, taskMutex;
+Barrier * barrier;
+ParallelTaskDistributor * td;
+
+int numberOfThreads = 1;
+pthread_t * th_structs;
+int * th_ids;
+int threadTask = -1;
+long long int R = 100000;
+long long int blockSize = 1000;
+long long int totalCounter = 0;
+
+long long int assignedJobs = 0;
+long long int &numberOfJobs = R;
+
+
+
 /// TODO: func description
 void project_xr(XRayPSF &psf, Image<double> &vol, Image<double> &imOut, int idxSlice)
 {
 
-    // psf.adjustParam(vol);
+    std::vector<MDLabel> labels2 = imOut.MD.getActiveLabels() ;
 
+
+    XrayThread *dataThread = new XrayThread;
+
+    dataThread->psf= psf;
+    dataThread->vol = &vol;
+    dataThread->imOut = &imOut;
+
+    std::vector<MDLabel> labels3 = dataThread->imOut->MD.getActiveLabels() ;
+
+    numberOfThreads = 2;
+    R = vol().zdim;
+    blockSize = 20;
+
+    //Create the job handler to distribute jobs
+    td = new ThreadTaskDistributor(R, blockSize);
+    barrier = new Barrier(numberOfThreads-1);
+    //Create threads to start working
+    //createThreads();
+    ThreadManager * thMgr = new ThreadManager(numberOfThreads,(void*) dataThread);
+    thMgr->run(thread_project_xr);
+    //Terminate threads and free memory
+    delete td;
+    delete thMgr;
+
+
+
+}
+
+
+void thread_project_xr(ThreadArgument &thArg)
+{
+
+    int thread_id = thArg.thread_id;
+
+
+    XrayThread *dataThread = (XrayThread*) thArg.workClass;
+    XRayPSF &psf = dataThread->psf;
+    Image<double> &vol =  *(dataThread->vol);
+    Image<double> &imOutGlobal = *(dataThread->imOut);
+
+    long long int first = -1, last = -1, priorLast = 0;
+
+
+    Image<double> imOut;
     imOut() = MultidimArray<double> (psf.Niy, psf.Nix);
     imOut().initZeros();
     imOut().setXmippOrigin();
 
-    MultidimArray<double> imTemp(psf.Noy, psf.Nox), intExp(psf.Noy, psf.Nox), imTempSc(imOut()), *imTempP;
+    if (thread_id==0)
+    {
+        vol().setXmippOrigin();
+        imOutGlobal().resize(psf.Niy, psf.Nix);
+        imOutGlobal().initZeros();
+        imOutGlobal().setXmippOrigin();
+    }
+
+    barrier->wait();
+
+
+
+    MultidimArray<double> imTemp(psf.Noy, psf.Nox),intExp(psf.Noy, psf.Nox),imTempSc(imOut()),*imTempP;
     intExp.initZeros();
     imTemp.initZeros();
     imTempSc.initZeros();
@@ -399,106 +475,140 @@ void project_xr(XRayPSF &psf, Image<double> &vol, Image<double> &imOut, int idxS
     imTemp.setXmippOrigin();
     imTempSc.setXmippOrigin();
 
-    vol().setXmippOrigin();
 
-    //#define DEBUG
-#ifdef DEBUG
 
-    Image<double> _Im(imOut);
-#endif
-
-        init_progress_bar(vol().zdim-1);
-
-    for (int k=((vol()).zinit); k<=((vol()).zinit + (vol()).zdim - 1); k++)
+    while (td->getTasks(first, last))
     {
-        FOR_ALL_ELEMENTS_IN_ARRAY2D(intExp)
+        std::cerr << "th" << thread_id << ": working from " << first << " to " << last <<std::endl;
+
+
+//        if (first>300)
         {
-            intExp(i, j) = intExp(i, j) + vol(k, i, j);
-            imTemp(i, j) = (exp(-intExp(i,j)*psf.dzo))*vol(k,i,j)*psf.dzo;
-            //            imTemp(i, j) = 1./(exp(intExp(i,j)))*vol(k,i,j);
-        }
+            for (int k=(vol()).zinit + priorLast; k<=(vol()).zinit + first - 1 ; k++)
+            {
+                FOR_ALL_ELEMENTS_IN_ARRAY2D(intExp)
+                intExp(i, j) = intExp(i, j) + vol(k, i, j);
+            }
+
+
+            //#define DEBUG
 #ifdef DEBUG
-        FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY2D(imTemp)
-        dAij(_Im(),i,j) = dAij(imTemp,i,j);
-        _Im.write("psfxr-imTemp.spi");
+
+            Image<double> _Im(imOut);
 #endif
 
-        psf.Z = psf.Zo + psf.DeltaZo - k*psf.dzo + imOut.Zoff();
+            //        init_progress_bar(vol().zdim-1);
+
+            for (int k=((vol()).zinit + first); k<=((vol()).zinit + last - 1); k++)
+            {
+                FOR_ALL_ELEMENTS_IN_ARRAY2D(intExp)
+                {
+                    intExp(i, j) = intExp(i, j) + vol(k, i, j);
+                    imTemp(i, j) = (exp(-intExp(i,j)*psf.dzo))*vol(k,i,j)*psf.dzo;
+                    //            imTemp(i, j) = 1./(exp(intExp(i,j)))*vol(k,i,j);
+                }
+#ifdef DEBUG
+                FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY2D(imTemp)
+                dAij(_Im(),i,j) = dAij(imTemp,i,j);
+                _Im.write("psfxr-imTemp.spi");
+#endif
+
+                psf.Z = psf.Zo + psf.DeltaZo - k*psf.dzo + imOut.Zoff();
+
+                switch (psf.AdjustType)
+                {
+                case PSFXR_INT:
+                    imTempP = &imTempSc;
+                    scaleToSize(LINEAR,*imTempP,imTemp,psf.Nix,psf.Niy);
+                    //          imTemp.scaleToSize(psf.Niy, psf.Nix, *imTempP);
+                    break;
+
+                case PSFXR_STD:
+                    imTempP = &imTemp;
+                    break;
+
+                case PSFXR_ZPAD:
+                    //    (*imTempSc).resize(imTemp);
+                    imTempSc = imTemp;
+                    imTempSc.window(-ROUND(psf.Niy/2)+1,-ROUND(psf.Nix/2)+1,ROUND(psf.Niy/2)-1,ROUND(psf.Nix/2)-1);
+                    imTempP = &imTempSc;
+                    break;
+                }
+
+                psf.generateOTF(*imTempP);
+
+
+
+
+#ifdef DEBUG
+
+                _Im().resize(intExp);
+                FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY2D(intExp)
+                dAij(_Im(),i,j) = dAij(intExp,i,j);
+                _Im.write("psfxr-intExp.spi");
+                _Im().resize(*imTempP);
+                FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY2D(*imTempP)
+                dAij(_Im(),i,j) = dAij(*imTempP,i,j);
+                _Im.write("psfxr-imTempEsc.spi");
+#endif
+
+                psf.applyOTF(*imTempP);
+
+#ifdef DEBUG
+
+                FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY2D(*imTempP)
+                dAij(_Im(),i,j) = dAij(*imTempP,i,j);
+                _Im.write("psfxr-imTempEsc2.spi");
+#endif
+
+                FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY2D(*imTempP)
+                dAij(imOut(),i,j) += dAij(*imTempP,i,j);
+
+                //        imOut.write("psfxr-imout.spi");
+
+                //        if (idxSlice > -1)
+                //            progress_bar((idxSlice - 1)*vol().zdim + k - vol().zinit);
+            }
+        }
+        priorLast = last;
+    }
+
+
+
+
+    //Lock for update the total counter
+    mutex.lock();
+    FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY2D(*imTempP)
+    dAij(imOutGlobal(),i,j) += dAij(imOut(),i,j);
+    mutex.unlock();
+
+
+    if (thread_id==0)
+    {
+        imOutGlobal() = 1-imOutGlobal();
+
+        //            imOut.write("psfxr-imout.spi");
 
         switch (psf.AdjustType)
         {
         case PSFXR_INT:
-            imTempP = &imTempSc;
-            scaleToSize(LINEAR,*imTempP,imTemp,psf.Nix,psf.Niy);
-            //          imTemp.scaleToSize(psf.Niy, psf.Nix, *imTempP);
-            break;
-
-        case PSFXR_STD:
-            imTempP = &imTemp;
+            //    imOut().selfScaleToSize(psf.Noy, psf.Nox);
+            selfScaleToSize(LINEAR,imOutGlobal(), psf.Nox, psf.Noy);
             break;
 
         case PSFXR_ZPAD:
-            //    (*imTempSc).resize(imTemp);
-            imTempSc = imTemp;
-            imTempSc.window(-ROUND(psf.Niy/2)+1,-ROUND(psf.Nix/2)+1,ROUND(psf.Niy/2)-1,ROUND(psf.Nix/2)-1);
-            imTempP = &imTempSc;
+            imOutGlobal().window(-ROUND(psf.Noy/2)+1,-ROUND(psf.Nox/2)+1,ROUND(psf.Noy/2)-1,ROUND(psf.Nox/2)-1);
             break;
         }
 
-        psf.generateOTF(*imTempP);
-
-
-
-
-#ifdef DEBUG
-
-        _Im().resize(intExp);
-        FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY2D(intExp)
-        dAij(_Im(),i,j) = dAij(intExp,i,j);
-        _Im.write("psfxr-intExp.spi");
-        _Im().resize(*imTempP);
-        FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY2D(*imTempP)
-        dAij(_Im(),i,j) = dAij(*imTempP,i,j);
-        _Im.write("psfxr-imTempEsc.spi");
-#endif
-
-        psf.applyOTF(*imTempP);
-
-#ifdef DEBUG
-
-        FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY2D(*imTempP)
-        dAij(_Im(),i,j) = dAij(*imTempP,i,j);
-        _Im.write("psfxr-imTempEsc2.spi");
-#endif
-
-        FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY2D(*imTempP)
-        dAij(imOut(),i,j) += dAij(*imTempP,i,j);
-
-        //        imOut.write("psfxr-imout.spi");
-
-        if (idxSlice > -1)
-            progress_bar((idxSlice - 1)*vol().zdim + k - vol().zinit);
+        imOutGlobal().setXmippOrigin();
+        //    imOut.write("psfxr-imout2.spi");
     }
-
-    imOut() = 1-imOut();
-    //            imOut.write("psfxr-imout.spi");
-
-
-    switch (psf.AdjustType)
-    {
-    case PSFXR_INT:
-        //    imOut().selfScaleToSize(psf.Noy, psf.Nox);
-        selfScaleToSize(LINEAR,imOut(), psf.Nox, psf.Noy);
-        break;
-
-    case PSFXR_ZPAD:
-        imOut().window(-ROUND(psf.Noy/2)+1,-ROUND(psf.Nox/2)+1,ROUND(psf.Noy/2)-1,ROUND(psf.Nox/2)-1);
-        break;
-    }
-    imOut().setXmippOrigin();
-    //    imOut.write("psfxr-imout2.spi");
 
 }
+
+
+
 
 #undef DEBUG
 

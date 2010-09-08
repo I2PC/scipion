@@ -29,7 +29,10 @@
 #include "fftw.h"
 #include "multidim_array.h"
 #include "image.h"
+#include "threads.h"
 #include <complex>
+#include "projection.h"
+
 
 /**@defgroup PSFXRSupport X-Ray Microscope PSF support classes
    @ingroup DataLibrary */
@@ -239,10 +242,21 @@ public:
     void adjustParam(Image<double> &Vol) ;
 };
 
+
+struct XrayThread
+{
+    XRayPSF psf;
+    Image<double> *vol;
+    Image<double> *imOut;
+};
+
 /// Generate the quadratic phase distribution of a ideal lens
 void lensPD(MultidimArray<std::complex<double> > &Im, double Flens, double lambda, double dx, double dy);
 
 /// Generate an X-ray microscope projection for volume vol using the microscope configuration psf
 void project_xr(XRayPSF &psf, Image<double> &vol, Image<double> &imOut,  int idxSlice = 1);
+
+/// Thread Job to generate an X-ray microscope projection
+void thread_project_xr(ThreadArgument &thArg);
 //@}
 #endif
