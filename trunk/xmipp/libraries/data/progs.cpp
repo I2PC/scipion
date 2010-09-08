@@ -344,3 +344,49 @@ void SF_main(int argc, char **argv,
         exit(1);
     }
 }
+
+void ProgHeader::readParams()
+{
+    fn_in = getParam("-i");
+    if (!fn_in.isMetaData())
+    {
+        md_input.addObject();
+        md_input.setValue( MDL_IMAGE, fn_in);
+        md_input.setValue( MDL_ENABLED, 1);
+    }
+    else
+    {
+        md_input.read(fn_in, NULL);
+        md_input.removeObjects(MDValueEQ(MDL_ENABLED, -1));
+
+        if (md_input.isEmpty())
+          REPORT_ERROR(ERR_MD_NOOBJ, "");
+    }
+}
+
+void ProgHeader::run()
+{
+  try
+    {
+        preprocess();
+
+        FOR_ALL_OBJECTS_IN_METADATA(md_input)
+        {
+            md_input.getValue(MDL_IMAGE, fn_img);
+
+            if (fn_img == "")
+                break;
+            std::cout << "FileName     : " << fn_img << std::endl;
+
+            headerProcess(fn_img);
+        }
+
+        postprocess();
+
+    }
+    catch (XmippError xe)
+    {
+        std::cout << xe;
+    }
+
+}

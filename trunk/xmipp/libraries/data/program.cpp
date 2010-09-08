@@ -106,6 +106,14 @@ double XmippProgram::getDoubleParam(const char * param, int arg)
     return textToFloat(progDef->getParam(param, arg));
 }
 
+bool XmippProgram::checkParam(const char * param)
+{
+    ParamDef * paramDef = progDef->findParam(param);
+    if (paramDef == NULL)
+      REPORT_ERROR(ERR_ARG_INCORRECT, ((std::string)"Doesn't exists param: " + param));
+    return paramDef->counter == 1;
+}
+
 const char * XmippProgram::name()
 {
     return progDef->name.c_str();

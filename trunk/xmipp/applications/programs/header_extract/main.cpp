@@ -26,86 +26,77 @@
 #include <data/args.h>
 #include <data/image.h>
 #include <data/metadata.h>
+#include <data/progs.h>
 
-void Usage();
+/* PROGRAM ----------------------------------------------------------------- */
+
+class ProgHeaderExtract: public ProgHeader
+{
+private:
+    bool round_shifts;
+    double           xx, yy;
+
+protected:
+    void defineParams()
+    {
+        addParamsLine(" xmipp_header_extract");
+        addParamsLine(" :Extracts the geometric transformation (angles & shifts) in the header of 2D-images.");
+        addParamsLine("   -i <metadata>      :metadata file with input.");
+        addParamsLine("   alias --input;");
+        addParamsLine("   [-o <metadata> ]    :metadata file, by default data is stored in input metaData file.");
+        addParamsLine("   alias --output;");
+        addParamsLine("   [-round_shifts]    :Round shifts to integers.");
+    }
+
+    void readParams()
+    {
+        ProgHeader::readParams();
+        fn_out = checkParam("-o") ? getParam("-o") : fn_in;
+        round_shifts = checkParam("-round_shifts");
+    }
+
+    void preprocess()
+{}
+
+    void postprocess()
+    {
+        md_input.write(fn_out);
+    }
+
+    void headerProcess(FileName &fn_img)
+    {
+
+        img.read(fn_img, false);
+        xx = (double) img.Xoff();
+        yy = (double) img.Yoff();
+        if (round_shifts)
+        {
+            xx = (double)ROUND(xx);
+            yy = (double)ROUND(yy);
+        }
+        md_input.setValue(MDL_ANGLEROT,  (double) img.rot());
+        md_input.setValue(MDL_ANGLETILT, (double) img.tilt());
+        md_input.setValue(MDL_ANGLEPSI,  (double) img.psi());
+        md_input.setValue(MDL_SHIFTX,    xx );
+        md_input.setValue(MDL_SHIFTY,    yy );
+        md_input.setValue(MDL_WEIGHT,    (double) img.weight());
+        md_input.setValue(MDL_FLIP,      (bool)   img.flip());
+
+    }
+}
+;// end of class ProgHeaderExtract
 
 /* MAIN -------------------------------------------------------------------- */
 int main(int argc, char *argv[])
 {
-    bool            round_shifts = false;
-    double           xx, yy;
-    FileName        fn_img, fn_out,fn_in;
-    Image<double>      img;
-    FileName        inputFile;
-
-// Check command line options ===========================================
     try
     {
-        
-        fn_in  = getParameter(argc, argv, "-i"); 
-	    if (checkParameter(argc, argv, "-o"))
-            fn_out = getParameter(argc, argv, "-o");
-	    else
-	        fn_out = fn_in;   
-            round_shifts = checkParameter(argc, argv, "-round_shifts");
+        ProgHeaderExtract program;
+        program.read(argc, argv);
+        program.run();
     }
-    catch (XmippError XE)
+    catch (XmippError xe)
     {
-        std::cout << XE;
-        Usage();
+        std::cerr << xe;
     }
-    MetaData SF(fn_in);
-    SF.removeObjects(MDValueEQ(MDL_ENABLED, -1));
-    // Extracting information  ==================================================
-    try
-    {
-
-	    if(SF.isEmpty())
-	    {
-	        std::cerr << "Empty inputFile File\n";
-	        exit(1);
-	    }
-
-	    FOR_ALL_OBJECTS_IN_METADATA(SF)
-        {
-	        SF.getValue(MDL_IMAGE,fn_img);
-            if (fn_img=="") break;
-	    img.read(fn_img,false);
-	    xx = (double) img.Xoff();
-	    yy = (double) img.Yoff();
-            if (round_shifts)
-            {
-                xx = (double)ROUND(xx);
-                yy = (double)ROUND(yy);
-            }
-	        SF.setValue(MDL_ANGLEROT,  (double) img.rot());
-	        SF.setValue(MDL_ANGLETILT, (double) img.tilt());
-    	    SF.setValue(MDL_ANGLEPSI,  (double) img.psi());
-	        SF.setValue(MDL_SHIFTX,    xx );
-	        SF.setValue(MDL_SHIFTY,    yy );
-	        SF.setValue(MDL_WEIGHT,    (double) img.weight());
-	        SF.setValue(MDL_FLIP,      (bool)   img.flip());
-        }
-	
-        SF.write(fn_out);
-    }
-    catch (XmippError XE)
-    {
-        std::cout << XE;
-    }
-
-}
-
-/* Usage ------------------------------------------------------------------- */
-void Usage()
-{
-    std::cout << " Purpose:\n";
-    std::cout << " Extracts the geometric transformation (angles & shifts) in the header of 2D-images.\n";
-    std::cout << " Usage:\n";
-    std::cout << "    header_extract \n";
-    std::cout <<              "        -i <metadata>       : metadata selfile\n";
-    std::cout << (std::string)"       [-o <docfile> ]     : metaData file, by default data\n" +
-                              "                             is stored in input metaData file\n";
-    std::cout <<              "       [-round_shifts]     : Round shifts to integers \n";
-    exit(1);
 }

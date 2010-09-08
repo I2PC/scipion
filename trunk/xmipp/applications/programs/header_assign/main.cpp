@@ -26,110 +26,113 @@
 #include <data/args.h>
 #include <data/image.h>
 #include <data/metadata.h>
+#include <data/progs.h>
 
-void Usage();
+class ProgHeaderAssign: public ProgHeader
+{
+private:
+    double          rot, tilt, psi, xshift, yshift, weight;
+    bool            mirror, round_shifts;
+    int             levels, labelsnumber;
+    std::vector<MDLabel> activeLabels;
+
+protected:
+    void defineParams()
+    {
+        addParamsLine(" xmipp_header_assign");
+        addParamsLine(" :Set the geometric transformation (angles & shifts) in the header of 2D-images.");
+        addParamsLine("   -i <metadata>      :Metadata file with input\n");
+        addParamsLine("   alias --input;");
+        addParamsLine("   [-round_shifts]    :Round shifts to integers");
+        addParamsLine("   [-levels <n=0>]    :Levels of pyramidal reduction, n=1, 2, ...");
+    }
+
+    void readParams()
+    {
+        ProgHeader::readParams();
+        round_shifts = checkParam("-round_shifts");
+        levels = getIntParam("-levels");
+    }
+
+    void preprocess()
+    {
+        std::vector<MDLabel> activeLabels = md_input.getActiveLabels();
+        labelsnumber = activeLabels.size();
+    }
+
+    void postprocess()
+    {
+        md_input.write(fn_out);
+    }
+
+    void headerProcess(FileName &fn_img)
+    {
+
+        img.read(fn_img);
+        for (int iter = 0; iter < labelsnumber; iter++)
+        {
+            switch (activeLabels[iter])
+            {
+            case MDL_ANGLEROT:
+                md_input.getValue( MDL_ANGLEROT, rot);
+                img.setRot(rot);
+                break;
+            case MDL_ANGLETILT:
+                md_input.getValue( MDL_ANGLETILT, tilt);
+                img.setTilt(tilt);
+                break;
+            case MDL_ANGLEPSI:
+                md_input.getValue( MDL_ANGLEPSI, psi);
+                img.setPsi(psi);
+                break;
+            case MDL_SHIFTX:
+                md_input.getValue( MDL_SHIFTX, xshift);
+                if (levels != 0)
+                    xshift /= pow(2.0, levels);
+                if (round_shifts)
+                    xshift = (float)ROUND(xshift);
+                img.setXoff(xshift);
+                break;
+            case MDL_SHIFTY:
+                md_input.getValue(MDL_SHIFTY, yshift);
+                if (levels != 0)
+                    yshift /= pow(2.0, levels);
+                if (round_shifts)
+                    yshift = (float)ROUND(yshift);
+                img.setYoff(yshift);
+                break;
+            case MDL_WEIGHT:
+                md_input.getValue( MDL_WEIGHT, weight);
+                img.setWeight(weight);
+                break;
+            case MDL_FLIP:
+                md_input.getValue( MDL_FLIP, mirror);
+                img.setFlip(mirror);
+                break;
+            default:
+                break;
+            }
+        }
+        img.write(fn_img);
+
+    }
+}
+;// end of class ProgHeaderAssign
 
 /* MAIN -------------------------------------------------------------------- */
 int main(int argc, char *argv[])
 {
-    double          rot, tilt, psi, xshift, yshift;
-    double          weight;
-    bool            mirror;
-    FileName        fn_img, fn_out, fn_in;
-    Image<double>   img;
-    int             levels,round_shifts;
-
-// Check command line options ===========================================
-    try
-    {
-        try
-        {
-        	round_shifts = checkParameter(argc, argv, "-round_shifts");
-        	levels = textToInteger(getParameter(argc, argv, "-levels", "0"));
-        	fn_in = getParameter(argc, argv, "-i");
-        }
-        catch (XmippError XE)
-        {
-            std::cout << XE;
-            Usage();
-        }
-
-        MetaData SF(fn_in);
-        SF.removeObjects(MDValueEQ(MDL_ENABLED, -1));
-
-        int labelsnumber=SF.getActiveLabels().size();
-        std::vector<MDLabel> activeLabels=SF.getActiveLabels();
-
-		if(SF.isEmpty())
-		{
-			std::cerr << "Empty inputFile File\n";
-			exit(1);
-		}
-
-		FOR_ALL_OBJECTS_IN_METADATA(SF)
-		{
-			SF.getValue( MDL_IMAGE, fn_img);
-			if (fn_img=="") break;
-			img.read(fn_img);
-                        for (int iter = 0; iter < labelsnumber; iter++)
-			{
-                                  switch (activeLabels[iter]) {
-					case MDL_ANGLEROT:
-						SF.getValue( MDL_ANGLEROT, rot);
-						img.setRot(rot);
-						break;
-					case MDL_ANGLETILT:
-						SF.getValue( MDL_ANGLETILT, tilt);
-						img.setTilt(tilt);
-						break;
-					case MDL_ANGLEPSI:
-						SF.getValue( MDL_ANGLEPSI, psi);
-						img.setPsi(psi);
-						break;
-					case MDL_SHIFTX:
-						SF.getValue( MDL_SHIFTX, xshift);
-					        if (levels != 0) xshift /= pow(2.0, levels);
-		                                if (round_shifts) xshift = (float)ROUND(xshift);
-						img.setXoff(xshift);
-						break;
-					case MDL_SHIFTY:
-						SF.getValue(MDL_SHIFTY, yshift);
-					        if (levels != 0) yshift /= pow(2.0, levels);
-		                                if (round_shifts) yshift = (float)ROUND(yshift);
-						img.setYoff(yshift);
-						break;
-					case MDL_WEIGHT:
-						SF.getValue( MDL_WEIGHT, weight);
-						img.setWeight(weight);
-						break;
-					case MDL_FLIP:
-						SF.getValue( MDL_FLIP, mirror);
-						img.setFlip(mirror);
-						break;
-                                        default:
-						break;
-				}
-			}
-			img.write(fn_img);
-		}
-
-    }
-    catch (XmippError XE)
-    {
-        std::cout << XE;
-    }
+  try
+  {
+      ProgHeaderAssign program;
+      program.read(argc, argv);
+      program.run();
+  }
+  catch (XmippError xe)
+  {
+      std::cerr << xe;
+  }
 }
 
-/* Usage ------------------------------------------------------------------- */
-void Usage()
-{
-    printf("Purpose:\n");
-    printf(" Set the geometric transformation (angles & shifts) in the header of 2D-images.\n");
-    printf("Usage:\n");
-    printf("   header_assign  \n");
-    printf("        -i <docfile>       : input metaData file\n");
-    printf("       [-round_shifts]     : Round shifts to integers \n");
-    printf("       [-levels <n=0>]     : Levels of pyramidal reduction, n=1, 2, ...\n");
-    exit(1);
-}
+
 

@@ -27,66 +27,34 @@
 #include <data/args.h>
 #include <data/image.h>
 #include <data/metadata.h>
-#include <data/program.h>
+#include <data/progs.h>
 
 /* PROGRAM ----------------------------------------------------------------- */
 
-class ProgHeaderPrint: public XmippProgram
+class ProgHeaderPrint: public ProgHeader
 {
-private:
-    Image<double>      img;
-    FileName        fn_input;
-    MetaData SF;
-
 protected:
     void defineParams()
     {
         addParamsLine("xmipp_header_print");
         addParamsLine("       :Print information from the header of 2D-images.");
-        addParamsLine(" -i <metadata>   :metaDataFile with images or individual image");
+        addParamsLine(" -i <metadata>   :MetaData file with images or an individual image.");
         addParamsLine(" alias --input;");
     }
 
-    void readParams()
+    void preprocess()
     {
-        fn_input = getParam("-i");
-        if (!fn_input.isMetaData())
-        {
-            SF.addObject();
-            SF.setValue( MDL_IMAGE, fn_input);
-            SF.setValue( MDL_ENABLED, 1);
-        }
-        else
-        {
-            SF.read(fn_input, NULL);
-            SF.removeObjects(MDValueEQ(MDL_ENABLED, -1));
-        }
+        std::cout << " Printing the header ... " << std::endl;
     }
-public:
-    void run()
+
+    void postprocess()
+    {}
+
+    void headerProcess(FileName &fn_img)
     {
-        try
-        {
-            std::cout << " Printing the header ... " << std::endl;
-
-            FOR_ALL_OBJECTS_IN_METADATA(SF)
-            {
-                FileName fn_img;
-                SF.getValue( MDL_IMAGE, fn_img);
-                if (fn_img=="")
-                    break;
-                std::cout << "FileName     : " << fn_img << std::endl;
-
-                img.read(fn_img, false, -1, false);
-                std::cout << img;
-                std::cout << std::endl;
-            }
-
-        }
-        catch (XmippError xe)
-        {
-            std::cout << xe;
-        }
+        img.read(fn_img, false, -1, false);
+        std::cout << img;
+        std::cout << std::endl;
     }
 }
 ;// end of class ProgHeaderPrint

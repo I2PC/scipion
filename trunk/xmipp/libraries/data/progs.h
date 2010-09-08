@@ -27,6 +27,7 @@
 #define PROGS_H
 
 #include "image.h"
+#include "program.h"
 
 /** @defgroup Programs Basic structure for programs using selfiles
  *  @ingroup DataLibrary
@@ -78,7 +79,7 @@ public:
         each_image_produces_an_output = true;
         allow_time_bar = true;
         apply_geo = false;
-	quiet = false;
+        quiet = false;
     }
 
     /// Read the basic parameters defined for this class
@@ -120,4 +121,26 @@ void SF_main(int argc,
              Prog_parameters* prm,
              void* process_img,
              int operation_mode = IMAGE2IMAGE);
+
+
+/** Special class of XmippProgram that performs some operation related with images header.
+ * It can receives a file with images(MetaData) or a single image
+ */
+class ProgHeader: public XmippProgram
+{
+protected:
+    Image<double>  img;
+    FileName        fn_in, fn_out, fn_img;
+    MetaData        md_input;
+
+    virtual void readParams();
+    virtual void preprocess() = 0;
+    virtual void postprocess() = 0;
+    virtual void headerProcess(FileName &fn_img) = 0;
+
+public:
+    virtual void run();
+}
+;// end of class ProgHeaderPrint
+
 #endif

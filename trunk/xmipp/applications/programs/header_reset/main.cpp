@@ -26,97 +26,83 @@
 #include <data/args.h>
 #include <data/image.h>
 #include <data/metadata.h>
+#include <data/progs.h>
 
-void Usage();
+class ProgHeaderReset: public ProgHeader
+{
+private:
+    bool            tiltSeries;
+    double          firstAngle, angularStep, angle;
+
+protected:
+    void defineParams()
+    {
+        addParamsLine(" xmipp_header_reset");
+        addParamsLine(" :Reset the geometric transformation (angles & shifts) in the header of 2D-images.");
+        addParamsLine("   -i <metadata>      :Metadata file with input images");
+        addParamsLine("   alias --input;");
+        addParamsLine("   [-tiltSeries <firstAngle> <angleStep>]: Assign a regularly spaced angular distribution.");
+    }
+
+    void readParams()
+    {
+        ProgHeader::readParams();
+        tiltSeries = checkParam("-tiltSeries");
+        if (tiltSeries)
+        {
+            firstAngle = getDoubleParam("-tiltSeries", 0);
+            angularStep = getDoubleParam("-tiltSeries", 1);
+        }
+    }
+
+    void preprocess()
+    {
+        std::cout << " Resetting all angles, origin offsets, weights and mirror flags to zero ... " << std::endl;
+
+        if (tiltSeries)
+        {
+            std::cout << "Setting the tilt angles to a tilt series\n"
+            << "First angle = " << firstAngle << std::endl
+            << "Angular step = " << angularStep << std::endl;
+            angle = firstAngle;
+        }
+    }
+
+    void postprocess()
+    {
+        md_input.write(fn_out);
+    }
+
+    void headerProcess(FileName &fn_img)
+    {
+        img.read(fn_img); //read data and header
+        img.clearHeader();
+
+        if (tiltSeries)
+        {
+            img.setTilt(angle);
+            angle += angularStep;
+        }
+        double daux = (double)1.;
+        img.setWeight(daux);
+        img.write(fn_img);
+    }
+}
+;// end of class ProgHeaderReset
 
 /* MAIN -------------------------------------------------------------------- */
 int main(int argc, char *argv[])
 {
-    Image<double>      img;
-    FileName        fn_input;
-    bool            tiltSeries;
-    double          firstAngle, angularStep,angle;
-    MetaData SF, MD;
-
-    try
-    {
-        fn_input = getParameter(argc, argv, "-i");
-        if (!fn_input.isMetaData())
-        {
-            SF.addObject();
-            SF.setValue( MDL_IMAGE, fn_input);
-            SF.setValue( MDL_ENABLED, 1);
-        }
-        else {
-            SF.read( fn_input ,NULL);
-            SF.removeObjects(MDValueEQ(MDL_ENABLED, -1));
-        }
-
-        tiltSeries=checkParameter(argc,argv,"-tiltSeries");
-        if (tiltSeries)
-        {
-            int i=paremeterPosition(argc,argv,"-tiltSeries");
-            if (i+2>=argc)
-                REPORT_ERROR(ERR_ARG_MISSING,"Not enough parameters after -tiltSeries");
-            firstAngle=textToFloat(argv[i+1]);
-            angularStep=textToFloat(argv[i+2]);
-        }
-    }
-    catch (XmippError XE)
-    {
-        std::cout << XE;
-        Usage();
-    }
-
-    try
-    {
-        std::cout << " Resetting all angles, origin offsets, weights and mirror flags to zero ... " << std::endl;
-
-        if (tiltSeries){
-            std::cout << "Setting the tilt angles to a tilt series\n"
-                      << "First angle=" << firstAngle << std::endl
-                      << "Angular step=" << angularStep << std::endl;
-            angle=firstAngle;
-        }
-
-        FOR_ALL_OBJECTS_IN_METADATA(SF)
-        {
-            FileName fn_img;
-            SF.getValue( MDL_IMAGE, fn_img); 
-            if (fn_img=="") break;
-
-            img.read(fn_img); //read data and header
-            
-            img.clearHeader();
-          
-            if (tiltSeries)
-            {
-                img.setTilt(angle);
-                angle+=angularStep;
-            }
-
-            double daux = (double)1.;
-            img.setWeight(daux);
-
-            img.write(fn_img);
-        }
-
-    }
-    catch (XmippError XE)
-    {
-        std::cout << XE;
-    }
+  try
+  {
+      ProgHeaderReset program;
+      program.read(argc, argv);
+      program.run();
+  }
+  catch (XmippError xe)
+  {
+      std::cerr << xe;
+  }
 }
 
-/* Usage ------------------------------------------------------------------- */
-void Usage()
-{
-    printf("Purpose:\n");
-    printf(" Reset the geometric transformation (angles & shifts) in the header of 2D-images.\n");
-    printf("Usage:\n");
-    printf("   header_reset \n");
-    printf("    -i                                   : metaDataFile with images or individual image\n");
-    printf("   [-tiltSeries <firstAngle> <angleStep>]: Assign a regularly spaced angular distribution\n");
-    exit(1);
-}
 

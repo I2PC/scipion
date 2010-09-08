@@ -61,7 +61,7 @@ protected:
   const char * getParam(const char * param, int arg = 0);
   int getIntParam(const char * param, int arg = 0);
   double getDoubleParam(const char * param, int arg = 0);
-
+  bool checkParam(const char * param);
 public:
   /** @name Public common functions
    * The functions in this section are available for all programs
