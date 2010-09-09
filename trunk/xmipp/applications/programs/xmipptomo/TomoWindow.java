@@ -86,7 +86,11 @@ public class TomoWindow extends JFrame implements WindowListener, AdjustmentList
 	SUB_BACKGROUND=new Button("Substract background",BackgroundSubstractPlugin.COMMAND, false),
 	ENHANCE_CONTRAST=new Button("Enhance contrast",ContrastEnhancePlugin.COMMAND, false),
 	APPLY=new Button("Apply","", false),
-	PRINT_WORKFLOW=new Button("Print workflow","", false);
+	PRINT_WORKFLOW=new Button("Print workflow","", false),
+	PLAY=new Button(">","",true),
+	// pause is a fake button, useful for defining the pause label
+	PAUSE=new Button("||","",true),
+	MEASURE=new Button("Measure",MeasurePlugin.COMMAND,false);
 	
 	// Lists of buttons for each menu tab
 	private static java.util.List<Button> buttonsMenuFile = new LinkedList<Button>(){
@@ -94,6 +98,7 @@ public class TomoWindow extends JFrame implements WindowListener, AdjustmentList
 			add(LOAD);
 			add(SAVE);
 			add(DEFINE_TILT);
+			add(MEASURE);
 		}
 	};	
 	
@@ -124,6 +129,7 @@ public class TomoWindow extends JFrame implements WindowListener, AdjustmentList
 			add(ENHANCE_CONTRAST);
 			add(APPLY);
 			add(PRINT_WORKFLOW);
+			add(MEASURE);
 		}
 	};	
 	
@@ -142,6 +148,8 @@ public class TomoWindow extends JFrame implements WindowListener, AdjustmentList
 	private boolean reloadingFile=false;
 	// true if changes are saved (so you can close the window without pain)
 	private boolean changeSaved=true;
+	// true if current projection is changing automatically
+	private boolean playing=false;
 	// window identifier - useful when you've got more than 1 window
 	private int windowId=-1;
 	
@@ -159,6 +167,7 @@ public class TomoWindow extends JFrame implements WindowListener, AdjustmentList
 	
 	// Control scrollbars
 	private LabelScrollbar projectionScrollbar;
+	private JButton playButton;
 	
 	// the model stores the data that this window shows - @see TomoData
 	private TomoData model=null;
@@ -216,15 +225,21 @@ public class TomoWindow extends JFrame implements WindowListener, AdjustmentList
 			}else if (command.equals(DEFINE_TILT.label())){
 				tw.actionSetTilt();	
 			}else if (command.equals(GAUSSIAN.label())){
-				tw.actionRunIjCmd(GAUSSIAN.label(), GAUSSIAN.imageJCmd());
+				tw.actionRunIjCmd(GAUSSIAN);
 			}else if (command.equals(MEDIAN.label())){
-				tw.actionRunIjCmd(MEDIAN.label(), MEDIAN.imageJCmd());
+				tw.actionRunIjCmd(MEDIAN);
 			}else if (command.equals(SUB_BACKGROUND.label())){
-				tw.actionRunIjCmd(SUB_BACKGROUND.label(), SUB_BACKGROUND.imageJCmd());
+				tw.actionRunIjCmd(SUB_BACKGROUND);
 			}else if (command.equals(ENHANCE_CONTRAST.label())){
-				tw.actionRunIjCmd(ENHANCE_CONTRAST.label(), ENHANCE_CONTRAST.imageJCmd());
+				tw.actionRunIjCmd(ENHANCE_CONTRAST);
 			}else if (command.equals(APPLY.label())){
 				tw.actionApply();
+			}else if (command.equals(PLAY.label())){
+				tw.actionPlay();
+			}else if (command.equals(PAUSE.label())){
+				tw.actionPause();
+			}else if (command.equals(MEASURE.label())){
+				tw.actionRunIjCmd(MEASURE);
 			}else if (command.equals(PRINT_WORKFLOW.label())){
 				Xmipp_Tomo.printWorkflow();
 			}
@@ -411,6 +426,8 @@ public class TomoWindow extends JFrame implements WindowListener, AdjustmentList
 		projectionScrollbar.addAdjustmentListener(this);
 		controlPanel.add(projectionScrollbar);
 		
+		addButton(PLAY, controlPanel);
+		
 		pack(); // adjust window size to host the new controls panel
 				
 	}
@@ -551,6 +568,10 @@ public class TomoWindow extends JFrame implements WindowListener, AdjustmentList
 		saveFile(getModel(),path);
 	}
 	
+	private void actionRunIjCmd(Button b){
+		actionRunIjCmd(b.label(), b.imageJCmd());
+	}
+	
 	private void actionRunIjCmd(String label,String cmd){
 		if(cmd == null)
 			return;
@@ -643,6 +664,23 @@ public class TomoWindow extends JFrame implements WindowListener, AdjustmentList
 			getModel().setTiltAngles(start, end);
 		else
 			getModel().setTiltAnglesStep(start, step);
+	}
+	
+	private void actionPlay(){
+		setPlaying(true);
+		PLAY.getButton().setText(PAUSE.label());
+		while(isPlaying()){
+			int nextProjection = (getModel().getCurrentProjection() + 1) % (getModel().getNumberOfProjections()+1);
+			projectionScrollbar.setValue(nextProjection);
+			try{
+				Thread.sleep(50);
+			}catch (InterruptedException ex){}
+		}
+	}
+	
+	private void actionPause(){
+		setPlaying(false);
+		PLAY.getButton().setText(PLAY.label());
 	}
 	
 	private void captureDialog(){
@@ -1007,5 +1045,19 @@ public class TomoWindow extends JFrame implements WindowListener, AdjustmentList
 	 */
 	private void setChangeSaved(boolean changeSaved) {
 		this.changeSaved = changeSaved;
+	}
+
+	/**
+	 * @return the playing
+	 */
+	private boolean isPlaying() {
+		return playing;
+	}
+
+	/**
+	 * @param playing the playing to set
+	 */
+	private void setPlaying(boolean playing) {
+		this.playing = playing;
 	}
 }

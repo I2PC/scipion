@@ -24,43 +24,42 @@
  ***************************************************************************/
 package xmipptomo;
 
-import javax.swing.JButton;
+import ij.gui.GenericDialog;
 
-public class Button {
-	private String label;
-	private String imageJCmd;
-	private JButton b;
-	private boolean enabled=true;
+
+public class MeasurePlugin extends Plugin {
+	// default values - @see xmipptomo.Plugin.collectParameters, ij.plugin.filter.Analyzer
+	boolean equalize, normalize, processStack=true, useStackHistogram;
+	static double saturated = 0.5;
 	
-	Button(String l,String cmd,boolean enabled) {
-		label=l;
-		imageJCmd=cmd;
-		this.enabled=enabled;
+	public static String COMMAND="Measure";
+	
+	@Override
+	public String getCommand(){
+		return COMMAND;
 	}
 	
-	public String label(){
-		return label;
+	// adapt radius if the original image was resized 
+	@Override
+	public String getOptions(){
+		return "Saturated Pixels:=" + saturated + "Normalize=" + normalize + "Equalize Histogram=" + equalize +
+		"Slices=" + processStack + "Use Stack Histogram=" + useStackHistogram;
 	}
 	
-	public String imageJCmd(){
-		return imageJCmd;	
+	@Override
+	public void collectParameters(GenericDialog gd) {
+		if(gd != null){
+			saturated=gd.getNextNumber();
+			normalize=gd.getNextBoolean();
+			equalize=gd.getNextBoolean();
+			processStack=gd.getNextBoolean();
+			useStackHistogram=gd.getNextBoolean();
+		}
 	}
+
 	
-	public void setButton(JButton button){
-		b=button;
-		b.setEnabled(isEnabled());
+	public String toString(){
+		return getOptions();
 	}
-	
-	public JButton getButton(){
-		return b;
-	}
-	
-	public boolean isEnabled(){
-		return enabled;
-	}
-	
-	public void setEnabled(boolean enabled){
-		this.enabled=enabled;
-		b.setEnabled(enabled);
-	}
+
 }
