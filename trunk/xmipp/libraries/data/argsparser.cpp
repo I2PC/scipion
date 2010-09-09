@@ -311,8 +311,8 @@ bool ArgLexer::nextToken()
         }
     }
 
-    ConsolePrinter * cp = new ConsolePrinter();
-    cp->printToken(pToken);
+    //ConsolePrinter * cp = new ConsolePrinter();
+    //cp->printToken(pToken);
 
     return true;
 }
