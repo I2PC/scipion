@@ -29,7 +29,7 @@
 
 int main(int argc, char *argv[])
 {
-    Prog_Project_XR_Parameters      prog_prm;
+    ProgProjectXR      prog_prm;
     Projection                           proj;
     MetaData                              SF;
 

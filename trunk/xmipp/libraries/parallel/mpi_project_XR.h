@@ -107,7 +107,7 @@ int PROJECT_mpi_XR_Effectively_project(
 
 
 /* ROUT_project ============================================================ */
-int ROUT_mpi_XR_project(Prog_Project_XR_Parameters &prm,
+int ROUT_mpi_XR_project(ProgProjectXR &prm,
                         Projection &proj, MetaData &SF, MpiNode &node);
 
 

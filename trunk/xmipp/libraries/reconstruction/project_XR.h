@@ -38,9 +38,9 @@
 /**@defgroup ProjectionXRProgram project_xr (project for tilt series)
    @ingroup ReconsLibrary */
 //@{
-/* Projection XR Program Parameters -------------------------------- */
-/** Parameter class for the project program */
-class Prog_Project_XR_Parameters
+/* Projection XR Program -------------------------------- */
+/** Program class for the project program */
+class ProgProjectXR
 {
 public:
     /// Filename with the Projection_Parameters.
@@ -157,7 +157,7 @@ public:
         This function produce the side information from the project
         program parameters. Basically it loads the phantom.*/
     void produce_Side_Info(const Projection_XR_Parameters &prm,
-                           const Prog_Project_XR_Parameters &prog_prm);
+                           const ProgProjectXR &prog_prm);
 };
 
 /* Effectively project ----------------------------------------------------- */
@@ -206,7 +206,7 @@ void project_xr_Volume_offCentered(PROJECT_XR_Side_Info &side, XRayPSF &psf, Pro
     The returned number is the total number of projections generated.
     A selection file with all images is also returned (and saved if any
     name has been given in the parameters).*/
-int ROUT_XR_project(Prog_Project_XR_Parameters &prm,
+int ROUT_XR_project(ProgProjectXR &prm,
                     Projection &proj, MetaData &SF);
 //@}
 

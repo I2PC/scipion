@@ -38,7 +38,7 @@ int main(int argc, char *argv[])
 //        fprintf(stderr, "MPI initialization error\n");
 //        exit(EXIT_FAILURE);
 //    }
-    Prog_Project_XR_Parameters      prog_prm;
+    ProgProjectXR      prog_prm;
     Projection                           proj;
     MetaData                              SF;
 

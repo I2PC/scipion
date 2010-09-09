@@ -29,7 +29,7 @@
 #include <data/psf_xr.h>
 
 /* Read from command line ================================================== */
-void Prog_Project_XR_Parameters::read(int argc, char **argv)
+void ProgProjectXR::read(int argc, char **argv)
 {
     if (argc==0)
     {
@@ -51,7 +51,7 @@ void Prog_Project_XR_Parameters::read(int argc, char **argv)
 }
 
 /* Usage =================================================================== */
-void Prog_Project_XR_Parameters::usage()
+void ProgProjectXR::usage()
 {
     printf("\nUsage:\n\n");
     printf("project_xr -i <Parameters File> \n"
@@ -195,7 +195,7 @@ void Projection_XR_Parameters::calculateProjectionAngles(Projection &P, double a
 /* Produce Side Information ================================================ */
 void PROJECT_XR_Side_Info::produce_Side_Info(
     const Projection_XR_Parameters &prm,
-    const Prog_Project_XR_Parameters &prog_prm)
+    const ProgProjectXR &prog_prm)
 {
     phantomVol.read(prm.fnPhantom);
     phantomVol().setXmippOrigin();
@@ -380,7 +380,7 @@ void project_xr_Volume_offCentered(PROJECT_XR_Side_Info &side, XRayPSF &psf, Pro
 
 
 /* ROUT_project ============================================================ */
-int ROUT_XR_project(Prog_Project_XR_Parameters &prm,
+int ROUT_XR_project(ProgProjectXR &prm,
                     Projection &proj, MetaData &SF)
 {
     randomize_random_generator();
