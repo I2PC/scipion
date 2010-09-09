@@ -299,8 +299,6 @@ bool ArgLexer::nextToken()
             offset = input[line].find_first_of('"', pos + 1);
             ++pos;
             offset -= pos;
-            std::cerr << "pos: " << pos << std::endl;
-            std::cerr << "offset: " << offset << std::endl;
             setupToken(TOK_STR);
             break;
         default:
