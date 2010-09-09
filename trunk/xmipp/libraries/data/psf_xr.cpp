@@ -120,8 +120,8 @@ std::ostream & operator <<(std::ostream &out, const XRayPSF &psf)
 /* Show the microscope parameters------------------------------------------- */
 void XRayPSF::show()
 {
-//    if (verbose)
-        std::cout << *this << std::endl;
+    //    if (verbose)
+    std::cout << *this << std::endl;
 }
 
 /* Default values ---------------------------------------------------------- */
@@ -388,29 +388,14 @@ void lensPD(MultidimArray<std::complex<double> > &Im, double Flens, double lambd
 }
 
 //Some global variables
-Mutex mutex, taskMutex;
+Mutex mutex;
 Barrier * barrier;
 ParallelTaskDistributor * td;
 
-int numberOfThreads = 1;
-pthread_t * th_structs;
-int * th_ids;
-int threadTask = -1;
-long long int R = 100000;
-long long int blockSize = 1000;
-long long int totalCounter = 0;
 
-long long int assignedJobs = 0;
-long long int &numberOfJobs = R;
-
-
-
-/// TODO: func description
+/// Generate an X-ray microscope projection for volume vol using the microscope configuration psf
 void project_xr(XRayPSF &psf, Image<double> &vol, Image<double> &imOut, int idxSlice)
 {
-
-    std::vector<MDLabel> labels2 = imOut.MD.getActiveLabels() ;
-
 
     XrayThread *dataThread = new XrayThread;
 
@@ -418,24 +403,34 @@ void project_xr(XRayPSF &psf, Image<double> &vol, Image<double> &imOut, int idxS
     dataThread->vol = &vol;
     dataThread->imOut = &imOut;
 
-    std::vector<MDLabel> labels3 = dataThread->imOut->MD.getActiveLabels() ;
+    longint blockSize, numberOfJobs= vol().zdim;
+    int numberOfThreads = psf.nThr;
 
-    numberOfThreads = 1;
-    R = vol().zdim;
-    blockSize = 10;
+    blockSize = (numberOfThreads == 1) ? numberOfJobs : numberOfJobs/numberOfThreads/6;
 
     //Create the job handler to distribute jobs
-    td = new ThreadTaskDistributor(R, blockSize);
+    td = new ThreadTaskDistributor(numberOfJobs, blockSize);
     barrier = new Barrier(numberOfThreads-1);
+
     //Create threads to start working
-    //createThreads();
+
     ThreadManager * thMgr = new ThreadManager(numberOfThreads,(void*) dataThread);
-    thMgr->run(thread_project_xr);
+
+
+//    if (numberOfThreads==1)
+//    {
+//        ThreadArgument thArg;
+//        thArg.thread_id = 0;
+//        thArg.workClass = dataThread;
+//        thread_project_xr(thArg);
+//    }
+//    else
+        thMgr->run(thread_project_xr);
+
+
     //Terminate threads and free memory
     delete td;
     delete thMgr;
-
-
 
 }
 
@@ -446,7 +441,7 @@ void thread_project_xr(ThreadArgument &thArg)
     int thread_id = thArg.thread_id;
 
     XrayThread *dataThread = (XrayThread*) thArg.workClass;
-    XRayPSF &psf = dataThread->psf;
+    XRayPSF psf = dataThread->psf;
     Image<double> &vol =  *(dataThread->vol);
     Image<double> &imOutGlobal = *(dataThread->imOut);
 
@@ -481,7 +476,7 @@ void thread_project_xr(ThreadArgument &thArg)
         std::cerr << "th" << thread_id << ": working from " << first << " to " << last <<std::endl;
 
 
-        if (first>350)
+        if (first>300)
         {
             for (int k=(vol()).zinit + priorLast + 1; k<=(vol()).zinit + first - 1 ; k++)
             {
@@ -601,7 +596,6 @@ void thread_project_xr(ThreadArgument &thArg)
         imOutGlobal().setXmippOrigin();
         //    imOut.write("psfxr-imout2.spi");
     }
-
 }
 
 

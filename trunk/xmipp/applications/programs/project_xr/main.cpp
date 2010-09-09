@@ -30,29 +30,17 @@
 int main(int argc, char *argv[])
 {
     ProgProjectXR      prog_prm;
-    Projection                           proj;
-    MetaData                              SF;
 
-    // Check the command line
     try
     {
+        // Check the command line
         prog_prm.read(argc, argv);
+        prog_prm.run();
     }
     catch (XmippError &XE)
     {
         std::cout << XE;
-        prog_prm.usage();
         exit(1);
-    }
-
-    try
-    {
-        // Really project
-        ROUT_XR_project(prog_prm, proj, SF);
-    }
-    catch (XmippError XE)
-    {
-        std::cout << XE;
     }
     return 0;
 }

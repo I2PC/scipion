@@ -28,46 +28,92 @@
 #include <data/args.h>
 #include <data/psf_xr.h>
 
-/* Read from command line ================================================== */
-void ProgProjectXR::read(int argc, char **argv)
-{
-    if (argc==0)
-    {
-        usage();
-        exit(0);
-    }
 
-    verbose = checkParameter(argc, argv, "-v");
-    if (verbose)
-        fn_proj_param = getParameter(argc, argv, "-i", "");
-    else
-        fn_proj_param = getParameter(argc, argv, "-i");
-    fn_sel_file   = getParameter(argc, argv, "-o", "");
-    fn_psf_xr   = getParameter(argc, argv, "-psf", "");
-    only_create_angles = checkParameter(argc, argv, "-only_create_angles");
+
+void ProgProjectXR::defineParams()
+{
+    addParamsLine("xmipp_project_xr");
+    addParamsLine("       :Generate projections as in a X-ray microscope from a 3D Xmipp volume.");
+    addParamsLine(" -i <Proj_param_file>   :MetaData file with projection parameters.");
+    addParamsLine("                         :Check the manual for a description of the parameters.");
+    addParamsLine(" alias --input;");
+    addParamsLine("[-psf <psf_param_file=\"x\">] : XRay-Microscope parameters file. If not set, then default parameters are chosen.");
+    addParamsLine("[-o <sel_file=\"\">]         : Output Metadata file with all the generated projecions.");
+    addParamsLine("[-v]                    : Verbose.");
+    addParamsLine("[-show_angles]          : Print angles value for each projection.");
+    addParamsLine("[-only_create_angles]   : Projections are not calculated, only the angles values.");
+    addParamsLine("[-thr <threads=1>]      : Number of concurrent threads.");
+}
+
+
+
+/* Read from command line ================================================== */
+void ProgProjectXR::readParams()
+{
+    fn_proj_param = getParam("-i");
+    fn_sel_file   = getParam("-o");
+    fn_psf_xr   = getParam("-psf");
+
+    only_create_angles = checkParam("-only_create_angles");
+    verbose = checkParam("-v");
+    nThr = getIntParam("-thr");
     tell=0;
-    if (checkParameter(argc, argv, "-show_angles"))
+    if (checkParam("-show_angles"))
         tell |= TELL_SHOW_ANGLES;
 }
 
-/* Usage =================================================================== */
-void ProgProjectXR::usage()
+
+void ProgProjectXR::run()
 {
-    printf("\nUsage:\n\n");
-    printf("project_xr -i <Parameters File> \n"
-           "       [-psf <psf_param_file>]\n"
-           "       [-o <sel_file>]\n"
-           "       [-show_angles]\n"
-           "       [-v]\n"
-           "       [-only_create_angles]\n");
-    printf(
-        "\tWhere:\n"
-        "\t<Parameters File>:  File containing projection parameters\n"
-        "\t                    check the manual for a description of the parameters\n"
-        "\t<psf_param_file>:  File containing X-ray microscope parameters\n"
-        "\t<sel_file>:         This is a selection file with all the generated\n"
-        "\t                    projections\n");
+    Projection         proj;
+    MetaData           SF;
+
+    //    ROUT_XR_project(*this, proj, SF);
+
+    randomize_random_generator();
+
+    // Read Microscope optics parameters and produce side information
+    XRayPSF psf;
+    psf.verbose = verbose;
+    psf.nThr = nThr;
+    psf.read(fn_psf_xr);
+    psf.produceSideInfo();
+    if(psf.verbose)
+        psf.show();
+
+
+    // Read projection parameters and produce side information
+    Projection_XR_Parameters proj_prm;
+    proj_prm.read(fn_proj_param);
+    proj_prm.tell=tell;
+    PROJECT_XR_Side_Info side;
+    side.produce_Side_Info(proj_prm);
+
+
+    //    psf.adjustParam(side.phantomVol);
+
+    // Project
+    int ProjNo = 0;
+    if (!only_create_angles)
+    {
+        // Really project
+        ProjNo = PROJECT_XR_Effectively_project(proj_prm, side,
+                                                proj, psf, SF);
+        // Save SelFile
+        if (fn_sel_file != "")
+            SF.write(fn_sel_file);
+    }
+    else
+    {
+        side.DF.write("/dev/stdout");
+    }
+    return;
+
+
+
 }
+
+
 
 /* Read Projection Parameters ============================================== */
 void Projection_XR_Parameters::read(const FileName &fn_proj_param)
@@ -194,8 +240,7 @@ void Projection_XR_Parameters::calculateProjectionAngles(Projection &P, double a
 
 /* Produce Side Information ================================================ */
 void PROJECT_XR_Side_Info::produce_Side_Info(
-    const Projection_XR_Parameters &prm,
-    const ProgProjectXR &prog_prm)
+    const Projection_XR_Parameters &prm)
 {
     phantomVol.read(prm.fnPhantom);
     phantomVol().setXmippOrigin();
@@ -383,41 +428,4 @@ void project_xr_Volume_offCentered(PROJECT_XR_Side_Info &side, XRayPSF &psf, Pro
 int ROUT_XR_project(ProgProjectXR &prm,
                     Projection &proj, MetaData &SF)
 {
-    randomize_random_generator();
-
-    // Read Microscope optics parameters and produce side information
-    XRayPSF psf;
-    psf.verbose = prm.verbose;
-    psf.read(prm.fn_psf_xr);
-    psf.produceSideInfo();
-    if(psf.verbose)
-        psf.show();
-
-
-    // Read projection parameters and produce side information
-    Projection_XR_Parameters proj_prm;
-    proj_prm.read(prm.fn_proj_param);
-    proj_prm.tell=prm.tell;
-    PROJECT_XR_Side_Info side;
-    side.produce_Side_Info(proj_prm, prm);
-
-
-    //    psf.adjustParam(side.phantomVol);
-
-    // Project
-    int ProjNo = 0;
-    if (!prm.only_create_angles)
-    {
-        // Really project
-        ProjNo = PROJECT_XR_Effectively_project(proj_prm, side,
-                                                proj, psf, SF);
-        // Save SelFile
-        if (prm.fn_sel_file != "")
-            SF.write(prm.fn_sel_file);
-    }
-    else
-    {
-        side.DF.write("/dev/stdout");
-    }
-    return ProjNo;
 }

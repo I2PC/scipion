@@ -185,7 +185,7 @@ int ROUT_mpi_XR_project(ProgProjectXR &prm,
     mpi_proj_prm.tell=prm.tell;
     PROJECT_XR_Side_Info side;
 
-    side.produce_Side_Info(mpi_proj_prm, prm);
+    side.produce_Side_Info(mpi_proj_prm);
     //    psf.adjustParam(side.phantomVol);
 
     // Project

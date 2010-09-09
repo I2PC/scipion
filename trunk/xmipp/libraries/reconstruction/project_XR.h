@@ -31,7 +31,7 @@
 #include <data/metadata.h>
 #include <data/projection.h>
 #include <data/psf_xr.h>
-
+#include <data/program.h>
 #include <data/transformations.h>
 
 
@@ -40,8 +40,9 @@
 //@{
 /* Projection XR Program -------------------------------- */
 /** Program class for the project program */
-class ProgProjectXR
+class ProgProjectXR: public XmippProgram
 {
+
 public:
     /// Filename with the Projection_Parameters.
     FileName fn_proj_param;
@@ -53,22 +54,24 @@ public:
     bool only_create_angles;
     /// Activate verbose mode;
     bool verbose;
+    /// Number of threads;
+    int nThr;
 
 #define TELL_SHOW_ANGLES 0x1
     /** Debugging variable.
         This is a bitwise flag with the following valid labels:
         \\TELL_SHOW_ANGLES: the program shows the angles for each image.*/
     int tell;
-public:
-    /** Read from a command line.
-        An exception might be thrown by any of the internal conversions,
-        this would mean that there is an error in the command line and you
-        might show a usage message. */
-    void read(int argc, char **argv);
 
-    /** Usage message.
-        This function shows the way of introducing this parameters. */
-    void usage();
+protected:
+    void defineParams();
+    void readParams();
+
+public:
+
+    void run();
+
+
 };
 
 /* Projection parameters --------------------------------------------------- */
@@ -156,8 +159,7 @@ public:
     /** Produce Project Side information.
         This function produce the side information from the project
         program parameters. Basically it loads the phantom.*/
-    void produce_Side_Info(const Projection_XR_Parameters &prm,
-                           const ProgProjectXR &prog_prm);
+    void produce_Side_Info(const Projection_XR_Parameters &prm);
 };
 
 /* Effectively project ----------------------------------------------------- */
