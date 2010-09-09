@@ -45,13 +45,6 @@ protected:
     void preprocess()
     {
         std::cout << " Printing the header ... " << std::endl;
-        std::string xx = getParam("-p");
-        std::cout << "print type: " << xx << std::endl;
-        std::string thr = getParam("-thr");
-        if (thr == "")
-          std::cout << "No threads" << std::endl;
-        else
-          std::cerr << "thr: " << thr << std::endl;
     }
 
     void postprocess()
