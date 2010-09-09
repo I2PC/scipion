@@ -171,6 +171,9 @@ public:
     /// Usage
     void usage();
 
+    /// Show the microscope parameters
+    void show();
+
     /// Show
     friend std::ostream & operator <<(std::ostream &out, const XRayPSF &psf);
 

@@ -233,29 +233,10 @@ int PROJECT_XR_Effectively_project(Projection_XR_Parameters &prm,
         Matrix1D<double> inPlaneShift(3);
         VECTOR_R3(inPlaneShift,shiftX,shiftY,0);
 
-
-
-        //        // Find Euler rotation matrix
-        //        Matrix1D<double> axis;
-        //        Euler_direction(prm.axisRot, prm.axisTilt, 0, axis);
-        //        Matrix2D<double> Raxis=rotation3DMatrix(angle,axis);
-        //        Raxis.resize(3,3);
-        //        double inplaneRot = 0;
-        //        Matrix2D<double> Rinplane=rotation3DMatrix(inplaneRot,'Z');
-        //        Rinplane.resize(3,3);
-        //        Euler_matrix2angles(Rinplane*Raxis, tRot, tTilt, tPsi);
-        //        proj.setEulerAngles(tRot,tTilt,tPsi);
-        //        proj.setShifts(XX(prm.raxis),YY(prm.raxis),ZZ(prm.raxis));
-
-
         prm.calculateProjectionAngles(proj,angle, 0,inPlaneShift);
-
 
         // Really project ....................................................
         project_xr_Volume_offCentered(side, psf, proj,prm.proj_Ydim, prm.proj_Xdim, idx);
-
-        //        project_xr_Volume(side, psf, proj);
-
 
         // Add noise in angles and voxels ....................................
         proj.getEulerAngles(tRot, tTilt,tPsi);
@@ -301,25 +282,6 @@ int PROJECT_XR_Effectively_project(Projection_XR_Parameters &prm,
 void project_xr_Volume_offCentered(PROJECT_XR_Side_Info &side, XRayPSF &psf, Projection &P,
                                    int Ydim, int Xdim, int idxSlice)
 {
-
-    //    // Find Euler rotation matrix
-    //    Matrix1D<double> axis;
-    //    Euler_direction(axisRot,axisTilt,0,axis);
-    //    Matrix2D<double> Raxis=rotation3DMatrix(angle,axis);
-    //    Raxis.resize(3,3);
-    //    Matrix2D<double> Rinplane=rotation3DMatrix(inplaneRot,'Z');
-    //    Rinplane.resize(3,3);
-    //    double rot, tilt, psi;
-    //    Euler_matrix2angles(Rinplane*Raxis, rot, tilt, psi);
-    //    P.set_angles(rot, tilt, psi);
-    //
-    //
-    //    // Find displacement because of axis offset and inplane shift
-    //    Matrix1D<double> roffset=Rinplane*(raxis-Raxis*raxis)+rinplane;
-    //
-    //    P.setShifts(XX(roffset), YY(roffset), ZZ(roffset));
-
-
     int iniXdim, iniYdim, iniZdim, newXdim, newYdim;
     int xOffsetN, yOffsetN, zinit, zend, yinit, yend, xinit, xend;
 
@@ -428,6 +390,8 @@ int ROUT_XR_project(Prog_Project_XR_Parameters &prm,
     psf.verbose = prm.verbose;
     psf.read(prm.fn_psf_xr);
     psf.produceSideInfo();
+    if(psf.verbose)
+        psf.show();
 
 
     // Read projection parameters and produce side information
@@ -438,7 +402,7 @@ int ROUT_XR_project(Prog_Project_XR_Parameters &prm,
     side.produce_Side_Info(proj_prm, prm);
 
 
-//    psf.adjustParam(side.phantomVol);
+    //    psf.adjustParam(side.phantomVol);
 
     // Project
     int ProjNo = 0;

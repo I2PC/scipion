@@ -117,6 +117,13 @@ std::ostream & operator <<(std::ostream &out, const XRayPSF &psf)
     return out;
 }
 
+/* Show the microscope parameters------------------------------------------- */
+void XRayPSF::show()
+{
+//    if (verbose)
+        std::cout << *this << std::endl;
+}
+
 /* Default values ---------------------------------------------------------- */
 void XRayPSF::clear()
 {
@@ -145,9 +152,6 @@ void XRayPSF::produceSideInfo()
 
     //        Z = 0.99999*Zo;
     //    Z = Zo;
-
-    if (verbose)
-        std::cout << *this << std::endl;
 }
 
 /* Apply the OTF to an image ----------------------------------------------- */
@@ -416,9 +420,9 @@ void project_xr(XRayPSF &psf, Image<double> &vol, Image<double> &imOut, int idxS
 
     std::vector<MDLabel> labels3 = dataThread->imOut->MD.getActiveLabels() ;
 
-    numberOfThreads = 2;
+    numberOfThreads = 1;
     R = vol().zdim;
-    blockSize = 20;
+    blockSize = 10;
 
     //Create the job handler to distribute jobs
     td = new ThreadTaskDistributor(R, blockSize);
@@ -441,19 +445,12 @@ void thread_project_xr(ThreadArgument &thArg)
 
     int thread_id = thArg.thread_id;
 
-
     XrayThread *dataThread = (XrayThread*) thArg.workClass;
     XRayPSF &psf = dataThread->psf;
     Image<double> &vol =  *(dataThread->vol);
     Image<double> &imOutGlobal = *(dataThread->imOut);
 
-    long long int first = -1, last = -1, priorLast = 0;
-
-
-    Image<double> imOut;
-    imOut() = MultidimArray<double> (psf.Niy, psf.Nix);
-    imOut().initZeros();
-    imOut().setXmippOrigin();
+    long long int first = -1, last = -1, priorLast = -1;
 
     if (thread_id==0)
     {
@@ -465,7 +462,10 @@ void thread_project_xr(ThreadArgument &thArg)
 
     barrier->wait();
 
-
+    Image<double> imOut;
+    imOut() = MultidimArray<double> (psf.Niy, psf.Nix);
+    imOut().initZeros();
+    imOut().setXmippOrigin();
 
     MultidimArray<double> imTemp(psf.Noy, psf.Nox),intExp(psf.Noy, psf.Nox),imTempSc(imOut()),*imTempP;
     intExp.initZeros();
@@ -476,15 +476,14 @@ void thread_project_xr(ThreadArgument &thArg)
     imTempSc.setXmippOrigin();
 
 
-
     while (td->getTasks(first, last))
     {
         std::cerr << "th" << thread_id << ": working from " << first << " to " << last <<std::endl;
 
 
-//        if (first>300)
+        if (first>350)
         {
-            for (int k=(vol()).zinit + priorLast; k<=(vol()).zinit + first - 1 ; k++)
+            for (int k=(vol()).zinit + priorLast + 1; k<=(vol()).zinit + first - 1 ; k++)
             {
                 FOR_ALL_ELEMENTS_IN_ARRAY2D(intExp)
                 intExp(i, j) = intExp(i, j) + vol(k, i, j);
@@ -499,7 +498,7 @@ void thread_project_xr(ThreadArgument &thArg)
 
             //        init_progress_bar(vol().zdim-1);
 
-            for (int k=((vol()).zinit + first); k<=((vol()).zinit + last - 1); k++)
+            for (int k=((vol()).zinit + first); k<=((vol()).zinit + last); k++)
             {
                 FOR_ALL_ELEMENTS_IN_ARRAY2D(intExp)
                 {
@@ -513,7 +512,7 @@ void thread_project_xr(ThreadArgument &thArg)
                 _Im.write("psfxr-imTemp.spi");
 #endif
 
-                psf.Z = psf.Zo + psf.DeltaZo - k*psf.dzo + imOut.Zoff();
+                psf.Z = psf.Zo + psf.DeltaZo - k*psf.dzo + imOutGlobal.Zoff();
 
                 switch (psf.AdjustType)
                 {
@@ -536,8 +535,6 @@ void thread_project_xr(ThreadArgument &thArg)
                 }
 
                 psf.generateOTF(*imTempP);
-
-
 
 
 #ifdef DEBUG
@@ -574,13 +571,13 @@ void thread_project_xr(ThreadArgument &thArg)
     }
 
 
-
-
     //Lock for update the total counter
     mutex.lock();
     FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY2D(*imTempP)
     dAij(imOutGlobal(),i,j) += dAij(imOut(),i,j);
     mutex.unlock();
+
+    barrier->wait();
 
 
     if (thread_id==0)
