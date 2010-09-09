@@ -112,6 +112,7 @@ void ArgLexer::setupToken(TokenType type)
         pToken->start = pos;
         pToken->end = pos + offset - 1;
         pToken->lexeme = input[line].substr(pos, offset);
+
         if (type == TOK_ID)
         {
             std::string s = pToken->lexeme;
@@ -126,6 +127,8 @@ void ArgLexer::setupToken(TokenType type)
             }
 
         }
+        else if (type == TOK_STR)
+          ++offset;
         pos += offset;
         offset = 1;
     }
@@ -294,7 +297,10 @@ bool ArgLexer::nextToken()
             break;
         case '"':
             offset = input[line].find_first_of('"', pos + 1);
-            offset -= pos - 1;
+            ++pos;
+            offset -= pos;
+            std::cerr << "pos: " << pos << std::endl;
+            std::cerr << "offset: " << offset << std::endl;
             setupToken(TOK_STR);
             break;
         default:
@@ -305,8 +311,8 @@ bool ArgLexer::nextToken()
         }
     }
 
-    //ConsolePrinter * cp = new ConsolePrinter();
-    //cp->printToken(pToken);
+    ConsolePrinter * cp = new ConsolePrinter();
+    cp->printToken(pToken);
 
     return true;
 }
