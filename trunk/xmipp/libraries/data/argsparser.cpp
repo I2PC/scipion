@@ -693,6 +693,13 @@ void ParamDef::check(std::stringstream & errors)
                 }
         }
     }
+    else
+    {
+      //Fill default arguments
+      for (size_t i = 0; i < arguments.size(); ++i)
+        if (arguments[i]->hasDefault)
+          cmdArguments.push_back(arguments[i]->argDefault.c_str());
+    }
 
 
 }
