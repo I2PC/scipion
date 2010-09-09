@@ -36,8 +36,8 @@ class ProgHeaderPrint: public ProgHeader
 protected:
     void defineParams()
     {
-        addParamsLine("xmipp_header_print");
-        addParamsLine("       :Print information from the header of 2D-images.");
+        addUsageLine("Print information from the header of 2D-images.");
+
         addParamsLine(" -i <metadata>   :MetaData file with images or an individual image.");
         addParamsLine(" alias --input;");
     }
@@ -45,6 +45,13 @@ protected:
     void preprocess()
     {
         std::cout << " Printing the header ... " << std::endl;
+        std::string xx = getParam("-p");
+        std::cout << "print type: " << xx << std::endl;
+        std::string thr = getParam("-thr");
+        if (thr == "")
+          std::cout << "No threads" << std::endl;
+        else
+          std::cerr << "thr: " << thr << std::endl;
     }
 
     void postprocess()

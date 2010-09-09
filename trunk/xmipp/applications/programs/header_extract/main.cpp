@@ -39,8 +39,7 @@ private:
 protected:
     void defineParams()
     {
-        addParamsLine(" xmipp_header_extract");
-        addParamsLine(" :Extracts the geometric transformation (angles & shifts) in the header of 2D-images.");
+        addUsageLine("Extracts the geometric transformation (angles & shifts) in the header of 2D-images.");
         addParamsLine("   -i <metadata>      :metadata file with input.");
         addParamsLine("   alias --input;");
         addParamsLine("   [-o <metadata> ]    :metadata file, by default data is stored in input metaData file.");

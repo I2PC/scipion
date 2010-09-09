@@ -39,8 +39,7 @@ private:
 protected:
     void defineParams()
     {
-        addParamsLine(" xmipp_header_assign");
-        addParamsLine(" :Set the geometric transformation (angles & shifts) in the header of 2D-images.");
+        addUsageLine("Set the geometric transformation (angles & shifts) in the header of 2D-images.");
         addParamsLine("   -i <metadata>      :Metadata file with input\n");
         addParamsLine("   alias --input;");
         addParamsLine("   [-round_shifts]    :Round shifts to integers");

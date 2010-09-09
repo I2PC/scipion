@@ -37,8 +37,7 @@ private:
 protected:
     void defineParams()
     {
-        addParamsLine(" xmipp_header_reset");
-        addParamsLine(" :Reset the geometric transformation (angles & shifts) in the header of 2D-images.");
+        addUsageLine("Reset the geometric transformation (angles & shifts) in the header of 2D-images.");
         addParamsLine("   -i <metadata>      :Metadata file with input images");
         addParamsLine("   alias --input;");
         addParamsLine("   [-tiltSeries <firstAngle> <angleStep>]: Assign a regularly spaced angular distribution.");
