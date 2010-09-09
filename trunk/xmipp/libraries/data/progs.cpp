@@ -145,7 +145,7 @@ void SF_main(int argc, char **argv,
     {
         if (!exists(prm->fn_in))
             REPORT_ERROR(ERR_IO_NOTEXIST,
-                       (std::string)argv[0] + ": " + prm->fn_in + " doesn't exist");
+                         (std::string)argv[0] + ": " + prm->fn_in + " doesn't exist");
         bool success;
 
         FileName fn_out;
@@ -360,13 +360,13 @@ void ProgHeader::readParams()
         md_input.removeObjects(MDValueEQ(MDL_ENABLED, -1));
 
         if (md_input.isEmpty())
-          REPORT_ERROR(ERR_MD_NOOBJ, "");
+            REPORT_ERROR(ERR_MD_NOOBJ, "");
     }
 }
 
 void ProgHeader::run()
 {
-  try
+    try
     {
         preprocess();
 

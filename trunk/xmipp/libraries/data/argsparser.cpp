@@ -464,6 +464,9 @@ bool ArgumentDef::acceptArguments(std::stringstream &errors, size_t & index, std
     }
 
     if (isList)
+      return true;
+
+    if (!subParams.empty())
     {
         bool found = false;
         std::string optionValue = (std::string)cmdArguments[index];
@@ -481,7 +484,7 @@ bool ArgumentDef::acceptArguments(std::stringstream &errors, size_t & index, std
         }
         if (!found)
         {
-            errors << optionValue << " is not a valid option for <" << name <<">. ";
+            errors << optionValue << " is not a valid option for <" << name <<"> ";
             return false;
         }
     }
@@ -577,9 +580,10 @@ bool ParamDef::parse()
                 ParamDef * pOpt = new ParamDef(pLexer, this);
                 pOpt->consume(TOK_ID);
 
-                pOpt->name = token.lexeme;
+                pOpt->name = pOpt->token.lexeme;
                 pOpt->parseArgumentList();
                 pOpt->parseCommentList(pOpt->comments);
+                pArg->subParams.push_back(pOpt);
             }
 
         }
@@ -914,6 +918,17 @@ void ConsolePrinter::printParam(const ParamDef &param, int v)
         }
         std::cout << std::endl;
         printCommentList(param.comments, v);
+        for (size_t i = 0; i < param.arguments.size(); ++i)
+        {
+            ArgumentDef &arg = *param.arguments[i];
+            if (!arg.subParams.empty())
+            {
+                std::cout << "      where <" << arg.name << "> can be:" << std::endl;
+                for (size_t j = 0; j < arg.subParams.size(); ++j)
+                    std::cout << "        " << arg.subParams[j]->name << std::endl;
+            }
+        }
+
     }
 }
 
@@ -923,7 +938,6 @@ void ConsolePrinter::printArgument(const ArgumentDef & argument, int v)
     if (argument.hasDefault)
         std::cout << "=" << argument.argDefault;
     std::cout << ">";
-
 }
 
 void ConsolePrinter::printCommentList(const CommentList &comments, int v)
