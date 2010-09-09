@@ -391,7 +391,7 @@ void lensPD(MultidimArray<std::complex<double> > &Im, double Flens, double lambd
 Mutex mutex;
 Barrier * barrier;
 ParallelTaskDistributor * td;
-
+int numberOfThreads;
 
 /// Generate an X-ray microscope projection for volume vol using the microscope configuration psf
 void project_xr(XRayPSF &psf, Image<double> &vol, Image<double> &imOut, int idxSlice)
@@ -404,7 +404,7 @@ void project_xr(XRayPSF &psf, Image<double> &vol, Image<double> &imOut, int idxS
     dataThread->imOut = &imOut;
 
     longint blockSize, numberOfJobs= vol().zdim;
-    int numberOfThreads = psf.nThr;
+    numberOfThreads = psf.nThr;
 
     blockSize = (numberOfThreads == 1) ? numberOfJobs : numberOfJobs/numberOfThreads/6;
 
@@ -417,15 +417,15 @@ void project_xr(XRayPSF &psf, Image<double> &vol, Image<double> &imOut, int idxS
     ThreadManager * thMgr = new ThreadManager(numberOfThreads,(void*) dataThread);
 
 
-//    if (numberOfThreads==1)
-//    {
-//        ThreadArgument thArg;
-//        thArg.thread_id = 0;
-//        thArg.workClass = dataThread;
-//        thread_project_xr(thArg);
-//    }
-//    else
-        thMgr->run(thread_project_xr);
+    //    if (numberOfThreads==1)
+    //    {
+    //        ThreadArgument thArg;
+    //        thArg.thread_id = 0;
+    //        thArg.workClass = dataThread;
+    //        thread_project_xr(thArg);
+    //    }
+    //    else
+    thMgr->run(thread_project_xr);
 
 
     //Terminate threads and free memory
@@ -476,6 +476,8 @@ void thread_project_xr(ThreadArgument &thArg)
         std::cerr << "th" << thread_id << ": working from " << first << " to " << last <<std::endl;
 
 
+        if (numberOfThreads == 1)
+            first = last -50;
         if (first>300)
         {
             for (int k=(vol()).zinit + priorLast + 1; k<=(vol()).zinit + first - 1 ; k++)

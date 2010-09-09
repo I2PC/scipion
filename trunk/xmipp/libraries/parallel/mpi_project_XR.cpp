@@ -39,6 +39,73 @@ struct mpiProjData
     double zShift;
 };
 
+MPIProgProjectXR::~MPIProgProjectXR()
+{
+    delete node;
+}
+
+void MPIProgProjectXR::defineParams()
+{
+    ProgProjectXR::defineParams();
+    clearUsage();
+    addUsageLine("MPI Generate projections as in a X-ray microscope from a 3D Xmipp volume.");
+
+}
+void MPIProgProjectXR::read(int argc, char** argv)
+{
+    node = new MpiNode(argc, argv);
+    ProgProjectXR::read(argc, argv);
+}
+
+void MPIProgProjectXR::run()
+{
+    randomize_random_generator();
+
+    Projection  proj;
+    MetaData    SF;
+
+    // Read Microscope optics parameters and produce side information
+    XRayPSF psf;
+    psf.verbose = verbose;
+    psf.nThr = nThr;
+    psf.read(fn_psf_xr);
+    psf.produceSideInfo();
+
+
+    std::cout << "---------------- MPI RUNNNN  ----------------" <<std::endl;
+
+
+
+    // Read projection parameters and produce side information
+    Projection_mpi_XR_Parameters mpi_proj_prm;
+    mpi_proj_prm.node = node;
+    mpi_proj_prm.read(fn_proj_param);
+    mpi_proj_prm.tell=tell;
+    PROJECT_XR_Side_Info side;
+
+    side.produce_Side_Info(mpi_proj_prm);
+    //    psf.adjustParam(side.phantomVol);
+
+    // Project
+    int ProjNo = 0;
+    if (!only_create_angles)
+    {
+        // Really project
+        ProjNo = PROJECT_mpi_XR_Effectively_project(mpi_proj_prm, side,
+                 proj, psf, SF);
+        // Save SelFile
+        if (node->isMaster() && fn_sel_file != "")
+            SF.write(fn_sel_file);
+    }
+    else
+    {
+        psf.adjustParam(side.phantomVol);
+        if (node->isMaster())
+            side.DF.write("/dev/stdout");
+    }
+    return;
+}
+
 /* Read parameters --------------------------------------------------------- */
 void Projection_mpi_XR_Parameters::read(const FileName &fn_proj_param)
 {
@@ -59,6 +126,16 @@ int PROJECT_mpi_XR_Effectively_project(
     MetaData DF_movements;
     DF_movements.setComment("True rot, tilt and psi; rot, tilt, psi, X and Y shifts applied");
     double tRot,tTilt,tPsi,rot,tilt,psi;
+
+
+
+
+
+    std::cout << "-------------MPI EFectiviliiii RUNNNN -------------" <<std::endl;
+
+
+
+
 
 
     // Calculation of data to be distributed in nodes
@@ -162,48 +239,4 @@ int PROJECT_mpi_XR_Effectively_project(
     }
     delete jobHandler;
     return numProjs;
-}
-
-
-/* ROUT_project ============================================================ */
-int ROUT_mpi_XR_project(ProgProjectXR &prm,
-                        Projection &proj, MetaData &SF, MpiNode &node)
-{
-    randomize_random_generator();
-
-    // Read Microscope optics parameters and produce side information
-    XRayPSF psf;
-    psf.verbose = prm.verbose;
-    psf.read(prm.fn_psf_xr);
-    psf.produceSideInfo();
-
-
-    // Read projection parameters and produce side information
-    Projection_mpi_XR_Parameters mpi_proj_prm;
-    mpi_proj_prm.node = &node;
-    mpi_proj_prm.read(prm.fn_proj_param);
-    mpi_proj_prm.tell=prm.tell;
-    PROJECT_XR_Side_Info side;
-
-    side.produce_Side_Info(mpi_proj_prm);
-    //    psf.adjustParam(side.phantomVol);
-
-    // Project
-    int ProjNo = 0;
-    if (!prm.only_create_angles)
-    {
-        // Really project
-        ProjNo = PROJECT_mpi_XR_Effectively_project(mpi_proj_prm, side,
-                 proj, psf, SF);
-        // Save SelFile
-        if (node.isMaster() && prm.fn_sel_file != "")
-            SF.write(prm.fn_sel_file);
-    }
-    else
-    {
-        psf.adjustParam(side.phantomVol);
-        if (node.isMaster())
-            side.DF.write("/dev/stdout");
-    }
-    return ProjNo;
 }

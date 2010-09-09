@@ -32,12 +32,12 @@
 
 void ProgProjectXR::defineParams()
 {
-    addParamsLine("xmipp_project_xr");
-    addParamsLine("       :Generate projections as in a X-ray microscope from a 3D Xmipp volume.");
+//    addParamsLine("xmipp_project_xr");
+    addUsageLine("Generate projections as in a X-ray microscope from a 3D Xmipp volume.");
     addParamsLine(" -i <Proj_param_file>   :MetaData file with projection parameters.");
     addParamsLine("                         :Check the manual for a description of the parameters.");
     addParamsLine(" alias --input;");
-    addParamsLine("[-psf <psf_param_file=\"x\">] : XRay-Microscope parameters file. If not set, then default parameters are chosen.");
+    addParamsLine("[-psf <psf_param_file=\"\">] : XRay-Microscope parameters file. If not set, then default parameters are chosen.");
     addParamsLine("[-o <sel_file=\"\">]         : Output Metadata file with all the generated projecions.");
     addParamsLine("[-v]                    : Verbose.");
     addParamsLine("[-show_angles]          : Print angles value for each projection.");

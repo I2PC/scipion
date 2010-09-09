@@ -31,21 +31,13 @@
 int main(int argc, char *argv[])
 {
 
-    MpiNode node(argc, argv);
-
-//    if (MPI_Init(&argc, &argv) != MPI_SUCCESS)
-//    {
-//        fprintf(stderr, "MPI initialization error\n");
-//        exit(EXIT_FAILURE);
-//    }
-    ProgProjectXR      prog_prm;
-    Projection                           proj;
-    MetaData                              SF;
+    MPIProgProjectXR      prog_prm;
 
     // Check the command line
     try
     {
         prog_prm.read(argc, argv);
+        prog_prm.run();
 
     }
     catch (XmippError &XE)
@@ -53,16 +45,6 @@ int main(int argc, char *argv[])
         std::cout << XE;
         prog_prm.usage();
         exit(1);
-    }
-
-    try
-    {
-        // Really project
-        ROUT_mpi_XR_project(prog_prm, proj, SF, node);
-    }
-    catch (XmippError XE)
-    {
-        std::cout << XE;
     }
     return 0;
 }

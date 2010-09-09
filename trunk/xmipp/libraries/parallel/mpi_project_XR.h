@@ -31,11 +31,30 @@
 #include "reconstruction/project_XR.h"
 
 
+/**@defgroup MPIProjectionXRProgram project_xr (project for tilt series)
+   @ingroup ParallelLibrary */
+//@{
+/* Projection XR Program -------------------------------- */
+/** Program class for the project program */
+class MPIProgProjectXR: public ProgProjectXR
+{
+    MpiNode *node;
+public:
+
+    ~MPIProgProjectXR();
+    void read(int argc, char** argv);
+
+    void run();
+
+protected:
+    void defineParams();
+};
+
 
 class Projection_mpi_XR_Parameters: public Projection_XR_Parameters
 {
 public:
-    /** Number of Procesors **/
+    /** Number of Processors **/
     int nProcs;
 
     /** Divide the job in this number block with this number of images */
@@ -45,9 +64,7 @@ public:
 
     /*  constructor ------------------------------------------------------- */
     Projection_mpi_XR_Parameters()
-    {
-
-    }
+    {}
 
 
     /* Read parameters --------------------------------------------------------- */
@@ -104,11 +121,5 @@ int PROJECT_mpi_XR_Effectively_project(
     Projection &proj,
     XRayPSF &psf,
     MetaData &SF) ;
-
-
-/* ROUT_project ============================================================ */
-int ROUT_mpi_XR_project(ProgProjectXR &prm,
-                        Projection &proj, MetaData &SF, MpiNode &node);
-
 
 #endif /* MPI_PROJECT_XR_H_ */
