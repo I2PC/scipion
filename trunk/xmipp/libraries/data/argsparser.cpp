@@ -747,10 +747,10 @@ ProgramDef::ProgramDef(ArgLexer * lexer) :
 bool ProgramDef::parse()
 {
     // P -> ID CL OL
-    consume(TOK_ID);
-    name = token.lexeme;
+    //consume(TOK_ID);
+    //name = token.lexeme;
     //Usage comments
-    parseCommentList(usageComments);
+    //parseCommentList(usageComments);
 
     while (!lookahead(TOK_END))
     {
@@ -842,6 +842,8 @@ void ProgramDef::addParamImplies(const std::string &name)
 void ProgramDef::read(int argc, char ** argv)
 {
     std::stringstream errors;
+    //Set the name with the first argument
+    name = argv[0];
     //We assume that all options start with -
     if (argc > 1 && argv[1][0] != '-')
         REPORT_ERROR(ERR_ARG_INCORRECT, "Parameters should start with a -");

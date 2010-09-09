@@ -53,9 +53,23 @@ protected:
    * If some error occurs the usage will be printed out.
    * */
   virtual void readParams();
-  /** This operator will be used in the function defineParams()
-   *  to add lines to parser */
+  /** @name Program definitions
+   * Following functions will be used in defineParams()
+   * for define the arguments of
+   * a program. Very useful for checking the command line parameters
+   * and for standard usage message.
+   * @{
+   */
+  /** Set the program name */
+  void setProgramName(const char * name);
+  /** Add usage line */
+  void addUsageLine(const char * line);
+  /** Clear usage */
+  void clearUsage();
+  /** Add a params definition line*/
   void addParamsLine(const char * line);
+
+  /** @} */
 
   /** Get the argument of this param, first start at 0 position */
   const char * getParam(const char * param, int arg = 0);

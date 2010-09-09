@@ -67,6 +67,8 @@ void XmippProgram::read(int argc, char ** argv)
     if (progLexer == NULL || progDef == NULL)
         init();
 
+    setProgramName(argv[0]);
+
     if (argc == 1)
         usage();
 
@@ -84,6 +86,21 @@ void XmippProgram::read(int argc, char ** argv)
         usage();
     }
 
+}
+
+void XmippProgram::setProgramName(const char * name)
+{
+  progDef->name = name;
+}
+
+void XmippProgram::addUsageLine(const char * line)
+{
+  progDef->usageComments.addComment(line);
+}
+
+void XmippProgram::clearUsage()
+{
+  progDef->usageComments.clear();
 }
 
 void XmippProgram::addParamsLine(const char * line)
