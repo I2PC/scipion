@@ -87,6 +87,7 @@ void * _threadMain(void * data)
         }
         else //exit thread
         {
+            thMgr->barrier->wait();//Make sure all threads are ready to DIE.
             pthread_exit(NULL);
             return NULL;
         }
@@ -110,7 +111,7 @@ ThreadManager::ThreadManager(int numberOfThreads, void * workClass)
         arguments[i].workClass = workClass;
 
         result = pthread_create(ids + i, NULL, _threadMain, (void*) (arguments
-                + i));
+                                + i));
 
         if (result != 0)
         {
@@ -126,6 +127,7 @@ ThreadManager::~ThreadManager()
     //Destroy the threads
     workFunction = NULL;
     barrier->wait();
+    barrier->wait();//Make sure all threads are ready to DIE.
 
     delete barrier;
     delete[] ids;
@@ -143,7 +145,7 @@ void ThreadManager::runAsync(ThreadFunction function)
 {
     workFunction = function;
     //Wait on barrier to threads starts working
-    barrier->wait();
+    wait();
 }
 
 void ThreadManager::wait()
@@ -209,8 +211,8 @@ bool ThreadTaskDistributor::distribute(longint &first, longint &last)
     {
         first = assignedTasks;
         assignedTasks
-                = (assignedTasks + blockSize < numberOfTasks) ? (assignedTasks
-                        + blockSize) : numberOfTasks;
+        = (assignedTasks + blockSize < numberOfTasks) ? (assignedTasks
+                + blockSize) : numberOfTasks;
         last = assignedTasks - 1;
     }
     return result;
