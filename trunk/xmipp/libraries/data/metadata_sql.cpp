@@ -460,7 +460,7 @@ void MDSql::dumpToFile(const FileName &fileName)
     sqlite3_backup *pBackup;
 
     sqlCommitTrans();
-    rc = sqlite3_open_v2(fileName.c_str(), &pTo);
+    rc = sqlite3_open(fileName.c_str(), &pTo);
     if( rc==SQLITE_OK )
     {
         pBackup = sqlite3_backup_init(pTo, "main", db, "main");
@@ -482,7 +482,7 @@ bool MDSql::sqlBegin()
     if (table_counter > 0)
         return true;
     //std::cerr << "entering sqlBegin" <<std::endl;
-    rc = sqlite3_open_v2("", &db);
+    rc = sqlite3_open("", &db);
 
     sqlite3_exec(db, "PRAGMA temp_store=MEMORY",NULL, NULL, &errmsg);
     sqlite3_exec(db, "PRAGMA synchronous=OFF",NULL, NULL, &errmsg);
