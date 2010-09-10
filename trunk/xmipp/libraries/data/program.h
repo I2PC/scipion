@@ -88,14 +88,18 @@ public:
    * the name of the program is defined
    * by each subclass of this base class.
    */
-  const char * name();
+  const char * name() const;
   /** Print the usage of the program, reduced version */
-  void usage();
+  void usage() const;
   /** Print detailed usage of the program */
-  void extendedUsage();
+  void extendedUsage() const;
 
   /** Return the version of the program */
-  int version();
+  int version() const;
+
+  /** Show parameters */
+  virtual void show() const;
+
   /** Read the command line arguments
    * If an error occurs while reading arguments,
    * the error message will be printed and the

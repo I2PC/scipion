@@ -54,12 +54,12 @@ XmippProgram::~XmippProgram()
 
 void XmippProgram::defineParams()
 {
-    REPORT_ERROR(ERR_PROG_NOTDEF, "function 'defineParams'");
+    REPORT_ERROR(ERR_NOT_IMPLEMENTED, "function 'defineParams'");
 }
 
 void XmippProgram::readParams()
 {
-    REPORT_ERROR(ERR_PROG_NOTDEF, "function 'readParams'");
+    REPORT_ERROR(ERR_NOT_IMPLEMENTED, "function 'readParams'");
 }
 
 void XmippProgram::read(int argc, char ** argv)
@@ -85,7 +85,6 @@ void XmippProgram::read(int argc, char ** argv)
         std::cerr << xe;
         usage();
     }
-
 }
 
 void XmippProgram::setProgramName(const char * name)
@@ -131,21 +130,30 @@ bool XmippProgram::checkParam(const char * param)
     return paramDef->counter == 1;
 }
 
-const char * XmippProgram::name()
+const char * XmippProgram::name() const
 {
     return progDef->name.c_str();
 }
 
-void XmippProgram::usage()
+void XmippProgram::usage() const
 {
     ConsolePrinter cp;
     cp.printProgram(*progDef);
     exit(1);
 }
 
-void XmippProgram::extendedUsage()
+void XmippProgram::extendedUsage() const
 {
     ConsolePrinter cp;
     cp.printProgram(*progDef, 1);
     exit(1);
+}
+
+void XmippProgram::show() const
+{
+}
+
+int XmippProgram::version() const
+{
+	REPORT_ERROR(ERR_NOT_IMPLEMENTED,"");
 }
