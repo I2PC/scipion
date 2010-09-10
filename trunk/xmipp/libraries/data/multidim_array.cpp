@@ -65,10 +65,11 @@ void forcePositive(MultidimArray<double> &V)
         do
         {
             negativeRemaining=false;
-
+            int totalNeg=0;
             FOR_ALL_ELEMENTS_IN_ARRAY2D(V)
             if (V(i, j)<=0)
             {
+            	totalNeg++;
                 std::vector<double> neighbours;
                 for (int ii=-2; ii<=2; ii++)
                 {
@@ -87,7 +88,9 @@ void forcePositive(MultidimArray<double> &V)
                 }
                 int N=neighbours.size();
                 if (N==0)
+                {
                     negativeRemaining=true;
+                }
                 else
                 {
                     std::sort(neighbours.begin(),neighbours.end());
@@ -97,6 +100,10 @@ void forcePositive(MultidimArray<double> &V)
                         V(i,j)=neighbours[N/2];
                 }
             }
+            if (totalNeg>0.05*MULTIDIM_SIZE(V))
+            	REPORT_ERROR(ERR_UNCLASSIFIED,(std::string)
+            			"The number of negative pixels exceeds the scope of this function: "+
+            			floatToString((float)totalNeg/MULTIDIM_SIZE(V)));
         }
         while (negativeRemaining);
     }
