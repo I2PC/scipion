@@ -129,14 +129,14 @@ void SF_main(int argc,
 class ProgHeader: public XmippProgram
 {
 protected:
-    Image<double>  img;
+    Image<double>   img;
     FileName        fn_in, fn_out, fn_img;
     MetaData        md_input;
 
     virtual void readParams();
     virtual void preprocess() = 0;
     virtual void postprocess() = 0;
-    virtual void headerProcess(FileName &fn_img) = 0;
+    virtual void headerProcess(const FileName &fn_img) = 0;
 
 public:
     virtual void run();
