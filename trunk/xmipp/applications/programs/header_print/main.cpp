@@ -50,7 +50,7 @@ protected:
     void postprocess()
     {}
 
-    void headerProcess(FileName &fn_img)
+    void headerProcess(const FileName &fn_img)
     {
         img.read(fn_img, false, -1, false);
         std::cout << img;
@@ -72,5 +72,6 @@ int main(int argc, char *argv[])
     {
         std::cerr << xe;
     }
+    return 0;
 }
 
