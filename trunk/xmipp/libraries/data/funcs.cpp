@@ -611,7 +611,7 @@ int existsTrim(const FileName &fn)
 }
 
 /* List of files within a directory ---------------------------------------- */
-void getdir(const std::string &dir, std::vector<std::string> &files)
+void getdir(const std::string &dir, std::vector<FileName> &files)
 {
 	files.clear();
 
@@ -622,8 +622,9 @@ void getdir(const std::string &dir, std::vector<std::string> &files)
 
     while ((dirp = readdir(dp)) != NULL)
     	if (strcmp(dirp->d_name,".")!=0 && strcmp(dirp->d_name,"..")!=0)
-           files.push_back(std::string(dirp->d_name));
+           files.push_back(FileName(dirp->d_name));
     closedir(dp);
+    std::sort(files.begin(),files.end());
 }
 
 /* Is directory ------------------------------------------------------------ */

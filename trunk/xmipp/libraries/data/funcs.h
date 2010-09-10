@@ -1091,7 +1091,7 @@ bool isDirectory (const FileName &fn);
 int existsTrim(const FileName& fn);
 
 /** Return the list of files within a directory. */
-void getdir(const std::string &dir, std::vector<std::string> &files);
+void getdir(const std::string &dir, std::vector<FileName> &files);
 
 /** This function raised an ERROR if the filename if not empty and if
  * the corresponding file does not exist.
