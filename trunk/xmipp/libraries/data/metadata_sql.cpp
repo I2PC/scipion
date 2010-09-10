@@ -23,6 +23,7 @@
  *  e-mail address 'xmipp@cnb.csic.es'
  ***************************************************************************/
 #include "metadata_sql.h"
+#include "threads.h"
 //#define DEBUG
 
 //This is needed for static memory allocation
@@ -32,6 +33,7 @@ MDSqlStaticInit MDSql::initialization;
 char *MDSql::errmsg;
 const char *MDSql::zLeftover;
 int MDSql::rc;
+Mutex sqlMutex; //Mutex to syncronize db access
 
 
 int MDSql::getUniqueId()
@@ -43,9 +45,12 @@ int MDSql::getUniqueId()
 
 MDSql::MDSql(MetaData *md)
 {
+    sqlMutex.lock();
     tableId = getUniqueId();
+    sqlMutex.unlock();
     myMd = md;
     myCache = new MDCache();
+
 }
 
 MDSql::~MDSql()
@@ -55,12 +60,24 @@ MDSql::~MDSql()
 
 bool MDSql::createMd()
 {
-    return createTable(&(myMd->activeLabels));
+    sqlMutex.lock();
+    //std::cerr << "creating md" <<std::endl;
+    bool result = createTable(&(myMd->activeLabels));
+    //std::cerr << "leave creating md" <<std::endl;
+    sqlMutex.unlock();
+
+    return result;
 }
 
 bool MDSql::clearMd()
 {
-    return dropTable();
+    sqlMutex.lock();
+    //std::cerr << "clearing md" <<std::endl;
+    bool result = dropTable();
+    //std::cerr << "leave clearing md" <<std::endl;
+    sqlMutex.unlock();
+
+    return result;
 }
 
 long int MDSql::addRow()
@@ -174,7 +191,7 @@ void MDSql::selectObjects(std::vector<long int> &objectsOut, const MDQuery *quer
         ss << queryPtr->orderByString();
         ss << queryPtr->limitString();
     }
-    rc = sqlite3_prepare(db, ss.str().c_str(), -1, &stmt, &zLeftover);
+    rc = sqlite3_prepare_v2(db, ss.str().c_str(), -1, &stmt, &zLeftover);
 #ifdef DEBUG
 
     std::cerr << "selectObjects: " << ss.str() <<std::endl;
@@ -547,7 +564,7 @@ bool MDSql::execSingleStmt(const std::stringstream &ss)
 #endif
 
     sqlite3_stmt * stmt;
-    rc = sqlite3_prepare(db, ss.str().c_str(), -1, &stmt, &zLeftover);
+    rc = sqlite3_prepare_v2(db, ss.str().c_str(), -1, &stmt, &zLeftover);
     bool r = execSingleStmt(stmt, &ss);
     rc = sqlite3_finalize(stmt);
     return r;
@@ -567,7 +584,7 @@ bool MDSql::execSingleStmt(sqlite3_stmt * &stmt, const std::stringstream *ss)
     if (rc != SQLITE_OK && rc != SQLITE_ROW && rc != SQLITE_DONE)
     {
         std::cerr << "MDSql::execSingleStmt: " << std::endl;
-        std::cerr <<"    code: " << rc << " error: " << sqlite3_errmsg(db) << std::endl;
+        std::cerr <<"    CCCcode: " << rc << " error: " << sqlite3_errmsg(db) << std::endl;
         r = false;
         exit(1);
     }

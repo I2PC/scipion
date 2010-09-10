@@ -38,6 +38,7 @@
 #include <fstream>
 #include <iomanip> //for print pi with more decimals
 #include "data/threads.h"
+#include "data/image.h"
 
 using namespace std;
 
@@ -64,27 +65,34 @@ int numberOfThreads = 1;
 pthread_t * th_structs;
 int * th_ids;
 int threadTask = -1;
-long long int R = 100000;
-long long int blockSize = 1000;
-long long int totalCounter = 0;
+longint R = 100000;
+longint blockSize = 1000;
+longint totalCounter = 0;
 
-long long int assignedJobs = 0;
-long long int &numberOfJobs = R;
+longint assignedJobs = 0;
+longint &numberOfJobs = R;
 
 void computePoints(ThreadArgument &thArg)
 {
     //ThreadArgument * thArg = (ThreadArgument*)data;
     int thread_id = thArg.thread_id;
 
-    long long int first = -1, last = -1;
-    long long int insideCounter = 0;
+    longint first = -1, last = -1;
+    longint insideCounter = 0;
 
     while (td->getTasks(first, last))
     {
         std::cerr << "th" << thread_id << ": working from " << first << " to " << last <<std::endl;
-        for (long long int x = 0; x <= R; x++)//just for more work to do
-            for (long long int y = first; y <= last; y++)
+        for (longint x = 0; x <= R; x++)//just for more work to do
+            for (longint y = first; y <= last; y++)
             {
+              Image<double> img;
+//              MetaData md1;
+//              MetaData md2;
+//              md1.clear();
+//              md1.addObject();
+//              md2.clear();
+//              md2.addObject();
                 if (X2 + Y2 <= R2)
                     insideCounter++;
             }
