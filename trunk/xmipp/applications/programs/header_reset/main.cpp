@@ -72,7 +72,7 @@ protected:
         md_input.write(fn_out);
     }
 
-    void headerProcess(FileName &fn_img)
+    void headerProcess(const FileName &fn_img)
     {
         img.read(fn_img); //read data and header
         img.clearHeader();
