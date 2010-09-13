@@ -594,7 +594,7 @@ ReconsSources = [
     'symmetrize.cpp',
     'virus_vertex.cpp',
     'volume_segment.cpp',
-#    'xray_import.cpp'
+    'xray_import.cpp'
 ]
 
 AddLibrary('XmippRecons', 'libraries/reconstruction', ReconsSources,
@@ -767,7 +767,7 @@ AddXmippProgram('template_threads')
 AddXmippProgram('virus_vertex', ['XmippRecons'])
 AddXmippProgram('volume_segment', ['XmippRecons'])
 AddXmippProgram('window')
-#AddXmippProgram('xray_import', ['XmippRecons'])
+AddXmippProgram('xray_import', ['XmippRecons'])
 
 
 # --- Scripts

@@ -25,28 +25,17 @@
 
 #include <reconstruction/xray_import.h>
 
-void Usage(const Prog_xray_import_prm &prm);
+void Usage(const ProgXrayImport &prm);
 
 int main(int argc, char **argv)
 {
-    Prog_xray_import_prm prm;
+    ProgXrayImport prm;
 
     // Read arguments
     try
     {
         prm.read(argc, argv);
-        std::cout << prm;
-    }
-    catch (XmippError Xe)
-    {
-        std::cout << Xe;
-        Usage(prm);
-        exit(1);
-    }
-
-    // Really import
-    try
-    {
+        prm.show();
         prm.run();
     }
     catch (XmippError Xe)
@@ -56,11 +45,3 @@ int main(int argc, char **argv)
     }
     exit(0);
 }
-
-/* Usage ------------------------------------------------------------------- */
-void Usage(const Prog_xray_import_prm &prm)
-{
-    std::cerr << "Usage: xray_import\n";
-    prm.usage();
-}
-

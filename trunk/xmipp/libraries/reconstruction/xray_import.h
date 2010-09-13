@@ -28,12 +28,14 @@
 #include <data/funcs.h>
 #include <data/multidim_array.h>
 #include <data/image.h>
+#include <data/program.h>
+#include <data/threads.h>
 
 ///@defgroup XrayImport Xray import
 ///@ingroup ReconsLibrary
 //@{
 /** Xray import parameters. */
-class Prog_xray_import_prm
+class ProgXrayImport: public XmippProgram
 {
 public:
     /// Input directory
@@ -44,34 +46,51 @@ public:
     FileName fnRoot;
     /// Number of pixels to crop from each side. Set to 0 for no cropping
     int cropSize;
+    /// Number of threads
+    int thrNum;
 
 public:
     /// Read argument from command line
-    void read(int argc, char **argv);
+    void readParams();
+
+    /// Define params
+    void defineParams();
 
     /// Show
-    friend std::ostream & operator << (std::ostream &out,
-        const Prog_xray_import_prm &prm);
+    void show() const;
 
-    /// Usage
-    void usage() const;
+    /** Really import*/
+    void run();
 
-    // Read an image and correct
-    void readAndCorrect(const FileName &fn, Image<double> &I);
+    /// Read an image and crop
+    void readAndCrop(const FileName &fn, Image<double> &I) const;
+
+    /// Correct for the synchrotron parameters
+    void correct(Image<double> &I) const;
 
     /** Get the darkfield for a directory.
      *  In case there is no darkfield a message is shown and the output image
      *  is empty. */
-    void getDarkfield(const FileName &fnDir, Image<double> &IavgDark);
+    void getDarkfield(const FileName &fnDir, Image<double> &IavgDark) const;
 
     /** Get the corrected average of a directory.
      *  If there is a darkfield, a file called fnRoot+"_"+fnDir+"_darkfield.xmp"
      *  is saved.
      */
-    void getCorrectedAvgOfDirectory(const FileName &fnDir, Image<double> &Iavg);
+    void getFlatfield(const FileName &fnDir, Image<double> &Iavg) const;
+public:
+    // Variables for the threads
+    ParallelTaskDistributor *td;
+    ThreadManager           *tm;
+    Mutex                    mutex;
 
-    /** Really import*/
-    void run();
+    // Intermediate results
+    Image<double> IavgFlat;
+    Image<double> IavgDark;
+    std::vector<FileName> filenames;
+
+    // Final list of images
+    MetaData MD;
 };
 //@}
 #endif

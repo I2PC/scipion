@@ -28,40 +28,42 @@
 #include <sort.h>
 
 // Read arguments ==========================================================
-void Prog_xray_import_prm::read(int argc, char **argv)
+void ProgXrayImport::readParams()
 {
-    fnDirData = getParameter(argc, argv, "-data");
-    fnRoot = getParameter(argc, argv, "-oroot");
-    fnDirFlat = getParameter(argc, argv, "-flat","");
-    cropSize = textToInteger(getParameter(argc, argv, "-crop", "0"));
+    fnDirData = getParam("-data");
+    fnRoot    = getParam("-oroot");
+    fnDirFlat = getParam("-flat");
+    cropSize  = getIntParam("-crop");
+    thrNum    = getIntParam("-thr");
 }
 
 // Show ====================================================================
-std::ostream & operator << (std::ostream &out, const Prog_xray_import_prm &prm)
+void ProgXrayImport::show() const
 {
-    out << "Input data directory       : " << prm.fnDirData  << std::endl
-    << "Input flatfield directory  : " << prm.fnDirFlat  << std::endl
-    << "Output rootname            : " << prm.fnRoot     << std::endl
-    << "Crop size                  : " << prm.cropSize   << std::endl
+    std::cout
+    << "Input data directory       : " << fnDirData  << std::endl
+    << "Input flatfield directory  : " << fnDirFlat  << std::endl
+    << "Output rootname            : " << fnRoot     << std::endl
+    << "Crop size                  : " << cropSize   << std::endl
+    << "Number of threads          : " << thrNum     << std::endl
     ;
-    return out;
 }
 
 // usage ===================================================================
-void Prog_xray_import_prm::usage() const
+void ProgXrayImport::defineParams()
 {
-    std::cerr
-    << "   -data <input data directory>      : Directory with SPE images, position files,\n"
-    << "                                       and optionally, darkfields\n"
-    << "  [-flat <input flatfield directory>]: Directory with SPE images, position files,\n"
-    << "                                       and optionally, darkfields\n"
-    << "   -oroot <output rootname>          : Rootname for output files\n"
-    << "  [-crop <size=0>]                   : Number of pixels to crop from each side\n"
-    ;
+    addUsageLine("Import X-ray micrographs with .spe extension");
+    addParamsLine("   -data <inputDataDirectory>       : Directory with SPE images, position files,");
+    addParamsLine("                                    : and optionally, darkfields");
+    addParamsLine("   -oroot <outputRootname>          : Rootname for output files");
+    addParamsLine("  [-flat <inputFlatfieldDirectory>] : Directory with SPE images, position files,");
+    addParamsLine("                                    : and optionally, darkfields");
+    addParamsLine("  [-crop <size=0>]                  : Number of pixels to crop from each side");
+    addParamsLine("  [-thr  <N=1>]                     : Number of threads");
 }
 
 // Really import ==========================================================
-void Prog_xray_import_prm::readAndCorrect(const FileName &fn, Image<double> &I)
+void ProgXrayImport::readAndCrop(const FileName &fn, Image<double> &I) const
 {
     I.read(fn);
     FileName fnBase=fn.without_extension();
@@ -73,6 +75,38 @@ void Prog_xray_import_prm::readAndCorrect(const FileName &fn, Image<double> &I)
     std::string line;
     std::vector<std::string> tokens;
     double currentBeam, exposureTime, slitWidth, tiltAngle;
+    while (!fhPosition.eof())
+    {
+        getline(fhPosition,line);
+        splitString(line," ",tokens);
+        if (tokens[0]=="xm:sample:rx")
+        {
+            tiltAngle=textToFloat(tokens[1]);
+            itemsFound++;
+        }
+        if (itemsFound==1)
+            break;
+    }
+    fhPosition.close();
+    if (itemsFound!=1)
+        REPORT_ERROR(ERR_VALUE_EMPTY,(std::string)"Cannot find tilt angle in "+
+                     fnBase+"-positions.txt");
+    I().window(cropSize,cropSize,YSIZE(I())-cropSize-1,XSIZE(I())-cropSize-1);
+    STARTINGX(I())=STARTINGY(I())=0;
+    I.setTilt(tiltAngle);
+}
+
+void ProgXrayImport::correct(Image<double> &I) const
+{
+    FileName fnBase=I.name().without_extension();
+    std::ifstream fhPosition;
+    fhPosition.open((fnBase+"-positions.txt").c_str());
+    if (!fhPosition)
+        REPORT_ERROR(ERR_IO_NOTEXIST,fnBase+"-positions.txt");
+    int itemsFound=0;
+    std::string line;
+    std::vector<std::string> tokens;
+    double currentBeam, exposureTime, slitWidth;
     while (!fhPosition.eof())
     {
         getline(fhPosition,line);
@@ -92,35 +126,27 @@ void Prog_xray_import_prm::readAndCorrect(const FileName &fn, Image<double> &I)
             slitWidth=textToFloat(tokens[1]);
             itemsFound++;
         }
-        else if (tokens[0]=="xm:sample:rx")
-        {
-            tiltAngle=textToFloat(tokens[1]);
-            itemsFound++;
-        }
-        if (itemsFound==4)
+        if (itemsFound==3)
             break;
     }
     fhPosition.close();
-    if (itemsFound!=4)
+    if (itemsFound!=3)
         REPORT_ERROR(ERR_VALUE_EMPTY,(std::string)"Cannot find all parameters in "+
                      fnBase+"-positions.txt");
-    I().window(cropSize,cropSize,YSIZE(I())-cropSize-1,XSIZE(I())-cropSize-1);
-    STARTINGX(I())=STARTINGY(I())=0;
     I()/=currentBeam*exposureTime*slitWidth;
-    I.setTilt(tiltAngle);
 }
 
-void Prog_xray_import_prm::getDarkfield(const FileName &fnDir, Image<double> &IavgDark)
+void ProgXrayImport::getDarkfield(const FileName &fnDir, Image<double> &IavgDark) const
 {
     IavgDark.clear();
-    std::vector<std::string> listDir;
+    std::vector<FileName> listDir;
     getdir(fnDir,listDir);
     bool found=false;
     for (int i=0; i<listDir.size(); i++)
         if (listDir[i]=="darkfields")
         {
             found=true;
-            std::vector<std::string> listDirDark;
+            std::vector<FileName> listDirDark;
             getdir(fnDir+"/darkfields",listDirDark);
             int N=0;
             for (int j=0; j<listDirDark.size(); j++)
@@ -129,7 +155,7 @@ void Prog_xray_import_prm::getDarkfield(const FileName &fnDir, Image<double> &Ia
                 if (extension!="spe")
                     continue;
                 Image<double> Iaux;
-                readAndCorrect(fnDir+"/darkfields/"+listDirDark[j],Iaux);
+                readAndCrop(fnDir+"/darkfields/"+listDirDark[j],Iaux);
                 if (N==0)
                     IavgDark()=Iaux();
                 else
@@ -146,8 +172,8 @@ void Prog_xray_import_prm::getDarkfield(const FileName &fnDir, Image<double> &Ia
         << "Execution continued without darkfield correction" << std::endl;
 }
 
-void Prog_xray_import_prm::getCorrectedAvgOfDirectory(const FileName &fnDir,
-        Image<double> &Iavg)
+void ProgXrayImport::getFlatfield(const FileName &fnDir,
+                                  Image<double> &Iavg) const
 {
     // Get Darkfield
     std::cerr << "Getting darkfield from "+fnDir << " ..." << std::endl;
@@ -157,7 +183,7 @@ void Prog_xray_import_prm::getCorrectedAvgOfDirectory(const FileName &fnDir,
         IavgDark.write(fnRoot+"_"+fnDir+"_darkfield.xmp");
 
     // Process the rest of the images
-    std::vector<std::string> listDir;
+    std::vector<FileName> listDir;
     getdir(fnDir,listDir);
     int N=0;
     Image<double> Iaux;
@@ -167,12 +193,13 @@ void Prog_xray_import_prm::getCorrectedAvgOfDirectory(const FileName &fnDir,
         if (extension!="spe")
             continue;
         FileName fnImg=fnDir+"/"+listDir[i];
-        std::cout << "Processing " << fnImg << " ..." << std::endl;
-        readAndCorrect(fnImg,Iaux);
-        if (XSIZE(IavgDark())!=0) {
+        readAndCrop(fnImg,Iaux);
+        if (XSIZE(IavgDark())!=0)
+        {
             Iaux()-=IavgDark();
             forcePositive(Iaux());
         }
+        correct(Iaux);
 
         if (N==0)
             Iavg()=Iaux();
@@ -185,31 +212,66 @@ void Prog_xray_import_prm::getCorrectedAvgOfDirectory(const FileName &fnDir,
     Iavg()/=N;
 }
 
-void Prog_xray_import_prm::run()
+void runThread(ThreadArgument &thArg)
 {
+    int thread_id = thArg.thread_id;
+    ProgXrayImport * ptrProg= (ProgXrayImport *)thArg.workClass;
+
+    MetaData localMD;
+    Image<double> Iaux;
+    long long int first = -1, last = -1;
+    while (ptrProg->td->getTasks(first, last))
+    {
+        for (int i=first; i<=last; i++)
+        {
+        	ptrProg->readAndCrop(ptrProg->filenames[i],Iaux);
+			if (XSIZE(ptrProg->IavgDark())!=0)
+			{
+				Iaux()-=ptrProg->IavgDark();
+				forcePositive(Iaux());
+				ptrProg->correct(Iaux);
+			}
+			if (XSIZE(ptrProg->IavgFlat())!=0)
+				Iaux()/=ptrProg->IavgFlat();
+			Iaux().selfLog10();
+			FileName fnImg=integerToString(i,4,'0')+"@"+ptrProg->fnRoot+".mrcs";
+			localMD.addObject();
+			localMD.setValue(MDL_IMAGE,fnImg);
+			Iaux.write(fnImg,i,true,WRITE_APPEND);
+			if (thread_id==0) progress_bar(i);
+        }
+    }
+    //Lock for update the total counter
+    ptrProg->mutex.lock();
+    ptrProg->MD.unionAll(localMD);
+    ptrProg->mutex.unlock();
+}
+
+void ProgXrayImport::run()
+{
+	// Delete output stack if it exists
+	if (exists((fnRoot+".stk").c_str()))
+		unlink((fnRoot+".stk").c_str());
+
     // Get the flatfield
-    Image<double> IavgFlat;
     if (fnDirFlat!="")
     {
         std::cerr << "Getting flatfield from "+fnDirFlat << " ..." << std::endl;
-        getCorrectedAvgOfDirectory(fnDirFlat,IavgFlat);
+        getFlatfield(fnDirFlat,IavgFlat);
         if (XSIZE(IavgFlat())!=0)
             IavgFlat.write(fnRoot+"_"+fnDirFlat+"_avg.xmp");
     }
 
     // Get the darkfield
     std::cerr << "Getting darkfield from "+fnDirData << " ..." << std::endl;
-    Image<double> IavgDark;
     getDarkfield(fnDirData, IavgDark);
     if (XSIZE(IavgDark())!=0)
-        IavgDark.write(fnRoot+"_"+fnDirData+"_darkfield.xmp");
+        IavgDark.write(fnRoot+"_darkfield.xmp");
 
     // Count the number of images
-    std::vector<std::string> listDir;
-    std::vector<FileName> filenames;
+    std::vector<FileName> listDir;
     getdir(fnDirData,listDir);
     int N=0;
-    Image<double> Iaux;
     for (int i=0; i<listDir.size(); i++)
     {
         FileName extension=((FileName)listDir[i]).get_extension();
@@ -219,19 +281,13 @@ void Prog_xray_import_prm::run()
         filenames.push_back(fnImg);
         N++;
     }
-    std::sort(filenames.begin(),filenames.end());
 
     // Process images
-    for (int i=0; i<filenames.size(); i++)
-    {
-        std::cout << "Processing " << filenames[i] << " ..." << std::endl;
-        readAndCorrect(filenames[i],Iaux);
-        if (XSIZE(IavgDark())!=0)
-        {
-            Iaux()-=IavgDark();
-            forcePositive(Iaux());
-        }
-        if (XSIZE(IavgFlat())!=0)
-            Iaux()/=IavgFlat();
-    }
+    td=new ThreadTaskDistributor(filenames.size(),XMIPP_MAX(1,filenames.size()/30));
+    tm=new ThreadManager(thrNum,this);
+    std::cerr << "Getting data from " << fnDirData << " ...\n";
+    init_progress_bar(filenames.size());
+    tm->run(runThread);
+    progress_bar(filenames.size());
+    MD.write(fnRoot+".sel");
 }
