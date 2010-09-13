@@ -9,7 +9,7 @@ import javax.swing.JFileChooser;
  */
 
 /*
- * JFrameLoad.java
+ * JFrameLoadVolume.java
  *
  * Created on May 25, 2010, 11:33:48 AM
  */
@@ -17,13 +17,13 @@ import javax.swing.JFileChooser;
  *
  * @author Juanjo Vega
  */
-public class JFrameLoad extends JDialog {
+public class JFrameLoadVolume extends JDialog {
 
     public boolean cancelled;
     private JFileChooser filechooser = new JFileChooser();
 
-    /** Creates new form JFrameLoad */
-    public JFrameLoad() {
+    /** Creates new form JFrameLoadVolume */
+    public JFrameLoadVolume() {
         super();
 
         initComponents();
@@ -51,7 +51,6 @@ public class JFrameLoad extends JDialog {
     private void initComponents() {
 
         jpControls = new javax.swing.JPanel();
-        jpVolume = new javax.swing.JPanel();
         jtfVolume = new javax.swing.JTextField();
         jbVolume = new javax.swing.JButton();
         jpButtons = new javax.swing.JPanel();
@@ -62,13 +61,9 @@ public class JFrameLoad extends JDialog {
         setTitle(LABELS.APP_TITLE);
         setModal(true);
 
-        jpControls.setLayout(new java.awt.GridLayout(2, 0));
-
-        jpVolume.setBorder(javax.swing.BorderFactory.createTitledBorder(LABELS.LABEL_VOLUME));
-
         jtfVolume.setColumns(20);
         jtfVolume.setEnabled(false);
-        jpVolume.add(jtfVolume);
+        jpControls.add(jtfVolume);
 
         jbVolume.setIcon(new javax.swing.ImageIcon(getClass().getResource("/resources/load.png"))); // NOI18N
         jbVolume.setText(LABELS.BUTTON_LOAD_FILE);
@@ -77,9 +72,7 @@ public class JFrameLoad extends JDialog {
                 jbVolumeActionPerformed(evt);
             }
         });
-        jpVolume.add(jbVolume);
-
-        jpControls.add(jpVolume);
+        jpControls.add(jbVolume);
 
         getContentPane().add(jpControls, java.awt.BorderLayout.CENTER);
 
@@ -129,7 +122,6 @@ public class JFrameLoad extends JDialog {
     private javax.swing.JButton jbVolume;
     private javax.swing.JPanel jpButtons;
     private javax.swing.JPanel jpControls;
-    private javax.swing.JPanel jpVolume;
     private javax.swing.JTextField jtfVolume;
     // End of variables declaration//GEN-END:variables
 }

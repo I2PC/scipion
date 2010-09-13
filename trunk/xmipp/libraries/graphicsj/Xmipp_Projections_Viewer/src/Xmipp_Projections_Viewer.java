@@ -39,7 +39,7 @@ public class Xmipp_Projections_Viewer implements PlugIn, UniverseListener {
     private Sphere sphere;
     private Image3DUniverse universeVolume;
     private final static int UNIVERSE_W = 400, UNIVERSE_H = 400;
-    private ImagePlus volumeIP, sphereIP;
+    private ImagePlus volumeIP;
     private MultidimArrayd xmippVolume;  // Volume for Xmipp library.
     private GlobalTransform gt = new GlobalTransform();
     private boolean dispatched = false;
@@ -70,7 +70,7 @@ public class Xmipp_Projections_Viewer implements PlugIn, UniverseListener {
                 ioex.printStackTrace();
             }
         } else {    // From menu.
-            JFrameLoad frameLoad = new JFrameLoad();
+            JFrameLoadVolume frameLoad = new JFrameLoadVolume();
 
             frameLoad.setLocationRelativeTo(null);
             frameLoad.setVisible(true);
@@ -95,15 +95,7 @@ public class Xmipp_Projections_Viewer implements PlugIn, UniverseListener {
 
             new StackConverter(volumeIP).convertToRGB();
 
-            // Loads euler angles file...
-            IJ.showStatus(LABELS.MESSAGE_LOADING_EULER_ANGLES_FILE);
             sphere = new Sphere();
-
-            // ...and the sphere.
-            IJ.showStatus(LABELS.MESSAGE_BUILDING_SPHERE);
-            sphereIP = sphere.build();
-
-            new StackConverter(sphereIP).convertToRGB();
 
             // Creates both universes and shows them.
             IJ.showStatus(LABELS.MESSAGE_BUILDING_VOLUME_UNIVERSE);
@@ -146,60 +138,22 @@ public class Xmipp_Projections_Viewer implements PlugIn, UniverseListener {
         double rot = angles[0];
         double tilt = angles[1];
 
-        int projectionW = sphereIP.getWidth();
-        int projectionH = sphereIP.getHeight();
+        int projectionW = volumeIP.getWidth();
+        int projectionH = volumeIP.getHeight();
 
         ImagePlus image = sphere.getProjection(xmippVolume, rot, tilt, projectionW, projectionH);
-        int n_images = sphere.getFiles(rot, tilt).size();
 
         // Shows projection using a custom window.
-        showProjection(image, n_images);
+        showProjection(image);
     }
 
-    private void showProjection(final ImagePlus ip, final int n_images) {
+    private void showProjection(final ImagePlus ip) {
         if (projectionWindow == null) {
             projectionWindow = new ProjectionWindow(ip);
         }
 
-        projectionWindow.update(ip, n_images);
+        projectionWindow.update(ip);
         projectionWindow.setVisible(true);
-    }
-
-    public void analyzeProjection() {
-        double angles[] = getEyeAngles(universeVolume);
-
-        int projectionW = sphereIP.getWidth();
-        int projectionH = sphereIP.getHeight();
-
-        String scoreFiles[] = sphere.analyzeProjection(xmippVolume, angles[0], angles[1], projectionW, projectionH);
-
-        // Shows table with scores
-        showScoreFiles(scoreFiles);
-
-        // Let's try to clean up memory.
-        System.gc();
-
-        IJ.showStatus("");
-    }
-
-    private void showScoreFiles(String scoreFiles[]) {
-        IJ.showStatus(LABELS.MESSAGE_LOADING_SCORE_FILE);
-
-        if (frameImagesTable == null) {
-            frameImagesTable = new JFrameImagesTable();
-        }
-
-        frameImagesTable.loadScoreFiles(scoreFiles);
-
-        ImageWindow3D window = universeVolume.getWindow();
-        Point location = window.getLocation();
-        location.translate(0, window.getHeight());
-
-        frameImagesTable.setLocation(location);
-
-        frameImagesTable.setWidth(universeVolume.getWindow().getWidth());
-
-        frameImagesTable.setVisible(true);
     }
 
     /**
