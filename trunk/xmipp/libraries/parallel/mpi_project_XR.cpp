@@ -71,11 +71,6 @@ void MPIProgProjectXR::run()
     psf.read(fn_psf_xr);
     psf.produceSideInfo();
 
-
-    std::cout << "---------------- MPI RUNNNN  ----------------" <<std::endl;
-
-
-
     // Read projection parameters and produce side information
     Projection_mpi_XR_Parameters mpi_proj_prm;
     mpi_proj_prm.node = node;
@@ -126,17 +121,6 @@ int PROJECT_mpi_XR_Effectively_project(
     MetaData DF_movements;
     DF_movements.setComment("True rot, tilt and psi; rot, tilt, psi, X and Y shifts applied");
     double tRot,tTilt,tPsi,rot,tilt,psi;
-
-
-
-
-
-    std::cout << "-------------MPI EFectiviliiii RUNNNN -------------" <<std::endl;
-
-
-
-
-
 
     // Calculation of data to be distributed in nodes
     std::vector<mpiProjData> mpiData;

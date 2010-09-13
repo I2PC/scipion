@@ -33,6 +33,7 @@
 #include <data/psf_xr.h>
 #include <data/program.h>
 #include <data/transformations.h>
+#include <data/threads.h>
 
 
 /**@defgroup ProjectionXRProgram project_xr (project for tilt series)
@@ -194,22 +195,19 @@ void project_xr_Volume_offCentered(PROJECT_XR_Side_Info &side, XRayPSF &psf, Pro
                                    int Ydim, int Xdim, int  idxSlice = 1);
 
 
+/// Generate an X-ray microscope projection for volume vol using the microscope configuration psf
+void project_xr(XRayPSF &psf, Image<double> &vol, Image<double> &imOut,  int idxSlice = 1);
 
-/* Main routine ------------------------------------------------------------ */
-/** Main Project routine.
-    Generate a set of projections given the projection parameters.
-    This is the main projecting routine. This function generates a set
-    of projections according to the projecting parameters defined.
-    The projections are written to disk.
+/// Data struct to be passed to threads
+struct XrayThread
+{
+    XRayPSF        *psf;
+    Image<double> *vol;
+    Image<double> *imOut;
+};
 
-    The Projection field will keep
-    at the end the last projection, this is useful in case you want
-    to project only one image, although it is also written to disk.
-    The returned number is the total number of projections generated.
-    A selection file with all images is also returned (and saved if any
-    name has been given in the parameters).*/
-int ROUT_XR_project(ProgProjectXR &prm,
-                    Projection &proj, MetaData &SF);
+/// Thread Job to generate an X-ray microscope projection
+void thread_project_xr(ThreadArgument &thArg);
 //@}
 
 

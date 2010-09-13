@@ -32,7 +32,7 @@
 
 void ProgProjectXR::defineParams()
 {
-//    addParamsLine("xmipp_project_xr");
+    //    addParamsLine("xmipp_project_xr");
     addUsageLine("Generate projections as in a X-ray microscope from a 3D Xmipp volume.");
     addParamsLine(" -i <Proj_param_file>   :MetaData file with projection parameters.");
     addParamsLine("                         :Check the manual for a description of the parameters.");
@@ -247,6 +247,16 @@ void PROJECT_XR_Side_Info::produce_Side_Info(
     rotPhantomVol = phantomVol;
 }
 
+
+//Some global variables
+Mutex mutex;
+Barrier * barrier;
+ThreadManager * thMgr;
+ParallelTaskDistributor * td;
+//FileTaskDistributor     * td;
+int numberOfThreads;
+
+
 /* Effectively project ===================================================== */
 int PROJECT_XR_Effectively_project(Projection_XR_Parameters &prm,
                                    PROJECT_XR_Side_Info &side,
@@ -254,6 +264,29 @@ int PROJECT_XR_Effectively_project(Projection_XR_Parameters &prm,
                                    XRayPSF &psf,
                                    MetaData &SF)
 {
+
+
+    XrayThread *dataThread = new XrayThread;
+
+    dataThread->psf= &psf;
+    dataThread->vol = &side.rotPhantomVol;
+    dataThread->imOut = &proj;
+
+    longint blockSize, numberOfJobs= side.phantomVol().zdim;
+    numberOfThreads = psf.nThr;
+
+    blockSize = (numberOfThreads == 1) ? numberOfJobs : numberOfJobs/numberOfThreads/6;
+
+    //Create the job handler to distribute jobs
+    td = new ThreadTaskDistributor(numberOfJobs, blockSize);
+    //    td = new FileTaskDistributor(numberOfJobs,blockSize);
+    barrier = new Barrier(numberOfThreads-1);
+
+    //Create threads to start working
+
+    thMgr = new ThreadManager(numberOfThreads,(void*) dataThread);
+
+
     int expectedNumProjs = FLOOR((prm.tiltF-prm.tilt0)/prm.tiltStep);
     int numProjs=0;
     SF.clear();
@@ -264,6 +297,7 @@ int PROJECT_XR_Effectively_project(Projection_XR_Parameters &prm,
     MetaData DF_movements;
     DF_movements.setComment("True rot, tilt and psi; rot, tilt, psi, X and Y shifts applied");
     double tRot,tTilt,tPsi,rot,tilt,psi;
+
 
     int idx=prm.starting;
     for (double angle=prm.tilt0; angle<=prm.tiltF; angle+=prm.tiltStep)
@@ -279,6 +313,9 @@ int PROJECT_XR_Effectively_project(Projection_XR_Parameters &prm,
         VECTOR_R3(inPlaneShift,shiftX,shiftY,0);
 
         prm.calculateProjectionAngles(proj,angle, 0,inPlaneShift);
+
+        //Reset thread task distributor
+        td->clear();
 
         // Really project ....................................................
         project_xr_Volume_offCentered(side, psf, proj,prm.proj_Ydim, prm.proj_Xdim, idx);
@@ -316,17 +353,30 @@ int PROJECT_XR_Effectively_project(Projection_XR_Parameters &prm,
         SF.addObject();
         SF.setValue(MDL_IMAGE,fn_proj);
         SF.setValue(MDL_ENABLED,1);
+
+        std::cout << "-----------  Finishing work with MD -----  "<< idx <<std::endl;
     }
     if (!(prm.tell&TELL_SHOW_ANGLES))
         progress_bar(expectedNumProjs);
 
     DF_movements.write(prm.fnProjectionSeed + "_movements.txt");
+
+
+    //Terminate threads and free memory
+    delete td;
+    delete thMgr;
+    delete barrier;
+
     return numProjs;
 }
 
 void project_xr_Volume_offCentered(PROJECT_XR_Side_Info &side, XRayPSF &psf, Projection &P,
                                    int Ydim, int Xdim, int idxSlice)
 {
+
+    std::cout << "-----------  Entering project_xr_VolumeOffcent -------------" <<std::endl;
+
+
     int iniXdim, iniYdim, iniZdim, newXdim, newYdim;
     int xOffsetN, yOffsetN, zinit, zend, yinit, yend, xinit, xend;
 
@@ -408,7 +458,9 @@ void project_xr_Volume_offCentered(PROJECT_XR_Side_Info &side, XRayPSF &psf, Pro
 
 
     //the really really final project routine, I swear by Snoopy.
-    project_xr(psf,side.rotPhantomVol,P, idxSlice);
+//    project_xr(psf,side.rotPhantomVol,P, idxSlice);
+    thMgr->run(thread_project_xr);
+
 
 
     int outXDim = XMIPP_MIN(Xdim,iniXdim);
@@ -419,13 +471,234 @@ void project_xr_Volume_offCentered(PROJECT_XR_Side_Info &side, XRayPSF &psf, Pro
                -ROUND(outYDim/2) + outYDim -1,
                -ROUND(outXDim/2) + outXDim -1);
 
+
+    std::cout << "-----------  Exiting project_xr_VolumeOffcent -------------" <<std::endl;
+
+
+}
+
+/// Generate an X-ray microscope projection for volume vol using the microscope configuration psf
+void project_xr(XRayPSF &psf, Image<double> &vol, Image<double> &imOut, int idxSlice)
+{
+
+    std::cout << "-----------  Entering project_xr -------------" <<std::endl;
+
+
+
+    XrayThread *dataThread = new XrayThread;
+
+    dataThread->psf= &psf;
+    dataThread->vol = &vol;
+    dataThread->imOut = &imOut;
+
+    longint blockSize, numberOfJobs= vol().zdim;
+    numberOfThreads = psf.nThr;
+
+    blockSize = (numberOfThreads == 1) ? numberOfJobs : numberOfJobs/numberOfThreads/6;
+
+    //Create the job handler to distribute jobs
+    td = new ThreadTaskDistributor(numberOfJobs, blockSize);
+    //    td = new FileTaskDistributor(numberOfJobs,blockSize);
+    barrier = new Barrier(numberOfThreads-1);
+
+    //Create threads to start working
+
+    ThreadManager * thMgr = new ThreadManager(numberOfThreads,(void*) dataThread);
+
+
+    //    if (numberOfThreads==1)
+    //    {
+    //        ThreadArgument thArg;
+    //        thArg.thread_id = 0;
+    //        thArg.workClass = dataThread;
+    //        thread_project_xr(thArg);
+    //    }
+    //    else
+    thMgr->run(thread_project_xr);
+
+
+    //Terminate threads and free memory
+    delete td;
+    delete thMgr;
+
+
+
+    std::cout << "-----------  Exiting project_xr -------------" <<std::endl;
+
 }
 
 
-
-
-/* ROUT_project ============================================================ */
-int ROUT_XR_project(ProgProjectXR &prm,
-                    Projection &proj, MetaData &SF)
+void thread_project_xr(ThreadArgument &thArg)
 {
+
+    int thread_id = thArg.thread_id;
+
+    XrayThread *dataThread = (XrayThread*) thArg.workClass;
+    XRayPSF psf = *(dataThread->psf);
+    Image<double> &vol =  *(dataThread->vol);
+    Image<double> &imOutGlobal = *(dataThread->imOut);
+
+    long long int first = -1, last = -1, priorLast = -1;
+
+    if (thread_id==0)
+    {
+        vol().setXmippOrigin();
+        imOutGlobal().resize(psf.Niy, psf.Nix);
+        imOutGlobal().initZeros();
+        imOutGlobal().setXmippOrigin();
+    }
+
+    barrier->wait();
+
+    Image<double> imOut;
+    imOut() = MultidimArray<double> (psf.Niy, psf.Nix);
+    imOut().initZeros();
+    imOut().setXmippOrigin();
+
+    MultidimArray<double> imTemp(psf.Noy, psf.Nox),intExp(psf.Noy, psf.Nox),imTempSc(imOut()),*imTempP;
+    intExp.initZeros();
+    imTemp.initZeros();
+    imTempSc.initZeros();
+    intExp.setXmippOrigin();
+    imTemp.setXmippOrigin();
+    imTempSc.setXmippOrigin();
+
+
+    while (td->getTasks(first, last))
+    {
+        std::cerr << "th" << thread_id << ": working from " << first << " to " << last <<std::endl;
+
+
+        if (numberOfThreads == 1)
+            first = last -50;
+        if (first>50)
+        {
+            for (int k=(vol()).zinit + priorLast + 1; k<=(vol()).zinit + first - 1 ; k++)
+            {
+                FOR_ALL_ELEMENTS_IN_ARRAY2D(intExp)
+                intExp(i, j) = intExp(i, j) + vol(k, i, j);
+            }
+
+
+            //#define DEBUG
+#ifdef DEBUG
+
+            Image<double> _Im(imOut);
+#endif
+
+            //        init_progress_bar(vol().zdim-1);
+
+            for (int k=((vol()).zinit + first); k<=((vol()).zinit + last); k++)
+            {
+                FOR_ALL_ELEMENTS_IN_ARRAY2D(intExp)
+                {
+                    intExp(i, j) = intExp(i, j) + vol(k, i, j);
+                    imTemp(i, j) = (exp(-intExp(i,j)*psf.dzo))*vol(k,i,j)*psf.dzo;
+                    //            imTemp(i, j) = 1./(exp(intExp(i,j)))*vol(k,i,j);
+                }
+#ifdef DEBUG
+                FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY2D(imTemp)
+                dAij(_Im(),i,j) = dAij(imTemp,i,j);
+                _Im.write("psfxr-imTemp.spi");
+#endif
+
+                psf.Z = psf.Zo + psf.DeltaZo - k*psf.dzo + imOutGlobal.Zoff();
+
+                switch (psf.AdjustType)
+                {
+                case PSFXR_INT:
+                    imTempP = &imTempSc;
+                    scaleToSize(LINEAR,*imTempP,imTemp,psf.Nix,psf.Niy);
+                    //          imTemp.scaleToSize(psf.Niy, psf.Nix, *imTempP);
+                    break;
+
+                case PSFXR_STD:
+                    imTempP = &imTemp;
+                    break;
+
+                case PSFXR_ZPAD:
+                    //    (*imTempSc).resize(imTemp);
+                    imTempSc = imTemp;
+                    imTempSc.window(-ROUND(psf.Niy/2)+1,-ROUND(psf.Nix/2)+1,ROUND(psf.Niy/2)-1,ROUND(psf.Nix/2)-1);
+                    imTempP = &imTempSc;
+                    break;
+                }
+
+                psf.generateOTF(*imTempP);
+
+
+#ifdef DEBUG
+
+                _Im().resize(intExp);
+                FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY2D(intExp)
+                dAij(_Im(),i,j) = dAij(intExp,i,j);
+                _Im.write("psfxr-intExp.spi");
+                _Im().resize(*imTempP);
+                FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY2D(*imTempP)
+                dAij(_Im(),i,j) = dAij(*imTempP,i,j);
+                _Im.write("psfxr-imTempEsc.spi");
+#endif
+
+                psf.applyOTF(*imTempP);
+
+#ifdef DEBUG
+
+                FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY2D(*imTempP)
+                dAij(_Im(),i,j) = dAij(*imTempP,i,j);
+                _Im.write("psfxr-imTempEsc2.spi");
+#endif
+
+                FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY2D(*imTempP)
+                dAij(imOut(),i,j) += dAij(*imTempP,i,j);
+
+                //        imOut.write("psfxr-imout.spi");
+
+                //        if (idxSlice > -1)
+                //            progress_bar((idxSlice - 1)*vol().zdim + k - vol().zinit);
+            }
+        }
+        priorLast = last;
+
+        std::cerr << "th" << thread_id << ": Finished work from " << first << " to " << last <<std::endl;
+
+    }
+
+
+    //Lock for update the total counter
+    mutex.lock();
+    FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY2D(*imTempP)
+    dAij(imOutGlobal(),i,j) += dAij(imOut(),i,j);
+    mutex.unlock();
+
+    barrier->wait();
+
+
+    if (thread_id==0)
+    {
+        std::cout << "Point 1" <<std::endl;
+
+        imOutGlobal() = 1-imOutGlobal();
+
+        //            imOut.write("psfxr-imout.spi");
+
+        std::cout << "Point 2" <<std::endl;
+        switch (psf.AdjustType)
+        {
+        case PSFXR_INT:
+            //    imOut().selfScaleToSize(psf.Noy, psf.Nox);
+            selfScaleToSize(LINEAR,imOutGlobal(), psf.Nox, psf.Noy);
+            std::cout << "Point 3" <<std::endl;
+            break;
+
+        case PSFXR_ZPAD:
+            imOutGlobal().window(-ROUND(psf.Noy/2)+1,-ROUND(psf.Nox/2)+1,ROUND(psf.Noy/2)-1,ROUND(psf.Nox/2)-1);
+            std::cout << "Point 4" <<std::endl;
+            break;
+        }
+
+        imOutGlobal().setXmippOrigin();
+        std::cout << "Point 5" <<std::endl;
+        //    imOut.write("psfxr-imout2.spi");
+    }
+    std::cerr << "th" << thread_id << ": Thread Finished" <<std::endl;
 }
