@@ -1,15 +1,15 @@
 #!/usr/bin/env sh
-XMIPP_PROTOCOLS=`which xmipp_protocols`
-XMIPP_BASE=`dirname $XMIPP_PROTOCOLS`/..
-JAVA_HOME=$XMIPP_BASE/external/java/jvm
+XMIPP_BASE="$HOME/xmipp"
+CWD="$XMIPP_BASE/external/java"
+JAVA_HOME="$CWD/jvm"
 
-if [ ! -e "$JAVA_HOME" ]
+if [ ! -L "$JAVA_HOME" ]
 then
 	echo "JVM not installed... fixing it..."
 	$XMIPP_BASE/external/java/install_jvm.sh
 fi
 
-if [ ! -e "$JAVA_HOME" ]
+if [ ! -L "$JAVA_HOME" ]
 then
 	echo "JVM is missing, so program can't be run. Check your XMIPP installation."
 else
@@ -17,7 +17,7 @@ else
 	if [ $# -le 1 ]
 	then
 	    echo "Not enough arguments."
-	    echo "Usage: xmipp_projections_viewerj <Memory size> -vol <volume_file>. Example: xmipp_projections_viewerj 1024m -vol file.vol"
+	    echo "Usage: xmipp_projections_viewerj <Memory size> <volume_file>. Example: xmipp_projections_viewerj 1024m file.vol"
 	else
 		export LD_LIBRARY_PATH=$XMIPP_BASE/lib
 		IMAGEJ_HOME=$XMIPP_BASE/external/imagej

@@ -1,11 +1,11 @@
 #!/usr/bin/env sh
 LINUX="java-6-sun-1.6.0.20_linux/"
-LINUX64="java-6-sun-1.6.0.20_linux64/"
+LINUX64="jdk1.6.0_14"
 MACOSX="java-6-sun-1.6.0.20_macosx/"
 
-XMIPP_PROTOCOLS=`which xmipp_protocols`
-XMIPP_BASE=`dirname $XMIPP_PROTOCOLS`/..
-JVM="$XMIPP_BASE"/external/java/"jvm"
+XMIPP_BASE="$HOME/xmipp"
+CWD="$XMIPP_BASE/external/java"
+JVM="$CWD/jvm"
 
 # Which is our OS?
 case "$(uname -s)" in
@@ -19,7 +19,7 @@ Linux)
 esac
 
 # Sets JAVA_HOME...
-test -z $JAVA_HOME && JAVA_HOME="$XMIPP_BASE"/external/java/"$platform"
+JAVA_HOME="$CWD/$platform"
 
 # Creates a symbolic link to the java virtual machine
 test -e $JVM && rm $JVM

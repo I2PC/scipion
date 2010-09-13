@@ -1,15 +1,15 @@
 #!/usr/bin/env sh
-XMIPP_PROTOCOLS=`which xmipp_protocols`
-XMIPP_BASE=`dirname $XMIPP_PROTOCOLS`/..
-JAVA_HOME=$XMIPP_BASE/external/java/jvm
+XMIPP_BASE="$HOME/xmipp"
+CWD="$XMIPP_BASE/external/java"
+JAVA_HOME="$CWD/jvm"
 
-if [ ! -e "$JAVA_HOME" ]
+if [ ! -L "$JAVA_HOME" ]
 then
 	echo "JVM not installed... fixing it..."
 	$XMIPP_BASE/external/java/install_jvm.sh
 fi
 
-if [ ! -e "$JAVA_HOME" ]
+if [ ! -L "$JAVA_HOME" ]
 then
 	echo "JVM is missing, so program can't be run. Check your XMIPP installation."
 else
