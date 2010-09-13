@@ -768,7 +768,6 @@ AddXmippProgram('virus_vertex', ['XmippRecons'])
 AddXmippProgram('volume_segment', ['XmippRecons'])
 AddXmippProgram('window')
 #AddXmippProgram('xray_import', ['XmippRecons'])
-AddXmippProgram('test')
 
 
 # --- Scripts
