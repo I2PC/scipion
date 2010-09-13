@@ -349,9 +349,15 @@ int  writeSPIDER(int select_img=-1, bool isStack=false, int mode=WRITE_OVERWRITE
         header->nsam = 2*xstore;
     }
 
+//#define DEBUG
 #ifdef DEBUG
-    printf("DEBUG writeSPIDER: Size: %g %g %g\n", header->nsam, header->nrow, header->nslice);
+    printf("DEBUG writeSPIDER: Size: %g %g %g %g\n",
+    		header->nsam,
+    		header->nrow,
+    		header->nslice,
+    		header->maxim);
 #endif
+#undef DEBUG
 
     if ( Zdim < 2 )
     {
