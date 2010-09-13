@@ -545,6 +545,7 @@ public:
 
     MDCache();
     ~MDCache();
+    void clear();
 };
 
 /** Just to work as static constructor for initialize database.

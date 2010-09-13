@@ -60,22 +60,23 @@ MDSql::~MDSql()
 
 bool MDSql::createMd()
 {
-    sqlMutex.lock();
+    //sqlMutex.lock();
     //std::cerr << "creating md" <<std::endl;
     bool result = createTable(&(myMd->activeLabels));
     //std::cerr << "leave creating md" <<std::endl;
-    sqlMutex.unlock();
+    //sqlMutex.unlock();
 
     return result;
 }
 
 bool MDSql::clearMd()
 {
-    sqlMutex.lock();
+    //sqlMutex.lock();
     //std::cerr << "clearing md" <<std::endl;
+    myCache->clear();
     bool result = dropTable();
     //std::cerr << "leave clearing md" <<std::endl;
-    sqlMutex.unlock();
+    //sqlMutex.unlock();
 
     return result;
 }
@@ -673,6 +674,11 @@ MDCache::MDCache()
 
 MDCache::~MDCache()
 {
+    clear();
+}
+
+void MDCache::clear()
+{
     //Clear cached statements
     std::map<MDLabel, sqlite3_stmt*>::iterator it;
     //FIXME: This is a bit dirty here...should be moved to MDSQl
@@ -690,4 +696,3 @@ MDCache::~MDCache()
     if (addRowStmt != NULL)
         sqlite3_finalize(iterStmt);
 }
-
