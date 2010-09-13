@@ -21,9 +21,6 @@ import window.ProjectionWindow;
 import java.io.File;
 import java.io.IOException;
 import javax.media.j3d.View;
-import org.apache.commons.cli.BasicParser;
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.Options;
 
 /*
  * To change this template, choose Tools | Templates
@@ -49,8 +46,6 @@ public class Xmipp_Projections_Viewer implements PlugIn, UniverseListener {
     private ProjectionTimer timer = new ProjectionTimer(500);
     private static ProjectionWindow projectionWindow;
     private static JFrameImagesTable frameImagesTable;
-    private final static String COMMAND_OPTION_VOLUME = "vol";
-    private final static int INDEX_VOLUME = 0;
 
     public static void main(String args[]) {
         IJ.getInstance();
@@ -60,22 +55,20 @@ public class Xmipp_Projections_Viewer implements PlugIn, UniverseListener {
     public void run(String string) {
         String fileVolume = null;
 
-        if (IJ.isMacro() && !Macro.getOptions().isEmpty()) { // From macro.
+        if (IJ.isMacro() && !(Macro.getOptions() == null || Macro.getOptions().isEmpty())) { // From macro.
             // "string" is used when called from another plugin or installed command.
             // "Macro.getOptions()" used when called from a run("command", arg) macro function.
-            String argsList[] = processArgs(Macro.getOptions().trim());
+            fileVolume = Macro.getOptions().trim();
 
             try {
                 fileVolume = (new File(Macro.getOptions().trim())).getCanonicalPath();
+
+                if (!fileVolume.startsWith(File.separator)) {
+                    fileVolume = (new File(fileVolume)).getAbsolutePath();//System.getProperty("user.dir") + File.separator + fileVolume;
+                }
             } catch (IOException ioex) {
                 ioex.printStackTrace();
             }
-            /*            if (!fileVolume.startsWith(File.separator)) {
-            fileVolume = (new File(fileVolume)).getAbsolutePath();//System.getProperty("user.dir") + File.separator + fileVolume;
-            }
-            if (!fileEulerAngles.startsWith(File.separator)) {
-            fileEulerAngles = System.getProperty("user.dir") + File.separator + fileEulerAngles;
-            }*/
         } else {    // From menu.
             JFrameLoad frameLoad = new JFrameLoad();
 
@@ -85,8 +78,6 @@ public class Xmipp_Projections_Viewer implements PlugIn, UniverseListener {
                 fileVolume = frameLoad.getVolumeFile();
             }
         }
-//        System.out.println("Volume: [" + fileVolume + "]");
-//        System.out.println("Euler : [" + fileEulerAngles + "]");
 
         if (fileVolume != null) {
             run(fileVolume, "");
@@ -133,30 +124,6 @@ public class Xmipp_Projections_Viewer implements PlugIn, UniverseListener {
             IJ.write(ex.getMessage());
             ex.printStackTrace();
         }
-    }
-
-    public static String[] processArgs(String args) {
-        String argsList[] = args.split(" ");
-
-        String parameters[] = {null, null};
-
-        Options options = new Options();
-        options.addOption(COMMAND_OPTION_VOLUME, true, "Volume file");
-
-        try {
-            BasicParser parser = new BasicParser();
-            CommandLine cmdLine = parser.parse(options, argsList);
-
-            // Volume file.
-            if (cmdLine.hasOption(COMMAND_OPTION_VOLUME)) {
-                parameters[INDEX_VOLUME] = cmdLine.getOptionValue(COMMAND_OPTION_VOLUME);
-                //System.out.println(" *** VOLUME: " + parameters[INDEX_VOLUME]);
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-
-        return parameters;
     }
 
     private Image3DUniverse createUniverse(ImagePlus volume, int type) {
