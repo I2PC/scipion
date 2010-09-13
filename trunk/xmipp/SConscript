@@ -594,7 +594,7 @@ ReconsSources = [
     'symmetrize.cpp',
     'virus_vertex.cpp',
     'volume_segment.cpp',
-    'xray_import.cpp'
+#    'xray_import.cpp'
 ]
 
 AddLibrary('XmippRecons', 'libraries/reconstruction', ReconsSources,
@@ -612,8 +612,9 @@ AddLibrary('XmippClassif', 'libraries/classification', ClassificationSources,
     ['#libraries',  '#'],['lib'],['XmippExternal','XmippData'])
 
 # XmippParallel
-ParallelSources = Glob('libraries/parallel', '*.cpp', []);
-AddMPILibrary("XmippParallel", 'libraries/parallel', ParallelSources, ["#", "#libraries", "#external"],
+if int(env['mpi']):
+    ParallelSources = Glob('libraries/parallel', '*.cpp', []);
+    AddMPILibrary("XmippParallel", 'libraries/parallel', ParallelSources, ["#", "#libraries", "#external"],
               ['lib'],['XmippExternal','XmippData','XmippRecons','XmippClassif']+FFTWLibs+TIFFLibs+SQLiteLibs)
 
 # Interface
@@ -705,10 +706,10 @@ AddXmippProgram('filter_projections', ['XmippRecons'])
 AddXmippProgram('find_center3d')
 AddXmippProgram('fourier_filter', ['XmippRecons'])
 AddXmippProgram('header_apply')
-AddXmippProgram('header_assign')
-AddXmippProgram('header_extract')
+#AddXmippProgram('header_assign')
+#AddXmippProgram('header_extract')
 AddXmippProgram('header_print')
-AddXmippProgram('header_reset')
+#AddXmippProgram('header_reset')
 AddXmippProgram('histogram')
 AddXmippProgram('image_import')
 AddXmippProgram('make_spectra', ['XmippRecons'])
@@ -762,11 +763,13 @@ AddXmippProgram('symmetrize', ['XmippRecons'])
 AddXmippProgram('threshold')
 AddXmippProgram('try_symmetry')
 ####AddXmippProgram('test_sql')
-#AddXmippProgram('test_md')
+AddXmippProgram('template_threads')
 AddXmippProgram('virus_vertex', ['XmippRecons'])
 AddXmippProgram('volume_segment', ['XmippRecons'])
 AddXmippProgram('window')
-AddXmippProgram('xray_import', ['XmippRecons'])
+#AddXmippProgram('xray_import', ['XmippRecons'])
+AddXmippProgram('test')
+
 
 # --- Scripts
 
