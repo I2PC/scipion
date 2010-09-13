@@ -39,7 +39,7 @@ public class ProjectionWindow extends ImageWindow {
         fixSize();
     }
 
-    public void update(ImagePlus newImageplus, int n_images) {
+    public void update(ImagePlus newImageplus) {
         getImagePlus().setImage(newImageplus.getImage());
     }
 
