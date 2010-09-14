@@ -61,7 +61,6 @@ ThreadArgument::ThreadArgument()
     thread_id = -1;
     manager = NULL;
     data = NULL;
-    workClass = NULL;
 }
 
 ThreadArgument::ThreadArgument(int id, ThreadManager * manager, void * data)
@@ -69,7 +68,6 @@ ThreadArgument::ThreadArgument(int id, ThreadManager * manager, void * data)
     this->thread_id = id;
     this->manager = manager;
     this->data = data;
-    workClass = NULL;
 }
 
 void * _threadMain(void * data)
@@ -80,18 +78,16 @@ void * _threadMain(void * data)
     while (true)
     {
         //Wait for start working or leave
-        thMgr->barrier->wait();
+        thMgr->wait();
         //After awaked check what to do
         if (thMgr->workFunction != NULL)
         {
             thMgr->workFunction(*thArg);
-            thMgr->barrier->wait(); //wait for finish together
+            thMgr->wait(); //wait for finish together
         }
         else //exit thread
         {
-            thMgr->barrier->wait();//Make sure all threads are ready to DIE.
-            pthread_exit(NULL);
-            //return NULL;
+            pthread_exit(NULL);            
         }
     }
 }
@@ -103,33 +99,44 @@ ThreadManager::ThreadManager(int numberOfThreads, void * workClass)
     workFunction = NULL;
     ids = new pthread_t[threads];
     arguments = new ThreadArgument[threads];
+    started = false;
+    this->workClass = workClass;
+
+}
+
+void ThreadManager::startThreads()
+{
     //Create threads
     int result;
-    for (int i = 0; i < numberOfThreads; ++i)
+    
+    for (int i = 0; i < threads; ++i)
     {
         arguments[i].thread_id = i;
         arguments[i].manager = this;
         arguments[i].data = NULL;
         arguments[i].workClass = workClass;
 
-        result = pthread_create(ids + i, NULL, _threadMain, (void*) (arguments
-                                + i));
+        result = pthread_create(ids + i, NULL, _threadMain, (void*) (arguments + i));
 
         if (result != 0)
         {
-            std::cerr << "ThreadManager Constructor: can't create threads.";
+            std::cerr << "ThreadManager: can't create threads." << std::endl;
             exit(1);
         }
     }
-
+    started = true;
 }
 
 ThreadManager::~ThreadManager()
 {
     //Destroy the threads
     workFunction = NULL;
-    barrier->wait();
-    barrier->wait();//Make sure all threads are ready to DIE.
+    if (started)
+    {
+        wait();
+        for (int i = 0; i < threads; ++i)
+            pthread_join(ids[i], NULL);
+    }
 
     delete barrier;
     delete[] ids;
@@ -146,6 +153,8 @@ void ThreadManager::run(ThreadFunction function)
 void ThreadManager::runAsync(ThreadFunction function)
 {
     workFunction = function;
+    if (!started)
+        startThreads();
     //Wait on barrier to threads starts working
     wait();
 }

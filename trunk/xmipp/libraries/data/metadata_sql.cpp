@@ -183,7 +183,6 @@ void MDSql::selectObjects(std::vector<long int> &objectsOut, const MDQuery *quer
     std::stringstream ss;
     sqlite3_stmt *stmt;
     objectsOut.clear();
-    long int id;
 
     ss << "SELECT objID FROM " << tableName(tableId);
     if (queryPtr != NULL)
@@ -554,7 +553,6 @@ bool MDSql::createTable(const std::vector<MDLabel> * labelsVector, bool withObjI
 void MDSql::prepareStmt(const std::stringstream &ss, sqlite3_stmt *stmt)
 {
     const char * zLeftover;
-    const char * str = ss.str().c_str();
     rc = sqlite3_prepare_v2(db, ss.str().c_str(), -1, &stmt, &zLeftover);
 }
 
