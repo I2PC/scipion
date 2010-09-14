@@ -150,6 +150,10 @@ private:
     /// Pointer to the function to work on,
     /// if null threads should exit
     ThreadFunction workFunction;
+    bool started;
+    void * workClass;
+
+    void startThreads();
 
 public:
     /** Constructor, number of working threads should be supplied */
