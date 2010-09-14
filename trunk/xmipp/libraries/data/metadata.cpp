@@ -407,7 +407,7 @@ long int MetaData::iteratorBegin(const MDQuery &query)
 }
 
 /** Check whether the iteration if finished */
-bool MetaData::iteratorEnd()
+bool MetaData::iteratorEnd() const
 {
     return iterIndex == -1;
 }
@@ -640,7 +640,7 @@ void MetaData::_readRows(std::istream& is, std::vector<MDValueStore>& columnValu
             }
             else if (!isspace(is.peek()))
             {
-                int objId = addObject();
+                addObject();
                 if (line != "")
                 {
                     if (!useCommentAsImage)

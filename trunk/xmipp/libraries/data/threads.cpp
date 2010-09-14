@@ -61,6 +61,7 @@ ThreadArgument::ThreadArgument()
     thread_id = -1;
     manager = NULL;
     data = NULL;
+    workClass = NULL;
 }
 
 ThreadArgument::ThreadArgument(int id, ThreadManager * manager, void * data)
@@ -68,6 +69,7 @@ ThreadArgument::ThreadArgument(int id, ThreadManager * manager, void * data)
     this->thread_id = id;
     this->manager = manager;
     this->data = data;
+    workClass = NULL;
 }
 
 void * _threadMain(void * data)
@@ -89,7 +91,7 @@ void * _threadMain(void * data)
         {
             thMgr->barrier->wait();//Make sure all threads are ready to DIE.
             pthread_exit(NULL);
-            return NULL;
+            //return NULL;
         }
     }
 }

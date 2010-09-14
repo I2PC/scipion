@@ -509,7 +509,7 @@ public:
 
     /** Check whether the iteration has finished.
      */
-    bool iteratorEnd();
+    bool iteratorEnd() const;
 
     /** Move to next object on iteration.
      * return nextObject id
