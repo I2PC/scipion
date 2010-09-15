@@ -1,7 +1,7 @@
 #!/usr/bin/env sh
 SCRIPTPATH=`readlink -f $0`
 CWD=`dirname $SCRIPTPATH`
-XMIPP_BASE="$CWD/../../.."
+XMIPP_BASE="$CWD/.."
 JAVA_HOME="$XMIPP_BASE/external/java"
 JVM="$JAVA_HOME/jvm"
 
@@ -17,18 +17,19 @@ then
 else
 	# GETOPTS
 	ERROR=0
+
 	if [ $# -gt 1 ]
 	then
-	    MEM="$1"
-	    VOLUME_FILE="$2"
+	    MEM=$1
+	    VOLUME_FILE=$2
 	else
 		MEM=512m
 		ERROR=1
 		if [ $# -gt 0 ]
 		then
-		    MEM=$1
+		    VOLUME_FILE=$1
 		else
-		    ERROR=`expr $ERROR + 2`
+		    ERROR=`expr $ERROR + 1`
 		fi	    
 	fi
 
@@ -45,7 +46,10 @@ else
 		echo "Usage: xmipp_projections_viewerj <Memory size> <volume_file>. Example: xmipp_projections_viewerj 1024m file.vol"
 	fi
 	
-	export LD_LIBRARY_PATH=$XMIPP_BASE/lib
-	IMAGEJ_HOME=$XMIPP_BASE/external/imagej
-	$JVM/bin/java -Xmx$MEM -Dplugins.dir=$IMAGEJ_HOME/plugins/ -jar $IMAGEJ_HOME/ij.jar -macro $IMAGEJ_HOME/macros/xmippProjectionsViewer.txt "$VOLUME_FILE"
+	if [ "$ERROR" != "2" ]
+	then
+		export LD_LIBRARY_PATH=$XMIPP_BASE/lib
+		IMAGEJ_HOME=$XMIPP_BASE/external/imagej
+		$JVM/bin/java -Xmx$MEM -Dplugins.dir=$IMAGEJ_HOME/plugins/ -jar $IMAGEJ_HOME/ij.jar -macro $IMAGEJ_HOME/macros/xmippProjectionsViewer.txt "$VOLUME_FILE"
+	fi
 fi

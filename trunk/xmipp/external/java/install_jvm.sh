@@ -3,9 +3,13 @@ LINUX="java-6-sun-1.6.0.20_linux/"
 LINUX64="jdk1.6.0_14"
 MACOSX="java-6-sun-1.6.0.20_macosx/"
 
-XMIPP_BASE="$HOME/xmipp"
-CWD="$XMIPP_BASE/external/java"
-JVM="$CWD/jvm"
+SCRIPT=`readlink -f $0`
+SCRIPTPATH=`dirname $SCRIPT`
+XMIPP_BASE="$SCRIPTPATH/../.."
+JAVA_HOME="$XMIPP_BASE/external/java"
+JVM="$SCRIPTPATH/jvm"
+
+echo $JVM
 
 # Which is our OS?
 case "$(uname -s)" in
@@ -18,10 +22,7 @@ Linux)
 	esac;;
 esac
 
-# Sets JAVA_HOME...
-JAVA_HOME="$CWD/$platform"
-
 # Creates a symbolic link to the java virtual machine
-test -e $JVM && rm $JVM
-ln $JAVA_HOME -s $JVM
+rm $JVM
+ln "$JAVA_HOME/$platform" -s $JVM
 

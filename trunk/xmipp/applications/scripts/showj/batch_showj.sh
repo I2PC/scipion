@@ -1,7 +1,7 @@
 #!/usr/bin/env sh
 SCRIPTPATH=`readlink -f $0`
 CWD=`dirname $SCRIPTPATH`
-XMIPP_BASE="$CWD/../../.."
+XMIPP_BASE="$CWD/.."
 JAVA_HOME="$XMIPP_BASE/external/java"
 JVM="$JAVA_HOME/jvm"
 

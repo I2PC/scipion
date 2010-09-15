@@ -1,7 +1,7 @@
 #!/usr/bin/env sh
 SCRIPTPATH=`readlink -f $0`
 CWD=`dirname $SCRIPTPATH`
-XMIPP_BASE="$CWD/../../.."
+XMIPP_BASE="$CWD/.."
 JAVA_HOME="$XMIPP_BASE/external/java"
 JVM="$JAVA_HOME/jvm"
 
@@ -34,11 +34,11 @@ else
 
 	if [ "$ERROR" != "0" ]
 	then
-		echo "Usage: xmipp_projection_explorer <Memory size> -vol <volume_file> -angles <angles_file>"
+		echo "Usage: xmipp_projection_explorer <Memory size> -vol <volume_file> -angles <angles_file>. Example: xmipp_projection_explorer 1024m -vol file.vol -angles angles.txt"
 		echo "No memory size provided. Using default: $MEM"
 	fi
 
-	if [ "$ERROR" == "2" ]
+	if [ "$ERROR" = "2" ]
 	then
 		echo "Not enough arguments."
 	else

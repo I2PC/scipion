@@ -1,7 +1,7 @@
 #!/usr/bin/env sh
 SCRIPTPATH=`readlink -f $0`
 CWD=`dirname $SCRIPTPATH`
-XMIPP_BASE="$CWD/../../.."
+XMIPP_BASE="$CWD/.."
 JAVA_HOME="$XMIPP_BASE/external/java"
 JVM="$JAVA_HOME/jvm"
 
@@ -17,20 +17,21 @@ then
 else
 	# GETOPTS
 	ERROR=0
-	if [ $# -gt 0 ]
-	then
-	    MEM=$1
-	else
-	    MEM=512m
-	    ERROR=1
-	fi
 
 	if [ $# -gt 1 ]
 	then
-	    WORKDIR="$2"
+	    MEM=$1
+	    WORKDIR=$2
 	else
-	    WORKDIR=`pwd`
-	    ERROR=`expr $ERROR + 2`
+		MEM=512m
+		ERROR=1
+		if [ $# -gt 0 ]
+		then
+		    WORKDIR=$1
+		else
+		    WORKDIR=`pwd`
+		    ERROR=`expr $ERROR + 1`
+		fi	    
 	fi
 
 	if [ "$ERROR" != "0" ]
@@ -45,8 +46,11 @@ else
 		fi
 		echo "Usage: xmipp_browserj <Memory size> <work_directory>. Example: xmipp_browserj 1024m $HOME"
 	fi
-
-	export LD_LIBRARY_PATH=$XMIPP_BASE/lib
-	IMAGEJ_HOME=$XMIPP_BASE/external/imagej
-	$JVM/bin/java -Xmx$MEM -Dplugins.dir=$IMAGEJ_HOME/plugins/ -jar $IMAGEJ_HOME/ij.jar -macro $IMAGEJ_HOME/macros/xmippBrowser.txt "$WORKDIR"
+	
+	if [ "$ERROR" != "2" ]
+	then
+		export LD_LIBRARY_PATH=$XMIPP_BASE/lib
+		IMAGEJ_HOME=$XMIPP_BASE/external/imagej
+		$JVM/bin/java -Xmx$MEM -Dplugins.dir=$IMAGEJ_HOME/plugins/ -jar $IMAGEJ_HOME/ij.jar -macro $IMAGEJ_HOME/macros/xmippBrowser.txt "$WORKDIR"
+	fi
 fi
