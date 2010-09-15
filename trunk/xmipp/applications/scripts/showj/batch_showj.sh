@@ -1,15 +1,17 @@
 #!/usr/bin/env sh
-XMIPP_BASE="$HOME/xmipp"
-CWD="$XMIPP_BASE/external/java"
-JAVA_HOME="$CWD/jvm"
+SCRIPTPATH=`readlink -f $0`
+CWD=`dirname $SCRIPTPATH`
+XMIPP_BASE="$CWD/../../.."
+JAVA_HOME="$XMIPP_BASE/external/java"
+JVM="$JAVA_HOME/jvm"
 
-if [ ! -L "$JAVA_HOME" ]
+if [ ! -L "$JVM" ]
 then
 	echo "JVM not installed... fixing it..."
-	$XMIPP_BASE/external/java/install_jvm.sh
+	$JAVA_HOME/install_jvm.sh
 fi
 
-if [ ! -L "$JAVA_HOME" ]
+if [ ! -L "$JVM" ]
 then
 	echo "JVM is missing, so program can't be run. Check your XMIPP installation."
 else
@@ -25,5 +27,5 @@ else
 
 	export LD_LIBRARY_PATH=$XMIPP_BASE/lib
 	IMAGEJ_HOME=$XMIPP_BASE/external/imagej
-	$JAVA_HOME/bin/java -Xmx$MEM -Dplugins.dir=$IMAGEJ_HOME/plugins/ -jar $IMAGEJ_HOME/ij.jar
+	$JVM/bin/java -Xmx$MEM -Dplugins.dir=$IMAGEJ_HOME/plugins/ -jar $IMAGEJ_HOME/ij.jar
 fi

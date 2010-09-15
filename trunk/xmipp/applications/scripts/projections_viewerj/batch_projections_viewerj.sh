@@ -1,26 +1,51 @@
 #!/usr/bin/env sh
-XMIPP_BASE="$HOME/xmipp"
-CWD="$XMIPP_BASE/external/java"
-JAVA_HOME="$CWD/jvm"
+SCRIPTPATH=`readlink -f $0`
+CWD=`dirname $SCRIPTPATH`
+XMIPP_BASE="$CWD/../../.."
+JAVA_HOME="$XMIPP_BASE/external/java"
+JVM="$JAVA_HOME/jvm"
 
-if [ ! -L "$JAVA_HOME" ]
+if [ ! -L "$JVM" ]
 then
 	echo "JVM not installed... fixing it..."
 	$XMIPP_BASE/external/java/install_jvm.sh
 fi
 
-if [ ! -L "$JAVA_HOME" ]
+if [ ! -L "$JVM" ]
 then
 	echo "JVM is missing, so program can't be run. Check your XMIPP installation."
 else
 	# GETOPTS
-	if [ $# -le 1 ]
+	ERROR=0
+	if [ $# -gt 1 ]
 	then
-	    echo "Not enough arguments."
-	    echo "Usage: xmipp_projections_viewerj <Memory size> <volume_file>. Example: xmipp_projections_viewerj 1024m file.vol"
+	    MEM="$1"
+	    VOLUME_FILE="$2"
 	else
-		export LD_LIBRARY_PATH=$XMIPP_BASE/lib
-		IMAGEJ_HOME=$XMIPP_BASE/external/imagej
-		$JAVA_HOME/bin/java -Xmx$1 -Dplugins.dir=$IMAGEJ_HOME/plugins/ -jar $IMAGEJ_HOME/ij.jar -macro $IMAGEJ_HOME/macros/xmippProjectionsViewer.txt "$2"
+		MEM=512m
+		ERROR=1
+		if [ $# -gt 0 ]
+		then
+		    MEM=$1
+		else
+		    ERROR=`expr $ERROR + 2`
+		fi	    
 	fi
+
+	if [ "$ERROR" != "0" ]
+	then
+    		if [ "$ERROR" != "2" ]
+		then
+			echo "No memory size provided. Using default: $MEM"
+		fi
+		if [ "$ERROR" != "1" ]
+		then
+			echo "Not enough arguments."
+		fi
+		echo "Usage: xmipp_projections_viewerj <Memory size> <volume_file>. Example: xmipp_projections_viewerj 1024m file.vol"
+	fi
+	
+	export LD_LIBRARY_PATH=$XMIPP_BASE/lib
+	IMAGEJ_HOME=$XMIPP_BASE/external/imagej
+	$JVM/bin/java -Xmx$MEM -Dplugins.dir=$IMAGEJ_HOME/plugins/ -jar $IMAGEJ_HOME/ij.jar -macro $IMAGEJ_HOME/macros/xmippProjectionsViewer.txt "$VOLUME_FILE"
 fi
