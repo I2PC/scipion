@@ -386,11 +386,9 @@ def AddImageJPlugin(name, pluginDir, outDir):
     # Packs classes and plugin config file into jar.
     env.Default(buildJar)
 
-# Copies jar files to ImageJ plugins directory. (Used when there is no source code available).
-def AddImageJPluginJars(pluginDir, outDir):
-    # Copies jar files to ImageJ plugins directory.
-    Execute("cp " + os.path.join(pluginDir, '*.jar ') + outDir)
-    Execute("cp " + os.path.join(pluginDir, '*.class ') + outDir)
+# Copies ImageJ external plugins (3rd party)
+def AddImageJExternalPlugins(pluginsDir, outDir):
+    Execute("cp " + os.path.join(pluginsDir, '* ') + outDir + ' -R')
 
 def AddSQLiteLibrary():
     libprefix = os.path.join(env['prefix'], 'lib')
@@ -641,9 +639,8 @@ if int(env['java']):
     # Checks if jvm exists, otherwise the compilation will be halted if jvm is missing.
     AddImageJPlugin('Xmipp_IO', 'libraries/graphicsj/Xmipp_IO', 'external/imagej/plugins')
     AddImageJPlugin('Xmipp_Projections_Explorer', 'libraries/graphicsj/Xmipp_Projections_Explorer', 'external/imagej/plugins')
-    AddImageJPlugin('Xmipp_Projections_Viewer', 'libraries/graphicsj/Xmipp_Projections_Viewer', 'external/imagej/plugins')
     AddImageJPlugin('Xmipp_Browser', 'libraries/graphicsj/Xmipp_Browser', 'external/imagej/plugins')
-    AddImageJPluginJars('libraries/graphicsj/plugins', 'external/imagej/plugins')
+    AddImageJExternalPlugins('libraries/graphicsj/plugins', 'external/imagej/plugins')
 
 # --- Programs
 
