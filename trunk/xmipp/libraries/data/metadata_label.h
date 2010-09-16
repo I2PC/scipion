@@ -411,7 +411,7 @@ public:
     //Default constructor
     MDLabelData()
     {
-       type = LABEL_NOTYPE;
+        type = LABEL_NOTYPE;
     }
 
     MDLabelData(MDLabelType t, std::string s)
@@ -422,22 +422,35 @@ public:
 }
 ;//close class MDLabelData
 
+/** Union to store values */
+typedef union
+ {
+    bool boolValue;
+    int intValue;
+    long int longintValue;
+    double doubleValue;
+    std::string * stringValue;
+    std::vector<double> * vectorValue;
+} ObjectData;
+
 /** Class to hold the labels values and type
  *
  */
 class MDObject
 {
-public:
-    MDLabelType type;
-    bool boolValue;
-    int intValue;
-    long int longintValue;
-    double doubleValue;
-    std::string stringValue;
-    std::vector<double> vectorValue;
-    MDLabel label;
+private:
+  ObjectData data;
 
     void labelTypeCheck(MDLabelType checkingType) const;
+    void copy(const MDObject &obj);
+
+public:
+    MDLabel label;
+    MDLabelType type;
+    /** Copy constructor */
+    MDObject(const MDObject & obj);
+    /** Assign operator */
+    MDObject & operator = (const MDObject &obj);
     //Just a simple constructor with the label
     //dont do any type checking as have not value yet
     MDObject(MDLabel label);
@@ -451,6 +464,8 @@ public:
     MDObject(MDLabel label, const long int longintValue);
     MDObject(MDLabel label, const float &floatValue);
     MDObject(MDLabel label, const char * &charValue);
+
+    ~MDObject();
 
     //These getValue also do a compilation type checking
     //when expanding templates functions and only
@@ -490,41 +505,50 @@ public:
     friend std::istream& operator>> (std::istream& is, MDObject &value);
     bool fromString(const std::string &str);
 
-    friend class MetaData;
     friend class MDSql;
-    friend class MDQuery;
-}; //close class MDValue
+}
+; //close class MDValue
 
 /** Class for holding an entire row of posible MDObject */
 class MDRow: public std::vector<MDObject*>
 {
 public:
-  //MDObject & operator [](MDLabel label);
-  bool containsLabel(MDLabel label) const;
-  template <typename T>
-  bool getValue(MDLabel label, T &d) const
-  {
-    for (const_iterator it = begin(); it != end(); ++it)
-        if ((*it)->label == label)
-        {
-            (*it)->getValue(d);
-            return true;
-        }
+    //MDObject & operator [](MDLabel label);
+    bool containsLabel(MDLabel label) const;
+    template <typename T>
+    bool getValue(MDLabel label, T &d) const
+    {
+        for (const_iterator it = begin(); it != end(); ++it)
+            if ((*it)->label == label)
+            {
+                (*it)->getValue(d);
+                return true;
+            }
 
-    return false;
-  }
-  template <typename T>
-  void setValue(MDLabel label, const T &d)
-  {
-    for (const_iterator it = begin(); it != end(); ++it)
-        if ((*it)->label == label)
-        {
-            (*it)->setValue(d);
-            return;
-        }
-    push_back(new MDObject(label, d));
-  }
-  ~MDRow();
+        return false;
+    }
+    template <typename T>
+    void setValue(MDLabel label, const T &d)
+    {
+        for (const_iterator it = begin(); it != end(); ++it)
+            if ((*it)->label == label)
+            {
+                (*it)->setValue(d);
+                return;
+            }
+        push_back(new MDObject(label, d));
+    }
+
+    /** Copy constructor */
+    MDRow(const MDRow & row);
+    MDRow();
+    MDRow& operator = (const MDRow &row);
+    ~MDRow();
+
+private:
+    void copy(const MDRow &row);
+
+
 };
 
 

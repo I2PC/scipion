@@ -126,6 +126,27 @@ bool vectorContainsLabel(const std::vector<MDLabel>& labelsVector, const MDLabel
     return (location != labelsVector.end());
 }
 
+void MDObject::copy(const MDObject &obj)
+{
+    label = obj.label;
+    type = obj.type;
+    data = obj.data;
+    if (type == LABEL_STRING)
+        data.stringValue = new std::string(*(obj.data.stringValue));
+    else if (type == LABEL_VECTOR)
+        data.vectorValue = new std::vector<double>(*(obj.data.vectorValue));
+}
+
+MDObject::MDObject(const MDObject & obj)
+{
+    copy(obj);
+}
+MDObject & MDObject::operator = (const MDObject &obj)
+{
+    copy(obj);
+    return *this;
+}
+
 //----------- Implementation of MDValue -----------------
 inline void MDObject::labelTypeCheck(MDLabelType checkingType) const
 {
@@ -164,7 +185,13 @@ MDObject::MDObject(MDLabel label)
 {
     this->label = label;
     if (label != MDL_UNDEFINED)
-        this->type = MDL::labelType(label);
+    {
+        type = MDL::labelType(label);
+        if (type == LABEL_STRING)
+            data.stringValue = new std::string;
+        else if (type == LABEL_VECTOR)
+            data.vectorValue = new std::vector<double>;
+    }
 }
 ///Constructors for each Label supported type
 ///these constructor will do the labels type checking
@@ -173,42 +200,42 @@ MDObject::MDObject(MDLabel label, const int &intValue)
     this->label = label;
     this->type = MDL::labelType(label);
     labelTypeCheck(LABEL_INT);
-    this->intValue = intValue;
+    this->data.intValue = intValue;
 }
 MDObject::MDObject(MDLabel label, const double &doubleValue)
 {
     this->label = label;
     this->type = MDL::labelType(label);
     labelTypeCheck(LABEL_DOUBLE);
-    this->doubleValue = doubleValue;
+    this->data.doubleValue = doubleValue;
 }
 MDObject::MDObject(MDLabel label, const bool &boolValue)
 {
     this->label = label;
     this->type = MDL::labelType(label);
     labelTypeCheck(LABEL_BOOL);
-    this->boolValue = boolValue;
+    this->data.boolValue = boolValue;
 }
 MDObject::MDObject(MDLabel label, const std::string &stringValue)
 {
     this->label = label;
     this->type = MDL::labelType(label);
     labelTypeCheck(LABEL_STRING);
-    this->stringValue = stringValue;
+    this->data.stringValue = new std::string(stringValue);
 }
 MDObject::MDObject(MDLabel label, const std::vector<double> &vectorValue)
 {
     this->label = label;
     this->type = MDL::labelType(label);
     labelTypeCheck(LABEL_VECTOR);
-    this->vectorValue = vectorValue;
+    this->data.vectorValue = new std::vector<double>(vectorValue);
 }
 MDObject::MDObject(MDLabel label, const long int longintValue)
 {
     this->label = label;
     this->type = MDL::labelType(label);
     labelTypeCheck(LABEL_LONG);
-    this->longintValue = longintValue;
+    this->data.longintValue = longintValue;
 
 }
 MDObject::MDObject(MDLabel label, const float &floatValue)
@@ -224,6 +251,14 @@ MDObject::MDObject(MDLabel label, const char* &charValue)
     exit(1);
 }
 
+MDObject::~MDObject()
+{
+    if (type == LABEL_STRING)
+        delete data.stringValue;
+    else if (type == LABEL_VECTOR)
+        delete data.vectorValue;
+}
+
 //These getValue also do a compilation type checking
 //when expanding templates functions and only
 //will allow the supported types
@@ -231,32 +266,32 @@ MDObject::MDObject(MDLabel label, const char* &charValue)
 void MDObject::getValue(int &iv) const
 {
     labelTypeCheck(LABEL_INT);
-    iv = this->intValue;
+    iv = this->data.intValue;
 }
 void MDObject::getValue(double &dv) const
 {
     labelTypeCheck(LABEL_DOUBLE);
-    dv = this->doubleValue;
+    dv = this->data.doubleValue;
 }
 void MDObject::getValue(bool &bv) const
 {
     labelTypeCheck(LABEL_BOOL);
-    bv = this->boolValue;
+    bv = this->data.boolValue;
 }
 void MDObject::getValue(std::string &sv) const
 {
     labelTypeCheck(LABEL_STRING);
-    sv = this->stringValue;
+    sv = *(this->data.stringValue);
 }
 void  MDObject::getValue(std::vector<double> &vv) const
 {
     labelTypeCheck(LABEL_VECTOR);
-    vv = this->vectorValue;
+    vv = *(this->data.vectorValue);
 }
 void MDObject::getValue(long int &lv) const
 {
     labelTypeCheck(LABEL_INT);
-    lv = this->longintValue;
+    lv = this->data.longintValue;
 }
 void MDObject::getValue(float &floatvalue) const
 {
@@ -274,34 +309,40 @@ void MDObject::getValue(char*  &charvalue) const
 void MDObject::setValue(const int &iv)
 {
     labelTypeCheck(LABEL_INT);
-    this->intValue = iv;
+    this->data.intValue = iv;
 }
 void MDObject::setValue(const double &dv)
 {
     labelTypeCheck(LABEL_DOUBLE);
-    this->doubleValue = dv;
+    this->data.doubleValue = dv;
 }
 
 void MDObject::setValue(const bool &bv)
 {
     labelTypeCheck(LABEL_BOOL);
-    this->boolValue = bv;
+    this->data.boolValue = bv;
 }
 
 void MDObject::setValue(const std::string &sv)
 {
     labelTypeCheck(LABEL_STRING);
-    this->stringValue = sv;
+    //if (this->data.stringValue == NULL)
+    //  this->data.stringValue = new std::string(sv);
+    //else
+    *(this->data.stringValue) = sv;
 }
 void  MDObject::setValue(const std::vector<double> &vv)
 {
     labelTypeCheck(LABEL_VECTOR);
-    this->vectorValue = vv;
+    //if (this->data.vectorValue == NULL)
+    //  this->data.vectorValue = new std::vector<double>(vv);
+    //else
+    *(this->data.vectorValue) = vv;
 }
 void MDObject::setValue(const long int &lv)
 {
     labelTypeCheck(LABEL_INT);
-    this->longintValue = lv;
+    this->data.longintValue = lv;
 }
 void MDObject::setValue(const float &floatvalue)
 {
@@ -330,31 +371,31 @@ void MDObject::toStream(std::ostream &os, bool withFormat, bool isSql) const
     std::string c = (isSql) ? "'" : "";
 
     if (label == MDL_UNDEFINED) //if undefine label, store as a literal string
-        os << stringValue;
+        os << data.stringValue;
     else
         switch (MDL::labelType(label))
         {
         case LABEL_BOOL: //bools are int in sqlite3
-            os << boolValue;
+            os << data.boolValue;
             break;
         case LABEL_INT:
-            INT2STREAM(intValue);
+            INT2STREAM(data.intValue);
             break;
         case LABEL_LONG:
-            INT2STREAM(longintValue);
+            INT2STREAM(data.longintValue);
             break;
         case LABEL_DOUBLE:
-            DOUBLE2STREAM(doubleValue);
+            DOUBLE2STREAM(data.doubleValue);
             break;
         case LABEL_STRING:
-            os << c << stringValue << c;
+            os << c << *(data.stringValue) << c;
             break;
         case LABEL_VECTOR:
             os << "[ ";
-            int size = vectorValue.size();
+            int size = data.vectorValue->size();
             for (int i = 0; i < size; i++)
             {
-                DOUBLE2STREAM(vectorValue[i]);
+                DOUBLE2STREAM(data.vectorValue->at(i));
                 os << " ";
             }
             os << "]";
@@ -378,10 +419,8 @@ std::istream& operator>> (std::istream& is, MDObject &value)
 
 bool MDObject::fromStream(std::istream &is)
 {
-
-
     if (label == MDL_UNDEFINED) //if undefine label, store as a literal string
-        is >> stringValue;
+        REPORT_ERROR(ERR_MD_BADTYPE, "Reading MDObject from stream");
     else
     {
         // int,bool and long are read as double for compatibility with old doc files
@@ -390,27 +429,31 @@ bool MDObject::fromStream(std::istream &is)
         {
         case LABEL_BOOL: //bools are int in sqlite3
             is >> d;
-            boolValue = (bool) ((int)d);
+            data.boolValue = (bool) ((int)d);
             break;
         case LABEL_INT:
             is >> d;
-            intValue = (int) d;
+            data.intValue = (int) d;
             break;
         case LABEL_LONG:
             is >> d;
-            longintValue = (long int) d;
+            data.longintValue = (long int) d;
             break;
         case LABEL_DOUBLE:
-            is >> doubleValue;
+            is >> data.doubleValue;
             break;
         case LABEL_STRING:
-            is >> stringValue;
+            //if (data.stringValue == NULL)
+            //    data.stringValue = new std::string;
+            is >> *(data.stringValue);
             break;
         case LABEL_VECTOR:
             is.ignore(256, '[');
-            vectorValue.clear();
-            while (is >> doubleValue) //This will stop at ending "]"
-                vectorValue.push_back(doubleValue);
+            //if (data.vectorValue == NULL)
+            //  data.vectorValue = new std::vector<double>;
+            data.vectorValue->clear();
+            while (is >> d) //This will stop at ending "]"
+                data.vectorValue->push_back(d);
             is.clear(); //this is for clear the fail state after found ']'
             is.ignore(256, ']'); //ignore the ending ']'
             break;
@@ -449,4 +492,31 @@ MDRow::~MDRow()
 {
     for (iterator it = begin(); it != end(); ++it)
         delete *it;
+}
+
+MDRow::MDRow(const MDRow & row)
+{
+    copy(row);
+}
+
+MDRow::MDRow():std::vector<MDObject*>()
+{}
+
+MDRow& MDRow::operator = (const MDRow &row)
+{
+    copy(row);
+}
+
+void MDRow::copy(const MDRow &row)
+{
+    resize(row.size());
+    int pos = 0;
+    for (iterator it = begin(); it != end(); ++it)
+    {
+        if (*it == NULL)
+            *it = new MDObject(*(row[pos]));
+        else
+            *(*it) = *(row[pos]);
+        ++pos;
+    }
 }

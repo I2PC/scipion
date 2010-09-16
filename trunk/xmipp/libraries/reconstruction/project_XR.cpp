@@ -454,9 +454,6 @@ void project_xr_Volume_offCentered(PROJECT_XR_Side_Info &side, XRayPSF &psf, Pro
 
     psf.adjustParam(side.rotPhantomVol);
 
-    std::vector<MDLabel> labels = P.MD.getActiveLabels() ;
-
-
     //the really really final project routine, I swear by Snoopy.
 //    project_xr(psf,side.rotPhantomVol,P, idxSlice);
     thMgr->run(thread_project_xr);

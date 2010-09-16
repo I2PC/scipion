@@ -211,9 +211,9 @@ private:
     long int _iteratorBegin(const MDQuery *query = NULL);
 
     /** Some private reading functions */
-    void _readColumns(std::istream& is, std::vector<MDObject>& columnValues,
+    void _readColumns(std::istream& is, MDRow & columnValues,
                                std::vector<MDLabel>* desiredLabels = NULL);
-    void _readRows(std::istream& is, std::vector<MDObject>& columnValues, bool useCommentAsImage);
+    void _readRows(std::istream& is, MDRow & columnValues, bool useCommentAsImage);
     void _readRowFormat(std::istream& is);
 
 public:

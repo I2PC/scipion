@@ -621,15 +621,15 @@ int MDSql::bindValue(sqlite3_stmt *stmt, const int position, const MDObject &val
     switch (valueIn.type)
     {
     case LABEL_BOOL: //bools are int in sqlite3
-        return sqlite3_bind_int(stmt, position, valueIn.boolValue ? 1 : 0);
+        return sqlite3_bind_int(stmt, position, valueIn.data.boolValue ? 1 : 0);
     case LABEL_INT:
-        return sqlite3_bind_int(stmt, position, valueIn.intValue);
+        return sqlite3_bind_int(stmt, position, valueIn.data.intValue);
     case LABEL_LONG:
-        return sqlite3_bind_int(stmt, position, valueIn.longintValue);
+        return sqlite3_bind_int(stmt, position, valueIn.data.longintValue);
     case LABEL_DOUBLE:
-        return sqlite3_bind_double(stmt, position, valueIn.doubleValue);
+        return sqlite3_bind_double(stmt, position, valueIn.data.doubleValue);
     case LABEL_STRING:
-        return sqlite3_bind_text(stmt, position, valueIn.stringValue.c_str(), -1, NULL);
+        return sqlite3_bind_text(stmt, position, valueIn.data.stringValue->c_str(), -1, NULL);
     case LABEL_VECTOR:
         return sqlite3_bind_text(stmt, position, valueIn.toString().c_str(), -1, NULL);
     }
@@ -641,20 +641,20 @@ int MDSql::extractValue(sqlite3_stmt *stmt, const int position, MDObject &valueO
     switch (valueOut.type)
     {
     case LABEL_BOOL: //bools are int in sqlite3
-        valueOut.boolValue = sqlite3_column_int(stmt, position) == 1;
+        valueOut.data.boolValue = sqlite3_column_int(stmt, position) == 1;
         break;
     case LABEL_INT:
-        valueOut.intValue = sqlite3_column_int(stmt, position);
+        valueOut.data.intValue = sqlite3_column_int(stmt, position);
         break;
     case LABEL_LONG:
-        valueOut.longintValue = sqlite3_column_int(stmt, position);
+        valueOut.data.longintValue = sqlite3_column_int(stmt, position);
         break;
     case LABEL_DOUBLE:
-        valueOut.doubleValue = sqlite3_column_double(stmt, position);
+        valueOut.data.doubleValue = sqlite3_column_double(stmt, position);
         break;
     case LABEL_STRING:
         ss << sqlite3_column_text(stmt, position);
-        valueOut.stringValue = ss.str();
+        valueOut.data.stringValue = new std::string(ss.str());
         break;
     case LABEL_VECTOR:
         //FIXME: Now are stored as string in DB

@@ -597,7 +597,7 @@ void MetaData::write(std::ostream &os)
  * or those who appears in the IgnoreLabels vector
  * also set the activeLabels
  */
-void MetaData::_readColumns(std::istream& is, std::vector<MDObject>& columnValues,
+void MetaData::_readColumns(std::istream& is, MDRow & columnValues,
                             std::vector<MDLabel>* desiredLabels)
 {
     std::string token;
@@ -611,7 +611,7 @@ void MetaData::_readColumns(std::istream& is, std::vector<MDObject>& columnValue
             label = MDL::str2Label(token);
             if (desiredLabels != NULL && !vectorContainsLabel(*desiredLabels, label))
                 label = MDL_UNDEFINED; //ignore if not present in desiredLabels
-            columnValues.push_back(MDObject(label));
+            columnValues.push_back(new MDObject(label));
             if (label != MDL_UNDEFINED)
                 addLabel(label);
         }
@@ -622,7 +622,7 @@ void MetaData::_readColumns(std::istream& is, std::vector<MDObject>& columnValue
  * the useCommentAsImage is for compatibility with old DocFile format
  * where the image were in comments
  */
-void MetaData::_readRows(std::istream& is, std::vector<MDObject>& columnValues, bool useCommentAsImage)
+void MetaData::_readRows(std::istream& is, MDRow & columnValues, bool useCommentAsImage)
 {
     std::string line = "";
     while (!is.eof() && !is.fail())
@@ -648,16 +648,16 @@ void MetaData::_readRows(std::istream& is, std::vector<MDObject>& columnValues, 
                     else
                         setValue(MDL_IMAGE, line);
                 }
-                for (int i = 0; i < columnValues.size(); i++)
+                for (int i = 0; i < columnValues.size(); ++i)
                 {
-                    is >> columnValues[i];
+                    is >> *(columnValues[i]);
                     if (is.fail())
                     {
-                        REPORT_ERROR(ERR_MD_BADLABEL, (std::string)"read: Error parsing data column, expecting " + MDL::label2Str(columnValues[i].label));
+                        REPORT_ERROR(ERR_MD_BADLABEL, (std::string)"read: Error parsing data column, expecting " + MDL::label2Str(columnValues[i]->label));
                     }
                     else
-                        if (columnValues[i].label != MDL_UNDEFINED)
-                            _setValue(activeObjId, columnValues[i]);
+                        if (columnValues[i]->label != MDL_UNDEFINED)
+                            _setValue(activeObjId, *(columnValues[i]));
                 }
             }
 
@@ -695,7 +695,7 @@ void MetaData::read(const FileName &filename, std::vector<MDLabel> *desiredLabel
     std::ifstream is(filename.data(), std::ios_base::in);
     std::stringstream ss;
     std::string line, token;
-    std::vector<MDObject> columnValues;
+    MDRow columnValues;
 
 
     getline(is, line); //get first line to identify the type of file
@@ -743,7 +743,7 @@ void MetaData::read(const FileName &filename, std::vector<MDLabel> *desiredLabel
         is.ignore(256, ':'); //ignore all until ':' to start parsing column labels
         getline(is, line);
         ss.str(line);
-        columnValues.resize(2, MDObject(MDL_UNDEFINED)); //start with 2 undefined to avoid 2 first columns of old format
+        columnValues.resize(2, new MDObject(MDL_UNDEFINED)); //start with 2 undefined to avoid 2 first columns of old format
         addLabel(MDL_IMAGE);
         _readColumns(ss, columnValues, desiredLabels);
         useCommentAsImage = true;
@@ -753,8 +753,8 @@ void MetaData::read(const FileName &filename, std::vector<MDLabel> *desiredLabel
         std::cerr << "WARNING: ** You are using an old file format (SELFILE) which is going "
         << "to be deprecated in next Xmipp release **" << std::endl;
         //I will assume that is an old SelFile, so only need to add two columns
-        columnValues.push_back(MDObject(MDL_IMAGE));//addLabel(MDL_IMAGE);
-        columnValues.push_back(MDObject(MDL_ENABLED));//addLabel(MDL_ENABLED);
+        columnValues.push_back(new MDObject(MDL_IMAGE));//addLabel(MDL_IMAGE);
+        columnValues.push_back(new MDObject(MDL_ENABLED));//addLabel(MDL_ENABLED);
     }
 
     if (isColumnFormat)
