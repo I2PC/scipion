@@ -110,7 +110,7 @@ bool MDSql::addColumn(MDLabel column)
     return execSingleStmt(ss);
 }
 
-bool MDSql::setObjectValue(const int objId, const MDValueStore &value)
+bool MDSql::setObjectValue(const int objId, const MDObject &value)
 {
     bool r = true;
     MDLabel column = value.label;
@@ -139,7 +139,7 @@ bool MDSql::setObjectValue(const int objId, const MDValueStore &value)
     return r;
 }
 
-bool MDSql::getObjectValue(const int objId, MDValueStore  &value)
+bool MDSql::getObjectValue(const int objId, MDObject  &value)
 {
     std::stringstream ss;
     MDLabel column = value.label;
@@ -613,7 +613,7 @@ std::string MDSql::tableName(const int tableId) const
     return ss.str();
 }
 
-int MDSql::bindValue(sqlite3_stmt *stmt, const int position, const MDValueStore &valueIn)
+int MDSql::bindValue(sqlite3_stmt *stmt, const int position, const MDObject &valueIn)
 {
     //First reset the statement
     //rc  = sqlite3_reset(stmt);
@@ -635,7 +635,7 @@ int MDSql::bindValue(sqlite3_stmt *stmt, const int position, const MDValueStore 
     }
 }
 
-int MDSql::extractValue(sqlite3_stmt *stmt, const int position, MDValueStore &valueOut)
+int MDSql::extractValue(sqlite3_stmt *stmt, const int position, MDObject &valueOut)
 {
     std::stringstream ss;
     switch (valueOut.type)

@@ -109,9 +109,6 @@ int readINF(int img_select,bool isStack=false)
         REPORT_ERROR(ERR_TYPE_INCORRECT, "rwINF::read: depth is not 8, 16 nor 32");
     }
 
-    MDMainHeader.removeObjects();
-    MDMainHeader.setColumnFormat(false);
-    MDMainHeader.addObject();
     MDMainHeader.setValue(MDL_SAMPLINGRATEX,(double) -1);
     MDMainHeader.setValue(MDL_SAMPLINGRATEY,(double) -1);
     MDMainHeader.setValue(MDL_DATATYPE,(int)datatype);
@@ -119,19 +116,18 @@ int readINF(int img_select,bool isStack=false)
     if( dataflag < 0 )
         return 0;
 
-    MD.removeObjects();
-    for ( i=imgStart; i<imgEnd; i++ )
-        //for(int i=0;i< Ndim;i++)
+    MD.clear();
+    MD.resize(imgEnd - imgStart);
+    for ( i = imgStart; i < imgEnd; ++i )
     {
-        MD.addObject();
-        MD.setValue(MDL_ORIGINX, zeroD);
-        MD.setValue(MDL_ORIGINY, zeroD);
-        MD.setValue(MDL_ORIGINZ,  zeroD);
-        MD.setValue(MDL_ANGLEROT, zeroD);
-        MD.setValue(MDL_ANGLETILT,zeroD);
-        MD.setValue(MDL_ANGLEPSI, zeroD);
-        MD.setValue(MDL_WEIGHT,   oneD);
-        MD.setValue(MDL_FLIP,     falseb);
+        MD[i-imgStart].setValue(MDL_ORIGINX, zeroD);
+        MD[i-imgStart].setValue(MDL_ORIGINY, zeroD);
+        MD[i-imgStart].setValue(MDL_ORIGINZ,  zeroD);
+        MD[i-imgStart].setValue(MDL_ANGLEROT, zeroD);
+        MD[i-imgStart].setValue(MDL_ANGLETILT,zeroD);
+        MD[i-imgStart].setValue(MDL_ANGLEPSI, zeroD);
+        MD[i-imgStart].setValue(MDL_WEIGHT,   oneD);
+        MD[i-imgStart].setValue(MDL_FLIP,     falseb);
     }
 
     //#define DEBUG

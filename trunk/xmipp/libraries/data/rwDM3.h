@@ -219,26 +219,23 @@ int readDM3(int img_select,bool isStack=false)
     DataType datatype = datatypeDM3(dataHeaders[0].dataType);
 
 
-    MDMainHeader.removeObjects();
-    MDMainHeader.setColumnFormat(false);
-    MDMainHeader.addObject();
     MDMainHeader.setValue(MDL_SAMPLINGRATEX,(double)dataHeaders[0].pixelWidth);
     MDMainHeader.setValue(MDL_SAMPLINGRATEY,(double)dataHeaders[0].pixelHeight);
     MDMainHeader.setValue(MDL_DATATYPE,(int)datatype);
 
-    MD.removeObjects();
-    for ( i=imgStart; i<imgEnd; i++ )
+    MD.clear();
+    MD.resize(imgEnd - imgStart);
+    for ( i = imgStart; i < imgEnd; i++ )
     {
-        MD.addObject();
-        MD.setValue(MDL_ORIGINX,  zeroD);
-        MD.setValue(MDL_ORIGINY,  zeroD);
-        MD.setValue(MDL_ORIGINZ,  zeroD);
+        MD[i-imgStart].setValue(MDL_ORIGINX,  zeroD);
+        MD[i-imgStart].setValue(MDL_ORIGINY,  zeroD);
+        MD[i-imgStart].setValue(MDL_ORIGINZ,  zeroD);
 
-        MD.setValue(MDL_ANGLEROT, zeroD);
-        MD.setValue(MDL_ANGLETILT,zeroD);
-        MD.setValue(MDL_ANGLEPSI, zeroD);
-        MD.setValue(MDL_WEIGHT,   oneD);
-        MD.setValue(MDL_FLIP,     falseb);
+        MD[i-imgStart].setValue(MDL_ANGLEROT, zeroD);
+        MD[i-imgStart].setValue(MDL_ANGLETILT,zeroD);
+        MD[i-imgStart].setValue(MDL_ANGLEPSI, zeroD);
+        MD[i-imgStart].setValue(MDL_WEIGHT,   oneD);
+        MD[i-imgStart].setValue(MDL_FLIP,     falseb);
     }
 
     offset = (unsigned long) dataHeaders[imgStart].headerSize;

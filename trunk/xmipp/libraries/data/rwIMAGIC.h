@@ -182,8 +182,6 @@ int  readIMAGIC(int img_select)
         header->densmax = header->avdens + header->sigma;
     }
 
-    MDMainHeader.removeObjects();
-    MDMainHeader.addObject();
     MDMainHeader.setValue(MDL_MIN,(double)header->densmin);
     MDMainHeader.setValue(MDL_MAX,(double)header->densmax);
     MDMainHeader.setValue(MDL_AVG,(double)header->avdens);
@@ -210,8 +208,9 @@ int  readIMAGIC(int img_select)
     else
         fseek( fhed, 0, SEEK_SET );
 
-    MD.removeObjects();
-    for ( i=0; i<Ndim; i++ )
+    MD.clear();
+    MD.resize(Ndim);
+    for ( i = 0; i < Ndim; ++i )
     {
         if ( fread( header, IMAGICSIZE, 1, fhed ) < 1 )
             return(-2);
@@ -221,14 +220,13 @@ int  readIMAGIC(int img_select)
                 for ( b = (char *) header; b<hend; b+=4 )
                     swapbytes(b, 4);
 
-            MD.addObject();
-            MD.setValue(MDL_ORIGINX,  (double)-1. * header->iyold);
-            MD.setValue(MDL_ORIGINY,  (double)-1. * header->ixold);
-            MD.setValue(MDL_ORIGINZ,  zeroD);
-            MD.setValue(MDL_ANGLEROT, (double)-1. * header->euler_alpha);
-            MD.setValue(MDL_ANGLETILT,(double)-1. * header->euler_beta);
-            MD.setValue(MDL_ANGLEPSI, (double)-1. * header->euler_gamma);
-            MD.setValue(MDL_WEIGHT,   (double)oneD);
+            MD[i].setValue(MDL_ORIGINX,  (double)-1. * header->iyold);
+            MD[i].setValue(MDL_ORIGINY,  (double)-1. * header->ixold);
+            MD[i].setValue(MDL_ORIGINZ,  zeroD);
+            MD[i].setValue(MDL_ANGLEROT, (double)-1. * header->euler_alpha);
+            MD[i].setValue(MDL_ANGLETILT,(double)-1. * header->euler_beta);
+            MD[i].setValue(MDL_ANGLEPSI, (double)-1. * header->euler_gamma);
+            MD[i].setValue(MDL_WEIGHT,   (double)oneD);
 
             j++;
         }
@@ -321,7 +319,7 @@ int  writeIMAGIC(int img_select=-1, int mode=WRITE_OVERWRITE)
         datasize = datasize_n * gettypesize(Float);
     double aux;
 
-    if (MDMainHeader.firstObject() != NO_OBJECTS_STORED)
+    if (!MDMainHeader.empty())
     {
 
         if(MDMainHeader.getValue(MDL_MIN,   aux))
@@ -395,37 +393,28 @@ int  writeIMAGIC(int img_select=-1, int mode=WRITE_OVERWRITE)
     }
     char* fdata = (char *) askMemory(datasize);
 
-    long int next_result;
-    i=imgStart;
-    //for ( i=imgStart; i<imgEnd; i++ )
-    FOR_ALL_OBJECTS_IN_METADATA(MD)
+    i = imgStart;
+    for (std::vector<MDRow>::iterator it = MD.begin(); it != MD.end(); ++it)
     {
-        //nextresult = MD.getActiveObject();
-        //header->imgnum = i + 1;
-        if (next_result != NO_OBJECTS_STORED &&
-            next_result != NO_MORE_OBJECTS)
-        {
-            if(MD.getValue(MDL_ORIGINX,  aux))
+            if(it->getValue(MDL_ORIGINX,  aux))
                 header->iyold  = (float)-aux;
-            if(MD.getValue(MDL_ORIGINY,  aux))
+            if(it->getValue(MDL_ORIGINY,  aux))
                 header->ixold  =(float)-aux;
-            //if(MD.getValue(MDL_ORIGINZ,  aux))
+            //if(it->getValue(MDL_ORIGINZ,  aux))
             //    header->zoff  =(float)aux;
-            if(MD.getValue(MDL_ANGLEROT, aux))
+            if(it->getValue(MDL_ANGLEROT, aux))
                 header->euler_alpha   =(float)-aux;
-            if(MD.getValue(MDL_ANGLETILT,aux))
+            if(it->getValue(MDL_ANGLETILT,aux))
                 header->euler_beta    =(float)-aux;
-            if(MD.getValue(MDL_ANGLEPSI, aux))
+            if(it->getValue(MDL_ANGLEPSI, aux))
                 header->euler_gamma =(float)-aux;
-        }
         fwrite( header, IMAGICSIZE, 1, fhed );
         if (isComplexT())
             castPage2Datatype(MULTIDIM_ARRAY(data) + i*datasize_n, fdata, ComplexFloat, datasize_n);
         else
             castPage2Datatype(MULTIDIM_ARRAY(data) + i*datasize_n, fdata, Float, datasize_n);
         fwrite( fdata, datasize, 1, fimg );
-        //next_result = MD.nextObject();
-        i++;
+        ++i;
     }
 
     freeMemory(fdata, datasize);

@@ -188,8 +188,8 @@ private:
      * and values
      */
 
-    bool _setValue(long int objId, const MDValueStore &mdValueIn);
-    bool _getValue(long int objId, MDValueStore &mdValueOut) const;
+    bool _setValue(long int objId, const MDObject &mdValueIn);
+    bool _getValue(long int objId, MDObject &mdValueOut) const;
 
     /** This have the same logic of the public one,
      * but doesn't perform any range(wich implies do a size()) checks.
@@ -211,9 +211,9 @@ private:
     long int _iteratorBegin(const MDQuery *query = NULL);
 
     /** Some private reading functions */
-    void _readColumns(std::istream& is, std::vector<MDValueStore>& columnValues,
+    void _readColumns(std::istream& is, std::vector<MDObject>& columnValues,
                                std::vector<MDLabel>* desiredLabels = NULL);
-    void _readRows(std::istream& is, std::vector<MDValueStore>& columnValues, bool useCommentAsImage);
+    void _readRows(std::istream& is, std::vector<MDObject>& columnValues, bool useCommentAsImage);
     void _readRowFormat(std::istream& is);
 
 public:
@@ -335,7 +335,7 @@ public:
     template<class T>
     bool setValue(const MDLabel label, const T &valueIn, long int objectId=-1)
     {
-        _setValue(objectId, MDValueStore(label, valueIn));
+        _setValue(objectId, MDObject(label, valueIn));
     }
 
     /** Get the value of some label.
@@ -357,7 +357,7 @@ public:
     {
         try
         {
-            MDValueStore mdValueOut(label);
+            MDObject mdValueOut(label);
             _getValue(objectId, mdValueOut);
             mdValueOut.getValue(valueOut);
             return true;
@@ -374,7 +374,7 @@ public:
     void getColumnValues(const MDLabel label, std::vector<T> &valuesOut)
     {
         T value;
-        MDValueStore mdValueOut(label);
+        MDObject mdValueOut(label);
         std::vector<long int> objectsId;
         findObjects(objectsId);
         int n = objectsId.size();

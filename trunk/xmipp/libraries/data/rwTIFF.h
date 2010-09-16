@@ -284,9 +284,7 @@ int readTIFF(int img_select, bool isStack=false)
     DataType datatype = datatypeTIFF(dirHead[0]);
 
     //Set main header
-    MDMainHeader.removeObjects();
-    MDMainHeader.setColumnFormat(false);
-    MDMainHeader.addObject();
+    MDMainHeader.clear();
     MDMainHeader.setValue(MDL_SAMPLINGRATEX, xRes);
     MDMainHeader.setValue(MDL_SAMPLINGRATEY, yRes);
     MDMainHeader.setValue(MDL_DATATYPE,(int) datatype);
@@ -302,12 +300,15 @@ int readTIFF(int img_select, bool isStack=false)
 
     data.coreAllocateReuse();
 
-    MD.removeObjects();
+
 
     int pad = _xDim * _yDim;
     int imReaded = 0;
 
-    for ( i=imgStart; i<imgEnd; i++ )
+    MD.clear();
+    MD.resize(imgEnd - imgStart);
+
+    for (i = imgStart; i < imgEnd; ++i)
     {
         TIFFSetDirectory(tif,(tdir_t) i);
 
@@ -372,18 +373,16 @@ int readTIFF(int img_select, bool isStack=false)
             }
         }
 
-        MD.addObject();
+        MD[i-imgStart].setValue(MDL_ORIGINX, zeroD);
+        MD[i-imgStart].setValue(MDL_ORIGINY, zeroD);
+        MD[i-imgStart].setValue(MDL_ORIGINZ,  zeroD);
+        MD[i-imgStart].setValue(MDL_ANGLEROT, zeroD);
+        MD[i-imgStart].setValue(MDL_ANGLETILT,zeroD);
+        MD[i-imgStart].setValue(MDL_ANGLEPSI, zeroD);
+        MD[i-imgStart].setValue(MDL_WEIGHT,   oneD);
+        MD[i-imgStart].setValue(MDL_FLIP,     falseb);
 
-        MD.setValue(MDL_ORIGINX, zeroD);
-        MD.setValue(MDL_ORIGINY, zeroD);
-        MD.setValue(MDL_ORIGINZ,  zeroD);
-        MD.setValue(MDL_ANGLEROT, zeroD);
-        MD.setValue(MDL_ANGLETILT,zeroD);
-        MD.setValue(MDL_ANGLEPSI, zeroD);
-        MD.setValue(MDL_WEIGHT,   oneD);
-        MD.setValue(MDL_FLIP,     falseb);
-
-        imReaded++;
+        ++imReaded;
     }
     _TIFFfree(tif_buf);
     TIFFClose(tif);
@@ -495,12 +494,10 @@ int writeTIFF(int img_select, bool isStack=false, int mode=WRITE_OVERWRITE, int 
 
     double aux;
 
-    if (MDMainHeader.firstObject() != NO_OBJECTS_STORED)
+    if (!MDMainHeader.empty())
     {
-        (MDMainHeader.getValue(MDL_SAMPLINGRATEX, aux)) ? dhMain.xTiffRes = (float) 1e8/aux \
-                : dhMain.xTiffRes = 0 ;
-        (MDMainHeader.getValue(MDL_SAMPLINGRATEX, aux)) ? dhMain.yTiffRes = (float) 1e8/aux \
-                : dhMain.yTiffRes = 0;
+        dhMain.xTiffRes = (MDMainHeader.getValue(MDL_SAMPLINGRATEX, aux)) ? (float) 1e8/aux : 0. ;
+        dhMain.yTiffRes = (MDMainHeader.getValue(MDL_SAMPLINGRATEX, aux)) ? (float) 1e8/aux : 0. ;
     }
 
     unsigned long   imgStart=0;

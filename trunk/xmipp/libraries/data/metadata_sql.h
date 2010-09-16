@@ -96,11 +96,11 @@ private:
 
     /**Set the value of an object in an specified column.
      */
-    bool setObjectValue(const int objId, const MDValueStore &value);
+    bool setObjectValue(const int objId, const MDObject &value);
 
     /** Get the value of an object.
      */
-    bool getObjectValue(const int objId, MDValueStore &value);
+    bool getObjectValue(const int objId, MDObject &value);
 
     /** This function will select some elements from table.
      * The 'limit' is the maximum number of object
@@ -184,8 +184,8 @@ private:
     long int execSingleIntStmt(const std::stringstream &ss);
     std::string tableName(const int tableId) const;
 
-    int bindValue(sqlite3_stmt *stmt, const int position, const MDValueStore &valueIn);
-    int extractValue(sqlite3_stmt *stmt, const int position, MDValueStore &valueOut);
+    int bindValue(sqlite3_stmt *stmt, const int position, const MDObject &valueIn);
+    int extractValue(sqlite3_stmt *stmt, const int position, MDObject &valueOut);
 
     static char *errmsg;
     static const char *zLeftover;
@@ -274,7 +274,7 @@ enum RelationalOp
  */
 class MDValueRelational: public MDQuery
 {
-    MDValueStore *value;
+    MDObject *value;
     RelationalOp op;
 public:
 
@@ -289,13 +289,13 @@ public:
     MDValueRelational(MDLabel label, const T &value, RelationalOp op, int limit = -1, int offset = 0, MDLabel orderLabel = MDL_OBJID):MDQuery(limit, offset, orderLabel)
     {
         this->op = op;
-        this->value = new MDValueStore(label, value);
+        this->value = new MDObject(label, value);
     }
 
-    MDValueRelational(const MDValueStore &value, RelationalOp op, int limit = -1, int offset = 0, MDLabel orderLabel = MDL_OBJID):MDQuery(limit, offset, orderLabel)
+    MDValueRelational(const MDObject &value, RelationalOp op, int limit = -1, int offset = 0, MDLabel orderLabel = MDL_OBJID):MDQuery(limit, offset, orderLabel)
     {
         this->op = op;
-        this->value = new MDValueStore(value);
+        this->value = new MDObject(value);
     }
 
     ~MDValueRelational()
@@ -332,7 +332,7 @@ public:
     {
         if (this->value != NULL)
             delete this->value;
-        this->value = new MDValueStore(this->value->label, value);
+        this->value = new MDObject(this->value->label, value);
     }
 }
 ;//end of class MDValueRelational

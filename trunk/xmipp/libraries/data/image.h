@@ -186,8 +186,8 @@ class Image
 {
 public:
     MultidimArray<T>    data;        // The image data array
-    MetaData MD;                     // data for each subimage
-    MetaData MDMainHeader;           // data for the file
+    std::vector<MDRow>  MD;                     // data for each subimage
+    MDRow               MDMainHeader;           // data for the file
 
 private:
     FileName            filename;    // File name
@@ -232,8 +232,7 @@ public:
         mmapOn = false;
         clear();
         data.resize(Ndim, Zdim, Ydim, Xdim);
-        for (int n = 1; n < Ndim; n++)
-            MD.addObject();
+        MD.resize(Ndim);
     }
 
     /** Clear.
@@ -270,8 +269,6 @@ public:
     {
         MDMainHeader.clear();
         MD.clear();
-        MD.addObject(); // Each image has at lest one MD object
-        MDMainHeader.addObject(); // Each image has at lest one MD object
     }
 
     /** Check whether image is complex based on T
@@ -364,10 +361,7 @@ public:
 
         int err = 0;
         // Check whether to read the data or only the header
-        if ( readdata )
-            dataflag = 1;
-        else
-            dataflag = -1;
+        dataflag = ( readdata ) ? 1 : -1;
 
         // Check whether to map the data or not
         mmapOn = mapData;
@@ -375,18 +369,18 @@ public:
         FileName ext_name = name.get_file_format();
         size_t found;
         filename = name;
-        found=filename.find_first_of("@");
-        if (found!=std::string::npos)
+        found = filename.find_first_of("@");
+        if (found != std::string::npos)
         {
             select_img =  atoi(filename.substr(0, found).c_str());
             filename = filename.substr(found+1) ;
         }
 
         double imParam = NULL;
-        found=filename.find_first_of("%");
-        if (found!=std::string::npos)
+        found = filename.find_first_of("%");
+        if (found != std::string::npos)
         {
-            imParam =  atof(filename.substr(found+1).c_str());
+            imParam = atof(filename.substr(found+1).c_str());
             filename = filename.substr(0, found) ;
         }
 
@@ -409,6 +403,9 @@ public:
         << " select_img "  << select_img << std::endl;
 #endif
 #undef DEBUG
+
+        //Just clear the header before reading
+        MDMainHeader.clear();
 
         if (ext_name.contains("spi") || ext_name.contains("xmp") )//mrc stack MUST go BEFORE plain MRC
             err = readSPIDER(select_img,true);
@@ -436,47 +433,49 @@ public:
         //This implementation does not handle stacks,
         //read in a block
 
-        if (docFilePtr != NULL)
-        {
-            if (activeLabelsPtr == NULL)
-                activeLabelsPtr = docFilePtr->geActiveLabelsAddress();
+        //TODO: Now read from an MDRow
 
-            std::vector<MDLabel>::iterator strIt;
-            double dd;
-            std::string ss;
-            int ii;
-            bool bb;
-            std::vector<double> vv;
-            //FIXME: This could be done better
-            for (strIt = activeLabelsPtr->begin(); strIt != activeLabelsPtr->end(); strIt++)
-            {
-                switch (MDL::labelType(*strIt))
+        /*        if (docFilePtr != NULL)
                 {
-                case LABEL_DOUBLE:
-                    docFilePtr->getValue(*strIt,dd);
-                    MD.setValue(*strIt,dd);
-                    break;
-                case LABEL_STRING:
-                    docFilePtr->getValue(*strIt,ss);
-                    MD.setValue(*strIt,ss);
-                    break;
-                case LABEL_INT:
-                    docFilePtr->getValue(*strIt,ii);
-                    MD.setValue(*strIt,ii);
-                    break;
-                case LABEL_BOOL:
-                    docFilePtr->getValue(*strIt,bb);
-                    MD.setValue(*strIt,bb);
-                    break;
-                case LABEL_VECTOR:
-                    docFilePtr->getValue(*strIt,vv);
-                    MD.setValue(*strIt,vv);
-                    break;
-                default:
-                    REPORT_ERROR(ERR_MD_BADLABEL, "Image.read: Unknown label type");
-                }
-            }//close for activeLabels
-        }
+                    if (activeLabelsPtr == NULL)
+                        activeLabelsPtr = docFilePtr->geActiveLabelsAddress();
+
+                    std::vector<MDLabel>::iterator strIt;
+                    double dd;
+                    std::string ss;
+                    int ii;
+                    bool bb;
+                    std::vector<double> vv;
+                    //FIXME: This could be done better
+                    for (strIt = activeLabelsPtr->begin(); strIt != activeLabelsPtr->end(); strIt++)
+                    {
+                        switch (MDL::labelType(*strIt))
+                        {
+                        case LABEL_DOUBLE:
+                            docFilePtr->getValue(*strIt,dd);
+                            MD.setValue(*strIt,dd);
+                            break;
+                        case LABEL_STRING:
+                            docFilePtr->getValue(*strIt,ss);
+                            MD.setValue(*strIt,ss);
+                            break;
+                        case LABEL_INT:
+                            docFilePtr->getValue(*strIt,ii);
+                            MD.setValue(*strIt,ii);
+                            break;
+                        case LABEL_BOOL:
+                            docFilePtr->getValue(*strIt,bb);
+                            MD.setValue(*strIt,bb);
+                            break;
+                        case LABEL_VECTOR:
+                            docFilePtr->getValue(*strIt,vv);
+                            MD.setValue(*strIt,vv);
+                            break;
+                        default:
+                            REPORT_ERROR(ERR_MD_BADLABEL, "Image.read: Unknown label type");
+                        }
+                    }//close for activeLabels
+                }*/
 
         //apply geo has not been defined for volumes
         if(this->data.getDim()>2)
@@ -623,8 +622,8 @@ public:
 
         if ( err < 0 )
         {
-            std::cerr<<" Filename = "<<filename<<" Extension= "<<ext_name<<std::endl;
-            REPORT_ERROR(ERR_IO_NOWRITE,"Error writing file");
+            std::cerr << " Filename = " << filename << " Extension= " << ext_name << std::endl;
+            REPORT_ERROR(ERR_IO_NOWRITE, "Error writing file");
         }
         //unlock file
     }
@@ -1208,7 +1207,7 @@ public:
     /* Is there label in the individual header */
     bool individualContainsLabel(MDLabel label) const
     {
-        return MD.containsLabel(label);
+        return MD[0].containsLabel(label);
     }
 
     /* Is there label in the main header */
@@ -1223,11 +1222,11 @@ public:
     * std::cout << "First Euler angle " << I.rot() << std::endl;
     * @endcode
     */
-    double rot(const long int n = -1) const
+    double rot(const long int n = 0) const
     {
-        double dummy=0;
-        MD.getValue(MDL_ANGLEROT,dummy,n);
-        return (dummy);
+        double dummy = 0;
+        MD[n].getValue(MDL_ANGLEROT, dummy);
+        return dummy;
     }
 
     /** Get Tilt angle
@@ -1236,11 +1235,11 @@ public:
      * std::cout << "Second Euler angle " << I.tilt() << std::endl;
      * @endcode
      */
-    double tilt(const long int n = -1) const
+    double tilt(const long int n = 0) const
     {
-        double dummy=0;
-        MD.getValue(MDL_ANGLETILT,dummy,n);
-        return (dummy);
+        double dummy = 0;
+        MD[n].getValue(MDL_ANGLETILT, dummy);
+        return dummy;
     }
 
     /** Get Psi angle
@@ -1249,11 +1248,11 @@ public:
      * std::cout << "Third Euler angle " << I.psi() << std::endl;
      * @endcode
      */
-    double psi(const long int n = -1) const
+    double psi(const long int n = 0) const
     {
-        double dummy=0;
-        MD.getValue(MDL_ANGLEPSI,dummy,n);
-        return (dummy);
+        double dummy = 0;
+        MD[n].getValue(MDL_ANGLEPSI, dummy);
+        return dummy;
     }
 
     /** Get Xoff
@@ -1262,11 +1261,11 @@ public:
      * std::cout << "Origin offset in X " << I.Xoff() << std::endl;
      * @endcode
      */
-    double Xoff(const long int n = -1) const
+    double Xoff(const long int n = 0) const
     {
-        double dummy=0;
-        MD.getValue(MDL_ORIGINX,dummy,n);
-        return (dummy);
+        double dummy = 0;
+        MD[n].getValue(MDL_ORIGINX, dummy);
+        return dummy;
     }
 
     /** Get Yoff
@@ -1275,11 +1274,11 @@ public:
      * std::cout << "Origin offset in Y " << I.Yoff() << std::endl;
      * @endcode
      */
-    double Yoff(const long int n = -1) const
+    double Yoff(const long int n = 0) const
     {
-        double dummy=0;
-        MD.getValue(MDL_ORIGINY,dummy,n);
-        return (dummy);
+        double dummy = 0;
+        MD[n].getValue(MDL_ORIGINY, dummy);
+        return dummy;
     }
 
     /** Get Zoff
@@ -1288,11 +1287,11 @@ public:
      * std::cout << "Origin offset in Z " << I.Zoff() << std::endl;
      * @endcode
      */
-    double Zoff(const long int n = -1) const
+    double Zoff(const long int n = 0) const
     {
-        double dummy=0;
-        MD.getValue(MDL_ORIGINZ,dummy,n);
-        return (dummy);
+        double dummy = 0;
+        MD[n].getValue(MDL_ORIGINZ, dummy);
+        return dummy;
     }
 
     /** Get Weight
@@ -1301,11 +1300,11 @@ public:
     * std::cout << "weight= " << I.weight() << std::endl;
     * @endcode
     */
-    double weight(const long int n = -1) const
+    double weight(const long int n = 0) const
     {
-        double dummy=1;
-        MD.getValue(MDL_WEIGHT,dummy,n);
-        return (dummy);
+        double dummy = 1;
+        MD[n].getValue(MDL_WEIGHT, dummy);
+        return dummy;
     }
 
     /** Get Flip
@@ -1314,11 +1313,11 @@ public:
     * std::cout << "flip= " << flip() << std::endl;
     * @endcode
     */
-    bool flip(const long int n = -1) const
+    bool flip(const long int n = 0) const
     {
-        bool dummy=false;
-        MD.getValue(MDL_FLIP,dummy,n);
-        return (dummy);
+        bool dummy = false;
+        MD[n].getValue(MDL_FLIP, dummy);
+        return dummy;
     }
 
     /** Data type
@@ -1327,11 +1326,11 @@ public:
         * std::cout << "datatype= " << dataType() << std::endl;
         * @endcode
         */
-    int dataType(const long int n = -1) const
+    int dataType() const
     {
-        int dummy=1.;
-        MDMainHeader.getValue(MDL_DATATYPE,dummy,n);
-        return (dummy);
+        int dummy;
+        MDMainHeader.getValue(MDL_DATATYPE, dummy);
+        return dummy;
     }
 
     /** Sampling RateX
@@ -1340,11 +1339,11 @@ public:
     * std::cout << "sampling= " << samplingRateX() << std::endl;
     * @endcode
     */
-    bool samplingRateX(const long int n = -1) const
+    double samplingRateX() const
     {
-        double dummy=1.;
-        MDMainHeader.getValue(MDL_SAMPLINGRATEX,dummy,n);
-        return (dummy);
+        double dummy = 1.;
+        MDMainHeader.getValue(MDL_SAMPLINGRATEX, dummy);
+        return dummy;
     }
 
     /** Set file name
@@ -1357,113 +1356,113 @@ public:
     /** Set Euler angles in image header
      */
     void setEulerAngles(double rot, double tilt, double psi,
-                        long int n = -1)
+                        long int n = 0)
     {
-        MD.setValue(MDL_ANGLEROT,rot,n);
-        MD.setValue(MDL_ANGLETILT,tilt,n);
-        MD.setValue(MDL_ANGLEPSI,psi,n);
+        MD[n].setValue(MDL_ANGLEROT, rot);
+        MD[n].setValue(MDL_ANGLETILT, tilt);
+        MD[n].setValue(MDL_ANGLEPSI, psi);
     }
 
     /** Get Euler angles from image header
      */
     void getEulerAngles(double &rot, double &tilt, double &psi,
-                        long int n = -1)
+                        long int n = 0)
     {
-        MD.getValue(MDL_ANGLEROT,rot,n);
-        MD.getValue(MDL_ANGLETILT,tilt,n);
-        MD.getValue(MDL_ANGLEPSI,psi,n);
+        MD[n].getValue(MDL_ANGLEROT, rot);
+        MD[n].getValue(MDL_ANGLETILT, tilt);
+        MD[n].getValue(MDL_ANGLEPSI, psi);
     }
 
     /** Set Rotation angle to image */
-    void setRot(double rot, long int n = -1)
+    void setRot(double rot, long int n = 0)
     {
-        MD.setValue(MDL_ANGLEROT,rot,n);
+        MD[n].getValue(MDL_ANGLEROT, rot);
     }
 
     /** Set Tilt angle to image */
-    void setTilt(double tilt, long int n = -1)
+    void setTilt(double tilt, long int n = 0)
     {
-        MD.setValue(MDL_ANGLETILT,tilt,n);
+        MD[n].getValue(MDL_ANGLETILT, tilt);
     }
 
     /** Set Rotation angle to image */
-    void setPsi(double psi, long int n = -1)
+    void setPsi(double psi, long int n = 0)
     {
-        MD.setValue(MDL_ANGLEPSI,psi,n);
+        MD[n].getValue(MDL_ANGLEPSI, psi);
     }
 
     /** Set origin offsets in image header
      */
     void setShifts(double xoff, double yoff, double zoff = 0.,
-                   long int n = -1)
+                   long int n = 0)
     {
-        MD.setValue(MDL_ORIGINX,xoff,n);
-        MD.setValue(MDL_ORIGINY,yoff,n);
-        MD.setValue(MDL_ORIGINZ,zoff,n);
+        MD[n].setValue(MDL_ORIGINX, xoff);
+        MD[n].setValue(MDL_ORIGINY, yoff);
+        MD[n].setValue(MDL_ORIGINZ, zoff);
     }
     /** Get origin offsets from image header
       */
     void getShifts(double &xoff, double &yoff, double &zoff = 0.,
-                   long int n = -1)
+                   long int n = 0)
     {
-        MD.getValue(MDL_ORIGINX,xoff,n);
-        MD.getValue(MDL_ORIGINY,yoff,n);
-        MD.getValue(MDL_ORIGINZ,zoff,n);
+        MD[n].getValue(MDL_ORIGINX, xoff);
+        MD[n].getValue(MDL_ORIGINY, yoff);
+        MD[n].getValue(MDL_ORIGINZ, zoff);
     }
 
     /** Set X offset in image header
      */
-    void setXoff(double xoff, long int n = -1)
+    void setXoff(double xoff, long int n = 0)
     {
-        MD.setValue(MDL_ORIGINX,xoff,n);
+        MD[n].setValue(MDL_ORIGINX, xoff);
     }
 
     /** Set Y offset in image header
      */
-    void setYoff(double yoff, long int n = -1)
+    void setYoff(double yoff, long int n = 0)
     {
-        MD.setValue(MDL_ORIGINY,yoff,n);
+        MD[n].setValue(MDL_ORIGINY, yoff);
     }
 
     /** Set Z offset in image header
      */
-    void setZoff(double zoff, long int n = -1)
+    void setZoff(double zoff, long int n = 0)
     {
-        MD.setValue(MDL_ORIGINZ,zoff,n);
+        MD[n].setValue(MDL_ORIGINZ, zoff);
     }
 
     /** Set flip in image header
      */
-    void setFlip(bool flip, long int n = -1)
+    void setFlip(bool flip, long int n = 0)
     {
-        MD.setValue(MDL_FLIP,flip,n);
+        MD[n].setValue(MDL_FLIP, flip);
     }
 
     /** Set Weight in image header
     */
-    void setWeight(double weight, long int n = -1)
+    void setWeight(double weight, long int n = 0)
     {
-        MD.setValue(MDL_WEIGHT,weight, n);
+        MD[n].setValue(MDL_WEIGHT, weight);
     }
 
     /** Get geometric transformation matrix from 2D-image header
       */
     Matrix2D< double > getTransformationMatrix(bool only_apply_shifts = false,
-            long int n = -1)
+            long int n = 0)
     {
         // This has only been implemented for 2D images...
         (*this)().checkDimension(2);
 
         double phi,psi,theta,xoff,yoff;
         bool flip;
-        MD.getValue(MDL_ANGLEROT,phi,n);
+        MD[n].getValue(MDL_ANGLEROT, phi);
         phi = realWRAP(phi, 0., 360.);
-        MD.getValue(MDL_ANGLETILT,theta,n);
+        MD[n].getValue(MDL_ANGLETILT, theta);
         theta = realWRAP(theta, 0., 360.);
-        MD.getValue(MDL_ANGLEPSI,psi,n);
+        MD[n].getValue(MDL_ANGLEPSI, psi);
         psi = realWRAP(psi, 0., 360.);
-        MD.getValue(MDL_ORIGINX,xoff,n);
-        MD.getValue(MDL_ORIGINY,yoff,n);
+        MD[n].getValue(MDL_ORIGINX, xoff);
+        MD[n].getValue(MDL_ORIGINY, yoff);
 
         Matrix2D< double > A(3, 3);
         A.initIdentity();
@@ -1497,7 +1496,8 @@ public:
         }
 
         // Also for only_apply_shifts: mirror if necessary!
-        MD.getValue(MDL_FLIP,flip,n);
+        MD[n].getValue(MDL_FLIP, flip);
+
         if (flip)
         {
             A(0, 0) = -A(0, 0);
@@ -1526,21 +1526,51 @@ public:
         o << "Data type    : ";
         switch (I.dataType())
         {
-        case Unknown_Type:      o << "Undefined data type"; break;
-        case UChar:             o << "Unsigned character or byte type"; break;
-        case SChar:             o << "Signed character (for CCP4)"; break;
-        case UShort:            o << "Unsigned integer (2-byte)"; break;
-        case Short:             o << "Signed integer (2-byte)"; break;
-        case UInt:              o << "Unsigned integer (4-byte)"; break;
-        case Int:               o << "Signed integer (4-byte)"; break;
-        case Long:              o << "Signed integer (4 or 8 byte, depending on system)"; break;
-        case Float:             o << "Floating point (4-byte)"; break;
-        case Double:            o << "Double precision floating point (8-byte)"; break;
-        case ComplexShort:      o << "Complex two-byte integer (4-byte)"; break;
-        case ComplexInt:        o << "Complex integer (8-byte)"; break;
-        case ComplexFloat:      o << "Complex floating point (8-byte)"; break;
-        case ComplexDouble:     o << "Complex floating point (16-byte)"; break;
-        case Bool:              o << "Boolean (1-byte?)"; break;
+        case Unknown_Type:
+            o << "Undefined data type";
+            break;
+        case UChar:
+            o << "Unsigned character or byte type";
+            break;
+        case SChar:
+            o << "Signed character (for CCP4)";
+            break;
+        case UShort:
+            o << "Unsigned integer (2-byte)";
+            break;
+        case Short:
+            o << "Signed integer (2-byte)";
+            break;
+        case UInt:
+            o << "Unsigned integer (4-byte)";
+            break;
+        case Int:
+            o << "Signed integer (4-byte)";
+            break;
+        case Long:
+            o << "Signed integer (4 or 8 byte, depending on system)";
+            break;
+        case Float:
+            o << "Floating point (4-byte)";
+            break;
+        case Double:
+            o << "Double precision floating point (8-byte)";
+            break;
+        case ComplexShort:
+            o << "Complex two-byte integer (4-byte)";
+            break;
+        case ComplexInt:
+            o << "Complex integer (8-byte)";
+            break;
+        case ComplexFloat:
+            o << "Complex floating point (8-byte)";
+            break;
+        case ComplexDouble:
+            o << "Complex floating point (16-byte)";
+            break;
+        case Bool:
+            o << "Boolean (1-byte?)";
+            break;
         }
         o << std::endl;
 

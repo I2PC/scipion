@@ -220,9 +220,6 @@ int readTIA(int img_select,bool isStack=false, double dStddev=5)
         break;
     }
 
-    MDMainHeader.removeObjects();
-    MDMainHeader.setColumnFormat(false);
-    MDMainHeader.addObject();
     MDMainHeader.setValue(MDL_SAMPLINGRATEX,(double)dataHeaders[0].PIXEL_WIDTH);
     MDMainHeader.setValue(MDL_SAMPLINGRATEY,(double)dataHeaders[0].PIXEL_HEIGHT);
     MDMainHeader.setValue(MDL_DATATYPE,(int)datatype);
@@ -233,31 +230,30 @@ int readTIA(int img_select,bool isStack=false, double dStddev=5)
         return 0;
     }
 
-    MD.removeObjects();
-    for ( i=imgStart; i<imgEnd; i++ )
-        //for(int i=0;i< Ndim;i++)
+    MD.clear();
+    MD.resize(imgEnd - imgStart);
+
+    for ( i = imgStart; i < imgEnd; ++i )
     {
-        MD.addObject();
         double aux;
         if(MDMainHeader.getValue(MDL_SAMPLINGRATEX,aux))
         {
             aux = ROUND(dataHeaders[i].CalibrationElementX - \
                         dataHeaders[i].CalibrationOffsetX/aux - data.xdim/2);
-            MD.setValue(MDL_ORIGINX, aux);
+            MD[i-imgStart].setValue(MDL_ORIGINX, aux);
         }
         if(MDMainHeader.getValue(MDL_SAMPLINGRATEY,aux))
         {
             aux = ROUND(dataHeaders[i].CalibrationElementY - \
                         dataHeaders[i].CalibrationOffsetY/aux -data.ydim/2);
-            MD.setValue(MDL_ORIGINY, aux);
+            MD[i-imgStart].setValue(MDL_ORIGINY, aux);
         }
-        MD.setValue(MDL_ORIGINZ,  zeroD);
-
-        MD.setValue(MDL_ANGLEROT, zeroD);
-        MD.setValue(MDL_ANGLETILT,zeroD);
-        MD.setValue(MDL_ANGLEPSI, zeroD);
-        MD.setValue(MDL_WEIGHT,   oneD);
-        MD.setValue(MDL_FLIP,     falseb);
+        MD[i-imgStart].setValue(MDL_ORIGINZ,  zeroD);
+        MD[i-imgStart].setValue(MDL_ANGLEROT, zeroD);
+        MD[i-imgStart].setValue(MDL_ANGLETILT,zeroD);
+        MD[i-imgStart].setValue(MDL_ANGLEPSI, zeroD);
+        MD[i-imgStart].setValue(MDL_WEIGHT,   oneD);
+        MD[i-imgStart].setValue(MDL_FLIP,     falseb);
     }
 
     //#define DEBUG

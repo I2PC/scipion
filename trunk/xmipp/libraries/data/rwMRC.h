@@ -209,8 +209,6 @@ int readMRC(int img_select, bool isStack=false)
             data.setXdim(XSIZE(data) + 1);     // Quick fix for odd x-size maps
     }
 
-    MDMainHeader.removeObjects();
-    MDMainHeader.addObject();
     MDMainHeader.setValue(MDL_MIN,(double)header->amin);
     MDMainHeader.setValue(MDL_MAX,(double)header->amax);
     MDMainHeader.setValue(MDL_AVG,(double)header->amean);
@@ -230,33 +228,32 @@ int readMRC(int img_select, bool isStack=false)
         return 0;
     }
 
-    MD.removeObjects();
-    for ( i=imgStart; i<imgEnd; i++ )
-        //for(int i=0;i< Ndim;i++)
+    MD.clear();
+    MD.resize(imgEnd - imgStart);
+    for ( i = imgStart; i < imgEnd; ++i )
     {
-        MD.addObject();
         double aux;
         if(MDMainHeader.getValue(MDL_SAMPLINGRATEX,aux))
         {
             aux = -header->xOrigin/aux;
-            MD.setValue(MDL_ORIGINX, aux);
+            MD[i-imgStart].setValue(MDL_ORIGINX, aux);
         }
         if(MDMainHeader.getValue(MDL_SAMPLINGRATEY,aux))
         {
             aux = -header->yOrigin/aux;
-            MD.setValue(MDL_ORIGINY, aux);
+            MD[i-imgStart].setValue(MDL_ORIGINY, aux);
         }
 
         if(MDMainHeader.getValue(MDL_SAMPLINGRATEZ,aux))
         {
             aux = -header->zOrigin/aux;
-            MD.setValue(MDL_ORIGINZ, aux);
+            MD[i-imgStart].setValue(MDL_ORIGINZ, aux);
         }
-        MD.setValue(MDL_ANGLEROT, zeroD);
-        MD.setValue(MDL_ANGLETILT,zeroD);
-        MD.setValue(MDL_ANGLEPSI, zeroD);
-        MD.setValue(MDL_WEIGHT,   oneD);
-        MD.setValue(MDL_FLIP,     falseb);
+        MD[i-imgStart].setValue(MDL_ANGLEROT, zeroD);
+        MD[i-imgStart].setValue(MDL_ANGLETILT,zeroD);
+        MD[i-imgStart].setValue(MDL_ANGLEPSI, zeroD);
+        MD[i-imgStart].setValue(MDL_WEIGHT,   oneD);
+        MD[i-imgStart].setValue(MDL_FLIP,     falseb);
     }
 
     //#define DEBUG
@@ -339,7 +336,7 @@ int writeMRC(int img_select, bool isStack=false, int mode=WRITE_OVERWRITE)
     header->b = 0.;// ub;
     header->c = 0.;// uc;
 
-    if (MDMainHeader.firstObject() != NO_OBJECTS_STORED)
+    if (!MDMainHeader.empty())
     {
         if(MDMainHeader.getValue(MDL_MIN, aux))
             header->amin  = (float)aux;

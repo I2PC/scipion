@@ -127,7 +127,7 @@ bool vectorContainsLabel(const std::vector<MDLabel>& labelsVector, const MDLabel
 }
 
 //----------- Implementation of MDValue -----------------
-inline void MDValueStore::labelTypeCheck(MDLabelType checkingType) const
+inline void MDObject::labelTypeCheck(MDLabelType checkingType) const
 {
     if (this->type != checkingType)
     {
@@ -160,7 +160,7 @@ inline void MDValueStore::labelTypeCheck(MDLabelType checkingType) const
 
 //Just a simple constructor with the label
 //dont do any type checking as have not value yet
-MDValueStore::MDValueStore(MDLabel label)
+MDObject::MDObject(MDLabel label)
 {
     this->label = label;
     if (label != MDL_UNDEFINED)
@@ -168,42 +168,42 @@ MDValueStore::MDValueStore(MDLabel label)
 }
 ///Constructors for each Label supported type
 ///these constructor will do the labels type checking
-MDValueStore::MDValueStore(MDLabel label, const int &intValue)
+MDObject::MDObject(MDLabel label, const int &intValue)
 {
     this->label = label;
     this->type = MDL::labelType(label);
     labelTypeCheck(LABEL_INT);
     this->intValue = intValue;
 }
-MDValueStore::MDValueStore(MDLabel label, const double &doubleValue)
+MDObject::MDObject(MDLabel label, const double &doubleValue)
 {
     this->label = label;
     this->type = MDL::labelType(label);
     labelTypeCheck(LABEL_DOUBLE);
     this->doubleValue = doubleValue;
 }
-MDValueStore::MDValueStore(MDLabel label, const bool &boolValue)
+MDObject::MDObject(MDLabel label, const bool &boolValue)
 {
     this->label = label;
     this->type = MDL::labelType(label);
     labelTypeCheck(LABEL_BOOL);
     this->boolValue = boolValue;
 }
-MDValueStore::MDValueStore(MDLabel label, const std::string &stringValue)
+MDObject::MDObject(MDLabel label, const std::string &stringValue)
 {
     this->label = label;
     this->type = MDL::labelType(label);
     labelTypeCheck(LABEL_STRING);
     this->stringValue = stringValue;
 }
-MDValueStore::MDValueStore(MDLabel label, const std::vector<double> &vectorValue)
+MDObject::MDObject(MDLabel label, const std::vector<double> &vectorValue)
 {
     this->label = label;
     this->type = MDL::labelType(label);
     labelTypeCheck(LABEL_VECTOR);
     this->vectorValue = vectorValue;
 }
-MDValueStore::MDValueStore(MDLabel label, const long int longintValue)
+MDObject::MDObject(MDLabel label, const long int longintValue)
 {
     this->label = label;
     this->type = MDL::labelType(label);
@@ -211,13 +211,13 @@ MDValueStore::MDValueStore(MDLabel label, const long int longintValue)
     this->longintValue = longintValue;
 
 }
-MDValueStore::MDValueStore(MDLabel label, const float &floatValue)
+MDObject::MDObject(MDLabel label, const float &floatValue)
 {
     std::cerr << "Do not use setValue with floats, use double"<< std::endl;
     std::cerr << "Floats are banned from metadata class"<< std::endl;
     exit(1);
 }
-MDValueStore::MDValueStore(MDLabel label, const char* &charValue)
+MDObject::MDObject(MDLabel label, const char* &charValue)
 {
     std::cerr << "Do not use setValue with char, use string"<< std::endl;
     std::cerr << "chars are banned from metadata class"<< std::endl;
@@ -228,49 +228,93 @@ MDValueStore::MDValueStore(MDLabel label, const char* &charValue)
 //when expanding templates functions and only
 //will allow the supported types
 //TODO: think if the type check if needed here
-void MDValueStore::getValue(int &iv) const
+void MDObject::getValue(int &iv) const
 {
     labelTypeCheck(LABEL_INT);
     iv = this->intValue;
 }
-void MDValueStore::getValue(double &dv) const
+void MDObject::getValue(double &dv) const
 {
     labelTypeCheck(LABEL_DOUBLE);
     dv = this->doubleValue;
 }
-void MDValueStore::getValue(bool &bv) const
+void MDObject::getValue(bool &bv) const
 {
     labelTypeCheck(LABEL_BOOL);
     bv = this->boolValue;
 }
-void MDValueStore::getValue(std::string &sv) const
+void MDObject::getValue(std::string &sv) const
 {
     labelTypeCheck(LABEL_STRING);
     sv = this->stringValue;
 }
-void  MDValueStore::getValue(std::vector<double> &vv) const
+void  MDObject::getValue(std::vector<double> &vv) const
 {
     labelTypeCheck(LABEL_VECTOR);
     vv = this->vectorValue;
 }
-void MDValueStore::getValue(long int &lv) const
+void MDObject::getValue(long int &lv) const
 {
     labelTypeCheck(LABEL_INT);
     lv = this->longintValue;
 }
-void MDValueStore::getValue(float &floatvalue) const
+void MDObject::getValue(float &floatvalue) const
 {
     std::cerr << "Do not use setValue with floats, use double"<< std::endl;
     std::cerr << "Floats are banned from metadata class"<< std::endl;
     exit(1);
 }
-void MDValueStore::getValue(char*  &charvalue) const
+void MDObject::getValue(char*  &charvalue) const
 {
     std::cerr << "Do not use setValue with char, use string"<< std::endl;
     std::cerr << "chars are banned from metadata class"<< std::endl;
     exit(1);
 }
 
+void MDObject::setValue(const int &iv)
+{
+    labelTypeCheck(LABEL_INT);
+    this->intValue = iv;
+}
+void MDObject::setValue(const double &dv)
+{
+    labelTypeCheck(LABEL_DOUBLE);
+    this->doubleValue = dv;
+}
+
+void MDObject::setValue(const bool &bv)
+{
+    labelTypeCheck(LABEL_BOOL);
+    this->boolValue = bv;
+}
+
+void MDObject::setValue(const std::string &sv)
+{
+    labelTypeCheck(LABEL_STRING);
+    this->stringValue = sv;
+}
+void  MDObject::setValue(const std::vector<double> &vv)
+{
+    labelTypeCheck(LABEL_VECTOR);
+    this->vectorValue = vv;
+}
+void MDObject::setValue(const long int &lv)
+{
+    labelTypeCheck(LABEL_INT);
+    this->longintValue = lv;
+}
+void MDObject::setValue(const float &floatvalue)
+{
+    std::cerr << "Do not use setValue with floats, use double"<< std::endl;
+    std::cerr << "Floats are banned from metadata class"<< std::endl;
+    exit(1);
+}
+void MDObject::setValue(const char*  &charvalue)
+{
+    std::cerr << "Do not use setValue with char, use string"<< std::endl;
+    std::cerr << "chars are banned from metadata class"<< std::endl;
+    exit(1);
+}
 #define DOUBLE2STREAM(d) \
     if (withFormat) {\
             (os) << std::setw(12); \
@@ -281,9 +325,9 @@ void MDValueStore::getValue(char*  &charvalue) const
     if (withFormat) os << std::setw(10); \
     os << i;
 
-void MDValueStore::toStream(std::ostream &os, bool withFormat, bool isSql) const
+void MDObject::toStream(std::ostream &os, bool withFormat, bool isSql) const
 {
-	std::string c = (isSql) ? "'" : "";
+    std::string c = (isSql) ? "'" : "";
 
     if (label == MDL_UNDEFINED) //if undefine label, store as a literal string
         os << stringValue;
@@ -318,7 +362,7 @@ void MDValueStore::toStream(std::ostream &os, bool withFormat, bool isSql) const
         }//close switch
 }//close function toStream
 
-std::string MDValueStore::toString(bool withFormat, bool isSql) const
+std::string MDObject::toString(bool withFormat, bool isSql) const
 {
     std::stringstream ss;
     toStream(ss, withFormat, isSql);
@@ -326,13 +370,13 @@ std::string MDValueStore::toString(bool withFormat, bool isSql) const
 }
 
 //bool MDValue::fromStream(std::istream &is)
-std::istream& operator>> (std::istream& is, MDValueStore &value)
+std::istream& operator>> (std::istream& is, MDObject &value)
 {
     value.fromStream(is);
     return is;
 }
 
-bool MDValueStore::fromStream(std::istream &is)
+bool MDObject::fromStream(std::istream &is)
 {
 
 
@@ -340,8 +384,8 @@ bool MDValueStore::fromStream(std::istream &is)
         is >> stringValue;
     else
     {
-      // int,bool and long are read as double for compatibility with old doc files
-      double d;
+        // int,bool and long are read as double for compatibility with old doc files
+        double d;
         switch (type)
         {
         case LABEL_BOOL: //bools are int in sqlite3
@@ -375,9 +419,34 @@ bool MDValueStore::fromStream(std::istream &is)
     return is.good();
 }
 
-bool MDValueStore::fromString(const std::string &str)
+bool MDObject::fromString(const std::string &str)
 {
     std::stringstream ss(str);
     fromStream(ss);
 }
 
+//MDObject & MDRow::operator [](MDLabel label)
+//{
+//    for (iterator it = begin(); it != end(); ++it)
+//        if ((*it)->label == label)
+//            return *(*it);
+//    MDObject * pObj = new MDObject(label);
+//    push_back(pObj);
+//
+//    return *pObj;
+//}
+
+bool MDRow::containsLabel(MDLabel label) const
+{
+    for (const_iterator it = begin(); it != end(); ++it)
+        if ((*it)->label == label)
+            return true;
+    return false;
+}
+
+
+MDRow::~MDRow()
+{
+    for (iterator it = begin(); it != end(); ++it)
+        delete *it;
+}

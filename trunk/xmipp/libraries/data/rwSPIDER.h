@@ -107,6 +107,8 @@ struct SPIDERhead
 /** Spider Reader
   * @ingroup Spider
 */
+#include "metadata_label.h"
+
 int  readSPIDER(int img_select,bool isStack=false)
 {
 #undef DEBUG
@@ -144,8 +146,6 @@ int  readSPIDER(int img_select,bool isStack=false)
     offset = (int) header->labbyt;
     DataType datatype  = Float;
 
-    MDMainHeader.removeObjects();
-    MDMainHeader.addObject();
     MDMainHeader.setValue(MDL_MIN,(double)header->fmin);
     MDMainHeader.setValue(MDL_MAX,(double)header->fmax);
     MDMainHeader.setValue(MDL_AVG,(double)header->av);
@@ -228,45 +228,42 @@ int  readSPIDER(int img_select,bool isStack=false)
         offset += offset;
     }
 
-    MD.removeObjects();
-    for ( i=imgStart; i<imgEnd; i++ )
+    MD.clear();
+    MD.resize(imgEnd - imgStart);
+
+    for (int n = 0, i = imgStart; i < imgEnd; ++i, ++n )
     {
+        fseek( fimg, header_size + i*image_size, SEEK_SET );
+        if(isStack)
         {
-            fseek( fimg, header_size + i*image_size, SEEK_SET );
-            if(isStack)
-            {
-                if ( fread( header, SPIDERSIZE, 1, fimg ) < 1 )
-                    REPORT_ERROR(ERR_IO_NOREAD,"rwSPIDER: cannot read multifile header information");
-                hend = (char *) header + extent;
-                if ( swap )
-                    for ( b = (char *) header; b<hend; b+=4 )
-                        swapbytes(b, 4);
-            }
-            MD.addObject();
+            if ( fread( header, SPIDERSIZE, 1, fimg ) < 1 )
+                REPORT_ERROR(ERR_IO_NOREAD,"rwSPIDER: cannot read multifile header information");
+            hend = (char *) header + extent;
+            if ( swap )
+                for ( b = (char *) header; b<hend; b+=4 )
+                    swapbytes(b, 4);
+        }
+
             double daux;
             daux = (double)header->xoff;
-            MD.setValue(MDL_ORIGINX, daux);
+            MD[n].setValue(MDL_ORIGINX, daux);
             daux = (double)header->yoff;
-            MD.setValue(MDL_ORIGINY, daux);
+            MD[n].setValue(MDL_ORIGINY, daux);
             daux = (double)header->zoff;
-            MD.setValue(MDL_ORIGINZ, daux);
+            MD[n].setValue(MDL_ORIGINZ, daux);
             daux = (double)header->phi;
-            MD.setValue(MDL_ANGLEROT, daux);
+            MD[n].setValue(MDL_ANGLEROT, daux);
             daux = (double)header->theta;
-            MD.setValue(MDL_ANGLETILT, daux);
+            MD[n].setValue(MDL_ANGLETILT, daux);
             daux = (double)header->gamma;
-            MD.setValue(MDL_ANGLEPSI, daux);
+            MD[n].setValue(MDL_ANGLEPSI, daux);
             daux = (double)header->weight;
-            MD.setValue(MDL_WEIGHT, daux);
-            bool baux;
-            if(header->flip == 1)
-                baux=true;
-            else
-                baux=false;
-            MD.setValue(MDL_FLIP, baux);
-            if(img_select==i)
-                break;
-        }
+            MD[n].setValue(MDL_WEIGHT, daux);
+            bool baux = (header->flip == 1);
+            MD[n].setValue(MDL_FLIP, baux);
+
+        if(img_select == i)
+            break;
     }
     delete header;
 
@@ -349,13 +346,13 @@ int  writeSPIDER(int select_img=-1, bool isStack=false, int mode=WRITE_OVERWRITE
         header->nsam = 2*xstore;
     }
 
-//#define DEBUG
+    //#define DEBUG
 #ifdef DEBUG
     printf("DEBUG writeSPIDER: Size: %g %g %g %g\n",
-    		header->nsam,
-    		header->nrow,
-    		header->nslice,
-    		header->maxim);
+           header->nsam,
+           header->nrow,
+           header->nslice,
+           header->maxim);
 #endif
 #undef DEBUG
 
@@ -377,15 +374,15 @@ int  writeSPIDER(int select_img=-1, bool isStack=false, int mode=WRITE_OVERWRITE
     bool baux;
     header->imami = 0;//never trust max/min
 
-    if (MDMainHeader.firstObject() != NO_OBJECTS_STORED)
+    if (!MDMainHeader.empty())
     {
-        if(MDMainHeader.getValue(MDL_MIN,   aux))
+        if(MDMainHeader.getValue(MDL_MIN, aux))
             header->fmin = (float)aux;
-        if(MDMainHeader.getValue(MDL_MAX,   aux))
+        if(MDMainHeader.getValue(MDL_MAX, aux))
             header->fmax = (float)aux;
-        if(MDMainHeader.getValue(MDL_AVG,   aux))
+        if(MDMainHeader.getValue(MDL_AVG, aux))
             header->av   = (float)aux;
-        if(MDMainHeader.getValue(MDL_STDDEV,aux))
+        if(MDMainHeader.getValue(MDL_STDDEV, aux))
             header->sig  = (float)aux;
 
     }
@@ -405,26 +402,23 @@ int  writeSPIDER(int select_img=-1, bool isStack=false, int mode=WRITE_OVERWRITE
         header->maxim = 1;
     }
 
-    if (  Ndim == 1 &&
-          mode != WRITE_APPEND &&
-          !isStack &&
-          MD.firstObject() != NO_OBJECTS_STORED)
+    if (Ndim == 1 && mode != WRITE_APPEND && !isStack && !MD.empty())
     {
-        if(MD.getValue(MDL_ORIGINX,  aux))
+        if(MD[0].getValue(MDL_ORIGINX,  aux))
             header->xoff  =(float)aux;
-        if(MD.getValue(MDL_ORIGINY,  aux))
+        if(MD[0].getValue(MDL_ORIGINY,  aux))
             header->yoff  =(float)aux;
-        if(MD.getValue(MDL_ORIGINZ,  aux))
+        if(MD[0].getValue(MDL_ORIGINZ,  aux))
             header->zoff  =(float)aux;
-        if(MD.getValue(MDL_ANGLEROT, aux))
+        if(MD[0].getValue(MDL_ANGLEROT, aux))
             header->phi   =(float)aux;
-        if(MD.getValue(MDL_ANGLETILT,aux))
+        if(MD[0].getValue(MDL_ANGLETILT,aux))
             header->theta =(float)aux;
-        if(MD.getValue(MDL_ANGLEPSI, aux))
+        if(MD[0].getValue(MDL_ANGLEPSI, aux))
             header->gamma =(float)aux;
-        if(MD.getValue(MDL_WEIGHT,   aux))
+        if(MD[0].getValue(MDL_WEIGHT,   aux))
             header->weight=(float)aux;
-        if(MD.getValue(MDL_FLIP,    baux))
+        if(MD[0].getValue(MDL_FLIP,    baux))
             header->flip  =(float)baux;
     }
     //else end
@@ -507,25 +501,25 @@ int  writeSPIDER(int select_img=-1, bool isStack=false, int mode=WRITE_OVERWRITE
             fseek( fimg,offset + (offset+datasize)*select_img, SEEK_SET);
         //for ( size_t i=0; i<Ndim; i++ )
         size_t i =imgStart;
-        MD.firstObject();
-        FOR_ALL_OBJECTS_IN_METADATA(MD)
+
+        for (std::vector<MDRow>::iterator it = MD.begin(); it != MD.end(); ++it)
         {
 
-            if(MD.getValue(MDL_ORIGINX,  aux))
+            if(it->getValue(MDL_ORIGINX,  aux))
                 header->xoff  =(float)aux;
-            if(MD.getValue(MDL_ORIGINY,  aux))
+            if(it->getValue(MDL_ORIGINY,  aux))
                 header->yoff  =(float)aux;
-            if(MD.getValue(MDL_ORIGINZ,  aux))
+            if(it->getValue(MDL_ORIGINZ,  aux))
                 header->zoff  =(float)aux;
-            if(MD.getValue(MDL_ANGLEROT, aux))
+            if(it->getValue(MDL_ANGLEROT, aux))
                 header->phi   =(float)aux;
-            if(MD.getValue(MDL_ANGLETILT,aux))
+            if(it->getValue(MDL_ANGLETILT,aux))
                 header->theta =(float)aux;
-            if(MD.getValue(MDL_ANGLEPSI, aux))
+            if(it->getValue(MDL_ANGLEPSI, aux))
                 header->gamma =(float)aux;
-            if(MD.getValue(MDL_WEIGHT,   aux))
+            if(it->getValue(MDL_WEIGHT,   aux))
                 header->weight=(float)aux;
-            if(MD.getValue(MDL_FLIP,    baux))
+            if(it->getValue(MDL_FLIP,    baux))
                 header->flip  =(float)baux;
 
             //do not need to unlock because we are in the overwrite case
