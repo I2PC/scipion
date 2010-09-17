@@ -515,6 +515,7 @@ class MDRow: public std::vector<MDObject*>
 public:
     //MDObject & operator [](MDLabel label);
     bool containsLabel(MDLabel label) const;
+    MDObject * getObject(MDLabel label);
     template <typename T>
     bool getValue(MDLabel label, T &d) const
     {

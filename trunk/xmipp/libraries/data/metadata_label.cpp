@@ -487,7 +487,13 @@ bool MDRow::containsLabel(MDLabel label) const
     return false;
 }
 
-
+MDObject * MDRow::getObject(MDLabel label)
+{
+    for (const_iterator it = begin(); it != end(); ++it)
+        if ((*it)->label == label)
+            return *it;
+    return NULL;
+}
 MDRow::~MDRow()
 {
     for (iterator it = begin(); it != end(); ++it)

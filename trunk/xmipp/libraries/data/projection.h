@@ -106,8 +106,7 @@ public:
       * direction is computed and stored in the Projection structure.
       */
     void read(const FileName& fn, const bool& apply_shifts = false,
-    		bool readdata = true, const MetaData *docFile= NULL,
-    		std::vector<MDLabel> *activeLabels = NULL );
+    		bool readdata = true, MDRow * row = NULL );
 
     /** Assignment.
      */

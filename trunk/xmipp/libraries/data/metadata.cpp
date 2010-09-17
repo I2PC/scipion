@@ -138,6 +138,20 @@ bool MetaData::_getValue(long int objId, MDObject &mdValueOut) const
     //MDL::value2VoidPtr(label, mdValue, valuePtrOut);
 }
 
+bool MetaData::getRow(MDRow &row, long int objId)
+{
+    row.clear();
+    MDObject * obj;
+    for (std::vector<MDLabel>::const_iterator it = activeLabels.begin(); it != activeLabels.end(); ++it)
+    {
+        obj = new MDObject(*it);
+        myMDSql->getObjectValue(objId, *obj);
+        row.push_back(obj);
+    }
+
+    return true;
+}
+
 MetaData::MetaData()
 {
     myMDSql = new MDSql(this);
@@ -456,7 +470,7 @@ long int MetaData::nextObject()
 long int MetaData::previousObject()
 {
     if (activeObjId == -1)
-      REPORT_ERROR(ERR_MD_NOACTIVE, "previousObject: Couldn't perform this operation when 'activeObject' is -1");
+        REPORT_ERROR(ERR_MD_NOACTIVE, "previousObject: Couldn't perform this operation when 'activeObject' is -1");
     activeObjId = myMDSql->previousRow(activeObjId);
     return activeObjId;
 }

@@ -368,7 +368,7 @@ public:
         }
     }
 
-    /**Get all values of a column as a vector.
+    /** Get all values of a column as a vector.
      */
     template<class T>
     void getColumnValues(const MDLabel label, std::vector<T> &valuesOut)
@@ -387,6 +387,9 @@ public:
         }
 
     }
+
+    /** Get all values of an MetaData row of an specified objId*/
+    bool getRow(MDRow &row, long int objId = -1);
 
     /** Set label values from string representation.
      */

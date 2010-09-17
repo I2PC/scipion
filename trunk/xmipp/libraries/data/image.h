@@ -351,10 +351,9 @@ public:
      * If -1 is given the whole object is read
      *
      */
-    int read(const FileName &name, bool readdata=true, int select_img=-1,
+    int read(const FileName &name, bool readdata=true, int select_img = 0,
              bool apply_geo = false, bool only_apply_shifts = false,
-             const MetaData *docFilePtr = NULL,
-             std::vector<MDLabel> *activeLabelsPtr = NULL, bool mapData = false)
+             MDRow * row = NULL, bool mapData = false)
     {
         //const MetaData &docFile = *docFilePtr;
         //std::vector<MDLabel> &activeLabels = *activeLabelsPtr;
@@ -432,7 +431,21 @@ public:
 
         //This implementation does not handle stacks,
         //read in a block
+        if (row != NULL)
+        {
+            if (data.ndim != 1)
+                REPORT_ERROR(ERR_MULTIDIM_SIZE, "Header overwriting not available for stacks!!!");
+            MDLabel label;
 
+            for (MDRow::const_iterator it = row->begin(); it != row->end(); ++it)
+            {
+                label = (*it)->label;
+                if (MD[select_img].containsLabel(label))
+                    *(MD[select_img].getObject(label)) = *(*it);
+                else
+                    MD[select_img].push_back(new MDObject(*(*it)));
+            }
+        }
         //TODO: Now read from an MDRow
 
         /*        if (docFilePtr != NULL)
