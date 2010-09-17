@@ -64,6 +64,7 @@ int main(int argc, char **argv)
         if (fn_in.isMetaData())
         {
             MetaData SF;
+            MDRow    row;
             SF.read(fn_in);
             if (fn_stack!="")
             {
@@ -74,7 +75,8 @@ int main(int argc, char **argv)
                 {
                     FileName fnImg;
                     SF.getValue(MDL_IMAGE,fnImg);
-                    in.read(fnImg,true,-1,false,false,&SF);
+                    SF.getRow(row);
+                    in.read(fnImg,true,-1,false,false,&row);
                     in.write(fn_stack,-1,true,WRITE_APPEND);
                 }
             }
@@ -106,7 +108,8 @@ int main(int argc, char **argv)
                 {
                     FileName fnImg;
                     SF.getValue(MDL_IMAGE,fnImg);
-                    in.read(fnImg,true,-1,false,false,&SF);
+                    SF.getRow(row);
+                    in.read(fnImg,true,-1,false,false,&row);
                     FileName fnOut;
                     fnOut.compose(fn_root,k++,extension);
                     in.write(fnOut);
