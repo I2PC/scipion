@@ -26,11 +26,13 @@
 package xmipptomo;
 
 import ij.IJ;
+import ij.ImagePlus;
 import ij.WindowManager;
 import ij.gui.DialogListener;
 import ij.gui.GenericDialog;
 import ij.gui.ImageCanvas;
 import ij.gui.ImageLayout;
+import ij.gui.ImageWindow;
 import ij.io.OpenDialog;
 import ij.io.SaveDialog;
 
@@ -48,6 +50,7 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JTabbedPane;
 import javax.swing.JTextField;
+import javax.swing.JWindow;
 
 
 /**
@@ -64,7 +67,7 @@ import javax.swing.JTextField;
  *  - update ActionThread.run
  *  - set a proper enable/disable cycle along user interaction (tipically start disabled, enable it when user can click it) 
  */
-public class TomoWindow extends JFrame implements WindowListener, AdjustmentListener,MouseMotionListener,ActionListener, PropertyChangeListener,DialogListener{
+public class TomoWindow extends ImageWindow implements WindowListener, AdjustmentListener,MouseMotionListener,ActionListener, PropertyChangeListener,DialogListener{
 	// for serialization only - just in case
 	private static final long serialVersionUID = -4063711975454855701L;
 	
@@ -74,6 +77,8 @@ public class TomoWindow extends JFrame implements WindowListener, AdjustmentList
 	private final static String TITLE="XmippTomo";
 	// minimum dimension of tabbed menu panel (window top)
 	private static int MENUPANEL_MINWIDTH=400, MENUPANEL_MINHEIGHT=100;
+	// maximum window size
+	private static Rectangle maxWindowSize = new Rectangle(800, 800);
 	// miliseconds to wait for a Plugin dialog to display (so the dialog capture can start)
 	private static int WAIT_FOR_DIALOG=800;
 	
@@ -157,17 +162,17 @@ public class TomoWindow extends JFrame implements WindowListener, AdjustmentList
 	/* 4 main panels */
 	private JTabbedPane menuPanel;
 	private JPanel viewPanel,controlPanel,statusPanel;
+	private JFrame realWindow;
 	
 	// Text fields and labels
 	private JTextField tiltTextField;
 	private JLabel statusLabel;
 	
 	// The canvas where current projection is displayed as an image
-	private ImageCanvas ic;
+	private ImageCanvas canvas;
 	
 	// Control scrollbars
 	private LabelScrollbar projectionScrollbar;
-	private JButton playButton;
 	
 	// the model stores the data that this window shows - @see TomoData
 	private TomoData model=null;
@@ -282,19 +287,28 @@ public class TomoWindow extends JFrame implements WindowListener, AdjustmentList
 	 * Create a window with its main panels (but no data/model available) and show it
 	 */
 	public TomoWindow(){
-		
+		super("Hola");
+		// set up a fake ImagePlus, while we get to load the real one
+		imp=new ImagePlus();
+		imp.setWindow(this);
 		// set this window as listener of general keyboard&mouse events
  		addWindowListener(this);
  		// EXIT_ON_CLOSE finishes ImageJ too...
  		// DO NOTHING allows for closing confirmation dialogs and the like
-	    setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
+	    // setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
 		WindowManager.addWindow(this);
+		realWindow = new JFrame(TITLE);
 		addMainPanels();	
 	}
 	
 	public TomoWindow(int windowId){
 		this();
 		setWindowId(windowId);		
+	}
+	
+	// JFrame methods
+	private Container getContentPane(){
+		return realWindow.getContentPane();
 	}
 	
 	/** Add button to a panel
@@ -329,14 +343,15 @@ public class TomoWindow extends JFrame implements WindowListener, AdjustmentList
 		button.setButton(b);
 	}
 	
+	
 	/** 
 	 * Add the main panels with their components, and associate each text field with model's documents (if a model is already set)
 	 */
 	private void addMainPanels(){
 		// Window title
- 		setTitle(getTitle());
+ 		realWindow.setTitle(getTitle());
  		
- 		setLayout(new BoxLayout(getContentPane(),BoxLayout.PAGE_AXIS));
+ 		realWindow.setLayout(new BoxLayout(getContentPane(),BoxLayout.PAGE_AXIS));
 
 		// BoxLayout component order is sequential, so all the panels
  		// MUST be added in order (even if they are empty)
@@ -346,14 +361,14 @@ public class TomoWindow extends JFrame implements WindowListener, AdjustmentList
 		addMenuTabs();	
 		menuPanel.setTabLayoutPolicy(JTabbedPane.SCROLL_TAB_LAYOUT);
 		menuPanel.setPreferredSize(new Dimension(MENUPANEL_MINWIDTH,MENUPANEL_MINHEIGHT));
-		add(menuPanel);
+		getContentPane().add(menuPanel);
 		
 		// VIEW & CONTROLS PANELS
 		viewPanel = new JPanel();
-		add(viewPanel);
+		getContentPane().add(viewPanel);
 		
 		controlPanel = new JPanel();
-		add(controlPanel);
+		getContentPane().add(controlPanel);
 		
 		if(getModel() != null){
 			addView();
@@ -370,10 +385,10 @@ public class TomoWindow extends JFrame implements WindowListener, AdjustmentList
 		statusLabel=new JLabel("Ready");
 		statusPanel.add(statusLabel);
 		updateStatusText();
-		add(statusPanel);
+		getContentPane().add(statusPanel);
 		
 		closed=false;
-		pack(); // adjust GUI size
+		realWindow.pack(); // adjust GUI size
 	}
 	
 	/**
@@ -388,12 +403,12 @@ public class TomoWindow extends JFrame implements WindowListener, AdjustmentList
 		for(int i=0; i < viewPanel.getComponentCount(); i++)
 			viewPanel.remove(i);
 		
-		ic=new ImageCanvas(getModel().getImage());
-		viewPanel.setLayout(new ImageLayout(ic));
-		viewPanel.add(ic);
-		ic.addMouseMotionListener(this);
+		setCanvas(new ImageCanvas(getModel().getImage()));
+		viewPanel.setLayout(new ImageLayout(canvas));
+		viewPanel.add(getCanvas());
+		getCanvas().addMouseMotionListener(this);
 	
-		pack(); // adjust window size to host the new view panel
+		realWindow.pack(); // adjust window size to host the new view panel
 	}
 	
 	/**
@@ -428,7 +443,7 @@ public class TomoWindow extends JFrame implements WindowListener, AdjustmentList
 		
 		addButton(PLAY, controlPanel);
 		
-		pack(); // adjust window size to host the new controls panel
+		realWindow.pack(); // adjust window size to host the new controls panel
 				
 	}
 	
@@ -473,8 +488,10 @@ public class TomoWindow extends JFrame implements WindowListener, AdjustmentList
 	 * warning: naming this method "show" leads to infinite recursion (since setVisible calls show in turn)
 	 */
 	public void display(){
-		 pack();
-	     setVisible(true);
+		 //pack();
+	     setVisible(false);
+	     realWindow.pack();
+	     realWindow.setVisible(true);
 	}
 	
 	
@@ -493,9 +510,9 @@ public class TomoWindow extends JFrame implements WindowListener, AdjustmentList
 	}
 	
 	private void refreshImageCanvas(){
-		if(ic != null){
-			ic.setImageUpdated();
-			ic.repaint();
+		if(canvas != null){
+			getCanvas().setImageUpdated();
+			getCanvas().repaint();
 		}
 	}
 	
@@ -539,7 +556,7 @@ public class TomoWindow extends JFrame implements WindowListener, AdjustmentList
 		if((path == null) || ("".equals(path)))
 			return;
 		
-		setModel(new TomoData(path));
+		setModel(new TomoData(path,this));
 	
 		
 		try{
@@ -551,6 +568,9 @@ public class TomoWindow extends JFrame implements WindowListener, AdjustmentList
 			Xmipp_Tomo.debug("Xmipp_Tomo - Interrupted exception");
 		}
 
+		imp=getModel().getImage();
+		imp.setWindow(this);
+		
 		setTitle(getTitle());
 		addView();
 		addControls();
@@ -623,7 +643,7 @@ public class TomoWindow extends JFrame implements WindowListener, AdjustmentList
 		TomoData originalModel=getModel();
 		
 		if(getModel().isResized()){
-			originalModel=new TomoData(getModel().getFilePath());
+			originalModel=new TomoData(getModel().getFilePath(),this);
 			originalModel.addPropertyChangeListener(this);
 			try{
 				setReloadingFile(true);
@@ -819,6 +839,18 @@ public class TomoWindow extends JFrame implements WindowListener, AdjustmentList
 		cursorLocation.setLocation(x,y);
 	}
 	
+	public Rectangle getMaximumBounds(){
+		return maxWindowSize;
+		
+	}
+	
+	// no need to reduce insets size - try to use Container.insets (instead of ImageWindow.getInsets())
+	public Insets getInsets() {
+		// Insets insets = new Insets(0,0,0,0);
+		
+		return insets();
+	}
+	
 	
 	/**
 	 * Update all window components related to the number of projections. The number itself is
@@ -923,7 +955,7 @@ public class TomoWindow extends JFrame implements WindowListener, AdjustmentList
     /********************** Main - class testing **************************/
 
 	private void gridBagLayoutTest(){
-        Container pane=getContentPane();
+       /* Container pane=getContentPane();
         
 		JButton button;
     	pane.setLayout(new GridBagLayout());
@@ -938,7 +970,7 @@ public class TomoWindow extends JFrame implements WindowListener, AdjustmentList
     	c.gridy = 0;
     	pane.add(button, c);
 
-    	setVisible(true);
+    	setVisible(true); */
 	}
 	
 	private void layoutTest(){
@@ -1059,5 +1091,28 @@ public class TomoWindow extends JFrame implements WindowListener, AdjustmentList
 	 */
 	private void setPlaying(boolean playing) {
 		this.playing = playing;
+	}
+	
+	/*public void paint(Graphics g) {
+		paintComponents(g);
+		// paintAll(g);
+		/*menuPanel.paint(g);
+		viewPanel.paint(g);
+		statusPanel.paint(g);
+		// root.paint(g);
+	}*/
+
+	/**
+	 * @return the canvas
+	 */
+	public ImageCanvas getCanvas() {
+		return canvas;
+	}
+
+	/**
+	 * @param canvas the canvas to set
+	 */
+	private void setCanvas(ImageCanvas canvas) {
+		this.canvas = canvas;
 	}
 }

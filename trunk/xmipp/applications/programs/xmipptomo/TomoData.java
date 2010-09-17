@@ -64,6 +64,7 @@ public class TomoData extends Component {
 
     // Actual tiltseries projections are stored inside an ImagePlus
 	private ImagePlus imp=null;
+	private TomoWindow window;
 
 	// by now use a vector to store the angles
 	java.util.List <Float> tiltAngles=null;
@@ -74,8 +75,9 @@ public class TomoData extends Component {
 	// allow Views to wait(lock) while the first (or last) image loads
 	private Semaphore firstLoaded= new Semaphore(0),lastLoaded=new Semaphore(0);
 	
-	public TomoData(String path){
+	public TomoData(String path,TomoWindow tw){
 		setFile(path);
+		window=tw;
 	}
 	
 	public void setTiltModel(Document model){
@@ -342,6 +344,7 @@ public class TomoData extends Component {
 			ImageStack stack=new ImageStack(imageProcessor.getWidth(), imageProcessor.getHeight());
 			stack.addSlice(null, imageProcessor);
 			setImage(new ImagePlus(getFileName(), stack));
+			getImage().setWindow(window);
 		}else		
 			getImage().getStack().addSlice(null, imageProcessor);
 		
