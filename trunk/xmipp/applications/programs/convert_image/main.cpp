@@ -171,8 +171,7 @@ int main(int argc, char **argv)
                         NSIZE(in())=ZSIZE(in());
                         ZSIZE(in())=1;
                         int Ndim=NSIZE(in());
-                        for (int n = 1; n < Ndim; n++)
-                            in.MD.addObject();
+                        in.MD.resize(Ndim);
                     }
                     in.write(fn_stack,-1,true);
                 }
