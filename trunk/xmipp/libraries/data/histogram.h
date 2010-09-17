@@ -511,16 +511,15 @@ template<typename T>
 void reject_outliers(T& v, double percentil_out = 0.25)
 {
     Histogram1D hist;
-    compute_hist(v, hist, 200)
-    ;
+    compute_hist(v, hist, 200);
     double eff0 = hist.percentil(percentil_out / 2);
     double effF = hist.percentil(100 - percentil_out / 2);
 
-    FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY1D(v)
-    if (DIRECT_A1D_ELEM(v,i) < eff0)
-        DIRECT_A1D_ELEM(v,i) = eff0;
-    else if (DIRECT_A1D_ELEM(v,i) > effF)
-        DIRECT_A1D_ELEM(v,i) = effF;
+    FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(v)
+    if (DIRECT_MULTIDIM_ELEM(v,n) < eff0)
+    	DIRECT_MULTIDIM_ELEM(v,n) = eff0;
+    else if (DIRECT_MULTIDIM_ELEM(v,n) > effF)
+    	DIRECT_MULTIDIM_ELEM(v,n) = effF;
 }
 
 /** Histogram equalization and re-quantization
