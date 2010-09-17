@@ -1376,19 +1376,19 @@ public:
     /** Set Rotation angle to image */
     void setRot(double rot, long int n = 0)
     {
-        MD[n].getValue(MDL_ANGLEROT, rot);
+        MD[n].setValue(MDL_ANGLEROT, rot);
     }
 
     /** Set Tilt angle to image */
     void setTilt(double tilt, long int n = 0)
     {
-        MD[n].getValue(MDL_ANGLETILT, tilt);
+        MD[n].setValue(MDL_ANGLETILT, tilt);
     }
 
     /** Set Rotation angle to image */
     void setPsi(double psi, long int n = 0)
     {
-        MD[n].getValue(MDL_ANGLEPSI, psi);
+        MD[n].setValue(MDL_ANGLEPSI, psi);
     }
 
     /** Set origin offsets in image header
