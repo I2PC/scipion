@@ -74,7 +74,7 @@ void ProgXrayImport::readAndCrop(const FileName &fn, Image<double> &I) const
     int itemsFound=0;
     std::string line;
     std::vector<std::string> tokens;
-    double currentBeam, exposureTime, slitWidth, tiltAngle;
+    double tiltAngle;
     while (!fhPosition.eof())
     {
         getline(fhPosition,line);
@@ -91,7 +91,7 @@ void ProgXrayImport::readAndCrop(const FileName &fn, Image<double> &I) const
     if (itemsFound!=1)
         REPORT_ERROR(ERR_VALUE_EMPTY,(std::string)"Cannot find tilt angle in "+
                      fnBase+"-positions.txt");
-    I().window(cropSize,cropSize,YSIZE(I())-cropSize-1,XSIZE(I())-cropSize-1);
+    if (cropSize>0) I().window(cropSize,cropSize,YSIZE(I())-cropSize-1,XSIZE(I())-cropSize-1);
     STARTINGX(I())=STARTINGY(I())=0;
     I.setTilt(tiltAngle);
 }
@@ -237,6 +237,7 @@ void runThread(ThreadArgument &thArg)
 			FileName fnImg=integerToString(i,4,'0')+"@"+ptrProg->fnRoot+".mrcs";
 			localMD.addObject();
 			localMD.setValue(MDL_IMAGE,fnImg);
+			localMD.setValue(MDL_ANGLETILT,Iaux.tilt());
 			Iaux.write(fnImg,i,true,WRITE_APPEND);
 			if (thread_id==0) progress_bar(i);
         }
@@ -289,5 +290,20 @@ void ProgXrayImport::run()
     init_progress_bar(filenames.size());
     tm->run(runThread);
     progress_bar(filenames.size());
-    MD.write(fnRoot+".sel");
+
+    // Write Selfile and angles
+    MetaData MDSorted;
+    MDSorted.sort(MD,MDL_ANGLETILT);
+    MDSorted.write(fnRoot+".sel");
+    std::ofstream fhTlt;
+    fhTlt.open((fnRoot+".tlt").c_str());
+    if (!fhTlt)
+    	REPORT_ERROR(ERR_IO_NOWRITE,fnRoot+".tlt");
+    FOR_ALL_OBJECTS_IN_METADATA(MDSorted)
+    {
+    	double tilt;
+    	MDSorted.getValue(MDL_ANGLETILT,tilt);
+    	fhTlt << tilt << std::endl;
+    }
+    fhTlt.close();
 }
