@@ -43,7 +43,7 @@ int main(int argc, char **argv)
     MultidimArray<double>            Vaux;
 
     Prog_Refine3d_prm            prm;
-    Prog_MLalign2D_prm           ML2D_prm;
+    ProgML2D           ML2D_prm;
 
     // Set to false for ML3D
     prm.fourier_mode = false;
@@ -114,7 +114,7 @@ int main(int argc, char **argv)
         // Initialize some additional stuff
         Maux.resize(ML2D_prm.dim, ML2D_prm.dim);
         Maux.setXmippOrigin();
-        Model_MLalign2D block_model(ML2D_prm.model.n_ref);
+        ModelML2D block_model(ML2D_prm.model.n_ref);
 
         // Loop over all iterations
         for (ML2D_prm.iter = ML2D_prm.istart; !converged && ML2D_prm.iter <= ML2D_prm.Niter; ML2D_prm.iter++)

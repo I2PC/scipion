@@ -46,7 +46,7 @@
 #define SMALLANGLE 1.75
 #define DATALINELENGTH 12
 
-class Prog_MLalign2D_prm;
+class ProgML2D;
 
 #define FOR_ALL_THREAD_REFNO() \
 int refno, load; \
@@ -143,12 +143,12 @@ public:
 // This structure is needed to pass parameters to the threads
 typedef struct{
     int thread_id;
-    Prog_MLalign2D_prm * prm;
+    ProgML2D * prm;
 } structThreadTasks;
 
 void * doThreadsTasks(void * data);
 
-class Model_MLalign2D
+class ModelML2D
 {
 public:
     /** Number of reference images */
@@ -177,14 +177,14 @@ public:
     /** Algorithmic variants */
     bool do_student, do_student_sigma_trick, do_norm;
 
-    Model_MLalign2D();
-    Model_MLalign2D(int n_ref);
+    ModelML2D();
+    ModelML2D(int n_ref);
 
     void initData();
     void setNRef(int n_ref);
-    void combineModel(Model_MLalign2D model, int sign);
-    void addModel(Model_MLalign2D model);
-    void substractModel(Model_MLalign2D model);
+    void combineModel(ModelML2D model, int sign);
+    void addModel(ModelML2D model);
+    void substractModel(ModelML2D model);
 
     double get_sumw(int refno);
     double get_sumw_mirror(int refno);
@@ -201,13 +201,13 @@ public:
     void updateScale(int refno, double sumwsc, double sumw);
     ///Just for debugging now
     void print();
-};//close class Model_MLalign2D
+};//close class ModelML2D
 
 /**@defgroup MLalign2D ml_align2d (Maximum likelihood in 2D)
    @ingroup ReconsLibrary */
 //@{
 /** MLalign2D parameters. */
-class Prog_MLalign2D_prm
+class ProgML2D
 {
 public:
     /** Filenames reference selfile/image, fraction docfile & output rootname */
@@ -353,7 +353,7 @@ public:
 
     //Some incremental stuff
     /** Model */
-    Model_MLalign2D model, *current_model;
+    ModelML2D model, *current_model;
     //std::vector<int> img_blocks;
     //Number of blocks for IEM
     int blocks;
@@ -459,7 +459,7 @@ public:
     void doReferencesRegularization();
 
     /// Update all model parameters
-    void maximization(Model_MLalign2D &model);
+    void maximization(ModelML2D &model);
 
     /// Update all model parameters, adapted for IEM blocks use
     void maximizationBlocks(int refs_per_class = 1);
@@ -479,10 +479,10 @@ public:
     void writeDocfile(FileName fn_base);
 
     /// Write model parameters
-    void writeOutputFiles(Model_MLalign2D model, int outputType = OUT_FINAL);
+    void writeOutputFiles(ModelML2D model, int outputType = OUT_FINAL);
 
     /// Read model from file
-    void readModel(Model_MLalign2D &model, FileName fn_base);
+    void readModel(ModelML2D &model, FileName fn_base);
     void foo();
     /// Get base name based on fn_root and some number
     FileName getBaseName(std::string suffix = "", int number = -1);

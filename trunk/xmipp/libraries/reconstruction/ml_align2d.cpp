@@ -33,7 +33,7 @@ pthread_mutex_t refno_mutex =
     PTHREAD_MUTEX_INITIALIZER;
 
 // Read arguments ==========================================================
-void Prog_MLalign2D_prm::read(int argc, char **argv, bool ML3D)
+void ProgML2D::read(int argc, char **argv, bool ML3D)
 {
     // Generate new command line for restart procedure
     cline = "";
@@ -153,7 +153,7 @@ void Prog_MLalign2D_prm::read(int argc, char **argv, bool ML3D)
 }
 
 // Show ====================================================================
-void Prog_MLalign2D_prm::show(bool ML3D)
+void ProgML2D::show(bool ML3D)
 {
 
     if (verb > 0)
@@ -301,7 +301,7 @@ void Prog_MLalign2D_prm::show(bool ML3D)
 }
 
 // Usage ===================================================================
-void Prog_MLalign2D_prm::usage()
+void ProgML2D::usage()
 {
     std::cerr << "Usage:  ml_align2d [options] "
     << "   -i <selfile>                : Selfile with input images \n"
@@ -315,7 +315,7 @@ void Prog_MLalign2D_prm::usage()
 }
 
 // Extended usage ===================================================================
-void Prog_MLalign2D_prm::extendedUsage(bool ML3D)
+void ProgML2D::extendedUsage(bool ML3D)
 {
     std::cerr << "Additional options: " << std::endl;
     std::cerr << " [ -eps <float=5e-5> ]         : Stopping criterium \n";
@@ -369,7 +369,7 @@ void Prog_MLalign2D_prm::extendedUsage(bool ML3D)
 }
 
 // Trying to merge produceSideInfo 1 y 2
-void Prog_MLalign2D_prm::produceSideInfo(int rank)
+void ProgML2D::produceSideInfo(int rank)
 {
 
     // Read selfile with experimental images
@@ -438,7 +438,7 @@ void Prog_MLalign2D_prm::produceSideInfo(int rank)
     show(do_ML3D);
 }
 
-void Prog_MLalign2D_prm::produceSideInfo2(int size, int rank)
+void ProgML2D::produceSideInfo2(int size, int rank)
 {
     Image<double> img;
     FileName fn_tmp;
@@ -691,7 +691,7 @@ void Prog_MLalign2D_prm::produceSideInfo2(int size, int rank)
 
 }//close function newProduceSideInfo
 
-void Prog_MLalign2D_prm::randomizeImagesOrder()
+void ProgML2D::randomizeImagesOrder()
 {
     //This static flag is for only randomize once
     static bool randomized = false;
@@ -706,7 +706,7 @@ void Prog_MLalign2D_prm::randomizeImagesOrder()
 }//close function randomizeImagesOrder
 
 // Calculate probability density function of all in-plane transformations phi
-void Prog_MLalign2D_prm::calculatePdfInplane()
+void ProgML2D::calculatePdfInplane()
 {
 #ifdef DEBUG
     std::cerr << "Entering calculatePdfInplane" <<std::endl;
@@ -756,7 +756,7 @@ void Prog_MLalign2D_prm::calculatePdfInplane()
 }
 
 // Rotate reference for all models and rotations and fill Fref vectors =============
-void Prog_MLalign2D_prm::rotateReference()
+void ProgML2D::rotateReference()
 {
 #ifdef DEBUG
     std::cerr<<"entering rotateReference"<<std::endl;
@@ -771,7 +771,7 @@ void Prog_MLalign2D_prm::rotateReference()
 }
 
 // Collect all rotations and sum to update Iref() for all models ==========
-void Prog_MLalign2D_prm::reverseRotateReference()
+void ProgML2D::reverseRotateReference()
 {
 
 #ifdef DEBUG
@@ -787,7 +787,7 @@ void Prog_MLalign2D_prm::reverseRotateReference()
 
 }
 
-void Prog_MLalign2D_prm::preselectLimitedDirections(double &phi, double &theta)
+void ProgML2D::preselectLimitedDirections(double &phi, double &theta)
 {
 
     double phi_ref, theta_ref, angle, angle2;
@@ -825,7 +825,7 @@ void Prog_MLalign2D_prm::preselectLimitedDirections(double &phi, double &theta)
 }
 
 // Pre-selection of significant refno and ipsi, based on current optimal translation =======
-void Prog_MLalign2D_prm::preselectFastSignificant()
+void ProgML2D::preselectFastSignificant()
 {
 
 #ifdef DEBUG
@@ -846,7 +846,7 @@ void Prog_MLalign2D_prm::preselectFastSignificant()
 
 // Maximum Likelihood calculation for one image ============================================
 // Integration over all translation, given  model and in-plane rotation
-void Prog_MLalign2D_prm::expectationSingleImage(Matrix1D<double> &opt_offsets)
+void ProgML2D::expectationSingleImage(Matrix1D<double> &opt_offsets)
 {
 #ifdef TIMING
     timer.tic(ESI_E1);
@@ -1067,7 +1067,7 @@ void Prog_MLalign2D_prm::expectationSingleImage(Matrix1D<double> &opt_offsets)
 }//close function expectationSingleImage
 
 /** Function to create threads that will work later */
-void Prog_MLalign2D_prm::createThreads()
+void ProgML2D::createThreads()
 {
 
     //Initialize some variables for using for threads
@@ -1095,7 +1095,7 @@ void Prog_MLalign2D_prm::createThreads()
 }//close function createThreads
 
 /** Free threads memory and exit */
-void Prog_MLalign2D_prm::destroyThreads()
+void ProgML2D::destroyThreads()
 {
     threadTask = TH_EXIT;
     barrier_wait(&barrier);
@@ -1108,7 +1108,7 @@ void * doThreadsTasks(void * data)
 {
     structThreadTasks * thread_data = (structThreadTasks *) data;
 
-    Prog_MLalign2D_prm * prm = thread_data->prm;
+    ProgML2D * prm = thread_data->prm;
 
     barrier_t & barrier = prm->barrier;
     barrier_t & barrier2 = prm->barrier2;
@@ -1163,7 +1163,7 @@ void * doThreadsTasks(void * data)
 /// Function to assign refno jobs to threads
 /// the starting refno is passed through the out refno parameter
 /// and is returned the number of refno's to do, 0 if no more refno's.
-int Prog_MLalign2D_prm::getThreadRefnoJob(int &refno)
+int ProgML2D::getThreadRefnoJob(int &refno)
 {
     int load = 0;
 
@@ -1183,7 +1183,7 @@ int Prog_MLalign2D_prm::getThreadRefnoJob(int &refno)
 }//close function getThreadRefnoJob
 
 ///Function for awake threads for different tasks
-void Prog_MLalign2D_prm::awakeThreads(int task, int start_refno, int load)
+void ProgML2D::awakeThreads(int task, int start_refno, int load)
 {
     threadTask = task;
     refno_index = start_refno;
@@ -1195,7 +1195,7 @@ void Prog_MLalign2D_prm::awakeThreads(int task, int start_refno, int load)
 }//close function awakeThreads
 
 
-void Prog_MLalign2D_prm::doThreadRotateReferenceRefno()
+void ProgML2D::doThreadRotateReferenceRefno()
 {
 #ifdef DEBUG
     std::cerr << "entering doThreadRotateReference " << std::endl;
@@ -1256,7 +1256,7 @@ void Prog_MLalign2D_prm::doThreadRotateReferenceRefno()
 
 }//close function doThreadRotateReferenceRefno
 
-void Prog_MLalign2D_prm::doThreadReverseRotateReferenceRefno()
+void ProgML2D::doThreadReverseRotateReferenceRefno()
 {
     double psi, dum, avg;
     MultidimArray<double> Maux(dim, dim), Maux2(dim, dim), Maux3(dim, dim);
@@ -1294,7 +1294,7 @@ void Prog_MLalign2D_prm::doThreadReverseRotateReferenceRefno()
 
 }//close function doThreadReverseRotateReference
 
-void Prog_MLalign2D_prm::doThreadPreselectFastSignificantRefno()
+void ProgML2D::doThreadPreselectFastSignificantRefno()
 {
     MultidimArray<double> Mtrans, Mflip;
     double ropt, aux, diff, pdf, fracpdf;
@@ -1447,7 +1447,7 @@ void Prog_MLalign2D_prm::doThreadPreselectFastSignificantRefno()
 
 }//close function doThreadPreselectFastSignificantRefno
 
-void Prog_MLalign2D_prm::doThreadExpectationSingleImageRefno()
+void ProgML2D::doThreadExpectationSingleImageRefno()
 {
 
 
@@ -1691,7 +1691,7 @@ void Prog_MLalign2D_prm::doThreadExpectationSingleImageRefno()
 
 }//close function doThreadExpectationSingleImage
 
-void Prog_MLalign2D_prm::doThreadESIUpdateRefno()
+void ProgML2D::doThreadESIUpdateRefno()
 {
     double scale_dim2_sumw = (opt_scale * ddim2) / sum_refw;
     int num_refs = model.n_ref * factor_nref;
@@ -1769,7 +1769,7 @@ void Prog_MLalign2D_prm::doThreadESIUpdateRefno()
 }//close function doThreadESIUpdateRefno
 
 
-void Prog_MLalign2D_prm::expectation()
+void ProgML2D::expectation()
 {
     MultidimArray<std::complex<double> > Fdzero(dim, hdim + 1);
     int num_output_refs = factor_nref * model.n_ref;
@@ -2053,7 +2053,7 @@ void Prog_MLalign2D_prm::expectation()
 }//close function expectation
 
 
-//void Prog_MLalign2D_prm::doReferencesRegularization()
+//void ProgML2D::doReferencesRegularization()
 //{
 //    //Calculate the weight of selected reference, acording to regularization parameter
 //    double selected_frac = 1 / (1 + ref_reg * (model.n_ref - 1));
@@ -2091,7 +2091,7 @@ void Prog_MLalign2D_prm::expectation()
 //}
 
 // Update all model parameters
-void Prog_MLalign2D_prm::maximization(Model_MLalign2D &local_model)
+void ProgML2D::maximization(ModelML2D &local_model)
 {
 
 #ifdef DEBUG
@@ -2184,10 +2184,10 @@ void Prog_MLalign2D_prm::maximization(Model_MLalign2D &local_model)
 #endif
 }//close function maximization
 
-void Prog_MLalign2D_prm::maximizationBlocks(int refs_per_class)
+void ProgML2D::maximizationBlocks(int refs_per_class)
 {
     bool special_first = (!do_restart && iter == istart);
-    Model_MLalign2D block_model(model.n_ref);
+    ModelML2D block_model(model.n_ref);
 
     if (blocks == 1) //ie not IEM, normal maximization
     {
@@ -2236,7 +2236,7 @@ void Prog_MLalign2D_prm::maximizationBlocks(int refs_per_class)
         correctScaleAverage(refs_per_class);
 }//close function maximizationBlocks
 
-void Prog_MLalign2D_prm::correctScaleAverage(int refs_per_class)
+void ProgML2D::correctScaleAverage(int refs_per_class)
 {
 
     int iclass, nr_classes = ROUND(model.n_ref / refs_per_class);
@@ -2270,7 +2270,7 @@ void Prog_MLalign2D_prm::correctScaleAverage(int refs_per_class)
 }//close function correctScaleAverage
 
 // Check convergence
-bool Prog_MLalign2D_prm::checkConvergence()
+bool ProgML2D::checkConvergence()
 {
 
 #ifdef DEBUG
@@ -2318,7 +2318,7 @@ bool Prog_MLalign2D_prm::checkConvergence()
 }//close function checkConvergence
 
 /// Add docfiledata to docfile
-void Prog_MLalign2D_prm::addPartialDocfileData(const MultidimArray<double> &data,
+void ProgML2D::addPartialDocfileData(const MultidimArray<double> &data,
         int first, int last)
 {
 #ifdef DEBUG
@@ -2359,10 +2359,10 @@ void Prog_MLalign2D_prm::addPartialDocfileData(const MultidimArray<double> &data
 #endif
 }//close function addDocfileData
 
-void Prog_MLalign2D_prm::writeDocfile(FileName fn_base)
+void ProgML2D::writeDocfile(FileName fn_base)
 {}//close function writeDocfile
 
-void Prog_MLalign2D_prm::writeOutputFiles(Model_MLalign2D model, int outputType)
+void ProgML2D::writeOutputFiles(ModelML2D model, int outputType)
 {
     FileName fn_base;
     FileName fn_tmp;
@@ -2481,7 +2481,7 @@ void Prog_MLalign2D_prm::writeOutputFiles(Model_MLalign2D model, int outputType)
 
 }//close function writeModel
 
-void Prog_MLalign2D_prm::readModel(Model_MLalign2D &model, FileName fn_base)
+void ProgML2D::readModel(ModelML2D &model, FileName fn_base)
 {
 
     // First read general model parameters from _log.xmd
@@ -2524,7 +2524,7 @@ void Prog_MLalign2D_prm::readModel(Model_MLalign2D &model, FileName fn_base)
     }
 }//close function readModel
 
-FileName Prog_MLalign2D_prm::getBaseName(std::string suffix, int number)
+FileName ProgML2D::getBaseName(std::string suffix, int number)
 {
     FileName fn_base = fn_root + suffix;
     if (number >= 0)
@@ -2532,8 +2532,8 @@ FileName Prog_MLalign2D_prm::getBaseName(std::string suffix, int number)
     return fn_base;
 }
 
-///////////// Model_MLalign2D Implementation ////////////
-Model_MLalign2D::Model_MLalign2D()
+///////////// ModelML2D Implementation ////////////
+ModelML2D::ModelML2D()
 {
   n_ref = -1;
   sumw_allrefs2 = 0;
@@ -2541,14 +2541,14 @@ Model_MLalign2D::Model_MLalign2D()
 
 }//close default constructor
 
-Model_MLalign2D::Model_MLalign2D(int n_ref)
+ModelML2D::ModelML2D(int n_ref)
 {
   sumw_allrefs2 = 0;
     initData();
     setNRef(n_ref);
 }//close constructor
 
-void Model_MLalign2D::initData()
+void ModelML2D::initData()
 {
     do_student = do_norm = false;
     do_student_sigma_trick = true;
@@ -2558,7 +2558,7 @@ void Model_MLalign2D::initData()
 
 /** Before call this function model.n_ref should
  * be properly setted. */
-void Model_MLalign2D::setNRef(int n_ref)
+void ModelML2D::setNRef(int n_ref)
 {
     Image<double> Iempty;
     Iempty().initZeros(dim,dim);
@@ -2571,7 +2571,7 @@ void Model_MLalign2D::setNRef(int n_ref)
 
 }//close function setNRef
 
-void Model_MLalign2D::combineModel(Model_MLalign2D model, int sign)
+void ModelML2D::combineModel(ModelML2D model, int sign)
 {
     if (n_ref != model.n_ref)
     {
@@ -2629,54 +2629,54 @@ void Model_MLalign2D::combineModel(Model_MLalign2D model, int sign)
 
 }//close function combineModel
 
-void Model_MLalign2D::addModel(Model_MLalign2D model)
+void ModelML2D::addModel(ModelML2D model)
 {
     combineModel(model, 1);
 }//close function addModel
 
-void Model_MLalign2D::substractModel(Model_MLalign2D model)
+void ModelML2D::substractModel(ModelML2D model)
 {
     combineModel(model, -1);
 }//close function substractModel
 
-double Model_MLalign2D::get_sumw(int refno)
+double ModelML2D::get_sumw(int refno)
 {
     return alpha_k[refno] * sumw_allrefs;
 }//close function sumw
 
-double Model_MLalign2D::get_sumw_mirror(int refno)
+double ModelML2D::get_sumw_mirror(int refno)
 {
     return get_sumw(refno) * mirror_fraction[refno];
 }//close function sumw_mirror
 
-double Model_MLalign2D::get_sumwsc(int refno)
+double ModelML2D::get_sumwsc(int refno)
 {
     return scale[refno] * get_sumw(refno);
 }//close function get_sumwsc
 
-MultidimArray<double> Model_MLalign2D::get_wsum_Mref(int refno)
+MultidimArray<double> ModelML2D::get_wsum_Mref(int refno)
 {
     return Iref[refno]() * Iref[refno].weight();
 }//close function get_wsum_Mref
 
-double Model_MLalign2D::get_wsum_sigma_offset()
+double ModelML2D::get_wsum_sigma_offset()
 {
     return sigma_offset * sigma_offset * 2 * sumw_allrefs;
 }//close function get_wsum_sigma_offset
 
-double Model_MLalign2D::get_wsum_sigma_noise()
+double ModelML2D::get_wsum_sigma_noise()
 {
     double sum = (do_student && do_student_sigma_trick) ? sumw_allrefs2
                  : sumw_allrefs;
     return sigma_noise * sigma_noise * dim * dim * sum;
 }//close function get_wsum_sigma_noise
 
-double Model_MLalign2D::get_sumfracweight()
+double ModelML2D::get_sumfracweight()
 {
     return avePmax * sumw_allrefs;
 }//close function get_sumfracweight
 
-void Model_MLalign2D::updateSigmaOffset(double wsum_sigma_offset)
+void ModelML2D::updateSigmaOffset(double wsum_sigma_offset)
 {
     if (sumw_allrefs == 0)
     {
@@ -2690,7 +2690,7 @@ void Model_MLalign2D::updateSigmaOffset(double wsum_sigma_offset)
         REPORT_ERROR(ERR_VALUE_INCORRECT, "sqrt of negative 'wsum_sigma_offset'");
 }//close function updateSigmaOffset
 
-void Model_MLalign2D::updateSigmaNoise(double wsum_sigma_noise)
+void ModelML2D::updateSigmaNoise(double wsum_sigma_noise)
 {
     // The following converges faster according to McLachlan&Peel (2000)
     // Finite Mixture Models, Wiley p. 228!
@@ -2707,12 +2707,12 @@ void Model_MLalign2D::updateSigmaNoise(double wsum_sigma_noise)
     sigma_noise = sqrt(sigma_noise2);
 }//close function updateSigmaNoise
 
-void Model_MLalign2D::updateAvePmax(double sumfracweight)
+void ModelML2D::updateAvePmax(double sumfracweight)
 {
     avePmax = sumfracweight / sumw_allrefs;
 }//close function updateAvePmax
 
-void Model_MLalign2D::updateFractions(int refno, double sumw,
+void ModelML2D::updateFractions(int refno, double sumw,
                                       double sumw_mirror, double sumw_allrefs)
 {
     if (sumw_allrefs == 0)
@@ -2732,14 +2732,14 @@ void Model_MLalign2D::updateFractions(int refno, double sumw,
     }
 }//close updateFractions
 
-void Model_MLalign2D::updateScale(int refno, double sumwsc, double sumw)
+void ModelML2D::updateScale(int refno, double sumwsc, double sumw)
 {
     if (do_norm)
         scale[refno] = (sumw > 0) ? sumwsc / sumw : 1;
 
 }//close function updateScale
 
-void Model_MLalign2D::print()
+void ModelML2D::print()
 {
     std::cerr << "sumw_allrefs: " << sumw_allrefs << std::endl;
     std::cerr << "wsum_sigma_offset: " << get_wsum_sigma_offset() << std::endl;

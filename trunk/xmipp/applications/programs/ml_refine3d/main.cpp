@@ -30,7 +30,7 @@ int main(int argc, char **argv)
     int                         c, volno, converged = 0, argc2 = 0;
     char                        **argv2=NULL;
     Prog_Refine3d_prm           prm;
-    Prog_MLalign2D_prm          ML2D_prm;
+    ProgML2D          ML2D_prm;
     FileName                    fnt;
 
     // Set to false for ML3D
@@ -74,7 +74,7 @@ int main(int argc, char **argv)
 
     try
     {
-        Model_MLalign2D block_model(ML2D_prm.model.n_ref);
+        ModelML2D block_model(ML2D_prm.model.n_ref);
 
         // Loop over all iterations
         for (ML2D_prm.iter = ML2D_prm.istart; !converged && ML2D_prm.iter <= ML2D_prm.Niter; ML2D_prm.iter++)

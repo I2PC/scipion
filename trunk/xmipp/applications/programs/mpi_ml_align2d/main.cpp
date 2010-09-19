@@ -31,7 +31,7 @@
 
 int main(int argc, char **argv)
 {
-    Prog_MLalign2D_prm prm;
+    ProgML2D prm;
 
     int c, nn, imgno, opt_refno, iaux;
     double aux, convv;
@@ -98,7 +98,7 @@ int main(int argc, char **argv)
     {
         Maux.resize(prm.dim, prm.dim);
         Maux.setXmippOrigin();
-        Model_MLalign2D block_model(prm.model.n_ref);
+        ModelML2D block_model(prm.model.n_ref);
 
         // Loop over all iterations
         for (prm.iter = prm.istart; !converged && prm.iter <= prm.Niter; prm.iter++)

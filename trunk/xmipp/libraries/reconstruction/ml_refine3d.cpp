@@ -55,7 +55,7 @@ void Prog_Refine3d_prm::read(int argc, char ** argv, int &argc2, char ** &argv2)
         }
         else
         {
-            Prog_MLalign2D_prm ML_prm;
+            ProgML2D ML_prm;
             ML_prm.extendedUsage(true);
         }
     }
