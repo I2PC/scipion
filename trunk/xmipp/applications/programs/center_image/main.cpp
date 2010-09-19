@@ -27,44 +27,55 @@
 #include <data/args.h>
 #include <data/filters.h>
 
-class Center_parameters: public Prog_parameters
+class ProgCenterImage: public XmippMetadataProgram
 {
 public:
     int Niter;
     bool limitShift;
 
-    void read(int argc, char **argv)
+    void defineParams()
     {
-        Prog_parameters::read(argc, argv);
-        Niter = textToInteger(getParameter(argc, argv, "-iter","10"));
-        limitShift = checkParameter(argc, argv, "-limitShift");
+        XmippMetadataProgram::defineParams();
+       addParamsLine("  [-iter <N=10>]           : Number of iterations");
+       addParamsLine("  [-limitShift]            : Limit the maximum shift allowed");
+    }
+
+    void readParams()
+    {
+        XmippMetadataProgram::readParams();
+        Niter = getIntParam("-iter");
+        limitShift = checkParam("-limitShift");
     }
 
     void show()
     {
-        Prog_parameters::show();
+        XmippMetadataProgram::show();
         std::cout << "Iterations = " << Niter << std::endl;
         std::cout << "LimitShift = " << limitShift << std::endl;
     }
 
-    void usage()
+    void processImage()
     {
-        Prog_parameters::usage();
-        std::cerr << "  [-iter <N=10>]           : Number of iterations\n";
-        std::cerr << "  [-limitShift]            : Limit the maximum shift allowed\n";
+      img.read(fnImg);
+      img().checkDimensionWithDebug(2,__FILE__,__LINE__);
+      centerImage(img(), Niter, limitShift);
     }
-};
 
-bool process_img(Image<double> &img, const Prog_parameters *prm)
+
+};///end of class ProgCenterImage
+
+/* MAIN -------------------------------------------------------------------- */
+int main(int argc, char *argv[])
 {
-    Center_parameters *eprm = (Center_parameters *) prm;
-    img().checkDimensionWithDebug(2,__FILE__,__LINE__);
-    centerImage(img(),eprm->Niter,eprm->limitShift);
-    return true;
+  try
+  {
+      ProgCenterImage program;
+      program.read(argc, argv);
+      program.run();
+  }
+  catch (XmippError xe)
+  {
+      std::cerr << xe;
+  }
 }
 
-int main(int argc, char **argv)
-{
-    Center_parameters prm;
-    SF_main(argc, argv, &prm, (void*)&process_img);
-}
