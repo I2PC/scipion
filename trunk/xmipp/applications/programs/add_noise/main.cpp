@@ -26,65 +26,56 @@
 #include <data/progs.h>
 #include <data/args.h>
 
-class Add_noise_parameters: public Prog_parameters
+class ProgAddNoise: public XmippMetadataProgram
 {
-public:
-    double noise_min, noise_max;
-    double noise_avg, noise_stddev;
+protected:
+    double param1, param2;
     double df, limit0, limitF;
-    bool   gaussian,  uniform, student, do_limit0, do_limitF;
+    bool   do_limit0, do_limitF;
+    std::string noise_type;
 
-    void read(int argc, char **argv)
+    void defineParams()
     {
-        Prog_parameters::read(argc, argv);
-        gaussian = uniform = student = false;
-        do_limit0 = checkParameter(argc, argv, "-limit0");
-        if (do_limit0)
-            limit0 =  textToFloat(getParameter(argc, argv, "-limit0"));
-        do_limitF = checkParameter(argc, argv, "-limitF");
-        if (do_limitF)
-            limitF =  textToFloat(getParameter(argc, argv, "-limitF"));
+        each_image_produces_an_output = true;
+        XmippMetadataProgram::defineParams();
+        addParamsLine("-gaussian <stddev> <avg=0.>        :Gaussian noise parameters");
+        addParamsLine("or -student <df> <stddev> <avg=0.> :t-student noise parameters");
+        addParamsLine("or -uniform  <min> <max>           :Uniform noise parameters");
+        addParamsLine("  [-limit0 <float> ]               :Crop noise histogram below this value ");
+        addParamsLine("  [-limitF <float> ]               :Crop noise histogram above this value ");
 
-        if (checkParameter(argc, argv, "-gaussian"))
+    }
+
+    void readParams()
+    {
+        XmippMetadataProgram::readParams();
+        do_limit0 = checkParam("-limit0");
+        if (do_limit0)
+            limit0 =  getDoubleParam("-limit0");
+        do_limitF = checkParam("-limitF");
+        if (do_limitF)
+            limitF =  getDoubleParam("-limitF");
+
+        ///Default value of df in addNoise function
+        df = 3.;
+        if (checkParam("-gaussian"))
         {
-            gaussian = true;
-            int i = paremeterPosition(argc, argv, "-gaussian");
-            if (i + 1 >= argc)
-                REPORT_ERROR(ERR_ARG_MISSING,
-                             "Not enough parameters after -gaussian");
-            noise_stddev = textToFloat(argv[i+1]);
-            if (i + 2 < argc)
-            {
-                noise_avg = textToFloat(argv[i+2]);
-            }
-            else
-                noise_avg = 0;
+            noise_type = "gaussian";
+            param1 = getDoubleParam("-gaussian", 0);
+            param2 = getDoubleParam("-gaussian", 1);
         }
-        else if (checkParameter(argc, argv, "-student"))
+        else if (checkParam("-student"))
         {
-            student = true;
-            int i = paremeterPosition(argc, argv, "-student");
-            if (i + 2 >= argc)
-                REPORT_ERROR(ERR_ARG_MISSING,
-                             "Not enough parameters after -student");
-            df = textToFloat(argv[i+1]);
-            noise_stddev = textToFloat(argv[i+2]);
-            if (i + 3 < argc)
-            {
-                noise_avg = textToFloat(argv[i+3]);
-            }
-            else
-                noise_avg = 0;
+            noise_type = "student";
+            df = getDoubleParam("-student", 0);
+            param1 = getDoubleParam("-student", 1);
+            param2 = getDoubleParam("-student", 2);
         }
-        else if (checkParameter(argc, argv, "-uniform"))
+        else if (checkParam("-uniform"))
         {
-            uniform = true;
-            int i = paremeterPosition(argc, argv, "-uniform");
-            if (i + 2 >= argc)
-                REPORT_ERROR(ERR_ARG_MISSING,
-                             "Not enough parameters after -uniform");
-            noise_min = textToFloat(argv[i+1]);
-            noise_max = textToFloat(argv[i+2]);
+            noise_type = "uniform";
+            param1 = getDoubleParam("-uniform", 0);
+            param2 = getDoubleParam("-uniform", 1);
         }
         else
             REPORT_ERROR(ERR_ARG_INCORRECT, "Unknown noise type");
@@ -92,62 +83,66 @@ public:
 
     void show()
     {
-        Prog_parameters::show();
-        if (gaussian)
-            std::cout << "Noise avg=" << noise_avg << std::endl
-            << "Noise stddev=" << noise_stddev << std::endl;
-        else if (student)
-            std::cout << "Degrees of freedom= "<<df<< std::endl
-            << "Noise avg=" << noise_avg << std::endl
-            << "Noise stddev=" << noise_stddev << std::endl;
-        else if (uniform)
-            std::cout << "Noise min=" << noise_min << std::endl
-            << "Noise max=" << noise_max << std::endl;
+        XmippMetadataProgram::show();
+        if (noise_type == "gaussian")
+            std::cout << "Noise avg=" << param1 << std::endl
+            << "Noise stddev=" << param2 << std::endl;
+        else if (noise_type == "student")
+            std::cout << "Degrees of freedom= "<< df << std::endl
+            << "Noise avg=" << param1 << std::endl
+            << "Noise stddev=" << param2 << std::endl;
+        else if (noise_type == "uniform")
+            std::cout << "Noise min=" << param1 << std::endl
+            << "Noise max=" << param2 << std::endl;
         if (do_limit0)
             std::cout << "Crop noise histogram below=" << limit0 << std::endl;
         if (do_limitF)
             std::cout << "Crop noise histogram above=" << limitF << std::endl;
     }
 
-    void usage()
-    {
-        Prog_parameters::usage();
-        std::cerr
-        << "  [-gaussian <stddev> [<avg>=0]] : Gaussian noise parameters\n"
-        << "  [-student <df> <stddev> [<avg>=0]] : t-student noise parameters\n"
-        << "  [-uniform  <min> <max>]   : Uniform noise parameters\n"
-        << "  [-limit0 <float> ]        : Crop noise histogram below this value \n"
-        << "  [-limitF <float> ]        : Crop noise histogram above this value \n";
-    }
-};
 
-bool process_img(Image<double> &img, const Prog_parameters *prm)
-{
-    Add_noise_parameters *eprm = (Add_noise_parameters *) prm;
-    if (eprm->gaussian)
-        img().addNoise(eprm->noise_avg, eprm->noise_stddev, "gaussian");
-    else if (eprm->student)
-        img().addNoise(eprm->noise_avg, eprm->noise_stddev, "student", eprm->df);
-    else if (eprm->uniform)
-        img().addNoise(eprm->noise_min, eprm->noise_max, "uniform");
-    if (eprm->do_limit0)
-        FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY3D(img())
+    void processImage()
     {
-        dAkij(img(),k,i,j) = XMIPP_MAX(dAkij(img(),k,i,j),eprm->limit0);
-    }
-    if (eprm->do_limitF)
-        FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY3D(img())
-    {
-        dAkij(img(),k,i,j) = XMIPP_MIN(dAkij(img(),k,i,j),eprm->limitF);
+        img.read(fnImg);
+        img().addNoise(param1, param2, noise_type, df);
+
+        if (do_limit0)
+            FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY3D(img())
+        {
+            dAkij(img(),k,i,j) = XMIPP_MAX(dAkij(img(),k,i,j), limit0);
+        }
+
+        if (do_limitF)
+            FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY3D(img())
+        {
+            dAkij(img(),k,i,j) = XMIPP_MIN(dAkij(img(),k,i,j), limitF);
+        }
+
+        img.write(fnImgOut);
+        mdOut.addObject();
+        mdOut.setValue(MDL_IMAGE, fnImgOut);
+        mdOut.setValue(MDL_ENABLED, 1);
     }
 
-    return true;
+    void postProcess()
+    {
+        mdOut.write(fn_out);
+    }
 }
+;//end of class ProgAddNoise
 
-int main(int argc, char **argv)
+/* MAIN -------------------------------------------------------------------- */
+int main(int argc, char *argv[])
 {
-    Add_noise_parameters prm;
-    randomize_random_generator();
-    SF_main(argc, argv, &prm, (void*)&process_img);
+    try
+    {
+        ProgAddNoise program;
+        program.read(argc, argv);
+        program.run();
+    }
+    catch (XmippError xe)
+    {
+        std::cerr << xe;
+    }
 }
 

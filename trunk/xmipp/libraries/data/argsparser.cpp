@@ -128,7 +128,7 @@ void ArgLexer::setupToken(TokenType type)
 
         }
         else if (type == TOK_STR)
-          ++offset;
+            ++offset;
         pos += offset;
         offset = 1;
     }
@@ -468,7 +468,7 @@ bool ArgumentDef::acceptArguments(std::stringstream &errors, size_t & index, std
     }
 
     if (isList)
-      return true;
+        return true;
 
     if (!subParams.empty())
     {
@@ -699,17 +699,17 @@ void ParamDef::check(std::stringstream & errors)
     }
     else
     {
-      //Fill default arguments
-      for (size_t i = 0; i < arguments.size(); ++i)
-        if (arguments[i]->hasDefault)
-          cmdArguments.push_back(arguments[i]->argDefault.c_str());
+        //Fill default arguments
+        for (size_t i = 0; i < arguments.size(); ++i)
+            if (arguments[i]->hasDefault)
+                cmdArguments.push_back(arguments[i]->argDefault.c_str());
     }
 
 
 }
 
 SectionDef::SectionDef(ArgLexer * lexer, ASTNode * parent) :
-        ASTNode(lexer, parent)
+ASTNode(lexer, parent)
 {}
 
 bool SectionDef::parse()
@@ -799,22 +799,30 @@ void reportExclusiveErrors(std::stringstream & errors, std::vector<ParamDef*> &e
 
 void ProgramDef::check(std::stringstream & errors)
 {
-    std::map<std::string, ParamDef*>::const_iterator it;
     std::vector<ParamDef*> exclusive;
     bool isAlias = false;
-    for (it = paramsMap.begin(); it != paramsMap.end(); it++)
-    {
-        std::string name = it->second->name;
-        bool orBefore = it->second->orBefore;
-        size_t size = exclusive.size();
-        //Doesn't check for alias, for doesn't repeat error messages
-        if ( !it->second->containsAlias(it->first) )
-        {
-            it->second->check(errors);
+    SectionDef * section;
+    ParamDef * param;
 
-            if (!it->second->orBefore)
+    for (size_t i = 0; i < sections.size(); ++i)
+    {
+        section = sections[i];
+        for (size_t j = 0; j < section->params.size(); ++j)
+        {
+            param = section->params[j];
+            std::string name = param->name;
+            bool orBefore = param->orBefore;
+            size_t size = exclusive.size();
+            //Doesn't check for alias, for doesn't repeat error messages
+            param->check(errors);
+
+            std::cerr << "name: " << name << std::endl;
+            if (!param->orBefore)
+            {
                 reportExclusiveErrors(errors, exclusive);
-            exclusive.push_back(it->second);
+                std::cerr << "-----------------------------" <<std::endl;
+            }
+            exclusive.push_back(param);
         }
     }
     reportExclusiveErrors(errors, exclusive);
