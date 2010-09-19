@@ -25,7 +25,91 @@
 
 #include "correct_bfactor.h"
 
-Prog_correct_bfactor_prm::Prog_correct_bfactor_prm()
+void ProgCorrectBfactor::defineParams()
+{
+    XmippMetadataProgram::defineParams();
+    addParamsLine("Use one of the three following modes: ");
+    addParamsLine(" -auto                   : Use automated B-factor fit in flat Wilson region");
+    addParamsLine("                         : Note: do not use the automated mode for maps with resolutions");
+    addParamsLine("                         : lower than 12-15 Angstroms!");
+    addParamsLine(" or [-ref <fn_ref>]        : Fit B-factor according to the reference ");
+    addParamsLine(" or [-adhoc <B>]           : Use a user-provided (negative) B-factor");
+    addParamsLine("== Specific parameters == ");
+    addParamsLine("  -sampling <float>        : Pixel size (in Ang) ");
+    addParamsLine("  -maxres <float>          : High-resolution limit for B-factor correction ");
+    addParamsLine(" [-fit_minres <f=15>]      : Low-resolution  limit (in Ang) for fit in -auto or -ref ");
+    addParamsLine(" [-fit_maxres <f=-1>]      : High-resolution limit (in Ang) for fit in -auto or -ref,");
+    addParamsLine("                           : -1 means maximun resolution ");
+    addParamsLine(" [-allpoints]              : Do not fit B-factor, adjust power spectrum to reference ");
+}
+
+void ProgCorrectBfactor::readParams()
+{
+    XmippMetadataProgram::readParams();
+    if (checkParam("-ref"))
+    {
+        mode = checkParam("-allpoints") ? ALLPOINTS_REF : BFACTOR_REF;
+        fn_ref= getParam("-ref");
+    }
+    else if (checkParam("-adhoc"))
+    {
+        mode = BFACTOR_ADHOC;
+        adhocB = getDoubleParam("-adhoc");
+    }
+    else if (checkParam("-auto"))
+    {
+        mode = BFACTOR_AUTO;
+    }
+    else
+        REPORT_ERROR(ERR_DEBUG_IMPOSIBLE, "This should not happens, review program definition");
+    sampling_rate = getDoubleParam("-sampling");
+    apply_maxres = getDoubleParam("-maxres");
+    fit_minres = getDoubleParam("-fit_minres");
+    fit_maxres = getDoubleParam("-fit_maxres");
+
+    if (fit_maxres < 0.)
+        fit_maxres = apply_maxres;
+    ///FIXME: This param is not defined
+    fn_fsc = getParam("-fsc");
+}
+
+
+void ProgCorrectBfactor::show()
+{
+    XmippMetadataProgram::show();
+    std::cout << "Pixel size : " << sampling_rate << " Angstrom" << std::endl;
+    std::cout << "Maximum resolution: " << apply_maxres << " Angstrom" << std::endl;
+    if (mode == BFACTOR_REF || mode == BFACTOR_AUTO)
+    {
+        std::cerr<<"Fit within resolutions: " << fit_minres << " - " << fit_maxres << " Angstrom" << std::endl;
+    }
+    if (mode == BFACTOR_REF)
+    {
+        std::cout << "Adjust B-factor according to reference "<<fn_ref<<std::endl;
+    }
+    else if (mode == BFACTOR_ADHOC)
+    {
+        std::cout << "Apply ad-hoc B-factor of "<< adhocB <<" squared Angstroms" << std::endl;
+    }
+    else
+    {
+        std::cout << "Use automated B-factor fit (Rosenthal and Henderson, 2003) " << std::endl;
+    }
+    if (fn_fsc != "")
+        std::cout << "Use signal-to-noise weighted based on "<< fn_fsc <<std::endl;
+}
+
+
+void ProgCorrectBfactor::processImage()
+{
+    Image<double> vol;
+    vol.read(fnImg);
+    vol().checkDimensionWithDebug(3,__FILE__,__LINE__);
+    FileName fn_guinier = fn_out + ".guinier";
+    bfactor_correction(vol(), fn_guinier);
+}
+
+ProgCorrectBfactor::ProgCorrectBfactor()
 {
 
     fit_minres    = -1.;
@@ -37,11 +121,9 @@ Prog_correct_bfactor_prm::Prog_correct_bfactor_prm()
     fn_ref        = "";
     fn_fsc        = "";
     adhocB        = 0.;
-    return;
-
 }
 
-void  Prog_correct_bfactor_prm::make_guinier_plot(MultidimArray< std::complex< double > > &FT1,
+void  ProgCorrectBfactor::make_guinier_plot(MultidimArray< std::complex< double > > &FT1,
         std::vector<fit_point2D> &guinier)
 {
 
@@ -93,7 +175,7 @@ void  Prog_correct_bfactor_prm::make_guinier_plot(MultidimArray< std::complex< d
     }
 }
 
-void Prog_correct_bfactor_prm::get_snr_weights(std::vector<double> &snr)
+void ProgCorrectBfactor::get_snr_weights(std::vector<double> &snr)
 {
     std::ifstream  fh;
     std::string    line;
@@ -128,7 +210,7 @@ void Prog_correct_bfactor_prm::get_snr_weights(std::vector<double> &snr)
     }
 }
 
-void  Prog_correct_bfactor_prm::apply_snr_weights(MultidimArray< std::complex< double > > &FT1,
+void  ProgCorrectBfactor::apply_snr_weights(MultidimArray< std::complex< double > > &FT1,
         std::vector<double> &snr)
 {
 
@@ -147,8 +229,8 @@ void  Prog_correct_bfactor_prm::apply_snr_weights(MultidimArray< std::complex< d
     }
 }
 
-void  Prog_correct_bfactor_prm::apply_bfactor(MultidimArray< std::complex< double > > &FT1,
-        double bfactor)
+void  ProgCorrectBfactor::apply_bfactor(MultidimArray< std::complex< double > > &FT1,
+                                        double bfactor)
 {
 
     Matrix1D<double> f(3);
@@ -165,7 +247,7 @@ void  Prog_correct_bfactor_prm::apply_bfactor(MultidimArray< std::complex< doubl
     }
 }
 
-void  Prog_correct_bfactor_prm::apply_allpoints(MultidimArray< std::complex< double > > &FT1,
+void  ProgCorrectBfactor::apply_allpoints(MultidimArray< std::complex< double > > &FT1,
         std::vector<fit_point2D> &guinier_diff)
 {
     Matrix1D<double> f(3);
@@ -185,7 +267,7 @@ void  Prog_correct_bfactor_prm::apply_allpoints(MultidimArray< std::complex< dou
     }
 }
 
-void  Prog_correct_bfactor_prm::write_guinierfile(FileName fn_guinier,
+void  ProgCorrectBfactor::write_guinierfile(FileName fn_guinier,
         std::vector<fit_point2D> &guinierin,
         std::vector<fit_point2D> &guinierweighted,
         std::vector<fit_point2D> &guiniernew,
@@ -213,10 +295,10 @@ void  Prog_correct_bfactor_prm::write_guinierfile(FileName fn_guinier,
 
 }
 
-void Prog_correct_bfactor_prm::bfactor_correction(MultidimArray< double > &m1,
-    const FileName &fn_guinier)
+void ProgCorrectBfactor::bfactor_correction(MultidimArray< double > &m1,
+        const FileName &fn_guinier)
 {
-	MultidimArray< std::complex< double > > FT1, FT2;
+    MultidimArray< std::complex< double > > FT1, FT2;
     FourierTransformer transformer;
     double slope, intercept;
     std::vector<fit_point2D>  guinierin, guinierweighted, guinierref, guinierdiff;

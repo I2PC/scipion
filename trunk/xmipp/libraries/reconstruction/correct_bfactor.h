@@ -31,15 +31,16 @@
 #include <data/fft.h>
 #include <data/fftw.h>
 #include <data/image.h>
+#include <data/program.h>
 
 /** @defgroup Correct Bfactor
   * @ingroup ReconsLibrary
   */
 
 /** correct_bfactor parameters. */
-class Prog_correct_bfactor_prm
+class ProgCorrectBfactor: public XmippMetadataProgram
 {
-public:
+protected:
 
     /** Low and high resolution limits for automated fit */
     double fit_minres, fit_maxres, apply_maxres;
@@ -71,13 +72,20 @@ public:
     /** Filename for FSC curve */
     FileName fn_fsc;
 
+    /** Functions from XmippMetadataProgram */
+
+    void show();
+    void defineParams();
+    void readParams();
+    void processImage();
+
 public:
 
     /** Constructor */
-    Prog_correct_bfactor_prm();
+    ProgCorrectBfactor();
 
     /** Destructor */
-    ~Prog_correct_bfactor_prm()
+    ~ProgCorrectBfactor()
     { }
     ;
 
