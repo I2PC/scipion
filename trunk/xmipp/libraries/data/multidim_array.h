@@ -3623,7 +3623,7 @@ public:
     void addNoise(double op1,
                   double op2,
                   const std::string& mode = "uniform",
-                  double df = 3) const
+                  double df = 3.) const
     {
         T* ptr=NULL;
         unsigned long int n;

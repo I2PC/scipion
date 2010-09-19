@@ -27,53 +27,66 @@
 #include <data/args.h>
 #include <data/geometry.h>
 
-class Headerapply_parameters: public Prog_parameters
+class ProgHeaderApply: public XmippMetadataProgram
 {
-public:
+protected:
     bool wrap;
 
-    void read(int argc, char **argv)
+    void defineParams()
     {
-        Prog_parameters::read(argc, argv);
-        wrap = !checkParameter(argc, argv, "-dont_wrap");
+        addUsageLine("Apply the geometric transformation stored in the image header.");
+        XmippMetadataProgram::defineParams();
+        addParamsLine(" [-dont_wrap]              : By default, the image is wrapped");
     }
 
-    void usage()
+    void readParams()
     {
-        Prog_parameters::usage();
-        std::cerr << "  [-dont_wrap]              : By default, the image is wrapped\n";
+        XmippMetadataProgram::readParams();
+        wrap = !checkParam("-dont_wrap");
     }
 
     void show()
     {
-        Prog_parameters::show();
+        XmippMetadataProgram::show();
+
         if (!wrap)
             std::cout << "Do not wrap"<<std::endl;
     }
-};
 
-bool process_img(Image<double> &img, const Prog_parameters *prm)
-{
-    if (ZSIZE(img())!=1 || NSIZE(img())!=1)
-        REPORT_ERROR(ERR_MULTIDIM_DIM, "This program is intended only for images");
+    void processImage()
+    {
+        img.read(fnImg);
 
-    Headerapply_parameters *eprm = (Headerapply_parameters *) prm;
-    MultidimArray<double> Maux;
-    applyGeometry(BSPLINE3, Maux, img(), img.getTransformationMatrix(), IS_INV, eprm->wrap);
-    img()=Maux;
+        if (ZSIZE(img())!=1 || NSIZE(img())!=1)
+            REPORT_ERROR(ERR_MULTIDIM_DIM, "This program is intended only for images");
 
-    //Reset in-plane transformations of the header
-    img.setShifts(0,0);
-    img.setPsi(0.);
-    if (img.tilt() == 0)
-        img.setRot(0.);
-    img.setFlip(0.);
+        MultidimArray<double> Maux;
+        applyGeometry(BSPLINE3, Maux, img(), img.getTransformationMatrix(), IS_INV, wrap);
+        img()=Maux;
+        //Reset in-plane transformations of the header
+        img.setShifts(0,0);
+        img.setPsi(0.);
 
-    return true;
+        if (img.tilt() == 0)
+            img.setRot(0.);
+        img.setFlip(0.);
+
+        img.write(fnImg);
+    }
 }
+;///end of class ProgHeaderApply
 
-int main(int argc, char **argv)
+/* MAIN -------------------------------------------------------------------- */
+int main(int argc, char *argv[])
 {
-    Headerapply_parameters prm;
-    SF_main(argc, argv, &prm, (void*)&process_img);
+    try
+    {
+        ProgHeaderApply program;
+        program.read(argc, argv);
+        program.run();
+    }
+    catch (XmippError xe)
+    {
+        std::cerr << xe;
+    }
 }

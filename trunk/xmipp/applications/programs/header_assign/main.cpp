@@ -28,7 +28,7 @@
 #include <data/metadata.h>
 #include <data/progs.h>
 
-class ProgHeaderAssign: public ProgHeader
+class ProgHeaderAssign: public XmippMetadataProgram
 {
 private:
     double          rot, tilt, psi, xshift, yshift, weight;
@@ -39,53 +39,55 @@ private:
 protected:
     void defineParams()
     {
-        addUsageLine("Set the geometric transformation (angles & shifts) in the header of 2D-images.");
-        addParamsLine("   -i <metadata>      :Metadata file with input\n");
-        addParamsLine("   alias --input;");
+      each_image_produces_an_output = true;
+      apply_geo = false;
+        addUsageLine("Assigns rotation angles, origin offsets (and optionally weights and mirror flags)");
+        addUsageLine("read from input file to the headers of images. ");
+        XmippMetadataProgram::defineParams();
         addParamsLine("   [-round_shifts]    :Round shifts to integers");
         addParamsLine("   [-levels <n=0>]    :Levels of pyramidal reduction, n=1, 2, ...");
     }
 
     void readParams()
     {
-        ProgHeader::readParams();
+        XmippMetadataProgram::readParams();
         round_shifts = checkParam("-round_shifts");
         levels = getIntParam("-levels");
     }
 
-    void preprocess()
+    void preProcess()
     {
-        std::vector<MDLabel> activeLabels = md_input.getActiveLabels();
+        activeLabels = mdIn.getActiveLabels();
         labelsnumber = activeLabels.size();
     }
 
-    void postprocess()
+    void postProcess()
     {
-        md_input.write(fn_out);
+        mdIn.write(fn_out);
     }
 
-    void headerProcess(const FileName &fn_img)
+    void processImage()
     {
 
-        img.read(fn_img);
+        img.read(fnImg);
         for (int iter = 0; iter < labelsnumber; iter++)
         {
             switch (activeLabels[iter])
             {
             case MDL_ANGLEROT:
-                md_input.getValue( MDL_ANGLEROT, rot);
+                mdIn.getValue( MDL_ANGLEROT, rot);
                 img.setRot(rot);
                 break;
             case MDL_ANGLETILT:
-                md_input.getValue( MDL_ANGLETILT, tilt);
+                mdIn.getValue( MDL_ANGLETILT, tilt);
                 img.setTilt(tilt);
                 break;
             case MDL_ANGLEPSI:
-                md_input.getValue( MDL_ANGLEPSI, psi);
+                mdIn.getValue( MDL_ANGLEPSI, psi);
                 img.setPsi(psi);
                 break;
             case MDL_SHIFTX:
-                md_input.getValue( MDL_SHIFTX, xshift);
+                mdIn.getValue( MDL_SHIFTX, xshift);
                 if (levels != 0)
                     xshift /= pow(2.0, levels);
                 if (round_shifts)
@@ -93,7 +95,7 @@ protected:
                 img.setXoff(xshift);
                 break;
             case MDL_SHIFTY:
-                md_input.getValue(MDL_SHIFTY, yshift);
+                mdIn.getValue(MDL_SHIFTY, yshift);
                 if (levels != 0)
                     yshift /= pow(2.0, levels);
                 if (round_shifts)
@@ -101,18 +103,18 @@ protected:
                 img.setYoff(yshift);
                 break;
             case MDL_WEIGHT:
-                md_input.getValue( MDL_WEIGHT, weight);
+                mdIn.getValue( MDL_WEIGHT, weight);
                 img.setWeight(weight);
                 break;
             case MDL_FLIP:
-                md_input.getValue( MDL_FLIP, mirror);
+                mdIn.getValue( MDL_FLIP, mirror);
                 img.setFlip(mirror);
                 break;
             default:
                 break;
             }
         }
-        img.write(fn_img);
+        img.write(fnImg);
 
     }
 }

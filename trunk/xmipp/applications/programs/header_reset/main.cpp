@@ -28,7 +28,7 @@
 #include <data/metadata.h>
 #include <data/progs.h>
 
-class ProgHeaderReset: public ProgHeader
+class ProgHeaderReset: public XmippMetadataProgram
 {
 private:
     bool            tiltSeries;
@@ -37,15 +37,16 @@ private:
 protected:
     void defineParams()
     {
+        each_image_produces_an_output = true;
+        XmippMetadataProgram::defineParams();
+
         addUsageLine("Reset the geometric transformation (angles & shifts) in the header of 2D-images.");
-        addParamsLine("   -i <metadata>      :Metadata file with input images");
-        addParamsLine("   alias --input;");
         addParamsLine("   [-tiltSeries <firstAngle> <angleStep>]: Assign a regularly spaced angular distribution.");
     }
 
     void readParams()
     {
-        ProgHeader::readParams();
+        XmippMetadataProgram::readParams();
         tiltSeries = checkParam("-tiltSeries");
         if (tiltSeries)
         {
@@ -54,7 +55,7 @@ protected:
         }
     }
 
-    void preprocess()
+    void show()
     {
         std::cout << " Resetting all angles, origin offsets, weights and mirror flags to zero ... " << std::endl;
 
@@ -67,14 +68,14 @@ protected:
         }
     }
 
-    void postprocess()
+    void postProcess()
     {
-        md_input.write(fn_out);
+        mdIn.write(fn_out);
     }
 
-    void headerProcess(const FileName &fn_img)
+    void processImage()
     {
-        img.read(fn_img); //read data and header
+        img.read(fnImg); //read data and header
         img.clearHeader();
 
         if (tiltSeries)
@@ -84,7 +85,7 @@ protected:
         }
         double daux = (double)1.;
         img.setWeight(daux);
-        img.write(fn_img);
+        img.write(fnImgOut);
     }
 }
 ;// end of class ProgHeaderReset
@@ -92,16 +93,16 @@ protected:
 /* MAIN -------------------------------------------------------------------- */
 int main(int argc, char *argv[])
 {
-  try
-  {
-      ProgHeaderReset program;
-      program.read(argc, argv);
-      program.run();
-  }
-  catch (XmippError xe)
-  {
-      std::cerr << xe;
-  }
+    try
+    {
+        ProgHeaderReset program;
+        program.read(argc, argv);
+        program.run();
+    }
+    catch (XmippError xe)
+    {
+        std::cerr << xe;
+    }
 }
 
 

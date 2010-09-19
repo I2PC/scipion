@@ -30,7 +30,7 @@
 
 /* PROGRAM ----------------------------------------------------------------- */
 
-class ProgHeaderExtract: public ProgHeader
+class ProgHeaderExtract: public XmippMetadataProgram
 {
 private:
     bool round_shifts;
@@ -39,47 +39,42 @@ private:
 protected:
     void defineParams()
     {
-        addUsageLine("Extracts the geometric transformation (angles & shifts) in the header of 2D-images.");
-        addParamsLine("   -i <metadata>      :metadata file with input.");
-        addParamsLine("   alias --input;");
-        addParamsLine("   [-o <metadata> ]    :metadata file, by default data is stored in input metaData file.");
-        addParamsLine("   alias --output;");
+       produces_an_output = true;
+        XmippMetadataProgram::defineParams();
+        addUsageLine("Extracts the geometric transformation (angles & shifts) in the header of 2D-images");
+        addUsageLine("and write values to a metadata file.");
         addParamsLine("   [-round_shifts]    :Round shifts to integers.");
     }
 
     void readParams()
     {
-        ProgHeader::readParams();
-        fn_out = checkParam("-o") ? getParam("-o") : fn_in;
+        XmippMetadataProgram::readParams();
         round_shifts = checkParam("-round_shifts");
     }
 
-    void preprocess()
-{}
-
-    void postprocess()
+    void postProcess()
     {
-        md_input.write(fn_out);
+        mdIn.write(fn_out);
     }
 
-    void headerProcess(const FileName &fn_img)
+    void processImage()
     {
 
-        img.read(fn_img, false);
-        xx = (double) img.Xoff();
-        yy = (double) img.Yoff();
+        img.read(fnImg, false);
+        xx = img.Xoff();
+        yy = img.Yoff();
         if (round_shifts)
         {
             xx = (double)ROUND(xx);
             yy = (double)ROUND(yy);
         }
-        md_input.setValue(MDL_ANGLEROT,  (double) img.rot());
-        md_input.setValue(MDL_ANGLETILT, (double) img.tilt());
-        md_input.setValue(MDL_ANGLEPSI,  (double) img.psi());
-        md_input.setValue(MDL_SHIFTX,    xx );
-        md_input.setValue(MDL_SHIFTY,    yy );
-        md_input.setValue(MDL_WEIGHT,    (double) img.weight());
-        md_input.setValue(MDL_FLIP,      (bool)   img.flip());
+        mdIn.setValue(MDL_ANGLEROT,  img.rot());
+        mdIn.setValue(MDL_ANGLETILT, img.tilt());
+        mdIn.setValue(MDL_ANGLEPSI,  img.psi());
+        mdIn.setValue(MDL_SHIFTX,    xx );
+        mdIn.setValue(MDL_SHIFTY,    yy );
+        mdIn.setValue(MDL_WEIGHT,    img.weight());
+        mdIn.setValue(MDL_FLIP,      img.flip());
 
     }
 }

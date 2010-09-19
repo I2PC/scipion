@@ -38,8 +38,9 @@
  * with a common structure where only a small part changes. These routines
  * make the heavy work for you and you only have to supply the changing
  * part from one to another.
+ *
+ * @{
  */
-
 /** Virtual program parameters class.
  * @ingroup Programs
  *
@@ -122,25 +123,8 @@ void SF_main(int argc,
              void* process_img,
              int operation_mode = IMAGE2IMAGE);
 
+/** @} */
 
-/** Special class of XmippProgram that performs some operation related with images header.
- * It can receives a file with images(MetaData) or a single image
- */
-class ProgHeader: public XmippProgram
-{
-protected:
-    Image<double>   img;
-    FileName        fn_in, fn_out, fn_img;
-    MetaData        md_input;
 
-    virtual void readParams();
-    virtual void preprocess() = 0;
-    virtual void postprocess() = 0;
-    virtual void headerProcess(const FileName &fn_img) = 0;
-
-public:
-    virtual void run();
-}
-;// end of class ProgHeaderPrint
 
 #endif

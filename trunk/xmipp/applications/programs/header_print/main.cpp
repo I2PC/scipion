@@ -31,30 +31,26 @@
 
 /* PROGRAM ----------------------------------------------------------------- */
 
-class ProgHeaderPrint: public ProgHeader
+class ProgHeaderPrint: public XmippMetadataProgram
 {
 protected:
     void defineParams()
     {
+        each_image_produces_an_output = false;
+        apply_geo = false;
+        XmippMetadataProgram::defineParams();
         addUsageLine("Print information from the header of 2D-images.");
-
-        addParamsLine(" -i <metadata>   :MetaData file with images or an individual image.");
-        addParamsLine(" alias --input;");
     }
 
-    void preprocess()
+    void show()
     {
         std::cout << " Printing the header ... " << std::endl;
     }
 
-    void postprocess()
-    {}
-
-    void headerProcess(const FileName &fn_img)
+    void processImage()
     {
-        img.read(fn_img, false, -1, false);
-        std::cout << img;
-        std::cout << std::endl;
+        img.read(fnImg, false, -1, false);
+        std::cout << img << std::endl;
     }
 }
 ;// end of class ProgHeaderPrint
