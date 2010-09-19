@@ -30,6 +30,12 @@ void XmippProgram::init()
     progLexer = new ArgLexer();
     progDef = new ProgramDef(progLexer);
     this->defineParams();
+    ///Add some common definitions to all Xmipp programs
+    addParamsLine("-v+ <verbose_level=1> : Verbosity level, 0 means no output.");
+    addParamsLine("alias --verb;");
+    addParamsLine("-h+ <param=\"\">      : Show help about specific param or this help message.");
+    addParamsLine("alias --help;");
+    addParamsLine("-more_options         : Show additional options.");
     progLexer->nextToken();
     progDef->parse();
 }
@@ -69,19 +75,24 @@ void XmippProgram::read(int argc, char ** argv)
 
     setProgramName(argv[0]);
 
+    ///If not arguments are provided, show usage message
     if (argc == 1)
         usage();
 
     try
     {
-        //TODO: Check if the command line is correct
         progDef->read(argc, argv);
-        //TODO: Check if only requested help message
         this->readParams();
-
     }
     catch (XmippError xe)
     {
+        ///If -more_options provided, show extended usage
+        if (checkParam("-more_options"))
+            extendedUsage();
+        ///If help requested, print usage message
+        if (checkParam("-h") && getParam("-h") == "")
+            usage();
+        ///If an input error, shows error message and usage
         std::cerr << xe;
         usage();
     }
@@ -184,8 +195,8 @@ void XmippMetadataProgram::defineParams()
     }
     else if (produces_an_output)
     {
-      addParamsLine("  [-o <output_file=\"\">]  : if wanted in case of a single image,");
-      addParamsLine("   alias --output;");
+        addParamsLine("  [-o <output_file=\"\">]  : if wanted in case of a single image,");
+        addParamsLine("   alias --output;");
     }
 
     if (apply_geo)
@@ -199,7 +210,7 @@ void XmippMetadataProgram::readParams()
     fn_in = getParam("-i");
 
     if (produces_an_output)
-      fn_out = checkParam("-o") ? getParam("-o") : fn_in;
+        fn_out = checkParam("-o") ? getParam("-o") : fn_in;
 
     if (each_image_produces_an_output)
     {
@@ -278,11 +289,11 @@ void XmippMetadataProgram::run()
 
             if (each_image_produces_an_output)
             {
-              fnImgOut = fnImg;
-              if (oroot != "")
-                fnImgOut = oroot + fnImgOut.without_extension();
-              if (oext != "")
-                fnImgOut = fnImgOut.without_extension() + "." + oext;
+                fnImgOut = fnImg;
+                if (oroot != "")
+                    fnImgOut = oroot + fnImgOut.without_extension();
+                if (oext != "")
+                    fnImgOut = fnImgOut.without_extension() + "." + oext;
             }
 
             processImage();

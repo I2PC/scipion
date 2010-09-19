@@ -816,11 +816,9 @@ void ProgramDef::check(std::stringstream & errors)
             //Doesn't check for alias, for doesn't repeat error messages
             param->check(errors);
 
-            std::cerr << "name: " << name << std::endl;
             if (!param->orBefore)
             {
                 reportExclusiveErrors(errors, exclusive);
-                std::cerr << "-----------------------------" <<std::endl;
             }
             exclusive.push_back(param);
         }
@@ -901,7 +899,8 @@ void ConsolePrinter::printProgram(const ProgramDef &program, int v)
     if (program.usageComments.size() > 0)
     {
         std::cout << "USAGE" << std::endl;
-        printCommentList(program.usageComments, v);
+        for (size_t i = 0; i < program.usageComments.size(); ++i)
+          std::cout << "   " << program.usageComments.comments[i] << std::endl;
     }
     if (program.sections.size() > 0)
     {
@@ -927,6 +926,9 @@ void ConsolePrinter::printParam(const ParamDef &param, int v)
 {
     if (param.visible <= v)
     {
+      if (param.orBefore)
+        std::cout << "   OR" << std::endl;
+
         std::cout << "   " << param.name;
         //print alias
         for (size_t i = 0; i < param.aliases.size(); ++i)
@@ -937,6 +939,9 @@ void ConsolePrinter::printParam(const ParamDef &param, int v)
             std::cout << " ";
             printArgument(*param.arguments[i], v);
         }
+        if (!param.notOptional)
+          std::cout << "   OPTIONAL";
+
         std::cout << std::endl;
         printCommentList(param.comments, v);
         for (size_t i = 0; i < param.arguments.size(); ++i)

@@ -27,139 +27,135 @@
 #include <data/args.h>
 #include <data/geometry.h>
 
-class Average_parameters: public Prog_parameters
+class ProgAverage: public XmippMetadataProgram
 {
-public:
+protected:
     Image<double>  sumI, sumI2;
     int         nI, nV;
     double      sumweight;
     bool        set_weight, weighted_avg, more_options, only_avg, keep_first_header, is_first;
-    
-public:
-    Average_parameters()
-    {
-        nI = nV = 0;
-	is_first = true;
-    }
-    void final_process();
 
-    void read(int argc, char **argv)
+    void defineParams()
     {
-        more_options = checkParameter(argc, argv, "-more_options");
-        Prog_parameters::read(argc, argv);
-        set_weight = checkParameter(argc, argv, "-set_weight");
-        weighted_avg = checkParameter(argc, argv, "-weighted_avg");
-        only_avg = checkParameter(argc, argv, "-only_avg");
-        keep_first_header = checkParameter(argc, argv, "-keep_first_header");
+        XmippMetadataProgram::defineParams();
+        addUsageLine("This program allows you to calculate the average and");
+        addUsageLine( "standard deviation of a set of images or volumes.");
+        addParamsLine( "  [-set_weight+]             : for 2D-images: set weight in header of average to nr. of particles");
+        addParamsLine( "  [-weighted_avg+]           : for 2D-images: use header weights in weighted average calculation");
+        addParamsLine( "  [-only_avg+]               : Skip stddev calculation; Output average will be called rootname.xmp");
+        addParamsLine( "  [-keep_first_header+]      : Set header of output images equal to header of first image (only for 2D!) ");
+    }
+
+    void readParams()
+    {
+        XmippMetadataProgram::readParams();
+        set_weight = checkParam("-set_weight");
+        weighted_avg = checkParam("-weighted_avg");
+        only_avg = checkParam("-only_avg");
+        keep_first_header = checkParam("-keep_first_header");
+
+        ///Some initializations
         sumweight = 0.;
+        nI = nV = 0;
+        is_first = true;
     }
 
-    void usage()
+    void processImage()
     {
-        Prog_parameters::usage();
-        std::cerr << "  [-more_options]           : show additional options\n";
-        if (more_options)
+        img.read(fnImg);
+
+        if (keep_first_header)
         {
-            std::cerr << "  [-set_weight]             : for 2D-images: set weight in header of average to nr. of particles\n";
-            std::cerr << "  [-weighted_avg]           : for 2D-images: use header weights in weighted average calculation\n";
-	    std::cerr << "  [-only_avg]               : Skip stddev calculation; Output average will be called rootname.xmp\n";
-	    std::cerr << "  [-keep_first_header]      : Set header of output images equal to header of first image (only for 2D!) \n";
+            if (is_first)
+            {
+                sumI=img;
+                sumI2=img;
+                sumI().initZeros();
+                sumI2().initZeros();
+                is_first = false;
+            }
         }
-        std::cerr << std::endl;
-        std::cerr << "Purpose: This program allows you to calculate the average and \n"
-        << "         standard deviation of a set of images or volumes \n";
-
-    }
-
-};
-
-bool process_img(Image<double> &img, const Prog_parameters *prm)
-{
-    Average_parameters *eprm = (Average_parameters *) prm;
-    if (eprm->keep_first_header)
-    {
-	if (eprm->is_first)
-	{
-	    eprm->sumI=img;
-	    eprm->sumI2=img;
-	    eprm->sumI().initZeros();
-	    eprm->sumI2().initZeros();
-	    eprm->is_first = false;
-	}
-    }
-    else
-    {
-	eprm->sumI().resize(img());
-	eprm->sumI2().resize(img());
-    }
-    if (eprm->weighted_avg)
-    {
-        img() *= img.weight();
-        eprm->sumweight += img.weight();
-    }
-    FOR_ALL_ELEMENTS_IN_ARRAY3D(img())
-    {
-        A3D_ELEM(eprm->sumI(), k, i, j) += A3D_ELEM(img(), k, i, j);
-    }
-    if (!eprm->only_avg)
-    {
-	FOR_ALL_ELEMENTS_IN_ARRAY3D(img())
-	{
-	    A3D_ELEM(eprm->sumI2(), k, i, j) += A3D_ELEM(img(), k, i, j) *
-                A3D_ELEM(img(), k, i, j);
-	}
-    }
-    eprm->nI++;
-    return true;
-}
-
-void Average_parameters::final_process()
-{
-    FileName fnt, fn_root = fn_in.without_extension();
-    if (nI != 0)
-    {
-        FOR_ALL_ELEMENTS_IN_ARRAY3D(sumI())
+        else
         {
-            A3D_ELEM(sumI(), k, i, j) /= nI;
+            sumI().resize(img());
+            sumI2().resize(img());
         }
-		if (!only_avg)
-		{
-			FOR_ALL_ELEMENTS_IN_ARRAY3D(sumI())
-			{
-			A3D_ELEM(sumI2(), k, i, j) /= nI;
-			A3D_ELEM(sumI2(), k, i, j) -= A3D_ELEM(sumI(), k, i, j) *
-						A3D_ELEM(sumI(), k, i, j);
-			A3D_ELEM(sumI2(), k, i, j) = sqrt(ABS(A3D_ELEM(sumI2(), k, i, j)));
-			}
-		}
         if (weighted_avg)
         {
-            sumI() /= sumweight;
-            sumI.setWeight(sumweight);
+            img() *= img.weight();
+            sumweight += img.weight();
         }
-        else if (set_weight)
+        FOR_ALL_ELEMENTS_IN_ARRAY3D(img())
         {
-            sumI.setWeight((double)nI);
-            std::cerr << " Setting weight in the header of the average image to " << integerToString(nI) << std::endl;
+            A3D_ELEM(sumI(), k, i, j) += A3D_ELEM(img(), k, i, j);
         }
-		if (only_avg)
-		{
-			sumI.write(fn_root + ".xmp");
-		}
-		else
-		{
-			sumI.write(fn_root + ".med.xmp");
-			sumI2.write(fn_root + ".sig.xmp");
-		}
+        if (!only_avg)
+        {
+            FOR_ALL_ELEMENTS_IN_ARRAY3D(img())
+            {
+                A3D_ELEM(sumI2(), k, i, j) += A3D_ELEM(img(), k, i, j) *
+                                              A3D_ELEM(img(), k, i, j);
+            }
+        }
+        ++nI;
+    }
+
+    void postProcess()
+    {
+        FileName fnt, fn_root = fn_in.without_extension();
+        if (nI != 0)
+        {
+            FOR_ALL_ELEMENTS_IN_ARRAY3D(sumI())
+            {
+                A3D_ELEM(sumI(), k, i, j) /= nI;
+            }
+            if (!only_avg)
+            {
+                FOR_ALL_ELEMENTS_IN_ARRAY3D(sumI())
+                {
+                    A3D_ELEM(sumI2(), k, i, j) /= nI;
+                    A3D_ELEM(sumI2(), k, i, j) -= A3D_ELEM(sumI(), k, i, j) *
+                                                  A3D_ELEM(sumI(), k, i, j);
+                    A3D_ELEM(sumI2(), k, i, j) = sqrt(ABS(A3D_ELEM(sumI2(), k, i, j)));
+                }
+            }
+            if (weighted_avg)
+            {
+                sumI() /= sumweight;
+                sumI.setWeight(sumweight);
+            }
+            else if (set_weight)
+            {
+                sumI.setWeight((double)nI);
+                std::cerr << " Setting weight in the header of the average image to " << integerToString(nI) << std::endl;
+            }
+            if (only_avg)
+            {
+                sumI.write(fn_root + ".xmp");
+            }
+            else
+            {
+                sumI.write(fn_root + ".med.xmp");
+                sumI2.write(fn_root + ".sig.xmp");
+            }
+        }
+    }
+
+}
+;///end of class ProgAverage
+
+/* MAIN -------------------------------------------------------------------- */
+int main(int argc, char *argv[])
+{
+    try
+    {
+        ProgAverage program;
+        program.read(argc, argv);
+        program.run();
+    }
+    catch (XmippError xe)
+    {
+        std::cerr << xe;
     }
 }
 
-int main(int argc, char **argv)
-{
-    Average_parameters prm;
-    prm.each_image_produces_an_output = false;
-    // Set default action for application of header transformation
-    prm.apply_geo = true;
-    SF_main(argc, argv, &prm, (void*)&process_img);
-    prm.final_process();
-}
