@@ -23,8 +23,7 @@
  *  e-mail address 'xmipp@cnb.csic.es'
  ***************************************************************************/
 
-#ifndef RWTIA_H_
-#define RWTIA_H_
+#include "image.h"
 
 #define TIASIZE    30 // Size of the TIA header without pDATA_OFFSET
 
@@ -73,7 +72,8 @@ struct TIAdataHead
 /** TIA Reader
   * @ingroup TIA
 */
-int readTIA(int img_select,bool isStack=false, double dStddev=5)
+template<typename T>
+int Image<T>::readTIA(int img_select, bool isStack, double dStddev)
 {
 #undef DEBUG
     //#define DEBUG
@@ -314,11 +314,10 @@ int readTIA(int img_select,bool isStack=false, double dStddev=5)
 /** TIA Writer
   * @ingroup TIA
 */
-int writeTIA(int img_select, bool isStack=false, int mode=WRITE_OVERWRITE)
+template<typename T>
+int Image<T>::writeTIA(int img_select, bool isStack, int mode)
 {
     REPORT_ERROR(ERR_IMG_NOWRITE, "ERROR: writeTIA is not implemented.");
     return(-1);
 }
 
-
-#endif /* RWTIA_H_ */

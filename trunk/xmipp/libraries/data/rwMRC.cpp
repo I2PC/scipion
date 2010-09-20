@@ -6,8 +6,7 @@
         Created: 19990321       Modified: 20030723
 */
 
-#ifndef RWMRC_H
-#define RWMRC_H
+#include "image.h"
 
 #define MRCSIZE    1024 // Minimum size of the MRC header (when nsymbt = 0)
 
@@ -94,7 +93,8 @@ struct MRChead
 /** MRC Reader
   * @ingroup MRC
 */
-int readMRC(int img_select, bool isStack=false)
+template<typename T>
+int Image<T>::readMRC(int img_select, bool isStack)
 {
 #undef DEBUG
     //#define DEBUG
@@ -275,7 +275,8 @@ int readMRC(int img_select, bool isStack=false)
 /** MRC Writer
   * @ingroup MRC
 */
-int writeMRC(int img_select, bool isStack=false, int mode=WRITE_OVERWRITE)
+template<typename T>
+int Image<T>::writeMRC(int img_select, bool isStack, int mode)
 {
     /*
         if ( transform != NoTransform )
@@ -449,4 +450,3 @@ int writeMRC(int img_select, bool isStack=false, int mode=WRITE_OVERWRITE)
 
     return(0);
 }
-#endif
