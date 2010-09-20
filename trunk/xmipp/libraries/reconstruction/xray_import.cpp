@@ -25,7 +25,7 @@
 
 #include <data/args.h>
 #include "xray_import.h"
-#include <sort.h>
+//#include <sort.h>
 
 // Read arguments ==========================================================
 void ProgXrayImport::readParams()

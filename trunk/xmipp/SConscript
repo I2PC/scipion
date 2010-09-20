@@ -388,7 +388,7 @@ def AddImageJPlugin(name, pluginDir, outDir):
 
 # Copies ImageJ external plugins (3rd party)
 def AddImageJExternalPlugins(pluginsDir, outDir):
-    Execute("cp " + os.path.join(pluginsDir, '* ') + outDir + ' -R')
+    Execute("rsync -av " + os.path.join(pluginsDir, '* ') + outDir + ' --exclude=".*/"')
 
 def AddSQLiteLibrary():
     libprefix = os.path.join(env['prefix'], 'lib')
@@ -793,7 +793,7 @@ AddBatch('protocols', 'applications/scripts/protocols')
 AddBatch('gui', 'applications/scripts/protocols')
 AddBatch('showj', 'applications/scripts/showj','.sh')
 AddBatch('projections_explorerj', 'applications/scripts/projections_explorerj','.sh')
-AddBatch('projections_viewerj', 'applications/scripts/projections_viewerj','.sh')
+#AddBatch('projections_viewerj', 'applications/scripts/projections_viewerj','.sh')
 AddBatch('browserj', 'applications/scripts/browserj','.sh')
 # AddBatch('convert_tia2raw', 'applications/programs/convert_tia2raw')
 AddBatch('move_along_NMAmode', 'applications/scripts/move_along_NMAmode','.pl')
