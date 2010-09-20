@@ -23,8 +23,7 @@
  *  e-mail address 'xmipp@cnb.csic.es'
  ***************************************************************************/
 
-#ifndef RWINF_H_
-#define RWINF_H_
+#include "image.h"
 
 ///@defgroup INF INF File format
 ///@ingroup ImageFormats
@@ -33,7 +32,8 @@
 /** INF Reader
   * @ingroup INF
 */
-int readINF(int img_select,bool isStack=false)
+template<typename T>
+int Image<T>::readINF(int img_select, bool isStack)
 {
 #undef DEBUG
     //#define DEBUG
@@ -153,7 +153,8 @@ int readINF(int img_select,bool isStack=false)
 /** INF Writer
   * @ingroup INF
 */
-int writeINF(int img_select, bool isStack=false, int mode=WRITE_OVERWRITE)
+template<typename T>
+int Image<T>::writeINF(int img_select, bool isStack, int mode)
 {
     //#define DEBUG
 #ifdef DEBUG
@@ -267,4 +268,3 @@ int writeINF(int img_select, bool isStack=false, int mode=WRITE_OVERWRITE)
     return(0);
 }
 
-#endif /* RWINF_H_ */

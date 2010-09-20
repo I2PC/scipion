@@ -42,7 +42,6 @@
 #include <unistd.h>
 
 // Includes for rwTIFF which cannot be inside it
-#include <cstring>
 #include "../../external/tiff-3.9.4/libtiff/tiffio.h"
 
 /// @defgroup Images Images
@@ -202,6 +201,23 @@ private:
     bool                mmapOn;      // Mapping when loading from file
     int                 mFd;         // Handle the file in reading method and mmap
     size_t              mappedSize;  // Size of the mapped file
+
+    ///Helper functions for formats read/write
+    void castTiffTile2T(
+        T * ptrDest ,
+        char* tif_buf,
+        unsigned int x, unsigned int y,
+        unsigned int imageWidth, unsigned int imageLength,
+        unsigned int tileWidth, unsigned int tileLength,
+        unsigned short samplesPerPixel,
+        DataType datatype);
+    void castTiffLine2T(
+        T * ptrDest,
+        char* tif_buf,
+        unsigned int y,
+        unsigned int imageWidth, unsigned int imageLength,
+        unsigned short samplesPerPixel,
+        DataType datatype);
 
 public:
     /** Empty constructor

@@ -23,18 +23,7 @@
  *  e-mail address 'xmipp@cnb.csic.es'
  ***************************************************************************/
 
-#ifndef RWTIFF_H_
-#define RWTIFF_H_
-
-#include <cstdio>
-#include <cstdlib>
-#include <unistd.h>
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <sys/mman.h>
-#include <fcntl.h>
-#include <iostream>
-
+#include "image.h"
 
 ///@defgroup TIFF TIFF File format
 ///@ingroup ImageFormats
@@ -64,7 +53,8 @@ struct TIFFDirHead
 // write the content of a tile from a TIFF file to an image array
 //
 */
-void castTiffTile2T(
+template<typename T>
+void Image<T>::castTiffTile2T(
     T * ptrDest ,
     char* tif_buf,
     unsigned int x, unsigned int y,
@@ -96,7 +86,8 @@ void castTiffTile2T(
 // write the content of a line from a TIFF file to an image array
 //
 */
-void castTiffLine2T(
+template<typename T>
+void Image<T>::castTiffLine2T(
     T * ptrDest,
     char* tif_buf,
     unsigned int y,
@@ -159,7 +150,8 @@ DataType datatypeTIFF(TIFFDirHead dHead)
 /** TIFF Reader
   * @ingroup TIFF
 */
-int readTIFF(int img_select, bool isStack=false)
+template<typename T>
+int Image<T>::readTIFF(int img_select, bool isStack)
 {
 #undef DEBUG
     //#define DEBUG
@@ -394,7 +386,8 @@ int readTIFF(int img_select, bool isStack=false)
 /** TIFF Writer
   * @ingroup TIFF
 */
-int writeTIFF(int img_select, bool isStack=false, int mode=WRITE_OVERWRITE, int imParam=NULL)
+template<typename T>
+int Image<T>::writeTIFF(int img_select, bool isStack, int mode, int imParam)
 {
 
 #undef DEBUG
@@ -567,4 +560,3 @@ int writeTIFF(int img_select, bool isStack=false, int mode=WRITE_OVERWRITE, int 
 
 
 }
-#endif /* RWTIA_H_ */

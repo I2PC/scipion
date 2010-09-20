@@ -12,8 +12,7 @@
  Created: 19990424  Modified: 20011030
 */
 
-#ifndef RWIMAGIC_H_
-#define RWIMAGIC_H_
+#include "image.h"
 
 #define IMAGICSIZE 1024 // Size of the IMAGIC header for each image
 
@@ -92,7 +91,8 @@ struct IMAGIChead
 /** Imagic reader
   * @ingroup Imagic
 */
-int  readIMAGIC(int img_select)
+template<typename T>
+int  Image<T>::readIMAGIC(int img_select)
 {
 #define DEBUG
 #undef DEBUG
@@ -262,7 +262,8 @@ int  readIMAGIC(int img_select)
 /** Imagic Writer
   * @ingroup Imagic
 */
-int  writeIMAGIC(int img_select=-1, int mode=WRITE_OVERWRITE)
+template<typename T>
+int  Image<T>::writeIMAGIC(int img_select, int mode)
 {
     //    if ( p->transform != NoTransform )
     //        img_convert_fourier(p, Centered);
@@ -426,4 +427,3 @@ int  writeIMAGIC(int img_select=-1, int mode=WRITE_OVERWRITE)
     return(0);
 }
 
-#endif /* RWIMAGIC_H_ */

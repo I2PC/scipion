@@ -23,8 +23,7 @@
  *  e-mail address 'xmipp@cnb.csic.es'
  ***************************************************************************/
 
-#ifndef RWSPE_H_
-#define RWSPE_H_
+#include "image.h"
 
 ///@defgroup SPE Princeton Instruments CCD camera
 ///@ingroup ImageFormats
@@ -33,7 +32,8 @@
 /** SPE Reader
   * @ingroup SPE
 */
-int readSPE(int img_select,bool isStack=false)
+template<typename T>
+int Image<T>::readSPE(int img_select, bool isStack)
 {
 
     int _xDim,_yDim,_zDim;
@@ -105,9 +105,9 @@ int readSPE(int img_select,bool isStack=false)
 /** SPE Writer
   * @ingroup SPE
 */
-int writeSPE(int img_select, bool isStack=false, int mode=WRITE_OVERWRITE)
+template<typename T>
+int Image<T>::writeSPE(int img_select, bool isStack, int mode)
 {
     REPORT_ERROR(ERR_IMG_NOWRITE, "writeSPE is not implemented.");
     return(-1);
 }
-#endif /* RWSPE_H_ */

@@ -23,8 +23,7 @@
  *  e-mail address 'xmipp@cnb.csic.es'
  ***************************************************************************/
 
-#ifndef RWRAW_H_
-#define RWRAW_H_
+#include "image.h"
 
 ///@defgroup RAW RAW Data type
 ///@ingroup ImageFormats
@@ -80,7 +79,8 @@ DataType datatypeRAW(std::string strDT)
   * @ingroup RAW
 */
 
-int readRAW(int img_select,bool isStack=false)
+template<typename T>
+int Image<T>::readRAW(int img_select, bool isStack)
 {
 #undef DEBUG
     //#define DEBUG
@@ -183,5 +183,3 @@ int readRAW(int img_select,bool isStack=false)
     return(0);
 }
 
-
-#endif /* RWINF_H_ */

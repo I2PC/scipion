@@ -6,8 +6,7 @@
  Created: 19990410  Modified: 20010928
 */
 
-#ifndef RWSPIDER_H
-#define RWSPIDER_H
+#include "image.h"
 
 #define SPIDERSIZE 1024 // Minimum size of the SPIDER header (variable)
 ///@defgroup Spider Spider File format
@@ -109,7 +108,8 @@ struct SPIDERhead
 */
 #include "metadata_label.h"
 
-int  readSPIDER(int img_select,bool isStack=false)
+template<typename T>
+int  Image<T>::readSPIDER(int img_select, bool isStack)
 {
 #undef DEBUG
     //#define DEBUG
@@ -293,7 +293,8 @@ int  readSPIDER(int img_select,bool isStack=false)
 /** Spider Writer
   * @ingroup Spider
 */
-int  writeSPIDER(int select_img=-1, bool isStack=false, int mode=WRITE_OVERWRITE)
+template<typename T>
+int  Image<T>::writeSPIDER(int select_img, bool isStack, int mode)
 {
     //return(1);
 #undef DEBUG
@@ -545,5 +546,3 @@ int  writeSPIDER(int select_img=-1, bool isStack=false, int mode=WRITE_OVERWRITE
 
     return(0);
 }
-#endif
-
