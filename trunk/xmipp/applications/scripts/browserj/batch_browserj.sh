@@ -15,42 +15,34 @@ if [ ! -L "$JVM" ]
 then
 	echo "JVM is missing, so program can't be run. Check your XMIPP installation."
 else
-	# GETOPTS
-	ERROR=0
+	while [ $# -gt 0 ]
+	do
+		case "$1" in
+			-mem)MEM=$2; shift;;
+			-dir)WORKDIR="$2"; shift;;
+			--)shift; break;;
+			-*)
+			echo >&2 \
+				"Unknown parameter: $1"
+				exit 1;;
+			*)  break;;	# terminate while loop
+		esac
+		shift
+	done
 
-	if [ $# -gt 1 ]
+	if [ -z $MEM ]
 	then
-	    MEM=$1
-	    WORKDIR=$2
-	else
-		MEM=512m
-		ERROR=1
-		if [ $# -gt 0 ]
-		then
-		    WORKDIR=$1
-		else
-		    WORKDIR=`pwd`
-		    ERROR=`expr $ERROR + 1`
-		fi	    
+		MEM=512m	# Default memory value.
+		echo "No memory size provided. Using default: $MEM"
 	fi
 
-	if [ "$ERROR" != "0" ]
+	if [ -z $WORKDIR ]
 	then
-    		if [ "$ERROR" != "2" ]
-		then
-			echo "No memory size provided. Using default: $MEM"
-		fi
-		if [ "$ERROR" != "1" ]
-		then
-			echo "Not enough arguments."
-		fi
-		echo "Usage: xmipp_browserj <Memory size> <work_directory>. Example: xmipp_browserj 1024m $HOME"
+		WORKDIR=.	# Default working directory.
+		echo "No work directory provided. Using current: `pwd`"
 	fi
-	
-	if [ "$ERROR" != "2" ]
-	then
-		export LD_LIBRARY_PATH=$XMIPP_BASE/lib
-		IMAGEJ_HOME=$XMIPP_BASE/external/imagej
-		$JVM/bin/java -Xmx$MEM -Dplugins.dir=$IMAGEJ_HOME/plugins/ -jar $IMAGEJ_HOME/ij.jar -macro $IMAGEJ_HOME/macros/xmippBrowser.txt "$WORKDIR"
-	fi
+
+	export LD_LIBRARY_PATH=$XMIPP_BASE/lib
+	IMAGEJ_HOME=$XMIPP_BASE/external/imagej
+	$JVM/bin/java -Xmx$MEM -Dplugins.dir=$IMAGEJ_HOME/plugins/ -jar $IMAGEJ_HOME/ij.jar -macro $IMAGEJ_HOME/macros/xmippBrowser.txt "$WORKDIR"
 fi
