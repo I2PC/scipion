@@ -9,8 +9,6 @@ XMIPP_BASE="$SCRIPTPATH/../.."
 JAVA_HOME="$XMIPP_BASE/external/java"
 JVM="$SCRIPTPATH/jvm"
 
-echo $JVM
-
 # Which is our OS?
 case "$(uname -s)" in
 Darwin)
