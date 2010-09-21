@@ -32,6 +32,7 @@
 #include <data/morphology.h>
 #include <data/filters.h>
 #include <data/transformations.h>
+#include <data/program.h>
 
 
 #include <queue>
@@ -44,7 +45,7 @@
 
 /// Parameters for enhance contrast program
 /// @ingroup Denoise
-class EnhanceContrast_parameters: public Prog_parameters
+class ProgEnhanceContrast: public XmippMetadataProgram
 {
 public:
 	// Confidence level for background identification
@@ -58,28 +59,27 @@ public:
 
 	// Save mask
 	FileName fnMask;
-public:
-    /** Empty constructor
-     */
-    EnhanceContrast_parameters();
+
+protected:
+	/** Params definition */
+	void defineParams();
 
     /** Read parameters from command line
      */
-    void read(int argc, char** argv);
+    void readParams();
 
+    void processImage();
+
+public:
     /** Produce side info.
      *
      * The DWT type is translated and set
      */
-    void produce_side_info();
+    void produceSideInfo();
 
     /** Show parameters. This function calls show_specific.
      */
     void show();
-
-    /** Usage. This function calls usage_specific.
-     */
-    void usage();
 
     /** Enhance contrast of a volume.
      */

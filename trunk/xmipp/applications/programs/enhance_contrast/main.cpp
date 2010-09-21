@@ -26,15 +26,17 @@
 
 #include <reconstruction/enhance_contrast.h>
 
-bool process_vol(Image<double> &vol, const Prog_parameters *prm)
+/* MAIN -------------------------------------------------------------------- */
+int main(int argc, char *argv[])
 {
-    EnhanceContrast_parameters *eprm = (EnhanceContrast_parameters *) prm;
-    eprm->enhance(vol());
-    return true;
-}
-
-int main(int argc, char **argv)
-{
-    EnhanceContrast_parameters prm;
-    SF_main(argc, argv, &prm, (void*)&process_vol);
+    try
+    {
+        ProgEnhanceContrast program;
+        program.read(argc, argv);
+        program.run();
+    }
+    catch (XmippError xe)
+    {
+        std::cerr << xe;
+    }
 }
