@@ -781,11 +781,11 @@ public:
      * fn_root = fn_proj.get_root();
      * @endcode
      */
-    FileName get_root() const;
+    FileName getRoot() const;
 
     /** Get the base name from a filename
      */
-    std::string get_baseName() const;
+    std::string getBaseName() const;
 
     /** Get the number from a filename
      *
@@ -796,7 +796,7 @@ public:
      * int num = proj.get_number();
      * @endcode
      */
-    int get_number() const;
+    int getNumber() const;
 
     /** Get the last extension from filename
      *
@@ -820,13 +820,13 @@ public:
      * fn_proj = fn_proj.get_file_format(); // fn_proj == "raw"
      * @endcode
      */
-    FileName get_file_format() const;
+    FileName getFileFormat() const;
 
     /** Random name
      *
      * Generate a random name of the desired length.
      */
-    void init_random(int length);
+    void initRandom(int length);
     //@}
 
     ///@name Filename utilities
@@ -838,7 +838,7 @@ public:
      * fn_proj = fn_proj.to_lowercase(); // fn_proj = "g1ta00001"
      * @endcode
      */
-    FileName to_lowercase() const;
+    FileName toLowercase() const;
 
     /** Change all characters for uppercases
      *
@@ -847,7 +847,7 @@ public:
      * fn_proj = fn_proj.to_uppercase(); // fn_proj = "G1Ta00001"
      * @endcode
      */
-    FileName to_uppercase() const;
+    FileName toUppercase() const;
 
     /** Check whether the filename contains the argument substring
      *
@@ -865,7 +865,7 @@ public:
      * fn_proj = fn_proj.before_first_of("#"); // fn_proj = "g1ta00001.raw"
      * @endcode
      */
-    FileName before_first_of(const std::string& str) const;
+    FileName beforeFirstOf(const std::string& str) const;
 
     /** Return substring before last instance of argument (as in Bsoft)
      *
@@ -874,7 +874,7 @@ public:
      * fn_proj = fn_proj.before_last_of("#"); // fn_proj = "g1ta00001.raw"
      * @endcode
      */
-    FileName before_last_of(const std::string& str) const;
+    FileName beforeLastOf(const std::string& str) const;
 
     /** Return substring after first instance of argument (as in Bsoft)
      *
@@ -883,7 +883,7 @@ public:
      * fn_proj = fn_proj.after_first_of("#"); // fn_proj = "d=f"
      * @endcode
      */
-    FileName after_first_of(const std::string& str) const;
+    FileName afterFirstOf(const std::string& str) const;
 
     /** Return substring after last instance of argument (as in Bsoft)
      *
@@ -892,7 +892,7 @@ public:
      * fn_proj = fn_proj.after_last_of("#"); // fn_proj = "d=f"
      * @endcode
      */
-    FileName after_last_of(const std::string& str) const;
+    FileName afterLastOf(const std::string& str) const;
 
     /** Add string at the beginning
      *
@@ -906,7 +906,7 @@ public:
      * fn_proj.add_prefix("h"); // fn_proj == "hg1ta00001"
      * @endcode
      */
-    FileName add_prefix(const std::string& prefix) const;
+    FileName addPrefix(const std::string& prefix) const;
 
     /** Add extension at the end.
      *
@@ -918,7 +918,7 @@ public:
      * fn_proj.add_extension("xmp"); // fn_proj == "g1ta00001.xmp"
      * @endcode
      */
-    FileName add_extension(const std::string& ext) const;
+    FileName addExtension(const std::string& ext) const;
 
     /** Remove last extension, if any
      *
@@ -930,7 +930,7 @@ public:
      * fn_proj = fn_proj.without_extension(); // fn_proj == "g1ta00001"
      * @endcode
      */
-    FileName without_extension() const;
+    FileName withoutExtension() const;
 
     /** Remove the root
      *
@@ -942,7 +942,7 @@ public:
      * fn_proj = fn_proj.without_root(); // fn_proj == "00001"
      * @endcode
      */
-    FileName without_root() const;
+    FileName withoutRoot() const;
 
     /** Insert before first extension
      *
@@ -958,7 +958,7 @@ public:
      * // fn_proj=="g1ta00001pp"
      * @endcode
      */
-    FileName insert_before_extension(const std::string& str) const;
+    FileName insertBeforeExtension(const std::string& str) const;
 
     /** Remove a certain extension
      *
@@ -972,11 +972,11 @@ public:
      * // fn_proj == "g1ta00001.bak"
      * @endcode
      */
-    FileName remove_extension(const std::string& ext) const;
+    FileName removeExtension(const std::string& ext) const;
 
     /** Remove all extensions
      */
-    FileName remove_all_extensions() const;
+    FileName removeAllExtensions() const;
 
     /** Remove file format
      * @code
@@ -988,7 +988,7 @@ public:
      * fn_proj = fn_proj.get_file_format(); // fn_proj == "raw"
      * @endcode
      */
-    FileName remove_file_format() const;
+    FileName removeFileFormat() const;
 
     /** Is this file a MetaData file?
      * Returns true if the get_file_format extension == "sel", "doc" or "xmd"
@@ -1024,7 +1024,7 @@ public:
      * // fn_proj=="g1ta00001.xmp.bak"
      * @endcode
      */
-    FileName substitute_extension(const std::string& ext1,
+    FileName substituteExtension(const std::string& ext1,
                                   const std::string& ext2) const;
 
     /** Without a substring
@@ -1040,13 +1040,13 @@ public:
      * instance /usr/local/data/ctf-image00001.fft with ctf- yields
      * image00001.fft. If the prefix is not found nothing is done.
      */
-    FileName remove_until_prefix(const std::string& str) const;
+    FileName removeUntilPrefix(const std::string& str) const;
 
     /** Remove all directories
      *
      * Or if keep>0, then keep the lowest keep directories
      */
-    FileName remove_directories(int keep = 0) const;
+    FileName removeDirectories(int keep = 0) const;
     //@}
 };
 

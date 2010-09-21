@@ -386,7 +386,7 @@ CTFViewer::CTFViewer(QWidget *parent, const char *name,
     if (fn_ctfparam != "")
     {
         selectedFile->setText(fn_ctfparam.c_str());
-        fn_root = fn_ctfparam.without_extension();
+        fn_root = fn_ctfparam.withoutExtension();
         openFile();
     }
 }
@@ -429,7 +429,7 @@ void CTFViewer::selectFile()
     if (!fn_ctfparam.isEmpty())
     {
         selectedFile->setText(fn_ctfparam);
-        fn_root = (static_cast<FileName>(fn_ctfparam.ascii())).without_extension();
+        fn_root = (static_cast<FileName>(fn_ctfparam.ascii())).withoutExtension();
         openFile();
     }
 }

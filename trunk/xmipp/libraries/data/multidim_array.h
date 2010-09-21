@@ -798,8 +798,8 @@ public:
 
         if (mmapOn)
         {
-            mapFile.init_random(8);
-            mapFile = mapFile.add_extension("tmp");
+            mapFile.initRandom(8);
+            mapFile = mapFile.addExtension("tmp");
 
 
             if ( ( mFd = open(mapFile.c_str(),  O_RDWR | O_CREAT | O_TRUNC,S_IRUSR|S_IWUSR|S_IRGRP|S_IWGRP) ) == -1 )
@@ -841,8 +841,8 @@ public:
 
         if (mmapOn)
             {
-                mapFile.init_random(8);
-                mapFile = mapFile.add_extension("tmp");
+                mapFile.initRandom(8);
+                mapFile = mapFile.addExtension("tmp");
 
                 if ( ( mFd = open(mapFile.c_str(),  O_RDWR | O_CREAT | O_TRUNC,S_IRUSR|S_IWUSR|S_IRGRP|S_IWGRP) ) == -1 )
                     REPORT_ERROR(ERR_IO_NOTOPEN,"MultidimArray::coreAllocateReuse: Error creating map file.");
@@ -1038,8 +1038,8 @@ public:
         {
             if (mmapOn)
             {
-                newMapFile.init_random(8);
-                newMapFile = newMapFile.add_extension("tmp");
+                newMapFile.initRandom(8);
+                newMapFile = newMapFile.addExtension("tmp");
 
                 if ( ( new_mFd = open(newMapFile.c_str(),  O_RDWR | O_CREAT | O_TRUNC,S_IRUSR|S_IWUSR|S_IRGRP|S_IWGRP) ) == -1 )
                     REPORT_ERROR(ERR_IO_NOTOPEN,"MultidimArray::resize: Error creating map file.");
@@ -4347,7 +4347,7 @@ public:
         checkDimension(1);
 
         FileName fn_tmp;
-        fn_tmp.init_random(10);
+        fn_tmp.initRandom(10);
         MultidimArray<T>::write(static_cast<std::string>("PPP") +
                                 fn_tmp + ".txt");
 
@@ -4376,7 +4376,7 @@ public:
     void edit()
     {
         FileName nam;
-        nam.init_random(15);
+        nam.initRandom(15);
 
         nam = static_cast< std::string >("PPP" + nam + ".txt");
         write(nam);

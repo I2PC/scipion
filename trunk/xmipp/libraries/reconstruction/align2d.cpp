@@ -42,8 +42,8 @@ void Prog_align2d_prm::read(int argc, char **argv)
     fn_sel = getParameter(argc, argv, "-i");
     SF.read(fn_sel,NULL);
     // Filename for output reference
-    fn_ave = fn_sel.without_extension() + ".xmp";
-    fn_ave = fn_ave.insert_before_extension(".ref");
+    fn_ave = fn_sel.withoutExtension() + ".xmp";
+    fn_ave = fn_ave.insertBeforeExtension(".ref");
     // Reference image
     fn_ref = getParameter(argc, argv, "-ref", "");
     // Extension for output images (overwrite input if none)
@@ -519,8 +519,8 @@ void Prog_align2d_prm::do_pspc()
     // Write out inter-mediate reference
     Iref() = Mref;
     FileName fn_tmp;
-    fn_tmp = fn_sel.without_extension() + ".xmp";
-    fn_tmp = fn_tmp.insert_before_extension(".pspc");
+    fn_tmp = fn_sel.withoutExtension() + ".xmp";
+    fn_tmp = fn_tmp.insertBeforeExtension(".pspc");
     Iref.write(fn_tmp);
     Iref.write(fn_ave);
 }
@@ -694,9 +694,9 @@ void Prog_align2d_prm::calc_correlation(const MultidimArray<double> &Mref, const
     if (do_rot)
     {
         ccf /= n_images;
-        fn_tmp = fn_sel.without_extension() + ".corr";
+        fn_tmp = fn_sel.withoutExtension() + ".corr";
         if (oext != "")
-            fn_tmp = fn_tmp.insert_before_extension("_" + oext);
+            fn_tmp = fn_tmp.insertBeforeExtension("_" + oext);
         //Output rotation correlation file
         std::ofstream out(fn_tmp.c_str(), std::ios::out);
         out << "# Angle [deg]   Corr.Coeff." << std::endl;
@@ -772,7 +772,7 @@ void Prog_align2d_prm::align2d()
     {
         fn_img = images[imgno].name();
         if (oext != "")
-            fn_out = fn_img.without_extension() + "." + oext;
+            fn_out = fn_img.withoutExtension() + "." + oext;
         else
             fn_out = fn_img;
         if (do_filter)
@@ -793,7 +793,7 @@ void Prog_align2d_prm::align2d()
     }
     fn_out = fn_sel;
     if (oext != "")
-        fn_out = fn_out.insert_before_extension("_" + oext);
+        fn_out = fn_out.insertBeforeExtension("_" + oext);
     SFo.write(fn_out);
 
 
@@ -813,16 +813,16 @@ void Prog_align2d_prm::align2d()
         sig().resize(Iref().rowNumber(), Iref().colNumber());
         sig().initZeros();
     }
-    fn_img = fn_sel.without_extension() + ".xmp";
+    fn_img = fn_sel.withoutExtension() + ".xmp";
     if (oext != "")
-        fn_img = fn_img.insert_before_extension("_" + oext);
-    fn_img = fn_img.insert_before_extension(".med");
+        fn_img = fn_img.insertBeforeExtension("_" + oext);
+    fn_img = fn_img.insertBeforeExtension(".med");
     med.setWeight(SFo.countObjects(MDValueEQ(MDL_ENABLED, 1)));
     med.write(fn_img);
-    fn_img = fn_sel.without_extension() + ".xmp";
+    fn_img = fn_sel.withoutExtension() + ".xmp";
     if (oext != "")
-        fn_img = fn_img.insert_before_extension("_" + oext);
-    fn_img = fn_img.insert_before_extension(".sig");
+        fn_img = fn_img.insertBeforeExtension("_" + oext);
+    fn_img = fn_img.insertBeforeExtension(".sig");
     sig.write(fn_img);
 
     // Calculate correlation wrt average image for document file

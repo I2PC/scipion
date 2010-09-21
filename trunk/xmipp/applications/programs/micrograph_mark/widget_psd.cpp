@@ -36,7 +36,7 @@ void QtWidgetPSD::set_assign_CTF_file(Micrograph &m,
     // Read the input assign CTF file
     fn_assign_CTF = _fn_assign_CTF;
     assign_ctf_prm.read(fn_assign_CTF);
-    FileName fn_root = assign_ctf_prm.image_fn.remove_all_extensions();
+    FileName fn_root = assign_ctf_prm.image_fn.removeAllExtensions();
 
     // Check if the CTF is computed at each particle
     if (assign_ctf_prm.compute_at_particle)
@@ -48,7 +48,7 @@ void QtWidgetPSD::set_assign_CTF_file(Micrograph &m,
 
     // Generate a random selfile
     FileName fn_random;
-    fn_random.init_random(15);
+    fn_random.initRandom(15);
     fn_random = (std::string)"PPP" + fn_random + ".sel";
     files_to_remove.push_back(fn_random);
 

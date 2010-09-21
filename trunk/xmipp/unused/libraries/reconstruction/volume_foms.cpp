@@ -936,8 +936,8 @@ void compute_resolution(VolumeXmipp &vol_phantom,
         REPORT_ERROR(1, "Compute resol:: Cannot open file for Spider batch");
     spider_batch
     << "rf 3\n"
-    << vol_phantom.name().without_extension() << std::endl
-    << vol_recons .name().without_extension() << std::endl
+    << vol_phantom.name().withoutExtension() << std::endl
+    << vol_recons .name().withoutExtension() << std::endl
     << "1" << std::endl
     << "0.001 1000" << std::endl
     << "C" << std::endl

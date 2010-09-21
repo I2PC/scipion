@@ -142,7 +142,7 @@ FileName Prog_nma_alignment_prm::createDeformedPDB(int pyramidLevel) const
     std::string command;
     FileName fnRandom;
 
-    fnRandom.init_random(19);  
+    fnRandom.initRandom(19);  
     
     fnRandom=fnRandom+integerToString(rangen);  //the last character is the rank
     

@@ -454,7 +454,7 @@ void Prog_tomograph_alignment::read(int argc, char **argv)
     fnSelOrig=getParameter(argc,argv,"-iorig","");
     fnRoot=getParameter(argc,argv,"-oroot","");
     if (fnRoot=="")
-        fnRoot=fnSel.without_extension();
+        fnRoot=fnSel.withoutExtension();
     localAffine=checkParameter(argc,argv,"-localAffine");
     useCriticalPoints=checkParameter(argc,argv,"-useCriticalPoints");
     if (useCriticalPoints)

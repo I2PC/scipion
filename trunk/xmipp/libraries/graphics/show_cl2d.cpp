@@ -98,7 +98,7 @@ void ShowCL2D::readFile(const FileName &_fn_root,
         originalImages=new FileName[listSize];
         for (int i=0; i<listSize; i++)
         {
-            FileName fnCV=imgnames[i].without_extension();
+            FileName fnCV=imgnames[i].withoutExtension();
             originalImages[i]=imgnames[i];
             if (exists(fnCV+filterSuffix+".sel"))
             {
@@ -148,9 +148,9 @@ void ShowCL2D::initRightclickMenubar()
     options->insertItem("View assigned images",  this,  SLOT(showAssigned()));
     options->insertItem("Show this image separately", this, SLOT(showThisImage()));
     options->insertItem("Show this class separately", this, SLOT(showThisClass()));
-    if (exists(originalImages[0].without_extension()+"_pcabasis_00.xmp"))
+    if (exists(originalImages[0].withoutExtension()+"_pcabasis_00.xmp"))
     	options->insertItem("Show PCA basis for this class", this, SLOT(showThisPCA()));
-    if (exists(originalImages[0].without_extension()+"_outliers.sel"))
+    if (exists(originalImages[0].withoutExtension()+"_outliers.sel"))
     	options->insertItem("Show outliers for this class", this, SLOT(showThisOutliers()));
     options->insertSeparator();
 
@@ -257,7 +257,7 @@ void ShowCL2D::showThisClass()
     ShowSel *showsel = new ShowSel;
     showsel->apply_geo = apply_geo;
     showsel->showonlyactive = true;
-    FileName fnClassRoot=originalImages[i].without_extension();
+    FileName fnClassRoot=originalImages[i].withoutExtension();
     showsel->initWithFile(10, 10, fnClassRoot+filterSuffix+".sel");
     showsel->show();
 }
@@ -272,7 +272,7 @@ void ShowCL2D::showThisPCA()
     bool finish=false;
     while (!finish)
     {
-		FileName fnPCA=originalImages[i].without_extension()+"_pcabasis_"+integerToString(n,2)+".xmp";
+		FileName fnPCA=originalImages[i].withoutExtension()+"_pcabasis_"+integerToString(n,2)+".xmp";
         if (exists(fnPCA))
         {
 			ImageViewer *showimg = new ImageViewer(fnPCA.c_str(),false);
@@ -294,7 +294,7 @@ void ShowCL2D::showThisOutliers()
     ShowSel *showsel = new ShowSel;
     showsel->apply_geo = apply_geo;
     showsel->showonlyactive = true;
-    FileName fnClassRoot=originalImages[i].without_extension();
+    FileName fnClassRoot=originalImages[i].withoutExtension();
     showsel->initWithFile(10, 10, fnClassRoot+filterSuffix+"_outliers.sel");
     showsel->show();
 }

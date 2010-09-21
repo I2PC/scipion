@@ -88,7 +88,7 @@ void Micrograph::open_micrograph(const FileName &_fn_micrograph,
     else
 {
     */
-    fn_inf = fn_micrograph.add_extension("inf");
+    fn_inf = fn_micrograph.addExtension("inf");
     FILE *fh_inf = fopen(fn_inf.c_str(), "r");
     if (!fh_inf)
         REPORT_ERROR(ERR_IO_NOTOPEN, (std::string)"Micrograph::open_micrograph: Cannot find " +
@@ -581,12 +581,12 @@ void Micrograph::produce_all_images(int label, const FileName &fn_root,
         }
     if (labels[label] != "")
     {
-        SF.write(fn_micrograph.remove_directories() + "." + labels[label] + ".sel");
+        SF.write(fn_micrograph.removeDirectories() + "." + labels[label] + ".sel");
         write_coordinates(label, fn_micrograph + "." + labels[label] + ".pos");
     }
     else
     {
-        SF.write(fn_micrograph.remove_directories() + ".sel");
+        SF.write(fn_micrograph.removeDirectories() + ".sel");
         write_coordinates(label, fn_micrograph + ".pos");
     }
 

@@ -271,11 +271,11 @@ public:
         Image<double> V;
 
         V() = __X;
-        V.write(fn.insert_before_extension("_X"));
+        V.write(fn.insertBeforeExtension("_X"));
         V() = __Y;
-        V.write(fn.insert_before_extension("_Y"));
+        V.write(fn.insertBeforeExtension("_Y"));
         V() = __Z;
-        V.write(fn.insert_before_extension("_Z"));
+        V.write(fn.insertBeforeExtension("_Z"));
     }
     //@}
 

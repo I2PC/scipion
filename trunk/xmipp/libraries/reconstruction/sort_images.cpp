@@ -162,7 +162,7 @@ void Prog_sort_images_prm::run()
         {
             FileName fnOutOrig; SFoutOriginal.getValue(MDL_IMAGE,fnOutOrig);
             FileName fnOut; SFout.getValue(MDL_IMAGE,fnOut);
-            FileName fnSel=fnOutOrig.without_extension()+".sel";
+            FileName fnSel=fnOutOrig.withoutExtension()+".sel";
             MetaData SFaux;
             SFaux.read(fnSel);
             SFInfo.addObject();

@@ -139,7 +139,7 @@ int main(int argc, char **argv)
                 if (fn_oext == "")
                     fn_out = fn_in;
                 else
-                    fn_out = fn_in.without_extension() + "." + fn_oext;
+                    fn_out = fn_in.withoutExtension() + "." + fn_oext;
 
                 image.read(fn_in);
                 image().setXmippOrigin();
@@ -180,7 +180,7 @@ int main(int argc, char **argv)
             }
             progress_bar(SF.size());
 
-            SF_out.write((SF.getFilename()).insert_before_extension(fn_oext));
+            SF_out.write((SF.getFilename()).insertBeforeExtension(fn_oext));
         }
     }
     catch (XmippError XE)

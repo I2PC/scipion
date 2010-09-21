@@ -194,7 +194,7 @@ void AssignCTFViewer::okToProceed()
 {
     // Create adjust parameters file
     FileName fn_random;
-    fn_random.init_random(15);
+    fn_random.initRandom(15);
     fn_random = (std::string)"PPP" + fn_random + ".txt";
     std::ofstream fh_adjust_param;
     fh_adjust_param.open(fn_random.c_str());

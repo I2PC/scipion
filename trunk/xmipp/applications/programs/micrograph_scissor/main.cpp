@@ -120,8 +120,8 @@ int main(int argc, char **argv)
         else
         {
             // Read angles
-            FileName fn_ang = fn_micrograph.without_extension();
-            fn_ang = fn_ang.add_extension("ang");
+            FileName fn_ang = fn_micrograph.withoutExtension();
+            fn_ang = fn_ang.addExtension("ang");
             std::ifstream fh_ang;
             fh_ang.open(fn_ang.c_str());
             if (!fh_ang)
@@ -136,7 +136,7 @@ int main(int argc, char **argv)
             Micrograph m;
             m.open_micrograph(fn_micrograph, reverse_endian);
             m.set_window_size(Xdim, Ydim);
-            m.read_coordinates(0, fn_micrograph.add_extension("Common.pos"));
+            m.read_coordinates(0, fn_micrograph.addExtension("Common.pos"));
             m.add_label("");
             m.set_transmitance_flag(compute_transmitance);
             m.set_inverse_flag(compute_inverse);
@@ -147,7 +147,7 @@ int main(int argc, char **argv)
             Micrograph mt;
             mt.open_micrograph(fn_tilted, reverse_endian);
             mt.set_window_size(Xdim, Ydim);
-            mt.read_coordinates(0, fn_tilted.add_extension("Common.pos"));
+            mt.read_coordinates(0, fn_tilted.addExtension("Common.pos"));
             mt.add_label("");
             mt.set_transmitance_flag(compute_transmitance);
             mt.set_inverse_flag(compute_inverse);

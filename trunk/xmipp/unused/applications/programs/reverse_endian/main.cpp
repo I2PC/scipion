@@ -113,7 +113,7 @@ int main(int argc, char **argv)
                 fn_in = SF.NextImg();
                 if (fn_in=="") break;
                 if (fn_oext == "") fn_out = fn_in;
-                else             fn_out = fn_in.without_extension() + "." + fn_oext;
+                else             fn_out = fn_in.withoutExtension() + "." + fn_oext;
                 // Process an image ...............................................
                 if (Is_FourierImageXmipp(fn_in))
                 {

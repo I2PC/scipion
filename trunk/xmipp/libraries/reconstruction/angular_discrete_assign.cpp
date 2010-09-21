@@ -149,7 +149,7 @@ void Prog_angular_predict_prm::produce_side_info(int rank)
 
     // Read the angle file
     MetaData DF;
-    DF.read(fn_ref.without_extension()+"_angles.doc");
+    DF.read(fn_ref.withoutExtension()+"_angles.doc");
     DF.firstObject();
     rot.resize(DF.size());
     tilt.resize(DF.size());

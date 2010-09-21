@@ -506,8 +506,8 @@ void QtMainWidgetMark::write_angles()
     draw_axes();
 
     FileName fn = __mWidget->getMicrograph()->micrograph_name();
-    fn = fn.without_extension();
-    fn = fn.add_extension("ang");
+    fn = fn.withoutExtension();
+    fn = fn.addExtension("ang");
     MetaData MD;
     MD.setColumnFormat(false);
     MD.addObject();

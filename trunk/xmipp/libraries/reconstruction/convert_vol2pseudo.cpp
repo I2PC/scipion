@@ -131,7 +131,7 @@ void Prog_Convert_Vol2Pseudo::produceSideInfo()
     Vin().setXmippOrigin();
     
     if (fnOut=="")
-        fnOut=fnVol.without_extension();
+        fnOut=fnVol.withoutExtension();
     
     Vcurrent().initZeros(Vin());
     mask_prm.generate_mask(Vin());

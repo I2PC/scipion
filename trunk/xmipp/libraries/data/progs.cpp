@@ -176,21 +176,21 @@ void SF_main(int argc, char **argv,
                         prm->fn_out = fn_read;
                     else if (prm->oroot != "")
                     {
-                        prm->fn_out = prm->oroot + fn_read.without_root();
+                        prm->fn_out = prm->oroot + fn_read.withoutRoot();
                         if (operation_mode == IMAGE2FOURIER)
                             if (fn_read.get_extension() == "xmp")
-                                prm->fn_out = prm->fn_out.without_extension() + ".fft";
+                                prm->fn_out = prm->fn_out.withoutExtension() + ".fft";
                             else
-                                prm->fn_out = prm->fn_out.without_extension() + ".fft3";
+                                prm->fn_out = prm->fn_out.withoutExtension() + ".fft3";
                         if (operation_mode == FOURIER2IMAGE)
                             if (fn_read.get_extension() == "fft")
-                                prm->fn_out = prm->fn_out.without_extension() + ".xmp";
+                                prm->fn_out = prm->fn_out.withoutExtension() + ".xmp";
                             else
-                                prm->fn_out = prm->fn_out.without_extension() + ".vol";
+                                prm->fn_out = prm->fn_out.withoutExtension() + ".vol";
                     }
                     else
                     {
-                        prm->fn_out = fn_read.without_extension() + "." + prm->oext;
+                        prm->fn_out = fn_read.withoutExtension() + "." + prm->oext;
                     }
 
                 if (img.isRealImage(fn_read))
@@ -280,7 +280,7 @@ void SF_main(int argc, char **argv,
             if (prm->each_image_produces_an_output)
                 if (prm->oext != "")
                 {
-                    prm->fn_out = prm->fn_in.insert_before_extension(prm->oext);
+                    prm->fn_out = prm->fn_in.insertBeforeExtension(prm->oext);
                     SF_out.write(prm->fn_out);
                 }
         }

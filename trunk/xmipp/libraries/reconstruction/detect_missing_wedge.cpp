@@ -304,7 +304,7 @@ void DetectMissingWedge_parameters::usage() const
 // Run ---------------------------------------------------------------------
 void DetectMissingWedge_parameters::run()
 {
-    FileName fn_root=V->name().without_extension();
+    FileName fn_root=V->name().withoutExtension();
 
     // Detect one of the planes
     lookForPlane(&(*V)(), Vmag, maxFreq, planeWidth, 1, rotPos, tiltPos);

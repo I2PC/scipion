@@ -2170,7 +2170,7 @@ double ROUT_Adjust_CTF(Adjust_CTF_Parameters &prm, CTFDescription &output_ctfmod
     /************************************************************************/
     if (prm.fn_psd!="")
     {
-        FileName fn_root = prm.fn_psd.without_extension();
+        FileName fn_root = prm.fn_psd.withoutExtension();
         global_action = 6;
         save_intermediate_results(fn_root, false);
         global_ctfmodel.write(fn_root + ".ctfparam");

@@ -2,7 +2,7 @@
  *
  * Authors:
  *
- * Javier Rodríguez Falces (jrodriguez@cnb.csic.es)
+ * Javier Rodrï¿½guez Falces (jrodriguez@cnb.csic.es)
  * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
  *
  * This program is free software; you can redistribute it and/or modify
@@ -60,7 +60,7 @@ void Prog_create_surface::read(int argc, char **argv)
     fn_in = getParameter(argc, argv, "-i");
     fn_out = getParameter(argc, argv, "-o", "");
     option = getParameter(argc, argv, "-f", ""); // 1:parabole, 2:cosine
-    if (fn_out == "") fn_out = fn_in.without_extension() + ".out";
+    if (fn_out == "") fn_out = fn_in.withoutExtension() + ".out";
 }
 
 void Prog_create_surface::read_input_file()

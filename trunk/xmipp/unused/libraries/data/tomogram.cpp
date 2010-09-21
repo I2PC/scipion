@@ -88,7 +88,7 @@ void Tomogram::open_tomogram(const FileName &_fn_tomogram,
     }
     else
     {
-        fn_inf = fn_tomogram.add_extension("inf");
+        fn_inf = fn_tomogram.addExtension("inf");
         FILE *fh_inf = fopen(fn_inf.c_str(), "r");
         if (!fh_inf)
             REPORT_ERROR(1, (std::string)"Tomogram::open_tomogram: Cannot find " +

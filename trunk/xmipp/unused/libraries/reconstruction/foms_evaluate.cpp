@@ -217,7 +217,7 @@ void EVALUATE_Side_Info::produce_Side_Info(
     else                            back_param = prm.back_factor;
 
     // Read reconstruction ..................................................
-    fn_root = prm.fn_recons.without_extension();
+    fn_root = prm.fn_recons.withoutExtension();
     vol_recons.read(prm.fn_recons);
     vol_recons.moveOriginTo_center();
 
@@ -678,7 +678,7 @@ void ROUT_Evaluate(Prog_Evaluate_Parameters &prm,
             if (prm.fnPhantom == "")
             {
                 mathematical_phantom = true;
-                prm.fnPhantom = prm.fn_recons.without_extension();
+                prm.fnPhantom = prm.fn_recons.withoutExtension();
                 prm.fnPhantom = prm.fnPhantom.without("_wos");
                 int i = prm.fnPhantom.find("_idr");
                 if (i != -1) prm.fnPhantom = prm.fnPhantom.replace(i, 6, "");

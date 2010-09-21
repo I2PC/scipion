@@ -60,12 +60,12 @@ void JDLFile::write()
 
     // Get a random filename for the data tar
     FileName fn_tmpdir;
-    fn_tmpdir.init_random(4);
+    fn_tmpdir.initRandom(4);
     FileName fn_data_in;
-    fn_data_in.init_random(4);
+    fn_data_in.initRandom(4);
     fn_data_in = (std::string)"xmipp" + job_root + "in" + fn_data_in;
     FileName fn_data_out;
-    fn_data_out.init_random(4);
+    fn_data_out.initRandom(4);
     fn_data_out = (std::string)"xmipp" + job_root + "out" + fn_data_out;
 
     // Write the local script ...............................................

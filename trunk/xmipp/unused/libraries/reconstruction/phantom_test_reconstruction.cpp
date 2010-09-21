@@ -727,14 +727,14 @@ void single_recons_test(const Recons_test_Parameters &prm,
             prm_surface.enable_ztop = true;
             prm_surface.ztop = rnd_unif(prm.top0, prm.topF);
             prm_surface.fn_top = fn_recons_root + "_top_surface";
-            prm_surface.fn_top.add_extension(fn_ext);
+            prm_surface.fn_top.addExtension(fn_ext);
         }
         if (prm.enable_bottom_surface)
         {
             prm_surface.enable_zbottom = true;
             prm_surface.zbottom = rnd_unif(prm.bottom0, prm.bottomF);
             prm_surface.fn_bottom = fn_recons_root + "_bottom_surface";
-            prm_surface.fn_bottom.add_extension(fn_ext);
+            prm_surface.fn_bottom.addExtension(fn_ext);
         }
         prm_surface.fn_mask = fn_mask = fn_recons_root + "_mask.vol";
         ROUT_surface(prm_surface);
@@ -888,7 +888,7 @@ void single_recons_test(const Recons_test_Parameters &prm,
 	    // COSS: This should be further tested since idr rewrites
 	    //       the input images
 
-            fn_recons_root = vol_recons.name().without_extension();
+            fn_recons_root = vol_recons.name().withoutExtension();
         }
     }
     else if (prm.recons_method == use_WBP)

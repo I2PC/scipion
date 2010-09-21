@@ -210,7 +210,7 @@ void Prog_tomo_extract_subvolume_prm::processImages(int imgno_start, int imgno_e
             vol().translate(-center, volout(), DONT_WRAP);
             //4. Window operation and write subvolume to disc
             volout().window(x0,x0,x0,xF,xF,xF);
-            fn_out=fn_img.without_extension();
+            fn_out=fn_img.withoutExtension();
             fn_out+="_sub";
             fn_out.compose(fn_out,i+1,"vol");
             volout.write(fn_out);

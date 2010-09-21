@@ -138,8 +138,8 @@ void rename_for_Spider(MetaData &SF_in, MetaData &SF_out, const FileName &fn_roo
     	SF_in.getValue( MDL_IMAGE, fn_in);
         if (fn_in=="") break;
         fn_out = fn_root + integerToString(counter, 5);
-        if (out_ext == "") fn_out = fn_out.add_extension(fn_in.get_extension());
-        else             fn_out = fn_out.add_extension(out_ext);
+        if (out_ext == "") fn_out = fn_out.addExtension(fn_in.get_extension());
+        else             fn_out = fn_out.addExtension(out_ext);
         SF_out.addObject();
         SF_out.setValue( MDL_IMAGE, fn_out);
         SF_out.setValue( MDL_ENABLED, 1);

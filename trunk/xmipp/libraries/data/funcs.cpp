@@ -776,7 +776,7 @@ void FileName::decompose(int &no, std::string &str) const
 }
 
 // Get the root name of a filename .........................................
-FileName FileName::get_root() const
+FileName FileName::getRoot() const
 {
     int skip_directories = find_last_of("/") + 1;
     int point = find_first_of(".", skip_directories);
@@ -790,7 +790,7 @@ FileName FileName::get_root() const
 }
 
 // Convert to lower case characters .........................................
-FileName FileName::to_lowercase() const
+FileName FileName::toLowercase() const
 {
     FileName result = *this;
     for(unsigned int i=0;i<result.length();i++)
@@ -799,7 +799,7 @@ FileName FileName::to_lowercase() const
 }
 
 // Convert to upper case characters .........................................
-FileName FileName::to_uppercase() const
+FileName FileName::toUppercase() const
 {
     FileName result = *this;
     for(unsigned int i=0;i<result.length();i++)
@@ -818,7 +818,7 @@ bool FileName::contains(const std::string& str) const
 }
 
 // Get substring before first instance of str
-FileName FileName::before_first_of(const std::string& str) const
+FileName FileName::beforeFirstOf(const std::string& str) const
 {
     int point = find_first_of(str);
     if (point > -1)
@@ -828,7 +828,7 @@ FileName FileName::before_first_of(const std::string& str) const
 }
 
 // Get substring before last instance of str
-FileName FileName::before_last_of(const std::string& str) const
+FileName FileName::beforeLastOf(const std::string& str) const
 {
     int point = find_last_of(str);
     if (point > -1)
@@ -838,7 +838,7 @@ FileName FileName::before_last_of(const std::string& str) const
 }
 
 // Get substring after first instance of str
-FileName FileName::after_first_of(const std::string& str) const
+FileName FileName::afterFirstOf(const std::string& str) const
 {
     int point = find_first_of(str);
     if (point > -1)
@@ -848,7 +848,7 @@ FileName FileName::after_first_of(const std::string& str) const
 }
 
 // Get substring after last instance of str
-FileName FileName::after_last_of(const std::string& str) const
+FileName FileName::afterLastOf(const std::string& str) const
 {
     int point = find_last_of(str);
     if (point > -1)
@@ -858,7 +858,7 @@ FileName FileName::after_last_of(const std::string& str) const
 }
 
 // Get the base name of a filename .........................................
-std::string FileName::get_baseName() const
+std::string FileName::getBaseName() const
 {
     std::string basename = "";
     std::string myname = *this;
@@ -882,7 +882,7 @@ std::string FileName::get_baseName() const
 }
 
 // Get number from file ....................................................
-int FileName::get_number() const
+int FileName::getNumber() const
 {
     int skip_directories = find_last_of("/") + 1;
     int point = find_first_of(".", skip_directories);
@@ -912,7 +912,7 @@ std::string FileName::get_extension() const
 }
 
 // Init random .............................................................
-void FileName::init_random(int length)
+void FileName::initRandom(int length)
 {
     randomize_random_generator();
     *this = "";
@@ -921,7 +921,7 @@ void FileName::init_random(int length)
 }
 
 // Add at beginning ........................................................
-FileName FileName::add_prefix(const std::string &prefix) const
+FileName FileName::addPrefix(const std::string &prefix) const
 {
     FileName retval = *this;
     int skip_directories = find_last_of("/") + 1;
@@ -929,7 +929,7 @@ FileName FileName::add_prefix(const std::string &prefix) const
 }
 
 // Add at the end ..........................................................
-FileName FileName::add_extension(const std::string &ext) const
+FileName FileName::addExtension(const std::string &ext) const
 {
     if (ext == "")
         return *this;
@@ -942,20 +942,20 @@ FileName FileName::add_extension(const std::string &ext) const
 }
 
 // Remove last extension ...................................................
-FileName FileName::without_extension() const
+FileName FileName::withoutExtension() const
 {
     FileName retval = *this;
     return retval.substr(0, rfind("."));
 }
 
 // Remove root .............................................................
-FileName FileName::without_root() const
+FileName FileName::withoutRoot() const
 {
-    return without(get_root());
+    return without(getRoot());
 }
 
 // Insert before extension .................................................
-FileName FileName::insert_before_extension(const std::string &str) const
+FileName FileName::insertBeforeExtension(const std::string &str) const
 {
     int point = -1;
     bool done = false;
@@ -980,7 +980,7 @@ FileName FileName::insert_before_extension(const std::string &str) const
 }
 
 // Remove an extension wherever it is ......................................
-FileName FileName::remove_extension(const std::string &ext) const
+FileName FileName::removeExtension(const std::string &ext) const
 {
     int first = find((std::string)"." + ext);
     if (first == -1)
@@ -993,7 +993,7 @@ FileName FileName::remove_extension(const std::string &ext) const
 }
 
 // Remove all extensions....................................................
-FileName FileName::remove_all_extensions() const
+FileName FileName::removeAllExtensions() const
 {
     int first = rfind("/");
     first = find(".", first + 1);
@@ -1003,7 +1003,7 @@ FileName FileName::remove_all_extensions() const
         return substr(0, first);
 }
 
-FileName FileName::get_file_format() const
+FileName FileName::getFileFormat() const
 {
     int first;
     FileName result;
@@ -1015,11 +1015,11 @@ FileName FileName::get_file_format() const
         result = substr(first + 1);
     else
         result="spi";
-    return result.to_lowercase();
+    return result.toLowercase();
 
 }
 
-FileName FileName::remove_file_format() const
+FileName FileName::removeFileFormat() const
 {
     if ( find("#", 0) > -1 )
         REPORT_ERROR(ERR_IO,"Not implemented for raw data");
@@ -1041,7 +1041,7 @@ bool FileName::isMetaData(bool failIfNotExists) const
     found=this->find('#');
     if (found!=std::string::npos)
         return false;
-    FileName ext = get_file_format();
+    FileName ext = getFileFormat();
     //
     if (ext=="sel" || ext=="xmd" || ext=="doc")
     {
@@ -1072,7 +1072,7 @@ bool FileName::isMetaData(bool failIfNotExists) const
 }
 
 // Substitute one extension by other .......................................
-FileName FileName::substitute_extension(const std::string &ext1,
+FileName FileName::substituteExtension(const std::string &ext1,
                                         const std::string &ext2) const
 {
     int first = find((std::string)"." + ext1);
@@ -1101,7 +1101,7 @@ FileName FileName::without(const std::string &str) const
 }
 
 // Remove until prefix .....................................................
-FileName FileName::remove_until_prefix(const std::string &str) const
+FileName FileName::removeUntilPrefix(const std::string &str) const
 {
     if (str.length() == 0)
         return *this;
@@ -1116,7 +1116,7 @@ FileName FileName::remove_until_prefix(const std::string &str) const
 }
 
 // Remove directories ......................................................
-FileName FileName::remove_directories(int keep) const
+FileName FileName::removeDirectories(int keep) const
 {
     int last_slash = rfind("/");
     int tokeep = keep;

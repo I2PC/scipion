@@ -1110,7 +1110,7 @@ public:
     void showWithGnuPlot(const std::string& xlabel, const std::string& title)
     {
     	FileName fn_tmp;
-        fn_tmp.init_random(10);
+        fn_tmp.initRandom(10);
         Matrix1D<T>::write(static_cast<std::string>("PPP") +
             fn_tmp + ".txt");
 
@@ -1232,7 +1232,7 @@ public:
     void edit()
     {
         FileName nam;
-        nam.init_random(15);
+        nam.initRandom(15);
 
         nam = static_cast< std::string >("PPP" + nam + ".txt");
         write(nam);

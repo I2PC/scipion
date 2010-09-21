@@ -29,6 +29,32 @@
 
 void Usage();
 
+//class progConvImg: public XmippMetadataProgram
+//{
+//public:
+//
+//    FileName fn_stack,  fn_vol;
+//
+//
+//protected:
+//    void defineParams()
+//    {
+//
+//    }
+//
+//
+//    void readParams();
+//
+//public:
+//
+//   void run();
+//
+//
+//};
+
+
+
+
 int main(int argc, char **argv)
 {
     FileName fn_stack, fn_root, fn_vol, fn_in, fn_img;
@@ -68,7 +94,7 @@ int main(int argc, char **argv)
             SF.read(fn_in);
             if (fn_stack!="")
             {
-                FileName fn_stack_plain=fn_stack.remove_file_format();
+                FileName fn_stack_plain=fn_stack.removeFileFormat();
                 if (exists(fn_stack_plain))
                     unlink(fn_stack_plain.c_str());
                 FOR_ALL_OBJECTS_IN_METADATA(SF)
@@ -100,8 +126,8 @@ int main(int argc, char **argv)
             }
             else if (fn_root!="")
             {
-                std::string extension=fn_root.get_file_format();
-                fn_root=fn_root.remove_file_format();
+                std::string extension=fn_root.getFileFormat();
+                fn_root=fn_root.removeFileFormat();
                 int k=0;
                 MetaData SFout;
                 FOR_ALL_OBJECTS_IN_METADATA(SF)
@@ -127,7 +153,7 @@ int main(int argc, char **argv)
                 // It's a stack with more than 1 slice
                 if (fn_stack!="")
                 {
-                    FileName fn_stack_plain=fn_stack.remove_file_format();
+                    FileName fn_stack_plain=fn_stack.removeFileFormat();
                     if (exists(fn_stack_plain))
                         unlink(fn_stack_plain.c_str());
                     int nmax=NSIZE(in());
@@ -146,8 +172,8 @@ int main(int argc, char **argv)
                 }
                 else if (fn_root!="")
                 {
-                    std::string extension=fn_root.get_file_format();
-                    fn_root=fn_root.remove_file_format();
+                    std::string extension=fn_root.getFileFormat();
+                    fn_root=fn_root.removeFileFormat();
                     MetaData SFout;
                     int nmax=NSIZE(in());
                     for (int n=0; n<nmax; n++)
@@ -182,8 +208,8 @@ int main(int argc, char **argv)
                     in.write(fn_vol);
                 else if (fn_root!="")
                 {
-                    std::string extension=fn_root.get_file_format();
-                    fn_root=fn_root.remove_file_format();
+                    std::string extension=fn_root.getFileFormat();
+                    fn_root=fn_root.removeFileFormat();
                     MetaData SFout;
                     for (int k=0; k<ZSIZE(in()); k++)
                     {

@@ -115,7 +115,7 @@ void Basic_ART_Parameters::default_values()
     unmatched          =      CHECK_PARAM(       "unmatched"            );  \
     if (CHECK_PARAM("o")) \
         fn_root        =      GET_PARAM(         "o"                    );  \
-    else fn_root       =      fn_sel.without_extension();                   \
+    else fn_root       =      fn_sel.withoutExtension();                   \
     fn_start           =      GET_PARAM_WITH_DEF("start",     ""        );  \
     if      (CHECK_PARAM("pSART"))  parallel_mode=pSART;\
     else if (CHECK_PARAM("pSIRT"))  parallel_mode=pSIRT; \

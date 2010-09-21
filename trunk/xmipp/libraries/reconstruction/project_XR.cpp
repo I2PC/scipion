@@ -454,6 +454,7 @@ void project_xr_Volume_offCentered(PROJECT_XR_Side_Info &side, XRayPSF &psf, Pro
 
     psf.adjustParam(side.rotPhantomVol);
 
+
     //the really really final project routine, I swear by Snoopy.
 //    project_xr(psf,side.rotPhantomVol,P, idxSlice);
     thMgr->run(thread_project_xr);
@@ -491,7 +492,7 @@ void project_xr(XRayPSF &psf, Image<double> &vol, Image<double> &imOut, int idxS
     longint blockSize, numberOfJobs= vol().zdim;
     numberOfThreads = psf.nThr;
 
-    blockSize = (numberOfThreads == 1) ? numberOfJobs : numberOfJobs/numberOfThreads/6;
+    blockSize = (numberOfThreads == 1) ? numberOfJobs : numberOfJobs/numberOfThreads;
 
     //Create the job handler to distribute jobs
     td = new ThreadTaskDistributor(numberOfJobs, blockSize);
@@ -565,10 +566,10 @@ void thread_project_xr(ThreadArgument &thArg)
     {
         std::cerr << "th" << thread_id << ": working from " << first << " to " << last <<std::endl;
 
-
-        if (numberOfThreads == 1)
-            first = last -50;
-        if (first>50)
+//
+//        if (numberOfThreads == 1)
+//            first = last -50;
+//        if (first>50)
         {
             for (int k=(vol()).zinit + priorLast + 1; k<=(vol()).zinit + first - 1 ; k++)
             {

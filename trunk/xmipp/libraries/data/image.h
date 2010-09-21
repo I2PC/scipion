@@ -365,7 +365,7 @@ public:
         // Check whether to map the data or not
         mmapOn = mapData;
 
-        FileName ext_name = name.get_file_format();
+        FileName ext_name = name.getFileFormat();
         size_t found;
         filename = name;
         found = filename.find_first_of("@");
@@ -383,11 +383,11 @@ public:
             filename = filename.substr(0, found) ;
         }
 
-        filename = filename.remove_file_format();
+        filename = filename.removeFileFormat();
 
         if(ext_name.contains("inf"))
-            filename = filename.without_extension();
-        else if (ext_name.contains("raw") && exists(filename.add_extension("inf")))
+            filename = filename.withoutExtension();
+        else if (ext_name.contains("raw") && exists(filename.addExtension("inf")))
             ext_name = "inf";
 
 
@@ -523,7 +523,7 @@ public:
         if (name == "")
             name = filename;
 
-        FileName ext_name = name.get_file_format();
+        FileName ext_name = name.getFileFormat();
         size_t found;
         filename = name;
         found=filename.find_first_of("@");
@@ -546,7 +546,7 @@ public:
             filename   = filename.substr(0, found);
 
         if(ext_name.contains("inf"))
-            filename = filename.without_extension();
+            filename = filename.withoutExtension();
 
         //#define DEBUG
 #ifdef DEBUG

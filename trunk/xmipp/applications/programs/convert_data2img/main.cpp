@@ -56,7 +56,7 @@ int main(int argc, char **argv)
     {
 
         fname = getParameter(argc, argv, "-i");
-        basename = fname.get_baseName();
+        basename = fname.getBaseName();
         selname = basename + (std::string) ".sel";
         selname = getParameter(argc, argv, "-o", selname.c_str());
         imgName = getParameter(argc, argv, "-imgName", basename.c_str());

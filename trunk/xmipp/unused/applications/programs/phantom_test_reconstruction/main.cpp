@@ -66,7 +66,7 @@ int main(int argc, char *argv[])
 // Make tests ..............................................................
     try
     {
-        fn_root = fn_test_params.without_extension();
+        fn_root = fn_test_params.withoutExtension();
         randomize_random_generator();
         if (only_training) test_training(recons_prm, nvol, fn_root + ".hist", training_FOM);
         else               test_all_FOMs(recons_prm, nvol, fn_root + ".hist");

@@ -54,7 +54,7 @@ int main(int argc, char **argv)
     {
         SelFile  SFin, SFout;
         SFin.read(fn_in);
-        if (fn_root == "") fn_root = fn_in.without_extension();
+        if (fn_root == "") fn_root = fn_in.withoutExtension();
         if (subsetSize == 0) subsetSize=SFin.ImgNo();
         
         for (int i=0; i<Nsubsets; i++)

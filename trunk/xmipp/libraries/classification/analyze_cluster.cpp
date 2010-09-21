@@ -140,9 +140,9 @@ void Prog_analyze_cluster_prm::produceSideInfo()
                 Iaux.write();
             else
             {
-                FileName fnRoot=auxFn.without_extension();
+                FileName fnRoot=auxFn.withoutExtension();
                 if (fnOdir!="")
-                   fnRoot=fnOdir+"/"+Iaux.name().get_baseName();
+                   fnRoot=fnOdir+"/"+Iaux.name().getBaseName();
                 
                 fnRoot = fnRoot + "." + oext;
                 
@@ -180,9 +180,9 @@ void Prog_analyze_cluster_prm::run()
     pcaAnalyzer.evaluateZScore(NPCA, Niter);
 
     // Output
-    FileName fnRoot=fnSel.without_extension();
+    FileName fnRoot=fnSel.withoutExtension();
     if (fnOdir!="")
-        fnRoot=fnOdir+"/"+fnSel.get_baseName();
+        fnRoot=fnOdir+"/"+fnSel.getBaseName();
     
     MetaData SFout_good, SFout_bad;
     MultidimArray<double> IalignedAvg;

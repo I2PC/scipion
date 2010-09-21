@@ -55,7 +55,7 @@ void Prog_MLPalign2D_prm::read(int argc, char **argv, bool ML3D)
             if (!ML3D)
             {
                 fn_sel = DFi.name();
-                fn_sel = fn_sel.without_extension() + "_restart.sel";
+                fn_sel = fn_sel.withoutExtension() + "_restart.sel";
                 comment += " -ref " + fn_sel;
             }
             comment += (DFi.get_current_line()).get_text();
@@ -76,7 +76,7 @@ void Prog_MLPalign2D_prm::read(int argc, char **argv, bool ML3D)
                     DFi.adjust_to_data_line();
                 }
                 fn_sel = DFi.name();
-                fn_sel = fn_sel.without_extension() + "_restart.sel";
+                fn_sel = fn_sel.withoutExtension() + "_restart.sel";
                 SFr.write(fn_sel);
                 SFr.clear();
             }

@@ -362,7 +362,7 @@ void ImageViewer::doOption(int item)
     }
     else if (item == editctfmodel)
     {
-        FileName fn_param = ((FileName)filename).without_extension() + ".ctfparam";
+        FileName fn_param = ((FileName)filename).withoutExtension() + ".ctfparam";
         std::string command = (std::string)"xmipp_edit -i " + fn_param + " &";
         std::cout << command << std::endl;
         system(command.c_str());
@@ -1296,14 +1296,14 @@ void ImageViewer::recomputeCTFmodel()
     if (assign_ctf_prm.selfile_mode)
     {
         FileName fn_root;
-        fn_root = assign_ctf_prm.selfile_fn.remove_all_extensions();
+        fn_root = assign_ctf_prm.selfile_fn.removeAllExtensions();
         if (assign_ctf_prm.PSD_mode == Prog_assign_CTF_prm::ARMA)
             fn_psd = fn_root + "_ARMAavg.psd";
         else fn_psd = fn_root + "_Periodogramavg.psd";
     }
     else
     {
-        fn_psd = ((FileName) filename).remove_all_extensions() + ".psd";
+        fn_psd = ((FileName) filename).removeAllExtensions() + ".psd";
     }
 
     // Show this image in a separate window to select the main parameters

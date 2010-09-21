@@ -94,7 +94,7 @@ void Prog_align_dual::readDual()
 void Prog_align_dual::produceSideInfo()
 {
     if (fnOut=="")
-        fnOut=fnDual.without_extension();
+        fnOut=fnDual.withoutExtension();
 
     std::cout << "Reading data...\n";
     SFRef.read(fnRef);
@@ -434,7 +434,7 @@ void Prog_align_dual::alignDual()
         SFout.setValue(MDL_IMAGE,fn);
         n++;
     }
-    SFout.write(fnOut.remove_directories()+"_aligned.sel");
+    SFout.write(fnOut.removeDirectories()+"_aligned.sel");
 }
 
 /// Run

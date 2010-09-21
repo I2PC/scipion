@@ -295,7 +295,7 @@ void Prog_SSNR_prm::Estimate_SSNR(int dim, Matrix2D<double> &output)
 #endif
 
             // Save image
-            FileName fn_img_out = fn_out_images + integerToString(Is.name().get_number(), 5) + ".xmp";
+            FileName fn_img_out = fn_out_images + integerToString(Is.name().getNumber(), 5) + ".xmp";
             SSNR2D.setEulerAngles(Is.rot(),Is.tilt(),Is.psi());
             SSNR2D.write(fn_img_out);
             SF_individual.addObject();
@@ -461,8 +461,8 @@ void ROUT_SSNR(Prog_SSNR_prm &prm, Matrix2D<double> &output)
             output.write(prm.fn_out);
         else
         {
-            FileName fn_out = prm.fn_S.insert_before_extension("_SSNR");
-            fn_out.substitute_extension("vol", "txt");
+            FileName fn_out = prm.fn_S.insertBeforeExtension("_SSNR");
+            fn_out.substituteExtension("vol", "txt");
             output.write(fn_out);
         }
     }
@@ -472,6 +472,6 @@ void ROUT_SSNR(Prog_SSNR_prm &prm, Matrix2D<double> &output)
         if (prm.fn_out != "")
             output.write(prm.fn_out);
         else
-            output.write(prm.fn_VSSNR.insert_before_extension("_radial_avg"));
+            output.write(prm.fn_VSSNR.insertBeforeExtension("_radial_avg"));
     }
 }

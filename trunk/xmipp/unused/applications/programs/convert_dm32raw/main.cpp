@@ -123,7 +123,7 @@ int main(int argc, char *argv[])
             if (fn_out!="")
                 out_name = fn_out;
             else
-                out_name = in_name.without_extension()+"."+fn_oext;
+                out_name = in_name.withoutExtension()+"."+fn_oext;
 
             dm32raw(in_name, out_name, reverse_endian);
 
@@ -135,7 +135,7 @@ int main(int argc, char *argv[])
         progress_bar(SF.size());
 
         if (fn_input.isMetaData())
-            SF_out.write(fn_input.without_extension()+"_raw.sel");
+            SF_out.write(fn_input.withoutExtension()+"_raw.sel");
     }
     catch (XmippError XE)
     {
@@ -240,7 +240,7 @@ void dm32raw(const FileName &fn_in,
         if (imCountF==1)
             fn_outF = fn_out;
         else
-            fn_outF.compose(fn_out.without_extension(),n+1,fn_out.get_extension());
+            fn_outF.compose(fn_out.withoutExtension(),n+1,fn_out.get_extension());
 
         /* Write image to file ==================================*/
 
@@ -318,7 +318,7 @@ void dm32raw(const FileName &fn_in,
 
         /* Write INF file ==================================*/
 
-        fn_outF=fn_outF.add_extension("inf");
+        fn_outF=fn_outF.addExtension("inf");
         if ( ( fh_out = fopen(fn_outF.c_str(), "w") ) == NULL )
             REPORT_ERROR(6001, "Cannot create output info file (dm32raw).");
 

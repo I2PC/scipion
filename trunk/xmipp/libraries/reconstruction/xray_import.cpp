@@ -66,7 +66,7 @@ void ProgXrayImport::defineParams()
 void ProgXrayImport::readAndCrop(const FileName &fn, Image<double> &I) const
 {
     I.read(fn);
-    FileName fnBase=fn.without_extension();
+    FileName fnBase=fn.withoutExtension();
     std::ifstream fhPosition;
     fhPosition.open((fnBase+"-positions.txt").c_str());
     if (!fhPosition)
@@ -98,7 +98,7 @@ void ProgXrayImport::readAndCrop(const FileName &fn, Image<double> &I) const
 
 void ProgXrayImport::correct(Image<double> &I) const
 {
-    FileName fnBase=I.name().without_extension();
+    FileName fnBase=I.name().withoutExtension();
     std::ifstream fhPosition;
     fhPosition.open((fnBase+"-positions.txt").c_str());
     if (!fhPosition)

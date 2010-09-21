@@ -73,7 +73,7 @@ void Prog_Sort_PSD_Parameters::produceSideInfo() {
 double Prog_Sort_PSD_Parameters::computeCorrelation(
 		const FileName &fnMicrograph) const {
 	std::cerr << "Processing " << fnMicrograph << std::endl;
-	FileName fn_root = fnMicrograph.without_extension();
+	FileName fn_root = fnMicrograph.withoutExtension();
 
 	// Compute PSD
 	Prog_assign_CTF_prm assignCTF;

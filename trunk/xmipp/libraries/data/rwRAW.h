@@ -100,7 +100,7 @@ int readRAW(int img_select,bool isStack=false)
     found = filename.find_first_of("#");
     infolist = filename.substr(found+1);
     filename = filename.substr(0,found);
-    infolist.to_lowercase();
+    infolist.toLowercase();
     splitString(infolist,",",info, false);
 
     if (info.size() < 5)

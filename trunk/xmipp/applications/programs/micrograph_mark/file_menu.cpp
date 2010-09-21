@@ -156,9 +156,9 @@ void QtFileMenu::slotLoadCoords()
             // Get the family name from the filename
             FileName fn;
             fn = (char*)coordFileDialog.selectedFile().ascii();
-            fn = fn.without_extension();
+            fn = fn.withoutExtension();
             FileName familyName;
-            FileName micrographName=m->micrograph_name().remove_directories();
+            FileName micrographName=m->micrograph_name().removeDirectories();
             int i=fn.find(micrographName+".");
             if (i!=-1)
                 familyName=fn.substr(i+micrographName.length()+1,

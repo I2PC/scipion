@@ -2071,7 +2071,7 @@ bool SymList::isSymmetryGroup(FileName fn_sym, int &pgGroup, int &pgOrder)
 
    //remove path
    FileName fn_sym_tmp;
-   fn_sym_tmp=fn_sym.remove_directories();
+   fn_sym_tmp=fn_sym.removeDirectories();
    int mySize=fn_sym_tmp.size();
    bool return_true;
    return_true=false;

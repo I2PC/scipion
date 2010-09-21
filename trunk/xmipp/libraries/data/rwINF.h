@@ -47,7 +47,7 @@ int readINF(int img_select,bool isStack=false)
 
     FileName fn_inf;
 
-    fn_inf = filename.add_extension("inf");
+    fn_inf = filename.addExtension("inf");
     FILE *fh_inf = fopen(fn_inf.c_str(), "r");
     if (!fh_inf)
         REPORT_ERROR(ERR_IO_NOTOPEN, (std::string)"Micrograph::open_micrograph: Cannot find " +
@@ -221,7 +221,7 @@ int writeINF(int img_select, bool isStack=false, int mode=WRITE_OVERWRITE)
     /* Write INF file ==================================*/
     FileName fn_inf;
 
-    fn_inf = filename.add_extension("inf");
+    fn_inf = filename.addExtension("inf");
     FILE *fh_inf = fopen(fn_inf.c_str(), "w");
     if (!fh_inf)
         REPORT_ERROR(ERR_IO_NOTOPEN, (std::string)"rwINF::write: Error opening file " + fn_inf);

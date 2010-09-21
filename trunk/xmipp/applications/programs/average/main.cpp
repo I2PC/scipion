@@ -102,7 +102,7 @@ protected:
 
     void postProcess()
     {
-        FileName fnt, fn_root = fn_in.without_extension();
+        FileName fnt, fn_root = fn_in.withoutExtension();
         if (nI != 0)
         {
             FOR_ALL_ELEMENTS_IN_ARRAY3D(sumI())

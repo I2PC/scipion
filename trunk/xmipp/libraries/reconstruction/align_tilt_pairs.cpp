@@ -229,7 +229,7 @@ void Prog_centilt_prm::centilt()
             fn_img = It.name();
             if (oext != "")
             {
-                fn_img = fn_img.without_extension() + "." + oext;
+                fn_img = fn_img.withoutExtension() + "." + oext;
             }
             SFt.setValue( MDL_ANGLEROT,It.rot() );
             SFt.setValue( MDL_ANGLETILT,It.tilt() );
@@ -269,7 +269,7 @@ void Prog_centilt_prm::centilt()
     // Write out selfile
     fn_img = SFt.getFilename();
     if (oext != "")
-        fn_img = fn_img.insert_before_extension("_" + oext);
+        fn_img = fn_img.insertBeforeExtension("_" + oext);
     SFt.write(fn_img);
     if (fn_doc != "")
     {

@@ -90,7 +90,7 @@ int main(int argc, char *argv[])
         if (do_clean) SF.clean();
 
         // Write output
-        if (fn_SF_out == "") fn_SF_out = fn_DF.without_extension().add_extension("sel");
+        if (fn_SF_out == "") fn_SF_out = fn_DF.withoutExtension().addExtension("sel");
         SF.write(fn_SF_out);
 
     }

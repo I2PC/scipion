@@ -86,13 +86,13 @@ int main(int argc, char *argv[])
             while (!SF.eof())
             {
                 FileName in_name = SF.NextImg();
-                FileName out_name = in_name.without_extension()+"."+fn_oext;
+                FileName out_name = in_name.withoutExtension()+"."+fn_oext;
                 SF_out.insert(out_name);
                 spe2spi(in_name, out_name, reverse_endian);
                 progress_bar(i++);
             }
             progress_bar(SF.ImgNo());
-            SF_out.write(fn_sel.without_extension()+"_spider.sel");
+            SF_out.write(fn_sel.withoutExtension()+"_spider.sel");
         }
 
         /* input/output are single files */

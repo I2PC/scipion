@@ -2500,7 +2500,7 @@ void AutoParticlePicking::saveAutoParticles()
 {
     if (__autoselection_done && __auto_label!=-1)
         __m->write_coordinates(__auto_label, __m->micrograph_name() +
-                               "."+__modelRootName.remove_directories()+".pos");
+                               "."+__modelRootName.removeDirectories()+".pos");
 }
 
 /* Save models ------------------------------------------------------------- */

@@ -122,7 +122,7 @@ int main(int argc, char **argv)
                     fn_out = fn_in;
                 else
                 {
-                    fn_out = fn_in.without_extension() + "." + oext;
+                    fn_out = fn_in.withoutExtension() + "." + oext;
                     SF_out.addObject();
                     SF_out.setValue(MDL_IMAGE,fn_out);
                 }
@@ -215,7 +215,7 @@ int main(int argc, char **argv)
             progress_bar(Nimg);
         if (oext != "" && Nimg>1)
         {
-            fn_out = fn_input.insert_before_extension(oext);
+            fn_out = fn_input.insertBeforeExtension(oext);
             SF_out.write(fn_out);
         }
 

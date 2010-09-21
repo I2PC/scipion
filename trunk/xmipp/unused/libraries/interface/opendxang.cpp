@@ -32,7 +32,7 @@ void openDXang::openDXangFile(FileName openDXangname_aux)
 
     FileName data_name;
     openDXangname = openDXangname_aux;
-    data_name = openDXangname.add_extension("data");
+    data_name = openDXangname.addExtension("data");
 
     openDXang::number_of_elements = 0;
 
@@ -71,7 +71,7 @@ openDXang::~openDXang()
 {
 
     FileName header_name;
-    header_name = openDXangname.add_extension("general");
+    header_name = openDXangname.addExtension("general");
 
 //header
     openDXang::fh_out_header.open(header_name.c_str(), std::ios::out); //trunc file

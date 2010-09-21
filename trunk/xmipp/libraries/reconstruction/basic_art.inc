@@ -391,7 +391,7 @@ void Basic_ART_iterations(Basic_ART_Parameters &prm,
                 iact_proj=0;
                 while (iact_proj<prm.numIMG)
                 {
-                    if (prm.IMG_Inf[iact_proj].fn_proj.get_number()==proj_number &&
+                    if (prm.IMG_Inf[iact_proj].fn_proj.getNumber()==proj_number &&
                         prm.IMG_Inf[iact_proj].sym==sym_number)
                         break;
                     iact_proj++;
@@ -421,7 +421,7 @@ void Basic_ART_iterations(Basic_ART_Parameters &prm,
                         .sym==-1 && it==0)
                 {
                     FileName fn_noise=prm.fn_root+"_noise_proj"+
-                                      integerToString(read_proj.name().get_number(),5)+".xmp";
+                                      integerToString(read_proj.name().getNumber(),5)+".xmp";
                     noisy_projection.write(fn_noise);
                     SF_noise.addObject();
                     SF_noise.setValue(MDL_IMAGE, fn_noise);
@@ -554,7 +554,7 @@ void Basic_ART_iterations(Basic_ART_Parameters &prm,
             }
 
             // Apply sparsity constraint .....................................
-            if (it>=1 && prm.sparseEps>0 && 
+            if (it>=1 && prm.sparseEps>0 &&
                 prm.parallel_mode!=Basic_ART_Parameters::SIRT &&
                 prm.parallel_mode!=Basic_ART_Parameters::pSIRT &&
                 prm.parallel_mode!=Basic_ART_Parameters::pfSIRT)

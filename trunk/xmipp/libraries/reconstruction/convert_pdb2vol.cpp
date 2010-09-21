@@ -155,7 +155,7 @@ void Prog_PDBPhantom_Parameters::read(int argc, char **argv)
     fn_pdb = getParameter(argc, argv, "-i");
     fn_out = getParameter(argc, argv, "-o", "");
     if (fn_out == "")
-        fn_out = fn_pdb.without_extension();
+        fn_out = fn_pdb.withoutExtension();
     Ts = textToFloat(getParameter(argc, argv, "-sampling_rate", "1"));
     highTs = textToFloat(getParameter(argc, argv, "-high_sampling_rate", "0.08333333"));
     output_dim = textToInteger(getParameter(argc, argv, "-size", "-1"));

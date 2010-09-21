@@ -72,7 +72,7 @@ void Prog_assign_CTF_prm::read(const FileName &fn_prm, bool do_not_read_files)
         else
             selfile_fn = getParameter(fh_param, "selfile", 0, "");
         picked_fn         = getParameter(fh_param, "picked", 0, "");
-        FileName fn_root  = image_fn.without_extension();
+        FileName fn_root  = image_fn.withoutExtension();
         if (PSD_mode == ARMA)
             PSDfn_root = fn_root + "_ARMA";
         else
@@ -100,7 +100,7 @@ void Prog_assign_CTF_prm::write(const FileName &fn_prm,
     if (!remove_directories)
         aux = image_fn;
     else
-        aux = directory + "/" + image_fn.remove_directories();
+        aux = directory + "/" + image_fn.removeDirectories();
     if (!selfile_mode)
         fh_param << "image="                << aux                  << std::endl;
     fh_param << "N_horizontal="         << N_horizontal         << std::endl
@@ -108,12 +108,12 @@ void Prog_assign_CTF_prm::write(const FileName &fn_prm,
     if (!remove_directories)
         aux = selfile_fn;
     else
-        aux = directory + "/" + selfile_fn.remove_directories();
+        aux = directory + "/" + selfile_fn.removeDirectories();
     fh_param << "selfile="              << aux                  << std::endl;
     if (!remove_directories)
         aux = picked_fn;
     else
-        aux = directory + "/" + picked_fn.remove_directories();
+        aux = directory + "/" + picked_fn.removeDirectories();
     fh_param << "picked="               << aux                  << std::endl;
     if (compute_at_particle)
         fh_param << "compute_at_particle=yes\n";
@@ -253,13 +253,13 @@ void Prog_assign_CTF_prm::process()
     // Open the selfile for the CTFs, if there is a selfile of particles
     FileName fn_root;
     if (!selfile_mode)
-        fn_root = image_fn.remove_all_extensions();
+        fn_root = image_fn.removeAllExtensions();
     else
-        fn_root = selfile_fn.remove_all_extensions();
+        fn_root = selfile_fn.removeAllExtensions();
     std::ofstream OutputFile_ctf;
     if (selfile_fn != "")
         OutputFile_ctf.open(
-            (selfile_fn.without_extension() + ".ctfdat").c_str());
+            (selfile_fn.withoutExtension() + ".ctfdat").c_str());
 
     // Open the micrograph
     Micrograph M_in;
@@ -469,7 +469,7 @@ void Prog_assign_CTF_prm::process()
             if (compute_at_particle)
             {
                 SF.getValue(MDL_IMAGE, piece_fn);
-                piece_fn_root = piece_fn.get_baseName();
+                piece_fn_root = piece_fn.getBaseName();
                 SF.nextObject();
             }
             else
@@ -525,7 +525,7 @@ void Prog_assign_CTF_prm::process()
                 MultidimArray<double> CTFs(bootstrapN,32);
                 adjust_CTF_prm.bootstrap=true;
                 adjust_CTF_prm.show_optimization=true;
-                FileName fnBase=fn_avg.without_extension();
+                FileName fnBase=fn_avg.withoutExtension();
                 std::cerr << "Computing bootstrap ...\n";
                 init_progress_bar(bootstrapN);
                 for (int n=0; n<bootstrapN; n++)
@@ -625,13 +625,13 @@ void Prog_assign_CTF_prm::process()
                 }
                 else
                     OutputFile_ctf << fn_img << " "
-                    << fn_avg.without_extension() + ".psd\n";
+                    << fn_avg.withoutExtension() + ".psd\n";
 
             }
             else
             {
                 OutputFile_ctf << fn_img << " "
-                << fn_avg.without_extension() + ".psd\n";
+                << fn_avg.withoutExtension() + ".psd\n";
             }
         }
     }

@@ -319,7 +319,7 @@ const char * ShowSel::cellLabel(int i) const
     if (load_mode == CTF_mode)
     {
         // Get the defocus parameters from the ctfparam file
-        FileName fn_param = imgnames[i].without_extension() + ".ctfparam";
+        FileName fn_param = imgnames[i].withoutExtension() + ".ctfparam";
         try
         {
             CTFDescription ctf;
@@ -683,13 +683,13 @@ void ShowSel::editCTFmodel()
         assign_ctf_prm.read(fn_assign);
 
         // Check if the CTF is computed at each particle
-        FileName fn_root = assign_ctf_prm.image_fn.remove_all_extensions();
+        FileName fn_root = assign_ctf_prm.image_fn.removeAllExtensions();
 
         // Get the piece name
         if (assign_ctf_prm.compute_at_particle)
         {
             int i = indexOf(currentRow(), currentColumn());
-            fn_param = imgnames[i].without_extension() + ".ctfparam";
+            fn_param = imgnames[i].withoutExtension() + ".ctfparam";
         }
         else if (assign_ctf_prm.micrograph_averaging)
         {
@@ -721,7 +721,7 @@ void ShowSel::editCTFmodel()
         // Read the corresponding assignment parameter file
         Prog_assign_CTF_prm assign_ctf_prm;
         assign_ctf_prm.read(fn_assign);
-        FileName fn_root = assign_ctf_prm.image_fn.remove_all_extensions();
+        FileName fn_root = assign_ctf_prm.image_fn.removeAllExtensions();
 
         // Get the piece name
         if (assign_ctf_prm.micrograph_averaging)
@@ -768,11 +768,11 @@ void ShowSel::recomputeCTFmodel()
 	}
 
 	// Get the PSD name
-	FileName fn_root = assign_ctf_prm.image_fn.remove_all_extensions();
+	FileName fn_root = assign_ctf_prm.image_fn.removeAllExtensions();
 	if (assign_ctf_prm.compute_at_particle)
 	{
             int i = indexOf(currentRow(), currentColumn());
-            fn_psd = imgnames[i].without_extension() + ".psd";
+            fn_psd = imgnames[i].withoutExtension() + ".psd";
 	}
 	else if (assign_ctf_prm.micrograph_averaging)
 	{
@@ -803,7 +803,7 @@ void ShowSel::recomputeCTFmodel()
 
         // Read the corresponding assignment parameter file
         assign_ctf_prm.read(fn_assign);
-        FileName fn_root = assign_ctf_prm.image_fn.remove_all_extensions();
+        FileName fn_root = assign_ctf_prm.image_fn.removeAllExtensions();
 
         // Get the piece name
         if (assign_ctf_prm.micrograph_averaging)

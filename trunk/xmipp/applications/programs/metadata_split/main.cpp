@@ -55,7 +55,7 @@ int main(int argc, char **argv)
         if (sortLabel == MDL_UNDEFINED)
             REPORT_ERROR(ERR_MD_UNDEFINED, (std::string)"Unrecognized label '" + sortLabelStr + "'");
         if (fn_root == "")
-            fn_root = fn_in.without_extension();
+            fn_root = fn_in.withoutExtension();
         SFin.read(fn_in);
     }
     catch (XmippError)

@@ -122,7 +122,7 @@ int main(int argc, char *argv[])
         {
             SelFile SF(sel_file);
             FileName SF_out_name;
-            SF_out_name = sel_file.without_extension().add_prefix("out_");
+            SF_out_name = sel_file.withoutExtension().addPrefix("out_");
             SF_out_name += (std::string)"." + sel_file.get_extension();
             SelFile SF_out;
             SF_out.clear();
@@ -133,8 +133,8 @@ int main(int argc, char *argv[])
                 { //The SelLine is not a comment
                     FileName in_name = line.get_text();
                     short label = line.get_label();
-                    FileName out_name = in_name.without_extension();
-                    out_name = out_name.add_extension(sel_ext);
+                    FileName out_name = in_name.withoutExtension();
+                    out_name = out_name.addExtension(sel_ext);
                     SF_out.insert(out_name, (SelLine::Label)label);
                     raw22spi(in_name, out_name, raw_type, force_byte,
                         header_size, Zdim, Ydim, Xdim,

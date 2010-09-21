@@ -148,7 +148,7 @@ int main(int argc, char *argv[])
             if (fn_out!="")
                 out_name = fn_out;
             else
-                out_name = in_name.without_extension()+"."+fn_oext;
+                out_name = in_name.withoutExtension()+"."+fn_oext;
 
             tia2raw(in_name, out_name, dStddev);
 
@@ -160,7 +160,7 @@ int main(int argc, char *argv[])
         progress_bar(SF.size());
 
         if (fn_input.isMetaData())
-            SF_out.write(fn_input.without_extension()+"_raw.sel");
+            SF_out.write(fn_input.withoutExtension()+"_raw.sel");
 
     }
     catch (XmippError XE)
@@ -245,7 +245,7 @@ void tia2raw(const FileName &fn_in, const FileName &fn_out, float dStddev)
         if (Header.NUMBER_IMAGES == 1)
             fn_outF = fn_out;
         else
-            fn_outF.compose(fn_out.without_extension(), n + 1, fn_out.get_extension());
+            fn_outF.compose(fn_out.withoutExtension(), n + 1, fn_out.get_extension());
 
         openImage(fn_in, fn_outF,Header.pDATA_OFFSET[n],dStddev);
     }
@@ -367,7 +367,7 @@ void openImage(const FileName &fn_in, FileName &fn_out, int Position, float dStd
 
     /* Write INF file ============================================================== */
 
-    fn_out = fn_out.add_extension("inf");
+    fn_out = fn_out.addExtension("inf");
     if ((fh_out = fopen(fn_out.c_str(), "w")) == NULL)
         REPORT_ERROR(6001, "Cannot create output info file (tia2raw).");
 

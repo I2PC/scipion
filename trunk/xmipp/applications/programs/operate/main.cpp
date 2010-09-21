@@ -291,7 +291,7 @@ void operate_plus(int operand_type1, int operand_type2, const FileName &fn_1,
             SF.getValue(MDL_IMAGE, fn_img);
 
             if (fn_out!="")
-                fnl_out = fn_img.without_extension() + "." + fn_out;
+                fnl_out = fn_img.withoutExtension() + "." + fn_out;
             else
                 fnl_out="";
             operate_plus(IMAGE, operand_type2, fn_img, fn_2, fnl_out);
@@ -357,7 +357,7 @@ void operate_minus(int operand_type1, int operand_type2,
             SF.getValue(MDL_IMAGE, fn_img);
 
             if (fn_out!="")
-                fnl_out = fn_img.without_extension() + "." + fn_out;
+                fnl_out = fn_img.withoutExtension() + "." + fn_out;
             else
                 fnl_out="";
             operate_minus(IMAGE, operand_type2, fn_img, fn_2, fnl_out);
@@ -422,7 +422,7 @@ void multiplication(int operand_type1, int operand_type2,
             FileName fnl_out, fn_img;
             SF.getValue(MDL_IMAGE, fn_img);
             if (fn_out!="")
-                fnl_out = fn_img.without_extension() + "." + fn_out;
+                fnl_out = fn_img.withoutExtension() + "." + fn_out;
             else
                 fnl_out="";
             multiplication(IMAGE, operand_type2, fn_img, fn_2, fnl_out);
@@ -489,7 +489,7 @@ void division(int operand_type1, int operand_type2,
             FileName fnl_out, fn_img;
             SF.getValue(MDL_IMAGE, fn_img);
             if (fn_out!="")
-                fnl_out = fn_img.without_extension() + "." + fn_out;
+                fnl_out = fn_img.withoutExtension() + "." + fn_out;
             else
                 fnl_out="";
             division(IMAGE, operand_type2, fn_img, fn_2, fnl_out);
@@ -558,7 +558,7 @@ void operate_max(int operand_type1, int operand_type2, const FileName &fn_1,
             FileName fnl_out, fn_img;
             SF.getValue(MDL_IMAGE, fn_img);
             if (fn_out!="")
-                fnl_out = fn_img.without_extension() + "." + fn_out;
+                fnl_out = fn_img.withoutExtension() + "." + fn_out;
             else
                 fnl_out="";
             operate_max(IMAGE, operand_type2, fn_img, fn_2, fnl_out);
@@ -627,7 +627,7 @@ void operate_min(int operand_type1, int operand_type2, const FileName &fn_1,
             FileName fnl_out, fn_img;
             SF.getValue(MDL_IMAGE, fn_img);
             if (fn_out!="")
-                fnl_out = fn_img.without_extension() + "." + fn_out;
+                fnl_out = fn_img.withoutExtension() + "." + fn_out;
             else
                 fnl_out="";
             operate_min(IMAGE, operand_type2, fn_img, fn_2, fnl_out);
@@ -695,7 +695,7 @@ void operate_which_max(int operand_type1, int operand_type2, const FileName &fn_
             FileName fnl_out, fn_img;
             SF.getValue(MDL_IMAGE, fn_img);
             if (fn_out!="")
-                fnl_out = fn_img.without_extension() + "." + fn_out;
+                fnl_out = fn_img.withoutExtension() + "." + fn_out;
             else
                 fnl_out="";
             operate_which_max(IMAGE, operand_type2, fn_img, fn_2, fnl_out);
@@ -763,7 +763,7 @@ void operate_which_min(int operand_type1, int operand_type2, const FileName &fn_
             FileName fnl_out, fn_img;
             SF.getValue(MDL_IMAGE, fn_img);
             if (fn_out!="")
-                fnl_out = fn_img.without_extension() + "." + fn_out;
+                fnl_out = fn_img.withoutExtension() + "." + fn_out;
             else
                 fnl_out="";
             operate_which_min(IMAGE, operand_type2, fn_img, fn_2, fnl_out);
@@ -800,7 +800,7 @@ void log10(int operand_type1, const FileName &fn_1, const FileName &fn_out)
             FileName fnl_out, fn_img;
             SF.getValue(MDL_IMAGE, fn_img);
             if (fn_out!="")
-                fnl_out = fn_img.without_extension() + "." + fn_out;
+                fnl_out = fn_img.withoutExtension() + "." + fn_out;
             else
                 fnl_out="";
             log10(IMAGE, fn_img, fnl_out);
@@ -850,7 +850,7 @@ void forcePositive(int operand_type1, const FileName &fn_1,
             FileName fnl_out, fn_img;
             SF.getValue(MDL_IMAGE, fn_img);
             if (fn_out!="")
-                fnl_out = fn_img.without_extension() + "." + fn_out;
+                fnl_out = fn_img.withoutExtension() + "." + fn_out;
             else
                 fnl_out="";
             forcePositive(IMAGE, fn_img, fnl_out);
@@ -887,7 +887,7 @@ void sqrt(int operand_type1, const FileName &fn_1, const FileName &fn_out)
             FileName fnl_out, fn_img;
             SF.getValue(MDL_IMAGE, fn_img);
             if (fn_out!="")
-                fnl_out = fn_img.without_extension() + "." + fn_out;
+                fnl_out = fn_img.withoutExtension() + "." + fn_out;
             else
                 fnl_out="";
             sqrt(IMAGE, fn_img, fnl_out);

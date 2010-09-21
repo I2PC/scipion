@@ -228,7 +228,7 @@ void VirusVertex::processAngles()
                 A = proj_aux.getTransformationMatrix(true);
                 if (!A.isIdentity())
                 	selfApplyGeometry(BSPLINE3,proj_aux(),A, IS_INV, DONT_WRAP);
-                fn_tmp = fn_img.without_extension() + "_";
+                fn_tmp = fn_img.withoutExtension() + "_";
                 fn_tmp.compose(fn_tmp, i, "xmp");
                 proj_aux.setShifts(0,0);//shift already applied, same for flip? I do not think so
                 proj_aux().window((Ydim-dim)/2,(Xdim-dim)/2,(Ydim+dim)/2,(Xdim+dim)/2,0);
@@ -259,7 +259,7 @@ void VirusVertex::processAngles()
     }
     progress_bar(DF.size());
     FileName fn_tmp1;
-    fn_tmp1= fn_doc.without_extension()+"_out.doc";
+    fn_tmp1= fn_doc.withoutExtension()+"_out.doc";
     DFout.write(fn_tmp1);
 }
 

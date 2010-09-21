@@ -376,7 +376,7 @@ int main(int argc, char **argv)
         if( save_iters )
         {
             FileName fn_aux = outputFile;
-            fn_aux = fn_aux.insert_before_extension( std::string("_iter_") + integerToString(iter) );
+            fn_aux = fn_aux.insertBeforeExtension( std::string("_iter_") + integerToString(iter) );
             
             std::cerr << "Saving intermidiate file: " << fn_aux << std::endl;
             

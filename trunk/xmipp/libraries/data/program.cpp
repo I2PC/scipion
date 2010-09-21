@@ -291,9 +291,9 @@ void XmippMetadataProgram::run()
             {
                 fnImgOut = fnImg;
                 if (oroot != "")
-                    fnImgOut = oroot + fnImgOut.without_extension();
+                    fnImgOut = oroot + fnImgOut.withoutExtension();
                 if (oext != "")
-                    fnImgOut = fnImgOut.without_extension() + "." + oext;
+                    fnImgOut = fnImgOut.withoutExtension() + "." + oext;
             }
 
             processImage();
