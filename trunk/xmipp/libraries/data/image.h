@@ -42,6 +42,7 @@
 #include <unistd.h>
 
 // Includes for rwTIFF which cannot be inside it
+#include <cstring>
 #include "../../external/tiff-3.9.4/libtiff/tiffio.h"
 
 /// @defgroup Images Images
@@ -202,23 +203,6 @@ private:
     int                 mFd;         // Handle the file in reading method and mmap
     size_t              mappedSize;  // Size of the mapped file
 
-    ///Helper functions for formats read/write
-    void castTiffTile2T(
-        T * ptrDest ,
-        char* tif_buf,
-        unsigned int x, unsigned int y,
-        unsigned int imageWidth, unsigned int imageLength,
-        unsigned int tileWidth, unsigned int tileLength,
-        unsigned short samplesPerPixel,
-        DataType datatype);
-    void castTiffLine2T(
-        T * ptrDest,
-        char* tif_buf,
-        unsigned int y,
-        unsigned int imageWidth, unsigned int imageLength,
-        unsigned short samplesPerPixel,
-        DataType datatype);
-
 public:
     /** Empty constructor
      *
@@ -228,7 +212,11 @@ public:
      * Image<double> I;
      * @endcode
      */
-    Image();
+    Image()
+    {
+        mmapOn = false;
+        clear();
+    }
 
     /** Constructor with size
      *
@@ -239,91 +227,121 @@ public:
      * Image I(64,64);
      * @endcode
      */
-    Image(int Xdim, int Ydim, int Zdim=1, int Ndim=1);
+    Image(int Xdim, int Ydim, int Zdim=1, int Ndim=1)
+    {
+        mmapOn = false;
+        clear();
+        data.resize(Ndim, Zdim, Ydim, Xdim);
+        MD.resize(Ndim);
+    }
 
     /** Clear.
      * Initialize everything to 0
      */
-    void clear();
+    void clear()
+    {
+        if (mmapOn)
+        {
+            munmap(data.data-offset,mappedSize);
+            close(mFd);
+            data.data = NULL;
+        }
+        else
+            data.clear();
+
+        dataflag = -1;
+        if (isComplexT())
+            transform = Standard;
+        else
+            transform = NoTransform;
+        i = 0;
+        filename = "";
+        offset = 0;
+        swap = 0;
+        clearHeader();
+        replaceNsize=0;
+        mmapOn = false;
+    }
 
     /** Clear the header of the image
      */
-    void clearHeader();
+    void clearHeader()
+    {
+        MDMainHeader.clear();
+        MD.clear();
+    }
 
     /** Check whether image is complex based on T
      */
-    bool isComplexT() const;
+    bool isComplexT() const
+    {
+        return ( typeid(T) == typeid(std::complex<double>) ||
+                 typeid(T) == typeid(std::complex<float>) );
+    }
 
     /** Check whether image is complex based on transform
       */
-    bool isComplex() const;
+    bool isComplex() const
+    {
+        return !(transform==NoTransform);
+    }
 
     /** Destructor.
      */
-    ~Image();
+    ~Image()
+    {
+        clear();
+    }
+
 
     /** Specific read functions for different file formats
       */
-    int readDM3(int img_select,bool isStack=false);
-    int writeDM3(int img_select, bool isStack=false, int mode=WRITE_OVERWRITE);
-
-    int  readIMAGIC(int img_select);
-    int  writeIMAGIC(int img_select=-1, int mode=WRITE_OVERWRITE);
-
-    int readMRC(int img_select, bool isStack=false);
-    int writeMRC(int img_select, bool isStack=false, int mode=WRITE_OVERWRITE);
-
-    int readINF(int img_select,bool isStack=false);
-    int writeINF(int img_select, bool isStack=false, int mode=WRITE_OVERWRITE);
-
-    int readRAW(int img_select,bool isStack=false);
-
-    int  readSPIDER(int img_select,bool isStack=false);
-    int  writeSPIDER(int select_img=-1, bool isStack=false, int mode=WRITE_OVERWRITE);
-
-    int readSPE(int img_select,bool isStack=false);
-    int writeSPE(int img_select, bool isStack=false, int mode=WRITE_OVERWRITE);
-
-    int readTIA(int img_select,bool isStack=false, double dStddev=5);
-    int writeTIA(int img_select, bool isStack=false, int mode=WRITE_OVERWRITE);
-
-    int readTIFF(int img_select, bool isStack=false);
-    int writeTIFF(int img_select, bool isStack=false, int mode=WRITE_OVERWRITE, int imParam=NULL);
-
-//#include "rwDM3.h"
-//#include "rwIMAGIC.h"
-//#include "rwMRC.h"
-//#include "rwINF.h"
-//#include "rwRAW.h"
-//#include "rwSPIDER.h"
-//#include "rwSPE.h"
-//#include "rwTIA.h"
-//#include "rwTIFF.h"
+#include "rwDM3.h"
+#include "rwIMAGIC.h"
+#include "rwMRC.h"
+#include "rwINF.h"
+#include "rwRAW.h"
+#include "rwSPIDER.h"
+#include "rwSPE.h"
+#include "rwTIA.h"
+#include "rwTIFF.h"
 
     /** Is this file an image
      *
      *  Check whether a real-space image can be read
      *
      */
-    bool isImage(const FileName &name);
+    bool isImage(const FileName &name)
+    {
+        return !read(name, false);
+    }
 
     /** Is this file a real-valued image
      *
      *  Check whether a real-space image can be read
      *
      */
-    bool isRealImage(const FileName &name);
+    bool isRealImage(const FileName &name)
+    {
+        return (isImage(name) && !isComplex());
+    }
 
     /** Is this file a complex image
      *
      *  Check whether a fourier-space (complex) image can be read
      *
      */
-    bool isComplexImage(const FileName &name);
+    bool isComplexImage(const FileName &name)
+    {
+        return (isImage(name) && isComplex());
+    }
 
     /** Rename the image
       */
-    void rename (const FileName &name);
+    void rename (const FileName &name)
+    {
+        filename = name;
+    }
 
     /** General read function
      * you can read a single image from a single image file
@@ -335,7 +353,161 @@ public:
      */
     int read(const FileName &name, bool readdata=true, int select_img = 0,
              bool apply_geo = false, bool only_apply_shifts = false,
-             MDRow * row = NULL, bool mapData = false);
+             MDRow * row = NULL, bool mapData = false)
+    {
+        //const MetaData &docFile = *docFilePtr;
+        //std::vector<MDLabel> &activeLabels = *activeLabelsPtr;
+
+        int err = 0;
+        // Check whether to read the data or only the header
+        dataflag = ( readdata ) ? 1 : -1;
+
+        // Check whether to map the data or not
+        mmapOn = mapData;
+
+        FileName ext_name = name.get_file_format();
+        size_t found;
+        filename = name;
+        found = filename.find_first_of("@");
+        if (found != std::string::npos)
+        {
+            select_img =  atoi(filename.substr(0, found).c_str());
+            filename = filename.substr(found+1) ;
+        }
+
+        double imParam = NULL;
+        found = filename.find_first_of("%");
+        if (found != std::string::npos)
+        {
+            imParam = atof(filename.substr(found+1).c_str());
+            filename = filename.substr(0, found) ;
+        }
+
+        filename = filename.remove_file_format();
+
+        if(ext_name.contains("inf"))
+            filename = filename.without_extension();
+        else if (ext_name.contains("raw") && exists(filename.add_extension("inf")))
+            ext_name = "inf";
+
+
+#undef DEBUG
+        //#define DEBUG
+#ifdef DEBUG
+
+        std::cerr << "READ\n" <<
+        "name="<<name <<std::endl;
+        std::cerr << "ext= "<<ext_name <<std::endl;
+        std::cerr << " now reading: "<< filename <<" dataflag= "<<dataflag
+        << " select_img "  << select_img << std::endl;
+#endif
+#undef DEBUG
+
+        //Just clear the header before reading
+        MDMainHeader.clear();
+
+        if (ext_name.contains("spi") || ext_name.contains("xmp") )//mrc stack MUST go BEFORE plain MRC
+            err = readSPIDER(select_img,true);
+        else if (ext_name.contains("mrcs"))//mrc stack MUST go BEFORE plain MRC
+            err = readMRC(select_img,true);
+        else if (ext_name.contains("mrc"))//mrc
+            err = readMRC(select_img,false);
+        else if (ext_name.contains("img") || ext_name.contains("hed"))//
+            err = readIMAGIC(select_img);//imagic is always an stack
+        else if (ext_name.contains("ser"))//TIA
+            err = readTIA(select_img,false, imParam);
+        else if (ext_name.contains("dm3"))//DM3
+            err = readDM3(select_img,false);
+        else if (ext_name.contains("inf"))//RAW with INF file
+            err = readINF(select_img,false);
+        else if (ext_name.contains("raw"))//RAW without INF file
+            err = readRAW(select_img,false);
+        else if (ext_name.contains("tif") || ext_name.contains("tiff"))//TIFF
+            err = readTIFF(select_img,false);
+        else if (ext_name.contains("spe"))//SPE
+            err = readSPE(select_img,false);
+        else
+            err = readSPIDER(select_img,true);
+
+        //This implementation does not handle stacks,
+        //read in a block
+        if (row != NULL)
+        {
+            if (data.ndim != 1)
+                REPORT_ERROR(ERR_MULTIDIM_SIZE, "Header overwriting not available for stacks!!!");
+            MDLabel label;
+
+            for (MDRow::const_iterator it = row->begin(); it != row->end(); ++it)
+            {
+                label = (*it)->label;
+                if (MD[select_img].containsLabel(label))
+                    *(MD[select_img].getObject(label)) = *(*it);
+                else
+                    MD[select_img].push_back(new MDObject(*(*it)));
+            }
+        }
+        //TODO: Now read from an MDRow
+
+        /*        if (docFilePtr != NULL)
+                {
+                    if (activeLabelsPtr == NULL)
+                        activeLabelsPtr = docFilePtr->geActiveLabelsAddress();
+
+                    std::vector<MDLabel>::iterator strIt;
+                    double dd;
+                    std::string ss;
+                    int ii;
+                    bool bb;
+                    std::vector<double> vv;
+                    //FIXME: This could be done better
+                    for (strIt = activeLabelsPtr->begin(); strIt != activeLabelsPtr->end(); strIt++)
+                    {
+                        switch (MDL::labelType(*strIt))
+                        {
+                        case LABEL_DOUBLE:
+                            docFilePtr->getValue(*strIt,dd);
+                            MD.setValue(*strIt,dd);
+                            break;
+                        case LABEL_STRING:
+                            docFilePtr->getValue(*strIt,ss);
+                            MD.setValue(*strIt,ss);
+                            break;
+                        case LABEL_INT:
+                            docFilePtr->getValue(*strIt,ii);
+                            MD.setValue(*strIt,ii);
+                            break;
+                        case LABEL_BOOL:
+                            docFilePtr->getValue(*strIt,bb);
+                            MD.setValue(*strIt,bb);
+                            break;
+                        case LABEL_VECTOR:
+                            docFilePtr->getValue(*strIt,vv);
+                            MD.setValue(*strIt,vv);
+                            break;
+                        default:
+                            REPORT_ERROR(ERR_MD_BADLABEL, "Image.read: Unknown label type");
+                        }
+                    }//close for activeLabels
+                }*/
+
+        //apply geo has not been defined for volumes
+        if(this->data.getDim()>2)
+            apply_geo=false;
+
+        if (readdata && (apply_geo || only_apply_shifts))
+        {
+            Matrix2D< double > A = getTransformationMatrix(only_apply_shifts);
+            if (!A.isIdentity())
+            {
+                MultidimArray<T> tmp = (*this)();
+                applyGeometry(BSPLINE3, (*this)(), tmp, A, IS_INV, WRAP);
+            }
+        }
+
+        // Negative errors are bad.
+        return err;
+    }
+
     /** General write function
      * select_img= which slice should I replace
      * overwrite = 0, append slice
@@ -344,37 +516,601 @@ public:
     void write(FileName name="",
                int select_img=-1,
                bool isStack=false,
-               int mode=WRITE_OVERWRITE);
-        /** Cast a page of data from type dataType to type Tdest
+               int mode=WRITE_OVERWRITE)
+    {
+        int err = 0;
+
+        if (name == "")
+            name = filename;
+
+        FileName ext_name = name.get_file_format();
+        size_t found;
+        filename = name;
+        found=filename.find_first_of("@");
+        FileName filNamePlusExt;
+        if (found!=std::string::npos)
+        {
+            //select_img = atoi(filename.substr(0, found).c_str());
+            filename   =      filename.substr(found+1) ;
+        }
+        int imParam = NULL;
+        found=filename.find_first_of("%");
+        if (found!=std::string::npos)
+        {
+            imParam =  atoi(filename.substr(found+1).c_str());
+            filename = filename.substr(0, found) ;
+        }
+        filNamePlusExt = filename;
+        found=filename.find_first_of(":");
+        if ( found!=std::string::npos)
+            filename   = filename.substr(0, found);
+
+        if(ext_name.contains("inf"))
+            filename = filename.without_extension();
+
+        //#define DEBUG
+#ifdef DEBUG
+
+        std::cerr << "write" <<std::endl;
+        std::cerr<<"extension for write= "<<ext_name<<std::endl;
+        std::cerr<<"filename= "<<filename<<std::endl;
+        std::cerr<<"mode= "<<mode<<std::endl;
+        std::cerr<<"isStack= "<<isStack<<std::endl;
+        std::cerr<<"select_img= "<<select_img<<std::endl;
+#endif
+#undef DEBUG
+        // Check that image is not empty
+        if (getSize() < 1)
+            REPORT_ERROR(ERR_MULTIDIM_EMPTY,"write Image ERROR: image is empty!");
+
+        // CHECK FOR INCONSISTENCIES BETWEEN data.xdim and x, etc???
+        int Xdim, Ydim, Zdim, Ndim;
+        this->getDimensions(Xdim,Ydim, Zdim, Ndim);
+
+        _exists = exists(filename);
+        Image<T> auxI;
+        replaceNsize=0;//reset replaceNsize in case image is reused
+        if(select_img==-1 && mode==WRITE_REPLACE)
+            REPORT_ERROR(ERR_VALUE_INCORRECT,"writeSPIDER: Please specify object to be replaced");
+        else if(!_exists && mode==WRITE_REPLACE)
+        {
+            std:: stringstream replace_number;
+            replace_number << select_img;
+            REPORT_ERROR(ERR_IO_NOTEXIST,(std::string)"Cannot replace object number: "
+                         + replace_number.str()
+                         + " in file " +filename
+                         + ". It does not exist");
+        }
+        else if (_exists && (mode==WRITE_REPLACE || mode==WRITE_APPEND))
+        {
+            auxI.dataflag = -2;
+            auxI.read(filNamePlusExt,false);
+            int _Xdim, _Ydim, _Zdim, _Ndim;
+            auxI.getDimensions(_Xdim,_Ydim, _Zdim, _Ndim);
+            replaceNsize=_Ndim;
+            if(Xdim!=_Xdim ||
+               Ydim!=_Ydim ||
+               Zdim!=_Zdim
+              )
+                REPORT_ERROR(ERR_MULTIDIM_SIZE,"write: target and source objects have different size");
+            if(mode==WRITE_REPLACE && select_img>_Ndim)
+                REPORT_ERROR(ERR_VALUE_INCORRECT,"write: cannot replace image stack is not large enough");
+            if(auxI.replaceNsize <1 &&
+               (mode==WRITE_REPLACE || mode==WRITE_APPEND))
+                REPORT_ERROR(ERR_IO,"write: output file is not an stack");
+        }
+        else if(!_exists && mode==WRITE_APPEND)
+        {
+            ;
+        }
+        else//If new file we are in the WRITE_OVERWRITE mode
+        {
+            mode=WRITE_OVERWRITE;
+        }
+        /*
+         * SELECT FORMAT
+         */
+
+        if(ext_name.contains("spi") || ext_name.contains("xmp") ||
+           ext_name.contains("stk") || ext_name.contains("vol"))
+            err = writeSPIDER(select_img,isStack,mode);
+        else if (ext_name.contains("mrcs"))
+            writeMRC(select_img,true,mode);
+        else if (ext_name.contains("mrc"))
+            writeMRC(select_img,false,mode);
+        else if (ext_name.contains("img") || ext_name.contains("hed"))
+            writeIMAGIC(select_img,mode);
+        else if (ext_name.contains("dm3"))
+            writeDM3(select_img,false,mode);
+        else if (ext_name.contains("ser"))
+            writeTIA(select_img,false,mode);
+        else if (ext_name.contains("raw") || ext_name.contains("inf"))
+            writeINF(select_img,false,mode);
+        else if (ext_name.contains("tif") || ext_name.contains("tiff"))
+            writeTIFF(select_img,isStack,mode,imParam);
+        else if (ext_name.contains("spe"))
+            writeSPE(select_img,isStack,mode);
+        else
+            err = writeSPIDER(select_img,isStack,mode);
+
+        if ( err < 0 )
+        {
+            std::cerr << " Filename = " << filename << " Extension= " << ext_name << std::endl;
+            REPORT_ERROR(ERR_IO_NOWRITE, "Error writing file");
+        }
+        //unlock file
+    }
+
+    /** Cast a page of data from type dataType to type Tdest
      *    input pointer  char *
      */
+    void castPage2T(char * page, T * ptrDest, DataType datatype, size_t pageSize )
+    {
+        switch (datatype)
+        {
+        case Unknown_Type:
+            REPORT_ERROR(ERR_TYPE_INCORRECT,"ERROR: datatype is Unknown_Type");
+        case UChar:
+            {
+                if (typeid(T) == typeid(unsigned char))
+                    memcpy(ptrDest, page, pageSize*sizeof(T));
+                else
+                {
+                    unsigned char * ptr = (unsigned char *) page;
+                    for(int i=0; i<pageSize; i++)
+                        ptrDest[i]=(T) ptr[i];
+                }
+                break;
+            }
+        case SChar:
+                {
+                    if (typeid(T) == typeid(signed char))
+                {
+                    memcpy(ptrDest, page, pageSize*sizeof(T));
+                    }
+                    else
+                    {
+                        signed char * ptr = (signed char *) page;
+                        for(int i=0; i<pageSize; i++)
+                            ptrDest[i]=(T) ptr[i];
+                    }
+                break;
+            }
+        case UShort:
+                {
+                    if (typeid(T) == typeid(unsigned short))
+                {
+                    memcpy(ptrDest, page, pageSize*sizeof(T));
+                    }
+                    else
+                    {
+                        unsigned short * ptr = (unsigned short *) page;
+                        for(int i=0; i<pageSize; i++)
+                            ptrDest[i]=(T) ptr[i];
+                    }
+                break;
+            }
+        case Short:
+                {
+                    if (typeid(T) == typeid(short))
+                {
+                    memcpy(ptrDest, page, pageSize*sizeof(T));
+                    }
+                    else
+                    {
+                        short * ptr = (short *) page;
+                        for(int i=0; i<pageSize; i++)
+                            ptrDest[i]=(T) ptr[i];
+                    }
+                break;
+            }
+        case UInt:
+                {
+                    if (typeid(T) == typeid(unsigned int))
+                {
+                    memcpy(ptrDest, page, pageSize*sizeof(T));
+                    }
+                    else
+                    {
+                        unsigned int * ptr = (unsigned int *) page;
+                        for(int i=0; i<pageSize; i++)
+                            ptrDest[i]=(T) ptr[i];
+                    }
+                break;
+            }
+        case Int:
+                {
+                    if (typeid(T) == typeid(int))
+                {
+                    memcpy(ptrDest, page, pageSize*sizeof(T));
+                    }
+                    else
+                    {
+                        int * ptr = (int *) page;
+                        for(int i=0; i<pageSize; i++)
+                            ptrDest[i]=(T) ptr[i];
+                    }
+                break;
+            }
+        case Long:
+                {
+                    if (typeid(T) == typeid(long))
+                {
+                    memcpy(ptrDest, page, pageSize*sizeof(T));
+                    }
+                    else
+                    {
+                        long * ptr = (long *) page;
+                        for(int i=0; i<pageSize; i++)
+                            ptrDest[i]=(T) ptr[i];
+                    }
+                break;
+            }
+        case Float:
+                {
+                    if (typeid(T) == typeid(float))
+                {
+                    memcpy(ptrDest, page, pageSize*sizeof(T));
+                    }
+                    else
+                    {
+                        float * ptr = (float *) page;
+                        for(int i=0; i<pageSize; i++)
+                            ptrDest[i]=(T) ptr[i];
+                    }
+                break;
+            }
+        case Double:
+                {
+                    if (typeid(T) == typeid(double))
+                {
+                    memcpy(ptrDest, page, pageSize*sizeof(T));
+                    }
+                    else
+                    {
+                        double * ptr = (double *) page;
+                        for(int i=0; i<pageSize; i++)
+                            ptrDest[i]=(T) ptr[i];
+                    }
+                break;
+            }
+        default:
+                {
+                    std::cerr<<"Datatype= "<<datatype<<std::endl;
+                    REPORT_ERROR(ERR_TYPE_INCORRECT," ERROR: cannot cast datatype to T");
+                    break;
+                }
+            }
 
-    void castPage2T(char * page, T * ptrDest, DataType datatype, size_t pageSize );
+    }
 
     /** Cast page from T to datatype
      *  input pointer char *
      */
-    void castPage2Datatype(T * srcPtr, char * page, DataType datatype, size_t pageSize );
+    void castPage2Datatype(T * srcPtr, char * page, DataType datatype, size_t pageSize )
+    {
+        switch (datatype)
+        {
+        case Float:
+            {
+                if (typeid(T) == typeid(float))
+                {
+                    memcpy(page, srcPtr, pageSize*sizeof(T));
+                }
+                else
+                {
+                    float * ptr = (float *) page;
+                    for(int i=0; i<pageSize; i++)
+                        ptr[i] = (float)srcPtr[i];
+                }
+                break;
+            }
+        case Double:
+                {
+                    if (typeid(T) == typeid(double))
+                {
+                    memcpy(page, srcPtr, pageSize*sizeof(T));
+                    }
+                    else
+                    {
+                        double * ptr = (double *) page;
+                        for(int i=0; i<pageSize; i++)
+                            ptr[i] = (double)srcPtr[i];
+                    }
+                break;
+            }
+        case UShort:
+                {
+                    if (typeid(T) == typeid(unsigned short))
+                {
+                    memcpy(page, srcPtr, pageSize*sizeof(T));
+                    }
+                    else
+                    {
+                        unsigned short * ptr = (unsigned short *) page;
+                        for(int i=0; i<pageSize; i++)
+                            ptr[i] = (unsigned short)srcPtr[i];
+                    }
+                break;
+            }
+        case UChar:
+                {
+                    if (typeid(T) == typeid(unsigned char))
+                {
+                    memcpy(page, srcPtr, pageSize*sizeof(T));
+                    }
+                    else
+                    {
+                        unsigned char * ptr = (unsigned char *) page;
+                        for(int i=0; i<pageSize; i++)
+                            ptr[i] = (unsigned char)srcPtr[i];
+                    }
+                break;
+            }
+        default:
+                {
+                    std::cerr<<"outputDatatype= "<<datatype<<std::endl;
+                    REPORT_ERROR(ERR_TYPE_INCORRECT," ERROR: cannot cast T to outputDatatype");
+                    break;
+                }
+            }
+    }
 
     /** Check file Datatype is same as T type to use mmap.
      */
-    bool checkMmapT(DataType datatype);
+    bool checkMmapT(DataType datatype)
+    {
+
+        switch (datatype)
+        {
+        case Unknown_Type:
+            REPORT_ERROR(ERR_TYPE_INCORRECT,"ERROR: datatype is Unknown_Type");
+        case UChar:
+            {
+                if (typeid(T) == typeid(unsigned char))
+                    return 1;
+                else
+                    return 0;
+                break;
+            }
+        case SChar:
+            {
+                if (typeid(T) == typeid(signed char))
+                    return 1;
+                else
+                    return 0;
+                break;
+            }
+        case UShort:
+            {
+                if (typeid(T) == typeid(unsigned short))
+                    return 1;
+                else
+                    return 0;
+                break;
+            }
+        case Short:
+            {
+                if (typeid(T) == typeid(short))
+                    return 1;
+                else
+                    return 0;
+                break;
+            }
+        case UInt:
+            {
+                if (typeid(T) == typeid(unsigned int))
+                    return 1;
+                else
+                    return 0;
+                break;
+            }
+        case Int:
+            {
+                if (typeid(T) == typeid(int))
+                    return 1;
+                else
+                    return 0;
+                break;
+            }
+        case Long:
+            {
+                if (typeid(T) == typeid(long))
+                    return 1;
+                else
+                    return 0;
+                break;
+            }
+        case Float:
+            {
+                if (typeid(T) == typeid(float))
+                    return 1;
+                else
+                    return 0;
+                break;
+            }
+        case Double:
+            {
+                if (typeid(T) == typeid(double))
+                    return 1;
+                else
+                    return 0;
+                break;
+            }
+        default:
+            {
+                std::cerr<<"Datatype= "<<datatype<<std::endl;
+                REPORT_ERROR(ERR_TYPE_INCORRECT," ERROR: cannot cast datatype to T");
+                break;
+            }
+        }
+        //               int * iTemp = (int*) map;
+        //                ptrDest = reinterpret_cast<T*> (iTemp);
+    }
 
     /** Write an entire page as datatype
      *
      * A page of datasize_n elements T is cast to datatype and written to fimg
      * The memory for the casted page is allocated and freed internally.
      */
-    void writePageAsDatatype(FILE * fimg, DataType datatype, size_t datasize_n );
+    void writePageAsDatatype(FILE * fimg, DataType datatype, size_t datasize_n )
+    {
+        size_t datasize = datasize_n * gettypesize(datatype);
+        char * fdata = (char *) askMemory(datasize);
+        castPage2Datatype(MULTIDIM_ARRAY(data), fdata, datatype, datasize_n);
+        fwrite( fdata, datasize, 1, fimg );
+        freeMemory(fdata, datasize);
+    }
 
     /** Swap an entire page
       * input pointer char *
       */
-    void swapPage(char * page, size_t pageNrElements, DataType datatype);
+    void swapPage(char * page, size_t pageNrElements, DataType datatype)
+    {
+        unsigned long datatypesize = gettypesize(datatype);
+#ifdef DEBUG
+
+        std::cerr<<"DEBUG swapPage: Swapping image data with swap= "
+        << swap<<" datatypesize= "<<datatypesize
+        << " pageNrElements " << pageNrElements
+        << " datatype " << datatype
+        <<std::endl;
+        ;
+#endif
+
+        // Swap bytes if required
+        if ( swap == 1 )
+        {
+            if ( datatype >= ComplexShort )
+                datatypesize /= 2;
+            for ( unsigned long i=0; i<pageNrElements; i+=datatypesize )
+                swapbytes(page+i, datatypesize);
+        }
+        else if ( swap > 1 )
+        {
+            for ( unsigned long i=0; i<pageNrElements; i+=swap )
+                swapbytes(page+i, swap);
+        }
+    }
 
     /** Read the raw data
       */
-    void readData(FILE* fimg, int select_img, DataType datatype, unsigned long pad);
+    void readData(FILE* fimg, int select_img, DataType datatype, unsigned long pad)
+    {
+        //#define DEBUG
+#ifdef DEBUG
+        std::cerr<<"entering readdata"<<std::endl;
+        std::cerr<<" readData flag= "<<dataflag<<std::endl;
+#endif
+
+        if ( dataflag < 1 )
+            return;
+
+        // If only half of a transform is stored, it needs to be handled
+        if (transform == Hermitian || transform == CentHerm )
+            data.setXdim(XSIZE(data)/2 + 1);
+
+        size_t myoffset, readsize, readsize_n, pagemax = 1073741824; //1Gb
+        size_t datatypesize=gettypesize(datatype);
+        size_t pagesize  =ZYXSIZE(data)*datatypesize;
+        size_t haveread_n=0;
+
+        //Multidimarray mmapOn is priority over image mmapOn
+        if(data.mmapOn)
+            mmapOn = false;
+
+        // Flag to know that data is not going to be mapped although mmapOn is true
+        if (mmapOn && !checkMmapT(datatype))
+        {
+            std::cout << "WARNING: Image Class. File datatype and image declaration not compatible with mmap. Loading into memory." <<std::endl;
+            mmapOn = false;
+            mFd = -1;
+        }
+
+        if (mmapOn)
+        {
+            if ( NSIZE(data) > 1 )
+            {
+                REPORT_ERROR(ERR_MMAP,"Image Class::ReadData: mmap with multiple \
+                             images file not compatible. Try selecting a unique image.");
+            }
+
+            fclose(fimg);
+
+            if ( ( mFd = open(filename.c_str(), O_RDWR, S_IREAD | S_IWRITE) ) == -1 )
+                REPORT_ERROR(ERR_IO_NOTOPEN,"Image Class::ReadData: Error opening the image file.");
+
+            char * map;
+            mappedSize = pagesize+offset;
+
+            if ( (map = (char*) mmap(0,mappedSize, PROT_READ | PROT_WRITE, MAP_SHARED, mFd, 0)) == (void*) -1 )
+                REPORT_ERROR(ERR_MMAP_NOTADDR,"Image Class::ReadData: mmap of image file failed.");
+            data.data = reinterpret_cast<T*> (map+offset);
+        }
+        else
+        {
+            // Reset select to get the correct offset
+            if ( select_img < 0 )
+                select_img = 0;
+
+            char* page = NULL;
+
+            // Allocate memory for image data (Assume xdim, ydim, zdim and ndim are already set
+            //if memory already allocated use it (no resize allowed)
+            data.coreAllocateReuse();
+            myoffset = offset + select_img*(pagesize + pad);
+            //#define DEBUG
+
+#ifdef DEBUG
+
+            data.printShape();
+            printf("DEBUG: Page size: %ld offset= %d \n", pagesize, offset);
+            printf("DEBUG: Swap = %d  Pad = %ld  Offset = %ld\n", swap, pad, offset);
+            printf("DEBUG: myoffset = %d select_img= %d \n", myoffset, select_img);
+#endif
+
+            if (pagesize > pagemax)
+                page = (char *) askMemory(pagemax*sizeof(char));
+            else
+                page = (char *) askMemory(pagesize*sizeof(char));
+
+            fseek( fimg, myoffset, SEEK_SET );
+            for ( size_t myn=0; myn<NSIZE(data); myn++ )
+            {
+                for (size_t myj=0; myj<pagesize; myj+=pagemax )//pagesize size of object
+                {
+                    // Read next page. Divide pages larger than pagemax
+                    readsize = pagesize - myj;
+                    if ( readsize > pagemax )
+                        readsize = pagemax;
+                    readsize_n = readsize/datatypesize;
+
+                    //Read page from disc
+                    fread( page, readsize, 1, fimg );
+                    //swap per page
+                    if (swap)
+                        swapPage(page, readsize, datatype);
+                    // cast to T per page
+                    castPage2T(page, MULTIDIM_ARRAY(data) + haveread_n, datatype, readsize_n);
+                    haveread_n += readsize_n;
+                }
+                if ( pad > 0 )
+                    //fread( padpage, pad, 1, fimg);
+                    fseek( fimg, pad, SEEK_CUR );
+            }
+            //if ( pad > 0 )
+            //    freeMemory(padpage, pad*sizeof(char));
+            if ( page > 0 )
+                freeMemory(page, pagesize*sizeof(char));
+
+#ifdef DEBUG
+
+            printf("DEBUG img_read_data: Finished reading and converting data\n");
+#endif
+
+        }
+        return;
+    }
 
     /** Data access
      *
@@ -387,9 +1123,14 @@ public:
      * I2() = I1() + I2();
      * @endcode
      */
-    MultidimArray<T>& operator()();
-
-    const MultidimArray<T>& operator()() const;
+    MultidimArray<T>& operator()()
+    {
+        return data;
+    }
+    const MultidimArray<T>& operator()() const
+    {
+        return data;
+    }
 
     /** Pixel access
     *
@@ -404,15 +1145,26 @@ public:
     * I(-3, -3) = I(-3, -2);
     * @endcode
     */
-    T& operator()(int i, int j) const;
+    T& operator()(int i, int j) const
+    {
+        return A2D_ELEM(data, i, j);
+    }
     /** Set pixel
      * (direct access) needed by swig
      */
-    void setPixel(int i, int j, T v);
+    void setPixel(int i, int j, T v)
+    {
+        IMGPIXEL(*this,i,j)=v;
+    }
+
     /** Get pixel
      * (direct acces) needed by swig
      */
-    T getPixel(int i, int j) const;
+    T getPixel(int i, int j) const
+    {
+        return IMGPIXEL(*this,i,j);
+    }
+
     /** Voxel access
      *
      * This operator is used to access a voxel within a 3D image. This is a
@@ -426,29 +1178,56 @@ public:
      * I(-3, -3, 1) = I(-3, -2, 0);
      * @endcode
      */
-    T& operator()(int k, int i, int j) const;
+    T& operator()(int k, int i, int j) const
+    {
+        return A3D_ELEM(data, k, i, j);
+    }
+
     /** Get file name
      *
      * @code
      * std::cout << "Image name = " << I.name() << std::endl;
      * @endcode
      */
-    const FileName & name() const;
+    const FileName & name() const
+    {
+        return filename;
+    }
+
     /** Get Image dimensions
      */
-    void getDimensions(int &Xdim, int &Ydim, int &Zdim, int &Ndim) const;
+    void getDimensions(int &Xdim, int &Ydim, int &Zdim, int &Ndim) const
+    {
+        Xdim = XSIZE(data);
+        Ydim = YSIZE(data);
+        Zdim = ZSIZE(data);
+        Ndim = NSIZE(data);
+    }
 
-    long unsigned int getSize() const;
+    long unsigned int getSize() const
+    {
+        return NZYXSIZE(data);
+    }
 
     /** Get Image offset and swap
      */
-    void getOffsetAndSwap(unsigned long &_offset, int &_swap) const;
+    void getOffsetAndSwap(unsigned long &_offset, int &_swap) const
+    {
+        _offset = offset;
+        _swap = swap;
+    }
 
     /* Is there label in the individual header */
-    bool individualContainsLabel(MDLabel label) const;
+    bool individualContainsLabel(MDLabel label) const
+    {
+        return MD[0].containsLabel(label);
+    }
 
     /* Is there label in the main header */
-    bool mainContainsLabel(MDLabel label) const;
+    bool mainContainsLabel(MDLabel label) const
+    {
+        return MDMainHeader.containsLabel(label);
+    }
 
     /** Get Rot angle
     *
@@ -456,7 +1235,12 @@ public:
     * std::cout << "First Euler angle " << I.rot() << std::endl;
     * @endcode
     */
-    double rot(const long int n = 0) const;
+    double rot(const long int n = 0) const
+    {
+        double dummy = 0;
+        MD[n].getValue(MDL_ANGLEROT, dummy);
+        return dummy;
+    }
 
     /** Get Tilt angle
      *
@@ -464,7 +1248,12 @@ public:
      * std::cout << "Second Euler angle " << I.tilt() << std::endl;
      * @endcode
      */
-    double tilt(const long int n = 0) const;
+    double tilt(const long int n = 0) const
+    {
+        double dummy = 0;
+        MD[n].getValue(MDL_ANGLETILT, dummy);
+        return dummy;
+    }
 
     /** Get Psi angle
      *
@@ -472,42 +1261,77 @@ public:
      * std::cout << "Third Euler angle " << I.psi() << std::endl;
      * @endcode
      */
-    double psi(const long int n = 0) const;
+    double psi(const long int n = 0) const
+    {
+        double dummy = 0;
+        MD[n].getValue(MDL_ANGLEPSI, dummy);
+        return dummy;
+    }
+
     /** Get Xoff
      *
      * @code
      * std::cout << "Origin offset in X " << I.Xoff() << std::endl;
      * @endcode
      */
-    double Xoff(const long int n = 0) const;
+    double Xoff(const long int n = 0) const
+    {
+        double dummy = 0;
+        MD[n].getValue(MDL_ORIGINX, dummy);
+        return dummy;
+    }
+
     /** Get Yoff
      *
      * @code
      * std::cout << "Origin offset in Y " << I.Yoff() << std::endl;
      * @endcode
      */
-    double Yoff(const long int n = 0) const;
+    double Yoff(const long int n = 0) const
+    {
+        double dummy = 0;
+        MD[n].getValue(MDL_ORIGINY, dummy);
+        return dummy;
+    }
+
     /** Get Zoff
      *
      * @code
      * std::cout << "Origin offset in Z " << I.Zoff() << std::endl;
      * @endcode
      */
-    double Zoff(const long int n = 0) const;
+    double Zoff(const long int n = 0) const
+    {
+        double dummy = 0;
+        MD[n].getValue(MDL_ORIGINZ, dummy);
+        return dummy;
+    }
+
     /** Get Weight
     *
     * @code
     * std::cout << "weight= " << I.weight() << std::endl;
     * @endcode
     */
-    double weight(const long int n = 0) const;
+    double weight(const long int n = 0) const
+    {
+        double dummy = 1;
+        MD[n].getValue(MDL_WEIGHT, dummy);
+        return dummy;
+    }
+
     /** Get Flip
     *
     * @code
     * std::cout << "flip= " << flip() << std::endl;
     * @endcode
     */
-    bool flip(const long int n = 0) const;
+    bool flip(const long int n = 0) const
+    {
+        bool dummy = false;
+        MD[n].getValue(MDL_FLIP, dummy);
+        return dummy;
+    }
 
     /** Data type
         *
@@ -515,7 +1339,12 @@ public:
         * std::cout << "datatype= " << dataType() << std::endl;
         * @endcode
         */
-    int dataType() const;
+    int dataType() const
+    {
+        int dummy;
+        MDMainHeader.getValue(MDL_DATATYPE, dummy);
+        return dummy;
+    }
 
     /** Sampling RateX
     *
@@ -523,146 +1352,273 @@ public:
     * std::cout << "sampling= " << samplingRateX() << std::endl;
     * @endcode
     */
-    double samplingRateX() const;
+    double samplingRateX() const
+    {
+        double dummy = 1.;
+        MDMainHeader.getValue(MDL_SAMPLINGRATEX, dummy);
+        return dummy;
+    }
 
     /** Set file name
      */
-    void setName(const FileName &_filename);
+    void setName(const FileName &_filename)
+    {
+        filename = _filename;
+    }
 
     /** Set Euler angles in image header
      */
     void setEulerAngles(double rot, double tilt, double psi,
-                        long int n = 0);
+                        long int n = 0)
+    {
+        MD[n].setValue(MDL_ANGLEROT, rot);
+        MD[n].setValue(MDL_ANGLETILT, tilt);
+        MD[n].setValue(MDL_ANGLEPSI, psi);
+    }
+
     /** Get Euler angles from image header
      */
     void getEulerAngles(double &rot, double &tilt, double &psi,
-                        long int n = 0);
+                        long int n = 0)
+    {
+        MD[n].getValue(MDL_ANGLEROT, rot);
+        MD[n].getValue(MDL_ANGLETILT, tilt);
+        MD[n].getValue(MDL_ANGLEPSI, psi);
+    }
+
     /** Set Rotation angle to image */
-    void setRot(double rot, long int n = 0);
+    void setRot(double rot, long int n = 0)
+    {
+        MD[n].setValue(MDL_ANGLEROT, rot);
+    }
+
     /** Set Tilt angle to image */
-    void setTilt(double tilt, long int n = 0);
+    void setTilt(double tilt, long int n = 0)
+    {
+        MD[n].setValue(MDL_ANGLETILT, tilt);
+    }
+
     /** Set Rotation angle to image */
-    void setPsi(double psi, long int n = 0);
+    void setPsi(double psi, long int n = 0)
+    {
+        MD[n].setValue(MDL_ANGLEPSI, psi);
+    }
+
     /** Set origin offsets in image header
      */
     void setShifts(double xoff, double yoff, double zoff = 0.,
-                   long int n = 0);
+                   long int n = 0)
+    {
+        MD[n].setValue(MDL_ORIGINX, xoff);
+        MD[n].setValue(MDL_ORIGINY, yoff);
+        MD[n].setValue(MDL_ORIGINZ, zoff);
+    }
     /** Get origin offsets from image header
       */
     void getShifts(double &xoff, double &yoff, double &zoff = 0.,
-                   long int n = 0);
+                   long int n = 0)
+    {
+        MD[n].getValue(MDL_ORIGINX, xoff);
+        MD[n].getValue(MDL_ORIGINY, yoff);
+        MD[n].getValue(MDL_ORIGINZ, zoff);
+    }
+
     /** Set X offset in image header
      */
-    void setXoff(double xoff, long int n = 0);
+    void setXoff(double xoff, long int n = 0)
+    {
+        MD[n].setValue(MDL_ORIGINX, xoff);
+    }
+
     /** Set Y offset in image header
      */
-    void setYoff(double yoff, long int n = 0);
+    void setYoff(double yoff, long int n = 0)
+    {
+        MD[n].setValue(MDL_ORIGINY, yoff);
+    }
+
     /** Set Z offset in image header
      */
-    void setZoff(double zoff, long int n = 0);
+    void setZoff(double zoff, long int n = 0)
+    {
+        MD[n].setValue(MDL_ORIGINZ, zoff);
+    }
+
     /** Set flip in image header
      */
-    void setFlip(bool flip, long int n = 0);
+    void setFlip(bool flip, long int n = 0)
+    {
+        MD[n].setValue(MDL_FLIP, flip);
+    }
+
     /** Set Weight in image header
     */
-    void setWeight(double weight, long int n = 0);
+    void setWeight(double weight, long int n = 0)
+    {
+        MD[n].setValue(MDL_WEIGHT, weight);
+    }
+
     /** Get geometric transformation matrix from 2D-image header
       */
     Matrix2D< double > getTransformationMatrix(bool only_apply_shifts = false,
-            long int n = 0);
+            long int n = 0)
+    {
+        // This has only been implemented for 2D images...
+        (*this)().checkDimension(2);
+
+        double phi,psi,theta,xoff,yoff;
+        bool flip;
+        MD[n].getValue(MDL_ANGLEROT, phi);
+        phi = realWRAP(phi, 0., 360.);
+        MD[n].getValue(MDL_ANGLETILT, theta);
+        theta = realWRAP(theta, 0., 360.);
+        MD[n].getValue(MDL_ANGLEPSI, psi);
+        psi = realWRAP(psi, 0., 360.);
+        MD[n].getValue(MDL_ORIGINX, xoff);
+        MD[n].getValue(MDL_ORIGINY, yoff);
+
+        Matrix2D< double > A(3, 3);
+        A.initIdentity();
+
+        if (only_apply_shifts)
+        {
+            Euler_angles2matrix(0., 0., 0., A);
+            A(0, 2) = -xoff;
+            A(1, 2) = -yoff;
+        }
+        else
+        {
+            if (theta == 0.)
+            {
+                // For untilted images: apply Euler matrix
+                Euler_angles2matrix(phi, 0., psi, A);
+            }
+            else
+            {
+                // For tilted images: only apply Psi
+                // Take another_set into account
+                if (theta < 0.)
+                {
+                    theta = -theta;
+                    psi = realWRAP(psi - 180., -180, 180);
+                }
+                Euler_angles2matrix(0., 0., psi, A);
+            }
+            A(0, 2) = -xoff;
+            A(1, 2) = -yoff;
+        }
+
+        // Also for only_apply_shifts: mirror if necessary!
+        MD[n].getValue(MDL_FLIP, flip);
+
+        if (flip)
+        {
+            A(0, 0) = -A(0, 0);
+            A(0, 1) = -A(0, 1);
+        }
+
+        return A;
+    }
+
     /** Show image properties
       */
     friend std::ostream& operator<<(std::ostream& o, const Image<T>& I)
     {
-      o << "Image type   : ";
-      if (I.isComplex())
-          o << "Fourier-space image" << std::endl;
-      else
-          o << "Real-space image" << std::endl;
+        o << "Image type   : ";
+        if (I.isComplex())
+            o << "Fourier-space image" << std::endl;
+        else
+            o << "Real-space image" << std::endl;
 
-      o << "Reversed     : ";
-      if (I.swap)
-          o << "TRUE"  << std::endl;
-      else
-          o << "FALSE" << std::endl;
+        o << "Reversed     : ";
+        if (I.swap)
+            o << "TRUE"  << std::endl;
+        else
+            o << "FALSE" << std::endl;
 
-      o << "Data type    : ";
-      switch (I.dataType())
-      {
-      case Unknown_Type:
-          o << "Undefined data type";
-          break;
-      case UChar:
-          o << "Unsigned character or byte type";
-          break;
-      case SChar:
-          o << "Signed character (for CCP4)";
-          break;
-      case UShort:
-          o << "Unsigned integer (2-byte)";
-          break;
-      case Short:
-          o << "Signed integer (2-byte)";
-          break;
-      case UInt:
-          o << "Unsigned integer (4-byte)";
-          break;
-      case Int:
-          o << "Signed integer (4-byte)";
-          break;
-      case Long:
-          o << "Signed integer (4 or 8 byte, depending on system)";
-          break;
-      case Float:
-          o << "Floating point (4-byte)";
-          break;
-      case Double:
-          o << "Double precision floating point (8-byte)";
-          break;
-      case ComplexShort:
-          o << "Complex two-byte integer (4-byte)";
-          break;
-      case ComplexInt:
-          o << "Complex integer (8-byte)";
-          break;
-      case ComplexFloat:
-          o << "Complex floating point (8-byte)";
-          break;
-      case ComplexDouble:
-          o << "Complex floating point (16-byte)";
-          break;
-      case Bool:
-          o << "Boolean (1-byte?)";
-          break;
-      }
-      o << std::endl;
+        o << "Data type    : ";
+        switch (I.dataType())
+        {
+        case Unknown_Type:
+            o << "Undefined data type";
+            break;
+        case UChar:
+            o << "Unsigned character or byte type";
+            break;
+        case SChar:
+            o << "Signed character (for CCP4)";
+            break;
+        case UShort:
+            o << "Unsigned integer (2-byte)";
+            break;
+        case Short:
+            o << "Signed integer (2-byte)";
+            break;
+        case UInt:
+            o << "Unsigned integer (4-byte)";
+            break;
+        case Int:
+            o << "Signed integer (4-byte)";
+            break;
+        case Long:
+            o << "Signed integer (4 or 8 byte, depending on system)";
+            break;
+        case Float:
+            o << "Floating point (4-byte)";
+            break;
+        case Double:
+            o << "Double precision floating point (8-byte)";
+            break;
+        case ComplexShort:
+            o << "Complex two-byte integer (4-byte)";
+            break;
+        case ComplexInt:
+            o << "Complex integer (8-byte)";
+            break;
+        case ComplexFloat:
+            o << "Complex floating point (8-byte)";
+            break;
+        case ComplexDouble:
+            o << "Complex floating point (16-byte)";
+            break;
+        case Bool:
+            o << "Boolean (1-byte?)";
+            break;
+        }
+        o << std::endl;
 
-      o << "dimensions   : " << NSIZE(I()) << " x " << ZSIZE(I()) << " x " << YSIZE(I()) << " x " << XSIZE(I());
-      o << "  (noObjects x slices x rows x columns)" << std::endl;
-      if (I.individualContainsLabel(MDL_ANGLEROT))
-      {
-          o << "Euler angles : " << std::endl;
-          o << "  Phi   (rotation around Z axis) = " << I.rot() << std::endl;
-          o << "  theta (tilt, second rotation around new Y axis) = " << I.tilt() << std::endl;
-          o << "  Psi   (third rotation around new Z axis) = " << I.psi() << std::endl;
-      }
-      if (I.individualContainsLabel(MDL_ORIGINX))
-      {
-          o << "Origin Offsets : " << std::endl;
-          o << "  Xoff  (origin offset in X-direction) = " << I.Xoff() << std::endl;
-          o << "  Yoff  (origin offset in Y-direction) = " << I.Yoff() << std::endl;
-          o << "  Zoff  (origin offset in Z-direction) = " << I.Zoff() << std::endl;
-      }
-      o << "Header size  : " << I.offset << std::endl;
-      if (I.individualContainsLabel(MDL_WEIGHT))
-          o << "Weight  : " << I.weight() << std::endl;
-      if (I.individualContainsLabel(MDL_FLIP))
-          o << "Flip    : " << I.flip() << std::endl;
-      return o;
+        o << "dimensions   : " << NSIZE(I()) << " x " << ZSIZE(I()) << " x " << YSIZE(I()) << " x " << XSIZE(I());
+        o << "  (noObjects x slices x rows x columns)" << std::endl;
+        if (I.individualContainsLabel(MDL_ANGLEROT))
+        {
+            o << "Euler angles : " << std::endl;
+            o << "  Phi   (rotation around Z axis) = " << I.rot() << std::endl;
+            o << "  theta (tilt, second rotation around new Y axis) = " << I.tilt() << std::endl;
+            o << "  Psi   (third rotation around new Z axis) = " << I.psi() << std::endl;
+        }
+        if (I.individualContainsLabel(MDL_ORIGINX))
+        {
+            o << "Origin Offsets : " << std::endl;
+            o << "  Xoff  (origin offset in X-direction) = " << I.Xoff() << std::endl;
+            o << "  Yoff  (origin offset in Y-direction) = " << I.Yoff() << std::endl;
+            o << "  Zoff  (origin offset in Z-direction) = " << I.Zoff() << std::endl;
+        }
+        o << "Header size  : " << I.offset << std::endl;
+        if (I.individualContainsLabel(MDL_WEIGHT))
+            o << "Weight  : " << I.weight() << std::endl;
+        if (I.individualContainsLabel(MDL_FLIP))
+            o << "Flip    : " << I.flip() << std::endl;
+        return o;
     }
+
     /** Sum this object with other file and keep in this object
       */
-    void sumWithFile(const FileName &fn);
+    void sumWithFile(const FileName &fn)
+    {
+        Image<T> aux;
+        aux.read(fn);
+        (*this)()+=aux();
+    }
 };
 
 // Special cases for complex numbers
@@ -676,12 +1632,6 @@ void Image< std::complex< double > >::castPage2Datatype(std::complex< double > *
         char * page,
         DataType datatype,
         size_t pageSize);
-
-// Explicit template instantiation
-template class Image<double>;
-template class Image<int>;
-template class Image<float>;
-template class Image< std::complex<double> >;
 
 /// @defgroup ImageFormats Image Formats
 /// @ingroup Images
