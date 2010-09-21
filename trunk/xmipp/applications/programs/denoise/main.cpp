@@ -25,15 +25,17 @@
 
 #include <reconstruction/denoise.h>
 
-bool process_img(Image<double> &img, const Prog_parameters *prm)
+/* MAIN -------------------------------------------------------------------- */
+int main(int argc, char *argv[])
 {
-    Denoising_parameters *eprm = (Denoising_parameters *) prm;
-    eprm->denoise(img());
-    return true;
-}
-
-int main(int argc, char **argv)
-{
-    Denoising_parameters prm;
-    SF_main(argc, argv, &prm, (void*)&process_img);
+    try
+    {
+        ProgDenoise program;
+        program.read(argc, argv);
+        program.run();
+    }
+    catch (XmippError xe)
+    {
+        std::cerr << xe;
+    }
 }

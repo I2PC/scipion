@@ -31,11 +31,12 @@ void XmippProgram::init()
     progDef = new ProgramDef(progLexer);
     this->defineParams();
     ///Add some common definitions to all Xmipp programs
-    addParamsLine("-v+ <verbose_level=1> : Verbosity level, 0 means no output.");
+    addParamsLine("== Common options ==");
+    addParamsLine("[-v+ <verbose_level=1>] : Verbosity level, 0 means no output.");
     addParamsLine("alias --verb;");
-    addParamsLine("-h+ <param=\"\">      : Show help about specific param or this help message.");
+    addParamsLine("[-h+ <param=\"\">]      : Show help about specific param or this help message.");
     addParamsLine("alias --help;");
-    addParamsLine("-more_options         : Show additional options.");
+    addParamsLine("[-more_options]         : Show additional options.");
     progLexer->nextToken();
     progDef->parse();
 }
@@ -123,14 +124,29 @@ const char * XmippProgram::getParam(const char * param, int arg)
     return progDef->getParam(param, arg);
 }
 
+const char * XmippProgram::getParam(const char * param, const char * subparam, int arg)
+{
+    return progDef->getParam(param, arg);
+}
+
 int XmippProgram::getIntParam(const char * param, int arg)
 {
     return textToInteger(progDef->getParam(param, arg));
 }
 
+int XmippProgram::getIntParam(const char * param, const char * subparam, int arg)
+{
+    return textToInteger(progDef->getParam(param, subparam, arg));
+}
+
 double XmippProgram::getDoubleParam(const char * param, int arg)
 {
     return textToFloat(progDef->getParam(param, arg));
+}
+
+double XmippProgram::getDoubleParam(const char * param, const char * subparam, int arg)
+{
+    return textToFloat(progDef->getParam(param, subparam, arg));
 }
 
 bool XmippProgram::checkParam(const char * param)

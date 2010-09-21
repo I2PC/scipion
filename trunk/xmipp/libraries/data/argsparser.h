@@ -27,6 +27,7 @@
 #define ARGSPARSER_H_
 
 #include <string>
+#include <cstring>
 #include <iostream>
 #include <sstream>
 #include <vector>
@@ -247,6 +248,7 @@ public:
     virtual void check(std::stringstream & errors);
     ParamDef * findParam(const std::string &name);
     const char * getParam(const char * paramName, int paramNumber = 0);
+    const char * getParam(const char * paramName, const char * subParam, int paramNumber = 0);
     void addParamName(const std::string & name, ParamDef *param);
     void addParamImplies(const std::string &name);
     /// Read and validate commmand line

@@ -888,7 +888,24 @@ const char * ProgramDef::getParam(const char * paramName, int argNumber)
     ParamDef * param = findParam(paramName);
     if (param == NULL)
         REPORT_ERROR(ERR_ARG_INCORRECT, ((std::string)"Doesn't exist param " + paramName).c_str());
-    return paramsMap[paramName]->cmdArguments.at(argNumber);
+    return param->cmdArguments.at(argNumber);
+}
+
+const char * ProgramDef::getParam(const char * paramName, const char * subParam, int argNumber)
+{
+    ParamDef * param = findParam(paramName);
+    if (param == NULL)
+        REPORT_ERROR(ERR_ARG_INCORRECT, ((std::string)"Doesn't exist param " + paramName).c_str());
+
+    size_t i = 0;
+    for (i = 0; i < param->cmdArguments.size(); ++i)
+      if (strcmp(param->cmdArguments[i], subParam) == 0)
+        break;
+
+    if (i == param->cmdArguments.size())
+      REPORT_ERROR(ERR_ARG_INCORRECT, ((std::string)"Sub-param " + subParam + " was not supplied in command line."));
+
+    return param->cmdArguments.at(i + 1 + argNumber);
 }
 
 //-------------------   PRINTER IMPLEMENTATIONS   --------------------------------
@@ -951,7 +968,17 @@ void ConsolePrinter::printParam(const ParamDef &param, int v)
             {
                 std::cout << "      where <" << arg.name << "> can be:" << std::endl;
                 for (size_t j = 0; j < arg.subParams.size(); ++j)
-                    std::cout << "        " << arg.subParams[j]->name << std::endl;
+                {
+                    std::cout << "        " << arg.subParams[j]->name;
+                    for (size_t k = 0; k < arg.subParams[j]->arguments.size(); ++k)
+                    {
+                      std::cout << " ";
+                      printArgument(*(arg.subParams[j]->arguments[k]));
+                    }
+                    std::cout << std::endl;
+                    printCommentList(arg.subParams[j]->comments);
+
+                }
             }
         }
 

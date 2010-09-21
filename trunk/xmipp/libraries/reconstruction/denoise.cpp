@@ -32,7 +32,7 @@
 #include <iomanip>
 
 // Empty constructor -------------------------------------------------------
-Denoising_parameters::Denoising_parameters(): Prog_parameters()
+ProgDenoise::ProgDenoise()
 {
     DWT_type = "DAUB12";
     denoising_type = REMOVE_SCALE;
@@ -55,18 +55,58 @@ Denoising_parameters::Denoising_parameters(): Prog_parameters()
     dont_denoise = false;
 }
 
-// Read from command line --------------------------------------------------
-void Denoising_parameters::read(int argc, char **argv)
+// defineParams -------------------------------------------------------------------s
+void ProgDenoise::defineParams()
 {
-    Prog_parameters::read(argc, argv);
-    DWT_type = getParameter(argc, argv, "-type", "DAUB12");
-    std::string aux = getParameter(argc, argv, "-denoising", "remove_scales");
-    if (aux == "remove_scales")
+    XmippMetadataProgram::defineParams();
+    addParamsLine("  [-type <DWT_type=DAUB12>]   : Discrete Wavelet Transform");
+    addParamsLine("    where <DWT_type> DAUB4 DAUB12 DAUB20");
+    addParamsLine("    alias -t;");
+    addParamsLine("  [-denoising <mode=remove_scale>]: Denoising action");
+    addParamsLine("    where <mode>");
+    addParamsLine("       remove_scale");
+    addParamsLine("       bayesian <SNR0=0.1> <SNRF=0.2> : Smallest(SNR0) and largest(SNRF) SNR.");
+    addParamsLine("       soft_thresholding");
+    addParamsLine("       adaptive_soft");
+    addParamsLine("       central");
+    addParamsLine("       difussion");
+    addParamsLine("    alias -d;");
+    addParamsLine("==+ Advanced Options ==");
+    addParamsLine("  [-scale <s=0>]             : scale");
+    addParamsLine("  [-output_scale <s=0>]      : output_scale");
+    addParamsLine("  [-th <th=50>]              : threshold of values (%) to remove");
+    addParamsLine("  [-R <r=-1>]                : Radius to keep, by default half the size");
+    //    addParamsLine("  [-SNR0 <SNR=0.1>]          : Smallest SNR");
+    //    addParamsLine("  [-SNRF <SNR=0.2>]          : Largest SNR");
+    addParamsLine("  [-white_noise]             : Select if the noise is white");
+    addParamsLine("  [-outer <it=10>]           : Difussion outer iterations");
+    addParamsLine("  [-inner <it=1>]            : Difussion inner iterations");
+    addParamsLine("  [-refinement <it=1>]       : Difussion refinement iterations");
+    addParamsLine("  [-Shah_weight <w0=0> <w1=50> <w2=50> <w3=0.02>]:Diffusion weights");
+    addParamsLine("                             :  w0 = data matching ");
+    addParamsLine("                             :  w1 = 1st derivative smooth ");
+    addParamsLine("                             :  w2 = edge strength ");
+    addParamsLine("                             :  w3 = edge smoothness ");
+    addParamsLine("  [-only_edge]               : Produce the edge image of the diffusion");
+    addParamsLine("  [-show]                    : Show information about the process");
+}
+
+// Read from command line --------------------------------------------------
+void ProgDenoise::readParams()
+{
+
+    DWT_type = getParam("-type");
+    std::string aux = getParam("-denoising");
+    if (aux == "remove_scale")
         denoising_type = REMOVE_SCALE;
     else if (aux == "soft_thresholding")
         denoising_type = SOFT_THRESHOLDING;
     else if (aux == "bayesian")
+    {
+        SNR0 = getDoubleParam("-d", "bayesian", 0);
+        SNRF = getDoubleParam("-d", "bayesian", 1);
         denoising_type = BAYESIAN;
+    }
     else if (aux == "adaptive_soft")
         denoising_type = ADAPTIVE_SOFT;
     else if (aux == "central")
@@ -74,34 +114,37 @@ void Denoising_parameters::read(int argc, char **argv)
     else if (aux == "difussion")
         denoising_type = SHAH;
     else
-        denoising_type = REMOVE_SCALE;
-    scale = textToInteger(getParameter(argc, argv, "-scale", "0"));
-    output_scale = textToInteger(getParameter(argc, argv, "-output_scale", "0"));
-    threshold = textToFloat(getParameter(argc, argv, "-th", "50"));
-    R = textToInteger(getParameter(argc, argv, "-R", "-1"));
-    SNR0 = textToFloat(getParameter(argc, argv, "-SNR0", "0.1"));
-    SNRF = textToFloat(getParameter(argc, argv, "-SNRF", "0.2"));
-    white_noise = checkParameter(argc, argv, "-white_noise");
-    Shah_outer = textToInteger(getParameter(argc, argv, "-outer", "10"));
-    Shah_inner = textToInteger(getParameter(argc, argv, "-inner", "1"));
-    Shah_refinement = textToInteger(getParameter(argc, argv, "-refinement", "1"));
-    if (checkParameter(argc, argv, "-Shah_weight"))
-        Shah_weight = getVectorParameter(argc, argv, "-Shah_weight", 4);
-    else
-    {
-        Shah_weight.initZeros(4);
-        Shah_weight(1) = Shah_weight(2) = 50;
-        Shah_weight(3) = 0.02;
-    }
-    Shah_edge = checkParameter(argc, argv, "-only_edge");
-    if (checkParameter(argc, argv, "-show"))
+        REPORT_ERROR(ERR_DEBUG_IMPOSIBLE, "Bad argument type, this couldn't happens, check arguments parser!!!");
+
+    scale = getIntParam("-scale");
+    output_scale = getIntParam("-output_scale");
+    threshold = getDoubleParam("-th");
+    R = getIntParam("-R");
+
+    white_noise = checkParam("-white_noise");
+    Shah_outer = getIntParam( "-outer");
+    Shah_inner = getIntParam( "-inner");
+    Shah_refinement = getIntParam("-refinement");
+    Shah_weight(0) = getDoubleParam("-Shah_weight", 0);
+    Shah_weight(1) = getDoubleParam("-Shah_weight", 1);
+    Shah_weight(2) = getDoubleParam("-Shah_weight", 2);
+    Shah_weight(3) = getDoubleParam("-Shah_weight", 3);
+
+    Shah_edge = checkParam("-only_edge");
+    if (checkParam("-show"))
         tell = 1;
 
-    produce_side_info();
+    produceSideInfo();
+}
+
+void ProgDenoise::processImage()
+{
+    img.read(fnImg);
+    denoise(img());
 }
 
 // Produce side info -------------------------------------------------------
-void Denoising_parameters::produce_side_info()
+void ProgDenoise::produceSideInfo()
 {
     if (DWT_type == "DAUB4")
         set_DWT_type(DAUB4);
@@ -114,14 +157,11 @@ void Denoising_parameters::produce_side_info()
 }
 
 // Show --------------------------------------------------------------------
-void Denoising_parameters::show()
+void ProgDenoise::show()
 {
-    Prog_parameters::show();
-    show_specific();
-}
+    XmippMetadataProgram::show();
 
-void Denoising_parameters::show_specific()
-{
+    ///Show specific options
     if (denoising_type != SHAH)
         std::cout << "DWT type: " << DWT_type << std::endl;
     std::cout << "Denoising: ";
@@ -160,51 +200,13 @@ void Denoising_parameters::show_specific()
         std::cout << "Output scale: " << output_scale << std::endl;
 }
 
-// Usage -------------------------------------------------------------------s
-void Denoising_parameters::usage()
-{
-    Prog_parameters::usage();
-    usage_specific();
-}
-
-void Denoising_parameters::usage_specific()
-{
-    std::cerr << "  [-type <str=DAUB12]        : DWT type. Valid types are:\n"
-              << "                               DAUB4, DAUB12, DAUB20\n"
-              << "  [-denoising <str=remove_scale] : Denoising action\n"
-              << "                               remove_scale\n"
-              << "                               bayesian\n"
-              << "                               soft_thresholding\n"
-              << "                               adaptive_soft\n"
-              << "                               central\n"
-              << "                               difussion\n"
-              << "  [-scale <s=0>]             : scale\n"
-              << "  [-output_scale <s=0>]      : output_scale\n"
-              << "  [-th <th=50>]              : threshold of values (%) to remove\n"
-              << "  [-R <r=-1>]                : Radius to keep, by default half the size\n"
-              << "  [-SNR0 <SNR=0.1>]          : Smallest SNR\n"
-              << "  [-SNRF <SNR=0.2>]          : Largest SNR\n"
-              << "  [-white_noise]             : Select if the noise is white\n"
-              << "  [-outer <it=10>]           : Difussion outer iterations\n"
-              << "  [-inner <it=1>]            : Difussion inner iterations\n"
-              << "  [-refinement <it=1>]       : Difussion refinement iterations\n"
-              << "  [-Shah_weight [w0,w1,w2,w3]]:Diffusion weights\n"
-              << "                               w0=data matching (=0)\n"
-              << "                               w1=1st derivative smooth (=50)\n"
-              << "                               w2=edge strength (=50)\n"
-              << "                               w3=edge smoothness (=0.02)\n"
-              << "  [-only_edge]               : Produce the edge image of the diffusion\n"
-              << "  [-show]                    : Show information about the process\n"
-     ;
-}
-
 // Denoise volume ----------------------------------------------------------
-void Denoising_parameters::denoise(MultidimArray<double> &img)
+void ProgDenoise::denoise(MultidimArray<double> &img)
 {
     if (img.getDim()==2)
     {
         // 2D image denoising
-    	if (denoising_type == BAYESIAN && adjust_range)
+        if (denoising_type == BAYESIAN && adjust_range)
             img.rangeAdjust(0, 1);
         if (denoising_type != SHAH)
         {
@@ -232,7 +234,7 @@ void Denoising_parameters::denoise(MultidimArray<double> &img)
             break;
         case BAYESIAN:
             estimatedS = bayesian_wiener_filtering2D(img, scale, SNR0, SNRF,
-                                                   white_noise, tell, !dont_denoise);
+                         white_noise, tell, !dont_denoise);
             break;
         case ADAPTIVE_SOFT:
             adaptive_soft_thresholding2D(img, scale);
@@ -264,8 +266,8 @@ void Denoising_parameters::denoise(MultidimArray<double> &img)
     }
     else
     {
-    	// 3D image denoising
-    	if (denoising_type == SHAH)
+        // 3D image denoising
+        if (denoising_type == SHAH)
         {
             std::cerr << "Shah denoising is not implemented for volumes\n";
             return;
@@ -300,7 +302,7 @@ void Denoising_parameters::denoise(MultidimArray<double> &img)
             break;
         case BAYESIAN:
             estimatedS = bayesian_wiener_filtering3D(img, scale, SNR0, SNRF,
-                                                   white_noise, tell, !dont_denoise);
+                         white_noise, tell, !dont_denoise);
             break;
         case ADAPTIVE_SOFT:
             std::cout << "Adaptive soft-thresholding not implemented for imgumes\n";
@@ -321,12 +323,9 @@ void Denoising_parameters::denoise(MultidimArray<double> &img)
         IDWT(img, img);
 
     }
-
-
-
 }
 
-void Denoising_parameters::denoise_avg_bayesian(MultidimArray<double> &vol)
+void ProgDenoise::denoiseAvgBayesian(MultidimArray<double> &vol)
 {
     DWT(vol, vol);
     bayesian_wiener_filtering3D(vol, scale, estimatedS);

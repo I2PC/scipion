@@ -28,7 +28,7 @@
 #include <data/mask.h>
 #include <data/filters.h>
 
-class Similarity_parameters: public Prog_parameters
+class ProgCorrelation: public XmippMetadataProgram
 {
 public:
     FileName    fn_ref, fn_msk;
@@ -36,93 +36,101 @@ public:
     MultidimArray<int> mask;
     bool usemask, docc, doeu, domi, doco;
 
-public:
-    Similarity_parameters()
-    {}
-    void read(int argc, char **argv)
+    void defineParams()
     {
-        Prog_parameters::read(argc, argv);
-        try
+        addParamsLine("   -ref <input file>        : Filename for reference image/volume ");
+        XmippMetadataProgram::defineParams();
+        addParamsLine("  [-mask <input mask=\"\">] : Restrict similarity calculation to region within the mask");
+        addParamsLine("  [-co ]                    : Calculate correlation (i.e. signal product).");
+        addParamsLine("  [-cc ]                    : Calculate cross-correlation coefficient ");
+        addParamsLine("  [-eu ]                    : Calculate euclidian distance ");
+        addParamsLine("  [-mi ]                    : Calculate mutual information");
+    }
+
+    void readParams()
+    {
+        XmippMetadataProgram::readParams();
+        usemask = false;
+        fn_ref = getParam("-ref");
+        ref.read(fn_ref, true, -1, apply_geo);
+        ref().setXmippOrigin();
+        fn_msk = getParam("-mask");
+        if (fn_msk != "")
         {
-            usemask = false;
-            fn_ref = getParameter(argc, argv, "-ref");
-            ref.read(fn_ref,true,-1,apply_geo);
-            ref().setXmippOrigin();
-            fn_msk = getParameter(argc, argv, "-mask", "");
-            if (fn_msk != "")
-            {
-                usemask = true;
-                M.read(fn_msk, true, -1, apply_geo);
-                M().setXmippOrigin();
-                typeCast(M(),mask);
-            }
-            doco=checkParameter(argc, argv, "-co");
-            docc=checkParameter(argc, argv, "-cc");
-            doeu=checkParameter(argc, argv, "-eu");
-            domi=checkParameter(argc, argv, "-mi");
+            usemask = true;
+            M.read(fn_msk, true, -1, apply_geo);
+            M().setXmippOrigin();
+            typeCast(M(),mask);
         }
-        catch (XmippError XE)
-        {
-            std::cout << XE;
-            usage();
-            exit(1);
-        }
+        doco = checkParam("-co");
+        docc = checkParam("-cc");
+        doeu = checkParam("-eu");
+        domi = checkParam("-mi");
     }
 
     void show()
     {
         std::cout << "Reference file: " << fn_ref << std::endl;
-        if (usemask) std::cout << "mask file: " << fn_msk << std::endl;
-        Prog_parameters::show();
+        if (usemask)
+            std::cout << "mask file: " << fn_msk << std::endl;
+        XmippMetadataProgram::show();
         std::cout << std::endl;
     }
-    void usage()
+
+    void processImage()
     {
-        std::cerr << "   -ref <input file>        : Filename for reference image/volume \n";
-        Prog_parameters::usage();
-        std::cerr << "  [-mask <input mask>]      : Restrict similarity calculation to region within the mask\n";
-        std::cerr << "  [-co ]                    : Calculate correlation (i.e. signal product).\n";
-        std::cerr << "  [-cc ]                    : Calculate cross-correlation coefficient \n";
-        std::cerr << "  [-eu ]                    : Calculate euclidian distance \n";
-        std::cerr << "  [-mi ]                    : Calculate mutual information\n";
+        img.read(fnImg);
+
+        double co, cc, eu, mi;
+        if (!usemask)
+        {
+            if (doco)
+                co = correlation(ref(), img());
+            if (docc)
+                cc = correlation_index(ref(), img());
+            if (doeu)
+                eu = euclidian_distance(ref(), img());
+            if (domi)
+                mi = mutual_information(ref(), img());
+        }
+        else
+        {
+            if (doco)
+                co = correlation(ref(), img(), &mask);
+            if (docc)
+                cc = correlation_index(ref(), img(), &mask);
+            if (doeu)
+                eu = euclidian_distance(ref(), img(), &mask);
+            if (domi)
+                mi = mutual_information(ref(), img(), 0, 0, &mask);
+        }
+
+        std::cout << img.name() << ": ";
+        if (doco)
+            std::cout << " co = " << co;
+        if (docc)
+            std::cout << " cc = " << cc;
+        if (doeu)
+            std::cout << " eu = " << eu;
+        if (domi)
+            std::cout << " mi = " << mi;
+        std::cout << std::endl;
     }
-};
-
-
-bool process_img(Image<double> &img, const Prog_parameters *prm)
-{
-    Similarity_parameters *eprm = (Similarity_parameters *) prm;
-
-    double co, cc, eu, mi;
-    if (!eprm->usemask)
-    {
-        if (eprm->doco) co = correlation(eprm->ref(), img());
-        if (eprm->docc) cc = correlation_index(eprm->ref(), img());
-        if (eprm->doeu) eu = euclidian_distance(eprm->ref(), img());
-        if (eprm->domi) mi = mutual_information(eprm->ref(), img());
-    }
-    else
-    {
-        if (eprm->doco) co = correlation(eprm->ref(), img(), &eprm->mask);
-        if (eprm->docc) cc = correlation_index(eprm->ref(), img(), &eprm->mask);
-        if (eprm->doeu) eu = euclidian_distance(eprm->ref(), img(), &eprm->mask);
-        if (eprm->domi) mi = mutual_information(eprm->ref(), img(), 0, 0, &eprm->mask);
-    }
-
-    std::cout << img.name() << ": ";
-    if (eprm->doco) std::cout << " co= " << co;
-    if (eprm->docc) std::cout << " cc= " << cc;
-    if (eprm->doeu) std::cout << " eu= " << eu;
-    if (eprm->domi) std::cout << " mi= " << mi;
-    std::cout << std::endl;
-    return true;
 }
+;///end of class ProgCorrelation
 
-int main(int argc, char **argv)
+
+/* MAIN -------------------------------------------------------------------- */
+int main(int argc, char *argv[])
 {
-    Similarity_parameters prm;
-    prm.allow_time_bar = false;
-    prm.each_image_produces_an_output = false;
-    prm.apply_geo = true;
-    SF_main(argc, argv, &prm, (void*)&process_img);
+  try
+  {
+      ProgCorrelation program;
+      program.read(argc, argv);
+      program.run();
+  }
+  catch (XmippError xe)
+  {
+      std::cerr << xe;
+  }
 }

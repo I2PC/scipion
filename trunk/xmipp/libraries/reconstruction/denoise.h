@@ -35,7 +35,7 @@
 
 /// Parameters for denoise program
 /// @ingroup Denoise
-class Denoising_parameters: public Prog_parameters
+class ProgDenoise: public XmippMetadataProgram
 {
 public:
     typedef enum
@@ -46,7 +46,7 @@ public:
         ADAPTIVE_SOFT,
         CENTRAL,
         SHAH
-    } Denoising_type;
+    } DenoisingType;
 
     /** Wavelet type.
      *
@@ -59,7 +59,7 @@ public:
      * Valid types are REMOVE_SCALE, SOFT_THRESHOLDING, BAYESIAN, ADAPTIVE_SOFT,
      * CENTRAL, SHAH.
      */
-    Denoising_type denoising_type;
+    DenoisingType denoising_type;
 
     /** Scale to which the denoising is applied.
      *
@@ -139,6 +139,12 @@ public:
      */
     bool dont_denoise;
 
+protected:
+    void defineParams();
+    void readParams();
+
+    void processImage();
+
 public:
     /** EstimatedS of the Bayesian method.
      */
@@ -146,33 +152,15 @@ public:
 
     /** Empty constructor
      */
-    Denoising_parameters();
-
-    /** Read parameters from command line
-     */
-    void read(int argc, char** argv);
+    ProgDenoise();
 
     /** Produce side info.
      *
      * The DWT type is translated and set
      */
-    void produce_side_info();
+    void produceSideInfo();
 
-    /** Show parameters. This function calls show_specific.
-     */
     void show();
-
-    /** Show specific
-     */
-    void show_specific();
-
-    /** Usage. This function calls usage_specific.
-     */
-    void usage();
-
-    /** Show specific parameters.
-     */
-    void usage_specific();
 
     /** Denoise an image.
      */
@@ -181,7 +169,7 @@ public:
     /** Denoise a volume using a precalculated estimate of the bayesian
      * parameters.
      */
-    void denoise_avg_bayesian(MultidimArray< double >& vol);
+    void denoiseAvgBayesian(MultidimArray< double >& vol);
 };
 
 #endif
