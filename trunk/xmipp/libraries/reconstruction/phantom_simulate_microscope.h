@@ -51,11 +51,11 @@ public:
     bool command_line;
 public:
     /// CTF
-    FourierMask ctf;
+    ProgFourierFilter ctf;
     /// Low pass filter, if it is 0 no lowpass filter is applied
-    FourierMask lowpass;
+    ProgFourierFilter lowpass;
     /// After CTF noise root squared spectrum
-    FourierMask after_ctf;
+    ProgFourierFilter after_ctf;
     /// Noise power before CTF
     double   sigma_before_CTF;
     /// Noise power after CTF

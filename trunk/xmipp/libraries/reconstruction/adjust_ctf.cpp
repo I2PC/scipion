@@ -681,14 +681,14 @@ void Adjust_CTF_Parameters::produce_side_info()
     enhanced_ctftomodel() = aux;
     enhanced_ctftomodel().rangeAdjust(0, 1);
 
-    FourierMask Filter;
+    ProgFourierFilter Filter;
     Filter.FilterShape = RAISED_COSINE;
     Filter.FilterBand = HIGHPASS;
     Filter.w1 = 0.01;
     Filter.raised_w = 0.005;
     enhanced_ctftomodel().setXmippOrigin();
-    Filter.generate_mask(enhanced_ctftomodel());
-    Filter.apply_mask_Space(enhanced_ctftomodel());
+    Filter.generateMask(enhanced_ctftomodel());
+    Filter.applyMaskSpace(enhanced_ctftomodel());
     STARTINGX(enhanced_ctftomodel()) = STARTINGY(enhanced_ctftomodel()) = 0;
 }
 

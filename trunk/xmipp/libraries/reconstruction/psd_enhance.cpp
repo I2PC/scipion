@@ -101,15 +101,15 @@ void Prog_Enhance_PSD_Parameters::apply(MultidimArray<double> &PSD)
 
     // Band pass filter
     CenterFFT(PSD, true);
-    FourierMask Filter;
+    ProgFourierFilter Filter;
     Filter.FilterShape = RAISED_COSINE;
     Filter.FilterBand = BANDPASS;
     Filter.w1 = filter_w1;
     Filter.w2 = filter_w2;
     Filter.raised_w = decay_width;
     PSD.setXmippOrigin();
-    Filter.generate_mask(PSD);
-    Filter.apply_mask_Space(PSD);
+    Filter.generateMask(PSD);
+    Filter.applyMaskSpace(PSD);
     STARTINGX(PSD) = STARTINGY(PSD) = 0;
     CenterFFT(PSD, false);
 

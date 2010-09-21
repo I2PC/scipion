@@ -86,8 +86,8 @@ void Prog_Microscope_Parameters::produce_side_info()
         aux.resize(2*Ydim, 2*Xdim);
         aux.setXmippOrigin();
         ctf.do_generate_3dmask=true;
-        ctf.generate_mask(aux);
-        before_power = ctf.mask_power();
+        ctf.generateMask(aux);
+        before_power = ctf.maskPower();
     }
 
     if (low_pass_before_CTF != 0)
@@ -107,8 +107,8 @@ void Prog_Microscope_Parameters::produce_side_info()
         aux.resize(2*Ydim, 2*Xdim);
         aux.setXmippOrigin();
         after_ctf.do_generate_3dmask=true;
-        after_ctf.generate_mask(aux);
-        after_power = after_ctf.mask_power();
+        after_ctf.generateMask(aux);
+        after_power = after_ctf.maskPower();
     }
 
     // Compute noise balance
@@ -137,7 +137,7 @@ void Prog_Microscope_Parameters::apply(MultidimArray<double> &I)
     MultidimArray<double> noisy;
     noisy.resize(I);
     noisy.initRandom(0, sigma_before_CTF, "gaussian");
-    if (low_pass_before_CTF != 0) lowpass.apply_mask_Space(noisy);
+    if (low_pass_before_CTF != 0) lowpass.applyMaskSpace(noisy);
     I += noisy;
 
     // Check if the mask is a defocus changing CTF
@@ -150,17 +150,17 @@ void Prog_Microscope_Parameters::apply(MultidimArray<double> &I)
         ctf.ctf.DeltafU *= rnd_unif(1 - defocus_change / 100, 1 + defocus_change / 100);
         ctf.ctf.DeltafV *= rnd_unif(1 - defocus_change / 100, 1 + defocus_change / 100);
         aux.initZeros(2*Ydim, 2*Xdim);
-        ctf.generate_mask(aux);
+        ctf.generateMask(aux);
         ctf.ctf.DeltafU = ctf.ctf.DeltafU;
         ctf.ctf.DeltafV = ctf.ctf.DeltafV;
     }
 
     // Apply CTF
-    if (fn_ctf != "") ctf.apply_mask_Space(I);
+    if (fn_ctf != "") ctf.applyMaskSpace(I);
 
     // Add noise after CTF
     noisy.initRandom(0, sigma_after_CTF, "gaussian");
-    if (after_ctf_noise) after_ctf.apply_mask_Space(noisy);
+    if (after_ctf_noise) after_ctf.applyMaskSpace(noisy);
     I += noisy;
     I.window(FIRST_XMIPP_INDEX(Ydim), FIRST_XMIPP_INDEX(Xdim),
              LAST_XMIPP_INDEX(Ydim), LAST_XMIPP_INDEX(Xdim));

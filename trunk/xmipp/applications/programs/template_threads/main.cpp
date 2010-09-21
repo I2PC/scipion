@@ -36,6 +36,7 @@
 #include <stdlib.h>
 #include <iostream>
 #include <fstream>
+#include <unistd.h>
 #include <iomanip> //for print pi with more decimals
 #include "data/threads.h"
 #include "data/image.h"
@@ -47,8 +48,6 @@ double PI25DT = 3.14159265358979323842643;
 #define X2 (x*x) //((x-R)*(x-R))
 #define Y2 (y*y) //((y-R)*(y-R))
 #define R2 (R*R)
-#define TH_EXIT 0
-#define TH_CHECK_POINTS 1
 
 typedef char STRING[256];
 
@@ -62,23 +61,28 @@ Barrier * barrier;
 ParallelTaskDistributor * td;
 
 int numberOfThreads = 1;
-pthread_t * th_structs;
-int * th_ids;
-int threadTask = -1;
+
 longint R = 100000;
 longint blockSize = 1000;
 longint totalCounter = 0;
 
-longint assignedJobs = 0;
+/** Here the number of jobs is the radius R that will be sampled */
 longint &numberOfJobs = R;
 
-void computePoints(ThreadArgument &thArg)
+void nothingFunctionNew(ThreadArgument &thArg)
 {
-    //ThreadArgument * thArg = (ThreadArgument*)data;
-    int thread_id = thArg.thread_id;
+    std::cerr << "Hello from thread " <<  thArg.thread_id;
+}
 
+/** Function to count the number of points that lies
+ * inside a circle of radius R, just for calculating PI.
+ * This is parallelized distributing some points for each threads
+ */
+void computePoints(int thread_id)
+{
     longint first = -1, last = -1;
     longint insideCounter = 0;
+   //ThreadManager tm(2);
 
     while (td->getTasks(first, last))
     {
@@ -86,22 +90,46 @@ void computePoints(ThreadArgument &thArg)
         for (longint x = 0; x <= R; x++)//just for more work to do
             for (longint y = first; y <= last; y++)
             {
-              Image<double> img;
-//              MetaData md1;
-//              MetaData md2;
-//              md1.clear();
-//              md1.addObject();
-//              md2.clear();
-//              md2.addObject();
+        // MetaData md1;
+    //MetaData md2;
+             Image<double> img;
+
+        //tm.run(nothingFunctionNew);
+        //sleep(1);
+//  ThreadTaskDistributor td(R, blockSize);
+                //std::cerr << "th" << thread_id << ": MD1 --- clearing metadatassss....: " << std::endl;
+                //md1.clear();
+        //std::cerr << "th" << thread_id << ": MD1 --- Adding object....: " << std::endl;
+                //md1.addObject();
+                //std::cerr << "th" << thread_id << ": ---------------------- MD2 ---------- clearing metadatassss....: " << std::endl;
+                //md2.clear();
+        //std::cerr << "th" << thread_id << ":----------------------- MD2 ---------- Adding object....: " << std::endl;
+                //md2.addObject();
+                //std::cerr << "th" << thread_id << ": calculating....: " << std::endl;
                 if (X2 + Y2 <= R2)
                     insideCounter++;
+
             }
+        std::cerr << "th" << thread_id << ": asking more jobs" << std::endl;
 
     }
+    std::cerr << "Updating counter thread " << thread_id << std::endl;
     //Lock for update the total counter
     mutex.lock();
     totalCounter += insideCounter;
     mutex.unlock();
+        std::cerr << "Leaving counter thread " << thread_id << std::endl;
+}
+
+void threadFunctionNew(ThreadArgument &thArg)
+{
+    computePoints(thArg.thread_id);
+}
+
+void * threadFunctionOld(void * data)
+{
+    long id = (long)data;
+    computePoints((int)id);
 }
 
 int main(int argc, char **argv)
@@ -116,22 +144,64 @@ int main(int argc, char **argv)
     if (argc > 3) //read blockSize
         blockSize =  atoll(argv[3]);
 
-    //Create the job handler to distribute jobs
-    //jobHandler = new ParallelJobHandler(R, blockSize);
-    td = new ThreadTaskDistributor(R, blockSize);
+    bool oldMethod = false;
+    if (argc > 4) //old or new method
+        oldMethod = true;
 
-    //Create threads to start working
-    //createThreads();
-    ThreadManager * thMgr = new ThreadManager(numberOfThreads);
-    thMgr->run(computePoints);
-    //Terminate threads and free memory
-    delete td;
-    delete thMgr;
+    ThreadManager * thMgr = NULL;//new  ThreadManager(numberOfThreads);
 
-    //Calculate PI based on the number of points inside circle
-    double myPI = (double)(totalCounter * 4) / R2;
-    std::cout.precision(20);
-    std::cout << "PI: " << std::fixed << myPI <<std::endl;
+    for (int i = 0; i < 10; ++i)
+    {
+        totalCounter = 0;
+        //Create the job handler to distribute jobs
+        //jobHandler = new ParallelJobHandler(R, blockSize);
+        td = new ThreadTaskDistributor(R, blockSize);
 
+        if (!oldMethod)
+        {
+            //Create threads to start working
+            thMgr = new ThreadManager(numberOfThreads);
+            std::cerr << "Creating ThreadManager...." << std::endl;
+            thMgr->run(threadFunctionNew);
+        }
+        else
+        {
+            /////////////////////////////////////////////////////////////////////////
+            /** Following is the old way to do the same thing with posix functions
+             * @code */
+            pthread_t threads[numberOfThreads];
+            int rc;
+            long t;
+            for(t = 0; t < numberOfThreads; t++)
+            {
+                printf("In main: creating thread %ld\n", t);
+                rc = pthread_create(&threads[t], NULL, threadFunctionOld, (void *)t);
+                if (rc)
+                {
+                    printf("ERROR; return code from pthread_create() is %d\n", rc);
+                    exit(-1);
+                }
+            }
+
+            for (t = 0; t < numberOfThreads; ++t)
+            {
+                rc = pthread_join(threads[t], NULL);
+            }
+
+            /**
+             * @endcode
+            */
+        }
+        ////////////////////////////////////////////////////////////////////////
+        //Calculate PI based on the number of points inside circle
+        double myPI = (double)(totalCounter * 4) / R2;
+        std::cout.precision(20);
+        std::cout << "PI: " << std::fixed << myPI <<std::endl;
+
+        //Terminate threads and free memory
+        delete td;
+        delete thMgr;
+    }
+    //delete thMgr;
     return 0;
 }

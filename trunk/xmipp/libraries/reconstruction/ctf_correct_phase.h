@@ -39,7 +39,7 @@ public:
     FileName fnCtfdat;
 
     /// Side Info: CTF
-    FourierMask ctf;
+    ProgFourierFilter ctf;
     
     /// Side Info: ctfdat
     MetaData ctfdat;

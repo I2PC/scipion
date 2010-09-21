@@ -30,7 +30,7 @@
 class FourierFilter_parameters: public Prog_parameters
 {
 public:
-    FourierMask fmask;
+    ProgFourierFilter fmask;
     bool        first;
 
 public:
@@ -59,10 +59,10 @@ bool process_img(Image<double> &img, const Prog_parameters *prm)
     FourierFilter_parameters *eprm = (FourierFilter_parameters *) prm;
     if (eprm->first)
     {
-        eprm->fmask.generate_mask(img());
+        eprm->fmask.generateMask(img());
         eprm->first = false;
     }
-    eprm->fmask.apply_mask_Space(img());
+    eprm->fmask.applyMaskSpace(img());
     return true;
 }
 

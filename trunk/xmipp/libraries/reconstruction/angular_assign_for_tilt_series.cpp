@@ -786,13 +786,13 @@ void Prog_tomograph_alignment::produceSideInfo()
                                                   XSIZE(Ifiltered)/10);
 
                 // Bandpass the image
-                FourierMask FilterBP;
+                ProgFourierFilter FilterBP;
                 FilterBP.FilterBand=BANDPASS;
                 FilterBP.w1=1.0/XSIZE(Ifiltered);
                 FilterBP.w2=100.0/XSIZE(Ifiltered);
                 FilterBP.raised_w=1.0/XSIZE(Ifiltered);
-                FilterBP.generate_mask(Ifiltered);
-                FilterBP.apply_mask_Space(Ifiltered);
+                FilterBP.generateMask(Ifiltered);
+                FilterBP.applyMaskSpace(Ifiltered);
 
                 // Equalize histogram
                 //histogram_equalization(Ifiltered,8);
@@ -1384,14 +1384,14 @@ void * threadgenerateLandmarkSetCriticalPoints( void * args )
         MultidimArray<double> Ifiltered;
         Ifiltered=I();
         Ifiltered.setXmippOrigin();
-        FourierMask FilterBP;
+        ProgFourierFilter FilterBP;
         FilterBP.FilterBand=BANDPASS;
         FilterBP.w1=2.0/XSIZE(Ifiltered);
         FilterBP.w2=128.0/XSIZE(Ifiltered);
         FilterBP.raised_w=1.0/XSIZE(Ifiltered);
         ;
-        FilterBP.generate_mask(Ifiltered);
-        FilterBP.apply_mask_Space(Ifiltered);
+        FilterBP.generateMask(Ifiltered);
+        FilterBP.applyMaskSpace(Ifiltered);
 
         // Identify low valued points and perform dilation
         MultidimArray<double> Iaux=Ifiltered;

@@ -146,7 +146,7 @@ void * threadPrepareImages( void * args )
     BinaryCircularMask(mask,Xdim/2, OUTSIDE_MASK);
     int NInsideMask=XSIZE(mask)*YSIZE(mask)-mask.sum();
 
-    FourierMask Filter;
+    ProgFourierFilter Filter;
     Filter.w1=-1;
     if (parent->lpf>0 && parent->hpf>0)
     {
@@ -185,10 +185,10 @@ void * threadPrepareImages( void * args )
             {
                 if (first)
                 {
-                    Filter.generate_mask(I());
+                    Filter.generateMask(I());
                     first=false;
                 }
-                Filter.apply_mask_Space(I());
+                Filter.applyMaskSpace(I());
             }
 
             // Compute sigma outside the largest circle

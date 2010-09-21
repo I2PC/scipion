@@ -51,7 +51,7 @@
    For volumes you the mask is computed on the fly and
    in this way memory is saved (unless do_generate_3dmask == true).
 */
-class FourierMask
+class ProgFourierFilter
 {
 public:
 #define RAISED_COSINE 1
@@ -88,23 +88,20 @@ public:
     CTFDescription ctf;
     
     /** Correct phase before applying CTF */
-    bool correctPhase;
+    bool do_correct_phase;
 
     /** Flag to generate 3D mask */
     bool do_generate_3dmask;
 
 public:
     /** Empty constructor */
-    FourierMask()
-    {
-        clear();
-    }
+    ProgFourierFilter();
 
     /** Assignment */
-    FourierMask & operator = (const FourierMask &F);
+    ProgFourierFilter & operator = (const ProgFourierFilter &F);
 
     /** Another function for assignment */
-    void assign(const FourierMask &F);
+    void assign(const ProgFourierFilter &F);
 
     /** Clear */
     void clear();
@@ -125,16 +122,16 @@ public:
     double maskValue(const Matrix1D<double> &w);
 
     /** Generate nD mask. */
-    void generate_mask(MultidimArray<double> &mask);
+    void generateMask(MultidimArray<double> &mask);
 
     /** Apply mask in 3D. */
-    void apply_mask_Space(MultidimArray<double> &v);
+    void applyMaskSpace(MultidimArray<double> &v);
 
     /** Get the power of the nD mask. */
-    double mask_power();
+    double maskPower();
     
     /** Correct phase */
-    void correct_phase();
+    void correctPhase();
 public:
     // Auxiliary vector for representing frequency values
     Matrix1D<double> w;

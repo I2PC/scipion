@@ -197,7 +197,7 @@ void ART_single_step(
     bool                    refine)          // Refine experimental projection before correcting
 {
     // Prepare to work with CTF ................................................
-    FourierMask ctf;
+    ProgFourierFilter ctf;
     ImageOver *footprint = (ImageOver *) & prm.basis.blobprint;
     ImageOver *footprint2 = (ImageOver *) & prm.basis.blobprint2;
     bool remove_footprints = false;
@@ -232,9 +232,9 @@ void ART_single_step(
 
         // Generate mask to the size of the footprint, correct phase
         // and apply CTF
-        ctf.generate_mask((*footprint)());
-        ctf.correct_phase();
-        ctf.apply_mask_Space((*footprint)());
+        ctf.generateMask((*footprint)());
+        ctf.correctPhase();
+        ctf.applyMaskSpace((*footprint)());
 
         // Remove unnecessary regions
         finalsize = 2 * CEIL(15 + blob_radius) + 1;
@@ -267,8 +267,8 @@ void ART_single_step(
 
     if (fn_ctf != "" && prm.unmatched)
     {
-        ctf.generate_mask(theo_proj());
-        ctf.apply_mask_Space(theo_proj());
+        ctf.generateMask(theo_proj());
+        ctf.applyMaskSpace(theo_proj());
     }
 
     // Print system matrix

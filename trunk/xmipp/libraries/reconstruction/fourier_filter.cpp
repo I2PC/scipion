@@ -31,7 +31,7 @@
 #include <data/fft.h>
 
 /* Clear ------------------------------------------------------------------- */
-void FourierMask::clear()
+void ProgFourierFilter::clear()
 {
     FilterShape = RAISED_COSINE;
     FilterBand = LOWPASS;
@@ -39,12 +39,18 @@ void FourierMask::clear()
     raised_w = 0;
     ctf.clear();
     ctf.enable_CTFnoise = false;
-    correctPhase = false;
+    do_correct_phase = false;
     do_generate_3dmask = false;
 }
 
+/* Empty constructor ---------------------------------------------------------*/
+ProgFourierFilter::ProgFourierFilter()
+{
+    clear();
+}
+
 /* Assignment -------------------------------------------------------------- */
-FourierMask & FourierMask::operator = (const FourierMask &F)
+ProgFourierFilter & ProgFourierFilter::operator = (const ProgFourierFilter &F)
 {
     if (this != &F)
     {
@@ -61,13 +67,13 @@ FourierMask & FourierMask::operator = (const FourierMask &F)
 }
 
 /* Another function for assignment ----------------------------------------- */
-void FourierMask::assign(const FourierMask &F)
+void ProgFourierFilter::assign(const ProgFourierFilter &F)
 {
     *this = F;
 }
 
 /* Read parameters from command line. -------------------------------------- */
-void FourierMask::read(int argc, char **argv)
+void ProgFourierFilter::read(int argc, char **argv)
 {
     clear();
 
@@ -132,7 +138,7 @@ void FourierMask::read(int argc, char **argv)
         ctf.enable_CTFnoise = false;
         ctf.read(argv[i+2]);
         ctf.Produce_Side_Info();
-        correctPhase=true;
+        do_correct_phase=true;
     }
     else if (strcmp(argv[i+1], "bfactor") == 0)
     {
@@ -183,7 +189,7 @@ void FourierMask::read(int argc, char **argv)
 }
 
 /* Show -------------------------------------------------------------------- */
-void FourierMask::show()
+void ProgFourierFilter::show()
 {
     if (FilterShape == WEDGE)
     {
@@ -245,7 +251,7 @@ void FourierMask::show()
 }
 
 /* Usage ------------------------------------------------------------------- */
-void FourierMask::usage()
+void ProgFourierFilter::usage()
 {
     std::cerr << "   -low_pass  <w1>                   : Cutoff freq (<1/2 or A)\n"
     << "   -high_pass <w1>                   : Cutoff freq (<1/2 or A)\n"
@@ -265,7 +271,7 @@ void FourierMask::usage()
 }
 
 /* Get mask value ---------------------------------------------------------- */
-double FourierMask::maskValue(const Matrix1D<double> &w)
+double ProgFourierFilter::maskValue(const Matrix1D<double> &w)
 {
     double absw=w.module();
 
@@ -348,7 +354,7 @@ double FourierMask::maskValue(const Matrix1D<double> &w)
 }
 
 /* Generate mask ----------------------------------------------------------- */
-void FourierMask::generate_mask(MultidimArray<double> &v)
+void ProgFourierFilter::generateMask(MultidimArray<double> &v)
 {
     if (do_generate_3dmask)
     {
@@ -423,7 +429,7 @@ void FourierMask::generate_mask(MultidimArray<double> &v)
     }
 }
 
-void FourierMask::apply_mask_Space(MultidimArray<double> &v)
+void ProgFourierFilter::applyMaskSpace(MultidimArray<double> &v)
 {
     MultidimArray< std::complex<double> > aux3D;
     transformer.FourierTransform(v, aux3D, false);
@@ -454,13 +460,13 @@ void FourierMask::apply_mask_Space(MultidimArray<double> &v)
 }
 
 /* Mask power -------------------------------------------------------------- */
-double FourierMask::mask_power()
+double ProgFourierFilter::maskPower()
 {
     return maskFourier.sum2()/MULTIDIM_SIZE(maskFourier);
 }
 
 // Correct phase -----------------------------------------------------------
-void FourierMask::correct_phase()
+void ProgFourierFilter::correctPhase()
 {
     FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(maskFourier)
     if (DIRECT_MULTIDIM_ELEM(maskFourier,n)< 0)

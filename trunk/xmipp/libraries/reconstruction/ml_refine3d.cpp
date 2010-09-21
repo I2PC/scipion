@@ -962,12 +962,12 @@ void Prog_Refine3d_prm::post_process_volumes(int argc, char **argv)
             // Filtering the volume
             if (lowpass > 0)
             {
-                FourierMask fmask;
+                ProgFourierFilter fmask;
                 fmask.raised_w = 0.02;
                 fmask.FilterShape = RAISED_COSINE;
                 fmask.FilterBand = LOWPASS;
                 fmask.w1 = lowpass;
-                fmask.apply_mask_Space(vol());
+                fmask.applyMaskSpace(vol());
             }
 
             // Different types of solvent flattening

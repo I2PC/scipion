@@ -106,16 +106,16 @@ void Prog_IDR_ART_Parameters::IDR_correction()
                                LAST_XMIPP_INDEX(2*Ydim), LAST_XMIPP_INDEX(2*Xdim));
 
             // Read CTF file
-            FourierMask ctf;
+            ProgFourierFilter ctf;
             ctf.FilterBand = CTF;
             ctf.ctf.read(fn_ctf);
             ctf.ctf.enable_CTFnoise = false;
             ctf.ctf.Produce_Side_Info();
-            ctf.generate_mask(Itheo_CTF());
-            ctf.correct_phase();
+            ctf.generateMask(Itheo_CTF());
+            ctf.correctPhase();
 
             // Apply CTF
-            ctf.apply_mask_Space(Itheo_CTF());
+            ctf.applyMaskSpace(Itheo_CTF());
             Itheo_CTF().window(FIRST_XMIPP_INDEX(Ydim), FIRST_XMIPP_INDEX(Xdim),
                                LAST_XMIPP_INDEX(Ydim), LAST_XMIPP_INDEX(Xdim));
 

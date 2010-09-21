@@ -187,16 +187,16 @@ void Prog_Convert_Vol2Pseudo::placeSeeds(int Nseeds)
 {
     // Convolve the difference with the Gaussian to know
     // where it would be better to put a Gaussian
-    FourierMask Filter;
+    ProgFourierFilter Filter;
     Filter.FilterBand=LOWPASS;
     Filter.FilterShape=REALGAUSSIAN;
     Filter.w1=sigma;
-    Filter.generate_mask(Vin());
+    Filter.generateMask(Vin());
     Filter.do_generate_3dmask=false;
  
     MultidimArray<double> Vdiff=Vin();
     Vdiff-=Vcurrent();
-    Filter.apply_mask_Space(Vdiff);
+    Filter.applyMaskSpace(Vdiff);
     
     // Place all seeds
     int rmax=3*sigma;

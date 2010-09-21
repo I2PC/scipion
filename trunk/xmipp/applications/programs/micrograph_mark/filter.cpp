@@ -112,8 +112,8 @@ void QtLowPassFilter::apply(Image<double> *_img)
     if (_img != NULL)
     {
         (*_img)().setXmippOrigin();
-        filter.generate_mask((*_img)());
-        filter.apply_mask_Space((*_img)());
+        filter.generateMask((*_img)());
+        filter.applyMaskSpace((*_img)());
         FOR_ALL_ELEMENTS_IN_ARRAY2D((*_img)())
         (*_img)()(i, j) = CLIP((*_img)()(i, j), 0, 255);
         STARTINGX((*_img)()) = 0;
@@ -138,8 +138,8 @@ void QtHighPassFilter::apply(Image<double> *_img)
     if (_img != NULL)
     {
         (*_img)().setXmippOrigin();
-        filter.generate_mask((*_img)());
-        filter.apply_mask_Space((*_img)());
+        filter.generateMask((*_img)());
+        filter.applyMaskSpace((*_img)());
         (*_img)().rangeAdjust(0, 255);
         STARTINGX((*_img)()) = 0;
         STARTINGY((*_img)()) = 0;

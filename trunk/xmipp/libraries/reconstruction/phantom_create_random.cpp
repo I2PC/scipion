@@ -318,7 +318,7 @@ void ROUT_random_phantom(const Prog_Random_Phantom_Parameters &prm,
     }
     else
     {
-        FourierMask ctf;
+        ProgFourierFilter ctf;
         if (prm.fn_CTF != "")
         {
             ctf.FilterBand = CTF;
@@ -366,8 +366,8 @@ void ROUT_random_phantom(const Prog_Random_Phantom_Parameters &prm,
             if (prm.fn_CTF != "")
             {
                 if (n == 0)
-                    ctf.generate_mask(proj());
-                ctf.apply_mask_Space(proj());
+                    ctf.generateMask(proj());
+                ctf.applyMaskSpace(proj());
             }
 
             // Compute projection area

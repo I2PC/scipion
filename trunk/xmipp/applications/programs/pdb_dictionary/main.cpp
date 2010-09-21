@@ -44,24 +44,24 @@ void extractTrainingPatches(const FileName &fnPDB, int patchSize,
 
     // Filter the volume to the final resolution
     MultidimArray<double> V0=pdbconverter.Vlow();
-    FourierMask Filter1;
+    ProgFourierFilter Filter1;
     Filter1.FilterShape=RAISED_COSINE;
     Filter1.FilterBand=LOWPASS;
     Filter1.w1=Ts/resolution1;
     Filter1.raised_w=0.05;
     V0.setXmippOrigin();
-    Filter1.apply_mask_Space(V0);
+    Filter1.applyMaskSpace(V0);
     V0.threshold("below",0,0);
 
     // Filter the volume to the restoration resolution
     MultidimArray<double> V0R=pdbconverter.Vlow();
-    FourierMask Filter2;
+    ProgFourierFilter Filter2;
     Filter2.FilterShape=RAISED_COSINE;
     Filter2.FilterBand=LOWPASS;
     Filter2.w1=Ts/resolution2;
     Filter2.raised_w=0.05;
     V0R.setXmippOrigin();
-    Filter2.apply_mask_Space(V0R);
+    Filter2.applyMaskSpace(V0R);
     V0R.threshold("below",0,0);
 
     // Build the pyramid and the differences between pyramid approximations

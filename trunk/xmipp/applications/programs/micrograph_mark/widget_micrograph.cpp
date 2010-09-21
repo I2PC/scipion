@@ -2180,14 +2180,14 @@ bool AutoParticlePicking::prepare_piece(MultidimArray<double> &piece,
 
     // Band pass filter
     pthread_mutex_lock( &preparePieceMutex );
-    FourierMask Filter;
+    ProgFourierFilter Filter;
     Filter.FilterShape = RAISED_COSINE;
     Filter.FilterBand = BANDPASS;
     Filter.w1 = __highpass_cutoff;
     Filter.w2 = 1.0/(__particle_radius/(__reduction*5.0));
     Filter.raised_w = XMIPP_MIN(0.02, __highpass_cutoff);
-    Filter.generate_mask(piece);
-    Filter.apply_mask_Space(piece);
+    Filter.generateMask(piece);
+    Filter.applyMaskSpace(piece);
     STARTINGX(piece) = STARTINGY(piece) = 0;
     #ifdef DEBUG_PREPARE
         save() = piece;
