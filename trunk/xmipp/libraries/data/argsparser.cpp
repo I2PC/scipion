@@ -84,7 +84,7 @@ ArgLexer::ArgLexer()
     reservedWords["WHERE"] = TOK_WHERE;
     reservedWords["ALIAS"] = TOK_ALIAS;
     reservedWords["OR"] = TOK_OR;
-    reservedWords["IMPLIES"] = TOK_IMPLIES;
+    reservedWords["REQUIRES"] = TOK_REQUIRES;
 }
 
 ArgLexer::~ArgLexer()
@@ -454,6 +454,7 @@ bool ArgumentDef::parse()
 
 bool ArgumentDef::acceptArguments(std::stringstream &errors, size_t & index, std::vector<const char *> &cmdArguments)
 {
+  ProgramDef * prog = (ProgramDef*) parent->parent->parent;
     if (index == cmdArguments.size())
     {
         if (hasDefault)
@@ -481,9 +482,9 @@ bool ArgumentDef::acceptArguments(std::stringstream &errors, size_t & index, std
                 found = true;
                 ++index;
 
-                subParams[i]->checkImplies(errors);
+                subParams[i]->checkRequires(errors, prog);
                 if (!errors.str().empty())
-                  return false;
+                    return false;
 
                 for (size_t j = 0; j < subParams[i]->arguments.size(); ++j)
                     if (!subParams[i]->arguments[j]->acceptArguments(errors, index, cmdArguments))
@@ -531,6 +532,7 @@ bool ParamDef::containsAlias(const std::string & alias)
 
 bool ParamDef::parse()
 {
+    ProgramDef * prog = (ProgramDef*) parent->parent;
     notOptional = true;
     orBefore = false;
     counter = 0;
@@ -555,7 +557,7 @@ bool ParamDef::parse()
     name = token.lexeme;
     visible = token.visibility;
 
-    ((ProgramDef*) parent->parent)->addParamName(name, this);
+    prog->addParamName(name, this);
 
     //Parse argument list
     parseArgumentList();
@@ -592,7 +594,7 @@ bool ParamDef::parse()
                 pOpt->name = pOpt->token.lexeme;
                 pOpt->parseArgumentList();
                 pOpt->parseCommentList(pOpt->comments);
-                pOpt->parseParamList(TOK_IMPLIES, pOpt->implies, false);
+                pOpt->parseParamList(TOK_REQUIRES, prog, pOpt->requires, false);
                 pArg->subParams.push_back(pOpt);
             }
 
@@ -600,10 +602,10 @@ bool ParamDef::parse()
     }
 
     //ALIAS section
-    parseParamList(TOK_ALIAS, aliases, true);
+    parseParamList(TOK_ALIAS, prog, aliases, true);
 
-    //IMPLIES section
-    parseParamList(TOK_IMPLIES, implies, false);
+    //REQUIRES section
+    parseParamList(TOK_REQUIRES, prog, requires, false);
 
     return true;
 }
@@ -634,7 +636,7 @@ bool ParamDef::parseArgumentList()
     return true;
 }
 
-bool ParamDef::parseParamList(TokenType startToken, StringVector &paramList,
+bool ParamDef::parseParamList(TokenType startToken, ProgramDef * prog, StringVector &paramList,
                               bool isAlias)
 {
     paramList.clear();
@@ -645,9 +647,9 @@ bool ParamDef::parseParamList(TokenType startToken, StringVector &paramList,
         paramList.push_back(token.lexeme);
 
         if (isAlias)
-            ((ProgramDef*) parent->parent)->addParamName(token.lexeme, this);
+            prog->addParamName(token.lexeme, this);
         else
-            ((ProgramDef*) parent->parent)->addParamImplies(token.lexeme);
+            prog->addParamRequires(token.lexeme);
 
         while (lookahead(TOK_COMMA))
         {
@@ -657,7 +659,7 @@ bool ParamDef::parseParamList(TokenType startToken, StringVector &paramList,
             if (isAlias)
                 ((ProgramDef*) parent->parent)->addParamName(token.lexeme, this);
             else
-                ((ProgramDef*) parent->parent)->addParamImplies(token.lexeme);
+                ((ProgramDef*) parent->parent)->addParamRequires(token.lexeme);
         }
         consume(TOK_SEMI);
     }
@@ -665,19 +667,20 @@ bool ParamDef::parseParamList(TokenType startToken, StringVector &paramList,
     return true;
 }
 
-void ParamDef::checkImplies(std::stringstream & errors)
+void ParamDef::checkRequires(std::stringstream & errors, ProgramDef * prog)
 {
     ParamDef * param;
-    for (size_t i = 0; i < implies.size(); ++i)
+    for (size_t i = 0; i < requires.size(); ++i)
     {
-        param = ((ProgramDef*) parent->parent)->findParam(implies[i]);
+        param = prog->findParam(requires[i]);
         if (param->counter < 1)
-            errors << "Parameter " << name << " requires " << implies[i] << std::endl;
+            errors << "Parameter " << name << " requires " << requires[i] << std::endl;
     }
 }
 
 void ParamDef::check(std::stringstream & errors)
 {
+    ProgramDef * prog = (ProgramDef*) parent->parent;
     if (counter > 1 )
     {
         errors << "Duplicated parameter: " << name << " (check alias)" << std::endl;
@@ -686,8 +689,8 @@ void ParamDef::check(std::stringstream & errors)
 
     if (counter == 1)
     {
-        //Check implies restrictions
-        checkImplies(errors);
+        //Check requires restrictions
+        checkRequires(errors, prog);
 
         //Check the number of arguments
         if (arguments.empty()) //if not arguments
@@ -851,9 +854,10 @@ void ProgramDef::addParamName(const std::string &name, ParamDef * param)
     else
         paramsMap[name] = param;
 }
-void ProgramDef::addParamImplies(const std::string &name)
+
+void ProgramDef::addParamRequires(const std::string &name)
 {
-    pendingImplies.push_back(name);
+    pendingRequires.push_back(name);
 }
 
 void ProgramDef::read(int argc, char ** argv)
@@ -950,6 +954,17 @@ void ConsolePrinter::printSection(const SectionDef &section, int v)
     }
 }
 
+void printRequiresList(StringVector requires)
+{
+  if (!requires.empty())
+  {
+    std::cout << " ( requires ";
+    for (size_t i = 0; i < requires.size(); ++i)
+      std::cout << requires[i] << " ";
+    std::cout << ")";
+  }
+}
+
 void ConsolePrinter::printParam(const ParamDef &param, int v)
 {
     if (param.visible <= v)
@@ -959,8 +974,8 @@ void ConsolePrinter::printParam(const ParamDef &param, int v)
 
         std::cout << "   ";
         if (!param.notOptional)
-                    std::cout << "[";
-         std::cout << param.name;
+            std::cout << "[";
+        std::cout << param.name;
         //print alias
         for (size_t i = 0; i < param.aliases.size(); ++i)
             std::cout << ", " << param.aliases[i];
@@ -973,8 +988,10 @@ void ConsolePrinter::printParam(const ParamDef &param, int v)
         if (!param.notOptional)
             std::cout << "]";
 
+        printRequiresList(param.requires);
         std::cout << std::endl;
         printCommentList(param.comments, v);
+
         for (size_t i = 0; i < param.arguments.size(); ++i)
         {
             ArgumentDef &arg = *param.arguments[i];
@@ -989,6 +1006,7 @@ void ConsolePrinter::printParam(const ParamDef &param, int v)
                         std::cout << " ";
                         printArgument(*(arg.subParams[j]->arguments[k]));
                     }
+                    printRequiresList(arg.subParams[j]->requires);
                     std::cout << std::endl;
                     printCommentList(arg.subParams[j]->comments);
 

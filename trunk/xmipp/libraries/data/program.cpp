@@ -34,7 +34,9 @@ void XmippProgram::init()
     addParamsLine("== Common options ==");
     addParamsLine("[-v+ <verbose_level=1>] : Verbosity level, 0 means no output.");
     addParamsLine("alias --verb;");
-    addParamsLine("[-h+ <param=\"\">]      : Show help about specific param or this help message.");
+    addParamsLine("[-h+ <param=\"\">]      : If not param is supplied show this help message.");
+    addParamsLine("                        : Otherwise, specific param help is showed,");
+    addParamsLine("                        : param should be provided without the '-'");
     addParamsLine("alias --help;");
     addParamsLine("[-more]         : Show additional options.");
     progLexer->nextToken();
@@ -91,8 +93,14 @@ void XmippProgram::read(int argc, char ** argv)
         if (checkParam("-more"))
             extendedUsage();
         ///If help requested, print usage message
-        if (checkParam("-h") && getParam("-h") == "")
-            usage();
+        if (checkParam("-h"))
+        {
+            std::string cmdHelp = (std::string)"-" + getParam("-h");
+            if (cmdHelp == "-")
+                usage();
+            else
+                usage(cmdHelp);
+            }
         ///If an input error, shows error message and usage
         std::cerr << xe;
         usage();
@@ -174,6 +182,16 @@ void XmippProgram::extendedUsage() const
     ConsolePrinter cp;
     cp.printProgram(*progDef, 1);
     exit(1);
+}
+
+void XmippProgram::usage(const std::string & param)
+{
+  ConsolePrinter cp;
+  ParamDef * paramDef = progDef->findParam(param);
+  if (paramDef == NULL)
+          REPORT_ERROR(ERR_ARG_INCORRECT, ((std::string)"Doesn't exists param: " + param));
+  cp.printParam(*paramDef, 2);
+  exit(0);
 }
 
 void XmippProgram::show() const

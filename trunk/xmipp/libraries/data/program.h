@@ -111,6 +111,8 @@ public:
     void usage() const;
     /** Print detailed usage of the program */
     void extendedUsage() const;
+    /** Print help about specific parameter */
+    void usage(const std::string & param);
 
     /** Return the version of the program */
     int version() const;

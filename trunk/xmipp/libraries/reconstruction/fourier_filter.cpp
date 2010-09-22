@@ -72,115 +72,117 @@ void ProgFourierFilter::assign(const ProgFourierFilter &F)
     *this = F;
 }
 
+
+/* Define params ------------------------------------------------------------------- */
+void ProgFourierFilter::defineParams()
+{
+    XmippMetadataProgram::defineParams();
+    addParamsLine("   -low_pass  <w1>                   : Cutoff freq (<1/2 or A)");
+    addParamsLine("or -high_pass <w1>                   : Cutoff freq (<1/2 or A)");
+    addParamsLine("or -band_pass <w1> <w2>              : Cutoff freq (<1/2 or A)");
+    addParamsLine("or -stop_band <w1> <w2>              : Cutoff freq (<1/2 or A)");
+    addParamsLine("   -fourier_mask <mask_type=raised_cosine> : Fourier mask that will be applied.");
+    addParamsLine("        where <mask_type> ");
+    addParamsLine("         raised_cosine <raisedw=0.02>     : Use raised cosine edges (in dig.freq.)");
+    addParamsLine("         wedge <th0> <thF>           : Missing wedge (along y) for data between th0-thF ");
+    addParamsLine("         cone <th0>                  : Missing cone for tilt angles up to th0 ");
+    addParamsLine("         gaussian                    : sigma=<w1>");
+    addParamsLine("         real_gaussian               : convolution with a Gaussian in real-space with sigma=<w1>");
+    addParamsLine("         ctf <ctfile>                : Provide a .ctfparam file");
+    addParamsLine("         ctfpos <ctfile>             : Provide a .ctfparam file");
+    addParamsLine("                                     : The CTF phase will be corrected before applying");
+    addParamsLine("         bfactor <B>                 : Exponential filter (positive values for decay) ");
+    addParamsLine("           requires -sampling;                                                         ");
+    addParamsLine("  [-sampling <sampling_rate>]        : If provided pass frequencies are taken in Ang ");
+}
+
 /* Read parameters from command line. -------------------------------------- */
-void ProgFourierFilter::read(int argc, char **argv)
+void ProgFourierFilter::readParams()
 {
     clear();
-
+    XmippMetadataProgram::readParams();
     // Filter shape .........................................................
-    int i = paremeterPosition(argc, argv, "-fourier_mask");
-    if (i + 1 >= argc)
-        REPORT_ERROR(ERR_ARG_MISSING, "FourierMask: -fourier_mask with no mask_type");
-    if (i == -1)
+    std::string mask_type = getParam("-fourier_mask");
+
+    if (mask_type == "raised_cosine")
     {
-        // The default is to use raised_cosine with width 0.02
-        raised_w = 0.02;
+        raised_w = getDoubleParam("-fourier_mask", "raised_cosine");
         FilterShape = RAISED_COSINE;
     }
-    else if (strcmp(argv[i+1], "raised_cosine") == 0)
+    else if (mask_type == "wedge")
     {
-        if (i + 2 >= argc)
-            REPORT_ERROR(ERR_ARG_MISSING, "FourierMask: Raised cosine needs a number of pixels");
-        raised_w = textToFloat(argv[i+2]);
-        FilterShape = RAISED_COSINE;
-    }
-    else if (strcmp(argv[i+1], "wedge") == 0)
-    {
-        if (i + 3 >= argc)
-            REPORT_ERROR(ERR_ARG_MISSING, "FourierMask: Wedge needs two angle parameters");
-        w1 = textToFloat(argv[i+2]);
-        w2 = textToFloat(argv[i+3]);
+        w1 = getDoubleParam("-fourier_mask", "wedge", 0);
+        w2 = getDoubleParam("-fourier_mask", "wedge", 1);
         FilterShape = WEDGE;
         do_generate_3dmask = true;
     }
-    else if (strcmp(argv[i+1], "cone") == 0)
+    else if (mask_type == "cone")
     {
-        if (i + 2 >= argc)
-            REPORT_ERROR(ERR_ARG_MISSING, "FourierMask: Cone needs one angle parameter");
-        w1 = textToFloat(argv[i+2]);
+        w1 = getDoubleParam("-fourier_mask", "cone", 0);
         FilterShape = CONE;
         do_generate_3dmask = true;
     }
-    else if (strcmp(argv[i+1], "gaussian") == 0)
+    else if (mask_type == "gaussian")
     {
         FilterShape = GAUSSIAN;
         FilterBand = LOWPASS;
     }
-    else if (strcmp(argv[i+1], "real_gaussian") == 0)
+    else if (mask_type == "real_gaussian")
     {
         FilterShape = REALGAUSSIAN;
         FilterBand = LOWPASS;
     }
-    else if (strcmp(argv[i+1], "ctf") == 0)
+    else if (mask_type == "ctf")
     {
-        if (i + 2 >= argc)
-            REPORT_ERROR(ERR_ARG_MISSING, "FourierMask: CTF needs a CTF file");
         FilterShape = FilterBand = CTF;
         ctf.enable_CTFnoise = false;
-        ctf.read(argv[i+2]);
+        ctf.read( getParam("-fourier_mask", "ctf") );
         ctf.Produce_Side_Info();
     }
-    else if (strcmp(argv[i+1], "ctfpos") == 0)
+    else if (mask_type == "ctfpos")
     {
-        if (i + 2 >= argc)
-            REPORT_ERROR(ERR_ARG_MISSING, "FourierMask: CTF needs a CTF file");
         FilterShape = FilterBand = CTFPOS;
         ctf.enable_CTFnoise = false;
-        ctf.read(argv[i+2]);
+        ctf.read( getParam("-fourier_mask", "ctfpos") );
         ctf.Produce_Side_Info();
-        do_correct_phase=true;
+        do_correct_phase = true;
     }
-    else if (strcmp(argv[i+1], "bfactor") == 0)
+    else if (mask_type == "bfactor")
     {
-        if (i + 2 >= argc)
-            REPORT_ERROR(ERR_ARG_MISSING, "FourierMask: Bfactor needs a Bfactor in Ang^2");
         FilterShape = FilterBand = BFACTOR;
-        w1 = textToFloat(argv[i+2]);
-        if (!checkParameter(argc, argv, "-sampling"))
-            REPORT_ERROR(ERR_ARG_MISSING, "FourierMask: Bfactor needs a -sampling argument");
-        w2 = textToFloat(getParameter(argc, argv, "-sampling"));
+        w1 = getDoubleParam("-fourier_mask", "bfactor");
+        w2 = getDoubleParam("-sampling");
     }
-
     else
-        REPORT_ERROR(ERR_ARG_INCORRECT, "FourierMask: Unknown filter type");
+        REPORT_ERROR(ERR_DEBUG_IMPOSIBLE, "This couldn't not happens, check argument parser or params definition");
 
     // Filter band ..........................................................
-    if (checkParameter(argc, argv, "-low_pass"))
+    if (checkParam("-low_pass"))
     {
-        w1 = textToFloat(getParameter(argc, argv, "-low_pass"));
+        w1 = getDoubleParam("-low_pass");
         FilterBand = LOWPASS;
     }
-    else if (checkParameter(argc, argv, "-high_pass"))
+    else if (checkParam("-high_pass"))
     {
-        w1 = textToFloat(getParameter(argc, argv, "-high_pass"));
+        w1 = getDoubleParam("-high_pass");
         FilterBand = HIGHPASS;
     }
-    else if (checkParameter(argc, argv, "-band_pass"))
+    else if (checkParam("-band_pass"))
     {
-        if (!getTwoDoubleParams(argc, argv, "-band_pass", w1, w2, 0, 0))
-            REPORT_ERROR(ERR_ARG_INCORRECT, "Not enough parameters after -band_pass");
+        w1 = getDoubleParam("-band_pass", 0);
+        w2 = getDoubleParam("-band_pass", 1);
         FilterBand = BANDPASS;
     }
-    else if (checkParameter(argc, argv, "-stop_band"))
+    else if (checkParam("-stop_band"))
     {
-        if (!getTwoDoubleParams(argc, argv, "-stop_band", w1, w2, 0, 0))
-            REPORT_ERROR(ERR_ARG_INCORRECT, "Not enough parameters after -stop_band");
+        w1 = getDoubleParam("-stop_band", 0);
+        w2 = getDoubleParam("-stop_band", 1);
         FilterBand = STOPBAND;
     }
 
-    if (!(FilterBand == BFACTOR) && checkParameter(argc, argv, "-sampling"))
+    if (!(FilterBand == BFACTOR) && checkParam("-sampling"))
     {
-        double sampling_rate = textToFloat(getParameter(argc, argv, "-sampling"));
+        double sampling_rate = getDoubleParam("-sampling");
         if (w1 != 0)
             w1 = sampling_rate / w1;
         if (w2 != 0)
@@ -250,30 +252,23 @@ void ProgFourierFilter::show()
     }
 }
 
-/* Usage ------------------------------------------------------------------- */
-void ProgFourierFilter::usage()
+void ProgFourierFilter::processImage()
 {
-    std::cerr << "   -low_pass  <w1>                   : Cutoff freq (<1/2 or A)\n"
-    << "   -high_pass <w1>                   : Cutoff freq (<1/2 or A)\n"
-    << "   -band_pass <w1> <w2>              : Cutoff freq (<1/2 or A)\n"
-    << "   -stop_band <w1> <w2>              : Cutoff freq (<1/2 or A)\n"
-    << "   -fourier_mask raised_cosine <raisedw>: Use raised cosine edges (in dig.freq.)\n"
-    << "   -fourier_mask wedge <th0> <thF>   : Missing wedge (along y) for data between th0-thF \n"
-    << "   -fourier_mask cone <th0>          : Missing cone for tilt angles up to th0 \n"
-    << "   -fourier_mask gaussian            : sigma=<w1>\n"
-    << "   -fourier_mask real_gaussian       : convolution with a Gaussian in real-space with sigma=<w1>\n"
-    << "   -fourier_mask ctf                 : Provide a .ctfparam file\n"
-    << "   -fourier_mask ctfpos              : Provide a .ctfparam file\n"
-    << "                                       The CTF phase will be corrected before applying\n"
-    << "   -fourier_mask bfactor <B>         : Exponential filter (positive values for decay) \n"
-    << "  [-sampling <sampling_rate>]        : If provided pass frequencies are taken in Ang \n"
-    ;
+    static bool first = false;
+
+    img.read(fnImg);
+    if (first)
+    {
+        generateMask(img());
+        first = false;
+    }
+    applyMaskSpace(img());
 }
 
 /* Get mask value ---------------------------------------------------------- */
 double ProgFourierFilter::maskValue(const Matrix1D<double> &w)
 {
-    double absw=w.module();
+    double absw = w.module();
 
     // Generate mask
     switch (FilterBand)

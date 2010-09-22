@@ -27,47 +27,17 @@
 #include <data/args.h>
 #include <reconstruction/fourier_filter.h>
 
-class FourierFilter_parameters: public Prog_parameters
+/* MAIN -------------------------------------------------------------------- */
+int main(int argc, char *argv[])
 {
-public:
-    ProgFourierFilter fmask;
-    bool        first;
-
-public:
-    void read(int argc, char **argv)
+    try
     {
-        fmask.read(argc, argv);
-        Prog_parameters::read(argc, argv);
-        first = true;
+        ProgFourierFilter program;
+        program.read(argc, argv);
+        program.run();
     }
-
-    void show()
+    catch (XmippError xe)
     {
-        Prog_parameters::show();
-        fmask.show();
+        std::cerr << xe;
     }
-
-    void usage()
-    {
-        Prog_parameters::usage();
-        fmask.usage();
-    }
-};
-
-bool process_img(Image<double> &img, const Prog_parameters *prm)
-{
-    FourierFilter_parameters *eprm = (FourierFilter_parameters *) prm;
-    if (eprm->first)
-    {
-        eprm->fmask.generateMask(img());
-        eprm->first = false;
-    }
-    eprm->fmask.applyMaskSpace(img());
-    return true;
-}
-
-int main(int argc, char **argv)
-{
-    FourierFilter_parameters prm;
-    SF_main(argc, argv, &prm, (void *)&process_img);
 }

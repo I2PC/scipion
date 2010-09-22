@@ -509,6 +509,9 @@ public:
 }
 ; //close class MDValue
 
+/** Explicit instantiation */
+template class std::vector<MDObject *>;
+
 /** Class for holding an entire row of posible MDObject */
 class MDRow: public std::vector<MDObject*>
 {

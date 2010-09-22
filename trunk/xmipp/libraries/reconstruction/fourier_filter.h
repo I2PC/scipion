@@ -29,6 +29,7 @@
 #include <data/ctf.h>
 #include <data/multidim_array.h>
 #include <data/fftw.h>
+#include <data/program.h>
 
 /**@defgroup FourierMasks Masks in Fourier space
    @ingroup ReconsLibrary */
@@ -51,7 +52,7 @@
    For volumes you the mask is computed on the fly and
    in this way memory is saved (unless do_generate_3dmask == true).
 */
-class ProgFourierFilter
+class ProgFourierFilter: public XmippMetadataProgram
 {
 public:
 #define RAISED_COSINE 1
@@ -92,6 +93,16 @@ public:
 
     /** Flag to generate 3D mask */
     bool do_generate_3dmask;
+protected:
+    /** Define parameters */
+    void defineParams();
+
+    /** Read parameters from command line.
+        If a CTF description file is provided it is read. */
+    void readParams();
+
+    /** Process one image */
+    void processImage();
 
 public:
     /** Empty constructor */
@@ -106,15 +117,8 @@ public:
     /** Clear */
     void clear();
 
-    /** Read parameters from command line.
-        If a CTF description file is provided it is read. */
-    void read(int argc, char **argv);
-
     /** Show. */
     void show();
-
-    /** Usage. */
-    void usage();
 
     /** Compute the mask value at a given frequency.
         The frequency must be normalized so that the maximum frequency

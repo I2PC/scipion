@@ -64,10 +64,12 @@ enum TokenType {
     TOK_WHERE,  // 'WHERE' keyword
     TOK_ALIAS,  // 'ALIAS' keyword
     TOK_OR,     // 'OR' keyword
-    TOK_IMPLIES,// 'IMPLIES' keyword
+    TOK_REQUIRES,// 'REQUIRES' keyword
     TOK_SECTION,// section defined by == Section ==
 
 };
+
+class ProgramDef;
 
 /** Just a simple struct to hold information about tokens */
 class ArgToken
@@ -209,14 +211,14 @@ public:
 
     CommentList comments;
     StringVector aliases;
-    StringVector implies;
+    StringVector requires;
 
     //Empty constructor
     ParamDef(ArgLexer *lexer, ASTNode * parent);
-    bool parseParamList(TokenType startToken, StringVector &paramList, bool addName);
+    bool parseParamList(TokenType startToken, ProgramDef * prog, StringVector &paramList, bool addName);
     bool parseArgumentList();
     virtual bool parse();
-    void checkImplies(std::stringstream & errors);
+    void checkRequires(std::stringstream & errors, ProgramDef * prog);
     virtual void check(std::stringstream & errors);
     bool containsArgument(const std::string & argName);
     ArgumentDef * findArgument(const std::string & argName);
@@ -242,7 +244,7 @@ public:
     std::vector<SectionDef*> sections;
     CommentList usageComments; ///< comments of usage
     std::map<std::string, ParamDef*> paramsMap; ///< Dictionary with all params and alias names
-    StringVector pendingImplies; ///< This is for checking that implies names exists
+    StringVector pendingRequires; ///< This is for checking that requires names exists
 
     ProgramDef(ArgLexer *lexer);
     virtual bool parse();
@@ -251,7 +253,7 @@ public:
     const char * getParam(const char * paramName, int paramNumber = 0);
     const char * getParam(const char * paramName, const char * subParam, int paramNumber = 0);
     void addParamName(const std::string & name, ParamDef *param);
-    void addParamImplies(const std::string &name);
+    void addParamRequires(const std::string &name);
     /// Read and validate commmand line
     void read(int argc, char ** argv);
 
