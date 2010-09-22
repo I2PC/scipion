@@ -406,7 +406,8 @@ public:
         //Just clear the header before reading
         MDMainHeader.clear();
 
-        if (ext_name.contains("spi") || ext_name.contains("xmp") )//mrc stack MUST go BEFORE plain MRC
+        if (ext_name.contains("spi") || ext_name.contains("xmp")  ||
+                ext_name.contains("stk") || ext_name.contains("vol"))//mrc stack MUST go BEFORE plain MRC
             err = readSPIDER(select_img,true);
         else if (ext_name.contains("mrcs"))//mrc stack MUST go BEFORE plain MRC
             err = readMRC(select_img,true);
