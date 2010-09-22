@@ -36,7 +36,7 @@ void XmippProgram::init()
     addParamsLine("alias --verb;");
     addParamsLine("[-h+ <param=\"\">]      : Show help about specific param or this help message.");
     addParamsLine("alias --help;");
-    addParamsLine("[-more_options]         : Show additional options.");
+    addParamsLine("[-more]         : Show additional options.");
     progLexer->nextToken();
     progDef->parse();
 }
@@ -88,7 +88,7 @@ void XmippProgram::read(int argc, char ** argv)
     catch (XmippError xe)
     {
         ///If -more_options provided, show extended usage
-        if (checkParam("-more_options"))
+        if (checkParam("-more"))
             extendedUsage();
         ///If help requested, print usage message
         if (checkParam("-h") && getParam("-h") == "")

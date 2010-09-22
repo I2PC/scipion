@@ -216,6 +216,7 @@ public:
     bool parseParamList(TokenType startToken, StringVector &paramList, bool addName);
     bool parseArgumentList();
     virtual bool parse();
+    void checkImplies(std::stringstream & errors);
     virtual void check(std::stringstream & errors);
     bool containsArgument(const std::string & argName);
     ArgumentDef * findArgument(const std::string & argName);

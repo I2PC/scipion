@@ -480,6 +480,11 @@ bool ArgumentDef::acceptArguments(std::stringstream &errors, size_t & index, std
             {
                 found = true;
                 ++index;
+
+                subParams[i]->checkImplies(errors);
+                if (!errors.str().empty())
+                  return false;
+
                 for (size_t j = 0; j < subParams[i]->arguments.size(); ++j)
                     if (!subParams[i]->arguments[j]->acceptArguments(errors, index, cmdArguments))
                         return false;
@@ -587,6 +592,7 @@ bool ParamDef::parse()
                 pOpt->name = pOpt->token.lexeme;
                 pOpt->parseArgumentList();
                 pOpt->parseCommentList(pOpt->comments);
+                pOpt->parseParamList(TOK_IMPLIES, pOpt->implies, false);
                 pArg->subParams.push_back(pOpt);
             }
 
@@ -659,6 +665,17 @@ bool ParamDef::parseParamList(TokenType startToken, StringVector &paramList,
     return true;
 }
 
+void ParamDef::checkImplies(std::stringstream & errors)
+{
+    ParamDef * param;
+    for (size_t i = 0; i < implies.size(); ++i)
+    {
+        param = ((ProgramDef*) parent->parent)->findParam(implies[i]);
+        if (param->counter < 1)
+            errors << "Parameter " << name << " requires " << implies[i] << std::endl;
+    }
+}
+
 void ParamDef::check(std::stringstream & errors)
 {
     if (counter > 1 )
@@ -670,13 +687,7 @@ void ParamDef::check(std::stringstream & errors)
     if (counter == 1)
     {
         //Check implies restrictions
-        ParamDef * param;
-        for (size_t i = 0; i < implies.size(); ++i)
-        {
-            param = ((ProgramDef*) parent->parent)->findParam(implies[i]);
-            if (param->counter < 1)
-                errors << "Parameter " << name << " requires " << implies[i] << std::endl;
-        }
+        checkImplies(errors);
 
         //Check the number of arguments
         if (arguments.empty()) //if not arguments
@@ -899,11 +910,11 @@ const char * ProgramDef::getParam(const char * paramName, const char * subParam,
 
     size_t i = 0;
     for (i = 0; i < param->cmdArguments.size(); ++i)
-      if (strcmp(param->cmdArguments[i], subParam) == 0)
-        break;
+        if (strcmp(param->cmdArguments[i], subParam) == 0)
+            break;
 
     if (i == param->cmdArguments.size())
-      REPORT_ERROR(ERR_ARG_INCORRECT, ((std::string)"Sub-param " + subParam + " was not supplied in command line."));
+        REPORT_ERROR(ERR_ARG_INCORRECT, ((std::string)"Sub-param " + subParam + " was not supplied in command line."));
 
     return param->cmdArguments.at(i + 1 + argNumber);
 }
@@ -917,7 +928,7 @@ void ConsolePrinter::printProgram(const ProgramDef &program, int v)
     {
         std::cout << "USAGE" << std::endl;
         for (size_t i = 0; i < program.usageComments.size(); ++i)
-          std::cout << "   " << program.usageComments.comments[i] << std::endl;
+            std::cout << "   " << program.usageComments.comments[i] << std::endl;
     }
     if (program.sections.size() > 0)
     {
@@ -943,10 +954,13 @@ void ConsolePrinter::printParam(const ParamDef &param, int v)
 {
     if (param.visible <= v)
     {
-      if (param.orBefore)
-        std::cout << "   OR" << std::endl;
+        if (param.orBefore)
+            std::cout << "   OR" << std::endl;
 
-        std::cout << "   " << param.name;
+        std::cout << "   ";
+        if (!param.notOptional)
+                    std::cout << "[";
+         std::cout << param.name;
         //print alias
         for (size_t i = 0; i < param.aliases.size(); ++i)
             std::cout << ", " << param.aliases[i];
@@ -957,7 +971,7 @@ void ConsolePrinter::printParam(const ParamDef &param, int v)
             printArgument(*param.arguments[i], v);
         }
         if (!param.notOptional)
-          std::cout << "   OPTIONAL";
+            std::cout << "]";
 
         std::cout << std::endl;
         printCommentList(param.comments, v);
@@ -972,8 +986,8 @@ void ConsolePrinter::printParam(const ParamDef &param, int v)
                     std::cout << "        " << arg.subParams[j]->name;
                     for (size_t k = 0; k < arg.subParams[j]->arguments.size(); ++k)
                     {
-                      std::cout << " ";
-                      printArgument(*(arg.subParams[j]->arguments[k]));
+                        std::cout << " ";
+                        printArgument(*(arg.subParams[j]->arguments[k]));
                     }
                     std::cout << std::endl;
                     printCommentList(arg.subParams[j]->comments);
