@@ -87,7 +87,7 @@ int main(int argc, char *argv[])
             mrcimage.write(fn_out, tomogram, reverse_endian,
                 x_length, y_length, z_length);
         }
-        else if (fn_in.get_extension()=="sel")
+        else if (fn_in.getExtension()=="sel")
         {// is this a selfile?
             SelFile SF;
             SF.read(fn_in);

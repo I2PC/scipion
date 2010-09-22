@@ -163,7 +163,7 @@ void QtFileMenu::slotLoadCoords()
             if (i!=-1)
                 familyName=fn.substr(i+micrographName.length()+1,
                     fn.length()-(i+micrographName.length()+1));
-            else familyName=fn.get_extension().c_str();
+            else familyName=fn.getExtension().c_str();
             emit signalAddFamily(familyName.c_str());
 
             int activeFamily = ((QtWidgetMicrograph*)parentWidget())->activeFamily();

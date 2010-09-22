@@ -807,7 +807,7 @@ public:
      * std::string ext = fn_proj.get_extension();
      * @endcode
      */
-    std::string get_extension() const;
+    std::string getExtension() const;
 
     /** Get image format identifier (as in Bsoft)
      *

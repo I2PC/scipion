@@ -151,7 +151,7 @@ void ProgXrayImport::getDarkfield(const FileName &fnDir, Image<double> &IavgDark
             int N=0;
             for (int j=0; j<listDirDark.size(); j++)
             {
-                FileName extension=((FileName)listDirDark[j]).get_extension();
+                FileName extension=((FileName)listDirDark[j]).getExtension();
                 if (extension!="spe")
                     continue;
                 Image<double> Iaux;
@@ -189,7 +189,7 @@ void ProgXrayImport::getFlatfield(const FileName &fnDir,
     Image<double> Iaux;
     for (int i=0; i<listDir.size(); i++)
     {
-        FileName extension=((FileName)listDir[i]).get_extension();
+        FileName extension=((FileName)listDir[i]).getExtension();
         if (extension!="spe")
             continue;
         FileName fnImg=fnDir+"/"+listDir[i];
@@ -275,7 +275,7 @@ void ProgXrayImport::run()
     int N=0;
     for (int i=0; i<listDir.size(); i++)
     {
-        FileName extension=((FileName)listDir[i]).get_extension();
+        FileName extension=((FileName)listDir[i]).getExtension();
         if (extension!="spe")
             continue;
         FileName fnImg=fnDirData+"/"+listDir[i];

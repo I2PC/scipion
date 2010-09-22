@@ -924,7 +924,7 @@ void compute_resolution(VolumeXmipp &vol_phantom,
 {
     int tell = 1;
     // If the phantom is not saved, save it
-    FileName ext = vol_recons.name().get_extension();
+    FileName ext = vol_recons.name().getExtension();
     FileName original_phantom_name = vol_phantom.name();
     vol_phantom.rename((std::string)"superfeo." + ext);
     vol_phantom.write();

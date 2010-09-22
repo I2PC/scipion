@@ -103,7 +103,7 @@ int readRAW(int img_select,bool isStack=false)
     infolist.toLowercase();
     splitString(infolist,",",info, false);
 
-    if (info.size() < 5)
+    if (info.size() < 4)
         REPORT_ERROR(ERR_ARG_MISSING, (std::string) " Cannot open file " + filename +
                      ". Not enough header arguments.");
 

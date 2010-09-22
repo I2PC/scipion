@@ -61,7 +61,7 @@ int main(int argc, char *argv[])
         double number_elements;
         int N = 0;
         FileName fn_out;
-        FileName fn_ext = fn_in.get_extension();
+        FileName fn_ext = fn_in.getExtension();
         Image<double> I, label;
         I.read(fn_in);
         int object_no;

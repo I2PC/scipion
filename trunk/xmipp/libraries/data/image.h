@@ -440,55 +440,12 @@ public:
             for (MDRow::const_iterator it = row->begin(); it != row->end(); ++it)
             {
                 label = (*it)->label;
-                if (MD[select_img].containsLabel(label))
-                    *(MD[select_img].getObject(label)) = *(*it);
+                if (MD[0].containsLabel(label))
+                    *(MD[0].getObject(label)) = *(*it);
                 else
-                    MD[select_img].push_back(new MDObject(*(*it)));
+                    MD[0].push_back(new MDObject(*(*it)));
             }
         }
-        //TODO: Now read from an MDRow
-
-        /*        if (docFilePtr != NULL)
-                {
-                    if (activeLabelsPtr == NULL)
-                        activeLabelsPtr = docFilePtr->geActiveLabelsAddress();
-
-                    std::vector<MDLabel>::iterator strIt;
-                    double dd;
-                    std::string ss;
-                    int ii;
-                    bool bb;
-                    std::vector<double> vv;
-                    //FIXME: This could be done better
-                    for (strIt = activeLabelsPtr->begin(); strIt != activeLabelsPtr->end(); strIt++)
-                    {
-                        switch (MDL::labelType(*strIt))
-                        {
-                        case LABEL_DOUBLE:
-                            docFilePtr->getValue(*strIt,dd);
-                            MD.setValue(*strIt,dd);
-                            break;
-                        case LABEL_STRING:
-                            docFilePtr->getValue(*strIt,ss);
-                            MD.setValue(*strIt,ss);
-                            break;
-                        case LABEL_INT:
-                            docFilePtr->getValue(*strIt,ii);
-                            MD.setValue(*strIt,ii);
-                            break;
-                        case LABEL_BOOL:
-                            docFilePtr->getValue(*strIt,bb);
-                            MD.setValue(*strIt,bb);
-                            break;
-                        case LABEL_VECTOR:
-                            docFilePtr->getValue(*strIt,vv);
-                            MD.setValue(*strIt,vv);
-                            break;
-                        default:
-                            REPORT_ERROR(ERR_MD_BADLABEL, "Image.read: Unknown label type");
-                        }
-                    }//close for activeLabels
-                }*/
 
         //apply geo has not been defined for volumes
         if(this->data.getDim()>2)

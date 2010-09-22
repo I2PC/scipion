@@ -721,12 +721,12 @@ void PROJECT_Side_Info::produce_Side_Info(const Projection_Parameters &prm,
     Assign_angles(DF, prm, prog_prm.fn_sym);
 
     // Load Phantom and set working mode
-    if (prm.fnPhantom.get_extension()=="descr")
+    if (prm.fnPhantom.getExtension()=="descr")
     {
         phantomDescr.read(prm.fnPhantom);
         phantomMode = XMIPP;
     }
-    else if (prm.fnPhantom.get_extension()=="pdb")
+    else if (prm.fnPhantom.getExtension()=="pdb")
     {
         phantomPDB.read(prm.fnPhantom);
         const double highTs=1.0/12.0;

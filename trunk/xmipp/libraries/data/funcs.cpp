@@ -901,7 +901,7 @@ int FileName::getNumber() const
 }
 
 // Get the extension of a filename .........................................
-std::string FileName::get_extension() const
+std::string FileName::getExtension() const
 {
     int skip_directories = find_last_of("/") + 1;
     int first_point = find_first_of(".", skip_directories);

@@ -123,7 +123,7 @@ int main(int argc, char *argv[])
             SelFile SF(sel_file);
             FileName SF_out_name;
             SF_out_name = sel_file.withoutExtension().addPrefix("out_");
-            SF_out_name += (std::string)"." + sel_file.get_extension();
+            SF_out_name += (std::string)"." + sel_file.getExtension();
             SelFile SF_out;
             SF_out.clear();
             while (!SF.eof())

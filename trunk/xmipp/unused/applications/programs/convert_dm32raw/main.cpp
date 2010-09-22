@@ -240,7 +240,7 @@ void dm32raw(const FileName &fn_in,
         if (imCountF==1)
             fn_outF = fn_out;
         else
-            fn_outF.compose(fn_out.withoutExtension(),n+1,fn_out.get_extension());
+            fn_outF.compose(fn_out.withoutExtension(),n+1,fn_out.getExtension());
 
         /* Write image to file ==================================*/
 

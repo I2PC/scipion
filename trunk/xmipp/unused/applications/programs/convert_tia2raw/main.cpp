@@ -245,7 +245,7 @@ void tia2raw(const FileName &fn_in, const FileName &fn_out, float dStddev)
         if (Header.NUMBER_IMAGES == 1)
             fn_outF = fn_out;
         else
-            fn_outF.compose(fn_out.withoutExtension(), n + 1, fn_out.get_extension());
+            fn_outF.compose(fn_out.withoutExtension(), n + 1, fn_out.getExtension());
 
         openImage(fn_in, fn_outF,Header.pDATA_OFFSET[n],dStddev);
     }

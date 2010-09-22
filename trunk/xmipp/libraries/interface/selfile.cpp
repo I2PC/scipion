@@ -661,7 +661,7 @@ FileName SelFile::FileExtension()
     std::vector<SelLine>::iterator aux = current_line;
     go_first_ACTIVE();
     FileName ext = (*current_line).text;
-    ext = ext.get_extension();
+    ext = ext.getExtension();
     current_line = aux;
     return ext;
 }

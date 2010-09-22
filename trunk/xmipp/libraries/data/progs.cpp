@@ -178,12 +178,12 @@ void SF_main(int argc, char **argv,
                     {
                         prm->fn_out = prm->oroot + fn_read.withoutRoot();
                         if (operation_mode == IMAGE2FOURIER)
-                            if (fn_read.get_extension() == "xmp")
+                            if (fn_read.getExtension() == "xmp")
                                 prm->fn_out = prm->fn_out.withoutExtension() + ".fft";
                             else
                                 prm->fn_out = prm->fn_out.withoutExtension() + ".fft3";
                         if (operation_mode == FOURIER2IMAGE)
-                            if (fn_read.get_extension() == "fft")
+                            if (fn_read.getExtension() == "fft")
                                 prm->fn_out = prm->fn_out.withoutExtension() + ".xmp";
                             else
                                 prm->fn_out = prm->fn_out.withoutExtension() + ".vol";
