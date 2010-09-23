@@ -24,60 +24,54 @@
  ***************************************************************************/
 
 #include <data/phantom.h>
+#include <data/program.h>
 
-void Usage(char *argv[]);
-
-int main(int argc, char *argv[])
+class ProgPhantomCreate: public XmippProgram
 {
+protected:
     FileName          fn_phantom;
     FileName          fn_vol;
     Phantom           phantom;
     Image<double>     vol;
 
-    // Read Parameters ......................................................
-    try
+    void defineParams()
     {
-        fn_phantom = getParameter(argc, argv, "-i");
-        fn_vol     = getParameter(argc, argv, "-o");
-    }
-    catch (XmippError XE)
-    {
-        std::cout << XE;
-        Usage(argv);
+        addUsageLine("This program allows you to create phantom XMIPP volumes");
+        addUsageLine("from a phantom feature description file.");
+
+        addParamsLine("-i <description_file>");
+        addParamsLine("-o <output_file>");
     }
 
+    void readParams()
+    {
+        fn_phantom = getParam("-i");
+        fn_vol = getParam("-o");
+    }
 
-    try
+public:
+    void run()
     {
         // Read description file .............................................
         phantom.read(fn_phantom);
-
         // Generate volume and write .........................................
         phantom.draw_in(vol());
         vol.write(fn_vol);
     }
-    catch (XmippError XE)
-    {
-        std::cout << XE;
-        exit(1);
-    }
-    exit(0);
 }
+;//end of class ProgPhantomCreate
 
-/* Usage ------------------------------------------------------------------- */
-void Usage(char *argv[])
+/* MAIN -------------------------------------------------------------------- */
+int main(int argc, char *argv[])
 {
-    printf(
-        "\n\nPurpose: This program allows you to create phantom XMIPP volumes\n"
-        "     from a phantom feature description file.\n"
-    );
-    printf(
-        "\n\nUsage: %s [Parameters]"
-        "\nOptions:"
-        "\nParameter Values: (note space before value)"
-        "\n    -i <description file>"
-        "\n    -o <output file>"
-        "\n"
-        , argv[0]);
-    exit(1);
+    try
+    {
+        ProgPhantomCreate program;
+        program.read(argc, argv);
+        program.run();
+    }
+    catch (XmippError xe)
+    {
+        std::cerr << xe;
+    }
 }
