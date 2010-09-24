@@ -76,6 +76,7 @@ void ProgFourierFilter::assign(const ProgFourierFilter &F)
 /* Define params ------------------------------------------------------------------- */
 void ProgFourierFilter::defineParams()
 {
+  each_image_produces_an_output = true;
     XmippMetadataProgram::defineParams();
     addParamsLine("   -low_pass  <w1>                   : Cutoff freq (<1/2 or A)");
     addParamsLine("or -high_pass <w1>                   : Cutoff freq (<1/2 or A)");
@@ -263,6 +264,7 @@ void ProgFourierFilter::processImage()
         first = false;
     }
     applyMaskSpace(img());
+    img.write(fnImgOut);
 }
 
 /* Get mask value ---------------------------------------------------------- */
