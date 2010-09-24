@@ -357,68 +357,22 @@ void ProgFourierFilter::generateMask(MultidimArray<double> &v)
         MultidimArray< std::complex<double> > Fourier;
         transformer.getFourierAlias(Fourier);
         maskFourier.resize(Fourier);
-        MultidimArray<double> mask(v);
-        mask.setXmippOrigin();
-        Matrix2D<double> A(3,3);
-        A.initIdentity();
-        MultidimArray<int> imask;
+        maskFourier.setXmippOrigin();
 
         if (FilterShape==WEDGE || FilterShape==CONE)
         {
-            Image<double> Vt;
             switch (FilterShape)
             {
             case WEDGE:
-                BinaryWedgeMask(mask, w1, w2, A);
-                break;
+                {
+                    Matrix2D<double> A(3,3);
+                    A.initIdentity();
+                    BinaryWedgeMask(maskFourier, w1, w2, A);
+                    break;
+                }
             case CONE:
-                imask.resize(v);
-                BinaryConeMask(imask,90. - w1);
-                FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(imask)
-                {
-                    DIRECT_MULTIDIM_ELEM(mask,n)=(double)(DIRECT_MULTIDIM_ELEM(imask,n));
-                }
-                Vt()=mask;
-                Vt.write("cone.vol");
+                BinaryConeMask(maskFourier, 90. - w1);
                 break;
-            }
-
-            // Transfer mask to maskFourier
-            for (int z=0, ii=0, yy, zz; z<ZSIZE(maskFourier); z++)
-            {
-                if ( z > (ZSIZE(maskFourier) - 1)/2 )
-                    zz = z-ZSIZE(maskFourier);
-                else
-                    zz = z;
-                for (int y=0; y<YSIZE(maskFourier); y++)
-                {
-                    if ( y > (YSIZE(maskFourier) - 1)/2 )
-                        yy = y-YSIZE(maskFourier);
-                    else
-                        yy = y;
-                    for (int xx=0; xx<XSIZE(maskFourier); xx++,ii++)
-                    {
-                        DIRECT_MULTIDIM_ELEM(maskFourier,ii) =
-                            A3D_ELEM(mask,zz,yy,xx);
-                    }
-                }
-            }
-        }
-        else
-        {
-            w.resize(3);
-            for (int k=0; k<ZSIZE(maskFourier); k++)
-            {
-                FFT_IDX2DIGFREQ(k,ZSIZE(v),ZZ(w));
-                for (int i=0; i<YSIZE(maskFourier); i++)
-                {
-                    FFT_IDX2DIGFREQ(i,YSIZE(v),YY(w));
-                    for (int j=0; j<XSIZE(maskFourier); j++)
-                    {
-                        FFT_IDX2DIGFREQ(j,XSIZE(v),XX(w));
-                        DIRECT_A3D_ELEM(maskFourier,k,i,j)=maskValue(w);
-                    }
-                }
             }
         }
     }

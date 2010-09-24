@@ -44,7 +44,8 @@
       Filter.w1=w_cutoff;
       Filter.raised_w=slope;
       I().setXmippOrigin();
-      Filter.generate_mask(I());
+      Filter.generate_mask(I()); // Should not be used with filters
+                                 // other than WEDGE or CONE
       Filter.apply_mask_Space(I());
       I.write("filtered_image.xmp");
    @endcode
@@ -126,7 +127,7 @@ public:
     double maskValue(const Matrix1D<double> &w);
 
     /** Generate nD mask. */
-    void generateMask(MultidimArray<double> &mask);
+    void generateMask(MultidimArray<double> &v);
 
     /** Apply mask in 3D. */
     void applyMaskSpace(MultidimArray<double> &v);
@@ -141,7 +142,7 @@ public:
     Matrix1D<double> w;
 
     // Auxiliary mask for the filter in 3D
-    MultidimArray<double> maskFourier;
+    MultidimArray<int> maskFourier;
 
     // Transformer
     FourierTransformer transformer;

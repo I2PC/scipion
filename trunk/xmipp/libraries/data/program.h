@@ -108,11 +108,9 @@ public:
      */
     const char * name() const;
     /** Print the usage of the program, reduced version */
-    void usage() const;
-    /** Print detailed usage of the program */
-    void extendedUsage() const;
+    void usage(int verb = 0) const;
     /** Print help about specific parameter */
-    void usage(const std::string & param);
+    void usage(const std::string & param, int verb = 2);
 
     /** Return the version of the program */
     int version() const;

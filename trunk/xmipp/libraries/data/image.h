@@ -269,6 +269,8 @@ public:
     {
         MDMainHeader.clear();
         MD.clear();
+        //Just to ensure there is an empty MDRow
+        MD.push_back(MDMainHeader);
     }
 
     /** Check whether image is complex based on T

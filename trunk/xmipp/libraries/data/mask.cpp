@@ -454,7 +454,7 @@ void BinaryConeMask(MultidimArray<int> &mask, double theta, int mode)
 
 }
 
-void BinaryWedgeMask(MultidimArray<double> &mask, double theta0, double thetaF,
+void BinaryWedgeMask(MultidimArray<int> &mask, double theta0, double thetaF,
                      Matrix2D<double> A)
 {
 
@@ -1102,7 +1102,7 @@ void Mask_Params::generate_mask(bool apply_geo)
         BinaryConeMask(imask, R1, mode);
         break;
     case BINARY_WEDGE_MASK:
-        BinaryWedgeMask(dmask, R1, R2, AA);
+        BinaryWedgeMask(imask, R1, R2, AA);
         break;
     case GAUSSIAN_MASK:
         GaussianMask(dmask, sigma, mode, x0, y0, z0);

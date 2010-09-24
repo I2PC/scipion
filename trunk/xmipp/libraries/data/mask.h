@@ -276,7 +276,7 @@ void BinaryConeMask(MultidimArray< int >& mask,
  * outside (ie in the missing wedge) it will be zero. The mask is centered at
  * (x0,y0,z0), and rotated with respect to euler angle matrix A.
  */
-void BinaryWedgeMask(MultidimArray< double >& mask, double theta0, double thetaF,
+void BinaryWedgeMask(MultidimArray< int >& mask, double theta0, double thetaF,
                      Matrix2D< double > A);
 
 

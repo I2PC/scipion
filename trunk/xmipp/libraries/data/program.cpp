@@ -91,7 +91,7 @@ void XmippProgram::read(int argc, char ** argv)
     {
         ///If -more_options provided, show extended usage
         if (checkParam("-more"))
-            extendedUsage();
+            usage(1);
         ///If help requested, print usage message
         if (checkParam("-h"))
         {
@@ -170,27 +170,20 @@ const char * XmippProgram::name() const
     return progDef->name.c_str();
 }
 
-void XmippProgram::usage() const
+void XmippProgram::usage(int verb) const
 {
     ConsolePrinter cp;
-    cp.printProgram(*progDef);
+    cp.printProgram(*progDef, verb);
     exit(1);
 }
 
-void XmippProgram::extendedUsage() const
-{
-    ConsolePrinter cp;
-    cp.printProgram(*progDef, 1);
-    exit(1);
-}
-
-void XmippProgram::usage(const std::string & param)
+void XmippProgram::usage(const std::string & param, int verb)
 {
   ConsolePrinter cp;
   ParamDef * paramDef = progDef->findParam(param);
   if (paramDef == NULL)
           REPORT_ERROR(ERR_ARG_INCORRECT, ((std::string)"Doesn't exists param: " + param));
-  cp.printParam(*paramDef, 2);
+  cp.printParam(*paramDef, verb);
   exit(0);
 }
 
