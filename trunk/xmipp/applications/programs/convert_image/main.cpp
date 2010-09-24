@@ -35,7 +35,7 @@ class progConvImg: public XmippProgram
 {
 private:
     FileName fn_stack, fn_root, fn_oext, fn_vol, fn_in, fn_out, fn_img;
-    std::string type;
+    std::string type, bits;
     Image<float> in, out;
     MetaData SF;
     MDRow    row;
@@ -43,7 +43,7 @@ private:
 protected:
     void defineParams()
     {
-        addUsageLine("Converts stacks, volumes or images into any of these three elements and any other file format.");
+        addUsageLine("Converts among stacks, volumes and images, and changes the file format.");
         addParamsLine(" -i <metadata>   :Input file: metadata, stack, volume or image.");
         addParamsLine("         :+ Supported read formats are:");
         addParamsLine("         :+ dm3 : Digital Micrograph 3.");
@@ -60,20 +60,25 @@ protected:
 
         addParamsLine("  [-o <output_file=\"\">]  : Output file: metadata, stack, volume or image.");
         addParamsLine("   alias --output;");
-        addParamsLine("  [-oext <extension=\"\">] : Output file format extension.");
+        addParamsLine("  [-oext <extension=spi>] : Output file format extension.");
         addParamsLine("         :+ Supported write formats are:");
         addParamsLine("         :+ img : Imagic");
         addParamsLine("         :+ inf,raw : RAW file with header INF file.");
         addParamsLine("         :+ mrc : CCP4");
         addParamsLine("         :+ spi, xmp : Spider");
-        addParamsLine("         :+ tif : TIFF. Supports 8bits, 16bits and float.");
+        addParamsLine("         :+ tif : TIFF. Supports 8bits, 16bits and float. See -bits option.");
         addParamsLine("  [-oroot <root=\"\">]     : Rootname of output individual images.");
         addParamsLine("[-type <output_type=img>] : Output file type.");
         addParamsLine("          where <output_type>");
-        addParamsLine("          img : image");
-        addParamsLine("          vol : volume");
-        addParamsLine("          stack : stack ");
+        addParamsLine("          img : Image");
+        addParamsLine("          vol : Volume");
+        addParamsLine("          stack : Stack ");
         addParamsLine("  alias -t;");
+        addParamsLine("  [-bits+ <bit_depth=8>] : Bit depth for TIFF format. Options are: ");
+        addParamsLine("                         :   8  : Uint8 (char).");
+        addParamsLine("                         :   16 : Uint16 (short).");
+        addParamsLine("                         :   32 : Float.");
+        addParamsLine("  alias -b;");
     }
 
     void readParams()
@@ -93,6 +98,14 @@ protected:
                 type = "stack";
         }
 
+        bits = getParam("-bits");
+
+        if (fn_out.getExtension() == "tif")
+          fn_out += "%" + bits;
+        else if (fn_oext == "tif")
+          fn_oext += "%" + bits;
+        else if (checkParam("-bits"))
+            REPORT_ERROR(ERR_PARAM_INCORRECT, "-bits option is only valid for TIFF format.");
 
     }
 public:
@@ -157,6 +170,7 @@ public:
                     in.write(fnOut);
                     SFout.addObject();
                     SFout.setValue(MDL_IMAGE,fnOut);
+                    SFout.setValue(MDL_ENABLED,1);
                 }
                 if (fn_root != "")
                     SFout.write(fn_root+".sel");
@@ -207,6 +221,7 @@ public:
                         in.write(fnOut);
                         SFout.addObject();
                         SFout.setValue(MDL_IMAGE,fnOut);
+                        SFout.setValue(MDL_ENABLED,1);
                     }
                     if (fn_root != "")
                         SFout.write(fn_root+".sel");
@@ -232,7 +247,7 @@ public:
                     }
                     in.write(fn_out,-1,true);
                 }
-                else if (type == "img" && fn_root!="")
+                else if (ZSIZE(in())>1 && type == "img")
                 {
                     fn_root=fn_root.removeFileFormat();
                     MetaData SFout;
@@ -248,6 +263,7 @@ public:
                         out.write(fnOut);
                         SFout.addObject();
                         SFout.setValue(MDL_IMAGE,fnOut);
+                        SFout.setValue(MDL_ENABLED,1);
                     }
                     if (fn_root != "")
                         SFout.write(fn_root+".sel");

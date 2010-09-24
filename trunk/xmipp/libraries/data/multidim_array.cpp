@@ -159,3 +159,15 @@ void forcePositive(MultidimArray<double> &V)
         REPORT_ERROR(ERR_NOT_IMPLEMENTED,"");
     }
 }
+
+template<>
+void MultidimArray< std::complex< double > >::computeDoubleMinMax(double& minval, double& maxval) const
+{
+  REPORT_ERROR(ERR_NOT_IMPLEMENTED,"MultidimArray::computeDoubleMinMax not implemented for complex.");
+}
+template<>
+void MultidimArray< std::complex< double > >::rangeAdjust(std::complex< double > minF, std::complex< double > maxF)
+{
+   REPORT_ERROR(ERR_NOT_IMPLEMENTED,"MultidimArray::rangeAdjust not implemented for complex.");
+}
+

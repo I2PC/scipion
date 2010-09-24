@@ -271,6 +271,7 @@ int readTIFF(int img_select, bool isStack=false)
     }
 
     data.setDimensions(_xDim, _yDim, 1, _nDim);
+    replaceNsize = _nDim;
 
     unsigned long   imgStart=0;
     unsigned long   imgEnd =_nDim;
@@ -394,16 +395,17 @@ int readTIFF(int img_select, bool isStack=false)
 /** TIFF Writer
   * @ingroup TIFF
 */
-int writeTIFF(int img_select, bool isStack=false, int mode=WRITE_OVERWRITE, int imParam=NULL)
+int writeTIFF(int img_select, bool isStack=false, int mode=WRITE_OVERWRITE, std::string imParam="")
 {
+#undef DEBUG
 
-#undef DEBUG
-    //#define DEBUG
-#ifdef DEBUG
-    printf("DEBUG writeTIFF: Writing TIFF file\n");
-    printf("DEBUG writeTIFF: File %s\n", filename.c_str());
-#endif
-#undef DEBUG
+    if (mode == WRITE_REPLACE)
+        REPORT_ERROR(ERR_TYPE_INCORRECT,"rwTIFF: Images cannot be replaced in TIFF file.");
+    if (typeid(T) == typeid(std::complex<double>))
+    {
+        REPORT_ERROR(ERR_TYPE_INCORRECT,"rwTIFF: Complex images are not supported by TIFF format.");
+        return 0;
+    }
 
     int Xdim = XSIZE(data);
     int Ydim = YSIZE(data);
@@ -413,16 +415,16 @@ int writeTIFF(int img_select, bool isStack=false, int mode=WRITE_OVERWRITE, int 
     // Volumes are not supported
     if (Zdim > 1)
         REPORT_ERROR(ERR_MULTIDIM_DIM, "writeTIFF does not support volumes.");
-    // TIFF cannot open a file to read/write at the same time, so the must be overwritten
-    if (mode |= WRITE_OVERWRITE)
-        REPORT_ERROR(ERR_VALUE_INCORRECT, "writeTIFF: LIBTIFF cannot modify an existing file, only overwrite it.");
+    // TIFF cannot open a file to read/write at the same time, so the file must be overwritten
+    //    if (mode != WRITE_OVERWRITE)
+    //        REPORT_ERROR(ERR_VALUE_INCORRECT, "writeTIFF: LIBTIFF cannot modify an existing file, only overwrite it.");
 
     TIFFDirHead dhMain; // Main header
 
     //Selection of output datatype
     DataType wDType;
 
-    if (imParam == NULL)
+    if (imParam == "")
     {
         if (typeid(T)==typeid(double)||typeid(T)==typeid(float))
         {
@@ -464,22 +466,24 @@ int writeTIFF(int img_select, bool isStack=false, int mode=WRITE_OVERWRITE, int 
     }
     else
     {
-        switch (imParam)
+        switch (atoi(imParam.c_str()))
         {
         case 8:
             wDType = UChar;
             dhMain.imageSampleFormat = SAMPLEFORMAT_UINT;
+            data.rangeAdjust(0, 255);
             break;
         case 16:
             wDType = UShort;
             dhMain.imageSampleFormat = SAMPLEFORMAT_UINT;
+            data.rangeAdjust(0, 65535);
             break;
         case 32:
             wDType = Float;
             dhMain.imageSampleFormat = SAMPLEFORMAT_IEEEFP;
             break;
         default:
-            REPORT_ERROR(ERR_TYPE_INCORRECT,"rwTIFF: Error, unknown TIFF output format.");
+            REPORT_ERROR(ERR_TYPE_INCORRECT,"rwTIFF: Error, incorrect TIFF bits depth value.");
         }
     }
 
@@ -512,7 +516,12 @@ int writeTIFF(int img_select, bool isStack=false, int mode=WRITE_OVERWRITE, int 
      */
     TIFF* tif;
 
-    if ((tif = TIFFOpen(filename.c_str(), "w")) == NULL)
+    if (mode == WRITE_OVERWRITE)
+        (tif = TIFFOpen(filename.c_str(), "w"));
+    else
+        (tif = TIFFOpen(filename.c_str(), "a"));
+
+    if (tif == NULL)
         REPORT_ERROR(ERR_IO_NOTOPEN,"writeTIFF: There is a problem opening the TIFF file.");
 
     char*  tif_buf;
@@ -523,9 +532,14 @@ int writeTIFF(int img_select, bool isStack=false, int mode=WRITE_OVERWRITE, int 
         exit(-1);
     }
 
+    //    if (mode == WRITE_REPLACE)
+    //        tiffsetdirectory(tif,img_select);
+
     //Write each image in a directory
     for (int i=imgStart; i<imgEnd; i++ )
     {
+        TIFFSetDirectory(tif,img_select);
+
         TIFFSetField(tif, TIFFTAG_BITSPERSAMPLE,  dhMain.bitsPerSample);
         TIFFSetField(tif, TIFFTAG_SAMPLESPERPIXEL,dhMain.samplesPerPixel);
         TIFFSetField(tif, TIFFTAG_SAMPLEFORMAT,   dhMain.imageSampleFormat);
@@ -540,7 +554,7 @@ int writeTIFF(int img_select, bool isStack=false, int mode=WRITE_OVERWRITE, int 
         TIFFSetField(tif, TIFFTAG_PLANARCONFIG,   PLANARCONFIG_CONTIG);
         TIFFSetField(tif, TIFFTAG_SOFTWARE,       "Xmipp 3.0");
 
-        if (Ndim == 1)
+        if (Ndim == 1 && isStack == false)
         {
             TIFFSetField(tif, TIFFTAG_SUBFILETYPE, (unsigned int) 0x0);
             TIFFSetField(tif, TIFFTAG_PAGENUMBER, (uint16) 0, (uint16) 0);

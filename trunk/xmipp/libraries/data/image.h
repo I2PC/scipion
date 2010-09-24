@@ -351,7 +351,7 @@ public:
      * If -1 is given the whole object is read
      *
      */
-    int read(const FileName &name, bool readdata=true, int select_img = 0,
+    int read(const FileName &name, bool readdata=true, int select_img = -1,
              bool apply_geo = false, bool only_apply_shifts = false,
              MDRow * row = NULL, bool mapData = false)
     {
@@ -491,11 +491,11 @@ public:
             //select_img = atoi(filename.substr(0, found).c_str());
             filename   =      filename.substr(found+1) ;
         }
-        int imParam = NULL;
+        std::string imParam = "";
         found=filename.find_first_of("%");
         if (found!=std::string::npos)
         {
-            imParam =  atoi(filename.substr(found+1).c_str());
+            imParam =  filename.substr(found+1).c_str();
             filename = filename.substr(0, found) ;
         }
         filNamePlusExt = filename;
@@ -1178,7 +1178,7 @@ public:
     /* Is there label in the individual header */
     bool individualContainsLabel(MDLabel label) const
     {
-        return MD[0].containsLabel(label);
+        return (!MD.empty() && MD[0].containsLabel(label));
     }
 
     /* Is there label in the main header */

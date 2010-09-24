@@ -840,27 +840,27 @@ public:
             REPORT_ERROR(ERR_MEM_BADREQUEST,"coreAllocateReuse:Cannot allocate a negative number of bytes");
 
         if (mmapOn)
-            {
-                mapFile.initRandom(8);
-                mapFile = mapFile.addExtension("tmp");
+        {
+            mapFile.initRandom(8);
+            mapFile = mapFile.addExtension("tmp");
 
-                if ( ( mFd = open(mapFile.c_str(),  O_RDWR | O_CREAT | O_TRUNC,S_IRUSR|S_IWUSR|S_IRGRP|S_IWGRP) ) == -1 )
-                    REPORT_ERROR(ERR_IO_NOTOPEN,"MultidimArray::coreAllocateReuse: Error creating map file.");
-                if ((lseek(mFd, nzyxdim*sizeof(T), SEEK_SET) == -1) || (::write(mFd,"",1) == -1))// Use of :: to call write from global space due to confict with multidimarray::write
-                {
-                    close(mFd);
-                    REPORT_ERROR(ERR_IO_NOWRITE,"MultidimArray::coreAllocateReuse: Error 'stretching' the map file.");
-                }
-
-                if ( (data = (T*) mmap(0,nzyxdim*sizeof(T), PROT_READ | PROT_WRITE, MAP_SHARED, mFd, 0)) == (void*) -1 )
-                    REPORT_ERROR(ERR_MMAP_NOTADDR,"MultidimArray::coreAllocateReuse: mmap failed.");
-            }
-            else
+            if ( ( mFd = open(mapFile.c_str(),  O_RDWR | O_CREAT | O_TRUNC,S_IRUSR|S_IWUSR|S_IRGRP|S_IWGRP) ) == -1 )
+                REPORT_ERROR(ERR_IO_NOTOPEN,"MultidimArray::coreAllocateReuse: Error creating map file.");
+            if ((lseek(mFd, nzyxdim*sizeof(T), SEEK_SET) == -1) || (::write(mFd,"",1) == -1))// Use of :: to call write from global space due to confict with multidimarray::write
             {
-                data = new T [nzyxdim];
-                if (data == NULL)
-                    REPORT_ERROR(ERR_MEM_NOTENOUGH, "Allocate: No space left");
+                close(mFd);
+                REPORT_ERROR(ERR_IO_NOWRITE,"MultidimArray::coreAllocateReuse: Error 'stretching' the map file.");
             }
+
+            if ( (data = (T*) mmap(0,nzyxdim*sizeof(T), PROT_READ | PROT_WRITE, MAP_SHARED, mFd, 0)) == (void*) -1 )
+                REPORT_ERROR(ERR_MMAP_NOTADDR,"MultidimArray::coreAllocateReuse: mmap failed.");
+        }
+        else
+        {
+            data = new T [nzyxdim];
+            if (data == NULL)
+                REPORT_ERROR(ERR_MEM_NOTENOUGH, "Allocate: No space left");
+        }
         nzyxdimAlloc = nzyxdim;
     }
 
@@ -4630,5 +4630,9 @@ std::ostream& operator<< (std::ostream& ostrm, const MultidimArray<T>& v)
 // Specializations cases for complex numbers
 template<>
 std::ostream& operator<<(std::ostream& ostrm, const MultidimArray< std::complex<double> >& v);
+template<>
+void MultidimArray< std::complex< double > >::computeDoubleMinMax(double& minval, double& maxval) const;
+template<>
+void MultidimArray< std::complex< double > >::rangeAdjust(std::complex< double > minF, std::complex< double > maxF);
 //@}
 #endif
