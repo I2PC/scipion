@@ -78,47 +78,39 @@ public class FileBrowser {
             changeDirectory(currentDirectory.getParentFile());
         }
     }
-    /*
-    public void changeDirectory(int dirIndex) {
-    switch (dirIndex) {
-    case 0: // ..
-    goParent();
-    break;
-    default:
-    currentDirectory = files.get(dirIndex - 1);//[dirIndex - 1];
-    }
-    changeDirectory(currentDirectory);
-    }
-     */
 
     public void changeDirectory(File newDirectory) {
-        currentDirectory = newDirectory;
+        try {
+            currentDirectory = newDirectory.getCanonicalFile();
 
-        File list[] = currentDirectory.listFiles();
+            File list[] = currentDirectory.listFiles();
 
-        if (list == null) { // Avoiding exceptions when no files.
-            files = Arrays.asList(new File[0]);
-        } else {
-            files = Arrays.asList(list);
+            if (list == null) { // Avoiding exceptions when no files.
+                files = Arrays.asList(new File[0]);
+            } else {
+                files = Arrays.asList(list);
 
-            if (!files.isEmpty()) {
-                // Sorts files so folders will be at the top of list.
-                Collections.sort(files, new Comparator() {
+                if (!files.isEmpty()) {
+                    // Sorts files so folders will be at the top of list.
+                    Collections.sort(files, new Comparator() {
 
-                    public int compare(final Object o1, final Object o2) {
-                        File a = (File) o1;
-                        File b = (File) o2;
+                        public int compare(final Object o1, final Object o2) {
+                            File a = (File) o1;
+                            File b = (File) o2;
 
-                        if (a.isDirectory() && !b.isDirectory()) {  // Dir vs. file
-                            return -1;
-                        } else if (!a.isDirectory() && b.isDirectory()) {   // file vs. dir
-                            return 1;
-                        } else {    // file vs. file
-                            return a.compareTo(b);
+                            if (a.isDirectory() && !b.isDirectory()) {  // Dir vs. file
+                                return -1;
+                            } else if (!a.isDirectory() && b.isDirectory()) {   // file vs. dir
+                                return 1;
+                            } else {    // file vs. file
+                                return a.compareTo(b);
+                            }
                         }
-                    }
-                });
+                    });
+                }
             }
+        } catch (Exception ex) {
+            IJ.error("Error", "Error changing to " + newDirectory.getAbsolutePath());
         }
     }
 

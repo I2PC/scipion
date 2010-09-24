@@ -19,7 +19,7 @@ else
 	do
 		case "$1" in
 			-mem)MEM=$2; shift;;
-			-dir)WORKDIR="$2"; shift;;
+			-dir)WORKDIR=$2; shift;;
 			--)shift; break;;
 			-*)
 			echo >&2 \
@@ -29,6 +29,11 @@ else
 		esac
 		shift
 	done
+
+	if test -z $MEM || test -z $WORKDIR
+	then
+		SHOW_HELP=1
+	fi
 
 	if [ -z $MEM ]
 	then
@@ -40,6 +45,11 @@ else
 	then
 		WORKDIR=.	# Default working directory.
 		echo "No work directory provided. Using current: `pwd`"
+	fi
+
+	if [ "$SHOW_HELP" = "1" ]
+	then
+		echo "Usage: xmipp_browserj [-mem <memory_ammount>] [-dir <work_directory>]"
 	fi
 
 	export LD_LIBRARY_PATH=$XMIPP_BASE/lib

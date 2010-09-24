@@ -1,13 +1,11 @@
 #!/usr/bin/env sh
 LINUX="java-6-sun-1.6.0.20_linux/"
-LINUX64="jdk1.6.0_14"
+LINUX64="jdk1.6.0_14_linux64/"
 MACOSX="java-6-sun-1.6.0.20_macosx/"
 
 SCRIPT=`readlink -f $0`
 SCRIPTPATH=`dirname $SCRIPT`
 XMIPP_BASE="$SCRIPTPATH/../.."
-JAVA_HOME="$XMIPP_BASE/external/java"
-JVM="$SCRIPTPATH/jvm"
 
 # Which is our OS?
 case "$(uname -s)" in
@@ -21,6 +19,5 @@ Linux)
 esac
 
 # Creates a symbolic link to the java virtual machine
-rm $JVM
-ln "$JAVA_HOME/$platform" -s $JVM
-
+rm "$SCRIPTPATH/jvm"
+ln "$SCRIPTPATH/$platform" -s "$SCRIPTPATH/jvm"
