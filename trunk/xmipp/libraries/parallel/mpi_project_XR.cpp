@@ -108,15 +108,6 @@ void Projection_mpi_XR_Parameters::read(const FileName &fn_proj_param)
 }
 
 
-//Some global variables
-Mutex mutex;
-Barrier * barrier;
-ThreadManager * thMgr;
-ParallelTaskDistributor * td;
-//FileTaskDistributor     * td;
-int numberOfThreads;
-
-
 /* Effectively project ===================================================== */
 int PROJECT_mpi_XR_Effectively_project(
     Projection_mpi_XR_Parameters &prm,
@@ -125,6 +116,7 @@ int PROJECT_mpi_XR_Effectively_project(
     XRayPSF &psf,
     MetaData &SF)
 {
+    // Threads stuff
 
     XrayThread *dataThread = new XrayThread;
 
@@ -137,18 +129,12 @@ int PROJECT_mpi_XR_Effectively_project(
 
     threadBlockSize = (numberOfThreads == 1) ? numberOfJobs : numberOfJobs/numberOfThreads/2;
 
-    //Create the job handler to distribute jobs
+    //Create the job handler to distribute thread jobs
     td = new ThreadTaskDistributor(numberOfJobs, threadBlockSize);
-    //    td = new FileTaskDistributor(numberOfJobs,threadBlockSize);
     barrier = new Barrier(numberOfThreads-1);
 
     //Create threads to start working
-
     thMgr = new ThreadManager(numberOfThreads,(void*) dataThread);
-
-
-
-
 
     int numProjs=0;
     SF.clear();
@@ -201,7 +187,6 @@ int PROJECT_mpi_XR_Effectively_project(
             SF.setValue(MDL_IMAGE,data.fn_proj);
             SF.setValue(MDL_ENABLED,1);
         }
-        //MPI            IMGMATRIX(proj).addNoise(prm.Npixel_avg, prm.Npixel_dev, "gaussian");
         mpiData.push_back(data);
         idx++;
     }
@@ -211,8 +196,8 @@ int PROJECT_mpi_XR_Effectively_project(
     // Creation of Job Handler file
 
     FileTaskDistributor *jobHandler;
-    char fName[L_tmpnam];
     long long int nodeBlockSize = 1;
+    jobHandler = new FileTaskDistributor(mpiData.size(), nodeBlockSize, &node);
 
 
     if (node.isMaster())
@@ -221,14 +206,13 @@ int PROJECT_mpi_XR_Effectively_project(
         std::cerr << "Projecting ...\n";
     }
 
-    jobHandler = new FileTaskDistributor(mpiData.size(), nodeBlockSize, &node);
 
     long long int first = -1, last = -1;
 
     if (!(prm.tell&TELL_SHOW_ANGLES))
         init_progress_bar(mpiData.size());
 
-    // Parallel jobs
+    // Parallel node jobs
     while (jobHandler->getTasks(first, last))
     {
         for (long long int k = first; k <= last; k++)

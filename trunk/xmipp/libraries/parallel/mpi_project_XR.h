@@ -26,7 +26,6 @@
 #ifndef MPI_PROJECT_XR_H_
 #define MPI_PROJECT_XR_H_
 
-
 #include "parallel/mpi.h"
 #include "reconstruction/project_XR.h"
 
@@ -66,53 +65,9 @@ public:
     Projection_mpi_XR_Parameters()
     {}
 
-
     /* Read parameters --------------------------------------------------------- */
     void read(const FileName &fn_proj_param);
-
-
 };
-
-//class Prog_mpi_Project_XR_Parameters: public Prog_Project_XR_Parameters
-//{
-//public:
-//
-//    /** Number of Procesors **/
-//    int nProcs;
-//
-//    /** Divide the job in this number block with this number of images */
-//    //int mpi_job_size;
-//
-//    /** computing node number. Master=0 */
-//    int rank;
-//
-//    /** status after am MPI call */
-//    MPI_Status status;
-//
-//
-//    /*  constructor ------------------------------------------------------- */
-//    Prog_mpi_Project_XR_Parameters()
-//    {
-//        //parent class constructor will be called by deault without parameters
-//        MPI_Comm_size(MPI_COMM_WORLD, &(nProcs));
-//        MPI_Comm_rank(MPI_COMM_WORLD, &(rank));
-//    }
-//
-//    /* Read parameters --------------------------------------------------------- */
-//    void read(int argc, char **argv)
-//    {
-//        Prog_Project_XR_Parameters::read(argc,argv);
-//    }
-//
-//    /* Usage ------------------------------------------------------------------- */
-//    void usage()
-//    {
-//        Prog_Project_XR_Parameters::usage();
-//    }
-//
-//
-//
-//};
 
 /* Effectively project ===================================================== */
 int PROJECT_mpi_XR_Effectively_project(

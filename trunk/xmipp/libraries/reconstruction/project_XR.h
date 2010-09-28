@@ -206,6 +206,16 @@ struct XrayThread
     Image<double> *imOut;
 };
 
+//Some global threads management variables
+Mutex mutex;
+Barrier * barrier;
+ThreadManager * thMgr;
+ParallelTaskDistributor * td;
+int numberOfThreads;
+
+
+
+
 /// Thread Job to generate an X-ray microscope projection
 void thread_project_xr(ThreadArgument &thArg);
 //@}

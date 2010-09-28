@@ -39,7 +39,7 @@ void ProgProjectXR::defineParams()
     addParamsLine(" alias --input;");
     addParamsLine("[-psf <psf_param_file=\"\">] : XRay-Microscope parameters file. If not set, then default parameters are chosen.");
     addParamsLine("[-o <sel_file=\"\">]         : Output Metadata file with all the generated projecions.");
-//    addParamsLine("[-v]                    : Verbose.");
+    //    addParamsLine("[-v]                    : Verbose.");
     addParamsLine("[-show_angles]          : Print angles value for each projection.");
     addParamsLine("[-only_create_angles]   : Projections are not calculated, only the angles values.");
     addParamsLine("[-thr <threads=1>]      : Number of concurrent threads.");
@@ -247,16 +247,6 @@ void PROJECT_XR_Side_Info::produce_Side_Info(
     rotPhantomVol = phantomVol;
 }
 
-
-//Some global variables
-Mutex mutex;
-Barrier * barrier;
-ThreadManager * thMgr;
-ParallelTaskDistributor * td;
-//FileTaskDistributor     * td;
-int numberOfThreads;
-
-
 /* Effectively project ===================================================== */
 int PROJECT_XR_Effectively_project(Projection_XR_Parameters &prm,
                                    PROJECT_XR_Side_Info &side,
@@ -265,6 +255,7 @@ int PROJECT_XR_Effectively_project(Projection_XR_Parameters &prm,
                                    MetaData &SF)
 {
 
+    // Threads stuff
 
     XrayThread *dataThread = new XrayThread;
 
@@ -275,29 +266,26 @@ int PROJECT_XR_Effectively_project(Projection_XR_Parameters &prm,
     longint blockSize, numberOfJobs= side.phantomVol().zdim;
     numberOfThreads = psf.nThr;
 
-    blockSize = (numberOfThreads == 1) ? numberOfJobs : numberOfJobs/numberOfThreads/6;
+    blockSize = (numberOfThreads == 1) ? numberOfJobs : numberOfJobs/numberOfThreads/2;
 
-    //Create the job handler to distribute jobs
+    //Create the job handler to distribute thread jobs
     td = new ThreadTaskDistributor(numberOfJobs, blockSize);
-    //    td = new FileTaskDistributor(numberOfJobs,blockSize);
     barrier = new Barrier(numberOfThreads-1);
 
     //Create threads to start working
-
     thMgr = new ThreadManager(numberOfThreads,(void*) dataThread);
-
 
     int expectedNumProjs = FLOOR((prm.tiltF-prm.tilt0)/prm.tiltStep);
     int numProjs=0;
-    SF.clear();
+
     std::cerr << "Projecting ...\n";
     if (!(prm.tell&TELL_SHOW_ANGLES))
-        init_progress_bar(expectedNumProjs*side.phantomVol().zdim);
-    //    SF.reserve(expectedNumProjs);
+        init_progress_bar(expectedNumProjs);
+
+    SF.clear();
     MetaData DF_movements;
     DF_movements.setComment("True rot, tilt and psi; rot, tilt, psi, X and Y shifts applied");
     double tRot,tTilt,tPsi,rot,tilt,psi;
-
 
     int idx=prm.starting;
     for (double angle=prm.tilt0; angle<=prm.tiltF; angle+=prm.tiltStep)
@@ -347,20 +335,18 @@ int PROJECT_XR_Effectively_project(Projection_XR_Parameters &prm,
             << proj.tilt() << "\t" << proj.psi() << std::endl;
         else if ((expectedNumProjs % XMIPP_MAX(1, numProjs / 60))  == 0)
             progress_bar(numProjs);
+
         proj.write(fn_proj);
         numProjs++;
         idx++;
         SF.addObject();
         SF.setValue(MDL_IMAGE,fn_proj);
         SF.setValue(MDL_ENABLED,1);
-
-        std::cout << "-----------  Finishing work with MD -----  "<< idx <<std::endl;
     }
     if (!(prm.tell&TELL_SHOW_ANGLES))
         progress_bar(expectedNumProjs);
 
     DF_movements.write(prm.fnProjectionSeed + "_movements.txt");
-
 
     //Terminate threads and free memory
     delete td;
@@ -373,9 +359,6 @@ int PROJECT_XR_Effectively_project(Projection_XR_Parameters &prm,
 void project_xr_Volume_offCentered(PROJECT_XR_Side_Info &side, XRayPSF &psf, Projection &P,
                                    int Ydim, int Xdim, int idxSlice)
 {
-
-    std::cout << "-----------  Entering project_xr_VolumeOffcent -------------" <<std::endl;
-
 
     int iniXdim, iniYdim, iniZdim, newXdim, newYdim;
     int xOffsetN, yOffsetN, zinit, zend, yinit, yend, xinit, xend;
@@ -434,8 +417,6 @@ void project_xr_Volume_offCentered(PROJECT_XR_Side_Info &side, XRayPSF &psf, Pro
 
     }
 
-
-
     // Rotate volume ....................................................
     //    applyGeometry(LINEAR,volTemp(), V, Euler_rotation3DMatrix(rot, tilt, psi), IS_NOT_INV, DONT_WRAP);
 
@@ -447,19 +428,14 @@ void project_xr_Volume_offCentered(PROJECT_XR_Side_Info &side, XRayPSF &psf, Pro
 
     Euler_rotate(side.phantomVol(), P.rot(), P.tilt(), P.psi(),side.rotPhantomVol());
 
-
     // Correct the shift position due to tilt axis is out of optical axis
     side.rotPhantomVol().window(zinit, yinit, xinit, zend, yend, xend);
 
-
     psf.adjustParam(side.rotPhantomVol);
 
-
     //the really really final project routine, I swear by Snoopy.
-//    project_xr(psf,side.rotPhantomVol,P, idxSlice);
+    //    project_xr(psf,side.rotPhantomVol,P, idxSlice);
     thMgr->run(thread_project_xr);
-
-
 
     int outXDim = XMIPP_MIN(Xdim,iniXdim);
     int outYDim = XMIPP_MIN(Ydim,iniYdim);
@@ -469,19 +445,11 @@ void project_xr_Volume_offCentered(PROJECT_XR_Side_Info &side, XRayPSF &psf, Pro
                -ROUND(outYDim/2) + outYDim -1,
                -ROUND(outXDim/2) + outXDim -1);
 
-
-    std::cout << "-----------  Exiting project_xr_VolumeOffcent -------------" <<std::endl;
-
-
 }
 
 /// Generate an X-ray microscope projection for volume vol using the microscope configuration psf
 void project_xr(XRayPSF &psf, Image<double> &vol, Image<double> &imOut, int idxSlice)
 {
-
-    std::cout << "-----------  Entering project_xr -------------" <<std::endl;
-
-
 
     XrayThread *dataThread = new XrayThread;
 
@@ -520,9 +488,6 @@ void project_xr(XRayPSF &psf, Image<double> &vol, Image<double> &imOut, int idxS
     delete thMgr;
 
 
-
-    std::cout << "-----------  Exiting project_xr -------------" <<std::endl;
-
 }
 
 
@@ -538,7 +503,7 @@ void thread_project_xr(ThreadArgument &thArg)
 
     long long int first = -1, last = -1, priorLast = -1;
 
-    if (thread_id==0)
+    if (thread_id == 0)
     {
         vol().setXmippOrigin();
         imOutGlobal().resize(psf.Niy, psf.Nix);
@@ -561,15 +526,15 @@ void thread_project_xr(ThreadArgument &thArg)
     imTemp.setXmippOrigin();
     imTempSc.setXmippOrigin();
 
-
+    // Parallel thread jobs
     while (td->getTasks(first, last))
     {
         std::cerr << "th" << thread_id << ": working from " << first << " to " << last <<std::endl;
 
-//
-        if (numberOfThreads == 1)
-            first = last -50;
-        if (first>300)
+        //        if (numberOfThreads == 1)
+        //            first = last -50;
+        //        if (first>300)
+
         {
             for (int k=(vol()).zinit + priorLast + 1; k<=(vol()).zinit + first - 1 ; k++)
             {
@@ -580,11 +545,8 @@ void thread_project_xr(ThreadArgument &thArg)
 
             //#define DEBUG
 #ifdef DEBUG
-
             Image<double> _Im(imOut);
 #endif
-
-            //        init_progress_bar(vol().zdim-1);
 
             for (int k=((vol()).zinit + first); k<=((vol()).zinit + last); k++)
             {
@@ -650,9 +612,6 @@ void thread_project_xr(ThreadArgument &thArg)
                 dAij(imOut(),i,j) += dAij(*imTempP,i,j);
 
                 //        imOut.write("psfxr-imout.spi");
-
-                //        if (idxSlice > -1)
-                //            progress_bar((idxSlice - 1)*vol().zdim + k - vol().zinit);
             }
         }
         priorLast = last;
@@ -661,8 +620,7 @@ void thread_project_xr(ThreadArgument &thArg)
 
     }
 
-
-    //Lock for update the total counter
+    //Lock to update the total summatory
     mutex.lock();
     FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY2D(*imTempP)
     dAij(imOutGlobal(),i,j) += dAij(imOut(),i,j);
@@ -670,33 +628,22 @@ void thread_project_xr(ThreadArgument &thArg)
 
     barrier->wait();
 
-
     if (thread_id==0)
     {
-        std::cout << "Point 1" <<std::endl;
-
         imOutGlobal() = 1-imOutGlobal();
 
-        //            imOut.write("psfxr-imout.spi");
-
-        std::cout << "Point 2" <<std::endl;
         switch (psf.AdjustType)
         {
         case PSFXR_INT:
             //    imOut().selfScaleToSize(psf.Noy, psf.Nox);
             selfScaleToSize(LINEAR,imOutGlobal(), psf.Nox, psf.Noy);
-            std::cout << "Point 3" <<std::endl;
             break;
-
         case PSFXR_ZPAD:
             imOutGlobal().window(-ROUND(psf.Noy/2)+1,-ROUND(psf.Nox/2)+1,ROUND(psf.Noy/2)-1,ROUND(psf.Nox/2)-1);
-            std::cout << "Point 4" <<std::endl;
             break;
         }
 
         imOutGlobal().setXmippOrigin();
-        std::cout << "Point 5" <<std::endl;
-        //    imOut.write("psfxr-imout2.spi");
     }
     std::cerr << "th" << thread_id << ": Thread Finished" <<std::endl;
 }
