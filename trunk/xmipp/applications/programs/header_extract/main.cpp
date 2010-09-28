@@ -39,7 +39,7 @@ private:
 protected:
     void defineParams()
     {
-       produces_an_output = true;
+        produces_an_output = true;
         XmippMetadataProgram::defineParams();
         addUsageLine("Extracts the geometric transformation (angles & shifts) in the header of 2D-images");
         addUsageLine("and write values to a metadata file.");
@@ -59,7 +59,6 @@ protected:
 
     void processImage()
     {
-
         img.read(fnImg, false);
         xx = img.Xoff();
         yy = img.Yoff();
@@ -75,7 +74,6 @@ protected:
         mdIn.setValue(MDL_SHIFTY,    yy );
         mdIn.setValue(MDL_WEIGHT,    img.weight());
         mdIn.setValue(MDL_FLIP,      img.flip());
-
     }
 }
 ;// end of class ProgHeaderExtract
