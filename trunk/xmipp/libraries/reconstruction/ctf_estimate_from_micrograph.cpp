@@ -263,12 +263,13 @@ void Prog_assign_CTF_prm::process()
 
     // Open the micrograph
     Micrograph M_in;
-    int bits; // Micrograph depth
+    //bits is never used
+    //**int bits; // Micrograph depth
     int Ydim, Xdim; // Micrograph dimensions
     if (!selfile_mode)
     {
-        M_in.open_micrograph(image_fn, reversed);
-        bits = M_in.depth();
+        M_in.open_micrograph(image_fn/*, reversed*/);
+        //**bits = M_in.depth();
         M_in.size(Xdim, Ydim);
     }
 
