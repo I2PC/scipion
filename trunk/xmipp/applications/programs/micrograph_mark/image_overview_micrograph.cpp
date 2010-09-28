@@ -110,13 +110,13 @@ void QtImageOverviewMicrograph::loadImage()
 
     if (getMicrograph() != NULL) getMicrograph()->size(mMaxX, mMaxY);
     else return;
-
+    //FIXME
     if (mMaxX >= image()->width() && mMaxY >= image()->height() &&
-        getMicrograph()->depth() == 8)
+        getMicrograph()->getDatatypeDetph() == 8)
     {
         byte rgb[256];
         for (int i = 0; i < 256; i++) rgb[i] = i;
-        byte *result = SmoothResize((byte *)(getMicrograph()->array8()),
+        byte *result = SmoothResize((byte *)(getMicrograph()->arrayUChar()),
                                     mMaxX, mMaxY, image()->width(), image()->height(),
                                     rgb, rgb, rgb, rgb, rgb, rgb, 256);
         byte *ptr = result;

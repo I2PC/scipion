@@ -39,7 +39,7 @@ int main(int argc, char **argv)
     FileName fnRaw;
     FileName fnRawTilted;
     FileName fnAutomaticModel;
-    bool     reversed;
+    //bool     reversed;
     FileName fn_assign_CTF;
     bool     ctf_mode = false;
     bool     autoSelect = false;
@@ -50,7 +50,7 @@ int main(int argc, char **argv)
     {
         fnRaw         = getParameter(argc, argv, "-i");
         fnRawTilted   = getParameter(argc, argv, "-tilted", "");
-        reversed      = checkParameter(argc, argv, "-reverse_endian");
+//        reversed      = checkParameter(argc, argv, "-reverse_endian");
         fn_assign_CTF = getParameter(argc, argv, "-psd", "");
         if (checkParameter(argc, argv, "-ctf"))
         {
@@ -75,7 +75,7 @@ int main(int argc, char **argv)
         Micrograph m, mTilted;
         FileName fn8bits="", fn8bitsTilted="";
 
-        m.open_micrograph(fnRaw, reversed);
+        m.open_micrograph(fnRaw);
 	// Sjors & Roberto: 25jan08
 	// The following is a "chapuza" because the 8-bit
 	// visualization routine from XVsmooth is much nicer than our
@@ -86,12 +86,13 @@ int main(int argc, char **argv)
 	// Note that this also requires that the name of the original
 	// micrograph in the dialog window under "generate images"
 	// should be the original fnRaw (and not be left blank as before!)
-        if (m.depth()!=8)
+        //FIXME
+        if (m.getDatatypeDetph()!=8)
         {
-            fn8bits=fnRaw+".8bits";
+            fn8bits=fnRaw+"_8bits.raw";
             m.write_as_8_bits(fn8bits);
             m.close_micrograph();
-            m.open_micrograph(fn8bits,false);
+            m.open_micrograph(fn8bits);
 	    m.set_micrograph_name(fnRaw);
             m.compute_8_bit_scaling();
 	    system(((std::string)"rm -rf "+fn8bits+"*").c_str());
@@ -103,13 +104,14 @@ int main(int argc, char **argv)
 
         if (fnRawTilted != "")
         {
-            mTilted.open_micrograph(fnRawTilted, reversed);
-            if (mTilted.depth()!=8)
+            mTilted.open_micrograph(fnRawTilted);
+            //FIXME
+            if (mTilted.getDatatypeDetph()!=8)
             {
                 fn8bitsTilted=fnRawTilted+".8bits";
                 mTilted.write_as_8_bits(fn8bitsTilted);
                 mTilted.close_micrograph();
-                mTilted.open_micrograph(fn8bitsTilted,false);
+                mTilted.open_micrograph(fn8bitsTilted);
 		mTilted.set_micrograph_name(fnRawTilted);
                 mTilted.compute_8_bit_scaling();
 		system(((std::string)"rm -rf "+fn8bitsTilted+"*").c_str());
@@ -181,7 +183,7 @@ void Usage()
               << "Usage: mark [options]\n"
               << "   -i <input raw file>                : File with the image\n"
               << "  [-tilted <tilted raw file>]         : Image with the tilted pair\n"
-              << "  [-reverse_endian]                   : Raw 16-bit file with reversed endian\n"
+//              << "  [-reverse_endian]                   : Raw 16-bit file with reversed endian\n"
               << "  [-psd <assign_CTF_prm_file>]        : Show the PSDs\n"
               << "  [-ctf <assign_CTF_prm_file>]        : Show the CTF models\n"
               << "  [-auto <model rootname>]            : For autoselection\n"

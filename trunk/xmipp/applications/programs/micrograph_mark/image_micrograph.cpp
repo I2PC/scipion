@@ -78,9 +78,9 @@ void QtImageMicrograph::loadImage()
     int mY0, mX0, mYF, mXF;
     imageToMicrograph(0, 0, mX0, mY0);
     imageToMicrograph(image()->width(), image()->height(), mXF, mYF);
-
+    //FIXME
     if (mXF - mX0 <= image()->width() && mYF - mY0 <= image()->height() &&
-        getMicrograph()->depth() == 8)
+        getMicrograph()->getDatatypeDetph() == 8)
     {
         // Use XV for showing the image
         // Copy that piece of the micrograph in an intermidiate piece of memory

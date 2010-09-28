@@ -36,6 +36,7 @@
 #include "image.h"
 #include "fftw.h"
 #include "metadata.h"
+#include "error.h"
 
 /* ************************************************************************* */
 /* FORWARD DEFINITIONS                                                       */
@@ -82,17 +83,27 @@ protected:
     int                     X_window_size;
     int                     Y_window_size;
     int                     Xdim;
-    int                     Ydim;
-    int                     __depth;
+    int                     Ydim,Zdim,Ndim;
+    int                     datatype;
+    int                     swapbyte;
+    //int                     __depth;
     int                     __offset;
-    bool                    __reversed;
-    bool                    __is_signed;
+    //bool                    __reversed;
+    //bool                    __is_signed;
     bool                    compute_transmitance;
     bool                    compute_inverse;
-    unsigned char           *m8;
-    short int               *m16;
-    unsigned short int      *um16;
-    float                   *m32;
+    //unsigned char           *m8;
+    //short int               *m16;
+    //unsigned short int      *um16;
+    //float                   *m32;
+    Image<char>              auxI;
+    Image<unsigned char>       IUChar;
+    Image<short int>           IShort;
+    Image<unsigned short int>  IUShort;
+    Image<int>                 IInt;
+    Image<unsigned int>        IUInt;
+    Image<float>               IFloat;
+
     bool                    __scaling_valid;
     float                   __a;
     float                   __b;
@@ -109,22 +120,17 @@ public:
     /** Clear */
     void clear();
 
-    /** Get micrograph depth. */
-    int depth() const
+    /** Get micrograph datatype. */
+    int getDatatype() const
     {
-        return __depth;
+        return datatype;
     }
-
-    /** Is the file reversed in disk */
-    bool reversed()
-    {
-        return __reversed;
-    }
+    /** Get micrograph datatype. */
+    int getDatatypeDetph() const;
 
     /** Open micrograph.
         An exception is thrown if the file is not valid. */
-    void open_micrograph(const FileName &fn_micrograph, /*bool in_core=FALSE,*/
-                         bool reversed = false);
+    void open_micrograph(const FileName &fn_micrograph);
 
     /** Close micrograpgh.
         After working with the file, you must close it. */
@@ -256,51 +262,75 @@ public:
                 double scaleX = 1, double scaleY = 1, bool only_check = false);
 
     /** Access to array of 8 bits. */
-    unsigned char * array8() const
+    unsigned char * arrayUChar() const
     {
-        return m8;
+        return IUChar().data;
     }
 
     /** Another function for access to array of 8 bits.*/
-    void get_array8(unsigned char * _m8)
+    //This is never used consider delete
+    void get_arrayUChar(unsigned char * _m8)
     {
-        _m8 = m8;
+        _m8 = IUChar().data;
     }
 
     /** Access to array of 16 bits. */
-    short int * array16() const
+    short int * arrayShort() const
     {
-        return m16;
+        return IShort().data;
     }
 
     /** Another function for access to array of 16 bits.*/
-    void get_array16(short int * _m16)
+    void get_arrayShort(short int * _m16)
     {
-        _m16 = m16;
+        _m16 = IShort().data;
     }
 
     /** Access to unsigned array of 16 bits. */
-    unsigned short int * arrayU16() const
+    unsigned short int * arrayUShort() const
     {
-        return um16;
+        return IUShort().data;
     }
 
     /** Another function for access to unsigned array of 16 bits.*/
-    void get_arrayU16(unsigned short int * _um16)
+    void get_arrayUShort(unsigned short int * _um16)
     {
-        _um16 = um16;
+        _um16 = IUShort().data;
+    }
+    /** Access to array of 32 bits int. */
+    int * arrayInt() const
+    {
+        return IInt().data;
+    }
+
+    /** Another function for access to array of 32 bits int.*/
+    void get_arrayInt(int * _m32)
+    {
+        _m32 = IInt().data;
+    }
+
+    /** Access to unsigned array of 32 bits unsig int. */
+    unsigned int * arrayUInt() const
+    {
+        return IUInt().data;
+    }
+
+    /** Another function for access to unsigned array of 32 bits unsigned int.*/
+    void get_arrayUInt(unsigned int * _um32)
+    {
+        _um32 = IUInt().data;
     }
 
     /** Access to array of 32 bits. */
-    float * array32() const
+    float * arrayFloat() const
     {
-        return m32;
+        return IFloat().data;
     }
 
     /** Another function for access to array of 32 bits.*/
-    void get_array32(float * _m32)
+    void get_arrayfloat(float * _mf32)
     {
-        _m32 = m32;
+        _mf32 = IFloat().data;
     }
 
     /** Pixel access for reading.
@@ -309,147 +339,99 @@ public:
     float operator()(int x, int y) const
     {
         if (y < 0 || y >= Ydim || x < 0 || x >= Xdim)
-            // COSS: REPORT_ERROR(ERR_INDEX_OUTOFBOUNDS, "Micrograph::(): index out of range");
+            // COSS: REPORT_ERROR(1, "Micrograph::(): index out of range");
 	    return 0;
-        if (__depth == 8)
+        if (datatype == UChar)
         {
-            return m8[y*Xdim+x];
+            return IUChar(x,y);
         }
-        else if (__depth == 16)
+        else if (datatype == UShort)
         {
-            if (__is_signed)
-            {
-                short int retval = m16[y*Xdim+x];
-                if (__reversed)
-                {
-                    unsigned char *ptr = (unsigned char *) & retval, temp;
-                    SWAP(*ptr, *(ptr + 1), temp);
-                }
-                return retval;
-            }
-            else
-            {
-                unsigned short int retval = um16[y*Xdim+x];
-                if (__reversed)
-                {
-                    unsigned char *ptr = (unsigned char *) & retval, temp;
-                    SWAP(*ptr, *(ptr + 1), temp);
-                }
-                return retval;
-            }
+            return IUShort(x,y);
         }
-        else if (__depth == 32)
+        else if (datatype == Short)
         {
-            float retval = m32[y*Xdim+x];
-            if (__reversed)
-            {
-                unsigned char *ptr = (unsigned char *) & retval, temp;
-                SWAP(*ptr, *(ptr + 3), temp);
-                SWAP(*(ptr + 1), *(ptr + 2), temp);
-            }
-            return retval;
+            return IShort(x,y);
         }
-        else REPORT_ERROR(ERR_TYPE_INCORRECT, "Micrograph::(): depth is not 8, 16 or 32");
+        else if (datatype == UInt)
+        {
+            return IUInt(x,y);
+        }
+        else if (datatype == Int)
+        {
+            return IInt(x,y);
+        }
+        else if (datatype == Float)
+        {
+            return IFloat(x,y);
+        }
+
+        else REPORT_ERROR(ERR_TYPE_INCORRECT, "Micrograph::(): unknown datatype");
     }
 
     /** Micrograph max min*/
     void computeDoubleMinMax(double &Dmin, double &Dmax) const
     {
-        if (__depth == 8)
+        if (datatype == UChar)
         {
-            unsigned char _Max = m8[0];
-            unsigned char _min = _Max;
-            long tmp = 0;
-            for (int i = 0; i < Ydim; i++)
-            {
-                for (int j = 0; j < Xdim; j++, tmp++)
-                {
-                    if (m8[tmp] > _Max) _Max = m8[tmp];
-                    else if (m8[tmp] < _min) _min = m8[tmp];
-                }
-            }
-            Dmin = (double)_min;
-            Dmax = (double)_Max;
+            return IUChar().computeDoubleMinMax(Dmin,Dmax);
         }
-        else if (__depth == 16)
+        else if (datatype == UShort)
         {
-            if (__is_signed)
-            {
-                int _Max = m16[0];
-                int _min = _Max;
-                long tmp = 0;
-                for (int i = 0; i < Ydim; i++)
-                    for (int j = 0; j < Xdim; j++, tmp++)
-                    {
-                        short int retval=m16[tmp];
-                        if (__reversed) {
-                        unsigned char *ptr=(unsigned char *)&retval, temp;
-                        SWAP(*ptr,*(ptr+1),temp);
-                        }
-        	        if(retval>_Max) _Max=retval;
-        	        else if(retval<_min) _min=retval;
-                    }
-                Dmin = (double)_min;
-                Dmax = (double)_Max;
-            }
-            else
-            {
-                unsigned int _Max = um16[0];
-                unsigned int _min = _Max;
-                long tmp = 0;
-                for (int i = 0; i < Ydim; i++)
-                    for (int j = 0; j < Xdim; j++, tmp++)
-                    {
-                        unsigned short int retval=um16[tmp];
-                        if (__reversed)
-                        {
-	                   unsigned char *ptr=(unsigned char *)&retval, temp;
-	                   SWAP(*ptr,*(ptr+1),temp);
-                        }
-        	        if(retval>_Max) _Max=retval;
-        	        else if(retval<_min) _min=retval;
-                    }
-                Dmin = (double)_min;
-                Dmax = (double)_Max;
-            }
+            return IUShort().computeDoubleMinMax(Dmin,Dmax);
         }
-        else if (__depth == 32)
+        else if (datatype == Short)
         {
-            float _Max = m32[0];
-            float _min = _Max;
-            long  tmp = 0;
-            for (int i = 0; i < Ydim; i++)
-                for (int j = 0; j < Xdim; j++, tmp++)
-                {
-                    float retval=m32[tmp];
-                    if (__reversed)
-                    {
-	               unsigned char *ptr=(unsigned char *)&retval, temp;
-	               SWAP(*ptr,*(ptr+3),temp);
-	               SWAP(*(ptr+1),*(ptr+2),temp);
-                    }
-        	    if(retval>_Max) _Max=retval;
-        	    else if(retval<_min) _min=retval;
-                }
+            return IShort().computeDoubleMinMax(Dmin,Dmax);
+        }
+        else if (datatype == UInt)
+        {
+            return IUInt().computeDoubleMinMax(Dmin,Dmax);
+        }
+        else if (datatype == Int)
+        {
+            return IInt().computeDoubleMinMax(Dmin,Dmax);
+        }
+        else if (datatype == Float)
+        {
+            return IFloat().computeDoubleMinMax(Dmin,Dmax);
+        }
 
-            Dmin = (double)_min;
-            Dmax = (double)_Max;
-        }
-        else REPORT_ERROR(ERR_TYPE_INCORRECT, "Micrograph::(): depth is not 8, 16 or 32");
+        else REPORT_ERROR(ERR_TYPE_INCORRECT, "Micrograph::computeDoubleMinMax::(): unknown datatype");
     }
 
     /** Pixel access for writing. */
+    //Dangerous function indeed
+    //write in default endiam
     void set_val(int x, int y, double new_val)
     {
-        if (y < 0 || y >= Ydim || x < 0 || x >= Xdim)
-            REPORT_ERROR(ERR_INDEX_OUTOFBOUNDS, "Micrograph::set_val: index out of range");
-        if (__depth == 8) m8[y*Xdim+x] = (unsigned char) new_val;
-        else if (__depth == 16 && __is_signed) m16[y*Xdim+x] =
-                (short int) new_val;
-        else if (__depth == 16 && !__is_signed) um16[y*Xdim+x] =
-                (unsigned short int) new_val;
-        else if (__depth == 32) m32[y*Xdim+x] = (float) new_val;
-        else REPORT_ERROR(ERR_TYPE_INCORRECT, "Micrograph::set_val: depth is not 8, 16 or 32");
+        if (datatype == UChar)
+        {
+             IUChar(x,y) = (unsigned char) new_val;
+        }
+        else if (datatype == UShort)
+        {
+            IUShort(x,y) = (unsigned short) new_val;
+        }
+        else if (datatype == Short)
+        {
+            IShort(x,y) = (short) new_val;
+        }
+        else if (datatype == UInt)
+        {
+            IUInt(x,y) = (unsigned int) new_val;
+        }
+        else if (datatype == Int)
+        {
+            IInt(x,y) = (int) new_val;
+        }
+        else if (datatype == Float)
+        {
+            IFloat(x,y) = (float) new_val;
+        }
+
+        else REPORT_ERROR(ERR_TYPE_INCORRECT, "Micrograph::set_val::(): unknown datatype");
+
     }
 
     /** Pixel value with 8 bits. */
@@ -458,7 +440,7 @@ public:
         if (!__scaling_valid) return(unsigned char)(*this)(x, y);
         else return(unsigned char)(__a*(*this)(x, y) + __b);
     }
-
+    
     /** Get the linear transformation for scaling micrographs */
     void getLinearTransformatioVal8(double &a, double &b) const;
 
@@ -523,7 +505,7 @@ public:
     std::string & get_label(int n)
     {
         if (n < 0 || n > LabelNo())
-            REPORT_ERROR(ERR_INDEX_OUTOFBOUNDS, "Micrograph::get_label(): index out of range");
+        	REPORT_ERROR(ERR_INDEX_OUTOFBOUNDS, "Micrograph::get_label(): index out of range");
         return labels[n];
     }
 

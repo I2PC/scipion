@@ -227,6 +227,12 @@ void Prog_downsample_prm::create_empty_output_file()
         Ypdim = FLOOR(Ydim / Ystep);
         Xpdim = FLOOR(Xdim / Xstep);
     }
+    //FIXME, here output downsampled image
+    //should be written in any format
+    //since I do not know how to do that
+    //without creating an image in memory. Only xmipp raw images are permited
+    if (!(fn_downsampled.getExtension() == "raw"))
+        REPORT_ERROR(ERR_IMG_NOREAD,"Output file name must be have 'raw' extension");
     create_empty_file(fn_downsampled, ((unsigned long long)Ypdim)*
                       Xpdim*bitsMp / 8);
 
@@ -253,8 +259,9 @@ void Prog_downsample_prm::create_empty_output_file()
 // Open input micrograph ---------------------------------------------------
 void Prog_downsample_prm::open_input_micrograph()
 {
-    M.open_micrograph(fn_micrograph, reversed);
-    bitsM = M.depth();
+    M.open_micrograph(fn_micrograph/*, reversed*/);
+    //FIXME this should be done general
+    bitsM = M.getDatatypeDetph();
     M.size(Xdim, Ydim);
 }
 
@@ -270,7 +277,7 @@ void Prog_downsample_prm::Downsample() const
     try
     {
         Micrograph Mp;
-        Mp.open_micrograph(fn_downsampled, reversed);
+        Mp.open_micrograph(fn_downsampled);
         downsample(M, Xstep, Ystep, kernel, Mp,do_fourier,nThreads);
         Mp.close_micrograph();
     }

@@ -33,14 +33,14 @@ int main(int argc, char **argv)
 {
     Prog_downsample_prm prm;
     bool                smooth;
-    bool                reversed;
+    //bool                reversed;
 
     // Get input parameters -------------------------------------------------
     try
     {
         prm.read(argc, argv);
         smooth         = checkParameter(argc, argv, "-smooth");
-        reversed       = checkParameter(argc, argv, "-reverse_endian");
+        //reversed       = checkParameter(argc, argv, "-reverse_endian");
     }
     catch (XmippError XE)
     {
@@ -59,10 +59,10 @@ int main(int argc, char **argv)
         if (smooth)
         {
             Micrograph Mp;
-            Mp.open_micrograph(prm.fn_downsampled, reversed);
+            Mp.open_micrograph(prm.fn_downsampled);
             byte rgb[256];
             for (int i = 0; i < 256; i++) rgb[i] = i;
-            byte *result = SmoothResize((byte *)(prm.M.array8()),
+            byte *result = SmoothResize((byte *)(prm.M.arrayUChar()),
                                         prm.Xdim, prm.Ydim, prm.Xpdim, prm.Ypdim,
                                         rgb, rgb, rgb, rgb, rgb, rgb, 256);
 

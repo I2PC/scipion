@@ -49,20 +49,14 @@ void Micrograph::clear()
     X_window_size = Y_window_size = -1;
     fh_micrograph = -1;
     Xdim = Ydim = -1;
-    __depth = -1;
-    m8 = NULL;
-    m16 = NULL;
-    um16 = NULL;
-    m32 = NULL;
+    datatype = -1;
     compute_transmitance = false;
     compute_inverse = false;
     __scaling_valid = false;
-    /* __in_core=FALSE;*/
 }
 
 /* Open micrograph --------------------------------------------------------- */
-void Micrograph::open_micrograph(const FileName &_fn_micrograph,
-                                 /*bool in_core,*/ bool reversed)
+void Micrograph::open_micrograph(const FileName &_fn_micrograph)
 {
     struct stat info;
 
@@ -70,200 +64,112 @@ void Micrograph::open_micrograph(const FileName &_fn_micrograph,
     fn_micrograph = _fn_micrograph;
 
     // Look for micrograph dimensions
-    // check if the file format is spider
-    ///// FIXME READING SPIDER FORMAT!!!!
-    /*
-    if (Is_ImageXmipp(fn_micrograph))
-{
-        headerXmipp     header;
-        header.read(fn_micrograph);
-        float fXdim, fYdim;
-        header.getDimensionension(fYdim, fXdim);
-        Xdim = (int) fXdim;
-        Ydim = (int)fYdim;
-        __offset = header.get_header_size();
-        __depth = 32;
-        reversed = header.reversed();
-}
-    else
-{
-    */
-    fn_inf = fn_micrograph.addExtension("inf");
-    FILE *fh_inf = fopen(fn_inf.c_str(), "r");
-    if (!fh_inf)
-        REPORT_ERROR(ERR_IO_NOTOPEN, (std::string)"Micrograph::open_micrograph: Cannot find " +
-                     fn_inf);
-    Xdim = textToInteger(getParameter(fh_inf, "Xdim"));
-    Ydim = textToInteger(getParameter(fh_inf, "Ydim"));
-    __depth = textToInteger(getParameter(fh_inf, "bitspersample"));
-    if (checkParameter(fh_inf, "offset"))
-        __offset = textToInteger(getParameter(fh_inf, "offset"));
-    else
-        __offset = 0;
-    if (checkParameter(fh_inf, "is_signed"))
-        __is_signed = (getParameter(fh_inf, "is_signed") == "true" ||
-                       getParameter(fh_inf, "is_signed") == "TRUE");
-    else
-        __is_signed = false;
-    fclose(fh_inf);
-    /*
-}
-    */
 
+    auxI.read(fn_micrograph,false);
+    auxI.getDimensions(Xdim,Ydim, Zdim, Ndim);
+    if((Zdim >1 )|| (Ndim >1))
+        REPORT_ERROR(ERR_MULTIDIM_DIM,"Micrograph::open_micrograph: Only files with a single micrograph may be processed. Error reading " + fn_micrograph );
+    auxI.MDMainHeader.getValue(MDL_DATATYPE,datatype);
+    __offset = 0;
+#define DEBUG
+    #ifdef DEBUG
+
+    std::cerr << "x,y,z,n, datatype : "
+    << Xdim << " "
+    << Ydim << " "
+    << Zdim << " "
+    << Zdim << " "
+    << datatype << " "
+    <<std::endl;
+#endif
+#undef DEBUG
+    //3,4,6
     // Open micrograph and map
-    fh_micrograph = open(fn_micrograph.c_str(), O_RDWR, S_IREAD | S_IWRITE);
-    if (fh_micrograph == -1)
-        REPORT_ERROR(ERR_IO_NOTOPEN, (std::string)"Micrograph::open_micrograph: There is a "
-                     "problem opening " + fn_micrograph +
-                     "\nCheck that the file has write permission");
-    char *aux_ptr;
-    switch (__depth)
+    int result;
+    switch (datatype)
     {
-    case 8:
-        /* if (!in_core) { */
-        m8 = (unsigned char *) mmap(0, (__depth / 8) * Ydim * Xdim + __offset,
-                                    PROT_READ | PROT_WRITE, MAP_SHARED, fh_micrograph, 0);
-        if (m8 == MAP_FAILED)
-            REPORT_ERROR(ERR_MMAP_NOTADDR, (std::string)"Micrograph::open_micrograph: cannot map " +
-                         _fn_micrograph + " in memory");
-        m8 += __offset;
-        /* } else {
-           m8=new unsigned char (Ydim*Xdim*__depth/8);
-           int length=Ydim*Xdim*__depth/8;
-           int read_length=read(fh_micrograph,m8,length);
-           std::cout << SSIZE_MAX << std::endl;
-           std::cout << read_length << std::endl;
-           if (read_length!=length)
-              REPORT_ERROR(1,(std::string)"Micrograph::open_micrograph: cannot read "+
-                 _fn_micrograph+" in memory");
-    } */
+    case UChar:
+        result=IUChar.read(fn_micrograph,true,-1,false,false,NULL,true);
         break;
-    case 16:
-        /* if (!in_core) { */
-        if (__is_signed)
-        {
-            m16 = (short int *) mmap(0, (__depth / 8) * Ydim * Xdim + __offset,
-                                     PROT_READ | PROT_WRITE, MAP_SHARED, fh_micrograph, 0);
-            if (m16 == MAP_FAILED)
-            {
-                /*
-                switch (errno) {
-                case EACCES:    std::cout << "EACCES:   \n"; break;
-                  case EAGAIN:    std::cout << "EAGAIN:   \n"; break;
-                case EBADF:     std::cout << "EBADF:    \n"; break;
-                case EINVAL:    std::cout << "EINVAL:   \n"; break;
-                case EMFILE:    std::cout << "EMFILE:   \n"; break;
-                case ENODEV:    std::cout << "ENODEV:   \n"; break;
-                case ENOMEM:    std::cout << "ENOMEM:   \n"; break;
-                case ENOTSUP:   std::cout << "ENOTSUP:  \n"; break;
-                case ENXIO:     std::cout << "ENXIO:    \n"; break;
-                case EOVERFLOW: std::cout << "EOVERFLOW:\n"; break;
-            }
-                */
-                REPORT_ERROR(ERR_MMAP_NOTADDR, (std::string)"Micrograph::open_micrograph: cannot map " +
-                             _fn_micrograph + " in memory");
-            }
-            aux_ptr = (char *)m16;
-
-            aux_ptr += __offset;
-            m16 = (short int *) aux_ptr;
-        }
-        else
-        {
-            um16 = (unsigned short int *) mmap(0, (__depth / 8) * Ydim * Xdim + __offset,
-                                               PROT_READ | PROT_WRITE, MAP_SHARED, fh_micrograph, 0);
-            if (um16 == MAP_FAILED)
-            {
-                /*
-                switch (errno) {
-                case EACCES:    std::cout << "EACCES:   \n"; break;
-                  case EAGAIN:    std::cout << "EAGAIN:   \n"; break;
-                case EBADF:     std::cout << "EBADF:    \n"; break;
-                case EINVAL:    std::cout << "EINVAL:   \n"; break;
-                case EMFILE:    std::cout << "EMFILE:   \n"; break;
-                case ENODEV:    std::cout << "ENODEV:   \n"; break;
-                case ENOMEM:    std::cout << "ENOMEM:   \n"; break;
-                case ENOTSUP:   std::cout << "ENOTSUP:  \n"; break;
-                case ENXIO:     std::cout << "ENXIO:    \n"; break;
-                case EOVERFLOW: std::cout << "EOVERFLOW:\n"; break;
-            }
-                */
-                REPORT_ERROR(ERR_MMAP_NOTADDR, (std::string)"Micrograph::open_micrograph: cannot map " +
-                             _fn_micrograph + " in memory");
-            }
-            aux_ptr = (char *)um16;
-            aux_ptr += __offset;
-            um16 = (unsigned short int *) aux_ptr;
-        }
-        /* } else {
-           m16=new short int (Ydim*Xdim*__depth/8);
-           int length=Ydim*Xdim*__depth/8;
-           if (read(fh_micrograph,m16,length)!=length)
-              REPORT_ERROR(1,(std::string)"Micrograph::open_micrograph: cannot read "+
-                 _fn_micrograph+" in memory");
-    } */
+    case UShort:
+        result=IUShort.read(fn_micrograph,true,-1,false,false,NULL,true);
         break;
-    case 32:
-        // Map file in memory
-        m32 = (float*) mmap(0, (__depth / 8) * Ydim * Xdim + __offset,
-                            PROT_READ | PROT_WRITE, MAP_SHARED, fh_micrograph, 0);
-        if (m32 == MAP_FAILED)
-            REPORT_ERROR(ERR_MMAP_NOTADDR, (std::string)"Micrograph::open_micrograph: cannot map " +
-                         _fn_micrograph + " in memory");
-        aux_ptr = (char *)m32;
-        aux_ptr += __offset;
-        m32 = (float *) aux_ptr;
+    case Short:
+        result=IShort.read(fn_micrograph,true,-1,false,false,NULL,true);
+        break;
+    case Int:
+        result=IInt.read(fn_micrograph,true,-1,false,false,NULL,true);
+        break;
+    case UInt:
+        result=IInt.read(fn_micrograph,true,-1,false,false,NULL,true);
+        break;
+    case Float:
+        result=IFloat.read(fn_micrograph,true,-1,false,false,NULL,true);
         break;
     default:
-        REPORT_ERROR(ERR_TYPE_INCORRECT, "Micrograph::open_micrograph: depth is not 8, 16 nor 32");
+        std::cerr << "Micrograph::open_micrograph: Unknown datatype " << datatype <<std::endl;
+        REPORT_ERROR(ERR_TYPE_INCORRECT,"ERROR");
+        break;
     }
-    /*__in_core=in_core; */
-    __reversed = reversed;
+    //fh_micrograph = open(fn_micrograph.c_str(), O_RDWR, S_IREAD | S_IWRITE);
+    if (result < 0)
+        REPORT_ERROR(ERR_IO_NOTEXIST, (std::string)"Micrograph::open_micrograph: There is a "
+                     "problem opening " + fn_micrograph +
+                     "\nCheck that the file has write permission");
 }
 
 /* Close micrograph -------------------------------------------------------- */
 void Micrograph::close_micrograph()
 {
-    if (fh_micrograph != -1)
+    switch (datatype)
     {
-        close(fh_micrograph);
-        /* if (!__in_core) { */
-        if (__depth == 8)
-        {
-            m8 -= __offset;
-            munmap((char *)m8, Ydim*Xdim*__depth / 8 + __offset);
-        }
-        else if (__depth == 16)
-        {
-            if (__is_signed)
-            {
-                char *aux_ptr = (char *)m16;
-                aux_ptr -= __offset;
-                m16 = (short int *)aux_ptr;
-                munmap((char *)m16, Ydim*Xdim*__depth / 8 + __offset);
-            }
-            else
-            {
-                char *aux_ptr = (char *)um16;
-                aux_ptr -= __offset;
-                um16 = (unsigned short int *)aux_ptr;
-                munmap((char *)um16, Ydim*Xdim*__depth / 8 + __offset);
-            }
-        }
-        else if (__depth == 32)
-        {
-            char *aux_ptr = (char *)m32;
-            aux_ptr -= __offset;
-            m32 = (float *)aux_ptr;
-            munmap((char *)m32, Ydim*Xdim*__depth / 8 + __offset);
-        }
-        /* } else {
-           if      (__depth== 8) delete m8;
-           else if (__depth==16) delete m16;
-    } */
+    case UChar:
+        IUChar.clear();
+        break;
+    case UShort:
+        IUShort.clear();
+        break;
+    case Short:
+        IShort.clear();
+        break;
+    case Int:
+        IInt.clear();
+        break;
+    case UInt:
+        IInt.clear();
+        break;
+    case Float:
+        IFloat.clear();
+        break;
+    default:
+        std::cerr << "Micrograph::close_micrograph: Unknown datatype " << datatype <<std::endl;
+        REPORT_ERROR(ERR_TYPE_INCORRECT,"ERROR");
+        break;
     }
 }
-
+/* Get datatype detph -------------------------------------------------------- */
+int Micrograph::getDatatypeDetph() const
+{
+    switch (datatype)
+    {
+    case UChar:
+        return (sizeof(unsigned char));
+    case UShort:
+        return (sizeof(unsigned short));
+    case Short:
+        return (sizeof(short));
+    case UInt:
+        return (sizeof(unsigned int));
+    case Int:
+        return (sizeof(int));
+    case Float:
+        return (sizeof(float));
+    default:
+        std::cerr << "Micrograph::getDatatypeDetph: Unknown datatype " << datatype <<std::endl;
+        REPORT_ERROR(ERR_TYPE_INCORRECT,"ERROR");
+        break;
+    }
+}
 /* Compute 8 bit scaling --------------------------------------------------- */
 //#define DEBUG
 void Micrograph::compute_8_bit_scaling()
@@ -357,7 +263,7 @@ void Micrograph::write_as_8_bits(const FileName &fn8bits)
 
     // Open micrograph
     Micrograph Mp;
-    Mp.open_micrograph(fn8bits, false);
+    Mp.open_micrograph(fn8bits);
     for (int y=0; y<Ydim; y++)
         for (int x=0; x<Xdim; x++)
             Mp.set_val(x,y,val8(x,y));
@@ -387,6 +293,7 @@ void Micrograph::write_coordinates(int label, const FileName &_fn_coords)
 /* Read coordinates from disk ---------------------------------------------- */
 void Micrograph::read_coordinates(int label, const FileName &_fn_coords)
 {
+    std::cerr << "reading coordinates " <<std::endl;
     std::ifstream  fh;
     int            line_no = 0;
     std::string    line;
@@ -403,11 +310,14 @@ void Micrograph::read_coordinates(int label, const FileName &_fn_coords)
     aux.valid = true;
     aux.label = label;
     aux.cost = 1;
+    std::cerr << "pos file name1" << MD.getFilename() << std::endl;
+    std::cerr << "pos file name2" << fn_coords << std::endl;
+
     FOR_ALL_OBJECTS_IN_METADATA(MD)
     {
-    	int x,y;
-    	MD.getValue(MDL_XINT,aux.X); //aux.X=x;
-    	MD.getValue(MDL_YINT,aux.Y); //aux.Y=y;
+        int x,y;
+        MD.getValue(MDL_XINT,aux.X); //aux.X=x;
+        MD.getValue(MDL_YINT,aux.Y); //aux.Y=y;
         coords.push_back(aux);
     }
 }
@@ -452,7 +362,7 @@ int Micrograph::scissor(const Particle_coords &P, Image<double> &result,
                         bool only_check)
 {
     if (X_window_size == -1 || Y_window_size == -1)
-        REPORT_ERROR(ERR_VALUE_NOTSET, "Micrograph::scissor: window size not set");
+        REPORT_ERROR(ERR_MULTIDIM_SIZE, "Micrograph::scissor: window size not set");
 
     result().resize(Y_window_size, X_window_size);
     int i0 = ROUND(scaleY * P.Y) + FIRST_XMIPP_INDEX(Y_window_size);
@@ -519,7 +429,7 @@ void Micrograph::produce_all_images(int label, const FileName &fn_root,
     else
     {
         M = new Micrograph;
-        M->open_micrograph(fn_image, __reversed);
+        M->open_micrograph(fn_image/*, swapbyte*/);
         M->set_window_size(X_window_size, Y_window_size);
         M->set_transmitance_flag(compute_transmitance);
         M->set_inverse_flag(compute_inverse);
@@ -704,14 +614,14 @@ void downsample(const Micrograph &M, int Xstep, int Ystep,
         double omin,omax;
         Mpmem.computeDoubleMinMax(omin,omax);
         double orange = omax - omin;
-        a = (pow(2.0, Mp.depth()) - 1.0) / orange;
+        a = (pow(2.0, Mp.getDatatypeDetph()) - 1.0) / orange;
         b = -omin;
 
         // Copy back data
         FOR_ALL_ELEMENTS_IN_ARRAY2D(Mpmem)
         {
             pixval=Mpmem(i,j);
-            if (Mp.depth() != 32)
+            if (Mp.getDatatypeDetph() != 32)
                 Mp.set_val(j, i, FLOOR(a*(pixval*scale + b)));
             else
                 Mp.set_val(j, i, pixval);
@@ -719,15 +629,16 @@ void downsample(const Micrograph &M, int Xstep, int Ystep,
     }
     else
     {
-        if (Mp.depth() != 32)
+        if (Mp.getDatatype() != Float)
         {
             double imin, imax;
             double omin, omax;
             bool ifirst = true, ofirst = true;
 
-            if (M.depth() != 32)
-                scale = (pow(2.0, Mp.depth()) - 1.0) / (pow(2.0, M.depth()) - 1.0);
-            else if (M.depth() == 32)
+            if (M.getDatatype() != Float)
+                scale = (pow(2.0, Mp.getDatatypeDetph()) - 1.0) /
+                            (pow(2.0, M.getDatatypeDetph()) - 1.0);
+            else if (M.getDatatype() == Float)
                 scale = 1;
             if(do_fourier)
                 init_progress_bar(yF / Ystep);
@@ -776,14 +687,14 @@ void downsample(const Micrograph &M, int Xstep, int Ystep,
             double irange = imax - imin;
             double orange = omax - omin;
 
-            if (M.depth() != 32)
+            if (M.getDatatype() != Float)
             {
                 a = scale * irange / orange;
                 b = -omin;
             }
             else
             {
-                a = (pow(2.0, Mp.depth()) - 1.0) / orange;
+                a = (pow(2.0, Mp.getDatatypeDetph()) - 1.0) / orange;
                 scale = 1;
                 b = -omin;
             }
@@ -807,7 +718,7 @@ void downsample(const Micrograph &M, int Xstep, int Ystep,
                 }
 
                 if (ii < Ypdim && jj < Xpdim)
-                    if (Mp.depth() != 32)
+                    if (Mp.getDatatype() != Float)
                         Mp.set_val(jj, ii, FLOOR(a*(pixval*scale + b)));
                     else
                         Mp.set_val(jj, ii, pixval);
