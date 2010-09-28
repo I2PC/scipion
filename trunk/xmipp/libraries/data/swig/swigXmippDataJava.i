@@ -37,10 +37,14 @@ using namespace std;
 // rm libraries/data/swig/swigXmippData_wrap_java.cpp libraries/data/swig/*.java ; ./scons.compile
 %ignore FileName::FileName(char const *);
 %{
-#include "../funcs.h"
+#include "../filename.h"
 %}
 class std::string {};
+%include "../filename.h"
 
+%{
+#include "../funcs.h"
+%}
 %include "../funcs.h"
 
 // Matrix3D

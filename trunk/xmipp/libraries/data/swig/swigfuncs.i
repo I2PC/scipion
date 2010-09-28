@@ -1,5 +1,6 @@
 %{
 #include "../funcs.h"
+#include "../filename.h"
 %}
 
 // Many functions are ignored through the #ifndef SWIG mechanism.
