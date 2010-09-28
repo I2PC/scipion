@@ -598,7 +598,7 @@ ReconsSources = [
     'symmetrize.cpp',
     'virus_vertex.cpp',
     'volume_segment.cpp',
-    'xray_import.cpp'
+#    'xray_import.cpp'
 ]
 
 AddLibrary('XmippRecons', 'libraries/reconstruction', ReconsSources,
@@ -722,6 +722,7 @@ AddXmippProgram('mean_shift')
 AddXmippProgram('metadata_histogram')
 AddXmippProgram('metadata_operate')
 AddXmippProgram('metadata_split')
+AddXmippProgram('metadata_utilities')
 AddXmippProgram('micrograph_downsample', ['XmippRecons'])
 AddXmippProgram('micrograph_phase_flipping',['XmippRecons'])
 AddXmippProgram('micrograph_scissor'),
@@ -771,7 +772,7 @@ AddXmippProgram('template_threads')
 AddXmippProgram('virus_vertex', ['XmippRecons'])
 AddXmippProgram('volume_segment', ['XmippRecons'])
 AddXmippProgram('window')
-AddXmippProgram('xray_import', ['XmippRecons'])
+#AddXmippProgram('xray_import', ['XmippRecons'])
 
 
 # --- Scripts
@@ -779,7 +780,6 @@ AddXmippProgram('xray_import', ['XmippRecons'])
 # Batches (apps)
 #
 AddBatch('metadata_selfile_create', 'applications/scripts/metadata_selfile_create','.py')
-AddBatch('metadata_utilities', 'applications/scripts/metadata_utilities','.py')
 #AddBatch('metadata_operate', 'applications/scripts/metadata_operate','.py')
 AddBatch('classify_CL2D_core_analysis', 'applications/scripts/classify_CL2D_core_analysis')
 AddBatch('convert_img2jpg','applications/scripts/convert_img2jpg')
