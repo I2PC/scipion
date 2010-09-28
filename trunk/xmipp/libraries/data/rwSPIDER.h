@@ -109,7 +109,7 @@ struct SPIDERhead
 */
 #include "metadata_label.h"
 
-int  readSPIDER(int img_select,bool isStack=false)
+int  readSPIDER(int img_select)
 {
 #undef DEBUG
     //#define DEBUG
@@ -155,10 +155,7 @@ int  readSPIDER(int img_select,bool isStack=false)
     MDMainHeader.setValue(MDL_SAMPLINGRATEZ,(double)header->scale);
     MDMainHeader.setValue(MDL_DATATYPE,(int)datatype);
 
-    if ( header->istack > 0 )
-        isStack = true;
-    else
-        isStack = false;
+    bool isStack = ( header->istack > 0 );
     int _xDim,_yDim,_zDim;
     unsigned long int _nDim, _nDimSet;
     _xDim = (int) header->nsam;

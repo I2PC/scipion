@@ -368,22 +368,16 @@ public:
         mmapOn = mapData;
 
         FileName ext_name = name.getFileFormat();
-        size_t found;
-        filename = name;
-        found = filename.find_first_of("@");
-        if (found != std::string::npos)
-        {
-            select_img =  atoi(filename.substr(0, found).c_str());
-            filename = filename.substr(found+1) ;
-        }
-
-        double imParam = NULL;
-        found = filename.find_first_of("%");
-        if (found != std::string::npos)
-        {
-            imParam = atof(filename.substr(found+1).c_str());
-            filename = filename.substr(0, found) ;
-        }
+//        size_t found;
+//        filename = name;
+//        found = filename.find_first_of("@");
+//        if (found != std::string::npos)
+//        {
+//            select_img =  atoi(filename.substr(0, found).c_str());
+//            filename = filename.substr(found+1) ;
+//        }
+//
+        name.decompose(select_img, filename);
 
         filename = filename.removeFileFormat();
 
@@ -410,7 +404,7 @@ public:
 
         if (ext_name.contains("spi") || ext_name.contains("xmp")  ||
                 ext_name.contains("stk") || ext_name.contains("vol"))//mrc stack MUST go BEFORE plain MRC
-            err = readSPIDER(select_img,true);
+            err = readSPIDER(select_img);
         else if (ext_name.contains("mrcs"))//mrc stack MUST go BEFORE plain MRC
             err = readMRC(select_img,true);
         else if (ext_name.contains("mrc"))//mrc
@@ -418,7 +412,7 @@ public:
         else if (ext_name.contains("img") || ext_name.contains("hed"))//
             err = readIMAGIC(select_img);//imagic is always an stack
         else if (ext_name.contains("ser"))//TIA
-            err = readTIA(select_img,false, imParam);
+            err = readTIA(select_img,false);
         else if (ext_name.contains("dm3"))//DM3
             err = readDM3(select_img,false);
         else if (ext_name.contains("inf"))//RAW with INF file
@@ -430,7 +424,7 @@ public:
         else if (ext_name.contains("spe"))//SPE
             err = readSPE(select_img,false);
         else
-            err = readSPIDER(select_img,true);
+            err = readSPIDER(select_img);
 
         //This implementation does not handle stacks,
         //read in a block
