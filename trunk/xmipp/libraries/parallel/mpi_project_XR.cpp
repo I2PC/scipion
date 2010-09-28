@@ -107,6 +107,16 @@ void Projection_mpi_XR_Parameters::read(const FileName &fn_proj_param)
     Projection_XR_Parameters::read(fn_proj_param);
 }
 
+
+//Some global variables
+Mutex mutex;
+Barrier * barrier;
+ThreadManager * thMgr;
+ParallelTaskDistributor * td;
+//FileTaskDistributor     * td;
+int numberOfThreads;
+
+
 /* Effectively project ===================================================== */
 int PROJECT_mpi_XR_Effectively_project(
     Projection_mpi_XR_Parameters &prm,
@@ -115,6 +125,31 @@ int PROJECT_mpi_XR_Effectively_project(
     XRayPSF &psf,
     MetaData &SF)
 {
+
+    XrayThread *dataThread = new XrayThread;
+
+    dataThread->psf= &psf;
+    dataThread->vol = &side.rotPhantomVol;
+    dataThread->imOut = &proj;
+
+    longint threadBlockSize, numberOfJobs= side.phantomVol().zdim;
+    numberOfThreads = psf.nThr;
+
+    threadBlockSize = (numberOfThreads == 1) ? numberOfJobs : numberOfJobs/numberOfThreads/6;
+
+    //Create the job handler to distribute jobs
+    td = new ThreadTaskDistributor(numberOfJobs, threadBlockSize);
+    //    td = new FileTaskDistributor(numberOfJobs,threadBlockSize);
+    barrier = new Barrier(numberOfThreads-1);
+
+    //Create threads to start working
+
+    thMgr = new ThreadManager(numberOfThreads,(void*) dataThread);
+
+
+
+
+
     int numProjs=0;
     SF.clear();
     MpiNode & node = *prm.node;
@@ -177,7 +212,7 @@ int PROJECT_mpi_XR_Effectively_project(
 
     FileTaskDistributor *jobHandler;
     char fName[L_tmpnam];
-    long long int blockSize = 1;
+    long long int nodeBlockSize = 1;
 
 
     if (node.isMaster())
@@ -186,7 +221,7 @@ int PROJECT_mpi_XR_Effectively_project(
         std::cerr << "Projecting ...\n";
     }
 
-    jobHandler = new FileTaskDistributor(mpiData.size(), blockSize, &node);
+    jobHandler = new FileTaskDistributor(mpiData.size(), nodeBlockSize, &node);
 
     long long int first = -1, last = -1;
 

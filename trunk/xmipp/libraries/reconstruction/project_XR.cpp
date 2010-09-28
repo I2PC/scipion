@@ -39,7 +39,7 @@ void ProgProjectXR::defineParams()
     addParamsLine(" alias --input;");
     addParamsLine("[-psf <psf_param_file=\"\">] : XRay-Microscope parameters file. If not set, then default parameters are chosen.");
     addParamsLine("[-o <sel_file=\"\">]         : Output Metadata file with all the generated projecions.");
-    addParamsLine("[-v]                    : Verbose.");
+//    addParamsLine("[-v]                    : Verbose.");
     addParamsLine("[-show_angles]          : Print angles value for each projection.");
     addParamsLine("[-only_create_angles]   : Projections are not calculated, only the angles values.");
     addParamsLine("[-thr <threads=1>]      : Number of concurrent threads.");
