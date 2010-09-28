@@ -112,7 +112,7 @@ class MDSql;
  */
 class MetaData
 {
-private:
+protected:
     //std::map<long int, MetaDataContainer *> objects; ///< Effectively stores all metadata
 
     // Used by firstObject, nextObject and lastObject to keep a pointer
