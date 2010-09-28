@@ -567,9 +567,9 @@ void thread_project_xr(ThreadArgument &thArg)
         std::cerr << "th" << thread_id << ": working from " << first << " to " << last <<std::endl;
 
 //
-//        if (numberOfThreads == 1)
-//            first = last -50;
-//        if (first>50)
+        if (numberOfThreads == 1)
+            first = last -50;
+        if (first>300)
         {
             for (int k=(vol()).zinit + priorLast + 1; k<=(vol()).zinit + first - 1 ; k++)
             {

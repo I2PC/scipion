@@ -135,7 +135,7 @@ int PROJECT_mpi_XR_Effectively_project(
     longint threadBlockSize, numberOfJobs= side.phantomVol().zdim;
     numberOfThreads = psf.nThr;
 
-    threadBlockSize = (numberOfThreads == 1) ? numberOfJobs : numberOfJobs/numberOfThreads/6;
+    threadBlockSize = (numberOfThreads == 1) ? numberOfJobs : numberOfJobs/numberOfThreads/2;
 
     //Create the job handler to distribute jobs
     td = new ThreadTaskDistributor(numberOfJobs, threadBlockSize);
@@ -237,6 +237,8 @@ int PROJECT_mpi_XR_Effectively_project(
             proj.setEulerAngles(mpiData[k].tRot, mpiData[k].tTilt,mpiData[k].tPsi);
             proj.setShifts(mpiData[k].xShift, mpiData[k].yShift, mpiData[k].zShift);
 
+            //Reset thread task distributor
+            td->clear();
             // Really project ....................................................
             project_xr_Volume_offCentered(side, psf, proj,prm.proj_Ydim, prm.proj_Xdim);
 
@@ -257,5 +259,10 @@ int PROJECT_mpi_XR_Effectively_project(
         }
     }
     delete jobHandler;
+    //Terminate threads and free memory
+    delete td;
+    delete thMgr;
+    delete barrier;
+
     return numProjs;
 }
