@@ -82,7 +82,7 @@ void ProgFourierFilter::defineParams()
     addParamsLine("or -high_pass <w1>                   : Cutoff freq (<1/2 or A)");
     addParamsLine("or -band_pass <w1> <w2>              : Cutoff freq (<1/2 or A)");
     addParamsLine("or -stop_band <w1> <w2>              : Cutoff freq (<1/2 or A)");
-    addParamsLine("   -fourier_mask <mask_type=raised_cosine> : Fourier mask that will be applied.");
+    addParamsLine("  [-fourier_mask <mask_type=raised_cosine>]: Fourier mask that will be applied.");
     addParamsLine("        where <mask_type> ");
     addParamsLine("         raised_cosine <raisedw=0.02>     : Use raised cosine edges (in dig.freq.)");
     addParamsLine("         wedge <th0> <thF>           : Missing wedge (along y) for data between th0-thF ");
