@@ -20,7 +20,7 @@ else
 		case "$1" in
 			-mem)MEM=$2; shift;;
 			-vol)VOLFILE="$2"; shift;;
-			-angles)ANGLESFILE="$2"; shift;;
+			-angles)ANGLESFILE="-angles $2"; shift;;
 			--)shift; break;;
 			-*)
 			echo >&2 \
@@ -40,11 +40,11 @@ else
 	if [ -z $VOLFILE ]
 	then
 		echo "Not enough arguments."
-		echo "Usage: $0 [-mem memory_ammount] <-vol work_dir_path> [-angles angles_file]"
+		echo "Usage: $0 [-mem memory_ammount] <-vol volume_file> [-angles angles_file]"
 	else
 		export LD_LIBRARY_PATH=$XMIPP_BASE/lib
 		IMAGEJ_HOME=$XMIPP_BASE/external/imagej
-		$JVM/bin/java -Xmx$MEM -Dplugins.dir=$IMAGEJ_HOME/plugins/ -jar $IMAGEJ_HOME/ij.jar -macro $IMAGEJ_HOME/macros/xmippExplorer.txt "-vol $VOLFILE -angles $ANGLESFILE"
+		$JVM/bin/java -Xmx$MEM -Dplugins.dir=$IMAGEJ_HOME/plugins/ -jar $IMAGEJ_HOME/ij.jar -macro $IMAGEJ_HOME/macros/xmippExplorer.txt "-vol $VOLFILE $ANGLESFILE"
 	fi
 fi
 

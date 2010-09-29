@@ -30,10 +30,21 @@ else
 		shift
 	done
 
+	if test -z $MEM || test -z $FILE
+	then
+		SHOW_HELP=1
+	fi
+
+
 	if [ -z $MEM ]
 	then
 		MEM=512m	# Default memory value.
 		echo "No memory size provided. Using default: $MEM"
+	fi
+
+	if [ "$SHOW_HELP" = "1" ]
+	then
+		echo "Usage: xmipp_showj [-mem <memory_ammount>] [-file <file_to_open>]"
 	fi
 
 	export LD_LIBRARY_PATH=$XMIPP_BASE/lib
