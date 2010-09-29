@@ -42,7 +42,7 @@
 #define TAG_WAIT   2
 #define TAG_FREEWORKER   3
 
-class Prog_mpi_angular_project_library_Parameters:Prog_angular_project_library_Parameters
+class Prog_mpi_angular_project_library_Parameters:ProgAngularProjectLibrary
 {
     public:
     //int rank, size, num_img_tot;
@@ -83,14 +83,14 @@ class Prog_mpi_angular_project_library_Parameters:Prog_angular_project_library_P
     /* Read parameters --------------------------------------------------------- */
     void read(int argc, char **argv)
     {
-        Prog_angular_project_library_Parameters::read(argc,argv);
+        ProgAngularProjectLibrary::read(argc,argv);
         mpi_job_size=textToInteger(getParameter(argc,argv,"-mpi_job_size","10"));
     }
 
     /* Usage ------------------------------------------------------------------- */
     void usage()
     {
-        Prog_angular_project_library_Parameters::usage();
+        ProgAngularProjectLibrary::usage();
         std::cerr << " [ -mpi_job_size default=10]    : Number of images sent to a cpu in a single job \n";
         std::cerr << "                                  10 may be a good value";
         std::cerr << "                                  if  -1 the computer will put the maximum";
@@ -101,7 +101,7 @@ class Prog_mpi_angular_project_library_Parameters:Prog_angular_project_library_P
     /* Show -------------------------------------------------------------------- */
     void show()
     {
-        Prog_angular_project_library_Parameters::show();
+        ProgAngularProjectLibrary::show();
 	std::cerr << " Size of mpi jobs " << mpi_job_size <<std::endl;
     }
 
@@ -405,7 +405,7 @@ std::cerr << "Wr" << rank << " " << "TAG_WORKFORWORKER" << std::endl;
     void createGroupSamplingFiles(void)
     {
         if (rank==0 && fn_groups!="")
-            Prog_angular_project_library_Parameters::createGroupSamplingFiles();
+            ProgAngularProjectLibrary::createGroupSamplingFiles();
     }
 
     /* a short function to print a message and exit */

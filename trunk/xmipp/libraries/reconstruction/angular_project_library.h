@@ -22,8 +22,8 @@
  *  All comments concerning this program package may be sent to the
  *  e-mail address 'xmipp@cnb.csic.es'
  ***************************************************************************/
-#ifndef _PROG_PDBPHANTOM_HH
-#define _PROG_PDBPHANTOM_HH
+#ifndef _PROG_ANGULAR_PROJECT_LIBRARY_HH
+#define _PROG_ANGULAR_PROJECT_LIBRARY_HH
 
 #include <data/sampling.h>
 #include <data/symmetries.h>
@@ -34,13 +34,14 @@
 #include <data/projection.h>
 #include <data/image.h>
 #include <data/funcs.h>
+#include <data/program.h>
 #include "projection_real_shears.h"
 
 /**@name Projection library program */
 //@{
 /* PDB Phantom Program Parameters ------------------------------------------ */
 /** Parameter class for the projection library program */
-class Prog_angular_project_library_Parameters
+class ProgAngularProjectLibrary: public XmippProgram
 {
 public:
     /** sampling object */
@@ -66,9 +67,6 @@ public:
 
     /** Name of selfile for groups */
     FileName fn_groups;
-
-    /** Quiet */
-    bool quiet;
 
     /** Shears.
         Use projection shears as projection method. */
@@ -135,17 +133,17 @@ public:
     // std::vector <Matrix1D<double> > symmetry_vectors;
 public:
     /** Empty constructor */
-    Prog_angular_project_library_Parameters();
+    ProgAngularProjectLibrary();
 
     /** Read from a command line.
         An exception might be thrown by any of the internal conversions,
         this would mean that there is an error in the command line and you
         might show a usage message. */
-    void read(int argc, char **argv);
+    void readParams();
 
     /** Usage message.
-        This function shows the way of introdustd::cing this parameters. */
-    void usage();
+        This function shows the way of introducing these parameters. */
+    void defineParams();
 
     /** Show parameters. */
     void show();

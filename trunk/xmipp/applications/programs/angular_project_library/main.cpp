@@ -35,7 +35,7 @@
 /* ------------------------------------------------------------------------- */
 int main(int argc, char *argv[])
 {
-    Prog_angular_project_library_Parameters prm;
+    ProgAngularProjectLibrary prm;
     try
     {
         prm.read(argc, argv);
