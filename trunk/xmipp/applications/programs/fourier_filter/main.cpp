@@ -39,5 +39,7 @@ int main(int argc, char *argv[])
     catch (XmippError xe)
     {
         std::cerr << xe;
+        return 1;
     }
+    return 0;
 }
