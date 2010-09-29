@@ -42,7 +42,7 @@
    @ingroup ReconsLibrary */
 //@{
 /** Angular Predict parameters. */
-class Prog_angular_predict_prm
+class ProgAngularDiscreteAssign: public XmippProgram
 {
 public:
     /** MPI version */
@@ -79,8 +79,6 @@ public:
         1 average of the most populated group.
         2 maximum correlation of the most populated group. */
     int pick;
-    /** Do not produce any output */
-    bool quiet;
 #define TELL_ROT_TILT  1
 #define TELL_PSI_SHIFT 2
 #define TELL_OPTIONS   4
@@ -136,19 +134,16 @@ public:
     Prog_angular_distance_prm distance_prm;
 public:
     /// Empty constructor
-    Prog_angular_predict_prm();
+    ProgAngularDiscreteAssign();
 
     /// Read argument from command line
-    void read(int argc, char **argv);
+    void readParams();
 
     /// Show
     void show();
 
     /// Usage
-    void usage();
-
-    /// More Usage
-    void more_usage();
+    void defineParams();
 
     /** Produce side info.
         An exception is thrown if any of the files is not found.

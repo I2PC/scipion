@@ -27,7 +27,7 @@
 
 int main(int argc, char **argv)
 {
-    Prog_angular_predict_prm prm;
+    ProgAngularDiscreteAssign prm;
     try {
         prm.read(argc,argv);
     } catch (XmippError XE) {

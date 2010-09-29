@@ -34,48 +34,42 @@
 #include <data/filters.h>
 
 // Empty constructor =======================================================
-Prog_angular_predict_prm::Prog_angular_predict_prm()
+ProgAngularDiscreteAssign::ProgAngularDiscreteAssign()
 {
     MPIversion = false;
 }
 
 // Read arguments ==========================================================
-void Prog_angular_predict_prm::read(int argc, char **argv)
+void ProgAngularDiscreteAssign::readParams()
 {
-    extended_usage = checkParameter(argc, argv, "-more_help");
-    if (extended_usage)
-    {
-        usage();
-        more_usage();
-    }
-    fn_ref = getParameter(argc, argv, "-ref");
-    fn_exp = getParameter(argc, argv, "-i");
-    fn_out_ang = getParameter(argc, argv, "-oang");
-    fn_sym = getParameter(argc, argv, "-sym", "");
-    max_proj_change = textToFloat(getParameter(argc, argv, "-max_proj_change", "-1"));
-    max_psi_change = textToFloat(getParameter(argc, argv, "-max_psi_change", "-1"));
-    max_shift_change = textToFloat(getParameter(argc, argv, "-max_shift_change", "0"));
-    psi_step = textToFloat(getParameter(argc, argv, "-psi_step", "5"));
-    shift_step = textToFloat(getParameter(argc, argv, "-shift_step", "1"));
-    th_discard = textToFloat(getParameter(argc, argv, "-keep", "50"));
-    smin = textToInteger(getParameter(argc, argv, "-smin", "1"));
-    smax = textToInteger(getParameter(argc, argv, "-smax", "-1"));
-    pick = textToInteger(getParameter(argc, argv, "-pick", "1"));
+	XmippProgram::readParams();
+    fn_ref = getParam("-ref");
+    fn_exp = getParam("-i");
+    fn_out_ang = getParam("-oang");
+    fn_sym = getParam("-sym");
+    max_proj_change = getDoubleParam("-max_proj_change");
+    max_psi_change = getDoubleParam("-max_psi_change");
+    max_shift_change = getDoubleParam("-max_shift_change");
+    psi_step = getDoubleParam("-psi_step");
+    shift_step = getDoubleParam("-shift_step");
+    th_discard = getDoubleParam("-keep");
+    smin = getIntParam("-smin");
+    smax = getIntParam("-smax");
+    pick = getIntParam("-pick");
     tell = 0;
-    if (checkParameter(argc, argv, "-show_rot_tilt"))
+    if (checkParam("-show_rot_tilt"))
         tell |= TELL_ROT_TILT;
-    if (checkParameter(argc, argv, "-show_psi_shift"))
+    if (checkParam("-show_psi_shift"))
         tell |= TELL_PSI_SHIFT;
-    if (checkParameter(argc, argv, "-show_options"))
+    if (checkParam("-show_options"))
         tell |= TELL_OPTIONS;
-    quiet = checkParameter(argc,argv,"-quiet");
-    search5D = checkParameter(argc, argv, "-5D");
+    search5D = checkParam("-5D");
 }
 
 // Show ====================================================================
-void Prog_angular_predict_prm::show()
+void ProgAngularDiscreteAssign::show()
 {
-    if (quiet)
+    if (!verbose)
         return;
     std::cout << "Reference images: " << fn_ref << std::endl
     << "Input angular file: " << fn_exp << std::endl
@@ -93,42 +87,34 @@ void Prog_angular_predict_prm::show()
 }
 
 // usage ===================================================================
-void Prog_angular_predict_prm::usage()
+void ProgAngularDiscreteAssign::defineParams()
 {
-    std::cerr << "Usage:\n"
-    << "   -ref <selfile>           : Selfile with the reference images\n"
-    << "   -i <docfile>             : Docfile with input angles\n"
-    << "   -oang <angle file>       : DocFile with output angles\n"
-    << "  [-sym <symmetry file>]    : Symmetry file if any\n"
-    << "  [-max_proj_change <ang=-1>]: Maximum change allowed in rot-tilt\n"
-    << "  [-max_psi_change <ang=-1>]: Maximum change allowed in psi\n"
-    << "  [-max_shift_change <r=0>] : Maximum change allowed in shift\n"
-    << "  [-psi_step <ang=5>]       : Step in psi in degrees\n"
-    << "  [-shift_step <r=1>]       : Step in shift in pixels\n"
-    << "  [-more_help]              : Show all options\n"
-    ;
-    if (extended_usage)
-        more_usage();
-}
-
-void Prog_angular_predict_prm::more_usage()
-{
-    std::cerr << "  [-keep <th=50%>]          : How many images are kept each round\n"
-    << "  [-smin <s=1>]             : Finest scale to consider (lowest value=0)\n"
-    << "  [-smax <s=-1>]            : Coarsest scale to consider (highest value=log2(Xdim))\n"
-    << "  [-pick <mth=1>]           : 0 --> maximum of the first group\n"
-    << "                              1 --> maximum of the most populated\n"
-    << "  [-show_rot_tilt]          : Show the rot-tilt process\n"
-    << "  [-show_psi_shift]         : Show the psi-shift process\n"
-    << "  [-show_options]           : Show final options among which\n"
-    << "                              the angles are selected\n"
-    << "  [-quiet]                  : Do not show any output\n"
-    << "  [-5D]                     : Perform a 5D search instead of 3D+2D\n"
-    ;
+	XmippProgram::defineParams();
+    addUsageLine("Makes a projection assignment using wavelets on a discrete library of projections");
+    addParamsLine("   -ref <selfile>           : Selfile with the reference images");
+    addParamsLine("   -i <docfile>             : Docfile with input angles");
+    addParamsLine("   -oang <angle_file>       : DocFile with output angles");
+    addParamsLine("  [-sym <symmetry_file>]    : Symmetry file if any");
+    addParamsLine("  [-max_proj_change <ang=-1>]: Maximum change allowed in rot-tilt");
+    addParamsLine("  [-max_psi_change <ang=-1>]: Maximum change allowed in psi");
+    addParamsLine("  [-max_shift_change <r=0>] : Maximum change allowed in shift");
+    addParamsLine("  [-psi_step <ang=5>]       : Step in psi in degrees");
+    addParamsLine("  [-shift_step <r=1>]       : Step in shift in pixels");
+    addParamsLine("==+Extra parameters==");
+    addParamsLine("  [-keep <th=50%>]          : How many images are kept each round");
+    addParamsLine("  [-smin <s=1>]             : Finest scale to consider (lowest value=0)");
+    addParamsLine("  [-smax <s=-1>]            : Coarsest scale to consider (highest value=log2(Xdim))");
+    addParamsLine("  [-pick <mth=1>]           : 0 --> maximum of the first group");
+    addParamsLine("                            : 1 --> maximum of the most populated");
+    addParamsLine("  [-show_rot_tilt]          : Show the rot-tilt process");
+    addParamsLine("  [-show_psi_shift]         : Show the psi-shift process");
+    addParamsLine("  [-show_options]           : Show final options among which");
+    addParamsLine("                            : the angles are selected");
+    addParamsLine("  [-5D]                     : Perform a 5D search instead of 3D+2D");
 }
 
 // Produce side information ================================================
-void Prog_angular_predict_prm::produce_side_info(int rank)
+void ProgAngularDiscreteAssign::produce_side_info(int rank)
 {
     // Read input reference image names
     SF_ref.read(fn_ref);
@@ -221,7 +207,7 @@ void Prog_angular_predict_prm::produce_side_info(int rank)
 }
 
 // Produce library -----------------------------------------------------------
-void Prog_angular_predict_prm::produce_library(int rank)
+void ProgAngularDiscreteAssign::produce_library(int rank)
 {
     Image<double> I;
     int number_of_imgs = SF_ref.size();
@@ -239,7 +225,7 @@ void Prog_angular_predict_prm::produce_library(int rank)
 
     if (rank==0)
     {
-        if (!quiet)
+        if (verbose)
         {
             std::cerr << "Generating reference library ...\n";
             init_progress_bar(number_of_imgs);
@@ -273,15 +259,15 @@ void Prog_angular_predict_prm::produce_library(int rank)
         }
 
         // Prepare for next iteration
-        if (++n % nstep == 0 && rank==0 && !quiet)
+        if (++n % nstep == 0 && rank==0 && verbose)
             progress_bar(n);
     }
-    if (rank==0 && !quiet)
+    if (rank==0 && verbose)
         progress_bar(SF_ref.size());
 }
 
 // Build candidate list ------------------------------------------------------
-void Prog_angular_predict_prm::build_ref_candidate_list(const Image<double> &I,
+void ProgAngularDiscreteAssign::build_ref_candidate_list(const Image<double> &I,
         std::vector<bool> &candidate_list, std::vector<double> &cumulative_corr,
         std::vector<double> &sumxy)
 {
@@ -310,7 +296,7 @@ void Prog_angular_predict_prm::build_ref_candidate_list(const Image<double> &I,
 }
 
 // Refine candidate list ---------------------------------------------------
-void Prog_angular_predict_prm::refine_candidate_list_with_correlation(
+void ProgAngularDiscreteAssign::refine_candidate_list_with_correlation(
     int m,
     Matrix1D<double> &dwt,
     std::vector<bool> &candidate_list, std::vector<double> &cumulative_corr,
@@ -356,7 +342,7 @@ void Prog_angular_predict_prm::refine_candidate_list_with_correlation(
 }
 
 // Predict rot and tilt ----------------------------------------------------
-double Prog_angular_predict_prm::predict_rot_tilt_angles(Image<double> &I,
+double ProgAngularDiscreteAssign::predict_rot_tilt_angles(Image<double> &I,
         double &assigned_rot, double &assigned_tilt, int &best_ref_idx)
 {
     if (XSIZE(I()) != NEXT_POWER_OF_2(XSIZE(I())) ||
@@ -432,7 +418,7 @@ double Prog_angular_predict_prm::predict_rot_tilt_angles(Image<double> &I,
 
     if (N_max == 0)
     {
-        if (!quiet)
+        if (verbose)
             std::cerr << "Predict_angles: Empty candidate list for image "
             << I.name() << std::endl;
         assigned_rot = I.rot();
@@ -464,7 +450,7 @@ double Prog_angular_predict_prm::predict_rot_tilt_angles(Image<double> &I,
 }
 
 // Evaluate candidates by correlation ----------------------------------------
-double Prog_angular_predict_prm::evaluate_candidates(
+double ProgAngularDiscreteAssign::evaluate_candidates(
     const std::vector<double> &vscore,
     const std::vector<int> &candidate_idx,
     std::vector<double> &candidate_rate, double weight)
@@ -508,7 +494,7 @@ double Prog_angular_predict_prm::evaluate_candidates(
 
 // Group images --------------------------------------------------------------
 //#define DEBUG
-void Prog_angular_predict_prm::group_views(const std::vector<double> &vrot,
+void ProgAngularDiscreteAssign::group_views(const std::vector<double> &vrot,
         const std::vector<double> &vtilt, const std::vector<double> &vpsi,
         const std::vector<int> &best_idx, const std::vector<int> &candidate_idx,
         std::vector< std::vector<int> > &groups)
@@ -589,14 +575,14 @@ void Prog_angular_predict_prm::group_views(const std::vector<double> &vrot,
 #undef DEBUG
 
 // Pick view -----------------------------------------------------------------
-int Prog_angular_predict_prm::pick_view(int method,
-                                        std::vector< std::vector<int> > &groups,
-                                        std::vector<double> &vscore,
-                                        std::vector<double> &vrot,
-                                        std::vector<double> &vtilt,
-                                        std::vector<double> &vpsi,
-                                        const std::vector<int> &best_idx,
-                                        const std::vector<int> &candidate_idx, const std::vector<double> &candidate_rate)
+int ProgAngularDiscreteAssign::pick_view(int method,
+        std::vector< std::vector<int> > &groups,
+        std::vector<double> &vscore,
+        std::vector<double> &vrot,
+        std::vector<double> &vtilt,
+        std::vector<double> &vpsi,
+        const std::vector<int> &best_idx,
+        const std::vector<int> &candidate_idx, const std::vector<double> &candidate_rate)
 {
 
     if (method == 0)
@@ -699,7 +685,7 @@ int Prog_angular_predict_prm::pick_view(int method,
 
 // Predict shift and psi -----------------------------------------------------
 //#define DEBUG
-double Prog_angular_predict_prm::predict_angles(Image<double> &I,
+double ProgAngularDiscreteAssign::predict_angles(Image<double> &I,
         double &assigned_shiftX, double &assigned_shiftY,
         double &assigned_rot, double &assigned_tilt, double &assigned_psi)
 {
@@ -1058,7 +1044,7 @@ double Prog_angular_predict_prm::predict_angles(Image<double> &I,
 #undef DEBUG
 
 // Finish processing ---------------------------------------------------------
-void Prog_angular_predict_prm::finish_processing()
+void ProgAngularDiscreteAssign::finish_processing()
 {
     MetaData DF;
     int i = 0;
@@ -1081,10 +1067,10 @@ void Prog_angular_predict_prm::finish_processing()
 }
 
 // Run ---------------------------------------------------------------------
-void Prog_angular_predict_prm::run()
+void ProgAngularDiscreteAssign::run()
 {
     int Nimg=DFexp.size();
-    if (!quiet)
+    if (verbose)
         init_progress_bar(Nimg);
     int n=0;
     FOR_ALL_OBJECTS_IN_METADATA(DFexp)
@@ -1096,10 +1082,10 @@ void Prog_angular_predict_prm::run()
         double shiftX, shiftY, psi, rot, tilt;
         double corr = predict_angles(img, shiftX, shiftY, rot, tilt, psi);
         n++;
-        if (!quiet && n%10==0)
+        if (verbose && n%10==0)
             progress_bar(n);
     }
-    if (!quiet)
+    if (verbose)
         progress_bar(Nimg);
 
     finish_processing();
