@@ -23,29 +23,33 @@
  *  e-mail address 'xmipp@cnb.csic.es'
  ***************************************************************************/
 
-#include <data/progs.h>
+#include <data/program.h>
 #include <data/args.h>
 
-class Pyramid_parameters: public Prog_parameters
+class ProgPyramid: public XmippMetadataProgram
 {
 public:
-    enum Toperation {Expand, Reduce, None};
+    enum Toperation {Expand, Reduce};
     Toperation operation;
     int levels;
+    float scaleFactor;
+    Image<double> result;
 
-    void read(int argc, char **argv)
+    void readParams()
     {
-        Prog_parameters::read(argc, argv);
-        levels = textToInteger(getParameter(argc, argv, "-levels", "1"));
-        if (checkParameter(argc, argv, "-expand")) operation = Expand;
-        else if (checkParameter(argc, argv, "-reduce")) operation = Reduce;
-        else                                       operation = None;
+        XmippMetadataProgram::readParams();
+        levels = getIntParam("-levels");
+        if (checkParam("-expand"))
+            operation = Expand;
+        else if (checkParam("-reduce"))
+            operation = Reduce;
     }
 
     void show()
     {
-        if (quiet) return;
-        Prog_parameters::show();
+        if (!verbose)
+            return;
+        XmippMetadataProgram::show();
         std::cout << "Operation: ";
         switch (operation)
         {
@@ -55,51 +59,59 @@ public:
         case Reduce:
             std::cout << "Reduce\n";
             break;
-        case None  :
-            std::cout << "None  \n";
-            break;
         }
         std::cout << "Levels: " << levels << std::endl;
     }
 
-    void usage()
+    void defineParams()
     {
-        Prog_parameters::usage();
-        std::cerr << "  -expand | -reduce         : Expand or reduce the image\n";
-        std::cerr << " [-levels=<l=1>]            : Expansion/reduction factor\n";
+    	each_image_produces_an_output=true;
+    	allow_time_bar=true;
+    	XmippMetadataProgram::defineParams();
+        addParamsLine("  -expand or -reduce       : Expand or reduce the image");
+        addParamsLine(" [-levels <l=1>]           : Expansion/reduction factor");
+    }
+
+    void preProcess() {
+    	scaleFactor = (float)(pow(2.0, levels));
+    }
+
+    void processImage()
+    {
+    	img.read(fnImg);
+        float Xoff, Yoff, Zoff;
+        Xoff=img.Xoff();
+        Yoff=img.Yoff();
+        Zoff=img.Zoff();
+        switch (operation)
+        {
+        case Expand:
+            pyramidExpand(3,result(),img(),levels);
+            img.setXoff(Xoff*scaleFactor);
+            img.setYoff(Yoff*scaleFactor);
+            img.setZoff(Zoff*scaleFactor);
+            break;
+        case Reduce:
+            pyramidReduce(3,result(),img(),levels);
+            img.setXoff(Xoff*scaleFactor);
+            img.setYoff(Yoff*scaleFactor);
+            img.setZoff(Zoff*scaleFactor);
+            break;
+        }
+        result.write(fnImgOut);
     }
 };
 
-bool process_img(Image<double> &img, const Prog_parameters *prm)
-{
-    Pyramid_parameters *eprm = (Pyramid_parameters *) prm;
-    float Xoff, Yoff, Zoff;
-    Xoff=img.Xoff(); Yoff=img.Yoff(); Zoff=img.Zoff();
-    MultidimArray<double> result;
-    float scale_factor = (float)(pow(2.0, eprm->levels));
-    switch (eprm->operation)
-    {
-    case Pyramid_parameters::Expand:
-        pyramidExpand(3,result,img(),eprm->levels);
-        img.setXoff(Xoff*scale_factor);
-        img.setYoff(Yoff*scale_factor);
-        img.setZoff(Zoff*scale_factor);
-        break;
-    case Pyramid_parameters::Reduce:
-        pyramidReduce(3,result,img(),eprm->levels);
-        img.setXoff(Xoff*scale_factor);
-        img.setYoff(Yoff*scale_factor);
-        img.setZoff(Zoff*scale_factor);
-        break;
-    }
-    img() = result;
-
-    return true;
-}
-
 int main(int argc, char **argv)
 {
-    Pyramid_parameters prm;
-    SF_main(argc, argv, &prm, (void*)&process_img);
+    ProgPyramid prm;
+	prm.read(argc,argv);
+    try {
+    	prm.run();
+    } catch (XmippError XE)
+    {
+    	std::cerr << XE << std::endl;
+    	return 1;
+    }
     return 0;
 }
