@@ -35,10 +35,8 @@ void Prog_downsample_prm::read(int argc, char **argv, bool do_not_read_files)
         fn_micrograph  = getParameter(argc, argv, "-i");
         fn_downsampled = getParameter(argc, argv, "-o");
     }
-    bitsMp         = textToInteger(getParameter(argc, argv, "-output_bits", "32"));
-    if (bitsMp != 8 && bitsMp != 16 && bitsMp != 32)
-        REPORT_ERROR(ERR_ARG_INCORRECT,
-                     "Downsample: you must specify 8, 16 or 32 bits only");
+    //bitsMp         = textToInteger(getParameter(argc, argv, "-output_bits", "32"));
+    datatype       = datatypeString2Int(getParameter(argc, argv, "-datatype", "Float"));
     nThreads   = textToInteger(getParameter(argc, argv, "-thr", "1"));
 
     if (checkParameter(argc, argv, "-fourier"))
@@ -55,7 +53,10 @@ void Prog_downsample_prm::read(int argc, char **argv, bool do_not_read_files)
         else
             Ystep     = Xstep;
     }
-    if (checkParameter(argc, argv, "-kernel"))
+
+    stdFilter = textToFloat(getParameter(argc, argv, "-stdfilter","-1"));
+
+      if (checkParameter(argc, argv, "-kernel"))
     {
         std::string aux = getParameter(argc, argv, "-kernel");
         int i = paremeterPosition(argc, argv, "-kernel");
@@ -120,13 +121,13 @@ void Prog_downsample_prm::read(int argc, char **argv, bool do_not_read_files)
             do_fourier=false;
         }
     }
-    reversed = checkParameter(argc, argv, "-reverse_endian");
+    //reversed = checkParameter(argc, argv, "-reverse_endian");
 }
 
 // Usage -------------------------------------------------------------------
 void Prog_downsample_prm::usage() const
 {
-    std::cerr << "  [-output_bits <bits=32>]   : Must be 8, 16 or 32 bits\n"
+    std::cerr << "  [-datatype <bits=float>]   : Must be uchar, short,int,...,float\n"
     << "   -Xstep <xstep>            : Look at the documentation\n"
     << "  [-Ystep <ystep=xstep>]\n"
     << "  [-fourier <factor=0.3333>] : work in fourier space, factor < 1\n"
@@ -136,7 +137,7 @@ void Prog_downsample_prm::usage() const
     << "  [-kernel gaussian  <r> <sigma>]\n"
     << "  [-kernel pick]\n"
     << "  [-kernel sinc <delta=0.02> <Deltaw=0.1>]\n"
-    << "  [-reverse_endian]       : Reverse endian\n"
+    << "  [-stdfilter <value>= -1]       : remove outlaters (pixels) with value outside 'value' standard deviations\n"
     ;
 }
 #ifdef NEVERDEFINED
@@ -227,6 +228,12 @@ void Prog_downsample_prm::create_empty_output_file()
         Ypdim = FLOOR(Ydim / Ystep);
         Xpdim = FLOOR(Xdim / Xstep);
     }
+    Micrograph auxM;
+    auxM.setDataType((DataType)datatype);
+    auxM.resize(Xpdim,Ypdim);
+    auxM.write(fn_downsampled);
+
+#ifdef NEVER
     //FIXME, here output downsampled image
     //should be written in any format
     //since I do not know how to do that
@@ -254,11 +261,13 @@ void Prog_downsample_prm::create_empty_output_file()
     fh_downsample_inf << "# Pixel depth\n";
     fh_downsample_inf << "bitspersample= " << bitsMp << std::endl;
     fh_downsample_inf.close();
-}
+#endif
+    }
 
 // Open input micrograph ---------------------------------------------------
 void Prog_downsample_prm::open_input_micrograph()
 {
+    M.setStdevFilter(stdFilter);
     M.open_micrograph(fn_micrograph/*, reversed*/);
     //FIXME this should be done general
     bitsM = M.getDatatypeDetph();

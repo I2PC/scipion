@@ -80,7 +80,8 @@ typedef enum
     ComplexInt = 11,        // Complex integer (8-byte)
     ComplexFloat = 12,      // Complex floating point (8-byte)
     ComplexDouble = 13,     // Complex floating point (16-byte)
-    Bool = 14               // Boolean (1-byte?)
+    Bool = 14,              // Boolean (1-byte?)
+    LastEntry = 15          // This must be the last entry
 } DataType;
 
 /** Write mode
@@ -191,6 +192,9 @@ public:
 
 private:
     FileName            filename;    // File name
+    FILE*                fimg;        // Image File hander
+    TIFF*                tif;         // TIFF Image file hander
+    bool                stayOpen;    // To maintain the image file open after read/write
     int                 dataflag;    // Flag to force reading of the data
     unsigned long       i;           // Current image number (may be > NSIZE)
     unsigned long       offset;      // Data offset
@@ -368,15 +372,15 @@ public:
         mmapOn = mapData;
 
         FileName ext_name = name.getFileFormat();
-//        size_t found;
-//        filename = name;
-//        found = filename.find_first_of("@");
-//        if (found != std::string::npos)
-//        {
-//            select_img =  atoi(filename.substr(0, found).c_str());
-//            filename = filename.substr(found+1) ;
-//        }
-//
+        //        size_t found;
+        //        filename = name;
+        //        found = filename.find_first_of("@");
+        //        if (found != std::string::npos)
+        //        {
+        //            select_img =  atoi(filename.substr(0, found).c_str());
+        //            filename = filename.substr(found+1) ;
+        //        }
+        //
         name.decompose(select_img, filename);
 
         filename = filename.removeFileFormat();
@@ -403,7 +407,7 @@ public:
         MDMainHeader.clear();
 
         if (ext_name.contains("spi") || ext_name.contains("xmp")  ||
-                ext_name.contains("stk") || ext_name.contains("vol"))//mrc stack MUST go BEFORE plain MRC
+            ext_name.contains("stk") || ext_name.contains("vol"))//mrc stack MUST go BEFORE plain MRC
             err = readSPIDER(select_img);
         else if (ext_name.contains("mrcs"))//mrc stack MUST go BEFORE plain MRC
             err = readMRC(select_img,true);
@@ -425,7 +429,6 @@ public:
             err = readSPE(select_img,false);
         else
             err = readSPIDER(select_img);
-
         //This implementation does not handle stacks,
         //read in a block
         if (row != NULL)
@@ -1573,7 +1576,70 @@ public:
         aux.read(fn);
         (*this)()+=aux();
     }
-};
+
+
+    /** Open file function
+      * Check if Image_Collection has let the file already opened,
+      *  else, it opens the file.
+      */
+    FILE openFile(const FileName name)
+    {
+
+        if ( ( fimg = fopen(name.c_str(), "r") ) == NULL )
+            REPORT_ERROR(ERR_IO_NOTOPEN,(std::string)"Image::openFile cannot open: " + name);
+
+        return fimg;
+
+    }
+
+    /** Close file function
+          * Check if Image_Collection has let the file already opened,
+          *  else, it opens the file.
+          */
+    FILE closeFile(const FileName name)
+    {
+    }
+    void doStdevFilter(double stdevFilter)
+    {
+      if (stdevFilter > 0 )
+      {
+          double temp, avg, stddev;
+          double size = YXSIZE(data);
+
+          avg = 0;
+          stddev = 0;
+
+          for ( int n=0; n<NSIZE(data); n++ )
+          {
+              FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY3D(data)
+              {
+                  temp = abs(DIRECT_NZYX_ELEM(data,n,0,i,j));
+                  avg += temp;
+                  stddev += temp * temp;
+              }
+              avg /= size;
+              stddev = stddev/size - avg * avg;
+              stddev *= size/(size -1);
+              stddev = sqrt(stddev);
+
+              double low  = (avg - stdevFilter * stddev);
+              double high = (avg + stdevFilter * stddev);
+
+              FOR_ALL_ELEMENTS_IN_ARRAY3D(data)
+              {
+                  if (abs(DIRECT_NZYX_ELEM(data,n,0,i,j)) < low)
+                      DIRECT_NZYX_ELEM(data,n,0,i,j) = (T) low;
+                  else if (abs(DIRECT_NZYX_ELEM(data,n,0,i,j)) > high)
+                      DIRECT_NZYX_ELEM(data,n,0,i,j) = (T) high;
+              }
+          }
+      }
+
+    }
+}
+;
+/** Convert datatype string to datatypr enun */
+int datatypeString2Int(std::string s);
 
 // Special cases for complex numbers
 template<>

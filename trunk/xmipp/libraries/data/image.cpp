@@ -106,3 +106,35 @@ unsigned long  gettypesize(DataType type)
 
     return(size);
 }
+
+int datatypeString2Int(std::string s)
+{
+  toLower(s);
+  if (!strcmp(s.c_str(),"uchar"))
+  {
+       return UChar;
+  }
+  else if (!strcmp(s.c_str(),"ushort"))
+  {
+    return UShort;
+  }
+  else if (!strcmp(s.c_str(),"short"))
+  {
+    return Short;
+  }
+  else if (!strcmp(s.c_str(),"uint"))
+  {
+    return UInt;
+  }
+  else if (!strcmp(s.c_str(),"int"))
+  {
+    return Int;
+  }
+  else if (!strcmp(s.c_str(),"float"))
+  {
+    return Float;
+  }
+  else REPORT_ERROR(ERR_TYPE_INCORRECT, "datatypeString2int; unknown datatype");
+
+
+}

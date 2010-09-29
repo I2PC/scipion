@@ -110,6 +110,7 @@ protected:
     /* bool                    __in_core; */
     int                     fh_micrograph;
     std::vector<std::string> labels;
+    double stdevFilter;
 public:
     /** Constructor */
     Micrograph()
@@ -152,6 +153,10 @@ public:
     void set_micrograph_name(const FileName& fn)
     {
 	fn_micrograph = fn;
+    }
+    void setStdevFilter(double d)
+    {
+        stdevFilter=d;
     }
 
     /** Save coordinates to disk. */
@@ -210,6 +215,10 @@ public:
             flag_value;
     }
 
+    void setDataType(DataType _datatype)
+    {
+      datatype = _datatype;
+    }
     /** Get Transmitance flag.
         When cutting images, 1/log10 is computed over the pixel values
         if transmitance_flag=true. This function reads it
@@ -440,7 +449,7 @@ public:
         if (!__scaling_valid) return(unsigned char)(*this)(x, y);
         else return(unsigned char)(__a*(*this)(x, y) + __b);
     }
-    
+
     /** Get the linear transformation for scaling micrographs */
     void getLinearTransformatioVal8(double &a, double &b) const;
 
@@ -521,6 +530,10 @@ public:
         _Xdim = Xdim;
         _Ydim = Ydim;
     }
+    //set micrograph size (when you do not read the file from disk)
+    void resize(int Xdim, int Ydim);
+    //write micrograph
+    void write(FileName fileName);
 };
 
 /** Downsample.
@@ -534,5 +547,7 @@ public:
 void downsample(const Micrograph &M, int Xstep, int Ystep,
                 const MultidimArray<double> &kernel, Micrograph &Mp,
                 bool do_fourier=false, int nThreads=1);
+
 //@}
+
 #endif

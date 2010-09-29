@@ -62,7 +62,6 @@ void Micrograph::open_micrograph(const FileName &_fn_micrograph)
 
     // Micrograph name
     fn_micrograph = _fn_micrograph;
-
     // Look for micrograph dimensions
 
     auxI.read(fn_micrograph,false);
@@ -90,21 +89,27 @@ void Micrograph::open_micrograph(const FileName &_fn_micrograph)
     {
     case UChar:
         result=IUChar.read(fn_micrograph,true,-1,false,false,NULL,true);
+        IUChar.doStdevFilter(stdevFilter);
         break;
     case UShort:
         result=IUShort.read(fn_micrograph,true,-1,false,false,NULL,true);
+        IUShort.doStdevFilter(stdevFilter);
         break;
     case Short:
         result=IShort.read(fn_micrograph,true,-1,false,false,NULL,true);
+        IShort.doStdevFilter(stdevFilter);
         break;
     case Int:
         result=IInt.read(fn_micrograph,true,-1,false,false,NULL,true);
+        IInt.doStdevFilter(stdevFilter);
         break;
     case UInt:
-        result=IInt.read(fn_micrograph,true,-1,false,false,NULL,true);
+        result=IUInt.read(fn_micrograph,true,-1,false,false,NULL,true);
+        IUChar.doStdevFilter(stdevFilter);
         break;
     case Float:
         result=IFloat.read(fn_micrograph,true,-1,false,false,NULL,true);
+        IFloat.doStdevFilter(stdevFilter);
         break;
     default:
         std::cerr << "Micrograph::open_micrograph: Unknown datatype " << datatype <<std::endl;
@@ -515,7 +520,7 @@ int Micrograph::search_coord_near(int x, int y, int prec) const
     int prec2 = prec * prec;
     for (int i = 0; i < imax; i++)
         if ((coords[i].X - x)*(coords[i].X - x) + (coords[i].Y - y)*(coords[i].Y - y) < prec2
-                && coords[i].valid)
+            && coords[i].valid)
             return i;
     return -1;
 }
@@ -551,6 +556,74 @@ void Micrograph::move_last_coord_to(int x, int y)
     }
 }
 
+void Micrograph::resize(int Xdim, int Ydim)
+{
+
+    if (datatype == UChar)
+    {
+        IUChar.data.setMmap(true);
+        IUChar.data.resize(1, 1, Ydim, Xdim);
+    }
+    else if (datatype == UShort)
+    {
+        IUShort.data.setMmap(true);
+        IUShort.data.resize(1, 1, Ydim, Xdim);
+    }
+    else if (datatype == Short)
+    {
+        IShort.data.setMmap(true);
+        IShort.data.resize(1, 1, Ydim, Xdim);
+    }
+    else if (datatype == UInt)
+    {
+        IUInt.data.setMmap(true);
+        IUInt.data.resize(1, 1, Ydim, Xdim);
+    }
+    else if (datatype == Int)
+    {
+        IInt.data.setMmap(true);
+        IInt.data.resize(1, 1, Ydim, Xdim);
+    }
+    else if (datatype == Float)
+    {
+        IFloat.data.setMmap(true);
+        IFloat.data.resize(1, 1, Ydim, Xdim);
+    }
+    else
+        REPORT_ERROR(ERR_TYPE_INCORRECT, "Micrograph::set_val::(): unknown datatype");
+
+}
+void Micrograph::write(FileName fileName)
+{
+
+    if (datatype == UChar)
+    {
+        IUChar.write(fileName);
+    }
+    else if (datatype == UShort)
+    {
+        IUShort.write(fileName);
+    }
+    else if (datatype == Short)
+    {
+        IShort.write(fileName);
+    }
+    else if (datatype == UInt)
+    {
+        IUInt.write(fileName);
+    }
+    else if (datatype == Int)
+    {
+        IInt.write(fileName);
+    }
+    else if (datatype == Float)
+    {
+        IFloat.write(fileName);
+    }
+    else
+        REPORT_ERROR(ERR_TYPE_INCORRECT, "Micrograph::set_val::(): unknown datatype");
+
+}
 /* Downsample -------------------------------------------------------------- */
 void downsample(const Micrograph &M, int Xstep, int Ystep,
                 const MultidimArray<double> &kernel, Micrograph &Mp,
@@ -637,7 +710,7 @@ void downsample(const Micrograph &M, int Xstep, int Ystep,
 
             if (M.getDatatype() != Float)
                 scale = (pow(2.0, Mp.getDatatypeDetph()) - 1.0) /
-                            (pow(2.0, M.getDatatypeDetph()) - 1.0);
+                        (pow(2.0, M.getDatatypeDetph()) - 1.0);
             else if (M.getDatatype() == Float)
                 scale = 1;
             if(do_fourier)

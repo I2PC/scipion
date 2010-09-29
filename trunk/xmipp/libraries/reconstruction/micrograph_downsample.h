@@ -71,7 +71,7 @@ public:
 
     /// Deltaw
     double   Deltaw;
-    
+
     /// fourier interpolation
     bool do_fourier;
     /// number of Threads used in the Fourier TRansform
@@ -96,6 +96,11 @@ public:
     int Xdim, Ydim;
     // Output dimensions
     int Xpdim, Ypdim;
+    // datatype
+    int datatype;
+    //
+    double stdFilter;
+
 public:
     /** Read input parameters.
         If do_not_read_files=TRUE then fn_micrograph and
