@@ -199,7 +199,7 @@ FileName Prog_nma_alignment_prm::createDeformedPDB(int pyramidLevel) const
         command=(std::string)"xmipp_scale_pyramid"+
                 " -i deformedPDB_"+fnRandom+".vol"+
                 " -reduce -levels "+integerToString(pyramidLevel)+
-                " -quiet";
+                " -v 0";
 
         system(command.c_str());
     }
@@ -217,12 +217,12 @@ void Prog_nma_alignment_prm::performCompleteSearch(
     command=(std::string)"xmipp_scale_pyramid -i "+
             currentImg->name()+" -o downimg_"+fnRandom+".xmp "+
             "-reduce -levels "+integerToString(pyramidLevel)+
-            " -quiet";
+            " -v 0";
 
     system(command.c_str());
 
     command=(std::string)"xmipp_metadata_selfile_create "+
-            "-p downimg_"+fnRandom+".xmp -o selfile_"+fnRandom+".sel";
+            "-p downimg_"+fnRandom+".xmp -o selfile_"+fnRandom+".sel --quiet";
 
     system(command.c_str());
 
@@ -232,11 +232,11 @@ void Prog_nma_alignment_prm::performCompleteSearch(
     command = (std::string)"-i deformedPDB_"+fnRandom+".vol"+ " -o ref" + fnRandom + "/ref" + fnRandom +
               "_ -sampling_rate 5 -sym " + symmetry;
     command=(std::string)
-            " xmipp_angular_project_library "+command + " -quiet";
+            " xmipp_angular_project_library "+command + " -v 0";
 
     system(command.c_str());
 
-    command=(std::string)"xmipp_metadata_selfile_create -p \"ref" + fnRandom + "/ref*.xmp\" -o ref"+fnRandom+"_.sel";
+    command=(std::string)"xmipp_metadata_selfile_create -p \"ref" + fnRandom + "/ref*.xmp\" -o ref"+fnRandom+"_.sel --quiet";
     system(command.c_str());
 
     command=(std::string)"mv ref" + fnRandom + "/*.doc .";
@@ -249,7 +249,7 @@ void Prog_nma_alignment_prm::performCompleteSearch(
         system(command.c_str());
     }
 
-    command=(std::string)" xmipp_header_extract -i selfile_"+fnRandom+".sel -o docexp"+fnRandom+".txt";
+    command=(std::string)" xmipp_header_extract -i selfile_"+fnRandom+".sel -o docexp"+fnRandom+".txt -v 0";
 
     system(command.c_str());
 
@@ -261,11 +261,11 @@ void Prog_nma_alignment_prm::performCompleteSearch(
             " -psi_step 5 "+
             " -max_shift_change "+integerToString(ROUND((double)imgSize/
                                                   (10.0*pow(2.0,(double)pyramidLevel))))+
-            " -5D -sym " + symmetry + " -quiet";
+            " -search5D -sym " + symmetry + " -v 0";
 
     system(command.c_str());
 
-    command=(std::string)" xmipp_header_assign -i angledisc_"+fnRandom+".txt";
+    command=(std::string)" xmipp_header_assign -i angledisc_"+fnRandom+".txt -v 0";
 
     system(command.c_str());
 
@@ -282,7 +282,7 @@ double Prog_nma_alignment_prm::performContinuousAssignment(
         command=(std::string)"cp -f "+currentImg->name()+" downimg_"+fnRandom+".xmp";
         system(command.c_str());
 
-        command=(std::string)" xmipp_header_assign -i angledisc_"+fnRandom+".txt";
+        command=(std::string)" xmipp_header_assign -i angledisc_"+fnRandom+".txt -v 0";
         system(command.c_str());
     }
 
@@ -294,10 +294,10 @@ double Prog_nma_alignment_prm::performContinuousAssignment(
             " -gaussian_Fourier " + floatToString((float)gaussian_DFT_sigma) +
             " -gaussian_Real " + floatToString((float)gaussian_Real_sigma) +
             " -zerofreq_weight " + floatToString((float)weight_zero_freq) +
-            " -quiet";
+            " -v 0";
     system(command.c_str());
 
-    command=(std::string)" xmipp_header_assign -i anglecont_"+fnRandom+".txt";
+    command=(std::string)" xmipp_header_assign -i anglecont_"+fnRandom+".txt -v 0";
     system(command.c_str());
 
     // Pick up results
