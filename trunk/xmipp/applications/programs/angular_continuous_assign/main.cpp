@@ -27,7 +27,7 @@
 
 int main(int argc, char **argv)
 {
-    Prog_angular_predict_continuous_prm prm;
+    ProgAngularContinuousAssign prm;
     try {
         prm.read(argc,argv);
     } catch (XmippError XE) {
