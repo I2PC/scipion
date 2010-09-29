@@ -25,8 +25,6 @@
  ***************************************************************************/
 """
 import os, glob, sys, optparse
-
-
    
 def command_line_options():
       """ add command line options here"""
@@ -42,21 +40,24 @@ Example:
       parser.add_option("-s", "--isstack",
                   action="store_true", dest="isStack", default=False,
                   help="Check if the images are stacks")
+      parser.add_option("-q", "--quiet",
+                  action="store_true", dest="quiet", default=False,
+                  help="Do not show any messages")
             
       (options, args)      = parser.parse_args()
       if(len(options.outMetaDataFile)<1):
           parser.print_help()
           exit()
       
-      print  '**'
-      print 'Files pattern:        ', options.pattern
-      print 'Output Metadata File: ', options.outMetaDataFile
-      print 'Is stack:             ', options.isStack
-      print  '**'
+      if not options.quiet:
+          print 'Files pattern:        ', options.pattern
+          print 'Output Metadata File: ', options.outMetaDataFile
+          print 'Is stack:             ', options.isStack
     
       return(options.pattern, 
              options.outMetaDataFile,
-             options.isStack)
+             options.isStack,
+             options.quiet)
 
 
 
@@ -65,7 +66,7 @@ sys.path.append(scriptdir) # add default search path
 import XmippData
 inFile = XmippData.FileName()
 
-pattern, outFile, isStack = command_line_options();
+pattern, outFile, isStack, quiet = command_line_options();
 
 mD = XmippData.MetaData()
 sIn = XmippData.FileNameP()
