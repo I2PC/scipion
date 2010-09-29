@@ -48,56 +48,53 @@
 int cstregistration(struct cstregistrationStruct *Data);
 
 // Read arguments ==========================================================
-void Prog_angular_predict_continuous_prm::read(int argc, char **argv)
+void ProgAngularContinuousAssign::readParams()
 {
-    fn_ref = getParameter(argc, argv, "-ref");
-    fn_ang = getParameter(argc, argv, "-ang", "");
-    fn_out_ang = getParameter(argc, argv, "-oang");
-    gaussian_DFT_sigma = (double) textToFloat(getParameter(argc, argv, "-gaussian_Fourier", "0.5"));
-    gaussian_Real_sigma = (double) textToFloat(getParameter(argc, argv, "-gaussian_Real", "0.5"));
-    weight_zero_freq = (double) textToFloat(getParameter(argc, argv, "-zerofreq_weight", "0."));
-    max_no_iter = textToInteger(getParameter(argc, argv, "-max_iter", "60"));
-    quiet = checkParameter(argc,argv,"-quiet");
-    max_shift = (double) textToFloat(getParameter(argc, argv, "-max_shift", "-1"));
-    max_angular_change = (double) textToFloat(getParameter(argc, argv, "-max_angular_change", "-1"));
+    fn_ref = getParam("-ref");
+    fn_ang = getParam("-ang", "");
+    fn_out_ang = getParam("-oang");
+    gaussian_DFT_sigma = getDoubleParam("-gaussian_Fourier");
+    gaussian_Real_sigma = getDoubleParam("-gaussian_Real");
+    weight_zero_freq = getDoubleParam("-zerofreq_weight");
+    max_no_iter = getIntParam("-max_iter");
+    max_shift = getDoubleParam("-max_shift");
+    max_angular_change = getDoubleParam("-max_angular_change");
 }
 
 // Show ====================================================================
-void Prog_angular_predict_continuous_prm::show()
+void ProgAngularContinuousAssign::show()
 {
-    if (quiet) return;
+    if (!verbose)
+        return;
     std::cout << "Reference volume:    " << fn_ref              << std::endl
-              << "Initial angle file:  " << fn_ang              << std::endl
-              << "Ouput angular file:  " << fn_out_ang          << std::endl
-              << "Gaussian Fourier:    " << gaussian_DFT_sigma  << std::endl
-              << "Gaussian Real:       " << gaussian_Real_sigma << std::endl
-              << "Zero-frequency weight:"<< weight_zero_freq    << std::endl
-              << "Max. Iter:           " << max_no_iter         << std::endl
-              << "Max. Shift:          " << max_shift           << std::endl
-              << "Max. Angular Change: " << max_angular_change  << std::endl
+    << "Initial angle file:  " << fn_ang              << std::endl
+    << "Ouput angular file:  " << fn_out_ang          << std::endl
+    << "Gaussian Fourier:    " << gaussian_DFT_sigma  << std::endl
+    << "Gaussian Real:       " << gaussian_Real_sigma << std::endl
+    << "Zero-frequency weight:"<< weight_zero_freq    << std::endl
+    << "Max. Iter:           " << max_no_iter         << std::endl
+    << "Max. Shift:          " << max_shift           << std::endl
+    << "Max. Angular Change: " << max_angular_change  << std::endl
     ;
 }
 
 // usage ===================================================================
-void Prog_angular_predict_continuous_prm::usage()
+void ProgAngularContinuousAssign::defineParams()
 {
-    std::cerr
-        << " Usage:\n"
-        << "   -ref <Xmipp Volume>        : Reference volume\n"
-        << "   -ang <angle file>          : MetaData with the initial angles\n"
-        << "   -oang <angle file>         : MetaData with output angles\n"
-        << "  [-gaussian_Fourier <s=0.5>] : Weighting sigma in Fourier space\n"
-        << "  [-gaussian_Real    <s=0.5>] : Weighting sigma in Real space\n"
-        << "  [-zerofreq_weight  <s=0. >] : Zero-frequency weight\n"
-        << "  [-max_iter <max=60>]        : Maximum number of iterations\n"
-        << "  [-max_shift <s=-1>          : Maximum shift allowed\n"
-        << "  [-max_angular_change <a=-1>]: Maximum angular change allowed\n"
-        << "  [-quiet]                    : Do not show messages\n"
-    ;
+    addUsageLine("This program makes a continuous angular assignment");
+    addParamsLine("   -ref <volume>              : Reference volume");
+    addParamsLine("   -ang <angle_file>          : MetaData with the initial angles");
+    addParamsLine("   -oang <angle_file>         : MetaData with output angles");
+    addParamsLine("  [-gaussian_Fourier <s=0.5>] : Weighting sigma in Fourier space");
+    addParamsLine("  [-gaussian_Real    <s=0.5>] : Weighting sigma in Real space");
+    addParamsLine("  [-zerofreq_weight  <s=0. >] : Zero-frequency weight");
+    addParamsLine("  [-max_iter <max=60>]        : Maximum number of iterations");
+    addParamsLine("  [-max_shift <s=-1>]         : Maximum shift allowed");
+    addParamsLine("  [-max_angular_change <a=-1>]: Maximum angular change allowed");
 }
 
 // Produce side information ================================================
-void Prog_angular_predict_continuous_prm::produce_side_info()
+void ProgAngularContinuousAssign::produce_side_info()
 {
     // Read the initial angles
     DF_initial.read(fn_ang);
@@ -127,10 +124,10 @@ void Prog_angular_predict_continuous_prm::produce_side_info()
 
     mask_Real3D.generate_mask(V());
     mask_Real.generate_mask(YSIZE(V()), XSIZE(V()));
-     
+
     double gs2 = 2. * PI * gaussian_Real_sigma * gaussian_Real_sigma * ((double)XSIZE(V()) * (double) XSIZE(V()));
     double gs3 = gs2 * sqrt(2. * PI) * gaussian_Real_sigma * ((double) XSIZE(V()));
- 
+
     mask_Real3D.get_cont_mask() *= gs3;
     mask_Real.get_cont_mask() *= gs2;
 
@@ -144,10 +141,10 @@ void Prog_angular_predict_continuous_prm::produce_side_info()
     // Prepare the weight function in Fourier space
     mask_Fourier.type = GAUSSIAN_MASK;
     mask_Fourier.mode = INNER_MASK;
-    
+
     mask_Fourier.sigma = gaussian_DFT_sigma * ((double)XSIZE(V()));
     mask_Fourier.generate_mask(YSIZE(V()), XSIZE(V()));
-    
+
     double gsf2 = 2. * PI * gaussian_DFT_sigma * gaussian_DFT_sigma * ((double)XSIZE(V()) * (double)XSIZE(V()));
     mask_Fourier.get_cont_mask() *= gsf2;
     mask_Fourier.get_cont_mask()(0, 0) *= weight_zero_freq;
@@ -168,7 +165,7 @@ void Prog_angular_predict_continuous_prm::produce_side_info()
 }
 
 // Predict =================================================================
-double Prog_angular_predict_continuous_prm::predict_angles(Image<double> &I,
+double ProgAngularContinuousAssign::predict_angles(Image<double> &I,
         double &shiftX, double &shiftY,
         double &rot, double &tilt, double &psi)
 {
@@ -185,10 +182,10 @@ double Prog_angular_predict_continuous_prm::predict_angles(Image<double> &I,
     pose(3) = -shiftX; // The convention of shifts is different
     pose(4) = -shiftY; // for Slavica
 
-    mask_Real.apply_mask(I(), I()); 
+    mask_Real.apply_mask(I(), I());
 
     double cost = CSTSplineAssignment(reDFTVolume, imDFTVolume,
-        I(), mask_Fourier.get_cont_mask(), pose, max_no_iter);
+                                      I(), mask_Fourier.get_cont_mask(), pose, max_no_iter);
 
     Matrix2D<double> Eold, Enew;
     Euler_angles2matrix(old_rot,old_tilt,old_psi,Eold);
@@ -231,7 +228,7 @@ double Prog_angular_predict_continuous_prm::predict_angles(Image<double> &I,
 }
 
 // Finish computations======================================================
-void Prog_angular_predict_continuous_prm::finish_processing()
+void ProgAngularContinuousAssign::finish_processing()
 {
     // Save predicted angles
     MetaData DF;
@@ -239,32 +236,35 @@ void Prog_angular_predict_continuous_prm::finish_processing()
     int i = 0;
     FOR_ALL_OBJECTS_IN_METADATA(DF_initial)
     {
-    	FileName fnImg;
-    	DF_initial.getValue(MDL_IMAGE,fnImg);
-    	DF.addObject();
+        FileName fnImg;
+        DF_initial.getValue(MDL_IMAGE,fnImg);
+        DF.addObject();
         DF.setValue(MDL_IMAGE,fnImg);
         DF.setValue(MDL_ENABLED,1);
-    	DF.setValue(MDL_ANGLEROT,predicted_rot[i]);
-    	DF.setValue(MDL_ANGLETILT,predicted_tilt[i]);
-    	DF.setValue(MDL_ANGLEPSI,predicted_psi[i]);
-    	DF.setValue(MDL_SHIFTX,predicted_shiftX[i]);
-    	DF.setValue(MDL_SHIFTY,predicted_shiftY[i]);
-    	DF.setValue(MDL_COST,predicted_cost[i]);
-    	i++;
+        DF.setValue(MDL_ANGLEROT,predicted_rot[i]);
+        DF.setValue(MDL_ANGLETILT,predicted_tilt[i]);
+        DF.setValue(MDL_ANGLEPSI,predicted_psi[i]);
+        DF.setValue(MDL_SHIFTX,predicted_shiftX[i]);
+        DF.setValue(MDL_SHIFTY,predicted_shiftY[i]);
+        DF.setValue(MDL_COST,predicted_cost[i]);
+        i++;
     }
     DF.write(fn_out_ang);
 }
 
 // Run ---------------------------------------------------------------------
-void Prog_angular_predict_continuous_prm::run()
+void ProgAngularContinuousAssign::run()
 {
     int Nimg=DF_initial.size();
-    if (!quiet) init_progress_bar(Nimg);
+    if (verbose)
+        init_progress_bar(Nimg);
     int key=0;
     FOR_ALL_OBJECTS_IN_METADATA(DF_initial)
     {
-        FileName fnImg; DF_initial.getValue(MDL_IMAGE,fnImg);
-        Image<double> img; img.read(fnImg);
+        FileName fnImg;
+        DF_initial.getValue(MDL_IMAGE,fnImg);
+        Image<double> img;
+        img.read(fnImg);
         img().setXmippOrigin();
         double shiftX = img.Xoff();
         double shiftY = img.Yoff();
@@ -273,10 +273,12 @@ void Prog_angular_predict_continuous_prm::run()
         double psi    = img.psi();
         double cost = predict_angles(img, shiftX, shiftY, rot, tilt, psi);
         key++;
-        if (!quiet) progress_bar(key);
+        if (verbose)
+            progress_bar(key);
     }
-    if (!quiet) progress_bar(Nimg);
-    
+    if (verbose)
+        progress_bar(Nimg);
+
     finish_processing();
 }
 
@@ -350,7 +352,7 @@ double CSTSplineAssignment(
 
     // Set performance parameters
     Matrix1D<double> Cost(max_no_iter + 1), TimePerIter(max_no_iter + 1),
-    	    	     Failures(max_no_iter + 1);
+    Failures(max_no_iter + 1);
     long             NumberIterPerformed, NumberSuccPerformed,
     NumberFailPerformed;
     Data.Cost             = MATRIX1D_ARRAY(Cost);
@@ -420,12 +422,15 @@ long mirroring(long period, long k)
 {
     long sqk, qk;
 
-    if (period == 1L) qk = 0L;
+    if (period == 1L)
+        qk = 0L;
     else
         qk = k - (2L * period - 2L) * (long) floor((double) k / (double)(2L * period - 2L));
 
-    if ((qk < period) && (qk >= 0L)) sqk = qk;
-    else sqk = 2L * period - 2L - qk;
+    if ((qk < period) && (qk >= 0L))
+        sqk = qk;
+    else
+        sqk = 2L * period - 2L - qk;
 
     return(sqk);
 }
@@ -434,14 +439,17 @@ long periodization(long period, long k)
 {
     long sqk, qk;
 
-    if (period == 1L) qk = 0L;
+    if (period == 1L)
+        qk = 0L;
     else if (k >= 0L)
         qk = k - period * (long) floor((double) k / (double) period);
     else
         qk = ABS(k + 1L) - period * (long) floor((double) ABS(k + 1L) / (double) period);
 
-    if ((k >= 0L) || (period == 1L)) sqk = qk;
-    else sqk = period - 1L - qk;
+    if ((k >= 0L) || (period == 1L))
+        sqk = qk;
+    else
+        sqk = period - 1L - qk;
 
     return(sqk);
 }

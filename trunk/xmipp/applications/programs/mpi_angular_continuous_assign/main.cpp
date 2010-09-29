@@ -35,7 +35,7 @@ int main(int argc, char **argv)
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &NProcessors);
 
-    Prog_angular_predict_continuous_prm prm;
+    ProgAngularContinuousAssign prm;
     try
     {
         // Read input parameters

@@ -36,7 +36,7 @@
    @ingroup ReconsLibrary */
 //@{
 /** Predict Continuous Parameters. */
-class Prog_angular_predict_continuous_prm
+class ProgAngularContinuousAssign: public XmippProgram
 {
 public:
     /** Filename of the reference volume */
@@ -88,13 +88,13 @@ public:
     std::vector<double>   predicted_cost;
 public:
     /// Read argument from command line
-    void read(int argc, char **argv);
+    void readParams();
 
     /// Show
     void show();
 
-    /// Usage
-    void usage();
+    /// Define parameters
+    void defineParams();
 
     /** Produce side info.
         An exception is thrown if any of the files is not found*/
