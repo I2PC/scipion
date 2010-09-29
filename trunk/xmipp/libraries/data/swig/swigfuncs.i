@@ -1,19 +1,15 @@
 %{
 #include "../funcs.h"
-#include "../filename.h"
 %}
 
 // Many functions are ignored through the #ifndef SWIG mechanism.
 // Open the ../funcs.h file to see which ones
-class std::string {};
-%ignore FILENAMENUMBERLENGTH;
 %ignore print(std::ostream& o, const bool b);
 %ignore printb;
 %ignore RealImag2Complex;
 %ignore AmplPhase2Complex;
 %ignore Complex2RealImag;
 %ignore Complex2AmplPhase;
-%ignore FileNameComparison;
 %ignore exit_if_not_exists;
 %ignore time_config;
 %ignore annotate_time;
@@ -29,14 +25,6 @@ class std::string {};
 %ignore Marsaglia;
 %include "../funcs.h"
 %ignore to_lowercase;
-
-
-%pointer_class(FileName, FileNameP);
-
-PRINT(FileName)
-//%typemap(in) const FileName& {
-//    $1 = &(FileName(PyString_AsString($input)));
-//}
 
 /* Test code
 python

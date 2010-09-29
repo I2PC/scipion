@@ -109,6 +109,7 @@ $result=PyInt_FromLong((long)*$1);
 %rename (mul)   operator*;
 
 // All interfaces being ported
+%include swigfilename.i
 %include swigfuncs.i
 %include swigsqllite.i
 %include swigmetadata.i
