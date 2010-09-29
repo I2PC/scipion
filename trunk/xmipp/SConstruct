@@ -341,7 +341,7 @@ elif (ARGUMENTS['mode'] == 'compile'):
 
     # debug?
     if int(env['debug']):
-        env.Append(CXXFLAGS=['-g'])
+        env.Append(CXXFLAGS=['-D__XMIPP_DEBUG__ -g'])
         #required for print stack trace
         env.Append(CXXFLAGS=['-rdynamic'])
         env.Append(CXXFLAGS=['-O0'])
