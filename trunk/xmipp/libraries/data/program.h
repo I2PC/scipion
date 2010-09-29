@@ -59,6 +59,9 @@ private:
     void init();
 
 protected:
+    /// Verbosity level
+    int verbose;
+
     /** @name Functions to be implemented by subclasses.
      * @{
      */
@@ -162,12 +165,10 @@ protected:
     FileName        fnImg, fnImgOut;
     /// Output extension and root
     FileName oext, oroot;
-    /// Quiet
-    bool quiet;
     /// Set this to true for allow the option
     /// of applicating the transformation as stored in the header
     bool apply_geo;
-    /// Set this to true when the program produce a result metada
+    /// Set this to true when the program produce a result metadata
     bool produces_an_output;
     /// Use this flag for not writing at every image
     bool each_image_produces_an_output;

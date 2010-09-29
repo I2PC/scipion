@@ -33,7 +33,7 @@ void XmippProgram::init()
     ///Add some common definitions to all Xmipp programs
     addParamsLine("== Common options ==");
     addParamsLine("[-v+ <verbose_level=1>] : Verbosity level, 0 means no output.");
-    addParamsLine("alias --verb;");
+    addParamsLine("alias --verbose;");
     addParamsLine("[-h+ <param=\"\">]      : If not param is supplied show this help message.");
     addParamsLine("                        : Otherwise, specific param help is showed,");
     addParamsLine("                        : param should be provided without the '-'");
@@ -85,6 +85,7 @@ void XmippProgram::read(int argc, char ** argv)
     try
     {
         progDef->read(argc, argv);
+        verbose = getIntParam("--verbose");
         this->readParams();
     }
     catch (XmippError xe)
@@ -100,7 +101,7 @@ void XmippProgram::read(int argc, char ** argv)
                 usage();
             else
                 usage(cmdHelp);
-            }
+        }
         ///If an input error, shows error message and usage
         std::cerr << xe;
         usage();
@@ -179,16 +180,16 @@ void XmippProgram::usage(int verb) const
 
 void XmippProgram::usage(const std::string & param, int verb)
 {
-  ConsolePrinter cp;
-  ParamDef * paramDef = progDef->findParam(param);
-  if (paramDef == NULL)
-          REPORT_ERROR(ERR_ARG_INCORRECT, ((std::string)"Doesn't exists param: " + param));
-  cp.printParam(*paramDef, verb);
-  exit(0);
+    ConsolePrinter cp;
+    ParamDef * paramDef = progDef->findParam(param);
+    if (paramDef == NULL)
+        REPORT_ERROR(ERR_ARG_INCORRECT, ((std::string)"Doesn't exists param: " + param));
+    cp.printParam(*paramDef, verb);
+    exit(0);
 }
 
 void XmippProgram::show() const
-    {}
+{}
 
 int XmippProgram::version() const
 {
@@ -202,9 +203,8 @@ XmippMetadataProgram::XmippMetadataProgram()
     oroot = oext = fn_out = fn_in = "";
     produces_an_output = false;
     each_image_produces_an_output = false;
-    allow_time_bar = false;
+    allow_time_bar = true;
     apply_geo = false;
-    quiet = false;
 }
 
 void XmippMetadataProgram::defineParams()
@@ -218,7 +218,6 @@ void XmippMetadataProgram::defineParams()
         addParamsLine("   alias --output;");
         addParamsLine("  [-oext <extension=\"\">] : if wanted in case of a metadata file.");
         addParamsLine("  [-oroot <root=\"\">]     : if wanted in case of a metadata file.");
-        addParamsLine("  [-quiet]            : do not show anything on screen.");
     }
     else if (produces_an_output)
     {
@@ -244,16 +243,9 @@ void XmippMetadataProgram::readParams()
         fn_out = checkParam("-o") ? getParam("-o") : fn_in;
         oext = getParam("-oext");
         oroot = getParam("-oroot");
-        quiet = checkParam("-quiet");
     }
 
-    if (!fn_in.isMetaData())
-    {
-        mdIn.addObject();
-        mdIn.setValue( MDL_IMAGE, fn_in);
-        mdIn.setValue( MDL_ENABLED, 1);
-    }
-    else
+    if (fn_in.isMetaData())
     {
         mdIn.read(fn_in, NULL);
         mdIn.removeObjects(MDValueEQ(MDL_ENABLED, -1));
@@ -265,11 +257,9 @@ void XmippMetadataProgram::readParams()
 
 void XmippMetadataProgram::show()
 {
-    if (quiet)
+    if (verbose==0)
         return;
     std::cout << "Input File: " << fn_in << std::endl;
-    /////////////////FIXME!!
-    //if (apply_geo && !Is_VolumeXmipp(fn_in))
     if (apply_geo)
         std::cout << "Applying transformation stored in header of 2D-image" << std::endl;
     if (each_image_produces_an_output)
@@ -298,43 +288,55 @@ void XmippMetadataProgram::run()
 
         //Show some info
         show();
-
-        // Initialize progress bar
-        int i = 0, mdSize = mdIn.size();
-
-        if (allow_time_bar && !quiet)
-            init_progress_bar(mdSize);
-        int istep = CEIL((double)mdSize / 60.0);
-
-
-        FOR_ALL_OBJECTS_IN_METADATA(mdIn)
+        if (!fn_in.isMetaData())
         {
-            mdIn.getValue(MDL_IMAGE, fnImg);
+            fnImg=fn_in;
+            fnImgOut = fn_out;
+            processImage();
+        }
+        else
+        {
+            // Initialize progress bar
+            int i = 0, mdSize = mdIn.size();
 
-            if (fnImg == "")
-                break;
+            if (allow_time_bar && verbose)
+                init_progress_bar(mdSize);
+            int istep = CEIL((double)mdSize / 60.0);
 
-            if (each_image_produces_an_output)
+            FOR_ALL_OBJECTS_IN_METADATA(mdIn)
             {
-                fnImgOut = fnImg;
-                if (oroot != "")
-                    fnImgOut = oroot + fnImgOut.withoutExtension();
-                if (oext != "")
-                    fnImgOut = fnImgOut.withoutExtension() + "." + oext;
+                mdIn.getValue(MDL_IMAGE, fnImg);
+
+                if (fnImg == "")
+                    break;
+
+                if (each_image_produces_an_output)
+                {
+                    fnImgOut = fnImg;
+                    if (oroot != "")
+                        fnImgOut = oroot + fnImgOut.withoutExtension();
+                    if (oext != "")
+                        fnImgOut = fnImgOut.withoutExtension() + "." + oext;
+                    if (fnImgOut!=fnImg)
+                    {
+                        mdOut.addObject();
+                        mdOut.setValue(MDL_IMAGE,fnImgOut);
+                    }
+                }
+
+                processImage();
+
+                if (i++ % istep == 0 && allow_time_bar && verbose)
+                    progress_bar(i);
             }
 
-            processImage();
+            if (allow_time_bar && verbose)
+                progress_bar(mdSize);
 
-            if (i++ % istep == 0 && allow_time_bar && !quiet)
-                progress_bar(i);
+            if (!mdOut.isEmpty())
+            	mdOut.write(fn_out);
         }
-
-        if (allow_time_bar && !quiet)
-            progress_bar(mdSize);
-
         postProcess();
-
-
     }
     catch (XmippError xe)
     {
