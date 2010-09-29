@@ -42,7 +42,6 @@ ProgAngularDiscreteAssign::ProgAngularDiscreteAssign()
 // Read arguments ==========================================================
 void ProgAngularDiscreteAssign::readParams()
 {
-	XmippProgram::readParams();
     fn_ref = getParam("-ref");
     fn_exp = getParam("-i");
     fn_out_ang = getParam("-oang");
@@ -63,7 +62,7 @@ void ProgAngularDiscreteAssign::readParams()
         tell |= TELL_PSI_SHIFT;
     if (checkParam("-show_options"))
         tell |= TELL_OPTIONS;
-    search5D = checkParam("-5D");
+    search5D = checkParam("-search5D");
 }
 
 // Show ====================================================================
@@ -89,28 +88,27 @@ void ProgAngularDiscreteAssign::show()
 // usage ===================================================================
 void ProgAngularDiscreteAssign::defineParams()
 {
-	XmippProgram::defineParams();
     addUsageLine("Makes a projection assignment using wavelets on a discrete library of projections");
-    addParamsLine("   -ref <selfile>           : Selfile with the reference images");
-    addParamsLine("   -i <docfile>             : Docfile with input angles");
-    addParamsLine("   -oang <angle_file>       : DocFile with output angles");
-    addParamsLine("  [-sym <symmetry_file>]    : Symmetry file if any");
-    addParamsLine("  [-max_proj_change <ang=-1>]: Maximum change allowed in rot-tilt");
-    addParamsLine("  [-max_psi_change <ang=-1>]: Maximum change allowed in psi");
-    addParamsLine("  [-max_shift_change <r=0>] : Maximum change allowed in shift");
-    addParamsLine("  [-psi_step <ang=5>]       : Step in psi in degrees");
-    addParamsLine("  [-shift_step <r=1>]       : Step in shift in pixels");
+    addParamsLine("   -ref <selfile>             : Selfile with the reference images");
+    addParamsLine("   -i <docfile>               : Docfile with input angles");
+    addParamsLine("   -oang <angle_file>         : DocFile with output angles");
+    addParamsLine("  [-sym <symmetry_file=\"\">] : Symmetry file if any");
+    addParamsLine("  [-max_proj_change <ang=-1>] : Maximum change allowed in rot-tilt");
+    addParamsLine("  [-max_psi_change <ang=-1>]  : Maximum change allowed in psi");
+    addParamsLine("  [-max_shift_change <r=0>]   : Maximum change allowed in shift");
+    addParamsLine("  [-psi_step <ang=5>]         : Step in psi in degrees");
+    addParamsLine("  [-shift_step <r=1>]         : Step in shift in pixels");
     addParamsLine("==+Extra parameters==");
-    addParamsLine("  [-keep <th=50%>]          : How many images are kept each round");
-    addParamsLine("  [-smin <s=1>]             : Finest scale to consider (lowest value=0)");
-    addParamsLine("  [-smax <s=-1>]            : Coarsest scale to consider (highest value=log2(Xdim))");
-    addParamsLine("  [-pick <mth=1>]           : 0 --> maximum of the first group");
-    addParamsLine("                            : 1 --> maximum of the most populated");
-    addParamsLine("  [-show_rot_tilt]          : Show the rot-tilt process");
-    addParamsLine("  [-show_psi_shift]         : Show the psi-shift process");
-    addParamsLine("  [-show_options]           : Show final options among which");
-    addParamsLine("                            : the angles are selected");
-    addParamsLine("  [-5D]                     : Perform a 5D search instead of 3D+2D");
+    addParamsLine("  [-keep <th=50>]             : How many images are kept each round (%)");
+    addParamsLine("  [-smin <s=1>]               : Finest scale to consider (lowest value=0)");
+    addParamsLine("  [-smax <s=-1>]              : Coarsest scale to consider (highest value=log2(Xdim))");
+    addParamsLine("  [-pick <mth=1>]             : 0 --> maximum of the first group");
+    addParamsLine("                              : 1 --> maximum of the most populated");
+    addParamsLine("  [-show_rot_tilt]            : Show the rot-tilt process");
+    addParamsLine("  [-show_psi_shift]           : Show the psi-shift process");
+    addParamsLine("  [-show_options]             : Show final options among which");
+    addParamsLine("                              : the angles are selected");
+    addParamsLine("  [-search5D]                 : Perform a 5D search instead of 3D+2D");
 }
 
 // Produce side information ================================================
