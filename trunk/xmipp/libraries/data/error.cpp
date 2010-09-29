@@ -69,7 +69,9 @@ std::ostream& operator << (std::ostream& o, XmippError& XE)
     o << XE.__errno << ":" << XE.getDefaultMessage() << std::endl
     << XE.msg << std::endl
     << "File: " << XE.file << " line: " << XE.line << std::endl;
-    //XE.printStackTrace(o);
+#ifdef __XMIPP_DEBUG__
+    XE.printStackTrace(o);
+#endif
 
     return o;
 }
