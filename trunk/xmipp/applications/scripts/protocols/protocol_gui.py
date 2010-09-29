@@ -136,6 +136,8 @@ class automated_gui_class:
         self.is_setupgui=False
         self.is_markgui=False
         self.have_publication=False
+	self.deleteWorkingDir=False
+	self.WorkingDir="."
 
     def MakeGui(self):
         self.ScriptRead()
@@ -279,6 +281,16 @@ class automated_gui_class:
         except ValueError:
             return False
         return True
+    def delWorkingDir(self):
+        for i in range(len(self.script_header_lines)):
+            # Get section headers
+            if (self.script_header_lines[i].find("WorkingDir",0,11)>-1):
+	         words=self.script_header_lines[i].split('=')
+                 self.WorkingDir = words[1]
+            if (self.script_header_lines[i].find("DoDeleteWorkingDir") > -1):
+		args=self.script_header_lines[i].split("=")
+                self.deleteWorkingDir = self.variables[args[0]][2].get()
+		break
 
     def ScriptParseVariables(self):
         self.variables={}
@@ -884,10 +896,21 @@ class automated_gui_class:
         if (self.is_analysis or key=="r"):
             answer="no"
         else:
-            answer=tkMessageBox._show("Execute protocol",
-                                      "Use a job queueing system?",
-                                      tkMessageBox.QUESTION, 
-                                      tkMessageBox.YESNOCANCEL)
+	    answer="ok"
+	    #update workingdir and deleteworkingdir variables
+	    self.delWorkingDir()
+	    # delete directory question
+	    if (self.deleteWorkingDir):
+		answer=tkMessageBox._show("Warning",
+                        	  "Directory "+self.WorkingDir + " will be deleted. Do you want to continue?",
+                        	  tkMessageBox.QUESTION, 
+                        	  tkMessageBox.OKCANCEL)
+
+            if(answer=="ok" or self.deleteWorkingDir==False):
+	         answer=tkMessageBox._show("Execute protocol",
+                                          "Use a job queueing system?",
+                                          tkMessageBox.QUESTION, 
+                                          tkMessageBox.YESNOCANCEL)
         if (answer=="yes" or answer==True):
             self.master.update()
             d = MyQueueLaunch(self.master,command)
