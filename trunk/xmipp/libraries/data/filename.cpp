@@ -77,8 +77,15 @@ bool FileName::isInStack() const
 void FileName::decompose(int &no, std::string &str) const
 {
     size_t idx = find('@');
-    no = textToInteger(substr(0,idx));
-    str = substr(idx+1,length()-idx);
+    if(idx != std::string::npos)
+    {
+        no = textToInteger(substr(0,idx));
+        str = substr(idx+1,length()-idx);
+    }
+    else{
+      no=-1;
+      str = *this;
+    }
 }
 
 // Get the root name of a filename .........................................
@@ -379,7 +386,7 @@ bool FileName::isMetaData(bool failIfNotExists) const
 
 // Substitute one extension by other .......................................
 FileName FileName::substituteExtension(const std::string &ext1,
-                                        const std::string &ext2) const
+                                       const std::string &ext2) const
 {
     int first = find((std::string)"." + ext1);
     if (first == -1)
