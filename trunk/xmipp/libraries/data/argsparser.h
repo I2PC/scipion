@@ -249,7 +249,9 @@ public:
     ProgramDef(ArgLexer *lexer);
     virtual bool parse();
     virtual void check(std::stringstream & errors);
-    ParamDef * findParam(const std::string &name);
+    ParamDef * findParam(const std::string &param);
+    /** Find a param and if not provided in cmd line, fill with its defaults values */
+    ParamDef * findAndFillParam(const std::string &param);
     const char * getParam(const char * paramName, int paramNumber = 0);
     const char * getParam(const char * paramName, const char * subParam, int paramNumber = 0);
     void addParamName(const std::string & name, ParamDef *param);

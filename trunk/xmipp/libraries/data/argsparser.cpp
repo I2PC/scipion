@@ -898,19 +898,35 @@ void ProgramDef::read(int argc, char ** argv)
     }
 }
 
+void ProgramDef::findAndFillParam(const char * param)
+{
+    ParamDef * paramDef = findParam(param);
+    if (paramDef == NULL)
+        REPORT_ERROR(ERR_ARG_INCORRECT, ((std::string)"Doesn't exists param: " + param));
+    ///Param was provided, not need to fill it
+    if (paramDef->counter == 1)
+      return paramDef;
+    std::stringstream errors;
+    size_t argIndex = 0;
+    for (size_t i = 0; i < paramDef->arguments.size(); ++i)
+        if (!paramDef->arguments[i]->acceptArguments(errors, argIndex, paramDef->cmdArguments))
+        {
+            errors << " parameter: " << paramDef->name << std::endl;
+            REPORT_ERROR(ERR_ARG_INCORRECT, errors.str());
+        }
+    return paramDef;
+}
+
 const char * ProgramDef::getParam(const char * paramName, int argNumber)
 {
-    ParamDef * param = findParam(paramName);
-    if (param == NULL)
-        REPORT_ERROR(ERR_ARG_INCORRECT, ((std::string)"Doesn't exist param " + paramName).c_str());
+    ParamDef * param = _findAndFillParam(paramName);
+
     return param->cmdArguments.at(argNumber);
 }
 
 const char * ProgramDef::getParam(const char * paramName, const char * subParam, int argNumber)
 {
-    ParamDef * param = findParam(paramName);
-    if (param == NULL)
-        REPORT_ERROR(ERR_ARG_INCORRECT, ((std::string)"Doesn't exist param " + paramName).c_str());
+    ParamDef * param = _findAndFillParam(paramName);
 
     size_t i = 0;
     for (i = 0; i < param->cmdArguments.size(); ++i)

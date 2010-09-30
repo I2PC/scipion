@@ -334,7 +334,7 @@ void XmippMetadataProgram::run()
                 progress_bar(mdSize);
 
             if (!mdOut.isEmpty())
-            	mdOut.write(fn_out);
+                mdOut.write(fn_out);
         }
         postProcess();
     }

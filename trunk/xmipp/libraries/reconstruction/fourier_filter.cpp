@@ -104,67 +104,59 @@ void ProgFourierFilter::readParams()
     XmippMetadataProgram::readParams();
     // Filter shape .........................................................
     std::string mask_type;
-    if (checkParam("-fourier_mask"))
-    {
-        mask_type=getParam("-fourier_mask");
+    mask_type = getParam("-fourier_mask");
 
-        if (mask_type == "raised_cosine")
-        {
-            raised_w = getDoubleParam("-fourier_mask", "raised_cosine");
-            FilterShape = RAISED_COSINE;
-        }
-        else if (mask_type == "wedge")
-        {
-            w1 = getDoubleParam("-fourier_mask", "wedge", 0);
-            w2 = getDoubleParam("-fourier_mask", "wedge", 1);
-            FilterShape = WEDGE;
-            do_generate_3dmask = true;
-        }
-        else if (mask_type == "cone")
-        {
-            w1 = getDoubleParam("-fourier_mask", "cone", 0);
-            FilterShape = CONE;
-            do_generate_3dmask = true;
-        }
-        else if (mask_type == "gaussian")
-        {
-            FilterShape = GAUSSIAN;
-            FilterBand = LOWPASS;
-        }
-        else if (mask_type == "real_gaussian")
-        {
-            FilterShape = REALGAUSSIAN;
-            FilterBand = LOWPASS;
-        }
-        else if (mask_type == "ctf")
-        {
-            FilterShape = FilterBand = CTF;
-            ctf.enable_CTFnoise = false;
-            ctf.read( getParam("-fourier_mask", "ctf") );
-            ctf.Produce_Side_Info();
-        }
-        else if (mask_type == "ctfpos")
-        {
-            FilterShape = FilterBand = CTFPOS;
-            ctf.enable_CTFnoise = false;
-            ctf.read( getParam("-fourier_mask", "ctfpos") );
-            ctf.Produce_Side_Info();
-            do_correct_phase = true;
-        }
-        else if (mask_type == "bfactor")
-        {
-            FilterShape = FilterBand = BFACTOR;
-            w1 = getDoubleParam("-fourier_mask", "bfactor");
-            w2 = getDoubleParam("-sampling");
-        }
-        else
-            REPORT_ERROR(ERR_DEBUG_IMPOSIBLE, "This couldn't happen, check argument parser or params definition");
+    if (mask_type == "raised_cosine")
+    {
+        raised_w = getDoubleParam("-fourier_mask", "raised_cosine");
+        FilterShape = RAISED_COSINE;
+    }
+    else if (mask_type == "wedge")
+    {
+        w1 = getDoubleParam("-fourier_mask", "wedge", 0);
+        w2 = getDoubleParam("-fourier_mask", "wedge", 1);
+        FilterShape = WEDGE;
+        do_generate_3dmask = true;
+    }
+    else if (mask_type == "cone")
+    {
+        w1 = getDoubleParam("-fourier_mask", "cone", 0);
+        FilterShape = CONE;
+        do_generate_3dmask = true;
+    }
+    else if (mask_type == "gaussian")
+    {
+        FilterShape = GAUSSIAN;
+        FilterBand = LOWPASS;
+    }
+    else if (mask_type == "real_gaussian")
+    {
+        FilterShape = REALGAUSSIAN;
+        FilterBand = LOWPASS;
+    }
+    else if (mask_type == "ctf")
+    {
+        FilterShape = FilterBand = CTF;
+        ctf.enable_CTFnoise = false;
+        ctf.read( getParam("-fourier_mask", "ctf") );
+        ctf.Produce_Side_Info();
+    }
+    else if (mask_type == "ctfpos")
+    {
+        FilterShape = FilterBand = CTFPOS;
+        ctf.enable_CTFnoise = false;
+        ctf.read( getParam("-fourier_mask", "ctfpos") );
+        ctf.Produce_Side_Info();
+        do_correct_phase = true;
+    }
+    else if (mask_type == "bfactor")
+    {
+        FilterShape = FilterBand = BFACTOR;
+        w1 = getDoubleParam("-fourier_mask", "bfactor");
+        w2 = getDoubleParam("-sampling");
     }
     else
-    {
-        FilterShape=RAISED_COSINE;
-        raised_w=0.02;
-    }
+        REPORT_ERROR(ERR_DEBUG_IMPOSIBLE, "This couldn't happen, check argument parser or params definition");
 
     // Filter band ..........................................................
     if (checkParam("-low_pass"))

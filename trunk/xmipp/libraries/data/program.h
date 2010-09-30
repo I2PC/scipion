@@ -96,6 +96,7 @@ protected:
     int getIntParam(const char * param, const char * subparam, int arg = 0);
     double getDoubleParam(const char * param, int arg = 0);
     double getDoubleParam(const char * param, const char * subparam, int arg = 0);
+    /** Check if the param was supplied to command line */
     bool checkParam(const char * param);
 public:
     /** @name Public common functions
