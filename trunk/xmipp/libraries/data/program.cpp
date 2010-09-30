@@ -27,8 +27,7 @@
 
 void XmippProgram::init()
 {
-    progLexer = new ArgLexer();
-    progDef = new ProgramDef(progLexer);
+    progDef = new ProgramDef();
     this->defineParams();
     ///Add some common definitions to all Xmipp programs
     addParamsLine("== Common options ==");
@@ -39,13 +38,33 @@ void XmippProgram::init()
     addParamsLine("                        : param should be provided without the '-'");
     addParamsLine("alias --help;");
     addParamsLine("[-more]         : Show additional options.");
-    progLexer->nextToken();
+
+    ///This are a set of internal command for MetaProgram usage
+    ///they should be hidden
+    addParamsLine("==+++++ Internal section ==");
+    addParamsLine("--__xmipp_print_metadata : Print metadata info about the program");
+
     progDef->parse();
+}
+
+void XmippProgram::checkBuiltIns()
+{
+  ///If -more_options provided, show extended usage
+  if (checkParam("-more"))
+      usage(1);
+  ///If help requested, print usage message
+  if (checkParam("-h"))
+  {
+      std::string cmdHelp = (std::string)"-" + getParam("-h");
+      if (cmdHelp == "-")
+          usage();
+      else
+          usage(cmdHelp);
+  }
 }
 
 XmippProgram::XmippProgram()
 {
-    progLexer = NULL;
     progDef = NULL;
 }
 
@@ -57,7 +76,6 @@ XmippProgram::XmippProgram(int argc, char ** argv)
 
 XmippProgram::~XmippProgram()
 {
-    delete progLexer;
     delete progDef;
 }
 
@@ -73,7 +91,7 @@ void XmippProgram::readParams()
 
 void XmippProgram::read(int argc, char ** argv)
 {
-    if (progLexer == NULL || progDef == NULL)
+    if (progDef == NULL)
         init();
 
     setProgramName(argv[0]);
@@ -85,23 +103,13 @@ void XmippProgram::read(int argc, char ** argv)
     try
     {
         progDef->read(argc, argv);
+        checkBuiltIns();
         verbose = getIntParam("--verbose");
         this->readParams();
     }
     catch (XmippError xe)
     {
-        ///If -more_options provided, show extended usage
-        if (checkParam("-more"))
-            usage(1);
-        ///If help requested, print usage message
-        if (checkParam("-h"))
-        {
-            std::string cmdHelp = (std::string)"-" + getParam("-h");
-            if (cmdHelp == "-")
-                usage();
-            else
-                usage(cmdHelp);
-        }
+      checkBuiltIns();
         ///If an input error, shows error message and usage
         std::cerr << xe;
         usage();
@@ -125,7 +133,7 @@ void XmippProgram::clearUsage()
 
 void XmippProgram::addParamsLine(const char * line)
 {
-    progLexer->addLine((std::string)line);
+    progDef->pLexer->addLine((std::string)line);
 }
 
 const char * XmippProgram::getParam(const char * param, int arg)

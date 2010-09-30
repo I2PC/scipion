@@ -152,7 +152,7 @@ public:
 class ASTNode
 {
 public:
-    ASTNode(ArgLexer *lexer, ASTNode * parent = NULL);
+    ASTNode(ArgLexer *lexer = NULL, ASTNode * parent = NULL);
     virtual ~ASTNode()
     {
     }
@@ -246,7 +246,8 @@ public:
     std::map<std::string, ParamDef*> paramsMap; ///< Dictionary with all params and alias names
     StringVector pendingRequires; ///< This is for checking that requires names exists
 
-    ProgramDef(ArgLexer *lexer);
+    ProgramDef();
+    ~ProgramDef();
     virtual bool parse();
     virtual void check(std::stringstream & errors);
     ParamDef * findParam(const std::string &param);

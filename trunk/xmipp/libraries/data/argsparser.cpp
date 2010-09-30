@@ -342,7 +342,7 @@ size_t CommentList::size() const
     return comments.size();
 }
 
-ASTNode::ASTNode(ArgLexer *lexer, ASTNode * parent)
+ASTNode::ASTNode(ArgLexer * lexer, ASTNode * parent)
 {
     pLexer = lexer;
     visible = 0;
@@ -454,7 +454,7 @@ bool ArgumentDef::parse()
 
 bool ArgumentDef::acceptArguments(std::stringstream &errors, size_t & index, std::vector<const char *> &cmdArguments)
 {
-  ProgramDef * prog = (ProgramDef*) parent->parent->parent;
+    ProgramDef * prog = (ProgramDef*) parent->parent->parent;
     if (index == cmdArguments.size())
     {
         if (hasDefault)
@@ -753,18 +753,28 @@ bool SectionDef::parse()
     return true;
 }
 
-ProgramDef::ProgramDef(ArgLexer * lexer) :
-        ASTNode(lexer)
-{}
+ProgramDef::ProgramDef() :
+        ASTNode()
+{
+    pLexer = new ArgLexer();
+}
 
+ProgramDef::~ProgramDef()
+{
+    delete pLexer;
+}
 /** Parse the program definition. */
 bool ProgramDef::parse()
 {
+
     // P -> ID CL OL
     //consume(TOK_ID);
     //name = token.lexeme;
     //Usage comments
     //parseCommentList(usageComments);
+
+    //Ask for first token
+    pLexer->nextToken();
 
     while (!lookahead(TOK_END))
     {
@@ -898,14 +908,14 @@ void ProgramDef::read(int argc, char ** argv)
     }
 }
 
-void ProgramDef::findAndFillParam(const char * param)
+ParamDef* ProgramDef::findAndFillParam(const std::string &param)
 {
     ParamDef * paramDef = findParam(param);
     if (paramDef == NULL)
         REPORT_ERROR(ERR_ARG_INCORRECT, ((std::string)"Doesn't exists param: " + param));
     ///Param was provided, not need to fill it
     if (paramDef->counter == 1)
-      return paramDef;
+        return paramDef;
     std::stringstream errors;
     size_t argIndex = 0;
     for (size_t i = 0; i < paramDef->arguments.size(); ++i)
@@ -919,14 +929,14 @@ void ProgramDef::findAndFillParam(const char * param)
 
 const char * ProgramDef::getParam(const char * paramName, int argNumber)
 {
-    ParamDef * param = _findAndFillParam(paramName);
+    ParamDef * param = findAndFillParam(paramName);
 
     return param->cmdArguments.at(argNumber);
 }
 
 const char * ProgramDef::getParam(const char * paramName, const char * subParam, int argNumber)
 {
-    ParamDef * param = _findAndFillParam(paramName);
+    ParamDef * param = findAndFillParam(paramName);
 
     size_t i = 0;
     for (i = 0; i < param->cmdArguments.size(); ++i)
@@ -972,13 +982,13 @@ void ConsolePrinter::printSection(const SectionDef &section, int v)
 
 void printRequiresList(StringVector requires)
 {
-  if (!requires.empty())
-  {
-    std::cout << " ( requires ";
-    for (size_t i = 0; i < requires.size(); ++i)
-      std::cout << requires[i] << " ";
-    std::cout << ")";
-  }
+    if (!requires.empty())
+    {
+        std::cout << " ( requires ";
+        for (size_t i = 0; i < requires.size(); ++i)
+            std::cout << requires[i] << " ";
+        std::cout << ")";
+    }
 }
 
 void ConsolePrinter::printParam(const ParamDef &param, int v)

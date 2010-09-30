@@ -52,11 +52,13 @@
 class XmippProgram
 {
 private:
-    ArgLexer * progLexer;
     ProgramDef * progDef;
 
     /** Initialization function */
     void init();
+
+    /** Function to check built-ins actions like --more, --help...etc */
+    void checkBuiltIns();
 
 protected:
     /// Verbosity level
