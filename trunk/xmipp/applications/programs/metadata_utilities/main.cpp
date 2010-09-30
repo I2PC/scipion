@@ -1,11 +1,37 @@
-/*
- * main.cpp
+/***************************************************************************
+ * Authors:     roberto marabini roberto@cnb.csic.es
  *
- *  Created on: Sep 28, 2010
- *      Author: roberto
- */
+ *
+ * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your param) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
+ * 02111-1307  USA
+ *
+ *  All comments concerning this program package may be sent to the
+ *  e-mail address 'xmipp@cnb.csic.es'
+ ***************************************************************************/
+//two requires and test select and test move
 #include <data/argsparser.h>
 #include <data/program.h>
+#include <string.h>
+#include <data/metadata.h>
+#include <sys/stat.h>
+#include <sys/types.h>
+#include <iostream>
+#include <fstream>
+
 class ProgMetadataUtilities: public XmippProgram
 {
 private:
@@ -14,31 +40,295 @@ protected:
     void defineParams()
     {
         addUsageLine ("Perform several operation over the metadata files");
-        addParamsLine("   --union  <md1> <md2>             : union of md1 and md2");
+
+        addParamsLine("  [--label <l1> ]                 : metadata label");
+        addParamsLine("     alias -l;");
+
+        addParamsLine("   [-o  <w1>]                          : Name of output metadata file");
+
+        addParamsLine("   --union  <md1> <md2>             : union of metadata files md1 and md2");
         addParamsLine("     alias -u;");
-        addParamsLine("or -intersection <md1> <md2>        : Intersection of md1 and md2");
+        addParamsLine("           requires --label;                                                         ");
+
+        addParamsLine("or --intersection <md1> <md2>        : Intersection of md1 and md2");
         addParamsLine("     alias -i;");
-        addParamsLine("or -subtraction <md1> <md2>         : Subtraction of md1 and md2");
-        addParamsLine("   -o  <w1>                   : Cutoff freq (<1/2 or A)");
+        addParamsLine("           requires --label;                                                         ");
+
+        addParamsLine("or --subtraction <md1> <md2>         : subtraction of md1 and md2");
         addParamsLine("     alias -s;");
+        addParamsLine("           requires --label;                                                         ");
+
+        addParamsLine("or --join <md1> <md2>                : inner join of md1 and md2 using label l1");
+        addParamsLine("     alias -j;");
+        addParamsLine("           requires --label;                                                         ");
+
+        addParamsLine("or --sort <md1>                      : sort metadata md1 using label l1");
+        addParamsLine("           requires --label;                                                         ");
+
+        addParamsLine("or --convert2db <md1>                : convert metadata to sqlite database");
+
+        addParamsLine("or --copy  <md1> <path>               : copy files in metadata md1 to directory path (file names at lable column)");
+        addParamsLine("           requires --label;                                                         ");
+
+        addParamsLine("or --move  <md1> <path>               : move files in metadata md1 to directory path (file names at lable column)");
+        addParamsLine("           requires --label;                                                         ");
+
+        addParamsLine("or --delete  <md1>                    : delete files in metadata md1 (file names at label column)");
+        addParamsLine("           requires --label;                                                         ");
+
+        addParamsLine("or --select  <md1> <min> <max>       : create new metadata with between min and max values (only implemented for double)");
+        addParamsLine("           requires --label;                                                         ");
+
+        addUsageLine ("Examples:");
+        addUsageLine ("   xmipp_metadata_utilities --union         mD1.doc mD2.doc  -o out.doc --label image");
+        addUsageLine ("   xmipp_metadata_utilities --intersection  mD1.doc mD2.doc  -o out.doc --label image");
+        addUsageLine ("   xmipp_metadata_utilities --subtraction   mD1.doc mD2.doc  -o out.doc --label image");
+        addUsageLine ("   xmipp_metadata_utilities --join j1.doc   mD1.doc          -o out.doc --label image");
+        addUsageLine ("   xmipp_metadata_utilities --sort          mD1.doc          -o out.doc --label image");
+        addUsageLine ("   xmipp_metadata_utilities --convert2db    mD1.doc          -o out.db; xmipp_sqlite3 out.db");
+        addUsageLine ("   xmipp_metadata_utilities --copy mD1.doc kk                -o out.doc --label image ");
+        addUsageLine ("   xmipp_metadata_utilities --delete out.doc                            --label image");
+    }
+    typedef enum {
+        _unknown=0,
+        _union=1,
+        _intersection=2,
+        _subtraction=3,
+        _join=4,
+        _copy=5,
+        _move=6,
+        _delete=7,
+        _select=8,
+        _sort=9,
+        _convert2db=10
+    } OperationType;
+    OperationType operationType;
+    MetaData inMD1, inMD2, outMD;
+    FileName inFileName1, inFileName2, outFileName, tmpFileName;
+    std::string _label;
+    std::string expression;
+    double min,max;
+
+    void encode(const char * s)
+    {
+        operationType = _unknown;
+
+        if (strcmp(s,"union") == 0)
+            operationType = _union;
+
+        else if (strcmp(s,"intersection") == 0)
+            operationType = _intersection;
+
+        else if (strcmp(s,"subtraction") == 0)
+            operationType = _subtraction;
+
+        else if (strcmp(s,"join") == 0)
+            operationType = _join;
+
+        else if (strcmp(s,"copy") == 0)
+            operationType = _copy;
+
+        else if (strcmp(s,"move") == 0)
+            operationType = _move;
+
+        else if (strcmp(s,"delete") == 0)
+            operationType = _delete;
+
+        else if (strcmp(s,"select") == 0)
+            operationType = _select;
+
+        else if (strcmp(s,"sort") == 0)
+            operationType = _sort;
+
+        else if (strcmp(s,"convert2db") == 0)
+            operationType = _convert2db;
     }
 
     void readParams()
     {
-    	std::cerr << "readParams" <<std::endl;
-        //int round_shifts = checkParam("-round_shifts");
+        if (checkParam("-o"))
+            outFileName = getParam("-o");
+        if (checkParam("--label"))
+            _label = getParam("--label");
+
+        if (checkParam("--union"))
+        {
+            encode("union");
+            inFileName1 = getParam("--union",0);
+            inFileName2 = getParam("--union",1);
+        }
+
+        else if (checkParam("--intersection"))
+        {
+            encode("intersection");
+            inFileName1 = getParam("--intersection",0);
+            inFileName2 = getParam("--intersection",1);
+        }
+
+        else if (checkParam("--subtraction"))
+        {
+            encode("subtraction");
+            inFileName1 = getParam("--subtraction",0);
+            inFileName2 = getParam("--subtraction",1);
+        }
+
+        else if (checkParam("--join"))
+        {
+            encode("join");
+            inFileName1 = getParam("--join",0);
+            inFileName2 = getParam("--join",1);
+        }
+
+        else if (checkParam("--sort"))
+        {
+            encode("sort");
+            inFileName1  = getParam("--sort",0);
+            outFileName  = getParam("-o");
+        }
+
+        else if (checkParam("--convert2db"))
+        {
+            encode("convert2db");
+            inFileName1 = getParam("--convert2db",0);
+            inMD1.read(inFileName1);
+            MDSql::dumpToFile(outFileName);
+        }
+
+        else if (checkParam("--move"))
+        {
+            encode("move");
+            inFileName1 = getParam("--move",0);
+            tmpFileName = getParam("--move",1);
+        }
+
+        else if (checkParam("--copy"))
+        {
+            encode("copy");
+            inFileName1 = getParam("--copy",0);
+            tmpFileName = getParam("--copy",1);
+        }
+
+        else if (checkParam("--delete"))
+        {
+            encode("delete");
+            inFileName1 = getParam("--delete",0);
+        }
+
+        else if (checkParam("--select"))
+        {
+            encode("select");
+            expression = getParam("--select",0);
+            min = textToFloat(getParam("--min" ,0 ));
+            max = textToFloat(getParam("--max" ,0 ));
+        }
     }
 public:
     void run()
     {
-        std::cerr << "running" <<std::endl;
+        switch (operationType)
+        {
+        case _union:
+            inMD1.read(inFileName1);
+            inMD2.read(inFileName2);
+            inMD1.unionDistinct(inMD2, MDL::str2Label(_label));
+            inMD1.write(outFileName);
+            break;
+        case _intersection:
+            inMD1.read(inFileName1);
+            inMD2.read(inFileName2);
+            inMD1.intersection(inMD2, MDL::str2Label(_label));
+            inMD1.write(outFileName);
+            break;
+        case _subtraction:
+            inMD1.read(inFileName1);
+            inMD2.read(inFileName2);
+            inMD1.subtraction(inMD2, MDL::str2Label(_label));
+            inMD1.write(outFileName);
+            break;
+        case _sort:
+            inMD1.read(inFileName1);
+            outMD.sort(inMD1, MDL::str2Label(_label));
+            outMD.write(outFileName);
+            break;
+        case _join:
+            inMD1.read(inFileName1);
+            inMD2.read(inFileName2);
+            MDSql::dumpToFile("pp.db");
+            outMD.join(inMD1,inMD2, MDL::str2Label(_label));
+            outMD.write(outFileName);
+            break;
+        case _copy:
+            inMD1.read(inFileName1);
+            //create dir
+            if (!exists(tmpFileName))
+                mkdir(tmpFileName.c_str(),0755);
+            FOR_ALL_OBJECTS_IN_METADATA(inMD1)
+            {
+                FileName inFnImg,outFnImg;
+                inMD1.getValue(MDL::str2Label(_label),inFnImg);
+                outFnImg = inFnImg.getBaseName();
+                outMD.addObject();
+                outMD.setValue(MDL::str2Label(_label),outFnImg);
+                std::ifstream f1 (inFnImg.c_str() , std::fstream::binary);
+                outFnImg = tmpFileName + "/" + outFnImg;
+                std::ofstream f2 (outFnImg.c_str(),std::fstream::trunc|std::fstream::binary);
+                f2<<f1.rdbuf();
+            }
+            outMD.write(tmpFileName+"/"+outFileName);
+            break;
+        case _move:
+            inMD1.read(inFileName1);
+            //create dir
+            if (!exists(tmpFileName))
+                mkdir(tmpFileName.c_str(),0755);
+            FOR_ALL_OBJECTS_IN_METADATA(inMD1)
+            {
+                FileName inFnImg,outFnImg;
+                inMD1.getValue(MDL::str2Label(_label),inFnImg);
+                outFnImg = inFnImg.getBaseName();
+                outMD.addObject();
+                outMD.setValue(MDL::str2Label(_label),outFnImg);
+                outFnImg = tmpFileName + "/" + outFnImg;
+                rename(inFnImg.c_str(),outFnImg.c_str());
+            }
+            outMD.write(tmpFileName+"/"+outFileName);
+            break;
+        case _delete:
+            inMD1.read(inFileName1);
+            FOR_ALL_OBJECTS_IN_METADATA(inMD1)
+            {
+                FileName inFnImg;
+                inMD1.getValue(MDL::str2Label(_label),inFnImg);
+                remove(inFnImg.c_str());
+                std::cerr << "Remove file: " << inFnImg <<std::endl;
+            }
+            break;
+        case _select:
+            inMD1.read(inFileName1);
+            MDValueRange query(MDL::str2Label(_label),min,max);
+            outMD.importObjects(inMD1,query);
+            outMD.write(tmpFileName+"/"+outFileName);
+            break;
+
+        default:
+            REPORT_ERROR(ERR_ARG_INCORRECT,"Unknown operation");
+        }
     }
-};
+
+}
+;
 
 int main(int argc, char **argv)
 {
-    std::cerr << "hello" <<std::endl;
-    ProgMetadataUtilities program;
-    program.read(argc, argv);
-    program.run();
+    try
+    {
+        ProgMetadataUtilities program;
+        program.read(argc, argv);
+        program.run();
+
+    }
+    catch (XmippError e)
+    {
+        std::cerr << e.msg <<std::endl;
+    }
 }
