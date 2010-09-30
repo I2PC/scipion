@@ -442,7 +442,6 @@ void MDSql::setOperate(const MetaData *mdInLeft, const MetaData *mdInRight, MDLa
     << " ON " << tableName(mdInLeft->myMDSql->tableId) << "." << MDL::label2Str(column)
     << "=" << tableName(temp.tableId) << "." << MDL::label2Str(column) << ";";
 
-    std::cerr << "JOIN STMT: " << ss.str() <<std::endl;
     execSingleStmt(ss);
 }
 
