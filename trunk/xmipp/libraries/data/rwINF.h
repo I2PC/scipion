@@ -45,27 +45,20 @@ int readINF(int img_select,bool isStack=false)
     unsigned long int _nDim;
     bool __is_signed;
 
-    FileName fn_inf;
-
-    fn_inf = filename.addExtension("inf");
-    FILE *fh_inf = fopen(fn_inf.c_str(), "r");
-    if (!fh_inf)
-        REPORT_ERROR(ERR_IO_NOTOPEN, (std::string)"Micrograph::open_micrograph: Cannot find " +
-                     fn_inf);
-    _xDim = textToInteger(getParameter(fh_inf, "Xdim"));
-    _yDim = textToInteger(getParameter(fh_inf, "Ydim"));
-    __depth = textToInteger(getParameter(fh_inf, "bitspersample"));
-    if (checkParameter(fh_inf, "offset"))
-        offset = textToInteger(getParameter(fh_inf, "offset"));
+    _xDim = textToInteger(getParameter(fhed, "Xdim"));
+    _yDim = textToInteger(getParameter(fhed, "Ydim"));
+    __depth = textToInteger(getParameter(fhed, "bitspersample"));
+    if (checkParameter(fhed, "offset"))
+        offset = textToInteger(getParameter(fhed, "offset"));
     else
         offset = 0;
-    if (checkParameter(fh_inf, "is_signed"))
-        __is_signed = (getParameter(fh_inf, "is_signed") == "true" ||
-                       getParameter(fh_inf, "is_signed") == "TRUE");
+    if (checkParameter(fhed, "is_signed"))
+        __is_signed = (getParameter(fhed, "is_signed") == "true" ||
+                       getParameter(fhed, "is_signed") == "TRUE");
     else
         __is_signed = false;
-    if (checkParameter(fh_inf, "endianess"))
-        if(getParameter(fh_inf, "endianess") == "big" || getParameter(fh_inf, "endianess") == "BIG")
+    if (checkParameter(fhed, "endianess"))
+        if(getParameter(fhed, "endianess") == "big" || getParameter(fhed, "endianess") == "BIG")
             swap = true;
         else
             swap = false;
@@ -73,7 +66,6 @@ int readINF(int img_select,bool isStack=false)
     if (IsBigEndian())
         swap = !swap;
 
-    fclose(fh_inf);
 
     _zDim = (int) 1;
     _nDim = (int) 1;
@@ -136,16 +128,10 @@ int readINF(int img_select,bool isStack=false)
     MD.write(std::cerr);
 #endif
 
-    FILE        *fimg;
-    if ( ( fimg = fopen(filename.c_str(), "r") ) == NULL )
-        return(-1);
 
     size_t pad = 0;
 
     readData(fimg, img_select, datatype, pad);
-
-    if ( !mmapOn )
-        fclose(fimg);
 
     return(0);
 }
@@ -222,32 +208,32 @@ int writeINF(int img_select, bool isStack=false, int mode=WRITE_OVERWRITE)
     FileName fn_inf;
 
     fn_inf = filename.addExtension("inf");
-    FILE *fh_inf = fopen(fn_inf.c_str(), "w");
-    if (!fh_inf)
+    FILE *fhed = fopen(fn_inf.c_str(), "w");
+    if (!fhed)
         REPORT_ERROR(ERR_IO_NOTOPEN, (std::string)"rwINF::write: Error opening file " + fn_inf);
 
-    fprintf(fh_inf,"# Bits per sample\n");
-    fprintf(fh_inf,"bitspersample= %d\n",_depth*8);
-    fprintf(fh_inf,"# Samples per pixel\n");
-    fprintf(fh_inf,"samplesperpixel= 1\n");
-    fprintf(fh_inf,"# Image width\n");
-    fprintf(fh_inf,"Xdim= %d\n", Xdim);
-    fprintf(fh_inf,"# Image length\n");
-    fprintf(fh_inf,"Ydim= %d\n",Ydim);
-    fprintf(fh_inf,"# offset in bytes (zero by default)\n");
-    fprintf(fh_inf,"offset= 0\n");
-    fprintf(fh_inf,"# Is a signed or Unsigned int (by default true)\n");
+    fprintf(fhed,"# Bits per sample\n");
+    fprintf(fhed,"bitspersample= %d\n",_depth*8);
+    fprintf(fhed,"# Samples per pixel\n");
+    fprintf(fhed,"samplesperpixel= 1\n");
+    fprintf(fhed,"# Image width\n");
+    fprintf(fhed,"Xdim= %d\n", Xdim);
+    fprintf(fhed,"# Image length\n");
+    fprintf(fhed,"Ydim= %d\n",Ydim);
+    fprintf(fhed,"# offset in bytes (zero by default)\n");
+    fprintf(fhed,"offset= 0\n");
+    fprintf(fhed,"# Is a signed or Unsigned int (by default true)\n");
     if (_is_signed)
-        fprintf(fh_inf,"is_signed = true\n");
+        fprintf(fhed,"is_signed = true\n");
     else
-        fprintf(fh_inf,"is_signed = false\n");
-    fprintf(fh_inf,"# Byte order\n");
+        fprintf(fhed,"is_signed = false\n");
+    fprintf(fhed,"# Byte order\n");
     if (IsBigEndian())
-        fprintf(fh_inf,"endianess = big\n");
+        fprintf(fhed,"endianess = big\n");
     else
-        fprintf(fh_inf,"endianess = little\n");
+        fprintf(fhed,"endianess = little\n");
 
-    if (fclose(fh_inf)!=0)
+    if (fclose(fhed)!=0)
         REPORT_ERROR(ERR_IO_NOCLOSED, "rwINF::write: Error creating output info file.");
 
 

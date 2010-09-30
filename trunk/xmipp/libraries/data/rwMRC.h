@@ -102,16 +102,9 @@ int readMRC(int img_select, bool isStack=false)
     printf("DEBUG readMRC: Reading MRC file\n");
 #endif
 
-    FILE        *fimg;
-    if ( ( fimg = fopen(filename.c_str(), "r") ) == NULL )
-        return(-1);
-
     MRChead*        header = (MRChead *) askMemory(sizeof(MRChead));
     if ( fread( header, MRCSIZE, 1, fimg ) < 1 )
-    {
-        fclose(fimg);
         return(-2);
-    }
 
     // Determine byte order and swap bytes if from little-endian machine
     swap = 0;
@@ -167,7 +160,6 @@ int readMRC(int img_select, bool isStack=false)
 
     data.setDimensions(_xDim, _yDim, _zDim, _nDim);
 
-
     unsigned long   imgStart=0;
     unsigned long   imgEnd =_nDim;
     if (img_select != -1)
@@ -222,11 +214,8 @@ int readMRC(int img_select, bool isStack=false)
     if ( header->mz && header->c!=0)//zx
         MDMainHeader.setValue(MDL_SAMPLINGRATEZ,(double)header->c/header->mz);
 
-    if (isStack && dataflag<0)   // Don't read the individual header
-    {                            // and the data if not necessary
-        fclose(fimg);
+    if (isStack && dataflag<0)   // Don't read the individual header and the data if not necessary
         return 0;
-    }
 
     MD.clear();
     MD.resize(imgEnd - imgStart);
@@ -265,9 +254,6 @@ int readMRC(int img_select, bool isStack=false)
     freeMemory(header, sizeof(MRChead));
 
     readData(fimg, img_select, datatype, 0);
-
-    if ( !mmapOn )
-        fclose(fimg);
 
     return(0);
 }

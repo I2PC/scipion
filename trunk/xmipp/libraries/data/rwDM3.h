@@ -74,10 +74,6 @@ int readDM3(int img_select,bool isStack=false)
     printf("DEBUG readDM3: Reading DM3 file\n");
 #endif
 
-    FILE        *fimg;
-    if ( ( fimg = fopen(filename.c_str(), "r") ) == NULL )
-        return(-1);
-
     DM3head * header = new DM3head;
     int dummy;
 
@@ -206,7 +202,6 @@ int readDM3(int img_select,bool isStack=false)
 
     data.setDimensions(_xDim, _yDim, 1, _nDim);
 
-
     unsigned long   imgStart=0;
     unsigned long   imgEnd =_nDim;
 
@@ -217,7 +212,6 @@ int readDM3(int img_select,bool isStack=false)
     }
 
     DataType datatype = datatypeDM3(dataHeaders[0].dataType);
-
 
     MDMainHeader.setValue(MDL_SAMPLINGRATEX,(double)dataHeaders[0].pixelWidth);
     MDMainHeader.setValue(MDL_SAMPLINGRATEY,(double)dataHeaders[0].pixelHeight);
@@ -243,10 +237,7 @@ int readDM3(int img_select,bool isStack=false)
     delete header;
 
     if( dataflag < 0 )
-    {
-        fclose(fimg);
         return 0;
-    }
 
 
     //#define DEBUG
@@ -258,9 +249,6 @@ int readDM3(int img_select,bool isStack=false)
 
 
     readData(fimg, img_select, datatype, pad);
-
-    if ( !mmapOn )
-        fclose(fimg);
 
     return(0);
 }

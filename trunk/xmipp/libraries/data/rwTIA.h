@@ -268,42 +268,7 @@ int readTIA(int img_select,bool isStack=false)
 
     readData(fimg, img_select, datatype, pad);
 
-//    if (dataflag == 1)
-//    {
-//        if (dStddev == NULL)
-//            dStddev = 5;
-//
-//        double temp, avg, stddev;
-//        double size = YXSIZE(data);
-//
-//        avg = 0;
-//        stddev = 0;
-//
-//        for ( int n=imgStart; n<imgEnd; n++ )
-//        {
-//            FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY3D(data)
-//            {
-//                temp = abs(DIRECT_NZYX_ELEM(data,n,0,i,j));
-//                avg += temp;
-//                stddev += temp * temp;
-//            }
-//            avg /= size;
-//            stddev = stddev/size - avg * avg;
-//            stddev *= size/(size -1);
-//            stddev = sqrt(stddev);
-//
-//            double low  = (avg - dStddev * stddev);
-//            double high = (avg + dStddev * stddev);
-//
-//            FOR_ALL_ELEMENTS_IN_ARRAY3D(data)
-//            {
-//                if (abs(DIRECT_NZYX_ELEM(data,n,0,i,j)) < low)
-//                    DIRECT_NZYX_ELEM(data,n,0,i,j) = (T) low;
-//                else if (abs(DIRECT_NZYX_ELEM(data,n,0,i,j)) > high)
-//                    DIRECT_NZYX_ELEM(data,n,0,i,j) = (T) high;
-//            }
-//        }
-//    }
+
 
     if ( !mmapOn )
         fclose(fimg);

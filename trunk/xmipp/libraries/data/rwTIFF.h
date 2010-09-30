@@ -167,14 +167,7 @@ int readTIFF(int img_select, bool isStack=false)
     printf("DEBUG readTIFF: Reading TIFF file\n");
 #endif
 
-    /* Open TIFF image */
-    TIFF* tif;
-
     TIFFSetWarningHandler(NULL); // Switch off warning messages
-
-    if ((tif = TIFFOpen(filename.c_str(), "r")) == NULL)
-        REPORT_ERROR(ERR_IO_NOTOPEN,"rwTIFF: There is a problem opening the TIFF file.");
-
 
     char*  tif_buf = NULL;
 
@@ -187,7 +180,6 @@ int readTIFF(int img_select, bool isStack=false)
     tsize_t scanline;
 
     unsigned int    x, y;
-
 
     /* Get TIFF image properties */
     do
@@ -291,17 +283,12 @@ int readTIFF(int img_select, bool isStack=false)
     MDMainHeader.setValue(MDL_DATATYPE,(int) datatype);
 
     if( dataflag < 0 )
-    {
-        TIFFClose(tif);
         return 0;
-    }
 
     // Allocate memory for image data (Assume xdim, ydim, zdim and ndim are already set
     //if memory already allocated use it (no resize allowed)
 
     data.coreAllocateReuse();
-
-
 
     int pad = _xDim * _yDim;
     int imReaded = 0;
@@ -324,11 +311,6 @@ int readTIFF(int img_select, bool isStack=false)
             TIFFGetField(tif, TIFFTAG_TILEWIDTH, &tileWidth);
             TIFFGetField(tif, TIFFTAG_TILELENGTH,&tileLength);
             tif_buf = (char*)_TIFFmalloc(TIFFTileSize(tif));
-            //            if (samplesPerPixel != 1)
-            //            {
-            //                std::cerr<<"rwTIFF ERROR: samplePerPixel is not 1: not yet implemented for RGB images";
-            //                exit(1);
-            //            }
         }
         else
         {
@@ -386,7 +368,6 @@ int readTIFF(int img_select, bool isStack=false)
         ++imReaded;
     }
     _TIFFfree(tif_buf);
-    TIFFClose(tif);
     return 0;
 }
 

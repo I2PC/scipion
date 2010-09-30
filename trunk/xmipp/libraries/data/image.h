@@ -91,11 +91,27 @@ typedef enum
 {
     WRITE_OVERWRITE, //forget about the old file and overwrite it
     WRITE_APPEND,    //append and object at the end of a stack, so far can not append stacks
-    WRITE_REPLACE    //replace a particular object by another
+    WRITE_REPLACE,   //replace a particular object by another
+    WRITE_READONLY   //only can read the file
 } WriteMode;
+
+
+/** Open File struct
+ * This struct is used to share the File handlers with Image Collection class
+ */
+struct fImageHandler
+{
+    FILE*     fimg;       // Image File handler
+    FILE*     fhed;       // Image File header handler
+    TIFF*     tif;        // TIFF Image file hander
+    FileName  ext_name;   // Filename extension
+};
+
 
 /// Returns memory size of datatype
 unsigned long gettypesize(DataType type);
+/** Convert datatype string to datatypr enun */
+int datatypeString2Int(std::string s);
 
 /// @name ImagesSpeedUp Images Speed-up
 /// @{
@@ -192,7 +208,8 @@ public:
 
 private:
     FileName            filename;    // File name
-    FILE*                fimg;        // Image File hander
+    FILE*                fimg;        // Image File handler
+    FILE*                fhed;        // Image File header handler
     TIFF*                tif;         // TIFF Image file hander
     bool                stayOpen;    // To maintain the image file open after read/write
     int                 dataflag;    // Flag to force reading of the data
@@ -361,34 +378,9 @@ public:
              bool apply_geo = false, bool only_apply_shifts = false,
              MDRow * row = NULL, bool mapData = false)
     {
-        //const MetaData &docFile = *docFilePtr;
-        //std::vector<MDLabel> &activeLabels = *activeLabelsPtr;
-
         int err = 0;
-        // Check whether to read the data or only the header
-        dataflag = ( readdata ) ? 1 : -1;
 
-        // Check whether to map the data or not
-        mmapOn = mapData;
 
-        FileName ext_name = name.getFileFormat();
-        //        size_t found;
-        //        filename = name;
-        //        found = filename.find_first_of("@");
-        //        if (found != std::string::npos)
-        //        {
-        //            select_img =  atoi(filename.substr(0, found).c_str());
-        //            filename = filename.substr(found+1) ;
-        //        }
-        //
-        name.decompose(select_img, filename);
-
-        filename = filename.removeFileFormat();
-
-        if(ext_name.contains("inf"))
-            filename = filename.withoutExtension();
-        else if (ext_name.contains("raw") && exists(filename.addExtension("inf")))
-            ext_name = "inf";
 
 
 #undef DEBUG
@@ -403,67 +395,16 @@ public:
 #endif
 #undef DEBUG
 
-        //Just clear the header before reading
-        MDMainHeader.clear();
+        fImageHandler* hFile = openFile(name);
+        err = _read(name, hFile, readdata, select_img, apply_geo, only_apply_shifts, row, mapData);
+        closeFile(hFile);
 
-        if (ext_name.contains("spi") || ext_name.contains("xmp")  ||
-            ext_name.contains("stk") || ext_name.contains("vol"))//mrc stack MUST go BEFORE plain MRC
-            err = readSPIDER(select_img);
-        else if (ext_name.contains("mrcs"))//mrc stack MUST go BEFORE plain MRC
-            err = readMRC(select_img,true);
-        else if (ext_name.contains("mrc"))//mrc
-            err = readMRC(select_img,false);
-        else if (ext_name.contains("img") || ext_name.contains("hed"))//
-            err = readIMAGIC(select_img);//imagic is always an stack
-        else if (ext_name.contains("ser"))//TIA
-            err = readTIA(select_img,false);
-        else if (ext_name.contains("dm3"))//DM3
-            err = readDM3(select_img,false);
-        else if (ext_name.contains("inf"))//RAW with INF file
-            err = readINF(select_img,false);
-        else if (ext_name.contains("raw"))//RAW without INF file
-            err = readRAW(select_img,false);
-        else if (ext_name.contains("tif") || ext_name.contains("tiff"))//TIFF
-            err = readTIFF(select_img,false);
-        else if (ext_name.contains("spe"))//SPE
-            err = readSPE(select_img,false);
-        else
-            err = readSPIDER(select_img);
-        //This implementation does not handle stacks,
-        //read in a block
-        if (row != NULL)
-        {
-            if (data.ndim != 1)
-                REPORT_ERROR(ERR_MULTIDIM_SIZE, "Header overwriting not available for stacks!!!");
-            MDLabel label;
-
-            for (MDRow::const_iterator it = row->begin(); it != row->end(); ++it)
-            {
-                label = (*it)->label;
-                if (MD[0].containsLabel(label))
-                    *(MD[0].getObject(label)) = *(*it);
-                else
-                    MD[0].push_back(new MDObject(*(*it)));
-            }
-        }
-
-        //apply geo has not been defined for volumes
-        if(this->data.getDim()>2)
-            apply_geo=false;
-
-        if (readdata && (apply_geo || only_apply_shifts))
-        {
-            Matrix2D< double > A = getTransformationMatrix(only_apply_shifts);
-            if (!A.isIdentity())
-            {
-                MultidimArray<T> tmp = (*this)();
-                applyGeometry(BSPLINE3, (*this)(), tmp, A, IS_INV, WRAP);
-            }
-        }
-
-        // Negative errors are bad.
         return err;
     }
+
+
+
+
 
     /** General write function
      * select_img= which slice should I replace
@@ -1577,69 +1518,259 @@ public:
         (*this)()+=aux();
     }
 
-
-    /** Open file function
-      * Check if Image_Collection has let the file already opened,
-      *  else, it opens the file.
-      */
-    FILE openFile(const FileName name)
-    {
-
-        if ( ( fimg = fopen(name.c_str(), "r") ) == NULL )
-            REPORT_ERROR(ERR_IO_NOTOPEN,(std::string)"Image::openFile cannot open: " + name);
-
-        return fimg;
-
-    }
-
-    /** Close file function
-          * Check if Image_Collection has let the file already opened,
-          *  else, it opens the file.
-          */
-    FILE closeFile(const FileName name)
-    {
-    }
+    /** Std filter removes outlaters (pixels) with
+     *  value outside 'value' standard deviations
+     */
     void doStdevFilter(double stdevFilter)
     {
-      if (stdevFilter > 0 )
-      {
-          double temp, avg, stddev;
-          double size = YXSIZE(data);
+        if (stdevFilter > 0 )
+        {
+            double temp, avg, stddev;
+            double size = YXSIZE(data);
 
-          avg = 0;
-          stddev = 0;
+            avg = 0;
+            stddev = 0;
 
-          for ( int n=0; n<NSIZE(data); n++ )
-          {
-              FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY3D(data)
-              {
-                  temp = abs(DIRECT_NZYX_ELEM(data,n,0,i,j));
-                  avg += temp;
-                  stddev += temp * temp;
-              }
-              avg /= size;
-              stddev = stddev/size - avg * avg;
-              stddev *= size/(size -1);
-              stddev = sqrt(stddev);
+            for ( int n=0; n<NSIZE(data); n++ )
+            {
+                FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY3D(data)
+                {
+                    temp = abs(DIRECT_NZYX_ELEM(data,n,0,i,j));
+                    avg += temp;
+                    stddev += temp * temp;
+                }
+                avg /= size;
+                stddev = stddev/size - avg * avg;
+                stddev *= size/(size -1);
+                stddev = sqrt(stddev);
 
-              double low  = (avg - stdevFilter * stddev);
-              double high = (avg + stdevFilter * stddev);
+                double low  = (avg - stdevFilter * stddev);
+                double high = (avg + stdevFilter * stddev);
 
-              FOR_ALL_ELEMENTS_IN_ARRAY3D(data)
-              {
-                  if (abs(DIRECT_NZYX_ELEM(data,n,0,i,j)) < low)
-                      DIRECT_NZYX_ELEM(data,n,0,i,j) = (T) low;
-                  else if (abs(DIRECT_NZYX_ELEM(data,n,0,i,j)) > high)
-                      DIRECT_NZYX_ELEM(data,n,0,i,j) = (T) high;
-              }
-          }
-      }
+                FOR_ALL_ELEMENTS_IN_ARRAY3D(data)
+                {
+                    if (abs(DIRECT_NZYX_ELEM(data,n,0,i,j)) < low)
+                        DIRECT_NZYX_ELEM(data,n,0,i,j) = (T) low;
+                    else if (abs(DIRECT_NZYX_ELEM(data,n,0,i,j)) > high)
+                        DIRECT_NZYX_ELEM(data,n,0,i,j) = (T) high;
+                }
+            }
+        }
 
     }
+
+private:
+
+    /** Open file function
+      * Open the image file and returns its file hander.
+      */
+    fImageHandler* openFile(const FileName name, WriteMode wMode = WRITE_READONLY)
+    {
+        fImageHandler* hFile = new fImageHandler;
+        FileName fileName, headName = "";
+        FileName ext_name = name.getFileFormat();
+
+        int dump;
+        name.decompose(dump, fileName);
+
+        fileName = fileName.removeFileFormat();
+
+        std::string wmChar;
+
+        switch (wMode)
+        {
+        case WRITE_READONLY:
+            wmChar = "r";
+            break;
+        case WRITE_OVERWRITE:
+            wmChar = "w";
+            break;
+        case WRITE_APPEND:
+            if (_exists = exists(fileName))
+                wmChar = "r+";
+            else
+                wmChar = "w+";
+            break;
+        case WRITE_REPLACE:
+            wmChar = "r+";
+            break;
+        }
+
+        if (ext_name.contains("tif"))
+        {
+            if ((hFile->tif = TIFFOpen(fileName.c_str(), wmChar.c_str())) == NULL)
+                REPORT_ERROR(ERR_IO_NOTOPEN,"rwTIFF: There is a problem opening the TIFF file.");
+        }
+        else
+        {
+            if (ext_name.contains("img") || ext_name.contains("hed"))
+            {
+                fileName = fileName.withoutExtension();
+                headName = fileName.addExtension("hed");
+                fileName = fileName.addExtension("img");
+
+            }
+            else if (ext_name.contains("inf") || \
+                     (ext_name.contains("raw") && exists(fileName.addExtension("inf"))))
+            {
+                fileName = fileName.removeAllExtensions();
+                fileName = fileName.addExtension("raw");
+                headName = fileName.addExtension("inf");
+                ext_name = "inf";
+            }
+
+            // Open image file
+            if ( ( hFile->fimg = fopen(fileName.c_str(), wmChar.c_str()) ) == NULL )
+                REPORT_ERROR(ERR_IO_NOTOPEN,(std::string)"Image::openFile cannot open: " + name);
+
+            if (headName != "")
+            {
+                if ( ( hFile->fhed = fopen(headName.c_str(), wmChar.c_str()) ) == NULL )
+                    REPORT_ERROR(ERR_IO_NOTOPEN,(std::string)"Image::openFile cannot open: " + headName);
+            }
+            else
+                hFile->fhed = NULL;
+
+        }
+        hFile->ext_name =ext_name;
+
+        return hFile;
+    }
+
+    /** Close file function.
+      * Close the image file according to its name and file handler.
+      */
+    void closeFile(fImageHandler* hFile = NULL)
+    {
+        FileName ext_name;
+        FILE* fimg, *fhed;
+        TIFF* tif;
+
+
+        if (hFile != NULL)
+        {
+            ext_name = hFile->ext_name;
+            fimg = hFile->fimg;
+            fhed = hFile->fhed;
+            tif  = hFile->tif;
+        }
+        else
+        {
+            ext_name = filename.getFileFormat();
+            fimg = this->fimg;
+            fhed = this->fhed;
+            tif  = this->tif;
+        }
+
+        if (ext_name.contains("tif"))
+            TIFFClose(tif);
+        else
+        {
+            if (fclose(fimg) != 0 )
+                REPORT_ERROR(ERR_IO_NOCLOSED,(std::string)"Can not close image file "+ filename);
+
+            if (fhed != NULL &&  fclose(fhed) != 0 )
+                REPORT_ERROR(ERR_IO_NOCLOSED,(std::string)"Can not close header file of "
+                             + filename);
+        }
+    }
+
+    FileName getFileFormat(FileName name)
+{}
+
+
+    int _read(const FileName &name, fImageHandler* hFile, bool readdata=true, int select_img = -1,
+              bool apply_geo = false, bool only_apply_shifts = false,
+              MDRow * row = NULL, bool mapData = false)
+    {
+        //const MetaData &docFile = *docFilePtr;
+        //std::vector<MDLabel> &activeLabels = *activeLabelsPtr;
+
+        int err = 0;
+        // Check whether to read the data or only the header
+        dataflag = ( readdata ) ? 1 : -1;
+
+        // Check whether to map the data or not
+        mmapOn = mapData;
+
+        //Just clear the header before reading
+        MDMainHeader.clear();
+
+        FileName ext_name = hFile->ext_name;
+        fimg = hFile->fimg;
+        fhed = hFile->fhed;
+        tif  = hFile->tif;
+
+        int dump;
+        name.decompose(dump, filename);
+
+        if (select_img == -1)
+            select_img = dump;
+
+
+        if (ext_name.contains("spi") || ext_name.contains("xmp")  ||
+            ext_name.contains("stk") || ext_name.contains("vol"))//mrc stack MUST go BEFORE plain MRC
+            err = readSPIDER(select_img);
+        else if (ext_name.contains("mrcs"))//mrc stack MUST go BEFORE plain MRC
+            err = readMRC(select_img,true);
+        else if (ext_name.contains("mrc"))//mrc
+            err = readMRC(select_img,false);
+        else if (ext_name.contains("img") || ext_name.contains("hed"))//
+            err = readIMAGIC(select_img);//imagic is always an stack
+        else if (ext_name.contains("ser"))//TIA
+            err = readTIA(select_img,false);
+        else if (ext_name.contains("dm3"))//DM3
+            err = readDM3(select_img,false);
+        else if (ext_name.contains("inf"))//RAW with INF file
+            err = readINF(select_img,false);
+        else if (ext_name.contains("raw"))//RAW without INF file
+            err = readRAW(select_img,false);
+        else if (ext_name.contains("tif"))//TIFF
+            err = readTIFF(select_img,false);
+        else if (ext_name.contains("spe"))//SPE
+            err = readSPE(select_img,false);
+        else
+            err = readSPIDER(select_img);
+        //This implementation does not handle stacks,
+        //read in a block
+        if (row != NULL)
+        {
+            if (data.ndim != 1)
+                REPORT_ERROR(ERR_MULTIDIM_SIZE, "Header overwriting not available for stacks!!!");
+            MDLabel label;
+
+            for (MDRow::const_iterator it = row->begin(); it != row->end(); ++it)
+            {
+                label = (*it)->label;
+                if (MD[0].containsLabel(label))
+                    *(MD[0].getObject(label)) = *(*it);
+                else
+                    MD[0].push_back(new MDObject(*(*it)));
+            }
+        }
+
+        //apply geo has not been defined for volumes
+        if(this->data.getDim()>2)
+            apply_geo=false;
+
+        if (readdata && (apply_geo || only_apply_shifts))
+        {
+            Matrix2D< double > A = getTransformationMatrix(only_apply_shifts);
+            if (!A.isIdentity())
+            {
+                MultidimArray<T> tmp = (*this)();
+                applyGeometry(BSPLINE3, (*this)(), tmp, A, IS_INV, WRAP);
+            }
+        }
+
+        // Negative errors are bad.
+        return err;
+    }
+
+
 }
 ;
-/** Convert datatype string to datatypr enun */
-int datatypeString2Int(std::string s);
+
 
 // Special cases for complex numbers
 template<>

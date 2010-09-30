@@ -118,10 +118,6 @@ int  readSPIDER(int img_select)
 #endif
 #undef DEBUG
 
-    FILE        *fimg;
-    if ( ( fimg = fopen(filename.c_str(), "r") ) == NULL )
-        REPORT_ERROR(ERR_IO_NOTOPEN,(std::string)"rwSPIDER: cannot read image:" + filename);
-
     SPIDERhead* header = new SPIDERhead;
     if ( fread( header, SPIDERSIZE, 1, fimg ) < 1 )
         REPORT_ERROR(ERR_IO_NOREAD,"rwSPIDER: cannot allocate memory for header");
@@ -189,12 +185,8 @@ int  readSPIDER(int img_select)
 
     data.setDimensions(_xDim, _yDim, _zDim, _nDimSet);
 
-
-    if (isStack && dataflag<0)   // Don't read the individual header
-    {                            // and the data if not necessary
-        fclose(fimg);
+    if (isStack && dataflag<0)   // Don't read the individual header and the data if not necessary
         return 0;
-    }
 
     size_t header_size = offset;
     size_t image_size  = header_size + ZYXSIZE(data)*sizeof(float);
@@ -271,9 +263,6 @@ int  readSPIDER(int img_select)
 #endif
     //offset should point to the begin of the data
     readData(fimg, img_select, datatype, pad );
-
-    if ( !mmapOn )
-        fclose(fimg);
 
     return(0);
 }
