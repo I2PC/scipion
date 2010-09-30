@@ -616,7 +616,7 @@ public:
     /** Substract two Metadatas.
      * Result in "calling" metadata
      */
-    void substraction(const MetaData &mdIn, const MDLabel label);
+    void subtraction(const MetaData &mdIn, const MDLabel label);
 
     /** Join two Metadatas
      * Result in "calling" metadata
