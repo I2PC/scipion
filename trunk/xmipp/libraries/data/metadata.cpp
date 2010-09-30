@@ -852,7 +852,7 @@ void MetaData::intersection(const MetaData &mdIn, const MDLabel label)
 {
     _setOperates(mdIn, label, INTERSECTION);
 }
-void MetaData::substraction(const MetaData &mdIn, const MDLabel label)
+void MetaData::subtraction(const MetaData &mdIn, const MDLabel label)
 {
     _setOperates(mdIn, label, SUBSTRACTION);
 }
