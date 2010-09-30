@@ -74,6 +74,9 @@ enum JoinType
  */
 class MDSql
 {
+public:
+	static void dumpToFile(const FileName &fileName);
+
 private:
 
     /** This will create the table to store the metada objects.
@@ -149,7 +152,6 @@ private:
     /** Function to dump DB to file */
     bool operate(const std::string &expression);
 
-    static void dumpToFile(const FileName &fileName);
 
 
     /** Constructor of MDSql
