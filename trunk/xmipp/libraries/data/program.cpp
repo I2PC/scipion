@@ -42,7 +42,7 @@ void XmippProgram::init()
     ///This are a set of internal command for MetaProgram usage
     ///they should be hidden
     addParamsLine("==+++++ Internal section ==");
-    addParamsLine("--__xmipp_print_metadata : Print metadata info about the program");
+    addParamsLine("[--__xmipp_print_metadata] : Print metadata info about the program");
 
     progDef->parse();
 }
@@ -217,19 +217,19 @@ XmippMetadataProgram::XmippMetadataProgram()
 
 void XmippMetadataProgram::defineParams()
 {
-    addParamsLine(" -i <metadata>   :MetaData file with images or an individual image.");
+    addParamsLine(" -i <metadata>   : Input file: metadata, stack, volume or image.");
     addParamsLine(" alias --input;");
 
     if (each_image_produces_an_output)
     {
-        addParamsLine("  [-o <output_file=\"\">]  : if wanted in case of a single image,");
+        addParamsLine("  [-o <output_file=\"\">]  : Output file: metadata, stack, volume or image.");
         addParamsLine("   alias --output;");
-        addParamsLine("  [-oext <extension=\"\">] : if wanted in case of a metadata file.");
-        addParamsLine("  [-oroot <root=\"\">]     : if wanted in case of a metadata file.");
+        addParamsLine("  [-oext <extension=\"\">] :  Output file format extension.");
+        addParamsLine("  [-oroot <root=\"\">]     : Rootname of output individual images.");
     }
     else if (produces_an_output)
     {
-        addParamsLine("  [-o <output_file=\"\">]  : if wanted in case of a single image,");
+        addParamsLine("  [-o <output_file=\"\">]  : Output file: metadata, stack, volume or image.");
         addParamsLine("   alias --output;");
     }
 
