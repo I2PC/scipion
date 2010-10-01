@@ -44,7 +44,7 @@ protected:
     void defineParams()
     {
         addUsageLine("Converts among stacks, volumes and images, and changes the file format.");
-        addParamsLine(" -i <metadata>   :Input file: metadata, stack, volume or image.");
+        addParamsLine(" -i <metadata>   : Input file: metadata, stack, volume or image.");
         addParamsLine("         :+ Supported read formats are:");
         addParamsLine("         :+ dm3 : Digital Micrograph 3.");
         addParamsLine("         :+ img : Imagic.");
@@ -53,7 +53,7 @@ protected:
         addParamsLine("         :+ spe : Princeton Instruments CCD camera.");
         addParamsLine("         :+ spi, xmp : Spider.");
         addParamsLine("         :+ tif : TIFF.");
-        addParamsLine("         :+ ser : tecnai imaging and analysis-only input");
+        addParamsLine("         :+ ser : tecnai imaging and analysis.");
         addParamsLine("         :+ raw#xDim,yDim,[zDim],offset,datatype,[r] : RAW image file without header file.");
         addParamsLine("         :+ where datatype can be: uchar, char, ushort, short, uint, int, long, float, double, cshort, cint, cfloat, cdouble, bool");
         addParamsLine(" alias --input;");
@@ -66,7 +66,7 @@ protected:
         addParamsLine("         :+ inf,raw : RAW file with header INF file.");
         addParamsLine("         :+ mrc : CCP4");
         addParamsLine("         :+ spi, xmp : Spider");
-        addParamsLine("         :+ tif : TIFF. Supports 8bits, 16bits and float. See -bits option.");
+        addParamsLine("         :+ tif : TIFF. It supports 8bits, 16bits and float. See -bits option.");
         addParamsLine("  [-oroot <root=\"\">]     : Rootname of output individual images.");
 
         addParamsLine("[-type <output_type=img>] : Output file type.");
