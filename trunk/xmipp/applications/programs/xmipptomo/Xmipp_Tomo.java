@@ -24,8 +24,7 @@
  ***************************************************************************/
 
 // some recommend that plugin classes must be in the default package...
-// here we use it has its own submenu
-package xmipptomo;
+// here we used so it has its own submenu
 
 
 import ij.*;

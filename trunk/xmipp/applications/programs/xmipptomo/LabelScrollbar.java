@@ -23,8 +23,6 @@
  *  e-mail address 'xmipp@cnb.csic.es'
  ***************************************************************************/
 
-package xmipptomo;
-
 import java.awt.Adjustable;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;

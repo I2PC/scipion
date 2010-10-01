@@ -23,8 +23,6 @@
  *  e-mail address 'xmipp@cnb.csic.es'
  ***************************************************************************/
 
-package xmipptomo;
-
 import ij.IJ;
 import ij.ImagePlus;
 import ij.ImageStack;
@@ -61,7 +59,11 @@ import java.util.Properties;
  * - make all methods static?
  */
 public class TiltSeriesIO {
-
+    static {
+        // loads "XmippDataJava"
+        System.loadLibrary("XmippDataJava");
+    }
+    
 	public static int MRC_HEADER_SIZE = 1024;
 	private boolean resize=true;
 	
@@ -159,10 +161,14 @@ public class TiltSeriesIO {
 		if ((path == null) || (path.equals(""))) 
 			throw new IOException("Empty path");
 		
+			path=path.toLowerCase();
+			
 			// right now, identify file type by its extension
 			if (path.endsWith(".mrc")) {       
 				readMRC(path,model);
 
+			}else if (path.endsWith(".mrcs")) {   
+				readMRCS(path,model);
 			}
 			/* else if (path.toLowerCase().endsWith(".spi") || path.toLowerCase().endsWith(".xmp")|| path.toLowerCase().endsWith(".vol")) {
 				imp = (ImagePlus) IJ.runPlugIn("Spider_Reader", path);
@@ -190,6 +196,11 @@ public class TiltSeriesIO {
 		if (path.endsWith(".mrc")) {       
 			writeMRC(model);
 		}
+	}
+	
+	private void readMRCS(String path,TomoData model){
+		// System.loadLibrary("XmippDataJava");
+		MultidimArrayd img=new MultidimArrayd();
 	}
 	
 	private void readMRC(String path,TomoData model) throws java.io.IOException, InterruptedException{

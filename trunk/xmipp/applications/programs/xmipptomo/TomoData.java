@@ -23,8 +23,6 @@
  *  e-mail address 'xmipp@cnb.csic.es'
  ***************************************************************************/
 
-package xmipptomo;
-
 import ij.ImagePlus;
 import ij.ImageStack;
 import ij.process.ImageProcessor;
