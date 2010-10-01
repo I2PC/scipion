@@ -158,8 +158,11 @@ int writeINF(int img_select, bool isStack=false, int mode=WRITE_OVERWRITE)
 
     // Volumes and stacks are not supported
     if (Zdim > 1 || Ndim > 1)
-        REPORT_ERROR(ERR_INDEX_OUTOFBOUNDS, "rwINF::read: does not support neither volumes nor stacks.");
+        REPORT_ERROR(ERR_INDEX_OUTOFBOUNDS, "rwINF::write does not support neither volumes nor stacks.");
 
+    if (mode != WRITE_OVERWRITE)
+        REPORT_ERROR(ERR_ARG_INCORRECT, "rwINF::write only can overwrite image files,"
+                      "neither append nor replace.");
 
     DataType wDType;
 
@@ -204,14 +207,20 @@ int writeINF(int img_select, bool isStack=false, int mode=WRITE_OVERWRITE)
 
     _depth = gettypesize(wDType);
 
+    //locking
+    struct flock fl;
+
+    fl.l_type   = F_WRLCK;  /* F_RDLCK, F_WRLCK, F_UNLCK    */
+    fl.l_whence = SEEK_SET; /* SEEK_SET, SEEK_CUR, SEEK_END */
+    fl.l_start  = 0;        /* Offset from l_whence         */
+    fl.l_len    = 0;        /* length, 0 = to EOF           */
+    fl.l_pid    = getpid(); /* our PID                      */
+
+    // Lock Header file
+    fl.l_type   = F_WRLCK;
+    fcntl(fileno(fhed), F_SETLKW, &fl); /* locked */
+
     /* Write INF file ==================================*/
-    FileName fn_inf;
-
-    fn_inf = filename.addExtension("inf");
-    FILE *fhed = fopen(fn_inf.c_str(), "w");
-    if (!fhed)
-        REPORT_ERROR(ERR_IO_NOTOPEN, (std::string)"rwINF::write: Error opening file " + fn_inf);
-
     fprintf(fhed,"# Bits per sample\n");
     fprintf(fhed,"bitspersample= %d\n",_depth*8);
     fprintf(fhed,"# Samples per pixel\n");
@@ -233,22 +242,23 @@ int writeINF(int img_select, bool isStack=false, int mode=WRITE_OVERWRITE)
     else
         fprintf(fhed,"endianess = little\n");
 
-    if (fclose(fhed)!=0)
-        REPORT_ERROR(ERR_IO_NOCLOSED, "rwINF::write: Error creating output info file.");
+    //Unlock Header file
+    fl.l_type = F_UNLCK;
+    fcntl(fileno(fhed), F_SETLK, &fl);
 
+    // Lock Image file
+   fl.l_type   = F_WRLCK;
+   fcntl(fileno(fimg), F_SETLKW, &fl);
 
     /* Write Image file ==================================*/
-    FILE  *fimg;
-    if ( ( fimg = fopen(filename.c_str(), "w") ) == NULL )
-        REPORT_ERROR(ERR_IO_NOTOPEN,(std::string)"Cannot create file " + filename);
-
     size_t datasize_n;
     datasize_n = Xdim*Ydim*Zdim;
 
     writePageAsDatatype(fimg, wDType, datasize_n);
 
-    if( fclose(fimg) !=0 )
-        REPORT_ERROR(ERR_IO_NOCLOSED,(std::string)"Can not close file "+ filename);
+    // Unlock Image file
+    fl.l_type   = F_UNLCK;
+    fcntl(fileno(fimg), F_SETLK, &fl);
 
     return(0);
 }

@@ -380,17 +380,6 @@ int writeMRC(int img_select, bool isStack=false, int mode=WRITE_OVERWRITE)
     fl.l_len    = 0;        /* length, 0 = to EOF           */
     fl.l_pid    = getpid(); /* our PID                      */
 
-    FILE        *fimg;
-    if (mode==WRITE_OVERWRITE || (!_exists && mode==WRITE_APPEND))//open in overwrite mode
-    {
-        if ( ( fimg = fopen(filename.c_str(), "w") ) == NULL )
-            REPORT_ERROR(ERR_IO_NOTOPEN,(std::string)"Cannot create file " + filename);
-    }
-    else //open in append mode
-    {
-        if ( ( fimg = fopen(filename.c_str(), "r+") ) == NULL )
-            REPORT_ERROR(ERR_IO_NOTOPEN,(std::string)"Cannot create file " + filename);
-    }
 
     //BLOCK
     fl.l_type   = F_WRLCK;
@@ -428,8 +417,9 @@ int writeMRC(int img_select, bool isStack=false, int mode=WRITE_OVERWRITE)
             fwrite( fdata, datasize, 1, fimg );
         }
     }
-    //I guess I do not need to unlock since we are going to close the file
-    fclose(fimg);
+    // Unlock the file
+    fl.l_type   = F_UNLCK;
+    fcntl(fileno(fimg), F_SETLK, &fl); /* unlocked */
 
     freeMemory(fdata, datasize);
 

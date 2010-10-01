@@ -99,22 +99,11 @@ int  readIMAGIC(int img_select)
  #ifdef DEBUG
     printf("DEBUG readIMAGIC: Reading Imagic file\n");
 #endif
-    // get the filename without extension to find the header file
-    FileName headername;
-    headername = filename.substr(0, filename.find_last_of('.')) + ".hed";
-    filename   = filename.substr(0, filename.find_last_of('.')) + ".img";
-
-    // open and read the header file
-    FILE  *fhed;
-    if ( ( fhed = fopen(headername.c_str(), "r") ) == NULL )
-        REPORT_ERROR(ERR_IO_NOTOPEN,(std::string)"readIMAGIC: header file " +headername+ " does not exist");
-    ;
 
     IMAGIChead* header = new IMAGIChead;
 
     if ( fread( header, IMAGICSIZE, 1, fhed ) < 1 )
-        REPORT_ERROR(ERR_IO_NOREAD,(std::string)"readIMAGIC: header file " +headername+ " cannot be read");
-    ;
+        REPORT_ERROR(ERR_IO_NOREAD,(std::string)"readIMAGIC: header file of " + filename + " cannot be read");
 
     // Determine byte order and swap bytes if from little-endian machine
     char*   b = (char *) header;
@@ -194,11 +183,9 @@ int  readIMAGIC(int img_select)
     offset = 0;   // separate header file
 
     unsigned long   Ndim = _nDim, j = 0;
-    if (dataflag<0)   // Don't read the individual header
-    {                            // and the data if not necessary
-        fclose(fhed);
+    if (dataflag<0)   // Don't read the individual header and the data if not necessary
         return 0;
-    }
+
     // View   view;
     char*   hend;
 
@@ -234,16 +221,8 @@ int  readIMAGIC(int img_select)
 
     delete header;
 
-    FILE        *fimg;
-    if ( ( fimg = fopen(filename.c_str(), "r") ) == NULL )
-        REPORT_ERROR(ERR_IO_NOTOPEN,(std::string)"readIMAGIC: image file " +filename+ " does not exist");
-
     int pad=0;
     readData(fimg, img_select, datatype, pad );
-
-    if ( !mmapOn )
-        fclose(fimg);
-    fclose(fhed);
 
     return(0);
 }
@@ -279,6 +258,7 @@ int  writeIMAGIC(int img_select=-1, int mode=WRITE_OVERWRITE)
     header->npixel = header->npix2;
     header->iylp = Xdim;
     header->ixlp = Ydim;
+    header->ifn = Ndim - 1 ;
 
     time_t timer;
     time ( &timer );
@@ -338,30 +318,6 @@ int  writeIMAGIC(int img_select=-1, int mode=WRITE_OVERWRITE)
     memcpy(header->lastpr, "Xmipp", 5);
     memcpy(header->name, filename.c_str(), 80);
 
-    // get the filename without extension to find the header file
-    FileName headername;
-    headername = filename.substr(0, filename.find_last_of('.')) + ".hed";
-    filename   = filename.substr(0, filename.find_last_of('.')) + ".img";
-
-    FILE        *fhed, *fimg;
-
-
-    if (mode==WRITE_OVERWRITE || (!_exists && mode==WRITE_APPEND))//open in overwrite mode
-    {
-        if ( ( fhed = fopen(headername.c_str(), "w") ) == NULL )
-            REPORT_ERROR(ERR_IO_NOTOPEN,(std::string)"Cannot create file " + filename);
-        if ( ( fimg = fopen(filename.c_str(), "w") ) == NULL )
-            REPORT_ERROR(ERR_IO_NOTOPEN,(std::string)"Cannot create file " + filename);
-    }
-    else //open in append mode
-    {
-        if ( ( fhed = fopen(headername.c_str(), "r+") ) == NULL )
-            REPORT_ERROR(ERR_IO_NOTOPEN,(std::string)"Cannot create file " + filename);
-        if ( ( fimg = fopen(filename.c_str(), "r+") ) == NULL )
-            REPORT_ERROR(ERR_IO_NOTOPEN,(std::string)"Cannot create file " + filename);
-    }
-
-
     /*
      * BLOCK HEADER IF NEEDED
      */
@@ -396,19 +352,21 @@ int  writeIMAGIC(int img_select=-1, int mode=WRITE_OVERWRITE)
     i = imgStart;
     for (std::vector<MDRow>::iterator it = MD.begin(); it != MD.end(); ++it)
     {
-            if(it->getValue(MDL_ORIGINX,  aux))
-                header->iyold  = (float)-aux;
-            if(it->getValue(MDL_ORIGINY,  aux))
-                header->ixold  =(float)-aux;
-            //if(it->getValue(MDL_ORIGINZ,  aux))
-            //    header->zoff  =(float)aux;
-            if(it->getValue(MDL_ANGLEROT, aux))
-                header->euler_alpha   =(float)-aux;
-            if(it->getValue(MDL_ANGLETILT,aux))
-                header->euler_beta    =(float)-aux;
-            if(it->getValue(MDL_ANGLEPSI, aux))
-                header->euler_gamma =(float)-aux;
+        if(it->getValue(MDL_ORIGINX,  aux))
+            header->iyold  = (float)-aux;
+        if(it->getValue(MDL_ORIGINY,  aux))
+            header->ixold  =(float)-aux;
+        //if(it->getValue(MDL_ORIGINZ,  aux))
+        //    header->zoff  =(float)aux;
+        if(it->getValue(MDL_ANGLEROT, aux))
+            header->euler_alpha   =(float)-aux;
+        if(it->getValue(MDL_ANGLETILT,aux))
+            header->euler_beta    =(float)-aux;
+        if(it->getValue(MDL_ANGLEPSI, aux))
+            header->euler_gamma =(float)-aux;
+
         fwrite( header, IMAGICSIZE, 1, fhed );
+
         if (isComplexT())
             castPage2Datatype(MULTIDIM_ARRAY(data) + i*datasize_n, fdata, ComplexFloat, datasize_n);
         else
@@ -417,9 +375,12 @@ int  writeIMAGIC(int img_select=-1, int mode=WRITE_OVERWRITE)
         ++i;
     }
 
+    //Unlock
+    fl.l_type   = F_UNLCK;
+    fcntl(fileno(fimg), F_SETLK, &fl); /* unlocked */
+    fcntl(fileno(fhed), F_SETLK, &fl); /* unlocked */
+
     freeMemory(fdata, datasize);
-    fclose(fhed);
-    fclose(fimg);
 
     delete header;
 

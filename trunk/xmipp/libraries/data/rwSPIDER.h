@@ -444,20 +444,6 @@ int  writeSPIDER(int select_img=-1, bool isStack=false, int mode=WRITE_OVERWRITE
     fl.l_pid    = getpid(); /* our PID                      */
 
 
-    FILE        * fimg;
-    /*
-     * OPEN FILE
-     */
-    if (mode==WRITE_OVERWRITE || (!_exists && mode==WRITE_APPEND))//open in overwrite mode
-    {
-        if ( ( fimg = fopen(filename.c_str(), "w") ) == NULL )
-            REPORT_ERROR(ERR_IO_NOTOPEN,(std::string)"Cannot create file " + filename);
-    }
-    else //open in append mode
-    {
-        if ( ( fimg = fopen(filename.c_str(), "r+") ) == NULL )
-            REPORT_ERROR(ERR_IO_NOTOPEN,(std::string)"Cannot create file " + filename);
-    }
     /*
      * BLOCK HEADER IF NEEDED
      */
@@ -520,11 +506,7 @@ int  writeSPIDER(int select_img=-1, bool isStack=false, int mode=WRITE_OVERWRITE
     }
     //I guess I do not need to unlock since we are going to close the file
     fl.l_type   = F_UNLCK;
-    ;
-    fcntl(fileno(fimg), F_SETLK, &fl); /* locked */
-    int cerr = fclose(fimg);
-    if( cerr !=0 )
-        REPORT_ERROR(ERR_IO_NOCLOSED,(std::string)"Can not close file "+ filename);
+    fcntl(fileno(fimg), F_SETLK, &fl); /* unlocked */
 
     freeMemory(fdata, datasize);
     freeMemory(header, (int)labbyt*sizeof(char));

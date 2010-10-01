@@ -31,15 +31,17 @@
 #define IMAGE_H
 
 #include <typeinfo>
+#include <fcntl.h>
+#include <sys/mman.h>
+#include <fcntl.h>
+#include <unistd.h>
+#include <sys/stat.h>
 #include "funcs.h"
 #include "memory.h"
 #include "multidim_array.h"
 #include "transformations.h"
 #include "metadata.h"
-#include <fcntl.h>
-#include <sys/mman.h>
-#include <fcntl.h>
-#include <unistd.h>
+
 
 // Includes for rwTIFF which cannot be inside it
 #include <cstring>
@@ -105,6 +107,7 @@ struct fImageHandler
     FILE*     fhed;       // Image File header handler
     TIFF*     tif;        // TIFF Image file hander
     FileName  ext_name;   // Filename extension
+    bool     exist;       // Shows if the file exists
 };
 
 
@@ -218,7 +221,7 @@ private:
     int                 swap;        // Perform byte swapping upon reading
     TransformType       transform;   // Transform type
     int                 replaceNsize;// Stack size in the replace case
-    int                 _exists;     // does target file exists?
+    bool                 _exists;     // does target file exists?
     // equal 0 is not exists or not a stack
     bool                mmapOn;      // Mapping when loading from file
     int                 mFd;         // Handle the file in reading method and mmap
@@ -380,21 +383,6 @@ public:
     {
         int err = 0;
 
-
-
-
-#undef DEBUG
-        //#define DEBUG
-#ifdef DEBUG
-
-        std::cerr << "READ\n" <<
-        "name="<<name <<std::endl;
-        std::cerr << "ext= "<<ext_name <<std::endl;
-        std::cerr << " now reading: "<< filename <<" dataflag= "<<dataflag
-        << " select_img "  << select_img << std::endl;
-#endif
-#undef DEBUG
-
         fImageHandler* hFile = openFile(name);
         err = _read(name, hFile, readdata, select_img, apply_geo, only_apply_shifts, row, mapData);
         closeFile(hFile);
@@ -402,141 +390,18 @@ public:
         return err;
     }
 
-
-
-
-
     /** General write function
      * select_img= which slice should I replace
      * overwrite = 0, append slice
      * overwrite = 1 overwrite slice
      */
-    void write(FileName name="",
-               int select_img=-1,
-               bool isStack=false,
+    void write(const FileName &name="", int select_img=-1, bool isStack=false,
                int mode=WRITE_OVERWRITE)
     {
-        int err = 0;
-
-        if (name == "")
-            name = filename;
-
-        FileName ext_name = name.getFileFormat();
-        size_t found;
-        filename = name;
-        found=filename.find_first_of("@");
-        FileName filNamePlusExt;
-        if (found!=std::string::npos)
-        {
-            //select_img = atoi(filename.substr(0, found).c_str());
-            filename   =      filename.substr(found+1) ;
-        }
-        std::string imParam = "";
-        found=filename.find_first_of("%");
-        if (found!=std::string::npos)
-        {
-            imParam =  filename.substr(found+1).c_str();
-            filename = filename.substr(0, found) ;
-        }
-        filNamePlusExt = filename;
-        found=filename.find_first_of(":");
-        if ( found!=std::string::npos)
-            filename   = filename.substr(0, found);
-
-        if(ext_name.contains("inf"))
-            filename = filename.withoutExtension();
-
-        //#define DEBUG
-#ifdef DEBUG
-
-        std::cerr << "write" <<std::endl;
-        std::cerr<<"extension for write= "<<ext_name<<std::endl;
-        std::cerr<<"filename= "<<filename<<std::endl;
-        std::cerr<<"mode= "<<mode<<std::endl;
-        std::cerr<<"isStack= "<<isStack<<std::endl;
-        std::cerr<<"select_img= "<<select_img<<std::endl;
-#endif
-#undef DEBUG
-        // Check that image is not empty
-        if (getSize() < 1)
-            REPORT_ERROR(ERR_MULTIDIM_EMPTY,"write Image ERROR: image is empty!");
-
-        // CHECK FOR INCONSISTENCIES BETWEEN data.xdim and x, etc???
-        int Xdim, Ydim, Zdim, Ndim;
-        this->getDimensions(Xdim,Ydim, Zdim, Ndim);
-
-        _exists = exists(filename);
-        Image<T> auxI;
-        replaceNsize=0;//reset replaceNsize in case image is reused
-        if(select_img==-1 && mode==WRITE_REPLACE)
-            REPORT_ERROR(ERR_VALUE_INCORRECT,"writeSPIDER: Please specify object to be replaced");
-        else if(!_exists && mode==WRITE_REPLACE)
-        {
-            std:: stringstream replace_number;
-            replace_number << select_img;
-            REPORT_ERROR(ERR_IO_NOTEXIST,(std::string)"Cannot replace object number: "
-                         + replace_number.str()
-                         + " in file " +filename
-                         + ". It does not exist");
-        }
-        else if (_exists && (mode==WRITE_REPLACE || mode==WRITE_APPEND))
-        {
-            auxI.dataflag = -2;
-            auxI.read(filNamePlusExt,false);
-            int _Xdim, _Ydim, _Zdim, _Ndim;
-            auxI.getDimensions(_Xdim,_Ydim, _Zdim, _Ndim);
-            replaceNsize=_Ndim;
-            if(Xdim!=_Xdim ||
-               Ydim!=_Ydim ||
-               Zdim!=_Zdim
-              )
-                REPORT_ERROR(ERR_MULTIDIM_SIZE,"write: target and source objects have different size");
-            if(mode==WRITE_REPLACE && select_img>_Ndim)
-                REPORT_ERROR(ERR_VALUE_INCORRECT,"write: cannot replace image stack is not large enough");
-            if(auxI.replaceNsize <1 &&
-               (mode==WRITE_REPLACE || mode==WRITE_APPEND))
-                REPORT_ERROR(ERR_IO,"write: output file is not an stack");
-        }
-        else if(!_exists && mode==WRITE_APPEND)
-        {
-            ;
-        }
-        else//If new file we are in the WRITE_OVERWRITE mode
-        {
-            mode=WRITE_OVERWRITE;
-        }
-        /*
-         * SELECT FORMAT
-         */
-
-        if(ext_name.contains("spi") || ext_name.contains("xmp") ||
-           ext_name.contains("stk") || ext_name.contains("vol"))
-            err = writeSPIDER(select_img,isStack,mode);
-        else if (ext_name.contains("mrcs"))
-            writeMRC(select_img,true,mode);
-        else if (ext_name.contains("mrc"))
-            writeMRC(select_img,false,mode);
-        else if (ext_name.contains("img") || ext_name.contains("hed"))
-            writeIMAGIC(select_img,mode);
-        else if (ext_name.contains("dm3"))
-            writeDM3(select_img,false,mode);
-        else if (ext_name.contains("ser"))
-            writeTIA(select_img,false,mode);
-        else if (ext_name.contains("raw") || ext_name.contains("inf"))
-            writeINF(select_img,false,mode);
-        else if (ext_name.contains("tif") || ext_name.contains("tiff"))
-            writeTIFF(select_img,isStack,mode,imParam);
-        else if (ext_name.contains("spe"))
-            writeSPE(select_img,isStack,mode);
-        else
-            err = writeSPIDER(select_img,isStack,mode);
-
-        if ( err < 0 )
-        {
-            std::cerr << " Filename = " << filename << " Extension= " << ext_name << std::endl;
-            REPORT_ERROR(ERR_IO_NOWRITE, "Error writing file");
-        }
-        //unlock file
+        const FileName &fname = (name == "") ? filename : name;
+        fImageHandler* hFile = openFile(fname, mode);
+        _write(fname, hFile, select_img, isStack, mode);
+        closeFile(hFile);
     }
 
     /** Cast a page of data from type dataType to type Tdest
@@ -1564,7 +1429,7 @@ private:
     /** Open file function
       * Open the image file and returns its file hander.
       */
-    fImageHandler* openFile(const FileName name, WriteMode wMode = WRITE_READONLY)
+    fImageHandler* openFile(const FileName &name, int mode = WRITE_READONLY)
     {
         fImageHandler* hFile = new fImageHandler;
         FileName fileName, headName = "";
@@ -1575,11 +1440,20 @@ private:
 
         fileName = fileName.removeFileFormat();
 
+        size_t found = fileName.find_first_of("%");
+        if (found!=std::string::npos)
+          fileName = fileName.substr(0, found) ;
+
+        hFile->exist = exists(fileName);
+
         std::string wmChar;
 
-        switch (wMode)
+        switch (mode)
         {
         case WRITE_READONLY:
+            if (!hFile->exist)
+                REPORT_ERROR(ERR_IO_NOTEXIST,(std::string) "Cannot read file "
+                             + fileName + ". It does not exist" );
             wmChar = "r";
             break;
         case WRITE_OVERWRITE:
@@ -1595,6 +1469,7 @@ private:
             wmChar = "r+";
             break;
         }
+
 
         if (ext_name.contains("tif"))
         {
@@ -1673,6 +1548,8 @@ private:
                 REPORT_ERROR(ERR_IO_NOCLOSED,(std::string)"Can not close header file of "
                              + filename);
         }
+
+        delete hFile;
     }
 
     FileName getFileFormat(FileName name)
@@ -1687,14 +1564,12 @@ private:
         //std::vector<MDLabel> &activeLabels = *activeLabelsPtr;
 
         int err = 0;
+
         // Check whether to read the data or only the header
         dataflag = ( readdata ) ? 1 : -1;
 
         // Check whether to map the data or not
         mmapOn = mapData;
-
-        //Just clear the header before reading
-        MDMainHeader.clear();
 
         FileName ext_name = hFile->ext_name;
         fimg = hFile->fimg;
@@ -1703,10 +1578,25 @@ private:
 
         int dump;
         name.decompose(dump, filename);
+        filename = name;
 
         if (select_img == -1)
             select_img = dump;
 
+#undef DEBUG
+        //#define DEBUG
+#ifdef DEBUG
+
+        std::cerr << "READ\n" <<
+        "name="<<name <<std::endl;
+        std::cerr << "ext= "<<ext_name <<std::endl;
+        std::cerr << " now reading: "<< filename <<" dataflag= "<<dataflag
+        << " select_img "  << select_img << std::endl;
+#endif
+#undef DEBUG
+
+        //Just clear the header before reading
+        MDMainHeader.clear();
 
         if (ext_name.contains("spi") || ext_name.contains("xmp")  ||
             ext_name.contains("stk") || ext_name.contains("vol"))//mrc stack MUST go BEFORE plain MRC
@@ -1767,6 +1657,142 @@ private:
         return err;
     }
 
+
+
+
+    void _write(FileName name, fImageHandler* hFile, int select_img=-1,
+                bool isStack=false, int mode=WRITE_OVERWRITE)
+    {
+        int err = 0;
+
+        FileName ext_name = hFile->ext_name;
+        fimg = hFile->fimg;
+        fhed = hFile->fhed;
+        tif  = hFile->tif;
+        _exists = hFile->exist;
+
+
+        FileName filNamePlusExt;
+
+        int dump;
+        name.decompose(dump, filename);
+
+        if (select_img == -1)
+            select_img = dump;
+
+        std::string imParam = "";
+        size_t found = name.find_first_of("%");
+
+        if (found!=std::string::npos)
+        {
+            imParam =  name.substr(found+1).c_str();
+            filNamePlusExt = name.substr(0, found) ;
+        }
+
+        found = filNamePlusExt.find_first_of(":");
+        if ( found!=std::string::npos)
+            filNamePlusExt   = filNamePlusExt.substr(0, found);
+
+
+        //#define DEBUG
+#ifdef DEBUG
+
+        std::cerr << "write" <<std::endl;
+        std::cerr<<"extension for write= "<<ext_name<<std::endl;
+        std::cerr<<"filename= "<<filename<<std::endl;
+        std::cerr<<"mode= "<<mode<<std::endl;
+        std::cerr<<"isStack= "<<isStack<<std::endl;
+        std::cerr<<"select_img= "<<select_img<<std::endl;
+#endif
+    #undef DEBUG
+        // Check that image is not empty
+        if (getSize() < 1)
+            REPORT_ERROR(ERR_MULTIDIM_EMPTY,"write Image ERROR: image is empty!");
+
+        // CHECK FOR INCONSISTENCIES BETWEEN data.xdim and x, etc???
+        int Xdim, Ydim, Zdim, Ndim;
+        this->getDimensions(Xdim,Ydim, Zdim, Ndim);
+
+        Image<T> auxI;
+        replaceNsize=0;//reset replaceNsize in case image is reused
+        if(select_img == -1 && mode == WRITE_REPLACE)
+            REPORT_ERROR(ERR_VALUE_INCORRECT,"writeSPIDER: Please specify object to be replaced");
+        else if(!_exists && mode == WRITE_REPLACE)
+        {
+            std:: stringstream replace_number;
+            replace_number << select_img;
+            REPORT_ERROR(ERR_IO_NOTEXIST,(std::string)"Cannot replace object number: "
+                         + replace_number.str()
+                         + " in file " +filename
+                         + ". It does not exist");
+        }
+        else if (_exists && (mode == WRITE_REPLACE || mode == WRITE_APPEND))
+        {
+            auxI.dataflag = -2;
+            auxI.read(filNamePlusExt,false);
+            int _Xdim, _Ydim, _Zdim, _Ndim;
+            auxI.getDimensions(_Xdim,_Ydim, _Zdim, _Ndim);
+            replaceNsize=_Ndim;
+            if(Xdim!=_Xdim ||
+               Ydim!=_Ydim ||
+               Zdim!=_Zdim
+              )
+                REPORT_ERROR(ERR_MULTIDIM_SIZE,"write: target and source objects have different size");
+            if(mode==WRITE_REPLACE && select_img>_Ndim)
+                REPORT_ERROR(ERR_VALUE_INCORRECT,"write: cannot replace image stack is not large enough");
+            if(auxI.replaceNsize <1 &&
+               (mode==WRITE_REPLACE || mode==WRITE_APPEND))
+                REPORT_ERROR(ERR_IO,"write: output file is not an stack");
+        }
+        else if(!_exists && mode==WRITE_APPEND)
+        {
+            ;
+        }
+        else if (mode == WRITE_READONLY)//If new file we are in the WRITE_OVERWRITE mode
+        {
+            REPORT_ERROR(ERR_ARG_INCORRECT, (std::string) "File " + name
+                         + " opened in read-only mode. Cannot write.");
+        }
+        /*
+         * SELECT FORMAT
+         */
+
+        if(ext_name.contains("spi") || ext_name.contains("xmp") ||
+           ext_name.contains("stk") || ext_name.contains("vol"))
+            err = writeSPIDER(select_img,isStack,mode);
+        else if (ext_name.contains("mrcs"))
+            writeMRC(select_img,true,mode);
+        else if (ext_name.contains("mrc"))
+            writeMRC(select_img,false,mode);
+        else if (ext_name.contains("img") || ext_name.contains("hed"))
+            writeIMAGIC(select_img,mode);
+        else if (ext_name.contains("dm3"))
+            writeDM3(select_img,false,mode);
+        else if (ext_name.contains("ser"))
+            writeTIA(select_img,false,mode);
+        else if (ext_name.contains("raw") || ext_name.contains("inf"))
+            writeINF(select_img,false,mode);
+        else if (ext_name.contains("tif") || ext_name.contains("tiff"))
+            writeTIFF(select_img,isStack,mode,imParam);
+        else if (ext_name.contains("spe"))
+            writeSPE(select_img,isStack,mode);
+        else
+            err = writeSPIDER(select_img,isStack,mode);
+
+        if ( err < 0 )
+        {
+            std::cerr << " Filename = " << filename << " Extension= " << ext_name << std::endl;
+            REPORT_ERROR(ERR_IO_NOWRITE, "Error writing file");
+        }
+
+        /* If initially the file did not existed, once the first image is written,
+         * then the file exists
+         */
+        if (!_exists)
+            hFile->exist = _exists = true;
+    }
+
+    friend class ImageCollection;
 
 }
 ;

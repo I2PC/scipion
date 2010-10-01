@@ -492,18 +492,6 @@ int writeTIFF(int img_select, bool isStack=false, int mode=WRITE_OVERWRITE, std:
     bufferSize = Xdim*nBytes;
     datasize_n = Xdim*Ydim*Zdim;
 
-    /*
-     * OPEN FILE
-     */
-    TIFF* tif;
-
-    if (mode == WRITE_OVERWRITE)
-        (tif = TIFFOpen(filename.c_str(), "w"));
-    else
-        (tif = TIFFOpen(filename.c_str(), "a"));
-
-    if (tif == NULL)
-        REPORT_ERROR(ERR_IO_NOTOPEN,"writeTIFF: There is a problem opening the TIFF file.");
 
     char*  tif_buf;
 
@@ -557,7 +545,6 @@ int writeTIFF(int img_select, bool isStack=false, int mode=WRITE_OVERWRITE, std:
     }
 
     _TIFFfree(tif_buf);
-    TIFFClose(tif);
     return(0);
 
 
