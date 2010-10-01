@@ -884,7 +884,8 @@ void ProgramDef::read(int argc, char ** argv)
     //Read command line params and arguments
     for (int i = 1; i < argc; ++i)
     {
-        if (argv[i][0] == '-')
+    double _d = atof (argv[i]);
+        if (argv[i][0] == '-' && _d == 0)
         {
             param = findParam(argv[i]);
             if (param == NULL)
