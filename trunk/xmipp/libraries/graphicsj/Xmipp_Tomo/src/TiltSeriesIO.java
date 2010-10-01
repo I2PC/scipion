@@ -59,10 +59,10 @@ import java.util.Properties;
  * - make all methods static?
  */
 public class TiltSeriesIO {
-    static {
+  /*  static {
         // loads "XmippDataJava"
         System.loadLibrary("XmippDataJava");
-    }
+    } */
     
 	public static int MRC_HEADER_SIZE = 1024;
 	private boolean resize=true;
@@ -161,15 +161,15 @@ public class TiltSeriesIO {
 		if ((path == null) || (path.equals(""))) 
 			throw new IOException("Empty path");
 		
-			path=path.toLowerCase();
+			// path=path.toLowerCase();
 			
 			// right now, identify file type by its extension
 			if (path.endsWith(".mrc")) {       
 				readMRC(path,model);
 
-			}else if (path.endsWith(".mrcs")) {   
+			}/*else if (path.endsWith(".mrcs")) {   
 				readMRCS(path,model);
-			}
+			}*/
 			/* else if (path.toLowerCase().endsWith(".spi") || path.toLowerCase().endsWith(".xmp")|| path.toLowerCase().endsWith(".vol")) {
 				imp = (ImagePlus) IJ.runPlugIn("Spider_Reader", path);
 				if (imp == null) {

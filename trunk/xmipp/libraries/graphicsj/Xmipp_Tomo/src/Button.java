@@ -23,6 +23,8 @@
  *  e-mail address 'xmipp@cnb.csic.es'
  ***************************************************************************/
 
+import ij.IJ;
+
 import javax.swing.JButton;
 
 public class Button {
@@ -60,6 +62,10 @@ public class Button {
 	
 	public void setEnabled(boolean enabled){
 		this.enabled=enabled;
+		try{
 		b.setEnabled(enabled);
+		}catch (Exception ex){
+			Xmipp_Tomo.debug(label);
+		}
 	}
 }

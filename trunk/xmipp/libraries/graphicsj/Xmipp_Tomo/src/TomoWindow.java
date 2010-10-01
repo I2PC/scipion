@@ -99,8 +99,8 @@ public class TomoWindow extends ImageWindow implements WindowListener,
 			PRINT_WORKFLOW = new Button("Print workflow", "", false),
 			PLAY = new Button(">", "", true),
 			// pause is a fake button, useful for defining the pause label
-			PAUSE = new Button("||", "", true), MEASURE = new Button("Measure",
-					MeasurePlugin.COMMAND, false);
+			PAUSE = new Button("||", "", true);
+	// MEASURE = new Button("Measure",MeasurePlugin.COMMAND, false);
 
 	// Lists of buttons for each menu tab
 	private static java.util.List<Button> buttonsMenuFile = new LinkedList<Button>() {
@@ -108,7 +108,7 @@ public class TomoWindow extends ImageWindow implements WindowListener,
 			add(LOAD);
 			add(SAVE);
 			add(DEFINE_TILT);
-			add(MEASURE);
+			// add(MEASURE);
 		}
 	};
 
@@ -147,7 +147,7 @@ public class TomoWindow extends ImageWindow implements WindowListener,
 			add(ENHANCE_CONTRAST);
 			add(APPLY);
 			add(PRINT_WORKFLOW);
-			add(MEASURE);
+			// add(MEASURE);
 		}
 	};
 
@@ -267,8 +267,8 @@ public class TomoWindow extends ImageWindow implements WindowListener,
 				tw.actionPlay();
 			} else if (command.equals(PAUSE.label())) {
 				tw.actionPause();
-			} else if (command.equals(MEASURE.label())) {
-				tw.actionRunIjCmd(MEASURE);
+		/*	} else if (command.equals(MEASURE.label())) {
+				tw.actionRunIjCmd(MEASURE);*/
 			} else if (command.equals(PRINT_WORKFLOW.label())) {
 				Xmipp_Tomo.printWorkflow();
 			}

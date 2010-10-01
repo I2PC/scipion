@@ -65,7 +65,7 @@ public class Xmipp_Tomo implements PlugIn{
 	};
 	
 	// enable debuging tests - release versions should have this set to 0
-	final static int TESTING = 1;
+	final static int TESTING = 0;
 
 	// UI elements
 	private static TomoWindow tw=null;
@@ -199,10 +199,12 @@ public class Xmipp_Tomo implements PlugIn{
 		Calendar calendar = Calendar.getInstance();
 		java.util.Date now = calendar.getTime();
 		String output="" + now.getTime() + " > " + s;
-		if(tw != null)
-			IJ.write(output);
-		else
-			System.err.println(output);
+		if(TESTING == 1){
+			if(tw != null)
+				IJ.write(output);
+			else
+				System.err.println(output);
+		}
 	}
 
 	/** same as Debug, plus ex stack trace
