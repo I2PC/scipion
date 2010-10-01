@@ -428,6 +428,11 @@ public:
      * Or if keep>0, then keep the lowest keep directories
      */
     FileName removeDirectories(int keep = 0) const;
+    /**copy one file
+     *
+     * s
+     */
+    void copyFile(const FileName & target) const;
     //@}
 };
 

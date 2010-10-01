@@ -22,7 +22,7 @@
  *  All comments concerning this program package may be sent to the
  *  e-mail address 'xmipp@cnb.csic.es'
  ***************************************************************************/
-//two requires and test select and test move
+
 #include <data/argsparser.h>
 #include <data/program.h>
 #include <string.h>
@@ -44,40 +44,43 @@ protected:
         addParamsLine("  [--label <l1> ]                 : metadata label");
         addParamsLine("     alias -l;");
 
+        addParamsLine("  [--expression <e1> ]                 : constrain applied in select");
+        addParamsLine("     alias -e;");
+
         addParamsLine("   [-o  <w1>]                          : Name of output metadata file");
 
         addParamsLine("   --union  <md1> <md2>             : union of metadata files md1 and md2");
         addParamsLine("     alias -u;");
-        addParamsLine("           requires --label;                                                         ");
+        addParamsLine("           requires --label, -o;                                                         ");
 
         addParamsLine("or --intersection <md1> <md2>        : Intersection of md1 and md2");
         addParamsLine("     alias -i;");
-        addParamsLine("           requires --label;                                                         ");
+        addParamsLine("           requires --label, -o;                                                         ");
 
         addParamsLine("or --subtraction <md1> <md2>         : subtraction of md1 and md2");
         addParamsLine("     alias -s;");
-        addParamsLine("           requires --label;                                                         ");
+        addParamsLine("           requires --label, -o;                                                         ");
 
         addParamsLine("or --join <md1> <md2>                : inner join of md1 and md2 using label l1");
         addParamsLine("     alias -j;");
-        addParamsLine("           requires --label;                                                         ");
+        addParamsLine("           requires --label, -o;                                                         ");
 
         addParamsLine("or --sort <md1>                      : sort metadata md1 using label l1");
-        addParamsLine("           requires --label;                                                         ");
+        addParamsLine("           requires --label, -o;                                                         ");
 
         addParamsLine("or --convert2db <md1>                : convert metadata to sqlite database");
 
         addParamsLine("or --copy  <md1> <path>               : copy files in metadata md1 to directory path (file names at lable column)");
-        addParamsLine("           requires --label;                                                         ");
+        addParamsLine("           requires --label, -o;                                                         ");
 
         addParamsLine("or --move  <md1> <path>               : move files in metadata md1 to directory path (file names at lable column)");
-        addParamsLine("           requires --label;                                                         ");
+        addParamsLine("           requires --label, -o;                                                         ");
 
         addParamsLine("or --delete  <md1>                    : delete files in metadata md1 (file names at label column)");
         addParamsLine("           requires --label;                                                         ");
 
-        addParamsLine("or --select  <md1> <min> <max>       : create new metadata with between min and max values (only implemented for double)");
-        addParamsLine("           requires --label;                                                         ");
+        addParamsLine("or --select  <md1> <exp>       : create new metadata with those entries that satisfy the expression 'exp'");
+        addParamsLine("           requires -o;                                                         ");
 
         addUsageLine ("Examples:");
         addUsageLine ("   xmipp_metadata_utilities --union         mD1.doc mD2.doc  -o out.doc --label image");
@@ -88,6 +91,8 @@ protected:
         addUsageLine ("   xmipp_metadata_utilities --convert2db    mD1.doc          -o out.db; xmipp_sqlite3 out.db");
         addUsageLine ("   xmipp_metadata_utilities --copy mD1.doc kk                -o out.doc --label image ");
         addUsageLine ("   xmipp_metadata_utilities --delete out.doc                            --label image");
+        addUsageLine ("   xmipp_metadata_utilities --select mD1.doc \"anglePsi > 0 AND shiftX > -0.5\" -o out.doc");
+
     }
     typedef enum {
         _unknown=0,
@@ -217,9 +222,8 @@ protected:
         else if (checkParam("--select"))
         {
             encode("select");
-            expression = getParam("--select",0);
-            min = textToFloat(getParam("--min" ,0 ));
-            max = textToFloat(getParam("--max" ,0 ));
+            inFileName1 = getParam("--select",0);
+            expression = getParam("--select",1);
         }
     }
 public:
@@ -269,10 +273,8 @@ public:
                 outFnImg = inFnImg.getBaseName();
                 outMD.addObject();
                 outMD.setValue(MDL::str2Label(_label),outFnImg);
-                std::ifstream f1 (inFnImg.c_str() , std::fstream::binary);
                 outFnImg = tmpFileName + "/" + outFnImg;
-                std::ofstream f2 (outFnImg.c_str(),std::fstream::trunc|std::fstream::binary);
-                f2<<f1.rdbuf();
+                inFnImg.copyFile(outFnImg);
             }
             outMD.write(tmpFileName+"/"+outFileName);
             break;
@@ -304,10 +306,11 @@ public:
             }
             break;
         case _select:
-            inMD1.read(inFileName1);
-            MDValueRange query(MDL::str2Label(_label),min,max);
-            outMD.importObjects(inMD1,query);
-            outMD.write(tmpFileName+"/"+outFileName);
+            {
+                inMD1.read(inFileName1);
+                outMD.importObjects(inMD1, MDExpression(expression));
+                outMD.write(outFileName);
+            }
             break;
 
         default:

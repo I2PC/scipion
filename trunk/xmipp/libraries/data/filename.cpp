@@ -443,3 +443,9 @@ FileName FileName::removeDirectories(int keep) const
     else
         return substr(last_slash + 1, length() - last_slash);
 }
+void FileName::copyFile(const FileName & target) const
+{
+    std::ifstream f1 (this->c_str(), std::fstream::binary);
+    std::ofstream f2 (target.c_str(),std::fstream::trunc|std::fstream::binary);
+    f2<<f1.rdbuf();
+}

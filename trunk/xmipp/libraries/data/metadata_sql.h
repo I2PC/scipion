@@ -473,6 +473,37 @@ public:
 }
 ;//end of class MDValueRange
 
+/**This subclass of Query will select those entries that satisfy an expression.
+ * @code
+ *  //Remove all images with rotational angle between 100 and 200
+ *  MetaData md;
+ *  md.removeObjects(MDExpression("angleRot > 100 AND angleRot < 200"));
+ *  @endcode
+ */
+class MDExpression: public MDQuery
+{
+	std::string sExpression;
+public:
+	MDExpression()
+    {
+		sExpression = " 1=1 ";
+    }
+	MDExpression(std::string _sExpression,
+			     int limit = -1,
+			     int offset = 0,
+			     MDLabel orderLabel = MDL_OBJID):MDQuery(limit, offset, orderLabel)
+    {
+		sExpression=_sExpression;
+    }
+
+    virtual std::string queryStringFunc() const
+    {
+        return sExpression;
+    }
+
+}
+;//end of class MDValueRange
+
 /** Query several conditions using AND and OR.
  * This kind of query if usefull if you want to check
  * two conditions at the same time, for example, import
