@@ -60,23 +60,23 @@ protected:
 
         addParamsLine("  [-o <output_file=\"\">]  : Output file: metadata, stack, volume or image.");
         addParamsLine("   alias --output;");
-        addParamsLine("  [-oext <extension=spi>] : Output file format extension.");
+        addParamsLine("  [--oext <extension=spi>] : Output file format extension.");
         addParamsLine("         :+ Supported write formats are:");
         addParamsLine("         :+ img : Imagic");
         addParamsLine("         :+ inf,raw : RAW file with header INF file.");
         addParamsLine("         :+ mrc : CCP4");
         addParamsLine("         :+ spi, xmp : Spider");
         addParamsLine("         :+ tif : TIFF. It supports 8bits, 16bits and float. See -bits option.");
-        addParamsLine("  [-oroot <root=\"\">]     : Rootname of output individual images.");
+        addParamsLine("  [--oroot <root=\"\">]     : Rootname of output individual images.");
 
-        addParamsLine("[-type <output_type=img>] : Output file type.");
+        addParamsLine("  [--type <output_type=img>] : Output file type.");
         addParamsLine("          where <output_type>");
         addParamsLine("          img : Image");
         addParamsLine("          vol : Volume");
-        addParamsLine("          stack : Stack ");
+        addParamsLine("          stk : Stack ");
         addParamsLine("  alias -t;");
 
-        addParamsLine("  [-bits+ <bit_depth=8>] : Bit depth for TIFF format. Options are: ");
+        addParamsLine("  [--bits+ <bit_depth=8>] : Bit depth for TIFF format. Options are: ");
         addParamsLine("                         :   8  : Uint8 (char).");
         addParamsLine("                         :   16 : Uint16 (short).");
         addParamsLine("                         :   32 : Float.");
@@ -87,26 +87,26 @@ protected:
     {
         fn_in = getParam("-i");
         fn_out = getParam("-o");
-        fn_oext = getParam("-oext");
-        fn_root = getParam("-oroot");
+        fn_oext = getParam("--oext");
+        fn_root = getParam("--oroot");
 
-        type = getParam("-type");
+        type = getParam("--type");
 
-        if (!checkParam("-type"))
+        if (!checkParam("--type"))
         {
             if (fn_out.getExtension() == "vol" || fn_oext == "vol")
                 type = "vol";
             else if (fn_out.getExtension() == "stk" || fn_oext == "stk")
-                type = "stack";
+                type = "stk";
         }
 
-        bits = getParam("-bits");
+        bits = getParam("--bits");
 
         if (fn_out.getExtension() == "tif")
           fn_out += "%" + bits;
         else if (fn_oext == "tif")
           fn_oext += "%" + bits;
-        else if (checkParam("-bits"))
+        else if (checkParam("--bits"))
             REPORT_ERROR(ERR_PARAM_INCORRECT, "-bits option is only valid for TIFF format.");
 
     }
@@ -119,7 +119,7 @@ public:
             MetaData SF;
             MDRow    row;
             SF.read(fn_in);
-            if (type == "stack")
+            if (type == "stk")
             {
                 FileName fn_stack_plain=fn_stack.removeFileFormat();
                 if (exists(fn_stack_plain))
@@ -187,7 +187,7 @@ public:
             if (NSIZE(in())>1)
             {
                 // It's a stack with more than 1 slice
-                if (type == "stack")
+                if (type == "stk")
                 {
                     FileName fn_stack_plain=fn_stack.removeFileFormat();
                     if (exists(fn_stack_plain))
@@ -236,7 +236,7 @@ public:
             {
                 // It's a stack with 1 slice, an image or a volume
                 in.read(fn_in);
-                if (type == "stack")
+                if (type == "stk")
                 {
                     if (ZSIZE(in())>1)
                     {
