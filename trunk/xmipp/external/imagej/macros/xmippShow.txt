@@ -1,0 +1,11 @@
+// This macro allows to launch ImageJ from command line
+// passing multiple parameters to it.
+macro "XmippShow" {
+    args = split(getArgument);
+
+    for (i=0; i<args.length; i++) {
+        if(lengthOf(args[i])>0){
+            open(args[i]);
+        }
+    }
+}

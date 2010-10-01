@@ -18,23 +18,21 @@ else
 	while [ $# -gt 0 ]
 	do
 		case "$1" in
-			-mem)MEM=$2; shift;;
-			-file)FILE="$2"; shift;;
+			-mem)MEM=$2;READFILES=0; shift;;
+			-file)READFILES=1;;	# Activates files input mode
 			--)shift; break;;
-			-*)
-			echo >&2 \
+			-*)READFILES=0; echo >&2 \
 				"Unknown parameter: $1"
 				exit 1;;
-			*)  break;;	# terminate while loop
+			*)test "$READFILES" = "1" && FILES="$FILES $1";;
 		esac
 		shift
 	done
 
-	if test -z $MEM || test -z $FILE
+	if test -z $MEM || test -z $FILES
 	then
 		SHOW_HELP=1
 	fi
-
 
 	if [ -z $MEM ]
 	then
@@ -49,5 +47,5 @@ else
 
 	export LD_LIBRARY_PATH=$XMIPP_BASE/lib
 	IMAGEJ_HOME=$XMIPP_BASE/external/imagej
-	$JVM/bin/java -Xmx$MEM -Dplugins.dir=$IMAGEJ_HOME/plugins/ -jar $IMAGEJ_HOME/ij.jar $FILE
+	$JVM/bin/java -Xmx$MEM -Dplugins.dir=$IMAGEJ_HOME/plugins/ -jar $IMAGEJ_HOME/ij.jar "$FILES"
 fi
