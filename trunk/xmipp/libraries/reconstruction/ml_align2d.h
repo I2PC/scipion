@@ -186,14 +186,14 @@ public:
     void addModel(ModelML2D model);
     void substractModel(ModelML2D model);
 
-    double get_sumw(int refno);
-    double get_sumw_mirror(int refno);
-    double get_sumwsc(int refno);
-    MultidimArray<double> get_wsum_Mref(int refno);
-    double get_sumw_allrefs();
-    double get_wsum_sigma_offset();
-    double get_wsum_sigma_noise();
-    double get_sumfracweight();
+    double getSumw(int refno);
+    double getSumwMirror(int refno);
+    double getSumwsc(int refno);
+    MultidimArray<double> getWsumMref(int refno);
+    double getSumwAllrefs();
+    double getWsumSigmaOffset();
+    double getWsumSigmaNoise();
+    double getSumfracweight();
     void updateSigmaOffset(double wsum_sigma_offset);
     void updateSigmaNoise(double wsum_sigma_noise);
     void updateAvePmax(double sumfracweight);

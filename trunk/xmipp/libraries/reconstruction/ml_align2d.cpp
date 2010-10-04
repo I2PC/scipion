@@ -1049,13 +1049,13 @@ void ProgML2D::expectationSingleImage(Matrix1D<double> &opt_offsets)
               - ddim2 * log(sqrt(PI * df * sigma_noise2)) + gammln(-df2)
               - gammln(df / 2.);
 
-//
-//    std::cerr << "\n======>>>> dLL: " << dLL << std::endl;
-//    std::cerr << "sum_refw: " << sum_refw << std::endl;
-//    std::cerr << "my_mindiff: " << my_mindiff << std::endl;
-//    std::cerr << "sigma_noise2: " << sigma_noise2 << std::endl;
-//    std::cerr << "ddim2: " << ddim2 << std::endl;
-//    std::cerr << "dfsigma2: " << dfsigma2 << std::endl;
+    //
+    //    std::cerr << "\n======>>>> dLL: " << dLL << std::endl;
+    //    std::cerr << "sum_refw: " << sum_refw << std::endl;
+    //    std::cerr << "my_mindiff: " << my_mindiff << std::endl;
+    //    std::cerr << "sigma_noise2: " << sigma_noise2 << std::endl;
+    //    std::cerr << "ddim2: " << ddim2 << std::endl;
+    //    std::cerr << "dfsigma2: " << dfsigma2 << std::endl;
 
     LL += dLL;
 
@@ -2165,7 +2165,10 @@ void ProgML2D::maximization(ModelML2D &local_model)
 
     // Update sigma of the origin offsets
     if (!fix_sigma_offset)
+    {
+        std::cerr << "wsum_sigma_offset: " << wsum_sigma_offset << std::endl;
         local_model.updateSigmaOffset(wsum_sigma_offset);
+    }
 
     // Update the noise parameters
     if (!fix_sigma_noise)
@@ -2246,11 +2249,11 @@ void ProgML2D::correctScaleAverage(int refs_per_class)
 
     for (int refno = 0; refno < model.n_ref; refno++)
     {
-        average_scale += model.get_sumwsc(refno);
+        average_scale += model.getSumwsc(refno);
         temp = ldiv(refno, refs_per_class);
         iclass = ROUND(temp.quot);
-        wsum_scale[iclass] += model.get_sumwsc(refno);
-        sumw_scale[iclass] += model.get_sumw(refno);
+        wsum_scale[iclass] += model.getSumwsc(refno);
+        sumw_scale[iclass] += model.getSumw(refno);
     }
     for (int refno = 0; refno < model.n_ref; refno++)
     {
@@ -2319,7 +2322,7 @@ bool ProgML2D::checkConvergence()
 
 /// Add docfiledata to docfile
 void ProgML2D::addPartialDocfileData(const MultidimArray<double> &data,
-        int first, int last)
+                                     int first, int last)
 {
 #ifdef DEBUG
     std::cerr << "Entering addPartialDocfileData" <<std::endl;
@@ -2535,15 +2538,15 @@ FileName ProgML2D::getBaseName(std::string suffix, int number)
 ///////////// ModelML2D Implementation ////////////
 ModelML2D::ModelML2D()
 {
-  n_ref = -1;
-  sumw_allrefs2 = 0;
+    n_ref = -1;
+    sumw_allrefs2 = 0;
     initData();
 
 }//close default constructor
 
 ModelML2D::ModelML2D(int n_ref)
 {
-  sumw_allrefs2 = 0;
+    sumw_allrefs2 = 0;
     initData();
     setNRef(n_ref);
 }//close constructor
@@ -2574,26 +2577,23 @@ void ModelML2D::setNRef(int n_ref)
 void ModelML2D::combineModel(ModelML2D model, int sign)
 {
     if (n_ref != model.n_ref)
-    {
         REPORT_ERROR(ERR_VALUE_INCORRECT, "Can not add models with different 'n_ref'");
-        exit(1);
-    }
 
     double sumw, sumw_mirror, sumwsc, sumweight;
-    double wsum_sigma_offset = get_wsum_sigma_offset() + sign
-                               * model.get_wsum_sigma_offset();
-    double wsum_sigma_noise = get_wsum_sigma_noise() + sign
-                              * model.get_wsum_sigma_noise();
+    double wsum_sigma_offset = getWsumSigmaOffset() + sign
+                               * model.getWsumSigmaOffset();
+    double wsum_sigma_noise = getWsumSigmaNoise() + sign
+                              * model.getWsumSigmaNoise();
     double local_sumw_allrefs = sumw_allrefs + sign * model.sumw_allrefs;
-    double sumfracweight = get_sumfracweight() + sign
-                           * model.get_sumfracweight();
+    double sumfracweight = getSumfracweight() + sign
+                           * model.getSumfracweight();
 
     for (int refno = 0; refno < n_ref; refno++)
     {
         sumweight = Iref[refno].weight() + sign * model.Iref[refno].weight();
         if (sumweight > 0)
         {
-            Iref[refno]() = (get_wsum_Mref(refno) + sign * model.get_wsum_Mref(
+            Iref[refno]() = (getWsumMref(refno) + sign * model.getWsumMref(
                                  refno)) / sumweight;
             Iref[refno].setWeight(sumweight);
         }
@@ -2606,10 +2606,10 @@ void ModelML2D::combineModel(ModelML2D model, int sign)
 
         //Get all sums first, because function call will change
         //after updating model parameters.
-        sumw = get_sumw(refno) + sign * model.get_sumw(refno);
-        sumw_mirror = get_sumw_mirror(refno) + sign * model.get_sumw_mirror(
+        sumw = getSumw(refno) + sign * model.getSumw(refno);
+        sumw_mirror = getSumwMirror(refno) + sign * model.getSumwMirror(
                           refno);
-        sumwsc = get_sumwsc(refno) + sign * model.get_sumwsc(refno);
+        sumwsc = getSumwsc(refno) + sign * model.getSumwsc(refno);
 
         //Update parameters
         //alpha_k[refno] = sumw / local_sumw_allrefs;
@@ -2623,7 +2623,7 @@ void ModelML2D::combineModel(ModelML2D model, int sign)
     sumw_allrefs2 += sign * model.sumw_allrefs2;
 
     updateSigmaNoise(wsum_sigma_noise);
-    updateSigmaOffset(wsum_sigma_offset);
+     (wsum_sigma_offset);
     updateAvePmax(sumfracweight);
     LL += sign * model.LL;
 
@@ -2639,39 +2639,39 @@ void ModelML2D::substractModel(ModelML2D model)
     combineModel(model, -1);
 }//close function substractModel
 
-double ModelML2D::get_sumw(int refno)
+double ModelML2D::getSumw(int refno)
 {
     return alpha_k[refno] * sumw_allrefs;
 }//close function sumw
 
-double ModelML2D::get_sumw_mirror(int refno)
+double ModelML2D::getSumwMirror(int refno)
 {
-    return get_sumw(refno) * mirror_fraction[refno];
+    return getSumw(refno) * mirror_fraction[refno];
 }//close function sumw_mirror
 
-double ModelML2D::get_sumwsc(int refno)
+double ModelML2D::getSumwsc(int refno)
 {
-    return scale[refno] * get_sumw(refno);
+    return scale[refno] * getSumw(refno);
 }//close function get_sumwsc
 
-MultidimArray<double> ModelML2D::get_wsum_Mref(int refno)
+MultidimArray<double> ModelML2D::getWsumMref(int refno)
 {
     return Iref[refno]() * Iref[refno].weight();
 }//close function get_wsum_Mref
 
-double ModelML2D::get_wsum_sigma_offset()
+double ModelML2D::getWsumSigmaOffset()
 {
     return sigma_offset * sigma_offset * 2 * sumw_allrefs;
 }//close function get_wsum_sigma_offset
 
-double ModelML2D::get_wsum_sigma_noise()
+double ModelML2D::getWsumSigmaNoise()
 {
     double sum = (do_student && do_student_sigma_trick) ? sumw_allrefs2
                  : sumw_allrefs;
     return sigma_noise * sigma_noise * dim * dim * sum;
 }//close function get_wsum_sigma_noise
 
-double ModelML2D::get_sumfracweight()
+double ModelML2D::getSumfracweight()
 {
     return avePmax * sumw_allrefs;
 }//close function get_sumfracweight
@@ -2679,10 +2679,7 @@ double ModelML2D::get_sumfracweight()
 void ModelML2D::updateSigmaOffset(double wsum_sigma_offset)
 {
     if (sumw_allrefs == 0)
-    {
-        std::cerr << "updateSigmaOffset: sumw_allrefs == 0 " <<std::endl;
-        exit(1);
-    }
+        REPORT_ERROR(ERR_VALUE_INCORRECT, "'sumw_allrefs' couldn't be zero");
     sigma_offset = sqrt(wsum_sigma_offset / (2. * sumw_allrefs));
     if (wsum_sigma_offset < 0.)
         REPORT_ERROR(ERR_VALUE_INCORRECT, "sqrt of negative 'wsum_sigma_offset'");
@@ -2697,10 +2694,8 @@ void ModelML2D::updateSigmaNoise(double wsum_sigma_noise)
     double sum = (do_student && do_student_sigma_trick) ? sumw_allrefs2
                  : sumw_allrefs;
     if (sum == 0)
-    {
-        std::cerr << "updateSigmaNoise: sumw_allrefs == 0 " <<std::endl;
-        exit(1);
-    }
+        REPORT_ERROR(ERR_VALUE_INCORRECT, "'sumw_allrefs' couldn't be zero");
+
     double sigma_noise2 = wsum_sigma_noise / (sum * dim * dim);
     if (sigma_noise2 < 0.)
         REPORT_ERROR(ERR_VALUE_INCORRECT, "sqrt of negative 'sigma_noise2'");
@@ -2713,7 +2708,7 @@ void ModelML2D::updateAvePmax(double sumfracweight)
 }//close function updateAvePmax
 
 void ModelML2D::updateFractions(int refno, double sumw,
-                                      double sumw_mirror, double sumw_allrefs)
+                                double sumw_mirror, double sumw_allrefs)
 {
     if (sumw_allrefs == 0)
     {
@@ -2742,8 +2737,8 @@ void ModelML2D::updateScale(int refno, double sumwsc, double sumw)
 void ModelML2D::print()
 {
     std::cerr << "sumw_allrefs: " << sumw_allrefs << std::endl;
-    std::cerr << "wsum_sigma_offset: " << get_wsum_sigma_offset() << std::endl;
-    std::cerr << "wsum_sigma_noise: " << get_wsum_sigma_noise() << std::endl;
+    std::cerr << "wsum_sigma_offset: " << getWsumSigmaOffset() << std::endl;
+    std::cerr << "wsum_sigma_noise: " << getWsumSigmaNoise() << std::endl;
     std::cerr << "sigma_offset: " << sigma_offset << std::endl;
     std::cerr << "sigma_noise: " << sigma_noise << std::endl;
     std::cerr << "LL: " << LL << std::endl;
@@ -2751,8 +2746,8 @@ void ModelML2D::print()
     for (int refno = 0; refno < n_ref; refno++)
     {
         std::cerr << "refno:       " << refno << std::endl;
-        std::cerr << "sumw:        " << get_sumw(refno) << std::endl;
-        std::cerr << "sumw_mirror: " << get_sumw_mirror(refno) << std::endl;
+        std::cerr << "sumw:        " << getSumw(refno) << std::endl;
+        std::cerr << "sumw_mirror: " << getSumwMirror(refno) << std::endl;
         std::cerr << "alpha_k:        " << alpha_k[refno] << std::endl;
         std::cerr << "mirror_fraction: " << mirror_fraction[refno] << std::endl;
 
