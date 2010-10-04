@@ -31,6 +31,7 @@
 #include "strings.h"
 #include "metadata.h"
 #include "image.h"
+#include "program_sql.h"
 
 /** @defgroup Programs2 Basic structure for Xmipp programs
  *  @ingroup DataLibrary
@@ -59,6 +60,9 @@ private:
 
     /** Function to check built-ins actions like --more, --help...etc */
     void checkBuiltIns();
+
+    /** Write Program info to DB */
+    void writeToDB(const FileName &dbName);
 
 protected:
     /// Verbosity level

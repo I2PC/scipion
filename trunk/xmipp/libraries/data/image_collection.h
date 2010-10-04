@@ -42,21 +42,29 @@
 class ImageCollection: public MetaData
 {
 private:
-  FileName lastInStack, lastOutStack;
+    ///Dictionary with already opened stacks
+    std::map<FileName, fImageHandler*> openedStacks;
 
-  ///Open stack to start reading images
-  void openStack(const FileName & fnStack);
-  ///Close stack
-  void closeStack(const FileName & fnStack);
-  ///Add image to metadata
-  void addImage(const FileName &fnImage);
+    /**Get an stack handle, open the file handler if not done
+     * and add to the dictionary of allready opened stacks
+     */
+    fImageHandler* getStackHandle(Image<double> &image, const FileName & fnStack);
 
 public:
-  ///Constructors and destructor
-  ImageCollection(const MetaData &md);
-  ImageCollection(const FileName &fnImage);
-  ~ImageCollection();
+    ///Constructors and destructor
+    ImageCollection(const MetaData &md);
+    ImageCollection(const FileName &fnImage);
+    ImageCollection(const Image<double> &image);
+    /** This is a wrap of Image::read */
+    int readImage(Image<double> &image, const FileName &name, bool readdata=true, int select_img = -1,
+             bool apply_geo = false, bool only_apply_shifts = false,
+             MDRow * row = NULL, bool mapData = false);
+    /** This is a wrap of Image::write */
+    void writeImage(Image<double> &image, const FileName &name="", int select_img=-1, bool isStack=false,
+                   int mode=WRITE_OVERWRITE);
+    ~ImageCollection();
 
-};//end of class ImageCollection
+}
+;//end of class ImageCollection
 
 #endif /* IMAGE_COLLECTION_H_ */

@@ -29,7 +29,7 @@ void _Xmipp_error(const ErrorType nerr, const std::string &what,
                   const std::string &file, const long line)
 {
     XmippError xe(nerr, what, file, line);
-    std::cout << xe << std::endl;
+    std::cerr << xe << std::endl;
     //std::cout << nerr << ": " << what << std::endl
     //<< "File: " << file << " line: " << line << std::endl;
     exit(nerr);

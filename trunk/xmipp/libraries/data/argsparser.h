@@ -278,10 +278,15 @@ public:
 };
 
 
-/** Just print to console */
+/** Just print to out stream */
 class ConsolePrinter: public Printer
 {
+protected:
+  std::ostream * pOut;
+  void printRequiresList(StringVector requires);
 public:
+  /**Constructor */
+  ConsolePrinter(std::ostream &out=std::cout);
     virtual void printProgram(const ProgramDef &program, int v = 0);
     virtual void printSection(const SectionDef &section, int v = 0);
     virtual void printParam(const ParamDef &param, int v = 0);

@@ -27,28 +27,77 @@
 
 ImageCollection::ImageCollection(const MetaData &md)
 {
-  copyMetadata(md);
+    copyMetadata(md);
 }
 
 ImageCollection::ImageCollection(const FileName &fnImage)
 {
-  Image<double> image;
-  image.read(fnImage, false);
-  if (image().ndim == 1)
-    addImage(fnImage);
-  else
-  {
-    FileName fnTemp;
-    for (int i = 0; i < image().ndim; ++i)
+    Image<double> image;
+    image.read(fnImage, false);
+    if (image().ndim == 1)
     {
-      fnTemp = integerToString(i, 5);
-      fnTemp += "@" + fnImage;
+        addObject();
+        setValue(MDL_IMAGE, fnImage);
+        setValue(MDL_ENABLED, 1);
     }
-  }
-
+    else
+    {
+        FileName fnTemp;
+        for (size_t i = 0; i < image().ndim; ++i)
+        {
+            fnTemp.compose(i, fnImage);
+            addObject();
+            setValue(MDL_IMAGE, fnImage);
+            setValue(MDL_ENABLED, 1);
+        }
+    }
 }
 
-void ImageCollection::addImage(const FileName &fnImage)
+ImageCollection::~ImageCollection()
 {
-
+  std::map<FileName, fImageHandler*>::iterator it;
+  Image<double> image;
+  for (it = openedStacks.begin(); it != openedStacks.end(); ++it)
+    image.closeFile(it->second);
 }
+
+fImageHandler* ImageCollection::getStackHandle(Image<double> &image, const FileName & fnStack)
+{
+  std::map<FileName, fImageHandler*>::iterator it;
+  it = openedStacks.find(fnStack);
+  if (it != openedStacks.end())
+    return it->second;
+  return (openedStacks[fnStack] = image.openFile(fnStack));
+}
+
+/** This is a wrap of Image::read */
+int ImageCollection::readImage(Image<double> &image, const FileName &name, bool readdata, int select_img,
+                               bool apply_geo, bool only_apply_shifts, MDRow * row, bool mapData)
+{
+    if (name.isInStack())
+    {
+        FileName stackName;
+        int imgno;
+        name.decompose(imgno, stackName);
+        fImageHandler * fIH = getStackHandle(image, stackName);
+        image._read(stackName, fIH, readdata, imgno, apply_geo, only_apply_shifts, row, mapData);
+    }
+    else
+        image.read(name, readdata, select_img, apply_geo, only_apply_shifts, row, mapData);
+}
+
+/** This is a wrap of Image::write */
+void ImageCollection::writeImage(Image<double> &image, const FileName &name, int select_img, bool isStack, int mode)
+{
+    if (name.isInStack())
+    {
+        FileName stackName;
+        int imgno;
+        name.decompose(imgno, stackName);
+        fImageHandler * fIH = getStackHandle(image, stackName);
+        image._write(stackName, fIH, imgno, true, mode);
+    }
+    else
+        image.write(name, select_img, isStack, mode);
+}
+

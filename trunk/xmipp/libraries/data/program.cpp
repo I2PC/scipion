@@ -37,30 +37,56 @@ void XmippProgram::init()
     addParamsLine("                        : Otherwise, specific param help is showed,");
     addParamsLine("                        : param should be provided without the '-'");
     addParamsLine("alias --help;");
-    addParamsLine("[-more]         : Show additional options.");
+    addParamsLine("[--more]         : Show additional options.");
 
     ///This are a set of internal command for MetaProgram usage
     ///they should be hidden
     addParamsLine("==+++++ Internal section ==");
-    addParamsLine("[--__xmipp_print_metadata] : Print metadata info about the program");
+    addParamsLine("[--xmipp_write_definition <dbname>] : Print metadata info about the program");
 
     progDef->parse();
 }
 
 void XmippProgram::checkBuiltIns()
 {
-  ///If -more_options provided, show extended usage
-  if (checkParam("-more"))
-      usage(1);
-  ///If help requested, print usage message
-  if (checkParam("-h"))
-  {
-      std::string cmdHelp = (std::string)"-" + getParam("-h");
-      if (cmdHelp == "-")
-          usage();
-      else
-          usage(cmdHelp);
-  }
+    ///If -more_options provided, show extended usage
+    if (checkParam("--more"))
+        usage(1);
+    ///If help requested, print usage message
+    if (checkParam("--help"))
+    {
+        std::string cmdHelp = (std::string)"-" + getParam("-h");
+        if (cmdHelp == "-")
+            usage();
+        else
+            usage(cmdHelp);
+    }
+    if (checkParam("--xmipp_write_definition"))
+    {
+        writeToDB("programs.db");
+        exit(0);
+    }
+}
+
+void XmippProgram::writeToDB(const FileName &dbName)
+{
+
+    XmippDB db(dbName);
+    DbProgram progData;
+    progData.name = name();
+    StringVector::const_iterator it;
+    StringVector & desc = progDef->usageComments.comments;
+    for (it = desc.begin(); it < desc.end(); ++it)
+        progData.description += *it + "\\n";
+    db.beginTrans();
+    db.insertProgram(&progData);
+    db.commitTrans();
+    //progData.description =
+    //FILE * dbFile = fopen(dbName.c_str(), "w+");
+    //    std::ofstream fileOut(dbName.c_str());
+    //    ConsolePrinter cp(fileOut);
+    //    cp.printProgram(*progDef, 2);
+    //    exit(0);
 }
 
 XmippProgram::XmippProgram()
@@ -109,7 +135,7 @@ void XmippProgram::read(int argc, char ** argv)
     }
     catch (XmippError xe)
     {
-      checkBuiltIns();
+        checkBuiltIns();
         ///If an input error, shows error message and usage
         std::cerr << xe;
         usage();

@@ -341,6 +341,9 @@ inline char* nextWord()
 void tokenize(const std::string& str,
               std::vector< std::string >& tokens,
               const std::string& delimiters = " \t");
+
+//TODO: For now just a typedef, I think that would be worth to write an String class
+typedef std::string String;
 //@}
 //@}
 #endif

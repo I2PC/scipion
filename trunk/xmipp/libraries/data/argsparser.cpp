@@ -952,18 +952,23 @@ const char * ProgramDef::getParam(const char * paramName, const char * subParam,
 
 //-------------------   PRINTER IMPLEMENTATIONS   --------------------------------
 
+ConsolePrinter::ConsolePrinter(std::ostream & out)
+{
+    this->pOut = &out;
+}
+
 void ConsolePrinter::printProgram(const ProgramDef &program, int v)
 {
-    std::cout << "PROGRAM" << std::endl << "   " << program.name << std::endl;
+    *pOut << "PROGRAM" << std::endl << "   " << program.name << std::endl;
     if (program.usageComments.size() > 0)
     {
-        std::cout << "USAGE" << std::endl;
+        *pOut << "USAGE" << std::endl;
         for (size_t i = 0; i < program.usageComments.size(); ++i)
-            std::cout << "   " << program.usageComments.comments[i] << std::endl;
+            *pOut << "   " << program.usageComments.comments[i] << std::endl;
     }
     if (program.sections.size() > 0)
     {
-        std::cout << "OPTIONS" << std::endl;
+        *pOut << "OPTIONS" << std::endl;
         for (size_t i = 0; i < program.sections.size(); ++i)
             printSection(*program.sections[i], v);
     }
@@ -973,22 +978,22 @@ void ConsolePrinter::printSection(const SectionDef &section, int v)
 {
     if (section.visible <= v)
     {
-        std::cout << std::endl;
+        *pOut << std::endl;
         if (section.name.length() > 0)
-            std::cout << section.name << std::endl;
+            *pOut << section.name << std::endl;
         for (size_t i = 0; i < section.params.size(); ++i)
             printParam(*section.params[i], v);
     }
 }
 
-void printRequiresList(StringVector requires)
+void ConsolePrinter::printRequiresList(StringVector requires)
 {
     if (!requires.empty())
     {
-        std::cout << " ( requires ";
+        *pOut << " ( requires ";
         for (size_t i = 0; i < requires.size(); ++i)
-            std::cout << requires[i] << " ";
-        std::cout << ")";
+            *pOut << requires[i] << " ";
+        *pOut << ")";
     }
 }
 
@@ -997,26 +1002,26 @@ void ConsolePrinter::printParam(const ParamDef &param, int v)
     if (param.visible <= v)
     {
         if (param.orBefore)
-            std::cout << "   OR" << std::endl;
+            *pOut << "   OR" << std::endl;
 
-        std::cout << "   ";
+        *pOut << "   ";
         if (!param.notOptional)
-            std::cout << "[";
-        std::cout << param.name;
+            *pOut << "[";
+        *pOut << param.name;
         //print alias
         for (size_t i = 0; i < param.aliases.size(); ++i)
-            std::cout << ", " << param.aliases[i];
+            *pOut << ", " << param.aliases[i];
         //print arguments
         for (size_t i = 0; i < param.arguments.size(); ++i)
         {
-            std::cout << " ";
+            *pOut << " ";
             printArgument(*param.arguments[i], v);
         }
         if (!param.notOptional)
-            std::cout << "]";
+            *pOut << "]";
 
         printRequiresList(param.requires);
-        std::cout << std::endl;
+        *pOut << std::endl;
         printCommentList(param.comments, v);
 
         for (size_t i = 0; i < param.arguments.size(); ++i)
@@ -1024,17 +1029,17 @@ void ConsolePrinter::printParam(const ParamDef &param, int v)
             ArgumentDef &arg = *param.arguments[i];
             if (!arg.subParams.empty())
             {
-                std::cout << "      where <" << arg.name << "> can be:" << std::endl;
+                *pOut << "      where <" << arg.name << "> can be:" << std::endl;
                 for (size_t j = 0; j < arg.subParams.size(); ++j)
                 {
-                    std::cout << "        " << arg.subParams[j]->name;
+                    *pOut << "        " << arg.subParams[j]->name;
                     for (size_t k = 0; k < arg.subParams[j]->arguments.size(); ++k)
                     {
-                        std::cout << " ";
+                        *pOut << " ";
                         printArgument(*(arg.subParams[j]->arguments[k]));
                     }
                     printRequiresList(arg.subParams[j]->requires);
-                    std::cout << std::endl;
+                    *pOut << std::endl;
                     printCommentList(arg.subParams[j]->comments);
 
                 }
@@ -1046,17 +1051,17 @@ void ConsolePrinter::printParam(const ParamDef &param, int v)
 
 void ConsolePrinter::printArgument(const ArgumentDef & argument, int v)
 {
-    std::cout << "<" << argument.name;
+    *pOut << "<" << argument.name;
     if (argument.hasDefault)
-        std::cout << "=" << argument.argDefault;
-    std::cout << ">";
+        *pOut << "=" << argument.argDefault;
+    *pOut << ">";
 }
 
 void ConsolePrinter::printCommentList(const CommentList &comments, int v)
 {
     for (size_t i = 0; i < comments.size(); ++i)
         if (comments.visibility[i] <= v)
-            std::cout << "          " << comments.comments[i] << std::endl;
+            *pOut << "          " << comments.comments[i] << std::endl;
 }
 
 void ConsolePrinter::printToken(ArgToken * token)

@@ -246,7 +246,7 @@ public:
     /** Destructor */
     ~XmippError();
     /** Function to print the Stack calls */
-    void printStackTrace(std::ostream& o = std::cout);
+    void printStackTrace(std::ostream& o = std::cerr);
     friend std::ostream& operator<<(std::ostream& o, XmippError& XE);
 
     char * getDefaultMessage();
