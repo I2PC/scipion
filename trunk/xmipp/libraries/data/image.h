@@ -1672,10 +1672,11 @@ private:
         _exists = hFile->exist;
 
 
-        FileName filNamePlusExt;
+
 
         int dump;
         name.decompose(dump, filename);
+        FileName filNamePlusExt(name);
 
         if (select_img == -1)
             select_img = dump;
