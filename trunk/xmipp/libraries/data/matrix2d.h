@@ -27,6 +27,7 @@
 #define MATRIX2D_H_
 
 #include <string.h>
+#include <fstream>
 #include <external/bilib/types/tsplinebasis.h>
 #include <external/bilib/types/tboundaryconvention.h>
 #include <external/bilib/headers/linearalgebra.h>
@@ -898,6 +899,20 @@ public:
      */
     void killAdaptationForNumericalRecipes2(T** m) const
         {}
+
+    /** Read this matrix from file.
+     *  The matrix is assumed to be already resized.
+      */
+    void read(const FileName &fn)
+    {
+        std::ifstream fhIn;
+        fhIn.open(fn.c_str());
+        if (!fhIn)
+            REPORT_ERROR(ERR_IO_NOTEXIST,fn);
+        FOR_ALL_ELEMENTS_IN_MATRIX2D(*this)
+        	fhIn >> MAT_ELEM(*this,i,j);
+        fhIn.close();
+    }
 
     /** Write this matrix to file
       */
