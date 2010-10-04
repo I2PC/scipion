@@ -1442,7 +1442,7 @@ private:
 
         size_t found = fileName.find_first_of("%");
         if (found!=std::string::npos)
-          fileName = fileName.substr(0, found) ;
+            fileName = fileName.substr(0, found) ;
 
         hFile->exist = exists(fileName);
 
@@ -1660,7 +1660,7 @@ private:
 
 
 
-    void _write(FileName name, fImageHandler* hFile, int select_img=-1,
+    void _write(const FileName &name, fImageHandler* hFile, int select_img=-1,
                 bool isStack=false, int mode=WRITE_OVERWRITE)
     {
         int err = 0;
@@ -1671,23 +1671,24 @@ private:
         tif  = hFile->tif;
         _exists = hFile->exist;
 
+        filename = name;
 
 
-
-        int dump;
-        name.decompose(dump, filename);
+        int aux;
+        name.decompose(aux, filNamePlusExt);
         FileName filNamePlusExt(name);
 
         if (select_img == -1)
-            select_img = dump;
+            select_img = aux;
+
+        size_t found = filNamePlusExt.find_first_of("%");
 
         std::string imParam = "";
-        size_t found = name.find_first_of("%");
 
         if (found!=std::string::npos)
         {
-            imParam =  name.substr(found+1).c_str();
-            filNamePlusExt = name.substr(0, found) ;
+            imParam =  filNamePlusExt.substr(found+1).c_str();
+            filNamePlusExt = filNamePlusExt.substr(0, found) ;
         }
 
         found = filNamePlusExt.find_first_of(":");
