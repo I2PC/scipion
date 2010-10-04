@@ -50,12 +50,14 @@ int main(int argc, char *argv[])
         img.getDimensions(x,y,z,n);
         sampling_rate = (double) img.samplingRateX();
         filestr.open (fn_out.c_str());
+        std::string ext = fn_in.getExtension();
         filestr  << "<ITEM id=\"" << itemNumber <<"\">\n"
         << "<MDL_IMAGE>" << fn_in << "</MDL_IMAGE>\n"
         << "<MDL_X>" << x << "</MDL_X>\n"
         << "<MDL_Y>" << y << "</MDL_Y>\n"
         << "<MDL_Z>" << z << "</MDL_Z>\n"
         << "<MDL_N>" << n << "</MDL_N>\n"
+        << "<MDL_IMAGE_FORMAT>" << ext << "</MDL_IMAGE_FORMAT>\n"
         << "</ITEM>\n";
         filestr.close();
     }
