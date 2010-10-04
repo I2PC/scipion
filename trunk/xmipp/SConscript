@@ -588,6 +588,7 @@ ReconsSources = [
     'range_adjust.cpp',
     'recons_misc.cpp',
     'reconstruct_art.cpp',
+    'reconstruct_art_pseudo.cpp',
     'reconstruct_fourier.cpp',
     'reconstruct_wbp.cpp',
     'refinement.cpp',
@@ -752,6 +753,7 @@ AddXmippProgram('psd_sort', ['XmippRecons'])
 AddXmippProgram('range_adjust', ['XmippRecons'])
 #Sjors: note that crystal stuff in ART is not working yet....
 AddXmippProgram('reconstruct_art', ['XmippRecons'])
+AddXmippProgram('reconstruct_art_pseudo', ['XmippRecons'])
 AddXmippProgram('reconstruct_wbp', ['XmippRecons'])
 AddXmippProgram('reconstruct_fourier', ['XmippRecons'])
 AddXmippProgram('resolution_fsc')
