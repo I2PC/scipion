@@ -31,7 +31,7 @@ else
 		shift
 	done
 
-	if test -z $MEM || test -z $VOLFILE || test -z ANGLESFILE
+	if test -z "$MEM" || test -z "$VOLFILE" || test -z "$ANGLESFILE"
 	then
 		SHOW_HELP=1
 	fi
@@ -42,9 +42,13 @@ else
 		echo "No memory size provided. Using default: $MEM"
 	fi
 
-	if [ "$SHOW_HELP" = "1" ]
+	if [ -z $VOLFILE ]
 	then
 		echo "Not enough arguments."
+	fi
+
+	if [ "$SHOW_HELP" = "1" ]
+	then
 		echo "Usage: xmipp_projections_explorerj [-mem memory_ammount] <-vol volume_file> [-angles angles_file]"
 	fi
 
