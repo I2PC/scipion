@@ -2,11 +2,14 @@
 #---------------------------------------------------------------------------
 # getComponentFromVector
 #---------------------------------------------------------------------------
-def getComponentFromVector(_vector,_iteration):
+def getComponentFromVector(__vector,_iteration):
+   print "getComponentFromVector",__vector,_iteration
+   _vector=__vector.strip()
    listValues=getListFromVector(_vector)
    if _iteration<0: _iteration=0
    if _iteration<len(listValues): return listValues[_iteration]
    else:                          return listValues[len(listValues)-1]
+
 
 #---------------------------------------------------------------------------
 # getListFromVector
