@@ -815,9 +815,12 @@ void MetaData::_setOperates(const MetaData &mdIn, const MDLabel label, SetOperat
 {
     if (this == &mdIn) //not sense to operate on same metadata
         REPORT_ERROR(ERR_MD, "Couldn't perform this operation on input metadata");
+    if (size() == 0 && mdIn.size() == 0)
+    	REPORT_ERROR(ERR_MD, "Couldn't perform this operation if both metadata are empty");
     //Add labels to be sure are present
     for (int i = 0; i < mdIn.activeLabels.size(); i++)
         addLabel(mdIn.activeLabels[i]);
+    std::cerr << "_setOperates" <<  MDL::label2Str(label) <<std::endl;
 
     mdIn.myMDSql->setOperate(this, label, operation);
     firstObject();
@@ -839,21 +842,30 @@ void MetaData::_setOperates(const MetaData &mdInLeft, const MetaData &mdInRight,
 
 void MetaData::unionDistinct(const MetaData &mdIn, const MDLabel label)
 {
+	if(mdIn.isEmpty())
+		return;
     _setOperates(mdIn, label, UNION_DISTINCT);
 }
 
 void MetaData::unionAll(const MetaData &mdIn)
 {
+	if(mdIn.isEmpty())
+		return;
     _setOperates(mdIn, MDL_UNDEFINED, UNION);//label not needed for unionAll operation
 }
 
 
 void MetaData::intersection(const MetaData &mdIn, const MDLabel label)
 {
-    _setOperates(mdIn, label, INTERSECTION);
+	if(mdIn.isEmpty())
+		clear();
+	else
+		_setOperates(mdIn, label, INTERSECTION);
 }
 void MetaData::subtraction(const MetaData &mdIn, const MDLabel label)
 {
+	if(mdIn.isEmpty())
+		return;
     _setOperates(mdIn, label, SUBSTRACTION);
 }
 
