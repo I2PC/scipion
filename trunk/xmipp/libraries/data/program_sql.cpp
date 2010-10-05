@@ -38,7 +38,6 @@ XmippDB::XmippDB(const FileName &dbName)
 
 bool XmippDB::execStmt(const std::string &stmt, const std::string &error)
 {
-    std::cerr << "stmt: " << stmt << std::endl;
     if (sqlite3_exec(db, stmt.c_str(), NULL, NULL, &errmsg) != SQLITE_OK)
     {
         std::cerr << error << ":  " << errmsg << std::endl;
@@ -57,20 +56,32 @@ bool XmippDB::commitTrans()
     return execStmt("COMMIT TRANSACTION", "Couldn't commit transaction:  ");
 }
 
+bool XmippDB::createCategoryTable()
+{
+    char * cmdStr =
+        "DROP TABLE IF EXISTS Category;"
+        "CREATE TABLE Category ("
+        "id INTEGER PRIMARY KEY ASC AUTOINCREMENT,"
+        "name TEXT UNIQUE, desc TEXT, prefixes TEXT);"
+        "INSERT INTO Category VALUES(NULL, 'Micrograph', 'Programs to work with micrographs', 'micrograph_');"
+        "INSERT INTO Category VALUES(NULL, 'Metadata', 'Selfiles, docfiles and metadatas', 'selfile_ docfile_ metadata_');"
+        "INSERT INTO Category VALUES(NULL, 'Header', 'Header manipulation', 'header_');"
+        "INSERT INTO Category VALUES(NULL, 'Classification', 'classification programs', 'classify_');"
+        ;
+    return execStmt(cmdStr, "Couldn't create Category table:  ");
+}
+
 /** Create tables related with programs */
-bool XmippDB::createProgramTables()
+bool XmippDB::createProgramTable()
 {
     char * cmdStr =
         "DROP TABLE IF EXISTS Program;"
         "CREATE TABLE Program ("
         "id INTEGER PRIMARY KEY ASC AUTOINCREMENT,"
-        "cat_id INTEGER, name TEXT UNIQUE, desc TEXT);"
-        "DROP TABLE IF EXISTS Category;"
-        "CREATE TABLE Category ("
-        "id INTEGER PRIMARY KEY ASC AUTOINCREMENT,"
-        "name TEXT UNIQUE, desc TEXT);";
+        "cat_id INTEGER, name TEXT UNIQUE, desc TEXT,"
+        "keywords TEXT);";
 
-    return execStmt(cmdStr, "Couldn't create program tables:  ");
+    return execStmt(cmdStr, "Couldn't create Program table:  ");
 }
 
 /** Insert a program into db, the id field will be filled */
@@ -79,7 +90,8 @@ bool XmippDB::insertProgram(DbProgram * program)
     ///FIXME: remove single quote or other special characters to sqlite
     std::stringstream ss;
     ss << "INSERT INTO Program VALUES(NULL, NULL,'"
-    << program->name << "','" << program->description << "');";
+    << program->name << "','" << program->description
+    << "', '" << program->keywords << "');";
     bool result = execStmt(ss.str(), "Couldn't insert program");
     program->id = sqlite3_last_insert_rowid(db);
     return result;

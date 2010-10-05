@@ -26,12 +26,13 @@
 #include <data/progs.h>
 #include <data/args.h>
 #include <data/image_collection.h>
+#include <data/strings.h>
 
 class ProgStackCreate: public XmippMetadataProgram
 {
 protected:
     bool write_sel;
-    bool use_collection;
+    String case_type;
     FileName stackOut;
     ImageCollection *collection;
 
@@ -40,7 +41,8 @@ protected:
         produces_an_output = true;
         XmippMetadataProgram::defineParams();
         addParamsLine(" [--write_sel <selfile>] : Also produce a new selfile with the images of the stack.");
-        addParamsLine(" [--use_collection ] : Also produce a new selfile with the images of the stack.");
+        addParamsLine(" [--case <case_type> ] : Also produce a new selfile with the images of the stack.");
+        addParamsLine(" where <case_type> stack stackc normal");
     }
 
     void readParams()
@@ -49,7 +51,8 @@ protected:
         stackOut = fn_out;
         if (write_sel = checkParam("--write_sel"))
             fn_out = getParam("--write_sel");
-        if (use_collection = checkParam("--use_collection"))
+        case_type = getParam("--case");
+        if (case_type == "stackc")
         {
             collection = new ImageCollection(mdIn);
             std::cout << "using collection......" << std::endl;
@@ -67,15 +70,20 @@ protected:
     {
         static int counter = 0;
         static int mode = WRITE_APPEND;//(counter == 1) ? WRITE_OVERWRITE : WRITE_APPEND;
-        if (use_collection)
+        if (case_type == "stackc")
         {
             collection->readImage(img, fnImg);
             collection->writeImage(img, stackOut, counter, true, mode);
         }
-        else
+        else if(case_type == "stack")
         {
             img.read(fnImg);
             img.write(stackOut, counter, true, mode);
+        }
+        else
+        {
+          img.read(fnImg);
+          img.write(fnImg+"new");
         }
         //Append image to the newly created stack
 

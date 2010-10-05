@@ -26,30 +26,102 @@
 #include <data/progs.h>
 #include <data/args.h>
 #include <data/image_collection.h>
+#include <data/strings.h>
+#include <iomanip>
+#include <iostream>
+#include <queue>
+
+///Constant values for weighting the keywords match
+#define NAME_MATCH 5
+#define KEYS_MATCH 3
+#define DESC_MATCH 1
 
 class ProgApropos: public XmippProgram
 {
 protected:
+    StringVector keywords;
 
     void defineParams()
     {
-      addUsageLine("Search for Xmipp programs that are related to some keywords.");
-      addUsageLine("Useful for when do not remeber a program name.");
-      addParamsLine(" --keywords <...>   :keywords list to search programs matching");
-      addParamsLine("   alias -k;");
+        addUsageLine("Search for Xmipp programs that are related to some keywords.");
+        addUsageLine("Useful for when doesn't remeber a program name.");
+        addUsageLine("Examples:");
+        addUsageLine("   xmipp_apropos -k header");
+        addUsageLine("   xmipp_apropos -k \"noise gaussian\"");
+
+        addParamsLine(" --keyword <key>   :keyword to search programs matching");
+        addParamsLine("                   :if you want to search for more than one keyword,");
+        addParamsLine("                   :use quotes. See example above");
+        addParamsLine("   alias -k;");
     }
 
     void readParams()
     {
-
+        //Get keywords from cmd line
+        String keys = getParam("--keyword");
+        toLower(keys);
+        tokenize(keys, keywords);
     }
 
     void show()
+    {}
+
+    int getRank(const String &line, const String &key, int weight) const
     {
+        String lineLower = line;
+        toLower(lineLower);
+        if (lineLower.find(key) != String::npos)
+            return weight;
+        return 0;
     }
+
 public:
     void run()
     {
+        std::vector<DbProgram*> progs;
+        std::priority_queue<DbProgram*> progsRank;
+
+        std::vector<DbProgram*>::iterator it;
+        StringVector::iterator keyIt;
+
+        XmippDB db("programs.db");
+        db.beginTrans();
+        db.selectPrograms(progs);
+        db.commitTrans();
+
+        String line;
+        DbProgram *prog;
+        int len, maxlen = 0; //take max program name
+        for (it = progs.begin(); it < progs.end(); ++it)
+        {
+            prog = *it;
+            prog->rank = 0;
+            for (keyIt = keywords.begin(); keyIt < keywords.end(); ++keyIt)
+            {
+                prog->rank += getRank(prog->name, *keyIt, NAME_MATCH);
+                prog->rank += getRank(prog->keywords, *keyIt, KEYS_MATCH);
+                prog->rank += getRank(prog->description, *keyIt, DESC_MATCH);
+            }
+            if (prog->rank > 2)
+            {
+                maxlen = XMIPP_MAX(prog->name.length(), maxlen);
+                progsRank.push(prog);
+            }
+        }
+
+        //Print out results
+        size_t endline;
+        maxlen += 3;
+        while (!progsRank.empty())
+        {
+            prog = progsRank.top();
+            progsRank.pop();
+            endline = prog->description.find_first_of('\n');
+            std::cout
+            << std::left << std::setw(maxlen) << prog->name
+            << "- " << prog->description.substr(0, endline) << std::endl;
+            delete prog;
+        }
 
     }
 }

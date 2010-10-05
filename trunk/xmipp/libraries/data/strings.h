@@ -344,6 +344,9 @@ void tokenize(const std::string& str,
 
 //TODO: For now just a typedef, I think that would be worth to write an String class
 typedef std::string String;
+typedef std::vector<String> StringVector;
+
+
 //@}
 //@}
 #endif

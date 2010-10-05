@@ -61,13 +61,14 @@ ImageCollection::~ImageCollection()
     image.closeFile(it->second);
 }
 
-fImageHandler* ImageCollection::getStackHandle(Image<double> &image, const FileName & fnStack)
+fImageHandler* ImageCollection::getStackHandle(Image<double> &image, const FileName & fnStack, int mode)
 {
   std::map<FileName, fImageHandler*>::iterator it;
   it = openedStacks.find(fnStack);
   if (it != openedStacks.end())
     return it->second;
-  return (openedStacks[fnStack] = image.openFile(fnStack));
+  std::cout << "opening new handle......" << std::endl;
+  return (openedStacks[fnStack] = image.openFile(fnStack, mode));
 }
 
 /** This is a wrap of Image::read */
@@ -89,12 +90,12 @@ int ImageCollection::readImage(Image<double> &image, const FileName &name, bool 
 /** This is a wrap of Image::write */
 void ImageCollection::writeImage(Image<double> &image, const FileName &name, int select_img, bool isStack, int mode)
 {
-    if (name.isInStack())
+    if (name.isInStack() || select_img != -1)
     {
         FileName stackName;
         int imgno;
         name.decompose(imgno, stackName);
-        fImageHandler * fIH = getStackHandle(image, stackName);
+        fImageHandler * fIH = getStackHandle(image, stackName, mode);
         image._write(stackName, fIH, imgno, true, mode);
     }
     else

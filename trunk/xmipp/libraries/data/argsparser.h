@@ -26,7 +26,6 @@
 #ifndef ARGSPARSER_H_
 #define ARGSPARSER_H_
 
-#include <string>
 #include <cstring>
 #include <iostream>
 #include <sstream>
@@ -36,7 +35,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "error.h"
-
+#include "strings.h"
 
 
 typedef std::vector<std::string> StringVector;
@@ -245,6 +244,7 @@ public:
     CommentList usageComments; ///< comments of usage
     std::map<std::string, ParamDef*> paramsMap; ///< Dictionary with all params and alias names
     StringVector pendingRequires; ///< This is for checking that requires names exists
+    String keywords;
 
     ProgramDef();
     ~ProgramDef();

@@ -74,10 +74,11 @@ void XmippProgram::writeToDB(const FileName &dbName)
     XmippDB db(dbName);
     DbProgram progData;
     progData.name = name();
+    progData.keywords = progDef->keywords;
     StringVector::const_iterator it;
     StringVector & desc = progDef->usageComments.comments;
     for (it = desc.begin(); it < desc.end(); ++it)
-        progData.description += *it + "\\n";
+        progData.description += *it + "\n";
     db.beginTrans();
     db.insertProgram(&progData);
     db.commitTrans();
@@ -162,6 +163,12 @@ void XmippProgram::addParamsLine(const char * line)
     progDef->pLexer->addLine((std::string)line);
 }
 
+void XmippProgram::addKeywords(const char * keywords)
+{
+  progDef->keywords += " ";
+  progDef->keywords += keywords;
+}
+
 const char * XmippProgram::getParam(const char * param, int arg)
 {
     return progDef->getParam(param, arg);
@@ -190,6 +197,16 @@ double XmippProgram::getDoubleParam(const char * param, int arg)
 double XmippProgram::getDoubleParam(const char * param, const char * subparam, int arg)
 {
     return textToFloat(progDef->getParam(param, subparam, arg));
+}
+
+void XmippProgram::getListParam(const char * param, StringVector &list)
+{
+  ParamDef * paramDef = progDef->findParam(param);
+      if (paramDef == NULL)
+          REPORT_ERROR(ERR_ARG_INCORRECT, ((std::string)"Doesn't exists param: " + param));
+      list.clear();
+      for (int i = 0; i < paramDef->cmdArguments.size(); ++i)
+        list.push_back(paramDef->cmdArguments[i]);
 }
 
 bool XmippProgram::checkParam(const char * param)

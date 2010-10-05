@@ -92,6 +92,8 @@ protected:
     void clearUsage();
     /** Add a params definition line*/
     void addParamsLine(const char * line);
+    /** Add keywords to the program definition */
+    void addKeywords(const char * keywords);
 
     /** @} */
 
@@ -102,6 +104,8 @@ protected:
     int getIntParam(const char * param, const char * subparam, int arg = 0);
     double getDoubleParam(const char * param, int arg = 0);
     double getDoubleParam(const char * param, const char * subparam, int arg = 0);
+    /** Get params supplied as a vector */
+    void getListParam(const char * param, StringVector &list);
     /** Check if the param was supplied to command line */
     bool checkParam(const char * param);
 public:

@@ -33,12 +33,16 @@
 class DbProgram
 {
 public:
+  int rank; //Used to compare and sorting
   int id;
   int cat_id;
-  std::string name;
-  std::string description;
+  String name, description, keywords;
+
+  bool operator < (const DbProgram & prog) { return rank < prog.rank; }
 
 };//end of class DbProgram
+
+
 
 /** Class to represent data of programs categories */
 class DbCategory
@@ -65,8 +69,10 @@ public:
   bool execStmt(const std::string &stmt, const std::string &error="");
   bool beginTrans();
   bool commitTrans();
+  /** Create program categories tables */
+  bool createCategoryTable();
   /** Create tables related with programs */
-  bool createProgramTables();
+  bool createProgramTable();
   /** Insert a program into db, the id field will be filled */
   bool insertProgram(DbProgram * program);
   /** Update program data, id must be valid */

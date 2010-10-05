@@ -48,7 +48,7 @@ private:
     /**Get an stack handle, open the file handler if not done
      * and add to the dictionary of allready opened stacks
      */
-    fImageHandler* getStackHandle(Image<double> &image, const FileName & fnStack);
+    fImageHandler* getStackHandle(Image<double> &image, const FileName & fnStack, int mode=WRITE_APPEND);
 
 public:
     ///Constructors and destructor
