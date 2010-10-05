@@ -13,6 +13,6 @@ class std::string {};
 %pointer_class(FileName, FileNameP);
 
 PRINT(FileName)
-//%typemap(in) const FileName& {
-//    $1 = &(FileName(PyString_AsString($input)));
-//}
+// %typemap(in) const FileName& {
+//     $1 = &(FileName(PyString_AsString($input)));
+// }
