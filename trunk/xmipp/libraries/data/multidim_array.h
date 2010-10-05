@@ -708,9 +708,9 @@ public:
     MultidimArray(const Matrix1D<T>& V)
     {
         coreInit();
-        resize(1, 1, 1, V.size());
+        resize(1, 1, 1, V.size(),false);
         for (int i = 0; i < V.size(); i++)
-            (*this)(i) = V(i);
+            DIRECT_A1D_ELEM(*this,i) = VEC_ELEM(V,i);
     }
 
     /** Constructor from vector 1D
@@ -721,9 +721,9 @@ public:
     MultidimArray(const std::vector<T> &vector)
     {
         coreInit();
-        resize(1, 1, 1, vector.size());
+        resize(1, 1, 1, vector.size(),false);
         for (int i = 0; i < vector.size(); i++)
-            (*this)(i) = vector[i];
+            DIRECT_A1D_ELEM(*this,i) = vector[i];
     }
 
     /** Destructor.
@@ -1005,10 +1005,19 @@ public:
      * V1.resize(3, 3, 2);
      * @endcode
      */
-    void resize(unsigned long int Ndim, int Zdim, int Ydim, int Xdim)
+    void resize(unsigned long int Ndim, int Zdim, int Ydim, int Xdim, bool copy=true)
     {
         if (Ndim*Zdim*Ydim*Xdim == nzyxdimAlloc && data != NULL)
+        {
+            ndim = Ndim;
+            xdim = Xdim;
+            ydim = Ydim;
+            zdim = Zdim;
+            yxdim = Ydim * Xdim;
+            zyxdim = Zdim * yxdim;
+            nzyxdim = Ndim * zyxdim;
             return;
+        }
 
         if (Xdim <= 0 || Ydim <= 0 || Zdim <= 0 || Ndim <= 0)
         {
@@ -1061,22 +1070,27 @@ public:
         }
 
         // Copy needed elements, fill with 0 if necessary
-        for (unsigned long int l = 0; l < Ndim; l++)
-            for (int k = 0; k < Zdim; k++)
-                for (int i = 0; i < Ydim; i++)
-                    for (int j = 0; j < Xdim; j++)
-                    {
-                        T val;
-                        if (k >= ZSIZE(*this))
-                            val = 0;
-                        else if (i >= YSIZE(*this))
-                            val = 0;
-                        else if (j >= XSIZE(*this))
-                            val = 0;
-                        else
-                            val = DIRECT_A3D_ELEM(*this, k, i, j);
-                        new_data[l*ZYXdim + k*YXdim+i*Xdim+j] = val;
-                    }
+        if (copy)
+        {
+            for (unsigned long int l = 0; l < Ndim; l++)
+                for (int k = 0; k < Zdim; k++)
+                    for (int i = 0; i < Ydim; i++)
+                        for (int j = 0; j < Xdim; j++)
+                        {
+                            T val;
+                            if (l >= NSIZE(*this))
+                            	val = 0;
+                            else if (k >= ZSIZE(*this))
+                                val = 0;
+                            else if (i >= YSIZE(*this))
+                                val = 0;
+                            else if (j >= XSIZE(*this))
+                                val = 0;
+                            else
+                                val = DIRECT_NZYX_ELEM(*this, l, k, i, j);
+                            new_data[l*ZYXdim + k*YXdim+i*Xdim+j] = val;
+                        }
+        }
 
         // deallocate old vector
         coreDeallocate();
@@ -1107,6 +1121,13 @@ public:
         resize(1, Zdim, Ydim, Xdim);
     }
 
+    /** Resize with no copy a single 3D image
+     */
+    void resizeNoCopy(int Zdim, int Ydim, int Xdim)
+    {
+        resize(1, Zdim, Ydim, Xdim, false);
+    }
+
     /** Resize a single 2D image
      *
      * This function assumes n and z are 1
@@ -1119,6 +1140,13 @@ public:
         resize(1, 1, Ydim, Xdim);
     }
 
+    /** Resize a single 2D image with no copy
+     */
+    void resizeNoCopy(int Ydim, int Xdim)
+    {
+        resize(1, 1, Ydim, Xdim, false);
+    }
+
     /** Resize a single 1D image
      *
      * This function assumes n and z and y are 1
@@ -1129,6 +1157,13 @@ public:
     void resize(int Xdim)
     {
         resize(1, 1, 1, Xdim);
+    }
+
+    /** Resize a single 1D image with no copy
+     */
+    void resizeNoCopy(int Xdim)
+    {
+        resize(1, 1, 1, Xdim, false);
     }
 
     /** Resize according to a pattern.
@@ -1149,6 +1184,20 @@ public:
         if (NSIZE(*this) != NSIZE(v) || XSIZE(*this) != XSIZE(v) ||
             YSIZE(*this) != YSIZE(v) || ZSIZE(*this) != ZSIZE(v) || data==NULL)
             resize(NSIZE(v), ZSIZE(v), YSIZE(v), XSIZE(v));
+
+        STARTINGX(*this) = STARTINGX(v);
+        STARTINGY(*this) = STARTINGY(v);
+        STARTINGZ(*this) = STARTINGZ(v);
+    }
+
+    /** Resize according to a pattern with no copy.
+     */
+    template<typename T1>
+    void resizeNoCopy(const MultidimArray<T1> &v)
+    {
+        if (NSIZE(*this) != NSIZE(v) || XSIZE(*this) != XSIZE(v) ||
+            YSIZE(*this) != YSIZE(v) || ZSIZE(*this) != ZSIZE(v) || data==NULL)
+            resize(NSIZE(v), ZSIZE(v), YSIZE(v), XSIZE(v), false);
 
         STARTINGX(*this) = STARTINGX(v);
         STARTINGY(*this) = STARTINGY(v);
@@ -1784,7 +1833,7 @@ public:
         if (n > NSIZE(*this))
             REPORT_ERROR(ERR_INDEX_OUTOFBOUNDS," Multidimarray getImage: n larger than NSIZE");
 
-        M.resize(1, ZSIZE(*this), YSIZE(*this), XSIZE(*this));
+        M.resizeNoCopy(1, ZSIZE(*this), YSIZE(*this), XSIZE(*this));
         FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY3D(M)
         DIRECT_A2D_ELEM(M, i, j) = DIRECT_NZYX_ELEM(*this, n, k, i, j);
 
@@ -1821,7 +1870,7 @@ public:
                              "Slice: Multidim subscript (k) out of range");
 
             k = k - STARTINGZ(*this);
-            M.resize(1, 1, YSIZE(*this), XSIZE(*this));
+            M.resize(1, 1, YSIZE(*this), XSIZE(*this),false);
             FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY2D(M)
             DIRECT_A2D_ELEM(M, i, j) = DIRECT_NZYX_ELEM(*this, n, k, i, j);
             STARTINGX(M) = STARTINGX(*this);
@@ -1833,7 +1882,7 @@ public:
                              "Slice: Multidim subscript (i) out of range");
 
             k = k - STARTINGY(*this);
-            M.resize(ZSIZE(*this), XSIZE(*this));
+            M.resizeNoCopy(ZSIZE(*this), XSIZE(*this));
             FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY2D(M)
             DIRECT_A2D_ELEM(M, i, j) = DIRECT_NZYX_ELEM(*this, n, i, k, j);
             STARTINGX(M) = STARTINGX(*this);
@@ -1845,7 +1894,7 @@ public:
                              "Slice: Multidim subscript (j) out of range");
 
             k = k - STARTINGX(*this);
-            M.resize(ZSIZE(*this), YSIZE(*this));
+            M.resizeNoCopy(ZSIZE(*this), YSIZE(*this));
             FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY2D(M)
             DIRECT_A2D_ELEM(M, i, j) = DIRECT_NZYX_ELEM(*this, n, i, j, k);
             STARTINGX(M) = STARTINGY(*this);
@@ -1907,9 +1956,9 @@ public:
         if (j < 0 || j >= xdim)
             REPORT_ERROR(ERR_INDEX_OUTOFBOUNDS,"getCol: Matrix subscript (j) greater than matrix dimension");
 
-        v.resize(ydim);
+        v.resizeNoCopy(ydim);
         for (int i = 0; i < ydim; i++)
-            v(i) = (*this)(i, j);
+            DIRECT_A1D_ELEM(v,i) = DIRECT_A2D_ELEM(*this,i, j);
     }
 
     /** Set Column
@@ -1959,9 +2008,9 @@ public:
         if (i < 0 || i >= ydim)
             REPORT_ERROR(ERR_INDEX_OUTOFBOUNDS, "getRow: Matrix subscript (i) greater than matrix dimension");
 
-        v.resize(xdim);
+        v.resizeNoCopy(xdim);
         for (int j = 0; j < xdim; j++)
-            v(j) = (*this)(i, j);
+            DIRECT_A1D_ELEM(v,j) = DIRECT_A2D_ELEM(*this,i, j);
     }
 
     /** Set Row
@@ -3113,7 +3162,7 @@ public:
                          (std::string) "Array_by_array: different shapes (" +
                          operation + ")");
         if (result.data == NULL || !result.sameShape(op1))
-            result.resize(op1);
+            result.resizeNoCopy(op1);
         coreArrayByArray(op1, op2, result, operation);
     }
 
@@ -3243,7 +3292,7 @@ public:
                                      char operation)
     {
         if (result.data == NULL || !result.sameShape(op1))
-            result.resize(op1);
+            result.resizeNoCopy(op1);
         coreArrayByScalar(op1, op2, result, operation);
     }
 
@@ -3382,7 +3431,7 @@ public:
                                      char operation)
     {
         if (result.data == NULL || !result.sameShape(op2))
-            result.resize(op2);
+            result.resizeNoCopy(op2);
         coreScalarByArray(op1, op2, result, operation);
     }
 
@@ -3457,7 +3506,7 @@ public:
     void initZeros(const MultidimArray<T1>& op)
     {
         if (data == NULL || !sameShape(op))
-            resize(op);
+        	resizeNoCopy(op);
         memset(data,0,nzyxdim*sizeof(T));
     }
 
@@ -3480,7 +3529,7 @@ public:
     inline void initZeros(unsigned long int Ndim, int Zdim, int Ydim, int Xdim)
     {
         if (xdim!=Xdim || ydim!=Ydim || zdim!=Zdim || ndim!=Ndim)
-            resize(Ndim, Zdim,Ydim,Xdim);
+        	resize(Ndim, Zdim,Ydim,Xdim,false);
         memset(data,0,nzyxdim*sizeof(T));
     }
 
@@ -3551,7 +3600,7 @@ public:
             clear();
         else
         {
-            resize(steps);
+        	resizeNoCopy(steps);
             for (int i = 0; i < steps; i++)
                 A1D_ELEM(*this, i) = (T)((double) minF + slope * i);
         }
@@ -3706,11 +3755,11 @@ public:
      */
     void loadFromNumericalRecipes2D(T** m, int Ydim, int Xdim)
     {
-        resize(Ydim, Xdim);
+    	resizeNoCopy(Ydim, Xdim);
 
         for (int i = 1; i <= Ydim; i++)
             for (int j = 1; j <= Xdim; j++)
-                (*this)(i - 1, j - 1) = m[i][j];
+                DIRECT_A2D_ELEM(*this,i - 1, j - 1) = m[i][j];
     }
 
     /** Kill a 2D array produced for numerical recipes
@@ -3831,13 +3880,13 @@ public:
 
         if (xdim == 1)
         {
-            indx.resize(1);
+            indx.resizeNoCopy(1);
             indx(0) = 1;
             return indx;
         }
 
         // Initialise data
-        indx.resize(xdim);
+        indx.resizeNoCopy(xdim);
         typeCast(*this, temp);
 
         // Sort indexes
@@ -4120,7 +4169,7 @@ public:
         if (!v1.sameShape(v2))
             REPORT_ERROR(ERR_MULTIDIM_SIZE, "MAX: arrays of different shape");
 
-        result.resize(v1);
+        result.resizeNoCopy(v1);
         FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(result)
         DIRECT_MULTIDIM_ELEM(result,n) = XMIPP_MAX(
                                              DIRECT_MULTIDIM_ELEM(v1,n),
@@ -4139,7 +4188,7 @@ public:
         if (!v1.sameShape(v2))
             REPORT_ERROR(ERR_MULTIDIM_SIZE, "MIN: arrays of different shape");
 
-        result.resize(v1);
+        result.resizeNoCopy(v1);
         FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(result)
         DIRECT_MULTIDIM_ELEM(result,n) = XMIPP_MIN(
                                              DIRECT_MULTIDIM_ELEM(v1,n),
@@ -4421,7 +4470,7 @@ public:
         if (&op1 != this)
         {
             if (data == NULL || !sameShape(op1))
-                resize(op1);
+                resizeNoCopy(op1);
             memcpy(data,op1.data,MULTIDIM_SIZE(op1)*sizeof(T));
         }
         return *this;
@@ -4506,7 +4555,7 @@ void typeCast(const MultidimArray<T1>& v1,  MultidimArray<T2>& v2, long n = -1)
 
     if (n < 0)
     {
-        v2.resize(v1);
+        v2.resizeNoCopy(v1);
         T1* ptr1=NULL;
         unsigned long int n;
         FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY_ptr(v1,n,ptr1)
@@ -4514,7 +4563,7 @@ void typeCast(const MultidimArray<T1>& v1,  MultidimArray<T2>& v2, long n = -1)
     }
     else
     {
-        v2.resize(ZSIZE(v1),YSIZE(v1),XSIZE(v1));
+        v2.resizeNoCopy(ZSIZE(v1),YSIZE(v1),XSIZE(v1));
         FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY3D(v2)
         DIRECT_A3D_ELEM(v2,k,i,j) = static_cast< T2 >DIRECT_NZYX_ELEM(v1,n,k,i,j);
     }
