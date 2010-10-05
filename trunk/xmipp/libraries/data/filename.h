@@ -68,7 +68,7 @@ public:
      * FileName fn_blobs;
      * @endcode
      */
-    FileName(): std::string("")
+    inline FileName(): std::string("")
     {}
 
     /** Constructor from string
