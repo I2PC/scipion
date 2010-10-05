@@ -1657,9 +1657,6 @@ private:
         return err;
     }
 
-
-
-
     void _write(const FileName &name, fImageHandler* hFile, int select_img=-1,
                 bool isStack=false, int mode=WRITE_OVERWRITE)
     {
@@ -1673,10 +1670,9 @@ private:
 
         filename = name;
 
-
         int aux;
-        name.decompose(aux, filNamePlusExt);
         FileName filNamePlusExt(name);
+        name.decompose(aux, filNamePlusExt);
 
         if (select_img == -1)
             select_img = aux;
