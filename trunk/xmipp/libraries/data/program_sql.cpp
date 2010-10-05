@@ -118,6 +118,7 @@ bool XmippDB::selectPrograms(std::vector<DbProgram*> &programs)
         progData->cat_id = sqlite3_column_int(stmt, 1);
         progData->name.assign((char*)sqlite3_column_text(stmt, 2));
         progData->description.assign((char*)sqlite3_column_text(stmt, 3));
+        progData->keywords.assign((char*)sqlite3_column_text(stmt, 4));
         programs.push_back(progData);
     }
     rc = sqlite3_finalize(stmt);

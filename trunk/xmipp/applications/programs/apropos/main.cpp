@@ -44,7 +44,7 @@ protected:
     void defineParams()
     {
         addUsageLine("Search for Xmipp programs that are related to some keywords.");
-        addUsageLine("Useful for when doesn't remeber a program name.");
+        addUsageLine("Useful for when does not remeber a program name. gaussian noise header");
         addUsageLine("Examples:");
         addUsageLine("   xmipp_apropos -k header");
         addUsageLine("   xmipp_apropos -k \"noise gaussian\"");
@@ -53,6 +53,8 @@ protected:
         addParamsLine("                   :if you want to search for more than one keyword,");
         addParamsLine("                   :use quotes. See example above");
         addParamsLine("   alias -k;");
+
+        addKeywords("noise gaussian header");
     }
 
     void readParams()
