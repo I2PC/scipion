@@ -370,12 +370,14 @@ void MDSql::setOperate(MetaData *mdPtrOut, MDLabel column, SetOperation operatio
     switch (operation)
     {
     case UNION:
+
         copyObjects(mdPtrOut->myMDSql);
         execStmt = false;
         break;
     case UNION_DISTINCT: //unionDistinct
         //Create string with columns list
-        size = myMd->activeLabels.size();
+        size = mdPtrOut->activeLabels.size();
+        //std::cerr << "LABEL" <<  MDL::label2Str(column) <<std::endl;
         for (int i = 0; i < size; i++)
         {
             ss2 << sep << MDL::label2Str( myMd->activeLabels[i]);
@@ -399,6 +401,7 @@ void MDSql::setOperate(MetaData *mdPtrOut, MDLabel column, SetOperation operatio
         << " FROM " << tableName(tableId) << ");";
         break;
     }
+    //std::cerr << "ss" << ss.str() <<std::endl;
     if (execStmt)
         execSingleStmt(ss);
 }
