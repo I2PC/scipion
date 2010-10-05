@@ -67,7 +67,7 @@ int main(int argc, char **argv)
 	    // Fill output docfile
 	    for (int i = 0; i < nr_images; i++)
 	    {
-	        prm.DFexp.goToObject(ROUND(output_values[i*MY_OUPUT_SIZE+1]));
+	        prm.DFexp.goToObject(1+ROUND(output_values[i*MY_OUPUT_SIZE+1]));
             prm.DFexp.getValue(MDL_IMAGE,fn_tmp);
 
             DFo.addObject();
@@ -77,7 +77,7 @@ int main(int argc, char **argv)
             DFo.setValue(MDL_ANGLEPSI, output_values[i*MY_OUPUT_SIZE+4]);
             DFo.setValue(MDL_SHIFTX,   output_values[i*MY_OUPUT_SIZE+5]);
             DFo.setValue(MDL_SHIFTY,   output_values[i*MY_OUPUT_SIZE+6]);
-            DFo.setValue(MDL_REF,(int)(output_values[i*MY_OUPUT_SIZE+7]));
+            DFo.setValue(MDL_REF,(int)(1+output_values[i*MY_OUPUT_SIZE+7]));
            	DFo.setValue(MDL_FLIP,    (output_values[i*MY_OUPUT_SIZE+8]>0));
             DFo.setValue(MDL_MAXCC,    output_values[i*MY_OUPUT_SIZE+9]);
 	    }

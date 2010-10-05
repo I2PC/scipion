@@ -679,7 +679,6 @@ void Prog_angular_projection_matching_prm::processSomeImages(int * my_images, do
     // Loop over all images
     for (int imgno = 0; imgno < nr_images; imgno++)
     {
-
         // add one because first number is number of elements in the array
         int this_image = my_images[imgno + 1];
 
@@ -687,7 +686,7 @@ void Prog_angular_projection_matching_prm::processSomeImages(int * my_images, do
         //std::cerr << "get_image(this_image,img,true " <<  this_image << std::endl;
         //DFexp.get_image IS NOT EQUIVALENT TO getCurrentImage
         //DFexp.get_image(this_image,img,true);
-        getCurrentImage(this_image,img);
+        getCurrentImage(this_image+1,img);
 
         //rotationallyAlignOneImage(img(),this_image, opt_refno, opt_psi, opt_flip, maxcorr);
 
@@ -744,6 +743,7 @@ void Prog_angular_projection_matching_prm::processSomeImages(int * my_images, do
         my_output[imgno * MY_OUPUT_SIZE + 8] = opt_flip;
         my_output[imgno * MY_OUPUT_SIZE + 9] = maxcorr;
     }
+
 }
 
 void Prog_angular_projection_matching_prm::getCurrentImage(int imgno, Image<double> &img)

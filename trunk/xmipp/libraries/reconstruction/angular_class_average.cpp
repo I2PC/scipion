@@ -42,7 +42,7 @@ void Prog_angular_class_average_prm::read(int argc, char **argv)
         do_add = false;
         fn_out = getParameter(argc, argv, "-o");
     }
-    col_select = getParameter(argc, argv, "-select", "");
+    col_select = getParameter(argc, argv, "-select", "maxCC");
     if (checkParameter(argc, argv, "-limitR"))
     {
         limitR = textToFloat(getParameter(argc, argv, "-limitR"));
@@ -549,16 +549,28 @@ void Prog_angular_class_average_prm::processOneClass(int &dirno,
     w1 = 0.;
     w2 = 0.;
     this_image=0;
-    FOR_ALL_OBJECTS_IN_METADATA(DF)
+    MetaData _DF;
+    _DF.importObjects(DF,MDValueEQ(MDL_REF,dirno));
+    if (_DF.size()==0)
+    {//no images asigned to this class
+        my_output[0] = (double)dirno;
+        my_output[1] = w;
+        my_output[2] = w1;
+        my_output[3] = w2;
+        return;
+    }
+    std::cerr << "size"   << " " <<  _DF.size() <<std::endl;
+    FOR_ALL_OBJECTS_IN_METADATA(_DF)
     {
-        DF.getValue(MDL_IMAGE,fn_img);
+        _DF.getValue(MDL_IMAGE,fn_img);
         this_image++;
-        DF.getValue(MDL_REF,ref_number);
-        if (ref_number == dirno)
+        //_DF.getValue(MDL_REF,ref_number);
+        std::cerr << "dirno"   << " " <<  dirno <<std::endl;
+        //if (ref_number == dirno)
         {
             bool is_selected = true;
             double auxval;
-            DF.getValue(MDL::str2Label(col_select),auxval);
+            _DF.getValue(MDL::str2Label(col_select),auxval);
             if (do_limit0)
             {
                 if (auxval < limit0)
@@ -571,11 +583,11 @@ void Prog_angular_class_average_prm::processOneClass(int &dirno,
             }
             if (is_selected)
             {
-                DF.getValue(MDL_ANGLEPSI, psi);
-                DF.getValue(MDL_SHIFTX, xshift);
-                DF.getValue(MDL_SHIFTY, yshift);
+                _DF.getValue(MDL_ANGLEPSI, psi);
+                _DF.getValue(MDL_SHIFTX, xshift);
+                _DF.getValue(MDL_SHIFTY, yshift);
                 if (do_mirrors)
-                    DF.getValue(MDL_FLIP,mirror);
+                    _DF.getValue(MDL_FLIP,mirror);
                 img.read(fn_img, true, -1, false, false);
                 img().setXmippOrigin();
                 img.setEulerAngles(0., 0., psi);
@@ -587,7 +599,6 @@ void Prog_angular_class_average_prm::processOneClass(int &dirno,
                     isplit = ROUND(rnd_unif());
                 else
                     isplit = 0;
-
                 // For re-alignment of class: store all images in memory
                 if (nr_iter > 0)
                 {
@@ -619,12 +630,21 @@ void Prog_angular_class_average_prm::processOneClass(int &dirno,
             }
         }
     }
+    if (SFclass1.size()==0 && SFclass2.size()==0)
+    {//no images asigned to this class
+        my_output[0] = (double)dirno;
+        my_output[1] = w;
+        my_output[2] = w1;
+        my_output[3] = w2;
+        return;
+    }
 
     // Re-alignment of the class
     if (nr_iter > 0)
     {
+        std::cerr << "SFclass 1 and 2 " << SFclass1.size() << " " << SFclass2.size() <<std::endl;
         SFclass=SFclass1;
-        SFclass.unionDistinct(SFclass2);
+        SFclass.unionAll(SFclass2);
         avg() = avg1() + avg2();
         w = w1 + w2;
         avg.setWeight(w);
@@ -644,8 +664,16 @@ void Prog_angular_class_average_prm::processOneClass(int &dirno,
     }
 
     // Output total and split averages and selfiles to disc
+    SFclass1.write(std::cerr);
+    SFclass2.write(std::cerr);
+    std::cerr << "equal before " <<std::endl;
+
     SFclass = SFclass1;
-    SFclass.unionDistinct(SFclass2);
+    std::cerr << "unionAll " <<std::endl;
+    SFclass.unionAll(SFclass2);
+    std::cerr << "unionAll2	" <<std::endl;
+    SFclass.write(std::cerr);
+
     avg() = avg1() + avg2();
     w = w1 + w2;
     avg.setWeight(w);
@@ -745,6 +773,7 @@ void Prog_angular_class_average_prm::addClassAverage(int dirno,
         if (w1 > 0.)
         {
             fn_tmp.compose(fn_out1+"_class",dirno,"xmp");
+            SFclasses1.addObject();
             SFclasses1.setValue(MDL_IMAGE,fn_tmp);
             SFclasses1.setValue(MDL_ANGLEROT,rot);
             SFclasses1.setValue(MDL_ANGLETILT,tilt);
@@ -753,6 +782,7 @@ void Prog_angular_class_average_prm::addClassAverage(int dirno,
         if (w2 > 0.)
         {
             fn_tmp.compose(fn_out2+"_class",dirno,"xmp");
+            SFclasses2.addObject();
             SFclasses2.setValue(MDL_IMAGE,fn_tmp);
             SFclasses2.setValue(MDL_ANGLEROT,rot);
             SFclasses2.setValue(MDL_ANGLETILT,tilt);
