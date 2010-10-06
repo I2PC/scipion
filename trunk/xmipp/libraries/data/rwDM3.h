@@ -219,7 +219,7 @@ int readDM3(int img_select,bool isStack=false)
 
     MD.clear();
     MD.resize(imgEnd - imgStart);
-    for ( i = imgStart; i < imgEnd; i++ )
+    for (int i = imgStart; i < imgEnd; i++ )
     {
         MD[i-imgStart].setValue(MDL_ORIGINX,  zeroD);
         MD[i-imgStart].setValue(MDL_ORIGINY,  zeroD);
