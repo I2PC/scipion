@@ -128,6 +128,12 @@ public:
 
     /// Don't scale the atom weights at the end
     bool dontScale;
+
+    /// Binarize
+    bool binarize;
+
+    /// Threshold for the binarization
+    double threshold;
 public:
     /// Read parameters from command line
     void read(int argc, char **argv);

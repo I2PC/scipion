@@ -68,6 +68,11 @@ void ProgConvertVol2Pseudo::read(int argc, char **argv)
     numThreads = textToInteger(getParameter(argc,argv,"-thr","1"));
     sampling = textToFloat(getParameter(argc,argv,"-sampling_rate","1"));
     dontScale = checkParameter(argc,argv,"-dontScale");
+    binarize = checkParameter(argc,argv,"-binarize");
+    if (binarize)
+    	threshold=textToFloat(getParameter(argc,argv,"-binarize"));
+    else
+    	threshold=0;
 }
 
 void ProgConvertVol2Pseudo::show() const
@@ -89,6 +94,8 @@ void ProgConvertVol2Pseudo::show() const
               << "Threads:        " << numThreads        << std::endl
               << "Sampling Rate:  " << sampling          << std::endl
               << "Don't scale:    " << dontScale         << std::endl
+              << "Binarize:       " << binarize          << std::endl
+              << "Threshold:      " << threshold         << std::endl
     ;    
     if (useMask) mask_prm.show();
     else std::cout << "No mask\n";
@@ -120,6 +127,7 @@ void ProgConvertVol2Pseudo::usage() const
               << "  [-penalty <p=10>]                : Penalty for overshooting\n"
               << "  [-sampling_rate <Ts=1>]          : Sampling rate Angstroms/pixel\n"
               << "  [-dontScale]                     : Don't scale atom weights in the PDB\n"
+              << "  [-binarize <threshold>]          : Binarize the volume for a more uniform distribution\n"
               << "  [-thr <n=1>]                     : Number of threads\n"
     ;
     mask_prm.usage();
@@ -134,6 +142,8 @@ void ProgConvertVol2Pseudo::produceSideInfo()
 
     Vin.read(fnVol);
     Vin().setXmippOrigin();
+    if (binarize)
+    	Vin().binarize(threshold,0);
     
     if (fnOut=="")
         fnOut=fnVol.withoutExtension();
@@ -789,12 +799,9 @@ void ProgConvertVol2Pseudo::run()
         else
         {
             double Natoms=atoms.size();
-            std::cout << "Removing seeds" << std::endl;
             removeSeeds(FLOOR(Natoms*(growSeeds/2)/100));
-            std::cout << "Placing seeds" << std::endl;
             placeSeeds(FLOOR(Natoms*growSeeds/100));
         }
-        std::cout << "Drawing approximation" << std::endl;
         drawApproximation();
         if (iter==0)
             std::cout << "Initial error with " << atoms.size()
