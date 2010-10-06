@@ -43,7 +43,7 @@ int main(int argc, char **argv)
     MultidimArray<double>            Vaux;
 
     Prog_Refine3d_prm            prm;
-    ProgML2D           ML2D_prm;
+    ProgML2D           ML2D_prm(true);
 
     // Set to false for ML3D
     prm.fourier_mode = false;
@@ -73,9 +73,9 @@ int main(int argc, char **argv)
         MPI_Barrier(MPI_COMM_WORLD);
 
         // Read and set general MLalign2D-stuff
-        ML2D_prm.read(argc2, argv2, true);
+        ML2D_prm.read(argc2, argv2);
         if (!IS_MASTER)
-            ML2D_prm.verb = prm.verb = 0;
+            ML2D_prm.verbose = prm.verb = 0;
         if (!checkParameter(argc2, argv2, "-psi_step"))
             ML2D_prm.psi_step = prm.angular;
         ML2D_prm.fn_root = prm.fn_root;
