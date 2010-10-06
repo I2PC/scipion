@@ -152,9 +152,6 @@ public class Xmipp_Projections_Explorer implements PlugIn, UniverseListener, iAn
     }
 
     public void run(String volumeFile, String eulerAnglesFile) {
-        System.out.println(" > " + volumeFile);
-        System.out.println(" > " + eulerAnglesFile);
-
         try {
             // Loads image plus for volume.
             IJ.showStatus(LABELS.MESSAGE_LOADING_VOLUME);
