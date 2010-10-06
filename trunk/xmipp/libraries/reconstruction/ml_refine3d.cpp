@@ -55,8 +55,8 @@ void Prog_Refine3d_prm::read(int argc, char ** argv, int &argc2, char ** &argv2)
         }
         else
         {
-            ProgML2D ML_prm;
-            ML_prm.extendedUsage(true);
+            ProgML2D ML_prm(true);
+            ML_prm.usage(1);
         }
     }
     if (checkParameter(argc, argv, "-show_all_ART_options"))

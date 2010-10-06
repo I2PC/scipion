@@ -30,7 +30,7 @@ int main(int argc, char **argv)
     int                         c, volno, converged = 0, argc2 = 0;
     char                        **argv2=NULL;
     Prog_Refine3d_prm           prm;
-    ProgML2D          ML2D_prm;
+    ProgML2D          ML2D_prm(true);
     FileName                    fnt;
 
     // Set to false for ML3D
@@ -48,7 +48,7 @@ int main(int argc, char **argv)
         prm.remake_SFvol(prm.istart - 1, true);
 
         // Read MLalign2D-stuff
-        ML2D_prm.read(argc2, argv2, true);
+        ML2D_prm.read(argc2, argv2);
         if (!checkParameter(argc2, argv2, "-psi_step"))
             ML2D_prm.psi_step = prm.angular;
         ML2D_prm.fn_root = prm.fn_root;
