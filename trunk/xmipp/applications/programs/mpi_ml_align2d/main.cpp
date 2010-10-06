@@ -54,21 +54,22 @@ int main(int argc, char **argv)
         // Read subsequently to avoid problems in restart procedure
         for (int proc = 0; proc < size; proc++)
         {
-            if (proc == rank) prm.read(argc, argv);
+            if (proc == rank)
+              prm.read(argc, argv);
             MPI_Barrier( MPI_COMM_WORLD);
         }
 
         //Send "master" seed to slaves for same randomization
         if (IS_MASTER)
         {
-            prm.verb = 1;
+            prm.verbose = 1;
             for (int slave = 1; slave < size; slave++)
                 MPI_Send(&prm.seed, 1, MPI_INT, slave, TAG_DOCFILE,
                         MPI_COMM_WORLD);
         }
         else
         {
-            prm.verb = 0;
+            prm.verbose = 0;
             MPI_Recv(&prm.seed, 1, MPI_INT, 0, TAG_DOCFILE, MPI_COMM_WORLD,
                     &status);
         }
@@ -103,7 +104,7 @@ int main(int argc, char **argv)
         // Loop over all iterations
         for (prm.iter = prm.istart; !converged && prm.iter <= prm.Niter; prm.iter++)
         {
-            if (prm.verb > 0)
+            if (prm.verbose > 0)
                  std::cerr << "  Multi-reference refinement:  iteration " << prm.iter << " of " << prm.Niter << std::endl;
 
             // Save old reference images
@@ -208,7 +209,7 @@ int main(int argc, char **argv)
 
         if (rank == 0)
         {
-            if (converged && prm.verb > 0)
+            if (converged && prm.verbose > 0)
                 std::cerr << " Optimization converged!" << std::endl;
             //Write final output files
             prm.writeOutputFiles(prm.model);

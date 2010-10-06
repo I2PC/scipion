@@ -27,104 +27,19 @@
 
 int main(int argc, char **argv)
 {
-
-    int c, nn, imgno, opt_refno;
-    bool converged = false;
-    double aux;
-    MultidimArray<double> Maux;
-    FileName fn_img, fn_tmp;
-
-    ProgML2D prm;
-
     // Get input parameters
     try
     {
+        ProgML2D program;
         //Read arguments
-        prm.read(argc, argv);
-        //Generate initial references if not provided
-        prm.produceSideInfo();
-        //Do some initialization work
-        prm.produceSideInfo2();
-        //Create threads to be ready for work
-        prm.createThreads();
-    }
-    catch (XmippError XE)
-    {
-        std::cout << XE;
-        prm.usage();
-        exit(0);
-    }
-
-    try
-    {
-        Maux.resize(prm.dim, prm.dim);
-        Maux.setXmippOrigin();
-
-        ModelML2D block_model(prm.model.n_ref);
-
-        // Loop over all iterations
-        for (prm.iter = prm.istart; !converged && prm.iter <= prm.Niter; prm.iter++)
-        {
-#ifdef TIMING
-            prm.timer.tic(ITER);
-#endif
-
-            if (prm.verb > 0)
-                std::cerr << "  Multi-reference refinement:  iteration " << prm.iter << " of " << prm.Niter << std::endl;
-
-            for (int refno = 0;refno < prm.model.n_ref; refno++)
-                prm.Iold[refno]() = prm.model.Iref[refno]();
-
-            for (prm.current_block = 0; prm.current_block < prm.blocks; prm.current_block++)
-            {
-#ifdef TIMING
-                prm.timer.tic(ITER_E);
-#endif
-                // Integrate over all images
-                prm.expectation();
-#ifdef TIMING
-
-                prm.timer.toc(ITER_E);
-                prm.timer.tic(ITER_M);
-#endif
-
-                prm.maximizationBlocks();
-#ifdef TIMING
-                prm.timer.toc(ITER_M);
-#endif
-
-            }//close for blocks
-            //std::cerr << "======End of blocks, MODEL: =========" <<std::endl;
-            //prm.model.print();
-
-            // Check convergence
-            converged = prm.checkConvergence();
-
-            // Write output files
-            prm.addPartialDocfileData(prm.docfiledata, prm.myFirstImg, prm.myLastImg);
-            prm.writeOutputFiles(prm.model, OUT_ITER);
-
-
-#ifdef TIMING
-            std::cout << "-------------------- ITER: " << prm.iter << " ----------------------" << std::endl;
-            prm.timer.toc(ITER);
-            prm.timer.printTimes(true);
-
-#endif
-
-        } // end loop iterations
-
-        if (converged && prm.verb > 0)
-            std::cerr << " Optimization converged!" << std::endl;
-
-        prm.writeOutputFiles(prm.model);
-        prm.destroyThreads();
+        program.read(argc, argv);
+        program.run();
 
     }
     catch (XmippError XE)
     {
-        std::cout << XE;
-        prm.usage();
-        exit(0);
+        std::cerr << XE;
+        XE.printStackTrace(std::cerr);
+        exit(1);
     }
 }

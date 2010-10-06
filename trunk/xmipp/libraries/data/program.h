@@ -70,9 +70,6 @@ protected:
     int argc;
     char ** argv;
 
-    /// Verbosity level
-    int verbose;
-
     /** @name Functions to be implemented by subclasses.
      * @{
      */
@@ -114,6 +111,10 @@ protected:
     /** Check if the param was supplied to command line */
     bool checkParam(const char * param);
 public:
+
+    /// Verbosity level
+    int verbose;
+
     /** @name Public common functions
      * The functions in this section are available for all programs
      * and should not be reimplemented in derived class, since they

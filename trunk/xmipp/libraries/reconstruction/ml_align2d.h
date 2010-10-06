@@ -26,6 +26,10 @@
 #ifndef _MLALIGN2D_H
 #define _MLALIGN2D_H
 
+#include <sys/time.h>
+#include <pthread.h>
+#include <vector>
+
 #include <data/fftw.h>
 #include <data/fft.h>
 #include <data/args.h>
@@ -37,9 +41,7 @@
 #include <data/mask.h>
 #include <data/ctf.h>
 #include <data/threads.h>
-#include <pthread.h>
-#include <vector>
-#include <sys/time.h>
+#include <data/program.h>
 
 
 #define SIGNIFICANT_WEIGHT_LOW 1e-8
@@ -65,65 +67,6 @@ while ((load = getThreadRefnoJob(refno)) > 0) \
 
 //For MPI
 #define IS_MASTER (rank == 0)
-
-#ifdef TIMING
-//testing time...
-
-#define TB_TOTAL 18
-typedef enum TimingBlocks { ITER, ITER_E, ITER_M, E_RR, E_PRE, E_FOR, E_RRR, E_OUT, FOR_F1, FOR_PFS, FOR_ESI, FOR_F2, ESI_E1, ESI_E2TH, ESI_E3, ESI_E4, ESI_E5, ESI_E6TH } TimingBlocks;
-
-class JMTimer
-{
-public:
-    ///Some timing stuff
-    timeval start_times[TB_TOTAL];
-    int counts[TB_TOTAL];
-    long int times[TB_TOTAL];
-    char * tags[];
-    //timeval start_time;
-    timeval end_time;
-
-    JMTimer()
-    {
-        clear();
-    }
-
-    void clear()
-    {
-        for (int i = 0; i < 25; i++)
-            counts[i] = times[i] = 0;
-    }
-
-    void tic(TimingBlocks tb)
-    {
-        int i = (int)tb;
-        gettimeofday(start_times + i, NULL);
-        counts[i]++;
-    }
-
-    int toc(TimingBlocks tb)
-    {
-        int i = (int)tb;
-        gettimeofday(&end_time, NULL);
-        times[i] += (end_time.tv_sec - start_times[i].tv_sec) * 1000000 +
-                       (end_time.tv_usec - start_times[i].tv_usec);
-    }
-
-    void printTimes(bool doClear)
-    {
-        char * tags[] = { "ITER", "ITER_E", "ITER_M", "E_RR", "E_PRE", "E_FOR", "E_RRR", "E_OUT", "FOR_F1", "FOR_PFS", "FOR_ESI", "FOR_F2", "ESI_E1", "ESI_E2TH", "ESI_E3", "ESI_E4", "ESI_E5", "ESI_E6TH"};
-
-        for (int i = 0; i < TB_TOTAL; i++)
-        {
-            std::cout << tags[i] << " took: " << times[i] / counts[i] << " microseconds" << std::endl;
-        }
-
-        if (doClear)
-            clear();
-    }
-};
-#endif
-
 
 //threadTask constants
 #define TH_EXIT 0
@@ -207,7 +150,7 @@ public:
    @ingroup ReconsLibrary */
 //@{
 /** MLalign2D parameters. */
-class ProgML2D
+class ProgML2D: public XmippProgram
 {
 public:
     /** Filenames reference selfile/image, fraction docfile & output rootname */
@@ -252,10 +195,6 @@ public:
     std::vector<double> A2;
     /** Sum of squared amplitudes of the experimental image */
     double Xi2;
-    /** Verbose level:
-        1: gives progress bar (=default)
-        0: gives no output to screen at all */
-    int verb;
     /** Stopping criterium */
     double eps;
     /** MetaData files for experimental and reference images */
@@ -375,23 +314,17 @@ public:
     //Initial references regularization
     double ref_reg;
 
-#ifdef TIMING
-    JMTimer timer;
-#endif
+    /// Read arguments from command line
+    void readParams();
+    /// Params definition
+    void defineParams();
 
 public:
-    /// Read arguments from command line
-    void read(int argc, char **argv, bool ML3D = false);
-
-    /// Show
-    void show(bool ML3D = false);
-
-    /// Usage for ML mode
-    void usage();
-
-    /// Extended Usage
-    void extendedUsage(bool ML3D = false);
-
+    ProgML2D(bool ML3D = false);
+    ///Show info
+    void show();
+    ///Main function of the program
+    void run();
     ///Try to merge produceSideInfo1 and 2
     void produceSideInfo(int rank = 0);
     ///Try to merge produceSideInfo1 and 2
