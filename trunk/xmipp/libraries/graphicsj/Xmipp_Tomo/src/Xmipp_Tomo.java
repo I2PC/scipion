@@ -58,7 +58,7 @@ public class Xmipp_Tomo implements PlugIn{
 	
 	// exit values of methods and dialogs
 	public static enum ExitValues {
-		OK(0),ERROR(1),YES(2),NO(3),CANCEL(4);
+		OK(0),ERROR(1),YES(2),NO(3),CANCEL(4),RUNTIME_ERROR(5),PROGRAM_NOT_FOUND(6);
 		private final int value;
 		ExitValues(int err) { value=err;}
 		public int value(){return value;}
@@ -140,11 +140,11 @@ public class Xmipp_Tomo implements PlugIn{
 	 * @param cmdline
 	 * @return the exit value of cmdline (@see Process.waitFor())
 	 */
-	int exec(String cmdline){
+	public static ExitValues exec(String cmdline){
 		// execution details may change with each OS...
 		//String osName = System.getProperty("os.name" );
 		
-		int exitValue=ExitValues.OK.value();
+		ExitValues exitValue=ExitValues.OK;
 		Process proc=null;
 		
 		Runtime rt = Runtime.getRuntime();
@@ -152,7 +152,9 @@ public class Xmipp_Tomo implements PlugIn{
 		try{
 			proc = rt.exec(cmdline);
 		}catch (IOException ex){
-			return -1;
+			debug(ex.toString());
+			// one improvement would be to extract the error code from the exception and return the exitvalue accordingly
+			return ExitValues.PROGRAM_NOT_FOUND;
 		}
 		
 		// Prepare buffered readers from inputstreams (stderr, stdout) ...
@@ -180,9 +182,15 @@ public class Xmipp_Tomo implements PlugIn{
         }
         
         try{
-        	exitValue = proc.waitFor();
+        	int ev = proc.waitFor();
+        	// convert from int ev to ExitValue
+        	switch(ev){
+        		default:
+        			debug(String.valueOf(ev));
+        	}
+        	
         }catch (java.lang.InterruptedException ex){
-        	exitValue=ExitValues.ERROR.value();;
+        	exitValue=ExitValues.ERROR;
         }
         return exitValue;
 	} // exec end

@@ -652,11 +652,18 @@ public class TomoWindow extends ImageWindow implements WindowListener,
 			b.setEnabled(true);
 	}
 	
+	/**
+	 * Ask user parameters for xmipp_xray_import and run it (by now, the program must be on $PATH)
+	 */
 	private void actionXray() {
 		XrayImportDialog d=new XrayImportDialog("X-Ray import",this);
 		// d.setup();
 		d.showDialog();
-		Xmipp_Tomo.debug(d.getCommand());
+		String command=d.getCommand();
+		// Xmipp_Tomo.debug(command);
+		Xmipp_Tomo.ExitValues error = Xmipp_Tomo.exec(command);
+		if(error != Xmipp_Tomo.ExitValues.OK)
+			Xmipp_Tomo.debug("Error (" + error + ") executing " + command);
 	}
 
 	private void actionSave() {
