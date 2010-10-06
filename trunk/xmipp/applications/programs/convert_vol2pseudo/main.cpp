@@ -50,7 +50,7 @@ int main(int argc, char **argv)
     bool FourD = false;
     int npoints;
 
-    Prog_Convert_Vol2Pseudo prm;
+    ProgConvertVol2Pseudo prm;
     bool newMode=false;
     // Read arguments
     try
