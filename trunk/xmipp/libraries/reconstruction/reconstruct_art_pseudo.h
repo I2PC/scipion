@@ -55,6 +55,9 @@ public:
 
     /// Sigma of atoms
     double sigma;
+
+    /// Sampling rate
+    double sampling;
 public:
     /** Define parameters */
     void defineParams();

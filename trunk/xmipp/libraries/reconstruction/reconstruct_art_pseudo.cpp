@@ -166,6 +166,7 @@ void ProgARTPseudo::readParams()
     Nit=getIntParam("-n");
     sigma=getDoubleParam("-sigma");
     fnNMA=getParam("-nma");
+    sampling=getDoubleParam("-sampling");
 }
 
 void ProgARTPseudo::show() const
@@ -174,6 +175,7 @@ void ProgARTPseudo::show() const
     << "Input images:    " << fnDoc     << std::endl
     << "Pseudoatoms:     " << fnPseudo  << std::endl
     << "Sigma:           " << sigma     << std::endl
+    << "Sampling rate:   " << sampling  << std::endl
     << "NMA:             " << fnNMA     << std::endl
     << "Output rootname: " << fnRoot    << std::endl
     << "Lambda ART:      " << lambdaART << std::endl
@@ -188,6 +190,7 @@ void ProgARTPseudo::defineParams()
     addParamsLine("   -pseudo <pseudofile> : Pseudo atomic structure (PDB format)");
     addParamsLine("   -o <rootname>        : Output rootname");
     addParamsLine("  [-sigma <s=-1>]       : Pseudoatom sigma. By default, from pseudo file");
+    addParamsLine("  [-sampling <Ts=1>]    : Sampling rate in Angstroms/pixel");
     addParamsLine("  [-l <lambda=0.1>]     : Relaxation factor");
     addParamsLine("  [-n <N=1>]            : Number of iterations");
     addParamsLine("  [-nma <selfile=\"\">] : Selfile with NMA");
@@ -211,6 +214,7 @@ void ProgARTPseudo::produceSideInfo()
             std::vector < std::string> results;
             splitString(line," ",results);
             sigma=textToFloat(results[2]);
+            sigma/=sampling;
         }
         else if (line.substr(0,4)=="ATOM")
         {
@@ -218,6 +222,7 @@ void ProgARTPseudo::produceSideInfo()
             v(0)=textToFloat(line.substr(30,8));
             v(1)=textToFloat(line.substr(38,8));
             v(2)=textToFloat(line.substr(46,8));
+            v/=sampling;
             atomPosition.push_back(v);
             atomWeight.push_back(0);
         }
