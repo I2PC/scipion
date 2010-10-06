@@ -53,8 +53,6 @@
 class XmippProgram
 {
 private:
-    ProgramDef * progDef;
-
     /** Initialization function */
     void init();
 
@@ -65,6 +63,13 @@ private:
     void writeToDB(const FileName &dbName);
 
 protected:
+    /// Program definition and arguments parser
+    ProgramDef * progDef;
+
+    ///Original command line arguments
+    int argc;
+    char ** argv;
+
     /// Verbosity level
     int verbose;
 

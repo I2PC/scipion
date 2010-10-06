@@ -870,8 +870,27 @@ void ProgramDef::addParamRequires(const std::string &name)
     pendingRequires.push_back(name);
 }
 
+void ProgramDef::clear()
+{
+
+    SectionDef * section;
+    ParamDef * param;
+
+    for (size_t i = 0; i < sections.size(); ++i)
+    {
+        section = sections[i];
+        for (size_t j = 0; j < section->params.size(); ++j)
+        {
+            param = section->params[j];
+            param->counter = 0;
+            param->cmdArguments.clear();
+        }
+    }
+}
+
 void ProgramDef::read(int argc, char ** argv)
 {
+  clear();
     std::stringstream errors;
     //Set the name with the first argument
     name = argv[0];
@@ -884,7 +903,9 @@ void ProgramDef::read(int argc, char ** argv)
     //Read command line params and arguments
     for (int i = 1; i < argc; ++i)
     {
-    double _d = atof (argv[i]);
+
+
+        double _d = atof (argv[i]);
         if (argv[i][0] == '-' && _d == 0)
         {
             param = findParam(argv[i]);

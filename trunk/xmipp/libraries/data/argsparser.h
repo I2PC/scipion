@@ -257,6 +257,8 @@ public:
     const char * getParam(const char * paramName, const char * subParam, int paramNumber = 0);
     void addParamName(const std::string & name, ParamDef *param);
     void addParamRequires(const std::string &name);
+    ///clear read arguments
+    void clear();
     /// Read and validate commmand line
     void read(int argc, char ** argv);
 

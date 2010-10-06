@@ -84,14 +84,28 @@ bool XmippDB::createProgramTable()
     return execStmt(cmdStr, "Couldn't create Program table:  ");
 }
 
+String getSqliteStr(const String & str)
+{
+  size_t pos = 0;
+  String temp = str;
+  while ((pos = temp.find_first_of("'", pos)) != String::npos)
+  {
+    temp.replace(pos, 1, "''");
+    pos += 2;
+  }
+
+  return (String)"'" + temp + "'";
+}
+
 /** Insert a program into db, the id field will be filled */
 bool XmippDB::insertProgram(DbProgram * program)
 {
     ///FIXME: remove single quote or other special characters to sqlite
     std::stringstream ss;
-    ss << "INSERT INTO Program VALUES(NULL, NULL,'"
-    << program->name << "','" << program->description
-    << "', '" << program->keywords << "');";
+    ss << "INSERT INTO Program VALUES(NULL, NULL,"
+    << getSqliteStr(program->name) << ","
+    << getSqliteStr(program->description) << ", "
+    << getSqliteStr(program->keywords) << ");";
     bool result = execStmt(ss.str(), "Couldn't insert program");
     program->id = sqlite3_last_insert_rowid(db);
     return result;

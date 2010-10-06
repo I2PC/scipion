@@ -53,8 +53,6 @@ protected:
         addParamsLine("                   :if you want to search for more than one keyword,");
         addParamsLine("                   :use quotes. See example above");
         addParamsLine("   alias -k;");
-
-        addKeywords("noise gaussian header");
     }
 
     void readParams()
@@ -62,6 +60,7 @@ protected:
         //Get keywords from cmd line
         String keys = getParam("--keyword");
         toLower(keys);
+        //StringVector vector;
         tokenize(keys, keywords);
     }
 
@@ -86,7 +85,8 @@ public:
         std::vector<DbProgram*>::iterator it;
         StringVector::iterator keyIt;
 
-        XmippDB db("programs.db");
+        FileName dbName = xmippBaseDir().append("/programs.db");
+        XmippDB db(dbName);
         db.beginTrans();
         db.selectPrograms(progs);
         db.commitTrans();
