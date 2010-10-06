@@ -47,7 +47,7 @@ std::ostream& operator << (std::ostream &o, const PseudoAtom &a)
 }
 
 /* I/O --------------------------------------------------------------------- */
-void Prog_Convert_Vol2Pseudo::read(int argc, char **argv)
+void ProgConvertVol2Pseudo::read(int argc, char **argv)
 {
     fnVol = getParameter(argc,argv,"-i");
     fnOut = getParameter(argc,argv,"-o","");
@@ -60,6 +60,7 @@ void Prog_Convert_Vol2Pseudo::read(int argc, char **argv)
     growSeeds = textToFloat(getParameter(argc,argv,"-growSeeds","30"));
     allowMovement = !checkParameter(argc,argv,"-dontAllowMovement");
     allowIntensity = !checkParameter(argc,argv,"-dontAllowIntensity");
+    intensityFraction = textToFloat(getParameter(argc,argv,"-intensityFraction","0.01"));
     intensityColumn = getParameter(argc,argv,"-intensityColumn","occupancy");
     Nclosest = textToInteger(getParameter(argc,argv,"-Nclosest","3"));
     minDistance = textToFloat(getParameter(argc,argv,"-minDistance","0.001"));
@@ -69,30 +70,31 @@ void Prog_Convert_Vol2Pseudo::read(int argc, char **argv)
     dontScale = checkParameter(argc,argv,"-dontScale");
 }
 
-void Prog_Convert_Vol2Pseudo::show() const
+void ProgConvertVol2Pseudo::show() const
 {
-    std::cout << "Input volume:   " << fnVol           << std::endl
-              << "Output volume:  " << fnOut           << std::endl
-              << "Sigma:          " << sigma           << std::endl
-              << "Initial seeds:  " << initialSeeds    << std::endl
-              << "Grow seeds:     " << growSeeds       << std::endl
-              << "Target error:   " << targetError     << std::endl
-              << "Stop:           " << stop            << std::endl
-              << "AllowMovement:  " << allowMovement   << std::endl
-              << "AllowIntensity: " << allowIntensity  << std::endl
-              << "Intensity Col:  " << intensityColumn << std::endl
-              << "Nclosest:       " << Nclosest        << std::endl
-              << "Min. Distance:  " << minDistance     << std::endl
-              << "Penalty:        " << penalty         << std::endl
-              << "Threads:        " << numThreads      << std::endl
-              << "Sampling Rate:  " << sampling        << std::endl
-              << "Don't scale:    " << dontScale       << std::endl
+    std::cout << "Input volume:   " << fnVol             << std::endl
+              << "Output volume:  " << fnOut             << std::endl
+              << "Sigma:          " << sigma             << std::endl
+              << "Initial seeds:  " << initialSeeds      << std::endl
+              << "Grow seeds:     " << growSeeds         << std::endl
+              << "Target error:   " << targetError       << std::endl
+              << "Stop:           " << stop              << std::endl
+              << "AllowMovement:  " << allowMovement     << std::endl
+              << "AllowIntensity: " << allowIntensity    << std::endl
+              << "Intensity Frac: " << intensityFraction << std::endl
+              << "Intensity Col:  " << intensityColumn   << std::endl
+              << "Nclosest:       " << Nclosest          << std::endl
+              << "Min. Distance:  " << minDistance       << std::endl
+              << "Penalty:        " << penalty           << std::endl
+              << "Threads:        " << numThreads        << std::endl
+              << "Sampling Rate:  " << sampling          << std::endl
+              << "Don't scale:    " << dontScale         << std::endl
     ;    
     if (useMask) mask_prm.show();
     else std::cout << "No mask\n";
 }
 
-void Prog_Convert_Vol2Pseudo::usage() const
+void ProgConvertVol2Pseudo::usage() const
 {
     std::cout << "Approximation algorithm:\n"
               << "   -i <volume>                     : Input volume\n"
@@ -106,6 +108,9 @@ void Prog_Convert_Vol2Pseudo::usage() const
               << "                                     error is below this threshold\n"
               << "  [-dontAllowMovement]             : Don't allow Gaussians to move\n"
               << "  [-dontAllowIntensity]            : Don't allow Gaussians to change intensity\n"
+              << "  [-intensityFraction <f=0.01>]    : In case of all Gaussian with the same intensity\n"
+              << "                                     this parameter determines the fraction of intensity\n"
+              << "                                     held by each pseudoatom\n"
               << "  [-intensityColumn <s=occupancy>] : Where to write the intensity in the PDB file\n"
               << "                                     Valid values: occupancy, Bfactor\n"
               << "  [-Nclosest <N=3>]                : N closest atoms, it is used only for the\n"
@@ -120,7 +125,7 @@ void Prog_Convert_Vol2Pseudo::usage() const
     mask_prm.usage();
 }
 
-void Prog_Convert_Vol2Pseudo::produceSideInfo()
+void ProgConvertVol2Pseudo::produceSideInfo()
 {
     sigma/=sampling;
 
@@ -166,7 +171,7 @@ void Prog_Convert_Vol2Pseudo::produceSideInfo()
     if (percentil1<=0)
         percentil1=maxval/500;
     range=hist.percentil(99)-percentil1;
-    smallAtom=(range*targetError)/2;
+    smallAtom=range*intensityFraction;
     
     // Create threads
     barrier_init(&barrier,numThreads+1);
@@ -183,7 +188,7 @@ void Prog_Convert_Vol2Pseudo::produceSideInfo()
 }
 
 //#define DEBUG
-void Prog_Convert_Vol2Pseudo::placeSeeds(int Nseeds)
+void ProgConvertVol2Pseudo::placeSeeds(int Nseeds)
 {
     // Convolve the difference with the Gaussian to know
     // where it would be better to put a Gaussian
@@ -248,7 +253,7 @@ void Prog_Convert_Vol2Pseudo::placeSeeds(int Nseeds)
 #undef DEBUG
 
 /* Remove seeds ------------------------------------------------------------ */
-void Prog_Convert_Vol2Pseudo::removeSeeds(int Nseeds)
+void ProgConvertVol2Pseudo::removeSeeds(int Nseeds)
 {
     int fromNegative=ROUND(Nseeds*0.5);
     int fromSmall=Nseeds-fromNegative;
@@ -329,7 +334,7 @@ void Prog_Convert_Vol2Pseudo::removeSeeds(int Nseeds)
     removeTooCloseSeeds();
 }
 
-void Prog_Convert_Vol2Pseudo::removeTooCloseSeeds()
+void ProgConvertVol2Pseudo::removeTooCloseSeeds()
 {
     // Remove atoms that are too close to each other
     if (minDistance>0 && allowIntensity)
@@ -382,7 +387,7 @@ void Prog_Convert_Vol2Pseudo::removeTooCloseSeeds()
 }
 
 /* Draw approximation ------------------------------------------------------ */
-void Prog_Convert_Vol2Pseudo::drawApproximation()
+void ProgConvertVol2Pseudo::drawApproximation()
 {
     Vcurrent().initZeros(Vin());
     int nmax=atoms.size();
@@ -410,7 +415,7 @@ void Prog_Convert_Vol2Pseudo::drawApproximation()
 }
 
 /* Gaussian operations ----------------------------------------------------- */
-double Prog_Convert_Vol2Pseudo::computeAverage(int k, int i, int j,
+double ProgConvertVol2Pseudo::computeAverage(int k, int i, int j,
 		MultidimArray<double> &V)
 {
     int k0=XMIPP_MAX(STARTINGZ(V),k-sigma3);
@@ -427,7 +432,7 @@ double Prog_Convert_Vol2Pseudo::computeAverage(int k, int i, int j,
     return sum/((kF-k0+1)*(iF-i0+1)*(jF-j0+1));
 }
 
-void Prog_Convert_Vol2Pseudo::drawGaussian(double k, double i, double j,
+void ProgConvertVol2Pseudo::drawGaussian(double k, double i, double j,
 		MultidimArray<double> &V, double intensity)
 {
     int k0=CEIL(XMIPP_MAX(STARTINGZ(V),k-sigma3));
@@ -452,7 +457,7 @@ void Prog_Convert_Vol2Pseudo::drawGaussian(double k, double i, double j,
     }
 }
 
-void Prog_Convert_Vol2Pseudo::extractRegion(int idxGaussian,
+void ProgConvertVol2Pseudo::extractRegion(int idxGaussian,
 		MultidimArray<double> &region, bool extended) const
 {
     double k=atoms[idxGaussian].location(0);
@@ -480,7 +485,7 @@ void Prog_Convert_Vol2Pseudo::extractRegion(int idxGaussian,
                 region(k,i,j)=Vcurrent(k,i,j);
 }
 
-double Prog_Convert_Vol2Pseudo::evaluateRegion(const MultidimArray<double> &region)
+double ProgConvertVol2Pseudo::evaluateRegion(const MultidimArray<double> &region)
     const 
 {
     double avgDiff=0;
@@ -499,7 +504,7 @@ double Prog_Convert_Vol2Pseudo::evaluateRegion(const MultidimArray<double> &regi
     return avgDiff/(N*range);
 }
 
-void Prog_Convert_Vol2Pseudo::insertRegion(const MultidimArray<double> &region)
+void ProgConvertVol2Pseudo::insertRegion(const MultidimArray<double> &region)
 {
     FOR_ALL_ELEMENTS_IN_ARRAY3D(region)
         Vcurrent(k,i,j)=A3D_ELEM(region,k,i,j);
@@ -508,12 +513,12 @@ void Prog_Convert_Vol2Pseudo::insertRegion(const MultidimArray<double> &region)
 /* Optimize ---------------------------------------------------------------- */
 static pthread_mutex_t mutexUpdateVolume=PTHREAD_MUTEX_INITIALIZER;
 
-void* Prog_Convert_Vol2Pseudo::optimizeCurrentAtomsThread(
+void* ProgConvertVol2Pseudo::optimizeCurrentAtomsThread(
     void * threadArgs)
 {
     Prog_Convert_Vol2Pseudo_ThreadParams *myArgs=
         (Prog_Convert_Vol2Pseudo_ThreadParams *) threadArgs;
-    Prog_Convert_Vol2Pseudo *parent=myArgs->parent;
+    ProgConvertVol2Pseudo *parent=myArgs->parent;
     std::vector< PseudoAtom > &atoms=parent->atoms;
     bool allowIntensity=parent->allowIntensity;
     bool allowMovement=parent->allowMovement;
@@ -623,7 +628,7 @@ void* Prog_Convert_Vol2Pseudo::optimizeCurrentAtomsThread(
     } while (true);
 }
 
-void Prog_Convert_Vol2Pseudo::optimizeCurrentAtoms()
+void ProgConvertVol2Pseudo::optimizeCurrentAtoms()
 {
     if (!allowIntensity && !allowMovement) return;
     bool finished=false;
@@ -667,7 +672,7 @@ void Prog_Convert_Vol2Pseudo::optimizeCurrentAtoms()
 }
 
 /* Write ------------------------------------------------------------------- */
-void Prog_Convert_Vol2Pseudo::writeResults()
+void ProgConvertVol2Pseudo::writeResults()
 {
     Vcurrent.write(fnOut+"_approximation.vol");
 
@@ -773,7 +778,7 @@ void Prog_Convert_Vol2Pseudo::writeResults()
 }
 
 /* Run --------------------------------------------------------------------- */
-void Prog_Convert_Vol2Pseudo::run()
+void ProgConvertVol2Pseudo::run()
 {
     int iter=0;
     double previousNAtoms=0;
@@ -784,9 +789,12 @@ void Prog_Convert_Vol2Pseudo::run()
         else
         {
             double Natoms=atoms.size();
+            std::cout << "Removing seeds" << std::endl;
             removeSeeds(FLOOR(Natoms*(growSeeds/2)/100));
+            std::cout << "Placing seeds" << std::endl;
             placeSeeds(FLOOR(Natoms*growSeeds/100));
         }
+        std::cout << "Drawing approximation" << std::endl;
         drawApproximation();
         if (iter==0)
             std::cout << "Initial error with " << atoms.size()

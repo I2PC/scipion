@@ -32,7 +32,7 @@
 #include <data/threads.h>
 #include <vector>
 
-class Prog_Convert_Vol2Pseudo;
+class ProgConvertVol2Pseudo;
 
 /**@defgroup ConvertVol2Pseudo ConvertVol2Pseudo
    @ingroup ReconsLibrary */
@@ -61,12 +61,12 @@ bool operator <(const PseudoAtom &a, const PseudoAtom &b);
 struct Prog_Convert_Vol2Pseudo_ThreadParams
 {
     int myThreadID;
-    Prog_Convert_Vol2Pseudo *parent;
+    ProgConvertVol2Pseudo *parent;
     int Nintensity;
     int Nmovement;
 };
 
-class Prog_Convert_Vol2Pseudo
+class ProgConvertVol2Pseudo
 {
 public:
     /// Volume to convert
@@ -101,6 +101,12 @@ public:
     
     /// Allow gaussians to vary intensity
     bool allowIntensity;
+
+    /** Intensity fraction.
+        In case intensity is not allowed to change, this fraction
+        is multiplied by the intensity range and all atoms will have
+        this intensity value. */
+    double intensityFraction;
 
     /// Column for the intensity (if any)
     std::string intensityColumn;
