@@ -59,10 +59,10 @@ import java.util.Properties;
  * - make all methods static?
  */
 public class TiltSeriesIO {
-  /*  static {
+  static {
         // loads "XmippDataJava"
         System.loadLibrary("XmippDataJava");
-    } */
+    } 
     
 	public static int MRC_HEADER_SIZE = 1024;
 	private boolean resize=true;
@@ -164,7 +164,7 @@ public class TiltSeriesIO {
 			// path=path.toLowerCase();
 			
 			// right now, identify file type by its extension
-			if (path.endsWith(".mrc")) {       
+			if (path.endsWith(".mrc") || path.endsWith(".mrcs")) {       
 				readMRC(path,model);
 
 			}/*else if (path.endsWith(".mrcs")) {   

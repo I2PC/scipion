@@ -65,7 +65,7 @@ public class Xmipp_Tomo implements PlugIn{
 	};
 	
 	// enable debuging tests - release versions should have this set to 0
-	final static int TESTING = 0;
+	final static int TESTING = 1;
 
 	// UI elements
 	private static TomoWindow tw=null;

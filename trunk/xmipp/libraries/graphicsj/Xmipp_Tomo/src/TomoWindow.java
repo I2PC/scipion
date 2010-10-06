@@ -31,7 +31,6 @@ import ij.gui.GenericDialog;
 import ij.gui.ImageCanvas;
 import ij.gui.ImageLayout;
 import ij.gui.ImageWindow;
-import ij.io.OpenDialog;
 import ij.io.SaveDialog;
 
 import java.awt.*;
@@ -85,6 +84,7 @@ public class TomoWindow extends ImageWindow implements WindowListener,
 
 	// Buttons declaration. The label must be unique
 	private static Button LOAD = new Button("Load", "", true),
+			XRAY = new Button("X-ray","",true),
 			SAVE = new Button("Save", "", false), DEFINE_TILT = new Button(
 					"Set tilt angles", "", false), GAUSSIAN = new Button(
 					"Gaussian", GaussianPlugin.COMMAND, false),
@@ -99,16 +99,17 @@ public class TomoWindow extends ImageWindow implements WindowListener,
 			PRINT_WORKFLOW = new Button("Print workflow", "", false),
 			PLAY = new Button(">", "", true),
 			// pause is a fake button, useful for defining the pause label
-			PAUSE = new Button("||", "", true);
-	// MEASURE = new Button("Measure",MeasurePlugin.COMMAND, false);
+			PAUSE = new Button("||", "", true),
+			MEASURE = new Button("Measure",MeasurePlugin.COMMAND, false);
 
 	// Lists of buttons for each menu tab
 	private static java.util.List<Button> buttonsMenuFile = new LinkedList<Button>() {
 		{
 			add(LOAD);
+			add(XRAY);
 			add(SAVE);
 			add(DEFINE_TILT);
-			// add(MEASURE);
+			add(MEASURE);
 		}
 	};
 
@@ -147,7 +148,7 @@ public class TomoWindow extends ImageWindow implements WindowListener,
 			add(ENHANCE_CONTRAST);
 			add(APPLY);
 			add(PRINT_WORKFLOW);
-			// add(MEASURE);
+			add(MEASURE);
 		}
 	};
 
@@ -249,7 +250,9 @@ public class TomoWindow extends ImageWindow implements WindowListener,
 			// select proper action method based on button's label
 			if (command.equals(LOAD.label())) {
 				tw.actionLoad();
-			} else if (command.equals(SAVE.label())) {
+			}else if(command.equals(XRAY.label())){
+				tw.actionXray();
+			}else if (command.equals(SAVE.label())) {
 				tw.actionSave();
 			} else if (command.equals(DEFINE_TILT.label())) {
 				tw.actionSetTilt();
@@ -267,8 +270,8 @@ public class TomoWindow extends ImageWindow implements WindowListener,
 				tw.actionPlay();
 			} else if (command.equals(PAUSE.label())) {
 				tw.actionPause();
-		/*	} else if (command.equals(MEASURE.label())) {
-				tw.actionRunIjCmd(MEASURE);*/
+			} else if (command.equals(MEASURE.label())) {
+				tw.actionRunIjCmd(MEASURE);
 			} else if (command.equals(PRINT_WORKFLOW.label())) {
 				Xmipp_Tomo.printWorkflow();
 			}
@@ -619,7 +622,7 @@ public class TomoWindow extends ImageWindow implements WindowListener,
 	}
 
 	private void actionLoad() {
-		String path = dialogOpen();
+		String path = XrayImportDialog.dialogOpen();
 		if ((path == null) || ("".equals(path)))
 			return;
 
@@ -647,6 +650,13 @@ public class TomoWindow extends ImageWindow implements WindowListener,
 		// enable buttons
 		for (Button b : buttonsEnabledAfterLoad)
 			b.setEnabled(true);
+	}
+	
+	private void actionXray() {
+		XrayImportDialog d=new XrayImportDialog("X-Ray import",this);
+		// d.setup();
+		d.showDialog();
+		Xmipp_Tomo.debug(d.getCommand());
 	}
 
 	private void actionSave() {
@@ -1086,15 +1096,10 @@ public class TomoWindow extends ImageWindow implements WindowListener,
 	 * 
 	 * @return the path of the file chosen by the user, or empty string (not
 	 *         null) if the user cancels the dialog
+	 * @deprecated Use {@link XrayImportDialog#dialogOpen()} instead
 	 */
 	private String dialogOpen() {
-		OpenDialog od = new OpenDialog("Import file", null);
-		String directory = od.getDirectory();
-		String fileName = od.getFileName();
-		String path = "";
-		if (fileName != null)
-			path = directory + fileName;
-		return path;
+		return XrayImportDialog.dialogOpen();
 	}
 
 	/**
@@ -1104,14 +1109,7 @@ public class TomoWindow extends ImageWindow implements WindowListener,
 	 *         null) if the user cancels the dialog
 	 */
 	private String dialogSave() {
-		SaveDialog sd = new SaveDialog("Save as...", getModel().getFilePath(),
-				".mrc");
-		String directory = sd.getDirectory();
-		String fileName = sd.getFileName();
-		String path = "";
-		if (fileName != null)
-			path = directory + fileName;
-		return path;
+		return XrayImportDialog.dialogSave(getModel().getFilePath(),".mrc");
 	}
 
 	/**
@@ -1122,17 +1120,7 @@ public class TomoWindow extends ImageWindow implements WindowListener,
 	 * @return Xmipp_Tomo.ExitValues.CANCEL / YES / NO
 	 */
 	private Xmipp_Tomo.ExitValues dialogYesNoCancel(String title, String message) {
-		GenericDialog gd = new GenericDialog(title);
-
-		gd.addMessage(message);
-		gd.enableYesNoCancel();
-		gd.showDialog();
-		if (gd.wasCanceled())
-			return Xmipp_Tomo.ExitValues.CANCEL;
-		else if (gd.wasOKed())
-			return Xmipp_Tomo.ExitValues.YES;
-		else
-			return Xmipp_Tomo.ExitValues.NO;
+			return XrayImportDialog.dialogYesNoCancel(title, message);
 	}
 
 	private void alert(String message) {
