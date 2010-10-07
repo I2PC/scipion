@@ -136,6 +136,7 @@ bool MDSql::setObjectValue(const int objId, const MDObject &value)
         <<"    code: " << rc << " error: " << sqlite3_errmsg(db) << std::endl;
         r = false;
     }
+
     return r;
 }
 
@@ -631,9 +632,9 @@ int MDSql::bindValue(sqlite3_stmt *stmt, const int position, const MDObject &val
     case LABEL_DOUBLE:
         return sqlite3_bind_double(stmt, position, valueIn.data.doubleValue);
     case LABEL_STRING:
-        return sqlite3_bind_text(stmt, position, valueIn.data.stringValue->c_str(), -1, NULL);
+        return sqlite3_bind_text(stmt, position, valueIn.data.stringValue->c_str(), -1, SQLITE_TRANSIENT);
     case LABEL_VECTOR:
-        return sqlite3_bind_text(stmt, position, valueIn.toString().c_str(), -1, NULL);
+        return sqlite3_bind_text(stmt, position, valueIn.toString().c_str(), -1, SQLITE_TRANSIENT);
     }
 }
 

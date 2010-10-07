@@ -518,6 +518,7 @@ MDRow::MDRow():std::vector<MDObject*>()
 MDRow& MDRow::operator = (const MDRow &row)
 {
     copy(row);
+    return *this;
 }
 
 void MDRow::copy(const MDRow &row)
