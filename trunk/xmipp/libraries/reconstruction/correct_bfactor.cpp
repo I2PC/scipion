@@ -28,49 +28,51 @@
 void ProgCorrectBfactor::defineParams()
 {
     XmippMetadataProgram::defineParams();
-    addParamsLine("Use one of the three following modes: ");
-    addParamsLine(" -auto                   : Use automated B-factor fit in flat Wilson region");
-    addParamsLine("                         : Note: do not use the automated mode for maps with resolutions");
-    addParamsLine("                         : lower than 12-15 Angstroms!");
-    addParamsLine(" or [-ref <fn_ref>]        : Fit B-factor according to the reference ");
-    addParamsLine(" or [-adhoc <B>]           : Use a user-provided (negative) B-factor");
+    addParamsLine(" --auto                   : Use automated B-factor fit in flat Wilson region");
+    addParamsLine("                        : Note: do not use the automated mode for maps with resolutions");
+    addParamsLine("                        : lower than 12-15 Angstroms!");
+    addParamsLine(" or --ref <fn_ref>        : Fit B-factor according to the reference ");
+    addParamsLine("           requires --allpoints;                                                         ");
+    addParamsLine(" or --adhoc <B>           : Use a user-provided (negative) B-factor");
     addParamsLine("== Specific parameters == ");
-    addParamsLine("  -sampling <float>        : Pixel size (in Ang) ");
-    addParamsLine("  -maxres <float>          : High-resolution limit for B-factor correction ");
-    addParamsLine(" [-fit_minres <f=15>]      : Low-resolution  limit (in Ang) for fit in -auto or -ref ");
-    addParamsLine(" [-fit_maxres <f=-1>]      : High-resolution limit (in Ang) for fit in -auto or -ref,");
-    addParamsLine("                           : -1 means maximun resolution ");
-    addParamsLine(" [-allpoints]              : Do not fit B-factor, adjust power spectrum to reference ");
+    addParamsLine("  --sampling <float>        : Pixel size (in Ang) ");
+    addParamsLine("  --maxres <float>          : High-resolution limit for B-factor correction ");
+    addParamsLine("  -o <filename>             : Output file Name with corrected volume ");
+    addParamsLine(" [--fit_minres <f=15>]      : Low-resolution  limit (in Ang) for fit in -auto or -ref ");
+    addParamsLine(" [--fit_maxres <f=-1>]      : High-resolution limit (in Ang) for fit in -auto or -ref,");
+    addParamsLine("                            : -1 means maximun resolution ");
+    addParamsLine(" [--allpoints]              : Do not fit B-factor, adjust power spectrum to reference ");
 }
 
 void ProgCorrectBfactor::readParams()
 {
     XmippMetadataProgram::readParams();
-    if (checkParam("-ref"))
+    if (checkParam("--ref"))
     {
-        mode = checkParam("-allpoints") ? ALLPOINTS_REF : BFACTOR_REF;
-        fn_ref= getParam("-ref");
+        mode = checkParam("--allpoints") ? ALLPOINTS_REF : BFACTOR_REF;
+        fn_ref= getParam("--ref");
     }
-    else if (checkParam("-adhoc"))
+    else if (checkParam("--adhoc"))
     {
         mode = BFACTOR_ADHOC;
-        adhocB = getDoubleParam("-adhoc");
+        adhocB = getDoubleParam("--adhoc");
     }
-    else if (checkParam("-auto"))
+    else if (checkParam("--auto"))
     {
         mode = BFACTOR_AUTO;
     }
     else
         REPORT_ERROR(ERR_DEBUG_IMPOSIBLE, "This should not happens, review program definition");
-    sampling_rate = getDoubleParam("-sampling");
-    apply_maxres = getDoubleParam("-maxres");
-    fit_minres = getDoubleParam("-fit_minres");
-    fit_maxres = getDoubleParam("-fit_maxres");
+    sampling_rate = getDoubleParam("--sampling");
+    apply_maxres = getDoubleParam("--maxres");
+    fit_minres = getDoubleParam("--fit_minres");
+    fit_maxres = getDoubleParam("--fit_maxres");
 
     if (fit_maxres < 0.)
         fit_maxres = apply_maxres;
-    ///FIXME: This param is not defined
-    fn_fsc = getParam("-fsc");
+    /////////////////////////////////
+    ///FIXME: This param is nver used
+    ////////7fn_fsc = getParam("-fsc");
 }
 
 
