@@ -300,7 +300,8 @@ void XmippMetadataProgram::readParams()
     if (fn_in.isMetaData())
     {
         mdIn.read(fn_in, NULL);
-        mdIn.removeObjects(MDValueEQ(MDL_ENABLED, -1));
+        if (mdIn.containsLabel(MDL_ENABLED))
+            mdIn.removeObjects(MDValueEQ(MDL_ENABLED, -1));
 
         if (mdIn.isEmpty())
             REPORT_ERROR(ERR_MD_NOOBJ, "");

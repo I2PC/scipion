@@ -365,6 +365,12 @@ void ProgML2D::run()
             // Integrate over all images
             expectation();
 
+            std::cerr << "------------ Before maximizationBlocks ----------------- " << std::endl;
+            std::cerr << "LL: " << LL << std::endl;
+            std::cerr << "sumfracweight: " << sumfracweight << std::endl;
+            std::cerr << "wsum_sigma_noise: " << wsum_sigma_noise << std::endl;
+            std::cerr << "wsum_sigma_offset: " << wsum_sigma_offset << std::endl;
+
             maximizationBlocks();
 
         }//close for blocks
@@ -2081,7 +2087,7 @@ void ProgML2D::maximization(ModelML2D &local_model)
     // Update sigma of the origin offsets
     if (!fix_sigma_offset)
     {
-        std::cerr << "wsum_sigma_offset: " << wsum_sigma_offset << std::endl;
+        //std::cerr << "wsum_sigma_offset: " << wsum_sigma_offset << std::endl;
         local_model.updateSigmaOffset(wsum_sigma_offset);
     }
 
