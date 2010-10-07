@@ -14,7 +14,7 @@
 # {file} Selfile with the input images:
 """ This selfile points to the spider single-file format images that make up your data set. The filenames can have relative or absolute paths, but it is strictly necessary that you put this selfile IN THE PROJECTDIR. 
 """
-SelFileName='all_images.sel'
+SelFileName = '10.sel'
 
 # {file} {expert} Docfile with the input angles:
 """ Do not provide anything if there are no angles yet. 
@@ -51,12 +51,12 @@ ContinueAtIteration=1
 """ Be careful, many options of the visualization protocol will not work anymore, 
     since all class averages, selfiles etc will be deleted.
 """
-CleanUpFiles=True
+CleanUpFiles = True
 
 # {expert} Root directory name for this project:
 """ Absolute path to the root directory for this project. Often, each data set of a given sample has its own ProjectDir.
 """
-ProjectDir='/home/scheres/work/test'
+ProjectDir='/home/roberto/Test/T7'
 
 # {expert} Directory name for logfiles:
 LogDir='Logs'
@@ -148,7 +148,7 @@ DoSphericalMask=True
 # Radius of spherical mask
 """ This is the radius (in pixels) of the spherical mask 
 """
-MaskRadius=32
+MaskRadius=72
 
 # {file} Binary mask file
 """ This should be a binary (only 0/1-valued) Xmipp volume of equal dimension as your reference
@@ -180,7 +180,7 @@ InnerRadius=0
 """ In pixels from the image center. Use a negative number to use the entire image.
     WARNING: this radius will be use for masking before computing resoution
 """
-OuterRadius=64
+OuterRadius = 72
 
 # {expert} Available memory to store all references (Gb)
 """ This is only for the storage of the references. If your projections do not fit in memory, 
@@ -189,7 +189,7 @@ OuterRadius=64
     Note that the memory per computing node needs to be given. That is, when using threads, 
     this value will be multiplied automatically by the number of (shared-memory) threads.
 """
-AvailableMemory=2
+AvailableMemory = 1
 
 # Angular sampling rate
 """Angular distance (in degrees) between neighboring projection  points
@@ -202,7 +202,7 @@ AvailableMemory=2
     Note: if there are less values than iterations the last value is reused
     Note: if there are more values than iterations the extra value are ignored
 """
-AngSamplingRateDeg='4x10 2x5 2x3 2x2'
+AngSamplingRateDeg = '6 4 2 1'
 
 # Angular search range 
 """Maximum change in rot & tilt  (in +/- degrees)
@@ -215,7 +215,7 @@ AngSamplingRateDeg='4x10 2x5 2x3 2x2'
     Note: if there are less values than iterations the last value is reused
     Note: if there are more values than iterations the extra value are ignored
 """
-MaxChangeInAngles='4x1000 2x20 2x9 2x6'
+MaxChangeInAngles = '1000 16 12 8 4 2'
 
 # {expert} Perturb projection directions?
 """ If set to true, this option will result to a Gaussian perturbation to the 
@@ -236,7 +236,7 @@ PerturbProjectionDirections=False
     Note: if there are less values than iterations the last value is reused
     Note: if there are more values than iterations the extra value are ignored
 """
-MaxChangeOffset='1000 '
+MaxChangeOffset = '1000 10 5 '
 
 # Search range for 5D translational search 
 """ Give search range from the image center for 5D searches (in +/- pixels).
@@ -279,7 +279,7 @@ TiltF=90
     for a description of the symmetry groups format
     If no symmetry is present, give c1
 """
-SymmetryGroup='c1'
+SymmetryGroup = 'i3'
 
 # {expert} Symmetry group for Neighbourhood computations
 """ If you do not know what this is leave it blank.
@@ -474,7 +474,7 @@ DoSplitReferenceImages=True
 # Pixel size (in Ang.)
 """ This will make that the X-axis in the resolution plots has units 1/Angstrom
 """
-ResolSam=2.8
+ResolSam = 5.6
 
 # {expert} Display resolution?
 DisplayResolution=False
@@ -518,7 +518,7 @@ ConstantToAddToFiltration='0.1'
 
 # {expert} Center volume
 """ Center volume after each iteration """
-DoCenterVolume=True
+DoCenterVolume=False
 
 #------------------------------------------------------------------------------------------------
 # {section} Parallelization issues
@@ -533,7 +533,7 @@ NumberOfThreads=1
 """ This option provides distributed-memory parallelization on multi-node machines. 
     It requires the installation of some MPI flavour, possibly together with a queueing system
 """
-DoParallel=True
+DoParallel = False
 
 # Number of MPI processes to use:
 NumberOfMpiProcesses=5
@@ -1724,7 +1724,7 @@ def  execute_resolution(_mylog,
          d = fsc.value()
          if(d < 0.5):
              XmippData.getValueDouble(mD, XmippData.MDL_RESOLUTION_FREQ, freq)
-               break
+             break
          id = mD.nextObject()
     filter_frequence = freq.value()
 
