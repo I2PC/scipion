@@ -559,13 +559,11 @@ void Prog_angular_class_average_prm::processOneClass(int &dirno,
         my_output[3] = w2;
         return;
     }
-    std::cerr << "size"   << " " <<  _DF.size() <<std::endl;
     FOR_ALL_OBJECTS_IN_METADATA(_DF)
     {
         _DF.getValue(MDL_IMAGE,fn_img);
         this_image++;
         //_DF.getValue(MDL_REF,ref_number);
-        std::cerr << "dirno"   << " " <<  dirno <<std::endl;
         //if (ref_number == dirno)
         {
             bool is_selected = true;
@@ -758,7 +756,8 @@ void Prog_angular_class_average_prm::addClassAverage(int dirno,
 
     DFlib.getValue(MDL_ANGLEROT,rot,dirno);
     DFlib.getValue(MDL_ANGLETILT,tilt,dirno);
-
+    double d=0.;
+    bool f=false;
     if (w > 0.)
     {
         fn_tmp.compose(fn_out+"_class",dirno,"xmp");
@@ -766,7 +765,15 @@ void Prog_angular_class_average_prm::addClassAverage(int dirno,
         SFclasses.setValue(MDL_IMAGE,fn_tmp);
         SFclasses.setValue(MDL_ANGLEROT,rot);
         SFclasses.setValue(MDL_ANGLETILT,tilt);
+        //this may help to keep compatibility with the next program
+        SFclasses.setValue(MDL_ANGLEPSI,d);
+        SFclasses.setValue(MDL_SHIFTX,d);
+        SFclasses.setValue(MDL_SHIFTY,d);
+
         SFclasses.setValue(MDL_WEIGHT,w);
+        //this may help to keep compatibility with the next program
+        SFclasses.setValue(MDL_FLIP,f);
+
     }
     if (do_split)
     {
@@ -777,7 +784,15 @@ void Prog_angular_class_average_prm::addClassAverage(int dirno,
             SFclasses1.setValue(MDL_IMAGE,fn_tmp);
             SFclasses1.setValue(MDL_ANGLEROT,rot);
             SFclasses1.setValue(MDL_ANGLETILT,tilt);
+            //this may help to keep compatibility with the next program
+            SFclasses1.setValue(MDL_ANGLEPSI,d);
+            SFclasses1.setValue(MDL_SHIFTX,d);
+            SFclasses1.setValue(MDL_SHIFTY,d);
+
             SFclasses1.setValue(MDL_WEIGHT,w1);
+
+            //this may help to keep compatibility with the next program
+            SFclasses1.setValue(MDL_FLIP,f);
         }
         if (w2 > 0.)
         {
@@ -786,7 +801,15 @@ void Prog_angular_class_average_prm::addClassAverage(int dirno,
             SFclasses2.setValue(MDL_IMAGE,fn_tmp);
             SFclasses2.setValue(MDL_ANGLEROT,rot);
             SFclasses2.setValue(MDL_ANGLETILT,tilt);
+            //this may help to keep compatibility with the next program
+            SFclasses2.setValue(MDL_ANGLEPSI,d);
+            SFclasses2.setValue(MDL_SHIFTX,d);
+            SFclasses2.setValue(MDL_SHIFTY,d);
+
             SFclasses2.setValue(MDL_WEIGHT,w2);
+
+            //this may help to keep compatibility with the next program
+            SFclasses2.setValue(MDL_FLIP,f);
         }
     }
 }
