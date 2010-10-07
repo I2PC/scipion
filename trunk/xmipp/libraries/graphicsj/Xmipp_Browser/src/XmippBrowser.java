@@ -1,9 +1,11 @@
 
 import browser.JFrameBrowser;
 import browser.LABELS;
+import browser.windows.ImagesWindowFactory;
 import ij.IJ;
 import ij.ImageJ;
 import ij.Macro;
+import ij.WindowManager;
 import ij.plugin.PlugIn;
 import org.apache.commons.cli.BasicParser;
 import org.apache.commons.cli.CommandLine;
@@ -19,12 +21,12 @@ import org.apache.commons.cli.Options;
  */
 public class XmippBrowser implements PlugIn {
 
-    private final static String COMMAND_OPTION_ZOOM = "zoom";
-    private final static String COMMAND_OPTION_GO_TO_INDEX = "gotoindex";
-    private final static String COMMAND_OPTION_GO_TO_LABEL = "gotolabel";
-    private final static int INDEX_ZOOM = 0;
-    private final static int INDEX_GO_TO_INDEX = 1;
-    private final static int INDEX_GO_TO_LABEL = 2;
+    private final static String COMMAND_OPTION_DIR = "dir";
+    private final static String COMMAND_OPTION_FILE = "file";
+    private final static String COMMAND_OPTION_POLL = "poll";
+    private String DIR;
+    private String FILES[];
+    private boolean POLL = false;
     protected JFrameBrowser frameBrowser;
 
     public static void main(String args[]) {
@@ -38,62 +40,67 @@ public class XmippBrowser implements PlugIn {
     }
 
     public void run(String string) {
-        String work_dir = System.getProperty("user.dir");
-        /*        work_dir = "/home/juanjo/Desktop/images/12205" //"/home/juanjo/Desktop/SampleData/Imgs"
-        //"/home/juanjo/Desktop/selfiles");
-        //"C:\\Documents and Settings\\Juanjo\\Escritorio\\imgs");
-        //System.getProperty("user.dir")
-        ;*/
-
         if (IJ.isMacro()) { // From macro.
             // "string" is used when called from another plugin or installed command.
             // "Macro.getOptions()" used when called from a run("command", arg) macro function.
-            //String argsList[] = processArgs(Macro.getOptions());
-
-            work_dir = Macro.getOptions().trim();
-            //System.out.println("[" + work_dir + "]");
-
-//            fileVolume = argsList[INDEX_VOLUME];
-//            fileEulerAngles = argsList[INDEX_EULER_ANGLES];
+            processArgs(Macro.getOptions().trim());
         } else {    // From menu.
         }
 
-        frameBrowser = new JFrameBrowser(LABELS.TITLE_MAIN_WINDOW, work_dir);
-        frameBrowser.setVisible(true);
+        String work_dir = null;
+        if (DIR != null) {
+            work_dir = DIR;
+        } else if (FILES == null) {
+            work_dir = System.getProperty("user.dir");
+        }
+
+        if (FILES != null) {
+            for (int i = 0; i < FILES.length; i++) {
+                if (!FILES[i].isEmpty()) {
+                    System.out.println("Opening: " + FILES[i]);
+                    ImagesWindowFactory.openImageWindow(FILES[i], POLL);
+                }
+            }
+        }
+
+        if (work_dir != null) {
+            frameBrowser = new JFrameBrowser(LABELS.TITLE_MAIN_WINDOW, work_dir);
+            frameBrowser.setVisible(true);
+        }
     }
 
-    public static String[] processArgs(String args) {
+    public void processArgs(String args) {
         String argsList[] = args.split(" ");
-
         Options options = new Options();
-        options.addOption(COMMAND_OPTION_ZOOM, true, "Initial Zoom");
-        options.addOption(COMMAND_OPTION_GO_TO_INDEX, true, "selected index");
-        options.addOption(COMMAND_OPTION_GO_TO_LABEL, true, "selected label");
 
-        String parameters[] = new String[options.getOptions().size()];
+        options.addOption(COMMAND_OPTION_DIR, true, "directory");
+        options.addOption(COMMAND_OPTION_FILE, true, "file(s)");
+        options.addOption(COMMAND_OPTION_POLL, false, "poll");
+
+        // It should be able to handle multiple files.
+        options.getOption(COMMAND_OPTION_FILE).setOptionalArg(true);
+        options.getOption(COMMAND_OPTION_FILE).setArgs(Integer.MAX_VALUE);
 
         try {
             BasicParser parser = new BasicParser();
             CommandLine cmdLine = parser.parse(options, argsList);
 
-            // Zoom.
-            if (cmdLine.hasOption(COMMAND_OPTION_ZOOM)) {
-                parameters[INDEX_ZOOM] = cmdLine.getOptionValue(COMMAND_OPTION_ZOOM);
+            // Dir.
+            if (cmdLine.hasOption(COMMAND_OPTION_DIR)) {
+                DIR = cmdLine.getOptionValue(COMMAND_OPTION_DIR);
             }
 
-            // Index.
-            if (cmdLine.hasOption(COMMAND_OPTION_GO_TO_INDEX)) {
-                parameters[INDEX_GO_TO_INDEX] = cmdLine.getOptionValue(COMMAND_OPTION_GO_TO_INDEX);
+            // File(s).
+            if (cmdLine.hasOption(COMMAND_OPTION_FILE)) {
+                FILES = cmdLine.getOptionValues(COMMAND_OPTION_FILE);
             }
 
             // Label.
-            if (cmdLine.hasOption(COMMAND_OPTION_GO_TO_LABEL)) {
-                parameters[INDEX_GO_TO_LABEL] = cmdLine.getOptionValue(COMMAND_OPTION_GO_TO_LABEL);
+            if (cmdLine.hasOption(COMMAND_OPTION_POLL)) {
+                POLL = true;
             }
         } catch (Exception e) {
             e.printStackTrace();
         }
-
-        return parameters;
     }
 }

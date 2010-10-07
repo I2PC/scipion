@@ -18,6 +18,11 @@ public class ImagesWindowFactory {
         return openImageWindow(file, -1);
     }
 
+    public static void openImageWindow(String file, boolean poll) {
+        ImagePlus ip = IJ.openImage(file);
+        openImageWindow(ip, poll);
+    }
+
     public static ImagePlus openImageWindow(File file, int slice) {
         ImagePlus ip = null;
 
