@@ -1219,7 +1219,8 @@ def execute_projection_matching(_mylog,
                                            
    _mylog.debug("execute_projection_matching")
    import os, shutil, string, glob, math
-   import launch_job, selfile, docfiles, utils_xmipp
+   #import launch_job, selfile, docfiles, utils_xmipp
+   import launch_job, utils_xmipp
 
    if (_DoCtfCorrection):
       # To use -add_to in angular_class_average correctly, 
@@ -1387,20 +1388,43 @@ def execute_projection_matching(_mylog,
                 
    # Make absolute path so visualization protocol can be run from the same directory
    # Make selfile with reference projections, class averages and realigned averages
-   classselfile=selfile.selfile()
-   classselfile.read(ProjMatchRootName+'_classes.sel')
-   library_sel_file=classselfile.replace_string(ProjMatchRootName+'_class',
-                                                        ProjectLibraryRootName);
-   before_alignment_sel_file=classselfile.replace_string('.xmp','.ref.xmp');
-   before_alignment_sel_file.deactivate_all_images()
-   newsel=library_sel_file.intercalate_union_3(before_alignment_sel_file, classselfile)
-   compare_sel_file=ProjMatchRootName+'_compare.sel'
-   newsel=newsel.make_abspath()
-   newsel.write(MultiAlign2dSel)
+
+   import XmippData, metadataUtils
+   metadataUtils.intercalate_union_3(ProjMatchRootName + '_classes.sel',
+                                     MultiAlign2dSel,
+				     ProjMatchRootName + '_class',
+				     ProjectLibraryRootName,
+				     '.xmp',
+				     '.ref.xmp'
+				     )
+
+#   #classselfile=selfile.selfile()
+#   #classselfile.read(ProjMatchRootName+'_classes.sel')
+#   classselfile = XmippData.MetaData(XmippData.FileName(ProjMatchRootName+'_classes.sel'))
+#   library_sel_file = XmippData.MetaData(classselfile)
+#   before_alignment_sel_file = XmippData.MetaData(classselfile)
+#   newsel = XmippData.MetaData()
+#   #library_sel_file=classselfile.replace_string(ProjMatchRootName+'_class',
+#   #                                                     ProjectLibraryRootName);
+#   library_sel_file.replaceString(library_sel_file,ProjMatchRootName+'_class',ProjectLibraryRootName)
+#   #before_alignment_sel_file=classselfile.replace_string('.xmp','.ref.xmp');
+#   metadataUtils.replaceString(before_alignment_sel_file,'.xmp','.ref.xmp')
+#
+#   #before_alignment_sel_file.deactivate_all_images()
+#   metadataUtils.deactivate_all_images(before_alignment_sel_file)
+#   
+#   #
+#   newsel=library_sel_file.intercalate_union_3(before_alignment_sel_file, classselfile)
+#   compare_sel_file=ProjMatchRootName+'_compare.sel'
+#   newsel=newsel.make_abspath()
+#   newsel.write(MultiAlign2dSel)
+   
    # Also make abspath in classes docfile
-   newdoc=docfiles.docfile(ProjMatchRootName + '_classes.doc')
-   newdoc.make_abspath()
-   newdoc.write(ForReconstructionDoc)
+###   newdoc=docfiles.docfile(ProjMatchRootName + '_classes.doc')
+###   newdoc.make_abspath()
+###   newdoc.write(ForReconstructionDoc)
+   metadataUtils.absolutePath(XmippData.FileName(ProjMatchRootName + '_classes.doc'),
+                              XmippData.FileName(ForReconstructionDoc))
 
    if (_DisplayProjectionMatching):
       command='xmipp_show -sel '+ "../"+'Iter_'+\
@@ -1686,22 +1710,35 @@ def  execute_resolution(_mylog,
 
     #compute resolution
     resolution_fsc_file = Outputvolumes[1]+'.frc'
-    f = open(resolution_fsc_file, 'r')
-    #skip first line
-    fi=f.readline()
-      
+#    f = open(resolution_fsc_file, 'r')
+#    #skip first line
+#    fi=f.readline()
+    import XmippData
     filter_frequence=0. 
-    for line in f:
-        line = line.strip()
-        if not line.startswith('#'):
-            mylist = (line.split())
-            if( float(mylist[1]) < 0.5):
+    mD = XmippData.MetaData(XmippData.FileName(resolution_fsc_file))
+    id = mD.firstObject()
+    fsc = XmippData.doubleP()
+    freq = XmippData.doubleP()
+    while(id != -1):
+         XmippData.getValueDouble(mD, XmippData.MDL_RESOLUTION_FRC, fsc)
+         d = fsc.value()
+         if(d < 0.5):
+             XmippData.getValueDouble(mD, XmippData.MDL_RESOLUTION_FREQ, freq)
                break
-            else:
-              filter_frequence=float(mylist[0])
+         id = mD.nextObject()
+    filter_frequence = freq.value()
 
 
-    f.close()
+#    for line in f:
+#        line = line.strip()
+#        if not line.startswith('#'):
+#            mylist = (line.split())
+#            if( float(mylist[1]) < 0.5):
+#               break
+#            else:
+#              filter_frequence=float(mylist[0])
+
+
     print '* maximum resolution (A^-1): ', filter_frequence
     filter_frequence *= _ResolSam
     print '* maximum resolution (px^-1): ', filter_frequence
