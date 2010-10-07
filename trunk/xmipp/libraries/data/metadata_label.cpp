@@ -130,11 +130,18 @@ void MDObject::copy(const MDObject &obj)
 {
     label = obj.label;
     type = obj.type;
-    data = obj.data;
     if (type == LABEL_STRING)
-        data.stringValue = new std::string(*(obj.data.stringValue));
+    {
+      delete data.stringValue;
+      data.stringValue = new std::string(*(obj.data.stringValue));
+    }
     else if (type == LABEL_VECTOR)
+    {
+      delete data.vectorValue;
         data.vectorValue = new std::vector<double>(*(obj.data.vectorValue));
+    }
+    else
+      data = obj.data;
 }
 
 MDObject::MDObject(const MDObject & obj)
