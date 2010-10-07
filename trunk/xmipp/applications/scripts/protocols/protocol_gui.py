@@ -286,7 +286,7 @@ class automated_gui_class:
             # Get section headers
             if (self.script_header_lines[i].find("WorkingDir",0,11)>-1):
 	         words=self.script_header_lines[i].split('=')
-                 self.WorkingDir = words[1]
+                 self.WorkingDir = self.variables[words[0]][2].get()
             if (self.script_header_lines[i].find("DoDeleteWorkingDir") > -1):
 		args=self.script_header_lines[i].split("=")
                 self.deleteWorkingDir = self.variables[args[0]][2].get()
@@ -902,7 +902,7 @@ class automated_gui_class:
 	    # delete directory question
 	    if (self.deleteWorkingDir):
 		answer=tkMessageBox._show("Warning",
-                        	  "Directory "+self.WorkingDir + " will be deleted. Do you want to continue?",
+                        	  "Working directory will be deleted. Do you want to continue?",
                         	  tkMessageBox.QUESTION, 
                         	  tkMessageBox.OKCANCEL)
 
