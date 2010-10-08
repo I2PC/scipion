@@ -71,11 +71,13 @@ class std::string {};
 %ignore applyGeometry<>;
 %ignore applyGeometryBSpline<>;
 %ignore getShifts;
+%ignore getImage;
 %{
 #include "../multidim_array.h"
 %}
 %include "../multidim_array.h"
 %template (MultidimArrayd) MultidimArray<double>;
+//%template (vectorMDObject) std::vector<MDObject *>
 
 %{
 #include "../image.h"

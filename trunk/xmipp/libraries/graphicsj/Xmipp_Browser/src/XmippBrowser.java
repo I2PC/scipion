@@ -57,7 +57,6 @@ public class XmippBrowser implements PlugIn {
         if (FILES != null) {
             for (int i = 0; i < FILES.length; i++) {
                 if (!FILES[i].isEmpty()) {
-                    System.out.println("Opening: " + FILES[i]);
                     ImagesWindowFactory.openImageWindow(FILES[i], POLL);
                 }
             }

@@ -20,6 +20,7 @@ else
 		case "$1" in
 			-mem)MEM=$2;READFILES=0; shift;;
 			-file)READFILES=1;;	# Activates files input mode
+			-poll)POLL=-poll;READFILES=0;;	# Sets polling
 			--)shift; break;;
 			-*)READFILES=0; echo >&2 \
 				"Unknown parameter: $1"
@@ -40,12 +41,20 @@ else
 		echo "No memory size provided. Using default: $MEM"
 	fi
 
-	if [ "$SHOW_HELP" = "1" ]
+	if [ -z "$FILES" ]
 	then
-		echo "Usage: xmipp_showj [-mem <memory_ammount>] [-file <file_to_open>]"
+		echo "Not enough arguments."
 	fi
 
-	export LD_LIBRARY_PATH=$XMIPP_BASE/lib
-	IMAGEJ_HOME=$XMIPP_BASE/external/imagej
-	$JVM/bin/java -Xmx$MEM -Dplugins.dir=$IMAGEJ_HOME/plugins/ -jar $IMAGEJ_HOME/ij.jar $FILES
+	if [ "$SHOW_HELP" = "1" ]
+	then
+		echo "Usage: xmipp_showj [-mem <memory_ammount>] <-file <file1 [file2 [..]]> > [-poll]"
+	fi
+
+	if [ ! -z "$FILES" ]
+	then
+		export LD_LIBRARY_PATH=$XMIPP_BASE/lib
+		IMAGEJ_HOME=$XMIPP_BASE/external/imagej
+		$JVM/bin/java -Xmx$MEM -Dplugins.dir=$IMAGEJ_HOME/plugins/ -jar $IMAGEJ_HOME/ij.jar -macro $IMAGEJ_HOME/macros/xmippBrowser.txt "-file$FILES $POLL"
+	fi
 fi

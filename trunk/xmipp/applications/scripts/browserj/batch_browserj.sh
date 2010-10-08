@@ -30,18 +30,18 @@ else
 		shift
 	done
 
-	if test -z $MEM || test -z $WORKDIR
+	if test -z "$MEM" || test -z "$WORKDIR"
 	then
 		SHOW_HELP=1
 	fi
 
-	if [ -z $MEM ]
+	if [ -z "$MEM" ]
 	then
 		MEM=512m	# Default memory value.
 		echo "No memory size provided. Using default: $MEM"
 	fi
 
-	if [ -z $WORKDIR ]
+	if [ -z "$WORKDIR" ]
 	then
 		WORKDIR=.	# Default working directory.
 		echo "No work directory provided. Using current: `pwd`"
