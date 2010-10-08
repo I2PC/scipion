@@ -19,7 +19,8 @@ public class ImagesWindowFactory {
     }
 
     public static void openImageWindow(String file, boolean poll) {
-        ImagePlus ip = IJ.openImage(file);
+        File f = new File(file);
+        ImagePlus ip = IJ.openImage(f.getAbsolutePath());
         openImageWindow(ip, poll);
     }
 

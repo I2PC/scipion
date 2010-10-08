@@ -29,6 +29,7 @@ using namespace std;
 %ignore *::operator-=;
 %ignore *::operator*=;
 %ignore *::operator/=;
+%ignore *::operator==;
 %rename (add)   operator+;
 %rename (sub)   operator-;
 %rename (div)   operator/;
