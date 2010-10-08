@@ -365,16 +365,22 @@ void ProgML2D::run()
             // Integrate over all images
             expectation();
 
-            std::cerr << "------------ Before maximizationBlocks ----------------- " << std::endl;
-            std::cerr << "LL: " << LL << std::endl;
-            std::cerr << "sumfracweight: " << sumfracweight << std::endl;
-            std::cerr << "wsum_sigma_noise: " << wsum_sigma_noise << std::endl;
-            std::cerr << "wsum_sigma_offset: " << wsum_sigma_offset << std::endl;
+            //            std::cerr << "------------ BBBBefore maximizationBlocks ----------------- " << std::endl;
+            //            std::cerr << "LL: " << LL << std::endl;
+            //            std::cerr << "sumw_allrefs: " << sumw_allrefs << std::endl;
+            //            std::cerr << "sumfracweight: " << sumfracweight << std::endl;
+            //            std::cerr << "wsum_sigma_noise: " << wsum_sigma_noise << std::endl;
+            //            std::cerr << "wsum_sigma_offset: " << wsum_sigma_offset << std::endl;
 
             maximizationBlocks();
 
         }//close for blocks
 
+        //#define DEBUG
+#ifdef DEBUG
+        model.print();
+#endif
+#undef DEBUG
         // Check convergence
         converged = checkConvergence();
 
@@ -400,7 +406,8 @@ void ProgML2D::produceSideInfo(int rank)
     // and set some global variables
     MDimg.read(fn_img);
     // Remove disabled images
-    MDimg.removeObjects(MDValueEQ(MDL_ENABLED, -1));
+    if (MDimg.containsLabel(MDL_ENABLED))
+        MDimg.removeObjects(MDValueEQ(MDL_ENABLED, -1));
     nr_images_global = MDimg.size();
     // By default set myFirst and myLast equal to 0 and N
     // respectively, this should be changed when using MPI
@@ -566,11 +573,8 @@ void ProgML2D::produceSideInfo2(int size, int rank)
     // Set limit_rot
     limit_rot = (search_rot < 180.);
     // Set sigdim, i.e. the number of pixels that will be considered in the translations
-    if (save_mem2)
-        sigdim = 2 * CEIL(model.sigma_offset * 3);
-    else
-        sigdim = 2 * CEIL(model.sigma_offset * 6);
-    sigdim++; // (to get uneven number)
+    sigdim = 2 * CEIL(model.sigma_offset * (save_mem2 ? 3 : 6));
+    ++sigdim; // (to get uneven number)
     sigdim = XMIPP_MIN(dim, sigdim);
 
     //Some vectors and matrixes initialization
@@ -700,7 +704,7 @@ void ProgML2D::produceSideInfo2(int size, int rank)
         //Expand MDref because it will be re-used in writeOutputFiles
         MetaData MDaux(MDref);
 
-        for (int group = 1; group < factor_nref; group++)
+        for (int group = 1; group < factor_nref; ++group)
         {
             FOR_ALL_OBJECTS_IN_METADATA(MDaux)
             {
@@ -1074,12 +1078,14 @@ void ProgML2D::expectationSingleImage(Matrix1D<double> &opt_offsets)
               - gammln(df / 2.);
 
     //
-    //    std::cerr << "\n======>>>> dLL: " << dLL << std::endl;
-    //    std::cerr << "sum_refw: " << sum_refw << std::endl;
-    //    std::cerr << "my_mindiff: " << my_mindiff << std::endl;
-    //    std::cerr << "sigma_noise2: " << sigma_noise2 << std::endl;
-    //    std::cerr << "ddim2: " << ddim2 << std::endl;
-    //    std::cerr << "dfsigma2: " << dfsigma2 << std::endl;
+    //        std::cerr << "\n======>>>> dLL: " << dLL << std::endl;
+    //        std::cerr << "sum_refw: " << sum_refw << std::endl;
+    //        std::cerr << "my_mindiff: " << my_mindiff << std::endl;
+    //        std::cerr << "sigma_noise2: " << sigma_noise2 << std::endl;
+    //        std::cerr << "ddim2: " << ddim2 << std::endl;
+    //       std::cerr << "dfsigma2: " << dfsigma2 << std::endl;
+    //        std::cerr << "wsum_corr: " << wsum_corr << std::endl;
+    //        std::cerr << "wsum_offset: " << wsum_offset << std::endl;
 
     LL += dLL;
 

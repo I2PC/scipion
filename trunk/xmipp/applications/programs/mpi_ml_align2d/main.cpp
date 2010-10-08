@@ -88,7 +88,7 @@ int main(int argc, char **argv)
     {
         if (IS_MASTER)
         {
-            std::cout << XE;
+            std::cerr << XE;
             prm.usage();
         }
         MPI_Finalize();
@@ -129,7 +129,7 @@ int main(int argc, char **argv)
                 MPI_Allreduce(&prm.wsum_sigma_offset, &aux, 1, MPI_DOUBLE,
                               MPI_SUM, MPI_COMM_WORLD);
                 prm.wsum_sigma_offset = aux;
-                for (int refno = 0; refno < prm.model.n_ref; refno++)
+                for (int refno = 0; refno < prm.model.n_ref * prm.factor_nref; refno++)
                 {
                     MPI_Allreduce(MULTIDIM_ARRAY(prm.wsum_Mref[refno]),
                                   MULTIDIM_ARRAY(Maux),
@@ -152,15 +152,15 @@ int main(int argc, char **argv)
                                   MPI_SUM, MPI_COMM_WORLD);
                     prm.sumwsc[refno] = aux;
                 }
-                if (IS_MASTER)
-                {
-
-                    std::cerr << "-----------MPI: Before maximizationBlocks ----------------- " << std::endl;
-                    std::cerr << "LL: " << prm.LL << std::endl;
-                    std::cerr << "sumfracweight: " << prm.sumfracweight << std::endl;
-                    std::cerr << "wsum_sigma_noise: " << prm.wsum_sigma_noise << std::endl;
-                    std::cerr << "wsum_sigma_offset: " << prm.wsum_sigma_offset << std::endl;
-                }
+//                if (IS_MASTER)
+//                {
+//
+//                    std::cerr << "-----------MPI: Before maximizationBlocks ----------------- " << std::endl;
+//                    std::cerr << "LL: " << prm.LL << std::endl;
+//                    std::cerr << "sumfracweight: " << prm.sumfracweight << std::endl;
+//                    std::cerr << "wsum_sigma_noise: " << prm.wsum_sigma_noise << std::endl;
+//                    std::cerr << "wsum_sigma_offset: " << prm.wsum_sigma_offset << std::endl;
+//                }
                 prm.maximizationBlocks();
 
             }//close for blocks
@@ -171,6 +171,12 @@ int main(int argc, char **argv)
             // Write intermediate files
             if (!IS_MASTER)
             {
+//#define DEBUG
+#ifdef DEBUG
+              prm.model.print();
+#endif
+#undef DEBUG
+
                 // All slaves send docfile data to the master
                 int s_size = MULTIDIM_SIZE(prm.docfiledata);
                 MPI_Send(&s_size, 1, MPI_INT, 0, TAG_DOCFILESIZE,
@@ -215,10 +221,10 @@ int main(int argc, char **argv)
 
 
 
-        if (rank == 0)
+        if (IS_MASTER)
         {
             if (converged && prm.verbose > 0)
-                std::cerr << " Optimization converged!" << std::endl;
+                std::cout << " Optimization converged!" << std::endl;
             //Write final output files
             prm.writeOutputFiles(prm.model);
         }
@@ -227,10 +233,9 @@ int main(int argc, char **argv)
     }
     catch (XmippError XE)
     {
-        if (rank == 0)
+        if (IS_MASTER)
         {
-            std::cout << XE;
-            prm.usage();
+            std::cerr << XE;
         }
         MPI_Finalize();
         exit(1);
