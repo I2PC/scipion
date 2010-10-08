@@ -820,7 +820,6 @@ void MetaData::_setOperates(const MetaData &mdIn, const MDLabel label, SetOperat
     //Add labels to be sure are present
     for (int i = 0; i < mdIn.activeLabels.size(); i++)
         addLabel(mdIn.activeLabels[i]);
-    std::cerr << "_setOperates" <<  MDL::label2Str(label) <<std::endl;
 
     mdIn.myMDSql->setOperate(this, label, operation);
     firstObject();
