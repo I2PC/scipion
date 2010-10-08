@@ -1079,7 +1079,7 @@ public:
                         {
                             T val;
                             if (l >= NSIZE(*this))
-                            	val = 0;
+                                val = 0;
                             else if (k >= ZSIZE(*this))
                                 val = 0;
                             else if (i >= YSIZE(*this))
@@ -3273,6 +3273,9 @@ public:
             case '/':
                 *ptrResult = *ptrOp1 / op2;
                 break;
+            case '=':
+                *ptrResult = *ptrOp1 == op2;
+                break;
             }
     }
 
@@ -3329,6 +3332,15 @@ public:
     {
         MultidimArray<T> tmp;
         arrayByScalar(*this, op1, tmp, '/');
+        return tmp;
+    }
+
+    /** v3 = (v1 == k).
+     */
+    MultidimArray<T> operator==(T op1) const
+    {
+        MultidimArray<T> tmp;
+        arrayByScalar(*this, op1, tmp, '=');
         return tmp;
     }
 
@@ -3506,7 +3518,7 @@ public:
     void initZeros(const MultidimArray<T1>& op)
     {
         if (data == NULL || !sameShape(op))
-        	resizeNoCopy(op);
+            resizeNoCopy(op);
         memset(data,0,nzyxdim*sizeof(T));
     }
 
@@ -3529,7 +3541,7 @@ public:
     inline void initZeros(unsigned long int Ndim, int Zdim, int Ydim, int Xdim)
     {
         if (xdim!=Xdim || ydim!=Ydim || zdim!=Zdim || ndim!=Ndim)
-        	resize(Ndim, Zdim,Ydim,Xdim,false);
+            resize(Ndim, Zdim,Ydim,Xdim,false);
         memset(data,0,nzyxdim*sizeof(T));
     }
 
@@ -3600,7 +3612,7 @@ public:
             clear();
         else
         {
-        	resizeNoCopy(steps);
+            resizeNoCopy(steps);
             for (int i = 0; i < steps; i++)
                 A1D_ELEM(*this, i) = (T)((double) minF + slope * i);
         }
@@ -3755,7 +3767,7 @@ public:
      */
     void loadFromNumericalRecipes2D(T** m, int Ydim, int Xdim)
     {
-    	resizeNoCopy(Ydim, Xdim);
+        resizeNoCopy(Ydim, Xdim);
 
         for (int i = 1; i <= Ydim; i++)
             for (int j = 1; j <= Xdim; j++)
@@ -4574,6 +4586,12 @@ void typeCast(const MultidimArray<T1>& v1,  MultidimArray<T2>& v2, long n = -1)
  *  A median filter is applied at those negative values. Positive values are untouched.
  */
 void forcePositive(MultidimArray<double> &V);
+
+
+/** Remove bad pixels.
+ *  A boundaries median filter is applied at those pixels far from the mean.
+ */
+void removeBadPixels(MultidimArray<double> &V, MultidimArray<double> mask);
 
 /** MultidimArray equality.*/
 template<typename T>

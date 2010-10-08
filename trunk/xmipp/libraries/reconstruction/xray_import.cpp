@@ -35,6 +35,7 @@ void ProgXrayImport::readParams()
     fnDirFlat = getParam("-flat");
     cropSize  = getIntParam("-crop");
     thrNum    = getIntParam("-thr");
+    fnBPMask  = getParam("--filterBadPixels");
 }
 
 // Show ====================================================================
@@ -56,10 +57,12 @@ void ProgXrayImport::defineParams()
     addParamsLine("   -data <inputDataDirectory>       : Directory with SPE images, position files,");
     addParamsLine("                                    : and optionally, darkfields");
     addParamsLine("   -oroot <outputRootname>          : Rootname for output files");
-    addParamsLine("  [-flat <inputFlatfieldDirectory>] : Directory with SPE images, position files,");
+    addParamsLine("  [-flat <inputFlatfieldDirectory=\"\">] : Directory with SPE images, position files,");
     addParamsLine("                                    : and optionally, darkfields");
     addParamsLine("  [-crop <size=0>]                  : Number of pixels to crop from each side");
     addParamsLine("  [-thr  <N=1>]                     : Number of threads");
+    addParamsLine("  [--filterBadPixels  <mask=\"\">]       : Apply a boundaries median filter to bad pixels given in mask.");
+    addParamsLine("  alias -f;");
 }
 
 // Really import ==========================================================
@@ -91,7 +94,8 @@ void ProgXrayImport::readAndCrop(const FileName &fn, Image<double> &I) const
     if (itemsFound!=1)
         REPORT_ERROR(ERR_VALUE_EMPTY,(std::string)"Cannot find tilt angle in "+
                      fnBase+"-positions.txt");
-    if (cropSize>0) I().window(cropSize,cropSize,YSIZE(I())-cropSize-1,XSIZE(I())-cropSize-1);
+    if (cropSize>0)
+        I().window(cropSize,cropSize,YSIZE(I())-cropSize-1,XSIZE(I())-cropSize-1);
     STARTINGX(I())=STARTINGY(I())=0;
     I.setTilt(tiltAngle);
 }
@@ -210,6 +214,17 @@ void ProgXrayImport::getFlatfield(const FileName &fnDir,
     if (N==0)
         REPORT_ERROR(ERR_IO_NOTEXIST,fnDir+" is empty");
     Iavg()/=N;
+
+    /* Create a mask with zero valued pixels to apply boundaries median filter 
+     * to avoid dividing by zero when normalizing
+     */
+    MultidimArray<double> mask(YSIZE(Iavg()), XSIZE(Iavg()));
+    mask.initZeros();
+    mask = (Iavg() == 0);
+    if (XSIZE(bpMask()) != 0)
+        mask += bpMask();
+
+    removeBadPixels(Iavg(),mask);
 }
 
 void runThread(ThreadArgument &thArg)
@@ -224,22 +239,34 @@ void runThread(ThreadArgument &thArg)
     {
         for (int i=first; i<=last; i++)
         {
-        	ptrProg->readAndCrop(ptrProg->filenames[i],Iaux);
-			if (XSIZE(ptrProg->IavgDark())!=0)
-			{
-				Iaux()-=ptrProg->IavgDark();
-				forcePositive(Iaux());
-				ptrProg->correct(Iaux);
-			}
-			if (XSIZE(ptrProg->IavgFlat())!=0)
-				Iaux()/=ptrProg->IavgFlat();
-			Iaux().selfLog10();
-			FileName fnImg=integerToString(i,4,'0')+"@"+ptrProg->fnRoot+".mrcs";
-			localMD.addObject();
-			localMD.setValue(MDL_IMAGE,fnImg);
-			localMD.setValue(MDL_ANGLETILT,Iaux.tilt());
-			Iaux.write(fnImg,i,true,WRITE_APPEND);
-			if (thread_id==0) progress_bar(i);
+            ptrProg->readAndCrop(ptrProg->filenames[i],Iaux);
+            if (XSIZE(ptrProg->IavgDark())!=0)
+            {
+                Iaux()-=ptrProg->IavgDark();
+                forcePositive(Iaux());
+            }
+            ptrProg->correct(Iaux);
+
+            if (XSIZE(ptrProg->IavgFlat())!=0)
+                Iaux()/=ptrProg->IavgFlat();
+
+            // Assign value 1 to zero valued pixels to avoid -inf when applying log10
+            MultidimArray<double> zeros(YSIZE(Iaux()), XSIZE(Iaux()));
+            zeros.initZeros();
+            zeros = (Iaux() == 0);
+            Iaux() += zeros;
+
+            Iaux().selfLog10();
+            if (XSIZE(ptrProg->bpMask()) != 0)
+                removeBadPixels(Iaux(),ptrProg->bpMask());
+
+            FileName fnImg=integerToString(i,4,'0')+"@"+ptrProg->fnRoot+".mrcs";
+            localMD.addObject();
+            localMD.setValue(MDL_IMAGE,fnImg);
+            localMD.setValue(MDL_ANGLETILT,Iaux.tilt());
+            Iaux.write(fnImg,i,true,WRITE_APPEND);
+            if (thread_id==0)
+                progress_bar(i);
         }
     }
     //Lock for update the total counter
@@ -250,9 +277,17 @@ void runThread(ThreadArgument &thArg)
 
 void ProgXrayImport::run()
 {
-	// Delete output stack if it exists
-	if (exists((fnRoot+".stk").c_str()))
-		unlink((fnRoot+".stk").c_str());
+    // Delete output stack if it exists
+    if (exists((fnRoot+".mrcs").c_str()))
+        unlink((fnRoot+".mrcs").c_str());
+
+    // Reading bad pixels mask
+    if (fnBPMask != "")
+    {
+        std::cerr << "Reading bad pixels mask from "+fnBPMask << "." << std::endl;
+        bpMask.read(fnBPMask);
+    }
+
 
     // Get the flatfield
     if (fnDirFlat!="")
@@ -268,6 +303,8 @@ void ProgXrayImport::run()
     getDarkfield(fnDirData, IavgDark);
     if (XSIZE(IavgDark())!=0)
         IavgDark.write(fnRoot+"_darkfield.xmp");
+
+
 
     // Count the number of images
     std::vector<FileName> listDir;
@@ -298,12 +335,12 @@ void ProgXrayImport::run()
     std::ofstream fhTlt;
     fhTlt.open((fnRoot+".tlt").c_str());
     if (!fhTlt)
-    	REPORT_ERROR(ERR_IO_NOWRITE,fnRoot+".tlt");
+        REPORT_ERROR(ERR_IO_NOWRITE,fnRoot+".tlt");
     FOR_ALL_OBJECTS_IN_METADATA(MDSorted)
     {
-    	double tilt;
-    	MDSorted.getValue(MDL_ANGLETILT,tilt);
-    	fhTlt << tilt << std::endl;
+        double tilt;
+        MDSorted.getValue(MDL_ANGLETILT,tilt);
+        fhTlt << tilt << std::endl;
     }
     fhTlt.close();
 }

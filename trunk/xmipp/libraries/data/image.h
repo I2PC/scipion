@@ -1552,9 +1552,6 @@ private:
         delete hFile;
     }
 
-    FileName getFileFormat(FileName name)
-{}
-
 
     int _read(const FileName &name, fImageHandler* hFile, bool readdata=true, int select_img = -1,
               bool apply_geo = false, bool only_apply_shifts = false,

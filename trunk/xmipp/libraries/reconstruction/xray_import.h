@@ -48,6 +48,8 @@ public:
     int cropSize;
     /// Number of threads
     int thrNum;
+    /// bad Pixel filter Mask
+    FileName fnBPMask;
 
 public:
     /// Read argument from command line
@@ -87,6 +89,7 @@ public:
     // Intermediate results
     Image<double> IavgFlat;
     Image<double> IavgDark;
+    Image<double>  bpMask;
     std::vector<FileName> filenames;
 
     // Final list of images
