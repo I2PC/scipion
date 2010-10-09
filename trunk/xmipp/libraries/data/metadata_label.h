@@ -112,6 +112,7 @@ enum MDLabel
     MDL_DM3_SIZE,
     MDL_DM3_VALUE,
 
+
     MDL_ENABLED, ///< Is this image enabled? (int [-1 or 1])
     MDL_FLIP, ///< Flip the image? (bool)
     MDL_IMAGE_CLASS_COUNT, ///< Number of images assigned to the same class as this image
@@ -188,7 +189,7 @@ enum MDLabel
     MDL_ZINT, ///< Z component (int)
     MDL_Z, ///< Z component (double)
     MDL_ZSCORE, ///< Z Score (double)
-
+    
 
     MDL_LAST_LABEL                       // **** NOTE ****: Do keep this label always at the end
     // it is here for looping purposes

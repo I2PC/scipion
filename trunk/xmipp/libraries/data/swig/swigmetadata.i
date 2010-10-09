@@ -40,6 +40,11 @@ namespace std {
 %template(MDValueAboveDouble) MDValueAboveSwig<double>; 
 %template(MDValueBelowDouble) MDValueBelowSwig<double>;
 
+%template(setValueColBool)      setValueColSwig<bool>; 
+%template(setValueColInt)       setValueColSwig<int>; 
+%template(setValueColDouble)    setValueColSwig<double>; 
+%template(setValueColString)    setValueColSwig<std::string>;
+
 /*
 ==================
 First example

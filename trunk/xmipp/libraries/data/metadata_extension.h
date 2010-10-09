@@ -49,4 +49,9 @@ bool getValueSwig(const MetaData &md, const MDLabel label, T &valueOut, long int
     md.getValue(label, valueOut, objectID);
 }
 
+template<class T>
+bool setValueColSwig(MetaData &md,  MDLabel label,  T &valueIn)
+{
+    md.setValueCol(label, valueIn);
+}
 #endif /* METADATA_EXTENSION_H_ */
