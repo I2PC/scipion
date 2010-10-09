@@ -101,6 +101,10 @@ private:
      */
     bool setObjectValue(const int objId, const MDObject &value);
 
+    /**Set the value of all objects in an specified column.
+     */
+    bool setObjectValue(const MDObject &value);
+
     /** Get the value of an object.
      */
     bool getObjectValue(const int objId, MDObject &value);
@@ -131,6 +135,13 @@ private:
     void aggregateMd(MetaData *mdPtrOut,
                      const std::vector<AggregateOperation> &operations,
                      MDLabel operateLabel);
+
+    /** This function performs aggregation operations.
+        without grouping. (i.e. absolute maximum of a metadata column)
+     */
+    double aggregateSingleDouble(const AggregateOperation operation,
+                                        MDLabel operateLabel);
+
 
     /** This function will be used to create o delete an index over a column.
      *Those indexes will improve searchs, but inserts will become expensives
@@ -184,6 +195,8 @@ private:
     bool execSingleStmt(const std::stringstream &ss);
     bool execSingleStmt(sqlite3_stmt *&stmt, const std::stringstream *ss = NULL);
     long int execSingleIntStmt(const std::stringstream &ss);
+    double execSingleDoubleStmt(const std::stringstream &ss);
+
     std::string tableName(const int tableId) const;
 
     int bindValue(sqlite3_stmt *stmt, const int position, const MDObject &valueIn);
@@ -302,7 +315,7 @@ public:
 
     ~MDValueRelational()
     {
-        delete value;
+        delete this->value;
     }
 
     std::string opString() const

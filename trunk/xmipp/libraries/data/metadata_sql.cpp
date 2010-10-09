@@ -72,7 +72,7 @@ bool MDSql::createMd()
 bool MDSql::clearMd()
 {
     sqlMutex.lock();
-   // std::cerr << "clearing md" <<std::endl;
+    // std::cerr << "clearing md" <<std::endl;
     myCache->clear();
     bool result = dropTable();
     //std::cerr << "leave clearing md" <<std::endl;
@@ -108,6 +108,28 @@ bool MDSql::addColumn(MDLabel column)
     ss << "ALTER TABLE " << tableName(tableId)
     << " ADD COLUMN " << MDL::label2SqlColumn(column) <<";";
     return execSingleStmt(ss);
+}
+//set column with a given value
+bool MDSql::setObjectValue(const MDObject &value)
+{
+    bool r = true;
+    MDLabel column = value.label;
+    std::stringstream ss;
+    sqlite3_stmt * stmt;
+    ss << "UPDATE " << tableName(tableId)
+    << " SET " << MDL::label2Str(column) << "=?;";
+    rc = sqlite3_prepare_v2(db, ss.str().c_str(), -1, &stmt, &zLeftover);
+    bindValue(stmt, 1, value);
+    rc = sqlite3_step(stmt);
+    if (rc != SQLITE_OK && rc != SQLITE_ROW && rc != SQLITE_DONE)
+    {
+        std::cerr << "MDSql::setObjectValue(MDObject): " << std::endl
+        << "   " << ss.str() << std::endl
+        <<"    code: " << rc << " error: " << sqlite3_errmsg(db) << std::endl;
+        r = false;
+    }
+    sqlite3_finalize(stmt);
+    return r;
 }
 
 bool MDSql::setObjectValue(const int objId, const MDObject &value)
@@ -297,11 +319,42 @@ void MDSql::aggregateMd(MetaData *mdPtrOut,
         << ") AS " << MDL::label2Str(mdPtrOut->activeLabels[i+1]);
     }
     ss << ") SELECT " << ss2.str();
-    ss << " FROM " << tableName(tableId)
-    << " GROUP BY " << aggregateStr
-    << " ORDER BY " << aggregateStr << ";";
-
+    ss << " FROM " << tableName(tableId);
+    ss << " GROUP BY " << aggregateStr;
+    ss << " ORDER BY " << aggregateStr << ";";
     execSingleStmt(ss);
+}
+
+double MDSql::aggregateSingleDouble(const AggregateOperation operation,
+                                    MDLabel operateLabel)
+{
+    std::stringstream ss;
+    ss << "SELECT ";
+    //Start iterating on second label, first is the
+    //aggregating one
+    switch (operation)
+    {
+    case AGGR_COUNT:
+        ss << "COUNT";
+        break;
+    case AGGR_MAX:
+        ss << "MAX";
+        break;
+    case AGGR_MIN:
+        ss << "MIN";
+        break;
+    case AGGR_SUM:
+        ss << "SUM";
+        break;
+    case AGGR_AVG:
+        ss << "AVG";
+        break;
+    default:
+        REPORT_ERROR(ERR_MD_SQL, "Invalid aggregate operation.");
+    }
+    ss << "(" << MDL::label2Str(operateLabel) << ")" ;
+    ss << " FROM " << tableName(tableId);
+    return (execSingleDoubleStmt(ss));
 }
 
 void MDSql::indexModify(const MDLabel column, bool create)
@@ -567,6 +620,7 @@ bool MDSql::execSingleStmt(const std::stringstream &ss)
 
     sqlite3_stmt * stmt;
     rc = sqlite3_prepare_v2(db, ss.str().c_str(), -1, &stmt, &zLeftover);
+    //std::cerr << "ss " << ss.str() <<std::endl;
     bool r = execSingleStmt(stmt, &ss);
     rc = sqlite3_finalize(stmt);
     return r;
@@ -602,13 +656,28 @@ long int MDSql::execSingleIntStmt(const std::stringstream &ss)
 
     if (rc != SQLITE_OK && rc != SQLITE_ROW && rc != SQLITE_DONE)
     {
-        std::cerr << "MDSql::execSingleIntStmt: error executing statemente, code " << rc <<std::endl;
+        std::cerr << "MDSql::execSingleIntStmt: error executing statement, code " << rc <<std::endl;
         result = -1;
     }
     rc = sqlite3_finalize(stmt);
     return result;
 }
 
+double MDSql::execSingleDoubleStmt(const std::stringstream &ss)
+{
+    sqlite3_stmt * stmt;
+    rc = sqlite3_prepare_v2(db, ss.str().c_str(), -1, &stmt, &zLeftover);
+    rc = sqlite3_step(stmt);
+    double result = sqlite3_column_double(stmt, 0);
+
+    if (rc != SQLITE_OK && rc != SQLITE_ROW && rc != SQLITE_DONE)
+    {
+        std::cerr << "MDSql::execSingleDoubleStmt: error executing statement, code " << rc <<std::endl;
+        result = -1;
+    }
+    rc = sqlite3_finalize(stmt);
+    return result;
+}
 std::string MDSql::tableName(const int tableId) const
 {
     std::stringstream ss;
