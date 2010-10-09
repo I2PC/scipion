@@ -191,6 +191,9 @@ protected:
     bool _setValue(long int objId, const MDObject &mdValueIn);
     bool _getValue(long int objId, MDObject &mdValueOut) const;
 
+    //Set the value of all objects in an specified column (both value and colum are specified in mdValueIn)
+    bool _setValueCol(const MDObject &mdValueIn);
+
     /** This have the same logic of the public one,
      * but doesn't perform any range(wich implies do a size()) checks.
      */
@@ -212,7 +215,7 @@ protected:
 
     /** Some private reading functions */
     void _readColumns(std::istream& is, MDRow & columnValues,
-                               std::vector<MDLabel>* desiredLabels = NULL);
+                      std::vector<MDLabel>* desiredLabels = NULL);
     void _readRows(std::istream& is, MDRow & columnValues, bool useCommentAsImage);
     void _readRowFormat(std::istream& is);
 
@@ -320,6 +323,18 @@ public:
      * @{
      */
 
+    /**Set the value of all objects in an specified column.
+     * @code
+     * MetaData md;
+     * md.setValueCol(MDL_IMAGE, "images/image00011.xmp");
+     * @endcode
+     */
+
+    template<class T>
+    bool setValueCol(const MDLabel label, const T &valueIn)
+    {
+        _setValueCol(MDObject(label, valueIn));
+    }
     /** Set the value for some label.
      * to the object that has id 'objectId'
      * or to 'activeObject' if is objectId=-1.
@@ -567,7 +582,7 @@ public:
      */
 
     /** Aggregate metadata objects,
-     * result in calling metadata object
+     * result in calling metadata object (except for aggregateSingle)
      * thisLabel label is used for aggregation, second. Valid operations are:
      *
      * MDL_AVG:  The avg function returns the average value of all  operationLabel within a group.
@@ -575,22 +590,24 @@ public:
       is at least one non-NULL input even if all inputs are integers.
        The result of avg is NULL if and only if there are no non-NULL inputs.
 
-      MDL_COUNT: The count function returns a count of the number of times that operationLabel is in a group.
+      AGGR_COUNT: The count function returns a count of the number of times that operationLabel is in a group.
 
-      MDL_MAX       The max aggregate function returns the maximum value of all values in the group.
+      AGGR_MAX       The max aggregate function returns the maximum value of all values in the group.
 
-      MDL_MIN       The min aggregate function returns the minimum  value of all values in the group.
+      AGGR_MIN       The min aggregate function returns the minimum  value of all values in the group.
 
-     MDL_SUM The total aggregate functions return sum of all values in the group.
+     AGGRL_SUM The total aggregate functions return sum of all values in the group.
      If there are no non-NULL input rows then returns 0.0.
 
-     The result of total() is always a floating point value.
+
      */
+
     void aggregate(const MetaData &mdIn, AggregateOperation op,
                    MDLabel aggregateLabel, MDLabel operateLabel, MDLabel resultLabel);
     void aggregate(const MetaData &mdIn, const std::vector<AggregateOperation> &ops,
-                             MDLabel operateLabel, const std::vector<MDLabel> &resultLabels);
-
+                   MDLabel operateLabel, const std::vector<MDLabel> &resultLabels);
+    double aggregateSingle(AggregateOperation op,
+                           MDLabel aggregateLabel);
     /** Union of elements in two Metadatas, without duplicating.
      * Result in calling metadata object
      * union is a reserved word so I called this method unionDistinct

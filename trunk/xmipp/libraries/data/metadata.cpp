@@ -118,6 +118,14 @@ bool MetaData::_setValue(long int objId, const MDObject &mdValueIn)
     myMDSql->setObjectValue(objId, mdValueIn);
 }
 
+bool MetaData::_setValueCol(const MDObject &mdValueIn)
+{
+    //add label if not exists, this is checked in addlabel
+    addLabel(mdValueIn.label);
+    //MDL::voidPtr2Value(label, valuePtr, mdValue);
+    myMDSql->setObjectValue(mdValueIn);
+}
+
 bool MetaData::_getValue(long int objId, MDObject &mdValueOut) const
 {
     if (!containsLabel(mdValueOut.label))
@@ -784,6 +792,15 @@ void MetaData::merge(const FileName &fn)
     md.read(fn);
     unionAll(md);
 }
+
+double MetaData::aggregateSingle(AggregateOperation op,
+		                           MDLabel aggregateLabel)
+
+{
+	myMDSql->aggregateSingleDouble(op,aggregateLabel);
+}
+
+
 
 void MetaData::aggregate(const MetaData &mdIn, AggregateOperation op,
                          MDLabel aggregateLabel, MDLabel operateLabel, MDLabel resultLabel)
