@@ -640,7 +640,6 @@ void Prog_angular_class_average_prm::processOneClass(int &dirno,
     // Re-alignment of the class
     if (nr_iter > 0)
     {
-        std::cerr << "SFclass 1 and 2 " << SFclass1.size() << " " << SFclass2.size() <<std::endl;
         SFclass=SFclass1;
         SFclass.unionAll(SFclass2);
         avg() = avg1() + avg2();
@@ -662,15 +661,9 @@ void Prog_angular_class_average_prm::processOneClass(int &dirno,
     }
 
     // Output total and split averages and selfiles to disc
-    SFclass1.write(std::cerr);
-    SFclass2.write(std::cerr);
-    std::cerr << "equal before " <<std::endl;
 
     SFclass = SFclass1;
-    std::cerr << "unionAll " <<std::endl;
     SFclass.unionAll(SFclass2);
-    std::cerr << "unionAll2	" <<std::endl;
-    SFclass.write(std::cerr);
 
     avg() = avg1() + avg2();
     w = w1 + w2;
