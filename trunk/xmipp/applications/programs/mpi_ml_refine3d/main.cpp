@@ -88,10 +88,10 @@ int main(int argc, char **argv)
         MPI_Barrier(MPI_COMM_WORLD);
 
         // All nodes produce general side-info
-        ML2D_prm.produceSideInfo(rank);
+        ML2D_prm.produceSideInfo();
         //Syncronize all before read references (slaves will wait for master to terminate generateInitialReferences)
         MPI_Barrier(MPI_COMM_WORLD);
-        ML2D_prm.produceSideInfo2(size, rank);
+        ML2D_prm.produceSideInfo2();
         prm.Nvols *= ML2D_prm.factor_nref;
         ML2D_prm.Iold.clear(); // To save memory
         ML2D_prm.createThreads();

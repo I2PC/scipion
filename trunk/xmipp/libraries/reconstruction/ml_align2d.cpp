@@ -337,7 +337,6 @@ void ProgML2D::run()
     int c, nn, imgno, opt_refno;
     bool converged = false;
     double aux;
-    MultidimArray<double> Maux;
     FileName fn_img, fn_tmp;
 
     produceSideInfo();
@@ -345,9 +344,6 @@ void ProgML2D::run()
     produceSideInfo2();
     //Create threads to be ready for work
     createThreads();
-
-    Maux.resize(dim, dim);
-    Maux.setXmippOrigin();
 
     ModelML2D block_model(model.n_ref);
 
@@ -364,30 +360,16 @@ void ProgML2D::run()
         {
             // Integrate over all images
             expectation();
-
-            //            std::cerr << "------------ BBBBefore maximizationBlocks ----------------- " << std::endl;
-            //            std::cerr << "LL: " << LL << std::endl;
-            //            std::cerr << "sumw_allrefs: " << sumw_allrefs << std::endl;
-            //            std::cerr << "sumfracweight: " << sumfracweight << std::endl;
-            //            std::cerr << "wsum_sigma_noise: " << wsum_sigma_noise << std::endl;
-            //            std::cerr << "wsum_sigma_offset: " << wsum_sigma_offset << std::endl;
-
+            // Update model with new estimates
             maximizationBlocks();
-
         }//close for blocks
 
-        //#define DEBUG
-#ifdef DEBUG
-        model.print();
-#endif
-#undef DEBUG
         // Check convergence
         converged = checkConvergence();
 
         // Write output files
         addPartialDocfileData(docfiledata, myFirstImg, myLastImg);
         writeOutputFiles(model, OUT_ITER);
-
 
     } // end loop iterations
 
@@ -399,7 +381,7 @@ void ProgML2D::run()
 }
 
 // Trying to merge produceSideInfo 1 y 2
-void ProgML2D::produceSideInfo(int rank)
+void ProgML2D::produceSideInfo()
 {
 
     // Read selfile with experimental images
@@ -469,7 +451,15 @@ void ProgML2D::produceSideInfo(int rank)
     show();
 }
 
-void ProgML2D::produceSideInfo2(int size, int rank)
+void ProgML2D::setNumberOfLocalImages()
+{
+  nr_images_local = nr_images_global;
+  //the following will be override in the MPI implementation.
+//  nr_images_local = divide_equally(nr_images_global, size, rank, myFirstImg,
+//                                   myLastImg);
+}
+
+void ProgML2D::produceSideInfo2()
 {
     Image<double> img;
     FileName fn_tmp;
@@ -507,10 +497,7 @@ void ProgML2D::produceSideInfo2(int size, int rank)
         refno++;
     }
 
-    //This will differs from nr_images_global if MPI
-    nr_images_local = divide_equally(nr_images_global, size, rank, myFirstImg,
-                                     myLastImg);
-
+    setNumberOfLocalImages();
     // prepare masks for rotated references
     mask.resize(dim, dim);
     mask.setXmippOrigin();
@@ -2289,10 +2276,7 @@ void ProgML2D::addPartialDocfileData(const MultidimArray<double> &data,
 #endif
 }//close function addDocfileData
 
-void ProgML2D::writeDocfile(FileName fn_base)
-{}//close function writeDocfile
-
-void ProgML2D::writeOutputFiles(ModelML2D model, int outputType)
+void ProgML2D::writeOutputFiles(const ModelML2D &model, int outputType)
 {
     FileName fn_base;
     FileName fn_tmp;

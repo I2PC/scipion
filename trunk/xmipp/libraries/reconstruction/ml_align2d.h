@@ -322,15 +322,18 @@ public:
 public:
     ProgML2D(bool ML3D = false);
     ///Show info
-    void show();
+    virtual void show();
     ///Main function of the program
-    void run();
+    virtual void run();
     ///Try to merge produceSideInfo1 and 2
-    void produceSideInfo(int rank = 0);
+    virtual void produceSideInfo();
     ///Try to merge produceSideInfo1 and 2
-    void produceSideInfo2(int size = 1, int rank = 0);
+    virtual void produceSideInfo2();
 
-    /// Randomize initial images order, only one
+    /// Set the number of images, this function is useful only for MPI
+    virtual void setNumberOfLocalImages();
+
+    /// Randomize initial images order, only once
     void randomizeImagesOrder();
 
     /// Calculate probability density distribution for in-plane transformations
@@ -382,14 +385,7 @@ public:
     void doThreadESIUpdateRefno();
 
     /// Integrate over all experimental images
-    void expectation();
-
-    /** Do a regularization of references in iter  0
-     * After iter 0 (old generateInitialReferences, do a regularization acording to parameter ref_reg
-     * if ref_reg is 0, no regularization is made and all references will only keep images asigned to it,
-     * if ref_reg is 1, all references will be the same...
-     */
-    void doReferencesRegularization();
+    virtual void expectation();
 
     /// Update all model parameters
     void maximization(ModelML2D &model);
@@ -404,19 +400,13 @@ public:
     bool checkConvergence();
 
     /// Add docfiledata to docfile
-    void addPartialDocfileData(const MultidimArray<double> &data, int first, int last);
-
-    void addDocfileData();
-
-    /// Write Docfile
-    void writeDocfile(FileName fn_base);
+    virtual void addPartialDocfileData(const MultidimArray<double> &data, int first, int last);
 
     /// Write model parameters
-    void writeOutputFiles(ModelML2D model, int outputType = OUT_FINAL);
+    virtual void writeOutputFiles(const ModelML2D &model, int outputType = OUT_FINAL);
 
     /// Read model from file
     void readModel(ModelML2D &model, FileName fn_base);
-    void foo();
     /// Get base name based on fn_root and some number
     FileName getBaseName(std::string suffix = "", int number = -1);
 

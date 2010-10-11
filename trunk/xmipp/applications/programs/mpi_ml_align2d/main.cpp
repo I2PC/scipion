@@ -26,12 +26,21 @@
 #include <mpi.h>
 
 #include <reconstruction/ml_align2d.h>
+#include <parallel/mpi_ml_align2d.h>
+
 #define TAG_DOCFILE 12
 #define TAG_DOCFILESIZE 13
 
 int main(int argc, char **argv)
 {
-    ProgML2D prm;
+  MpiProgML2D mpiProgram;
+  mpiProgram.read(argc, argv);
+  mpiProgram.run();
+
+  return 0;
+
+
+  /*  ProgML2D prm;
 
     int c, nn, imgno, opt_refno, iaux;
     double aux, convv;
@@ -75,11 +84,11 @@ int main(int argc, char **argv)
         }
 
         // Create references from random subset averages
-        prm.produceSideInfo(rank);
+        prm.produceSideInfo();
         //Syncronize all before read references (slaves will wait for master to terminate generateInitialReferences)
         MPI_Barrier(MPI_COMM_WORLD);
         // All nodes produce general side-info
-        prm.produceSideInfo2(size, rank);
+        prm.produceSideInfo2();
         prm.createThreads();
         MPI_Barrier(MPI_COMM_WORLD);
 
@@ -105,7 +114,7 @@ int main(int argc, char **argv)
         for (prm.iter = prm.istart; !converged && prm.iter <= prm.Niter; prm.iter++)
         {
             if (prm.verbose > 0)
-                std::cerr << "  Multi-reference refinement:  iteration " << prm.iter << " of " << prm.Niter << std::endl;
+                std::cerr << "Node " << rank << " Multi-reference refinement:  iteration " << prm.iter << " of " << prm.Niter << std::endl;
 
             // Save old reference images
             for (int refno = 0; refno < prm.model.n_ref; refno++)
@@ -242,5 +251,5 @@ int main(int argc, char **argv)
     }
 
     MPI_Finalize();
-    return 0;
+    return 0;*/
 }
