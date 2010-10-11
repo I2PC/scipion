@@ -184,7 +184,7 @@ void ProgXrayImport::getFlatfield(const FileName &fnDir,
     Image<double> IavgDark;
     getDarkfield(fnDir, IavgDark);
     if (XSIZE(IavgDark())!=0)
-        IavgDark.write(fnRoot+"_"+fnDir+"_darkfield.xmp");
+        IavgDark.write(fnRoot+"_"+fnDir.removeDirectories()+"_darkfield.xmp");
 
     // Process the rest of the images
     std::vector<FileName> listDir;
@@ -295,7 +295,7 @@ void ProgXrayImport::run()
         std::cerr << "Getting flatfield from "+fnDirFlat << " ..." << std::endl;
         getFlatfield(fnDirFlat,IavgFlat);
         if (XSIZE(IavgFlat())!=0)
-            IavgFlat.write(fnRoot+"_"+fnDirFlat+"_avg.xmp");
+            IavgFlat.write(fnRoot+"_"+fnDirFlat.removeDirectories()+"_avg.xmp");
     }
 
     // Get the darkfield
