@@ -213,3 +213,8 @@ bool MpiNode::isMaster() const
 {
     return rank == 0;
 }
+
+void MpiNode::barrierWait()
+{
+  MPI_Barrier(MPI_COMM_WORLD);
+}
