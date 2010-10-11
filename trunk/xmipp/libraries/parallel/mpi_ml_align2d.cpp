@@ -37,7 +37,6 @@ MpiProgML2D::~MpiProgML2D()
 
 void MpiProgML2D::read(int argc, char** argv)
 {
-    std::cerr << "MpiProgML2D::read" <<std::endl;
     node = new MpiNode(argc, argv);
     // Read subsequently to avoid problems in restart procedure
     for (int proc = 0; proc < node->size; ++proc)
@@ -64,14 +63,12 @@ void MpiProgML2D::read(int argc, char** argv)
 
 void MpiProgML2D::setNumberOfLocalImages()
 {
-    std::cerr << "MpiProgML2D::setNumberOfLocalImages" << std::endl;
     nr_images_local = divide_equally(nr_images_global, node->size, node->rank, myFirstImg,
                                      myLastImg);
 }
 
 void MpiProgML2D::produceSideInfo2()
 {
-    std::cerr << "MpiProgML2D::produceSideInfo2" << std::endl;
     node->barrierWait();
     ProgML2D::produceSideInfo2();
     //Also sync after finishing produceSideInfo2
@@ -85,7 +82,6 @@ void MpiProgML2D::expectation()
   Maux.resize(dim, dim);
   Maux.setXmippOrigin();
 
-  std::cerr << "MpiProgML2D::expectation" << std::endl;
     ProgML2D::expectation();
     //After expectation, collect data from all nodes
     // Here MPI_allreduce of all wsums,LL and sumfracweight !!!

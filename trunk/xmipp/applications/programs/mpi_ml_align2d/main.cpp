@@ -33,11 +33,20 @@
 
 int main(int argc, char **argv)
 {
+  try
+  {
   MpiProgML2D mpiProgram;
   mpiProgram.read(argc, argv);
   mpiProgram.run();
-
   return 0;
+  }
+  catch (XmippError xe)
+  {
+    std::cerr << xe << std::endl;
+    xe.printStackTrace();
+    exit(1);
+  }
+
 
 
   /*  ProgML2D prm;
