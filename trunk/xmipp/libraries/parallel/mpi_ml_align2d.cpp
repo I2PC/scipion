@@ -77,10 +77,10 @@ void MpiProgML2D::produceSideInfo2()
 
 void MpiProgML2D::expectation()
 {
-  MultidimArray<double> Maux;
-  double aux;
-  Maux.resize(dim, dim);
-  Maux.setXmippOrigin();
+    MultidimArray<double> Maux;
+    double aux;
+    Maux.resize(dim, dim);
+    Maux.setXmippOrigin();
 
     ProgML2D::expectation();
     //After expectation, collect data from all nodes
@@ -122,47 +122,53 @@ void MpiProgML2D::expectation()
     }
 }//end of expectation
 
+void MpiProgML2D::readModel(ModelML2D &model, FileName fn_base)
+{
+    ProgML2D::readModel(model, fn_base);
+    node->barrierWait();
+}
+
 void MpiProgML2D::addPartialDocfileData(const MultidimArray<double> &data, int first, int last)
 {
-  // Write intermediate files
-  if (!node->isMaster())
-  {
-      // All slaves send docfile data to the master
-      int s_size = MULTIDIM_SIZE(docfiledata);
-      MPI_Send(&s_size, 1, MPI_INT, 0, TAG_DOCFILESIZE,
-               MPI_COMM_WORLD);
-      MPI_Send(MULTIDIM_ARRAY(docfiledata), s_size, MPI_DOUBLE,
-               0, TAG_DOCFILE, MPI_COMM_WORLD);
-  }
-  else
-  {
-      // Master fills docfile
-      // Master's own contribution
-      ProgML2D::addPartialDocfileData(docfiledata, myFirstImg, myLastImg);
-      int s_size, first_img, last_img;
-      MPI_Status status;
+    // Write intermediate files
+    if (!node->isMaster())
+    {
+        // All slaves send docfile data to the master
+        int s_size = MULTIDIM_SIZE(docfiledata);
+        MPI_Send(&s_size, 1, MPI_INT, 0, TAG_DOCFILESIZE,
+                 MPI_COMM_WORLD);
+        MPI_Send(MULTIDIM_ARRAY(docfiledata), s_size, MPI_DOUBLE,
+                 0, TAG_DOCFILE, MPI_COMM_WORLD);
+    }
+    else
+    {
+        // Master fills docfile
+        // Master's own contribution
+        ProgML2D::addPartialDocfileData(docfiledata, myFirstImg, myLastImg);
+        int s_size, first_img, last_img;
+        MPI_Status status;
 
-      for (int docCounter = 1; docCounter < node->size; ++docCounter)
-      {
-          // receive in order
-          MPI_Recv(&s_size, 1, MPI_INT, docCounter, TAG_DOCFILESIZE,
-                   MPI_COMM_WORLD, &status);
-          MPI_Recv(MULTIDIM_ARRAY(docfiledata), s_size,
-                   MPI_DOUBLE, docCounter, TAG_DOCFILE,
-                   MPI_COMM_WORLD, &status);
-          divide_equally(nr_images_global, node->size, docCounter, first_img, last_img);
-          ProgML2D::addPartialDocfileData(docfiledata, first_img, last_img);
-      }
-  }
+        for (int docCounter = 1; docCounter < node->size; ++docCounter)
+        {
+            // receive in order
+            MPI_Recv(&s_size, 1, MPI_INT, docCounter, TAG_DOCFILESIZE,
+                     MPI_COMM_WORLD, &status);
+            MPI_Recv(MULTIDIM_ARRAY(docfiledata), s_size,
+                     MPI_DOUBLE, docCounter, TAG_DOCFILE,
+                     MPI_COMM_WORLD, &status);
+            divide_equally(nr_images_global, node->size, docCounter, first_img, last_img);
+            ProgML2D::addPartialDocfileData(docfiledata, first_img, last_img);
+        }
+    }
 }
 
 void MpiProgML2D::writeOutputFiles(const ModelML2D &model, int outputType)
 {
-  //Only master write files
-  if (node->isMaster())
-    ProgML2D::writeOutputFiles(model, outputType);
-  //All nodes wait until files are written
-  node->barrierWait();
+    //Only master write files
+    if (node->isMaster())
+        ProgML2D::writeOutputFiles(model, outputType);
+    //All nodes wait until files are written
+    node->barrierWait();
 }
 
 

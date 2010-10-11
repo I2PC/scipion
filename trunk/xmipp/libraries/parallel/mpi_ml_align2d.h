@@ -57,7 +57,11 @@ public:
     void writeOutputFiles(const ModelML2D &model, int outputType = OUT_FINAL);
     /// After normal ML2D expectation, data must be collected from nodes
     void expectation();
+    /// Read model from file, but syncronize all nodes
+    void readModel(ModelML2D &model, FileName fn_base);
 
-};//end of class MpiProgML2D
+
+}
+;//end of class MpiProgML2D
 
 #endif /* MPI_ML_ALIGN2D_H_ */
