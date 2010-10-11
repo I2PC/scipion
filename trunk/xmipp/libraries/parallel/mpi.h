@@ -50,6 +50,8 @@ public:
     ~MpiNode();
 
     bool isMaster() const;
+    /** Wait on a barrier for the other MPI nodes */
+    void barrierWait();
 };
 
 //mpi macros
