@@ -353,12 +353,13 @@ void frc_dpr(MultidimArray< double > & m1,
     {
         FFT_IDX2DIGFREQ(j,XSIZE(m1),XX(f));
         FFT_IDX2DIGFREQ(i,YSIZE(m1),YY(f));
+        FFT_IDX2DIGFREQ(k,ZSIZE(m1),ZZ(f));
         double R=f.module();
         if (R>0.5)
             continue;
         int idx=ROUND(R*XSIZE(m1));
-        std::complex<double> z1=dAij(FT1, i, j);
-        std::complex<double> z2=dAij(FT2, i, j);
+        std::complex<double> z1=dAkij(FT1, k, i, j);
+        std::complex<double> z2=dAkij(FT2, k, i, j);
         double absz1=abs(z1);
         double absz2=abs(z2);
         num(idx)+=real(conj(z1) * z2);
