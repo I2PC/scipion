@@ -483,6 +483,15 @@ void ShiftFFT(MultidimArray< std::complex< double > > & v,
  * Changes the real and the fourier space origin
  */
 void CenterOriginFFT(MultidimArray< std::complex< double > > & v, bool forward);
+
+
+/** Xmipp image -> Xmipp PSD.
+    The log10 is taken, outliers rejected and the image is reorganized. */
+void xmipp2PSD(const MultidimArray<double> &input, MultidimArray<double> &output);
+
+/** Xmipp image -> Xmipp CTF.
+    The log10 is taken, outliers rejected and the image is reorganized. */
+void xmipp2CTF(const MultidimArray<double> &input, MultidimArray<double> &output);
 //@}
 //@}
 #endif

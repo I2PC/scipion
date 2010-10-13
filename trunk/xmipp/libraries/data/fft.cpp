@@ -25,6 +25,7 @@
 
 #include "fft.h"
 #include "args.h"
+#include "histogram.h"
 #include "external/bilib/headers/dft.h"
 
 /* Format conversions ------------------------------------------------------ */
@@ -393,3 +394,63 @@ void CenterOriginFFT(MultidimArray< std::complex< double > > & v, bool forward)
         REPORT_ERROR(ERR_MULTIDIM_DIM,"CenterOriginFFT ERROR: only valis for 1D or 2D or 3D");
 }
 
+/* Xmipp image -> Xmipp PSD ------------------------------------------------ */
+void xmipp2PSD(const MultidimArray<double> &input, MultidimArray<double> &output)
+{
+    output = input;
+    CenterFFT(output, true);
+    double min_val = output.computeMax();
+    FOR_ALL_ELEMENTS_IN_ARRAY2D(output)
+    if (output(i, j) > 0 && output(i, j) < min_val) min_val = output(i, j);
+    min_val = 10 * log10(min_val);
+    FOR_ALL_ELEMENTS_IN_ARRAY2D(output)
+    if (output(i, j) > 0) output(i, j) = 10 * log10(output(i, j));
+    else               output(i, j) = min_val;
+    reject_outliers(output);
+}
+
+/* Xmipp image -> Xmipp CTF ------------------------------------------------ */
+void xmipp2CTF(const MultidimArray<double> &input, MultidimArray<double> &output)
+{
+    output = input;
+    CenterFFT(output, true);
+
+    // Prepare PSD part
+    double min_val = output(0, XSIZE(output) - 1);
+    double max_val = min_val;
+    bool first = true;
+    int Xdim = XSIZE(output);
+    int Ydim = YSIZE(output);
+    FOR_ALL_ELEMENTS_IN_ARRAY2D(output)
+    {
+        if ((i < Ydim / 2 && j >= Xdim / 2) || (i >= Ydim / 2 && j < Xdim / 2))
+        {
+            if (output(i, j) > XMIPP_EQUAL_ACCURACY &&
+                (output(i, j) < min_val || first)) min_val = output(i, j);
+            if (output(i, j) > XMIPP_EQUAL_ACCURACY &&
+                (output(i, j) > max_val || first))
+            {
+                max_val = output(i, j);
+                first = false;
+            }
+        }
+    }
+    MultidimArray<double> left(YSIZE(output), XSIZE(output));
+    min_val = 10 * log10(min_val);
+    FOR_ALL_ELEMENTS_IN_ARRAY2D(output)
+    {
+        if ((i < Ydim / 2 && j >= Xdim / 2) || (i >= Ydim / 2 && j < Xdim / 2))
+        {
+            if (output(i, j) > XMIPP_EQUAL_ACCURACY)
+                left(i, j) = 10 * log10(output(i, j));
+            else left(i, j) = min_val;
+        }
+    }
+    reject_outliers(left);
+
+    // Join both parts
+    FOR_ALL_ELEMENTS_IN_ARRAY2D(output)
+    if ((i < Ydim / 2 && j >= Xdim / 2) || (i >= Ydim / 2 && j < Xdim / 2))
+        output(i, j) = left(i, j);
+    else output(i, j) = ABS(output(i, j));
+}

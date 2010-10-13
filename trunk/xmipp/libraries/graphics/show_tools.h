@@ -41,6 +41,7 @@
 #endif
 
 #include <data/image.h>
+#include <data/fft.h>
 
 #include <vector>
 #include <string>
@@ -199,14 +200,6 @@ void Qt2xmipp(QImage &_qimage, Image<double> &_ximage);
 /** Xmipp -> PixMap */
 void xmipp2Pixmap(Image<double> &xmippImage, QPixmap* pixmap,
                   int _minScale = 0, int _maxScale = 255, double _m = 0, double _M = 0);
-
-/** Xmipp image -> Xmipp PSD.
-    The log10 is taken, outliers rejected and the image is reorganized. */
-void xmipp2PSD(const MultidimArray<double> &input, MultidimArray<double> &output);
-
-/** Xmipp image -> Xmipp CTF.
-    The log10 is taken, outliers rejected and the image is reorganized. */
-void xmipp2CTF(const MultidimArray<double> &input, MultidimArray<double> &output);
 //@}
 
 /** Miscellanea */
