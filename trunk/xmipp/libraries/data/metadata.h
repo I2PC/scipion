@@ -300,6 +300,10 @@ public:
      */
     FileName getFilename() const;
 
+    /**Set metadata filename.
+     */
+    void setFilename(const FileName _filename);
+
     /**Get safe access to active labels.
      */
     std::vector<MDLabel> getActiveLabels() const;

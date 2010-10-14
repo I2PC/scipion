@@ -244,6 +244,11 @@ FileName MetaData::getFilename() const
     return inFile;
 }
 
+void MetaData::setFilename(const FileName _fileName)
+{
+    inFile=_fileName;
+}
+
 std::vector<MDLabel> MetaData::getActiveLabels() const
 {
     return activeLabels;
