@@ -744,7 +744,13 @@ void PCAMahalanobisAnalyzer::computeStatistics(MultidimArray<double> & avg,
 void PCAMahalanobisAnalyzer::evaluateZScore(int NPCA, int Niter)
 {
     int N=v.size();
-    if (N==1)
+    if (N==0)
+    {
+    	Zscore.clear();
+    	idx.clear();
+    	return;
+    }
+    else if (N==1)
     {
         Zscore.initZeros(N);
         idx=Zscore.indexSort();
