@@ -81,6 +81,7 @@ void Prog_analyze_cluster_prm::produceSideInfo()
 {
     // Read input selfile and reference
     SFin.read(fnSel, NULL);
+    if (SFin.size()==0) return;
     SFin.removeObjects(MDValueEQ(MDL_ENABLED, -1));
 
     // Image holding current reference
@@ -169,7 +170,6 @@ void Prog_analyze_cluster_prm::produceSideInfo()
         char c;
         std::cin >> c;
 #endif
-
     }
 }
 #undef DEBUG
@@ -177,7 +177,7 @@ void Prog_analyze_cluster_prm::produceSideInfo()
 // Run  ====================================================================
 void Prog_analyze_cluster_prm::run()
 {
-    pcaAnalyzer.evaluateZScore(NPCA, Niter);
+	pcaAnalyzer.evaluateZScore(NPCA, Niter);
 
     // Output
     FileName fnRoot=fnSel.withoutExtension();
@@ -186,9 +186,11 @@ void Prog_analyze_cluster_prm::run()
     
     MetaData SFout_good, SFout_bad;
     MultidimArray<double> IalignedAvg;
-    IalignedAvg.initZeros(XSIZE(Ialigned[0]));
-    double Ngood=0;
     int N=SFin.size();
+    if (N>0)
+    	IalignedAvg.initZeros(XSIZE(Ialigned[0]));
+    double Ngood=0;
+
     for (int n=0; n<N; n++)
     {
     	int trueIdx=pcaAnalyzer.getSorted(n);
