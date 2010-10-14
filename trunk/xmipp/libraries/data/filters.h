@@ -245,10 +245,11 @@ double correlation(const MultidimArray< T >& x,
 
                     retval += DIRECT_A3D_ELEM(x, k, i, j) *
                               DIRECT_A3D_ELEM(y, kp, ip, jp);
+                    N++;
                 }
             }
 
-    return retval / (Slices * Rows * Cols);
+    return retval / N;
 }
 
 /** correlation_index nD
