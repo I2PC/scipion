@@ -3085,11 +3085,11 @@ public:
         computeStats(avg0, stddev0, minval, maxval);
 
         if (stddev0 != 0)
-            a = static_cast< double >(stddevF) / static_cast< double >(stddev0);
+            a = stddevF / stddev0;
         else
             a = 0;
 
-        b = static_cast< double >(avgF) - a * static_cast< double >(avg0);
+        b = avgF - a * avg0;
 
         T* ptr=NULL;
         unsigned long int n;
