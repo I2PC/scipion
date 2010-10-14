@@ -326,7 +326,7 @@ class visualize_projmatch_class:
             displayVolList=self._DisplayReconstruction_list
             if (_DisplayFilteredReconstruction):
                 displayVolList=self._DisplayFilteredReconstruction_list
-            print "kk", displayVolList
+            
             show_ang_distribution(self._ShowPlotsList,
                                   self._iteration_number,
                                   self._TitleList,
@@ -355,45 +355,47 @@ def show_ang_distribution(_ShowPlots,
                           _DisplayAngularDistributionWith,
                           _displayVolList,
                           _mylog=""):
-    import os
-    import docfiles
-    import visualization
+    import os,XmippData
+    import visualization,metadataUtils
     print "_DisplayAngularDistributionWith:" , _DisplayAngularDistributionWith
     if(_DisplayAngularDistributionWith=='3D'):
         visualization.angDistributionChimera(_ShowPlots,_displayVolList,_mylog)
     elif(_DisplayAngularDistributionWith=='2D'):
+        doc=XmippData.MetaData()
         for i in range(len(_ShowPlots)):
-            doc=docfiles.docfile(_ShowPlots[i])
-            doc.check_angle_range()
-            mini=doc.minimum_of_column(7)
-            maxi=doc.maximum_of_column(7)
+	    doc.clear()
+            metadataUtils.check_angle_range(_ShowPlots[i],_ShowPlots[i])
+	    doc.read(XmippData.FileName(_ShowPlots[i]))
+            mini=doc.aggregateSingle(XmippData.AGGR_MIN,XmippData.MDL_WEIGHT)
+            maxi=doc.aggregateSingle(XmippData.AGGR_MAX,XmippData.MDL_WEIGHT)
+	    print "_ShowPlots[i]),mini,maxi",_ShowPlots[i],mini,maxi
 	    if not _mylog=="":
                _mylog.debug("mini "+ str(mini) +" maxi "+ str(maxi))
-            if mini==0:
-               mini=1
-            if maxi<mini:
-               maxi=mini   
-            doc.write_several(_ShowPlots[i],
+            #if mini==0:
+            #   mini=1
+            #if maxi<mini:
+            #   maxi=mini   
+            doc=metadataUtils.write_several(doc,
                               10,
-                              7,
+                              XmippData.MDL_WEIGHT,
                               mini,
                               maxi,
                               )
             plot=visualization.gnuplot()
             _title[i] =_title[i]+'\\n min= '+str(mini)+', max= '+str(maxi) 
-            plot.plot_xy1y2_several_angular_doc_files(_ShowPlots[i],
+            plot.plot_xy1y2_several_angular_doc_files(doc,
                                                       _title[i],
                                                       'degrees',
                                                       'degrees',
-                                                      3,
-                                                      4)
+                                                      XmippData.MDL_ANGLEROT,
+                                                      XmippData.MDL_ANGLETILT,
+						      XmippData.MDL_COUNT)
     else:
         print "Error: wrong utility to visualizeshow_ang_distribution"
         exit(1)
 
 def show_plots(_ShowPlots,_iteration_number,_title,_mylog):
         import os
-        import docfiles
         import visualization
         plot=visualization.gnuplot()
         for i in range(len(_ShowPlots)):
