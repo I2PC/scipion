@@ -68,9 +68,9 @@ class sortJunkThread(Thread):
                         lastShown=toShow
                 sys.stdout.flush()
                 fnClass=className[0:className.rfind('.sel')]
-                os.system("xmipp_metadata_utilities -i "+\
-                    fnRoot+"_F1_good.sel -n "+fnClass+\
-                    ".sel -l image -o "+fnClass+"_F1.sel")
+                os.system("xmipp_metadata_utilities --intersection "+\
+                    fnRoot+"_F1_good.sel "+fnClass+\
+                    ".sel --label image -o "+fnClass+"_F1.sel")
                 os.system("xmipp_classify_analyze_cluster -i "+fnClass+"_F1.sel -ref "+\
                     fnClass+".xmp -dontMask >& /dev/null")
                 fh=open(fnClass+"_F1_outliers.sel");
@@ -110,7 +110,8 @@ def sortJunk(Nthreads,fnRoot,classFiles,thZscore):
     os.system("cat "+fnRoot+"_level_00_??????.sel > "+fnRoot+"_all.sel")
     os.system("xmipp_sort_by_statistics -i "+fnRoot+"_all.sel -o "+\
         fnRoot+"_F1 -zcut "+str(thZscore)+" -multivariate")
-    os.system("mv -f "+fnRoot+"_F1.sel "+fnRoot+"_F1_sorted.sel")
+    if os.path.exists(fnRoot+"_F1.sel"):
+    	os.system("mv -f "+fnRoot+"_F1.sel "+fnRoot+"_F1_sorted.sel")
 
     # Sort junk according to clusters, launch threads
     threadList=[]
@@ -221,7 +222,7 @@ class buildCoreThread(Thread):
                         if coocurrence[key]==self.level:
                             core.add(key[0])
                             core.add(key[1])
-                if (float(len(core))/len(thisClass))>self.thGoodClass:
+                if len(thisClass)>0 and (float(len(core))/len(thisClass))>self.thGoodClass:
                     fnSel=self.fnRoot+"_level_"+'%02d'%self.level+"_"+\
                         '%06d'%nclass+"_F123.sel";
                     writeSelfile(core,fnSel)
@@ -280,15 +281,21 @@ class purifyCoresThread(Thread):
                     "_F123.sel -o "+\
                     fnClass+"_F1234 -zcut "+str(self.Zscore)+\
                     " -multivariate >& /dev/null")
-                os.system("mv -f "+fnClass+"_F1234_good.sel "+fnClass+"_F1234.sel")
+                if os.path.exists(fnClass+"_F1234_good.sel"):
+                	os.system("mv -f "+fnClass+"_F1234_good.sel "+fnClass+"_F1234.sel")
                 os.system("xmipp_classify_analyze_cluster -i "+fnClass+\
                     "_F1234.sel -ref "+\
                     fnClass+".xmp -maxDist "+str(self.Zscore)+" -dontMask >& /dev/null")
-                os.system("mv -f "+fnClass+"_F1234_pca.sel "+fnClass+"_F12345.sel")
-                os.system("mv -f "+fnClass+"_F1234_pca.xmp "+fnClass+"_F12345.xmp")
-                os.system("mv -f "+fnClass+"_F1234_pcabasis_00.xmp "+fnClass+"_F12345_pcabasis_01.xmp")
-                os.system("mv -f "+fnClass+"_F1234_pcabasis_01.xmp "+fnClass+"_F12345_pcabasis_00.xmp")
-                os.system("mv -f "+fnClass+"_F1234_outliers.sel "+fnClass+"_F12345_outliers.sel")
+                if os.path.exists(fnClass+"_F1234_pca.sel"):
+	                os.system("mv -f "+fnClass+"_F1234_pca.sel "+fnClass+"_F12345.sel")
+                if os.path.exists(fnClass+"_F1234_pca.xmp"):
+    	            os.system("mv -f "+fnClass+"_F1234_pca.xmp "+fnClass+"_F12345.xmp")
+                if os.path.exists(fnClass+"_F1234_pcabasis_00.xmp"):
+        	        os.system("mv -f "+fnClass+"_F1234_pcabasis_00.xmp "+fnClass+"_F12345_pcabasis_01.xmp")
+                if os.path.exists(fnClass+"_F1234_pcabasis_01.xmp"):
+            	    os.system("mv -f "+fnClass+"_F1234_pcabasis_01.xmp "+fnClass+"_F12345_pcabasis_00.xmp")
+                if os.path.exists(fnClass+"_F1234_outliers.sel"):
+                	os.system("mv -f "+fnClass+"_F1234_outliers.sel "+fnClass+"_F12345_outliers.sel")
             idx=idx+1
         if (self.myId==0):
             print
