@@ -18,10 +18,10 @@ else
 	while [ $# -gt 0 ]
 	do
 		case "$1" in
-			-mem)MEM=$2; shift;;
-			-vol)VOLFILE="$2"; shift;;
-			-angles)ANGLESFILE="-angles $2"; shift;;
-			--)shift; break;;
+			--mem)MEM=$2; shift;;
+			--vol)VOLFILE="$2"; shift;;
+			--angles)ANGLESFILE="-angles $2"; shift;;
+			---)shift; break;;
 			-*)
 			echo >&2 \
 				"Unknown parameter: $1"
@@ -49,7 +49,7 @@ else
 
 	if [ "$SHOW_HELP" = "1" ]
 	then
-		echo "Usage: xmipp_projections_explorerj [-mem memory_ammount] <-vol volume_file> [-angles angles_file]"
+		echo "Usage: xmipp_projections_explorerj [--mem memory_ammount] <--vol volume_file> [--angles angles_file]"
 	fi
 
 	if [ ! -z "$VOLFILE" ]

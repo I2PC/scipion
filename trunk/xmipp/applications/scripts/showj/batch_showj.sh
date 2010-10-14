@@ -18,19 +18,24 @@ else
 	while [ $# -gt 0 ]
 	do
 		case "$1" in
-			-mem)MEM=$2;READFILES=0; shift;;
-			-file)READFILES=1;;	# Activates files input mode
-			-poll)POLL=-poll;READFILES=0;;	# Sets polling
-			--)shift; break;;
-			-*)READFILES=0; echo >&2 \
+			--mem)MEM=$2;READIMGS=0; READSEL=0;shift;;
+			--img)READIMGS=1;;	# Activates IMGS input mode
+			--sel)READSEL=1;;
+			--poll)POLL=-poll;READIMGS=0;READSEL=0;;	# Sets polling
+			---)shift; break;;
+			-*)READIMGS=0; READSEL=0;echo >&2 \
 				"Unknown parameter: $1"
 				exit 1;;
-			*)test "$READFILES" = "1" && FILES="$FILES $1";;
+			*)test "$READIMGS" = "1" && IMGS="$IMGS $1";test "$READSEL" = "1" && SEL="$SEL $1";;
 		esac
 		shift
 	done
+echo "MEM: $MEM"
+echo "IMGS: $IMGS"
+echo "SEL: $SEL"
+echo "POLL: $POLL"
 
-	if test -z "$MEM" || test -z "$FILES"
+	if test -z "$MEM" || test -z "$IMGS"
 	then
 		SHOW_HELP=1
 	fi
@@ -41,20 +46,24 @@ else
 		echo "No memory size provided. Using default: $MEM"
 	fi
 
-	if [ -z "$FILES" ]
+	if [ -n "$IMGS" ]
 	then
-		echo "Not enough arguments."
+		IMGS="-img$IMGS"
 	fi
+
+	if [ -n "$SEL" ]
+	then
+		SEL="-sel$SEL"
+	fi
+
+	echo "SEL: $SEL"
 
 	if [ "$SHOW_HELP" = "1" ]
 	then
-		echo "Usage: xmipp_showj [-mem <memory_ammount>] <-file <file1 [file2 [..]]> > [-poll]"
+		echo "Usage: xmipp_showj [--mem <memory_ammount>] [--img <file1 [file2 [..]]>] [--poll]"
 	fi
 
-	if [ ! -z "$FILES" ]
-	then
-		export LD_LIBRARY_PATH=$XMIPP_BASE/lib
-		IMAGEJ_HOME=$XMIPP_BASE/external/imagej
-		$JVM/bin/java -Xmx$MEM -Dplugins.dir=$IMAGEJ_HOME/plugins/ -jar $IMAGEJ_HOME/ij.jar -macro $IMAGEJ_HOME/macros/xmippBrowser.txt "-file$FILES $POLL"
-	fi
+	export LD_LIBRARY_PATH=$XMIPP_BASE/lib
+	IMAGEJ_HOME=$XMIPP_BASE/external/imagej
+	$JVM/bin/java -Xmx$MEM -Dplugins.dir=$IMAGEJ_HOME/plugins/ -jar $IMAGEJ_HOME/ij.jar -macro $IMAGEJ_HOME/macros/xmippBrowser.txt "$IMGS $SEL $POLL"
 fi

@@ -18,9 +18,9 @@ else
 	while [ $# -gt 0 ]
 	do
 		case "$1" in
-			-mem)MEM=$2; shift;;
-			-dir)WORKDIR=$2; shift;;
-			--)shift; break;;
+			--mem)MEM=$2; shift;;
+			--dir)WORKDIR=$2; shift;;
+			---)shift; break;;
 			-*)
 			echo >&2 \
 				"Unknown parameter: $1"
@@ -49,10 +49,10 @@ else
 
 	if [ "$SHOW_HELP" = "1" ]
 	then
-		echo "Usage: xmipp_browserj [-mem <memory_ammount>] [-dir <work_directory>]"
+		echo "Usage: xmipp_browserj [--mem <memory_ammount>] [--dir <work_directory>]"
 	fi
 
 	export LD_LIBRARY_PATH=$XMIPP_BASE/lib
 	IMAGEJ_HOME=$XMIPP_BASE/external/imagej
-	$JVM/bin/java -Xmx$MEM -Dplugins.dir=$IMAGEJ_HOME/plugins/ -jar $IMAGEJ_HOME/ij.jar -macro $IMAGEJ_HOME/macros/xmippBrowser.txt "$WORKDIR"
+	$JVM/bin/java -Xmx$MEM -Dplugins.dir=$IMAGEJ_HOME/plugins/ -jar $IMAGEJ_HOME/ij.jar -macro $IMAGEJ_HOME/macros/xmippBrowser.txt "-dir $WORKDIR"
 fi
