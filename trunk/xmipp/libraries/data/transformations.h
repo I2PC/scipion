@@ -228,6 +228,7 @@ void scale3DMatrix(const Matrix1D< double >& sc, Matrix2D< double > &m,
  * applyGeometry(V2, A, V1);
  * @endcode
  */
+#define NEAREST 0
 #define LINEAR 1
 #define BSPLINE2 2
 #define BSPLINE3 3
@@ -341,8 +342,8 @@ void applyGeometry(int SplineDegree,
             // geometrical transformation
             // they are related by
             // coords_output(=x,y) = A * coords_input (=xp,yp)
-            xp = x * Aref(0, 0) + y * Aref(0, 1) + Aref(0, 2);
-            yp = x * Aref(1, 0) + y * Aref(1, 1) + Aref(1, 2);
+            xp = x * MAT_ELEM(Aref, 0, 0) + y * MAT_ELEM(Aref, 0, 1) + MAT_ELEM(Aref, 0, 2);
+            yp = x * MAT_ELEM(Aref, 1, 0) + y * MAT_ELEM(Aref, 1, 1) + MAT_ELEM(Aref, 1, 2);
 
             for (int j = 0; j < XSIZE(V2); j++)
             {
@@ -391,7 +392,11 @@ void applyGeometry(int SplineDegree,
 
                 if (interp)
                 {
-                    if (SplineDegree==1)
+                	if (SplineDegree==0)
+                	{
+                		dAij(V2, i, j)=A2D_ELEM(V1,ROUND(yp),ROUND(xp));
+                	}
+                	else if (SplineDegree==1)
                     {
                         // Linear interpolation
 
@@ -456,15 +461,14 @@ void applyGeometry(int SplineDegree,
                 }
 
                 // Compute new point inside input image
-                xp += Aref(0, 0);
-                yp += Aref(1, 0);
+                xp += MAT_ELEM(Aref, 0, 0);
+                yp += MAT_ELEM(Aref, 1, 0);
             }
         }
     }
     else
     {
         // 3D transformation
-
         int m1, n1, o1, m2, n2, o2;
         double x, y, z, xp, yp, zp;
         double minxp, minyp, maxxp, maxyp, minzp, maxzp;
@@ -524,9 +528,9 @@ void applyGeometry(int SplineDegree,
                 // Calculate this position in the input image according to the
                 // geometrical transformation they are related by
                 // coords_output(=x,y) = A * coords_input (=xp,yp)
-                xp = x * Aref(0, 0) + y * Aref(0, 1) + z * Aref(0, 2) + Aref(0, 3);
-                yp = x * Aref(1, 0) + y * Aref(1, 1) + z * Aref(1, 2) + Aref(1, 3);
-                zp = x * Aref(2, 0) + y * Aref(2, 1) + z * Aref(2, 2) + Aref(2, 3);
+                xp = x * MAT_ELEM(Aref, 0, 0) + y * MAT_ELEM(Aref, 0, 1) + z * MAT_ELEM(Aref, 0, 2) + MAT_ELEM(Aref, 0, 3);
+                yp = x * MAT_ELEM(Aref, 1, 0) + y * MAT_ELEM(Aref, 1, 1) + z * MAT_ELEM(Aref, 1, 2) + MAT_ELEM(Aref, 1, 3);
+                zp = x * MAT_ELEM(Aref, 2, 0) + y * MAT_ELEM(Aref, 2, 1) + z * MAT_ELEM(Aref, 2, 2) + MAT_ELEM(Aref, 2, 3);
 
                 for (int j = 0; j < V2.xdim; j++)
                 {
@@ -581,7 +585,11 @@ void applyGeometry(int SplineDegree,
 
                     if (interp)
                     {
-                        if (SplineDegree == 1)
+                    	if (SplineDegree==0)
+                    	{
+                    		dAkij(V2, k, i, j)=A3D_ELEM(V1,ROUND(zp),ROUND(yp),ROUND(xp));
+                    	}
+                    	else if (SplineDegree == 1)
                         {
 
                             // Linear interpolation
@@ -688,9 +696,9 @@ void applyGeometry(int SplineDegree,
                         dAkij(V2, k, i, j) = outside;
 
                     // Compute new point inside input image
-                    xp += Aref(0, 0);
-                    yp += Aref(1, 0);
-                    zp += Aref(2, 0);
+                    xp += MAT_ELEM(Aref, 0, 0);
+                    yp += MAT_ELEM(Aref, 1, 0);
+                    zp += MAT_ELEM(Aref, 2, 0);
                 }
             }
     }
