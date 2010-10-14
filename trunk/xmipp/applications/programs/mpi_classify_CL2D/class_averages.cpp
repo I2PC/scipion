@@ -199,9 +199,9 @@ void VQProjection::transferUpdate()
         Pupdate*=iNq;
         Pupdate.statisticsAdjust(0,1);
         P=Pupdate;
-        FOR_ALL_ELEMENTS_IN_ARRAY2D(P)
-        if (!(*mask)(i,j))
-            P(i,j)=0;
+        FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY2D(P)
+        if (!DIRECT_A2D_ELEM(*mask,i,j))
+            DIRECT_A2D_ELEM(P,i,j)=0;
         Pupdate.initZeros(P);
         computeTransforms();
         std::sort(nextListImg.begin(),nextListImg.end() );
@@ -213,10 +213,10 @@ void VQProjection::transferUpdate()
             MultidimArray<double> classCorr, nonClassCorr;
             classCorr.initZeros(nextClassCorr.size());
             nonClassCorr.initZeros(nextNonClassCorr.size());
-            FOR_ALL_ELEMENTS_IN_ARRAY1D(classCorr)
-            classCorr(i)=nextClassCorr[i];
-            FOR_ALL_ELEMENTS_IN_ARRAY1D(nonClassCorr)
-            nonClassCorr(i)=nextNonClassCorr[i];
+            FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY1D(classCorr)
+            DIRECT_A1D_ELEM(classCorr,i)=nextClassCorr[i];
+            FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY1D(nonClassCorr)
+            DIRECT_A1D_ELEM(nonClassCorr,i)=nextNonClassCorr[i];
             nextClassCorr.clear();
             nextNonClassCorr.clear();
             double minC, maxC;
@@ -258,7 +258,9 @@ void VQProjection::computeTransforms()
     // Compute the polar Fourier transform of the full image
     normalizedPolarFourierTransform(P,polarFourierP,false,
                                     XSIZE(P)/5,XSIZE(P)/2,plans,1);
-    rotationalCorr.resize(2*polarFourierP.getSampleNoOuterRing()-1);
+    int finalSize=2*polarFourierP.getSampleNoOuterRing()-1;
+    if (XSIZE(rotationalCorr)!=finalSize)
+    	rotationalCorr.resize(finalSize);
     local_transformer.setReal(rotationalCorr);
 }
 
@@ -350,7 +352,7 @@ void VQProjection::fitBasic(MultidimArray<double> &I,
         ARS(1,2)+=shiftY;
         applyGeometry(LINEAR,IauxRS,I,ARS,IS_NOT_INV,WRAP);
     }
-    
+
     // Compute the correntropy
     double corrCodeRS, corrCodeSR;
     if (useCorrelation)
@@ -434,13 +436,13 @@ void VQProjection::fit(MultidimArray<double> &I,
             return;
         double likelihoodClass=0;
         for (int i=0; i<=idx; i++)
-            likelihoodClass+=histClass(i);
+            likelihoodClass+=DIRECT_A1D_ELEM(histClass,i);
         histNonClass.val2index(corrCode,idx);
         if (idx<0)
             return;
         double likelihoodNonClass=0;
         for (int i=0; i<=idx; i++)
-            likelihoodNonClass+=histNonClass(i);
+            likelihoodNonClass+=DIRECT_A1D_ELEM(histNonClass,i);
         likelihood=likelihoodClass*likelihoodNonClass;
     }
 }
