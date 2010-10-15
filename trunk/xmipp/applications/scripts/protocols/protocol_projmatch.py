@@ -653,6 +653,8 @@ class projection_matching_class:
                 ):
        # Import libraries and add Xmipp libs to default search path
        import os,sys,shutil
+       scriptdir = os.path.split(os.path.dirname(os.popen('which xmipp_protocols', 'r').read()))[0] + '/lib'
+       sys.path.append(scriptdir) # add default search path
        scriptdir=os.path.split(os.path.dirname(os.popen('which xmipp_protocols','r').read()))[0]+'/protocols'
        sys.path.append(scriptdir)
        import arg,log,logging,selfile
