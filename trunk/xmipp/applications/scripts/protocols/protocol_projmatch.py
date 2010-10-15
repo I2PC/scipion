@@ -1266,7 +1266,7 @@ def execute_projection_matching(_mylog,
               ' -groups '              + CtfGroupSubsetFileName
 
    if (_DoParallel):
-      parameters = parameters + ' -mpi_job_size ' + str(_MyMpiJobSize)
+      parameters = parameters + ' --mpi_job_size ' + str(_MyMpiJobSize)
       
    if (len(SymmetryGroupNeighbourhood)>1):
       parameters+= \
