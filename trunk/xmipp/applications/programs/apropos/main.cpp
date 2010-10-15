@@ -40,6 +40,8 @@ class ProgApropos: public XmippProgram
 {
 protected:
     StringVector keywords;
+    bool update;
+    bool list;
 
     void defineParams()
     {
@@ -53,15 +55,25 @@ protected:
         addParamsLine("                   :if you want to search for more than one keyword,");
         addParamsLine("                   :use quotes. See example above");
         addParamsLine("   alias -k;");
+        addParamsLine("or --update        : Update the database with programs info");
+        addParamsLine("   alias -up;");
+        addParamsLine("or --list          : List all Xmipp programs");
+        addParamsLine("   alias -l;");
+
     }
 
     void readParams()
     {
         //Get keywords from cmd line
-        String keys = getParam("--keyword");
-        toLower(keys);
-        //StringVector vector;
-        tokenize(keys, keywords);
+        if (checkParam("--keyword"))
+        {
+            String keys = getParam("--keyword");
+            toLower(keys);
+            //StringVector vector;
+            tokenize(keys, keywords);
+        }
+        update = checkParam("--update");
+        list = checkParam("--list");
     }
 
     void show()
@@ -86,6 +98,15 @@ public:
         StringVector::iterator keyIt;
 
         FileName dbName = xmippBaseDir().append("/programs.db");
+
+        if (update)
+        {
+            createDB();
+            exit(0);
+        }
+
+        if (!exists(dbName))
+            createDB();
         XmippDB db(dbName);
         db.beginTrans();
         db.selectPrograms(progs);
@@ -94,15 +115,21 @@ public:
         String line;
         DbProgram *prog;
         int len, maxlen = 0; //take max program name
+
         for (it = progs.begin(); it < progs.end(); ++it)
         {
             prog = *it;
-            prog->rank = 0;
-            for (keyIt = keywords.begin(); keyIt < keywords.end(); ++keyIt)
+            if (list)
+                prog->rank = 3;
+            else
             {
-                prog->rank += getRank(prog->name, *keyIt, NAME_MATCH);
-                prog->rank += getRank(prog->keywords, *keyIt, KEYS_MATCH);
-                prog->rank += getRank(prog->description, *keyIt, DESC_MATCH);
+                prog->rank = 0;
+                for (keyIt = keywords.begin(); keyIt < keywords.end(); ++keyIt)
+                {
+                    prog->rank += getRank(prog->name, *keyIt, NAME_MATCH);
+                    prog->rank += getRank(prog->keywords, *keyIt, KEYS_MATCH);
+                    prog->rank += getRank(prog->description, *keyIt, DESC_MATCH);
+                }
             }
             if (prog->rank > 2)
             {
@@ -125,6 +152,54 @@ public:
             delete prog;
         }
 
+    }
+
+    void createDB()
+    {
+        ///Create db
+        FileName dirPath = xmippBaseDir().append("/bin/");
+        FileName dbName = xmippBaseDir().append("/programs.db");
+        XmippDB db(dbName);
+        db.beginTrans();
+        db.createCategoryTable();
+        db.createProgramTable();
+        db.commitTrans();
+        std::vector<FileName> files;
+
+        std::string progCmd;
+        FILE * input;
+        getdir(dirPath, files);
+        char readbuffer[256];
+
+        int pfd[2];
+        if (pipe(pfd) == -1)
+        {
+            perror("pipe");
+            exit(EXIT_FAILURE);
+        }
+        //Redirect std::cerr writing end of the pipe
+        //dup2(pfd[1], 2);
+        std::vector<FileName>::const_iterator iter;
+        int times = 0;
+        for (iter = files.begin(); iter != files.end(); ++iter)
+        {
+            if (iter->find("xmipp_") == 0 &&
+                iter->find("_mpi_") == std::string::npos &&
+                iter->rfind("j") != iter->length()-1 &&
+                iter->find("xmipp_test") == std::string::npos)
+            {
+                int fdOut;
+                progCmd = *iter + " --xmipp_write_definition";
+                std::cerr << progCmd << std::endl;
+                dup2(1, fdOut);//save std::cout
+                dup2(pfd[1], 1);
+                input = popen(progCmd.c_str(), "r");
+                int nbytes;
+                bool ok = false;
+                pclose(input);
+                dup2(fdOut, 1);//restore std::cout
+            }
+        }
     }
 }
 ;//end of class ProgApropos
