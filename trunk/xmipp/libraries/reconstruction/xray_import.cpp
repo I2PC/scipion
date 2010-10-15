@@ -215,9 +215,8 @@ void ProgXrayImport::getFlatfield(const FileName &fnDir,
         REPORT_ERROR(ERR_IO_NOTEXIST,fnDir+" is empty");
     Iavg()/=N;
 
-    /* Create a mask with zero valued pixels to apply boundaries median filter 
-     * to avoid dividing by zero when normalizing
-     */
+    /* Create a mask with zero valued pixels to apply boundaries median filter
+     * to avoid dividing by zero when normalizing */
     MultidimArray<double> mask(YSIZE(Iavg()), XSIZE(Iavg()));
     mask.initZeros();
     mask = (Iavg() == 0);
@@ -250,15 +249,15 @@ void runThread(ThreadArgument &thArg)
             if (XSIZE(ptrProg->IavgFlat())!=0)
                 Iaux()/=ptrProg->IavgFlat();
 
-            // Assign value 1 to zero valued pixels to avoid -inf when applying log10
-            MultidimArray<double> zeros(YSIZE(Iaux()), XSIZE(Iaux()));
-            zeros.initZeros();
-            zeros = (Iaux() == 0);
-            Iaux() += zeros;
-
-            Iaux().selfLog10();
+            // Assign median filter to zero valued pixels to avoid -inf when applying log10
+            MultidimArray<double> mask(YSIZE(Iaux()), XSIZE(Iaux()));
+            mask.initZeros();
+            mask = (Iaux() == 0);
             if (XSIZE(ptrProg->bpMask()) != 0)
-                removeBadPixels(Iaux(),ptrProg->bpMask());
+                mask += ptrProg->bpMask();
+
+            removeBadPixels(Iaux(), mask);
+            Iaux().selfLog10();
 
             FileName fnImg=integerToString(i,4,'0')+"@"+ptrProg->fnRoot+".mrcs";
             localMD.addObject();
@@ -286,6 +285,9 @@ void ProgXrayImport::run()
     {
         std::cerr << "Reading bad pixels mask from "+fnBPMask << "." << std::endl;
         bpMask.read(fnBPMask);
+        if (cropSize>0)
+            bpMask().window(cropSize,cropSize,YSIZE(bpMask())-cropSize-1,XSIZE(bpMask())-cropSize-1);
+        STARTINGX(bpMask())=STARTINGY(bpMask())=0;
     }
 
 
