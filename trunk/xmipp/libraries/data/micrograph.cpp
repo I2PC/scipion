@@ -77,7 +77,7 @@ void Micrograph::open_micrograph(const FileName &_fn_micrograph)
     << Xdim << " "
     << Ydim << " "
     << Zdim << " "
-    << Zdim << " "
+    << Ndim << " "
     << datatype << " "
     <<std::endl;
 #endif
