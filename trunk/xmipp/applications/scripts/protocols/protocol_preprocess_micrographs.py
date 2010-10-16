@@ -40,22 +40,6 @@ ProjectDir='/gpfs/fs1/home/bioinfo/coss/Trial_02'
 # {expert} Directory name for logfiles:
 LogDir='Logs'
 #------------------------------------------------------------------------------------------------
-# {section} Initial conversion to raw
-#------------------------------------------------------------------------------------------------
-# Perform micrograph conversion? 
-DoConversion=True
-# {list}|Tif2Raw|Mrc2Raw|Spi2Raw|Raw2Raw|Ser2Raw|Dm32Raw| Which conversion to perform?
-""" Some TIF formats are not recognized. In that case, save your micrographs 
-    as spider, mrc or raw and try to convert those. Note that raw2raw 
-    assumes the raw files have an Xmipp-like raw.info file with the 
-    same rootname, and that in this case no conversion takes place, but 
-    only the required directory structure is made.
-    
-"""
-ConversionTask='Tif2Raw'
-#{expert}"threshold at XX standard deviation (only for .ser files)
-Stddev=5
-#------------------------------------------------------------------------------------------------
 # {section} Downsampling
 #------------------------------------------------------------------------------------------------
 # Perform downsampling?
@@ -66,6 +50,8 @@ Down=2
 """ Fourier is theoretically the best option, but it may take more memory than your machine can handle. Then, Rectangle is the fastest, but least accurate. Since is reasonably accurate, but painfully slow...
 """
 DownKernel='Fourier'
+#{expert}"threshold at XX standard deviation (this must be selected for .ser files)
+Stddev=5
 #------------------------------------------------------------------------------------------------
 # {section} CTF estimation
 #------------------------------------------------------------------------------------------------
@@ -180,9 +166,7 @@ class preprocess_A_class:
                  MicrographSelfile,
                  ProjectDir,
                  LogDir,
-                 DoConversion,
 		 Stddev,
-                 ConversionTask,
                  DoDownSample,
                  Down,
                  DownKernel,
@@ -219,9 +203,7 @@ class preprocess_A_class:
         self.ExtMicrographs=ExtMicrographs
         self.ProjectDir=os.path.abspath(ProjectDir)
         self.LogDir=LogDir
-        self.DoConversion=DoConversion
 	self.Stddev=Stddev
-        self.ConversionTask=ConversionTask
         self.DoDownSample=DoDownSample
         if (float(Down)==int(Down)):
             self.Down=int(Down)
@@ -281,18 +263,11 @@ class preprocess_A_class:
 	xmpi_run_file=self.WorkingDir+"/"+'xmipp_preprocess_micrographs_' + str(unique_number) 
         self.xmpi_run_file=os.path.abspath(xmpi_run_file)
 	fh_mpi  = os.open(self.xmpi_run_file+ '_1.sh',os.O_WRONLY|os.O_TRUNC|os.O_CREAT, 0700)
-	#fh_mpi.os.close()
-	#fh_mpi = os.fdopen(fdfile)
-	#fh_mpi  = open(self.xmpi_run_file,"a")
-        #os.chmod(xmpi_run_file,0755)
 
         # Execute protocol in the working directory
         os.chdir(self.WorkingDir)
 	self.process_all_micrographs(fh_mpi,self.xmpi_run_file)
 
-        # Return to parent dir
-        #os.chdir(os.pardir)
-        #os.write(fh_mpi,"cd " + os.pardir)
 
         
     def process_all_micrographs(self,fh_mpi,xmpi_run_file):
@@ -319,25 +294,26 @@ class preprocess_A_class:
 		
             if not os.path.exists(self.shortname):
                 os.makedirs(self.shortname)
-
-            if (self.DoConversion):
-                if (self.ConversionTask=='Tif2Raw'):
-                    self.perform_tif2raw(fh_mpi)
-                elif (self.ConversionTask=='Mrc2Raw'):
-                    self.perform_mrc2raw(fh_mpi)
-                elif (self.ConversionTask=='Spi2Raw'):
-                    self.perform_spi2raw(fh_mpi)
-                elif (self.ConversionTask=='Raw2Raw'):
-                    self.perform_raw2raw(fh_mpi)
-                elif (self.ConversionTask=='Ser2Raw'):
-                    self.perform_ser2raw(fh_mpi,self.Stddev)
-                elif (self.ConversionTask=='Dm32Raw'):
-                    self.perform_dm32raw(fh_mpi)
-                else:
-                    message="Unrecognized ConversionTask: choose from list options"
-                    print '*',message
-                    self.log.error(message)
-                    sys.exit()
+put some help information about raw format, do not forget to ask kino for endian
+where is documentation 
+#            if (self.DoConversion):
+#                if (self.ConversionTask=='Tif2Raw'):
+#                    self.perform_tif2raw(fh_mpi)
+#                elif (self.ConversionTask=='Mrc2Raw'):
+#                    self.perform_mrc2raw(fh_mpi)
+#                elif (self.ConversionTask=='Spi2Raw'):
+#                    self.perform_spi2raw(fh_mpi)
+#                elif (self.ConversionTask=='Raw2Raw'):
+#                    self.perform_raw2raw(fh_mpi)
+#                elif (self.ConversionTask=='Ser2Raw'):
+#                    self.perform_ser2raw(fh_mpi,self.Stddev)
+#                elif (self.ConversionTask=='Dm32Raw'):
+#                    self.perform_dm32raw(fh_mpi)
+#                else:
+#                    message="Unrecognized ConversionTask: choose from list options"
+#                    print '*',message
+#                    self.log.error(message)
+#                    sys.exit()
         #Stop here untill conversions are done
         if(self._DoParallel):
             os.write(fh_mpi,"MPI_Barrier"+"\n");
