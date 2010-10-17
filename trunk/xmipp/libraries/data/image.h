@@ -385,7 +385,11 @@ public:
 
         fImageHandler* hFile = openFile(name);
         err = _read(name, hFile, readdata, select_img, apply_geo, only_apply_shifts, row, mapData);
-        closeFile(hFile);
+        if(!mapData)//do not close the file if mmap is on
+        	        //nevertheless file must be close ...
+        	        //although this is for micrographs usually left a hanfle open is OK
+        			//Further more since we use fourier for downsampling...
+            closeFile(hFile);
 
         return err;
     }
