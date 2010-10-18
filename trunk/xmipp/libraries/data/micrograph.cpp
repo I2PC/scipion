@@ -39,7 +39,27 @@
 #ifdef LINUX
 #include <unistd.h>
 #endif
-
+Micrograph::Micrograph()
+{
+    auxI = new(Image<char>);
+    IUChar=NULL;
+    IShort=NULL;
+    IUShort=NULL;
+    IInt=NULL;
+    IUInt=NULL;
+    IFloat=NULL;
+    stdevFilter=-1;
+}
+Micrograph::~Micrograph()
+{
+    delete(auxI);
+    delete(IUChar);
+    delete(IShort);
+    delete(IUShort);
+    delete(IInt);
+    delete(IUInt);
+    delete(IFloat);
+}
 /* Clear ------------------------------------------------------------------- */
 void Micrograph::clear()
 {
@@ -53,25 +73,35 @@ void Micrograph::clear()
     compute_transmitance = false;
     compute_inverse = false;
     __scaling_valid = false;
+    delete(IUChar);
+    delete(IShort);
+    delete(IUShort);
+    delete(IInt);
+    delete(IUInt);
+    delete(IFloat);
 }
 
 /* Open micrograph --------------------------------------------------------- */
 void Micrograph::open_micrograph(const FileName &_fn_micrograph)
 {
+	clear();
     struct stat info;
-
+    std::cerr << "mic file name: " << _fn_micrograph<<std::endl;
     // Micrograph name
     fn_micrograph = _fn_micrograph;
     // Look for micrograph dimensions
+    auxI->read(fn_micrograph,false,-1,false,false,NULL,false);
+    static int iii =0;
+    FileName fn;
 
-    auxI.read(fn_micrograph,false);
-    auxI.getDimensions(Xdim,Ydim, Zdim, Ndim);
+    auxI->getDimensions(Xdim,Ydim, Zdim, Ndim);
     if((Zdim >1 )|| (Ndim >1))
         REPORT_ERROR(ERR_MULTIDIM_DIM,"Micrograph::open_micrograph: Only files with a single micrograph may be processed. Error reading " + fn_micrograph );
-    auxI.MDMainHeader.getValue(MDL_DATATYPE,datatype);
+    auxI->MDMainHeader.getValue(MDL_DATATYPE,datatype);
     __offset = 0;
-#define DEBUG
-    #ifdef DEBUG
+    auxI->clear();
+//#define DEBUG
+#ifdef DEBUG
 
     std::cerr << "x,y,z,n, datatype : "
     << Xdim << " "
@@ -88,28 +118,34 @@ void Micrograph::open_micrograph(const FileName &_fn_micrograph)
     switch (datatype)
     {
     case UChar:
-        result=IUChar.read(fn_micrograph,true,-1,false,false,NULL,true);
-        IUChar.doStdevFilter(stdevFilter);
+        IUChar = new(Image<unsigned char>);
+        result=IUChar->read(fn_micrograph,true,-1,false,false,NULL,true);
+        IUChar->doStdevFilter(stdevFilter);
         break;
     case UShort:
-        result=IUShort.read(fn_micrograph,true,-1,false,false,NULL,true);
-        IUShort.doStdevFilter(stdevFilter);
+        IUShort = new(Image<unsigned short>);
+        result=IUShort->read(fn_micrograph,true,-1,false,false,NULL,true);
+        IUShort->doStdevFilter(stdevFilter);
         break;
     case Short:
-        result=IShort.read(fn_micrograph,true,-1,false,false,NULL,true);
-        IShort.doStdevFilter(stdevFilter);
+        IShort = new(Image< short>);
+        result=IShort->read(fn_micrograph,true,-1,false,false,NULL,true);
+        IShort->doStdevFilter(stdevFilter);
         break;
     case Int:
-        result=IInt.read(fn_micrograph,true,-1,false,false,NULL,true);
-        IInt.doStdevFilter(stdevFilter);
+        IInt = new(Image< int>);
+        result=IInt->read(fn_micrograph,true,-1,false,false,NULL,true);
+        IInt->doStdevFilter(stdevFilter);
         break;
     case UInt:
-        result=IUInt.read(fn_micrograph,true,-1,false,false,NULL,true);
-        IUChar.doStdevFilter(stdevFilter);
+        IUInt = new(Image< unsigned int>);
+        result=IUInt->read(fn_micrograph,true,-1,false,false,NULL,true);
+        IUChar->doStdevFilter(stdevFilter);
         break;
     case Float:
-        result=IFloat.read(fn_micrograph,true,-1,false,false,NULL,true);
-        IFloat.doStdevFilter(stdevFilter);
+        IFloat = new(Image<float>);
+        result=IFloat->read(fn_micrograph,true,-1,false,false,NULL,true);
+        IFloat->doStdevFilter(stdevFilter);
         break;
     default:
         std::cerr << "Micrograph::open_micrograph: Unknown datatype " << datatype <<std::endl;
@@ -123,28 +159,29 @@ void Micrograph::open_micrograph(const FileName &_fn_micrograph)
                      "\nCheck that the file has write permission");
 }
 
+
 /* Close micrograph -------------------------------------------------------- */
 void Micrograph::close_micrograph()
 {
     switch (datatype)
     {
     case UChar:
-        IUChar.clear();
+        IUChar->clear();
         break;
     case UShort:
-        IUShort.clear();
+        IUShort->clear();
         break;
     case Short:
-        IShort.clear();
+        IShort->clear();
         break;
     case Int:
-        IInt.clear();
+        IInt->clear();
         break;
     case UInt:
-        IInt.clear();
+        IInt->clear();
         break;
     case Float:
-        IFloat.clear();
+        IFloat->clear();
         break;
     default:
         std::cerr << "Micrograph::close_micrograph: Unknown datatype " << datatype <<std::endl;
@@ -269,9 +306,13 @@ void Micrograph::write_as_8_bits(const FileName &fn8bits)
     // Open micrograph
     Micrograph Mp;
     Mp.open_micrograph(fn8bits);
+    //Mp.datatype=UChar;
     for (int y=0; y<Ydim; y++)
         for (int x=0; x<Xdim; x++)
-            Mp.set_val(x,y,val8(x,y));
+        {
+        	unsigned char c=val8(y,x);
+            Mp.set_val(y,x,c);
+        }
     Mp.close_micrograph();
 }
 
@@ -315,8 +356,6 @@ void Micrograph::read_coordinates(int label, const FileName &_fn_coords)
     aux.valid = true;
     aux.label = label;
     aux.cost = 1;
-    std::cerr << "pos file name1" << MD.getFilename() << std::endl;
-    std::cerr << "pos file name2" << fn_coords << std::endl;
 
     FOR_ALL_OBJECTS_IN_METADATA(MD)
     {
@@ -377,6 +416,7 @@ int Micrograph::scissor(const Particle_coords &P, Image<double> &result,
     int retval = 1;
     double range, temp;
     range = Dmax - Dmin;
+
     if (i0 < 0 || iF >= Ydim || j0 < 0 || jF >= Xdim)
     {
         result().initZeros();
@@ -402,9 +442,13 @@ int Micrograph::scissor(const Particle_coords &P, Image<double> &result,
                     else
                     {
                         if (compute_inverse)
-                            A2D_ELEM(result(), i - i0, j - j0) = (Dmax - (*this)(j, i)) / range;
+                            A2D_ELEM(result(), i - i0, j - j0) = (Dmax - (*this)(i, j)) / range;
                         else
-                            A2D_ELEM(result(), i - i0, j - j0) = (*this)(j, i);
+                        {
+                            A2D_ELEM(result(), i - i0, j - j0) = (*this)(i, j);
+                            //std::cerr << "this i j: " << (*this)(j, i) << "(" << i <<","<<j<<")"<<std::endl;
+                        }
+
                     }
                 }
         }
@@ -473,7 +517,9 @@ void Micrograph::produce_all_images(int label, const FileName &fn_root,
         {
             SF.addObject();
             fn_out.compose(fn_root, i++, "xmp");
-            if (!M->scissor(coords[n], (Image<double> &) I, Dmin, Dmax, scaleX, scaleY))
+            bool t;
+            t=M->scissor(coords[n], (Image<double> &) I, Dmin, Dmax, scaleX, scaleY);
+            if (!t)
             {
                 std::cout << "Particle " << fn_out << " is very near the border, "
                 << "corresponding image is set to blank\n";
@@ -492,7 +538,7 @@ void Micrograph::produce_all_images(int label, const FileName &fn_root,
             I.set_tilt((float)tilt);
             I.set_psi((float)psi);
             */
-            I.write(fn_out);
+            I.write(fn_out,-1,false,WRITE_OVERWRITE);
         }
     if (labels[label] != "")
     {
@@ -561,33 +607,33 @@ void Micrograph::resize(int Xdim, int Ydim)
 
     if (datatype == UChar)
     {
-        IUChar.data.setMmap(true);
-        IUChar.data.resize(1, 1, Ydim, Xdim);
+        IUChar->data.setMmap(true);
+        IUChar->data.resize(1, 1, Ydim, Xdim);
     }
     else if (datatype == UShort)
     {
-        IUShort.data.setMmap(true);
-        IUShort.data.resize(1, 1, Ydim, Xdim);
+        IUShort->data.setMmap(true);
+        IUShort->data.resize(1, 1, Ydim, Xdim);
     }
     else if (datatype == Short)
     {
-        IShort.data.setMmap(true);
-        IShort.data.resize(1, 1, Ydim, Xdim);
+        IShort->data.setMmap(true);
+        IShort->data.resize(1, 1, Ydim, Xdim);
     }
     else if (datatype == UInt)
     {
-        IUInt.data.setMmap(true);
-        IUInt.data.resize(1, 1, Ydim, Xdim);
+        IUInt->data.setMmap(true);
+        IUInt->data.resize(1, 1, Ydim, Xdim);
     }
     else if (datatype == Int)
     {
-        IInt.data.setMmap(true);
-        IInt.data.resize(1, 1, Ydim, Xdim);
+        IInt->data.setMmap(true);
+        IInt->data.resize(1, 1, Ydim, Xdim);
     }
     else if (datatype == Float)
     {
-        IFloat.data.setMmap(true);
-        IFloat.data.resize(1, 1, Ydim, Xdim);
+        IFloat->data.setMmap(true);
+        IFloat->data.resize(1, 1, Ydim, Xdim);
     }
     else
         REPORT_ERROR(ERR_TYPE_INCORRECT, "Micrograph::set_val::(): unknown datatype");
@@ -595,30 +641,29 @@ void Micrograph::resize(int Xdim, int Ydim)
 }
 void Micrograph::write(FileName fileName)
 {
-
     if (datatype == UChar)
     {
-        IUChar.write(fileName);
+        IUChar->write(fileName);
     }
     else if (datatype == UShort)
     {
-        IUShort.write(fileName);
+        IUShort->write(fileName);
     }
     else if (datatype == Short)
     {
-        IShort.write(fileName);
+        IShort->write(fileName);
     }
     else if (datatype == UInt)
     {
-        IUInt.write(fileName);
+        IUInt->write(fileName);
     }
     else if (datatype == Int)
     {
-        IInt.write(fileName);
+        IInt->write(fileName);
     }
     else if (datatype == Float)
     {
-        IFloat.write(fileName);
+        IFloat->write(fileName);
     }
     else
         REPORT_ERROR(ERR_TYPE_INCORRECT, "Micrograph::set_val::(): unknown datatype");
