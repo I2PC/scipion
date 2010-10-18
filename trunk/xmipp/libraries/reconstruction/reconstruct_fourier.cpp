@@ -219,7 +219,7 @@ void Prog_RecFourier_prm::produce_Side_info()
 }
 
 void Prog_RecFourier_prm::get_angles_for_image(const FileName &fn, double &rot,
-        double &tilt, double &psi, double &xoff, double &yoff, double &flip,
+        double &tilt, double &psi, double &xoff, double &yoff, bool &flip,
         double &weight, MetaData * docfile)
 {
     std::vector<long int> found;
@@ -235,10 +235,9 @@ void Prog_RecFourier_prm::get_angles_for_image(const FileName &fn, double &rot,
         (*docfile).getValue(MDL_SHIFTY,yoff);
         flip=0;
         weight=0;
-        bool iflip;
-        (*docfile).getValue(MDL_FLIP,iflip);
-        flip=iflip;
-        // COSS (*docfile).getValue(MDL_WEIGHT,weight);
+        (*docfile).getValue(MDL_FLIP,flip);
+        // COSS, ROB porque no coger weight?
+        (*docfile).getValue(MDL_WEIGHT,weight);
     }
     else
         REPORT_ERROR(ERR_MD_NOOBJ, (std::string)"Prog_RecFourier_prm: Cannot find " + fn + " in docfile " + fn_doc);
@@ -284,7 +283,8 @@ void * Prog_RecFourier_prm::processImageThread( void * threadArgs )
                     parent->SF.getValue(MDL_IMAGE, fn_img, objId[threadParams->imageIndex] );
 
                     // Read input image
-                    double rot, tilt, psi, xoff,yoff,flip,weight;
+                    double rot, tilt, psi, xoff,yoff,weight;
+                    bool flip;
                     Projection proj;
 
                     if (parent->fn_doc == "")
