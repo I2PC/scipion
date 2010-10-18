@@ -25,7 +25,57 @@
 
 #include <data/micrograph.h>
 #include <data/args.h>
+#ifdef NNNNNN
+class ProgMetadataUtilities: public XmippProgram
+{
+private:
 
+protected:
+    void defineParams()
+    {
+        addUsageLine ("Purpose: Cut the images marked with xmipp_mark\n");
+
+        addParamsLine("  -i <input(untilted) micrograph>     : From which the images will be cutted");
+        addParamsLine(" [--orig <original micrograph>]       : unless this parameter is specified\n");
+        //use to be -root
+        addParamsLine("  -o <output_stack>                   : for the cutted images\n");
+        addParamsLine("  --pos <position file>               : order X,Y\n");
+        //I wonder if next option works, it does need an example ROB
+        addParamsLine("  [--transform < mat-file>]           : transform all coordinates according to this 3x3 matrix\n");
+
+        addUsageLine ("Examples:");
+        addUsageLine ("   xmipp_micrograph_scissor -i g7107.raw --pos g7107.raw.Common.pos -o kk.mrcs --Xdim 64");
+
+    }
+};
+void Usage()
+{
+    std::cerr << "Purpose: Cut the images marked with xmipp_mark\n"
+    << "Usage: scissor [options]\n"
+    << "For single images -------------------------\n"
+    << "   -i <input micrograph>      : From which the images will be cutted\n"
+    << "  [-orig <original micrograph>: unless this parameter is specified\n"
+    << "   -root <root name>          : for the cutted images\n"
+    << "   -pos <position file>       : order X,Y\n"
+    << "                                from transmitance\n"
+    << "  [-transform <.mat-file>]    : transform all coordinates according to this 3x3 matrix\n"
+    << "  [-down_transform <int=1>]   : the transformation matrix was determined with this downsampling rate\n"
+    << "  [-alpha <ang>]              : Angle from Y axis to tilt axis\n"
+    << "                                as it comes out from xmipp_mark\n"
+    << "For image pairs ---------------------------\n"
+    << "   -i <untilted micrograph>   : From which the images will be cutted\n"
+    << "   -tilted <tilted micrograph>: From which the images will be cutted\n"
+    << "   -root <root name>          : for the cutted images\n"
+    << "   -root_tilted <root name>   : for the tilted cutted images\n"
+    << "For both ----------------------------------\n"
+    << "   -Xdim <window X dim>       : in pixels\n"
+    << "  [-Ydim <window Y dim>]      : if not given Ydim=Xdim\n"
+    << "  [-start <N=1>]              : Number of the first image\n"
+    << "  [-invert]                   : Invert contrast\n"
+    << "  [-log]                      : Compute optical density\n"
+    ;
+}
+#endif
 void Usage();
 
 int main(int argc, char **argv)
@@ -79,7 +129,6 @@ int main(int argc, char **argv)
         if (!pair_mode)
         {
             Micrograph m;
-            FileName f;
             m.open_micrograph(fn_micrograph);
             m.set_window_size(Xdim, Ydim);
             m.read_coordinates(0, fn_pos);
@@ -92,9 +141,9 @@ int main(int argc, char **argv)
                 MD.read(fn_transform);
                 std::vector<double> myVector;
                 myVector.resize(9);
-            	std::cerr << "before " << fn_transform<<std::endl;
+                std::cerr << "before " << fn_transform<<std::endl;
                 MD.getValue(MDL_TRANSFORMATIONMTRIX,myVector,0);
-            	copy( myVector.begin(), myVector.end(), Mtransform.mdata);
+                copy( myVector.begin(), myVector.end(), Mtransform.mdata);
                 Mtransform.copyFromVector(myVector,Mtransform.mdimx,Mtransform.mdimy);
                 m.transform_coordinates(Mtransform);
                 std::cerr << Mtransform <<std::endl;
@@ -149,7 +198,6 @@ int main(int argc, char **argv)
         std::cout << XE;
     }
 }
-
 void Usage()
 {
     std::cerr << "Purpose: Cut the images marked with xmipp_mark\n"
@@ -173,10 +221,11 @@ void Usage()
     << "   -Xdim <window X dim>       : in pixels\n"
     << "  [-Ydim <window Y dim>]      : if not given Ydim=Xdim\n"
     << "  [-start <N=1>]              : Number of the first image\n"
-    //<< "  [-reverse_endian]           : of the input micrographs\n"
     << "  [-invert]                   : Invert contrast\n"
     << "  [-log]                      : Compute optical density\n"
     ;
 }
+
+
 
 
