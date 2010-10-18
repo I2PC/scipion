@@ -90,7 +90,7 @@ void QtImageMicrograph::loadImage()
         ptr = piece;
         for (mY = mY0; mY < mYF; mY++)
             for (mX = mX0; mX < mXF; mX++)
-                *ptr++ = getMicrograph()->val8(mX, mY);
+                *ptr++ = getMicrograph()->val8(mY, mX);
 
         // Apply xvsmooth and copy to the canvas
         byte rgb[256];
@@ -120,10 +120,10 @@ void QtImageMicrograph::loadImage()
                         double wy = emY - (int)emY;
                         int    mX1 = (int)emX, mX2 = mX1 + 1;
                         int    mY1 = (int)emY, mY2 = mY1 + 1;
-                        val += (1 - wy) * (1 - wx) * getMicrograph()->val8(mX1, mY1) +
-                               (1 - wy) *   wx * getMicrograph()->val8(mX2, mY1) +
-                               wy * (1 - wx) * getMicrograph()->val8(mX1, mY2) +
-                               wy *   wx * getMicrograph()->val8(mX2, mY2);
+                        val += (1 - wy) * (1 - wx) * getMicrograph()->val8(mY1, mX1) +
+                               (1 - wy) *   wx * getMicrograph()->val8(mY2, mX1) +
+                               wy * (1 - wx) * getMicrograph()->val8(mY1, mX2) +
+                               wy *   wx * getMicrograph()->val8(mY2, mX2);
                     }
                     setPixel(x, y, (unsigned int)val);
                 }
