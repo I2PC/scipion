@@ -164,11 +164,6 @@ int readRAW(int img_select,bool isStack=false)
         MD[i-imgStart].setValue(MDL_FLIP,     falseb);
     }
 
-    //#define DEBUG
-#ifdef DEBUG
-    MDMainHeader.write(std::cerr);
-    MD.write(std::cerr);
-#endif
 
     FILE        *fimg;
     if ( ( fimg = fopen(filename.c_str(), "r") ) == NULL )
@@ -176,6 +171,8 @@ int readRAW(int img_select,bool isStack=false)
 
     size_t pad = 0;
     readData(fimg, img_select, datatype, pad);
+
+
 
     if ( !mmapOn )
         fclose(fimg);
