@@ -65,7 +65,7 @@ void ProgXrayImport::defineParams()
     addParamsLine("   == Filters                                          ");
     addParamsLine("  [--filterBadPixels  <mask=\"\">]       : Apply a boundaries median filter to bad pixels given in mask.");
     addParamsLine("  alias -f;");
-    addParamsLine("  [--log]       : Apply a log filter to normalized output images.");
+    addParamsLine("  [--log]       : Apply a log10 correction to normalized output images.");
     addParamsLine("  alias -l;");
 }
 
@@ -235,6 +235,7 @@ void runThread(ThreadArgument &thArg)
 
     MetaData localMD;
     Image<double> Iaux;
+    FileName fnImg;
     long long int first = -1, last = -1;
     while (ptrProg->td->getTasks(first, last))
     {
@@ -261,7 +262,9 @@ void runThread(ThreadArgument &thArg)
             if (ptrProg->logFilt)
                 Iaux().selfLog10();
 
-            FileName fnImg=integerToString(i,4,'0')+"@"+ptrProg->fnRoot+".mrcs";
+            fnImg.compose(i, ptrProg->fnRoot);
+            fnImg = fnImg.addExtension("mrcs");
+
             localMD.addObject();
             localMD.setValue(MDL_IMAGE,fnImg);
             localMD.setValue(MDL_ANGLETILT,Iaux.tilt());
