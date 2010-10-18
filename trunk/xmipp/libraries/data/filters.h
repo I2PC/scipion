@@ -367,7 +367,7 @@ double correntropy(const MultidimArray<T> &x, const MultidimArray<T> &y,
  * images. You can restrict the shift to a region defined by a mask (the maximum
  * will be sought where the mask is 1).
  *
- * To apply these results you must shift I1 by (-shiftX,-shiftY) or 
+ * To apply these results you must shift I1 by (-shiftX,-shiftY) or
  * I2 by (shiftX, shiftY)
  */
 void best_shift(const MultidimArray< double >& I1,
@@ -610,18 +610,18 @@ double rms(const MultidimArray< T >& x,
  * shape, and the image logical origin is used for the decomposition.
  * k1 and k2 determines the harmonic coefficients to be computed.
  */
-void Fourier_Bessel_decomposition(const MultidimArray< double >& img_in,
-                                  MultidimArray< double >& m_out,
-                                  double r1,
-                                  double r2,
-                                  int k1,
-                                  int k2);
+void FourierBesselDecomposition(const MultidimArray< double >& img_in,
+                                MultidimArray< double >& m_out,
+                                double r1,
+                                double r2,
+                                int k1,
+                                int k2);
 
 /** Harmonic decomposition
  * @ingroup Filters
  */
-void harmonic_decomposition(const MultidimArray< double >& img_in,
-                            MultidimArray< double >& v_out);
+void harmonicDecomposition(const MultidimArray< double >& img_in,
+                           MultidimArray< double >& v_out);
 
 // Function needed by median filtering
 template <typename T>
@@ -668,7 +668,7 @@ void sort(T a, T b, T c, MultidimArray< T >& v)
 
 // Function needed by median filtering
 template <typename T>
-void merge_sort(MultidimArray< T >& v1, MultidimArray< T >& v2, MultidimArray< T >& v)
+void mergeSort(MultidimArray< T >& v1, MultidimArray< T >& v2, MultidimArray< T >& v)
 {
     int i1 = 0, i2 = 0, i = 0;
 
@@ -1007,14 +1007,14 @@ void median_filter3x3(MultidimArray< T >&m, MultidimArray< T >& out)
  *
  * Paper: Teboul, et al. IEEE-Trans. on Image Proc. Vol. 7, 387-397.
  */
-void Smoothing_Shah(MultidimArray< double >& img,
-                    MultidimArray< double >& surface_strength,
-                    MultidimArray< double >& edge_strength,
-                    const Matrix1D< double >& W,
-                    int OuterLoops,
-                    int InnerLoops,
-                    int RefinementLoops,
-                    bool adjust_range = true);
+void SmoothingShah(MultidimArray< double >& img,
+                   MultidimArray< double >& surface_strength,
+                   MultidimArray< double >& edge_strength,
+                   const Matrix1D< double >& W,
+                   int OuterLoops,
+                   int InnerLoops,
+                   int RefinementLoops,
+                   bool adjust_range = true);
 
 /** Tomographic diffusion
  * @ingroup Filters
@@ -1037,9 +1037,9 @@ double tomographicDiffusion(MultidimArray< double >& V,
  * These moments have been taken from
  * http://www.cs.cf.ac.uk/Dave/Vision_lecture/node36.html (moments 1 to 5).
  */
-void rotational_invariant_moments(const MultidimArray< double >& img,
-                                  const MultidimArray< int >* mask,
-                                  MultidimArray< double >& v_out);
+void rotationalInvariantMoments(const MultidimArray< double >& img,
+                                const MultidimArray< int >* mask,
+                                MultidimArray< double >& v_out);
 
 /** Inertia moments
  * @ingroup Filters
@@ -1049,10 +1049,10 @@ void rotational_invariant_moments(const MultidimArray< double >& img,
  * moments. v_out contains the inertia moments while the columns of u contain
  * the directions of the principal axes.
  */
-void inertia_moments(const MultidimArray< double >& img,
-                     const MultidimArray< int >* mask,
-                     Matrix1D< double >& v_out,
-                     Matrix2D< double >& u);
+void inertiaMoments(const MultidimArray< double >& img,
+                    const MultidimArray< int >* mask,
+                    Matrix1D< double >& v_out,
+                    Matrix2D< double >& u);
 
 /** Fill a triangle defined by three points
  * @ingroup Filters
@@ -1060,7 +1060,7 @@ void inertia_moments(const MultidimArray< double >& img,
  * The points are supplied as a pointer to three integer positions. They can be
  * negative
  */
-void fill_triangle(MultidimArray< double >&img, int* tx, int* ty, double color);
+void fillTriangle(MultidimArray< double >&img, int* tx, int* ty, double color);
 
 /** Local thresholding
  * @ingroup Filters
@@ -1076,11 +1076,11 @@ void fill_triangle(MultidimArray< double >&img, int* tx, int* ty, double color);
  * - Thresholding the difference image with C.
  * - Inverting the thresholded image.
  */
-void local_thresholding(MultidimArray< double >& img,
-                        double C,
-                        double dimLocal,
-                        MultidimArray< int >& result,
-                        MultidimArray< int >* mask = NULL);
+void localThresholding(MultidimArray< double >& img,
+                       double C,
+                       double dimLocal,
+                       MultidimArray< int >& result,
+                       MultidimArray< int >* mask = NULL);
 
 /** Center an image translationally
  * @ingroup Filters
@@ -1109,5 +1109,117 @@ void centerImageRotationally(MultidimArray<double> &I);
  * and then rotationally Niter times.
  */
 void centerImage(MultidimArray<double> &I, int Niter=10, bool limitShift=true);
+
+
+/** Force positive.
+ *  * @ingroup Filters
+ *
+ *  A median filter is applied at those negative values. Positive values are untouched.
+ */
+void forcePositive(MultidimArray<double> &V);
+
+
+/** Remove bad pixels.
+ *  * @ingroup Filters
+ *
+ *  A boundaries median filter is applied at those pixels given by the mask.
+ */
+template <typename T>
+void removeBadPixels(MultidimArray< T > &V, MultidimArray<char> mask, int n=0)
+{
+    bool badRemaining;
+
+    do
+    {
+        badRemaining=false;
+
+        FOR_ALL_ELEMENTS_IN_ARRAY3D(V)
+        if (NZYX_ELEM(mask, 0, k, i, j) != 0)
+        {
+            std::vector<double> neighbours;
+            for (int kk=-2; kk<=2; kk++)
+            {
+                int kkk=k+kk;
+                if (kkk<0 || kkk>=ZSIZE(V))
+                    continue;
+                for (int ii=-2; ii<=2; ii++)
+                {
+                    int iii=i+ii;
+                    if (iii<0 || iii>=YSIZE(V))
+                        continue;
+                    for (int jj=-2; jj<=2; jj++)
+                    {
+                        int jjj=j+jj;
+                        if (jjj<0 || jjj>=XSIZE(V))
+                            continue;
+                        double val = NZYX_ELEM(V, n, kkk,iii,jjj);
+                        if (NZYX_ELEM(mask, 0, kkk, iii, jjj) == 0)
+                            neighbours.push_back(val);
+                    }
+                }
+                int N=neighbours.size();
+                if (N==0)
+                    badRemaining=true;
+                else
+                {
+                    std::sort(neighbours.begin(),neighbours.end());
+                    if (N%2==0)
+                        NZYX_ELEM(V,n,k,i,j) = 0.5*(neighbours[N/2-1]+
+                                                    neighbours[N/2]);
+                    else
+                        NZYX_ELEM(V,n,k,i,j) = neighbours[N/2];
+                    NZYX_ELEM(mask,0,k,i,j) = false;
+                }
+            }
+        }
+    }
+    while (badRemaining);
+}
+
+/** Std filter removes outlaters (pixels) with
+  *  value outside 'value' standard deviations
+  */
+template <typename T>
+void stdDesvFilter(MultidimArray< T > &V, double thresFactor)
+{
+    if (thresFactor > 0 )
+    {
+        double temp, avg, stddev;
+        double size = YXSIZE(V);
+
+        avg = 0;
+        stddev = 0;
+
+        MultidimArray<char> mask(YSIZE(V), XSIZE(V));
+
+        for ( int n=0; n<NSIZE(V); n++ )
+        {
+            FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY3D(V)
+            {
+                temp = abs(DIRECT_NZYX_ELEM(V,n,0,i,j));
+                avg += temp;
+                stddev += temp * temp;
+            }
+            avg /= size;
+            stddev = stddev/size - avg * avg;
+            stddev *= size/(size -1);
+            stddev = sqrt(stddev);
+
+            double low  = (avg - thresFactor * stddev);
+            double high = (avg + thresFactor * stddev);
+
+            FOR_ALL_ELEMENTS_IN_ARRAY3D(V)
+            {
+                if (abs(DIRECT_NZYX_ELEM(V,n,0,i,j)) < low)
+                    DIRECT_A2D_ELEM(mask,i,j) = 1;
+                else if (abs(DIRECT_NZYX_ELEM(V,n,0,i,j)) > high)
+                    DIRECT_A2D_ELEM(mask,i,j) = 1;
+                else
+                    DIRECT_A2D_ELEM(mask,i,j) = 0;
+            }
+            removeBadPixels(V, mask, n);
+        }
+    }
+}
 
 #endif

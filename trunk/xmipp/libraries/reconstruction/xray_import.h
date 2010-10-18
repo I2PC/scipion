@@ -89,7 +89,7 @@ public:
     // Intermediate results
     Image<double> IavgFlat;
     Image<double> IavgDark;
-    Image<double>  bpMask;
+    Image<char>   bpMask;
     std::vector<FileName> filenames;
 
     // Final list of images

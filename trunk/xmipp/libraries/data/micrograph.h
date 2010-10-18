@@ -30,7 +30,7 @@
 /* INCLUDES                                                                  */
 /* ************************************************************************* */
 #include <vector>
-
+#include "filters.h"
 #include "funcs.h"
 #include "multidim_array.h"
 #include "image.h"

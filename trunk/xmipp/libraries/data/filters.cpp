@@ -1180,8 +1180,8 @@ void estimateGaussian2D(const MultidimArray<double> &I,
 }
 
 /* Fourier-Bessel decomposition. ------------------------------------------- */
-void Fourier_Bessel_decomposition(const MultidimArray<double> &img_in,
-                                  MultidimArray<double> &m_out, double r1, double r2, int k1, int k2)
+void FourierBesselDecomposition(const MultidimArray<double> &img_in,
+                                MultidimArray<double> &m_out, double r1, double r2, int k1, int k2)
 {
     img_in.checkDimension(2);
 
@@ -1232,8 +1232,8 @@ void Fourier_Bessel_decomposition(const MultidimArray<double> &img_in,
 }
 
 /* Harmonic decomposition. ------------------------------------------------- */
-void harmonic_decomposition(const MultidimArray<double> &img_in,
-                            MultidimArray<double> &v_out)
+void harmonicDecomposition(const MultidimArray<double> &img_in,
+                           MultidimArray<double> &v_out)
 {}
 
 /* Shah energy ------------------------------------------------------------- */
@@ -1386,14 +1386,14 @@ double Update_edge_Shah(MultidimArray<double> &img,
 
 /* Smoothing Shah ---------------------------------------------------------- */
 #define SHAH_CONVERGENCE_THRESHOLD  0.0001
-void Smoothing_Shah(MultidimArray<double> &img,
-                    MultidimArray<double> &surface_strength,
-                    MultidimArray<double> &edge_strength,
-                    const Matrix1D<double> &W,
-                    int OuterLoops,
-                    int InnerLoops,
-                    int RefinementLoops,
-                    bool adjust_range)
+void SmoothingShah(MultidimArray<double> &img,
+                   MultidimArray<double> &surface_strength,
+                   MultidimArray<double> &edge_strength,
+                   const Matrix1D<double> &W,
+                   int OuterLoops,
+                   int InnerLoops,
+                   int RefinementLoops,
+                   bool adjust_range)
 {
 
     img.checkDimension(2);
@@ -1552,9 +1552,9 @@ double tomographicDiffusion(MultidimArray< double >& V,
 #undef DEBUG
 
 /* Rotational invariant moments -------------------------------------------- */
-void rotational_invariant_moments(const MultidimArray<double> &img,
-                                  const MultidimArray<int> *mask,
-                                  MultidimArray<double> &v_out)
+void rotationalInvariantMoments(const MultidimArray<double> &img,
+                                const MultidimArray<int> *mask,
+                                MultidimArray<double> &v_out)
 {
     img.checkDimension(2);
 
@@ -1615,10 +1615,10 @@ void rotational_invariant_moments(const MultidimArray<double> &img,
 }
 
 /* Inertia moments --------------------------------------------------------- */
-void inertia_moments(const MultidimArray<double> &img,
-                     const MultidimArray<int> *mask,
-                     Matrix1D<double> &v_out,
-                     Matrix2D<double> &u)
+void inertiaMoments(const MultidimArray<double> &img,
+                    const MultidimArray<int> *mask,
+                    Matrix1D<double> &v_out,
+                    Matrix2D<double> &u)
 {
     img.checkDimension(2);
 
@@ -1656,7 +1656,7 @@ void inertia_moments(const MultidimArray<double> &img,
 }
 
 /* Fill triangle ----------------------------------------------------------- */
-void fill_triangle(MultidimArray<double> &img, int *tx, int *ty, double color)
+void fillTriangle(MultidimArray<double> &img, int *tx, int *ty, double color)
 {
     img.checkDimension(2);
 
@@ -1804,11 +1804,11 @@ void fill_triangle(MultidimArray<double> &img, int *tx, int *ty, double color)
 }
 
 /* Local thresholding ------------------------------------------------------ */
-void local_thresholding(MultidimArray<double> &img,
-                        double C,
-                        double dimLocal,
-                        MultidimArray<int> &result,
-                        MultidimArray<int> *mask)
+void localThresholding(MultidimArray<double> &img,
+                       double C,
+                       double dimLocal,
+                       MultidimArray<int> &result,
+                       MultidimArray<int> *mask)
 {
 
     // Convolve the input image with the kernel
@@ -2132,3 +2132,107 @@ void centerImage(MultidimArray<double> &I, int Niter, bool limitShift)
     delete plans;
 }
 #undef DEBUG
+
+/** Force positive -------------------------------------------------------- */
+void forcePositive(MultidimArray<double> &V)
+{
+    bool negativeRemaining;
+
+    if (V.getDim()==2) // IMAGE
+    {
+        do
+        {
+            negativeRemaining=false;
+            int totalNeg=0;
+            FOR_ALL_ELEMENTS_IN_ARRAY2D(V)
+            if (V(i, j)<=0)
+            {
+                totalNeg++;
+                std::vector<double> neighbours;
+                for (int ii=-2; ii<=2; ii++)
+                {
+                    int iii=i+ii;
+                    if (iii<0 || iii>=YSIZE(V))
+                        continue;
+                    for (int jj=-2; jj<=2; jj++)
+                    {
+                        int jjj=j+jj;
+                        if (jjj<0 || jjj>=XSIZE(V))
+                            continue;
+                        double val=V(iii,jjj);
+                        if (val>0)
+                            neighbours.push_back(val);
+                    }
+                }
+                int N=neighbours.size();
+                if (N==0)
+                {
+                    negativeRemaining=true;
+                }
+                else
+                {
+                    std::sort(neighbours.begin(),neighbours.end());
+                    if (N%2==0)
+                        V(i,j)=0.5*(neighbours[N/2-1]+neighbours[N/2]);
+                    else
+                        V(i,j)=neighbours[N/2];
+                }
+            }
+            if (totalNeg>0.05*MULTIDIM_SIZE(V))
+                REPORT_ERROR(ERR_UNCLASSIFIED,(std::string)
+                             "The number of negative pixels exceeds the scope of this function: "+
+                             floatToString((float)totalNeg/MULTIDIM_SIZE(V)));
+        }
+        while (negativeRemaining);
+    }
+    else if (V.getDim()==3) // VOLUME
+    {
+        do
+        {
+            negativeRemaining=false;
+
+            FOR_ALL_ELEMENTS_IN_ARRAY3D(V)
+            if (V(k, i, j)<=0)
+            {
+                std::vector<double> neighbours;
+                for (int kk=-2; kk<=2; kk++)
+                {
+                    int kkk=k+kk;
+                    if (kkk<0 || kkk>=ZSIZE(V))
+                        continue;
+                    for (int ii=-2; ii<=2; ii++)
+                    {
+                        int iii=i+ii;
+                        if (iii<0 || iii>=YSIZE(V))
+                            continue;
+                        for (int jj=-2; jj<=2; jj++)
+                        {
+                            int jjj=j+jj;
+                            if (jjj<0 || jjj>=XSIZE(V))
+                                continue;
+                            double val=V(kkk,iii,jjj);
+                            if (val>0)
+                                neighbours.push_back(val);
+                        }
+                    }
+                    int N=neighbours.size();
+                    if (N==0)
+                        negativeRemaining=true;
+                    else
+                    {
+                        std::sort(neighbours.begin(),neighbours.end());
+                        if (N%2==0)
+                            V(k,i,j)=0.5*(neighbours[N/2-1]+
+                                          neighbours[N/2]);
+                        else
+                            V(k,i,j)=neighbours[N/2];
+                    }
+                }
+            }
+        }
+        while (negativeRemaining);
+    }
+    else
+        REPORT_ERROR(ERR_NOT_IMPLEMENTED,"");
+}
+

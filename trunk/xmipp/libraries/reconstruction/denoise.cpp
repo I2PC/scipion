@@ -243,7 +243,7 @@ void ProgDenoise::denoise(MultidimArray<double> &img)
             DWT_keep_central_part(img, R);
             break;
         case SHAH:
-            Smoothing_Shah(img, surface_strength, edge_strength,
+            SmoothingShah(img, surface_strength, edge_strength,
                            Shah_weight, Shah_outer, Shah_inner,
                            Shah_refinement, adjust_range);
             if (Shah_edge)

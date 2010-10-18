@@ -21,6 +21,7 @@
  ***************************************************************************/
 
 #include <data/args.h>
+#include <data/filters.h>
 #include <data/image.h>
 #include <data/funcs.h>
 #include <algorithm>

@@ -1387,47 +1387,6 @@ public:
         (*this)()+=aux();
     }
 
-    /** Std filter removes outlaters (pixels) with
-     *  value outside 'value' standard deviations
-     */
-    void doStdevFilter(double stdevFilter)
-    {
-        if (stdevFilter > 0 )
-        {
-            double temp, avg, stddev;
-            double size = YXSIZE(data);
-
-            avg = 0;
-            stddev = 0;
-
-            for ( int n=0; n<NSIZE(data); n++ )
-            {
-                FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY3D(data)
-                {
-                    temp = abs(DIRECT_NZYX_ELEM(data,n,0,i,j));
-                    avg += temp;
-                    stddev += temp * temp;
-                }
-                avg /= size;
-                stddev = stddev/size - avg * avg;
-                stddev *= size/(size -1);
-                stddev = sqrt(stddev);
-
-                double low  = (avg - stdevFilter * stddev);
-                double high = (avg + stdevFilter * stddev);
-
-                FOR_ALL_ELEMENTS_IN_ARRAY3D(data)
-                {
-                    if (abs(DIRECT_NZYX_ELEM(data,n,0,i,j)) < low)
-                        DIRECT_NZYX_ELEM(data,n,0,i,j) = (T) low;
-                    else if (abs(DIRECT_NZYX_ELEM(data,n,0,i,j)) > high)
-                        DIRECT_NZYX_ELEM(data,n,0,i,j) = (T) high;
-                }
-            }
-        }
-
-    }
-
 private:
 
     /** Open file function

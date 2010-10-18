@@ -3337,11 +3337,11 @@ public:
 
     /** v3 = (v1 == k).
      */
-    MultidimArray<T> operator==(T op1) const
+    void equal(T op1, MultidimArray<char> &result) const
     {
-        MultidimArray<T> tmp;
-        arrayByScalar(*this, op1, tmp, '=');
-        return tmp;
+      result.resizeNoCopy(*this);
+      FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(result)
+        DIRECT_MULTIDIM_ELEM(result,n) = DIRECT_MULTIDIM_ELEM(*this,n) == op1;
     }
 
     /** v3 += k.
@@ -4581,17 +4581,6 @@ void typeCast(const MultidimArray<T1>& v1,  MultidimArray<T2>& v2, long n = -1)
     }
 
 }
-
-/** Force positive.
- *  A median filter is applied at those negative values. Positive values are untouched.
- */
-void forcePositive(MultidimArray<double> &V);
-
-
-/** Remove bad pixels.
- *  A boundaries median filter is applied at those pixels far from the mean.
- */
-void removeBadPixels(MultidimArray<double> &V, MultidimArray<double> mask);
 
 /** MultidimArray equality.*/
 template<typename T>

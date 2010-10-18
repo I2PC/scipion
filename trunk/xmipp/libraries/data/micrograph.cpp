@@ -84,7 +84,7 @@ void Micrograph::clear()
 /* Open micrograph --------------------------------------------------------- */
 void Micrograph::open_micrograph(const FileName &_fn_micrograph)
 {
-	clear();
+    clear();
     struct stat info;
     std::cerr << "mic file name: " << _fn_micrograph<<std::endl;
     // Micrograph name
@@ -100,7 +100,7 @@ void Micrograph::open_micrograph(const FileName &_fn_micrograph)
     auxI->MDMainHeader.getValue(MDL_DATATYPE,datatype);
     __offset = 0;
     auxI->clear();
-//#define DEBUG
+    //#define DEBUG
 #ifdef DEBUG
 
     std::cerr << "x,y,z,n, datatype : "
@@ -120,32 +120,32 @@ void Micrograph::open_micrograph(const FileName &_fn_micrograph)
     case UChar:
         IUChar = new(Image<unsigned char>);
         result=IUChar->read(fn_micrograph,true,-1,false,false,NULL,true);
-        IUChar->doStdevFilter(stdevFilter);
+        stdDesvFilter(IUChar->data, stdevFilter);
         break;
     case UShort:
         IUShort = new(Image<unsigned short>);
         result=IUShort->read(fn_micrograph,true,-1,false,false,NULL,true);
-        IUShort->doStdevFilter(stdevFilter);
+        stdDesvFilter(IUShort->data, stdevFilter);
         break;
     case Short:
         IShort = new(Image< short>);
         result=IShort->read(fn_micrograph,true,-1,false,false,NULL,true);
-        IShort->doStdevFilter(stdevFilter);
+        stdDesvFilter(IShort->data, stdevFilter);
         break;
     case Int:
         IInt = new(Image< int>);
         result=IInt->read(fn_micrograph,true,-1,false,false,NULL,true);
-        IInt->doStdevFilter(stdevFilter);
+        stdDesvFilter(IInt->data, stdevFilter);
         break;
     case UInt:
         IUInt = new(Image< unsigned int>);
         result=IUInt->read(fn_micrograph,true,-1,false,false,NULL,true);
-        IUChar->doStdevFilter(stdevFilter);
+        stdDesvFilter(IUChar->data, stdevFilter);
         break;
     case Float:
         IFloat = new(Image<float>);
         result=IFloat->read(fn_micrograph,true,-1,false,false,NULL,true);
-        IFloat->doStdevFilter(stdevFilter);
+        stdDesvFilter(IFloat->data, stdevFilter);
         break;
     default:
         std::cerr << "Micrograph::open_micrograph: Unknown datatype " << datatype <<std::endl;
@@ -310,7 +310,7 @@ void Micrograph::write_as_8_bits(const FileName &fn8bits)
     for (int y=0; y<Ydim; y++)
         for (int x=0; x<Xdim; x++)
         {
-        	unsigned char c=val8(y,x);
+            unsigned char c=val8(y,x);
             Mp.set_val(y,x,c);
         }
     Mp.close_micrograph();

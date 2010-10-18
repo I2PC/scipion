@@ -24,8 +24,8 @@
  ***************************************************************************/
 
 #include <data/args.h>
+#include <data/filters.h>
 #include "xray_import.h"
-//#include <sort.h>
 
 // Read arguments ==========================================================
 void ProgXrayImport::readParams()
@@ -217,12 +217,10 @@ void ProgXrayImport::getFlatfield(const FileName &fnDir,
 
     /* Create a mask with zero valued pixels to apply boundaries median filter
      * to avoid dividing by zero when normalizing */
-    MultidimArray<double> mask(YSIZE(Iavg()), XSIZE(Iavg()));
-    mask.initZeros();
-    mask = (Iavg() == 0);
+    MultidimArray<char> mask;
+    Iavg().equal(0,mask);
     if (XSIZE(bpMask()) != 0)
         mask += bpMask();
-
     removeBadPixels(Iavg(),mask);
 }
 
@@ -250,9 +248,8 @@ void runThread(ThreadArgument &thArg)
                 Iaux()/=ptrProg->IavgFlat();
 
             // Assign median filter to zero valued pixels to avoid -inf when applying log10
-            MultidimArray<double> mask(YSIZE(Iaux()), XSIZE(Iaux()));
-            mask.initZeros();
-            mask = (Iaux() == 0);
+            MultidimArray<char> mask;
+            Iaux().equal(0,mask);
             if (XSIZE(ptrProg->bpMask()) != 0)
                 mask += ptrProg->bpMask();
 
@@ -290,7 +287,6 @@ void ProgXrayImport::run()
         STARTINGX(bpMask())=STARTINGY(bpMask())=0;
     }
 
-
     // Get the flatfield
     if (fnDirFlat!="")
     {
@@ -305,8 +301,6 @@ void ProgXrayImport::run()
     getDarkfield(fnDirData, IavgDark);
     if (XSIZE(IavgDark())!=0)
         IavgDark.write(fnRoot+"_darkfield.xmp");
-
-
 
     // Count the number of images
     std::vector<FileName> listDir;

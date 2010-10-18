@@ -1,7 +1,7 @@
 /***************************************************************************
  *
  * Authors:     Carlos Oscar S. Sorzano (coss@cnb.csic.es)
- *              Pedro A. de Alarcón     (pedro@cnb.csic.es)
+ *              Pedro A. de Alarcï¿½n     (pedro@cnb.csic.es)
  *
  * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
  *
@@ -273,7 +273,7 @@ void random_convex_hull(const MultidimArray<double> &img, MultidimArray<double> 
         ty[2] = full_ty[k];
 
         // Fill the triangle
-        fill_triangle(hull, tx, ty, 1);
+        fillTriangle(hull, tx, ty, 1);
     }
     /*
     MultidimArray<double> aux;
