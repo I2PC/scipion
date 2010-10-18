@@ -96,13 +96,6 @@ protected:
     //short int               *m16;
     //unsigned short int      *um16;
     //float                   *m32;
-    Image<char>              auxI;
-    Image<unsigned char>       IUChar;
-    Image<short int>           IShort;
-    Image<unsigned short int>  IUShort;
-    Image<int>                 IInt;
-    Image<unsigned int>        IUInt;
-    Image<float>               IFloat;
 
     bool                    __scaling_valid;
     float                   __a;
@@ -112,11 +105,18 @@ protected:
     std::vector<std::string> labels;
     double stdevFilter;
 public:
+    Image<char>                * auxI;
+    Image<unsigned char>       * IUChar;
+    Image<short int>           * IShort;
+    Image<unsigned short int>  * IUShort;
+    Image<int>                 * IInt;
+    Image<unsigned int>        * IUInt;
+    Image<float>               * IFloat;
     /** Constructor */
-    Micrograph()
-    {
-        clear();
-    }
+    Micrograph();
+
+    /** Destructor */
+    ~Micrograph();
 
     /** Clear */
     void clear();
@@ -273,106 +273,106 @@ public:
     /** Access to array of 8 bits. */
     unsigned char * arrayUChar() const
     {
-        return IUChar().data;
+        return (*IUChar)().data;
     }
 
     /** Another function for access to array of 8 bits.*/
     //This is never used consider delete
     void get_arrayUChar(unsigned char * _m8)
     {
-        _m8 = IUChar().data;
+        _m8 = (*IUChar)().data;
     }
 
     /** Access to array of 16 bits. */
     short int * arrayShort() const
     {
-        return IShort().data;
+        return (*IShort)().data;
     }
 
     /** Another function for access to array of 16 bits.*/
     void get_arrayShort(short int * _m16)
     {
-        _m16 = IShort().data;
+        _m16 = (*IShort)().data;
     }
 
     /** Access to unsigned array of 16 bits. */
     unsigned short int * arrayUShort() const
     {
-        return IUShort().data;
+        return (*IUShort)().data;
     }
 
     /** Another function for access to unsigned array of 16 bits.*/
     void get_arrayUShort(unsigned short int * _um16)
     {
-        _um16 = IUShort().data;
+        _um16 = (*IUShort)().data;
     }
     /** Access to array of 32 bits int. */
     int * arrayInt() const
     {
-        return IInt().data;
+        return (*IInt)().data;
     }
 
     /** Another function for access to array of 32 bits int.*/
     void get_arrayInt(int * _m32)
     {
-        _m32 = IInt().data;
+        _m32 = (*IInt)().data;
     }
 
     /** Access to unsigned array of 32 bits unsig int. */
     unsigned int * arrayUInt() const
     {
-        return IUInt().data;
+        return (*IUInt)().data;
     }
 
     /** Another function for access to unsigned array of 32 bits unsigned int.*/
     void get_arrayUInt(unsigned int * _um32)
     {
-        _um32 = IUInt().data;
+        _um32 = (*IUInt)().data;
     }
 
     /** Access to array of 32 bits. */
     float * arrayFloat() const
     {
-        return IFloat().data;
+        return (*IFloat)().data;
     }
 
     /** Another function for access to array of 32 bits.*/
     void get_arrayfloat(float * _mf32)
     {
-        _mf32 = IFloat().data;
+        _mf32 = (*IFloat)().data;
     }
 
     /** Pixel access for reading.
         These coordinates follow the physical Xmipp convention
         {../../../Extra_Docs/Conventions.html} for coordinates */
-    float operator()(int x, int y) const
+    float operator()(int y, int x) const
     {
         if (y < 0 || y >= Ydim || x < 0 || x >= Xdim)
             // COSS: REPORT_ERROR(1, "Micrograph::(): index out of range");
 	    return 0;
         if (datatype == UChar)
         {
-            return IUChar(x,y);
+            return (*IUChar)(y,x);
         }
         else if (datatype == UShort)
         {
-            return IUShort(x,y);
+            return (*IUShort)(y,x);
         }
         else if (datatype == Short)
         {
-            return IShort(x,y);
+            return (*IShort)(y,x);
         }
         else if (datatype == UInt)
         {
-            return IUInt(x,y);
+            return (*IUInt)(y,x);
         }
         else if (datatype == Int)
         {
-            return IInt(x,y);
+            return (*IInt)(y,x);
         }
         else if (datatype == Float)
         {
-            return IFloat(x,y);
+            return (*IFloat)(y,x);
         }
 
         else REPORT_ERROR(ERR_TYPE_INCORRECT, "Micrograph::(): unknown datatype");
@@ -383,27 +383,27 @@ public:
     {
         if (datatype == UChar)
         {
-            return IUChar().computeDoubleMinMax(Dmin,Dmax);
+            return (*IUChar)().computeDoubleMinMax(Dmin,Dmax);
         }
         else if (datatype == UShort)
         {
-            return IUShort().computeDoubleMinMax(Dmin,Dmax);
+            return (*IUShort)().computeDoubleMinMax(Dmin,Dmax);
         }
         else if (datatype == Short)
         {
-            return IShort().computeDoubleMinMax(Dmin,Dmax);
+            return (*IShort)().computeDoubleMinMax(Dmin,Dmax);
         }
         else if (datatype == UInt)
         {
-            return IUInt().computeDoubleMinMax(Dmin,Dmax);
+            return (*IUInt)().computeDoubleMinMax(Dmin,Dmax);
         }
         else if (datatype == Int)
         {
-            return IInt().computeDoubleMinMax(Dmin,Dmax);
+            return (*IInt)().computeDoubleMinMax(Dmin,Dmax);
         }
         else if (datatype == Float)
         {
-            return IFloat().computeDoubleMinMax(Dmin,Dmax);
+            return (*IFloat)().computeDoubleMinMax(Dmin,Dmax);
         }
 
         else REPORT_ERROR(ERR_TYPE_INCORRECT, "Micrograph::computeDoubleMinMax::(): unknown datatype");
@@ -412,31 +412,31 @@ public:
     /** Pixel access for writing. */
     //Dangerous function indeed
     //write in default endiam
-    void set_val(int x, int y, double new_val)
+    void set_val(int y, int x, double new_val)
     {
         if (datatype == UChar)
         {
-             IUChar(x,y) = (unsigned char) new_val;
+             (*IUChar)(y,x) = (unsigned char) new_val;
         }
         else if (datatype == UShort)
         {
-            IUShort(x,y) = (unsigned short) new_val;
+            (*IUShort)(y,x) = (unsigned short) new_val;
         }
         else if (datatype == Short)
         {
-            IShort(x,y) = (short) new_val;
+            (*IShort)(y,x) = (short) new_val;
         }
         else if (datatype == UInt)
         {
-            IUInt(x,y) = (unsigned int) new_val;
+            (*IUInt)(y,x) = (unsigned int) new_val;
         }
         else if (datatype == Int)
         {
-            IInt(x,y) = (int) new_val;
+            (*IInt)(y,x) = (int) new_val;
         }
         else if (datatype == Float)
         {
-            IFloat(x,y) = (float) new_val;
+            (*IFloat)(y,x) = (float) new_val;
         }
 
         else REPORT_ERROR(ERR_TYPE_INCORRECT, "Micrograph::set_val::(): unknown datatype");
@@ -444,10 +444,10 @@ public:
     }
 
     /** Pixel value with 8 bits. */
-    inline unsigned char val8(int x, int y) const
+    inline unsigned char val8(int y, int x) const
     {
-        if (!__scaling_valid) return(unsigned char)(*this)(x, y);
-        else return(unsigned char)(__a*(*this)(x, y) + __b);
+        if (!__scaling_valid) return(unsigned char)(*this)(y, x);
+        else return(unsigned char)(__a*(*this)(y, x) + __b);
     }
 
     /** Get the linear transformation for scaling micrographs */
