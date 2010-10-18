@@ -198,7 +198,7 @@ public:
 
     /// Get angles (either from reading the header or from a docfile)
     void get_angles_for_image(const FileName &fn, double &rot, double &tilt,
-                              double &psi, double &xoff, double &yoff, double &flip, double &weight, MetaData * docFile);
+                              double &psi, double &xoff, double &yoff, bool &flip, double &weight, MetaData * docFile);
 
     /// Main Loop
     void run();
