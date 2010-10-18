@@ -60,7 +60,7 @@ echo "POLL: $POLL"
 
 	if [ "$SHOW_HELP" = "1" ]
 	then
-		echo "Usage: xmipp_showj [--mem <memory_ammount>] [--img <file1 [file2 [..]]>] [--poll]"
+		echo "Usage: xmipp_showj [--mem <memory_ammount>] [--img <file1 [file2 [..]]>] [--sel <file1 [file2 [..]]>] [--poll]"
 	fi
 
 	export LD_LIBRARY_PATH=$XMIPP_BASE/lib
