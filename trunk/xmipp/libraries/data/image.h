@@ -251,9 +251,9 @@ public:
      * Image I(64,64);
      * @endcode
      */
-    Image(int Xdim, int Ydim, int Zdim=1, int Ndim=1)
+    Image(int Xdim, int Ydim, int Zdim=1, int Ndim=1,bool _mmapOn=false)
     {
-        mmapOn = false;
+        mmapOn = _mmapOn;
         clear();
         data.resize(Ndim, Zdim, Ydim, Xdim);
         MD.resize(Ndim);
@@ -1492,7 +1492,9 @@ private:
             else if (ext_name.contains("inf") || \
                      (ext_name.contains("raw") && exists(fileName.addExtension("inf"))))
             {
-                fileName = fileName.removeAllExtensions();
+                if (ext_name.contains("inf"))
+                	fileName = fileName.withoutExtension();
+            	fileName = fileName.withoutExtension();
                 fileName = fileName.addExtension("raw");
                 headName = fileName.addExtension("inf");
                 ext_name = "inf";
@@ -1500,7 +1502,7 @@ private:
 
             // Open image file
             if ( ( hFile->fimg = fopen(fileName.c_str(), wmChar.c_str()) ) == NULL )
-                REPORT_ERROR(ERR_IO_NOTOPEN,(std::string)"Image::openFile cannot open: " + name);
+                REPORT_ERROR(ERR_IO_NOTOPEN,(std::string)"Image::openFile cannot open: " + fileName);
 
             if (headName != "")
             {
