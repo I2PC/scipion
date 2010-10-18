@@ -145,10 +145,10 @@ void QtImageOverviewMicrograph::loadImage()
                         double wy = emY - (int)emY;
                         int    mX1 = (int)emX, mX2 = mX1 + 1;
                         int    mY1 = (int)emY, mY2 = mY1 + 1;
-                        val += (1 - wy) * (1 - wx) * getMicrograph()->val8(mX1, mY1) +
-                               (1 - wy) *   wx * getMicrograph()->val8(mX2, mY1) +
-                               wy * (1 - wx) * getMicrograph()->val8(mX1, mY2) +
-                               wy *   wx * getMicrograph()->val8(mX2, mY2);
+                        val += (1 - wy) * (1 - wx) * getMicrograph()->val8(mY1, mX1) +
+                               (1 - wy) *   wx * getMicrograph()->val8(mY2, mX1) +
+                               wy * (1 - wx) * getMicrograph()->val8(mY1, mX2) +
+                               wy *   wx * getMicrograph()->val8(mY2, mX2);
                     }
                     setPixel(x, y, (unsigned int)val);
                 }
