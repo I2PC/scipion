@@ -50,7 +50,7 @@ int main(int argc, char **argv)
     {
         fnRaw         = getParameter(argc, argv, "-i");
         fnRawTilted   = getParameter(argc, argv, "-tilted", "");
-//        reversed      = checkParameter(argc, argv, "-reverse_endian");
+        //        reversed      = checkParameter(argc, argv, "-reverse_endian");
         fn_assign_CTF = getParameter(argc, argv, "-psd", "");
         if (checkParameter(argc, argv, "-ctf"))
         {
@@ -76,31 +76,32 @@ int main(int argc, char **argv)
         FileName fn8bits="", fn8bitsTilted="";
 
         m.open_micrograph(fnRaw);
-	// Sjors & Roberto: 25jan08
-	// The following is a "chapuza" because the 8-bit
-	// visualization routine from XVsmooth is much nicer than our
-	// own routine. We save the micrograph with name fn8bits,
-	// re-read it in 8bit-format, and then set the name explicitly
-	// to the original fnRaw to get the correct .pos, .ang etc
-	// files.
-	// Note that this also requires that the name of the original
-	// micrograph in the dialog window under "generate images"
-	// should be the original fnRaw (and not be left blank as before!)
+        // Sjors & Roberto: 25jan08
+        // The following is a "chapuza" because the 8-bit
+        // visualization routine from XVsmooth is much nicer than our
+        // own routine. We save the micrograph with name fn8bits,
+        // re-read it in 8bit-format, and then set the name explicitly
+        // to the original fnRaw to get the correct .pos, .ang etc
+        // files.
+        // Note that this also requires that the name of the original
+        // micrograph in the dialog window under "generate images"
+        // should be the original fnRaw (and not be left blank as before!)
         //FIXME
         if (m.getDatatypeDetph()!=8)
         {
             fn8bits=fnRaw+"_8bits.raw";
             m.write_as_8_bits(fn8bits);
             m.close_micrograph();
+
             m.open_micrograph(fn8bits);
-	    m.set_micrograph_name(fnRaw);
+            m.set_micrograph_name(fnRaw);
             m.compute_8_bit_scaling();
-	    system(((std::string)"rm -rf "+fn8bits+"*").c_str());
+            system(((std::string)"rm -rf "+fn8bits+"*").c_str());
         }
-	else
-	{
-	    m.compute_8_bit_scaling();
-	}
+        else
+        {
+            m.compute_8_bit_scaling();
+        }
 
         if (fnRawTilted != "")
         {
@@ -112,14 +113,14 @@ int main(int argc, char **argv)
                 mTilted.write_as_8_bits(fn8bitsTilted);
                 mTilted.close_micrograph();
                 mTilted.open_micrograph(fn8bitsTilted);
-		mTilted.set_micrograph_name(fnRawTilted);
+                mTilted.set_micrograph_name(fnRawTilted);
                 mTilted.compute_8_bit_scaling();
-		system(((std::string)"rm -rf "+fn8bitsTilted+"*").c_str());
+                system(((std::string)"rm -rf "+fn8bitsTilted+"*").c_str());
             }
-	    else
-	    {
-		mTilted.compute_8_bit_scaling();
-	    }
+            else
+            {
+                mTilted.compute_8_bit_scaling();
+            }
         }
 
         // Configure application .............................................
@@ -135,16 +136,18 @@ int main(int argc, char **argv)
             {
                 mainWidget = new QtMainWidgetMark(&m);
                 mainWidget->untilted_widget()->
-                    setAutoParticlePicking(autoPicking);
+                setAutoParticlePicking(autoPicking);
             }
-            else mainWidget = new QtMainWidgetMark(&m, &mTilted);
+            else
+                mainWidget = new QtMainWidgetMark(&m, &mTilted);
         }
 
         // Check if the PSDs must be shown ...................................
         if (fn_assign_CTF != "")
         {
             QtWidgetPSD PSDshow;
-            if (ctf_mode) PSDshow.set_CTF_mode();
+            if (ctf_mode)
+                PSDshow.set_CTF_mode();
             PSDshow.set_assign_CTF_file(m, fn_assign_CTF);
             PSDshow.show();
         }
@@ -178,16 +181,16 @@ int main(int argc, char **argv)
 void Usage()
 {
     std::cerr << "Purpose: Mark particles in a Raw image\n"
-              << "         There must exist the image and the corresponding .inf file\n"
-              << "\n"
-              << "Usage: mark [options]\n"
-              << "   -i <input raw file>                : File with the image\n"
-              << "  [-tilted <tilted raw file>]         : Image with the tilted pair\n"
-//              << "  [-reverse_endian]                   : Raw 16-bit file with reversed endian\n"
-              << "  [-psd <assign_CTF_prm_file>]        : Show the PSDs\n"
-              << "  [-ctf <assign_CTF_prm_file>]        : Show the CTF models\n"
-              << "  [-auto <model rootname>]            : For autoselection\n"
-              << "  [-autoSelect]                       : Autoselect without user interaction\n"
-              << "  [-thr <p=1>]                        : Number of threads for automatic picking\n"
+    << "         There must exist the image and the corresponding .inf file\n"
+    << "\n"
+    << "Usage: mark [options]\n"
+    << "   -i <input raw file>                : File with the image\n"
+    << "  [-tilted <tilted raw file>]         : Image with the tilted pair\n"
+    //              << "  [-reverse_endian]                   : Raw 16-bit file with reversed endian\n"
+    << "  [-psd <assign_CTF_prm_file>]        : Show the PSDs\n"
+    << "  [-ctf <assign_CTF_prm_file>]        : Show the CTF models\n"
+    << "  [-auto <model rootname>]            : For autoselection\n"
+    << "  [-autoSelect]                       : Autoselect without user interaction\n"
+    << "  [-thr <p=1>]                        : Number of threads for automatic picking\n"
     ;
 }
