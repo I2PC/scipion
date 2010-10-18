@@ -30,10 +30,6 @@ else
 		esac
 		shift
 	done
-echo "MEM: $MEM"
-echo "IMGS: $IMGS"
-echo "SEL: $SEL"
-echo "POLL: $POLL"
 
 	if test -z "$MEM" || test -z "$IMGS"
 	then
