@@ -50,6 +50,8 @@ public:
     int thrNum;
     /// bad Pixel filter Mask
     FileName fnBPMask;
+    /// Flag to apply log filter
+    bool logFilt;
 
 public:
     /// Read argument from command line

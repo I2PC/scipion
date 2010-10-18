@@ -36,6 +36,7 @@ void ProgXrayImport::readParams()
     cropSize  = getIntParam("-crop");
     thrNum    = getIntParam("-thr");
     fnBPMask  = getParam("--filterBadPixels");
+    logFilt   = checkParam("--log");
 }
 
 // Show ====================================================================
@@ -61,8 +62,11 @@ void ProgXrayImport::defineParams()
     addParamsLine("                                    : and optionally, darkfields");
     addParamsLine("  [-crop <size=0>]                  : Number of pixels to crop from each side");
     addParamsLine("  [-thr  <N=1>]                     : Number of threads");
+    addParamsLine("   == Filters                                          ");
     addParamsLine("  [--filterBadPixels  <mask=\"\">]       : Apply a boundaries median filter to bad pixels given in mask.");
     addParamsLine("  alias -f;");
+    addParamsLine("  [--log]       : Apply a log filter to normalized output images.");
+    addParamsLine("  alias -l;");
 }
 
 // Really import ==========================================================
@@ -252,9 +256,10 @@ void runThread(ThreadArgument &thArg)
             Iaux().equal(0,mask);
             if (XSIZE(ptrProg->bpMask()) != 0)
                 mask += ptrProg->bpMask();
-
             removeBadPixels(Iaux(), mask);
-            Iaux().selfLog10();
+
+            if (ptrProg->logFilt)
+                Iaux().selfLog10();
 
             FileName fnImg=integerToString(i,4,'0')+"@"+ptrProg->fnRoot+".mrcs";
             localMD.addObject();
