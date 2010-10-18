@@ -79,22 +79,14 @@ int main(int argc, char **argv)
         if (!pair_mode)
         {
             Micrograph m;
+            FileName f;
             m.open_micrograph(fn_micrograph);
             m.set_window_size(Xdim, Ydim);
             m.read_coordinates(0, fn_pos);
             if (fn_transform!="")
             {
-            	std::cerr << "here" <<std::endl;
                 if (down_transform != 1.)
                     m.scale_coordinates(1./down_transform);
-                //std::ifstream fh_transform;
-                //fh_transform.open(fn_transform.c_str());
-                //if (!fh_transform)
-                //    REPORT_ERROR(1, (std::string)"Scissor: Cannot open file" + fn_transform);
-                //std::cerr << "fh_transform" << fh_transform <<std::endl;
-                //fh_transform >> Mtransform;
-                //fh_transform.close();
-            	std::cerr << "there" <<std::endl;
 
                 MetaData MD;
                 MD.read(fn_transform);
@@ -102,9 +94,6 @@ int main(int argc, char **argv)
                 myVector.resize(9);
             	std::cerr << "before " << fn_transform<<std::endl;
                 MD.getValue(MDL_TRANSFORMATIONMTRIX,myVector,0);
-                MD.write("aa");
-            	std::cerr << "after filename " <<fn_transform << " " << MD.size()<<std::endl;
-                std::cerr << "myVector " << myVector[0] <<std::endl;
             	copy( myVector.begin(), myVector.end(), Mtransform.mdata);
                 Mtransform.copyFromVector(myVector,Mtransform.mdimx,Mtransform.mdimy);
                 m.transform_coordinates(Mtransform);
