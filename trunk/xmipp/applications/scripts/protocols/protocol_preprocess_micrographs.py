@@ -1,19 +1,17 @@
 #!/usr/bin/env python
 #------------------------------------------------------------------------------------------------
 # General script for Xmipp-based pre-processing of micrographs: 
-#  - tif2raw conversion, 
 #  - downsampling
 #  - power spectral density (PSD) and CTF estimation on the micrograph
 #  - CTF phase flipping on the micrograph
 #
-# For each file <micrograph>.tif given, this script will perform 
+# For each micrograph given, this script will perform 
 # the requested operations below.
 # For each micrograph a subdirectory will be created
 #
-# Example use:
-# ./xmipp_preprocess_micrographs.py *.tif
 # Author: Sjors Scheres, March 2007
 #         Roberto Marabini (mpi extension)
+#         Carlos Oscar
 #------------------------------------------------------------------------------------------------
 # {section} Global parameters
 #------------------------------------------------------------------------------------------------
@@ -29,29 +27,41 @@ DirMicrographs='Micrographs'
     Note that any wildcard is possible, e.g. *3[1,2].tif
 """
 ExtMicrographs='*.tif'
-# Name for the output micrograph selfile:
-""" Be aware that this file will be overwritten if it already exists!
+# Rootname for these micrographs
+""" Several files will be created called <rootname>_...
 """
-MicrographSelfile='all_micrographs.sel'
+RootName='all'
 # {expert} Root directory name for this project:
 """ Absolute path to the root directory for this project
 """
-ProjectDir='/gpfs/fs1/home/bioinfo/coss/Trial_02'
+ProjectDir='/media/usbdisk/Experiments/TestProtocols'
 # {expert} Directory name for logfiles:
 LogDir='Logs'
 #------------------------------------------------------------------------------------------------
-# {section} Downsampling
+# {section} Preprocess
 #------------------------------------------------------------------------------------------------
-# Perform downsampling?
-DoDownSample=True
+# Do proceprocess
+# Perform preprocessing? 
+DoPreprocess=True
+# Crop borders
+""" Crop a given amount of pixels from each border.
+    Set this option to -1 for not applying it."""
+Crop=-1
+# Remove bad pixels
+""" Values will be thresholded to this multiple of standard deviations. Typical
+    values are about 5, i.e., pixel values beyond 5 times the standard deviation will be
+    substituted by the local median. Set this option to -1 for not applying it."""
+Stddev=-1
 # Downsampling factor 
-Down=2
+""" Set to 1 for no downsampling. Non-integer downsample factors are possible with
+    the Fourier kernel. """
+Down=1
 # {expert}{list}|Fourier|Rectangle|Sinc| Which method to use for downsampling?
-""" Fourier is theoretically the best option, but it may take more memory than your machine can handle. Then, Rectangle is the fastest, but least accurate. Since is reasonably accurate, but painfully slow...
+""" Fourier is theoretically the best option, but it may take more memory than your machine
+    can handle. Then, Rectangle is the fastest, but much less accurate. Sinc is reasonably
+    accurate, but painfully slow...
 """
 DownKernel='Fourier'
-#{expert}"threshold at XX standard deviation (this must be selected for .ser files)
-Stddev=5
 #------------------------------------------------------------------------------------------------
 # {section} CTF estimation
 #------------------------------------------------------------------------------------------------
@@ -83,14 +93,21 @@ LowResolCutoff=0.05
     The default value is 0.35, but it should be increased for micrographs with signals extending beyond this value
 """
 HighResolCutoff=0.35
+# {expert} Minimum defocus to search (in Ang.)
+""" Minimum defocus value (in Angstrom) to include in defocus search
+"""
+MinFocus=5000
+# {expert} Maximum defocus to search (in Ang.)
+""" Maximum defocus value (in Angstrom) to include in defocus search
+"""
+MaxFocus=100000
 #------------------------------------------------------------------------------------------------
 # {section} CTFFIND
 #------------------------------------------------------------------------------------------------
-# Use N. Grigorieffs CTFFIND instead of Xmipp?
-""" Some people prefer the faster CTFFIND program.
-    Note however that this option will yield no information about the CTF envelope, and therefore this option cannot be used with the high-resolution refinement protocol.
+# Use N. Grigorieffs CTFFIND beside Xmipp?
+""" Use this option to double check the validity of the defoci.
 """
-DoCtffind=True
+DoCtffind=False
 # {file} Location of the CTFFIND executable
 CtffindExec='/gpfs/fs1/bin/ctffind3.exe'
 # {expert} Window size
@@ -103,14 +120,6 @@ MinResCTF=0.02
 """ highest resolution to include in CTF estimation. Valid range 0-0.5
 """
 MaxResCTF=0.35
-# {expert} Minimum defocus to search (in Ang.)
-""" Minimum defocus value (in Angstrom) to include in defocus search
-"""
-MinFocus=5000
-# {expert} Maximum defocus to search (in Ang.)
-""" Maximum defocus value (in Angstrom) to include in defocus search
-"""
-MaxFocus=100000
 # {expert} Defocus step (in Ang.)
 """ Step size for defocus search (in Angstrom)
 """
@@ -121,7 +130,7 @@ StepFocus=500
 # Perform CTF phase flipping on the micrographs?
 """ The phase-flipped micrographs will be saved with a different format (spider) than the original raw-format.
 """
-DoCtfPhaseFlipping=True
+DoCtfPhaseFlipping=False
 #------------------------------------------------------------------------------------------------
 # {expert} Analysis of results
 """ This script serves only for GUI-assisted visualization of the results
@@ -148,26 +157,25 @@ NumberOfMpiProcesses=3
 """
 SystemFlavour=''
 
-
-
-
 #------------------------------------------------------------------------------------------------
 #------------------------------------------------------------------------------------------------
 # {end-of-header} USUALLY YOU DO NOT NEED TO MODIFY ANYTHING BELOW THIS LINE ...
 #------------------------------------------------------------------------------------------------
 #------------------------------------------------------------------------------------------------
 #
+import glob,os,shutil,sys
 class preprocess_A_class:
     def __init__(self,
                  WorkingDir,
                  DoDeleteWorkingDir,
                  DirMicrographs,
                  ExtMicrographs,
-                 MicrographSelfile,
+                 RootName,
                  ProjectDir,
                  LogDir,
-		 Stddev,
-                 DoDownSample,
+                 DoPreprocess,
+                 Crop,
+                 Stddev,
                  Down,
                  DownKernel,
                  DoCtfEstimate,
@@ -180,12 +188,12 @@ class preprocess_A_class:
                  LowResolCutoff,
                  HighResolCutoff,
                  DoCtffind,
+                 MinFocus,
+                 MaxFocus,
                  CtffindExec,
                  WinSize,
                  MinResCTF,
                  MaxResCTF,
-                 MinFocus,
-                 MaxFocus,
                  StepFocus,
                  DoCtfPhaseFlipping,
                  DoParallel,
@@ -193,7 +201,6 @@ class preprocess_A_class:
                  SystemFlavour
                  ):
         
-        import os,sys,shutil
         scriptdir=os.path.split(os.path.dirname(os.popen('which xmipp_protocols','r').read()))[0]+'/protocols'
         sys.path.append(scriptdir)
         import log
@@ -203,8 +210,10 @@ class preprocess_A_class:
         self.ExtMicrographs=ExtMicrographs
         self.ProjectDir=os.path.abspath(ProjectDir)
         self.LogDir=LogDir
-	self.Stddev=Stddev
-        self.DoDownSample=DoDownSample
+        self.RootName=RootName
+        self.DoPreprocess=DoPreprocess
+        self.Crop=Crop
+        self.Stddev=Stddev
         if (float(Down)==int(Down)):
             self.Down=int(Down)
         else:
@@ -219,15 +228,14 @@ class preprocess_A_class:
         self.OnlyEstimatePSD=OnlyEstimatePSD
         self.LowResolCutoff=LowResolCutoff
         self.HighResolCutoff=HighResolCutoff
+        self.MinFocus=MinFocus
+        self.MaxFocus=MaxFocus
         self.DoCtffind=DoCtffind
         self.WinSize=WinSize
         self.MinResCTF=MinResCTF
         self.MaxResCTF=MaxResCTF
-        self.MinFocus=MinFocus
-        self.MaxFocus=MaxFocus
         self.StepFocus=StepFocus
         self.DoCtfPhaseFlipping=DoCtfPhaseFlipping
-        self.MicrographSelfile=MicrographSelfile
         self._MySystemFlavour=SystemFlavour
         self._DoParallel=DoParallel
         self._MyNumberOfMpiProcesses=NumberOfMpiProcesses
@@ -237,15 +245,10 @@ class preprocess_A_class:
                                      LogDir,
                                      sys.argv[0],
                                      self.WorkingDir)
+
         # Check ctffind executable
         if (self.DoCtffind):
-            if (not os.path.exists(CtffindExec)):
-                message = "Error: cannot find ctffind executable: ",CtffindExec
-                print '*',message
-                self.log.error(message)
-                sys.exit()
-            else:
-                self.CtffindExec=os.path.abspath(CtffindExec)
+            self.CtffindExec=os.path.abspath(CtffindExec)
 
         # Delete working directory if exists, make a new one
         if (DoDeleteWorkingDir): 
@@ -260,349 +263,201 @@ class preprocess_A_class:
         log.make_backup_of_script_file(sys.argv[0],
                                    os.path.abspath(self.WorkingDir))
         unique_number=os.getpid()
-	xmpi_run_file=self.WorkingDir+"/"+'xmipp_preprocess_micrographs_' + str(unique_number) 
+        xmpi_run_file=self.WorkingDir+"/"+'xmipp_preprocess_micrographs_' + str(unique_number) 
         self.xmpi_run_file=os.path.abspath(xmpi_run_file)
-	fh_mpi  = os.open(self.xmpi_run_file+ '_1.sh',os.O_WRONLY|os.O_TRUNC|os.O_CREAT, 0700)
 
         # Execute protocol in the working directory
         os.chdir(self.WorkingDir)
-	self.process_all_micrographs(fh_mpi,self.xmpi_run_file)
+        self.process_all_micrographs(self.xmpi_run_file)
 
-
-        
-    def process_all_micrographs(self,fh_mpi,xmpi_run_file):
-        import os
-        import glob
-        import log
+    def process_all_micrographs(self,xmpi_run_file):
         print '*********************************************************************'
         print '*  Processing the following micrographs: '
         for self.filename in glob.glob(self.DirMicrographs+'/'+self.ExtMicrographs):
             (self.filepath, self.name) = os.path.split(self.filename)
             print '*  '+self.name
 
-        self.psdselfile = []
-        self.ctfselfile = []
-        self.inputselfile = []
-        self.micselfile = []
-        job_index=0;
-        #convert data
-        for self.filename in glob.glob(self.DirMicrographs+'/'+self.ExtMicrographs):
-            (self.filepath, self.name) = os.path.split(self.filename)
-            (self.shortname,extension) = os.path.splitext(self.name)
-            self.downname='down'+str(self.Down)+'_'+self.shortname
-            job_index = job_index + 1
-		
-            if not os.path.exists(self.shortname):
-                os.makedirs(self.shortname)
-put some help information about raw format, do not forget to ask kino for endian
-where is documentation 
-#            if (self.DoConversion):
-#                if (self.ConversionTask=='Tif2Raw'):
-#                    self.perform_tif2raw(fh_mpi)
-#                elif (self.ConversionTask=='Mrc2Raw'):
-#                    self.perform_mrc2raw(fh_mpi)
-#                elif (self.ConversionTask=='Spi2Raw'):
-#                    self.perform_spi2raw(fh_mpi)
-#                elif (self.ConversionTask=='Raw2Raw'):
-#                    self.perform_raw2raw(fh_mpi)
-#                elif (self.ConversionTask=='Ser2Raw'):
-#                    self.perform_ser2raw(fh_mpi,self.Stddev)
-#                elif (self.ConversionTask=='Dm32Raw'):
-#                    self.perform_dm32raw(fh_mpi)
-#                else:
-#                    message="Unrecognized ConversionTask: choose from list options"
-#                    print '*',message
-#                    self.log.error(message)
-#                    sys.exit()
-        #Stop here untill conversions are done
-        if(self._DoParallel):
-            os.write(fh_mpi,"MPI_Barrier"+"\n");
+        self.SFpsd = []
+        self.SFinputparams = []
+        self.SFctf = []
+        self.SFmicrograph = []
+        self.SFshort = []
+        self.SFflipped = []
 
-        #downsample
-        job_index=0
-        for self.filename in glob.glob(self.DirMicrographs+'/'+self.ExtMicrographs):
-            (self.filepath, self.name) = os.path.split(self.filename)
-            (self.shortname,extension) = os.path.splitext(self.name)
-            if (self.DoDownSample):
-                self.downname='down'+str(self.Down)+'_'+self.shortname
-            else:
-                self.downname=self.shortname
-            job_index = job_index + 1
+        fh_mpi  = os.open(self.xmpi_run_file+ '_1.sh',os.O_WRONLY|os.O_TRUNC|os.O_CREAT, 0700)
+        # Preprocessing
+        for filename in glob.glob(self.DirMicrographs+'/'+self.ExtMicrographs):
 
-            if (self.DoDownSample):
-                self.perform_downsample(fh_mpi)
-        #Stop here until downsampling is done
-        if(self._DoParallel):
+            # Get the shortname and extension
+            (filepath, micrographName) = os.path.split(filename)
+            (shortname,extension) = os.path.splitext(micrographName)
+            self.SFshort.append(shortname)
+            
+            # Create directory for this micrograph
+            if not os.path.exists(shortname):
+                os.makedirs(shortname)
+
+            # Preprocess
+            finalName=self.perform_preprocessing(filename,fh_mpi)
+            self.SFmicrograph.append(finalName)
+
+        # Stop here until preprocessing is done
+        if self._DoParallel:
             os.write(fh_mpi,"MPI_Barrier"+"\n");
 
         # Estimate CTF
-        job_index=0
-        for self.filename in glob.glob(self.DirMicrographs+'/'+self.ExtMicrographs):
-            (self.filepath, self.name) = os.path.split(self.filename)
-            (self.shortname,extension) = os.path.splitext(self.name)
-            if (self.DoDownSample):
-                self.downname='down'+str(self.Down)+'_'+self.shortname
-            else:
-                self.downname=self.shortname
-            job_index = job_index + 1
+        idx=0;
+        for filename in self.SFmicrograph:
+            if self.DoCtfEstimate:
+                shortname=self.SFshort[idx]
+                names=self.perform_ctfestimate_xmipp(shortname,filename,fh_mpi)
+                self.SFpsd.append(names[0])
+                self.SFinputparams.append(names[1])
+                if not self.OnlyEstimatePSD:                    
+                    self.SFctf.append(names[2])
+                if self.DoCtffind:
+                    self.perform_ctfestimate_ctffind(shortname,filename,fh_mpi)
+            idx+=1
 
-            if (self.DoCtfEstimate):
-                if not (self.DoCtffind):
-                    if (self.OnlyEstimatePSD):
-                        self.perform_only_psdestimate(fh_mpi)
-                    else:
-                        self.perform_ctfestimate_xmipp(fh_mpi)
-                else:
-                    self.perform_ctfestimate_ctffind(fh_mpi,True)
-	if(self._DoParallel):
-	    os.write(fh_mpi,"MPI_Barrier"+"\n");
-	import sys,launch_job
-	os.close(fh_mpi)#file must be closed before executed
-        log.cat(self.log,xmpi_run_file + '_1.sh')
-	if(self._DoParallel):
-	    command =' -i '+ xmpi_run_file + '_1.sh'
-	    launch_job.launch_job("xmipp_run",
-		   	          command,
-			          self.log,
-			          True,
-				  self._MyNumberOfMpiProcesses,
-				  1,
-				  self._MySystemFlavour)
-	else:
-            self.log.info(xmpi_run_file + '_1.sh')     
-	    os.system(xmpi_run_file + '_1.sh')     
-        os.remove(xmpi_run_file + '_1.sh')
+        # Launch Preprocessing and calculation of the CTF
+        os.close(fh_mpi)
+        self.launchCommandFile(xmpi_run_file + '_1.sh')
         
-	fh_mpi  = os.open(self.xmpi_run_file+ '_2.sh',os.O_WRONLY|os.O_TRUNC|os.O_CREAT, 0700)
-        job_index=0
-        for self.filename in glob.glob(self.DirMicrographs+'/'+self.ExtMicrographs):
-             (self.filepath, self.name) = os.path.split(self.filename)
-             (self.shortname,extension) = os.path.splitext(self.name)
-             if (self.DoDownSample):
-                self.downname='down'+str(self.Down)+'_'+self.shortname
-             else:
-                self.downname=self.shortname
-             job_index = job_index + 1
+        # Pickup results from CTFFIND and Phase flip
+        fh_mpi  = os.open(self.xmpi_run_file+ '_2.sh',os.O_WRONLY|os.O_TRUNC|os.O_CREAT, 0700)
+        idx=0;
+        for filename in self.SFmicrograph:
+            shortname=self.SFshort[idx]
+            ctfparam=self.SFctf[idx]
+            # Pickup result from CTFTILT
+            if self.DoCtfEstimate and self.DoCtffind:
+                ctfName=self.pickup_ctfestimate_ctffind(shortname,filename,fh_mpi)
+                self.SFctf.append(ctfName) 
 
-             if (self.DoCtfEstimate):
-                  if (self.DoCtffind):
-                      self.perform_ctfestimate_ctffind(fh_mpi,False) 
+            # Perform Phase flipping
+            if (self.DoCtfPhaseFlipping):
+                flippedName=self.perform_ctf_phase_flipping(filename,ctfparam,fh_mpi)
+                self.SFflipped.append(flippedName)
 
-             if (self.DoCtfPhaseFlipping):
-                self.perform_ctf_phase_flipping(fh_mpi)
-             self.append_micrograph_selfile()
-             if (self.DoCtfEstimate):
-                 if not (self.DoCtffind):
-                     if (self.OnlyEstimatePSD):
-                         #self.perform_only_psdestimate()
-                         oname=self.shortname+'/'+self.downname+'_Periodogramavg.psd'
-                         self.psdselfile.append(oname+' 1\n')
-                         fh = open("all_psds.sel","w")
-                         fh.writelines(self.psdselfile)
-                         fh.close()
-                     else:
-                         #self.perform_ctfestimate_xmipp()
-                         # Add entry to the ctfselfile (for visualization of all CTFs)
-                         oname=self.shortname+'/'+self.downname+'_Periodogramavg.ctfmodel_halfplane'
-                         self.ctfselfile.append(oname+' 1\n')
-                         fh=open('all_ctfs.sel','w')
-                         fh.writelines(self.ctfselfile)
-                         fh.close()
-                         # Add entry to the inputparamselfile
-                         oname=self.shortname+'/'+self.shortname+'_input.param'
-                         self.inputselfile.append(oname+' 1\n')
-                         fh=open('all_inputparams.sel','w')
-                         fh.writelines(self.inputselfile)
-                         fh.close()
+            os.write(fh_mpi,"\n");
+            idx+=1
 
-                         #Also add enrty to psdselfile
-                         oname=self.shortname+'/'+self.downname+'_Periodogramavg.psd'
-                         self.psdselfile.append(oname+' 1\n')
-                         fh = open("all_psds.sel","w")
-                         fh.writelines(self.psdselfile)
-                         fh.close()
-                 else:
-                     #self.perform_ctfestimate_ctffind()
-                     ctfname = self.shortname + '/ctffind_' + self.downname + '_ctfmodel.xmp'
-                     self.ctfselfile.append(ctfname+' 1 \n')
-                     fh=open('all_ctfs.sel','w')
-                     fh.writelines(self.ctfselfile)
-                     fh.close()
-             os.write(fh_mpi,"\n");
-
-	os.close(fh_mpi)#file must be closed before executed
-        log.cat(self.log,xmpi_run_file + '_2.sh')
-	if(self._DoParallel):
-	    command =' -i '+ xmpi_run_file + '_2.sh'
-	    launch_job.launch_job("xmipp_run",
-		   	          command,
-			          self.log,
-			          True,
-				  self._MyNumberOfMpiProcesses,
-				  1,
-				  self._MySystemFlavour)
-	else:
-            self.log.info(xmpi_run_file+ '_2.sh')
-	    os.system(xmpi_run_file+ '_2.sh')
-        os.remove(xmpi_run_file + '_2.sh')
-
-    def perform_tif2raw(self,fh_mpi):
-        import os
-        import launch_job
-        oname=self.shortname+'/'+self.shortname+'.raw'
-        os.write (fh_mpi,"echo '*********************************************************************';\n")
-        os.write (fh_mpi,"echo '*  Generating RAW for micrograph: '"+self.name+";\n")
-        command='xmipp_convert_tiff2raw '+self.filename+' '+oname 
-        os.write(fh_mpi,command+ "\n");
-        #launch_job.launch_job("xmipp_convert_tiff2raw",
-        #                      command,
-        #                      self.log,
-        #                      False,1,1,'')
-
-    def perform_mrc2raw(self,fh_mpi):
-        import os
-        import launch_job
-        oname=self.shortname+'/'+self.shortname+'.raw'
-        tname=self.shortname+'/'+self.shortname+'.spi'
-        os.write(fh_mpi,"echo '*********************************************************************';\n")
-        os.write(fh_mpi,"echo '*  Generating RAW for micrograph: '"+self.name+";\n")
-        command ='xmipp_convert_spi22ccp4 -i '+self.filename+' -o '+tname
-        command += ";"
-        command +='xmipp_convert_raw22spi -generate_inf -f -i '+tname+' -o '+oname
-
-        command += ";"
-        command += "rm " + tname
-        os.write(fh_mpi,command +"\n");
+        # Launch Pickup results and Phase flipping
+        os.close(fh_mpi)
+        self.launchCommandFile(xmpi_run_file + '_2.sh')
         
-    def perform_ser2raw(self,fh_mpi,_Stddev):
-        import os
-        import launch_job
-        oname=self.shortname+'/'+self.shortname+'.raw'
-        os.write(fh_mpi,"echo '*********************************************************************';\n")
-        os.write(fh_mpi,"echo '*  Generating RAW for micrograph: '"+self.name+";\n")
-        command ='xmipp_convert_tia2raw -i '+self.filename+' -o '+oname + ' -s ' + str(_Stddev)
+        # Write the different selfiles
+        self.writeSelfile(self.SFmicrograph, self.WorkingDir+"/"+self.RootName+"_micrographs.sel")
+        self.writeSelfile(self.SFpsd,        self.WorkingDir+"/"+self.RootName+"_psds.sel")
+        self.writeSelfile(self.SFinputparams,self.WorkingDir+"/"+self.RootName+"_ctfinputparams.sel")
+        self.writeSelfile(self.SFctf,        self.WorkingDir+"/"+self.RootName+"_ctfs.sel")
+        self.writeSelfile(self.SFflipped,    self.WorkingDir+"/"+self.RootName+"_flipped.sel")
 
-        os.write(fh_mpi,command +"\n");
-        
-    def perform_dm32raw(self,fh_mpi):
-        import os
-        import launch_job
-        oname=self.shortname+'/'+self.shortname+'.raw'
-        os.write(fh_mpi,"echo '*********************************************************************';\n")
-        os.write(fh_mpi,"echo '*  Generating RAW for micrograph: '"+self.name+";\n")
-        command ='xmipp_convert_dm32raw -i '+self.filename+' -o '+oname ;
+        message=" Done pre-processing of micrographs"
+        print '* ',message
+        print '*********************************************************************'
+        self.log.info(message)
 
-        os.write(fh_mpi,command +"\n");
-        
-    def perform_spi2raw(self,fh_mpi):
-        import os
-        import launch_job
-        oname=self.shortname+'/'+self.shortname+'.raw'
-        os.write(fh_mpi,"echo '*********************************************************************';\n")
-        os.write(fh_mpi,"echo '*  Generating RAW for micrograph: '"+self.name +";\n")
-        command='xmipp_convert_raw22spi -generate_inf -f -i '+self.filename+' -o '+oname
-        #launch_job.launch_job("xmipp_convert_raw22spi",
-        #                      command,
-        #                      self.log,
-        #                      False,1,1,'')
-        os.write(fh_mpi,command+"\n");
-
-    def perform_raw2raw(self,fh_mpi):
-        import os
-        oname=self.shortname+'/'+self.shortname+'.raw'
-        os.write(fh_mpi,"echo '*********************************************************************';\n")
-        os.write(fh_mpi,"echo '*  Generating RAW for micrograph: '"+self.name+";\n")
-        command='ln -s '+self.filename+' '+oname + "\n"
-        os.write(fh_mpi,"echo '* '," + command)
-        os.write(fh_mpi,command);
-        #self.log.info(command)
-        #os.system(command)
-        command ='ln -s '+self.filename+'.inf '+oname+'.inf\n'
-        os.write(fh_mpi,"echo '* '" + command)
-        #self.log.info(command)
-        #os.system(command)
-        os.write(fh_mpi,command+"\n");
-    
-    def perform_downsample(self,fh_mpi):
-        import os
-        import launch_job
-        iname=self.shortname+'/'+self.shortname+'.raw'
-        oname=self.shortname+'/'+self.downname+'.raw'
-        os.write(fh_mpi,"echo '*********************************************************************';")
-        os.write(fh_mpi,"echo '*  Downsampling micrograph: '"+iname+";")
-	if(self.Down==1):
-	   command='mv ' + iname + ' ' + oname + ' ; mv ' + iname + '.inf ' + oname + '.inf' 
-        elif (self.DownKernel=='Fourier'):
-            scale = 1./self.Down
-            command='xmipp_micrograph_downsample -i '+iname+' -o '+oname+' -output_bits 32 -fourier '+str(scale)
-        elif (self.DownKernel=='Sinc'):
-            command='xmipp_micrograph_downsample -i '+iname+' -o '+oname+' -output_bits 32 -Xstep '+str(self.Down)+' -kernel sinc 0.02 0.1'
-        elif (self.DownKernel=='Rectangle'):
-            command='xmipp_micrograph_downsample -i '+iname+' -o '+oname+' -output_bits 32 -Xstep '+str(self.Down)+' -kernel rectangle '+str(self.Down)+' '+str(self.Down)
+    def launchCommandFile(self,commandFile):
+        import launch_job, log
+        log.cat(self.log,commandFile)
+        if self._DoParallel:
+            command =' -i '+ commandFile
+            launch_job.launch_job("xmipp_run",command,self.log,True,
+                  self._MyNumberOfMpiProcesses,1,self._MySystemFlavour)
         else:
-            message="Unrecognized DownKernel: choose from list options"
-            print '*',message
-            self.log.error(message)
-            sys.exit()
-	if(self.Down!=1):
-	     command  += ";rm " + iname + ' ' + iname + ".inf"
-        os.write(fh_mpi,command+"\n");
-        #launch_job.launch_job("xmipp_micrograph_downsample",
-        #                      command,
-        #                      self.log,
-        #                      False,1,1,'')
+            self.log.info(commandFile)     
+            os.system(commandFile)     
+        os.remove(commandFile)
 
-    def perform_only_psdestimate(self,fh_mpi):
-        import os
-        import launch_job
-        iname=self.shortname+'/'+self.downname+'.raw'
-        pname=self.shortname+'/'+self.shortname+'_psd.param'
+    def writeSelfile(self, selfile, fnOut):
+        import XmippData
+        MD=XmippData.Metadata()
+        ptr=XmippData.stringP()
+        for filename in selfile:
+            ptr.assign(filename)
+            MD.addObject()
+            XmippData.setValueString(MD,XmippData.MDL_IMAGE,ptr)
+        MD.write(XmippData.FileName(fnOut))
+
+    def perform_preprocessing(self,filename,fh_mpi):
+        # Decide name after preprocessing
+        (filepath, micrographName) = os.path.split(filename)
+        (shortname,extension) = os.path.splitext(micrographName)
+        finalname='down'+str(self.Down)+'_'+shortname
+        if not self.Stddev==-1 or not self.Crop==-1 or not self.Down==1:
+            finalname+=".raw"
+        else:
+            finalname+="."+extension
+            if not os.path.exists(finalname):
+                command='ln -s '+filename+' '+finalname + "\n"
+                os.write(fh_mpi,"echo '* '," + command)
+                os.write(fh_mpi,command)
+        if not self.DoPreprocess:
+            return finalname
+        
+        # Crop
+        iname=filename
+        command="";
+        if not self.Crop==-1:
+            command+="xmipp_window -i "+iname+" -o "+finalname+" -crop"+str(self.Crop)+" ; "
+            iname=finalname
+        
+        # Remove bad pixels
+        if not self.Stddev==-1:
+            command+="xmipp_filter -i "+iname+" -stddev "+str(self.Stddev)
+            if not iname==finalname:
+                command+=" -o "+finalname
+                iname=finalname
+            command+=" ; "
+
+        # Downsample
+        if not self.Down==1:
+            command+="xmipp_micrograph_downsample -i "+iname+" --output_bits 32 "
+            if not iname==finalname:
+                command+=" -o "+finalname
+                iname=finalname
+            if (self.DownKernel=='Fourier'):
+                scale = 1./self.Down
+                command+=' -fourier '+str(scale)
+            elif (self.DownKernel=='Sinc'):
+                command+=' -Xstep '+str(self.Down)+' -kernel sinc 0.02 0.1'
+            elif (self.DownKernel=='Rectangle'):
+                command+=' -Xstep '+str(self.Down)+' -kernel rectangle '+str(self.Down)+' '+str(self.Down)
+
+        # Write the preprocessing command
+        command+="\n"
+        os.write(fh_mpi,"echo '* '," + command)
+        os.write(fh_mpi,command)
+        return finalname
+
+    def perform_ctfestimate_xmipp(self,shortname,filename,fh_mpi):
+        pname=shortname+'/'+shortname+'_input.param'
         print '*********************************************************************'
-        print '*  Estimate PSD for micrograph: '+iname
-        paramlist = []
-        paramlist.append('image= '+iname+'\n')
-        paramlist.append('micrograph_averaging= yes \n')
-        paramlist.append('N_horizontal= 512 \n')
-        paramlist.append('periodogram= yes \n')
-        paramlist.append('dont_adjust_CTF= yes \n')
-    	
-        fh = open(pname,"w")
-        fh.writelines(paramlist)
-        fh.close()
-        command='xmipp_ctf_estimate_from_micrograph -i '+pname
-        os.write(fh_mpi,command+"\n");
-        #launch_job.launch_job("xmipp_ctf_estimate_from_micrograph",
-        #                      command,
-        #                      self.log,
-        #                      False,1,1,'')
-        ##oname=self.shortname+'/'+self.downname+'_Periodogramavg.psd'
-        ##self.psdselfile.append(oname+' 1\n')
-	    ##fh = open("all_psds.sel","w")
-        ##fh.writelines(self.psdselfile)
-        ##fh.close()
-    
-    def perform_ctfestimate_xmipp(self,fh_mpi):
-        import os
-        import launch_job
-        iname=self.shortname+'/'+self.downname+'.raw'
-        pname=self.shortname+'/'+self.shortname+'_input.param'
-        print '*********************************************************************'
-        print '*  Estimate CTF for micrograph: '+iname
+        print '*  Estimate PSD/CTF for micrograph: '+filename
+        retval=[]
+        
+        (filepath, micrographName) = os.path.split(filename)
+        (fnRoot,extension) = os.path.splitext(micrographName)
+        retval.append(shortname+'/'+fnRoot+"_PeriodogramAvg.psd")
+        retval.append(pname)
 
         # prepare parameter file
-        AngPix = (10000. * self.ScannedPixelSize * self.Down) / self.Magnification
         paramlist = []
-        paramlist.append('image= '+iname+'\n')
+        paramlist.append('image= '+filename+'\n')
         paramlist.append('micrograph_averaging= yes \n')
-        paramlist.append('voltage= '+str(self.Voltage)+'\n')
-        paramlist.append('spherical_aberration= '+str(self.SphericalAberration)+'\n')
-        paramlist.append('sampling_rate= '+str(AngPix)+'\n')
-        paramlist.append('particle_horizontal= 128 \n')
-        paramlist.append('Q0= -'+str(self.AmplitudeContrast)+'\n')
         paramlist.append('N_horizontal= 512 \n')
-        paramlist.append('min_freq= '+str(self.LowResolCutoff)+'\n')
-        paramlist.append('max_freq= '+str(self.HighResolCutoff)+'\n')
         paramlist.append('periodogram= yes \n')
+        if not self.OnlyEstimatePSD:
+            AngPix = (10000. * self.ScannedPixelSize * self.Down) / self.Magnification
+            paramlist.append('voltage= '+str(self.Voltage)+'\n')
+            paramlist.append('spherical_aberration= '+str(self.SphericalAberration)+'\n')
+            paramlist.append('sampling_rate= '+str(AngPix)+'\n')
+            paramlist.append('particle_horizontal= 128 \n')
+            paramlist.append('Q0= -'+str(self.AmplitudeContrast)+'\n')
+            paramlist.append('min_freq= '+str(self.LowResolCutoff)+'\n')
+            paramlist.append('max_freq= '+str(self.HighResolCutoff)+'\n')
+            retval.append(shortname+'/'+fnRoot+".ctfparam")
 
         # Perform CTF estimation
         fh=open(pname,"w")
@@ -610,105 +465,43 @@ where is documentation
         fh.close()
         command='xmipp_ctf_estimate_from_micrograph -i '+pname
         os.write(fh_mpi,command+"\n");
-        #launch_job.launch_job("xmipp_ctf_estimate_from_micrograph",
-        #                      command,
-        #                      self.log,
-        #                      False,1,1,'')
+        return retval
 
-        ### Add entry to the ctfselfile (for visualization of all CTFs)
-        ##oname=self.shortname+'/'+self.downname+'_Periodogramavg.ctfmodel_halfplane'
-        ##self.ctfselfile.append(oname+' 1\n')
-        ##fh=open('all_ctfs.sel','w')
-        ##fh.writelines(self.ctfselfile)
-        ##fh.close()
-#
-        ##Also add enrty to psdselfile
-        ##oname=self.shortname+'/'+self.downname+'_Periodogramavg.psd'
-        ##self.psdselfile.append(oname+' 1\n')
-        ##fh = open("all_psds.sel","w")
-        ##fh.writelines(self.psdselfile)
-        ##fh.close()
+    def perform_ctfestimate_ctffind(self,shortname,filename,fh_mpi):
+        # Convert image to MRC
+        command='xmipp_convert_image -i '+filename+' -o '+self.shortname+'/tmp.mrc ; '
 
+        # The new line is different if we are running in parallel or not
+        theNewLine='\n'
+        if(self._DoParallel):
+            theNewLine='MPI_NEWLINE'
+        
+        # Prepare parameters for CTFTILT
+        AngPix = (10000. * self.ScannedPixelSize * self.Down) / self.Magnification
+        command+="export NATIVEMTZ=kk ; "
+        command+= self.CtffindExec+'  << eof > '+shortname+'/ctffind.log'+theNewLine
+        command+= shortname+'/tmp.mrc'+theNewLine
+        command+= shortname+'/ctffind_spectrum.mrc'+theNewLine
+        command+= str(self.SphericalAberration) + ',' + \
+                  str(self.Voltage) + ',' + \
+                  str(self.AmplitudeContrast) + ',' + \
+                  str(self.Magnification) + ',' + \
+                  str(self.ScannedPixelSize*self.Down) +theNewLine
+        command+= str(self.WinSize) + ',' + \
+                  str(AngPix/self.MinResCTF) + ',' + \
+                  str(AngPix/self.MaxResCTF) + ',' + \
+                  str(self.MinFocus) + ',' + \
+                  str(self.MaxFocus) + ',' + \
+                  str(self.StepFocus) +theNewLine
+        command+= 'eof'
+        os.write(fh_mpi,"echo '* '," + command)
+        os.write(fh_mpi,command)
 
-    def perform_ctfestimate_ctffind(self,fh_mpi,split):
-        import os
-        # Prepare stuff
-        DStep  = float(self.ScannedPixelSize * 10000 *self.Down) / self.Magnification
-        MaxRes =  DStep / self.MaxResCTF
-        MinResCTF =  DStep / self.MinResCTF
-
-        self.convert_raw_to_mrc(fh_mpi)
-
-        # Execute CTFFIND
-        #next line tell ctfind to skip endian checking
-        #I could have modified the program spi22ccp4 but
-        #I do not agree with cctfind interpretation of the flag
-    	#os.putenv('NATIVEMTZ', "kk")
-	theNewLine='\n'
-	if(self._DoParallel):
-	    theNewLine='MPI_NEWLINE'
-        if(split):
-            os.write(fh_mpi,"export NATIVEMTZ=kk;");#joins with convert_raw_to_mrc
-    
-            command=  self.CtffindExec+'  << eof > '+self.shortname+'/ctffind_'+self.downname+'.log'+theNewLine
-            command+= self.shortname+'/tmp.mrc'+theNewLine
-            command+= self.shortname+'/spectrum.mrc'+theNewLine
-            command+= str(self.SphericalAberration) + ',' + \
-                      str(self.Voltage) + ',' + \
-                      str(self.AmplitudeContrast) + ',' + \
-                      str(self.Magnification) + ',' + \
-                      str(self.ScannedPixelSize*self.Down) +theNewLine
-            command+= str(self.WinSize) + ',' + \
-                      str(MinResCTF) + ',' + \
-                      str(MaxRes) + ',' + \
-                      str(self.MinFocus) + ',' + \
-                      str(self.MaxFocus) + ',' + \
-                      str(self.StepFocus) +theNewLine
-            command+= 'eof'
-            os.write(fh_mpi,"echo '*' ; ")
-            #self.log.info(command)
-            #os.system(command )
-            os.write(fh_mpi,command+'\n')
-            #os.write(fh_mpi,command+'\n')
-        else:
-            # Convert output to Xmipp ctfparam files
-            self.convert_ctffind_output_to_xmipp_style(fh_mpi)        
-    
-            # Remove temporary files
-            os.write(fh_mpi,"rm " + self.shortname+'/tmp.mrc;')
-            os.write(fh_mpi,"rm " + self.shortname+'/tmp.spi;')
-            os.write(fh_mpi,"rm " + self.shortname+'/spectrum.mrc;')
-
-    def convert_raw_to_mrc(self,fh_mpi):
-        import os
-        import launch_job
-        command= 'xmipp_convert_raw22spi -i '+ self.shortname+'/'+self.downname+'.raw ' + \
-                 ' -o '+ self.shortname+'/tmp.spi ' + \
-                 ' -is_micrograph '
-	if(self.Down!=1):#when down =1 inout image is integer
-	                #if down !=1 is float
-	         command += ' -f'
-        os.write(fh_mpi,command+";");
-        #launch_job.launch_job("xmipp_convert_raw22spi",
-        #                      command,
-        #                      self.log,
-        #                      False,1,1,'')
-        command= 'xmipp_convert_spi22ccp4 -i '+ self.shortname+'/tmp.spi ' + \
-                 ' -o '+ self.shortname+'/tmp.mrc '
-        os.write(fh_mpi,command+";");#finish in ; because should join next command
-        #launch_job.launch_job("xmipp_convert_spi22ccp4",
-        #                      command,
-        #                      self.log,
-        #                      False,1,1,'')
-
-    def convert_ctffind_output_to_xmipp_style(self,fh_mpi):
-        import os;
-        import launch_job
-        logfile=self.shortname+'/ctffind_'+self.downname+'.log'
-        fh=open(logfile,'r')
+    def pickup_ctfestimate_ctffind(self,shortname,filename,fh_mpi):
+        # Pick values from ctffind
+        fh=open(shortname+'/ctffind.log','r')
         lines=fh.readlines()
         fh.close()
-        newlines=[]
         DF1=0.
         DF2=0.
         Angle=0.
@@ -718,40 +511,16 @@ where is documentation
                 DF1=words[0]
                 DF2=words[1]
                 Angle=words[2]
-            if (lines[i].find('CS[mm], HT[kV], AmpCnst, XMAG, DStep[um]')>-1):
-                newlines.append(str(DF1)+' '+str(DF2)+' '+str(Angle)+' '+lines[i+1])
+                break
 
-        # Write CTFFIND .ctf file
-        ctffile=self.shortname+'/ctffind_'+self.downname+'.ctf'
-        fh=open(ctffile,'w')
-        fh.writelines(newlines)
-        fh.close()
-
-        # Convert MRC ctf model to Xmipp image
-        ctfname = self.shortname + '/ctffind_' + self.downname + '_ctfmodel.xmp'
-        command= 'xmipp_convert_spi22ccp4 -i ' + self.shortname + '/spectrum.mrc ' + \
-                 ' -o '+ ctfname
-        os.write(fh_mpi,command+" ;")
-        #launch_job.launch_job("xmipp_convert_spi22ccp4",
-        #                      command,
-        #                      self.log,
-        #                      False,1,1,'')
-
-        # Add entry to the ctfselfile (for visualization of all CTFs)
-        #ctfname = self.shortname + '/ctffind_' + self.downname + '_ctfmodel.xmp'
-        #self.ctfselfile.append(ctfname+' 1 \n')
-	#fh=open('all_ctfs.sel','w')
-        #fh.writelines(self.ctfselfile)
-        #fh.close()
-  
         # Generate Xmipp .ctfparam file:
-        paramname=self.shortname+'/'+self.downname+'_Periodogramavg.ctfparam'
-        if os.path.exists(paramname):
-            os.remove(paramname)
+        (filepath, micrographName) = os.path.split(filename)
+        (fnRoot,extension) = os.path.splitext(micrographName)
+        paramname=shortname+'/'+fnRoot+'_ctffind.ctfparam'
         AngPix = (10000. * self.ScannedPixelSize * self.Down) / self.Magnification
         paramlist = []
-        paramlist.append('defocusU= '+str(-1. * float(DF1))+'\n')
-        paramlist.append('defocusV= '+str(-1. * float(DF2))+'\n')
+        paramlist.append('defocusU= '+str(-DF1)+'\n')
+        paramlist.append('defocusV= '+str(-DF2)+'\n')
         paramlist.append('azimuthal_angle= '+str(Angle)+'\n')
         paramlist.append('sampling_rate= '+str(AngPix)+'\n')
         paramlist.append('voltage= '+str(self.Voltage)+'\n')
@@ -762,79 +531,73 @@ where is documentation
         fh.writelines(paramlist)
         fh.close()
 
-    def perform_ctf_phase_flipping(self,fh_mpi):
-        import os
-        import launch_job
-        iname=self.shortname+'/'+self.downname+'.raw'
-        oname=self.shortname+'/'+self.downname+'.spi'
-        paramname=self.shortname+'/'+self.downname+'_Periodogramavg.ctfparam'
-        command= 'xmipp_micrograph_phase_flipping -i   ' + iname + \
-                 ' -o   ' + oname + \
-                 ' -ctf ' + paramname 
-        os.write(fh_mpi,command+"\n")
-        #launch_job.launch_job("xmipp_micrograph_phase_flipping",
-        #                      command,
-        #                      self.log,
-        #                      False,1,1,'')
+        # Remove temporary files
+        command+="rm " + self.shortname+'/tmp.mrc'
+        os.write(fh_mpi,"echo '* '," + command)
+        os.write(fh_mpi,command)
 
-    def append_micrograph_selfile(self):
-        if self.DoCtfPhaseFlipping:
-            name=self.shortname+'/'+self.downname+'.spi'
-        else:
-            name=self.shortname+'/'+self.downname+'.raw'
-        self.micselfile.append(name+' 1\n')
-        fh = open(self.MicrographSelfile,'w')
-        fh.writelines(self.micselfile)
-        fh.close()
+    def perform_ctf_phase_flipping(self,filename,ctfparam,fh_mpi):
+        (filepath, micrographName) = os.path.split(filename)
+        (fnRoot,extension) = os.path.splitext(micrographName)
+        outputName=fnRoot+'_flipped.xmp'
+        fnOut= 'xmipp_micrograph_phase_flipping -i   ' + filename + \
+                 ' -o   ' + fnOut+' -ctf ' + ctfparam 
+        os.write(fh_mpi,"echo '* '," + command)
+        os.write(fh_mpi,command)
+        return fnOut
 
+# Preconditions
+def preconditions(gui):
+    retval=True
+    # Check ctffind executable
+    if (DoCtffind):
+        if (not os.path.exists(CtffindExec)):
+            message="Cannot find ctffind executable: " + CtffindExec
+            if gui:
+                import tkMessageBox
+                tkMessageBox.showerror("Error", message)
+            else:
+                print message
+            retval=False
+    return retval
 
-    def close(self):
-        message=" Done pre-processing all"
-        print '* ',message
-        print '*********************************************************************'
-        self.log.info(message)
-#		
+#        
 # Main
 #     
 if __name__ == '__main__':
-
     # create preprocess_A_class object
-    
-    preprocessA=preprocess_A_class(WorkingDir,
-                                   DoDeleteWorkingDir,
-                                   DirMicrographs,
-                                   ExtMicrographs,
-                                   MicrographSelfile,
-                                   ProjectDir,
-                                   LogDir,
-                                   DoConversion,
-				   Stddev,
-                                   ConversionTask,
-                                   DoDownSample,
-                                   Down,
-                                   DownKernel,
-                                   DoCtfEstimate,
-                                   Voltage,
-                                   SphericalAberration,
-                                   Magnification,
-                                   ScannedPixelSize,
-                                   AmplitudeContrast,
-                                   OnlyEstimatePSD,
-                                   LowResolCutoff,
-                                   HighResolCutoff,
-                                   DoCtffind,
-                                   CtffindExec,
-                                   WinSize,
-                                   MinResCTF,
-                                   MaxResCTF,
-                                   MinFocus,
-                                   MaxFocus,
-                                   StepFocus,
-                                   DoCtfPhaseFlipping,
-                                   DoParallel,
-                                   NumberOfMpiProcesses,
-                                   SystemFlavour)
-
-    # close 
-    preprocessA.close()
-
+    preconditions(False)
+    preprocessA=preprocess_A_class(
+                 WorkingDir,
+                 DoDeleteWorkingDir,
+                 DirMicrographs,
+                 ExtMicrographs,
+                 RootName,
+                 ProjectDir,
+                 LogDir,
+                 DoPreprocess,
+                 Crop,
+                 Stddev,
+                 Down,
+                 DownKernel,
+                 DoCtfEstimate,
+                 Voltage,
+                 SphericalAberration,
+                 Magnification,
+                 ScannedPixelSize,
+                 AmplitudeContrast,
+                 OnlyEstimatePSD,
+                 LowResolCutoff,
+                 HighResolCutoff,
+                 DoCtffind,
+                 MinFocus,
+                 MaxFocus,
+                 CtffindExec,
+                 WinSize,
+                 MinResCTF,
+                 MaxResCTF,
+                 StepFocus,
+                 DoCtfPhaseFlipping,
+                 DoParallel,
+                 NumberOfMpiProcesses,
+                 SystemFlavour)
