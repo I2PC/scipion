@@ -80,6 +80,7 @@ int main(int argc, char **argv)
             DFo.setValue(MDL_REF,(int)(1+output_values[i*MY_OUPUT_SIZE+7]));
            	DFo.setValue(MDL_FLIP,    (output_values[i*MY_OUPUT_SIZE+8]>0));
             DFo.setValue(MDL_MAXCC,    output_values[i*MY_OUPUT_SIZE+9]);
+            ///DFo.setValue(MDL_SCALE...
 	    }
 
 	    fn_tmp=prm.fn_root + ".doc";
