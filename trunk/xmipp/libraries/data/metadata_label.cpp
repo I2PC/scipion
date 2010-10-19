@@ -146,11 +146,13 @@ void MDObject::copy(const MDObject &obj)
 
 MDObject::MDObject(const MDObject & obj)
 {
+  data.doubleValue = 0;
     copy(obj);
 }
 MDObject & MDObject::operator = (const MDObject &obj)
 {
-    copy(obj);
+  data.doubleValue = 0;
+  copy(obj);
     return *this;
 }
 
