@@ -692,6 +692,9 @@ void Prog_angular_projection_matching_prm::processSomeImages(int * my_images, do
 
         // Call threads to calculate the rotational alignment of each image in the selfile
         pthread_t * th_ids = (pthread_t *)malloc( threads * sizeof( pthread_t));
+        //scale image here
+        //ADD
+
         structThreadRotationallyAlignOneImage * threads_d = (structThreadRotationallyAlignOneImage *)
                 malloc ( threads * sizeof( structThreadRotationallyAlignOneImage ) );
         for( int c = 0 ; c < threads ; c++ )
@@ -732,6 +735,10 @@ void Prog_angular_projection_matching_prm::processSomeImages(int * my_images, do
         opt_xoff += img.Xoff();
         opt_yoff += img.Yoff();
 
+        // Compute better scale
+           //FIXME
+           //for scale
+          //SCALE
         // Output
         my_output[imgno * MY_OUPUT_SIZE + 1] = this_image;
         my_output[imgno * MY_OUPUT_SIZE + 2] = opt_rot;
@@ -764,11 +771,15 @@ void Prog_angular_projection_matching_prm::getCurrentImage(int imgno, Image<doub
     double shiftX, shiftY;
     DFexp.getValue(MDL_SHIFTX,shiftX);
     DFexp.getValue(MDL_SHIFTY,shiftY);
+    //DFexp scale
     img.setShifts(shiftX,shiftY);
     img.setEulerAngles(0.,0.,0.);
     img.setFlip(0.);
+    //img.scale
+    //img.setScale<=== add scale
 
-    A = img.getTransformationMatrix(true);
+    //modify getTransformationMatrix so scale is taken into account
+    A = img.getTransformationMatrix(true); //<=== add scale
     if (!A.isIdentity())
         selfApplyGeometry(BSPLINE3, img(), A, IS_INV, WRAP);
 }
