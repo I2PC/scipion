@@ -886,11 +886,13 @@ class automated_gui_class:
         import tkMessageBox
         self.GuiSave()
         modulename=self.scriptname.replace(".py","")
+        if not '.' in sys.path:
+            sys.path.insert(0,'.')
         exec "import " + modulename
         if "preconditions" in eval("dir("+modulename+")"):
-            exec "ok="+modulename+".preconditions()"
+            exec "ok="+modulename+".preconditions(True)"
             if not ok:
-                sys.exit(1)
+                return
         command = "python " + self.scriptname + ' &'
 
         # For ALT-R direct execution (hidden option)
