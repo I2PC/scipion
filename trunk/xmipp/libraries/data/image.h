@@ -1559,6 +1559,8 @@ private:
 
         //Just clear the header before reading
         MDMainHeader.clear();
+        //Put the file pointer at the begining
+        fseek(fimg, 0, SEEK_SET);
 
         if (ext_name.contains("spi") || ext_name.contains("xmp")  ||
             ext_name.contains("stk") || ext_name.contains("vol"))//mrc stack MUST go BEFORE plain MRC
@@ -1676,7 +1678,7 @@ private:
         Image<T> auxI;
         replaceNsize=0;//reset replaceNsize in case image is reused
         if(select_img == -1 && mode == WRITE_REPLACE)
-            REPORT_ERROR(ERR_VALUE_INCORRECT,"writeSPIDER: Please specify object to be replaced");
+            REPORT_ERROR(ERR_VALUE_INCORRECT,"Please specify object to be replaced");
         else if(!_exists && mode == WRITE_REPLACE)
         {
             std:: stringstream replace_number;
@@ -1689,7 +1691,7 @@ private:
         else if (_exists && (mode == WRITE_REPLACE || mode == WRITE_APPEND))
         {
             auxI.dataflag = -2;
-            auxI.read(filNamePlusExt,false);
+            auxI._read(filNamePlusExt, hFile, false);
             int _Xdim, _Ydim, _Zdim, _Ndim;
             auxI.getDimensions(_Xdim,_Ydim, _Zdim, _Ndim);
             replaceNsize=_Ndim;
@@ -1716,6 +1718,8 @@ private:
         /*
          * SELECT FORMAT
          */
+        //Set the file pointer at beginning
+        fseek(fimg, 0, SEEK_SET);
 
         if(ext_name.contains("spi") || ext_name.contains("xmp") ||
            ext_name.contains("stk") || ext_name.contains("vol"))

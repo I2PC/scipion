@@ -233,23 +233,23 @@ int  readSPIDER(int img_select)
                     swapbytes(b, 4);
         }
 
-            double daux;
-            daux = (double)header->xoff;
-            MD[n].setValue(MDL_ORIGINX, daux);
-            daux = (double)header->yoff;
-            MD[n].setValue(MDL_ORIGINY, daux);
-            daux = (double)header->zoff;
-            MD[n].setValue(MDL_ORIGINZ, daux);
-            daux = (double)header->phi;
-            MD[n].setValue(MDL_ANGLEROT, daux);
-            daux = (double)header->theta;
-            MD[n].setValue(MDL_ANGLETILT, daux);
-            daux = (double)header->gamma;
-            MD[n].setValue(MDL_ANGLEPSI, daux);
-            daux = (double)header->weight;
-            MD[n].setValue(MDL_WEIGHT, daux);
-            bool baux = (header->flip == 1);
-            MD[n].setValue(MDL_FLIP, baux);
+        double daux;
+        daux = (double)header->xoff;
+        MD[n].setValue(MDL_ORIGINX, daux);
+        daux = (double)header->yoff;
+        MD[n].setValue(MDL_ORIGINY, daux);
+        daux = (double)header->zoff;
+        MD[n].setValue(MDL_ORIGINZ, daux);
+        daux = (double)header->phi;
+        MD[n].setValue(MDL_ANGLEROT, daux);
+        daux = (double)header->theta;
+        MD[n].setValue(MDL_ANGLETILT, daux);
+        daux = (double)header->gamma;
+        MD[n].setValue(MDL_ANGLEPSI, daux);
+        daux = (double)header->weight;
+        MD[n].setValue(MDL_WEIGHT, daux);
+        bool baux = (header->flip == 1);
+        MD[n].setValue(MDL_FLIP, baux);
 
         if(img_select == i)
             break;
@@ -380,6 +380,8 @@ int  writeSPIDER(int select_img=-1, bool isStack=false, int mode=WRITE_OVERWRITE
         header->maxim = Ndim;
         if(mode == WRITE_APPEND)
             header->maxim = replaceNsize +1;
+        else if(mode == WRITE_REPLACE)
+            header->maxim = replaceNsize;
     }
     else
     {
@@ -467,14 +469,15 @@ int  writeSPIDER(int select_img=-1, bool isStack=false, int mode=WRITE_OVERWRITE
 
     else
     {
-        if(mode==WRITE_APPEND)
-            fseek( fimg, 0, SEEK_END);
-        else if(mode==WRITE_REPLACE)
+        if (mode == WRITE_APPEND)
+            fseek(fimg, 0, SEEK_END);
+        else if(mode == WRITE_REPLACE)
             fseek( fimg,offset + (offset+datasize)*select_img, SEEK_SET);
-        //for ( size_t i=0; i<Ndim; i++ )
-        size_t i =imgStart;
 
-        for (std::vector<MDRow>::iterator it = MD.begin(); it != MD.end(); ++it)
+        //for ( size_t i=0; i<Ndim; i++ )
+        size_t i = (NSIZE(data) == 1) ? 0 : imgStart;
+
+        for (std::vector<MDRow>::iterator it = MD.begin(); it != MD.end(); ++it, ++i)
         {
 
             if(it->getValue(MDL_ORIGINX,  aux))
@@ -501,7 +504,6 @@ int  writeSPIDER(int select_img=-1, bool isStack=false, int mode=WRITE_OVERWRITE
             else
                 castPage2Datatype(MULTIDIM_ARRAY(data) + i*datasize_n, fdata, Float, datasize_n);
             fwrite( fdata, datasize, 1, fimg );
-            i++;
         }
     }
     //I guess I do not need to unlock since we are going to close the file
