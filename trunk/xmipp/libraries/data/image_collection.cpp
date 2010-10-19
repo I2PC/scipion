@@ -25,12 +25,18 @@
 
 #include "image_collection.h"
 
-ImageCollection::ImageCollection(const MetaData &md)
+ImageCollection::ImageCollection(int mode)
 {
-    copyMetadata(md);
+  this->mode = mode;
 }
 
-ImageCollection::ImageCollection(const FileName &fnImage)
+ImageCollection::ImageCollection(const MetaData &md, int mode)
+{
+    copyMetadata(md);
+    this->mode = mode;
+}
+
+ImageCollection::ImageCollection(const FileName &fnImage, int mode)
 {
     Image<double> image;
     image.read(fnImage, false);
@@ -51,6 +57,7 @@ ImageCollection::ImageCollection(const FileName &fnImage)
             setValue(MDL_ENABLED, 1);
         }
     }
+    this->mode = mode;
 }
 
 ImageCollection::~ImageCollection()
@@ -61,13 +68,12 @@ ImageCollection::~ImageCollection()
     image.closeFile(it->second);
 }
 
-fImageHandler* ImageCollection::getStackHandle(Image<double> &image, const FileName & fnStack, int mode)
+fImageHandler* ImageCollection::getStackHandle(Image<double> &image, const FileName & fnStack)
 {
   std::map<FileName, fImageHandler*>::iterator it;
   it = openedStacks.find(fnStack);
   if (it != openedStacks.end())
     return it->second;
-  std::cout << "opening new handle......" << std::endl;
   return (openedStacks[fnStack] = image.openFile(fnStack, mode));
 }
 
@@ -88,15 +94,17 @@ int ImageCollection::readImage(Image<double> &image, const FileName &name, bool 
 }
 
 /** This is a wrap of Image::write */
-void ImageCollection::writeImage(Image<double> &image, const FileName &name, int select_img, bool isStack, int mode)
+void ImageCollection::writeImage(Image<double> &image, const FileName &name, int select_img, bool isStack)
 {
     if (name.isInStack() || select_img != -1)
     {
         FileName stackName;
         int imgno;
         name.decompose(imgno, stackName);
-        fImageHandler * fIH = getStackHandle(image, stackName, mode);
-        image._write(stackName, fIH, imgno, true, mode);
+        if (select_img == -1)
+          select_img = imgno;
+        fImageHandler * fIH = getStackHandle(image, stackName);
+        image._write(stackName, fIH, select_img, true, mode);
     }
     else
         image.write(name, select_img, isStack, mode);
