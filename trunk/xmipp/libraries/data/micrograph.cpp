@@ -467,7 +467,7 @@ void Micrograph::produce_all_images(int label, const FileName &fn_root,
                                     int starting_index, const FileName &fn_image, double ang, double tilt,
                                     double psi)
 {
-    MetaData SF;
+    ImageCollection SF(WRITE_APPEND);
     FileName fn_out;
     Image<double> I;
     Micrograph *M;
@@ -512,23 +512,28 @@ void Micrograph::produce_all_images(int label, const FileName &fn_root,
         << "   applying apropriate rotation\n";
     int i = starting_index;
     int nmax = ParticleNo();
+    FileName fn_aux;
+    fn_out          = fn_root;
+    if(exists(fn_out))
+        unlink(fn_out.c_str());
+    int ii=0;
     for (int n = 0; n < nmax; n++)
         if (coords[n].valid && coords[n].label == label)
         {
+        	fn_aux.compose(ii++,fn_out);
             SF.addObject();
-            fn_out.compose(fn_root, i++, "xmp");
             bool t;
             t=M->scissor(coords[n], (Image<double> &) I, Dmin, Dmax, scaleX, scaleY);
             if (!t)
             {
-                std::cout << "Particle " << fn_out << " is very near the border, "
+                std::cout << "Particle " << fn_aux << " is very near the border, "
                 << "corresponding image is set to blank\n";
-                SF.setValue( MDL_IMAGE, fn_out);
+                SF.setValue( MDL_IMAGE, fn_aux);
                 SF.setValue( MDL_ENABLED, 1);
             }
             else
             {
-                SF.setValue( MDL_IMAGE, fn_out);
+                SF.setValue( MDL_IMAGE, fn_aux);
                 SF.setValue( MDL_ENABLED, 1);
             }
             //  if (ang!=0) I().rotate(-ang);
@@ -538,7 +543,7 @@ void Micrograph::produce_all_images(int label, const FileName &fn_root,
             I.set_tilt((float)tilt);
             I.set_psi((float)psi);
             */
-            I.write(fn_out,-1,false,WRITE_OVERWRITE);
+            SF.writeImage(I,fn_out,-1,true);
         }
     if (labels[label] != "")
     {
