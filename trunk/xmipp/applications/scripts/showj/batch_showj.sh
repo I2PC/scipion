@@ -18,20 +18,21 @@ else
 	while [ $# -gt 0 ]
 	do
 		case "$1" in
-			--mem)MEM=$2;READIMGS=0; READSEL=0;shift;;
-			--img)READIMGS=1;;	# Activates IMGS input mode
-			--sel)READSEL=1;;
-			--poll)POLL=-poll;READIMGS=0;READSEL=0;;	# Sets polling
+			--mem)MEM=$2;READIMG=0;READSEL=0;READVOL=0;shift;;
+			--img)READIMG=1;READSEL=0;READVOL=0;;	# Activates IMG input mode
+			--sel)READIMG=0;READSEL=1;READVOL=0;;	# Activates SEL input mode
+			--vol)READIMG=0;READSEL=0;READVOL=1;;	# Activates VOL input mode
+			--poll)POLL=-poll;READIMG=0;READSEL=0;READVOL=0;;	# Sets polling
 			---)shift; break;;
-			-*)READIMGS=0; READSEL=0;echo >&2 \
+			-*)READIMG=0;READSEL=0;READVOL=0;echo >&2 \
 				"Unknown parameter: $1"
 				exit 1;;
-			*)test "$READIMGS" = "1" && IMGS="$IMGS $1";test "$READSEL" = "1" && SEL="$SEL $1";;
+			*)test "$READIMG" = "1" && IMG="$IMG $1";test "$READSEL" = "1" && SEL="$SEL $1";test "$READVOL" = "1" && VOL="$VOL $1";;
 		esac
 		shift
 	done
 
-	if test -z "$MEM" || test -z "$IMGS"
+	if test -z "$MEM" || test -z "$IMG" || test -z "$SEL" || test -z "$VOL"
 	then
 		SHOW_HELP=1
 	fi
@@ -42,9 +43,9 @@ else
 		echo "No memory size provided. Using default: $MEM"
 	fi
 
-	if [ -n "$IMGS" ]
+	if [ -n "$IMG" ]
 	then
-		IMGS="-img$IMGS"
+		IMG="-img$IMG"
 	fi
 
 	if [ -n "$SEL" ]
@@ -52,14 +53,17 @@ else
 		SEL="-sel$SEL"
 	fi
 
-	echo "SEL: $SEL"
+	if [ -n "$VOL" ]
+	then
+		VOL="-vol$VOL"
+	fi
 
 	if [ "$SHOW_HELP" = "1" ]
 	then
-		echo "Usage: xmipp_showj [--mem <memory_ammount>] [--img <file1 [file2 [..]]>] [--sel <file1 [file2 [..]]>] [--poll]"
+		echo "Usage: xmipp_showj [--mem <memory_ammount>] [--img|vol|sel <file1 [file2 [..]]>] [--poll]"
 	fi
 
 	export LD_LIBRARY_PATH=$XMIPP_BASE/lib
 	IMAGEJ_HOME=$XMIPP_BASE/external/imagej
-	$JVM/bin/java -Xmx$MEM -Dplugins.dir=$IMAGEJ_HOME/plugins/ -jar $IMAGEJ_HOME/ij.jar -macro $IMAGEJ_HOME/macros/xmippBrowser.txt "$IMGS $SEL $POLL"
+	$JVM/bin/java -Xmx$MEM -Dplugins.dir=$IMAGEJ_HOME/plugins/ -jar $IMAGEJ_HOME/ij.jar -macro $IMAGEJ_HOME/macros/xmippBrowser.txt "$IMG $SEL $VOL $POLL"
 fi
