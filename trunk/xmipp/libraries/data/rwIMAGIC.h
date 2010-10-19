@@ -26,7 +26,7 @@
 struct IMAGIChead
 {             // file header for IMAGIC data
     int imn;          //  0      image location number (1,2,...)
-    int ifn;          //  1      # images following
+    int ifn;          //  1      # images following, only of importance in the first location
     int ierror;       //  2      error code: error if >0
     int nhfr;         //  3      # header records per image
     int ndate;        //  4      creation day
@@ -94,9 +94,9 @@ struct IMAGIChead
 */
 int  readIMAGIC(int img_select)
 {
-#define DEBUG
 #undef DEBUG
- #ifdef DEBUG
+    //#define DEBUG
+#ifdef DEBUG
     printf("DEBUG readIMAGIC: Reading Imagic file\n");
 #endif
 
@@ -243,8 +243,11 @@ int  readIMAGIC(int img_select)
 */
 int  writeIMAGIC(int img_select=-1, int mode=WRITE_OVERWRITE)
 {
-    //    if ( p->transform != NoTransform )
-    //        img_convert_fourier(p, Centered);
+#undef DEBUG
+//#define DEBUG
+ #ifdef DEBUG
+    printf("DEBUG writeIMAGIC: Reading Imagic file\n");
+#endif
 
     IMAGIChead* header = new IMAGIChead;
     int Xdim = XSIZE(data);
@@ -258,7 +261,18 @@ int  writeIMAGIC(int img_select=-1, int mode=WRITE_OVERWRITE)
     header->npixel = header->npix2;
     header->iylp = Xdim;
     header->ixlp = Ydim;
+
     header->ifn = Ndim - 1 ;
+    std::cerr << "header->ifn " << header->ifn <<std::endl;
+    header->imn = 1;
+    int firtIfn=0;
+    if(replaceNsize!=0 && mode == WRITE_APPEND)
+    {
+    	std::cerr << "inside WRITE APPEND" <<std::endl;
+        firtIfn     = replaceNsize;
+        header->imn = replaceNsize+1;
+        header->ifn = 0;//only important in first header
+    }
 
     time_t timer;
     time ( &timer );
@@ -331,11 +345,16 @@ int  writeIMAGIC(int img_select=-1, int mode=WRITE_OVERWRITE)
     fcntl(fileno(fimg),       F_SETLKW, &fl); /* locked */
     fcntl(fileno(fhed), F_SETLKW, &fl); /* locked */
 
-
     if(mode==WRITE_APPEND)
     {
-        fseek( fimg, 0, SEEK_END);
+        if(replaceNsize!=0)
+        {   //rewrite firt record
+            fseek( fhed, sizeof(int), SEEK_SET);
+            fwrite(&firtIfn,SIZEOF_INT,1,fhed);
+            std::cerr << "write size:" << firtIfn <<" " << SIZEOF_INT << " " << sizeof(int)<<std::endl;
+        }
         fseek( fhed, 0, SEEK_END);
+        fseek( fimg, 0, SEEK_END);
     }
     else if(mode==WRITE_REPLACE)
     {
@@ -344,7 +363,8 @@ int  writeIMAGIC(int img_select=-1, int mode=WRITE_OVERWRITE)
     }
     else //mode==WRITE_OVERWRITE
     {
-        fseek( fimg, 0, SEEK_SET);
+        //this is already done in image.h but only for the data file not for the header
+        //fseek( fimg, 0, SEEK_SET);
         fseek( fhed, 0, SEEK_SET);
     }
     char* fdata = (char *) askMemory(datasize);
@@ -352,6 +372,7 @@ int  writeIMAGIC(int img_select=-1, int mode=WRITE_OVERWRITE)
     i = imgStart;
     for (std::vector<MDRow>::iterator it = MD.begin(); it != MD.end(); ++it)
     {
+    	header->iyold=header->ixold=header->euler_alpha=header->euler_beta=header->euler_gamma=0.;
         if(it->getValue(MDL_ORIGINX,  aux))
             header->iyold  = (float)-aux;
         if(it->getValue(MDL_ORIGINY,  aux))
