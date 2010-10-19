@@ -39,10 +39,6 @@ int readSPE(int img_select,bool isStack=false)
     int _xDim,_yDim,_zDim;
     unsigned long int _nDim;
 
-    FILE        *fimg;
-    if ( ( fimg = fopen(filename.c_str(), "r") ) == NULL )
-        REPORT_ERROR(ERR_IO_NOTOPEN,"readSPE: error opening image file.");
-
     short int aux;
     fseek(fimg,42,SEEK_SET);
     xmippFREAD(&aux, sizeof(short int), 1, fimg, swap );
@@ -72,10 +68,7 @@ int readSPE(int img_select,bool isStack=false)
     MDMainHeader.setValue(MDL_DATATYPE,(int)datatype);
 
     if( dataflag == -2 )
-    {
-        fclose(fimg);
         return 0;
-    }
 
     MD.clear();
     MD.resize(imgEnd - imgStart);
@@ -95,9 +88,6 @@ int readSPE(int img_select,bool isStack=false)
     size_t pad = 0;
 
     readData(fimg, img_select, datatype, pad);
-
-    if ( !mmapOn )
-        fclose(fimg);
 
     return(0);
 }
