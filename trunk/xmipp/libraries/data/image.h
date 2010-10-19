@@ -386,9 +386,9 @@ public:
         fImageHandler* hFile = openFile(name);
         err = _read(name, hFile, readdata, select_img, apply_geo, only_apply_shifts, row, mapData);
         if(!mapData)//do not close the file if mmap is on
-        	        //nevertheless file must be close ...
-        	        //although this is for micrographs usually left a hanfle open is OK
-        			//Further more since we use fourier for downsampling...
+            //nevertheless file must be close ...
+            //although this is for micrographs usually left a hanfle open is OK
+            //Further more since we use fourier for downsampling...
             closeFile(hFile);
 
         return err;
@@ -1452,8 +1452,8 @@ private:
                      (ext_name.contains("raw") && exists(fileName.addExtension("inf"))))
             {
                 if (ext_name.contains("inf"))
-                	fileName = fileName.withoutExtension();
-            	fileName = fileName.withoutExtension();
+                    fileName = fileName.withoutExtension();
+                fileName = fileName.withoutExtension();
                 fileName = fileName.addExtension("raw");
                 headName = fileName.addExtension("inf");
                 ext_name = "inf";
@@ -1699,7 +1699,11 @@ private:
                Ydim!=_Ydim ||
                Zdim!=_Zdim
               )
+            {
+                std::cerr << "(x,y,z) " << Xdim << " " << Ydim << " " << Zdim << " "<< Ndim << std::endl;
+                std::cerr << "(_x,_y,_z) " << _Xdim << " " << _Ydim << " " << _Zdim << " " <<_Ndim <<std::endl;
                 REPORT_ERROR(ERR_MULTIDIM_SIZE,"write: target and source objects have different size");
+            }
             if(mode==WRITE_REPLACE && select_img>_Ndim)
                 REPORT_ERROR(ERR_VALUE_INCORRECT,"write: cannot replace image stack is not large enough");
             if(auxI.replaceNsize <1 &&
