@@ -99,7 +99,6 @@ int readINF(int img_select,bool isStack=false)
     default:
         REPORT_ERROR(ERR_TYPE_INCORRECT, "rwINF::read: depth is not 8, 16 nor 32");
     }
-std::cerr << "rwIN: datatpe __depth:" << datatype << " " <<__depth <<std::endl;
 
     MDMainHeader.setValue(MDL_SAMPLINGRATEX,(double) -1);
     MDMainHeader.setValue(MDL_SAMPLINGRATEY,(double) -1);
