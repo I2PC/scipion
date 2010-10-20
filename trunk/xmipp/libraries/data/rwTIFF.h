@@ -26,16 +26,6 @@
 #ifndef RWTIFF_H_
 #define RWTIFF_H_
 
-#include <cstdio>
-#include <cstdlib>
-#include <unistd.h>
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <sys/mman.h>
-#include <fcntl.h>
-#include <iostream>
-
-
 ///@defgroup TIFF TIFF File format
 ///@ingroup ImageFormats
 
@@ -284,6 +274,16 @@ int readTIFF(int img_select, bool isStack=false)
 
     if( dataflag < 0 )
         return 0;
+
+    /* As we cannot mmap a TIFF File, when this option is passed we are going to mmap
+     * the multidimarray of Image
+     */
+
+    if (mmapOn)
+    {
+        data.setMmap(true);
+        mmapOn = false;
+    }
 
     // Allocate memory for image data (Assume xdim, ydim, zdim and ndim are already set
     //if memory already allocated use it (no resize allowed)
