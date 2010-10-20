@@ -3,7 +3,7 @@
 #---------------------------------------------------------------------------
 # Project related configuration options
 #---------------------------------------------------------------------------
-PROJECT_NAME           = Xmipp
+PROJECT_NAME           = "Xmipp Programmers' Guide"
 PROJECT_NUMBER         = 1.1+CVS
 OUTPUT_DIRECTORY       = documentation
 CREATE_SUBDIRS         = NO
@@ -237,3 +237,8 @@ DOT_CLEANUP            = YES
 # Configuration::additions related to the search engine
 #---------------------------------------------------------------------------
 SEARCHENGINE           = YES
+#---------------------------------------------------------------------------
+# Configuration options related to embed documentation in Eclipse
+#---------------------------------------------------------------------------
+GENERATE_ECLIPSEHELP = YES
+ECLIPSE_DOC_ID        = com.csic.xmipp
