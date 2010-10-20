@@ -1,17 +1,11 @@
 import java.awt.BorderLayout;
 import java.awt.Color;
-import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.Frame;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
-import java.awt.GridLayout;
-import java.awt.Label;
-import java.awt.Panel;
-import java.awt.TextField;
+import java.awt.Insets;
 import java.util.Hashtable;
-import java.util.Vector;
-import java.awt.Button;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.AdjustmentListener;
@@ -20,18 +14,16 @@ import java.awt.event.ItemListener;
 import java.awt.event.KeyListener;
 import java.awt.event.TextListener;
 import java.awt.event.WindowListener;
-
 import javax.swing.JButton;
 import javax.swing.JDialog;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
-
 import ij.IJ;
 import ij.gui.GenericDialog;
 import ij.io.OpenDialog;
 import ij.io.SaveDialog;
-import ij.plugin.frame.Recorder;
+
 
 
 
@@ -49,7 +41,7 @@ public class XrayImportDialog extends JDialog implements ActionListener
 	private GridBagConstraints gbc;
 	//int mainPanelRow=0;
 	private Xmipp_Tomo.ExitValues status= Xmipp_Tomo.ExitValues.CANCEL;
-	private static String BROWSE_LABEL="Browse...", DATA_LABEL="Data", FLAT_LABEL="Flat", ROOT_LABEL="Root", CROP_LABEL="Crop";
+	private static String BROWSE_LABEL="Browse...", DATA_LABEL="Data directory ", FLAT_LABEL="Flatfield directory ", ROOT_LABEL="Root directory ", ROOT_FILE_LABEL="Root file ", CROP_LABEL="Crop ";
 	private Hashtable<String, JTextField> textFields= new Hashtable<String, JTextField>();
 	private String command;
 	
@@ -60,6 +52,8 @@ public class XrayImportDialog extends JDialog implements ActionListener
 		mainPanel=new JPanel();
 		mainPanel.setLayout(new GridBagLayout());
 		gbc=new GridBagConstraints();
+		//gbc.ipadx=5; gbc.ipady=5;
+		gbc.insets=new Insets(5,5,5,5);
 		// gbc.gridwidth=3; gbc.gridheight=4;
 		// mainPanel.setPreferredSize(new Dimension(3*100, 4*50));
 		getContentPane().add(mainPanel,BorderLayout.CENTER);
@@ -75,11 +69,13 @@ public class XrayImportDialog extends JDialog implements ActionListener
 		getContentPane().add(okCancelPanel,BorderLayout.PAGE_END);
 		
 		
-    	addBrowseField(0,DATA_LABEL, "");
-    	addBrowseField(1,FLAT_LABEL, "");
-    	addStringField(2,ROOT_LABEL, "ProcessedData/img",10);
+    	addBrowseField(0,DATA_LABEL, "/gpfs/fs1/home/bioinfo/jcuenca/sample_data/20090606-10/10s/");
+    	addBrowseField(1,FLAT_LABEL, "/gpfs/fs1/home/bioinfo/jcuenca/sample_data/20090606-10/flatfields/");
+    	addBrowseField(2,ROOT_LABEL, "/gpfs/fs1/home/bioinfo/jcuenca/sample_data/20090606-10/ProcessedData");
+    	addStringField(3,ROOT_FILE_LABEL, "img",10);
+    	// addStringField(2,ROOT_LABEL, "ProcessedData/img",10);
     	// maybe it's better to use a slidebar instead of a numeric field?
-    	addNumericField(3,CROP_LABEL, 7);
+    	addNumericField(4,CROP_LABEL, 7);
 	}
 	
     
@@ -103,6 +99,7 @@ public class XrayImportDialog extends JDialog implements ActionListener
    			label2 = label2.replace('_', ' ');
 		JLabel theLabel = makeLabel(label2);
 		gbc.gridy = row; gbc.gridx=0;
+		gbc.anchor = GridBagConstraints.EAST;
 		mainPanel.add(theLabel,gbc);
 
 		JTextField tf = new JTextField(defaultText, 15);
@@ -120,6 +117,7 @@ public class XrayImportDialog extends JDialog implements ActionListener
 		b.setName(label);
 		b.addActionListener(this);
 		gbc.gridx=2;
+		gbc.fill=GridBagConstraints.NONE;
 		mainPanel.add(b,gbc);
 		//mainPanelRow++;
     }
@@ -171,8 +169,8 @@ public class XrayImportDialog extends JDialog implements ActionListener
 	}
 	
 	private void buildCommand(){
-		setCommand("xmipp_ray -import -data " + getText(DATA_LABEL) + " -flat " + getText(FLAT_LABEL) + "-oroot " + getText(ROOT_LABEL)+
-				"-crop " + getText(CROP_LABEL) + "-thr 1");
+		setCommand("xmipp_xray_import -data " + getText(DATA_LABEL) + " -flat " + getText(FLAT_LABEL) + " -oroot " + getText(ROOT_LABEL)+
+				"/" + getText(ROOT_FILE_LABEL) + " -crop " + getText(CROP_LABEL) + " -thr 1");
 	}
 	
 	public void actionPerformed(ActionEvent e) {
@@ -193,7 +191,8 @@ public class XrayImportDialog extends JDialog implements ActionListener
 
 	private void actionBrowse(String fieldName){
 		String path=dialogOpen();
-		textFields.get(fieldName).setText(path);
+		if(! ("".equals(path)))
+			textFields.get(fieldName).setText(path);
 	}
 	
 	/**

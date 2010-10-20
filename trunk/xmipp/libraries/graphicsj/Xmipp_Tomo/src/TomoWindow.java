@@ -39,8 +39,12 @@ import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.util.Hashtable;
 import java.util.LinkedList;
+
+import javax.swing.Action;
 import javax.swing.BoxLayout;
+import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
@@ -48,6 +52,8 @@ import javax.swing.JPanel;
 import javax.swing.JTabbedPane;
 import javax.swing.JTextField;
 import javax.swing.Timer;
+import javax.swing.UIManager;
+import javax.swing.plaf.FontUIResource;
 
 /**
  * @author jcuenca
@@ -57,11 +63,11 @@ import javax.swing.Timer;
  * 			DialogListener to capture GenericDialogs, ComponentListener to handle window resizing
  */
 /**
- * Protocol for adding new buttons to the workflow/UI: - declare the button -
- * its label and its corresponding ImageJ command (if any), from the plugin
- * class - if the button runs a plugin, update the code in actionRunIjCommand() -
- * include it in its menu list (for example, buttonsMenuFile) - update
- * ActionThread.run - set a proper enable/disable cycle along user interaction
+ * Protocol for adding new buttons to the workflow/UI:
+ * - declare its command in Command
+ * - define the action method in TomoController
+ * - include the command in its menu list (for example, commandsMenuFile) 
+ * - set a proper enable/disable cycle along user interaction
  * (tipically start disabled, enable it when user can click it)
  */
 public class TomoWindow extends ImageWindow implements WindowListener,
@@ -80,75 +86,62 @@ public class TomoWindow extends ImageWindow implements WindowListener,
 	private static Rectangle maxWindowSize = new Rectangle(800, 800);
 	// miliseconds to wait for a Plugin dialog to display (so the dialog capture
 	// can start)
-	private static int WAIT_FOR_DIALOG = 800;
+	public static int WAIT_FOR_DIALOG = 800;
 
-	// Buttons declaration. The label must be unique
-	private static Button LOAD = new Button("Load", "", true),
-			XRAY = new Button("X-ray","",true),
-			SAVE = new Button("Save", "", false), DEFINE_TILT = new Button(
-					"Set tilt angles", "", false), GAUSSIAN = new Button(
-					"Gaussian", GaussianPlugin.COMMAND, false),
-			MEDIAN = new Button("Median", MedianPlugin.COMMAND, false),
-			SUB_BACKGROUND = new Button("Substract background",
-					BackgroundSubstractPlugin.COMMAND, false),
-			ENHANCE_CONTRAST = new Button("Enhance contrast",
-					ContrastEnhancePlugin.COMMAND, false), APPLY = new Button(
-					"Apply", "", false), ALIGN_AUTO = new Button("Auto", "",
-					false), ALIGN_MANUAL = new Button("Manual", "", false),
-			ALIGN_CORRELATION = new Button("Quick", "", false),
-			PRINT_WORKFLOW = new Button("Print workflow", "", false),
-			PLAY = new Button(">", "", true),
-			// pause is a fake button, useful for defining the pause label
-			PAUSE = new Button("||", "", true),
-			MEASURE = new Button("Measure",MeasurePlugin.COMMAND, false);
+	public static String PLAY_ICON = "resources/icon-play.png",
+			PAUSE_ICON = "resources/icon-pause.png";
+	
+	private Hashtable<String, ImageIcon> icons = new Hashtable<String, ImageIcon>();
 
-	// Lists of buttons for each menu tab
-	private static java.util.List<Button> buttonsMenuFile = new LinkedList<Button>() {
+	private Hashtable<String, JButton> buttons = new Hashtable<String, JButton>();
+
+	// Lists of commands for each menu tab
+	private static java.util.List<Command> commandsMenuFile = new LinkedList<Command>() {
 		{
-			add(LOAD);
-			add(XRAY);
-			add(SAVE);
-			add(DEFINE_TILT);
-			add(MEASURE);
+			add(Command.LOAD);
+			add(Command.XRAY);
+			add(Command.SAVE);
+			add(Command.DEFINE_TILT);
+			add(Command.MEASURE);
 		}
 	};
 
-	private static java.util.List<Button> buttonsMenuPreproc = new LinkedList<Button>() {
+	private static java.util.List<Command> commandsMenuPreproc = new LinkedList<Command>() {
 		{
-			add(GAUSSIAN);
-			add(MEDIAN);
-			add(SUB_BACKGROUND);
-			add(ENHANCE_CONTRAST);
-			add(APPLY);
+			add(Command.GAUSSIAN);
+			add(Command.MEDIAN);
+			add(Command.SUB_BACKGROUND);
+			add(Command.ENHANCE_CONTRAST);
+			add(Command.APPLY);
 		}
 	};
 
-	private static java.util.List<Button> buttonsMenuAlign = new LinkedList<Button>() {
+	private static java.util.List<Command> commandsMenuAlign = new LinkedList<Command>() {
 		{
-			add(ALIGN_AUTO);
-			add(ALIGN_MANUAL);
-			add(ALIGN_CORRELATION);
+			add(Command.ALIGN_AUTO);
+			add(Command.ALIGN_MANUAL);
+			add(Command.ALIGN_CORRELATION);
 		}
 	};
 
-	private static java.util.List<Button> buttonsMenuDebug = new LinkedList<Button>() {
+	private static java.util.List<Command> commandsMenuDebug = new LinkedList<Command>() {
 		{
-			add(PRINT_WORKFLOW);
+			add(Command.PRINT_WORKFLOW);
 		}
 	};
 
-	// which buttons to enable after loading a file
-	private static java.util.List<Button> buttonsEnabledAfterLoad = new LinkedList<Button>() {
+	// which commands to enable after loading a file
+	private static java.util.List<Command> commandsEnabledAfterLoad = new LinkedList<Command>() {
 		{
-			add(SAVE);
-			add(DEFINE_TILT);
-			add(GAUSSIAN);
-			add(MEDIAN);
-			add(SUB_BACKGROUND);
-			add(ENHANCE_CONTRAST);
-			add(APPLY);
-			add(PRINT_WORKFLOW);
-			add(MEASURE);
+			add(Command.SAVE);
+			add(Command.DEFINE_TILT);
+			add(Command.GAUSSIAN);
+			add(Command.MEDIAN);
+			add(Command.SUB_BACKGROUND);
+			add(Command.ENHANCE_CONTRAST);
+			add(Command.APPLY);
+			add(Command.PRINT_WORKFLOW);
+			add(Command.MEASURE);
 		}
 	};
 
@@ -176,6 +169,7 @@ public class TomoWindow extends ImageWindow implements WindowListener,
 	private boolean playing = false;
 	// window identifier - useful when you've got more than 1 window
 	private int windowId = -1;
+	private TomoController controller;
 
 	/* Window GUI components */
 	/* 4 main panels */
@@ -186,9 +180,6 @@ public class TomoWindow extends ImageWindow implements WindowListener,
 	// Text fields and labels
 	private JTextField tiltTextField;
 	private JLabel statusLabel;
-
-	// The canvas where current projection is displayed as an image - reuse ImageWindow canvas
-	// private ImageCanvas canvas;
 
 	// Control scrollbars
 	private LabelScrollbar projectionScrollbar;
@@ -203,100 +194,10 @@ public class TomoWindow extends ImageWindow implements WindowListener,
 
 	// for window resizing
 	Timer timer;
-	
+
 	// current plugin - DialogCapture thread uses it (when dialotItemChanged is
 	// called)
 	private Plugin plugin;
-
-	// ImportDataThread: load & display projections in parallel
-	private class ImportDataThread extends Thread {
-		private TomoData dataModel;
-		private boolean resize = false;
-
-		ImportDataThread(TomoData model, boolean resize) {
-			dataModel = model;
-			this.resize = resize;
-		}
-
-		public void run() {
-			try {
-				new TiltSeriesIO(resize).read(dataModel);
-			} catch (FileNotFoundException ex) {
-				Xmipp_Tomo.debug("ImportDataThread.run - " + ex.getMessage());
-			} catch (IOException ex) {
-				Xmipp_Tomo.debug("ImportDataThread.run - Error opening file");
-			} catch (InterruptedException ex) {
-				Xmipp_Tomo
-						.debug("ImportDataThread.run - Interrupted exception");
-			} catch (Exception ex) {
-				Xmipp_Tomo.debug("ImportDataThread.run - unexpected exception",
-						ex);
-			}
-		}
-	}
-
-	// implement UI concurrency with private class that extends Thread
-	// ActionThread: handle user actions in parallel (no GUI locking)
-	private class ActionThread extends Thread {
-		private TomoWindow tw;
-		private String command;
-
-		ActionThread(TomoWindow window, String command) {
-			tw = window;
-			this.command = command;
-		}
-
-		public void run() {
-			// select proper action method based on button's label
-			if (command.equals(LOAD.label())) {
-				tw.actionLoad();
-			}else if(command.equals(XRAY.label())){
-				tw.actionXray();
-			}else if (command.equals(SAVE.label())) {
-				tw.actionSave();
-			} else if (command.equals(DEFINE_TILT.label())) {
-				tw.actionSetTilt();
-			} else if (command.equals(GAUSSIAN.label())) {
-				tw.actionRunIjCmd(GAUSSIAN);
-			} else if (command.equals(MEDIAN.label())) {
-				tw.actionRunIjCmd(MEDIAN);
-			} else if (command.equals(SUB_BACKGROUND.label())) {
-				tw.actionRunIjCmd(SUB_BACKGROUND);
-			} else if (command.equals(ENHANCE_CONTRAST.label())) {
-				tw.actionRunIjCmd(ENHANCE_CONTRAST);
-			} else if (command.equals(APPLY.label())) {
-				tw.actionApply();
-			} else if (command.equals(PLAY.label())) {
-				tw.actionPlay();
-			} else if (command.equals(PAUSE.label())) {
-				tw.actionPause();
-			} else if (command.equals(MEASURE.label())) {
-				tw.actionRunIjCmd(MEASURE);
-			} else if (command.equals(PRINT_WORKFLOW.label())) {
-				Xmipp_Tomo.printWorkflow();
-			}
-		}
-	}
-
-	// implement UI concurrency with private class that extends Thread
-	// DialogCaptureThread: intercept generic dialogs
-	private class DialogCaptureThread extends Thread {
-		private TomoWindow window;
-
-		DialogCaptureThread(TomoWindow w) {
-			window = w;
-		}
-
-		public void run() {
-			try {
-				sleep(WAIT_FOR_DIALOG);
-				window.captureDialog();
-			} catch (Exception ex) {
-				Xmipp_Tomo.debug(
-						"DialogCaptureThread.run - unexpected exception", ex);
-			}
-		}
-	}
 
 	/* METHODS ------------------------------------------------------------- */
 
@@ -315,8 +216,25 @@ public class TomoWindow extends ImageWindow implements WindowListener,
 	 */
 	public TomoWindow() {
 		super("Hola");
+
+		setController(new TomoController(this));
+		
+		// change default font
+		Font defaultBoldFont = new Font("Dialog", Font.BOLD, 14), defaultFont = new Font(
+				"Dialog", Font.PLAIN, 14);
+		UIManager.put("Label.font", new FontUIResource(defaultBoldFont));
+		UIManager.put("Button.font", new FontUIResource(defaultBoldFont));
+		UIManager.put("Panel.font", new FontUIResource(defaultBoldFont));
+		UIManager.put("TextField.font", new FontUIResource(defaultFont));
+		UIManager.put("TabbedPane.font", new FontUIResource(defaultBoldFont));
+
+		// turn on anti-aliasing for smooth fonts.
+		// System.setProperty( "swing.aatext", "true" );
+		// ...or (Java 1.6)
+		System.setProperty("swing.useSystemAAFontSettings", "lcd");
+		
 		// disable dynamic resizing - it's OS dependent...
-		//Toolkit.getDefaultToolkit().setDynamicLayout(false);
+		// Toolkit.getDefaultToolkit().setDynamicLayout(false);
 		// set up a fake ImagePlus, while we get to load the real one
 		imp = new ImagePlus();
 		imp.setWindow(this);
@@ -341,45 +259,15 @@ public class TomoWindow extends ImageWindow implements WindowListener,
 		return realWindow.getContentPane();
 	}
 
-	/**
-	 * @deprecated Add button to a panel
-	 * @param label
-	 */
-	private JButton addButton(String label, Container panel) {
-		JButton b = new JButton(label);
-		b.addActionListener(this);
-		// b.addKeyListener(IJ.getInstance());
+	private void addButton(Command cmd, Container panel) throws Exception {
+		TomoAction a = new TomoAction(getController(), cmd);
+		JButton b = new JButton(a);
 		panel.add(b);
-		// probably the iteration can be more efficient
-		/*
-		 * for(Button button:Button.values()) if(button.label().equals(label))
-		 * button.setButton(b);
-		 */
-		return b;
+		buttons.put(cmd.getId(), b);
 	}
 
-	/**
-	 * @deprecated
-	 * 
-	 * @param label
-	 * @param panel
-	 * @param enabled
-	 */
-	void addButton(String label, Container panel, boolean enabled) {
-		addButton(label, panel).setEnabled(enabled);
-	}
-
-	/*
-	 * void addButton(Button button,Container panel,boolean enabled) {
-	 * addButton(button, panel); button.setEnabled(enabled); }
-	 */
-
-	private void addButton(Button button, Container panel) {
-		JButton b = new JButton(button.label());
-		b.addActionListener(this);
-		// b.addKeyListener(IJ.getInstance());
-		panel.add(b);
-		button.setButton(b);
+	private JButton getButton(String id) {
+		return buttons.get(id);
 	}
 
 	/**
@@ -398,7 +286,11 @@ public class TomoWindow extends ImageWindow implements WindowListener,
 
 		// TABBED MENU PANEL
 		menuPanel = new JTabbedPane();
-		addMenuTabs();
+		try{
+			addMenuTabs();
+		}catch (Exception ex){
+			Xmipp_Tomo.debug("Tomowindow.addMainPanels - addmenutabs " + ex.toString());
+		}
 		menuPanel.setTabLayoutPolicy(JTabbedPane.SCROLL_TAB_LAYOUT);
 		menuPanel.setPreferredSize(new Dimension(MENUPANEL_MINWIDTH,
 				MENUPANEL_MINHEIGHT));
@@ -438,7 +330,7 @@ public class TomoWindow extends ImageWindow implements WindowListener,
 	 * 
 	 * @param model
 	 */
-	private void addView() {
+	public void addView() {
 		if (getModel() == null)
 			return;
 
@@ -461,13 +353,17 @@ public class TomoWindow extends ImageWindow implements WindowListener,
 	 * 
 	 * @param model
 	 */
-	private void addControls() {
-		if (getModel() == null)
+	public void addControls() {
+		// only add controls if they are not available already
+		if (projectionScrollbar != null){
+			projectionScrollbar.setMaximum(getModel().getNumberOfProjections());
+			getModel().setTiltModel(tiltTextField.getDocument());
 			return;
-
-		// remove previous controls if any
+		}
+		
+		/* remove previous controls if any
 		for (int i = 0; i < controlPanel.getComponentCount(); i++)
-			controlPanel.remove(i);
+			controlPanel.remove(i); */
 
 		FlowLayout fl2 = new FlowLayout();
 		fl2.setAlignment(FlowLayout.CENTER);
@@ -488,8 +384,12 @@ public class TomoWindow extends ImageWindow implements WindowListener,
 		projectionScrollbar.addAdjustmentListener(this);
 		controlPanel.add(projectionScrollbar);
 
-		addButton(PLAY, controlPanel);
-
+		// addButton(PLAY, controlPanel);
+		try {
+			addButton(Command.PLAY, controlPanel);
+		} catch (Exception ex) {
+			Xmipp_Tomo.debug("addControls - play");
+		}
 		realWindow.pack(); // adjust window size to host the new controls panel
 
 	}
@@ -498,48 +398,35 @@ public class TomoWindow extends ImageWindow implements WindowListener,
 	 * Add menu tabs populated with their buttons (specified in the lists at the
 	 * beginning of the class)
 	 */
-	private void addMenuTabs() {
+	private void addMenuTabs() throws Exception {
 		// File
-		// ButtonTabComponent file_tab=new ButtonTabComponent(menuPanel),
-		// preproc_tab=new ButtonTabComponent(menuPanel);
 		JPanel fileTabPanel = new JPanel(false); // false = no double buffer
-													// (flicker)
+		// (flicker)
 		// menuPanel.setMnemonicAt(0, KeyEvent.VK_1);
-		for (Button b : buttonsMenuFile)
-			addButton(b, fileTabPanel);
-		/*
-		 * addButton(LOAD,fileTabPanel); addButton(SAVE,fileTabPanel,false);
-		 */
-		menuPanel.addTab(Menu.FILE.toString(), fileTabPanel); // try to add the
-																// tab when it's
-																// ready (all
-																// controls
-																// inside)
+		for (Command c : commandsMenuFile)
+			addButton(c, fileTabPanel);
+
+		// try to add the tab when it's ready (all controls inside)
+		menuPanel.addTab(Menu.FILE.toString(), fileTabPanel);
 
 		// Preprocessing
 		JPanel preprocTabPanel = new JPanel();
-		for (Button b : buttonsMenuPreproc)
-			addButton(b, preprocTabPanel);
-		/*
-		 * addButton(GAUSSIAN,preprocTabPanel,false);
-		 * addButton(MEDIAN,preprocTabPanel,false);
-		 * addButton(SUB_BACKGROUND,preprocTabPanel,false);
-		 * addButton(ENHANCE_CONTRAST,preprocTabPanel,false);
-		 * addButton(APPLY,preprocTabPanel,false);
-		 */
+		for (Command c : commandsMenuPreproc)
+			addButton(c, preprocTabPanel);
+
 		menuPanel.addTab(Menu.PREPROC.toString(), preprocTabPanel);
 
 		// Align
 		JPanel alignTabPanel = new JPanel();
-		for (Button b : buttonsMenuAlign)
-			addButton(b, alignTabPanel);
+		for (Command c : commandsMenuAlign)
+			addButton(c, alignTabPanel);
 		menuPanel.addTab(Menu.ALIGN.toString(), alignTabPanel);
 
 		// Debugging
 		if (Xmipp_Tomo.TESTING == 1) {
 			JPanel debugTabPanel = new JPanel();
-			for (Button b : buttonsMenuDebug)
-				addButton(b, debugTabPanel);
+			for (Command c : commandsMenuDebug)
+				addButton(c, debugTabPanel);
 			// addButton(PRINT_WORKFLOW,debugTabPanel,false);
 			menuPanel.addTab(Menu.DEBUG.toString(), debugTabPanel);
 		}
@@ -556,7 +443,7 @@ public class TomoWindow extends ImageWindow implements WindowListener,
 		realWindow.setVisible(true);
 	}
 
-	private void setStatus(String text) {
+	public void setStatus(String text) {
 		getStatusLabel().setText(text);
 	}
 
@@ -572,7 +459,7 @@ public class TomoWindow extends ImageWindow implements WindowListener,
 		return (int) cursorLocation.distance(x, y);
 	}
 
-	private void refreshImageCanvas() {
+	public void refreshImageCanvas() {
 		if (getCanvas() != null) {
 			getCanvas().setImageUpdated();
 			getCanvas().repaint();
@@ -595,6 +482,17 @@ public class TomoWindow extends ImageWindow implements WindowListener,
 		notify();
 	}
 
+	public void enableButtonsAfterLoad() {
+		for (Command c : commandsEnabledAfterLoad) {
+			getButton(c.getId()).setEnabled(true);
+		}
+	}
+
+	public void setImagePlusWindow() {
+		imp = getModel().getImage();
+		imp.setWindow(this);
+	}
+
 	/*
 	 * button/keyboard events - run in a different thread to not to block the
 	 * GUI
@@ -605,196 +503,25 @@ public class TomoWindow extends ImageWindow implements WindowListener,
 	public void actionPerformed(ActionEvent e) {
 
 		String label = e.getActionCommand();
-		if (label == null){
+		if (label == null) {
 			// Timer event
 			realWindow.pack();
-			//Xmipp_Tomo.debug("Timer");
-		}else{	
-			new ActionThread(this, label).start();
+			// Xmipp_Tomo.debug("Timer");
 		}
 	} // actionPerformed end
 
 	/* -------------------------- Action management -------------------- */
 
-	private void addUserAction(UserAction a) {
+	public void addUserAction(UserAction a) {
 		Xmipp_Tomo.addUserAction(getLastAction(), a);
 		setLastAction(a);
 	}
 
-	private void actionLoad() {
-		String path = XrayImportDialog.dialogOpen();
-		if ((path == null) || ("".equals(path)))
-			return;
-
-		setModel(new TomoData(path, this));
-
-		try {
-			// import data in one thread and hold this thread until the first
-			// projection is loaded
-			setReloadingFile(false);
-			(new Thread(new ImportDataThread(getModel(), true))).start();
-			getModel().waitForFirstImage();
-		} catch (InterruptedException ex) {
-			Xmipp_Tomo.debug("Xmipp_Tomo - Interrupted exception");
-		}
-
-		imp = getModel().getImage();
-		imp.setWindow(this);
-
-		setTitle(getTitle());
-		addView();
-		addControls();
-		addUserAction(new UserAction(getWindowId(), "Load", getModel()
-				.getFileName()));
-
-		// enable buttons
-		for (Button b : buttonsEnabledAfterLoad)
-			b.setEnabled(true);
-	}
-	
-	/**
-	 * Ask user parameters for xmipp_xray_import and run it (by now, the program must be on $PATH)
-	 */
-	private void actionXray() {
-		XrayImportDialog d=new XrayImportDialog("X-Ray import",this);
-		// d.setup();
-		d.showDialog();
-		String command=d.getCommand();
-		// Xmipp_Tomo.debug(command);
-		Xmipp_Tomo.ExitValues error = Xmipp_Tomo.exec(command);
-		if(error != Xmipp_Tomo.ExitValues.OK)
-			Xmipp_Tomo.debug("Error (" + error + ") executing " + command);
+	public void changeIcon(String buttonId, String iconName) {
+		getButton(buttonId).setIcon(getIcon(iconName));
 	}
 
-	private void actionSave() {
-		String path = dialogSave();
-		if ((path == null) || ("".equals(path)))
-			return;
-		saveFile(getModel(), path);
-	}
-
-	private void actionRunIjCmd(Button b) {
-		actionRunIjCmd(b.label(), b.imageJCmd());
-	}
-
-	private void actionRunIjCmd(String label, String cmd) {
-		if (cmd == null)
-			return;
-
-		if (label != null)
-			setStatus(label + " - started");
-
-		setChangeSaved(false);
-
-		if (cmd.equals(GAUSSIAN.imageJCmd()))
-			setPlugin(new GaussianPlugin());
-		else if (cmd.equals(MEDIAN.imageJCmd()))
-			setPlugin(new MedianPlugin());
-		else if (cmd.equals(SUB_BACKGROUND.imageJCmd()))
-			setPlugin(new BackgroundSubstractPlugin());
-		else if (cmd.equals(ENHANCE_CONTRAST.imageJCmd()))
-			setPlugin(new ContrastEnhancePlugin());
-
-		(new Thread(new DialogCaptureThread(this))).start();
-
-		WindowManager.setTempCurrentImage(getModel().getImage());
-		try {
-			IJ.run(cmd);
-		} catch (Exception ex) {
-			// catch java.lang.RuntimeException: Macro canceled
-			Xmipp_Tomo.debug("actionRunIjCmd - action canceled");
-			return;
-		}
-		refreshImageCanvas();
-
-		setStatus("Done");
-
-		addUserAction(new UserAction(getWindowId(), cmd, getPlugin()));
-
-		setPlugin(null);
-	}
-
-	/**
-	 * Apply this window's workflow to the file associated to this window
-	 * (through the model)
-	 */
-	private void actionApply() {
-
-		String path = dialogSave();
-		if ("".equals(path)) {
-			return;
-		}
-
-		// Reopen the file only if the data was resized
-		TomoData originalModel = getModel();
-
-		if (getModel().isResized()) {
-			originalModel = new TomoData(getModel().getFilePath(), this);
-			originalModel.addPropertyChangeListener(this);
-			try {
-				setReloadingFile(true);
-				(new Thread(new ImportDataThread(originalModel, false)))
-						.start();
-				originalModel.waitForLastImage();
-			} catch (Exception ex) {
-				Xmipp_Tomo.debug("actionApply - unexpected exception", ex);
-			}
-
-			// iterate through the user actions that make sense
-			for (UserAction currentAction : Xmipp_Tomo
-					.getWorkflow(getLastAction())) {
-				if (currentAction.isNeededForFile()) {
-					// Xmipp_Tomo.debug("Applying " + currentAction.toString());
-					setStatus("Applying " + currentAction.getCommand());
-					currentAction.getPlugin().run(originalModel.getImage());
-				}
-			}
-		}
-
-		// write
-		saveFile(originalModel, path);
-	}
-
-	private void actionSetTilt() {
-		GenericDialog gd = new GenericDialog("Tilt angles");
-		gd
-				.addMessage("Please fill either start and end angles, or start and step");
-		gd.addNumericField("Start angle", 0.0, 1);
-		gd.addNumericField("End angle", 0.0, 1);
-		gd.addNumericField("Step", 0.0, 1);
-		gd.showDialog();
-		if (gd.wasCanceled())
-			return;
-		double start = gd.getNextNumber();
-		double end = gd.getNextNumber();
-		double step = gd.getNextNumber();
-		if (step == 0.0)
-			// use start & end
-			getModel().setTiltAngles(start, end);
-		else
-			getModel().setTiltAnglesStep(start, step);
-	}
-
-	private void actionPlay() {
-		setPlaying(true);
-		PLAY.getButton().setText(PAUSE.label());
-		while (isPlaying()) {
-			int nextProjection = (getModel().getCurrentProjection() + 1)
-					% (getModel().getNumberOfProjections() + 1);
-			projectionScrollbar.setValue(nextProjection);
-			try {
-				Thread.sleep(50);
-			} catch (InterruptedException ex) {
-			}
-		}
-	}
-
-	private void actionPause() {
-		setPlaying(false);
-		PLAY.getButton().setText(PLAY.label());
-	}
-
-	private void captureDialog() {
+	public void captureDialog() {
 		Window[] windows = Window.getWindows();
 		for (Window w : windows) {
 			String className = w.getClass().toString();
@@ -829,71 +556,78 @@ public class TomoWindow extends ImageWindow implements WindowListener,
 	public void componentMoved(ComponentEvent e) {
 	}
 
-	// This event is called many times as the user resizes the window - it may be better to capture
-	// a propertychange event like "windowresized" (meaning the user released the mouse and finished
-	// resizing. Unluckily, mouse release is not fired while resizing a window) if it exists
+	// This event is called many times as the user resizes the window - it may
+	// be better to capture
+	// a propertychange event like "windowresized" (meaning the user released
+	// the mouse and finished
+	// resizing. Unluckily, mouse release is not fired while resizing a window)
+	// if it exists
 	public void componentResized(ComponentEvent e) {
 		Component c = e.getComponent();
-		// Xmipp_Tomo.debug("componentResized event from " + c.getClass().getName());
-		//		+ "; new size: " + c.getSize().width + ", "
-		//		+ c.getSize().height + " - view size:" + viewPanel.getSize());
+		// Xmipp_Tomo.debug("componentResized event from " +
+		// c.getClass().getName());
+		// + "; new size: " + c.getSize().width + ", "
+		// + c.getSize().height + " - view size:" + viewPanel.getSize());
 		getTimer().stop();
-		//getTimer().setDelay(2000);
+		// getTimer().setDelay(2000);
 		timer.start();
 		resizeView();
 	}
-	
+
 	/**
-	 * Fit the image canvas to the space available in the view, keeping the aspect ratio
+	 * Fit the image canvas to the space available in the view, keeping the
+	 * aspect ratio
 	 */
-	public void resizeView(){
-		if((viewPanel == null) || (getCanvas() == null))
+	public void resizeView() {
+		if ((viewPanel == null) || (getCanvas() == null))
 			return;
-		
-		double factorWidth= viewPanel.getWidth() / getCanvas().getPreferredSize().getWidth();
-		double factorHeight= viewPanel.getHeight() / getCanvas().getPreferredSize().getHeight();
-		double factor=1;
-		
-		if(factorWidth < 1){
-			if(factorHeight < 1)
+
+		double factorWidth = viewPanel.getWidth()
+				/ getCanvas().getPreferredSize().getWidth();
+		double factorHeight = viewPanel.getHeight()
+				/ getCanvas().getPreferredSize().getHeight();
+		double factor = 1;
+
+		if (factorWidth < 1) {
+			if (factorHeight < 1)
 				// apply maximum of both (since both are < 1 )
-				factor=Math.max(factorWidth, factorHeight);
+				factor = Math.max(factorWidth, factorHeight);
 			else
 				factor = factorWidth;
-		}else{
-			if(factorHeight < 1)
-				factor=factorHeight;
+		} else {
+			if (factorHeight < 1)
+				factor = factorHeight;
 			else
 				factor = Math.min(factorWidth, factorHeight);
 		}
-		
+
 		// if size change is minimal or none, don't resize canvas
-		if(Math.abs(factor - 1) < 0.03)
+		if (Math.abs(factor - 1) < 0.03)
 			return;
-		
-		// Xmipp_Tomo.debug("resize: " + factorWidth + "," + factorHeight + ", " + factor );
+
+		// Xmipp_Tomo.debug("resize: " + factorWidth + "," + factorHeight + ", "
+		// + factor );
 		resizeView(factor);
-		
+
 	}
-	
-	public void resizeView(double factor){
+
+	public void resizeView(double factor) {
 		double w = getCanvas().getWidth() * factor;
 		double h = getCanvas().getHeight() * factor;
-		
-		
+
 		// getCanvas().resizeCanvas((int)w, (int)h);
 		/*
-		ImageCanvas canvas = getModel().getImage().getCanvas();
-		getCanvas().setMagnification(factor);
-		canvas.setSourceRect(new Rectangle(0, 0, (int)(w/factor), (int)(h/factor)));
-		canvas.setDrawingSize((int)w, (int)h);
-		realWindow.pack();
-		canvas.repaint(); */
+		 * ImageCanvas canvas = getModel().getImage().getCanvas();
+		 * getCanvas().setMagnification(factor); canvas.setSourceRect(new
+		 * Rectangle(0, 0, (int)(w/factor), (int)(h/factor)));
+		 * canvas.setDrawingSize((int)w, (int)h); realWindow.pack();
+		 * canvas.repaint();
+		 */
 		WindowManager.setTempCurrentImage(getModel().getImage());
 		// Xmipp_Tomo.debug("Set... " + "zoom="+ ((int) (factor * 100)));
-		IJ.run("Set... " , "zoom="+ ((int) (factor * 100)));
+		IJ.run("Set... ", "zoom=" + ((int) (factor * 100)));
 		refreshImageCanvas();
-		
+
 	}
 
 	public void componentShown(ComponentEvent e) {
@@ -994,7 +728,7 @@ public class TomoWindow extends ImageWindow implements WindowListener,
 	// Handle changes in the number of projections (either first load, or reload
 	// prior to saving)
 	public void propertyChange(PropertyChangeEvent event) {
-		Xmipp_Tomo.debug(event.getNewValue().toString());
+		// Xmipp_Tomo.debug(event.getNewValue().toString());
 		if (TomoData.Properties.NUMBER_OF_PROJECTIONS.name().equals(
 				event.getPropertyName()))
 			if (isReloadingFile())
@@ -1005,6 +739,18 @@ public class TomoWindow extends ImageWindow implements WindowListener,
 	}
 
 	/* Getters/ setters --------------------------------------------------- */
+
+	private ImageIcon getIcon(String name) {
+		ImageIcon res = icons.get(name);
+		if (res == null) {
+			java.net.URL imageURL = Xmipp_Tomo.class.getResource(name);
+			if (imageURL != null) {
+				res = new ImageIcon(imageURL);
+				icons.put(name, res);
+			}
+		}
+		return res;
+	}
 
 	/**
 	 * @return the model
@@ -1115,8 +861,8 @@ public class TomoWindow extends ImageWindow implements WindowListener,
 	 * @return the path of the file chosen by the user, or empty string (not
 	 *         null) if the user cancels the dialog
 	 */
-	private String dialogSave() {
-		return XrayImportDialog.dialogSave(getModel().getFilePath(),".mrc");
+	public String dialogSave() {
+		return XrayImportDialog.dialogSave(getModel().getFilePath(), ".mrc");
 	}
 
 	/**
@@ -1127,14 +873,14 @@ public class TomoWindow extends ImageWindow implements WindowListener,
 	 * @return Xmipp_Tomo.ExitValues.CANCEL / YES / NO
 	 */
 	private Xmipp_Tomo.ExitValues dialogYesNoCancel(String title, String message) {
-			return XrayImportDialog.dialogYesNoCancel(title, message);
+		return XrayImportDialog.dialogYesNoCancel(title, message);
 	}
 
 	private void alert(String message) {
 		IJ.error("Xmipp_tomo", message);
 	}
 
-	private void saveFile(TomoData model, String path) {
+	public void saveFile(TomoData model, String path) {
 		setStatus("Saving...");
 		model.setFile(path);
 		new TiltSeriesIO(false).write(model);
@@ -1253,7 +999,7 @@ public class TomoWindow extends ImageWindow implements WindowListener,
 	 * @param reloadingFile
 	 *            the reloadingFile to set
 	 */
-	private void setReloadingFile(boolean reloadingFile) {
+	public void setReloadingFile(boolean reloadingFile) {
 		this.reloadingFile = reloadingFile;
 	}
 
@@ -1268,14 +1014,14 @@ public class TomoWindow extends ImageWindow implements WindowListener,
 	 * @param changeSaved
 	 *            the changeSaved to set
 	 */
-	private void setChangeSaved(boolean changeSaved) {
+	public void setChangeSaved(boolean changeSaved) {
 		this.changeSaved = changeSaved;
 	}
 
 	/**
 	 * @return the playing
 	 */
-	private boolean isPlaying() {
+	public boolean isPlaying() {
 		return playing;
 	}
 
@@ -1283,7 +1029,7 @@ public class TomoWindow extends ImageWindow implements WindowListener,
 	 * @param playing
 	 *            the playing to set
 	 */
-	private void setPlaying(boolean playing) {
+	public void setPlaying(boolean playing) {
 		this.playing = playing;
 	}
 
@@ -1295,35 +1041,65 @@ public class TomoWindow extends ImageWindow implements WindowListener,
 
 	/**
 	 * @return the canvas
-	 
-	public ImageCanvas getCanvas() {
-		return canvas;
-	}*/
+	 * 
+	 *         public ImageCanvas getCanvas() { return canvas; }
+	 */
 
 	/**
 	 * @param canvas
 	 *            the canvas to set
 	 */
 	private void setCanvas(ImageCanvas canvas) {
-		//this.canvas = canvas;
-		ic=canvas;
+		// this.canvas = canvas;
+		ic = canvas;
 	}
 
 	/**
 	 * @return the timer
 	 */
 	private Timer getTimer() {
-		if(timer == null){
-			timer=new Timer(2000, this);
+		if (timer == null) {
+			timer = new Timer(2000, this);
 			timer.setRepeats(false);
 		}
 		return timer;
 	}
 
 	/**
-	 * @param timer the timer to set
+	 * @param timer
+	 *            the timer to set
 	 */
 	private void setTimer(Timer timer) {
 		this.timer = timer;
+	}
+
+	/**
+	 * @return the projectionScrollbar
+	 */
+	public LabelScrollbar getProjectionScrollbar() {
+		return projectionScrollbar;
+	}
+
+	/**
+	 * @param projectionScrollbar
+	 *            the projectionScrollbar to set
+	 */
+	public void setProjectionScrollbar(LabelScrollbar projectionScrollbar) {
+		this.projectionScrollbar = projectionScrollbar;
+	}
+
+	/**
+	 * @return the controller
+	 */
+	public TomoController getController() {
+		return controller;
+	}
+
+	/**
+	 * @param controller
+	 *            the controller to set
+	 */
+	public void setController(TomoController controller) {
+		this.controller = controller;
 	}
 }

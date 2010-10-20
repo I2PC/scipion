@@ -61,7 +61,7 @@ import java.util.Properties;
 public class TiltSeriesIO {
   static {
         // loads "XmippDataJava"
-        System.loadLibrary("XmippDataJava");
+        //System.loadLibrary("XmippDataJava");
     } 
     
 	public static int MRC_HEADER_SIZE = 1024;

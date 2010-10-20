@@ -149,6 +149,9 @@ public class Xmipp_Tomo implements PlugIn{
 		
 		Runtime rt = Runtime.getRuntime();
 		
+		// Xmipp_Tomo.debug(System.getenv("LD_LIBRARY_PATH"));
+		Xmipp_Tomo.debug(cmdline);
+		
 		try{
 			proc = rt.exec(cmdline);
 		}catch (IOException ex){
@@ -208,9 +211,9 @@ public class Xmipp_Tomo implements PlugIn{
 		java.util.Date now = calendar.getTime();
 		String output="" + now.getTime() + " > " + s;
 		if(TESTING == 1){
-			if(tw != null)
+			/*if(tw != null)
 				IJ.write(output);
-			else
+			else */
 				System.err.println(output);
 		}
 	}

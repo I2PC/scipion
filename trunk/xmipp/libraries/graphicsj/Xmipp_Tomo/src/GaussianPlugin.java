@@ -29,7 +29,7 @@ import ij.gui.GenericDialog;
 public class GaussianPlugin extends Plugin {
 	// default value - @see xmipptomo.Plugin.collectParameters, ij.plugin.GaussianBlur
 	private double radius=2.0;
-	public static String COMMAND="Gaussian Blur...";
+	private static String COMMAND="Gaussian Blur...";
 	
 	public String getClassName(){
 		return "ij.plugin.GaussianBlur";
