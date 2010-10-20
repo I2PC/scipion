@@ -886,8 +886,7 @@ class automated_gui_class:
         import tkMessageBox
         self.GuiSave()
         modulename=self.scriptname.replace(".py","")
-        if not '.' in sys.path:
-            sys.path.insert(0,'.')
+        sys.path.insert(0,'.')
         exec "import " + modulename
         if "preconditions" in eval("dir("+modulename+")"):
             exec "ok="+modulename+".preconditions(True)"
