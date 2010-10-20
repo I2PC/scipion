@@ -335,7 +335,7 @@ class preprocess_A_class:
                 self.SFctf.append(ctfName) 
 
             # Perform Phase flipping
-            if (self.DoCtfPhaseFlipping):
+            if self.DoCtfPhaseFlipping:
                 flippedName=self.perform_ctf_phase_flipping(filename,ctfparam,fh_mpi)
                 self.SFflipped.append(flippedName)
 
@@ -368,11 +368,13 @@ class preprocess_A_class:
         else:
             self.log.info(commandFile)     
             os.system(commandFile)     
-        os.remove(commandFile)
+        # COSS os.remove(commandFile)
 
     def writeSelfile(self, selfile, fnOut):
+        if len(selfile)==0:
+            return
         import XmippData
-        MD=XmippData.Metadata()
+        MD=XmippData.MetaData()
         ptr=XmippData.stringP()
         for filename in selfile:
             ptr.assign(filename)
@@ -384,14 +386,14 @@ class preprocess_A_class:
         # Decide name after preprocessing
         (filepath, micrographName) = os.path.split(filename)
         (shortname,extension) = os.path.splitext(micrographName)
-        finalname='down'+str(self.Down)+'_'+shortname
+        finalname=shortname+'/down'+str(self.Down)+'_'+shortname
         if not self.Stddev==-1 or not self.Crop==-1 or not self.Down==1:
-            finalname+=".raw"
+            finalname+="raw"
         else:
-            finalname+="."+extension
+            finalname+=extension
             if not os.path.exists(finalname):
                 command='ln -s '+filename+' '+finalname + "\n"
-                os.write(fh_mpi,"echo '* '," + command)
+                os.write(fh_mpi,"echo * " + command)
                 os.write(fh_mpi,command)
         if not self.DoPreprocess:
             return finalname
@@ -426,20 +428,21 @@ class preprocess_A_class:
                 command+=' -Xstep '+str(self.Down)+' -kernel rectangle '+str(self.Down)+' '+str(self.Down)
 
         # Write the preprocessing command
-        command+="\n"
-        os.write(fh_mpi,"echo '* '," + command)
-        os.write(fh_mpi,command)
+        if not command=="":
+            command+="\n"
+            os.write(fh_mpi,"echo * " + command)
+            os.write(fh_mpi,command)
         return finalname
 
     def perform_ctfestimate_xmipp(self,shortname,filename,fh_mpi):
-        pname=shortname+'/'+shortname+'_input.param'
+        pname=shortname+'/'+shortname+'_estimate_ctf_input.param'
         print '*********************************************************************'
         print '*  Estimate PSD/CTF for micrograph: '+filename
         retval=[]
         
         (filepath, micrographName) = os.path.split(filename)
         (fnRoot,extension) = os.path.splitext(micrographName)
-        retval.append(shortname+'/'+fnRoot+"_PeriodogramAvg.psd")
+        retval.append(shortname+'/'+fnRoot+"_Periodogramavg.psd")
         retval.append(pname)
 
         # prepare parameter file
@@ -457,19 +460,20 @@ class preprocess_A_class:
             paramlist.append('Q0= -'+str(self.AmplitudeContrast)+'\n')
             paramlist.append('min_freq= '+str(self.LowResolCutoff)+'\n')
             paramlist.append('max_freq= '+str(self.HighResolCutoff)+'\n')
-            retval.append(shortname+'/'+fnRoot+".ctfparam")
+            retval.append(shortname+'/'+fnRoot+"_Periodogramavg.ctfparam")
 
         # Perform CTF estimation
         fh=open(pname,"w")
         fh.writelines(paramlist)
         fh.close()
         command='xmipp_ctf_estimate_from_micrograph -i '+pname
+        os.write(fh_mpi,"echo * " + command+"\n")
         os.write(fh_mpi,command+"\n");
         return retval
 
     def perform_ctfestimate_ctffind(self,shortname,filename,fh_mpi):
         # Convert image to MRC
-        command='xmipp_convert_image -i '+filename+' -o '+self.shortname+'/tmp.mrc ; '
+        command='xmipp_convert_image -i '+filename+' -o '+shortname+'/tmp.mrc ; '
 
         # The new line is different if we are running in parallel or not
         theNewLine='\n'
@@ -494,7 +498,7 @@ class preprocess_A_class:
                   str(self.MaxFocus) + ',' + \
                   str(self.StepFocus) +theNewLine
         command+= 'eof'
-        os.write(fh_mpi,"echo '* '," + command)
+        os.write(fh_mpi,"echo * " + command)
         os.write(fh_mpi,command)
 
     def pickup_ctfestimate_ctffind(self,shortname,filename,fh_mpi):
@@ -566,7 +570,8 @@ def preconditions(gui):
 #     
 if __name__ == '__main__':
     # create preprocess_A_class object
-    preconditions(False)
+    if not preconditions(False):
+        sys.exit(1)
     preprocessA=preprocess_A_class(
                  WorkingDir,
                  DoDeleteWorkingDir,
