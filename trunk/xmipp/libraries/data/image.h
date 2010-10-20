@@ -1438,9 +1438,12 @@ private:
         {
             if ((hFile->tif = TIFFOpen(fileName.c_str(), wmChar.c_str())) == NULL)
                 REPORT_ERROR(ERR_IO_NOTOPEN,"rwTIFF: There is a problem opening the TIFF file.");
+            hFile->fimg = NULL;
         }
         else
         {
+            hFile->tif = NULL;
+
             if (ext_name.contains("img") || ext_name.contains("hed"))
             {
                 fileName = fileName.withoutExtension();
@@ -1559,8 +1562,9 @@ private:
 
         //Just clear the header before reading
         MDMainHeader.clear();
-        //Put the file pointer at the begining
-        fseek(fimg, 0, SEEK_SET);
+        //Put the file pointer at the beginning
+        if (fimg != NULL)
+            fseek(fimg, 0, SEEK_SET);
 
         if (ext_name.contains("spi") || ext_name.contains("xmp")  ||
             ext_name.contains("stk") || ext_name.contains("vol"))//mrc stack MUST go BEFORE plain MRC
