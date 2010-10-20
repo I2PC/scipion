@@ -242,3 +242,7 @@ SEARCHENGINE           = YES
 #---------------------------------------------------------------------------
 GENERATE_ECLIPSEHELP = YES
 ECLIPSE_DOC_ID        = com.csic.xmipp
+#---------------------------------------------------------------------------
+# Configuration to run multiple instances of dot in parallel (R >= 1.7.0) (0 = AUTO)
+#---------------------------------------------------------------------------
+DOT_NUM_THREADS = 0
