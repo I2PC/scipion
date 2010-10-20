@@ -86,7 +86,6 @@ void Micrograph::open_micrograph(const FileName &_fn_micrograph)
 {
     clear();
     struct stat info;
-    std::cerr << "mic file name: " << _fn_micrograph<<std::endl;
     // Micrograph name
     fn_micrograph = _fn_micrograph;
     // Look for micrograph dimensions
