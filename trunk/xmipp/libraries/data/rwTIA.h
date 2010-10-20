@@ -225,10 +225,7 @@ int readTIA(int img_select,bool isStack=false)
     MDMainHeader.setValue(MDL_DATATYPE,(int)datatype);
 
     if( dataflag < 0 )
-    {
-        fclose(fimg);
         return 0;
-    }
 
     MD.clear();
     MD.resize(imgEnd - imgStart);
@@ -267,11 +264,6 @@ int readTIA(int img_select,bool isStack=false)
     size_t pad = TIAdataSIZE;
 
     readData(fimg, img_select, datatype, pad);
-
-
-
-    if ( !mmapOn )
-        fclose(fimg);
 
     return(0);
 }

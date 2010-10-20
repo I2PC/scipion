@@ -245,7 +245,8 @@ public:
     /** Constructor with size
      *
      * A blank image (0.0 filled) is created with the given size. Pay attention
-     * to the dimension order: Y and then X.
+     * to the dimension order: Y and then X. If _mmapOn is True then image is allocated
+     * in a temporary file.
      *
      * @code
      * Image I(64,64);
@@ -253,9 +254,9 @@ public:
      */
     Image(int Xdim, int Ydim, int Zdim=1, int Ndim=1,bool _mmapOn=false)
     {
-        mmapOn = _mmapOn;
         clear();
         data.resize(Ndim, Zdim, Ydim, Xdim);
+        data.setMmap(_mmapOn);
         MD.resize(Ndim);
     }
 
@@ -265,11 +266,7 @@ public:
     void clear()
     {
         if (mmapOn)
-        {
-            munmap(data.data-offset,mappedSize);
-            close(mFd);
-            data.data = NULL;
-        }
+            closeMmap();
         else
             data.clear();
 
@@ -285,6 +282,8 @@ public:
         clearHeader();
         replaceNsize=0;
         mmapOn = false;
+        mappedSize = NULL;
+        mFd    = NULL;
     }
 
     /** Clear the header of the image
@@ -385,11 +384,7 @@ public:
 
         fImageHandler* hFile = openFile(name);
         err = _read(name, hFile, readdata, select_img, apply_geo, only_apply_shifts, row, mapData);
-        if(!mapData)//do not close the file if mmap is on
-            //nevertheless file must be close ...
-            //although this is for micrographs usually left a hanfle open is OK
-            //Further more since we use fourier for downsampling...
-            closeFile(hFile);
+        closeFile(hFile);
 
         return err;
     }
@@ -782,10 +777,6 @@ public:
         size_t pagesize  =ZYXSIZE(data)*datatypesize;
         size_t haveread_n=0;
 
-        //Multidimarray mmapOn is priority over image mmapOn
-        if(data.mmapOn)
-            mmapOn = false;
-
         // Flag to know that data is not going to be mapped although mmapOn is true
         if (mmapOn && !checkMmapT(datatype))
         {
@@ -796,6 +787,10 @@ public:
 
         if (mmapOn)
         {
+            // Image mmapOn is not compatible with Multidimarray mmapOn
+            if(data.mmapOn)
+                REPORT_ERROR(ERR_MULTIDIM_DIM,"Image Class::ReadData: mmap option can not be selected simoultanesouslly\
+                             for both Image class and its Multidimarray.");
             if ( NSIZE(data) > 1 )
             {
                 REPORT_ERROR(ERR_MMAP,"Image Class::ReadData: mmap with multiple \
@@ -1389,6 +1384,14 @@ public:
 
 private:
 
+    void closeMmap()
+    {
+        munmap(data.data-offset,mappedSize);
+        close(mFd);
+        data.data = NULL;
+        mappedSize = NULL;
+    }
+
     /** Open file function
       * Open the image file and returns its file hander.
       */
@@ -1509,7 +1512,7 @@ private:
             TIFFClose(tif);
         else
         {
-            if (fclose(fimg) != 0 )
+            if (!mmapOn && fclose(fimg) != 0 )
                 REPORT_ERROR(ERR_IO_NOCLOSED,(std::string)"Can not close image file "+ filename);
 
             if (fhed != NULL &&  fclose(fhed) != 0 )
@@ -1532,6 +1535,10 @@ private:
 
         // Check whether to read the data or only the header
         dataflag = ( readdata ) ? 1 : -1;
+
+        // If Image has been previously used with mmap, then close the previous file
+        if (mappedSize != NULL)
+            closeMmap();
 
         // Check whether to map the data or not
         mmapOn = mapData;

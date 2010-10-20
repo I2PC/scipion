@@ -164,18 +164,8 @@ int readRAW(int img_select,bool isStack=false)
         MD[i-imgStart].setValue(MDL_FLIP,     falseb);
     }
 
-
-    FILE        *fimg;
-    if ( ( fimg = fopen(filename.c_str(), "r") ) == NULL )
-        return(-1);
-
     size_t pad = 0;
     readData(fimg, img_select, datatype, pad);
-
-
-
-    if ( !mmapOn )
-        fclose(fimg);
 
     return(0);
 }
