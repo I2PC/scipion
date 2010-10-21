@@ -76,7 +76,6 @@ public class XmippBrowser implements PlugIn {
             }
         }
 
-        DIR = "/home/juanjo/Desktop/SampleData/Imgs";
         if (DIR != null) {
             frameBrowser = new JFrameBrowser(LABELS.TITLE_MAIN_WINDOW, DIR);
             frameBrowser.setVisible(true);
