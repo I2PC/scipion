@@ -464,7 +464,7 @@ void Micrograph::getLinearTransformatioVal8(double &a, double &b) const
 /* Produce all images ------------------------------------------------------ */
 void Micrograph::produce_all_images(int label, const FileName &fn_root,
                                     int starting_index, const FileName &fn_image, double ang, double tilt,
-                                    double psi)
+                                    double psi, bool rmStack)
 {
     ImageCollection SF(WRITE_APPEND);
     FileName fn_out;
@@ -513,8 +513,10 @@ void Micrograph::produce_all_images(int label, const FileName &fn_root,
     int nmax = ParticleNo();
     FileName fn_aux;
     fn_out          = fn_root;
-    if(exists(fn_out))
+    if(exists(fn_out) && rmStack)
+    {
         unlink(fn_out.c_str());
+    }
     int ii=0;
     for (int n = 0; n < nmax; n++)
         if (coords[n].valid && coords[n].label == label)
