@@ -32,46 +32,67 @@
 #include "widget_psd.h"
 #include "widget_micrograph.h"
 
-void Usage();
-
-int main(int argc, char **argv)
+class ProgMicrographMark: public XmippProgram
 {
+private:
+
+protected:
+    void defineParams()
+    {
+
+        addUsageLine ("Purpose: Mark particles in a micrograph\n");
+
+        addParamsLine("  -i <input_untilted_micrograph>      : File with untilted image");
+        addParamsLine("     alias --untilted;");
+        addParamsLine("  [-t <input_tilted_micrograph>]      : File with tilted image");
+        addParamsLine("     alias --tilted;");
+        addParamsLine("  [--psd <assign_CTF_prm_file>]       : Show the PSDs\n");
+        addParamsLine("  [--ctf <assign_CTF_prm_file>]       : Show the CTF models\n");
+        addParamsLine("  [--auto <model_rootname>]           : For autoselection\n");
+        addParamsLine("  [--autoSelect]                          : Autoselect without user interaction\n");
+        addParamsLine("  [--thr <p=1>]                           : Number of threads for automatic picking\n");
+    }
     FileName fnRaw;
     FileName fnRawTilted;
     FileName fnAutomaticModel;
     //bool     reversed;
     FileName fn_assign_CTF;
-    bool     ctf_mode = false;
-    bool     autoSelect = false;
-    int      numThreads = 1;
+    bool     ctf_mode;
+    bool     autoSelect;
+    int      numThreads;
 
-    // Get input parameters .................................................
-    try
+    void readParams()
     {
-        fnRaw         = getParameter(argc, argv, "-i");
-        fnRawTilted   = getParameter(argc, argv, "-tilted", "");
-        //        reversed      = checkParameter(argc, argv, "-reverse_endian");
-        fn_assign_CTF = getParameter(argc, argv, "-psd", "");
-        if (checkParameter(argc, argv, "-ctf"))
+        ctf_mode   = false;
+        autoSelect = false;
+        // Get input parameters .................................................
+        fnRaw         = getParam( "-i");
+        if(checkParam("--tilted"))
+            fnRawTilted   = getParam("--tilted");
+        else
+            fnRawTilted   ="";
+        if(checkParam("--psd"))
+            fn_assign_CTF = getParam("--psd");
+        else
+            fn_assign_CTF="";
+        if (checkParam("--ctf"))
         {
             ctf_mode = true;
-            fn_assign_CTF = getParameter(argc, argv, "-ctf");
+            fn_assign_CTF = getParam("--ctf");
         }
-        fnAutomaticModel = getParameter(argc, argv, "-auto", "");
-        autoSelect = checkParameter(argc, argv, "-autoSelect");
+        if(checkParam("--auto"))
+            fnAutomaticModel = getParam("--auto");
+        else
+            fnAutomaticModel ="";
+        autoSelect = checkParam("--autoSelect");
         if (fnRawTilted!="" && autoSelect)
             REPORT_ERROR(ERR_VALUE_INCORRECT,"Automatic particle picking cannot be performed on tilt pairs");
-        numThreads = textToInteger(getParameter(argc, argv, "-thr","1"));
+        numThreads = getIntParam("--thr");
     }
-    catch (XmippError XE)
+public:
+    void run()
     {
-        std::cout << XE;
-        Usage();
-        exit(1);
-    }
 
-    try
-    {
         Micrograph m, mTilted;
         FileName fn8bits="", fn8bitsTilted="";
 
@@ -109,7 +130,7 @@ int main(int argc, char **argv)
             //FIXME
             if (mTilted.getDatatypeDetph()!=8)
             {
-                fn8bitsTilted=fnRawTilted+".8bits";
+                fn8bitsTilted=fnRawTilted+".8bits.raw";
                 mTilted.write_as_8_bits(fn8bitsTilted);
                 mTilted.close_micrograph();
                 mTilted.open_micrograph(fn8bitsTilted);
@@ -169,28 +190,24 @@ int main(int argc, char **argv)
             autoPicking->automaticallySelectParticles();
             autoPicking->saveAutoParticles();
         }
+
     }
-    catch (XmippError XE)
+};
+
+int main(int argc, char **argv)
+{
+    try
     {
-        std::cout << XE;
+        ProgMicrographMark program;
+        program.read(argc, argv);
+        program.run();
+
+    }
+    catch (XmippError e)
+    {
+        std::cerr << e.msg <<std::endl;
     }
     return 0;
 }
 
-/* Usage ------------------------------------------------------------------- */
-void Usage()
-{
-    std::cerr << "Purpose: Mark particles in a Raw image\n"
-    << "         There must exist the image and the corresponding .inf file\n"
-    << "\n"
-    << "Usage: mark [options]\n"
-    << "   -i <input raw file>                : File with the image\n"
-    << "  [-tilted <tilted raw file>]         : Image with the tilted pair\n"
-    //              << "  [-reverse_endian]                   : Raw 16-bit file with reversed endian\n"
-    << "  [-psd <assign_CTF_prm_file>]        : Show the PSDs\n"
-    << "  [-ctf <assign_CTF_prm_file>]        : Show the CTF models\n"
-    << "  [-auto <model rootname>]            : For autoselection\n"
-    << "  [-autoSelect]                       : Autoselect without user interaction\n"
-    << "  [-thr <p=1>]                        : Number of threads for automatic picking\n"
-    ;
-}
+
