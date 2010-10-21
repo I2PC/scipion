@@ -263,12 +263,10 @@ int  writeIMAGIC(int img_select=-1, int mode=WRITE_OVERWRITE)
     header->ixlp = Ydim;
 
     header->ifn = Ndim - 1 ;
-    std::cerr << "header->ifn " << header->ifn <<std::endl;
     header->imn = 1;
     int firtIfn=0;
     if(replaceNsize!=0 && mode == WRITE_APPEND)
     {
-    	std::cerr << "inside WRITE APPEND" <<std::endl;
         firtIfn     = replaceNsize;
         header->imn = replaceNsize+1;
         header->ifn = 0;//only important in first header
@@ -351,7 +349,6 @@ int  writeIMAGIC(int img_select=-1, int mode=WRITE_OVERWRITE)
         {   //rewrite firt record
             fseek( fhed, sizeof(int), SEEK_SET);
             fwrite(&firtIfn,SIZEOF_INT,1,fhed);
-            std::cerr << "write size:" << firtIfn <<" " << SIZEOF_INT << " " << sizeof(int)<<std::endl;
         }
         fseek( fhed, 0, SEEK_END);
         fseek( fimg, 0, SEEK_END);
