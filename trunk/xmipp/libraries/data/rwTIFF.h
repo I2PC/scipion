@@ -157,10 +157,9 @@ int readTIFF(int img_select, bool isStack=false)
     printf("DEBUG readTIFF: Reading TIFF file\n");
 #endif
 
-    TIFFSetWarningHandler(NULL); // Switch off warning messages
+//    TIFFSetWarningHandler(NULL); // Switch off warning messages
 
     char*  tif_buf = NULL;
-
     unsigned int    tileWidth;
     unsigned int    tileLength;
     std::vector<TIFFDirHead> dirHead;
@@ -272,6 +271,7 @@ int readTIFF(int img_select, bool isStack=false)
     MDMainHeader.setValue(MDL_SAMPLINGRATEY, yRes);
     MDMainHeader.setValue(MDL_DATATYPE,(int) datatype);
 
+    //Read header only
     if( dataflag < 0 )
         return 0;
 
@@ -473,7 +473,7 @@ int writeTIFF(int img_select, bool isStack=false, int mode=WRITE_OVERWRITE, std:
     /* Set TIFF image properties */
     dhMain.bitsPerSample = (unsigned short int) nBytes*8;
     dhMain.samplesPerPixel = 1;
-    dhMain.imageWidth = Xdim;
+    dhMain.imageWidth  = Xdim;
     dhMain.imageLength = Ydim;
     dhMain.resUnit = RESUNIT_CENTIMETER;
 
@@ -546,7 +546,5 @@ int writeTIFF(int img_select, bool isStack=false, int mode=WRITE_OVERWRITE, std:
 
     _TIFFfree(tif_buf);
     return(0);
-
-
 }
-#endif /* RWTIA_H_ */
+#endif /* RWTIFF_H_ */

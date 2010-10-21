@@ -82,9 +82,10 @@ void FileName::decompose(int &no, std::string &str) const
         no = textToInteger(substr(0,idx));
         str = substr(idx+1,length()-idx);
     }
-    else{
-      no=-1;
-      str = *this;
+    else
+    {
+        no=-1;
+        str = *this;
     }
 }
 
@@ -334,9 +335,10 @@ FileName FileName::getFileFormat() const
 
 FileName FileName::removeFileFormat() const
 {
-    if ( find("#", 0) > -1 )
-        REPORT_ERROR(ERR_IO,"Not implemented for raw data");
-    size_t found=rfind(":");
+    size_t found=rfind("#");
+    if (found!=std::string::npos)
+        return substr(0, found);
+    found=rfind(":");
     if (found!=std::string::npos)
         return substr(0, found);
     return *this;

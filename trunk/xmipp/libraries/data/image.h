@@ -1439,6 +1439,7 @@ private:
 
         if (ext_name.contains("tif"))
         {
+            TIFFSetWarningHandler(NULL); // Switch off warning messages
             if ((hFile->tif = TIFFOpen(fileName.c_str(), wmChar.c_str())) == NULL)
                 REPORT_ERROR(ERR_IO_NOTOPEN,"rwTIFF: There is a problem opening the TIFF file.");
             hFile->fimg = NULL;
