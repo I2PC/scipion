@@ -105,11 +105,9 @@ MaxFocus=100000
 # {section} CTFFIND
 #------------------------------------------------------------------------------------------------
 # Use N. Grigorieffs CTFFIND beside Xmipp?
-""" Use this option to double check the validity of the defoci.
-"""
-DoCtffind=False
 # {file} Location of the CTFFIND executable
-CtffindExec='/gpfs/fs1/bin/ctffind3.exe'
+""" If available, CTFFIND will be used to double check the validity of the defoci """
+CtffindExec='/media/usbdisk/OtherPackages/ctffind/ctf/ctffind3.exe'
 # {expert} Window size
 WinSize=128
 # {expert} Minimum resolution (in norm. freq.)
@@ -187,7 +185,6 @@ class preprocess_A_class:
                  OnlyEstimatePSD,
                  LowResolCutoff,
                  HighResolCutoff,
-                 DoCtffind,
                  MinFocus,
                  MaxFocus,
                  CtffindExec,
@@ -230,7 +227,7 @@ class preprocess_A_class:
         self.HighResolCutoff=HighResolCutoff
         self.MinFocus=MinFocus
         self.MaxFocus=MaxFocus
-        self.DoCtffind=DoCtffind
+        self.DoCtffind=(not CtffindExec=="")
         self.WinSize=WinSize
         self.MinResCTF=MinResCTF
         self.MaxResCTF=MaxResCTF
@@ -331,8 +328,7 @@ class preprocess_A_class:
             ctfparam=self.SFctf[idx]
             # Pickup result from CTFTILT
             if self.DoCtfEstimate and self.DoCtffind:
-                ctfName=self.pickup_ctfestimate_ctffind(shortname,filename,fh_mpi)
-                self.SFctf.append(ctfName) 
+                self.pickup_ctfestimate_ctffind(shortname,filename,fh_mpi)
 
             # Perform Phase flipping
             if self.DoCtfPhaseFlipping:
@@ -402,7 +398,7 @@ class preprocess_A_class:
         iname=filename
         command="";
         if not self.Crop==-1:
-            command+="xmipp_window -i "+iname+" -o "+finalname+" -crop"+str(self.Crop)+" ; "
+            command+="xmipp_window -i "+iname+" -o "+finalname+" -crop "+str(self.Crop)+" ; "
             iname=finalname
         
         # Remove bad pixels
@@ -497,11 +493,12 @@ class preprocess_A_class:
                   str(self.MinFocus) + ',' + \
                   str(self.MaxFocus) + ',' + \
                   str(self.StepFocus) +theNewLine
-        command+= 'eof'
+        command+= 'eof\n'
         os.write(fh_mpi,"echo * " + command)
         os.write(fh_mpi,command)
 
     def pickup_ctfestimate_ctffind(self,shortname,filename,fh_mpi):
+        import XmippData
         # Pick values from ctffind
         fh=open(shortname+'/ctffind.log','r')
         lines=fh.readlines()
@@ -512,33 +509,52 @@ class preprocess_A_class:
         for i in range(len(lines)):
             if not (lines[i].find('Final Values')==-1):
                 words=lines[i].split()
-                DF1=words[0]
-                DF2=words[1]
-                Angle=words[2]
+                DF1=float(words[0])
+                DF2=float(words[1])
+                Angle=float(words[2])
                 break
 
         # Generate Xmipp .ctfparam file:
         (filepath, micrographName) = os.path.split(filename)
         (fnRoot,extension) = os.path.splitext(micrographName)
-        paramname=shortname+'/'+fnRoot+'_ctffind.ctfparam'
+        MD=XmippData.MetaData()
+        MD.setColumnFormat(False)
+        ptr=XmippData.doubleP()
+        
         AngPix = (10000. * self.ScannedPixelSize * self.Down) / self.Magnification
-        paramlist = []
-        paramlist.append('defocusU= '+str(-DF1)+'\n')
-        paramlist.append('defocusV= '+str(-DF2)+'\n')
-        paramlist.append('azimuthal_angle= '+str(Angle)+'\n')
-        paramlist.append('sampling_rate= '+str(AngPix)+'\n')
-        paramlist.append('voltage= '+str(self.Voltage)+'\n')
-        paramlist.append('spherical_aberration= '+str(self.SphericalAberration)+'\n')
-        paramlist.append('Q0= -'+str(self.AmplitudeContrast)+'\n')
-        paramlist.append('K= 1.\n')
-        fh=open(paramname,"w")
-        fh.writelines(paramlist)
-        fh.close()
+        ptr.assign(AngPix)
+        MD.addObject()
+        XmippData.setValueDouble(MD,XmippData.MDL_CTF_SAMPLING_RATE,ptr)
+
+        ptr.assign(self.Voltage)
+        XmippData.setValueDouble(MD,XmippData.MDL_CTF_VOLTAGE,ptr)
+
+        ptr.assign(-DF1)
+        XmippData.setValueDouble(MD,XmippData.MDL_CTF_DEFOCUSU,ptr)
+        
+        ptr.assign(-DF2)
+        XmippData.setValueDouble(MD,XmippData.MDL_CTF_DEFOCUSV,ptr)
+
+        ptr.assign(Angle)
+        XmippData.setValueDouble(MD,XmippData.MDL_CTF_DEFOCUS_ANGLE,ptr)
+
+        ptr.assign(self.SphericalAberration)
+        XmippData.setValueDouble(MD,XmippData.MDL_CTF_CS,ptr)
+
+        ptr.assign(self.AmplitudeContrast)
+        XmippData.setValueDouble(MD,XmippData.MDL_CTF_Q0,ptr)
+
+        ptr.assign(1.0)
+        XmippData.setValueDouble(MD,XmippData.MDL_CTF_K,ptr)
+
+        fnOut=shortname+'/'+fnRoot+'_ctffind.ctfparam'
+        MD.write(XmippData.FileName(fnOut))
 
         # Remove temporary files
-        command+="rm " + self.shortname+'/tmp.mrc'
+        command="rm " + shortname+'/tmp.mrc\n'
         os.write(fh_mpi,"echo '* '," + command)
         os.write(fh_mpi,command)
+        return fnOut
 
     def perform_ctf_phase_flipping(self,filename,ctfparam,fh_mpi):
         (filepath, micrographName) = os.path.split(filename)
@@ -554,7 +570,7 @@ class preprocess_A_class:
 def preconditions(gui):
     retval=True
     # Check ctffind executable
-    if (DoCtffind):
+    if not CtffindExec=="":
         if (not os.path.exists(CtffindExec)):
             message="Cannot find ctffind executable: " + CtffindExec
             if gui:
@@ -594,7 +610,6 @@ if __name__ == '__main__':
                  OnlyEstimatePSD,
                  LowResolCutoff,
                  HighResolCutoff,
-                 DoCtffind,
                  MinFocus,
                  MaxFocus,
                  CtffindExec,
