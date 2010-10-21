@@ -49,7 +49,7 @@ protected:
         addParamsLine("  [--tiltfn <output_stack>]           : Name for tilted images (Stack FileName)");
         addParamsLine("     requires --untiltfn;                                                         ");
 
-        addParamsLine("  --pos <position_file>               : file with particle coordinates");
+        addParamsLine("  [--pos <position_file>]             : file with particle coordinates (NOT for pairs)");
         addParamsLine("  [--down_transform <float=1.>]       : The transformation matrix was determined with this downsampling rate");
 
         addParamsLine("  --Xdim <window_X_dim>               : In pixels");
@@ -61,6 +61,7 @@ protected:
 
         addUsageLine ("Examples:");
         addUsageLine ("   xmipp_micrograph_scissor -i g7107.raw --pos g7107.raw.Common.pos -o kk.mrcs --Xdim 64");
+        addUsageLine ("   xmipp_micrograph_scissor -i g7107.raw -t g7106.raw  --Xdim 64 -o u_.img --tiltfn t_.img");
     }
     FileName fn_micrograph,fn_root;
     FileName fn_tilted, fn_root_tilted;
@@ -76,31 +77,31 @@ protected:
 
     void readParams()
     {
-        fn_micrograph = getParameter(argc, argv, "-i");
-        pair_mode     = checkParameter(argc, argv, "-tilted");
-        fn_root       = getParameter(argc, argv, "--untiltfn");
-        Xdim          = textToInteger(getParameter(argc, argv, "--Xdim"));
-        if (checkParameter(argc, argv, "-Ydim"))
-            Ydim      = textToInteger(getParameter(argc, argv, "--Ydim"));
+        fn_micrograph = getParam  ("-i");
+        pair_mode     = checkParam("--tilted");
+        fn_root       = getParam  ("--untiltfn");
+        Xdim          = getIntParam("--Xdim");
+        if (checkParam("--Ydim"))
+            Ydim      = getIntParam("--Ydim");
         else
             Ydim = Xdim;
 
-        startN               = textToInteger(getParameter(argc, argv, "--start", "1"));
-        compute_inverse      = checkParameter(argc, argv, "--invert");
-        compute_transmitance = checkParameter(argc, argv, "--log");
-        rmStack              = checkParameter(argc, argv, "--rmStack");
+        startN               = getIntParam("--start");
+        compute_inverse      = checkParam("--invert");
+        compute_transmitance = checkParam("--log");
+        rmStack              = checkParam("--rmStack");
 
         if (!pair_mode)
         {
-            fn_pos        = getParameter(argc, argv, "--pos");
-            fn_orig       = getParameter(argc, argv, "--orig", "");
+            fn_pos        = getParam("--ppos");
+            fn_orig       = getParam("--orig", "");
         }
         else
         {
-            fn_root_tilted = getParameter(argc, argv, "--tiltfn");
-            fn_tilted      = getParameter(argc, argv, "--tilted");
+            fn_root_tilted = getParam("--tiltfn");
+            fn_tilted      = getParam("--tilted");
         }
-        down_transform = textToFloat(getParameter(argc, argv, "--down_transform","1"));
+        down_transform = getDoubleParam("--down_transform");
     }
 public:
     void run()
@@ -121,18 +122,15 @@ public:
         }
         else
         {
+            MetaData auxMd;
             // Read angles
             FileName fn_ang = fn_micrograph.withoutExtension();
             fn_ang = fn_ang.addExtension("ang");
-            std::ifstream fh_ang;
-            fh_ang.open(fn_ang.c_str());
-            if (!fh_ang)
-                REPORT_ERROR(ERR_IO_NOTOPEN, (std::string)"Scissor: Cannot open file" + fn_ang);
-            std::string aux;
-            getline(fh_ang, aux);
             double alpha_u, alpha_t, tilt_angle;
-            fh_ang >> alpha_u >> alpha_t >> tilt_angle;
-            fh_ang.close();
+            auxMd.read(fn_ang);
+            auxMd.getValue(MDL_ANGLEPSI,alpha_u);
+            auxMd.getValue(MDL_ANGLEPSI2,alpha_t);
+            auxMd.getValue(MDL_ANGLETILT,tilt_angle);
 
             // Generate the images for the untilted image
             Micrograph m;
@@ -166,7 +164,7 @@ int main(int argc, char **argv)
 {
     try
     {
-    	ProgMicrographScissor program;
+        ProgMicrographScissor program;
         program.read(argc, argv);
         program.run();
 
