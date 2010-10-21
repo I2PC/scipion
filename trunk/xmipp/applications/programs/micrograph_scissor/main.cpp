@@ -23,10 +23,12 @@
  *  e-mail address 'xmipp@cnb.csic.es'
  ***************************************************************************/
 
+#include <data/argsparser.h>
+#include <data/program.h>
 #include <data/micrograph.h>
 #include <data/args.h>
-#ifdef NNNNNN
-class ProgMetadataUtilities: public XmippProgram
+
+class ProgMicrographScissor: public XmippProgram
 {
 private:
 
@@ -35,125 +37,87 @@ protected:
     {
         addUsageLine ("Purpose: Cut the images marked with xmipp_mark\n");
 
-        addParamsLine("  -i <input(untilted) micrograph>     : From which the images will be cutted");
-        addParamsLine(" [--orig <original micrograph>]       : unless this parameter is specified\n");
-        //use to be -root
-        addParamsLine("  -o <output_stack>                   : for the cutted images\n");
-        addParamsLine("  --pos <position file>               : order X,Y\n");
-        //I wonder if next option works, it does need an example ROB
-        addParamsLine("  [--transform < mat-file>]           : transform all coordinates according to this 3x3 matrix\n");
+        addParamsLine("  -i <input_untilted_micrograph>     : From which the untilted images will be cutted");
+        addParamsLine("     alias --untilted;");
+        addParamsLine("  [--orig <original_micrograph>]      : unless this parameter is specified");
+        addParamsLine("  [-t <input_tilted_micrograph>]      : From which the   tilted images will be cutted");
+        addParamsLine("     alias --tilted;");
+
+        addParamsLine("  -o <output_stack>                   : Name for cutted images (stack fileName)");
+        addParamsLine("     alias --untiltfn;");
+
+        addParamsLine("  [--tiltfn <output_stack>]           : Name for tilted images (Stack FileName)");
+        addParamsLine("     requires --untiltfn;                                                         ");
+
+        addParamsLine("  --pos <position_file>               : file with particle coordinates");
+        addParamsLine("  [--down_transform <float=1.>]       : The transformation matrix was determined with this downsampling rate");
+
+        addParamsLine("  --Xdim <window_X_dim>               : In pixels");
+        addParamsLine("  [--Ydim <window_Y_dim>]             : If not given Ydim=Xdim");
+        addParamsLine("  [--start <N=1>]                     : Number of the first image");
+        addParamsLine("  [--invert]                          : Invert contrast");
+        addParamsLine("  [--log]                             : Number of the first image");
+        addParamsLine("  [--rmStack]                         : By default files are added to stack");
 
         addUsageLine ("Examples:");
         addUsageLine ("   xmipp_micrograph_scissor -i g7107.raw --pos g7107.raw.Common.pos -o kk.mrcs --Xdim 64");
-
     }
-};
-void Usage()
-{
-    std::cerr << "Purpose: Cut the images marked with xmipp_mark\n"
-    << "Usage: scissor [options]\n"
-    << "For single images -------------------------\n"
-    << "   -i <input micrograph>      : From which the images will be cutted\n"
-    << "  [-orig <original micrograph>: unless this parameter is specified\n"
-    << "   -root <root name>          : for the cutted images\n"
-    << "   -pos <position file>       : order X,Y\n"
-    << "                                from transmitance\n"
-    << "  [-transform <.mat-file>]    : transform all coordinates according to this 3x3 matrix\n"
-    << "  [-down_transform <int=1>]   : the transformation matrix was determined with this downsampling rate\n"
-    << "  [-alpha <ang>]              : Angle from Y axis to tilt axis\n"
-    << "                                as it comes out from xmipp_mark\n"
-    << "For image pairs ---------------------------\n"
-    << "   -i <untilted micrograph>   : From which the images will be cutted\n"
-    << "   -tilted <tilted micrograph>: From which the images will be cutted\n"
-    << "   -root <root name>          : for the cutted images\n"
-    << "   -root_tilted <root name>   : for the tilted cutted images\n"
-    << "For both ----------------------------------\n"
-    << "   -Xdim <window X dim>       : in pixels\n"
-    << "  [-Ydim <window Y dim>]      : if not given Ydim=Xdim\n"
-    << "  [-start <N=1>]              : Number of the first image\n"
-    << "  [-invert]                   : Invert contrast\n"
-    << "  [-log]                      : Compute optical density\n"
-    ;
-}
-#endif
-void Usage();
-
-int main(int argc, char **argv)
-{
-    FileName fn_orig, fn_micrograph, fn_pos, fn_root, fn_transform;
+    FileName fn_micrograph,fn_root;
     FileName fn_tilted, fn_root_tilted;
-    int      Ydim, Xdim;
+    FileName fn_orig, fn_pos;
     int      startN;
-    bool     reverse_endian;
-    bool     compute_transmitance = false;
-    bool     compute_inverse = false;
-    double   alpha, down_transform;
     bool     pair_mode;
-    Matrix2D<double> Mtransform(3,3);
-    try
+    int      Ydim, Xdim;
+    bool     reverse_endian;
+    bool     compute_transmitance;
+    bool     compute_inverse ;
+    double   down_transform;
+    bool     rmStack;
+
+    void readParams()
     {
         fn_micrograph = getParameter(argc, argv, "-i");
-        pair_mode = checkParameter(argc, argv, "-tilted");
-        fn_root       = getParameter(argc, argv, "-root");
-        Xdim          = textToInteger(getParameter(argc, argv, "-Xdim"));
+        pair_mode     = checkParameter(argc, argv, "-tilted");
+        fn_root       = getParameter(argc, argv, "--untiltfn");
+        Xdim          = textToInteger(getParameter(argc, argv, "--Xdim"));
         if (checkParameter(argc, argv, "-Ydim"))
-            Ydim       = textToInteger(getParameter(argc, argv, "-Ydim"));
+            Ydim      = textToInteger(getParameter(argc, argv, "--Ydim"));
         else
             Ydim = Xdim;
-        startN        = textToInteger(getParameter(argc, argv, "-start", "1"));
-        reverse_endian = checkParameter(argc, argv, "-reverse_endian");
-        compute_inverse = checkParameter(argc, argv, "-invert");
-        compute_transmitance = checkParameter(argc, argv, "-log");
+
+        startN               = textToInteger(getParameter(argc, argv, "--start", "1"));
+        compute_inverse      = checkParameter(argc, argv, "--invert");
+        compute_transmitance = checkParameter(argc, argv, "--log");
+        rmStack              = checkParameter(argc, argv, "--rmStack");
+
         if (!pair_mode)
         {
-            fn_pos        = getParameter(argc, argv, "-pos");
-            fn_orig       = getParameter(argc, argv, "-orig", "");
-            alpha         = textToFloat(getParameter(argc, argv, "-alpha", "0"));
+            fn_pos        = getParameter(argc, argv, "--pos");
+            fn_orig       = getParameter(argc, argv, "--orig", "");
         }
         else
         {
-            fn_root_tilted = getParameter(argc, argv, "-root_tilted");
-            fn_tilted     = getParameter(argc, argv, "-tilted");
+            fn_root_tilted = getParameter(argc, argv, "--tiltfn");
+            fn_tilted      = getParameter(argc, argv, "--tilted");
         }
-        fn_transform = getParameter(argc, argv, "-transform","");
-        down_transform = textToFloat(getParameter(argc, argv, "-down_transform","1"));
+        down_transform = textToFloat(getParameter(argc, argv, "--down_transform","1"));
     }
-    catch (XmippError XE)
+public:
+    void run()
     {
-        std::cout << XE;
-        Usage();
-        exit(1);
-    }
-    try
-    {
+
         if (!pair_mode)
         {
             Micrograph m;
             m.open_micrograph(fn_micrograph);
             m.set_window_size(Xdim, Ydim);
             m.read_coordinates(0, fn_pos);
-            if (fn_transform!="")
-            {
-                if (down_transform != 1.)
-                    m.scale_coordinates(1./down_transform);
-
-                MetaData MD;
-                MD.read(fn_transform);
-                std::vector<double> myVector;
-                myVector.resize(9);
-                std::cerr << "before " << fn_transform<<std::endl;
-                MD.getValue(MDL_TRANSFORMATIONMTRIX,myVector,0);
-                copy( myVector.begin(), myVector.end(), Mtransform.mdata);
-                Mtransform.copyFromVector(myVector,Mtransform.mdimx,Mtransform.mdimy);
-                m.transform_coordinates(Mtransform);
-                std::cerr << Mtransform <<std::endl;
-                if (down_transform != 1.)
-                    m.scale_coordinates(down_transform);
-            }
+            if (down_transform != 1.)
+                m.scale_coordinates(1./down_transform);
             m.add_label("");
             m.set_transmitance_flag(compute_transmitance);
             m.set_inverse_flag(compute_inverse);
-            m.produce_all_images(0, fn_root, startN, fn_orig, alpha);
+            m.produce_all_images(0, fn_root, startN, fn_orig, 0.,0.,0., rmStack);
         }
         else
         {
@@ -178,7 +142,7 @@ int main(int argc, char **argv)
             m.add_label("");
             m.set_transmitance_flag(compute_transmitance);
             m.set_inverse_flag(compute_inverse);
-            m.produce_all_images(0, fn_root, startN, "", alpha_u);
+            m.produce_all_images(0, fn_root, startN, "", alpha_u,0.,0.,rmStack);
             m.close_micrograph();
 
             // Generate the images for the tilted image
@@ -189,41 +153,29 @@ int main(int argc, char **argv)
             mt.add_label("");
             mt.set_transmitance_flag(compute_transmitance);
             mt.set_inverse_flag(compute_inverse);
-            mt.produce_all_images(0, fn_root_tilted, startN, "", 0., tilt_angle, alpha_t);
+            mt.produce_all_images(0, fn_root_tilted, startN, "", 0., tilt_angle, alpha_t, rmStack);
             mt.close_micrograph();
         }
     }
-    catch (XmippError XE)
-    {
-        std::cout << XE;
-    }
-}
-void Usage()
+};
+
+//#endif
+void Usage();
+
+int main(int argc, char **argv)
 {
-    std::cerr << "Purpose: Cut the images marked with xmipp_mark\n"
-    << "Usage: scissor [options]\n"
-    << "For single images -------------------------\n"
-    << "   -i <input micrograph>      : From which the images will be cutted\n"
-    << "  [-orig <original micrograph>: unless this parameter is specified\n"
-    << "   -root <root name>          : for the cutted images\n"
-    << "   -pos <position file>       : order X,Y\n"
-    << "                                from transmitance\n"
-    << "  [-transform <.mat-file>]    : transform all coordinates according to this 3x3 matrix\n"
-    << "  [-down_transform <int=1>]   : the transformation matrix was determined with this downsampling rate\n"
-    << "  [-alpha <ang>]              : Angle from Y axis to tilt axis\n"
-    << "                                as it comes out from xmipp_mark\n"
-    << "For image pairs ---------------------------\n"
-    << "   -i <untilted micrograph>   : From which the images will be cutted\n"
-    << "   -tilted <tilted micrograph>: From which the images will be cutted\n"
-    << "   -root <root name>          : for the cutted images\n"
-    << "   -root_tilted <root name>   : for the tilted cutted images\n"
-    << "For both ----------------------------------\n"
-    << "   -Xdim <window X dim>       : in pixels\n"
-    << "  [-Ydim <window Y dim>]      : if not given Ydim=Xdim\n"
-    << "  [-start <N=1>]              : Number of the first image\n"
-    << "  [-invert]                   : Invert contrast\n"
-    << "  [-log]                      : Compute optical density\n"
-    ;
+    try
+    {
+    	ProgMicrographScissor program;
+        program.read(argc, argv);
+        program.run();
+
+    }
+    catch (XmippError e)
+    {
+        std::cerr << e.msg <<std::endl;
+    }
+
 }
 
 
