@@ -3,7 +3,6 @@
 # General script for Xmipp-based pre-processing of micrographs: 
 #  - downsampling
 #  - power spectral density (PSD) and CTF estimation on the micrograph
-#  - CTF phase flipping on the micrograph
 #
 # For each micrograph given, this script will perform 
 # the requested operations below.
@@ -122,19 +121,7 @@ MaxResCTF=0.35
 """ Step size for defocus search (in Angstrom)
 """
 StepFocus=500
-#------------------------------------------------------------------------------------------------
-# {section} CTF phase flipping
-#------------------------------------------------------------------------------------------------
-# Perform CTF phase flipping on the micrographs?
-""" The phase-flipped micrographs will be saved with a different format (spider) than the original raw-format.
-"""
-DoCtfPhaseFlipping=False
-#------------------------------------------------------------------------------------------------
-# {expert} Analysis of results
-""" This script serves only for GUI-assisted visualization of the results
-"""
-AnalysisScript='visualize_preprocess_micrographs.py'
-#
+
 #------------------------------------------------------------------------------------------------
 # {section} Parallelization issues
 #------------------------------------------------------------------------------------------------
@@ -154,6 +141,12 @@ NumberOfMpiProcesses=3
     Or read: http://xmipp.cnb.csic.es/twiki/bin/view/Xmipp/ParallelPage. The following values are available: 
 """
 SystemFlavour=''
+
+#------------------------------------------------------------------------------------------------
+# {expert} Analysis of results
+""" This script serves only for GUI-assisted visualization of the results
+"""
+AnalysisScript='visualize_preprocess_micrographs.py'
 
 #------------------------------------------------------------------------------------------------
 #------------------------------------------------------------------------------------------------
@@ -192,7 +185,6 @@ class preprocess_A_class:
                  MinResCTF,
                  MaxResCTF,
                  StepFocus,
-                 DoCtfPhaseFlipping,
                  DoParallel,
                  NumberOfMpiProcesses,
                  SystemFlavour
@@ -232,7 +224,6 @@ class preprocess_A_class:
         self.MinResCTF=MinResCTF
         self.MaxResCTF=MaxResCTF
         self.StepFocus=StepFocus
-        self.DoCtfPhaseFlipping=DoCtfPhaseFlipping
         self._MySystemFlavour=SystemFlavour
         self._DoParallel=DoParallel
         self._MyNumberOfMpiProcesses=NumberOfMpiProcesses
@@ -279,7 +270,6 @@ class preprocess_A_class:
         self.SFctf = []
         self.SFmicrograph = []
         self.SFshort = []
-        self.SFflipped = []
 
         fh_mpi  = os.open(self.xmpi_run_file+ '_1.sh',os.O_WRONLY|os.O_TRUNC|os.O_CREAT, 0700)
         # Preprocessing
@@ -320,7 +310,7 @@ class preprocess_A_class:
         os.close(fh_mpi)
         self.launchCommandFile(xmpi_run_file + '_1.sh')
         
-        # Pickup results from CTFFIND and Phase flip
+        # Pickup results from CTFFIND
         fh_mpi  = os.open(self.xmpi_run_file+ '_2.sh',os.O_WRONLY|os.O_TRUNC|os.O_CREAT, 0700)
         idx=0;
         for filename in self.SFmicrograph:
@@ -330,15 +320,10 @@ class preprocess_A_class:
             if self.DoCtfEstimate and self.DoCtffind:
                 self.pickup_ctfestimate_ctffind(shortname,filename,fh_mpi)
 
-            # Perform Phase flipping
-            if self.DoCtfPhaseFlipping:
-                flippedName=self.perform_ctf_phase_flipping(filename,ctfparam,fh_mpi)
-                self.SFflipped.append(flippedName)
-
             os.write(fh_mpi,"\n");
             idx+=1
 
-        # Launch Pickup results and Phase flipping
+        # Launch Pickup results
         os.close(fh_mpi)
         self.launchCommandFile(xmpi_run_file + '_2.sh')
         
@@ -347,7 +332,6 @@ class preprocess_A_class:
         self.writeSelfile(self.SFpsd,        self.WorkingDir+"/"+self.RootName+"_psds.sel")
         self.writeSelfile(self.SFinputparams,self.WorkingDir+"/"+self.RootName+"_ctfinputparams.sel")
         self.writeSelfile(self.SFctf,        self.WorkingDir+"/"+self.RootName+"_ctfs.sel")
-        self.writeSelfile(self.SFflipped,    self.WorkingDir+"/"+self.RootName+"_flipped.sel")
 
         message=" Done pre-processing of micrographs"
         print '* ',message
@@ -384,7 +368,7 @@ class preprocess_A_class:
         (shortname,extension) = os.path.splitext(micrographName)
         finalname=shortname+'/down'+str(self.Down)+'_'+shortname
         if not self.Stddev==-1 or not self.Crop==-1 or not self.Down==1:
-            finalname+="raw"
+            finalname+=".spi"
         else:
             finalname+=extension
             if not os.path.exists(finalname):
@@ -403,18 +387,15 @@ class preprocess_A_class:
         
         # Remove bad pixels
         if not self.Stddev==-1:
-            command+="xmipp_filter -i "+iname+" -stddev "+str(self.Stddev)
+            command+="xmipp_filter -i "+iname+" -stdfilter "+str(self.Stddev)
             if not iname==finalname:
                 command+=" -o "+finalname
-                iname=finalname
             command+=" ; "
-
+        
         # Downsample
         if not self.Down==1:
-            command+="xmipp_micrograph_downsample -i "+iname+" --output_bits 32 "
-            if not iname==finalname:
-                command+=" -o "+finalname
-                iname=finalname
+            command+="xmipp_micrograph_downsample -i "+iname+" -o "+shortname+"/tmp.spi "+\
+                     "--output_bits 32 "
             if (self.DownKernel=='Fourier'):
                 scale = 1./self.Down
                 command+=' -fourier '+str(scale)
@@ -422,7 +403,8 @@ class preprocess_A_class:
                 command+=' -Xstep '+str(self.Down)+' -kernel sinc 0.02 0.1'
             elif (self.DownKernel=='Rectangle'):
                 command+=' -Xstep '+str(self.Down)+' -kernel rectangle '+str(self.Down)+' '+str(self.Down)
-
+            command+=" ; rm -f "+finalname+" ; mv -i "+shortname+"/tmp.spi "+finalname
+        
         # Write the preprocessing command
         if not command=="":
             command+="\n"
@@ -556,16 +538,6 @@ class preprocess_A_class:
         os.write(fh_mpi,command)
         return fnOut
 
-    def perform_ctf_phase_flipping(self,filename,ctfparam,fh_mpi):
-        (filepath, micrographName) = os.path.split(filename)
-        (fnRoot,extension) = os.path.splitext(micrographName)
-        outputName=fnRoot+'_flipped.xmp'
-        fnOut= 'xmipp_micrograph_phase_flipping -i   ' + filename + \
-                 ' -o   ' + fnOut+' -ctf ' + ctfparam 
-        os.write(fh_mpi,"echo '* '," + command)
-        os.write(fh_mpi,command)
-        return fnOut
-
 # Preconditions
 def preconditions(gui):
     retval=True
@@ -617,7 +589,6 @@ if __name__ == '__main__':
                  MinResCTF,
                  MaxResCTF,
                  StepFocus,
-                 DoCtfPhaseFlipping,
                  DoParallel,
                  NumberOfMpiProcesses,
                  SystemFlavour)
