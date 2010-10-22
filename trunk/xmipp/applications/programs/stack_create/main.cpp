@@ -31,10 +31,11 @@
 class ProgStackCreate: public XmippMetadataProgram
 {
 protected:
-    bool write_sel;
+    bool write_sel, randomize, replace;
     String case_type;
     FileName stackOut;
     ImageCollection *collection;
+    int mode;
 
     void defineParams()
     {
@@ -43,20 +44,31 @@ protected:
         addParamsLine(" [--write_sel <selfile>] : Also produce a new selfile with the images of the stack.");
         addParamsLine(" [--case <case_type> ] : Also produce a new selfile with the images of the stack.");
         addParamsLine(" where <case_type> stack stackc normal");
+        addParamsLine(" [--randomize ] : Randomize input metadata.");
+        addParamsLine(" [--replace ] : Replace images on stack");
     }
 
     void readParams()
     {
         XmippMetadataProgram::readParams();
         stackOut = fn_out;
+
+        randomize = checkParam("--randomize");
+        replace = checkParam("--replace");
+
         if (write_sel = checkParam("--write_sel"))
             fn_out = getParam("--write_sel");
+
         case_type = getParam("--case");
+
+        mode = replace ? WRITE_REPLACE : WRITE_APPEND;
+
         if (case_type == "stackc")
         {
-            collection = new ImageCollection(mdIn);
+            collection = new ImageCollection(mdIn, mode);
             std::cout << "using collection......" << std::endl;
         }
+
 
     }
 
@@ -65,29 +77,46 @@ protected:
         XmippMetadataProgram::show();
     }
 
+    void preProcess()
+    {
+        if (randomize)
+        {
+            MetaData mdAux(mdIn);
+            mdIn.randomize(mdAux);
+        }
+    }
 
     void processImage()
     {
         static int counter = 0;
-        static int mode = WRITE_APPEND;//(counter == 1) ? WRITE_OVERWRITE : WRITE_APPEND;
+        std::cerr << "================ IMAGE " << (counter + 1) << "=====" << std::endl;
         if (case_type == "stackc")
         {
             collection->readImage(img, fnImg);
-            collection->writeImage(img, stackOut, counter, true, mode);
+
+            collection->writeImage(img, stackOut, counter, true);
         }
         else if(case_type == "stack")
         {
+            std::cerr << "-------------> Reading image" <<std::endl;
             img.read(fnImg);
+            //if (replace)
+            {
+
+                FileName fn;
+                fn.compose("test", counter+1, "xmp");
+                std::cerr << "-------------> Saving temp image" << fn <<std::endl;
+                img.write(fn);
+            }
+            std::cerr << "-------------> Writing image to Stack" <<std::endl;
             img.write(stackOut, counter, true, mode);
         }
         else
         {
-          img.read(fnImg);
-          img.write(fnImg+"new");
+            img.read(fnImg);
+            img.write(fnImg+"new");
         }
         //Append image to the newly created stack
-
-
         if (write_sel)
         {
             mdOut.addObject();

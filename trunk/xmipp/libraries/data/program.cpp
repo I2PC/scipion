@@ -81,12 +81,6 @@ void XmippProgram::writeToDB(const FileName &dbName)
     db.beginTrans();
     db.insertProgram(&progData);
     db.commitTrans();
-    //progData.description =
-    //FILE * dbFile = fopen(dbName.c_str(), "w+");
-    //    std::ofstream fileOut(dbName.c_str());
-    //    ConsolePrinter cp(fileOut);
-    //    cp.printProgram(*progDef, 2);
-    //    exit(0);
 }
 
 XmippProgram::XmippProgram()
