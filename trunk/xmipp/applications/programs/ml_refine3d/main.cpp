@@ -27,9 +27,9 @@
 
 int main(int argc, char **argv)
 {
-    int                         c, volno, converged = 0, argc2 = 0;
-    char                        **argv2=NULL;
-    Prog_Refine3d_prm           prm;
+    int                         c, volno, converged = 0, argc2 = 0, argc3=0;
+    char                        **argv2=NULL, **argv3=NULL, *copy=NULL;
+    ProgRefine3D           prm;
     ProgML2D          ML2D_prm(true);
     FileName                    fnt;
 
@@ -45,24 +45,34 @@ int main(int argc, char **argv)
         prm.produceSideInfo();
         prm.show();
         // Write starting volume(s) to disc with correct name for iteration loop
-        prm.remake_SFvol(prm.istart - 1, true);
+        prm.remakeSFvol(prm.istart - 1, true);
 
         // Read MLalign2D-stuff
-        ML2D_prm.read(argc2, argv2);
+
+        std::stringstream ss;
+        ss << "-i " << prm.fn_sel << " -o " << prm.fn_root << " -fast -mirror -thr 2 -save_memB -ref " << prm.fn_root << "_lib.xmd";
+        std::cerr << "Starting ml2d with options: " << std::endl;
+        std::cerr << ss.str();
+        generateCommandLine(ss.str(), argc3, argv3, copy);
+        ML2D_prm.read(argc3, argv3);
         if (!checkParameter(argc2, argv2, "-psi_step"))
             ML2D_prm.psi_step = prm.angular;
-        ML2D_prm.fn_root = prm.fn_root;
-        ML2D_prm.fast_mode = true;
-        ML2D_prm.do_mirror = true;
-        ML2D_prm.save_mem2 = true;
-        ML2D_prm.fn_ref = prm.fn_root + "_lib.xmd";
+//        ML2D_prm.fn_img = prm.fn_sel;
+//        ML2D_prm.threads = 2;//FIXME: read number of threads from params
+//        ML2D_prm.fn_root = prm.fn_root;
+//        ML2D_prm.fast_mode = true;
+//        ML2D_prm.do_mirror = true;
+//        ML2D_prm.save_mem2 = true;
+//        ML2D_prm.fn_ref = prm.fn_root + "_lib.xmd";
         // Project volume and read lots of stuff into memory
-        prm.project_reference_volume(ML2D_prm.MDref);
+        prm.projectReferenceVolume(ML2D_prm.MDref);
         ML2D_prm.produceSideInfo();
         ML2D_prm.produceSideInfo2();
         prm.Nvols *= ML2D_prm.factor_nref;
         ML2D_prm.Iold.clear(); // To save memory
         ML2D_prm.createThreads();
+
+        std::cerr << "After creating threads..........." <<std::endl;
 
     }
     catch (XmippError XE)
@@ -90,7 +100,7 @@ int main(int argc, char **argv)
                 // Project volumes
                 if (ML2D_prm.iter > ML2D_prm.istart || ML2D_prm.current_block > 0)
                 {
-                    prm.project_reference_volume(ML2D_prm.MDref);
+                    prm.projectReferenceVolume(ML2D_prm.MDref);
                     c = 0;
                     // Read new references from disc (I could just as well keep them in memory, maybe...)
                     FOR_ALL_OBJECTS_IN_METADATA(ML2D_prm.MDref)
@@ -121,27 +131,30 @@ int main(int argc, char **argv)
 
                 // Update the reference volume selection file
                 // and post-process the volumes
-                prm.remake_SFvol(ML2D_prm.iter, false, false);
-                prm.post_process_volumes(argc2, argv2);
+                prm.remakeSFvol(ML2D_prm.iter, false, false);
+                prm.postProcessVolumes(argc2, argv2);
 
             } // end loop blocks
 
+            //FIXME: Print model only for debug
+            ML2D_prm.model.print();
+
             // Check convergence
-            converged = (prm.check_convergence(ML2D_prm.iter)) ? 1 :0;
+            converged = (prm.checkConvergence(ML2D_prm.iter)) ? 1 :0;
 
             // Write output ML2D files
             ML2D_prm.addPartialDocfileData(ML2D_prm.docfiledata, ML2D_prm.myFirstImg, ML2D_prm.myLastImg);
             ML2D_prm.writeOutputFiles(ML2D_prm.model, OUT_IMGS);
-            prm.concatenate_selfiles(ML2D_prm.iter);
+            prm.concatenateSelfiles(ML2D_prm.iter);
 
         } // end loop iterations
 
         if (prm.verb > 0)
         {
         	if (converged)
-            	std::cerr << "--> Optimization converged!" << std::endl;
+            	std::cout << "--> Optimization converged!" << std::endl;
         	else
-                std::cerr << "--> Optimization was stopped before convergence was reached!" << std::endl;
+                std::cout << "--> Optimization was stopped before convergence was reached!" << std::endl;
         }
 
         // Write converged output ML2D files
@@ -151,7 +164,7 @@ int main(int argc, char **argv)
     }
     catch (XmippError XE)
     {
-        std::cout << XE;
+        std::cerr << XE;
         prm.usage();
         exit(0);
     }

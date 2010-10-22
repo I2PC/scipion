@@ -49,7 +49,7 @@ int main(int argc, char **argv)
     FileName                    fn_tmp;
     MetaData                     SFo;
 
-    Prog_Refine3d_prm           prm;
+    ProgRefine3D           prm;
     Prog_MLFalign2D_prm         ML2D_prm;
 
     // Set to true for MLF!
@@ -73,10 +73,10 @@ int main(int argc, char **argv)
         if (rank == 0)
         {
             prm.show();
-            prm.remake_SFvol(prm.istart - 1, true, false);
+            prm.remakeSFvol(prm.istart - 1, true, false);
         }
         else
-            prm.remake_SFvol(prm.istart - 1, false, false);
+            prm.remakeSFvol(prm.istart - 1, false, false);
         MPI_Barrier(MPI_COMM_WORLD);
 
         // Read and set general MLalign2D-stuff
@@ -93,7 +93,7 @@ int main(int argc, char **argv)
         ML2D_prm.fn_ref = prm.fn_root + "_lib.xmd";
 
         // Project the reference volume
-        prm.project_reference_volume(ML2D_prm.MDref, rank, size);
+        prm.projectReferenceVolume(ML2D_prm.MDref, rank, size);
         MPI_Barrier(MPI_COMM_WORLD);
 
         // All nodes produce general side-info
@@ -262,8 +262,8 @@ int main(int argc, char **argv)
 
                 // Output all intermediate files
                 ML2D_prm.writeOutputFiles(iter, sumw_allrefs, LL, sumcorr, conv);
-                prm.concatenate_selfiles(iter);
-                prm.make_noise_images(ML2D_prm.Iref);
+                prm.concatenateSelfiles(iter);
+                prm.makeNoiseImages(ML2D_prm.Iref);
             }
             MPI_Barrier(MPI_COMM_WORLD);
 
@@ -286,14 +286,14 @@ int main(int argc, char **argv)
             {
 
                 // Solvent flattening and/or symmetrizing (if requested)
-                prm.remake_SFvol(iter, false, true);
-                prm.post_process_volumes(argc2, argv2);
+                prm.remakeSFvol(iter, false, true);
+                prm.postProcessVolumes(argc2, argv2);
 
                 // Calculate 3D-SSNR
-                prm.calculate_3DSSNR(spectral_signal, iter);
+                prm.calculate3DSSNR(spectral_signal, iter);
 
                 // Check convergence
-                if (prm.check_convergence(iter))
+                if (prm.checkConvergence(iter))
                 {
                     converged = 1;
                     if (prm.verb > 0)
@@ -308,13 +308,13 @@ int main(int argc, char **argv)
                       MPI_DOUBLE, 0, MPI_COMM_WORLD);
 
             // Update filenames in SFvol (now without noise volumes!)
-            prm.remake_SFvol(iter, false, false);
+            prm.remakeSFvol(iter, false, false);
             ML2D_prm.updateWienerFilters(spectral_signal, sumw_defocus, iter);
 
             if (!converged && iter + 1 <= prm.Niter)
             {
                 // All nodes again: project and read new references from disc
-                prm.project_reference_volume(ML2D_prm.MDref, rank, size);
+                prm.projectReferenceVolume(ML2D_prm.MDref, rank, size);
                 MPI_Barrier(MPI_COMM_WORLD);
                 FileName fn_img;
                 int c = 0;

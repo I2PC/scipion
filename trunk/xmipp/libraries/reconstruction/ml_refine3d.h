@@ -54,7 +54,7 @@
    @ingroup ReconsLibrary */
 //@{
 /** Refine3d parameters. */
-class Prog_Refine3d_prm
+class ProgRefine3D
 {
 
 public:
@@ -104,6 +104,9 @@ public:
     // Number of reference projections per 3D model
     int nr_projections;
 
+private:
+    ///Helper function to show to screan and file history
+    void showToStream(std::ostream &out);
 
 public:
 
@@ -126,29 +129,29 @@ public:
     void produceSideInfo(int rank = 0);
 
     /// Project the reference volume in evenly sampled directions
-    void project_reference_volume(MetaData &SFlib, int rank = 0, int size = 1) ;
+    void projectReferenceVolume(MetaData &SFlib, int rank = 0, int size = 1) ;
 
     /// (For mpi-version only:) calculate noise averages and write to disc
-    void make_noise_images(std::vector<Image<double>  > &Iref) ;
+    void makeNoiseImages(std::vector<Image<double>  > &Iref) ;
 
     /// reconstruction by (weighted ART) or Fourier interpolation
     void reconstruction(int argc, char **argv,
                         int iter, int volno, int noise = 0);
 
     /// Calculate 3D SSNR according to Unser ea. (2005)
-    void calculate_3DSSNR(MultidimArray<double> &spectral_signal, int iter);
+    void calculate3DSSNR(MultidimArray<double> &spectral_signal, int iter);
 
     /// After reconstruction update reference volume selfile
-    void remake_SFvol(int iter, bool rewrite = false, bool include_noise = false) ;
+    void remakeSFvol(int iter, bool rewrite = false, bool include_noise = false) ;
 
     /// Merge MLalign2D classification selfiles into volume classes
-    void concatenate_selfiles(int iter);
+    void concatenateSelfiles(int iter);
 
     /// Maksing, filtering etc. of the volume
-    void post_process_volumes(int argc, char **argv) ;
+    void postProcessVolumes(int argc, char **argv) ;
 
     /// Convergency check
-    bool check_convergence(int iter) ;
+    bool checkConvergence(int iter) ;
 
 };
 //@}

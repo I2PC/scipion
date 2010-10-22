@@ -96,14 +96,14 @@ void ProgML2D::readParams()
     FileName restart_imgmd, restart_refmd;
     int restart_iter, restart_seed;
 
-    if (checkParam("-restart"))
+    if (!do_ML3D  && checkParam("-restart"))
     {
         //TODO-------- Think later -----------
         do_restart = true;
         MetaData MDrestart;
         char *copy  = NULL;
 
-        MDrestart.read(getParameter(argc, argv, "-restart"));
+        MDrestart.read(getParam("-restart"));
         cline = MDrestart.getComment();
         MDrestart.getValue(MDL_SIGMANOISE, restart_noise);
         MDrestart.getValue(MDL_SIGMAOFFSET, restart_offset);
@@ -129,7 +129,7 @@ void ProgML2D::readParams()
     fn_root = getParam("-o");
     psi_step = getDoubleParam("-psi_step");
     Niter = getIntParam("-iter");
-    istart = getIntParam("-istart");
+    istart = (do_ML3D) ? 1 : getIntParam("-istart");
     model.sigma_noise = getDoubleParam("-noise");
     model.sigma_offset = getDoubleParam("-offset");
     do_mirror = checkParam("-mirror");
@@ -196,140 +196,146 @@ void ProgML2D::show()
         // To screen
         if (!do_ML3D)
         {
-            std::cerr
+            std::cout
             << " -----------------------------------------------------------------"
             << std::endl;
-            std::cerr
+            std::cout
             << " | Read more about this program in the following publications:   |"
             << std::endl;
-            std::cerr
+            std::cout
             << " |  Scheres ea. (2005) J.Mol.Biol. 348(1), 139-49                |"
             << std::endl;
-            std::cerr
+            std::cout
             << " |  Scheres ea. (2005) Bioinform. 21(suppl.2), ii243-4   (-fast) |"
             << std::endl;
-            std::cerr
+            std::cout
             << " |                                                               |"
             << std::endl;
-            std::cerr
+            std::cout
             << " |  *** Please cite them if this program is of use to you! ***   |"
             << std::endl;
-            std::cerr
+            std::cout
             << " -----------------------------------------------------------------"
             << std::endl;
         }
 
-        std::cerr << "--> Maximum-likelihood multi-reference refinement "
+        std::cout << "--> Maximum-likelihood multi-reference refinement "
         << std::endl;
-        std::cerr << "  Input images            : " << fn_img << " ("
+        std::cout << "  Input images            : " << fn_img << " ("
         << nr_images_global << ")" << std::endl;
 
         if (fn_ref != "")
-            std::cerr << "  Reference image(s)      : " << fn_ref << std::endl;
+            std::cout << "  Reference image(s)      : " << fn_ref << std::endl;
         else
-            std::cerr << "  Number of references:   : " << model.n_ref * factor_nref << std::endl;
+            std::cout << "  Number of references:   : " << model.n_ref * factor_nref << std::endl;
 
-        std::cerr << "  Output rootname         : " << fn_root << std::endl;
+        std::cout << "  Output rootname         : " << fn_root << std::endl;
 
-        std::cerr << "  Stopping criterium      : " << eps << std::endl;
+        std::cout << "  Stopping criterium      : " << eps << std::endl;
 
-        std::cerr << "  initial sigma noise     : " << model.sigma_noise
+        std::cout << "  initial sigma noise     : " << model.sigma_noise
         << std::endl;
 
-        std::cerr << "  initial sigma offset    : " << model.sigma_offset
+        std::cout << "  initial sigma offset    : " << model.sigma_offset
         << std::endl;
 
-        std::cerr << "  Psi sampling interval   : " << psi_step << std::endl;
+        std::cout << "  Psi sampling interval   : " << psi_step << std::endl;
 
         if (do_mirror)
-            std::cerr << "  Check mirrors           : true" << std::endl;
+            std::cout << "  Check mirrors           : true" << std::endl;
         else
-            std::cerr << "  Check mirrors           : false" << std::endl;
+            std::cout << "  Check mirrors           : false" << std::endl;
 
         if (fn_frac != "")
-            std::cerr << "  Initial model fractions : "
+            std::cout << "  Initial model fractions : "
             << fn_frac << std::endl;
 
         if (fast_mode)
         {
-            std::cerr
+            std::cout
             << "  -> Use fast, reduced search-space approach with C = "
             << C_fast << std::endl;
 
             if (zero_offsets)
-                std::cerr
+                std::cout
                 << "    + Start from all-zero translations" << std::endl;
         }
 
         if (search_rot < 180.)
-            std::cerr
+            std::cout
             << "    + Limit orientational search to +/- " << search_rot
             << " degrees" << std::endl;
 
         if (save_mem1)
-            std::cerr
+            std::cout
             << "  -> Save_memory A: recalculate real-space rotations in -fast"
             << std::endl;
 
         if (save_mem2)
-            std::cerr
+            std::cout
             << "  -> Save_memory B: limit translations to 3 sigma_offset "
             << std::endl;
 
         if (fix_fractions)
         {
-            std::cerr << "  -> Do not update estimates of model fractions."
+            std::cout << "  -> Do not update estimates of model fractions."
             << std::endl;
         }
 
         if (fix_sigma_offset)
         {
-            std::cerr << "  -> Do not update sigma-estimate of origin offsets."
+            std::cout << "  -> Do not update sigma-estimate of origin offsets."
             << std::endl;
         }
 
         if (fix_sigma_noise)
         {
-            std::cerr << "  -> Do not update sigma-estimate of noise."
+            std::cout << "  -> Do not update sigma-estimate of noise."
             << std::endl;
         }
 
         if (model.do_student)
         {
-            std::cerr << "  -> Use t-student distribution with df = " << df
+            std::cout << "  -> Use t-student distribution with df = " << df
             << std::endl;
 
             if (model.do_student_sigma_trick)
             {
-                std::cerr << "  -> Use sigma-trick for t-student distributions"
+                std::cout << "  -> Use sigma-trick for t-student distributions"
                 << std::endl;
             }
         }
 
         if (model.do_norm)
         {
-            std::cerr
+            std::cout
             << "  -> Refine normalization for each experimental image"
             << std::endl;
         }
 
         if (threads > 1)
         {
-            std::cerr << "  -> Using " << threads << " parallel threads"
+            std::cout << "  -> Using " << threads << " parallel threads"
             << std::endl;
         }
 
         if (blocks > 1)
         {
-            std::cerr << "  -> Doing IEM with " << blocks << " blocks" <<std::endl;
+            std::cout << "  -> Doing IEM with " << blocks << " blocks" <<std::endl;
         }
 
-        std::cerr
+        std::cout
         << " -----------------------------------------------------------------"
         << std::endl;
 
     }
 
+}
+
+void ProgML2D::printModel(const String &msg, const ModelML2D & model)
+{
+    std::cerr << "================> " << msg << std::endl;
+    model.print();
 }
 
 void ProgML2D::run()
@@ -351,7 +357,7 @@ void ProgML2D::run()
     for (iter = istart; !converged && iter <= Niter; iter++)
     {
         if (verbose > 0)
-            std::cerr << "  Multi-reference refinement:  iteration " << iter << " of " << Niter << std::endl;
+            std::cout << "  Multi-reference refinement:  iteration " << iter << " of " << Niter << std::endl;
 
         for (int refno = 0;refno < model.n_ref; refno++)
             Iold[refno]() = model.Iref[refno]();
@@ -360,8 +366,14 @@ void ProgML2D::run()
         {
             // Integrate over all images
             expectation();
+            //just for debugging.
+            //std::stringstream ss;
+            //ss << "iter: " << iter << " block: " << current_block;
+
+            //printModel(ss.str() + " BEFORE maximization blocks ", model);
             // Update model with new estimates
             maximizationBlocks();
+           // printModel(ss.str() + " AFTER maximization blocks ", model);
         }//close for blocks
 
         // Check convergence
@@ -453,10 +465,10 @@ void ProgML2D::produceSideInfo()
 
 void ProgML2D::setNumberOfLocalImages()
 {
-  nr_images_local = nr_images_global;
-  //the following will be override in the MPI implementation.
-//  nr_images_local = divide_equally(nr_images_global, size, rank, myFirstImg,
-//                                   myLastImg);
+    nr_images_local = nr_images_global;
+    //the following will be override in the MPI implementation.
+    //  nr_images_local = divide_equally(nr_images_global, size, rank, myFirstImg,
+    //                                   myLastImg);
 }
 
 void ProgML2D::produceSideInfo2()
@@ -709,7 +721,7 @@ void ProgML2D::produceSideInfo2()
 void ProgML2D::randomizeImagesOrder()
 {
     //This static flag is for only randomize once
-    static bool randomized = false;
+    static bool randomized = true;
 
     if (!randomized)
     {
@@ -866,6 +878,7 @@ void ProgML2D::expectationSingleImage(Matrix1D<double> &opt_offsets)
 #ifdef TIMING
     timer.tic(ESI_E1);
 #endif
+   // std::cerr << "************* IMAGE " << current_image << " ********" <<std::endl;
 
     MultidimArray<double> Maux, Mweight;
     MultidimArray<std::complex<double> > Faux;
@@ -902,7 +915,8 @@ void ProgML2D::expectationSingleImage(Matrix1D<double> &opt_offsets)
             dAij(Faux,0,0) -= bgmean;
 
         Fimg_flip.push_back(Faux);
-    }
+
+   }
 
     // The real stuff: loop over all references, rotations and translations
     int redo_counter = 0;
@@ -1046,6 +1060,17 @@ void ProgML2D::expectationSingleImage(Matrix1D<double> &opt_offsets)
     wsum_sigma_offset += (wsum_offset / sum_refw);
 
     sumfracweight += fracweight;
+
+
+//    std::cerr << "-------------------- wsum_corr: " << wsum_corr << std::endl;
+//    std::cerr << "-------------------- sum_refw: " << sum_refw << std::endl;
+//    std::cerr << std::endl << "-------------------- wsum_sigma_offset: " << wsum_sigma_offset << std::endl;
+//    std::cerr << "-------------------- wsum_sigma_noise: " << wsum_sigma_noise << std::endl << std::endl;
+//    if (wsum_sigma_noise < 0)
+//    {
+//      std::cerr << "Negative wsum_sigma_noise....exiting"  <<std::endl;
+//      exit(1);
+//    }
 
     awakeThreads(TH_ESI_UPDATE_REFNO, 0, refno_load_param);
 
@@ -1469,7 +1494,7 @@ void ProgML2D::doThreadExpectationSingleImageRefno()
 
 
     //    if (current_image == 1)
-    //        std::cerr << "************* Doing more printing for image 1 ********" <<std::endl;
+
 
     double diff;
     double aux, pdf, fracpdf, A2_plus_Xi2;
@@ -1559,6 +1584,7 @@ void ProgML2D::doThreadExpectationSingleImageRefno()
 
                         // B. Calculate weights for each pixel within sigdim (Mweight)
                         my_sumweight = my_sumstoredweight = my_maxweight = 0.;
+
 
                         FOR_ALL_ELEMENTS_IN_ARRAY2D(Mweight)
                         {
@@ -1694,6 +1720,17 @@ void ProgML2D::doThreadExpectationSingleImageRefno()
         sum_refw += refw[output_refno] + refw_mirror[output_refno];
         wsum_offset += local_wsum_offset;
         wsum_corr += local_wsum_corr;
+
+        //FIXME: ***** debug printing
+//        if (iter > istart)
+//        {
+//          std::cerr << "Xi2: " << Xi2 << std::endl;
+//          std::cerr << "A2[refno]: " << A2[refno] << std::endl;
+//        std::cerr << "sum_refw: " << sum_refw << std::endl;
+//        std::cerr << "local_wsum_corr: " << local_wsum_corr << std::endl;
+//        std::cerr << "wsum_corr: " << wsum_corr << std::endl;
+//        }
+
         mindiff = XMIPP_MIN(mindiff, local_mindiff);
 
         if (model.do_norm)
@@ -1862,7 +1899,7 @@ void ProgML2D::expectation()
     }
 
     int c = XMIPP_MAX(1, nr_images_local / 60);
-
+    //std::cerr << "-----xmipp_current: Expectation, iter " << iter << "-------" << std::endl;
     //for (int imgno = 0, img_done = 0; imgno < nn; imgno++)
     // Loop over all images
     FOR_ALL_LOCAL_IMAGES()
@@ -1870,6 +1907,7 @@ void ProgML2D::expectation()
 
         if (IMG_BLOCK(imgno) == current_block)
         {
+          current_image = imgno;
             //std::cerr << "\n ======>>> imgno: " << imgno << std::endl;
             if (factor_nref > 1)
                 mygroup = divide_equally_group(nr_images_global, factor_nref, imgno);
@@ -1881,6 +1919,12 @@ void ProgML2D::expectation()
             img().setXmippOrigin();
             Xi2 = img().sum2();
             Mimg = img();
+
+            ///FIXME: Remove this printing, only for debug
+//            std::cerr << std::endl;
+//            std::cerr << "   ====================>>> IMAGE: " << imgno << std::endl;
+//            std::cerr << "                          fn_img: " << fn_img << std::endl;
+//            std::cerr << "                             Xi2: " << Xi2 << std::endl;
 
             // These two parameters speed up expectationSingleImage
             opt_refno = imgs_optrefno[IMG_LOCAL_INDEX];
@@ -1986,7 +2030,27 @@ void ProgML2D::expectation()
 
 
         }//close if current_block, also close of for all images
-    }
+
+//        // Initialize weighted sums
+//        LL = 0.;
+//        wsumimgs.clear();
+//        sumw.clear();
+//        sumw2.clear();
+//        sumwsc.clear();
+//        sumwsc2.clear();
+//        sumw_mirror.clear();
+//        wsum_sigma_noise = 0.;
+//        wsum_sigma_offset = 0.;
+//        sumfracweight = 0.;
+
+        ///FIXME: Remove this printing, only for debug
+//        std::cerr << "                              LL: " << LL << std::endl;
+//        std::cerr << "                wsum_sigma_noise: " << wsum_sigma_noise << std::endl;
+//        std::cerr << "                sum_sigma_offset: " << wsum_sigma_offset << std::endl;
+//        std::cerr << "                   sumfracweight: " << wsum_sigma_offset << std::endl << std::endl;
+//
+
+    }//close for all images
 
 
     if (verbose > 0 && current_block == (blocks - 1))
@@ -2080,13 +2144,14 @@ void ProgML2D::maximization(ModelML2D &local_model)
     // Update sigma of the origin offsets
     if (!fix_sigma_offset)
     {
-        //std::cerr << "wsum_sigma_offset: " << wsum_sigma_offset << std::endl;
+        //std::cerr << std::endl << "-------------------- wsum_sigma_offset: " << wsum_sigma_offset << std::endl;
         local_model.updateSigmaOffset(wsum_sigma_offset);
     }
 
     // Update the noise parameters
     if (!fix_sigma_noise)
     {
+        //std::cerr << "-------------------- wsum_sigma_noise: " << wsum_sigma_noise << std::endl << std::endl;
         local_model.updateSigmaNoise(wsum_sigma_noise);
         //sigma_noise2 = local_model.sigma_noise * local_model.sigma_noise;
     }
@@ -2510,7 +2575,7 @@ void ModelML2D::combineModel(ModelML2D model, int sign)
         }
         else
         {
-            std::cerr << "sumweight: " << sumweight << std::endl;
+            //std::cerr << "sumweight: " << sumweight << std::endl;
             Iref[refno]().initZeros();
             Iref[refno].setWeight(0);
         }
@@ -2550,39 +2615,39 @@ void ModelML2D::substractModel(ModelML2D model)
     combineModel(model, -1);
 }//close function substractModel
 
-double ModelML2D::getSumw(int refno)
+double ModelML2D::getSumw(int refno) const
 {
     return alpha_k[refno] * sumw_allrefs;
 }//close function sumw
 
-double ModelML2D::getSumwMirror(int refno)
+double ModelML2D::getSumwMirror(int refno) const
 {
     return getSumw(refno) * mirror_fraction[refno];
 }//close function sumw_mirror
 
-double ModelML2D::getSumwsc(int refno)
+double ModelML2D::getSumwsc(int refno) const
 {
     return scale[refno] * getSumw(refno);
 }//close function get_sumwsc
 
-MultidimArray<double> ModelML2D::getWsumMref(int refno)
+MultidimArray<double> ModelML2D::getWsumMref(int refno) const
 {
     return Iref[refno]() * Iref[refno].weight();
 }//close function get_wsum_Mref
 
-double ModelML2D::getWsumSigmaOffset()
+double ModelML2D::getWsumSigmaOffset() const
 {
     return sigma_offset * sigma_offset * 2 * sumw_allrefs;
 }//close function get_wsum_sigma_offset
 
-double ModelML2D::getWsumSigmaNoise()
+double ModelML2D::getWsumSigmaNoise() const
 {
     double sum = (do_student && do_student_sigma_trick) ? sumw_allrefs2
                  : sumw_allrefs;
     return sigma_noise * sigma_noise * dim * dim * sum;
 }//close function get_wsum_sigma_noise
 
-double ModelML2D::getSumfracweight()
+double ModelML2D::getSumfracweight() const
 {
     return avePmax * sumw_allrefs;
 }//close function get_sumfracweight
@@ -2623,9 +2688,9 @@ void ModelML2D::updateFractions(int refno, double sumw,
 {
     if (sumw_allrefs == 0)
     {
-        std::cerr << "updateFractions: sumw_allrefs == 0 " <<std::endl;
-        exit(1);
+        REPORT_ERROR(ERR_VALUE_INCORRECT, "updateFractions: sumw_allrefs == 0 ");
     }
+
     if (sumw > 0.)
     {
         alpha_k[refno] = sumw / sumw_allrefs;
@@ -2645,7 +2710,7 @@ void ModelML2D::updateScale(int refno, double sumwsc, double sumw)
 
 }//close function updateScale
 
-void ModelML2D::print()
+void ModelML2D::print() const
 {
     std::cerr << "sumw_allrefs: " << sumw_allrefs << std::endl;
     std::cerr << "wsum_sigma_offset: " << getWsumSigmaOffset() << std::endl;

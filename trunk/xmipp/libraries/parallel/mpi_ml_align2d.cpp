@@ -49,7 +49,7 @@ void MpiProgML2D::read(int argc, char** argv)
     //Send "master" seed to slaves for same randomization
     if (node->isMaster())
     {
-        verbose = 1;
+        //verbose = 1;
         for (int slave = 1; slave < node->size; ++slave)
             MPI_Send(&seed, 1, MPI_INT, slave, TAG_SEED, MPI_COMM_WORLD);
     }
@@ -122,12 +122,6 @@ void MpiProgML2D::expectation()
     }
 }//end of expectation
 
-void MpiProgML2D::readModel(ModelML2D &model, FileName fn_base)
-{
-    ProgML2D::readModel(model, fn_base);
-    node->barrierWait();
-}
-
 void MpiProgML2D::addPartialDocfileData(const MultidimArray<double> &data, int first, int last)
 {
     // Write intermediate files
@@ -164,6 +158,8 @@ void MpiProgML2D::addPartialDocfileData(const MultidimArray<double> &data, int f
 
 void MpiProgML2D::writeOutputFiles(const ModelML2D &model, int outputType)
 {
+    //All nodes should arrive to writeOutput files at same time
+    node->barrierWait();
     //Only master write files
     if (node->isMaster())
         ProgML2D::writeOutputFiles(model, outputType);
@@ -171,4 +167,10 @@ void MpiProgML2D::writeOutputFiles(const ModelML2D &model, int outputType)
     node->barrierWait();
 }
 
+//Just for debuging
+void MpiProgML2D::printModel(const String &msg, const ModelML2D & model)
+{
+    if (node->isMaster())
+        ProgML2D::printModel(msg, model);
+}
 

@@ -38,7 +38,7 @@ int main(int argc, char **argv)
     MultidimArray<double>            spectral_signal;
     MetaData                     DFo;
 
-    Prog_Refine3d_prm           prm;
+    ProgRefine3D           prm;
     Prog_MLFalign2D_prm         ML2D_prm;
 
     // Set to true for MLF!
@@ -53,7 +53,7 @@ int main(int argc, char **argv)
         prm.produceSideInfo();
         prm.show();
         // Write starting volume(s) to disc with correct name for iteration loop
-        prm.remake_SFvol(prm.istart - 1, true);
+        prm.remakeSFvol(prm.istart - 1, true);
 
         // Read MLalign2D-stuff
         ML2D_prm.read(argc2, argv2, true);
@@ -65,7 +65,7 @@ int main(int argc, char **argv)
         //ML2D_prm.write_selfiles = true;
         ML2D_prm.fn_ref = prm.fn_root + "_lib.xmd";
         // Project volume and read lots of stuff into memory
-        prm.project_reference_volume(ML2D_prm.MDref);
+        prm.projectReferenceVolume(ML2D_prm.MDref);
         //ML2D_prm.MDref.write(std::cerr);
         ML2D_prm.produceSideInfo();
         ML2D_prm.estimateInitialNoiseSpectra();
@@ -120,7 +120,7 @@ int main(int argc, char **argv)
             // Write intermediate output files
             ML2D_prm.addPartialDocfileData(ML2D_prm.docfiledata, ML2D_prm.myFirstImg, ML2D_prm.myLastImg);
             ML2D_prm.writeOutputFiles(iter, sumw_allrefs, LL, sumcorr, conv);
-            prm.concatenate_selfiles(iter);
+            prm.concatenateSelfiles(iter);
 
             // Jump out before 3D reconstruction
             // (Useful for some parallelization protocols)
@@ -128,7 +128,7 @@ int main(int argc, char **argv)
                 exit(1);
 
             // Write noise images to disc
-            prm.make_noise_images(ML2D_prm.Iref);
+            prm.makeNoiseImages(ML2D_prm.Iref);
 
             // Reconstruct new volumes from the reference images
             for (volno = 0; volno < prm.Nvols; volno++)
@@ -140,16 +140,16 @@ int main(int argc, char **argv)
 
             // Update the reference volume selection file
             // and post-process the volumes (for -FS also the noise volumes!)
-            prm.remake_SFvol(iter, false, true);
-            prm.post_process_volumes(argc2, argv2);
-            prm.remake_SFvol(iter, false, false);
+            prm.remakeSFvol(iter, false, true);
+            prm.postProcessVolumes(argc2, argv2);
+            prm.remakeSFvol(iter, false, false);
 
             // Calculate 3D-SSNR and new Wiener filters
-            prm.calculate_3DSSNR(spectral_signal, iter);
+            prm.calculate3DSSNR(spectral_signal, iter);
             ML2D_prm.updateWienerFilters(spectral_signal, sumw_defocus, iter);
 
             // Check convergence
-            if (prm.check_convergence(iter))
+            if (prm.checkConvergence(iter))
             {
                 converged = 1;
                 if (prm.verb > 0)
@@ -159,7 +159,7 @@ int main(int argc, char **argv)
             // Re-project volumes
             if (!converged && iter + 1 <= prm.Niter)
             {
-                prm.project_reference_volume(ML2D_prm.MDref);
+                prm.projectReferenceVolume(ML2D_prm.MDref);
                 // Read new references from disc (I could just as well keep them in memory, maybe...)
                 FileName fn_img;
                 int c = 0;

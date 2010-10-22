@@ -42,7 +42,7 @@ int main(int argc, char **argv)
     MultidimArray<double>            Maux;
     MultidimArray<double>            Vaux;
 
-    Prog_Refine3d_prm            prm;
+    ProgRefine3D            prm;
     ProgML2D           ML2D_prm(true);
 
     // Set to false for ML3D
@@ -66,10 +66,10 @@ int main(int argc, char **argv)
         if (IS_MASTER)
         {
             prm.show();
-            prm.remake_SFvol(prm.istart - 1, true, false);
+            prm.remakeSFvol(prm.istart - 1, true, false);
         }
         else
-            prm.remake_SFvol(prm.istart - 1, false, false);
+            prm.remakeSFvol(prm.istart - 1, false, false);
         MPI_Barrier(MPI_COMM_WORLD);
 
         // Read and set general MLalign2D-stuff
@@ -84,7 +84,7 @@ int main(int argc, char **argv)
         ML2D_prm.save_mem2 = true;
         ML2D_prm.fn_ref = prm.fn_root + "_lib.xmd";
         // Project the reference volume
-        prm.project_reference_volume(ML2D_prm.MDref, rank, size);
+        prm.projectReferenceVolume(ML2D_prm.MDref, rank, size);
         MPI_Barrier(MPI_COMM_WORLD);
 
         // All nodes produce general side-info
@@ -131,7 +131,7 @@ int main(int argc, char **argv)
                 // Project volumes
                 if (ML2D_prm.iter > ML2D_prm.istart || ML2D_prm.current_block > 0)
                 {
-                    prm.project_reference_volume(ML2D_prm.MDref, rank, size);
+                    prm.projectReferenceVolume(ML2D_prm.MDref, rank, size);
                     c = 0;
                     // Read new references from disc (I could just as well keep them in memory, maybe...)
                     FOR_ALL_OBJECTS_IN_METADATA(ML2D_prm.MDref)
@@ -200,20 +200,20 @@ int main(int argc, char **argv)
                 MPI_Barrier(MPI_COMM_WORLD);
 
                 // Update filenames in SFvol (now without noise volumes!)
-                prm.remake_SFvol(ML2D_prm.iter, false, false);
+                prm.remakeSFvol(ML2D_prm.iter, false, false);
 
                 // Only the master does post-processing & convergence check (i.e. sequentially)
                 if (IS_MASTER)
                 {
                     // Solvent flattening and/or symmetrize (if requested)
-                    prm.post_process_volumes(argc2, argv2);
+                    prm.postProcessVolumes(argc2, argv2);
                 }
 
 
             } //end loop blocks
 
             // Check convergence
-            converged = (prm.check_convergence(ML2D_prm.iter)) ? 1 :0;
+            converged = (prm.checkConvergence(ML2D_prm.iter)) ? 1 :0;
 
             // Write intermediate files
             if (!IS_MASTER)
@@ -253,7 +253,7 @@ int main(int argc, char **argv)
 
                 // Output all intermediate files
                 ML2D_prm.writeOutputFiles(ML2D_prm.model, OUT_IMGS);
-                prm.concatenate_selfiles(ML2D_prm.iter);
+                prm.concatenateSelfiles(ML2D_prm.iter);
             }
             MPI_Barrier(MPI_COMM_WORLD);
 

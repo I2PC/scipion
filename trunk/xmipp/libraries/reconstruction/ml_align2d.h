@@ -129,21 +129,21 @@ public:
     void addModel(ModelML2D model);
     void substractModel(ModelML2D model);
 
-    double getSumw(int refno);
-    double getSumwMirror(int refno);
-    double getSumwsc(int refno);
-    MultidimArray<double> getWsumMref(int refno);
-    double getSumwAllrefs();
-    double getWsumSigmaOffset();
-    double getWsumSigmaNoise();
-    double getSumfracweight();
+    double getSumw(int refno) const;
+    double getSumwMirror(int refno) const;
+    double getSumwsc(int refno) const;
+    MultidimArray<double> getWsumMref(int refno) const;
+    double getSumwAllrefs() const;
+    double getWsumSigmaOffset() const;
+    double getWsumSigmaNoise() const;
+    double getSumfracweight() const;
     void updateSigmaOffset(double wsum_sigma_offset);
     void updateSigmaNoise(double wsum_sigma_noise);
     void updateAvePmax(double sumfracweight);
     void updateFractions(int refno, double sumw, double sumw_mirror, double sumw_allrefs);
     void updateScale(int refno, double sumwsc, double sumw);
     ///Just for debugging now
-    void print();
+    void print() const;
 };//close class ModelML2D
 
 /**@defgroup MLalign2D ml_align2d (Maximum likelihood in 2D)
@@ -409,6 +409,8 @@ public:
     virtual void readModel(ModelML2D &model, FileName fn_base);
     /// Get base name based on fn_root and some number
     FileName getBaseName(std::string suffix = "", int number = -1);
+
+    virtual void printModel(const String &msg, const ModelML2D & model);
 
 };
 
