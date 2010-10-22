@@ -1455,14 +1455,20 @@ private:
                 fileName = fileName.addExtension("img");
 
             }
-            else if (ext_name.contains("inf") || \
-                     (ext_name.contains("raw") && exists(fileName.addExtension("inf"))))
+            else if (ext_name.contains("raw"))
             {
-                if (ext_name.contains("inf"))
-                    fileName = fileName.withoutExtension();
+                if (mode != WRITE_READONLY || exists(fileName.addExtension("inf")) )
+                {
+                    headName = fileName.addExtension("inf");
+                    ext_name = "inf";
+                }
+                else
+                    ext_name = "raw";
+            }
+            else if (ext_name.contains("inf"))
+            {
+                headName = fileName;
                 fileName = fileName.withoutExtension();
-                fileName = fileName.addExtension("raw");
-                headName = fileName.addExtension("inf");
                 ext_name = "inf";
             }
 

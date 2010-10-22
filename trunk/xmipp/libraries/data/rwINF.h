@@ -57,11 +57,11 @@ int readINF(int img_select,bool isStack=false)
                        getParameter(fhed, "is_signed") == "TRUE");
     else
         __is_signed = false;
-    if (checkParameter(fhed, "endianess"))
-        if(getParameter(fhed, "endianess") == "big" || getParameter(fhed, "endianess") == "BIG")
-            swap = true;
-        else
-            swap = false;
+    if (checkParameter(fhed, "endianess") &&
+        (getParameter(fhed, "endianess") == "big" || getParameter(fhed, "endianess") == "BIG"))
+        swap = true;
+    else
+        swap = false;
 
     if (IsBigEndian())
         swap = !swap;
@@ -159,7 +159,7 @@ int writeINF(int img_select, bool isStack=false, int mode=WRITE_OVERWRITE)
 
     if (mode != WRITE_OVERWRITE)
         REPORT_ERROR(ERR_ARG_INCORRECT, "rwINF::write only can overwrite image files,"
-                      "neither append nor replace.");
+                     "neither append nor replace.");
 
     DataType wDType;
 
@@ -244,8 +244,8 @@ int writeINF(int img_select, bool isStack=false, int mode=WRITE_OVERWRITE)
     fcntl(fileno(fhed), F_SETLK, &fl);
 
     // Lock Image file
-   fl.l_type   = F_WRLCK;
-   fcntl(fileno(fimg), F_SETLKW, &fl);
+    fl.l_type   = F_WRLCK;
+    fcntl(fileno(fimg), F_SETLKW, &fl);
 
     /* Write Image file ==================================*/
     size_t datasize_n;
