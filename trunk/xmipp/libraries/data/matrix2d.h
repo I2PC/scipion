@@ -600,6 +600,7 @@ public:
     {
         if (mdimx!=dim || mdimy!=dim)
             resize(dim, dim);
+        initZeros();
         for (int i = 0; i < dim; i++)
             MAT_ELEM(*this,i,i) = 1;
     }
