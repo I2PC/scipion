@@ -224,7 +224,7 @@ void Micrograph::compute_8_bit_scaling()
     {
         for (int j = 0; j < Xdim; j++)
         {
-            float tmp = (*this)(j, i);
+            float tmp = (*this)(i, j);
             if (tmp < minval)
                 minval = tmp;
             else if (tmp > maxval)
@@ -233,7 +233,7 @@ void Micrograph::compute_8_bit_scaling()
             if(maxval > 32000)
               std::cout << "(i,j) max min valuefloat value" << i << " " << j
                  << " " << maxval << " " << minval << " "<< tmp
-                 << " " << (*this)(j,i) << std::endl;
+                 << " " << (*this)(i,j) << std::endl;
             */
         }
     }
@@ -429,10 +429,10 @@ int Micrograph::scissor(const Particle_coords &P, Image<double> &result,
                 {
                     if (compute_transmitance)
                     {
-                        if ((*this)(j, i) < 1)
-                            temp = (*this)(j, i);
+                        if ((*this)(i, j) < 1)
+                            temp = (*this)(i, j);
                         else
-                            temp = log10((double)(*this)(j, i));
+                            temp = log10((double)(*this)(i, j));
                         if (compute_inverse)
                             A2D_ELEM(result(),i - i0, j - j0) = (Dmax - temp) / range;
                         else
@@ -445,7 +445,7 @@ int Micrograph::scissor(const Particle_coords &P, Image<double> &result,
                         else
                         {
                             A2D_ELEM(result(), i - i0, j - j0) = (*this)(i, j);
-                            //std::cerr << "this i j: " << (*this)(j, i) << "(" << i <<","<<j<<")"<<std::endl;
+                            //std::cerr << "this i j: " << (*this)(i, j) << "(" << i <<","<<j<<")"<<std::endl;
                         }
 
                     }
@@ -735,7 +735,7 @@ void downsample(const Micrograph &M, int Xstep, int Ystep,
         MultidimArray<double> Mmem(Ydim,Xdim);
         MultidimArray<std::complex<double> > MmemFourier;
         FOR_ALL_ELEMENTS_IN_ARRAY2D(Mmem)
-        Mmem(i,j)=(double)M(j,i);
+        Mmem(i,j)=(double)M(i,j);
 
         // Perform the Fourier transform
         FourierTransformer transformerM;
@@ -807,15 +807,15 @@ void downsample(const Micrograph &M, int Xstep, int Ystep,
                         int i2 = intWRAP(i + y, 0, yF - 1);
                         if (ifirst)
                         {
-                            imin = imax = M(j2, i2);
+                            imin = imax = M(i2, j2);
                             ifirst = false;
                         }
                         else
                         {
-                            imin = XMIPP_MIN(imin, M(j2, i2));
-                            imax = XMIPP_MAX(imax, M(j2, i2));
+                            imin = XMIPP_MIN(imin, M(i2, j2));
+                            imax = XMIPP_MAX(imax, M(i2, j2));
                         }
-                        pixval += kernel(i, j) * M(j2, i2);
+                        pixval += kernel(i, j) * M(i2, j2);
                     }
                     pixval *= scale;
                     if (ii < Ypdim && jj < Xpdim)
@@ -867,7 +867,7 @@ void downsample(const Micrograph &M, int Xstep, int Ystep,
                     for (int j=STARTINGX(kernel); j<=FINISHINGX(kernel); j++)
                     {
                         int j2 = intWRAP(j + x, 0, xF - 1);
-                        pixval += kernel(i, j) * M(j2, i2);
+                        pixval += kernel(i, j) * M(i2, j2);
                     }
                 }
 
