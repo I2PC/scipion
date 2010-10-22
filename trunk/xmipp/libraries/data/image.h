@@ -255,8 +255,8 @@ public:
     Image(int Xdim, int Ydim, int Zdim=1, int Ndim=1,bool _mmapOn=false)
     {
         clear();
-        data.resize(Ndim, Zdim, Ydim, Xdim);
         data.setMmap(_mmapOn);
+        data.resize(Ndim, Zdim, Ydim, Xdim);
         MD.resize(Ndim);
     }
 

@@ -521,7 +521,7 @@ void Micrograph::produce_all_images(int label, const FileName &fn_root,
     for (int n = 0; n < nmax; n++)
         if (coords[n].valid && coords[n].label == label)
         {
-        	fn_aux.compose(ii++,fn_out);
+            fn_aux.compose(ii++,fn_out);
             SF.addObject();
             bool t;
             t=M->scissor(coords[n], (Image<double> &) I, Dmin, Dmax, scaleX, scaleY);
@@ -613,33 +613,63 @@ void Micrograph::resize(int Xdim, int Ydim)
 
     if (datatype == UChar)
     {
-        IUChar->data.setMmap(true);
-        IUChar->data.resize(1, 1, Ydim, Xdim);
+        if (IUChar == NULL)
+            IUChar = new Image<unsigned char>(Xdim, Ydim, 1, 1, true);
+        else
+        {
+            IUChar->data.setMmap(true);
+            IUChar->data.resize(1, 1, Ydim, Xdim);
+        }
     }
     else if (datatype == UShort)
     {
-        IUShort->data.setMmap(true);
-        IUShort->data.resize(1, 1, Ydim, Xdim);
+        if (IUShort == NULL)
+            IUShort = new Image<unsigned short int>(Xdim, Ydim, 1, 1, true);
+        else
+        {
+            IUShort->data.setMmap(true);
+            IUShort->data.resize(1, 1, Ydim, Xdim);
+        }
     }
     else if (datatype == Short)
     {
-        IShort->data.setMmap(true);
-        IShort->data.resize(1, 1, Ydim, Xdim);
+        if (IShort == NULL)
+            IShort = new Image<short int>(Xdim, Ydim, 1, 1, true);
+        else
+        {
+            IShort->data.setMmap(true);
+            IShort->data.resize(1, 1, Ydim, Xdim);
+        }
     }
     else if (datatype == UInt)
     {
-        IUInt->data.setMmap(true);
-        IUInt->data.resize(1, 1, Ydim, Xdim);
+        if (IUInt == NULL)
+            IUInt = new Image<unsigned int>(Xdim, Ydim, 1, 1, true);
+        else
+        {
+            IUInt->data.setMmap(true);
+            IUInt->data.resize(1, 1, Ydim, Xdim);
+        }
     }
     else if (datatype == Int)
     {
-        IInt->data.setMmap(true);
-        IInt->data.resize(1, 1, Ydim, Xdim);
+        if (IInt == NULL)
+            IInt = new Image<int>(Xdim, Ydim, 1, 1, true);
+        else
+        {
+            IInt->data.setMmap(true);
+            IInt->data.resize(1, 1, Ydim, Xdim);
+        }
     }
     else if (datatype == Float)
     {
-        IFloat->data.setMmap(true);
-        IFloat->data.resize(1, 1, Ydim, Xdim);
+        if (IFloat == NULL)
+            IFloat = new Image<float>(Xdim, Ydim, 1, 1, true);
+        else
+        {
+            IFloat->data.setMmap(true);
+            IFloat->data.resize(1, 1, Ydim, Xdim);
+        }
     }
     else
         REPORT_ERROR(ERR_TYPE_INCORRECT, "Micrograph::set_val::(): unknown datatype");
@@ -746,9 +776,9 @@ void downsample(const Micrograph &M, int Xstep, int Ystep,
         {
             pixval=Mpmem(i,j);
             if (Mp.getDatatypeDetph() != 32)
-                Mp.set_val(j, i, FLOOR(a*(pixval*scale + b)));
+                Mp.set_val(i, j, FLOOR(a*(pixval*scale + b)));
             else
-                Mp.set_val(j, i, pixval);
+                Mp.set_val(i, j, pixval);
         }
     }
     else
@@ -843,9 +873,9 @@ void downsample(const Micrograph &M, int Xstep, int Ystep,
 
                 if (ii < Ypdim && jj < Xpdim)
                     if (Mp.getDatatype() != Float)
-                        Mp.set_val(jj, ii, FLOOR(a*(pixval*scale + b)));
+                        Mp.set_val(ii, jj, FLOOR(a*(pixval*scale + b)));
                     else
-                        Mp.set_val(jj, ii, pixval);
+                        Mp.set_val(ii, jj, pixval);
             }
             if (ii % 50 == 0)
                 progress_bar(ii);

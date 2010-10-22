@@ -56,7 +56,7 @@ void Prog_downsample_prm::read(int argc, char **argv, bool do_not_read_files)
 
     stdFilter = textToFloat(getParameter(argc, argv, "-stdfilter","-1"));
 
-      if (checkParameter(argc, argv, "-kernel"))
+    if (checkParameter(argc, argv, "-kernel"))
     {
         std::string aux = getParameter(argc, argv, "-kernel");
         int i = paremeterPosition(argc, argv, "-kernel");
@@ -262,7 +262,7 @@ void Prog_downsample_prm::create_empty_output_file()
     fh_downsample_inf << "bitspersample= " << bitsMp << std::endl;
     fh_downsample_inf.close();
 #endif
-    }
+}
 
 // Open input micrograph ---------------------------------------------------
 void Prog_downsample_prm::open_input_micrograph()
