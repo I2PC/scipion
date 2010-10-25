@@ -48,7 +48,6 @@ int main(int argc, char **argv)
         prm.remakeSFvol(prm.istart - 1, true);
 
         // Read MLalign2D-stuff
-
         std::stringstream ss;
         ss << "-i " << prm.fn_sel << " -o " << prm.fn_root << " -fast -mirror -thr 2 -save_memB -ref " << prm.fn_root << "_lib.xmd";
         std::cerr << "Starting ml2d with options: " << std::endl;
@@ -87,7 +86,7 @@ int main(int argc, char **argv)
         ModelML2D block_model(ML2D_prm.model.n_ref);
 
         // Loop over all iterations
-        for (ML2D_prm.iter = ML2D_prm.istart; !converged && ML2D_prm.iter <= ML2D_prm.Niter; ML2D_prm.iter++)
+        for (ML2D_prm.iter = ML2D_prm.istart; !converged && ML2D_prm.iter <= prm.Niter; ML2D_prm.iter++)
         {
             if (prm.verb > 0)
             {
