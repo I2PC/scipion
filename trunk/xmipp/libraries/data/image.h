@@ -282,7 +282,7 @@ public:
         clearHeader();
         replaceNsize=0;
         mmapOn = false;
-        mappedSize = NULL;
+        mappedSize = 0;
         mFd    = NULL;
     }
 
@@ -1389,7 +1389,7 @@ private:
         munmap(data.data-offset,mappedSize);
         close(mFd);
         data.data = NULL;
-        mappedSize = NULL;
+        mappedSize = 0;
     }
 
     /** Open file function
@@ -1544,7 +1544,7 @@ private:
         dataflag = ( readdata ) ? 1 : -1;
 
         // If Image has been previously used with mmap, then close the previous file
-        if (mappedSize != NULL)
+        if (mappedSize != 0)
             closeMmap();
 
         // Check whether to map the data or not
