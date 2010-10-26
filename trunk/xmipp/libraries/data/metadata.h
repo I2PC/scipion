@@ -376,6 +376,7 @@ public:
     {
         try
         {
+        	if (!containsLabel(label)) return false;
             MDObject mdValueOut(label);
             _getValue(objectId, mdValueOut);
             mdValueOut.getValue(valueOut);
