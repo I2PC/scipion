@@ -40,15 +40,21 @@ ProgML2D::ProgML2D(bool ML3D)
 
 void ProgML2D::defineParams()
 {
+    //There are some params that are fixed
+    //in the 3D case, for example -fast, -mirror
     addParamsLine("   -i <selfile>                : Selfile with input images ");
     addParamsLine("   -nref <int=1>               : Number of references to generate automatically (recommended)");
     addParamsLine("or -ref <selfile=\"\">         : or selfile with initial references/single reference image ");
-    addParamsLine(" [ -o <rootname=ml2d> ]        : Output rootname");
-    addParamsLine(" [ -mirror ]                   : Also check mirror image of each reference ");
-    addParamsLine(" [ -fast ]                     : Use pre-centered images to pre-calculate significant orientations");
+    if (!do_ML3D)
+    {
+        addParamsLine(" [ -o <rootname=ml2d> ]        : Output rootname");
+        addParamsLine(" [ -mirror ]                   : Also check mirror image of each reference ");
+        addParamsLine(" [ -fast ]                     : Use pre-centered images to pre-calculate significant orientations");
+    }
+    else
+        addParamsLine(" [ -o <rootname=ml3d> ]        : Output rootname");
     addParamsLine(" [ -thr <N=1> ]                : Use N parallel threads ");
     addParamsLine(" [ -iem <blocks=1>]            : Number of blocks to be used with IEM");
-
     addParamsLine("==+ Additional options ==");
     addParamsLine(" [ -eps <float=5e-5> ]         : Stopping criterium");
     addParamsLine(" [ -iter <int=100> ]           : Maximum number of iterations to perform ");
@@ -72,7 +78,9 @@ void ProgML2D::defineParams()
     addParamsLine("    requires -student;");
     addParamsLine(" [ -norm ]                     : Refined normalization parameters for each particle ");
     addParamsLine(" [ -save_memA ]                : Save memory A");
-    addParamsLine(" [ -save_memB ]                : Save memory B");
+
+    if (!do_ML3D)
+        addParamsLine(" [ -save_memB ]                : Save memory B");
 
     addParamsLine("==+++++ Hidden arguments ==");
     addParamsLine(" [-scratch <scratch=\"\">]");
@@ -129,19 +137,31 @@ void ProgML2D::readParams()
     fn_root = getParam("-o");
     psi_step = getDoubleParam("-psi_step");
     Niter = getIntParam("-iter");
-    istart = (do_ML3D) ? 1 : getIntParam("-istart");
+    //Fixed values for the 3D case
+    if (do_ML3D)
+    {
+        istart = 1;
+        fast_mode = save_mem2 = do_mirror = true;
+    }
+    else
+    {
+        istart = getIntParam("-istart");
+        do_mirror = checkParam("-mirror");
+        save_mem2 = checkParam("-save_memB");
+        fast_mode = checkParam("-fast");
+    }
     model.sigma_noise = getDoubleParam("-noise");
     model.sigma_offset = getDoubleParam("-offset");
-    do_mirror = checkParam("-mirror");
+
     eps = getDoubleParam("-eps");
     fn_frac = getParam("-frac");
     fix_fractions = checkParam("-fix_fractions");
     fix_sigma_offset = checkParam("-fix_sigma_offset");
     fix_sigma_noise = checkParam("-fix_sigma_noise");
-    fast_mode = checkParam("-fast");
+
     C_fast = getDoubleParam("-C");
     save_mem1 = checkParam("-save_memA");
-    save_mem2 = checkParam("-save_memB");
+
     zero_offsets = checkParam("-zero_offsets");
     model.do_student = checkParam("-student");
     df = getDoubleParam("-df");
@@ -190,7 +210,7 @@ void ProgML2D::readParams()
 void ProgML2D::show()
 {
 
-    if (verbose > 0)
+    if (verbose)
     {
 
         // To screen
@@ -351,14 +371,12 @@ void ProgML2D::run()
     //Create threads to be ready for work
     createThreads();
 
-    ModelML2D block_model(model.n_ref);
-
     // Loop over all iterations
     for (iter = istart; !converged && iter <= Niter; iter++)
     {
-        if (verbose > 0)
+        if (verbose)        
             std::cout << "  Multi-reference refinement:  iteration " << iter << " of " << Niter << std::endl;
-
+        
         for (int refno = 0;refno < model.n_ref; refno++)
             Iold[refno]() = model.Iref[refno]();
 
@@ -373,7 +391,7 @@ void ProgML2D::run()
             //printModel(ss.str() + " BEFORE maximization blocks ", model);
             // Update model with new estimates
             maximizationBlocks();
-           // printModel(ss.str() + " AFTER maximization blocks ", model);
+            // printModel(ss.str() + " AFTER maximization blocks ", model);
         }//close for blocks
 
         // Check convergence
@@ -385,8 +403,13 @@ void ProgML2D::run()
 
     } // end loop iterations
 
-    if (converged && verbose > 0)
-        std::cout << " Optimization converged!" << std::endl;
+    if (verbose)
+    {
+        std::cout << (converged ?
+                      "--> Optimization converged!" :
+                      "--> Optimization was stopped before convergence was reached!")
+        << std::endl;
+    }
 
     writeOutputFiles(model);
     destroyThreads();
@@ -878,7 +901,7 @@ void ProgML2D::expectationSingleImage(Matrix1D<double> &opt_offsets)
 #ifdef TIMING
     timer.tic(ESI_E1);
 #endif
-   // std::cerr << "************* IMAGE " << current_image << " ********" <<std::endl;
+    // std::cerr << "************* IMAGE " << current_image << " ********" <<std::endl;
 
     MultidimArray<double> Maux, Mweight;
     MultidimArray<std::complex<double> > Faux;
@@ -916,7 +939,7 @@ void ProgML2D::expectationSingleImage(Matrix1D<double> &opt_offsets)
 
         Fimg_flip.push_back(Faux);
 
-   }
+    }
 
     // The real stuff: loop over all references, rotations and translations
     int redo_counter = 0;
@@ -1062,15 +1085,15 @@ void ProgML2D::expectationSingleImage(Matrix1D<double> &opt_offsets)
     sumfracweight += fracweight;
 
 
-//    std::cerr << "-------------------- wsum_corr: " << wsum_corr << std::endl;
-//    std::cerr << "-------------------- sum_refw: " << sum_refw << std::endl;
-//    std::cerr << std::endl << "-------------------- wsum_sigma_offset: " << wsum_sigma_offset << std::endl;
-//    std::cerr << "-------------------- wsum_sigma_noise: " << wsum_sigma_noise << std::endl << std::endl;
-//    if (wsum_sigma_noise < 0)
-//    {
-//      std::cerr << "Negative wsum_sigma_noise....exiting"  <<std::endl;
-//      exit(1);
-//    }
+    //    std::cerr << "-------------------- wsum_corr: " << wsum_corr << std::endl;
+    //    std::cerr << "-------------------- sum_refw: " << sum_refw << std::endl;
+    //    std::cerr << std::endl << "-------------------- wsum_sigma_offset: " << wsum_sigma_offset << std::endl;
+    //    std::cerr << "-------------------- wsum_sigma_noise: " << wsum_sigma_noise << std::endl << std::endl;
+    //    if (wsum_sigma_noise < 0)
+    //    {
+    //      std::cerr << "Negative wsum_sigma_noise....exiting"  <<std::endl;
+    //      exit(1);
+    //    }
 
     awakeThreads(TH_ESI_UPDATE_REFNO, 0, refno_load_param);
 
@@ -1722,14 +1745,14 @@ void ProgML2D::doThreadExpectationSingleImageRefno()
         wsum_corr += local_wsum_corr;
 
         //FIXME: ***** debug printing
-//        if (iter > istart)
-//        {
-//          std::cerr << "Xi2: " << Xi2 << std::endl;
-//          std::cerr << "A2[refno]: " << A2[refno] << std::endl;
-//        std::cerr << "sum_refw: " << sum_refw << std::endl;
-//        std::cerr << "local_wsum_corr: " << local_wsum_corr << std::endl;
-//        std::cerr << "wsum_corr: " << wsum_corr << std::endl;
-//        }
+        //        if (iter > istart)
+        //        {
+        //          std::cerr << "Xi2: " << Xi2 << std::endl;
+        //          std::cerr << "A2[refno]: " << A2[refno] << std::endl;
+        //        std::cerr << "sum_refw: " << sum_refw << std::endl;
+        //        std::cerr << "local_wsum_corr: " << local_wsum_corr << std::endl;
+        //        std::cerr << "wsum_corr: " << wsum_corr << std::endl;
+        //        }
 
         mindiff = XMIPP_MIN(mindiff, local_mindiff);
 
@@ -1907,7 +1930,7 @@ void ProgML2D::expectation()
 
         if (IMG_BLOCK(imgno) == current_block)
         {
-          current_image = imgno;
+            current_image = imgno;
             //std::cerr << "\n ======>>> imgno: " << imgno << std::endl;
             if (factor_nref > 1)
                 mygroup = divide_equally_group(nr_images_global, factor_nref, imgno);
@@ -1921,10 +1944,10 @@ void ProgML2D::expectation()
             Mimg = img();
 
             ///FIXME: Remove this printing, only for debug
-//            std::cerr << std::endl;
-//            std::cerr << "   ====================>>> IMAGE: " << imgno << std::endl;
-//            std::cerr << "                          fn_img: " << fn_img << std::endl;
-//            std::cerr << "                             Xi2: " << Xi2 << std::endl;
+            //            std::cerr << std::endl;
+            //            std::cerr << "   ====================>>> IMAGE: " << imgno << std::endl;
+            //            std::cerr << "                          fn_img: " << fn_img << std::endl;
+            //            std::cerr << "                             Xi2: " << Xi2 << std::endl;
 
             // These two parameters speed up expectationSingleImage
             opt_refno = imgs_optrefno[IMG_LOCAL_INDEX];
@@ -2031,24 +2054,24 @@ void ProgML2D::expectation()
 
         }//close if current_block, also close of for all images
 
-//        // Initialize weighted sums
-//        LL = 0.;
-//        wsumimgs.clear();
-//        sumw.clear();
-//        sumw2.clear();
-//        sumwsc.clear();
-//        sumwsc2.clear();
-//        sumw_mirror.clear();
-//        wsum_sigma_noise = 0.;
-//        wsum_sigma_offset = 0.;
-//        sumfracweight = 0.;
+        //        // Initialize weighted sums
+        //        LL = 0.;
+        //        wsumimgs.clear();
+        //        sumw.clear();
+        //        sumw2.clear();
+        //        sumwsc.clear();
+        //        sumwsc2.clear();
+        //        sumw_mirror.clear();
+        //        wsum_sigma_noise = 0.;
+        //        wsum_sigma_offset = 0.;
+        //        sumfracweight = 0.;
 
         ///FIXME: Remove this printing, only for debug
-//        std::cerr << "                              LL: " << LL << std::endl;
-//        std::cerr << "                wsum_sigma_noise: " << wsum_sigma_noise << std::endl;
-//        std::cerr << "                sum_sigma_offset: " << wsum_sigma_offset << std::endl;
-//        std::cerr << "                   sumfracweight: " << wsum_sigma_offset << std::endl << std::endl;
-//
+        //        std::cerr << "                              LL: " << LL << std::endl;
+        //        std::cerr << "                wsum_sigma_noise: " << wsum_sigma_noise << std::endl;
+        //        std::cerr << "                sum_sigma_offset: " << wsum_sigma_offset << std::endl;
+        //        std::cerr << "                   sumfracweight: " << wsum_sigma_offset << std::endl << std::endl;
+        //
 
     }//close for all images
 
@@ -2259,7 +2282,7 @@ bool ProgML2D::checkConvergence()
     std::cerr<<"entering checkConvergence"<<std::endl;
 #endif
 
-    if (iter==0)
+    if (iter == 0)
         return false;
 
     bool converged = true;

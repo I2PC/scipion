@@ -321,7 +321,7 @@ public:
 
 public:
     ProgML2D(bool ML3D = false);
-    ///Show info
+    ///Show info at starting program
     virtual void show();
     ///Main function of the program
     virtual void run();
@@ -391,7 +391,7 @@ public:
     void maximization(ModelML2D &model);
 
     /// Update all model parameters, adapted for IEM blocks use
-    void maximizationBlocks(int refs_per_class = 1);
+    virtual void maximizationBlocks(int refs_per_class = 1);
 
     /// Correct references scale
     void correctScaleAverage(int refs_per_class = 1);
