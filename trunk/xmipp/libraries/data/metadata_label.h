@@ -56,6 +56,11 @@ enum MDLabel
     MDL_ANGLEROT, ///< Rotation angle of an image (double)
     MDL_ANGLETILT2, ///< Tilting angle of an image (double)
     MDL_ANGLETILT, ///< Tilting angle of an image (double)
+    MDL_ASSOCIATED_IMAGE1, ///< Image associated to this object (std::string)
+    MDL_ASSOCIATED_IMAGE2, ///< Image associated to this object (std::string)
+    MDL_ASSOCIATED_IMAGE3, ///< Image associated to this object (std::string)
+    MDL_ASSOCIATED_IMAGE4, ///< Image associated to this object (std::string)
+    MDL_ASSOCIATED_IMAGE5, ///< Image associated to this object (std::string)
     MDL_AVG, ///< average value (double)
     MDL_AZIMUTALANGLE, ///< ctf definition azimutal angle
     MDL_BGMEAN, ///< Mean background value for an image
@@ -67,6 +72,7 @@ enum MDLabel
     MDL_COUNT, ///< Number of elements of a type (int) [this is a genereic type do not use to transfer information to another program]
     MDL_CTFINPUTPARAMS, ///< Parameters file for the CTF Model (std::string)
     MDL_CTFMODEL, ///< Name for the CTF Model (std::string)
+    MDL_CTFMODEL2, ///< Name for another CTF model (std::string)
     MDL_CTF_SAMPLING_RATE, ///< Sampling rate
     MDL_CTF_VOLTAGE, ///< Microscope voltage (kV)
     MDL_CTF_DEFOCUSU, ///< Defocus U (Angstroms)
@@ -98,6 +104,13 @@ enum MDLabel
     MDL_CTFBG_GAUSSIAN2_CU, ///< CTF Background parameter
     MDL_CTFBG_GAUSSIAN2_CV, ///< CTF Background parameter
     MDL_CTFBG_GAUSSIAN2_ANGLE, ///< CTF Background parameter
+    MDL_CTF_CRITERION_PSDCORRELATION90, ///< PSD correlation at 90 degrees
+    MDL_CTF_CRITERION_FIRSTZERORATIO, ///< First zero ratio
+    MDL_CTF_CRITERION_FIRSTZEROAVG, ///< First zero average (in Angstroms)
+    MDL_CTF_CRITERION_FIRSTZERODISAGREEMENT, ///< First zero disagreement with second model (in Angstroms)
+    MDL_CTF_CRITERION_DAMPING, ///< Minimum damping at border
+    MDL_CTF_CRITERION_PSDRADIALINTEGRAL, ///< Integral of the radial PSD
+    MDL_CTF_CRITERION_FITTINGSCORE, ///< Score of the fitting
     MDL_DATATYPE, ///< if read from file original image datatype, this is an struct defined in image
     MDL_DEFGROUP, ///< Defocus group
     MDL_DEFOCUSU, ///< microscope defocus U direction (double)
@@ -144,8 +157,8 @@ enum MDLabel
     MDL_ORIGINX, ///< Origin for the image in the X axis (double)
     MDL_ORIGINY, ///< Origin for the image in the Y axis (double)
     MDL_ORIGINZ, ///< Origin for the image in the Z axis (double)
-    MDL_PERIODOGRAM, ///< A periodogram's file name (std::string)
     MDL_PMAX, ///< Maximum value of normalized probability function (now called "Pmax/sumP") (double)
+    MDL_PSD, ///< A Power Spectrum Density file name (std::string)
     MDL_Q0, ///< ctf definition Q0
     MDL_RANDOMSEED, ///< Seed for random number generator
     MDL_REF3D, ///< 3D Class to which the image belongs (int)
@@ -264,6 +277,11 @@ private:
         MDL::addLabel(MDL_ANGLEROT, LABEL_DOUBLE, "angleRot", "rot");
         MDL::addLabel(MDL_ANGLETILT2, LABEL_DOUBLE, "angleTilt2", "tilt2");
         MDL::addLabel(MDL_ANGLETILT, LABEL_DOUBLE, "angleTilt", "tilt");
+        MDL::addLabel(MDL_ASSOCIATED_IMAGE1, LABEL_STRING, "associatedImage1");
+        MDL::addLabel(MDL_ASSOCIATED_IMAGE2, LABEL_STRING, "associatedImage2");
+        MDL::addLabel(MDL_ASSOCIATED_IMAGE3, LABEL_STRING, "associatedImage3");
+        MDL::addLabel(MDL_ASSOCIATED_IMAGE4, LABEL_STRING, "associatedImage4");
+        MDL::addLabel(MDL_ASSOCIATED_IMAGE5, LABEL_STRING, "associatedImage5");
         MDL::addLabel(MDL_AVG, LABEL_DOUBLE, "avg");
         MDL::addLabel(MDL_AZIMUTALANGLE, LABEL_DOUBLE, "azimutalAngle");
         MDL::addLabel(MDL_BGMEAN, LABEL_DOUBLE, "bgMean");
@@ -275,6 +293,7 @@ private:
         MDL::addLabel(MDL_COUNT, LABEL_INT, "count");
         MDL::addLabel(MDL_CTFINPUTPARAMS, LABEL_STRING, "CTFInputParams");
         MDL::addLabel(MDL_CTFMODEL, LABEL_STRING, "CTFModel");
+        MDL::addLabel(MDL_CTFMODEL2, LABEL_STRING, "CTFModel2");
         MDL::addLabel(MDL_CTF_SAMPLING_RATE, LABEL_DOUBLE, "CTF_Sampling_rate");
         MDL::addLabel(MDL_CTF_VOLTAGE, LABEL_DOUBLE, "CTF_Voltage");
         MDL::addLabel(MDL_CTF_DEFOCUSU, LABEL_DOUBLE, "CTF_Defocus_U");
@@ -306,6 +325,13 @@ private:
         MDL::addLabel(MDL_CTFBG_GAUSSIAN2_CU, LABEL_DOUBLE, "CTFBG_Gaussian2_CU");
         MDL::addLabel(MDL_CTFBG_GAUSSIAN2_CV, LABEL_DOUBLE, "CTFBG_Gaussian2_CV");
         MDL::addLabel(MDL_CTFBG_GAUSSIAN2_ANGLE, LABEL_DOUBLE, "CTFBG_Gaussian2_Angle");
+        MDL::addLabel(MDL_CTF_CRITERION_PSDCORRELATION90, LABEL_DOUBLE, "CTFCrit_psdcorr90");
+        MDL::addLabel(MDL_CTF_CRITERION_FIRSTZERORATIO, LABEL_DOUBLE, "CTFCrit_firstZeroRatio");
+        MDL::addLabel(MDL_CTF_CRITERION_FIRSTZEROAVG, LABEL_DOUBLE, "CTFCrit_firstZero");
+        MDL::addLabel(MDL_CTF_CRITERION_FIRSTZERODISAGREEMENT, LABEL_DOUBLE, "CTFCrit_disagree");
+        MDL::addLabel(MDL_CTF_CRITERION_DAMPING, LABEL_DOUBLE, "CTFCrit_damping");
+        MDL::addLabel(MDL_CTF_CRITERION_PSDRADIALINTEGRAL, LABEL_DOUBLE, "CTFCrit_psdint");
+        MDL::addLabel(MDL_CTF_CRITERION_FITTINGSCORE, LABEL_DOUBLE, "CTFCrit_Fitting");
         MDL::addLabel(MDL_DEFGROUP, LABEL_INT, "defocusGroup");
         MDL::addLabel(MDL_DATATYPE, LABEL_INT, "datatype");
         MDL::addLabel(MDL_DEFOCUSU, LABEL_DOUBLE, "defocusU");
@@ -350,8 +376,8 @@ private:
         MDL::addLabel(MDL_ORIGINX, LABEL_DOUBLE, "originX");
         MDL::addLabel(MDL_ORIGINY, LABEL_DOUBLE, "originY");
         MDL::addLabel(MDL_ORIGINZ, LABEL_DOUBLE, "originZ");
-        MDL::addLabel(MDL_PERIODOGRAM, LABEL_STRING, "periodogram");
         MDL::addLabel(MDL_PMAX, LABEL_DOUBLE, "pMax", "Pmax", "sumP");
+        MDL::addLabel(MDL_PSD, LABEL_STRING, "powerSpectrum");
         MDL::addLabel(MDL_Q0, LABEL_DOUBLE, "Q0");
         MDL::addLabel(MDL_RANDOMSEED, LABEL_INT, "randomSeed");
         MDL::addLabel(MDL_REF3D, LABEL_INT, "ref3d");
@@ -555,9 +581,5 @@ private:
 
 
 };
-
-
-
-
 
 #endif
