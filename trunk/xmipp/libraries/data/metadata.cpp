@@ -294,8 +294,10 @@ bool MetaData::setValueFromStr(const MDLabel label, const std::string &value, lo
 bool MetaData::getStrFromValue(const MDLabel label, std::string &strOut, long int objectId)
 {
     MDObject mdValueOut(label);
-    _getValue(objectId, mdValueOut);
+    if (!_getValue(objectId, mdValueOut))
+      return false;
     strOut = mdValueOut.toString();
+    return true;
 }
 
 bool MetaData::isEmpty() const
