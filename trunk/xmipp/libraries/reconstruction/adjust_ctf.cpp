@@ -750,11 +750,11 @@ void save_intermediate_results(const FileName &fn_root, bool
     global_prm->generate_model_halfplane(
         global_prm->ctfmodelSize, global_prm->ctfmodelSize,
         save_ctf());
-    save_ctf.write(fn_root + ".ctfmodel_halfplane");
+    save_ctf.write(fn_root + "_ctfmodel_halfplane.xmp");
     global_prm->generate_model_quadrant(
         global_prm->ctfmodelSize, global_prm->ctfmodelSize,
         save_ctf());
-    save_ctf.write(fn_root + ".ctfmodel_quadrant");
+    save_ctf.write(fn_root + "_ctfmodel_quadrant.xmp");
 
     if (!generate_profiles) return;
     plotX.open((fn_root + "X.txt").c_str());
@@ -2174,6 +2174,10 @@ double ROUT_Adjust_CTF(Adjust_CTF_Parameters &prm, CTFDescription &output_ctfmod
         global_action = 6;
         save_intermediate_results(fn_root, false);
         global_ctfmodel.write(fn_root + ".ctfparam");
+        MetaData MD;
+        MD.read(fn_root + ".ctfparam");
+        MD.setValue(MDL_CTF_CRITERION_FITTINGSCORE,fitness);
+        MD.write(fn_root + ".ctfparam");
     }
     output_ctfmodel=global_ctfmodel;
 
