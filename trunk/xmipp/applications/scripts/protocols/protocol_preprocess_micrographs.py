@@ -108,7 +108,7 @@ MaxFocus=100000
 """ If available, CTFFIND will be used to double check the validity of the defoci """
 CtffindExec='/media/usbdisk/OtherPackages/ctffind/ctf/ctffind3.exe'
 # {expert} Window size
-WinSize=128
+WinSize=256
 # {expert} Minimum resolution (in norm. freq.)
 """ Lowest resolution to include in CTF estimation. Valid range 0-0.5
 """
@@ -265,11 +265,14 @@ class preprocess_A_class:
             (self.filepath, self.name) = os.path.split(self.filename)
             print '*  '+self.name
 
-        self.SFpsd = []
         self.SFinputparams = []
-        self.SFctf = []
         self.SFmicrograph = []
+        self.SFquadrant = []
+        self.SFctffind = []
         self.SFshort = []
+        self.SFhalf = []
+        self.SFctf = []
+        self.SFpsd = []
 
         fh_mpi  = os.open(self.xmpi_run_file+ '_1.sh',os.O_WRONLY|os.O_TRUNC|os.O_CREAT, 0700)
         # Preprocessing
@@ -302,6 +305,8 @@ class preprocess_A_class:
                 self.SFinputparams.append(names[1])
                 if not self.OnlyEstimatePSD:                    
                     self.SFctf.append(names[2])
+                    self.SFhalf.append(names[3])
+                    self.SFquadrant.append(names[4])
                 if self.DoCtffind:
                     self.perform_ctfestimate_ctffind(shortname,filename,fh_mpi)
             idx+=1
@@ -318,21 +323,48 @@ class preprocess_A_class:
             ctfparam=self.SFctf[idx]
             # Pickup result from CTFTILT
             if self.DoCtfEstimate and self.DoCtffind:
-                self.pickup_ctfestimate_ctffind(shortname,filename,fh_mpi)
+                fnCTFfind=self.pickup_ctfestimate_ctffind(shortname,filename,fh_mpi)
+                self.SFctffind.append(fnCTFfind)
 
             os.write(fh_mpi,"\n");
             idx+=1
+        
+        # Write the different selfiles
+        import XmippData
+        MD=XmippData.MetaData()
+        ptr=XmippData.stringP()
+        idx=0
+        for filename in self.SFmicrograph:
+            MD.addObject()
+            ptr.assign(filename)
+            XmippData.setValueString(MD,XmippData.MDL_IMAGE,ptr)
+            ptr.assign(self.SFpsd[idx])
+            XmippData.setValueString(MD,XmippData.MDL_PSD,ptr)
+            if len(self.SFinputparams)>0:
+                ptr.assign(self.SFinputparams[idx])
+                XmippData.setValueString(MD,XmippData.MDL_CTFINPUTPARAMS,ptr)
+            if len(self.SFctf)>0:
+                ptr.assign(self.SFctf[idx])
+                XmippData.setValueString(MD,XmippData.MDL_CTFMODEL,ptr)
+                ptr.assign(self.SFhalf[idx])
+                XmippData.setValueString(MD,XmippData.MDL_ASSOCIATED_IMAGE1,ptr)
+                ptr.assign(self.SFquadrant[idx])
+                XmippData.setValueString(MD,XmippData.MDL_ASSOCIATED_IMAGE2,ptr)
+            if len(self.SFctffind)>0:
+                ptr.assign(self.SFctffind[idx])
+                XmippData.setValueString(MD,XmippData.MDL_CTFMODEL2,ptr)
+            idx+=1
+        MD.write(XmippData.FileName(self.WorkingDir+"/"+self.RootName+"_micrographs.sel"))
 
-        # Launch Pickup results
+        # CTF Quality control
+        command="xmipp_psd_sort -i "+self.RootName+"_micrographs.sel\n"
+        os.write(fh_mpi,"echo * " + command)
+        os.write(fh_mpi,command)
+        
+        # Launch second shell
         os.close(fh_mpi)
         self.launchCommandFile(xmpi_run_file + '_2.sh')
         
-        # Write the different selfiles
-        self.writeSelfile(self.SFmicrograph, self.WorkingDir+"/"+self.RootName+"_micrographs.sel")
-        self.writeSelfile(self.SFpsd,        self.WorkingDir+"/"+self.RootName+"_psds.sel")
-        self.writeSelfile(self.SFinputparams,self.WorkingDir+"/"+self.RootName+"_ctfinputparams.sel")
-        self.writeSelfile(self.SFctf,        self.WorkingDir+"/"+self.RootName+"_ctfs.sel")
-
         message=" Done pre-processing of micrographs"
         print '* ',message
         print '*********************************************************************'
@@ -349,18 +381,6 @@ class preprocess_A_class:
             self.log.info(commandFile)     
             os.system(commandFile)     
         # COSS os.remove(commandFile)
-
-    def writeSelfile(self, selfile, fnOut):
-        if len(selfile)==0:
-            return
-        import XmippData
-        MD=XmippData.MetaData()
-        ptr=XmippData.stringP()
-        for filename in selfile:
-            ptr.assign(filename)
-            MD.addObject()
-            XmippData.setValueString(MD,XmippData.MDL_IMAGE,ptr)
-        MD.write(XmippData.FileName(fnOut))
 
     def perform_preprocessing(self,filename,fh_mpi):
         # Decide name after preprocessing
@@ -413,13 +433,13 @@ class preprocess_A_class:
         return finalname
 
     def perform_ctfestimate_xmipp(self,shortname,filename,fh_mpi):
-        pname=shortname+'/'+shortname+'_estimate_ctf_input.param'
+        (filepath, micrographName) = os.path.split(filename)
+        (fnRoot,extension) = os.path.splitext(micrographName)
+        pname=shortname+'/'+fnRoot+'_estimate_ctf_input.param'
         print '*********************************************************************'
         print '*  Estimate PSD/CTF for micrograph: '+filename
         retval=[]
         
-        (filepath, micrographName) = os.path.split(filename)
-        (fnRoot,extension) = os.path.splitext(micrographName)
         retval.append(shortname+'/'+fnRoot+"_Periodogramavg.psd")
         retval.append(pname)
 
@@ -434,11 +454,13 @@ class preprocess_A_class:
             paramlist.append('voltage= '+str(self.Voltage)+'\n')
             paramlist.append('spherical_aberration= '+str(self.SphericalAberration)+'\n')
             paramlist.append('sampling_rate= '+str(AngPix)+'\n')
-            paramlist.append('particle_horizontal= 128 \n')
+            paramlist.append('particle_horizontal= 256 \n')
             paramlist.append('Q0= -'+str(self.AmplitudeContrast)+'\n')
             paramlist.append('min_freq= '+str(self.LowResolCutoff)+'\n')
             paramlist.append('max_freq= '+str(self.HighResolCutoff)+'\n')
             retval.append(shortname+'/'+fnRoot+"_Periodogramavg.ctfparam")
+            retval.append(shortname+'/'+fnRoot+"_Periodogramavg_ctfmodel_halfplane.xmp")
+            retval.append(shortname+'/'+fnRoot+"_Periodogramavg_ctfmodel_quadrant.xmp")
 
         # Perform CTF estimation
         fh=open(pname,"w")
@@ -460,10 +482,12 @@ class preprocess_A_class:
         
         # Prepare parameters for CTFTILT
         AngPix = (10000. * self.ScannedPixelSize * self.Down) / self.Magnification
+        (filepath, micrographName) = os.path.split(filename)
+        (fnRoot,extension) = os.path.splitext(micrographName)
         command+="export NATIVEMTZ=kk ; "
-        command+= self.CtffindExec+'  << eof > '+shortname+'/ctffind.log'+theNewLine
+        command+= self.CtffindExec+'  << eof > '+shortname+'/'+fnRoot+'_ctffind.log'+theNewLine
         command+= shortname+'/tmp.mrc'+theNewLine
-        command+= shortname+'/ctffind_spectrum.mrc'+theNewLine
+        command+= shortname+'/'+fnRoot+'_ctffind_spectrum.mrc'+theNewLine
         command+= str(self.SphericalAberration) + ',' + \
                   str(self.Voltage) + ',' + \
                   str(self.AmplitudeContrast) + ',' + \
@@ -481,8 +505,11 @@ class preprocess_A_class:
 
     def pickup_ctfestimate_ctffind(self,shortname,filename,fh_mpi):
         import XmippData
+        (filepath, micrographName) = os.path.split(filename)
+        (fnRoot,extension) = os.path.splitext(micrographName)
+
         # Pick values from ctffind
-        fh=open(shortname+'/ctffind.log','r')
+        fh=open(shortname+'/'+fnRoot+'_ctffind.log','r')
         lines=fh.readlines()
         fh.close()
         DF1=0.
@@ -497,8 +524,6 @@ class preprocess_A_class:
                 break
 
         # Generate Xmipp .ctfparam file:
-        (filepath, micrographName) = os.path.split(filename)
-        (fnRoot,extension) = os.path.splitext(micrographName)
         MD=XmippData.MetaData()
         MD.setColumnFormat(False)
         ptr=XmippData.doubleP()
@@ -511,10 +536,10 @@ class preprocess_A_class:
         ptr.assign(self.Voltage)
         XmippData.setValueDouble(MD,XmippData.MDL_CTF_VOLTAGE,ptr)
 
-        ptr.assign(-DF1)
+        ptr.assign(-DF2)
         XmippData.setValueDouble(MD,XmippData.MDL_CTF_DEFOCUSU,ptr)
         
-        ptr.assign(-DF2)
+        ptr.assign(-DF1)
         XmippData.setValueDouble(MD,XmippData.MDL_CTF_DEFOCUSV,ptr)
 
         ptr.assign(Angle)
@@ -523,7 +548,7 @@ class preprocess_A_class:
         ptr.assign(self.SphericalAberration)
         XmippData.setValueDouble(MD,XmippData.MDL_CTF_CS,ptr)
 
-        ptr.assign(self.AmplitudeContrast)
+        ptr.assign(-self.AmplitudeContrast)
         XmippData.setValueDouble(MD,XmippData.MDL_CTF_Q0,ptr)
 
         ptr.assign(1.0)
@@ -534,7 +559,7 @@ class preprocess_A_class:
 
         # Remove temporary files
         command="rm " + shortname+'/tmp.mrc\n'
-        os.write(fh_mpi,"echo '* '," + command)
+        os.write(fh_mpi,"echo * " + command)
         os.write(fh_mpi,command)
         return fnOut
 
