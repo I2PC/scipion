@@ -1177,7 +1177,7 @@ public:
     }
     /** Get origin offsets from image header
       */
-    void getShifts(double &xoff, double &yoff, double &zoff = 0.,
+    void getShifts(double &xoff, double &yoff, double &zoff,
                    long int n = 0)
     {
         MD[n].getValue(MDL_ORIGINX, xoff);
