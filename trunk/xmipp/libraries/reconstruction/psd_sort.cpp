@@ -28,118 +28,152 @@
 #include "ctf_estimate_from_micrograph.h"
 #include <data/args.h>
 #include <data/filters.h>
+#include <data/transformations.h>
 
 /* Read parameters --------------------------------------------------------- */
-void Prog_Sort_PSD_Parameters::read(int argc, char **argv) {
-	fnSel = getParameter(argc, argv, "-i");
-	fnOut = getParameter(argc, argv, "-o");
-	windowSize = textToInteger(getParameter(argc, argv, "-N", "512"));
-	filter_w1 = textToFloat(getParameter(argc, argv, "-f1", "0.05"));
-	filter_w2 = textToFloat(getParameter(argc, argv, "-f2", "0.2"));
-	decay_width = textToFloat(getParameter(argc, argv, "-decay", "0.02"));
-	mask_w1 = textToFloat(getParameter(argc, argv, "-m1", "0.025"));
-	mask_w2 = textToFloat(getParameter(argc, argv, "-m2", "0.2"));
+void Prog_Sort_PSD_Parameters::readParams()
+{
+    fnSel = getParam("-i");
+    filter_w1 = getDoubleParam("-f1");
+    filter_w2 = getDoubleParam("-f2");
+    decay_width = getDoubleParam("-decay");
+    mask_w1 = getDoubleParam("-m1");
+    mask_w2 = getDoubleParam("-m2");
 }
 
 /* Usage ------------------------------------------------------------------- */
-void Prog_Sort_PSD_Parameters::usage() const {
-	std::cerr << "psd_sort\n"
-			<< "   -i <selfile>             : Selfile with micrographs\n"
-			<< "   -o <outputfile>          : List of micrographs with its correlations\n"
-			<< "  [-N <size=512>]           : Size of windows for the PSD estimation\n"
-			<< "  [-f1 <freq_low=0.05>]     : Low freq. for band pass filtration, max 0.5\n"
-			<< "  [-f2 <freq_high=0.2>]     : High freq. for band pass filtration, max 0.5\n"
-			<< "  [-decay <freq_decay=0.02>]: Decay for the transition bands\n"
-			<< "  [-m1 <freq_low=0.025>]    : Low freq. for mask, max 0.5\n"
-			<< "  [-m2 <freq_high=0.2>      : High freq. for mask, max 0.5\n";
+void Prog_Sort_PSD_Parameters::defineParams()
+{
+    addUsageLine("This program evaluates the CTFs and PSDs of a set of micrographs");
+    addUsageLine("as produced by the preprocessing micrographs step of the Xmipp protocols");
+    addParamsLine("   -i <selfile>              : Selfile with micrographs");
+    addParamsLine("==+ Enhancement filter parameters");
+    addParamsLine("  [-f1 <freq_low=0.02>]      : Low freq. for band pass filtration, max 0.5");
+    addParamsLine("  [-f2 <freq_high=0.2>]      : High freq. for band pass filtration, max 0.5");
+    addParamsLine("  [-decay <freq_decay=0.02>] : Decay for the transition bands");
+    addParamsLine("  [-m1 <mfreq_low=0.01>]     : Low freq. for mask, max 0.5");
+    addParamsLine("  [-m2 <mfreq_high=0.45>]    : High freq. for mask, max 0.5");
 }
 
 /* Show -------------------------------------------------------------------- */
-void Prog_Sort_PSD_Parameters::show() const {
-	std::cout << "Selfile:      " << fnSel << std::endl << "Output:       "
-			<< fnOut << std::endl << "N:            " << windowSize
-			<< std::endl << "Filter w1:    " << filter_w1 << std::endl
-			<< "Filter w2:    " << filter_w2 << std::endl << "Filter decay: "
-			<< decay_width << std::endl << "Mask w1:      " << mask_w1
-			<< std::endl << "Mask w2:      " << mask_w2 << std::endl;
-}
-
-/* Produce side information ------------------------------------------------ */
-void Prog_Sort_PSD_Parameters::produceSideInfo() {
-	SF.read(fnSel);
+void Prog_Sort_PSD_Parameters::show() const
+{
+    std::cout << "Selfile:      " << fnSel << std::endl
+    << "Filter w1:    " << filter_w1 << std::endl
+    << "Filter w2:    " << filter_w2 << std::endl
+    << "Filter decay: " << decay_width << std::endl
+    << "Mask w1:      " << mask_w1 << std::endl
+    << "Mask w2:      " << mask_w2 << std::endl;
 }
 
 /* Compute Correlation ----------------------------------------------------- */
-double Prog_Sort_PSD_Parameters::computeCorrelation(
-		const FileName &fnMicrograph) const {
-	std::cerr << "Processing " << fnMicrograph << std::endl;
-	FileName fn_root = fnMicrograph.withoutExtension();
+double Prog_Sort_PSD_Parameters::evaluate(const FileName &fnMicrograph,
+    const FileName &fnPSD, const FileName &fnCTF, const FileName &fnCTF2,
+    PSDEvaluation &evaluation) const
+{
+    FileName fnRoot = fnMicrograph.withoutExtension();
 
-	// Compute PSD
-	Prog_assign_CTF_prm assignCTF;
-	assignCTF.image_fn = fnMicrograph;
-	assignCTF.selfile_mode = false;
-	assignCTF.reversed = false;
-	assignCTF.N_horizontal = windowSize;
-	assignCTF.N_vertical = assignCTF.N_horizontal;
-	assignCTF.compute_at_particle = false;
-	assignCTF.micrograph_averaging = true;
-	assignCTF.piece_averaging = false;
-	assignCTF.Nside_piece = 5;
-	assignCTF.PSD_mode = Prog_assign_CTF_prm::Periodogram;
-	assignCTF.dont_adjust_CTF = true;
-	assignCTF.selfile_fn = "";
-	assignCTF.picked_fn = "";
-	assignCTF.PSDfn_root = fn_root + "_Periodogram";
-	assignCTF.process();
+    // Read input data
+    Image<double> PSD;
+    PSD.read(fnPSD);
+    CTFDescription CTF1, CTF2;
+    CTF1.read(fnCTF);
+    CTF1.Produce_Side_Info();
+    if (fnCTF2!="")
+    {
+    	CTF2.read(fnCTF2);
+    	CTF2.Produce_Side_Info();
+    }
 
-	// Load the PSD
-	Image<double> PSD;
-	PSD.read(fn_root + "_Periodogramavg.psd");
+    // Enhance the PSD
+    Prog_Enhance_PSD_Parameters enhancePSD;
+    enhancePSD.center = true;
+    enhancePSD.take_log = true;
+    enhancePSD.filter_w1 = filter_w1;
+    enhancePSD.filter_w2 = filter_w2;
+    enhancePSD.decay_width = decay_width;
+    enhancePSD.mask_w1 = mask_w1;
+    enhancePSD.mask_w2 = mask_w2;
+    enhancePSD.apply(PSD());
+    PSD.write(fnRoot + "_Periodogramavg_enhanced.xmp");
 
-	// Enhance the PSD
-	Prog_Enhance_PSD_Parameters enhancePSD;
-	enhancePSD.center = true;
-	enhancePSD.take_log = true;
-	enhancePSD.filter_w1 = filter_w1;
-	enhancePSD.filter_w2 = filter_w2;
-	enhancePSD.decay_width = decay_width;
-	enhancePSD.mask_w1 = mask_w1;
-	enhancePSD.mask_w2 = mask_w2;
-	enhancePSD.apply(PSD());
-	PSD.write(fn_root + "_Periodogramavg_enhanced.psd");
+    // Evaluate the radial integral
+    PSD().setXmippOrigin();
+    Matrix1D< int > center_of_rot(2);
+    MultidimArray< double > radial_mean;
+    MultidimArray<int> radial_count;
+    radialAverage(PSD(),center_of_rot,radial_mean,radial_count);
+    radial_mean.selfABS();
+    evaluation.PSDradialIntegral=radial_mean.sum();
 
-	// Rotate 90 degrees and compute correlation
-	Image<double> PSDrotated(PSD);
-	selfRotate(BSPLINE3, PSDrotated(), 90);
-	return correlation_index(PSD(), PSDrotated());
+    // Rotate 90 degrees and compute correlation
+    Image<double> PSDrotated(PSD);
+    selfRotate(BSPLINE3, PSDrotated(), 90);
+    evaluation.PSDcorrelation90=correlation_index(PSD(), PSDrotated());
+
+    // Get the fitting score
+    MetaData MD;
+    MD.read(fnCTF);
+    MD.getValue(MDL_CTF_CRITERION_FITTINGSCORE,evaluation.fittingScore);
+
+    // Explore the CTF
+    Matrix1D<double> u(2), freqZero1(2), freqZero2(2);
+    double wmax=0.5/CTF1.Tm;
+    double maxModule=0, minModule=1e38, min;
+    double N=0;
+    evaluation.maxDampingAtBorder=0;
+    evaluation.firstZeroDisagreement=0;
+    evaluation.firstZeroAvg=0;
+    for (double alpha=0; alpha<=PI; alpha+=PI/180, N++)
+    {
+    	VECTOR_R2(u,cos(alpha),sin(alpha));
+
+    	// Get the zero in the direction of u
+    	CTF1.zero(1, u, freqZero1);
+    	double module=1.0/freqZero1.module();
+    	maxModule=XMIPP_MAX(maxModule,module);
+    	minModule=XMIPP_MIN(minModule,module);
+    	evaluation.firstZeroAvg+=module;
+    	double wx=wmax*XX(u);
+    	double wy=wmax*YY(u);
+    	double damping=CTF1.CTFdamping_at(wx,wy);
+    	damping=damping*damping;
+    	evaluation.maxDampingAtBorder=XMIPP_MAX(evaluation.maxDampingAtBorder,damping);
+    	if (fnCTF2!="") {
+        	CTF2.zero(1, u, freqZero2);
+        	double module2=1.0/freqZero2.module();
+        	double diff=ABS(module-module2);
+        	evaluation.firstZeroDisagreement=XMIPP_MAX(evaluation.firstZeroDisagreement,diff);
+    	}
+    }
+    evaluation.firstZeroAvg/=N;
+    evaluation.firstZeroRatio=maxModule/minModule;
 }
 
 /* Run --------------------------------------------------------------------- */
-void Prog_Sort_PSD_Parameters::run() {
-	// Compute the correlation of all micrographs
-	correlation.resize(SF.size());
-	std::vector<FileName> filenames;
-	int i=0;
-	FOR_ALL_OBJECTS_IN_METADATA(SF) {
-		FileName fnMicrograph;
-		SF.getValue(MDL_IMAGE,fnMicrograph);
-		filenames.push_back(fnMicrograph);
-		correlation(i) = computeCorrelation(fnMicrograph);
-		i++;
-	}
-
-	// Sort the correlations
-	MultidimArray<int> idx = correlation.indexSort();
-
-	// Produce output
-	std::ofstream fhOut;
-	fhOut.open(fnOut.c_str());
-	if (!fhOut)
-		REPORT_ERROR(ERR_IO_NOTOPEN,(std::string)"Cannot open "+fnOut+" for output");
-	FOR_ALL_ELEMENTS_IN_ARRAY1D(idx) {
-		int ii = idx(i) - 1;
-		fhOut << filenames[ii] << " \t" << correlation(ii) << std::endl;
-	}
-	fhOut.close();
+void Prog_Sort_PSD_Parameters::run()
+{
+    MetaData SF(fnSel);
+    PSDEvaluation evaluation;
+    init_progress_bar(SF.size());
+    int idx=0;
+    FOR_ALL_OBJECTS_IN_METADATA(SF)
+    {
+        FileName fnMicrograph, fnPSD, fnCTF, fnCTF2;
+        SF.getValue(MDL_IMAGE,fnMicrograph);
+        SF.getValue(MDL_PSD,fnPSD);
+        SF.getValue(MDL_CTFMODEL,fnCTF);
+        if (SF.containsLabel(MDL_CTFMODEL2))
+        	SF.getValue(MDL_CTFMODEL2,fnCTF2);
+        evaluate(fnMicrograph, fnPSD, fnCTF, fnCTF2, evaluation);
+        SF.setValue(MDL_CTF_CRITERION_DAMPING,evaluation.maxDampingAtBorder);
+        SF.setValue(MDL_CTF_CRITERION_FIRSTZEROAVG,evaluation.firstZeroAvg);
+        SF.setValue(MDL_CTF_CRITERION_FIRSTZERODISAGREEMENT,evaluation.firstZeroDisagreement);
+        SF.setValue(MDL_CTF_CRITERION_FIRSTZERORATIO,evaluation.firstZeroRatio);
+        SF.setValue(MDL_CTF_CRITERION_FITTINGSCORE,evaluation.fittingScore);
+        SF.setValue(MDL_CTF_CRITERION_PSDCORRELATION90,evaluation.PSDcorrelation90);
+        SF.setValue(MDL_CTF_CRITERION_PSDRADIALINTEGRAL,evaluation.PSDradialIntegral);
+        progress_bar(++idx);
+    }
+    SF.write(fnSel);
 }
