@@ -28,26 +28,19 @@
 
 int main(int argc, char **argv)
 {
-    Prog_Sort_PSD_Parameters prm;
+    // Get input parameters
     try
     {
-        prm.read(argc,argv);
-    } catch (XmippError XE)
-    {
-        std::cerr << XE << std::endl;
-        prm.usage();
-        return 1;
+    	Prog_Sort_PSD_Parameters program;
+        program.read(argc, argv);
+        program.run();
+
     }
-    
-    try
+    catch (XmippError XE)
     {
-        prm.produceSideInfo();
-        prm.show();
-        prm.run();
-    } catch (XmippError XE)
-    {
-        std::cerr << XE << std::endl;
-        return 1;
+        std::cerr << XE;
+        XE.printStackTrace(std::cerr);
+        exit(1);
     }
     return 0;
 }
