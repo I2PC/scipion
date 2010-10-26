@@ -653,7 +653,7 @@ public:
     MultidimArray(unsigned long int Ndim, int Zdim, int Ydim, int Xdim)
     {
         coreInit();
-        resize(Ndim, Zdim, Ydim, Xdim);
+        coreAllocate(Ndim, Zdim, Ydim, Xdim);
     }
 
     /** Size constructor with 3D size.
@@ -663,7 +663,7 @@ public:
     MultidimArray(int Zdim, int Ydim, int Xdim)
     {
         coreInit();
-        resize(1, Zdim, Ydim, Xdim);
+        coreAllocate(1, Zdim, Ydim, Xdim);
     }
 
     /** Size constructor with 2D size.
@@ -673,7 +673,7 @@ public:
     MultidimArray(int Ydim, int Xdim)
     {
         coreInit();
-        resize(1, 1, Ydim, Xdim);
+        coreAllocate(1, 1, Ydim, Xdim);
     }
 
     /** Size constructor with 1D size.
@@ -683,7 +683,7 @@ public:
     MultidimArray(int Xdim)
     {
         coreInit();
-        resize(1, 1, 1, Xdim);
+        coreAllocate(1, 1, 1, Xdim);
     }
 
     /** Copy constructor
@@ -708,7 +708,7 @@ public:
     MultidimArray(const Matrix1D<T>& V)
     {
         coreInit();
-        resize(1, 1, 1, V.size(),false);
+        coreAllocate(1, 1, 1, V.size());
         for (int i = 0; i < V.size(); i++)
             DIRECT_A1D_ELEM(*this,i) = VEC_ELEM(V,i);
     }
@@ -721,7 +721,7 @@ public:
     MultidimArray(const std::vector<T> &vector)
     {
         coreInit();
-        resize(1, 1, 1, vector.size(),false);
+        coreAllocate(1, 1, 1, vector.size());
         for (int i = 0; i < vector.size(); i++)
             DIRECT_A1D_ELEM(*this,i) = vector[i];
     }
@@ -798,9 +798,7 @@ public:
 
         if (mmapOn)
         {
-            mapFile.initRandom(8);
-            mapFile = mapFile.addExtension("tmp");
-
+            mapFile.initUniqueName();
 
             if ( ( mFd = open(mapFile.c_str(),  O_RDWR | O_CREAT | O_TRUNC,S_IRUSR|S_IWUSR|S_IRGRP|S_IWGRP) ) == -1 )
                 REPORT_ERROR(ERR_IO_NOTOPEN,"MultidimArray::coreAllocate: Error creating map file.");
@@ -841,8 +839,7 @@ public:
 
         if (mmapOn)
         {
-            mapFile.initRandom(8);
-            mapFile = mapFile.addExtension("tmp");
+          mapFile.initUniqueName();
 
             if ( ( mFd = open(mapFile.c_str(),  O_RDWR | O_CREAT | O_TRUNC,S_IRUSR|S_IWUSR|S_IRGRP|S_IWGRP) ) == -1 )
                 REPORT_ERROR(ERR_IO_NOTOPEN,"MultidimArray::coreAllocateReuse: Error creating map file.");
@@ -1047,8 +1044,7 @@ public:
         {
             if (mmapOn)
             {
-                newMapFile.initRandom(8);
-                newMapFile = newMapFile.addExtension("tmp");
+                newMapFile.initUniqueName();
 
                 if ( ( new_mFd = open(newMapFile.c_str(),  O_RDWR | O_CREAT | O_TRUNC,S_IRUSR|S_IWUSR|S_IRGRP|S_IWGRP) ) == -1 )
                     REPORT_ERROR(ERR_IO_NOTOPEN,"MultidimArray::resize: Error creating map file.");
@@ -1092,7 +1088,7 @@ public:
                         }
         }
 
-        // deallocate old vector
+        // deallocate old array
         coreDeallocate();
 
         // assign *this vector to the newly created
@@ -1109,6 +1105,13 @@ public:
         nzyxdimAlloc = nzyxdim;
     }
 
+    /** Resize with no copy a single 3D image
+     */
+    void resizeNoCopy(int Zdim, int Ydim, int Xdim)
+    {
+        resize(1, Zdim, Ydim, Xdim, false);
+    }
+
     /** Resize a single 3D image
      *
      * This function assumes n is 1
@@ -1119,13 +1122,6 @@ public:
     void resize(int Zdim, int Ydim, int Xdim)
     {
         resize(1, Zdim, Ydim, Xdim);
-    }
-
-    /** Resize with no copy a single 3D image
-     */
-    void resizeNoCopy(int Zdim, int Ydim, int Xdim)
-    {
-        resize(1, Zdim, Ydim, Xdim, false);
     }
 
     /** Resize a single 2D image
@@ -3339,8 +3335,8 @@ public:
      */
     void equal(T op1, MultidimArray<char> &result) const
     {
-      result.resizeNoCopy(*this);
-      FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(result)
+        result.resizeNoCopy(*this);
+        FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(result)
         DIRECT_MULTIDIM_ELEM(result,n) = DIRECT_MULTIDIM_ELEM(*this,n) == op1;
     }
 

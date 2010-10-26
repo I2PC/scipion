@@ -256,7 +256,7 @@ public:
     {
         clear();
         data.setMmap(_mmapOn);
-        data.resize(Ndim, Zdim, Ydim, Xdim);
+        data.coreAllocate(Ndim, Zdim, Ydim, Xdim);
         MD.resize(Ndim);
     }
 

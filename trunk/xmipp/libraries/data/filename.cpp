@@ -234,6 +234,22 @@ void FileName::initRandom(int length)
         *this += 'a' + FLOOR(rnd_unif(0, 26));
 }
 
+// Init Unique .............................................................
+void FileName::initUniqueName(char *templateStr)
+{
+    int fd;
+    char filename[L_tmpnam];
+    strcpy(filename, templateStr);
+
+    if ((fd = mkstemp(filename)) == -1)
+    {
+        perror("FileTaskDistributor::Error generating tmp lock file");
+        exit(1);
+    }
+    close(fd);
+    *this = filename;
+}
+
 // Add at beginning ........................................................
 FileName FileName::addPrefix(const std::string &prefix) const
 {

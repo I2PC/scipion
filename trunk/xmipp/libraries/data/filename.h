@@ -208,6 +208,14 @@ public:
      * Generate a random name of the desired length.
      */
     void initRandom(int length);
+
+    /** Unique name
+     *
+     * Generate a unique name replacing each 'X' with a character from
+     * the portable filename character set. The characters are chosen such
+     * that the resulting name does not duplicate the name of an existing file.
+     */
+    void initUniqueName(char * templateStr = "xmippTemp_XXXXXX");
     //@}
 
     ///@name Filename utilities
