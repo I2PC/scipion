@@ -104,6 +104,7 @@ double Prog_Sort_PSD_Parameters::evaluate(const FileName &fnMicrograph,
     MultidimArray<int> radial_count;
     radialAverage(PSD(),center_of_rot,radial_mean,radial_count);
     radial_mean.selfABS();
+    radial_mean/=radial_mean.computeMax();
     evaluation.PSDradialIntegral=radial_mean.sum();
 
     // Rotate 90 degrees and compute correlation
