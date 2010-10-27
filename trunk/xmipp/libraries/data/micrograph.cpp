@@ -608,13 +608,17 @@ void Micrograph::move_last_coord_to(int x, int y)
     }
 }
 
-void Micrograph::resize(int Xdim, int Ydim)
+void Micrograph::resize(int Xdim, int Ydim, FileName filename)
 {
+  this->Xdim = Xdim;
+  this->Ydim = Ydim;
+  this->Zdim = 1;
+  this->Ndim = 1;
 
     if (datatype == UChar)
     {
         if (IUChar == NULL)
-            IUChar = new Image<unsigned char>(Xdim, Ydim, 1, 1, true);
+            IUChar = new Image<unsigned char>(Xdim, Ydim, 1, 1, filename);
         else
         {
             IUChar->data.setMmap(true);
@@ -624,7 +628,7 @@ void Micrograph::resize(int Xdim, int Ydim)
     else if (datatype == UShort)
     {
         if (IUShort == NULL)
-            IUShort = new Image<unsigned short int>(Xdim, Ydim, 1, 1, true);
+            IUShort = new Image<unsigned short int>(Xdim, Ydim, 1, 1, filename);
         else
         {
             IUShort->data.setMmap(true);
@@ -634,7 +638,7 @@ void Micrograph::resize(int Xdim, int Ydim)
     else if (datatype == Short)
     {
         if (IShort == NULL)
-            IShort = new Image<short int>(Xdim, Ydim, 1, 1, true);
+            IShort = new Image<short int>(Xdim, Ydim, 1, 1, filename);
         else
         {
             IShort->data.setMmap(true);
@@ -644,7 +648,7 @@ void Micrograph::resize(int Xdim, int Ydim)
     else if (datatype == UInt)
     {
         if (IUInt == NULL)
-            IUInt = new Image<unsigned int>(Xdim, Ydim, 1, 1, true);
+            IUInt = new Image<unsigned int>(Xdim, Ydim, 1, 1, filename);
         else
         {
             IUInt->data.setMmap(true);
@@ -654,7 +658,7 @@ void Micrograph::resize(int Xdim, int Ydim)
     else if (datatype == Int)
     {
         if (IInt == NULL)
-            IInt = new Image<int>(Xdim, Ydim, 1, 1, true);
+            IInt = new Image<int>(Xdim, Ydim, 1, 1, filename);
         else
         {
             IInt->data.setMmap(true);
@@ -664,7 +668,7 @@ void Micrograph::resize(int Xdim, int Ydim)
     else if (datatype == Float)
     {
         if (IFloat == NULL)
-            IFloat = new Image<float>(Xdim, Ydim, 1, 1, true);
+            IFloat = new Image<float>(Xdim, Ydim, 1, 1, filename);
         else
         {
             IFloat->data.setMmap(true);

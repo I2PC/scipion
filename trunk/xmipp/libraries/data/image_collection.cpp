@@ -62,15 +62,15 @@ ImageCollection::ImageCollection(const FileName &fnImage, int mode)
 
 ImageCollection::~ImageCollection()
 {
-  std::map<FileName, fImageHandler*>::iterator it;
+  std::map<FileName, ImageFHandler*>::iterator it;
   Image<double> image;
   for (it = openedStacks.begin(); it != openedStacks.end(); ++it)
     image.closeFile(it->second);
 }
 
-fImageHandler* ImageCollection::getStackHandle(Image<double> &image, const FileName & fnStack)
+ImageFHandler* ImageCollection::getStackHandle(Image<double> &image, const FileName & fnStack)
 {
-  std::map<FileName, fImageHandler*>::iterator it;
+  std::map<FileName, ImageFHandler*>::iterator it;
   it = openedStacks.find(fnStack);
   if (it != openedStacks.end())
     return it->second;
@@ -86,7 +86,7 @@ int ImageCollection::readImage(Image<double> &image, const FileName &name, bool 
         FileName stackName;
         int imgno;
         name.decompose(imgno, stackName);
-        fImageHandler * fIH = getStackHandle(image, stackName);
+        ImageFHandler * fIH = getStackHandle(image, stackName);
         image._read(stackName, fIH, readdata, imgno, apply_geo, only_apply_shifts, row, mapData);
     }
     else
@@ -103,7 +103,7 @@ void ImageCollection::writeImage(Image<double> &image, const FileName &name, int
         name.decompose(imgno, stackName);
         if (select_img == -1)
           select_img = imgno;
-        fImageHandler * fIH = getStackHandle(image, stackName);
+        ImageFHandler * fIH = getStackHandle(image, stackName);
         image._write(stackName, fIH, select_img, true, mode);
     }
     else

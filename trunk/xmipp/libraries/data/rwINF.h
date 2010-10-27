@@ -243,19 +243,30 @@ int writeINF(int img_select, bool isStack=false, int mode=WRITE_OVERWRITE)
     fl.l_type = F_UNLCK;
     fcntl(fileno(fhed), F_SETLK, &fl);
 
+    /* Write Image file ==================================*/
+    size_t datasize_n, datasize;
+    datasize_n = Xdim*Ydim*Zdim;
+    datasize = datasize_n * gettypesize(wDType);
+
     // Lock Image file
     fl.l_type   = F_WRLCK;
     fcntl(fileno(fimg), F_SETLKW, &fl);
 
-    /* Write Image file ==================================*/
-    size_t datasize_n;
-    datasize_n = Xdim*Ydim*Zdim;
-
-    writePageAsDatatype(fimg, wDType, datasize_n);
+    if (mmapOn)
+    {
+        offset = 0;
+        mappedSize = offset + datasize;
+        fseek(fimg, datasize-1, SEEK_SET);
+        fputc(0, fimg);
+        mmapFile();
+    }
+    else
+        writePageAsDatatype(fimg, wDType, datasize_n);
 
     // Unlock Image file
     fl.l_type   = F_UNLCK;
     fcntl(fileno(fimg), F_SETLK, &fl);
+
 
     return(0);
 }

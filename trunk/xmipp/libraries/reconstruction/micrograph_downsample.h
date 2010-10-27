@@ -90,6 +90,8 @@ public:
     MultidimArray<double> kernel;
     // Input micrograph
     Micrograph M;
+    // Output micrograph
+    Micrograph outM;
     // Input micrograph depth
     int bitsM;
     // Input dimensions
@@ -126,7 +128,7 @@ public:
     void create_empty_output_file();
 
     /** Really downsample.*/
-    void Downsample() const;
+    void Downsample();
 };
 //@}
 #endif

@@ -43,14 +43,14 @@ class ImageCollection: public MetaData
 {
 private:
     ///Dictionary with already opened stacks
-    std::map<FileName, fImageHandler*> openedStacks;
+    std::map<FileName, ImageFHandler*> openedStacks;
     ///Mode for open images files
     int mode;
 
     /**Get an stack handle, open the file handler if not done
      * and add to the dictionary of allready opened stacks
      */
-    fImageHandler* getStackHandle(Image<double> &image, const FileName & fnStack);
+    ImageFHandler* getStackHandle(Image<double> &image, const FileName & fnStack);
 
 public:
     ///Constructors and destructor

@@ -101,13 +101,15 @@ typedef enum
 /** Open File struct
  * This struct is used to share the File handlers with Image Collection class
  */
-struct fImageHandler
+struct ImageFHandler
 {
     FILE*     fimg;       // Image File handler
     FILE*     fhed;       // Image File header handler
     TIFF*     tif;        // TIFF Image file hander
+    FileName  fileName;
+    FileName  headName;
     FileName  ext_name;   // Filename extension
-    bool     exist;       // Shows if the file exists
+    bool     exist;       // Shows if the file exists. Equal 0 means file does not exist or not stack.
 };
 
 
@@ -211,6 +213,7 @@ public:
 
 private:
     FileName            filename;    // File name
+    FileName            dataFName;   // Data File name without flags
     FILE*                fimg;        // Image File handler
     FILE*                fhed;        // Image File header handler
     TIFF*                tif;         // TIFF Image file hander
@@ -238,8 +241,7 @@ public:
      */
     Image()
     {
-        mmapOn = false;
-        clear();
+        init();
     }
 
     /** Constructor with size
@@ -252,24 +254,42 @@ public:
      * Image I(64,64);
      * @endcode
      */
-    Image(int Xdim, int Ydim, int Zdim=1, int Ndim=1,bool _mmapOn=false)
+    Image(int Xdim, int Ydim, int Zdim=1, int Ndim=1, bool _mmapOn=false)
     {
-        clear();
+        init();
         data.setMmap(_mmapOn);
         data.coreAllocate(Ndim, Zdim, Ydim, Xdim);
         MD.resize(Ndim);
     }
 
-    /** Clear.
+    /** Constructor with size and filename
+     *
+     * An image file, which name and format are given by filename,
+     * is created with the given size. Then the image is mapped to this file. After calculations,
+     * Image::write must be called in order to fulfill header information.
+     *
+     * @code
+     * Image I(64,64,1,1,"image.spi");
+     * @endcode
+     */
+    Image(int Xdim, int Ydim, int Zdim, int Ndim, FileName _filename)
+    {
+        init();
+        mmapOn = true;
+        data.setDimensions(Xdim, Ydim, Zdim, Ndim);
+        MD.resize(Ndim);
+        filename = _filename;
+        ImageFHandler *hFile = openFile(_filename, WRITE_OVERWRITE);
+        _write(_filename, hFile, -1, false, WRITE_OVERWRITE);
+        closeFile(hFile);
+    }
+
+    /** Init.
      * Initialize everything to 0
      */
-    void clear()
+    void init()
     {
-        if (mmapOn)
-            closeMmap();
-        else
-            data.clear();
-
+        clearHeader();
         dataflag = -1;
         if (isComplexT())
             transform = Standard;
@@ -279,11 +299,23 @@ public:
         filename = "";
         offset = 0;
         swap = 0;
-        clearHeader();
         replaceNsize=0;
         mmapOn = false;
         mappedSize = 0;
         mFd    = NULL;
+    }
+
+    /** Clear.
+     * Initialize everything to 0
+     */
+    void clear()
+    {
+        if (mmapOn)
+            munmapFile();
+        else
+            data.clear();
+
+        init();
     }
 
     /** Clear the header of the image
@@ -382,7 +414,7 @@ public:
     {
         int err = 0;
 
-        fImageHandler* hFile = openFile(name);
+        ImageFHandler* hFile = openFile(name);
         err = _read(name, hFile, readdata, select_img, apply_geo, only_apply_shifts, row, mapData);
         closeFile(hFile);
 
@@ -398,7 +430,7 @@ public:
                int mode=WRITE_OVERWRITE)
     {
         const FileName &fname = (name == "") ? filename : name;
-        fImageHandler* hFile = openFile(fname, mode);
+        ImageFHandler* hFile = openFile(fname, mode);
         _write(fname, hFile, select_img, isStack, mode);
         closeFile(hFile);
     }
@@ -753,125 +785,6 @@ public:
             for ( unsigned long i=0; i<pageNrElements; i+=swap )
                 swapbytes(page+i, swap);
         }
-    }
-
-    /** Read the raw data
-      */
-    void readData(FILE* fimg, int select_img, DataType datatype, unsigned long pad)
-    {
-        //#define DEBUG
-#ifdef DEBUG
-        std::cerr<<"entering readdata"<<std::endl;
-        std::cerr<<" readData flag= "<<dataflag<<std::endl;
-#endif
-
-        if ( dataflag < 1 )
-            return;
-
-        // If only half of a transform is stored, it needs to be handled
-        if (transform == Hermitian || transform == CentHerm )
-            data.setXdim(XSIZE(data)/2 + 1);
-
-        size_t myoffset, readsize, readsize_n, pagemax = 1073741824; //1Gb
-        size_t datatypesize=gettypesize(datatype);
-        size_t pagesize  =ZYXSIZE(data)*datatypesize;
-        size_t haveread_n=0;
-
-        // Flag to know that data is not going to be mapped although mmapOn is true
-        if (mmapOn && !checkMmapT(datatype))
-        {
-            std::cout << "WARNING: Image Class. File datatype and image declaration not compatible with mmap. Loading into memory." <<std::endl;
-            mmapOn = false;
-            mFd = -1;
-        }
-
-        if (mmapOn)
-        {
-            // Image mmapOn is not compatible with Multidimarray mmapOn
-            if(data.mmapOn)
-                REPORT_ERROR(ERR_MULTIDIM_DIM,"Image Class::ReadData: mmap option can not be selected simoultanesouslly\
-                             for both Image class and its Multidimarray.");
-            if ( NSIZE(data) > 1 )
-            {
-                REPORT_ERROR(ERR_MMAP,"Image Class::ReadData: mmap with multiple \
-                             images file not compatible. Try selecting a unique image.");
-            }
-
-            fclose(fimg);
-
-            if ( ( mFd = open(filename.c_str(), O_RDWR, S_IREAD | S_IWRITE) ) == -1 )
-                REPORT_ERROR(ERR_IO_NOTOPEN,"Image Class::ReadData: Error opening the image file.");
-
-            char * map;
-            mappedSize = pagesize+offset;
-
-            if ( (map = (char*) mmap(0,mappedSize, PROT_READ | PROT_WRITE, MAP_SHARED, mFd, 0)) == (void*) -1 )
-                REPORT_ERROR(ERR_MMAP_NOTADDR,"Image Class::ReadData: mmap of image file failed.");
-            data.data = reinterpret_cast<T*> (map+offset);
-        }
-        else
-        {
-            // Reset select to get the correct offset
-            if ( select_img < 0 )
-                select_img = 0;
-
-            char* page = NULL;
-
-            // Allocate memory for image data (Assume xdim, ydim, zdim and ndim are already set
-            //if memory already allocated use it (no resize allowed)
-            data.coreAllocateReuse();
-            myoffset = offset + select_img*(pagesize + pad);
-            //#define DEBUG
-
-#ifdef DEBUG
-
-            data.printShape();
-            printf("DEBUG: Page size: %ld offset= %d \n", pagesize, offset);
-            printf("DEBUG: Swap = %d  Pad = %ld  Offset = %ld\n", swap, pad, offset);
-            printf("DEBUG: myoffset = %d select_img= %d \n", myoffset, select_img);
-#endif
-
-            if (pagesize > pagemax)
-                page = (char *) askMemory(pagemax*sizeof(char));
-            else
-                page = (char *) askMemory(pagesize*sizeof(char));
-
-            fseek( fimg, myoffset, SEEK_SET );
-            for ( size_t myn=0; myn<NSIZE(data); myn++ )
-            {
-                for (size_t myj=0; myj<pagesize; myj+=pagemax )//pagesize size of object
-                {
-                    // Read next page. Divide pages larger than pagemax
-                    readsize = pagesize - myj;
-                    if ( readsize > pagemax )
-                        readsize = pagemax;
-                    readsize_n = readsize/datatypesize;
-
-                    //Read page from disc
-                    fread( page, readsize, 1, fimg );
-                    //swap per page
-                    if (swap)
-                        swapPage(page, readsize, datatype);
-                    // cast to T per page
-                    castPage2T(page, MULTIDIM_ARRAY(data) + haveread_n, datatype, readsize_n);
-                    haveread_n += readsize_n;
-                }
-                if ( pad > 0 )
-                    //fread( padpage, pad, 1, fimg);
-                    fseek( fimg, pad, SEEK_CUR );
-            }
-            //if ( pad > 0 )
-            //    freeMemory(padpage, pad*sizeof(char));
-            if ( page > 0 )
-                freeMemory(page, pagesize*sizeof(char));
-
-#ifdef DEBUG
-
-            printf("DEBUG img_read_data: Finished reading and converting data\n");
-#endif
-
-        }
-        return;
     }
 
     /** Data access
@@ -1384,20 +1297,12 @@ public:
 
 private:
 
-    void closeMmap()
-    {
-        munmap(data.data-offset,mappedSize);
-        close(mFd);
-        data.data = NULL;
-        mappedSize = 0;
-    }
-
     /** Open file function
       * Open the image file and returns its file hander.
       */
-    fImageHandler* openFile(const FileName &name, int mode = WRITE_READONLY)
+    ImageFHandler* openFile(const FileName &name, int mode = WRITE_READONLY)
     {
-        fImageHandler* hFile = new fImageHandler;
+        ImageFHandler* hFile = new ImageFHandler;
         FileName fileName, headName = "";
         FileName ext_name = name.getFileFormat();
 
@@ -1426,7 +1331,7 @@ private:
             wmChar = "w";
             break;
         case WRITE_APPEND:
-            if (_exists = exists(fileName))
+            if (hFile->exist)
                 wmChar = "r+";
             else
                 wmChar = "w+";
@@ -1443,6 +1348,7 @@ private:
             if ((hFile->tif = TIFFOpen(fileName.c_str(), wmChar.c_str())) == NULL)
                 REPORT_ERROR(ERR_IO_NOTOPEN,"rwTIFF: There is a problem opening the TIFF file.");
             hFile->fimg = NULL;
+            hFile->fhed = NULL;
         }
         else
         {
@@ -1485,7 +1391,9 @@ private:
                 hFile->fhed = NULL;
 
         }
-        hFile->ext_name =ext_name;
+        hFile->fileName = fileName;
+        hFile->headName = headName;
+        hFile->ext_name = ext_name;
 
         return hFile;
     }
@@ -1493,7 +1401,7 @@ private:
     /** Close file function.
       * Close the image file according to its name and file handler.
       */
-    void closeFile(fImageHandler* hFile = NULL)
+    void closeFile(ImageFHandler* hFile = NULL)
     {
         FileName ext_name;
         FILE* fimg, *fhed;
@@ -1519,19 +1427,18 @@ private:
             TIFFClose(tif);
         else
         {
-            if (!mmapOn && fclose(fimg) != 0 )
+            if (fclose(fimg) != 0 )
                 REPORT_ERROR(ERR_IO_NOCLOSED,(std::string)"Can not close image file "+ filename);
 
             if (fhed != NULL &&  fclose(fhed) != 0 )
                 REPORT_ERROR(ERR_IO_NOCLOSED,(std::string)"Can not close header file of "
                              + filename);
         }
-
         delete hFile;
     }
 
 
-    int _read(const FileName &name, fImageHandler* hFile, bool readdata=true, int select_img = -1,
+    int _read(const FileName &name, ImageFHandler* hFile, bool readdata=true, int select_img = -1,
               bool apply_geo = false, bool only_apply_shifts = false,
               MDRow * row = NULL, bool mapData = false)
     {
@@ -1545,7 +1452,7 @@ private:
 
         // If Image has been previously used with mmap, then close the previous file
         if (mappedSize != 0)
-            closeMmap();
+            munmapFile();
 
         // Check whether to map the data or not
         mmapOn = mapData;
@@ -1558,6 +1465,7 @@ private:
         int dump;
         name.decompose(dump, filename);
         filename = name;
+        dataFName = hFile->fileName;
 
         if (select_img == -1)
             select_img = dump;
@@ -1576,9 +1484,11 @@ private:
 
         //Just clear the header before reading
         MDMainHeader.clear();
-        //Put the file pointer at the beginning
+        //Set the file pointer at beginning
         if (fimg != NULL)
             fseek(fimg, 0, SEEK_SET);
+        if (fhed != NULL)
+            fseek(fhed, 0, SEEK_SET);
 
         if (ext_name.contains("spi") || ext_name.contains("xmp")  ||
             ext_name.contains("stk") || ext_name.contains("vol"))//mrc stack MUST go BEFORE plain MRC
@@ -1639,21 +1549,22 @@ private:
         return err;
     }
 
-    void _write(const FileName &name, fImageHandler* hFile, int select_img=-1,
+    void _write(const FileName &name, ImageFHandler* hFile, int select_img=-1,
                 bool isStack=false, int mode=WRITE_OVERWRITE)
     {
         int err = 0;
 
-        FileName ext_name = hFile->ext_name;
+        filename = name;
+        dataFName = hFile->fileName;
+        _exists = hFile->exist;
         fimg = hFile->fimg;
         fhed = hFile->fhed;
         tif  = hFile->tif;
-        _exists = hFile->exist;
 
-        filename = name;
+        FileName ext_name = hFile->ext_name;
 
         int aux;
-        FileName filNamePlusExt(name);
+        FileName filNamePlusExt;
         name.decompose(aux, filNamePlusExt);
 
         if (select_img == -1)
@@ -1741,7 +1652,10 @@ private:
          * SELECT FORMAT
          */
         //Set the file pointer at beginning
-        fseek(fimg, 0, SEEK_SET);
+        if (fimg != NULL)
+            fseek(fimg, 0, SEEK_SET);
+        if (fhed != NULL)
+            fseek(fhed, 0, SEEK_SET);
 
         if(ext_name.contains("spi") || ext_name.contains("xmp") ||
            ext_name.contains("stk") || ext_name.contains("vol"))
@@ -1758,7 +1672,7 @@ private:
             writeTIA(select_img,false,mode);
         else if (ext_name.contains("raw") || ext_name.contains("inf"))
             writeINF(select_img,false,mode);
-        else if (ext_name.contains("tif") || ext_name.contains("tiff"))
+        else if (ext_name.contains("tif"))
             writeTIFF(select_img,isStack,mode,imParam);
         else if (ext_name.contains("spe"))
             writeSPE(select_img,isStack,mode);
@@ -1778,8 +1692,141 @@ private:
             hFile->exist = _exists = true;
     }
 
-    friend class ImageCollection;
+    /** Read the raw data
+      */
+    void readData(FILE* fimg, int select_img, DataType datatype, unsigned long pad)
+    {
+        //#define DEBUG
+#ifdef DEBUG
+        std::cerr<<"entering readdata"<<std::endl;
+        std::cerr<<" readData flag= "<<dataflag<<std::endl;
+#endif
 
+        if ( dataflag < 1 )
+            return;
+
+        // If only half of a transform is stored, it needs to be handled
+        if (transform == Hermitian || transform == CentHerm )
+            data.setXdim(XSIZE(data)/2 + 1);
+
+        size_t myoffset, readsize, readsize_n, pagemax = 1073741824; //1Gb
+        size_t datatypesize=gettypesize(datatype);
+        size_t pagesize  =ZYXSIZE(data)*datatypesize;
+        size_t haveread_n=0;
+
+        // Flag to know that data is not going to be mapped although mmapOn is true
+        if (mmapOn && !checkMmapT(datatype))
+        {
+            std::cout << "WARNING: Image Class. File datatype and image declaration not compatible with mmap. Loading into memory." <<std::endl;
+            mmapOn = false;
+            mFd = -1;
+        }
+
+        if (mmapOn)
+        {
+            // Image mmapOn is not compatible with Multidimarray mmapOn
+            if(data.mmapOn)
+                REPORT_ERROR(ERR_MULTIDIM_DIM,"Image Class::ReadData: mmap option can not be selected simoultanesouslly\
+                             for both Image class and its Multidimarray.");
+            if ( NSIZE(data) > 1 )
+            {
+                REPORT_ERROR(ERR_MMAP,"Image Class::ReadData: mmap with multiple \
+                             images file not compatible. Try selecting a unique image.");
+            }
+            //            fclose(fimg);
+            mappedSize = pagesize+offset;
+            mmapFile();
+        }
+        else
+        {
+            // Reset select to get the correct offset
+            if ( select_img < 0 )
+                select_img = 0;
+
+            char* page = NULL;
+
+            // Allocate memory for image data (Assume xdim, ydim, zdim and ndim are already set
+            //if memory already allocated use it (no resize allowed)
+            data.coreAllocateReuse();
+            myoffset = offset + select_img*(pagesize + pad);
+            //#define DEBUG
+
+#ifdef DEBUG
+
+            data.printShape();
+            printf("DEBUG: Page size: %ld offset= %d \n", pagesize, offset);
+            printf("DEBUG: Swap = %d  Pad = %ld  Offset = %ld\n", swap, pad, offset);
+            printf("DEBUG: myoffset = %d select_img= %d \n", myoffset, select_img);
+#endif
+
+            if (pagesize > pagemax)
+                page = (char *) askMemory(pagemax*sizeof(char));
+            else
+                page = (char *) askMemory(pagesize*sizeof(char));
+
+            fseek( fimg, myoffset, SEEK_SET );
+            for ( size_t myn=0; myn<NSIZE(data); myn++ )
+            {
+                for (size_t myj=0; myj<pagesize; myj+=pagemax )//pagesize size of object
+                {
+                    // Read next page. Divide pages larger than pagemax
+                    readsize = pagesize - myj;
+                    if ( readsize > pagemax )
+                        readsize = pagemax;
+                    readsize_n = readsize/datatypesize;
+
+                    //Read page from disc
+                    fread( page, readsize, 1, fimg );
+                    //swap per page
+                    if (swap)
+                        swapPage(page, readsize, datatype);
+                    // cast to T per page
+                    castPage2T(page, MULTIDIM_ARRAY(data) + haveread_n, datatype, readsize_n);
+                    haveread_n += readsize_n;
+                }
+                if ( pad > 0 )
+                    //fread( padpage, pad, 1, fimg);
+                    fseek( fimg, pad, SEEK_CUR );
+            }
+            //if ( pad > 0 )
+            //    freeMemory(padpage, pad*sizeof(char));
+            if ( page > 0 )
+                freeMemory(page, pagesize*sizeof(char));
+
+#ifdef DEBUG
+
+            printf("DEBUG img_read_data: Finished reading and converting data\n");
+#endif
+
+        }
+        return;
+    }
+
+    /* Mmap Image::MultidimArray to the image file.
+     */
+    void mmapFile()
+    {
+        if ( ( mFd = open(dataFName.c_str(), O_RDWR, S_IREAD | S_IWRITE) ) == -1 )
+            REPORT_ERROR(ERR_IO_NOTOPEN,"Image Class::ReadData: Error opening the image file.");
+
+        char * map;
+
+        if ( (map = (char*) mmap(0,mappedSize, PROT_READ | PROT_WRITE, MAP_SHARED, mFd, 0)) == (void*) -1 )
+            REPORT_ERROR(ERR_MMAP_NOTADDR,"Image Class::ReadData: mmap of image file failed.");
+        data.data = reinterpret_cast<T*> (map+offset);
+    }
+
+    /* Munmap the image file.
+     */
+    void munmapFile()
+    {
+        munmap(data.data-offset,mappedSize);
+        close(mFd);
+        data.data = NULL;
+        mappedSize = 0;
+    }
+
+    friend class ImageCollection;
 }
 ;
 
