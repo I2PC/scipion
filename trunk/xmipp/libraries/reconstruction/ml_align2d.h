@@ -318,6 +318,12 @@ public:
     void readParams();
     /// Params definition
     void defineParams();
+    /// Divide the definition of params in several
+    ///functions, also allowing other programs
+    ///to include the ML2D params definition
+    void defineBasicParams(XmippProgram * prog);
+    void defineAdditionalParams(XmippProgram * prog, const char * sectionLine);
+
 
 public:
     ProgML2D(bool ML3D = false);

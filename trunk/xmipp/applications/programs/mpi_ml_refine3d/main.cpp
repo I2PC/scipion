@@ -59,8 +59,8 @@ int main(int argc, char **argv)
     {
 
         // Read command line
-        prm.read(argc, argv, argc2, argv2);
-        prm.produceSideInfo(rank);
+        prm.read(argc, argv);
+        prm.produceSideInfo();
 
         // Write starting volumes to disc with correct name for iteration loop
         if (IS_MASTER)
@@ -75,7 +75,7 @@ int main(int argc, char **argv)
         // Read and set general MLalign2D-stuff
         ML2D_prm.read(argc2, argv2);
         if (!IS_MASTER)
-            ML2D_prm.verbose = prm.verb = 0;
+            ML2D_prm.verbose = prm.verbose = 0;
         if (!checkParameter(argc2, argv2, "-psi_step"))
             ML2D_prm.psi_step = prm.angular;
         ML2D_prm.fn_root = prm.fn_root;
@@ -120,7 +120,7 @@ int main(int argc, char **argv)
         for (ML2D_prm.iter = ML2D_prm.istart; !converged && ML2D_prm.iter <= ML2D_prm.Niter; ML2D_prm.iter++)
         {
 
-            if (prm.verb > 0)
+            if (prm.verbose > 0)
             {
                 std::cerr << "--> 3D-EM volume refinement:  iteration " << ML2D_prm.iter << " of " << prm.Niter << std::endl;
                 prm.fh_hist  << "--> 3D-EM volume refinement:  iteration " << ML2D_prm.iter << " of " << prm.Niter << std::endl;
@@ -261,9 +261,9 @@ int main(int argc, char **argv)
 
         if (IS_MASTER)
         {
-            if (converged && prm.verb > 0)
+            if (converged && prm.verbose > 0)
                 std::cerr << "--> Optimization converged!" << std::endl;
-            else if (prm.verb > 0)
+            else if (prm.verbose > 0)
                 std::cerr << "--> Optimization was stopped before convergence was reached!" << std::endl;
 
             ML2D_prm.writeOutputFiles(ML2D_prm.model);

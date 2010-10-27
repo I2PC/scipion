@@ -54,7 +54,7 @@
    @ingroup ReconsLibrary */
 //@{
 /** Refine3d parameters. */
-class ProgRefine3D
+class ProgRefine3D: public XmippProgram
 {
 
 public:
@@ -66,8 +66,6 @@ public:
     int Nvols;
     // Iteration numbers
     int istart, Niter;
-    // Verbosity flag
-    int verb;
     // Convergence check
     double eps;
     // Angular sampling interval (degree)
@@ -104,29 +102,36 @@ public:
     // Number of reference projections per 3D model
     int nr_projections;
 
+    // A pointer to the 2D alignment and classification program
+    ProgML2D * ml2d;
+
 private:
-    ///Helper function to show to screan and file history
+    ///Helper function to show to screen and file history
     void showToStream(std::ostream &out);
 
 public:
 
-    /// Read additional arguments for 3D-process from command line
-    void read(int argc, char ** argv, int &argc2, char ** &argv2) ;
+    /// Empty constructor, call the constructor of ProgML2D
+    /// with the ML3D flag set to true
+    ProgRefine3D(bool fourier = false);
+    /** Destructor */
+    ~ProgRefine3D();
 
-    /// ML Usage
-    void usage();
+    /// Read additional arguments for 3D-process from command line
+    void readParams();
+
+    /// Define the parameters accepted
+    void defineParams();
 
     /// MLF Usage
     void MLF_usage();
 
-    /// Additional options
-    void extended_usage();
-
     /// Show
     void show();
 
+    //Call produceSideInfo of ML2D and
     // Fill sampling and create DFlib
-    void produceSideInfo(int rank = 0);
+    virtual void produceSideInfo();
 
     /// Project the reference volume in evenly sampled directions
     void projectReferenceVolume(MetaData &SFlib, int rank = 0, int size = 1) ;
@@ -153,6 +158,10 @@ public:
     /// Convergency check
     bool checkConvergence(int iter) ;
 
+
+
+    ///Provides implementation of the run function
+    void run();
 };
 //@}
 #endif

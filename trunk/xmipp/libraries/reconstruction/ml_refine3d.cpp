@@ -26,40 +26,63 @@
 #include "ml_refine3d.h"
 //#define DEBUG
 
-// Read ===================================================================
-void ProgRefine3D::read(int argc, char ** argv, int &argc2, char ** &argv2)
+ProgRefine3D::ProgRefine3D(bool fourier)
 {
+    fourier_mode = fourier;
+    if (!fourier)
+        ml2d = new ProgML2D(true);
+}
 
+ProgRefine3D::~ProgRefine3D()
+{
+    delete ml2d;
+}
+
+// Usage ===================================================================
+void ProgRefine3D::defineParams()
+{
+    addUsageLine("This program allow to separate structurally heterogenous data sets");
+    addUsageLine("into homogeneous classes by a multi-reference 3D-angular refinement,");
+    addUsageLine("using a maximum-likelihood(ML) target function.");
+    //Add some params from 2D
+    ml2d->defineBasicParams(this);
+    addParamsLine(" [ -ang <float=10> ]           : Angular sampling (degrees) ");
+    ml2d->defineAdditionalParams(this, "==++ ML additional options: ==");
+
+    addParamsLine("==+ Additional options: ==");
+    addParamsLine(" [ -l <float=0.2> ]            : wlsART-relaxation parameter (lambda)  ");
+    addParamsLine(" [ -k <float=0.5> ]            : wlsART-relaxation parameter for residual (kappa)");
+    addParamsLine(" [ -n <int=10> ]               : Number of wlsART-iterations ");
+    addParamsLine(" [ -nostart ]                  : Start wlsART reconstructions from all-zero volumes ");
+    addParamsLine(" [ -sym <symfile=c1> ]         : Symmetry group ");
+    addParamsLine(" [ -filter <digfreq=-1> ]      : Low-pass filter volume every iteration ");
+    addParamsLine(" [ -sym_mask <maskfile=\"\"> ]      : Local symmetry (only inside mask) ");
+    addParamsLine(" [ -tilt0 <float=-91.> ]       : Lower-value for restricted tilt angle search ");
+    addParamsLine(" [ -tiltF <float=91.> ]        : Higher-value for restricted tilt angle search ");
+    addParamsLine(" [ -perturb ]                  : Randomly perturb reference projection directions ");
+    addParamsLine(" [ -show_all_ML_options* ]      : Show all parameters for the ML-refinement");
+    addParamsLine(" [ -show_all_ART_options* ]     : Show all parameters for the wlsART reconstruction ");;
+
+    addParamsLine("==+++++ Hidden arguments ==");
+    addParamsLine(" [-solvent <filename=\"\">]");
+    addParamsLine(" [-fourier]");
+    addParamsLine(" [-prob_solvent]");
+    addParamsLine(" [-threshold_solvent <float=0.0>]");
+    addParamsLine(" [-deblob_solvent]");
+    addParamsLine(" [-dilate_solvent <int=0>]");
+    addParamsLine(" [-skip_reconstruction]");
+}
+
+// Read ===================================================================
+void ProgRefine3D::readParams()
+{
     bool do_restart = false;
 
-    if (checkParameter(argc, argv, "-more_options"))
+    if (checkParam("-show_all_ML_options"))
     {
-        if (fourier_mode)
-        {
-            MLF_usage();
-            extended_usage();
-        }
-        else
-        {
-            usage();
-            extended_usage();
-        }
+        ml2d->usage(1);
     }
-    if (checkParameter(argc, argv, "-show_all_ML_options"))
-    {
-        if (fourier_mode)
-
-        {
-            //Prog_MLFalign2D_prm MLF_prm;
-            //MLF_prm.extendedUsage(true);
-        }
-        else
-        {
-            ProgML2D ML_prm(true);
-            ML_prm.usage(1);
-        }
-    }
-    if (checkParameter(argc, argv, "-show_all_ART_options"))
+    if (checkParam( "-show_all_ART_options"))
     {
         Basic_ART_Parameters   art_prm;
         art_prm.usage_more();
@@ -69,7 +92,7 @@ void ProgRefine3D::read(int argc, char ** argv, int &argc2, char ** &argv2)
     // Generate new command line for restart procedure
     /// FIXME: restart has to be re-thought
     /*
-    if (checkParameter(argc, argv, "-restart"))
+    if (checkParam( "-restart"))
 {
         std::string   comment, cline = "";
         DocFile  DFi;
@@ -106,11 +129,11 @@ void ProgRefine3D::read(int argc, char ** argv, int &argc2, char ** &argv2)
             generateCommandLine(comment, argc2, argv2, copy);
             // Get number of volumes and names to generate SFvol
             if (fourier_mode)
-                fn_root = getParameter(argc2, argv2, "-o", "mlf3d");
+                fn_root = getParam( "-o", "mlf3d");
             else
-                fn_root = getParameter(argc2, argv2, "-o", "ml3d");
-            fn_vol = getParameter(argc2, argv2, "-vol");
-            istart = textToInteger(getParameter(argc2, argv2, "-istart"));
+                fn_root = getParam( "-o", "ml3d");
+            fn_vol = getParam( "-vol");
+            istart = getIntParam( "-istart"));
             if (Is_VolumeXmipp(fn_vol))
             {
                 SFvol.clear();
@@ -150,21 +173,24 @@ void ProgRefine3D::read(int argc, char ** argv, int &argc2, char ** &argv2)
 {
     */
     // no restart, just copy argc to argc2 and argv to argv2
-    argc2 = argc;
-    argv2 = argv;
+    //argc2 = argc;
+    //argv2 = argv;
     //   }
 
 
     //Read Refine3d parameters
-    fn_sel = getParameter(argc2, argv2, "-i");
-    if (fourier_mode)
-        fn_root = getParameter(argc2, argv2, "-o", "mlf3d");
-    else
-        fn_root = getParameter(argc2, argv2, "-o", "ml3d");
+    fn_sel = getParam( "-i");
+    fn_root = getParam("-o");
+
+    //    if (fourier_mode)
+    //        fn_root = getParam( "-o", "mlf3d");
+    //    else
+    //        fn_root = getParam( "-o", "ml3d");
+
     if (!do_restart)
     {
         // Fill volume selfile
-        fn_vol = getParameter(argc2, argv2, "-vol");
+        fn_vol = getParam( "-ref");
         SFvol.clear();
         if (fn_vol.isMetaData())
         {
@@ -176,52 +202,45 @@ void ProgRefine3D::read(int argc, char ** argv, int &argc2, char ** &argv2)
             SFvol.setValue(MDL_IMAGE, fn_vol);
             SFvol.setValue(MDL_ENABLED, 1);
         }
-        SFvol.removeObjects(MDValueEQ(MDL_ENABLED, -1));
+        if (SFvol.containsLabel(MDL_ENABLED))
+            SFvol.removeObjects(MDValueEQ(MDL_ENABLED, -1));
         Nvols = SFvol.size();
     }
 
-    angular = textToFloat(getParameter(argc2, argv2, "-ang", "10"));
-    fn_sym = getParameter(argc2, argv2, "-sym", "c1");
-    eps = textToFloat(getParameter(argc2, argv2, "-eps", "5e-5"));
-    verb = textToInteger(getParameter(argc2, argv2, "-verb", "1"));
-    Niter = textToInteger(getParameter(argc2, argv2, "-iter", "25"));
-    istart = textToInteger(getParameter(argc2, argv2, "-istart", "1"));
-    tilt_range0 = textToFloat(getParameter(argc2, argv2, "-tilt0", "-91."));
-    tilt_rangeF = textToFloat(getParameter(argc2, argv2, "-tiltF", "91."));
-    fn_symmask = getParameter(argc2, argv2, "-sym_mask", "");
-    lowpass = textToFloat(getParameter(argc2, argv2, "-filter", "-1"));
-    wlsart_no_start = checkParameter(argc2, argv2, "-nostart");
-    do_perturb = checkParameter(argc2, argv2, "-perturb");
+    angular = getDoubleParam( "-ang");
+    fn_sym = getParam( "-sym");
+    eps = getDoubleParam( "-eps");
+    Niter = getIntParam( "-iter");
+    istart = 1;//getIntParam( "-istart");
+    tilt_range0 = getDoubleParam( "-tilt0");
+    tilt_rangeF = getDoubleParam( "-tiltF");
+    fn_symmask = getParam( "-sym_mask");
+    lowpass = getDoubleParam( "-filter");
+    wlsart_no_start = checkParam( "-nostart");
+    do_perturb = checkParam( "-perturb");
 
     // Hidden for now
-    fn_solv = getParameter(argc2, argv2, "-solvent", "");
-    reconstruct_fourier = checkParameter(argc2, argv2, "-fourier");
-    do_prob_solvent = checkParameter(argc2, argv2, "-prob_solvent");
-    threshold_solvent = textToFloat(getParameter(argc2, argv2, "-threshold_solvent", "999"));
-    do_deblob_solvent = checkParameter(argc2, argv2, "-deblob_solvent");
-    dilate_solvent = textToInteger(getParameter(argc2, argv2, "-dilate_solvent", "0"));
-    skip_reconstruction = checkParameter(argc2, argv2, "-skip_reconstruction");
+    fn_solv = getParam( "-solvent");
+    reconstruct_fourier = checkParam( "-fourier");
+    do_prob_solvent = checkParam( "-prob_solvent");
+    threshold_solvent = getDoubleParam( "-threshold_solvent");
+    do_deblob_solvent = checkParam( "-deblob_solvent");
+    dilate_solvent = getIntParam( "-dilate_solvent");
+    skip_reconstruction = checkParam( "-skip_reconstruction");
 
     // Checks
     if (lowpass > 0.5)
         REPORT_ERROR(ERR_VALUE_INCORRECT, "Digital frequency for low-pass filter should be smaller than 0.5");
 
+    //Read ml2d params
+    ml2d->read(argc, argv, false);
+    if (!checkParam("-psi_step"))
+        ml2d->psi_step = angular;
+    ml2d->fn_img = fn_sel;
+    ml2d->fn_ref = fn_root + "_lib.xmd";
 }
 
-// Usage ===================================================================
-void ProgRefine3D::usage()
-{
-    std::cerr << "Usage:  ml_refine3d [options] " << std::endl;
-    std::cerr
-    << "   -i <metadatafile>           : Metadatafile with input images \n"
-    << "   -vol <volume/metadatafile>  : Initial reference volume \n"
-    << "                               :  OR metadatafile with multiple reference volumes\n"
-    << " [ -o <root=\"ml3d\"> ]          : Output rootname \n"
-    << " [ -ang <float=10> ]           : Angular sampling (degrees) \n"
-    << " [ -iter <int=25> ]            : Maximum number of iterations \n"
-    << " [ -more_options ]             : Show additional parameters for 3D-refinement\n";
 
-}
 
 // MLF Usage =================================================================
 void ProgRefine3D::MLF_usage()
@@ -231,9 +250,10 @@ void ProgRefine3D::MLF_usage()
     std::cerr << "   -vol <volume/metadatafile>  : Initial reference volume \n";
     std::cerr << "                               :  OR metadata file with multiple reference volumes\n";
     std::cerr << " [ -o <rootname> ]             : Output rootname (default = \"mlf2d\")\n";
-    std::cerr << " [ -no_ctf ]                   : Do not use any CTF correction \n";
     std::cerr << " [ -ang <float=10> ]           : Angular sampling (degrees) \n";
     std::cerr << " [ -iter <int=25>  ]           : Maximum number of iterations \n";
+
+    std::cerr << " [ -no_ctf ]                   : Do not use any CTF correction \n";
     std::cerr << " [ -search_shift <float=3>]    : Limited translational searches (in pixels) \n";
     std::cerr << " [ -reduce_noise <factor=1> ]  : Use a value smaller than one to decrease the estimated SSNRs \n";
     std::cerr << " [ -not_phase_flipped ]        : Use this if the experimental images have not been phase flipped \n";
@@ -242,28 +262,9 @@ void ProgRefine3D::MLF_usage()
     std::cerr << " [ -high <Ang=0> ]             : Exclude highest frequencies from P-calculations (in Ang) \n";
     std::cerr << " [ -ini_high <Ang=0> ]         : Exclude highest frequencies during first iteration (in Ang) \n";
     std::cerr << " [ -pixel_size <Ang=1> ]       : Pixel size in Angstrom (only necessary for -no_ctf mode) \n";
+
     std::cerr << " [ -more_options ]             : Show additional parameters for 3D-refinement \n";
 
-}
-
-// Extended usage =============================================================
-void ProgRefine3D::extended_usage()
-{
-    std::cerr << "Additional options: " << std::endl;
-    std::cerr << " [ -l <float=0.2> ]            : wlsART-relaxation parameter (lambda)  \n"
-    << " [ -k <float=0.5> ]            : wlsART-relaxation parameter for residual (kappa)\n"
-    << " [ -n <int=10> ]               : Number of wlsART-iterations \n"
-    << " [ -nostart ]                  : Start wlsART reconstructions from all-zero volumes \n"
-    << " [ -sym <symfile> ]            : Symmetry group \n"
-    << " [ -filter <dig.freq.=-1> ]    : Low-pass filter volume every iteration \n"
-    << " [ -sym_mask <maskfile> ]      : Local symmetry (only inside mask) \n"
-    << " [ -tilt0 <float=-91.> ]       : Lower-value for restricted tilt angle search \n"
-    << " [ -tiltF <float=91.> ]        : Higher-value for restricted tilt angle search \n"
-    << " [ -perturb ]                  : Randomly perturb reference projection directions \n"
-    << " [ -show_all_ML_options ]      : Show all parameters for the ML-refinement\n"
-    << " [ -show_all_ART_options ]     : Show all parameters for the wlsART reconstruction \n";
-    std::cerr << std::endl;
-    exit(1);
 }
 
 // Show ======================================================================
@@ -308,8 +309,7 @@ void ProgRefine3D::showToStream(std::ostream &out)
 
 void ProgRefine3D::show()
 {
-
-    if (verb > 0)
+    if (verbose)
     {
         // To screen
         showToStream(std::cout);
@@ -319,15 +319,12 @@ void ProgRefine3D::show()
             REPORT_ERROR(ERR_IO_NOTOPEN, (std::string)"Prog_Refine3d: Cannot open file " + fn_root + ".hist");
         showToStream(fh_hist);
     }
-
 }
 
 // Fill sampling and create DFlib
-void ProgRefine3D::produceSideInfo(int rank)
+void ProgRefine3D::produceSideInfo()
 {
-
     FileName fn_sym_loc;
-
     // Precalculate sampling
     mysampling.SetSampling(angular);
     if (fn_symmask != "")
@@ -341,7 +338,99 @@ void ProgRefine3D::produceSideInfo(int rank)
     mysampling.Compute_sampling_points(true, tilt_rangeF, tilt_range0);
     mysampling.remove_redundant_points_exhaustive(symmetry, sym_order, true, 0.75 * angular);
     nr_projections = mysampling.no_redundant_sampling_points_angles.size();
+
 }
+
+void ProgRefine3D::run()
+{
+    bool converged = false;
+
+    // Get input parameters
+    produceSideInfo();
+    show();
+    // Write starting volume(s) to disc with correct name for iteration loop
+    remakeSFvol(istart - 1, true);
+    projectReferenceVolume(ml2d->MDref);
+    ml2d->produceSideInfo();
+    ml2d->produceSideInfo2();
+    Nvols *= ml2d->factor_nref;
+    ml2d->Iold.clear(); // To save memory
+    ml2d->createThreads();
+
+    // Loop over all iterations
+    for (ml2d->iter = ml2d->istart; !converged && ml2d->iter <= ml2d->Niter; ml2d->iter++)
+    {
+        if (verbose)
+        {
+            std::cout << "--> 3D-EM volume refinement:  iteration " << ml2d->iter << " of " << Niter << std::endl;
+            fh_hist  << "--> 3D-EM volume refinement:  iteration " << ml2d->iter << " of " << Niter << std::endl;
+        }
+
+        for (ml2d->current_block = 0; ml2d->current_block < ml2d->blocks; ml2d->current_block++)
+        {
+            // Project volumes
+            if (ml2d->iter > ml2d->istart || ml2d->current_block > 0)
+            {
+                projectReferenceVolume(ml2d->MDref);
+                int c = 0;
+                FileName fnt;
+                // Read new references from disc (I could just as well keep them in memory, maybe...)
+                FOR_ALL_OBJECTS_IN_METADATA(ml2d->MDref)
+                {
+                    ml2d->MDref.getValue(MDL_IMAGE, fnt);
+                    ml2d->model.Iref[c].read(fnt);
+                    ml2d->model.Iref[c]().setXmippOrigin();
+                    ++c;
+                }
+            }
+
+            // Integrate over all images
+            ml2d->expectation();
+
+            ml2d->maximizationBlocks(nr_projections);
+
+            // Write out 2D reference images (to be used in reconstruction)
+            ml2d->writeOutputFiles(ml2d->model, OUT_REFS);
+
+            // Jump out before 3D reconstruction
+            // (Useful for some parallelization protocols)
+            if (skip_reconstruction)
+                exit(1);
+
+            // Reconstruct new volumes from the reference images
+            for (int volno = 0; volno < Nvols; ++volno)
+                reconstruction(argc, argv, ml2d->iter, volno, 0);
+
+            // Update the reference volume selection file
+            // and post-process the volumes
+            remakeSFvol(ml2d->iter, false, false);
+            postProcessVolumes(argc, argv);
+
+        } // end loop blocks
+
+        // Check convergence
+        converged = checkConvergence(ml2d->iter);
+
+        // Write output ML2D files
+        ml2d->addPartialDocfileData(ml2d->docfiledata, ml2d->myFirstImg, ml2d->myLastImg);
+        ml2d->writeOutputFiles(ml2d->model, OUT_IMGS);
+        concatenateSelfiles(ml2d->iter);
+
+    } // end loop iterations
+
+    if (verbose)
+    {
+        std::cout << (converged ?
+                      "--> Optimization converged!" :
+                      "--> Optimization was stopped before convergence was reached!")
+        << std::endl;
+    }
+
+    // Write converged output ML2D files
+    ml2d->writeOutputFiles(ml2d->model);
+    ml2d->destroyThreads();
+
+}//end of function run
 
 // Projection of the reference (blob) volume =================================
 void ProgRefine3D::projectReferenceVolume(MetaData &SFlib, int rank, int size)
@@ -362,7 +451,7 @@ void ProgRefine3D::projectReferenceVolume(MetaData &SFlib, int rank, int size)
 
     // Initialize
     SFlib.clear();
-    if (verb > 0)
+    if (verbose)
     {
         std::cerr << "--> projecting reference library ..." << std::endl;
         init_progress_bar(nl);
@@ -404,12 +493,12 @@ void ProgRefine3D::projectReferenceVolume(MetaData &SFlib, int rank, int size)
             // New for metadata: store which volume in SFlib
             SFlib.setValue(MDL_REF3D, nvol + 1);
             ++nr_dir;
-            if (verb > 0 && (nr_dir % XMIPP_MAX(1, nl / 60) == 0))
+            if (verbose && (nr_dir % XMIPP_MAX(1, nl / 60) == 0))
                 progress_bar(nr_dir);
         }
         ++nvol;
     }
-    if (verb > 0)
+    if (verbose)
     {
         progress_bar(nl);
         std::cerr << " -----------------------------------------------------------------" << std::endl;
@@ -518,7 +607,7 @@ void ProgRefine3D::reconstruction(int argc, char **argv,
         /*
            // read command line (fn_sym, angular etc.)
            Prog_RecFourier_prm   fourier_prm;
-           if (verb > 0)
+           if (verbose)
                std::cerr << "--> Fourier-interpolation reconstruction " << std::endl;
            fourier_prm.read(argc, argv);
            fourier_prm.fn_sel = fn_insel;
@@ -541,7 +630,7 @@ void ProgRefine3D::reconstruction(int argc, char **argv,
         Plain_ART_Parameters   dummy;
         GridVolume             new_blobs;
         GridVolume             start_blobs;
-        if (verb > 0)
+        if (verbose)
             std::cerr << "--> weighted least-squares ART reconstruction " << std::endl;
 
         // Read ART parameters from command line & I/O with outer loop of Refine3d
@@ -549,14 +638,14 @@ void ProgRefine3D::reconstruction(int argc, char **argv,
         art_prm.WLS = true;
         if (fn_symmask != "")
             art_prm.fn_sym = "";
-        if (!checkParameter(argc, argv, "-n"))
+        if (!checkParam( "-n"))
             art_prm.no_it = 10;
-        if (!checkParameter(argc, argv, "-l"))
+        if (!checkParam( "-l"))
         {
             art_prm.lambda_list.resize(1);
             art_prm.lambda_list.initConstant(0.2);
         }
-        if (!checkParameter(argc, argv, "-k"))
+        if (!checkParam( "-k"))
         {
             art_prm.kappa_list.resize(1);
             art_prm.kappa_list.initConstant(0.5);
@@ -578,7 +667,7 @@ void ProgRefine3D::reconstruction(int argc, char **argv,
 
     }
 
-    if (verb > 0)
+    if (verbose)
         std::cerr << " -----------------------------------------------------------------" << std::endl;
 
 }
@@ -609,7 +698,7 @@ void ProgRefine3D::calculate3DSSNR(MultidimArray<double> &spectral_signal, int i
     mask.setXmippOrigin();
     RaisedCosineMask(mask, dim / 2 - 2, dim / 2);
 
-    if (verb > 0)
+    if (verbose)
     {
         std::cerr << "--> calculating 3D-SSNR ..." << std::endl;
         init_progress_bar(MDnoise_all.size());
@@ -677,7 +766,7 @@ void ProgRefine3D::calculate3DSSNR(MultidimArray<double> &spectral_signal, int i
                 Msignal += Maux * weight;
             volweight += weight;
             c++;
-            if (c % XMIPP_MAX(1, MDnoise_all.size() / 60) == 0 && verb > 0)
+            if (c % XMIPP_MAX(1, MDnoise_all.size() / 60) == 0 && verbose)
                 progress_bar(c);
         }
 
@@ -711,13 +800,13 @@ void ProgRefine3D::calculate3DSSNR(MultidimArray<double> &spectral_signal, int i
             avg_alphaS += alpha_signal;
         }
     }
-    if (verb > 0)
+    if (verbose)
         progress_bar(MDnoise_all.size());
     spectral_signal /= (double)Nvols;
     avg_alphaN /= (double)Nvols;
     avg_alphaS /= (double)Nvols;
 
-    if (verb > 0)
+    if (verbose)
     {
         fn_tmp = fn_root + "_it";
         fn_tmp.compose(fn_tmp, iter, "3dssnr");
@@ -1052,7 +1141,7 @@ void ProgRefine3D::postProcessVolumes(int argc, char **argv)
             vol.write(fn_vol);
 
         }
-        if (verb > 0)
+        if (verbose)
             std::cerr << " -----------------------------------------------------------------" << std::endl;
     }
 
@@ -1073,7 +1162,7 @@ bool ProgRefine3D::checkConvergence(int iter)
     if (iter == 0)
         return false;
 
-    if (verb > 0)
+    if (verbose)
         std::cerr << "--> checking convergence " << std::endl;
 
     for (int volno = 0; volno < Nvols; volno++)
@@ -1116,7 +1205,7 @@ bool ProgRefine3D::checkConvergence(int iter)
         signal = old_vol().sum2();
         if (change / signal > eps)
             converged = false;
-        if (verb > 0)
+        if (verbose)
         {
             if (Nvols > 1)
             {

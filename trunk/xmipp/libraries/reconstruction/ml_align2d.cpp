@@ -38,50 +38,74 @@ ProgML2D::ProgML2D(bool ML3D)
     do_ML3D = ML3D;
 }
 
-void ProgML2D::defineParams()
+void ProgML2D::defineBasicParams(XmippProgram * prog)
 {
     //There are some params that are fixed
     //in the 3D case, for example -fast, -mirror
-    addParamsLine("   -i <selfile>                : Selfile with input images ");
-    addParamsLine("   -nref <int=1>               : Number of references to generate automatically (recommended)");
-    addParamsLine("or -ref <selfile=\"\">         : or selfile with initial references/single reference image ");
+    prog->addParamsLine("   -i <selfile>                : Selfile with input images ");
+
+
     if (!do_ML3D)
     {
-        addParamsLine(" [ -o <rootname=ml2d> ]        : Output rootname");
-        addParamsLine(" [ -mirror ]                   : Also check mirror image of each reference ");
-        addParamsLine(" [ -fast ]                     : Use pre-centered images to pre-calculate significant orientations");
+        prog->addParamsLine("   -nref <int=1>               : Number of references to generate automatically (recommended)");
+        prog->addParamsLine("or -ref <selfile=\"\">         : or selfile with initial references/single reference image ");
+        prog->addParamsLine(" [ -o <rootname=ml2d> ]        : Output rootname");
+        prog->addParamsLine(" [ -mirror ]                   : Also check mirror image of each reference ");
+        prog->addParamsLine(" [ -fast ]                     : Use pre-centered images to pre-calculate significant orientations");
     }
     else
-        addParamsLine(" [ -o <rootname=ml3d> ]        : Output rootname");
-    addParamsLine(" [ -thr <N=1> ]                : Use N parallel threads ");
-    addParamsLine(" [ -iem <blocks=1>]            : Number of blocks to be used with IEM");
-    addParamsLine("==+ Additional options ==");
-    addParamsLine(" [ -eps <float=5e-5> ]         : Stopping criterium");
-    addParamsLine(" [ -iter <int=100> ]           : Maximum number of iterations to perform ");
-    addParamsLine(" [ -psi_step <float=5> ]       : In-plane rotation sampling interval [deg]");
-    addParamsLine(" [ -noise <float=1> ]          : Expected standard deviation for pixel noise ");
-    addParamsLine(" [ -offset <float=3> ]         : Expected standard deviation for origin offset [pix]");
-    addParamsLine(" [ -frac <docfile=\"\"> ]      : Docfile with expected model fractions (default: even distr.)");
-    addParamsLine(" [ -C <double=1e-12> ]         : Significance criterion for fast approach ");
-    addParamsLine(" [ -zero_offsets ]             : Kick-start the fast algorithm from all-zero offsets ");
+    {
+        prog-> addParamsLine("-ref <selfile=\"\">         : or selfile with initial references/single reference image ");
+        prog->addParamsLine("  [ -nref <int=1> ]              : Number of references to generate automatically (recommended)");
+        prog->addParamsLine(" [ -o <rootname=ml3d> ]        : Output rootname");
+    }
+    prog->addParamsLine(" [ -thr <N=1> ]                : Use N parallel threads ");
+    prog->addParamsLine(" [ -iem <blocks=1>]            : Number of blocks to be used with IEM");
+
+}
+
+void ProgML2D::defineAdditionalParams(XmippProgram * prog, const char * sectionLine)
+{
+    prog->addParamsLine(sectionLine);
+    prog->addParamsLine(" [ -eps <float=5e-5> ]         : Stopping criterium");
+    if (!do_ML3D)
+        prog->addParamsLine(" [ -iter <int=100> ]           : Maximum number of iterations to perform ");
+    else //Only 25 iterations by default in ml3d
+        prog->addParamsLine(" [ -iter <int=25> ]           : Maximum number of iterations to perform ");
+    prog->addParamsLine(" [ -psi_step <float=5> ]       : In-plane rotation sampling interval [deg]");
+    prog->addParamsLine(" [ -noise <float=1> ]          : Expected standard deviation for pixel noise ");
+    prog->addParamsLine(" [ -offset <float=3> ]         : Expected standard deviation for origin offset [pix]");
+    prog->addParamsLine(" [ -frac <docfile=\"\"> ]      : Docfile with expected model fractions (default: even distr.)");
+    prog->addParamsLine(" [ -C <double=1e-12> ]         : Significance criterion for fast approach ");
+    prog->addParamsLine(" [ -zero_offsets ]             : Kick-start the fast algorithm from all-zero offsets ");
     if (!do_ML3D)
     {
-        addParamsLine(" [ -restart <logfile> ]    : restart a run with all parameters as in the logfile ");
-        addParamsLine(" [ -istart <int=1> ]         : number of initial iteration ");
+        prog->addParamsLine(" [ -restart <logfile> ]    : restart a run with all parameters as in the logfile ");
+        prog->addParamsLine(" [ -istart <int=1> ]         : number of initial iteration ");
     }
-    addParamsLine(" [ -fix_sigma_noise ]           : Do not re-estimate the standard deviation in the pixel noise ");
-    addParamsLine(" [ -fix_sigma_offset ]          : Do not re-estimate the standard deviation in the origin offsets ");
-    addParamsLine(" [ -fix_fractions ]             : Do not re-estimate the model fractions ");
-    addParamsLine(" [ -doc <docfile=\"\"> ]       : Read initial angles and offsets from docfile ");
-    addParamsLine(" [ -student ]                  : Use t-distributed instead of Gaussian model for the noise ");
-    addParamsLine(" [ -df <int=6> ]               : Degrees of freedom for the t-distribution ");
-    addParamsLine("    requires -student;");
-    addParamsLine(" [ -norm ]                     : Refined normalization parameters for each particle ");
-    addParamsLine(" [ -save_memA ]                : Save memory A");
+    prog->addParamsLine(" [ -fix_sigma_noise ]           : Do not re-estimate the standard deviation in the pixel noise ");
+    prog->addParamsLine(" [ -fix_sigma_offset ]          : Do not re-estimate the standard deviation in the origin offsets ");
+    prog->addParamsLine(" [ -fix_fractions ]             : Do not re-estimate the model fractions ");
+    prog->addParamsLine(" [ -doc <docfile=\"\"> ]       : Read initial angles and offsets from docfile ");
+    prog->addParamsLine(" [ -student ]                  : Use t-distributed instead of Gaussian model for the noise ");
+    prog->addParamsLine(" [ -df <int=6> ]               : Degrees of freedom for the t-distribution ");
+    prog->addParamsLine("    requires -student;");
+    prog->addParamsLine(" [ -norm ]                     : Refined normalization parameters for each particle ");
+    prog->addParamsLine(" [ -save_memA ]                : Save memory A");
 
     if (!do_ML3D)
-        addParamsLine(" [ -save_memB ]                : Save memory B");
+        prog->addParamsLine(" [ -save_memB ]                : Save memory B");
 
+
+
+}
+
+void ProgML2D::defineParams()
+{
+    addUsageLine("This utility allows you to perform (multi-reference) 2D-alignment,");
+    addUsageLine("using a maximum-likelihood (ML) target function.");
+    defineBasicParams(this);
+    defineAdditionalParams(this, "==+ Additional options ==");
     addParamsLine("==+++++ Hidden arguments ==");
     addParamsLine(" [-scratch <scratch=\"\">]");
     addParamsLine(" [-debug <int=0>]");
@@ -374,9 +398,9 @@ void ProgML2D::run()
     // Loop over all iterations
     for (iter = istart; !converged && iter <= Niter; iter++)
     {
-        if (verbose)        
+        if (verbose)
             std::cout << "  Multi-reference refinement:  iteration " << iter << " of " << Niter << std::endl;
-        
+
         for (int refno = 0;refno < model.n_ref; refno++)
             Iold[refno]() = model.Iref[refno]();
 
@@ -483,7 +507,8 @@ void ProgML2D::produceSideInfo()
     }
 
     // Print some output to screen
-    show();
+    if (!do_ML3D)
+        show();
 }
 
 void ProgML2D::setNumberOfLocalImages()
