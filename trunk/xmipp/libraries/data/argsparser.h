@@ -83,6 +83,8 @@ public:
     /// 1 - less visible
     /// while great is the number is less visible
     int visibility;
+    /// Some special mark to tokens
+    bool starred;
 
     static const char * typeString(TokenType type);
 };
@@ -108,6 +110,7 @@ private:
     void readId();
     void setupToken(TokenType type);
     void checkVisibility();
+    void checkIndependent();
     void nextLine();
 
 public:
@@ -204,6 +207,7 @@ class ParamDef: public ASTNode
 public:
     bool notOptional; //contradictory param not paramal :)
     bool orBefore;
+    bool independent;
     std::vector<ArgumentDef*> arguments;
     std::vector<const char *> cmdArguments;
     int counter; ///< for count the number of times it appears in command line
@@ -235,6 +239,8 @@ public:
     virtual void check(std::stringstream & errors)
     {
     }
+    ///Add a param to the section
+    void addParamDef(ParamDef * param);
 };
 
 class ProgramDef: public ASTNode
@@ -245,6 +251,9 @@ public:
     std::map<std::string, ParamDef*> paramsMap; ///< Dictionary with all params and alias names
     StringVector pendingRequires; ///< This is for checking that requires names exists
     String keywords;
+    ///This flag is used to check if an independent option was found like: --more, --help
+    ///that avoid others options restrictions.
+    bool singleOption;
 
     ProgramDef();
     ~ProgramDef();
@@ -260,7 +269,10 @@ public:
     ///clear read arguments
     void clear();
     /// Read and validate commmand line
-    void read(int argc, char ** argv);
+    void read(int argc, char ** argv, bool reportErrors = true);
+    /// Add a section to the program definition
+    /// and return a pointer to it, usefull for manually
+    SectionDef * addSection(String sectionName, int visibility = 0);
 
 };
 

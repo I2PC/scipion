@@ -92,8 +92,7 @@ protected:
     void addUsageLine(const char * line);
     /** Clear usage */
     void clearUsage();
-    /** Add a params definition line*/
-    void addParamsLine(const char * line);
+
     /** Add keywords to the program definition */
     void addKeywords(const char * keywords);
 
@@ -111,7 +110,8 @@ protected:
     /** Check if the param was supplied to command line */
     bool checkParam(const char * param);
 public:
-
+    /** Add a params definition line*/
+    void addParamsLine(const char * line);
     /// Verbosity level
     int verbose;
 
@@ -144,7 +144,7 @@ public:
      * usage of the program showed. So the is no need
      * to do that in readParams();
      * */
-    void read(int argc, char ** argv);
+    void read(int argc, char ** argv, bool reportErrors = true);
 
     /** @} */
     /** This function will be start running the program.

@@ -145,10 +145,20 @@ void ArgLexer::checkVisibility()
     }
 }
 
+void ArgLexer::checkIndependent()
+{
+    if (input[line][pos]== '*')
+    {
+        pToken->starred = true;
+        ++pos;
+    }
+}
+
 bool ArgLexer::nextToken()
 {
     //make it visible by default
     pToken->visibility = 0;
+    pToken->starred = false;
 
     if (line == input.size())
     {
@@ -294,6 +304,7 @@ bool ArgLexer::nextToken()
             }
             setupToken(TOK_OPT);
             checkVisibility();
+            checkIndependent();
             break;
         case '"':
             offset = input[line].find_first_of('"', pos + 1);
@@ -535,6 +546,7 @@ bool ParamDef::parse()
     ProgramDef * prog = (ProgramDef*) parent->parent;
     notOptional = true;
     orBefore = false;
+    independent = false;
     counter = 0;
 
     //Param Definition(OD)
@@ -556,6 +568,7 @@ bool ParamDef::parse()
     consume(TOK_OPT);
     name = token.lexeme;
     visible = token.visibility;
+    independent = token.starred;
 
     prog->addParamName(name, this);
 
@@ -718,12 +731,21 @@ void ParamDef::check(std::stringstream & errors)
             if (arguments[i]->hasDefault)
                 cmdArguments.push_back(arguments[i]->argDefault.c_str());
     }
+}
 
-
+void SectionDef::addParamDef(ParamDef * param)
+{
+    ProgramDef * prog = (ProgramDef*)parent;
+    if (prog->findParam(param->name) == NULL)
+    {
+        prog->addParamName(param->name, param);
+        param->parent = this;
+        params.push_back(param);
+    }
 }
 
 SectionDef::SectionDef(ArgLexer * lexer, ASTNode * parent) :
-ASTNode(lexer, parent)
+        ASTNode(lexer, parent)
 {}
 
 bool SectionDef::parse()
@@ -757,6 +779,7 @@ ProgramDef::ProgramDef() :
         ASTNode()
 {
     pLexer = new ArgLexer();
+    singleOption = false;
 }
 
 ProgramDef::~ProgramDef()
@@ -839,11 +862,8 @@ void ProgramDef::check(std::stringstream & errors)
             size_t size = exclusive.size();
             //Doesn't check for alias, for doesn't repeat error messages
             param->check(errors);
-
             if (!param->orBefore)
-            {
                 reportExclusiveErrors(errors, exclusive);
-            }
             exclusive.push_back(param);
         }
     }
@@ -888,12 +908,13 @@ void ProgramDef::clear()
     }
 }
 
-void ProgramDef::read(int argc, char ** argv)
+void ProgramDef::read(int argc, char ** argv, bool reportErrors)
 {
-  clear();
+    clear();
     std::stringstream errors;
     //Set the name with the first argument
     name = argv[0];
+    singleOption = false;
     //We assume that all options start with -
     if (argc > 1 && argv[1][0] != '-')
         REPORT_ERROR(ERR_ARG_INCORRECT, "Parameters should start with a -");
@@ -912,22 +933,36 @@ void ProgramDef::read(int argc, char ** argv)
             if (param == NULL)
                 errors << "Unrecognized parameter: " << argv[i] << std::endl;
             else
-                param->counter++;
+            {
+                ++(param->counter);
+                if (param->independent)
+                  singleOption = true;
+            }
         }
         else if (param != NULL)
             param->cmdArguments.push_back(argv[i]);
     }
 
-    check(errors);
+    if (!singleOption)
+      check(errors);
 
     //Report errors found
-    if (errors.str().length() > 0)
+    if (reportErrors && errors.str().length() > 0)
     {
         //Unrecognized parameters
         //for (size_t i = 0; i < unrecognized.size(); ++i)
         //    std::cerr << "Unrecognized parameter: " << unrecognized[i] << std::endl;
         REPORT_ERROR(ERR_ARG_BADCMDLINE, errors.str().c_str());
     }
+}
+
+SectionDef * ProgramDef::addSection(String sectionName, int visibility)
+{
+    SectionDef * section = new SectionDef(NULL, this);
+    section->name = sectionName;
+    section->visible = visibility;
+    sections.push_back(section);
+    return section;
 }
 
 ParamDef* ProgramDef::findAndFillParam(const std::string &param)

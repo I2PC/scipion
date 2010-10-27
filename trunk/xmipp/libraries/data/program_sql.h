@@ -63,6 +63,10 @@ private:
 
 
 public:
+  /** Some initialization */
+  void init(const FileName &dbName);
+  /** Empty constructor */
+  XmippDB();
   /** Constructor, it will create the Sqlite db. */
   XmippDB(const FileName &dbName);
   /** Begin and end transaction */
@@ -73,6 +77,8 @@ public:
   bool createCategoryTable();
   /** Create tables related with programs */
   bool createProgramTable();
+  /** Delete a program knowing the name */
+  bool deleteProgramByName(const String &programName);
   /** Insert a program into db, the id field will be filled */
   bool insertProgram(DbProgram * program);
   /** Update program data, id must be valid */

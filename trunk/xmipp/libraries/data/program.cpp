@@ -33,16 +33,16 @@ void XmippProgram::init()
     addParamsLine("== Common options ==");
     addParamsLine("[-v+ <verbose_level=1>] : Verbosity level, 0 means no output.");
     addParamsLine("alias --verbose;");
-    addParamsLine("[-h+ <param=\"\">]      : If not param is supplied show this help message.");
+    addParamsLine("[-h+* <param=\"\">]      : If not param is supplied show this help message.");
     addParamsLine("                        : Otherwise, specific param help is showed,");
     addParamsLine("                        : param should be provided without the '-'");
     addParamsLine("alias --help;");
-    addParamsLine("[--more]         : Show additional options.");
+    addParamsLine("[--more*]         : Show additional options.");
 
     ///This are a set of internal command for MetaProgram usage
     ///they should be hidden
     addParamsLine("==+++++ Internal section ==");
-    addParamsLine("[--xmipp_write_definition <dbname>] : Print metadata info about the program");
+    addParamsLine("[--xmipp_write_definition* <dbname>] : Print metadata info about the program");
 
     progDef->parse();
 }
@@ -70,7 +70,7 @@ void XmippProgram::checkBuiltIns()
 
 void XmippProgram::writeToDB(const FileName &dbName)
 {
-    XmippDB db(dbName);
+    XmippDB db;
     DbProgram progData;
     progData.name = name();
     progData.keywords = progDef->keywords;
@@ -109,7 +109,7 @@ void XmippProgram::readParams()
     REPORT_ERROR(ERR_NOT_IMPLEMENTED, "function 'readParams'");
 }
 
-void XmippProgram::read(int argc, char ** argv)
+void XmippProgram::read(int argc, char ** argv, bool reportErrors)
 {
     if (progDef == NULL)
         init();
@@ -124,14 +124,13 @@ void XmippProgram::read(int argc, char ** argv)
     {
         this->argc = argc;
         this->argv = argv;
-        progDef->read(argc, argv);
+        progDef->read(argc, argv, reportErrors);
         checkBuiltIns();
         verbose = getIntParam("--verbose");
         this->readParams();
     }
     catch (XmippError xe)
     {
-        checkBuiltIns();
         ///If an input error, shows error message and usage
         std::cerr << xe;
         usage();

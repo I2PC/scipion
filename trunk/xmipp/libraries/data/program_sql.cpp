@@ -25,15 +25,23 @@
 
 #include "program_sql.h"
 
+void XmippDB::init(const FileName &dbName)
+{
+  rc = sqlite3_open(dbName.c_str(), &db);
+  sqlite3_exec(db, "PRAGMA temp_store=MEMORY",NULL, NULL, &errmsg);
+  sqlite3_exec(db, "PRAGMA synchronous=OFF",NULL, NULL, &errmsg);
+  sqlite3_exec(db, "PRAGMA count_changes=OFF",NULL, NULL, &errmsg);
+  sqlite3_exec(db, "PRAGMA page_size=4092",NULL, NULL, &errmsg);
+}
+
 XmippDB::XmippDB(const FileName &dbName)
 {
-    rc = sqlite3_open(dbName.c_str(), &db);
+    init(dbName);
+}
 
-    sqlite3_exec(db, "PRAGMA temp_store=MEMORY",NULL, NULL, &errmsg);
-    sqlite3_exec(db, "PRAGMA synchronous=OFF",NULL, NULL, &errmsg);
-    sqlite3_exec(db, "PRAGMA count_changes=OFF",NULL, NULL, &errmsg);
-    sqlite3_exec(db, "PRAGMA page_size=4092",NULL, NULL, &errmsg);
-
+XmippDB::XmippDB()
+{
+  init(xmippBaseDir().append("/programs.db"));
 }
 
 bool XmippDB::execStmt(const std::string &stmt, const std::string &error)
@@ -86,21 +94,30 @@ bool XmippDB::createProgramTable()
 
 String getSqliteStr(const String & str)
 {
-  size_t pos = 0;
-  String temp = str;
-  while ((pos = temp.find_first_of("'", pos)) != String::npos)
-  {
-    temp.replace(pos, 1, "''");
-    pos += 2;
-  }
+    size_t pos = 0;
+    String temp = str;
+    while ((pos = temp.find_first_of("'", pos)) != String::npos)
+    {
+        temp.replace(pos, 1, "''");
+        pos += 2;
+    }
 
-  return (String)"'" + temp + "'";
+    return (String)"'" + temp + "'";
+}
+
+bool XmippDB::deleteProgramByName(const String &programName)
+{
+    std::stringstream ss;
+    ss << "DELETE FROM Program WHERE name=" << getSqliteStr(programName) << ";";
+    bool result = execStmt(ss.str(), "Couldn't delete program " + programName);
+    return result;
 }
 
 /** Insert a program into db, the id field will be filled */
 bool XmippDB::insertProgram(DbProgram * program)
 {
-    ///FIXME: remove single quote or other special characters to sqlite
+    ///Delete first the program if exist
+    deleteProgramByName(program->name);
     std::stringstream ss;
     ss << "INSERT INTO Program VALUES(NULL, NULL,"
     << getSqliteStr(program->name) << ","
