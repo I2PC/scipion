@@ -772,7 +772,9 @@ void MetaData::read(const FileName &filename, std::vector<MDLabel> *desiredLabel
         is.ignore(256, ':'); //ignore all until ':' to start parsing column labels
         getline(is, line);
         ss.str(line);
-        columnValues.resize(2, new MDObject(MDL_UNDEFINED)); //start with 2 undefined to avoid 2 first columns of old format
+        columnValues.push_back(new MDObject(MDL_UNDEFINED));
+        columnValues.push_back(new MDObject(MDL_UNDEFINED));
+
         addLabel(MDL_IMAGE);
         _readColumns(ss, columnValues, desiredLabels);
         useCommentAsImage = true;
