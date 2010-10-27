@@ -201,6 +201,8 @@ MDObject::MDObject(MDLabel label)
         else if (type == LABEL_VECTOR)
             data.vectorValue = new std::vector<double>;
     }
+    else
+    	type = LABEL_NOTYPE;
 }
 ///Constructors for each Label supported type
 ///these constructor will do the labels type checking
@@ -429,8 +431,11 @@ std::istream& operator>> (std::istream& is, MDObject &value)
 bool MDObject::fromStream(std::istream &is)
 {
     if (label == MDL_UNDEFINED) //if undefine label, store as a literal string
-        REPORT_ERROR(ERR_MD_BADTYPE, "Reading MDObject from stream");
-    else
+    {
+    	String s;
+    	is >> s;
+    }
+    	else
     {
         // int,bool and long are read as double for compatibility with old doc files
         double d;
