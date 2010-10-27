@@ -110,7 +110,7 @@
  */
 enum ErrorType
 {
-    ERR_ARG_BADCMDLINE,     ///< Errors on command line parameters.
+    ERR_ARG_BADCMDLINE = 1,     ///< Errors on command line parameters.
     ERR_ARG_INCORRECT,      ///< Incorrect argument received.
     ERR_ARG_MISSING,        ///< Argument missing.
     ERR_ARG_DEPENDENCE,     ///< Error with some arguments dependecies
