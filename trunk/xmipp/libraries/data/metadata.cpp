@@ -510,7 +510,8 @@ void MetaData::findObjects(std::vector<long int> &objectsOut, const MDQuery &que
 void MetaData::findObjects(std::vector<long int> &objectsOut, int limit)
 {
     objectsOut.clear();
-    myMDSql->selectObjects(objectsOut, new MDQuery(limit));
+    MDQuery query(limit);
+    myMDSql->selectObjects(objectsOut, &query);
 }
 
 int MetaData::countObjects(const MDQuery &query)

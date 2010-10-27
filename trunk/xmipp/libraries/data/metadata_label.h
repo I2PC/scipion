@@ -225,11 +225,11 @@ public:
      * @{
      */
     /** Converts an string to MDLabel */
-    static MDLabel str2Label(const std::string &labelName);
+    static MDLabel str2Label(const String &labelName);
     /** Converts MDLabel to string */
-    static std::string label2Str(const MDLabel label);
+    static String label2Str(const MDLabel label);
     /** Converts MDLabel to string representing SQL column*/
-    static std::string label2SqlColumn(const MDLabel label);
+    static String label2SqlColumn(const MDLabel label);
     /** @} */
 
     /** @name Type checks
@@ -242,9 +242,9 @@ public:
     static bool isDouble(const MDLabel label);
     static bool isVector(const MDLabel label);
     static bool isValidLabel(const MDLabel label);
-    static bool isValidLabel(const std::string &labelName);
+    static bool isValidLabel(const String &labelName);
     static MDLabelType labelType(const MDLabel label);
-    static MDLabelType labelType(std::string &labelName);
+    static MDLabelType labelType(const String &labelName);
     /** @} */
 
 private:
@@ -252,7 +252,7 @@ private:
     static std::map<std::string, MDLabel> names;
     static MDLabelStaticInit initialization; //Just for initialization
 
-    static void addLabel(MDLabel label, MDLabelType type, std::string name, std::string name2 = "", std::string name3 = "");
+    static void addLabel(MDLabel label, MDLabelType type, const String &name, const String &name2 = "", const String &name3 = "");
 
     friend class MDLabelStaticInit;
 }
@@ -434,14 +434,14 @@ class MDLabelData
 {
 public:
     MDLabelType type;
-    std::string str;
+    String str;
     //Default constructor
     MDLabelData()
     {
         type = LABEL_NOTYPE;
     }
 
-    MDLabelData(MDLabelType t, std::string s)
+    MDLabelData(MDLabelType t, const String &s)
     {
         type = t;
         str = s;
@@ -456,7 +456,7 @@ typedef union
     int intValue;
     long int longintValue;
     double doubleValue;
-    std::string * stringValue;
+    String * stringValue;
     std::vector<double> * vectorValue;
 } ObjectData;
 
@@ -486,7 +486,7 @@ public:
     MDObject(MDLabel label, const int &intValue);
     MDObject(MDLabel label, const double &doubleValue);
     MDObject(MDLabel label, const bool &boolValue);
-    MDObject(MDLabel label, const std::string &stringValue);
+    MDObject(MDLabel label, const String &stringValue);
     MDObject(MDLabel label, const std::vector<double> &vectorValue);
     MDObject(MDLabel label, const long int longintValue);
     MDObject(MDLabel label, const float &floatValue);
@@ -501,7 +501,7 @@ public:
     void  getValue(int &iv) const;
     void  getValue(double &dv) const;
     void  getValue(bool &bv) const;
-    void  getValue(std::string &sv) const;
+    void  getValue(String &sv) const;
     void  getValue(std::vector<double> &vv) const;
     void  getValue(long int &lv) const;
     void  getValue(float &floatvalue) const;
@@ -510,7 +510,7 @@ public:
     void  setValue(const int &iv);
     void  setValue(const double &dv);
     void  setValue(const bool &bv);
-    void  setValue(const std::string &sv);
+    void  setValue(const String &sv);
     void  setValue(const std::vector<double> &vv);
     void  setValue(const long int &lv);
     void  setValue(const float &floatvalue);
@@ -527,10 +527,10 @@ public:
         os << i;
 
     void toStream(std::ostream &os, bool withFormat = false, bool isSql=false) const;
-    std::string toString(bool withFormat = false, bool isSql=false) const;
+    String toString(bool withFormat = false, bool isSql=false) const;
     bool fromStream(std::istream &is);
     friend std::istream& operator>> (std::istream& is, MDObject &value);
-    bool fromString(const std::string &str);
+    bool fromString(const String &str);
 
     friend class MDSql;
 }

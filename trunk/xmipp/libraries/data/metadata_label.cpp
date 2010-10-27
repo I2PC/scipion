@@ -29,7 +29,7 @@ std::map<MDLabel, MDLabelData> MDL::data;
 std::map<std::string, MDLabel> MDL::names;
 MDLabelStaticInit MDL::initialization; //Just for initialization
 
-void MDL::addLabel(const MDLabel label, const MDLabelType type, std::string name, std::string name2, std::string name3)
+void MDL::addLabel(const MDLabel label, const MDLabelType type, const String &name, const String &name2, const String &name3)
 {
     data[label] = MDLabelData(type, name);
     names[name] = label;
@@ -39,21 +39,21 @@ void MDL::addLabel(const MDLabel label, const MDLabelType type, std::string name
         names[name3] = label;
 }//close function addLabel
 
-MDLabel  MDL::str2Label(const std::string &labelName)
+MDLabel  MDL::str2Label(const String &labelName)
 {
     if (names.find(labelName) == names.end())
         return MDL_UNDEFINED;
     return names[labelName];
 }//close function str2Label
 
-std::string  MDL::label2Str(const MDLabel label)
+String  MDL::label2Str(const MDLabel label)
 {
     if (data.find(label) == data.end())
         return "";
     return data[label].str;
 }//close function label2Str
 
-std::string MDL::label2SqlColumn(const MDLabel label)
+String MDL::label2SqlColumn(const MDLabel label)
 {
     std::stringstream ss;
     ss << MDL::label2Str(label) << " ";
@@ -102,7 +102,7 @@ bool MDL::isValidLabel(const MDLabel label)
     return (label > MDL_UNDEFINED && label < MDL_LAST_LABEL);
 }
 
-bool MDL::isValidLabel(const std::string &labelName)
+bool MDL::isValidLabel(const String &labelName)
 {
     return isValidLabel(str2Label(labelName));
 }
@@ -112,7 +112,7 @@ MDLabelType MDL::labelType(const MDLabel label)
     return data[label].type;
 }
 
-MDLabelType MDL::labelType(std::string &labelName)
+MDLabelType MDL::labelType(const String &labelName)
 {
     return data[str2Label(labelName)].type;
 }
@@ -133,7 +133,7 @@ void MDObject::copy(const MDObject &obj)
     if (type == LABEL_STRING)
     {
       delete data.stringValue;
-      data.stringValue = new std::string(*(obj.data.stringValue));
+      data.stringValue = new String(*(obj.data.stringValue));
     }
     else if (type == LABEL_VECTOR)
     {
@@ -197,7 +197,7 @@ MDObject::MDObject(MDLabel label)
     {
         type = MDL::labelType(label);
         if (type == LABEL_STRING)
-            data.stringValue = new std::string;
+            data.stringValue = new String;
         else if (type == LABEL_VECTOR)
             data.vectorValue = new std::vector<double>;
     }
@@ -227,12 +227,12 @@ MDObject::MDObject(MDLabel label, const bool &boolValue)
     labelTypeCheck(LABEL_BOOL);
     this->data.boolValue = boolValue;
 }
-MDObject::MDObject(MDLabel label, const std::string &stringValue)
+MDObject::MDObject(MDLabel label, const String &stringValue)
 {
     this->label = label;
     this->type = MDL::labelType(label);
     labelTypeCheck(LABEL_STRING);
-    this->data.stringValue = new std::string(stringValue);
+    this->data.stringValue = new String(stringValue);
 }
 MDObject::MDObject(MDLabel label, const std::vector<double> &vectorValue)
 {
@@ -289,7 +289,7 @@ void MDObject::getValue(bool &bv) const
     labelTypeCheck(LABEL_BOOL);
     bv = this->data.boolValue;
 }
-void MDObject::getValue(std::string &sv) const
+void MDObject::getValue(String &sv) const
 {
     labelTypeCheck(LABEL_STRING);
     sv = *(this->data.stringValue);
@@ -334,11 +334,11 @@ void MDObject::setValue(const bool &bv)
     this->data.boolValue = bv;
 }
 
-void MDObject::setValue(const std::string &sv)
+void MDObject::setValue(const String &sv)
 {
     labelTypeCheck(LABEL_STRING);
     //if (this->data.stringValue == NULL)
-    //  this->data.stringValue = new std::string(sv);
+    //  this->data.stringValue = new String(sv);
     //else
     *(this->data.stringValue) = sv;
 }
@@ -379,7 +379,7 @@ void MDObject::setValue(const char*  &charvalue)
 
 void MDObject::toStream(std::ostream &os, bool withFormat, bool isSql) const
 {
-    std::string c = (isSql) ? "'" : "";
+    String c = (isSql) ? "'" : "";
 
     if (label == MDL_UNDEFINED) //if undefine label, store as a literal string
         os << data.stringValue;
@@ -414,7 +414,7 @@ void MDObject::toStream(std::ostream &os, bool withFormat, bool isSql) const
         }//close switch
 }//close function toStream
 
-std::string MDObject::toString(bool withFormat, bool isSql) const
+String MDObject::toString(bool withFormat, bool isSql) const
 {
     std::stringstream ss;
     toStream(ss, withFormat, isSql);
@@ -476,7 +476,7 @@ bool MDObject::fromStream(std::istream &is)
     return is.good();
 }
 
-bool MDObject::fromString(const std::string &str)
+bool MDObject::fromString(const String&str)
 {
     std::stringstream ss(str);
     fromStream(ss);
