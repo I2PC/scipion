@@ -291,7 +291,11 @@ def AddSwigJavaLibrary(name, basedir, sourceList, includes, libpath=[], libs=[])
     # Create wrapper
     # setup
     env.AppendENVPath('PATH', 'external/java/jvm/bin')
-
+#import glob,os
+#javaFiles=glob.glob('*.java')
+#for i in range(len(javaFiles)):
+#   os.remove(javaFiles[i])
+#    os.system("rm *java")
     basedirswig = AddLastSlash(basedir+"/swig")
     libprefix = os.path.join(env['prefix'], 'lib')
 
@@ -775,6 +779,7 @@ AddXmippProgram('symmetrize', ['XmippRecons'])
 AddXmippProgram('threshold')
 AddXmippProgram('try_symmetry')
 #AddXmippProgram('test_program')
+#AddXmippProgram('test_sql')
 AddXmippProgram('template_threads')
 AddXmippProgram('virus_vertex', ['XmippRecons'])
 AddXmippProgram('volume_segment', ['XmippRecons'])
