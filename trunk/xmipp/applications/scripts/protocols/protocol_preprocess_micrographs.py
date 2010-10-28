@@ -330,6 +330,8 @@ class preprocess_A_class:
             idx+=1
         
         # Write the different selfiles
+        scriptdir=os.path.split(os.path.dirname(os.popen('which xmipp_protocols','r').read()))[0]+'/protocols'
+        sys.path.append(scriptdir)
         import XmippData
         MD=XmippData.MetaData()
         ptr=XmippData.stringP()
