@@ -52,22 +52,24 @@ double CTF_fitness(double *, void *);
 namespace AdjustCTF
 {
 // Some aliases
-Adjust_CTF_Parameters *global_prm;
-MultidimArray<double>      *f;               // The CTF to model
-Matrix1D<double>           *global_adjust;   // Current theoretical adjustment
+Adjust_CTF_Parameters  *global_prm;
+MultidimArray<double>  *f;               // The CTF to model
+Matrix1D<double>       *global_adjust;   // Current theoretical adjustment
+double                  global_corr13;   // Correlation with enhanced PSD between rings 1 and 3
 
 // Frequency of each point in digital units
-MultidimArray<double>       global_x_digfreq;
-MultidimArray<double>       global_y_digfreq;
-MultidimArray<double>       global_w_digfreq;
-MultidimArray<double>       global_x_contfreq;
-MultidimArray<double>       global_y_contfreq;
-MultidimArray<double>       global_w_contfreq;
-MultidimArray<double>       global_mask;
-MultidimArray<double>       global_w_count;
+MultidimArray<double>  global_x_digfreq;
+MultidimArray<double>  global_y_digfreq;
+MultidimArray<double>  global_w_digfreq;
+MultidimArray<double>  global_x_contfreq;
+MultidimArray<double>  global_y_contfreq;
+MultidimArray<double>  global_w_contfreq;
+MultidimArray<double>  global_mask;
+MultidimArray<double>  global_mask_between_zeroes;
+MultidimArray<double>  global_w_count;
 
 // Penalization for forbidden values of the parameters
-double         global_heavy_penalization;
+double                 global_heavy_penalization;
 
 // Penalization factor for the background
 bool                   global_penalize;
@@ -78,8 +80,8 @@ const double           global_penalty = 32; // Maximum penalization
 int                    global_evaluation_reduction;
 
 // CTF model and noise model
-CTFDescription               global_ctfmodel;
-CTFDescription               global_ctfmodel_defoci;
+CTFDescription         global_ctfmodel;
+CTFDescription         global_ctfmodel_defoci;
 
 // Maximum of the gaussian
 double                 global_max_gauss_freq;
@@ -1023,9 +1025,10 @@ double CTF_fitness(double *p, void *)
         }
         break;
     case 5:
-            assign_CTF_from_parameters(p - 0 + 1,
-                                       global_ctfmodel, 0, ALL_CTF_PARAMETERS,
-                                       global_prm->modelSimplification);
+    case 6:
+        assign_CTF_from_parameters(p - 0 + 1,
+                                   global_ctfmodel, 0, ALL_CTF_PARAMETERS,
+                                   global_prm->modelSimplification);
         if (global_show >= 2)
         {
             std::cout << "Input vector:";
@@ -1088,6 +1091,7 @@ double CTF_fitness(double *p, void *)
             case 3:
             case 4:
             case 5:
+            case 6:
                 if (global_prm->initial_ctfmodel.DeltafU != 0)
                 {
                     // If there is an initial model, the true solution
@@ -1132,6 +1136,7 @@ double CTF_fitness(double *p, void *)
                 break;
             case 4:
             case 5:
+            case 6:
                 if (envelope > 1e-2)
                     dist = ABS(ctf2 - ctf2_th) / (envelope * envelope);
                 else
@@ -1151,13 +1156,17 @@ double CTF_fitness(double *p, void *)
                 if (global_w_digfreq(i, j) < 0.9*global_max_freq &&
                     global_w_digfreq(i, j) > 1.1*global_min_freq)
                 {
-                    ctf_with_damping2 = ctf_with_damping * ctf_with_damping;
-                    enhanced_model += enhanced_ctf * ctf_with_damping2;
-                    enhanced2 += enhanced_ctf * enhanced_ctf;
-                    model2 += ctf_with_damping2 * ctf_with_damping2;
-                    enhanced_avg += enhanced_ctf;
-                    model_avg += ctf_with_damping2;
-                    Ncorr++;
+                	if (global_action<6 ||
+                		(global_action==6 && global_mask_between_zeroes(i,j)==1))
+                	{
+						ctf_with_damping2 = ctf_with_damping * ctf_with_damping;
+						enhanced_model += enhanced_ctf * ctf_with_damping2;
+						enhanced2 += enhanced_ctf * enhanced_ctf;
+						model2 += ctf_with_damping2 * ctf_with_damping2;
+						enhanced_avg += enhanced_ctf;
+						model_avg += ctf_with_damping2;
+						Ncorr++;
+                	}
                 }
                 if (global_action == 3 && global_prm->enhanced_weight == 0)
                 {
@@ -1175,8 +1184,8 @@ double CTF_fitness(double *p, void *)
         retval = distsum / N;
     else
         retval = global_heavy_penalization;
-    if (global_action >= 3 && global_action <= 4 && Ncorr > 0 &&
-        global_prm->enhanced_weight != 0)
+    if ((global_action >= 3 && global_action <= 4 || global_action==6) &&
+        Ncorr > 0 && global_prm->enhanced_weight != 0)
     {
         model_avg /= Ncorr;
         enhanced_avg /= Ncorr;
@@ -1188,7 +1197,10 @@ double CTF_fitness(double *p, void *)
         else
         {
             correlation_coeff /= sigma1 * sigma2;
-            retval -= global_prm->enhanced_weight*correlation_coeff;
+            if (global_action==6)
+            	global_corr13=correlation_coeff;
+            else
+            	retval -= global_prm->enhanced_weight*correlation_coeff;
         }
     }
 
@@ -2273,15 +2285,34 @@ double ROUT_Adjust_CTF(Adjust_CTF_Parameters &prm, CTFDescription &output_ctfmod
     /************************************************************************
       STEP 12:  Produce output
     /************************************************************************/
+    global_action = 6;
+
     if (prm.fn_psd!="")
     {
+        // Define mask between first and third zero
+        global_mask_between_zeroes.initZeros(global_mask);
+        Matrix1D<double> u(2), z1(2), z3(2);
+        FOR_ALL_ELEMENTS_IN_ARRAY2D(global_mask_between_zeroes)
+        {
+            VECTOR_R2(u,global_x_digfreq(i, j),global_y_digfreq(i, j));
+            u/=u.module();
+            global_ctfmodel.zero(1,u,z1);
+            global_ctfmodel.zero(3,u,z3);
+            if (z1.module()<global_w_contfreq(i,j) && global_w_contfreq(i,j)<z3.module())
+                global_mask_between_zeroes(i,j)=1;
+        }
+
+        // Evaluate the correlation in this region
+        CTF_fitness(global_adjust->adaptForNumericalRecipes(),NULL);
+
+        // Save results
         FileName fn_root = prm.fn_psd.withoutExtension();
-        global_action = 6;
         save_intermediate_results(fn_root, false);
         global_ctfmodel.write(fn_root + ".ctfparam");
         MetaData MD;
         MD.read(fn_root + ".ctfparam");
         MD.setValue(MDL_CTF_CRITERION_FITTINGSCORE,fitness);
+        MD.setValue(MDL_CTF_CRITERION_FITTINGCORR13,global_corr13);
         MD.write(fn_root + ".ctfparam");
     }
     output_ctfmodel=global_ctfmodel;
