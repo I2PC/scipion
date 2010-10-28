@@ -73,6 +73,7 @@ protected:
         mdIn.setValue(MDL_SHIFTX,    xx );
         mdIn.setValue(MDL_SHIFTY,    yy );
         mdIn.setValue(MDL_WEIGHT,    img.weight());
+        mdIn.setValue(MDL_SCALE,     img.scale());
         mdIn.setValue(MDL_FLIP,      img.flip());
     }
 }
