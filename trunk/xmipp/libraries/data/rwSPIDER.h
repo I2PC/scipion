@@ -250,7 +250,10 @@ int  readSPIDER(int img_select)
         MD[n].setValue(MDL_WEIGHT, daux);
         bool baux = (header->flip == 1);
         MD[n].setValue(MDL_FLIP, baux);
-
+        daux = (double) header->scale;
+        if (daux==0.)
+            daux=1.0;
+        MD[n].setValue(MDL_SCALE, daux);
         if(img_select == i)
             break;
     }
@@ -418,6 +421,8 @@ int  writeSPIDER(int select_img=-1, bool isStack=false, int mode=WRITE_OVERWRITE
             header->weight=(float)aux;
         if(MD[0].getValue(MDL_FLIP,    baux))
             header->flip  =(float)baux;
+        if(MD[0].getValue(MDL_SCALE,    aux))
+            header->scale  =(float)aux;  
     }
     //else end
     // Set time and date
