@@ -111,6 +111,7 @@ enum MDLabel
     MDL_CTF_CRITERION_DAMPING, ///< Minimum damping at border
     MDL_CTF_CRITERION_PSDRADIALINTEGRAL, ///< Integral of the radial PSD
     MDL_CTF_CRITERION_FITTINGSCORE, ///< Score of the fitting
+    MDL_CTF_CRITERION_FITTINGCORR13, ///< Correlation between the 1st and 3rd ring of the CTF
     MDL_DATATYPE, ///< if read from file original image datatype, this is an struct defined in image
     MDL_DEFGROUP, ///< Defocus group
     MDL_DEFOCUSU, ///< microscope defocus U direction (double)
@@ -332,6 +333,7 @@ private:
         MDL::addLabel(MDL_CTF_CRITERION_DAMPING, LABEL_DOUBLE, "CTFCrit_damping");
         MDL::addLabel(MDL_CTF_CRITERION_PSDRADIALINTEGRAL, LABEL_DOUBLE, "CTFCrit_psdint");
         MDL::addLabel(MDL_CTF_CRITERION_FITTINGSCORE, LABEL_DOUBLE, "CTFCrit_Fitting");
+        MDL::addLabel(MDL_CTF_CRITERION_FITTINGCORR13, LABEL_DOUBLE, "CTFCrit_Corr13");
         MDL::addLabel(MDL_DEFGROUP, LABEL_INT, "defocusGroup");
         MDL::addLabel(MDL_DATATYPE, LABEL_INT, "datatype");
         MDL::addLabel(MDL_DEFOCUSU, LABEL_DOUBLE, "defocusU");
