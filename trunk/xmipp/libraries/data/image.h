@@ -994,6 +994,20 @@ public:
         MD[n].getValue(MDL_WEIGHT, dummy);
         return dummy;
     }
+    
+    /** Get Scale factor
+    *
+    * @code
+    * std::cout << "scale= " << I.scale() << std::endl;
+    * @endcode
+    */
+    double scale(const long int n = 0) const
+    {
+        double dummy = 1;
+        MD[n].getValue(MDL_SCALE, dummy);
+        return dummy;
+    }
+
 
     /** Get Flip
     *
@@ -1118,6 +1132,20 @@ public:
     {
         MD[n].setValue(MDL_ORIGINZ, zoff);
     }
+    
+    /** Set scale in image header
+     */
+    void setScale(double scale, long int n = 0)
+    {
+    	MD[n].setValue(MDL_SCALE, scale);
+    }
+
+    /** Get scale from image header
+     */
+    void getScale(double &scale, long int n = 0)
+    {
+    	MD[n].getValue(MDL_SCALE, scale);
+    }
 
     /** Set flip in image header
      */
@@ -1141,7 +1169,7 @@ public:
         // This has only been implemented for 2D images...
         (*this)().checkDimension(2);
 
-        double phi,psi,theta,xoff,yoff;
+        double phi,psi,theta,xoff,yoff,scale;
         bool flip;
         MD[n].getValue(MDL_ANGLEROT, phi);
         phi = realWRAP(phi, 0., 360.);
@@ -1151,6 +1179,7 @@ public:
         psi = realWRAP(psi, 0., 360.);
         MD[n].getValue(MDL_ORIGINX, xoff);
         MD[n].getValue(MDL_ORIGINY, yoff);
+        MD[n].getValue(MDL_SCALE, scale);
 
         Matrix2D< double > A(3, 3);
         A.initIdentity();
@@ -1182,6 +1211,7 @@ public:
             A(0, 2) = -xoff;
             A(1, 2) = -yoff;
         }
+        A *= scale;
 
         // Also for only_apply_shifts: mirror if necessary!
         MD[n].getValue(MDL_FLIP, flip);
@@ -1278,6 +1308,8 @@ public:
             o << "  Yoff  (origin offset in Y-direction) = " << I.Yoff() << std::endl;
             o << "  Zoff  (origin offset in Z-direction) = " << I.Zoff() << std::endl;
         }
+        if(I.individualContainsLabel(MDL_SCALE))
+            o << "Scale  : " <<I.scale() << std::endl;
         o << "Header size  : " << I.offset << std::endl;
         if (I.individualContainsLabel(MDL_WEIGHT))
             o << "Weight  : " << I.weight() << std::endl;
