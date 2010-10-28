@@ -151,6 +151,8 @@ public:
      * it also should be implemented by derived classes.
      */
     virtual void run() = 0;
+    /** Call the run function inside a try/catch block */
+    void tryRun();
 
     /** @name Constructors
      * @{

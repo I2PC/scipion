@@ -137,6 +137,19 @@ void XmippProgram::read(int argc, char ** argv, bool reportErrors)
     }
 }
 
+void XmippProgram::tryRun()
+{
+    try
+    {
+        this->run();
+    }
+    catch (XmippError xe)
+    {
+        std::cout << xe;
+        exit(xe.__errno);
+    }
+}
+
 void XmippProgram::setProgramName(const char * name)
 {
     progDef->name = name;
