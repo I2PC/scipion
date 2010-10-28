@@ -31,7 +31,7 @@
 class ProgHeaderAssign: public XmippMetadataProgram
 {
 private:
-    double          rot, tilt, psi, xshift, yshift, weight;
+    double          rot, tilt, psi, xshift, yshift, weight,scale;
     bool            mirror, round_shifts;
     int             levels, labelsnumber;
     std::vector<MDLabel> activeLabels;
@@ -105,6 +105,10 @@ protected:
             case MDL_WEIGHT:
                 mdIn.getValue( MDL_WEIGHT, weight);
                 img.setWeight(weight);
+                break;
+            case MDL_SCALE:
+                mdIn.getValue( MDL_SCALE, scale);
+                img.setScale(scale);
                 break;
             case MDL_FLIP:
                 mdIn.getValue( MDL_FLIP, mirror);
