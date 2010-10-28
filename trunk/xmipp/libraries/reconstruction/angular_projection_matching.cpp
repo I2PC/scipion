@@ -32,119 +32,163 @@
 pthread_mutex_t update_refs_in_memory_mutex = PTHREAD_MUTEX_INITIALIZER;
 pthread_mutex_t debug_mutex = PTHREAD_MUTEX_INITIALIZER;
 
-// Read arguments ==========================================================
-void Prog_angular_projection_matching_prm::read(int argc, char **argv)
-{
 
-    // Read command line
-    if (checkParameter(argc,argv,"-more_options"))
-    {
-        usage();
-        extendedUsage();
-    }
-    fn_ref  = getParameter(argc,argv,"-ref","ref");
-    fn_exp  = getParameter(argc,argv,"-i");
-    fn_root = getParameter(argc,argv,"-o","out");
+// Read arguments ==========================================================
+void ProgAngularProjectionMatching::readParams()
+
+{
+    fn_exp  = getParam("-i");
+    fn_root = getParam("-o");
+    fn_ref  = getParam("--ref");
 
     // Additional commands
-    pad=XMIPP_MAX(1.,textToFloat(getParameter(argc,argv,"-pad","1.")));
-    Ri=textToInteger(getParameter(argc,argv,"-Ri","-1"));
-    Ro=textToInteger(getParameter(argc,argv,"-Ro","-1"));
-    search5d_shift  = textToInteger(getParameter(argc,argv,"-search5d_shift","0"));
-    search5d_step = textToInteger(getParameter(argc,argv,"-search5d_step","2"));
-    max_shift = textToFloat(getParameter(argc,argv,"-max_shift","-1"));
-    avail_memory = textToFloat(getParameter(argc,argv,"-mem","1"));
-    fn_ctf  = getParameter(argc,argv,"-ctf","");
-    phase_flipped = checkParameter(argc, argv, "-phase_flipped");
-    // Number of threads
-    threads = textToInteger(getParameter(argc, argv, "-thr","1"));
+    pad=XMIPP_MAX(1.,getDoubleParam("--pad"));
+    Ri=getIntParam("--Ri");
+    Ro=getIntParam("--Ro");
+    search5d_shift  = getIntParam("--search5d_shift");
+    search5d_step = getIntParam("--search5d_step");
+    max_shift = getDoubleParam("--max_shift");
+    avail_memory = getDoubleParam("--mem");
+    if (checkParam("--ctf"))
+        fn_ctf  = getParam("--ctf");
+    phase_flipped = checkParam("--phase_flipped");
+    threads = getIntParam("--thr");
 
-    // Hidden stuff
-    verb=textToInteger(getParameter(argc,argv,"-verb","1"));
-
+    scale_step = getDoubleParam("--scale",0);
+    scale_nsteps = getDoubleParam("--scale",1);
 }
 
-// Show ====================================================================
-void Prog_angular_projection_matching_prm::show()
-{
 
-    if (verb>0)
+
+void ProgAngularProjectionMatching::defineParams()
+{
+    addUsageLine("This program performs a discrete angular assignment using a new projection matching");
+    addUsageLine("Example of use: Sample at 2 pixel step size for 5D shift search");
+    addUsageLine("   xmipp_angular_projection_matching -i in.doc -o out_dir --ref ref_dir --search5d_step 2");
+
+    addParamsLine("   -i <doc_file>               : Docfile with input images");
+    addParamsLine("   -o <output_rootname=\"out\">  : Output rootname");
+    addParamsLine("   -r <ref_rootname=\"ref\">   : Reference projection files rootname");
+    addParamsLine("     alias --ref;");
+    addParamsLine("  [--search5d_shift <s5dshift=0>]: Search range (in +/- pix) for 5D shift search");
+    addParamsLine("  [--search5d_step <s5dstep=2>]  : Step size for 5D shift search (in pix)");
+    addParamsLine("  [--Ri <ri=1>]             : Inner radius to limit rotational search");
+    addParamsLine("  [--Ro <ro=-1>]             : Outer radius to limit rotational search");
+    addParamsLine("                    : ro = -1 -> dim/2-1");
+    addParamsLine("  [-s <step=1> <n_steps=3>]   : scale step factor (1 means 0.01 in/de-crements) and number of steps arround 1.");
+    addParamsLine("                              : with default values: 1 ±0.01 | ±0.02 | ±0.03");
+    addParamsLine("    alias --scale;");
+    addParamsLine("==+Extra parameters==");
+    addParamsLine("  [--mem <mem=1>]            : Available memory for reference library (Gb)");
+    addParamsLine("  [--max_shift <max_shift=-1>]   : Max. change in origin offset (+/- pixels; neg= no limit)");
+    addParamsLine("  [--ctf <filename>]           : CTF to apply to the reference projections, either a");
+    addParamsLine("                : CTF parameter file or a 2D image with the CTF amplitudes");
+    addParamsLine("  [--pad <pad=1>]            : Padding factor (for CTF correction only)");
+    addParamsLine("  [--phase_flipped]           : Use this if the experimental images have been phase flipped");
+    addParamsLine("  [--thr <threads=1>]           : Number of concurrent threads");
+}
+
+/* Show -------------------------------------------------------------------- */
+void ProgAngularProjectionMatching::show()
+{
+    if (!verbose)
+        return;
+
+    std::cout << "  Input images            : "<< fn_exp << std::endl
+    << "  Output rootname         : "<< fn_root << std::endl
+    ;
+    if (Ri>0)
+        std::cout << "  Inner radius rot-search : " << Ri<< std::endl;
+    if (Ro>0)
+        std::cout << "  Outer radius rot-search : " << Ro << std::endl;
+    if (max_nr_refs_in_memory<total_nr_refs)
     {
-        std::cerr << "  Input images            : "<< fn_exp << std::endl;
-        std::cerr << "  Output rootname         : "<< fn_root << std::endl;
-        if (Ri>0)
-            std::cerr << "  Inner radius rot-search : "<<Ri<<std::endl;
-        if (Ro>0)
-            std::cerr << "  Outer radius rot-search : "<<Ro<<std::endl;
-        if (max_nr_refs_in_memory<total_nr_refs)
+        std::cout << "  Number of references    : " << total_nr_refs << std::endl
+        << "  Nr. refs in memory      : " << max_nr_refs_in_memory << " (using " << avail_memory <<" Gb)" << std::endl
+        ;
+    }
+    else
+    {
+        std::cout << "  Number of references    : " << total_nr_refs << " (all stored in memory)" << std::endl;
+    }
+    std::cout << "  Max. allowed shift      : +/- " <<max_shift<<" pixels"<<std::endl;
+    if (search5d_shift > 0)
+    {
+        std::cout << "  5D-search shift range   : "<<search5d_shift<<" pixels (sampled "<<nr_trans<<" times)"<<std::endl;
+    }
+    if (fn_ctf!="")
+    {
+        if (!fn_ctf.isMetaData())
         {
-            std::cerr << "  Number of references    : "<<total_nr_refs<<std::endl;
-            std::cerr << "  Nr. refs in memory      : "<<max_nr_refs_in_memory<< " (using "
-            <<avail_memory<<" Gb)"<<std::endl;
+            std::cout << "  CTF image               :  " <<fn_ctf<<std::endl;
+            if (pad > 1.)
+                std::cout << "  Padding factor          : "<< pad << std::endl;
         }
         else
         {
-            std::cerr << "  Number of references    : "<<total_nr_refs<<" (all stored in memory)"<<std::endl;
-        }
-        std::cerr << "  Max. allowed shift      : +/- " <<max_shift<<" pixels"<<std::endl;
-        if (search5d_shift > 0)
-        {
-            std::cerr << "  5D-search shift range   : "<<search5d_shift<<" pixels (sampled "<<nr_trans<<" times)"<<std::endl;
-        }
-        if (fn_ctf!="")
-        {
-            if (!fn_ctf.isMetaData())
-            {
-                std::cerr << "  CTF image               :  " <<fn_ctf<<std::endl;
-                if (pad > 1.)
-                    std::cerr << "  Padding factor          : "<< pad << std::endl;
-            }
+            std::cout << "  CTF parameter file      :  " <<fn_ctf<<std::endl;
+            if (phase_flipped)
+                std::cout << "    + Assuming images have been phase flipped " << std::endl;
             else
-            {
-                std::cerr << "  CTF parameter file      :  " <<fn_ctf<<std::endl;
-                if (phase_flipped)
-                    std::cerr << "    + Assuming images have been phase flipped " << std::endl;
-                else
-                    std::cerr << "    + Assuming images have not been phase flipped " << std::endl;
-            }
+                std::cout << "    + Assuming images have not been phase flipped " << std::endl;
         }
-        if (threads>1)
-        {
-            std::cerr << "  -> Using "<<threads<<" parallel threads"<<std::endl;
-        }
-        std::cerr << " ================================================================="<<std::endl;
     }
+    if (threads>1)
+    {
+        std::cout << "  -> Using "<<threads<<" parallel threads"<<std::endl;
+    }
+    std::cout << " ================================================================="<<std::endl;
+
 }
 
-// Usage ===================================================================
-void Prog_angular_projection_matching_prm::usage()
+/* Run --------------------------------------------------------------------- */
+void ProgAngularProjectionMatching::run()
 {
-    std::cerr << "Usage:  projection_matching [options] "<<std::endl;
-    std::cerr << "   -i <docfile>            : Docfile with input images \n"
-    << "   -ref <ref rootname=\"ref\"> : Rootname for reference projection files \n"
-    << "   -o [rootname=\"out\"]       : Output rootname \n"
-    << " [ -search5d_shift <int=0> ]   : Search range (in +/- pix) for 5D shift search\n"
-    << " [ -search5d_step  <int=2> ]   : Step size for 5D shift search (in pix) \n"
-    << " [ -Ri <float=1> ]             : Inner radius to limit rotational search \n"
-    << " [ -Ro <float=dim/2 - 1> ]     : Outer radius to limit rotational search \n"
-    << " [ -more_options ]             : Show all program options\n";
+    MetaData                         DFo;
+    FileName                         fn_tmp;
+    Matrix1D<double>                 dataline(8);
+
+    produceSideInfo();
+
+    int nr_images = DFexp.size();
+    int input_images[nr_images+1];
+    double output_values[MY_OUPUT_SIZE*nr_images+1];
+
+    // Process all images
+    input_images[0]=nr_images;
+    for (int i = 0; i < nr_images; i++)
+    {
+        input_images[i+1]=i;
+    }
+    processSomeImages(input_images,output_values);
+
+    // Fill output docfile
+    for (int i = 0; i < nr_images; i++)
+    {
+        DFexp.goToObject(1+ROUND(output_values[i*MY_OUPUT_SIZE+1]));
+        DFexp.getValue(MDL_IMAGE,fn_tmp);
+
+        DFo.addObject();
+        DFo.setValue(MDL_IMAGE,fn_tmp);
+        DFo.setValue(MDL_ANGLEROT, output_values[i*MY_OUPUT_SIZE+2]);
+        DFo.setValue(MDL_ANGLETILT,output_values[i*MY_OUPUT_SIZE+3]);
+        DFo.setValue(MDL_ANGLEPSI, output_values[i*MY_OUPUT_SIZE+4]);
+        DFo.setValue(MDL_SHIFTX,   output_values[i*MY_OUPUT_SIZE+5]);
+        DFo.setValue(MDL_SHIFTY,   output_values[i*MY_OUPUT_SIZE+6]);
+        DFo.setValue(MDL_REF,(int)(1+output_values[i*MY_OUPUT_SIZE+7]));
+        DFo.setValue(MDL_FLIP,    (output_values[i*MY_OUPUT_SIZE+8]>0));
+        DFo.setValue(MDL_SCALE,    output_values[i*MY_OUPUT_SIZE+9]);
+        DFo.setValue(MDL_MAXCC,    output_values[i*MY_OUPUT_SIZE+10]);
+    }
+
+    fn_tmp=fn_root + ".doc";
+    DFo.write(fn_tmp);
+    std::cerr<<"done!"<<std::endl;
 }
 
-// Extended usage ===================================================================
-void Prog_angular_projection_matching_prm::extendedUsage()
-{
-    std::cerr << "Additional options: \n"
-    << " [ -mem <float=1> ]            : Available memory for reference library (Gb)\n"
-    << " [ -max_shift <float=-1> ]     : Max. change in origin offset (+/- pixels; neg= no limit) \n"
-    << " [ -ctf <filename> ]           : CTF to apply to the reference projections, either a  \n"
-    << "                                 CTF parameter file or a 2D image with the CTF amplitudes\n"
-    << " [-pad <float=1>]              : Padding factor (for CTF correction only)\n"
-    << " [ -phase_flipped ]            : Use this if the experimental images have been phase flipped\n";
-    exit(1);
-}
 
 // Side info stuff ===================================================================
-void Prog_angular_projection_matching_prm::produceSideInfo()
+void ProgAngularProjectionMatching::produceSideInfo()
 {
 
     Image<double>    img,empty;
@@ -307,7 +351,7 @@ void Prog_angular_projection_matching_prm::produceSideInfo()
 
 }
 
-int Prog_angular_projection_matching_prm::getCurrentReference(int refno,
+int ProgAngularProjectionMatching::getCurrentReference(int refno,
         Polar_fftw_plans &local_plans)
 {
 
@@ -394,7 +438,7 @@ void * threadRotationallyAlignOneImage( void * data )
     // Variables from above
     int thread_id = thread_data->thread_id;
     int thread_num = thread_data->thread_num;
-    Prog_angular_projection_matching_prm *prm = thread_data->prm;
+    ProgAngularProjectionMatching *prm = thread_data->prm;
     MultidimArray<double> *img = thread_data->img;
     int *this_image = thread_data->this_image;
     int *opt_refno = thread_data->opt_refno;
@@ -576,7 +620,7 @@ void * threadRotationallyAlignOneImage( void * data )
 
 }
 
-void Prog_angular_projection_matching_prm::translationallyAlignOneImage(MultidimArray<double> &img,
+void ProgAngularProjectionMatching::translationallyAlignOneImage(MultidimArray<double> &img,
         const int &opt_refno,
         const double &opt_psi,
         const double &opt_flip,
@@ -666,10 +710,117 @@ void Prog_angular_projection_matching_prm::translationallyAlignOneImage(Multidim
 
 }
 
-void Prog_angular_projection_matching_prm::processSomeImages(int * my_images, double * my_output)
+
+void ProgAngularProjectionMatching::scaleAlignOneImage(MultidimArray<double> &img,
+        const int &opt_refno,
+        const double &opt_psi,
+        const double &opt_flip,
+        double &opt_xoff,
+        double &opt_yoff,
+        double &opt_scale,
+        double &maxcorr)
+{
+
+    MultidimArray<double> Mscale,Mtrans,Mimg,Mref,Mrot;
+    int refno;
+
+    Mscale.setXmippOrigin();
+    Mtrans.setXmippOrigin();
+    Mimg.setXmippOrigin();
+    Mref.setXmippOrigin();
+    Mrot.setXmippOrigin();
+
+#ifdef TIMING
+
+    TimeStamp t0,t1,t2;
+    time_config();
+    annotate_time(&t0);
+#endif
+
+    // ROTATE
+    rotate(BSPLINE3,Mrot,img,-opt_psi,DONT_WRAP);
+
+    if (opt_flip > 0.)
+    {
+        // Flip experimental image
+        Matrix2D<double> A(3,3);
+        A.initIdentity();
+        A(0, 0) *= -1.;
+        A(0, 1) *= -1.;
+        applyGeometry(LINEAR, Mimg, Mrot, A, IS_INV, DONT_WRAP);
+    }
+    else
+        Mimg = Mrot;
+
+    // TRANSLATE
+    translate(LINEAR,Mtrans,Mimg,vectorR2(opt_xoff,opt_yoff),true);
+
+    // Correct X-shift for mirrored images
+    if (opt_flip>0.)
+        opt_xoff *= -1.;
+
+    // SCALE
+    // Get pointer to the correct reference image in memory
+    refno = pointer_allrefs2refsinmem[opt_refno];
+    if (refno == -1)
+    {
+        // Reference is not stored in memory (anymore): (re-)read from disc
+        getCurrentReference(opt_refno,global_plans);
+        refno = pointer_allrefs2refsinmem[opt_refno];
+    }
+
+    Mref = proj_ref[refno];
+
+    // Mtrans is already shifted
+    double ref_mean, trans_mean;
+
+    // Means
+    ref_mean=Mref.computeMedian();
+    trans_mean=Mtrans.computeMedian();
+
+    // Scale search
+    double corr;
+    opt_scale = 1;
+    maxcorr = 0;
+
+    // from 1+/-
+    for(double scale = 1 - 0.01 * scale_step * scale_nsteps ;
+        scale < 1 + 0.01 * scale_step * (scale_nsteps + 1) ;
+        scale += 0.01 * scale_step)
+    {
+        // apply current scale
+        Matrix2D<double> A(3,3);
+        A.initIdentity();
+        A *= scale;
+        applyGeometry(LINEAR, Mscale, Mtrans, A, IS_INV, DONT_WRAP);
+
+        // SUM (Mscale - trans_mean) * (Mref - ref_mean)
+        Mscale.operator -=(trans_mean);
+        Mscale.operator *=(Mref.operator -(ref_mean));
+        corr = Mscale.sum();
+
+        // best scale update
+        if(corr > maxcorr)
+        {
+            opt_scale = scale;
+            maxcorr = corr;
+        }
+    }
+
+#ifdef TIMING
+
+    float total_trans = elapsed_time(t0);
+    std::cerr<<" trans%% "<<total_trans <<std::endl;
+#endif
+
+}
+
+
+
+void ProgAngularProjectionMatching::processSomeImages(int * my_images, double * my_output)
 {
     Image<double> img;
-    double opt_rot, opt_tilt, opt_psi, opt_flip, opt_xoff, opt_yoff, maxcorr=-99.e99;
+    double opt_rot, opt_tilt, opt_psi, opt_flip, opt_xoff, opt_yoff, opt_scale, maxcorr=-99.e99;
     int opt_refno;
 
     int nr_images = my_images[0];
@@ -688,12 +839,8 @@ void Prog_angular_projection_matching_prm::processSomeImages(int * my_images, do
         //DFexp.get_image(this_image,img,true);
         getCurrentImage(this_image+1,img);
 
-        //rotationallyAlignOneImage(img(),this_image, opt_refno, opt_psi, opt_flip, maxcorr);
-
         // Call threads to calculate the rotational alignment of each image in the selfile
         pthread_t * th_ids = (pthread_t *)malloc( threads * sizeof( pthread_t));
-        //scale image here
-        //ADD
 
         structThreadRotationallyAlignOneImage * threads_d = (structThreadRotationallyAlignOneImage *)
                 malloc ( threads * sizeof( structThreadRotationallyAlignOneImage ) );
@@ -735,10 +882,14 @@ void Prog_angular_projection_matching_prm::processSomeImages(int * my_images, do
         opt_xoff += img.Xoff();
         opt_yoff += img.Yoff();
 
-        // Compute better scale
-           //FIXME
-           //for scale
-          //SCALE
+        //FIXME
+        opt_scale=1.0;
+        // Compute a better scale (scale_min -> scale_max)
+        //scaleAlignOneImage(img(), opt_refno, opt_psi, opt_flip, opt_xoff, opt_yoff, opt_scale, maxcorr);
+
+        //Add the previously applied scale to the newly found one
+        //opt_scale *= img.scale();
+
         // Output
         my_output[imgno * MY_OUPUT_SIZE + 1] = this_image;
         my_output[imgno * MY_OUPUT_SIZE + 2] = opt_rot;
@@ -748,12 +899,13 @@ void Prog_angular_projection_matching_prm::processSomeImages(int * my_images, do
         my_output[imgno * MY_OUPUT_SIZE + 6] = opt_yoff;
         my_output[imgno * MY_OUPUT_SIZE + 7] = opt_refno;
         my_output[imgno * MY_OUPUT_SIZE + 8] = opt_flip;
-        my_output[imgno * MY_OUPUT_SIZE + 9] = maxcorr;
+        my_output[imgno * MY_OUPUT_SIZE + 9] = opt_scale;
+        my_output[imgno * MY_OUPUT_SIZE + 10] = maxcorr;
     }
 
 }
 
-void Prog_angular_projection_matching_prm::getCurrentImage(int imgno, Image<double> &img)
+void ProgAngularProjectionMatching::getCurrentImage(int imgno, Image<double> &img)
 {
 
     FileName fn_img;
@@ -771,15 +923,17 @@ void Prog_angular_projection_matching_prm::getCurrentImage(int imgno, Image<doub
     double shiftX, shiftY;
     DFexp.getValue(MDL_SHIFTX,shiftX);
     DFexp.getValue(MDL_SHIFTY,shiftY);
-    //DFexp scale
     img.setShifts(shiftX,shiftY);
     img.setEulerAngles(0.,0.,0.);
     img.setFlip(0.);
-    //img.scale
-    //img.setScale<=== add scale
+    //!a
+    double scale;
+    scale = 1.;
+    if(DFexp.containsLabel(MDL_SCALE))
+        DFexp.getValue(MDL_SCALE,scale);
+    img.setScale(scale);
 
-    //modify getTransformationMatrix so scale is taken into account
-    A = img.getTransformationMatrix(true); //<=== add scale
+    A = img.getTransformationMatrix(true);
     if (!A.isIdentity())
         selfApplyGeometry(BSPLINE3, img(), A, IS_INV, WRAP);
 }
