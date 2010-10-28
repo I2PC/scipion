@@ -52,7 +52,7 @@ int       output_values_size;
 //consider
 //class Prog_mpi_projection_matching_prm:public Prog_projection_matching_prm
 //to access parent variables
-class Prog_mpi_angular_projection_matching_prm:Prog_angular_projection_matching_prm
+class ProgMpiAngularProjectionMatching: public ProgAngularProjectionMatching
 {
     public:
     //int rank, size, num_img_tot;
@@ -91,7 +91,7 @@ class Prog_mpi_angular_projection_matching_prm:Prog_angular_projection_matching_
         int sym_order;
 
     /*  constructor ------------------------------------------------------- */
-    Prog_mpi_angular_projection_matching_prm()
+    ProgMpiAngularProjectionMatching()
     {
         //parent class constructor will be called by deault without parameters
         MPI_Comm_size(MPI_COMM_WORLD, &(nProcs));
@@ -624,7 +624,7 @@ int main(int argc, char *argv[])
     //size of the mpi block, number of images
     //mpi_job_size=!checkParameter(argc,argv,"-mpi_job_size","-1");
 
-    Prog_mpi_angular_projection_matching_prm prm;
+    ProgMpiAngularProjectionMatching prm;
     bool finalize_worker=false;
     if (prm.rank == 0)
     {
