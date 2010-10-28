@@ -66,26 +66,26 @@ void ProgAngularProjectionMatching::defineParams()
     addUsageLine("Example of use: Sample at 2 pixel step size for 5D shift search");
     addUsageLine("   xmipp_angular_projection_matching -i in.doc -o out_dir --ref ref_dir --search5d_step 2");
 
-    addParamsLine("   -i <doc_file>               : Docfile with input images");
+    addParamsLine("   -i <doc_file>               	: Docfile with input images");
     addParamsLine("   -o <output_rootname=\"out\">  : Output rootname");
-    addParamsLine("   -r <ref_rootname=\"ref\">   : Reference projection files rootname");
+    addParamsLine("   -r <ref_rootname=\"ref\">   	: Reference projection files rootname");
     addParamsLine("     alias --ref;");
     addParamsLine("  [--search5d_shift <s5dshift=0>]: Search range (in +/- pix) for 5D shift search");
     addParamsLine("  [--search5d_step <s5dstep=2>]  : Step size for 5D shift search (in pix)");
-    addParamsLine("  [--Ri <ri=1>]             : Inner radius to limit rotational search");
-    addParamsLine("  [--Ro <ro=-1>]             : Outer radius to limit rotational search");
-    addParamsLine("                    : ro = -1 -> dim/2-1");
-    addParamsLine("  [-s <step=1> <n_steps=3>]   : scale step factor (1 means 0.01 in/de-crements) and number of steps arround 1.");
-    addParamsLine("                              : with default values: 1 ±0.01 | ±0.02 | ±0.03");
+    addParamsLine("  [--Ri <ri=1>]            	 	: Inner radius to limit rotational search");
+    addParamsLine("  [--Ro <ro=-1>]             	: Outer radius to limit rotational search");
+    addParamsLine("                    				: ro = -1 -> dim/2-1");
+    addParamsLine("  [-s <step=1> <n_steps=3>]   	: scale step factor (1 means 0.01 in/de-crements) and number of steps arround 1.");
+    addParamsLine("                              	: with default values: 1 ±0.01 | ±0.02 | ±0.03");
     addParamsLine("    alias --scale;");
     addParamsLine("==+Extra parameters==");
-    addParamsLine("  [--mem <mem=1>]            : Available memory for reference library (Gb)");
+    addParamsLine("  [--mem <mem=1>]            	: Available memory for reference library (Gb)");
     addParamsLine("  [--max_shift <max_shift=-1>]   : Max. change in origin offset (+/- pixels; neg= no limit)");
-    addParamsLine("  [--ctf <filename>]           : CTF to apply to the reference projections, either a");
-    addParamsLine("                : CTF parameter file or a 2D image with the CTF amplitudes");
-    addParamsLine("  [--pad <pad=1>]            : Padding factor (for CTF correction only)");
-    addParamsLine("  [--phase_flipped]           : Use this if the experimental images have been phase flipped");
-    addParamsLine("  [--thr <threads=1>]           : Number of concurrent threads");
+    addParamsLine("  [--ctf <filename>]           	: CTF to apply to the reference projections, either a");
+    addParamsLine("                					: CTF parameter file or a 2D image with the CTF amplitudes");
+    addParamsLine("  [--pad <pad=1>]            	: Padding factor (for CTF correction only)");
+    addParamsLine("  [--phase_flipped]           	: Use this if the experimental images have been phase flipped");
+    addParamsLine("  [--thr <threads=1>]          	: Number of concurrent threads");
 }
 
 /* Show -------------------------------------------------------------------- */
@@ -783,9 +783,9 @@ void ProgAngularProjectionMatching::scaleAlignOneImage(MultidimArray<double> &im
     opt_scale = 1;
     maxcorr = 0;
 
-    // from 1+/-
+    // 1 ±(0.01 * scale_step * scale_nsteps)
     for(double scale = 1 - 0.01 * scale_step * scale_nsteps ;
-        scale < 1 + 0.01 * scale_step * (scale_nsteps + 1) ;
+        scale <= 1 + 0.01 * scale_step * (scale_nsteps + 1) ;
         scale += 0.01 * scale_step)
     {
         // apply current scale
@@ -882,13 +882,12 @@ void ProgAngularProjectionMatching::processSomeImages(int * my_images, double * 
         opt_xoff += img.Xoff();
         opt_yoff += img.Yoff();
 
-        //FIXME
         opt_scale=1.0;
         // Compute a better scale (scale_min -> scale_max)
-        //scaleAlignOneImage(img(), opt_refno, opt_psi, opt_flip, opt_xoff, opt_yoff, opt_scale, maxcorr);
+        scaleAlignOneImage(img(), opt_refno, opt_psi, opt_flip, opt_xoff, opt_yoff, opt_scale, maxcorr);
 
         //Add the previously applied scale to the newly found one
-        //opt_scale *= img.scale();
+        opt_scale *= img.scale();
 
         // Output
         my_output[imgno * MY_OUPUT_SIZE + 1] = this_image;
