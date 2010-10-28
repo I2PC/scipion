@@ -22,80 +22,28 @@
  *  All comments concerning this program package may be sent to the
  *  e-mail address 'xmipp@cnb.csic.es'
  ***************************************************************************/
+#include <data/progs.h>
+#include <data/args.h>
 
 #include <reconstruction/angular_projection_matching.h>
- 
 
+/* MAIN -------------------------------------------------------------------- */
 int main(int argc, char **argv)
 {
 
-    MetaData                         DFo;
-    Prog_angular_projection_matching_prm prm;
-    FileName                         fn_tmp;
-    Matrix1D<double>                 dataline(8);
-
-    // Get input parameters
-    try
-    {
-        // Read command line & produce side info
-        prm.read(argc, argv);
-        prm.produceSideInfo();
-        prm.show();
-
-    }
-    catch (XmippError XE)
-    {
-        std::cout << XE;
-        prm.usage();
-        exit(0);
-    }
-
-    int nr_images = prm.DFexp.size();
-    int input_images[nr_images+1];
-    double output_values[MY_OUPUT_SIZE*nr_images+1];
-
-    try
-    {
-        // Process all images
-	    input_images[0]=nr_images;
-	    for (int i = 0; i < nr_images; i++)
-	    {
-	        input_images[i+1]=i;
-	    }
-            prm.processSomeImages(input_images,output_values);
-
-	    // Fill output docfile
-	    for (int i = 0; i < nr_images; i++)
-	    {
-	        prm.DFexp.goToObject(1+ROUND(output_values[i*MY_OUPUT_SIZE+1]));
-            prm.DFexp.getValue(MDL_IMAGE,fn_tmp);
-
-            DFo.addObject();
-            DFo.setValue(MDL_IMAGE,fn_tmp);
-            DFo.setValue(MDL_ANGLEROT, output_values[i*MY_OUPUT_SIZE+2]);
-            DFo.setValue(MDL_ANGLETILT,output_values[i*MY_OUPUT_SIZE+3]);
-            DFo.setValue(MDL_ANGLEPSI, output_values[i*MY_OUPUT_SIZE+4]);
-            DFo.setValue(MDL_SHIFTX,   output_values[i*MY_OUPUT_SIZE+5]);
-            DFo.setValue(MDL_SHIFTY,   output_values[i*MY_OUPUT_SIZE+6]);
-            DFo.setValue(MDL_REF,(int)(1+output_values[i*MY_OUPUT_SIZE+7]));
-           	DFo.setValue(MDL_FLIP,    (output_values[i*MY_OUPUT_SIZE+8]>0));
-            DFo.setValue(MDL_MAXCC,    output_values[i*MY_OUPUT_SIZE+9]);
-            ///DFo.setValue(MDL_SCALE...
-	    }
-
-	    fn_tmp=prm.fn_root + ".doc";
-	    DFo.write(fn_tmp);
-	    std::cerr<<"done!"<<std::endl;
-    }
-    catch (XmippError XE)
-    {
-        std::cout << XE;
-        prm.usage();
-        exit(0);
-    }
-
+	ProgAngularProjectionMatching program;
+	try
+	{
+		program.read(argc, argv);
+		program.run();
+	}
+	catch (XmippError xe)
+	{
+		std::cerr << xe;
+		return 1;
+	}
+	return 0;
 }
-
 
 
 
