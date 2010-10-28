@@ -27,94 +27,9 @@
 
 int main(int argc, char **argv)
 {
-    int c, nn, imgno, opt_refno;
-    double LL, sumw_allrefs, convv, sumcorr;
-    bool converged;
-    std::vector<double> conv;
-    double aux, wsum_sigma_noise, wsum_sigma_offset;
-    std::vector<MultidimArray<double > > wsumimgs; //3D
-    std::vector<MultidimArray<double > > wsumweds; //3D
-    std::vector<MultidimArray<double > > fsc;
-    MultidimArray<double> sumw; //1D
-    MultidimArray<double> P_phi, Mr2, Maux; //3D
-    FileName fn_img, fn_tmp;
-    MultidimArray<double> oneline(0); //1D
-
-    ProgMLTomo prm;
-
-    // Get input parameters
-    try
-    {
-        prm.read(argc, argv);
-        prm.produceSideInfo();
-        prm.show();
-        if (prm.fn_ref == "")
-        {
-            if (prm.nr_ref != 0)
-            {
-                prm.generateInitialReferences();
-            }
-            else
-            {
-                REPORT_ERROR(ERR_ARG_MISSING, "Please provide -ref or -nref");
-            }
-        }
-        prm.produceSideInfo2();
-
-    }
-    catch (XmippError XE)
-    {
-        std::cout << XE;
-        prm.usage();
-        exit(0);
-    }
-
-    try
-    {
-        Maux.resize(prm.dim, prm.dim, prm.dim);
-        Maux.setXmippOrigin();
-
-        // Loop over all iterations
-        for (int iter = prm.istart; iter <= prm.Niter; iter++)
-        {
-
-            if (prm.verb > 0)
-                std::cerr << "  Multi-reference refinement:  iteration " << iter << " of " << prm.Niter << std::endl;
-
-            // Save old reference images
-            for (int refno = 0;refno < prm.nr_ref; refno++)
-                prm.Iold[refno]() = prm.Iref[refno]();
-
-            // Integrate over all images
-            prm.expectation(prm.MDimg, prm.Iref, iter,
-                            LL, sumcorr, wsumimgs, wsumweds,
-                            wsum_sigma_noise, wsum_sigma_offset, sumw);
-
-            // Update model parameters
-            prm.maximization(wsumimgs, wsumweds,
-                             wsum_sigma_noise, wsum_sigma_offset,
-                             sumw, sumcorr, sumw_allrefs, fsc, iter);
-
-            // Check convergence
-            converged = prm.checkConvergence(conv);
-
-            prm.writeOutputFiles(iter, wsumweds, sumw_allrefs, LL, sumcorr, conv, fsc);
-
-            if (converged)
-            {
-                if (prm.verb > 0)
-                    std::cerr << " Optimization converged!" << std::endl;
-                break;
-            }
-
-        } // end loop iterations
-        prm.writeOutputFiles(-1, wsumweds, sumw_allrefs, LL, sumcorr, conv, fsc);
-
-    }
-    catch (XmippError XE)
-    {
-        std::cout << XE;
-        prm.usage();
-        exit(0);
-    }
+    ProgMLTomo program;
+    // Read input parameters
+    program.read(argc, argv);
+    // Run the program in a try/catch block
+    program.tryRun();
 }
