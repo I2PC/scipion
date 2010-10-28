@@ -180,6 +180,7 @@ int  readIMAGIC(int img_select)
     MDMainHeader.setValue(MDL_SAMPLINGRATEZ,(double)1.);
     MDMainHeader.setValue(MDL_DATATYPE,(int)datatype);
 
+
     offset = 0;   // separate header file
 
     unsigned long   Ndim = _nDim, j = 0;
@@ -197,6 +198,7 @@ int  readIMAGIC(int img_select)
 
     MD.clear();
     MD.resize(Ndim);
+    double daux=1.;
     for ( i = 0; i < Ndim; ++i )
     {
         if ( fread( header, IMAGICSIZE, 1, fhed ) < 1 )
@@ -214,7 +216,7 @@ int  readIMAGIC(int img_select)
             MD[i].setValue(MDL_ANGLETILT,(double)-1. * header->euler_beta);
             MD[i].setValue(MDL_ANGLEPSI, (double)-1. * header->euler_gamma);
             MD[i].setValue(MDL_WEIGHT,   (double)oneD);
-
+            MD[i].setValue(MDL_SCALE, daux);
             j++;
         }
     }
