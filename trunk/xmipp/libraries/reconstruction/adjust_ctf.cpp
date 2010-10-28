@@ -858,8 +858,6 @@ void Adjust_CTF_Parameters::generate_model_quadrant(int Ydim, int Xdim,
     CenterFFT(enhancedPSD, false);
     selfScaleToSize(BSPLINE3, enhancedPSD, Ydim, Xdim);
     CenterFFT(enhancedPSD, true);
-    // Remove negative values due to the interpolation
-    enhancedPSD.rangeAdjust(0,1);
 
     // Generate the CTF model
     assign_CTF_from_parameters(MATRIX1D_ARRAY(*global_adjust), global_ctfmodel,
@@ -912,8 +910,6 @@ void Adjust_CTF_Parameters::generate_model_halfplane(int Ydim, int Xdim,
     CenterFFT(enhancedPSD, false);
     selfScaleToSize(BSPLINE3, enhancedPSD, Ydim, Xdim);
     CenterFFT(enhancedPSD, true);
-    // Remove negative values due to the interpolation
-    enhancedPSD.rangeAdjust(0,1);
 
     // The left part is the CTF model
     assign_CTF_from_parameters(MATRIX1D_ARRAY(*global_adjust), global_ctfmodel,
