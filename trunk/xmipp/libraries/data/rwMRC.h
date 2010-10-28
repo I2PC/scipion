@@ -219,6 +219,7 @@ int readMRC(int img_select, bool isStack=false)
 
     MD.clear();
     MD.resize(imgEnd - imgStart);
+    double daux=1.;
     for ( i = imgStart; i < imgEnd; ++i )
     {
         double aux;
@@ -243,6 +244,7 @@ int readMRC(int img_select, bool isStack=false)
         MD[i-imgStart].setValue(MDL_ANGLEPSI, zeroD);
         MD[i-imgStart].setValue(MDL_WEIGHT,   oneD);
         MD[i-imgStart].setValue(MDL_FLIP,     falseb);
+        MD[i-imgStart].setValue(MDL_SCALE, daux);
     }
 
     //#define DEBUG
