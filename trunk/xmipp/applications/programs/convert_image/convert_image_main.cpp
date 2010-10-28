@@ -29,12 +29,10 @@
 #include <data/metadata_extension.h>
 #include <data/progs.h>
 
-void Usage();
-
 class ProgConvImg: public XmippProgram
 {
 private:
-    FileName fn_stack, fn_root, fn_oext, fn_vol, fn_in, fn_out, fn_img;
+    FileName fn_root, fn_oext, fn_in, fn_out;
     std::string type, bits;
     Image<float> in, out;
     MetaData SF;
@@ -121,7 +119,7 @@ public:
             SF.read(fn_in);
             if (type == "stk")
             {
-                FileName fn_stack_plain=fn_stack.removeFileFormat();
+                FileName fn_stack_plain=fn_out.removeFileFormat();
                 if (exists(fn_stack_plain))
                     unlink(fn_stack_plain.c_str());
                 FOR_ALL_OBJECTS_IN_METADATA(SF)
@@ -189,7 +187,7 @@ public:
                 // It's a stack with more than 1 slice
                 if (type == "stk")
                 {
-                    FileName fn_stack_plain=fn_stack.removeFileFormat();
+                    FileName fn_stack_plain=fn_out.removeFileFormat();
                     if (exists(fn_stack_plain))
                         unlink(fn_stack_plain.c_str());
                     int nmax=NSIZE(in());
