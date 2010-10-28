@@ -298,18 +298,31 @@ int writeMRC(int img_select, bool isStack=false, int mode=WRITE_OVERWRITE)
         header->nx = Xdim/2 + 1;        // If a transform, physical storage is nx/2 + 1
 
     // Convert T to datatype
+    DataType wDType;
     if ( typeid(T) == typeid(double) ||
          typeid(T) == typeid(float) ||
          typeid(T) == typeid(int) )
+    {
         header->mode = 2;
+        wDType = Float;
+    }
     else if ( typeid(T) == typeid(unsigned char) ||
               typeid(T) == typeid(signed char) )
+    {
         header->mode = 0;
+        wDType = SChar;
+    }
     else if ( typeid(T) == typeid(std::complex<float>) ||
               typeid(T) == typeid(std::complex<double>) )
+    {
         header->mode = 4;
+        wDType = ComplexFloat;
+    }
     else
         REPORT_ERROR(ERR_TYPE_INCORRECT,"ERROR write MRC image: invalid typeid(T)");
+
+    if (mmapOnWrite && !checkMmapT(wDType))
+        REPORT_ERROR(ERR_MMAP, "File datatype and image declaration not compatible with mmap.");
 
     //Set this to zero till we decide if we want to update it
     header->mx = 0;//(int) (ua/ux + 0.5);
@@ -355,10 +368,7 @@ int writeMRC(int img_select, bool isStack=false, int mode=WRITE_OVERWRITE)
     offset = MRCSIZE + header->nsymbt;
     size_t datasize, datasize_n;
     datasize_n = Xdim*Ydim*Zdim;
-    if (isComplexT())
-        datasize = datasize_n * gettypesize(ComplexFloat);
-    else
-        datasize = datasize_n * gettypesize(Float);
+    datasize = datasize_n * gettypesize(wDType);
 
     //#define DEBUG
 #ifdef DEBUG
@@ -392,30 +402,39 @@ int writeMRC(int img_select, bool isStack=false, int mode=WRITE_OVERWRITE)
         fwrite( header, MRCSIZE, 1, fimg );
     freeMemory(header, sizeof(MRChead) );
 
-    //write only once, ignore select_img
-    char* fdata = (char *) askMemory(datasize);
+    char* fdata;
+    if (!mmapOnWrite)
+        fdata = (char *) askMemory(datasize);
     //think about writing in several chunks
 
+    //write only once, ignore select_img
     if ( NSIZE(data) == 1 && mode==WRITE_OVERWRITE)
     {
-        if (isComplexT())
-            castPage2Datatype(MULTIDIM_ARRAY(data), fdata, ComplexFloat, datasize_n);
+        if (mmapOnWrite)
+        {
+            offset = ftell(fimg);
+            mappedSize = offset + datasize;
+            fseek(fimg, datasize-1, SEEK_CUR);
+            fputc(0, fimg);
+        }
         else
-            castPage2Datatype(MULTIDIM_ARRAY(data), fdata, Float, datasize_n);
-        fwrite( fdata, datasize, 1, fimg );
+        {
+            castPage2Datatype(MULTIDIM_ARRAY(data), fdata, wDType, datasize_n);
+            fwrite( fdata, datasize, 1, fimg );
+        }
     }
     else
     {
+        if (mmapOnWrite)
+            REPORT_ERROR(ERR_NOT_IMPLEMENTED,"writeSPIDER: Mmap file not implemented neither for volumes nor stacks.");
+
         if(mode==WRITE_APPEND)
             fseek( fimg, 0, SEEK_END);
         else if(mode==WRITE_REPLACE)
             fseek( fimg,offset + (datasize)*img_select, SEEK_SET);
         for ( size_t i =imgStart; i<imgEnd; i++ )
         {
-            if (isComplexT())
-                castPage2Datatype(MULTIDIM_ARRAY(data) + i*datasize_n, fdata, ComplexFloat, datasize_n);
-            else
-                castPage2Datatype(MULTIDIM_ARRAY(data) + i*datasize_n, fdata, Float, datasize_n);
+            castPage2Datatype(MULTIDIM_ARRAY(data) + i*datasize_n, fdata, wDType, datasize_n);
             fwrite( fdata, datasize, 1, fimg );
         }
     }
@@ -423,7 +442,10 @@ int writeMRC(int img_select, bool isStack=false, int mode=WRITE_OVERWRITE)
     fl.l_type   = F_UNLCK;
     fcntl(fileno(fimg), F_SETLK, &fl); /* unlocked */
 
-    freeMemory(fdata, datasize);
+    if (mmapOnWrite)
+        mmapFile();
+    else
+        freeMemory(fdata, datasize);
 
     return(0);
 }

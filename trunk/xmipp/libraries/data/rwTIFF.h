@@ -279,10 +279,10 @@ int readTIFF(int img_select, bool isStack=false)
      * the multidimarray of Image
      */
 
-    if (mmapOn)
+    if (mmapOnRead)
     {
         data.setMmap(true);
-        mmapOn = false;
+        mmapOnRead = false;
     }
 
     // Allocate memory for image data (Assume xdim, ydim, zdim and ndim are already set

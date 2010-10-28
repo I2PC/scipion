@@ -228,10 +228,8 @@ void Prog_downsample_prm::create_empty_output_file()
         Ypdim = FLOOR(Ydim / Ystep);
         Xpdim = FLOOR(Xdim / Xstep);
     }
-//    Micrograph auxM;
     outM.setDataType((DataType)datatype);
     outM.resize(Xpdim,Ypdim, fn_downsampled);
-//    auxM.write(fn_downsampled);
 
 #ifdef NEVER
     //FIXME, here output downsampled image
@@ -285,10 +283,7 @@ void Prog_downsample_prm::Downsample()
 {
     try
     {
-        Micrograph Mp;
-//        Mp.open_micrograph(fn_downsampled);
         downsample(M, Xstep, Ystep, kernel, outM, do_fourier, nThreads);
-//        Mp.close_micrograph();
     }
     catch (XmippError XE)
     {

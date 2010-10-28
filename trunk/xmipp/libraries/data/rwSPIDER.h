@@ -309,7 +309,7 @@ int  writeSPIDER(int select_img=-1, bool isStack=false, int mode=WRITE_OVERWRITE
     else
         wDType = Float;
 
-    if (mmapOn && !checkMmapT(wDType))
+    if (mmapOnWrite && !checkMmapT(wDType))
         REPORT_ERROR(ERR_MMAP, "File datatype and image declaration not compatible with mmap.");
 
     float  lenbyt = sizeof(float)*Xdim;  // Record length (in bytes)
@@ -436,10 +436,7 @@ int  writeSPIDER(int select_img=-1, bool isStack=false, int mode=WRITE_OVERWRITE
 
     size_t datasize, datasize_n;
     datasize_n = Xdim*Ydim*Zdim;
-    if (isComplexT())
-        datasize = datasize_n * gettypesize(ComplexFloat);
-    else
-        datasize = datasize_n * gettypesize(Float);
+    datasize = datasize_n * gettypesize(wDType);
 
 #ifdef DEBUG
 
@@ -470,14 +467,14 @@ int  writeSPIDER(int select_img=-1, bool isStack=false, int mode=WRITE_OVERWRITE
         fwrite( header, offset, 1, fimg );
 
     char* fdata;
-    if (!mmapOn)
+    if (!mmapOnWrite)
         fdata = (char *) askMemory(datasize);
     //think about writing in several chucks
 
     //write only once, ignore select_img
     if ( NSIZE(data) == 1 && mode==WRITE_OVERWRITE)
     {
-        if (mmapOn)
+        if (mmapOnWrite)
         {
             offset = ftell(fimg);
             mappedSize = offset + datasize;
@@ -486,16 +483,13 @@ int  writeSPIDER(int select_img=-1, bool isStack=false, int mode=WRITE_OVERWRITE
         }
         else
         {
-            if (isComplexT())
-                castPage2Datatype(MULTIDIM_ARRAY(data), fdata, ComplexFloat, datasize_n);
-            else
-                castPage2Datatype(MULTIDIM_ARRAY(data), fdata, Float, datasize_n);
+            castPage2Datatype(MULTIDIM_ARRAY(data), fdata, wDType, datasize_n);
             fwrite( fdata, datasize, 1, fimg );
         }
     }
     else
     {
-        if (mmapOn)
+        if (mmapOnWrite)
             REPORT_ERROR(ERR_NOT_IMPLEMENTED,"writeSPIDER: Mmap file not implemented neither for volumes nor stacks.");
 
         if (mode == WRITE_APPEND)
@@ -527,10 +521,7 @@ int  writeSPIDER(int select_img=-1, bool isStack=false, int mode=WRITE_OVERWRITE
 
             //do not need to unlock because we are in the overwrite case
             fwrite( header, offset, 1, fimg );
-            if (isComplexT())
-                castPage2Datatype(MULTIDIM_ARRAY(data) + i*datasize_n, fdata, ComplexFloat, datasize_n);
-            else
-                castPage2Datatype(MULTIDIM_ARRAY(data) + i*datasize_n, fdata, Float, datasize_n);
+            castPage2Datatype(MULTIDIM_ARRAY(data) + i*datasize_n, fdata, wDType, datasize_n);
             fwrite( fdata, datasize, 1, fimg );
         }
     }
@@ -538,7 +529,7 @@ int  writeSPIDER(int select_img=-1, bool isStack=false, int mode=WRITE_OVERWRITE
     fl.l_type   = F_UNLCK;
     fcntl(fileno(fimg), F_SETLK, &fl); /* unlocked */
 
-    if (mmapOn)
+    if (mmapOnWrite)
         mmapFile();
     else
         freeMemory(fdata, datasize);

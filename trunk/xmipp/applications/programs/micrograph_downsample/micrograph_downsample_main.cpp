@@ -51,7 +51,7 @@ int main(int argc, char **argv)
 
     try
     {
-    
+
         if(!prm.do_fourier)
            prm.generate_kernel();
         prm.open_input_micrograph();
@@ -68,8 +68,8 @@ int main(int argc, char **argv)
 
             for (int i = 0; i < prm.Ypdim; i++)
                 for (int j = 0; j < prm.Xpdim; j++)
-                    Mp.set_val(j, i, result[i*prm.Xpdim+j]);
-            Mp.close_micrograph();
+                   prm.outM.set_val(j, i, result[i*prm.Xpdim+j]);
+            prm.outM.close_micrograph();
         }
         else prm.Downsample();
         prm.close_input_micrograph();

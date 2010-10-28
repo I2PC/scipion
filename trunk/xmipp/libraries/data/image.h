@@ -226,7 +226,8 @@ private:
     int                 replaceNsize;// Stack size in the replace case
     bool                 _exists;     // does target file exists?
     // equal 0 is not exists or not a stack
-    bool                mmapOn;      // Mapping when loading from file
+    bool                mmapOnRead;  // Mapping when reading from file
+    bool                mmapOnWrite; // Mapping when writting to file
     int                 mFd;         // Handle the file in reading method and mmap
     size_t              mappedSize;  // Size of the mapped file
 
@@ -275,7 +276,7 @@ public:
     Image(int Xdim, int Ydim, int Zdim, int Ndim, FileName _filename)
     {
         init();
-        mmapOn = true;
+        mmapOnWrite = true;
         data.setDimensions(Xdim, Ydim, Zdim, Ndim);
         MD.resize(Ndim);
         filename = _filename;
@@ -300,7 +301,7 @@ public:
         offset = 0;
         swap = 0;
         replaceNsize=0;
-        mmapOn = false;
+        mmapOnRead = mmapOnWrite = false;
         mappedSize = 0;
         mFd    = NULL;
     }
@@ -310,11 +311,10 @@ public:
      */
     void clear()
     {
-        if (mmapOn)
+        if (mmapOnRead || mmapOnWrite)
             munmapFile();
         else
             data.clear();
-
         init();
     }
 
@@ -1455,7 +1455,7 @@ private:
             munmapFile();
 
         // Check whether to map the data or not
-        mmapOn = mapData;
+        mmapOnRead = mapData;
 
         FileName ext_name = hFile->ext_name;
         fimg = hFile->fimg;
@@ -1715,14 +1715,14 @@ private:
         size_t haveread_n=0;
 
         // Flag to know that data is not going to be mapped although mmapOn is true
-        if (mmapOn && !checkMmapT(datatype))
+        if (mmapOnRead && !checkMmapT(datatype))
         {
             std::cout << "WARNING: Image Class. File datatype and image declaration not compatible with mmap. Loading into memory." <<std::endl;
-            mmapOn = false;
+            mmapOnRead = false;
             mFd = -1;
         }
 
-        if (mmapOn)
+        if (mmapOnRead)
         {
             // Image mmapOn is not compatible with Multidimarray mmapOn
             if(data.mmapOn)

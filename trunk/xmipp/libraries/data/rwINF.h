@@ -202,6 +202,9 @@ int writeINF(int img_select, bool isStack=false, int mode=WRITE_OVERWRITE)
     else
         REPORT_ERROR(ERR_TYPE_INCORRECT,(std::string)"ERROR: rwINF does not write from " + typeid(T).name() + "type.");
 
+    if (mmapOnWrite && !checkMmapT(wDType))
+        REPORT_ERROR(ERR_MMAP, "File datatype and image declaration not compatible with mmap.");
+
     _depth = gettypesize(wDType);
 
     //locking
@@ -252,7 +255,7 @@ int writeINF(int img_select, bool isStack=false, int mode=WRITE_OVERWRITE)
     fl.l_type   = F_WRLCK;
     fcntl(fileno(fimg), F_SETLKW, &fl);
 
-    if (mmapOn)
+    if (mmapOnWrite)
     {
         offset = 0;
         mappedSize = offset + datasize;
