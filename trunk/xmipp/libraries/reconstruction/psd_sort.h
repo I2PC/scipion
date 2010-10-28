@@ -45,6 +45,7 @@ public:
 	double maxDampingAtBorder;
 	double PSDradialIntegral;
 	double fittingScore;
+	double fittingCorr13;
 };
 
 /* Sort PSD Program Parameters ------------------------------------------ */

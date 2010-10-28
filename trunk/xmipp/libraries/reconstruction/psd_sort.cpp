@@ -116,6 +116,7 @@ double Prog_Sort_PSD_Parameters::evaluate(const FileName &fnMicrograph,
     MetaData MD;
     MD.read(fnCTF);
     MD.getValue(MDL_CTF_CRITERION_FITTINGSCORE,evaluation.fittingScore);
+    MD.getValue(MDL_CTF_CRITERION_FITTINGCORR13,evaluation.fittingCorr13);
 
     // Explore the CTF
     Matrix1D<double> u(2), freqZero1(2), freqZero2(2);
@@ -172,6 +173,7 @@ void Prog_Sort_PSD_Parameters::run()
         SF.setValue(MDL_CTF_CRITERION_FIRSTZERODISAGREEMENT,evaluation.firstZeroDisagreement);
         SF.setValue(MDL_CTF_CRITERION_FIRSTZERORATIO,evaluation.firstZeroRatio);
         SF.setValue(MDL_CTF_CRITERION_FITTINGSCORE,evaluation.fittingScore);
+        SF.setValue(MDL_CTF_CRITERION_FITTINGCORR13,evaluation.fittingCorr13);
         SF.setValue(MDL_CTF_CRITERION_PSDCORRELATION90,evaluation.PSDcorrelation90);
         SF.setValue(MDL_CTF_CRITERION_PSDRADIALINTEGRAL,evaluation.PSDradialIntegral);
         progress_bar(++idx);
