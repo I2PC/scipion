@@ -41,12 +41,13 @@
 #include "symmetrize.h"
 #include <data/threads.h>
 #include <vector>
+#include "data/program.h"
 
 #define SIGNIFICANT_WEIGHT_LOW 1e-8
 #define SMALLANGLE 2.75
 #define MLTOMO_DATALINELENGTH 10
 #define MLTOMO_BLOCKSIZE 10
-class Prog_ml_tomo_prm;
+class ProgMLTomo;
 
 // Thread declaration
 void * threadMLTomoExpectationSingleImage( void * data );
@@ -56,7 +57,7 @@ typedef struct
 {
     int thread_id;
     int thread_num;
-    Prog_ml_tomo_prm *prm;
+    ProgMLTomo *prm;
     MetaData *MDimg;
     int *iter;
     double *wsum_sigma_noise;
@@ -77,7 +78,7 @@ structThreadExpectationSingleImage ;
    @ingroup ReconsLibrary */
 //@{
 /** ml_tomo parameters. */
-class Prog_ml_tomo_prm
+class ProgMLTomo: public XmippProgram
 {
 public:
     /** Filenames reference selfile/image, fraction MetaData & output rootname */
@@ -225,17 +226,17 @@ public:
     std::vector<long int> imgs_id;
 
 public:
+    /// Define the arguments accepted
+    void defineParams();
+
     /// Read arguments from command line
-    void read(int argc, char **argv);
+    void readParams();
+
+    /// Main body of the program
+    void run();
 
     /// Show
     void show();
-
-    /// Usage for ML mode
-    void usage() const;
-
-    /// Extended Usage
-    void extendedUsage() const;
 
     /// Setup lots of stuff
     void produceSideInfo();

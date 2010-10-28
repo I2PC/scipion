@@ -29,8 +29,68 @@
 pthread_mutex_t mltomo_weightedsum_update_mutex = PTHREAD_MUTEX_INITIALIZER;
 pthread_mutex_t mltomo_selfile_access_mutex = PTHREAD_MUTEX_INITIALIZER;
 
+// Usage ===================================================================
+void ProgMLTomo::defineParams()
+{
+    addUsageLine("This program allows to align and classify 3D images with missing data regions in Fourier space,");
+    addUsageLine("e.g. subtomograms or RCT reconstructions, by a 3D multi-reference refinement");
+    addUsageLine("based on a maximum-likelihood (ML) target function. ");
+
+    addParamsLine("   -i <metadata>           : MetaData file with input images (and angles) ");
+    addParamsLine("   -nref <int=0>               : Number of references to generate automatically (recommended)");
+    addParamsLine("   OR -ref <file=\"\">         : or metadatafile with initial references/single reference image ");
+    addParamsLine(" [ -o <rootname=mltomo> ]             : Output rootname (default = \"mltomo\")");
+    addParamsLine(" [ -missing <metadata=\"\"> ]   : MetaData file with missing data region definitions");
+
+    addParamsLine("== Angular sampling ==");
+    addParamsLine(" [ -ang <float=10.> ]          : Angular sampling rate (in degrees)");
+    addParamsLine(" [ -ang_search <float=-1.> ]   : Angular search range around orientations from MetaData ");
+    addParamsLine("                                    (by default, exhaustive searches are performed)");
+    addParamsLine(" [ -dont_limit_psirange ]      : Exhaustive psi searches when using -ang_search (only for c1 symmetry)");
+    addParamsLine(" [ -limit_trans <float=-1.> ]  : Maximum allowed shifts (negative value means no restriction)");
+    addParamsLine(" [ -tilt0+ <float=-91.> ]       : Limit tilt angle search from tilt0 to tiltF (in degrees) ");
+    addParamsLine(" [ -tiltF+ <float=91.> ]        : Limit tilt angle search from tilt0 to tiltF (in degrees) ");
+    addParamsLine(" [ -psi_sampling+ <float=-1.> ]  : Angular sampling rate for the in-plane rotations(in degrees)");
+
+    addParamsLine("== Regularization ==");
+    addParamsLine(" [ -reg0 <float=0.> ]          : Initial regularization parameters (in N/K^2) ");
+    addParamsLine(" [ -regF <float=0.> ]          : Final regularization parameters (in N/K^2) ");
+    addParamsLine(" [ -reg_steps <int=5> ]        : Number of iterations in which the regularization is changed from reg0 to regF");
+
+    addParamsLine("== ==");
+    addParamsLine(" [ -dont_rotate ]              : Keep orientations from MetaData fixed, only translate and classify ");
+    addParamsLine(" [ -dont_align ]               : Keep orientations and tran MetaData (otherwise start from random)");
+    addParamsLine(" [ -perturb ]                  : Apply random perturbations to angular sampling in each iteration");
+    addParamsLine(" [ -dim <int=-1> ]                : Use downscaled (in fourier space) images of this size ");
+    addParamsLine(" [ -maxres <float=0.5> ]       : Maximum resolution (in pixel^-1) to use ");
+    addParamsLine(" [ -thr <int=1> ]              : Number of shared-memory threads to use in parallel ");
+    addParamsLine(" [ -more_options ]             : Show all possible input parameters ");
+
+    addParamsLine("==+ Additional options: ==");
+    addParamsLine(" [ -impute_iter <int=1> ]      : Number of iterations for inner imputation loop ");
+    addParamsLine(" [ -iter <int=25> ]           : Maximum number of iterations to perform ");
+    addParamsLine(" [ -istart <int=1> ]             : number of initial iteration ");
+    addParamsLine(" [ -noise <float=1> ]          : Expected standard deviation for pixel noise ");
+    addParamsLine(" [ -offset <float=3> ]         : Expected standard deviation for origin offset [pix]");
+    addParamsLine(" [ -frac <metadata=\"\"> ]     : MetaData with expected model fractions (default: even distr.)");
+    addParamsLine(" [ -restart <logfile> ]        : restart a run with all parameters as in the logfile ");
+    addParamsLine(" [ -fix_sigma_noise]           : Do not re-estimate the standard deviation in the pixel noise ");
+    addParamsLine(" [ -fix_sigma_offset]          : Do not re-estimate the standard deviation in the origin offsets ");
+    addParamsLine(" [ -fix_fractions]             : Do not re-estimate the model fractions ");
+    addParamsLine(" [ -eps <float=5e-5> ]         : Stopping criterium ");
+    addParamsLine(" [ -pixel_size <float=1> ]     : Pixel size (in Anstrom) for resolution in FSC plots ");
+
+    addParamsLine(" [ -mask <maskfile> ]          : Mask particles; only valid in combination with -dont_align ");
+    addParamsLine(" [ -maxCC ]                    : Use constrained cross-correlation and weighted averaging instead of ML ");
+    addParamsLine(" [ -dont_impute ]              : Use weighted averaging, rather than imputation ");
+    addParamsLine(" [ -noimp_threshold <float=1.>] : Threshold to avoid division by zero for weighted averaging ");
+
+    addParamsLine("==+++++ Hidden arguments ==");
+    addParamsLine(" [-trymindiff_factor <float=0.9>]");
+}
+
 // Read arguments ==========================================================
-void Prog_ml_tomo_prm::read(int argc, char **argv)
+void ProgMLTomo::readParams()
 {
     // Generate new command line for restart procedure
     cline = "";
@@ -111,82 +171,134 @@ void Prog_ml_tomo_prm::read(int argc, char **argv)
         }
     }
 
-    // Read command line
-    if (checkParameter(argc2, argv2, "-more_options"))
-    {
-        usage();
-        extendedUsage();
-    }
-    nr_ref = textToInteger(getParameter(argc2, argv2, "-nref", "0"));
-    fn_ref = getParameter(argc2, argv2, "-ref", "");
-    fn_doc = getParameter(argc2, argv2, "-doc", "");
-    fn_sel = getParameter(argc2, argv2, "-i");
-    fn_root = getParameter(argc2, argv2, "-o", "mltomo");
-    fn_sym = getParameter(argc2, argv2, "-sym", "c1");
-    Niter = textToInteger(getParameter(argc2, argv2, "-iter", "25"));
-    Niter2 = textToInteger(getParameter(argc2, argv2, "-impute_iter", "1"));
-    istart = textToInteger(getParameter(argc2, argv2, "-istart", "1"));
-    sigma_noise = textToFloat(getParameter(argc2, argv2, "-noise", "1"));
-    sigma_offset = textToFloat(getParameter(argc2, argv2, "-offset", "3"));
-    fn_frac = getParameter(argc2, argv2, "-frac", "");
-    fix_fractions = checkParameter(argc2, argv2, "-fix_fractions");
-    fix_sigma_offset = checkParameter(argc2, argv2, "-fix_sigma_offset");
-    fix_sigma_noise = checkParameter(argc2, argv2, "-fix_sigma_noise");
-    eps = textToFloat(getParameter(argc2, argv2, "-eps", "5e-5"));
-    verb = textToInteger(getParameter(argc2, argv2, "-verb", "1"));
-    no_SMALLANGLE = checkParameter(argc2, argv2, "-no_SMALLANGLE");
-    do_keep_angles = checkParameter(argc2, argv2, "-keep_angles");
-    do_perturb = checkParameter(argc2, argv2, "-perturb");
-    pixel_size = textToFloat(getParameter(argc2, argv2, "-pixel_size", "1"));
+    nr_ref = getIntParam("-nref");
+    fn_ref = getParam("-ref");
+    fn_doc = getParam("-doc");
+    fn_sel = getParam("-i");
+    fn_root = getParam("-o");
+    fn_sym = getParam("-sym", "c1");
+    Niter = getIntParam("-iter");
+    Niter2 = getIntParam("-impute_iter");
+    istart = getIntParam("-istart");
+    sigma_noise = getDoubleParam("-noise");
+    sigma_offset = getDoubleParam("-offset");
+    fn_frac = getParam("-frac");
+    fix_fractions = checkParam("-fix_fractions");
+    fix_sigma_offset = checkParam("-fix_sigma_offset");
+    fix_sigma_noise = checkParam("-fix_sigma_noise");
+    eps = getDoubleParam("-eps");
+    no_SMALLANGLE = checkParam("-no_SMALLANGLE");
+    do_keep_angles = checkParam("-keep_angles");
+    do_perturb = checkParam("-perturb");
+    pixel_size = getDoubleParam("-pixel_size");
 
     // Low-pass filter
-    do_filter = checkParameter(argc2, argv2, "-filter");
-    do_ini_filter = checkParameter(argc2, argv2, "-ini_filter");
+    do_filter = checkParam("-filter");
+    do_ini_filter = checkParam("-ini_filter");
 
     // regularization
-    reg0=textToFloat(getParameter(argc2, argv2, "-reg0", "0."));
-    regF=textToFloat(getParameter(argc2, argv2, "-regF", "0."));
-    reg_steps=textToInteger(getParameter(argc2, argv2, "-reg_steps", "5."));
+    reg0 = getDoubleParam("-reg0");
+    regF = getDoubleParam("-regF");
+    reg_steps = getIntParam("-reg_steps");
 
     // ML (with/without) imputation, or maxCC
-    do_ml = !checkParameter(argc2, argv2, "-maxCC");
-    do_impute = !checkParameter(argc2, argv2, "-dont_impute");
-    noimp_threshold = textToFloat(getParameter(argc2, argv2, "-noimp_threshold", "1."));
+    do_ml = !checkParam("-maxCC");
+    do_impute = !checkParam("-dont_impute");
+    noimp_threshold = getDoubleParam("-noimp_threshold");
 
     // Angular sampling
-    angular_sampling = textToFloat(getParameter(argc2, argv2, "-ang", "10"));
-    psi_sampling = textToFloat(getParameter(argc2, argv2, "-psi_sampling", "-1"));
-    tilt_range0 = textToFloat(getParameter(argc2, argv2, "-tilt0", "-91."));
-    tilt_rangeF = textToFloat(getParameter(argc2, argv2, "-tiltF", "91."));
-    ang_search = textToFloat(getParameter(argc2, argv2, "-ang_search", "-1."));
-    do_limit_psirange = !checkParameter(argc2, argv2, "-dont_limit_psirange");
-    limit_trans = textToFloat(getParameter(argc2, argv2, "-limit_trans", "-1."));
+    angular_sampling = getDoubleParam("-ang");
+    psi_sampling = getDoubleParam("-psi_sampling");
+    tilt_range0 = getDoubleParam("-tilt0");
+    tilt_rangeF = getDoubleParam("-tiltF");
+    ang_search = getDoubleParam("-ang_search");
+    do_limit_psirange = !checkParam("-dont_limit_psirange");
+    limit_trans = getDoubleParam("-limit_trans");
 
     // Skip rotation, only translate and classify
-    dont_rotate = checkParameter(argc2, argv2, "-dont_rotate");
+    dont_rotate = checkParam("-dont_rotate");
     // Skip rotation and translation, only classify
-    dont_align = checkParameter(argc2, argv2, "-dont_align");
+    dont_align = checkParam("-dont_align");
     // Skip rotation and translation and classification
-    do_only_average = checkParameter(argc2, argv2, "-only_average");
+    do_only_average = checkParam("-only_average");
 
     // For focussed classification (only in combination with dont_align)
-    fn_mask = getParameter(argc2, argv2, "-mask", "");
+    fn_mask = getParam("-mask", "");
 
     // Missing data structures
-    fn_missing = getParameter(argc2, argv2, "-missing","");
-    dim = textToInteger(getParameter(argc2, argv2, "-dim", "-1"));
-    maxres = textToFloat(getParameter(argc2, argv2, "-maxres", "0.5"));
+    fn_missing = getParam("-missing");
+    dim = getIntParam("-dim");
+    maxres = getDoubleParam("-maxres");
 
     // Hidden arguments
-    trymindiff_factor = textToFloat(getParameter(argc2, argv2, "-trymindiff_factor", "0.9"));
+    trymindiff_factor = getDoubleParam("-trymindiff_factor");
 
     // Number of threads
-    threads = textToInteger(getParameter(argc2, argv2, "-thr","1"));
+    threads = getIntParam("-thr");
+
+}
+
+void ProgMLTomo::run()
+{
+  int c, nn, imgno, opt_refno;
+  double LL, sumw_allrefs, convv, sumcorr;
+  bool converged;
+  std::vector<double> conv;
+  double aux, wsum_sigma_noise, wsum_sigma_offset;
+  std::vector<MultidimArray<double > > wsumimgs; //3D
+  std::vector<MultidimArray<double > > wsumweds; //3D
+  std::vector<MultidimArray<double > > fsc;
+  MultidimArray<double> sumw; //1D
+  MultidimArray<double> P_phi, Mr2, Maux; //3D
+  FileName fn_img, fn_tmp;
+  MultidimArray<double> oneline(0); //1D
+
+    produceSideInfo();
+    show();
+    produceSideInfo2();
+    Maux.resize(dim, dim, dim);
+    Maux.setXmippOrigin();
+
+    // Loop over all iterations
+    for (int iter = istart; iter <= Niter; iter++)
+    {
+
+        if (verb > 0)
+            std::cerr << "  Multi-reference refinement:  iteration " << iter << " of " << Niter << std::endl;
+
+        // Save old reference images
+        for (int refno = 0;refno < nr_ref; refno++)
+            Iold[refno]() = Iref[refno]();
+
+        // Integrate over all images
+        expectation(MDimg, Iref, iter,
+                        LL, sumcorr, wsumimgs, wsumweds,
+                        wsum_sigma_noise, wsum_sigma_offset, sumw);
+
+        // Update model parameters
+        maximization(wsumimgs, wsumweds,
+                         wsum_sigma_noise, wsum_sigma_offset,
+                         sumw, sumcorr, sumw_allrefs, fsc, iter);
+
+        // Check convergence
+        converged = checkConvergence(conv);
+
+        writeOutputFiles(iter, wsumweds, sumw_allrefs, LL, sumcorr, conv, fsc);
+
+        if (converged)
+        {
+            if (verb > 0)
+                std::cerr << " Optimization converged!" << std::endl;
+            break;
+        }
+
+    } // end loop iterations
+    writeOutputFiles(-1, wsumweds, sumw_allrefs, LL, sumcorr, conv, fsc);
 
 }
 
 // Show ====================================================================
-void Prog_ml_tomo_prm::show()
+void ProgMLTomo::show()
 {
 
     if (verb > 0)
@@ -283,63 +395,12 @@ void Prog_ml_tomo_prm::show()
 
 }
 
-// Usage ===================================================================
-void Prog_ml_tomo_prm::usage() const
-{
-    //TODO!!
-    std::cerr << "Usage:  ml_tomo [options] " << std::endl;
-    std::cerr << "   -i <metadatafile>           : MetaData file with input images (and angles) \n";
-    std::cerr << "   -nref <int>                 : Number of references to generate automatically (recommended)\n";
-    std::cerr << "   OR -ref <metadatafile/image>      OR metadatafile with initial references/single reference image \n";
-    std::cerr << " [ -o <rootname> ]             : Output rootname (default = \"mltomo\")\n";
-    std::cerr << " [ -missing <metadatafile> ]   : MetaData file with missing data region definitions\n";
-    std::cerr << " [ -ang <float=10> ]           : Angular sampling rate (in degrees)\n";
-    std::cerr << " [ -ang_search <float> ]       : Angular search range around orientations from MetaData \n";
-    std::cerr << "                                    (by default, exhaustive searches are performed)\n";
-    std::cerr << " [ -dont_limit_psirange ]      : Exhaustive psi searches when using -ang_search (only for c1 symmetry)\n";
-    std::cerr << " [ -limit_trans <float=-1.> ]  : Maximum allowed shifts (negative value means no restriction)\n";
-    std::cerr << " [ -reg0 <float=0.> ]          : Initial regularization parameters (in N/K^2) \n";
-    std::cerr << " [ -regF <float=0.> ]          : Final regularization parameters (in N/K^2) \n";
-    std::cerr << " [ -reg_steps <int=5> ]        : Number of iterations in which the regularization is changed from reg0 to regF\n";
-    std::cerr << " [ -dont_rotate ]              : Keep orientations from MetaData fixed, only translate and classify \n";
-    std::cerr << " [ -dont_align ]               : Keep orientations and tran MetaData (otherwise start from random)\n";
-    std::cerr << " [ -perturb ]                  : Apply random perturbations to angular sampling in each iteration\n";
-    std::cerr << " [ -dim <int> ]                : Use downscaled (in fourier space) images of this size \n";
-    std::cerr << " [ -maxres <float=0.5> ]       : Maximum resolution (in pixel^-1) to use \n";
-    std::cerr << " [ -thr <int=1> ]              : Number of shared-memory threads to use in parallel \n";
-    std::cerr << " [ -more_options ]             : Show all possible input parameters \n";
-}
 
-// Extended usage ===================================================================
-void Prog_ml_tomo_prm::extendedUsage() const
-{
-    std::cerr << "Additional options: " << std::endl;
-    std::cerr << " [ -impute_iter <int=1> ]      : Number of iterations for inner imputation loop \n";
-    std::cerr << " [ -iter <int=100> ]           : Maximum number of iterations to perform \n";
-    std::cerr << " [ -istart <int> ]             : number of initial iteration \n";
-    std::cerr << " [ -noise <float=1> ]          : Expected standard deviation for pixel noise \n";
-    std::cerr << " [ -offset <float=3> ]         : Expected standard deviation for origin offset [pix]\n";
-    std::cerr << " [ -frac <MetaData=\"\"> ]        : MetaData with expected model fractions (default: even distr.)\n";
-    std::cerr << " [ -restart <logfile> ]        : restart a run with all parameters as in the logfile \n";
-    std::cerr << " [ -fix_sigma_noise]           : Do not re-estimate the standard deviation in the pixel noise \n";
-    std::cerr << " [ -fix_sigma_offset]          : Do not re-estimate the standard deviation in the origin offsets \n";
-    std::cerr << " [ -fix_fractions]             : Do not re-estimate the model fractions \n";
-    std::cerr << " [ -eps <float=5e-5> ]         : Stopping criterium \n";
-    std::cerr << " [ -pixel_size <float=1> ]     : Pixel size (in Anstrom) for resolution in FSC plots \n";
-    std::cerr << " [ -tilt0 <float=-91.> ]       : Limit tilt angle search from tilt0 to tiltF (in degrees) \n";
-    std::cerr << " [ -tiltF <float=91.> ]        : Limit tilt angle search from tilt0 to tiltF (in degrees) \n";
-    std::cerr << " [ -mask <maskfile> ]          : Mask particles; only valid in combination with -dont_align \n";
-    std::cerr << " [ -maxCC ]                    : Use constrained cross-correlation and weighted averaging instead of ML \n";
-    std::cerr << " [ -dont_impute ]              : Use weighted averaging, rather than imputation \n";
-    std::cerr << " [ -noimp_threshold <float=1>] : Threshold to avoid division by zero for weighted averaging \n";
-    std::cerr << std::endl;
-    exit(1);
-}
 
 // Set up a lot of general stuff
 // This side info is general, i.e. in parallel mode it is the same for
 // all processors! (in contrast to produce_Side_info2)
-void Prog_ml_tomo_prm::produceSideInfo()
+void ProgMLTomo::produceSideInfo()
 {
 
     FileName                    fn_img, fn_tmp, fn_base, fn_tmp2;
@@ -590,7 +651,7 @@ void Prog_ml_tomo_prm::produceSideInfo()
 }
 
 // Generate initial references =============================================
-void Prog_ml_tomo_prm::generateInitialReferences()
+void ProgMLTomo::generateInitialReferences()
 {
 
     //MetaData SFtmp;
@@ -764,7 +825,7 @@ void Prog_ml_tomo_prm::generateInitialReferences()
 // Read reference images to memory and initialize offset vectors
 // This side info is NOT general, i.e. in parallel mode it is NOT the
 // same for all processors! (in contrast to produce_Side_info)
-void Prog_ml_tomo_prm::produceSideInfo2(int nr_vols)
+void ProgMLTomo::produceSideInfo2(int nr_vols)
 {
 
     int                       c;
@@ -773,6 +834,9 @@ void Prog_ml_tomo_prm::produceSideInfo2(int nr_vols)
     FileName                  fn_tmp;
     Image<double>               img, Vaux;
     std::vector<Matrix1D<double> > Vdm;
+
+    if (nr_ref != 0)
+      generateInitialReferences();
 
 #ifdef  DEBUG
 
@@ -1092,7 +1156,7 @@ void Prog_ml_tomo_prm::produceSideInfo2(int nr_vols)
 
 }
 
-void Prog_ml_tomo_prm::perturbAngularSampling()
+void ProgMLTomo::perturbAngularSampling()
 {
 
     Matrix2D< double > R, I(3,3);
@@ -1128,7 +1192,7 @@ void Prog_ml_tomo_prm::perturbAngularSampling()
 
 }
 
-void Prog_ml_tomo_prm::getMissingRegion(MultidimArray<double> &Mmissing,
+void ProgMLTomo::getMissingRegion(MultidimArray<double> &Mmissing,
                                         Matrix2D<double> A,
                                         const int missno)
 {
@@ -1329,7 +1393,7 @@ void Prog_ml_tomo_prm::getMissingRegion(MultidimArray<double> &Mmissing,
 }
 
 // Calculate probability density function of all in-plane transformations phi
-void Prog_ml_tomo_prm::calculatePdfTranslations()
+void ProgMLTomo::calculatePdfTranslations()
 {
 
 #ifdef  DEBUG
@@ -1389,7 +1453,7 @@ void Prog_ml_tomo_prm::calculatePdfTranslations()
 
 }
 
-void Prog_ml_tomo_prm::maskSphericalAverageOutside(MultidimArray<double> &Min)
+void ProgMLTomo::maskSphericalAverageOutside(MultidimArray<double> &Min)
 {
     double outside_density = 0., sumdd = 0.;
     FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(real_omask)
@@ -1409,7 +1473,7 @@ void Prog_ml_tomo_prm::maskSphericalAverageOutside(MultidimArray<double> &Min)
 }
 
 
-void Prog_ml_tomo_prm::reScaleVolume(MultidimArray<double> &Min, bool down_scale)
+void ProgMLTomo::reScaleVolume(MultidimArray<double> &Min, bool down_scale)
 {
     MultidimArray<std::complex<double> > Fin;
     MultidimArray<double> Mout;
@@ -1449,7 +1513,7 @@ void Prog_ml_tomo_prm::reScaleVolume(MultidimArray<double> &Min, bool down_scale
 
 }
 
-void Prog_ml_tomo_prm::postProcessVolume(Image<double> &Vin, double resolution)
+void ProgMLTomo::postProcessVolume(Image<double> &Vin, double resolution)
 {
 
     MultidimArray<std::complex<double> > Faux;
@@ -1531,7 +1595,7 @@ void Prog_ml_tomo_prm::postProcessVolume(Image<double> &Vin, double resolution)
 
 
 // Calculate FT of each reference and calculate A2 =============
-void Prog_ml_tomo_prm::precalculateA2(std::vector< Image<double> > &Iref)
+void ProgMLTomo::precalculateA2(std::vector< Image<double> > &Iref)
 {
 
 #ifdef DEBUG
@@ -1640,7 +1704,7 @@ void Prog_ml_tomo_prm::precalculateA2(std::vector< Image<double> > &Iref)
 
 // Maximum Likelihood calculation for one image ============================================
 // Integration over all translation, given  model and in-plane rotation
-void Prog_ml_tomo_prm::expectationSingleImage(MultidimArray<double> &Mimg, int imgno, int missno, double old_psi,
+void ProgMLTomo::expectationSingleImage(MultidimArray<double> &Mimg, int imgno, int missno, double old_psi,
         std::vector< Image<double> > &Iref,
         std::vector<MultidimArray<double> > &wsumimgs,
         std::vector<MultidimArray<double> > &wsumweds,
@@ -2049,7 +2113,7 @@ void Prog_ml_tomo_prm::expectationSingleImage(MultidimArray<double> &Mimg, int i
 }
 
 
-void Prog_ml_tomo_prm::maxConstrainedCorrSingleImage(
+void ProgMLTomo::maxConstrainedCorrSingleImage(
     MultidimArray<double> &Mimg, int imgno, int missno, double old_psi,
     std::vector<Image<double> > &Iref,
     std::vector<MultidimArray<double> > &wsumimgs,
@@ -2304,7 +2368,7 @@ void * threadMLTomoExpectationSingleImage( void * data )
     // Variables from above
     int thread_id = thread_data->thread_id;
     int thread_num = thread_data->thread_num;
-    Prog_ml_tomo_prm *prm = thread_data->prm;
+    ProgMLTomo *prm = thread_data->prm;
     MetaData *MDimg = thread_data->MDimg;
     int *iter = thread_data->iter;
     double *wsum_sigma_noise = thread_data->wsum_sigma_noise;
@@ -2443,7 +2507,7 @@ void * threadMLTomoExpectationSingleImage( void * data )
 
 }
 
-void Prog_ml_tomo_prm::expectation(
+void ProgMLTomo::expectation(
     MetaData &MDimg, std::vector< Image<double> > &Iref, int iter,
     double &LL, double &sumfracweight,
     std::vector<MultidimArray<double> > &wsumimgs,
@@ -2553,7 +2617,7 @@ void Prog_ml_tomo_prm::expectation(
 }
 
 // Update all model parameters
-void Prog_ml_tomo_prm::maximization(std::vector<MultidimArray<double> > &wsumimgs,
+void ProgMLTomo::maximization(std::vector<MultidimArray<double> > &wsumimgs,
                                     std::vector<MultidimArray<double> > &wsumweds,
                                     double &wsum_sigma_noise, double &wsum_sigma_offset,
                                     MultidimArray<double> &sumw, double &sumfracweight,
@@ -2756,7 +2820,7 @@ void Prog_ml_tomo_prm::maximization(std::vector<MultidimArray<double> > &wsumimg
 #endif
 }
 
-void Prog_ml_tomo_prm::calculateFsc(MultidimArray<double> &M1, MultidimArray<double> &M2,
+void ProgMLTomo::calculateFsc(MultidimArray<double> &M1, MultidimArray<double> &M2,
                                     MultidimArray<double> &W1, MultidimArray<double> &W2,
                                     MultidimArray<double> &freq, MultidimArray<double> &fsc,
                                     double &resolution)
@@ -2835,7 +2899,7 @@ void Prog_ml_tomo_prm::calculateFsc(MultidimArray<double> &M1, MultidimArray<dou
 }
 
 // Apply regularization
-bool Prog_ml_tomo_prm::regularize(int iter)
+bool ProgMLTomo::regularize(int iter)
 {
 
     // Update regularization constant in a linear manner
@@ -2938,7 +3002,7 @@ bool Prog_ml_tomo_prm::regularize(int iter)
     }
 }
 // Check convergence
-bool Prog_ml_tomo_prm::checkConvergence(std::vector<double> &conv)
+bool ProgMLTomo::checkConvergence(std::vector<double> &conv)
 {
 
 #ifdef DEBUG
@@ -2979,7 +3043,7 @@ bool Prog_ml_tomo_prm::checkConvergence(std::vector<double> &conv)
     return converged;
 }
 
-void Prog_ml_tomo_prm::addPartialDocfileData(MultidimArray<double> data,
+void ProgMLTomo::addPartialDocfileData(MultidimArray<double> data,
                            int first, int last)
 {
     int index;
@@ -3001,7 +3065,7 @@ void Prog_ml_tomo_prm::addPartialDocfileData(MultidimArray<double> data,
 }
 
 
-void Prog_ml_tomo_prm::writeOutputFiles(const int iter,
+void ProgMLTomo::writeOutputFiles(const int iter,
                                         std::vector<MultidimArray<double> > &wsumweds,
                                         double &sumw_allrefs, double &LL, double &avefracweight,
                                         std::vector<double> &conv, std::vector<MultidimArray<double> > &fsc)
