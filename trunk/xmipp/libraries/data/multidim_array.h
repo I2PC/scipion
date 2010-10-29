@@ -800,17 +800,19 @@ public:
         {
             mapFile.initUniqueName();
 
-            if ( ( mFd = open(mapFile.c_str(),  O_RDWR | O_CREAT | O_TRUNC,S_IRUSR|S_IWUSR|S_IRGRP|S_IWGRP) ) == -1 )
-                REPORT_ERROR(ERR_IO_NOTOPEN,"MultidimArray::coreAllocate: Error creating map file.");
+            mmapFile(data, nzyxdim, mFd, mapFile);
 
-            if ((lseek(mFd, nzyxdim*sizeof(T), SEEK_SET) == -1)|| (::write(mFd,"",1) == -1))// Use of :: to call write from global space due to confict with multidimarray::write
-            {
-                close(mFd);
-                REPORT_ERROR(ERR_IO_NOWRITE,"MultidimArray::coreAllocate: Error 'stretching' the map file.");
-            }
-
-            if ( (data = (T*) mmap(0,nzyxdim*sizeof(T), PROT_READ | PROT_WRITE, MAP_SHARED, mFd, 0)) == (void*) -1 )
-                REPORT_ERROR(ERR_MMAP_NOTADDR,"MultidimArray::coreAllocate: mmap failed.");
+//            if ( ( mFd = open(mapFile.c_str(),  O_RDWR | O_CREAT | O_TRUNC,S_IRUSR|S_IWUSR|S_IRGRP|S_IWGRP) ) == -1 )
+//                REPORT_ERROR(ERR_IO_NOTOPEN,"MultidimArray::coreAllocate: Error creating map file.");
+//
+//            if ((lseek(mFd, nzyxdim*sizeof(T), SEEK_SET) == -1)|| (::write(mFd,"",1) == -1))// Use of :: to call write from global space due to confict with multidimarray::write
+//            {
+//                close(mFd);
+//                REPORT_ERROR(ERR_IO_NOWRITE,"MultidimArray::coreAllocate: Error 'stretching' the map file.");
+//            }
+//
+//            if ( (data = (T*) mmap(0,nzyxdim*sizeof(T), PROT_READ | PROT_WRITE, MAP_SHARED, mFd, 0)) == (void*) -1 )
+//                REPORT_ERROR(ERR_MMAP_NOTADDR,"MultidimArray::coreAllocate: mmap failed.");
         }
         else
         {
@@ -839,18 +841,21 @@ public:
 
         if (mmapOn)
         {
-          mapFile.initUniqueName();
+            mapFile.initUniqueName();
 
-            if ( ( mFd = open(mapFile.c_str(),  O_RDWR | O_CREAT | O_TRUNC,S_IRUSR|S_IWUSR|S_IRGRP|S_IWGRP) ) == -1 )
-                REPORT_ERROR(ERR_IO_NOTOPEN,"MultidimArray::coreAllocateReuse: Error creating map file.");
-            if ((lseek(mFd, nzyxdim*sizeof(T), SEEK_SET) == -1) || (::write(mFd,"",1) == -1))// Use of :: to call write from global space due to confict with multidimarray::write
-            {
-                close(mFd);
-                REPORT_ERROR(ERR_IO_NOWRITE,"MultidimArray::coreAllocateReuse: Error 'stretching' the map file.");
-            }
+            mmapFile(data, nzyxdim, mFd, mapFile);
 
-            if ( (data = (T*) mmap(0,nzyxdim*sizeof(T), PROT_READ | PROT_WRITE, MAP_SHARED, mFd, 0)) == (void*) -1 )
-                REPORT_ERROR(ERR_MMAP_NOTADDR,"MultidimArray::coreAllocateReuse: mmap failed.");
+
+//            if ( ( mFd = open(mapFile.c_str(),  O_RDWR | O_CREAT | O_TRUNC,S_IRUSR|S_IWUSR|S_IRGRP|S_IWGRP) ) == -1 )
+//                REPORT_ERROR(ERR_IO_NOTOPEN,"MultidimArray::coreAllocateReuse: Error creating map file.");
+//            if ((lseek(mFd, nzyxdim*sizeof(T), SEEK_SET) == -1) || (::write(mFd,"",1) == -1))// Use of :: to call write from global space due to confict with multidimarray::write
+//            {
+//                close(mFd);
+//                REPORT_ERROR(ERR_IO_NOWRITE,"MultidimArray::coreAllocateReuse: Error 'stretching' the map file.");
+//            }
+//
+//            if ( (data = (T*) mmap(0,nzyxdim*sizeof(T), PROT_READ | PROT_WRITE, MAP_SHARED, mFd, 0)) == (void*) -1 )
+//                REPORT_ERROR(ERR_MMAP_NOTADDR,"MultidimArray::coreAllocateReuse: mmap failed.");
         }
         else
         {
@@ -869,6 +874,22 @@ public:
     void setMmap(bool mmap)
     {
         mmapOn = mmap;
+    }
+
+
+    void mmapFile(T* &_data, size_t nzyxDim, int &Fd, FileName _mapFile)
+    {
+
+        if ( ( Fd = open(_mapFile.c_str(),  O_RDWR | O_CREAT | O_TRUNC,S_IRUSR|S_IWUSR|S_IRGRP|S_IWGRP) ) == -1 )
+            REPORT_ERROR(ERR_IO_NOTOPEN,"MultidimArray::resize: Error creating map file.");
+        if ((lseek(Fd, nzyxDim*sizeof(T)-1, SEEK_SET) == -1) || (::write(Fd,"",1) == -1))
+        {
+            close(Fd);
+            REPORT_ERROR(ERR_IO_NOWRITE,"MultidimArray::resize: Error 'stretching' the map file.");
+        }
+
+        if ( (_data = (T*) mmap(0,nzyxDim*sizeof(T), PROT_READ | PROT_WRITE, MAP_SHARED, Fd, 0)) == (void*) -1 )
+            REPORT_ERROR(ERR_MMAP_NOTADDR,"MultidimArray::resize: mmap failed.");
     }
 
     /** Core deallocate.
@@ -1046,16 +1067,19 @@ public:
             {
                 newMapFile.initUniqueName();
 
-                if ( ( new_mFd = open(newMapFile.c_str(),  O_RDWR | O_CREAT | O_TRUNC,S_IRUSR|S_IWUSR|S_IRGRP|S_IWGRP) ) == -1 )
-                    REPORT_ERROR(ERR_IO_NOTOPEN,"MultidimArray::resize: Error creating map file.");
-                if ((lseek(new_mFd, NZYXdim*sizeof(T)-1, SEEK_SET) == -1) || (::write(new_mFd,"",1) == -1))
-                {
-                    close(new_mFd);
-                    REPORT_ERROR(ERR_IO_NOWRITE,"MultidimArray::resize: Error 'stretching' the map file.");
-                }
+                mmapFile(new_data, NZYXdim, new_mFd, newMapFile);
 
-                if ( (new_data = (T*) mmap(0,NZYXdim*sizeof(T), PROT_READ | PROT_WRITE, MAP_SHARED, new_mFd, 0)) == (void*) -1 )
-                    REPORT_ERROR(ERR_MMAP_NOTADDR,"MultidimArray::resize: mmap failed.");
+
+//                if ( ( new_mFd = open(newMapFile.c_str(),  O_RDWR | O_CREAT | O_TRUNC,S_IRUSR|S_IWUSR|S_IRGRP|S_IWGRP) ) == -1 )
+//                    REPORT_ERROR(ERR_IO_NOTOPEN,"MultidimArray::resize: Error creating map file.");
+//                if ((lseek(new_mFd, NZYXdim*sizeof(T)-1, SEEK_SET) == -1) || (::write(new_mFd,"",1) == -1))
+//                {
+//                    close(new_mFd);
+//                    REPORT_ERROR(ERR_IO_NOWRITE,"MultidimArray::resize: Error 'stretching' the map file.");
+//                }
+//
+//                if ( (new_data = (T*) mmap(0,NZYXdim*sizeof(T), PROT_READ | PROT_WRITE, MAP_SHARED, new_mFd, 0)) == (void*) -1 )
+//                    REPORT_ERROR(ERR_MMAP_NOTADDR,"MultidimArray::resize: mmap failed.");
             }
             else
                 new_data = new T [NZYXdim];
@@ -3054,7 +3078,7 @@ public:
         double denom=N*sumx2-sumx*sumx;
         double b=0;
         if (denom!=0)
-        	b=(N*sumxy-sumx*sumy)/denom;
+            b=(N*sumxy-sumx*sumy)/denom;
         double a=sumy/N-b*sumx/N;
         FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY_ptr(*this,n,ptr)
         *ptr = static_cast< double >(a+b * static_cast< double > (*ptr));
