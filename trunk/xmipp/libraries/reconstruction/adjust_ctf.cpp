@@ -872,7 +872,7 @@ void Adjust_CTF_Parameters::generate_model_quadrant(int Ydim, int Xdim,
     {
         if ((j >= Xdim / 2 && i >= Ydim / 2) || (j < Xdim / 2 && i < Ydim / 2))
         {
-            mask(i,j)=1;
+            mask(i,j)=(enhancedPSD(i,j)>1e-3);
             XX(idx) = j;
             YY(idx) = i;
             FFT_idx2digfreq(model, idx, freq);
@@ -890,7 +890,7 @@ void Adjust_CTF_Parameters::generate_model_quadrant(int Ydim, int Xdim,
     // Copy the part of the enhancedPSD
     FOR_ALL_ELEMENTS_IN_ARRAY2D(model)
     {
-        if (!mask(i,j))
+        if (!((j >= Xdim / 2 && i >= Ydim / 2) || (j < Xdim / 2 && i < Ydim / 2)))
             model(i, j) = enhancedPSD(i,j);
     }
 
@@ -923,7 +923,7 @@ void Adjust_CTF_Parameters::generate_model_halfplane(int Ydim, int Xdim,
     {
         if (j >= Xdim / 2)
             continue;
-        mask(i,j)=1;
+        mask(i,j)=(enhancedPSD(i,j)>1e-3);
 
         XX(idx) = j;
         YY(idx) = i;
@@ -941,7 +941,7 @@ void Adjust_CTF_Parameters::generate_model_halfplane(int Ydim, int Xdim,
     // Copy the part of the enhancedPSD
     FOR_ALL_ELEMENTS_IN_ARRAY2D(model)
     {
-        if (!mask(i,j))
+        if (j >= Xdim / 2)
             model(i, j) = enhancedPSD(i,j);
     }
 
@@ -1021,10 +1021,10 @@ double CTF_fitness(double *p, void *)
         }
         break;
     case 5:
-    case 6:
-        assign_CTF_from_parameters(p - 0 + 1,
-                                   global_ctfmodel, 0, ALL_CTF_PARAMETERS,
-                                   global_prm->modelSimplification);
+        case 6:
+                assign_CTF_from_parameters(p - 0 + 1,
+                                           global_ctfmodel, 0, ALL_CTF_PARAMETERS,
+                                           global_prm->modelSimplification);
         if (global_show >= 2)
         {
             std::cout << "Input vector:";
@@ -1053,6 +1053,20 @@ double CTF_fitness(double *p, void *)
             std::cout << "Too large defocus\n";
         return global_heavy_penalization;
     }
+    if (global_prm->initial_ctfmodel.DeltafU != 0)
+    {
+        // If there is an initial model, the true solution
+        // cannot be too far
+        if (ABS(global_prm->initial_ctfmodel.DeltafU -
+                global_ctfmodel.DeltafU) > 10000 ||
+            ABS(global_prm->initial_ctfmodel.DeltafV -
+                global_ctfmodel.DeltafV) > 10000)
+        {
+            if (global_show >= 2)
+                std::cout << "Too far from hint\n";
+            return global_heavy_penalization;
+        }
+    }
 
     // Now the 2D error
     double distsum = 0;
@@ -1062,6 +1076,8 @@ double CTF_fitness(double *p, void *)
     double enhanced_model = 0;
     double enhanced2 = 0;
     double model2 = 0;
+    double dYsize=(double)YSIZE(global_w_digfreq);
+    const MultidimArray<double>& local_enhanced_ctf=global_prm->enhanced_ctftomodel();
     for (int i = 0; i < YSIZE(global_w_digfreq); i += global_evaluation_reduction)
         for (int j = 0; j < XSIZE(global_w_digfreq); j += global_evaluation_reduction)
         {
@@ -1088,20 +1104,6 @@ double CTF_fitness(double *p, void *)
             case 4:
             case 5:
             case 6:
-                if (global_prm->initial_ctfmodel.DeltafU != 0)
-                {
-                    // If there is an initial model, the true solution
-                    // cannot be too far
-                    if (ABS(global_prm->initial_ctfmodel.DeltafU -
-                            global_ctfmodel.DeltafU) > 10000 ||
-                        ABS(global_prm->initial_ctfmodel.DeltafV -
-                            global_ctfmodel.DeltafV) > 10000)
-                    {
-                        if (global_show >= 2)
-                            std::cout << "Too far from hint\n";
-                        return global_heavy_penalization;
-                    }
-                }
                 envelope = global_ctfmodel.CTFdamping_at(f_x, f_y);
                 ctf_without_damping = global_ctfmodel.CTFpure_without_damping_at(f_x, f_y);
                 ctf_with_damping = envelope * ctf_without_damping;
@@ -1111,9 +1113,9 @@ double CTF_fitness(double *p, void *)
 
             // Compute distance
             double ctf2 = DIRECT_A2D_ELEM(*f, i, j);
-            double enhanced_ctf = DIRECT_A2D_ELEM(global_prm->enhanced_ctftomodel(), i, j);
             double dist = 0;
-            int r = FLOOR(global_w_digfreq(i, j) * (double)YSIZE(global_w_digfreq));
+            double rr=DIRECT_A2D_ELEM(global_w_digfreq, i, j) * dYsize;
+            int r = FLOOR(rr);
             double ctf_with_damping2;
             switch (global_action)
             {
@@ -1133,6 +1135,23 @@ double CTF_fitness(double *p, void *)
             case 4:
             case 5:
             case 6:
+            case 3:
+                if (global_w_digfreq(i, j) < 0.9*global_max_freq &&
+                    global_w_digfreq(i, j) > 1.1*global_min_freq)
+                {
+                    if (global_action==3 || global_action==4 ||
+                        (global_action==6 && global_mask_between_zeroes(i,j)==1))
+                    {
+                        double enhanced_ctf = DIRECT_A2D_ELEM(local_enhanced_ctf, i, j);
+                        ctf_with_damping2 = ctf_with_damping * ctf_with_damping;
+                        enhanced_model += enhanced_ctf * ctf_with_damping2;
+                        enhanced2 += enhanced_ctf * enhanced_ctf;
+                        model2 += ctf_with_damping2 * ctf_with_damping2;
+                        enhanced_avg += enhanced_ctf;
+                        model_avg += ctf_with_damping2;
+                        Ncorr++;
+                    }
+                }
                 if (envelope > 1e-2)
                     dist = ABS(ctf2 - ctf2_th) / (envelope * envelope);
                 else
@@ -1147,30 +1166,6 @@ double CTF_fitness(double *p, void *)
                 //    x-bg      y-bg       x-y
                 //   ------- - ------- = -------
                 //    env^2     env^2     env^2
-
-            case 3:
-                if (global_w_digfreq(i, j) < 0.9*global_max_freq &&
-                    global_w_digfreq(i, j) > 1.1*global_min_freq)
-                {
-                	if (global_action<6 ||
-                		(global_action==6 && global_mask_between_zeroes(i,j)==1))
-                	{
-						ctf_with_damping2 = ctf_with_damping * ctf_with_damping;
-						enhanced_model += enhanced_ctf * ctf_with_damping2;
-						enhanced2 += enhanced_ctf * enhanced_ctf;
-						model2 += ctf_with_damping2 * ctf_with_damping2;
-						enhanced_avg += enhanced_ctf;
-						model_avg += ctf_with_damping2;
-						Ncorr++;
-                	}
-                }
-                if (global_action == 3 && global_prm->enhanced_weight == 0)
-                {
-                    if (envelope > 1e-2)
-                        dist = ABS(ctf2 - ctf2_th) / (envelope * envelope);
-                    else
-                        dist = ABS(ctf2 - ctf2_th);
-                }
                 break;
             }
             distsum += dist*global_mask(i,j);
@@ -1194,9 +1189,9 @@ double CTF_fitness(double *p, void *)
         {
             correlation_coeff /= sigma1 * sigma2;
             if (global_action==6)
-            	global_corr13=correlation_coeff;
+                global_corr13=correlation_coeff;
             else
-            	retval -= global_prm->enhanced_weight*correlation_coeff;
+                retval -= global_prm->enhanced_weight*correlation_coeff;
         }
     }
 
