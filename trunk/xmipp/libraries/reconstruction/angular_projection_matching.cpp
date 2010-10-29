@@ -66,26 +66,26 @@ void ProgAngularProjectionMatching::defineParams()
     addUsageLine("Example of use: Sample at 2 pixel step size for 5D shift search");
     addUsageLine("   xmipp_angular_projection_matching -i in.doc -o out_dir --ref ref_dir --search5d_step 2");
 
-    addParamsLine("   -i <doc_file>               	: Docfile with input images");
+    addParamsLine("   -i <doc_file>                : Docfile with input images");
     addParamsLine("   -o <output_rootname=\"out\">  : Output rootname");
-    addParamsLine("   -r <ref_rootname=\"ref\">   	: Reference projection files rootname");
+    addParamsLine("   -r <ref_rootname=\"ref\">    : Reference projection files rootname");
     addParamsLine("     alias --ref;");
     addParamsLine("  [--search5d_shift <s5dshift=0>]: Search range (in +/- pix) for 5D shift search");
     addParamsLine("  [--search5d_step <s5dstep=2>]  : Step size for 5D shift search (in pix)");
-    addParamsLine("  [--Ri <ri=1>]            	 	: Inner radius to limit rotational search");
-    addParamsLine("  [--Ro <ro=-1>]             	: Outer radius to limit rotational search");
-    addParamsLine("                    				: ro = -1 -> dim/2-1");
-    addParamsLine("  [-s <step=1> <n_steps=3>]   	: scale step factor (1 means 0.01 in/de-crements) and number of steps arround 1.");
-    addParamsLine("                              	: with default values: 1 ±0.01 | ±0.02 | ±0.03");
+    addParamsLine("  [--Ri <ri=1>]               : Inner radius to limit rotational search");
+    addParamsLine("  [--Ro <ro=-1>]              : Outer radius to limit rotational search");
+    addParamsLine("                        : ro = -1 -> dim/2-1");
+    addParamsLine("  [-s <step=1> <n_steps=3>]    : scale step factor (1 means 0.01 in/de-crements) and number of steps arround 1.");
+    addParamsLine("                               : with default values: 1 ±0.01 | ±0.02 | ±0.03");
     addParamsLine("    alias --scale;");
     addParamsLine("==+Extra parameters==");
-    addParamsLine("  [--mem <mem=1>]            	: Available memory for reference library (Gb)");
+    addParamsLine("  [--mem <mem=1>]             : Available memory for reference library (Gb)");
     addParamsLine("  [--max_shift <max_shift=-1>]   : Max. change in origin offset (+/- pixels; neg= no limit)");
-    addParamsLine("  [--ctf <filename>]           	: CTF to apply to the reference projections, either a");
-    addParamsLine("                					: CTF parameter file or a 2D image with the CTF amplitudes");
-    addParamsLine("  [--pad <pad=1>]            	: Padding factor (for CTF correction only)");
-    addParamsLine("  [--phase_flipped]           	: Use this if the experimental images have been phase flipped");
-    addParamsLine("  [--thr <threads=1>]          	: Number of concurrent threads");
+    addParamsLine("  [--ctf <filename>]            : CTF to apply to the reference projections, either a");
+    addParamsLine("                     : CTF parameter file or a 2D image with the CTF amplitudes");
+    addParamsLine("  [--pad <pad=1>]             : Padding factor (for CTF correction only)");
+    addParamsLine("  [--phase_flipped]            : Use this if the experimental images have been phase flipped");
+    addParamsLine("  [--thr <threads=1>]           : Number of concurrent threads");
 }
 
 /* Show -------------------------------------------------------------------- */
@@ -721,14 +721,12 @@ void ProgAngularProjectionMatching::scaleAlignOneImage(MultidimArray<double> &im
         double &maxcorr)
 {
 
-    MultidimArray<double> Mscale,Mtrans,Mimg,Mref,Mrot;
+    MultidimArray<double> Mscale,Mtrans,Mref;
     int refno;
 
     Mscale.setXmippOrigin();
     Mtrans.setXmippOrigin();
-    Mimg.setXmippOrigin();
     Mref.setXmippOrigin();
-    Mrot.setXmippOrigin();
 
 #ifdef TIMING
 
@@ -737,27 +735,32 @@ void ProgAngularProjectionMatching::scaleAlignOneImage(MultidimArray<double> &im
     annotate_time(&t0);
 #endif
 
-    // ROTATE
-    rotate(BSPLINE3,Mrot,img,-opt_psi,DONT_WRAP);
+    // ROTATE + SHIFT
+    // Transformation matrix
+    Matrix2D<double> A(3,3);
+    A.initIdentity();
+    double ang, cosine, sine;
+    ang = DEG2RAD(-opt_psi);
+    cosine = cos(ang);
+    sine = sin(ang);
+
+    // Rotation
+    A(0, 0) = cosine;
+    A(0, 1) = -sine;
+    A(1, 0) = sine;
+    A(1, 1) = cosine;
+
+    // Shift
+    A(0, 2) = -opt_xoff;
+    A(1, 2) = -opt_yoff;
 
     if (opt_flip > 0.)
     {
-        // Flip experimental image
-        Matrix2D<double> A(3,3);
-        A.initIdentity();
         A(0, 0) *= -1.;
         A(0, 1) *= -1.;
-        applyGeometry(LINEAR, Mimg, Mrot, A, IS_INV, DONT_WRAP);
     }
-    else
-        Mimg = Mrot;
 
-    // TRANSLATE
-    translate(LINEAR,Mtrans,Mimg,vectorR2(opt_xoff,opt_yoff),true);
-
-    // Correct X-shift for mirrored images
-    if (opt_flip>0.)
-        opt_xoff *= -1.;
+    applyGeometry(LINEAR, Mtrans, img, A, IS_INV, DONT_WRAP);
 
     // SCALE
     // Get pointer to the correct reference image in memory
@@ -768,10 +771,9 @@ void ProgAngularProjectionMatching::scaleAlignOneImage(MultidimArray<double> &im
         getCurrentReference(opt_refno,global_plans);
         refno = pointer_allrefs2refsinmem[opt_refno];
     }
-
     Mref = proj_ref[refno];
 
-    // Mtrans is already shifted
+    // Mtrans is already rotated and shifted
     double ref_mean, trans_mean;
 
     // Means
@@ -925,7 +927,7 @@ void ProgAngularProjectionMatching::getCurrentImage(int imgno, Image<double> &im
     img.setShifts(shiftX,shiftY);
     img.setEulerAngles(0.,0.,0.);
     img.setFlip(0.);
-    //!a
+
     double scale;
     scale = 1.;
     if(DFexp.containsLabel(MDL_SCALE))
