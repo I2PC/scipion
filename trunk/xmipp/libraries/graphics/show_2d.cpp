@@ -1304,6 +1304,8 @@ void ImageViewer::recomputeCTFmodel()
     else
     {
         fn_psd = ((FileName) filename).removeAllExtensions() + ".psd";
+        fn_psd=findAndReplace(fn_psd,"_ctfmodel_halfplane","");
+        fn_psd=findAndReplace(fn_psd,"_ctfmodel_quadrant","");
     }
 
     // Show this image in a separate window to select the main parameters
