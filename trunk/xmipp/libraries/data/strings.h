@@ -212,6 +212,13 @@ std::string removeSpaces(const std::string& _str);
  * @endcode
  */
 void removeQuotes(char** _str);
+
+/** Replace.
+ * This function replaces in the string all the occurrences of tFind and
+ * replaces it with tReplace.
+ */
+std::string findAndReplace(const std::string& tInput, const std::string &tFind,
+	const std::string &tReplace);
 //@}
 
 /** @name Tokenization

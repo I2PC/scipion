@@ -196,6 +196,7 @@ std::string floatToString(float F, int _width, int _prec)
     char aux[15];
     std::ostrstream outs(aux, sizeof(aux));
 #else
+
     std::ostringstream outs;
 #endif
 
@@ -216,14 +217,18 @@ std::string floatToString(float F, int _width, int _prec)
         outs.precision(_prec);
 
 #if GCC_VERSION < 30301
+
     outs << F << std::ends;
 #else
+
     outs << F;
 #endif
 
 #if GCC_VERSION < 30300
+
     return std::string(aux);
 #else
+
     std::string retval = outs.str();
     int i = retval.find('\0');
 
@@ -490,4 +495,24 @@ void tokenize(const std::string& str, std::vector<std::string>& tokens,
         // Find next "non-delimiter"
         pos = str.find_first_of(delimiters, lastPos);
     }
+}
+
+// Find and replace =======================================================
+std::string findAndReplace(const std::string& tInput, const std::string &tFind,
+                    const std::string &tReplace)
+{
+    size_t uFindLen = tFind.length();
+
+    if( uFindLen == 0 )
+        return tInput;
+
+    size_t uPos = 0;
+    size_t uReplaceLen = tReplace.length();
+    std::string tOut=tInput;
+    for( ;(uPos = tOut.find(tFind, uPos)) != std::string::npos; )
+    {
+    	tOut=tOut.replace( uPos, uFindLen, tReplace );
+        uPos += uReplaceLen;
+    }
+    return tOut;
 }
