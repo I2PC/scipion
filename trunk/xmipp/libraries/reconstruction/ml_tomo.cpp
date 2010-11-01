@@ -36,16 +36,16 @@ void ProgMLTomo::defineParams()
     addUsageLine("e.g. subtomograms or RCT reconstructions, by a 3D multi-reference refinement");
     addUsageLine("based on a maximum-likelihood (ML) target function. ");
 
-    addParamsLine("   -i <metadata>           : MetaData file with input images (and angles) ");
+    addParamsLine("   -i <metadata>               : MetaData file with input images (and angles) ");
     addParamsLine("   -nref <int=0>               : Number of references to generate automatically (recommended)");
     addParamsLine("   OR -ref <file=\"\">         : or metadatafile with initial references/single reference image ");
-    addParamsLine(" [ -o <rootname=mltomo> ]             : Output rootname (default = \"mltomo\")");
+    addParamsLine(" [ -o <rootname=mltomo> ]             : Output rootname ");
     addParamsLine(" [ -missing <metadata=\"\"> ]   : MetaData file with missing data region definitions");
 
     addParamsLine("== Angular sampling ==");
     addParamsLine(" [ -ang <float=10.> ]          : Angular sampling rate (in degrees)");
     addParamsLine(" [ -ang_search <float=-1.> ]   : Angular search range around orientations from MetaData ");
-    addParamsLine("                                    (by default, exhaustive searches are performed)");
+    addParamsLine("                               : (by default, exhaustive searches are performed)");
     addParamsLine(" [ -dont_limit_psirange ]      : Exhaustive psi searches when using -ang_search (only for c1 symmetry)");
     addParamsLine(" [ -limit_trans <float=-1.> ]  : Maximum allowed shifts (negative value means no restriction)");
     addParamsLine(" [ -tilt0+ <float=-91.> ]       : Limit tilt angle search from tilt0 to tiltF (in degrees) ");
@@ -57,14 +57,13 @@ void ProgMLTomo::defineParams()
     addParamsLine(" [ -regF <float=0.> ]          : Final regularization parameters (in N/K^2) ");
     addParamsLine(" [ -reg_steps <int=5> ]        : Number of iterations in which the regularization is changed from reg0 to regF");
 
-    addParamsLine("== ==");
+    addParamsLine("== Others ==");
     addParamsLine(" [ -dont_rotate ]              : Keep orientations from MetaData fixed, only translate and classify ");
     addParamsLine(" [ -dont_align ]               : Keep orientations and tran MetaData (otherwise start from random)");
     addParamsLine(" [ -perturb ]                  : Apply random perturbations to angular sampling in each iteration");
     addParamsLine(" [ -dim <int=-1> ]                : Use downscaled (in fourier space) images of this size ");
     addParamsLine(" [ -maxres <float=0.5> ]       : Maximum resolution (in pixel^-1) to use ");
     addParamsLine(" [ -thr <int=1> ]              : Number of shared-memory threads to use in parallel ");
-    addParamsLine(" [ -more_options ]             : Show all possible input parameters ");
 
     addParamsLine("==+ Additional options: ==");
     addParamsLine(" [ -impute_iter <int=1> ]      : Number of iterations for inner imputation loop ");
@@ -263,8 +262,8 @@ void ProgMLTomo::run()
     for (int iter = istart; iter <= Niter; iter++)
     {
 
-        if (verb > 0)
-            std::cerr << "  Multi-reference refinement:  iteration " << iter << " of " << Niter << std::endl;
+        if (verbose)
+            std::cout << "  Multi-reference refinement:  iteration " << iter << " of " << Niter << std::endl;
 
         // Save old reference images
         for (int refno = 0;refno < nr_ref; refno++)
@@ -287,8 +286,8 @@ void ProgMLTomo::run()
 
         if (converged)
         {
-            if (verb > 0)
-                std::cerr << " Optimization converged!" << std::endl;
+            if (verbose)
+                std::cout << " Optimization converged!" << std::endl;
             break;
         }
 
@@ -301,95 +300,95 @@ void ProgMLTomo::run()
 void ProgMLTomo::show()
 {
 
-    if (verb > 0)
+    if (verbose)
     {
         // To screen
-        std::cerr << " -----------------------------------------------------------------" << std::endl;
-        std::cerr << " | Read more about this program in the following publication:    |" << std::endl;
-        std::cerr << " |  Scheres ea.  (2009) Structure, 17, 1563-1572                 |" << std::endl;
-        std::cerr << " |                                                               |" << std::endl;
-        std::cerr << " |   *** Please cite it if this program is of use to you! ***    |" << std::endl;
-        std::cerr << " -----------------------------------------------------------------" << std::endl;
-        std::cerr << "--> Maximum-likelihood multi-reference refinement " << std::endl;
-        std::cerr << "  Input images            : " << fn_sel << " (" << nr_exp_images << ")" << std::endl;
+        std::cout << " -----------------------------------------------------------------" << std::endl;
+        std::cout << " | Read more about this program in the following publication:    |" << std::endl;
+        std::cout << " |  Scheres ea.  (2009) Structure, 17, 1563-1572                 |" << std::endl;
+        std::cout << " |                                                               |" << std::endl;
+        std::cout << " |   *** Please cite it if this program is of use to you! ***    |" << std::endl;
+        std::cout << " -----------------------------------------------------------------" << std::endl;
+        std::cout << "--> Maximum-likelihood multi-reference refinement " << std::endl;
+        std::cout << "  Input images            : " << fn_sel << " (" << nr_exp_images << ")" << std::endl;
         if (fn_ref != "")
-            std::cerr << "  Reference image(s)      : " << fn_ref << std::endl;
+            std::cout << "  Reference image(s)      : " << fn_ref << std::endl;
         else
-            std::cerr << "  Number of references:   : " << nr_ref << std::endl;
-        std::cerr << "  Output rootname         : " << fn_root << std::endl;
+            std::cout << "  Number of references:   : " << nr_ref << std::endl;
+        std::cout << "  Output rootname         : " << fn_root << std::endl;
         if (!(dont_align || do_only_average || dont_rotate))
         {
-            std::cerr << "  Angular sampling rate   : " << angular_sampling<< " degrees"<<std::endl;
+            std::cout << "  Angular sampling rate   : " << angular_sampling<< " degrees"<<std::endl;
             if (ang_search > 0.)
             {
-                std::cerr << "  Local angular searches  : "<<ang_search<<" degrees"<<std::endl;
+                std::cout << "  Local angular searches  : "<<ang_search<<" degrees"<<std::endl;
                 if (!do_limit_psirange)
-                    std::cerr << "                          : but with complete psi searches"<<std::endl;
+                    std::cout << "                          : but with complete psi searches"<<std::endl;
             }
         }
         if (limit_trans >= 0.)
-            std::cerr << "  Maximum allowed shifts  : "<<limit_trans<<" pixels"<<std::endl;
-        std::cerr << "  Symmetry group          : " << fn_sym<<std::endl;
-        std::cerr << "  Stopping criterium      : " << eps << std::endl;
-        std::cerr << "  initial sigma noise     : " << sigma_noise << std::endl;
-        std::cerr << "  initial sigma offset    : " << sigma_offset << std::endl;
-        std::cerr << "  Maximum resolution      : " << maxres << " pix^-1"<< std::endl;
-        std::cerr << "  Use images of size      : " << dim << std::endl;
+            std::cout << "  Maximum allowed shifts  : "<<limit_trans<<" pixels"<<std::endl;
+        std::cout << "  Symmetry group          : " << fn_sym<<std::endl;
+        std::cout << "  Stopping criterium      : " << eps << std::endl;
+        std::cout << "  initial sigma noise     : " << sigma_noise << std::endl;
+        std::cout << "  initial sigma offset    : " << sigma_offset << std::endl;
+        std::cout << "  Maximum resolution      : " << maxres << " pix^-1"<< std::endl;
+        std::cout << "  Use images of size      : " << dim << std::endl;
         if (reg0 > 0.)
         {
-            std::cerr << "  Regularization from     : "<<reg0<<" to "<<regF<<" in " <<reg_steps<<" steps"<<std::endl;
+            std::cout << "  Regularization from     : "<<reg0<<" to "<<regF<<" in " <<reg_steps<<" steps"<<std::endl;
         }
         if (fn_missing!="")
         {
-            std::cerr << "  Missing data info       : "<<fn_missing <<std::endl;
+            std::cout << "  Missing data info       : "<<fn_missing <<std::endl;
             if (do_impute && do_ml)
-                std::cerr << "  Missing data treatment  : imputation "<<std::endl;
+                std::cout << "  Missing data treatment  : imputation "<<std::endl;
             else
-                std::cerr << "  Missing data treatment  : conventional division "<<std::endl;
+                std::cout << "  Missing data treatment  : conventional division "<<std::endl;
         }
         if (fn_frac != "")
-            std::cerr << "  Initial model fractions : " << fn_frac << std::endl;
+            std::cout << "  Initial model fractions : " << fn_frac << std::endl;
 
         if (dont_rotate)
         {
-            std::cerr << "  -> Skip rotational searches, only translate and classify "<< std::endl;
+            std::cout << "  -> Skip rotational searches, only translate and classify "<< std::endl;
         }
         if (dont_align)
         {
-            std::cerr << "  -> Skip alignment, only classify "<< std::endl;
+            std::cout << "  -> Skip alignment, only classify "<< std::endl;
             if (do_mask)
-                std::cerr << "  -> Classify within mask "<<fn_mask<< std::endl;
+                std::cout << "  -> Classify within mask "<<fn_mask<< std::endl;
         }
         if (do_only_average)
         {
-            std::cerr << "  -> Skip alignment and classification, only calculate weighted average "<<std::endl;
+            std::cout << "  -> Skip alignment and classification, only calculate weighted average "<<std::endl;
         }
         if (!do_ml)
         {
-            std::cerr << "  -> Use constrained correlation coefficient instead of ML-imputation approach." << std::endl;
+            std::cout << "  -> Use constrained correlation coefficient instead of ML-imputation approach." << std::endl;
         }
         if (do_perturb)
         {
-            std::cerr << "  -> Perturb angular sampling." << std::endl;
+            std::cout << "  -> Perturb angular sampling." << std::endl;
         }
         if (fix_fractions)
         {
-            std::cerr << "  -> Do not update estimates of model fractions." << std::endl;
+            std::cout << "  -> Do not update estimates of model fractions." << std::endl;
         }
         if (fix_sigma_offset)
         {
-            std::cerr << "  -> Do not update sigma-estimate of origin offsets." << std::endl;
+            std::cout << "  -> Do not update sigma-estimate of origin offsets." << std::endl;
         }
         if (fix_sigma_noise)
         {
-            std::cerr << "  -> Do not update sigma-estimate of noise." << std::endl;
+            std::cout << "  -> Do not update sigma-estimate of noise." << std::endl;
         }
         if (threads>1)
         {
-            std::cerr << "  -> Using "<<threads<<" parallel threads"<<std::endl;
+            std::cout << "  -> Using "<<threads<<" parallel threads"<<std::endl;
         }
 
-        std::cerr << " -----------------------------------------------------------------" << std::endl;
+        std::cout << " -----------------------------------------------------------------" << std::endl;
 
     }
 
@@ -549,7 +548,7 @@ void ProgMLTomo::produceSideInfo()
         if (mysampling.SL.SymsNo() > 0)
         {
             do_sym=true;
-            if (verb > 0)
+            if (verbose)
             {
                 std::cerr<<"  --> Using symmetry version of the code: "<<std::endl;
                 std::cerr<<"      [-psi, -tilt, -rot] is applied to the references, thereby "<<std::endl;
@@ -675,9 +674,9 @@ void ProgMLTomo::generateInitialReferences()
     std::cerr<<"Start generateInitialReferences"<<std::endl;
 #endif
 
-    if (verb > 0)
+    if (verbose)
     {
-        std::cerr << "  Generating initial references by averaging over random subsets" << std::endl;
+        std::cout << "  Generating initial references by averaging over random subsets" << std::endl;
         init_progress_bar(nr_exp_images);
     }
 
@@ -750,7 +749,7 @@ void ProgMLTomo::generateInitialReferences()
                     Msumwedge2 += Mmissing;
             }
             c++;
-            if (verb > 0 && c % cc == 0)
+            if (verbose && c % cc == 0)
                 progress_bar(c);
         }
 
@@ -810,7 +809,7 @@ void ProgMLTomo::generateInitialReferences()
         reScaleVolume(Iout(),false);
         Iout.write(fn_tmp);
     }
-    if (verb > 0)
+    if (verbose)
         progress_bar(nr_exp_images);
     fn_ref = fn_root + "_it";
     fn_ref.compose(fn_ref, 0, "sel");
@@ -1118,7 +1117,7 @@ void ProgMLTomo::produceSideInfo2(int nr_vols)
             //DF.next_data_line();
         }
         if (ABS(sumfrac - 1.) > 1e-3)
-            if (verb > 0)
+            if (verbose)
                 std::cerr << " ->WARNING: Sum of all expected model fractions (" << sumfrac << ") is not one!" << std::endl;
         for (int refno = 0; refno < nr_ref; refno++)
         {
@@ -2403,7 +2402,7 @@ void * threadMLTomoExpectationSingleImage( void * data )
     //First and last image to process in each block
     longint myFirst, myLast;
 
-    if (prm->verb > 0 && thread_id==0)
+    if (prm->verbose && thread_id==0)
         init_progress_bar(myNum);
 
     // Loop over all images
@@ -2491,13 +2490,13 @@ void * threadMLTomoExpectationSingleImage( void * data )
             dAij(docfiledata, index, 8) = fracweight;                // P_max/P_tot
             dAij(docfiledata, index, 9) = dLL;                       // log-likelihood
 
-            if (prm->verb > 0 && thread_id==0)
+            if (prm->verbose && thread_id==0)
                 progress_bar(cc);
             cc++;
         }
         prm->addPartialDocfileData(docfiledata, myFirst, myLast);
     }
-    if (prm->verb > 0 && thread_id==0)
+    if (prm->verbose && thread_id==0)
         progress_bar(myNum);
 
 #ifdef DEBUG_THREAD

@@ -112,10 +112,6 @@ public:
     int nr_exp_images;
     /** Sum of squared amplitudes of the references */
     std::vector<double> A2, corrA2;
-    /** Verbose level:
-        1: gives progress bar (=default)
-        0: gives no output to screen at all */
-    int verb;
     /** Stopping criterium */
     double eps;
     /** SelFile images, references and missingregions */
