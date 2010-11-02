@@ -817,6 +817,7 @@ public:
         else
         {
             data = new T [nzyxdim];
+            memset(data,0,nzyxdim*sizeof(T));
             if (data == NULL)
                 REPORT_ERROR(ERR_MEM_NOTENOUGH, "Allocate: No space left");
         }
@@ -860,6 +861,7 @@ public:
         else
         {
             data = new T [nzyxdim];
+            memset(data,0,nzyxdim*sizeof(T));
             if (data == NULL)
                 REPORT_ERROR(ERR_MEM_NOTENOUGH, "Allocate: No space left");
         }
@@ -1082,7 +1084,10 @@ public:
 //                    REPORT_ERROR(ERR_MMAP_NOTADDR,"MultidimArray::resize: mmap failed.");
             }
             else
+            {
                 new_data = new T [NZYXdim];
+                memset(new_data,0,NZYXdim*sizeof(T));
+            }
         }
         catch (std::bad_alloc &)
         {
