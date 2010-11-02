@@ -311,11 +311,14 @@ bool CtfGroupParams::isIsotropic(CTFDescription &ctf)
         XX(freq) = cosp * digres;
         YY(freq) = sinp * digres;
         digfreq2contfreq(freq, freq, pixel_size);
-        ctfp = ctf.CTF_at(XX(freq), YY(freq));
-        diff = ABS(ctfp - ctf.CTF_at(YY(freq), XX(freq)));
+        ctf.precomputeValues(XX(freq), YY(freq));
+        ctfp = ctf.CTF_at();
+        ctf.precomputeValues(YY(freq), XX(freq));
+        diff = ABS(ctfp - ctf.CTF_at());
         if (diff > max_error)
         {
-            std::cerr<<" Anisotropy!"<<digres<<" "<<max_error<<" "<<diff<<" "<<ctfp<<" "<<ctf.CTF_at(YY(freq), XX(freq))<<std::endl;
+            std::cerr<<" Anisotropy!"<<digres<<" "<<max_error<<" "<<diff<<" "<<ctfp
+            		 <<" "<<ctf.CTF_at()<<std::endl;
             return false;
         }
     }

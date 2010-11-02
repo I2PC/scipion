@@ -526,11 +526,6 @@ void Prog_assign_CTF_prm::process()
             psd_std(i,j)=0;
         else
             psd_std(i,j)=sqrt(psd_std(i,j));
-        psd_std.write("PPPstd.xmp");
-        double stdQ=0;
-        FOR_ALL_ELEMENTS_IN_ARRAY2D(psd_std())
-        	stdQ+=psd_std(i,j)/psd_avg(i,j);
-        stdQ/=MULTIDIM_SIZE(psd_std());
 
         if (!dont_adjust_CTF)
         {
@@ -542,6 +537,17 @@ void Prog_assign_CTF_prm::process()
             {
                 double fitting_error = ROUT_Adjust_CTF(adjust_CTF_prm,
                                                        ctfmodel, false);
+
+                // Evaluate PSD variance and write into the CTF
+                double stdQ=0;
+                FOR_ALL_ELEMENTS_IN_ARRAY2D(psd_std())
+                	stdQ+=psd_std(i,j)/psd_avg(i,j);
+                stdQ/=MULTIDIM_SIZE(psd_std());
+
+                MetaData MD;
+                MD.read(fn_avg.withoutExtension() + ".ctfparam");
+                MD.setValue(MDL_CTF_CRITERION_PSDVARIANCE,stdQ);
+                MD.write(fn_root + ".ctfparam");
             }
             else
             {

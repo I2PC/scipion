@@ -59,7 +59,8 @@ void Prog_micrograph_phase_flipping::run(void)
         VECTOR_R2(idx,j,i);
         FFT_idx2digfreq(M_in(),idx,freq);
         digfreq2contfreq(freq, freq, ctf.Tm);
-        if (ctf.CTFpure_without_damping_at(XX(freq),YY(freq))<0)
+        ctf.precomputeValues(XX(freq),YY(freq));
+        if (ctf.CTFpure_without_damping_at()<0)
         {
             M_inFourier(i,j)*=-1;
         }

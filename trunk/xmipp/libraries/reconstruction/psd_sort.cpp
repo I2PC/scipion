@@ -138,7 +138,8 @@ double Prog_Sort_PSD_Parameters::evaluate(const FileName &fnMicrograph,
     	evaluation.firstZeroAvg+=module;
     	double wx=wmax*XX(u);
     	double wy=wmax*YY(u);
-    	double damping=CTF1.CTFdamping_at(wx,wy);
+    	CTF1.precomputeValues(wx,wy);
+    	double damping=CTF1.CTFdamping_at();
     	damping=damping*damping;
     	evaluation.maxDampingAtBorder=XMIPP_MAX(evaluation.maxDampingAtBorder,damping);
     	if (fnCTF2!="") {

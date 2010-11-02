@@ -726,21 +726,22 @@ void generate_model_so_far(Image<double> &I, bool apply_log = false)
 
         // Decide what to save
         double param;
+        global_ctfmodel.precomputeValues(XX(freq), YY(freq));
         if (global_action <= 1)
-            I()(i, j) = global_ctfmodel.CTFnoise_at(XX(freq), YY(freq));
+            I()(i, j) = global_ctfmodel.CTFnoise_at();
         else if (global_action == 2)
         {
-            double E = global_ctfmodel.CTFdamping_at(XX(freq), YY(freq));
-            I()(i, j) = global_ctfmodel.CTFnoise_at(XX(freq), YY(freq)) + E * E;
+            double E = global_ctfmodel.CTFdamping_at();
+            I()(i, j) = global_ctfmodel.CTFnoise_at() + E * E;
         }
         else if (global_action >= 3 && global_action <= 5)
         {
-            double ctf = global_ctfmodel.CTFpure_at(XX(freq), YY(freq));
-            I()(i, j) = global_ctfmodel.CTFnoise_at(XX(freq), YY(freq)) + ctf * ctf;
+            double ctf = global_ctfmodel.CTFpure_at();
+            I()(i, j) = global_ctfmodel.CTFnoise_at() + ctf * ctf;
         }
         else
         {
-            double ctf = global_ctfmodel.CTFpure_at(XX(freq), YY(freq));
+            double ctf = global_ctfmodel.CTFpure_at();
             I()(i, j) = ctf;
         }
         if (apply_log)
@@ -880,7 +881,8 @@ void Adjust_CTF_Parameters::generate_model_quadrant(int Ydim, int Xdim,
             FFT_idx2digfreq(model, idx, freq);
             digfreq2contfreq(freq, freq, global_prm->Tm);
 
-            model(i, j) = global_ctfmodel.CTFpure_at(XX(freq), YY(freq));
+            global_ctfmodel.precomputeValues(XX(freq), YY(freq));
+            model(i, j) = global_ctfmodel.CTFpure_at();
             model(i, j) *= model(i, j);
         }
     }
@@ -932,7 +934,8 @@ void Adjust_CTF_Parameters::generate_model_halfplane(int Ydim, int Xdim,
         FFT_idx2digfreq(model, idx, freq);
         digfreq2contfreq(freq, freq, global_prm->Tm);
 
-        model(i, j) = global_ctfmodel.CTFpure_at(XX(freq), YY(freq));
+        global_ctfmodel.precomputeValues(XX(freq), YY(freq));
+        model(i, j) = global_ctfmodel.CTFpure_at();
         model(i, j) *= model(i, j);
     }
 
@@ -1090,7 +1093,8 @@ double CTF_fitness(double *p, void *)
             // Compute each component
             double f_x = DIRECT_A2D_ELEM(global_x_contfreq, i, j);
             double f_y = DIRECT_A2D_ELEM(global_y_contfreq, i, j);
-            double bg = global_ctfmodel.CTFnoise_at(f_x, f_y);
+            global_ctfmodel.precomputeValues(f_x, f_y);
+            double bg = global_ctfmodel.CTFnoise_at();
             double envelope, ctf_without_damping, ctf_with_damping;
             double ctf2_th;
             switch (global_action)
@@ -1100,15 +1104,15 @@ double CTF_fitness(double *p, void *)
                 ctf2_th = bg;
                 break;
             case 2:
-                envelope = global_ctfmodel.CTFdamping_at(f_x, f_y);
+                envelope = global_ctfmodel.CTFdamping_at();
                 ctf2_th = bg + envelope * envelope;
                 break;
             case 3:
             case 4:
             case 5:
             case 6:
-                envelope = global_ctfmodel.CTFdamping_at(f_x, f_y);
-                ctf_without_damping = global_ctfmodel.CTFpure_without_damping_at(f_x, f_y);
+                envelope = global_ctfmodel.CTFdamping_at();
+                ctf_without_damping = global_ctfmodel.CTFpure_without_damping_at();
                 ctf_with_damping = envelope * ctf_without_damping;
                 ctf2_th = bg + ctf_with_damping * ctf_with_damping;
                 break;
@@ -1332,8 +1336,8 @@ void estimate_background_sqrt_parameters()
         double weight = 1 + global_max_freq - global_w_digfreq(i, j);
 
         // Compute error
-        double explained = global_ctfmodel.CTFnoise_at(
-                               global_x_contfreq(i, j), global_y_contfreq(i, j));
+        global_ctfmodel.precomputeValues(global_x_contfreq(i, j), global_y_contfreq(i, j));
+        double explained = global_ctfmodel.CTFnoise_at();
         double unexplained = (*f)(i, j) - explained;
         if (unexplained <= 0)
             continue;
@@ -1428,8 +1432,8 @@ void estimate_background_gauss_parameters()
             continue;
 
         int r = FLOOR(w * (double)YSIZE(*f));
-        radial_CTFmodel_avg(r) += global_ctfmodel.CTFnoise_at(
-                                      global_x_contfreq(i, j), global_y_contfreq(i, j));
+        global_ctfmodel.precomputeValues(global_x_contfreq(i, j), global_y_contfreq(i, j));
+        radial_CTFmodel_avg(r) += global_ctfmodel.CTFnoise_at();
         radial_CTFampl_avg(r) += (*f)(i, j);
         radial_N(r)++;
     }
@@ -1560,8 +1564,8 @@ void estimate_background_gauss_parameters()
         double weight = 1 + global_max_freq - global_w_digfreq(i, j);
 
         // Compute error
-        double explained = global_ctfmodel.CTFnoise_at(
-                               global_x_contfreq(i, j), global_y_contfreq(i, j));
+        global_ctfmodel.precomputeValues(global_x_contfreq(i, j), global_y_contfreq(i, j));
+        double explained = global_ctfmodel.CTFnoise_at();
         double unexplained = (*f)(i, j) - explained;
         if (unexplained <= 0)
             continue;
@@ -1617,9 +1621,10 @@ void estimate_background_gauss_parameters2()
         int r = FLOOR(w * (double)YSIZE(*f));
         double f_x = DIRECT_A2D_ELEM(global_x_contfreq, i, j);
         double f_y = DIRECT_A2D_ELEM(global_y_contfreq, i, j);
-        double bg = global_ctfmodel.CTFnoise_at(f_x, f_y);
-        double envelope = global_ctfmodel.CTFdamping_at(f_x, f_y);
-        double ctf_without_damping = global_ctfmodel.CTFpure_without_damping_at(f_x, f_y);
+        global_ctfmodel.precomputeValues(f_x, f_y);
+        double bg = global_ctfmodel.CTFnoise_at();
+        double envelope = global_ctfmodel.CTFdamping_at();
+        double ctf_without_damping = global_ctfmodel.CTFpure_without_damping_at();
         double ctf_with_damping = envelope * ctf_without_damping;
         double ctf2_th = bg + ctf_with_damping * ctf_with_damping;
         radial_CTFmodel_avg(r) += ctf2_th;
@@ -1694,9 +1699,10 @@ void estimate_background_gauss_parameters2()
         // Compute error
         double f_x = DIRECT_A2D_ELEM(global_x_contfreq, i, j);
         double f_y = DIRECT_A2D_ELEM(global_y_contfreq, i, j);
-        double bg = global_ctfmodel.CTFnoise_at(f_x, f_y);
-        double envelope = global_ctfmodel.CTFdamping_at(f_x, f_y);
-        double ctf_without_damping = global_ctfmodel.CTFpure_without_damping_at(f_x, f_y);
+        global_ctfmodel.precomputeValues(f_x, f_y);
+        double bg = global_ctfmodel.CTFnoise_at();
+        double envelope = global_ctfmodel.CTFdamping_at();
+        double ctf_without_damping = global_ctfmodel.CTFpure_without_damping_at();
         double ctf_with_damping = envelope * ctf_without_damping;
         double ctf2_th = bg + ctf_with_damping * ctf_with_damping;
         double explained = ctf2_th;
@@ -2080,7 +2086,8 @@ void estimate_defoci()
             save()(i, j) = global_prm->enhanced_ctftomodel()(i, j);
             double f_x = DIRECT_A2D_ELEM(global_x_contfreq, i, j);
             double f_y = DIRECT_A2D_ELEM(global_y_contfreq, i, j);
-            double ctf_without_damping = global_ctfmodel.CTFpure_without_damping_at(f_x, f_y);
+            global_ctfmodel.precomputeValues(f_x, f_y);
+            double ctf_without_damping = global_ctfmodel.CTFpure_without_damping_at();
             save2()(i, j) = ctf_without_damping * ctf_without_damping;
             save3()(i, j) = -global_prm->enhanced_ctftomodel()(i, j) *
                             ctf_without_damping * ctf_without_damping;

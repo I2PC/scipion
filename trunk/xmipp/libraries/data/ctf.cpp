@@ -395,17 +395,19 @@ void CTFDescription::Produce_Side_Info()
 
 /* Zero -------------------------------------------------------------------- */
 //#define DEBUG
-void CTFDescription::zero(int n, const Matrix1D<double> &u, Matrix1D<double> &freq) const
+void CTFDescription::zero(int n, const Matrix1D<double> &u, Matrix1D<double> &freq)
 {
     double wmax = 1 / (2 * Tm);
     double wstep = wmax / 300;
     int sign_changes = 0;
-    double last_ctf = CTF_at(0, 0), ctf;
+    precomputeValues(0,0);
+    double last_ctf = CTF_at(), ctf;
     double w;
     for (w = 0; w <= wmax; w += wstep)
     {
         V2_BY_CT(freq, u, w);
-        ctf = CTFpure_at(XX(freq), YY(freq));
+        precomputeValues(XX(freq), YY(freq));
+        ctf = CTFpure_at();
         if (SGN(ctf) != SGN(last_ctf))
         {
             sign_changes++;
@@ -439,7 +441,7 @@ void CTFDescription::zero(int n, const Matrix1D<double> &u, Matrix1D<double> &fr
 #undef DEBUG
 
 /* Apply the CTF to an image ----------------------------------------------- */
-void CTFDescription::Apply_CTF(MultidimArray < std::complex<double> > &FFTI) const
+void CTFDescription::Apply_CTF(MultidimArray < std::complex<double> > &FFTI)
 {
     Matrix1D<int>    idx(2);
     Matrix1D<double> freq(2);
@@ -451,7 +453,8 @@ void CTFDescription::Apply_CTF(MultidimArray < std::complex<double> > &FFTI) con
         XX(idx) = j;
         YY(idx) = i;
         FFT_idx2digfreq(FFTI, idx, freq);
-        double ctf = CTF_at(XX(freq), YY(freq));
+        precomputeValues(XX(freq), YY(freq));
+        double ctf = CTF_at();
         FFTI(i, j) *= ctf;
     }
 }
@@ -459,7 +462,7 @@ void CTFDescription::Apply_CTF(MultidimArray < std::complex<double> > &FFTI) con
 /* Generate CTF Image ------------------------------------------------------ */
 //#define DEBUG
 void CTFDescription::Generate_CTF(int Ydim, int Xdim,
-                            MultidimArray < std::complex<double> > &CTF) const
+                            MultidimArray < std::complex<double> > &CTF)
 {
     Matrix1D<int>    idx(2);
     Matrix1D<double> freq(2);
@@ -475,7 +478,8 @@ void CTFDescription::Generate_CTF(int Ydim, int Xdim,
         YY(idx) = i;
         FFT_idx2digfreq(CTF, idx, freq);
         digfreq2contfreq(freq, freq, Tm);
-        CTF(i, j) = CTF_at(XX(freq), YY(freq));
+        precomputeValues(XX(freq), YY(freq));
+        CTF(i, j) = CTF_at();
 #ifdef DEBUG
 
         if (i == 0)
@@ -494,6 +498,7 @@ bool CTFDescription::physical_meaning()
     bool retval;
     if (enable_CTF)
     {
+    	precomputeValues(0,0);
         retval =
             K >= 0       && base_line >= 0  &&
             kV >= 50     && kV <= 1000      &&
@@ -506,7 +511,7 @@ bool CTFDescription::physical_meaning()
             DeltaR >= 0  && DeltaR <= 100   &&
             Q0 >= -0.40  && Q0 <= 0         &&
             DeltafU <= 0 && DeltafV <= 0    &&
-            CTF_at(0, 0) >= 0;
+            CTF_at() >= 0;
 #ifdef DEBUG
 
         if (retval == false)

@@ -340,10 +340,12 @@ double ProgFourierFilter::maskValue(const Matrix1D<double> &w)
         }
         break;
     case CTF:
-        return ctf.CTF_at(XX(w)/ctf.Tm,YY(w)/ctf.Tm);
+    	ctf.precomputeValues(XX(w)/ctf.Tm,YY(w)/ctf.Tm);
+        return ctf.CTF_at();
         break;
     case CTFPOS:
-        return ABS(ctf.CTF_at(XX(w)/ctf.Tm,YY(w)/ctf.Tm));
+    	ctf.precomputeValues(XX(w)/ctf.Tm,YY(w)/ctf.Tm);
+        return ABS(ctf.CTF_at());
         break;
     case BFACTOR:
         double R = absw / w2;

@@ -69,8 +69,9 @@ int main(int argc, char **argv)
         for (double w = 0; w <= 0.5; w += w_step)
         {
             Matrix1D<double> current_w = w / CTF.Tm * w_dir;
-            double CTF_pure = CTF.CTFpure_at(XX(current_w), YY(current_w));
-            double CTF_noise = CTF.CTFnoise_at(XX(current_w), YY(current_w));
+            CTF.precomputeValues(XX(current_w), YY(current_w));
+            double CTF_pure = CTF.CTFpure_at();
+            double CTF_noise = CTF.CTFnoise_at();
             double cont_freq = current_w.module();
             double cont_freq_A = (cont_freq == 0) ? 0 : 1 / cont_freq;
             std::cout << w << " " << cont_freq << " " << cont_freq_A << " "
