@@ -59,7 +59,6 @@ protected:
         addParamsLine("   alias -up;");
         addParamsLine("or --list          : List all Xmipp programs");
         addParamsLine("   alias -l;");
-
     }
 
     void readParams()
@@ -131,7 +130,7 @@ public:
                     prog->rank += getRank(prog->description, *keyIt, DESC_MATCH);
                 }
             }
-            if (prog->rank > 2)
+            if (prog->rank > 0)
             {
                 maxlen = XMIPP_MAX(prog->name.length(), maxlen);
                 progsRank.push(prog);
