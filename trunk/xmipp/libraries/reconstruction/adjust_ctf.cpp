@@ -61,6 +61,7 @@ double                  global_corr13;   // Correlation with enhanced PSD betwee
 MultidimArray<double>  global_x_digfreq;
 MultidimArray<double>  global_y_digfreq;
 MultidimArray<double>  global_w_digfreq;
+MultidimArray<int>     global_w_digfreq_r;
 MultidimArray<double>  global_x_contfreq;
 MultidimArray<double>  global_y_contfreq;
 MultidimArray<double>  global_w_contfreq;
@@ -601,6 +602,7 @@ void Adjust_CTF_Parameters::produce_side_info()
     global_x_digfreq.initZeros(YSIZE(*f), XSIZE(*f) / 2);
     global_y_digfreq.initZeros(YSIZE(*f), XSIZE(*f) / 2);
     global_w_digfreq.initZeros(YSIZE(*f), XSIZE(*f) / 2);
+    global_w_digfreq_r.initZeros(YSIZE(*f), XSIZE(*f) / 2);
     global_x_contfreq.initZeros(YSIZE(*f), XSIZE(*f) / 2);
     global_y_contfreq.initZeros(YSIZE(*f), XSIZE(*f) / 2);
     global_w_contfreq.initZeros(YSIZE(*f), XSIZE(*f) / 2);
@@ -617,6 +619,7 @@ void Adjust_CTF_Parameters::produce_side_info()
         global_x_digfreq(i, j) = XX(freq);
         global_y_digfreq(i, j) = YY(freq);
         global_w_digfreq(i, j) = freq.module();
+        global_w_digfreq_r(i, j) = global_w_digfreq(i, j) * (double)YSIZE(global_w_digfreq);
 
         // Continuous frequency
         digfreq2contfreq(freq, freq, global_prm->Tm);
@@ -634,8 +637,7 @@ void Adjust_CTF_Parameters::produce_side_info()
             global_w_digfreq(i, j) <= min_freq)
             continue;
         global_mask(i, j) = 1;
-        int r = FLOOR(global_w_digfreq(i, j) * (double)YSIZE(global_w_digfreq));
-        global_w_count(r)++;
+        global_w_count(global_w_digfreq_r(i, j))++;
     }
 
     // Bootstrap
@@ -822,7 +824,7 @@ void save_intermediate_results(const FileName &fn_root, bool
             continue;
         double model2 = save()(i, j);
 
-        int r = FLOOR(global_w_digfreq(i, j) * (double)YSIZE(*f));
+        int r = global_w_digfreq_r(i, j);
         radial_CTFmodel_avg(r) += model2;
         radial_CTFampl_avg(r) += (*f)(i, j);
         radial_enhanced_avg(r) += global_prm->enhanced_ctftomodel()(i, j);
@@ -1076,7 +1078,8 @@ double CTF_fitness(double *p, void *)
     double enhanced_model = 0;
     double enhanced2 = 0;
     double model2 = 0;
-    double dYsize=(double)YSIZE(global_w_digfreq);
+    double lowerLimit=1.1*global_min_freq;
+    double upperLimit=0.9*global_max_freq;
     const MultidimArray<double>& local_enhanced_ctf=global_prm->enhanced_ctftomodel();
     for (int i = 0; i < YSIZE(global_w_digfreq); i += global_evaluation_reduction)
         for (int j = 0; j < XSIZE(global_w_digfreq); j += global_evaluation_reduction)
@@ -1114,8 +1117,7 @@ double CTF_fitness(double *p, void *)
             // Compute distance
             double ctf2 = DIRECT_A2D_ELEM(*f, i, j);
             double dist = 0;
-            double rr=DIRECT_A2D_ELEM(global_w_digfreq, i, j) * dYsize;
-            int r = FLOOR(rr);
+            int r = DIRECT_A2D_ELEM(global_w_digfreq_r, i, j);
             double ctf_with_damping2;
             switch (global_action)
             {
@@ -1136,11 +1138,11 @@ double CTF_fitness(double *p, void *)
             case 5:
             case 6:
             case 3:
-                if (global_w_digfreq(i, j) < 0.9*global_max_freq &&
-                    global_w_digfreq(i, j) > 1.1*global_min_freq)
+                if (DIRECT_A2D_ELEM(global_w_digfreq,i, j) < upperLimit &&
+                    DIRECT_A2D_ELEM(global_w_digfreq,i, j) > lowerLimit)
                 {
                     if (global_action==3 || global_action==4 ||
-                        (global_action==6 && global_mask_between_zeroes(i,j)==1))
+                        (global_action==6 && DIRECT_A2D_ELEM(global_mask_between_zeroes,i,j)==1))
                     {
                         double enhanced_ctf = DIRECT_A2D_ELEM(local_enhanced_ctf, i, j);
                         ctf_with_damping2 = ctf_with_damping * ctf_with_damping;
@@ -1168,7 +1170,7 @@ double CTF_fitness(double *p, void *)
                 //    env^2     env^2     env^2
                 break;
             }
-            distsum += dist*global_mask(i,j);
+            distsum += dist*DIRECT_A2D_ELEM(global_mask,i,j);
             N++;
         }
     if (N > 0)
