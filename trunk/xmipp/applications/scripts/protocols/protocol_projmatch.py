@@ -202,7 +202,7 @@ AvailableMemory = 1
     Note: if there are less values than iterations the last value is reused
     Note: if there are more values than iterations the extra value are ignored
 """
-AngSamplingRateDeg = '6 4 2 1'
+AngSamplingRateDeg ='6 4 2 1'
 
 # Angular search range 
 """Maximum change in rot & tilt  (in +/- degrees)
@@ -215,7 +215,7 @@ AngSamplingRateDeg = '6 4 2 1'
     Note: if there are less values than iterations the last value is reused
     Note: if there are more values than iterations the extra value are ignored
 """
-MaxChangeInAngles = '1000 16 12 8 4 2'
+MaxChangeInAngles ='1000 16 12 8 4 2'
 
 # {expert} Perturb projection directions?
 """ If set to true, this option will result to a Gaussian perturbation to the 
@@ -236,7 +236,7 @@ PerturbProjectionDirections=False
     Note: if there are less values than iterations the last value is reused
     Note: if there are more values than iterations the extra value are ignored
 """
-MaxChangeOffset = '1000 10 5 '
+MaxChangeOffset ='1000 10 5'
 
 # Search range for 5D translational search 
 """ Give search range from the image center for 5D searches (in +/- pixels).
@@ -279,7 +279,7 @@ TiltF=90
     for a description of the symmetry groups format
     If no symmetry is present, give c1
 """
-SymmetryGroup = 'i3'
+SymmetryGroup ='i3'
 
 # {expert} Symmetry group for Neighbourhood computations
 """ If you do not know what this is leave it blank.
