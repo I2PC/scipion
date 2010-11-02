@@ -330,7 +330,7 @@ void Prog_assign_CTF_prm::process()
     PosFile.clear();
     PosFile.seekg(0, std::ios::beg); // Start of file
     SF.firstObject();
-    Image<double> psd_avg;
+    Image<double> psd_avg, psd_std;
     std::cerr << "Computing models of each piece ...\n";
     init_progress_bar(div_Number);
 
@@ -342,6 +342,9 @@ void Prog_assign_CTF_prm::process()
         fn_avg = fn_root + "_Periodogramavg.psd";
     int N = 1;    // Index of current piece
     int i = 0, j = 0; // top-left corner of the current piece
+    MultidimArray< std::complex<double> > Periodogram;
+    MultidimArray<double> piece(N_vertical, N_horizontal);
+    Image<double> psd, psd2;
     while (N <= div_Number)
     {
         // Compute the top-left corner of the piece ..........................
@@ -402,12 +405,11 @@ void Prog_assign_CTF_prm::process()
         }
 
         // Extract micrograph piece ..........................................
-        MultidimArray<double> piece(N_vertical, N_horizontal);
         if (!selfile_mode)
         {
             for (int k = 0; k < YSIZE(piece); k++)
                 for (int l = 0; l < XSIZE(piece); l++)
-                    piece(k, l) = M_in(j + l, i + k);
+                    DIRECT_A2D_ELEM(piece, k, l) = M_in(j + l, i + k);
         }
         else
         {
@@ -420,7 +422,6 @@ void Prog_assign_CTF_prm::process()
         piece.statisticsAdjust(0, 1);
 
         // Estimate the power spectrum .......................................
-        Image<double> psd;
         psd().resize(piece);
         if (!piece_averaging)
             if (PSD_mode == ARMA)
@@ -434,7 +435,6 @@ void Prog_assign_CTF_prm::process()
             else
             {
                 // Compute the periodogram
-                MultidimArray< std::complex<double> > Periodogram;
                 FourierTransform(piece, Periodogram);
                 FFT_magnitude(Periodogram, psd());
                 psd() *= psd();
@@ -442,14 +442,23 @@ void Prog_assign_CTF_prm::process()
             }
         else
             PSD_piece_by_averaging(piece, psd());
+        psd2()=psd();
+        psd2()*=psd();
 
         // Perform averaging if applicable ...................................
         if (micrograph_averaging)
         {
+
             if (N == 1)
+            {
                 psd_avg() = psd();
+                psd_std() = psd2();
+            }
             else
+            {
                 psd_avg() += psd();
+                psd_std() += psd2();
+            }
             if (micrograph_averaging && PSD_mode == ARMA)
             {
                 psd_avg.write(fn_avg);
@@ -478,7 +487,7 @@ void Prog_assign_CTF_prm::process()
 
             psd.write(piece_fn_root + ".psd");
             std::cerr << psd.name() << "\t top-left corner located at (X,Y)=("
-                      << j << "," << i << ")\n";
+            << j << "," << i << ")\n";
 
             if (!dont_adjust_CTF)
             {
@@ -509,6 +518,19 @@ void Prog_assign_CTF_prm::process()
     {
         psd_avg() /= div_Number;
         psd_avg.write(fn_avg);
+
+        psd_std() /= div_Number;
+        psd_std() -= psd_avg()*psd_avg();
+        FOR_ALL_ELEMENTS_IN_ARRAY2D(psd_std())
+        if (psd_std(i,j)<0)
+            psd_std(i,j)=0;
+        else
+            psd_std(i,j)=sqrt(psd_std(i,j));
+        psd_std.write("PPPstd.xmp");
+        double stdQ=0;
+        FOR_ALL_ELEMENTS_IN_ARRAY2D(psd_std())
+        	stdQ+=psd_std(i,j)/psd_avg(i,j);
+        stdQ/=MULTIDIM_SIZE(psd_std());
 
         if (!dont_adjust_CTF)
         {
