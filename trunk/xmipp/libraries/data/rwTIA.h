@@ -251,6 +251,7 @@ int readTIA(int img_select,bool isStack=false)
         MD[i-imgStart].setValue(MDL_ANGLEPSI, zeroD);
         MD[i-imgStart].setValue(MDL_WEIGHT,   oneD);
         MD[i-imgStart].setValue(MDL_FLIP,     falseb);
+        MD[i-imgStart].setValue(MDL_SCALE,    oneD);
     }
 
     //#define DEBUG
