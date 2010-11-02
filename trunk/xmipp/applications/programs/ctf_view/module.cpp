@@ -734,9 +734,10 @@ void CTFViewer::getCTFcurve(const std::string &type, int angle,
     for (double f = 0; f < fmax; f += fmax / Nsamples)
     {
         data(i, 0) = f;
-        double ctf_bg  = ctf.CTFnoise_at(f * cos(angle_rad), f * sin(angle_rad));
-        double ctf_pure = ctf.CTFpure_at(f * cos(angle_rad), f * sin(angle_rad));
-        double ctf_E   = ctf.CTFdamping_at(f * cos(angle_rad), f * sin(angle_rad));
+        ctf.precomputeValues(f * cos(angle_rad), f * sin(angle_rad));
+        double ctf_bg  = ctf.CTFnoise_at();
+        double ctf_pure = ctf.CTFpure_at();
+        double ctf_E   = ctf.CTFdamping_at();
         if (type == "pure")
         {
             data(i, 1) = ctf_bg + ctf_pure * ctf_pure;
@@ -829,7 +830,8 @@ void CTFViewer::generate_ctfmodel()
         XX(freq) = ((double)j-Xdim/2.0)/Xdim;
         YY(freq) = ((double)i-Ydim/2.0)/Xdim;
         digfreq2contfreq(freq, freq, ctf.Tm);
-        model()(i, j) = ctf.CTFpure_at(XX(freq), YY(freq));
+        ctf.precomputeValues(XX(freq), YY(freq));
+        model()(i, j) = ctf.CTFpure_at();
         model()(i,j)*=model()(i,j);
     	minval=XMIPP_MIN(minval,model()(i,j));
     	maxval=XMIPP_MAX(maxval,model()(i,j));
