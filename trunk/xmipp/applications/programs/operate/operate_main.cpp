@@ -82,6 +82,7 @@ void compare(Image<double> &op1, const Image<double> &op2)
     }
 }
 
+///Be carefull with integer images for relational operations...due to double comparisions
 void eq(Image<double> &op1, const Image<double> &op2)
 {
     FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(op1())
