@@ -126,7 +126,8 @@ void CTFDescription::read(const FileName &fn, bool disable_if_not_K)
                 DeltafU = textToFloat(getParameter(fh_param, "defocusU", 0, "0"));
                 if (checkParameter(fh_param, "defocusV"))
                     DeltafV = textToFloat(getParameter(fh_param, "defocusV", 0));
-                else DeltafV = DeltafU;
+                else
+                    DeltafV = DeltafU;
                 azimuthal_angle = textToFloat(getParameter(fh_param, "azimuthal_angle", 0, "0"));
                 kV = textToFloat(getParameter(fh_param, "voltage", 0, "100"));
                 Cs = textToFloat(getParameter(fh_param, "spherical_aberration", 0, "0"));
@@ -138,7 +139,8 @@ void CTFDescription::read(const FileName &fn, bool disable_if_not_K)
                 DeltaR = textToFloat(getParameter(fh_param, "transversal_displace", 0, "0"));
                 Q0 = textToFloat(getParameter(fh_param, "Q0", 0, "0"));
                 K = textToFloat(getParameter(fh_param, "K", 0, "1"));
-                if (K == 0 && disable_if_not_K) enable_CTF = false;
+                if (K == 0 && disable_if_not_K)
+                    enable_CTF = false;
             }
 
             if (enable_CTFnoise)
@@ -149,17 +151,20 @@ void CTFDescription::read(const FileName &fn, bool disable_if_not_K)
                 sigmaU        = textToFloat(getParameter(fh_param, "sigmaU", 0, "0"));
                 if (checkParameter(fh_param, "sigmaV"))
                     sigmaV     = textToFloat(getParameter(fh_param, "sigmaV", 0));
-                else sigmaV   = sigmaU;
+                else
+                    sigmaV   = sigmaU;
                 cU            = textToFloat(getParameter(fh_param, "cU", 0, "0"));
                 if (checkParameter(fh_param, "cV"))
                     cV         = textToFloat(getParameter(fh_param, "cV", 0));
-                else cV       = cU;
+                else
+                    cV       = cU;
                 gaussian_angle = textToFloat(getParameter(fh_param, "gaussian_angle", 0, "0"));
 
                 sqU           = textToFloat(getParameter(fh_param, "sqU", 0, "0"));
                 if (checkParameter(fh_param, "sqV"))
                     sqV        = textToFloat(getParameter(fh_param, "sqV", 0));
-                else sqV      = sqU;
+                else
+                    sqV      = sqU;
                 sqrt_angle = textToFloat(getParameter(fh_param, "sqrt_angle", 0, "0"));
                 sqrt_K        = textToFloat(getParameter(fh_param, "sqrt_K", 0, "0"));
 
@@ -167,11 +172,13 @@ void CTFDescription::read(const FileName &fn, bool disable_if_not_K)
                 sigmaU2        = textToFloat(getParameter(fh_param, "sigmaU2", 0, "0"));
                 if (checkParameter(fh_param, "sigmaV2"))
                     sigmaV2     = textToFloat(getParameter(fh_param, "sigmaV2", 0));
-                else sigmaV2   = sigmaU2;
+                else
+                    sigmaV2   = sigmaU2;
                 cU2            = textToFloat(getParameter(fh_param, "cU2", 0, "0"));
                 if (checkParameter(fh_param, "cV2"))
                     cV2         = textToFloat(getParameter(fh_param, "cV2", 0));
-                else cV2       = cU2;
+                else
+                    cV2       = cU2;
                 gaussian_angle2 = textToFloat(getParameter(fh_param, "gaussian_angle2", 0, "0"));
 
                 if (gaussian_K == 0 && sqrt_K == 0 && base_line == 0 && gaussian_K2 == 0 &&
@@ -393,6 +400,27 @@ void CTFDescription::Produce_Side_Info()
     K7 = local_Cs * lambda * lambda;
 }
 
+/* Precompute values ------------------------------------------------------- */
+void CTFDescription::precomputeValues(const MultidimArray<double> &cont_x_freq,
+                                      const MultidimArray<double> &cont_y_freq)
+{
+    precomputedImage.reserve(MULTIDIM_SIZE(cont_x_freq));
+    precomputedImageXdim=XSIZE(cont_x_freq);
+
+    FOR_ALL_ELEMENTS_IN_ARRAY2D(cont_x_freq)
+    {
+    	double X=A2D_ELEM(cont_x_freq,i,j);
+    	double Y=A2D_ELEM(cont_y_freq,i,j);
+        precomputeValues(X, Y);
+        if (ABS(X) < XMIPP_EQUAL_ACCURACY &&
+            ABS(Y) < XMIPP_EQUAL_ACCURACY)
+            precomputed.deltaf=0;
+        else
+        	precomputed.deltaf=-1;
+    	precomputedImage.push_back(precomputed);
+    }
+}
+
 /* Zero -------------------------------------------------------------------- */
 //#define DEBUG
 void CTFDescription::zero(int n, const Matrix1D<double> &u, Matrix1D<double> &freq)
@@ -462,7 +490,7 @@ void CTFDescription::Apply_CTF(MultidimArray < std::complex<double> > &FFTI)
 /* Generate CTF Image ------------------------------------------------------ */
 //#define DEBUG
 void CTFDescription::Generate_CTF(int Ydim, int Xdim,
-                            MultidimArray < std::complex<double> > &CTF)
+                                  MultidimArray < std::complex<double> > &CTF)
 {
     Matrix1D<int>    idx(2);
     Matrix1D<double> freq(2);
@@ -498,7 +526,7 @@ bool CTFDescription::physical_meaning()
     bool retval;
     if (enable_CTF)
     {
-    	precomputeValues(0,0);
+        precomputeValues(0,0);
         retval =
             K >= 0       && base_line >= 0  &&
             kV >= 50     && kV <= 1000      &&

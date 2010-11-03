@@ -628,6 +628,9 @@ void Adjust_CTF_Parameters::produce_side_info()
         global_w_contfreq(i, j) = freq.module();
     }
 
+    // Precompute frequency related terms in the CTF
+    global_ctfmodel.precomputeValues(global_x_contfreq, global_y_contfreq);
+
     // Build frequency mask
     global_mask.initZeros(global_w_digfreq);
     global_w_count.initZeros(XSIZE(global_w_digfreq));
@@ -1093,7 +1096,7 @@ double CTF_fitness(double *p, void *)
             // Compute each component
             double f_x = DIRECT_A2D_ELEM(global_x_contfreq, i, j);
             double f_y = DIRECT_A2D_ELEM(global_y_contfreq, i, j);
-            global_ctfmodel.precomputeValues(f_x, f_y);
+            global_ctfmodel.precomputeValues(i,j);
             double bg = global_ctfmodel.CTFnoise_at();
             double envelope, ctf_without_damping, ctf_with_damping;
             double ctf2_th;

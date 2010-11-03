@@ -99,7 +99,7 @@ void CorrectAmplitude3DParams::generateCTF1D(const FileName &fnCTF, const double
     {
         if ( (minResol < 0) || (1./res < minResol) )
         {
-        	ctf.ctf.precomputeValues(res, 0);
+        	ctf.ctf.precomputeValues(res, 0.0);
             CTF1D(step)=ctf.ctf.CTF_at();
             if (isFlipped)
                 CTF1D(step)=ABS(CTF1D(step));

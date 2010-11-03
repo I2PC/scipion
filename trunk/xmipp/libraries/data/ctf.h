@@ -38,7 +38,7 @@ class PrecomputedForCTF
 {
 public:
     double u_sqrt;
-	double u;
+    double u;
     double u2;
     double u4;
     double ang;
@@ -174,6 +174,10 @@ public:
     double D;
     // Precomputed values
     PrecomputedForCTF precomputed;
+    // Image of precomputed values
+    std::vector<PrecomputedForCTF> precomputedImage;
+    // Xdim size of the image
+    int precomputedImageXdim;
 public:
     /// Global gain. By default, 1
     double K;
@@ -303,6 +307,23 @@ public:
         }
     }
 
+    /// Precompute values for an image
+    void precomputeValues(const MultidimArray<double> &cont_x_freq,
+                          const MultidimArray<double> &cont_y_freq);
+
+    /// Precompute values for a given frequency
+    void precomputeValues(int i, int j)
+    {
+        precomputed=precomputedImage[i*precomputedImageXdim+j];
+        if (precomputed.deltaf==-1)
+        {
+            double ellipsoid_ang = precomputed.ang - rad_azimuth;
+            double DeltafUp = DeltafU * cos(ellipsoid_ang);
+            double DeltafVp = DeltafV * sin(ellipsoid_ang);
+            precomputed.deltaf=SGN(DeltafU)*sqrt(DeltafUp*DeltafUp + DeltafVp*DeltafVp);
+        }
+    }
+
     /// Compute CTF at (U,V). Continuous frequencies
     double CTF_at(bool show = false) const
     {
@@ -350,7 +371,7 @@ public:
         {
             std::cout << "   Deltaf=" << precomputed.deltaf << std::endl;
             std::cout << "   u,u2,u4=" << precomputed.u << " " << precomputed.u2
-            		  << " " << precomputed.u4 << std::endl;
+            << " " << precomputed.u4 << std::endl;
             std::cout << "   K3,Eespr=" << K3 << " " << Eespr << std::endl;
             std::cout << "   K4,Eispr=" << K4 << " " << /*Eispr <<*/ std::endl;
             std::cout << "   K5,EdeltaF=" << K5 << " " << EdeltaF << std::endl;
@@ -381,7 +402,7 @@ public:
         {
             std::cout << "   Deltaf=" << precomputed.deltaf << std::endl;
             std::cout << "   u,u2,u4=" << precomputed.u << " " << precomputed.u2
-            		  << " " << precomputed.u4 << std::endl;
+            << " " << precomputed.u4 << std::endl;
             std::cout << "   K1,K2,sin=" << K1 << " " << K2 << " "
             << sine_part << std::endl;
             std::cout << "   K3,Eespr=" << K3 << " " << Eespr << std::endl;
@@ -448,7 +469,8 @@ public:
         double aux=precomputed.u - c;
         double aux2=precomputed.u - c2;
         return base_line +
-               gaussian_K*exp(-sigma*aux*aux) + sqrt_K*exp(-sq*precomputed.u_sqrt) -
+               gaussian_K*exp(-sigma*aux*aux) +
+               sqrt_K*exp(-sq*precomputed.u_sqrt) -
                gaussian_K2*exp(-sigma2*aux2*aux2);
     }
 
