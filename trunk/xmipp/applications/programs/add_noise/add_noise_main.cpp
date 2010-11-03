@@ -119,15 +119,9 @@ protected:
         }
 
         img.write(fnImgOut);
-        mdOut.addObject();
-        mdOut.setValue(MDL_IMAGE, fnImgOut);
-        mdOut.setValue(MDL_ENABLED, 1);
+
     }
 
-    void postProcess()
-    {
-        mdOut.write(fn_out);
-    }
 }
 ;//end of class ProgAddNoise
 

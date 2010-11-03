@@ -349,7 +349,7 @@ void XmippMetadataProgram::run()
         show();
         if (!fn_in.isMetaData())
         {
-            fnImg=fn_in;
+            fnImg = fn_in;
             fnImgOut = fn_out;
             processImage();
         }
@@ -376,10 +376,11 @@ void XmippMetadataProgram::run()
                         fnImgOut = oroot + fnImgOut.withoutExtension();
                     if (oext != "")
                         fnImgOut = fnImgOut.withoutExtension() + "." + oext;
-                    if (fnImgOut!=fnImg)
+                    if (fnImgOut != fnImg)
                     {
                         mdOut.addObject();
                         mdOut.setValue(MDL_IMAGE,fnImgOut);
+                        mdOut.setValue(MDL_ENABLED, 1);
                     }
                 }
 
