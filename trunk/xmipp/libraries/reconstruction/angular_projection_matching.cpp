@@ -443,7 +443,7 @@ void * threadRotationallyAlignOneImage( void * data )
     int *this_image = thread_data->this_image;
     int *opt_refno = thread_data->opt_refno;
     double *opt_psi = thread_data->opt_psi;
-    double *opt_flip = thread_data->opt_flip;
+    bool *opt_flip = thread_data->opt_flip;
     double *maxcorr = thread_data->maxcorr;
 
     // Local variables
@@ -574,7 +574,7 @@ void * threadRotationallyAlignOneImage( void * data )
                         *maxcorr = corr(k);
                         *opt_psi = ang(k);
                         *opt_refno = prm->mysampling.my_neighbors[imgno][i];
-                        *opt_flip = 0.;
+                        *opt_flip = false;
                     }
                 }
 #ifdef DEBUG
@@ -591,13 +591,13 @@ void * threadRotationallyAlignOneImage( void * data )
                         *maxcorr = corr(k);
                         *opt_psi = ang(k);
                         *opt_refno = prm->mysampling.my_neighbors[imgno][i];
-                        *opt_flip = 1.;
+                        *opt_flip = true;
                     }
                 }
 
 #ifdef DEBUG
                 std::cerr<<"mirror: corr "<<*maxcorr;
-                if (*opt_flip==1.)
+                if (*opt_flip)
                     std::cerr<<"**";
                 std::cerr<<std::endl;
 #endif
@@ -623,7 +623,7 @@ void * threadRotationallyAlignOneImage( void * data )
 void ProgAngularProjectionMatching::translationallyAlignOneImage(MultidimArray<double> &img,
         const int &opt_refno,
         const double &opt_psi,
-        const double &opt_flip,
+        const bool &opt_flip,
         double &opt_xoff,
         double &opt_yoff,
         double &maxcorr)
@@ -664,7 +664,7 @@ void ProgAngularProjectionMatching::translationallyAlignOneImage(MultidimArray<d
     std::cerr<<"rotated ref "<<std::endl;
 #endif
 
-    if (opt_flip > 0.)
+    if (opt_flip)
     {
         // Flip experimental image
         Matrix2D<double> A(3,3);
@@ -699,7 +699,7 @@ void ProgAngularProjectionMatching::translationallyAlignOneImage(MultidimArray<d
 #endif
 
     // Correct X-shift for mirrored images
-    if (opt_flip>0.)
+    if (opt_flip)
         opt_xoff *= -1.;
 
 #ifdef TIMING
@@ -714,9 +714,9 @@ void ProgAngularProjectionMatching::translationallyAlignOneImage(MultidimArray<d
 void ProgAngularProjectionMatching::scaleAlignOneImage(MultidimArray<double> &img,
         const int &opt_refno,
         const double &opt_psi,
-        const double &opt_flip,
-        double &opt_xoff,
-        double &opt_yoff,
+        const bool &opt_flip,
+        const double &opt_xoff,
+        const double &opt_yoff,
         double &opt_scale,
         double &maxcorr)
 {
@@ -754,7 +754,7 @@ void ProgAngularProjectionMatching::scaleAlignOneImage(MultidimArray<double> &im
     A(0, 2) = -opt_xoff;
     A(1, 2) = -opt_yoff;
 
-    if (opt_flip > 0.)
+    if (opt_flip)
     {
         A(0, 0) *= -1.;
         A(0, 1) *= -1.;
@@ -822,7 +822,8 @@ void ProgAngularProjectionMatching::scaleAlignOneImage(MultidimArray<double> &im
 void ProgAngularProjectionMatching::processSomeImages(int * my_images, double * my_output)
 {
     Image<double> img;
-    double opt_rot, opt_tilt, opt_psi, opt_flip, opt_xoff, opt_yoff, opt_scale, maxcorr=-99.e99;
+    double opt_rot, opt_tilt, opt_psi, opt_xoff, opt_yoff, opt_scale, maxcorr=-99.e99;
+    bool opt_flip;
     int opt_refno;
 
     int nr_images = my_images[0];

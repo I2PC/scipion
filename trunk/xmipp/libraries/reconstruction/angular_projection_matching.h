@@ -60,7 +60,7 @@ typedef struct{
     int *this_image;
     int *opt_refno;
     double *opt_psi;
-    double *opt_flip; 
+    bool *opt_flip;
     double *maxcorr;
 } structThreadRotationallyAlignOneImage ;
 
@@ -157,21 +157,21 @@ public:
      *  The input image is assumed to be in FTs of polar rings
      */
     void rotationallyAlignOneImage(Matrix2D<double> &img, int imgno, int &opt_samplenr,
-    		double &opt_psi, double &opt_flip, double &maxcorr);
+    		double &opt_psi, bool &opt_flip, double &maxcorr);
 
     /** Translational alignment using cartesian coordinates
      *  The optimal direction is re-projected from the volume
      */
     void translationallyAlignOneImage(MultidimArray<double> &img,
-    		const int &samplenr, const double &psi, const double &opt_flip,
+    		const int &samplenr, const double &psi, const bool &opt_flip,
     		double &opt_xoff, double &opt_yoff, double &maxcorr);
 
     /** Translational alignment using cartesian coordinates
          *  The optimal direction is re-projected from the volume
          */
     void scaleAlignOneImage(MultidimArray<double> &img,
-        		const int &samplenr, const double &psi, const double &opt_flip,
-        		double &opt_xoff, double &opt_yoff, double &opt_scale, double &maxcorr);
+        		const int &samplenr, const double &psi, const bool &opt_flip,
+        		const double &opt_xoff, const double &opt_yoff, double &opt_scale, double &maxcorr);
 
     /** Get pointer to the current reference image
       If this image wasn't stored in memory yet, read it from disc and
