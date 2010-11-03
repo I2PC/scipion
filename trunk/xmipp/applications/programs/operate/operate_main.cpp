@@ -156,10 +156,6 @@ double power(Image<double> &op)
     }
 }
 
-
-
-
-
 /** Some basic operation on images, or selfiles */
 class ProgOperate: public XmippMetadataProgram
 {
@@ -279,7 +275,7 @@ protected:
         else if (checkParam("-ge"))
         {
             file_or_value = getParam("-ge");
-            binaryOperator = compare;
+            binaryOperator = ge;
         }
         ///Unary operations
         else if (checkParam("-log10"))
@@ -334,9 +330,6 @@ protected:
                 }
             }
         }
-
-
-
     }
 
     void processImage()
