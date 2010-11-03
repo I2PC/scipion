@@ -99,4 +99,8 @@ class std::string {};
 %}
 %include "../geometry.h"
 
+%{
+#include "../metadata.h"
+%}
+%include "../metadata.h"
 
