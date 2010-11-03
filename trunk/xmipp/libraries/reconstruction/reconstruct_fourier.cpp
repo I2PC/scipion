@@ -26,34 +26,56 @@
  ***************************************************************************/
 
 #include "reconstruct_fourier.h"
-#include <data/args.h>
-#include <data/fft.h>
-#include <sys/time.h>
+
 // Read arguments ==========================================================
-void Prog_RecFourier_prm::read(int argc, char **argv)
+void ProgRecFourier::readParams()
+	{
+		fn_sel = getParam("-i");
+		if(checkParam("--doc")) fn_doc = getParam("--doc");
+		fn_out = getParam("-o");
+		fn_sym = getParam("--sym");
+		if(checkParam("--prepare_fsc")) fn_fsc = getParam("--prepare_fsc");
+		do_weights = checkParam("--weight");
+		padding_factor_proj = getDoubleParam("--pad_proj");
+		padding_factor_vol = getDoubleParam("--pad_vol");
+		blob.radius   = getDoubleParam("-r");
+		blob.order    = getDoubleParam("-m");
+		blob.alpha    = getDoubleParam("-a");
+		maxResolution = getDoubleParam("--max_resolution");
+		numThreads = getDoubleParam("--thr");
+		thrWidth = getDoubleParam("--thr_width");
+	}
+
+
+// Define params
+void ProgRecFourier::defineParams()
 {
-    fn_sel = getParameter(argc, argv, "-i");
-    fn_doc = getParameter(argc, argv, "-doc","");
-    fn_out = getParameter(argc, argv, "-o", "rec_fourier.vol");
-    fn_sym = getParameter(argc, argv, "-sym", "");
-    fn_fsc = getParameter(argc, argv, "-prepare_fsc","");
-    verb = textToInteger(getParameter(argc, argv, "-verb", "1"));
-    do_weights = checkParameter(argc, argv, "-weight");
-    padding_factor_proj = textToFloat(getParameter(argc, argv, "-pad_proj","2"));
-    padding_factor_vol = textToFloat(getParameter(argc, argv, "-pad_vol","2"));
-    fn_control    = getParameter(argc, argv, "-control", "");
-    blob.radius   = textToFloat(getParameter(argc, argv, "-r","1.9"));
-    blob.order    = textToFloat(getParameter(argc, argv, "-m","0"));
-    blob.alpha    = textToFloat(getParameter(argc, argv, "-a","15"));
-    //sampling_rate = textToFloat(getParameter(argc, argv, "-sampling_rate", "1"));
-    maxResolution = textToFloat(getParameter(argc, argv,
-                                "-max_resolution",".5"));
-    numThreads = textToInteger(getParameter(argc, argv, "-thr", "1"));
-    thrWidth = textToInteger(getParameter(argc,argv, "-thr_width", "-1"));
+
+    addUsageLine("This program performs direct 3D reconstruction method using ");
+    addUsageLine("   Kaiser windows as interpolators");
+    addUsageLine("Example of use: Reconstruction enforcing i3 symmetry and using stored weights");
+    addUsageLine("   xmipp_reconstruct_fourier  -i reconstruction.sel --sym i3 --weight");
+
+    addParamsLine("   -i <sel_file>              		: Selection file with input images");
+    addParamsLine("   -o <out_vol=\"rec_fourier.vol\">  : Filename for output volume");
+    addParamsLine("  [--sym <symfile>]            		: Enforce symmetry in projections");
+    addParamsLine("  [--pad_proj <p=2.0>]         		: Projection padding factor");
+    addParamsLine("  [--pad_vol  <p=2.0>]         		: Volume padding factor");
+    addParamsLine("  [--prepare_fsc <fscfile>]    		: Filename root for FSC files");
+    addParamsLine("  [--doc <docfile> ]          		: Ignore headers and get angles from this docfile");
+    addParamsLine("  [--max_resolution <p=0.5>]   		: Max resolution (Nyquist=0.5)");
+    addParamsLine("  [--weight]                   		: Use weights stored in the image headers or doc file");
+    addParamsLine("  [--thr <threads=1>]          		: Number of concurrent threads");
+    addParamsLine("  [--thr_width <width=1>] 			: Number of image rows processed at a time by a thread");
+    //addParamsLine("Interpolation Function");
+    addParamsLine("  [-r <blrad=1.9>]                	: blob radius in pixels");
+    addParamsLine("  [-m <blord=0>]                  	: order of Bessel function in blob");
+    addParamsLine("  [-a <blalpha=15>]               	: blob parameter alpha");
 }
 
+
 // Show ====================================================================
-void Prog_RecFourier_prm::show()
+void ProgRecFourier::show()
 {
     if (verb > 0)
     {
@@ -84,32 +106,51 @@ void Prog_RecFourier_prm::show()
     }
 }
 
-// Usage ====================================================================
-void Prog_RecFourier_prm::usage()
+// Main routine ------------------------------------------------------------
+void ProgRecFourier::run()
 {
-    // To screen
-    std::cerr << "  Usage:\n";
-    std::cerr << "  reconstruct_fourier  <options>\n";
-    std::cerr << "   -i <input selfile>          : Selection file with input images \n";
-    std::cerr << " [ -o <\"rec_fourier.vol\">]     : Filename for output volume \n";
-    std::cerr << " [ -sym <symfile> ]            : Enforce symmetry in projections\n";
-    std::cerr << " [ -pad_proj <p=2.0> ]         : Projection padding factor \n";
-    std::cerr << " [ -pad_vol  <p=2.0> ]         : Volume padding factor \n";
-    std::cerr << " [ -prepare_fsc <fscfile> ]    : Filename root for FSC files \n";
-    std::cerr << " [ -doc <docfile> ]            : Ignore headers and get angles from this docfile \n";
-    std::cerr << " [ -max_resolution <p=0.5> ]   : Max resolution (Nyquist=0.5) \n";
-    std::cerr << " [ -weight ]                   : Use weights stored in the image headers or doc file\n";
-    std::cerr << " [ -thr <threads=1> ]          : Number of concurrent threads\n";
-    std::cerr << " [ -thr_width <width=blob_radius> : Number of image rows processed at a time by a thread\n";
-    std::cerr << " -----------------------------------------------------------------\n";
-    std::cerr << "Interpolation Function\n ";
-    std::cerr << " [-r blrad=1.9]                : blob radius in pixels\n";
-    std::cerr << " [-m blord=0]                  : order of Bessel function in blob\n";
-    std::cerr << " [-a blalpha=15]               : blob parameter alpha\n";
-    std::cerr << " -----------------------------------------------------------------"<< std::endl;
+
+    produceSideinfo();
+
+    // Process all images in the selfile
+    if (verb)
+        init_progress_bar(SF.size());
+
+    // Create threads stuff
+    barrier_init( &barrier, numThreads+1 );
+    pthread_mutex_init( &workLoadMutex, NULL );
+    statusArray = NULL;
+    th_ids = (pthread_t *)malloc( numThreads * sizeof( pthread_t));
+    th_args = (ImageThreadParams *) malloc ( numThreads * sizeof( ImageThreadParams ) );
+
+    // Create threads
+    for ( int nt = 0 ; nt < numThreads ; nt ++ )
+    {
+        // Passing parameters to each thread
+        th_args[nt].parent = this;
+        th_args[nt].myThreadID = nt;
+        th_args[nt].docFile = new MetaData(DF);
+        pthread_create( (th_ids+nt) , NULL, processImageThread, (void *)(th_args+nt) );
+    }
+
+    if( fn_fsc != "" )
+        processImages(0,SF.size()-1,true);
+    else
+        processImages(0,SF.size()-1,false);
+
+    finishComputations(fn_out);
+
+    threadOpCode = EXIT_THREAD;
+
+    // Waiting for threads to finish
+    barrier_wait( &barrier );
+    for ( int nt = 0 ; nt < numThreads ; nt ++ )
+        pthread_join(*(th_ids+nt), NULL);
+    barrier_destroy( &barrier );
 }
 
-void Prog_RecFourier_prm::produce_Side_info()
+
+void ProgRecFourier::produceSideinfo()
 {
     // Translate the maximum resolution to digital frequency
     // maxResolution=sampling_rate/maxResolution;
@@ -218,7 +259,7 @@ void Prog_RecFourier_prm::produce_Side_info()
     }
 }
 
-void Prog_RecFourier_prm::get_angles_for_image(const FileName &fn, double &rot,
+void ProgRecFourier::get_angles_for_image(const FileName &fn, double &rot,
         double &tilt, double &psi, double &xoff, double &yoff, bool &flip,
         double &weight, MetaData * docfile)
 {
@@ -243,10 +284,10 @@ void Prog_RecFourier_prm::get_angles_for_image(const FileName &fn, double &rot,
         REPORT_ERROR(ERR_MD_NOOBJ, (std::string)"Prog_RecFourier_prm: Cannot find " + fn + " in docfile " + fn_doc);
 }
 
-void * Prog_RecFourier_prm::processImageThread( void * threadArgs )
+void * ProgRecFourier::processImageThread( void * threadArgs )
 {
     ImageThreadParams * threadParams = (ImageThreadParams *) threadArgs;
-    Prog_RecFourier_prm * parent = threadParams->parent;
+    ProgRecFourier * parent = threadParams->parent;
     barrier_t * barrier = &(parent->barrier);
 
     int minSeparation;
@@ -646,7 +687,7 @@ void * Prog_RecFourier_prm::processImageThread( void * threadArgs )
 }
 
 //#define DEBUG
-void Prog_RecFourier_prm::processImages( int firstImageIndex, int lastImageIndex, bool saveFSC )
+void ProgRecFourier::processImages( int firstImageIndex, int lastImageIndex, bool saveFSC )
 {
     MultidimArray< std::complex<double> > *paddedFourier;
 
@@ -778,7 +819,7 @@ void Prog_RecFourier_prm::processImages( int firstImageIndex, int lastImageIndex
                     // processing current projection
                     barrier_wait( &barrier );
 
-//#define DEBUG2
+                    //#define DEBUG2
 #ifdef DEBUG2
 
                     {
@@ -865,47 +906,7 @@ void Prog_RecFourier_prm::processImages( int firstImageIndex, int lastImageIndex
     }
 }
 
-// Main routine ------------------------------------------------------------
-void Prog_RecFourier_prm::run()
-{
-    // Process all images in the selfile
-    if (verb)
-        init_progress_bar(SF.size());
-
-    // Create threads stuff
-    barrier_init( &barrier, numThreads+1 );
-    pthread_mutex_init( &workLoadMutex, NULL );
-    statusArray = NULL;
-    th_ids = (pthread_t *)malloc( numThreads * sizeof( pthread_t));
-    th_args = (ImageThreadParams *) malloc ( numThreads * sizeof( ImageThreadParams ) );
-
-    // Create threads
-    for ( int nt = 0 ; nt < numThreads ; nt ++ )
-    {
-        // Passing parameters to each thread
-        th_args[nt].parent = this;
-        th_args[nt].myThreadID = nt;
-        th_args[nt].docFile = new MetaData(DF);
-        pthread_create( (th_ids+nt) , NULL, processImageThread, (void *)(th_args+nt) );
-    }
-
-    if( fn_fsc != "" )
-        processImages(0,SF.size()-1,true);
-    else
-        processImages(0,SF.size()-1,false);
-
-    finishComputations(fn_out);
-
-    threadOpCode = EXIT_THREAD;
-
-    // Waiting for threads to finish
-    barrier_wait( &barrier );
-    for ( int nt = 0 ; nt < numThreads ; nt ++ )
-        pthread_join(*(th_ids+nt), NULL);
-    barrier_destroy( &barrier );
-}
-
-void Prog_RecFourier_prm::finishComputations( const FileName &out_name )
+void ProgRecFourier::finishComputations( const FileName &out_name )
 {
     //#define DEBUG_VOL
 #ifdef DEBUG_VOL
@@ -991,7 +992,7 @@ void Prog_RecFourier_prm::finishComputations( const FileName &out_name )
         double factor = Fourier_blob_table(ROUND(sqrt((double)(k*k+i*i+j*j))
                                            *iDeltaFourier));
         //if(k==0 && i==0 && j > 0)
-        //	std::cerr << j<<" "<<factor << std::endl;
+        // std::cerr << j<<" "<<factor << std::endl;
         Vout(k,i,j) /= (factor/pad_relation);
     }
 

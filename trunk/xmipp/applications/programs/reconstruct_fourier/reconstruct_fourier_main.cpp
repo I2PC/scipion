@@ -22,34 +22,27 @@
  *  All comments concerning this program package may be sent to the
  *  e-mail address 'xmipp@cnb.csic.es'
  ***************************************************************************/
+#include <data/progs.h>
+#include <data/args.h>
+
 #include <reconstruction/reconstruct_fourier.h>
 
+
+/* MAIN -------------------------------------------------------------------- */
 int main(int argc, char **argv)
 {
-    Prog_RecFourier_prm prm;
 
-    try
-    {
-        prm.read(argc, argv);
-    }
-    catch (XmippError XE)
-    {
-        std::cout << XE;
-        prm.usage();
-        return 1;
-    }
-
-    try
-    {
-        prm.show();
-        prm.produce_Side_info();
-        prm.run();
-    }
-    catch (XmippError XE)
-    {
-        std::cout << XE;
-        return 1;
-    }
-    return 0;
+	 ProgRecFourier program;
+	 try
+	{
+		program.read(argc, argv);
+		program.run();
+	}
+	catch (XmippError xe)
+	{
+		std::cerr << xe;
+		return 1;
+	}
+	return 0;
 }
 

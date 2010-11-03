@@ -37,6 +37,13 @@
 #include <data/blobs.h>
 #include <data/metadata.h>
 
+#include <data/args.h>
+#include <data/fft.h>
+#include <sys/time.h>
+
+#include <data/metadata.h>
+#include <data/program.h>
+
 #include <reconstruction/directions.h>
 #include <reconstruction/symmetrize.h>
 #define BLOB_TABLE_SIZE 5000
@@ -53,13 +60,14 @@
 /**@defgroup FourierReconstruction Fourier reconstruction
    @ingroup ReconsLibrary */
 //@{
-class Prog_RecFourier_prm;
+class ProgRecFourier;
+
 static pthread_mutex_t mutexDocFile= PTHREAD_MUTEX_INITIALIZER;
 
 struct ImageThreadParams
 {
     int myThreadID;
-    Prog_RecFourier_prm * parent;
+    ProgRecFourier * parent;
     MultidimArray< std::complex<double> > *paddedFourier;
     MultidimArray< std::complex<double> > *localPaddedFourier;
     Matrix2D<double> * symmetry;
@@ -72,11 +80,11 @@ struct ImageThreadParams
 };
 
 /** Fourier reconstruction parameters. */
-class Prog_RecFourier_prm
+class ProgRecFourier : public XmippProgram
 {
 public:
     /** Filenames */
-    FileName fn_out, fn_sym, fn_sel, fn_doc, fn_control, fn_fsc;
+    FileName fn_out, fn_sym, fn_sel, fn_doc, fn_fsc;
 
     /** SelFile containing all projections */
     MetaData SF;
@@ -183,25 +191,26 @@ public: // Internal members
 
     // Output volume
     Image<double> Vout;
+
 public:
     /// Read arguments from command line
-    void read(int argc, char **argv);
+    void readParams();
 
-    /// Show
+    /// Read arguments from command line
+    void defineParams();
+
+    /** Show. */
     void show();
 
-    /// Usage
-    void usage();
+    /** Run. */
+    void run();
 
     /// Produce side info: fill arrays with relevant transformation matrices
-    void produce_Side_info() ;
+    void produceSideinfo();
 
     /// Get angles (either from reading the header or from a docfile)
     void get_angles_for_image(const FileName &fn, double &rot, double &tilt,
                               double &psi, double &xoff, double &yoff, bool &flip, double &weight, MetaData * docFile);
-
-    /// Main Loop
-    void run();
 
     void finishComputations( const FileName &out_name );
 
