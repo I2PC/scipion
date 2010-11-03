@@ -1,4 +1,4 @@
-/* author: Javier Velazquez
+/* author: J.M. de la Rosa Trevin   jmdelarosa@cnb.csic.es
  * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
  *
  * This program is free software; you can redistribute it and/or modify
@@ -26,1050 +26,344 @@
 #include <data/funcs.h>
 #include <algorithm>
 
-void Usage(void);
-bool check_for_operation(int argc, char **argv, char *operation,
-							FileName &fn, int &operand_type);
-void compute(int operation, int operand_type1, int operand_type2,
-			   const FileName &fn_1, const FileName &fn_2, const FileName &fn_out);
-void operate_plus(int operand_type1, int operand_type2,
-					const FileName &fn_1, const FileName &fn_2, const FileName &fn_out);
-void operate_minus(int operand_type1, int operand_type2,
-                     const FileName &fn_1, const FileName &fn_2, const FileName &fn_out);
-void multiplication(int operand_type1, int operand_type2,
-                      const FileName &fn_1, const FileName &fn_2, const FileName &fn_out);
-void division(int operand_type1, int operand_type2,
-               const FileName &fn_1, const FileName &fn_2, const FileName &fn_out);
-void operate_min(int operand_type1, int operand_type2,
-                   const FileName &fn_1, const FileName &fn_2, const FileName &fn_out);
-void operate_max(int operand_type1, int operand_type2,
-                   const FileName &fn_1, const FileName &fn_2, const FileName &fn_out);
-void operate_which_min(int operand_type1, int operand_type2,
-                          const FileName &fn_1, const FileName &fn_2, const FileName &fn_out);
-void operate_which_max(int operand_type1, int operand_type2,
-                          const FileName &fn_1, const FileName &fn_2, const FileName &fn_out);
-void log10(int operand_type1, const FileName &fn_1,const FileName &fn_out);
-void forcePositive(int operand_type1, const FileName &fn_1,const FileName &fn_out);
-void sqrt(int operand_type1, const FileName &fn_1, const FileName &fn_out);
-void extract_row(int operand_type1, int operand_type2,
-                 const FileName &fn_1, const FileName &fn_2,
-                 const FileName &fn_out);
-void extract_column(int operand_type1, int operand_type2,
-                    const FileName &fn_1, const FileName &fn_2,
-                    const FileName &fn_out);
-void extract_slice(int operand_type1, int operand_type2,
-                   const FileName &fn_1, const FileName &fn_2,
-                   const FileName &fn_out);
-void radial_avg(int operand_type1, const FileName &fn_1, const FileName &fn_out);
+#include "data/program.h"
+#include "data/metadata_extension.h"
 
-// Operations suported
-#define    OPERATE_PLUS       1
-#define    OPERATE_MINUS      2
-#define    MULTIPLICATION     3
-#define    DIVISION           4
-#define    LOG10              5
-#define    SQRT               6
-#define    SLICE              7
-#define    COLUMN             8
-#define    ROW                9
-#define    RADIAL_AVG        10
-#define    FORCE_POSITIVE    11
-#define    OPERATE_MAX       12
-#define    OPERATE_MIN       13
-#define    OPERATE_WHICH_MAX 14
-#define    OPERATE_WHICH_MIN 15
+//This define the prototype of binary operations on images
+//the result will be left in op1
+typedef void ImageBinaryOperator(Image<double> &op1, const Image<double> &op2);
 
-// types supported
-#define    IMAGE     1
-#define    NUMBER    2
-#define    SELFILE   3
+//This define the prototype of unary opeations on images
+//the result will be left in op
+typedef double ImageUnaryOperator(Image<double> &op);
 
-/**************************************************************************
-
-   NAME:          main
-
-   DESCRIPTION:
-
-   DATE:          22-8-2001
-
-/**************************************************************************/
-int main(int argc, char **argv)
+///==== Operations ======
+void minus(Image<double> &op1, const Image<double> &op2)
 {
-    FileName  fn_1, fn_2, fn_out;
-    int operation = 0,
-         operand_type1 = 0,
-         operand_type2 = 0,
-         operand_type_input2 = 0;
+    op1() -= op2();
+}
 
-    // Obtain command line parameters form the program
-    try
+void plus(Image<double> &op1, const Image<double> &op2)
+{
+    op1() += op2();
+}
+
+void mult(Image<double> &op1, const Image<double> &op2)
+{
+    op1() *= op2();
+}
+
+void divide(Image<double> &op1, const Image<double> &op2)
+{
+    op1() /= op2();
+}
+
+void min(Image<double> &op1, const Image<double> &op2)
+{
+    FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(op1())
     {
-        fn_out  = getParameter(argc, argv, "-oext","");
-        if (fn_out=="")
-            fn_out  = getParameter(argc, argv, "-o","");
-        check_for_operation(argc, argv, "-i", fn_1, operand_type1);
+        dAi(op1(), n) = XMIPP_MIN(dAi(op1(), n), dAi(op2(), n));
+    }
+}
 
-        // Check the operations supported
-        if (check_for_operation(argc, argv, "-plus", fn_2, operand_type2))
-            operation = OPERATE_PLUS;
-        else if (check_for_operation(argc, argv, "-minus", fn_2, operand_type2))
-            operation = OPERATE_MINUS;
-        else if (check_for_operation(argc, argv, "-mult", fn_2, operand_type2))
-            operation = MULTIPLICATION;
-        else if (check_for_operation(argc, argv, "-divide", fn_2, operand_type2))
-            operation = DIVISION;
-        else if (checkParameter(argc, argv, "-log10"))
-            operation = LOG10;
-        else if (checkParameter(argc, argv, "-sqrt"))
-            operation = SQRT;
-        else if (check_for_operation(argc, argv, "-slice", fn_2, operand_type2))
-            operation = SLICE;
-        else if (check_for_operation(argc, argv, "-column", fn_2, operand_type2))
-            operation = COLUMN;
-        else if (check_for_operation(argc, argv, "-row", fn_2, operand_type2))
-            operation = ROW;
-        else if (checkParameter(argc, argv, "-radial_avg"))
-            operation = RADIAL_AVG;
-        else if (checkParameter(argc, argv, "-forcePositive"))
-            operation = FORCE_POSITIVE;
-        else if (check_for_operation(argc, argv, "-max", fn_2, operand_type2))
-            operation = OPERATE_MAX;
-        else if (check_for_operation(argc, argv, "-min", fn_2, operand_type2))
-            operation = OPERATE_MIN;
-        else if (check_for_operation(argc, argv, "-which_max", fn_2, operand_type2))
-            operation = OPERATE_WHICH_MAX;
-        else if (check_for_operation(argc, argv, "-which_min", fn_2, operand_type2))
-            operation = OPERATE_WHICH_MIN;
+void max(Image<double> &op1, const Image<double> &op2)
+{
+    FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(op1())
+    {
+        dAi(op1(), n) = XMIPP_MAX(dAi(op1(), n), dAi(op2(), n));
+    }
+}
+
+void compare(Image<double> &op1, const Image<double> &op2)
+{
+    FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(op1())
+    {
+        dAi(op1(), n) = dAi(op1(), n) == dAi(op2(), n) ? 0 : (dAi(op1(), n) < dAi(op2(), n) ? -1 : 1 );
+    }
+}
+
+void eq(Image<double> &op1, const Image<double> &op2)
+{
+    FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(op1())
+    {
+        dAi(op1(), n) = dAi(op1(), n) == dAi(op2(), n) ? 1 : 0;
+    }
+}
+
+void ne(Image<double> &op1, const Image<double> &op2)
+{
+    FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(op1())
+    {
+        dAi(op1(), n) = dAi(op1(), n) != dAi(op2(), n) ? 1 : 0;
+    }
+}
+
+void lt(Image<double> &op1, const Image<double> &op2)
+{
+    FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(op1())
+    {
+        dAi(op1(), n) = dAi(op1(), n) < dAi(op2(), n) ? 1 : 0;
+    }
+}
+
+void le(Image<double> &op1, const Image<double> &op2)
+{
+    FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(op1())
+    {
+        dAi(op1(), n) = dAi(op1(), n) <= dAi(op2(), n) ? 1 : 0;
+    }
+}
+
+void gt(Image<double> &op1, const Image<double> &op2)
+{
+    FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(op1())
+    {
+        dAi(op1(), n) = dAi(op1(), n) > dAi(op2(), n) ? 1 : 0;
+    }
+}
+
+void ge(Image<double> &op1, const Image<double> &op2)
+{
+    FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(op1())
+    {
+        dAi(op1(), n) = dAi(op1(), n) >= dAi(op2(), n) ? 1 : 0;
+    }
+}
+
+
+double sqrt(Image<double> &op)
+{
+    FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(op())
+    {
+        dAi(op(), n) = sqrt(dAi(op(), n));
+    }
+}
+
+double log10(Image<double> &op)
+{
+    FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(op())
+    {
+        dAi(op(), n) = log10(dAi(op(), n));
+    }
+}
+
+double powerExp = 2;
+double power(Image<double> &op)
+{
+    FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(op())
+    {
+        dAi(op(), n) = pow(dAi(op(), n), powerExp);
+    }
+}
+
+
+
+
+
+/** Some basic operation on images, or selfiles */
+class ProgOperate: public XmippMetadataProgram
+{
+private:
+    ///Functions pointers to selected operation
+    ImageBinaryOperator * binaryOperator;
+    ImageUnaryOperator * unaryOperator;
+
+    FileName fn2;
+    MetaData md2;
+    Image<double> img2;
+    bool isValue;
+    double value;
+    String file_or_value;
+
+protected:
+    void defineParams()
+    {
+        each_image_produces_an_output = true;
+        addUsageLine("A simple Xmipp images calculator. Binary and unary operations");
+        XmippMetadataProgram::defineParams();
+        addParamsLine("== Binary operations: ==");
+        addParamsLine("or -plus <file_or_value>    :Sums two images, volumes or adds a numerical value to an image");
+        addParamsLine("or -minus <file_or_value>   :Substracts two images, volumes or substracts a numerical value to an image");
+        addParamsLine("or -mult <file_or_value>    :Multiplies two images, volumes, or multiplies per a given number");
+        addParamsLine("or -divide <file_or_value>  :Divides two images, volumes, or divides per a given number");
+        addParamsLine("or -min <file_or_value>     :Minimum of two images, volumes, or number (pixel-wise)");
+        addParamsLine("or -max <file_or_value>     :Maximum of two images, volumes, or number (pixel-wise)");
+        addParamsLine("or -compare <file_or_value> :Returns -1 if the left value is less, 0 if are equal or 1 if greater.(pixel-wise)");
+        addParamsLine("==+ Relational operations: ==");
+        addParamsLine("or -eq <file_or_value>      :Returns 1 if the pixels values are equal, 0 otherwise (pixel-wise)");
+        addParamsLine("or -le <file_or_value>      :Returns 1 if the pixels values are equal  less, 0 otherwise (pixel-wise)");
+        addParamsLine("or -lt <file_or_value>      :Returns 1 if the pixels values are equal  less, 0 otherwise (pixel-wise)");
+        addParamsLine("or -ge <file_or_value>      :Returns 1 if the pixels values are equal  less, 0 otherwise (pixel-wise)");
+        addParamsLine("or -gt <file_or_value>      :Returns 1 if the pixels values are equal  less, 0 otherwise (pixel-wise)");
+        addParamsLine("or -ne <file_or_value>      :Returns 1 if the pixels values are equal  less, 0 otherwise (pixel-wise)");
+
+        addParamsLine("== Unary operations: ==");
+        addParamsLine("or -log10                   :Computes the logarithm of an image");
+        addParamsLine("or -sqrt                    :Computes the square root of an image");
+        addParamsLine("or -pow <value=2>           :Computes the power of an image");
+        addParamsLine("or -slice  <value>          :Extracts a given slice from a volume");
+        addParamsLine("or -column <value>          :Extracts a given column from a image or volume");
+        addParamsLine("or -row    <value>          :Extracts a given row from a image or volume");
+        addParamsLine("or -radial_avg              :Compute the radial average of an image");
+    }
+
+    void readParams()
+    {
+        XmippMetadataProgram::readParams();
+        binaryOperator = NULL;
+        unaryOperator = NULL;
+        isValue = false;
+        // Check operation to do
+        //Binary operations
+        if (checkParam("-plus"))
+        {
+            file_or_value = getParam("-plus");
+            binaryOperator = plus;
+        }
+        else if (checkParam("-minus"))
+        {
+            file_or_value = getParam("-minus");
+            binaryOperator = minus;
+        }
+        else if (checkParam("-mult"))
+        {
+            file_or_value = getParam("-mult");
+            binaryOperator = mult;
+        }
+        else if (checkParam("-divide"))
+        {
+            file_or_value = getParam("-divide");
+            binaryOperator = divide;
+        }
+        else if (checkParam("-max"))
+        {
+            file_or_value = getParam("-max");
+            binaryOperator = max;
+        }
+        else if (checkParam("-min"))
+        {
+            file_or_value = getParam("-min");
+            binaryOperator = min;
+        }
+        else if (checkParam("-compare"))
+        {
+            file_or_value = getParam("-compare");
+            binaryOperator = compare;
+        }
+        ///Relational operations
+        else if (checkParam("-eq"))
+        {
+            file_or_value = getParam("-eq");
+            binaryOperator = eq;
+        }
+        else if (checkParam("-ne"))
+        {
+            file_or_value = getParam("-ne");
+            binaryOperator = ne;
+        }
+        else if (checkParam("-lt"))
+        {
+            file_or_value = getParam("-lt");
+            binaryOperator = lt;
+        }
+        else if (checkParam("-le"))
+        {
+            file_or_value = getParam("-le");
+            binaryOperator = le;
+        }
+        else if (checkParam("-gt"))
+        {
+            file_or_value = getParam("-gt");
+            binaryOperator = gt;
+        }
+        else if (checkParam("-ge"))
+        {
+            file_or_value = getParam("-ge");
+            binaryOperator = compare;
+        }
+        ///Unary operations
+        else if (checkParam("-log10"))
+            unaryOperator = log10;
+        else if (checkParam("-sqrt"))
+            unaryOperator = sqrt;
+        else if (checkParam("-pow"))
+        {
+            powerExp = getDoubleParam("-pow");
+            unaryOperator = power;
+        }
+        else if (checkParam("-slice"))
+            unaryOperator = log10;
+        else if (checkParam("-column"))
+            unaryOperator = log10;
+        else if (checkParam("-row"))
+            unaryOperator = log10;
+        else if (checkParam("-radial_avg"))
+            unaryOperator = log10;
+        else if (checkParam("-forcePositive"))
+            unaryOperator = log10;
         else
             REPORT_ERROR(ERR_VALUE_INCORRECT, "No valid operation specified");
-
-        compute(operation, operand_type1, operand_type2, fn_1, fn_2, fn_out);
-    }
-    catch (XmippError XE)
-    {
-        std::cout << XE;
-        Usage();
-        exit(1);
-    }
-}
-
-bool check_for_operation(int argc, char **argv, char *operation,
-                         FileName &fn, int &operand_type)
-{
-    if (checkParameter(argc, argv, operation))
-    {
-        fn  = getParameter(argc, argv, operation);
-        // If the file exist, tell if it is an image or a volume
-        if (existsTrim(fn) && operation!="-slice" && operation!="-row"
-            && operation!="-column")
+        if (binaryOperator != NULL)
         {
-            if (fn.isMetaData())
-                operand_type = SELFILE;
-            else
-                operand_type = IMAGE;
-
-        }
-        // In other case check if it's a number
-        else
-        {
-            // check if we have a number using textToFloat
-            // If a problem exist, textToFloat will throw an exception, catched by the main function
-            double dummy = textToFloat(fn);
-            operand_type = NUMBER;
-        }
-
-        return true;
-    }
-
-    return false;
-}
-
-// Insert new functions here and create its operations as in plus() or log10(), for example
-void compute(int operation, int operand_type1, int operand_type2,
-             const FileName &fn_1, const FileName &fn_2, const FileName &fn_out)
-{
-    switch (operation)
-    {
-    case    OPERATE_PLUS:
-        operate_plus(operand_type1, operand_type2, fn_1, fn_2, fn_out);
-        break;
-    case    OPERATE_MINUS:
-        operate_minus(operand_type1, operand_type2, fn_1, fn_2, fn_out);
-        break;
-    case    MULTIPLICATION:
-        multiplication(operand_type1, operand_type2, fn_1, fn_2, fn_out);
-        break;
-    case    DIVISION:
-        division(operand_type1, operand_type2, fn_1, fn_2, fn_out);
-        break;
-    case    LOG10:
-        log10(operand_type1, fn_1, fn_out);
-        break;
-    case    SQRT:
-        sqrt(operand_type1, fn_1, fn_out);
-        break;
-    case    SLICE:
-        extract_slice(operand_type1, operand_type2, fn_1, fn_2, fn_out);
-        break;
-    case    COLUMN:
-        extract_column(operand_type1, operand_type2, fn_1, fn_2, fn_out);
-        break;
-    case    ROW:
-        extract_row(operand_type1, operand_type2, fn_1, fn_2, fn_out);
-        break;
-    case    RADIAL_AVG:
-        radial_avg(operand_type1, fn_1, fn_out);
-        break;
-    case    FORCE_POSITIVE:
-        forcePositive(operand_type1, fn_1, fn_out);
-        break;
-    case    OPERATE_MAX:
-        operate_max(operand_type1, operand_type2, fn_1, fn_2, fn_out);
-        break;
-    case    OPERATE_MIN:
-        operate_min(operand_type1, operand_type2, fn_1, fn_2, fn_out);
-        break;
-    case    OPERATE_WHICH_MAX:
-        operate_which_max(operand_type1, operand_type2, fn_1, fn_2, fn_out);
-        break;
-    case    OPERATE_WHICH_MIN:
-        operate_which_min(operand_type1, operand_type2, fn_1, fn_2, fn_out);
-        break;
-    }
-}
-
-void operate_plus(int operand_type1, int operand_type2, const FileName &fn_1,
-                  const FileName &fn_2, const FileName &fn_out)
-{
-    if (operand_type1 == NUMBER && operand_type2 == IMAGE)
-    {
-        Image<double> out;
-        out.read(fn_2);
-        double number1 = textToFloat(fn_1);
-        out() = out() + number1;
-        out.setShifts(0., 0.);
-        out.setEulerAngles(0., 0., 0.);
-        if (fn_out=="")
-            out.write(fn_2);
-        else
-            out.write(fn_out);
-    }
-    else if (operand_type1 == IMAGE && operand_type2 == NUMBER)
-    {
-        Image<double> out;
-        out.read(fn_1);
-        double number2 = textToFloat(fn_2);
-        out() = out() + number2;
-        out.setShifts(0., 0.);
-        out.setEulerAngles(0., 0., 0.);
-        if (fn_out=="")
-            out.write(fn_1);
-        else
-            out.write(fn_out);
-    }
-    else if (operand_type1 == IMAGE && operand_type2 == IMAGE)
-    {
-        Image<double> Op1, out;
-        Op1.read(fn_1);
-        out.read(fn_2);
-        out() = Op1() + out();
-        out.setShifts(0., 0.);
-        out.setEulerAngles(0., 0., 0.);
-        if (fn_out=="")
-            out.write(fn_1);
-        else
-            out.write(fn_out);
-    }
-    else if (operand_type1 == SELFILE)
-    {
-        MetaData SF;
-        SF.read(fn_1);
-        init_progress_bar(SF.size());
-
-        int i=0;
-        FOR_ALL_OBJECTS_IN_METADATA(SF)
-        {
-            FileName fnl_out, fn_img;
-            SF.getValue(MDL_IMAGE, fn_img);
-
-            if (fn_out!="")
-                fnl_out = fn_img.withoutExtension() + "." + fn_out;
-            else
-                fnl_out="";
-            operate_plus(IMAGE, operand_type2, fn_img, fn_2, fnl_out);
-            if ((i++ % 50) ==0)
-                progress_bar(i);
-        }
-        progress_bar(SF.size());
-    }
-}
-
-void operate_minus(int operand_type1, int operand_type2,
-                   const FileName &fn_1, const FileName &fn_2, const FileName &fn_out)
-{
-    if (operand_type1 == NUMBER && operand_type2 == IMAGE)
-    {
-        Image<double> out;
-        out.read(fn_2);
-        double number1 = textToFloat(fn_1);
-        out() = number1 - out();
-        out.setShifts(0., 0.);
-        out.setEulerAngles(0., 0., 0.);
-        if (fn_out=="")
-            out.write(fn_2);
-        else
-            out.write(fn_out);
-    }
-    else if (operand_type1 == IMAGE && operand_type2 == NUMBER)
-    {
-        Image<double> out;
-        out.read(fn_1);
-        double number2 = textToFloat(fn_2);
-        out() = out() - number2;
-        out.setShifts(0., 0.);
-        out.setEulerAngles(0., 0., 0.);
-        if (fn_out=="")
-            out.write(fn_1);
-        else
-            out.write(fn_out);
-    }
-    else if (operand_type1 == IMAGE && operand_type2 == IMAGE)
-    {
-        Image<double> Op1, out;
-        Op1.read(fn_1);
-        out.read(fn_2);
-        out() = Op1() - out();
-        out.setShifts(0., 0.);
-        out.setEulerAngles(0., 0., 0.);
-        if (fn_out=="")
-            out.write(fn_1);
-        else
-            out.write(fn_out);
-    }
-    else if (operand_type1 == SELFILE)
-    {
-        MetaData SF;
-        SF.read(fn_1);
-        init_progress_bar(SF.size());
-
-        int i=0;
-        FOR_ALL_OBJECTS_IN_METADATA(SF)
-        {
-            FileName fnl_out, fn_img;
-            SF.getValue(MDL_IMAGE, fn_img);
-
-            if (fn_out!="")
-                fnl_out = fn_img.withoutExtension() + "." + fn_out;
-            else
-                fnl_out="";
-            operate_minus(IMAGE, operand_type2, fn_img, fn_2, fnl_out);
-            if ((i++ % 50) ==0)
-                progress_bar(i);
-        }
-        progress_bar(SF.size());
-    }
-}
-
-void multiplication(int operand_type1, int operand_type2,
-                    const FileName &fn_1, const FileName &fn_2, const FileName &fn_out)
-{
-    if (operand_type1 == NUMBER && operand_type2 == IMAGE)
-    {
-        Image<double> out;
-        out.read(fn_2);
-        double number1 = textToFloat(fn_1);
-        out() *= number1;
-        out.setShifts(0., 0.);
-        out.setEulerAngles(0., 0., 0.);
-        if (fn_out=="")
-            out.write(fn_2);
-        else
-            out.write(fn_out);
-    }
-    else if (operand_type1 == IMAGE && operand_type2 == NUMBER)
-    {
-        Image<double> out;
-        out.read(fn_1);
-        double number2 = textToFloat(fn_2);
-        out() *= number2;
-        out.setShifts(0., 0.);
-        out.setEulerAngles(0., 0., 0.);
-        if (fn_out=="")
-            out.write(fn_1);
-        else
-            out.write(fn_out);
-    }
-    else if (operand_type1 == IMAGE && operand_type2 == IMAGE)
-    {
-        Image<double> Op1, out;
-        Op1.read(fn_1);
-        out.read(fn_2);
-        out() *= Op1();
-        out.setShifts(0., 0.);
-        out.setEulerAngles(0., 0., 0.);
-        if (fn_out=="")
-            out.write(fn_1);
-        else
-            out.write(fn_out);
-    }
-    else if (operand_type1 == SELFILE)
-    {
-        MetaData SF;
-        SF.read(fn_1);
-        init_progress_bar(SF.size());
-
-        int i=0;
-        FOR_ALL_OBJECTS_IN_METADATA(SF)
-        {
-            FileName fnl_out, fn_img;
-            SF.getValue(MDL_IMAGE, fn_img);
-            if (fn_out!="")
-                fnl_out = fn_img.withoutExtension() + "." + fn_out;
-            else
-                fnl_out="";
-            multiplication(IMAGE, operand_type2, fn_img, fn_2, fnl_out);
-            if ((i++ % 50) ==0)
-                progress_bar(i);
-        }
-        progress_bar(SF.size());
-    }
-}
-
-void division(int operand_type1, int operand_type2,
-              const FileName &fn_1, const FileName &fn_2, const FileName &fn_out)
-{
-    if (operand_type1 == NUMBER && operand_type2 == IMAGE)
-    {
-        Image<double> out;
-        out.read(fn_2);
-        double number1 = textToFloat(fn_1);
-
-        FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(out())
-        DIRECT_MULTIDIM_ELEM(out(),n) = number1 / DIRECT_MULTIDIM_ELEM(out(),n);
-        out.setShifts(0., 0.);
-        out.setEulerAngles(0., 0., 0.);
-        if (fn_out=="")
-            out.write(fn_2);
-        else
-            out.write(fn_out);
-    }
-    else if (operand_type1 == IMAGE && operand_type2 == NUMBER)
-    {
-        Image<double> out;
-        out.read(fn_1);
-        double number2 = textToFloat(fn_2);
-        out() /= number2;
-        out.setShifts(0., 0.);
-        out.setEulerAngles(0., 0., 0.);
-        if (fn_out=="")
-            out.write(fn_1);
-        else
-            out.write(fn_out);
-    }
-    else if (operand_type1 == IMAGE && operand_type2 == IMAGE)
-    {
-        Image<double> Op1, out;
-        Op1.read(fn_1);
-        out.read(fn_2);
-        FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(out())
-        DIRECT_MULTIDIM_ELEM(out(),n) = DIRECT_MULTIDIM_ELEM(Op1(),n) / DIRECT_MULTIDIM_ELEM(out(),n);
-        out.setShifts(0., 0.);
-        out.setEulerAngles(0., 0., 0.);
-        if (fn_out=="")
-            out.write(fn_1);
-        else
-            out.write(fn_out);
-    }
-    else if (operand_type1 == SELFILE)
-    {
-        MetaData SF;
-        SF.read(fn_1);
-        init_progress_bar(SF.size());
-        int i=0;
-        FOR_ALL_OBJECTS_IN_METADATA(SF)
-        {
-            FileName fnl_out, fn_img;
-            SF.getValue(MDL_IMAGE, fn_img);
-            if (fn_out!="")
-                fnl_out = fn_img.withoutExtension() + "." + fn_out;
-            else
-                fnl_out="";
-            division(IMAGE, operand_type2, fn_img, fn_2, fnl_out);
-            if ((i++ % 50) ==0)
-                progress_bar(i);
-        }
-        progress_bar(SF.size());
-    }
-}
-
-void operate_max(int operand_type1, int operand_type2, const FileName &fn_1,
-                 const FileName &fn_2, const FileName &fn_out)
-{
-    if (operand_type1 == NUMBER && operand_type2 == IMAGE)
-    {
-        Image<double> out;
-        out.read(fn_2);
-        double number1 = textToFloat(fn_1);
-        FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(out())
-        DIRECT_MULTIDIM_ELEM(out(),n) = XMIPP_MAX(DIRECT_MULTIDIM_ELEM(out(),n),number1);
-        out.setShifts(0., 0.);
-        out.setEulerAngles(0., 0., 0.);
-        if (fn_out=="")
-            out.write(fn_2);
-        else
-            out.write(fn_out);
-    }
-    else if (operand_type1 == IMAGE && operand_type2 == NUMBER)
-    {
-        Image<double> out;
-        out.read(fn_1);
-        double number2 = textToFloat(fn_2);
-        FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(out())
-        DIRECT_MULTIDIM_ELEM(out(),n) = XMIPP_MAX(DIRECT_MULTIDIM_ELEM(out(),n),number2);
-        out.setShifts(0., 0.);
-        out.setEulerAngles(0., 0., 0.);
-        if (fn_out=="")
-            out.write(fn_1);
-        else
-            out.write(fn_out);
-    }
-    else if (operand_type1 == IMAGE && operand_type2 == IMAGE)
-    {
-        Image<double> Op1, out;
-        Op1.read(fn_1);
-        out.read(fn_2);
-        FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(out())
-        DIRECT_MULTIDIM_ELEM(out(),n) = XMIPP_MAX(DIRECT_MULTIDIM_ELEM(out(),n), \
-                                        DIRECT_MULTIDIM_ELEM(Op1(),n));
-        //        out() = Op1() + out(); //FIXME this line is badly included. Check and remove in version 2.4
-        out.setShifts(0., 0.);
-        out.setEulerAngles(0., 0., 0.);
-        if (fn_out=="")
-            out.write(fn_1);
-        else
-            out.write(fn_out);
-    }
-    else if (operand_type1 == SELFILE)
-    {
-        MetaData SF;
-        SF.read(fn_1);
-        init_progress_bar(SF.size());
-        int i=0;
-        FOR_ALL_OBJECTS_IN_METADATA(SF)
-        {
-            FileName fnl_out, fn_img;
-            SF.getValue(MDL_IMAGE, fn_img);
-            if (fn_out!="")
-                fnl_out = fn_img.withoutExtension() + "." + fn_out;
-            else
-                fnl_out="";
-            operate_max(IMAGE, operand_type2, fn_img, fn_2, fnl_out);
-            if ((i++ % 50) ==0)
-                progress_bar(i);
-        }
-        progress_bar(SF.size());
-    }
-}
-
-void operate_min(int operand_type1, int operand_type2, const FileName &fn_1,
-                 const FileName &fn_2, const FileName &fn_out)
-{
-    if (operand_type1 == NUMBER && operand_type2 == IMAGE)
-    {
-        Image<double> out;
-        out.read(fn_2);
-        double number1 = textToFloat(fn_1);
-        FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(out())
-        DIRECT_MULTIDIM_ELEM(out(),n) = XMIPP_MIN(DIRECT_MULTIDIM_ELEM(out(),n),number1);
-        out.setShifts(0., 0.);
-        out.setEulerAngles(0., 0., 0.);
-        if (fn_out=="")
-            out.write(fn_2);
-        else
-            out.write(fn_out);
-    }
-    else if (operand_type1 == IMAGE && operand_type2 == NUMBER)
-    {
-        Image<double> out;
-        out.read(fn_1);
-        double number2 = textToFloat(fn_2);
-        FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(out())
-        DIRECT_MULTIDIM_ELEM(out(),n) = XMIPP_MIN(DIRECT_MULTIDIM_ELEM(out(),n),number2);
-        out.setShifts(0., 0.);
-        out.setEulerAngles(0., 0., 0.);
-        if (fn_out=="")
-            out.write(fn_1);
-        else
-            out.write(fn_out);
-    }
-    else if (operand_type1 == IMAGE && operand_type2 == IMAGE)
-    {
-        Image<double> Op1, out;
-        Op1.read(fn_1);
-        out.read(fn_2);
-        FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(out())
-        DIRECT_MULTIDIM_ELEM(out(),n) = XMIPP_MIN(DIRECT_MULTIDIM_ELEM(out(),n),DIRECT_MULTIDIM_ELEM(Op1(),n));
-
-        //        out() = Op1() + out(); //FIXME this line is badly included. Check and remove in version 2.4
-        out.setShifts(0., 0.);
-        out.setEulerAngles(0., 0., 0.);
-        if (fn_out=="")
-            out.write(fn_1);
-        else
-            out.write(fn_out);
-    }
-    else if (operand_type1 == SELFILE)
-    {
-        MetaData SF;
-        SF.read(fn_1);
-        init_progress_bar(SF.size());
-        int i=0;
-        FOR_ALL_OBJECTS_IN_METADATA(SF)
-        {
-            FileName fnl_out, fn_img;
-            SF.getValue(MDL_IMAGE, fn_img);
-            if (fn_out!="")
-                fnl_out = fn_img.withoutExtension() + "." + fn_out;
-            else
-                fnl_out="";
-            operate_min(IMAGE, operand_type2, fn_img, fn_2, fnl_out);
-            if ((i++ % 50) ==0)
-                progress_bar(i);
-        }
-        progress_bar(SF.size());
-    }
-}
-
-void operate_which_max(int operand_type1, int operand_type2, const FileName &fn_1,
-                       const FileName &fn_2, const FileName &fn_out)
-{
-    if (operand_type1 == NUMBER && operand_type2 == IMAGE)
-    {
-        Image<double> out;
-        out.read(fn_2);
-        double number1 = textToFloat(fn_1);
-        FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(out())
-        DIRECT_MULTIDIM_ELEM(out(),n) = (number1>DIRECT_MULTIDIM_ELEM(out(),n))?0:1;
-        out.setShifts(0., 0.);
-        out.setEulerAngles(0., 0., 0.);
-        if (fn_out=="")
-            out.write(fn_2);
-        else
-            out.write(fn_out);
-    }
-    else if (operand_type1 == IMAGE && operand_type2 == NUMBER)
-    {
-        Image<double> out;
-        out.read(fn_1);
-        double number2 = textToFloat(fn_2);
-        FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(out())
-        DIRECT_MULTIDIM_ELEM(out(),n) = (DIRECT_MULTIDIM_ELEM(out(),n)>number2)?0:1;
-        out.setShifts(0., 0.);
-        out.setEulerAngles(0., 0., 0.);
-        if (fn_out=="")
-            out.write(fn_1);
-        else
-            out.write(fn_out);
-    }
-    else if (operand_type1 == IMAGE && operand_type2 == IMAGE)
-    {
-        Image<double> Op1, out;
-        Op1.read(fn_1);
-        out.read(fn_2);
-        FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(out())
-        DIRECT_MULTIDIM_ELEM(out(),n) = (DIRECT_MULTIDIM_ELEM(Op1(),n)>DIRECT_MULTIDIM_ELEM(out(),n))?0:1;
-        //        out() = Op1() + out(); FIXME the same copied error. CHECK in v 2.4
-        out.setShifts(0., 0.);
-        out.setEulerAngles(0., 0., 0.);
-        if (fn_out=="")
-            out.write(fn_1);
-        else
-            out.write(fn_out);
-    }
-    else if (operand_type1 == SELFILE)
-    {
-        MetaData SF;
-        SF.read(fn_1);
-        init_progress_bar(SF.size());
-        int i=0;
-        FOR_ALL_OBJECTS_IN_METADATA(SF)
-        {
-            FileName fnl_out, fn_img;
-            SF.getValue(MDL_IMAGE, fn_img);
-            if (fn_out!="")
-                fnl_out = fn_img.withoutExtension() + "." + fn_out;
-            else
-                fnl_out="";
-            operate_which_max(IMAGE, operand_type2, fn_img, fn_2, fnl_out);
-            if ((i++ % 50) ==0)
-                progress_bar(i);
-        }
-        progress_bar(SF.size());
-    }
-}
-
-void operate_which_min(int operand_type1, int operand_type2, const FileName &fn_1,
-                       const FileName &fn_2, const FileName &fn_out)
-{
-    if (operand_type1 == NUMBER && operand_type2 == IMAGE)
-    {
-        Image<double> out;
-        out.read(fn_2);
-        double number1 = textToFloat(fn_1);
-        FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(out())
-        DIRECT_MULTIDIM_ELEM(out(),n) = (number1<DIRECT_MULTIDIM_ELEM(out(),n))?0:1;
-        out.setShifts(0., 0.);
-        out.setEulerAngles(0., 0., 0.);
-        if (fn_out=="")
-            out.write(fn_2);
-        else
-            out.write(fn_out);
-    }
-    else if (operand_type1 == IMAGE && operand_type2 == NUMBER)
-    {
-        Image<double> out;
-        out.read(fn_1);
-        double number2 = textToFloat(fn_2);
-        FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(out())
-        DIRECT_MULTIDIM_ELEM(out(),n) = (DIRECT_MULTIDIM_ELEM(out(),n)<number2)?0:1;
-        out.setShifts(0., 0.);
-        out.setEulerAngles(0., 0., 0.);
-        if (fn_out=="")
-            out.write(fn_1);
-        else
-            out.write(fn_out);
-    }
-    else if (operand_type1 == IMAGE && operand_type2 == IMAGE)
-    {
-        Image<double> Op1, out;
-        Op1.read(fn_1);
-        out.read(fn_2);
-        FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(out())
-        DIRECT_MULTIDIM_ELEM(out(),n) = (DIRECT_MULTIDIM_ELEM(Op1(),n)<DIRECT_MULTIDIM_ELEM(out(),n))?0:1;
-        //        out() = Op1() + out(); // FIXME again the same problem. Check in v 2.4
-        out.setShifts(0., 0.);
-        out.setEulerAngles(0., 0., 0.);
-        if (fn_out=="")
-            out.write(fn_1);
-        else
-            out.write(fn_out);
-    }
-    else if (operand_type1 == SELFILE)
-    {
-        MetaData SF;
-        SF.read(fn_1);
-        init_progress_bar(SF.size());
-        int i=0;
-        FOR_ALL_OBJECTS_IN_METADATA(SF)
-        {
-            FileName fnl_out, fn_img;
-            SF.getValue(MDL_IMAGE, fn_img);
-            if (fn_out!="")
-                fnl_out = fn_img.withoutExtension() + "." + fn_out;
-            else
-                fnl_out="";
-            operate_which_min(IMAGE, operand_type2, fn_img, fn_2, fnl_out);
-            if ((i++ % 50) ==0)
-                progress_bar(i);
-        }
-        progress_bar(SF.size());
-    }
-}
-
-void log10(int operand_type1, const FileName &fn_1, const FileName &fn_out)
-{
-    if (operand_type1 == IMAGE)
-    {
-        Image<double> out;
-        out.read(fn_1);
-        FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(out())
-        DIRECT_MULTIDIM_ELEM(out(),n) = log10(DIRECT_MULTIDIM_ELEM(out(),n));
-        out.setShifts(0., 0.);
-        out.setEulerAngles(0., 0., 0.);
-        if (fn_out=="")
-            out.write(fn_1);
-        else
-            out.write(fn_out);
-    }
-    else if (operand_type1 == SELFILE)
-    {
-        MetaData SF;
-        SF.read(fn_1);
-        init_progress_bar(SF.size());
-        int i=0;
-        FOR_ALL_OBJECTS_IN_METADATA(SF)
-        {
-            FileName fnl_out, fn_img;
-            SF.getValue(MDL_IMAGE, fn_img);
-            if (fn_out!="")
-                fnl_out = fn_img.withoutExtension() + "." + fn_out;
-            else
-                fnl_out="";
-            log10(IMAGE, fn_img, fnl_out);
-            if ((i++ % 50) ==0)
-                progress_bar(i);
-        }
-        progress_bar(SF.size());
-    }
-}
-
-void forcePositive(int operand_type1, const FileName &fn_1,
-                   const FileName &fn_out)
-{
-    if (operand_type1 == IMAGE)
-    {
-        Image<double> out;
-        out.read(fn_1);
-
-        if (out().zdim==1) // IMAGE
-        {
-        	forcePositive(out());
-            out.setShifts(0., 0.);
-            out.setEulerAngles(0., 0., 0.);
-            if (fn_out=="")
-                out.write(fn_1);
-            else
-                out.write(fn_out);
-
-        }
-        else // VOLUME
-        {
-        	forcePositive(out());
-            if (fn_out=="")
-                out.write(fn_1);
-            else
-                out.write(fn_out);
-        }
-    }
-    else if (operand_type1 == SELFILE)
-    {
-        MetaData SF;
-        SF.read(fn_1);
-        init_progress_bar(SF.size());
-        int i=0;
-        FOR_ALL_OBJECTS_IN_METADATA(SF)
-        {
-            FileName fnl_out, fn_img;
-            SF.getValue(MDL_IMAGE, fn_img);
-            if (fn_out!="")
-                fnl_out = fn_img.withoutExtension() + "." + fn_out;
-            else
-                fnl_out="";
-            forcePositive(IMAGE, fn_img, fnl_out);
-            if ((i++ % 50) ==0)
-                progress_bar(i);
-        }
-        progress_bar(SF.size());
-    }
-}
-
-void sqrt(int operand_type1, const FileName &fn_1, const FileName &fn_out)
-{
-    if (operand_type1 == IMAGE)
-    {
-        Image<double> out;
-        out.read(fn_1);
-        FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(out())
-        DIRECT_MULTIDIM_ELEM(out(),n) = sqrt(DIRECT_MULTIDIM_ELEM(out(),n));
-        out.setShifts(0., 0.);
-        out.setEulerAngles(0., 0., 0.);
-        if (fn_out=="")
-            out.write(fn_1);
-        else
-            out.write(fn_out);
-    }
-    else if (operand_type1 == SELFILE)
-    {
-        MetaData SF;
-        SF.read(fn_1);
-        init_progress_bar(SF.size());
-        int i=0;
-        FOR_ALL_OBJECTS_IN_METADATA(SF)
-        {
-            FileName fnl_out, fn_img;
-            SF.getValue(MDL_IMAGE, fn_img);
-            if (fn_out!="")
-                fnl_out = fn_img.withoutExtension() + "." + fn_out;
-            else
-                fnl_out="";
-            sqrt(IMAGE, fn_img, fnl_out);
-            if ((i++ % 50) ==0)
-                progress_bar(i);
-        }
-        progress_bar(SF.size());
-    }
-}
-
-void extract_slice(int operand_type1, int operand_type2, const FileName &fn_1,
-                   const FileName &fn_2, const FileName &fn_out)
-{
-    if (operand_type1 == IMAGE && operand_type2 == NUMBER)
-    {
-        Image<double> Op1;
-        Image<double>  out;
-        Op1.read(fn_1);
-        int number2 = textToInteger(fn_2);
-        // If the slice requested exists
-        if (number2 >= STARTINGZ(Op1()) && number2 <= FINISHINGZ(Op1()))
-        {
-            // Resize image
-            out().resize(Op1().rowNumber(), Op1().colNumber());
-            // Copy
-            for (int i = STARTINGY(Op1());i <= FINISHINGY(Op1());i++)
-                for (int j = STARTINGX(Op1());j <= FINISHINGX(Op1());j++)
-                    out(i, j) = Op1(number2, i, j);
-            // Save
-            out.write(fn_out);
-        }
-    }
-}
-
-void extract_column(int operand_type1, int operand_type2, const FileName &fn_1,
-                    const FileName &fn_2, const FileName &fn_out)
-{
-    if (operand_type1 == IMAGE && operand_type2 == NUMBER) // VOLUME
-    {
-        Image<double> Op1;
-        Image<double>  out;
-        Op1.read(fn_1);
-        int number2 = textToInteger(fn_2);
-        // If the column requested exists
-        if (number2 >= STARTINGX(Op1()) && number2 <= FINISHINGX(Op1()))
-        {
-            // Resize image
-            out().resize(Op1().ydim, Op1().zdim); // Columns along Z axis are now along X axis
-            // Copy
-            for (int k = STARTINGZ(Op1());k <= FINISHINGZ(Op1());k++)
-                for (int i = STARTINGY(Op1());i <= FINISHINGY(Op1());i++)
-                {
-                    out(i, k) = Op1(k, i, number2);
-                    if (Op1().zdim==1)
-                    {
-                        // For 1D output: also write in text format to screen
-                        std::cout <<i+FIRST_XMIPP_INDEX(Op1().colNumber())<<" "<<Op1(i, number2)<<std::endl;
-                    }
-                }
-            // Save
-            out.write(fn_out);
-        }
-    }
-}
-
-
-void extract_row(int operand_type1, int operand_type2, const FileName &fn_1,
-                 const FileName &fn_2, const FileName &fn_out)
-{
-    if (operand_type1 == IMAGE && operand_type2 == NUMBER) // VOLUME
-    {
-        Image<double> Op1;
-        Image<double>  out;
-        Op1.read(fn_1);
-        int number2 = textToInteger(fn_2);
-        // If the column requested exists
-        if (number2 >= STARTINGY(Op1()) && number2 <= FINISHINGY(Op1()))
-        {
-            // Resize image
-            out().resize(Op1().zdim, Op1().xdim);
-            // Copy
-            for (int k = STARTINGZ(Op1());k <= FINISHINGZ(Op1());k++)
-                for (int j = STARTINGX(Op1());j <= FINISHINGX(Op1());j++)
-                {
-                    out(k, j) = Op1(k, number2, j);
-                    if (Op1().zdim==1)
-                    {
-                        // For 1D output: also write in text format to screen
-                        std::cout <<j+FIRST_XMIPP_INDEX(Op1().ydim)<<" "<<Op1(number2,j)<<std::endl;
-                    }
-                }
-            // Save
-            out.write(fn_out);
-        }
-    }
-}
-
-void radial_avg(int operand_type1, const FileName &fn_1, const FileName &fn_out)
-{
-    if (operand_type1 == IMAGE)
-    {
-        Image<double> input;
-        input.read(fn_1);
-        input().setXmippOrigin();
-
-        if (input().zdim==1) // IMAGE
-        {
-            Matrix1D<int> center(2);
-            center.initZeros();
-            MultidimArray<double> radial_mean;
-            MultidimArray<int> radial_count;
-            radialAverage(input(), center, radial_mean, radial_count);
-            radial_mean.write(fn_out);
-
-
-            int my_rad;
-            FOR_ALL_ELEMENTS_IN_ARRAY2D(input())
+            if (!exists(file_or_value))
             {
-                my_rad = (int)floor(sqrt((double)(i * i + j * j)));
-                input(i, j) = radial_mean(my_rad);
+                isValue = true;
+                value = textToFloat(file_or_value);
+                int xdim, ydim, zdim;
+                if (fn_in.isMetaData())
+                    ImgSize(mdIn, xdim, ydim, zdim);
+                else
+                    SingleImgSize(fn_in, xdim, ydim, zdim);
+                img2().resizeNoCopy(zdim, ydim, xdim);
+                img2().initConstant(value);
+            }
+            else
+            {
+                isValue = false;
+                fn2 = file_or_value;
+                if (fn2.isMetaData())
+                {
+                    md2.read(fn2);
+                    if (mdIn.size() != md2.size())
+                        REPORT_ERROR(ERR_MD, "Both metadatas operands should be of same size.");
+                }
+                else
+                {
+                    isValue = true;
+                    img2.read(fn2);
+                }
             }
         }
-        else // VOLUME
-        {
-            Matrix1D<int> center(3);
-            center.initZeros();
-            MultidimArray<double> radial_mean;
-            MultidimArray<int> radial_count;
-            radialAverage(input(), center, radial_mean, radial_count);
-            radial_mean.write(fn_out);
 
-            int my_rad;
-            FOR_ALL_ELEMENTS_IN_ARRAY3D(input())
+
+
+    }
+
+    void processImage()
+    {
+        img.read(fnImg);
+
+        if (unaryOperator != NULL)
+            unaryOperator(img);
+        else
+        {
+            if (!isValue)
             {
-                my_rad = (int)floor(sqrt((double)(i * i + j * j + k * k)));
-                input(k, i, j) = radial_mean(my_rad);
+                md2.getValue(MDL_IMAGE, fn2);
+                img2.read(fn2);
+                md2.nextObject();
             }
+            binaryOperator(img, img2);
         }
-        input.write(fn_out + ".img");
+        img.write(fnImgOut);
     }
 }
+;//end of class ProgOperate
 
-/**************************************************************************
 
-   NAME:          usage
-
-   DESCRIPTION:   This function displays how to use the program
-
-   DATE:          19-1-2001
-
-/**************************************************************************/
-void Usage()
+int main(int argc, char **argv)
 {
-    std::cout  << " A simple Xmipp images calculator. Binary and unary operations\n"
-    << " Parameters:\n"
-    << " -i xmipp image, selfile or volume. This is the input to the program. \n"
-    << "                                    Only image selfiles are allowed\n"
-    << "[-o <file> / -oext <extension>]     If no output is given, the input\n"
-    << "                                    images are rewritten.\n"
-    << "\n"
-    << " CURRENTLY SUPPORTED OPERATIONS \n"
-    << "================================\n"
-    << " -plus <file or value>    Sums two images, volumes or adds a numerical value to an image\n"
-    << " -minus <file or value>   Substracts two images, volumes or substracts a numerical value to an image\n"
-    << " -mult <file or value>    Multiplies two images, volumes, or multiplies per a given number\n"
-    << " -divide <file or value>  Divides two images, volumes, or divides per a given number\n"
-    << " -min <file or value>     Minimum of two images, volumes, or number (pixel-wise)\n"
-    << " -max <file or value>     Maximum of two images, volumes, or number (pixel-wise)\n"
-    << " -which_min <file or value> Returns 0 if the first argument is the minimum of the two (pixel-wise)\n"
-    << " -which_max <file or value> Returns 0 if the first argument is the maximum of the two (pixel-wise)\n"
-    << " -log10                   Computes the logarithm of an image\n"
-    << " -sqrt                    Computes the square root of an image\n"
-    << " -slice  <value>          Extracts a given slice from a volume\n"
-    << " -column <value>          Extracts a given column from a image or volume\n"
-    << " -row    <value>          Extracts a given row from a image or volume\n"
-    << " -radial_avg              Compute the radial average of an image\n"
-    << " EXAMPLES \n"
-    << "==========\n"
-    << "operate -i image1 -plus image2 -o image3\n"
-    << "operate -i image1 -mult image2 -o image3\n"
-    << "operate -i image1 -divide 2 -o image3\n"
-    << "operate -i image1 -sqrt -o image3\n"
-    ;
+    ProgOperate program;
+    program.read(argc, argv);
+    program.tryRun();
 }
