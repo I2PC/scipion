@@ -24,6 +24,7 @@
  *  e-mail address 'xmipp@cnb.csic.es'
  ***************************************************************************/
 
+#include <data/basic_pca.h>
 #include <data/histogram.h>
 #include <data/image.h>
 #include <data/fftw.h>
