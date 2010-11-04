@@ -30,7 +30,7 @@
 #include <data/args.h>
 #include <data/metadata.h>
 #include <data/metadata_extension.h>
-#include <classification/pca.h>
+#include <data/basic_pca.h>
 
 class Sort_junk_parameters
 {
