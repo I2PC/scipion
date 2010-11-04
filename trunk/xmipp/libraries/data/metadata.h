@@ -38,6 +38,7 @@
 #include <stdarg.h>
 #include <stdio.h>
 #include <sstream>
+#include <strings.h>
 
 /** @defgroup MetaData Metadata Stuff
  * @ingroup DataLibrary
@@ -48,6 +49,13 @@ static double zeroD=0.;
 static double oneD=1.;
 static bool  falseb=false;
 
+/** Write mode
+ */
+typedef enum
+{
+    OVERWRITE, //forget about the old file and overwrite it
+    APPEND,    //append a data_ at the file end or replace an existing one
+} WriteModeMetaData;
 /** Iterate over all elements in MetaData
  *
  * This macro is used to generate loops over all elements in the MetaData.
@@ -217,6 +225,7 @@ protected:
     void _readColumns(std::istream& is, MDRow & columnValues,
                       std::vector<MDLabel>* desiredLabels = NULL);
     void _readRows(std::istream& is, MDRow & columnValues, bool useCommentAsImage);
+    void _readRowsStar(MDRow & columnValues,char * firstloop, char * secondData);
     void _readRowFormat(std::istream& is);
 
 public:
@@ -277,6 +286,35 @@ public:
      */
     void setColumnFormat(bool column);
 
+    /** Check if the file (not the object) is in column format
+     *  returns pointer do first two data_entries and firts loop
+     */
+    bool isColumnFormatFile(char * map,
+            char ** firstData,
+            char ** secondData,
+            char ** firstloop,
+            const char * blockName);
+    /** Get Metadata labels for the block defined by start
+     * and end loop pointers. Return pointer to newline after last label
+     *
+     */
+    char * _readColumnsStar(char * start,
+                                    char * end,
+                                    MDRow & columnValues,
+                                    std::vector<MDLabel>* desiredLabels);
+#ifdef NEVERDEFINED
+    /** This function will read the possible columns and values from the file
+     * in ROW format
+     * and mark as MDL_UNDEFINED those who aren't valid labels
+     * or those who appears in the IgnoreLabels vector
+     * also set the activeLabels (for new STAR files)
+     */
+
+    char * _readRowFormatStar(char * pStart,
+                                        char * pEnd,
+                                        MDRow & columnValues,
+                                        std::vector<MDLabel>* desiredLabels);
+#endif
     /**Get path.
      */
     std::string getPath() const ;
@@ -571,15 +609,15 @@ public:
     /** Write metadata to disk.
      * This will write the metadata content to disk.
      */
-    void write(const FileName &outFile);
+    void write(const FileName &outFile,const std::string & blockName="", WriteModeMetaData mode=OVERWRITE);
 
     /** Write metadata to out stream
      */
-    void write(std::ostream &os);
+    void write(std::ostream &os, const std::string & blockName="",WriteModeMetaData mode=OVERWRITE);
 
     /** Read data from file.
      */
-    void read(const FileName &inFile, std::vector<MDLabel> *labelsVector = NULL);
+    void read(const FileName &inFile, std::vector<MDLabel> *labelsVector = NULL, const std::string & blockName="");
     /** @} */
 
     /** @name Set Operations
