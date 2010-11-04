@@ -28,7 +28,7 @@
 #include <data/funcs.h>
 #include <data/metadata.h>
 #include <data/metadata_extension.h>
-#include "pca.h"
+#include <data/basic_pca.h>
 
 /**@defgroup AnalyzeClusterProgram Analyze cluster
    @ingroup ClassificationLibrary */
