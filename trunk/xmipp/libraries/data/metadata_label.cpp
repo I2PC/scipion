@@ -482,6 +482,11 @@ bool MDObject::fromString(const String&str)
     fromStream(ss);
 }
 
+bool MDObject::fromChar(const char * szChar)
+{
+    std::stringstream ss(szChar);
+    fromStream(ss);
+}
 //MDObject & MDRow::operator [](MDLabel label)
 //{
 //    for (iterator it = begin(); it != end(); ++it)
