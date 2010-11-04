@@ -516,3 +516,40 @@ std::string findAndReplace(const std::string& tInput, const std::string &tFind,
     }
     return tOut;
 }
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+
+
+/** Tokenizer  for char arrays. It does NOT modify
+ * the input array
+ *  src is a pointer to the array beginning.
+ *  It may be modified to trim the token
+ * _end is a pointer to the end of the token
+ * sep is an array with the valid separator
+ */
+
+char   *memtok(char **src,  char **_end, const char *sep)
+{
+    char   *start = *src;
+    char   *end;
+
+    /*
+     * Skip over leading delimiters.
+     */
+    start += strspn(start, sep);
+    if (*start == 0) {
+	*src = start;
+	return (0);
+    }
+
+    /*
+     * Separate off one token.
+     */
+    end = start + strcspn(start, sep);
+    *src = start;
+    *_end=end;
+    return (start);
+}
