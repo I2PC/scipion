@@ -547,7 +547,7 @@ void Prog_assign_CTF_prm::process()
                 MetaData MD;
                 MD.read(fn_avg.withoutExtension() + ".ctfparam");
                 MD.setValue(MDL_CTF_CRITERION_PSDVARIANCE,stdQ);
-                MD.write(fn_root + ".ctfparam");
+                MD.write(fn_avg.withoutExtension() + ".ctfparam");
             }
             else
             {

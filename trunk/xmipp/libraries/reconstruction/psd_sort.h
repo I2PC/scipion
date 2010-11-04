@@ -46,6 +46,8 @@ public:
 	double PSDradialIntegral;
 	double fittingScore;
 	double fittingCorr13;
+	double PSDVariance;
+	double PSDPC1Variance;
 };
 
 /* Sort PSD Program Parameters ------------------------------------------ */
