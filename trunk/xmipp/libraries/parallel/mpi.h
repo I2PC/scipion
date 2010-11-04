@@ -26,12 +26,12 @@
 #ifndef XMIPP_MPI_H_
 #define XMIPP_MPI_H_
 
+#include <mpi.h>
 #include <fcntl.h>
 #include <unistd.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <iostream>
-#include <mpi.h>
 #include "data/threads.h"
 
 /** @addtogroup Parallel
