@@ -1,4 +1,8 @@
-/* author: J.M. de la Rosa Trevin   jmdelarosa@cnb.csic.es
+/***************************************************************************
+ *
+ * Authors: J.M. de la Rosa Trevin   (jmdelarosa@cnb.csic.es) x 0.95
+ *          Joaquin Oton             (joton@cnb.csic.es)      x 0.05
+ *
  * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
  *
  * This program is free software; you can redistribute it and/or modify
@@ -33,7 +37,7 @@
 //the result will be left in op1
 typedef void ImageBinaryOperator(Image<double> &op1, const Image<double> &op2);
 
-//This define the prototype of unary opeations on images
+//This define the prototype of unary operations on images
 //the result will be left in op
 typedef double ImageUnaryOperator(Image<double> &op);
 
@@ -154,6 +158,36 @@ double power(Image<double> &op)
     FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(op())
     {
         dAi(op(), n) = pow(dAi(op(), n), powerExp);
+    }
+}
+
+int nSlice;
+char axis;
+double getSlice(Image<double> &op)
+{
+    MultidimArray<double> imAux;
+
+    op().getSlice(nSlice, imAux, axis);
+    op() = imAux;
+}
+
+
+FileName fnOut;
+double radialAvg(Image<double> &op)
+{
+    op().setXmippOrigin();
+    Matrix1D<int> center(3);
+    center.initZeros();
+    MultidimArray<double> radial_mean;
+    MultidimArray<int> radial_count;
+    radialAverage(op(), center, radial_mean, radial_count);
+    radial_mean.write((fnOut.withoutExtension()).addExtension("txt"));
+
+    int my_rad;
+    FOR_ALL_ELEMENTS_IN_ARRAY3D(op())
+    {
+        my_rad = (int)floor(sqrt((double)(i * i + j * j + k * k)));
+        op(k, i, j) = radial_mean(my_rad);
     }
 }
 
@@ -289,13 +323,28 @@ protected:
             unaryOperator = power;
         }
         else if (checkParam("-slice"))
-            unaryOperator = log10;
+        {
+            axis = 'Z';
+            nSlice = getIntParam("-slice");
+            unaryOperator = getSlice;
+        }
         else if (checkParam("-column"))
-            unaryOperator = log10;
+        {
+            axis = 'X';
+            nSlice = getIntParam("-column");
+            unaryOperator = getSlice;
+        }
         else if (checkParam("-row"))
-            unaryOperator = log10;
+        {
+            axis = 'Y';
+            nSlice = getIntParam("-row");
+            unaryOperator = getSlice;
+        }
         else if (checkParam("-radial_avg"))
-            unaryOperator = log10;
+        {
+            fnOut = fn_out;
+            unaryOperator = radialAvg;
+        }
         else if (checkParam("-forcePositive"))
             unaryOperator = log10;
         else
