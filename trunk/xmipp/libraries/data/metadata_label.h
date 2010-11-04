@@ -537,6 +537,7 @@ public:
     bool fromStream(std::istream &is);
     friend std::istream& operator>> (std::istream& is, MDObject &value);
     bool fromString(const String &str);
+    bool fromChar(const char * str);
 
     friend class MDSql;
 }
