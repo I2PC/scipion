@@ -349,6 +349,39 @@ void tokenize(const std::string& str,
               std::vector< std::string >& tokens,
               const std::string& delimiters = " \t");
 
+/** Tokenizer  for char arrays. Similar to strtok but does NOT modify
+ * the input array
+ *  src is a pointer to the array beginning.
+ *  It may be modified to trim the token
+ * _end is a pointer to the end of the token
+ * sep is an array with the valid separator
+ @code
+    char   *start;
+    char   *str;
+    char   *end;
+    start=(char *) malloc(128);
+    strcpy(start,"Filtrose    el\tmozo\n en una zahurda lóbrega, las paredes\
+    enhollinadas");
+    fprintf(stderr,"Mstart=%d",(void *) start);
+    char aux[64];
+
+    str = mystrtok(&start, &end," \t\r\n");
+    strncpy(aux,str,end-str); aux[end-str]=0;
+    printf(">%s< %d\n", aux,(void *) end);
+    str = mystrtok(&start, &end," \t\r\n");
+    strncpy(aux,str,end-str); aux[end-str]=0;
+    printf(">%s< %d\n", aux,(void *) end);
+    str = mystrtok(&start, &end," \t\r\n");
+    strncpy(aux,str,end-str); aux[end-str]=0;
+    printf(">%s< %d\n", aux,(void *) end);
+    str = mystrtok(&start, &end," \t\r\n");
+    strncpy(aux,str,end-str); aux[end-str]=0;
+    printf(">%s< %d\n", aux,(void *) end);
+ @endcode
+ */
+
+char   *memtok(char **src,  char **_end, const char *sep);
+
 //TODO: For now just a typedef, I think that would be worth to write an String class
 typedef std::string String;
 typedef std::vector<String> StringVector;
