@@ -460,4 +460,11 @@ private:
     void Best2Bin(int candidate);
     void Rand2Bin(int candidate);
 };
+
+/** Check the randomness of a sequence.
+ *  The function returns a z-score of randomness. The highest the Z-score in absolute value,
+ *  the less random the sequence is. The sequence is supposed to be formed by two symbols:
+ *  + and -, 0 and 1, A and B, ...
+ */
+double checkRandomness(const std::string &sequence);
 #endif

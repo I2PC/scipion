@@ -37,9 +37,9 @@ void randomPermutation(int N, MultidimArray<int>& result)
 
 /* Powell's optimizer ------------------------------------------------------ */
 void powellOptimizer(Matrix1D<double> &p, int i0, int n,
-                      double(*f)(double *x, void *), void * prm,
-                      double ftol, double &fret,
-                      int &iter, const Matrix1D<double> &steps, bool show)
+                     double(*f)(double *x, void *), void * prm,
+                     double ftol, double &fret,
+                     int &iter, const Matrix1D<double> &steps, bool show)
 {
     double *xi = NULL;
 
@@ -75,7 +75,8 @@ void GaussianInterpolator::initialize(double _xmax, int N, bool normalize)
     {
         double x=i*xstep;
         v(i)=exp(-x*x/2);
-        if (normalize) v(i)*=inorm;
+        if (normalize)
+            v(i)*=inorm;
     }
 }
 
@@ -83,7 +84,7 @@ void GaussianInterpolator::initialize(double _xmax, int N, bool normalize)
 
 /* Solve Cx=d, nonnegative x */
 double solveNonNegative(const Matrix2D<double> &C, const Matrix1D<double> &d,
-                    Matrix1D<double> &result)
+                        Matrix1D<double> &result)
 {
     if (C.Xdim() == 0)
         REPORT_ERROR(ERR_MATRIX_EMPTY, "Solve_nonneg: Matrix is empty");
@@ -93,7 +94,7 @@ double solveNonNegative(const Matrix2D<double> &C, const Matrix1D<double> &d,
         REPORT_ERROR(ERR_MATRIX_DIM, "Solve_nonneg: Not correct vector shape");
 
     Matrix2D<double> Ct;
-	Ct=C.transpose();
+    Ct=C.transpose();
 
     result.initZeros(Ct.Ydim());
     double rnorm;
@@ -112,7 +113,7 @@ double solveNonNegative(const Matrix2D<double> &C, const Matrix1D<double> &d,
 
 /* Solve Ax=b, A definite positive and symmetric --------------------------- */
 void solveViaCholesky(const Matrix2D<double> &A, const Matrix1D<double> &b,
-                        Matrix1D<double> &result)
+                      Matrix1D<double> &result)
 {
     Matrix2D<double> Ap = A;
     Matrix1D<double> p(A.Xdim());
@@ -127,7 +128,7 @@ void solveViaCholesky(const Matrix2D<double> &A, const Matrix1D<double> &b,
 
 /* Quadratic form ---------------------------------------------------------- */
 void evaluateQuadratic(const Matrix1D<double> &x, const Matrix1D<double> &c,
-                    const Matrix2D<double> &H, double &val, Matrix1D<double> &grad)
+                       const Matrix2D<double> &H, double &val, Matrix1D<double> &grad)
 {
     if (x.size() != c.size())
         REPORT_ERROR(ERR_MATRIX_SIZE, "Eval_quadratic: Not compatible sizes in x and c");
@@ -174,7 +175,7 @@ void quadraticProgramming_obj32(int nparam, int j, double* x, double* fj, void* 
     CDAB* in = (CDAB *)cd;
     Matrix2D<double> X(nparam,1);
     for (int i=0; i<nparam; ++i)
-       X(i,0)=x[i];
+        X(i,0)=x[i];
     Matrix2D<double> result;
     result = 0.5 * X.transpose() * in->C * X + in->D.transpose() * X;
 
@@ -197,7 +198,7 @@ void quadraticProgramming_grob32(int nparam, int j, double* x, double* gradfj, v
     CDAB* in = (CDAB *)cd;
     Matrix2D<double> X(1,nparam);
     for (int i=0; i<nparam; ++i)
-       X(0,i)=x[i];
+        X(0,i)=x[i];
 
     Matrix2D<double> gradient;
     gradient = in->C * X + in->D;
@@ -223,10 +224,10 @@ void quadraticProgramming_grcn32(int nparam, int j, double *x, double *gradgj, v
 
 **************************************************************************/
 void quadraticProgramming(const Matrix2D<double> &C, const Matrix1D<double> &d,
-              const Matrix2D<double> &A,   const Matrix1D<double> &b,
-              const Matrix2D<double> &Aeq, const Matrix1D<double> &beq,
-              Matrix1D<double> &bl,        Matrix1D<double> &bu,
-              Matrix1D<double> &x)
+                          const Matrix2D<double> &A,   const Matrix1D<double> &b,
+                          const Matrix2D<double> &Aeq, const Matrix1D<double> &beq,
+                          Matrix1D<double> &bl,        Matrix1D<double> &bu,
+                          Matrix1D<double> &x)
 {
     CDAB prm;
     prm.C = C;
@@ -297,6 +298,7 @@ void quadraticProgramming(const Matrix2D<double> &C, const Matrix1D<double> &d,
           (void*)&prm);
 
 #ifdef DEBUG
+
     if (inform == 0)
         std::cout << "SUCCESSFUL RETURN. \n";
     if (inform == 1 || inform == 2)
@@ -317,10 +319,10 @@ void quadraticProgramming(const Matrix2D<double> &C, const Matrix1D<double> &d,
                                        bl<=x<=bu
 **************************************************************************/
 void leastSquare(const Matrix2D<double> &C, const Matrix1D<double> &d,
-            const Matrix2D<double> &A,   const Matrix1D<double> &b,
-            const Matrix2D<double> &Aeq, const Matrix1D<double> &beq,
-            Matrix1D<double> &bl,        Matrix1D<double> &bu,
-            Matrix1D<double> &x)
+                 const Matrix2D<double> &A,   const Matrix1D<double> &b,
+                 const Matrix2D<double> &Aeq, const Matrix1D<double> &beq,
+                 Matrix1D<double> &bl,        Matrix1D<double> &bu,
+                 Matrix1D<double> &x)
 {
     // Convert d to Matrix2D for multiplication
     Matrix2D<double> P;
@@ -337,8 +339,8 @@ void leastSquare(const Matrix2D<double> &C, const Matrix1D<double> &d,
 
 /* Regularized least squares ----------------------------------------------- */
 void regularizedLeastSquare(const Matrix2D< double >& A,
-    const Matrix1D< double >& d, double lambda,
-    const Matrix2D< double >& G, Matrix1D< double >& x)
+                            const Matrix1D< double >& d, double lambda,
+                            const Matrix2D< double >& G, Matrix1D< double >& x)
 {
     int Nd=A.Ydim(); // Number of data samples
     int Nx=A.Xdim(); // Number of variables
@@ -346,9 +348,9 @@ void regularizedLeastSquare(const Matrix2D< double >& A,
     Matrix2D<double> X(Nx,Nx); // X=(A^t * A +lambda *G^t G)
     // Compute A^t*A
     FOR_ALL_ELEMENTS_IN_MATRIX2D(X)
-        // Compute the dot product of the i-th and j-th columns of A
-        for (int k=0; k<A.Ydim(); k++)
-            X(i,j) += A(k,i) * A(k,j);
+    // Compute the dot product of the i-th and j-th columns of A
+    for (int k=0; k<A.Ydim(); k++)
+        X(i,j) += A(k,i) * A(k,j);
 
     // Compute lambda*G^t*G
     if (G.Xdim()==0)
@@ -356,16 +358,16 @@ void regularizedLeastSquare(const Matrix2D< double >& A,
             X(i,i)+=lambda;
     else
         FOR_ALL_ELEMENTS_IN_MATRIX2D(X)
-            // Compute the dot product of the i-th and j-th columns of G
-            for (int k=0; k<G.Ydim(); k++)
-                X(i,j) += G(k,i) * G(k,j);
+        // Compute the dot product of the i-th and j-th columns of G
+        for (int k=0; k<G.Ydim(); k++)
+            X(i,j) += G(k,i) * G(k,j);
 
     // Compute A^t*d
     Matrix1D<double> Atd(Nx);
     FOR_ALL_ELEMENTS_IN_MATRIX1D(Atd)
-        // Compute the dot product of the i-th column of A and d
-        for (int k=0; k<A.Ydim(); k++)
-            Atd(i) += A(k,i) * d(k);
+    // Compute the dot product of the i-th column of A and d
+    for (int k=0; k<A.Ydim(); k++)
+        Atd(i) += A(k,i) * d(k);
 
     // Compute the inverse of X
     Matrix2D<double> Xinv;
@@ -374,7 +376,7 @@ void regularizedLeastSquare(const Matrix2D< double >& A,
     // Now multiply Xinv * A^t * d
     x.initZeros(Nx);
     FOR_ALL_ELEMENTS_IN_MATRIX2D(Xinv)
-        x(i) += Xinv(i,j) * Atd(j);
+    x(i) += Xinv(i,j) * Atd(j);
 }
 
 
@@ -385,11 +387,11 @@ void regularizedLeastSquare(const Matrix2D< double >& A,
 #define CopyVector(a,b) memcpy((a),(b),nDim*sizeof(double))
 
 DESolver::DESolver(int dim, int popSize) :
-        nDim(dim), nPop(popSize),
-        generations(0), strategy(stRand1Exp),
-        scale(0.7), probability(0.5), bestEnergy(0.0),
-        trialSolution(0), bestSolution(0),
-        popEnergy(0), population(0)
+nDim(dim), nPop(popSize),
+generations(0), strategy(stRand1Exp),
+scale(0.7), probability(0.5), bestEnergy(0.0),
+trialSolution(0), bestSolution(0),
+popEnergy(0), population(0)
 {
     trialSolution = new double[nDim];
     bestSolution  = new double[nDim];
@@ -427,10 +429,10 @@ void DESolver::Setup(double min[], double max[],
     for (i = 0; i < nPop; i++)
     {
         for (j = 0; j < nDim; j++)
-	{
-		population[i*nDim+j] = rnd_unif(min[j], max[j]);
-		//Element(population, i, j) = rnd_unif(min[j], max[j]);
-	}
+        {
+            population[i*nDim+j] = rnd_unif(min[j], max[j]);
+            //Element(population, i, j) = rnd_unif(min[j], max[j]);
+        }
 
         popEnergy[i] = 1.0E20;
     }
@@ -779,3 +781,37 @@ void DESolver::SelectSamples(int candidate, int *r1, int *r2,
     return;
 }
 
+/* Check Randomness ------------------------------------------------------- */
+/* See http://home.ubalt.edu/ntsbarsh/Business-stat/opre504.htm for the formulas */
+/* This is called runs test */
+double checkRandomness(const std::string &sequence)
+{
+    int imax=sequence.size();
+    if (imax<=1)
+        return 0;
+    double n0=1, n1=0, R=1;
+    int current=0;
+    for (int i=1; i<imax; ++i)
+    {
+        if (sequence[i]!=sequence[i-1])
+        {
+        	current=(current+1)%2;
+        	R++;
+            if (current==0)
+                n0++;
+            else
+                n1++;
+        }
+        else
+        {
+            if (current==0)
+                n0++;
+            else
+                n1++;
+        }
+    }
+    double m=1+2*n0*n1/(n0+n1);
+    double s=sqrt(2*n0*n1*(2*n0*n1-n0-n1)/((n0+n1)*(n0+n1)*(n0+n1-1)));
+    double z=(R-m)/s;
+    return ABS(z);
+}
