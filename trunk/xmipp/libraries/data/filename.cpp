@@ -393,9 +393,9 @@ bool FileName::isMetaData(bool failIfNotExists) const
 
         // Search for xmipp_3,
         getline(infile, line, '\n');
-        int pos = line.find("XMIPP_3 * ");
+        int pos = line.find("XMIPP_STAR_1 *");
 
-        if (pos != std::string::npos) // xmipp_3 token found
+        if (pos != std::string::npos) // xmipp_star_1 token found
             return true;
         else
             return false;
