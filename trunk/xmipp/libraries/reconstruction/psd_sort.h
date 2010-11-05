@@ -48,6 +48,7 @@ public:
 	double fittingCorr13;
 	double PSDVariance;
 	double PSDPC1Variance;
+	double PSDPCRunsTest;
 };
 
 /* Sort PSD Program Parameters ------------------------------------------ */

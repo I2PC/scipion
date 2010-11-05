@@ -118,7 +118,8 @@ double Prog_Sort_PSD_Parameters::evaluate(const FileName &fnMicrograph,
     MD.getValue(MDL_CTF_CRITERION_FITTINGSCORE,evaluation.fittingScore);
     MD.getValue(MDL_CTF_CRITERION_FITTINGCORR13,evaluation.fittingCorr13);
     MD.getValue(MDL_CTF_CRITERION_PSDVARIANCE,evaluation.PSDVariance);
-    MD.getValue(MDL_CTF_CRITERION_PSDPCA1VARIACE,evaluation.PSDPC1Variance);
+    MD.getValue(MDL_CTF_CRITERION_PSDPCA1VARIANCE,evaluation.PSDPC1Variance);
+    MD.getValue(MDL_CTF_CRITERION_PSDPCARUNSTEST,evaluation.PSDPCRunsTest);
 
     // Explore the CTF
     Matrix1D<double> u(2), freqZero1(2), freqZero2(2);
@@ -180,7 +181,7 @@ void Prog_Sort_PSD_Parameters::run()
         SF.setValue(MDL_CTF_CRITERION_PSDCORRELATION90,evaluation.PSDcorrelation90);
         SF.setValue(MDL_CTF_CRITERION_PSDRADIALINTEGRAL,evaluation.PSDradialIntegral);
         SF.setValue(MDL_CTF_CRITERION_PSDVARIANCE,evaluation.PSDVariance);
-        SF.setValue(MDL_CTF_CRITERION_PSDPCA1VARIACE,evaluation.PSDPC1Variance);
+        SF.setValue(MDL_CTF_CRITERION_PSDPCARUNSTEST,evaluation.PSDPCRunsTest);
         progress_bar(++idx);
     }
     SF.write(fnSel);

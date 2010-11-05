@@ -1,7 +1,7 @@
 /***************************************************************************
  *
  * Authors:     Javier Angel Velazquez Muriel (javi@cnb.csic.es)
- *              Carlos Oscar S�nchez Sorzano
+ *              Carlos Oscar Sanchez Sorzano
  *
  * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
  *
@@ -31,6 +31,7 @@
 #include <data/metadata.h>
 #include <data/image.h>
 #include <data/fft.h>
+#include <data/basic_pca.h>
 
 /* Read parameters ========================================================= */
 void Prog_assign_CTF_prm::read(const FileName &fn_prm, bool do_not_read_files)
@@ -344,6 +345,9 @@ void Prog_assign_CTF_prm::process()
     int i = 0, j = 0; // top-left corner of the current piece
     MultidimArray< std::complex<double> > Periodogram;
     MultidimArray<double> piece(N_vertical, N_horizontal);
+    PCAMahalanobisAnalyzer pcaAnalyzer;
+    MultidimArray<int> PCAmask;
+    MultidimArray<float> PCAv;
     Image<double> psd, psd2;
     while (N <= div_Number)
     {
@@ -409,7 +413,7 @@ void Prog_assign_CTF_prm::process()
         {
             for (int k = 0; k < YSIZE(piece); k++)
                 for (int l = 0; l < XSIZE(piece); l++)
-                    DIRECT_A2D_ELEM(piece, k, l) = M_in(j + l, i + k);
+                    DIRECT_A2D_ELEM(piece, k, l) = M_in(i+k, j+l);
         }
         else
         {
@@ -448,7 +452,7 @@ void Prog_assign_CTF_prm::process()
         // Perform averaging if applicable ...................................
         if (micrograph_averaging)
         {
-
+            // Compute average and standard deviation
             if (N == 1)
             {
                 psd_avg() = psd();
@@ -459,6 +463,35 @@ void Prog_assign_CTF_prm::process()
                 psd_avg() += psd();
                 psd_std() += psd2();
             }
+
+            // Keep psd for the PCA
+            if (XSIZE(PCAmask)==0)
+            {
+                PCAmask.initZeros(psd());
+                Matrix1D<int>    idx(2);  // Indexes for Fourier plane
+                Matrix1D<double> freq(2); // Frequencies for Fourier plane
+                int PCAdim=0;
+                FOR_ALL_ELEMENTS_IN_ARRAY2D(PCAmask)
+                {
+                    VECTOR_R2(idx, j, i);
+                    FFT_idx2digfreq(psd(), idx, freq);
+                    double w = freq.module();
+                    if (w>0.05 && w<0.4)
+                    {
+                        PCAmask(i,j)=1;
+                        ++PCAdim;
+                    }
+                }
+                PCAv.initZeros(PCAdim);
+            }
+
+            int ii=-1;
+            FOR_ALL_ELEMENTS_IN_ARRAY2D(PCAmask)
+            if (A2D_ELEM(PCAmask,i,j))
+                A1D_ELEM(PCAv,++ii)=(float)psd(i,j);
+            pcaAnalyzer.addVector(PCAv);
+
+            // Write the PSD if ARMA
             if (micrograph_averaging && PSD_mode == ARMA)
             {
                 psd_avg.write(fn_avg);
@@ -516,6 +549,7 @@ void Prog_assign_CTF_prm::process()
     // If averaging, compute the CTF model ----------------------------------
     if (micrograph_averaging)
     {
+        // Compute the avg and stddev of the local PSDs
         psd_avg() /= div_Number;
         psd_avg.write(fn_avg);
 
@@ -535,18 +569,53 @@ void Prog_assign_CTF_prm::process()
             CTFDescription ctfmodel;
             if (bootstrapN==-1)
             {
+                // Compute the PCA of the local PSDs
+                std::cerr << "Evaluating the quality of the micrograph ...\n";
+                pcaAnalyzer.standardarizeVariables();
+                // pcaAnalyzer.subtractAvg();
+                pcaAnalyzer.learnPCABasis(1,10);
+
+#ifdef DEBUG
+
+                Image<double> save;
+                save().initZeros(psd());
+                int ii=-1;
+                FOR_ALL_ELEMENTS_IN_ARRAY2D(PCAmask)
+                if (PCAmask(i,j))
+                    save(i,j)=pcaAnalyzer.PCAbasis[0](++ii);
+                save.write("PPPbasis.xmp");
+#endif
+
+                Matrix2D<double> CtY;
+                pcaAnalyzer.projectOnPCABasis(CtY);
+                Matrix1D<double> p;
+                CtY.toVector(p);
+                double pavg=p.sum(true);
+                double pstd=p.sum2()/VEC_XSIZE(p)-pavg*pavg;
+                pstd=(pstd<0)?0:sqrt(pstd);
+
+                std::string psign;
+                FOR_ALL_ELEMENTS_IN_MATRIX1D(p)
+                if (p(i)<0)
+                    psign+="-";
+                else
+                    psign+="+";
+                double zrandomness=checkRandomness(psign);
+
                 double fitting_error = ROUT_Adjust_CTF(adjust_CTF_prm,
                                                        ctfmodel, false);
 
                 // Evaluate PSD variance and write into the CTF
                 double stdQ=0;
                 FOR_ALL_ELEMENTS_IN_ARRAY2D(psd_std())
-                	stdQ+=psd_std(i,j)/psd_avg(i,j);
+                stdQ+=psd_std(i,j)/psd_avg(i,j);
                 stdQ/=MULTIDIM_SIZE(psd_std());
 
                 MetaData MD;
                 MD.read(fn_avg.withoutExtension() + ".ctfparam");
                 MD.setValue(MDL_CTF_CRITERION_PSDVARIANCE,stdQ);
+                MD.setValue(MDL_CTF_CRITERION_PSDPCA1VARIANCE,pstd);
+                MD.setValue(MDL_CTF_CRITERION_PSDPCARUNSTEST,zrandomness);
                 MD.write(fn_avg.withoutExtension() + ".ctfparam");
             }
             else
