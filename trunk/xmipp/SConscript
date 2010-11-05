@@ -291,15 +291,19 @@ def AddSwigJavaLibrary(name, basedir, sourceList, includes, libpath=[], libs=[])
     # Create wrapper
     # setup
     env.AppendENVPath('PATH', 'external/java/jvm/bin')
-#import glob,os
-#javaFiles=glob.glob('*.java')
-#for i in range(len(javaFiles)):
-#   os.remove(javaFiles[i])
-#    os.system("rm *java")
+
     basedirswig = AddLastSlash(basedir+"/swig")
     libprefix = os.path.join(env['prefix'], 'lib')
 
     if int(env['swig']):
+	# Remove previously generated java and class files.
+	removeAll(basedirswig,'*.java')
+	removeAll(basedirswig,'*.class')
+	removeAll(basedirswig,'*.jar')
+	removeAll(basedirswig,'*.cc')
+	removeAll(basedirswig,'*.py')
+	removeAll(basedirswig,'*.so')
+	removeAll(basedirswig,'*.os')
 
         # Build wrapper
         wrapper = env.i2java(basedirswig + name + "_wrap.cc", sourceList)
@@ -314,6 +318,7 @@ def AddSwigJavaLibrary(name, basedir, sourceList, includes, libpath=[], libs=[])
     AddLibrary(name, basedirswig, [name+"_wrap.cc"],
         ['#',env['JNI_CPPPATH'],env['JNI_CPPPATH']+"/linux"],
         ['lib'],['XmippData'],'lib')
+
     #
     """
     pyFile = libprefix+'/'+name+'.py'
@@ -324,6 +329,13 @@ def AddSwigJavaLibrary(name, basedir, sourceList, includes, libpath=[], libs=[])
     command = command + " ../" + basedirswig+name+".py " + libprefix+'/'+name+'.py'
     print command
     os.system(command)"""
+
+def removeAll(basedir, regexp):
+	import glob
+
+	files=glob.glob(basedir + regexp)
+	for i in range(len(files)):
+		os.remove(files[i])
 
 def AddImageJPlugin(name, pluginDir, outDir):
     import shutil
