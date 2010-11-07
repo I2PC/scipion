@@ -554,9 +554,11 @@ void MetaData::write(const FileName &outFile,const std::string &blockName, Write
 
     //check if file exists or not block name has been given
     //in our format no two identical data_xxx strings may exists
-    if(!exists(outFile))
-        mode=OVERWRITE;
+    if(mode==OVERWRITE)
+        ;
     else if (blockName=="")
+        mode=OVERWRITE;
+    else if(!exists(outFile))
         mode=OVERWRITE;
     else
     {
