@@ -42,7 +42,7 @@ void MetaData::_clear(bool onlyData)
         activeLabels.clear();
         ignoreLabels.clear();
         isColumnFormat = true;
-        inFile = FileName::FileName();
+        inFile = FileName();
         activeObjId = -1;//no active object
         delete iterObjectsId;
         iterObjectsId = NULL;
