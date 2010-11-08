@@ -107,7 +107,7 @@ public:
     /* Read parameters --------------------------------------------------------- */
     void readParams()
     {
-    	ProgAngularProjectionMatching::readParams();
+        ProgAngularProjectionMatching::readParams();
         mpi_job_size=getIntParam("--mpi_job_size");
         chunk_angular_distance = getDoubleParam("--chunk_angular_distance");
         fn_sym = getParam("--sym");
@@ -116,18 +116,18 @@ public:
     /* Usage ------------------------------------------------------------------- */
     void defineParams()
     {
-    	ProgAngularProjectionMatching::defineParams();
-    	addParamsLine("  [--mpi_job_size <size=10>]   : Number of images sent to a cpu in a single job ");
-    	addParamsLine("                                : 10 may be a good value");
-    	addParamsLine("                                : if  -1 the computer will fill the value for you");
-    	addParamsLine("  [--chunk_angular_distance <dist=-1>]  : sample the projection sphere with this ");
-    	addParamsLine("                                 :using the voronoi regions");
-    	addParamsLine("  [--sym <cn=\"c1\">]            : One of the 17 possible symmetries in");
-    	addParamsLine("                                 :single particle electronmicroscopy");
-    	addParamsLine("                                 :i.e.  ci, cs, cn, cnv, cnh, sn, dn, dnv,");
-    	addParamsLine("                                 :dnh, t, td, th, o, oh, i1 (default MDB), i2, i3, i4, ih");
-    	addParamsLine("                                 :i1h (default MDB), i2h, i3h, i4h");
-    	addParamsLine("                               	: where n may change from 1 to 99");
+        ProgAngularProjectionMatching::defineParams();
+        addParamsLine("  [--mpi_job_size <size=10>]   : Number of images sent to a cpu in a single job ");
+        addParamsLine("                                : 10 may be a good value");
+        addParamsLine("                                : if  -1 the computer will fill the value for you");
+        addParamsLine("  [--chunk_angular_distance <dist=-1>]  : sample the projection sphere with this ");
+        addParamsLine("                                 :using the voronoi regions");
+        addParamsLine("  [--sym <cn=\"c1\">]            : One of the 17 possible symmetries in");
+        addParamsLine("                                 :single particle electronmicroscopy");
+        addParamsLine("                                 :i.e.  ci, cs, cn, cnv, cnh, sn, dn, dnv,");
+        addParamsLine("                                 :dnh, t, td, th, o, oh, i1 (default MDB), i2, i3, i4, ih");
+        addParamsLine("                                 :i1h (default MDB), i2h, i3h, i4h");
+        addParamsLine("                                : where n may change from 1 to 99");
     }
 
 
@@ -638,19 +638,35 @@ int main(int argc, char *argv[])
     ProgMpiAngularProjectionMatching prm;
     bool finalize_worker=false;
 
-    try
+    if (prm.rank == 0)
     {
-    	prm.read(argc, argv);
-    }
-
-    catch (XmippError XE)
-    {
-    	std::cerr << XE;
-    	MPI_Finalize();
-    	exit(1);
+        try
+        {
+            prm.read(argc, argv);
+        }
+        catch (XmippError XE)
+        {
+            std::cerr << XE;
+            MPI_Finalize();
+            exit(1);
+        }
     }
 
     MPI_Barrier(MPI_COMM_WORLD);
+
+    if (prm.rank != 0)
+    {
+        try
+        {
+            prm.read(argc, argv);
+        }
+        catch (XmippError XE)
+        {
+            std::cerr << XE;
+            MPI_Finalize();
+            exit(1);
+        }
+    }
 
     try
     {
