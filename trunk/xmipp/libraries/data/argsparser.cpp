@@ -24,6 +24,7 @@
  ***************************************************************************/
 
 #include "argsparser.h"
+#include "filename.h"
 
 //-------------------   LEXER IMPLEMENTATIONS --------------------------------
 
@@ -936,7 +937,7 @@ void ProgramDef::read(int argc, char ** argv, bool reportErrors)
             {
                 ++(param->counter);
                 if (param->independent)
-                  singleOption = true;
+                    singleOption = true;
             }
         }
         else if (param != NULL)
@@ -944,7 +945,7 @@ void ProgramDef::read(int argc, char ** argv, bool reportErrors)
     }
 
     if (!singleOption)
-      check(errors);
+        check(errors);
 
     //Report errors found
     if (reportErrors && errors.str().length() > 0)
@@ -1127,4 +1128,161 @@ void ConsolePrinter::printToken(ArgToken * token)
     << "' type: " << ArgToken::typeString(token->type)
     << " line: " << token->line + 1
     << " pos: " << token->start + 1 << std::endl;
+}
+
+//-------------------   TK PRINTER IMPLEMENTATIONS   --------------------------------
+
+TkPrinter::TkPrinter()
+{
+    FileName dir = xmippBaseDir();
+    dir.append("/applications/scripts/program_gui/program_gui.py");
+    //      std::cout << "Running: " << dir << std::endl;
+
+    char readbuffer[256];
+    //        int pfd[2], fdOut, nbytes;
+    //        if (pipe(pfd) == -1)
+    //        {
+    //            perror("pipe");
+    //            exit(EXIT_FAILURE);
+    //        }
+    //dup2(1, fdOut);//save std::cout
+    //dup2(pfd[1], 1);
+    output = popen(dir.c_str(), "w");
+
+}
+
+TkPrinter::~TkPrinter()
+{
+    pclose(output);
+}
+
+void TkPrinter::printProgram(const ProgramDef &program, int v)
+{
+    //    *pOut << "PROGRAM" << std::endl << "   " << program.name << std::endl;
+    fprintf(output, "XMIPP 3.0 - %s\n", program.name.c_str());
+    //    if (program.usageComments.size() > 0)
+    //    {
+    //        *pOut << "USAGE" << std::endl;
+    //        for (size_t i = 0; i < program.usageComments.size(); ++i)
+    //            *pOut << "   " << program.usageComments.comments[i] << std::endl;
+    //    }
+    //    if (program.sections.size() > 0)
+    //    {
+    //        *pOut << "OPTIONS" << std::endl;
+    for (size_t i = 0; i < program.sections.size(); ++i)
+        printSection(*program.sections[i], v);
+    //    }
+}
+
+void TkPrinter::printSection(const SectionDef &section, int v)
+{
+    if (section.visible <= v)
+    {
+        //        *pOut << std::endl;
+        //        if (section.name.length() > 0)
+        //            *pOut << section.name << std::endl;
+        for (size_t i = 0; i < section.params.size(); ++i)
+            printParam(*section.params[i], v);
+    }
+}
+
+//void TkPrinter::printRequiresList(StringVector requires)
+//{
+//    if (!requires.empty())
+//    {
+//        *pOut << " ( requires ";
+//        for (size_t i = 0; i < requires.size(); ++i)
+//            *pOut << requires[i] << " ";
+//        *pOut << ")";
+//    }
+//}
+
+void TkPrinter::printParam(const ParamDef &param, int v)
+{
+    if (param.visible <= v)
+    {
+        //        if (param.orBefore)
+        //            *pOut << "   OR" << std::endl;
+
+        //        *pOut << "   ";
+        //        if (!param.notOptional)
+        //            *pOut << "[";
+        //        *pOut << param.name;
+        //        //print alias
+        //        for (size_t i = 0; i < param.aliases.size(); ++i)
+        //            *pOut << ", " << param.aliases[i];
+        //        //print arguments
+        //Independent params are some kind of special ones
+        if (param.independent)
+            return;
+
+        int n_args = param.arguments.size();
+        fprintf(output, "param = ParamWidget(self.params_frame, \"%s\", %d);\n", param.name.c_str(), n_args);
+
+        for (size_t i = 0; i < param.arguments.size(); ++i)
+        {
+            //*pOut << " ";
+            printArgument(*param.arguments[i], v);
+        }
+        //Add comments to the help
+        for (size_t i = 0; i < param.comments.size(); ++i)
+            if (param.comments.visibility[i] <= v)
+                fprintf(output, "param.addCommentLine('''%s''');\n", param.comments.comments[i].c_str());
+        //End with options of the param
+        fprintf(output, "param.endWithOptions();\n");
+
+        //        if (!param.notOptional)
+        //            *pOut << "]";
+        //
+        //        printRequiresList(param.requires);
+        //        *pOut << std::endl;
+        //        printCommentList(param.comments, v);
+
+        //        for (size_t i = 0; i < param.arguments.size(); ++i)
+        //        {
+        //            ArgumentDef &arg = *param.arguments[i];
+        //            if (!arg.subParams.empty())
+        //            {
+        //                *pOut << "      where <" << arg.name << "> can be:" << std::endl;
+        //                for (size_t j = 0; j < arg.subParams.size(); ++j)
+        //                {
+        //                    *pOut << "        " << arg.subParams[j]->name;
+        //                    for (size_t k = 0; k < arg.subParams[j]->arguments.size(); ++k)
+        //                    {
+        //                        *pOut << " ";
+        //                        printArgument(*(arg.subParams[j]->arguments[k]));
+        //                    }
+        //                    printRequiresList(arg.subParams[j]->requires);
+        //                    *pOut << std::endl;
+        //                    printCommentList(arg.subParams[j]->comments);
+        //
+        //                }
+        //            }
+        //        }
+
+    }
+}
+
+void TkPrinter::printArgument(const ArgumentDef & argument, int v)
+{
+    //    *pOut << "<" << argument.name;
+    //    if (argument.hasDefault)
+    //        *pOut << "=" << argument.argDefault;
+    //    *pOut << ">";
+    fprintf(output, "param.addOption(\"%s\", \"%s\", []);\n", argument.name.c_str(), argument.argDefault.c_str());
+}
+
+void TkPrinter::printCommentList(const CommentList &comments, int v)
+{
+    //    for (size_t i = 0; i < comments.size(); ++i)
+    //        if (comments.visibility[i] <= v)
+    //            *pOut << "          " << comments.comments[i] << std::endl;
+}
+
+void TkPrinter::printToken(ArgToken * token)
+{
+    //    std::cerr << "token: '" << token->lexeme
+    //    << "' type: " << ArgToken::typeString(token->type)
+    //    << " line: " << token->line + 1
+    //    << " pos: " << token->start + 1 << std::endl;
 }

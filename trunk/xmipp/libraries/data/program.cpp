@@ -83,6 +83,15 @@ void XmippProgram::writeToDB(const FileName &dbName)
     db.commitTrans();
 }
 
+void XmippProgram::createGUI()
+{
+  TkPrinter tk;
+  tk.printProgram(*progDef);
+  //FIXME
+  exit(0);
+
+}
+
 XmippProgram::XmippProgram()
 {
     progDef = NULL;
@@ -118,7 +127,8 @@ void XmippProgram::read(int argc, char ** argv, bool reportErrors)
 
     ///If not arguments are provided, show usage message
     if (argc == 1)
-        usage();
+        //usage();
+      createGUI();
 
     try
     {

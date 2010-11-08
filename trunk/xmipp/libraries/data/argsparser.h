@@ -309,4 +309,20 @@ public:
     virtual void printToken(ArgToken * token);
 };
 
+/** Print out to create Tk GUI */
+class TkPrinter: public Printer
+{
+protected:
+  FILE * output;
+public:
+  /** Constructor */
+  TkPrinter();
+  ~TkPrinter();
+  virtual void printProgram(const ProgramDef &program, int v = 0);
+  virtual void printSection(const SectionDef &section, int v = 0);
+  virtual void printParam(const ParamDef &param, int v = 0);
+  virtual void printArgument(const ArgumentDef & argument, int v = 0);
+  virtual void printCommentList(const CommentList &comments, int v = 0);
+  virtual void printToken(ArgToken * token);
+};
 #endif /* ARGSPARSER_H_ */

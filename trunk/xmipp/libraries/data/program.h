@@ -62,6 +62,9 @@ private:
     /** Write Program info to DB */
     void writeToDB(const FileName &dbName);
 
+    /** Create Tk GUI */
+    void createGUI();
+
 protected:
     /// Program definition and arguments parser
     ProgramDef * progDef;
@@ -128,9 +131,9 @@ public:
      */
     const char * name() const;
     /** Print the usage of the program, reduced version */
-    void usage(int verb = 0) const;
+    virtual void usage(int verb = 0) const;
     /** Print help about specific parameter */
-    void usage(const std::string & param, int verb = 2);
+    virtual void usage(const std::string & param, int verb = 2);
 
     /** Return the version of the program */
     int version() const;
