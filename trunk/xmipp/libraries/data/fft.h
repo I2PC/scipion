@@ -82,7 +82,7 @@ void FFT_idx2digfreq(T& v, const Matrix1D< int >& idx, Matrix1D< double >& freq)
     v.getSize(size);
 
     FOR_ALL_ELEMENTS_IN_MATRIX1D(idx)
-        FFT_IDX2DIGFREQ(idx(i), size[i], freq(i));
+    FFT_IDX2DIGFREQ(idx(i), size[i], freq(i));
 }
 
 /** Frequency to index
@@ -104,7 +104,7 @@ void digfreq2FFT_idx(T& v, const Matrix1D< double >& freq, Matrix1D< int >& idx)
     v.getSize(size);
 
     FOR_ALL_ELEMENTS_IN_MATRIX1D(idx)
-        DIGFREQ2FFT_IDX(freq(i), size[i], idx(i));
+    DIGFREQ2FFT_IDX(freq(i), size[i], idx(i));
 }
 
 /** Digital to Continuous frequency
@@ -118,7 +118,7 @@ inline void digfreq2contfreq(const Matrix1D< double >& digfreq,
 {
     contfreq.resize(digfreq);
     FOR_ALL_ELEMENTS_IN_MATRIX1D(digfreq)
-		contfreq(i) = digfreq(i) / pixel_size;
+    contfreq(i) = digfreq(i) / pixel_size;
 }
 
 /** Continuous to Digital frequency
@@ -132,7 +132,7 @@ inline void contfreq2digfreq(const Matrix1D< double >& contfreq,
 {
     digfreq.resize(contfreq);
     FOR_ALL_ELEMENTS_IN_MATRIX1D(contfreq)
-		digfreq(i) = contfreq(i) * pixel_size;
+    digfreq(i) = contfreq(i) * pixel_size;
 }
 //@}
 
@@ -196,40 +196,40 @@ void RealImag2Complex(const MultidimArray< double > & real,
  *
  * int main() {
  *     try {
- *     	 MultidimArray<double> x(65);
- * 	 x.setXmippOrigin();
- * 	 double T=0.5;
- * 	 double T1=6;
- * 	 int N1=(int)CEIL(T1/T);
+ *       MultidimArray<double> x(65);
+ *   x.setXmippOrigin();
+ *   double T=0.5;
+ *   double T1=6;
+ *   int N1=(int)CEIL(T1/T);
  *
- * 	 // Fill x with a pulse from -N1 to N1 (-T1 to T1 in continuous)
- * 	 FOR_ALL_ELEMENTS_IN_ARRAY1D(x)
- * 	    if (ABS(i)<=N1) x(i)=1;
+ *   // Fill x with a pulse from -N1 to N1 (-T1 to T1 in continuous)
+ *   FOR_ALL_ELEMENTS_IN_ARRAY1D(x)
+ *      if (ABS(i)<=N1) x(i)=1;
  *
- * 	 // Compute the Fourier transform
- * 	 MultidimArray< std::complex<double> > X;
- * 	 MultidimArray<double> Xmag;
- * 	 FourierTransform(x,X);
- * 	 FFT_magnitude(X,Xmag);
+ *   // Compute the Fourier transform
+ *   MultidimArray< std::complex<double> > X;
+ *   MultidimArray<double> Xmag;
+ *   FourierTransform(x,X);
+ *   FFT_magnitude(X,Xmag);
  *
- * 	 // Compute the frequency axes
- * 	 MultidimArray<double> contfreq(XSIZE(X)), digfreq(XSIZE(X));
+ *   // Compute the frequency axes
+ *   MultidimArray<double> contfreq(XSIZE(X)), digfreq(XSIZE(X));
  *          FOR_ALL_ELEMENTS_IN_ARRAY1D(X)
  *              FFT_IDX2DIGFREQ(i,XSIZE(X),digfreq(i));
- * 	 digfreq*=2*PI;
- * 	 contfreq=digfreq/T;
+ *   digfreq*=2*PI;
+ *   contfreq=digfreq/T;
  *
- * 	 // Show all Fourier transforms
- * 	 FOR_ALL_ELEMENTS_IN_ARRAY1D(X) {
- * 	     if (digfreq(i)>=0)
+ *   // Show all Fourier transforms
+ *   FOR_ALL_ELEMENTS_IN_ARRAY1D(X) {
+ *       if (digfreq(i)>=0)
  *                 std::cout << digfreq(i) << " " << contfreq(i) << " "
- * 		          << XSIZE(X)*Xmag(i) << " "
- * 			  << ABS(discreteTransform(digfreq(i),N1)) << " "
- * 			  << ABS(continuousTransform(contfreq(i),T1)/T)
- * 			  << std::endl;
- * 	 }
+ *             << XSIZE(X)*Xmag(i) << " "
+ *      << ABS(discreteTransform(digfreq(i),N1)) << " "
+ *      << ABS(continuousTransform(contfreq(i),T1)/T)
+ *      << std::endl;
+ *   }
  *     } catch (XmippError XE) {
- *     	   std::cout << XE << std::endl;
+ *         std::cout << XE << std::endl;
  *     }
  *     return 0;
  * }
@@ -266,189 +266,103 @@ void InverseFourierTransformHalf(const MultidimArray< std::complex< double > > &
 template <typename T>
 void CenterFFT(MultidimArray< T >& v, bool forward)
 {
-    if ( v.getDim() == 1 )
-    {
-        // 1D
-        MultidimArray< T > aux;
-        int l, shift;
-
-        l = XSIZE(v);
-        aux.resize(l);
-        shift = (int)(l / 2);
-
-        if (!forward)
-            shift = -shift;
-
-        // Shift the input in an auxiliar vector
-        for (int i = 0; i < l; i++)
-        {
-            int ip = i + shift;
-
-            if (ip < 0)
-                ip += l;
-            else if (ip >= l)
-                ip -= l;
-
-            aux(ip) = DIRECT_A1D_ELEM(v, i);
-        }
-
-        // Copy the vector
-        for (int i = 0; i < l; i++)
-            DIRECT_A1D_ELEM(v, i) = DIRECT_A1D_ELEM(aux, i);
-    }
-    else if ( v.getDim() == 2 )
-    {
-        // 2D
-        MultidimArray< T > aux;
-        int l, shift;
-
-        // Shift in the X direction
-        l = XSIZE(v);
-        aux.resize(l);
-        shift = (int)(l / 2);
-
-        if (!forward)
-            shift = -shift;
-
-        for (int i = 0; i < YSIZE(v); i++)
-        {
-            // Shift the input in an auxiliar vector
-            for (int j = 0; j < l; j++)
-            {
-                int jp = j + shift;
-
-                if (jp < 0)
-                    jp += l;
-                else if (jp >= l)
-                    jp -= l;
-
-                aux(jp) = DIRECT_A2D_ELEM(v, i, j);
-            }
-
-            // Copy the vector
-            for (int j = 0; j < l; j++)
-                DIRECT_A2D_ELEM(v, i, j) = DIRECT_A1D_ELEM(aux, j);
-        }
-
-        // Shift in the Y direction
-        l = YSIZE(v);
-        aux.resize(l);
-        shift = (int)(l / 2);
-
-        if (!forward)
-            shift = -shift;
-
-        for (int j = 0; j < XSIZE(v); j++)
-        {
-            // Shift the input in an auxiliar vector
-            for (int i = 0; i < l; i++)
-            {
-                int ip = i + shift;
-
-                if (ip < 0)
-                    ip += l;
-                else if (ip >= l)
-                    ip -= l;
-
-                aux(ip) = DIRECT_A2D_ELEM(v, i, j);
-            }
-
-            // Copy the vector
-            for (int i = 0; i < l; i++)
-                DIRECT_A2D_ELEM(v, i, j) = DIRECT_A1D_ELEM(aux, i);
-        }
-    }
-    else if ( v.getDim() == 3 )
+    if ( v.getDim() > 0 && v.getDim() <= 3)
     {
         // 3D
         MultidimArray< T > aux;
         int l, shift;
 
         // Shift in the X direction
-        l = XSIZE(v);
-        aux.resize(l);
-        shift = (int)(l / 2);
+        if ((l = XSIZE(v)) > 1)
+        {
+            aux.resize(l);
+            shift = (int)(l / 2);
 
-        if (!forward)
-            shift = -shift;
+            if (!forward)
+                shift = -shift;
 
-        for (int k = 0; k < ZSIZE(v); k++)
-            for (int i = 0; i < YSIZE(v); i++)
-            {
-                // Shift the input in an auxiliar vector
-                for (int j = 0; j < l; j++)
+            for (int k = 0; k < ZSIZE(v); k++)
+                for (int i = 0; i < YSIZE(v); i++)
                 {
-                    int jp = j + shift;
+                    // Shift the input in an auxiliar vector
+                    for (int j = 0; j < l; j++)
+                    {
+                        int jp = j + shift;
 
-                    if (jp < 0)
-                        jp += l;
-                    else if (jp >= l)
-                        jp -= l;
+                        if (jp < 0)
+                            jp += l;
+                        else if (jp >= l)
+                            jp -= l;
 
-                    aux(jp) = DIRECT_A3D_ELEM(v, k, i, j);
+                        dAi(aux,jp) = dAkij(v, k, i, j);
+                    }
+
+                    // Copy the vector
+                    for (int j = 0; j < l; j++)
+                      dAkij(v, k, i, j) = dAi(aux, j);
                 }
-
-                // Copy the vector
-                for (int j = 0; j < l; j++)
-                    DIRECT_A3D_ELEM(v, k, i, j) = DIRECT_A1D_ELEM(aux, j);
-            }
+        }
 
         // Shift in the Y direction
-        l = YSIZE(v);
-        aux.resize(l);
-        shift = (int)(l / 2);
+        if ((l = YSIZE(v)) > 1)
+        {
+            aux.resize(l);
+            shift = (int)(l / 2);
 
-        if (!forward)
-            shift = -shift;
+            if (!forward)
+                shift = -shift;
 
-        for (int k = 0; k < ZSIZE(v); k++)
-            for (int j = 0; j < XSIZE(v); j++)
-            {
-                // Shift the input in an auxiliar vector
-                for (int i = 0; i < l; i++)
+            for (int k = 0; k < ZSIZE(v); k++)
+                for (int j = 0; j < XSIZE(v); j++)
                 {
-                    int ip = i + shift;
+                    // Shift the input in an auxiliar vector
+                    for (int i = 0; i < l; i++)
+                    {
+                        int ip = i + shift;
 
-                    if (ip < 0)
-                        ip += l;
-                    else if (ip >= l)
-                        ip -= l;
+                        if (ip < 0)
+                            ip += l;
+                        else if (ip >= l)
+                            ip -= l;
 
-                    aux(ip) = DIRECT_A3D_ELEM(v, k, i, j);
+                        dAi(aux,ip) = dAkij(v, k, i, j);
+                    }
+
+                    // Copy the vector
+                    for (int i = 0; i < l; i++)
+                      dAkij(v, k, i, j) = dAi(aux, i);
                 }
-
-                // Copy the vector
-                for (int i = 0; i < l; i++)
-                    DIRECT_A3D_ELEM(v, k, i, j) = DIRECT_A1D_ELEM(aux, i);
-            }
+        }
 
         // Shift in the Z direction
-        l = ZSIZE(v);
-        aux.resize(l);
-        shift = (int)(l / 2);
+        if ((l = ZSIZE(v)) > 1)
+        {
+            aux.resize(l);
+            shift = (int)(l / 2);
 
-        if (!forward)
-            shift = -shift;
+            if (!forward)
+                shift = -shift;
 
-        for (int i = 0; i < YSIZE(v); i++)
-            for (int j = 0; j < XSIZE(v); j++)
-            {
-                // Shift the input in an auxiliar vector
-                for (int k = 0; k < l; k++)
+            for (int i = 0; i < YSIZE(v); i++)
+                for (int j = 0; j < XSIZE(v); j++)
                 {
-                    int kp = k + shift;
-                    if (kp < 0)
-                        kp += l;
-                    else if (kp >= l)
-                        kp -= l;
+                    // Shift the input in an auxiliar vector
+                    for (int k = 0; k < l; k++)
+                    {
+                        int kp = k + shift;
+                        if (kp < 0)
+                            kp += l;
+                        else if (kp >= l)
+                            kp -= l;
 
-                    aux(kp) = DIRECT_A3D_ELEM(v, k, i, j);
+                        dAi(aux,kp) = dAkij(v, k, i, j);
+                    }
+
+                    // Copy the vector
+                    for (int k = 0; k < l; k++)
+                      dAkij(v, k, i, j) = dAi(aux, k);
                 }
-
-                // Copy the vector
-                for (int k = 0; k < l; k++)
-                    DIRECT_A3D_ELEM(v, k, i, j) = DIRECT_A1D_ELEM(aux, k);
-            }
+        }
     }
     else
         REPORT_ERROR(ERR_MULTIDIM_DIM,"CenterFFT ERROR: Dimension should be 1, 2 or 3");
