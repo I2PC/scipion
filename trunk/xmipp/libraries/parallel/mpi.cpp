@@ -218,3 +218,20 @@ void MpiNode::barrierWait()
 {
   MPI_Barrier(MPI_COMM_WORLD);
 }
+
+XmippMpiProgram::XmippMpiProgram(int rank)
+{
+  this->mpiRank = rank;
+}
+
+XmippMpiProgram::XmippMpiProgram(MpiNode * node)
+{
+  this->mpiNode = node;
+  mpiRank = node->rank;
+}
+
+void XmippMpiProgram::usage(int verb) const
+{
+  if (mpiRank == 0)
+    XmippProgram::usage(verb);
+}

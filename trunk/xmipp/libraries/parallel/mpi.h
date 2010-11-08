@@ -33,6 +33,7 @@
 #include <stdlib.h>
 #include <iostream>
 #include "data/threads.h"
+#include "data/program.h"
 
 /** @addtogroup Parallel
  * @{
@@ -77,7 +78,8 @@ public:
     ~MpiTaskDistributor();
 
     friend void __threadMpiMasterDistributor(ThreadArgument &arg);
-};//end of class MpiTaskDistributor
+}
+;//end of class MpiTaskDistributor
 
 /** Another implementation of ParallelTaskDistributor using a file as lock mechanism.
  * It will extends from ThreadTaskDistributor for also be compatible with several
@@ -104,7 +106,22 @@ protected:
 public:
     FileTaskDistributor(longint nTasks, longint bSize, MpiNode * node  = NULL);
     virtual ~FileTaskDistributor();
-};//end of class FileTaskDistributor
+}
+;//end of class FileTaskDistributor
+
+/** Class to extend from XmippProgram for Mpi tasks */
+class XmippMpiProgram: public XmippProgram
+{
+protected:
+    int mpiRank;
+    MpiNode * mpiNode;
+
+public:
+    XmippMpiProgram(int rank = 0); //master by default
+    XmippMpiProgram(MpiNode * node);
+    /** Print the usage of the program, reduced version */
+    void usage(int verb = 0) const;
+};
 
 /** @} */
 #endif /* XMIPP_MPI_H_ */
