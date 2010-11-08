@@ -35,6 +35,8 @@
 #include <data/mask.h>
 #include <data/polar.h>
 
+#include <data/program.h>
+
 #define AVG_OUPUT_SIZE 9
 
 /**@defgroup ClassAverage Create class averages from projection
@@ -42,7 +44,7 @@
    @ingroup ReconsLibrary */
 //@{
 /** angular_class_average parameters. */
-class Prog_angular_class_average_prm
+class ProgAngularClassAverage : public XmippProgram
 {
 
 public:
@@ -94,14 +96,15 @@ public:
     MultidimArray<double> corr;
 
 public:
+
     /// Read arguments from command line
-    void read(int argc, char **argv);
+    void readParams();
 
-    /// Show
-    void show();
+    /// Read arguments from command line
+    void defineParams();
 
-    /// Usage
-    void usage();
+    /** Run. */
+    void run();
 
     /** Make shiftmask and calculate nr_psi */
     void produceSideInfo();

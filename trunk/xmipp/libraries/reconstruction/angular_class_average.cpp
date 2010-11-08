@@ -26,26 +26,25 @@
 #include "angular_class_average.h"
 
 // Read arguments ==========================================================
-void Prog_angular_class_average_prm::read(int argc, char **argv)
+void ProgAngularClassAverage::readParams()
 {
-
     // Read command line
-    DF.read(getParameter(argc, argv, "-i"));
-    DFlib.read(getParameter(argc, argv, "-lib"));
-    if (checkParameter(argc, argv, "-add_to"))
+    DF.read(getParam("-i"));
+    DFlib.read(getParam("--lib"));
+    if (checkParam("--add_to"))
     {
         do_add = true;
-        fn_out = getParameter(argc, argv, "-add_to");
+        fn_out = getParam("--add_to");
     }
     else
     {
         do_add = false;
-        fn_out = getParameter(argc, argv, "-o");
+        fn_out = getParam("-o");
     }
-    col_select = getParameter(argc, argv, "-select", "maxCC");
-    if (checkParameter(argc, argv, "-limitR"))
+    col_select = getParam("--select");
+    if (checkParam("--limitR"))
     {
-        limitR = textToFloat(getParameter(argc, argv, "-limitR"));
+        limitR = getDoubleParam("--limitR");
         if (limitR < -100. || limitR > 100.)
             REPORT_ERROR(ERR_VALUE_INCORRECT,
                          "limitR should be a percentage: provide values between -100 and 100.");
@@ -57,122 +56,165 @@ void Prog_angular_class_average_prm::read(int argc, char **argv)
             do_limitRF = true;
         }
     }
-    do_limit0=checkParameter(argc, argv, "-limit0");
+    do_limit0=checkParam("--limit0");
     if (do_limit0)
     {
-        limit0 = textToFloat(getParameter(argc, argv, "-limit0"));
+        limit0 = getDoubleParam("--limit0");
     }
-    do_limitF=checkParameter(argc, argv, "-limitF");
+    do_limitF=checkParam("--limitF");
     if (do_limitF)
     {
-        limitF = textToFloat(getParameter(argc, argv, "-limitF"));
+        limitF = getDoubleParam("--limitF");
     }
 
     // Perform splitting of the data?
-    do_split = checkParameter(argc, argv, "-split");
+    do_split = checkParameter(argc, argv, "--split");
 
     // Perform Wiener filtering of average?
-    fn_wien = getParameter(argc, argv, "-wien","");
-    pad = XMIPP_MAX(1.,textToFloat(getParameter(argc, argv, "-pad","1.")));
+    fn_wien = getParameter(argc, argv, "--wien","");
+    pad = XMIPP_MAX(1.,getDoubleParam("--pad"));
 
     // Skip writing selfiles?
-    dont_write_selfiles = checkParameter(argc, argv, "-dont_write_selfiles");
+    dont_write_selfiles = checkParam("--dont_write_selfiles");
 
     // Internal re-alignment of the class averages
-    Ri      = textToInteger(getParameter(argc,argv,"-Ri","-1"));
-    Ro      = textToInteger(getParameter(argc,argv,"-Ro","-1"));
-    nr_iter = textToInteger(getParameter(argc,argv,"-iter","0"));
-    max_shift        = textToFloat(getParameter(argc, argv, "-max_shift","999."));
-    max_shift_change = textToFloat(getParameter(argc, argv, "-max_shift_change","999."));
-    max_psi_change   = textToFloat(getParameter(argc, argv, "-max_psi_change","360."));
+    Ri      = getIntParam("--Ri");
+    Ro      = getIntParam("--Ro");
+    nr_iter = getIntParam("--iter");
+    max_shift        = getDoubleParam("--max_shift");
+    max_shift_change = getDoubleParam("--max_shift_change");
+    max_psi_change   = getDoubleParam("--max_psi_change");
 }
 
-// Show ====================================================================
-void Prog_angular_class_average_prm::show()
-{
 
-    std::cerr << "  Input docfile           : "<< DF.getFilename()<<std::endl;
-    std::cerr << "  Library docfile         : "<< DFlib.getFilename()<<std::endl;
+// Define parameters ==========================================================
+void ProgAngularClassAverage::defineParams()
+{
+    addUsageLine("This program makes class average images and corresponding selfiles from angular_projection_matching docfiles");
+    addUsageLine("Example of use: Sample at default values and calculating output averages of random halves of the data");
+    addUsageLine("   xmipp_angular_class_average  -i proj_match.doc --lib ref_angles.doc -o out_dir --split");
+
+    addParamsLine("    -i <doc_file>         	: Docfile with assigned angles for all experimental particles");
+    addParamsLine("   --lib <doc_file>       	: Docfile with angles used to generate the projection matching library");
+    addParamsLine("    -o <root_name>        	: Output rootname for class averages and selfiles");
+    addParamsLine("or --add_to <root_name>   	: Add output to existing files");
+    addParamsLine("   [--split ]             	: Also output averages of random halves of the data");
+    addParamsLine("   [--wien <img=\"\"> ]   	: Apply this Wiener filter to the averages");
+    addParamsLine("   [--pad <factor=1.> ]    	: Padding factor for Wiener correction");
+    addParamsLine("   [--dont_write_selfiles]   : Do not write class selfiles to disc");
+
+    addUsageLine("   IMAGE SELECTION BASED ON INPUT DOCFILE ");
+    addParamsLine("   [--select <col=\"\">]    	: Column to use for image selection (limit0, limitF or limitR)");
+    addParamsLine("   [--limit0 <l0>]       	: Discard images below <l0>");
+    addParamsLine("   [--limitF <lF>]       	: Discard images above <lF>");
+    addParamsLine("   [--limitR <lR>]      		: if (lR>0 && lR< 100): discard lowest  <lR> % in each class");
+    addParamsLine("                       		: if (lR<0 && lR>-100): discard highest <lR> % in each class");
+
+    addUsageLine("    REALIGNMENT OF CLASSES ");
+    addParamsLine("   [--iter <nr_iter=0>]      : Number of iterations for re-alignment");
+    addParamsLine("   [--Ri <ri=1>]             : Inner radius to limit rotational search");
+    addParamsLine("   [--Ro <r0=-1>]            : Outer radius to limit rotational search");
+    addParamsLine("                          	: ro = -1 -> dim/2-1");
+    addParamsLine("   [--max_shift <ms=999.>]        : Maximum shift (larger shifts will be set to 0)");
+    addParamsLine("   [--max_shift_change <msc=999.>] : Discard images that change shift more in the last iteration ");
+    addParamsLine("   [--max_psi_change <mps=360.>]   : Discard images that change psi more in the last iteration ");
+
+    addKeywords("class average images");
+}
+
+// Run ====================================================================
+void ProgAngularClassAverage::run()
+{
+    int              i, nmax, nr_ref, nr_images, reserve;
+    double           ref_number, rot, tilt, psi, xshift, yshift, mirror;
+    double           w, w1, w2;
+    Matrix1D<double> dataline(8);
+
+    produceSideInfo();
+
+    // Only for do_add: append input docfile to add_to docfile
     if (do_add)
-        std::cerr << "  Add class averages to   : "<< fn_out<<std::endl;
-    else
-        std::cerr << "  Output rootname         : "<< fn_out<<std::endl;
-    if (do_split)
-        std::cerr << "     -> Split data in random halves and output class averages "<<std::endl;
-    if (do_mirrors)
-        std::cerr << "     -> Take mirror operation into account "<<std::endl;
-    if (dont_write_selfiles)
-        std::cerr << "     -> Do not write class selfiles to disc "<<std::endl;
-    // election
-    if (do_limit0 || do_limitF || do_limitR0 || do_limitRF)
     {
-        std::cerr << "  PERFORM IMAGE SELECTION BASED ON INPUT DOCFILE"<<std::endl;
-        std::cerr << "    Column number to use    : "<<col_select<<std::endl;
-        if (do_limitR0)
-            std::cerr << "    Discard lowest          : "<<limitR<<" %"<<std::endl;
-        else if (do_limitRF)
-            std::cerr << "    Discard highest         : "<<limitR<<" %"<<std::endl;
-        if (do_limit0)
-            std::cerr << "    Discard images below    : "<<limit0<<std::endl;
-        if (do_limitF)
-            std::cerr << "    Discard images above    : "<<limitF<<std::endl;
+        FileName fn_tmp=fn_out+".doc";
+        if (exists(fn_tmp))
+        {
+            MetaData DFaux = DF;
+            // Don't do any fancy merging or sorting because those functions are really slow...
+            DFaux.merge(fn_tmp);
+            DFaux.write(fn_tmp);
+        }
+        else
+        {
+            DF.write(fn_tmp);
+        }
     }
-    // Realignment
+
+    // Making class averages
+
+    // Reserve memory for output from class realignment
     if (nr_iter > 0)
-    {
-        std::cerr << "  PERFORM REALIGNMENT OF CLASSES"<<std::endl;
-        std::cerr << "    Number of iterations    : "<<nr_iter<<std::endl;
-        std::cerr << "    Maximum shift           : "<<max_shift<<std::endl;
-        std::cerr << "    Maximum shift change    : "<<max_shift_change<<std::endl;
-        std::cerr << "    Maximum psi change      : "<<max_psi_change<<std::endl;
-        if (Ri>0)
-            std::cerr << "    Inner radius rot-search : "<<Ri<<std::endl;
-        if (Ro>0)
-            std::cerr << "    Outer radius rot-search : "<<Ro<<std::endl;
-    }
-    // Wiener filter correction
-    if (fn_wien != "")
-    {
-        std::cerr << "  PERFORM WIENER CORRECTION ON CLASS AVERAGES"<<std::endl;
-        std::cerr << "    Padding factor          : "<<pad<<std::endl;
-    }
+        reserve = DF.size();
+    else
+        reserve = 0;
+    double output_values[AVG_OUPUT_SIZE*reserve+1];
 
-    std::cerr << " ================================================================="<<std::endl;
+    nr_ref = DFlib.size();
+    init_progress_bar(nr_ref);
+
+    // Loop over all classes
+
+    for (int dirno = 1; dirno <= nr_ref; dirno++)
+    {
+        // Do the actual work
+        processOneClass(dirno, output_values);
+
+        // Output classes sel and doc files
+        w = output_values[1];
+        w1 = output_values[2];
+        w2 = output_values[3];
+        addClassAverage(dirno,w,w1,w2);
+
+        // Fill new docfile (with params after realignment)
+        if (nr_iter > 0)
+        {
+            nr_images = ROUND(output_values[4] / AVG_OUPUT_SIZE);
+            for (int i = 0; i < nr_images; i++)
+            {
+                int this_image = ROUND(output_values[i*AVG_OUPUT_SIZE+5]);
+                if (!(this_image < 0))
+                {
+                    //FIXME: The next line has no sense since the MDL_IMAGE is string
+                    // and 'this_image' is of type int...
+                    REPORT_ERROR(ERR_UNCLASSIFIED,
+                                 "The next line has no sense since the MDL_IMAGE is string \
+                                 and 'this_image' is of type int...");
+                    DF.gotoFirstObject(MDValueEQ(MDL_IMAGE,this_image));
+
+                    DF.setValue(MDL_ANGLEROT,output_values[i*AVG_OUPUT_SIZE+6]);
+                    DF.setValue(MDL_ANGLETILT,output_values[i*AVG_OUPUT_SIZE+7]);
+                    DF.setValue(MDL_ANGLEPSI,output_values[i*AVG_OUPUT_SIZE+8]);
+                    DF.setValue(MDL_SHIFTX,output_values[i*AVG_OUPUT_SIZE+9]);
+                    DF.setValue(MDL_SHIFTY,output_values[i*AVG_OUPUT_SIZE+10]);
+                    DF.setValue(MDL_REF,output_values[i*AVG_OUPUT_SIZE+11]);
+                    DF.setValue(MDL_FLIP,output_values[i*AVG_OUPUT_SIZE+12]);
+                    DF.setValue(MDL_MAXCC,output_values[i*AVG_OUPUT_SIZE+13]);
+                }
+            }
+        }
+
+        progress_bar(dirno);
+
+    }
+    progress_bar(nr_ref);
+
+    // Write selfiles and docfiles with all class averages
+    finalWriteToDisc();
+
 }
 
-// Usage ===================================================================
-void Prog_angular_class_average_prm::usage()
-{
-    printf("Purpose:\n");
-    printf(" Makes class average images and corresponding selfiles from angular_projection_matching docfiles.\n");
-    printf("Usage:\n");
-    printf("   angular_class_average \n");
-    printf("        -i <docfile>        : docfile with assigned angles for all experimental particles\n");
-    printf("        -lib <docfile>      : docfile with angles used to generate the projection matching library\n");
-    printf("        -o <rootname>       : output rootname for class averages and selfiles\n");
-    printf("    OR: -add_to <rootname>  : Add output to existing files\n");
-    printf("       [-split ]            : Also output averages of random halves of the data\n");
-    printf("       [-wien <img=\"\"> ]    : Apply this Wiener filter to the averages\n");
-    printf("       [-pad <float=1.> ]   : Padding factor for Wiener correction\n");
-    printf("       [-dont_write_selfiles]  : Do not write class selfiles to disc\n");
-    printf(" IMAGE SELECTION BASED ON INPUT DOCFILE \n");
-    printf("       [-select <col=''>]   : Column to use for image selection (limit0, limitF or limitR)\n");
-    printf("       [-limit0 <float>]    : Discard images below <limit0>\n");
-    printf("       [-limitF <float>]    : Discard images above <limitF>\n");
-    printf("       [-limitR <float>     : if (limitR>0 && limitR< 100): discard lowest  <limitR> % in each class\n");
-    printf("                            : if (limitR<0 && limitR>-100): discard highest <limitR> % in each class\n");
-    printf(" REALIGNMENT OF CLASSES \n");
-    printf("       [-iter <int=0>]                  : Number of iterations for re-alignment\n");
-    printf("       [-Ri <int=1>]                    : Inner radius to limit rotational search\n");
-    printf("       [-Ro <int=dim/2-1>]              : Outer radius to limit rotational search\n");
-    printf("       [-max_shift <float=999.>]        : Maximum shift (larger shifts will be set to 0)\n");
-    printf("       [-max_shift_change <float=999.>] : Discard images that change shift more in the last iteration \n");
-    printf("       [-max_psi_change <float=360.>]   : Discard images that change psi more in the last iteration \n");
-    exit(1);
-}
 
 // Side info stuff ===================================================================
-void Prog_angular_class_average_prm::produceSideInfo()
+void ProgAngularClassAverage::produceSideInfo()
 {
     FileName fn_img;
 
@@ -274,8 +316,8 @@ void Prog_angular_class_average_prm::produceSideInfo()
     global_transformer.FourierTransform();
 }
 
-void Prog_angular_class_average_prm::getPolar(MultidimArray<double> &img, Polar<std::complex <double> > &fP,
-        bool conjugated, float xoff, float yoff)
+void ProgAngularClassAverage::getPolar(MultidimArray<double> &img, Polar<std::complex <double> > &fP,
+                                       bool conjugated, float xoff, float yoff)
 {
     MultidimArray<double> Maux;
     Polar<double> P;
@@ -286,7 +328,7 @@ void Prog_angular_class_average_prm::getPolar(MultidimArray<double> &img, Polar<
     fourierTransformRings(P,fP,global_plans,conjugated);
 }
 
-void Prog_angular_class_average_prm::reAlignClass(Image<double> &avg1,
+void ProgAngularClassAverage::reAlignClass(Image<double> &avg1,
         Image<double> &avg2,
         MetaData   &SFclass1,
         MetaData   &SFclass2,
@@ -496,7 +538,7 @@ void Prog_angular_class_average_prm::reAlignClass(Image<double> &avg1,
     }
 }
 
-void Prog_angular_class_average_prm::applyWienerFilter(MultidimArray<double> &img)
+void ProgAngularClassAverage::applyWienerFilter(MultidimArray<double> &img)
 {
     MultidimArray<std::complex<double> > Faux;
     if (paddim > dim)
@@ -521,7 +563,7 @@ void Prog_angular_class_average_prm::applyWienerFilter(MultidimArray<double> &im
     }
 }
 
-void Prog_angular_class_average_prm::processOneClass(int &dirno,
+void ProgAngularClassAverage::processOneClass(int &dirno,
         double * my_output)
 {
     Image<double> img, avg, avg1, avg2;
@@ -684,7 +726,7 @@ void Prog_angular_class_average_prm::processOneClass(int &dirno,
 
 }
 
-void Prog_angular_class_average_prm::writeToDisc(Image<double> avg,
+void ProgAngularClassAverage::writeToDisc(Image<double> avg,
         int        dirno,
         MetaData    SF,
         FileName   fn,
@@ -739,7 +781,7 @@ void Prog_angular_class_average_prm::writeToDisc(Image<double> avg,
 }
 
 
-void Prog_angular_class_average_prm::addClassAverage(int dirno,
+void ProgAngularClassAverage::addClassAverage(int dirno,
         double w,
         double w1,
         double w2)
@@ -807,7 +849,7 @@ void Prog_angular_class_average_prm::addClassAverage(int dirno,
     }
 }
 
-void Prog_angular_class_average_prm::finalWriteToDisc()
+void ProgAngularClassAverage::finalWriteToDisc()
 {
     FileName fn_tmp;
     MetaData  auxSF, auxDF;
