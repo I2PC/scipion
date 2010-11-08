@@ -127,8 +127,8 @@ void XmippProgram::read(int argc, char ** argv, bool reportErrors)
 
     ///If not arguments are provided, show usage message
     if (argc == 1)
-        //usage();
-      createGUI();
+        usage();
+      //createGUI();
 
     try
     {
