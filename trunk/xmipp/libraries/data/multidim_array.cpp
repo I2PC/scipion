@@ -27,6 +27,7 @@
 
 
 // Show a complex array ---------------------------------------------------
+template<>
 std::ostream& operator<<(std::ostream& ostrm,
                          const MultidimArray< std::complex<double> >& v)
 {
