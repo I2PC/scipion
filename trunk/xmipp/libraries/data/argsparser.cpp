@@ -117,7 +117,7 @@ void ArgLexer::setupToken(TokenType type)
         {
             std::string s = pToken->lexeme;
             std::transform(s.begin(), s.end(), s.begin(),
-                           (int(*)(int)) std::toupper);
+                           ::toupper);
             std::map<std::string, TokenType>::iterator it;
             it = reservedWords.find(s);
             if (it != reservedWords.end())

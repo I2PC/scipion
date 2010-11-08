@@ -46,8 +46,10 @@ XmippError::XmippError(const ErrorType nerr, const std::string &what,
 
     //Store information about the stack calls
     void *array[10];
+    #ifdef LINUX
     size = backtrace(array, 10);
     strings = backtrace_symbols(array, size);
+    #endif
 }
 
 //Object Destructor

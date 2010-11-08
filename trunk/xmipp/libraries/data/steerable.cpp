@@ -127,18 +127,18 @@ Steerable::Steerable(double sigma, MultidimArray<double> &Vtomograph,
 /* Build basis ------------------------------------------------------------- */
 void Steerable::buildBasis(const MultidimArray<double> &Vtomograph, double sigma)
 {
-    std::vector< MultidimArray<double> > hx, hy, hz;
-    generate1DFilters(sigma, Vtomograph, hx, hy, hz);
+    std::vector< MultidimArray<double> > hx1, hy1, hz1;
+    generate1DFilters(sigma, Vtomograph, hx1, hy1, hz1);
     for (int n=0; n<6; n++)
     {
         MultidimArray<double> aux;
-        singleFilter(Vtomograph,hx[n],hy[n],hz[n],aux);
+        singleFilter(Vtomograph,hx1[n],hy1[n],hz1[n],aux);
         basis.push_back(aux);
     }    
 }        
 
 void Steerable::singleFilter(const MultidimArray<double>& Vin,
-    MultidimArray<double> &hx, MultidimArray<double> &hy, MultidimArray<double> &hz,
+    MultidimArray<double> &hx1, MultidimArray<double> &hy1, MultidimArray<double> &hz1,
     MultidimArray<double> &Vout){
 
     MultidimArray< std::complex<double> > H, Aux;
@@ -147,7 +147,7 @@ void Steerable::singleFilter(const MultidimArray<double>& Vin,
     // Filter in X
     #define MINUS_ONE_POWER(n) (((n)%2==0)? 1:-1)
     FourierTransformer transformer;
-    transformer.FourierTransform(hx,H);
+    transformer.FourierTransform(hx1,H);
     
     FOR_ALL_ELEMENTS_IN_ARRAY1D(H)
           H(i)*= MINUS_ONE_POWER(i);
@@ -174,7 +174,7 @@ void Steerable::singleFilter(const MultidimArray<double>& Vin,
         }
 
     // Filter in Y
-    transformer.FourierTransform(hy,H);
+    transformer.FourierTransform(hy1,H);
     
     FOR_ALL_ELEMENTS_IN_ARRAY1D(H)
           H(i)*= MINUS_ONE_POWER(i);
@@ -199,7 +199,7 @@ void Steerable::singleFilter(const MultidimArray<double>& Vin,
 
     // Filter in Z
 
-    transformer.FourierTransform(hz,H);
+    transformer.FourierTransform(hz1,H);
 
     FOR_ALL_ELEMENTS_IN_ARRAY1D(H)
           H(i)*= MINUS_ONE_POWER(i);
@@ -230,72 +230,72 @@ void Steerable::singleFilter(const MultidimArray<double>& Vin,
 /* Filter generation ------------------------------------------------------- */
 void Steerable::generate1DFilters(double sigma,
     const MultidimArray<double> &Vtomograph,
-    std::vector< MultidimArray<double> > &hx,
-    std::vector< MultidimArray<double> > &hy,
-    std::vector< MultidimArray<double> > &hz){
+    std::vector< MultidimArray<double> > &hx1,
+    std::vector< MultidimArray<double> > &hy1,
+    std::vector< MultidimArray<double> > &hz1){
 
     // Initialization 
     MultidimArray<double> aux;
     aux.initZeros(XSIZE(Vtomograph));
     aux.setXmippOrigin();
-    for (int i=0; i<6; i++) hx.push_back(aux);
+    for (int i=0; i<6; i++) hx1.push_back(aux);
     
     aux.initZeros(YSIZE(Vtomograph));
     aux.setXmippOrigin();
-    for (int i=0; i<6; i++) hy.push_back(aux);
+    for (int i=0; i<6; i++) hy1.push_back(aux);
 
     aux.initZeros(ZSIZE(Vtomograph));
     aux.setXmippOrigin();
-    for (int i=0; i<6; i++) hz.push_back(aux);
+    for (int i=0; i<6; i++) hz1.push_back(aux);
 
     double sigma2=sigma*sigma;       
     double k1 =  1.0/pow((2.0*PI*sigma),(3.0/2.0));
     double k2 = -1.0/(sigma2);
     
-    FOR_ALL_ELEMENTS_IN_ARRAY1D(hx[0])
+    FOR_ALL_ELEMENTS_IN_ARRAY1D(hx1[0])
     {        
         double i2=i*i;
         double g = -exp(-i2/(2.0*sigma2));
-	hx[0](i) = k1*k2*g*(1.0-(i2/sigma2));
-	hx[1](i) = k1*k2*g;
-	hx[2](i) = k1*k2*g;
-	hx[3](i) = k1*k2*k2*g*i;
-	hx[4](i) = k1*k2*k2*g*i;
-	hx[5](i) = k1*k2*k2*g;
+	hx1[0](i) = k1*k2*g*(1.0-(i2/sigma2));
+	hx1[1](i) = k1*k2*g;
+	hx1[2](i) = k1*k2*g;
+	hx1[3](i) = k1*k2*k2*g*i;
+	hx1[4](i) = k1*k2*k2*g*i;
+	hx1[5](i) = k1*k2*k2*g;
     }    
-    FOR_ALL_ELEMENTS_IN_ARRAY1D(hy[0])
+    FOR_ALL_ELEMENTS_IN_ARRAY1D(hy1[0])
     {
         double i2=i*i;
         double g = -exp(-i2/(2.0*sigma2));
-        hy[0](i) = g;
-        hy[1](i) = g*(1.0-(i2/sigma2));
-        hy[2](i) = g;
-        hy[3](i) = g*i;
-        hy[4](i) = g;
-        hy[5](i) = g*i;
+        hy1[0](i) = g;
+        hy1[1](i) = g*(1.0-(i2/sigma2));
+        hy1[2](i) = g;
+        hy1[3](i) = g*i;
+        hy1[4](i) = g;
+        hy1[5](i) = g*i;
     }
-    FOR_ALL_ELEMENTS_IN_ARRAY1D(hz[0])
+    FOR_ALL_ELEMENTS_IN_ARRAY1D(hz1[0])
     {
         double i2=i*i;
         double g = -exp(-i2/(2.0*sigma2));
-	hz[0](i) = g;
-	hz[1](i) = g;
-	hz[2](i) = g*(1.0-(i2/sigma2));
-	hz[3](i) = g;
-	hz[4](i) = g*i;
-	hz[5](i) = g*i;
+	hz1[0](i) = g;
+	hz1[1](i) = g;
+	hz1[2](i) = g*(1.0-(i2/sigma2));
+	hz1[3](i) = g;
+	hz1[4](i) = g*i;
+	hz1[5](i) = g*i;
     }
 }
 
 void Steerable::generate3DFilter(MultidimArray<double>& h3D,
-    std::vector< MultidimArray<double> > &hx,
-    std::vector< MultidimArray<double> > &hy,
-    std::vector< MultidimArray<double> > &hz)
+    std::vector< MultidimArray<double> > &hx1,
+    std::vector< MultidimArray<double> > &hy1,
+    std::vector< MultidimArray<double> > &hz1)
 {
-    h3D.initZeros(XSIZE(hz[0]),XSIZE(hy[0]),XSIZE(hx[0]));
+    h3D.initZeros(XSIZE(hz1[0]),XSIZE(hy1[0]),XSIZE(hx1[0]));
     h3D.setXmippOrigin();
     FOR_ALL_ELEMENTS_IN_ARRAY3D(h3D)
         for (int n=0; n<6; n++)
-            h3D(k,i,j)+=(hz[n](k)*hy[n](i)*hx[n](j));    
+            h3D(k,i,j)+=(hz1[n](k)*hy1[n](i)*hx1[n](j));    
 }
 

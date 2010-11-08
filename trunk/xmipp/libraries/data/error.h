@@ -28,8 +28,9 @@
 #include <cstdlib>
 #include <string>
 #include <iostream>
+#ifdef LINUX
 #include <execinfo.h>
-
+#endif
 /** @defgroup ErrorHandling Error handling
  *  @ingroup DataLibrary
  *

@@ -380,14 +380,13 @@ void lensPD(MultidimArray<std::complex<double> > &Im, double Flens, double lambd
         y = (double) i * dy + (dy) / 2;
 
         phase = (-PI / lambda / Flens) * (x * x + y * y);
-
+#ifndef _AIX
         (Im(i, j)).real() = cos(phase);
         (Im(i, j)).imag() = sin(phase);
-
+#else
+         Im(i,j)=std::complex<double>(cos(phase),sin(phase));
+#endif
     }
 }
-
-
-
 #undef DEBUG
 

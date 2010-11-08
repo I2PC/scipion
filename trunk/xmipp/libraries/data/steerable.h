@@ -85,20 +85,20 @@ public:
     /** Internal function for the generation of 1D filters. */
     void generate1DFilters(double sigma,
         const MultidimArray<double> &Vtomograph,
-        std::vector< MultidimArray<double> > &hx,
-        std::vector< MultidimArray<double> > &hy,
-        std::vector< MultidimArray<double> > &hz);
+        std::vector< MultidimArray<double> > &hx1,
+        std::vector< MultidimArray<double> > &hy1,
+        std::vector< MultidimArray<double> > &hz1);
 
     /** Internal function for the generation of 3D filters. */
     void generate3DFilter(MultidimArray<double>& h3D,
-	std::vector< MultidimArray<double> > &hx,
-	std::vector< MultidimArray<double> > &hy,
-	std::vector< MultidimArray<double> > &hz);
+	std::vector< MultidimArray<double> > &hx1,
+	std::vector< MultidimArray<double> > &hy1,
+	std::vector< MultidimArray<double> > &hz1);
 
     /** Internal function for filtering */
     void singleFilter(const MultidimArray<double>& Vin,
-        MultidimArray<double> &hx, MultidimArray<double> &hy,
-        MultidimArray<double> &hz, MultidimArray<double> &Vout);
+        MultidimArray<double> &hx1, MultidimArray<double> &hy1,
+        MultidimArray<double> &hz1, MultidimArray<double> &Vout);
 };
 //@}
 #endif
