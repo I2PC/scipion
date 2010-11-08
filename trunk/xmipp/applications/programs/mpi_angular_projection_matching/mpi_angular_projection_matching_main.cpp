@@ -105,44 +105,31 @@ public:
 
 
     /* Read parameters --------------------------------------------------------- */
-    void read(int argc, char **argv)
+    void readParams()
     {
-        ProgAngularProjectionMatching::read(argc,argv);
-        mpi_job_size=textToInteger(getParameter(argc,argv,"-mpi_job_size","10"));
-        chunk_angular_distance = textToFloat(getParameter(argc,
-                                             argv,"-chunk_angular_distance","-1"));
-        fn_sym = getParameter(argc, argv, "-sym","c1");
+    	ProgAngularProjectionMatching::readParams();
+        mpi_job_size=getIntParam("--mpi_job_size");
+        chunk_angular_distance = getDoubleParam("--chunk_angular_distance");
+        fn_sym = getParam("--sym");
     }
 
     /* Usage ------------------------------------------------------------------- */
-    void usage()
+    void defineParams()
     {
-        ProgAngularProjectionMatching::usage();
-        std::cerr << " [ -mpi_job_size default=10]   : Number of images sent to a cpu in a single job \n";
-        std::cerr << "                                 10 may be a good value\n";
-        std::cerr << "                                 if  -1 the computer will fill the value for you\n";
-        std::cerr << " [ -chunk_angular_distance N]  : sample the projection sphere with this \n";
-        std::cerr << "                                 sampling rate and create subsets of experimental\n";
-        std::cerr << "                                 using the voronoi regions\n";
-        std::cerr << "  [-sym cn]                    : One of the 17 possible symmetries in\n"
-        << "                                 single particle electronmicroscopy\n"
-        << "                                 i.e.  ci, cs, cn, cnv, cnh, sn, dn, dnv,\n "
-        << "                                 dnh, t, td, th, o, oh, i1 (default MDB), i2, i3, i4, ih\n"
-        << "                                 i1h (default MDB), i2h, i3h, i4h\n"
-        << "                               : where n may change from 1 to 99\n"
-        ;
+    	ProgAngularProjectionMatching::defineParams();
+    	addParamsLine("  [--mpi_job_size <size=10>]   : Number of images sent to a cpu in a single job ");
+    	addParamsLine("                                : 10 may be a good value");
+    	addParamsLine("                                : if  -1 the computer will fill the value for you");
+    	addParamsLine("  [--chunk_angular_distance <dist=-1>]  : sample the projection sphere with this ");
+    	addParamsLine("                                 :using the voronoi regions");
+    	addParamsLine("  [--sym <cn=\"c1\">]            : One of the 17 possible symmetries in");
+    	addParamsLine("                                 :single particle electronmicroscopy");
+    	addParamsLine("                                 :i.e.  ci, cs, cn, cnv, cnh, sn, dn, dnv,");
+    	addParamsLine("                                 :dnh, t, td, th, o, oh, i1 (default MDB), i2, i3, i4, ih");
+    	addParamsLine("                                 :i1h (default MDB), i2h, i3h, i4h");
+    	addParamsLine("                               	: where n may change from 1 to 99");
     }
 
-
-    /* Show -------------------------------------------------------------------- */
-    void show()
-    {
-        ProgAngularProjectionMatching::show();
-        std::cerr << " Size of mpi jobs " << mpi_job_size <<std::endl
-        << " Sampling rate(chunk_angular_distance): " << chunk_angular_distance    << std::endl
-        << " Symmetry group:            " << fn_sym << std::endl
-        ;
-    }
 
     /* Pre Run --------------------------------------------------------------------- */
     void preRun()
@@ -151,7 +138,6 @@ public:
         int max_number_of_images_in_around_a_sampling_point=0;
         if (rank == 0)
         {
-            show();
             //read experimental doc file
             DFexp.read(fn_exp);
             //process the symmetry file
@@ -648,41 +634,24 @@ int main(int argc, char *argv[])
         fprintf(stderr, "MPI initialization error\n");
         exit(EXIT_FAILURE);
     }
-    //size of the mpi block, number of images
-    //mpi_job_size=!checkParameter(argc,argv,"-mpi_job_size","-1");
 
     ProgMpiAngularProjectionMatching prm;
     bool finalize_worker=false;
-    if (prm.rank == 0)
-    {
-        try
-        {
-            prm.read(argc, argv);
-        }
 
-        catch (XmippError XE)
-        {
-            std::cerr << XE;
-            prm.usage();
-            MPI_Finalize();
-            exit(1);
-        }
-    }
-    if (prm.rank != 0)
+    try
     {
-        try
-        {
-            prm.read(argc, argv);
-        }
-
-        catch (XmippError XE)
-        {
-            std::cerr << XE;
-            MPI_Finalize();
-            exit(1);
-        }
+    	prm.read(argc, argv);
     }
+
+    catch (XmippError XE)
+    {
+    	std::cerr << XE;
+    	MPI_Finalize();
+    	exit(1);
+    }
+
     MPI_Barrier(MPI_COMM_WORLD);
+
     try
     {
         prm.preRun();
