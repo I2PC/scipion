@@ -46,7 +46,7 @@
 double  * output_values;
 int       output_values_size;
 
-class Prog_mpi_angular_class_average:Prog_angular_class_average_prm
+class ProgMPIAngularClassAverage: public ProgAngularClassAverage
 {
 public:
     //int rank, size, num_img_tot;
@@ -64,7 +64,7 @@ public:
     MPI_Status status;
 
     /*  constructor ------------------------------------------------------- */
-    Prog_mpi_angular_class_average()
+    ProgMPIAngularClassAverage()
     {
         //parent class constructor will be called by deault without parameters
         MPI_Comm_size(MPI_COMM_WORLD, &(nProcs));
@@ -79,21 +79,21 @@ public:
     /* Read parameters --------------------------------------------------------- */
     void read(int argc, char **argv)
     {
-        Prog_angular_class_average_prm::read(argc,argv);
-        Prog_angular_class_average_prm::produceSideInfo();
+    	ProgAngularClassAverage::read(argc,argv);
+        ProgAngularClassAverage::produceSideInfo();
 
     }
 
     /* Usage ------------------------------------------------------------------- */
     void usage()
     {
-        Prog_angular_class_average_prm::usage();
+    	ProgAngularClassAverage::usage();
     }
 
     /* Show -------------------------------------------------------------------- */
     void show()
     {
-        Prog_angular_class_average_prm::show();
+    	ProgAngularClassAverage::show();
         //std::cerr << " Size of mpi jobs " << mpi_job_size <<std::endl
         //      ;
     }
@@ -402,7 +402,7 @@ int main(int argc, char *argv[])
         exit(EXIT_FAILURE);
     }
 
-    Prog_mpi_angular_class_average prm;
+    ProgMPIAngularClassAverage prm;
     if (prm.rank == 0)
     {
         try
