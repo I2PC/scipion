@@ -77,31 +77,24 @@ public:
     }
 
     /* Read parameters --------------------------------------------------------- */
-    void read(int argc, char **argv)
+    void readParams()
     {
-    	ProgAngularClassAverage::read(argc,argv);
-        ProgAngularClassAverage::produceSideInfo();
+        ProgAngularClassAverage::readParams();
 
     }
 
     /* Usage ------------------------------------------------------------------- */
-    void usage()
+    void defineParams()
     {
-    	ProgAngularClassAverage::usage();
+        ProgAngularClassAverage::defineParams();
     }
 
-    /* Show -------------------------------------------------------------------- */
-    void show()
-    {
-    	ProgAngularClassAverage::show();
-        //std::cerr << " Size of mpi jobs " << mpi_job_size <<std::endl
-        //      ;
-    }
 
     /* Pre Run --------------------------------------------------------------------- */
     void preRun()
     {
-        //        MPI_Bcast(&max_number_of_images_in_around_a_sampling_point,
+    	produceSideInfo();
+    	//        MPI_Bcast(&max_number_of_images_in_around_a_sampling_point,
         //                  1, MPI_INT, 0, MPI_COMM_WORLD);
         int reserve = 0;
         if (nr_iter > 0)
@@ -408,17 +401,18 @@ int main(int argc, char *argv[])
         try
         {
             prm.read(argc, argv);
-            prm.show();
         }
 
         catch (XmippError XE)
         {
             std::cerr << XE;
-            prm.usage();
+            MPI_Finalize();
             exit(1);
         }
     }
+
     MPI_Barrier(MPI_COMM_WORLD);
+
     if (prm.rank != 0)
     {
         try
@@ -428,9 +422,11 @@ int main(int argc, char *argv[])
         catch (XmippError XE)
         {
             std::cerr << XE;
+            MPI_Finalize();
             exit(1);
         }
     }
+
     try
     {
         prm.preRun();
@@ -442,5 +438,6 @@ int main(int argc, char *argv[])
         std::cerr << XE;
         exit(1);
     }
+
     exit(0);
 }
