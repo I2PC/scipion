@@ -624,6 +624,7 @@ void MetaData::write(const FileName &outFile,const std::string &blockName, Write
     std::ofstream ofs(outFile.data(), openMode);
 
     write(ofs, blockName, mode);
+    ofs.close();
 
 }
 
@@ -633,16 +634,6 @@ void MetaData::write(std::ostream &os,const std::string &blockName, WriteModeMet
         os << "# XMIPP_STAR_1 * "// << (isColumnFormat ? "column" : "row")
         << std::endl //write wich type of format (column or row) and the path
         << "# " << comment << std::endl;     //write md comment in the 2nd comment line of header
-    /*
-        else if(mode==APPEND)
-            os.seekp(0,std::ios::end);
-        else
-            REPORT_ERROR(ERR_ARG_INCORRECT,"MetaDataWrite: Wrong mode");
-    */
-    //open file
-    //copy line by line skip block
-    //proceed
-    ;
     //write data block
     std::string _szBlockName = (std::string)("data_") + blockName;
 
