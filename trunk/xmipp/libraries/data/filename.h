@@ -37,6 +37,11 @@
 #include <algorithm>
 #include <vector>
 #include <typeinfo>
+#include <sys/stat.h>
+#include <errno.h>
+#ifdef HAVE_UNISTD_H
+#include <unistd.h>
+#endif /* HAVE_UNISTD_H */
 
 #include "numerical_recipes.h"
 #include "macros.h"
@@ -521,6 +526,16 @@ void create_empty_file(const FileName& fn,
 /** Returns the base directory of the Xmipp installation
  */
 FileName xmippBaseDir();
+
+/** Auxiliary function used to create a tree of directories
+ *
+ */
+static int do_mkdir(const char *path, mode_t mode);
+
+/** mkpath - create directory tree.
+* Ensure all directories in path exist
+*/
+int mkpath(const FileName &path, mode_t mode);
 //@}
 
 #endif /* FILENAME_H_ */
