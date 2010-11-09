@@ -467,3 +467,63 @@ void FileName::copyFile(const FileName & target) const
     std::ofstream f2 (target.c_str(),std::fstream::trunc|std::fstream::binary);
     f2<<f1.rdbuf();
 }
+
+
+
+typedef struct stat Stat;
+
+//return 0 on success
+static int do_mkdir(const char *path, mode_t mode)
+{
+    Stat            st;
+    int             status = 0;
+
+    if (stat(path, &st) != 0)
+    {
+        /* Directory does not exist */
+        if (mkdir(path, mode) != 0)
+            status = -1;
+    }
+    else if (!S_ISDIR(st.st_mode))
+    {
+        errno = ENOTDIR;
+        status = -1;
+    }
+
+    return(status);
+}
+
+
+/**
+** mkpath - ensure all directories in path exist
+** Algorithm takes the pessimistic view and works top-down to ensure
+** each directory in path exists, rather than optimistically creating
+** the last element and working backwards. Return null if fails
+*/
+int mkpath(const FileName &path, mode_t mode)
+{
+    char           *pp;
+    char           *sp;
+    int             status;
+    char           *copypath = strdup(path.c_str());
+    if(copypath==NULL)
+    	REPORT_ERROR(ERR_MEM_BADREQUEST,"Mkpath: Canot alloc memory");
+
+    status = 0;
+    pp = copypath;
+    while (status == 0 && (sp = strchr(pp, '/')) != 0)
+    {
+        if (sp != pp)
+        {
+            /* Neither root nor double slash in path */
+            *sp = '\0';
+            status = do_mkdir(copypath, mode);
+            *sp = '/';
+        }
+        pp = sp + 1;
+    }
+    if (status == 0)
+        status = do_mkdir(path.c_str(), mode);
+    free(copypath);
+    return (status);
+}
