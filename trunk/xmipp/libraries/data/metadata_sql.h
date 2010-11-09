@@ -515,7 +515,7 @@ public:
     }
 
 }
-;//end of class MDValueRange
+;//end of class MDExpression
 
 /** Query several conditions using AND and OR.
  * This kind of query if usefull if you want to check
