@@ -265,12 +265,13 @@ public:
             inMD1.read(inFileName1);
             //create dir
             if (!exists(tmpFileName))
-                mkdir(tmpFileName.c_str(),0755);
+            	if (mkpath(tmpFileName, 0755) != 0)
+            		REPORT_ERROR(ERR_IO_NOPERM, "Run: Cannot create directory "+ tmpFileName);
             FOR_ALL_OBJECTS_IN_METADATA(inMD1)
             {
                 FileName inFnImg,outFnImg;
                 inMD1.getValue(MDL::str2Label(_label),inFnImg);
-                outFnImg = inFnImg.getBaseName();
+                outFnImg = inFnImg.removeDirectories();
                 outMD.addObject();
                 outMD.setValue(MDL::str2Label(_label),outFnImg);
                 outFnImg = tmpFileName + "/" + outFnImg;
@@ -282,12 +283,13 @@ public:
             inMD1.read(inFileName1);
             //create dir
             if (!exists(tmpFileName))
-                mkdir(tmpFileName.c_str(),0755);
+            	if (mkpath(tmpFileName, 0755) != 0)
+            		REPORT_ERROR(ERR_IO_NOPERM, "Run: Cannot create directory "+ tmpFileName);
             FOR_ALL_OBJECTS_IN_METADATA(inMD1)
             {
                 FileName inFnImg,outFnImg;
                 inMD1.getValue(MDL::str2Label(_label),inFnImg);
-                outFnImg = inFnImg.getBaseName();
+                outFnImg = inFnImg.removeDirectories();
                 outMD.addObject();
                 outMD.setValue(MDL::str2Label(_label),outFnImg);
                 outFnImg = tmpFileName + "/" + outFnImg;
