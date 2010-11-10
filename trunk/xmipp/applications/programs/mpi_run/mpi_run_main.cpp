@@ -208,10 +208,7 @@ public:
                     MPI_Recv(&szline, MAX_LINE, MPI_CHAR, 0, TAG_WORK, MPI_COMM_WORLD, &status);
                     //do the job
                     if(strlen(szline)<1)
-                    {
-                        std::cerr << "xmipp_mpi_run: skipping blank line" << std::endl;
                         continue;
-                    }
                     else
                         system(szline);
                 }
