@@ -1125,7 +1125,7 @@ void forcePositive(MultidimArray<double> &V);
  *  A boundaries median filter is applied at those pixels given by the mask.
  */
 template <typename T>
-void removeBadPixels(MultidimArray< T > &V, MultidimArray<char> mask, int n=0)
+void boundMedianFilter(MultidimArray< T > &V, MultidimArray<char> mask, int n=0)
 {
     bool badRemaining;
 
@@ -1134,7 +1134,7 @@ void removeBadPixels(MultidimArray< T > &V, MultidimArray<char> mask, int n=0)
         badRemaining=false;
 
         FOR_ALL_ELEMENTS_IN_ARRAY3D(V)
-        if (NZYX_ELEM(mask, 0, k, i, j) != 0)
+        if (NZYX_ELEM(mask, n, k, i, j) != 0)
         {
             std::vector<double> neighbours;
             for (int kk=-2; kk<=2; kk++)
@@ -1153,7 +1153,7 @@ void removeBadPixels(MultidimArray< T > &V, MultidimArray<char> mask, int n=0)
                         if (jjj<0 || jjj>=XSIZE(V))
                             continue;
                         double val = NZYX_ELEM(V, n, kkk,iii,jjj);
-                        if (NZYX_ELEM(mask, 0, kkk, iii, jjj) == 0)
+                        if (NZYX_ELEM(mask, n, kkk, iii, jjj) == 0)
                             neighbours.push_back(val);
                     }
                 }
@@ -1168,7 +1168,7 @@ void removeBadPixels(MultidimArray< T > &V, MultidimArray<char> mask, int n=0)
                                                     neighbours[N/2]);
                     else
                         NZYX_ELEM(V,n,k,i,j) = neighbours[N/2];
-                    NZYX_ELEM(mask,0,k,i,j) = false;
+                    NZYX_ELEM(mask,n,k,i,j) = false;
                 }
             }
         }
@@ -1176,11 +1176,16 @@ void removeBadPixels(MultidimArray< T > &V, MultidimArray<char> mask, int n=0)
     while (badRemaining);
 }
 
-/** Std filter removes outlaters (pixels) with
-  *  value outside 'value' standard deviations
+
+
+/** Remove bad pixels.
+ *  * @ingroup Filters
+ *
+ *  A boundaries median filter is applied at those pixels whose value is out of range
+ *  given by thresFactor * std.
   */
 template <typename T>
-void stdDesvFilter(MultidimArray< T > &V, double thresFactor)
+void pixelDesvFilter(MultidimArray< T > &V, double thresFactor)
 {
     if (thresFactor > 0 )
     {
@@ -1217,7 +1222,7 @@ void stdDesvFilter(MultidimArray< T > &V, double thresFactor)
                 else
                     DIRECT_A2D_ELEM(mask,i,j) = 0;
             }
-            removeBadPixels(V, mask, n);
+            boundMedianFilter(V, mask, n);
         }
     }
 }
