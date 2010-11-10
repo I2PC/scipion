@@ -21,9 +21,9 @@ def launch_job(programname,
 
         elif (SystemFlavour=='TORQUE-OPENMPI'): # like our crunchy
             if (int(NumberOfThreads) > 1):
-                mpicommand = 'mpirun --bynode -np ' + str(NumberOfMpiProcesses) 
+                mpicommand = 'mpirun -mca mpi_yield_when_idle 1 --bynode -np ' + str(NumberOfMpiProcesses) 
             else:
-                mpicommand = 'mpirun -np ' + str(NumberOfMpiProcesses) 
+                mpicommand = 'mpirun -mca mpi_yield_when_idle 1 -np ' + str(NumberOfMpiProcesses) 
 
         elif (SystemFlavour=='SGE-OPENMPI'): # like cluster at imp.ac.at (no variable nr_cpus yet...)
             mpicommand = 'mpiexec -n ' + str(NumberOfMpiProcesses) 
@@ -38,7 +38,7 @@ def launch_job(programname,
             mpicommand = 'mpirun -np ' + str(NumberOfMpiProcesses) + ' -machinefile ' + os.environ.get('HOME') + '/machinefile.dat'
 
         elif (SystemFlavour==''):
-            mpicommand = 'mpirun -np ' + str(NumberOfMpiProcesses)
+            mpicommand = 'mpirun -mca mpi_yield_when_idle 1 -np ' + str(NumberOfMpiProcesses)
 
         else:
             message= "Error: unrecognized SystemFlavour: ", SystemFlavour
