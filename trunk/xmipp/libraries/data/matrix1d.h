@@ -434,7 +434,7 @@ public:
      * V1.resize(3, 3, 2);
      * @endcode
      */
-    inline void resize(int Xdim)
+    inline void resize(int Xdim, bool copy = true)
     {
         if (Xdim == vdim)
             return;
@@ -456,14 +456,17 @@ public:
         }
 
         // Copy needed elements, fill with 0 if necessary
-        for (int j = 0; j < Xdim; j++)
+        if (copy)
         {
-            T val;
-            if (j >= vdim)
-                val = 0;
-            else
-                val = vdata[j];
-            new_vdata[j] = val;
+            for (int j = 0; j < Xdim; j++)
+            {
+                T val;
+                if (j >= vdim)
+                    val = 0;
+                else
+                    val = vdata[j];
+                new_vdata[j] = val;
+            }
         }
 
         // deallocate old vector
@@ -473,6 +476,13 @@ public:
         vdata = new_vdata;
         vdim = Xdim;
 
+    }
+
+    /** Resize a single 1D image with no copy
+         */
+    void resizeNoCopy(int Xdim)
+    {
+        resize(Xdim, false);
     }
 
     /** Resize according to a pattern.
@@ -493,6 +503,16 @@ public:
         if (vdim != v.vdim)
             resize(v.vdim);
     }
+
+    /** Resize a single 1D image with no copy
+    */
+    template<typename T1>
+    void resizeNoCopy(const Matrix1D<T1> &v)
+    {
+        if (vdim != v.vdim)
+            resize(v.vdim, false);
+    }
+
 
     /** Same shape.
      *

@@ -88,7 +88,7 @@ void FourierTransformer::setReal(MultidimArray<double> &input)
         recomputePlan=true;
     else
         recomputePlan=!(fReal->sameShape(input));
-    fFourier.resize(ZSIZE(input),YSIZE(input),XSIZE(input)/2+1);
+    fFourier.resizeNoCopy(ZSIZE(input),YSIZE(input),XSIZE(input)/2+1);
     fReal=&input;
 
     if (recomputePlan)
@@ -146,7 +146,7 @@ void FourierTransformer::setReal(MultidimArray<std::complex<double> > &input)
         recomputePlan=true;
     else
         recomputePlan=!(fComplex->sameShape(input));
-    fFourier.resize(input);
+    fFourier.resizeNoCopy(input);
     fComplex=&input;
 
     if (recomputePlan)
@@ -291,7 +291,7 @@ void FourierTransformer::enforceHermitianSymmetry()
 void FFT_magnitude(const MultidimArray< std::complex<double> > &v,
                    MultidimArray<double> &mag)
 {
-    mag.resize(v);
+    mag.resizeNoCopy(v);
     FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(v)
         DIRECT_MULTIDIM_ELEM(mag, n) = abs(DIRECT_MULTIDIM_ELEM(v, n));
 }
@@ -300,7 +300,7 @@ void FFT_magnitude(const MultidimArray< std::complex<double> > &v,
 void FFT_phase(const MultidimArray< std::complex<double> > &v,
                MultidimArray<double> &phase)
 {
-    phase.resize(v);
+    phase.resizeNoCopy(v);
     FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(v)
         DIRECT_MULTIDIM_ELEM(phase, n) = atan2(DIRECT_MULTIDIM_ELEM(v,n).imag(), DIRECT_MULTIDIM_ELEM(v, n).real());
 }
@@ -413,7 +413,7 @@ void selfScaleToSizeFourier(int Ydim, int Xdim, MultidimArray<double>& Mpmem,int
     transformerM.FourierTransform(Mpmem, MmemFourier, false);
 
     // Create space for the downsampled image and its Fourier transform
-    Mpmem.resize(Ydim, Xdim);
+    Mpmem.resizeNoCopy(Ydim, Xdim);
     MultidimArray<std::complex<double> > MpmemFourier;
     FourierTransformer transformerMp;
     transformerMp.setReal(Mpmem);

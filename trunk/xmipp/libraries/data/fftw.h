@@ -192,7 +192,7 @@ public:
     /** Get Fourier coefficients. */
     template <typename T>
         void getFourierCopy(T& V) {
-            V.resize(fFourier);
+            V.resizeNoCopy(fFourier);
             memcpy(MULTIDIM_ARRAY(V),MULTIDIM_ARRAY(fFourier),
                 MULTIDIM_SIZE(fFourier)*2*sizeof(double));
         }
@@ -201,7 +201,7 @@ public:
     */
     template <typename T>
         void getCompleteFourier(T& V) {
-            V.resize(*fReal);
+            V.resizeNoCopy(*fReal);
             int ndim=3;
             if (ZSIZE(*fReal)==1)
             {

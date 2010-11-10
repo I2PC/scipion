@@ -73,16 +73,16 @@
 template <typename T>
 void FFT_idx2digfreq(T& v, const Matrix1D< int >& idx, Matrix1D< double >& freq)
 {
-    if (idx.size() < 1 || idx.size() > 3)
+    if (VEC_XSIZE(idx) < 1 || VEC_XSIZE(idx) > 3)
         REPORT_ERROR(ERR_MATRIX_SIZE, "FFT_idx2digfreq: Index is not of the correct size");
 
-    freq.resize(idx.size());
+    freq.resizeNoCopy(VEC_XSIZE(idx));
 
     int size[3];
     v.getSize(size);
 
     FOR_ALL_ELEMENTS_IN_MATRIX1D(idx)
-    FFT_IDX2DIGFREQ(idx(i), size[i], freq(i));
+    FFT_IDX2DIGFREQ(VEC_ELEM(idx,i), size[i], VEC_ELEM(freq,i));
 }
 
 /** Frequency to index
@@ -95,16 +95,16 @@ void FFT_idx2digfreq(T& v, const Matrix1D< int >& idx, Matrix1D< double >& freq)
 template <typename T>
 void digfreq2FFT_idx(T& v, const Matrix1D< double >& freq, Matrix1D< int >& idx)
 {
-    if (freq.size() < 1 || freq.size() > 3)
+    if (VEC_XSIZE(freq) < 1 || VEC_XSIZE(freq) > 3)
         REPORT_ERROR(ERR_MATRIX_SIZE, "digfreq2FFT_idx: freq is not of the correct size");
 
-    idx.resize(freq.size());
+    idx.resizeNoCopy(VEC_XSIZE(freq));
 
     int size[3];
     v.getSize(size);
 
     FOR_ALL_ELEMENTS_IN_MATRIX1D(idx)
-    DIGFREQ2FFT_IDX(freq(i), size[i], idx(i));
+    DIGFREQ2FFT_IDX(VEC_ELEM(freq,i), size[i], VEC_ELEM(idx,i));
 }
 
 /** Digital to Continuous frequency
@@ -116,9 +116,9 @@ inline void digfreq2contfreq(const Matrix1D< double >& digfreq,
                              Matrix1D< double >& contfreq,
                              double pixel_size)
 {
-    contfreq.resize(digfreq);
+    contfreq.resizeNoCopy(digfreq);
     FOR_ALL_ELEMENTS_IN_MATRIX1D(digfreq)
-    contfreq(i) = digfreq(i) / pixel_size;
+    VEC_ELEM(contfreq,i) = VEC_ELEM(digfreq,i) / pixel_size;
 }
 
 /** Continuous to Digital frequency
@@ -130,9 +130,9 @@ inline void contfreq2digfreq(const Matrix1D< double >& contfreq,
                              Matrix1D< double >& digfreq,
                              double pixel_size)
 {
-    digfreq.resize(contfreq);
+    digfreq.resizeNoCopy(contfreq);
     FOR_ALL_ELEMENTS_IN_MATRIX1D(contfreq)
-    digfreq(i) = contfreq(i) * pixel_size;
+    VEC_ELEM(digfreq,i) = VEC_ELEM(contfreq,i) * pixel_size;
 }
 //@}
 
