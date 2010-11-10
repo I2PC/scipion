@@ -1028,11 +1028,11 @@ public:
         * std::cout << "datatype= " << dataType() << std::endl;
         * @endcode
         */
-    int dataType() const
+    DataType dataType() const
     {
         int dummy;
         MDMainHeader.getValue(MDL_DATATYPE, dummy);
-        return dummy;
+        return (DataType)dummy;
     }
 
     /** Sampling RateX
