@@ -312,6 +312,8 @@ void XmippMetadataProgram::defineParams()
 {
     addParamsLine(" -i <metadata>   : Input file: metadata, stack, volume or image.");
     addParamsLine(" alias --input;");
+    addParamsLine(" [--bn <blockName>]   : Block name for metadata file");
+    addParamsLine(" alias --blockname;");
 
     if (each_image_produces_an_output)
     {
