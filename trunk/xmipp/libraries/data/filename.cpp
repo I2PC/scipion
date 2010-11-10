@@ -471,9 +471,8 @@ void FileName::copyFile(const FileName & target) const
 
 
 typedef struct stat Stat;
-
 //return 0 on success
-static int do_mkdir(const char *path, mode_t mode)
+int do_mkdir(const char *path, mode_t mode)
 {
     Stat            st;
     int             status = 0;
@@ -492,7 +491,6 @@ static int do_mkdir(const char *path, mode_t mode)
 
     return(status);
 }
-
 
 /**
 ** mkpath - ensure all directories in path exist
