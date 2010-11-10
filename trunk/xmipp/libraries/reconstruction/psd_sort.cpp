@@ -79,7 +79,7 @@ double Prog_Sort_PSD_Parameters::evaluate(const FileName &fnMicrograph,
     CTFDescription CTF1, CTF2;
     CTF1.read(fnCTF);
     CTF1.Produce_Side_Info();
-    if (fnCTF2!="")
+    if (fnCTF2!="" && fnCTF2!="NA")
     {
     	CTF2.read(fnCTF2);
     	CTF2.Produce_Side_Info();
