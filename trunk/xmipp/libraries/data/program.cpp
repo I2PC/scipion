@@ -253,6 +253,14 @@ void XmippProgram::getListParam(const char * param, StringVector &list)
         list.push_back(paramDef->cmdArguments[i]);
 }
 
+int XmippProgram::getCountParam(const char * param)
+{
+  ParamDef * paramDef = progDef->findParam(param);
+  if (paramDef == NULL)
+    REPORT_ERROR(ERR_ARG_INCORRECT, ((std::string)"Doesn't exists param: " + param));
+  return paramDef->cmdArguments.size();
+}
+
 bool XmippProgram::checkParam(const char * param)
 {
     ParamDef * paramDef = progDef->findParam(param);
@@ -266,6 +274,8 @@ bool XmippProgram::existsParam(const char * param)
     ParamDef * paramDef = progDef->findParam(param);
     return paramDef != NULL;
 }
+
+
 
 const char * XmippProgram::name() const
 {

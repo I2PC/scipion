@@ -108,8 +108,10 @@ protected:
     int getIntParam(const char * param, const char * subparam, int arg = 0);
     double getDoubleParam(const char * param, int arg = 0);
     double getDoubleParam(const char * param, const char * subparam, int arg = 0);
-    /** Get params supplied as a vector */
+    /** Get arguments supplied to param as a list */
     void getListParam(const char * param, StringVector &list);
+    /** Get the number of arguments supplied to the param */
+    int getCountParam(const char * param);
     /** Check if the param was supplied to command line */
     bool checkParam(const char * param);
     /** Return true if the program is defined */
