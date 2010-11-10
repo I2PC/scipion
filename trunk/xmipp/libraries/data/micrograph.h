@@ -531,9 +531,11 @@ public:
         _Xdim = Xdim;
         _Ydim = Ydim;
     }
-    //set micrograph size (when you do not read the file from disk)
+
+    /// Set micrograph size (when you do not read the file from disk)
     void resize(int Xdim, int Ydim, FileName filename="");
-    //write micrograph
+
+    /// Write micrograph
     void write(FileName fileName);
 };
 
