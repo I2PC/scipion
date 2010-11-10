@@ -43,13 +43,13 @@ protected:
         XmippMetadataProgram::defineParams();
         addUsageLine("Extract the geometric transformation (angles & shifts) in the header of 2D-images");
         addUsageLine("and write values to a metadata file.");
-        addParamsLine("   [-round_shifts]    :Round shifts to integers.");
+        addParamsLine("   [--round_shifts]    :Round shifts to integers.");
     }
 
     void readParams()
     {
         XmippMetadataProgram::readParams();
-        round_shifts = checkParam("-round_shifts");
+        round_shifts = checkParam("--round_shifts");
     }
 
     void postProcess()

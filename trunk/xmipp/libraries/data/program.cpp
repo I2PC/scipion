@@ -66,14 +66,14 @@ void XmippProgram::checkBuiltIns()
                 usage(cmdHelp);
             else
             {
-              cmdHelp.insert(0, "-");
-              if (existsParam(cmdHelp.c_str()))
-                usage(cmdHelp);
-              else
-              {
-                std::cerr << "Unrecognized param " << helpParam << " neither - or --" << std::endl;
-                usage();
-              }
+                cmdHelp.insert(0, "-");
+                if (existsParam(cmdHelp.c_str()))
+                    usage(cmdHelp);
+                else
+                {
+                    std::cerr << "Unrecognized param " << helpParam << " neither - or --" << std::endl;
+                    usage();
+                }
             }
         }
         else
@@ -306,13 +306,14 @@ XmippMetadataProgram::XmippMetadataProgram()
     each_image_produces_an_output = false;
     allow_time_bar = true;
     apply_geo = false;
+    blockName = "";
 }
 
 void XmippMetadataProgram::defineParams()
 {
     addParamsLine(" -i <metadata>   : Input file: metadata, stack, volume or image.");
     addParamsLine(" alias --input;");
-    addParamsLine(" [--bn <blockName>]   : Block name for metadata file");
+    addParamsLine(" [--bn <blockName=\"\">]   : Block name for metadata file");
     addParamsLine(" alias --blockname;");
 
     if (each_image_produces_an_output)
@@ -337,7 +338,8 @@ void XmippMetadataProgram::defineParams()
 void XmippMetadataProgram::readParams()
 {
     fn_in = getParam("-i");
-
+    if(checkParam("--blockName"))
+        blockName = getParam("--blockName");
     if (produces_an_output)
         fn_out = checkParam("-o") ? getParam("-o") : fn_in;
 
@@ -350,7 +352,7 @@ void XmippMetadataProgram::readParams()
 
     if (fn_in.isMetaData())
     {
-        mdIn.read(fn_in, NULL);
+        mdIn.read(fn_in, NULL,blockName);
         if (mdIn.containsLabel(MDL_ENABLED))
             mdIn.removeObjects(MDValueEQ(MDL_ENABLED, -1));
 

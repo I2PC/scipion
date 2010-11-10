@@ -184,6 +184,8 @@ protected:
     Image<double>   img;
     /// Filenames of input and output Metadata
     FileName        fn_in, fn_out;
+    /// Metadata Blockname (several metadata may go in the same file)
+    std::string blockName;
     /// Input and output metadatas
     MetaData        mdIn, mdOut;
     /// Filenames of input and output Images
