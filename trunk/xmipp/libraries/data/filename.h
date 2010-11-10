@@ -530,7 +530,7 @@ FileName xmippBaseDir();
 /** Auxiliary function used to create a tree of directories
  *
  */
-static int do_mkdir(const char *path, mode_t mode);
+int do_mkdir(const char *path, mode_t mode);
 
 /** mkpath - create directory tree.
 * Ensure all directories in path exist
