@@ -114,6 +114,8 @@ char * XmippError::getDefaultMessage(ErrorType e)
         return " Image cannot be read from file.";
     case ERR_IMG_NOWRITE:
         return " Image cannot be written to file.";
+    case ERR_IMG_UNKNOWN:
+        return " Unknown image type";
 
     case ERR_INDEX_OUTOFBOUNDS:
         return " Index out of bounds";

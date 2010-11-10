@@ -128,6 +128,7 @@ enum ErrorType
 
     ERR_IMG_NOREAD,         ///< Cannot read image from file.
     ERR_IMG_NOWRITE,        ///< Cannot write image to file.
+    ERR_IMG_UNKNOWN,        ///< Unknown image type
 
     ERR_INDEX_OUTOFBOUNDS,  ///< Index out of bounds.
 
