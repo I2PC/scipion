@@ -1160,68 +1160,68 @@ void TkPrinter::printProgram(const ProgramDef &program, int v)
 {
     //    *pOut << "PROGRAM" << std::endl << "   " << program.name << std::endl;
     fprintf(output, "XMIPP 3.0 - %s\n", program.name.c_str());
-    //    if (program.usageComments.size() > 0)
-    //    {
-    //        *pOut << "USAGE" << std::endl;
-    //        for (size_t i = 0; i < program.usageComments.size(); ++i)
-    //            *pOut << "   " << program.usageComments.comments[i] << std::endl;
-    //    }
-    //    if (program.sections.size() > 0)
-    //    {
-    //        *pOut << "OPTIONS" << std::endl;
+    //Send number of usage lines
+    fprintf(output, "%d\n", program.usageComments.size());
+
+    if (program.usageComments.size() > 0)
+    {
+        for (size_t i = 0; i < program.usageComments.size(); ++i)
+            fprintf(output, "%s\n", program.usageComments.comments[i].c_str());
+    }
+
     for (size_t i = 0; i < program.sections.size(); ++i)
         printSection(*program.sections[i], v);
-    //    }
 }
 
 void TkPrinter::printSection(const SectionDef &section, int v)
 {
     if (section.visible <= v)
     {
-        //        *pOut << std::endl;
-        //        if (section.name.length() > 0)
-        //            *pOut << section.name << std::endl;
+        //Just ignore in the GUI this section
+        if (section.name == " Common options ")
+            return;
+
+        //if (section.name.length() > 0)
+        fprintf(output, "section = self.addSection('%s');\n", section.name.c_str());
+        bool first_group = true;
         for (size_t i = 0; i < section.params.size(); ++i)
-            printParam(*section.params[i], v);
+        {
+            if (section.params[i]->visible <= v)
+            {
+                if (!section.params[i]->orBefore)
+                {
+                    const char * single = (i < section.params.size()-1 && section.params[i+1]->orBefore) ? "False" : "True";
+
+                    if (!first_group)
+                        fprintf(output, "section.addGroup(group);\n");
+                    else
+                        first_group = false;
+                    fprintf(output, "group = ParamsGroup(section, %s);\n", single);
+
+                }
+                printParam(*section.params[i], v);
+            }
+        }
+        //close last open group
+        if (!first_group)
+            fprintf(output, "section.addGroup(group);\n");
     }
 }
-
-//void TkPrinter::printRequiresList(StringVector requires)
-//{
-//    if (!requires.empty())
-//    {
-//        *pOut << " ( requires ";
-//        for (size_t i = 0; i < requires.size(); ++i)
-//            *pOut << requires[i] << " ";
-//        *pOut << ")";
-//    }
-//}
 
 void TkPrinter::printParam(const ParamDef &param, int v)
 {
     if (param.visible <= v)
     {
-        //        if (param.orBefore)
-        //            *pOut << "   OR" << std::endl;
-
-        //        *pOut << "   ";
-        //        if (!param.notOptional)
-        //            *pOut << "[";
-        //        *pOut << param.name;
-        //        //print alias
-        //        for (size_t i = 0; i < param.aliases.size(); ++i)
-        //            *pOut << ", " << param.aliases[i];
-        //        //print arguments
         //Independent params are some kind of special ones
         if (param.independent)
             return;
 
         int n_args = param.arguments.size();
-        fprintf(output, "param = ParamWidget(self.params_frame, \"%s\", %d);\n", param.name.c_str(), n_args);
+
+        fprintf(output, "param = ParamWidget(group, \"%s\");\n", param.name.c_str());
 
         for (size_t i = 0; i < param.arguments.size(); ++i)
         {
-            //*pOut << " ";
             printArgument(*param.arguments[i], v);
         }
         //Add comments to the help
@@ -1231,45 +1231,29 @@ void TkPrinter::printParam(const ParamDef &param, int v)
         //End with options of the param
         fprintf(output, "param.endWithOptions();\n");
 
-        //        if (!param.notOptional)
-        //            *pOut << "]";
-        //
-        //        printRequiresList(param.requires);
-        //        *pOut << std::endl;
-        //        printCommentList(param.comments, v);
-
-        //        for (size_t i = 0; i < param.arguments.size(); ++i)
-        //        {
-        //            ArgumentDef &arg = *param.arguments[i];
-        //            if (!arg.subParams.empty())
-        //            {
-        //                *pOut << "      where <" << arg.name << "> can be:" << std::endl;
-        //                for (size_t j = 0; j < arg.subParams.size(); ++j)
-        //                {
-        //                    *pOut << "        " << arg.subParams[j]->name;
-        //                    for (size_t k = 0; k < arg.subParams[j]->arguments.size(); ++k)
-        //                    {
-        //                        *pOut << " ";
-        //                        printArgument(*(arg.subParams[j]->arguments[k]));
-        //                    }
-        //                    printRequiresList(arg.subParams[j]->requires);
-        //                    *pOut << std::endl;
-        //                    printCommentList(arg.subParams[j]->comments);
-        //
-        //                }
-        //            }
-        //        }
-
     }
 }
 
 void TkPrinter::printArgument(const ArgumentDef & argument, int v)
 {
-    //    *pOut << "<" << argument.name;
-    //    if (argument.hasDefault)
-    //        *pOut << "=" << argument.argDefault;
-    //    *pOut << ">";
-    fprintf(output, "param.addOption(\"%s\", \"%s\", []);\n", argument.name.c_str(), argument.argDefault.c_str());
+    static String paramStr = "param";
+    fprintf(output, "%s.addOption(\"%s\", \"%s\", %d);\n",
+            paramStr.c_str(), argument.name.c_str(), argument.argDefault.c_str(), argument.subParams.size());
+    if (argument.subParams.size() > 0)
+    {
+
+        for (size_t j = 0; j < argument.subParams.size(); ++j)
+        {
+            fprintf(output, "subparam = param.addSubParam(\"%s\");\n",
+                    argument.subParams[j]->name.c_str());
+            paramStr = "subparam";
+            for (size_t k = 0; k < argument.subParams[j]->arguments.size(); ++k)
+            {
+                printArgument(*(argument.subParams[j]->arguments[k]));
+            }
+            paramStr = "param";
+        }
+    }
 }
 
 void TkPrinter::printCommentList(const CommentList &comments, int v)
