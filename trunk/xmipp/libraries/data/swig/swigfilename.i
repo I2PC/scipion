@@ -8,7 +8,9 @@ class std::string {};
 %ignore FILENAMENUMBERLENGTH;
 %include "../filename.h"
 %ignore to_lowercase;
-
+//python has its own create directory routines
+%ignore mkpath(const FileName &, mode_t);
+%ignore do_mkdir( char const *, mode_t);
 
 %pointer_class(FileName, FileNameP);
 
