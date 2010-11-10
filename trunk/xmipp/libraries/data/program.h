@@ -112,6 +112,9 @@ protected:
     void getListParam(const char * param, StringVector &list);
     /** Check if the param was supplied to command line */
     bool checkParam(const char * param);
+    /** Return true if the program is defined */
+    bool existsParam(const char * param);
+
 public:
     /** Add a params definition line*/
     void addParamsLine(const char * line);

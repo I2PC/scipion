@@ -972,8 +972,8 @@ ParamDef* ProgramDef::findAndFillParam(const std::string &param)
     if (paramDef == NULL)
         REPORT_ERROR(ERR_ARG_INCORRECT, ((std::string)"Doesn't exists param: " + param));
     ///Param was provided, not need to fill it
-    if (paramDef->counter == 1)
-        return paramDef;
+    //if (paramDef->counter == 1)
+    //    return paramDef;
     std::stringstream errors;
     size_t argIndex = 0;
     for (size_t i = 0; i < paramDef->arguments.size(); ++i)

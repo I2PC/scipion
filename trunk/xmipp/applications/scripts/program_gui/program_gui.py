@@ -177,6 +177,10 @@ class ParamWidget(Frame):
         else:
             for option in self.options:
                 option.setState(DISABLED);
+                
+    def getParamString(self):
+        if len(self.options) == 0:
+            pass;
 
 class ParamsGroup(Frame):
     def __init__(self, parent, single):
@@ -210,6 +214,9 @@ class ParamsGroup(Frame):
         
     def isLarge(self):
         return not self.single or self.params[0].isLarge;
+    
+    def getParamString(self):
+        return self.params[self.lastSelected].paramName;
         
 class SectionWidget(LabelFrame):
     def __init__(self, parent, sectionName):        
@@ -222,6 +229,7 @@ class SectionWidget(LabelFrame):
         #To check when to pack params in next line
         self.row = 0;
         self.col = 0;
+        self.groups = [];
     def addGroup(self, group):
         #group.pack(fill=X, anchor=W);
         #return;
@@ -230,23 +238,23 @@ class SectionWidget(LabelFrame):
         #return;
         if group.isLarge():            
             group.grid(column=0, columnspan=2, row=self.row, 
-                       sticky=NW, ipadx="2m", ipady="1m");
+                       sticky=NW, ipadx="2m");
             self.row = self.row + 1;
             self.col = 0;
         else:
             group.grid(column=self.col, row=self.row, 
-                       sticky=NW, ipadx="2m", ipady="1m");
+                       sticky=NW, ipadx="2m");
             if self.col == 1:
                 self.row = self.row + 1;
                 self.col = 0;
             else:
                 self.col = 1;
+        self.groups.append(group);
     
 class ProgramGUI(Frame):
     def __init__(self, parent):
         self.parent = parent;
-        Frame.__init__(self, parent);
-        self.pack();
+        Frame.__init__(self, parent);        
         self.sections = [];
         # Create header
         self.createHeader();
@@ -255,15 +263,16 @@ class ProgramGUI(Frame):
         self.params_frame.pack(fill=X, padx="5m");
         self.createParams();
         self.createButtons();
+        self.pack();
     
     def createHeader(self):
         '''Create header with program name and usage lines'''
                 # Read the title from input 
         title = sys.stdin.readline();#readline();
         self.winfo_toplevel().title(title);
-        progName = title.split("-")[1].strip();
+        self.progName = title.split("-")[1].strip();
         Label(self,
-              text=progName,
+              text=self.progName,
               font=tkFont.Font(weight="bold", size="16"),
               fg="#292987", bd=BORDER, relief=SUNKEN
               ).pack(side=TOP, padx="5m"); 
@@ -353,9 +362,14 @@ class ProgramGUI(Frame):
         # Run button
         Button(self.buttons_frame,
                text="Run",
-               width=6
+               width=6,
+               command=self.buttonRun_click
                ).pack(side=RIGHT, padx="1m", anchor="e");
-        
+        Button(self.buttons_frame,
+               text="Center",
+               width=6,
+               command=self.centerWindows
+               ).pack(side=RIGHT, padx="1m", anchor="e");
     def addSection(self, sectionName):
         section = SectionWidget(self.params_frame, sectionName);
         self.sections.append(section);
@@ -366,9 +380,29 @@ class ProgramGUI(Frame):
     def buttonCancel_click(self):
         self.parent.destroy();
         
+    def buttonRun_click(self):
+        cmdStr = self.progName;
+        for section in self.sections:
+            for group in section.groups:
+                cmdStr = cmdStr + " " + group.getParamString();
+        print cmdStr;
+        
+    def centerWindows(self):
+        root = self.parent
+        w = root.winfo_screenwidth()
+        h = root.winfo_screenheight()
+        print w, h
+        rootsize = tuple(int(_) for _ in root.geometry().split('+')[0].split('x'))
+        print rootsize
+        x = w/2 - rootsize[0]/2
+        y = h/2 - rootsize[1]/2
+        root.geometry("%dx%d+%d+%d" % (rootsize + (x, y)))
+        
         
 root = Tk();
 #myapp = SampleApp(root)
-ProgramGUI(root);
+program = ProgramGUI(root);
+#program.centerWindows();
+
 root.mainloop();
 
