@@ -344,7 +344,7 @@ public:
     {
         if (&op1 != this)
         {
-            resize(op1);
+            resizeNoCopy(op1);
             for (int i = 0; i < vdim; i++)
                 vdata[i] = op1.vdata[i];
             row=op1.row;
@@ -365,7 +365,7 @@ public:
      */
     Matrix1D<T>& operator=(const std::vector<T>& op1)
     {
-        resize(op1.size());
+        resizeNoCopy(op1.size());
         for (int i = 0; i < vdim; i++)
             vdata[i] = op1[i];
         row=false;
@@ -406,6 +406,7 @@ public:
 
         vdim=_vdim;
         vdata = new T [vdim];
+        memset(vdata,0,vdim*sizeof(T));
         if (vdata == NULL)
             REPORT_ERROR(ERR_MEM_NOTENOUGH, "Allocate: No space left");
     }
@@ -449,6 +450,7 @@ public:
         try
         {
             new_vdata = new T [Xdim];
+            memset(new_vdata,0,Xdim*sizeof(T));
         }
         catch (std::bad_alloc &)
         {
@@ -1424,7 +1426,7 @@ void typeCast(const Matrix1D<T1>& v1,  Matrix1D<T2>& v2)
         return;
     }
 
-    v2.resize(v1.vdim);
+    v2.resizeNoCopy(v1.vdim);
     for (int j = 0; j < v1.vdim; j++)
     {
         v2.vdata[j] = static_cast< T2 > (v1.vdata[j]);
