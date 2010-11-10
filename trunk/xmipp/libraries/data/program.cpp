@@ -316,7 +316,6 @@ XmippMetadataProgram::XmippMetadataProgram()
     each_image_produces_an_output = false;
     allow_time_bar = true;
     apply_geo = false;
-    blockName = "";
 }
 
 void XmippMetadataProgram::defineParams()
@@ -348,8 +347,8 @@ void XmippMetadataProgram::defineParams()
 void XmippMetadataProgram::readParams()
 {
     fn_in = getParam("-i");
-    if(checkParam("--blockName"))
-        blockName = getParam("--blockName");
+    blockName = getParam("--blockname");
+
     if (produces_an_output)
         fn_out = checkParam("-o") ? getParam("-o") : fn_in;
 
