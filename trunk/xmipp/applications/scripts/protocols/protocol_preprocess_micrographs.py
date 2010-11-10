@@ -547,7 +547,7 @@ class preprocess_A_class:
         os.write(fh_mpi,command)
 
     def pickup_ctfestimate_ctffind(self,shortname,filename,fh_mpi):
-        import XmippData
+        import XmippData, time
         (filepath, micrographName) = os.path.split(filename)
         (fnRoot,extension) = os.path.splitext(micrographName)
 
