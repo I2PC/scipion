@@ -24,6 +24,7 @@
  ***************************************************************************/
 
 #include "program.h"
+#include <stdlib.h>
 
 void XmippProgram::init()
 {
@@ -37,6 +38,7 @@ void XmippProgram::init()
     addParamsLine("                        : Otherwise, specific param help is showed,");
     addParamsLine("                        : param should be provided without the '-'");
     addParamsLine("alias --help;");
+    addParamsLine("[--gui*]                 : Show a GUI for launch the program.");
     addParamsLine("[--more*]         : Show additional options.");
 
     ///This are a set of internal command for MetaProgram usage
@@ -55,16 +57,36 @@ void XmippProgram::checkBuiltIns()
     ///If help requested, print usage message
     if (checkParam("--help"))
     {
-        std::string cmdHelp = (std::string)"-" + getParam("-h");
-        if (cmdHelp == "-")
-            usage();
+        std::string helpParam = getParam("-h");
+        if (helpParam != "")
+        {
+            std::string cmdHelp("-");
+            cmdHelp += helpParam;
+            if (existsParam(cmdHelp.c_str()))
+                usage(cmdHelp);
+            else
+            {
+              cmdHelp.insert(0, "-");
+              if (existsParam(cmdHelp.c_str()))
+                usage(cmdHelp);
+              else
+              {
+                std::cerr << "Unrecognized param " << helpParam << " neither - or --" << std::endl;
+                usage();
+              }
+            }
+        }
         else
-            usage(cmdHelp);
+            usage();
     }
     if (checkParam("--xmipp_write_definition"))
     {
         writeToDB("programs.db");
         exit(0);
+    }
+    if (checkParam("--gui"))
+    {
+        createGUI();
     }
 }
 
@@ -85,11 +107,10 @@ void XmippProgram::writeToDB(const FileName &dbName)
 
 void XmippProgram::createGUI()
 {
-  TkPrinter tk;
-  tk.printProgram(*progDef);
-  //FIXME
-  exit(0);
-
+    TkPrinter tk;
+    tk.printProgram(*progDef);
+    //FIXME
+    exit(0);
 }
 
 XmippProgram::XmippProgram()
@@ -125,10 +146,16 @@ void XmippProgram::read(int argc, char ** argv, bool reportErrors)
 
     setProgramName(argv[0]);
 
-    ///If not arguments are provided, show usage message
+    ///If not arguments are provided, show the GUI or console program help
+    //this behaivour will be defined with environment variable XMIPP_BEHAVIOR
     if (argc == 1)
-        usage();
-      //createGUI();
+    {
+        char * var = getenv("XMIPP_GUI_ON");
+        if (var != NULL)
+            createGUI();
+        else
+            usage();
+    }
 
     try
     {
@@ -193,7 +220,7 @@ const char * XmippProgram::getParam(const char * param, int arg)
 
 const char * XmippProgram::getParam(const char * param, const char * subparam, int arg)
 {
-    return progDef->getParam(param, arg);
+    return progDef->getParam(param, subparam, arg);
 }
 
 int XmippProgram::getIntParam(const char * param, int arg)
@@ -232,6 +259,12 @@ bool XmippProgram::checkParam(const char * param)
     if (paramDef == NULL)
         REPORT_ERROR(ERR_ARG_INCORRECT, ((std::string)"Doesn't exists param: " + param));
     return paramDef->counter == 1;
+}
+
+bool XmippProgram::existsParam(const char * param)
+{
+    ParamDef * paramDef = progDef->findParam(param);
+    return paramDef != NULL;
 }
 
 const char * XmippProgram::name() const
