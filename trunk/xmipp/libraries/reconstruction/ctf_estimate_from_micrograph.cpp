@@ -570,7 +570,6 @@ void Prog_assign_CTF_prm::process()
             if (bootstrapN==-1)
             {
                 // Compute the PCA of the local PSDs
-                std::cerr << "Evaluating the quality of the micrograph ...\n";
                 pcaAnalyzer.standardarizeVariables();
                 // pcaAnalyzer.subtractAvg();
                 pcaAnalyzer.learnPCABasis(1,10);
