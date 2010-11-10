@@ -44,7 +44,7 @@ void Prog_Sort_PSD_Parameters::readParams()
 /* Usage ------------------------------------------------------------------- */
 void Prog_Sort_PSD_Parameters::defineParams()
 {
-    addUsageLine("This program evaluates the CTFs and PSDs of a set of micrographs");
+    addUsageLine("Evaluate the CTFs and PSDs of a set of micrographs");
     addUsageLine("as produced by the preprocessing micrographs step of the Xmipp protocols");
     addParamsLine("   -i <selfile>              : Selfile with micrographs");
     addParamsLine("==+ Enhancement filter parameters");

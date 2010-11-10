@@ -62,7 +62,7 @@ void ProgAngularProjectionMatching::readParams()
 
 void ProgAngularProjectionMatching::defineParams()
 {
-    addUsageLine("This program performs a discrete angular assignment using a new projection matching");
+    addUsageLine("Perform a discrete angular assignment using a new projection matching");
     addUsageLine("Example of use: Sample at 2 pixel step size for 5D shift search");
     addUsageLine("   xmipp_angular_projection_matching -i in.doc -o out_dir --ref ref_dir --search5d_step 2");
 

@@ -185,7 +185,7 @@ void ProgARTPseudo::show() const
 
 void ProgARTPseudo::defineParams()
 {
-    addUsageLine("This program allows 3D reconstruction using ART on pseudoatoms");
+    addUsageLine("Perform 3D reconstruction using ART on pseudoatoms");
     addParamsLine("   -i <selfile>         : Input images");
     addParamsLine("   -pseudo <pseudofile> : Pseudo atomic structure (PDB format)");
     addParamsLine("   -o <rootname>        : Output rootname");

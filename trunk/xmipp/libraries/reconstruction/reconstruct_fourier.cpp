@@ -51,7 +51,7 @@ void ProgRecFourier::readParams()
 void ProgRecFourier::defineParams()
 {
 
-    addUsageLine("This program performs direct 3D reconstruction method using ");
+    addUsageLine("Perform direct 3D reconstruction method using ");
     addUsageLine("   Kaiser windows as interpolators");
     addUsageLine("Example of use: Reconstruction enforcing i3 symmetry and using stored weights");
     addUsageLine("   xmipp_reconstruct_fourier  -i reconstruction.sel --sym i3 --weight");

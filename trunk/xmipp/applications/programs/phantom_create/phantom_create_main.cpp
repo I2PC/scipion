@@ -36,7 +36,7 @@ protected:
 
     void defineParams()
     {
-        addUsageLine("This program allows you to create phantom XMIPP volumes");
+        addUsageLine("Create phantom XMIPP volumes");
         addUsageLine("from a phantom feature description file.");
 
         addParamsLine("-i <description_file>");

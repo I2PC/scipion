@@ -35,7 +35,7 @@ private:
 protected:
     void defineParams()
     {
-        addUsageLine ("Purpose: Cut the images marked with xmipp_mark\n");
+        addUsageLine ("Cut the images marked with xmipp_mark.");
 
         addParamsLine("  -i <input_untilted_micrograph>     : From which the untilted images will be cutted");
         addParamsLine("     alias --untilted;");

@@ -225,7 +225,7 @@ void ProgXrayImport::getFlatfield(const FileName &fnDir,
     Iavg().equal(0,mask);
     if (XSIZE(bpMask()) != 0)
         mask += bpMask();
-    removeBadPixels(Iavg(),mask);
+    boundMedianFilter(Iavg(),mask);
 }
 
 void runThread(ThreadArgument &thArg)
@@ -257,7 +257,7 @@ void runThread(ThreadArgument &thArg)
             Iaux().equal(0,mask);
             if (XSIZE(ptrProg->bpMask()) != 0)
                 mask += ptrProg->bpMask();
-            removeBadPixels(Iaux(), mask);
+            boundMedianFilter(Iaux(), mask);
 
             if (ptrProg->logFilt)
                 Iaux().selfLog10();

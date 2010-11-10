@@ -69,7 +69,7 @@ void ProgAngularProjectLibrary::readParams()
 /* Usage ------------------------------------------------------------------- */
 void ProgAngularProjectLibrary::defineParams()
 {
-    addUsageLine("This program creates a gallery of projections from a volume");
+    addUsageLine("Create a gallery of projections from a volume");
     addUsageLine("Example of use: Sample at 2 degrees and use c6 symmetry");
     addUsageLine("   xmipp_angular_project_library -i in.vol -o out -sym c6  -sampling_rate 2");
     addParamsLine("   -i <input_volume>           : Input Volume");

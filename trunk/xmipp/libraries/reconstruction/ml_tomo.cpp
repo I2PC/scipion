@@ -32,9 +32,9 @@ pthread_mutex_t mltomo_selfile_access_mutex = PTHREAD_MUTEX_INITIALIZER;
 // Usage ===================================================================
 void ProgMLTomo::defineParams()
 {
-    addUsageLine("This program allows to align and classify 3D images with missing data regions in Fourier space,");
+    addUsageLine("Align and classify 3D images with missing data regions in Fourier space,");
     addUsageLine("e.g. subtomograms or RCT reconstructions, by a 3D multi-reference refinement");
-    addUsageLine("based on a maximum-likelihood (ML) target function. ");
+    addUsageLine("based on a maximum-likelihood (ML) target function.");
 
     addParamsLine("   -i <metadata>               : MetaData file with input images (and angles) ");
     addParamsLine("   -nref <int=0>               : Number of references to generate automatically (recommended)");

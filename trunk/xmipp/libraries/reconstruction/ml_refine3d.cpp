@@ -41,7 +41,7 @@ ProgRefine3D::~ProgRefine3D()
 // Usage ===================================================================
 void ProgRefine3D::defineParams()
 {
-    addUsageLine("This program allow to separate structurally heterogenous data sets");
+    addUsageLine("Separate structurally heterogenous data sets");
     addUsageLine("into homogeneous classes by a multi-reference 3D-angular refinement,");
     addUsageLine("using a maximum-likelihood(ML) target function.");
     //Add some params from 2D

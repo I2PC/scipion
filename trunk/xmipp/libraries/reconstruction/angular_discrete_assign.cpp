@@ -88,7 +88,7 @@ void ProgAngularDiscreteAssign::show()
 // usage ===================================================================
 void ProgAngularDiscreteAssign::defineParams()
 {
-    addUsageLine("Makes a projection assignment using wavelets on a discrete library of projections");
+    addUsageLine("Make a projection assignment using wavelets on a discrete library of projections");
     addParamsLine("   -ref <selfile>             : Selfile with the reference images");
     addParamsLine("   -i <docfile>               : Docfile with input angles");
     addParamsLine("   -oang <angle_file>         : DocFile with output angles");

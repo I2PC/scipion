@@ -150,6 +150,8 @@ void XRayPSF::produceSideInfo()
     dxiMax = lambda * Zi / (2 * Rlens);
     DoF = 4*deltaR*deltaR/lambda;
 
+    DoF = log10(DoF);
+
     //        Z = 0.99999*Zo;
     //    Z = Zo;
 }
@@ -192,11 +194,9 @@ void XRayPSF::generateOTF(MultidimArray<double> &Im)
     //    std::cout << std::endl;
     //#endif
 
-    MultidimArray< std::complex<double> > OTFTemp, PSFi;
-    FourierTransformer transformer;
+    MultidimArray< std::complex<double> > OTFTemp(Niy, Nix), PSFi;
     //    Mask_Params mask_prm; TODO do we have to include masks using this method?
 
-    OTFTemp.resize(Niy,Nix);
     lensPD(OTFTemp, focalEquiv, lambda, dxl, dyl);
 
     //    OTFTemp.window(-128,-128,127,255,10);
@@ -217,7 +217,7 @@ void XRayPSF::generateOTF(MultidimArray<double> &Im)
     _Im.write("psfxr-lens.spi");
 #endif
 
-
+    FourierTransformer transformer;
     transformer.FourierTransform(OTFTemp, PSFi, false);
     //    CenterOriginFFT(PSFi, 1);
     double norm=0;

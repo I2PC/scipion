@@ -102,7 +102,7 @@ void ProgML2D::defineAdditionalParams(XmippProgram * prog, const char * sectionL
 
 void ProgML2D::defineParams()
 {
-    addUsageLine("This utility allows you to perform (multi-reference) 2D-alignment,");
+    addUsageLine("Perform (multi-reference) 2D-alignment,");
     addUsageLine("using a maximum-likelihood (ML) target function.");
     defineBasicParams(this);
     defineAdditionalParams(this, "==+ Additional options ==");

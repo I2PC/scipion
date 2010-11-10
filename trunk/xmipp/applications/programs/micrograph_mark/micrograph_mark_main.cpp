@@ -40,7 +40,7 @@ protected:
     void defineParams()
     {
 
-        addUsageLine ("Purpose: Mark particles in a micrograph\n");
+        addUsageLine ("Mark particles in a micrograph\n");
 
         addParamsLine("  -i <input_untilted_micrograph>      : File with untilted image");
         addParamsLine("     alias --untilted;");

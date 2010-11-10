@@ -38,8 +38,7 @@ protected:
     void defineParams()
     {
         XmippMetadataProgram::defineParams();
-        addUsageLine("This program allows you to calculate the average and");
-        addUsageLine( "standard deviation of a set of images or volumes.");
+        addUsageLine("Calculate the average and standard deviation of a set of images or volumes.");
         addParamsLine( "  [-set_weight+]             : for 2D-images: set weight in header of average to nr. of particles");
         addParamsLine( "  [-weighted_avg+]           : for 2D-images: use header weights in weighted average calculation");
         addParamsLine( "  [-only_avg+]               : Skip stddev calculation; Output average will be called rootname.xmp");

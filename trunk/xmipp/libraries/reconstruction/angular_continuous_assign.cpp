@@ -81,7 +81,7 @@ void ProgAngularContinuousAssign::show()
 // usage ===================================================================
 void ProgAngularContinuousAssign::defineParams()
 {
-    addUsageLine("This program makes a continuous angular assignment");
+    addUsageLine("Make a continuous angular assignment");
     addParamsLine("   -ref <volume>              : Reference volume");
     addParamsLine("   -ang <angle_file>          : MetaData with the initial angles");
     addParamsLine("   -oang <angle_file>         : MetaData with output angles");

@@ -41,7 +41,7 @@ protected:
     {
       each_image_produces_an_output = true;
       apply_geo = false;
-        addUsageLine("Assigns rotation angles, origin offsets (and optionally weights and mirror flags)");
+        addUsageLine("Assign rotation angles, origin offsets (and optionally weights and mirror flags)");
         addUsageLine("read from input file to the headers of images. ");
         XmippMetadataProgram::defineParams();
         addParamsLine("   [-round_shifts]    :Round shifts to integers");

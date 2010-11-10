@@ -41,7 +41,7 @@ private:
 protected:
     void defineParams()
     {
-        addUsageLine("Converts among stacks, volumes and images, and changes the file format.");
+        addUsageLine("Convert among stacks, volumes and images, and change the file format.");
         addParamsLine(" -i <metadata>   : Input file: metadata, stack, volume or image.");
         addParamsLine("         :+ Supported read formats are:");
         addParamsLine("         :+ dm3 : Digital Micrograph 3.");

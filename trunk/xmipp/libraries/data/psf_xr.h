@@ -208,7 +208,7 @@ public:
 
 #ifdef DEBUG
 
-        _Im().resize(ImFT);
+        _Im().resizeNoCopy(ImFT);
         FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY2D(ImFT)
         dAij(_Im(),i,j) = abs(dAij(ImFT,i,j));
         _Im.write(("psfxr-imft1.spi"));

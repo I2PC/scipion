@@ -506,22 +506,17 @@ void thread_project_xr(ThreadArgument &thArg)
     if (thread_id == 0)
     {
         vol().setXmippOrigin();
-        imOutGlobal().resize(psf.Niy, psf.Nix);
+        imOutGlobal().resizeNoCopy(psf.Niy, psf.Nix);
         imOutGlobal().initZeros();
         imOutGlobal().setXmippOrigin();
     }
 
     barrier->wait();
 
-    Image<double> imOut;
-    imOut() = MultidimArray<double> (psf.Niy, psf.Nix);
-    imOut().initZeros();
+    Image<double> imOut(psf.Nix,psf.Niy);
     imOut().setXmippOrigin();
 
     MultidimArray<double> imTemp(psf.Noy, psf.Nox),intExp(psf.Noy, psf.Nox),imTempSc(imOut()),*imTempP;
-    intExp.initZeros();
-    imTemp.initZeros();
-    imTempSc.initZeros();
     intExp.setXmippOrigin();
     imTemp.setXmippOrigin();
     imTempSc.setXmippOrigin();
@@ -539,7 +534,7 @@ void thread_project_xr(ThreadArgument &thArg)
             for (int k=(vol()).zinit + priorLast + 1; k<=(vol()).zinit + first - 1 ; k++)
             {
                 FOR_ALL_ELEMENTS_IN_ARRAY2D(intExp)
-                intExp(i, j) = intExp(i, j) + vol(k, i, j);
+                intExp(i, j) += vol(k, i, j);
             }
 
 
@@ -552,7 +547,7 @@ void thread_project_xr(ThreadArgument &thArg)
             {
                 FOR_ALL_ELEMENTS_IN_ARRAY2D(intExp)
                 {
-                    intExp(i, j) = intExp(i, j) + vol(k, i, j);
+                    intExp(i, j) += vol(k, i, j);
                     imTemp(i, j) = (exp(-intExp(i,j)*psf.dzo))*vol(k,i,j)*psf.dzo;
                     //            imTemp(i, j) = 1./(exp(intExp(i,j)))*vol(k,i,j);
                 }
