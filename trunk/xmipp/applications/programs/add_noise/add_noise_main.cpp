@@ -38,7 +38,7 @@ protected:
     {
         each_image_produces_an_output = true;
         XmippMetadataProgram::defineParams();
-        addUsageLine("This program adds random noise to the input images");
+        addUsageLine("Add random noise to the input images");
         addParamsLine("-gaussian <stddev> <avg=0.>        :Gaussian noise parameters");
         addParamsLine("or -student <df> <stddev> <avg=0.> :t-student noise parameters");
         addParamsLine("or -uniform  <min> <max>           :Uniform noise parameters");
