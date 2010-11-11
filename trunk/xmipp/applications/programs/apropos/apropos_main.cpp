@@ -42,6 +42,7 @@ protected:
     StringVector keywords;
     bool update;
     bool list;
+    int maxlen;
 
     void defineParams()
     {
@@ -87,13 +88,22 @@ protected:
         return 0;
     }
 
+    void printProgram(DbProgram * prog)
+    {
+      size_t endline;
+        endline = prog->description.find_first_of('\n');
+        std::cout
+        << std::left << std::setw(maxlen) << prog->name
+        << "- " << prog->description.substr(0, endline) << std::endl;
+    }
+
 public:
     void run()
     {
         std::vector<DbProgram*> progs;
-        std::priority_queue<DbProgram*> progsRank;
+        //std::vector<DbProgram*> progsRank;
 
-        std::vector<DbProgram*>::iterator it;
+        std::vector<DbProgram*>::iterator it, it2;
         StringVector::iterator keyIt;
 
         FileName dbName = xmippBaseDir().append("/programs.db");
@@ -113,13 +123,15 @@ public:
 
         String line;
         DbProgram *prog;
-        int len, maxlen = 0; //take max program name
+        int len;
+        maxlen = 20; //take max program name
 
-        for (it = progs.begin(); it < progs.end(); ++it)
+        for (int i  = 0; i < progs.size(); ++i)
         {
-            prog = *it;
+            prog = progs[i];
+            maxlen = XMIPP_MAX(prog->name.length(), maxlen);
             if (list)
-                prog->rank = 3;
+                prog->rank = 1;
             else
             {
                 prog->rank = 0;
@@ -129,28 +141,24 @@ public:
                     prog->rank += getRank(prog->keywords, *keyIt, KEYS_MATCH);
                     prog->rank += getRank(prog->description, *keyIt, DESC_MATCH);
                 }
-            }
-            if (prog->rank > 0)
-            {
-                maxlen = XMIPP_MAX(prog->name.length(), maxlen);
-                progsRank.push(prog);
+                //Order by insertion sort
+                for (int j = i - 1; j >= 0 && prog->rank > progs[j]->rank; --j)
+                {
+                    //Swap values
+                    progs[j + 1] = progs[j];
+                    progs[j] = prog;
+                }
             }
         }
 
         //Print out results
-        size_t endline;
         maxlen += 3;
-        while (!progsRank.empty())
+        for (int i  = 0; i < progs.size(); ++i)
         {
-            prog = progsRank.top();
-            progsRank.pop();
-            endline = prog->description.find_first_of('\n');
-            std::cout
-            << std::left << std::setw(maxlen) << prog->name
-            << "- " << prog->description.substr(0, endline) << std::endl;
-            delete prog;
+            prog = progs[i];
+            if (prog->rank)
+              printProgram(prog);
         }
-
     }
 
     void createDB()
