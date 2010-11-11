@@ -59,12 +59,13 @@ protected:
         addParamsLine("  [-o <output_file=\"\">]  : Output file: metadata, stack, volume or image.");
         addParamsLine("   alias --output;");
         addParamsLine("  [--oext <extension=spi>] : Output file format extension.");
-        addParamsLine("         :+ Supported write formats are:");
-        addParamsLine("         :+ img : Imagic");
-        addParamsLine("         :+ inf,raw : RAW file with header INF file.");
-        addParamsLine("         :+ mrc : CCP4");
-        addParamsLine("         :+ spi, xmp : Spider");
-        addParamsLine("         :+ tif : TIFF. It supports 8bits, 16bits and float. See -bits option.");
+        addParamsLine("           where <extension>");
+        addParamsLine("         img : Imagic");
+        addParamsLine("         inf raw : RAW file with header INF file.");
+        addParamsLine("         mrc : CCP4");
+        addParamsLine("         spi xmp : Spider");
+        addParamsLine("         tif : TIFF. It supports 8bits, 16bits and float. See -bits option.");
+
         addParamsLine("  [--oroot <root=\"\">]     : Rootname of output individual images.");
 
         addParamsLine("  [--type <output_type=img>] : Output file type.");
