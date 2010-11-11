@@ -40,9 +40,15 @@ protected:
     void defineParams()
     {
         produces_an_output = true;
-        XmippMetadataProgram::defineParams();
+
         addUsageLine("Extract the geometric transformation (angles & shifts) in the header of 2D-images");
         addUsageLine("and write values to a metadata file.");
+        addUsageLine("Example of use: Extract headers from in_file and overwrite out_file");
+        addUsageLine("   xmipp_header_extract -i in_file.sel -o out_file.doc");
+        addUsageLine("Example of use: Extract headers from in_file and append blockname named ONE to out_file");
+        addUsageLine("   xmipp_header_extract -i in_file.sel --bn ONE --mode append -o out_file.doc");
+
+        XmippMetadataProgram::defineParams();
         addParamsLine("   [--round_shifts]    :Round shifts to integers.");
     }
 
@@ -54,7 +60,7 @@ protected:
 
     void postProcess()
     {
-        mdIn.write(fn_out);
+        mdIn.write(fn_out,blockName,mode);
     }
 
     void processImage()
