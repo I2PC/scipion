@@ -141,13 +141,18 @@ class ParamWidget(Frame):
     
     def endWithOptions(self):
         #Put a checkbutton if have no arguments           
-        if len(self.options) == 0:
+        if len(self.options) == 0 and self.parent.single:
            self.checkButton = Checkbutton(self);
            self.checkButton.pack(side=LEFT);
         if len(self.comments) > 0:
-            helpImage = PhotoImage(file="~/Download/help256.gif").subsample(12, 12);
-            helpButton = Button(self, image=helpImage, command=self.buttonHelp_click);
-            helpButton.image = helpImage;
+            try:
+                helpImage = PhotoImage(file="~/Download/help256.gif").subsample(12, 12);
+                helpButton = Button(self, image=helpImage, command=self.buttonHelp_click);
+                helpButton.image = helpImage;
+            except TclError:
+                helpButton = Button(self, text="Help",
+                                    bg="#33663F", 
+                                    command=self.buttonHelp_click);
             helpButton.pack(side=LEFT, padx="1m");  
         if not self.parent.single and len(self.parent.params) > 1:
             self.disable(); 
@@ -164,7 +169,7 @@ class ParamWidget(Frame):
         
     def enable(self):
         self.label.config(font=self.boldFont);
-        if len(self.options) == 0:
+        if len(self.options) == 0 and self.parent.single:
             self.checkButton.config(state=NORMAL);
         else:
             for option in self.options:
@@ -172,7 +177,7 @@ class ParamWidget(Frame):
             
     def disable(self):
         self.label.config(font=self.normalFont);
-        if len(self.options) == 0:
+        if len(self.options) == 0 and self.parent.single:
             self.checkButton.config(state=DISABLED);
         else:
             for option in self.options:
@@ -262,8 +267,8 @@ class ProgramGUI(Frame):
         self.params_frame = Frame(self);
         self.params_frame.pack(fill=X, padx="5m");
         self.createParams();
-        self.createButtons();
-        self.pack();
+        self.createButtons();   
+        self.pack();     
     
     def createHeader(self):
         '''Create header with program name and usage lines'''
@@ -302,8 +307,6 @@ class ProgramGUI(Frame):
         # Create some params for testing
         section = self.addSection("Testing section");
         group = ParamsGroup(section, False);
-        
-        
         param = ParamWidget(group, "--input");
         param.endWithOptions();
         param = ParamWidget(group, "--ouput");
@@ -365,15 +368,12 @@ class ProgramGUI(Frame):
                width=6,
                command=self.buttonRun_click
                ).pack(side=RIGHT, padx="1m", anchor="e");
-        Button(self.buttons_frame,
-               text="Center",
-               width=6,
-               command=self.centerWindows
-               ).pack(side=RIGHT, padx="1m", anchor="e");
+
     def addSection(self, sectionName):
         section = SectionWidget(self.params_frame, sectionName);
         self.sections.append(section);
         section.pack(padx="2m", side=TOP, fill=X);
+        #self.centerWindows();
         return section;
         #Label(self.params_frame, text=sectionName + "Test").pack();
         
@@ -391,17 +391,19 @@ class ProgramGUI(Frame):
         root = self.parent
         w = root.winfo_screenwidth()
         h = root.winfo_screenheight()
-        print w, h
+        #print w, h
         rootsize = tuple(int(_) for _ in root.geometry().split('+')[0].split('x'))
-        print rootsize
+        print root.geometry();
         x = w/2 - rootsize[0]/2
         y = h/2 - rootsize[1]/2
         root.geometry("%dx%d+%d+%d" % (rootsize + (x, y)))
         
         
 root = Tk();
-#myapp = SampleApp(root)
+w = root.winfo_screenwidth()
+h = root.winfo_screenheight()
 program = ProgramGUI(root);
+#root.update();
 #program.centerWindows();
 
 root.mainloop();
