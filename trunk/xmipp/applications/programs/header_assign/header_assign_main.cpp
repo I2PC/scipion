@@ -39,20 +39,26 @@ private:
 protected:
     void defineParams()
     {
-      each_image_produces_an_output = true;
-      apply_geo = false;
+        each_image_produces_an_output = true;
+        apply_geo = false;
         addUsageLine("Assign rotation angles, origin offsets (and optionally weights and mirror flags)");
         addUsageLine("read from input file to the headers of images. ");
+
+        addUsageLine("Example of use: Extract headers from in_file and overwrite out_file");
+        addUsageLine("   xmipp_header_assign -i in_file.sel -o out_file.doc");
+        addUsageLine("Example of use: Extract headers from in_file and append blockname named ONE to out_file");
+        addUsageLine("   xmipp_header_extract -i in_file.sel --bn ONE --mode append -o out_file.doc");
+
         XmippMetadataProgram::defineParams();
-        addParamsLine("   [-round_shifts]    :Round shifts to integers");
-        addParamsLine("   [-levels <n=0>]    :Levels of pyramidal reduction, n=1, 2, ...");
+        addParamsLine("   [--round_shifts]    :Round shifts to integers");
+        addParamsLine("   [--levels <n=0>]    :Levels of pyramidal reduction, n=1, 2, ...");
     }
 
     void readParams()
     {
         XmippMetadataProgram::readParams();
-        round_shifts = checkParam("-round_shifts");
-        levels = getIntParam("-levels");
+        round_shifts = checkParam("--round_shifts");
+        levels = getIntParam("--levels");
     }
 
     void preProcess()
@@ -63,7 +69,8 @@ protected:
 
     void postProcess()
     {
-        mdIn.write(fn_out);
+    	if(fn_in != fn_out)
+    		mdIn.write(fn_out,blockName,mode);
     }
 
     void processImage()
@@ -127,16 +134,16 @@ protected:
 /* MAIN -------------------------------------------------------------------- */
 int main(int argc, char *argv[])
 {
-  try
-  {
-      ProgHeaderAssign program;
-      program.read(argc, argv);
-      program.run();
-  }
-  catch (XmippError xe)
-  {
-      std::cerr << xe;
-  }
+    try
+    {
+        ProgHeaderAssign program;
+        program.read(argc, argv);
+        program.run();
+    }
+    catch (XmippError xe)
+    {
+        std::cerr << xe;
+    }
 }
 
 
