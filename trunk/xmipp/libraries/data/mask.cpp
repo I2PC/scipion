@@ -617,14 +617,14 @@ void Mask_Params::read(int argc, char **argv)
         x0 = y0 = z0 = 0;
     }
 
-    i = paremeterPosition(argc, argv, "-mask");
+    i = paremeterPosition(argc, argv, "--mask");
     if (i == -1)
     {
         clear();
         return;
     }
     if (i + 1 >= argc)
-        REPORT_ERROR(ERR_ARG_MISSING, "Mask_Params: -mask with no mask_type");
+        REPORT_ERROR(ERR_ARG_MISSING, "Mask_Params: --mask with no mask_type");
     // Circular mask ........................................................
     if (strcmp(argv[i+1], "circular") == 0)
     {

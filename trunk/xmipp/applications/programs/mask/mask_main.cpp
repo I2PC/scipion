@@ -31,15 +31,15 @@
 
 #include <cstdio>
 
-void Usage();
+#include <data/program.h>
 
-/* MAIN -------------------------------------------------------------------- */
-int main(int argc, char **argv)
+
+class ProgMask: public XmippProgram
 {
-    FileName        oext, fn_out, fn_input, fn_mask;
-    MetaData        SF_in, SF_out;
-    Image<double>   image;
+public:
+
     Mask_Params     mask_prm;
+    FileName        oext, fn_out, fn_input, fn_mask;
     int             save_mask;
     int             create_mask;
     int             count_above;
@@ -50,44 +50,76 @@ int main(int argc, char **argv)
     double          subs_val;
     std::string     str_subs_val;
     int             count;
-    int             max_length = 0;
 
-    // Read arguments --------------------------------------------------------
-    try
+    /* Read Parameters ----------------------------------------------------------------- */
+    void readParams()
     {
-        fn_input     = getParameter(argc, argv, "-i", NULL);
-        fn_out       = getParameter(argc, argv, "-o", "");
-        oext         = getParameter(argc, argv, "-oext", "");
-        save_mask    = checkParameter(argc, argv, "-save_mask");
-        count_above  = checkParameter(argc, argv, "-count_above");
-        apply_geo    = !checkParameter(argc, argv, "-dont_apply_geo");
+        fn_input     = getParam("-i");
+
+        if(checkParam("-o"))
+            fn_out       = getParam("-o");
+        else
+            oext         = getParam("--oext");
+
+        save_mask    = checkParam("--save_mask");
+        count_above  = checkParam("--count_above");
+        apply_geo    = !checkParam("--dont_apply_geo");
         if (count_above)
-            th_above  = textToFloat(getParameter(argc, argv, "-count_above"));
-        count_below  = checkParameter(argc, argv, "-count_below");
+            th_above  = getDoubleParam("-count_above");
+        count_below  = checkParam("--count_below");
         if (count_below)
-            th_below  = textToFloat(getParameter(argc, argv, "-count_below"));
-        create_mask  = checkParameter(argc, argv, "-create_mask");
+            th_below  = getDoubleParam("--count_below");
+        create_mask  = checkParam("--create_mask");
         if (create_mask)
         {
-            fn_mask  = getParameter(argc, argv, "-create_mask");
-            if (fn_mask[0] == '-')
+            fn_mask  = getParam("--create_mask");
+            if (fn_mask[0] == '--')
                 REPORT_ERROR(ERR_IO_NOTEXIST, "Mask: the output mask filename is missing");
         }
         mask_prm.read(argc, argv);
-        str_subs_val = getParameter(argc, argv, "-substitute", "0");
+        str_subs_val = getParam("--substitute");
         count = count_below || count_above;
-    }
-    catch (XmippError XE)
-    {
-        std::cout << XE;
-        Usage();
-        mask_prm.usage();
-        exit(1);
+
     }
 
-    try
+    /* Define Parameters ----------------------------------------------------------------- */
+    void defineParams()
     {
-        mask_prm.show();
+        addUsageLine("Apply a mask");
+        addUsageLine("Example of use: Sample at circular mask inside radius 72");
+        addUsageLine("   xmipp_mask  -i reference.vol -o output_volume.vol -mask circular -72");
+
+        addParamsLine("   -i <in_file>                : Input image, volume or selfile");
+        //!a
+        //addParamsLine("   -i <image or volume> [-o <image_out or volume_out]");
+        //addParamsLine("   -i <selfile> [-oext <output extension>]");
+        addParamsLine("    -o <out_file>       : Output image (with input image) or volume (with input volume)");
+        addParamsLine("or --oext <out_file>    : Output extension (with input selfile)");
+        addParamsLine("   [--save_mask]     : Apply and save mask");
+        addParamsLine("   [--dont_apply_geo]    : Dont apply (opposite) geometric transformation as stored in header of 2D-image");
+        addParamsLine("   [--create_mask <output_mask_file>]  : Don't apply and save mask");
+        addParamsLine("   [--count_above <th>]                : Voxels within mask >= th");
+        addParamsLine("   [--count_below <th>]                : Voxels within mask <= th");
+        //!a
+        //addParamsLine("   [--substitute <val=0>]  : Value outside the mask: min|max|avg");
+        addParamsLine("   [--substitute <val=min>]  : Value outside the mask: min|max|avg");
+        addParamsLine("        where <val> min max avg");
+
+        //!a FIXME
+        addParamsLine("   [--mask <mask> <r>]     : mask");
+
+    }
+
+
+    /* RuMAIN -------------------------------------------------------------------- */
+    void run()
+    {
+        MetaData        SF_in, SF_out;
+        Image<double>   image;
+        int             max_length = 0;
+
+        //mask_prm.show();
+
         // Read list of images --------------------------------------------------
         if (image.isImage(fn_input))
         {
@@ -139,7 +171,7 @@ int main(int argc, char **argv)
 
             // Generate mask
             if (ZSIZE(image())>1)
-            	apply_geo=false;
+                apply_geo=false;
             if (apply_geo)
             {
                 if (mask_prm.x0 + mask_prm.y0 != 0.)
@@ -222,24 +254,31 @@ int main(int argc, char **argv)
         // Save masks -----------------------------------------------------------
         if (save_mask)
             mask_prm.write_mask("mask.spi");
-    }
-    catch (XmippError XE)
-    {
-        std::cout << XE;
-    }
-    exit(0);
-} //main
 
-/* Usage ------------------------------------------------------------------- */
-void Usage()
+        exit(0);
+    }
+
+
+};
+
+
+
+
+/* MAIN -------------------------------------------------------------------- */
+int main(int argc, char **argv)
 {
-    std::cerr << "Usage: mask <parameters>\n"
-    << "   -i <image or volume> [-o <image_out or volume_out]\n"
-    << "   -i <selfile> [-oext <output extension>]\n"
-    << "   [-save_mask]                       : apply and save mask\n"
-    << "   [-dont_apply_geo]                  : dont apply (opposite) geometric transformation as stored in header of 2D-image\n"
-    << "   [-create_mask <output mask file>]  : don't apply and save mask\n"
-    << "   [-count_above <th>]                : voxels within mask >= th\n"
-    << "   [-count_below <th>]                : voxels within mask <= th\n"
-    << "   [-substitute <val=0>|min|max|avg]  : value outside the mask\n";
+
+    try
+    {
+        ProgMask program;
+        program.read(argc, argv);
+        program.run();
+    }
+    catch (XmippError xe)
+    {
+        std::cerr << xe;
+        return 1;
+    }
+    return 0;
 }
+
