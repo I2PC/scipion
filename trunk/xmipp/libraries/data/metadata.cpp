@@ -1343,3 +1343,15 @@ void MetaData::selectPart(const MetaData &mdIn, long int startPosition, long int
     firstObject();
 }
 
+
+WriteModeMetaData metadataModeConvert (String mode)
+{
+    toLower(mode);
+    if (mode.npos != mode.find("overwrite"))
+        return OVERWRITE;
+    if (mode.npos != mode.find("append"))
+        return APPEND;
+    REPORT_ERROR(ERR_ARG_INCORRECT,"metadataModeConvert: Invalid mode");
+}
+
+

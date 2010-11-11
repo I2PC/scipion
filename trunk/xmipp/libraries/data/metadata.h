@@ -740,6 +740,13 @@ public:
     friend class MDSql;
 };
 
+
+/** Convert string to write mode metadata enum.
+ *
+ */
+WriteModeMetaData metadataModeConvert (String mode);
+
+
 /** @} */
 
 #endif

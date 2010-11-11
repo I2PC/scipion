@@ -255,10 +255,10 @@ void XmippProgram::getListParam(const char * param, StringVector &list)
 
 int XmippProgram::getCountParam(const char * param)
 {
-  ParamDef * paramDef = progDef->findParam(param);
-  if (paramDef == NULL)
-    REPORT_ERROR(ERR_ARG_INCORRECT, ((std::string)"Doesn't exists param: " + param));
-  return paramDef->cmdArguments.size();
+    ParamDef * paramDef = progDef->findParam(param);
+    if (paramDef == NULL)
+        REPORT_ERROR(ERR_ARG_INCORRECT, ((std::string)"Doesn't exists param: " + param));
+    return paramDef->cmdArguments.size();
 }
 
 bool XmippProgram::checkParam(const char * param)
@@ -324,6 +324,7 @@ void XmippMetadataProgram::defineParams()
     addParamsLine(" alias --input;");
     addParamsLine(" [--bn <blockName=\"\">]   : Block name for metadata file");
     addParamsLine(" alias --blockname;");
+    addParamsLine(" [--mode <mode=\"overwrite\">]   : Metadata writing mode: overwrite, append");
 
     if (each_image_produces_an_output)
     {
@@ -348,6 +349,7 @@ void XmippMetadataProgram::readParams()
 {
     fn_in = getParam("-i");
     blockName = getParam("--blockname");
+    mode = metadataModeConvert(getParam("--mode"));
 
     if (produces_an_output)
         fn_out = checkParam("-o") ? getParam("-o") : fn_in;
