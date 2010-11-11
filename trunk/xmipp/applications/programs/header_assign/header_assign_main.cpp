@@ -44,10 +44,11 @@ protected:
         addUsageLine("Assign rotation angles, origin offsets (and optionally weights and mirror flags)");
         addUsageLine("read from input file to the headers of images. ");
 
-        addUsageLine("Example of use: Extract headers from in_file and overwrite out_file");
-        addUsageLine("   xmipp_header_assign -i in_file.sel -o out_file.doc");
-        addUsageLine("Example of use: Extract headers from in_file and append blockname named ONE to out_file");
-        addUsageLine("   xmipp_header_extract -i in_file.sel --bn ONE --mode append -o out_file.doc");
+        addUsageLine("Example of use: Assign to headers metadata contained in file in_file.doc");
+        addUsageLine("   xmipp_header_assign -i in_file.doc");
+        addUsageLine("Example of use: Assign to headers metadata contained in file in_file.doc with blockname named ONE");
+        addUsageLine("The metadata assign is append to the file out_file.doc");
+        addUsageLine("   xmipp_header_extract -i in_file.doc --bn ONE --mode append -o out_file.doc");
 
         XmippMetadataProgram::defineParams();
         addParamsLine("   [--round_shifts]    :Round shifts to integers");
