@@ -351,14 +351,15 @@ public:
             {
                 MetaData  mySF;
                 FileName fn_temp;
-                int myCounter=0;
+                int myCounter=-1;
 
                 for (int mypsi=0;mypsi<360;mypsi += psi_sampling)
                     for (int i=0;i<=mysampling.no_redundant_sampling_points_angles.size()-1;i++)
                     {
-                        fn_temp.compose(output_file_root, ++myCounter,"xmp");
-                        mySF.addObject();
+                        fn_temp.compose( ++myCounter,output_file);
+                    	mySF.addObject();
                         mySF.setValue(MDL_IMAGE,fn_temp);
+                        mySF.setValue(MDL_ENABLED,1);
                     }
                 fn_temp=output_file_root+".sel";
                 mySF.write(fn_temp);
