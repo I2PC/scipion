@@ -557,9 +557,6 @@ class preprocess_A_class:
             retval.append('NA')
             retval.append('NA')
             return retval
-        fh=open(shortname+"/status.txt","w+")
-        fh.write("Step 3: CTF estimated with CTFFind "+time.asctime()+"\n")
-        fh.close()
         
         fh=open(shortname+'/'+fnRoot+'_ctffind.log','r')
         lines=fh.readlines()
@@ -567,13 +564,26 @@ class preprocess_A_class:
         DF1=0.
         DF2=0.
         Angle=0.
+        found=False
         for i in range(len(lines)):
             if not (lines[i].find('Final Values')==-1):
                 words=lines[i].split()
                 DF1=float(words[0])
                 DF2=float(words[1])
                 Angle=float(words[2])
+                found=True
                 break
+        command="rm " + shortname+'/tmp.mrc\n'
+        os.write(fh_mpi,command)
+        if not found:
+            retval=[]
+            retval.append('NA')
+            retval.append('NA')
+            return retval
+
+        fh=open(shortname+"/status.txt","w+")
+        fh.write("Step 3: CTF estimated with CTFFind "+time.asctime()+"\n")
+        fh.close()
 
         # Generate Xmipp .ctfparam file:
         MD=XmippData.MetaData()
@@ -610,8 +620,6 @@ class preprocess_A_class:
         MD.write(XmippData.FileName(fnOut))
 
         # Remove temporary files
-        command="rm " + shortname+'/tmp.mrc\n'
-        os.write(fh_mpi,command)
         retval=[];
         retval.append(fnOut);
         retval.append(shortname+'/'+fnRoot+'_ctffind_spectrum.mrc');
