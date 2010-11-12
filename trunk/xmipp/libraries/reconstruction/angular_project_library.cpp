@@ -37,33 +37,34 @@ ProgAngularProjectLibrary::ProgAngularProjectLibrary()
 void ProgAngularProjectLibrary::readParams()
 {
     input_volume = getParam("-i");
-    output_file_root = getParam("-o");
-    fn_sym = getParam("-sym");
-    fn_sym_neigh=checkParam("-sym_neigh")?getParam("-sym_neigh"):fn_sym;
-    sampling = getDoubleParam("-sampling_rate");
-    psi_sampling = getDoubleParam("-psi_sampling");
-    max_tilt_angle = getDoubleParam("-max_tilt_angle");
-    min_tilt_angle = getDoubleParam("-min_tilt_angle");
-    angular_distance_bool = checkParam("-angular_distance");
+    output_file = getParam("-o");
+    output_file_root = output_file.withoutExtension();
+    fn_sym = getParam("--sym");
+    fn_sym_neigh=checkParam("--sym_neigh")?getParam("--sym_neigh"):fn_sym;
+    sampling = getDoubleParam("--sampling_rate");
+    psi_sampling = getDoubleParam("--psi_sampling");
+    max_tilt_angle = getDoubleParam("--max_tilt_angle");
+    min_tilt_angle = getDoubleParam("--min_tilt_angle");
+    angular_distance_bool = checkParam("--angular_distance");
     angular_distance=0.;
     if(angular_distance_bool)
     {
-        FnexperimentalImages = getParam("-experimental_images");
-        angular_distance = getDoubleParam("-angular_distance");
+        FnexperimentalImages = getParam("--experimental_images");
+        angular_distance = getDoubleParam("--angular_distance");
     }
-    compute_closer_sampling_point_bool= checkParam("-closer_sampling_points");
+    compute_closer_sampling_point_bool= checkParam("--closer_sampling_points");
     if(compute_closer_sampling_point_bool)
-        FnexperimentalImages = getParam("-experimental_images");
-    shears = checkParam("-shears");
+        FnexperimentalImages = getParam("--experimental_images");
+    shears = checkParam("--shears");
     //NOTE perturb in computed after the even sampling is computes
     //     and max tilt min tilt applied
-    perturb_projection_vector=getDoubleParam("-perturb");
-    compute_neighbors_bool=checkParam("-compute_neighbors");
-    remove_points_far_away_from_experimental_data_bool=checkParam("-near_exp_data");
+    perturb_projection_vector=getDoubleParam("--perturb");
+    compute_neighbors_bool=checkParam("--compute_neighbors");
+    remove_points_far_away_from_experimental_data_bool=checkParam("--near_exp_data");
     if(remove_points_far_away_from_experimental_data_bool)
-        FnexperimentalImages = getParam("-experimental_images");
-    fn_groups = getParam("-groups");
-    only_winner = checkParam("-only_winner");
+        FnexperimentalImages = getParam("--experimental_images");
+    fn_groups = getParam("--groups");
+    only_winner = checkParam("--only_winner");
 }
 
 /* Usage ------------------------------------------------------------------- */
@@ -71,34 +72,34 @@ void ProgAngularProjectLibrary::defineParams()
 {
     addUsageLine("Create a gallery of projections from a volume");
     addUsageLine("Example of use: Sample at 2 degrees and use c6 symmetry");
-    addUsageLine("   xmipp_angular_project_library -i in.vol -o out -sym c6  -sampling_rate 2");
+    addUsageLine("   xmipp_angular_project_library -i in.vol -o out -sym c6 -sampling_rate 2");
     addParamsLine("   -i <input_volume>           : Input Volume");
     addParamsLine("   -o <root_file_name>         : Root for output files");
-    addParamsLine("  [-sym <symmetry=c1>]         : Symmetry to define sampling ");
+    addParamsLine("  [--sym <symmetry=c1>]         : Symmetry to define sampling ");
     addParamsLine("                               : One of the 17 possible symmetries in");
     addParamsLine("                               : single particle electron microscopy");
-    addParamsLine("  [-sampling_rate <Ts=5>]          : Distance in degrees between sampling points");
+    addParamsLine("  [--sampling_rate <Ts=5>]          : Distance in degrees between sampling points");
     addParamsLine("==+Extra parameters==");
-    addParamsLine("  [-sym_neigh <symmetry>]      : symmetry used to define neighbors, by default");
+    addParamsLine("  [--sym_neigh <symmetry>]      : symmetry used to define neighbors, by default");
     addParamsLine("                               : same as sym");
-    addParamsLine("  [-psi_sampling <psi=360>]        : sampling in psi, 360 -> no sampling in psi");
-    addParamsLine("  [-max_tilt_angle <tmax=91>]      : maximum tilt angle in degrees");
-    addParamsLine("  [-min_tilt_angle <tmin=-91>]     : minimum tilt angle in degrees");
-    addParamsLine("  [-experimental_images <docfile=\"\">] : doc file with experimental data");
-    addParamsLine("  [-angular_distance <ang=20>]     : Do not search a distance larger than...");
-    addParamsLine("  requires -experimental_images;");
-    addParamsLine("  [-closer_sampling_points]    : create doc file with closest sampling points");
-    addParamsLine("  requires -experimental_images;");
-    addParamsLine("  [-near_exp_data]             : remove points far away from experimental data");
-    addParamsLine("  requires -experimental_images;");
-    addParamsLine("  [-compute_neighbors]         : create doc file with sampling point neighbors");
-    addParamsLine("  requires -angular_distance;");
-    addParamsLine("  [-shears]                    : use projection shears to generate projections");
-    addParamsLine("  [-perturb <sigma=0.0>]       : gaussian noise projection unit vectors ");
+    addParamsLine("  [--psi_sampling <psi=360>]        : sampling in psi, 360 -> no sampling in psi");
+    addParamsLine("  [--max_tilt_angle <tmax=91>]      : maximum tilt angle in degrees");
+    addParamsLine("  [--min_tilt_angle <tmin=-91>]     : minimum tilt angle in degrees");
+    addParamsLine("  [--experimental_images <docfile=\"\">] : doc file with experimental data");
+    addParamsLine("  [--angular_distance <ang=20>]     : Do not search a distance larger than...");
+    addParamsLine("  requires --experimental_images;");
+    addParamsLine("  [--closer_sampling_points]    : create doc file with closest sampling points");
+    addParamsLine("  requires --experimental_images;");
+    addParamsLine("  [--near_exp_data]             : remove points far away from experimental data");
+    addParamsLine("  requires --experimental_images;");
+    addParamsLine("  [--compute_neighbors]         : create doc file with sampling point neighbors");
+    addParamsLine("  requires --angular_distance;");
+    addParamsLine("  [--shears]                    : use projection shears to generate projections");
+    addParamsLine("  [--perturb <sigma=0.0>]       : gaussian noise projection unit vectors ");
     addParamsLine("                         : a value=sin(sampling_rate)/4  ");
     addParamsLine("                         : may be a good starting point ");
-    addParamsLine("  [-groups <selfile=\"\">]     : selfile with groups");
-    addParamsLine("  [-only_winner]               : if set each experimental");
+    addParamsLine("  [--groups <selfile=\"\">]     : selfile with groups");
+    addParamsLine("  [--only_winner]               : if set each experimental");
     addParamsLine("                               : point will have a unique neighbor");
 }
 
@@ -155,6 +156,9 @@ ProgAngularProjectLibrary::project_angle_vector(
         prepareStructVolume(inputVol(),VShears);
         inputVol.clear();
     }
+    //fn_proj.compose(output_file_root, ++myCounter,"xmp");
+
+    unlink(output_file.c_str());
 
     for (int mypsi=0;mypsi<360;mypsi += psi_sampling)
     {
@@ -171,8 +175,8 @@ ProgAngularProjectLibrary::project_angle_vector(
             else
                 project_Volume(inputVol(), P, Ydim, Xdim,rot,tilt,psi);
 
-            fn_proj.compose(output_file_root, ++myCounter,"xmp");
-            P.write(fn_proj);
+            //fn_proj.compose(output_file_root, ++myCounter,"xmp");
+            P.write(output_file,-1,true,WRITE_APPEND);
         }
     }
     if (verbose)
@@ -366,12 +370,12 @@ void ProgAngularProjectLibrary::run()
     //only rank 0 create sel file
     MetaData  mySF;
     FileName fn_temp;
-    int myCounter=0;
+    int myCounter=-1;
 
     for (int mypsi=0;mypsi<360;mypsi += psi_sampling)
         for (int i=0;i<=mysampling.no_redundant_sampling_points_angles.size()-1;i++)
         {
-            fn_temp.compose(output_file_root, ++myCounter,"xmp");
+            fn_temp.compose( ++myCounter,output_file);
             mySF.addObject();
             mySF.setValue(MDL_IMAGE,fn_temp);
             mySF.setValue(MDL_ENABLED,1);
