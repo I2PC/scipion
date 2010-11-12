@@ -114,7 +114,7 @@ public:
         }
         else
         {
-            //show();
+            show();
             SF.read(fn_sel);
         }
 
