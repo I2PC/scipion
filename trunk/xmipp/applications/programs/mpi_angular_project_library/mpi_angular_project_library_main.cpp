@@ -42,7 +42,7 @@
 #define TAG_WAIT   2
 #define TAG_FREEWORKER   3
 
-class Prog_mpi_angular_project_library_Parameters: public ProgAngularProjectLibrary
+class ProgMpiAngularProjectLibrary: public ProgAngularProjectLibrary
 {
 public:
     //int rank, size, num_img_tot;
@@ -67,7 +67,7 @@ public:
     bool verbose;
 
     /*  constructor ------------------------------------------------------- */
-    Prog_mpi_angular_project_library_Parameters()
+    ProgMpiAngularProjectLibrary()
     {
         //parent class constructor will be called by deault without parameters
         MPI_Comm_size(MPI_COMM_WORLD, &(nProcs));
@@ -84,14 +84,14 @@ public:
     void readParams()
     {
         ProgAngularProjectLibrary::readParams();
-        mpi_job_size = textToInteger(getParameter(argc,argv,"-mpi_job_size","10"));
+        mpi_job_size = getIntParam("--mpi_job_size");
     }
 
     /* Usage ------------------------------------------------------------------- */
     void defineParams()
     {
         ProgAngularProjectLibrary::defineParams();
-        addParamsLine("  --mpi_job_size <N=10>     : Number of images sent to a cpu in a single job");
+        addParamsLine("  [--mpi_job_size <size=10>]: Number of images sent to a cpu in a single job");
         addParamsLine("                            : 10 may be a good value");
         addParamsLine("                            : if  -1 the computer will put the maximum");
         addParamsLine("                            : posible value that may not be the best option");
@@ -301,6 +301,7 @@ public:
                              MPI_COMM_WORLD, &status);
                     //#define DEBUG
 #ifdef DEBUG
+
                     std::cerr << "Mr_f received TAG_FREEWORKER from worker " <<  status.MPI_SOURCE << std::endl;
 #endif
                     //send work
@@ -313,6 +314,7 @@ public:
                     i++; //increase job number
                     //#define DEBUG
 #ifdef DEBUG
+
                     std::cerr << "Ms_f sent TAG_WORKFORWORKER to worker " <<  status.MPI_SOURCE << std::endl;
                     std::cerr << "Sent jobNo " <<  i << std::endl;
 #endif
@@ -376,12 +378,14 @@ public:
                 MPI_Send(0, 0, MPI_INT, 0, TAG_FREEWORKER, MPI_COMM_WORLD);
                 //#define DEBUG
 #ifdef DEBUG
+
                 std::cerr << "W" << rank << " " << "sent TAG_FREEWORKER to master " << std::endl;
 #endif
 #undef DEBUG
                 //get yor next task
                 MPI_Probe(0, MPI_ANY_TAG, MPI_COMM_WORLD, &status);
 #ifdef DEBUG
+
                 std::cerr << "W" << rank << " " << "probe MPI_ANY_TAG " << std::endl;
 #endif
 
@@ -393,6 +397,7 @@ public:
                     MPI_Recv(0, 0, MPI_INT, 0, TAG_STOP,
                              MPI_COMM_WORLD, &status);
 #ifdef DEBUG
+
                     std::cerr << "Wr" << rank << " " << "TAG_STOP" << std::endl;
 #endif
 
@@ -404,6 +409,7 @@ public:
                     //get the jobs number
                     MPI_Recv(&jobNumber, 1, MPI_INT, 0, TAG_WORKFORWORKER, MPI_COMM_WORLD, &status);
 #ifdef DEBUG
+
                     std::cerr << "Wr" << rank << " " << "TAG_WORKFORWORKER" << std::endl;
                     std::cerr <<    "jobNumber "  << jobNumber << std::endl;
 #endif
@@ -449,15 +455,45 @@ int main(int argc, char *argv[])
     //size of the mpi block, number of images
     //mpi_job_size=!checkParameter(argc,argv,"-mpi_job_size","-1");
 
-    Prog_mpi_angular_project_library_Parameters prm;
-    prm.read(argc, argv);
+    ProgMpiAngularProjectLibrary program;
+    program.read(argc, argv);
+
+    if (program.rank == 0)
+    {
+        try
+        {
+            program.read(argc, argv);
+        }
+        catch (XmippError XE)
+        {
+            std::cerr << XE;
+            MPI_Finalize();
+            exit(1);
+        }
+    }
+
+    MPI_Barrier(MPI_COMM_WORLD);
+
+    if (program.rank != 0)
+    {
+        try
+        {
+            program.read(argc, argv);
+        }
+        catch (XmippError XE)
+        {
+            std::cerr << XE;
+            MPI_Finalize();
+            exit(1);
+        }
+    }
 
 
     try
     {
-        prm.preRun();
-        prm.run();
-        prm.createGroupSamplingFiles();
+        program.preRun();
+        program.run();
+        program.createGroupSamplingFiles();
         MPI_Finalize();
     }
     catch (XmippError XE)
@@ -467,6 +503,8 @@ int main(int argc, char *argv[])
     }
 
     exit(0);
+
+
 }
 
 
