@@ -62,6 +62,9 @@ public:
     /** minimum tilt angle */
     double min_tilt_angle;
     
+    /** output file */
+    FileName output_file;
+
     /** root for output files */
     FileName output_file_root;
 
