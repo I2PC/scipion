@@ -428,14 +428,12 @@ void CTFDescription::zero(int n, const Matrix1D<double> &u, Matrix1D<double> &fr
     double wmax = 1 / (2 * Tm);
     double wstep = wmax / 300;
     int sign_changes = 0;
-    precomputeValues(0,0);
-    double last_ctf = CTF_at(), ctf;
+    double last_ctf = CTFpure_atNoPrecomputed(0,0), ctf;
     double w;
     for (w = 0; w <= wmax; w += wstep)
     {
         V2_BY_CT(freq, u, w);
-        precomputeValues(XX(freq), YY(freq));
-        ctf = CTFpure_at();
+        ctf = CTFpure_atNoPrecomputed(XX(freq), YY(freq));
         if (SGN(ctf) != SGN(last_ctf))
         {
             sign_changes++;
@@ -463,7 +461,6 @@ void CTFDescription::zero(int n, const Matrix1D<double> &u, Matrix1D<double> &fr
 
         std::cout << " final w= " << w << " final freq=" << freq.transpose() << std::endl;
 #endif
-
     }
 }
 #undef DEBUG

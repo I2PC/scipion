@@ -419,6 +419,56 @@ public:
         return -K*(sine_part + Q0*cosine_part)*E;
     }
 
+    /// Compute CTF pure at (U,V). Continuous frequencies
+    inline double CTFpure_atNoPrecomputed(double X, double Y, bool show = false) const
+    {
+        double u2 = X * X + Y * Y;
+        double u = sqrt(u2);
+        double u4 = u2 * u2;
+        // if (u2>=ua2) return 0;
+        double deltaf = DeltafNoPrecomputed(X, Y);
+        double argument = K1 * deltaf * u2 + K2 * u4;
+        double sine_part = sin(argument); // OK
+        double cosine_part = cos(argument);
+        double Eespr = exp(-K3 * u4); // OK
+        //CO: double Eispr=exp(-K4*u4); // OK
+        double EdeltaF = bessj0(K5 * u2); // OK
+        double EdeltaR = SINC(u * DeltaR); // OK
+        double Ealpha = exp(-K6 * (K7 * u2 * u + deltaf * u) * (K7 * u2 * u + deltaf * u)); // OK
+        // CO: double E=Eespr*Eispr*EdeltaF*EdeltaR*Ealpha;
+        double E = Eespr * EdeltaF * EdeltaR * Ealpha;
+        if (show)
+        {
+            std::cout << " Deltaf=" << deltaf << std::endl;
+            std::cout << " u,u2,u4=" << u << " " << u2 << " " << u4 << std::endl;
+            std::cout << " K1,K2,sin=" << K1 << " " << K2 << " "
+            << sine_part << std::endl;
+            std::cout << " K3,Eespr=" << K3 << " " << Eespr << std::endl;
+            std::cout << " K4,Eispr=" << K4 << " " << /*Eispr <<*/ std::endl;
+            std::cout << " K5,EdeltaF=" << K5 << " " << EdeltaF << std::endl;
+            std::cout << " EdeltaR=" << EdeltaR << std::endl;
+            std::cout << " K6,K7,Ealpha=" << K6 << " " << K7 << " " << Ealpha
+            << std::endl;
+            std::cout << " Total atenuation(E)= " << E << std::endl;
+            std::cout << " K,Q0,base_line=" << K << "," << Q0 << "," << base_line << std::endl;
+            std::cout << " (X,Y)=(" << X << "," << Y << ") CTF="
+            << -K*(sine_part + Q0*cosine_part)*E + base_line << std::endl;
+        }
+        return -K*(sine_part + Q0*cosine_part)*E;
+    }
+
+    /// Deltaf at a given direction
+    double DeltafNoPrecomputed(double X, double Y) const
+    {
+        if (ABS(X) < XMIPP_EQUAL_ACCURACY &&
+            ABS(Y) < XMIPP_EQUAL_ACCURACY)
+            return 0;
+        double ellipsoid_ang = atan2(Y, X) - rad_azimuth;
+        double DeltafUp = DeltafU * cos(ellipsoid_ang);
+        double DeltafVp = DeltafV * sin(ellipsoid_ang);
+        return SGN(DeltafU)*sqrt(DeltafUp*DeltafUp + DeltafVp*DeltafVp);
+    }
+
     /// Compute noise at (X,Y). Continuous frequencies, notice it is squared
     //#define DEBUG
     inline double CTFnoise_at(bool show = false) const
