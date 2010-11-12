@@ -382,6 +382,8 @@ class preprocess_A_class:
             if len(self.SFctffind)>0:
                 ptr.assign(self.SFctffind[idx])
                 XmippData.setValueString(MD,XmippData.MDL_CTFMODEL2,ptr)
+                ptr.assign(self.SFctffindmrc[idx])
+                XmippData.setValueString(MD,XmippData.MDL_ASSOCIATED_IMAGE3,ptr)
             idx+=1
         MD.write(XmippData.FileName(self.WorkingDir+"/"+self.RootName+"_micrographs.sel"))
 
