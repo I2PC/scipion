@@ -456,8 +456,6 @@ int main(int argc, char *argv[])
     //mpi_job_size=!checkParameter(argc,argv,"-mpi_job_size","-1");
 
     ProgMpiAngularProjectLibrary program;
-    program.read(argc, argv);
-
     if (program.rank == 0)
     {
         try
