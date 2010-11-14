@@ -1138,21 +1138,21 @@ TkPrinter::TkPrinter()
     dir.append("/applications/scripts/program_gui/program_gui.py");
     //      std::cout << "Running: " << dir << std::endl;
 
-    char readbuffer[256];
-    //        int pfd[2], fdOut, nbytes;
-    //        if (pipe(pfd) == -1)
-    //        {
-    //            perror("pipe");
-    //            exit(EXIT_FAILURE);
-    //        }
-    //dup2(1, fdOut);//save std::cout
-    //dup2(pfd[1], 1);
+//    int pfd[2], fdOut, nbytes;
+//    if (pipe(pfd) == -1)
+//    {
+//        perror("pipe");
+//        exit(EXIT_FAILURE);
+//    }
+//    dup2(1, fdOut);//save std::cout
+//    dup2(pfd[1], 1);
     output = popen(dir.c_str(), "w");
 
 }
 
 TkPrinter::~TkPrinter()
 {
+
     pclose(output);
 }
 
@@ -1219,15 +1219,16 @@ void TkPrinter::printParam(const ParamDef &param, int v)
         int n_args = param.arguments.size();
 
         fprintf(output, "param = ParamWidget(group, \"%s\");\n", param.name.c_str());
-
+        if (param.notOptional)
+            fprintf(output, "param.notOptional = True; \n");
         for (size_t i = 0; i < param.arguments.size(); ++i)
         {
             printArgument(*param.arguments[i], v);
         }
         //Add comments to the help
         for (size_t i = 0; i < param.comments.size(); ++i)
-            if (param.comments.visibility[i] <= v)
-                fprintf(output, "param.addCommentLine('''%s''');\n", param.comments.comments[i].c_str());
+            //if (param.comments.visibility[i] <= v)
+            fprintf(output, "param.addCommentLine('''%s''');\n", param.comments.comments[i].c_str());
         //End with options of the param
         fprintf(output, "param.endWithOptions();\n");
 

@@ -315,6 +315,8 @@ class TkPrinter: public Printer
 protected:
   FILE * output;
 public:
+  /** buffer to read the command line output */
+  char readbuffer[1024];
   /** Constructor */
   TkPrinter();
   ~TkPrinter();

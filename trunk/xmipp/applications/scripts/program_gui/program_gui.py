@@ -24,13 +24,18 @@
  *  e-mail address 'xmipp@cnb.csic.es'
  ***************************************************************************/
  """
-import sys, fileinput;
+import sys, os, fileinput;
 from Tkinter import *;  
 import tkFont;
 import tkMessageBox;
 import tkFileDialog;
+from subprocess import call;
+
 
 BORDER = 0;
+PROGRAM_BLUE = "#292987";
+SECTION_GREEN= "#297739";
+
 
 class OptionWidget(Frame):
     def __init__(self, parent, optionName, default, subOptions=0):
@@ -44,7 +49,7 @@ class OptionWidget(Frame):
         if subOptions == 0:
             entryWidth = max(6, len(default));
             iName = optionName.lower();
-            self.isFile = iName.find("file") != -1 or iName.find("metadata") != -1;
+            self.isFile = iName.find("file") != -1 or iName.find("metadata") != -1 or iName.find("directory") != -1;
             if self.isFile:
                 entryWidth = 40;
             self.entryVar = StringVar();
@@ -52,7 +57,7 @@ class OptionWidget(Frame):
             self.entry = Entry(self,
               bg="white",
               width=entryWidth,
-              highlightcolor="magenta",
+              highlightcolor=PROGRAM_BLUE,
               textvariable=self.entryVar,
               );
             self.entry.pack(side=LEFT, padx="1m");
@@ -85,6 +90,7 @@ class OptionWidget(Frame):
             self.menuButton.config(state=optState);
             
     def addParam(self, param):
+        param.isSubparam = True;
         self.subparams.append(param);
         self.maxWidth = max(self.maxWidth, len(param.paramName));
         self.menuButton.config(width=self.maxWidth);
@@ -107,6 +113,20 @@ class OptionWidget(Frame):
             self.subparams[self.lastIndex].pack_forget();
         self.subparams[index].pack();
         self.lastIndex = index; 
+        
+    def getValue(self):
+        if len(self.subparams) == 0:
+            return self.entryVar.get().strip();
+        else:
+            return self.subparams[self.lastIndex].getParamString();
+    
+    def isDefault(self):
+        if len(self.subparams) == 0:
+            return self.default == self.entryVar.get().strip();
+        else:
+            if self.default != self.subparams[self.lastIndex].paramName:
+                return False;
+            return self.subparams[self.lastIndex].isDefault();
              
 class ParamWidget(Frame):
     def __init__(self, parent, paramName):
@@ -114,6 +134,8 @@ class ParamWidget(Frame):
         self.options = [];
         self.parent = parent;
         self.paramName = paramName;
+        self.isSubparam = False;
+        self.notOptional = False;
         #The following flag will be used to pack the 
         #param in the same line or in the next one
         self.isLarge = False; 
@@ -123,7 +145,7 @@ class ParamWidget(Frame):
         self.boldFont = tkFont.Font(weight="bold");  
         #Add label of radiobutton   
         self.label = parent.addParam(self);
-        self.label.pack(side=LEFT);          
+        self.label.pack(side=LEFT); 
             
     def addOption(self, optionName, defaultValue, subOptions=0):
         self.lastOption = OptionWidget(self, optionName, defaultValue, subOptions)
@@ -142,8 +164,9 @@ class ParamWidget(Frame):
     def endWithOptions(self):
         #Put a checkbutton if have no arguments           
         if len(self.options) == 0 and self.parent.single:
-           self.checkButton = Checkbutton(self);
-           self.checkButton.pack(side=LEFT);
+            self.checkVar = IntVar();
+            self.checkButton = Checkbutton(self, variable=self.checkVar);
+            self.checkButton.pack(side=LEFT);
         if len(self.comments) > 0:
             try:
                 helpImage = PhotoImage(file="~/Download/help256.gif").subsample(12, 12);
@@ -151,20 +174,25 @@ class ParamWidget(Frame):
                 helpButton.image = helpImage;
             except TclError:
                 helpButton = Button(self, text="Help",
-                                    bg="#33663F", 
+                                    bg="#a7dce1", 
+                                    activebackground="#72b9bf",
                                     command=self.buttonHelp_click);
             helpButton.pack(side=LEFT, padx="1m");  
         if not self.parent.single and len(self.parent.params) > 1:
             self.disable(); 
         if len(self.options) > 2:
-            self.isLarge = True;            
-         
-        
+            self.isLarge = True;
+        if self.notOptional:
+            self.label.config(fg="#931212", 
+                              highlightcolor="#931212", 
+                              activeforeground="#931212");
+    
     def addCommentLine(self, comment):
         self.comments.append(comment);
         
     def buttonHelp_click(self):
         msg = "\n".join(self.comments);
+        #print msg;
         tkMessageBox.showinfo(self.paramName + " help", msg);
         
     def enable(self):
@@ -185,7 +213,32 @@ class ParamWidget(Frame):
                 
     def getParamString(self):
         if len(self.options) == 0:
-            pass;
+            if self.isSubparam or not self.parent.single or self.checkVar.get() == 1:
+                return " " + self.paramName;
+            else:
+                return "";
+        else:
+            optStr = "";
+            if self.isDefault():
+                return "";
+            else:
+                for option in self.options:
+                    optStr += " " + option.getValue();
+                return " " + self.paramName + optStr;
+            
+    def isDefault(self):
+        for option in self.options:
+            if not option.isDefault():
+                return False;
+        return True;
+    
+    def check(self):
+        if len(self.options) == 0:
+            return "";
+        if self.notOptional and self.isDefault():
+            return "You should provide parameter: " + self.paramName + "\n";
+        return "";
+        
 
 class ParamsGroup(Frame):
     def __init__(self, parent, single):
@@ -221,14 +274,17 @@ class ParamsGroup(Frame):
         return not self.single or self.params[0].isLarge;
     
     def getParamString(self):
-        return self.params[self.lastSelected].paramName;
+        return self.params[self.lastSelected].getParamString();
+    
+    def check(self):
+        return self.params[self.lastSelected].check();
         
 class SectionWidget(LabelFrame):
     def __init__(self, parent, sectionName):        
         self.sectionName = sectionName.strip();
         LabelFrame.__init__(self, parent, bd=1, relief=SUNKEN,
                             text=self.sectionName,
-                            fg="#297739",
+                            fg=SECTION_GREEN,
                             font=tkFont.Font(weight="bold"),
                             labelanchor="nw");
         #To check when to pack params in next line
@@ -236,12 +292,12 @@ class SectionWidget(LabelFrame):
         self.col = 0;
         self.groups = [];
     def addGroup(self, group):
+        self.groups.append(group);
         #group.pack(fill=X, anchor=W);
         #return;
-        #print "section: ", self.sectionName;
-        #print "group: ", group.params[0].paramName#, " col: ", self.col, " row: ", self.row;
-        #return;
-        if group.isLarge():            
+        if group.isLarge(): 
+            if self.col == 1:
+                self.row = self.row + 1;           
             group.grid(column=0, columnspan=2, row=self.row, 
                        sticky=NW, ipadx="2m");
             self.row = self.row + 1;
@@ -254,7 +310,10 @@ class SectionWidget(LabelFrame):
                 self.col = 0;
             else:
                 self.col = 1;
-        self.groups.append(group);
+        #print "section: ", self.sectionName;
+        #print "group: ", group.params[0].paramName, " col: ", self.col, " row: ", self.row;
+        #print "large: ", group.isLarge();
+        
     
 class ProgramGUI(Frame):
     def __init__(self, parent):
@@ -279,7 +338,7 @@ class ProgramGUI(Frame):
         Label(self,
               text=self.progName,
               font=tkFont.Font(weight="bold", size="16"),
-              fg="#292987", bd=BORDER, relief=SUNKEN
+              fg=PROGRAM_BLUE, bd=BORDER, relief=SUNKEN
               ).pack(side=TOP, padx="5m"); 
         n = int(sys.stdin.readline());
         if n > 0:
@@ -377,15 +436,28 @@ class ProgramGUI(Frame):
         return section;
         #Label(self.params_frame, text=sectionName + "Test").pack();
         
+    def check(self):
+        errors = "";
+        for section in self.sections:
+            for group in section.groups:
+                errors += group.check();
+        if errors == "":
+            return True;
+        tkMessageBox.showerror(self.progName + " errors", errors);
+        return False;
+        
     def buttonCancel_click(self):
         self.parent.destroy();
         
     def buttonRun_click(self):
-        cmdStr = self.progName;
-        for section in self.sections:
-            for group in section.groups:
-                cmdStr = cmdStr + " " + group.getParamString();
-        print cmdStr;
+        if self.check():
+            cmdStr = self.progName;
+            for section in self.sections:
+                for group in section.groups:
+                    cmdStr = cmdStr + group.getParamString();
+            print cmdStr;
+            os.system(cmdStr);
+            self.parent.destroy();
         
     def centerWindows(self):
         root = self.parent
@@ -393,7 +465,7 @@ class ProgramGUI(Frame):
         h = root.winfo_screenheight()
         #print w, h
         rootsize = tuple(int(_) for _ in root.geometry().split('+')[0].split('x'))
-        print root.geometry();
+        #print root.geometry();
         x = w/2 - rootsize[0]/2
         y = h/2 - rootsize[1]/2
         root.geometry("%dx%d+%d+%d" % (rootsize + (x, y)))
@@ -403,8 +475,8 @@ root = Tk();
 w = root.winfo_screenwidth()
 h = root.winfo_screenheight()
 program = ProgramGUI(root);
-#root.update();
-#program.centerWindows();
-
+root.update();
+program.centerWindows();
 root.mainloop();
+
 

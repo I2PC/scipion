@@ -107,8 +107,9 @@ void XmippProgram::writeToDB(const FileName &dbName)
 
 void XmippProgram::createGUI()
 {
-    TkPrinter tk;
-    tk.printProgram(*progDef);
+    TkPrinter * tk = new TkPrinter();
+    tk->printProgram(*progDef);
+    delete tk;
     //FIXME
     exit(0);
 }
