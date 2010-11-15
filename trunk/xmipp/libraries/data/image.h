@@ -1785,7 +1785,7 @@ private:
             data.coreAllocateReuse();
             myoffset = offset + selectImgSizeT*(pagesize + pad);
 //ROB
-#define DEBUG
+//#define DEBUG
 #ifdef DEBUG
 
             data.printShape();
@@ -1813,6 +1813,9 @@ private:
 
                     //Read page from disc
                     fread( page, readsize, 1, fimg );
+                    //float *kk;
+                    //kk = (float *) page;
+                    //cerr << "kk " << kk << " " << *kk;
                     //swap per page
                     if (swap)
                         swapPage(page, readsize, datatype);
