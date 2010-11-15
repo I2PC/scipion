@@ -1799,7 +1799,7 @@ private:
             else
                 page = (char *) askMemory(pagesize*sizeof(char));
 
-            if(!fseek( fimg, myoffset, SEEK_SET ))
+            if(fseek( fimg, myoffset, SEEK_SET )==-1)
             	REPORT_ERROR(ERR_IO_SIZE,"readData: can not seek the file pointer");
             for ( size_t myn=0; myn<NSIZE(data); myn++ )
             {
