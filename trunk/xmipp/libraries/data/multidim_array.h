@@ -598,22 +598,22 @@ public:
     unsigned long ndim;
 
     // Number of elements in Z
-    int zdim;
+    size_t zdim;
 
     // Number of elements in Y
-    int ydim;
+    size_t ydim;
 
     // Number of elements in X
-    int xdim;
+    size_t xdim;
 
     // Number of elements in YX
-    unsigned long int yxdim;
+    size_t yxdim;
 
     // Number of elements in ZYX
-    unsigned long int zyxdim;
+    size_t zyxdim;
 
     // Number of elements in NZYX
-    unsigned long int nzyxdim;
+    size_t nzyxdim;
 
     // Z init
     int zinit;
@@ -629,7 +629,7 @@ public:
     //Mapped file handler
     FILE*      mFd;
     // Number of elements in NZYX in allocated memory
-    unsigned long int nzyxdimAlloc;
+    size_t nzyxdimAlloc;
 
 public:
     /// @name Constructors
@@ -648,7 +648,7 @@ public:
      * The Size constructor creates an array with memory associated,
      * and fills it with zeros.
      */
-    MultidimArray(unsigned long int Ndim, int Zdim, int Ydim, int Xdim)
+    MultidimArray(unsigned long int Ndim, size_t Zdim, size_t Ydim, size_t Xdim)
     {
         coreInit();
         coreAllocate(Ndim, Zdim, Ydim, Xdim);
@@ -658,17 +658,17 @@ public:
      * The Size constructor creates an array with memory associated,
      * and fills it with zeros.
      */
-    MultidimArray(int Zdim, int Ydim, int Xdim)
+    MultidimArray( size_t Zdim, size_t Ydim, size_t Xdim)
     {
         coreInit();
-        coreAllocate(1, Zdim, Ydim, Xdim);
+        coreAllocate((size_t)1, Zdim, Ydim, Xdim);
     }
 
     /** Size constructor with 2D size.
      * The Size constructor creates an array with memory associated,
      * and fills it with zeros.
      */
-    MultidimArray(int Ydim, int Xdim)
+    MultidimArray(size_t Ydim, size_t Xdim)
     {
         coreInit();
         coreAllocate(1, 1, Ydim, Xdim);
@@ -678,7 +678,7 @@ public:
      * The Size constructor creates an array with memory associated,
      * and fills it with zeros.
      */
-    MultidimArray(int Xdim)
+    MultidimArray(size_t Xdim)
     {
         coreInit();
         coreAllocate(1, 1, 1, Xdim);
@@ -760,7 +760,7 @@ public:
 
     /** Core allocate with dimensions.
      */
-    void coreAllocate(unsigned long int _ndim, int _zdim, int _ydim, int _xdim)
+    void coreAllocate(size_t _ndim, size_t _zdim, size_t _ydim, size_t _xdim)
     {
         if (_ndim <= 0 || _zdim <= 0 || _ydim<=0 || _xdim<=0)
         {
