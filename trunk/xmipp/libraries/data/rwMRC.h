@@ -125,15 +125,15 @@ int readMRC(int img_select, bool isStack=false)
     // Convert VAX floating point types if necessary
     if ( header->amin > header->amax )
         REPORT_ERROR(ERR_UNCLASSIFIED,"readMRC: amin > max: VAX floating point conversion unsupported");
-    int _xDim,_yDim,_zDim;
-    unsigned long int _nDim;
-    _xDim = (int) header->nx;
-    _yDim = (int) header->ny;
-    _zDim = (int) header->nz;
+    size_t _xDim,_yDim,_zDim;
+    size_t _nDim;
+    _xDim = (size_t) header->nx;
+    _yDim = (size_t) header->ny;
+    _zDim = (size_t) header->nz;
     _nDim = 1;
     if(isStack)
     {
-        _nDim = (unsigned long int) _zDim;
+        _nDim = (size_t) _zDim;
         _zDim = 1;
         replaceNsize=_nDim;
         std::stringstream Num;
