@@ -86,9 +86,9 @@ void Image< std::complex< double > >::castPage2Datatype(std::complex<double> * s
 }
 
 // Get size of datatype
-unsigned long  gettypesize(DataType type)
+size_t  gettypesize(DataType type)
 {
-    unsigned long   size;
+    size_t   size;
 
     switch ( type ) {
         case UChar: case SChar:  size = sizeof(char); break;
