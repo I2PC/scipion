@@ -220,7 +220,7 @@ private:
     bool                stayOpen;    // To maintain the image file open after read/write
     int                 dataflag;    // Flag to force reading of the data
     unsigned long       i;           // Current image number (may be > NSIZE)
-    unsigned long       offset;      // Data offset
+    size_t       offset;      // Data offset
     int                 swap;        // Perform byte swapping upon reading
     TransformType       transform;   // Transform type
     int                 replaceNsize;// Stack size in the replace case
@@ -886,7 +886,7 @@ public:
 
     /** Get Image offset and swap
      */
-    void getOffsetAndSwap(unsigned long &_offset, int &_swap) const
+    void getOffsetAndSwap(size_t &_offset, int &_swap) const
     {
         _offset = offset;
         _swap = swap;
