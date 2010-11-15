@@ -42,7 +42,7 @@
    @ingroup ReconsLibrary */
 //@{
 /** Angular Predict parameters. */
-class ProgAngularDiscreteAssign: public XmippProgram
+class ProgAngularDiscreteAssign: public XmippMetadataProgram
 {
 public:
     /** MPI version */
@@ -112,24 +112,6 @@ public:
     std::vector<double> rot;
     // Vector with the tilting angles of the library
     std::vector<double> tilt;
-    // Index of the current processed image
-    int current_img;
-    // Vector of image names
-    std::vector<std::string> image_name;
-    // Vector of predicted rotational angles
-    std::vector<double> predicted_rot;
-    // Vector of predicted tilting angles
-    std::vector<double> predicted_tilt;
-    // Vector of predicted psi angles
-    std::vector<double> predicted_psi;
-    // Vector of predicted shiftX
-    std::vector<double> predicted_shiftX;
-    // Vector of predicted shiftY
-    std::vector<double> predicted_shiftY;
-    // Vector of predicted corr
-    std::vector<double> predicted_corr;
-    // Vector of corresponding reference index
-    std::vector<int>    predicted_reference;
     // Parameters for computing distances
     Prog_angular_distance_prm distance_prm;
 public:
@@ -145,13 +127,11 @@ public:
     /// Usage
     void defineParams();
 
-    /** Produce side info.
-        An exception is thrown if any of the files is not found.
-        In parallel execution, the rank=0 creates the projections.*/
-    void produce_side_info(int rank = 0);
+    /** Produce side info. */
+    void produce_side_info();
 
     /** Produce library.*/
-    void produce_library(int rank = 0);
+    void produce_library();
 
     /** Build candidate list.
         Build a candidate list with all possible reference projections
@@ -211,19 +191,15 @@ public:
     double predict_rot_tilt_angles(Image<double> &I,
                                    double &assigned_rot, double &assigned_tilt, int &best_ref_idx);
 
-    /** Predict angles and shift.
+    /** Process one image.
+        Predict angles and shift.
         This function searches in the shift-psi space and for each combination
         it correlates with the whole reference set. */
-    double predict_angles(Image<double> &I,
-                          double &assigned_shiftX, double &assigned_shiftY,
-                          double &assigned_rot, double &assigned_tilt, double &assigned_psi);
+    void processImage();
 
     /** Finish processing.
         Close all output files. */
-    void finish_processing();
-
-    /** Run over all images */
-    void run();
+    void postProcess();
 };
 //@}
 #endif

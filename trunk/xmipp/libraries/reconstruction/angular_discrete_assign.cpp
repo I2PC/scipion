@@ -112,7 +112,7 @@ void ProgAngularDiscreteAssign::defineParams()
 }
 
 // Produce side information ================================================
-void ProgAngularDiscreteAssign::produce_side_info(int rank)
+void ProgAngularDiscreteAssign::produce_side_info()
 {
     // Read input reference image names
     SF_ref.read(fn_ref);
@@ -144,18 +144,6 @@ void ProgAngularDiscreteAssign::produce_side_info(int rank)
         DF.getValue(MDL_ANGLETILT, tilt[i]);
         i++;
     }
-
-    // Resize the predicted vectors
-    int number_of_images = DFexp.size();
-    current_img = 0;
-    image_name.resize(number_of_images);
-    predicted_rot.resize(number_of_images);
-    predicted_tilt.resize(number_of_images);
-    predicted_psi.resize(number_of_images);
-    predicted_shiftX.resize(number_of_images);
-    predicted_shiftY.resize(number_of_images);
-    predicted_corr.resize(number_of_images);
-    predicted_reference.resize(number_of_images);
 
     // Build mask for subbands
     int Ydim, Xdim;
@@ -198,14 +186,14 @@ void ProgAngularDiscreteAssign::produce_side_info(int rank)
     }
 
     // Produce library
-    produce_library(rank);
+    produce_library();
 
     // Save a little space
     SF_ref.clear();
 }
 
 // Produce library -----------------------------------------------------------
-void ProgAngularDiscreteAssign::produce_library(int rank)
+void ProgAngularDiscreteAssign::produce_library()
 {
     Image<double> I;
     int number_of_imgs = SF_ref.size();
@@ -221,14 +209,11 @@ void ProgAngularDiscreteAssign::produce_library(int rank)
     }
     library_power.initZeros(number_of_imgs, SBNo);
 
-    if (rank==0)
-    {
-        if (verbose)
+    if (verbose)
         {
             std::cerr << "Generating reference library ...\n";
             init_progress_bar(number_of_imgs);
         }
-    }
     int n = 0, nstep = XMIPP_MAX(1, number_of_imgs / 60); // For progress bar
     FOR_ALL_OBJECTS_IN_METADATA(SF_ref)
     {
@@ -257,10 +242,10 @@ void ProgAngularDiscreteAssign::produce_library(int rank)
         }
 
         // Prepare for next iteration
-        if (++n % nstep == 0 && rank==0 && verbose)
+        if (++n % nstep == 0 && verbose)
             progress_bar(n);
     }
-    if (rank==0 && verbose)
+    if (verbose)
         progress_bar(SF_ref.size());
 }
 
@@ -681,22 +666,28 @@ int ProgAngularDiscreteAssign::pick_view(int method,
     }
 }
 
-// Predict shift and psi -----------------------------------------------------
+// Run ---------------------------------------------------------------------
+// Predict shift and psi ---------------------------------------------------
 //#define DEBUG
-double ProgAngularDiscreteAssign::predict_angles(Image<double> &I,
-        double &assigned_shiftX, double &assigned_shiftY,
-        double &assigned_rot, double &assigned_tilt, double &assigned_psi)
+void ProgAngularDiscreteAssign::processImage()
 {
+	// Read the image and take its angles from the Metadata
+	// if they are available. If not, take them from the header.
+	// If not, set them to 0.
+	MDRow mdrow;
+	mdIn.getRow(mdrow);
+    img.read(fnImg, true, -1, false, false, &mdrow, false);
+
     double best_rot, best_tilt, best_psi, best_shiftX, best_shiftY,
     best_score = 0, best_rate;
 
     Image<double> Ip;
-    Ip = I;
+    Ip = img;
     Matrix1D<double> shift(2);
 
     // Get the 2D alignment shift
-    double Xoff = I.Xoff();
-    double Yoff = I.Yoff();
+    double Xoff = img.Xoff();
+    double Yoff = img.Yoff();
 
     // Establish psi limits
     double psi0, psiF;
@@ -707,8 +698,8 @@ double ProgAngularDiscreteAssign::predict_angles(Image<double> &I,
     }
     else
     {
-        psi0 = I.psi() - max_psi_change;
-        psiF = I.psi() + max_psi_change;
+        psi0 = img.psi() - max_psi_change;
+        psiF = img.psi() + max_psi_change;
     }
     double R2 = max_shift_change * max_shift_change;
 
@@ -724,7 +715,7 @@ double ProgAngularDiscreteAssign::predict_angles(Image<double> &I,
 
 #ifdef DEBUG
 
-    I.write("PPPoriginal.xmp");
+    img.write("PPPoriginal.xmp");
 #endif
 
     for (double shiftX = Xoff - max_shift_change; shiftX <= Xoff + max_shift_change; shiftX += shift_step)
@@ -738,11 +729,11 @@ double ProgAngularDiscreteAssign::predict_angles(Image<double> &I,
 
                 // Shift image if necessary
                 if (shiftX == 0 && shiftY == 0)
-                    Ip() = I();
+                    Ip() = img();
                 else
                 {
                     VECTOR_R2(shift, shiftX, shiftY);
-                    translate(LINEAR,Ip(),I(),shift,WRAP);
+                    translate(LINEAR,Ip(),img(),shift,WRAP);
                 }
 
                 // Rotate image if necessary
@@ -763,7 +754,7 @@ double ProgAngularDiscreteAssign::predict_angles(Image<double> &I,
 
                 double aux_rot = rotp, aux_tilt = tiltp, aux_psi = psi;
                 double ang_jump = distance_prm.check_symmetries(
-                                      I.rot(), I.tilt(), I.psi(),
+                                      img.rot(), img.tilt(), img.psi(),
                                       aux_rot, aux_tilt, aux_psi, false);
 
                 vshiftX.push_back(shiftX);
@@ -919,7 +910,7 @@ double ProgAngularDiscreteAssign::predict_angles(Image<double> &I,
 
     if (tell & (TELL_PSI_SHIFT | TELL_OPTIONS))
     {
-        std::cout << I.name() << std::endl;
+        std::cout << img.name() << std::endl;
         std::cout.flush();
         for (int j = 0; j < jmax; j++)
         {
@@ -987,11 +978,11 @@ double ProgAngularDiscreteAssign::predict_angles(Image<double> &I,
         Iref().setXmippOrigin();
         selfRotate(LINEAR,Iref(),-vpsi[ibest]);
         if (Xoff == 0 && Yoff == 0)
-            Ip() = I();
+            Ip() = img();
         else
         {
             VECTOR_R2(shift, Xoff, Yoff);
-            translate(LINEAR,Ip(),I(),shift,WRAP);
+            translate(LINEAR,Ip(),img(),shift,WRAP);
         }
 
         double shiftX, shiftY;
@@ -1016,8 +1007,8 @@ double ProgAngularDiscreteAssign::predict_angles(Image<double> &I,
 
     if (tell & (TELL_PSI_SHIFT | TELL_OPTIONS))
     {
-        std::cout << "Originally it had, psi=" << I.psi() << " rot=" << I.rot()
-        << " tilt=" << I.tilt() << std::endl;
+        std::cout << "Originally it had, psi=" << img.psi() << " rot=" << img.rot()
+        << " tilt=" << img.tilt() << std::endl;
         std::cout << "Finally I choose: ";
         if (tell & TELL_PSI_SHIFT)
             std::cout << jbest << "\n";
@@ -1028,63 +1019,17 @@ double ProgAngularDiscreteAssign::predict_angles(Image<double> &I,
     }
 
     // Save results
-    image_name[current_img]                         = I.name();
-    assigned_rot    = predicted_rot[current_img]    = best_rot;
-    assigned_tilt   = predicted_tilt[current_img]   = best_tilt;
-    assigned_psi    = predicted_psi[current_img]    = best_psi;
-    assigned_shiftX = predicted_shiftX[current_img] = best_shiftX;
-    assigned_shiftY = predicted_shiftY[current_img] = best_shiftY;
-    predicted_corr[current_img]                     = best_score;
-    predicted_reference[current_img]                = vref_idx[ibest];
-    current_img++;
-    return best_rate;
+    mdIn.setValue(MDL_ANGLEROT,  best_rot);
+    mdIn.setValue(MDL_ANGLETILT, best_tilt);
+    mdIn.setValue(MDL_ANGLEPSI,  best_psi);
+    mdIn.setValue(MDL_SHIFTX,    best_shiftX);
+    mdIn.setValue(MDL_SHIFTY,    best_shiftY);
+    mdIn.setValue(MDL_MAXCC,     best_score);
 }
 #undef DEBUG
 
 // Finish processing ---------------------------------------------------------
-void ProgAngularDiscreteAssign::finish_processing()
+void ProgAngularDiscreteAssign::postProcess()
 {
-    MetaData DF;
-    int i = 0;
-    FOR_ALL_OBJECTS_IN_METADATA(DFexp)
-    {
-        DF.addObject();
-        std::string fn;
-        DFexp.getValue(MDL_IMAGE, fn);
-        DF.setValue(MDL_IMAGE,     fn);
-        DF.setValue(MDL_ENABLED,   1);
-        DF.setValue(MDL_ANGLEROT,  predicted_rot[i]);
-        DF.setValue(MDL_ANGLETILT, predicted_tilt[i]);
-        DF.setValue(MDL_ANGLEPSI,  predicted_psi[i]);
-        DF.setValue(MDL_SHIFTX,    predicted_shiftX[i]);
-        DF.setValue(MDL_SHIFTY,    predicted_shiftY[i]);
-        DF.setValue(MDL_MAXCC,     predicted_corr[i]);
-        i++;
-    }
-    DF.write(fn_out_ang);
-}
-
-// Run ---------------------------------------------------------------------
-void ProgAngularDiscreteAssign::run()
-{
-    int Nimg=DFexp.size();
-    if (verbose)
-        init_progress_bar(Nimg);
-    int n=0;
-    FOR_ALL_OBJECTS_IN_METADATA(DFexp)
-    {
-        std::string fnImg;
-        DFexp.getValue(MDL_IMAGE,fnImg);
-        Image<double> img;
-        img.read(fnImg);
-        double shiftX, shiftY, psi, rot, tilt;
-        double corr = predict_angles(img, shiftX, shiftY, rot, tilt, psi);
-        n++;
-        if (verbose && n%10==0)
-            progress_bar(n);
-    }
-    if (verbose)
-        progress_bar(Nimg);
-
-    finish_processing();
+    mdIn.write(fn_out_ang);
 }
