@@ -16,10 +16,8 @@
 #------------------------------------------------------------------------------------------------
 # Working subdirectory:
 WorkingDir='Preprocessing'
-# Delete working subdirectory if it already exists?
-DoDeleteWorkingDir=False
 # {dir} Directory name from where to process all scanned micrographs
-DirMicrographs='Micrographs'
+DirMicrographs='placas2'
 # Which files in this directory to process
 """ This is typically *.tif or *.ser, but may also be *.mrc, *.spi 
     (see the expert options)
@@ -33,9 +31,9 @@ RootName='all'
 # {expert} Root directory name for this project:
 """ Absolute path to the root directory for this project
 """
-ProjectDir='/media/usbdisk/Experiments/TestProtocols'
+ProjectDir ='/media/usbdisk/Experiments/TestProtocols'
 # {expert} Directory name for logfiles:
-LogDir='Logs'
+LogDir ='Logs'
 #------------------------------------------------------------------------------------------------
 # {section} Preprocess
 #------------------------------------------------------------------------------------------------
@@ -161,20 +159,53 @@ def relpath(path, start=posixpath.curdir):
     """Return a relative version of a path"""
     if not path:
         raise ValueError("no path specified")
-    start_list = posixpath.abspath(start).split(posixpath.sep)
-    path_list = posixpath.abspath(path).split(posixpath.sep)
+    start_list=posixpath.abspath(start).split(posixpath.sep)
+    path_list=posixpath.abspath(path).split(posixpath.sep)
     # Work out how much of the filepath is shared by start and path.
-    i = len(posixpath.commonprefix([start_list, path_list]))
-    rel_list = [posixpath.pardir] * (len(start_list)-i) + path_list[i:]
+    i=len(posixpath.commonprefix([start_list, path_list]))
+    rel_list=[posixpath.pardir] * (len(start_list) - i) + path_list[i:]
     if not rel_list:
         return curdir
     return posixpath.join(*rel_list)
 
-import glob,os,shutil,sys
+def stepPerformed(step,filename):
+    import re
+    f = open(filename, 'r')
+    lines=f.readlines()
+    f.close()
+    expr = re.compile(step)
+    return len(filter(expr.search,lines))>0
+
+import glob, os, shutil, sys
 class preprocess_A_class:
+    def saveAndCompareParameters(self, listOfParameters):
+        fnOut=self.WorkingDir + "/protocolParameters.txt"
+        linesNew=[];
+        for prm in listOfParameters:
+            eval("linesNew.append('"+prm +"='+str("+prm+")+'\\n')")
+        if os.path.exists(fnOut):
+            f = open(fnOut, 'r')
+            linesOld=f.readlines()
+            f.close()
+            same=True;
+            if len(linesOld)==len(linesNew):
+                for i in range(len(linesNew)):
+                    if not linesNew[i]==linesOld[i]:
+                        same=False
+                        break;
+            else:
+                same=False
+            if not same:
+                print("Deleting")
+                self.log.info("Deleting working directory since it is run with different parameters")
+                shutil.rmtree(self.WorkingDir)
+                os.makedirs(self.WorkingDir)
+        f = open(fnOut, 'w')
+        f.writelines(linesNew)
+        f.close()
+    
     def __init__(self,
                  WorkingDir,
-                 DoDeleteWorkingDir,
                  DirMicrographs,
                  ExtMicrographs,
                  RootName,
@@ -206,7 +237,7 @@ class preprocess_A_class:
                  SystemFlavour
                  ):
         
-        scriptdir=os.path.split(os.path.dirname(os.popen('which xmipp_protocols','r').read()))[0]+'/protocols'
+        scriptdir=os.path.split(os.path.dirname(os.popen('which xmipp_protocols', 'r').read()))[0] + '/protocols'
         sys.path.append(scriptdir)
         import log
 
@@ -219,7 +250,7 @@ class preprocess_A_class:
         self.DoPreprocess=DoPreprocess
         self.Crop=Crop
         self.Stddev=Stddev
-        if (float(Down)==int(Down)):
+        if (float(Down) == int(Down)):
             self.Down=int(Down)
         else:
             self.Down=float(Down)
@@ -235,7 +266,7 @@ class preprocess_A_class:
         self.HighResolCutoff=HighResolCutoff
         self.MinFocus=MinFocus
         self.MaxFocus=MaxFocus
-        self.DoCtffind=(not CtffindExec=="")
+        self.DoCtffind=(not CtffindExec == "")
         self.WinSize=WinSize
         self.MinResCTF=MinResCTF
         self.MaxResCTF=MaxResCTF
@@ -255,75 +286,93 @@ class preprocess_A_class:
             self.CtffindExec=os.path.abspath(CtffindExec)
 
         # Delete working directory if exists, make a new one
-        if (DoDeleteWorkingDir): 
-            if (self.WorkingDir==""):
-                raise RuntimeError,"No working directory given"
-            if os.path.exists(self.WorkingDir):
-                shutil.rmtree(self.WorkingDir)
         if not os.path.exists(self.WorkingDir):
             os.makedirs(self.WorkingDir)
 
+        # Save parameters and compare to possible previous runs
+        self.saveAndCompareParameters([
+                 "DirMicrographs",
+                 "ExtMicrographs",
+                 "RootName",
+                 "DoPreprocess",
+                 "Crop",
+                 "Stddev",
+                 "Down",
+                 "DownKernel",
+                 "DoCtfEstimate",
+                 "Voltage",
+                 "SphericalAberration",
+                 "Magnification",
+                 "ScannedPixelSize",
+                 "AmplitudeContrast",
+                 "OnlyEstimatePSD",
+                 "LowResolCutoff",
+                 "HighResolCutoff",
+                 "MinFocus",
+                 "MaxFocus",
+                 "WinSize",
+                 "MinResCTF",
+                 "MaxResCTF",
+                 "StepFocus"]);
+        
         # Backup script
         log.make_backup_of_script_file(sys.argv[0],
                                    os.path.abspath(self.WorkingDir))
-        unique_number=os.getpid()
-        xmpi_run_file=self.WorkingDir+"/"+'xmipp_preprocess_micrographs_' + str(unique_number) 
+        xmpi_run_file=self.WorkingDir + "/xmipp_preprocess_micrographs" 
         self.xmpi_run_file=os.path.abspath(xmpi_run_file)
 
         # Execute protocol in the working directory
         os.chdir(self.WorkingDir)
         self.process_all_micrographs(self.xmpi_run_file)
 
-    def process_all_micrographs(self,xmpi_run_file):
+    def process_all_micrographs(self, xmpi_run_file):
         import time
         print '*********************************************************************'
         print '*  Processing the following micrographs: '
-        for self.filename in glob.glob(self.DirMicrographs+'/'+self.ExtMicrographs):
-            (self.filepath, self.name) = os.path.split(self.filename)
-            print '*  '+self.name
+        for self.filename in glob.glob(self.DirMicrographs + '/' + self.ExtMicrographs):
+            (self.filepath, self.name)=os.path.split(self.filename)
+            print '*  ' + self.name
 
-        self.SFinputparams = []
-        self.SFmicrograph = []
-        self.SFctffindmrc = []
-        self.SFquadrant = []
-        self.SFctffind = []
-        self.SFshort = []
-        self.SFhalf = []
-        self.SFctf = []
-        self.SFpsd = []
+        self.SFinputparams=[]
+        self.SFmicrograph=[]
+        self.SFctffindmrc=[]
+        self.SFquadrant=[]
+        self.SFctffind=[]
+        self.SFshort=[]
+        self.SFhalf=[]
+        self.SFctf=[]
+        self.SFpsd=[]
 
-        fh_mpi  = os.open(self.xmpi_run_file+ '_1.sh',os.O_WRONLY|os.O_TRUNC|os.O_CREAT, 0700)
+        fh_mpi=os.open(self.xmpi_run_file + '_1.sh', os.O_WRONLY | os.O_TRUNC | os.O_CREAT, 0700)
         # Preprocessing
-        for filename in glob.glob(self.DirMicrographs+'/'+self.ExtMicrographs):
+        for filename in glob.glob(self.DirMicrographs + '/' + self.ExtMicrographs):
 
             # Get the shortname and extension
-            (filepath, micrographName) = os.path.split(filename)
-            (shortname,extension) = os.path.splitext(micrographName)
+            (filepath, micrographName)=os.path.split(filename)
+            (shortname, extension)=os.path.splitext(micrographName)
             self.SFshort.append(shortname)
             
             # Create directory for this micrograph
-            if os.path.exists(shortname) and self.DoPreprocess:
-                import shutil
-                shutil.rmtree(shortname,True)
-            os.makedirs(shortname)
-            fh=open(shortname+"/status.txt","w")
-            fh.write("Step 0: Process started on "+time.asctime()+"\n")
-            fh.close()
+            if not os.path.exists(shortname):
+                os.makedirs(shortname)
+                fh=open(shortname + "/status.txt", "w")
+                fh.write("Step 0: Directory created started on " + time.asctime() + "\n")
+                fh.close()
 
             # Preprocess
-            finalName=self.perform_preprocessing(filename,fh_mpi)
+            finalName=self.perform_preprocessing(filename, fh_mpi)
             self.SFmicrograph.append(finalName)
 
         # Stop here until preprocessing is done
         if self._DoParallel:
-            os.write(fh_mpi,"MPI_Barrier\n");
+            os.write(fh_mpi, "MPI_Barrier\n");
 
         # Estimate CTF
         idx=0;
         for filename in self.SFmicrograph:
             if self.DoCtfEstimate:
                 shortname=self.SFshort[idx]
-                names=self.perform_ctfestimate_xmipp(shortname,filename,fh_mpi)
+                names=self.perform_ctfestimate_xmipp(shortname, filename, fh_mpi)
                 self.SFpsd.append(names[0])
                 self.SFinputparams.append(names[1])
                 if not self.OnlyEstimatePSD:                    
@@ -331,236 +380,255 @@ class preprocess_A_class:
                     self.SFhalf.append(names[3])
                     self.SFquadrant.append(names[4])
                 if self.DoCtffind:
-                    self.perform_ctfestimate_ctffind(shortname,filename,fh_mpi)
-            idx+=1
+                    self.perform_ctfestimate_ctffind(shortname, filename, fh_mpi)
+            idx += 1
 
         # Launch Preprocessing and calculation of the CTF
         os.close(fh_mpi)
         self.launchCommandFile(xmpi_run_file + '_1.sh')
         
         # Pickup results from CTFFIND
-        fh_mpi  = os.open(self.xmpi_run_file+ '_2.sh',os.O_WRONLY|os.O_TRUNC|os.O_CREAT, 0700)
         idx=0;
         for filename in self.SFmicrograph:
             shortname=self.SFshort[idx]
             ctfparam=self.SFctf[idx]
             # Pickup result from CTFTILT
             if self.DoCtfEstimate and self.DoCtffind:
-                results=self.pickup_ctfestimate_ctffind(shortname,filename,fh_mpi)
+                results=self.pickup_ctfestimate_ctffind(shortname, filename)
                 self.SFctffind.append(results[0])
                 self.SFctffindmrc.append(results[1])
-
-            os.write(fh_mpi,"\n");
-            idx+=1
+            idx += 1
         
         # Write the different selfiles
-        scriptdir=os.path.split(os.path.dirname(os.popen('which xmipp_protocols','r').read()))[0]+'/protocols'
+        scriptdir=os.path.split(os.path.dirname(os.popen('which xmipp_protocols', 'r').read()))[0] + '/protocols'
         sys.path.append(scriptdir)
         import XmippData
         MD=XmippData.MetaData()
         ptr=XmippData.stringP()
         idx=0
         for filename in self.SFmicrograph:
-            fh=open(self.SFshort[idx]+"/status.txt","a")
-            fh.write("Step F: Finished on "+time.asctime()+"\n")
-            fh.close()
+            if not stepPerformed("Step F",self.SFshort[idx] + "/status.txt"):
+                fh=open(self.SFshort[idx] + "/status.txt", "a")
+                fh.write("Step F: Finished on " + time.asctime() + "\n")
+                fh.close()
             MD.addObject()
             ptr.assign(filename)
-            XmippData.setValueString(MD,XmippData.MDL_IMAGE,ptr)
+            XmippData.setValueString(MD, XmippData.MDL_IMAGE, ptr)
             ptr.assign(self.SFpsd[idx])
-            XmippData.setValueString(MD,XmippData.MDL_PSD,ptr)
-            if len(self.SFinputparams)>0:
+            XmippData.setValueString(MD, XmippData.MDL_PSD, ptr)
+            if len(self.SFinputparams) > 0:
                 ptr.assign(self.SFinputparams[idx])
-                XmippData.setValueString(MD,XmippData.MDL_CTFINPUTPARAMS,ptr)
-            if len(self.SFctf)>0:
+                XmippData.setValueString(MD, XmippData.MDL_CTFINPUTPARAMS, ptr)
+            if len(self.SFctf) > 0:
                 ptr.assign(self.SFctf[idx])
-                XmippData.setValueString(MD,XmippData.MDL_CTFMODEL,ptr)
+                XmippData.setValueString(MD, XmippData.MDL_CTFMODEL, ptr)
                 ptr.assign(self.SFhalf[idx])
-                XmippData.setValueString(MD,XmippData.MDL_ASSOCIATED_IMAGE1,ptr)
+                XmippData.setValueString(MD, XmippData.MDL_ASSOCIATED_IMAGE1, ptr)
                 ptr.assign(self.SFquadrant[idx])
-                XmippData.setValueString(MD,XmippData.MDL_ASSOCIATED_IMAGE2,ptr)
-            if len(self.SFctffind)>0:
+                XmippData.setValueString(MD, XmippData.MDL_ASSOCIATED_IMAGE2, ptr)
+            if len(self.SFctffind) > 0:
                 ptr.assign(self.SFctffind[idx])
-                XmippData.setValueString(MD,XmippData.MDL_CTFMODEL2,ptr)
+                XmippData.setValueString(MD, XmippData.MDL_CTFMODEL2, ptr)
                 ptr.assign(self.SFctffindmrc[idx])
-                XmippData.setValueString(MD,XmippData.MDL_ASSOCIATED_IMAGE3,ptr)
-            idx+=1
-        MD.write(XmippData.FileName(self.WorkingDir+"/"+self.RootName+"_micrographs.sel"))
+                XmippData.setValueString(MD, XmippData.MDL_ASSOCIATED_IMAGE3, ptr)
+            idx += 1
+        MD.write(XmippData.FileName(self.WorkingDir + "/" + self.RootName + "_micrographs.sel"))
 
         # CTF Quality control
-        command="xmipp_psd_sort -i "+self.RootName+"_micrographs.sel\n"
-        os.write(fh_mpi,command)
-        
-        # Launch second shell
-        os.close(fh_mpi)
-        self.launchCommandFile(xmpi_run_file + '_2.sh')
+        command="xmipp_psd_sort -i " + self.RootName + "_micrographs.sel\n"
+        self.log.info(command)     
+        os.system(command)     
         
         message=" Done pre-processing of micrographs"
-        print '* ',message
+        print '* ', message
         print '*********************************************************************'
         self.log.info(message)
 
-    def launchCommandFile(self,commandFile):
+    def launchCommandFile(self, commandFile):
         import launch_job, log
-        log.cat(self.log,commandFile)
+        log.cat(self.log, commandFile)
         if self._DoParallel:
-            command =' -i '+ commandFile
-            launch_job.launch_job("xmipp_run",command,self.log,True,
-                  self._MyNumberOfMpiProcesses,1,self._MySystemFlavour)
+            command=' -i ' + commandFile
+            launch_job.launch_job("xmipp_run", command, self.log, True,
+                  self._MyNumberOfMpiProcesses, 1, self._MySystemFlavour)
         else:
             self.log.info(commandFile)     
             os.system(commandFile)     
         os.remove(commandFile)
 
-    def perform_preprocessing(self,filename,fh_mpi):
+    def perform_preprocessing(self, filename, fh_mpi):
         # Decide name after preprocessing
-        (filepath, micrographName) = os.path.split(filename)
-        (shortname,extension) = os.path.splitext(micrographName)
-        finalname=shortname+'/down'+str(self.Down)+'_'+shortname
-        if not self.Stddev==-1 or not self.Crop==-1 or not self.Down==1:
-            if not self.Down==1:
-                finalname+=".spi"
+        (filepath, micrographName)=os.path.split(filename)
+        (shortname, extension)=os.path.splitext(micrographName)
+        finalname=shortname + '/down' + str(self.Down) + '_' + shortname
+        if not self.Stddev == -1 or not self.Crop == -1 or not self.Down == 1:
+            if not self.Down == 1:
+                finalname += ".spi"
             else:
-                finalname+=".raw"
+                finalname += ".raw"
         else:
-            finalname+=extension
+            finalname += extension
             if not os.path.exists(finalname):
-                command='ln -s '+relpath(filename,shortname)+' '+finalname + "; "
-                command+= "if [ -e "+finalname+' ]; then '+\
-                            'echo "Step 1: Preprocessed image created " `date` >> '+ shortname+"/status.txt; "+\
+                command='ln -s ' + relpath(filename, shortname) + ' ' + finalname + "; "
+                command += "if [ -e " + finalname + ' ]; then ' + \
+                            'echo "Step 1: Preprocessed image created " `date` >> ' + shortname + "/status.txt; " + \
                           "fi"
-                command+="\n"
-                os.write(fh_mpi,command)
+                command += "\n"
+                os.write(fh_mpi, command)
                 return finalname
         if not self.DoPreprocess:
+            return finalname
+        
+        # Check if the preprocessing has already been done
+        if stepPerformed("Step 1",shortname + "/status.txt"):
             return finalname
         
         # Crop
         iname=filename
         command="";
-        if not self.Crop==-1:
-            command+="xmipp_window -i "+iname+" -o "+finalname+" -crop "+str(self.Crop)+" ; "
+        if not self.Crop == -1:
+            command += "xmipp_window -i " + iname + " -o " + finalname + " -crop " + str(self.Crop) + " ; "
             iname=finalname
         
         # Remove bad pixels
-        if not self.Stddev==-1:
-            command+="xmipp_filter -i "+iname+" -desvPixels "+str(self.Stddev)
-            if not iname==finalname:
-                command+=" -o "+finalname
+        if not self.Stddev == -1:
+            command += "xmipp_filter -i " + iname + " -desvPixels " + str(self.Stddev)
+            if not iname == finalname:
+                command += " -o " + finalname
                 iname=finalname
-            command+=" ; "
+            command += " ; "
         
         # Downsample
-        if not self.Down==1:
-            command+="xmipp_micrograph_downsample -i "+iname+" -o "+shortname+"/tmp.spi "+\
+        if not self.Down == 1:
+            command += "xmipp_micrograph_downsample -i " + iname + " -o " + shortname + "/tmp.spi " + \
                      "--output_bits 32 "
-            if (self.DownKernel=='Fourier'):
-                scale = 1./self.Down
-                command+=' -fourier '+str(scale)
-            elif (self.DownKernel=='Sinc'):
-                command+=' -Xstep '+str(self.Down)+' -kernel sinc 0.02 0.1'
-            elif (self.DownKernel=='Rectangle'):
-                command+=' -Xstep '+str(self.Down)+' -kernel rectangle '+str(self.Down)+' '+str(self.Down)
-            command+=" ; rm -f "+finalname+" ; mv -i "+shortname+"/tmp.spi "+finalname+" ; "
+            if (self.DownKernel == 'Fourier'):
+                scale=1. / self.Down
+                command += ' -fourier ' + str(scale)
+            elif (self.DownKernel == 'Sinc'):
+                command += ' -Xstep ' + str(self.Down) + ' -kernel sinc 0.02 0.1'
+            elif (self.DownKernel == 'Rectangle'):
+                command += ' -Xstep ' + str(self.Down) + ' -kernel rectangle ' + str(self.Down) + ' ' + str(self.Down)
+            command += " ; rm -f " + finalname + " ; mv -i " + shortname + "/tmp.spi " + finalname + " ; "
         
         # Postprocessing
-        command += "if [ -e "+finalname+' ]; then '+\
-                     'echo "Step 1: Preprocessed image created " `date` >> '+ shortname+"/status.txt; "+\
+        command += "if [ -e " + finalname + ' ]; then ' + \
+                     'echo "Step 1: Preprocessed image created " `date` >> ' + shortname + "/status.txt; " + \
                    "fi"
         
         # Write the preprocessing command
-        if not command=="":
-            command+="\n"
-            os.write(fh_mpi,command)
+        if not command == "":
+            command += "\n"
+            os.write(fh_mpi, command)
         return finalname
 
-    def perform_ctfestimate_xmipp(self,shortname,filename,fh_mpi):
-        (filepath, micrographName) = os.path.split(filename)
-        (fnRoot,extension) = os.path.splitext(micrographName)
-        pname=shortname+'/'+fnRoot+'_estimate_ctf_input.param'
+    def perform_ctfestimate_xmipp(self, shortname, filename, fh_mpi):
+        (filepath, micrographName)=os.path.split(filename)
+        (fnRoot, extension)=os.path.splitext(micrographName)
+        pname=shortname + '/' + fnRoot + '_estimate_ctf_input.param'
         retval=[]
         
-        retval.append(shortname+'/'+fnRoot+"_Periodogramavg.psd")
+        retval.append(shortname + '/' + fnRoot + "_Periodogramavg.psd")
         retval.append(pname)
 
         # prepare parameter file
-        paramlist = []
-        paramlist.append('image= '+filename+'\n')
+        paramlist=[]
+        paramlist.append('image= ' + filename + '\n')
         paramlist.append('micrograph_averaging= yes \n')
         paramlist.append('N_horizontal= 512 \n')
         paramlist.append('periodogram= yes \n')
         if not self.OnlyEstimatePSD:
-            AngPix = (10000. * self.ScannedPixelSize * self.Down) / self.Magnification
-            paramlist.append('voltage= '+str(self.Voltage)+'\n')
-            paramlist.append('spherical_aberration= '+str(self.SphericalAberration)+'\n')
-            paramlist.append('sampling_rate= '+str(AngPix)+'\n')
+            AngPix=(10000. * self.ScannedPixelSize * self.Down) / self.Magnification
+            paramlist.append('voltage= ' + str(self.Voltage) + '\n')
+            paramlist.append('spherical_aberration= ' + str(self.SphericalAberration) + '\n')
+            paramlist.append('sampling_rate= ' + str(AngPix) + '\n')
             paramlist.append('particle_horizontal= 256 \n')
-            paramlist.append('Q0= -'+str(self.AmplitudeContrast)+'\n')
-            paramlist.append('min_freq= '+str(self.LowResolCutoff)+'\n')
-            paramlist.append('max_freq= '+str(self.HighResolCutoff)+'\n')
-            retval.append(shortname+'/'+fnRoot+"_Periodogramavg.ctfparam")
-            retval.append(shortname+'/'+fnRoot+"_Periodogramavg_ctfmodel_halfplane.xmp")
-            retval.append(shortname+'/'+fnRoot+"_Periodogramavg_ctfmodel_quadrant.xmp")
+            paramlist.append('Q0= -' + str(self.AmplitudeContrast) + '\n')
+            paramlist.append('min_freq= ' + str(self.LowResolCutoff) + '\n')
+            paramlist.append('max_freq= ' + str(self.HighResolCutoff) + '\n')
+            retval.append(shortname + '/' + fnRoot + "_Periodogramavg.ctfparam")
+            retval.append(shortname + '/' + fnRoot + "_Periodogramavg_ctfmodel_halfplane.xmp")
+            retval.append(shortname + '/' + fnRoot + "_Periodogramavg_ctfmodel_quadrant.xmp")
+
+        # Check if the preprocessing has already been done
+        if stepPerformed("Step 2",shortname + "/status.txt"):
+            return retval
 
         # Perform CTF estimation
-        fh=open(pname,"w")
+        fh=open(pname, "w")
         fh.writelines(paramlist)
         fh.close()
-        command='if grep -q "Step 1" '+shortname+'/status.txt ; then '+\
-            'xmipp_ctf_estimate_from_micrograph -i '+pname+' ; '+\
-            'if [ -e '+shortname+'/'+fnRoot+'_Periodogramavg.ctfparam ] ; then '+\
-               'echo "Step 2: CTF estimated with Xmipp " `date` >> '+ shortname+'/status.txt;'+\
+        command='if grep -q "Step 1" ' + shortname + '/status.txt ; then ' + \
+            'xmipp_ctf_estimate_from_micrograph -i ' + pname + ' ; ' + \
+            'if [ -e ' + shortname + '/' + fnRoot + '_Periodogramavg.ctfparam ] ; then ' + \
+               'echo "Step 2: CTF estimated with Xmipp " `date` >> ' + shortname + '/status.txt;' + \
             ' fi; fi'
-        command+='\n'
-        os.write(fh_mpi,command);
+        command += '\n'
+        os.write(fh_mpi, command);
         return retval
 
-    def perform_ctfestimate_ctffind(self,shortname,filename,fh_mpi):
+    def perform_ctfestimate_ctffind(self, shortname, filename, fh_mpi):
+        # Check if the preprocessing has already been done
+        if stepPerformed("Step 3",shortname + "/status.txt"):
+            return
+
         # The new line is different if we are running in parallel or not
         theNewLine='\n'
         if(self._DoParallel):
             theNewLine='MPI_NEWLINE'
 
         # Convert image to MRC
-        command='if grep -q "Step 1" '+shortname+'/status.txt'+theNewLine+\
-            'then'+theNewLine+'('+theNewLine
-        command+='xmipp_convert_image -i '+filename+' -o '+shortname+'/tmp.mrc ; '
+        command='if grep -q "Step 1" ' + shortname + '/status.txt' + theNewLine + \
+            'then' + theNewLine + '(' + theNewLine
+        command += 'xmipp_convert_image -i ' + filename + ' -o ' + shortname + '/tmp.mrc ; '
 
         # Prepare parameters for CTFTILT
-        AngPix = (10000. * self.ScannedPixelSize * self.Down) / self.Magnification
-        (filepath, micrographName) = os.path.split(filename)
-        (fnRoot,extension) = os.path.splitext(micrographName)
-        command+="export NATIVEMTZ=kk"+theNewLine
-        command+= self.CtffindExec+'  << eof > '+shortname+'/'+fnRoot+'_ctffind.log'+theNewLine
-        command+= shortname+'/tmp.mrc'+theNewLine
-        command+= shortname+'/'+fnRoot+'_ctffind_spectrum.mrc'+theNewLine
-        command+= str(self.SphericalAberration) + ',' + \
+        AngPix=(10000. * self.ScannedPixelSize * self.Down) / self.Magnification
+        (filepath, micrographName)=os.path.split(filename)
+        (fnRoot, extension)=os.path.splitext(micrographName)
+        command += "export NATIVEMTZ=kk" + theNewLine
+        command += self.CtffindExec + '  << eof > ' + shortname + '/' + fnRoot + '_ctffind.log' + theNewLine
+        command += shortname + '/tmp.mrc' + theNewLine
+        command += shortname + '/' + fnRoot + '_ctffind_spectrum.mrc' + theNewLine
+        command += str(self.SphericalAberration) + ',' + \
                   str(self.Voltage) + ',' + \
                   str(self.AmplitudeContrast) + ',' + \
                   str(self.Magnification) + ',' + \
-                  str(self.ScannedPixelSize*self.Down) +theNewLine
-        command+= str(self.WinSize) + ',' + \
-                  str(AngPix/self.MinResCTF) + ',' + \
-                  str(AngPix/self.MaxResCTF) + ',' + \
+                  str(self.ScannedPixelSize * self.Down) + theNewLine
+        command += str(self.WinSize) + ',' + \
+                  str(AngPix / self.MinResCTF) + ',' + \
+                  str(AngPix / self.MaxResCTF) + ',' + \
                   str(self.MinFocus) + ',' + \
                   str(self.MaxFocus) + ',' + \
-                  str(self.StepFocus) +theNewLine
-        command+= 'eof'+theNewLine+')'+theNewLine+'fi\n'
-        os.write(fh_mpi,command)
+                  str(self.StepFocus) + theNewLine
+        command += 'eof' + theNewLine + ')' + theNewLine + 'fi\n'
+        os.write(fh_mpi, command)
 
-    def pickup_ctfestimate_ctffind(self,shortname,filename,fh_mpi):
+    def pickup_ctfestimate_ctffind(self, shortname, filename):
         import XmippData, time
-        (filepath, micrographName) = os.path.split(filename)
-        (fnRoot,extension) = os.path.splitext(micrographName)
+        (filepath, micrographName)=os.path.split(filename)
+        (fnRoot, extension)=os.path.splitext(micrographName)
+
+        # Check if the preprocessing has already been done
+        if stepPerformed("Step 3",shortname + "/status.txt"):
+            retval=[];
+            retval.append(fnOut);
+            retval.append(shortname + '/' + fnRoot + '_ctffind_spectrum.mrc');
+            return retval
+
+        # Remove temporary files
+        if os.path.exists(shortname + '/tmp.mrc'):
+            os.remove(shortname + '/tmp.mrc')
 
         # Pick values from ctffind
-        if not os.path.exists(shortname+'/'+fnRoot+'_ctffind.log'):
+        if not os.path.exists(shortname + '/' + fnRoot + '_ctffind.log'):
             retval=[]
             retval.append('NA')
             retval.append('NA')
             return retval
         
-        fh=open(shortname+'/'+fnRoot+'_ctffind.log','r')
+        # Effectively pickup results
+        fh=open(shortname + '/' + fnRoot + '_ctffind.log', 'r')
         lines=fh.readlines()
         fh.close()
         DF1=0.
@@ -568,70 +636,79 @@ class preprocess_A_class:
         Angle=0.
         found=False
         for i in range(len(lines)):
-            if not (lines[i].find('Final Values')==-1):
+            if not (lines[i].find('Final Values') == -1):
                 words=lines[i].split()
                 DF1=float(words[0])
                 DF2=float(words[1])
                 Angle=float(words[2])
                 found=True
                 break
-        command="rm " + shortname+'/tmp.mrc\n'
-        os.write(fh_mpi,command)
+
         if not found:
             retval=[]
             retval.append('NA')
             retval.append('NA')
             return retval
-
-        fh=open(shortname+"/status.txt","w+")
-        fh.write("Step 3: CTF estimated with CTFFind "+time.asctime()+"\n")
-        fh.close()
+        
+        retval=[];
+        retval.append(fnOut);
+        retval.append(shortname + '/' + fnRoot + '_ctffind_spectrum.mrc');
 
         # Generate Xmipp .ctfparam file:
         MD=XmippData.MetaData()
         MD.setColumnFormat(False)
         ptr=XmippData.doubleP()
         
-        AngPix = (10000. * self.ScannedPixelSize * self.Down) / self.Magnification
+        AngPix=(10000. * self.ScannedPixelSize * self.Down) / self.Magnification
         ptr.assign(AngPix)
         MD.addObject()
-        XmippData.setValueDouble(MD,XmippData.MDL_CTF_SAMPLING_RATE,ptr)
+        XmippData.setValueDouble(MD, XmippData.MDL_CTF_SAMPLING_RATE, ptr)
 
         ptr.assign(self.Voltage)
-        XmippData.setValueDouble(MD,XmippData.MDL_CTF_VOLTAGE,ptr)
+        XmippData.setValueDouble(MD, XmippData.MDL_CTF_VOLTAGE, ptr)
 
         ptr.assign(-DF2)
-        XmippData.setValueDouble(MD,XmippData.MDL_CTF_DEFOCUSU,ptr)
+        XmippData.setValueDouble(MD, XmippData.MDL_CTF_DEFOCUSU, ptr)
         
         ptr.assign(-DF1)
-        XmippData.setValueDouble(MD,XmippData.MDL_CTF_DEFOCUSV,ptr)
+        XmippData.setValueDouble(MD, XmippData.MDL_CTF_DEFOCUSV, ptr)
 
         ptr.assign(Angle)
-        XmippData.setValueDouble(MD,XmippData.MDL_CTF_DEFOCUS_ANGLE,ptr)
+        XmippData.setValueDouble(MD, XmippData.MDL_CTF_DEFOCUS_ANGLE, ptr)
 
         ptr.assign(self.SphericalAberration)
-        XmippData.setValueDouble(MD,XmippData.MDL_CTF_CS,ptr)
+        XmippData.setValueDouble(MD, XmippData.MDL_CTF_CS, ptr)
 
         ptr.assign(-self.AmplitudeContrast)
-        XmippData.setValueDouble(MD,XmippData.MDL_CTF_Q0,ptr)
+        XmippData.setValueDouble(MD, XmippData.MDL_CTF_Q0, ptr)
 
         ptr.assign(1.0)
-        XmippData.setValueDouble(MD,XmippData.MDL_CTF_K,ptr)
+        XmippData.setValueDouble(MD, XmippData.MDL_CTF_K, ptr)
 
-        fnOut=shortname+'/'+fnRoot+'_ctffind.ctfparam'
+        fnOut=shortname + '/' + fnRoot + '_ctffind.ctfparam'
         MD.write(XmippData.FileName(fnOut))
 
-        # Remove temporary files
-        retval=[];
-        retval.append(fnOut);
-        retval.append(shortname+'/'+fnRoot+'_ctffind_spectrum.mrc');
+        fh=open(shortname + "/status.txt", "w+")
+        fh.write("Step 3: CTF estimated with CTFFind " + time.asctime() + "\n")
+        fh.close()
+
         return retval
 
 # Preconditions
 def preconditions(gui):
     retval=True
+    # Check if there is workingdir
+    if WorkingDir == "":
+        message="No working directory given"
+        if gui:
+            import tkMessageBox
+            tkMessageBox.showerror("Error", message)
+        else:
+            print message
+        retval=False
+    
     # Check ctffind executable
-    if not CtffindExec=="":
+    if not CtffindExec == "":
         if (not os.path.exists(CtffindExec)):
             message="Cannot find ctffind executable: " + CtffindExec
             if gui:
@@ -642,9 +719,9 @@ def preconditions(gui):
             retval=False
             
     # Check that there are any micrograph to process
-    listOfMicrographs=glob.glob(DirMicrographs+'/'+ExtMicrographs)
-    if len(listOfMicrographs)==0:
-        message="There are no micrographs to process in " + DirMicrographs+'/'+ExtMicrographs
+    listOfMicrographs=glob.glob(DirMicrographs + '/' + ExtMicrographs)
+    if len(listOfMicrographs) == 0:
+        message="There are no micrographs to process in " + DirMicrographs + '/' + ExtMicrographs
         if gui:
             import tkMessageBox
             tkMessageBox.showerror("Error", message)
@@ -663,7 +740,6 @@ if __name__ == '__main__':
         sys.exit(1)
     preprocessA=preprocess_A_class(
                  WorkingDir,
-                 DoDeleteWorkingDir,
                  DirMicrographs,
                  ExtMicrographs,
                  RootName,
