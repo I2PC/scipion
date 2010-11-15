@@ -1357,9 +1357,10 @@ int AutoParticlePicking::automaticallySelectParticles()
             std::vector<int> toKeep;
             for (int i=0; i<YSIZE(features[1]); i++)
             {
+            	//aux should be a matrix1d
                 MultidimArray<double> aux;
                 features[1].getRow(i,aux);
-                Matrix1D<double> trialFeatures(XSIZE(aux));
+                Matrix1D<double> trialFeatures((int)XSIZE(aux));
                 FOR_ALL_ELEMENTS_IN_ARRAY1D(aux)
 					trialFeatures(i) = aux(i);
                 double cost;
