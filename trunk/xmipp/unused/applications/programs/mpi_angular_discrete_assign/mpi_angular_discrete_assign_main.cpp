@@ -40,7 +40,7 @@ int main(int argc, char **argv)
     try
     {
         // Read input parameters
-	prm.MPIversion=true;
+        prm.MPIversion=true;
         prm.read(argc, argv);
     }
     catch (XmippError XE)
@@ -105,7 +105,7 @@ int main(int argc, char **argv)
                     Image<double> img;
                     img.read(fnImg);
                     double shiftX, shiftY, psi, rot, tilt;
-                    double corr = prm.predict_angles(img, shiftX, shiftY, rot, tilt, psi);
+                    double corr = prm.predictAngles(img, shiftX, shiftY, rot, tilt, psi);
 
                     // Send the alignment parameters to the master
                     v[0] = i;
@@ -121,13 +121,14 @@ int main(int argc, char **argv)
             }
         }
 
-        if (rank == 0) prm.finish_processing();
+        if (rank == 0)
+            prm.finish_processing();
     }
     catch (XmippError XE)
     {
         std::cout << XE << std::endl;
         MPI_Finalize();
-	return 1 ;
+        return 1 ;
     }
     MPI_Finalize();
     return 0 ;
