@@ -1,5 +1,5 @@
 #include "memory.h"
-char*  askMemory(unsigned long memsize)
+char*  askMemory(size_t memsize)
 {
     char*		ptr = NULL;
 
