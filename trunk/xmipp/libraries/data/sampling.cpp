@@ -1301,7 +1301,7 @@ void Sampling::create_sym_file(FileName simFp,int symmetry, int sym_order)
 }
 void Sampling::create_asym_unit_file(const FileName &docfilename)
 {
-    MetaData DFvectors, DFangles;
+    MetaData DF;
     FileName tmp_filename;
     //#define CHIMERA
     #ifdef CHIMERA
@@ -1325,23 +1325,20 @@ void Sampling::create_asym_unit_file(const FileName &docfilename)
 		   << std::endl
 		   ;
 	#endif
-        DFvectors.addObject();
-        DFvectors.setValue(MDL_X,XX(no_redundant_sampling_points_vector[i]));
-        DFvectors.setValue(MDL_Y,YY(no_redundant_sampling_points_vector[i]));
-        DFvectors.setValue(MDL_Z,ZZ(no_redundant_sampling_points_vector[i]));
-        DFangles.addObject();
-        DFangles.setValue(MDL_ANGLEROT,XX(no_redundant_sampling_points_angles[i]));
-        DFangles.setValue(MDL_ANGLETILT,YY(no_redundant_sampling_points_angles[i]));
-        DFangles.setValue(MDL_ANGLEPSI,ZZ(no_redundant_sampling_points_angles[i]));
+        DF.addObject();
+        DF.setValue(MDL_ANGLEROT,XX(no_redundant_sampling_points_angles[i]));
+        DF.setValue(MDL_ANGLETILT,YY(no_redundant_sampling_points_angles[i]));
+        DF.setValue(MDL_ANGLEPSI,ZZ(no_redundant_sampling_points_angles[i]));
+        DF.setValue(MDL_X,XX(no_redundant_sampling_points_vector[i]));
+        DF.setValue(MDL_Y,YY(no_redundant_sampling_points_vector[i]));
+        DF.setValue(MDL_Z,ZZ(no_redundant_sampling_points_vector[i]));
     }
     #ifdef CHIMERA
     filestr.close();
     #endif
     #undef CHIMERA   
-    tmp_filename = docfilename + "_vectors.doc";
-    DFvectors.write(tmp_filename);
     tmp_filename = docfilename + "_angles.doc";
-    DFangles.write(tmp_filename);
+    DF.write(tmp_filename);
 }
 
  void Sampling::save_sampling_file(FileName outfilename,bool write_vectors)
