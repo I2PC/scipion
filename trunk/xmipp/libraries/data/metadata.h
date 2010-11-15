@@ -470,8 +470,11 @@ public:
     bool containsLabel(const MDLabel label) const;
 
     /** Add a new label to the metadata.
+     * By default the label is added at the end,
+     * if the position is specified and is between 0 and n-1
+     * the new label is inserted at that position.
      */
-    bool addLabel(const MDLabel label);
+    bool addLabel(const MDLabel label, int pos = -1);
 
     /** Adds a new, empty object to the objects map. If objectId == -1
      * the new ID will be that for the last object inserted + 1, else

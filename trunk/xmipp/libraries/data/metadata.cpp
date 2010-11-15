@@ -318,11 +318,14 @@ bool MetaData::containsLabel(const MDLabel label) const
     return vectorContainsLabel(activeLabels, label);
 }
 
-bool MetaData::addLabel(const MDLabel label)
+bool MetaData::addLabel(const MDLabel label, int pos)
 {
     if (containsLabel(label))
         return false;
-    activeLabels.push_back(label);
+    if (pos < 0 || pos >= activeLabels.size())
+      activeLabels.push_back(label);
+    else
+      activeLabels.insert(activeLabels.begin() + pos, label);
     myMDSql->addColumn(label);
     return true;
 }
