@@ -1728,7 +1728,7 @@ private:
       */
     void readData(FILE* fimg, int select_img, DataType datatype, unsigned long pad)
     {
-        #define DEBUG
+        //#define DEBUG
 #ifdef DEBUG
         std::cerr<<"entering readdata"<<std::endl;
         std::cerr<<" readData flag= "<<dataflag<<std::endl;
@@ -1745,6 +1745,7 @@ private:
         size_t datatypesize=gettypesize(datatype);
         size_t pagesize  =ZYXSIZE(data)*datatypesize;
         size_t haveread_n=0;
+        size_t selectImgSizeT=0;
 
         // Flag to know that data is not going to be mapped although mmapOn is true
         if (mmapOnRead && !checkMmapT(datatype))
@@ -1773,22 +1774,24 @@ private:
         {
             // Reset select to get the correct offset
             if ( select_img < 0 )
-                select_img = 0;
+            	selectImgSizeT = 0;
+            else
+            	selectImgSizeT = (size_t) select_img;
 
             char* page = NULL;
 
             // Allocate memory for image data (Assume xdim, ydim, zdim and ndim are already set
             //if memory already allocated use it (no resize allowed)
             data.coreAllocateReuse();
-            myoffset = offset + select_img*(pagesize + pad);
-            #define DEBUG
-
+            myoffset = offset + selectImgSizeT*(pagesize + pad);
+//ROB
+#define DEBUG
 #ifdef DEBUG
 
             data.printShape();
-            printf("DEBUG: Page size: %ld offset= %d \n", pagesize, offset);
+            printf("DEBUG: Page size: %ld offset= %ld \n", pagesize, offset);
             printf("DEBUG: Swap = %d  Pad = %ld  Offset = %ld\n", swap, pad, offset);
-            printf("DEBUG: myoffset = %d select_img= %d \n", myoffset, select_img);
+            printf("DEBUG: myoffset = %ld select_img= %ld \n", myoffset, selectImgSizeT);
 #endif
 #undef DEBUG
             if (pagesize > pagemax)
