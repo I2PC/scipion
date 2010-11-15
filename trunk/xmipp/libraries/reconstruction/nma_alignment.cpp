@@ -227,18 +227,13 @@ void Prog_nma_alignment_prm::performCompleteSearch(
     std::cout << time(NULL) << " Executing " << command << std::endl;
     system(command.c_str());
 
-    MetaData MD;
-    MD.addObject();
-    MD.setValue(MDL_IMAGE,"downimg_"+fnRandom+".xmp");
-    MD.write((std::string)"selfile_"+fnRandom+".sel");
-
     command=(std::string)"mkdir ref" + fnRandom;
     std::cout << time(NULL) << " Executing " << command << std::endl;
     system(command.c_str());
 
     command = (std::string)"xmipp_angular_project_library -i deformedPDB_"+fnRandom+".vol"+
     		  " -o ref" + fnRandom + "/ref" + fnRandom+".stk"
-    		  "--sampling_rate 5 --sym " + symmetry +" -v 0";
+    		  " --sampling_rate 5 --sym " + symmetry +" -v 0";
     FileName fnRefSel=(std::string)"ref" + fnRandom + "/ref" + fnRandom+".doc";
     std::cout << time(NULL) << " Executing " << command << std::endl;
     system(command.c_str());
@@ -252,7 +247,7 @@ void Prog_nma_alignment_prm::performCompleteSearch(
 
     // Perform alignment
     command=(std::string)" xmipp_angular_discrete_assign"+
-            " -i selfile_"+fnRandom+".sel"+
+            " -i downimg_"+fnRandom+".xmp"+
             " -ref "+fnRefSel+
             " -oang angledisc_"+fnRandom+".txt"+
             " -psi_step 5 "+
