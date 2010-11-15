@@ -356,7 +356,12 @@ class preprocess_A_class:
             if not os.path.exists(shortname):
                 os.makedirs(shortname)
                 fh=open(shortname + "/status.txt", "w")
-                fh.write("Step 0: Directory created started on " + time.asctime() + "\n")
+                fh.write("Process started at " + time.asctime() + "\n")
+                fh.write("Step 0: Directory created at " + time.asctime() + "\n")
+                fh.close()
+            else:
+                fh=open(shortname + "/status.txt", "a")
+                fh.write("Process started at " + time.asctime() + "\n")
                 fh.close()
 
             # Preprocess
@@ -407,10 +412,9 @@ class preprocess_A_class:
         ptr=XmippData.stringP()
         idx=0
         for filename in self.SFmicrograph:
-            if not stepPerformed("Step F",self.SFshort[idx] + "/status.txt"):
-                fh=open(self.SFshort[idx] + "/status.txt", "a")
-                fh.write("Step F: Finished on " + time.asctime() + "\n")
-                fh.close()
+            fh=open(self.SFshort[idx] + "/status.txt", "a")
+            fh.write("Step F: Finished on " + time.asctime() + "\n")
+            fh.close()
             MD.addObject()
             ptr.assign(filename)
             XmippData.setValueString(MD, XmippData.MDL_IMAGE, ptr)
@@ -608,6 +612,7 @@ class preprocess_A_class:
         import XmippData, time
         (filepath, micrographName)=os.path.split(filename)
         (fnRoot, extension)=os.path.splitext(micrographName)
+        fnOut=shortname + '/' + fnRoot + '_ctffind.ctfparam'
 
         # Check if the preprocessing has already been done
         if stepPerformed("Step 3",shortname + "/status.txt"):
@@ -685,10 +690,9 @@ class preprocess_A_class:
         ptr.assign(1.0)
         XmippData.setValueDouble(MD, XmippData.MDL_CTF_K, ptr)
 
-        fnOut=shortname + '/' + fnRoot + '_ctffind.ctfparam'
         MD.write(XmippData.FileName(fnOut))
 
-        fh=open(shortname + "/status.txt", "w+")
+        fh=open(shortname + "/status.txt", "a")
         fh.write("Step 3: CTF estimated with CTFFind " + time.asctime() + "\n")
         fh.close()
 
