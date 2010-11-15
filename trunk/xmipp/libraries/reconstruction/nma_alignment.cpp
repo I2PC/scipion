@@ -151,6 +151,7 @@ FileName Prog_nma_alignment_prm::createDeformedPDB(int pyramidLevel) const
     command=(std::string)"xmipp_move_along_NMAmode "+fnPDB+" "+modeList[0]+" "+
             floatToString((float)trial(0)*scale_defamp)+" > inter"+fnRandom+"; mv -f inter"+fnRandom+" deformedPDB_"+
             fnRandom+".pdb";
+    std::cout << time(NULL) << " Executing " << command << std::endl;
     system(command.c_str());
 
     for (int i=1; i<VEC_XSIZE(trial)-5; ++i)
@@ -159,6 +160,7 @@ FileName Prog_nma_alignment_prm::createDeformedPDB(int pyramidLevel) const
                 floatToString((float)trial(i)*scale_defamp)+" > inter"+fnRandom+"; mv -f inter"+fnRandom+" deformedPDB_"+
                 fnRandom+".pdb";
 
+        std::cout << time(NULL) << " Executing " << command << std::endl;
         system(command.c_str());
     }
 
@@ -183,6 +185,7 @@ FileName Prog_nma_alignment_prm::createDeformedPDB(int pyramidLevel) const
         }
     }
 
+    std::cout << time(NULL) << " Executing " << command << std::endl;
     system(command.c_str());
 
     if (do_FilterPDBVol)
@@ -191,6 +194,7 @@ FileName Prog_nma_alignment_prm::createDeformedPDB(int pyramidLevel) const
                 " -i deformedPDB_"+fnRandom+".vol"+
                 " -sampling "+floatToString((float)sampling_rate)+
                 " -low_pass " + floatToString((float)cutoff_LPfilter) + " -fourier_mask raised_cosine 0.1 >& /dev/null";
+        std::cout << time(NULL) << " Executing " << command << std::endl;
         system(command.c_str());
     }
 
@@ -201,6 +205,7 @@ FileName Prog_nma_alignment_prm::createDeformedPDB(int pyramidLevel) const
                 " -reduce -levels "+integerToString(pyramidLevel)+
                 " -v 0";
 
+        std::cout << time(NULL) << " Executing " << command << std::endl;
         system(command.c_str());
     }
 
@@ -219,56 +224,44 @@ void Prog_nma_alignment_prm::performCompleteSearch(
             "-reduce -levels "+integerToString(pyramidLevel)+
             " -v 0";
 
+    std::cout << time(NULL) << " Executing " << command << std::endl;
     system(command.c_str());
 
-    command=(std::string)"xmipp_metadata_selfile_create "+
-            "-p downimg_"+fnRandom+".xmp -o selfile_"+fnRandom+".sel --quiet";
-
-    system(command.c_str());
+    MetaData MD;
+    MD.addObject();
+    MD.setValue(MDL_IMAGE,"downimg_"+fnRandom+".xmp");
+    MD.write((std::string)"selfile_"+fnRandom+".sel");
 
     command=(std::string)"mkdir ref" + fnRandom;
+    std::cout << time(NULL) << " Executing " << command << std::endl;
     system(command.c_str());
 
-    command = (std::string)"-i deformedPDB_"+fnRandom+".vol"+ " -o ref" + fnRandom + "/ref" + fnRandom +
-              "_ -sampling_rate 5 -sym " + symmetry;
-    command=(std::string)
-            " xmipp_angular_project_library "+command + " -v 0";
-
-    system(command.c_str());
-
-    command=(std::string)"xmipp_metadata_selfile_create -p \"ref" + fnRandom + "/ref*.xmp\" -o ref"+fnRandom+"_.sel --quiet";
-    system(command.c_str());
-
-    command=(std::string)"mv ref" + fnRandom + "/*.doc .";
+    command = (std::string)"xmipp_angular_project_library -i deformedPDB_"+fnRandom+".vol"+
+    		  " -o ref" + fnRandom + "/ref" + fnRandom+".stk"
+    		  "--sampling_rate 5 --sym " + symmetry +" -v 0";
+    FileName fnRefSel=(std::string)"ref" + fnRandom + "/ref" + fnRandom+".doc";
+    std::cout << time(NULL) << " Executing " << command << std::endl;
     system(command.c_str());
 
     if (fnmask != "")
     {
-        command=(std::string) " xmipp_mask -i ref"+fnRandom+"_.sel -mask "+fnmask;
-
+        command=(std::string) " xmipp_mask -i "+fnRefSel+" -mask "+fnmask;
+        std::cout << time(NULL) << " Executing " << command << std::endl;
         system(command.c_str());
     }
 
-    command=(std::string)" xmipp_header_extract -i selfile_"+fnRandom+".sel -o docexp"+fnRandom+".txt -v 0";
-
-    system(command.c_str());
-
     // Perform alignment
     command=(std::string)" xmipp_angular_discrete_assign"+
-            " -i docexp"+fnRandom+".txt" +
-            " -ref ref"+fnRandom+"_.sel"+
+            " -i selfile_"+fnRandom+".sel"+
+            " -ref "+fnRefSel+
             " -oang angledisc_"+fnRandom+".txt"+
             " -psi_step 5 "+
             " -max_shift_change "+integerToString(ROUND((double)imgSize/
                                                   (10.0*pow(2.0,(double)pyramidLevel))))+
             " -search5D -sym " + symmetry + " -v 0";
 
+    std::cout << time(NULL) << " Executing " << command << std::endl;
     system(command.c_str());
-
-    command=(std::string)" xmipp_header_assign -i angledisc_"+fnRandom+".txt -v 0";
-
-    system(command.c_str());
-
 }
 
 // Continuous assignment ===================================================
@@ -280,9 +273,11 @@ double Prog_nma_alignment_prm::performContinuousAssignment(
     {
         // Make copy instead of a link
         command=(std::string)"cp -f "+currentImg->name()+" downimg_"+fnRandom+".xmp";
+        std::cout << time(NULL) << " Executing " << command << std::endl;
         system(command.c_str());
 
         command=(std::string)" xmipp_header_assign -i angledisc_"+fnRandom+".txt -v 0";
+        std::cout << time(NULL) << " Executing " << command << std::endl;
         system(command.c_str());
     }
 
@@ -295,9 +290,11 @@ double Prog_nma_alignment_prm::performContinuousAssignment(
             " -gaussian_Real " + floatToString((float)gaussian_Real_sigma) +
             " -zerofreq_weight " + floatToString((float)weight_zero_freq) +
             " -v 0";
+    std::cout << time(NULL) << " Executing " << command << std::endl;
     system(command.c_str());
 
     command=(std::string)" xmipp_header_assign -i anglecont_"+fnRandom+".txt -v 0";
+    std::cout << time(NULL) << " Executing " << command << std::endl;
     system(command.c_str());
 
     // Pick up results
@@ -372,6 +369,7 @@ double ObjFunc_nma_alignment::eval(Vector X, int *nerror)
     double fitness=global_NMA_prog->performContinuousAssignment(fnRandom,pyramidLevelCont);
 
     std::string command=(std::string)"rm -rf *"+fnRandom+"* &";
+    std::cout << time(NULL) << " Executing " << command << std::endl;
     system(command.c_str());
 
     //std::cout << "Trial=" << global_NMA_prog->trial.transpose() << " ---> " << fitness << std::endl;
