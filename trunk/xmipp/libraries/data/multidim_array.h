@@ -150,7 +150,7 @@ extern std::string floatToString(float F, int _width, int _prec);
  * @endcode
  */
 #define FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(v) \
-    for (unsigned long int n=0; n<NZYXSIZE(v); ++n)
+    for (size_t n=0; n<NZYXSIZE(v); ++n)
 
 /** For all direct elements in the array
  *
@@ -904,7 +904,7 @@ public:
       *  Note that the dataArray is NOT resized. This should be done separately with coreAllocate()
       *
       */
-    void setDimensions(int Xdim, int Ydim, int Zdim, unsigned long int Ndim)
+    void setDimensions(size_t Xdim, size_t Ydim, size_t Zdim, size_t Ndim)
     {
         ndim=Ndim;
         zdim=Zdim;
@@ -920,7 +920,7 @@ public:
      *  Note that the dataArray is NOT resized. This should be done separately with coreAllocate()
      *
      */
-    void setNdim(int Ndim)
+    void setNdim(size_t Ndim)
     {
         ndim = Ndim;
         nzyxdim=ndim*zyxdim;
@@ -931,7 +931,7 @@ public:
      *  Note that the dataArray is NOT resized. This should be done separately with coreAllocate()
      *
      */
-    void setZdim(int Zdim)
+    void setZdim(size_t Zdim)
     {
         zdim = Zdim;
         zyxdim=zdim*yxdim;
@@ -943,7 +943,7 @@ public:
      *  Note that the dataArray is NOT resized. This should be done separately with coreAllocate()
      *
      */
-    void setYdim(int Ydim)
+    void setYdim(size_t Ydim)
     {
         ydim = Ydim;
         yxdim=ydim*xdim;
@@ -956,7 +956,7 @@ public:
       *  Note that the dataArray is NOT resized. This should be done separately with coreAllocate()
       *
       */
-    void setXdim(int Xdim)
+    void setXdim(size_t Xdim)
     {
         xdim = Xdim;
         yxdim=ydim*xdim;
