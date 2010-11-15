@@ -1799,7 +1799,8 @@ private:
             else
                 page = (char *) askMemory(pagesize*sizeof(char));
 
-            fseek( fimg, myoffset, SEEK_SET );
+            if(!fseek( fimg, myoffset, SEEK_SET ))
+            	REPORT_ERROR(ERR_IO_SIZE,"readData: can not seek the file pointer");
             for ( size_t myn=0; myn<NSIZE(data); myn++ )
             {
                 for (size_t myj=0; myj<pagesize; myj+=pagemax )//pagesize size of object
