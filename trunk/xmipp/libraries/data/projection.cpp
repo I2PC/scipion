@@ -125,6 +125,9 @@ void project_Volume(MultidimArray<double> &V, Projection &P, int Ydim, int Xdim,
     double half_x_sign = 0.5 * x_sign;
     double half_y_sign = 0.5 * y_sign;
     double half_z_sign = 0.5 * z_sign;
+    double iXXP_direction=1.0/XX(P.direction);
+    double iYYP_direction=1.0/YY(P.direction);
+    double iZZP_direction=1.0/ZZ(P.direction);
 
     MultidimArray<double> &mP = P();
     FOR_ALL_ELEMENTS_IN_ARRAY2D(mP)
@@ -164,12 +167,12 @@ void project_Volume(MultidimArray<double> &V, Projection &P, int Ydim, int Xdim,
 
             // Compute the minimum and maximum alpha for the ray
             // intersecting the given volume
-            double alpha_xmin = (x_0 - 0.5 - XX(p1)) / XX(P.direction);
-            double alpha_xmax = (x_F + 0.5 - XX(p1)) / XX(P.direction);
-            double alpha_ymin = (y_0 - 0.5 - YY(p1)) / YY(P.direction);
-            double alpha_ymax = (y_F + 0.5 - YY(p1)) / YY(P.direction);
-            double alpha_zmin = (z_0 - 0.5 - ZZ(p1)) / ZZ(P.direction);
-            double alpha_zmax = (z_F + 0.5 - ZZ(p1)) / ZZ(P.direction);
+            double alpha_xmin = (x_0 - 0.5 - XX(p1))* iXXP_direction;
+            double alpha_xmax = (x_F + 0.5 - XX(p1))* iXXP_direction;
+            double alpha_ymin = (y_0 - 0.5 - YY(p1))* iYYP_direction;
+            double alpha_ymax = (y_F + 0.5 - YY(p1))* iYYP_direction;
+            double alpha_zmin = (z_0 - 0.5 - ZZ(p1))* iZZP_direction;
+            double alpha_zmax = (z_F + 0.5 - ZZ(p1))* iZZP_direction;
 
             double alpha_min = XMIPP_MAX(XMIPP_MIN(alpha_xmin, alpha_xmax),
                                          XMIPP_MIN(alpha_ymin, alpha_ymax));
@@ -200,15 +203,15 @@ void project_Volume(MultidimArray<double> &V, Projection &P, int Ydim, int Xdim,
 
             // Compute the first point in the volume intersecting the ray
             Matrix1D<double>  v(3);
-            Matrix1D<int>    idx(3);
+            double zz_idxd, yy_idxd, xx_idxd;
+            int    zz_idx , yy_idx , xx_idx;
             V3_BY_CT(v, P.direction, alpha_min);
             V3_PLUS_V3(v, p1, v);
 
             // Compute the index of the first voxel
-            XX(idx) = CLIP(ROUND(XX(v)), x_0, x_F);
-            YY(idx) = CLIP(ROUND(YY(v)), y_0, y_F);
-            ZZ(idx) = CLIP(ROUND(ZZ(v)), z_0, z_F);
-
+            xx_idxd = xx_idx = CLIP(ROUND(XX(v)), x_0, x_F);
+            yy_idxd = yy_idx = CLIP(ROUND(YY(v)), y_0, y_F);
+            zz_idxd = zz_idx = CLIP(ROUND(ZZ(v)), z_0, z_F);
 
 #ifdef DEBUG
 
@@ -222,37 +225,47 @@ void project_Volume(MultidimArray<double> &V, Projection &P, int Ydim, int Xdim,
             do
             {
 #ifdef DEBUG
-                std::cout << " \n\nCurrent Value: " << V(ZZ(idx), YY(idx), XX(idx)) << std::endl;
+                std::cout << " \n\nCurrent Value: " << V(zz_idx, yy_idx, xx_idx) << std::endl;
 #endif
 
-                double alpha_x = (XX(idx) + half_x_sign - XX(p1)) / XX(P.direction);
-                double alpha_y = (YY(idx) + half_y_sign - YY(p1)) / YY(P.direction);
-                double alpha_z = (ZZ(idx) + half_z_sign - ZZ(p1)) / ZZ(P.direction);
+                double alpha_x = (xx_idxd + half_x_sign - XX(p1))* iXXP_direction;
+                double alpha_y = (yy_idxd + half_y_sign - YY(p1))* iYYP_direction;
+                double alpha_z = (zz_idxd + half_z_sign - ZZ(p1))* iZZP_direction;
 
                 // Which dimension will ray move next step into?, it isn't neccesary to be only
                 // one.
-                double diffx = ABS(alpha - alpha_x);
-                double diffy = ABS(alpha - alpha_y);
-                double diffz = ABS(alpha - alpha_z);
+                double aux, diffx, diffy, diffz, diff_alpha;
+                aux=alpha-alpha_x;
+                diffx = ABS(aux);
+                aux=alpha-alpha_y;
+                diffy = ABS(aux);
+                diff_alpha = XMIPP_MIN(diffx, diffy);
+                aux=alpha-alpha_z;
+                diffz = ABS(aux);
+                diff_alpha=XMIPP_MIN(diff_alpha, diffz);
 
-                double diff_alpha = XMIPP_MIN(XMIPP_MIN(diffx, diffy), diffz);
+                ray_sum += diff_alpha * A3D_ELEM(V, zz_idx, yy_idx, xx_idx);
 
-                ray_sum += diff_alpha * V(ZZ(idx), YY(idx), XX(idx));
-
-                if (ABS(diff_alpha - diffx) <= XMIPP_EQUAL_ACCURACY)
+                aux=diff_alpha - diffx;
+                if (ABS(aux) <= XMIPP_EQUAL_ACCURACY)
                 {
                     alpha = alpha_x;
-                    XX(idx) += x_sign;
+                    xx_idx += x_sign;
+                    xx_idxd = xx_idx;
                 }
-                if (ABS(diff_alpha - diffy) <= XMIPP_EQUAL_ACCURACY)
+                aux=diff_alpha - diffy;
+                if (ABS(aux) <= XMIPP_EQUAL_ACCURACY)
                 {
                     alpha = alpha_y;
-                    YY(idx) += y_sign;
+                    yy_idx += y_sign;
+                    yy_idxd = yy_idx;
                 }
-                if (ABS(diff_alpha - diffz) <= XMIPP_EQUAL_ACCURACY)
+                aux=diff_alpha - diffz;
+                if (ABS(aux) <= XMIPP_EQUAL_ACCURACY)
                 {
                     alpha = alpha_z;
-                    ZZ(idx) += z_sign;
+                    zz_idx += z_sign;
+                    zz_idxd = zz_idx;
                 }
 
 #ifdef DEBUG
@@ -275,12 +288,10 @@ void project_Volume(MultidimArray<double> &V, Projection &P, int Ydim, int Xdim,
             while ((alpha_max - alpha) > XMIPP_EQUAL_ACCURACY);
         } // for
 
-        A2D_ELEM(P(), i, j) = ray_sum * 0.25;
+        A2D_ELEM(IMGMATRIX(P), i, j) = ray_sum * 0.25;
 #ifdef DEBUG
-
         std::cout << "Assigning P(" << i << "," << j << ")=" << ray_sum << std::endl;
 #endif
-
     }
 }
 #undef DEBUG
