@@ -374,7 +374,7 @@ public:
 
     /** Core allocate.
      */
-    void coreAllocate(int _mdimy, int _mdimx)
+    void coreAllocate( int _mdimy, int _mdimx)
     {
         if (_mdimy <= 0 ||_mdimx<=0)
         {
@@ -418,7 +418,7 @@ public:
         }
 
         T * new_mdata;
-        size_t YXdim=Ydim*Xdim;
+        int YXdim=Ydim*Xdim;
 
         try
         {
