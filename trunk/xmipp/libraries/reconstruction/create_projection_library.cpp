@@ -63,18 +63,18 @@ void Prog_create_projection_library_Parameters::read(int argc, char **argv)
     shears = checkParameter(argc, argv,"-shears");
     //NOTE perturb in computed after the even sampling is computes
     //     and max tilt min tilt applied
-    perturb_projection_vector=textToFloat(getParameter(argc,argv,"-perturb","0"));       
+    perturb_projection_vector=textToFloat(getParameter(argc,argv,"-perturb","0"));
     compute_neighbors_bool=checkParameter(argc, argv,"-compute_neighbors");
     remove_points_far_away_from_experimental_data_bool=
-                   checkParameter(argc, argv,"-near_exp_data");
+        checkParameter(argc, argv,"-near_exp_data");
     if(remove_points_far_away_from_experimental_data_bool)
     {
         if(!checkParameter(argc, argv, "-experimental_images"))
-             REPORT_ERROR(ERR_ARG_MISSING,"3-Docfile with experimental images euler angles is missing");
+            REPORT_ERROR(ERR_ARG_MISSING,"3-Docfile with experimental images euler angles is missing");
         FnexperimentalImages = getParameter(argc, argv, "-experimental_images","");
     }
     if (angular_distance_bool==false && compute_neighbors_bool==true)
-       REPORT_ERROR(ERR_ARG_MISSING,"If -compute_neighbors requires -angular_distance");
+        REPORT_ERROR(ERR_ARG_MISSING,"If -compute_neighbors requires -angular_distance");
 }
 
 /* Usage ------------------------------------------------------------------- */
@@ -101,8 +101,8 @@ void Prog_create_projection_library_Parameters::usage()
     << "  [-shears]                    : use projection shears to generate projections\n"
     << "  [-near_exp_data]             : remove points far away from experimental data\n"
     << "  [-perturb default=0.0]       : gaussian noise projection unit vectors \n"
-    << "			         a value=sin(sampling_rate)/4  \n"
-    << "			         may be a good starting point \n"
+    << "            a value=sin(sampling_rate)/4  \n"
+    << "            may be a good starting point \n"
     << "\n"
     << "Example of use: Sample at 2 degrees and use c6 symmetry\n"
     << "   xmipp_create_projection_library -i in.vol -o out "
@@ -113,24 +113,25 @@ void Prog_create_projection_library_Parameters::usage()
 /* Show -------------------------------------------------------------------- */
 void Prog_create_projection_library_Parameters::show()
 {
-    if (quiet) return;    
+    if (quiet)
+        return;
     std::cout << "output input_volume root:  " << input_volume << std::endl
-              << "output files root:         " << output_file_root << std::endl
-              << "Sampling rate:             " << sampling    << std::endl
-              << "symmetry group:            " << fn_sym << std::endl
-              << "max_tilt_angle:            " << max_tilt_angle << std::endl
-              << "min_tilt_angle:            " << min_tilt_angle << std::endl
-              << "psi_sampling:              " << psi_sampling << std::endl
-              << "compute_neighbors:         " << compute_neighbors_bool << std::endl
-              << "quiet:                     " << quiet << std::endl
-              << "shears:                    " << shears << std::endl
+    << "output files root:         " << output_file_root << std::endl
+    << "Sampling rate:             " << sampling    << std::endl
+    << "symmetry group:            " << fn_sym << std::endl
+    << "max_tilt_angle:            " << max_tilt_angle << std::endl
+    << "min_tilt_angle:            " << min_tilt_angle << std::endl
+    << "psi_sampling:              " << psi_sampling << std::endl
+    << "compute_neighbors:         " << compute_neighbors_bool << std::endl
+    << "quiet:                     " << quiet << std::endl
+    << "shears:                    " << shears << std::endl
     ;
     if (angular_distance_bool)
         std::cout << "angular_distance:          " << angular_distance << std::endl;
-    if (FnexperimentalImages.size() > 0)	
+    if (FnexperimentalImages.size() > 0)
         std::cout << "experimental_images:       " << FnexperimentalImages << std::endl;
     std::cout << "compute_closer_sampling_point_bool:" << compute_closer_sampling_point_bool
-              << std::endl;	
+    << std::endl;
     if (perturb_projection_vector!=0)
         std::cout << "perturb_projection_vector: " << perturb_projection_vector << std::endl;
 }
@@ -144,15 +145,15 @@ void Prog_create_projection_library_Parameters::project_angle_vector(
     int mySize;
     mySize=my_end-my_init+1;
     if (psi_sampling < 360)
-       mySize *= (int) (359.99999/psi_sampling);
+        mySize *= (int) (359.99999/psi_sampling);
     if (verbose)
-       init_progress_bar(mySize);
+        init_progress_bar(mySize);
     int myCounter=0;
-    
+
     for (int mypsi=0;mypsi<360;mypsi += psi_sampling)
-       for (int i=0;i<my_init;i++)
-         myCounter++;
-        
+        for (int i=0;i<my_init;i++)
+            myCounter++;
+
     if (shears)
     {
         prepareStructVolume(inputVol(),VShears);
@@ -161,22 +162,22 @@ void Prog_create_projection_library_Parameters::project_angle_vector(
 
     for (int mypsi=0;mypsi<360;mypsi += psi_sampling)
     {
-       for (int i=my_init;i<=my_end;i++)
-       {    
-           if (verbose)
-               progress_bar(i-my_init);
-           psi= mypsi+ZZ(mysampling.no_redundant_sampling_points_angles[i]);
-           tilt=      YY(mysampling.no_redundant_sampling_points_angles[i]);
-           rot=       XX(mysampling.no_redundant_sampling_points_angles[i]);
+        for (int i=my_init;i<=my_end;i++)
+        {
+            if (verbose)
+                progress_bar(i-my_init);
+            psi= mypsi+ZZ(mysampling.no_redundant_sampling_points_angles[i]);
+            tilt=      YY(mysampling.no_redundant_sampling_points_angles[i]);
+            rot=       XX(mysampling.no_redundant_sampling_points_angles[i]);
 
-           if (shears)
-               project_Volume(VShears, P, Ydim, Xdim,rot,tilt,psi);
-           else
-               project_Volume(inputVol(), P, Ydim, Xdim,rot,tilt,psi);
+            if (shears)
+                project_Volume(VShears, P, Ydim, Xdim,rot,tilt,psi);
+            else
+                project_Volume(inputVol(), P, Ydim, Xdim,rot,tilt,psi);
 
-           fn_proj.compose(output_file_root, ++myCounter,"xmp");
-           P.write(fn_proj);
-       }
+            fn_proj.compose(output_file_root, ++myCounter,"xmp");
+            P.write(fn_proj);
+        }
     }
     if (verbose)
         progress_bar(mySize);
@@ -184,15 +185,7 @@ void Prog_create_projection_library_Parameters::project_angle_vector(
 
 /* Run --------------------------------------------------------------------- */
 void Prog_create_projection_library_Parameters::run()
-{ 
-    //#define DEBUGTIME
-    #ifdef  DEBUGTIME
-        #include <ctime>
-        time_t start,end;
-        double time_dif;
-        time (&start);
-    #endif
-
+{
     /////////////////////////////
     // PreRun for all nodes but not for all works
     /////////////////////////////
@@ -203,7 +196,7 @@ void Prog_create_projection_library_Parameters::run()
     mysampling.SetSampling(sampling);
     srand ( time(NULL) );
     if (!mysampling.SL.isSymmetryGroup(fn_sym, symmetry, sym_order))
-         REPORT_ERROR(ERR_VALUE_INCORRECT, (std::string)"Invalid symmetry" +  fn_sym);
+        REPORT_ERROR(ERR_VALUE_INCORRECT, (std::string)"Invalid symmetry" +  fn_sym);
     if (perturb_projection_vector!=0)
     {
         int my_seed;
@@ -211,7 +204,7 @@ void Prog_create_projection_library_Parameters::run()
         mysampling.SetNoise(perturb_projection_vector,my_seed);
     }
 
-    if(angular_distance_bool!=0)	
+    if(angular_distance_bool!=0)
         mysampling.SetNeighborhoodRadius(angular_distance);//irelevant
 
     //true -> half_sphere
@@ -220,69 +213,29 @@ void Prog_create_projection_library_Parameters::run()
     mysampling.SL.read_sym_file(fn_sym);
     mysampling.fill_L_R_repository();
     mysampling.fill_exp_data_projection_direction_by_L_R(FnexperimentalImages);
-    #ifdef  DEBUGTIME
-        time (&end);
-        time_dif = difftime (end,start); start=end;
-        printf ("fill_exp_data_projection_direction_by_L_R after %.2lf seconds\n", time_dif );
-    #endif
 
     mysampling.remove_redundant_points(symmetry, sym_order);
-    #ifdef  DEBUGTIME
-        time (&end);
-        time_dif = difftime (end,start); start=end;
-        printf ("remove_redundant_points after %.2lf seconds\n", time_dif );
-    #endif
-    if (FnexperimentalImages.size() > 0 && 
+    if (FnexperimentalImages.size() > 0 &&
         remove_points_far_away_from_experimental_data_bool)
     {
         mysampling.remove_points_far_away_from_experimental_data();
-        #ifdef  DEBUGTIME
-            time (&end);
-            time_dif = difftime (end,start); start=end;
-            printf ("remove_points_far_away_from_experimental_data after %.2lf seconds\n", time_dif );
-        #endif
     }
     if(compute_closer_sampling_point_bool)
     {
-	mysampling.find_closest_sampling_point(FnexperimentalImages,output_file_root);
-        #ifdef  DEBUGTIME
-            time (&end);
-            time_dif = difftime (end,start); start=end;
-            printf ("find_closest_sampling_point after %.2lf seconds\n", time_dif );
-        #endif
+        mysampling.find_closest_sampling_point(FnexperimentalImages,output_file_root);
     }
 
     mysampling.create_asym_unit_file(output_file_root);
-    #ifdef  DEBUGTIME
-        time (&end);
-        time_dif = difftime (end,start); start=end;
-        printf ("create_asym_unit_file (save file) after %.2lf seconds\n", time_dif );
-    #endif
 
     inputVol.read(input_volume);
     inputVol().setXmippOrigin();
     Xdim = XSIZE(inputVol());
     Ydim = YSIZE(inputVol());
-    #ifdef  DEBUGTIME
-        time (&end);
-        time_dif = difftime (end,start); start=end;
-        printf ("read volume after %.2lf seconds\n", time_dif );
-    #endif
-    if (compute_neighbors_bool) {
+    if (compute_neighbors_bool)
+    {
         mysampling.compute_neighbors();
-        mysampling.save_sampling_file(output_file_root+ 
-	    "_closest_sampling_points.doc");
-        #ifdef  DEBUGTIME
-            time (&end);
-            time_dif = difftime (end,start); start=end;
-            printf ("compute_neighbors after %.2lf seconds\n", time_dif );
-        #endif
+        mysampling.save_sampling_file(output_file_root+"_closest_sampling_points.doc");
         mysampling.save_sampling_file(output_file_root,false);
-        #ifdef  DEBUGTIME
-            time (&end);
-            time_dif = difftime (end,start); start=end;
-            printf ("save sampling file after %.2lf seconds\n", time_dif );
-        #endif
     }
 
     mysampling.exp_data_projection_direction_by_L_R.clear();
@@ -291,23 +244,33 @@ void Prog_create_projection_library_Parameters::run()
     //angle information is in
     //mysampling.no_redundant_sampling_points_angles[i]
     project_angle_vector(0,
-        mysampling.no_redundant_sampling_points_angles.size()-1,!quiet);
-    #ifdef  DEBUGTIME
-        time (&end);
-        time_dif = difftime (end,start); start=end;
-        printf ("project_angle_vector after %.2lf seconds\n", time_dif );
-    #endif
-                 
-    MetaData  mySF;
+                         mysampling.no_redundant_sampling_points_angles.size()-1,!quiet);
+
+    MetaData  mySFin, mySFout;
     FileName fn_temp;
-    int myCounter=0;
+    mySFin.read(output_file_root+"_angles.doc");
+    int myCounter=-1;
     for (int mypsi=0;mypsi<360;mypsi += psi_sampling)
-       for (int i=0;i<=mysampling.no_redundant_sampling_points_angles.size()-1;i++)
-       {    
-	   fn_temp.compose(output_file_root, ++myCounter,"xmp");
-	   mySF.addObject();
-	   mySF.setValue(MDL_IMAGE,fn_temp);
-       }
-    fn_temp=output_file_root+".sel";   
-    mySF.write(fn_temp);         
+    	FOR_ALL_OBJECTS_IN_METADATA(mySFin)
+    	{
+            double x,y,z, rot, tilt, psi;
+            mySFin.getValue(MDL_ANGLEROT,rot);
+            mySFin.getValue(MDL_ANGLETILT,tilt);
+            mySFin.getValue(MDL_ANGLEPSI,psi);
+            mySFin.getValue(MDL_X,x);
+            mySFin.getValue(MDL_Y,y);
+            mySFin.getValue(MDL_Z,z);
+            fn_temp.compose(output_file_root, ++myCounter,"xmp");
+            mySFout.addObject();
+            mySFout.setValue(MDL_IMAGE,fn_temp);
+            mySFout.setValue(MDL_ENABLED,1);
+            mySFout.setValue(MDL_ANGLEROT,rot);
+            mySFout.setValue(MDL_ANGLETILT,tilt);
+            mySFout.setValue(MDL_ANGLEPSI,psi+mypsi);
+            mySFout.setValue(MDL_X,x);
+            mySFout.setValue(MDL_Y,y);
+            mySFout.setValue(MDL_Z,z);
+        }
+    mySFout.write(output_file_root+".doc");
+    unlink((output_file_root+"_angles.doc").c_str());
 }

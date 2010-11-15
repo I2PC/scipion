@@ -189,14 +189,6 @@ ProgAngularProjectLibrary::project_angle_vector(
 /* Run --------------------------------------------------------------------- */
 void ProgAngularProjectLibrary::run()
 {
-    //#define DEBUGTIME
-#ifdef  DEBUGTIME
-    #include <ctime>
-
-    time_t start,end;
-    double time_dif;
-    time (&start);
-#endif
     /////////////////////////////
     // PreRun for all nodes but not for all works
     /////////////////////////////
@@ -250,36 +242,13 @@ void ProgAngularProjectLibrary::run()
     //precompute product between symmetry matrices and experimental data
     if (FnexperimentalImages.size() > 0)
         mysampling.fill_exp_data_projection_direction_by_L_R(FnexperimentalImages);
-#ifdef  DEBUGTIME
-
-    time (&end);
-    time_dif = difftime (end,start);
-    start=end;
-    printf ("fill_exp_data_projection_direction_by_L_R after %.2lf seconds\n", time_dif );
-#endif
 
     //remove points not close to experimental points, only for no symmetric cases
-#ifdef  DEBUGTIME
-
-    time (&end);
-    time_dif = difftime (end,start);
-    start=end;
-    printf ("remove_redundant_points after %.2lf seconds\n", time_dif );
-#endif
-
     if (FnexperimentalImages.size() > 0 &&
         remove_points_far_away_from_experimental_data_bool)
     {
         // here we remove points no close to experimental data, neight symmetry must be use
         mysampling.remove_points_far_away_from_experimental_data();
-#ifdef  DEBUGTIME
-
-        time (&end);
-        time_dif = difftime (end,start);
-        start=end;
-        printf ("remove_points_far_away_from_experimental_data after %.2lf seconds\n", time_dif );
-#endif
-
     }
     if(compute_closer_sampling_point_bool)
     {
@@ -287,25 +256,10 @@ void ProgAngularProjectLibrary::run()
         //and save docfile with this information
         // use neight symmetry
         mysampling.find_closest_sampling_point(FnexperimentalImages,output_file_root);
-#ifdef  DEBUGTIME
-
-        time (&end);
-        time_dif = difftime (end,start);
-        start=end;
-        printf ("find_closest_sampling_point after %.2lf seconds\n", time_dif );
-#endif
-
     }
     //only rank 0
     //write docfil with vectors and angles
     mysampling.create_asym_unit_file(output_file_root);
-#ifdef  DEBUGTIME
-
-    time (&end);
-    time_dif = difftime (end,start);
-    start=end;
-    printf ("create_asym_unit_file (save file) after %.2lf seconds\n", time_dif );
-#endif
     //all nodes
     //If there is no reference available exit
     try
@@ -320,35 +274,12 @@ void ProgAngularProjectLibrary::run()
     inputVol().setXmippOrigin();
     Xdim = XSIZE(inputVol());
     Ydim = YSIZE(inputVol());
-#ifdef  DEBUGTIME
-
-    time (&end);
-    time_dif = difftime (end,start);
-    start=end;
-    printf ("read volume after %.2lf seconds\n", time_dif );
-#endif
 
     if (compute_neighbors_bool)
     {
         // new symmetry
         mysampling.compute_neighbors(only_winner);
-#ifdef  DEBUGTIME
-
-        time (&end);
-        time_dif = difftime (end,start);
-        start=end;
-        printf ("compute_neighbors after %.2lf seconds\n", time_dif );
-#endif
-
         mysampling.save_sampling_file(output_file_root,false);
-#ifdef  DEBUGTIME
-
-        time (&end);
-        time_dif = difftime (end,start);
-        start=end;
-        printf ("save sampling file after %.2lf seconds\n", time_dif );
-#endif
-
     }
     //release some memory
     mysampling.exp_data_projection_direction_by_L_R.clear();
@@ -359,29 +290,35 @@ void ProgAngularProjectLibrary::run()
     //Run for all works
     project_angle_vector(0,
                          mysampling.no_redundant_sampling_points_angles.size()-1,verbose);
-#ifdef  DEBUGTIME
-
-    time (&end);
-    time_dif = difftime (end,start);
-    start=end;
-    printf ("project_angle_vector after %.2lf seconds\n", time_dif );
-#endif
 
     //only rank 0 create sel file
-    MetaData  mySF;
+    MetaData  mySFin, mySFout;
     FileName fn_temp;
+    mySFin.read(output_file_root+"_angles.doc");
     int myCounter=-1;
-
     for (int mypsi=0;mypsi<360;mypsi += psi_sampling)
-        for (int i=0;i<=mysampling.no_redundant_sampling_points_angles.size()-1;i++)
-        {
+    	FOR_ALL_OBJECTS_IN_METADATA(mySFin)
+    	{
+            double x,y,z, rot, tilt, psi;
+            mySFin.getValue(MDL_ANGLEROT,rot);
+            mySFin.getValue(MDL_ANGLETILT,tilt);
+            mySFin.getValue(MDL_ANGLEPSI,psi);
+            mySFin.getValue(MDL_X,x);
+            mySFin.getValue(MDL_Y,y);
+            mySFin.getValue(MDL_Z,z);
             fn_temp.compose( ++myCounter,output_file);
-            mySF.addObject();
-            mySF.setValue(MDL_IMAGE,fn_temp);
-            mySF.setValue(MDL_ENABLED,1);
+            mySFout.addObject();
+            mySFout.setValue(MDL_IMAGE,fn_temp);
+            mySFout.setValue(MDL_ENABLED,1);
+            mySFout.setValue(MDL_ANGLEROT,rot);
+            mySFout.setValue(MDL_ANGLETILT,tilt);
+            mySFout.setValue(MDL_ANGLEPSI,psi+mypsi);
+            mySFout.setValue(MDL_X,x);
+            mySFout.setValue(MDL_Y,y);
+            mySFout.setValue(MDL_Z,z);
         }
-    fn_temp=output_file_root+".sel";
-    mySF.write(fn_temp);
+    mySFout.write(output_file_root+".doc");
+    unlink((output_file_root+"_angles.doc").c_str());
 }
 
 void ProgAngularProjectLibrary::createGroupSamplingFiles(void)
