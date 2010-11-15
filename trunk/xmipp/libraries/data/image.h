@@ -1728,12 +1728,12 @@ private:
       */
     void readData(FILE* fimg, int select_img, DataType datatype, unsigned long pad)
     {
-        //#define DEBUG
+        #define DEBUG
 #ifdef DEBUG
         std::cerr<<"entering readdata"<<std::endl;
         std::cerr<<" readData flag= "<<dataflag<<std::endl;
 #endif
-
+#undef DEBUG
         if ( dataflag < 1 )
             return;
 
@@ -1781,7 +1781,7 @@ private:
             //if memory already allocated use it (no resize allowed)
             data.coreAllocateReuse();
             myoffset = offset + select_img*(pagesize + pad);
-            //#define DEBUG
+            #define DEBUG
 
 #ifdef DEBUG
 
@@ -1790,7 +1790,7 @@ private:
             printf("DEBUG: Swap = %d  Pad = %ld  Offset = %ld\n", swap, pad, offset);
             printf("DEBUG: myoffset = %d select_img= %d \n", myoffset, select_img);
 #endif
-
+#undef DEBUG
             if (pagesize > pagemax)
                 page = (char *) askMemory(pagemax*sizeof(char));
             else
