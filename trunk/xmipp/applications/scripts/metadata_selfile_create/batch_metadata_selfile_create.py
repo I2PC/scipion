@@ -79,7 +79,7 @@ files = glob.glob(pattern)
 files.sort()
 ii.assign(1)
 x = XmippData.intP()
-n = XmippData.intP()
+n = XmippData.ulongP()
 
 nSize = 1
 for file in files:
