@@ -193,9 +193,9 @@ void Basis::changeToVoxels(GridVolume &vol_basis, MultidimArray<double> *vol_vox
             STARTINGZ(*vol_voxels) - zdiff,
             STARTINGY(*vol_voxels) - ydiff,
             STARTINGX(*vol_voxels) - xdiff,
-            FINISHINGZ(*vol_voxels) + Zdim - ZSIZE(*vol_voxels) - zdiff,
-            FINISHINGY(*vol_voxels) + Ydim - YSIZE(*vol_voxels) - ydiff,
-            FINISHINGX(*vol_voxels) + Xdim - XSIZE(*vol_voxels) - xdiff);
+            (int)(FINISHINGZ(*vol_voxels) + Zdim - ZSIZE(*vol_voxels) - zdiff),
+            (int)(FINISHINGY(*vol_voxels) + Ydim - YSIZE(*vol_voxels) - ydiff),
+            (int)(FINISHINGX(*vol_voxels) + Xdim - XSIZE(*vol_voxels) - xdiff));
         break;
     case splines:
         spatial_Bspline032voxels(vol_basis, vol_voxels, Zdim, Ydim, Xdim);

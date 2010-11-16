@@ -19,7 +19,7 @@ char*  askMemory(size_t memsize)
     return(ptr);
 }
 
-int  freeMemory(void* ptr, unsigned long memsize)
+int  freeMemory(void* ptr, size_t memsize)
 {
     if ( ptr == NULL )
         return(0);

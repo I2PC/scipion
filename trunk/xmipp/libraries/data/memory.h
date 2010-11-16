@@ -154,7 +154,7 @@ template <class T> void free_Tvolume(T *** &m, int nsl, int nsh,
  *
  * returns char* : a pointer to the memory (NULL on failure)
  */
-char* askMemory(unsigned long size);
+char* askMemory(size_t size);
 
 /** Frees allocated memory.
  * Adapted from Bsofts bfree
@@ -165,7 +165,7 @@ char* askMemory(unsigned long size);
  *
  * returns int: 0 = success, -1 = failure.
 */
-int freeMemory(void* ptr, unsigned long memsize);
+int freeMemory(void* ptr, size_t memsize);
 
 //@}
 #endif
