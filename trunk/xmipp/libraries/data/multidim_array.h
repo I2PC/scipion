@@ -61,7 +61,7 @@ extern std::string floatToString(float F, int _width, int _prec);
 
 /** Returns the last X valid logical index
  */
-#define FINISHINGX(v) ((v).xinit + (v).xdim - 1)
+#define FINISHINGX(v) ((int)((v).xinit + (v).xdim - 1))
 
 /** Returns the first Y valid logical index
  */
@@ -69,7 +69,7 @@ extern std::string floatToString(float F, int _width, int _prec);
 
 /** Returns the last Y valid logical index
  */
-#define FINISHINGY(v) ((v).yinit + (v).ydim - 1)
+#define FINISHINGY(v) ((int)((v).yinit + (v).ydim - 1))
 
 /** Returns the first Z valid logical index
  */
@@ -77,7 +77,7 @@ extern std::string floatToString(float F, int _width, int _prec);
 
 /** Returns the last Z valid logical index
  */
-#define FINISHINGZ(v) ((v).zinit + (v).zdim - 1)
+#define FINISHINGZ(v) ((int)((v).zinit + (v).zdim - 1))
 
 /** Access to X dimension (size)
  */

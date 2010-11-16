@@ -86,7 +86,7 @@ void Image< std::complex< double > >::castPage2Datatype(std::complex<double> * s
 }
 
 // Get size of datatype
-size_t  gettypesize(DataType type)
+size_t gettypesize(DataType type)
 {
     size_t   size;
 

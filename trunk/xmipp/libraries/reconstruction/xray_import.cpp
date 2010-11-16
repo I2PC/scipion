@@ -99,7 +99,8 @@ void ProgXrayImport::readAndCrop(const FileName &fn, Image<double> &I) const
         REPORT_ERROR(ERR_VALUE_EMPTY,(std::string)"Cannot find tilt angle in "+
                      fnBase+"-positions.txt");
     if (cropSize>0)
-        I().window(cropSize,cropSize,YSIZE(I())-cropSize-1,XSIZE(I())-cropSize-1);
+        I().window(cropSize,cropSize,
+        (int)(YSIZE(I())-cropSize-1),(int)(XSIZE(I())-cropSize-1));
     STARTINGX(I())=STARTINGY(I())=0;
     I.setTilt(tiltAngle);
 }
@@ -291,7 +292,8 @@ void ProgXrayImport::run()
         std::cerr << "Reading bad pixels mask from "+fnBPMask << "." << std::endl;
         bpMask.read(fnBPMask);
         if (cropSize>0)
-            bpMask().window(cropSize,cropSize,YSIZE(bpMask())-cropSize-1,XSIZE(bpMask())-cropSize-1);
+            bpMask().window(cropSize,cropSize,
+            (int)(YSIZE(bpMask())-cropSize-1),(int)(XSIZE(bpMask())-cropSize-1));
         STARTINGX(bpMask())=STARTINGY(bpMask())=0;
     }
 
