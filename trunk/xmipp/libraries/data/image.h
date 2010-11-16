@@ -1626,13 +1626,6 @@ private:
 
 			if (fseek(fimg, myoffset, SEEK_SET) == -1)
 				REPORT_ERROR(ERR_IO_SIZE,"readData: can not seek the file pointer");
-			//////////7
-			fread(page, 4, 1, fimg);
-			float * kk;
-			kk = (float *) page;
-			std::cerr << "kk " << " " << *kk << std::endl;
-			fseek(fimg, myoffset, SEEK_SET);
-			///////////
 			for (size_t myn = 0; myn < NSIZE(data); myn++) {
 				for (size_t myj = 0; myj < pagesize; myj += pagemax)//pagesize size of object
 				{
@@ -1644,11 +1637,6 @@ private:
 
 					//Read page from disc
 					fread(page, readsize, 1, fimg);
-					//////////7
-					//float * kk;
-					//kk = (float *) page;
-					//std::cerr << "kk " << " " << *kk << std::endl;
-					///////////
 					//swap per page
 					if (swap)
 						swapPage(page, readsize, datatype);
