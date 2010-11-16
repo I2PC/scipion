@@ -45,8 +45,6 @@
 class ProgAngularDiscreteAssign: public XmippMetadataProgram
 {
 public:
-    /** MPI version */
-    bool MPIversion;
     /** Selfile with the reference images */
     FileName fn_ref;
     /** Filename for the symmetry file */

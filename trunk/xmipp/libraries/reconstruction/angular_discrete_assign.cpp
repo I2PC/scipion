@@ -36,7 +36,6 @@
 // Empty constructor =======================================================
 ProgAngularDiscreteAssign::ProgAngularDiscreteAssign()
 {
-    MPIversion = false;
     produces_an_output = true;
     each_image_produces_an_output = false;
 }
