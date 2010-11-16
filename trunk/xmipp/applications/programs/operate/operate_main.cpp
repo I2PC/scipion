@@ -213,7 +213,7 @@ protected:
         addUsageLine("A simple Xmipp images calculator. Binary and unary operations");
         XmippMetadataProgram::defineParams();
         addParamsLine("== Binary operations: ==");
-        addParamsLine("or -plus <file_or_value>    :Sums two images, volumes or adds a numerical value to an image");
+        addParamsLine("   -plus <file_or_value>    :Sums two images, volumes or adds a numerical value to an image");
         addParamsLine("or -minus <file_or_value>   :Substracts two images, volumes or substracts a numerical value to an image");
         addParamsLine("or -mult <file_or_value>    :Multiplies two images, volumes, or multiplies per a given number");
         addParamsLine("or -divide <file_or_value>  :Divides two images, volumes, or divides per a given number");
