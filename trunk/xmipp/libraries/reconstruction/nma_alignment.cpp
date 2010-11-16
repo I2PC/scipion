@@ -167,8 +167,7 @@ FileName Prog_nma_alignment_prm::createDeformedPDB(int pyramidLevel) const
     command=(std::string)"xmipp_convert_pdb2vol"+
             " -i deformedPDB_"+fnRandom+".pdb"+
             " -size "+integerToString(ROUND(imgSize))+
-            " -sampling_rate " + floatToString((float)sampling_rate) +
-            " >& /dev/null";
+            " -sampling_rate " + floatToString((float)sampling_rate);
 
     if (do_centerPDB)
         command+=(std::string)" -centerPDB ";
@@ -184,6 +183,7 @@ FileName Prog_nma_alignment_prm::createDeformedPDB(int pyramidLevel) const
             command+=(std::string)" -fixed_Gaussian " + floatToString((float)sigmaGaussian)+ " -intensityColumn Bfactor ";
         }
     }
+    command+=" >& /dev/null";
 
     std::cout << time(NULL) << " Executing " << command << std::endl;
     system(command.c_str());
@@ -249,7 +249,7 @@ void Prog_nma_alignment_prm::performCompleteSearch(
     command=(std::string)" xmipp_angular_discrete_assign"+
             " -i downimg_"+fnRandom+".xmp"+
             " -ref "+fnRefSel+
-            " -oang angledisc_"+fnRandom+".txt"+
+            " -o angledisc_"+fnRandom+".txt"+
             " -psi_step 5 "+
             " -max_shift_change "+integerToString(ROUND((double)imgSize/
                                                   (10.0*pow(2.0,(double)pyramidLevel))))+
