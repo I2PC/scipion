@@ -47,12 +47,18 @@
 // Prototypes
 int cstregistration(struct cstregistrationStruct *Data);
 
+// Empty constructor =======================================================
+ProgAngularContinuousAssign::ProgAngularContinuousAssign()
+{
+    produces_an_output = true;
+    each_image_produces_an_output = false;
+}
+
 // Read arguments ==========================================================
 void ProgAngularContinuousAssign::readParams()
 {
+	XmippMetadataProgram::readParams();
     fn_ref = getParam("-ref");
-    fn_ang = getParam("-ang", "");
-    fn_out_ang = getParam("-oang");
     gaussian_DFT_sigma = getDoubleParam("-gaussian_Fourier");
     gaussian_Real_sigma = getDoubleParam("-gaussian_Real");
     weight_zero_freq = getDoubleParam("-zerofreq_weight");
@@ -66,9 +72,8 @@ void ProgAngularContinuousAssign::show()
 {
     if (!verbose)
         return;
+	XmippMetadataProgram::show();
     std::cout << "Reference volume:    " << fn_ref              << std::endl
-    << "Initial angle file:  " << fn_ang              << std::endl
-    << "Ouput angular file:  " << fn_out_ang          << std::endl
     << "Gaussian Fourier:    " << gaussian_DFT_sigma  << std::endl
     << "Gaussian Real:       " << gaussian_Real_sigma << std::endl
     << "Zero-frequency weight:"<< weight_zero_freq    << std::endl
@@ -82,9 +87,8 @@ void ProgAngularContinuousAssign::show()
 void ProgAngularContinuousAssign::defineParams()
 {
     addUsageLine("Make a continuous angular assignment");
+	XmippMetadataProgram::defineParams();
     addParamsLine("   -ref <volume>              : Reference volume");
-    addParamsLine("   -ang <angle_file>          : MetaData with the initial angles");
-    addParamsLine("   -oang <angle_file>         : MetaData with output angles");
     addParamsLine("  [-gaussian_Fourier <s=0.5>] : Weighting sigma in Fourier space");
     addParamsLine("  [-gaussian_Real    <s=0.5>] : Weighting sigma in Real space");
     addParamsLine("  [-zerofreq_weight  <s=0. >] : Zero-frequency weight");
@@ -96,24 +100,10 @@ void ProgAngularContinuousAssign::defineParams()
 // Produce side information ================================================
 void ProgAngularContinuousAssign::produce_side_info()
 {
-    // Read the initial angles
-    DF_initial.read(fn_ang);
-
     // Read the reference volume
     Image<double> V;
     V.read(fn_ref);
     V().setXmippOrigin();
-
-    // Resize the predicted vectors
-    int number_of_images = DF_initial.size();
-    current_image = 0;
-    image_name.resize(number_of_images);
-    predicted_rot.resize(number_of_images);
-    predicted_tilt.resize(number_of_images);
-    predicted_psi.resize(number_of_images);
-    predicted_shiftX.resize(number_of_images);
-    predicted_shiftY.resize(number_of_images);
-    predicted_cost.resize(number_of_images);
 
     // Prepare the masks in real space
     Mask_Params mask_Real3D;
@@ -165,121 +155,71 @@ void ProgAngularContinuousAssign::produce_side_info()
 }
 
 // Predict =================================================================
-double ProgAngularContinuousAssign::predict_angles(Image<double> &I,
-        double &shiftX, double &shiftY,
-        double &rot, double &tilt, double &psi)
+void ProgAngularContinuousAssign::processImage()
 {
-    double old_rot=rot;
-    double old_tilt=tilt;
-    double old_psi=psi;
-    double old_shiftX=shiftX;
-    double old_shiftY=shiftY;
+    // Read the image and take its angles from the Metadata
+    // if they are available. If not, take them from the header.
+    // If not, set them to 0.
+    MDRow mdrow;
+    mdIn.getRow(mdrow);
+    img.read(fnImg, true, -1, false, false, &mdrow, false);
+
+    double old_rot=img.rot();
+    double old_tilt=img.tilt();
+    double old_psi=img.psi();
+    double old_shiftX=img.Xoff();
+    double old_shiftY=img.Yoff();
 
     Matrix1D<double> pose(5);
-    pose(0) = rot;
-    pose(1) = tilt;
-    pose(2) = psi;
-    pose(3) = -shiftX; // The convention of shifts is different
-    pose(4) = -shiftY; // for Slavica
+    pose(0) = old_rot;
+    pose(1) = old_tilt;
+    pose(2) = old_psi;
+    pose(3) = -old_shiftX; // The convention of shifts is different
+    pose(4) = -old_shiftY; // for Slavica
 
-    mask_Real.apply_mask(I(), I());
+    mask_Real.apply_mask(img(), img());
 
     double cost = CSTSplineAssignment(reDFTVolume, imDFTVolume,
-                                      I(), mask_Fourier.get_cont_mask(), pose, max_no_iter);
+                                      img(), mask_Fourier.get_cont_mask(), pose, max_no_iter);
 
     Matrix2D<double> Eold, Enew;
     Euler_angles2matrix(old_rot,old_tilt,old_psi,Eold);
     Euler_angles2matrix(pose(0),pose(1),pose(2),Enew);
     double angular_change=Euler_distanceBetweenMatrices(Eold,Enew);
     double shift=sqrt(pose(3)*pose(3)+pose(4)*pose(4));
+    double new_rot=old_rot;
+    double new_tilt=old_tilt;
+    double new_psi=old_psi;
+    double new_shiftX=old_shiftX;
+    double new_shiftY=old_shiftY;
     if (angular_change<max_angular_change || max_angular_change<0)
     {
-        rot    =  pose(0);
-        tilt   =  pose(1);
-        psi    =  pose(2);
+    	new_rot    =  pose(0);
+    	new_tilt   =  pose(1);
+    	new_psi    =  pose(2);
     }
     else
         cost=-1;
     if (shift<max_shift || max_shift<0)
     {
-        shiftX = -pose(3);
-        shiftY = -pose(4);
+    	new_shiftX = -pose(3);
+    	new_shiftY = -pose(4);
     }
     else
         cost=-1;
-    if (cost<0)
-    {
-        rot=old_rot;
-        tilt=old_tilt;
-        psi=old_psi;
-        shiftX=old_shiftX;
-        shiftY=old_shiftY;
-    }
-    predicted_cost  [current_image] = cost;
-    image_name      [current_image] = I.name();
-    predicted_rot   [current_image] = rot;
-    predicted_tilt  [current_image] = tilt;
-    predicted_psi   [current_image] = psi;
-    predicted_shiftX[current_image] = shiftX;
-    predicted_shiftY[current_image] = shiftY;
-    current_image++;
 
-    return cost;
+    mdIn.setValue(MDL_ANGLEROT,  new_rot);
+    mdIn.setValue(MDL_ANGLETILT, new_tilt);
+    mdIn.setValue(MDL_ANGLEPSI,  new_psi);
+    mdIn.setValue(MDL_SHIFTX,    new_shiftX);
+    mdIn.setValue(MDL_SHIFTY,    new_shiftY);
+    mdIn.setValue(MDL_COST,      cost);
 }
 
-// Finish computations======================================================
-void ProgAngularContinuousAssign::finish_processing()
+// Finish processing ---------------------------------------------------------
+void ProgAngularContinuousAssign::postProcess()
 {
-    // Save predicted angles
-    MetaData DF;
-    Matrix1D<double> v(6);
-    int i = 0;
-    FOR_ALL_OBJECTS_IN_METADATA(DF_initial)
-    {
-        FileName fnImg;
-        DF_initial.getValue(MDL_IMAGE,fnImg);
-        DF.addObject();
-        DF.setValue(MDL_IMAGE,fnImg);
-        DF.setValue(MDL_ENABLED,1);
-        DF.setValue(MDL_ANGLEROT,predicted_rot[i]);
-        DF.setValue(MDL_ANGLETILT,predicted_tilt[i]);
-        DF.setValue(MDL_ANGLEPSI,predicted_psi[i]);
-        DF.setValue(MDL_SHIFTX,predicted_shiftX[i]);
-        DF.setValue(MDL_SHIFTY,predicted_shiftY[i]);
-        DF.setValue(MDL_COST,predicted_cost[i]);
-        i++;
-    }
-    DF.write(fn_out_ang);
-}
-
-// Run ---------------------------------------------------------------------
-void ProgAngularContinuousAssign::run()
-{
-    int Nimg=DF_initial.size();
-    if (verbose)
-        init_progress_bar(Nimg);
-    int key=0;
-    FOR_ALL_OBJECTS_IN_METADATA(DF_initial)
-    {
-        FileName fnImg;
-        DF_initial.getValue(MDL_IMAGE,fnImg);
-        Image<double> img;
-        img.read(fnImg);
-        img().setXmippOrigin();
-        double shiftX = img.Xoff();
-        double shiftY = img.Yoff();
-        double rot    = img.rot();
-        double tilt   = img.tilt();
-        double psi    = img.psi();
-        double cost = predict_angles(img, shiftX, shiftY, rot, tilt, psi);
-        key++;
-        if (verbose)
-            progress_bar(key);
-    }
-    if (verbose)
-        progress_bar(Nimg);
-
-    finish_processing();
+    mdIn.write(fn_out);
 }
 
 /* ------------------------------------------------------------------------- */

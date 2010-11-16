@@ -36,15 +36,11 @@
    @ingroup ReconsLibrary */
 //@{
 /** Predict Continuous Parameters. */
-class ProgAngularContinuousAssign: public XmippProgram
+class ProgAngularContinuousAssign: public XmippMetadataProgram
 {
 public:
     /** Filename of the reference volume */
     FileName fn_ref;
-    /** Filename for the output angles.*/
-    FileName fn_out_ang;
-    /** Filename for the input initial guess angles. */
-    FileName fn_ang;
     /** Gaussian weight sigma in Fourier space. */
     double   gaussian_DFT_sigma;
     /** Gaussian weight sigma in real space. */
@@ -64,29 +60,14 @@ public:
     MultidimArray<double> reDFTVolume;
     // Imaginary part of the Fourier transform
     MultidimArray<double> imDFTVolume;
-    // DocFile with the initial guess
-    MetaData         DF_initial;
     // Weighting mask in Fourier space
     Mask_Params      mask_Fourier;
     // Weighting mask in Real space
     Mask_Params      mask_Real;
-    // Number of images processed so far
-    int              current_image;
-    // Vector of image names
-    std::vector<std::string> image_name;
-    // Vector of predicted rotational angles
-    std::vector<double>   predicted_rot;
-    // Vector of predicted tilting angles
-    std::vector<double>   predicted_tilt;
-    // Vector of predicted psi angles
-    std::vector<double>   predicted_psi;
-    // Vector of predicted shiftX
-    std::vector<double>   predicted_shiftX;
-    // Vector of predicted shiftY
-    std::vector<double>   predicted_shiftY;
-    // Vector of predicted corr
-    std::vector<double>   predicted_cost;
 public:
+    /// Empty constructor
+    ProgAngularContinuousAssign();
+
     /// Read argument from command line
     void readParams();
 
@@ -103,16 +84,11 @@ public:
     /** Predict angles and shift.
         At the input the pose parameters must have an initial guess of the
         parameters. At the output they have the estimated pose.*/
-    double predict_angles(Image<double> &I,
-                          double &shiftX, double &shiftY,
-                          double &rot, double &tilt, double &psi);
+    void processImage();
 
     /** Finish processing.
         Close all output files. */
-    void finish_processing();
-    
-    /** Run the algorithm on all images */
-    void run();
+    void postProcess();
 };
 
 /** Assign pose parameters for 1 image.
