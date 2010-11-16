@@ -52,6 +52,7 @@ class std::string {};
 %ignore MultidimArray::setXdim;
 %ignore MultidimArray::setYdim;
 %ignore MultidimArray::setZdim;
+%ignore MultidimArray::setNdim;
 
 %ignore coreArrayByArray<>( const MultidimArray<T>& op1,
                             const MultidimArray<T>& op2,
