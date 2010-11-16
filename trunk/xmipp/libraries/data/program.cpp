@@ -410,6 +410,8 @@ void XmippMetadataProgram::run()
         {
             fnImg = fn_in;
             fnImgOut = fn_out;
+            mdIn.addObject();
+            mdIn.setValue(MDL_IMAGE,fnImg);
             processImage();
         }
         else
