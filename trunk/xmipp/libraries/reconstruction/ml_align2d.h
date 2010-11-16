@@ -50,8 +50,14 @@
 
 class ProgML2D;
 
+///******** Some macro definitions ****************
+///Useful macro for thread iteration and work over all refno
 #define FOR_ALL_THREAD_REFNO() \
 int refno, load; \
+while ((load = getThreadRefnoJob(refno)) > 0) \
+    for (int i = 0; i < load; i++, refno = (refno + 1) % model.n_ref)
+///Same macro as before, but without declaring refno and load
+#define FOR_ALL_THREAD_REFNO_NODECL() \
 while ((load = getThreadRefnoJob(refno)) > 0) \
     for (int i = 0; i < load; i++, refno = (refno + 1) % model.n_ref)
 
@@ -251,7 +257,7 @@ public:
 
     /** Thread stuff */
     int threads, threadTask;
-    barrier_t barrier, barrier2;
+    barrier_t barrier, barrier2, barrier3;
     pthread_t * th_ids;
     structThreadTasks * threads_d;
 
@@ -289,6 +295,14 @@ public:
     int refno_index, refno_count, refno_load, refno_load_param;
     // Which group does this image belong to in iteration 0 (generation of K references)
     int mygroup;
+
+    /** This are only useful for PreselectFastSignificant.
+     * Are declared here for thread visibility
+     */
+    double pfs_mindiff;
+    MultidimArray<double> pfs_maxweight;
+    MultidimArray<double> pfs_weight;
+    int pfs_count;
 
     //Some incremental stuff
     /** Model */

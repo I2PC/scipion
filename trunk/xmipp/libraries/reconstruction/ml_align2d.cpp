@@ -538,8 +538,6 @@ void ProgML2D::produceSideInfo2()
         MDref.setValue(MDL_ENABLED, 1);
     }
 
-
-
     model.setNRef(MDref.size());
     int refno = 0;
     FOR_ALL_OBJECTS_IN_METADATA(MDref)
@@ -555,7 +553,7 @@ void ProgML2D::produceSideInfo2()
         // Default start is half-half mirrored images
         model.mirror_fraction[refno] = (do_mirror ? 0.5 : 0.);
         // Already initialize the other groups Irefs with correct headers
-        refno++;
+        ++refno;
     }
 
     setNumberOfLocalImages();
@@ -901,6 +899,8 @@ void ProgML2D::preselectLimitedDirections(double &phi, double &theta)
 }
 
 // Pre-selection of significant refno and ipsi, based on current optimal translation =======
+
+
 void ProgML2D::preselectFastSignificant()
 {
 
@@ -911,13 +911,18 @@ void ProgML2D::preselectFastSignificant()
     // Initialize Msignificant to all zeros
     // TODO: check whether this is strictly necessary? Probably not...
     Msignificant.initZeros();
+    pfs_mindiff = 99.e99;
+    pfs_maxweight.resizeNoCopy((do_mirror ? 2 : 1), model.n_ref);
+    pfs_maxweight.initConstant(-99.e99);
+    pfs_weight.resizeNoCopy(model.n_ref, nr_psi * nr_flip);
+    pfs_weight.initZeros();
+    pfs_count = threads;
     awakeThreads(TH_PFS_REFNO, 0, refno_load_param);
 
 #ifdef DEBUG
 
     std::cerr<<"leaving preselectFastSignificant"<<std::endl;
 #endif
-
 }
 
 // Maximum Likelihood calculation for one image ============================================
@@ -927,7 +932,6 @@ void ProgML2D::expectationSingleImage(Matrix1D<double> &opt_offsets)
 #ifdef TIMING
     timer.tic(ESI_E1);
 #endif
-    // std::cerr << "************* IMAGE " << current_image << " ********" <<std::endl;
 
     MultidimArray<double> Maux, Mweight;
     MultidimArray<std::complex<double> > Faux;
@@ -1138,15 +1142,14 @@ void ProgML2D::expectationSingleImage(Matrix1D<double> &opt_offsets)
               - ddim2 * log(sqrt(PI * df * sigma_noise2)) + gammln(-df2)
               - gammln(df / 2.);
 
-    //
-    //        std::cerr << "\n======>>>> dLL: " << dLL << std::endl;
-    //        std::cerr << "sum_refw: " << sum_refw << std::endl;
-    //        std::cerr << "my_mindiff: " << my_mindiff << std::endl;
-    //        std::cerr << "sigma_noise2: " << sigma_noise2 << std::endl;
-    //        std::cerr << "ddim2: " << ddim2 << std::endl;
-    //       std::cerr << "dfsigma2: " << dfsigma2 << std::endl;
-    //        std::cerr << "wsum_corr: " << wsum_corr << std::endl;
-    //        std::cerr << "wsum_offset: " << wsum_offset << std::endl;
+//    std::cerr << "                             dLL: " << dLL << std::endl;
+//    std::cerr << "                        sum_refw: " << sum_refw << std::endl;
+//    std::cerr << "                      my_mindiff: " << my_mindiff << std::endl;
+//    std::cerr << "                    sigma_noise2: " << sigma_noise2 << std::endl;
+//    std::cerr << "                           ddim2: " << ddim2 << std::endl;
+//    //std::cerr << "                        dfsigma2: " << dfsigma2 << std::endl;
+//    std::cerr << "                       wsum_corr: " << wsum_corr << std::endl;
+//    std::cerr << "                     wsum_offset: " << wsum_offset << std::endl;
 
     LL += dLL;
 
@@ -1168,6 +1171,7 @@ void ProgML2D::createThreads()
 
     barrier_init(&barrier, threads + 1);
     barrier_init(&barrier2, threads + 1);
+    barrier_init(&barrier3, threads);//Main thread will not wait here
 
     for (int i = 0; i < threads; i++)
     {
@@ -1385,6 +1389,14 @@ void ProgML2D::doThreadReverseRotateReferenceRefno()
 
 }//close function doThreadReverseRotateReference
 
+///Some macro definitions for the following function
+#define IIFLIP (imirror * nr_nomirror_flips + iflip)
+#define IROT (IIFLIP * nr_psi + ipsi)
+#define IREFMIR ()
+#define WEIGHT (dAij(pfs_weight, refno, IROT))
+#define MAX_WEIGHT (dAij(pfs_maxweight, imirror, refno))
+#define MSIGNIFICANT (dAij(Msignificant, refno, IROT))
+
 void ProgML2D::doThreadPreselectFastSignificantRefno()
 {
     MultidimArray<double> Mtrans, Mflip;
@@ -1392,159 +1404,121 @@ void ProgML2D::doThreadPreselectFastSignificantRefno()
     double A2_plus_Xi2;
     int irot, irefmir, iiflip;
     Matrix1D<double> trans(2);
-    Matrix1D<double> weight(nr_psi * nr_flip);
-    double local_maxweight, local_mindiff;
+    double local_mindiff;
     double sigma_noise2 = model.sigma_noise * model.sigma_noise;
-
-    int nr_mirror = 1;
-
-    if (do_mirror)
-        nr_mirror++;
+    int nr_mirror = (do_mirror) ? 2 : 1;
 
     Mtrans.resize(dim, dim);
-
     Mtrans.setXmippOrigin();
-
     Mflip.resize(dim, dim);
-
     Mflip.setXmippOrigin();
 
+    local_mindiff = 99.e99;
+
+    // A. Translate image and calculate probabilities for every rotation
     FOR_ALL_THREAD_REFNO()
     {
         if (!limit_rot || pdf_directions[refno] > 0.)
         {
             A2_plus_Xi2 = 0.5 * (A2[refno] + Xi2);
-
             for (int imirror = 0; imirror < nr_mirror; imirror++)
             {
-                local_maxweight = -99.e99;
-                local_mindiff = 99.e99;
                 irefmir = imirror * model.n_ref + refno;
                 // Get optimal offsets
-                trans(0) = (double) allref_offsets[2 * irefmir];
-                trans(1) = (double) allref_offsets[2 * irefmir + 1];
+                trans(0) = allref_offsets[2 * irefmir];
+                trans(1) = allref_offsets[2 * irefmir + 1];
                 ropt = sqrt(trans(0) * trans(0) + trans(1) * trans(1));
                 // Do not trust optimal offsets if they are larger than 3*sigma_offset:
-
                 if (ropt > 3 * model.sigma_offset)
                 {
                     for (int iflip = 0; iflip < nr_nomirror_flips; iflip++)
-                    {
-                        iiflip = imirror * nr_nomirror_flips + iflip;
-
                         for (int ipsi = 0; ipsi < nr_psi; ipsi++)
-                        {
-                            irot = iiflip * nr_psi + ipsi;
-                            dAij(Msignificant, refno, irot) = 1;
-                        }
-                    }
+                            MSIGNIFICANT = 1;
                 }
                 else
                 {
-                    // Set priors
-
-                    if (imirror == 0)
-                        fracpdf = model.alpha_k[refno] * (1.
-                                                          - model.mirror_fraction[refno]);
-                    else
-                        fracpdf = model.alpha_k[refno]
-                                  * model.mirror_fraction[refno];
-
-                    pdf = fracpdf * A2D_ELEM(P_phi,
-                                             (int)trans(1),
-                                             (int)trans(0));
-
-                    // A. Translate image and calculate probabilities for every rotation
                     translate(LINEAR, Mtrans, Mimg, trans, true);
-
                     for (int iflip = 0; iflip < nr_nomirror_flips; iflip++)
                     {
-                        iiflip = imirror * nr_nomirror_flips + iflip;
-                        applyGeometry(LINEAR, Mflip, Mtrans, F[iiflip], IS_INV,
-                                      WRAP);
-
+                        applyGeometry(LINEAR, Mflip, Mtrans, F[IIFLIP], IS_INV, WRAP);
                         for (int ipsi = 0; ipsi < nr_psi; ipsi++)
                         {
-                            irot = iiflip * nr_psi + ipsi;
                             diff = A2_plus_Xi2;
                             FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY2D(Mflip)
                             {
-                                diff
-                                -= dAij(Mflip, i, j)
-                                   * dAij(mref[refno*nr_psi + ipsi], i, j);
+                                diff -= dAij(Mflip, i, j) * dAij(mref[refno*nr_psi + ipsi], i, j);
                             }
-
-                            weight(irot) = diff;
-
+                            WEIGHT = diff;
                             if (diff < local_mindiff)
                                 local_mindiff = diff;
                         }
                     }
+                }//close else if ropt > ...
+            }//close for imirror
+        }//close if !limit_rot ...
+    }//close for_all refno
 
-                    // B. Now that we have local_mindiff, calculate the weights
-                    for (int iflip = 0; iflip < nr_nomirror_flips; iflip++)
+    ///Update the real mindiff
+    pthread_mutex_lock(&update_mutex);
+    pfs_mindiff = XMIPP_MIN(pfs_mindiff, local_mindiff);
+    refno_index = refno_count = 0;
+    pthread_mutex_unlock(&update_mutex);
+
+    ///Wait for all threads update mindiff
+    barrier_wait(&barrier3);
+    local_mindiff = pfs_mindiff;
+
+    // B. Now that we have local_mindiff, calculate the weights
+    FOR_ALL_THREAD_REFNO_NODECL()
+    {
+
+      if (!limit_rot || pdf_directions[refno] > 0.)
+        {
+            for (int imirror = 0; imirror < nr_mirror; imirror++)
+            {
+                irefmir = imirror * model.n_ref + refno;
+                // Get optimal offsets
+                trans(0) = allref_offsets[2 * irefmir];
+                trans(1) = allref_offsets[2 * irefmir + 1];
+                ///Calculate max_weight for this refno-mirror combination
+                for (int iflip = 0; iflip < nr_nomirror_flips; iflip++)
+                    for (int ipsi = 0; ipsi < nr_psi; ipsi++)
                     {
-                        iiflip = imirror * nr_nomirror_flips + iflip;
-
-                        for (int ipsi = 0; ipsi < nr_psi; ipsi++)
+                        if (!MSIGNIFICANT)
                         {
-                            irot = iiflip * nr_psi + ipsi;
-                            diff = weight(irot);
-
+                            fracpdf = model.alpha_k[refno] *
+                                      (imirror ? model.mirror_fraction[refno] : (1.- model.mirror_fraction[refno]));
+                            pdf = fracpdf * A2D_ELEM(P_phi, (int)trans(1), (int)trans(0));
                             if (!model.do_student)
                             {
                                 // normal distribution
-                                aux = (diff - local_mindiff) / sigma_noise2;
+                                aux = (WEIGHT - local_mindiff) / sigma_noise2;
                                 // next line because of numerical precision of exp-function
-                                if (aux > 1000.)
-                                    weight(irot) = 0.;
-                                else
-                                    weight(irot) = exp(-aux) * pdf;
+                                WEIGHT = (aux > 1000. ? 0. : exp(-aux) * pdf);
                             }
                             else
                             {
                                 // t-student distribution
-                                aux = (dfsigma2 + 2. * diff) / (dfsigma2
-                                                                + 2. * local_mindiff);
-                                weight(irot) = pow(aux, df2) * pdf;
+                                aux = (dfsigma2 + 2. * WEIGHT) / (dfsigma2 + 2. * local_mindiff);
+                                WEIGHT = pow(aux, df2) * pdf;
                             }
-
-                            if (weight(irot) > local_maxweight)
-                                local_maxweight
-                                = weight(irot);
-                        } // close ipsi
-                    } // close iflip
-
-                    // C. Now that we know the weights for all rotations, set Msignificant
-                    for (int iflip = 0; iflip < nr_nomirror_flips; iflip++)
-                    {
-                        iiflip = imirror * nr_nomirror_flips + iflip;
-
-                        for (int ipsi = 0; ipsi < nr_psi; ipsi++)
-                        {
-                            irot = iiflip * nr_psi + ipsi;
-
-                            if (weight(irot) >= C_fast * local_maxweight)
-                                dAij(Msignificant, refno, irot) = 1;
-                            else
-                                dAij(Msignificant, refno, irot) = 0;
+                            if (WEIGHT > MAX_WEIGHT)
+                                MAX_WEIGHT = WEIGHT;
                         }
-                    }
-                } //endif ropt<3*sigma_offset
-            } //end loop imirror
+                    } // close ipsi
+                ///Now we have max_weight, set Msignificant values
+                for (int iflip = 0; iflip < nr_nomirror_flips; iflip++)
+                    for (int ipsi = 0; ipsi < nr_psi; ipsi++)
+                        if (!MSIGNIFICANT)
+                            MSIGNIFICANT = (WEIGHT >= C_fast * MAX_WEIGHT) ? 1. : 0.;
+            }//close for imirror
         } //endif limit_rot and pdf_directions
-
-    }//close while refno
+    } //end for_all refno
 
 }//close function doThreadPreselectFastSignificantRefno
 
 void ProgML2D::doThreadExpectationSingleImageRefno()
 {
-
-
-    //    if (current_image == 1)
-
-
     double diff;
     double aux, pdf, fracpdf, A2_plus_Xi2;
     double weight, stored_weight, weight2, my_maxweight;
@@ -1585,7 +1559,6 @@ void ProgML2D::doThreadExpectationSingleImageRefno()
         local_wsum_sc = local_wsum_sc2 = local_wsum_corr
                                          = local_wsum_offset = 0;
         // Initialize my weighted sums
-
         for (int ipsi = 0; ipsi < nr_psi; ipsi++)
         {
             output_refnoipsi = output_refno * nr_psi + ipsi;
@@ -1938,7 +1911,7 @@ void ProgML2D::expectation()
     //Some initializations
     opt_scale = 1., bgmean = 0.;
 
-    Msignificant.resize(model.n_ref, nr_psi * nr_flip);
+    Msignificant.resizeNoCopy(model.n_ref, nr_psi * nr_flip);
 
     static int img_done;
     if (verbose > 0 && current_block == 0) //when not iem current block is always 0
@@ -1970,9 +1943,9 @@ void ProgML2D::expectation()
             Mimg = img();
 
             ///FIXME: Remove this printing, only for debug
-            //            std::cerr << std::endl;
-            //            std::cerr << "   ====================>>> IMAGE: " << imgno << std::endl;
-            //            std::cerr << "                          fn_img: " << fn_img << std::endl;
+            //std::cerr << std::endl;
+            //std::cerr << "   ====================>>> ITER_IMAGE: " << iter << "_" << imgno << std::endl;
+            //std::cerr << "                          fn_img: " << fn_img << std::endl;
             //            std::cerr << "                             Xi2: " << Xi2 << std::endl;
 
             // These two parameters speed up expectationSingleImage
@@ -2042,14 +2015,11 @@ void ProgML2D::expectation()
             }
 
             // Output docfile
+            opt_flip = 0.;
             if (-opt_psi > 360.)
             {
                 opt_psi += 360.;
                 opt_flip = 1.;
-            }
-            else
-            {
-                opt_flip = 0.;
             }
 
             dAij(docfiledata,IMG_LOCAL_INDEX,0)
@@ -2093,10 +2063,12 @@ void ProgML2D::expectation()
         //        sumfracweight = 0.;
 
         ///FIXME: Remove this printing, only for debug
-        //        std::cerr << "                              LL: " << LL << std::endl;
-        //        std::cerr << "                wsum_sigma_noise: " << wsum_sigma_noise << std::endl;
-        //        std::cerr << "                sum_sigma_offset: " << wsum_sigma_offset << std::endl;
-        //        std::cerr << "                   sumfracweight: " << wsum_sigma_offset << std::endl << std::endl;
+       // std::cerr << "                              LL: " << LL << std::endl;
+        //std::cerr << "                  opt_offsets(0): " << opt_offsets(0) << std::endl;
+        //std::cerr << "                  opt_offsets(1): " << opt_offsets(1) << std::endl;
+        //std::cerr << "                wsum_sigma_noise: " << wsum_sigma_noise << std::endl;
+        //std::cerr << "                sum_sigma_offset: " << wsum_sigma_offset << std::endl;
+        //std::cerr << "                   sumfracweight: " << wsum_sigma_offset << std::endl;
         //
 
     }//close for all images
