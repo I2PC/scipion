@@ -105,6 +105,7 @@ public:
     double hmin; // minimum value of the histogram
     double hmax; // maximum value of the histogram
     double step_size; // size of step
+    double istep_size;
     int no_samples; // No. of points inside the histogram
 
     /** Empty constructor
@@ -233,11 +234,14 @@ public:
     void val2index(double v, int& i) const
     {
         if (v == hmax)
-            i = stepNo() - 1;
+            i = XSIZE(*this) - 1;
         else
-            i = (int) FLOOR((v - hmin) / step_size);
+        {
+        	double aux=(v - hmin) * istep_size;
+            i = (int) FLOOR(aux);
+        }
 
-        if (i < 0 || i >= stepNo())
+        if (i < 0 || i >= XSIZE(*this))
             i = -1;
     }
 

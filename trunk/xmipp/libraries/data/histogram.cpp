@@ -39,6 +39,7 @@ void Histogram1D::clear()
     hmin = 0;
     hmax = 0;
     step_size = 0;
+    istep_size = 0;
     no_samples = 0;
     MultidimArray<double>::clear();
 }
@@ -52,6 +53,7 @@ Histogram1D & Histogram1D::operator =(const Histogram1D &H)
         hmin       = H.hmin;
         hmax       = H.hmax;
         step_size  = H.step_size;
+        istep_size = H.istep_size;
         no_samples = H.no_samples;
     }
     return *this;
@@ -68,6 +70,7 @@ void Histogram1D::init(double min_val, double max_val, int n_steps)
     hmin = min_val;
     hmax = max_val;
     step_size = (double)(max_val - min_val) / (double) n_steps; // CO: n_steps-1->n_steps
+    istep_size = 1.0/step_size;
     MultidimArray<double>::initZeros(n_steps);
     no_samples = 0;
 }
