@@ -59,7 +59,8 @@ void Prog_align2d_prm::read(int argc, char **argv)
     Ro = textToInteger(getParameter(argc, argv, "-Ro", "0"));
 
     //get image dimensions
-    int Xdim, Ydim, Zdim, Ndim;
+    int Xdim, Ydim, Zdim;
+    unsigned long Ndim;
     SF.firstObject();
     FileName fnImg;
     SF.getValue(MDL_IMAGE,fnImg);

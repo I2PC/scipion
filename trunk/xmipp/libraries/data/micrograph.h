@@ -83,8 +83,8 @@ protected:
     FileName                fn_inf;
     int                     X_window_size;
     int                     Y_window_size;
-    int                     Xdim;
-    int                     Ydim,Zdim,Ndim;
+    int                     Xdim,Ydim,Zdim;
+    unsigned long           Ndim;
     int                     datatype;
     int                     swapbyte;
     //int                     __depth;

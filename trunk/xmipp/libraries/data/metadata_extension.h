@@ -19,18 +19,19 @@ void getStatistics(MetaData &MT, Image<double> & _ave, Image<double> & _sd, doub
  */
 
 static int null_object=-1;
+static unsigned long null_objectLong=0;
 
 void SingleImgSize(const FileName &filename, int &Xdim, int &Ydim=null_object,
              int &Zdim=null_object,
-             int &Ndim=null_object);
+             unsigned long &Ndim=null_objectLong);
 
 void ImgSize(const MetaData &MD, int &Xdim, int &Ydim=null_object,
              int &Zdim=null_object,
-             int &Ndim=null_object);
+             unsigned long &Ndim=null_objectLong);
 
 void ImgSize(const FileName &filename, int &Xdim, int &Ydim=null_object,
              int &Zdim=null_object,
-             int &Ndim=null_object);
+             unsigned long &Ndim=null_objectLong);
 
 int MaxFileNameLength(MetaData &MD);
 

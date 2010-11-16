@@ -61,7 +61,7 @@ extern std::string floatToString(float F, int _width, int _prec);
 
 /** Returns the last X valid logical index
  */
-#define FINISHINGX(v) ((int)((v).xinit + (v).xdim - 1))
+#define FINISHINGX(v) ((v).xinit + (v).xdim - 1)
 
 /** Returns the first Y valid logical index
  */
@@ -69,7 +69,7 @@ extern std::string floatToString(float F, int _width, int _prec);
 
 /** Returns the last Y valid logical index
  */
-#define FINISHINGY(v) ((int)((v).yinit + (v).ydim - 1))
+#define FINISHINGY(v) ((v).yinit + (v).ydim - 1)
 
 /** Returns the first Z valid logical index
  */
@@ -77,7 +77,7 @@ extern std::string floatToString(float F, int _width, int _prec);
 
 /** Returns the last Z valid logical index
  */
-#define FINISHINGZ(v) ((int)((v).zinit + (v).zdim - 1))
+#define FINISHINGZ(v) ((v).zinit + (v).zdim - 1)
 
 /** Access to X dimension (size)
  */
@@ -166,10 +166,10 @@ extern std::string floatToString(float F, int _width, int _prec);
  * @endcode
  */
 #define FOR_ALL_DIRECT_NZYX_ELEMENTS_IN_MULTIDIMARRAY(V) \
-    for (size_t l=0; l<NSIZE(V); l++) \
-        for (size_t k=0; k<ZSIZE(V); k++) \
-            for (size_t i=0; i<YSIZE(V); i++)      \
-                for (size_t j=0; j<XSIZE(V); j++)
+    for (unsigned long l=0; l<NSIZE(V); l++) \
+        for (int k=0; k<ZSIZE(V); k++) \
+            for (int i=0; i<YSIZE(V); i++)      \
+                for (int j=0; j<XSIZE(V); j++)
 
 /** For all direct elements in the array
  *
@@ -185,7 +185,7 @@ extern std::string floatToString(float F, int _width, int _prec);
  * @endcode
  */
 #define FOR_ALL_NZYX_ELEMENTS_IN_MULTIDIMARRAY(V) \
-    for (int l=0; l<NSIZE(V); l++) \
+    for (unsigned long l=0; l<NSIZE(V); l++) \
         for (int k=STARTINGZ(V); k<=FINISHINGZ(V); k++) \
             for (int i=STARTINGY(V); i<=FINISHINGY(V); i++)     \
                 for (int j=STARTINGX(V); j<=FINISHINGX(V); j++)
@@ -212,7 +212,7 @@ extern std::string floatToString(float F, int _width, int _prec);
 /** Access to a direct element.
  * v is the array, k is the slice (Z), i is the Y index and j is the X index.
  */
-#define DIRECT_A3D_ELEM(v,k,i,j) ((v).data[(k)*YXSIZE(v)+((i)*XSIZE(v))+(j)])
+#define DIRECT_A3D_ELEM(v,k,i,j) ((v).data[YXSIZE(v)*(k)+((i)*XSIZE(v))+(j)])
 
 /** A short alias for the previous function.
  *
@@ -296,9 +296,9 @@ extern std::string floatToString(float F, int _width, int _prec);
  * @endcode
  */
 #define FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY3D(V) \
-    for (size_t k=0; k<ZSIZE(V); k++) \
-        for (size_t i=0; i<YSIZE(V); i++) \
-            for (size_t j=0; j<XSIZE(V); j++)
+    for (int k=0; k<ZSIZE(V); k++) \
+        for (int i=0; i<YSIZE(V); i++) \
+            for (int j=0; j<XSIZE(V); j++)
 
 /** Access to a direct element of a matrix.
  * v is the array, i and j define the element v_ij.
@@ -474,8 +474,8 @@ extern std::string floatToString(float F, int _width, int _prec);
  * @endcode
  */
 #define FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY2D(m) \
-    for (size_t i=0; i<YSIZE(m); i++) \
-        for (size_t j=0; j<XSIZE(m); j++)
+    for (int i=0; i<YSIZE(m); i++) \
+        for (int j=0; j<XSIZE(m); j++)
 
 /** Vector element: Physical access
  *
@@ -558,7 +558,7 @@ extern std::string floatToString(float F, int _width, int _prec);
  * @endcode
  */
 #define FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY1D(v) \
-    for (size_t i=0; i<v.xdim; i++)
+    for (int i=0; i<v.xdim; i++)
 //@}
 
 // Forward declarations ====================================================
@@ -598,13 +598,13 @@ public:
     unsigned long ndim;
 
     // Number of elements in Z
-    size_t zdim;
+    int zdim;
 
     // Number of elements in Y
-    size_t ydim;
+    int ydim;
 
     // Number of elements in X
-    size_t xdim;
+    int xdim;
 
     // Number of elements in YX
     size_t yxdim;
@@ -648,7 +648,7 @@ public:
      * The Size constructor creates an array with memory associated,
      * and fills it with zeros.
      */
-    MultidimArray(unsigned long int Ndim, size_t Zdim, size_t Ydim, size_t Xdim)
+    MultidimArray(unsigned long int Ndim, int Zdim, int Ydim, int Xdim)
     {
         coreInit();
         coreAllocate(Ndim, Zdim, Ydim, Xdim);
@@ -658,30 +658,30 @@ public:
      * The Size constructor creates an array with memory associated,
      * and fills it with zeros.
      */
-    MultidimArray( size_t Zdim, size_t Ydim, size_t Xdim)
+    MultidimArray( int Zdim, int Ydim, int Xdim)
     {
         coreInit();
-        coreAllocate((size_t)1, Zdim, Ydim, Xdim);
+        coreAllocate(1UL, Zdim, Ydim, Xdim);
     }
 
     /** Size constructor with 2D size.
      * The Size constructor creates an array with memory associated,
      * and fills it with zeros.
      */
-    MultidimArray(size_t Ydim, size_t Xdim)
+    MultidimArray(int Ydim, int Xdim)
     {
         coreInit();
-        coreAllocate(1, 1, Ydim, Xdim);
+        coreAllocate(1UL, 1, Ydim, Xdim);
     }
 
     /** Size constructor with 1D size.
      * The Size constructor creates an array with memory associated,
      * and fills it with zeros.
      */
-    MultidimArray(size_t Xdim)
+    MultidimArray(int Xdim)
     {
         coreInit();
-        coreAllocate(1, 1, 1, Xdim);
+        coreAllocate(1UL, 1, 1, Xdim);
     }
 
     /** Copy constructor
@@ -760,7 +760,7 @@ public:
 
     /** Core allocate with dimensions.
      */
-    void coreAllocate(size_t _ndim, size_t _zdim, size_t _ydim, size_t _xdim)
+    void coreAllocate(int _ndim, int _zdim, int _ydim, int _xdim)
     {
         if (_ndim <= 0 || _zdim <= 0 || _ydim<=0 || _xdim<=0)
         {
@@ -774,9 +774,9 @@ public:
         zdim=_zdim;
         ydim=_ydim;
         xdim=_xdim;
-        yxdim=ydim*xdim;
-        zyxdim=zdim*yxdim;
-        nzyxdim=ndim*zyxdim;
+        yxdim=(size_t)ydim*xdim;
+        zyxdim=yxdim*zdim;
+        nzyxdim=zyxdim*ndim;
 
         coreAllocate();
     }
@@ -904,7 +904,7 @@ public:
       *  Note that the dataArray is NOT resized. This should be done separately with coreAllocate()
       *
       */
-    void setDimensions(size_t Xdim, size_t Ydim, size_t Zdim, size_t Ndim)
+    void setDimensions(int Xdim, int Ydim, int Zdim, int Ndim)
     {
         ndim=Ndim;
         zdim=Zdim;
@@ -920,10 +920,10 @@ public:
      *  Note that the dataArray is NOT resized. This should be done separately with coreAllocate()
      *
      */
-    void setNdim(size_t Ndim)
+    void setNdim(int Ndim)
     {
         ndim = Ndim;
-        nzyxdim=ndim*zyxdim;
+        nzyxdim=zyxdim*ndim;
     }
 
     /** Sets new Z dimension.
@@ -931,11 +931,11 @@ public:
      *  Note that the dataArray is NOT resized. This should be done separately with coreAllocate()
      *
      */
-    void setZdim(size_t Zdim)
+    void setZdim(int Zdim)
     {
         zdim = Zdim;
-        zyxdim=zdim*yxdim;
-        nzyxdim=ndim*zyxdim;
+        zyxdim=yxdim*zdim;
+        nzyxdim=zyxdim*ndim;
     }
 
     /** Sets new Y dimension.
@@ -943,12 +943,12 @@ public:
      *  Note that the dataArray is NOT resized. This should be done separately with coreAllocate()
      *
      */
-    void setYdim(size_t Ydim)
+    void setYdim(int Ydim)
     {
         ydim = Ydim;
-        yxdim=ydim*xdim;
-        zyxdim=zdim*yxdim;
-        nzyxdim=ndim*zyxdim;
+        yxdim=(size_t)ydim*xdim;
+        zyxdim=yxdim*zdim;
+        nzyxdim=zyxdim*ndim;
     }
 
     /** Sets new X dimension.
@@ -956,12 +956,12 @@ public:
       *  Note that the dataArray is NOT resized. This should be done separately with coreAllocate()
       *
       */
-    void setXdim(size_t Xdim)
+    void setXdim(int Xdim)
     {
         xdim = Xdim;
-        yxdim=ydim*xdim;
-        zyxdim=zdim*yxdim;
-        nzyxdim=ndim*zyxdim;
+        yxdim=(size_t)ydim*xdim;
+        zyxdim=yxdim*zdim;
+        nzyxdim=zyxdim*ndim;
     }
 
     /** Copy the shape parameters
@@ -1022,9 +1022,9 @@ public:
         }
 
         // Ask for memory
-        size_t YXdim=Ydim*Xdim;
-        size_t ZYXdim=Zdim*YXdim;
-        size_t NZYXdim=Ndim*ZYXdim;
+        size_t YXdim=(size_t)Ydim*Xdim;
+        size_t ZYXdim=YXdim*Zdim;
+        size_t NZYXdim=ZYXdim*Ndim;
         FILE*    new_mFd;
 
         T * new_data;

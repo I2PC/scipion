@@ -134,7 +134,8 @@ public:
             }
             else if (type == "vol")
             {
-                int Xdim, Ydim, Zdim, Ndim;
+                int Xdim, Ydim, Zdim;
+                unsigned long Ndim;
                 ImgSize(SF, Xdim, Ydim, Zdim, Ndim);
                 if (Zdim!=1 || Ndim!=1)
                     REPORT_ERROR(ERR_MULTIDIM_DIM,

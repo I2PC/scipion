@@ -403,14 +403,15 @@ void ProgMLTomo::produceSideInfo()
 {
 
     FileName                    fn_img, fn_tmp, fn_base, fn_tmp2;
-    Image<double>              vol;
-    Matrix1D<double>          offsets(3), dum;
-    MultidimArray<double>      Maux, Maux2;
+    Image<double>               vol;
+    Matrix1D<double>            offsets(3), dum;
+    MultidimArray<double>       Maux, Maux2;
     MultidimArray<std::complex<double> >  Faux;
     Matrix1D<int>               center(3);
     MultidimArray<int>          radial_count;
     double                      av;
-    int                         xdim, ydim, zdim, ndim;
+    int                         xdim, ydim, zdim;
+    unsigned long 				ndim;
 
 #ifdef  DEBUG
 

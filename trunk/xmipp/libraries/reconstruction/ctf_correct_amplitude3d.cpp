@@ -75,7 +75,7 @@ void CorrectAmplitude3DParams::produceSideInfo()
     ctfdat.getValue(MDL_CTFMODEL,fnCTF);
     Image<double> V;
     V.read(fnVol);
-    int Ndim;
+    unsigned long Ndim;
     V.getDimensions(Xdim,Ydim,Zdim,Ndim);
 }
 

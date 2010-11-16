@@ -83,16 +83,17 @@ void Prog_parameters::get_input_size(int &Zdim, int &Ydim, int &Xdim)
 {
     Image<double> I;
     int dum;
+    unsigned long dum2;
     if (fn_in.isMetaData())
     {
         MetaData SF;
         SF.read(fn_in);
-        ImgSize(SF, Xdim, Ydim, dum, dum);
+        ImgSize(SF, Xdim, Ydim, dum, dum2);
     }
     else
     {
         I.read(fn_in);
-        I.getDimensions(Xdim, Ydim, Zdim, dum);
+        I.getDimensions(Xdim, Ydim, Zdim, dum2);
     }
 }
 
