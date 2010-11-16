@@ -16,6 +16,7 @@ namespace std {
 // Pointers to base classes
 %include cpointer.i
 %pointer_class(int,intP);
+%pointer_class(unsigned long,ulongP);
 %pointer_class(char,charP);
 %pointer_class(double,doubleP);
 %pointer_class(float,floatP);
