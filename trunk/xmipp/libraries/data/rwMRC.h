@@ -134,6 +134,7 @@ int readMRC(int img_select, bool isStack=false)
     if(isStack)
     {
         _nDim = (size_t) _zDim;
+std::cerr << "ndim, zdim " << _nDim << " " << _zDim << std::endl;
         _zDim = 1;
         replaceNsize=_nDim;
         std::stringstream Num;
@@ -142,7 +143,7 @@ int readMRC(int img_select, bool isStack=false)
         {
             Num  << img_select;
             Num2 << _nDim;
-            REPORT_ERROR(ERR_INDEX_OUTOFBOUNDS,(std::string)"readImagic: Image number " + Num.str() +
+            REPORT_ERROR(ERR_INDEX_OUTOFBOUNDS,(std::string)"readmrc: Image number " + Num.str() +
                          " exceeds stack size " + Num2.str());
         }
     }
