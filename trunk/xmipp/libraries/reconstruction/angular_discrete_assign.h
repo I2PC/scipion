@@ -47,12 +47,8 @@ class ProgAngularDiscreteAssign: public XmippMetadataProgram
 public:
     /** MPI version */
     bool MPIversion;
-    /** FileName with the images to be assigned */
-    FileName fn_exp;
     /** Selfile with the reference images */
     FileName fn_ref;
-    /** Filename for the output angles.*/
-    FileName fn_out_ang;
     /** Filename for the symmetry file */
     FileName fn_sym;
     /** Maximum projection change.
@@ -89,8 +85,6 @@ public:
     /** 5D search, instead of 3D+2D */
     bool search5D;
 public:
-    // Docfile with the experimental images
-    MetaData DFexp;
     // Number of subbands
     int SBNo;
     // Subband size
@@ -141,7 +135,7 @@ public:
         The list size is the total number of reference images. For each
         image the list is true if it is still a candidate.*/
     void build_ref_candidate_list(const Image<double> &I,
-                                  std::vector<bool> &candidate_list, std::vector<double> &cumulative_corr,
+                                  bool * candidate_list, std::vector<double> &cumulative_corr,
                                   std::vector<double> &sumxy);
 
     /** Refine candidate list via correlation. Given a projection image and the
@@ -150,7 +144,7 @@ public:
 
         m is the subband being studied*/
     void refine_candidate_list_with_correlation(int m,
-            Matrix1D<double> &dwt, std::vector<bool> &candidate_list,
+            Matrix1D<double> &dwt, bool * candidate_list,
             std::vector<double> &cumulative_corr,
             Matrix1D<double> &x_power,
             std::vector<double> &sumxy, double th = 50);

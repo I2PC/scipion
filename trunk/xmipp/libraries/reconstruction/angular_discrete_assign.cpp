@@ -37,14 +37,15 @@
 ProgAngularDiscreteAssign::ProgAngularDiscreteAssign()
 {
     MPIversion = false;
+    produces_an_output = true;
+    each_image_produces_an_output = false;
 }
 
 // Read arguments ==========================================================
 void ProgAngularDiscreteAssign::readParams()
 {
+    XmippMetadataProgram::readParams();
     fn_ref = getParam("-ref");
-    fn_exp = getParam("-i");
-    fn_out_ang = getParam("-oang");
     fn_sym = getParam("-sym");
     max_proj_change = getDoubleParam("-max_proj_change");
     max_psi_change = getDoubleParam("-max_psi_change");
@@ -70,9 +71,8 @@ void ProgAngularDiscreteAssign::show()
 {
     if (!verbose)
         return;
+    XmippMetadataProgram::show();
     std::cout << "Reference images: " << fn_ref << std::endl
-    << "Input angular file: " << fn_exp << std::endl
-    << "Ouput angular file: " << fn_out_ang << std::endl
     << "Max proj change: " << max_proj_change << std::endl
     << "Max psi change: " << max_psi_change << " step: " << psi_step << std::endl
     << "Max shift change: " << max_shift_change << " step: " << shift_step << std::endl
@@ -89,16 +89,15 @@ void ProgAngularDiscreteAssign::show()
 void ProgAngularDiscreteAssign::defineParams()
 {
     addUsageLine("Make a projection assignment using wavelets on a discrete library of projections");
+    XmippMetadataProgram::defineParams();
     addParamsLine("   -ref <selfile>             : Selfile with the reference images");
-    addParamsLine("   -i <docfile>               : Docfile with input angles");
-    addParamsLine("   -oang <angle_file>         : DocFile with output angles");
     addParamsLine("  [-sym <symmetry_file=\"\">] : Symmetry file if any");
-    addParamsLine("  [-max_proj_change <ang=-1>] : Maximum change allowed in rot-tilt");
-    addParamsLine("  [-max_psi_change <ang=-1>]  : Maximum change allowed in psi");
     addParamsLine("  [-max_shift_change <r=0>]   : Maximum change allowed in shift");
     addParamsLine("  [-psi_step <ang=5>]         : Step in psi in degrees");
     addParamsLine("  [-shift_step <r=1>]         : Step in shift in pixels");
     addParamsLine("==+Extra parameters==");
+    addParamsLine("  [-max_proj_change <ang=-1>] : Maximum change allowed in rot-tilt");
+    addParamsLine("  [-max_psi_change <ang=-1>]  : Maximum change allowed in psi");
     addParamsLine("  [-keep <th=50>]             : How many images are kept each round (%)");
     addParamsLine("  [-smin <s=1>]               : Finest scale to consider (lowest value=0)");
     addParamsLine("  [-smax <s=-1>]              : Coarsest scale to consider (highest value=log2(Xdim))");
@@ -127,39 +126,30 @@ void ProgAngularDiscreteAssign::produce_side_info()
     distance_prm.fn_sym = fn_sym;
     distance_prm.produce_side_info();
 
-    // Read the experimental images
-    DFexp.read(fn_exp);
-    DFexp.firstObject();
-
     // Read the angle file
-    MetaData DF;
-    DF.read(fn_ref.withoutExtension()+"_angles.doc");
-    DF.firstObject();
-    rot.resize(DF.size());
-    tilt.resize(DF.size());
+    rot.resize(SF_ref.size());
+    tilt.resize(SF_ref.size());
     int i = 0;
-    FOR_ALL_OBJECTS_IN_METADATA(DF)
+    FOR_ALL_OBJECTS_IN_METADATA(SF_ref)
     {
-        DF.getValue(MDL_ANGLEROT, rot[i]);
-        DF.getValue(MDL_ANGLETILT, tilt[i]);
+        SF_ref.getValue(MDL_ANGLEROT, rot[i]);
+        SF_ref.getValue(MDL_ANGLETILT, tilt[i]);
         i++;
     }
 
     // Build mask for subbands
-    int Ydim, Xdim;
-    ImgSize(SF_ref,Ydim, Xdim);
-    Mask_no.resize(Ydim, Xdim);
+    Mask_no.resize(refYdim, refXdim);
     Mask_no.initConstant(-1);
 
     if (smax == -1)
-        smax = Get_Max_Scale(Ydim) - 3;
+        smax = Get_Max_Scale(refYdim) - 3;
     SBNo = (smax - smin + 1) * 3 + 1;
     SBsize.resize(SBNo);
 
     Mask_Params Mask(INT_MASK);
     Mask.type = BINARY_DWT_CIRCULAR_MASK;
-    Mask.R1 = CEIL((double)Xdim / 2.0);
-    Mask.resize(Ydim, Xdim);
+    Mask.R1 = CEIL((double)refXdim / 2.0);
+    Mask.resize(refYdim, refXdim);
 
     int m = 0, s;
     for (s = smax; s >= smin; s--)
@@ -210,18 +200,15 @@ void ProgAngularDiscreteAssign::produce_library()
     library_power.initZeros(number_of_imgs, SBNo);
 
     if (verbose)
-        {
-            std::cerr << "Generating reference library ...\n";
-            init_progress_bar(number_of_imgs);
-        }
+    {
+        std::cerr << "Generating reference library ...\n";
+        init_progress_bar(number_of_imgs);
+    }
     int n = 0, nstep = XMIPP_MAX(1, number_of_imgs / 60); // For progress bar
     FOR_ALL_OBJECTS_IN_METADATA(SF_ref)
     {
         FileName fn_img;
         SF_ref.getValue(MDL_IMAGE,fn_img);
-        if (fn_img=="")
-            break;
-        //Old (no metadata): I.read(fn_img, false, false, true, true);
         I.read(fn_img, true, -1, true, true);
         library_name.push_back(I.name());
 
@@ -251,11 +238,10 @@ void ProgAngularDiscreteAssign::produce_library()
 
 // Build candidate list ------------------------------------------------------
 void ProgAngularDiscreteAssign::build_ref_candidate_list(const Image<double> &I,
-        std::vector<bool> &candidate_list, std::vector<double> &cumulative_corr,
+        bool *candidate_list, std::vector<double> &cumulative_corr,
         std::vector<double> &sumxy)
 {
     int refNo = rot.size();
-    candidate_list.resize(refNo);
     cumulative_corr.resize(refNo);
     sumxy.resize(refNo);
     for (int i = 0; i < refNo; i++)
@@ -273,7 +259,6 @@ void ProgAngularDiscreteAssign::build_ref_candidate_list(const Image<double> &I,
             std::cout << "(" << I.rot() << "," << I.tilt() << ") and ("
             << rot[i] << "," << tilt[i] << ") --> " << ang_distance << std::endl;
 #endif
-
         }
     }
 }
@@ -282,7 +267,7 @@ void ProgAngularDiscreteAssign::build_ref_candidate_list(const Image<double> &I,
 void ProgAngularDiscreteAssign::refine_candidate_list_with_correlation(
     int m,
     Matrix1D<double> &dwt,
-    std::vector<bool> &candidate_list, std::vector<double> &cumulative_corr,
+    bool *candidate_list, std::vector<double> &cumulative_corr,
     Matrix1D<double> &x_power, std::vector<double> &sumxy,
     double th)
 {
@@ -290,18 +275,19 @@ void ProgAngularDiscreteAssign::refine_candidate_list_with_correlation(
     hist.init(-1, 1, 201);
 
     int dimp = SBsize(m);
-    int imax = candidate_list.size();
-    MultidimArray<double> *library_m = library[m];
+    int imax = rot.size();
+    const MultidimArray<double> &library_m = *(library[m]);
     for (int i = 0; i < imax; i++)
     {
         if (candidate_list[i])
         {
             double sumxyp = 0.0;
             for (int j = 0; j < dimp; j++)
-                sumxyp += dwt(j) * (*library_m)(i, j);
+                sumxyp += VEC_ELEM(dwt,j) * DIRECT_A2D_ELEM(library_m,i, j);
             sumxy[i] += sumxyp;
 
-            double corr = sumxy[i] / sqrt(library_power(i, m) * x_power(m));
+            double corr = sumxy[i] / sqrt(DIRECT_A2D_ELEM(library_power,i, m) *
+            		                      VEC_ELEM(x_power,m));
             cumulative_corr[i] = corr;
             hist.insert_value(corr);
 
@@ -316,8 +302,8 @@ void ProgAngularDiscreteAssign::refine_candidate_list_with_correlation(
 
     // Remove all those projections below the threshold
     for (int i = 0; i < imax; i++)
-        if (candidate_list[i] && cumulative_corr[i] < corr_th)
-            candidate_list[i] = false;
+        if (candidate_list[i])
+        	candidate_list[i] = (cumulative_corr[i] >= corr_th);
 
     // Show the percentil used
     if (tell & TELL_ROT_TILT)
@@ -334,11 +320,10 @@ double ProgAngularDiscreteAssign::predict_rot_tilt_angles(Image<double> &I,
                      "experimental images must be of a size that is power of 2");
 
     // Build initial candidate list
-    std::vector<bool>   candidate_list;
+    bool* candidate_list=new bool[rot.size()];
     std::vector<double> cumulative_corr;
     std::vector<double> sumxy;
     build_ref_candidate_list(I, candidate_list, cumulative_corr, sumxy);
-    int imax = candidate_list.size();
 
     // Make DWT of the input image and build vectors for comparison
     std::vector<Matrix1D<double> * > Idwt;
@@ -357,13 +342,13 @@ double ProgAngularDiscreteAssign::predict_rot_tilt_angles(Image<double> &I,
     DWT(I(), I());
     FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY2D(Mask_no)
     {
-        int m = Mask_no(i, j);
+        int m = DIRECT_A2D_ELEM(Mask_no,i, j);
         if (m != -1)
         {
-            double coef = I(i, j), coef2 = coef * coef;
+            double coef = DIRECT_A2D_ELEM(IMGMATRIX(I), i, j), coef2 = coef * coef;
             (*(Idwt[m]))(SBidx(m)++) = coef;
             for (int mp = m; mp < SBNo; mp++)
-                x_power(mp) += coef2;
+                VEC_ELEM(x_power,mp) += coef2;
         }
     }
 
@@ -386,6 +371,7 @@ double ProgAngularDiscreteAssign::predict_rot_tilt_angles(Image<double> &I,
     int best_i = -1;
     bool first = true;
     int N_max = 0;
+    int imax = rot.size();
     for (int i = 0; i < imax; i++)
         if (candidate_list[i])
             if (first)
@@ -429,6 +415,7 @@ double ProgAngularDiscreteAssign::predict_rot_tilt_angles(Image<double> &I,
     assigned_rot    = rot[best_i];
     assigned_tilt   = tilt[best_i];
     best_ref_idx    = best_i;
+    delete [] candidate_list;
     return cumulative_corr[best_i];
 }
 
@@ -671,11 +658,11 @@ int ProgAngularDiscreteAssign::pick_view(int method,
 //#define DEBUG
 void ProgAngularDiscreteAssign::processImage()
 {
-	// Read the image and take its angles from the Metadata
-	// if they are available. If not, take them from the header.
-	// If not, set them to 0.
-	MDRow mdrow;
-	mdIn.getRow(mdrow);
+    // Read the image and take its angles from the Metadata
+    // if they are available. If not, take them from the header.
+    // If not, set them to 0.
+    MDRow mdrow;
+    mdIn.getRow(mdrow);
     img.read(fnImg, true, -1, false, false, &mdrow, false);
 
     double best_rot, best_tilt, best_psi, best_shiftX, best_shiftY,
@@ -1031,5 +1018,5 @@ void ProgAngularDiscreteAssign::processImage()
 // Finish processing ---------------------------------------------------------
 void ProgAngularDiscreteAssign::postProcess()
 {
-    mdIn.write(fn_out_ang);
+    mdIn.write(fn_out);
 }
