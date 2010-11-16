@@ -151,7 +151,6 @@ FileName Prog_nma_alignment_prm::createDeformedPDB(int pyramidLevel) const
     command=(std::string)"xmipp_move_along_NMAmode "+fnPDB+" "+modeList[0]+" "+
             floatToString((float)trial(0)*scale_defamp)+" > inter"+fnRandom+"; mv -f inter"+fnRandom+" deformedPDB_"+
             fnRandom+".pdb";
-    std::cout << time(NULL) << " Executing " << command << std::endl;
     system(command.c_str());
 
     for (int i=1; i<VEC_XSIZE(trial)-5; ++i)
@@ -160,7 +159,6 @@ FileName Prog_nma_alignment_prm::createDeformedPDB(int pyramidLevel) const
                 floatToString((float)trial(i)*scale_defamp)+" > inter"+fnRandom+"; mv -f inter"+fnRandom+" deformedPDB_"+
                 fnRandom+".pdb";
 
-        std::cout << time(NULL) << " Executing " << command << std::endl;
         system(command.c_str());
     }
 
@@ -185,7 +183,6 @@ FileName Prog_nma_alignment_prm::createDeformedPDB(int pyramidLevel) const
     }
     command+=" >& /dev/null";
 
-    std::cout << time(NULL) << " Executing " << command << std::endl;
     system(command.c_str());
 
     if (do_FilterPDBVol)
@@ -194,7 +191,6 @@ FileName Prog_nma_alignment_prm::createDeformedPDB(int pyramidLevel) const
                 " -i deformedPDB_"+fnRandom+".vol"+
                 " -sampling "+floatToString((float)sampling_rate)+
                 " -low_pass " + floatToString((float)cutoff_LPfilter) + " -fourier_mask raised_cosine 0.1 >& /dev/null";
-        std::cout << time(NULL) << " Executing " << command << std::endl;
         system(command.c_str());
     }
 
@@ -205,7 +201,6 @@ FileName Prog_nma_alignment_prm::createDeformedPDB(int pyramidLevel) const
                 " -reduce -levels "+integerToString(pyramidLevel)+
                 " -v 0";
 
-        std::cout << time(NULL) << " Executing " << command << std::endl;
         system(command.c_str());
     }
 
@@ -224,24 +219,20 @@ void Prog_nma_alignment_prm::performCompleteSearch(
             "-reduce -levels "+integerToString(pyramidLevel)+
             " -v 0";
 
-    std::cout << time(NULL) << " Executing " << command << std::endl;
     system(command.c_str());
 
     command=(std::string)"mkdir ref" + fnRandom;
-    std::cout << time(NULL) << " Executing " << command << std::endl;
     system(command.c_str());
 
     command = (std::string)"xmipp_angular_project_library -i deformedPDB_"+fnRandom+".vol"+
     		  " -o ref" + fnRandom + "/ref" + fnRandom+".stk"
     		  " --sampling_rate 5 --sym " + symmetry +" -v 0";
     FileName fnRefSel=(std::string)"ref" + fnRandom + "/ref" + fnRandom+".doc";
-    std::cout << time(NULL) << " Executing " << command << std::endl;
     system(command.c_str());
 
     if (fnmask != "")
     {
         command=(std::string) " xmipp_mask -i "+fnRefSel+" -mask "+fnmask;
-        std::cout << time(NULL) << " Executing " << command << std::endl;
         system(command.c_str());
     }
 
@@ -255,7 +246,6 @@ void Prog_nma_alignment_prm::performCompleteSearch(
                                                   (10.0*pow(2.0,(double)pyramidLevel))))+
             " -search5D -sym " + symmetry + " -v 0";
 
-    std::cout << time(NULL) << " Executing " << command << std::endl;
     system(command.c_str());
 }
 
@@ -263,33 +253,15 @@ void Prog_nma_alignment_prm::performCompleteSearch(
 double Prog_nma_alignment_prm::performContinuousAssignment(
     const FileName &fnRandom, int pyramidLevel) const
 {
-    std::string command;
-    if (pyramidLevel==0)
-    {
-        // Make copy instead of a link
-        command=(std::string)"cp -f "+currentImg->name()+" downimg_"+fnRandom+".xmp";
-        std::cout << time(NULL) << " Executing " << command << std::endl;
-        system(command.c_str());
-
-        command=(std::string)" xmipp_header_assign -i angledisc_"+fnRandom+".txt -v 0";
-        std::cout << time(NULL) << " Executing " << command << std::endl;
-        system(command.c_str());
-    }
-
     // Perform alignment
-    command=(std::string)"xmipp_angular_continuous_assign"+
-            " -ang angledisc_"+fnRandom+".txt"+
+    std::string command=(std::string)"xmipp_angular_continuous_assign"+
+            " -i angledisc_"+fnRandom+".txt"+
             " -ref deformedPDB_"+fnRandom+".vol"+
-            " -oang anglecont_"+fnRandom+".txt"+
+            " -o anglecont_"+fnRandom+".txt"+
             " -gaussian_Fourier " + floatToString((float)gaussian_DFT_sigma) +
             " -gaussian_Real " + floatToString((float)gaussian_Real_sigma) +
             " -zerofreq_weight " + floatToString((float)weight_zero_freq) +
             " -v 0";
-    std::cout << time(NULL) << " Executing " << command << std::endl;
-    system(command.c_str());
-
-    command=(std::string)" xmipp_header_assign -i anglecont_"+fnRandom+".txt -v 0";
-    std::cout << time(NULL) << " Executing " << command << std::endl;
     system(command.c_str());
 
     // Pick up results
@@ -364,7 +336,6 @@ double ObjFunc_nma_alignment::eval(Vector X, int *nerror)
     double fitness=global_NMA_prog->performContinuousAssignment(fnRandom,pyramidLevelCont);
 
     std::string command=(std::string)"rm -rf *"+fnRandom+"* &";
-    std::cout << time(NULL) << " Executing " << command << std::endl;
     system(command.c_str());
 
     //std::cout << "Trial=" << global_NMA_prog->trial.transpose() << " ---> " << fitness << std::endl;
