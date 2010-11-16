@@ -317,7 +317,7 @@ int  writeSPIDER(int select_img=-1, bool isStack=false, int mode=WRITE_OVERWRITE
     if ( fmod(SPIDERSIZE,lenbyt) != 0 )
         labrec++;
     float  labbyt = labrec*lenbyt;   // Size of header in bytes
-    offset = (int) labbyt;
+    offset = (size_t) labbyt;
     SPIDERhead* header = (SPIDERhead *) askMemory((int)labbyt*sizeof(char));
 
     // Map the parameters
@@ -435,7 +435,7 @@ int  writeSPIDER(int select_img=-1, bool isStack=false, int mode=WRITE_OVERWRITE
     sprintf(header->cdat, "%02d-%02d-%02d", t->tm_mday, t->tm_mon, t->tm_year);
 
     size_t datasize, datasize_n;
-    datasize_n = Xdim*Ydim*Zdim;
+    datasize_n = (size_t)Xdim*Ydim*Zdim;
     datasize = datasize_n * gettypesize(wDType);
 
 #ifdef DEBUG

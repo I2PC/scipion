@@ -121,7 +121,7 @@ int readRAW(int img_select,bool isStack=false)
         _zDim = textToInteger(info[2]);
     }
 
-    offset = textToInteger(info[rPos]);
+    offset = (size_t)textToInteger(info[rPos]);
     datatype = datatypeRAW(info[rPos+1]);
     _nDim = (int) 1;
 

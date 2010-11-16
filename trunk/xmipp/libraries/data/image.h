@@ -267,8 +267,7 @@ public:
 	 * Image I(64,64,1,1,"image.spi");
 	 * @endcode
 	 */
-	Image(int Xdim, int Ydim, int Zdim, int Ndim,
-			const FileName &_filename) {
+	Image(int Xdim, int Ydim, int Zdim, int Ndim, const FileName &_filename) {
 		init();
 		mmapOnWrite = true;
 		data.setDimensions(Xdim, Ydim, Zdim, Ndim);
@@ -1609,7 +1608,7 @@ private:
 			data.coreAllocateReuse();
 			myoffset = offset + selectImgSizeT * (pagesize + pad);
 			//ROB
-//#define DEBUG
+			//#define DEBUG
 #ifdef DEBUG
 
 			data.printShape();
@@ -1627,6 +1626,13 @@ private:
 
 			if (fseek(fimg, myoffset, SEEK_SET) == -1)
 				REPORT_ERROR(ERR_IO_SIZE,"readData: can not seek the file pointer");
+			//////////7
+			fread(page, 4, 1, fimg);
+			float * kk;
+			kk = (float *) page;
+			std::cerr << "kk " << " " << *kk << std::endl;
+			fseek(fimg, myoffset, SEEK_SET);
+			///////////
 			for (size_t myn = 0; myn < NSIZE(data); myn++) {
 				for (size_t myj = 0; myj < pagesize; myj += pagemax)//pagesize size of object
 				{
@@ -1653,7 +1659,8 @@ private:
 				}
 				if (pad > 0)
 					//fread( padpage, pad, 1, fimg);
-					fseek(fimg, pad, SEEK_CUR);
+					if (fseek(fimg, pad, SEEK_CUR) == -1)
+						REPORT_ERROR(ERR_IO_SIZE,"readData: can not seek the file pointer");
 			}
 			//if ( pad > 0 )
 			//    freeMemory(padpage, pad*sizeof(char));

@@ -306,7 +306,7 @@ int  writeIMAGIC(int img_select=-1, int mode=WRITE_OVERWRITE)
         REPORT_ERROR(ERR_TYPE_INCORRECT,"ERROR write IMAGIC image: invalid typeid(T)");
 
     size_t datasize, datasize_n;
-    datasize_n = Xdim*Ydim*Zdim;
+    datasize_n = (size_t)Xdim*Ydim*Zdim;
     if (isComplexT())
         datasize = datasize_n * gettypesize(ComplexFloat);
     else
