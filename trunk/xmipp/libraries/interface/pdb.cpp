@@ -417,8 +417,8 @@ double electronFormFactorFourier(double f, const Matrix1D<double> &descriptors)
     double retval=0;
     for (int i=1; i<=5; i++)
     {
-        double ai=descriptors(i);
-        double bi=descriptors(i+5);
+        double ai=VEC_ELEM(descriptors,i);
+        double bi=VEC_ELEM(descriptors,i+5);
         retval+=ai*exp(-bi*f*f);
     }
     return retval;
@@ -569,6 +569,7 @@ double Hlpf_fitness(double *p, void *prm)
     FourierTransform(aux,Ffilter);
     FFT_magnitude(Ffilter,FfilterMag);
     freq.initZeros(XSIZE(Ffilter));
+
     FOR_ALL_ELEMENTS_IN_ARRAY1D(FfilterMag)
     FFT_IDX2DIGFREQ(i,XSIZE(FfilterMag),freq(i));
     freq/=globalM*globalT;
