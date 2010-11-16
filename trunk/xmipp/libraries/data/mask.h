@@ -30,6 +30,16 @@
 #include "histogram.h"
 #include "blobs.h"
 
+#include "program.h"
+#include "metadata.h"
+#include "args.h"
+#include "wavelet.h"
+#include "progs.h"
+
+#include "program.h"
+#include "metadata_extension.h"
+
+
 void apply_geo_binary_2D_mask(MultidimArray< int > &mask,
                               const Matrix2D< double >& A);
 void apply_geo_cont_2D_mask(MultidimArray< double >& mask,
@@ -118,7 +128,7 @@ void BlackmanMask(MultidimArray< double >& mask, int mode = INNER_MASK,
  */
 void SincBlackmanMask(MultidimArray< double >& mask,
                       double omega, double power_percentage,
-                      int mode = INNER_MASK, 
+                      int mode = INNER_MASK,
                       double x0 = 0, double y0 = 0, double z0 = 0);
 
 /** Creates a circular mask for already sized masks
@@ -130,7 +140,7 @@ void SincBlackmanMask(MultidimArray< double >& mask,
  * is created.
  */
 void BinaryCircularMask(MultidimArray< int >& mask,
-                        double radius, int mode = INNER_MASK, 
+                        double radius, int mode = INNER_MASK,
                         double x0 = 0, double y0 = 0, double z0 = 0);
 
 
@@ -143,7 +153,7 @@ void BinaryCircularMask(MultidimArray< int >& mask,
  * is created.
  */
 void BlobCircularMask(MultidimArray<double> &mask,
-                      double r1, blobtype blob, int mode, 
+                      double r1, blobtype blob, int mode,
                       double x0 = 0, double y0 = 0, double z0 = 0);
 
 
@@ -158,7 +168,7 @@ void BlobCircularMask(MultidimArray<double> &mask,
  * When entering the mask is initialiazed to 0 and then the mask is created.
  */
 void BinaryCrownMask(MultidimArray< int >& mask,
-                     double R1, double R2, int mode = INNER_MASK, 
+                     double R1, double R2, int mode = INNER_MASK,
                      double x0 = 0, double y0 = 0, double z0 = 0);
 
 /** Creates a crown mask  with blob-shaped edges for already sized masks
@@ -172,7 +182,7 @@ void BinaryCrownMask(MultidimArray< int >& mask,
  * When entering the mask is initialiazed to 0 and then the mask is created.
  */
 void BlobCrownMask(MultidimArray<double> &mask,
-                   double r1, double r2, blobtype blob, int mode, 
+                   double r1, double r2, blobtype blob, int mode,
                    double x0 = 0, double y0 = 0, double z0 = 0);
 
 /** Creates a gaussian mask for already sized masks
@@ -185,7 +195,7 @@ void BlobCrownMask(MultidimArray<double> &mask,
  * When entering the mask is initialiazed to 0 and then the mask is created.
  */
 void GaussianMask(MultidimArray< double >& mask,
-                  double sigma, int mode = INNER_MASK, 
+                  double sigma, int mode = INNER_MASK,
                   double x0 = 0, double y0 = 0, double z0 = 0);
 
 /** Binary Circular 2D mask in wavelet space */
@@ -239,7 +249,7 @@ void BinaryDWTSphericalMask2D(MultidimArray< int >& mask,
  * initialiazed to 0 and then the mask is created.
  */
 void BinaryCylinderMask(MultidimArray< int >& mask,
-                        double R, double H, int mode = INNER_MASK, 
+                        double R, double H, int mode = INNER_MASK,
                         double x0 = 0, double y0 = 0, int z0 = 0);
 
 /** Creates a 3D frame mask for already sized masks
@@ -352,6 +362,7 @@ void mask3D_26neig(MultidimArray< int >& mask, int value1 = 1, int value2 = 1,
  * Mask.apply_mask(input_Matrix2D, output_Matrix2D);
  * @endcode
  */
+
 class Mask_Params
 {
 public:
@@ -482,6 +493,11 @@ public:
      */
     MultidimArray< double > dmask;
 
+    /** Mask type
+         */
+    std::string mask_type;
+
+
 public:
 
 #define INT_MASK    1
@@ -501,6 +517,10 @@ public:
      * An exception is thrown if the read mask is not of an allowed type.
      */
     void read(int argc, char** argv);
+
+    /** Read parameters
+         *
+         */
 
     /** Show
      */
@@ -741,6 +761,7 @@ public:
             typeCast(dmask, imask);
         }
     }
+
 };
 
 /** @name Mask Tools
@@ -770,9 +791,9 @@ void apply_geo_cont_2D_mask(MultidimArray< double >& mask,
  */
 template<typename T>
 void computeStats_within_binary_mask(const MultidimArray< int >& mask,
-                                      const MultidimArray< T >& m, T& min_val,
-                                      T& max_val,
-                                      double& avg, double& stddev)
+                                     const MultidimArray< T >& m, T& min_val,
+                                     T& max_val,
+                                     double& avg, double& stddev)
 {
     SPEED_UP_temps;
     double sum1 = 0;
@@ -847,9 +868,10 @@ void apply_cont_mask(const MultidimArray< double >& mask, const MultidimArray< T
     // If in common with the mask
     if ((k >= STARTINGZ(mask)) && (k <= FINISHINGZ(mask)) &&
         (i >= STARTINGY(mask)) && (i <= FINISHINGY(mask)) &&
-        (j >= STARTINGX(mask) && j <= FINISHINGX(mask))) {
+        (j >= STARTINGX(mask) && j <= FINISHINGX(mask)))
+    {
         A3D_ELEM(m_out, k, i, j) = (T)(A3D_ELEM(m_in, k, i, j) * A3D_ELEM(mask, k, i, j));
-       }
+    }
     // It is not in common, leave the original one
     else
         A3D_ELEM(m_out, k, i, j) = A3D_ELEM(m_in, k, i, j);
@@ -977,7 +999,7 @@ void invert_binary_mask(MultidimArray< T >& mask)
     T* ptr=NULL;
     unsigned long int n;
     FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY_ptr(mask,n,ptr)
-    	*ptr = 1-(*ptr);
+    *ptr = 1-(*ptr);
 }
 
 /** Range adjust within binary mask
@@ -987,8 +1009,8 @@ void invert_binary_mask(MultidimArray< T >& mask)
  * mask is provided then all voxels are used.
  */
 void rangeAdjust_within_mask(const MultidimArray< double >* mask,
-                              const MultidimArray< double >& m1,
-                              MultidimArray< double >& m2);
+                             const MultidimArray< double >& m1,
+                             MultidimArray< double >& m2);
 //@}
 //@}
 #endif

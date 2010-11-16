@@ -24,9 +24,7 @@
  ***************************************************************************/
 
 #include "mask.h"
-#include "args.h"
-#include "image.h"
-#include "wavelet.h"
+#include "program.h"
 
 /*---------------------------------------------------------------------------*/
 /* Multidim Masks                                                                  */
@@ -600,10 +598,11 @@ void Mask_Params::resize(int Zdim, int Ydim, int Xdim)
     }
 }
 
+
 // Read from command lines -------------------------------------------------
 void Mask_Params::read(int argc, char **argv)
 {
-    int i = paremeterPosition(argc, argv, "-center");
+    int i = paremeterPosition(argc, argv, "--center");
     if (i != -1)
     {
         if (i + 3 >= argc)
@@ -839,7 +838,7 @@ void Mask_Params::read(int argc, char **argv)
 
         // Raised crown mask ....................................................
     }
-     else if (strcmp(argv[i+1], "blob_crown") == 0)
+    else if (strcmp(argv[i+1], "blob_crown") == 0)
     {
         if (i + 4 >= argc)
             REPORT_ERROR(ERR_ARG_MISSING, "Mask_Params: blob_crown mask needs two radii and a with");
@@ -1064,10 +1063,10 @@ void Mask_Params::write_mask(const FileName &fn)
 // Generate mask --------------------------------------------------------
 void Mask_Params::generate_mask(bool apply_geo)
 {
-	Image<double> img;
-	Matrix2D<double> AA(4, 4);
-	AA.initIdentity();
-	blobtype blob;
+    Image<double> img;
+    Matrix2D<double> AA(4, 4);
+    AA.initIdentity();
+    blobtype blob;
     if (type==BLOB_CIRCULAR_MASK || type==BLOB_CROWN_MASK)
     {
         blob.radius = blob_radius;
@@ -1126,7 +1125,7 @@ void Mask_Params::generate_mask(bool apply_geo)
         SincMask(dmask, omega, mode, x0, y0, z0);
         break;
     case READ_MASK:
-    	img.read(fn_mask);
+        img.read(fn_mask);
         typeCast(img(), imask);
         imask.setXmippOrigin();
         break;
@@ -1142,12 +1141,12 @@ void Mask_Params::generate_mask(bool apply_geo)
         case INT_MASK:
             if (ZSIZE(imask) > 1)
                 REPORT_ERROR(ERR_NOT_IMPLEMENTED,"Error: apply_geo only implemented for 2D masks");
-	    apply_geo_binary_2D_mask(imask, mask_geo);
+            apply_geo_binary_2D_mask(imask, mask_geo);
             break;
         case DOUBLE_MASK:
             if (ZSIZE(dmask) > 1)
                 REPORT_ERROR(ERR_NOT_IMPLEMENTED,"Error: apply_geo only implemented for 2D masks");
-	    apply_geo_cont_2D_mask(dmask, mask_geo);
+            apply_geo_cont_2D_mask(dmask, mask_geo);
             break;
         }
     }
@@ -1171,8 +1170,9 @@ void apply_geo_binary_2D_mask(MultidimArray<int> &mask,
     applyGeometry(1, tmp, tmp2, A, IS_NOT_INV, DONT_WRAP, outside);
     // The type cast gives strange results here, using round instead
     //typeCast(tmp, mask);
-    FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY2D(mask) {
-      dAij(mask,i,j)=ROUND(dAij(tmp,i,j));
+    FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY2D(mask)
+    {
+        dAij(mask,i,j)=ROUND(dAij(tmp,i,j));
     }
 }
 
@@ -1184,7 +1184,7 @@ void apply_geo_cont_2D_mask(MultidimArray<double> &mask,
     MultidimArray<double> tmp = mask;
     // Instead of IS_INV for images use IS_NOT_INV for masks!
     applyGeometry(1, tmp, mask, A, IS_NOT_INV, DONT_WRAP, outside);
- }
+}
 
 int count_with_mask(const MultidimArray<int> &mask,
                     const MultidimArray< std::complex<double> > &m, int mode, double th1, double th2)
@@ -1252,3 +1252,4 @@ void rangeAdjust_within_mask(const MultidimArray<double> *mask,
     // Apply to m2
     FOR_ALL_ELEMENTS_IN_ARRAY3D(m2) m2(k, i, j) = b(0) * m2(k, i, j) + b(1);
 }
+
