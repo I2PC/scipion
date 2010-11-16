@@ -114,7 +114,8 @@ struct ImageFHandler
 
 
 /// Returns memory size of datatype
-unsigned long gettypesize(DataType type);
+size_t gettypesize(DataType type);
+
 /** Convert datatype string to datatypr enun */
 int datatypeString2Int(std::string s);
 
