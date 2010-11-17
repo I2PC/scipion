@@ -355,6 +355,7 @@ public:
 	 *
 	 */
 	bool isImage(const FileName &name) {
+		std::cerr << "This cannot work" <<std::endl;
 		return !read(name, false);
 	}
 
