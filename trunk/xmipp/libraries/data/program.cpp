@@ -342,7 +342,7 @@ void XmippMetadataProgram::defineParams()
 
     if (apply_geo)
     {
-        addParamsLine("  [-dont_apply_geo]   : for 2D-images: do not apply transformation stored in the header");
+        addParamsLine("  [--dont_apply_geo]   : for 2D-images: do not apply transformation stored in the header");
     }
 }
 
@@ -371,6 +371,10 @@ void XmippMetadataProgram::readParams()
         if (mdIn.isEmpty())
             REPORT_ERROR(ERR_MD_NOOBJ, "");
     }
+
+    if (apply_geo)
+         apply_geo = !checkParam("--dont_apply_geo");
+
 }
 
 void XmippMetadataProgram::show()
