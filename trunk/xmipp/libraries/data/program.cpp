@@ -38,7 +38,7 @@ void XmippProgram::init()
     addParamsLine("                        : Otherwise, specific param help is showed,");
     addParamsLine("                        : param should be provided without the '-'");
     addParamsLine("alias --help;");
-    addParamsLine("[--gui*]                 : Show a GUI for launch the program.");
+    addParamsLine("[--gui*]                 : Show a GUI to launch the program.");
     addParamsLine("[--more*]         : Show additional options.");
 
     ///This are a set of internal command for MetaProgram usage
