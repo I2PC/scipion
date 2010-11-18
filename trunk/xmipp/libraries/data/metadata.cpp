@@ -114,7 +114,6 @@ bool MetaData::_setValue(long int objId, const MDObject &mdValueIn)
     }
     //add label if not exists, this is checked in addlabel
     addLabel(mdValueIn.label);
-    //MDL::voidPtr2Value(label, valuePtr, mdValue);
     myMDSql->setObjectValue(objId, mdValueIn);
 }
 
@@ -122,7 +121,6 @@ bool MetaData::_setValueCol(const MDObject &mdValueIn)
 {
     //add label if not exists, this is checked in addlabel
     addLabel(mdValueIn.label);
-    //MDL::voidPtr2Value(label, valuePtr, mdValue);
     myMDSql->setObjectValue(mdValueIn);
 }
 
@@ -143,7 +141,6 @@ bool MetaData::_getValue(long int objId, MDObject &mdValueOut) const
     }
     //MDValue mdValue;
     return myMDSql->getObjectValue(objId, mdValueOut);
-    //MDL::value2VoidPtr(label, mdValue, valuePtrOut);
 }
 
 bool MetaData::getRow(MDRow &row, long int objId)
@@ -153,11 +150,10 @@ bool MetaData::getRow(MDRow &row, long int objId)
     for (std::vector<MDLabel>::const_iterator it = activeLabels.begin(); it != activeLabels.end(); ++it)
     {
         obj = new MDObject(*it);
-        if (!myMDSql->getObjectValue(objId, *obj))
-        	return false;
+        if (!_getValue(objId, *obj))
+            return false;
         row.push_back(obj);
     }
-
     return true;
 }
 
@@ -175,13 +171,12 @@ MetaData::MetaData(const std::vector<MDLabel> *labelsVector)
     init(labelsVector);
 }//close MetaData default Constructor
 
-MetaData::MetaData(const FileName &fileName, const std::vector<MDLabel> *labelsVector)
+MetaData::MetaData(const FileName &fileName, const std::vector<MDLabel> *desiredLabels)
 {
     myMDSql = new MDSql(this);
     iterObjectsId = NULL;
-    init(labelsVector);
-    //FIXME: what to do when labels vector is provided???
-    read(fileName);
+    init(desiredLabels);
+    read(fileName, desiredLabels);
 }//close MetaData from file Constructor
 
 MetaData::MetaData(const MetaData &md)
@@ -324,9 +319,9 @@ bool MetaData::addLabel(const MDLabel label, int pos)
     if (containsLabel(label))
         return false;
     if (pos < 0 || pos >= activeLabels.size())
-      activeLabels.push_back(label);
+        activeLabels.push_back(label);
     else
-      activeLabels.insert(activeLabels.begin() + pos, label);
+        activeLabels.insert(activeLabels.begin() + pos, label);
     myMDSql->addColumn(label);
     return true;
 }
@@ -388,7 +383,7 @@ void MetaData::removeObjects(const std::vector<long int> &toRemove)
 int MetaData::removeObjects(const MDQuery &query)
 {
     int removed = myMDSql->deleteObjects(&query);
-    firstObject(); //I prefer put active object to -1
+    firstObject();
     return removed;
 }
 int MetaData::removeObjects()
@@ -670,6 +665,8 @@ void MetaData::write(std::ostream &os,const std::string &blockName, WriteModeMet
             }
             os << std::endl;
         }
+        //Put the activeObject to the first, if exists
+        firstObject();
     }
     else //rowFormat
     {
@@ -696,8 +693,6 @@ void MetaData::write(std::ostream &os,const std::string &blockName, WriteModeMet
                 if (activeLabels[i] != MDL_COMMENT)
                 {
                     MDObject mdValue(activeLabels[i]);
-                    //os.width(maxWidth + 1);
-                    //os << "_" << MDL::label2Str(activeLabels.at(i)) << std::endl;
                     os << " _" << MDL::label2Str(activeLabels.at(i)) << " ";
                     myMDSql->getObjectValue(objId, mdValue);
                     mdValue.toStream(os);
@@ -715,7 +710,7 @@ void MetaData::write(std::ostream &os,const std::string &blockName, WriteModeMet
  * also set the activeLabels (for OLD doc files)
  */
 void MetaData::_readColumns(std::istream& is, MDRow & columnValues,
-                            std::vector<MDLabel>* desiredLabels)
+                            const std::vector<MDLabel>* desiredLabels)
 {
     std::string token;
     MDLabel label;
@@ -734,32 +729,43 @@ void MetaData::_readColumns(std::istream& is, MDRow & columnValues,
 
         }
 }
+
+/* Helper function to parse an MDObject and set its value.
+ * The parsing will be from an input stream(istream)
+ * and if parsing fails, an error will be raised
+ */
+void MetaData::_parseObject(std::istream &is, MDObject &object)
+{
+    is >> object;
+    if (is.fail())
+    {
+        REPORT_ERROR(ERR_MD_BADLABEL, (std::string)"read: Error parsing data column, expecting " + MDL::label2Str(object.label));
+    }
+    else
+        if (object.label != MDL_UNDEFINED)
+            _setValue(activeObjId, object);
+}//end of function parseObject
+
+#define END_OF_LINE() ((char*) memchr (pchStart, '\n', pEnd-pchStart+1))
 /** This function will read the posible columns from the file
  * and mark as MDL_UNDEFINED those who aren't valid labels
  * or those who appears in the IgnoreLabels vector
  * also set the activeLabels (for new STAR files)
  */
-
 char * MetaData::_readColumnsStar(char * pStart,
                                   char * pEnd,
                                   MDRow & columnValues,
-                                  std::vector<MDLabel>* desiredLabels)
+                                  const std::vector<MDLabel>* desiredLabels)
 {
-    //search for "_" and "\n"
     char * pchStart, *pchEnd;
     pchStart =pStart;
-    pchStart = (char*) memchr (pchStart, '\n', pEnd-pchStart);//after nextline
-    ++pchStart;
+    pchStart = END_OF_LINE() + 1;//skip _loop line
     MDLabel label;
-    char toks[] = "\t \n"; // tabs, spaces and newlines
-    char * szAux;
-    szAux = (char *) calloc(1024,1);
     while(1)
     {
         //Next char should be _ or we are done
         //if((pchStart+1)[0]!='_')
         //{
-
         if( isspace((pchStart)[0]))//trim spaces and newlines at the beginning
         {
             ++pchStart;
@@ -767,68 +773,41 @@ char * MetaData::_readColumnsStar(char * pStart,
         }
         if((pchStart)[0]=='#')//this is a comment
         {
-            pchStart = (char*) memchr (pchStart, '\n', pEnd-pchStart-1);//after nextline
+            pchStart = END_OF_LINE() + 1;
             continue;
         }
         if( (pchStart)[0] !='_')
         {
-            //pchEnd = pchStart;
             break;
         }
 
-        //}
-
-        //pchStart = (char*) memchr (pchStart, '_' , pEnd-pchStart) ;//begining label
-        //if(pchStart==NULL)
-        //    break;
         ++pchStart;//skip '_'
-        pchEnd = (char*) memchr (pchStart, '\n', pEnd-pchStart);//after endlabel
-        //        if(pchStart<pEnd )//&& pchStart !=NULL)
-        //        {
-        //            std::string s(pchStart,pchEnd-pchStart);
-        //            trim(s);
-        //            label = MDL::str2Label(s);
-        //            if (desiredLabels != NULL && !vectorContainsLabel(*desiredLabels, label))
-        //                label = MDL_UNDEFINED; //ignore if not present in desiredLabels
-        //            columnValues.push_back(new MDObject(label));
-        //            //std::cerr << "label " << MDL::label2Str(label) <<std::endl;
-        //            if (label != MDL_UNDEFINED)
-        //                addLabel(label);
-        //            pchStart=pchEnd;
-        //        }
-        //        else
-        //            break;
-        if(pchStart<pEnd /*&& pchStart !=NULL*/)
+
+        if(pchStart < pEnd /*&& pchStart !=NULL*/)
         {
+            std::stringstream ss;
+            pchEnd = END_OF_LINE();
+            String s(pchStart, pchEnd-pchStart);//get string line
+            ss.str(s);//set the string of the stream
+            ss >> s; //get the first token, the label
             //will fail is string label has spaces, tabs or newlines
-            memtok(&pchStart,&pchEnd,toks);//get label
-            std::string s(pchStart,pchEnd-pchStart);
             label = MDL::str2Label(s);
             if (desiredLabels != NULL && !vectorContainsLabel(*desiredLabels, label))
             {
                 label = MDL_UNDEFINED; //ignore if not present in desiredLabels
             }
+            else
+                addLabel(label);
             MDObject * _mdObject = new MDObject(label);
-            addLabel(label);
             columnValues.push_back(_mdObject);//add the value here with a char
-            pchStart=pchEnd;
             if(!isColumnFormat)
-            {
-                memtok(&pchStart,&pchEnd,toks);//get value
-                if (label != MDL_UNDEFINED)
-                {
-                    strncpy(szAux,pchStart,pchEnd-pchStart);
-                    szAux[pchEnd-pchStart]=NULL;
-                    _mdObject->fromChar(szAux);
-                    _setValue(activeObjId, *(_mdObject));
-                }
-                pchStart=pchEnd;
-            }
+                _parseObject(ss, *_mdObject);
+            pchStart = pchEnd + 1;//go to next line character
         }
         else
             break;
     }
-    return pchEnd;
+    return pchStart;
 }
 #ifdef NEVERDEFINED
 /** This function will read the possible columns and values from the file
@@ -941,60 +920,47 @@ void MetaData::_readRows(std::istream& is, MDRow & columnValues, bool useComment
             else if (!isspace(is.peek()))
             {
                 addObject();
-                if (line != "")
+                if (line != "")//this is for old format files
                 {
                     if (!useCommentAsImage)
                         setValue(MDL_COMMENT, line);
                     else
                         setValue(MDL_IMAGE, line);
                 }
-                for (int i = 0; i < columnValues.size(); ++i)
-                {
-                    is >> *(columnValues[i]);
-                    if (is.fail())
-                    {
-                        REPORT_ERROR(ERR_MD_BADLABEL, (std::string)"read: Error parsing data column, expecting " + MDL::label2Str(columnValues[i]->label));
-                    }
-                    else
-                        if (columnValues[i]->label != MDL_UNDEFINED)
-                            _setValue(activeObjId, *(columnValues[i]));
-                }
+                int nCol = columnValues.size();
+                for (int i = 0; i < nCol; ++i)
+                    _parseObject(is, *(columnValues[i]));
             }
 
     }
 }
 
 /** This function will be used to parse the rows data in START format
+ * @param[out] columnValues MDRow with values to fill in
+ * @param pchStar pointer to the position of '_loop' in memory
+ * @param pEnd  pointer to the position of the next '_data' in memory
  */
-void MetaData::_readRowsStar(MDRow & columnValues,char *firstLoop,char*secondData)
+void MetaData::_readRowsStar(MDRow & columnValues, char * pchStart, char * pEnd)
 {
-    char toks[] = "\t \n"; // tabs, spaces and newlines
-    char * start;
-    char * end;
+    char * pchEnd;
+    String line;
+    std::stringstream ss;
     int nCol = columnValues.size();
-    int colCounter;
-    colCounter=0;
-    start = firstLoop;
-    int column;
-    start = (char*) memchr (start, '\n', secondData- firstLoop)+1;//skip till nextline
-    char * szAux;
-    szAux = (char *) calloc(1024,1);
-    for ( start = memtok(&start,&end,toks) ; start != NULL && start < secondData; start = memtok(&start,&end,toks) )
+
+    while (pchStart < pEnd)//while there are data lines
     {
-        column=colCounter%nCol;
-        if((column)==0)
+        pchEnd = END_OF_LINE();
+        line.assign(pchStart, pchEnd-pchStart);
+        trim(line);
+        if (line != "")
+        {
+            ss.str(line);
             addObject();
-
-        strncpy(szAux,start,end-start);
-        szAux[end-start]=NULL;
-        columnValues[column]->fromChar(szAux);
-
-        if (columnValues[column]->label != MDL_UNDEFINED)
-            _setValue(activeObjId, *(columnValues[column]));
-        start = end;
-        ++colCounter;
+            for (int i = 0; i < nCol; ++i)
+                _parseObject(ss, *(columnValues[i]));
+        }
+        pchStart = pchEnd + 1;//go to next line
     }
-    free(szAux);
 }
 
 /**This function will read the md data if is in row format */
@@ -1023,7 +989,7 @@ void MetaData::_readRowFormat(std::istream& is)
     }
 }
 
-void MetaData::read(const FileName &filename, std::vector<MDLabel> *desiredLabels,const std::string & blockName)
+void MetaData::read(const FileName &filename, const std::vector<MDLabel> *desiredLabels, const std::string & blockName)
 {
 
     std::ifstream is(filename.data(), std::ios_base::in);
@@ -1031,14 +997,12 @@ void MetaData::read(const FileName &filename, std::vector<MDLabel> *desiredLabel
     std::string line, token;
     MDRow columnValues;
 
-
     getline(is, line); //get first line to identify the type of file
 
     if (is.fail())
     {
         REPORT_ERROR(ERR_IO_NOTEXIST, (std::string) "MetaData::read: File " + filename + " does not exists" );
     }
-
     _clear();
     myMDSql->createMd();
     isColumnFormat = true;
@@ -1050,7 +1014,6 @@ void MetaData::read(const FileName &filename, std::vector<MDLabel> *desiredLabel
 
     if (line.find("XMIPP_STAR_1") != std::string::npos)
     {
-
         //map file
         struct stat file_status;
         int fd;
@@ -1093,8 +1056,8 @@ void MetaData::read(const FileName &filename, std::vector<MDLabel> *desiredLabel
         char * aux;
         if (isColumnFormat)
         {
-            aux=_readColumnsStar(firstloop, secondData, columnValues, desiredLabels);
-            _readRowsStar(columnValues,aux,secondData);
+            aux = _readColumnsStar(firstloop, secondData, columnValues, desiredLabels);
+            _readRowsStar(columnValues, aux, secondData);
         }
         else
         {

@@ -223,9 +223,14 @@ protected:
 
     /** Some private reading functions */
     void _readColumns(std::istream& is, MDRow & columnValues,
-                      std::vector<MDLabel>* desiredLabels = NULL);
+                      const std::vector<MDLabel>* desiredLabels = NULL);
     void _readRows(std::istream& is, MDRow & columnValues, bool useCommentAsImage);
-    void _readRowsStar(MDRow & columnValues,char * firstloop, char * secondData);
+    /** This function will be used to parse the rows data in START format
+     * @param[out] columnValues MDRow with values to fill in
+     * @param pchStar pointer to the position of '_loop' in memory
+     * @param pEnd  pointer to the position of the next '_data' in memory
+     */
+    void _readRowsStar(MDRow & columnValues, char * pchStart, char * pEnd);
     void _readRowFormat(std::istream& is);
 
 public:
@@ -248,7 +253,7 @@ public:
      * The MetaData is created and data is read from provided FileName. Optionally, a vector
      * of labels can be provided to read just those required labels
      */
-    MetaData(const FileName &fileName, const std::vector<MDLabel> *labelsVector = NULL);
+    MetaData(const FileName &fileName, const std::vector<MDLabel> *desiredLabels = NULL);
 
     /** Copy constructor
      *
@@ -294,14 +299,20 @@ public:
             char ** secondData,
             char ** firstloop,
             const char * blockName);
+
+    /* Helper function to parse an MDObject and set its value.
+     * The parsing will be from an input stream(istream)
+     * and if parsing fails, an error will be raised
+     */
+    void _parseObject(std::istream &is, MDObject &object);
+
     /** Get Metadata labels for the block defined by start
      * and end loop pointers. Return pointer to newline after last label
-     *
      */
     char * _readColumnsStar(char * start,
                                     char * end,
                                     MDRow & columnValues,
-                                    std::vector<MDLabel>* desiredLabels);
+                                    const std::vector<MDLabel>* desiredLabels);
 #ifdef NEVERDEFINED
     /** This function will read the possible columns and values from the file
      * in ROW format
@@ -313,7 +324,7 @@ public:
     char * _readRowFormatStar(char * pStart,
                                         char * pEnd,
                                         MDRow & columnValues,
-                                        std::vector<MDLabel>* desiredLabels);
+                                        const std::vector<MDLabel>* desiredLabels);
 #endif
     /**Get path.
      */
@@ -620,7 +631,7 @@ public:
 
     /** Read data from file.
      */
-    void read(const FileName &inFile, std::vector<MDLabel> *labelsVector = NULL, const std::string & blockName="");
+    void read(const FileName &inFile, const std::vector<MDLabel> *desiredLabels = NULL, const std::string & blockName="");
     /** @} */
 
     /** @name Set Operations
