@@ -153,7 +153,8 @@ bool MetaData::getRow(MDRow &row, long int objId)
     for (std::vector<MDLabel>::const_iterator it = activeLabels.begin(); it != activeLabels.end(); ++it)
     {
         obj = new MDObject(*it);
-        myMDSql->getObjectValue(objId, *obj);
+        if (!myMDSql->getObjectValue(objId, *obj))
+        	return false;
         row.push_back(obj);
     }
 
