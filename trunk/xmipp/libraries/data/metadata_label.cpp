@@ -546,3 +546,13 @@ void MDRow::copy(const MDRow &row)
         ++pos;
     }
 }
+
+std::ostream& operator << (std::ostream &out, const MDRow &row)
+{
+    for (MDRow::const_iterator it = row.begin(); it != row.end(); ++it)
+    {
+        (*it)->toStream(out);
+        out << " ";
+    }
+    return out;
+}

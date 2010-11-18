@@ -261,7 +261,6 @@ private:
     friend class MDLabelStaticInit;
 }
 ;//close class MLD definition
-/** @} */
 
 
 /** Just to work as static constructor for initialize labels data.
@@ -500,6 +499,7 @@ public:
     MDObject(MDLabel label, const float &floatValue);
     MDObject(MDLabel label, const char * &charValue);
 
+    /// Destructor
     ~MDObject();
 
     //These getValue also do a compilation type checking
@@ -553,8 +553,13 @@ class MDRow: public std::vector<MDObject*>
 {
 public:
     //MDObject & operator [](MDLabel label);
+	/** True if this row contains this label */
     bool containsLabel(MDLabel label) const;
+
+    /** Get object */
     MDObject * getObject(MDLabel label);
+
+    /** Get value */
     template <typename T>
     bool getValue(MDLabel label, T &d) const
     {
@@ -567,6 +572,8 @@ public:
 
         return false;
     }
+
+    /** Set value */
     template <typename T>
     void setValue(MDLabel label, const T &d)
     {
@@ -581,14 +588,22 @@ public:
 
     /** Copy constructor */
     MDRow(const MDRow & row);
+
+    /** Empty constructor */
     MDRow();
+
+    /** Assignment */
     MDRow& operator = (const MDRow &row);
+
+    /** Destructor */
     ~MDRow();
+
+    /** Show */
+    friend std::ostream& operator << (std::ostream &out, const MDRow &row);
 
 private:
     void copy(const MDRow &row);
-
-
 };
+/** @} */
 
 #endif
