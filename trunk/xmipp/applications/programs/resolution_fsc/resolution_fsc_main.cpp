@@ -139,9 +139,6 @@ public:
     {
         MetaData     SFaux,SF, SF1, SF2;
         std::vector<MetaData> vMD;
-        vMD.push_back(SF1);
-        vMD.push_back(SF2);
-
         Image<double>       I1, I2, Id;
         double      dummy;
         MultidimArray<double> freq, frc, dpr, frc_noise, ssnr, error_l2, pixel;
@@ -149,6 +146,8 @@ public:
         SFaux.read(fn_sel);
         SF.randomize(SFaux);
         SF.split(2,vMD,MDL_IMAGE);
+        SF1 = vMD.at(0);
+        SF2 = vMD.at(1);
         getStatistics(SF1,I1,Id,dummy,dummy,true);
         getStatistics(SF2,I2,Id,dummy,dummy,true);
         I1().setXmippOrigin();
@@ -159,15 +158,10 @@ public:
 
     void run()
     {
-
         if (!do_set_of_images)
-        {
             process_img();
-        }
         else
-        {
             process_sel();
-        }
     }
 
 };
