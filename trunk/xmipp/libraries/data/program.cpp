@@ -323,9 +323,9 @@ void XmippMetadataProgram::defineParams()
 {
     addParamsLine(" -i <metadata>   : Input file: metadata, stack, volume or image.");
     addParamsLine(" alias --input;");
-    addParamsLine(" [--bn <blockName=\"\">]   : Block name for metadata file");
+    addParamsLine(" [--bn+ <blockName=\"\">]   : Block name for metadata file");
     addParamsLine(" alias --blockname;");
-    addParamsLine(" [--mode <mode=\"overwrite\">]   : Metadata writing mode: overwrite, append");
+    addParamsLine(" [--mode+ <mode=\"overwrite\">]   : Metadata writing mode: overwrite, append");
 
     if (each_image_produces_an_output)
     {
