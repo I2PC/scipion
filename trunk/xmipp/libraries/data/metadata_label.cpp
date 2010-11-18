@@ -422,6 +422,13 @@ String MDObject::toString(bool withFormat, bool isSql) const
 }
 
 //bool MDValue::fromStream(std::istream &is)
+std::ostream& operator<< (std::ostream& os, MDObject &value)
+{
+    value.toStream(os);
+    return os;
+}
+
+//bool MDValue::fromStream(std::istream &is)
 std::istream& operator>> (std::istream& is, MDObject &value)
 {
     value.fromStream(is);
