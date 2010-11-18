@@ -79,6 +79,11 @@ class OptionWidget(Frame):
     def browseFile(self):
         filename = tkFileDialog.askopenfilename();
         if len(filename) > 0:
+            cwd = os.getcwd() + os.sep;
+            print "cwd", cwd
+            print "filename: ", filename;
+            if filename.startswith(cwd):
+                filename = filename.replace(cwd, "");
             self.entryVar.set(filename);
             
     def setState(self, optState):
@@ -455,9 +460,10 @@ class ProgramGUI(Frame):
             for section in self.sections:
                 for group in section.groups:
                     cmdStr = cmdStr + group.getParamString();
+            self.parent.destroy();
             print cmdStr;
             os.system(cmdStr);
-            self.parent.destroy();
+            
         
     def centerWindows(self):
         root = self.parent
