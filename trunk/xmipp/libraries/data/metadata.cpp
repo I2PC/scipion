@@ -954,7 +954,7 @@ void MetaData::_readRowsStar(MDRow & columnValues, char * pchStart, char * pEnd)
         trim(line);
         if (line != "")
         {
-            ss.str(line);
+            std::stringstream ss(line);
             addObject();
             for (int i = 0; i < nCol; ++i)
                 _parseObject(ss, *(columnValues[i]));
