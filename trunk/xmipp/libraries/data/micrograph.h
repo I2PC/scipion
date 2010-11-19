@@ -353,30 +353,30 @@ public:
 	    return 0;
         if (datatype == UChar)
         {
-            return (*IUChar)(y,x);
+            return IMGPIXEL(*IUChar,y,x);
         }
         else if (datatype == UShort)
         {
-            return (*IUShort)(y,x);
+            return IMGPIXEL(*IUShort,y,x);
         }
         else if (datatype == Short)
         {
-            return (*IShort)(y,x);
+            return IMGPIXEL(*IShort,y,x);
         }
         else if (datatype == UInt)
         {
-            return (*IUInt)(y,x);
+            return IMGPIXEL(*IUInt,y,x);
         }
         else if (datatype == Int)
         {
-            return (*IInt)(y,x);
+            return IMGPIXEL(*IInt,y,x);
         }
         else if (datatype == Float)
         {
-            return (*IFloat)(y,x);
+            return IMGPIXEL(*IFloat,y,x);
         }
-
-        else REPORT_ERROR(ERR_TYPE_INCORRECT, "Micrograph::(): unknown datatype");
+        else
+        	REPORT_ERROR(ERR_TYPE_INCORRECT, "Micrograph::(): unknown datatype");
     }
 
     /** Micrograph max min*/
@@ -417,27 +417,27 @@ public:
     {
         if (datatype == UChar)
         {
-             (*IUChar)(y,x) = (unsigned char) new_val;
+        	IMGPIXEL(*IUChar,y,x) = (unsigned char) new_val;
         }
         else if (datatype == UShort)
         {
-            (*IUShort)(y,x) = (unsigned short) new_val;
+        	IMGPIXEL(*IUShort,y,x) = (unsigned short) new_val;
         }
         else if (datatype == Short)
         {
-            (*IShort)(y,x) = (short) new_val;
+        	IMGPIXEL(*IShort,y,x) = (short) new_val;
         }
         else if (datatype == UInt)
         {
-            (*IUInt)(y,x) = (unsigned int) new_val;
+        	IMGPIXEL(*IUInt,y,x) = (unsigned int) new_val;
         }
         else if (datatype == Int)
         {
-            (*IInt)(y,x) = (int) new_val;
+        	IMGPIXEL(*IInt,y,x) = (int) new_val;
         }
         else if (datatype == Float)
         {
-            (*IFloat)(y,x) = (float) new_val;
+        	IMGPIXEL(*IFloat,y,x) = (float) new_val;
         }
 
         else REPORT_ERROR(ERR_TYPE_INCORRECT, "Micrograph::set_val::(): unknown datatype");
