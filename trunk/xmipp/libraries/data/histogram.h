@@ -255,7 +255,7 @@ public:
      * hist.index2val(0, beginning_of_interval_0);
      * @endcode
      */
-    void index2val(double i, double& v) const
+    inline void index2val(double i, double& v) const
     {
         v = hmin + i * step_size;
     }
@@ -542,10 +542,10 @@ void histogram_equalization(MultidimArray<T>
 
     // Compute the distribution function of the pdf
     MultidimArray<double> norm_sum(hist_steps);
-    norm_sum(0) = hist(0);
+    DIRECT_A1D_ELEM(norm_sum,0) = DIRECT_A1D_ELEM(hist,0);
 
     for (int i = 1; i < hist_steps; i++)
-        norm_sum(i) = norm_sum(i - 1) + hist(i);
+    	DIRECT_A1D_ELEM(norm_sum,i) = DIRECT_A1D_ELEM(norm_sum,i - 1) + DIRECT_A1D_ELEM(hist,i);
     norm_sum /= MULTIDIM_SIZE(v);
 
     // array to store the boundary pixels of bins
@@ -555,9 +555,9 @@ void histogram_equalization(MultidimArray<T>
     for (int current_bin = 1; current_bin < bins; current_bin++)
     {
         double current_value = (double) current_bin / bins;
-        while (norm_sum(index) < current_value && index < FINISHINGX(norm_sum))
+        while (DIRECT_A1D_ELEM(norm_sum,index) < current_value && index < FINISHINGX(norm_sum))
             index++;
-        hist.index2val((double) index, div(current_bin - 1));
+        hist.index2val((double) index, DIRECT_A1D_ELEM(div,current_bin - 1));
     }
 
     // requantize and equalize histogram
@@ -566,14 +566,14 @@ void histogram_equalization(MultidimArray<T>
     FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY_ptr(v,n,ptr)
     {
         T vi=*ptr;
-        if (vi < div(0))
+        if (vi < DIRECT_A1D_ELEM(div,0))
             *ptr = 0;
-        else if (vi > div(bins - 2))
+        else if (vi > DIRECT_A1D_ELEM(div,bins - 2))
             *ptr = bins - 1;
         else
         {
             index = 0;
-            while (vi > div(index))
+            while (vi > DIRECT_A1D_ELEM(div,index))
                 index++;
             *ptr = index;
         }

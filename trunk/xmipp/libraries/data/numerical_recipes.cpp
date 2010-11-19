@@ -26,6 +26,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <iostream>
+#include <string.h>
 
 #include "numerical_recipes.h"
 
@@ -9458,20 +9459,21 @@ void pwt(double a[], unsigned long n, int isign)
     nmod = wfilt.ncof * n;
     n1 = n - 1;
     nh = n >> 1;
-    for (j = 1;j <= n;j++)
-        wksp[j] = 0.0;
+    memset(wksp+1,0,n*sizeof(double));
     if (isign >= 0)
     {
         for (ii = 1, i = 1;i <= n;i += 2, ii++)
         {
             ni = i + nmod + wfilt.ioff;
             nj = i + nmod + wfilt.joff;
+            double &aux1=wksp[ii];
+            double &aux2=wksp[ii+nh];
             for (k = 1;k <= wfilt.ncof;k++)
             {
                 jf = n1 & (ni + k);
                 jr = n1 & (nj + k);
-                wksp[ii] += wfilt.cc[k] * a[jf+1];
-                wksp[ii+nh] += wfilt.cr[k] * a[jr+1];
+                aux1 += wfilt.cc[k] * a[jf+1];
+                aux2 += wfilt.cr[k] * a[jr+1];
             }
         }
     }

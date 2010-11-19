@@ -53,7 +53,7 @@ int splitHistogramsUsingEntropy(const std::vector<Histogram1D> &hist,
         Histogram1D histaux = hist[k];
         for (int l = 0; l < XSIZE(histaux); l++)
             if (l < l0 || l > lF) 
-                histaux(l) = 0;
+                DIRECT_A1D_ELEM(histaux,l) = 0;
         histaux /= histaux.sum();
         histNorm.push_back(histaux);
     }
@@ -62,10 +62,11 @@ int splitHistogramsUsingEntropy(const std::vector<Histogram1D> &hist,
     MultidimArray<double> p(K, 2);
     for (int k = 0; k < K; k++)
     {
-        p(k, 0) = histNorm[k](l0);
-        p(k, 1) = 0;
+    	const Histogram1D& histogram=histNorm[k];
+        DIRECT_A2D_ELEM(p,k, 0) = DIRECT_A1D_ELEM(histogram,l0);
+        DIRECT_A2D_ELEM(p,k, 1) = 0;
         for (int l = l0 + 1; l <= lF; l++)
-            p(k, 1) += histNorm[k](l);
+        	DIRECT_A2D_ELEM(p,k, 1) += DIRECT_A1D_ELEM(histogram,l);
     }
 
     // Compute the splitting l giving maximum entropy
@@ -77,7 +78,10 @@ int splitHistogramsUsingEntropy(const std::vector<Histogram1D> &hist,
         // Compute the entropy of the clases if we split by l
         double entropy = 0;
         FOR_ALL_ELEMENTS_IN_ARRAY2D(p)
-            if (p(i, j) != 0) entropy -= p(i, j) * log10(p(i, j));
+        {
+        	double aux=DIRECT_A2D_ELEM(p,i,j);
+            if (aux != 0) entropy -= aux * log10(aux);
+        }
 
         #ifdef DEBUG_SPLITTING_USING_ENTROPY
             std::cout << "Splitting at "  << l << " entropy=" << entropy
@@ -97,8 +101,10 @@ int splitHistogramsUsingEntropy(const std::vector<Histogram1D> &hist,
         // Update probabilities of being l<=l0 and l>l0
         for (int k = 0; k < K; k++)
         {
-            p(k, 0) += histNorm[k](l);
-            p(k, 1) -= histNorm[k](l);
+        	const Histogram1D& histogram=histNorm[k];
+        	double aux=DIRECT_A1D_ELEM(histogram,l);
+            DIRECT_A2D_ELEM(p,k, 0) += aux;
+        	DIRECT_A2D_ELEM(p,k, 1) -= aux;
         }
     }
     
@@ -154,7 +160,8 @@ LeafNode::LeafNode(const std::vector < MultidimArray<double> > &leafFeatures,
     Matrix1D<int> limits(2);
     VECTOR_R2(limits,0,99);
     intervals.push(limits);
-    for (int i=0; i<ROUND(log2(__discreteLevels)); i++)
+    int imax=ROUND(log2(__discreteLevels));
+    for (int i=0; i<imax; i++)
     {
         // Split all the intervals in the queue
         while (!intervals.empty())
@@ -179,7 +186,7 @@ LeafNode::LeafNode(const std::vector < MultidimArray<double> > &leafFeatures,
 
     // Compute the bins of the split
     MultidimArray<int> newBins(__discreteLevels);
-    int imax=intervals.size();
+    imax=intervals.size();
     for (int i=0; i<imax; i++)
     {
         newBins(i) = intervals.front()(1);
