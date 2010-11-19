@@ -8,6 +8,7 @@
 #ifndef METADATA_EXTENSION_H_
 #define METADATA_EXTENSION_H_
 
+#include "filename.h"
 #include "image.h"
 #include "metadata.h"
 
@@ -17,7 +18,6 @@ void getStatistics(MetaData &MT, Image<double> & _ave, Image<double> & _sd, doub
 /** Get image size
  *
  */
-
 static int null_object=-1;
 static unsigned long null_objectLong=0;
 
@@ -55,4 +55,10 @@ bool setValueColSwig(MetaData &md,  MDLabel label,  T &valueIn)
 {
     md.setValueCol(label, valueIn);
 }
+
+/** Read a 1 or two column list of micrographs.
+ *  Two column files are interpreted as Random Conical Tilt pairs.
+ */
+void readMetaDataWithTwoPossibleImages(const FileName &fn, MetaData &MD);
+
 #endif /* METADATA_EXTENSION_H_ */

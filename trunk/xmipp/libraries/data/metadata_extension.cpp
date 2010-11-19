@@ -4,9 +4,9 @@
  *  Created on: May 12, 2010
  *      Author: roberto
  */
+#include "metadata_extension.h"
 
 /*----------   Statistics --------------------------------------- */
-#include "metadata_extension.h"
 void getStatistics(MetaData &MT_in, Image<double> & _ave, Image<double> & _sd, double& _min,
                    double& _max, bool apply_geo)
 {
@@ -99,15 +99,15 @@ void ImgSize(const FileName &filename, int &Xdim, int &Ydim, int &Zdim, unsigned
 
 int MaxFileNameLength(MetaData &MD)
 {
-	int maxLength=0;
-	FOR_ALL_OBJECTS_IN_METADATA(MD)
-	{
-		FileName fnImg;
-		MD.getValue(MDL_IMAGE,fnImg);
-		int length=fnImg.length();
-		maxLength=XMIPP_MAX(length,maxLength);
-	}
-	return maxLength;
+    int maxLength=0;
+    FOR_ALL_OBJECTS_IN_METADATA(MD)
+    {
+        FileName fnImg;
+        MD.getValue(MDL_IMAGE,fnImg);
+        int length=fnImg.length();
+        maxLength=XMIPP_MAX(length,maxLength);
+    }
+    return maxLength;
 }
 
 void mpiSelectPart(MetaData &md, int rank, int size, int &num_img_tot)
@@ -115,4 +115,44 @@ void mpiSelectPart(MetaData &md, int rank, int size, int &num_img_tot)
     num_img_tot = md.size();
     MetaData aux(md);
     md.selectSplitPart(aux, size, rank);
+}
+
+void readMetaDataWithTwoPossibleImages(const FileName &fn, MetaData &MD)
+{
+    if (fn.isMetaData())
+        MD.read(fn);
+    else
+    {
+    	// Try to read a one or two column file
+    	std::ifstream fhIn;
+    	fhIn.open(fn.c_str());
+    	if (!fhIn)
+    		REPORT_ERROR(ERR_IO_NOTEXIST,fn);
+    	MD.clear();
+    	std::string line;
+    	while (!fhIn.eof())
+    	{
+    		getline(fhIn,line);
+    		std::vector<std::string> tokens;
+    		tokenize(line, tokens, " \t");
+    		switch (tokens.size())
+    		{
+    		case 0:
+    			break;
+    		case 1:
+    			MD.addObject();
+    			MD.setValue(MDL_IMAGE,tokens[0]);
+    			break;
+    		case 2:
+    			MD.addObject();
+    			MD.setValue(MDL_IMAGE,tokens[0]);
+    			MD.setValue(MDL_ASSOCIATED_IMAGE1,tokens[1]);
+    			break;
+    		default:
+    			REPORT_ERROR(ERR_MD_OBJECTNUMBER,
+    				(std::string)"Invalid number of objects in line:"+line);
+    		}
+    	}
+    	fhIn.close();
+    }
 }
