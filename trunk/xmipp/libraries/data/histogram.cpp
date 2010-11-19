@@ -314,7 +314,7 @@ int IrregularHistogram1D::val2Index(double value)
 {
     int binsNo = XSIZE(__binsRightLimits);
     for (int i = 0; i < binsNo; i++)
-        if(value <= __binsRightLimits(i)) return i;
+        if(value <= DIRECT_A1D_ELEM(__binsRightLimits,i)) return i;
 
     //In case the value is greater, we return the last bin
     return binsNo - 1;
