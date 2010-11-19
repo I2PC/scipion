@@ -631,8 +631,8 @@ Matrix1D<double> bayesian_wiener_filtering2D(MultidimArray<double> &WI, int allo
             FOR_ALL_ELEMENTS_IN_ARRAY2D_BETWEEN(x0, xF)
             {
             	double aux=DIRECT_A2D_ELEM(WI,YY(r),XX(r));
-                power(j) += aux*aux;
-                average(j) += aux;
+                VEC_ELEM(power,j) += aux*aux;
+                VEC_ELEM(average,j) += aux;
             }
         }
         VEC_ELEM(Ncoefs,j) = (int)pow(2.0, 2 * (max_scale - VEC_ELEM(scale,j) - 1)) * orientationSize;
