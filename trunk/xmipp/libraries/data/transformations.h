@@ -277,7 +277,7 @@ void applyGeometry(int SplineDegree,
     // size instead of being resized inside the routine with the
     // same size as the input matrix
     if (XSIZE(V2) == 0)
-        V2.resize(V1);
+        V2.initZeros(V1);
 
     if (V1.getDim() == 2)
     {
@@ -925,7 +925,7 @@ void scaleToSize(int SplineDegree,
         tmp.initIdentity(3);
         tmp(0, 0) = (double) Xdim / (double) XSIZE(V1);
         tmp(1, 1) = (double) Ydim / (double) YSIZE(V1);
-        V2.resize(1, 1, Ydim, Xdim);
+        V2.initZeros(1, 1, Ydim, Xdim);
     }
     else if (V1.getDim()==3)
     {
@@ -933,7 +933,7 @@ void scaleToSize(int SplineDegree,
         tmp(0, 0) = (double) Xdim / (double) XSIZE(V1);
         tmp(1, 1) = (double) Ydim / (double) YSIZE(V1);
         tmp(2, 2) = (double) Zdim / (double) ZSIZE(V1);
-        V2.resize(1, Zdim, Ydim, Xdim);
+        V2.initZeros(1, Zdim, Ydim, Xdim);
     }
     else
         REPORT_ERROR(ERR_MULTIDIM_DIM,"scaleToSize ERROR: scaleToSize only valid for 2D or 3D arrays");
@@ -1071,7 +1071,7 @@ void reduceBSpline(int SplineDegree,
         else if (XSIZE(aux) % 2 != 0)
             aux.resize(YSIZE(aux), XSIZE(aux) - 1);
 
-        V2.resize(YSIZE(aux) / 2, XSIZE(aux) / 2);
+        V2.initZeros(YSIZE(aux) / 2, XSIZE(aux) / 2);
         Reduce_2D(MULTIDIM_ARRAY(aux), XSIZE(aux), YSIZE(aux),
                   MULTIDIM_ARRAY(V2), g, ng, IsCentered);
     }
@@ -1092,14 +1092,12 @@ void reduceBSpline(int SplineDegree,
         else if (XSIZE(aux) % 2 == 0 && YSIZE(aux) % 2 == 0 && ZSIZE(aux) % 2 != 0)
             aux.resize(ZSIZE(aux) - 1, YSIZE(aux), XSIZE(aux));
 
-        V2.resize(ZSIZE(aux) / 2, YSIZE(aux) / 2, XSIZE(aux) / 2);
+        V2.initZeros(ZSIZE(aux) / 2, YSIZE(aux) / 2, XSIZE(aux) / 2);
         Reduce_3D(MULTIDIM_ARRAY(aux), XSIZE(aux), YSIZE(aux), ZSIZE(aux),
                   MULTIDIM_ARRAY(V2), g, ng, IsCentered);
     }
     else
         REPORT_ERROR(ERR_MULTIDIM_DIM,"reduceBSpline ERROR: only valid for 2D or 3D arrays");
-
-
 }
 
 /** Expand a set of B-spline coefficients.
@@ -1129,13 +1127,13 @@ void expandBSpline(int SplineDegree,
 
     if (V1.getDim() == 2)
     {
-        V2.resize(2 * YSIZE(aux), 2 * XSIZE(aux));
+        V2.initZeros(2 * YSIZE(aux), 2 * XSIZE(aux));
         Expand_2D(MULTIDIM_ARRAY(aux), XSIZE(aux), YSIZE(aux),
                   MULTIDIM_ARRAY(V2), h, nh, IsCentered);
     }
     else if (V1.getDim() == 3)
     {
-        V2.resize(2 * ZSIZE(aux), 2 * YSIZE(aux), 2 * XSIZE(aux));
+        V2.initZeros(2 * ZSIZE(aux), 2 * YSIZE(aux), 2 * XSIZE(aux));
         Expand_3D(MULTIDIM_ARRAY(aux), XSIZE(aux), YSIZE(aux), ZSIZE(aux),
                   MULTIDIM_ARRAY(V2), h, nh, IsCentered);
     }
@@ -1212,10 +1210,8 @@ void radialAverage(const MultidimArray< T >& m,
         dim++;
 
     // Define the vectors
-    radial_mean.resize(dim);
-    radial_mean.initZeros();
-    radial_count.resize(dim);
-    radial_count.initZeros();
+    radial_mean.initZeros(dim);
+    radial_count.initZeros(dim);
 
     // Perform the radial sum and count pixels that contribute to every
     // distance

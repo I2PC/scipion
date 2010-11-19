@@ -2120,7 +2120,7 @@ bool AutoParticlePicking::build_vector(const MultidimArray<double> &piece,
 void AutoParticlePicking::get_centered_piece(MultidimArray<double> &piece,
         int _x, int _y, int &_posx, int &_posy)
 {
-    piece.resize(__piece_xsize, __piece_xsize);
+    piece.initZeros(__piece_xsize, __piece_xsize);
     int startx = _x - ROUND(__piece_xsize / 2);
     int endx   = _x + ROUND(__piece_xsize / 2);
     int starty = _y - ROUND(__piece_xsize / 2);
