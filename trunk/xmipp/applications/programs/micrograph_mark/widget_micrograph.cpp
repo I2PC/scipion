@@ -2157,9 +2157,10 @@ void AutoParticlePicking::get_centered_piece(MultidimArray<double> &piece,
     }
 
     //read the matrix from the micrograph
+    const Micrograph &micrograph=*__m;
     for (int i = 0; i < __piece_xsize; i++)
         for (int j = 0; j < __piece_xsize; j++)
-            piece(i, j) = (*__m)(startx + j, starty + i);
+            DIRECT_A2D_ELEM(piece, i, j) = micrograph(startx + j, starty + i);
 }
 
 // Get a piece whose top-left corner is at the desired position (if possible)
