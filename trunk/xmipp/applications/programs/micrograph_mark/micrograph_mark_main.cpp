@@ -92,8 +92,7 @@ protected:
 public:
     void run()
     {
-
-        Micrograph m, mTilted;
+    	Micrograph m, mTilted;
         FileName fn8bits="", fn8bitsTilted="";
 
         m.open_micrograph(fnRaw);
@@ -116,13 +115,14 @@ public:
 
             m.open_micrograph(fn8bits);
             m.set_micrograph_name(fnRaw);
-            m.compute_8_bit_scaling();
+//            m.compute_8_bit_scaling();
             system(((std::string)"rm -rf "+fn8bits+"*").c_str());
         }
         else
         {
             m.compute_8_bit_scaling();
         }
+
 
         if (fnRawTilted != "")
         {
