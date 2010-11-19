@@ -423,8 +423,10 @@ void compute_hist(const T& v, Histogram1D& hist,
                   double min, double max, int no_steps)
 {
     hist.init(min, max, no_steps);
-    FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(v)
-    hist.insert_value(DIRECT_MULTIDIM_ELEM(v, n));
+    T* ptr=NULL;
+    unsigned long int n;
+    FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY_ptr(v,n,ptr)
+    hist.insert_value(*ptr);
 }
 
 /** Compute histogram within a region (2D or 3D)
