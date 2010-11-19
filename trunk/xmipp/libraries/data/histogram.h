@@ -419,7 +419,7 @@ void compute_hist(const std::vector< T > &v,
  * @endcode
  */
 template<typename T>
-void compute_hist(const T& v, Histogram1D& hist,
+void compute_hist(const MultidimArray<T>& v, Histogram1D& hist,
                   double min, double max, int no_steps)
 {
     hist.init(min, max, no_steps);
