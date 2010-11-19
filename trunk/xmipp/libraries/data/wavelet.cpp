@@ -619,7 +619,9 @@ Matrix1D<double> bayesian_wiener_filtering2D(MultidimArray<double> &WI, int allo
     orientation.push_back("01");
     orientation.push_back("10");
     orientation.push_back("11");
-    for (int j = 0;j < scale.size();j++)
+    int orientationSize=orientation.size();
+    int jmax=scale.size();
+    for (int j = 0;j < jmax;j++)
     {
         for (int k = 0; k < orientation.size(); k++)
         {
@@ -627,12 +629,13 @@ Matrix1D<double> bayesian_wiener_filtering2D(MultidimArray<double> &WI, int allo
                            XX(x0), XX(xF), YY(x0), YY(xF));
             FOR_ALL_ELEMENTS_IN_ARRAY2D_BETWEEN(x0, xF)
             {
-                power(j) += WI(r) * WI(r);
-                average(j) += WI(r);
+            	double aux=DIRECT_A2D_ELEM(WI,YY(r),XX(r));
+                power(j) += aux*aux;
+                average(j) += aux;
             }
         }
-        Ncoefs(j) = (int)pow(2.0, 2 * (max_scale - scale(j) - 1)) * orientation.size();
-        average(j) = average(j) / Ncoefs(j);
+        VEC_ELEM(Ncoefs,j) = (int)pow(2.0, 2 * (max_scale - VEC_ELEM(scale,j) - 1)) * orientationSize;
+        VEC_ELEM(average,j) = VEC_ELEM(average,j) / VEC_ELEM(Ncoefs,j);
     }
 
     /*Evaluate the power of the unconsidered part of the image */
@@ -640,7 +643,10 @@ Matrix1D<double> bayesian_wiener_filtering2D(MultidimArray<double> &WI, int allo
     int Ncoefs_rest = 0;
     SelectDWTBlock(scale(scale_dim - 1), WI, "00", XX(x0), XX(xF), YY(x0), YY(xF));
     FOR_ALL_ELEMENTS_IN_ARRAY2D_BETWEEN(x0, xF)
-    power_rest += WI(r) * WI(r);
+    {
+    	double aux=DIRECT_A2D_ELEM(WI,YY(r),XX(r));
+    	power_rest += aux*aux;
+    }
     Ncoefs_rest = (int)pow(2.0, 2 * (max_scale - 1 - scale(scale_dim - 1)));
 
     if (tell)
