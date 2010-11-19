@@ -93,8 +93,8 @@ void Histogram1D::insert_value(double val)
     if (i < 0 || i >= XSIZE(*this))
         return; // the value is outside our scope
 
-    A1D_ELEM(*this, i)++;
-    no_samples++;
+    ++DIRECT_A1D_ELEM(*this, i);
+    ++no_samples;
 #ifdef DEBUG
 
     std::cout << "   hmin " << hmin << " hmax " << hmax << " value " << val
