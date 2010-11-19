@@ -332,16 +332,15 @@ int NaiveBayes::doInference(const MultidimArray<double> &newFeatures,
     
     MultidimArray<double> allCosts;
     allCosts=__cost*classesProbs;
-    for (int k=0; k<K; k++)
-        allCosts(k)=log10(allCosts(k));
+    allCosts.selfLog10();
 //    std::cout << "allCosts " << allCosts.transpose() << std::endl;
 
     int bestk=0;
-    cost=allCosts(0);
+    cost=DIRECT_A1D_ELEM(allCosts,0);
     for (int k=1; k<K; k++)
-        if (allCosts(k)<cost)
+        if (DIRECT_A1D_ELEM(allCosts,k)<cost)
         {
-            cost=allCosts(k);
+            cost=DIRECT_A1D_ELEM(allCosts,k);
             bestk=k;
         }
 
