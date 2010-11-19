@@ -80,9 +80,19 @@ void Histogram1D::init(double min_val, double max_val, int n_steps)
 void Histogram1D::insert_value(double val)
 {
     int i;
-    val2index(val, i);
-    if (i == -1)
+
+    // The following code is equivalent to val2index(val, i);
+    if (val == hmax)
+        i = XSIZE(*this) - 1;
+    else
+    {
+    	double aux=(val - hmin) * istep_size;
+        i = (int) FLOOR(aux);
+    }
+
+    if (i < 0 || i >= XSIZE(*this))
         return; // the value is outside our scope
+
     A1D_ELEM(*this, i)++;
     no_samples++;
 #ifdef DEBUG
