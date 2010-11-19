@@ -263,7 +263,7 @@ NaiveBayes::NaiveBayes(
         for (int k=0; k<K; k++)
             features[k].getCol(f, aux[k]);
         __leafs.push_back(new LeafNode(aux,discreteLevels));
-        __weights(f)=__leafs[f]->computeWeight();
+        DIRECT_A1D_ELEM(__weights,f)=__leafs[f]->computeWeight();
         #ifdef DEBUG_WEIGHTS
             if(debugging == true)
             {
@@ -402,8 +402,11 @@ EnsembleNaiveBayes::EnsembleNaiveBayes(
 
             MultidimArray<double> newFeaturesK;
             newFeaturesK.initZeros(NsubIndividuals,NsubFeatures);
+            const MultidimArray<double>& features_k=features[k];
             FOR_ALL_ELEMENTS_IN_ARRAY2D(newFeaturesK)
-                newFeaturesK(i,j)=features[k](subIndividuals(i),subFeatures(j));
+                DIRECT_A2D_ELEM(newFeaturesK,i,j)=DIRECT_A2D_ELEM(features_k,
+                		DIRECT_A1D_ELEM(subIndividuals,i),
+                		DIRECT_A1D_ELEM(subFeatures,j));
             
             newFeatures.push_back(newFeaturesK);
         }
