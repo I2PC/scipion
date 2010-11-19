@@ -10,7 +10,8 @@
 #
 # Author: Sjors Scheres, March 2007
 #         Roberto Marabini (mpi extension)
-#         Carlos Oscar
+#         Carlos Oscar Sorzano, November 2010
+#
 #------------------------------------------------------------------------------------------------
 # {section} Global parameters
 #------------------------------------------------------------------------------------------------
