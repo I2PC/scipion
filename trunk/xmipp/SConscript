@@ -29,9 +29,12 @@ def Glob(dir, pattern, blacklist):
 
 def AddLastSlash(string):
     ''' Low trick for correct parsing of paths '''
-    if string[len(string)-1] != '/':
-        string = string + '/'
-    return string
+    str = string.strip();
+    if len(str) == 0:
+        return "";
+    if not str.endswith('/'):
+        str = str + '/'
+    return str
 
 def AddBatch(name, basedir, extension = ''):
     # setup
@@ -286,7 +289,7 @@ def AddSwigPythonLibrary(name, basedir, sourceList, includes, libpath=[], libs=[
     #install = env.InstallAs(libprefix+'/'+name+'.py',basedirswig+name+".py")
     #env.Alias(name+'.py', install)
     #env.Default(name+'.py')
-
+    
 def AddSwigJavaLibrary(name, basedir, sourceList, includes, libpath=[], libs=[]):
     # Create wrapper
     # setup
@@ -536,6 +539,13 @@ AddLibrary('XmippExternal', 'external',
 DataSources = Glob('libraries/data','*.cpp',[])
 AddLibrary('XmippData', 'libraries/data', DataSources, ['#'],
            ['lib'],['XmippExternal']+FFTWLibs+TIFFLibs+SQLiteLibs)
+
+#Xmipp Python Extension
+PyExtSources = Glob('libraries/bindings/python', '*.cpp', [])
+import distutils.sysconfig
+AddLibrary('xmipp', 'libraries/bindings/python', PyExtSources, 
+           ['#libraries',"#", distutils.sysconfig.get_python_inc()],
+           ['lib'],['XmippData'],'')
 
 SwigDataSources = ['libraries/data/swig/swigXmippData.i']
 SwigJavaDataSources = ['libraries/data/swig/swigXmippDataJava.i']
@@ -1002,11 +1012,11 @@ if int(env['matlab']):
     import os
 
     def AddMatlabBinding(name):
-	print 'compiling Matlab wrapper for ' + name
-        command = env['MATLAB_DIR'] + '/bin/mex -O -outdir matlab_bindings -I. -Ilibraries/data -Ilibraries -Llib -Ilibraries/reconstruction -lXmippRecons -lXmippData -lXmippExternal matlab_bindings/tom_xmipp_' + name + '_wrapper.cpp'
-	output = os.popen(command).read()
-	if len(output) > 0:
-	    print output
+        print 'compiling Matlab wrapper for ' + name
+        command = env['MATLAB_DIR'] + '/bin/mex -O -outdir libraries/bindings/matlab -I. -Ilibraries/data -Ilibraries -Llib -Ilibraries/reconstruction -lXmippRecons -lXmippData -lXmippExternal libraries/bindings/matlab/tom_xmipp_' + name + '_wrapper.cpp'
+        output = os.popen(command).read()
+        if len(output) > 0:
+            print output
 
     bindings = ['adjust_ctf','align2d','ctf_correct_phase',
         'mask','mirror','morphology','normalize','psd_enhance',
