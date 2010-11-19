@@ -2208,10 +2208,11 @@ bool AutoParticlePicking::get_corner_piece(
     //read the matrix from the micrograph
     if (copyPiece)
     {
-        piece.resize(__piece_xsize, __piece_xsize);
+        piece.resizeNoCopy(__piece_xsize, __piece_xsize);
+        const Micrograph& micrograph=*__m;
         for (int i = 0; i < __piece_xsize; i++)
             for (int j = 0; j < __piece_xsize; j++)
-                piece(i, j) = (*__m)(_left + j, _top + i);
+                DIRECT_A2D_ELEM(piece,i, j) = micrograph(_left + j, _top + i);
     }
 
     return true;

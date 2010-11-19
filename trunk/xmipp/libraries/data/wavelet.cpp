@@ -415,13 +415,14 @@ void DWT_Bijaoui_denoise_LL2D(MultidimArray<double> &WI, int scale,
     {
         FOR_ALL_ELEMENTS_IN_ARRAY2D_BETWEEN(x0, xF)
         {
-            double y = WI(r);
+        	double &WI_r=A2D_ELEM(WI,YY(r),XX(r));
+            double y = WI_r;
             double ymu = y - mu;
             double ymu2 = -0.5 * ymu * ymu;
             double expymu2SN = exp(ymu2 / SN);
             double den = exp(ymu2 / N) + expymu2SN;
             if (den > 1e-10)
-                WI(r) = S_N * expymu2SN / den * y;
+                WI_r *= S_N * expymu2SN / den;
         }
     }
 }
