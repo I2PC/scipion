@@ -1721,7 +1721,7 @@ void AutoParticlePicking::buildVectors(std::vector<int> &_idx,
             p.status = 1;
             p.cost = 1.0;
             if (_model.addParticleTraining(p, 0))
-            	numParticles++;
+                numParticles++;
         }
 
         // make vector from the neighbours
@@ -1748,7 +1748,7 @@ void AutoParticlePicking::buildVectors(std::vector<int> &_idx,
                 p.status = 1;
                 p.cost = 1.0;
                 if (_model.addParticleTraining(p, 0))
-                	numParticles++;
+                    numParticles++;
             }
         }
     }
@@ -1847,7 +1847,7 @@ void AutoParticlePicking::buildNegativeVectors(Classification_model &_model,
                     if (!checkForPalsePostives)
                     {
                         if (_model.addParticleTraining(P, 1))
-                        	Nnonparticles++;
+                            Nnonparticles++;
                     }
                     else
                     {
@@ -1855,7 +1855,7 @@ void AutoParticlePicking::buildNegativeVectors(Classification_model &_model,
                         if (votes>5)
                         {
                             if (_model.addParticleTraining(P, 2))
-                            	Nfalsepositives++;
+                                Nfalsepositives++;
                         }
                     }
                 }
@@ -1973,16 +1973,22 @@ bool AutoParticlePicking::build_vector(const MultidimArray<double> &piece,
     // Put the image values into the corresponding radial bins
     FOR_ALL_ELEMENTS_IN_ARRAY2D(mask)
     {
-        int val = (int)piece(_y + i, _x + j);
-        bool foreground = mask(i, j);
+        int val = (int)A2D_ELEM(piece, _y + i, _x + j);
+        bool foreground = A2D_ELEM(mask, i, j);
 
-        int idx1 = classif1(i, j);
+        int idx1 = A2D_ELEM(classif1, i, j);
         if (idx1 != -1)
         {
-            radial_val[idx1](radial_idx(idx1)++) = val;
-            int idx2 = classif2(i, j);
+            MultidimArray<int> &auxi=radial_val[idx1];
+            int aux=A1D_ELEM(radial_idx,idx1);
+            A1D_ELEM(auxi,aux) = val;
+            A1D_ELEM(radial_idx,idx1)++;
+            int idx2 = A2D_ELEM(classif2, i, j);
             if (idx2 != -1)
-                sector[idx2](idx1) += val;
+            {
+                MultidimArray<double> &auxd=sector[idx2];
+                A1D_ELEM(auxd,idx1) += val;
+            }
         }
 
         // Get particle
@@ -2003,12 +2009,15 @@ bool AutoParticlePicking::build_vector(const MultidimArray<double> &piece,
     // Compute the sector averages and reorganize the data in rings
     for (int j = 0; j < angleBins; j++)
     {
-        FOR_ALL_ELEMENTS_IN_ARRAY1D(sector[j])
+        MultidimArray<int> &Nsector_j=*(__Nsector[j]);
+        MultidimArray<double> &sector_j=sector[j];
+        FOR_ALL_ELEMENTS_IN_ARRAY1D(sector_j)
         {
-            if ((*(__Nsector[j]))(i)>0)
+            if (DIRECT_A1D_ELEM(Nsector_j,i)>0)
             {
-                sector[j](i)/=(*(__Nsector[j]))(i);
-                ring[i](j)=sector[j](i);
+                DIRECT_A1D_ELEM(sector_j,i)/=DIRECT_A1D_ELEM(Nsector_j,i);
+                MultidimArray<double> &ring_i=ring[i];
+                DIRECT_A1D_ELEM(ring_i,j)=DIRECT_A1D_ELEM(sector_j,i);
             }
         }
     }
@@ -2020,7 +2029,7 @@ bool AutoParticlePicking::build_vector(const MultidimArray<double> &piece,
         Histogram1D hist;
         compute_hist(radial_val[i], hist, 0, __gray_bins - 1, __gray_bins);
         for (int j = 0; j < __gray_bins - 1; j++)
-            _result(idx_result++) = hist(j);
+            VEC_ELEM(_result,idx_result++) = DIRECT_A1D_ELEM(hist,j);
     }
 
     // Compute the correlation of the sectors
@@ -2030,25 +2039,25 @@ bool AutoParticlePicking::build_vector(const MultidimArray<double> &piece,
         sectorCorr.initZeros(angleBins);
         for (int i = 0; i<angleBins; i++)
         {
-            sectorCorr(i)=correlation_index(
+            DIRECT_A1D_ELEM(sectorCorr,i)=correlation_index(
                               sector[i],
                               sector[intWRAP(i+step,0,angleBins-1)]);
         }
-        _result(idx_result++) = sectorCorr.computeAvg();
+        VEC_ELEM(_result,idx_result++) = sectorCorr.computeAvg();
         MultidimArray<double> sectorAutocorr;
         correlation_vector_no_Fourier(sectorCorr,sectorCorr,sectorAutocorr);
         for (int j = 0; j < XSIZE(sectorAutocorr); j++)
-            _result(idx_result++) = sectorAutocorr(j);
+            VEC_ELEM(_result,idx_result++) = DIRECT_A1D_ELEM(sectorAutocorr,j);
     }
 
     // Compute the correlation in rings
+    MultidimArray<double> ringCorr;
     for (int step = 1; step<=2; step++)
         for (int i = 8; i<__radial_bins-step; i++)
         {
-            MultidimArray<double> ringCorr;
             correlation_vector_no_Fourier(ring[i],ring[i+step],ringCorr);
             for (int j = 0; j < XSIZE(ringCorr); j++)
-                _result(idx_result++) = ringCorr(j);
+                VEC_ELEM(_result,idx_result++) = DIRECT_A1D_ELEM(ringCorr,j);
         }
 
 #ifdef DEBUG_IMG_BUILDVECTOR
@@ -2497,7 +2506,7 @@ void AutoParticlePicking::getAutoFalsePositives(
             __auto_candidates[i].cost<__minCost)
         {
             if (_training_model.addParticleTraining(__auto_candidates[i], 2))
-            	Nrejected++;
+                Nrejected++;
         }
 
     // Add the manually selected false positives
@@ -2505,7 +2514,7 @@ void AutoParticlePicking::getAutoFalsePositives(
     _training_model.addFalsePositives(imax);
     for (int i = 0; i < imax; i++)
         if (_training_model.addParticleTraining(__rejected_particles[i], 2))
-        	Nrejected++;
+            Nrejected++;
     std::cout << Nrejected << " false positives are considered\n";
 }
 
@@ -2521,7 +2530,7 @@ void AutoParticlePicking::getAutoTruePositives(
             __auto_candidates[i].cost>=__minCost)
         {
             if (_training_model.addParticleTraining(__auto_candidates[i], 0))
-            	Naccepted++;
+                Naccepted++;
         }
     std::cout << Naccepted << " true positives are considered\n";
 }
