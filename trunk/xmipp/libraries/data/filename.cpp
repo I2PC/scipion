@@ -27,37 +27,37 @@
 #include "funcs.h"
 
 // Constructor with root, number and extension .............................
-void FileName::compose(const std::string &str, int no, const std::string &ext)
+void FileName::compose(const String &str, int no, const String &ext)
 {
     *this = (FileName) str;
     if (no != -1)
     {
 
         char aux_str[FILENAMENUMBERLENGTH+1];
-        std::string tmp_fileformat;
-        tmp_fileformat = (std::string) "%0" +
+        String tmp_fileformat;
+        tmp_fileformat = (String) "%0" +
                          integerToString(FILENAMENUMBERLENGTH)+
-                         (std::string)"d";
+                         (String)"d";
         sprintf(aux_str, tmp_fileformat.c_str(), no);
         *this += aux_str;
     }
 
     if (ext != "")
-        *this += (std::string)"." + ext;
+        *this += (String)"." + ext;
 }
 
 // Constructor: prefix number and filename, mainly for selfiles..
-void FileName::compose(int no , const std::string &str)
+void FileName::compose(int no , const String &str)
 {
     *this = (FileName) str;
     if (no != -1)
     {
 
         char aux_str[FILENAMENUMBERLENGTH+1];
-        std::string tmp_fileformat;
-        tmp_fileformat = (std::string) "%0" +
+        String tmp_fileformat;
+        tmp_fileformat = (String) "%0" +
                          integerToString(FILENAMENUMBERLENGTH)+
-                         (std::string)"d@";
+                         (String)"d@";
         sprintf(aux_str, tmp_fileformat.c_str(), no);
         *this = aux_str + str;
     }
@@ -70,14 +70,14 @@ void FileName::compose(int no , const std::string &str)
 // Is in stack ............................................................
 bool FileName::isInStack() const
 {
-    return find("@") != std::string::npos;
+    return find("@") != String::npos;
 }
 
 // Decompose ..............................................................
-void FileName::decompose(int &no, std::string &str) const
+void FileName::decompose(int &no, String &str) const
 {
     size_t idx = find('@');
-    if(idx != std::string::npos)
+    if(idx != String::npos)
     {
         no = textToInteger(substr(0,idx));
         str = substr(idx+1,length()-idx);
@@ -122,7 +122,7 @@ FileName FileName::toUppercase() const
 }
 
 // Is substring present?
-bool FileName::contains(const std::string& str) const
+bool FileName::contains(const String& str) const
 {
     int point = rfind(str);
     if (point > -1)
@@ -132,7 +132,7 @@ bool FileName::contains(const std::string& str) const
 }
 
 // Get substring before first instance of str
-FileName FileName::beforeFirstOf(const std::string& str) const
+FileName FileName::beforeFirstOf(const String& str) const
 {
     int point = find_first_of(str);
     if (point > -1)
@@ -142,7 +142,7 @@ FileName FileName::beforeFirstOf(const std::string& str) const
 }
 
 // Get substring before last instance of str
-FileName FileName::beforeLastOf(const std::string& str) const
+FileName FileName::beforeLastOf(const String& str) const
 {
     int point = find_last_of(str);
     if (point > -1)
@@ -152,7 +152,7 @@ FileName FileName::beforeLastOf(const std::string& str) const
 }
 
 // Get substring after first instance of str
-FileName FileName::afterFirstOf(const std::string& str) const
+FileName FileName::afterFirstOf(const String& str) const
 {
     int point = find_first_of(str);
     if (point > -1)
@@ -162,7 +162,7 @@ FileName FileName::afterFirstOf(const std::string& str) const
 }
 
 // Get substring after last instance of str
-FileName FileName::afterLastOf(const std::string& str) const
+FileName FileName::afterLastOf(const String& str) const
 {
     int point = find_last_of(str);
     if (point > -1)
@@ -172,10 +172,10 @@ FileName FileName::afterLastOf(const std::string& str) const
 }
 
 // Get the base name of a filename .........................................
-std::string FileName::getBaseName() const
+String FileName::getBaseName() const
 {
-    std::string basename = "";
-    std::string myname = *this;
+    String basename = "";
+    String myname = *this;
     int myindex = 0;
     for (int p = myname.size() - 1; p >= 0; p--)
     {
@@ -207,7 +207,7 @@ int FileName::getNumber() const
     {
         if (point - root_end > FILENAMENUMBERLENGTH)
             root_end = point - FILENAMENUMBERLENGTH - 1;
-        std::string aux = substr(root_end + 1, point - root_end + 1);
+        String aux = substr(root_end + 1, point - root_end + 1);
         return atoi(aux.c_str());
     }
     else
@@ -215,7 +215,7 @@ int FileName::getNumber() const
 }
 
 // Get the extension of a filename .........................................
-std::string FileName::getExtension() const
+String FileName::getExtension() const
 {
     int skip_directories = find_last_of("/") + 1;
     int first_point = find_first_of(".", skip_directories);
@@ -251,7 +251,7 @@ void FileName::initUniqueName(char *templateStr)
 }
 
 // Add at beginning ........................................................
-FileName FileName::addPrefix(const std::string &prefix) const
+FileName FileName::addPrefix(const String &prefix) const
 {
     FileName retval = *this;
     int skip_directories = find_last_of("/") + 1;
@@ -259,14 +259,14 @@ FileName FileName::addPrefix(const std::string &prefix) const
 }
 
 // Add at the end ..........................................................
-FileName FileName::addExtension(const std::string &ext) const
+FileName FileName::addExtension(const String &ext) const
 {
     if (ext == "")
         return *this;
     else
     {
         FileName retval = *this;
-        retval = retval.append((std::string)"." + ext);
+        retval = retval.append((String)"." + ext);
         return retval;
     }
 }
@@ -285,7 +285,7 @@ FileName FileName::withoutRoot() const
 }
 
 // Insert before extension .................................................
-FileName FileName::insertBeforeExtension(const std::string &str) const
+FileName FileName::insertBeforeExtension(const String &str) const
 {
     int point = -1;
     bool done = false;
@@ -310,9 +310,9 @@ FileName FileName::insertBeforeExtension(const std::string &str) const
 }
 
 // Remove an extension wherever it is ......................................
-FileName FileName::removeExtension(const std::string &ext) const
+FileName FileName::removeExtension(const String &ext) const
 {
-    int first = find((std::string)"." + ext);
+    int first = find((String)"." + ext);
     if (first == -1)
         return *this;
     else
@@ -337,11 +337,11 @@ FileName FileName::getFileFormat() const
 {
     int first;
     FileName result;
-    if (find("#") != std::string::npos)
+    if (find("#") != String::npos)
         return "raw";
-    else if ( (first = rfind(":"))!=std::string::npos)
+    else if ( (first = rfind(":"))!=String::npos)
         result = substr(first + 1) ;
-    else if ( (first = rfind("."))!=std::string::npos)
+    else if ( (first = rfind("."))!=String::npos)
         result = substr(first + 1);
     else
         result="spi";
@@ -352,10 +352,10 @@ FileName FileName::getFileFormat() const
 FileName FileName::removeFileFormat() const
 {
     size_t found=rfind("#");
-    if (found!=std::string::npos)
+    if (found!=String::npos)
         return substr(0, found);
     found=rfind(":");
-    if (found!=std::string::npos)
+    if (found!=String::npos)
         return substr(0, found);
     return *this;
 }
@@ -363,17 +363,11 @@ FileName FileName::removeFileFormat() const
 bool FileName::isMetaData(bool failIfNotExists) const
 {
     //file names containing @, : or % are not metadatas
-    size_t found=this->find('@');
-    if (found!=std::string::npos)
+    size_t found = this->find('@');
+    if (find_first_of("@:#") != npos)
         return false;
-    found=this->find(':');
-    if (found!=std::string::npos)
-        return false;
-    found=this->find('#');
-    if (found!=std::string::npos)
-        return false;
+
     FileName ext = getFileFormat();
-    //
     if (ext=="sel" || ext=="xmd" || ext=="doc")
     {
         return true;
@@ -381,12 +375,12 @@ bool FileName::isMetaData(bool failIfNotExists) const
     else
     {
         std::ifstream infile(data(), std::ios_base::in);
-        std::string line;
+        String line;
 
         if (infile.fail())
         {
             if (failIfNotExists)
-                REPORT_ERROR( ERR_IO_NOTEXIST, (std::string) "File " + *this + " does not exist." );
+                REPORT_ERROR( ERR_IO_NOTEXIST, (String) "File " + *this + " does not exist." );
             else
                 return false;
         }
@@ -395,7 +389,7 @@ bool FileName::isMetaData(bool failIfNotExists) const
         getline(infile, line, '\n');
         int pos = line.find("XMIPP_STAR_1 *");
 
-        if (pos != std::string::npos) // xmipp_star_1 token found
+        if (pos != String::npos) // xmipp_star_1 token found
             return true;
         else
             return false;
@@ -403,21 +397,21 @@ bool FileName::isMetaData(bool failIfNotExists) const
 }
 
 // Substitute one extension by other .......................................
-FileName FileName::substituteExtension(const std::string &ext1,
-                                       const std::string &ext2) const
+FileName FileName::substituteExtension(const String &ext1,
+                                       const String &ext2) const
 {
-    int first = find((std::string)"." + ext1);
+    int first = find((String)"." + ext1);
     if (first == -1)
         return *this;
     else
     {
         FileName retval = *this;
-        return retval.replace(first, 1 + ext1.length(), (std::string)"." + ext2);
+        return retval.replace(first, 1 + ext1.length(), (String)"." + ext2);
     }
 }
 
 // Remove a substring ......................................................
-FileName FileName::without(const std::string &str) const
+FileName FileName::without(const String &str) const
 {
     if (str.length() == 0)
         return *this;
@@ -432,7 +426,7 @@ FileName FileName::without(const std::string &str) const
 }
 
 // Remove until prefix .....................................................
-FileName FileName::removeUntilPrefix(const std::string &str) const
+FileName FileName::removeUntilPrefix(const String &str) const
 {
     if (str.length() == 0)
         return *this;
@@ -461,6 +455,7 @@ FileName FileName::removeDirectories(int keep) const
     else
         return substr(last_slash + 1, length() - last_slash);
 }
+
 void FileName::copyFile(const FileName & target) const
 {
     std::ifstream f1 (this->c_str(), std::fstream::binary);
