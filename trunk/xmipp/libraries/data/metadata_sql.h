@@ -161,7 +161,7 @@ private:
     void setOperate(MetaData *mdPtrOut, MDLabel column, SetOperation operation);
     void setOperate(const MetaData *mdInLeft, const MetaData *mdInRight, MDLabel column, SetOperation operation);
     /** Function to dump DB to file */
-    bool operate(const std::string &expression);
+    bool operate(const String &expression);
 
 
 
@@ -197,7 +197,7 @@ private:
     long int execSingleIntStmt(const std::stringstream &ss);
     double execSingleDoubleStmt(const std::stringstream &ss);
 
-    std::string tableName(const int tableId) const;
+    String tableName(const int tableId) const;
 
     int bindValue(sqlite3_stmt *stmt, const int position, const MDObject &valueIn);
     int extractValue(sqlite3_stmt *stmt, const int position, MDObject &valueOut);
@@ -238,13 +238,13 @@ public:
     }
 
     /** Return the ORDER BY string to be used in SQL query */
-    std::string orderByString() const
+    String orderByString() const
     {
-        return (std::string)" ORDER BY " + MDL::label2Str(orderLabel);
+        return (String)" ORDER BY " + MDL::label2Str(orderLabel);
     }
 
     /** Return the LIMIT string to be used in SQL */
-    std::string limitString() const
+    String limitString() const
     {
         std::stringstream ss;
         if (limit != -1)
@@ -255,14 +255,14 @@ public:
     }
 
     /** Return the WHERE string to be used in SQL query */
-    std::string whereString() const
+    String whereString() const
     {
-        std::string queryString = this->queryStringFunc();
+        String queryString = this->queryStringFunc();
         return (queryString == " ") ? " " : " WHERE " + queryString + " ";
     }
 
     /** Return the query string, should be overrided in subclasses */
-    virtual std::string queryStringFunc() const
+    virtual String queryStringFunc() const
     {
         return " ";
     }
@@ -318,7 +318,7 @@ public:
         delete this->value;
     }
 
-    std::string opString() const
+    String opString() const
     {
         switch (op)
         {
@@ -337,7 +337,7 @@ public:
         }
     }
 
-    virtual std::string queryStringFunc() const
+    virtual String queryStringFunc() const
     {
         return (value == NULL) ? " " : MDL::label2Str(value->label) + opString() + value->toString(false, true);
     }
@@ -471,7 +471,7 @@ public:
         query2 = new MDValueRelational(label, valueMax, LE);
     }
 
-    virtual std::string queryStringFunc() const
+    virtual String queryStringFunc() const
     {
         std::stringstream ss;
         ss << "(" << query1->queryStringFunc() << " AND " << query2->queryStringFunc() << ")";
@@ -495,13 +495,13 @@ public:
  */
 class MDExpression: public MDQuery
 {
-	std::string sExpression;
+	String sExpression;
 public:
 	MDExpression()
     {
 		sExpression = " 1=1 ";
     }
-	MDExpression(std::string _sExpression,
+	MDExpression(String _sExpression,
 			     int limit = -1,
 			     int offset = 0,
 			     MDLabel orderLabel = MDL_OBJID):MDQuery(limit, offset, orderLabel)
@@ -509,7 +509,7 @@ public:
 		sExpression=_sExpression;
     }
 
-    virtual std::string queryStringFunc() const
+    virtual String queryStringFunc() const
     {
         return sExpression;
     }
@@ -537,7 +537,7 @@ class MDMultiQuery: public MDQuery
 {
 private:
     std::vector<const MDQuery*> queries;
-    std::vector<std::string> operations;
+    std::vector<String> operations;
 
 public:
 
@@ -562,7 +562,7 @@ public:
         operations.clear();
     }
 
-    virtual std::string queryStringFunc() const
+    virtual String queryStringFunc() const
     {
         if (queries.size() > 0)
         {

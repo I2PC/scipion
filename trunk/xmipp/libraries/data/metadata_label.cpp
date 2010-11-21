@@ -117,6 +117,11 @@ MDLabelType MDL::labelType(const String &labelName)
     return data[str2Label(labelName)].type;
 }
 
+std::map<String, MDLabel>& MDL::getLabelDict()
+{
+  return names;
+}
+
 
 bool vectorContainsLabel(const std::vector<MDLabel>& labelsVector, const MDLabel label)
 {

@@ -249,6 +249,7 @@ public:
     static bool isValidLabel(const String &labelName);
     static MDLabelType labelType(const MDLabel label);
     static MDLabelType labelType(const String &labelName);
+    static std::map<String, MDLabel>& getLabelDict();
     /** @} */
 
 private:
