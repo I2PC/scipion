@@ -990,6 +990,19 @@ public:
         return temp;
     }
 
+    /** Maximum element */
+    T computeMax() const
+    {
+        if (vdim == 0)
+            return 0;
+
+        T maxval = VEC_ELEM(*this,0);
+        for (int j = 0; j < vdim; ++j)
+            if ( VEC_ELEM(*this,j) > maxval )
+                maxval=VEC_ELEM(*this,j);
+        return maxval;
+    }
+
     /** Index for the maximum element.
      *
      * This function returns the index of the maximum element of an matrix1d.
@@ -1004,10 +1017,13 @@ public:
         }
 
         jmax = 0;
-        T maxval = (*this)(0);
-        for (int j = 0; j < vdim; j++)
-            if ( (*this)(j) > maxval )
+        T maxval = VEC_ELEM(*this, 0);
+        for (int j = 0; j < vdim; ++j)
+            if ( VEC_ELEM(*this,j) > maxval )
+            {
                 jmax =j;
+                maxval=VEC_ELEM(*this,j);
+            }
     }
 
     /** Index for the minimum element.
@@ -1024,10 +1040,13 @@ public:
         }
 
         jmin = 0;
-        T minval = (*this)(0);
-        for (int j = 0; j < vdim; j++)
-            if ( (*this)(j) < minval )
+        T minval = VEC_ELEM(*this, 0);
+        for (int j = 0; j < vdim; ++j)
+            if ( VEC_ELEM(*this,j) < minval )
+            {
                 jmin =j;
+                minval=VEC_ELEM(*this,j);
+            }
     }
 
     /** Algebraic transpose of vector
@@ -1050,7 +1069,7 @@ public:
      *
      * The same as before but the result is stored in this same object.
      */
-    void selfTranspose()
+    inline void selfTranspose()
     {
         row = !row;
     }
