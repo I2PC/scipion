@@ -49,7 +49,7 @@ int main(int argc, char **argv)
     double          new_val, old_val, avg_val, sig_val;
     std::string     str_new_val, str_old_val;
     double          accuracy;
-    Mask_Params     mask_prm(INT_MASK);
+    MaskProgram     mask_prm(INT_MASK);
     MultidimArray<int> * mask;
 
     // Read arguments --------------------------------------------------------

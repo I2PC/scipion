@@ -76,7 +76,7 @@ public:
     FileName fnOut;
     
     // Mask
-    Mask_Params mask_prm;
+    MaskProgram mask_prm;
 
     // Use mask
     bool useMask;

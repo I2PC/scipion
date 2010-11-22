@@ -68,7 +68,7 @@ class Particle
 public:
     int x, y;             // position in micrograph
     int idx;              // Index of this particle within the micrograph
-    // list of coordinates
+                          // list of coordinates
     char status;          // rejected=0, selected=1 or moved=2
     Matrix1D<double> vec; // vector of that particle
     double cost;          // Associated cost
@@ -224,7 +224,7 @@ public:
     int                        __numThreads;
     bool                       __learn_particles_done;
     bool                       __autoselection_done;
-    Mask_Params                __mask;
+    MaskProgram                __mask;
     Classification_model       __training_model;
     Classification_model       __training_loaded_model;
     Classification_model       __selection_model;

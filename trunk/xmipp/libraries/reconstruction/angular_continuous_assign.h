@@ -61,9 +61,9 @@ public:
     // Imaginary part of the Fourier transform
     MultidimArray<double> imDFTVolume;
     // Weighting mask in Fourier space
-    Mask_Params      mask_Fourier;
+    MaskProgram      mask_Fourier;
     // Weighting mask in Real space
-    Mask_Params      mask_Real;
+    MaskProgram      mask_Real;
 public:
     /// Empty constructor
     ProgAngularContinuousAssign();

@@ -34,11 +34,11 @@
 #include <data/program.h>
 
 
-class ProgMask: public Mask_Params, public XmippProgram
+class ProgMask: public MaskProgram
 {
 public:
 
-    Mask_Params     mask_prm;
+    MaskProgram     mask_prm;
     FileName        oext, fn_in, fn_out, fn_mask;
     int             save_mask;
     int             create_mask;
@@ -88,7 +88,7 @@ public:
         addParamsLine("   [--count_above <th>]                : Voxels within mask >= th");
         addParamsLine("   [--count_below <th>]                : Voxels within mask <= th");
         addParamsLine("   [--substitute <val=\"0\">]  : Value outside the mask: userProvidedValue|min|max|avg");
-        commonCommandLineForMasks;
+        MaskProgram::defineParams();
     }
     void readParams()
     {
@@ -112,12 +112,11 @@ public:
         str_subs_val = getParam("--substitute");
         count = count_below || count_above;
 
-        processCommonCommandLineForMasks;
+        MaskProgram::readParams();
     }
 
     void readParamsMask()
-    {
-    }
+{}
 
     /* RuMAIN -------------------------------------------------------------------- */
     void run()

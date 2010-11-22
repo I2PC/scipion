@@ -382,7 +382,7 @@ void adaptive_soft_thresholding2D(MultidimArray<double> &I, int scale)
 // Keep central part -------------------------------------------------------
 void DWT_keep_central_part(MultidimArray<double> &I, double R)
 {
-    Mask_Params mask(INT_MASK);
+    MaskProgram mask(INT_MASK);
     mask.type = BINARY_DWT_CIRCULAR_MASK;
     if (R == -1)
         mask.R1 = (double)XSIZE(I) / 2 + 1;

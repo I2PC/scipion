@@ -29,7 +29,7 @@
 #include <data/geometry.h>
 #include <data/mask.h>
 
-void Usage(const Mask_Params &m);
+void Usage(const MaskProgram &m);
 
 // Alignment parameters needed by fitness ----------------------------------
 class AlignParams
@@ -115,7 +115,7 @@ int main(int argc, char **argv)
     bool     apply;
     bool     mask_enabled, mean_in_mask;
     bool     usePowell, onlyShift;
-    Mask_Params mask(INT_MASK);
+    MaskProgram mask(INT_MASK);
 
     // Get parameters =======================================================
     try
@@ -338,7 +338,7 @@ int main(int argc, char **argv)
     return 0;
 }
 
-void Usage(const Mask_Params &m)
+void Usage(const MaskProgram &m)
 {
     std::cerr << "Purpose: Align two volumes varying orientation, position and scale\n"
     << "Usage: align3D [options]\n"

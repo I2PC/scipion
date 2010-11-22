@@ -283,7 +283,7 @@ public:
     MultidimArray< int  > bg_mask, bg_mask_bck;
     bool apply_geo;
     bool enable_mask;
-    Mask_Params mask_prm;
+    MaskProgram mask_prm;
 
     /** Read parameters from command line.
      */

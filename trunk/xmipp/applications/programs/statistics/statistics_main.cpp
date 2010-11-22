@@ -39,7 +39,7 @@ int main(int argc, char **argv)
     MetaData        DF_stats;
     Image<double>  image;
 
-    Mask_Params     mask_prm(INT_MASK);
+    MaskProgram     mask_prm(INT_MASK);
     int             short_format;     // True if a short line is to be shown
     int             save_mask;        // True if the masks must be saved
     int             repair;           // True if headers are initialized

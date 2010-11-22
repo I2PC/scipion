@@ -135,6 +135,10 @@ void XmippProgram::defineParams()
     REPORT_ERROR(ERR_NOT_IMPLEMENTED, "function 'defineParams'");
 }
 
+void XmippProgram::run()
+{
+    REPORT_ERROR(ERR_NOT_IMPLEMENTED, "function 'run'");
+}
 void XmippProgram::readParams()
 {
     REPORT_ERROR(ERR_NOT_IMPLEMENTED, "function 'readParams'");

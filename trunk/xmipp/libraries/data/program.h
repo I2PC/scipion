@@ -158,7 +158,7 @@ public:
     /** This function will be start running the program.
      * it also should be implemented by derived classes.
      */
-    virtual void run() = 0;
+    virtual void run();
     /** Call the run function inside a try/catch block */
     void tryRun();
 
