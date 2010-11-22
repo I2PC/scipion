@@ -338,8 +338,6 @@ int NaiveBayes::doInference(const MultidimArray<double> &newFeatures,
     //    std::cout << "classesProbs norm " << classesProbs.transpose() << std::endl;
 
     allCosts=__cost*classesProbs;
-    std::cout << "__cost=" << __cost << std::endl;
-    std::cout << "classesProbs=" << classesProbs << std::endl;
     //    std::cout << "allCosts " << allCosts.transpose() << std::endl;
 
     int bestk=0;
