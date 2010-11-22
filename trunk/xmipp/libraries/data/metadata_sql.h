@@ -471,6 +471,15 @@ public:
         query2 = new MDValueRelational(label, valueMax, LE);
     }
 
+    MDValueRange(const MDObject &o1, const MDObject &o2,
+        int limit = -1, int offset = 0, MDLabel orderLabel = MDL_OBJID):MDQuery(limit, offset, orderLabel)
+    {
+        if (o1.label != o2.label)
+          REPORT_ERROR(ERR_VALUE_INCORRECT, "Labels should be the same");
+        query1 = new MDValueRelational(o1, GE);
+        query2 = new MDValueRelational(o2, LE);
+
+    }
     virtual String queryStringFunc() const
     {
         std::stringstream ss;
