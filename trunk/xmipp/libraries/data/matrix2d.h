@@ -310,7 +310,7 @@ public:
     Matrix2D(int Ydim, int Xdim)
     {
         coreInit();
-        resize(Ydim, Xdim);
+        initZeros(Ydim, Xdim);
     }
 
     /** Copy constructor
@@ -344,7 +344,7 @@ public:
         {
             if (MAT_XSIZE(*this)!=MAT_XSIZE(op1) ||
                 MAT_YSIZE(*this)!=MAT_YSIZE(op1))
-                resize(op1);
+                resizeNoCopy(op1);
             memcpy(mdata,op1.mdata,op1.mdim*sizeof(T));
         }
 
@@ -405,7 +405,7 @@ public:
     //@{
     /** Resize to a given size
      */
-    void resize(int Ydim, int Xdim)
+    void resize(int Ydim, int Xdim, bool noCopy=false)
     {
 
         if (Xdim == mdimx && Ydim == mdimy)
@@ -430,18 +430,19 @@ public:
         }
 
         // Copy needed elements, fill with 0 if necessary
-        for (int i = 0; i < Ydim; i++)
-            for (int j = 0; j < Xdim; j++)
-            {
-                T val;
-                if (i >= mdimy)
-                    val = 0;
-                else if (j >= mdimx)
-                    val = 0;
-                else
-                    val = mdata[i*mdimx + j];
-                new_mdata[i*Xdim+j] = val;
-            }
+        if (!noCopy)
+			for (int i = 0; i < Ydim; i++)
+				for (int j = 0; j < Xdim; j++)
+				{
+					T val;
+					if (i >= mdimy)
+						val = 0;
+					else if (j >= mdimx)
+						val = 0;
+					else
+						val = mdata[i*mdimx + j];
+					new_mdata[i*Xdim+j] = val;
+				}
 
         // deallocate old vector
         coreDeallocate();
@@ -470,6 +471,23 @@ public:
     {
         if (mdimx != v.mdimx || mdimy != v.mdimy)
             resize(v.mdimy, v.mdimx);
+    }
+
+    /** Resize to a given size (don't copy old elements)
+     */
+    inline void resizeNoCopy(int Ydim, int Xdim)
+    {
+    	resize(Ydim, Xdim, true);
+    }
+
+    /** Resize according to a pattern.
+     *  Do not copy old elements.
+     */
+    template<typename T1>
+    inline void resizeNoCopy(const Matrix2D<T1> &v)
+    {
+        if (mdimx != v.mdimx || mdimy != v.mdimy)
+            resize(v.mdimy, v.mdimx, true);
     }
 
     /** Extract submatrix and assign to this object.
@@ -553,7 +571,7 @@ public:
     void initZeros(int Ydim, int Xdim)
     {
         if (mdimx!=Xdim || mdimy!=Ydim)
-            resize(Ydim, Xdim);
+            resizeNoCopy(Ydim, Xdim);
         memset(mdata,0,mdimx*mdimy*sizeof(T));
     }
 
@@ -570,7 +588,7 @@ public:
     void initZeros(const Matrix2D<T1>& op)
     {
         if (mdimx!=op.mdimx || mdimy!=op.mdimy)
-            resize(op);
+            resizeNoCopy(op);
         memset(mdata,0,mdimx*mdimy*sizeof(T));
     }
 
@@ -598,9 +616,7 @@ public:
      */
     void initIdentity(int dim)
     {
-        if (mdimx!=dim || mdimy!=dim)
-            resize(dim, dim);
-        initZeros();
+        initZeros(dim, dim);
         for (int i = 0; i < dim; i++)
             MAT_ELEM(*this,i,i) = 1;
     }
@@ -878,11 +894,11 @@ public:
     void loadFromNumericalRecipes(T** m, int Ydim, int Xdim)
     {
         if (mdimx!=Xdim || mdimy!=Ydim)
-            resize(Ydim, Xdim);
+            resizeNoCopy(Ydim, Xdim);
 
         for (int i = 1; i <= Ydim; i++)
             for (int j = 1; j <= Xdim; j++)
-                (*this)(i - 1, j - 1) = m[i][j];
+                MAT_ELEM(*this,i - 1, j - 1) = m[i][j];
     }
 
     /** Kill a 2D array produced for numerical recipes
@@ -975,7 +991,7 @@ public:
         if (op1.isRow())
         {
             if (mdimy!=1 || mdimx!=VEC_XSIZE(op1))
-                resize(1, VEC_XSIZE(op1));
+                resizeNoCopy(1, VEC_XSIZE(op1));
 
             for (int j = 0; j < VEC_XSIZE(op1); j++)
                 MAT_ELEM(*this,0, j) = VEC_ELEM(op1,j);
@@ -983,10 +999,10 @@ public:
         else
         {
             if (mdimy!=1 || mdimx!=VEC_XSIZE(op1))
-                resize(VEC_XSIZE(op1), 1);
+                resizeNoCopy(VEC_XSIZE(op1), 1);
 
             for (int i = 0; i < VEC_XSIZE(op1); i++)
-                MAT_ELEM(*this,i, 0) = VEC_ELEM(op1,i);
+                MAT_ELEM(*this, i, 0) = VEC_ELEM(op1,i);
         }
     }
 
@@ -1020,7 +1036,7 @@ public:
         {
             // Row vector
             if (VEC_XSIZE(op1)!=mdimx)
-                op1.resize(mdimx);
+                op1.resizeNoCopy(mdimx);
 
             for (int j = 0; j < mdimx; j++)
                 VEC_ELEM(op1,j) = MAT_ELEM(*this,0, j);
@@ -1031,7 +1047,7 @@ public:
         {
             // Column vector
             if (VEC_XSIZE(op1)!=mdimy)
-                op1.resize(mdimy);
+                op1.resizeNoCopy(mdimy);
 
             for (int i = 0; i < mdimy; i++)
                 VEC_ELEM(op1,i) = MAT_ELEM(*this,i, 0);
@@ -1051,7 +1067,7 @@ public:
     void copyFromVector(std::vector<T> &v,int Xdim, int Ydim)
     {
         if (mdimx!=Xdim || mdimy!=Ydim)
-            resize(Ydim, Xdim);
+            resizeNoCopy(Ydim, Xdim);
         copy( v.begin(), v.begin()+v.size(), mdata);
     }
 
@@ -1078,7 +1094,7 @@ public:
             REPORT_ERROR(ERR_INDEX_OUTOFBOUNDS, "getRow: Matrix subscript (i) greater than matrix dimension");
 
         if (VEC_XSIZE(v)!=mdimx)
-            v.resize(mdimx);
+            v.resizeNoCopy(mdimx);
         for (int j = 0; j < mdimx; j++)
             VEC_ELEM(v,j) = MAT_ELEM(*this,i, j);
 
@@ -1107,7 +1123,7 @@ public:
             REPORT_ERROR(ERR_INDEX_OUTOFBOUNDS,"getCol: Matrix subscript (j) greater than matrix dimension");
 
         if (VEC_XSIZE(v)!=mdimy)
-            v.resize(mdimy);
+            v.resizeNoCopy(mdimy);
         for (int i = 0; i < mdimy; i++)
             VEC_ELEM(v,i) = MAT_ELEM(*this,i, j);
 
@@ -1350,7 +1366,7 @@ void ludcmp(const Matrix2D<T>& A, Matrix2D<T>& LU, Matrix1D< int >& indx, T& d)
 {
     LU = A;
     if (VEC_XSIZE(indx)!=A.mdimx)
-        indx.resize(A.mdimx);
+        indx.resizeNoCopy(A.mdimx);
     ludcmp(LU.adaptForNumericalRecipes2(), A.mdimx,
            indx.adaptForNumericalRecipes(), &d);
 }
@@ -1427,7 +1443,7 @@ void typeCast(const Matrix2D<T1>& v1,  Matrix2D<T2>& v2)
     }
 
     if (v1.mdimx!=v2.mdimx || v1.mdimy!=v2.mdimy)
-        v2.resize(v1);
+        v2.resizeNoCopy(v1);
     for (unsigned long int n = 0; n < v1.mdim; n++)
         v2.mdata[n] = static_cast< T2 > (v1.mdata[n]);
 }
