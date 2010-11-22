@@ -41,18 +41,18 @@ bool debugging = true;
 // Split several histograms within the indexes l0 and lF so that
 // the entropy after division is maximized
 int splitHistogramsUsingEntropy(const std::vector<Histogram1D> &hist,
-    int l0, int lF)
+                                int l0, int lF)
 {
     // Number of classes
     int K = hist.size();
-    
+
     // Set everything outside l0 and lF to zero, and make it a PDF
     std::vector<Histogram1D> histNorm;
     for (int k = 0; k < K; k++)
     {
         Histogram1D histaux = hist[k];
         for (int l = 0; l < XSIZE(histaux); l++)
-            if (l < l0 || l > lF) 
+            if (l < l0 || l > lF)
                 DIRECT_A1D_ELEM(histaux,l) = 0;
         histaux /= histaux.sum();
         histNorm.push_back(histaux);
@@ -62,11 +62,11 @@ int splitHistogramsUsingEntropy(const std::vector<Histogram1D> &hist,
     MultidimArray<double> p(K, 2);
     for (int k = 0; k < K; k++)
     {
-    	const Histogram1D& histogram=histNorm[k];
+        const Histogram1D& histogram=histNorm[k];
         DIRECT_A2D_ELEM(p,k, 0) = DIRECT_A1D_ELEM(histogram,l0);
         DIRECT_A2D_ELEM(p,k, 1) = 0;
         for (int l = l0 + 1; l <= lF; l++)
-        	DIRECT_A2D_ELEM(p,k, 1) += DIRECT_A1D_ELEM(histogram,l);
+            DIRECT_A2D_ELEM(p,k, 1) += DIRECT_A1D_ELEM(histogram,l);
     }
 
     // Compute the splitting l giving maximum entropy
@@ -79,14 +79,15 @@ int splitHistogramsUsingEntropy(const std::vector<Histogram1D> &hist,
         double entropy = 0;
         FOR_ALL_ELEMENTS_IN_ARRAY2D(p)
         {
-        	double aux=DIRECT_A2D_ELEM(p,i,j);
-            if (aux != 0) entropy -= aux * log10(aux);
+            double aux=DIRECT_A2D_ELEM(p,i,j);
+            if (aux != 0)
+                entropy -= aux * log10(aux);
         }
 
-        #ifdef DEBUG_SPLITTING_USING_ENTROPY
-            std::cout << "Splitting at "  << l << " entropy=" << entropy
-                      << std::endl;
-        #endif
+#ifdef DEBUG_SPLITTING_USING_ENTROPY
+        std::cout << "Splitting at "  << l << " entropy=" << entropy
+        << std::endl;
+#endif
 
         // Check if this is the maximum
         if (entropy > maxEntropy)
@@ -94,25 +95,25 @@ int splitHistogramsUsingEntropy(const std::vector<Histogram1D> &hist,
             maxEntropy = entropy;
             lmaxEntropy = l;
         }
-         
+
         // Move to next split point
         l++;
-        
+
         // Update probabilities of being l<=l0 and l>l0
         for (int k = 0; k < K; k++)
         {
-        	const Histogram1D& histogram=histNorm[k];
-        	double aux=DIRECT_A1D_ELEM(histogram,l);
+            const Histogram1D& histogram=histNorm[k];
+            double aux=DIRECT_A1D_ELEM(histogram,l);
             DIRECT_A2D_ELEM(p,k, 0) += aux;
-        	DIRECT_A2D_ELEM(p,k, 1) -= aux;
+            DIRECT_A2D_ELEM(p,k, 1) -= aux;
         }
     }
-    
-    #ifdef DEBUG_SPLITTING_USING_ENTROPY
-        std::cout << "Finally in l=[" << l0 << "," << lF
-                  << " Max Entropy:" << maxEntropy
-                  << " lmax=" << lmaxEntropy << std::endl;
-    #endif
+
+#ifdef DEBUG_SPLITTING_USING_ENTROPY
+    std::cout << "Finally in l=[" << l0 << "," << lF
+    << " Max Entropy:" << maxEntropy
+    << " lmax=" << lmaxEntropy << std::endl;
+#endif
 
     // If the point giving the maximum entropy is too much on the extreme,
     // substitute it by the middle point
@@ -123,8 +124,8 @@ int splitHistogramsUsingEntropy(const std::vector<Histogram1D> &hist,
 }
 
 /* Constructor ------------------------------------------------------------- */
-LeafNode::LeafNode(const std::vector < MultidimArray<double> > &leafFeatures, 
-    int discrete_levels)
+LeafNode::LeafNode(const std::vector < MultidimArray<double> > &leafFeatures,
+                   int discrete_levels)
 {
     __discreteLevels = discrete_levels;
     K = leafFeatures.size();
@@ -169,13 +170,13 @@ LeafNode::LeafNode(const std::vector < MultidimArray<double> > &leafFeatures,
             Matrix1D<int> currentInterval = intervals.front();
             intervals.pop();
             int lsplit = splitHistogramsUsingEntropy(hist,
-                currentInterval(0), currentInterval(1));
+                         currentInterval(0), currentInterval(1));
             VECTOR_R2(limits,currentInterval(0),lsplit);
             splittedIntervals.push(limits);
             VECTOR_R2(limits,lsplit+1, currentInterval(1));
             splittedIntervals.push(limits);
         }
-        
+
         // Copy the splitted intervals to the interval list
         while (!splittedIntervals.empty())
         {
@@ -190,7 +191,7 @@ LeafNode::LeafNode(const std::vector < MultidimArray<double> > &leafFeatures,
     for (int i=0; i<imax; i++)
     {
         newBins(i) = intervals.front()(1);
-        intervals.pop(); 
+        intervals.pop();
     }
 
     // Compute now the irregular histograms
@@ -199,7 +200,7 @@ LeafNode::LeafNode(const std::vector < MultidimArray<double> > &leafFeatures,
         IrregularHistogram1D irregHist;
         irregHist.init(hist[k], newBins);
         irregHist.selfNormalize();
-        __leafPDF.push_back(irregHist);    
+        __leafPDF.push_back(irregHist);
     }
 }
 
@@ -223,10 +224,11 @@ double LeafNode::computeWeight() const
     for (int k1=0; k1<K; k1++)
         for (int k2=0; k2<K; k2++)
         {
-            if (k1==k2) continue;
+            if (k1==k2)
+                continue;
             retval+=KLDistance(
-                __leafPDF[k1].getHistogram(),
-                __leafPDF[k2].getHistogram());
+                        __leafPDF[k1].getHistogram(),
+                        __leafPDF[k2].getHistogram());
         }
     return (retval/(K*K-K));
 }
@@ -236,7 +238,7 @@ std::ostream & operator << (std::ostream &_out, const LeafNode &leaf)
 {
     for (int k=0; k<leaf.K; k++)
         _out << "Histogram of class " << k << "=\n"
-             << leaf.__leafPDF[k] << std::endl;
+        << leaf.__leafPDF[k] << std::endl;
     _out << "Classification power=" << leaf.computeWeight() << std::endl;
     return _out;
 }
@@ -246,117 +248,125 @@ std::ostream & operator << (std::ostream &_out, const LeafNode &leaf)
 /* ------------------------------------------------------------------------- */
 NaiveBayes::NaiveBayes(
     const std::vector< MultidimArray<double> > &features,
-    const MultidimArray<double> &priorProbs,
+    const Matrix1D<double> &priorProbs,
     int discreteLevels)
-{ 
+{
     K = features.size();
     Nfeatures=XSIZE(features[0]);
-    __priorProbsLog10 = priorProbs;
-    __priorProbsLog10.selfLog10();
-    __priorProbsLog10.resize(K);
+    __priorProbsLog10.initZeros(K);
+    FOR_ALL_ELEMENTS_IN_MATRIX1D(__priorProbsLog10)
+    VEC_ELEM(__priorProbsLog10,i)=log10(VEC_ELEM(priorProbs,i));
 
     // Build a leafnode for each feature and assign a weight
     __weights.initZeros(Nfeatures);
-    std::vector < MultidimArray<double> > aux(K);	
+    std::vector < MultidimArray<double> > aux(K);
     for (int f=0; f<Nfeatures; f++)
     {
         for (int k=0; k<K; k++)
             features[k].getCol(f, aux[k]);
         __leafs.push_back(new LeafNode(aux,discreteLevels));
         DIRECT_A1D_ELEM(__weights,f)=__leafs[f]->computeWeight();
-        #ifdef DEBUG_WEIGHTS
-            if(debugging == true)
-            {
-                std::cout << "Node " << f << std::endl
-                          << *(__leafs[f]) << std::endl;
-            }
-        #endif            
+#ifdef DEBUG_WEIGHTS
+
+        if(debugging == true)
+        {
+            std::cout << "Node " << f << std::endl
+            << *(__leafs[f]) << std::endl;
+        }
+#endif
+
     }
     __weights /= __weights.computeMax();
-    
+
     // Set default cost matrix
-    __cost.resize(K,K);
+    __cost.resizeNoCopy(K,K);
     __cost.initConstant(1);
-    for (int i=0; i<K; i++) __cost(i,i)=0;
+    for (int i=0; i<K; i++)
+        MAT_ELEM(__cost,i,i)=0;
 }
 
 /* Destructor -------------------------------------------------------------- */
 NaiveBayes::~NaiveBayes()
 {
-   for (int i = 0; i < __leafs.size(); i++)
-      delete __leafs[i];
+    for (int i = 0; i < __leafs.size(); i++)
+        delete __leafs[i];
 }
 
 /* Set cost matrix --------------------------------------------------------- */
-void NaiveBayes::setCostMatrix(const MultidimArray<double> &cost)
+void NaiveBayes::setCostMatrix(const Matrix2D<double> &cost)
 {
-    if (XSIZE(cost)!=K || YSIZE(cost)!=K)
+    if (MAT_XSIZE(cost)!=K || MAT_YSIZE(cost)!=K)
         REPORT_ERROR(ERR_MULTIDIM_SIZE,"Cost matrix does not have the apropriate size");
     __cost=cost;
 }
 
 /* Do inference ------------------------------------------------------------ */
 int NaiveBayes::doInference(const MultidimArray<double> &newFeatures,
-    double &cost)
+                            double &cost)
 {
-    MultidimArray<double> classesProbs;
     classesProbs = __priorProbsLog10;
     for(int f=0; f<Nfeatures; f++)
         for (int k=0; k<K; k++)
         {
-      	    double p = __leafs[f]->assignProbability(newFeatures(f), k);
-            
-            if (ABS(p) < 1e-2) classesProbs(k) += -2*__weights(f);
-            else               classesProbs(k) += __weights(f)*std::log10(p);
+            double p = __leafs[f]->assignProbability(newFeatures(f), k);
 
-            #ifdef DEBUG_FINE_CLASSIFICATION
-                if(debugging == true)
-                {
-                    std::cout << "Feature " << f
-                              << " Probability for class " << k << " = "
-                              << classesProbs(k) << " increase= " << p 
-                              << std::endl;
-                    char c;
-// COSS                    std::cin >> c;
-//                    if (c=='q') debugging = false;
-                }
-            #endif        	        
+            if (ABS(p) < 1e-2)
+                VEC_ELEM(classesProbs,k) += -2*DIRECT_A1D_ELEM(__weights,f);
+            else
+                VEC_ELEM(classesProbs,k) += DIRECT_A1D_ELEM(__weights,f)*std::log10(p);
+
+#ifdef DEBUG_FINE_CLASSIFICATION
+            if(debugging == true)
+            {
+                std::cout << "Feature " << f
+                << " Probability for class " << k << " = "
+                << classesProbs(k) << " increase= " << p
+                << std::endl;
+                char c;
+                // COSS                    std::cin >> c;
+                //                    if (c=='q') debugging = false;
+            }
+#endif
+
         }
     classesProbs-=classesProbs.computeMax();
-//    std::cout << "classesProbs " << classesProbs.transpose() << std::endl;
-    
+    //    std::cout << "classesProbs " << classesProbs.transpose() << std::endl;
+
     for (int k=0; k<K; k++)
-        classesProbs(k)=pow(10.0,classesProbs(k));
+        VEC_ELEM(classesProbs,k)=pow(10.0,VEC_ELEM(classesProbs,k));
     classesProbs/=classesProbs.sum();
-//    std::cout << "classesProbs norm " << classesProbs.transpose() << std::endl;
-    
-    MultidimArray<double> allCosts;
+    //    std::cout << "classesProbs norm " << classesProbs.transpose() << std::endl;
+
     allCosts=__cost*classesProbs;
-    allCosts.selfLog10();
-//    std::cout << "allCosts " << allCosts.transpose() << std::endl;
+    std::cout << "__cost=" << __cost << std::endl;
+    std::cout << "classesProbs=" << classesProbs << std::endl;
+    //    std::cout << "allCosts " << allCosts.transpose() << std::endl;
 
     int bestk=0;
-    cost=DIRECT_A1D_ELEM(allCosts,0);
+    cost=VEC_ELEM(allCosts,0)=std::log10(VEC_ELEM(allCosts,0));
     for (int k=1; k<K; k++)
-        if (DIRECT_A1D_ELEM(allCosts,k)<cost)
+    {
+        VEC_ELEM(allCosts,k)=std::log10(VEC_ELEM(allCosts,k));
+        if (VEC_ELEM(allCosts,k)<cost)
         {
-            cost=DIRECT_A1D_ELEM(allCosts,k);
+            cost=VEC_ELEM(allCosts,k);
             bestk=k;
         }
+    }
 
-    #ifdef DEBUG_CLASSIFICATION
-        if(debugging == true)
-        {
-            for (int k=0; k<K; k++)
-                classesProbs(k)=log10(classesProbs(k));
-            std::cout << "Class probababilities=" << classesProbs.transpose()
-                      << "\n  costs=" << allCosts.transpose()
-                      << "  best class=" << bestk << std::endl;
-            char c;
-            // COSS std::cin >> c;
-            // if (c=='q') debugging = false;
-        }
-    #endif
+#ifdef DEBUG_CLASSIFICATION
+    if(debugging == true)
+    {
+        for (int k=0; k<K; k++)
+            classesProbs(k)=log10(classesProbs(k));
+        std::cout << "Class probababilities=" << classesProbs.transpose()
+        << "\n  costs=" << allCosts.transpose()
+        << "  best class=" << bestk << std::endl;
+        char c;
+        // COSS std::cin >> c;
+        // if (c=='q') debugging = false;
+    }
+#endif
     return bestk;
 }
 
@@ -365,15 +375,15 @@ std::ostream & operator << (std::ostream &_out, const NaiveBayes &naive)
 {
     for (int f=0; f<naive.Nfeatures; f++)
         _out << "Node " << f << std::endl
-             << *(naive.__leafs[f]) << std::endl;
+        << *(naive.__leafs[f]) << std::endl;
     return _out;
 }
 
 /* Ensemble constructor ---------------------------------------------------- */
 EnsembleNaiveBayes::EnsembleNaiveBayes(
     const std::vector < MultidimArray<double> >  &features,
-    const MultidimArray<double> &priorProbs,
-    int discreteLevels, int numberOfClassifiers, 
+    const Matrix1D<double> &priorProbs,
+    int discreteLevels, int numberOfClassifiers,
     double samplingFeatures, double samplingIndividuals,
     const std::string &newJudgeCombination)
 {
@@ -386,7 +396,7 @@ EnsembleNaiveBayes::EnsembleNaiveBayes(
         // Produce the set of features for this subclassifier
         MultidimArray<int> subFeatures(NsubFeatures);
         FOR_ALL_ELEMENTS_IN_ARRAY1D(subFeatures)
-            subFeatures(i)=ROUND(rnd_unif(0,NFeatures-1));
+        subFeatures(i)=ROUND(rnd_unif(0,NFeatures-1));
 
         // Container for the new training sample
         std::vector< MultidimArray<double> >  newFeatures;
@@ -398,19 +408,19 @@ EnsembleNaiveBayes::EnsembleNaiveBayes(
             int NsubIndividuals=CEIL(NIndividuals*samplingIndividuals);
             MultidimArray<int> subIndividuals(NsubIndividuals);
             FOR_ALL_ELEMENTS_IN_ARRAY1D(subIndividuals)
-                subIndividuals(i)=ROUND(rnd_unif(0,NsubIndividuals-1));
+            subIndividuals(i)=ROUND(rnd_unif(0,NsubIndividuals-1));
 
             MultidimArray<double> newFeaturesK;
             newFeaturesK.initZeros(NsubIndividuals,NsubFeatures);
             const MultidimArray<double>& features_k=features[k];
             FOR_ALL_ELEMENTS_IN_ARRAY2D(newFeaturesK)
-                DIRECT_A2D_ELEM(newFeaturesK,i,j)=DIRECT_A2D_ELEM(features_k,
-                		DIRECT_A1D_ELEM(subIndividuals,i),
-                		DIRECT_A1D_ELEM(subFeatures,j));
-            
+            DIRECT_A2D_ELEM(newFeaturesK,i,j)=DIRECT_A2D_ELEM(features_k,
+                                              DIRECT_A1D_ELEM(subIndividuals,i),
+                                              DIRECT_A1D_ELEM(subFeatures,j));
+
             newFeatures.push_back(newFeaturesK);
         }
-        
+
         // Create a Naive Bayes classifier with this data
         NaiveBayes *nb=new NaiveBayes(newFeatures, priorProbs, discreteLevels);
         ensemble.push_back(nb);
@@ -427,7 +437,7 @@ EnsembleNaiveBayes::~EnsembleNaiveBayes()
 }
 
 /* Set cost matrix --------------------------------------------------------- */
-void EnsembleNaiveBayes::setCostMatrix(const MultidimArray<double> &cost)
+void EnsembleNaiveBayes::setCostMatrix(const Matrix2D<double> &cost)
 {
     int nmax=ensemble.size();
     for (int n=0; n<nmax; n++)
@@ -436,14 +446,16 @@ void EnsembleNaiveBayes::setCostMatrix(const MultidimArray<double> &cost)
 
 /* Do inference ------------------------------------------------------------ */
 int EnsembleNaiveBayes::doInference(const MultidimArray<double> &newFeatures,
-    double &cost, MultidimArray<int> &votes)
+                                    double &cost, MultidimArray<int> &votes)
 {
 
     int nmax=ensemble.size();
     MultidimArray<double> minCost, maxCost;
     votes.initZeros(K);
-    minCost.initZeros(K); minCost.initConstant(1);
-    maxCost.initZeros(K); maxCost.initConstant(1);
+    minCost.initZeros(K);
+    minCost.initConstant(1);
+    maxCost.initZeros(K);
+    maxCost.initConstant(1);
     double bestMinCost=0;
     int bestClass;
     MultidimArray<double> newFeaturesn;
@@ -452,19 +464,24 @@ int EnsembleNaiveBayes::doInference(const MultidimArray<double> &newFeatures,
         double costn;
         newFeaturesn.initZeros(XSIZE(ensembleFeatures[n]));
         FOR_ALL_ELEMENTS_IN_ARRAY1D(newFeaturesn)
-            newFeaturesn(i)=newFeatures(ensembleFeatures[n](i));
+        newFeaturesn(i)=newFeatures(ensembleFeatures[n](i));
         int k=ensemble[n]->doInference(newFeaturesn, costn);
         votes(k)++;
-        if (minCost(k)>0 || minCost(k)>costn) minCost(k)=costn;
-        if (maxCost(k)>0 || maxCost(k)<costn) maxCost(k)=costn;
+        if (minCost(k)>0 || minCost(k)>costn)
+            minCost(k)=costn;
+        if (maxCost(k)>0 || maxCost(k)<costn)
+            maxCost(k)=costn;
         if (minCost(k)<bestMinCost)
         {
             bestMinCost=minCost(k);
             bestClass=k;
         }
     }
-    if      (judgeCombination[bestClass]=='m') cost=minCost(bestClass);
-    else if (judgeCombination[bestClass]=='M') cost=maxCost(bestClass);
-    else    cost=minCost(bestClass);
+    if      (judgeCombination[bestClass]=='m')
+        cost=minCost(bestClass);
+    else if (judgeCombination[bestClass]=='M')
+        cost=maxCost(bestClass);
+    else
+        cost=minCost(bestClass);
     return bestClass;
 }

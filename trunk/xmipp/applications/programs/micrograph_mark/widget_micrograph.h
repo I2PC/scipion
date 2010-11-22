@@ -191,12 +191,12 @@ public:
 
     //init the naive bayesian network
     void initNaiveBayes(const std::vector < MultidimArray<double> >
-                        &features, const MultidimArray<double> &probs,
+                        &features, const Matrix1D<double> &probs,
                         int discreteLevels, double penalization);
 
     //init the naive bayesian network
     void initNaiveBayesEnsemble(const std::vector < MultidimArray<double> >
-                                &features, const MultidimArray<double> &probs,
+                                &features, const Matrix1D<double> &probs,
                                 int discreteLevels, double penalization,
                                 int numberOfClassifiers,
                                 double samplingFeatures, double samplingIndividuals,
@@ -375,7 +375,7 @@ public:
 
     // Get classes probabilities
     void produceClassesProbabilities(const Classification_model &_model,
-                                     MultidimArray<double> &probabilities);
+                                     Matrix1D<double> &probabilities);
 
     // Get false positives automatically selected
     void getAutoFalsePositives(Classification_model &_training_model);

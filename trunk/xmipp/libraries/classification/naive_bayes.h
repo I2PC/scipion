@@ -89,10 +89,10 @@ public:
     int Nfeatures;
 
     // Prior probabilities of the classes
-    MultidimArray<double> __priorProbsLog10;
+    Matrix1D<double> __priorProbsLog10;
 
     // Weight of each feature
-    MultidimArray<double>        __weights;
+    MultidimArray<double> __weights;
 
     // The vector containing the Leafs (as many leafs as features)   
     std::vector<LeafNode*>  __leafs;
@@ -100,19 +100,26 @@ public:
     // Cost matrix
     // C(i,j) is the cost of predicting class j when the true
     // class is class i.
-    MultidimArray<double> __cost;
+    Matrix2D<double> __cost;
+
+public:
+    // Auxiliary variable for all costs
+    Matrix1D<double> allCosts;
+
+    // Auxiliary variable for the probability of the classes
+    Matrix1D<double> classesProbs;
 public:	
     // Constructor
     NaiveBayes(
         const std::vector < MultidimArray<double> >  &features,
-        const MultidimArray<double> &priorProbs,
+        const Matrix1D<double> &priorProbs,
         int discreteLevels);
 
     // Destructor
     ~NaiveBayes();
 
     // Set cost matrix
-    void setCostMatrix(const MultidimArray<double> &cost);
+    void setCostMatrix(const Matrix2D<double> &cost);
 
     // Returns the class with the largest probability given a set of features
     int doInference(const MultidimArray<double> &newFeatures, double &cost);
@@ -143,7 +150,7 @@ public:
     // Constructor
     EnsembleNaiveBayes(
         const std::vector < MultidimArray<double> >  &features,
-        const MultidimArray<double> &priorProbs,
+        const Matrix1D<double> &priorProbs,
         int discreteLevels, int numberOfClassifiers,
         double samplingFeatures, double samplingIndividuals,
         const std::string &newJudgeCombination);
@@ -152,7 +159,7 @@ public:
     ~EnsembleNaiveBayes();
 
     // Set cost matrix
-    void setCostMatrix(const MultidimArray<double> &cost);
+    void setCostMatrix(const Matrix2D<double> &cost);
 
     // Returns the class with the largest probability given a set of features
     int doInference(const MultidimArray<double> &newFeatures, double &cost,

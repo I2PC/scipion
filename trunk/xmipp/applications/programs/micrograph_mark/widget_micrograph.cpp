@@ -131,14 +131,14 @@ void Classification_model::import_model(const Classification_model &_model)
 /* Initialize -------------------------------------------------------------- */
 void Classification_model::initNaiveBayes(
     const std::vector < MultidimArray<double> > &features,
-    const MultidimArray<double> &probs, int discreteLevels,
+    const Matrix1D<double> &probs, int discreteLevels,
     double penalization)
 {
     __bayesNet=new NaiveBayes(features, probs, discreteLevels);
     int K=features.size();
-    MultidimArray<double> cost(K,K);
+    Matrix2D<double> cost(K,K);
     cost.initConstant(1);
-    for (int i=0; i<XSIZE(cost); i++)
+    for (int i=0; i<MAT_XSIZE(cost); i++)
         cost(i,i)=0;
     cost(0,K-1)=penalization;
     __bayesNet->setCostMatrix(cost);
@@ -147,7 +147,7 @@ void Classification_model::initNaiveBayes(
 
 void Classification_model::initNaiveBayesEnsemble(
     const std::vector < MultidimArray<double> > &features,
-    const MultidimArray<double> &probs, int discreteLevels,
+    const Matrix1D<double> &probs, int discreteLevels,
     double penalization, int numberOfClassifiers,
     double samplingFeatures, double samplingIndividuals,
     const std::string &newJudgeCombination)
@@ -156,9 +156,9 @@ void Classification_model::initNaiveBayesEnsemble(
                        numberOfClassifiers, samplingFeatures, samplingIndividuals,
                        newJudgeCombination);
     int K=features.size();
-    MultidimArray<double> cost(K,K);
+    Matrix2D<double> cost(K,K);
     cost.initConstant(1);
-    for (int i=0; i<XSIZE(cost); i++)
+    for (int i=0; i<MAT_XSIZE(cost); i++)
         cost(i,i)=0;
     cost(0,K-1)=penalization;
     __bayesEnsembleNet->setCostMatrix(cost);
@@ -1102,7 +1102,7 @@ void AutoParticlePicking::produceFeatures(
 
 /* produceClassesProbabilities --------------------------------------------- */
 void AutoParticlePicking::produceClassesProbabilities(
-    const Classification_model &_model, MultidimArray<double> &probabilities)
+    const Classification_model &_model, Matrix1D<double> &probabilities)
 {
     double micrographsScanned = 0.0;
     double particlesMarked = 0.0;
@@ -1284,7 +1284,7 @@ int AutoParticlePicking::automaticallySelectParticles()
 
     // Get the training features and the a priori probabilities
     std::vector < MultidimArray<double> > features;
-    MultidimArray<double> probs;
+    Matrix1D<double> probs;
     produceFeatures(__selection_model,features);
     produceClassesProbabilities(__selection_model,probs);
 
@@ -1767,7 +1767,7 @@ void AutoParticlePicking::buildNegativeVectors(Classification_model &_model,
 
     // Setup a classification model with the already known data
     std::vector < MultidimArray<double> > features;
-    MultidimArray<double> probs;
+    Matrix1D<double> probs;
     if (checkForPalsePostives)
     {
         // Gather all information for classification
