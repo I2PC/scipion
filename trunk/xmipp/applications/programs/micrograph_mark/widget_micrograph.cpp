@@ -2544,7 +2544,7 @@ void AutoParticlePicking::loadModels(const FileName &fn)
     // Load parameters
     std::string dummy;
     std::ifstream fh_params;
-    fh_params.open((__modelRootName + ".param").c_str());
+    fh_params.open((__modelRootName + ".param.txt").c_str());
     if (!fh_params)
         return;
     fh_params >> dummy >> __gray_bins
@@ -2564,7 +2564,7 @@ void AutoParticlePicking::loadModels(const FileName &fn)
 
     // Load the mask
     __mask.type = READ_MASK;
-    __mask.fn_mask = __modelRootName + ".mask";
+    __mask.fn_mask = __modelRootName + ".mask.xmp";
     __mask.generate_mask();
     __mask.get_binary_mask().setXmippOrigin();
     __mask_size = XSIZE(__mask.get_binary_mask()) * __reduction;
@@ -2573,10 +2573,10 @@ void AutoParticlePicking::loadModels(const FileName &fn)
 
     // Load training vectors
     std::ifstream fh_training;
-    fh_training.open((__modelRootName + ".training").c_str());
+    fh_training.open((__modelRootName + ".training.txt").c_str());
     if (!fh_training)
         REPORT_ERROR(ERR_IO_NOTOPEN, (std::string)"AutoParticlePicking::write: Cannot open file " +
-                     __modelRootName + ".training" + " for input");
+                     __modelRootName + ".training.txt" + " for input");
 
     fh_training >> __training_loaded_model;
     fh_training.close();
@@ -2613,14 +2613,14 @@ void AutoParticlePicking::saveModels(const FileName &_fn_root)
     // Save the mask
     Image<double> save;
     typeCast(__mask.get_binary_mask(), save());
-    save.write(fn_root + ".mask");
+    save.write(fn_root + ".mask.xmp");
 
     // Save parameters
     std::ofstream fh_params;
-    fh_params.open((fn_root + ".param").c_str());
+    fh_params.open((fn_root + ".param.txt").c_str());
     if (!fh_params)
         REPORT_ERROR(ERR_IO_NOTOPEN, (std::string)"AutoParticlePicking::write: Cannot open file " +
-                     fn_root + ".param" + " for output");
+                     fn_root + ".param.txt for output");
     fh_params << "gray_bins=                      " << __gray_bins                      << std::endl
     << "radial_bins=                    " << __radial_bins                    << std::endl
     << "piece_xsize=                    " << __piece_xsize                    << std::endl
@@ -2636,10 +2636,10 @@ void AutoParticlePicking::saveModels(const FileName &_fn_root)
     Classification_model aux_model;
     aux_model = __training_model;
     std::ofstream fh_training;
-    fh_training.open((fn_root + ".training").c_str());
+    fh_training.open((fn_root + ".training.txt").c_str());
     if (!fh_training)
         REPORT_ERROR(ERR_IO_NOTOPEN, (std::string)"AutoParticlePicking::write: Cannot open file " +
-                     fn_root + ".training" + " for output");
+                     fn_root + ".training.txt for output");
     fh_training << aux_model << std::endl;
     fh_training.close();
     std::cout << "The model has been saved..." << std::endl;
