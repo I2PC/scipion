@@ -88,7 +88,7 @@ public:
         addParamsLine("   [--count_above <th>]                : Voxels within mask >= th");
         addParamsLine("   [--count_below <th>]                : Voxels within mask <= th");
         addParamsLine("   [--substitute <val=\"0\">]  : Value outside the mask: userProvidedValue|min|max|avg");
-        commonCommandLine
+        commonCommandLineForMasks;
     }
     void readParams()
     {
@@ -112,11 +112,12 @@ public:
         str_subs_val = getParam("--substitute");
         count = count_below || count_above;
 
-        processCommonCommandLine
+        processCommonCommandLineForMasks;
     }
 
     void readParamsMask()
-{}
+    {
+    }
 
     /* RuMAIN -------------------------------------------------------------------- */
     void run()

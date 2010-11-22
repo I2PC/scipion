@@ -386,7 +386,8 @@ public:
 #define BLOB_CIRCULAR_MASK       16
 #define BLOB_CROWN_MASK          17
 
-#define commonCommandLine                 addParamsLine("   [--center <x0=0> <y0=0> <z0=0>]: Center of the mask");\
+#define commonCommandLineForMasks \
+	addParamsLine("   [--center <x0=0> <y0=0> <z0=0>]: Center of the mask");\
     addParamsLine("   [--mask <mask_type=cirular>]");\
     addParamsLine("        where <mask_type> ");\
     addUsageLine("INT MASK");\
@@ -439,7 +440,8 @@ public:
     addParamsLine("   [ -a <blob_alpha=10.4>]    : Alpha of blob");\
     /*addParamsLine("     requires blob_circular blob_crown;");*/
 
-#define processCommonCommandLine         x0 = y0 = z0 = 0;\
+#define processCommonCommandLineForMasks \
+	x0 = y0 = z0 = 0;\
     x0 = getDoubleParam("--center",0);\
     y0 = getDoubleParam("--center",1);\
     z0 = getDoubleParam("--center",2);\
