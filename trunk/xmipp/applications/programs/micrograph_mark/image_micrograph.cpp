@@ -71,8 +71,10 @@ void QtImageMicrograph::loadImage()
     int mMaxX, mMaxY, mX, mY;
     double emX, emY;
 
-    if (getMicrograph() != NULL) getMicrograph()->size(mMaxX, mMaxY);
-    else return;
+    if (getMicrograph() != NULL)
+        getMicrograph()->size(mMaxX, mMaxY);
+    else
+        return;
 
     // Get the starting and finishing point in the original micrograph
     int mY0, mX0, mYF, mXF;
@@ -94,7 +96,8 @@ void QtImageMicrograph::loadImage()
 
         // Apply xvsmooth and copy to the canvas
         byte rgb[256];
-        for (int i = 0; i < 256; i++) rgb[i] = i;
+        for (int i = 0; i < 256; i++)
+            rgb[i] = i;
         byte *result = SmoothResize(piece,
                                     mXF - mX0, mYF - mY0, image()->width(), image()->height(),
                                     rgb, rgb, rgb, rgb, rgb, rgb, 256);
@@ -127,7 +130,8 @@ void QtImageMicrograph::loadImage()
                     }
                     setPixel(x, y, (unsigned int)val);
                 }
-                else setPixel(x, y, 0);
+                else
+                    setPixel(x, y, 0);
     }
 }
 
@@ -141,22 +145,34 @@ void QtImageMicrograph::drawEllipse(int _x, int _y, int _color, float _ellipse_r
     {
         QPen pen(__col.col(_color), 2);
         __paint->setPen(pen);
-	if (_type == MARK_CIRCLE)
-	{
-	    __paint->drawEllipse(ROUND(mX - _ellipse_radius / __zoom),
-				 ROUND(mY - _ellipse_radius / __zoom),
-				 ROUND(2*_ellipse_radius / __zoom), ROUND(2*_ellipse_radius / __zoom));
-	}
-	else if (_type == MARK_SQUARE)
-	{
-	    __paint->drawRect(ROUND(mX - _ellipse_radius / __zoom),
-			      ROUND(mY - _ellipse_radius / __zoom),
-			      ROUND(2*_ellipse_radius / __zoom), ROUND(2*_ellipse_radius / __zoom));
-	}
-	else
-	{
+        if (_type == MARK_CIRCLE)
+        {
+            __paint->drawEllipse(ROUND(mX - _ellipse_radius / __zoom),
+                                 ROUND(mY - _ellipse_radius / __zoom),
+                                 ROUND(2*_ellipse_radius / __zoom), ROUND(2*_ellipse_radius / __zoom));
+        }
+        else if (_type == MARK_SQUARE)
+        {
+            __paint->drawRect(ROUND(mX - _ellipse_radius / __zoom),
+                              ROUND(mY - _ellipse_radius / __zoom),
+                              ROUND(2*_ellipse_radius / __zoom), ROUND(2*_ellipse_radius / __zoom));
+        }
+        else
+        {
             REPORT_ERROR(ERR_VALUE_INCORRECT, "QtImageMicrograph::drawEllipse: unrecognized type");
-	}
+        }
+        if (_ellipse_radius/ __zoom>=12)
+        {
+            const int crossSemiLength=3;
+            __paint->drawLine(ROUND(mX - crossSemiLength / __zoom),
+                              ROUND(mY - crossSemiLength / __zoom),
+                              ROUND(mX + crossSemiLength / __zoom),
+                              ROUND(mY + crossSemiLength / __zoom));
+            __paint->drawLine(ROUND(mX + crossSemiLength / __zoom),
+                              ROUND(mY - crossSemiLength / __zoom),
+                              ROUND(mX - crossSemiLength / __zoom),
+                              ROUND(mY + crossSemiLength / __zoom));
+        }
     }
 }
 
@@ -168,11 +184,13 @@ void QtImageMicrograph::drawLastEllipse(int _x, int _y, int _color, float _ellip
 /* Load Symbols ------------------------------------------------------------ */
 void QtImageMicrograph::loadSymbols()
 {
-    if (getMicrograph() == NULL) return;
+    if (getMicrograph() == NULL)
+        return;
     for (int i = 0; i < getMicrograph()->ParticleNo(); i++)
     {
         if (!getMicrograph()->coord(i).valid ||
-            getMicrograph()->coord(i).cost<__minCost) continue;
+            getMicrograph()->coord(i).cost<__minCost)
+            continue;
         drawEllipse(getMicrograph()->coord(i).X,
                     getMicrograph()->coord(i).Y, getMicrograph()->coord(i).label,
                     __ellipse_radius, __ellipse_type);
@@ -188,7 +206,8 @@ void QtImageMicrograph::resizeEvent(QResizeEvent *e)
 {
     QtImage::resizeEvent(e);
 
-    if (getMicrograph() == NULL) return;
+    if (getMicrograph() == NULL)
+        return;
 
     emit signalSetWidthHeight(image()->width(), image()->height());
     emit signalRepaint();
@@ -196,25 +215,28 @@ void QtImageMicrograph::resizeEvent(QResizeEvent *e)
 
 void QtImageMicrograph::mousePressEvent(QMouseEvent *e)
 {
-    if (e->button() == Qt::LeftButton) __pressed = true;
+    if (e->button() == Qt::LeftButton)
+        __pressed = true;
 }
 
 void QtImageMicrograph::mouseReleaseEvent(QMouseEvent *e)
 {
-    if (getMicrograph() == NULL) return;
+    if (getMicrograph() == NULL)
+        return;
 
     // If moving a particle
     if (__movingMark != -1 && __pressed)
     {
         if (getWidgetMicrograph()->getAutoParticlePicking()!=NULL)
             getWidgetMicrograph()->getAutoParticlePicking()->
-                move_particle(__movingMark);
+            move_particle(__movingMark);
         __movingMark = -1;
         __pressed    = false;
         emit signalRecalculateTiltMatrix();
         return;
     }
-    else if (__movingMark != -1) return;
+    else if (__movingMark != -1)
+        return;
 
     // If picking a new one
     int mX, mY;
@@ -223,8 +245,10 @@ void QtImageMicrograph::mouseReleaseEvent(QMouseEvent *e)
     if (e->button() == Qt::RightButton)
     {
         int coord = getMicrograph()->search_coord_near(mX, mY, 10);
-        if (coord != -1) movingMark(coord);
-    } else if (__pressed == true)
+        if (coord != -1)
+            movingMark(coord);
+    }
+    else if (__pressed == true)
     {
         if (isTilted())
         {
@@ -241,11 +265,13 @@ void QtImageMicrograph::mouseReleaseEvent(QMouseEvent *e)
                 getMicrograph()->add_coord(mX, mY, __activeFamily,1);
                 __pressed = false;
                 emit signalAddCoordOther(mX, mY, __activeFamily);
-            } else {
+            }
+            else
+            {
                 getMicrograph()->coord(coord).valid = false;
                 if (getWidgetMicrograph()->getAutoParticlePicking()!=NULL)
                     getWidgetMicrograph()->getAutoParticlePicking()->
-                        delete_particle(coord);
+                    delete_particle(coord);
                 emit signalDeleteMarkOther(coord);
                 emit signalRepaint();
             }
@@ -255,7 +281,8 @@ void QtImageMicrograph::mouseReleaseEvent(QMouseEvent *e)
 
 void QtImageMicrograph::mouseMoveEvent(QMouseEvent *e)
 {
-    if (getMicrograph() == NULL || __movingMark == -1 || !__pressed) return;
+    if (getMicrograph() == NULL || __movingMark == -1 || !__pressed)
+        return;
 
     int mX, mY;
     imageToMicrograph(e->pos().x(), e->pos().y(), mX, mY);
@@ -267,7 +294,8 @@ void QtImageMicrograph::mouseMoveEvent(QMouseEvent *e)
 
 void QtImageMicrograph::slotZoomIn()
 {
-    if (__zoom == 0.1) return;
+    if (__zoom == 0.1)
+        return;
     __zoom -= 0.1;
 
     __x = __y = 0;
