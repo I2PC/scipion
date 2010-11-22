@@ -238,7 +238,7 @@ void QtImageMicrograph::mouseReleaseEvent(QMouseEvent *e)
     else if (__movingMark != -1)
         return;
 
-    // If picking a new one
+    // If picking a new one or deleting
     int mX, mY;
     imageToMicrograph(e->pos().x(), e->pos().y(), mX, mY);
 
