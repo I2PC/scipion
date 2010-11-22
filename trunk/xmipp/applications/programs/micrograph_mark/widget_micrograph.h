@@ -554,7 +554,6 @@ public slots:
     void slotActiveFamily(int _f);
     void slotAddFamily(const char *_familyName);
     void slotDeleteMarkOther(int _coord);
-    void slotDeleteAutomatic(int _coord);
     void slotRepaint()
     {
         repaint();
