@@ -295,10 +295,10 @@ public:
      *  returns pointer do first two data_entries and firts loop
      */
     bool isColumnFormatFile(char * map,
-            char ** firstData,
-            char ** secondData,
-            char ** firstloop,
-            const char * blockName);
+                            char ** firstData,
+                            char ** secondData,
+                            char ** firstloop,
+                            const char * blockName);
 
     /* Helper function to parse an MDObject and set its value.
      * The parsing will be from an input stream(istream)
@@ -310,9 +310,9 @@ public:
      * and end loop pointers. Return pointer to newline after last label
      */
     char * _readColumnsStar(char * start,
-                                    char * end,
-                                    MDRow & columnValues,
-                                    const std::vector<MDLabel>* desiredLabels);
+                            char * end,
+                            MDRow & columnValues,
+                            const std::vector<MDLabel>* desiredLabels);
 #ifdef NEVERDEFINED
     /** This function will read the possible columns and values from the file
      * in ROW format
@@ -322,9 +322,9 @@ public:
      */
 
     char * _readRowFormatStar(char * pStart,
-                                        char * pEnd,
-                                        MDRow & columnValues,
-                                        const std::vector<MDLabel>* desiredLabels);
+                              char * pEnd,
+                              MDRow & columnValues,
+                              const std::vector<MDLabel>* desiredLabels);
 #endif
     /**Get path.
      */
@@ -427,7 +427,7 @@ public:
         {
             MDObject mdValueOut(label);
             if (!_getValue(objectId, mdValueOut))
-              return false;
+                return false;
             mdValueOut.getValue(valueOut);
             return true;
         }
@@ -748,6 +748,13 @@ public:
     */
     void selectPart (const MetaData &mdIn, long int startPosition, long int numberOfObjects,
                      const MDLabel sortLabel=MDL_OBJID);
+
+    /** Makes filenames with absolute paths
+    *
+    */
+    void makeAbsPath(const MDLabel label=MDL_IMAGE);
+
+
     /** @} */
 
 

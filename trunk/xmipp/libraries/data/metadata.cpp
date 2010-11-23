@@ -1321,4 +1321,28 @@ WriteModeMetaData metadataModeConvert (String mode)
     REPORT_ERROR(ERR_ARG_INCORRECT,"metadataModeConvert: Invalid mode");
 }
 
+void MetaData::makeAbsPath(const MDLabel label)
+{
 
+	std::string aux_string;
+	std::string aux_string_path;
+	char buffer[1024];
+
+	getcwd(buffer, 1023);
+	std::string path_str(buffer);
+	path_str += "/";
+
+	this->firstObject();
+	getValue(label,aux_string);
+
+	if (aux_string[0] == '/')
+		return;
+
+	FOR_ALL_OBJECTS_IN_METADATA(*this)
+    {
+		aux_string_path = path_str;
+		getValue(label,aux_string);
+		aux_string_path += aux_string;
+        setValue(label,aux_string_path);
+    }
+}
