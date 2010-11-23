@@ -316,7 +316,7 @@ void Micrograph::write_as_8_bits(const FileName &fn8bits)
 }
 
 /* Save coordinates to disk ------------------------------------------------ */
-void Micrograph::write_coordinates(int label, const FileName &_fn_coords)
+void Micrograph::write_coordinates(int label, double minCost, const FileName &_fn_coords)
 {
     std::ofstream fh;
     if (_fn_coords != "")
@@ -325,12 +325,14 @@ void Micrograph::write_coordinates(int label, const FileName &_fn_coords)
     MetaData MD;
     MD.setComment((std::string)"Selected Coordinates for file " + fn_coords);
     int imax = coords.size();
-    int x,y;
     for (int i = 0; i < imax; i++)
     {
-        MD.addObject();
-        MD.setValue(MDL_XINT,coords[i].X);
-        MD.setValue(MDL_YINT,coords[i].Y);
+        if (coords[i].valid && coords[i].cost>minCost)
+        {
+            MD.addObject();
+            MD.setValue(MDL_XINT,coords[i].X);
+            MD.setValue(MDL_YINT,coords[i].Y);
+        }
     }
     MD.write(fn_coords);
 }
@@ -549,12 +551,12 @@ void Micrograph::produce_all_images(int label, const FileName &fn_root,
     if (labels[label] != "")
     {
         SF.write(fn_micrograph.removeDirectories() + "." + labels[label] + ".sel");
-        write_coordinates(label, fn_micrograph + "." + labels[label] + ".pos");
+        write_coordinates(label, -1, fn_micrograph + "." + labels[label] + ".pos");
     }
     else
     {
         SF.write(fn_micrograph.removeDirectories() + ".sel");
-        write_coordinates(label, fn_micrograph + ".pos");
+        write_coordinates(label, -1, fn_micrograph + ".pos");
     }
 
     // Free source image??
@@ -610,10 +612,10 @@ void Micrograph::move_last_coord_to(int x, int y)
 
 void Micrograph::resize(int Xdim, int Ydim, FileName filename)
 {
-  this->Xdim = Xdim;
-  this->Ydim = Ydim;
-  this->Zdim = 1;
-  this->Ndim = 1;
+    this->Xdim = Xdim;
+    this->Ydim = Ydim;
+    this->Zdim = 1;
+    this->Ndim = 1;
 
     if (datatype == UChar)
     {

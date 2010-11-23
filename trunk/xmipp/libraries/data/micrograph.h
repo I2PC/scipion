@@ -73,7 +73,7 @@ struct Particle_coords
 */
 class Micrograph
 {
-protected:
+public:
     /* This image will contain a single particle from the micrograph,
        this is done to avoid asking/freeing memory all time. */
     Image<double>           single_particle;
@@ -161,7 +161,7 @@ public:
     }
 
     /** Save coordinates to disk. */
-    void write_coordinates(int label, const FileName &fn_coords = "");
+    void write_coordinates(int label, double minCost, const FileName &fn_coords = "");
 
     /** Read coordinates from disk.
         Coordinates are read into the selected family, the rest of
