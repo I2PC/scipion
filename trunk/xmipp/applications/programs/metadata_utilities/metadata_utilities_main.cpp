@@ -195,8 +195,6 @@ protected:
         {
             encode("convert2db");
             inFileName1 = getParam("--convert2db",0);
-            inMD1.read(inFileName1);
-            MDSql::dumpToFile(outFileName);
         }
 
         else if (checkParam("--move"))
@@ -265,8 +263,8 @@ public:
             inMD1.read(inFileName1);
             //create dir
             if (!exists(tmpFileName))
-            	if (mkpath(tmpFileName, 0755) != 0)
-            		REPORT_ERROR(ERR_IO_NOPERM, "Run: Cannot create directory "+ tmpFileName);
+                if (mkpath(tmpFileName, 0755) != 0)
+                    REPORT_ERROR(ERR_IO_NOPERM, "Run: Cannot create directory "+ tmpFileName);
             FOR_ALL_OBJECTS_IN_METADATA(inMD1)
             {
                 FileName inFnImg,outFnImg;
@@ -283,8 +281,8 @@ public:
             inMD1.read(inFileName1);
             //create dir
             if (!exists(tmpFileName))
-            	if (mkpath(tmpFileName, 0755) != 0)
-            		REPORT_ERROR(ERR_IO_NOPERM, "Run: Cannot create directory "+ tmpFileName);
+                if (mkpath(tmpFileName, 0755) != 0)
+                    REPORT_ERROR(ERR_IO_NOPERM, "Run: Cannot create directory "+ tmpFileName);
             FOR_ALL_OBJECTS_IN_METADATA(inMD1)
             {
                 FileName inFnImg,outFnImg;
@@ -313,6 +311,13 @@ public:
                 outMD.importObjects(inMD1, MDExpression(expression));
                 outMD.write(outFileName);
             }
+            break;
+
+        case _convert2db:
+          {
+              inMD1.read(inFileName1);
+              MDSql::dumpToFile(outFileName);
+          }
             break;
 
         default:
