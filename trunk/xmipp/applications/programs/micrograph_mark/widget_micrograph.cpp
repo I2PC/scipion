@@ -72,10 +72,10 @@ std::ostream & operator << (std::ostream &_out, const Particle &_p)
     _out << _p.x      << " " << _p.y << " "
     << _p.idx    << " "
     << (int)_p.status << " "
-    << _p.cost   << " "
-    << _p.vec.transpose()
-    << std::endl
-    ;
+    << _p.cost << " ";
+    FOR_ALL_ELEMENTS_IN_MATRIX1D(_p.vec)
+    _out << VEC_ELEM(_p.vec,i) << " ";
+    _out << std::endl;
     return _out;
 }
 
@@ -1148,6 +1148,7 @@ void * automaticallySelectParticlesThread(void * args)
     Matrix1D<double> v;
     int N = 1, particle_idx = 0, Nscanned=0;
     MultidimArray<double> piece, original_piece;
+    MultidimArray<int> ipiece;
     const MultidimArray<int> &mask = autoPicking->__mask.get_binary_mask();
     std::vector< Particle > threadCandidates;
     do
@@ -1172,7 +1173,7 @@ void * automaticallySelectParticlesThread(void * args)
 #endif
 
             // Get a piece and prepare it
-            if (!autoPicking->prepare_piece(piece, original_piece))
+            if (!autoPicking->prepare_piece(piece, ipiece, original_piece))
             {
                 top = next_top;
                 left = next_left;
@@ -1209,7 +1210,7 @@ void * automaticallySelectParticlesThread(void * args)
                 << std::endl;
 #endif
 
-                if (autoPicking->build_vector(piece, original_piece, posx, posy, v))
+                if (autoPicking->build_vector(ipiece, original_piece, posx, posy, v))
                 {
                     double cost;
                     int votes=autoPicking->__selection_model.isParticle(v,cost);
@@ -1676,6 +1677,8 @@ void AutoParticlePicking::buildVectors(std::vector<int> &_idx,
     int numParticles = 0;
 
     MultidimArray<char> visited(num_part);
+    MultidimArray<double> piece, original_piece;
+    MultidimArray<int> ipiece;
     while (visited.sum() < num_part)
     {
         int part_i = 0;
@@ -1692,11 +1695,10 @@ void AutoParticlePicking::buildVectors(std::vector<int> &_idx,
         int x = __m->coord(part_idx).X;
         int y = __m->coord(part_idx).Y;
         int posx, posy;
-        MultidimArray<double> piece, original_piece;
         get_centered_piece(piece, x, y, posx, posy);
 
         // Denoise, reduce, reject outliers and equalize histogram
-        bool success = prepare_piece(piece, original_piece);
+        bool success = prepare_piece(piece, ipiece, original_piece);
 
         if (!success)
             continue;
@@ -1704,7 +1706,7 @@ void AutoParticlePicking::buildVectors(std::vector<int> &_idx,
         posy = ROUND(posy / __reduction);
 
         //make vector from this particle
-        success = build_vector(piece, original_piece, posx, posy, v);
+        success = build_vector(ipiece, original_piece, posx, posy, v);
         if (success)
         {
             Particle p;
@@ -1730,7 +1732,7 @@ void AutoParticlePicking::buildVectors(std::vector<int> &_idx,
             part_idx = _idx.at(part_i);
             posx = nbr.at(i)(1);
             posy = nbr.at(i)(2);
-            success = build_vector(piece, original_piece, posx, posy, v);
+            success = build_vector(ipiece, original_piece, posx, posy, v);
             visited(part_i) = 1;
             if (success)
             {
@@ -1792,12 +1794,13 @@ void AutoParticlePicking::buildNegativeVectors(Classification_model &_model,
     // the process of automatic selecting we will want an overlap so we
     // do not miss any particle.
     MultidimArray<double> piece, original_piece;
+    MultidimArray<int> ipiece;
     while (get_corner_piece(piece, top, left, skip_y,
                             next_skip_x, next_skip_y, next_top, next_left, 0,
                             true))
     {
         // Get a piece and prepare it
-        if (!prepare_piece(piece, original_piece))
+        if (!prepare_piece(piece, ipiece, original_piece))
         {
             top = next_top;
             left = next_left;
@@ -1827,7 +1830,7 @@ void AutoParticlePicking::buildNegativeVectors(Classification_model &_model,
                              top + posy  * __reduction,
                              XSIZE(mask) * __reduction))
             {
-                if (build_vector(piece, original_piece, posx, posy, v))
+                if (build_vector(ipiece, original_piece, posx, posy, v))
                 {
                     // Build the Particle structure
                     Particle P;
@@ -1894,8 +1897,9 @@ bool AutoParticlePicking::anyParticle(int posx, int posy, int rect_size)
 }
 
 /* Build classification vector --------------------------------------------- */
-bool AutoParticlePicking::build_vector(const MultidimArray<double> &piece,
-                                       const MultidimArray<double> &original_piece, int _x, int _y,
+bool AutoParticlePicking::build_vector(const MultidimArray<int> &piece,
+                                       const MultidimArray<double> &original_piece,
+                                       int _x, int _y,
                                        Matrix1D<double> &_result)
 {
 #ifdef DEBUG_BUILDVECTOR
@@ -1904,7 +1908,8 @@ bool AutoParticlePicking::build_vector(const MultidimArray<double> &piece,
 
     // Resize the output and make same aliases
     int angleBins=__sector.size();
-    _result.initZeros(__radial_bins*(__gray_bins-1) // radial histograms
+    _result.initZeros(32 // Histogram of the original piece
+                      +__radial_bins*(__gray_bins-1) // radial histograms
                       +(angleBins-1)+(angleBins-1)*angleBins // sector correlations
                       +(2*__radial_bins-19)*angleBins // ring correlations
                      );
@@ -1924,10 +1929,10 @@ bool AutoParticlePicking::build_vector(const MultidimArray<double> &piece,
 #ifdef DEBUG_IMG_BUILDVECTOR
 
     bool debug_go = false;
-    ImageXmipp save, savefg, saveOrig;
+    Image<double> save, savefg, saveOrig;
     if (true)
     {
-        save() = piece;
+        typeCast(piece,save());
         save.write("PPP0.xmp");
         save().initZeros(YSIZE(mask), XSIZE(mask));
         STARTINGY(save()) = STARTINGY(mask);
@@ -1940,10 +1945,6 @@ bool AutoParticlePicking::build_vector(const MultidimArray<double> &piece,
 #endif
 
     MultidimArray<int> radial_idx(__radial_bins);
-    MultidimArray<double> particle;
-    particle.initZeros(YSIZE(mask), XSIZE(mask));
-    STARTINGY(particle) = STARTINGY(mask);
-    STARTINGX(particle) = STARTINGX(mask);
 
     // Copy __radial_val, __sector, and __ring into local structures
     // so that threads are applicable
@@ -1964,15 +1965,19 @@ bool AutoParticlePicking::build_vector(const MultidimArray<double> &piece,
     for (int i=0; i<__ring.size(); i++)
         ring.push_back(dummyd);
 
+    Histogram1D histogramOriginal;
+    histogramOriginal.init(0,255,32);
+
     // Put the image values into the corresponding radial bins
     FOR_ALL_ELEMENTS_IN_ARRAY2D(mask)
     {
-        int val = (int)A2D_ELEM(piece, _y + i, _x + j);
-        bool foreground = A2D_ELEM(mask, i, j);
-
         int idx1 = A2D_ELEM(classif1, i, j);
         if (idx1 != -1)
         {
+            int val = A2D_ELEM(piece, _y + i, _x + j);
+            double orig_val = A2D_ELEM(original_piece, _y + i, _x + j);
+            histogramOriginal.insert_value(orig_val);
+
             MultidimArray<int> &auxi=radial_val[idx1];
             int aux=A1D_ELEM(radial_idx,idx1);
             A1D_ELEM(auxi,aux) = val;
@@ -1990,7 +1995,7 @@ bool AutoParticlePicking::build_vector(const MultidimArray<double> &piece,
         if (debug_go)
         {
             save(i, j) = val;
-            if (foreground)
+            if (A2D_ELEM(mask, i, j))
             {
                 savefg(i, j) = val;
                 saveOrig(i, j) =  original_piece(_y+i, _x+j);
@@ -2016,29 +2021,32 @@ bool AutoParticlePicking::build_vector(const MultidimArray<double> &piece,
         }
     }
 
-    // Compute the histogram of the radial bins and store them
+    // Store the histogram of
     int idx_result=0;
+    FOR_ALL_ELEMENTS_IN_ARRAY1D(histogramOriginal)
+    VEC_ELEM(_result,idx_result++) = DIRECT_A1D_ELEM(histogramOriginal,i);
+
+    // Compute the histogram of the radial bins and store them
+    Histogram1D hist;
     for (int i = 0; i < __radial_bins; i++)
     {
-        Histogram1D hist;
         compute_hist(radial_val[i], hist, 0, __gray_bins - 1, __gray_bins);
         for (int j = 0; j < __gray_bins - 1; j++)
             VEC_ELEM(_result,idx_result++) = DIRECT_A1D_ELEM(hist,j);
     }
 
     // Compute the correlation of the sectors
+    MultidimArray<double> sectorCorr, sectorAutocorr;
     for (int step = 1; step<angleBins; step++)
     {
-        MultidimArray<double> sectorCorr;
         sectorCorr.initZeros(angleBins);
         for (int i = 0; i<angleBins; i++)
         {
             DIRECT_A1D_ELEM(sectorCorr,i)=correlation_index(
-                              sector[i],
-                              sector[intWRAP(i+step,0,angleBins-1)]);
+                                              sector[i],
+                                              sector[intWRAP(i+step,0,angleBins-1)]);
         }
         VEC_ELEM(_result,idx_result++) = sectorCorr.computeAvg();
-        MultidimArray<double> sectorAutocorr;
         correlation_vector_no_Fourier(sectorCorr,sectorCorr,sectorAutocorr);
         for (int j = 0; j < XSIZE(sectorAutocorr); j++)
             VEC_ELEM(_result,idx_result++) = DIRECT_A1D_ELEM(sectorAutocorr,j);
@@ -2215,12 +2223,19 @@ bool AutoParticlePicking::get_corner_piece(
 /* Prepare piece ----------------------------------------------------------- */
 static pthread_mutex_t preparePieceMutex = PTHREAD_MUTEX_INITIALIZER;
 bool AutoParticlePicking::prepare_piece(MultidimArray<double> &piece,
+                                        MultidimArray<int> &ipiece,
                                         MultidimArray<double> &original_piece)
 {
-    original_piece = piece;
+    original_piece=piece;
+
+    // Reject 5% of the outliers
+    reject_outliers(original_piece, 5.0);
+    // COSS original_piece.statisticsAdjust(0,1);
+    // COSS original_piece-=original_piece.computeAvg();
+
 #ifdef DEBUG_PREPARE
 
-    ImageXmipp save;
+    Image<double> save;
     save() = piece;
     save.write("PPPpiece0.xmp");
 #endif
@@ -2279,18 +2294,19 @@ bool AutoParticlePicking::prepare_piece(MultidimArray<double> &piece,
     // Equalize histogram
     histogram_equalization(piece, __gray_bins);
 
+    typeCast(piece,ipiece);
+
 #ifdef DEBUG_PREPARE
 
     save() = piece;
     save.write("PPPpiece3.xmp");
+    std::cout << "Press any key\n";
+    char c;
+    std::cin >> c;
 #endif
 
-    selfScaleToSize(LINEAR, original_piece, YSIZE(piece), XSIZE(piece));
-
-    // Reject 5% of the outliers
-    reject_outliers(original_piece, 5.0);
-    original_piece.statisticsAdjust(0,1);
-    original_piece-=original_piece.computeAvg();
+    if (!original_piece.sameShape(piece))
+        selfScaleToSize(LINEAR, original_piece, YSIZE(piece), XSIZE(piece));
 
 #ifdef DEBUG_PREPARE
 

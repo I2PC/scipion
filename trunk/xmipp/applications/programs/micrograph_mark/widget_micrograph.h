@@ -290,7 +290,7 @@ public:
     // a reduced version of a piece in the micrograph)
     // (0,0) is the top-left corner
     // Returns true if the vector is successfully built
-    bool build_vector(const MultidimArray<double> &piece,
+    bool build_vector(const MultidimArray<int> &piece,
                       const MultidimArray<double> &original_piece,
                       int _x, int _y, Matrix1D<double> &_result);
 
@@ -319,6 +319,7 @@ public:
     // Usually, it is unsuccessful if the denoising fails to work because
     // some "weird" features of the piece
     bool prepare_piece(MultidimArray<double> &piece,
+    				   MultidimArray<int> &ipiece,
                        MultidimArray<double> &original_piece);
 
     //To get the neighbours of the particle at position (x,y) in the micrograph
