@@ -2162,7 +2162,7 @@ void AutoParticlePicking::get_centered_piece(MultidimArray<double> &piece,
     const Micrograph &micrograph=*__m;
     for (int i = 0; i < __piece_xsize; i++)
         for (int j = 0; j < __piece_xsize; j++)
-            DIRECT_A2D_ELEM(piece, i, j) = micrograph(startx + j, starty + i);
+            DIRECT_A2D_ELEM(piece, i, j) = micrograph(starty + i, startx + j);
 }
 
 // Get a piece whose top-left corner is at the desired position (if possible)
@@ -2214,7 +2214,7 @@ bool AutoParticlePicking::get_corner_piece(
         const Micrograph& micrograph=*__m;
         for (int i = 0; i < __piece_xsize; i++)
             for (int j = 0; j < __piece_xsize; j++)
-                DIRECT_A2D_ELEM(piece,i, j) = micrograph(_left + j, _top + i);
+                DIRECT_A2D_ELEM(piece,i, j) = micrograph(_top + i, _left + j);
     }
 
     return true;
@@ -2227,11 +2227,6 @@ bool AutoParticlePicking::prepare_piece(MultidimArray<double> &piece,
                                         MultidimArray<double> &original_piece)
 {
     original_piece=piece;
-
-    // Reject 5% of the outliers
-    reject_outliers(original_piece, 5.0);
-    // COSS original_piece.statisticsAdjust(0,1);
-    // COSS original_piece-=original_piece.computeAvg();
 
 #ifdef DEBUG_PREPARE
 
@@ -2291,6 +2286,11 @@ bool AutoParticlePicking::prepare_piece(MultidimArray<double> &piece,
     // Reject 5% of the outliers
     reject_outliers(piece, 5.0);
 
+#ifdef DEBUG_PREPARE
+    save() = piece;
+    save.write("PPPpiece2_5.xmp");
+#endif
+
     // Equalize histogram
     histogram_equalization(piece, __gray_bins);
 
@@ -2300,18 +2300,24 @@ bool AutoParticlePicking::prepare_piece(MultidimArray<double> &piece,
 
     save() = piece;
     save.write("PPPpiece3.xmp");
-    std::cout << "Press any key\n";
-    char c;
-    std::cin >> c;
 #endif
 
     if (!original_piece.sameShape(piece))
         selfScaleToSize(LINEAR, original_piece, YSIZE(piece), XSIZE(piece));
 
+    // Reject 5% of the outliers
+    reject_outliers(original_piece, 5.0);
+    // COSS original_piece.statisticsAdjust(0,1);
+    // COSS original_piece-=original_piece.computeAvg();
+
+
 #ifdef DEBUG_PREPARE
 
     save() = original_piece;
     save.write("PPPpiece4.xmp");
+    std::cout << "Press any key\n";
+    char c;
+    std::cin >> c;
 #endif
 
     return true;
