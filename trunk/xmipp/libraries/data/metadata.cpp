@@ -100,7 +100,7 @@ void MetaData::copyMetadata(const MetaData &md)
     }
 }
 
-bool MetaData::_setValue(long int objId, const MDObject &mdValueIn)
+bool MetaData::setValue(const MDObject &mdValueIn, long int objId)
 {
     if (objId == -1)
     {
@@ -124,7 +124,7 @@ bool MetaData::_setValueCol(const MDObject &mdValueIn)
     myMDSql->setObjectValue(mdValueIn);
 }
 
-bool MetaData::_getValue(long int objId, MDObject &mdValueOut) const
+bool MetaData::getValue(MDObject &mdValueOut, long int objId) const
 {
     if (!containsLabel(mdValueOut.label))
         return false;
@@ -150,7 +150,7 @@ bool MetaData::getRow(MDRow &row, long int objId)
     for (std::vector<MDLabel>::const_iterator it = activeLabels.begin(); it != activeLabels.end(); ++it)
     {
         obj = new MDObject(*it);
-        if (!_getValue(objId, *obj))
+        if (!getValue(*obj, objId))
             return false;
         row.push_back(obj);
     }
@@ -290,7 +290,7 @@ bool MetaData::setValueFromStr(const MDLabel label, const std::string &value, lo
 bool MetaData::getStrFromValue(const MDLabel label, std::string &strOut, long int objectId)
 {
     MDObject mdValueOut(label);
-    if (!_getValue(objectId, mdValueOut))
+    if (!getValue(mdValueOut, objectId))
         return false;
     strOut = mdValueOut.toString();
     return true;
@@ -743,7 +743,7 @@ void MetaData::_parseObject(std::istream &is, MDObject &object)
     }
     else
         if (object.label != MDL_UNDEFINED)
-            _setValue(activeObjId, object);
+            setValue(object, activeObjId);
 }//end of function parseObject
 
 #define END_OF_LINE() ((char*) memchr (pchStart, '\n', pEnd-pchStart+1))
@@ -883,7 +883,7 @@ char * MetaData::_readRowFormatStar(char * pStart,
                 addLabel(label);
                 columnValues.push_back(_mdObject);//add the value here with a char
 
-                _setValue(activeObjId, *(_mdObject));
+                setValue(activeObjId, *(_mdObject));
 
             }
             pchStart=pchEnd;
@@ -985,7 +985,7 @@ void MetaData::_readRowFormat(std::istream& is)
         MDObject value(label);
         os >> value;
         if (label != MDL_UNDEFINED)
-            _setValue(objectID, value);
+            setValue(value, objectID);
     }
 }
 

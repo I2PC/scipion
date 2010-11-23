@@ -189,16 +189,6 @@ protected:
      */
     void copyMetadata(const MetaData &md);
 
-    /** This private functions are for set real values
-     * there is an explicit function signature
-     * foreach type supported in Metadata.
-     * This is done for some type checking of Metadata labels
-     * and values
-     */
-
-    bool _setValue(long int objId, const MDObject &mdValueIn);
-    bool _getValue(long int objId, MDObject &mdValueOut) const;
-
     //Set the value of all objects in an specified column (both value and colum are specified in mdValueIn)
     bool _setValueCol(const MDObject &mdValueIn);
 
@@ -403,14 +393,17 @@ public:
     template<class T>
     bool setValue(const MDLabel label, const T &valueIn, long int objectId=-1)
     {
-        _setValue(objectId, MDObject(label, valueIn));
+        setValue(MDObject(label, valueIn), objectId);
     }
 
-    /** Variant of previous function, but provinding the MDObject */
-    bool setValue(const MDObject &obj, long int objectId=-1)
-    {
-        _setValue(objectId, obj);
-    }
+    /** This functions are using MDObject for set real values
+     * there is an explicit function signature
+     * foreach type supported in Metadata.
+     * This is done for some type checking of Metadata labels
+     * and values
+     */
+    bool setValue(const MDObject &mdValueIn, long int objId = -1);
+    bool getValue(MDObject &mdValueOut, long int objId = -1) const;
 
     /** Get the value of some label.
      * from the object that has id 'objectId'
@@ -432,7 +425,7 @@ public:
         try
         {
             MDObject mdValueOut(label);
-            if (!_getValue(objectId, mdValueOut))
+            if (!getValue(mdValueOut,objectId))
                 return false;
             mdValueOut.getValue(valueOut);
             return true;
@@ -456,7 +449,7 @@ public:
         valuesOut.resize(n);
         for (int i = 0; i < n; i++)
         {
-            _getValue(objectsId[i], mdValueOut);
+            getValue(mdValueOut, objectsId[i]);
             mdValueOut.getValue(value);
             valuesOut[i] = value;
         }

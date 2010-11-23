@@ -385,7 +385,7 @@ long int MDSql::lastRow()
     std::stringstream ss;
     ss << "SELECT COALESCE(MAX(objID), -1) AS MDSQL_LAST_ID FROM "
     << tableName(tableId) << ";";
-    execSingleIntStmt(ss);
+    return execSingleIntStmt(ss);
 }
 
 long int MDSql::nextRow(long int currentRow)

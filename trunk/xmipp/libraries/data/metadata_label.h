@@ -473,13 +473,12 @@ typedef union
  */
 class MDObject
 {
-private:
+public:
   ObjectData data;
 
     void labelTypeCheck(MDLabelType checkingType) const;
     void copy(const MDObject &obj);
 
-public:
     MDLabel label;
     MDLabelType type;
     /** Copy constructor */
