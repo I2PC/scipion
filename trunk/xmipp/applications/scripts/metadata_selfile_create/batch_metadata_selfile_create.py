@@ -63,43 +63,32 @@ Example:
 
 scriptdir = os.path.split(os.path.dirname(os.popen('which xmipp_protocols', 'r').read()))[0] + '/lib'
 sys.path.append(scriptdir) # add default search path
-import XmippData
-inFile = XmippData.FileName()
+
+from xmipp import *
 
 pattern, outFile, isStack, quiet = command_line_options();
 
-mD = XmippData.MetaData()
-sIn = XmippData.FileNameP()
-outFileName = XmippData.FileName(outFile);
-sOut = XmippData.FileNameP()
-sOut.assign(outFileName)
-
-ii = XmippData.intP()
 files = glob.glob(pattern)
 files.sort()
-ii.assign(1)
-x = XmippData.intP()
-n = XmippData.ulongP()
+
+mD = MetaData()
+inFile = FileName()
 
 nSize = 1
 for file in files:
-    fileName = XmippData.FileName(file)
-    sIn.assign(fileName)
-    counter = 0
     if isStack:
-        XmippData.SingleImgSize(sIn, x, x, x, n)
-        nSize = n.value()
+        x, x, x, nSize = SingleImgSize(file)
     if nSize != 1:
-        for jj in range (n.value()):
+        counter = 0
+        for jj in range(nSize):
+            inFile.compose(counter, file)
             mD.addObject()
-            inFile.compose(counter, sIn)
-            XmippData.setValueString(mD, XmippData.MDL_IMAGE, inFile)
-            XmippData.setValueInt(mD, XmippData.MDL_ENABLED, ii)
+            mD.setValue(MDL_IMAGE, inFile)
+            mD.setValue(MDL_ENABLED, 1)
             counter = counter + 1
     else:
         mD.addObject()
-        XmippData.setValueString(mD, XmippData.MDL_IMAGE, sIn)
-        XmippData.setValueInt(mD, XmippData.MDL_ENABLED, ii)
-        
+        mD.setValue(MDL_IMAGE, file)
+        mD.setValue(MDL_ENABLED, 1)
 
-mD.write(sOut)
+mD.write(outFile)
