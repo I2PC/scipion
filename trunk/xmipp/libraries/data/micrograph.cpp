@@ -90,8 +90,6 @@ void Micrograph::open_micrograph(const FileName &_fn_micrograph)
     fn_micrograph = _fn_micrograph;
     // Look for micrograph dimensions
     auxI->read(fn_micrograph,false,-1,false,false,NULL,false);
-    static int iii =0;
-    FileName fn;
 
     auxI->getDimensions(Xdim,Ydim, Zdim, Ndim);
     if((Zdim >1 )|| (Ndim >1))
@@ -165,22 +163,28 @@ void Micrograph::close_micrograph()
     switch (datatype)
     {
     case UChar:
-        IUChar->clear();
+        delete(IUChar);
+        IUChar=NULL;
         break;
     case UShort:
-        IUShort->clear();
+        delete(IUShort);
+        IUShort=NULL;
         break;
     case Short:
-        IShort->clear();
+        delete(IShort);
+        IShort=NULL;
         break;
     case Int:
-        IInt->clear();
+        delete(IInt);
+        IInt=NULL;
         break;
     case UInt:
-        IInt->clear();
+        delete(IUInt);
+        IUInt=NULL;
         break;
     case Float:
-        IFloat->clear();
+        delete(IFloat);
+        IFloat=NULL;
         break;
     default:
         std::cerr << "Micrograph::close_micrograph: Unknown datatype " << datatype <<std::endl;
