@@ -110,7 +110,6 @@ void QtImageOverviewMicrograph::loadImage()
 
     if (getMicrograph() != NULL) getMicrograph()->size(mMaxX, mMaxY);
     else return;
-    //FIXME
     if (mMaxX >= image()->width() && mMaxY >= image()->height() &&
         getMicrograph()->getDatatypeDetph() == 8)
     {
