@@ -454,6 +454,9 @@ public:
     /** Get the linear transformation for scaling micrographs */
     void getLinearTransformatioVal8(double &a, double &b) const;
 
+    /** Get the linear transformation for scaling micrographs */
+    void resetLinearTransformatioVal8();
+
     /** Produce all single particle images.
         The file fn_micrograph+".sel" is also generated. The angle is the angle
         from the Y axis to the tilt axis, angles are positive clockwise.

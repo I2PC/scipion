@@ -467,6 +467,13 @@ void Micrograph::getLinearTransformatioVal8(double &a, double &b) const
     b=__b;
 }
 
+/* Reset linear transformation --------------------------------------------- */
+void Micrograph::resetLinearTransformatioVal8()
+{
+	__a=1;
+	__b=0;
+}
+
 /* Produce all images ------------------------------------------------------ */
 void Micrograph::produce_all_images(int label, const FileName &fn_root,
                                     int starting_index, const FileName &fn_image, double ang, double tilt,
