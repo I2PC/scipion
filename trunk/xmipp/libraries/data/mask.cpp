@@ -1109,12 +1109,7 @@ void MaskProgram::defineParams()
     addParamsLine("                             :  if w > 0 => outside sinc");
     addParamsLine("                             :  if w < 0 => inside sinc");
     addParamsLine("   [ -m <blob_order=2>]       : Order of blob");
-    /*addParamsLine("     requires --xx;");*/
-    \
-    /*addParamsLine("     requires --mask blob_circular;");*/\
-    /*addParamsLine("     requires --blob_crown;");*/\
     addParamsLine("   [ -a <blob_alpha=10.4>]    : Alpha of blob");
-    /*addParamsLine("     requires blob_circular blob_crown;");*/
 }
 
 void MaskProgram::readParams()
