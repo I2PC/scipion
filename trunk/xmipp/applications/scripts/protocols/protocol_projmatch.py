@@ -442,7 +442,7 @@ WBPReconstructionExtraCommand=' '
 """ See http://xmipp.cnb.uam.es/twiki/bin/view/Xmipp/Fourier and
         http://xmipp.cnb.uam.es/twiki/bin/view/Xmipp/Mpi_Fourier and
         for details
-	-thr_width 
+    -thr_width 
 """
 FourierReconstructionExtraCommand=' '
 
@@ -644,8 +644,8 @@ class projection_matching_class:
                 _MyMpiJobSize,
                 _MyNumberOfThreads,
                 _SymmetryGroup,
-		_SymmetryGroupNeighbourhood,
-		_OnlyWinner,
+        _SymmetryGroupNeighbourhood,
+        _OnlyWinner,
                 _DoLowPassFilter,
                 _UseFscForFilter,
                 _ConstantToAddToFiltration,
@@ -657,8 +657,8 @@ class projection_matching_class:
        sys.path.append(scriptdir) # add default search path
        scriptdir=os.path.split(os.path.dirname(os.popen('which xmipp_protocols','r').read()))[0]+'/protocols'
        sys.path.append(scriptdir)
-       import arg,log,logging,selfile
-       import launch_job
+       import arg,log,logging
+       import launch_job, XmippData
 
        self._CleanUpFiles=_CleanUpFiles
        self._WorkingDir=os.getcwd()+'/'+_WorkingDir
@@ -752,18 +752,17 @@ class projection_matching_class:
        log.make_backup_of_script_file(sys.argv[0],self._WorkingDir)
        
        # Create a selfile with absolute pathname in the WorkingDir
-       mysel=selfile.selfile()
-       mysel.read(_SelFileName)
-       newsel=mysel.make_abspath()
+       newsel= XmippData.MetaData(XmippData.FileName(_SelFileName))
+       newsel.makeAbsPath(XmippData.MDL_IMAGE)
        self._SelFileName=os.path.abspath(self._WorkingDir + '/' + _SelFileName)
-       newsel.write(self._SelFileName)
+       newsel.write(XmippData.FileName(self._SelFileName))
        
        # For ctf groups, also create a CTFdat file with absolute pathname in the WorkingDir
        if (self._DoCtfCorrection):
           import ctfdat
           myctfdat=ctfdat.ctfdat()
           myctfdat.read(_CTFDatName)
-          newctfdat=myctfdat.make_abspath()
+          newctfdat=myctfdat.makeAbsPath()
           self._CTFDatName=os.path.abspath(self._WorkingDir + '/' + _CTFDatName)
           newctfdat.write(self._CTFDatName)
 
@@ -937,8 +936,8 @@ class projection_matching_class:
                                          self._MyMpiJobSize,
                                          self._WorkingDir,
                                          self._SymmetryGroup,
-					 self._SymmetryGroupNeighbourhood,
-					 self._OnlyWinner,
+                     self._SymmetryGroupNeighbourhood,
+                     self._OnlyWinner,
                                          self._AvailableMemory,
                                          self._DoComputeResolution,
                                          self._DoSplitReferenceImages,
@@ -983,7 +982,7 @@ class projection_matching_class:
                                     self._ReconstructedVolume[_iteration_number],
                                     self._DoComputeResolution,
                                     self._DoSplitReferenceImages,
-				    self._PaddingFactor
+                    self._PaddingFactor
                                     )
           else:
              self._mylog.info("Skipped Reconstruction") 
@@ -1008,11 +1007,11 @@ class projection_matching_class:
                                                   self._ReconstructedVolume[_iteration_number],
                                                   self._ARTLambda,
                                                   self._OuterRadius,
-						  self._DoSplitReferenceImages,
-						  self._PaddingFactor
+                          self._DoSplitReferenceImages,
+                          self._PaddingFactor
                                                   )
           else:
-	     filter_frequence=0
+         filter_frequence=0
              self._mylog.info("Skipped Resolution calculation") 
           
           self._ConstantToAddToFiltration=arg.getComponentFromVector(\
@@ -1154,11 +1153,11 @@ def execute_mask(_DoMask,
        if (_DoSphericalMask):
           command=' -i '    + InPutVolume + \
                   ' -o '    + _ReferenceVolume + \
-                  ' -mask circular -' + str(_MaskRadius)
+                  ' --mask circular -' + str(_MaskRadius)
        else:
           command=' -i '    + InPutVolume + \
                   ' -o '    + _ReferenceVolume + \
-                  ' -mask ' + _MaskFileName
+                  ' --mask ' + _MaskFileName
        launch_job.launch_job("xmipp_mask",
                              command,
                              _mylog,
@@ -1208,8 +1207,8 @@ def execute_projection_matching(_mylog,
                                 _MyMpiJobSize,
                                 _WorkingDir,
                                 _SymmetryGroup,
-				_SymmetryGroupNeighbourhood,
-				_OnlyWinner,
+                _SymmetryGroupNeighbourhood,
+                _OnlyWinner,
                                 _AvailableMemory,
                                 _DoComputeResolution,
                                 _DoSplitReferenceImages,
@@ -1223,7 +1222,7 @@ def execute_projection_matching(_mylog,
    import os, shutil, string, glob, math
    #import launch_job, selfile, docfiles, utils_xmipp
    import launch_job, utils_xmipp
-
+      
    if (_DoCtfCorrection):
       # To use -add_to in angular_class_average correctly, 
       # make sure there are no proj_match_class* files from previous runs. 
@@ -1239,43 +1238,43 @@ def execute_projection_matching(_mylog,
    print '*********************************************************************'
    print '* Create projection library'
    parameters=' -i '                   + _ReferenceVolume + \
-              ' -experimental_images ' +  _InputDocFileName + \
+              ' --experimental_images ' +  _InputDocFileName + \
               ' -o '                   + ProjectLibraryRootName + \
-              ' -sampling_rate '       + _AngSamplingRateDeg  + \
-              ' -sym '                 + _SymmetryGroup + 'h' + \
-              ' -compute_neighbors'
+              ' --sampling_rate '       + _AngSamplingRateDeg  + \
+              ' --sym '                 + _SymmetryGroup + 'h' + \
+              ' --compute_neighbors'
 
    if ( string.atof(_MaxChangeInAngles) < 181.):
       parameters+= \
-              ' -near_exp_data -angular_distance '    + str(_MaxChangeInAngles)
+              ' --near_exp_data --angular_distance '    + str(_MaxChangeInAngles)
    else:
       parameters+= \
-              ' -angular_distance -1'
+              ' --angular_distance -1'
 
    if (_PerturbProjectionDirections):
       # Just follow Roberto's suggestion
       perturb=math.sin(math.radians(float(_AngSamplingRateDeg)))/4.
       parameters+= \
-          ' -perturb ' + str(perturb)
+          ' --perturb ' + str(perturb)
 
    if (_DoRetricSearchbyTiltAngle):
      parameters+=  \
-              ' -min_tilt_angle '      + str(_Tilt0) + \
-              ' -max_tilt_angle '      + str(_TiltF)
+              ' --min_tilt_angle '      + str(_Tilt0) + \
+              ' --max_tilt_angle '      + str(_TiltF)
   
    if (_DoCtfCorrection):
      parameters+=  \
-              ' -groups '              + CtfGroupSubsetFileName
+              ' --groups '              + CtfGroupSubsetFileName
 
    if (_DoParallel):
       parameters = parameters + ' --mpi_job_size ' + str(_MyMpiJobSize)
       
    if (len(SymmetryGroupNeighbourhood)>1):
       parameters+= \
-          ' -sym_neigh ' + SymmetryGroupNeighbourhood + 'h'
+          ' --sym_neigh ' + SymmetryGroupNeighbourhood + 'h'
       if (OnlyWinner):
-	  parameters+= \
-              ' -only_winner '
+      parameters+= \
+              ' --only_winner '
 
    launch_job.launch_job('xmipp_angular_project_library',
                          parameters,
@@ -1312,24 +1311,23 @@ def execute_projection_matching(_mylog,
       print '* Perform projection matching'
       parameters= ' -i '              + inputdocfile + \
                   ' -o '              + outputname + \
-                  ' -ref '            + refname + \
-                  ' -Ri '             + str(_Ri)           + \
-                  ' -Ro '             + str(_Ro)           + \
-                  ' -max_shift '      + str(_MaxChangeOffset) + \
-                  ' -search5d_shift ' + str(_Search5DShift) + \
-                  ' -search5d_step  ' + str(_Search5DStep) + \
-                  ' -mem '            + str(_AvailableMemory * _MyNumberOfThreads) + \
-                  ' -thr '            + str(_MyNumberOfThreads) + \
-                  ' -sym '            + _SymmetryGroup + 'h'
+                  ' --ref '            + refname + \
+                  ' --Ri '             + str(_Ri)           + \
+                  ' --Ro '             + str(_Ro)           + \
+                  ' --max_shift '      + str(_MaxChangeOffset) + \
+                  ' --search5d_shift ' + str(_Search5DShift) + \
+                  ' --search5d_step  ' + str(_Search5DStep) + \
+                  ' --mem '            + str(_AvailableMemory * _MyNumberOfThreads) + \
+                  ' --thr '            + str(_MyNumberOfThreads) 
 
       if (_DoCtfCorrection and _ReferenceIsCtfCorrected):
          ctffile = CtfGroupName + '.ctf'
          parameters += \
-                  ' -pad '            + str(_PaddingFactor) + \
-                  ' -ctf '            + ctffile
+                  ' --pad '            + str(_PaddingFactor) + \
+                  ' --ctf '            + ctffile
 
       if (_DoParallel):
-         parameters = parameters + ' -mpi_job_size ' + str(_MyMpiJobSize)
+         parameters = parameters + ' --mpi_job_size ' + str(_MyMpiJobSize)
 
       launch_job.launch_job('xmipp_angular_projection_matching',
                             parameters,
@@ -1341,30 +1339,30 @@ def execute_projection_matching(_mylog,
 
       # Now make the class averages
       parameters =  ' -i '      + outputname + '.doc'  + \
-                    ' -lib '    + ProjectLibraryRootName + '_angles.doc' + \
-                    ' -dont_write_selfiles ' + \
-                    ' -limit0 ' + str(_MinimumCrossCorrelation) + \
-                    ' -limitR ' + str(_DiscardPercentage)
+                    ' --lib '    + ProjectLibraryRootName + '.doc' + \
+                    ' --dont_write_selfiles ' + \
+                    ' --limit0 ' + str(_MinimumCrossCorrelation) + \
+                    ' --limitR ' + str(_DiscardPercentage)
       if (_DoCtfCorrection):
          # On-the fly apply Wiener-filter correction and add all CTF groups together
          parameters += \
-                    ' -wien '             + CtfGroupName + '.wien' + \
-                    ' -pad '              + str(_PaddingFactor) + \
-                    ' -add_to '           + ProjMatchRootName
+                    ' --wien '             + CtfGroupName + '.wien' + \
+                    ' --pad '              + str(_PaddingFactor) + \
+                    ' --add_to '           + ProjMatchRootName
       else:
          parameters += \
                     ' -o '                + ProjMatchRootName
       if (_DoAlign2D == '1'):
          parameters += \
-                    ' -iter '             + str(_Align2DIterNr) + \
-                    ' -Ri '               + str(_Ri)           + \
-                    ' -Ro '               + str(_Ro)           + \
-                    ' -max_shift '        + str(_MaxChangeOffset) + \
-                    ' -max_shift_change ' + str(_Align2dMaxChangeOffset) + \
-                    ' -max_psi_change '   + str(_Align2dMaxChangeRot) 
+                    ' --iter '             + str(_Align2DIterNr) + \
+                    ' --Ri '               + str(_Ri)           + \
+                    ' --Ro '               + str(_Ro)           + \
+                    ' --max_shift '        + str(_MaxChangeOffset) + \
+                    ' --max_shift_change ' + str(_Align2dMaxChangeOffset) + \
+                    ' --max_psi_change '   + str(_Align2dMaxChangeRot) 
       if (_DoComputeResolution and _DoSplitReferenceImages):
          parameters += \
-                    ' -split '
+                    ' --split '
 
       launch_job.launch_job('xmipp_angular_class_average',
                             parameters,
@@ -1394,11 +1392,11 @@ def execute_projection_matching(_mylog,
    import XmippData, metadataUtils
    metadataUtils.intercalate_union_3(ProjMatchRootName + '_classes.sel',
                                      MultiAlign2dSel,
-				     ProjMatchRootName + '_class',
-				     ProjectLibraryRootName,
-				     '.xmp',
-				     '.ref.xmp'
-				     )
+                     ProjMatchRootName + '_class',
+                     ProjectLibraryRootName,
+                     '.xmp',
+                     '.ref.xmp'
+                     )
 
 #   #classselfile=selfile.selfile()
 #   #classselfile.read(ProjMatchRootName+'_classes.sel')
@@ -1432,7 +1430,7 @@ def execute_projection_matching(_mylog,
       command='xmipp_show -sel '+ "../"+'Iter_'+\
                    str(_iteration_number) +'/'+ MultiAlign2dSel +' -w 9 '
       if (_DoAlign2D == '1'):
-         command += ' -showall '
+         command += ' --showall '
 
       print '*********************************************************************'
       print '* ',command
@@ -1456,7 +1454,7 @@ def make_subset_docfiles(_mylog,
       inselfile = CtfGroupName + '.sel'
       inputdocfile = (os.path.basename(inselfile)).replace('.sel','.doc')
       command=' -i   ' + _InputDocFileName + \
-              ' -sel ' + inselfile + \
+              ' --sel ' + inselfile + \
               ' -o   ' + inputdocfile
       print '*********************************************************************'
       launch_job.launch_job("xmipp_docfile_select_subset",
@@ -1492,7 +1490,7 @@ def execute_reconstruction(_mylog,
                            _ReconstructedandfilteredVolume,
                            _DoComputeResolution,
                            _DoSplitReferenceImages,
-			   _PaddingFactor):
+               _PaddingFactor):
 
    _mylog.debug("execute_reconstruction")
 
@@ -1508,10 +1506,10 @@ def execute_reconstruction(_mylog,
       Outputvolume = Outputvolume+".vol"
       program = 'xmipp_reconstruct_wbp'
       parameters= ' -i '    + ForReconstructionSel + \
-                  ' -doc '  + ForReconstructionDoc + \
+                  ' --doc '  + ForReconstructionDoc + \
                   ' -o '    + Outputvolume + \
-                  ' -sym '  + _SymmetryGroup + \
-                  ' -weight -use_each_image '
+                  ' --sym '  + _SymmetryGroup + \
+                  ' --weight --use_each_image '
       parameters = parameters + _WBPReconstructionExtraCommand
       _MyNumberOfThreads = 1
               
@@ -1520,31 +1518,31 @@ def execute_reconstruction(_mylog,
       _DoParallel=False
       parameters=' -i '    + ForReconstructionSel + \
                  ' -o '    + Outputvolume + ' ' + \
-                 ' -sym '  + _SymmetryGroup + \
-		 ' -thr '  + str(_MyNumberOfThreads) + \
-                 ' -WLS '
+                 ' --sym '  + _SymmetryGroup + \
+         ' --thr '  + str(_MyNumberOfThreads) + \
+                 ' --WLS '
       if len(_ARTLambda)>1:
          parameters = parameters + ' -l '   + _ARTLambda + ' '
       parameters = parameters + _ARTReconstructionExtraCommand
    elif _ReconstructionMethod=='fourier':
       if ( _MyNumberOfMpiProcesses ==1):
-	 _DoParallel=False
+     _DoParallel=False
       program = 'xmipp_reconstruct_fourier'
       parameters=' -i '    + ForReconstructionSel + \
                  ' -o '    + Outputvolume + '.vol ' + \
-                 ' -sym '  + _SymmetryGroup + \
-                 ' -thr '  + str(_MyNumberOfThreads) + \
-                 ' -weight ' + \
-                 ' -max_resolution ' + str(_FourierMaxFrequencyOfInterest) +\
-		 ' -pad_proj ' + str(_PaddingFactor) +\
-		 ' -pad_vol ' + str(_PaddingFactor)
+                 ' --sym '  + _SymmetryGroup + \
+                 ' --thr '  + str(_MyNumberOfThreads) + \
+                 ' --weight ' + \
+                 ' --max_resolution ' + str(_FourierMaxFrequencyOfInterest) +\
+         ' --pad_proj ' + str(_PaddingFactor) +\
+         ' --pad_vol ' + str(_PaddingFactor)
       if (_DoParallel):
-         parameters = parameters + ' -mpi_job_size ' + str(_MyMpiJobSize)
+         parameters = parameters + ' --mpi_job_size ' + str(_MyMpiJobSize)
       if (_DoComputeResolution and not _DoSplitReferenceImages):
          myFileName =  ProjMatchDir + '/' + ProjMatchName
-         parameters = parameters + ' -prepare_fsc ' + myFileName + ' '
+         parameters = parameters + ' --prepare_fsc ' + myFileName + ' '
          rand_command  = ' xmipp_selfile_split -i '
-         rand_command += ForReconstructionSel + ' -dont_sort -n 1 ' 
+         rand_command += ForReconstructionSel + ' --dont_sort -n 1 ' 
          os.system(rand_command)
          _mylog.info(rand_command)
       parameters = parameters + _FourierReconstructionExtraCommand 
@@ -1563,7 +1561,7 @@ def execute_reconstruction(_mylog,
 
    #_mylog.info(command+ ' ' + parameters)
    if _DisplayReconstruction==True:
-      command='xmipp_show -vol '+ Outputvolume + '&'
+      command='xmipp_show --vol '+ Outputvolume + '&'
       print '*********************************************************************'
       print '* ',command
       _mylog.info(command)
@@ -1591,8 +1589,8 @@ def  execute_resolution(_mylog,
                         _ReconstructedVolume,
                         _ARTLambda,
                         _OuterRadius,
-			_DoSplitReferenceImages,
-			_PaddingFactor):
+            _DoSplitReferenceImages,
+            _PaddingFactor):
 
     import os,shutil,math
 
@@ -1614,10 +1612,10 @@ def  execute_resolution(_mylog,
        if _ReconstructionMethod=='wbp':
           program = 'xmipp_reconstruct_wbp'
           parameters= ' -i '    + Selfiles[i] + \
-                      ' -doc '  + Docfiles[i] + \
+                      ' --doc '  + Docfiles[i] + \
                       ' -o '    + Outputvolumes[i] + ".vol" + \
-                      ' -sym '  + _SymmetryGroup + \
-                      ' -weight -use_each_image '
+                      ' --sym '  + _SymmetryGroup + \
+                      ' --weight --use_each_image '
           parameters = parameters + _WBPReconstructionExtraCommand
           _MyNumberOfThreads = 1
        elif _ReconstructionMethod=='art':
@@ -1625,28 +1623,28 @@ def  execute_resolution(_mylog,
           _DoParallel=False
           parameters=' -i '    + Selfiles[i] + \
                      ' -o '    + Outputvolumes[i] + \
-                     ' -sym '  + _SymmetryGroup + \
-		     ' -thr '  + str(_MyNumberOfThreads) + \
-                     ' -WLS '
+                     ' --sym '  + _SymmetryGroup + \
+             ' --thr '  + str(_MyNumberOfThreads) + \
+                     ' --WLS '
           if len(_ARTLambda)>1:
              parameters = parameters + ' -l '   + _ARTLambda + ' '
           parameters = parameters + _ARTReconstructionExtraCommand
        elif _ReconstructionMethod=='fourier':
           if ( _MyNumberOfMpiProcesses ==1):
-	      _DoParallel=False
+          _DoParallel=False
           program = 'xmipp_reconstruct_fourier'
           parameters=' -i '    +  Selfiles[i] + \
                      ' -o '    +  Outputvolumes[i] + '.vol ' + \
-                     ' -sym '  + _SymmetryGroup + \
-		     ' -thr '  + str(_MyNumberOfThreads) + \
-                     ' -weight ' + \
-                     ' -max_resolution ' + str(_FourierMaxFrequencyOfInterest) +\
-		     ' -pad_proj ' + str(_PaddingFactor) +\
-		     ' -pad_vol ' + str(_PaddingFactor)
+                     ' --sym '  + _SymmetryGroup + \
+             ' --thr '  + str(_MyNumberOfThreads) + \
+                     ' --weight ' + \
+                     ' --max_resolution ' + str(_FourierMaxFrequencyOfInterest) +\
+             ' --pad_proj ' + str(_PaddingFactor) +\
+             ' --pad_vol ' + str(_PaddingFactor)
           if (_DoParallel):
-             parameters = parameters + ' -mpi_job_size ' + str(_MyMpiJobSize)
+             parameters = parameters + ' --mpi_job_size ' + str(_MyMpiJobSize)
           if ( not _DoSplitReferenceImages):
-	     PerformReconstruction=False
+         PerformReconstruction=False
           parameters = parameters + _FourierReconstructionExtraCommand
        else:
           _mylog.error("Reconstruction method unknown. Quiting")
@@ -1670,7 +1668,7 @@ def  execute_resolution(_mylog,
        print '*********************************************************************'
        print '* Applying a soft mask'
        command = " -i " + Outputvolumes[i] + \
-                 " -mask  raised_cosine -" + str(innerrad) + \
+                 " --mask  raised_cosine -" + str(innerrad) + \
                  " -" + str(_OuterRadius)
        launch_job.launch_job("xmipp_mask",
                              command,
@@ -1679,16 +1677,16 @@ def  execute_resolution(_mylog,
   
     print '**************************************************************'
     print '* Compute resolution ' 
-    command = " -ref " + Outputvolumes[0] +\
-              " -i " +Outputvolumes[1]  + ' -sam ' + str(_ResolSam)
+    command = " --ref " + Outputvolumes[0] +\
+              " -i " +Outputvolumes[1]  + ' --sam ' + str(_ResolSam)
     if ReconstructionMethod=='fourier':
-	import spider_header
+    import spider_header
         myheader=spider_header.spiderheader(Outputvolumes[i] )
         ncolumns=myheader.nx
-	#2.5 is the blob radius 
-	aux4 = 2.5 * 0.5 / ncolumns
-        command += " -max_sam " + str (_ResolSam/(aux4+_FourierMaxFrequencyOfInterest))
-	
+    #2.5 is the blob radius 
+    aux4 = 2.5 * 0.5 / ncolumns
+        command += " --max_sam " + str (_ResolSam/(aux4+_FourierMaxFrequencyOfInterest))
+    
     launch_job.launch_job("xmipp_resolution_fsc",
                           command,
                           _mylog,
@@ -1787,7 +1785,7 @@ def filter_at_given_resolution(_DoLowPassFilter,
            filter_in_pixels_at=0.5
         else:
            command = " -i " + Inputvolume +\
-                     " -o " + Outputvolume + ' -low_pass ' +\
+                     " -o " + Outputvolume + ' --low_pass ' +\
                      str (filter_in_pixels_at)
            launch_job.launch_job("xmipp_fourier_filter",
                                  command,
@@ -1807,14 +1805,14 @@ def execute_center_volume(_mylog,
     _mylog.info("Centering "+_volume)
     
     # Symmetrize input volume
-    command = "-i "+_volume+".vol -o tmp.vol -sym i3"
+    command = "-i "+_volume+".vol -o tmp.vol --sym i3"
     launch_job.launch_job("xmipp_symmetrize",
                          command,
                          _mylog,
                          False,1,1,_MySystemFlavour)
     
     # Align input volume
-    command = "-i1 tmp.vol -i2 "+_volume+".vol -local -onlyShift -apply"
+    command = "--i1 tmp.vol --i2 "+_volume+".vol --local --onlyShift --apply"
     launch_job.launch_job("xmipp_align_volumes",
                          command,
                          _mylog,

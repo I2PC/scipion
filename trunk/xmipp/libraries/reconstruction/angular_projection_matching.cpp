@@ -219,9 +219,10 @@ void ProgAngularProjectionMatching::produceSideInfo()
     // Check that the reference and the experimental images are of the same
     // size
     FileName fnt;
-    fnt.compose(fn_ref,1,"xmp");
+    fnt.compose(0,fn_ref);
     Image<double> imgRef;
     imgRef.read(fnt);
+
     if (!imgRef().sameShape(img()))
         REPORT_ERROR(ERR_MULTIDIM_SIZE,
                      "Check that the reference volume and the experimental images are of the same size");
@@ -364,7 +365,7 @@ int ProgAngularProjectionMatching::getCurrentReference(int refno,
     FourierTransformer                     local_transformer;
 
     // Image was not stored yet: read it from disc and store
-    fnt.compose(fn_ref,refno+1,"xmp");
+    fnt.compose(refno/*+1*/,fn_ref);
     img.read(fnt);
     img().setXmippOrigin();
 
