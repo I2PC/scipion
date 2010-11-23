@@ -815,17 +815,18 @@ void downsample(const Micrograph &M, int Xstep, int Ystep,
                     {
                         int j2 = intWRAP(j + x, 0, xF - 1);
                         int i2 = intWRAP(i + y, 0, yF - 1);
+                    	double aux=M(i2, j2);
                         if (ifirst)
                         {
-                            imin = imax = M(i2, j2);
+                            imin = imax = aux;
                             ifirst = false;
                         }
                         else
                         {
-                            imin = XMIPP_MIN(imin, M(i2, j2));
-                            imax = XMIPP_MAX(imax, M(i2, j2));
+                            imin = XMIPP_MIN(imin, aux);
+                            imax = XMIPP_MAX(imax, aux);
                         }
-                        pixval += kernel(i, j) * M(i2, j2);
+                        pixval += kernel(i, j) * aux;
                     }
                     pixval *= scale;
                     if (ii < Ypdim && jj < Xpdim)
