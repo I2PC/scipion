@@ -4456,22 +4456,13 @@ public:
      *
      * This function is ported to Python as assign.
      */
-    template <typename T1>
-    MultidimArray<T>& operator=(const MultidimArray<T1>& op1)
+    MultidimArray<T>& operator=(const MultidimArray<T>& op1)
     {
         if (&op1 != this)
         {
             if (data == NULL || !sameShape(op1))
                 resizeNoCopy(op1);
-            if (typeid(T) == typeid(T1))
-                memcpy(data,op1.data,MULTIDIM_SIZE(op1)*sizeof(T));
-            else
-            {
-                FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(op1)
-                {
-                  DIRECT_MULTIDIM_ELEM(data,n) = (T) DIRECT_MULTIDIM_ELEM(op1,n);
-                }
-            }
+            memcpy(data,op1.data,MULTIDIM_SIZE(op1)*sizeof(T));
         }
         return *this;
     }
