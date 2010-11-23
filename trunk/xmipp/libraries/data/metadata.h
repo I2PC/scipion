@@ -406,6 +406,12 @@ public:
         _setValue(objectId, MDObject(label, valueIn));
     }
 
+    /** Variant of previous function, but provinding the MDObject */
+    bool setValue(const MDObject &obj, long int objectId=-1)
+    {
+        _setValue(objectId, obj);
+    }
+
     /** Get the value of some label.
      * from the object that has id 'objectId'
      * or from 'activeObject' if objectId=-1.
