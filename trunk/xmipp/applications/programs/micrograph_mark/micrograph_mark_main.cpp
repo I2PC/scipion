@@ -114,6 +114,7 @@ public:
             m.close_micrograph();
 
             m.open_micrograph(fn8bits);
+            m.set_micrograph_name(fnRaw);
             filesToDelete.push_back(fn8bits+"*");
         }
         else
@@ -132,6 +133,7 @@ public:
                 mTilted.write_as_8_bits(fn8bitsTilted);
                 mTilted.close_micrograph();
                 mTilted.open_micrograph(fn8bitsTilted);
+                m.set_micrograph_name(fnRawTilted);
                 filesToDelete.push_back(fn8bitsTilted+"*");
             }
             else
