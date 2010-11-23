@@ -413,8 +413,8 @@ void correlation_vector_no_Fourier(const MultidimArray<T> &v1, const MultidimArr
     result.setXmippOrigin();
     int N=XSIZE(v1)-1;
     FOR_ALL_ELEMENTS_IN_ARRAY1D(result)
-        for (int k=0; k<XSIZE(v1); k++)
-            result(i)+=DIRECT_A1D_ELEM(v1,intWRAP(k+i,0,N))*
+        for (int k=0; k<XSIZE(v1); ++k)
+            A1D_ELEM(result,i)+=DIRECT_A1D_ELEM(v1,intWRAP(k+i,0,N))*
                        DIRECT_A1D_ELEM(v2,k);
     STARTINGX(result)=0;
 }
