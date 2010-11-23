@@ -198,17 +198,17 @@ int Micrograph::getDatatypeDetph() const
     switch (datatype)
     {
     case UChar:
-        return (sizeof(unsigned char));
+        return (8*sizeof(unsigned char));
     case UShort:
-        return (sizeof(unsigned short));
+        return (8*sizeof(unsigned short));
     case Short:
-        return (sizeof(short));
+        return (8*sizeof(short));
     case UInt:
-        return (sizeof(unsigned int));
+        return (8*sizeof(unsigned int));
     case Int:
-        return (sizeof(int));
+        return (8*sizeof(int));
     case Float:
-        return (sizeof(float));
+        return (8*sizeof(float));
     default:
         std::cerr << "Micrograph::getDatatypeDetph: Unknown datatype " << datatype <<std::endl;
         REPORT_ERROR(ERR_TYPE_INCORRECT,"ERROR");
