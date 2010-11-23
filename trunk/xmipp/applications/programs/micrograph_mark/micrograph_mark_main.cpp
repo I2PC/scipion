@@ -92,7 +92,7 @@ protected:
 public:
     void run()
     {
-    	Micrograph m, mTilted;
+        Micrograph m, mTilted;
         FileName fn8bits="", fn8bitsTilted="";
 
         m.open_micrograph(fnRaw);
@@ -107,39 +107,25 @@ public:
         // micrograph in the dialog window under "generate images"
         // should be the original fnRaw (and not be left blank as before!)
         std::vector<FileName> filesToDelete;
-        if (m.getDatatypeDetph()!=8)
-        {
-            fn8bits=fnRaw+"_8bits.raw";
-            m.write_as_8_bits(fn8bits);
-            m.close_micrograph();
+        fn8bits=fnRaw+"_8bits.raw";
+        m.write_as_8_bits(fn8bits);
+        m.close_micrograph();
 
-            m.open_micrograph(fn8bits);
-            m.set_micrograph_name(fnRaw);
-            filesToDelete.push_back(fn8bits+"*");
-        }
-        else
-        {
-            m.compute_8_bit_scaling();
-        }
-
+        m.open_micrograph(fn8bits);
+        m.resetLinearTransformatioVal8();
+        m.set_micrograph_name(fnRaw);
+        filesToDelete.push_back(fn8bits+"*");
 
         if (fnRawTilted != "")
         {
             mTilted.open_micrograph(fnRawTilted);
-            //FIXME
-            if (mTilted.getDatatypeDetph()!=8)
-            {
-                fn8bitsTilted=fnRawTilted+"_8bits.raw";
-                mTilted.write_as_8_bits(fn8bitsTilted);
-                mTilted.close_micrograph();
-                mTilted.open_micrograph(fn8bitsTilted);
-                m.set_micrograph_name(fnRawTilted);
-                filesToDelete.push_back(fn8bitsTilted+"*");
-            }
-            else
-            {
-                mTilted.compute_8_bit_scaling();
-            }
+            fn8bitsTilted=fnRawTilted+"_8bits.raw";
+            mTilted.write_as_8_bits(fn8bitsTilted);
+            mTilted.close_micrograph();
+            mTilted.open_micrograph(fn8bitsTilted);
+            mTilted.set_micrograph_name(fnRawTilted);
+            mTilted.resetLinearTransformatioVal8();
+            filesToDelete.push_back(fn8bitsTilted+"*");
         }
 
         // Configure application .............................................
@@ -160,7 +146,7 @@ public:
             else
                 mainWidget = new QtMainWidgetMark(&m, &mTilted);
             for (int i=0; i<filesToDelete.size(); i++)
-            	mainWidget->__filesToDelete.push_back(filesToDelete[i]);
+                mainWidget->__filesToDelete.push_back(filesToDelete[i]);
         }
 
         // Check if the PSDs must be shown ...................................
