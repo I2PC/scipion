@@ -650,7 +650,26 @@ MetaData_SingleImgSize(PyObject *obj, PyObject *args, PyObject *kwargs)
   }
   return NULL;
 }
-
+/* SingleImgSize */
+static PyObject *
+MetaData_makeAbsPath(PyObject *obj, PyObject *args, PyObject *kwargs)
+{
+  int label = (MDLabel)MDL_IMAGE;
+  if (PyArg_ParseTuple(args, "|i", &label))
+  {
+    try
+    {
+      MetaDataObject *self = (MetaDataObject*)obj;
+      self->metadata->makeAbsPath((MDLabel)label);
+      return Py_BuildValue("");
+    }
+    catch (XmippError xe)
+    {
+      PyErr_SetString(PyXmippError, xe.msg.c_str());
+    }
+  }
+  return NULL;
+}
 
 /* MetaData methods */
 static PyMethodDef MetaData_methods[] = {
@@ -692,6 +711,9 @@ static PyMethodDef MetaData_methods[] = {
     },
     {"setValue", (PyCFunction)MetaData_setValue, METH_VARARGS,
      "Set the value for column(label)"
+    },
+    {"makeAbsPath", (PyCFunction)MetaData_makeAbsPath, METH_VARARGS,
+     "Make filenames with absolute paths"
     },
 
     {NULL}  /* Sentinel */
@@ -830,6 +852,32 @@ createMDObject(int label, PyObject *pyValue)
     PyErr_SetString(PyXmippError, xe.msg.c_str());
   }
   return NULL;
+}
+
+static PyObject *
+getMDObjectValue(MDObject * obj)
+{
+  if (obj->label == MDL_UNDEFINED) //if undefine label, store as a literal string
+      return NULL;
+    switch (MDL::labelType(obj->label))
+    {
+      case LABEL_BOOL: //bools are int in sqlite3
+          if (obj->data.boolValue)
+            Py_RETURN_TRUE;
+          else
+            Py_RETURN_FALSE;
+      case LABEL_INT:
+          return PyLong_FromLong(obj->data.intValue);
+      case LABEL_LONG:
+        return PyLong_FromLong(obj->data.longintValue);
+      case LABEL_DOUBLE:
+          return PyFloat_FromDouble(obj->data.doubleValue);
+      case LABEL_STRING:
+          return PyString_FromString(obj->data.stringValue->c_str());
+      case LABEL_VECTOR:
+         return NULL;//FIXME: Not implemented now
+    }//close switch
+    return NULL;
 }
 
 
