@@ -1261,11 +1261,19 @@ public:
 
         int prec = bestPrecision(max_val, 10);
 
-        for (int j = 0; j < v.vdim; j++)
-        {
-            ostrm << floatToString((double) v.vdata[j], 10, prec)
-            << std::endl;
-        }
+        if (v.row)
+            for (int j = 0; j < v.vdim; j++)
+            {
+                ostrm << floatToString((double) v.vdata[j], 10, prec)
+                << std::endl;
+            }
+        else
+            for (int j = 0; j < v.vdim; j++)
+            {
+                ostrm << floatToString((double) v.vdata[j], 10, prec)
+                << " ";
+            }
+
         return ostrm;
     }
 
