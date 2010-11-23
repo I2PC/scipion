@@ -32,18 +32,20 @@
 
 static PyObject * PyXmippError;
 
-#define FileName_Check(v)  ((v)->ob_type == &FileNameType)
+#define FileName_Check(v)  (((v)->ob_type == &FileNameType))
 #define FileName_Value(v)  ((*((FileNameObject*)(v))->filename))
 
-#define MetaData_Check(v)  ((v)->ob_type == &MetaDataType)
+#define MetaData_Check(v)  (((v)->ob_type == &MetaDataType))
 #define MetaData_Value(v)  ((*((MetaDataObject*)(v))->metadata))
-#define MDQuery_Check(v) ((v)->ob_typ == &MDQuery)
-
+#define MDQuery_Check(v) (((v)->ob_type == &MDQueryType))
+#define MDQuery_Value(v)  ((*((MDQueryObject*)(v))->query))
 
 #define RETURN_MDOBJECT(value) return new MDObject((MDLabel)label, value)
 /*Helper function to create an MDObject from a PyObject */
 static MDObject *
 createMDObject(int label, PyObject *pyValue);
+static PyObject *
+getMDObjectValue(MDObject * obj);
 
 /***************************************************************/
 /*                            FileName                         */
@@ -126,7 +128,7 @@ FileName_compose(PyObject *obj, PyObject *args, PyObject *kwargs)
         else
           return NULL;
     }
-    return Py_BuildValue("");//Return None(similar to void in C)
+    Py_RETURN_NONE;//Return None(similar to void in C)
 }
 
 /* isInStack */
@@ -409,7 +411,7 @@ MetaData_read(PyObject *obj, PyObject *args, PyObject *kwargs)
             {
                 str = PyString_AsString(pyStr);
                 self->metadata->read(str);
-                return Py_BuildValue("");
+                Py_RETURN_NONE;
             }
             else
               return NULL;
@@ -448,11 +450,11 @@ MetaData_write(PyObject *obj, PyObject *args, PyObject *kwargs)
 //          {
 //              str = PyString_AsString(pyStr);
 //              self->metadata->write(str);
-//              return Py_BuildValue("");
+//              Py_RETURN_NONE;
 //          }
           else
             return NULL;
-          return Py_BuildValue("");
+          Py_RETURN_NONE;
         }
         catch (XmippError xe)
         {
@@ -585,7 +587,7 @@ MetaData_setColumnFormat(PyObject *obj, PyObject *args, PyObject *kwargs)
       {
         MetaDataObject *self = (MetaDataObject*)obj;
         self->metadata->setColumnFormat(input == Py_True);
-        return Py_BuildValue("");
+        Py_RETURN_NONE;
       }
       else
         PyErr_SetString(PyExc_TypeError, "MetaData::setColumnFormat: Expecting boolean value");
@@ -624,10 +626,116 @@ MetaData_setValue(PyObject *obj, PyObject *args, PyObject *kwargs)
   }
   return NULL;
 }
+/* getValue */
+static PyObject *
+MetaData_getValue(PyObject *obj, PyObject *args, PyObject *kwargs)
+{
+  int label;
+  long int objectId = -1;
+  PyObject *pyValue;
 
+  if (PyArg_ParseTuple(args, "i|l", &label, &objectId))
+  {
+    try
+    {
+      MDObject * object = new MDObject((MDLabel)label);
+      MetaDataObject *self = (MetaDataObject*)obj;
+      self->metadata->getValue(*object, objectId);
+      pyValue = getMDObjectValue(object);
+      delete object;
+      return pyValue;
+    }
+    catch (XmippError xe)
+    {
+      PyErr_SetString(PyXmippError, xe.msg.c_str());
+    }
+  }
+  return NULL;
+}
+/* addLabel */
+static PyObject *
+MetaData_addLabel(PyObject *obj, PyObject *args, PyObject *kwargs)
+{
+  int label, pos = -1;
+  PyObject *pyValue;
+  if (PyArg_ParseTuple(args, "i|i", &label, &pos))
+  {
+    try
+    {
+      MetaDataObject *self = (MetaDataObject*)obj;
+      self->metadata->addLabel((MDLabel)label);
+      Py_RETURN_TRUE;
+    }
+    catch (XmippError xe)
+    {
+      PyErr_SetString(PyXmippError, xe.msg.c_str());
+    }
+  }
+  return NULL;
+}
+/* importObjects */
+static PyObject *
+MetaData_importObjects(PyObject *obj, PyObject *args, PyObject *kwargs)
+{
+  int label, objectId = -1;
+  PyObject *pyMd = NULL;
+  PyObject *pyQuery = NULL;
+
+  if (PyArg_ParseTuple(args, "OO", &pyMd, &pyQuery))
+  {
+    try
+    {
+      //FIXME: if (!MetaData_Check(pyMd))
+      if (0)
+      {
+        PyErr_SetString(PyExc_TypeError, "MetaData::importObjects: Expecting MetaData as first arguments");
+        return NULL;
+      }
+      if (!MDQuery_Check(pyQuery))
+      {
+        PyErr_SetString(PyExc_TypeError, "MetaData::importObjects: Expecting MDQuery as second arguments");
+        return NULL;
+      }
+      MetaDataObject *self = (MetaDataObject*)obj;
+      self->metadata->importObjects(MetaData_Value(pyMd), MDQuery_Value(pyQuery));
+      Py_RETURN_NONE;
+    }
+    catch (XmippError xe)
+    {
+      PyErr_SetString(PyXmippError, xe.msg.c_str());
+    }
+  }
+  return NULL;
+}
+/* removeObjects */
+static PyObject *
+MetaData_removeObjects(PyObject *obj, PyObject *args, PyObject *kwargs)
+{
+  PyObject *pyQuery = NULL;
+
+  if (PyArg_ParseTuple(args, "O", &pyQuery))
+  {
+    try
+    {
+      if (!MDQuery_Check(pyQuery))
+      {
+        PyErr_SetString(PyExc_TypeError, "MetaData::removeObjects: Expecting MDQuery as second arguments");
+        return NULL;
+      }
+      MetaDataObject *self = (MetaDataObject*)obj;
+      self->metadata->removeObjects(MDQuery_Value(pyQuery));
+      Py_RETURN_NONE;
+    }
+    catch (XmippError xe)
+    {
+      PyErr_SetString(PyXmippError, xe.msg.c_str());
+    }
+  }
+  return NULL;
+}
 /* SingleImgSize */
 static PyObject *
-MetaData_SingleImgSize(PyObject *obj, PyObject *args, PyObject *kwargs)
+xmipp_SingleImgSize(PyObject *obj, PyObject *args, PyObject *kwargs)
 {
   PyObject *pyValue; //Only used to skip label and value
 
@@ -661,7 +769,7 @@ MetaData_makeAbsPath(PyObject *obj, PyObject *args, PyObject *kwargs)
     {
       MetaDataObject *self = (MetaDataObject*)obj;
       self->metadata->makeAbsPath((MDLabel)label);
-      return Py_BuildValue("");
+      Py_RETURN_NONE;
     }
     catch (XmippError xe)
     {
@@ -712,10 +820,21 @@ static PyMethodDef MetaData_methods[] = {
     {"setValue", (PyCFunction)MetaData_setValue, METH_VARARGS,
      "Set the value for column(label)"
     },
+    {"getValue", (PyCFunction)MetaData_getValue, METH_VARARGS,
+     "Get the value for column(label)"
+    },
+    {"addLabel", (PyCFunction)MetaData_addLabel, METH_VARARGS,
+     "Add a new label to MetaData"
+    },
     {"makeAbsPath", (PyCFunction)MetaData_makeAbsPath, METH_VARARGS,
      "Make filenames with absolute paths"
     },
-
+    {"importObjects", (PyCFunction)MetaData_importObjects, METH_VARARGS,
+     "Import objects from another metadata"
+    },
+    {"removeObjects", (PyCFunction)MetaData_removeObjects, METH_VARARGS,
+     "Remove objects from metadata"
+    },
     {NULL}  /* Sentinel */
 };
 
@@ -941,7 +1060,6 @@ xmipp_isValidLabel(PyObject *obj, PyObject *args, PyObject *kwargs)
 
 /* Methods for constructing concrete queries */
 
-
 /* Helper function to create relational queries */
 static PyObject *
 createMDValueRelational(PyObject *args, int op)
@@ -1052,7 +1170,7 @@ static PyMethodDef xmipp_methods[] =
     "Construct a relational query"},
     {"MDValueRange", (PyCFunction)xmipp_MDValueRange, METH_VARARGS,
      "Construct a range query"},
-     {"SingleImgSize", (PyCFunction)MetaData_SingleImgSize, METH_VARARGS,
+     {"SingleImgSize", (PyCFunction)xmipp_SingleImgSize, METH_VARARGS,
       "Get image dimensions"
      },
      {NULL} /* Sentinel */
