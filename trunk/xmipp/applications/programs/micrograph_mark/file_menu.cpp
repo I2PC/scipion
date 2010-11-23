@@ -62,10 +62,13 @@ QtFileMenu::QtFileMenu(QtWidgetMicrograph* _parent) :
 
     insertSeparator();
 #ifdef QT3_SUPPORT
+
     options =  new Q3PopupMenu();
 #else
+
     options =  new QPopupMenu();
 #endif
+
     insertItem("Change mark type", options);
     circle = options->insertItem("Circle");
     square = options->insertItem("Square");
@@ -87,21 +90,23 @@ void QtFileMenu::doOption(int item)
 {
 
     Micrograph *m = ((QtWidgetMicrograph*)parentWidget())->getMicrograph();
-    if (m == NULL) return;
+    if (m == NULL)
+        return;
 
-    if (options->isItemChecked(item)) return;     // They are all radio buttons
+    if (options->isItemChecked(item))
+        return;     // They are all radio buttons
 
     if (item == circle)
     {
         options->setItemChecked(circle, true);
         options->setItemChecked(square, false);
-	((QtWidgetMicrograph*)parentWidget())->changeMarkType(MARK_CIRCLE);
+        ((QtWidgetMicrograph*)parentWidget())->changeMarkType(MARK_CIRCLE);
     }
     else if (item == square)
     {
         options->setItemChecked(circle, false);
         options->setItemChecked(square, true);
-	((QtWidgetMicrograph*)parentWidget())->changeMarkType(MARK_SQUARE);
+        ((QtWidgetMicrograph*)parentWidget())->changeMarkType(MARK_SQUARE);
     }
 }
 
@@ -109,7 +114,8 @@ void QtFileMenu::doOption(int item)
 void QtFileMenu::slotChangeCircleRadius()
 {
     Micrograph *m = ((QtWidgetMicrograph*)parentWidget())->getMicrograph();
-    if (m == NULL) return;
+    if (m == NULL)
+        return;
     ((QtWidgetMicrograph*)parentWidget())->slotChangeCircleRadius();
 }
 
@@ -117,22 +123,23 @@ void QtFileMenu::slotChangeCircleRadius()
 void QtFileMenu::slotShowFamilies()
 {
     ((QtMainWidgetMark*) ((QtWidgetMicrograph*)parentWidget())->parentWidget())
-        ->showFamilies();
+    ->showFamilies();
 }
 
 /* Show Micrograph info ---------------------------------------------------- */
 void QtFileMenu::slotMicrographInfo()
 {
     Micrograph *m = ((QtWidgetMicrograph*)parentWidget())->getMicrograph();
-    if (m == NULL) return;
+    if (m == NULL)
+        return;
 
     int Xdim, Ydim;
     m->size(Xdim,Ydim);
     std::string message = (std::string)"Micrograph name: "+m->micrograph_name();
     message+=(std::string)"\nSize YxX: "+integerToString(Ydim)+"x"+
-        integerToString(Xdim);
+             integerToString(Xdim);
     QMessageBox helpmsg((QString)"Information", (QString) message.c_str(),
-        QMessageBox::Information, QMessageBox::Ok, 0, 0, 0, 0, false);
+                        QMessageBox::Information, QMessageBox::Ok, 0, 0, 0, 0, false);
     helpmsg.exec();
 }
 
@@ -140,15 +147,18 @@ void QtFileMenu::slotMicrographInfo()
 void QtFileMenu::slotLoadCoords()
 {
     Micrograph *m = ((QtWidgetMicrograph*)parentWidget())->getMicrograph();
-    if (m == NULL) return;
+    if (m == NULL)
+        return;
 
     try
     {
 #ifdef QT3_SUPPORT
         Q3FileDialog coordFileDialog(this, 0, TRUE);
 #else
+
         QFileDialog coordFileDialog(this, 0, TRUE);
 #endif
+
         coordFileDialog.setCaption("Coordinates filename");
         coordFileDialog.setFilter("*.pos");
         if (coordFileDialog.exec())
@@ -162,8 +172,9 @@ void QtFileMenu::slotLoadCoords()
             int i=fn.find(micrographName+".");
             if (i!=-1)
                 familyName=fn.substr(i+micrographName.length()+1,
-                    fn.length()-(i+micrographName.length()+1));
-            else familyName=fn.getExtension().c_str();
+                                     fn.length()-(i+micrographName.length()+1));
+            else
+                familyName=fn.getExtension().c_str();
             emit signalAddFamily(familyName.c_str());
 
             int activeFamily = ((QtWidgetMicrograph*)parentWidget())->activeFamily();
@@ -183,7 +194,8 @@ void QtFileMenu::slotLoadCoords()
 void QtFileMenu::slotSaveCoords()
 {
     Micrograph *m = ((QtWidgetMicrograph*)parentWidget())->getMicrograph();
-    if (m == NULL) return;
+    if (m == NULL)
+        return;
 
     switch (QMessageBox::information(this, "Mark",
                                      "Save active family coordinates\n"
@@ -210,7 +222,8 @@ void QtFileMenu::slotSaveCoords()
 void QtFileMenu::slotGenerateImages()
 {
     Micrograph *m = ((QtWidgetMicrograph*)parentWidget())->getMicrograph();
-    if (m == NULL) return;
+    if (m == NULL)
+        return;
     /*
        switch(QMessageBox::information( this, "Mark",
                                        "Generate active family images\n"
@@ -230,10 +243,13 @@ void QtFileMenu::slotGenerateImages()
         QDialog   setPropertiesDialog(this, 0, TRUE);
         setPropertiesDialog.setCaption("Generate images");
 #ifdef QT3_SUPPORT
+
         Q3Grid     qgrid(2, &setPropertiesDialog);
 #else
+
         QGrid     qgrid(2, &setPropertiesDialog);
 #endif
+
         qgrid.setMinimumSize(250, 170);
         QLabel    windowSizeXLabel("X window size: ", &qgrid);
         QLineEdit windowSizeXLineEdit(&qgrid);
@@ -248,12 +264,12 @@ void QtFileMenu::slotGenerateImages()
         startingIndexLineEdit.setText("1");
         QLabel    originalM("Original micrograph: ", &qgrid);
         QLineEdit originalMLineEdit(&qgrid);
-	// Sjors & Roberto: 25jan08
-	// Here we need the name of the original micrograph, as we
-	// might have a 8bit version in memory because this gives
-	// nicer visualization with the XVsmooth routines
-	// Also see our explanation in main.cpp
-	FileName fnt = (((QtWidgetMicrograph*)parentWidget())->getMicrograph())->micrograph_name();
+        // Sjors & Roberto: 25jan08
+        // Here we need the name of the original micrograph, as we
+        // might have a 8bit version in memory because this gives
+        // nicer visualization with the XVsmooth routines
+        // Also see our explanation in main.cpp
+        FileName fnt = (((QtWidgetMicrograph*)parentWidget())->getMicrograph())->micrograph_name();
         originalMLineEdit.setText(fnt.c_str());
         QRadioButton  computeTransmitance("Transmitance -> O.D.  ", &qgrid);
         QRadioButton  computeInverse("Invert", &qgrid);
@@ -355,15 +371,16 @@ void QtFileMenu::slotQuit()
         { // Escape == button 2
         case 0: // Save clicked, Alt-S or Enter pressed.
             slotSaveCoords();
-            exit(0);
+            ((QtMainWidgetMark *)(parentWidget()->parentWidget()))->deleteTemporaryFilesAndExit(0);
             break;
         case 1: // Don't Save clicked or Alt-D pressed
-            exit(1);
+            ((QtMainWidgetMark *)(parentWidget()->parentWidget()))->deleteTemporaryFilesAndExit(1);
             break;
         case 2: // Cancel clicked, Alt-C or Escape pressed
             // don't do anything
             break;
         }
     }
-    else exit(1);
+    else
+        ((QtMainWidgetMark *)(parentWidget()->parentWidget()))->deleteTemporaryFilesAndExit(1);
 }

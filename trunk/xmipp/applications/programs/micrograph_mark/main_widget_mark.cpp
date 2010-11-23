@@ -241,6 +241,19 @@ void QtMainWidgetMark::showFamilies()
     __familyDialog->show();
 }
 
+// Exit -------------------------------------------------------------------
+void QtMainWidgetMark::closeEvent(QCloseEvent *event)
+{
+	deleteTemporaryFilesAndExit(0);
+}
+
+void QtMainWidgetMark::deleteTemporaryFilesAndExit(int exitval)
+{
+	for (int i=0; i<__filesToDelete.size(); i++)
+        system(((std::string)"rm -rf "+__filesToDelete[i]).c_str());
+	exit(exitval);
+}
+
 //#define _DEBUG
 /* Add point to least squares matrices ------------------------------------- */
 void QtMainWidgetMark::add_point(const Particle_coords &U,

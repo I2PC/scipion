@@ -106,7 +106,7 @@ public:
         // Note that this also requires that the name of the original
         // micrograph in the dialog window under "generate images"
         // should be the original fnRaw (and not be left blank as before!)
-        //FIXME
+        std::vector<FileName> filesToDelete;
         if (m.getDatatypeDetph()!=8)
         {
             fn8bits=fnRaw+"_8bits.raw";
@@ -114,8 +114,7 @@ public:
             m.close_micrograph();
 
             m.open_micrograph(fn8bits);
-            m.set_micrograph_name(fnRaw);
-            system(((std::string)"rm -rf "+fn8bits+"*").c_str());
+            filesToDelete.push_back(fn8bits+"*");
         }
         else
         {
@@ -129,13 +128,11 @@ public:
             //FIXME
             if (mTilted.getDatatypeDetph()!=8)
             {
-                fn8bitsTilted=fnRawTilted+".8bits.raw";
+                fn8bitsTilted=fnRawTilted+"_8bits.raw";
                 mTilted.write_as_8_bits(fn8bitsTilted);
                 mTilted.close_micrograph();
                 mTilted.open_micrograph(fn8bitsTilted);
-                mTilted.set_micrograph_name(fnRawTilted);
-                mTilted.compute_8_bit_scaling();
-                system(((std::string)"rm -rf "+fn8bitsTilted+"*").c_str());
+                filesToDelete.push_back(fn8bitsTilted+"*");
             }
             else
             {
@@ -160,6 +157,8 @@ public:
             }
             else
                 mainWidget = new QtMainWidgetMark(&m, &mTilted);
+            for (int i=0; i<filesToDelete.size(); i++)
+            	mainWidget->__filesToDelete.push_back(filesToDelete[i]);
         }
 
         // Check if the PSDs must be shown ...................................
@@ -200,7 +199,6 @@ int main(int argc, char **argv)
         ProgMicrographMark program;
         program.read(argc, argv);
         program.run();
-
     }
     catch (XmippError e)
     {

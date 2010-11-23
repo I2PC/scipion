@@ -29,6 +29,7 @@
 
 #include <qwidget.h>
 #include <qlayout.h>
+#include <qevent.h>
 
 #ifdef QT3_SUPPORT
 //Added by qt3to4:
@@ -85,6 +86,9 @@ private:
     bool                __untilted_generated;
     bool                __tilted_generated;
 
+public:
+    // Files to delete
+    std::vector<FileName> __filesToDelete;
 
 public:
     // Constructor
@@ -96,6 +100,9 @@ public:
 
     // Show families
     void showFamilies();
+
+    // Delete temporary files and exit
+    void deleteTemporaryFilesAndExit(int exitval);
 
     // Access to WidgetMicrographs
     QtWidgetMicrograph * untilted_widget()
@@ -172,6 +179,9 @@ public:
     // generated the images, the selfiles are compared to remove
     // those images that were discarded in only one of them
     void generated(bool _this_is_tilted, const std::string &_label);
+
+    // Close window
+    void closeEvent(QCloseEvent *event);
 public slots:
     void slotAddCoordTilted(int _mX, int _mY, int _f);
     void slotAddCoordUntilted(int _mX, int _mY, int _f);
