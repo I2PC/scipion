@@ -38,17 +38,17 @@ DataType datatypeRAW(std::string strDT)
 {
     DataType datatype;
 
-    if(strDT=="uchar")
+    if(strDT=="uint8")
         datatype = UChar;
-    else if (strDT=="char")
+    else if (strDT=="int8")
         datatype = SChar;
-    else if (strDT=="ushort")
+    else if (strDT=="uint16")
         datatype = UShort;
-    else if (strDT=="short")
+    else if (strDT=="int16")
         datatype = Short;
-    else if (strDT=="uint")
+    else if (strDT=="uint32")
         datatype = UInt;
-    else if (strDT=="int")
+    else if (strDT=="int32")
         datatype = Int;
     else if (strDT=="long")
         datatype = Long;
@@ -56,9 +56,9 @@ DataType datatypeRAW(std::string strDT)
         datatype = Float;
     else if (strDT=="double")
         datatype = Double;
-    else if (strDT=="cshort")
+    else if (strDT=="cint16")
         datatype = ComplexShort;
-    else if (strDT=="cint")
+    else if (strDT=="cint32")
         datatype = ComplexInt;
     else if (strDT=="cfloat")
         datatype = ComplexFloat;

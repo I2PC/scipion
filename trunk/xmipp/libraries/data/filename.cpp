@@ -343,8 +343,6 @@ FileName FileName::getFileFormat() const
         result = substr(first + 1) ;
     else if ( (first = rfind("."))!=String::npos)
         result = substr(first + 1);
-    else
-        result="spi";
     return result.toLowercase();
 
 }

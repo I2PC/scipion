@@ -1828,7 +1828,8 @@ public:
      * V.slice(0, m);
      * @endcode
      */
-    void getSlice(int k, MultidimArray<T>& M, char axis = 'Z', unsigned long n = 0) const
+    template <typename T1>
+    void getSlice(int k, MultidimArray<T1>& M, char axis = 'Z', unsigned long n = 0) const
     {
         if (XSIZE(*this) == 0)
         {
@@ -1846,7 +1847,7 @@ public:
             k = k - STARTINGZ(*this);
             M.resize(1, 1, YSIZE(*this), XSIZE(*this),false);
             FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY2D(M)
-            DIRECT_A2D_ELEM(M, i, j) = DIRECT_NZYX_ELEM(*this, n, k, i, j);
+            DIRECT_A2D_ELEM(M, i, j) = (T1) DIRECT_NZYX_ELEM(*this, n, k, i, j);
             STARTINGX(M) = STARTINGX(*this);
             STARTINGY(M) = STARTINGY(*this);
             break;
@@ -1858,7 +1859,7 @@ public:
             k = k - STARTINGY(*this);
             M.resizeNoCopy(ZSIZE(*this), XSIZE(*this));
             FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY2D(M)
-            DIRECT_A2D_ELEM(M, i, j) = DIRECT_NZYX_ELEM(*this, n, i, k, j);
+            DIRECT_A2D_ELEM(M, i, j) = (T1) DIRECT_NZYX_ELEM(*this, n, i, k, j);
             STARTINGX(M) = STARTINGX(*this);
             STARTINGY(M) = STARTINGZ(*this);
             break;
@@ -1870,7 +1871,7 @@ public:
             k = k - STARTINGX(*this);
             M.resizeNoCopy(ZSIZE(*this), YSIZE(*this));
             FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY2D(M)
-            DIRECT_A2D_ELEM(M, i, j) = DIRECT_NZYX_ELEM(*this, n, i, j, k);
+            DIRECT_A2D_ELEM(M, i, j) = (T1) DIRECT_NZYX_ELEM(*this, n, i, j, k);
             STARTINGX(M) = STARTINGY(*this);
             STARTINGY(M) = STARTINGZ(*this);
             break;
@@ -1890,7 +1891,8 @@ public:
      * V.setSlice(1, (V.slice(0)));
      * @endcode
      */
-    void setSlice(int k, const MultidimArray<T>& v, unsigned long n = 0)
+    template <typename T1>
+    void setSlice(int k, const MultidimArray<T1>& v, unsigned long n = 0)
     {
         if (xdim == 0)
             return;
@@ -1906,7 +1908,7 @@ public:
         k = k - STARTINGZ(*this);
 
         FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY2D(v)
-        DIRECT_NZYX_ELEM(*this, n, k, i, j) = DIRECT_A2D_ELEM(v, i, j);
+        DIRECT_NZYX_ELEM(*this, n, k, i, j) = (T) DIRECT_A2D_ELEM(v, i, j);
     }
 
     /** Get Column
@@ -4454,13 +4456,22 @@ public:
      *
      * This function is ported to Python as assign.
      */
-    MultidimArray<T>& operator=(const MultidimArray<T>& op1)
+    template <typename T1>
+    MultidimArray<T>& operator=(const MultidimArray<T1>& op1)
     {
         if (&op1 != this)
         {
             if (data == NULL || !sameShape(op1))
                 resizeNoCopy(op1);
-            memcpy(data,op1.data,MULTIDIM_SIZE(op1)*sizeof(T));
+            if (typeid(T) == typeid(T1))
+                memcpy(data,op1.data,MULTIDIM_SIZE(op1)*sizeof(T));
+            else
+            {
+                FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(op1)
+                {
+                  DIRECT_MULTIDIM_ELEM(data,n) = (T) DIRECT_MULTIDIM_ELEM(op1,n);
+                }
+            }
         }
         return *this;
     }

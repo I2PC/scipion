@@ -100,7 +100,7 @@ protected:
         else if (checkParam("-desvPixels"))
         {
             params.factor = getDoubleParam("-desvPixels");
-            filterOperator = removeBadPixels;
+            filterOperator = stdDesvFilter;
         }
 
     }

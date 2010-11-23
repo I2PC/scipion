@@ -51,7 +51,7 @@ void Image< std::complex< double > >::castPage2Datatype(std::complex<double> * s
 {
     switch (datatype)
     {
-    case ComplexShort:
+      case ComplexShort:
     {
         std::complex<short> * ptr = (std::complex<short> *) page;
         for(int i=0; i<pageSize;i++) ptr[i] = (std::complex<short>)srcPtr[i];
@@ -84,6 +84,30 @@ void Image< std::complex< double > >::castPage2Datatype(std::complex<double> * s
 
 
 }
+
+template<>
+void Image< std::complex< double > >::castConvertPage2Datatype(std::complex< double > * srcPtr,
+    char * page, DataType datatype, size_t pageSize,bool adjust)
+    {
+
+  switch (datatype)
+    {
+    case ComplexFloat:
+    {
+        std::complex<float> * ptr = (std::complex<float> *) page;
+        for(int i=0; i<pageSize;i++) ptr[i] = (std::complex<float>)srcPtr[i];
+        break;
+    }
+    default:
+    {
+        std::cerr<<"Datatype= "<<datatype<<std::endl;
+        REPORT_ERROR(ERR_TYPE_INCORRECT," ERROR: cannot cast&convert datatype to complex<float>");
+        break;
+    }
+    }
+
+
+    }
 
 // Get size of datatype
 size_t gettypesize(DataType type)

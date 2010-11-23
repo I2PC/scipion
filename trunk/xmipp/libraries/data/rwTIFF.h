@@ -30,6 +30,11 @@
 ///@ingroup ImageFormats
 
 
+/* Minimum size of a TIFF file to be mapped to a tempfile in case of mapping from
+ * image file is required
+ */
+# define TIFF_MAP_MIN_SIZE 200e6
+
 /** TIFF Data Header
   * @ingroup TIFF
 */
@@ -157,7 +162,7 @@ int readTIFF(int img_select, bool isStack=false)
     printf("DEBUG readTIFF: Reading TIFF file\n");
 #endif
 
-//    TIFFSetWarningHandler(NULL); // Switch off warning messages
+    //    TIFFSetWarningHandler(NULL); // Switch off warning messages
 
     char*  tif_buf = NULL;
     unsigned int    tileWidth;
@@ -281,8 +286,9 @@ int readTIFF(int img_select, bool isStack=false)
 
     if (mmapOnRead)
     {
-        data.setMmap(true);
         mmapOnRead = false;
+        if (data.nzyxdim*gettypesize(datatype) > TIFF_MAP_MIN_SIZE)
+            data.setMmap(true);
     }
 
     // Allocate memory for image data (Assume xdim, ydim, zdim and ndim are already set
@@ -448,17 +454,21 @@ int writeTIFF(int img_select, bool isStack=false, int mode=WRITE_OVERWRITE, std:
     }
     else
     {
-        switch (atoi(imParam.c_str()))
+      int bDepth;
+        if ((bDepth = atoi(imParam.c_str())) == 0)
+            bDepth = 8; // Default value
+
+        switch (bDepth)
         {
         case 8:
             wDType = UChar;
             dhMain.imageSampleFormat = SAMPLEFORMAT_UINT;
-            data.rangeAdjust(0, 255);
+            data.rangeAdjust(0, UCHAR_MAX);
             break;
         case 16:
             wDType = UShort;
             dhMain.imageSampleFormat = SAMPLEFORMAT_UINT;
-            data.rangeAdjust(0, 65535);
+            data.rangeAdjust(0, USHRT_MAX);
             break;
         case 32:
             wDType = Float;
