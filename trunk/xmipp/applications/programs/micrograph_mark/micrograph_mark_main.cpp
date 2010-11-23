@@ -115,7 +115,6 @@ public:
 
             m.open_micrograph(fn8bits);
             m.set_micrograph_name(fnRaw);
-//            m.compute_8_bit_scaling();
             system(((std::string)"rm -rf "+fn8bits+"*").c_str());
         }
         else
