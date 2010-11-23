@@ -160,7 +160,7 @@ double tdev(double nu, int *idum)
 }
 
 
-// Kolmogorov-Smirnov test 
+// Kolmogorov-Smirnov test
 void ksone(double data[], int n, double(*func)(double), double * d, double * prob)
 {
     qcksrt(n, data);
@@ -172,9 +172,10 @@ void ksone(double data[], int n, double(*func)(double), double * d, double * pro
         fn = j / en;
         ff = (*func)(data[j]);
         dt = XMIPP_MAX(fabs(fo - ff), fabs(fn - ff));
-        if (dt> *d) *d = dt;
+        if (dt> *d)
+            *d = dt;
         fo = fn;
-    } 
+    }
     *prob = probks(sqrt(en)*(*d));
 }
 
@@ -190,7 +191,8 @@ double probks(double alam)
     {
         term = fac * exp(a2*j*j);
         sum += term;
-        if (fabs(term) <= EPS1*termbf || fabs(term) <= EPS2*sum) return sum;
+        if (fabs(term) <= EPS1*termbf || fabs(term) <= EPS2*sum)
+            return sum;
         fac = -fac;
         termbf = fabs(term);
     }
@@ -836,7 +838,8 @@ void mnbrak(double *ax, double *bx, double *cx,
             if (fu < *fc)
             {
                 SHFT(*bx, *cx, u, *cx + GOLD*(*cx - *bx))
-                double aux; F1DIM(u,aux);
+                double aux;
+                F1DIM(u,aux);
                 SHFT(*fb, *fc, fu, aux)
             }
         }
@@ -1075,7 +1078,7 @@ void powell(double *p, double *xi, int n, double ftol, int &iter,
         fptt = (*func)(ptt,prm);
         if (fptt < fp)
         {
-            #define SQR(a) ((a)*(a))
+#define SQR(a) ((a)*(a))
             t = 2.0 * (fp - 2.0 * fret + fptt) * SQR(fp - fret - del) - del * SQR(fp - fptt);
             if (t < 0.0)
             {
@@ -1191,7 +1194,7 @@ int _nnls_h12(
     int ice,        /* Storage increment between elements of vectors in cm[] */
     int icv,        /* Storage increment between vectors in cm[] */
     int ncv         /* Nr of vectors in cm[] to be transformed;
-                             if ncv<=0, then no operations will be done on cm[] */
+                                     if ncv<=0, then no operations will be done on cm[] */
 )
 {
     double d1, d2, b, clinv, cl, sm;
@@ -5132,7 +5135,7 @@ L510:
         indxcn[i+nineq+neqn] = nineq + neqn + i;
     glob_info.ncallg += neqn;
 
-L605:
+    L605:
     if (glob_prnt.iprint > 0 && feasb && !prnt)
     {
         fprintf(glob_prnt.io,
@@ -5227,7 +5230,7 @@ L605:
     nobL = nob;
     glob_prnt.info = -1;
     epskt = 1.e-10;
-L910:
+    L910:
     nctotl = nppram + ncnstr + DMAX1(nobL, 1);
     leniw = 2 * (ncnstr + DMAX1(nobL, 1)) + 2 * nppram + 6;
     lenw = 2 * nppram * nppram + 10 * nppram + 6 * (ncnstr + DMAX1(nobL, 1) + 1);
@@ -7017,7 +7020,7 @@ L310:
             }
         }
     }
-L1110:
+    L1110:
     matrvc(nparam, nparam, hess, di, cvec);
     vv = -DMIN1(0.01e0 * dnm, pow(dnm, 2.5));
     /*--------------------------------------------------------------*/
@@ -7792,9 +7795,9 @@ L315:
         for (i = 1; i <= nob; i++)
             iact[nn+i] = i;
         goto L1500;
-L1110:
+        L1110:
         cdone = fdone = eqdone = reform = FALSE;
-L1120:
+        L1120:
         itry++;
         if (glob_info.modec == 2)
             fbind = FALSE;
@@ -7807,7 +7810,7 @@ L1120:
     }
     glob_prnt.info = 4;
     nstop = 0;
-L1500:
+    L1500:
     free_dm(adummy, 1);
     if (*steps < 1.e0)
         return;
@@ -9468,7 +9471,32 @@ void pwt(double a[], unsigned long n, int isign)
             nj = i + nmod + wfilt.joff;
             double &aux1=wksp[ii];
             double &aux2=wksp[ii+nh];
-            for (k = 1;k <= wfilt.ncof;k++)
+            unsigned long kmax=4*(wfilt.ncof/4);
+            // Loop unrolling (every 4 coefficients)
+            for (k = 1;k <= kmax;k+=4)
+            {
+                unsigned long k_1=k+1;
+                unsigned long k_2=k+2;
+                unsigned long k_3=k+3;
+                jf = n1 & (ni + k);
+                jr = n1 & (nj + k);
+                aux1 += wfilt.cc[k] * a[jf+1];
+                aux2 += wfilt.cr[k] * a[jr+1];
+                unsigned long jf_1 = n1 & (ni + k_1);
+                unsigned long jr_1 = n1 & (nj + k_1);
+                aux1 += wfilt.cc[k_1] * a[jf_1+1];
+                aux2 += wfilt.cr[k_1] * a[jr_1+1];
+                unsigned long jf_2 = n1 & (ni + k_2);
+                unsigned long jr_2 = n1 & (nj + k_2);
+                aux1 += wfilt.cc[k_2] * a[jf_2+1];
+                aux2 += wfilt.cr[k_2] * a[jr_2+1];
+                unsigned long jf_3 = n1 & (ni + k_3);
+                unsigned long jr_3 = n1 & (nj + k_3);
+                aux1 += wfilt.cc[k_3] * a[jf_3+1];
+                aux2 += wfilt.cr[k_3] * a[jr_3+1];
+            }
+            // The rest of coefficients
+            for (k = kmax+1;k <= wfilt.ncof;++k)
             {
                 jf = n1 & (ni + k);
                 jr = n1 & (nj + k);
@@ -9680,8 +9708,8 @@ void polint(double *xa, double *ya, int n, double x, double &y, double &dy)
 
 /* Simulated annealing ----------------------------------------------------- */
 double amotsa(double **p, double y[], double psum[], int ndim, double pb[],
-    double *yb, double (*funk)(double []), int ihi, double *yhi, double fac,
-    double tt, int &idum)
+              double *yb, double (*funk)(double []), int ihi, double *yhi, double fac,
+              double tt, int &idum)
 {
     int j;
     double fac1,fac2,yflu,ytry,*ptry;
@@ -9690,27 +9718,31 @@ double amotsa(double **p, double y[], double psum[], int ndim, double pb[],
     fac1=(1.0-fac)/ndim;
     fac2=fac1-fac;
     for (j=1;j<=ndim;j++)
-	ptry[j]=psum[j]*fac1-p[ihi][j]*fac2;
+        ptry[j]=psum[j]*fac1-p[ihi][j]*fac2;
     ytry=(*funk)(ptry);
-    if (ytry <= *yb) {
-	for (j=1;j<=ndim;j++) pb[j]=ptry[j];
-	*yb=ytry;
+    if (ytry <= *yb)
+    {
+        for (j=1;j<=ndim;j++)
+            pb[j]=ptry[j];
+        *yb=ytry;
     }
     yflu=ytry-tt*log(ran1(&idum));
-    if (yflu < *yhi) {
-	y[ihi]=ytry;
-	*yhi=yflu;
-	for (j=1;j<=ndim;j++) {
-	    psum[j] += ptry[j]-p[ihi][j];
-	    p[ihi][j]=ptry[j];
-	}
+    if (yflu < *yhi)
+    {
+        y[ihi]=ytry;
+        *yhi=yflu;
+        for (j=1;j<=ndim;j++)
+        {
+            psum[j] += ptry[j]-p[ihi][j];
+            p[ihi][j]=ptry[j];
+        }
     }
     free_Tvector(ptry,1,ndim);
     return yflu;
 }
 
 void amebsa(double **p, double y[], int ndim, double pb[], double *yb,
-    double ftol, double (*funk)(double []), int *iter, double temptr)
+            double ftol, double (*funk)(double []), int *iter, double temptr)
 {
     int i,ihi,ilo,j,m,n,mpts=ndim+1;
     double rtol,sum,swap,yhi,ylo,ynhi,ysave,yt,ytry,*psum;
@@ -9718,72 +9750,94 @@ void amebsa(double **p, double y[], int ndim, double pb[], double *yb,
 
     ask_Tvector(psum,1,ndim);
     double tt = -temptr;
-    for (n=1;n<=ndim;n++) {
-        for (sum=0.0,m=1;m<=mpts;m++) sum += p[m][n];
+    for (n=1;n<=ndim;n++)
+    {
+        for (sum=0.0,m=1;m<=mpts;m++)
+            sum += p[m][n];
         psum[n]=sum;
     }
-    for (;;) {
-	ilo=1;
-	ihi=2;
-	ynhi=ylo=y[1]+tt*log(ran1(&idum));
-	yhi=y[2]+tt*log(ran1(&idum));
-	if (ylo > yhi) {
-	    ihi=1;
-	    ilo=2;
-	    ynhi=yhi;
-	    yhi=ylo;
-	    ylo=ynhi;
-	}
-	for (i=3;i<=mpts;i++) {
-	    yt=y[i]+tt*log(ran1(&idum));
-	    if (yt <= ylo) {
-		ilo=i;
-		ylo=yt;
-	    }
-	    if (yt > yhi) {
-		ynhi=yhi;
-		ihi=i;
-		yhi=yt;
-	    } else if (yt > ynhi) {
-		ynhi=yt;
-	    }
-	}
-	rtol=2.0*fabs(yhi-ylo)/(fabs(yhi)+fabs(ylo));
-	if (rtol < ftol || *iter < 0) {
-	    swap=y[1];
-	    y[1]=y[ilo];
-	    y[ilo]=swap;
-	    for (n=1;n<=ndim;n++) {
-		swap=p[1][n];
-		p[1][n]=p[ilo][n];
-		p[ilo][n]=swap;
-	    }
-	    break;
-	}
-	*iter -= 2;
-	ytry=amotsa(p,y,psum,ndim,pb,yb,funk,ihi,&yhi,-1.0,tt,idum);
-	if (ytry <= ylo) {
-	    ytry=amotsa(p,y,psum,ndim,pb,yb,funk,ihi,&yhi,2.0,tt,idum);
-	} else if (ytry >= ynhi) {
-	    ysave=yhi;
-	    ytry=amotsa(p,y,psum,ndim,pb,yb,funk,ihi,&yhi,0.5,tt,idum);
-	    if (ytry >= ysave) {
-		for (i=1;i<=mpts;i++) {
-		    if (i != ilo) {
-			for (j=1;j<=ndim;j++) {
-			    psum[j]=0.5*(p[i][j]+p[ilo][j]);
-			    p[i][j]=psum[j];
-			}
-			y[i]=(*funk)(psum);
-		    }
-		}
-		*iter -= ndim;
-                for (n=1;n<=ndim;n++) {
-                    for (sum=0.0,m=1;m<=mpts;m++) sum += p[m][n];
+    for (;;)
+    {
+        ilo=1;
+        ihi=2;
+        ynhi=ylo=y[1]+tt*log(ran1(&idum));
+        yhi=y[2]+tt*log(ran1(&idum));
+        if (ylo > yhi)
+        {
+            ihi=1;
+            ilo=2;
+            ynhi=yhi;
+            yhi=ylo;
+            ylo=ynhi;
+        }
+        for (i=3;i<=mpts;i++)
+        {
+            yt=y[i]+tt*log(ran1(&idum));
+            if (yt <= ylo)
+            {
+                ilo=i;
+                ylo=yt;
+            }
+            if (yt > yhi)
+            {
+                ynhi=yhi;
+                ihi=i;
+                yhi=yt;
+            }
+            else if (yt > ynhi)
+            {
+                ynhi=yt;
+            }
+        }
+        rtol=2.0*fabs(yhi-ylo)/(fabs(yhi)+fabs(ylo));
+        if (rtol < ftol || *iter < 0)
+        {
+            swap=y[1];
+            y[1]=y[ilo];
+            y[ilo]=swap;
+            for (n=1;n<=ndim;n++)
+            {
+                swap=p[1][n];
+                p[1][n]=p[ilo][n];
+                p[ilo][n]=swap;
+            }
+            break;
+        }
+        *iter -= 2;
+        ytry=amotsa(p,y,psum,ndim,pb,yb,funk,ihi,&yhi,-1.0,tt,idum);
+        if (ytry <= ylo)
+        {
+            ytry=amotsa(p,y,psum,ndim,pb,yb,funk,ihi,&yhi,2.0,tt,idum);
+        }
+        else if (ytry >= ynhi)
+        {
+            ysave=yhi;
+            ytry=amotsa(p,y,psum,ndim,pb,yb,funk,ihi,&yhi,0.5,tt,idum);
+            if (ytry >= ysave)
+            {
+                for (i=1;i<=mpts;i++)
+                {
+                    if (i != ilo)
+                    {
+                        for (j=1;j<=ndim;j++)
+                        {
+                            psum[j]=0.5*(p[i][j]+p[ilo][j]);
+                            p[i][j]=psum[j];
+                        }
+                        y[i]=(*funk)(psum);
+                    }
+                }
+                *iter -= ndim;
+                for (n=1;n<=ndim;n++)
+                {
+                    for (sum=0.0,m=1;m<=mpts;m++)
+                        sum += p[m][n];
                     psum[n]=sum;
                 }
-	    }
-	} else ++(*iter);
+            }
+        }
+        else
+            ++(*iter);
     }
     free_Tvector(psum,1,ndim);
 }
