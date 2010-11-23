@@ -28,6 +28,22 @@
 
 #include <data/filename.h>
 #include <data/metadata.h>
+#include <data/metadata_extension.h>
+
+static PyObject * PyXmippError;
+
+#define FileName_Check(v)  ((v)->ob_type == &FileNameType)
+#define FileName_Value(v)  ((*((FileNameObject*)(v))->filename))
+
+#define MetaData_Check(v)  ((v)->ob_type == &MetaDataType)
+#define MetaData_Value(v)  ((*((MetaDataObject*)(v))->metadata))
+#define MDQuery_Check(v) ((v)->ob_typ == &MDQuery)
+
+
+#define RETURN_MDOBJECT(value) return new MDObject((MDLabel)label, value)
+/*Helper function to create an MDObject from a PyObject */
+static MDObject *
+createMDObject(int label, PyObject *pyValue);
 
 /***************************************************************/
 /*                            FileName                         */
@@ -60,8 +76,8 @@ FileName_new(PyTypeObject *type, PyObject *args, PyObject *kwargs)
         PyObject *input = NULL, *pyStr = NULL;
         char *str = "", *ext="";
         int number = -1;
-        if (PyArg_ParseTuple(args, "|Ois", &input, &number, &ext)
-            || PyArg_ParseTuple(args, "|Os", &input, &ext))
+        if (PyArg_ParseTuple(args, "|Ois", &input, &number, &ext))
+            //|| PyArg_ParseTuple(args, "|Os", &input, &ext)) FIXME
         {
             pyStr = PyObject_Str(input);
             if (pyStr != NULL)
@@ -92,14 +108,15 @@ FileName_compose(PyObject *obj, PyObject *args, PyObject *kwargs)
         PyObject *input = NULL, *pyStr = NULL;
         char *str = "", *ext="";
         int number = -1;
-        if (PyArg_ParseTuple(args, "Ois", &input, &number, &ext))
+        Py_ssize_t n = PyTuple_Size(args);
+        if (n == 3 && PyArg_ParseTuple(args, "Ois", &input, &number, &ext))
         {
             pyStr = PyObject_Str(input);
             if (pyStr != NULL)
                 str = PyString_AsString(pyStr);
             self->filename->compose(str, number, ext);
         }
-        else if (PyArg_ParseTuple(args, "iO", &number, &input))
+        else if (n == 2 && PyArg_ParseTuple(args, "iO", &number, &input))
         {
           pyStr = PyObject_Str(input);
           if (pyStr != NULL)
@@ -324,6 +341,499 @@ static PyTypeObject MDQueryType = {
 
 
 /***************************************************************/
+/*                            MetaData                         */
+/**************************************************************/
+
+/*MetaData Object*/
+typedef struct
+{
+    PyObject_HEAD
+    MetaData * metadata;
+}
+MetaDataObject;
+
+/* Destructor */
+static void
+MetaData_dealloc(MetaDataObject* self)
+{
+    delete self->metadata;
+    self->ob_type->tp_free((PyObject*)self);
+}
+
+/* Constructor */
+static PyObject *
+MetaData_new(PyTypeObject *type, PyObject *args, PyObject *kwargs);
+
+static int
+MetaData_print(PyObject *obj, FILE *fp, int flags)
+{
+  try
+  {
+    MetaDataObject *self = (MetaDataObject*)obj;
+    std::stringstream ss;
+    self->metadata->write(ss);
+    fprintf(fp, "%s", ss.str().c_str());
+    return 0;
+  }
+  catch (XmippError xe)
+  {
+    PyErr_SetString(PyXmippError, xe.msg.c_str());
+    return -1;
+  }
+}
+
+/* String representation */
+static PyObject *
+MetaData_repr(PyObject * obj)
+{
+    MetaDataObject *self = (MetaDataObject*)obj;
+    return PyString_FromString((self->metadata->getFilename()+"(MetaData)").c_str());
+}
+
+/* read */
+static PyObject *
+MetaData_read(PyObject *obj, PyObject *args, PyObject *kwargs)
+{
+    MetaDataObject *self = (MetaDataObject*)obj;
+
+    if (self != NULL)
+    {
+        PyObject *input = NULL, *pyStr = NULL;
+        char *str = NULL;
+        int number = -1;
+        if (PyArg_ParseTuple(args, "O", &input))
+        {
+          try
+          {
+            if ((pyStr = PyObject_Str(input)) != NULL)
+            {
+                str = PyString_AsString(pyStr);
+                self->metadata->read(str);
+                return Py_BuildValue("");
+            }
+            else
+              return NULL;
+          }
+          catch (XmippError xe)
+          {
+            PyErr_SetString(PyXmippError, xe.msg.c_str());
+            return NULL;
+          }
+        }
+    }
+    return NULL;
+}
+
+/* write */
+static PyObject *
+MetaData_write(PyObject *obj, PyObject *args, PyObject *kwargs)
+{
+  MetaDataObject *self = (MetaDataObject*)obj;
+
+  if (self != NULL)
+  {
+      PyObject *input = NULL, *pyStr = NULL;
+      char *str = NULL;
+      int number = -1;
+      if (PyArg_ParseTuple(args, "O", &input))
+      {
+        try
+        {
+          if (PyString_Check(input))
+            self->metadata->write(PyString_AsString(input));
+          else if (FileName_Check(input))
+            self->metadata->write(FileName_Value(input));
+//
+//          if ((pyStr = PyObject_Str(input)) != NULL)
+//          {
+//              str = PyString_AsString(pyStr);
+//              self->metadata->write(str);
+//              return Py_BuildValue("");
+//          }
+          else
+            return NULL;
+          return Py_BuildValue("");
+        }
+        catch (XmippError xe)
+        {
+          PyErr_SetString(PyXmippError, xe.msg.c_str());
+          return NULL;
+        }
+      }
+  }
+  return NULL;
+}
+/* addObject */
+static PyObject *
+MetaData_addObject(PyObject *obj, PyObject *args, PyObject *kwargs)
+{
+  MetaDataObject *self = (MetaDataObject*)obj;
+  return PyLong_FromLong(self->metadata->addObject());
+}
+/* getActiveObject */
+static PyObject *
+MetaData_getActiveObject(PyObject *obj, PyObject *args, PyObject *kwargs)
+{
+  MetaDataObject *self = (MetaDataObject*)obj;
+  return PyLong_FromLong(self->metadata->getActiveObject());
+}
+/* firstObject */
+static PyObject *
+MetaData_firstObject(PyObject *obj, PyObject *args, PyObject *kwargs)
+{
+  MetaDataObject *self = (MetaDataObject*)obj;
+  return PyLong_FromLong(self->metadata->firstObject());
+}
+/* lastObject */
+static PyObject *
+MetaData_lastObject(PyObject *obj, PyObject *args, PyObject *kwargs)
+{
+  MetaDataObject *self = (MetaDataObject*)obj;
+  return PyLong_FromLong(self->metadata->lastObject());
+}
+/* nextObject */
+static PyObject *
+MetaData_nextObject(PyObject *obj, PyObject *args, PyObject *kwargs)
+{
+  try
+  {
+    MetaDataObject *self = (MetaDataObject*)obj;
+    return PyLong_FromLong(self->metadata->nextObject());
+  }
+  catch (XmippError xe)
+  {
+    PyErr_SetString(PyXmippError, xe.msg.c_str());
+    return NULL;
+  }
+}
+/* previousObject */
+static PyObject *
+MetaData_previousObject(PyObject *obj, PyObject *args, PyObject *kwargs)
+{
+  try
+  {
+    MetaDataObject *self = (MetaDataObject*)obj;
+    return PyLong_FromLong(self->metadata->previousObject());
+  }
+  catch (XmippError xe)
+  {
+    PyErr_SetString(PyXmippError, xe.msg.c_str());
+    return NULL;
+  }
+}
+/* size */
+static PyObject *
+MetaData_size(PyObject *obj, PyObject *args, PyObject *kwargs)
+{
+  try
+  {
+    MetaDataObject *self = (MetaDataObject*)obj;
+    return PyLong_FromLong(self->metadata->size());
+  }
+  catch (XmippError xe)
+  {
+    PyErr_SetString(PyXmippError, xe.msg.c_str());
+    return NULL;
+  }
+}
+/* isEmpty */
+static PyObject *
+MetaData_isEmpty(PyObject *obj, PyObject *args, PyObject *kwargs)
+{
+  try
+  {
+    MetaDataObject *self = (MetaDataObject*)obj;
+    if (self->metadata->isEmpty())
+      Py_RETURN_TRUE;
+    else
+      Py_RETURN_FALSE;
+  }
+  catch (XmippError xe)
+  {
+    PyErr_SetString(PyXmippError, xe.msg.c_str());
+    return NULL;
+  }
+}
+/* getColumnFormat */
+static PyObject *
+MetaData_getColumnFormat(PyObject *obj, PyObject *args, PyObject *kwargs)
+{
+  try
+  {
+    MetaDataObject *self = (MetaDataObject*)obj;
+    if (self->metadata->getColumnFormat())
+      Py_RETURN_TRUE;
+    else
+      Py_RETURN_FALSE;
+  }
+  catch (XmippError xe)
+  {
+    PyErr_SetString(PyXmippError, xe.msg.c_str());
+    return NULL;
+  }
+}
+/* setColumnFormat */
+static PyObject *
+MetaData_setColumnFormat(PyObject *obj, PyObject *args, PyObject *kwargs)
+{
+  PyObject *input = NULL;
+  if (PyArg_ParseTuple(args, "O", &input))
+  {
+    try
+    {
+      if (PyBool_Check(input))
+      {
+        MetaDataObject *self = (MetaDataObject*)obj;
+        self->metadata->setColumnFormat(input == Py_True);
+        return Py_BuildValue("");
+      }
+      else
+        PyErr_SetString(PyExc_TypeError, "MetaData::setColumnFormat: Expecting boolean value");
+    }
+    catch (XmippError xe)
+    {
+      PyErr_SetString(PyXmippError, xe.msg.c_str());
+    }
+  }
+  return NULL;
+}
+
+/* setValue */
+static PyObject *
+MetaData_setValue(PyObject *obj, PyObject *args, PyObject *kwargs)
+{
+  int label, objectId = -1;
+  PyObject *pyValue; //Only used to skip label and value
+
+  if (PyArg_ParseTuple(args, "iO|i", &label, &pyValue, &objectId))
+  {
+    try
+    {
+      MDObject * object = createMDObject(label, pyValue);
+      if (!object)
+        return NULL;
+      MetaDataObject *self = (MetaDataObject*)obj;
+      self->metadata->setValue(*object, objectId);
+      delete object;
+      Py_RETURN_TRUE;
+    }
+    catch (XmippError xe)
+    {
+      PyErr_SetString(PyXmippError, xe.msg.c_str());
+    }
+  }
+  return NULL;
+}
+
+/* SingleImgSize */
+static PyObject *
+MetaData_SingleImgSize(PyObject *obj, PyObject *args, PyObject *kwargs)
+{
+  PyObject *pyValue; //Only used to skip label and value
+
+  if (PyArg_ParseTuple(args, "O", &pyValue))
+  {
+    try
+    {
+      PyObject * pyStr = PyObject_Str(pyValue);
+      char * str = PyString_AsString(pyStr);
+      int xdim, ydim, zdim;
+      unsigned long ndim;
+      SingleImgSize(str, xdim, ydim, zdim, ndim);
+      Py_DECREF(pyStr);
+      return Py_BuildValue("iiik", xdim, ydim, zdim, ndim);
+    }
+    catch (XmippError xe)
+    {
+      PyErr_SetString(PyXmippError, xe.msg.c_str());
+    }
+  }
+  return NULL;
+}
+
+
+/* MetaData methods */
+static PyMethodDef MetaData_methods[] = {
+    {"read", (PyCFunction)MetaData_read, METH_VARARGS,
+     "Read data from file"
+    },
+    {"write", (PyCFunction)MetaData_write, METH_VARARGS,
+     "Write MetaData content to disk"
+    },
+    {"addObject", (PyCFunction)MetaData_addObject, METH_NOARGS,
+     "Add a new object and return its id"
+    },
+    {"getActiveObject", (PyCFunction)MetaData_getActiveObject, METH_NOARGS,
+     "Return active object id"
+    },
+    {"firstObject", (PyCFunction)MetaData_firstObject, METH_NOARGS,
+     "Goto first metadata object, return its object id"
+    },
+    {"lastObject", (PyCFunction)MetaData_lastObject, METH_NOARGS,
+     "Goto last metadata object, return its object id"
+    },
+    {"nextObject", (PyCFunction)MetaData_nextObject, METH_NOARGS,
+     "Goto next object to the active object"
+    },
+    {"previousObject", (PyCFunction)MetaData_previousObject, METH_NOARGS,
+     "Goto previous object to the active object"
+    },
+    {"size", (PyCFunction)MetaData_size, METH_NOARGS,
+     "Return number of objects in MetaData"
+    },
+    {"isEmpty", (PyCFunction)MetaData_isEmpty, METH_NOARGS,
+     "Check whether the MetaData is empty"
+    },
+    {"getColumnFormat", (PyCFunction)MetaData_getColumnFormat, METH_NOARGS,
+     "Get column format info"
+    },
+    {"setColumnFormat", (PyCFunction)MetaData_setColumnFormat, METH_VARARGS,
+     "Set column format info"
+    },
+    {"setValue", (PyCFunction)MetaData_setValue, METH_VARARGS,
+     "Set the value for column(label)"
+    },
+
+    {NULL}  /* Sentinel */
+};
+
+/*MetaData Type */
+static PyTypeObject MetaDataType = {
+   PyObject_HEAD_INIT(NULL)
+   0,                         /*ob_size*/
+   "xmipp.MetaData",          /*tp_name*/
+   sizeof(MetaDataObject),   /*tp_basicsize*/
+   0,                         /*tp_itemsize*/
+   (destructor)MetaData_dealloc, /*tp_dealloc*/
+   MetaData_print,               /*tp_print*/
+   0,                         /*tp_getattr*/
+   0,                         /*tp_setattr*/
+   0,                         /*tp_compare*/
+   MetaData_repr,             /*tp_repr*/
+   0,                         /*tp_as_number*/
+   0,                         /*tp_as_sequence*/
+   0,                         /*tp_as_mapping*/
+   0,                         /*tp_hash */
+   0,                         /*tp_call*/
+   0,                         /*tp_str*/
+   0,                         /*tp_getattro*/
+   0,                         /*tp_setattro*/
+   0,                         /*tp_as_buffer*/
+   Py_TPFLAGS_DEFAULT,        /*tp_flags*/
+   "Python wrapper to Xmipp MetaData class",/* tp_doc */
+   0,                     /* tp_traverse */
+   0,                     /* tp_clear */
+   0,                     /* tp_richcompare */
+   0,                     /* tp_weaklistoffset */
+   0,                     /* tp_iter */
+   0,                     /* tp_iternext */
+   MetaData_methods,  /* tp_methods */
+   0,                      /* tp_members */
+   0,                         /* tp_getset */
+   0,                         /* tp_base */
+   0,                         /* tp_dict */
+   0,                         /* tp_descr_get */
+   0,                         /* tp_descr_set */
+   0,                         /* tp_dictoffset */
+   0,                         /* tp_init */
+   0,                         /* tp_alloc */
+   MetaData_new,                 /* tp_new */
+};
+
+PyObject *
+MetaData_new(PyTypeObject *type, PyObject *args, PyObject *kwargs)
+{
+    MetaDataObject *self = (MetaDataObject*)type->tp_alloc(type, 0);
+
+    if (self != NULL)
+    {
+        PyObject *input = NULL;
+        PyArg_ParseTuple(args, "|O", &input);
+        if (input != NULL)
+        {
+          try
+          {
+            if (MetaData_Check(input))
+              self->metadata = new MetaData(MetaData_Value(input));
+            else if (PyString_Check(input))
+              self->metadata = new MetaData(PyString_AsString(input));
+            else if (FileName_Check(input))
+              self->metadata = new MetaData(FileName_Value(input));
+            else
+              return NULL;
+          }
+          catch (XmippError xe)
+          {
+            PyErr_SetString(PyXmippError, xe.msg.c_str());
+            return NULL;
+          }
+        }
+        else
+        {
+          self->metadata = new MetaData();
+        }
+    }
+    return (PyObject *)self;
+}
+
+MDObject *
+createMDObject(int label, PyObject *pyValue)
+{
+  try
+  {
+    if (PyInt_Check(pyValue))
+    {
+      int iValue = PyInt_AS_LONG(pyValue);
+      RETURN_MDOBJECT(iValue);
+    }
+    if (PyString_Check(pyValue))
+    {
+      RETURN_MDOBJECT(std::string(PyString_AsString(pyValue)));
+    }
+    if (FileName_Check(pyValue))
+    {
+      RETURN_MDOBJECT(*((FileNameObject*)pyValue)->filename);
+    }
+    if (PyFloat_Check(pyValue))
+    {
+      double dValue = PyFloat_AS_DOUBLE(pyValue);
+      RETURN_MDOBJECT(double(dValue));
+    }
+    if (PyBool_Check(pyValue))
+    {
+      bool bValue = (pyValue == Py_True);
+      RETURN_MDOBJECT(bValue);
+    }
+    if (PyList_Check(pyValue))
+    {
+      Py_ssize_t size = PyList_Size(pyValue);
+      PyObject * item = NULL;
+      double dValue = 0.;
+      std::vector<double> vValue((size_t)size);
+      for (Py_ssize_t i = 0; i < size; ++i)
+      {
+        item = PyList_GET_ITEM(pyValue, i);
+        if (!PyFloat_Check(pyValue))
+        {
+          PyErr_SetString(PyExc_TypeError, "Vectors are only supported for double");
+          return NULL;
+        }
+        dValue = PyFloat_AS_DOUBLE(item);
+        vValue.push_back(dValue);
+      }
+      RETURN_MDOBJECT(vValue);
+    }
+    PyErr_SetString(PyExc_TypeError, "Unrecognized type to create MDObject");
+  }
+  catch (XmippError xe)
+  {
+    PyErr_SetString(PyXmippError, xe.msg.c_str());
+  }
+  return NULL;
+}
+
+
+/***************************************************************/
 /*                            Global methods                   */
 /***************************************************************/
 static PyObject *
@@ -332,7 +842,7 @@ xmipp_str2Label(PyObject *obj,PyObject *args)
   char * str;
   if (PyArg_ParseTuple(args, "s", &str))
     return Py_BuildValue("i", (int)MDL::str2Label(str));
-  return Py_BuildValue("");
+  return NULL;
 }
 
 static PyObject *
@@ -350,12 +860,16 @@ xmipp_label2Str(PyObject *obj, PyObject *args)
 static PyObject *
 xmipp_labelType(PyObject *obj,PyObject *args)
 {
-  char * str;
-  int label;
-  if (PyArg_ParseTuple(args, "s", &str))
-    return Py_BuildValue("i", (int)MDL::labelType(str));
-  else if (PyArg_ParseTuple(args, "i", &label))
-    return Py_BuildValue("i", (int)MDL::labelType((MDLabel)label));
+  PyObject * input;
+  if (PyArg_ParseTuple(args, "O", &input))
+  {
+    if (PyString_Check(input))
+      return Py_BuildValue("i", (int)MDL::labelType(PyString_AsString(input)));
+    else if (PyInt_Check(input))
+      return Py_BuildValue("i", (int)MDL::labelType((MDLabel)PyInt_AsLong(input)));
+    else
+      PyErr_SetString(PyExc_TypeError, "labelType: Only int or string are allowed as input");
+  }
   return NULL;
 }
 
@@ -379,33 +893,7 @@ xmipp_isValidLabel(PyObject *obj, PyObject *args, PyObject *kwargs)
 
 /* Methods for constructing concrete queries */
 
-#define RETURN_MDOBJECT(value) return new MDObject((MDLabel)label, value)
-/*Helper function to create an MDObject from a PyObject */
-static MDObject *
-createMDObject(int label, PyObject *pyValue)
-{
-  int iValue;
-  float dValue;
-  char * sValue;
-  bool bValue;
 
-  if (PyInt_Check(pyValue))
-  {
-    iValue = PyInt_AS_LONG(pyValue);
-    RETURN_MDOBJECT(iValue);
-  }
-  if (PyString_Check(pyValue))
-  {
-    RETURN_MDOBJECT(std::string(PyString_AsString(pyValue)));
-  }
-  else if (PyFloat_Check(pyValue))
-  {
-    dValue = PyFloat_AS_DOUBLE(pyValue);
-    RETURN_MDOBJECT(double(dValue));
-  }
-  else
-    return NULL;
-}
 /* Helper function to create relational queries */
 static PyObject *
 createMDValueRelational(PyObject *args, int op)
@@ -490,7 +978,6 @@ xmipp_MDValueRange(PyObject *obj, PyObject *args, PyObject *kwargs)
   return NULL;
 }
 
-
 static PyMethodDef xmipp_methods[] =
 {
    {"str2Label",  xmipp_str2Label, METH_VARARGS,
@@ -517,6 +1004,9 @@ static PyMethodDef xmipp_methods[] =
     "Construct a relational query"},
     {"MDValueRange", (PyCFunction)xmipp_MDValueRange, METH_VARARGS,
      "Construct a range query"},
+     {"SingleImgSize", (PyCFunction)MetaData_SingleImgSize, METH_VARARGS,
+      "Get image dimensions"
+     },
      {NULL} /* Sentinel */
 };
 
@@ -530,23 +1020,34 @@ void addIntConstant(PyObject * dict, const char * name, const long &value)
 PyMODINIT_FUNC
 initxmipp(void)
 {
+  //Initialize module variable
     PyObject* module;
-
     module = Py_InitModule3("xmipp", xmipp_methods,
                        "Xmipp module as a Python extension.");
 
-    //FileNameType.tp_new = PyType_GenericNew;
+    // Add FileName type
     if (PyType_Ready(&FileNameType) < 0)
         return;
-    MDQueryType.tp_new = PyType_GenericNew;
-    if (PyType_Ready(&MDQueryType) < 0)
-            return;
-
     Py_INCREF(&FileNameType);
     PyModule_AddObject(module, "FileName", (PyObject *)&FileNameType);
 
+    // Add MDQuery type, as no specific new is create, use the generic one
+    MDQueryType.tp_new = PyType_GenericNew;
+    if (PyType_Ready(&MDQueryType) < 0)
+            return;
     Py_INCREF(&MDQueryType);
     PyModule_AddObject(module, "MDQuery", (PyObject *)&MDQueryType);
+
+    //Add MetaData type
+    if (PyType_Ready(&MetaDataType) < 0)
+        return;
+    Py_INCREF(&MetaDataType);
+    PyModule_AddObject(module, "MetaData", (PyObject *)&MetaDataType);
+
+    //Add PyXmippError
+    PyXmippError = PyErr_NewException("xmipp.error", NULL, NULL);
+    Py_INCREF(PyXmippError);
+    PyModule_AddObject(module, "error", PyXmippError);
 
     PyObject * dict = PyModule_GetDict(module);
 
