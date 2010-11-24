@@ -351,6 +351,7 @@ typedef struct
 {
     PyObject_HEAD
     MetaData * metadata;
+    bool startedIter;
 }
 MetaDataObject;
 
@@ -445,13 +446,6 @@ MetaData_write(PyObject *obj, PyObject *args, PyObject *kwargs)
             self->metadata->write(PyString_AsString(input));
           else if (FileName_Check(input))
             self->metadata->write(FileName_Value(input));
-//
-//          if ((pyStr = PyObject_Str(input)) != NULL)
-//          {
-//              str = PyString_AsString(pyStr);
-//              self->metadata->write(str);
-//              Py_RETURN_NONE;
-//          }
           else
             return NULL;
           Py_RETURN_NONE;
@@ -778,7 +772,48 @@ MetaData_makeAbsPath(PyObject *obj, PyObject *args, PyObject *kwargs)
   }
   return NULL;
 }
-
+/** Iteration functions */
+static PyObject *
+MetaData_iter(PyObject *obj)
+{
+    try
+    {
+      MetaDataObject *self = (MetaDataObject*)obj;
+      self->startedIter = true;
+      Py_INCREF(self);
+      return (PyObject *)self;
+      //return Py_BuildValue("l", self->metadata->iteratorBegin());
+    }
+    catch (XmippError xe)
+    {
+      PyErr_SetString(PyXmippError, xe.msg.c_str());
+    }
+  return NULL;
+}
+static PyObject *
+MetaData_iternext(PyObject *obj)
+{
+    try
+    {
+      MetaDataObject *self = (MetaDataObject*)obj;
+      long objId;
+      if (self->startedIter)
+      {
+        objId = self->metadata->iteratorBegin();
+        self->startedIter = false;
+      }
+      else
+        objId = self->metadata->iteratorNext();
+      if (self->metadata->iteratorEnd())
+        return NULL;
+      return Py_BuildValue("l", objId);
+    }
+    catch (XmippError xe)
+    {
+      PyErr_SetString(PyXmippError, xe.msg.c_str());
+    }
+  return NULL;
+}
 /* MetaData methods */
 static PyMethodDef MetaData_methods[] = {
     {"read", (PyCFunction)MetaData_read, METH_VARARGS,
@@ -860,14 +895,14 @@ static PyTypeObject MetaDataType = {
    0,                         /*tp_getattro*/
    0,                         /*tp_setattro*/
    0,                         /*tp_as_buffer*/
-   Py_TPFLAGS_DEFAULT,        /*tp_flags*/
+   Py_TPFLAGS_DEFAULT | Py_TPFLAGS_HAVE_ITER,    /*tp_flags*/
    "Python wrapper to Xmipp MetaData class",/* tp_doc */
    0,                     /* tp_traverse */
    0,                     /* tp_clear */
    0,                     /* tp_richcompare */
    0,                     /* tp_weaklistoffset */
-   0,                     /* tp_iter */
-   0,                     /* tp_iternext */
+   MetaData_iter,         /* tp_iter */
+   MetaData_iternext,     /* tp_iternext */
    MetaData_methods,  /* tp_methods */
    0,                      /* tp_members */
    0,                         /* tp_getset */
@@ -914,6 +949,7 @@ MetaData_new(PyTypeObject *type, PyObject *args, PyObject *kwargs)
           self->metadata = new MetaData();
         }
     }
+    self->startedIter = false;
     return (PyObject *)self;
 }
 
