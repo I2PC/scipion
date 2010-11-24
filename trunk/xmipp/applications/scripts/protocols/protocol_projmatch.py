@@ -658,8 +658,9 @@ class projection_matching_class:
        scriptdir=os.path.split(os.path.dirname(os.popen('which xmipp_protocols','r').read()))[0]+'/protocols'
        sys.path.append(scriptdir)
        import arg,log,logging
-       import launch_job, XmippData
-
+       import launch_job
+       from xmipp import *
+ 
        self._CleanUpFiles=_CleanUpFiles
        self._WorkingDir=os.getcwd()+'/'+_WorkingDir
        self._SelFileName=_SelFileName
@@ -752,10 +753,11 @@ class projection_matching_class:
        log.make_backup_of_script_file(sys.argv[0],self._WorkingDir)
        
        # Create a selfile with absolute pathname in the WorkingDir
-       newsel= XmippData.MetaData(XmippData.FileName(_SelFileName))
-       newsel.makeAbsPath(XmippData.MDL_IMAGE)
+       #newsel= XmippData.MetaData(XmippData.FileName(_SelFileName))
+       newsel = MetaData(_SelFileName)
+       newsel.makeAbsPath(MDL_IMAGE)
        self._SelFileName=os.path.abspath(self._WorkingDir + '/' + _SelFileName)
-       newsel.write(XmippData.FileName(self._SelFileName))
+       newsel.write(self._SelFileName)
        
        # For ctf groups, also create a CTFdat file with absolute pathname in the WorkingDir
        if (self._DoCtfCorrection):
@@ -1389,7 +1391,7 @@ def execute_projection_matching(_mylog,
    # Make absolute path so visualization protocol can be run from the same directory
    # Make selfile with reference projections, class averages and realigned averages
 
-   import XmippData, metadataUtils
+   import  metadataUtils
    metadataUtils.intercalate_union_3(ProjMatchRootName + '_classes.sel',
                                      MultiAlign2dSel,
                      ProjMatchRootName + '_class',
@@ -1423,8 +1425,8 @@ def execute_projection_matching(_mylog,
 ###   newdoc=docfiles.docfile(ProjMatchRootName + '_classes.doc')
 ###   newdoc.make_abspath()
 ###   newdoc.write(ForReconstructionDoc)
-   metadataUtils.absolutePath(XmippData.FileName(ProjMatchRootName + '_classes.doc'),
-                              XmippData.FileName(ForReconstructionDoc))
+   metadataUtils.absolutePath(ProjMatchRootName + '_classes.doc',
+                              ForReconstructionDoc)
 
    if (_DisplayProjectionMatching):
       command='xmipp_show -sel '+ "../"+'Iter_'+\
@@ -1593,6 +1595,7 @@ def  execute_resolution(_mylog,
             _PaddingFactor):
 
     import os,shutil,math
+    from xmipp import *
 
     PerformReconstruction=True
     split_sel_root_name=ProjMatchRootName+'_split'
@@ -1710,35 +1713,25 @@ def  execute_resolution(_mylog,
 
     #compute resolution
     resolution_fsc_file = Outputvolumes[1]+'.frc'
-#    f = open(resolution_fsc_file, 'r')
-#    #skip first line
-#    fi=f.readline()
-    import XmippData
+
+    from xmipp import *
+    
     filter_frequence=0. 
-    mD = XmippData.MetaData(XmippData.FileName(resolution_fsc_file))
+    mD = MetaData(resolution_fsc_file)
     id = mD.firstObject()
-    fsc = XmippData.doubleP()
-    freq = XmippData.doubleP()
-    while(id != -1):
-         XmippData.getValueDouble(mD, XmippData.MDL_RESOLUTION_FRC, fsc)
-         d = fsc.value()
+    id = mD
+    fsc=0.
+    freq=0.
+    while(id != -1):        
+         fsc = mD.getValue(MDL_RESOLUTION_FRC)
+         d = fsc
          if(d < 0.5):
-             XmippData.getValueDouble(mD, XmippData.MDL_RESOLUTION_FREQ, freq)
+             freq=mD.getValue(MDL_RESOLUTION_FREQ)
+             print freq         
              break
          id = mD.nextObject()
-    filter_frequence = freq.value()
-
-
-#    for line in f:
-#        line = line.strip()
-#        if not line.startswith('#'):
-#            mylist = (line.split())
-#            if( float(mylist[1]) < 0.5):
-#               break
-#            else:
-#              filter_frequence=float(mylist[0])
-
-
+    filter_frequence = freq
+    
     print '* maximum resolution (A^-1): ', filter_frequence
     filter_frequence *= _ResolSam
     print '* maximum resolution (px^-1): ', filter_frequence
