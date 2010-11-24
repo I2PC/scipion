@@ -355,6 +355,10 @@ public class TomoData extends Component {
 	public boolean isResized() {
 		return resized;
 	}
+	
+	public boolean isLoadCanceled(){
+		return(window.getLastCommandState() == Command.State.CANCELED);
+	}
 
 
 	public void setResized(boolean resized) {

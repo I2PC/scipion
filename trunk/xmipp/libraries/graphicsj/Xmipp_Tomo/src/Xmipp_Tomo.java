@@ -79,6 +79,7 @@ public class Xmipp_Tomo implements PlugIn{
 	public void run(String arg){
 		setWorkflow(null);
 		createTomoWindow();
+		// debug("library path: " + System.getProperty("java.library.path"));
 		
 		// IJ.debugMode = true;
 		

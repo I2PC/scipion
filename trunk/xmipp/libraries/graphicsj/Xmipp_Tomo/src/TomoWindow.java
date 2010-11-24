@@ -43,6 +43,7 @@ import java.util.Hashtable;
 import java.util.LinkedList;
 
 import javax.swing.Action;
+import javax.swing.BorderFactory;
 import javax.swing.BoxLayout;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
@@ -53,6 +54,7 @@ import javax.swing.JTabbedPane;
 import javax.swing.JTextField;
 import javax.swing.Timer;
 import javax.swing.UIManager;
+import javax.swing.border.Border;
 import javax.swing.plaf.FontUIResource;
 
 /**
@@ -142,6 +144,7 @@ public class TomoWindow extends ImageWindow implements WindowListener,
 			add(Command.APPLY);
 			add(Command.PRINT_WORKFLOW);
 			add(Command.MEASURE);
+			add(Command.PLAY);
 		}
 	};
 
@@ -161,8 +164,7 @@ public class TomoWindow extends ImageWindow implements WindowListener,
 	}
 
 	private boolean closed = true;
-	// true while reloading a file that was resized
-	private boolean reloadingFile = false;
+	private Command.State lastCommandState=Command.State.IDLE;
 	// true if changes are saved (so you can close the window without pain)
 	private boolean changeSaved = true;
 	// true if current projection is changing automatically
@@ -266,7 +268,7 @@ public class TomoWindow extends ImageWindow implements WindowListener,
 		buttons.put(cmd.getId(), b);
 	}
 
-	private JButton getButton(String id) {
+	public JButton getButton(String id) {
 		return buttons.get(id);
 	}
 
@@ -314,6 +316,7 @@ public class TomoWindow extends ImageWindow implements WindowListener,
 		fl.setAlignment(FlowLayout.LEFT);
 		statusPanel.setLayout(fl);
 		statusPanel.setMaximumSize(new Dimension(Short.MAX_VALUE, 50));
+		statusPanel.setBorder(BorderFactory.createMatteBorder(1, 0, 0, 0, Color.BLACK));
 
 		statusLabel = new JLabel("Ready");
 		statusPanel.add(statusLabel);
@@ -689,6 +692,7 @@ public class TomoWindow extends ImageWindow implements WindowListener,
 
 		// close the window (no return back...)
 		setVisible(false);
+		setModel(null);
 		dispose();
 		WindowManager.removeWindow(this);
 		closed = true;
@@ -989,18 +993,23 @@ public class TomoWindow extends ImageWindow implements WindowListener,
 	}
 
 	/**
+	 * @deprecated
 	 * @return the reloadingFile
 	 */
 	private boolean isReloadingFile() {
-		return reloadingFile;
+		return (getLastCommandState() == Command.State.RELOADING);
 	}
 
 	/**
+	 * @deprecated
 	 * @param reloadingFile
 	 *            the reloadingFile to set
 	 */
 	public void setReloadingFile(boolean reloadingFile) {
-		this.reloadingFile = reloadingFile;
+		if(reloadingFile)
+			setLastCommandState(Command.State.RELOADING);
+		else
+			setLastCommandState(Command.State.LOADED);
 	}
 
 	/**
@@ -1101,5 +1110,13 @@ public class TomoWindow extends ImageWindow implements WindowListener,
 	 */
 	public void setController(TomoController controller) {
 		this.controller = controller;
+	}
+
+	public void setLastCommandState(Command.State lastCommandState) {
+		this.lastCommandState = lastCommandState;
+	}
+
+	public Command.State getLastCommandState() {
+		return lastCommandState;
 	}
 }

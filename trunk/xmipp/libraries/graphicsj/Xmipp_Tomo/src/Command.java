@@ -23,6 +23,8 @@
  *  e-mail address 'xmipp@cnb.csic.es'
  ***************************************************************************/
 
+import java.util.Enumeration;
+
 import javax.swing.ImageIcon;
 
 /**
@@ -34,8 +36,8 @@ import javax.swing.ImageIcon;
 public class Command {
 	
 	public static Command PLAY= new Command("controls.play","", "playPause", false, TomoWindow.PLAY_ICON),
-	LOAD=new Command("file.emload","EM","load",true,null),
-	XRAY=new Command("file.xrayload","X-Ray","xray",true,null),
+	LOAD=new Command("file.emload","Load EM","loadEM",true,null),
+	XRAY=new Command("file.xrayload","Load X-Ray","loadXray",true,null),
 	SAVE=new Command("file.save","Save","save",false,null),
 	DEFINE_TILT = new Command("file.tilt","Set tilt angles","setTilt",false,null),
 	GAUSSIAN = new Command("proc.gaussian","Gaussian","gaussian", false,null),
@@ -48,6 +50,8 @@ public class Command {
 	ALIGN_MANUAL = new Command("align.manual","Manual","alignManual",false,null),
 	ALIGN_CORRELATION = new Command("align.correlation","Quick","alignCorrelation",false,null),
 	PRINT_WORKFLOW = new Command("debug.print_workflow","Print workflow","printWorkflow",false,null);
+	
+	public static enum State{IDLE,LOADING, LOADED, RELOADING,CANCELED;};
 	
 	private String id;
 	private String label;

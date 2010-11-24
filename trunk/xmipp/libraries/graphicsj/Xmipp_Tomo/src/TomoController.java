@@ -71,15 +71,18 @@ public class TomoController {
 	private class ImportDataThread extends Thread {
 		private TomoData dataModel;
 		private boolean resize = false;
+		private TomoController controller;
 
-		ImportDataThread(TomoData model, boolean resize) {
+		ImportDataThread(TomoData model, boolean resize,TomoController controller) {
 			dataModel = model;
 			this.resize = resize;
+			this.controller = controller;
 		}
 
 		public void run() {
 			try {
 				new TiltSeriesIO(resize).read(dataModel);
+				controller.loadedEM();
 			} catch (FileNotFoundException ex) {
 				Xmipp_Tomo.debug("ImportDataThread.run - " + ex.getMessage());
 			} catch (IOException ex) {
@@ -87,6 +90,8 @@ public class TomoController {
 			} catch (InterruptedException ex) {
 				Xmipp_Tomo
 						.debug("ImportDataThread.run - Interrupted exception");
+			} catch (OutOfMemoryError err){
+				Xmipp_Tomo.debug("ImportDataThread.run - Out of memory");
 			} catch (Exception ex) {
 				Xmipp_Tomo.debug("ImportDataThread.run - unexpected exception",
 						ex);
@@ -152,47 +157,80 @@ public class TomoController {
 		Xmipp_Tomo.printWorkflow();
 	}
 
-	public void load() {
-		String path = XrayImportDialog.dialogOpen();
-		if ((path == null) || ("".equals(path)))
-			return;
+	public void loadEM() {
+		if (window.getLastCommandState() == Command.State.LOADING) {
+			// if the button was pressed while loading, it means user wants to
+			// cancel
+			window.setLastCommandState(Command.State.CANCELED);
+			window.getButton(Command.LOAD.getId()).setText(Command.LOAD.getLabel());
+			Xmipp_Tomo.debug("loadEM - cancelled");
+		} else {
+			String path = XrayImportDialog.dialogOpen();
+			if ((path == null) || ("".equals(path)))
+				return;
 
-		window.setModel(new TomoData(path, window));
+			// free previous model (if any) ??
+			window.setModel(null);
+			window.setModel(new TomoData(path, window));
+			window.getButton(Command.LOAD.getId()).setText("Cancel " + Command.LOAD.getLabel());
+			window.setLastCommandState(Command.State.LOADING);
+			
+			try {
+				// import data in one thread and hold this thread until the
+				// first
+				// projection is loaded
+				
+				(new Thread(new ImportDataThread(window.getModel(), true,this)))
+						.start();
+				window.getModel().waitForFirstImage();
+			} catch (InterruptedException ex) {
+				Xmipp_Tomo.debug("Xmipp_Tomo - Interrupted exception");
+			}
 
-		try {
-			// import data in one thread and hold this thread until the first
-			// projection is loaded
-			window.setReloadingFile(false);
-			(new Thread(new ImportDataThread(window.getModel(), true))).start();
-			window.getModel().waitForFirstImage();
-		} catch (InterruptedException ex) {
-			Xmipp_Tomo.debug("Xmipp_Tomo - Interrupted exception");
+			window.setImagePlusWindow();
+
+			window.setTitle(window.getTitle());
+			window.addView();
+			window.addControls();
+			window.addUserAction(new UserAction(window.getWindowId(), "Load",
+					window.getModel().getFileName()));
+
+			// enable buttons
+			window.enableButtonsAfterLoad();
+
+			// wait for last image in a different thread
+			try {
+				new BackgroundMethod(getClass().getMethod("loadedEM"), this)
+						.execute();
+			} catch (Exception ex) {
+				Xmipp_Tomo.debug("TomoController.playPause() "
+						+ ex.getMessage());
+			}
 		}
-
-		window.setImagePlusWindow();
-
-		window.setTitle(window.getTitle());
-		window.addView();
-		window.addControls();
-		window.addUserAction(new UserAction(window.getWindowId(), "Load",
-				window.getModel().getFileName()));
-
-		// enable buttons
-		window.enableButtonsAfterLoad();
 	}
 
-	public void alignManual(){
-		
+	/**
+	 * Post-actions (once all the images are loaded)
+	 */
+	public void loadedEM() {
+		if(window.getLastCommandState() == Command.State.LOADING){
+			window.setLastCommandState(Command.State.LOADED);
+			window.getButton(Command.LOAD.getId()).setText(Command.LOAD.getLabel());
+		}
 	}
-	
-	public void alignAuto(){
-		
+
+	public void alignManual() {
+
 	}
-	
-	public void alignCorrelation(){
-		
+
+	public void alignAuto() {
+
 	}
-	
+
+	public void alignCorrelation() {
+
+	}
+
 	/**
 	 * Apply this window's workflow to the file associated to this window
 	 * (through the model)
@@ -212,14 +250,15 @@ public class TomoController {
 					window);
 			originalModel.addPropertyChangeListener(window);
 			try {
-				window.setReloadingFile(true);
-				(new Thread(new ImportDataThread(originalModel, false)))
+				window.setLastCommandState(Command.State.RELOADING);
+				(new Thread(new ImportDataThread(originalModel, false,this)))
 						.start();
 				originalModel.waitForLastImage();
 			} catch (Exception ex) {
 				Xmipp_Tomo.debug("actionApply - unexpected exception", ex);
 			}
 
+			window.setLastCommandState(Command.State.LOADED);
 			// iterate through the user actions that make sense
 			for (UserAction currentAction : Xmipp_Tomo.getWorkflow(window
 					.getLastAction())) {
@@ -240,7 +279,7 @@ public class TomoController {
 		window.setPlugin(plugin);
 		runIjCmd(Command.GAUSSIAN, plugin);
 	}
-	
+
 	public void measure() {
 		Plugin plugin = new MeasurePlugin();
 		window.setPlugin(plugin);
@@ -325,7 +364,7 @@ public class TomoController {
 	 * Ask user parameters for xmipp_xray_import and run it (by now, the program
 	 * must be on $PATH)
 	 */
-	public void xray() {
+	public void loadXray() {
 		XrayImportDialog d = new XrayImportDialog("X-Ray import", window);
 		// d.setup();
 		d.showDialog();
