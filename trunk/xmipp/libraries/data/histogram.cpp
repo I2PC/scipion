@@ -86,7 +86,7 @@ void Histogram1D::insert_value(double val)
         i = XSIZE(*this) - 1;
     else
     {
-    	double aux=(val - hmin) * istep_size;
+        double aux=(val - hmin) * istep_size;
         i = (int) FLOOR(aux);
     }
 
@@ -293,7 +293,8 @@ double KLDistance(const Histogram1D& h1, const Histogram1D& h2)
 
     double retval=0;
     FOR_ALL_ELEMENTS_IN_ARRAY1D(h1)
-        if (h2(i)!=0.0 && h1(i)!=0.0) retval += h1(i)*log10(h1(i)/h2(i));
+    if (h2(i)!=0.0 && h1(i)!=0.0)
+        retval += h1(i)*log10(h1(i)/h2(i));
     return retval;
 }
 
@@ -302,7 +303,7 @@ double KLDistance(const Histogram1D& h1, const Histogram1D& h2)
 /* ------------------------------------------------------------------------- */
 /* Initialization ---------------------------------------------------------- */
 void IrregularHistogram1D::init(const Histogram1D &hist,
-    const MultidimArray<int> &bins)
+                                const MultidimArray<int> &bins)
 {
     int steps_no = XSIZE(bins);
     __binsRightLimits.initZeros(steps_no);
@@ -320,11 +321,40 @@ void IrregularHistogram1D::init(const Histogram1D &hist,
 }
 
 /* val2index --------------------------------------------------------------- */
-int IrregularHistogram1D::val2Index(double value)
+int IrregularHistogram1D::val2Index(double value) const
 {
     int binsNo = XSIZE(__binsRightLimits);
-    for (int i = 0; i < binsNo; i++)
-        if(value <= DIRECT_A1D_ELEM(__binsRightLimits,i)) return i;
+    /* Binary search is not interesting for small vectors
+     * However, we leave the code, just in case it is needed in the future
+    int ileft=1, iright=binsNo-1;
+    int iret=0;
+    if (value<=DIRECT_A1D_ELEM(__binsRightLimits,0))
+        return =0;
+    else if (value>DIRECT_A1D_ELEM(__binsRightLimits,iright))
+        return iright;
+    else
+        do
+        {
+            iret = (iright+ileft)/2;
+            if (value>DIRECT_A1D_ELEM(__binsRightLimits,iret))
+                ileft=iret+1;
+            else
+                iright=iret;
+            if (value>DIRECT_A1D_ELEM(__binsRightLimits,iret-1) &&
+                    value<=DIRECT_A1D_ELEM(__binsRightLimits,iret))
+            	break;
+            else if (ileft == iright)
+            {
+            	iret=ileft;
+            	break;
+            }
+        }
+        while (true);
+	*/
+
+    for (int i = 0; i < binsNo; ++i)
+        if(value <= DIRECT_A1D_ELEM(__binsRightLimits,i))
+            return i;
 
     //In case the value is greater, we return the last bin
     return binsNo - 1;
@@ -338,7 +368,7 @@ void IrregularHistogram1D::selfNormalize()
 
 /* Show -------------------------------------------------------------------- */
 std::ostream & operator << (std::ostream &_out,
-    const IrregularHistogram1D &_hist)
+                            const IrregularHistogram1D &_hist)
 {
     for (int i = 0; i < XSIZE(_hist.__binsRightLimits); i++)
         _out << "\t" << _hist.__binsRightLimits(i) << "\t\t" << _hist.__hist(i) << std::endl;

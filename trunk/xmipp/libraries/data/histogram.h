@@ -339,7 +339,7 @@ public:
     void init(const Histogram1D &oldHistogram, const MultidimArray<int> &bins);
 
     /// Return the index corresponding to a certain value
-    int val2Index(double value);
+    int val2Index(double value) const;
 
     /// Normalize to be a probability density function
     void selfNormalize();
