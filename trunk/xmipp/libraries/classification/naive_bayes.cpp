@@ -213,8 +213,9 @@ int LeafNode::getNumberOfLevels()
 /* Assign probability ------------------------------------------------------ */
 double LeafNode::assignProbability(double value, int k)
 {
-    int index = __leafPDF[k].val2Index(value);
-    return __leafPDF[k](index);
+	const IrregularHistogram1D& hist=__leafPDF[k];
+    int index = hist.val2Index(value);
+    return DIRECT_A1D_ELEM(hist.__hist,index);
 }
 
 /* Compute weight ---------------------------------------------------------- */
@@ -378,6 +379,7 @@ std::ostream & operator << (std::ostream &_out, const NaiveBayes &naive)
 }
 
 /* Ensemble constructor ---------------------------------------------------- */
+#define WEIGHTED_SAMPLING
 EnsembleNaiveBayes::EnsembleNaiveBayes(
     const std::vector < MultidimArray<double> >  &features,
     const Matrix1D<double> &priorProbs,
@@ -389,12 +391,44 @@ EnsembleNaiveBayes::EnsembleNaiveBayes(
     int NsubFeatures=CEIL(NFeatures*samplingFeatures);
     K=features.size();
     judgeCombination=newJudgeCombination;
+
+#ifdef WEIGHTED_SAMPLING
+    // Measure the classification power of each variable
+    NaiveBayes *nb_weights=new NaiveBayes(features, priorProbs, discreteLevels);
+    MultidimArray<double> weights=nb_weights->__weights;
+    delete nb_weights;
+    double sumWeights=weights.sum();
+#endif
+
     for (int n=0; n<numberOfClassifiers; n++)
     {
         // Produce the set of features for this subclassifier
         MultidimArray<int> subFeatures(NsubFeatures);
         FOR_ALL_ELEMENTS_IN_ARRAY1D(subFeatures)
-        subFeatures(i)=ROUND(rnd_unif(0,NFeatures-1));
+        {
+#ifdef WEIGHTED_SAMPLING
+        	double random_sum_weight=rnd_unif(0,sumWeights);
+        	int j=0;
+        	do {
+        		double wj=DIRECT_A1D_ELEM(weights,j);
+        		if (wj<random_sum_weight)
+        		{
+        			random_sum_weight-=wj;
+        			j++;
+        			if (j==NFeatures)
+        			{
+        				j=NFeatures-1;
+        				break;
+        			}
+        		}
+        		else
+        			break;
+        	} while (true);
+        	DIRECT_A1D_ELEM(subFeatures,i)=j;
+#else
+        	DIRECT_A1D_ELEM(subFeatures,i)=ROUND(rnd_unif(0,NFeatures-1));
+#endif
+        }
 
         // Container for the new training sample
         std::vector< MultidimArray<double> >  newFeatures;

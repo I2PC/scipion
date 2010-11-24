@@ -346,12 +346,6 @@ std::ostream & operator << (std::ostream &_out,
 }
 
 /* Get value --------------------------------------------------------------- */
-double IrregularHistogram1D::operator()(int i) const
-{
-    return __hist(i);
-}
-
-/* Get value --------------------------------------------------------------- */
 const Histogram1D& IrregularHistogram1D::getHistogram() const
 {
     return __hist;

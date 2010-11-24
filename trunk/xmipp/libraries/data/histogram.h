@@ -332,7 +332,7 @@ public:
 class IrregularHistogram1D
 {
 public:
-    Histogram1D         __hist;
+    Histogram1D              __hist;
     MultidimArray<double>    __binsRightLimits;
 public:
     /// Initialize class
@@ -349,7 +349,10 @@ public:
                                        const IrregularHistogram1D &_h);
 
     /// Get value
-    double operator()(int i) const;
+    inline double operator()(int i) const
+    {
+        return DIRECT_A1D_ELEM(__hist,i);
+    }
 
     /// Get histogram
     const Histogram1D& getHistogram() const;
