@@ -66,7 +66,7 @@ public:
     int getNumberOfLevels();
 
     /// Assign probability to a value within the PDF of a given class
-    double assignProbability(double value, int k);
+    double assignProbability(double value, int k) const;
     
     /// Compute weight of this leaf as a classifier
     double computeWeight() const;

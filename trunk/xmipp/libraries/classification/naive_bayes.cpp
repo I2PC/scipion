@@ -211,7 +211,7 @@ int LeafNode::getNumberOfLevels()
 }
 
 /* Assign probability ------------------------------------------------------ */
-double LeafNode::assignProbability(double value, int k)
+double LeafNode::assignProbability(double value, int k) const
 {
 	const IrregularHistogram1D& hist=__leafPDF[k];
     int index = hist.val2Index(value);
@@ -307,9 +307,12 @@ int NaiveBayes::doInference(const MultidimArray<double> &newFeatures,
 {
     classesProbs = __priorProbsLog10;
     for(int f=0; f<Nfeatures; f++)
+    {
+    	const LeafNode &leaf_f=*(__leafs[f]);
+    	double newFeatures_f=DIRECT_A1D_ELEM(newFeatures,f);
         for (int k=0; k<K; k++)
         {
-            double p = __leafs[f]->assignProbability(newFeatures(f), k);
+            double p = leaf_f.assignProbability(newFeatures_f, k);
 
             if (ABS(p) < 1e-2)
                 VEC_ELEM(classesProbs,k) += -2*DIRECT_A1D_ELEM(__weights,f);
@@ -330,6 +333,8 @@ int NaiveBayes::doInference(const MultidimArray<double> &newFeatures,
 #endif
 
         }
+    }
+
     classesProbs-=classesProbs.computeMax();
     //    std::cout << "classesProbs " << classesProbs.transpose() << std::endl;
 
@@ -379,7 +384,7 @@ std::ostream & operator << (std::ostream &_out, const NaiveBayes &naive)
 }
 
 /* Ensemble constructor ---------------------------------------------------- */
-#define WEIGHTED_SAMPLING
+//#define WEIGHTED_SAMPLING
 EnsembleNaiveBayes::EnsembleNaiveBayes(
     const std::vector < MultidimArray<double> >  &features,
     const Matrix1D<double> &priorProbs,
