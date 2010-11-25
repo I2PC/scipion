@@ -533,14 +533,14 @@ void mask3D_26neig(MultidimArray<int> &mask, int value1, int value2, int value3,
 /* Mask Type                                                                 */
 /*---------------------------------------------------------------------------*/
 // Constructor -------------------------------------------------------------
-MaskProgram::MaskProgram(int _allowed_data_types)
+Mask::Mask(int _allowed_data_types)
 {
     clear();
     allowed_data_types = _allowed_data_types;
 }
 
 // Default values ----------------------------------------------------------
-void MaskProgram::clear()
+void Mask::clear()
 {
     type = NO_MASK;
     mode = INNER_MASK;
@@ -553,7 +553,7 @@ void MaskProgram::clear()
 }
 
 // Resize ------------------------------------------------------------------
-void MaskProgram::resize(int Xdim)
+void Mask::resize(int Xdim)
 {
     switch (datatype())
     {
@@ -568,7 +568,7 @@ void MaskProgram::resize(int Xdim)
     }
 }
 
-void MaskProgram::resize(int Ydim, int Xdim)
+void Mask::resize(int Ydim, int Xdim)
 {
     switch (datatype())
     {
@@ -583,7 +583,7 @@ void MaskProgram::resize(int Ydim, int Xdim)
     }
 }
 
-void MaskProgram::resize(int Zdim, int Ydim, int Xdim)
+void Mask::resize(int Zdim, int Ydim, int Xdim)
 {
     switch (datatype())
     {
@@ -600,7 +600,7 @@ void MaskProgram::resize(int Zdim, int Ydim, int Xdim)
 
 
 // Read from command lines -------------------------------------------------
-void MaskProgram::read(int argc, char **argv)
+void Mask::read(int argc, char **argv)
 {
     int i = paremeterPosition(argc, argv, "--center");
     if (i != -1)
@@ -890,7 +890,7 @@ void MaskProgram::read(int argc, char **argv)
 }
 
 // Show --------------------------------------------------------------------
-void MaskProgram::show() const
+void Mask::show() const
 {
 #define SHOW_MODE \
     if (mode==INNER_MASK) std::cout << "   mode=INNER MASK\n"; \
@@ -994,7 +994,7 @@ void MaskProgram::show() const
 }
 
 // Usage -------------------------------------------------------------------
-void MaskProgram::usage() const
+void Mask::usage() const
 {
     std::cerr << "Mask usage:\n";
     std::cerr << "   [-center <x0=0> <y0=0> <z0=0>]: Center of the mask\n";
@@ -1049,7 +1049,7 @@ void MaskProgram::usage() const
 }
 
 // Write -------------------------------------------------------------------
-void MaskProgram::write_mask(const FileName &fn)
+void Mask::write_mask(const FileName &fn)
 {
     Image<double> img;
     if (datatype() == INT_MASK)
@@ -1060,78 +1060,78 @@ void MaskProgram::write_mask(const FileName &fn)
 }
 
 
-void MaskProgram::defineParams()
+void Mask::defineParams(XmippProgram * program)
 {
-    addParamsLine("   [--center <x0=0> <y0=0> <z0=0>]: Center of the mask");
-    addParamsLine("   [--mask <mask_type=cirular>]");
-    addParamsLine("        where <mask_type> ");
-    addUsageLine("INT MASK");
-    addParamsLine("         circular <R>        : circle/sphere mask");
-    addParamsLine("                :if R>0 => outside R");
-    addParamsLine("                :if R<0 => inside  R");
-    addParamsLine("         DWT_circular <R> <smin> <smax>: circle/sphere mask");
-    addParamsLine("                : smin and smax define the scales to be kept");
-    addParamsLine("         rectangular <Xrect> <Yrect> <Zrect=0>: 2D or 3D rectangle");
-    addParamsLine("                                         :if X,Y,Z > 0 => outside rectangle");
-    addParamsLine("                                          :if X,Y,Z < 0 => inside rectangle");
-    addParamsLine("         crown <R1> <R2>    : 2D or 3D crown");
-    addParamsLine("                                          :if R1,R2 > 0 => outside crown");
-    addParamsLine("                                          :if R1,R2 < 0 => inside crown");
-    addParamsLine("         cylinder <R> <H>   : 2D circle or 3D cylinder");
-    addParamsLine("                                         :if R,H > 0 => outside cylinder");
-    addParamsLine("                                          :if R,H < 0 => inside cylinder");
-    addParamsLine("         cone <theta>       : 3D cone (parallel to Z) ");
-    addParamsLine("                                          :if theta > 0 => outside cone");
-    addParamsLine("                                         :if theta < 0 => inside cone");
-    addParamsLine("         wedge <th0> <thF>  : 3D missing-wedge mask for data ");
-    addParamsLine("                                          :collected between tilting angles ");
-    addParamsLine("                                          :th0 and thF (around the Y-axis) ");
-    addParamsLine("         binary_file <binary_file>      : Read from file");
-    addUsageLine("DOUBLE MASK");
-    addParamsLine("         gaussian <sigma>   : 2D or 3D gaussian");
-    addParamsLine("                              :if sigma > 0 => outside gaussian");
-    addParamsLine("                              : if sigma < 0 => inside gaussian");
-    addParamsLine("         raised_cosine <R1> <R2>: 2D or 3D raised_cosine");
-    addParamsLine("                              : if R1,R2 > 0 => outside sphere");
-    addParamsLine("                              : if R1,R2 < 0 => inside sphere");
-    addParamsLine("         raised_crown <R1> <R2> <pixwidth>: 2D or 3D raised_crown");
-    addParamsLine("                              : if R1,R2 > 0 => outside sphere");
-    addParamsLine("                              : if R1,R2 < 0 => inside sphere");
-    addParamsLine("         blob_circular <R1> <blob_radius>: 2D or 3D blob circular");
-    addParamsLine("                              : if blob_radius > 0 => outside sphere");
-    addParamsLine("                              : if blob_radius < 0 => inside sphere");
-    addParamsLine("         blob_crown <R1> <R2> <blob_radius>: 2D or 3D blob_crown");
-    addParamsLine("                              : if blob_radius > 0 => outside sphere");
-    addParamsLine("                              : if blob_radius < 0 => inside sphere");
-    addParamsLine("         blackman           : 2D or 3D Blackman mask");
-    addParamsLine("                             :  always inside blackman");
-    addParamsLine("         sinc <w>          : 2D or 3D sincs");
-    addParamsLine("                             :  if w > 0 => outside sinc");
-    addParamsLine("                             :  if w < 0 => inside sinc");
-    addParamsLine("   [ -m <blob_order=2>]       : Order of blob");
-    addParamsLine("   [ -a <blob_alpha=10.4>]    : Alpha of blob");
+    program->addParamsLine("   [--center <x0=0> <y0=0> <z0=0>]: Center of the mask");
+    program->addParamsLine("   [--mask <mask_type=circular>]");
+    program->addParamsLine("        where <mask_type> ");
+   // program->addParamsLine("== INT MASK ==");
+    program->addParamsLine("         circular <R>        : circle/sphere mask");
+    program->addParamsLine("                :if R>0 => outside R");
+    program->addParamsLine("                :if R<0 => inside  R");
+    program->addParamsLine("         DWT_circular <R> <smin> <smax>: circle/sphere mask");
+    program->addParamsLine("                : smin and smax define the scales to be kept");
+    program->addParamsLine("         rectangular <Xrect> <Yrect> <Zrect=0>: 2D or 3D rectangle");
+    program->addParamsLine("                                         :if X,Y,Z > 0 => outside rectangle");
+    program->addParamsLine("                                          :if X,Y,Z < 0 => inside rectangle");
+    program->addParamsLine("         crown <R1> <R2>    : 2D or 3D crown");
+    program->addParamsLine("                                          :if R1,R2 > 0 => outside crown");
+    program->addParamsLine("                                          :if R1,R2 < 0 => inside crown");
+    program->addParamsLine("         cylinder <R> <H>   : 2D circle or 3D cylinder");
+    program->addParamsLine("                                         :if R,H > 0 => outside cylinder");
+    program->addParamsLine("                                          :if R,H < 0 => inside cylinder");
+    program->addParamsLine("         cone <theta>       : 3D cone (parallel to Z) ");
+    program->addParamsLine("                                          :if theta > 0 => outside cone");
+    program->addParamsLine("                                         :if theta < 0 => inside cone");
+    program->addParamsLine("         wedge <th0> <thF>  : 3D missing-wedge mask for data ");
+    program->addParamsLine("                                          :collected between tilting angles ");
+    program->addParamsLine("                                          :th0 and thF (around the Y-axis) ");
+    program->addParamsLine("         binary_file <binary_file>      : Read from file");
+    //program->addParamsLine("== DOUBLE MASK ==");
+    program->addParamsLine("         gaussian <sigma>   : 2D or 3D gaussian");
+    program->addParamsLine("                              :if sigma > 0 => outside gaussian");
+    program->addParamsLine("                              : if sigma < 0 => inside gaussian");
+    program->addParamsLine("         raised_cosine <R1> <R2>: 2D or 3D raised_cosine");
+    program->addParamsLine("                              : if R1,R2 > 0 => outside sphere");
+    program->addParamsLine("                              : if R1,R2 < 0 => inside sphere");
+    program->addParamsLine("         raised_crown <R1> <R2> <pixwidth>: 2D or 3D raised_crown");
+    program->addParamsLine("                              : if R1,R2 > 0 => outside sphere");
+    program->addParamsLine("                              : if R1,R2 < 0 => inside sphere");
+    program->addParamsLine("         blob_circular <R1> <blob_radius>: 2D or 3D blob circular");
+    program->addParamsLine("                              : if blob_radius > 0 => outside sphere");
+    program->addParamsLine("                              : if blob_radius < 0 => inside sphere");
+    program->addParamsLine("         blob_crown <R1> <R2> <blob_radius>: 2D or 3D blob_crown");
+    program->addParamsLine("                              : if blob_radius > 0 => outside sphere");
+    program->addParamsLine("                              : if blob_radius < 0 => inside sphere");
+    program->addParamsLine("         blackman           : 2D or 3D Blackman mask");
+    program->addParamsLine("                             :  always inside blackman");
+    program->addParamsLine("         sinc <w>          : 2D or 3D sincs");
+    program->addParamsLine("                             :  if w > 0 => outside sinc");
+    program->addParamsLine("                             :  if w < 0 => inside sinc");
+    program->addParamsLine("   [ -m <blob_order=2>]       : Order of blob");
+    program->addParamsLine("   [ -a <blob_alpha=10.4>]    : Alpha of blob");
 }
 
-void MaskProgram::readParams()
+void Mask::readParams(XmippProgram * program)
 {
     x0 = y0 = z0 = 0;
-    x0 = getDoubleParam("--center",0);
-    y0 = getDoubleParam("--center",1);
-    z0 = getDoubleParam("--center",2);
-    mask_type = getParam("--mask");
+    x0 = program->getDoubleParam("--center",0);
+    y0 = program->getDoubleParam("--center",1);
+    z0 = program->getDoubleParam("--center",2);
+    mask_type = program->getParam("--mask");
     /* Circular mask ........................................................*/\
     if (mask_type == "circular")
     {
         if (!(allowed_data_types & INT_MASK))
             REPORT_ERROR(ERR_ARG_INCORRECT, "MaskProgram: binary masks are not allowed");
-        R1 = getDoubleParam("--mask","circular");
+        R1 = program->getDoubleParam("--mask","circular");
         if (R1 < 0)
         {
-            MaskProgram::mode = INNER_MASK;
+            Mask::mode = INNER_MASK;
             R1 = ABS(R1);
         }
         else if (R1 > 0)
-            MaskProgram::mode = OUTSIDE_MASK;
+            Mask::mode = OUTSIDE_MASK;
         else
             REPORT_ERROR(ERR_ARG_INCORRECT, "MaskProgram: circular mask with radius 0");
         type = BINARY_CIRCULAR_MASK;
@@ -1141,10 +1141,10 @@ void MaskProgram::readParams()
     {
         if (!(allowed_data_types & INT_MASK))
             REPORT_ERROR(ERR_ARG_INCORRECT, "MaskProgram: binary masks are not allowed");
-        R1 = getDoubleParam("--mask","DWT_circular",0);
-        smin = getIntParam("--mask","DWT_circular",1);
-        smax = getIntParam("--mask","DWT_circular",2);
-        quadrant = getParam("--mask","DWT_circular",3);
+        R1 = program->getDoubleParam("--mask","DWT_circular",0);
+        smin = program->getIntParam("--mask","DWT_circular",1);
+        smax = program->getIntParam("--mask","DWT_circular",2);
+        quadrant = program->getParam("--mask","DWT_circular",3);
         type = BINARY_DWT_CIRCULAR_MASK;
     }
     /*// Rectangular mask .....................................................*/\
@@ -1152,18 +1152,18 @@ void MaskProgram::readParams()
     {
         if (!(allowed_data_types & INT_MASK))
             REPORT_ERROR(ERR_ARG_INCORRECT, "MaskProgram: binary masks are not allowed");
-        Xrect = getIntParam("--mask","rectangular",0);
-        Yrect = getIntParam("--mask","rectangular",1);
-        Zrect = getIntParam("--mask","rectangular",2);
+        Xrect = program->getIntParam("--mask","rectangular",0);
+        Yrect = program->getIntParam("--mask","rectangular",1);
+        Zrect = program->getIntParam("--mask","rectangular",2);
         if (Xrect < 0 && Yrect < 0 && Zrect <= 0)
         {
-            MaskProgram::mode = INNER_MASK;
+            Mask::mode = INNER_MASK;
             Xrect = ABS(Xrect);
             Yrect = ABS(Yrect);
             Zrect = ABS(Zrect);
         }
         else if (Xrect > 0 && Yrect > 0 && Zrect >= 0)
-            MaskProgram::mode = OUTSIDE_MASK;
+            Mask::mode = OUTSIDE_MASK;
         else
             REPORT_ERROR(ERR_ARG_INCORRECT, "MaskProgram: cannot determine mode for rectangle");
         type = BINARY_FRAME_MASK;
@@ -1173,14 +1173,14 @@ void MaskProgram::readParams()
     {
         if (!(allowed_data_types & INT_MASK))
             REPORT_ERROR(ERR_ARG_INCORRECT, "MaskProgram: binary masks are not allowed");
-        R1 = getDoubleParam("--mask","cone");
+        R1 = program->getDoubleParam("--mask","cone");
         if (R1 < 0)
         {
-            MaskProgram::mode = INNER_MASK;
+            Mask::mode = INNER_MASK;
             R1 = ABS(R1);
         }
         else
-            MaskProgram::mode = OUTSIDE_MASK;
+            Mask::mode = OUTSIDE_MASK;
         type = BINARY_CONE_MASK;
     }
     /*// Wedge mask ............................................................*/\
@@ -1188,8 +1188,8 @@ void MaskProgram::readParams()
     {\
         if (!(allowed_data_types & DOUBLE_MASK))
             REPORT_ERROR(ERR_ARG_INCORRECT, "MaskProgram: binary masks are not allowed");
-        R1 = getDoubleParam("--mask","wedge",0);
-        R2 = getDoubleParam("--mask","wedge",1);
+        R1 = program->getDoubleParam("--mask","wedge",0);
+        R2 = program->getDoubleParam("--mask","wedge",1);
         type = BINARY_WEDGE_MASK;
     }\
     /*// Crown mask ...........................................................*/\
@@ -1200,14 +1200,14 @@ void MaskProgram::readParams()
             \
             REPORT_ERROR(ERR_ARG_INCORRECT, "MaskProgram: binary masks are not allowed");
         \
-        R1 = getDoubleParam("--mask","crown",0);
+        R1 = program->getDoubleParam("--mask","crown",0);
         \
-        R2 = getDoubleParam("--mask","crown",1);
+        R2 = program->getDoubleParam("--mask","crown",1);
         \
         if (R1 < 0 && R2 < 0)
             \
         {\
-            MaskProgram::mode = INNER_MASK;
+            Mask::mode = INNER_MASK;
             \
             R1 = ABS(R1);
             \
@@ -1216,7 +1216,7 @@ void MaskProgram::readParams()
         }\
         else if (R1 > 0 && R2 > 0)
             \
-            MaskProgram::mode = OUTSIDE_MASK;
+            Mask::mode = OUTSIDE_MASK;
         \
         else
             \
@@ -1233,14 +1233,14 @@ void MaskProgram::readParams()
             \
             REPORT_ERROR(ERR_ARG_INCORRECT, "MaskProgram: binary masks are not allowed");
         \
-        R1 = getDoubleParam("--mask","cylinder",0);
+        R1 = program->getDoubleParam("--mask","cylinder",0);
         \
-        H = getDoubleParam("--mask","cylinder",1);
+        H = program->getDoubleParam("--mask","cylinder",1);
         \
         if (R1 < 0 && H < 0)
             \
         {\
-            MaskProgram::mode = INNER_MASK;
+            Mask::mode = INNER_MASK;
             \
             R1 = ABS(R1);
             \
@@ -1249,7 +1249,7 @@ void MaskProgram::readParams()
         }\
         else if (R1 > 0 && H > 0)
             \
-            MaskProgram::mode = OUTSIDE_MASK;
+            Mask::mode = OUTSIDE_MASK;
         \
         else
             \
@@ -1266,19 +1266,19 @@ void MaskProgram::readParams()
             \
             REPORT_ERROR(ERR_ARG_INCORRECT, "MaskProgram: continuous masks are not allowed");
         \
-        sigma = getDoubleParam("--mask","gaussian");
+        sigma = program->getDoubleParam("--mask","gaussian");
         \
         if (sigma < 0)
             \
         {\
-            MaskProgram::mode = INNER_MASK;
+            Mask::mode = INNER_MASK;
             \
             sigma = ABS(sigma);
             \
         }\
         else
             \
-            MaskProgram::mode = OUTSIDE_MASK;
+            Mask::mode = OUTSIDE_MASK;
         \
         type = GAUSSIAN_MASK;
         \
@@ -1291,14 +1291,14 @@ void MaskProgram::readParams()
             \
             REPORT_ERROR(ERR_ARG_INCORRECT, "MaskProgram: continuous masks are not allowed");
         \
-        R1 = getDoubleParam("--mask","raised_cosine",0);
+        R1 = program->getDoubleParam("--mask","raised_cosine",0);
         \
-        R2 = getDoubleParam("--mask","raised_cosine",1);
+        R2 = program->getDoubleParam("--mask","raised_cosine",1);
         \
         if (R1 < 0 && R2 < 0)
             \
         {\
-            MaskProgram::mode = INNER_MASK;
+            Mask::mode = INNER_MASK;
             \
             R1 = ABS(R1);
             \
@@ -1307,7 +1307,7 @@ void MaskProgram::readParams()
         }\
         else if (R1 > 0 && R2 > 0)
             \
-            MaskProgram::mode = OUTSIDE_MASK;
+            Mask::mode = OUTSIDE_MASK;
         \
         else
             \
@@ -1324,16 +1324,16 @@ void MaskProgram::readParams()
             \
             REPORT_ERROR(ERR_ARG_INCORRECT, "MaskProgram: continuous masks are not allowed");
         \
-        R1 = getDoubleParam("--mask","raised_crown",0);
+        R1 = program->getDoubleParam("--mask","raised_crown",0);
         \
-        R2 = getDoubleParam("--mask","raised_crown",1);
+        R2 = program->getDoubleParam("--mask","raised_crown",1);
         \
-        pix_width = getDoubleParam("--mask","raised_crown",2);
+        pix_width = program->getDoubleParam("--mask","raised_crown",2);
         \
         if (R1 < 0 && R2 < 0)
             \
         {\
-            MaskProgram::mode = INNER_MASK;
+            Mask::mode = INNER_MASK;
             \
             R1 = ABS(R1);
             \
@@ -1342,7 +1342,7 @@ void MaskProgram::readParams()
         }\
         else if (R1 > 0 && R2 > 0)
             \
-            MaskProgram::mode = OUTSIDE_MASK;
+            Mask::mode = OUTSIDE_MASK;
         \
         else
             \
@@ -1359,19 +1359,19 @@ void MaskProgram::readParams()
             \
             REPORT_ERROR(ERR_ARG_INCORRECT, "MaskProgram: continuous masks are not allowed");
         \
-        R1 = getDoubleParam("--mask","blob_circular",0);
+        R1 = program->getDoubleParam("--mask","blob_circular",0);
         \
-        double aux = getDoubleParam("--mask","blob_circular",1);
+        double aux = program->getDoubleParam("--mask","blob_circular",1);
         \
         blob_radius= ABS(aux);
         \
         if (aux < 0)
             \
-            MaskProgram::mode = INNER_MASK;
+            Mask::mode = INNER_MASK;
         \
         else if (aux > 0)
             \
-            MaskProgram::mode = OUTSIDE_MASK;
+            Mask::mode = OUTSIDE_MASK;
         \
         else
             \
@@ -1379,9 +1379,9 @@ void MaskProgram::readParams()
         \
         type = BLOB_CIRCULAR_MASK;
         \
-        blob_order= getDoubleParam("-m");
+        blob_order= program->getDoubleParam("-m");
         \
-        blob_alpha= getDoubleParam("-a");
+        blob_alpha= program->getDoubleParam("-a");
         \
         /*// Raised crown mask ....................................................*/\
     }\
@@ -1392,21 +1392,21 @@ void MaskProgram::readParams()
             \
             REPORT_ERROR(ERR_ARG_INCORRECT, "MaskProgram: continuous masks are not allowed");
         \
-        R1 = getDoubleParam("--mask","blob_crown",0);
+        R1 = program->getDoubleParam("--mask","blob_crown",0);
         \
-        R2 = getDoubleParam("--mask","blob_crown",1);
+        R2 = program->getDoubleParam("--mask","blob_crown",1);
         \
-        double aux = getDoubleParam("--mask","blob_crown",2);
+        double aux = program->getDoubleParam("--mask","blob_crown",2);
         \
         blob_radius= ABS(aux);
         \
         if (aux < 0)
             \
-            MaskProgram::mode = INNER_MASK;
+            Mask::mode = INNER_MASK;
         \
         else if (aux > 0)
             \
-            MaskProgram::mode = OUTSIDE_MASK;
+            Mask::mode = OUTSIDE_MASK;
         \
         else
             \
@@ -1414,16 +1414,16 @@ void MaskProgram::readParams()
         \
         type = BLOB_CROWN_MASK;
         \
-        blob_order= getDoubleParam("-m");
+        blob_order= program->getDoubleParam("-m");
         \
-        blob_alpha= getDoubleParam("-a");
+        blob_alpha= program->getDoubleParam("-a");
         \
     }\
     /*// Blackman mask ........................................................*/\
     else if (mask_type == "blackman")
         \
     {\
-        MaskProgram::mode = INNER_MASK;
+        Mask::mode = INNER_MASK;
         \
         type = BLACKMAN_MASK;
         \
@@ -1436,19 +1436,19 @@ void MaskProgram::readParams()
             \
             REPORT_ERROR(ERR_ARG_INCORRECT, "MaskProgram: binary masks are not allowed");
         \
-        omega = getDoubleParam("--mask","sinc");
+        omega = program->getDoubleParam("--mask","sinc");
         \
         if (omega < 0)
             \
         {\
-            MaskProgram::mode = INNER_MASK;
+            Mask::mode = INNER_MASK;
             \
             omega = ABS(omega);
             \
         }\
         else
             \
-            MaskProgram::mode = OUTSIDE_MASK;
+            Mask::mode = OUTSIDE_MASK;
         \
         type = SINC_MASK;
         \
@@ -1464,7 +1464,7 @@ void MaskProgram::readParams()
 
 }
 // Generate mask --------------------------------------------------------
-void MaskProgram::generate_mask(bool apply_geo)
+void Mask::generate_mask(bool apply_geo)
 {
     Image<double> img;
     Matrix2D<double> AA(4, 4);
@@ -1568,7 +1568,10 @@ void apply_geo_binary_2D_mask(MultidimArray<int> &mask,
     tmp.resize(mask);
     typeCast(mask, tmp);
     double outside = DIRECT_A2D_ELEM(tmp, 0, 0);
-    MultidimArray<double> tmp2 = tmp;
+    MultidimArray<double> tmp2;
+    std::cerr << tmp2.data << "  tmp= " << tmp.data << std::endl;
+    tmp2 = tmp;
+    std::cerr << tmp2.data << "  tmp= " << tmp.data << std::endl;
     // Instead of IS_INV for images use IS_NOT_INV for masks!
     applyGeometry(1, tmp, tmp2, A, IS_NOT_INV, DONT_WRAP, outside);
     // The type cast gives strange results here, using round instead
@@ -1576,6 +1579,7 @@ void apply_geo_binary_2D_mask(MultidimArray<int> &mask,
     FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY2D(mask)
     {
         dAij(mask,i,j)=ROUND(dAij(tmp,i,j));
+//        std::cout << "i, j = " << i << "," << j <<std::endl;
     }
 }
 

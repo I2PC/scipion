@@ -224,7 +224,7 @@ public:
     int                        __numThreads;
     bool                       __learn_particles_done;
     bool                       __autoselection_done;
-    MaskProgram                __mask;
+    Mask                __mask;
     Classification_model       __training_model;
     Classification_model       __training_loaded_model;
     Classification_model       __selection_model;

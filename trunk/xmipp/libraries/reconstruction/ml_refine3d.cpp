@@ -1154,7 +1154,7 @@ bool ProgRefine3D::checkConvergence(int iter)
 
     Image<double>        vol, old_vol, diff_vol;
     FileName               fn_tmp;
-    MaskProgram            mask_prm;
+    Mask            mask_prm;
     MultidimArray<int>    mask3D;
     double                 signal, change;
     int                    dim;

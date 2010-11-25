@@ -50,7 +50,7 @@ public:
     double sigma;
 
     /// Mask
-	MaskProgram mask_prm;
+	Mask mask_prm;
 	
 	/** Empty constructor */
 	Prog_Range_adjust_Parameters(): Prog_parameters(), mask_prm(INT_MASK)

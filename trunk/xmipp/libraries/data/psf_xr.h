@@ -29,12 +29,11 @@
 #include "fftw.h"
 #include "multidim_array.h"
 #include "image.h"
-#include "threads.h"
 #include <complex>
 #include "projection.h"
 
 
-/**@defgroup PSFXRSupport X-Ray Microscope PSF support classes
+/**@defgroup PSFXRSupport X-Ray Microscope PSF class
    @ingroup DataLibrary */
 //@{
 
@@ -95,6 +94,8 @@ class XRayPSF
 public:
     // Current OTF
     MultidimArray< std::complex<double> > OTF;
+    // 3D PSF
+    Image<double> *PSF;
 
     /* RX Microscope configuration */
     /// Lens Aperture Radius
@@ -105,17 +106,23 @@ public:
     double Z;
     /// Image plane (CCD position)
     double Zi;
-    /// Depth of focus. Only for information pourposes
+    /// Depth of focus. Only for information purposes
     double DoF;
 
     /* Digital Parameters */
-    /// Size of the input image (object plane size)
-    double Nox, Noy;
+    /// X size of the input image (object plane size)
+    double Nox;
+    /// Y size of the input image (object plane size)
+    double Noy;
+    /// Z size of the input image (object plane size)
+    double Noz;
     /* Maximum pixel size in image plane (Minimum resolution condition).
-     The same for both axis x-y, due to the simmetry of the lens aperture */
+     The same for both axis x-y, due to the symmetry of the lens aperture */
     double dxiMax;
-    /// Pixel size in lens plane
-    double dxl, dyl;
+    /// Pixel size in X-dim in lens plane
+    double dxl;
+    /// Pixel size in Y-dim in lens plane
+    double dyl;
     /// Z limits around Zo in the psf generation due to Nyquist Limit
     double deltaZMaxX, deltaZMaxY, deltaZMinX, deltaZMinY;
 

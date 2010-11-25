@@ -106,7 +106,7 @@ void ProgAngularContinuousAssign::produce_side_info()
     V().setXmippOrigin();
 
     // Prepare the masks in real space
-    MaskProgram mask_Real3D;
+    Mask mask_Real3D;
     mask_Real3D.type = mask_Real.type = GAUSSIAN_MASK;
     mask_Real3D.mode = mask_Real.mode = INNER_MASK;
 

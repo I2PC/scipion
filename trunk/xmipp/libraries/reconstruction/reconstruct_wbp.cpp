@@ -417,7 +417,7 @@ void Prog_WBP_prm::apply_2Dfilter_arbitrary_geometry(MetaData &SF, MultidimArray
     double            rot, tilt, psi, newrot, newtilt, newpsi, xoff, yoff, flip, weight;
     Projection        proj;
     Matrix2D<double>  L(4, 4), R(4, 4), A;
-    MaskProgram       mask_prm;
+    Mask       mask_prm;
     FileName          fn_img;
 
     vol.resize(dim, dim, dim);

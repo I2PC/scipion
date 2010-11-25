@@ -192,7 +192,7 @@ void Prog_Filter_Projections_Parameters::produce_side_info()
         I.read(fnAux);
         I().setXmippOrigin();
 
-        MaskProgram aux;
+        Mask aux;
         aux.type = BINARY_CIRCULAR_MASK;
         aux.mode = INNER_MASK;
         aux.R1 = r1;
@@ -203,7 +203,7 @@ void Prog_Filter_Projections_Parameters::produce_side_info()
         dhardMask.setXmippOrigin();
         ihardMask.setXmippOrigin();
 
-        MaskProgram aux2;
+        Mask aux2;
         aux2.type = RAISED_COSINE_MASK;
         aux2.mode = INNER_MASK;
         aux2.R1 = r1;

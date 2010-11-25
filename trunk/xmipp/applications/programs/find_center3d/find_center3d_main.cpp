@@ -34,7 +34,7 @@
 void Usage();
 double evaluateSymmetry(double *p, void *prm);
 Image<double> volume, volume_sym, volume_aux;
-MaskProgram mask_prm(INT_MASK);
+Mask mask_prm(INT_MASK);
 int rot_sym;
 bool useSplines;
 

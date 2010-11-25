@@ -34,11 +34,11 @@
 #include <data/program.h>
 
 
-class ProgMask: public MaskProgram
+class ProgMask: public XmippProgram
 {
 public:
 
-    MaskProgram     mask_prm;
+    Mask     mask;
     FileName        oext, fn_in, fn_out, fn_mask;
     int             save_mask;
     int             create_mask;
@@ -88,7 +88,7 @@ public:
         addParamsLine("   [--count_above <th>]                : Voxels within mask >= th");
         addParamsLine("   [--count_below <th>]                : Voxels within mask <= th");
         addParamsLine("   [--substitute <val=\"0\">]  : Value outside the mask: userProvidedValue|min|max|avg");
-        MaskProgram::defineParams();
+        Mask::defineParams(this);
     }
     void readParams()
     {
@@ -108,11 +108,11 @@ public:
         create_mask  = checkParam("--create_mask");
         if (create_mask)
             fn_mask  = getParam("--create_mask");
-        mask_prm.read(argc, argv);
+        mask.read(argc, argv);
         str_subs_val = getParam("--substitute");
         count = count_below || count_above;
 
-        MaskProgram::readParams();
+        mask.readParams(this);
     }
 
     void readParamsMask()
@@ -127,7 +127,6 @@ public:
 
         // Read list of images --------------------------------------------------
         //This should be converted to the new xmipp 3.0 standard
-        std::cerr << "fn_in " << fn_in << std::endl;
         if (!fn_in.isMetaData())
         {
             SF_in.addObject();
@@ -181,13 +180,14 @@ public:
                 apply_geo=false;
             if (apply_geo)
             {
-                if (mask_prm.x0 + mask_prm.y0 != 0.)
+                if (mask.x0 + mask.y0 != 0.)
                     REPORT_ERROR(ERR_ARG_INCORRECT, "Mask: -center option cannot be combined with apply_geo; use -dont_apply_geo");
                 else
                     // Read geometric transformation from the image and store for mask
-                    mask_prm.mask_geo = image.getTransformationMatrix();
+                    mask.mask_geo = image.getTransformationMatrix();
             }
-            mask_prm.generate_mask(image());
+            mask.generate_mask(image());
+
 
             // Apply mask
             if (!create_mask)
@@ -200,7 +200,7 @@ public:
                     subs_val=image().computeAvg();
                 else
                     subs_val=textToFloat(str_subs_val);
-                mask_prm.apply_mask(image(), image(), subs_val, apply_geo);
+                mask.apply_mask(image(), image(), subs_val, apply_geo);
                 if (!count)
                     if (fn_out == "")
                         image.write(fn_in);
@@ -208,12 +208,12 @@ public:
                         image.write(fn_out);
             }
             else
-                mask_prm.write_mask(fn_mask);
+                mask.write_mask(fn_mask);
 
             // Count
             if (count)
             {
-                if (mask_prm.datatype() == INT_MASK)
+                if (mask.datatype() == INT_MASK)
                 {
                     int count;
                     std::string elem_type="pixels";
@@ -223,14 +223,14 @@ public:
                     {
                         std::cout << stringToString(fn_in,max_length)
                         << " number of " << elem_type << " above " << th_above;
-                        count=count_with_mask_above(mask_prm.get_binary_mask(),
+                        count=count_with_mask_above(mask.get_binary_mask(),
                                                     image(),th_above);
                     }
                     else if (count_below && !count_above)
                     {
                         std::cout << stringToString(fn_in,max_length)
                         << " number of " << elem_type << " below " << th_below;
-                        count=count_with_mask_below(mask_prm.get_binary_mask(),
+                        count=count_with_mask_below(mask.get_binary_mask(),
                                                     image(),th_below);
                     }
                     else if (count_below && count_above)
@@ -238,7 +238,7 @@ public:
                         std::cout << stringToString(fn_in,max_length)
                         << " number of " << elem_type << " above " << th_above
                         << " and below " << th_below << " = ";
-                        count=count_with_mask_between(mask_prm.get_binary_mask(),
+                        count=count_with_mask_between(mask.get_binary_mask(),
                                                       image(),th_above,th_below);
                     }
                     std::cout << " = " << count << std::endl;
@@ -260,7 +260,7 @@ public:
 
         // Save masks -----------------------------------------------------------
         if (save_mask)
-            mask_prm.write_mask("mask.spi");
+            mask.write_mask("mask.spi");
 
         exit(0);
     }

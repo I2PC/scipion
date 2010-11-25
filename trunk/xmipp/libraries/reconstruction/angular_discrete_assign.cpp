@@ -145,7 +145,7 @@ void ProgAngularDiscreteAssign::produce_side_info()
     SBNo = (smax - smin + 1) * 3 + 1;
     SBsize.resize(SBNo);
 
-    MaskProgram Mask(INT_MASK);
+    Mask Mask(INT_MASK);
     Mask.type = BINARY_DWT_CIRCULAR_MASK;
     Mask.R1 = CEIL((double)refXdim / 2.0);
     Mask.resize(refYdim, refXdim);

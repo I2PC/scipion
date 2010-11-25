@@ -37,7 +37,7 @@ int main(int argc, char **argv)
     Image<double>   image;
     MetaData        SF;
     FileName        fn_in, fn_out, fn_sel;
-    MaskProgram     mask_prm(INT_MASK);
+    Mask     mask_prm(INT_MASK);
     bool            automatic_range, do_normalize, is_first = true;
     double          m, M; // range for histogram
     int             StepsNo;

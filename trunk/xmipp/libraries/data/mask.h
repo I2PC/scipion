@@ -363,7 +363,7 @@ void mask3D_26neig(MultidimArray< int >& mask, int value1 = 1, int value2 = 1,
  * @endcode
  */
 
-class MaskProgram: public XmippProgram
+class Mask
 {
 public:
 
@@ -386,8 +386,8 @@ public:
 #define BLOB_CIRCULAR_MASK       16
 #define BLOB_CROWN_MASK          17
 
-    virtual void defineParams();
-    virtual void readParams();
+    static void defineParams(XmippProgram * program);
+    void readParams(XmippProgram * program);
 
 
     /** Mask Type
@@ -511,7 +511,7 @@ public:
     /** Constructors
      * Allowed data types are ALL_KINDS, INT_MASK and DOUBLE_MASK used with | .
      */
-    MaskProgram(int _allowed_data_type = ALL_KINDS);
+    Mask(int _allowed_data_type = ALL_KINDS);
 
     /** Clear
      */

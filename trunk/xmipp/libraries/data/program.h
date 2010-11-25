@@ -73,6 +73,7 @@ protected:
     int argc;
     char ** argv;
 
+public:
     /** @name Functions to be implemented by subclasses.
      * @{
      */
@@ -117,7 +118,6 @@ protected:
     /** Return true if the program is defined */
     bool existsParam(const char * param);
 
-public:
     /** Add a params definition line*/
     void addParamsLine(const char * line);
     /// Verbosity level
