@@ -27,7 +27,7 @@
 
 ImageCollection::ImageCollection(int mode)
 {
-  this->mode = mode;
+    this->mode = mode;
 }
 
 ImageCollection::ImageCollection(const MetaData &md, int mode)
@@ -38,7 +38,7 @@ ImageCollection::ImageCollection(const MetaData &md, int mode)
 
 ImageCollection::ImageCollection(const FileName &fnImage, int mode)
 {
-    Image<double> image;
+    Image<char> image;
     image.read(fnImage, false);
     if (image().ndim == 1)
     {
@@ -62,19 +62,20 @@ ImageCollection::ImageCollection(const FileName &fnImage, int mode)
 
 ImageCollection::~ImageCollection()
 {
-  std::map<FileName, ImageFHandler*>::iterator it;
-  Image<double> image;
-  for (it = openedStacks.begin(); it != openedStacks.end(); ++it)
-    image.closeFile(it->second);
+    std::map<FileName, ImageFHandler*>::iterator it;
+    Image<char> image;
+    for (it = openedStacks.begin(); it != openedStacks.end(); ++it)
+        image.closeFile(it->second);
 }
 
-ImageFHandler* ImageCollection::getStackHandle(Image<double> &image, const FileName & fnStack)
+ImageFHandler* ImageCollection::getStackHandle(const FileName & fnStack)
 {
-  std::map<FileName, ImageFHandler*>::iterator it;
-  it = openedStacks.find(fnStack);
-  if (it != openedStacks.end())
-    return it->second;
-  return (openedStacks[fnStack] = image.openFile(fnStack, mode));
+    std::map<FileName, ImageFHandler*>::iterator it;
+    it = openedStacks.find(fnStack);
+    if (it != openedStacks.end())
+        return it->second;
+    Image<char> image;
+    return (openedStacks[fnStack] = image.openFile(fnStack, mode));
 }
 
 /** This is a wrap of Image::read */
@@ -86,7 +87,7 @@ int ImageCollection::readImage(Image<double> &image, const FileName &name, bool 
         FileName stackName;
         int imgno;
         name.decompose(imgno, stackName);
-        ImageFHandler * fIH = getStackHandle(image, stackName);
+        ImageFHandler * fIH = getStackHandle(stackName);
         image._read(stackName, fIH, readdata, imgno, apply_geo, only_apply_shifts, row, mapData);
     }
     else
@@ -102,8 +103,8 @@ void ImageCollection::writeImage(Image<double> &image, const FileName &name, int
         int imgno;
         name.decompose(imgno, stackName);
         if (select_img == -1)
-          select_img = imgno;
-        ImageFHandler * fIH = getStackHandle(image, stackName);
+            select_img = imgno;
+        ImageFHandler * fIH = getStackHandle(stackName);
         image._write(stackName, fIH, select_img, true, mode);
     }
     else
