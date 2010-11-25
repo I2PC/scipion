@@ -48,6 +48,7 @@ private:
     MetaData SF;
     MDRow    row;
     ImageConv convMode;
+    bool adjust;
     int k;
 
 
@@ -75,11 +76,11 @@ protected:
         addParamsLine("OR  --oroot <root=\"\">     : Rootname of output individual images (Optional + \":ext\").");
         addParamsLine("  [--oext <extension=spi>] : Output file format extension.");
         addParamsLine("           where <extension>");
-        addParamsLine("         img : Imagic (Data types: uint8, int16, float and cfloat. Default = auto).");
-        addParamsLine("         inf raw : RAW file with header INF file (All data types. See -b option).");
-        addParamsLine("         mrc : CCP4");
+        addParamsLine("         img : Imagic (Data types: uint8, int16, float* and cfloat).");
+        addParamsLine("         inf raw : RAW file with header INF file (All data types. See -d option).");
+        addParamsLine("         mrc : CCP4 (Data types: int8, float* and cfloat).");
         addParamsLine("         spi xmp : Spider (Data types: float* and cfloat).");
-        addParamsLine("         tif : TIFF. (Data types: uint8*, uint16 and float).");
+        addParamsLine("         tif : TIFF. (Data types: uint8*, uint16, uint32 and float).");
 
 
 
@@ -108,6 +109,8 @@ protected:
         addParamsLine("                 cdouble");
         addParamsLine("                 bool");
         addParamsLine("  alias -d;");
+        addParamsLine("  [--rangeAdjust] : Adjust the histogram to fill the gray level range.");
+        addParamsLine("  alias -r;");
     }
 
     void readParams()
@@ -117,7 +120,7 @@ protected:
         fn_root = getParam("--oroot");
         fn_oext = getParam("--oext");
 
-        if (checkParam("--oroot") || !checkParam("--oext"))
+        if (checkParam("--oroot") && !checkParam("--oext"))
             fn_oext = fn_root.getFileFormat();
         fn_root = fn_root.removeFileFormat();
 
@@ -131,12 +134,17 @@ protected:
                 type = "stk";
         }
 
-        depth = getParam("--depth");
+        if (checkParam("--depth"))
+        {
+            depth = getParam("--depth");
 
-        if (fn_out != "")
-            fn_out += "%" + depth;
-        else
-            fn_oext += "%" + depth;
+            if (fn_out != "")
+                fn_out += "%" + depth;
+            else
+                fn_oext += "%" + depth;
+        }
+
+        adjust = checkParam("--rangeAdjust");
 
     }
 
@@ -153,7 +161,7 @@ protected:
         case IM2IM:
             {
                 ImIn.read(fnIn,readdata, select_imgIn,apply_geo,only_apply_shifts,row,true);
-                ImIn.write(fnOut,select_imgOut,isStack,mode);
+                ImIn.write(fnOut,select_imgOut,isStack,mode,adjust);
                 break;
             }
         case MD2VOL:
@@ -167,7 +175,7 @@ protected:
                 ImIn.read(fnIn,readdata, select_imgIn,apply_geo,only_apply_shifts,row,true);
                 ZSIZE(ImIn())*=NSIZE(ImIn());
                 NSIZE(ImIn()) = 1;
-                ImIn.write(fnOut);
+                ImIn.write(fnOut,-1,false,WRITE_OVERWRITE,adjust);
                 break;
             }
         case VOL2STK:
@@ -177,7 +185,7 @@ protected:
                 ZSIZE(ImIn())=1;
                 int Ndim=NSIZE(ImIn());
                 ImIn.MD.resize(Ndim);
-                ImIn.write(fnOut,-1,true);
+                ImIn.write(fnOut,-1,true,WRITE_OVERWRITE,adjust);
                 break;
             }
         case VOL2MD:
@@ -193,7 +201,7 @@ protected:
                     else
                         fnOut.compose(fn_in.withoutExtension(),k,fn_oext);
 
-                    out.write(fnOut);
+                    out.write(fnOut,-1,false,WRITE_OVERWRITE,adjust);
                     SFout.addObject();
                     SFout.setValue(MDL_IMAGE,fnOut);
                     SFout.setValue(MDL_ENABLED,1);
