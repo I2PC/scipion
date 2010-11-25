@@ -1138,14 +1138,14 @@ TkPrinter::TkPrinter()
     dir.append("/applications/scripts/program_gui/program_gui.py");
     //      std::cout << "Running: " << dir << std::endl;
 
-//    int pfd[2], fdOut, nbytes;
-//    if (pipe(pfd) == -1)
-//    {
-//        perror("pipe");
-//        exit(EXIT_FAILURE);
-//    }
-//    dup2(1, fdOut);//save std::cout
-//    dup2(pfd[1], 1);
+    //    int pfd[2], fdOut, nbytes;
+    //    if (pipe(pfd) == -1)
+    //    {
+    //        perror("pipe");
+    //        exit(EXIT_FAILURE);
+    //    }
+    //    dup2(1, fdOut);//save std::cout
+    //    dup2(pfd[1], 1);
     output = popen(dir.c_str(), "w");
 
 }
@@ -1247,6 +1247,8 @@ void TkPrinter::printArgument(const ArgumentDef & argument, int v)
         {
             fprintf(output, "subparam = param.addSubParam(\"%s\");\n",
                     argument.subParams[j]->name.c_str());
+            for (size_t i = 0; i < argument.subParams[j]->comments.size(); ++i)
+                fprintf(output, "subparam.addCommentLine('''%s''');\n", argument.subParams[j]->comments.comments[i].c_str());
             paramStr = "subparam";
             for (size_t k = 0; k < argument.subParams[j]->arguments.size(); ++k)
             {

@@ -80,8 +80,6 @@ class OptionWidget(Frame):
         filename = tkFileDialog.askopenfilename();
         if len(filename) > 0:
             cwd = os.getcwd() + os.sep;
-            print "cwd", cwd
-            print "filename: ", filename;
             if filename.startswith(cwd):
                 filename = filename.replace(cwd, "");
             self.entryVar.set(filename);
@@ -121,7 +119,10 @@ class OptionWidget(Frame):
         
     def getValue(self):
         if len(self.subparams) == 0:
-            return self.entryVar.get().strip();
+            if not self.isDefault():
+                return self.entryVar.get().strip();
+            else:
+                return "";
         else:
             return self.subparams[self.lastIndex].getParamString();
     
@@ -132,6 +133,12 @@ class OptionWidget(Frame):
             if self.default != self.subparams[self.lastIndex].paramName:
                 return False;
             return self.subparams[self.lastIndex].isDefault();
+        
+    def getHelp(self):
+        if len(self.subparams) == 0:
+            return "";
+        return self.subparams[self.lastIndex].getHelp();
+        
              
 class ParamWidget(Frame):
     def __init__(self, parent, paramName):
@@ -196,7 +203,9 @@ class ParamWidget(Frame):
         self.comments.append(comment);
         
     def buttonHelp_click(self):
-        msg = "\n".join(self.comments);
+        msg = self.getHelp() + "\n";
+        for option in self.options:
+            msg = msg + "\n" + option.getHelp();
         #print msg;
         tkMessageBox.showinfo(self.paramName + " help", msg);
         
@@ -216,6 +225,9 @@ class ParamWidget(Frame):
             for option in self.options:
                 option.setState(DISABLED);
                 
+    def getHelp(self):
+        return "\n".join(self.comments);
+    
     def getParamString(self):
         if len(self.options) == 0:
             if self.isSubparam or not self.parent.single or self.checkVar.get() == 1:
@@ -419,7 +431,7 @@ class ProgramGUI(Frame):
     def createButtons(self):
         # Create buttons frame and add butttons
         self.buttons_frame = Frame(self);
-        self.buttons_frame.pack(anchor="e", pady="3m");
+        self.buttons_frame.pack(anchor="e", pady="3m", fill=X);
         # Cancel button
         Button(self.buttons_frame,
                text="Cancel",
@@ -432,14 +444,19 @@ class ProgramGUI(Frame):
                width=6,
                command=self.buttonRun_click
                ).pack(side=RIGHT, padx="1m", anchor="e");
+               
+        Button(self.buttons_frame,
+               text="Show command",
+               width=10,
+               command=self.buttonShowCmd_click
+               ).pack(side=RIGHT, padx="1m", anchor="e");
+
 
     def addSection(self, sectionName):
         section = SectionWidget(self.params_frame, sectionName);
         self.sections.append(section);
         section.pack(padx="2m", side=TOP, fill=X);
-        #self.centerWindows();
         return section;
-        #Label(self.params_frame, text=sectionName + "Test").pack();
         
     def check(self):
         errors = "";
@@ -463,7 +480,13 @@ class ProgramGUI(Frame):
             self.parent.destroy();
             print cmdStr;
             os.system(cmdStr);
-            
+    def buttonShowCmd_click(self):
+        if self.check():
+            cmdStr = self.progName;
+            for section in self.sections:
+                for group in section.groups:
+                    cmdStr = cmdStr + group.getParamString();
+            tkMessageBox.showinfo("Command to be generated:", cmdStr);            
         
     def centerWindows(self):
         root = self.parent
