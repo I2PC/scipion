@@ -73,7 +73,7 @@ void ProgAngularProjectLibrary::defineParams()
     addUsageLine("Create a gallery of projections from a volume");
     addUsageLine("Example of use: Sample at 2 degrees and use c6 symmetry");
     addUsageLine("   xmipp_angular_project_library -i in.vol -o out -sym c6 -sampling_rate 2");
-    addParamsLine("   -i <input_volume>           : Input Volume");
+    addParamsLine("   -i <input_volume_file>           : Input Volume");
     addParamsLine("   -o <root_file_name>         : Root for output files");
     addParamsLine("  [--sym <symmetry=c1>]         : Symmetry to define sampling ");
     addParamsLine("                               : One of the 17 possible symmetries in");
