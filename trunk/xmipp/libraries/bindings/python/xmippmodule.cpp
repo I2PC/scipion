@@ -110,7 +110,7 @@ FileName_compose(PyObject *obj, PyObject *args, PyObject *kwargs)
         PyObject *input = NULL, *pyStr = NULL;
         char *str = "", *ext="";
         int number = -1;
-        Py_ssize_t n = PyTuple_Size(args);
+        size_t n = PyTuple_Size(args);
         if (n == 3 && PyArg_ParseTuple(args, "Ois", &input, &number, &ext))
         {
             pyStr = PyObject_Str(input);
@@ -983,11 +983,11 @@ createMDObject(int label, PyObject *pyValue)
     }
     if (PyList_Check(pyValue))
     {
-      Py_ssize_t size = PyList_Size(pyValue);
+      size_t size = PyList_Size(pyValue);
       PyObject * item = NULL;
       double dValue = 0.;
       std::vector<double> vValue((size_t)size);
-      for (Py_ssize_t i = 0; i < size; ++i)
+      for (size_t i = 0; i < size; ++i)
       {
         item = PyList_GET_ITEM(pyValue, i);
         if (!PyFloat_Check(pyValue))
