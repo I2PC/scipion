@@ -129,15 +129,8 @@ protected:
 /* MAIN -------------------------------------------------------------------- */
 int main(int argc, char *argv[])
 {
-    try
-    {
-        ProgAddNoise program;
-        program.read(argc, argv);
-        program.run();
-    }
-    catch (XmippError xe)
-    {
-        std::cerr << xe;
-    }
+    ProgAddNoise program;
+    program.read(argc, argv);
+    program.tryRun();
 }
 

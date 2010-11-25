@@ -38,7 +38,7 @@ typedef enum
     VOL2MD
 } ImageConv;
 
-class ConvImgProg: public XmippProgram
+class ProgConvImg: public XmippProgram
 {
 private:
     FileName fn_root, fn_oext, fn_in, fn_out;
@@ -57,32 +57,12 @@ protected:
     void defineParams()
     {
         addUsageLine("Convert among stacks, volumes and images, and change the file format.");
-        addParamsLine(" -i <metadata>   : Input file: metadata, stack, volume or image.");
-        addParamsLine("         :+ Supported read formats are:");
-        addParamsLine("         :+ dm3 : Digital Micrograph 3.");
-        addParamsLine("         :+ img : Imagic.");
-        addParamsLine("         :+ inf,raw : RAW file with header INF file.");
-        addParamsLine("         :+ mrc : CCP4.");
-        addParamsLine("         :+ spe : Princeton Instruments CCD camera.");
-        addParamsLine("         :+ spi, xmp : Spider.");
-        addParamsLine("         :+ tif : TIFF.");
-        addParamsLine("         :+ ser : tecnai imaging and analysis.");
-        addParamsLine("         :+ raw#xDim,yDim,[zDim],offset,datatype,[r] : RAW image file without header file.");
-        addParamsLine("         :+ where datatype can be: uint8,int8,uint16,int16,uint32,int32,long,float,double,cint16,cint32,cfloat,cdouble,bool");
-        addParamsLine(" alias --input;");
-
+        addInputLine();
         addParamsLine("  -o <output_file=\"\">  : Output file: metadata, stack, volume or image.");
         addParamsLine("   alias --output;");
         addParamsLine("OR  --oroot <root=\"\">     : Rootname of output individual images (Optional + \":ext\").");
         addParamsLine("  [--oext <extension=spi>] : Output file format extension.");
-        addParamsLine("           where <extension>");
-        addParamsLine("         img : Imagic (Data types: uint8, int16, float* and cfloat).");
-        addParamsLine("         inf raw : RAW file with header INF file (All data types. See -d option).");
-        addParamsLine("         mrc : CCP4 (Data types: int8, float* and cfloat).");
-        addParamsLine("         spi xmp : Spider (Data types: float* and cfloat).");
-        addParamsLine("         tif : TIFF. (Data types: uint8*, uint16, uint32 and float).");
-
-
+        addExtensionWhere("extension");
 
         addParamsLine("  [--type <output_type=img>] : Output file type.");
         addParamsLine("          where <output_type>");
@@ -435,7 +415,7 @@ int main(int argc, char *argv[])
 {
     try
     {
-        ConvImgProg program;
+        ProgConvImg program;
         program.read(argc, argv);
         program.run();
     }

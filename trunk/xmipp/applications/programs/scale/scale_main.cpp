@@ -28,183 +28,108 @@
 #include <data/args.h>
 #include <data/metadata.h>
 #include <data/fftw.h>
+#include <data/program.h>
 
-void Usage();
-
-int main(int argc, char **argv)
+class ProgScale: public XmippMetadataProgram
 {
-    FileName        fn_input, fn_output, fn_oext, fn_in, fn_out;
-    MetaData        SF, SF_out;
-    Image<double>   image;
+protected:
     int             zdim, ydim, xdim;
-    double          factor=-1;
+    double          factor;
     bool            linear;
     bool            fourier;
     int             nThreads;
-    Matrix2D< double > A(3, 3), B(4, 4);
-    A.initIdentity();
-    B.initIdentity();
+    Matrix2D< double > A, B;//(3, 3), B(4, 4);
 
-    // Read arguments --------------------------------------------------------
-    try
+    void defineParams()
     {
-        fn_input = getParameter(argc, argv, "-i", NULL);
-        fn_out   = getParameter(argc, argv, "-o", "");
-        fn_oext  = getParameter(argc, argv, "-oext", "");
-        if (fn_input.isMetaData())
-            SF.read(fn_input);
-        if (checkParameter(argc,argv,"-factor"))
+        each_image_produces_an_output = true;
+        XmippMetadataProgram::defineParams();
+        addUsageLine("Scale images/volumes to a given size");
+
+        addParamsLine(" -dim <x> <y=x> <z=x>      :New x,y and z dimensions");
+        addParamsLine(" or -factor <scale_factor> :Scale by a factor");
+        addParamsLine(" [-interp <interpolation_type=spline>] : Interpolation type to be used. ");
+        addParamsLine("      where <interpolation_type>");
+        addParamsLine("        spline          : Use spline interpolation");
+        addParamsLine("        linear          : Use bilinear/trilinear interpolation");
+        addParamsLine("        fourier <thr=1> : Use padding/windowing in Fourier Space (only for 2D)");
+    }
+
+    void readParams()
+    {
+        XmippMetadataProgram::readParams();
+        if (checkParam("-factor"))
         {
-            factor=textToFloat(getParameter(argc, argv, "-factor"));
-            if (factor<=0)
+            factor = getDoubleParam("-factor");
+            //Some extra validations for factor
+            if (factor <= 0)
                 REPORT_ERROR(ERR_VALUE_INCORRECT,"Factor must be a positive number");
         }
         else
         {
-            zdim = textToInteger(getParameter(argc, argv, "-zdim", "0"));
-            ydim = textToInteger(getParameter(argc, argv, "-ydim", "0"));
-            xdim = textToInteger(getParameter(argc, argv, "-xdim"));
+            xdim = getDoubleParam("-dim", 0);
+            ydim = (String(getParam("-dim", 1)) == "x") ? xdim : getDoubleParam("-dim", 1);
+            zdim = (String(getParam("-dim", 2)) == "x") ? xdim : getDoubleParam("-dim", 2);
         }
-        linear = checkParameter(argc, argv, "-linear");
-        fourier = checkParameter(argc, argv, "-fourier");
-
-        if (ydim == 0)
-            ydim = xdim;
-        if (zdim == 0)
-            zdim = xdim;
-        nThreads=textToInteger(getParameter(argc, argv, "-thr", "1"));
-    }
-    catch (XmippError XE)
-    {
-        std::cout << XE;
-        Usage();
-        exit(1);
+        linear = (getParam("-interp") == "linear");
+        fourier = (getParam("-interp") == "fourier");
+        if (fourier)
+            nThreads = getIntParam("-interp", "fourier");
     }
 
-    try
+    void processImage()
     {
-        // Scale a single image -------------------------------------------------
-        if (!fn_input.isMetaData())
+        img.read(fnImg);
+        img().setXmippOrigin();
+
+        if (img().getDim()==2)
         {
-            image.read(fn_input);
-            image().setXmippOrigin();
-            if (image().getDim()==2)
+            if (factor>0)
             {
-                if (factor>0)
-                {
-                    ydim=YSIZE(image())*factor;
-                    xdim=XSIZE(image())*factor;
-                }
+                ydim=YSIZE(img())*factor;
+                xdim=XSIZE(img())*factor;
+            }
 
-                if (fourier)
-                    selfScaleToSizeFourier(ydim,xdim,image(),nThreads);
-                else if (linear)
-                    selfScaleToSize(LINEAR,image(),xdim, ydim);
-                else
-                    selfScaleToSize(BSPLINE3,image(),xdim, ydim);
-            }
+            if (fourier)
+                selfScaleToSizeFourier(ydim,xdim,img(),nThreads);
+            else if (linear)
+                selfScaleToSize(LINEAR,img(),xdim, ydim);
             else
-            {
-                if (factor>0)
-                {
-                    zdim=ZSIZE(image())*factor;
-                    ydim=YSIZE(image())*factor;
-                    xdim=XSIZE(image())*factor;
-                }
-                if (linear)
-                    selfScaleToSize(LINEAR,image(),xdim, ydim, zdim);
-                else
-                    selfScaleToSize(BSPLINE3,image(),xdim, ydim, zdim);
-            }
-            if (fn_out == "")
-                image.write(fn_input);
-            else
-                image.write(fn_out);
+                selfScaleToSize(BSPLINE3,img(),xdim, ydim);
         }
-        // Scale a selection file ------------------------------------------------
         else
         {
-            SF.read(fn_input);
-
-            // Initialize progress bar
-            time_config();
-            int i = 0;
-            //Image<double> image;
-
-            init_progress_bar(SF.size());
-            FOR_ALL_OBJECTS_IN_METADATA(SF)
+            if (factor>0)
             {
-            	 // FIXME: This should disappear, now provoking segfault
-                SF.getValue(MDL_IMAGE,fn_in);
-                if (fn_oext == "")
-                    fn_out = fn_in;
-                else
-                    fn_out = fn_in.withoutExtension() + "." + fn_oext;
-
-                image.read(fn_in);
-                image().setXmippOrigin();
-                if (image().getDim()==2)
-                {
-                    if (factor>0)
-                    {
-                        ydim=YSIZE(image())*factor;
-                        xdim=XSIZE(image())*factor;
-                    }
-
-                    if (fourier)
-                        selfScaleToSizeFourier(ydim,xdim,image(),nThreads);
-                    else if (linear)
-                        selfScaleToSize(LINEAR,image(),xdim, ydim);
-                    else
-                        selfScaleToSize(BSPLINE3,image(),xdim, ydim);
-                }
-                else
-                {
-                    if (factor>0)
-                    {
-                        zdim=ZSIZE(image())*factor;
-                        ydim=YSIZE(image())*factor;
-                        xdim=XSIZE(image())*factor;
-                    }
-                    if (linear)
-                        selfScaleToSize(LINEAR,image(),xdim, ydim, zdim);
-                    else
-                        selfScaleToSize(BSPLINE3,image(),xdim, ydim, zdim);
-                }
-                image.write(fn_out);
-                SF_out.addObject();
-                SF_out.setValue(MDL_IMAGE,fn_out);
-
-                if (i++ % 25 == 0)
-                    progress_bar(i);
+                zdim=ZSIZE(img())*factor;
+                ydim=YSIZE(img())*factor;
+                xdim=XSIZE(img())*factor;
             }
-            progress_bar(SF.size());
-
-            SF_out.write((SF.getFilename()).insertBeforeExtension(fn_oext));
+            if (linear)
+                selfScaleToSize(LINEAR,img(),xdim, ydim, zdim);
+            else
+                selfScaleToSize(BSPLINE3,img(),xdim, ydim, zdim);
         }
+
+        img.write(fnImgOut);
     }
-    catch (XmippError XE)
+
+public:
+    /** Constructor */
+    ProgScale()
     {
-        std::cout << XE;
+        factor = -1;
+        A.initIdentity(3);
+        B.initIdentity(4);
     }
-    exit(0);
+}
+; //end of class ProgScale
+
+
+int main(int argc, char **argv)
+{
+    ProgScale program;
+    program.read(argc, argv);
+    program.tryRun();
 } //main
 
-/* Usage ------------------------------------------------------------------- */
-void Usage()
-{
-    std::cerr << "Purpose:\n";
-    std::cerr << "    Scale images/volumes to a given size\n";
-
-    std::cerr << "Usage: scale <parameters>\n"
-    << "   -i <image or volume> [-o <image_out or volume_out]\n"
-    << "   -i <selfile> [-oext <output extension>]\n"
-    << "  [-xdim <new x dimension>]\n"
-    << "  [-ydim <new y dimension=new x dimension>]\n"
-    << "  [-zdim <new z dimension=new x dimension>]\n"
-    << "  [-factor <scale factor>]\n"
-    << "  [-linear]         : Use bilinear/trilinear interpolation\n"
-    << "  [-fourier]        : Use padding/windowing in Fourier Space (only for 2D)\n"
-    << "  [-thr n]          : Use n threads, only implemented for fourier interpolation\n";
-
-}
