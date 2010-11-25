@@ -85,7 +85,10 @@ int readINF(int img_select,bool isStack=false)
     switch ( __depth )
     {
     case 8:
-        datatype = UChar;
+        if (__is_signed)
+            datatype = SChar;
+        else
+            datatype = UChar;
         break;
     case 16:
         if (__is_signed)
@@ -137,7 +140,7 @@ int readINF(int img_select,bool isStack=false)
 /** INF Writer
   * @ingroup INF
 */
-int writeINF(int img_select, bool isStack=false, int mode=WRITE_OVERWRITE)
+int writeINF(int img_select, bool isStack=false, int mode=WRITE_OVERWRITE, std::string bitDepth="", bool adjust=false)
 {
     //#define DEBUG
 #ifdef DEBUG
@@ -162,46 +165,46 @@ int writeINF(int img_select, bool isStack=false, int mode=WRITE_OVERWRITE)
         REPORT_ERROR(ERR_ARG_INCORRECT, "rwINF::write only can overwrite image files,"
                      "neither append nor replace.");
 
-    DataType wDType;
+    DataType wDType,myTypeID = myT();
+    CastWriteMode castMode = CAST;
 
-    if (typeid(T)==typeid(double)||typeid(T)==typeid(float))
+    if (bitDepth != "")
     {
+        myTypeID = (bitDepth == "default") ? UChar : datatypeRAW(bitDepth);
+        castMode = (adjust)? ADJUST : CONVERT;
+    }
+
+    switch(myTypeID)
+    {
+    case Double:
+    case UInt:
+    case Int:
+        if (bitDepth != "")
+            REPORT_ERROR(ERR_TYPE_INCORRECT,"ERROR: incorrect RAW bits depth value.");
+    case Float:
         wDType = Float;
-        _is_signed = true;
-    }
-    else if (typeid(T)==typeid(int))
-    {
-        wDType = Int;
-        _is_signed = true;
-    }
-    else if (typeid(T)==typeid(unsigned int))
-    {
-        wDType = UInt;
-        _is_signed = false;
-
-    }
-    else if (typeid(T)==typeid(short))
-    {
-        wDType = Short;
-        _is_signed = true;
-    }
-    else if (typeid(T)==typeid(unsigned short))
-    {
+        break;
+    case UShort:
         wDType = UShort;
         _is_signed = false;
-    }
-    else if (typeid(T)==typeid(char))
-    {
-        wDType = SChar;
+        break;
+    case Short:
+        wDType = Short;
         _is_signed = true;
-    }
-    else if (typeid(T)==typeid(unsigned char))
-    {
+        break;
+    case UChar:
         wDType = UChar;
         _is_signed = false;
+        break;
+    case SChar:
+        wDType = SChar;
+        _is_signed = true;
+        break;
+    default:
+        wDType = Unknown_Type;
+        REPORT_ERROR(ERR_TYPE_INCORRECT,(std::string)"ERROR: RAW format does not write from " \
+                     + typeid(T).name() + "type.");
     }
-    else
-        REPORT_ERROR(ERR_TYPE_INCORRECT,(std::string)"ERROR: rwINF does not write from " + typeid(T).name() + "type.");
 
     if (mmapOnWrite && !checkMmapT(wDType))
         REPORT_ERROR(ERR_MMAP, "File datatype and image declaration not compatible with mmap.");
@@ -234,14 +237,14 @@ int writeINF(int img_select, bool isStack=false, int mode=WRITE_OVERWRITE)
     fprintf(fhed,"offset= 0\n");
     fprintf(fhed,"# Is a signed or Unsigned int (by default true)\n");
     if (_is_signed)
-        fprintf(fhed,"is_signed = true\n");
+        fprintf(fhed,"is_signed= true\n");
     else
-        fprintf(fhed,"is_signed = false\n");
+        fprintf(fhed,"is_signed= false\n");
     fprintf(fhed,"# Byte order\n");
     if (IsBigEndian())
-        fprintf(fhed,"endianess = big\n");
+        fprintf(fhed,"endianess= big\n");
     else
-        fprintf(fhed,"endianess = little\n");
+        fprintf(fhed,"endianess= little\n");
 
     //Unlock Header file
     fl.l_type = F_UNLCK;
@@ -265,12 +268,11 @@ int writeINF(int img_select, bool isStack=false, int mode=WRITE_OVERWRITE)
         mmapFile();
     }
     else
-        writePageAsDatatype(fimg, wDType, datasize_n);
+        writeData(fimg, 0, wDType, datasize_n, castMode);
 
     // Unlock Image file
     fl.l_type   = F_UNLCK;
     fcntl(fileno(fimg), F_SETLK, &fl);
-
 
     return(0);
 }

@@ -98,6 +98,15 @@ typedef enum
     WRITE_READONLY   //only can read the file
 } WriteMode;
 
+/* Cast Write mode
+ * This enum defines the cast writing behavior
+ */
+typedef enum
+{
+    CAST,       //Only cast the data type
+    CONVERT,    //Convert the data from one type to another
+    ADJUST      //Adjust the histogram to fill the gray level range
+} CastWriteMode;
 
 /** Open File struct
  * This struct is used to share the File handlers with Image Collection class
@@ -374,7 +383,6 @@ public:
      */
     bool isImage(const FileName &name)
     {
-        std::cerr << "This cannot work" <<std::endl;
         return !read(name, false);
     }
 
@@ -453,11 +461,11 @@ public:
      * overwrite = 1 overwrite slice
      */
     void write(const FileName &name="", int select_img=-1, bool isStack=false,
-               int mode=WRITE_OVERWRITE)
+               int mode=WRITE_OVERWRITE,bool adjust=false)
     {
         const FileName &fname = (name == "") ? filename : name;
         ImageFHandler* hFile = openFile(fname, mode);
-        _write(fname, hFile, select_img, isStack, mode);
+        _write(fname, hFile, select_img, isStack, mode, adjust);
         closeFile(hFile);
     }
 
@@ -681,9 +689,23 @@ public:
                     }
                 break;
             }
+        case SChar:
+                {
+                    if (typeid(T) == typeid(char))
+                {
+                    memcpy(page, srcPtr, pageSize*sizeof(T));
+                    }
+                    else
+                    {
+                        char * ptr = (char *) page;
+                        for(int i=0; i<pageSize; i++)
+                            ptr[i] = (char)srcPtr[i];
+                    }
+                break;
+            }
         default:
                 {
-                    std::cerr<<"outputDatatype= "<<datatype<<std::endl;
+                    std::cerr<<"outputDatatype = " << datatype << std::endl;
                     REPORT_ERROR(ERR_TYPE_INCORRECT," ERROR: cannot cast T to outputDatatype");
                     break;
                 }
@@ -693,21 +715,20 @@ public:
     /* Convert the image to another datatype and save it
         *
         */
-    void castConvertPage2Datatype(T * srcPtr, char * page, DataType datatype, size_t pageSize, bool adjust=false)
+    void castConvertPage2Datatype(T * srcPtr, char * page, DataType datatype, size_t pageSize,
+                                  double min0, double max0, CastWriteMode castMode=CONVERT)
     {
 
-        double min0, max0, minF, maxF;
+        double minF, maxF;
         double slope;
         unsigned long int n;
         DataType  myTypeId = myT();
-
-        data.computeDoubleMinMax(min0, max0);
 
         switch(datatype)
         {
         case UChar:
             {
-                if (!adjust && myTypeId == SChar)
+                if (castMode==CONVERT && myTypeId == SChar)
                 {
                     slope = 1;
                     min0 -= CHAR_MIN;
@@ -732,7 +753,7 @@ public:
             }
         case SChar:
                 {
-                    if (!adjust &&  myTypeId == UChar)
+                    if (castMode==CONVERT &&  myTypeId == UChar)
                 {
                     slope = 1;
                     min0 += CHAR_MIN;
@@ -757,21 +778,25 @@ public:
             }
         case UShort:
                 {
-                    if (!adjust &&  (myTypeId == SChar|| myTypeId == Short))
+                    if (castMode==CONVERT && (myTypeId == SChar|| myTypeId == Short))
                     {
                         slope = 1;
-                        min0 += SHRT_MIN;
+                        min0 -= SHRT_MIN;
+                    }
+                    else if (castMode==CONVERT && (myTypeId == UChar))
+                    {
+                        slope = 1;
                     }
                     else
                     {
                         minF = 0;
                         maxF = USHRT_MAX;
                         if (max0 != min0)
-                                slope = static_cast< double >(maxF - minF) /
-                                        static_cast< double >(max0 - min0);
+                                slope = static_cast<double >(maxF-minF)/static_cast<double >(max0-min0);
                             else
                                 slope = 0;
                         }
+
                 unsigned short * ptr = (unsigned short *) page;
 
                 for( n=0; n<pageSize; n++)
@@ -782,11 +807,14 @@ public:
             }
         case Short:
                 {
-                    if (!adjust &&  (myTypeId == UChar
-                                         || myTypeId == UShort))
+                    if (castMode==CONVERT && (myTypeId == UChar || myTypeId == UShort))
                     {
                         slope = 1;
-                        min0 -= SHRT_MIN;
+                        min0 += SHRT_MIN;
+                    }
+                    else if (castMode==CONVERT && (myTypeId == SChar))
+                    {
+                        slope = 1;
                     }
                     else
                     {
@@ -808,12 +836,16 @@ public:
             }
         case UInt:
                 {
-                    if (!adjust &&  (myTypeId == SChar
-                                         || myTypeId == Short
-                                         || myTypeId == Int))
+                    if (castMode==CONVERT &&  (myTypeId == SChar
+                                                   || myTypeId == Short
+                                                   || myTypeId == Int))
                     {
                         slope = 1;
-                        min0 += INT_MIN;
+                        min0 -= INT_MIN;
+                    }
+                    else if (castMode==CONVERT &&  (myTypeId == UShort || myTypeId == UChar))
+                    {
+                        slope = 1;
                     }
                     else
                     {
@@ -834,12 +866,16 @@ public:
             }
         case Int:
                 {
-                    if (!adjust &&  (myTypeId == UChar
-                                         || myTypeId == UShort
-                                         || myTypeId == UInt))
+                    if (castMode==CONVERT &&  (myTypeId == UChar
+                                                   || myTypeId == UShort
+                                                   || myTypeId == UInt))
                     {
                         slope = 1;
-                        min0 -= INT_MIN;
+                        min0 += INT_MIN;
+                    }
+                    else if (castMode==CONVERT &&  (myTypeId == Short || myTypeId == SChar))
+                    {
+                        slope = 1;
                     }
                     else
                     {
@@ -1461,22 +1497,22 @@ public:
             o << "Undefined data type";
             break;
         case UChar:
-            o << "Unsigned character or byte type";
+            o << "Unsigned character or byte type (UInt8)";
             break;
         case SChar:
-            o << "Signed character (for CCP4)";
+            o << "Signed character (Int8)";
             break;
         case UShort:
-            o << "Unsigned integer (2-byte)";
+            o << "Unsigned short integer (UInt16)";
             break;
         case Short:
-            o << "Signed integer (2-byte)";
+            o << "Signed short integer (Int16)";
             break;
         case UInt:
-            o << "Unsigned integer (4-byte)";
+            o << "Unsigned integer (UInt32)";
             break;
         case Int:
-            o << "Signed integer (4-byte)";
+            o << "Signed integer (Int32)";
             break;
         case Long:
             o << "Signed integer (4 or 8 byte, depending on system)";
@@ -1545,7 +1581,7 @@ private:
     /** Open file function
       * Open the image file and returns its file hander.
       */
-    ImageFHandler* openFile(const FileName &name, int mode = WRITE_READONLY)
+    ImageFHandler* openFile(const FileName &name, int mode = WRITE_READONLY) const
     {
         ImageFHandler* hFile = new ImageFHandler;
         FileName fileName, headName = "";
@@ -1792,7 +1828,7 @@ private:
     }
 
     void _write(const FileName &name, ImageFHandler* hFile, int select_img=-1,
-                bool isStack=false, int mode=WRITE_OVERWRITE)
+                bool isStack=false, int mode=WRITE_OVERWRITE, bool adjust=false)
     {
         int err = 0;
 
@@ -1914,17 +1950,17 @@ private:
         else if (ext_name.contains("mrcs"))
             writeMRC(select_img,true,mode);
         else if (ext_name.contains("mrc"))
-            writeMRC(select_img,false,mode);
+            writeMRC(select_img,false,mode,imParam,adjust);
         else if (ext_name.contains("img") || ext_name.contains("hed"))
-            writeIMAGIC(select_img,mode,imParam);
+            writeIMAGIC(select_img,mode,imParam,adjust);
         else if (ext_name.contains("dm3"))
             writeDM3(select_img,false,mode);
         else if (ext_name.contains("ser"))
             writeTIA(select_img,false,mode);
         else if (ext_name.contains("raw") || ext_name.contains("inf"))
-            writeINF(select_img,false,mode);
+            writeINF(select_img,false,mode,imParam,adjust);
         else if (ext_name.contains("tif"))
-            writeTIFF(select_img,isStack,mode,imParam);
+            writeTIFF(select_img,isStack,mode,imParam,adjust);
         else if (ext_name.contains("spe"))
             writeSPE(select_img,isStack,mode);
         else
@@ -1983,8 +2019,8 @@ private:
                              for both Image class and its Multidimarray.");
             if ( NSIZE(data) > 1 )
             {
-                REPORT_ERROR(ERR_MMAP,"Image Class::ReadData: mmap with multiple \
-                             images file not compatible. Try selecting a unique image.");
+                REPORT_ERROR(ERR_MMAP,"Image Class::ReadData: mmap with multiple "
+                             "images file not compatible. Try selecting a unique image.");
             }
             //            fclose(fimg);
             mappedSize = pagesize+offset;
@@ -2058,6 +2094,31 @@ private:
 
         }
         return;
+    }
+
+    void writeData(FILE* fimg, size_t offset, DataType wDType, size_t datasize_n,
+                   CastWriteMode castMode=CAST)
+    {
+        size_t datasize = datasize_n * gettypesize(wDType);
+        char* fdata = (char *) askMemory(datasize);
+
+        switch(castMode)
+        {
+        case CAST:
+            {
+                castPage2Datatype(MULTIDIM_ARRAY(data)+offset, fdata, wDType, datasize_n);
+                break;
+            }
+        default:
+            {
+                double min0, max0;
+                data.computeDoubleMinMaxRange(min0, max0, offset, datasize_n);
+                castConvertPage2Datatype(MULTIDIM_ARRAY(data)+offset, fdata, wDType, datasize_n,min0 ,max0, castMode);
+            }
+        }
+
+        fwrite( fdata, datasize, 1, fimg );
+        freeMemory(fdata, datasize);
     }
 
     /* Mmap Image::MultidimArray to the image file.
@@ -2143,8 +2204,7 @@ void Image< std::complex< double > >::castPage2Datatype(std::complex< double > *
         size_t pageSize);
 template<>
 void Image< std::complex< double > >::castConvertPage2Datatype(std::complex< double > * srcPtr,
-        char * page, DataType datatype, size_t pageSize,bool adjust);
-
+        char * page, DataType datatype, size_t pageSize,double min0,double max0,CastWriteMode castMode);
 
 /// @defgroup ImageFormats Image Formats
 /// @ingroup Images

@@ -118,18 +118,24 @@ DataType datatypeTIFF(TIFFDirHead dHead)
     switch (dHead.bitsPerSample)
     {
     case 8:
-        datatype = UChar;
+        if (dHead.imageSampleFormat == SAMPLEFORMAT_INT)
+            datatype = SChar;
+        else
+            datatype = UChar;
         break;
     case 16:
-        //        if (dHead.imageSampleFormat == SAMPLEFORMAT_INT)
-        //            datatype = Short;
+        if (dHead.imageSampleFormat == SAMPLEFORMAT_INT)
+            datatype = Short;
+        else
+            datatype = UShort;
+
         //        else if (dHead.imageSampleFormat == SAMPLEFORMAT_UINT ||
         //                 dHead.imageSampleFormat == SAMPLEFORMAT_IEEEFP ) //Don't know why
         //            datatype = UShort;
         //        //        else if (dHead.imageSampleFormat == 0     ||
         //        //                 dHead.imageSampleFormat == 32767 ) // Format 0 and 32767 are not declared in TIFF 6.0 specifications ¿?
         //        else
-        datatype = UShort;
+        //        datatype = UShort;
         break;
     case 32:
         if (dHead.imageSampleFormat == SAMPLEFORMAT_INT)
@@ -383,7 +389,7 @@ int readTIFF(int img_select, bool isStack=false)
 /** TIFF Writer
   * @ingroup TIFF
 */
-int writeTIFF(int img_select, bool isStack=false, int mode=WRITE_OVERWRITE, std::string imParam="")
+int writeTIFF(int img_select, bool isStack=false, int mode=WRITE_OVERWRITE, std::string bitDepth="", bool adjust=false)
 {
 #undef DEBUG
 
@@ -410,73 +416,64 @@ int writeTIFF(int img_select, bool isStack=false, int mode=WRITE_OVERWRITE, std:
     TIFFDirHead dhMain; // Main header
 
     //Selection of output datatype
-    DataType wDType;
 
-    if (imParam == "")
+    DataType wDType,myTypeID = myT();
+    CastWriteMode castMode;
+
+    if (bitDepth == "")
     {
-        if (typeid(T)==typeid(double)||typeid(T)==typeid(float))
+        castMode = CAST;
+        switch(myTypeID)
         {
+        case Double:
+        case Float:
             wDType = Float;
             dhMain.imageSampleFormat = SAMPLEFORMAT_IEEEFP;
-        }
-        else if (typeid(T)==typeid(int))
-        {
-            wDType = Int;
-            dhMain.imageSampleFormat = SAMPLEFORMAT_INT;
-        }
-        else if (typeid(T)==typeid(unsigned int))
-        {
+            break;
+        case Int:
+            castMode = CONVERT;
+        case UInt:
             wDType = UInt;
             dhMain.imageSampleFormat = SAMPLEFORMAT_UINT;
-        }
-        else if (typeid(T)==typeid(short))
-        {
-            wDType = Short;
-            dhMain.imageSampleFormat = SAMPLEFORMAT_INT;
-        }
-        else if (typeid(T)==typeid(unsigned short))
-        {
+            break;
+        case Short:
+            castMode = CONVERT;
+        case UShort:
             wDType = UShort;
             dhMain.imageSampleFormat = SAMPLEFORMAT_UINT;
-        }
-        else if (typeid(T)==typeid(char))
-        {
-            wDType = SChar;
-            dhMain.imageSampleFormat = SAMPLEFORMAT_INT;
-        }
-        else if (typeid(T)==typeid(unsigned char))
-        {
+            break;
+        case SChar:
+            castMode = CONVERT;
+        case UChar:
             wDType = UChar;
             dhMain.imageSampleFormat = SAMPLEFORMAT_UINT;
+            break;
+        default:
+            wDType = Unknown_Type;
+            REPORT_ERROR(ERR_TYPE_INCORRECT,(std::string)"ERROR: IMAGIC format does not write from " \
+                         + typeid(T).name() + "type.");
         }
-        else
-            REPORT_ERROR(ERR_TYPE_INCORRECT,(std::string)"writeTIFF does not write from " + typeid(T).name() + "type.");
     }
     else
     {
-      int bDepth;
-        if ((bDepth = atoi(imParam.c_str())) == 0)
-            bDepth = 8; // Default value
+        // Default Value
+        wDType = (bitDepth == "default") ? UChar : datatypeRAW(bitDepth);
 
-        switch (bDepth)
+        switch(wDType)
         {
-        case 8:
-            wDType = UChar;
-            dhMain.imageSampleFormat = SAMPLEFORMAT_UINT;
-            data.rangeAdjust(0, UCHAR_MAX);
-            break;
-        case 16:
-            wDType = UShort;
-            dhMain.imageSampleFormat = SAMPLEFORMAT_UINT;
-            data.rangeAdjust(0, USHRT_MAX);
-            break;
-        case 32:
-            wDType = Float;
+        case Float:
             dhMain.imageSampleFormat = SAMPLEFORMAT_IEEEFP;
             break;
+        case UInt:
+        case UShort:
+        case UChar:
+            dhMain.imageSampleFormat = SAMPLEFORMAT_UINT;
+            break;
         default:
-            REPORT_ERROR(ERR_TYPE_INCORRECT,"rwTIFF: Error, incorrect TIFF bits depth value.");
+            wDType = Unknown_Type;
+            REPORT_ERROR(ERR_TYPE_INCORRECT,"ERROR: incorrect TIFF bits depth value.");
         }
+        castMode = (adjust)? ADJUST : CONVERT;
     }
 
     int nBytes = gettypesize(wDType);
@@ -503,6 +500,7 @@ int writeTIFF(int img_select, bool isStack=false, int mode=WRITE_OVERWRITE, std:
     bufferSize = Xdim*nBytes;
     datasize_n = Xdim*Ydim*Zdim;
 
+    double min0, max0;
 
     char*  tif_buf;
 
@@ -545,9 +543,13 @@ int writeTIFF(int img_select, bool isStack=false, int mode=WRITE_OVERWRITE, std:
             TIFFSetField(tif, TIFFTAG_PAGENUMBER, (uint16) i, (uint16) Ndim);
         }
 
+        data.computeDoubleMinMaxRange(min0, max0, i*datasize_n, datasize_n);
+
         for (uint32 y = 0; y < Ydim; y++)
         {
-            castPage2Datatype(MULTIDIM_ARRAY(data) + i*datasize_n + y*Xdim,(char *)tif_buf, wDType, (size_t) Xdim);
+            castConvertPage2Datatype(MULTIDIM_ARRAY(data)+i*datasize_n + y*Xdim,
+                                     (char *)tif_buf, wDType, (size_t) Xdim,min0 ,max0, castMode);
+
             TIFFWriteScanline(tif, tif_buf,y,0);
         }
 

@@ -2724,6 +2724,31 @@ public:
         }
     }
 
+    /** Minimum and maximum of the values in the array.
+     *
+     * As doubles.
+     */
+    void computeDoubleMinMaxRange(double& minval, double& maxval,size_t offset, size_t size) const
+    {
+        if (NZYXSIZE(*this) <= 0)
+            return;
+
+        minval = maxval = static_cast< double >(data[offset]);
+
+        T* ptr=NULL;
+        T val;
+        unsigned long int n;
+
+        for (n=offset,ptr=data+offset; n<size; ++n, ++ptr)
+        {
+            val = *ptr;
+            if (val < minval)
+                minval = static_cast< double >(val);
+            else if (val > maxval)
+                maxval = static_cast< double >(val);
+        }
+    }
+
     /** Average of the values in the array.
      *
      * The returned value is always double, independently of the type of the
@@ -4667,6 +4692,8 @@ template<>
 std::ostream& operator<<(std::ostream& ostrm, const MultidimArray< std::complex<double> >& v);
 template<>
 void MultidimArray< std::complex< double > >::computeDoubleMinMax(double& minval, double& maxval) const;
+template<>
+void MultidimArray< std::complex< double > >::computeDoubleMinMaxRange(double& minval, double& maxval, size_t pos, size_t size) const;
 template<>
 void MultidimArray< std::complex< double > >::rangeAdjust(std::complex< double > minF, std::complex< double > maxF);
 //@}

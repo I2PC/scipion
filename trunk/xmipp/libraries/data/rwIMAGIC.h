@@ -243,7 +243,7 @@ int  readIMAGIC(int img_select)
 /** Imagic Writer
   * @ingroup Imagic
 */
-int  writeIMAGIC(int img_select=-1, int mode=WRITE_OVERWRITE, std::string bitDepth="")
+int  writeIMAGIC(int img_select=-1, int mode=WRITE_OVERWRITE, std::string bitDepth="", bool adjust=false)
 {
 #undef DEBUG
     //#define DEBUG
@@ -292,11 +292,13 @@ int  writeIMAGIC(int img_select=-1, int mode=WRITE_OVERWRITE, std::string bitDep
         imgStart=0;
 
 
-    // Convert T to datatype
+    // Cast T to datatype without convert data
     DataType wDType,myTypeID = myT();
+    CastWriteMode castMode;
 
     if (bitDepth == "")
     {
+        castMode = CAST;
         switch(myTypeID)
         {
         case Double:
@@ -306,10 +308,14 @@ int  writeIMAGIC(int img_select=-1, int mode=WRITE_OVERWRITE, std::string bitDep
             wDType = Float;
             strcpy(header->type,"REAL");
             break;
+        case UShort:
+            castMode = CONVERT;
         case Short:
             wDType = Short;
             strcpy(header->type,"INTG");
             break;
+        case SChar:
+            castMode = CONVERT;
         case UChar:
             wDType = UChar;
             strcpy(header->type,"PACK");
@@ -317,37 +323,15 @@ int  writeIMAGIC(int img_select=-1, int mode=WRITE_OVERWRITE, std::string bitDep
         case ComplexFloat:
         case ComplexDouble:
             wDType = ComplexFloat;
+            strcpy(header->type,"COMP");
+            break;
         default:
             wDType = Unknown_Type;
             REPORT_ERROR(ERR_TYPE_INCORRECT,(std::string)"ERROR: IMAGIC format does not write from " \
                          + typeid(T).name() + "type.");
         }
-        //        if ( typeid(T) == typeid(double) || typeid(T) == typeid(float) ||
-        //             typeid(T) == typeid(int) || typeid(T) == typeid(unsigned int))
-        //        {
-        //            wDType = Float;
-        //            strcpy(header->type,"REAL");
-        //        }
-        //        else if ( typeid(T) == typeid(short))
-        //        {
-        //            wDType = Short;
-        //            strcpy(header->type,"INTG");
-        //        }
-        //        else if ( typeid(T) == typeid(unsigned char))
-        //        {
-        //            wDType = UChar;
-        //            strcpy(header->type,"PACK");
-        //        }
-        //        else if ( typeid(T) == typeid(std::complex<float>) ||
-        //                  typeid(T) == typeid(std::complex<double>) )
-        //        {
-        //            wDType = ComplexFloat;
-        //            strcpy(header->type,"COMP");
-        //        }
-        //        else
-        //            REPORT_ERROR(ERR_TYPE_INCORRECT,(std::string)"ERROR: IMAGIC format does not write from " + typeid(T).name() + "type.");
     }
-    else
+    else //Convert to other data type
     {
         // Default Value
         wDType = (bitDepth == "default") ? Float : datatypeRAW(bitDepth);
@@ -356,7 +340,6 @@ int  writeIMAGIC(int img_select=-1, int mode=WRITE_OVERWRITE, std::string bitDep
         {
         case UChar:
             strcpy(header->type,"PACK");
-            //                convertWrite(wDType, name, img_select, false, mode,false);
             break;
         case Short:
             strcpy(header->type,"INTG");
@@ -364,31 +347,19 @@ int  writeIMAGIC(int img_select=-1, int mode=WRITE_OVERWRITE, std::string bitDep
         case Float:
             strcpy(header->type,"REAL");
             break;
+        case ComplexFloat:
+            strcpy(header->type,"COMP");
+            break;
         default:
             REPORT_ERROR(ERR_TYPE_INCORRECT,"ERROR: incorrect IMAGIC bits depth value.");
         }
-    }
-
-
-
-    switch (wDType)
-    {
-    case UChar:
-        strcpy(header->type,"PACK");
-        break;
-    case Short:
-        strcpy(header->type,"INTG");
-        break;
-    case Float:
-        strcpy(header->type,"REAL");
-        break;
-    default:
-        REPORT_ERROR(ERR_TYPE_INCORRECT,"ERROR: incorrect IMAGIC bits depth value.");
+        castMode = (adjust)? ADJUST : CONVERT;
     }
 
     size_t datasize, datasize_n;
     datasize_n = (size_t)Xdim*Ydim*Zdim;
     datasize = datasize_n * gettypesize(wDType);
+
     double aux;
 
     if (!MDMainHeader.empty())
@@ -444,7 +415,7 @@ int  writeIMAGIC(int img_select=-1, int mode=WRITE_OVERWRITE, std::string bitDep
         //fseek( fimg, 0, SEEK_SET);
         fseek( fhed, 0, SEEK_SET);
     }
-    char* fdata = (char *) askMemory(datasize);
+
 
     i = imgStart;
     for (std::vector<MDRow>::iterator it = MD.begin(); it != MD.end(); ++it)
@@ -464,13 +435,8 @@ int  writeIMAGIC(int img_select=-1, int mode=WRITE_OVERWRITE, std::string bitDep
             header->euler_gamma =(float)-aux;
 
         fwrite( header, IMAGICSIZE, 1, fhed );
+        writeData(fimg, i*datasize_n, wDType, datasize_n, castMode);
 
-        if (bitDepth == "")
-          castPage2Datatype(MULTIDIM_ARRAY(data) + i*datasize_n, fdata, wDType, datasize_n);
-        else
-          castConvertPage2Datatype(MULTIDIM_ARRAY(data) + i*datasize_n, fdata, wDType, datasize_n);
-
-        fwrite( fdata, datasize, 1, fimg );
         ++i;
     }
 
@@ -478,8 +444,6 @@ int  writeIMAGIC(int img_select=-1, int mode=WRITE_OVERWRITE, std::string bitDep
     fl.l_type   = F_UNLCK;
     fcntl(fileno(fimg), F_SETLK, &fl); /* unlocked */
     fcntl(fileno(fhed), F_SETLK, &fl); /* unlocked */
-
-    freeMemory(fdata, datasize);
 
     delete header;
 

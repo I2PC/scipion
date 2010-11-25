@@ -422,7 +422,7 @@ int  writeSPIDER(int select_img=-1, bool isStack=false, int mode=WRITE_OVERWRITE
         if(MD[0].getValue(MDL_FLIP,    baux))
             header->flip  =(float)baux;
         if(MD[0].getValue(MDL_SCALE,    aux))
-            header->scale  =(float)aux;  
+            header->scale  =(float)aux;
     }
     //else end
     // Set time and date
@@ -466,11 +466,6 @@ int  writeSPIDER(int select_img=-1, bool isStack=false, int mode=WRITE_OVERWRITE
     if(mode==WRITE_OVERWRITE || mode==WRITE_APPEND)//header must change
         fwrite( header, offset, 1, fimg );
 
-    char* fdata;
-    if (!mmapOnWrite)
-        fdata = (char *) askMemory(datasize);
-    //think about writing in several chucks
-
     //write only once, ignore select_img
     if ( NSIZE(data) == 1 && mode==WRITE_OVERWRITE)
     {
@@ -482,10 +477,7 @@ int  writeSPIDER(int select_img=-1, bool isStack=false, int mode=WRITE_OVERWRITE
             fputc(0, fimg);
         }
         else
-        {
-            castPage2Datatype(MULTIDIM_ARRAY(data), fdata, wDType, datasize_n);
-            fwrite( fdata, datasize, 1, fimg );
-        }
+            writeData(fimg, 0, wDType, datasize_n, CAST);
     }
     else
     {
@@ -521,8 +513,7 @@ int  writeSPIDER(int select_img=-1, bool isStack=false, int mode=WRITE_OVERWRITE
 
             //do not need to unlock because we are in the overwrite case
             fwrite( header, offset, 1, fimg );
-            castPage2Datatype(MULTIDIM_ARRAY(data) + i*datasize_n, fdata, wDType, datasize_n);
-            fwrite( fdata, datasize, 1, fimg );
+            writeData(fimg, i*datasize_n, wDType, datasize_n, CAST);
         }
     }
     //I guess I do not need to unlock since we are going to close the file
@@ -531,8 +522,6 @@ int  writeSPIDER(int select_img=-1, bool isStack=false, int mode=WRITE_OVERWRITE
 
     if (mmapOnWrite)
         mmapFile();
-    else
-        freeMemory(fdata, datasize);
 
     freeMemory(header, (int)labbyt*sizeof(char));
 

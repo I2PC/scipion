@@ -134,7 +134,7 @@ int readMRC(int img_select, bool isStack=false)
     if(isStack)
     {
         _nDim = (size_t) _zDim;
-std::cerr << "ndim, zdim " << _nDim << " " << _zDim << std::endl;
+        std::cerr << "ndim, zdim " << _nDim << " " << _zDim << std::endl;
         _zDim = 1;
         replaceNsize=_nDim;
         std::stringstream Num;
@@ -264,7 +264,7 @@ std::cerr << "ndim, zdim " << _nDim << " " << _zDim << std::endl;
 /** MRC Writer
   * @ingroup MRC
 */
-int writeMRC(int img_select, bool isStack=false, int mode=WRITE_OVERWRITE)
+int writeMRC(int img_select, bool isStack=false, int mode=WRITE_OVERWRITE, std::string bitDepth="", bool adjust=false)
 {
     /*
         if ( transform != NoTransform )
@@ -298,29 +298,62 @@ int writeMRC(int img_select, bool isStack=false, int mode=WRITE_OVERWRITE)
     if ( transform == CentHerm )
         header->nx = Xdim/2 + 1;        // If a transform, physical storage is nx/2 + 1
 
-    // Convert T to datatype
-    DataType wDType;
-    if ( typeid(T) == typeid(double) ||
-         typeid(T) == typeid(float) ||
-         typeid(T) == typeid(int) )
+    // Cast T to datatype
+    DataType wDType,myTypeID = myT();
+    CastWriteMode castMode;
+
+    if (bitDepth == "")
     {
-        header->mode = 2;
-        wDType = Float;
+        castMode = CAST;
+        switch(myTypeID)
+        {
+        case Double:
+        case Float:
+        case Int:
+        case UInt:
+        case Short:
+        case UShort:
+            wDType = Float;
+            header->mode = 2;
+            break;
+        case UChar:
+            castMode = CONVERT;
+        case SChar:
+            wDType = SChar;
+            header->mode = 0;
+            break;
+        case ComplexFloat:
+        case ComplexDouble:
+            wDType = ComplexFloat;
+            header->mode = 4;
+            break;
+        default:
+            wDType = Unknown_Type;
+            REPORT_ERROR(ERR_TYPE_INCORRECT,(std::string)"ERROR: MRC format does not write to " \
+                         + typeid(T).name() + " type.");
+        }
     }
-    else if ( typeid(T) == typeid(unsigned char) ||
-              typeid(T) == typeid(signed char) )
+    else //Convert to other data type
     {
-        header->mode = 0;
-        wDType = SChar;
+        // Default Value
+        wDType = (bitDepth == "default") ? Float : datatypeRAW(bitDepth);
+
+        switch (wDType)
+        {
+        case Float:
+            header->mode = 2;
+            break;
+        case SChar:
+            header->mode = 0;
+            break;
+        case ComplexFloat:
+            header->mode = 4;
+            break;
+        default:
+            REPORT_ERROR(ERR_TYPE_INCORRECT,"ERROR: incorrect MRC bits depth value.");
+        }
+        castMode = (adjust)? ADJUST : CONVERT;
     }
-    else if ( typeid(T) == typeid(std::complex<float>) ||
-              typeid(T) == typeid(std::complex<double>) )
-    {
-        header->mode = 4;
-        wDType = ComplexFloat;
-    }
-    else
-        REPORT_ERROR(ERR_TYPE_INCORRECT,"ERROR write MRC image: invalid typeid(T)");
 
     if (mmapOnWrite && !checkMmapT(wDType))
         REPORT_ERROR(ERR_MMAP, "File datatype and image declaration not compatible with mmap.");
@@ -403,11 +436,6 @@ int writeMRC(int img_select, bool isStack=false, int mode=WRITE_OVERWRITE)
         fwrite( header, MRCSIZE, 1, fimg );
     freeMemory(header, sizeof(MRChead) );
 
-    char* fdata;
-    if (!mmapOnWrite)
-        fdata = (char *) askMemory(datasize);
-    //think about writing in several chunks
-
     //write only once, ignore select_img
     if ( NSIZE(data) == 1 && mode==WRITE_OVERWRITE)
     {
@@ -419,10 +447,7 @@ int writeMRC(int img_select, bool isStack=false, int mode=WRITE_OVERWRITE)
             fputc(0, fimg);
         }
         else
-        {
-            castPage2Datatype(MULTIDIM_ARRAY(data), fdata, wDType, datasize_n);
-            fwrite( fdata, datasize, 1, fimg );
-        }
+            writeData(fimg, 0, wDType, datasize_n, castMode);
     }
     else
     {
@@ -433,11 +458,9 @@ int writeMRC(int img_select, bool isStack=false, int mode=WRITE_OVERWRITE)
             fseek( fimg, 0, SEEK_END);
         else if(mode==WRITE_REPLACE)
             fseek( fimg,offset + (datasize)*img_select, SEEK_SET);
+
         for ( size_t i =imgStart; i<imgEnd; i++ )
-        {
-            castPage2Datatype(MULTIDIM_ARRAY(data) + i*datasize_n, fdata, wDType, datasize_n);
-            fwrite( fdata, datasize, 1, fimg );
-        }
+            writeData(fimg, i*datasize_n, wDType, datasize_n, castMode);
     }
     // Unlock the file
     fl.l_type   = F_UNLCK;
@@ -445,8 +468,6 @@ int writeMRC(int img_select, bool isStack=false, int mode=WRITE_OVERWRITE)
 
     if (mmapOnWrite)
         mmapFile();
-    else
-        freeMemory(fdata, datasize);
 
     return(0);
 }
