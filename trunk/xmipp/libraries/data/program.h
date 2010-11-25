@@ -120,6 +120,14 @@ public:
 
     /** Add a params definition line*/
     void addParamsLine(const char * line);
+
+    /** Group of predefined PARAMS
+     * or WHERE's that will represent
+     * types commonly used by several programs
+     */
+    void addInputLine();
+    void addExtensionWhere(const char * whereName="extension");
+
     /// Verbosity level
     int verbose;
 
