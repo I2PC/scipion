@@ -400,15 +400,13 @@ void XmippMetadataProgram::readParams()
         oroot = getParam("-oroot");
     }
 
-    if (fn_in.isMetaData())
-    {
-        mdIn.read(fn_in, NULL,blockName);
-        if (mdIn.containsLabel(MDL_ENABLED))
-            mdIn.removeObjects(MDValueEQ(MDL_ENABLED, -1));
+    single_image = !fn_in.isMetaData();
+    mdIn.read(fn_in, NULL,blockName);
+    if (mdIn.containsLabel(MDL_ENABLED))
+        mdIn.removeObjects(MDValueEQ(MDL_ENABLED, -1));
 
-        if (mdIn.isEmpty())
-            REPORT_ERROR(ERR_MD_NOOBJ, "");
-    }
+    if (mdIn.isEmpty())
+        REPORT_ERROR(ERR_MD_NOOBJ, "");
 
     if (apply_geo)
         apply_geo = !checkParam("--dont_apply_geo");
@@ -439,73 +437,87 @@ void XmippMetadataProgram::preProcess()
 void XmippMetadataProgram::postProcess()
 {}
 
+void XmippMetadataProgram::startProcessing()
+{
+    //Show some info
+    show();
+    // Initialize progress bar
+    time_bar_size = mdIn.size();
+    if (allow_time_bar && verbose)
+        init_progress_bar(time_bar_size);
+    time_bar_step = CEIL((double)time_bar_size / 60.0);
+    time_bar_done = 0;
+}
+
+void XmippMetadataProgram::finishProcessing()
+{
+    if (allow_time_bar && verbose)
+        progress_bar(time_bar_size);
+
+    if (!mdOut.isEmpty())
+        mdOut.write(fn_out);
+}
+
+void XmippMetadataProgram::showProgress()
+{
+    if (time_bar_done % time_bar_step == 0 && allow_time_bar && verbose)
+        progress_bar(time_bar_done);
+}
+
+long int XmippMetadataProgram::getImageToProcess()
+{
+    long int nextImg;
+    if (time_bar_done == 0)
+        nextImg = mdIn.iteratorBegin();
+    else
+        nextImg = mdIn.iteratorNext();
+    ++time_bar_done;
+    return nextImg;
+}
+
 void XmippMetadataProgram::run()
 {
     try
     {
-      FileName fnImg, fnImgOut;
-      long int objId;
+        FileName fnImg, fnImgOut;
+        long int objId;
         //Perform particular preprocessing
         preProcess();
 
-        //Show some info
-        show();
-        if (!fn_in.isMetaData())
-        {
-            fnImg = fn_in;
-            fnImgOut = fn_out;
-            if (oroot != "")
-                fnImgOut = oroot + fnImgOut.withoutExtension();
-            if (oext != "")
-                fnImgOut = fnImgOut.withoutExtension() + "." + oext;
-            objId = mdIn.addObject();
-            mdIn.setValue(MDL_IMAGE,fnImg);
-            processImage(fnImg, fnImgOut, objId);
-        }
-        else
-        {
-            // Initialize progress bar
-            int i = 0, mdSize = mdIn.size();
+        startProcessing();
 
-            if (allow_time_bar && verbose)
-                init_progress_bar(mdSize);
-            int istep = CEIL((double)mdSize / 60.0);
+        //FOR_ALL_OBJECTS_IN_METADATA(mdIn)
+        while ((objId = getImageToProcess()) != -1)
+        {
+            mdIn.getValue(MDL_IMAGE, fnImg, objId);
 
-            FOR_ALL_OBJECTS_IN_METADATA(mdIn)
+            if (fnImg == "")
+                break;
+
+            if (each_image_produces_an_output)
             {
-              objId = mdIn.getActiveObject();
-                mdIn.getValue(MDL_IMAGE, fnImg);
-
-                if (fnImg == "")
-                    break;
-
-                if (each_image_produces_an_output)
+                fnImgOut = (single_image) ? fn_out : fnImg;
+                if (oroot != "")
+                    fnImgOut = oroot + fnImgOut.withoutExtension();
+                if (oext != "")
+                    fnImgOut = fnImgOut.withoutExtension() + "." + oext;
+                if (fnImgOut != fnImg)
                 {
-                    fnImgOut = fnImg;
-                    if (oroot != "")
-                        fnImgOut = oroot + fnImgOut.withoutExtension();
-                    if (oext != "")
-                        fnImgOut = fnImgOut.withoutExtension() + "." + oext;
-                    if (fnImgOut != fnImg)
-                    {
-                        mdOut.addObject();
-                        mdOut.setValue(MDL_IMAGE,fnImgOut);
-                        mdOut.setValue(MDL_ENABLED, 1);
-                    }
+                    mdOut.addObject();
+                    mdOut.setValue(MDL_IMAGE,fnImgOut);
+                    mdOut.setValue(MDL_ENABLED, 1);
                 }
-
-                processImage(fnImg, fnImgOut, objId);
-
-                if (i++ % istep == 0 && allow_time_bar && verbose)
-                    progress_bar(i);
             }
+            std::cerr << "fnImg: " << fnImg << std::endl;
+            std::cerr << "fnImgOut: " << fnImgOut << std::endl;
 
-            if (allow_time_bar && verbose)
-                progress_bar(mdSize);
+            processImage(fnImg, fnImgOut, objId);
 
-            if (!mdOut.isEmpty())
-                mdOut.write(fn_out);
+            showProgress();
         }
+
+        finishProcessing();
+
         postProcess();
     }
     catch (XmippError xe)

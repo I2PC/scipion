@@ -24,6 +24,7 @@
  ***************************************************************************/
 
 #include "metadata.h"
+#include "image.h"
 
 //-----Constructors and related functions ------------
 void MetaData::_clear(bool onlyData)
@@ -423,7 +424,7 @@ long int MetaData::_iteratorBegin(const MDQuery *query)
 
 long int MetaData::iteratorBegin()
 {
-    _iteratorBegin();
+    return _iteratorBegin();
 }
 
 /**Same as previous but iterating over a subset of
@@ -431,7 +432,7 @@ long int MetaData::iteratorBegin()
  */
 long int MetaData::iteratorBegin(const MDQuery &query)
 {
-    _iteratorBegin(&query);
+    return _iteratorBegin(&query);
 }
 
 /** Check whether the iteration if finished */
@@ -991,6 +992,34 @@ void MetaData::_readRowFormat(std::istream& is)
 
 void MetaData::read(const FileName &filename, const std::vector<MDLabel> *desiredLabels, const std::string & blockName)
 {
+  //First try to open the file as a metadata
+  _clear();
+  myMDSql->createMd();
+  isColumnFormat = true;
+
+  if (!filename.isMetaData())//if not a metadata, try to read as image or stack
+  {
+      Image<char> image;
+      image.read(filename, false);
+      if (image().ndim == 1) //single image
+      {
+          addObject();
+          setValue(MDL_IMAGE, filename);
+          setValue(MDL_ENABLED, 1);
+      }
+      else //stack
+      {
+          FileName fnTemp;
+          for (size_t i = 0; i < image().ndim; ++i)
+          {
+              fnTemp.compose(i, filename);
+              addObject();
+              setValue(MDL_IMAGE, fnTemp);
+              setValue(MDL_ENABLED, 1);
+          }
+      }
+      return;
+  }
 
     std::ifstream is(filename.data(), std::ios_base::in);
     std::stringstream ss;
@@ -1003,9 +1032,7 @@ void MetaData::read(const FileName &filename, const std::vector<MDLabel> *desire
     {
         REPORT_ERROR(ERR_IO_NOTEXIST, (std::string) "MetaData::read: File " + filename + " does not exists" );
     }
-    _clear();
-    myMDSql->createMd();
-    isColumnFormat = true;
+
     bool useCommentAsImage = false;
     this->inFile = filename;
     bool oldFormat=true;
@@ -1324,25 +1351,25 @@ WriteModeMetaData metadataModeConvert (String mode)
 void MetaData::makeAbsPath(const MDLabel label)
 {
 
-	std::string aux_string;
-	std::string aux_string_path;
-	char buffer[1024];
+    std::string aux_string;
+    std::string aux_string_path;
+    char buffer[1024];
 
-	getcwd(buffer, 1023);
-	std::string path_str(buffer);
-	path_str += "/";
+    getcwd(buffer, 1023);
+    std::string path_str(buffer);
+    path_str += "/";
 
-	this->firstObject();
-	getValue(label,aux_string);
+    this->firstObject();
+    getValue(label,aux_string);
 
-	if (aux_string[0] == '/')
-		return;
+    if (aux_string[0] == '/')
+        return;
 
-	FOR_ALL_OBJECTS_IN_METADATA(*this)
+    FOR_ALL_OBJECTS_IN_METADATA(*this)
     {
-		aux_string_path = path_str;
-		getValue(label,aux_string);
-		aux_string_path += aux_string;
+        aux_string_path = path_str;
+        getValue(label,aux_string);
+        aux_string_path += aux_string;
         setValue(label,aux_string_path);
     }
 }

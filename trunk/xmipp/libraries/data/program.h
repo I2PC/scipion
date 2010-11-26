@@ -199,7 +199,7 @@ protected:
     /// Metadata writing mode: OVERWRITE, APPEND
     WriteModeMetaData mode;
     /// Input and output metadatas
-    MetaData        mdIn, mdOut;
+    MetaData     mdIn, mdOut;
     /// Filenames of input and output Images
     //FileName        fnImg, fnImgOut;
     /// Output extension and root
@@ -213,6 +213,10 @@ protected:
     bool each_image_produces_an_output;
     /// Use this flag for not producing a time bar
     bool allow_time_bar;
+    /// Some time bar related counters
+    int time_bar_step, time_bar_size, time_bar_done;
+    /// Flag to know when input is a single image
+    bool single_image;
 
     virtual void defineParams();
     virtual void readParams();
@@ -220,6 +224,19 @@ protected:
     virtual void postProcess();
     virtual void processImage(const FileName &fnImg, const FileName &fnImgOut, long int objId) = 0;
     virtual void show();
+    /** Do some stuff before starting processing
+     * in a parallel environment usually this only be executed
+     * by master.
+     */
+    virtual void startProcessing();
+    virtual void finishProcessing();
+    virtual void showProgress();
+    /** This method will be used to distribute the images to process
+     * it will return the objectId to read from input metadata
+     * or -1 if there are no more images to process.
+     * This method will be useful for parallel task distribution
+     */
+    virtual long int getImageToProcess();
 
 public:
     XmippMetadataProgram();
