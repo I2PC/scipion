@@ -729,31 +729,6 @@ MetaData_removeObjects(PyObject *obj, PyObject *args, PyObject *kwargs)
 }
 /* SingleImgSize */
 static PyObject *
-xmipp_SingleImgSize(PyObject *obj, PyObject *args, PyObject *kwargs)
-{
-  PyObject *pyValue; //Only used to skip label and value
-
-  if (PyArg_ParseTuple(args, "O", &pyValue))
-  {
-    try
-    {
-      PyObject * pyStr = PyObject_Str(pyValue);
-      char * str = PyString_AsString(pyStr);
-      int xdim, ydim, zdim;
-      unsigned long ndim;
-      SingleImgSize(str, xdim, ydim, zdim, ndim);
-      Py_DECREF(pyStr);
-      return Py_BuildValue("iiik", xdim, ydim, zdim, ndim);
-    }
-    catch (XmippError xe)
-    {
-      PyErr_SetString(PyXmippError, xe.msg.c_str());
-    }
-  }
-  return NULL;
-}
-/* SingleImgSize */
-static PyObject *
 MetaData_makeAbsPath(PyObject *obj, PyObject *args, PyObject *kwargs)
 {
   int label = (MDLabel)MDL_IMAGE;
@@ -1179,6 +1154,62 @@ xmipp_MDValueRange(PyObject *obj, PyObject *args, PyObject *kwargs)
   }
   return NULL;
 }
+/* SingleImgSize */
+static PyObject *
+xmipp_SingleImgSize(PyObject *obj, PyObject *args, PyObject *kwargs)
+{
+  PyObject *pyValue; //Only used to skip label and value
+
+  if (PyArg_ParseTuple(args, "O", &pyValue))
+  {
+    try
+    {
+      PyObject * pyStr = PyObject_Str(pyValue);
+      char * str = PyString_AsString(pyStr);
+      int xdim, ydim, zdim;
+      unsigned long ndim;
+      SingleImgSize(str, xdim, ydim, zdim, ndim);
+      Py_DECREF(pyStr);
+      return Py_BuildValue("iiik", xdim, ydim, zdim, ndim);
+    }
+    catch (XmippError xe)
+    {
+      PyErr_SetString(PyXmippError, xe.msg.c_str());
+    }
+  }
+  return NULL;
+}
+/* readMetaDataWithTwoPossibleImages */
+static PyObject *
+xmipp_readMetaDataWithTwoPossibleImages(PyObject *obj, PyObject *args, PyObject *kwargs)
+{
+  PyObject *pyStr, *pyMd; //Only used to skip label and value
+
+  if (PyArg_ParseTuple(args, "OO", &pyStr, &pyMd))
+  {
+    try
+    {
+      if (!MetaData_Check(pyMd))
+        PyErr_SetString(PyExc_TypeError, "Expected MetaData as second argument");
+      else
+      {
+        if (PyString_Check(pyStr))
+          readMetaDataWithTwoPossibleImages(PyString_AsString(pyStr), MetaData_Value(pyMd));
+        else if (FileName_Check(pyStr))
+          readMetaDataWithTwoPossibleImages(FileName_Value(pyStr), MetaData_Value(pyMd));
+        else
+          PyErr_SetString(PyExc_TypeError, "Expected string or FileName as first argument");
+        Py_RETURN_NONE;
+      }
+    }
+    catch (XmippError xe)
+    {
+      PyErr_SetString(PyXmippError, xe.msg.c_str());
+    }
+  }
+  return NULL;
+}
+
 
 static PyMethodDef xmipp_methods[] =
 {
@@ -1209,6 +1240,9 @@ static PyMethodDef xmipp_methods[] =
      {"SingleImgSize", (PyCFunction)xmipp_SingleImgSize, METH_VARARGS,
       "Get image dimensions"
      },
+     {"readMetaDataWithTwoPossibleImages", (PyCFunction)xmipp_readMetaDataWithTwoPossibleImages, METH_VARARGS,
+       "Read a 1 or two column list of micrographs"
+        },
      {NULL} /* Sentinel */
 };
 
