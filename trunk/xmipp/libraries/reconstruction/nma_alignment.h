@@ -26,7 +26,7 @@
 #define _PROG_NMA_ALIGNMENT
 
 #include <vector>
-#include <data/progs.h>
+#include <data/program.h>
 #include <data/metadata.h>
 #include <data/image.h>
 #include "../../external/condor/ObjectiveFunction.h"
@@ -36,7 +36,7 @@
    @ingroup ReconsLibrary */
 //@{
 /** NMA Alignment Parameters. */
-class Prog_nma_alignment_prm: public Prog_parameters
+class ProgNmaAlignment: public XmippMetadataProgram
 {
 public:
     /** MPI version */
@@ -130,20 +130,20 @@ public:
       
 public:
     /// Empty constructor
-    Prog_nma_alignment_prm();
+    ProgNmaAlignment();
 
-    /// Read argument from command line
-    void read(int argc, char **argv);
+    /// Define params
+    void defineParams();
+
+    /// Read arguments from command line
+    void readParams();
 
     /// Show
     void show();
 
-    /// Usage
-    void usage();
-
     /** Produce side info.
         An exception is thrown if any of the files is not found*/
-    void produce_side_info(int rank=0);
+    void produceSideInfo(int rank=0);
     
     /** Create deformed PDB */
     FileName createDeformedPDB(int pyramidLevel) const;
@@ -163,14 +163,14 @@ public:
     double computeFitness(Matrix1D<double> &trial) const;
 
     /** Update the best fitness and the corresponding best trial*/
-    void update_bestfit(double fitness, int dim) const;
+    void updateBestFit(double fitness, int dim) const;
 
     /** Assign NMA and Alignment parameters to an image */
-    void assignParameters(Image<double> &img);
+    void processImage(const FileName &fnImg, const FileName &fnImgOut, long int objId);
 
     /** Finish processing.
         Close all output files. */
-    void finish_processing();
+    void postProcess();
 };
 
 class ObjFunc_nma_alignment: public UnconstrainedObjectiveFunction

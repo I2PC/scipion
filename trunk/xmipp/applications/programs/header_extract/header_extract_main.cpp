@@ -63,8 +63,9 @@ protected:
         mdIn.write(fn_out,blockName,mode);
     }
 
-    void processImage()
+    void processImage(const FileName &fnImg, const FileName &fnImgOut, long int objId)
     {
+      Image<double> img;
         img.read(fnImg, false);
         xx = img.Xoff();
         yy = img.Yoff();

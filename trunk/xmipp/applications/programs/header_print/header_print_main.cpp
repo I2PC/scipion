@@ -47,8 +47,9 @@ protected:
         std::cout << " Printing the header ... " << std::endl;
     }
 
-    void processImage()
+    void processImage(const FileName &fnImg, const FileName &fnImgOut, long int objId)
     {
+      Image<double> img;
         img.read(fnImg, false, -1, false);
         std::cout << img << std::endl;
     }

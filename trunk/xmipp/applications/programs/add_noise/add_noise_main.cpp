@@ -102,9 +102,9 @@ protected:
     }
 
 
-    void processImage()
+    void processImage(const FileName &fnImg, const FileName &fnImgOut, long int objId)
     {
-        img.read(fnImg);
+        Image<double> img; img.read(fnImg);;
         img().addNoise(param1, param2, noise_type, df);
 
         if (do_limit0)
@@ -132,5 +132,6 @@ int main(int argc, char *argv[])
     ProgAddNoise program;
     program.read(argc, argv);
     program.tryRun();
+    return 0;
 }
 

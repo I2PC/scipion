@@ -105,9 +105,9 @@ protected:
 
     }
 
-    void processImage()
+    void processImage(const FileName &fnImg, const FileName &fnImgOut, long int objId)
     {
-        img.read(fnImg);
+        Image<double> img; img.read(fnImg);;
 
         if (filterOperator != NULL)
             filterOperator(img, params);

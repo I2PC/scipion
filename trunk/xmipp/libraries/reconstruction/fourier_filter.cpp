@@ -254,11 +254,11 @@ void ProgFourierFilter::show()
     }
 }
 
-void ProgFourierFilter::processImage()
+void ProgFourierFilter::processImage(const FileName &fnImg, const FileName &fnImgOut, long int objId)
 {
     static bool first = false;
 
-    img.read(fnImg);
+    Image<double> img; img.read(fnImg);;
     if (first)
     {
         generateMask(img());

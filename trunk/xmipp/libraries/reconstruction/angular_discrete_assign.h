@@ -187,7 +187,7 @@ public:
         Predict angles and shift.
         This function searches in the shift-psi space and for each combination
         it correlates with the whole reference set. */
-    void processImage();
+    void processImage(const FileName &fnImg, const FileName &fnImgOut, long int objId);
 
     /** Finish processing.
         Close all output files. */

@@ -137,9 +137,9 @@ void ProgDenoise::readParams()
     produceSideInfo();
 }
 
-void ProgDenoise::processImage()
+void ProgDenoise::processImage(const FileName &fnImg, const FileName &fnImgOut, long int objId)
 {
-    img.read(fnImg);
+    Image<double> img; img.read(fnImg);;
     denoise(img());
 }
 

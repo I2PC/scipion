@@ -102,7 +102,7 @@ void ProgCorrectBfactor::show()
 }
 
 
-void ProgCorrectBfactor::processImage()
+void ProgCorrectBfactor::processImage(const FileName &fnImg, const FileName &fnImgOut, long int objId)
 {
     Image<double> vol;
     vol.read(fnImg);

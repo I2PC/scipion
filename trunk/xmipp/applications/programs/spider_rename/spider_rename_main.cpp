@@ -43,11 +43,12 @@ protected:
         REPORT_ERROR(ERR_ARG_MISSING, "-o is required");
     }
 
-    void processImage()
+    void processImage(const FileName &fnImg, const FileName &fnImgOut, long int objId)
     {
         static int counter = 0;
         ++counter;
-        fnImgOut.compose(oroot, counter, oext);
+        FileName fnTemp(fnImgOut);
+        fnTemp.compose(oroot, counter, oext);
         if (verbose)
             std::cout << "Renaming " << fn_in << " as " << fn_out << std::endl;
         std::string command = (std::string)"cp " + fn_in + " " + fn_out;

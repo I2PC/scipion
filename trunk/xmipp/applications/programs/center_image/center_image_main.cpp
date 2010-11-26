@@ -54,9 +54,9 @@ public:
         std::cout << "LimitShift = " << limitShift << std::endl;
     }
 
-    void processImage()
+    void processImage(const FileName &fnImg, const FileName &fnImgOut, long int objId)
     {
-      img.read(fnImg);
+      Image<double> img; img.read(fnImg);;
       img().checkDimensionWithDebug(2,__FILE__,__LINE__);
       centerImage(img(), Niter, limitShift);
     }

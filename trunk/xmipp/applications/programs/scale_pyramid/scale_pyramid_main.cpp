@@ -76,9 +76,9 @@ public:
     	scaleFactor = (float)(pow(2.0, levels));
     }
 
-    void processImage()
+    void processImage(const FileName &fnImg, const FileName &fnImgOut, long int objId)
     {
-    	img.read(fnImg);
+    	Image<double> img; img.read(fnImg);;
         float Xoff, Yoff, Zoff;
         Xoff=img.Xoff();
         Yoff=img.Yoff();

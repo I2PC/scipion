@@ -191,7 +191,7 @@ public:
 class XmippMetadataProgram: public XmippProgram
 {
 protected:
-    Image<double>   img;
+    //Image<double>   img;
     /// Filenames of input and output Metadata
     FileName        fn_in, fn_out;
     /// Metadata Blockname (several metadata may go in the same file)
@@ -201,7 +201,7 @@ protected:
     /// Input and output metadatas
     MetaData        mdIn, mdOut;
     /// Filenames of input and output Images
-    FileName        fnImg, fnImgOut;
+    //FileName        fnImg, fnImgOut;
     /// Output extension and root
     FileName oext, oroot;
     /// Set this to true for allow the option
@@ -218,7 +218,7 @@ protected:
     virtual void readParams();
     virtual void preProcess();
     virtual void postProcess();
-    virtual void processImage() = 0;
+    virtual void processImage(const FileName &fnImg, const FileName &fnImgOut, long int objId) = 0;
     virtual void show();
 
 public:

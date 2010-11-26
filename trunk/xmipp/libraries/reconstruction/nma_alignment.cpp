@@ -30,43 +30,63 @@
 #include "../../external/condor/tools.h"
 
 // Empty constructor =======================================================
-Prog_nma_alignment_prm::Prog_nma_alignment_prm()
+ProgNmaAlignment::ProgNmaAlignment()
 {
     MPIversion = false;
     currentImg=NULL;
     each_image_produces_an_output = true;
 }
 
-// Read arguments ==========================================================
-void Prog_nma_alignment_prm::read(int argc, char **argv)
+// Params definition ============================================================
+void ProgNmaAlignment::defineParams()
 {
-    Prog_parameters::read(argc, argv);
-    fnPDB=getParameter(argc,argv,"-pdb");
-    fnOut=getParameter(argc,argv,"-oang");
-    fnModeList=getParameter(argc,argv,"-modes");
-    scale_defamp=textToFloat(getParameter(argc,argv,"-deformation_scale"));
-    sampling_rate=(double)textToFloat(getParameter(argc,argv,"-sampling_rate"));
-    symmetry=getParameter(argc,argv,"-sym","c1");
-    fnmask=getParameter(argc,argv,"-mask","");
-    gaussian_DFT_sigma = (double)textToFloat(getParameter(argc, argv, "-gaussian_Fourier", "0.5"));
-    gaussian_Real_sigma = (double)textToFloat(getParameter(argc, argv, "-gaussian_Real", "0.5"));
-    weight_zero_freq = (double)textToFloat(getParameter(argc, argv, "-zerofreq_weight", "0."));
-    do_centerPDB = checkParameter(argc, argv, "-centerPDB");
-    do_FilterPDBVol = checkParameter(argc, argv, "-filterVol");
+  XmippMetadataProgram::defineParams();
+    addParamsLine("   -pdb <PDB filename>                : PDB Model to compute NMA");
+    addParamsLine("   -oang <output filename>            : File for the assignment");
+    addParamsLine("   -modes <filename>                  : File with a list of mode filenames");
+    addParamsLine("   -deformation_scale                 : Scaling factor to scale deformation amplitude");
+    addParamsLine("   -sampling_rate <Ts>                : in Angstroms/pixel");
+    addParamsLine("  [-sym <symmetry=\"\">]              : Symmetry file or point group");
+    addParamsLine("  [-mask <m=\"\">]                    : Mask");
+    addParamsLine("  [-gaussian_Fourier <s=0.5>]         : Weighting sigma in Fourier space");
+    addParamsLine("  [-gaussian_Real    <s=0.5>]         : Weighting sigma in Real space");
+    addParamsLine("  [-zerofreq_weight  <s=0.>]          : Zero-frequency weight");
+    addParamsLine("  [-centerPDB]                        : Center the PDB structure");
+    addParamsLine("  [-filterVol <cutoff=15.>]           : Flter the volume from the PDB structure. Default cut-off is 15 A.");
+    addParamsLine("  [-fixed_Gaussian <std=-1>]          : For pseudo atoms fixed_Gaussian must be used.");
+    addParamsLine("                                      : Default standard deviation <std> is read from PDB file.");
+}
+
+// Read arguments ==========================================================
+void ProgNmaAlignment::readParams()
+{
+    XmippMetadataProgram::readParams();
+    fnPDB = getParam("-pdb");
+    fnOut = getParam("-oang");
+    fnModeList = getParam("-modes");
+    scale_defamp = getDoubleParam("-deformation_scale");
+    sampling_rate = getDoubleParam("-sampling_rate");
+    symmetry = getParam("-sym");
+    fnmask = getParam("-mask");
+    gaussian_DFT_sigma = getDoubleParam( "-gaussian_Fourier");
+    gaussian_Real_sigma = getDoubleParam( "-gaussian_Real");
+    weight_zero_freq = getDoubleParam( "-zerofreq_weight");
+    do_centerPDB = checkParam("-centerPDB");
+    do_FilterPDBVol = checkParam("-filterVol");
     if (do_FilterPDBVol)
-        cutoff_LPfilter=(double)textToFloat(getParameter(argc,argv,"-filterVol","15."));
-    useFixedGaussian = checkParameter(argc, argv, "-fixed_Gaussian");
+        cutoff_LPfilter = getDoubleParam("-filterVol");
+    useFixedGaussian = checkParam("-fixed_Gaussian");
     if (useFixedGaussian)
-        sigmaGaussian=(double)textToFloat(getParameter(argc,argv,"-fixed_Gaussian","-1"));
+        sigmaGaussian = getDoubleParam("-fixed_Gaussian");
 
     if (!MPIversion)
-        produce_side_info();
+        produceSideInfo();
 }
 
 // Show ====================================================================
-void Prog_nma_alignment_prm::show()
+void ProgNmaAlignment::show()
 {
-    Prog_parameters::show();
+    XmippMetadataProgram::show();
     std::cout << "PDB:                 " << fnPDB               << std::endl
     << "Output:              " << fnOut               << std::endl
     << "Mode list:           " << fnModeList          << std::endl
@@ -84,31 +104,12 @@ void Prog_nma_alignment_prm::show()
     ;
 }
 
-// usage ===================================================================
-void Prog_nma_alignment_prm::usage()
-{
-    Prog_parameters::usage();
-    std::cerr << "   -pdb <PDB filename>                : PDB Model to compute NMA\n"
-    << "   -oang <output filename>            : File for the assignment\n"
-    << "   -modes <filename>                  : File with a list of mode filenames\n"
-    << "   -deformation_scale                 : Scaling factor to scale deformation amplitude\n"
-    << "   -sampling_rate <Ts>                : in Angstroms/pixel\n"
-    << "  [-sym]                              : Symmetry file or point group\n"
-    << "  [-mask]                             : Mask\n"
-    << "  [-gaussian_Fourier <s=0.5>]         : Weighting sigma in Fourier space\n"
-    << "  [-gaussian_Real    <s=0.5>]          : Weighting sigma in Real space\n"
-    << "  [-zerofreq_weight  <s=0.>]         : Zero-frequency weight\n"
-    << "  [-centerPDB]                        : Center the PDB structure\n"
-    << "  [-filterVol <cutoff>]               : Flter the volume from the PDB structure. Default cut-off is 15 A.\n"
-    << "  [-fixed_Gaussian <std>]             : For pseudo atoms fixed_Gaussian must be used.\n"
-    << "                                        Default standard deviation <std> is read from PDB file.\n"
-    ;
-}
+
 
 // Produce side information ================================================
-const Prog_nma_alignment_prm *global_NMA_prog;
+const ProgNmaAlignment *global_NMA_prog;
 
-void Prog_nma_alignment_prm::produce_side_info(int rank)
+void ProgNmaAlignment::produceSideInfo(int rank)
 {
     // Read list of modes
     MetaData SFmodelist;
@@ -139,7 +140,7 @@ void Prog_nma_alignment_prm::produce_side_info(int rank)
 }
 
 // Create deformed PDB =====================================================
-FileName Prog_nma_alignment_prm::createDeformedPDB(int pyramidLevel) const
+FileName ProgNmaAlignment::createDeformedPDB(int pyramidLevel) const
 {
     std::string command;
     FileName fnRandom;
@@ -208,7 +209,7 @@ FileName Prog_nma_alignment_prm::createDeformedPDB(int pyramidLevel) const
 }
 
 // Perform complete search =================================================
-void Prog_nma_alignment_prm::performCompleteSearch(
+void ProgNmaAlignment::performCompleteSearch(
     const FileName &fnRandom, int pyramidLevel) const
 {
     std::string command;
@@ -250,7 +251,7 @@ void Prog_nma_alignment_prm::performCompleteSearch(
 }
 
 // Continuous assignment ===================================================
-double Prog_nma_alignment_prm::performContinuousAssignment(
+double ProgNmaAlignment::performContinuousAssignment(
     const FileName &fnRandom, int pyramidLevel) const
 {
     // Perform alignment
@@ -279,7 +280,7 @@ double Prog_nma_alignment_prm::performContinuousAssignment(
     return tempvar;
 }
 
-void Prog_nma_alignment_prm::update_bestfit(double fitness,int dim) const
+void ProgNmaAlignment::updateBestFit(double fitness,int dim) const
 {
     if (fitness < fitness_min(0))
     {
@@ -340,7 +341,7 @@ double ObjFunc_nma_alignment::eval(Vector X, int *nerror)
 
     //std::cout << "Trial=" << global_NMA_prog->trial.transpose() << " ---> " << fitness << std::endl;
 
-    global_NMA_prog->update_bestfit(fitness,dim);
+    global_NMA_prog->updateBestFit(fitness,dim);
 
     return fitness;
 }
@@ -349,9 +350,9 @@ ObjFunc_nma_alignment::ObjFunc_nma_alignment(int _t, int _n)
 {
 }
 
-void Prog_nma_alignment_prm::assignParameters(Image<double> &img)
+void ProgNmaAlignment::processImage(const FileName &fnImg, const FileName &fnImgOut, long int objId)
 {
-    FileName imgname=img.name();
+    Image<double> img; img.read(fnImg);;
 
     double rhoStart=1e-0, rhoEnd=1e-3;
 
@@ -450,10 +451,10 @@ void Prog_nma_alignment_prm::assignParameters(Image<double> &img)
     parameters.resize(VEC_XSIZE(parameters)+1);
     parameters(VEC_XSIZE(parameters)-1)=fitness_min(0);
     listAssignments.push_back(parameters);
-    img_names.push_back(imgname);
+    img_names.push_back(fnImg);
 
     DF_out.addObject();
-    DF_out.setValue(MDL_IMAGE,imgname);
+    DF_out.setValue(MDL_IMAGE,fnImg);
     DF_out.setValue(MDL_ENABLED,1);
     DF_out.setValue(MDL_ANGLEROT,parameters(0));
     DF_out.setValue(MDL_ANGLETILT,parameters(1));
@@ -476,7 +477,7 @@ void Prog_nma_alignment_prm::assignParameters(Image<double> &img)
 }
 
 // Finish computations======================================================
-void Prog_nma_alignment_prm::finish_processing()
+void ProgNmaAlignment::postProcess()
 {
     int p = listAssignments.size();
     MetaData DF;

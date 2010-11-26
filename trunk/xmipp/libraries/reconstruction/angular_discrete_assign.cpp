@@ -655,13 +655,14 @@ int ProgAngularDiscreteAssign::pick_view(int method,
 // Run ---------------------------------------------------------------------
 // Predict shift and psi ---------------------------------------------------
 //#define DEBUG
-void ProgAngularDiscreteAssign::processImage()
+void ProgAngularDiscreteAssign::processImage(const FileName &fnImg, const FileName &fnImgOut, long int objId)
 {
     // Read the image and take its angles from the Metadata
     // if they are available. If not, take them from the header.
     // If not, set them to 0.
     MDRow mdrow;
     mdIn.getRow(mdrow);
+    Image<double> img;
     img.read(fnImg, true, -1, false, false, &mdrow, false);
 
     double best_rot, best_tilt, best_psi, best_shiftX, best_shiftY,

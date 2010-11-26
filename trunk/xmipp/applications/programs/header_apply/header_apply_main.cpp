@@ -53,9 +53,9 @@ protected:
             std::cout << "Do not wrap"<<std::endl;
     }
 
-    void processImage()
+    void processImage(const FileName &fnImg, const FileName &fnImgOut, long int objId)
     {
-        img.read(fnImg);
+        Image<double> img; img.read(fnImg);;
 
         if (ZSIZE(img())!=1 || NSIZE(img())!=1)
             REPORT_ERROR(ERR_MULTIDIM_DIM, "This program is intended only for images");

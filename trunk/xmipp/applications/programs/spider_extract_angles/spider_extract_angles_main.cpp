@@ -76,7 +76,7 @@ protected:
             std::cerr << "Extracting angles ...\n";
     }
 
-    void processImage()
+    void processImage(const FileName &fnImg, const FileName &fnImgOut, long int objId)
     {
         if (from_metadata)
         {
@@ -91,7 +91,7 @@ protected:
         }
         else
         {
-            img.read(fnImg);
+            Image<double> img; img.read(fnImg);;
             DF_out.append_angles(img.rot(), img.tilt(), img.psi(),
                                  ang1, ang2, ang3);
         }

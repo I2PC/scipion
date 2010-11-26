@@ -86,7 +86,7 @@ protected:
         }
     }
 
-    void processImage()
+    void processImage(const FileName &fnImg, const FileName &fnImgOut, long int objId)
     {
         static int counter = 0;
         std::cerr << "================ IMAGE " << (counter + 1) << "=====" << std::endl;
@@ -99,7 +99,7 @@ protected:
         else if(case_type == "stack")
         {
             std::cerr << "-------------> Reading image" <<std::endl;
-            img.read(fnImg);
+            Image<double> img; img.read(fnImg);;
             //if (replace)
             {
 
@@ -113,7 +113,7 @@ protected:
         }
         else
         {
-            img.read(fnImg);
+            Image<double> img; img.read(fnImg);;
             img.write(fnImg+"new");
         }
         //Append image to the newly created stack

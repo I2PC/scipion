@@ -35,7 +35,7 @@ int main(int argc, char **argv)
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &NProcessors);
 
-    Prog_nma_alignment_prm prm;
+    ProgNmaAlignment prm;
     try
     {
         // Read input parameters
@@ -56,7 +56,7 @@ int main(int argc, char **argv)
     try
     {
         // Prepare side information
-        prm.produce_side_info(rank);
+        prm.produceSideInfo(rank);
         MetaData SF_in(prm.fn_in);
 
         // Divide the selfile in chunks
@@ -115,7 +115,7 @@ Matrix1D<double> dummy;
                 I.read(tempname);
 
                 I().setXmippOrigin();
-                prm.assignParameters(I);
+                prm.processImage(I);
 
                 // Send the alignment parameters to the master
                 v[0] = i;
@@ -127,7 +127,7 @@ Matrix1D<double> dummy;
             }
         }
 
-        if (rank == 0) prm.finish_processing();
+        if (rank == 0) prm.postProcess();
         MPI_Finalize();
         return 0 ;
     }

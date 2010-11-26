@@ -62,7 +62,7 @@ protected:
         DF_out.append_comment((std::string)"Translation for Spider of " + fn_in);
     }
 
-    void processImage()
+    void processImage(const FileName &fnImg, const FileName &fnImgOut, long int objId)
     {
         static Matrix1D<double>   aux(1);
         static int i=1;

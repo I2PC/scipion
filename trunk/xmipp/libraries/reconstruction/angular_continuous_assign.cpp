@@ -155,13 +155,14 @@ void ProgAngularContinuousAssign::produce_side_info()
 }
 
 // Predict =================================================================
-void ProgAngularContinuousAssign::processImage()
+void ProgAngularContinuousAssign::processImage(const FileName &fnImg, const FileName &fnImgOut, long int objId)
 {
     // Read the image and take its angles from the Metadata
     // if they are available. If not, take them from the header.
     // If not, set them to 0.
     MDRow mdrow;
     mdIn.getRow(mdrow);
+    Image<double> img;
     img.read(fnImg, true, -1, false, false, &mdrow, false);
 
     double old_rot=img.rot();

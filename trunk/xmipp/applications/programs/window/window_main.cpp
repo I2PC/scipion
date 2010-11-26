@@ -193,8 +193,9 @@ public:
         Iin.write(fnImgOut);
     }
 
-    void processImage()
+    void processImage(const FileName &fnImg, const FileName &fnImgOut, long int objId)
     {
+      Image<double> img;
         img.read(fnImg,false);
 
         switch (img.dataType())

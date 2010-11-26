@@ -74,10 +74,10 @@ protected:
     		mdIn.write(fn_out,blockName,mode);
     }
 
-    void processImage()
+    void processImage(const FileName &fnImg, const FileName &fnImgOut, long int objId)
     {
 
-        img.read(fnImg);
+        Image<double> img; img.read(fnImg);;
         for (int iter = 0; iter < labelsnumber; iter++)
         {
             switch (activeLabels[iter])

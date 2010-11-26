@@ -77,9 +77,9 @@ public:
         std::cout << std::endl;
     }
 
-    void processImage()
+    void processImage(const FileName &fnImg, const FileName &fnImgOut, long int objId)
     {
-        img.read(fnImg);
+        Image<double> img; img.read(fnImg);;
 
         double co, cc, eu, mi;
         if (!usemask)

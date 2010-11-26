@@ -443,6 +443,8 @@ void XmippMetadataProgram::run()
 {
     try
     {
+      FileName fnImg, fnImgOut;
+      long int objId;
         //Perform particular preprocessing
         preProcess();
 
@@ -456,9 +458,9 @@ void XmippMetadataProgram::run()
                 fnImgOut = oroot + fnImgOut.withoutExtension();
             if (oext != "")
                 fnImgOut = fnImgOut.withoutExtension() + "." + oext;
-            mdIn.addObject();
+            objId = mdIn.addObject();
             mdIn.setValue(MDL_IMAGE,fnImg);
-            processImage();
+            processImage(fnImg, fnImgOut, objId);
         }
         else
         {
@@ -471,6 +473,7 @@ void XmippMetadataProgram::run()
 
             FOR_ALL_OBJECTS_IN_METADATA(mdIn)
             {
+              objId = mdIn.getActiveObject();
                 mdIn.getValue(MDL_IMAGE, fnImg);
 
                 if (fnImg == "")
@@ -491,7 +494,7 @@ void XmippMetadataProgram::run()
                     }
                 }
 
-                processImage();
+                processImage(fnImg, fnImgOut, objId);
 
                 if (i++ % istep == 0 && allow_time_bar && verbose)
                     progress_bar(i);
