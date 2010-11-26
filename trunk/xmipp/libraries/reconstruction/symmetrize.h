@@ -37,7 +37,7 @@
 //@{
 /* Test parameters --------------------------------------------------------- */
 /// Symmetrize Parameters
-class Symmetrize_Parameters
+class ProgSymmetrize : public XmippProgram
 {
 public:
     /// input file
@@ -54,14 +54,16 @@ public:
     bool            useBsplines;
 public:
     /** Read parameters from command line. */
-    void read(int argc, char **argv);
+    void readParams();
 
-    /** Usage */
-    void usage();
+    /** Define Parameters */
+    void defineParams();
+
+    /** Run */
+    void run();
 
     /** Show parameters */
-    friend std::ostream & operator << (std::ostream &out, const Symmetrize_Parameters
-                                       &prm);
+    //friend std::ostream & operator << (std::ostream &out, const Symmetrize_Parameters &prm);
 };
 
 /** Really symmetrize.*/
@@ -69,8 +71,6 @@ void symmetrize(const SymList &SL, MultidimArray<double> &V_in, MultidimArray<do
                 int Splinedegree=LINEAR, bool wrap=true, bool show_progress=false,
                 bool do_outside_avg=false);
 
-/** Main program */
-void ROUT_symmetrize(const Symmetrize_Parameters &prm);
 //@}
 
 #endif

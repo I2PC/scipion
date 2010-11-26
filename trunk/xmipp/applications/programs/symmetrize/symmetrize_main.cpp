@@ -27,27 +27,17 @@
 
 int main(int argc, char *argv[])
 {
-    Symmetrize_Parameters prm;
-
+	ProgSymmetrize program;
     try
     {
-        prm.read(argc, argv);
+    	program.read(argc, argv);
+    	program.run();
     }
-    catch (XmippError XE)
+    catch (XmippError xe)
     {
-        std::cout << XE;
-        prm.usage();
-        exit(1);
+        std::cerr << xe;
+        return 1;
     }
-
-    try
-    {
-        ROUT_symmetrize(prm);
-    }
-    catch (XmippError XE)
-    {
-        std::cout << XE;
-    }
-    exit(0);
+    return 0;
 }
 

@@ -28,48 +28,34 @@
 #include <data/args.h>
 
 /* Read parameters --------------------------------------------------------- */
-void Symmetrize_Parameters::read(int argc, char **argv)
+void ProgSymmetrize::readParams()
 {
-    fn_in  = getParameter(argc, argv, "-i");
-    fn_out = getParameter(argc, argv, "-o", "");
-    fn_sym = getParameter(argc, argv, "-sym");
-    do_not_generate_subgroup = checkParameter(argc, argv, "-no_group");
-    wrap = !checkParameter(argc, argv, "-dont_wrap");
-    useBsplines = checkParameter(argc, argv, "-splines");
+    fn_in  = getParam("-i");
+    fn_out = getParam("-o");
+    fn_sym = getParam("--sym");
+    do_not_generate_subgroup = checkParam("--no_group");
+    wrap = !checkParam("--dont_wrap");
+    useBsplines = checkParam("--splines");
 }
 
 /* Usage ------------------------------------------------------------------- */
-void Symmetrize_Parameters::usage()
+void ProgSymmetrize::defineParams()
 {
-    std::cout
-    << "Usage: symmetrize [Purpose and Parameters]\n"
-    << "Purpose: Symmetrize a 3D volume\n"
-    << "Parameter Values: (notice space before value)\n"
-    << "    -i <file_in>        : input 3D Xmipp file\n"
-    << "   [-o <file_out>]      : if no name is given then the input file is\n"
-    << "                          rewritten\n"
-    << "    -sym <sym_file>     : symmetry file (see the manual)\n"
-    << "   [-no_group]          : do not generate symmetry subgroup\n"
-    << "   [-dont_wrap]         : by default, the volume is wrapped\n"
-    << "   [-splines]           : by default, trilinear interpolation\n";
+    addUsageLine("Symmetrize a 3D volume ");
+    addUsageLine("Example of use: Sample at i3 symmetry and the volume is not wrapped");
+    addUsageLine("   xmipp_symmetrize -i input.vol --sym i3 --dont_wrap");
+    addParamsLine("    -i <file_in>        : input 3D Xmipp file");
+    addParamsLine("   [-o <file_out=\"\">]      : if no name is given then the input file is rewritten");
+    addParamsLine("    --sym <sym_file>     : symmetry file (see the manual)");
+    addParamsLine("   [--no_group]          : do not generate symmetry subgroup");
+    addParamsLine("   [--dont_wrap]         : by default, the volume is wrapped");
+    addParamsLine("   [--splines]           : by default, trilinear interpolation");
 }
 
-/* Show -------------------------------------------------------------------- */
-std::ostream & operator << (std::ostream &out, const Symmetrize_Parameters &prm)
-{
-    out << "File in:       " << prm.fn_in  << std::endl
-    << "File out:      " << prm.fn_out << std::endl
-    << "Symmetry file: " << prm.fn_sym << std::endl
-    << "Generate group:" << !prm.do_not_generate_subgroup << std::endl
-    << "Wrapping:      " << prm.wrap   << std::endl;
-    out << "Splines:       " << prm.useBsplines << std::endl;
-    return out;
-}
-
-/* Really symmetrize ------------------------------------------------------- */
+/* Symmetrize ------------------------------------------------------- */
 //#define DEBUG
 void symmetrize(const SymList &SL, MultidimArray<double> &V_in, MultidimArray<double> &V_out,
-		        int Splinedegree,bool wrap, bool show_progress, bool do_outside_avg)
+                                int Splinedegree,bool wrap, bool show_progress, bool do_outside_avg)
 {
     Matrix2D<double> L(4, 4), R(4, 4); // A matrix from the list
     MultidimArray<double> V_aux, V_aux2;
@@ -105,7 +91,7 @@ void symmetrize(const SymList &SL, MultidimArray<double> &V_in, MultidimArray<do
         R(3, 2) = sh(2) * V_aux.zdim;//sliceNumber();
 
         applyGeometry(Splinedegree,V_aux, V_in, R.transpose(), IS_NOT_INV, wrap, avg);
-//#define DEBUG
+        //#define DEBUG
 #ifdef DEBUG
 
         V_aux.write((std::string)"PPPsym_" + integerToString(i) + ".vol");
@@ -125,26 +111,25 @@ void symmetrize(const SymList &SL, MultidimArray<double> &V_in, MultidimArray<do
 #undef DEBUG
 
 /* Main program ------------------------------------------------------------ */
-void ROUT_symmetrize(const Symmetrize_Parameters &prm)
+void ProgSymmetrize::run()
 {
     SymList           SL;
     Image<double>     V_in;
     Image<double>     V_out;
-    FileName          fn_out;
 
-    double accuracy = (prm.do_not_generate_subgroup) ? -1 : 1e-6;
-    SL.read_sym_file(prm.fn_sym, accuracy);
+    double accuracy = (do_not_generate_subgroup) ? -1 : 1e-6;
+    SL.read_sym_file(fn_sym, accuracy);
     std:: cout << "Number of symmetries: " << SL.SymsNo() << std::endl;
-    V_in.read(prm.fn_in);
+    V_in.read(fn_in);
 
-    std::cerr << prm;
-    if (!prm.useBsplines)
-        symmetrize(SL, V_in(), V_out(), LINEAR, prm.wrap, true,false);
+    //std::cerr << prm;
+    if (!useBsplines)
+        symmetrize(SL, V_in(), V_out(), LINEAR, wrap, true,false);
     else
-    	symmetrize(SL, V_in(), V_out(), 3, prm.wrap, true,true);
-    if (prm.fn_out == "")
+        symmetrize(SL, V_in(), V_out(), 3, wrap, true,true);
+    if (fn_out == "")
         fn_out = V_in.name();
-    else
-        fn_out = prm.fn_out;
     V_out.write(fn_out);
 }
+
+
