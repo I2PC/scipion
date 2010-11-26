@@ -317,6 +317,20 @@ MinimumCrossCorrelation='-1'
 """    
 DiscardPercentage='10'
 
+# Step scale factor size
+""" Scale step factor size (1 means 0.01 in/de-crements arround 1).
+"""    
+ScaleStep='1'
+
+# Number of scale steps
+""" Number of scale steps.
+    With default values (ScaleStep='1' and ScaleNumberOfSteps='3'): 1 ±0.01 | ±0.02 | ±0.03.    
+    With values ScaleStep='2' and ScaleNumberOfSteps='4' it performs a scale search over:
+     1 ±0.02 | ±0.04 | ±0.06 | ±0.08.    
+"""    
+ScaleNumberOfSteps='3'
+
+
 # {expert} Additional options for Projection_Matching
 """ See http://xmipp.cnb.uam.es/twiki/bin/view/Xmipp/Projection_matching and
         http://xmipp.cnb.uam.es/twiki/bin/view/Xmipp/Mpi_projection_matching for details
@@ -597,6 +611,8 @@ class projection_matching_class:
                 _DoRetricSearchbyTiltAngle,
                 _Tilt0,
                 _TiltF,
+                _ScaleStep,
+                _ScaleNumberOfSteps,
                 _ProjMatchingExtra,
                 _MaxChangeOffset,
                 _MaxChangeInAngles,
@@ -644,8 +660,8 @@ class projection_matching_class:
                 _MyMpiJobSize,
                 _MyNumberOfThreads,
                 _SymmetryGroup,
-        _SymmetryGroupNeighbourhood,
-        _OnlyWinner,
+                _SymmetryGroupNeighbourhood,
+                _OnlyWinner,
                 _DoLowPassFilter,
                 _UseFscForFilter,
                 _ConstantToAddToFiltration,
@@ -676,6 +692,8 @@ class projection_matching_class:
        self._PerturbProjectionDirections=_PerturbProjectionDirections
        self._Tilt0=_Tilt0
        self._TiltF=_TiltF
+       self._ScaleStep = ScaleStep
+       self._ScaleNumberOfSteps = ScaleNumberOfSteps
        self._ProjMatchingExtra=_ProjMatchingExtra
        self._ProjectDir=_ProjectDir
        self._InnerRadius=_InnerRadius
@@ -927,6 +945,8 @@ class projection_matching_class:
                                          self._Search5DStep,
                                          self._MaxChangeOffset, 
                                          self._MaxChangeInAngles,
+                                         self._ScaleStep,
+                                         self._ScaleNumberOfSteps,
                                          self._ProjMatchingExtra,
                                          self._MinimumCrossCorrelation,
                                          self._DiscardPercentage,
@@ -1198,6 +1218,8 @@ def execute_projection_matching(_mylog,
                                 _Search5DStep,
                                 _MaxChangeOffset,
                                 _MaxChangeInAngles,
+                                _ScaleStep,
+                                _ScaleNumberOfSteps,
                                 _ProjMatchingExtra,
                                 _MinimumCrossCorrelation,
                                 _DiscardPercentage,
@@ -1209,8 +1231,8 @@ def execute_projection_matching(_mylog,
                                 _MyMpiJobSize,
                                 _WorkingDir,
                                 _SymmetryGroup,
-                _SymmetryGroupNeighbourhood,
-                _OnlyWinner,
+                                _SymmetryGroupNeighbourhood,
+                                _OnlyWinner,
                                 _AvailableMemory,
                                 _DoComputeResolution,
                                 _DoSplitReferenceImages,
@@ -1320,7 +1342,8 @@ def execute_projection_matching(_mylog,
                   ' --search5d_shift ' + str(_Search5DShift) + \
                   ' --search5d_step  ' + str(_Search5DStep) + \
                   ' --mem '            + str(_AvailableMemory * _MyNumberOfThreads) + \
-                  ' --thr '            + str(_MyNumberOfThreads) 
+                  ' --thr '            + str(_MyNumberOfThreads) + \
+                  ' --scale '          + str(_ScaleStep) + ' ' + str(_ScaleNumberOfSteps) 
 
       if (_DoCtfCorrection and _ReferenceIsCtfCorrected):
          ctffile = CtfGroupName + '.ctf'
@@ -1882,7 +1905,9 @@ if __name__ == '__main__':
                 PerturbProjectionDirections,
                 DoRetricSearchbyTiltAngle,      
                 Tilt0,                          
-                TiltF,                          
+                TiltF,   
+                ScaleStep,
+                ScaleNumberOfSteps,
                 ProjMatchingExtra,              
                 MaxChangeOffset,
                 MaxChangeInAngles,
