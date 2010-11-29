@@ -24,8 +24,59 @@
  *  All comments concerning this program package may be sent to the
  *  e-mail address 'xmipp@cnb.uam.es'
  ***************************************************************************/
-#include <mpi.h>
+//#include <mpi.h>
 #include <reconstruction/nma_alignment.h>
+#include <parallel/mpi.h>
+
+/** Class to perfom the NMA Alignment with  MPI parallelization */
+class MpiProgNMA: public ProgNmaAlignment
+{
+private:
+    MpiNode *node;
+    FileTaskDistributor *distributor;
+    std::vector<long int> imgsId;
+
+public:
+    /** Constructor */
+    MpiProgNMA()
+    {
+        MPIversion = true;
+        //Initialization of MPI
+    }
+    /** Destructor */
+    ~MpiProgNMA()
+    {
+        delete node;
+    }
+
+    /** Redefine read to initialize MPI environment */
+    void read(int argc, char **argv)
+    {
+        node = new MpiNode(argc, argv);
+        ProgNmaAlignment::read(argc, argv);
+    }
+    /** Redefine show, only master show */
+    void show()
+    {
+        if (node->isMaster())
+            ProgNmaAlignment::show();
+    }
+
+    /** main body */
+    void startProcessing()
+    {
+        //      if (node->isMaster())
+        //        ProgNmaAlignment::startProcessing();
+        //      long int n = mdIn.size();
+        //      distributor = new FileTaskDistributor(n, 1, node);
+        //      imgsId.resize(n);
+        //      mdIn
+    }
+
+
+
+}
+;//end of class MpiProgNMA
 
 int main(int argc, char **argv)
 {
@@ -39,7 +90,7 @@ int main(int argc, char **argv)
     try
     {
         // Read input parameters
-	prm.MPIversion=true;
+        prm.MPIversion=true;
         prm.read(argc, argv);
     }
     catch (XmippError XE)
@@ -60,30 +111,32 @@ int main(int argc, char **argv)
         MetaData SF_in(prm.fn_in);
 
         // Divide the selfile in chunks
-        int imgNbr = prm.get_images_to_process();
+        int imgNbr = prm.fn_in.size();
         int Nchunk = (int)((float)imgNbr / (float)(NProcessors - 1));
         int myFirst = (rank - 1) * Nchunk;
         int myLast = rank * Nchunk - 1;
-        if (rank == NProcessors - 1) myLast = imgNbr - 1;
+        if (rank == NProcessors - 1)
+            myLast = imgNbr - 1;
 
         // Make the alignment, rank=0 receives all the assignments
         // The rest of the ranks compute the angular parameters for their
         // assigned images
-	
-	int numberofparam = 7 + prm.modeList.size();
-	
+
+        int numberofparam = 7 + prm.modeList.size();
+
         double v[numberofparam];
         if (rank == 0)
         {
             int i=0;
-FOR_ALL_OBJECTS_IN_METADATA(SF_in){
-   FileName fnImg;
-   SF_in.getValue(MDL_IMAGE,fnImg);
-   prm.img_names.push_back(fnImg);
-Matrix1D<double> dummy;
-   prm.listAssignments.push_back(dummy);
-   i++;
-}
+            FOR_ALL_OBJECTS_IN_METADATA(SF_in)
+            {
+                FileName fnImg;
+                SF_in.getValue(MDL_IMAGE,fnImg);
+                prm.img_names.push_back(fnImg);
+                Matrix1D<double> dummy;
+                prm.listAssignments.push_back(dummy);
+                i++;
+            }
             int toGo = imgNbr;
             MPI_Status status;
             //std::cerr << "Assigning modes and angles ...\n";
@@ -93,11 +146,11 @@ Matrix1D<double> dummy;
                 MPI_Recv(v, numberofparam, MPI_DOUBLE, MPI_ANY_SOURCE,
                          MPI_ANY_TAG, MPI_COMM_WORLD, &status);
                 int i = (int)v[0];
-		Matrix1D<double> aux(numberofparam-1);
+                Matrix1D<double> aux(numberofparam-1);
 
-	        for (int j=1; j<numberofparam; j++)
+                for (int j=1; j<numberofparam; j++)
                     aux(j-1)=v[j];
-		prm.listAssignments[i]=aux;
+                prm.listAssignments[i]=aux;
                 toGo--;
             }
             progress_bar(imgNbr);
@@ -110,7 +163,7 @@ Matrix1D<double> dummy;
                 Image<double> I;
                 FileName tempname;
                 SF_in.getValue(MDL_IMAGE,tempname,i+1);
-                
+
                 //Old (no metadata etc) : I.read(tempname, false, false, false);
                 I.read(tempname);
 
@@ -119,7 +172,7 @@ Matrix1D<double> dummy;
 
                 // Send the alignment parameters to the master
                 v[0] = i;
-		for (int j=1; j<numberofparam; j++)
+                for (int j=1; j<numberofparam; j++)
                 {
                     v[j]=prm.parameters(j-1);
                 }
@@ -127,7 +180,8 @@ Matrix1D<double> dummy;
             }
         }
 
-        if (rank == 0) prm.postProcess();
+        if (rank == 0)
+            prm.postProcess();
         MPI_Finalize();
         return 0 ;
     }
@@ -136,6 +190,6 @@ Matrix1D<double> dummy;
     {
         std::cout << XE << std::endl;
         MPI_Finalize();
-	return 1 ;
+        return 1 ;
     }
 }
