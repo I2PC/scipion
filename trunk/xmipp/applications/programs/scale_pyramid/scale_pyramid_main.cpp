@@ -78,7 +78,7 @@ public:
 
     void processImage(const FileName &fnImg, const FileName &fnImgOut, long int objId)
     {
-    	Image<double> img; img.read(fnImg);;
+    	Image<double> img; img.read(fnImg);
         float Xoff, Yoff, Zoff;
         Xoff=img.Xoff();
         Yoff=img.Yoff();
@@ -86,16 +86,16 @@ public:
         switch (operation)
         {
         case Expand:
-            pyramidExpand(3,result(),img(),levels);
+            pyramidExpand(BSPLINE3, result(),img(),levels);
             img.setXoff(Xoff*scaleFactor);
             img.setYoff(Yoff*scaleFactor);
             img.setZoff(Zoff*scaleFactor);
             break;
         case Reduce:
-            pyramidReduce(3,result(),img(),levels);
-            img.setXoff(Xoff*scaleFactor);
-            img.setYoff(Yoff*scaleFactor);
-            img.setZoff(Zoff*scaleFactor);
+            pyramidReduce(BSPLINE3,result(),img(),levels);
+            img.setXoff(Xoff/scaleFactor);
+            img.setYoff(Yoff/scaleFactor);
+            img.setZoff(Zoff/scaleFactor);
             break;
         }
         result.write(fnImgOut);
