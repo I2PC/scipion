@@ -191,9 +191,11 @@ public:
 class XmippMetadataProgram: public XmippProgram
 {
 protected:
+public:
     //Image<double>   img;
     /// Filenames of input and output Metadata
     FileName        fn_in, fn_out;
+protected:
     /// Metadata Blockname (several metadata may go in the same file)
     std::string blockName;
     /// Metadata writing mode: OVERWRITE, APPEND

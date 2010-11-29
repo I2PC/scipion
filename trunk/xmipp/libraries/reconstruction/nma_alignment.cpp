@@ -41,12 +41,12 @@ ProgNmaAlignment::ProgNmaAlignment()
 void ProgNmaAlignment::defineParams()
 {
   XmippMetadataProgram::defineParams();
-    addParamsLine("   -pdb <PDB filename>                : PDB Model to compute NMA");
-    addParamsLine("   -oang <output filename>            : File for the assignment");
+    addParamsLine("   -pdb <PDB_filename>                : PDB Model to compute NMA");
+    addParamsLine("   -oang <output_filename>            : File for the assignment");
     addParamsLine("   -modes <filename>                  : File with a list of mode filenames");
-    addParamsLine("   -deformation_scale                 : Scaling factor to scale deformation amplitude");
-    addParamsLine("   -sampling_rate <Ts>                : in Angstroms/pixel");
-    addParamsLine("  [-sym <symmetry=\"\">]              : Symmetry file or point group");
+    addParamsLine("  [-deformation_scale <s=1>]          : Scaling factor to scale deformation amplitude");
+    addParamsLine("  [-sampling_rate <Ts=1>]             : in Angstroms/pixel");
+    addParamsLine("  [-sym <symmetry=c1>]              : Symmetry file or point group");
     addParamsLine("  [-mask <m=\"\">]                    : Mask");
     addParamsLine("  [-gaussian_Fourier <s=0.5>]         : Weighting sigma in Fourier space");
     addParamsLine("  [-gaussian_Real    <s=0.5>]         : Weighting sigma in Real space");
@@ -122,7 +122,6 @@ void ProgNmaAlignment::produceSideInfo(int rank)
         modeList.push_back(tempname);
         i++;
     }
-
     // Get the size of the images in the selfile
     MetaData SFin;
     SFin.read(fn_in);
@@ -246,7 +245,6 @@ void ProgNmaAlignment::performCompleteSearch(
             " -max_shift_change "+integerToString(ROUND((double)imgSize/
                                                   (10.0*pow(2.0,(double)pyramidLevel))))+
             " -search5D -sym " + symmetry + " -v 0";
-
     system(command.c_str());
 }
 

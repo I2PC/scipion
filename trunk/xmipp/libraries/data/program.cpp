@@ -454,7 +454,7 @@ void XmippMetadataProgram::finishProcessing()
     if (allow_time_bar && verbose)
         progress_bar(time_bar_size);
 
-    if (!mdOut.isEmpty())
+    if (!single_image && !mdOut.isEmpty())
         mdOut.write(fn_out);
 }
 
@@ -508,8 +508,6 @@ void XmippMetadataProgram::run()
                     mdOut.setValue(MDL_ENABLED, 1);
                 }
             }
-            std::cerr << "fnImg: " << fnImg << std::endl;
-            std::cerr << "fnImgOut: " << fnImgOut << std::endl;
 
             processImage(fnImg, fnImgOut, objId);
 
