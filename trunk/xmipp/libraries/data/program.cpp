@@ -1,5 +1,5 @@
 /***************************************************************************
- * Authors:     AUTHOR_NAME (josem@cnb.csic.es)
+ * Authors:     J.M. de la Rosa Trevin (josem@cnb.csic.es)
  *
  *
  * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
