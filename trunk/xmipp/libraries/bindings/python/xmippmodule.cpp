@@ -634,10 +634,40 @@ MetaData_getValue(PyObject *obj, PyObject *args, PyObject *kwargs)
     {
       MDObject * object = new MDObject((MDLabel)label);
       MetaDataObject *self = (MetaDataObject*)obj;
-      self->metadata->getValue(*object, objectId);
-      pyValue = getMDObjectValue(object);
-      delete object;
-      return pyValue;
+      if (self->metadata->getValue(*object, objectId))
+      {
+    	  pyValue = getMDObjectValue(object);
+    	  delete object;
+    	  return pyValue;
+      }
+      else
+      {
+    	  delete object;
+    	  Py_RETURN_NONE;
+      }
+    }
+    catch (XmippError xe)
+    {
+      PyErr_SetString(PyXmippError, xe.msg.c_str());
+    }
+  }
+  return NULL;
+}
+/* containsLabel */
+static PyObject *
+MetaData_containsLabel(PyObject *obj, PyObject *args, PyObject *kwargs)
+{
+  int label;
+  PyObject *pyValue;
+  if (PyArg_ParseTuple(args, "i", &label))
+  {
+    try
+    {
+      MetaDataObject *self = (MetaDataObject*)obj;
+      if (self->metadata->containsLabel((MDLabel)label))
+    	  Py_RETURN_TRUE;
+      else
+    	  Py_RETURN_FALSE;
     }
     catch (XmippError xe)
     {
@@ -832,6 +862,9 @@ static PyMethodDef MetaData_methods[] = {
     },
     {"getValue", (PyCFunction)MetaData_getValue, METH_VARARGS,
      "Get the value for column(label)"
+    },
+    {"containsLabel", (PyCFunction)MetaData_containsLabel, METH_VARARGS,
+     "True if this metadata contains this label"
     },
     {"addLabel", (PyCFunction)MetaData_addLabel, METH_VARARGS,
      "Add a new label to MetaData"
