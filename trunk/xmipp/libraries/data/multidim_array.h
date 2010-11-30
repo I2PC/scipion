@@ -580,8 +580,20 @@ void coreArrayByArray(const MultidimArray<T>& op1, const MultidimArray<T>& op2,
 /** Template class for Xmipp arrays.
   * This class provides physical and logical access.
 */
+
+
+class MultidimArrayBase
+{
+
+public:
+
+  virtual void getDimensions(int& Xdim, int& Ydim, int& Zdim, unsigned long int &Ndim) const =0;
+  virtual void resize(unsigned long int Ndim, int Zdim, int Ydim, int Xdim, bool copy=true)=0;
+};
+
+
 template<typename T>
-class MultidimArray
+class MultidimArray: public MultidimArrayBase
 {
 public:
     /* The array itself.

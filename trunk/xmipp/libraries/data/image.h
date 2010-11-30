@@ -127,7 +127,7 @@ struct ImageFHandler
 size_t gettypesize(DataType type);
 
 /** Convert datatype string to datatypr enun */
-int datatypeString2Int(std::string s);
+DataType datatypeString2Int(std::string str);
 
 /// @name ImagesSpeedUp Images Speed-up
 /// @{
@@ -211,18 +211,16 @@ int datatypeString2Int(std::string s);
  */
 #define SWAPTRIG     65535
 
-/** Template class for images.
- * The image class is the general image handling class.
- */
-template<typename T>
-class Image
-{
-public:
-    MultidimArray<T>    data;        // The image data array
-    std::vector<MDRow>  MD;                     // data for each subimage
-    MDRow               MDMainHeader;           // data for the file
 
-private:
+
+
+
+
+// Image base class
+class ImageBase
+{
+
+protected:
     FileName            filename;    // File name
     FileName            dataFName;   // Data File name without flags
     FILE*                fimg;        // Image File handler
@@ -241,6 +239,34 @@ private:
     bool                mmapOnWrite; // Mapping when writing to file
     int                 mFd;         // Handle the file in reading method and mmap
     size_t              mappedSize;  // Size of the mapped file
+
+
+public:
+
+    virtual int read(const FileName &name, bool readdata=true, int select_img = -1,
+                     bool apply_geo = false, bool only_apply_shifts = false,
+                     MDRow * row = NULL, bool mapData = false)=0;
+    virtual void write(const FileName &name="", int select_img=-1, bool isStack=false,
+                       int mode=WRITE_OVERWRITE,bool adjust=false)=0;
+
+    virtual void newMappedFile(int Xdim, int Ydim, int Zdim, int Ndim, FileName _filename)=0;
+    virtual void clear()=0;
+
+};
+
+
+
+/** Template class for images.
+ * The image class is the general image handling class.
+ */
+template<typename T>
+class Image: public ImageBase
+{
+public:
+    MultidimArray<T>    data;        // The image data array
+    std::vector<MDRow>  MD;                     // data for each subimage
+    MDRow               MDMainHeader;           // data for the file
+
 
 public:
     /** Empty constructor
@@ -463,6 +489,12 @@ public:
     void write(const FileName &name="", int select_img=-1, bool isStack=false,
                int mode=WRITE_OVERWRITE,bool adjust=false)
     {
+        if (mmapOnWrite && mappedSize > 0)
+        {
+            munmapFile();
+            return;
+        }
+
         const FileName &fname = (name == "") ? filename : name;
         ImageFHandler* hFile = openFile(fname, mode);
         _write(fname, hFile, select_img, isStack, mode, adjust);
