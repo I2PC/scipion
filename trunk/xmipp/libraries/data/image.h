@@ -494,6 +494,11 @@ public:
             munmapFile();
             return;
         }
+        if (name.isInStack() && isStack == false && mode == WRITE_OVERWRITE)
+        {
+            isStack = true;
+            mode = WRITE_APPEND;
+        }
 
         const FileName &fname = (name == "") ? filename : name;
         ImageFHandler* hFile = openFile(fname, mode);
@@ -2029,11 +2034,16 @@ private:
         if (transform == Hermitian || transform == CentHerm )
             data.setXdim(XSIZE(data)/2 + 1);
 
-        size_t myoffset, readsize, readsize_n, pagemax = 1073741824; //1Gb
+        size_t selectImgOffset, readsize, readsize_n, pagemax = 1073741824; //1Gb
         size_t datatypesize=gettypesize(datatype);
         size_t pagesize  =ZYXSIZE(data)*datatypesize;
         size_t haveread_n=0;
         size_t selectImgSizeT=0;
+
+        // Reset select to get the correct offset
+        selectImgSizeT = ( select_img < 0 )? 0 : (size_t) select_img;
+
+        selectImgOffset = offset + selectImgSizeT*(pagesize + pad);
 
         // Flag to know that data is not going to be mapped although mmapOn is true
         if (mmapOnRead && !checkMmapT(datatype))
@@ -2055,23 +2065,17 @@ private:
                              "images file not compatible. Try selecting a unique image.");
             }
             //            fclose(fimg);
-            mappedSize = pagesize+offset;
+            offset = selectImgOffset;
+            mappedSize = offset + pagesize;
             mmapFile();
         }
         else
         {
-            // Reset select to get the correct offset
-            if ( select_img < 0 )
-                selectImgSizeT = 0;
-            else
-                selectImgSizeT = (size_t) select_img;
-
             char* page = NULL;
 
             // Allocate memory for image data (Assume xdim, ydim, zdim and ndim are already set
             //if memory already allocated use it (no resize allowed)
             data.coreAllocateReuse();
-            myoffset = offset + selectImgSizeT*(pagesize + pad);
             //ROB
             //#define DEBUG
 #ifdef DEBUG
@@ -2079,7 +2083,7 @@ private:
             data.printShape();
             printf("DEBUG: Page size: %ld offset= %ld \n", pagesize, offset);
             printf("DEBUG: Swap = %d  Pad = %ld  Offset = %ld\n", swap, pad, offset);
-            printf("DEBUG: myoffset = %ld select_img= %ld \n", myoffset, selectImgSizeT);
+            printf("DEBUG: myoffset = %ld select_img= %ld \n", selectImgOffset, selectImgSizeT);
 #endif
 #undef DEBUG
 
@@ -2088,7 +2092,7 @@ private:
             else
                 page = (char *) askMemory(pagesize*sizeof(char));
 
-            if(fseek( fimg, myoffset, SEEK_SET )==-1)
+            if(fseek( fimg, selectImgOffset, SEEK_SET )==-1)
                 REPORT_ERROR(ERR_IO_SIZE,"readData: can not seek the file pointer");
             for ( size_t myn=0; myn<NSIZE(data); myn++ )
             {
@@ -2171,7 +2175,7 @@ private:
      */
     void munmapFile()
     {
-        munmap(data.data-offset,mappedSize);
+        munmap((void*)data.data-offset,mappedSize);
         close(mFd);
         data.data = NULL;
         mappedSize = 0;
