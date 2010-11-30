@@ -28,44 +28,55 @@
 #include <data/metadata.h>
 #include <data/ctf.h>
 
-int main(int argc, char **argv)
+#include <data/program.h>
+
+class ProgCtfCreateCtfdat : public XmippProgram
 {
+
+public:
+
     FileName fn_sel, fn_doc, fn_ctf, fn_param, fn_out;
     bool do_mode2;
 
-    try
+public:
+
+    void readParams()
     {
-        fn_sel = getParameter(argc, argv, "-i");
-        fn_out = getParameter(argc, argv, "-o","out");
-        do_mode2 = checkParameter(argc, argv, "-ctfs");
+        fn_sel = getParam("-i");
+        fn_out = getParam("-o");
+        do_mode2 = checkParam("--ctfs");
         if (do_mode2)
         {
-            fn_ctf = getParameter(argc, argv, "-ctfs");
+            fn_ctf = getParam("--ctfs");
         }
         else
         {
-            fn_doc = getParameter(argc, argv, "-doc");
-            fn_param = getParameter(argc, argv, "-param");
+            fn_doc = getParam("--doc");
+            fn_param = getParam("--param");
         }
     }
-    catch (XmippError XE)
+
+    void defineParams()
     {
-        std::cerr << XE << std::endl;
-        std::cerr << "Usage: docfile_select_subset\n"
-        << "   -i <selfile>          : Input selfile of selfiles for each micrograph\n"
-        << "   -o <rootname=\"out\">   : Root name for output files \n"
-        << " MODE 1: \n"
-        << "   -param <param file>   : CTFparam file with common parameters \n"
-        << "   -doc <docfile>        : Docfile with defocus values for each micrograph \n "
-        << "                           this file may have either a single column (defocus)\n"
-        << "                           or three columns (defocusU, defocusV, azimuth_angle)\n"
-        << " MODE 2: \n"
-        << "   -ctfs <selfile>       : Selfile of CTF param files for each micropgrah \n"
-        ;
-        return 1;
+        addUsageLine("create CTFdat files from a selfile that contains image selfiles for each micrograph.");
+        addUsageLine("Example of use: Sample at MODE 1 pixel step size for 5D shift search");
+        addUsageLine("   ctf_create_ctfdat -i input.sel --param input.ctfparam --doc defocus.doc");
+        addUsageLine("Example of use: Sample at MODE 2 pixel step size for 5D shift search");
+        addUsageLine("   ctf_create_ctfdat -i imput.sel --ctfs ctfparams.sel");
+
+        addParamsLine("  -i <selfile>           : Input selfile of selfiles for each micrograph");
+        addParamsLine("  -o <rootname=\"out\">  : Root name for output files ");
+        addParamsLine(" == MODE 1: == ");
+        addParamsLine("  [--param <param_file>] : CTFparam file with common parameters ");
+        addParamsLine("  [--doc <docfile>]      : Docfile with defocus values for each micrograph ");
+        addParamsLine("                         : this file may have either a single column (defocus)");
+        addParamsLine("                         : or three columns (defocusU, defocusV, azimuth_angle)");
+        addParamsLine(" == MODE 2: == ");
+        addParamsLine("  [--ctfs <selfile>]     : Selfile of CTF param files for each micropgrah ");
     }
 
-    try
+
+    void run()
     {
         MetaData SFsel, SFind, SFctf, ctfdat;
         FileName fnsel, fnimg, fnctf;
@@ -115,8 +126,7 @@ int main(int argc, char **argv)
 
         // For both modes
         if (SFsel.size() != SFctf.size())
-            REPORT_ERROR(ERR_MD_OBJECTNUMBER,
-                         "Selfiles of options -i and -ctfs have unequal number of entries! ");
+            REPORT_ERROR(ERR_MD_OBJECTNUMBER, "Selfiles of options -i and -ctfs have unequal number of entries! ");
         SFctf.firstObject();
         FOR_ALL_OBJECTS_IN_METADATA(SFsel)
         {
@@ -136,10 +146,23 @@ int main(int argc, char **argv)
         std::cerr<<" Saved CTFdat file as "<<fn_out+".ctfdat"<<std::endl;
         std::cerr<< " Done! "<<std::endl;
     }
-    catch (XmippError XE)
+};
+
+
+int main(int argc, char **argv)
+{
+
+    ProgCtfCreateCtfdat program;
+    try
     {
-        std::cerr << XE << std::endl;
-        return 2;
+        program.read(argc, argv);
+        program.run();
+    }
+    catch (XmippError xe)
+    {
+        std::cerr << xe;
+        return 1;
     }
     return 0;
 }
+
