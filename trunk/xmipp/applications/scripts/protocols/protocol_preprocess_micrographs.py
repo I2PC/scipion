@@ -506,7 +506,7 @@ class preprocess_A_class:
         # Downsample
         if not self.Down == 1:
             command += "xmipp_micrograph_downsample -i " + iname + " -o " + shortname + "/tmp.spi " + \
-                     "--output_bits 32 "
+                     "-datatype float "
             if (self.DownKernel == 'Fourier'):
                 scale=1. / self.Down
                 command += ' -fourier ' + str(scale)
