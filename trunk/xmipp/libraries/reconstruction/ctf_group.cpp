@@ -29,30 +29,30 @@
 #include <data/metadata_extension.h>
 
 /* Read parameters from command line. -------------------------------------- */
-void CtfGroupParams::read(int argc, char **argv)
+void ProgCtfGroup::readParams()
 {
-    fn_sel        = getParameter(argc, argv, "-i");
-    fn_ctfdat     = getParameter(argc, argv, "-ctfdat");
-    fn_root       = getParameter(argc, argv, "-o","ctf");
-    phase_flipped = checkParameter(argc, argv, "-phase_flipped");
-    do_discard_anisotropy = checkParameter(argc, argv, "-discard_anisotropy");
-    do_auto       = !checkParameter(argc, argv, "-split");
-    pad           = XMIPP_MAX(1., textToFloat(getParameter(argc, argv, "-pad","1")));
+    fn_sel        = getParam("-i");
+    fn_ctfdat     = getParam("--ctfdat");
+    fn_root       = getParam("-o");
+    phase_flipped = checkParam("--phase_flipped");
+    do_discard_anisotropy = checkParam("--discard_anisotropy");
+    do_auto       = !checkParam("--split");
+    pad           = XMIPP_MAX(1., getDoubleParam("--pad"));
     if (do_auto)
     {
-        max_error     = textToFloat(getParameter(argc, argv, "-error","0.5"));
-        resol_error   = textToFloat(getParameter(argc, argv, "-resol","-1"));
+        max_error     = getDoubleParam("--error");
+        resol_error   = getDoubleParam("--resol");
     }
     else
     {
-        fn_split = getParameter(argc, argv, "-split");
+        fn_split = getParam("--split");
     }
-    do_wiener = checkParameter(argc, argv, "-wiener");
-    wiener_constant = textToFloat(getParameter(argc, argv, "-wc","-1"));
+    do_wiener = checkParam("--wiener");
+    wiener_constant = getDoubleParam("--wc");
 }
 
 /* Show -------------------------------------------------------------------- */
-void CtfGroupParams::show()
+void ProgCtfGroup::show()
 {
     std::cerr << "  Input sel file          : "<< fn_sel << std::endl;
     std::cerr << "  Input ctfdat file       : "<< fn_ctfdat << std::endl;
@@ -91,26 +91,31 @@ void CtfGroupParams::show()
 }
 
 /* Usage ------------------------------------------------------------------- */
-void CtfGroupParams::usage()
+void ProgCtfGroup::defineParams()
 {
-    std::cerr << "   -i <selfile>             : Input selfile \n"
-    << "   -ctfdat <ctfdat file>    : Input CTFdat file for all data\n"
-    << "  [-o <oext=\"ctf\">]        : Output root name\n"
-    << "  [-pad <float=1>]          : Padding factor \n"
-    << "  [-phase_flipped]          : Output filters for phase-flipped data\n"
-    << "  [-discard_anisotropy]     : Exclude anisotropic CTFs from groups\n"
-    << "  [-wiener]                 : Also calculate Wiener filters\n"
-    << "  [-wc <float=-1>]          : Wiener-filter constant (if < 0: use FREALIGN default)\n"
-    << " MODE 1: AUTOMATED: \n"
-    << "  [-error <float=0.5> ]     : Maximum allowed error\n"
-    << "  [-resol <float> ]         : Resol. (in Ang) for error calculation (default=Nyquist)\n"
-    << " MODE 2: MANUAL: \n"
-    << "  [-split <docfile> ]       : 1-column docfile with defocus values where to split the data \n"
-    ;
+    addUsageLine("Perform direct 3D reconstruction method using ");
+    addUsageLine("   Kaiser windows as interpolators");
+    addUsageLine("Example of use: Reconstruction enforcing i3 symmetry and using stored weights");
+    addUsageLine("   xmipp_reconstruct_fourier  -i reconstruction.sel --sym i3 --weight");
+
+    addParamsLine("   -i <sel_file>              : Input selfile");
+    addParamsLine("   --ctfdat <ctfdat_file>     : Input CTFdat file for all data");
+    addParamsLine("   [-o <oext=\"ctf\">]        : Output root name");
+    addParamsLine("   [--pad <float=1>]          : Padding factor ");
+    addParamsLine("   [--phase_flipped]          : Output filters for phase-flipped data");
+    addParamsLine("   [--discard_anisotropy]     : Exclude anisotropic CTFs from groups");
+    addParamsLine("   [--wiener]                 : Also calculate Wiener filters");
+    addParamsLine("   [--wc <float=-1>]          : Wiener-filter constant (if < 0: use FREALIGN default)");
+    addParamsLine(" == MODE 1: AUTOMATED: == ");
+    addParamsLine("   [--error <float=0.5> ]     : Maximum allowed error");
+    addParamsLine("   [--resol <float=-1> ]      : Resol. (in Ang) for error calculation. Default (-1) = Nyquist");
+    addParamsLine(" == MODE 2: MANUAL: == ");
+    addParamsLine("   [--split <docfile> ]       : 1-column docfile with defocus values where to split the data ");
+
 }
 
 /* Produce Side information ------------------------------------------------ */
-void CtfGroupParams::produceSideInfo()
+void ProgCtfGroup::produceSideInfo()
 {
     FileName fnt_img, fnt_ctf, fnt;
     Image<double> img;
@@ -152,10 +157,11 @@ void CtfGroupParams::produceSideInfo()
 
         // Find which CTF group it belongs to
         found = false;
-        FOR_ALL_OBJECTS_IN_METADATA(ctfdat);
+        FOR_ALL_OBJECTS_IN_METADATA(ctfdat)
         {
             ctfdat.getValue(MDL_IMAGE,fnt_img);
             ctfdat.getValue(MDL_CTFMODEL,fnt_ctf);
+
             if (fnt_img == fnt)
             {
                 found = true;
@@ -200,7 +206,7 @@ void CtfGroupParams::produceSideInfo()
                     }
                     else if (pixel_size != ctf.Tm)
                         REPORT_ERROR(ERR_VALUE_INCORRECT,
-                        		"Cannot mix CTFs with different sampling rates!");
+                                     "Cannot mix CTFs with different sampling rates!");
                     if (!do_discard_anisotropy || isIsotropic(ctf))
                     {
                         avgdef = (ctf.DeltafU + ctf.DeltafV)/2.;
@@ -297,7 +303,7 @@ void CtfGroupParams::produceSideInfo()
 }
 
 // Check whether a CTF is anisotropic
-bool CtfGroupParams::isIsotropic(CTFDescription &ctf)
+bool ProgCtfGroup::isIsotropic(CTFDescription &ctf)
 {
     double xp, yp, xpp, ypp;
     double cosp, sinp, ctfp, diff;
@@ -318,7 +324,7 @@ bool CtfGroupParams::isIsotropic(CTFDescription &ctf)
         if (diff > max_error)
         {
             std::cerr<<" Anisotropy!"<<digres<<" "<<max_error<<" "<<diff<<" "<<ctfp
-            		 <<" "<<ctf.CTF_at()<<std::endl;
+            <<" "<<ctf.CTF_at()<<std::endl;
             return false;
         }
     }
@@ -326,7 +332,7 @@ bool CtfGroupParams::isIsotropic(CTFDescription &ctf)
 }
 
 // Do the actual work
-void CtfGroupParams::autoRun()
+void ProgCtfGroup::autoRun()
 {
     double diff, mindiff;
     int iopt_group, nr_groups;
@@ -379,7 +385,7 @@ void CtfGroupParams::autoRun()
     std::cerr<<" Number of CTF groups= "<<nr_groups<<std::endl;
 }
 
-void CtfGroupParams::manualRun()
+void ProgCtfGroup::manualRun()
 {
     MetaData DF;
     double defocus, split, oldsplit=99.e99;
@@ -430,7 +436,7 @@ void CtfGroupParams::manualRun()
     progress_bar(n);
 }
 
-void CtfGroupParams::writeOutputToDisc()
+void ProgCtfGroup::writeOutputToDisc()
 {
     FileName fnt;
     MetaData SFo, DFo;
@@ -551,8 +557,10 @@ void CtfGroupParams::writeOutputToDisc()
     DFo.write(fn_root+"_groups_split.doc");
 }
 
-void CtfGroupParams::run()
+void ProgCtfGroup::run()
 {
+    produceSideInfo();
+
     if (do_auto)
     {
         autoRun();
@@ -565,4 +573,3 @@ void CtfGroupParams::run()
 
     std::cerr << " Done!" <<std::endl;
 }
-

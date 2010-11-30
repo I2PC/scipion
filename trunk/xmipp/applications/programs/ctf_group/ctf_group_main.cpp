@@ -29,30 +29,18 @@
 
 int main(int argc, char **argv)
 {
-    CtfGroupParams prm;
+    ProgCtfGroup program;
     try
     {
-       prm.read(argc,argv);
-       prm.produceSideInfo();
-       prm.show();
+        program.read(argc, argv);;
+        program.run();
     }
-    catch (XmippError XE)
+    catch (XmippError xe)
     {
-       std::cerr << XE << std::endl;
-       prm.usage();
-       exit(1);
-    }
-
-    try
-    {
-        prm.run();
-    }
-    catch (XmippError XE)
-    {
-       std::cerr << XE << std::endl;
-       prm.usage();
-       return 1;
+        std::cerr << xe;
+        return 1;
     }
     return 0;
+
 }
 

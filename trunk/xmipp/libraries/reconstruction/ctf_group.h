@@ -31,11 +31,13 @@
 #include "fourier_filter.h"
 #include <data/ctf.h>
 
+#include <data/program.h>
+
 /**@defgroup CTFGroup ctf_group
    @ingroup ReconsLibrary */
 //@{
-/// CTFGroup parameters
-class CtfGroupParams
+/// CTFGroup program class
+class ProgCtfGroup: public XmippProgram
 {
 public:
     /// Filenames
@@ -43,13 +45,13 @@ public:
 
     /// Maximum allowed error
     double max_error;
-    
+
     /// Resolution for maximum allowed error (in dig. freq.)
     double resol_error;
 
     /// Resolution for maximum allowed error (in pixels)
     int iresol_error;
-    
+
     // Pixel size  (Angstrom)
     double pixel_size;
 
@@ -95,7 +97,10 @@ public:
 public:
 
     /** Read parameters from command line. */
-    void read(int argc, char **argv);
+    void readParams();
+
+    /** Define parameters. */
+    void defineParams();
 
     /** Show. */
     void show();
