@@ -6,7 +6,7 @@ def launch_job(programname,
                NumberOfMpiProcesses,
                NumberOfThreads,
                SystemFlavour,
-	       onlyBuildCommand=False):
+               onlyBuildCommand=False):
 
     import os,sys
 
