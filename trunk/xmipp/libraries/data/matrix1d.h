@@ -345,8 +345,7 @@ public:
         if (&op1 != this)
         {
             resizeNoCopy(op1);
-            for (int i = 0; i < vdim; i++)
-                vdata[i] = op1.vdata[i];
+            memcpy(vdata,op1.vdata,vdim*sizeof(T));
             row=op1.row;
         }
 
