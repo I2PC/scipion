@@ -200,6 +200,15 @@ bool ParallelTaskDistributor::getTasks(longint &first, longint &last)
     return result;
 }
 
+bool ParallelTaskDistributor::setAssignedTasks(longint tasks)
+{
+  if (tasks < 0 || tasks >= numberOfTasks)
+    return false;
+  lock();
+  assignedTasks = tasks;
+  unlock();
+}
+
 void ThreadTaskDistributor::lock()
 {
     mutex.lock();
