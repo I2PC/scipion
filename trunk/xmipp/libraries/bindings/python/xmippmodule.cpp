@@ -459,6 +459,38 @@ MetaData_write(PyObject *obj, PyObject *args, PyObject *kwargs)
   }
   return NULL;
 }
+/* append */
+static PyObject *
+MetaData_append(PyObject *obj, PyObject *args, PyObject *kwargs)
+{
+  MetaDataObject *self = (MetaDataObject*)obj;
+
+  if (self != NULL)
+  {
+      PyObject *input = NULL, *pyStr = NULL;
+      char *str = NULL;
+      int number = -1;
+      if (PyArg_ParseTuple(args, "O", &input))
+      {
+        try
+        {
+          if (PyString_Check(input))
+            self->metadata->append(PyString_AsString(input));
+          else if (FileName_Check(input))
+            self->metadata->append(FileName_Value(input));
+          else
+            return NULL;
+          Py_RETURN_NONE;
+        }
+        catch (XmippError xe)
+        {
+          PyErr_SetString(PyXmippError, xe.msg.c_str());
+          return NULL;
+        }
+      }
+  }
+  return NULL;
+}
 /* addObject */
 static PyObject *
 MetaData_addObject(PyObject *obj, PyObject *args, PyObject *kwargs)
@@ -826,6 +858,9 @@ static PyMethodDef MetaData_methods[] = {
     },
     {"write", (PyCFunction)MetaData_write, METH_VARARGS,
      "Write MetaData content to disk"
+    },
+    {"append", (PyCFunction)MetaData_append, METH_VARARGS,
+     "Append MetaData content to disk"
     },
     {"addObject", (PyCFunction)MetaData_addObject, METH_NOARGS,
      "Add a new object and return its id"

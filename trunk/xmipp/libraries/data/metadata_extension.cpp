@@ -74,7 +74,7 @@ void getStatistics(MetaData &MT_in, Image<double> & _ave, Image<double> & _sd, d
 
 void SingleImgSize(const FileName &filename, int &Xdim, int &Ydim, int &Zdim, unsigned long &Ndim)
 {
-    Image<double> img;
+    Image<char> img;
     img.read(filename, false);
     img.getDimensions(Xdim, Ydim, Zdim, Ndim);
 }

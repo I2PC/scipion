@@ -619,6 +619,9 @@ public:
      * @{
      */
 
+    /** Write rows data to disk. */
+    void _writeRows(std::ostream &os);
+
     /** Write metadata to disk.
      * This will write the metadata content to disk.
      */
@@ -627,6 +630,15 @@ public:
     /** Write metadata to out stream
      */
     void write(std::ostream &os, const std::string & blockName="",WriteModeMetaData mode=OVERWRITE);
+
+    /** Append data lines to file.
+     * This function can be used to add new data to
+     * an existing metadata. Now should be used with
+     * files with only one metadata, maybe can be extended later.
+     * For now it will not check any compatibility beetween the
+     * existent metadata and the new data to append.
+     */
+    void append(const FileName &outFile);
 
     /** Read data from file.
      */
