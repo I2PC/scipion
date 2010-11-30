@@ -57,9 +57,6 @@ public:
     /// Sampling rate
     double sampling_rate;
     
-    ///File name of the symmetry file (or point group)
-    FileName symmetry;
-
     /// Mask file
     FileName fnmask;
 
@@ -111,7 +108,7 @@ public:
     int imgSize;
     
     // Current image being considered
-    const Image<double> *currentImg;
+    FileName currentImgName;
     
     // Current stage of optimization
     int currentStage;
@@ -163,7 +160,7 @@ public:
     double computeFitness(Matrix1D<double> &trial) const;
 
     /** Update the best fitness and the corresponding best trial*/
-    void updateBestFit(double fitness, int dim) const;
+    void updateBestFit(double fitness, int dim);
 
     /** Assign NMA and Alignment parameters to an image */
     void processImage(const FileName &fnImg, const FileName &fnImgOut, long int objId);

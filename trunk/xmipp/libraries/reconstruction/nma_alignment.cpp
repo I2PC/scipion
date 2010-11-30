@@ -23,6 +23,7 @@
  ***************************************************************************/
 
 #include "nma_alignment.h"
+#include <data/metadata_extension.h>
 
 #include <iostream>
 #include <data/args.h>
@@ -35,7 +36,7 @@
 ProgNmaAlignment::ProgNmaAlignment()
 {
     MPIversion = false;
-    currentImg=NULL;
+    currentImgName="";
     each_image_produces_an_output = true;
 }
 
@@ -48,7 +49,6 @@ void ProgNmaAlignment::defineParams()
     addParamsLine("   -modes <filename>                  : File with a list of mode filenames");
     addParamsLine("  [-deformation_scale <s=1>]          : Scaling factor to scale deformation amplitude");
     addParamsLine("  [-sampling_rate <Ts=1>]             : in Angstroms/pixel");
-    addParamsLine("  [-sym <symmetry=c1>]              : Symmetry file or point group");
     addParamsLine("  [-mask <m=\"\">]                    : Mask");
     addParamsLine("  [-gaussian_Fourier <s=0.5>]         : Weighting sigma in Fourier space");
     addParamsLine("  [-gaussian_Real    <s=0.5>]         : Weighting sigma in Real space");
@@ -68,7 +68,6 @@ void ProgNmaAlignment::readParams()
     fnModeList = getParam("-modes");
     scale_defamp = getDoubleParam("-deformation_scale");
     sampling_rate = getDoubleParam("-sampling_rate");
-    symmetry = getParam("-sym");
     fnmask = getParam("-mask");
     gaussian_DFT_sigma = getDoubleParam( "-gaussian_Fourier");
     gaussian_Real_sigma = getDoubleParam( "-gaussian_Real");
@@ -94,7 +93,6 @@ void ProgNmaAlignment::show()
     << "Mode list:           " << fnModeList          << std::endl
     << "Amplitude scale:     " << scale_defamp        << std::endl
     << "Sampling rate:       " << sampling_rate       << std::endl
-    << "Symmetry:            " << symmetry            << std::endl
     << "Mask:                " << fnmask              << std::endl
     << "Gaussian Fourier:    " << gaussian_DFT_sigma  << std::endl
     << "Gaussian Real:       " << gaussian_Real_sigma << std::endl
@@ -109,7 +107,7 @@ void ProgNmaAlignment::show()
 
 
 // Produce side information ================================================
-const ProgNmaAlignment *global_NMA_prog;
+ProgNmaAlignment *global_NMA_prog;
 
 void ProgNmaAlignment::produceSideInfo(int rank)
 {
@@ -128,11 +126,7 @@ void ProgNmaAlignment::produceSideInfo(int rank)
     MetaData SFin;
     SFin.read(fn_in);
     SFin.getValue(MDL_IMAGE,tempname);
-    Image<double> tempimage;
-    tempimage.read(tempname);
-
-    imgSize=YSIZE(tempimage());
-    int imgnumber=SFin.size();
+    ImgSize(SFin,imgSize);
 
     // Set the pointer of the program to this object
     global_NMA_prog=this;
@@ -220,18 +214,18 @@ void ProgNmaAlignment::performCompleteSearch(
     if (pyramidLevel!=0)
     {
     	Image<double> I, Ireduced;
-    	I.read(currentImg->name());
+    	I.read(currentImgName);
     	reduceBSpline(BSPLINE3,Ireduced(),I());
     	Ireduced.write(fnDown);
     }
     else
-        link(currentImg->name().c_str(),fnDown.c_str());
+        link(currentImgName.c_str(),fnDown.c_str());
 
     mkdir(((std::string)"ref" + fnRandom).c_str(),S_IRWXU);
 
     command = (std::string)"xmipp_angular_project_library -i deformedPDB_"+fnRandom+".vol"+
               " -o ref" + fnRandom + "/ref" + fnRandom+".stk"
-              " --sampling_rate 5 --sym " + symmetry +" -v 0";
+              " --sampling_rate 25 -v 0";
     FileName fnRefSel=(std::string)"ref" + fnRandom + "/ref" + fnRandom+".doc";
     system(command.c_str());
 
@@ -249,7 +243,7 @@ void ProgNmaAlignment::performCompleteSearch(
             " -psi_step 5 "+
             " -max_shift_change "+integerToString(ROUND((double)imgSize/
                                                   (10.0*pow(2.0,(double)pyramidLevel))))+
-            " -search5D -sym " + symmetry + " -v 0";
+            " -search5D -v 0";
     system(command.c_str());
 }
 
@@ -283,15 +277,12 @@ double ProgNmaAlignment::performContinuousAssignment(
     return tempvar;
 }
 
-void ProgNmaAlignment::updateBestFit(double fitness,int dim) const
+void ProgNmaAlignment::updateBestFit(double fitness,int dim)
 {
     if (fitness < fitness_min(0))
     {
         fitness_min(0) = fitness;
-        for (int i=0; i<dim+5; i++)
-        {
-            trial_best(i)=trial(i);
-        }
+        trial_best=trial;
     }
 }
 
@@ -336,7 +327,7 @@ double ObjFunc_nma_alignment::eval(Vector X, int *nerror)
         DF.setValue(MDL_SHIFTY,yshift);
 
         DF.write((std::string)"angledisc_"+fnRandom+".txt");
-        link(global_NMA_prog->currentImg->name().c_str(),fnDown.c_str());
+        link(global_NMA_prog->currentImgName.c_str(),fnDown.c_str());
     }
     double fitness=global_NMA_prog->performContinuousAssignment(fnRandom,pyramidLevelCont);
 
@@ -355,10 +346,6 @@ ObjFunc_nma_alignment::ObjFunc_nma_alignment(int _t, int _n)
 
 void ProgNmaAlignment::processImage(const FileName &fnImg, const FileName &fnImgOut, long int objId)
 {
-    Image<double> img;
-    img.read(fnImg);
-    ;
-
     double rhoStart=1e-0, rhoEnd=1e-3;
 
     int niter=1000;
@@ -368,7 +355,7 @@ void ProgNmaAlignment::processImage(const FileName &fnImg, const FileName &fnImg
     int dim=modeList.size();
 
     parameters.initZeros(dim+5);
-    currentImg=&img;
+    currentImgName=fnImg;
 
     trial.initZeros(dim+5);
     trial_best.initZeros(dim+5);
@@ -401,13 +388,7 @@ void ProgNmaAlignment::processImage(const FileName &fnImg, const FileName &fnImg
         std::cout << "Best deformations = " << dd[i] << std::endl;
 }*/
 
-    for (int i=0; i<dim+5; i++)
-    {
-        parameters(i)=trial_best(i);
-        trial(i)=trial_best(i);
-    }
-
-    bestStage1=trial;
+    bestStage1=trial=parameters=trial_best;
 
     delete of;
 
@@ -438,10 +419,7 @@ void ProgNmaAlignment::processImage(const FileName &fnImg, const FileName &fnImg
         std::cout << "Best deformations = " << dd[i] << std::endl;
     }
 
-    for (int i=0; i<dim+5; i++)
-    {
-        trial(i)=trial_best(i);
-    }
+    trial=trial_best;
 
     for (int i=dim; i<dim+5; i++)
     {
