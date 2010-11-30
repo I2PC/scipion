@@ -1,5 +1,5 @@
 /***************************************************************************
- * 
+ *
  * Authors:     J.R. Bilbao-Castro (jrbcast@ace.ual.es)
  *
  * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
@@ -630,7 +630,7 @@ public:
 
     /** Read data from file.
      */
-    void read(const FileName &inFile, const std::vector<MDLabel> *desiredLabels = NULL, const std::string & blockName="");
+    void read(const FileName &inFile, const std::vector<MDLabel> *desiredLabels = NULL, const std::string & blockName="", bool addStack=true);
     /** @} */
 
     /** @name Set Operations

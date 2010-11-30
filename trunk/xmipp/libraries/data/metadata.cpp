@@ -1,5 +1,5 @@
 /***************************************************************************
- * 
+ *
  * Authors:      J.R. Bilbao-Castro (jrbcast@ace.ual.es)
  *
  * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
@@ -990,7 +990,7 @@ void MetaData::_readRowFormat(std::istream& is)
     }
 }
 
-void MetaData::read(const FileName &filename, const std::vector<MDLabel> *desiredLabels, const std::string & blockName)
+void MetaData::read(const FileName &filename, const std::vector<MDLabel> *desiredLabels, const std::string & blockName, bool addStack)
 {
   //First try to open the file as a metadata
   _clear();
@@ -1001,7 +1001,7 @@ void MetaData::read(const FileName &filename, const std::vector<MDLabel> *desire
   {
       Image<char> image;
       image.read(filename, false);
-      if (image().ndim == 1) //single image
+      if (image().ndim == 1 || !addStack) //single image
       {
           addObject();
           setValue(MDL_IMAGE, filename);
