@@ -2175,7 +2175,7 @@ private:
      */
     void munmapFile()
     {
-        munmap((void*)data.data-offset,mappedSize);
+        munmap((void*)(data.data-offset),mappedSize);
         close(mFd);
         data.data = NULL;
         mappedSize = 0;
