@@ -1,6 +1,6 @@
 /***************************************************************************
  *
- * Authors: Jesus Cuenca (jcuenca@cnb.csic.es)
+ * Author: Jesus Cuenca (jcuenca@cnb.csic.es)
  *
  * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
  *
@@ -49,7 +49,7 @@ public:
 	int width, height;
 	bool readHeaderOnly;
 	int nImages;
-	int slice;
+	int slice; // which slice to read
 
 	// empty constructor
 	ImagePlusC() {
@@ -72,6 +72,9 @@ public:
 	}
 };
 
+/**
+ * Read the image file specified in ip and save all the relevant info into ip too
+ */
 int readImage(ImagePlusC &ip) {
 	Image<float> in;
 	int error = 0;
@@ -82,7 +85,7 @@ int readImage(ImagePlusC &ip) {
 		 cout << cCurrentPath;*/
 
 		FileName fn = ip.filename;
-
+		// cout << fn;
 		// read header / whole file (depending on ip.readHeaderOnly)
 		error = in.read(fn, !ip.readHeaderOnly, ip.slice);
 

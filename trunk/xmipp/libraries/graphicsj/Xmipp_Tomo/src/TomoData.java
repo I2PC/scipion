@@ -326,6 +326,10 @@ public class TomoData extends Component {
 		// Xmipp_Tomo.debug("firstImageLoaded");
 	}
 	
+	public void loadCanceled(){
+		firstImageLoaded();
+	}
+	
 	public void waitForLastImage() throws InterruptedException{
 		// Xmipp_Tomo.debug("waitForFirstImage");
 		lastLoaded.acquire();

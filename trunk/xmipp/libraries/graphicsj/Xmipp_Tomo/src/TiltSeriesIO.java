@@ -39,18 +39,15 @@ import ij.process.ShortProcessor;
 import java.awt.image.ColorModel;
 import java.io.BufferedOutputStream;
 import java.io.BufferedReader;
-import java.io.BufferedWriter;
 import java.io.DataOutputStream;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.FileReader;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintWriter;
 import java.io.RandomAccessFile;
-import java.io.Writer;
 import java.util.Iterator;
 import java.util.Properties;
 
@@ -59,11 +56,12 @@ import java.util.Properties;
  */
 public class TiltSeriesIO {
 	static {
-		// loads "XmippDataJava"
+		// loads "XmippDataJava", the native C++ library
 		System.loadLibrary("XmippDataJava");
 	}
 
 	public static int MRC_HEADER_SIZE = 1024;
+	// resize images after loading?
 	private boolean resize = true;
 
 	// Header of a data file
@@ -154,7 +152,7 @@ public class TiltSeriesIO {
 
 	/**
 	 * @param path
-	 *            file to read
+	 *            file to read - current support for .sel and .mrcs
 	 * @param model
 	 *            stores relevant data following MVC paradigm
 	 * @throws java.io.IOException
@@ -172,27 +170,13 @@ public class TiltSeriesIO {
 		// path=path.toLowerCase();
 
 		// right now, identify file type by its extension
+		// should check also uppercase like .SEL
 		if (path.endsWith(".mrc") || path.endsWith(".mrcs")) {
 			readImages(path, model);
-
 		} else if (path.endsWith(".sel")) {
 			readSel(path, model);
-		}else
+		} else
 			throw new IOException("Unknown file type");
-		/*
-		 * else if (path.endsWith(".mrcs")) { readMRCS(path,model); }
-		 */
-		/*
-		 * else if (path.toLowerCase().endsWith(".spi") ||
-		 * path.toLowerCase().endsWith(".xmp")||
-		 * path.toLowerCase().endsWith(".vol")) { imp = (ImagePlus)
-		 * IJ.runPlugIn("Spider_Reader", path); if (imp == null) { //width =
-		 * PLUGIN_NOT_FOUND; } if (imp != null && imp.getWidth() == 0) { imp =
-		 * null; } }else if (path.endsWith(".sel")) { imp = (ImagePlus)
-		 * IJ.runPlugIn("Sel_Reader", path); if (imp == null) { //width =
-		 * PLUGIN_NOT_FOUND; } if (imp != null && imp.getWidth() == 0) { imp =
-		 * null; } }
-		 */
 
 	}
 
@@ -205,7 +189,7 @@ public class TiltSeriesIO {
 	}
 
 	/**
-	 * selfile includes tilt angles
+	 * selfile includes tilt angles (Metadata)
 	 * 
 	 * @param path
 	 *            absolute path to selfile
@@ -215,23 +199,31 @@ public class TiltSeriesIO {
 	private void readSel(String path, TomoData model) throws IOException {
 
 		// files inside selfiles are relative to selfile location
-		String baseDir = new File(path).getParent();
+		// baseDir only needed with ImageJ FileDialog
+		// XmippTomo FileDialog returns absolute path
+		//String baseDir = new File(path).getParent();
+		String baseDir=null;
 
 		MetaData md = new MetaData();
 
 		FileName fn = new FileName(path);
-		Xmipp_Tomo.debug(fn.getBaseName());
+		// Xmipp_Tomo.debug(fn.getBaseName());
 		md.read(fn);
-		int k = md.iteratorBegin();
+		md.iteratorBegin();
 		while (!md.iteratorEnd()) {
 			// store in filenameString the field MDL_IMAGE of each row of the
 			// selfile
 			String filenameString[] = new String[1];
 			md.getStrFromValue(MDLabel.MDL_IMAGE, filenameString);
-
-			ImagePlusC ip = readImage(filenameString[0], baseDir, false);
-			postReadImage(model, ip);
-			k = md.iteratorNext();
+			try {
+				// Xmipp_Tomo.debug(filenameString[0]);
+				ImagePlusC ip = readImage(filenameString[0], baseDir, false);
+				postReadImage(model, ip);
+			} catch (IOException ex) {
+				// don't throw exception, so it tries to read next image
+				Xmipp_Tomo.debug("readimages - ", ex);
+			}
+			md.iteratorNext();
 		}
 
 		postReadImages(model);
@@ -242,6 +234,20 @@ public class TiltSeriesIO {
 		return readImage(path, base, headerOnly, -1);
 	}
 
+	/**
+	 * Read an image using the native Xmipp code (see java_wrapper.h)
+	 * 
+	 * @param path
+	 *            to file - if relative, base should not be null
+	 * @param base
+	 *            base directory (for relative paths)
+	 * @param headerOnly
+	 *            - read only the header of the image (vs whole image data)
+	 * @param slice
+	 *            - slice number (0..N-1)
+	 * @return image as ImagePlusC
+	 * @throws IOException
+	 */
 	private ImagePlusC readImage(String path, String base, boolean headerOnly,
 			int slice) throws IOException {
 		String filepath = path;
@@ -262,8 +268,14 @@ public class TiltSeriesIO {
 		return ipc;
 	}
 
+	/**
+	 * Actions required after reading 1 image
+	 * 
+	 * @param model
+	 * @param img
+	 */
 	private void postReadImage(TomoData model, ImagePlusC img) {
-		ImagePlus image=convert(img);
+		ImagePlus image = convert(img);
 		// resize/scale - use an aux image processor for all projections
 		ImageProcessor ipresized = null, ip = image.getProcessor();
 
@@ -275,28 +287,38 @@ public class TiltSeriesIO {
 			model.addProjection(ip);
 	}
 
+	/**
+	 * Actions required after reading all the images
+	 * 
+	 * @param model
+	 */
 	private void postReadImages(TomoData model) {
 		if (isResize()) {
 			// Adjust file info to scaled size
-			//fi.width = Xmipp_Tomo.resizeThreshold.width;
-			//fi.height = Xmipp_Tomo.resizeThreshold.height;
+			// fi.width = Xmipp_Tomo.resizeThreshold.width;
+			// fi.height = Xmipp_Tomo.resizeThreshold.height;
 			model.setResized(true);
 		}
 
 		model.lastImageLoaded();
 	}
 
-
+	/**
+	 * Convert from ImagePlusC to ImagePlus
+	 * 
+	 * @param img
+	 * @return
+	 */
 	private ImagePlus convert(ImagePlusC img) {
 
 		// Creates image
 		FloatProcessor ip = new FloatProcessor(img.getWidth(), img.getHeight());
-		
-		if(img.getReadHeaderOnly() == false)
+
+		if (img.getReadHeaderOnly() == false)
 			for (int x = 0; x < img.getWidth(); x++)
 				for (int y = 0; y < img.getHeight(); y++)
 					ip.setf(x, y, (float) img.getPixel(x, y));
-		
+
 		ImagePlus imagePlus = new ImagePlus("ImageDouble", ip);
 		// imagePlus.getProcessor().setPixels(img.getImage());
 		imagePlus.setDimensions(0, img.getNImages(), 0);
@@ -325,30 +347,45 @@ public class TiltSeriesIO {
 		model.setWidth(img.getWidth());
 
 		// load images
-		Xmipp_Tomo.debug("Number of images: " + nImages);
+		// Xmipp_Tomo.debug("Number of images: " + nImages);
 		for (int i = 1; i <= nImages; i++) {
 			if (model.isLoadCanceled())
 				break;
-
-			ImagePlusC ip = readImage(path, null, false, i - 1);
-			postReadImage(model, ip);
-
+			try {
+				ImagePlusC ip = readImage(path, null, false, i - 1);
+				postReadImage(model, ip);
+			} catch (IOException ex) {
+				// don't throw exception, so it tries to read next image
+				Xmipp_Tomo.debug("readimages - ", ex);
+			}
 			// uncomment for concurrency tests
 			// if(Xmipp_Tomo.TESTING != 0)
 			// Thread.sleep(250);
 		}
 		postReadImages(model);
-		
+
 		// read tilt angles
 		String tltFilePath = getTltPath(path);
 		try {
 			readTlt(tltFilePath, model);
 		} catch (FileNotFoundException ex) {
 			// model.emptyTiltAngles(model.getNumberOfProjections());
+			Xmipp_Tomo.debug("readImages - problem reading tlt. "
+					+ ex.toString());
 		}
-		
+
 	}
 
+	/**
+	 * Java method for reading .mrc/.mrcs files (as an alternative to Xmipp
+	 * native code)
+	 * 
+	 * @param path
+	 * @param model
+	 * @throws java.io.IOException
+	 * @throws InterruptedException
+	 * @throws OutOfMemoryError
+	 */
 	private void readMRCJava(String path, TomoData model)
 			throws java.io.IOException, InterruptedException, OutOfMemoryError {
 
@@ -448,7 +485,7 @@ public class TiltSeriesIO {
 		setCalibration(model.getImage(), fi, fo);
 		ImageProcessor ip = model.getImage().getProcessor();
 		if (ip.getMin() == ip.getMax()) // find stack min and max if first slice
-										// is blank
+			// is blank
 			setStackDisplayRange(model.getImage());
 
 		model.lastImageLoaded();
@@ -759,7 +796,18 @@ public class TiltSeriesIO {
 	}
 
 	private String getTltPath(String path) {
-		return path.replace(".mrc", ".tlt");
+		return changeExtension(path, ".tlt");
+	}
+
+	// Copyleft 2003 Fred Swartz
+	private static String changeExtension(String originalName,
+			String newExtension) {
+		int lastDot = originalName.lastIndexOf(".");
+		if (lastDot != -1) {
+			return originalName.substring(0, lastDot) + newExtension;
+		} else {
+			return originalName + newExtension;
+		}
 	}
 
 	/************** Helper methods to convert numbers extracted from Properties ****/

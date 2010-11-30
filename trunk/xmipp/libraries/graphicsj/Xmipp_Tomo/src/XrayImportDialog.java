@@ -190,8 +190,8 @@ public class XrayImportDialog extends JDialog implements ActionListener
 
 
 	private void actionBrowse(String fieldName){
-		String path=dialogOpen();
-		if(! ("".equals(path)))
+		String path=FileDialog.openDialog(fieldName, this);
+		if(! ("".equals(path))) 
 			textFields.get(fieldName).setText(path);
 	}
 	
@@ -214,7 +214,7 @@ public class XrayImportDialog extends JDialog implements ActionListener
 
 	/**
 	 * Show a file open browser and...
-	 * 
+	 * @deprecated - see FileDialog
 	 * @return the path of the file chosen by the user, or empty string (not
 	 *         null) if the user cancels the dialog
 	 */

@@ -36,8 +36,8 @@ import javax.swing.ImageIcon;
 public class Command {
 	
 	public static Command PLAY= new Command("controls.play","", "playPause", false, TomoWindow.PLAY_ICON),
-	LOAD=new Command("file.emload","Load EM","loadEM",true,null),
-	XRAY=new Command("file.xrayload","Load X-Ray","loadXray",true,null),
+	LOAD=new Command("file.emload","Load","loadEM",true,null),
+	XRAY=new Command("file.xrayload","Import X-Ray","loadXray",true,null),
 	SAVE=new Command("file.save","Save","save",false,null),
 	DEFINE_TILT = new Command("file.tilt","Set tilt angles","setTilt",false,null),
 	GAUSSIAN = new Command("proc.gaussian","Gaussian","gaussian", false,null),

@@ -1,13 +1,3 @@
-import ij.IJ;
-import ij.WindowManager;
-import ij.gui.GenericDialog;
-
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.lang.reflect.Method;
-
-import javax.swing.SwingWorker;
-
 /***************************************************************************
  *
  * @author: Jesus Cuenca (jcuenca@cnb.csic.es)
@@ -32,6 +22,17 @@ import javax.swing.SwingWorker;
  *  All comments concerning this program package may be sent to the
  *  e-mail address 'xmipp@cnb.csic.es'
  ***************************************************************************/
+
+import ij.IJ;
+import ij.WindowManager;
+import ij.gui.GenericDialog;
+
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.lang.reflect.Method;
+
+import javax.swing.SwingWorker;
+
 
 /**
  * @author jcuenca Collection of GUI action methods
@@ -80,22 +81,29 @@ public class TomoController {
 		}
 
 		public void run() {
+			String errorMessage="";
 			try {
 				new TiltSeriesIO(resize).read(dataModel);
 				controller.loadedEM();
 			} catch (FileNotFoundException ex) {
-				Xmipp_Tomo.debug("ImportDataThread.run - " + ex.getMessage());
+				Xmipp_Tomo.debug("ImportDataThread.run - ", ex);
 			} catch (IOException ex) {
-				Xmipp_Tomo.debug("ImportDataThread.run - Error opening file");
+				Xmipp_Tomo.debug("ImportDataThread.run - Error opening file ",ex);
+				errorMessage="Error opening file";
 			} catch (InterruptedException ex) {
-				Xmipp_Tomo
-						.debug("ImportDataThread.run - Interrupted exception");
+				Xmipp_Tomo.debug("ImportDataThread.run - Interrupted exception", ex);
 			} catch (OutOfMemoryError err){
-				Xmipp_Tomo.debug("ImportDataThread.run - Out of memory");
+				Xmipp_Tomo.debug("ImportDataThread.run - Out of memory" + err.toString());
+				errorMessage="Out of memory";	
 			} catch (Exception ex) {
-				Xmipp_Tomo.debug("ImportDataThread.run - unexpected exception",
-						ex);
+				Xmipp_Tomo.debug("ImportDataThread.run - unexpected exception",	ex);
+			} finally{
+				if(dataModel.getNumberOfProjections() < 1){
+					dataModel.loadCanceled();
+					TomoWindow.alert(errorMessage);
+				}
 			}
+			
 		}
 	}
 
@@ -165,7 +173,7 @@ public class TomoController {
 			window.getButton(Command.LOAD.getId()).setText(Command.LOAD.getLabel());
 			Xmipp_Tomo.debug("loadEM - cancelled");
 		} else {
-			String path = XrayImportDialog.dialogOpen();
+			String path = FileDialog.openDialog("Load EM", window);
 			if ((path == null) || ("".equals(path)))
 				return;
 
@@ -187,24 +195,26 @@ public class TomoController {
 				Xmipp_Tomo.debug("Xmipp_Tomo - Interrupted exception");
 			}
 
-			window.setImagePlusWindow();
-
-			window.setTitle(window.getTitle());
-			window.addView();
-			window.addControls();
-			window.addUserAction(new UserAction(window.getWindowId(), "Load",
-					window.getModel().getFileName()));
-
-			// enable buttons
-			window.enableButtonsAfterLoad();
-
-			// wait for last image in a different thread
-			try {
-				new BackgroundMethod(getClass().getMethod("loadedEM"), this)
-						.execute();
-			} catch (Exception ex) {
-				Xmipp_Tomo.debug("TomoController.playPause() "
-						+ ex.getMessage());
+			if(window.getModel().getNumberOfProjections() > 0){
+				window.setImagePlusWindow();
+	
+				window.setTitle(window.getTitle());
+				window.addView();
+				window.addControls();
+				window.addUserAction(new UserAction(window.getWindowId(), "Load",
+						window.getModel().getFileName()));
+	
+				// enable buttons
+				window.enableButtonsAfterLoad();
+	
+				// wait for last image in a different thread
+				try {
+					new BackgroundMethod(getClass().getMethod("loadedEM"), this)
+							.execute();
+				} catch (Exception ex) {
+					Xmipp_Tomo.debug("TomoController.playPause() "
+							+ ex.getMessage());
+				}
 			}
 		}
 	}

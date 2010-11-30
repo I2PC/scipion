@@ -150,7 +150,7 @@ public class TomoWindow extends ImageWindow implements WindowListener,
 
 	// Menu labels
 	private enum Menu {
-		FILE("File"), PREPROC("Preprocess"), ALIGN("Align"), DEBUG("Debug");
+		FILE("File"), PREPROC("Preprocess"), ALIGN("Align"), RECONSTRUCTION("Reconstruction"), DEBUG("Debug");
 
 		private String label;
 
@@ -424,7 +424,14 @@ public class TomoWindow extends ImageWindow implements WindowListener,
 		for (Command c : commandsMenuAlign)
 			addButton(c, alignTabPanel);
 		menuPanel.addTab(Menu.ALIGN.toString(), alignTabPanel);
-
+		
+		// Reconstruction
+		JPanel reconstructionTabPanel = new JPanel();
+		/*for (Command c : commandsMenuAlign)
+			addButton(c, alignTabPanel);*/
+		menuPanel.addTab(Menu.RECONSTRUCTION.toString(), reconstructionTabPanel);
+		menuPanel.setEnabledAt(3, false);
+		
 		// Debugging
 		if (Xmipp_Tomo.TESTING == 1) {
 			JPanel debugTabPanel = new JPanel();
@@ -853,10 +860,10 @@ public class TomoWindow extends ImageWindow implements WindowListener,
 	 * 
 	 * @return the path of the file chosen by the user, or empty string (not
 	 *         null) if the user cancels the dialog
-	 * @deprecated Use {@link XrayImportDialog#dialogOpen()} instead
+	 * @deprecated Use {@link FileDialog#dialogOpen()} instead
 	 */
 	private String dialogOpen() {
-		return XrayImportDialog.dialogOpen();
+		return FileDialog.openDialog("Import...", this);
 	}
 
 	/**
@@ -880,8 +887,8 @@ public class TomoWindow extends ImageWindow implements WindowListener,
 		return XrayImportDialog.dialogYesNoCancel(title, message);
 	}
 
-	private void alert(String message) {
-		IJ.error("Xmipp_tomo", message);
+	public static void alert(String message) {
+		IJ.error("XmippTomo", message);
 	}
 
 	public void saveFile(TomoData model, String path) {

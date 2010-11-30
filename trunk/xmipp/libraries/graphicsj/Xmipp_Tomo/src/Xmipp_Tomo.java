@@ -224,7 +224,7 @@ public class Xmipp_Tomo implements PlugIn{
 	 * @param ex Exception
 	 */
 	public static void debug(String s, Exception ex){
-		debug(s);
+		debug(s + ex.toString());
 		ex.printStackTrace();
 	}
 	
