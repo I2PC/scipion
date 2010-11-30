@@ -29,7 +29,7 @@
 #include <data/geometry.h>
 #include <data/mask.h>
 
-void Usage(const Mask &m);
+#include <data/program.h>
 
 // Alignment parameters needed by fitness ----------------------------------
 class AlignParams
@@ -47,10 +47,10 @@ public:
 };
 
 // Global parameters needed by fitness ------------------------------------
-AlignParams prm;
+AlignParams params;
 
 // Apply transformation ---------------------------------------------------
-void applyTransformation(const MultidimArray<double> &V2, 
+void applyTransformation(const MultidimArray<double> &V2,
                          MultidimArray<double> &Vaux,
                          double *p)
 {
@@ -78,32 +78,40 @@ void applyTransformation(const MultidimArray<double> &V2,
     Vaux+=greyShift;
 }
 
+
 // Fitness between two volumes --------------------------------------------
 double fitness(double *p)
 {
-    applyTransformation(prm.V2(),prm.Vaux(),p);
+    applyTransformation(params.V2(),params.Vaux(),p);
 
     // Correlate
     double fit;
-    switch (prm.alignment_method)
+    switch (params.alignment_method)
     {
     case (COVARIANCE):
-                    fit = -correlation_index(prm.V1(), prm.Vaux(), prm.mask_ptr);
+                    fit = -correlation_index(params.V1(), params.Vaux(), params.mask_ptr);
         break;
     case (LEAST_SQUARES):
-                    fit = rms(prm.V1(), prm.Vaux(), prm.mask_ptr);
+                    fit = rms(params.V1(), params.Vaux(), params.mask_ptr);
         break;
     }
     return fit;
 }
 
-double wrapperFitness(double *p, void *prm)
+
+double wrapperFitness(double *p, void *params)
 {
     return fitness(p+1);
 }
 
-int main(int argc, char **argv)
+
+class ProgAlignVolumes : public XmippProgram
 {
+
+public:
+
+    Mask mask;
+
     FileName fn1, fn2;
     double   rot0, rotF, tilt0, tiltF, psi0, psiF;
     double   step_rot, step_tilt, step_psi;
@@ -115,32 +123,87 @@ int main(int argc, char **argv)
     bool     apply;
     bool     mask_enabled, mean_in_mask;
     bool     usePowell, onlyShift;
-    Mask mask(INT_MASK);
 
-    // Get parameters =======================================================
-    try
+public:
+
+    void defineParams()
     {
-        fn1 = getParameter(argc, argv, "-i1");
-        fn2 = getParameter(argc, argv, "-i2");
-        getThreeDoubleParams(argc, argv, "-rot", rot0, rotF, step_rot, 0, 0, 1);
-        getThreeDoubleParams(argc, argv, "-tilt", tilt0, tiltF, step_tilt, 0, 0, 1);
-        getThreeDoubleParams(argc, argv, "-psi", psi0, psiF, step_psi, 0, 0, 1);
-        getThreeDoubleParams(argc, argv, "-scale", scale0, scaleF, step_scale, 1, 1, 1);
-        getThreeDoubleParams(argc, argv, "-grey_scale", grey_scale0, grey_scaleF,
-                             step_grey, 1, 1, 1);
-        getThreeDoubleParams(argc, argv, "-grey_shift", grey_shift0, grey_shiftF,
-                             step_grey_shift, 0, 0, 1);
-        getThreeDoubleParams(argc, argv, "-z", z0, zF, step_z, 0, 0, 1);
-        getThreeDoubleParams(argc, argv, "-y", y0, yF, step_y, 0, 0, 1);
-        getThreeDoubleParams(argc, argv, "-x", x0, xF, step_x, 0, 0, 1);
 
-        mask_enabled = checkParameter(argc, argv, "-mask");
-        mean_in_mask = checkParameter(argc, argv, "-mean_in_mask");
+        addUsageLine("Align two volumes varying orientation, position and scale");
+        addUsageLine("Example of use: Align volume1 and volume2 with default options");
+        addUsageLine("   xmipp_align_volumes --i1 volume1.vol --i2 volume2.vol");
+
+        addParamsLine("   --i1 <volume1>        : the first volume to align");
+        addParamsLine("   --i2 <volume2>        : the second one");
+        addParamsLine("  [--rot   <rot0=0>  <rotF=0>  <step_rot=1>]  : in degrees");
+        addParamsLine("  [--tilt  <tilt0=0> <tiltF=0> <step_tilt=1>] : in degrees");
+        addParamsLine("  [--psi   <psi0=0>  <psiF=0>  <step_psi=1>]  : in degrees");
+        addParamsLine("  [--scale <sc0=1>   <scF=1>   <step_sc=1>]   : size scale margin");
+        addParamsLine("  [--grey_scale <sc0=1> <scF=1> <step_sc=1>]  : grey scale margin");
+        addParamsLine("  [--grey_shift <sh0=0> <shF=0> <step_sh=1>]  : grey shift margin");
+        addParamsLine("  [-z <z0=0> <zF=0> <step_z=1>] : Z position in pixels");
+        addParamsLine("  [-y <y0=0> <yF=0> <step_y=1>] : Y position in pixels");
+        addParamsLine("  [-x <x0=0> <xF=0> <step_x=1>] : X position in pixels");
+        addParamsLine("  [--show_fit]      : Show fitness values");
+        addParamsLine("  [--apply]         : Apply best movement to --i2");
+        addParamsLine("  [--mean_in_mask]  : Use the means within the mask");
+        addParamsLine("  [--covariance]    : Covariance fitness criterion");
+        addParamsLine("  [--least_squares] : LS fitness criterion");
+        addParamsLine("  [--local]         : Use local optimizer instead of exhaustive search");
+        addParamsLine("  [--onlyShift]     : Only shift");
+        addParamsLine(" == Mask Options == ");
+        mask.defineParams(this);
+    }
+
+    void readParams()
+    {
+        // Get parameters =======================================================
+        fn1 = getParam("--i1");
+        fn2 = getParam("--i2");
+
+        rot0 = getDoubleParam("--rot",0);
+        rotF = getDoubleParam("--rot",1);
+        step_rot = getDoubleParam("--rot",2);
+
+        tilt0 = getDoubleParam("--tilt",0);
+        tiltF = getDoubleParam("--tilt",1);
+        step_tilt = getDoubleParam("--tilt",2);
+
+        psi0 = getDoubleParam("--psi",0);
+        psiF = getDoubleParam("--psi",1);
+        step_psi = getDoubleParam("--psi",2);
+
+        scale0 = getDoubleParam("--scale",0);
+        scaleF = getDoubleParam("--scale",1);
+        step_scale = getDoubleParam("--scale",2);
+
+        grey_scale0 = getDoubleParam("--grey_scale",0);
+        grey_scaleF = getDoubleParam("--grey_scale",1);
+        step_grey = getDoubleParam("--grey_scale",2);
+
+        grey_shift0 = getDoubleParam("--grey_shift",0);
+        grey_shiftF = getDoubleParam("--grey_shift",1);
+        step_grey_shift = getDoubleParam("--grey_shift",2);
+
+        z0 = getDoubleParam("-z",0);
+        zF = getDoubleParam("-z",1);
+        step_z = getDoubleParam("-z",2);
+
+        y0 = getDoubleParam("-y",0);
+        yF = getDoubleParam("-y",1);
+        step_y = getDoubleParam("-y",2);
+
+        x0 = getDoubleParam("-x",0);
+        xF = getDoubleParam("-x",1);
+        step_x = getDoubleParam("-x",2);
+
+        mask_enabled = checkParam("--mask");
+        mean_in_mask = checkParam("--mean_in_mask");
         if (mask_enabled)
             mask.read(argc, argv);
 
-        usePowell = checkParameter(argc, argv, "-local");
-        onlyShift = checkParameter(argc, argv, "-onlyShift");
+        usePowell = checkParam("--local");
+        onlyShift = checkParam("--onlyShift");
 
         if (step_rot   == 0)
             step_rot = 1;
@@ -160,37 +223,33 @@ int main(int argc, char **argv)
             step_y = 1;
         if (step_x     == 0)
             step_x = 1;
-        tell = checkParameter(argc, argv, "-show_fit");
-        apply = checkParameter(argc, argv, "-apply");
 
-        if (checkParameter(argc, argv, "-covariance"))
+        tell = checkParam("--show_fit");
+        apply = checkParam("--apply");
+
+        if (checkParam("--covariance"))
         {
-            prm.alignment_method = COVARIANCE;
+            params.alignment_method = COVARIANCE;
         }
-        else if (checkParameter(argc, argv, "-least_squares"))
+        else if (checkParam("--least_squares"))
         {
-            prm.alignment_method = LEAST_SQUARES;
+            params.alignment_method = LEAST_SQUARES;
         }
         else
         {
-            prm.alignment_method = COVARIANCE;
+            params.alignment_method = COVARIANCE;
         }
     }
-    catch (XmippError XE)
-    {
-        std::cout << XE << std::endl;
-        Usage(mask);
-        exit(1);
-    }
 
-    // Main program =========================================================
-    //#define DEBUG
-    try
+    void run ()
     {
-        prm.V1.read(fn1);
-        prm.V1().setXmippOrigin();
-        prm.V2.read(fn2);
-        prm.V2().setXmippOrigin();
+        mask.allowed_data_types = INT_MASK;
+
+        // Main program =========================================================
+        params.V1.read(fn1);
+        params.V1().setXmippOrigin();
+        params.V2.read(fn2);
+        params.V2().setXmippOrigin();
 
         // Initialize best_fit
         double best_fit;
@@ -200,11 +259,11 @@ int main(int argc, char **argv)
         // Generate mask
         if (mask_enabled)
         {
-            mask.generate_mask(prm.V1());
-            prm.mask_ptr = &(mask.get_binary_mask());
+            mask.generate_mask(params.V1());
+            params.mask_ptr = &(mask.get_binary_mask());
         }
         else
-            prm.mask_ptr = NULL;
+            params.mask_ptr = NULL;
 
         // Exhaustive search
         if (!usePowell)
@@ -304,8 +363,7 @@ int main(int argc, char **argv)
             x(7)=(y0+yF)/2;
             x(8)=(x0+xF)/2;
 
-            powellOptimizer(x,1,9,&wrapperFitness,NULL,
-                            0.01,fitness,iter,steps,true);
+            powellOptimizer(x,1,9,&wrapperFitness,NULL,0.01,fitness,iter,steps,true);
             best_align=x;
             best_fit=fitness;
             first=false;
@@ -325,43 +383,30 @@ int main(int argc, char **argv)
             << "Fitness value         : " << best_fit << std::endl;
         if (apply)
         {
-            applyTransformation(prm.V2(),prm.Vaux(),MATRIX1D_ARRAY(best_align));
-            prm.V2()=prm.Vaux();
-            prm.V2.write();
+            applyTransformation(params.V2(),params.Vaux(),MATRIX1D_ARRAY(best_align));
+            params.V2()=params.Vaux();
+            params.V2.write();
         }
+
     }
-    catch (XmippError XE)
+
+};
+
+
+int main(int argc, char **argv)
+{
+    ProgAlignVolumes program;
+    try
     {
-        std::cout << XE << std::endl;
+        program.read(argc, argv);
+        program.run();
+    }
+    catch (XmippError xe)
+    {
+        std::cerr << xe;
         return 1;
     }
     return 0;
 }
 
-void Usage(const Mask &m)
-{
-    std::cerr << "Purpose: Align two volumes varying orientation, position and scale\n"
-    << "Usage: align3D [options]\n"
-    << "   -i1 <volume1>        : the first volume to align\n"
-    << "   -i2 <volume2>        : the second one\n"
-    << "  [-rot  <rot0>  <rotF>  <step_rot>  : in degrees\n"
-    << "  [-tilt  <tilt0> <tiltF> <step_tilt> : in degrees\n"
-    << "  [-psi  <psi0>  <psiF>  <step_psi>  : in degrees\n"
-    << "  [-scale  <sc0>   <scF>   <step_sc>   : size scale margin\n"
-    << "  [-grey_scale <sc0>   <scF>   <step_sc>   : grey scale margin\n"
-    << "  [-grey_shift <sh0>   <shF>   <step_sh>   : grey shift margin\n"
-    << "  [-z   <z0>  <zF>  <step_z>    : Z position in pixels\n"
-    << "  [-y   <y0>  <yF>  <step_y>    : Y position in pixels\n"
-    << "  [-x   <x0>  <xF>  <step_x>    : X position in pixels\n"
-    << "  [-show_fit]         : Show fitness values\n"
-    << "  [-apply]         : Apply best movement to -i2\n"
-    << "  [-mean_in_mask]        : Use the means within the mask\n"
-    << "  [-covariance]        : Covariance fitness criterion\n"
-    << "  [-least_squares]        : LS fitness criterion\n"
-    << "  [-local]                                 : Use local optimizer instead of\n"
-    << "                                             exhaustive search\n"
-    << "  [-onlyShift]                             : Only shift\n"
-    ;
-    m.usage();
-    std::cout << std::endl;
-}
+
