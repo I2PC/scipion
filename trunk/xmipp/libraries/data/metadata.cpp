@@ -1003,36 +1003,36 @@ void MetaData::_readRowFormat(std::istream& is)
     }
 }
 
-void MetaData::read(const FileName &filename, const std::vector<MDLabel> *desiredLabels, const std::string & blockName, bool addStack)
+void MetaData::read(const FileName &filename, const std::vector<MDLabel> *desiredLabels, const std::string & blockName, bool decomposeStack)
 {
     //First try to open the file as a metadata
     _clear();
     myMDSql->createMd();
     isColumnFormat = true;
 
-    if (!filename.isMetaData())//if not a metadata, try to read as image or stack
-    {
-        Image<char> image;
-        image.read(filename, false);
-        if (image().ndim == 1 || !addStack) //single image
-        {
-            addObject();
-            setValue(MDL_IMAGE, filename);
-            setValue(MDL_ENABLED, 1);
-        }
-        else //stack
-        {
-            FileName fnTemp;
-            for (size_t i = 0; i < image().ndim; ++i)
-            {
-                fnTemp.compose(i, filename);
-                addObject();
-                setValue(MDL_IMAGE, fnTemp);
-                setValue(MDL_ENABLED, 1);
-            }
-        }
-        return;
-    }
+  if (!filename.isMetaData())//if not a metadata, try to read as image or stack
+  {
+      Image<char> image;
+      image.read(filename, false);
+      if (image().ndim == 1 || !decomposeStack) //single image
+      {
+          addObject();
+          setValue(MDL_IMAGE, filename);
+          setValue(MDL_ENABLED, 1);
+      }
+      else //stack
+      {
+          FileName fnTemp;
+          for (size_t i = 0; i < image().ndim; ++i)
+          {
+              fnTemp.compose(i, filename);
+              addObject();
+              setValue(MDL_IMAGE, fnTemp);
+              setValue(MDL_ENABLED, 1);
+          }
+      }
+      return;
+  }
 
     std::ifstream is(filename.data(), std::ios_base::in);
     std::stringstream ss;

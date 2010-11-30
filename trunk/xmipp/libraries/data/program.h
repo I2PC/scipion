@@ -206,12 +206,12 @@ protected:
     //FileName        fnImg, fnImgOut;
     /// Output extension and root
     FileName oext, oroot;
-    /// Set this to true for allow the option
-    /// of applicating the transformation as stored in the header
+    /// Set this true to allow the option
+    /// of applying the transformation as stored in the header
     bool apply_geo;
-    /// Set this to true when the program produce a result metadata
+    /// Use this flag for not writing at every image and when the program produces an unique output
     bool produces_an_output;
-    /// Use this flag for not writing at every image
+    /// Set this flag true when the program produces a metadata/stack result
     bool each_image_produces_an_output;
     /// Use this flag for not producing a time bar
     bool allow_time_bar;
@@ -220,7 +220,7 @@ protected:
     /// Flag to know when input is a single image
     bool single_image;
     /// Flag to treat a stack file as a set of images instead of a unique file
-    bool add_stacks;
+    bool decompose_stacks;
 
     virtual void defineParams();
     virtual void readParams();

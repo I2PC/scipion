@@ -353,7 +353,7 @@ XmippMetadataProgram::XmippMetadataProgram()
     each_image_produces_an_output = false;
     allow_time_bar = true;
     apply_geo = false;
-    add_stacks = true;
+    decompose_stacks = true;
 }
 
 void XmippMetadataProgram::defineParams()
@@ -392,16 +392,28 @@ void XmippMetadataProgram::readParams()
     mode = metadataModeConvert(getParam("--mode"));
 
     if (produces_an_output)
-        fn_out = checkParam("-o") ? getParam("-o") : fn_in;
+        fn_out = checkParam("-o") ? getParam("-o") : "";
 
     if (each_image_produces_an_output)
     {
-        fn_out = checkParam("-o") ? getParam("-o") : fn_in;
+        fn_out = checkParam("-o") ? getParam("-o") : "";
         oext = getParam("-oext");
         oroot = getParam("-oroot");
     }
 
-    mdIn.read(fn_in, NULL,blockName,add_stacks);
+    if (oroot == "" && oext == "" && fn_out == "")
+        fn_out = fn_in;
+    else
+    {
+        FileName fn_stack_plain=fn_out.removeFileFormat();
+        if (exists(fn_stack_plain))
+            unlink(fn_stack_plain.c_str());
+    }
+
+
+
+
+    mdIn.read(fn_in, NULL,blockName,decompose_stacks);
     single_image = !fn_in.isMetaData() && (mdIn.size() == 1);
 
     if (mdIn.containsLabel(MDL_ENABLED))

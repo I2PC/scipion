@@ -642,7 +642,7 @@ public:
 
     /** Read data from file.
      */
-    void read(const FileName &inFile, const std::vector<MDLabel> *desiredLabels = NULL, const std::string & blockName="", bool addStack=true);
+    void read(const FileName &inFile, const std::vector<MDLabel> *desiredLabels = NULL, const std::string & blockName="", bool decomposeStack=true);
     /** @} */
 
     /** @name Set Operations
