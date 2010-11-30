@@ -408,36 +408,27 @@ class preprocess_A_class:
         # Write the different selfiles
         scriptdir=os.path.split(os.path.dirname(os.popen('which xmipp_protocols', 'r').read()))[0] + '/protocols'
         sys.path.append(scriptdir)
-        import XmippData
-        MD=XmippData.MetaData()
-        ptr=XmippData.stringP()
+        import xmipp
+        MD=xmipp.MetaData()
         idx=0
         for filename in self.SFmicrograph:
             fh=open(self.SFshort[idx] + "/status.txt", "a")
             fh.write("Step F: Finished on " + time.asctime() + "\n")
             fh.close()
             MD.addObject()
-            ptr.assign(filename)
-            XmippData.setValueString(MD, XmippData.MDL_IMAGE, ptr)
-            ptr.assign(self.SFpsd[idx])
-            XmippData.setValueString(MD, XmippData.MDL_PSD, ptr)
+            MD.setValue(xmipp.MDL_IMAGE, filename)
+            MD.setValue(xmipp.MDL_PSD,   self.SFpsd[idx])
             if len(self.SFinputparams) > 0:
-                ptr.assign(self.SFinputparams[idx])
-                XmippData.setValueString(MD, XmippData.MDL_CTFINPUTPARAMS, ptr)
+                MD.setValue(xmipp.MDL_CTFINPUTPARAMS, self.SFinputparams[idx])
             if len(self.SFctf) > 0:
-                ptr.assign(self.SFctf[idx])
-                XmippData.setValueString(MD, XmippData.MDL_CTFMODEL, ptr)
-                ptr.assign(self.SFhalf[idx])
-                XmippData.setValueString(MD, XmippData.MDL_ASSOCIATED_IMAGE1, ptr)
-                ptr.assign(self.SFquadrant[idx])
-                XmippData.setValueString(MD, XmippData.MDL_ASSOCIATED_IMAGE2, ptr)
+                MD.setValue(xmipp.MDL_CTFMODEL,          self.SFctf[idx])
+                MD.setValue(xmipp.MDL_ASSOCIATED_IMAGE1, self.SFhalf[idx])
+                MD.setValue(xmipp.MDL_ASSOCIATED_IMAGE2, self.SFquadrant[idx])
             if len(self.SFctffind) > 0:
-                ptr.assign(self.SFctffind[idx])
-                XmippData.setValueString(MD, XmippData.MDL_CTFMODEL2, ptr)
-                ptr.assign(self.SFctffindmrc[idx])
-                XmippData.setValueString(MD, XmippData.MDL_ASSOCIATED_IMAGE3, ptr)
+                MD.setValue(xmipp.MDL_CTFMODEL2, self.SFctffind[idx])
+                MD.setValue(xmipp.MDL_ASSOCIATED_IMAGE3, self.SFctffindmrc[idx])
             idx += 1
-        MD.write(XmippData.FileName(self.WorkingDir + "/" + self.RootName + "_micrographs.sel"))
+        MD.write(self.WorkingDir + "/" + self.RootName + "_micrographs.sel")
 
         # CTF Quality control
         command="xmipp_psd_sort -i " + self.RootName + "_micrographs.sel\n"
@@ -459,10 +450,10 @@ class preprocess_A_class:
         else:
             self.log.info(commandFile)     
             os.system(commandFile)     
-        os.remove(commandFile)
 
     def perform_preprocessing(self, filename, fh_mpi):
         # Decide name after preprocessing
+        filename=relpath(filename)
         (filepath, micrographName)=os.path.split(filename)
         (shortname, extension)=os.path.splitext(micrographName)
         finalname=shortname + '/down' + str(self.Down) + '_' + shortname
@@ -585,7 +576,7 @@ class preprocess_A_class:
         # Convert image to MRC
         command='if grep -q "Step 1" ' + shortname + '/status.txt' + theNewLine + \
             'then' + theNewLine + '(' + theNewLine
-        command += 'xmipp_convert_image -i ' + filename + ' -o ' + shortname + '/tmp.mrc ; '
+        command += 'xmipp_convert_image -i ' + filename + ' -o ' + shortname + '/tmp.mrc -v 0; '
 
         # Prepare parameters for CTFTILT
         AngPix=(10000. * self.ScannedPixelSize * self.Down) / self.Magnification
@@ -610,7 +601,7 @@ class preprocess_A_class:
         os.write(fh_mpi, command)
 
     def pickup_ctfestimate_ctffind(self, shortname, filename):
-        import XmippData, time
+        import xmipp, time
         (filepath, micrographName)=os.path.split(filename)
         (fnRoot, extension)=os.path.splitext(micrographName)
         fnOut=shortname + '/' + fnRoot + '_ctffind.ctfparam'
@@ -661,36 +652,18 @@ class preprocess_A_class:
         retval.append(shortname + '/' + fnRoot + '_ctffind_spectrum.mrc');
 
         # Generate Xmipp .ctfparam file:
-        MD=XmippData.MetaData()
+        MD=xmipp.MetaData()
         MD.setColumnFormat(False)
-        ptr=XmippData.doubleP()
-        
         AngPix=(10000. * self.ScannedPixelSize * self.Down) / self.Magnification
-        ptr.assign(AngPix)
         MD.addObject()
-        XmippData.setValueDouble(MD, XmippData.MDL_CTF_SAMPLING_RATE, ptr)
-
-        ptr.assign(self.Voltage)
-        XmippData.setValueDouble(MD, XmippData.MDL_CTF_VOLTAGE, ptr)
-
-        ptr.assign(-DF2)
-        XmippData.setValueDouble(MD, XmippData.MDL_CTF_DEFOCUSU, ptr)
-        
-        ptr.assign(-DF1)
-        XmippData.setValueDouble(MD, XmippData.MDL_CTF_DEFOCUSV, ptr)
-
-        ptr.assign(Angle)
-        XmippData.setValueDouble(MD, XmippData.MDL_CTF_DEFOCUS_ANGLE, ptr)
-
-        ptr.assign(self.SphericalAberration)
-        XmippData.setValueDouble(MD, XmippData.MDL_CTF_CS, ptr)
-
-        ptr.assign(-self.AmplitudeContrast)
-        XmippData.setValueDouble(MD, XmippData.MDL_CTF_Q0, ptr)
-
-        ptr.assign(1.0)
-        XmippData.setValueDouble(MD, XmippData.MDL_CTF_K, ptr)
-
+        MD.setValue(xmipp.MDL_CTF_SAMPLING_RATE, AngPix)
+        MD.setValue(xmipp.MDL_CTF_VOLTAGE,       self.Voltage)
+        MD.setValue(xmipp.MDL_CTF_DEFOCUSU,      -DF2)
+        MD.setValue(xmipp.MDL_CTF_DEFOCUSV,      -DF1)
+        MD.setValue(xmipp.MDL_CTF_DEFOCUS_ANGLE, Angle)
+        MD.setValue(xmipp.MDL_CTF_CS,            self.SphericalAberration)
+        MD.setValue(xmipp.MDL_CTF_Q0,            -self.AmplitudeContrast)
+        MD.setValue(xmipp.MDL_CTF_K,             1.0)
         MD.write(XmippData.FileName(fnOut))
 
         fh=open(shortname + "/status.txt", "a")
