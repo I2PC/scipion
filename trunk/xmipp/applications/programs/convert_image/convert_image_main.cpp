@@ -35,49 +35,34 @@ typedef enum
 {
     MD2MD,
     MD2VOL,
-    STK2VOL,
-    VOL2STK,
     VOL2MD
 } ImageConv;
 
-class ConvImgProg: public XmippMetadataProgram
+class ProgConvImg: public XmippMetadataProgram
 {
 private:
-    //    FileName fn_root, fn_oext, fn_in, fn_out;
     std::string type, depth;
     Image<char> imTemp;
-    //    Image<float> out;
+    ImageGeneric imIn, *imOut;
+    DataType     outDataT;
     MetaData mdTemp;
     MDRow    row;
     ImageConv convMode;
     bool adjust;
     int k;
 
-    ImageGeneric imIn, *imOut;
-    DataType     outDataT;
-
-
 protected:
     void defineParams()
     {
         each_image_produces_an_output = true;
         XmippMetadataProgram::defineParams();
-
         addUsageLine("Convert among stacks, volumes and images, and change the file format.");
-        //        addInputLine();
-        //        addParamsLine("  -o <output_file=\"\">  : Output file: metadata, stack, volume or image.");
-        //        addParamsLine("   alias --output;");
-        //        addParamsLine("OR  --oroot <root=\"\">     : Rootname of output individual images (Optional + \":ext\").");
-        //        addParamsLine("  [--oext <extension=spi>] : Output file format extension.");
-        //        addExtensionWhere("extension");
-
         addParamsLine("  [--type <output_type=img>] : Output file type.");
         addParamsLine("          where <output_type>");
         addParamsLine("          img : Image");
         addParamsLine("          vol : Volume");
         addParamsLine("          stk : Stack ");
         addParamsLine("  alias -t;");
-
         addParamsLine("  [--depth+ <bit_depth=default>] : Image bit depth.");
         addParamsLine("          where <bit_depth>");
         addParamsLine("                 default: Default selected value (*).");
@@ -104,17 +89,8 @@ protected:
     {
         XmippMetadataProgram::readParams();
 
-        //        fn_in = getParam("-i");
-        //        fn_out = getParam("-o");
-        //        fn_root = getParam("--oroot");
-        //        fn_oext = getParam("--oext");
-
-        //        if (checkParam("--oroot") && !checkParam("--oext"))
-        //            fn_oext = fn_root.getFileFormat();
-        //        fn_root = fn_root.removeFileFormat();
-
         fn_out = (checkParam("-o"))? getParam("-o") : "";
-
+        adjust = checkParam("--rangeAdjust");
         type = getParam("--type");
 
         if (!checkParam("--type"))
@@ -138,12 +114,7 @@ protected:
         }
         else
             outDataT = Float;
-
-
-        adjust = checkParam("--rangeAdjust");
-
     }
-
 
     void preProcess()
     {
@@ -156,7 +127,6 @@ protected:
         if (!single_image && type == "vol")
         {
             convMode = MD2VOL;
-            //            single_image = true;
 
             int Xdim, Ydim, Zdim;
             unsigned long Ndim;
@@ -175,6 +145,7 @@ protected:
             imTemp.read(fn_in,false);
             imTemp.getDimensions(Xdim,Ydim,Zdim,Ndim);
 
+            //Fill mdIn to allow XmippMetaDataProgram create the fnImgOut
             if (single_image && Zdim > 1 && type != "vol")
             {
                 convMode = VOL2MD;
@@ -197,13 +168,10 @@ protected:
                 k = 0;
             }
         }
-
     }
-
 
     void processImage(const FileName &fnImg, const FileName &fnImgOut, long int objId)
     {
-
         switch(convMode)
         {
         case MD2MD:
@@ -223,6 +191,8 @@ protected:
             }
         case MD2VOL:
             {
+                std::cout << fnImg <<std::endl;
+                std::cout << "k = " << k <<std::endl;
                 imIn.read(fnImg,true,-1,false,false, NULL,true);
                 imOut->data->setSlice(k++,imIn.data);
                 break;
@@ -231,9 +201,9 @@ protected:
             {
                 imIn.data->getSlice(k++,imOut->data);
                 if (fnImgOut.isInStack())
-                  imOut->write(fnImgOut,-1,true,WRITE_APPEND,adjust);
+                    imOut->write(fnImgOut,-1,true,WRITE_APPEND,adjust);
                 else
-                  imOut->write(fnImgOut,-1,false,WRITE_OVERWRITE,adjust);
+                    imOut->write(fnImgOut,-1,false,WRITE_OVERWRITE,adjust);
             }
         }
     }
@@ -243,26 +213,17 @@ protected:
         switch(convMode)
         {
         case MD2VOL:
-            {
-                imOut->write();
-                break;
-            }
+            imOut->write();
+            break;
         }
     }
 };
 
 int main(int argc, char *argv[])
 {
-    try
-    {
-        ConvImgProg program;
-        program.read(argc, argv);
-        program.run();
-    }
-    catch (XmippError xe)
-    {
-        std::cerr << xe;
-    }
+    ProgConvImg program;
+    program.read(argc, argv);
+    program.tryRun();
 
     return 0;
 }
