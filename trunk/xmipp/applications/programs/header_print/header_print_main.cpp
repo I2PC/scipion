@@ -38,6 +38,8 @@ protected:
     {
         each_image_produces_an_output = false;
         apply_geo = false;
+        allow_time_bar = false;
+        add_stacks = false;
         XmippMetadataProgram::defineParams();
         addUsageLine("Print information from the header of 2D-images.");
     }

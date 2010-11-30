@@ -219,6 +219,8 @@ protected:
     int time_bar_step, time_bar_size, time_bar_done;
     /// Flag to know when input is a single image
     bool single_image;
+    /// Flag to treat a stack file as a set of images instead of a unique file
+    bool add_stacks;
 
     virtual void defineParams();
     virtual void readParams();

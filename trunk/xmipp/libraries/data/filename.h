@@ -160,6 +160,16 @@ public:
      */
     void decompose(int &no, std::string& str) const;
 
+    /** Get decomposed filename from filenames with @. Mainly from selfiles
+         *
+         * @code
+         * filename = fn_proj.decomposedFileName();  // fn_proj = "000001@g1ta000001.xmp"
+         *                                          // no=1
+         *                                          // filename = "g1ta000001.xmp"
+         * @endcode
+         */
+    String getDecomposedFileName() const;
+
     /** Get the root from a filename
      *
      * @code
@@ -419,7 +429,7 @@ public:
      * @endcode
      */
     FileName substituteExtension(const std::string& ext1,
-                                  const std::string& ext2) const;
+                                 const std::string& ext2) const;
 
     /** Without a substring
      *

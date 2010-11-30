@@ -353,6 +353,7 @@ XmippMetadataProgram::XmippMetadataProgram()
     each_image_produces_an_output = false;
     allow_time_bar = true;
     apply_geo = false;
+    add_stacks = true;
 }
 
 void XmippMetadataProgram::defineParams()
@@ -400,8 +401,9 @@ void XmippMetadataProgram::readParams()
         oroot = getParam("-oroot");
     }
 
-    single_image = !fn_in.isMetaData();
-    mdIn.read(fn_in, NULL,blockName);
+    mdIn.read(fn_in, NULL,blockName,add_stacks);
+    single_image = !fn_in.isMetaData() && (mdIn.size() == 1);
+
     if (mdIn.containsLabel(MDL_ENABLED))
         mdIn.removeObjects(MDValueEQ(MDL_ENABLED, -1));
 
@@ -443,7 +445,7 @@ void XmippMetadataProgram::startProcessing()
     show();
     // Initialize progress bar
     time_bar_size = mdIn.size();
-    if (allow_time_bar && verbose)
+    if (allow_time_bar && verbose && !single_image)
         init_progress_bar(time_bar_size);
     time_bar_step = CEIL((double)time_bar_size / 60.0);
     time_bar_done = 0;
@@ -451,7 +453,7 @@ void XmippMetadataProgram::startProcessing()
 
 void XmippMetadataProgram::finishProcessing()
 {
-    if (allow_time_bar && verbose)
+    if (allow_time_bar && verbose && !single_image)
         progress_bar(time_bar_size);
 
     if (!single_image && !mdOut.isEmpty())
@@ -460,7 +462,7 @@ void XmippMetadataProgram::finishProcessing()
 
 void XmippMetadataProgram::showProgress()
 {
-    if (time_bar_done % time_bar_step == 0 && allow_time_bar && verbose)
+    if (time_bar_done % time_bar_step == 0 && allow_time_bar && verbose && !single_image)
         progress_bar(time_bar_done);
 }
 
@@ -479,12 +481,15 @@ void XmippMetadataProgram::run()
 {
     try
     {
-        FileName fnImg, fnImgOut;
+        FileName fnImg, fnImgOut, basename;
         long int objId;
+        int num;
         //Perform particular preprocessing
         preProcess();
 
         startProcessing();
+
+        int kk = 0;
 
         //FOR_ALL_OBJECTS_IN_METADATA(mdIn)
         while ((objId = getImageToProcess()) != -1)
@@ -496,17 +501,38 @@ void XmippMetadataProgram::run()
 
             if (each_image_produces_an_output)
             {
-                fnImgOut = (single_image) ? fn_out : fnImg;
-                if (oroot != "")
-                    fnImgOut = oroot + fnImgOut.withoutExtension();
-                if (oext != "")
-                    fnImgOut = fnImgOut.withoutExtension() + "." + oext;
-                if (fnImgOut != fnImg)
+                fnImgOut = fnImg;
+                if (oroot != "" || oext != "")
                 {
+                    if (oext == "")
+                        oext = oroot.getFileFormat();
+                    oroot = oroot.removeFileFormat();
+                    if (oext == "")
+                        oext = fnImg.getFileFormat();
+
+                    basename = oroot.getBaseName();
+                    oroot = oroot.getRoot();
+
+                    if (basename != "")
+                        fnImgOut.compose(oroot,kk++,oext);
+                    else if (fnImg.isInStack())
+                        fnImgOut.compose(oroot + (fnImg.withoutExtension()).getDecomposedFileName(),kk++,oext);
+                    else
+                        fnImgOut = oroot + fnImg.withoutExtension()+"." + oext;
+
                     mdOut.addObject();
                     mdOut.setValue(MDL_IMAGE,fnImgOut);
                     mdOut.setValue(MDL_ENABLED, 1);
                 }
+                else if (fn_out != "")
+                {
+                    if (single_image)
+                        fnImgOut = fn_out;
+                    else
+                        fnImgOut.compose(kk++,fn_out);
+                }
+                else
+                    fnImgOut = fnImg;
             }
 
             processImage(fnImg, fnImgOut, objId);

@@ -89,6 +89,15 @@ void FileName::decompose(int &no, String &str) const
     }
 }
 
+// Get decomposed filename .......................................
+String FileName::getDecomposedFileName() const
+{
+    String str;
+    int no;
+    decompose(no, str);
+    return str;
+}
+
 // Get the root name of a filename .........................................
 FileName FileName::getRoot() const
 {
@@ -498,7 +507,7 @@ int mkpath(const FileName &path, mode_t mode)
     int             status;
     char           *copypath = strdup(path.c_str());
     if(copypath==NULL)
-    	REPORT_ERROR(ERR_MEM_BADREQUEST,"Mkpath: Canot alloc memory");
+        REPORT_ERROR(ERR_MEM_BADREQUEST,"Mkpath: Canot alloc memory");
 
     status = 0;
     pp = copypath;
