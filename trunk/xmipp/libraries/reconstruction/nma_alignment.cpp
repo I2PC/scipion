@@ -26,6 +26,8 @@
 
 #include <iostream>
 #include <data/args.h>
+#include <unistd.h>
+#include <sys/stat.h>
 #include "../../external/condor/Solver.h"
 #include "../../external/condor/tools.h"
 
@@ -40,7 +42,7 @@ ProgNmaAlignment::ProgNmaAlignment()
 // Params definition ============================================================
 void ProgNmaAlignment::defineParams()
 {
-  XmippMetadataProgram::defineParams();
+    XmippMetadataProgram::defineParams();
     addParamsLine("   -pdb <PDB_filename>                : PDB Model to compute NMA");
     addParamsLine("   -oang <output_filename>            : File for the assignment");
     addParamsLine("   -modes <filename>                  : File with a list of mode filenames");
@@ -214,19 +216,22 @@ void ProgNmaAlignment::performCompleteSearch(
     std::string command;
 
     // Reduce the image
-    command=(std::string)"xmipp_scale_pyramid -i "+
-            currentImg->name()+" -o downimg_"+fnRandom+".xmp "+
-            "-reduce -levels "+integerToString(pyramidLevel)+
-            " -v 0";
+    FileName fnDown=(std::string)"downimg_"+fnRandom+".xmp";
+    if (pyramidLevel!=0)
+    {
+    	Image<double> I, Ireduced;
+    	I.read(currentImg->name());
+    	reduceBSpline(BSPLINE3,Ireduced(),I());
+    	Ireduced.write(fnDown);
+    }
+    else
+        link(currentImg->name().c_str(),fnDown.c_str());
 
-    system(command.c_str());
-
-    command=(std::string)"mkdir ref" + fnRandom;
-    system(command.c_str());
+    mkdir(((std::string)"ref" + fnRandom).c_str(),S_IRWXU);
 
     command = (std::string)"xmipp_angular_project_library -i deformedPDB_"+fnRandom+".vol"+
-    		  " -o ref" + fnRandom + "/ref" + fnRandom+".stk"
-    		  " --sampling_rate 5 --sym " + symmetry +" -v 0";
+              " -o ref" + fnRandom + "/ref" + fnRandom+".stk"
+              " --sampling_rate 5 --sym " + symmetry +" -v 0";
     FileName fnRefSel=(std::string)"ref" + fnRandom + "/ref" + fnRandom+".doc";
     system(command.c_str());
 
@@ -254,13 +259,13 @@ double ProgNmaAlignment::performContinuousAssignment(
 {
     // Perform alignment
     std::string command=(std::string)"xmipp_angular_continuous_assign"+
-            " -i angledisc_"+fnRandom+".txt"+
-            " -ref deformedPDB_"+fnRandom+".vol"+
-            " -o anglecont_"+fnRandom+".txt"+
-            " -gaussian_Fourier " + floatToString((float)gaussian_DFT_sigma) +
-            " -gaussian_Real " + floatToString((float)gaussian_Real_sigma) +
-            " -zerofreq_weight " + floatToString((float)weight_zero_freq) +
-            " -v 0";
+                        " -i angledisc_"+fnRandom+".txt"+
+                        " -ref deformedPDB_"+fnRandom+".vol"+
+                        " -o anglecont_"+fnRandom+".txt"+
+                        " -gaussian_Fourier " + floatToString((float)gaussian_DFT_sigma) +
+                        " -gaussian_Real " + floatToString((float)gaussian_Real_sigma) +
+                        " -zerofreq_weight " + floatToString((float)weight_zero_freq) +
+                        " -v 0";
     system(command.c_str());
 
     // Pick up results
@@ -321,7 +326,8 @@ double ObjFunc_nma_alignment::eval(Vector X, int *nerror)
         yshift = global_NMA_prog->bestStage1(VEC_XSIZE(global_NMA_prog->bestStage1)-1);
 
         DF.addObject();
-        DF.setValue(MDL_IMAGE,"downimg_"+fnRandom+".xmp");
+        FileName fnDown=(std::string)"downimg_"+fnRandom+".xmp";
+        DF.setValue(MDL_IMAGE,fnDown);
         DF.setValue(MDL_ENABLED,1);
         DF.setValue(MDL_ANGLEROT,rot);
         DF.setValue(MDL_ANGLETILT,tilt);
@@ -329,8 +335,8 @@ double ObjFunc_nma_alignment::eval(Vector X, int *nerror)
         DF.setValue(MDL_SHIFTX,xshift);
         DF.setValue(MDL_SHIFTY,yshift);
 
-        DF.write("angledisc_"+fnRandom+".txt");
-
+        DF.write((std::string)"angledisc_"+fnRandom+".txt");
+        link(global_NMA_prog->currentImg->name().c_str(),fnDown.c_str());
     }
     double fitness=global_NMA_prog->performContinuousAssignment(fnRandom,pyramidLevelCont);
 
@@ -345,12 +351,13 @@ double ObjFunc_nma_alignment::eval(Vector X, int *nerror)
 }
 
 ObjFunc_nma_alignment::ObjFunc_nma_alignment(int _t, int _n)
-{
-}
+{}
 
 void ProgNmaAlignment::processImage(const FileName &fnImg, const FileName &fnImgOut, long int objId)
 {
-    Image<double> img; img.read(fnImg);;
+    Image<double> img;
+    img.read(fnImg);
+    ;
 
     double rhoStart=1e-0, rhoEnd=1e-3;
 
