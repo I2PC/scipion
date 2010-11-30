@@ -257,39 +257,6 @@ def AddLibrary(name, basedir, sources, includes, libpath=[], libs=[],
     env.Alias(name, install)
     env.Default(alias)
 
-def AddSwigPythonLibrary(name, basedir, sourceList, includes, libpath=[], libs=[]):
-    # Create wrapper
-    # setup
-    basedirswig = AddLastSlash(basedir+"/swig")
-    libprefix = os.path.join(env['prefix'], 'lib')
-    if int(env['swig']):
-
-        # Build wrapper
-        wrapper = env.i2cc(basedirswig + name + "_wrap.cc", sourceList)
-        Depends(wrapper, Glob(basedir, '*.h', [])+Glob(basedirswig, '*.i', []))
-
-        # alias
-        alias=env.Alias(name,wrapper)
-        env.Default(alias)
-
-    # Create library
-    import distutils.sysconfig
-    AddLibrary("_"+name, basedirswig, [name+"_wrap.cc"],
-        ['#',distutils.sysconfig.get_python_inc()],['lib'],['XmippData'],'_')
-    #
-    pyFile = libprefix+'/'+name+'.py'
-    if os.path.exists(pyFile):
-       command = "ln -fs "
-    else:
-       command = "ln -s  "
-    command = command + " ../" + basedirswig+name+".py " + libprefix+'/'+name+'.py'
-    print command
-    os.system(command)
-
-    #install = env.InstallAs(libprefix+'/'+name+'.py',basedirswig+name+".py")
-    #env.Alias(name+'.py', install)
-    #env.Default(name+'.py')
-    
 def AddSwigJavaLibrary(name, basedir, sourceList, includes, libpath=[], libs=[]):
     # Create wrapper
     # setup
@@ -547,10 +514,7 @@ AddLibrary('xmipp', 'libraries/bindings/python', PyExtSources,
            ['#libraries',"#", distutils.sysconfig.get_python_inc()],
            ['lib'],['XmippData'],'')
 
-SwigDataSources = ['libraries/data/swig/swigXmippData.i']
 SwigJavaDataSources = ['libraries/data/swig/swigXmippDataJava.i']
-AddSwigPythonLibrary('XmippData', 'libraries/data', SwigDataSources, ['#'],
-    [], ['XmippData'])
 
 if int(env['java']):
     AddSwigJavaLibrary('XmippDataJava', 'libraries/data', SwigJavaDataSources, ['#'],
