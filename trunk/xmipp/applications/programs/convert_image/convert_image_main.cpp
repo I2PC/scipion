@@ -29,40 +29,47 @@
 #include <data/metadata_extension.h>
 #include <data/progs.h>
 
+#include <data/image_generic.h>
+
 typedef enum
 {
-    IM2IM,
+    MD2MD,
     MD2VOL,
     STK2VOL,
     VOL2STK,
     VOL2MD
 } ImageConv;
 
-class ProgConvImg: public XmippProgram
+class ConvImgProg: public XmippMetadataProgram
 {
 private:
-    FileName fn_root, fn_oext, fn_in, fn_out;
+    //    FileName fn_root, fn_oext, fn_in, fn_out;
     std::string type, depth;
-    Image<char> in;
-    Image<float> out;
-    MetaData SF;
+    Image<char> imTemp;
+    //    Image<float> out;
+    MetaData mdTemp;
     MDRow    row;
     ImageConv convMode;
     bool adjust;
     int k;
 
+    ImageGeneric imIn, *imOut;
+    DataType     outDataT;
 
 
 protected:
     void defineParams()
     {
+        each_image_produces_an_output = true;
+        XmippMetadataProgram::defineParams();
+
         addUsageLine("Convert among stacks, volumes and images, and change the file format.");
-        addInputLine();
-        addParamsLine("  -o <output_file=\"\">  : Output file: metadata, stack, volume or image.");
-        addParamsLine("   alias --output;");
-        addParamsLine("OR  --oroot <root=\"\">     : Rootname of output individual images (Optional + \":ext\").");
-        addParamsLine("  [--oext <extension=spi>] : Output file format extension.");
-        addExtensionWhere("extension");
+        //        addInputLine();
+        //        addParamsLine("  -o <output_file=\"\">  : Output file: metadata, stack, volume or image.");
+        //        addParamsLine("   alias --output;");
+        //        addParamsLine("OR  --oroot <root=\"\">     : Rootname of output individual images (Optional + \":ext\").");
+        //        addParamsLine("  [--oext <extension=spi>] : Output file format extension.");
+        //        addExtensionWhere("extension");
 
         addParamsLine("  [--type <output_type=img>] : Output file type.");
         addParamsLine("          where <output_type>");
@@ -95,22 +102,26 @@ protected:
 
     void readParams()
     {
-        fn_in = getParam("-i");
-        fn_out = getParam("-o");
-        fn_root = getParam("--oroot");
-        fn_oext = getParam("--oext");
+        XmippMetadataProgram::readParams();
 
-        if (checkParam("--oroot") && !checkParam("--oext"))
-            fn_oext = fn_root.getFileFormat();
-        fn_root = fn_root.removeFileFormat();
+        //        fn_in = getParam("-i");
+        //        fn_out = getParam("-o");
+        //        fn_root = getParam("--oroot");
+        //        fn_oext = getParam("--oext");
+
+        //        if (checkParam("--oroot") && !checkParam("--oext"))
+        //            fn_oext = fn_root.getFileFormat();
+        //        fn_root = fn_root.removeFileFormat();
+
+        fn_out = (checkParam("-o"))? getParam("-o") : "";
 
         type = getParam("--type");
 
         if (!checkParam("--type"))
         {
-            if (fn_out.getExtension() == "vol" || fn_oext == "vol")
+            if (fn_out.getExtension() == "vol" || oext == "vol")
                 type = "vol";
-            else if (fn_out.getExtension() == "stk" || fn_oext == "stk")
+            else if (fn_out.getExtension() == "stk" || oext == "stk")
                 type = "stk";
         }
 
@@ -118,304 +129,133 @@ protected:
         {
             depth = getParam("--depth");
 
+            outDataT = datatypeString2Int((depth == "default")? "float": depth);
+
             if (fn_out != "")
                 fn_out += "%" + depth;
             else
-                fn_oext += "%" + depth;
+                oext += "%" + depth;
         }
+        else
+            outDataT = Float;
+
 
         adjust = checkParam("--rangeAdjust");
 
     }
 
-    template <typename T>
-    void processImage(Image<T> &ImIn , const FileName &fnIn, const FileName &fnOut ,
-                      bool readdata, int select_imgIn,
-                      bool apply_geo, bool only_apply_shifts,
-                      MDRow * row, bool mapData,
-                      int select_imgOut, bool isStack,
-                      int mode)
+
+    void preProcess()
     {
-        switch (convMode)
+        FileName fn_stack_plain=fn_out.removeFileFormat();
+        if (exists(fn_stack_plain) && type == "stk")
+            unlink(fn_stack_plain.c_str());
+
+        convMode = MD2MD;
+
+        if (!single_image && type == "vol")
         {
-        case IM2IM:
+            convMode = MD2VOL;
+            //            single_image = true;
+
+            int Xdim, Ydim, Zdim;
+            unsigned long Ndim;
+            ImgSize(mdIn, Xdim, Ydim, Zdim, Ndim);
+            if (Zdim!=1)
+                REPORT_ERROR(ERR_MULTIDIM_DIM,
+                             "Only 2D images can be converted into volumes");
+            imOut = new ImageGeneric(outDataT);
+            imOut->newMappedFile(Xdim,Ydim,mdIn.size(),1,fn_out);
+            k = 0;
+        }
+        else if (single_image)
+        {
+            int Xdim, Ydim, Zdim;
+            unsigned long Ndim;
+            imTemp.read(fn_in,false);
+            imTemp.getDimensions(Xdim,Ydim,Zdim,Ndim);
+
+            if (single_image && Zdim > 1 && type != "vol")
             {
-                ImIn.read(fnIn,readdata, select_imgIn,apply_geo,only_apply_shifts,row,true);
-                ImIn.write(fnOut,select_imgOut,isStack,mode,adjust);
+                convMode = VOL2MD;
+                single_image = false;
+
+                mdIn.clear();
+
+                FileName fnTemp;
+
+                for (k=0;k<Zdim;k++)
+                {
+                    fnTemp.compose(k, fn_in);
+
+                    mdIn.addObject();
+                    mdIn.setValue(MDL_IMAGE, fnTemp);
+                    mdIn.setValue(MDL_ENABLED, 1);
+                }
+                imIn.read(fn_in,true,-1,false,false,NULL,true);
+                imOut = new ImageGeneric(outDataT);
+                k = 0;
+            }
+        }
+
+    }
+
+
+    void processImage(const FileName &fnImg, const FileName &fnImgOut, long int objId)
+    {
+
+        switch(convMode)
+        {
+        case MD2MD:
+            {
+                if (fnImgOut.isInStack())
+                {
+                    mdIn.getRow(row);
+                    imIn.read(fnImg,true,-1,false,false,&row,true);
+                    imIn.write(fnImgOut,-1,true,WRITE_APPEND,adjust);
+                }
+                else
+                {
+                    imIn.read(fnImg,true,-1,false,false,NULL,true);
+                    imIn.write(fnImgOut,-1,false,WRITE_OVERWRITE,adjust);
+                }
                 break;
             }
         case MD2VOL:
             {
-                ImIn.read(fnIn,readdata, select_imgIn,apply_geo,only_apply_shifts,row,true);
-                out().setSlice(k++,ImIn());
-                break;
-            }
-        case STK2VOL:
-            {
-                ImIn.read(fnIn,readdata, select_imgIn,apply_geo,only_apply_shifts,row,true);
-                ZSIZE(ImIn())*=NSIZE(ImIn());
-                NSIZE(ImIn()) = 1;
-                ImIn.write(fnOut,-1,false,WRITE_OVERWRITE,adjust);
-                break;
-            }
-        case VOL2STK:
-            {
-                ImIn.read(fnIn,readdata, select_imgIn,apply_geo,only_apply_shifts,row,true);
-                NSIZE(ImIn())=ZSIZE(ImIn());
-                ZSIZE(ImIn())=1;
-                int Ndim=NSIZE(ImIn());
-                ImIn.MD.resize(Ndim);
-                ImIn.write(fnOut,-1,true,WRITE_OVERWRITE,adjust);
+                imIn.read(fnImg,true,-1,false,false, NULL,true);
+                imOut->data->setSlice(k++,imIn.data);
                 break;
             }
         case VOL2MD:
             {
-                MetaData SFout;
-                ImIn.read(fnIn,readdata, select_imgIn,apply_geo,only_apply_shifts,row,true);
-                for (int k=0; k<ZSIZE(ImIn()); k++)
-                {
-                    ImIn().getSlice(k,out());
-                    FileName fnOut;
-                    if (fn_root !="")
-                        fnOut.compose(fn_root,k,fn_oext);
-                    else
-                        fnOut.compose(fn_in.withoutExtension(),k,fn_oext);
-
-                    out.write(fnOut,-1,false,WRITE_OVERWRITE,adjust);
-                    SFout.addObject();
-                    SFout.setValue(MDL_IMAGE,fnOut);
-                    SFout.setValue(MDL_ENABLED,1);
-                }
-                if (fn_root != "")
-                    SFout.write(fn_root+".sel");
-                else if (fn_out != "")
-                    SFout.write(fn_out);
+                imIn.data->getSlice(k++,imOut->data);
+                if (fnImgOut.isInStack())
+                  imOut->write(fnImgOut,-1,true,WRITE_APPEND,adjust);
                 else
-                    SFout.write(fn_in.withoutExtension() + "_out.sel");
-                break;
+                  imOut->write(fnImgOut,-1,false,WRITE_OVERWRITE,adjust);
             }
         }
     }
 
-
-    void imageConvert( const FileName &fnIn, const FileName &fnOut ,
-                       bool readdata=true, int select_imgIn = -1,
-                       bool apply_geo = false, bool only_apply_shifts = false,
-                       MDRow * row = NULL, bool mapData = false,
-                       int select_imgOut=-1, bool isStack=false,
-                       int mode=WRITE_OVERWRITE)
+    void postProcess()
     {
-        Image<char> Im;
-        Im.read(fnIn,false);
-
-
-        switch (Im.dataType())
+        switch(convMode)
         {
-        case Unknown_Type:
-            REPORT_ERROR(ERR_IMG_UNKNOWN,"");
-            break;
-        case UChar:
+        case MD2VOL:
             {
-                Image<unsigned char>       IUChar;
-                processImage(IUChar,fnIn,fnOut,readdata,select_imgIn,apply_geo,\
-                             only_apply_shifts,row,mapData,select_imgOut,isStack,mode);
+                imOut->write();
                 break;
-            }
-        case SChar:
-            {
-                Image<char>                IChar;
-                processImage(IChar,fnIn,fnOut,readdata,select_imgIn,apply_geo,\
-                             only_apply_shifts,row,mapData,select_imgOut,isStack,mode);
-                break;
-            }
-        case UShort:
-            {
-                Image<unsigned short int>  IUShort;
-                processImage(IUShort,fnIn,fnOut,readdata,select_imgIn,apply_geo,\
-                             only_apply_shifts,row,mapData,select_imgOut,isStack,mode);
-                break;
-            }
-        case Short:
-            {
-                Image<short int>           IShort;
-                processImage(IShort,fnIn,fnOut,readdata,select_imgIn,apply_geo,\
-                             only_apply_shifts,row,mapData,select_imgOut,isStack,mode);
-                break;
-            }
-        case Int:
-            {
-                Image<int>                  IInt;
-                processImage(IInt,fnIn,fnOut,readdata,select_imgIn,apply_geo,\
-                             only_apply_shifts,row,mapData,select_imgOut,isStack,mode);
-                break;
-            }
-        case Float:
-            {
-                Image<float>               IFloat;
-                processImage(IFloat,fnIn,fnOut,readdata,select_imgIn,apply_geo,\
-                             only_apply_shifts,row,mapData,select_imgOut,isStack,mode);
-                break;
-            }
-        default:
-            REPORT_ERROR(ERR_NOT_IMPLEMENTED, "Datatype not implemented.");
-            break;
-        }
-    }
-
-public:
-    void run()
-    {
-        convMode = IM2IM;
-
-        // From metadata to ...............................................
-        if (fn_in.isMetaData())
-        {
-            MDRow    row;
-            SF.read(fn_in);
-            if (type == "stk")
-            {
-                FileName fn_stack_plain=fn_out.removeFileFormat();
-                if (exists(fn_stack_plain))
-                    unlink(fn_stack_plain.c_str());
-                FOR_ALL_OBJECTS_IN_METADATA(SF)
-                {
-                    FileName fnImg;
-                    SF.getValue(MDL_IMAGE,fnImg);
-                    SF.getRow(row);
-                    //                    in.read(fnImg,true,-1,false,false,&row);
-                    //                    in.write(fn_out,-1,true,WRITE_APPEND);
-                    imageConvert(fnImg,fn_out,true,-1,false,false,&row,true,-1,true, WRITE_APPEND);
-                }
-            }
-            else if (type == "vol")
-            {
-                convMode = MD2VOL;
-
-                int Xdim, Ydim, Zdim;
-                unsigned long Ndim;
-                ImgSize(SF, Xdim, Ydim, Zdim, Ndim);
-                if (Zdim!=1 || Ndim!=1)
-                    REPORT_ERROR(ERR_MULTIDIM_DIM,
-                                 "Only 2D images can be converted into volumes");
-                out().coreAllocate(1,SF.size(),Ydim,Xdim);
-                k = 0;
-                FOR_ALL_OBJECTS_IN_METADATA(SF)
-                {
-                    FileName fnImg;
-                    SF.getValue(MDL_IMAGE,fnImg);
-                    imageConvert(fnImg,fn_out);
-                }
-                out.write(fn_out);
-            }
-            else if (type == "img")
-            {
-                int k=0;
-                MetaData SFout;
-                FOR_ALL_OBJECTS_IN_METADATA(SF)
-                {
-                    FileName fnImg;
-                    SF.getValue(MDL_IMAGE,fnImg);
-                    SF.getRow(row);
-                    FileName fnOut;
-                    if (fn_root !="")
-                        fnOut.compose(fn_root,k++,fn_oext);
-                    else
-                        fnOut = (fnImg.withoutExtension()).addExtension(fn_oext);
-
-                    //                    in.read(fnImg,true,-1,false,false,&row);
-                    //                    in.write(fnOut);
-                    imageConvert(fnImg,fnOut,true,-1,false,false,&row);
-
-                    SFout.addObject();
-                    SFout.setValue(MDL_IMAGE,fnOut);
-                    SFout.setValue(MDL_ENABLED,1);
-                }
-                if (fn_root != "")
-                    SFout.write(fn_root+".sel");
-                else if (fn_out != "")
-                    SFout.write(fn_out);
-                else
-                    SFout.write(fn_in.insertBeforeExtension("_out"));
-            }
-        }
-        else // From Image file to.....
-        {
-            in.read(fn_in,false);
-            if (NSIZE(in())>1)   // It's a stack with more than 1 slice
-
-            {
-                if (type == "stk")
-                {
-                    FileName fn_stack_plain=fn_out.removeFileFormat();
-                    if (exists(fn_stack_plain))
-                        unlink(fn_stack_plain.c_str());
-                    int nmax=NSIZE(in());
-                    for (int n=0; n<nmax; n++)
-                    {
-                        //                        in.read(fn_in,true,n);
-                        //                        in.write(fn_out,-1,true,WRITE_APPEND);
-                        imageConvert(fn_in,fn_out,true,n,false,false,NULL,true,-1,true, WRITE_APPEND);
-                    }
-                }
-                else if (type == "vol")
-                {
-                    convMode = STK2VOL;
-                    imageConvert(fn_in,fn_out);
-                }
-                else if (type == "img")
-                {
-                    MetaData SFout;
-                    int nmax=NSIZE(in());
-                    for (int n=0; n<nmax; n++)
-                    {
-                        FileName fnOut;
-                        if (fn_root !="")
-                            fnOut.compose(fn_root,n,fn_oext);
-                        else
-                            fnOut.compose(fn_in.withoutExtension(),n,fn_oext);
-
-                        //                        in.read(fn_in,true,n);
-                        //                        in.write(fnOut);
-                        imageConvert(fn_in,fnOut,true,n);
-
-                        SFout.addObject();
-                        SFout.setValue(MDL_IMAGE,fnOut);
-                        SFout.setValue(MDL_ENABLED,1);
-                    }
-                    if (fn_root != "")
-                        SFout.write(fn_root+".sel");
-                    else if (fn_out != "")
-                        SFout.write(fn_out);
-                    else
-                        SFout.write(fn_in.withoutExtension() + "_out.sel");
-                }
-            }
-            else // It's a stack with 1 slice, an image or a volume
-            {
-                if (type == "stk")
-                {
-                    if (ZSIZE(in())>1)   // Convert the volume into a stack
-                        convMode = VOL2STK;
-                    else
-                        convMode = IM2IM;
-                }
-                else if (ZSIZE(in())>1 && type == "img")
-                    convMode = VOL2MD;
-                else
-                    convMode = IM2IM;
-
-                imageConvert(fn_in,fn_out);
             }
         }
     }
 };
 
-
 int main(int argc, char *argv[])
 {
     try
     {
-        ProgConvImg program;
+        ConvImgProg program;
         program.read(argc, argv);
         program.run();
     }

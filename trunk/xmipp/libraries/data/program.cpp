@@ -483,7 +483,6 @@ void XmippMetadataProgram::run()
     {
         FileName fnImg, fnImgOut, basename;
         long int objId;
-        int num;
         //Perform particular preprocessing
         preProcess();
 
