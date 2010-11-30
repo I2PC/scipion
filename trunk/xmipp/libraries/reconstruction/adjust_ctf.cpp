@@ -1148,7 +1148,8 @@ double CTF_fitness(double *p, void *)
                 if (DIRECT_A2D_ELEM(global_w_digfreq,i, j) < upperLimit &&
                     DIRECT_A2D_ELEM(global_w_digfreq,i, j) > lowerLimit)
                 {
-                    if (global_action==3 || global_action==4 ||
+                    if (global_action==3 ||
+                    	(global_action==4 && DIRECT_A2D_ELEM(global_mask_between_zeroes,i,j)==1) ||
                         (global_action==6 && DIRECT_A2D_ELEM(global_mask_between_zeroes,i,j)==1))
                     {
                         double enhanced_ctf = DIRECT_A2D_ELEM(local_enhanced_ctf, i, j);
@@ -2136,7 +2137,7 @@ double ROUT_Adjust_CTF(Adjust_CTF_Parameters &prm, CTFDescription &output_ctfmod
     global_ctfmodel.enable_CTF = false;
     global_evaluation_reduction = 4;
 
-    // If initial parameters weren�t supplied for the gaussian curve,
+    // If initial parameters were not supplied for the gaussian curve,
     // estimate them from the CTF file
     global_action = 0;
     if (prm.adjust(FIRST_SQRT_PARAMETER) == 0)
@@ -2221,6 +2222,19 @@ double ROUT_Adjust_CTF(Adjust_CTF_Parameters &prm, CTFDescription &output_ctfmod
         steps(20) = steps(21) = steps(23) = 0;
     if (prm.modelSimplification>=1)
         steps(10) = steps(11) = 0;
+
+    global_mask_between_zeroes.initZeros(global_mask);
+    Matrix1D<double> u(2), z1(2), z3(2);
+    FOR_ALL_ELEMENTS_IN_ARRAY2D(global_mask_between_zeroes)
+    {
+        VECTOR_R2(u,global_x_digfreq(i, j),global_y_digfreq(i, j));
+        u/=u.module();
+        global_ctfmodel.zero(1,u,z1);
+        global_ctfmodel.zero(3,u,z3);
+        if (z1.module()<global_w_contfreq(i,j) && global_w_contfreq(i,j)<z3.module())
+            global_mask_between_zeroes(i,j)=1;
+    }
+
     powellOptimizer(*global_adjust, 0 + 1,
                     CTF_PARAMETERS, &CTF_fitness, NULL,
                     0.01, fitness, iter, steps, global_prm->show_optimization);
