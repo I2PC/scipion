@@ -49,7 +49,7 @@ typedef struct Column
 column;
 
 /** WBP parameters. */
-class ProgReconstructWbp: public XmippProgram
+class ProgRecWbp: public XmippProgram
 {
 public:
     /** Filenames */

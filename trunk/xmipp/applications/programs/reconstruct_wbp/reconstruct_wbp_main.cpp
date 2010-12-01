@@ -27,7 +27,7 @@
 
 int main(int argc, char **argv)
 {
-	ProgReconstructWbp program;
+	ProgRecWbp program;
     try
     {
         program.read(argc, argv);;

@@ -27,7 +27,7 @@
 #include <data/metadata_extension.h>
 
 // Read arguments ==========================================================
-void ProgReconstructWbp::readParams()
+void ProgRecWbp::readParams()
 {
     fn_sel = getParam("-i");
     fn_doc = getParam("--doc");
@@ -43,7 +43,7 @@ void ProgReconstructWbp::readParams()
 }
 
 // Show ====================================================================
-void ProgReconstructWbp::show()
+void ProgRecWbp::show()
 {
     if (verbose > 0)
     {
@@ -71,7 +71,7 @@ void ProgReconstructWbp::show()
 }
 
 // Usage ====================================================================
-void ProgReconstructWbp::defineParams()
+void ProgRecWbp::defineParams()
 {
     // To screen
     addUsageLine("Generate 3D reconstruction from projections using the Weighted BackProjection algorithm.");
@@ -90,7 +90,7 @@ void ProgReconstructWbp::defineParams()
     //addParamsLine(" [ --control <fn=\"\">]             : For improved killing control ");
 }
 
-void ProgReconstructWbp::run()
+void ProgRecWbp::run()
 {
     Image<double> vol;
 
@@ -104,7 +104,7 @@ void ProgReconstructWbp::run()
     vol.write(fn_out);
 }
 
-void ProgReconstructWbp::produceSideInfo()
+void ProgRecWbp::produceSideInfo()
 {
     // Read-in stuff
     //remove images with weight=0
@@ -147,7 +147,7 @@ void ProgReconstructWbp::produceSideInfo()
 }
 
 
-void ProgReconstructWbp::get_angles_for_image(const FileName &fn, double &rot, double &tilt, double &psi,
+void ProgRecWbp::get_angles_for_image(const FileName &fn, double &rot, double &tilt, double &psi,
         double &xoff, double &yoff, double &flip, double &weight)
 {
     if (fn_doc == "")
@@ -182,7 +182,7 @@ void ProgReconstructWbp::get_angles_for_image(const FileName &fn, double &rot, d
     }
 }
 
-void ProgReconstructWbp::get_sampled_matrices(MetaData &SF)
+void ProgRecWbp::get_sampled_matrices(MetaData &SF)
 {
     MetaData          DFlib;
     FileName          fn_tmp;
@@ -258,7 +258,7 @@ void ProgReconstructWbp::get_sampled_matrices(MetaData &SF)
 }
 
 // Fill array with transformation matrices needed for arbitrary geometry filter
-void ProgReconstructWbp::get_all_matrices(MetaData &SF)
+void ProgRecWbp::get_all_matrices(MetaData &SF)
 {
     Matrix2D<double> A(3, 3);
     Matrix2D<double> L(4, 4), R(4, 4);
@@ -311,7 +311,7 @@ void ProgReconstructWbp::get_all_matrices(MetaData &SF)
 }
 
 // Simple backprojection of a single image
-void ProgReconstructWbp::simple_backprojection(Projection &img, MultidimArray<double> &vol,
+void ProgRecWbp::simple_backprojection(Projection &img, MultidimArray<double> &vol,
         int diameter)
 {
     int i, j, k, l, m;
@@ -364,7 +364,7 @@ void ProgReconstructWbp::simple_backprojection(Projection &img, MultidimArray<do
 }
 
 // Calculate the filter in 2D and apply ======================================
-void ProgReconstructWbp::filter_one_image(Projection &proj)
+void ProgRecWbp::filter_one_image(Projection &proj)
 {
     Image<double> save;
     save()=proj();
@@ -425,7 +425,7 @@ void ProgReconstructWbp::filter_one_image(Projection &proj)
 }
 
 // Calculate the filter in 2D and apply ======================================
-void ProgReconstructWbp::apply_2Dfilter_arbitrary_geometry(MetaData &SF, MultidimArray<double> &vol)
+void ProgRecWbp::apply_2Dfilter_arbitrary_geometry(MetaData &SF, MultidimArray<double> &vol)
 {
 
     int               c, nn, imgno;
