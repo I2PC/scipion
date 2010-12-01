@@ -71,12 +71,6 @@ public:
       if (node->isMaster())
         ProgNmaAlignment::startProcessing();
     }
-    //Only master do finishing progress bar stuff
-    void finishProcessing()
-    {
-      if (node->isMaster())
-        ProgNmaAlignment::finishProcessing();
-    }
     //Only master show progress
     void showProgress()
     {
