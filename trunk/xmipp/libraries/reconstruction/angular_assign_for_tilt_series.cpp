@@ -269,15 +269,19 @@ void setupAffineFitness(AffineFitness &fitness, const MultidimArray<double> &I1,
     I2aux.window(STARTINGY(I1)+borderY,STARTINGX(I1)+borderX,
                  FINISHINGY(I1)-borderY,FINISHINGX(I1)-borderX);
 
-    MultidimArray<double> Mask1=I1aux;
-    FOR_ALL_ELEMENTS_IN_ARRAY2D(I1aux)
-    if (I1(i,j)!=0)
-        Mask1(i,j)=1;
+    MultidimArray<double> Mask1;
+    Mask1.initZeros(I1aux);
+    double* ptr=NULL;
+    unsigned long int n;
+    FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY_ptr(I1,n,ptr)
+    if (*ptr!=0)
+    	DIRECT_MULTIDIM_ELEM(Mask1,n)=1;
 
-    MultidimArray<double> Mask2=I2aux;
-    FOR_ALL_ELEMENTS_IN_ARRAY2D(I2aux)
-    if (I2(i,j)!=0)
-        Mask2(i,j)=1;
+    MultidimArray<double> Mask2;
+    Mask2.initZeros(I2aux);
+    FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY_ptr(I2,n,ptr)
+    if (*ptr!=0)
+    	DIRECT_MULTIDIM_ELEM(Mask2,n)=1;
 
     do
     {
