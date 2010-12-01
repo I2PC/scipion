@@ -293,7 +293,7 @@ double correlation_index(const MultidimArray< T >& x,
         FOR_ALL_ELEMENTS_IN_COMMON_IN_ARRAY3D(x, y)
         {
             if (mask != NULL)
-                if (!(*mask)(k, i, j))
+                if (!A3D_ELEM(*mask,k, i, j))
                     continue;
 
             aux = (A3D_ELEM(x, k, i, j) - mean_x) * (A3D_ELEM(y, k, i, j) -
@@ -311,11 +311,11 @@ double correlation_index(const MultidimArray< T >& x,
         FOR_ALL_ELEMENTS_IN_COMMON_IN_ARRAY3D(x, y)
         {
             if (mask != NULL)
-                if (!(*mask)(k, i, j))
+                if (!A3D_ELEM(*mask,k, i, j))
                     continue;
 
-            retval += (A3D_ELEM(x, k, i, j) - mean_x) * (A3D_ELEM(y, k, i, j) -
-                      mean_y);
+            retval += (A3D_ELEM(x, k, i, j) - mean_x) *
+            		  (A3D_ELEM(y, k, i, j) - mean_y);
             n++;
         }
     }
