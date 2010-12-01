@@ -174,7 +174,7 @@ public:
             // Produce masks for the comparison
             MultidimArray<int> maskInTheSpaceOf1, maskInTheSpaceOf2;
             MultidimArray<double> maskAux;
-            applyGeometry(LINEAR,maskAux,Mask1_level,A12level,IS_NOT_INV,DONT_WRAP);
+            applyGeometry(LINEAR,maskAux,Mask2_level,A12level,IS_NOT_INV,DONT_WRAP);
             maskInTheSpaceOf2.initZeros(YSIZE(maskAux),XSIZE(maskAux));
             maskInTheSpaceOf2.setXmippOrigin();
             FOR_ALL_ELEMENTS_IN_ARRAY2D(maskAux)
@@ -271,17 +271,15 @@ void setupAffineFitness(AffineFitness &fitness, const MultidimArray<double> &I1,
 
     MultidimArray<double> Mask1;
     Mask1.initZeros(I1aux);
-    double* ptr=NULL;
-    unsigned long int n;
-    FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY_ptr(I1,n,ptr)
-    if (*ptr!=0)
-    	DIRECT_MULTIDIM_ELEM(Mask1,n)=1;
+    FOR_ALL_ELEMENTS_IN_ARRAY2D(I1aux)
+    if (A2D_ELEM(I1,i,j)!=0)
+        A2D_ELEM(Mask1,i,j)=1;
 
     MultidimArray<double> Mask2;
     Mask2.initZeros(I2aux);
-    FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY_ptr(I2,n,ptr)
-    if (*ptr!=0)
-    	DIRECT_MULTIDIM_ELEM(Mask2,n)=1;
+    FOR_ALL_ELEMENTS_IN_ARRAY2D(I2aux)
+    if (A2D_ELEM(I2,i,j)!=0)
+        A2D_ELEM(Mask2,i,j)=1;
 
     do
     {
