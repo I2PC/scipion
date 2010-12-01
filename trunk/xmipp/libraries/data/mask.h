@@ -812,17 +812,17 @@ void computeStats_within_binary_mask(const MultidimArray< int >& mask,
         {
             N++;
 
+            double aux=A3D_ELEM(m, k, i, j);
             // Minimum and maximum
-            if (A3D_ELEM(m, k, i, j) < min_val)
-                min_val = A3D_ELEM(m, k, i, j);
+            if (aux < min_val)
+                min_val = aux;
 
-            if (A3D_ELEM(m, k, i, j) > max_val)
-                max_val = A3D_ELEM(m, k, i, j);
+            if (aux > max_val)
+                max_val = aux;
 
             // cumulative sums for average and standard deviation
-            sum1 += (double) A3D_ELEM(m, k, i, j);
-            sum2 += ((double) A3D_ELEM(m, k, i, j)) *
-                    ((double) A3D_ELEM(m, k, i, j));
+            sum1 += aux;
+            sum2 += aux*aux;
         }
     }
 
