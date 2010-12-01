@@ -56,6 +56,24 @@ public class TomoData extends Component {
 	private boolean resized=false;
 	
 	private int width=0,height=0;
+	private int originalWidth=0, originalHeight=0;
+	public int getOriginalWidth() {
+		return originalWidth;
+	}
+
+	public void setOriginalWidth(int originalWidth) {
+		this.originalWidth = originalWidth;
+	}
+
+	public int getOriginalHeight() {
+		return originalHeight;
+	}
+
+	public void setOriginalHeight(int originalHeight) {
+		this.originalHeight = originalHeight;
+	}
+
+
 	private int numberOfProjections=0;
 	
 	private File file;

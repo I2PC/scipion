@@ -850,9 +850,15 @@ public class TomoWindow extends ImageWindow implements WindowListener,
 		String title = TITLE;
 		if (getModel() != null)
 			title = title + " > " + getModel().getFileName() + " ("
-					+ getModel().getWidth() + "x" + getModel().getHeight()
+					+ getModel().getOriginalWidth() + "x" + getModel().getOriginalHeight()
 					+ ")";
+		Xmipp_Tomo.debug("Title: " + title);
+		
 		return title;
+	}
+	
+	public void setTitle(String title){
+		realWindow.setTitle(title);
 	}
 
 	/**

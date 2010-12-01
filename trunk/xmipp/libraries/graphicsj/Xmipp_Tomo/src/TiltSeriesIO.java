@@ -52,7 +52,7 @@ import java.util.Iterator;
 import java.util.Properties;
 
 /**
- * Collection of methods for handling I/O - make all methods static?
+ * Collection of methods for handling I/O - make all methods static? 
  */
 public class TiltSeriesIO {
 	static {
@@ -276,6 +276,9 @@ public class TiltSeriesIO {
 	 */
 	private void postReadImage(TomoData model, ImagePlusC img) {
 		ImagePlus image = convert(img);
+		// save original image size
+		model.setOriginalHeight(img.getHeight());
+		model.setOriginalWidth(img.getWidth());
 		// resize/scale - use an aux image processor for all projections
 		ImageProcessor ipresized = null, ip = image.getProcessor();
 
