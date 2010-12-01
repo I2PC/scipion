@@ -35,8 +35,8 @@
 // Empty constructor =======================================================
 ProgNmaAlignment::ProgNmaAlignment()
 {
-    MPIversion = false;
-    currentImgName="";
+    rangen = 0;
+    currentImg="";
     each_image_produces_an_output = true;
 }
 
@@ -80,8 +80,6 @@ void ProgNmaAlignment::readParams()
     if (useFixedGaussian)
         sigmaGaussian = getDoubleParam("-fixed_Gaussian");
 
-    if (!MPIversion)
-        produceSideInfo();
 }
 
 // Show ====================================================================
@@ -107,31 +105,49 @@ void ProgNmaAlignment::show()
 
 
 // Produce side information ================================================
-ProgNmaAlignment *global_NMA_prog;
+const ProgNmaAlignment *global_NMA_prog;
 
-void ProgNmaAlignment::produceSideInfo(int rank)
+void ProgNmaAlignment::createWorkFiles()
+{
+  MetaData mdTodo, mdDone;
+  mdTodo = mdIn;
+  if (exists("nmaDone.xmd"))
+  {
+    mdDone.read("nmaDone.xmd");
+    mdTodo.subtraction(mdDone, MDL_IMAGE);
+  }
+  else//if not exists create metadata only with headers
+  {
+    mdDone.addLabel(MDL_IMAGE);
+    mdDone.addLabel(MDL_ENABLED);
+    mdDone.addLabel(MDL_ANGLEROT);
+    mdDone.addLabel(MDL_ANGLETILT);
+    mdDone.addLabel(MDL_ANGLEPSI);
+    mdDone.addLabel(MDL_SHIFTX);
+    mdDone.addLabel(MDL_SHIFTY);
+    mdDone.addLabel(MDL_NMA);
+    mdDone.addLabel(MDL_COST);
+    mdDone.write("nmaDone.xmd");
+  }
+  mdIn = mdTodo;
+}
+
+void ProgNmaAlignment::preProcess()
 {
     // Read list of modes
-    MetaData SFmodelist;
-    SFmodelist.read(fnModeList);
+    MetaData SFmodelist(fnModeList);
     FileName tempname;
-    int i=0;
     FOR_ALL_OBJECTS_IN_METADATA(SFmodelist)
     {
         SFmodelist.getValue(MDL_IMAGE,tempname);
         modeList.push_back(tempname);
-        i++;
     }
     // Get the size of the images in the selfile
-    MetaData SFin;
-    SFin.read(fn_in);
-    SFin.getValue(MDL_IMAGE,tempname);
-    ImgSize(SFin,imgSize);
-
+    ImgSize(mdIn, imgSize);
     // Set the pointer of the program to this object
-    global_NMA_prog=this;
-
-    rangen=rank;
+    global_NMA_prog = this;
+    //create some neededs files
+    createWorkFiles();
 }
 
 // Create deformed PDB =====================================================
@@ -253,13 +269,13 @@ double ProgNmaAlignment::performContinuousAssignment(
 {
     // Perform alignment
     std::string command=(std::string)"xmipp_angular_continuous_assign"+
-                        " -i angledisc_"+fnRandom+".txt"+
-                        " -ref deformedPDB_"+fnRandom+".vol"+
-                        " -o anglecont_"+fnRandom+".txt"+
-                        " -gaussian_Fourier " + floatToString((float)gaussian_DFT_sigma) +
-                        " -gaussian_Real " + floatToString((float)gaussian_Real_sigma) +
-                        " -zerofreq_weight " + floatToString((float)weight_zero_freq) +
-                        " -v 0";
+            " -i angledisc_"+fnRandom+".txt"+
+            " -ref deformedPDB_"+fnRandom+".vol"+
+            " -o anglecont_"+fnRandom+".txt"+
+            " -gaussian_Fourier " + floatToString((float)gaussian_DFT_sigma) +
+            " -gaussian_Real " + floatToString((float)gaussian_Real_sigma) +
+            " -zerofreq_weight " + floatToString((float)weight_zero_freq) +
+            " -v 0";
     system(command.c_str());
 
     // Pick up results
@@ -282,7 +298,7 @@ void ProgNmaAlignment::updateBestFit(double fitness,int dim)
     if (fitness < fitness_min(0))
     {
         fitness_min(0) = fitness;
-        trial_best=trial;
+        trial_best = trial;
     }
 }
 
@@ -317,7 +333,7 @@ double ObjFunc_nma_alignment::eval(Vector X, int *nerror)
         yshift = global_NMA_prog->bestStage1(VEC_XSIZE(global_NMA_prog->bestStage1)-1);
 
         DF.addObject();
-        FileName fnDown=(std::string)"downimg_"+fnRandom+".xmp";
+        FileName fnDown = (std::string)"downimg_"+fnRandom+".xmp";
         DF.setValue(MDL_IMAGE,fnDown);
         DF.setValue(MDL_ENABLED,1);
         DF.setValue(MDL_ANGLEROT,rot);
@@ -331,7 +347,8 @@ double ObjFunc_nma_alignment::eval(Vector X, int *nerror)
     }
     double fitness=global_NMA_prog->performContinuousAssignment(fnRandom,pyramidLevelCont);
 
-    std::string command=(std::string)"rm -rf *"+fnRandom+"* &";
+    std::string command = (std::string)"rm -rf *"+fnRandom+"* &";
+    //std::cerr << "cleanning: " << command << std::endl;
     system(command.c_str());
 
     //std::cout << "Trial=" << global_NMA_prog->trial.transpose() << " ---> " << fitness << std::endl;
@@ -342,7 +359,8 @@ double ObjFunc_nma_alignment::eval(Vector X, int *nerror)
 }
 
 ObjFunc_nma_alignment::ObjFunc_nma_alignment(int _t, int _n)
-{}
+{
+}
 
 void ProgNmaAlignment::processImage(const FileName &fnImg, const FileName &fnImgOut, long int objId)
 {
@@ -364,7 +382,7 @@ void ProgNmaAlignment::processImage(const FileName &fnImg, const FileName &fnImg
     fitness_min(0)=1000000.0;
 
     currentStage=1;
-
+    //std::cerr << std::endl << "DEBUG: ===== Processing image " << fnImg << " at stage: " << currentStage << std::endl;
     of=new ObjFunc_nma_alignment(1,dim);
 
     of->xStart.setSize(dim);
@@ -388,12 +406,13 @@ void ProgNmaAlignment::processImage(const FileName &fnImg, const FileName &fnImg
         std::cout << "Best deformations = " << dd[i] << std::endl;
 }*/
 
-    bestStage1=trial=parameters=trial_best;
+    bestStage1 = trial = parameters = trial_best;
 
     delete of;
 
-    currentStage=2;
-    fitness_min(0)=1000000.0;
+    currentStage = 2;
+    //std::cerr << std::endl << "DEBUG: ===== Processing image " << fnImg << " at stage: " << currentStage << std::endl;
+    fitness_min(0) = 1000000.0;
 
     of=new ObjFunc_nma_alignment(1,dim);
 
@@ -419,7 +438,7 @@ void ProgNmaAlignment::processImage(const FileName &fnImg, const FileName &fnImg
         std::cout << "Best deformations = " << dd[i] << std::endl;
     }
 
-    trial=trial_best;
+    trial = trial_best;
 
     for (int i=dim; i<dim+5; i++)
     {
@@ -433,57 +452,61 @@ void ProgNmaAlignment::processImage(const FileName &fnImg, const FileName &fnImg
 
     parameters.resize(VEC_XSIZE(parameters)+1);
     parameters(VEC_XSIZE(parameters)-1)=fitness_min(0);
-    listAssignments.push_back(parameters);
-    img_names.push_back(fnImg);
 
-    DF_out.addObject();
-    DF_out.setValue(MDL_IMAGE,fnImg);
-    DF_out.setValue(MDL_ENABLED,1);
-    DF_out.setValue(MDL_ANGLEROT,parameters(0));
-    DF_out.setValue(MDL_ANGLETILT,parameters(1));
-    DF_out.setValue(MDL_ANGLEPSI,parameters(2));
-    DF_out.setValue(MDL_SHIFTX,parameters(3));
-    DF_out.setValue(MDL_SHIFTY,parameters(4));
-
-    std::vector<double> vectortemp;
-    for (int j = 5; j < 5+dim; j++)
-    {
-        vectortemp.push_back(parameters(j));
-    }
-
-    DF_out.setValue(MDL_NMA,vectortemp);
-    DF_out.setValue(MDL_COST,parameters(5+dim));
-
-    DF_out.write(fnOut+integerToString(rangen));
-
+    writeImageParameters(fnImg);
     delete of;
+}
+
+void ProgNmaAlignment::writeImageParameters(const FileName &fnImg)
+{
+  MetaData md;
+  md.addObject();
+  md.setValue(MDL_IMAGE,fnImg);
+  md.setValue(MDL_ENABLED,1);
+  md.setValue(MDL_ANGLEROT,parameters(0));
+  md.setValue(MDL_ANGLETILT,parameters(1));
+  md.setValue(MDL_ANGLEPSI,parameters(2));
+  md.setValue(MDL_SHIFTX,parameters(3));
+  md.setValue(MDL_SHIFTY,parameters(4));
+
+  int dim=modeList.size();
+  std::vector<double> vectortemp;
+  for (int j = 5; j < 5+dim; j++)
+  {
+      vectortemp.push_back(parameters(j));
+  }
+
+  md.setValue(MDL_NMA,vectortemp);
+  md.setValue(MDL_COST,parameters(5+dim));
+
+  md.append("nmaDone.xmd");
 }
 
 // Finish computations======================================================
 void ProgNmaAlignment::postProcess()
 {
-    int p = listAssignments.size();
-    MetaData DF;
-
-    for (int i = 0; i < p; i++)
-    {
-        DF.addObject();
-        DF.setValue(MDL_IMAGE,img_names[i]);
-        DF.setValue(MDL_ENABLED,1);
-        DF.setValue(MDL_ANGLEROT,listAssignments[i](0));
-        DF.setValue(MDL_ANGLETILT,listAssignments[i](1));
-        DF.setValue(MDL_ANGLEPSI,listAssignments[i](2));
-        DF.setValue(MDL_SHIFTX,listAssignments[i](3));
-        DF.setValue(MDL_SHIFTY,listAssignments[i](4));
-
-        int xsz=VEC_XSIZE(listAssignments[i]);
-        std::vector<double> vectortemp;
-        for (int j = 5; j < xsz-1; j++)
-        {
-            vectortemp.push_back(listAssignments[i](j));
-        }
-        DF.setValue(MDL_NMA,vectortemp);
-        DF.setValue(MDL_COST,listAssignments[i](xsz-1));
-    }
-    DF.write(fnOut);
+//    int p = assignments.size();
+//    MetaData DF;
+//
+//    for (int i = 0; i < p; i++)
+//    {
+//        DF.addObject();
+//        DF.setValue(MDL_IMAGE,img_names[i]);
+//        DF.setValue(MDL_ENABLED,1);
+//        DF.setValue(MDL_ANGLEROT,assignments[i](0));
+//        DF.setValue(MDL_ANGLETILT,assignments[i](1));
+//        DF.setValue(MDL_ANGLEPSI,assignments[i](2));
+//        DF.setValue(MDL_SHIFTX,assignments[i](3));
+//        DF.setValue(MDL_SHIFTY,assignments[i](4));
+//
+//        int xsz=VEC_XSIZE(assignments[i]);
+//        std::vector<double> vectortemp;
+//        for (int j = 5; j < xsz-1; j++)
+//        {
+//            vectortemp.push_back(assignments[i](j));
+//        }
+//        DF.setValue(MDL_NMA,vectortemp);
+//        DF.setValue(MDL_COST,assignments[i](xsz-1));
+//    }
+//    DF.write(fnOut);
 }

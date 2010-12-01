@@ -37,12 +37,6 @@ private:
     std::vector<long int> imgsId;
 
 public:
-    /** Constructor */
-    MpiProgNMA()
-    {
-        MPIversion = true;
-        //Initialization of MPI
-    }
     /** Destructor */
     ~MpiProgNMA()
     {
@@ -55,32 +49,66 @@ public:
         node = new MpiNode(argc, argv);
         ProgNmaAlignment::read(argc, argv);
     }
-    /** Redefine show, only master show */
-    void show()
-    {
-        if (node->isMaster())
-            ProgNmaAlignment::show();
-    }
-
     /** main body */
+    void createWorkFiles()
+    {
+      //Master node should prepare some stuff before start working
+      if (node->isMaster())
+      {
+        ProgNmaAlignment::createWorkFiles();
+        mdIn.write("nmaTodo.xmd");
+      }
+      node->barrierWait();//Sync all before start working
+      mdIn.read("nmaTodo.xmd");
+      mdIn.findObjects(imgsId);//get objects ids
+      rangen = node->rank;
+      std::cerr << "Creating file task distributor......."<< std::endl;
+      distributor = new FileTaskDistributor(mdIn.size(), 1, node);
+    }
+    //Only master do starting progress bar stuff
     void startProcessing()
     {
-        //      if (node->isMaster())
-        //        ProgNmaAlignment::startProcessing();
-        //      long int n = mdIn.size();
-        //      distributor = new FileTaskDistributor(n, 1, node);
-        //      imgsId.resize(n);
-        //      mdIn
+      if (node->isMaster())
+        ProgNmaAlignment::startProcessing();
     }
-
-
-
+    //Only master do finishing progress bar stuff
+    void finishProcessing()
+    {
+      if (node->isMaster())
+        ProgNmaAlignment::finishProcessing();
+    }
+    //Only master show progress
+    void showProgress()
+    {
+      if (node->isMaster())
+        ProgNmaAlignment::showProgress();
+    }
+    //Now use the distributor to grasp images
+    long int getImageToProcess()
+    {
+      longint first, last;
+      bool moreTasks = distributor->getTasks(first, last);
+      if (moreTasks)
+      {
+        time_bar_done = first + 1;
+        return imgsId[first];
+      }
+      time_bar_done = mdIn.size();
+      return -1;
+    }
 }
 ;//end of class MpiProgNMA
 
 int main(int argc, char **argv)
 {
+  MpiProgNMA program;
+  std::cerr << "reading " << std::endl;
+  program.read(argc, argv);
+  std::cerr << "running " << std::endl;
+  program.tryRun();
+
     // Initialize MPI
+  /*
     int rank, NProcessors;
     MPI_Init(&argc, &argv);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
@@ -107,7 +135,7 @@ int main(int argc, char **argv)
     try
     {
         // Prepare side information
-        prm.produceSideInfo(rank);
+        prm.preProcess();
         MetaData SF_in(prm.fn_in);
 
         // Divide the selfile in chunks
@@ -134,7 +162,7 @@ int main(int argc, char **argv)
                 SF_in.getValue(MDL_IMAGE,fnImg);
                 prm.img_names.push_back(fnImg);
                 Matrix1D<double> dummy;
-                prm.listAssignments.push_back(dummy);
+                prm.assignments.push_back(dummy);
                 i++;
             }
             int toGo = imgNbr;
@@ -150,7 +178,7 @@ int main(int argc, char **argv)
 
                 for (int j=1; j<numberofparam; j++)
                     aux(j-1)=v[j];
-                prm.listAssignments[i]=aux;
+                prm.assignments[i]=aux;
                 toGo--;
             }
             progress_bar(imgNbr);
@@ -165,10 +193,10 @@ int main(int argc, char **argv)
                 SF_in.getValue(MDL_IMAGE,tempname,i+1);
 
                 //Old (no metadata etc) : I.read(tempname, false, false, false);
-                I.read(tempname);
+                //I.read(tempname);
 
                 I().setXmippOrigin();
-                prm.processImage(I);
+                prm.processImage(tempname, prm.fnOut, SF_in.getActiveObject());
 
                 // Send the alignment parameters to the master
                 v[0] = i;
@@ -191,5 +219,5 @@ int main(int argc, char **argv)
         std::cout << XE << std::endl;
         MPI_Finalize();
         return 1 ;
-    }
+    } */
 }

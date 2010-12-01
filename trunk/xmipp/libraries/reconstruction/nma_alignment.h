@@ -116,12 +116,6 @@ public:
     // Solution of the first stage
     Matrix1D<double> bestStage1;
     
-    // List of all parameters
-    std::vector< Matrix1D<double> > listAssignments;
-    
-    // List of all image names
-    std::vector< FileName > img_names;   
-    
     // Temporary document file
     MetaData DF_out;
       
@@ -138,22 +132,18 @@ public:
     /// Show
     void show();
 
-    /** Produce side info.
-        An exception is thrown if any of the files is not found*/
-    void produceSideInfo(int rank=0);
-    
-    /** Create deformed PDB */
+   /** Create deformed PDB */
     FileName createDeformedPDB(int pyramidLevel) const;
 
     /** Perform a complete search with the given image and reference
         volume at the given level of pyramid. Return the values
-	in the last five positions of trial. */
+    in the last five positions of trial. */
     void performCompleteSearch(const FileName &fnRandom,
         int pyramidLevel) const;
 
     /** Perform a continuous search with the given image and reference
         volume at the given pyramid level. Return the values
-	in the last five positions of trial. */
+    in the last five positions of trial. */
     double performContinuousAssignment(const FileName &fnRandom, int pyramidLevel) const;
 
     /** Computes the fitness of a set of trial parameters */
@@ -162,12 +152,20 @@ public:
     /** Update the best fitness and the corresponding best trial*/
     void updateBestFit(double fitness, int dim);
 
-    /** Assign NMA and Alignment parameters to an image */
-    void processImage(const FileName &fnImg, const FileName &fnImgOut, long int objId);
+    /** Create the processing working files.
+     * The working files are:
+     * nmaTodo.xmd for images to process (nmaTodo = mdIn - nmaDone)
+     * nmaDone.xmd image already processed (could exists from a previous run)
+     */
+    virtual void createWorkFiles();
 
-    /** Finish processing.
-        Close all output files. */
-    void postProcess();
+    /** Produce side info.
+        An exception is thrown if any of the files is not found*/
+    virtual void preProcess();
+    /** Assign NMA and Alignment parameters to an image */
+    virtual void processImage(const FileName &fnImg, const FileName &fnImgOut, long int objId);
+    virtual void writeImageParameters(const FileName &fnImg);
+    virtual void postProcess();
 };
 
 class ObjFunc_nma_alignment: public UnconstrainedObjectiveFunction
