@@ -36,27 +36,29 @@ void dilate2D_step(const MultidimArray<double> &in, MultidimArray<double> &out, 
     for (int i = STARTINGY(in) + 1;i < FINISHINGY(in); i++)
         for (int j = STARTINGX(in) + 1;j < FINISHINGX(in); j++)
         {
-            if (in(i, j) == 0)
+            if (A2D_ELEM(in,i, j) == 0)
             {
                 // 4-environment
-                out(i, j) = 0;
-                sum = (int)(in(i - 1, j) + in(i + 1, j) + in(i, j - 1) + in(i, j + 1));
+                A2D_ELEM(out, i, j) = 0;
+                sum = (int)(A2D_ELEM(in,i - 1, j) + A2D_ELEM(in,i + 1, j) +
+                		    A2D_ELEM(in,i, j - 1) + A2D_ELEM(in,i, j + 1));
                 if (sum > count)
                 { //change the value to foreground
                     out(i, j) = 1;
                 }
                 else if (neig == 8)
                 { //8-environment
-                    sum = (int)(sum + in(i - 1, j - 1) + in(i - 1, j + 1) + in(i + 1, j - 1) + in(i + 1, j + 1));
+                    sum = (int)(sum + A2D_ELEM(in,i - 1, j - 1) + A2D_ELEM(in,i - 1, j + 1) +
+                    		          A2D_ELEM(in,i + 1, j - 1) + A2D_ELEM(in,i + 1, j + 1));
                     if (sum > count)
                     { //change the value to foreground
-                        out(i, j) = 1;
+                        A2D_ELEM(out, i, j) = 1;
                     }
                 }
             }
             else
             {
-                out(i, j) = in(i, j);
+                A2D_ELEM(out, i, j) = A2D_ELEM(in,i, j);
             }
             sum = 0;
         }
@@ -69,18 +71,20 @@ void erode2D_step(const MultidimArray<double> &in, MultidimArray<double> &out, i
     for (int i = STARTINGY(in) + 1;i < FINISHINGY(in); i++)
         for (int j = STARTINGX(in) + 1;j < FINISHINGX(in); j++)
         {
-            if (in(i, j) == 1)
+            if (A2D_ELEM(in, i, j) == 1)
             {
                 // 4-environment
-                out(i, j) = 1;
-                sum = (int)(in(i - 1, j) + in(i + 1, j) + in(i, j - 1) + in(i, j + 1));
+                A2D_ELEM(out,i, j) = 1;
+                sum = (int)(A2D_ELEM(in,i - 1, j) + A2D_ELEM(in,i + 1, j) +
+                		    A2D_ELEM(in, i, j - 1) + A2D_ELEM(in, i, j + 1));
                 if ((4 - sum) > count)
                 { //change the value to background
-                    out(i, j) = 0;
+                    A2D_ELEM(out, i, j) = 0;
                 }
                 else if (neig == 8)
                 { //8-environment
-                    sum = (int)(sum + in(i - 1, j - 1) + in(i - 1, j + 1) + in(i + 1, j - 1) + in(i + 1, j + 1));
+                    sum = (int)(sum + A2D_ELEM(in, i - 1, j - 1) + A2D_ELEM(in, i - 1, j + 1) +
+                    		          A2D_ELEM(in, i + 1, j - 1) + A2D_ELEM(in, i + 1, j + 1));
                     if ((neig - sum) > count)
                     { //change the value to background
                         out(i, j) = 0;
@@ -89,7 +93,7 @@ void erode2D_step(const MultidimArray<double> &in, MultidimArray<double> &out, i
             }
             else
             {
-                out(i, j) = in(i, j);
+                A2D_ELEM(out, i, j) = A2D_ELEM(in, i, j);
             }
             sum = 0;
         }
