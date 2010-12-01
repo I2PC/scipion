@@ -238,7 +238,7 @@ template<typename T>
 void applyGeometry(int SplineDegree,
                    MultidimArray<T>& V2,
                    const MultidimArray<T>& V1,
-                   const Matrix2D< double > A, bool inv,
+                   const Matrix2D< double > &A, bool inv,
                    bool wrap, T outside = 0)
 {
 
@@ -348,7 +348,7 @@ void applyGeometry(int SplineDegree,
             for (int j = 0; j < XSIZE(V2); j++)
             {
                 bool interp;
-                T tmp;
+                double tmp;
 
 #ifdef DEBUG_APPLYGEO
 
@@ -432,20 +432,23 @@ void applyGeometry(int SplineDegree,
                         // if wx == 0 means that the rightest point is useless for this
                         // interpolation, and even it might not be defined if m1=xdim-1
                         // The same can be said for wy.
-                        tmp  = (T)((1 - wy) * (1 - wx) * DIRECT_A2D_ELEM(V1, n1, m1));
+                        double aux1=(1 - wy);
+                        double aux2=aux1* (1 - wx) ;
+                        tmp  = aux2 * DIRECT_A2D_ELEM(V1, n1, m1);
 
                         if (wx != 0 && m2 < V1.xdim)
-                            tmp += (T)((1 - wy) * wx * DIRECT_A2D_ELEM(V1, n1, m2));
+                            tmp += (aux1-aux2) * DIRECT_A2D_ELEM(V1, n1, m2);
 
                         if (wy != 0 && n2 < V1.ydim)
                         {
-                            tmp += (T)(wy * (1 - wx) * DIRECT_A2D_ELEM(V1, n2, m1));
+                        	aux2=wy * (1 - wx);
+                            tmp += aux2 * DIRECT_A2D_ELEM(V1, n2, m1);
 
                             if (wx != 0 && m2 < V1.xdim)
-                                tmp += (T)(wy * wx * DIRECT_A2D_ELEM(V1, n2, m2));
+                                tmp += (wy-aux2) * DIRECT_A2D_ELEM(V1, n2, m2);
                         }
 
-                        dAij(V2, i, j) = tmp;
+                        dAij(V2, i, j) = (T) tmp;
                     }
                     else
                     {
@@ -535,7 +538,7 @@ void applyGeometry(int SplineDegree,
                 for (int j = 0; j < V2.xdim; j++)
                 {
                     bool interp;
-                    T tmp;
+                    double tmp;
 
 #ifdef DEBUG
 
@@ -631,28 +634,28 @@ void applyGeometry(int SplineDegree,
                             // this interpolation, and even it might not be defined if
                             // m1=xdim-1
                             // The same can be said for wy.
-                            tmp  = (T)((1 - wz) * (1 - wy) * (1 - wx) * DIRECT_A3D_ELEM(V1, o1, n1, m1));
+                            tmp  = (1 - wz) * (1 - wy) * (1 - wx) * DIRECT_A3D_ELEM(V1, o1, n1, m1);
 
                             if (wx != 0 && m2 < V1.xdim)
-                                tmp += (T)((1 - wz) * (1 - wy) * wx * DIRECT_A3D_ELEM(V1, o1, n1, m2));
+                                tmp += (1 - wz) * (1 - wy) * wx * DIRECT_A3D_ELEM(V1, o1, n1, m2);
 
                             if (wy != 0 && n2 < V1.ydim)
                             {
-                                tmp += (T)((1 - wz) * wy * (1 - wx) * DIRECT_A3D_ELEM(V1, o1, n2, m1));
+                                tmp += (1 - wz) * wy * (1 - wx) * DIRECT_A3D_ELEM(V1, o1, n2, m1);
                                 if (wx != 0 && m2 < V1.xdim)
-                                    tmp += (T)((1 - wz) * wy * wx * DIRECT_A3D_ELEM(V1, o1, n2, m2));
+                                    tmp += (1 - wz) * wy * wx * DIRECT_A3D_ELEM(V1, o1, n2, m2);
                             }
 
                             if (wz != 0 && o2 < V1.zdim)
                             {
-                                tmp += (T)(wz * (1 - wy) * (1 - wx) * DIRECT_A3D_ELEM(V1, o2, n1, m1));
+                                tmp += wz * (1 - wy) * (1 - wx) * DIRECT_A3D_ELEM(V1, o2, n1, m1);
                                 if (wx != 0 && m2 < V1.xdim)
-                                    tmp += (T)(wz * (1 - wy) * wx * DIRECT_A3D_ELEM(V1, o2, n1, m2));
+                                    tmp += wz * (1 - wy) * wx * DIRECT_A3D_ELEM(V1, o2, n1, m2);
                                 if (wy != 0 && n2 < V1.ydim)
                                 {
-                                    tmp += (T)(wz * wy * (1 - wx) * DIRECT_A3D_ELEM(V1, o2, n2, m1));
+                                    tmp += wz * wy * (1 - wx) * DIRECT_A3D_ELEM(V1, o2, n2, m1);
                                     if (wx != 0 && m2 < V1.xdim)
-                                        tmp += (T)(wz * wy * wx * DIRECT_A3D_ELEM(V1, o2, n2, m2));
+                                        tmp += wz * wy * wx * DIRECT_A3D_ELEM(V1, o2, n2, m2);
                                 }
                             }
 
@@ -683,7 +686,7 @@ void applyGeometry(int SplineDegree,
                                 "tmp= " << tmp << std::endl;
 #endif
 
-                            dAkij(V2 , k, i, j) = tmp;
+                            dAkij(V2 , k, i, j) = (T)tmp;
                         }
                         else
                         {
@@ -712,7 +715,7 @@ void applyGeometry(int SplineDegree,
 template<typename T>
 void selfApplyGeometry(int SplineDegree,
                        MultidimArray<T>& V1,
-                       const Matrix2D< double > A, bool inv,
+                       const Matrix2D< double > &A, bool inv,
                        bool wrap, T outside = 0)
 {
     MultidimArray<T> aux = V1;
@@ -721,16 +724,18 @@ void selfApplyGeometry(int SplineDegree,
 }
 
 //Special cases for complex arrays
+template<>
 void applyGeometry(int SplineDegree,
-                   MultidimArray< std::complex<double> > &V2,
-                   const MultidimArray< std::complex<double> > &V1,
-                   const Matrix2D<double> &A, bool inv,
+                   MultidimArray< std::complex<double> >& V2,
+                   const MultidimArray< std::complex<double> >& V1,
+                   const Matrix2D< double > &A, bool inv,
                    bool wrap, std::complex<double> outside);
 
 //Special cases for complex arrays
+template<>
 void selfApplyGeometry(int SplineDegree,
-                       MultidimArray< std::complex<double> > &V1,
-                       const Matrix2D<double> &A, bool inv,
+                       MultidimArray< std::complex<double> >& V1,
+                       const Matrix2D< double > &A, bool inv,
                        bool wrap, std::complex<double> outside);
 
 /** Produce spline coefficients.

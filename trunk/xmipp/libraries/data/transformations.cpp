@@ -204,10 +204,11 @@ void scale3DMatrix(const Matrix1D<double> &sc, Matrix2D<double>& result,
 }
 
 // Special case for complex numbers
+template<>
 void applyGeometry(int SplineDegree,
-                   MultidimArray< std::complex<double> > &V2,
-                   const MultidimArray< std::complex<double> > &V1,
-                   const Matrix2D<double> &A, bool inv,
+                   MultidimArray< std::complex<double> >& V2,
+                   const MultidimArray< std::complex<double> >& V1,
+                   const Matrix2D< double > &A, bool inv,
                    bool wrap, std::complex<double> outside)
 {
 
@@ -232,11 +233,10 @@ void applyGeometry(int SplineDegree,
     }
     else
         applyGeometry(SplineDegree, V2, V1, A, inv, wrap, outside);
-
-
 }
 
 // Special case for complex numbers
+template<>
 void selfApplyGeometry(int Splinedegree,
                        MultidimArray< std::complex<double> > &V1,
                        const Matrix2D<double> &A, bool inv,
