@@ -36,7 +36,7 @@
 ProgNmaAlignment::ProgNmaAlignment()
 {
     rangen = 0;
-    currentImg="";
+    currentImgName="";
     each_image_produces_an_output = true;
 }
 
@@ -105,7 +105,7 @@ void ProgNmaAlignment::show()
 
 
 // Produce side information ================================================
-const ProgNmaAlignment *global_NMA_prog;
+ProgNmaAlignment *global_NMA_prog;
 
 void ProgNmaAlignment::createWorkFiles()
 {

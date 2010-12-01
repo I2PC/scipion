@@ -96,6 +96,12 @@ public:
       time_bar_done = mdIn.size();
       return -1;
     }
+
+    void postProcess()
+    {
+      //All nodes wait for each other
+      node->barrierWait();
+    }
 }
 ;//end of class MpiProgNMA
 
