@@ -332,11 +332,11 @@ void setupAffineFitness(AffineFitness &fitness, const MultidimArray<double> &I1,
     fitness.maxAllowed(4)=fitness.maxAllowed(5)= maxShift;
 }
 
-static pthread_mutex_t localAffineMutex = PTHREAD_MUTEX_INITIALIZER;
+static pthread_mutex_t globalAffineMutex = PTHREAD_MUTEX_INITIALIZER;
 double computeAffineTransformation(const MultidimArray<unsigned char> &I1,
                                    const MultidimArray<unsigned char> &I2, int maxShift, int maxIterDE,
                                    Matrix2D<double> &A12, Matrix2D<double> &A21, bool show,
-                                   double thresholdAffine, bool localAffine, bool isMirror,
+                                   double thresholdAffine, bool globalAffine, bool isMirror,
                                    bool checkRotation, int pyramidLevel)
 {
     try
@@ -358,7 +358,7 @@ double computeAffineTransformation(const MultidimArray<unsigned char> &I1,
             A(3)*=-1;
         if (MAT_XSIZE(A12)==0)
         {
-            if (!localAffine)
+            if (globalAffine)
             {
                 // Exhaustive search
                 double bestShiftX=0, bestShiftY=0, bestCost=2;
@@ -382,7 +382,7 @@ double computeAffineTransformation(const MultidimArray<unsigned char> &I1,
             {
                 // Initialize with cross correlation
                 double tx, ty;
-                pthread_mutex_lock( &localAffineMutex );
+                pthread_mutex_lock( &globalAffineMutex );
                 if (!isMirror)
                     best_shift(I1d,I2d,tx,ty);
                 else
@@ -394,7 +394,7 @@ double computeAffineTransformation(const MultidimArray<unsigned char> &I1,
                     best_shift(I1d,auxI2d,tx,ty);
                     ty=-ty;
                 }
-                pthread_mutex_unlock( &localAffineMutex );
+                pthread_mutex_unlock( &globalAffineMutex );
                 A(4)=-tx;
                 A(5)=-ty;
             }
@@ -450,7 +450,7 @@ void Prog_tomograph_alignment::readParams()
     fnRoot=getParam("-oroot");
     if (fnRoot=="")
         fnRoot=fnSel.withoutExtension();
-    localAffine=checkParam("-localAffine");
+    globalAffine=checkParam("-globalAffine");
     useCriticalPoints=checkParam("-useCriticalPoints");
     if (useCriticalPoints)
         Ncritical=getIntParam("-useCriticalPoints");
@@ -478,6 +478,7 @@ void Prog_tomograph_alignment::readParams()
     numThreads = getIntParam("-thr");
     if (numThreads<1)
         numThreads = 1;
+    lastStep=getIntParam("-lastStep");
 }
 
 void Prog_tomograph_alignment::show()
@@ -485,7 +486,7 @@ void Prog_tomograph_alignment::show()
     std::cout << "Input images:       " << fnSel              << std::endl
     << "Original images:    " << fnSelOrig          << std::endl
     << "Output rootname:    " << fnRoot             << std::endl
-    << "Local affine:       " << localAffine        << std::endl
+    << "Global affine:      " << globalAffine       << std::endl
     << "Use critical points:" << useCriticalPoints  << std::endl
     << "Num critical points:" << Ncritical          << std::endl
     << "SeqLength:          " << seqLength          << std::endl
@@ -508,6 +509,7 @@ void Prog_tomograph_alignment::show()
     << "No outliers:        " << doNotIdentifyOutliers << std::endl
     << "Pyramid level:      " << pyramidLevel       << std::endl
     << "Threads to use:     " << numThreads         << std::endl
+    << "Last step:          " << lastStep           << std::endl
     ;
 }
 
@@ -517,7 +519,7 @@ void Prog_tomograph_alignment::defineParams()
     addParamsLine("   -i <metadatafile>              : Input images");
     addParamsLine("  [-iorig <metadatafile=\"\">]       : Metadata with images at original scale");
     addParamsLine("  [-oroot <fn_out=\"\">]             : Output alignment");
-    addParamsLine("  [-localAffine]                  : Look for affine transformations close to I");
+    addParamsLine("  [-globalAffine]                 : Look globally for affine transformations");
     addParamsLine("  [-seqLength <n=5>]              : Sequence length");
     addParamsLine("  [-localSize <size=0.04>]        : In percentage");
     addParamsLine("  [-useCriticalPoints <n=0>]      : Use critical points instead of a grid");
@@ -542,6 +544,9 @@ void Prog_tomograph_alignment::defineParams()
     addParamsLine("  [-identifyOutliers+ <z=5>]      : Z-score to be an outlier");
     addParamsLine("  [-noOutliers+]                  : Do not identify outliers");
     addParamsLine("  [-pyramid+ <level=1>]           : Multiresolution for affine transformations");
+    addParamsLine("  [-lastStep <step=-1>]           : Last step to perform");
+    addParamsLine("                                  : Step -1 -> Perform all steps");
+    addParamsLine("                                  : Step  0 -> Determination of affine transformations");
 }
 
 /* Produce side info ------------------------------------------------------- */
@@ -568,7 +573,7 @@ void * threadComputeTransform( void * args )
     double thresholdAffine = parent->thresholdAffine;
     std::vector < MultidimArray<unsigned char> *> & img = parent->img;
     std::vector< std::vector< Matrix2D<double> > > & affineTransformations = parent->affineTransformations;
-    double localAffine = parent->localAffine;
+    double globalAffine = parent->globalAffine;
 
     int maxShift=FLOOR(XSIZE(*img[0])*maxShiftPercentage);
     int initjj=1;
@@ -594,7 +599,7 @@ void * threadComputeTransform( void * args )
             Matrix2D<double> Aij, Aji;
             cost = computeAffineTransformation(img_i, img_j, maxShift,
                                                maxIterDE, Aij, Aji,
-                                               showAffine, thresholdAffine, localAffine,
+                                               showAffine, thresholdAffine, globalAffine,
                                                isMirror,true, parent->pyramidLevel);
             parent->correlationList[jj]=1-cost;
 
@@ -641,10 +646,10 @@ void * threadComputeTransform( void * args )
 }
 
 void Prog_tomograph_alignment::computeAffineTransformations(
-    bool localAffineToUse)
+    bool globalAffineToUse)
 {
-    bool oldLocalAffine=localAffine;
-    localAffine=localAffineToUse;
+    bool oldglobalAffine=globalAffine;
+    globalAffine=globalAffineToUse;
 
     pthread_t * th_ids = new pthread_t[numThreads];
     ThreadComputeTransformParams * th_args=
@@ -665,7 +670,7 @@ void Prog_tomograph_alignment::computeAffineTransformations(
     // Threads structures are not needed any more
     delete( th_ids );
     delete( th_args );
-    localAffine=oldLocalAffine;
+    globalAffine=oldglobalAffine;
 }
 
 void Prog_tomograph_alignment::identifyOutliers(bool mark)
@@ -905,7 +910,7 @@ void Prog_tomograph_alignment::produceSideInfo()
                     << tiltList[i+1] << std::endl;
                     double cost = computeAffineTransformation(img_i, img_j,
                                   maxShift, maxIterDE, Aij, Aji,
-                                  showAffine, thresholdAffine, localAffine,
+                                  showAffine, thresholdAffine, globalAffine,
                                   isMirror,true, pyramidLevel);
                     if (cost<0)
                     {
@@ -921,7 +926,7 @@ void Prog_tomograph_alignment::produceSideInfo()
     }
 
     // Compute the rest of transformations
-    computeAffineTransformations(localAffine);
+    computeAffineTransformations(globalAffine);
 
     // Do not show refinement
     showRefinement=false;
@@ -994,6 +999,8 @@ void Prog_tomograph_alignment::produceSideInfo()
     }
     else
         isOutlier.initZeros(Nimg);
+    if (lastStep==0)
+    	exit(0);
 }
 
 /* Generate landmark set --------------------------------------------------- */

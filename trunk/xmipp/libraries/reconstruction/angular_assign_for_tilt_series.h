@@ -42,7 +42,7 @@ double computeAffineTransformation(const MultidimArray<unsigned char> &I1,
     const MultidimArray<unsigned char> &I2, int maxShift, int maxIterDE,
     const FileName &fn_affine, 
     Matrix2D<double> &A12, Matrix2D<double> &A21, bool show,
-    double thresholdAffine, bool localAffine, bool isMirror,
+    double thresholdAffine, bool globalAffine, bool isMirror,
     bool checkRotation);
 
 /** Landmark class.
@@ -88,7 +88,7 @@ public:
     int numThreads;
    
     /// Look for local affine transformation
-    bool localAffine;
+    bool globalAffine;
    
     /// Use critical points
     bool useCriticalPoints;
@@ -170,7 +170,7 @@ public:
     void produceSideInfo();
 
     /// Compute affine transformations
-    void computeAffineTransformations(bool localAffineToUse);
+    void computeAffineTransformations(bool globalAffineToUse);
 
     /// Identify outliers
     void identifyOutliers(bool mark);
@@ -450,7 +450,7 @@ public:
 double computeAffineTransformation(const MultidimArray<double> &I1,
     const MultidimArray<double> &I2, int maxShift, int maxIterDE,
     Matrix2D<double> &A12, Matrix2D<double> &A21, bool show,
-    double thresholdAffine, bool localAffine, bool isMirror,
+    double thresholdAffine, bool globalAffine, bool isMirror,
     int pyramidLevel);
 //@}
 #endif
