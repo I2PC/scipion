@@ -86,7 +86,7 @@ void erode2D_step(const MultidimArray<double> &in, MultidimArray<double> &out, i
                 else if (neig == 8)
                 { //8-environment
                     sum += A2D_ELEM(in, i - 1, j - 1) + A2D_ELEM(in, i - 1, j + 1) +
-                    	   A2D_ELEM(in, i + 1, j - 1) + A2D_ELEM(in, i + 1, j + 1));
+                    	   A2D_ELEM(in, i + 1, j - 1) + A2D_ELEM(in, i + 1, j + 1);
                     if ((neig - sum) > dcount)
                     { //change the value to background
                         A2D_ELEM(out,i, j) = 0;
