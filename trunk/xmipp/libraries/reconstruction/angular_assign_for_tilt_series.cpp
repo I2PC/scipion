@@ -163,6 +163,9 @@ public:
         Matrix2D<double> A21level=A21;
         for (int level=0; level<I1.size(); level++)
         {
+            const MultidimArray<double> &Mask1_level=*(Mask1[level]);
+            const MultidimArray<double> &Mask2_level=*(Mask2[level]);
+
             // Produce the transformed images
             MultidimArray<double> transformedI1, transformedI2;
             applyGeometry(LINEAR,transformedI1,*(I1[level]),A12level,IS_NOT_INV,DONT_WRAP);
@@ -171,18 +174,24 @@ public:
             // Produce masks for the comparison
             MultidimArray<int> maskInTheSpaceOf1, maskInTheSpaceOf2;
             MultidimArray<double> maskAux;
-            applyGeometry(LINEAR,maskAux,*(Mask1[level]),A12level,IS_NOT_INV,DONT_WRAP);
+            applyGeometry(LINEAR,maskAux,Mask1_level,A12level,IS_NOT_INV,DONT_WRAP);
             maskInTheSpaceOf2.initZeros(YSIZE(maskAux),XSIZE(maskAux));
             maskInTheSpaceOf2.setXmippOrigin();
             FOR_ALL_ELEMENTS_IN_ARRAY2D(maskAux)
-            maskInTheSpaceOf2(i,j)=ROUND(maskAux(i,j))*(*(Mask2[level]))(i,j);
+            {
+                if (A2D_ELEM(maskAux,i,j)>0.5)
+                	A2D_ELEM(maskInTheSpaceOf2,i,j)=A2D_ELEM(Mask2_level,i,j);
+            }
 
             maskAux.initZeros();
-            applyGeometry(LINEAR,maskAux,*(Mask2[level]),A21level,IS_NOT_INV,DONT_WRAP);
+            applyGeometry(LINEAR,maskAux,Mask2_level,A21level,IS_NOT_INV,DONT_WRAP);
             maskInTheSpaceOf1.initZeros(YSIZE(maskAux),XSIZE(maskAux));
             maskInTheSpaceOf1.setXmippOrigin();
             FOR_ALL_ELEMENTS_IN_ARRAY2D(maskAux)
-            maskInTheSpaceOf1(i,j)=ROUND(maskAux(i,j))*(*(Mask1[level]))(i,j);
+            {
+            	if (A2D_ELEM(maskAux,i,j)>0.5)
+            		A2D_ELEM(maskInTheSpaceOf1,i,j)=A2D_ELEM(Mask1_level,i,j);
+            }
 
             // Compare the two images
             double distLevel=0.5*(
@@ -1000,7 +1009,7 @@ void Prog_tomograph_alignment::produceSideInfo()
     else
         isOutlier.initZeros(Nimg);
     if (lastStep==0)
-    	exit(0);
+        exit(0);
 }
 
 /* Generate landmark set --------------------------------------------------- */
