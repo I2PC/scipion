@@ -2857,6 +2857,43 @@ public:
             stddev = 0;
     }
 
+    /** Compute statistics.
+     *
+     * The average, standard deviation, minimum and maximum value are
+     * returned.
+     */
+    void computeAvgStdev(double& avg, double& stddev) const
+    {
+        if (NZYXSIZE(*this) <= 0)
+            return;
+
+        avg = 0;
+        stddev = 0;
+
+        T* ptr=NULL;
+        unsigned long int n;
+        FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY_ptr(*this,n,ptr)
+        {
+            T Tval=*ptr;
+            double val=Tval;
+            avg += val;
+            stddev += val * val;
+        }
+
+        avg /= NZYXSIZE(*this);
+
+        if (NZYXSIZE(*this) > 1)
+        {
+            stddev = stddev / NZYXSIZE(*this) - avg * avg;
+            stddev *= NZYXSIZE(*this) / (NZYXSIZE(*this) - 1);
+
+            // Foreseeing numerical instabilities
+            stddev = sqrt(static_cast< double >(ABS(stddev)));
+        }
+        else
+            stddev = 0;
+    }
+
     /** Compute statistics within 2D region of 2D image.
      *
      * The 2D region is specified by two corners.
