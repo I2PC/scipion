@@ -27,63 +27,119 @@
 
 #include <reconstruction/reconstruct_wbp.h>
 
-int main(int argc, char **argv)
+class ProgMPIRecWbp: public ProgRecWbp
 {
 
-    // For parallelization
-    int           rank, size, num_img_tot;
-    // For program
-    Image<double>   vol, aux;
-    Prog_WBP_prm  prm;
-    int           iaux;
+public:
 
-    // Init Parallel interface
-    MPI_Init(&argc, &argv);
-    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-    MPI_Comm_size(MPI_COMM_WORLD, &size);
+    /** computing node number. Master=0 */
+    int rank;
+    int size, num_img_tot;
 
-    try
+    Image<double> vol, aux;
+    int iaux;
+
+public:
+
+    /*  constructor ------------------------------------------------------- */
+    ProgMPIRecWbp()
     {
-        // Read command line & produce side info
-        prm.read(argc, argv);
-        if (rank == 0) prm.show();
-        else
-            prm.verb = 0;
+        //parent class constructor will be called by deault without parameters
+        MPI_Comm_size(MPI_COMM_WORLD, &(size));
+        MPI_Comm_rank(MPI_COMM_WORLD, &(rank));
+        if (size < 2)
+            error_exit("This program cannot be executed in a single working node");
 
+        MPI_Barrier(MPI_COMM_WORLD);
+    }
+
+    /* a short function to print a message and exit */
+    void error_exit(char * msg)
+    {
+        fprintf(stderr, "%s", msg);
+        MPI_Abort(MPI_COMM_WORLD, EXIT_FAILURE);
+    }
+
+    void run()
+    {
         // First produce the filter and then cut selfile in smaller parts
-        prm.produce_Side_info();
+        produceSideInfo();
 
         // Select only relevant part of selfile for this rank
-        mpiSelectPart(prm.SF, rank, size, num_img_tot);
+        mpiSelectPart(SF, rank, size, num_img_tot);
 
         // Actual backprojection
-        prm.apply_2Dfilter_arbitrary_geometry(prm.SF, vol());
+        apply_2Dfilter_arbitrary_geometry(SF, vol());
 
         aux().resize(vol());
         MPI_Allreduce(MULTIDIM_ARRAY(vol()), MULTIDIM_ARRAY(aux()),
                       MULTIDIM_SIZE(vol()), MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
         vol = aux;
-        MPI_Allreduce(&prm.count_thr, &iaux, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
+        MPI_Allreduce(&count_thr, &iaux, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
 
         if (rank == 0)
         {
             std::cerr << "Fourier pixels for which the threshold was not reached: "
-            << (float)(iaux*100.) / (num_img_tot*prm.dim*prm.dim) << " %" << std::endl;
-            vol.write(prm.fn_out);
+            << (float)(iaux*100.) / (num_img_tot*dim*dim) << " %" << std::endl;
+            vol.write(fn_out);
         }
+    }
+};
+
+
+int main(int argc, char **argv)
+{
+
+    if (MPI_Init(&argc, &argv) != MPI_SUCCESS)
+    {
+        fprintf(stderr, "MPI initialization error\n");
+        exit(EXIT_FAILURE);
+    }
+
+    ProgMPIRecWbp program;
+
+    if (program.rank == 0)
+    {
+        try
+        {
+            program.read(argc, argv);
+        }
+        catch (XmippError XE)
+        {
+            std::cerr << XE;
+            MPI_Finalize();
+            exit(1);
+        }
+    }
+
+    MPI_Barrier(MPI_COMM_WORLD);
+
+    if (program.rank != 0)
+    {
+        try
+        {
+            program.read(argc, argv);
+        }
+        catch (XmippError XE)
+        {
+            std::cerr << XE;
+            MPI_Finalize();
+            exit(1);
+        }
+    }
+
+    try
+    {
+        program.run();
+        MPI_Finalize();
     }
     catch (XmippError XE)
     {
-        if (rank == 0)
-        {
-            std::cout << XE;
-            prm.usage();
-        }
-        MPI_Finalize();
+        std::cerr << XE;
         exit(1);
     }
 
-    MPI_Finalize();
-    return 0;
+    exit(0);
+
 }
 
