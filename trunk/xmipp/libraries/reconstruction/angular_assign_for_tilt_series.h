@@ -29,6 +29,7 @@
 #include <data/matrix1d.h>
 #include <data/metadata.h>
 #include <data/metadata_extension.h>
+#include <data/program.h>
 #include <pthread.h>
 
 /**@defgroup AngularAssignTiltSeries angular_assign_for_tilt_series
@@ -72,7 +73,7 @@ typedef std::vector<Landmark> LandmarkChain;
 class Alignment;
 
 /** This is the main class */
-class Prog_tomograph_alignment {
+class Prog_tomograph_alignment: public XmippProgram {
 public:
     /// MetaData File with all images
     FileName fnSel;
@@ -153,14 +154,17 @@ public:
     /// Pyramid
     int pyramidLevel;
 
+    /// Last step to run (-1=run them all)
+    int lastStep;
+
     /// Read parameters from argument line
-    void read(int argc, char **argv);
+    void readParams();
 
     /// Show parameters
     void show();
    
     /// Usage
-    void usage() const;
+    void defineParams();
 
     /// Produce side info
     void produceSideInfo();

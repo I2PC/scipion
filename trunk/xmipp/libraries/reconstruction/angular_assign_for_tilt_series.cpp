@@ -28,12 +28,7 @@
 #include <data/args.h>
 #include <data/filters.h>
 #include <data/fftw.h>
-#define  METADATA
-#ifndef METADATA
-    #include <data/docfile.h>
-#else
-    #include <data/metadata.h>
-#endif
+#include <data/metadata.h>
 #include <data/numerical_tools.h>
 #include <data/morphology.h>
 #include <fstream>
@@ -448,39 +443,39 @@ double computeAffineTransformation(const MultidimArray<unsigned char> &I1,
 }
 
 /* Parameters -------------------------------------------------------------- */
-void Prog_tomograph_alignment::read(int argc, char **argv)
+void Prog_tomograph_alignment::readParams()
 {
-    fnSel=getParameter(argc,argv,"-i");
-    fnSelOrig=getParameter(argc,argv,"-iorig","");
-    fnRoot=getParameter(argc,argv,"-oroot","");
+    fnSel=getParam("-i");
+    fnSelOrig=getParam("-iorig");
+    fnRoot=getParam("-oroot");
     if (fnRoot=="")
         fnRoot=fnSel.withoutExtension();
-    localAffine=checkParameter(argc,argv,"-localAffine");
-    useCriticalPoints=checkParameter(argc,argv,"-useCriticalPoints");
+    localAffine=checkParam("-localAffine");
+    useCriticalPoints=checkParam("-useCriticalPoints");
     if (useCriticalPoints)
-        Ncritical=textToInteger(getParameter(argc,argv,"-useCriticalPoints"));
+        Ncritical=getIntParam("-useCriticalPoints");
     else
         Ncritical=0;
-    seqLength=textToInteger(getParameter(argc,argv,"-seqLength","5"));
-    blindSeqLength=textToInteger(getParameter(argc,argv,"-blindSeqLength","-1"));
-    maxStep=textToInteger(getParameter(argc,argv,"-maxStep","4"));
-    gridSamples=textToInteger(getParameter(argc,argv,"-gridSamples","40"));
-    psiMax=textToFloat(getParameter(argc,argv,"-psiMax","-1"));
-    deltaRot=textToFloat(getParameter(argc,argv,"-deltaRot","5"));
-    localSize=textToFloat(getParameter(argc,argv,"-localSize","0.04"));
-    optimizeTiltAngle=checkParameter(argc,argv,"-optimizeTiltAngle");
-    isCapillar=checkParameter(argc,argv,"-isCapillar");
-    dontNormalize=checkParameter(argc,argv,"-dontNormalize");
-    difficult=checkParameter(argc,argv,"-difficult");
-    corrThreshold=textToFloat(getParameter(argc,argv,"-threshold","-1"));
-    maxShiftPercentage=textToFloat(getParameter(argc,argv,"-maxShiftPercentage","0.2"));
-    maxIterDE=textToInteger(getParameter(argc,argv,"-maxIterDE","30"));
-    showAffine=checkParameter(argc,argv,"-showAffine");
-    thresholdAffine=textToFloat(getParameter(argc,argv,"-thresholdAffine","0.85"));
-    identifyOutliersZ = textToFloat(getParameter(argc, argv, "-identifyOutliers","5"));
-    doNotIdentifyOutliers = checkParameter(argc, argv, "-noOutliers");
-    pyramidLevel = textToInteger(getParameter(argc, argv, "-pyramid","0"));
-    numThreads = textToInteger(getParameter(argc, argv, "-thr", "1"));
+    seqLength=getIntParam("-seqLength");
+    blindSeqLength=getIntParam("-blindSeqLength");
+    maxStep=getIntParam("-maxStep");
+    gridSamples=getIntParam("-gridSamples");
+    psiMax=getDoubleParam("-psiMax");
+    deltaRot=getDoubleParam("-deltaRot");
+    localSize=getDoubleParam("-localSize");
+    optimizeTiltAngle=checkParam("-optimizeTiltAngle");
+    isCapillar=checkParam("-isCapillar");
+    dontNormalize=checkParam("-dontNormalize");
+    difficult=checkParam("-difficult");
+    corrThreshold=getDoubleParam("-threshold");
+    maxShiftPercentage=getDoubleParam("-maxShiftPercentage");
+    maxIterDE=getIntParam("-maxIterDE");
+    showAffine=checkParam("-showAffine");
+    thresholdAffine=getDoubleParam("-thresholdAffine");
+    identifyOutliersZ = getDoubleParam("-identifyOutliers");
+    doNotIdentifyOutliers = checkParam("-noOutliers");
+    pyramidLevel = getIntParam("-pyramid");
+    numThreads = getIntParam("-thr");
     if (numThreads<1)
         numThreads = 1;
 }
@@ -516,38 +511,37 @@ void Prog_tomograph_alignment::show()
     ;
 }
 
-void Prog_tomograph_alignment::usage() const
+void Prog_tomograph_alignment::defineParams()
 {
-    std::cerr << "tomograph_alignment\n"
-    << "   -i <metadatafile>                   : Input images\n"
-    << "  [-iorig <metadatafile>]              : metadatafile with images at original scale\n"
-    << "  [-oroot <fn_out>]               : Output alignment\n"
-    << "  [-localAffine]                  : Look for affine transformations close to I\n"
-    << "  [-useCriticalPoints <n>]        : Use critical points instead of a grid\n"
-    << "                                    n is the number of critical points to choose\n"
-    << "                                    in each image\n"
-    << "  [-seqLength <n=5>]              : Sequence length\n"
-    << "  [-blindSeqLength <n=-1>]        : Blind sequence length, -1=No blind landmarks\n"
-    << "  [-maxStep <step=4>]             : Maximum step for chain refinement\n"
-    << "  [-gridSamples <n=40>]           : Total number of samples=n*n\n"
-    << "  [-psiMax <psi=-1>]              : Maximum psi in absolute value (degrees)\n"
-    << "                                    -1: do not optimize for psi\n"
-    << "  [-deltaRot <rot=5>]             : In degrees. For the first optimization stage\n"
-    << "  [-localSize <size=0.04>]        : In percentage\n"
-    << "  [-optimizeTiltAngle]            : Optimize tilt angle\n"
-    << "  [-isCapillar]                   : Set this flag if the tilt series is of a capillar\n"
-    << "  [-dontNormalize]                : Don't normalize\n"
-    << "  [-difficult]                    : Apply some filters before affine alignment\n"
-    << "  [-threshold <th=-1>]            : threshold\n"
-    << "  [-maxShiftPercentage <p=0.2>]   : Maximum shift as percentage of image size\n"
-    << "  [-maxIterDE <n=30>]             : Maximum number of iteration in Differential Evolution\n"
-    << "  [-showAffine]                   : Show affine transformations as PPP*\n"
-    << "  [-thresholdAffine <th=0.85>]    : Threshold affine\n"
-    << "  [-identifyOutliers <z=5>]       : Z-score to be an outlier\n"
-    << "  [-noOutliers]                   : Do not identify outliers\n"
-    << "  [-pyramid <level=0>]            : Multiresolution for affine transformations\n"
-    << "  [-thr <num=1>]                  : Parallel processing using \"num\" threads\n"
-    ;
+    addUsageLine("This program aligns a single-axis tilt series without any marker");
+    addParamsLine("   -i <metadatafile>              : Input images");
+    addParamsLine("  [-iorig <metadatafile=\"\">]       : Metadata with images at original scale");
+    addParamsLine("  [-oroot <fn_out=\"\">]             : Output alignment");
+    addParamsLine("  [-localAffine]                  : Look for affine transformations close to I");
+    addParamsLine("  [-seqLength <n=5>]              : Sequence length");
+    addParamsLine("  [-localSize <size=0.04>]        : In percentage");
+    addParamsLine("  [-useCriticalPoints <n=0>]      : Use critical points instead of a grid");
+    addParamsLine("                                  : n is the number of critical points to choose");
+    addParamsLine("                                  : in each image");
+    addParamsLine("  [-maxShiftPercentage <p=0.2>]   : Maximum shift as percentage of image size");
+    addParamsLine("  [-thresholdAffine <th=0.85>]    : Threshold affine");
+    addParamsLine("  [-thr <num=1>]                  : Parallel processing using \"num\" threads");
+    addParamsLine("  [-blindSeqLength+ <n=-1>]       : Blind sequence length, -1=No blind landmarks");
+    addParamsLine("  [-maxStep+ <step=4>]            : Maximum step for chain refinement");
+    addParamsLine("  [-gridSamples+ <n=40>]           : Total number of samples=n*n");
+    addParamsLine("  [-psiMax+ <psi=-1>]             : Maximum psi in absolute value (degrees)");
+    addParamsLine("                                  : -1 -> do not optimize for psi");
+    addParamsLine("  [-deltaRot+ <rot=5>]            : In degrees. For the first optimization stage");
+    addParamsLine("  [-optimizeTiltAngle+]           : Optimize tilt angle");
+    addParamsLine("  [-isCapillar+]                  : Set this flag if the tilt series is of a capillar");
+    addParamsLine("  [-dontNormalize+]               : Don't normalize");
+    addParamsLine("  [-difficult+]                   : Apply some filters before affine alignment");
+    addParamsLine("  [-threshold+ <th=-1>]           : threshold");
+    addParamsLine("  [-maxIterDE+ <n=30>]            : Maximum number of iteration in Differential Evolution");
+    addParamsLine("  [-showAffine+]                  : Show affine transformations as PPP*");
+    addParamsLine("  [-identifyOutliers+ <z=5>]      : Z-score to be an outlier");
+    addParamsLine("  [-noOutliers+]                  : Do not identify outliers");
+    addParamsLine("  [-pyramid+ <level=1>]           : Multiresolution for affine transformations");
 }
 
 /* Produce side info ------------------------------------------------------- */
@@ -2226,25 +2220,11 @@ void Prog_tomograph_alignment::alignImages(const Alignment &alignment)
     z0/=z0N;
     std::cout << "Average height of the landmarks at 0 degrees=" << z0
     << std::endl;
-#ifndef METADATA
-
-    DocFile DF;
-#else
-
     MetaData DF;
-#endif
 
     if (fnSelOrig!="")
         SForig.firstObject();
-#ifndef METADATA
-
-    DF.append_comment("in-plane rotation    Xshift      Yshift");
-    DF.append_comment("First shift by -(Xshift,Yshift)");
-    DF.append_comment("Then, rotate by in-plane rotation");
-#else
-
     DF.setComment("First shift by -(shiftX,shiftY), then rotate by psi");
-#endif
 
     for (int i=0;i<Nimg; i++)
     {
@@ -2316,24 +2296,11 @@ void Prog_tomograph_alignment::alignImages(const Alignment &alignment)
         }
 
         // Prepare data for the docfile
-#ifndef METADATA
-        Matrix1D<double> params(3);
-        params(0)=90-alignment.rot+alignment.psi(i);
-        params(1)=XX(alignment.di[i]+alignment.diaxis[i]);
-        params(2)=YY(alignment.di[i]+alignment.diaxis[i]);
-
-        DF.append_comment(fn_corrected);
-        DF.append_data_line(params);
-#else
-
         DF.addObject();
         DF.setValue(MDL_IMAGE, fn_corrected);
         DF.setValue(MDL_ANGLEPSI, 90.-alignment.rot+alignment.psi(i));
         DF.setValue(MDL_SHIFTX, XX(alignment.di[i]+alignment.diaxis[i]));
         DF.setValue(MDL_SHIFTY, YY(alignment.di[i]+alignment.diaxis[i]));
-
-#endif
-
     }
     DF.write(fnRoot+"_correction_parameters.txt");
 

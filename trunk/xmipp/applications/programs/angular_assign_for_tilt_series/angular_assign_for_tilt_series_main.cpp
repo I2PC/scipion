@@ -25,16 +25,18 @@
 
 #include <reconstruction/angular_assign_for_tilt_series.h>
 
-int main(int argc, char **argv) {
-   Prog_tomograph_alignment prm;
-   try {
-      prm.read(argc,argv);
-   } catch (XmippError XE) {std::cout << XE; prm.usage(); exit(1);}
-
-   try {
-      prm.produceSideInfo();
-      prm.show();
-      prm.run();
-   } catch (XmippError XE) {std::cout << XE;}
-   return 0;
+int main(int argc, char **argv)
+{
+    Prog_tomograph_alignment prm;
+    try
+    {
+        prm.read(argc,argv);
+        prm.produceSideInfo();
+        prm.tryRun();
+    }
+    catch (XmippError XE)
+    {
+        std::cout << XE;
+    }
+    return 0;
 }
