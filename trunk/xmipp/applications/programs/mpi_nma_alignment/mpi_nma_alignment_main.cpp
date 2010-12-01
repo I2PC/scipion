@@ -97,10 +97,12 @@ public:
       return -1;
     }
 
-    void postProcess()
+    void finishProcessing()
     {
       //All nodes wait for each other
       node->barrierWait();
+      if (node->isMaster())
+        ProgNmaAlignment::finishProcessing();
     }
 }
 ;//end of class MpiProgNMA
