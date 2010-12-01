@@ -31,6 +31,8 @@
 #include <data/projection.h>
 #include <data/filters.h>
 
+#include <data/program.h>
+
 #include <reconstruction/directions.h>
 #include <reconstruction/symmetrize.h>
 
@@ -47,7 +49,7 @@ typedef struct Column
 column;
 
 /** WBP parameters. */
-class Prog_WBP_prm
+class ProgReconstructWbp: public XmippProgram
 {
 public:
     /** Filenames */
@@ -61,7 +63,7 @@ public:
     /** Diameter for reconstruction */
     int diameter;
     /** verbosity flag */
-    int verb;
+    //int verb;
     /** dimensions of the images */
     int dim;
     /** Number of elements in matrix array */
@@ -80,16 +82,19 @@ public:
 
 public:
     /// Read arguments from command line
-    void read(int argc, char **argv);
+    void readParams();
 
     /// Show
     void show();
 
-    /// Usage
-    void usage();
+    /// Define parameters
+    void defineParams();
+
+    /** Do the job */
+    void run();
 
     /// Produce side info: fill arrays with relevant transformation matrices
-    void produce_Side_info() ;
+    void produceSideInfo() ;
 
     /// Get angles (either from reading the header or from a docfile)
     void get_angles_for_image(const FileName &fn, double &rot, double &tilt, double &psi,

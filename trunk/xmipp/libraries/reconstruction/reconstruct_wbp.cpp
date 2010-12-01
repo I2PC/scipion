@@ -27,28 +27,25 @@
 #include <data/metadata_extension.h>
 
 // Read arguments ==========================================================
-void Prog_WBP_prm::read(int argc, char **argv)
+void ProgReconstructWbp::readParams()
 {
-    fn_sel = getParameter(argc, argv, "-i");
-    fn_doc = getParameter(argc, argv, "-doc","");
-    fn_out =  getParameter(argc, argv, "-o", "wbp.vol");
-    fn_sym =  getParameter(argc, argv, "-sym", "");
-    threshold = textToFloat(getParameter(argc, argv, "-threshold", "0.005"));
-    diameter = 2 * textToInteger(getParameter(argc, argv, "-radius", "0"));
-    sampling = textToFloat(getParameter(argc, argv, "-filsam", "5"));
-    do_all_matrices = checkParameter(argc, argv, "-use_each_image");
-    // Hidden
-    verb = textToInteger(getParameter(argc, argv, "-verb", "1"));
-    do_weights = checkParameter(argc, argv, "-weight");
-
+    fn_sel = getParam("-i");
+    fn_doc = getParam("--doc");
+    fn_out =  getParam("-o");
+    fn_sym =  getParam("--sym");
+    threshold = getDoubleParam("--threshold");
+    diameter = 2 * getIntParam("--radius");
+    sampling = getDoubleParam("--filsam");
+    do_all_matrices = checkParam("--use_each_image");
+    do_weights = checkParam("--weight");
     // For improved killing control
-    fn_control = getParameter(argc, argv, "-control", "");
+    //fn_control = getParam("--control");
 }
 
 // Show ====================================================================
-void Prog_WBP_prm::show()
+void ProgReconstructWbp::show()
 {
-    if (verb > 0)
+    if (verbose > 0)
     {
         // To screen
         std::cerr << " =================================================================" << std::endl;
@@ -74,24 +71,40 @@ void Prog_WBP_prm::show()
 }
 
 // Usage ====================================================================
-void Prog_WBP_prm::usage()
+void ProgReconstructWbp::defineParams()
 {
     // To screen
-    std::cerr << "  Usage:\n";
-    std::cerr << "  WBP <options>\n";
-    std::cerr << "   -i <input selfile>          : selection file with input images \n";
-    std::cerr << " [ -o <name=\"wbp.vol\">         : filename for output volume \n";
-    std::cerr << " [ -doc <docfile>              : Ignore headers and get angles from this docfile \n";
-    std::cerr << " [ -radius <int=dim/2> ]       : Reconstruction radius \n";
-    std::cerr << " [ -sym <symfile> ]            : Enforce symmetry \n";
-    std::cerr << " [ -threshold <float=0.005> ]  : Lower (relative) threshold for filter values \n";
-    std::cerr << " [ -filsam <float=5> ]         : Angular sampling rate for geometry filter \n";
-    std::cerr << " [ -use_each_image]            : Use each image instead of sampled representatives for filter \n";
-    std::cerr << " [ -weight]                    : Use weights stored in image headers \n";
-    std::cerr << " -----------------------------------------------------------------" << std::endl;
+    addUsageLine("Generate 3D reconstruction from projections using the Weighted BackProjection algorithm.");
+    addUsageLine("Example of use: Sample using projections included in g1t.sel input selection file and default options");
+    addUsageLine("   reconstruct_wbp -i g1t.sel -o recons_wbp.vol");
+
+    addParamsLine("   -i <input_selfile>          : selection file with input images ");
+    addParamsLine(" [ -o <name=\"wbp.vol\"> ]     : filename for output volume ");
+    addParamsLine(" [ --doc <docfile=\"\"> ]      : Ignore headers and get angles from this docfile ");
+    addParamsLine(" [ --radius <int=-1> ]         : Reconstruction radius. int=-1 means radius=dim/2 ");
+    addParamsLine(" [ --sym <symfile=\"\"> ]      : Enforce symmetry ");
+    addParamsLine(" [ --threshold <float=0.005> ] : Lower (relative) threshold for filter values ");
+    addParamsLine(" [ --filsam <float=5> ]        : Angular sampling rate for geometry filter ");
+    addParamsLine(" [ --use_each_image]           : Use each image instead of sampled representatives for filter ");
+    addParamsLine(" [ --weight]                   : Use weights stored in image headers ");
+    //addParamsLine(" [ --control <fn=\"\">]             : For improved killing control ");
 }
 
-void Prog_WBP_prm::produce_Side_info()
+void ProgReconstructWbp::run()
+{
+    Image<double> vol;
+
+    produceSideInfo();
+    apply_2Dfilter_arbitrary_geometry(SF, vol());
+
+    if (verbose > 0)
+        std::cerr << "Fourier pixels for which the threshold was not reached: "
+        << (float)(count_thr*100.) / (SF.size()*dim*dim) << " %" << std::endl;
+
+    vol.write(fn_out);
+}
+
+void ProgReconstructWbp::produceSideInfo()
 {
     // Read-in stuff
     //remove images with weight=0
@@ -133,8 +146,9 @@ void Prog_WBP_prm::produce_Side_info()
 
 }
 
-void Prog_WBP_prm::get_angles_for_image(const FileName &fn, double &rot, double &tilt, double &psi,
-                                        double &xoff, double &yoff, double &flip, double &weight)
+
+void ProgReconstructWbp::get_angles_for_image(const FileName &fn, double &rot, double &tilt, double &psi,
+        double &xoff, double &yoff, double &flip, double &weight)
 {
     if (fn_doc == "")
     {
@@ -168,7 +182,7 @@ void Prog_WBP_prm::get_angles_for_image(const FileName &fn, double &rot, double 
     }
 }
 
-void Prog_WBP_prm::get_sampled_matrices(MetaData &SF)
+void ProgReconstructWbp::get_sampled_matrices(MetaData &SF)
 {
     MetaData          DFlib;
     FileName          fn_tmp;
@@ -178,7 +192,7 @@ void Prog_WBP_prm::get_sampled_matrices(MetaData &SF)
     int               NN, dir, optdir;
     std::vector<double>    count_imgs;
 
-    if (verb > 0)
+    if (verbose > 0)
         std::cerr << "--> Sampling the filter ..." << std::endl;
 
     // Create an (asymmetric part of an) even projection direction distribution
@@ -244,7 +258,7 @@ void Prog_WBP_prm::get_sampled_matrices(MetaData &SF)
 }
 
 // Fill array with transformation matrices needed for arbitrary geometry filter
-void Prog_WBP_prm::get_all_matrices(MetaData &SF)
+void ProgReconstructWbp::get_all_matrices(MetaData &SF)
 {
     Matrix2D<double> A(3, 3);
     Matrix2D<double> L(4, 4), R(4, 4);
@@ -297,7 +311,7 @@ void Prog_WBP_prm::get_all_matrices(MetaData &SF)
 }
 
 // Simple backprojection of a single image
-void Prog_WBP_prm::simple_backprojection(Projection &img, MultidimArray<double> &vol,
+void ProgReconstructWbp::simple_backprojection(Projection &img, MultidimArray<double> &vol,
         int diameter)
 {
     int i, j, k, l, m;
@@ -350,10 +364,11 @@ void Prog_WBP_prm::simple_backprojection(Projection &img, MultidimArray<double> 
 }
 
 // Calculate the filter in 2D and apply ======================================
-void Prog_WBP_prm::filter_one_image(Projection &proj)
+void ProgReconstructWbp::filter_one_image(Projection &proj)
 {
     Image<double> save;
-    save()=proj(); save.write("PPPwbp2_before.xmp");
+    save()=proj();
+    save.write("PPPwbp2_before.xmp");
 
     MultidimArray< std::complex<double> > IMG;
     Matrix2D<double>  A(3, 3);
@@ -410,7 +425,7 @@ void Prog_WBP_prm::filter_one_image(Projection &proj)
 }
 
 // Calculate the filter in 2D and apply ======================================
-void Prog_WBP_prm::apply_2Dfilter_arbitrary_geometry(MetaData &SF, MultidimArray<double> &vol)
+void ProgReconstructWbp::apply_2Dfilter_arbitrary_geometry(MetaData &SF, MultidimArray<double> &vol)
 {
 
     int               c, nn, imgno;
@@ -426,10 +441,10 @@ void Prog_WBP_prm::apply_2Dfilter_arbitrary_geometry(MetaData &SF, MultidimArray
     count_thr = 0;
 
     // Initialize time bar
-    if (verb > 0)
+    if (verbose > 0)
         std::cerr << "--> Back-projecting ..." << std::endl;
     nn = SF.size();
-    if (verb > 0)
+    if (verbose > 0)
         init_progress_bar(nn);
     c = XMIPP_MAX(1, nn / 60);
 
@@ -439,7 +454,7 @@ void Prog_WBP_prm::apply_2Dfilter_arbitrary_geometry(MetaData &SF, MultidimArray
     FOR_ALL_OBJECTS_IN_METADATA(SF)
     {
         // Check whether to kill job
-        exit_if_not_exists(fn_control);
+        //exit_if_not_exists(fn_control);
         SF.getValue(MDL_IMAGE,fn_img);
         if (fn_doc == "")
         {
@@ -465,13 +480,13 @@ void Prog_WBP_prm::apply_2Dfilter_arbitrary_geometry(MetaData &SF, MultidimArray
         filter_one_image(proj);
         simple_backprojection(proj, vol, diameter);
 
-        if (verb > 0)
+        if (verbose > 0)
             if (imgno % c == 0)
                 progress_bar(imgno);
         imgno++;
 
     }
-    if (verb > 0)
+    if (verbose > 0)
         progress_bar(nn);
 
     // Symmetrize if necessary

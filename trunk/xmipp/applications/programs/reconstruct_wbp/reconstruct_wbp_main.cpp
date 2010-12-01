@@ -27,27 +27,17 @@
 
 int main(int argc, char **argv)
 {
-    Image<double> vol;
-    Prog_WBP_prm prm;
-
+	ProgReconstructWbp program;
     try
     {
-        prm.read(argc, argv);
-        prm.show();
-        prm.produce_Side_info();
-        prm.apply_2Dfilter_arbitrary_geometry(prm.SF, vol());
-
-        if (prm.verb > 0)
-            std::cerr << "Fourier pixels for which the threshold was not reached: "
-            << (float)(prm.count_thr*100.) / (prm.SF.size()*prm.dim*prm.dim) << " %" << std::endl;
-
-        vol.write(prm.fn_out);
+        program.read(argc, argv);;
+        program.run();
     }
-    catch (XmippError XE)
+    catch (XmippError xe)
     {
-        std::cout << XE;
-        prm.usage();
-        exit(0);
+        std::cerr << xe;
+        return 1;
     }
-    exit(1);
+    return 0;
+
 }
