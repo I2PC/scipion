@@ -60,9 +60,11 @@ public class REGISTERED_FILE_ITEMS {
     }
 
     public static int getIndexForRegisteredItem(String ext) {
-        for (int i = 0; i < TABLE.length; i++) {
-            if (ext.compareTo(getExtension(i)) == 0) {
-                return i;
+        if (ext != null) {
+            for (int i = 0; i < TABLE.length; i++) {
+                if (ext.compareTo(getExtension(i)) == 0) {
+                    return i;
+                }
             }
         }
 

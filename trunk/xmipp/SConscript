@@ -258,30 +258,41 @@ def AddLibrary(name, basedir, sources, includes, libpath=[], libs=[],
     env.Default(alias)
 
 def AddSwigJavaLibrary(name, basedir, sourceList, includes, libpath=[], libs=[]):
+    import shutil
+    import glob
+
     # Create wrapper
     # setup
     env.AppendENVPath('PATH', 'external/java/jvm/bin')
 
-    basedirswig = AddLastSlash(basedir+"/swig")
+    basedirswig = AddLastSlash(basedir + '/swig')
+    swigwrapperpath = basedirswig + 'xmipp'
     libprefix = os.path.join(env['prefix'], 'lib')
 
     if int(env['swig']):
 	# Remove previously generated java and class files.
-	removeAll(basedirswig,'*.java')
-	removeAll(basedirswig,'*.class')
+	if os.path.exists(swigwrapperpath):
+		shutil.rmtree(swigwrapperpath)
+	os.mkdir(swigwrapperpath)	# Destination dir
 	removeAll(basedirswig,'*.jar')
 	removeAll(basedirswig,'*.cc')
 	removeAll(basedirswig,'*.py')
 	removeAll(basedirswig,'*.so')
 	removeAll(basedirswig,'*.os')
 
-        # Build wrapper
         wrapper = env.i2java(basedirswig + name + "_wrap.cc", sourceList)
         Depends(wrapper, Glob(basedir, '*.h', [])+Glob(basedirswig, '*.i', []))
 
         # alias
         alias=env.Alias(name,wrapper)
         env.Default(alias)
+
+	# Packs everything into a jar file.
+	env['JARFLAGS'] = '-Mcf'    # Default "cf". "M" = Do not add a manifest file.
+	buildJar=env.Jar(target=basedirswig + '/' + name + '.jar',
+		source = swigwrapperpath,
+		JARCHDIR = basedirswig)
+	env.Default(buildJar)
 
     # Create library
     import distutils.sysconfig
@@ -359,7 +370,9 @@ def AddImageJPlugin(name, pluginDir, outDir):
 
     buildClasses=env.Java(buildDir,sourceDir)
 
+    # Packs classes and plugin config file into jar.
     env.Default(buildClasses)
+    env.Default(buildJar)
 
     # Copies macros to ImageJ/macros folder (if any).
     outMacrosDir = outDir + '/../macros/'
@@ -368,9 +381,6 @@ def AddImageJPlugin(name, pluginDir, outDir):
 		macro_item = os.path.join(macrosDir, f)
 		if os.path.isfile(macro_item):
         		shutil.copy(macro_item, os.path.join(outDir, os.pardir) + "/macros")
-
-    # Packs classes and plugin config file into jar.
-    env.Default(buildJar)
 
 # Copies ImageJ external plugins (3rd party)
 def AddImageJExternalPlugins(pluginsDir, outDir):
