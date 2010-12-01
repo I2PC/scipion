@@ -271,8 +271,8 @@ double correlation_index(const MultidimArray< T >& x,
 
     if (mask == NULL)
     {
-        x.computeAvgStdev(mean_x, stddev_x, dummy, dummy);
-        y.computeAvgStdev(mean_y, stddev_y, dummy, dummy);
+        x.computeAvgStdev(mean_x, stddev_x);
+        y.computeAvgStdev(mean_y, stddev_y);
     }
     else
     {
