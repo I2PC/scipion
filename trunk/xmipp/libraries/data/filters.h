@@ -264,7 +264,6 @@ double correlation_index(const MultidimArray< T >& x,
     SPEED_UP_temps;
 
     double retval = 0, aux;
-    T dummy;
     double mean_x, mean_y;
     double stddev_x, stddev_y;
 
@@ -272,15 +271,13 @@ double correlation_index(const MultidimArray< T >& x,
 
     if (mask == NULL)
     {
-        x.computeStats(mean_x, stddev_x, dummy, dummy);
-        y.computeStats(mean_y, stddev_y, dummy, dummy);
+        x.computeAvgStdev(mean_x, stddev_x, dummy, dummy);
+        y.computeAvgStdev(mean_y, stddev_y, dummy, dummy);
     }
     else
     {
-        computeStats_within_binary_mask(*mask, x, dummy, dummy, mean_x,
-                                        stddev_x);
-        computeStats_within_binary_mask(*mask, y, dummy, dummy, mean_y,
-                                        stddev_y);
+        computeAvgStdev_within_binary_mask(*mask, x, mean_x,stddev_x);
+        computeAvgStdev_within_binary_mask(*mask, y, mean_y,stddev_y);
     }
     if (ABS(stddev_x)<XMIPP_EQUAL_ACCURACY ||
         ABS(stddev_y)<XMIPP_EQUAL_ACCURACY)
