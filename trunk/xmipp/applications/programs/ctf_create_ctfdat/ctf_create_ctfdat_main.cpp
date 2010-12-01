@@ -58,10 +58,10 @@ public:
 
     void defineParams()
     {
-        addUsageLine("create CTFdat files from a selfile that contains image selfiles for each micrograph.");
-        addUsageLine("Example of use: Sample at MODE 1 pixel step size for 5D shift search");
+        addUsageLine("Create CTFdat files from a selfile that contains image selfiles for each micrograph.");
+        addUsageLine("Example of use: Sample at MODE 1");
         addUsageLine("   ctf_create_ctfdat -i input.sel --param input.ctfparam --doc defocus.doc");
-        addUsageLine("Example of use: Sample at MODE 2 pixel step size for 5D shift search");
+        addUsageLine("Example of use: Sample at MODE 2");
         addUsageLine("   ctf_create_ctfdat -i imput.sel --ctfs ctfparams.sel");
 
         addParamsLine("  -i <selfile>           : Input selfile of selfiles for each micrograph");
