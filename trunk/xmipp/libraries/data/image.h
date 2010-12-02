@@ -42,7 +42,6 @@
 #include "transformations.h"
 #include "metadata.h"
 
-
 // Includes for rwTIFF which cannot be inside it
 #include <cstring>
 #include "../../external/tiff-3.9.4/libtiff/tiffio.h"
@@ -211,14 +210,12 @@ DataType datatypeString2Int(std::string str);
  */
 #define SWAPTRIG     65535
 
-
-
-
-
-
 // Image base class
 class ImageBase
 {
+public:
+    std::vector<MDRow>  MD;                     // data for each subimage
+    MDRow               MDMainHeader;           // data for the file
 
 protected:
     FileName            filename;    // File name
@@ -240,21 +237,15 @@ protected:
     int                 mFd;         // Handle the file in reading method and mmap
     size_t              mappedSize;  // Size of the mapped file
 
-
 public:
-
     virtual int read(const FileName &name, bool readdata=true, int select_img = -1,
                      bool apply_geo = false, bool only_apply_shifts = false,
                      MDRow * row = NULL, bool mapData = false)=0;
     virtual void write(const FileName &name="", int select_img=-1, bool isStack=false,
                        int mode=WRITE_OVERWRITE,bool adjust=false)=0;
-
     virtual void newMappedFile(int Xdim, int Ydim, int Zdim, int Ndim, FileName _filename)=0;
     virtual void clear()=0;
-
 };
-
-
 
 /** Template class for images.
  * The image class is the general image handling class.
@@ -264,9 +255,6 @@ class Image: public ImageBase
 {
 public:
     MultidimArray<T>    data;        // The image data array
-    std::vector<MDRow>  MD;                     // data for each subimage
-    MDRow               MDMainHeader;           // data for the file
-
 
 public:
     /** Empty constructor
@@ -389,19 +377,6 @@ public:
             data.clear();
     }
 
-
-    /** Specific read functions for different file formats
-      */
-#include "rwDM3.h"
-#include "rwIMAGIC.h"
-#include "rwMRC.h"
-#include "rwINF.h"
-#include "rwRAW.h"
-#include "rwSPIDER.h"
-#include "rwSPE.h"
-#include "rwTIA.h"
-#include "rwTIFF.h"
-
     /** Is this file an image
      *
      *  Check whether a real-space image can be read
@@ -489,18 +464,24 @@ public:
     void write(const FileName &name="", int select_img=-1, bool isStack=false,
                int mode=WRITE_OVERWRITE,bool adjust=false)
     {
+        // If image is already mapped to file then close the file and clear.
         if (mmapOnWrite && mappedSize > 0)
         {
             munmapFile();
             return;
         }
-        if (name.isInStack() && isStack == false && mode == WRITE_OVERWRITE)
+
+        const FileName &fname = (name == "") ? filename : name;
+
+        /* If the filename is in stack we will suppose you want to write this,
+         * even if you have not set the flags to.
+         */
+        if (fname.isInStack() && isStack == false && mode == WRITE_OVERWRITE)
         {
             isStack = true;
             mode = WRITE_APPEND;
         }
 
-        const FileName &fname = (name == "") ? filename : name;
         ImageFHandler* hFile = openFile(fname, mode);
         _write(fname, hFile, select_img, isStack, mode, adjust);
         closeFile(hFile);
@@ -1613,6 +1594,19 @@ public:
         (*this)()+=aux();
     }
 
+    /**
+     *  Specific read functions for different file formats
+     */
+#include "rwDM3.h"
+#include "rwIMAGIC.h"
+#include "rwMRC.h"
+#include "rwINF.h"
+#include "rwRAW.h"
+#include "rwSPIDER.h"
+#include "rwSPE.h"
+#include "rwTIA.h"
+#include "rwTIFF.h"
+
 private:
 
     /** Open file function
@@ -1676,7 +1670,6 @@ private:
                 fileName = fileName.withoutExtension();
                 headName = fileName.addExtension("hed");
                 fileName = fileName.addExtension("img");
-
             }
             else if (ext_name.contains("raw"))
             {
@@ -1753,6 +1746,8 @@ private:
         delete hFile;
     }
 
+    /* Internal read image file method.
+     */
     int _read(const FileName &name, ImageFHandler* hFile, bool readdata=true, int select_img = -1,
               bool apply_geo = false, bool only_apply_shifts = false,
               MDRow * row = NULL, bool mapData = false)
@@ -1864,6 +1859,8 @@ private:
         return err;
     }
 
+    /* Internal write image file method.
+     */
     void _write(const FileName &name, ImageFHandler* hFile, int select_img=-1,
                 bool isStack=false, int mode=WRITE_OVERWRITE, bool adjust=false)
     {
@@ -2132,6 +2129,8 @@ private:
         return;
     }
 
+    /* Write the raw date after a data type casting.
+     */
     void writeData(FILE* fimg, size_t offset, DataType wDType, size_t datasize_n,
                    CastWriteMode castMode=CAST)
     {
@@ -2157,7 +2156,7 @@ private:
         freeMemory(fdata, datasize);
     }
 
-    /* Mmap Image::MultidimArray to the image file.
+    /* Mmap the Image class to an image file.
      */
     void mmapFile()
     {
@@ -2175,15 +2174,14 @@ private:
      */
     void munmapFile()
     {
-        munmap((void*)(data.data-offset),mappedSize);
+        munmap((void*)(data.data)-offset,mappedSize);
         close(mFd);
         data.data = NULL;
         mappedSize = 0;
     }
 
-    /* Return the datatype of the actual image
+    /* Return the datatype of the current image object
      */
-
     DataType myT()
     {
         if (typeid(T) == typeid(unsigned char))
@@ -2222,10 +2220,11 @@ private:
             return Unknown_Type;
     }
 
+    /* friend declaration for stacks handling purposes
+     */
     friend class ImageCollection;
 }
 ;
-
 
 // Special cases for complex numbers
 template<>
