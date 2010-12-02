@@ -538,8 +538,12 @@ public:
     /// Set micrograph size (when you do not read the file from disk)
     void resize(int Xdim, int Ydim, FileName filename="");
 
-    /// Write micrograph
-    void write(FileName fileName);
+    /** Write micrograph.
+        Set adjust to true if the values should be scaled within the minimum
+        and maximum of the output range.
+        Ex: m.write(fn8bits+"%uint8");
+    */
+    void write(const FileName &fileName, bool adjust=false);
 };
 
 /** Downsample.

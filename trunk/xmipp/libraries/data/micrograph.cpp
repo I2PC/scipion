@@ -692,31 +692,31 @@ void Micrograph::resize(int Xdim, int Ydim, FileName filename)
         REPORT_ERROR(ERR_TYPE_INCORRECT, "Micrograph::set_val::(): unknown datatype");
 
 }
-void Micrograph::write(FileName fileName)
+void Micrograph::write(const FileName &fileName, bool adjust)
 {
     if (datatype == UChar)
     {
-        IUChar->write(fileName);
+        IUChar->write(fileName, -1, false, WRITE_OVERWRITE, adjust);
     }
     else if (datatype == UShort)
     {
-        IUShort->write(fileName);
+        IUShort->write(fileName, -1, false, WRITE_OVERWRITE, adjust);
     }
     else if (datatype == Short)
     {
-        IShort->write(fileName);
+        IShort->write(fileName, -1, false, WRITE_OVERWRITE, adjust);
     }
     else if (datatype == UInt)
     {
-        IUInt->write(fileName);
+        IUInt->write(fileName, -1, false, WRITE_OVERWRITE, adjust);
     }
     else if (datatype == Int)
     {
-        IInt->write(fileName);
+        IInt->write(fileName, -1, false, WRITE_OVERWRITE, adjust);
     }
     else if (datatype == Float)
     {
-        IFloat->write(fileName);
+        IFloat->write(fileName, -1, false, WRITE_OVERWRITE, adjust);
     }
     else
         REPORT_ERROR(ERR_TYPE_INCORRECT, "Micrograph::set_val::(): unknown datatype");
