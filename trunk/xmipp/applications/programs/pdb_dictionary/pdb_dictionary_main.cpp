@@ -36,7 +36,7 @@ void extractTrainingPatches(const FileName &fnPDB, int patchSize,
     std::vector< Matrix1D<double> > &training)
 {
     // Convert PDB to volume
-    Prog_PDBPhantom_Parameters pdbconverter;
+    ProgPdbConverter pdbconverter;
     pdbconverter.fn_pdb=fnPDB;
     pdbconverter.fn_out="";
     pdbconverter.Ts=Ts;
