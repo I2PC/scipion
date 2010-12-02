@@ -96,19 +96,9 @@ public:
         FileName fn8bits="", fn8bitsTilted="";
 
         m.open_micrograph(fnRaw);
-        // Sjors & Roberto: 25jan08
-        // The following is a "chapuza" because the 8-bit
-        // visualization routine from XVsmooth is much nicer than our
-        // own routine. We save the micrograph with name fn8bits,
-        // re-read it in 8bit-format, and then set the name explicitly
-        // to the original fnRaw to get the correct .pos, .ang etc
-        // files.
-        // Note that this also requires that the name of the original
-        // micrograph in the dialog window under "generate images"
-        // should be the original fnRaw (and not be left blank as before!)
         std::vector<FileName> filesToDelete;
         fn8bits=fnRaw+"_8bits.raw";
-        m.write_as_8_bits(fn8bits);
+        m.write(fn8bits+"%uint8",true);
         m.close_micrograph();
 
         m.open_micrograph(fn8bits);
@@ -120,7 +110,7 @@ public:
         {
             mTilted.open_micrograph(fnRawTilted);
             fn8bitsTilted=fnRawTilted+"_8bits.raw";
-            mTilted.write_as_8_bits(fn8bitsTilted);
+            mTilted.write(fn8bitsTilted+"%uint8");
             mTilted.close_micrograph();
             mTilted.open_micrograph(fn8bitsTilted);
             mTilted.set_micrograph_name(fnRawTilted);
@@ -176,7 +166,6 @@ public:
             autoPicking->automaticallySelectParticles();
             autoPicking->saveAutoParticles();
         }
-
     }
 };
 
@@ -194,5 +183,3 @@ int main(int argc, char **argv)
     }
     return 0;
 }
-
-
