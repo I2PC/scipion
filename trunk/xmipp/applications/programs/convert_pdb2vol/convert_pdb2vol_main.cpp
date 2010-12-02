@@ -24,37 +24,15 @@
  ***************************************************************************/
 
 #include <reconstruction/convert_pdb2vol.h>
-#include <data/error.h>
-
-#include <iostream>
 
 /* ------------------------------------------------------------------------- */
 /* Program                                                                   */
 /* ------------------------------------------------------------------------- */
 int main(int argc, char *argv[])
 {
-    Prog_PDBPhantom_Parameters prm;
-    try
-    {
-        prm.read(argc, argv);
-    }
-    catch (XmippError XE)
-    {
-        std::cout << XE;
-        prm.usage();
-        exit(1);
-    }
+    ProgPdbConverter prm;
+    prm.read(argc, argv);
+    prm.tryRun();
 
-    try
-    {
-        prm.produceSideInfo();
-        prm.show();
-        prm.run();
-    }
-    catch (XmippError XE)
-    {
-        std::cout << XE;
-        exit(1);
-    }
-    exit(0);
+    return 0;
 }

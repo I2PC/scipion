@@ -27,13 +27,14 @@
 
 #include <data/blobs.h>
 #include <interface/pdb.h>
+#include <data/program.h>
 
 /**@defgroup PDBPhantom convert_pdb2vol (PDB Phantom program)
    @ingroup ReconsLibrary */
 //@{
 /* PDB Phantom Program Parameters ------------------------------------------ */
 /** Parameter class for the PDB Phantom program */
-class Prog_PDBPhantom_Parameters
+class ProgPdbConverter: public XmippProgram
 {
 public:
     /** Sampling rate */
@@ -73,21 +74,19 @@ public:
     std::string intensityColumn;
 public:
     /** Empty constructor */
-    Prog_PDBPhantom_Parameters();
+    ProgPdbConverter();
 
+    /** Params definitions */
+    void defineParams();
     /** Read from a command line.
         An exception might be thrown by any of the internal conversions,
         this would mean that there is an error in the command line and you
         might show a usage message. */
-    void read(int argc, char **argv);
+    void readParams();
 
     /** Produce side information.
         Produce the atomic profiles. */
     void produceSideInfo();
-
-    /** Usage message.
-        This function shows the way of introdustd::cing this parameters. */
-    void usage();
 
     /** Show parameters. */
     void show();
@@ -118,23 +117,23 @@ public:
     Image<double> Vlow;
 
     /* Blob properties at the high sampling rate */
-    void blob_properties() const;
+    void blobProperties() const;
 
     /* Atom weight and radius */
     void atomBlobDescription(const std::string &_element,
         double &weight, double &radius) const;
 
     /* Protein geometry */
-    void compute_protein_geometry();
+    void computeProteinGeometry();
 
     /* Create protein at a high sampling rate */
-    void create_protein_at_high_sampling_rate();
+    void createProteinAtHighSamplingRate();
 
     /* Create protein at a low sampling rate */
-    void create_protein_at_low_sampling_rate();
+    void createProteinAtLowSamplingRate();
 
     /* Create protein using scattering profiles */
-    void create_protein_using_scattering_profiles();
+    void createProteinUsingScatteringProfiles();
 };
 //@}
 #endif
