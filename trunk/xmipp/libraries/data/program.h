@@ -161,6 +161,11 @@ public:
      * to do that in readParams();
      * */
     void read(int argc, char ** argv, bool reportErrors = true);
+    /** Read arguments from an string.
+     * This function should do the same as reading arguments
+     * but first convert the string to arguments.
+     */
+    void read(const String &argumentsLine);
 
     /** @} */
     /** This function will be start running the program.
@@ -180,6 +185,10 @@ public:
     /** Destructor */
     virtual ~XmippProgram();
     /** @} */
+
+    /** Run some program passing some arguments
+     * if destroy is true the program pointer will be freed */
+    static void runProgram(XmippProgram * program, const String &arguments, bool destroy=true);
 
 };
 

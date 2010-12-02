@@ -179,6 +179,17 @@ void XmippProgram::read(int argc, char ** argv, bool reportErrors)
     }
 }
 
+void XmippProgram::read(const String &argumentsLine)
+{
+  int argc;
+  char ** argv;
+  char * copy;
+
+  generateCommandLine(argumentsLine, argc, argv, copy);
+  read(argc, argv);
+
+}
+
 void XmippProgram::tryRun()
 {
     try
@@ -344,6 +355,13 @@ int XmippProgram::version() const
     REPORT_ERROR(ERR_NOT_IMPLEMENTED,"");
 }
 
+void XmippProgram::runProgram(XmippProgram * program, const String &arguments, bool destroy)
+{
+  program->read(arguments);
+  program->run();
+  if (destroy)
+    delete program;
+}
 
 /// Empty constructor
 XmippMetadataProgram::XmippMetadataProgram()
@@ -409,9 +427,6 @@ void XmippMetadataProgram::readParams()
         if (exists(fn_stack_plain))
             unlink(fn_stack_plain.c_str());
     }
-
-
-
 
     mdIn.read(fn_in, NULL,blockName,decompose_stacks);
     single_image = !fn_in.isMetaData() && (mdIn.size() == 1);
@@ -561,3 +576,5 @@ void XmippMetadataProgram::run()
         exit(xe.__errno);
     }
 }
+
+
