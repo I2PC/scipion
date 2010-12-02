@@ -76,35 +76,23 @@ class Micrograph
 public:
     /* This image will contain a single particle from the micrograph,
        this is done to avoid asking/freeing memory all time. */
-    Image<double>           single_particle;
+    Image<double>            single_particle;
     std::vector<Particle_coords> coords;
-    FileName                fn_coords;
-    FileName                fn_micrograph;
-    FileName                fn_inf;
-    int                     X_window_size;
-    int                     Y_window_size;
-    int                     Xdim,Ydim,Zdim;
-    unsigned long           Ndim;
-    int                     datatype;
-    int                     swapbyte;
-    //int                     __depth;
-    int                     __offset;
-    //bool                    __reversed;
-    //bool                    __is_signed;
-    bool                    compute_transmitance;
-    bool                    compute_inverse;
-    //unsigned char           *m8;
-    //short int               *m16;
-    //unsigned short int      *um16;
-    //float                   *m32;
-
-    bool                    __scaling_valid;
-    float                   __a;
-    float                   __b;
-    /* bool                    __in_core; */
-    int                     fh_micrograph;
+    FileName                 fn_coords;
+    FileName                 fn_micrograph;
+    FileName                 fn_inf;
+    int                      X_window_size;
+    int                      Y_window_size;
+    int                      Xdim,Ydim,Zdim;
+    unsigned long            Ndim;
+    int                      datatype;
+    int                      swapbyte;
+    int                      __offset;
+    bool                     compute_transmitance;
+    bool                     compute_inverse;
+    int                      fh_micrograph;
     std::vector<std::string> labels;
-    double stdevFilter;
+    double 				     stdevFilter;
 public:
     Image<char>                * auxI;
     Image<unsigned char>       * IUChar;
@@ -137,12 +125,6 @@ public:
     /** Close micrograpgh.
         After working with the file, you must close it. */
     void close_micrograph();
-
-    /** Compute scaling for 8 bits */
-    void compute_8_bit_scaling();
-
-    /** Write as 8 bits */
-    void write_as_8_bits(const FileName &fn8bits);
 
     /** Get micrograph filename. */
     const FileName& micrograph_name()
@@ -443,19 +425,6 @@ public:
         else REPORT_ERROR(ERR_TYPE_INCORRECT, "Micrograph::set_val::(): unknown datatype");
 
     }
-
-    /** Pixel value with 8 bits. */
-    inline unsigned char val8(int y, int x) const
-    {
-        if (!__scaling_valid) return(unsigned char)(*this)(y, x);
-        else return(unsigned char)(__a*(*this)(y, x) + __b);
-    }
-
-    /** Get the linear transformation for scaling micrographs */
-    void getLinearTransformatioVal8(double &a, double &b) const;
-
-    /** Get the linear transformation for scaling micrographs */
-    void resetLinearTransformatioVal8();
 
     /** Produce all single particle images.
         The file fn_micrograph+".sel" is also generated. The angle is the angle

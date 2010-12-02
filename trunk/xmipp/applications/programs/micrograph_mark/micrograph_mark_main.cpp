@@ -102,7 +102,6 @@ public:
         m.close_micrograph();
 
         m.open_micrograph(fn8bits);
-        m.resetLinearTransformatioVal8();
         m.set_micrograph_name(fnRaw);
         filesToDelete.push_back(fn8bits+"*");
 
@@ -114,7 +113,6 @@ public:
             mTilted.close_micrograph();
             mTilted.open_micrograph(fn8bitsTilted);
             mTilted.set_micrograph_name(fnRawTilted);
-            mTilted.resetLinearTransformatioVal8();
             filesToDelete.push_back(fn8bitsTilted+"*");
         }
 

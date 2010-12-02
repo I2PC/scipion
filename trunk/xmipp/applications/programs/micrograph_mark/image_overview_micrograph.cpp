@@ -119,22 +119,18 @@ void QtImageOverviewMicrograph::loadImage()
                                     mMaxX, mMaxY, image()->width(), image()->height(),
                                     rgb, rgb, rgb, rgb, rgb, rgb, 256);
         byte *ptr = result;
-        double a,b;
-        getMicrograph()->getLinearTransformatioVal8(a,b);
         for (int y = 0; y < image()->height(); y++)
             for (int x = 0; x < image()->width(); x++)
-            {
-                byte proposedVal=(*ptr++);
-                setPixel(x, y, CLIP(a*proposedVal+b,0,255));
-            }
+                setPixel(x, y, *ptr++);
         free(result);
     }
     else
     {
         // Apply bilinear interpolation
+    	const Micrograph *micrograph=getMicrograph();
         for (int y = 0; y < image()->height(); y++)
             for (int x = 0; x < image()->width(); x++)
-                if (getMicrograph() != NULL)
+                if (micrograph != NULL)
                 {
                     exact_overviewToMicrograph(x, y, emX, emY);
                     double val = 0;
@@ -144,10 +140,10 @@ void QtImageOverviewMicrograph::loadImage()
                         double wy = emY - (int)emY;
                         int    mX1 = (int)emX, mX2 = mX1 + 1;
                         int    mY1 = (int)emY, mY2 = mY1 + 1;
-                        val += (1 - wy) * (1 - wx) * getMicrograph()->val8(mY1, mX1) +
-                               (1 - wy) *   wx * getMicrograph()->val8(mY2, mX1) +
-                               wy * (1 - wx) * getMicrograph()->val8(mY1, mX2) +
-                               wy *   wx * getMicrograph()->val8(mY2, mX2);
+                        val += (1 - wy) * (1 - wx) * (*micrograph)(mY1, mX1) +
+                               (1 - wy) *   wx * (*micrograph)(mY2, mX1) +
+                               wy * (1 - wx) * (*micrograph)(mY1, mX2) +
+                               wy *   wx * (*micrograph)(mY2, mX2);
                     }
                     setPixel(x, y, (unsigned int)val);
                 }
