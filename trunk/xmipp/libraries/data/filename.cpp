@@ -244,7 +244,7 @@ void FileName::initRandom(int length)
 }
 
 // Init Unique .............................................................
-void FileName::initUniqueName(char *templateStr)
+void FileName::initUniqueName(const char *templateStr)
 {
     int fd;
     char filename[L_tmpnam];

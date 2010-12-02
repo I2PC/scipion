@@ -230,7 +230,7 @@ public:
      * the portable filename character set. The characters are chosen such
      * that the resulting name does not duplicate the name of an existing file.
      */
-    void initUniqueName(char * templateStr = "xmippTemp_XXXXXX");
+    void initUniqueName(const char * templateStr = "xmippTemp_XXXXXX");
     //@}
 
     ///@name Filename utilities
