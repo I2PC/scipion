@@ -47,14 +47,14 @@ double PI25DT = 3.14159265358979323842643;
 #define X2 (x*x) //((x-R)*(x-R))
 #define Y2 (y*y) //((y-R)*(y-R))
 #define R2 (R*R)
-#define IS_MASTER (node.rank == 0)
+#define IS_MASTER (node->rank == 0)
 
 //For time tests
 double T = 0;
 double T2 = 0;
 
 ParallelTaskDistributor * distributor;
-//MpiNode * node;
+MpiNode * node;
 
 int main(int argc, char **argv)
 {
@@ -64,8 +64,8 @@ int main(int argc, char **argv)
     /** status after am MPI call */
 
     //MPI Initialization
-    //node = new MpiNode(argc, argv);
-    MpiNode node(argc, argv);
+    node = new MpiNode(argc, argv);
+    //MpiNode node(argc, argv);
 
     if (argc > 1)
         R = atoll(argv[1]);
@@ -80,17 +80,18 @@ int main(int argc, char **argv)
     float T = 0.;
 
     //MPI distributor using a node to distribute
-    distributor = new MpiTaskDistributor(R, blockSize, &node);
+    //distributor = new MpiTaskDistributor(R, blockSize, &node);
+    //distributor = new MpiTaskDistributor(R, blockSize, node);
     //File distributor using a file
-    //distributor = new FileTaskDistributor(R, blockSize, &node);
+    distributor = new FileTaskDistributor(R, blockSize, node);
 
-    std::cerr << "hello from node(" << node.rank << ")!!!" << std::endl;
+    std::cerr << "hello from node(" << node->rank << ")!!!" << std::endl;
 
     //All nodes working, there is not master!!!
     //Liberté, égalité, fraternité!!!
     while ((moreJobs = distributor->getTasks(first, last)))
     {
-        std::cerr << "node:" << node.rank << " working from " << first
+        std::cerr << "node:" << node->rank << " working from " << first
                 << " to " << last << std::endl;
         for (long long int x = 0; x <= R; x++)//just for more work to do
             for (long long int y = first; y <= last; y++)
@@ -104,11 +105,11 @@ int main(int argc, char **argv)
     MPI_Barrier(MPI_COMM_WORLD);
 
     // Print out results subsequently
-    for (int n = 0; n < node.size; n++)
+    for (int n = 0; n < node->size; n++)
     {
-        if (n == node.rank)
+        if (n == node->rank)
         {
-            std::cout << "Node" << node.rank << ": locks: " << totalLocks
+            std::cout << "Node" << node->rank << ": locks: " << totalLocks
                     << " total locktime " << T << " total processingTime "
                     << T2 << " avg locktime " << (T / totalLocks)
                     << " avg processingTime " << (T2 / totalLocks) << std::endl;
@@ -122,12 +123,13 @@ int main(int argc, char **argv)
             MPI_SUM, 0, MPI_COMM_WORLD);
 
     //Calculate PI on the master node
-    if (node.isMaster())
+    if (node->isMaster())
     {
         double myPI = (double) (totalInsideCounter * 4) / R2;
         std::cout.precision(20);
         std::cout << "PI: " << std::fixed << myPI << std::endl;
     }
 
+    delete node;
     return 0;
 }
