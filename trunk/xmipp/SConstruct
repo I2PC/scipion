@@ -34,6 +34,8 @@ opts.Add('CCFLAGS', 'The C compiler flags', None)
 opts.Add('CXXFLAGS', 'The C++ compiler flags', None)
 
 opts.Add(BoolVariable('debug', 'Build debug version?', 'no'))
+#Profile version implies debug and then it will be ignored
+opts.Add(BoolVariable('profile', 'Build profile version?', 'no'))
 opts.Add(BoolVariable('warn', 'Show warnings?', 'no'))
 opts.Add(BoolVariable('fast', 'Fast?', 'no'))
 opts.Add(BoolVariable('static', 'Prevent dynamic linking?', 'no'))
@@ -339,16 +341,22 @@ elif (ARGUMENTS['mode'] == 'compile'):
     # add separator to prepend (not shown in help)
     env['prepend'] = env['prepend'] + '_'
 
-    # debug?
-    if int(env['debug']):
-        env.Append(CXXFLAGS=['-D__XMIPP_DEBUG__ -g'])
+    dp = False #debug or profile?
+    if int(env['profile']):
+        dp = True
+        dpFlags = "-g -pg"
+    elif int(env['debug']):
+        dp = True
+        dpFlags = "-g"
+    # profile or debug?
+    if dp:
+        env.Append(CXXFLAGS=['-D__XMIPP_DEBUG__'])
+        env.Append(CXXFLAGS=[dpFlags])
         #required for print stack trace
         env.Append(CXXFLAGS=['-rdynamic'])
         env.Append(CXXFLAGS=['-O0'])
-        env.Append(CXXFLAGS=['-pg'])
-        env.Append(CCFLAGS=['-g'])
-        env.Append(CCFLAGS=['-pg'])
-        env.Append(LINKFLAGS=['-pg'])
+        env.Append(CCFLAGS=[dpFlags])
+        env.Append(LINKFLAGS=[dpFlags])
     else:
         # "safe" optimization
         env.Append(CXXFLAGS=['-O2'])
