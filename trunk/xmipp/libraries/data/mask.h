@@ -1049,5 +1049,36 @@ void rangeAdjust_within_mask(const MultidimArray< double >* mask,
                              const MultidimArray< double >& m1,
                              MultidimArray< double >& m2);
 //@}
+
+class ProgMask: public XmippProgram
+{
+public:
+
+    Mask     mask;
+    FileName        oext, fn_in, fn_out, fn_mask;
+    int             save_mask;
+    int             create_mask;
+    int             count_above;
+    double          th_above;
+    int             count_below;
+    double          th_below;
+    bool            apply_geo;
+    double          subs_val;
+    std::string     str_subs_val;
+    int             count;
+
+    /// Metadata Blockname (several metadata may go in the same file)
+    std::string blockName;
+
+    void defineParams();
+    void readParams();
+    void readParamsMask();
+    void run();
+
+    void processImage(const FileName &fnImg, const FileName &fnImgOut, long int objId);
+};
+
+
+
 //@}
 #endif
