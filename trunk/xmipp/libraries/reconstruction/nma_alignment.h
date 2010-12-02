@@ -118,6 +118,9 @@ public:
     
     // Temporary document file
     MetaData DF_out;
+
+    ///Template for temporal filename generation
+    char nameTemplate[256];
       
 public:
     /// Empty constructor
@@ -165,7 +168,6 @@ public:
     /** Assign NMA and Alignment parameters to an image */
     virtual void processImage(const FileName &fnImg, const FileName &fnImgOut, long int objId);
     virtual void writeImageParameters(const FileName &fnImg);
-    virtual void postProcess();
 };
 
 class ObjFunc_nma_alignment: public UnconstrainedObjectiveFunction

@@ -155,10 +155,7 @@ FileName ProgNmaAlignment::createDeformedPDB(int pyramidLevel) const
 {
     std::string command;
     FileName fnRandom;
-
-    fnRandom.initRandom(19);
-
-    fnRandom=fnRandom+integerToString(rangen);  //the last character is the rank
+    fnRandom.initUniqueName(nameTemplate);
 
     command=(std::string)"xmipp_move_along_NMAmode "+fnPDB+" "+modeList[0]+" "+
             floatToString((float)trial(0)*scale_defamp)+" > inter"+fnRandom+"; mv -f inter"+fnRandom+" deformedPDB_"+
@@ -373,16 +370,19 @@ void ProgNmaAlignment::processImage(const FileName &fnImg, const FileName &fnImg
     int dim=modeList.size();
 
     parameters.initZeros(dim+5);
-    currentImgName=fnImg;
+    currentImgName = fnImg;
+    sprintf(nameTemplate, "_node%d_img%ld_XXXXXX", rangen, objId);
 
     trial.initZeros(dim+5);
     trial_best.initZeros(dim+5);
 
     fitness_min.initZeros(1);
-    fitness_min(0)=1000000.0;
+    fitness_min(0) = 1000000.0;
 
     currentStage=1;
-    //std::cerr << std::endl << "DEBUG: ===== Processing image " << fnImg << " at stage: " << currentStage << std::endl;
+    std::cerr << std::endl << "DEBUG: ===== Node: " << rangen
+        <<" processing image " << fnImg <<"(" << objId << ")"
+        << " at stage: " << currentStage << std::endl;
     of=new ObjFunc_nma_alignment(1,dim);
 
     of->xStart.setSize(dim);
@@ -411,7 +411,10 @@ void ProgNmaAlignment::processImage(const FileName &fnImg, const FileName &fnImg
     delete of;
 
     currentStage = 2;
-    //std::cerr << std::endl << "DEBUG: ===== Processing image " << fnImg << " at stage: " << currentStage << std::endl;
+    std::cerr << std::endl << "DEBUG: ===== Node: " << rangen
+        <<" processing image " << fnImg <<"(" << objId << ")"
+        << " at stage: " << currentStage << std::endl;
+
     fitness_min(0) = 1000000.0;
 
     of=new ObjFunc_nma_alignment(1,dim);
@@ -480,33 +483,4 @@ void ProgNmaAlignment::writeImageParameters(const FileName &fnImg)
   md.setValue(MDL_COST,parameters(5+dim));
 
   md.append("nmaDone.xmd");
-}
-
-// Finish computations======================================================
-void ProgNmaAlignment::postProcess()
-{
-//    int p = assignments.size();
-//    MetaData DF;
-//
-//    for (int i = 0; i < p; i++)
-//    {
-//        DF.addObject();
-//        DF.setValue(MDL_IMAGE,img_names[i]);
-//        DF.setValue(MDL_ENABLED,1);
-//        DF.setValue(MDL_ANGLEROT,assignments[i](0));
-//        DF.setValue(MDL_ANGLETILT,assignments[i](1));
-//        DF.setValue(MDL_ANGLEPSI,assignments[i](2));
-//        DF.setValue(MDL_SHIFTX,assignments[i](3));
-//        DF.setValue(MDL_SHIFTY,assignments[i](4));
-//
-//        int xsz=VEC_XSIZE(assignments[i]);
-//        std::vector<double> vectortemp;
-//        for (int j = 5; j < xsz-1; j++)
-//        {
-//            vectortemp.push_back(assignments[i](j));
-//        }
-//        DF.setValue(MDL_NMA,vectortemp);
-//        DF.setValue(MDL_COST,assignments[i](xsz-1));
-//    }
-//    DF.write(fnOut);
 }
