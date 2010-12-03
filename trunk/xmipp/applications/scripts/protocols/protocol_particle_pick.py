@@ -10,24 +10,24 @@
 # python xmipp_particle_pick.py &
 #
 # Author: Sjors Scheres, March 2007
+# Author: Carlos Oscar Sorzano, November, 2010
 #
 #------------------------------------------------------------------------------------------------
 # {section} Global parameters
 #------------------------------------------------------------------------------------------------
 # {dir} Working subdirectory:
-""" Use the same directory where you executed xmipp_protocol_preprocess_micrographs.py
+""" Do not use the same directory where you executed xmipp_protocol_preprocess_micrographs.py
 """
-WorkingDir='Preprocessing'
+WorkingDir='ParticlePicking'
 
 # {file} Selfile with all micrographs to pick particles from:
 MicrographSelfile='Preprocessing/all_micrographs.sel'
 
 # Is this selfile a list of untilted-tilted pairs?
-""" True for RCT-processing. In that case, provide a 3-column selfile as follows:
-    untilted_pair1.raw tilted_pair1.raw 1
-    untilted_pair2.raw tilted_pair2.raw 1
+""" True for RCT-processing. In that case, provide a 2-column selfile as follows:
+    untilted_pair1.raw tilted_pair1.raw
+    untilted_pair2.raw tilted_pair2.raw
     etc...
-    Where 1 in the third column means active pair, and -1 means inactive pair
     Use relative paths from the Preprocessing directory!
 """
 IsPairList=False
@@ -44,7 +44,7 @@ AutomaticPicking=False
 # {expert} Root directory name for this project:
 """ Absolute path to the root directory for this project
 """
-ProjectDir='/home/scheres/Demo/my_experiment'
+ProjectDir='/media/usbdisk/Experiments/TestProtocols'
 
 # {expert} Directory name for logfiles:
 LogDir='Logs'
@@ -52,12 +52,6 @@ LogDir='Logs'
 #------------------------------------------------------------------------------------------------
 # {section} Parallelization issues for automatic particle picking
 #------------------------------------------------------------------------------------------------
-# Number of (shared-memory) threads?
-""" This option provides shared-memory parallelization on multi-core machines. 
-    It does not require any additional software, other than xmipp
-"""
-NumberOfThreads=1
-
 # Use distributed-memory parallelization (MPI)?
 """ This option provides parallelization on clusters with distributed memory architecture.
     It requires mpi to be installed.
@@ -81,9 +75,13 @@ SystemFlavour=''
 #------------------------------------------------------------------------------------------------
 #
 from Tkinter import *
+import os,sys
+scriptdir=os.path.split(os.path.dirname(os.popen('which xmipp_protocols','r').read()))[0]+'/protocols'
+sys.path.append(scriptdir) # add default search path
+import xmipp
+
 # Create a GUI automatically from a selfile of micrographs
 class particle_pick_class:
-
     def __init__(self,
                  WorkingDir,
                  MicrographSelfile,
@@ -92,15 +90,11 @@ class particle_pick_class:
                  AutomaticPicking,
                  ProjectDir,
                  LogDir,
-                 NumberOfThreads,
                  DoParallel,
-		 NumberOfMpiProcesses,
+		         NumberOfMpiProcesses,
                  SystemFlavour
                  ):
 
-        import os,sys
-        scriptdir=os.path.split(os.path.dirname(os.popen('which xmipp_protocols','r').read()))[0]+'/protocols'
-        sys.path.append(scriptdir) # add default search path
         self.SYSTEMSCRIPTDIR=scriptdir
         import log
 
@@ -119,10 +113,13 @@ class particle_pick_class:
         self.AutomaticPicking=AutomaticPicking
         self.ProjectDir=ProjectDir
         self.LogDir=LogDir
-        self.NumberOfThreads=NumberOfThreads
         self.DoParallel=DoParallel
         self.NumberOfMpiProcesses=NumberOfMpiProcesses
         self.SystemFlavour=SystemFlavour
+
+        # Delete working directory if exists, make a new one
+        if not os.path.exists(self.WorkingDir):
+            os.makedirs(self.WorkingDir)
 
         # Setup logging
         self.log=log.init_log_system(self.ProjectDir,
@@ -131,23 +128,39 @@ class particle_pick_class:
                                      self.WorkingDir)
                 
         # Make working directory if it does not exist yet
+        import time
         if not os.path.exists(self.WorkingDir):
             os.makedirs(self.WorkingDir)
+            fh=open(self.WorkingDir + "/status.txt", "w")
+            fh.write("Process started at " + time.asctime() + "\n")
+            fh.write("Step 0: Directory created at " + time.asctime() + "\n")
+            fh.close()
+        else:
+            fh=open(self.WorkingDir + "/status.txt", "a")
+            fh.write("Process started at " + time.asctime() + "\n")
+            fh.close()
 
         # Backup script
         log.make_backup_of_script_file(sys.argv[0],
         			       os.path.abspath(self.WorkingDir))
     
-        # Execute protocol in the working directory
-        os.chdir(self.WorkingDir)
-        
+        # Read micrographs
+        self.mD=xmipp.MetaData();
+        self.mD.read(MicrographSelfile)
+
         # Execute protocol in the working directory
         self.print_warning()
-        self.sellines=self.ReadSelfile()
         self.MakeGui()
 
-        # Return to parent dir
-        os.chdir(os.pardir)
+    def print_warning(self):
+        import os, sys
+        print '*********************************************************************'
+        print '*  Perform manual particle picking for micrographs in: '+os.path.basename(self.MicrographSelfile)
+        print '*'
+        print '* DONT FORGET TO SAVE YOUR COORDINATES REGULARLY, AND ALWAYS BEFORE CLOSING!'
+        if (self.IsPairList):
+            print '* AND ALSO SAVE THE ANGLES IN THE UNTILTED MICROGRAPHS!'
+        print '*'
 
     def MakeGui(self):
         import xmipp_protocol_gui
@@ -171,33 +184,6 @@ class particle_pick_class:
 
         # Enter main loop
         self.master.mainloop()
-
-    def ReadSelfile(self):
-        import os
-        newlines=[]
-        if not os.path.exists(self.MicrographSelfile):
-            message='Error: '+self.MicrographSelfile+' does not exist'
-            print '*',message
-            self.log.error(message)
-            sys.exit()
-        fh=open(self.MicrographSelfile,'r')
-        lines=fh.readlines()
-        fh.close()
-        words=lines[0].split()
-        if ((not self.IsPairList) and (not len(words)==2)):
-            message='Error: '+self.MicrographSelfile+' is not a valid selection file'
-            print '*',message
-            self.log.error(message)
-            sys.exit()
-        if ((self.IsPairList) and (not len(words)==3)):
-            message='Error: '+self.MicrographSelfile+' is not a valid pairlist file'
-            print '*',message
-            self.log.error(message)
-            sys.exit()
-        for line in lines:
-            words=line.split()
-            newlines.append(words)
-        return newlines
  
     def FillMarkGui(self):
         import os
@@ -220,10 +206,16 @@ class particle_pick_class:
         self.selectedForAutomaticPickingAuto=[]
         self.selectedForAutomaticPickingName=[]
         self.selectedForAutomaticPickingMark=[]
+        directory,dummy=os.path.split(self.MicrographSelfile)
         if not self.IsPairList:
-            for micrograph,state in self.sellines:
-                micrograph=micrograph.replace('.spi','.raw')
-                if (state.find('-1') == -1):
+            for id in self.mD:
+                micrograph=self.mD.getValue(xmipp.MDL_IMAGE)
+                if not os.path.exists(directory+"/"+micrograph):
+                    c=0
+                    cauto=0
+                    row=self.GuiAddSingleMarkEntry(micrograph,c,cauto)
+                    self.row[micrograph]=row
+                else:
                     c=self.CountPicked(micrograph,str(self.PosName))
                     cauto=self.CountPicked(micrograph,str(self.PosName+'.auto'))
                     total+=c
@@ -231,15 +223,14 @@ class particle_pick_class:
                     row=self.GuiAddSingleMarkEntry(micrograph,c,cauto)
                     self.row[micrograph]=row
         else:
-            for micrograph,tilted,state in self.sellines:
-                micrograph=micrograph.replace('.spi','.raw')
-                tilted=tilted.replace('.spi','.raw')
-                if (state.find('-1') == -1):
-                    c=self.CountPicked(micrograph,str(self.PosName))
-                    total+=c
-                    self.whichtilted[micrograph]=tilted
-                    row=self.GuiAddPairMarkEntry(micrograph,c)
-                    self.row[micrograph]=row
+            for id in self.mD:
+                micrograph=self.mD.getValue(xmipp.MDL_IMAGE)
+                tilted=self.mD.getValue(xmipp.MDL_ASSOCIATED_IMAGE1)
+                c=self.CountPicked(micrograph,str(self.PosName))
+                total+=c
+                self.whichtilted[micrograph]=tilted
+                row=self.GuiAddPairMarkEntry(micrograph,c)
+                self.row[micrograph]=row
 
         row=(self.frame.grid_size()[1]+1)
         Label(self.frame,text="", 
@@ -294,7 +285,6 @@ class particle_pick_class:
             b.grid(row=self.buttonrow+1,column=1,sticky=N+S+W+E)
         
     def GuiAddSingleMarkEntry(self,micrograph,count,count_auto):
-        import os
         row=self.frame.grid_size()[1]
 
         label=os.path.basename(micrograph)
@@ -324,7 +314,7 @@ class particle_pick_class:
         else:
             nextColumn=1
 
-        r=Radiobutton(self.frame,text="Mark!",variable=self.whichmark,
+        r=Radiobutton(self.frame,text="Mark",variable=self.whichmark,
                       value=micrograph,indicatoron=0,
                       command=self.LaunchSingleMark, 
                       bg=self.ButtonBackgroundColour, 
@@ -349,7 +339,6 @@ class particle_pick_class:
         return row
 
     def GuiAddPairMarkEntry(self,micrograph,count):
-        import os
         row=self.frame.grid_size()[1]
         label=os.path.basename(micrograph)+' : '+os.path.basename(self.whichtilted[micrograph])
         l=Label(self.frame, text=label, 
@@ -359,7 +348,7 @@ class particle_pick_class:
         l=Label(self.frame, text=label, 
                 bg=self.LabelBackgroundColour)
         l.grid(row=row, column=2)
-        r=Radiobutton(self.frame,text="Mark!",variable=self.whichmark,
+        r=Radiobutton(self.frame,text="Mark",variable=self.whichmark,
                            value=micrograph, indicatoron=0,
                            command=self.LaunchPairMark)
         r.grid(row=row, column=1,sticky=N)
@@ -390,16 +379,25 @@ class particle_pick_class:
                 self.selectedForAutomaticPickingTrain[i].set(1)
 
     def AutomaticallyDetect(self):
-        import os
         command_file = open("pick.sh", "w")
+        directoryPreprocessing,dummy=os.path.split(self.MicrographSelfile)
         for i in range(0,len(self.selectedForAutomaticPickingAuto)):
             if (self.selectedForAutomaticPickingAuto[i].get()):
                directory,micrograph=os.path.split(
                   self.selectedForAutomaticPickingName[i])
-               command_file.write("( cd "+directory+
-                  "; xmipp_micrograph_mark -i "+micrograph+
-                  " -auto ../"+self.PosName+".auto -autoSelect )\n");
+               filename=self.WorkingDir+"/"+micrograph+"."+self.PosName+".auto.pos"
+               command_file.write(
+                  "( xmipp_micrograph_mark -i "+directoryPreprocessing+"/"+\
+                  self.selectedForAutomaticPickingName[i]+\
+                  " --auto "+self.WorkingDir+"/"+self.PosName+".auto --autoSelect "+\
+                  " --outputRoot "+self.WorkingDir+"/"+micrograph+\
+                  "; if [ -e " + filename + ' ]; then ' + \
+                  'echo "Step A: "'+micrograph+' automatically marked on `date` >> ' + \
+                  self.WorkingDir + "/status.txt; fi )\n")
+                 
         command_file.write("MPI_Barrier\n")
+        command_file.write('echo "Step F: " finished marking on `date` >> ' + \
+                  self.WorkingDir + "/status.txt \n")
         command_file.write("rm pick.sh pick.py\n")
         command_file.close();
 
@@ -410,8 +408,6 @@ class particle_pick_class:
                                   tkMessageBox.YESNOCANCEL)
         import launch_job
         command=""
-        print("*"+answer+"*");
-        print(answer=="no" or answer==False);
         if self.DoParallel:
             command=launch_job.launch_job("xmipp_run",
                                  "-i pick.sh",
@@ -435,7 +431,6 @@ class particle_pick_class:
             import xmipp_protocol_gui
             python_file = open("pick.py", "w")
             python_file.write("WorkingDir='"+self.WorkingDir+"'\n")
-            python_file.write("NumberOfThreads=1\n")
             python_file.write("DoParallel="+str(self.DoParallel)+"\n")
             python_file.write("NumberOfMpiProcesses="+str(self.NumberOfMpiProcesses)+"\n")
             python_file.write("# {end-of-header}\n")
@@ -444,17 +439,16 @@ class particle_pick_class:
             python_file.close();
 
             d = xmipp_protocol_gui.MyQueueLaunch(self.master,"python pick.py")
+        else:
+            os.system(command);
 
     def CountPicked(self,micrograph,label):
-        import os
-        posfile=str(micrograph)+'.'+label+'.pos'
+        directory,fnMicrograph=os.path.split(micrograph);
+        posfile=self.WorkingDir+"/"+str(fnMicrograph)+'.'+label+'.pos'
         if os.path.exists(posfile):
-            fh=open(posfile,'r')
-            lines=fh.readlines()
-            fh.close()
-            picked=len(lines)-1
-            if picked>0:
-                return picked
+            import xmipp
+            mD=xmipp.MetaData(posfile);
+            return mD.size()
         return 0
     
     def CountAll(self, family=''):
@@ -478,20 +472,51 @@ class particle_pick_class:
         return total
         
     def LaunchSingleMark(self):
-        import os
+        import launch_job
+
         self.GuiUpdateCount()
-        print "* Marking... "
-        self.perform_picking(self.whichmark.get())
+        print "* Marking ... "
+        name=self.whichmark.get()
+        if name=='':
+            return
+        basedirectory,dummy=os.path.split(self.MicrographSelfile)
+        directory,micrograph=os.path.split(name)
+        command='( xmipp_micrograph_mark -i '+basedirectory+"/"+directory+"/"+micrograph+\
+                  " --outputRoot "+self.WorkingDir+"/"+micrograph
+        if (self.AutomaticPicking):
+            command+=' --auto '+self.WorkingDir+"/"+self.PosName+'.auto'
+            filename=self.WorkingDir+"/"+micrograph+"."+self.PosName+".auto.pos"
+            command+="; if [ -e " + filename + ' ]; then ' + \
+                 'echo "Step L: "'+micrograph+' used for learning on `date` >> ' + \
+                 self.WorkingDir + "/status.txt; fi "
+        filename=self.WorkingDir+"/"+micrograph+"."+self.PosName+".pos"
+        command+="; if [ -e " + filename + ' ]; then ' + \
+                 'echo "Step M: "'+micrograph+' manually marked on `date` >> ' + \
+                 self.WorkingDir + "/status.txt; fi "
+        command+=") &"
+        self.log.info(command)
+        os.system(command)
 
     def LaunchPairMark(self):
-        import os
+        import launch_job
         self.GuiUpdateCount()
-        print "* Marking... "
+        print "* Marking pair ... "
+        
         untilted=self.whichmark.get()
-        self.perform_picking_pair(self.whichmark.get(),self.whichtilted[self.whichmark.get()])
+        tilted=self.whichtilted[self.whichmark.get()]
+        directory,uname=os.path.split(untilted)
+        if (len(directory)>0):
+            os.chdir(directory)
+        tname='../'+tilted
+        command=' -i '+uname+' --tilted '+tname + ' &'
+        launch_job.launch_job("xmipp_micrograph_mark",
+                              command,
+                              self.log,
+                              False,1,1,'')
+        os.chdir(os.pardir)
 
     def GuiUpdateCount(self):
-        print "* Updating count..."
+        print "* Updating count ..."
         total=self.CountAll()
         label=str(total).zfill(5)
         l=Label(self.frame, text=label, 
@@ -512,79 +537,73 @@ class particle_pick_class:
         self.master.destroy()
         sys.exit(0)
         
-    def print_warning(self):
-        import os, sys
-        print '*********************************************************************'
-        print '*  Perform manual particle picking for micrographs in: '+os.path.basename(self.MicrographSelfile)
-        print '*'
-        print '* DONT FORGET TO SAVE YOUR COORDINATES REGULARLY, AND ALWAYS BEFORE CLOSING!'
-        if (self.IsPairList):
-            print '* AND ALSO SAVE THE ANGLES IN THE UNTILTED MICROGRAPHS!'
-            if (self.AutomaticPicking):
-                print '\n'
-                print 'ERROR: CANNOT DO AUTOMATIC PICKING IN TILTED PAIRS\n'
-                sys.exit(1)
-        print '*'
-
-    def perform_picking(self,name):
-        import os
-        import launch_job
-        if name=='':
-            return
+# Preconditions
+def preconditions(gui):
+    retval=True
+    # Check if there is workingdir
+    if WorkingDir == "":
+        message="No working directory given"
+        if gui:
+            import tkMessageBox
+            tkMessageBox.showerror("Error", message)
+        else:
+            print message
+        retval=False
+    
+    # Check that automatic particle picking is not for tilted
+    if IsPairList and AutomaticPicking:
+        message="No working directory given"
+        if gui:
+            import tkMessageBox
+            tkMessageBox.showerror("Error", message)
+        else:
+            print message
+        retval=False
         
-        directory,micrograph=os.path.split(name)
-        if (len(directory)>0):
-            os.chdir(directory)
-        arguments='-i '+micrograph
-        if (self.AutomaticPicking):
-            arguments+=' -auto ../'+self.PosName+'.auto'
-            if (self.NumberOfThreads>1):
-                arguments+=' -thr '+str(self.NumberOfThreads)
-            arguments+=' &'
-        launch_job.launch_job("xmipp_micrograph_mark",
-                              arguments,
-                              self.log,
-                              False,1,1,'')
-        os.chdir(os.pardir)
+    # Check that there is a valid list of micrographs
+    if not os.path.exists(MicrographSelfile)>0:
+        message="Cannot find "+MicrographSelfile
+        if gui:
+            import tkMessageBox
+            tkMessageBox.showerror("Error", message)
+        else:
+            print message
+        retval=False
+    
+    # Check that all micrographs exist
+    import xmipp
+    mD = xmipp.MetaData()
+    mD.read(MicrographSelfile)
+    message="Cannot find the following micrographs:\n"
+    NnotFound=0
+    for id in mD:
+         micrograph = mD.getValue(xmipp.MDL_IMAGE)
+         if not os.path.exists(micrograph):
+            message+=micrograph+"\n"
+            NnotFound=NnotFound+1
+    
+    if not NnotFound>0:
+        if gui:
+            import tkMessageBox
+            tkMessageBox.showerror("Error", message)
+        else:
+            print message
+        retval=False
+            
+    return retval
 
-    def perform_picking_pair(self,untilted,tilted):
-        import os
-        import launch_job
-        directory,uname=os.path.split(untilted)
-        if (len(directory)>0):
-            os.chdir(directory)
-        tname='../'+tilted
-        command=' -i '+uname+' -tilted '+tname + ' &'
-        launch_job.launch_job("xmipp_micrograph_mark",
-                              command,
-                              self.log,
-                              False,1,1,'')
-        os.chdir(os.pardir)
-
-
-    def close(self):
-        message=" Exiting ... "
-        print '* ',message
-        print '*********************************************************************'
-        self.log.info(message)
 #		
 # Main
 #     
 if __name__ == '__main__':
-
-   	# create preprocess_A_class object
 	particle_pick=particle_pick_class(WorkingDir,
-                                          MicrographSelfile,
-                                          IsPairList,
-                                          PosName,
-                                          AutomaticPicking,
-                                          ProjectDir,
-                                          LogDir,
-                                          NumberOfThreads,
-                                          DoParallel,
-					  NumberOfMpiProcesses,
-                                          SystemFlavour
-                                          )
-
-	# close 
-	particle_pick.close()
+                                      MicrographSelfile,
+                                      IsPairList,
+                                      PosName,
+                                      AutomaticPicking,
+                                      ProjectDir,
+                                      LogDir,
+                                      DoParallel,
+                                      NumberOfMpiProcesses,
+                                      SystemFlavour
+                                      )
