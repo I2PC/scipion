@@ -394,16 +394,15 @@ class preprocess_A_class:
         self.launchCommandFile(xmpi_run_file + '_1.sh')
         
         # Pickup results from CTFFIND
-        idx=0;
-        for filename in self.SFmicrograph:
-            shortname=self.SFshort[idx]
-            ctfparam=self.SFctf[idx]
-            # Pickup result from CTFTILT
-            if self.DoCtfEstimate and self.DoCtffind:
+        if self.DoCtfEstimate and self.DoCtffind:
+            idx=0;
+            for filename in self.SFmicrograph:
+                shortname=self.SFshort[idx]
+                ctfparam=self.SFctf[idx]
                 results=self.pickup_ctfestimate_ctffind(shortname, filename)
                 self.SFctffind.append(results[0])
                 self.SFctffindmrc.append(results[1])
-            idx += 1
+                idx += 1
         
         # Write the different selfiles
         scriptdir=os.path.split(os.path.dirname(os.popen('which xmipp_protocols', 'r').read()))[0] + '/protocols'
@@ -417,7 +416,8 @@ class preprocess_A_class:
             fh.close()
             MD.addObject()
             MD.setValue(xmipp.MDL_IMAGE, filename)
-            MD.setValue(xmipp.MDL_PSD,   self.SFpsd[idx])
+            if self.DoCtfEstimate:
+                MD.setValue(xmipp.MDL_PSD,   self.SFpsd[idx])
             if len(self.SFinputparams) > 0:
                 MD.setValue(xmipp.MDL_CTFINPUTPARAMS, self.SFinputparams[idx])
             if len(self.SFctf) > 0:
@@ -428,12 +428,14 @@ class preprocess_A_class:
                 MD.setValue(xmipp.MDL_CTFMODEL2, self.SFctffind[idx])
                 MD.setValue(xmipp.MDL_ASSOCIATED_IMAGE3, self.SFctffindmrc[idx])
             idx += 1
+        MD.sort(xmipp.MDL_IMAGE);
         MD.write(self.WorkingDir + "/" + self.RootName + "_micrographs.sel")
 
         # CTF Quality control
-        command="xmipp_psd_sort -i " + self.RootName + "_micrographs.sel\n"
-        self.log.info(command)     
-        os.system(command)     
+        if self.DoCtfEstimate:
+            command="xmipp_psd_sort -i " + self.RootName + "_micrographs.sel\n"
+            self.log.info(command)     
+            os.system(command)     
         
         message=" Done pre-processing of micrographs"
         print '* ', message
