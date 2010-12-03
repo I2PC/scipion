@@ -365,7 +365,7 @@ void QtWidgetMicrograph::setMicrograph(Micrograph *_m)
 /* Set Output directory ---------------------------------------------------- */
 void QtWidgetMicrograph::setOutputRoot(const FileName& outputRoot)
 {
-	__outputRoot=outputRoot;
+    __outputRoot=outputRoot;
 }
 
 /* Set the class for automatic particle picking ---------------------------- */
@@ -517,9 +517,29 @@ void QtWidgetMicrograph::slotChangeCircleRadius()
 }
 
 // Learn particles
-void QtWidgetMicrograph::learnParticles()
+bool QtWidgetMicrograph::learnParticles()
 {
-    __autoPicking->learnParticles(__ellipse_radius);
+    if (__ellipse_radius<12)
+    {
+        if (!QMessageBox::information(this, "Mark",
+                                      (std::string)"The particle radius is "+
+                                      floatToString(__ellipse_radius,3,2)+
+                                      "\nAre you sure to continue?",
+                                      "&Yes", "&No",
+                                      0,      // Enter == button 0
+                                      1))
+        {
+            __autoPicking->learnParticles(__ellipse_radius);
+            return true;
+        }
+        else
+        	return false;
+    }
+    else
+    {
+        __autoPicking->learnParticles(__ellipse_radius);
+        return true;
+    }
 }
 
 // Automatically Select Particles
@@ -1539,7 +1559,7 @@ void QtWidgetMicrograph::slotRestrictSelection(float _cost)
 
 void AutoParticlePicking::setOutputRoot(const FileName &outputRoot)
 {
-	__outputRoot=outputRoot;
+    __outputRoot=outputRoot;
 }
 
 void AutoParticlePicking::restrictSelection(float _cost)
@@ -2298,6 +2318,7 @@ bool AutoParticlePicking::prepare_piece(MultidimArray<double> &piece,
     reject_outliers(piece, 5.0);
 
 #ifdef DEBUG_PREPARE
+
     save() = piece;
     save.write("PPPpiece2_5.xmp");
 #endif
@@ -2623,8 +2644,12 @@ void AutoParticlePicking::loadModels(const FileName &fn)
 void AutoParticlePicking::saveAutoParticles()
 {
     if (__autoselection_done && __auto_label!=-1)
+    {
+        std::cout << "Writing at " << __outputRoot+
+        "."+__modelRootName.removeDirectories()+".pos" << std::endl;
         __m->write_coordinates(__auto_label, __minCost, __outputRoot+
                                "."+__modelRootName.removeDirectories()+".pos");
+    }
 }
 
 /* Save models ------------------------------------------------------------- */

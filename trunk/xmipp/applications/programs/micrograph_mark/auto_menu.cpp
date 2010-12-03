@@ -68,7 +68,9 @@ void QtAutoMenu::slotSaveModels()
 /* Save models of Particles ------------------------------------------------ */
 void QtAutoMenu::slotLearnSaveQuit()
 {
-    ((QtWidgetMicrograph *)parentWidget())->learnParticles();
-    ((QtWidgetMicrograph *)parentWidget())->saveModels(false);
-    ((QtWidgetMicrograph *)parentWidget())->file_menu()->slotQuit();
+    if (((QtWidgetMicrograph *)parentWidget())->learnParticles())
+    {
+        ((QtWidgetMicrograph *)parentWidget())->saveModels(false);
+        ((QtWidgetMicrograph *)parentWidget())->file_menu()->slotQuit();
+    }
 }

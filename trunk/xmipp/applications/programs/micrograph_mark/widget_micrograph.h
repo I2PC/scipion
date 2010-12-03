@@ -557,7 +557,7 @@ public:
                    const std::string &_family_name);
 
     // Learn particles
-    void learnParticles();
+    bool learnParticles();
 
     // Automatically Select Particles
     void automaticallySelectParticles();
