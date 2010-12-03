@@ -36,23 +36,10 @@
 /* MAIN -------------------------------------------------------------------- */
 int main(int argc, char **argv)
 {
-    try
-    {
-        ProgMask program;
-        /*
-         if (checkParameter(argc,argv,"--create_mask"))
-            program._produces_an_output = true;
-        else
-            program._each_image_produces_an_output = true;
-         */
-        program.XmippProgram::read(argc, argv);
-        program.run();
-    }
-    catch (XmippError xe)
-    {
-        std::cerr << xe;
-        return 1;
-    }
+    ProgMask program;
+    program.XmippProgram::read(argc, argv);
+    program.tryRun();
+
     return 0;
 }
 
