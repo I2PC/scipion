@@ -468,6 +468,8 @@ class preprocess_A_class:
             finalname += extension
             if not os.path.exists(finalname):
                 command='ln -s ' + relpath(filename, shortname) + ' ' + finalname + "; "
+                if micrographName.endswith(".raw"):
+                    command+='ln -s ' + relpath(filename, shortname) + '.inf ' + finalname + ".inf; "
                 command += "if [ -e " + finalname + ' ]; then ' + \
                             'echo "Step 1: Preprocessed image created " `date` >> ' + shortname + "/status.txt; " + \
                           "fi"
