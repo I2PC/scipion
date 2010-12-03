@@ -227,7 +227,7 @@ void Micrograph::write_coordinates(int label, double minCost, const FileName &_f
     int imax = coords.size();
     for (int i = 0; i < imax; i++)
     {
-        if (coords[i].valid && coords[i].cost>minCost)
+        if (coords[i].valid && coords[i].cost>minCost && coords[i].label==label)
         {
             MD.addObject();
             MD.setValue(MDL_XINT,coords[i].X);
