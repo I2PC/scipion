@@ -92,9 +92,9 @@ protected:
             REPORT_ERROR(ERR_VALUE_INCORRECT,"Automatic particle picking cannot be performed on tilt pairs");
         numThreads = getIntParam("--thr");
         if (checkParam("--outputRoot"))
-        	outputRoot = getParam("--outputRoot");
+            outputRoot = getParam("--outputRoot");
         else
-        	outputRoot = fnRaw;
+            outputRoot = fnRaw;
     }
 public:
     void run()
@@ -125,7 +125,8 @@ public:
 
         // Configure application .............................................
         AutoParticlePicking *autoPicking=NULL;
-        autoPicking=new AutoParticlePicking(&m);
+        if (fnRawTilted=="")
+            autoPicking=new AutoParticlePicking(&m);
 
         QApplication *app=NULL;
         QtMainWidgetMark *mainWidget=NULL;
@@ -155,7 +156,8 @@ public:
         }
 
         // Check if a model has been provided ................................
-        autoPicking->setNumThreads(numThreads);
+        if (autoPicking!=NULL)
+            autoPicking->setNumThreads(numThreads);
         if (fnAutomaticModel!="")
             autoPicking->loadModels(fnAutomaticModel);
 
@@ -163,14 +165,15 @@ public:
         if (!autoSelect)
         {
             mainWidget->setOutputRoot(outputRoot);
-        	autoPicking->setOutputRoot(outputRoot);
+            if (autoPicking!=NULL)
+                autoPicking->setOutputRoot(outputRoot);
             app->setMainWidget(mainWidget);
             mainWidget->openAllWindows();
             app->exec();
         }
         else
         {
-        	autoPicking->setOutputRoot(outputRoot);
+            autoPicking->setOutputRoot(outputRoot);
             autoPicking->automaticallySelectParticles();
             autoPicking->saveAutoParticles();
         }

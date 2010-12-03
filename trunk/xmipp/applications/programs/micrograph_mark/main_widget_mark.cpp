@@ -518,9 +518,7 @@ void QtMainWidgetMark::write_angles()
     compute_alphas();
     draw_axes();
 
-    FileName fn = __mWidget->getMicrograph()->micrograph_name();
-    fn = fn.withoutExtension();
-    fn = fn.addExtension("ang");
+    FileName fn = __mWidget->__outputRoot+".angles.txt";
     MetaData MD;
     MD.setColumnFormat(false);
     MD.addObject();
@@ -651,6 +649,6 @@ void QtMainWidgetMark::setOutputRoot(const FileName &outputRoot)
 {
 	__mWidget->setOutputRoot(outputRoot);
     if (__mTiltedWidget != NULL)
-    	__mTiltedWidget->setOutputRoot(outputRoot);
+    	__mTiltedWidget->setOutputRoot(outputRoot+".tilted");
 
 }
