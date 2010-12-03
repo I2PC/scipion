@@ -163,6 +163,7 @@ public:
         if (!autoSelect)
         {
             mainWidget->setOutputRoot(outputRoot);
+        	autoPicking->setOutputRoot(outputRoot);
             app->setMainWidget(mainWidget);
             mainWidget->openAllWindows();
             app->exec();
