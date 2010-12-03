@@ -400,6 +400,9 @@ public:
      */
     bool isMetaData(bool failIfNotExists=true) const;
 
+    /** True if it is a Star 1 file. */
+    bool isStar1(bool failIfNotExists) const;
+
     /** Clean image FileName (as in Bsoft)
      *
      * @code

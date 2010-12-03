@@ -380,7 +380,11 @@ bool FileName::isMetaData(bool failIfNotExists) const
         return true;
     }
     else
-    {
+    	return isStar1(failIfNotExists);
+}
+
+bool FileName::isStar1(bool failIfNotExists) const
+{
         std::ifstream infile(data(), std::ios_base::in);
         String line;
 
@@ -401,7 +405,6 @@ bool FileName::isMetaData(bool failIfNotExists) const
         else
             return false;
     }
-}
 
 // Substitute one extension by other .......................................
 FileName FileName::substituteExtension(const String &ext1,
