@@ -146,7 +146,7 @@ class particle_pick_class:
     
         # Read micrographs
         self.mD=xmipp.MetaData();
-        self.mD.read(MicrographSelfile)
+        xmipp.readMetaDataWithTwoPossibleImages(MicrographSelfile, self.mD)
 
         # Execute protocol in the working directory
         self.print_warning()
@@ -504,16 +504,19 @@ class particle_pick_class:
         
         untilted=self.whichmark.get()
         tilted=self.whichtilted[self.whichmark.get()]
-        directory,uname=os.path.split(untilted)
-        if (len(directory)>0):
-            os.chdir(directory)
-        tname='../'+tilted
-        command=' -i '+uname+' --tilted '+tname + ' &'
-        launch_job.launch_job("xmipp_micrograph_mark",
-                              command,
-                              self.log,
-                              False,1,1,'')
-        os.chdir(os.pardir)
+        basedirectory,dummy=os.path.split(self.MicrographSelfile)
+        directoryUname,uname=os.path.split(untilted)
+        directoryTname,tname=os.path.split(tilted)
+        filename=self.WorkingDir+"/"+uname+"."+self.PosName+".pos"
+        command='( xmipp_micrograph_mark -i '+basedirectory+"/"+directoryUname+"/"+uname+\
+                ' --tilted '+basedirectory+"/"+directoryTname+"/"+tname+\
+                " --outputRoot "+self.WorkingDir+"/"+uname
+        command+="; if [ -e " + filename + ' ]; then ' + \
+                 'echo "Step M: "'+uname+' manually marked pair on `date` >> ' + \
+                 self.WorkingDir + "/status.txt; fi "
+        command+=") &"
+        self.log.info(command)
+        os.system(command)
 
     def GuiUpdateCount(self):
         print "* Updating count ..."
@@ -573,7 +576,7 @@ def preconditions(gui):
     # Check that all micrographs exist
     import xmipp
     mD = xmipp.MetaData()
-    mD.read(MicrographSelfile)
+    xmipp.readMetaDataWithTwoPossibleImages(MicrographSelfile, mD)
     message="Cannot find the following micrographs:\n"
     NnotFound=0
     for id in mD:
@@ -581,6 +584,11 @@ def preconditions(gui):
          if not os.path.exists(micrograph):
             message+=micrograph+"\n"
             NnotFound=NnotFound+1
+         if mD.containsLabel(xmipp.MDL_ASSOCIATED_IMAGE1):
+             micrograph = mD.getValue(xmipp.MDL_ASSOCIATED_IMAGE1)
+             if not os.path.exists(micrograph):
+                 message+=micrograph+"\n"
+                 NnotFound=NnotFound+1
     
     if not NnotFound>0:
         if gui:
