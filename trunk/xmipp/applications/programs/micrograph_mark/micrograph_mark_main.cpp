@@ -46,17 +46,20 @@ protected:
         addParamsLine("     alias --untilted;");
         addParamsLine("  [-t <input_tilted_micrograph>]      : File with tilted image");
         addParamsLine("     alias --tilted;");
-        addParamsLine("  [--psd <assign_CTF_prm_file>]       : Show the PSDs\n");
-        addParamsLine("  [--ctf <assign_CTF_prm_file>]       : Show the CTF models\n");
+        addParamsLine("  [--psd+ <assign_CTF_prm_file>]      : Show the PSDs\n");
+        addParamsLine("  [--ctf+ <assign_CTF_prm_file>]      : Show the CTF models\n");
         addParamsLine("  [--auto <model_rootname>]           : For autoselection\n");
-        addParamsLine("  [--autoSelect]                          : Autoselect without user interaction\n");
-        addParamsLine("  [--thr <p=1>]                           : Number of threads for automatic picking\n");
+        addParamsLine("  [--autoSelect]                      : Autoselect without user interaction\n");
+        addParamsLine("  [--thr <p=1>]                       : Number of threads for automatic picking\n");
+        addParamsLine("  [--outputRoot+ <rootname>]          : Output rootname\n");
+        addParamsLine("                                      : If not given, the micrograph name is taken\n");
     }
     FileName fnRaw;
     FileName fnRawTilted;
     FileName fnAutomaticModel;
     //bool     reversed;
     FileName fn_assign_CTF;
+    FileName outputRoot;
     bool     ctf_mode;
     bool     autoSelect;
     int      numThreads;
@@ -88,6 +91,10 @@ protected:
         if (fnRawTilted!="" && autoSelect)
             REPORT_ERROR(ERR_VALUE_INCORRECT,"Automatic particle picking cannot be performed on tilt pairs");
         numThreads = getIntParam("--thr");
+        if (checkParam("--outputRoot"))
+        	outputRoot = getParam("--outputRoot");
+        else
+        	outputRoot = fnRaw;
     }
 public:
     void run()
@@ -155,12 +162,14 @@ public:
         // Run application ...................................................
         if (!autoSelect)
         {
+            mainWidget->setOutputRoot(outputRoot);
             app->setMainWidget(mainWidget);
             mainWidget->openAllWindows();
             app->exec();
         }
         else
         {
+        	autoPicking->setOutputRoot(outputRoot);
             autoPicking->automaticallySelectParticles();
             autoPicking->saveAutoParticles();
         }

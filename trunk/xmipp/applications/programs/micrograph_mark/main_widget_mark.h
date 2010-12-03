@@ -85,7 +85,6 @@ private:
     // To balance the selfiles of a pair
     bool                __untilted_generated;
     bool                __tilted_generated;
-
 public:
     // Files to delete
     std::vector<FileName> __filesToDelete;
@@ -182,6 +181,9 @@ public:
 
     // Close window
     void closeEvent(QCloseEvent *event);
+
+    // Set output root
+    void setOutputRoot(const FileName &outputRoot);
 public slots:
     void slotAddCoordTilted(int _mX, int _mY, int _f);
     void slotAddCoordUntilted(int _mX, int _mY, int _f);

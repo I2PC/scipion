@@ -646,3 +646,11 @@ void QtMainWidgetMark::slotSaveCoords()
         __mWidget->file_menu()->slotSaveAngles();
     }
 }
+
+void QtMainWidgetMark::setOutputRoot(const FileName &outputRoot)
+{
+	__mWidget->setOutputRoot(outputRoot);
+    if (__mTiltedWidget != NULL)
+    	__mTiltedWidget->setOutputRoot(outputRoot);
+
+}

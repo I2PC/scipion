@@ -221,6 +221,7 @@ class AutoParticlePicking
 public:
     Micrograph                *__m;
     FileName                   __modelRootName;
+    FileName                   __outputRoot;
     int                        __numThreads;
     bool                       __learn_particles_done;
     bool                       __autoselection_done;
@@ -242,7 +243,7 @@ public:
     int                        __min_distance_between_particles;
     int                        __output_scale;
     int                        __reduction; // Of the piece with respect
-    // to the micrograph
+                                            // to the micrograph
     int                        __piece_overlap;
     int                        __scan_overlap;
     int                        __learn_overlap;
@@ -394,6 +395,9 @@ public:
     // Delete particle.
     // The input index is the index of the moved particle in the micrograph list
     void delete_particle(int _idx);
+
+    // Set output directory
+    void setOutputRoot(const FileName &outputRoot);
 };
 
 // AutomaticallySelectThreadParams
@@ -426,6 +430,7 @@ public:
     QVBoxLayout               *__gridLayout;
 #endif
 
+    FileName                   __outputRoot;
     QtFileMenu                *__file_menu;
     bool                       __tilted;
     int                        __mingray;
@@ -451,6 +456,15 @@ public:
     Micrograph *getMicrograph()
     {
         return(__m);
+    }
+
+    // Set Output Directory
+    void setOutputRoot(const FileName& outputRoot);
+
+    // Get Output Directory
+    const FileName& getOutputRoot() const
+    {
+    	return __outputRoot;
     }
 
     // Set this as tilted micrograph

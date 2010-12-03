@@ -362,6 +362,12 @@ void QtWidgetMicrograph::setMicrograph(Micrograph *_m)
     }
 }
 
+/* Set Output directory ---------------------------------------------------- */
+void QtWidgetMicrograph::setOutputRoot(const FileName& outputRoot)
+{
+	__outputRoot=outputRoot;
+}
+
 /* Set the class for automatic particle picking ---------------------------- */
 void QtWidgetMicrograph::setAutoParticlePicking(
     AutoParticlePicking *_autoPicking)
@@ -1531,6 +1537,11 @@ void QtWidgetMicrograph::slotRestrictSelection(float _cost)
     emit signalRepaint();
 }
 
+void AutoParticlePicking::setOutputRoot(const FileName &outputRoot)
+{
+	__outputRoot=outputRoot;
+}
+
 void AutoParticlePicking::restrictSelection(float _cost)
 {
     __minCost=_cost;
@@ -2612,7 +2623,7 @@ void AutoParticlePicking::loadModels(const FileName &fn)
 void AutoParticlePicking::saveAutoParticles()
 {
     if (__autoselection_done && __auto_label!=-1)
-        __m->write_coordinates(__auto_label, __minCost, __m->micrograph_name() +
+        __m->write_coordinates(__auto_label, __minCost, __outputRoot+
                                "."+__modelRootName.removeDirectories()+".pos");
 }
 
