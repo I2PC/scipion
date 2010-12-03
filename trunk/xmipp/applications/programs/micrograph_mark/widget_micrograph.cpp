@@ -519,7 +519,7 @@ void QtWidgetMicrograph::slotChangeCircleRadius()
 // Learn particles
 bool QtWidgetMicrograph::learnParticles()
 {
-    if (__ellipse_radius<12)
+    if (__ellipse_radius<12 && !__autoPicking->__is_model_loaded)
     {
         if (!QMessageBox::information(this, "Mark",
                                       (std::string)"The particle radius is "+
