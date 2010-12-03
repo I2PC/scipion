@@ -2644,12 +2644,8 @@ void AutoParticlePicking::loadModels(const FileName &fn)
 void AutoParticlePicking::saveAutoParticles()
 {
     if (__autoselection_done && __auto_label!=-1)
-    {
-        std::cout << "Writing at " << __outputRoot+
-        "."+__modelRootName.removeDirectories()+".pos" << std::endl;
         __m->write_coordinates(__auto_label, __minCost, __outputRoot+
                                "."+__modelRootName.removeDirectories()+".pos");
-    }
 }
 
 /* Save models ------------------------------------------------------------- */
