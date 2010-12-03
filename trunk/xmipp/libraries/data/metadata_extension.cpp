@@ -119,7 +119,7 @@ void mpiSelectPart(MetaData &md, int rank, int size, int &num_img_tot)
 
 void readMetaDataWithTwoPossibleImages(const FileName &fn, MetaData &MD)
 {
-    if (fn.isMetaData())
+    if (fn.isStar1(true))
         MD.read(fn);
     else
     {
