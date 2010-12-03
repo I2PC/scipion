@@ -212,9 +212,6 @@ void QtFileMenu::slotSaveCoords()
     }
 
     int activeFamily = ((QtWidgetMicrograph*)parentWidget())->activeFamily();
-    std::cout << "Aqui: " <<  ((QtWidgetMicrograph*)parentWidget())->getOutputRoot()+"."+
-            m->get_label(activeFamily) +
-            ".pos" << std::endl;
     m->write_coordinates(activeFamily,  -1,
     		             ((QtWidgetMicrograph*)parentWidget())->getOutputRoot()+"."+
                          m->get_label(activeFamily)+".pos");
