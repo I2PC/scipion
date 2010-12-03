@@ -120,13 +120,13 @@ FileName_compose(PyObject *obj, PyObject *args, PyObject *kwargs)
         }
         else if (n == 2 && PyArg_ParseTuple(args, "iO", &number, &input))
         {
-          pyStr = PyObject_Str(input);
-          if (pyStr != NULL)
-              str = PyString_AsString(pyStr);
+            pyStr = PyObject_Str(input);
+            if (pyStr != NULL)
+                str = PyString_AsString(pyStr);
             self->filename->compose(number, str);
         }
         else
-          return NULL;
+            return NULL;
     }
     Py_RETURN_NONE;//Return None(similar to void in C)
 }
@@ -135,128 +135,128 @@ FileName_compose(PyObject *obj, PyObject *args, PyObject *kwargs)
 static PyObject *
 FileName_isInStack(PyObject *obj, PyObject *args, PyObject *kwargs)
 {
-  FileNameObject *self = (FileNameObject*)obj;
+    FileNameObject *self = (FileNameObject*)obj;
 
-  if (self->filename->isInStack())
-    Py_RETURN_TRUE;
-  else
-    Py_RETURN_FALSE;
+    if (self->filename->isInStack())
+        Py_RETURN_TRUE;
+    else
+        Py_RETURN_FALSE;
 }
 
 /* isInStack */
 static PyObject *
 FileName_isMetaData(PyObject *obj, PyObject *args, PyObject *kwargs)
 {
-  FileNameObject *self = (FileNameObject*)obj;
+    FileNameObject *self = (FileNameObject*)obj;
 
-  if (self->filename->isMetaData(false))
-    Py_RETURN_TRUE;
-  else
-    Py_RETURN_FALSE;
+    if (self->filename->isMetaData(false))
+        Py_RETURN_TRUE;
+    else
+        Py_RETURN_FALSE;
 }
 
 static PyObject *
 FileName_getExtension(PyObject *obj, PyObject *args, PyObject *kwargs)
 {
-  FileNameObject *self = (FileNameObject*)obj;
+    FileNameObject *self = (FileNameObject*)obj;
 
-  return PyString_FromString(self->filename->getExtension().c_str());
+    return PyString_FromString(self->filename->getExtension().c_str());
 }
 
 static PyObject *
 FileName_getNumber(PyObject *obj, PyObject *args, PyObject *kwargs)
 {
-  FileNameObject *self = (FileNameObject*)obj;
+    FileNameObject *self = (FileNameObject*)obj;
 
-  return PyInt_FromLong(self->filename->getNumber());
+    return PyInt_FromLong(self->filename->getNumber());
 }
 
 static PyObject *
 FileName_getBaseName(PyObject *obj, PyObject *args, PyObject *kwargs)
 {
-  FileNameObject *self = (FileNameObject*)obj;
+    FileNameObject *self = (FileNameObject*)obj;
 
-  return PyString_FromString(self->filename->getBaseName().c_str());
+    return PyString_FromString(self->filename->getBaseName().c_str());
 }
 
 static PyObject *
 FileName_decompose(PyObject *obj, PyObject *args, PyObject *kwargs)
 {
-  FileNameObject *self = (FileNameObject*)obj;
-  int no;
-  String str;
-  self->filename->decompose(no, str);
-  return Py_BuildValue("is", no, str.c_str());
+    FileNameObject *self = (FileNameObject*)obj;
+    int no;
+    String str;
+    self->filename->decompose(no, str);
+    return Py_BuildValue("is", no, str.c_str());
 }
 
 /* FileName methods */
 static PyMethodDef FileName_methods[] = {
-    {"compose", (PyCFunction)FileName_compose, METH_VARARGS,
-     "Compose from root, number and extension OR prefix with number @"
-    },
-    {"isInStack", (PyCFunction)FileName_isInStack, METH_NOARGS,
-     "True if filename has stack format"
-    },
-    {"isMetaData", (PyCFunction)FileName_isMetaData, METH_NOARGS,
-     "True if is a MetaData"
-    },
-    {"getExtension", (PyCFunction)FileName_getExtension, METH_NOARGS,
-     "Get the last extension from a FileName"
-    },
-    {"getNumber", (PyCFunction)FileName_getNumber, METH_NOARGS,
-     "Get the number from a FileName"
-    },
-    {"getBaseName", (PyCFunction)FileName_getBaseName, METH_NOARGS,
-     "Get the base name from a FileName"
-    },
-    {"decompose", (PyCFunction)FileName_decompose, METH_NOARGS,
-     "Decompose filenames with @. Mainly from selfiles"
-    },
-    {NULL}  /* Sentinel */
-};
+                                            {"compose", (PyCFunction)FileName_compose, METH_VARARGS,
+                                             "Compose from root, number and extension OR prefix with number @"
+                                            },
+                                            {"isInStack", (PyCFunction)FileName_isInStack, METH_NOARGS,
+                                             "True if filename has stack format"
+                                            },
+                                            {"isMetaData", (PyCFunction)FileName_isMetaData, METH_NOARGS,
+                                             "True if is a MetaData"
+                                            },
+                                            {"getExtension", (PyCFunction)FileName_getExtension, METH_NOARGS,
+                                             "Get the last extension from a FileName"
+                                            },
+                                            {"getNumber", (PyCFunction)FileName_getNumber, METH_NOARGS,
+                                             "Get the number from a FileName"
+                                            },
+                                            {"getBaseName", (PyCFunction)FileName_getBaseName, METH_NOARGS,
+                                             "Get the base name from a FileName"
+                                            },
+                                            {"decompose", (PyCFunction)FileName_decompose, METH_NOARGS,
+                                             "Decompose filenames with @. Mainly from selfiles"
+                                            },
+                                            {NULL}  /* Sentinel */
+                                        };
 
 /*FileName Type */
 static PyTypeObject FileNameType = {
-   PyObject_HEAD_INIT(NULL)
-   0,                         /*ob_size*/
-   "xmipp.FileName",          /*tp_name*/
-   sizeof(FileNameObject),   /*tp_basicsize*/
-   0,                         /*tp_itemsize*/
-   (destructor)FileName_dealloc, /*tp_dealloc*/
-   0,                         /*tp_print*/
-   0,                         /*tp_getattr*/
-   0,                         /*tp_setattr*/
-   0,                         /*tp_compare*/
-   FileName_repr,             /*tp_repr*/
-   0,                         /*tp_as_number*/
-   0,                         /*tp_as_sequence*/
-   0,                         /*tp_as_mapping*/
-   0,                         /*tp_hash */
-   0,                         /*tp_call*/
-   0,                         /*tp_str*/
-   0,                         /*tp_getattro*/
-   0,                         /*tp_setattro*/
-   0,                         /*tp_as_buffer*/
-   Py_TPFLAGS_DEFAULT,        /*tp_flags*/
-   "Python wrapper to Xmipp FileName class",/* tp_doc */
-   0,                     /* tp_traverse */
-   0,                     /* tp_clear */
-   0,                     /* tp_richcompare */
-   0,                     /* tp_weaklistoffset */
-   0,                     /* tp_iter */
-   0,                     /* tp_iternext */
-   FileName_methods,  /* tp_methods */
-   0,                      /* tp_members */
-   0,                         /* tp_getset */
-   0,                         /* tp_base */
-   0,                         /* tp_dict */
-   0,                         /* tp_descr_get */
-   0,                         /* tp_descr_set */
-   0,                         /* tp_dictoffset */
-   0,                         /* tp_init */
-   0,                         /* tp_alloc */
-   FileName_new,                 /* tp_new */
-};
+                                       PyObject_HEAD_INIT(NULL)
+                                       0,                         /*ob_size*/
+                                       "xmipp.FileName",          /*tp_name*/
+                                       sizeof(FileNameObject),   /*tp_basicsize*/
+                                       0,                         /*tp_itemsize*/
+                                       (destructor)FileName_dealloc, /*tp_dealloc*/
+                                       0,                         /*tp_print*/
+                                       0,                         /*tp_getattr*/
+                                       0,                         /*tp_setattr*/
+                                       0,                         /*tp_compare*/
+                                       FileName_repr,             /*tp_repr*/
+                                       0,                         /*tp_as_number*/
+                                       0,                         /*tp_as_sequence*/
+                                       0,                         /*tp_as_mapping*/
+                                       0,                         /*tp_hash */
+                                       0,                         /*tp_call*/
+                                       0,                         /*tp_str*/
+                                       0,                         /*tp_getattro*/
+                                       0,                         /*tp_setattro*/
+                                       0,                         /*tp_as_buffer*/
+                                       Py_TPFLAGS_DEFAULT,        /*tp_flags*/
+                                       "Python wrapper to Xmipp FileName class",/* tp_doc */
+                                       0,                     /* tp_traverse */
+                                       0,                     /* tp_clear */
+                                       0,                     /* tp_richcompare */
+                                       0,                     /* tp_weaklistoffset */
+                                       0,                     /* tp_iter */
+                                       0,                     /* tp_iternext */
+                                       FileName_methods,  /* tp_methods */
+                                       0,                      /* tp_members */
+                                       0,                         /* tp_getset */
+                                       0,                         /* tp_base */
+                                       0,                         /* tp_dict */
+                                       0,                         /* tp_descr_get */
+                                       0,                         /* tp_descr_set */
+                                       0,                         /* tp_dictoffset */
+                                       0,                         /* tp_init */
+                                       0,                         /* tp_alloc */
+                                       FileName_new,                 /* tp_new */
+                                   };
 
 
 /***************************************************************/
@@ -286,60 +286,60 @@ MDQuery_repr(PyObject * obj)
     MDQueryObject *self = (MDQueryObject*)obj;
     if (self->query)
     {
-      String s = self->query->whereString() + self->query->limitString() + self->query->orderByString();
-      return PyString_FromString(s.c_str());
+        String s = self->query->whereString() + self->query->limitString() + self->query->orderByString();
+        return PyString_FromString(s.c_str());
     }
     else
-      return PyString_FromString("");
+        return PyString_FromString("");
 }
 
 /* MDQuery methods */
 static PyMethodDef MDQuery_methods[] = {
-    {NULL}  /* Sentinel */
-};
+                                           {NULL}  /* Sentinel */
+                                       };
 
 /*MDQuery Type */
 static PyTypeObject MDQueryType = {
-   PyObject_HEAD_INIT(NULL)
-   0,                         /*ob_size*/
-   "xmipp.MDQuery",          /*tp_name*/
-   sizeof(MDQueryObject),   /*tp_basicsize*/
-   0,                         /*tp_itemsize*/
-   (destructor)MDQuery_dealloc, /*tp_dealloc*/
-   0,                         /*tp_print*/
-   0,                         /*tp_getattr*/
-   0,                         /*tp_setattr*/
-   0,                         /*tp_compare*/
-   MDQuery_repr,             /*tp_repr*/
-   0,                         /*tp_as_number*/
-   0,                         /*tp_as_sequence*/
-   0,                         /*tp_as_mapping*/
-   0,                         /*tp_hash */
-   0,                         /*tp_call*/
-   0,                         /*tp_str*/
-   0,                         /*tp_getattro*/
-   0,                         /*tp_setattro*/
-   0,                         /*tp_as_buffer*/
-   Py_TPFLAGS_DEFAULT,        /*tp_flags*/
-   "Python wrapper to Xmipp MDQuery class",/* tp_doc */
-   0,                     /* tp_traverse */
-   0,                     /* tp_clear */
-   0,                     /* tp_richcompare */
-   0,                     /* tp_weaklistoffset */
-   0,                     /* tp_iter */
-   0,                     /* tp_iternext */
-   MDQuery_methods,  /* tp_methods */
-   0,                      /* tp_members */
-   0,                         /* tp_getset */
-   0,                         /* tp_base */
-   0,                         /* tp_dict */
-   0,                         /* tp_descr_get */
-   0,                         /* tp_descr_set */
-   0,                         /* tp_dictoffset */
-   0,                         /* tp_init */
-   0,                         /* tp_alloc */
-   0,                 /* tp_new */
-};
+                                      PyObject_HEAD_INIT(NULL)
+                                      0,                         /*ob_size*/
+                                      "xmipp.MDQuery",          /*tp_name*/
+                                      sizeof(MDQueryObject),   /*tp_basicsize*/
+                                      0,                         /*tp_itemsize*/
+                                      (destructor)MDQuery_dealloc, /*tp_dealloc*/
+                                      0,                         /*tp_print*/
+                                      0,                         /*tp_getattr*/
+                                      0,                         /*tp_setattr*/
+                                      0,                         /*tp_compare*/
+                                      MDQuery_repr,             /*tp_repr*/
+                                      0,                         /*tp_as_number*/
+                                      0,                         /*tp_as_sequence*/
+                                      0,                         /*tp_as_mapping*/
+                                      0,                         /*tp_hash */
+                                      0,                         /*tp_call*/
+                                      0,                         /*tp_str*/
+                                      0,                         /*tp_getattro*/
+                                      0,                         /*tp_setattro*/
+                                      0,                         /*tp_as_buffer*/
+                                      Py_TPFLAGS_DEFAULT,        /*tp_flags*/
+                                      "Python wrapper to Xmipp MDQuery class",/* tp_doc */
+                                      0,                     /* tp_traverse */
+                                      0,                     /* tp_clear */
+                                      0,                     /* tp_richcompare */
+                                      0,                     /* tp_weaklistoffset */
+                                      0,                     /* tp_iter */
+                                      0,                     /* tp_iternext */
+                                      MDQuery_methods,  /* tp_methods */
+                                      0,                      /* tp_members */
+                                      0,                         /* tp_getset */
+                                      0,                         /* tp_base */
+                                      0,                         /* tp_dict */
+                                      0,                         /* tp_descr_get */
+                                      0,                         /* tp_descr_set */
+                                      0,                         /* tp_dictoffset */
+                                      0,                         /* tp_init */
+                                      0,                         /* tp_alloc */
+                                      0,                 /* tp_new */
+                                  };
 
 
 /***************************************************************/
@@ -370,19 +370,19 @@ MetaData_new(PyTypeObject *type, PyObject *args, PyObject *kwargs);
 static int
 MetaData_print(PyObject *obj, FILE *fp, int flags)
 {
-  try
-  {
-    MetaDataObject *self = (MetaDataObject*)obj;
-    std::stringstream ss;
-    self->metadata->write(ss);
-    fprintf(fp, "%s", ss.str().c_str());
-    return 0;
-  }
-  catch (XmippError xe)
-  {
-    PyErr_SetString(PyXmippError, xe.msg.c_str());
-    return -1;
-  }
+    try
+    {
+        MetaDataObject *self = (MetaDataObject*)obj;
+        std::stringstream ss;
+        self->metadata->write(ss);
+        fprintf(fp, "%s", ss.str().c_str());
+        return 0;
+    }
+    catch (XmippError xe)
+    {
+        PyErr_SetString(PyXmippError, xe.msg.c_str());
+        return -1;
+    }
 }
 
 /* String representation */
@@ -406,22 +406,22 @@ MetaData_read(PyObject *obj, PyObject *args, PyObject *kwargs)
         int number = -1;
         if (PyArg_ParseTuple(args, "O", &input))
         {
-          try
-          {
-            if ((pyStr = PyObject_Str(input)) != NULL)
+            try
             {
-                str = PyString_AsString(pyStr);
-                self->metadata->read(str);
-                Py_RETURN_NONE;
+                if ((pyStr = PyObject_Str(input)) != NULL)
+                {
+                    str = PyString_AsString(pyStr);
+                    self->metadata->read(str);
+                    Py_RETURN_NONE;
+                }
+                else
+                    return NULL;
             }
-            else
-              return NULL;
-          }
-          catch (XmippError xe)
-          {
-            PyErr_SetString(PyXmippError, xe.msg.c_str());
-            return NULL;
-          }
+            catch (XmippError xe)
+            {
+                PyErr_SetString(PyXmippError, xe.msg.c_str());
+                return NULL;
+            }
         }
     }
     return NULL;
@@ -431,383 +431,383 @@ MetaData_read(PyObject *obj, PyObject *args, PyObject *kwargs)
 static PyObject *
 MetaData_write(PyObject *obj, PyObject *args, PyObject *kwargs)
 {
-  MetaDataObject *self = (MetaDataObject*)obj;
+    MetaDataObject *self = (MetaDataObject*)obj;
 
-  if (self != NULL)
-  {
-      PyObject *input = NULL, *pyStr = NULL;
-      char *str = NULL;
-      int number = -1;
-      if (PyArg_ParseTuple(args, "O", &input))
-      {
-        try
+    if (self != NULL)
+    {
+        PyObject *input = NULL, *pyStr = NULL;
+        char *str = NULL;
+        int number = -1;
+        if (PyArg_ParseTuple(args, "O", &input))
         {
-          if (PyString_Check(input))
-            self->metadata->write(PyString_AsString(input));
-          else if (FileName_Check(input))
-            self->metadata->write(FileName_Value(input));
-          else
-            return NULL;
-          Py_RETURN_NONE;
+            try
+            {
+                if (PyString_Check(input))
+                    self->metadata->write(PyString_AsString(input));
+                else if (FileName_Check(input))
+                    self->metadata->write(FileName_Value(input));
+                else
+                    return NULL;
+                Py_RETURN_NONE;
+            }
+            catch (XmippError xe)
+            {
+                PyErr_SetString(PyXmippError, xe.msg.c_str());
+                return NULL;
+            }
         }
-        catch (XmippError xe)
-        {
-          PyErr_SetString(PyXmippError, xe.msg.c_str());
-          return NULL;
-        }
-      }
-  }
-  return NULL;
+    }
+    return NULL;
 }
 /* append */
 static PyObject *
 MetaData_append(PyObject *obj, PyObject *args, PyObject *kwargs)
 {
-  MetaDataObject *self = (MetaDataObject*)obj;
+    MetaDataObject *self = (MetaDataObject*)obj;
 
-  if (self != NULL)
-  {
-      PyObject *input = NULL, *pyStr = NULL;
-      char *str = NULL;
-      int number = -1;
-      if (PyArg_ParseTuple(args, "O", &input))
-      {
-        try
+    if (self != NULL)
+    {
+        PyObject *input = NULL, *pyStr = NULL;
+        char *str = NULL;
+        int number = -1;
+        if (PyArg_ParseTuple(args, "O", &input))
         {
-          if (PyString_Check(input))
-            self->metadata->append(PyString_AsString(input));
-          else if (FileName_Check(input))
-            self->metadata->append(FileName_Value(input));
-          else
-            return NULL;
-          Py_RETURN_NONE;
+            try
+            {
+                if (PyString_Check(input))
+                    self->metadata->append(PyString_AsString(input));
+                else if (FileName_Check(input))
+                    self->metadata->append(FileName_Value(input));
+                else
+                    return NULL;
+                Py_RETURN_NONE;
+            }
+            catch (XmippError xe)
+            {
+                PyErr_SetString(PyXmippError, xe.msg.c_str());
+                return NULL;
+            }
         }
-        catch (XmippError xe)
-        {
-          PyErr_SetString(PyXmippError, xe.msg.c_str());
-          return NULL;
-        }
-      }
-  }
-  return NULL;
+    }
+    return NULL;
 }
 /* addObject */
 static PyObject *
 MetaData_addObject(PyObject *obj, PyObject *args, PyObject *kwargs)
 {
-  MetaDataObject *self = (MetaDataObject*)obj;
-  return PyLong_FromLong(self->metadata->addObject());
+    MetaDataObject *self = (MetaDataObject*)obj;
+    return PyLong_FromLong(self->metadata->addObject());
 }
 /* getActiveObject */
 static PyObject *
 MetaData_getActiveObject(PyObject *obj, PyObject *args, PyObject *kwargs)
 {
-  MetaDataObject *self = (MetaDataObject*)obj;
-  return PyLong_FromLong(self->metadata->getActiveObject());
+    MetaDataObject *self = (MetaDataObject*)obj;
+    return PyLong_FromLong(self->metadata->getActiveObject());
 }
 /* firstObject */
 static PyObject *
 MetaData_firstObject(PyObject *obj, PyObject *args, PyObject *kwargs)
 {
-  MetaDataObject *self = (MetaDataObject*)obj;
-  return PyLong_FromLong(self->metadata->firstObject());
+    MetaDataObject *self = (MetaDataObject*)obj;
+    return PyLong_FromLong(self->metadata->firstObject());
 }
 /* lastObject */
 static PyObject *
 MetaData_lastObject(PyObject *obj, PyObject *args, PyObject *kwargs)
 {
-  MetaDataObject *self = (MetaDataObject*)obj;
-  return PyLong_FromLong(self->metadata->lastObject());
+    MetaDataObject *self = (MetaDataObject*)obj;
+    return PyLong_FromLong(self->metadata->lastObject());
 }
 /* nextObject */
 static PyObject *
 MetaData_nextObject(PyObject *obj, PyObject *args, PyObject *kwargs)
 {
-  try
-  {
-    MetaDataObject *self = (MetaDataObject*)obj;
-    return PyLong_FromLong(self->metadata->nextObject());
-  }
-  catch (XmippError xe)
-  {
-    PyErr_SetString(PyXmippError, xe.msg.c_str());
-    return NULL;
-  }
+    try
+    {
+        MetaDataObject *self = (MetaDataObject*)obj;
+        return PyLong_FromLong(self->metadata->nextObject());
+    }
+    catch (XmippError xe)
+    {
+        PyErr_SetString(PyXmippError, xe.msg.c_str());
+        return NULL;
+    }
 }
 /* previousObject */
 static PyObject *
 MetaData_previousObject(PyObject *obj, PyObject *args, PyObject *kwargs)
 {
-  try
-  {
-    MetaDataObject *self = (MetaDataObject*)obj;
-    return PyLong_FromLong(self->metadata->previousObject());
-  }
-  catch (XmippError xe)
-  {
-    PyErr_SetString(PyXmippError, xe.msg.c_str());
-    return NULL;
-  }
+    try
+    {
+        MetaDataObject *self = (MetaDataObject*)obj;
+        return PyLong_FromLong(self->metadata->previousObject());
+    }
+    catch (XmippError xe)
+    {
+        PyErr_SetString(PyXmippError, xe.msg.c_str());
+        return NULL;
+    }
 }
 /* size */
 static PyObject *
 MetaData_size(PyObject *obj, PyObject *args, PyObject *kwargs)
 {
-  try
-  {
-    MetaDataObject *self = (MetaDataObject*)obj;
-    return PyLong_FromLong(self->metadata->size());
-  }
-  catch (XmippError xe)
-  {
-    PyErr_SetString(PyXmippError, xe.msg.c_str());
-    return NULL;
-  }
+    try
+    {
+        MetaDataObject *self = (MetaDataObject*)obj;
+        return PyLong_FromLong(self->metadata->size());
+    }
+    catch (XmippError xe)
+    {
+        PyErr_SetString(PyXmippError, xe.msg.c_str());
+        return NULL;
+    }
 }
 /* isEmpty */
 static PyObject *
 MetaData_isEmpty(PyObject *obj, PyObject *args, PyObject *kwargs)
 {
-  try
-  {
-    MetaDataObject *self = (MetaDataObject*)obj;
-    if (self->metadata->isEmpty())
-      Py_RETURN_TRUE;
-    else
-      Py_RETURN_FALSE;
-  }
-  catch (XmippError xe)
-  {
-    PyErr_SetString(PyXmippError, xe.msg.c_str());
-    return NULL;
-  }
+    try
+    {
+        MetaDataObject *self = (MetaDataObject*)obj;
+        if (self->metadata->isEmpty())
+            Py_RETURN_TRUE;
+        else
+            Py_RETURN_FALSE;
+    }
+    catch (XmippError xe)
+    {
+        PyErr_SetString(PyXmippError, xe.msg.c_str());
+        return NULL;
+    }
 }
 /* getColumnFormat */
 static PyObject *
 MetaData_getColumnFormat(PyObject *obj, PyObject *args, PyObject *kwargs)
 {
-  try
-  {
-    MetaDataObject *self = (MetaDataObject*)obj;
-    if (self->metadata->getColumnFormat())
-      Py_RETURN_TRUE;
-    else
-      Py_RETURN_FALSE;
-  }
-  catch (XmippError xe)
-  {
-    PyErr_SetString(PyXmippError, xe.msg.c_str());
-    return NULL;
-  }
+    try
+    {
+        MetaDataObject *self = (MetaDataObject*)obj;
+        if (self->metadata->getColumnFormat())
+            Py_RETURN_TRUE;
+        else
+            Py_RETURN_FALSE;
+    }
+    catch (XmippError xe)
+    {
+        PyErr_SetString(PyXmippError, xe.msg.c_str());
+        return NULL;
+    }
 }
 /* setColumnFormat */
 static PyObject *
 MetaData_setColumnFormat(PyObject *obj, PyObject *args, PyObject *kwargs)
 {
-  PyObject *input = NULL;
-  if (PyArg_ParseTuple(args, "O", &input))
-  {
-    try
+    PyObject *input = NULL;
+    if (PyArg_ParseTuple(args, "O", &input))
     {
-      if (PyBool_Check(input))
-      {
-        MetaDataObject *self = (MetaDataObject*)obj;
-        self->metadata->setColumnFormat(input == Py_True);
-        Py_RETURN_NONE;
-      }
-      else
-        PyErr_SetString(PyExc_TypeError, "MetaData::setColumnFormat: Expecting boolean value");
+        try
+        {
+            if (PyBool_Check(input))
+            {
+                MetaDataObject *self = (MetaDataObject*)obj;
+                self->metadata->setColumnFormat(input == Py_True);
+                Py_RETURN_NONE;
+            }
+            else
+                PyErr_SetString(PyExc_TypeError, "MetaData::setColumnFormat: Expecting boolean value");
+        }
+        catch (XmippError xe)
+        {
+            PyErr_SetString(PyXmippError, xe.msg.c_str());
+        }
     }
-    catch (XmippError xe)
-    {
-      PyErr_SetString(PyXmippError, xe.msg.c_str());
-    }
-  }
-  return NULL;
+    return NULL;
 }
 
 /* setValue */
 static PyObject *
 MetaData_setValue(PyObject *obj, PyObject *args, PyObject *kwargs)
 {
-  int label, objectId = -1;
-  PyObject *pyValue; //Only used to skip label and value
+    int label, objectId = -1;
+    PyObject *pyValue; //Only used to skip label and value
 
-  if (PyArg_ParseTuple(args, "iO|i", &label, &pyValue, &objectId))
-  {
-    try
+    if (PyArg_ParseTuple(args, "iO|i", &label, &pyValue, &objectId))
     {
-      MDObject * object = createMDObject(label, pyValue);
-      if (!object)
-        return NULL;
-      MetaDataObject *self = (MetaDataObject*)obj;
-      self->metadata->setValue(*object, objectId);
-      delete object;
-      Py_RETURN_TRUE;
+        try
+        {
+            MDObject * object = createMDObject(label, pyValue);
+            if (!object)
+                return NULL;
+            MetaDataObject *self = (MetaDataObject*)obj;
+            self->metadata->setValue(*object, objectId);
+            delete object;
+            Py_RETURN_TRUE;
+        }
+        catch (XmippError xe)
+        {
+            PyErr_SetString(PyXmippError, xe.msg.c_str());
+        }
     }
-    catch (XmippError xe)
-    {
-      PyErr_SetString(PyXmippError, xe.msg.c_str());
-    }
-  }
-  return NULL;
+    return NULL;
 }
 /* getValue */
 static PyObject *
 MetaData_getValue(PyObject *obj, PyObject *args, PyObject *kwargs)
 {
-  int label;
-  long int objectId = -1;
-  PyObject *pyValue;
+    int label;
+    long int objectId = -1;
+    PyObject *pyValue;
 
-  if (PyArg_ParseTuple(args, "i|l", &label, &objectId))
-  {
-    try
+    if (PyArg_ParseTuple(args, "i|l", &label, &objectId))
     {
-      MDObject * object = new MDObject((MDLabel)label);
-      MetaDataObject *self = (MetaDataObject*)obj;
-      if (self->metadata->getValue(*object, objectId))
-      {
-    	  pyValue = getMDObjectValue(object);
-    	  delete object;
-    	  return pyValue;
-      }
-      else
-      {
-    	  delete object;
-    	  Py_RETURN_NONE;
-      }
+        try
+        {
+            MDObject * object = new MDObject((MDLabel)label);
+            MetaDataObject *self = (MetaDataObject*)obj;
+            if (self->metadata->getValue(*object, objectId))
+            {
+                pyValue = getMDObjectValue(object);
+                delete object;
+                return pyValue;
+            }
+            else
+            {
+                delete object;
+                Py_RETURN_NONE;
+            }
+        }
+        catch (XmippError xe)
+        {
+            PyErr_SetString(PyXmippError, xe.msg.c_str());
+        }
     }
-    catch (XmippError xe)
-    {
-      PyErr_SetString(PyXmippError, xe.msg.c_str());
-    }
-  }
-  return NULL;
+    return NULL;
 }
 /* containsLabel */
 static PyObject *
 MetaData_containsLabel(PyObject *obj, PyObject *args, PyObject *kwargs)
 {
-  int label;
-  PyObject *pyValue;
-  if (PyArg_ParseTuple(args, "i", &label))
-  {
-    try
+    int label;
+    PyObject *pyValue;
+    if (PyArg_ParseTuple(args, "i", &label))
     {
-      MetaDataObject *self = (MetaDataObject*)obj;
-      if (self->metadata->containsLabel((MDLabel)label))
-    	  Py_RETURN_TRUE;
-      else
-    	  Py_RETURN_FALSE;
+        try
+        {
+            MetaDataObject *self = (MetaDataObject*)obj;
+            if (self->metadata->containsLabel((MDLabel)label))
+                Py_RETURN_TRUE;
+            else
+                Py_RETURN_FALSE;
+        }
+        catch (XmippError xe)
+        {
+            PyErr_SetString(PyXmippError, xe.msg.c_str());
+        }
     }
-    catch (XmippError xe)
-    {
-      PyErr_SetString(PyXmippError, xe.msg.c_str());
-    }
-  }
-  return NULL;
+    return NULL;
 }
 /* addLabel */
 static PyObject *
 MetaData_addLabel(PyObject *obj, PyObject *args, PyObject *kwargs)
 {
-  int label, pos = -1;
-  PyObject *pyValue;
-  if (PyArg_ParseTuple(args, "i|i", &label, &pos))
-  {
-    try
+    int label, pos = -1;
+    PyObject *pyValue;
+    if (PyArg_ParseTuple(args, "i|i", &label, &pos))
     {
-      MetaDataObject *self = (MetaDataObject*)obj;
-      self->metadata->addLabel((MDLabel)label);
-      Py_RETURN_TRUE;
+        try
+        {
+            MetaDataObject *self = (MetaDataObject*)obj;
+            self->metadata->addLabel((MDLabel)label);
+            Py_RETURN_TRUE;
+        }
+        catch (XmippError xe)
+        {
+            PyErr_SetString(PyXmippError, xe.msg.c_str());
+        }
     }
-    catch (XmippError xe)
-    {
-      PyErr_SetString(PyXmippError, xe.msg.c_str());
-    }
-  }
-  return NULL;
+    return NULL;
 }
 /* importObjects */
 static PyObject *
 MetaData_importObjects(PyObject *obj, PyObject *args, PyObject *kwargs)
 {
-  int label, objectId = -1;
-  PyObject *pyMd = NULL;
-  PyObject *pyQuery = NULL;
+    int label, objectId = -1;
+    PyObject *pyMd = NULL;
+    PyObject *pyQuery = NULL;
 
-  if (PyArg_ParseTuple(args, "OO", &pyMd, &pyQuery))
-  {
-    try
+    if (PyArg_ParseTuple(args, "OO", &pyMd, &pyQuery))
     {
-      //FIXME: if (!MetaData_Check(pyMd))
-      if (0)
-      {
-        PyErr_SetString(PyExc_TypeError, "MetaData::importObjects: Expecting MetaData as first arguments");
-        return NULL;
-      }
-      if (!MDQuery_Check(pyQuery))
-      {
-        PyErr_SetString(PyExc_TypeError, "MetaData::importObjects: Expecting MDQuery as second arguments");
-        return NULL;
-      }
-      MetaDataObject *self = (MetaDataObject*)obj;
-      self->metadata->importObjects(MetaData_Value(pyMd), MDQuery_Value(pyQuery));
-      Py_RETURN_NONE;
+        try
+        {
+            //FIXME: if (!MetaData_Check(pyMd))
+            if (0)
+            {
+                PyErr_SetString(PyExc_TypeError, "MetaData::importObjects: Expecting MetaData as first arguments");
+                return NULL;
+            }
+            if (!MDQuery_Check(pyQuery))
+            {
+                PyErr_SetString(PyExc_TypeError, "MetaData::importObjects: Expecting MDQuery as second arguments");
+                return NULL;
+            }
+            MetaDataObject *self = (MetaDataObject*)obj;
+            self->metadata->importObjects(MetaData_Value(pyMd), MDQuery_Value(pyQuery));
+            Py_RETURN_NONE;
+        }
+        catch (XmippError xe)
+        {
+            PyErr_SetString(PyXmippError, xe.msg.c_str());
+        }
     }
-    catch (XmippError xe)
-    {
-      PyErr_SetString(PyXmippError, xe.msg.c_str());
-    }
-  }
-  return NULL;
+    return NULL;
 }
 /* removeObjects */
 static PyObject *
 MetaData_removeObjects(PyObject *obj, PyObject *args, PyObject *kwargs)
 {
-  PyObject *pyQuery = NULL;
+    PyObject *pyQuery = NULL;
 
-  if (PyArg_ParseTuple(args, "O", &pyQuery))
-  {
-    try
+    if (PyArg_ParseTuple(args, "O", &pyQuery))
     {
-      if (!MDQuery_Check(pyQuery))
-      {
-        PyErr_SetString(PyExc_TypeError, "MetaData::removeObjects: Expecting MDQuery as second arguments");
-        return NULL;
-      }
-      MetaDataObject *self = (MetaDataObject*)obj;
-      self->metadata->removeObjects(MDQuery_Value(pyQuery));
-      Py_RETURN_NONE;
+        try
+        {
+            if (!MDQuery_Check(pyQuery))
+            {
+                PyErr_SetString(PyExc_TypeError, "MetaData::removeObjects: Expecting MDQuery as second arguments");
+                return NULL;
+            }
+            MetaDataObject *self = (MetaDataObject*)obj;
+            self->metadata->removeObjects(MDQuery_Value(pyQuery));
+            Py_RETURN_NONE;
+        }
+        catch (XmippError xe)
+        {
+            PyErr_SetString(PyXmippError, xe.msg.c_str());
+        }
     }
-    catch (XmippError xe)
-    {
-      PyErr_SetString(PyXmippError, xe.msg.c_str());
-    }
-  }
-  return NULL;
+    return NULL;
 }
 /* SingleImgSize */
 static PyObject *
 MetaData_makeAbsPath(PyObject *obj, PyObject *args, PyObject *kwargs)
 {
-  int label = (MDLabel)MDL_IMAGE;
-  if (PyArg_ParseTuple(args, "|i", &label))
-  {
-    try
+    int label = (MDLabel)MDL_IMAGE;
+    if (PyArg_ParseTuple(args, "|i", &label))
     {
-      MetaDataObject *self = (MetaDataObject*)obj;
-      self->metadata->makeAbsPath((MDLabel)label);
-      Py_RETURN_NONE;
+        try
+        {
+            MetaDataObject *self = (MetaDataObject*)obj;
+            self->metadata->makeAbsPath((MDLabel)label);
+            Py_RETURN_NONE;
+        }
+        catch (XmippError xe)
+        {
+            PyErr_SetString(PyXmippError, xe.msg.c_str());
+        }
     }
-    catch (XmippError xe)
-    {
-      PyErr_SetString(PyXmippError, xe.msg.c_str());
-    }
-  }
-  return NULL;
+    return NULL;
 }
 /** Iteration functions */
 static PyObject *
@@ -815,149 +815,174 @@ MetaData_iter(PyObject *obj)
 {
     try
     {
-      MetaDataObject *self = (MetaDataObject*)obj;
-      self->startedIter = true;
-      Py_INCREF(self);
-      return (PyObject *)self;
-      //return Py_BuildValue("l", self->metadata->iteratorBegin());
+        MetaDataObject *self = (MetaDataObject*)obj;
+        self->startedIter = true;
+        Py_INCREF(self);
+        return (PyObject *)self;
+        //return Py_BuildValue("l", self->metadata->iteratorBegin());
     }
     catch (XmippError xe)
     {
-      PyErr_SetString(PyXmippError, xe.msg.c_str());
+        PyErr_SetString(PyXmippError, xe.msg.c_str());
     }
-  return NULL;
+    return NULL;
 }
 static PyObject *
 MetaData_iternext(PyObject *obj)
 {
     try
     {
-      MetaDataObject *self = (MetaDataObject*)obj;
-      long objId;
-      if (self->startedIter)
-      {
-        objId = self->metadata->iteratorBegin();
-        self->startedIter = false;
-      }
-      else
-        objId = self->metadata->iteratorNext();
-      if (self->metadata->iteratorEnd())
-        return NULL;
-      return Py_BuildValue("l", objId);
+        MetaDataObject *self = (MetaDataObject*)obj;
+        long objId;
+        if (self->startedIter)
+        {
+            objId = self->metadata->iteratorBegin();
+            self->startedIter = false;
+        }
+        else
+            objId = self->metadata->iteratorNext();
+        if (self->metadata->iteratorEnd())
+            return NULL;
+        return Py_BuildValue("l", objId);
     }
     catch (XmippError xe)
     {
-      PyErr_SetString(PyXmippError, xe.msg.c_str());
+        PyErr_SetString(PyXmippError, xe.msg.c_str());
     }
-  return NULL;
+    return NULL;
+}
+/** Sort Metadata */
+static PyObject *
+MetaData_sort(PyObject *obj, PyObject *args, PyObject *kwargs)
+{
+    int label = (MDLabel)MDL_IMAGE;
+    if (PyArg_ParseTuple(args, "|i", &label))
+    {
+        try
+        {
+            MetaDataObject *self = (MetaDataObject*)obj;
+            MetaData MDaux=*(self->metadata);
+            self->metadata->clear();
+            self->metadata->sort(MDaux,(MDLabel)label);
+            Py_RETURN_NONE;
+        }
+        catch (XmippError xe)
+        {
+            PyErr_SetString(PyXmippError, xe.msg.c_str());
+        }
+    }
+    return NULL;
 }
 /* MetaData methods */
 static PyMethodDef MetaData_methods[] = {
-    {"read", (PyCFunction)MetaData_read, METH_VARARGS,
-     "Read data from file"
-    },
-    {"write", (PyCFunction)MetaData_write, METH_VARARGS,
-     "Write MetaData content to disk"
-    },
-    {"append", (PyCFunction)MetaData_append, METH_VARARGS,
-     "Append MetaData content to disk"
-    },
-    {"addObject", (PyCFunction)MetaData_addObject, METH_NOARGS,
-     "Add a new object and return its id"
-    },
-    {"getActiveObject", (PyCFunction)MetaData_getActiveObject, METH_NOARGS,
-     "Return active object id"
-    },
-    {"firstObject", (PyCFunction)MetaData_firstObject, METH_NOARGS,
-     "Goto first metadata object, return its object id"
-    },
-    {"lastObject", (PyCFunction)MetaData_lastObject, METH_NOARGS,
-     "Goto last metadata object, return its object id"
-    },
-    {"nextObject", (PyCFunction)MetaData_nextObject, METH_NOARGS,
-     "Goto next object to the active object"
-    },
-    {"previousObject", (PyCFunction)MetaData_previousObject, METH_NOARGS,
-     "Goto previous object to the active object"
-    },
-    {"size", (PyCFunction)MetaData_size, METH_NOARGS,
-     "Return number of objects in MetaData"
-    },
-    {"isEmpty", (PyCFunction)MetaData_isEmpty, METH_NOARGS,
-     "Check whether the MetaData is empty"
-    },
-    {"getColumnFormat", (PyCFunction)MetaData_getColumnFormat, METH_NOARGS,
-     "Get column format info"
-    },
-    {"setColumnFormat", (PyCFunction)MetaData_setColumnFormat, METH_VARARGS,
-     "Set column format info"
-    },
-    {"setValue", (PyCFunction)MetaData_setValue, METH_VARARGS,
-     "Set the value for column(label)"
-    },
-    {"getValue", (PyCFunction)MetaData_getValue, METH_VARARGS,
-     "Get the value for column(label)"
-    },
-    {"containsLabel", (PyCFunction)MetaData_containsLabel, METH_VARARGS,
-     "True if this metadata contains this label"
-    },
-    {"addLabel", (PyCFunction)MetaData_addLabel, METH_VARARGS,
-     "Add a new label to MetaData"
-    },
-    {"makeAbsPath", (PyCFunction)MetaData_makeAbsPath, METH_VARARGS,
-     "Make filenames with absolute paths"
-    },
-    {"importObjects", (PyCFunction)MetaData_importObjects, METH_VARARGS,
-     "Import objects from another metadata"
-    },
-    {"removeObjects", (PyCFunction)MetaData_removeObjects, METH_VARARGS,
-     "Remove objects from metadata"
-    },
-    {NULL}  /* Sentinel */
-};
+                                            {"read", (PyCFunction)MetaData_read, METH_VARARGS,
+                                             "Read data from file"
+                                            },
+                                            {"write", (PyCFunction)MetaData_write, METH_VARARGS,
+                                             "Write MetaData content to disk"
+                                            },
+                                            {"append", (PyCFunction)MetaData_append, METH_VARARGS,
+                                             "Append MetaData content to disk"
+                                            },
+                                            {"addObject", (PyCFunction)MetaData_addObject, METH_NOARGS,
+                                             "Add a new object and return its id"
+                                            },
+                                            {"getActiveObject", (PyCFunction)MetaData_getActiveObject, METH_NOARGS,
+                                             "Return active object id"
+                                            },
+                                            {"firstObject", (PyCFunction)MetaData_firstObject, METH_NOARGS,
+                                             "Goto first metadata object, return its object id"
+                                            },
+                                            {"lastObject", (PyCFunction)MetaData_lastObject, METH_NOARGS,
+                                             "Goto last metadata object, return its object id"
+                                            },
+                                            {"nextObject", (PyCFunction)MetaData_nextObject, METH_NOARGS,
+                                             "Goto next object to the active object"
+                                            },
+                                            {"previousObject", (PyCFunction)MetaData_previousObject, METH_NOARGS,
+                                             "Goto previous object to the active object"
+                                            },
+                                            {"size", (PyCFunction)MetaData_size, METH_NOARGS,
+                                             "Return number of objects in MetaData"
+                                            },
+                                            {"isEmpty", (PyCFunction)MetaData_isEmpty, METH_NOARGS,
+                                             "Check whether the MetaData is empty"
+                                            },
+                                            {"getColumnFormat", (PyCFunction)MetaData_getColumnFormat, METH_NOARGS,
+                                             "Get column format info"
+                                            },
+                                            {"setColumnFormat", (PyCFunction)MetaData_setColumnFormat, METH_VARARGS,
+                                             "Set column format info"
+                                            },
+                                            {"setValue", (PyCFunction)MetaData_setValue, METH_VARARGS,
+                                             "Set the value for column(label)"
+                                            },
+                                            {"getValue", (PyCFunction)MetaData_getValue, METH_VARARGS,
+                                             "Get the value for column(label)"
+                                            },
+                                            {"containsLabel", (PyCFunction)MetaData_containsLabel, METH_VARARGS,
+                                             "True if this metadata contains this label"
+                                            },
+                                            {"addLabel", (PyCFunction)MetaData_addLabel, METH_VARARGS,
+                                             "Add a new label to MetaData"
+                                            },
+                                            {"makeAbsPath", (PyCFunction)MetaData_makeAbsPath, METH_VARARGS,
+                                             "Make filenames with absolute paths"
+                                            },
+                                            {"importObjects", (PyCFunction)MetaData_importObjects, METH_VARARGS,
+                                             "Import objects from another metadata"
+                                            },
+                                            {"removeObjects", (PyCFunction)MetaData_removeObjects, METH_VARARGS,
+                                             "Remove objects from metadata"
+                                            },
+                                            {"sort", (PyCFunction)MetaData_sort, METH_VARARGS,
+                                             "Sort metadata according to a label"
+                                            },
+                                            {NULL}  /* Sentinel */
+                                        };
 
 /*MetaData Type */
 static PyTypeObject MetaDataType = {
-   PyObject_HEAD_INIT(NULL)
-   0,                         /*ob_size*/
-   "xmipp.MetaData",          /*tp_name*/
-   sizeof(MetaDataObject),   /*tp_basicsize*/
-   0,                         /*tp_itemsize*/
-   (destructor)MetaData_dealloc, /*tp_dealloc*/
-   MetaData_print,               /*tp_print*/
-   0,                         /*tp_getattr*/
-   0,                         /*tp_setattr*/
-   0,                         /*tp_compare*/
-   MetaData_repr,             /*tp_repr*/
-   0,                         /*tp_as_number*/
-   0,                         /*tp_as_sequence*/
-   0,                         /*tp_as_mapping*/
-   0,                         /*tp_hash */
-   0,                         /*tp_call*/
-   0,                         /*tp_str*/
-   0,                         /*tp_getattro*/
-   0,                         /*tp_setattro*/
-   0,                         /*tp_as_buffer*/
-   Py_TPFLAGS_DEFAULT | Py_TPFLAGS_HAVE_ITER,    /*tp_flags*/
-   "Python wrapper to Xmipp MetaData class",/* tp_doc */
-   0,                     /* tp_traverse */
-   0,                     /* tp_clear */
-   0,                     /* tp_richcompare */
-   0,                     /* tp_weaklistoffset */
-   MetaData_iter,         /* tp_iter */
-   MetaData_iternext,     /* tp_iternext */
-   MetaData_methods,  /* tp_methods */
-   0,                      /* tp_members */
-   0,                         /* tp_getset */
-   0,                         /* tp_base */
-   0,                         /* tp_dict */
-   0,                         /* tp_descr_get */
-   0,                         /* tp_descr_set */
-   0,                         /* tp_dictoffset */
-   0,                         /* tp_init */
-   0,                         /* tp_alloc */
-   MetaData_new,                 /* tp_new */
-};
+                                       PyObject_HEAD_INIT(NULL)
+                                       0,                         /*ob_size*/
+                                       "xmipp.MetaData",          /*tp_name*/
+                                       sizeof(MetaDataObject),   /*tp_basicsize*/
+                                       0,                         /*tp_itemsize*/
+                                       (destructor)MetaData_dealloc, /*tp_dealloc*/
+                                       MetaData_print,               /*tp_print*/
+                                       0,                         /*tp_getattr*/
+                                       0,                         /*tp_setattr*/
+                                       0,                         /*tp_compare*/
+                                       MetaData_repr,             /*tp_repr*/
+                                       0,                         /*tp_as_number*/
+                                       0,                         /*tp_as_sequence*/
+                                       0,                         /*tp_as_mapping*/
+                                       0,                         /*tp_hash */
+                                       0,                         /*tp_call*/
+                                       0,                         /*tp_str*/
+                                       0,                         /*tp_getattro*/
+                                       0,                         /*tp_setattro*/
+                                       0,                         /*tp_as_buffer*/
+                                       Py_TPFLAGS_DEFAULT | Py_TPFLAGS_HAVE_ITER,    /*tp_flags*/
+                                       "Python wrapper to Xmipp MetaData class",/* tp_doc */
+                                       0,                     /* tp_traverse */
+                                       0,                     /* tp_clear */
+                                       0,                     /* tp_richcompare */
+                                       0,                     /* tp_weaklistoffset */
+                                       MetaData_iter,         /* tp_iter */
+                                       MetaData_iternext,     /* tp_iternext */
+                                       MetaData_methods,  /* tp_methods */
+                                       0,                      /* tp_members */
+                                       0,                         /* tp_getset */
+                                       0,                         /* tp_base */
+                                       0,                         /* tp_dict */
+                                       0,                         /* tp_descr_get */
+                                       0,                         /* tp_descr_set */
+                                       0,                         /* tp_dictoffset */
+                                       0,                         /* tp_init */
+                                       0,                         /* tp_alloc */
+                                       MetaData_new,                 /* tp_new */
+                                   };
 
 PyObject *
 MetaData_new(PyTypeObject *type, PyObject *args, PyObject *kwargs)
@@ -970,26 +995,26 @@ MetaData_new(PyTypeObject *type, PyObject *args, PyObject *kwargs)
         PyArg_ParseTuple(args, "|O", &input);
         if (input != NULL)
         {
-          try
-          {
-            if (MetaData_Check(input))
-              self->metadata = new MetaData(MetaData_Value(input));
-            else if (PyString_Check(input))
-              self->metadata = new MetaData(PyString_AsString(input));
-            else if (FileName_Check(input))
-              self->metadata = new MetaData(FileName_Value(input));
-            else
-              return NULL;
-          }
-          catch (XmippError xe)
-          {
-            PyErr_SetString(PyXmippError, xe.msg.c_str());
-            return NULL;
-          }
+            try
+            {
+                if (MetaData_Check(input))
+                    self->metadata = new MetaData(MetaData_Value(input));
+                else if (PyString_Check(input))
+                    self->metadata = new MetaData(PyString_AsString(input));
+                else if (FileName_Check(input))
+                    self->metadata = new MetaData(FileName_Value(input));
+                else
+                    return NULL;
+            }
+            catch (XmippError xe)
+            {
+                PyErr_SetString(PyXmippError, xe.msg.c_str());
+                return NULL;
+            }
         }
         else
         {
-          self->metadata = new MetaData();
+            self->metadata = new MetaData();
         }
     }
     self->startedIter = false;
@@ -999,81 +1024,81 @@ MetaData_new(PyTypeObject *type, PyObject *args, PyObject *kwargs)
 MDObject *
 createMDObject(int label, PyObject *pyValue)
 {
-  try
-  {
-    if (PyInt_Check(pyValue))
+    try
     {
-      int iValue = PyInt_AS_LONG(pyValue);
-      RETURN_MDOBJECT(iValue);
-    }
-    if (PyString_Check(pyValue))
-    {
-      RETURN_MDOBJECT(std::string(PyString_AsString(pyValue)));
-    }
-    if (FileName_Check(pyValue))
-    {
-      RETURN_MDOBJECT(*((FileNameObject*)pyValue)->filename);
-    }
-    if (PyFloat_Check(pyValue))
-    {
-      double dValue = PyFloat_AS_DOUBLE(pyValue);
-      RETURN_MDOBJECT(double(dValue));
-    }
-    if (PyBool_Check(pyValue))
-    {
-      bool bValue = (pyValue == Py_True);
-      RETURN_MDOBJECT(bValue);
-    }
-    if (PyList_Check(pyValue))
-    {
-      size_t size = PyList_Size(pyValue);
-      PyObject * item = NULL;
-      double dValue = 0.;
-      std::vector<double> vValue((size_t)size);
-      for (size_t i = 0; i < size; ++i)
-      {
-        item = PyList_GET_ITEM(pyValue, i);
-        if (!PyFloat_Check(pyValue))
+        if (PyInt_Check(pyValue))
         {
-          PyErr_SetString(PyExc_TypeError, "Vectors are only supported for double");
-          return NULL;
+            int iValue = PyInt_AS_LONG(pyValue);
+            RETURN_MDOBJECT(iValue);
         }
-        dValue = PyFloat_AS_DOUBLE(item);
-        vValue.push_back(dValue);
-      }
-      RETURN_MDOBJECT(vValue);
+        if (PyString_Check(pyValue))
+        {
+            RETURN_MDOBJECT(std::string(PyString_AsString(pyValue)));
+        }
+        if (FileName_Check(pyValue))
+        {
+            RETURN_MDOBJECT(*((FileNameObject*)pyValue)->filename);
+        }
+        if (PyFloat_Check(pyValue))
+        {
+            double dValue = PyFloat_AS_DOUBLE(pyValue);
+            RETURN_MDOBJECT(double(dValue));
+        }
+        if (PyBool_Check(pyValue))
+        {
+            bool bValue = (pyValue == Py_True);
+            RETURN_MDOBJECT(bValue);
+        }
+        if (PyList_Check(pyValue))
+        {
+            size_t size = PyList_Size(pyValue);
+            PyObject * item = NULL;
+            double dValue = 0.;
+            std::vector<double> vValue((size_t)size);
+            for (size_t i = 0; i < size; ++i)
+            {
+                item = PyList_GET_ITEM(pyValue, i);
+                if (!PyFloat_Check(pyValue))
+                {
+                    PyErr_SetString(PyExc_TypeError, "Vectors are only supported for double");
+                    return NULL;
+                }
+                dValue = PyFloat_AS_DOUBLE(item);
+                vValue.push_back(dValue);
+            }
+            RETURN_MDOBJECT(vValue);
+        }
+        PyErr_SetString(PyExc_TypeError, "Unrecognized type to create MDObject");
     }
-    PyErr_SetString(PyExc_TypeError, "Unrecognized type to create MDObject");
-  }
-  catch (XmippError xe)
-  {
-    PyErr_SetString(PyXmippError, xe.msg.c_str());
-  }
-  return NULL;
+    catch (XmippError xe)
+    {
+        PyErr_SetString(PyXmippError, xe.msg.c_str());
+    }
+    return NULL;
 }
 
 static PyObject *
 getMDObjectValue(MDObject * obj)
 {
-  if (obj->label == MDL_UNDEFINED) //if undefine label, store as a literal string
-      return NULL;
+    if (obj->label == MDL_UNDEFINED) //if undefine label, store as a literal string
+        return NULL;
     switch (MDL::labelType(obj->label))
     {
-      case LABEL_BOOL: //bools are int in sqlite3
-          if (obj->data.boolValue)
+    case LABEL_BOOL: //bools are int in sqlite3
+        if (obj->data.boolValue)
             Py_RETURN_TRUE;
-          else
+        else
             Py_RETURN_FALSE;
-      case LABEL_INT:
-          return PyLong_FromLong(obj->data.intValue);
-      case LABEL_LONG:
+    case LABEL_INT:
+        return PyLong_FromLong(obj->data.intValue);
+    case LABEL_LONG:
         return PyLong_FromLong(obj->data.longintValue);
-      case LABEL_DOUBLE:
-          return PyFloat_FromDouble(obj->data.doubleValue);
-      case LABEL_STRING:
-          return PyString_FromString(obj->data.stringValue->c_str());
-      case LABEL_VECTOR:
-         return NULL;//FIXME: Not implemented now
+    case LABEL_DOUBLE:
+        return PyFloat_FromDouble(obj->data.doubleValue);
+    case LABEL_STRING:
+        return PyString_FromString(obj->data.stringValue->c_str());
+    case LABEL_VECTOR:
+        return NULL;//FIXME: Not implemented now
     }//close switch
     return NULL;
 }
@@ -1085,56 +1110,57 @@ getMDObjectValue(MDObject * obj)
 static PyObject *
 xmipp_str2Label(PyObject *obj,PyObject *args)
 {
-  char * str;
-  if (PyArg_ParseTuple(args, "s", &str))
-    return Py_BuildValue("i", (int)MDL::str2Label(str));
-  return NULL;
+    char * str;
+    if (PyArg_ParseTuple(args, "s", &str))
+        return Py_BuildValue("i", (int)MDL::str2Label(str));
+    return NULL;
 }
 
 static PyObject *
 xmipp_label2Str(PyObject *obj, PyObject *args)
 {
-  int label;
-  if (PyArg_ParseTuple(args, "i", &label))
-  {
-    String labelStr = MDL::label2Str((MDLabel)label);
-    return PyString_FromString(labelStr.c_str());
-  }
-  return NULL;
+    int label;
+    if (PyArg_ParseTuple(args, "i", &label))
+    {
+        String labelStr = MDL::label2Str((MDLabel)label);
+        return PyString_FromString(labelStr.c_str());
+    }
+    return NULL;
 }
 
 static PyObject *
 xmipp_labelType(PyObject *obj,PyObject *args)
 {
-  PyObject * input;
-  if (PyArg_ParseTuple(args, "O", &input))
-  {
-    if (PyString_Check(input))
-      return Py_BuildValue("i", (int)MDL::labelType(PyString_AsString(input)));
-    else if (PyInt_Check(input))
-      return Py_BuildValue("i", (int)MDL::labelType((MDLabel)PyInt_AsLong(input)));
-    else
-      PyErr_SetString(PyExc_TypeError, "labelType: Only int or string are allowed as input");
-  }
-  return NULL;
+    PyObject * input;
+    if (PyArg_ParseTuple(args, "O", &input))
+    {
+        if (PyString_Check(input))
+            return Py_BuildValue("i", (int)MDL::labelType(PyString_AsString(input)));
+        else if (PyInt_Check(input))
+            return Py_BuildValue("i", (int)MDL::labelType((MDLabel)PyInt_AsLong(input)));
+        else
+            PyErr_SetString(PyExc_TypeError, "labelType: Only int or string are allowed as input");
+    }
+    return NULL;
 }
 
 /* isInStack */
 static PyObject *
 xmipp_isValidLabel(PyObject *obj, PyObject *args, PyObject *kwargs)
 {
-  char *str;
-  int label;
-  if (PyArg_ParseTuple(args, "s", &str))
-    label = MDL::str2Label(str);
-  else
-    if (PyArg_ParseTuple(args, "i", &label));
-  else
-    return NULL;
-  if (MDL::isValidLabel((MDLabel)label))
-    Py_RETURN_TRUE;
-  else
-    Py_RETURN_FALSE;
+    char *str;
+    int label;
+    if (PyArg_ParseTuple(args, "s", &str))
+        label = MDL::str2Label(str);
+    else
+        if (PyArg_ParseTuple(args, "i", &label))
+            ;
+        else
+            return NULL;
+    if (MDL::isValidLabel((MDLabel)label))
+        Py_RETURN_TRUE;
+    else
+        Py_RETURN_FALSE;
 }
 
 /* Methods for constructing concrete queries */
@@ -1143,191 +1169,191 @@ xmipp_isValidLabel(PyObject *obj, PyObject *args, PyObject *kwargs)
 static PyObject *
 createMDValueRelational(PyObject *args, int op)
 {
-  int label, limit = -1, offset = 0, orderLabel=(int)MDL_OBJID;
-  PyObject *pyValue; //Only used to skip label and value
+    int label, limit = -1, offset = 0, orderLabel=(int)MDL_OBJID;
+    PyObject *pyValue; //Only used to skip label and value
 
-  if ((op == -1 && PyArg_ParseTuple(args, "iO|iiii", &label, &pyValue, &op, &limit, &offset, &orderLabel))
-      ||PyArg_ParseTuple(args, "iO|iii", &label, &pyValue, &limit, &offset, &orderLabel))
-  {
-    MDObject * object = createMDObject(label, pyValue);
-    if (!object)
-      return NULL;
-    MDQueryObject * pyQuery = PyObject_New(MDQueryObject, &MDQueryType);
-    pyQuery->query = new MDValueRelational(*object, (RelationalOp)op, limit, offset, (MDLabel)orderLabel);
-    delete object;
-    return (PyObject *) pyQuery;
-  }
-  return NULL;
+    if ((op == -1 && PyArg_ParseTuple(args, "iO|iiii", &label, &pyValue, &op, &limit, &offset, &orderLabel))
+        ||PyArg_ParseTuple(args, "iO|iii", &label, &pyValue, &limit, &offset, &orderLabel))
+    {
+        MDObject * object = createMDObject(label, pyValue);
+        if (!object)
+            return NULL;
+        MDQueryObject * pyQuery = PyObject_New(MDQueryObject, &MDQueryType);
+        pyQuery->query = new MDValueRelational(*object, (RelationalOp)op, limit, offset, (MDLabel)orderLabel);
+        delete object;
+        return (PyObject *) pyQuery;
+    }
+    return NULL;
 }
 /* MDValue Relational */
 static PyObject *
 xmipp_MDValueRelational(PyObject *obj, PyObject *args, PyObject *kwargs)
 {
-  return createMDValueRelational(args, -1);
+    return createMDValueRelational(args, -1);
 }
 /* MDValueEQ */
 static PyObject *
 xmipp_MDValueEQ(PyObject *obj, PyObject *args, PyObject *kwargs)
 {
-  return createMDValueRelational(args, EQ);
+    return createMDValueRelational(args, EQ);
 }
 /* MDValueEQ */
 static PyObject *
 xmipp_MDValueNE(PyObject *obj, PyObject *args, PyObject *kwargs)
 {
-  return createMDValueRelational(args, NE);
+    return createMDValueRelational(args, NE);
 }
 /* MDValueLT */
 static PyObject *
 xmipp_MDValueLT(PyObject *obj, PyObject *args, PyObject *kwargs)
 {
-  return createMDValueRelational(args, LT);
+    return createMDValueRelational(args, LT);
 }
 /* MDValueLE */
 static PyObject *
 xmipp_MDValueLE(PyObject *obj, PyObject *args, PyObject *kwargs)
 {
-  return createMDValueRelational(args, LE);
+    return createMDValueRelational(args, LE);
 }
 /* MDValueLT */
 static PyObject *
 xmipp_MDValueGT(PyObject *obj, PyObject *args, PyObject *kwargs)
 {
-  return createMDValueRelational(args, GT);
+    return createMDValueRelational(args, GT);
 }
 /* MDValueLE */
 static PyObject *
 xmipp_MDValueGE(PyObject *obj, PyObject *args, PyObject *kwargs)
 {
-  return createMDValueRelational(args, GE);
+    return createMDValueRelational(args, GE);
 }
 /* MDValueRange */
 static PyObject *
 xmipp_MDValueRange(PyObject *obj, PyObject *args, PyObject *kwargs)
 {
-  int label, limit = -1, offset = 0, orderLabel=(int)MDL_OBJID;
-  PyObject *pyValue1, *pyValue2; //Only used to skip label and value
+    int label, limit = -1, offset = 0, orderLabel=(int)MDL_OBJID;
+    PyObject *pyValue1, *pyValue2; //Only used to skip label and value
 
-  if (PyArg_ParseTuple(args, "iOO|iii", &label, &pyValue1, &pyValue2, &limit, &offset, &orderLabel))
-  {
-    MDObject * object1 = createMDObject(label, pyValue1);
-    MDObject * object2 = createMDObject(label, pyValue2);
-    if (!object1 || !object2)
-      return NULL;
-    MDQueryObject * pyQuery = PyObject_New(MDQueryObject, &MDQueryType);
-    pyQuery->query = new MDValueRange(*object1, *object2, limit, offset, (MDLabel)orderLabel);
-    delete object1;
-    delete object2;
-    return (PyObject *) pyQuery;
-  }
-  return NULL;
+    if (PyArg_ParseTuple(args, "iOO|iii", &label, &pyValue1, &pyValue2, &limit, &offset, &orderLabel))
+    {
+        MDObject * object1 = createMDObject(label, pyValue1);
+        MDObject * object2 = createMDObject(label, pyValue2);
+        if (!object1 || !object2)
+            return NULL;
+        MDQueryObject * pyQuery = PyObject_New(MDQueryObject, &MDQueryType);
+        pyQuery->query = new MDValueRange(*object1, *object2, limit, offset, (MDLabel)orderLabel);
+        delete object1;
+        delete object2;
+        return (PyObject *) pyQuery;
+    }
+    return NULL;
 }
 /* SingleImgSize */
 static PyObject *
 xmipp_SingleImgSize(PyObject *obj, PyObject *args, PyObject *kwargs)
 {
-  PyObject *pyValue; //Only used to skip label and value
+    PyObject *pyValue; //Only used to skip label and value
 
-  if (PyArg_ParseTuple(args, "O", &pyValue))
-  {
-    try
+    if (PyArg_ParseTuple(args, "O", &pyValue))
     {
-      PyObject * pyStr = PyObject_Str(pyValue);
-      char * str = PyString_AsString(pyStr);
-      int xdim, ydim, zdim;
-      unsigned long ndim;
-      SingleImgSize(str, xdim, ydim, zdim, ndim);
-      Py_DECREF(pyStr);
-      return Py_BuildValue("iiik", xdim, ydim, zdim, ndim);
+        try
+        {
+            PyObject * pyStr = PyObject_Str(pyValue);
+            char * str = PyString_AsString(pyStr);
+            int xdim, ydim, zdim;
+            unsigned long ndim;
+            SingleImgSize(str, xdim, ydim, zdim, ndim);
+            Py_DECREF(pyStr);
+            return Py_BuildValue("iiik", xdim, ydim, zdim, ndim);
+        }
+        catch (XmippError xe)
+        {
+            PyErr_SetString(PyXmippError, xe.msg.c_str());
+        }
     }
-    catch (XmippError xe)
-    {
-      PyErr_SetString(PyXmippError, xe.msg.c_str());
-    }
-  }
-  return NULL;
+    return NULL;
 }
 /* readMetaDataWithTwoPossibleImages */
 static PyObject *
 xmipp_readMetaDataWithTwoPossibleImages(PyObject *obj, PyObject *args, PyObject *kwargs)
 {
-  PyObject *pyStr, *pyMd; //Only used to skip label and value
+    PyObject *pyStr, *pyMd; //Only used to skip label and value
 
-  if (PyArg_ParseTuple(args, "OO", &pyStr, &pyMd))
-  {
-    try
+    if (PyArg_ParseTuple(args, "OO", &pyStr, &pyMd))
     {
-      if (!MetaData_Check(pyMd))
-        PyErr_SetString(PyExc_TypeError, "Expected MetaData as second argument");
-      else
-      {
-        if (PyString_Check(pyStr))
-          readMetaDataWithTwoPossibleImages(PyString_AsString(pyStr), MetaData_Value(pyMd));
-        else if (FileName_Check(pyStr))
-          readMetaDataWithTwoPossibleImages(FileName_Value(pyStr), MetaData_Value(pyMd));
-        else
-          PyErr_SetString(PyExc_TypeError, "Expected string or FileName as first argument");
-        Py_RETURN_NONE;
-      }
+        try
+        {
+            if (!MetaData_Check(pyMd))
+                PyErr_SetString(PyExc_TypeError, "Expected MetaData as second argument");
+            else
+            {
+                if (PyString_Check(pyStr))
+                    readMetaDataWithTwoPossibleImages(PyString_AsString(pyStr), MetaData_Value(pyMd));
+                else if (FileName_Check(pyStr))
+                    readMetaDataWithTwoPossibleImages(FileName_Value(pyStr), MetaData_Value(pyMd));
+                else
+                    PyErr_SetString(PyExc_TypeError, "Expected string or FileName as first argument");
+                Py_RETURN_NONE;
+            }
+        }
+        catch (XmippError xe)
+        {
+            PyErr_SetString(PyXmippError, xe.msg.c_str());
+        }
     }
-    catch (XmippError xe)
-    {
-      PyErr_SetString(PyXmippError, xe.msg.c_str());
-    }
-  }
-  return NULL;
+    return NULL;
 }
 
 
 static PyMethodDef xmipp_methods[] =
-{
-   {"str2Label",  xmipp_str2Label, METH_VARARGS,
-    "Convert an string to MDLabel"},
-   {"label2Str",  xmipp_label2Str, METH_VARARGS,
-    "Convert MDLabel to string"},
-   {"labelType",  xmipp_labelType, METH_VARARGS,
-    "Return the type of a label"},
-   {"isValidLabel", (PyCFunction)xmipp_isValidLabel, METH_VARARGS,
-    "Check if the label is a valid one"},
-   {"MDValueRelational", (PyCFunction)xmipp_MDValueRelational, METH_VARARGS,
-    "Construct a relational query"},
-  {"MDValueEQ", (PyCFunction)xmipp_MDValueEQ, METH_VARARGS,
-   "Construct a relational query"},
-   {"MDValueNE", (PyCFunction)xmipp_MDValueNE, METH_VARARGS,
-    "Construct a relational query"},
-  {"MDValueLT", (PyCFunction)xmipp_MDValueLT, METH_VARARGS,
-   "Construct a relational query"},
-   {"MDValueLE", (PyCFunction)xmipp_MDValueLE, METH_VARARGS,
-    "Construct a relational query"},
-  {"MDValueGT", (PyCFunction)xmipp_MDValueGT, METH_VARARGS,
-   "Construct a relational query"},
-   {"MDValueGE", (PyCFunction)xmipp_MDValueGE, METH_VARARGS,
-    "Construct a relational query"},
-    {"MDValueRange", (PyCFunction)xmipp_MDValueRange, METH_VARARGS,
-     "Construct a range query"},
-     {"SingleImgSize", (PyCFunction)xmipp_SingleImgSize, METH_VARARGS,
-      "Get image dimensions"
-     },
-     {"readMetaDataWithTwoPossibleImages", (PyCFunction)xmipp_readMetaDataWithTwoPossibleImages, METH_VARARGS,
-       "Read a 1 or two column list of micrographs"
+    {
+        {"str2Label",  xmipp_str2Label, METH_VARARGS,
+         "Convert an string to MDLabel"},
+        {"label2Str",  xmipp_label2Str, METH_VARARGS,
+         "Convert MDLabel to string"},
+        {"labelType",  xmipp_labelType, METH_VARARGS,
+         "Return the type of a label"},
+        {"isValidLabel", (PyCFunction)xmipp_isValidLabel, METH_VARARGS,
+         "Check if the label is a valid one"},
+        {"MDValueRelational", (PyCFunction)xmipp_MDValueRelational, METH_VARARGS,
+         "Construct a relational query"},
+        {"MDValueEQ", (PyCFunction)xmipp_MDValueEQ, METH_VARARGS,
+         "Construct a relational query"},
+        {"MDValueNE", (PyCFunction)xmipp_MDValueNE, METH_VARARGS,
+         "Construct a relational query"},
+        {"MDValueLT", (PyCFunction)xmipp_MDValueLT, METH_VARARGS,
+         "Construct a relational query"},
+        {"MDValueLE", (PyCFunction)xmipp_MDValueLE, METH_VARARGS,
+         "Construct a relational query"},
+        {"MDValueGT", (PyCFunction)xmipp_MDValueGT, METH_VARARGS,
+         "Construct a relational query"},
+        {"MDValueGE", (PyCFunction)xmipp_MDValueGE, METH_VARARGS,
+         "Construct a relational query"},
+        {"MDValueRange", (PyCFunction)xmipp_MDValueRange, METH_VARARGS,
+         "Construct a range query"},
+        {"SingleImgSize", (PyCFunction)xmipp_SingleImgSize, METH_VARARGS,
+         "Get image dimensions"
         },
-     {NULL} /* Sentinel */
-};
+        {"readMetaDataWithTwoPossibleImages", (PyCFunction)xmipp_readMetaDataWithTwoPossibleImages, METH_VARARGS,
+         "Read a 1 or two column list of micrographs"
+        },
+        {NULL} /* Sentinel */
+    };
 
 void addIntConstant(PyObject * dict, const char * name, const long &value)
 {
-  PyObject * pyValue = PyInt_FromLong(value);
-  PyDict_SetItemString(dict, name, pyValue);
-  Py_DECREF(pyValue);
+    PyObject * pyValue = PyInt_FromLong(value);
+    PyDict_SetItemString(dict, name, pyValue);
+    Py_DECREF(pyValue);
 }
 
 PyMODINIT_FUNC
 initxmipp(void)
 {
-  //Initialize module variable
+    //Initialize module variable
     PyObject* module;
     module = Py_InitModule3("xmipp", xmipp_methods,
-                       "Xmipp module as a Python extension.");
+                            "Xmipp module as a Python extension.");
 
     // Add FileName type
     if (PyType_Ready(&FileNameType) < 0)
@@ -1338,7 +1364,7 @@ initxmipp(void)
     // Add MDQuery type, as no specific new is create, use the generic one
     MDQueryType.tp_new = PyType_GenericNew;
     if (PyType_Ready(&MDQueryType) < 0)
-            return;
+        return;
     Py_INCREF(&MDQueryType);
     PyModule_AddObject(module, "MDQuery", (PyObject *)&MDQueryType);
 
