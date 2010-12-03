@@ -527,37 +527,42 @@ void Prog_tomograph_alignment::show()
 void Prog_tomograph_alignment::defineParams()
 {
     addUsageLine("This program aligns a single-axis tilt series without any marker");
+    addParamsLine(" == General Options == ");
     addParamsLine("   -i <metadatafile>              : Input images");
     addParamsLine("  [-iorig <metadatafile=\"\">]       : Metadata with images at original scale");
     addParamsLine("  [-oroot <fn_out=\"\">]             : Output alignment");
-    addParamsLine("  [-globalAffine]                 : Look globally for affine transformations");
-    addParamsLine("  [-seqLength <n=5>]              : Sequence length");
-    addParamsLine("  [-localSize <size=0.04>]        : In percentage");
-    addParamsLine("  [-useCriticalPoints <n=0>]      : Use critical points instead of a grid");
-    addParamsLine("                                  : n is the number of critical points to choose");
-    addParamsLine("                                  : in each image");
+    addParamsLine("  [-thr <num=1>]                  : Parallel processing using \"num\" threads");
+    addParamsLine("  [-lastStep+ <step=-1>]          : Last step to perform");
+    addParamsLine("                                  : Step -1 -> Perform all steps");
+    addParamsLine("                                  : Step  0 -> Determination of affine transformations");
+    addParamsLine(" == Step 0 (Affine alignment) Options == ");
     addParamsLine("  [-maxShiftPercentage <p=0.2>]   : Maximum shift as percentage of image size");
     addParamsLine("  [-thresholdAffine <th=0.85>]    : Threshold affine");
-    addParamsLine("  [-thr <num=1>]                  : Parallel processing using \"num\" threads");
-    addParamsLine("  [-blindSeqLength+ <n=-1>]       : Blind sequence length, -1=No blind landmarks");
-    addParamsLine("  [-maxStep+ <step=4>]            : Maximum step for chain refinement");
-    addParamsLine("  [-gridSamples+ <n=40>]           : Total number of samples=n*n");
-    addParamsLine("  [-psiMax+ <psi=-1>]             : Maximum psi in absolute value (degrees)");
-    addParamsLine("                                  : -1 -> do not optimize for psi");
-    addParamsLine("  [-deltaRot+ <rot=5>]            : In degrees. For the first optimization stage");
-    addParamsLine("  [-optimizeTiltAngle+]           : Optimize tilt angle");
-    addParamsLine("  [-isCapillar+]                  : Set this flag if the tilt series is of a capillar");
-    addParamsLine("  [-dontNormalize+]               : Don't normalize");
+    addParamsLine("  [-globalAffine]                 : Look globally for affine transformations");
     addParamsLine("  [-difficult+]                   : Apply some filters before affine alignment");
-    addParamsLine("  [-threshold+ <th=-1>]           : threshold");
     addParamsLine("  [-maxIterDE+ <n=30>]            : Maximum number of iteration in Differential Evolution");
     addParamsLine("  [-showAffine+]                  : Show affine transformations as PPP*");
     addParamsLine("  [-identifyOutliers+ <z=5>]      : Z-score to be an outlier");
     addParamsLine("  [-noOutliers+]                  : Do not identify outliers");
     addParamsLine("  [-pyramid+ <level=1>]           : Multiresolution for affine transformations");
-    addParamsLine("  [-lastStep <step=-1>]           : Last step to perform");
-    addParamsLine("                                  : Step -1 -> Perform all steps");
-    addParamsLine("                                  : Step  0 -> Determination of affine transformations");
+    addParamsLine(" == Step 1 (Landmark chain) Options == ");
+    addParamsLine("  [-seqLength <n=5>]              : Sequence length");
+    addParamsLine("  [-localSize <size=0.04>]        : In percentage");
+    addParamsLine("  [-useCriticalPoints <n=0>]      : Use critical points instead of a grid");
+    addParamsLine("                                  : n is the number of critical points to choose");
+    addParamsLine("                                  : in each image");
+    addParamsLine("  [-threshold+ <th=-1>]           : Correlation threshold");
+    addParamsLine("  [-blindSeqLength+ <n=-1>]       : Blind sequence length, -1=No blind landmarks");
+    addParamsLine("  [-maxStep+ <step=4>]            : Maximum step for chain refinement");
+    addParamsLine("  [-gridSamples+ <n=40>]           : Total number of samples=n*n");
+    addParamsLine("  [-isCapillar+]                  : Set this flag if the tilt series is of a capillar");
+    addParamsLine(" == Step 2 (Alignment) Options == ");
+    addParamsLine("  [-psiMax+ <psi=-1>]             : Maximum psi in absolute value (degrees)");
+    addParamsLine("                                  : -1 -> do not optimize for psi");
+    addParamsLine("  [-deltaRot+ <rot=5>]            : In degrees. For the first optimization stage");
+    addParamsLine("  [-optimizeTiltAngle+]           : Optimize tilt angle");
+    addParamsLine(" == Step 3 (Produce aligned images) Options == ");
+    addParamsLine("  [-dontNormalize+]               : Don't normalize the output images");
 }
 
 /* Produce side info ------------------------------------------------------- */
