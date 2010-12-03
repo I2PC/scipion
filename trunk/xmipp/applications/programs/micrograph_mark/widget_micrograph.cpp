@@ -389,11 +389,14 @@ void QtWidgetMicrograph::openMenus()
 
     QtFilterMenu *filterMenu = new QtFilterMenu(this);
 
-    QtAutoMenu *autoMenu = new QtAutoMenu(this);
 
     addMenuItem("&File", (QtPopupMenuMark *)(__file_menu));
     addMenuItem("F&ilters", (QtPopupMenuMark *)(filterMenu));
-    addMenuItem("&AutoSelection", (QtPopupMenuMark *)(autoMenu));
+    if (__autoPicking!=NULL)
+    {
+    	QtAutoMenu *autoMenu = new QtAutoMenu(this);
+    	addMenuItem("&AutoSelection", (QtPopupMenuMark *)(autoMenu));
+    }
 
     connect(__file_menu, SIGNAL(signalAddFamily(const char *)),
             this, SLOT(slotAddFamily(const char*)));
