@@ -37,55 +37,62 @@ void ProgMLTomo::defineParams()
     addUsageLine("based on a maximum-likelihood (ML) target function.");
 
     addParamsLine("   -i <metadata>               : MetaData file with input images (and angles) ");
-    addParamsLine("   -nref <int=0>               : Number of references to generate automatically (recommended)");
-    addParamsLine("   OR -ref <file=\"\">         : or metadatafile with initial references/single reference image ");
-    addParamsLine(" [ -o <rootname=mltomo> ]             : Output rootname ");
-    addParamsLine(" [ -missing <metadata=\"\"> ]   : MetaData file with missing data region definitions");
+    addParamsLine("   --nref <int=0>               : Number of references to generate automatically (recommended)");
+    addParamsLine("   OR --ref <file=\"\">         : or metadatafile with initial references/single reference image ");
+    addParamsLine(" [ -o <rootname=mltomo> ]       : Output rootname ");
+    //docfile not implemented, it can go in the -i option
+    //addParamsLine(" [ --doc <metadata=\"\"> ]      : MetaData with orientations  for all particles ");
+    addParamsLine(" [ --sym <symgroup=c1> ]        : Symmetry group ");
+    addParamsLine(" [ --missing <metadata=\"\"> ]  : MetaData file with missing data region definitions");
 
     addParamsLine("== Angular sampling ==");
-    addParamsLine(" [ -ang <float=10.> ]          : Angular sampling rate (in degrees)");
-    addParamsLine(" [ -ang_search <float=-1.> ]   : Angular search range around orientations from MetaData ");
+    addParamsLine(" [ --ang <float=10.> ]          : Angular sampling rate (in degrees)");
+    addParamsLine(" [ --ang_search <float=-1.> ]   : Angular search range around orientations from MetaData ");
     addParamsLine("                               : (by default, exhaustive searches are performed)");
-    addParamsLine(" [ -dont_limit_psirange ]      : Exhaustive psi searches when using -ang_search (only for c1 symmetry)");
-    addParamsLine(" [ -limit_trans <float=-1.> ]  : Maximum allowed shifts (negative value means no restriction)");
-    addParamsLine(" [ -tilt0+ <float=-91.> ]       : Limit tilt angle search from tilt0 to tiltF (in degrees) ");
-    addParamsLine(" [ -tiltF+ <float=91.> ]        : Limit tilt angle search from tilt0 to tiltF (in degrees) ");
-    addParamsLine(" [ -psi_sampling+ <float=-1.> ]  : Angular sampling rate for the in-plane rotations(in degrees)");
+    addParamsLine(" [ --dont_limit_psirange ]      : Exhaustive psi searches when using -ang_search (only for c1 symmetry)");
+    addParamsLine(" [ --limit_trans <float=-1.> ]  : Maximum allowed shifts (negative value means no restriction)");
+    addParamsLine(" [ --tilt0+ <float=-91.> ]       : Limit tilt angle search from tilt0 to tiltF (in degrees) ");
+    addParamsLine(" [ --tiltF+ <float=91.> ]        : Limit tilt angle search from tilt0 to tiltF (in degrees) ");
+    addParamsLine(" [ --psi_sampling+ <float=-1.> ]  : Angular sampling rate for the in-plane rotations(in degrees)");
 
     addParamsLine("== Regularization ==");
-    addParamsLine(" [ -reg0 <float=0.> ]          : Initial regularization parameters (in N/K^2) ");
-    addParamsLine(" [ -regF <float=0.> ]          : Final regularization parameters (in N/K^2) ");
-    addParamsLine(" [ -reg_steps <int=5> ]        : Number of iterations in which the regularization is changed from reg0 to regF");
+    addParamsLine(" [ --reg0 <float=0.> ]          : Initial regularization parameters (in N/K^2) ");
+    addParamsLine(" [ --regF <float=0.> ]          : Final regularization parameters (in N/K^2) ");
+    addParamsLine(" [ --reg_steps <int=5> ]        : Number of iterations in which the regularization is changed from reg0 to regF");
 
     addParamsLine("== Others ==");
-    addParamsLine(" [ -dont_rotate ]              : Keep orientations from MetaData fixed, only translate and classify ");
-    addParamsLine(" [ -dont_align ]               : Keep orientations and tran MetaData (otherwise start from random)");
-    addParamsLine(" [ -perturb ]                  : Apply random perturbations to angular sampling in each iteration");
-    addParamsLine(" [ -dim <int=-1> ]                : Use downscaled (in fourier space) images of this size ");
-    addParamsLine(" [ -maxres <float=0.5> ]       : Maximum resolution (in pixel^-1) to use ");
-    addParamsLine(" [ -thr <int=1> ]              : Number of shared-memory threads to use in parallel ");
+    addParamsLine(" [ --dont_rotate ]              : Keep orientations from MetaData fixed, only translate and classify ");
+    addParamsLine(" [ --dont_align ]               : Keep orientations and tran MetaData (otherwise start from random)");
+    addParamsLine(" [ --perturb ]                  : Apply random perturbations to angular sampling in each iteration");
+    addParamsLine(" [ --dim <int=-1> ]                : Use downscaled (in fourier space) images of this size ");
+    addParamsLine(" [ --maxres <float=0.5> ]       : Maximum resolution (in pixel^-1) to use ");
+    addParamsLine(" [ --thr <int=1> ]              : Number of shared-memory threads to use in parallel ");
 
     addParamsLine("==+ Additional options: ==");
-    addParamsLine(" [ -impute_iter <int=1> ]      : Number of iterations for inner imputation loop ");
-    addParamsLine(" [ -iter <int=25> ]           : Maximum number of iterations to perform ");
-    addParamsLine(" [ -istart <int=1> ]             : number of initial iteration ");
-    addParamsLine(" [ -noise <float=1> ]          : Expected standard deviation for pixel noise ");
-    addParamsLine(" [ -offset <float=3> ]         : Expected standard deviation for origin offset [pix]");
-    addParamsLine(" [ -frac <metadata=\"\"> ]     : MetaData with expected model fractions (default: even distr.)");
-    addParamsLine(" [ -restart <logfile> ]        : restart a run with all parameters as in the logfile ");
-    addParamsLine(" [ -fix_sigma_noise]           : Do not re-estimate the standard deviation in the pixel noise ");
-    addParamsLine(" [ -fix_sigma_offset]          : Do not re-estimate the standard deviation in the origin offsets ");
-    addParamsLine(" [ -fix_fractions]             : Do not re-estimate the model fractions ");
-    addParamsLine(" [ -eps <float=5e-5> ]         : Stopping criterium ");
-    addParamsLine(" [ -pixel_size <float=1> ]     : Pixel size (in Anstrom) for resolution in FSC plots ");
+    addParamsLine(" [ --impute_iter <int=1> ]      : Number of iterations for inner imputation loop ");
+    addParamsLine(" [ --iter <int=25> ]           : Maximum number of iterations to perform ");
+    addParamsLine(" [ --istart <int=1> ]             : number of initial iteration ");
+    addParamsLine(" [ --noise <float=1> ]          : Expected standard deviation for pixel noise ");
+    addParamsLine(" [ --offset <float=3> ]         : Expected standard deviation for origin offset [pix]");
+    addParamsLine(" [ --frac <metadata=\"\"> ]     : MetaData with expected model fractions (default: even distr.)");
+    addParamsLine(" [ --restart <logfile> ]        : restart a run with all parameters as in the logfile ");
+    addParamsLine(" [ --fix_sigma_noise]           : Do not re-estimate the standard deviation in the pixel noise ");
+    addParamsLine(" [ --fix_sigma_offset]          : Do not re-estimate the standard deviation in the origin offsets ");
+    addParamsLine(" [ --fix_fractions]             : Do not re-estimate the model fractions ");
+    addParamsLine(" [ --eps <float=5e-5> ]         : Stopping criterium ");
+    addParamsLine(" [ --pixel_size <float=1> ]     : Pixel size (in Anstrom) for resolution in FSC plots ");
 
-    addParamsLine(" [ -mask <maskfile> ]          : Mask particles; only valid in combination with -dont_align ");
-    addParamsLine(" [ -maxCC ]                    : Use constrained cross-correlation and weighted averaging instead of ML ");
-    addParamsLine(" [ -dont_impute ]              : Use weighted averaging, rather than imputation ");
-    addParamsLine(" [ -noimp_threshold <float=1.>] : Threshold to avoid division by zero for weighted averaging ");
+    addParamsLine(" [ --mask <maskfile> ]          : Mask particles; only valid in combination with -dont_align ");
+    addParamsLine(" [ --maxCC ]                    : Use constrained cross-correlation and weighted averaging instead of ML ");
+    addParamsLine(" [ --dont_impute ]              : Use weighted averaging, rather than imputation ");
+    addParamsLine(" [ --noimp_threshold <float=1.>] : Threshold to avoid division by zero for weighted averaging ");
 
     addParamsLine("==+++++ Hidden arguments ==");
-    addParamsLine(" [-trymindiff_factor <float=0.9>]");
+    addParamsLine(" [--trymindiff_factor <float=0.9>]");
+    addParamsLine(" [ --no_SMALLANGLE <float=5e-5> ]: ");
+    addParamsLine(" [ --keep_angles]: ");
+    addParamsLine(" [ --filter]: ");
+    addParamsLine(" [ --ini_filter]: ");
 }
 
 // Read arguments ==========================================================
@@ -170,70 +177,70 @@ void ProgMLTomo::readParams()
         }
     }
 
-    nr_ref = getIntParam("-nref");
-    fn_ref = getParam("-ref");
-    fn_doc = getParam("-doc");
+    nr_ref = getIntParam("--nref");
+    fn_ref = getParam("--ref");
+    //fn_doc = getParam("--doc");
     fn_sel = getParam("-i");
     fn_root = getParam("-o");
-    fn_sym = getParam("-sym", "c1");
-    Niter = getIntParam("-iter");
-    Niter2 = getIntParam("-impute_iter");
-    istart = getIntParam("-istart");
-    sigma_noise = getDoubleParam("-noise");
-    sigma_offset = getDoubleParam("-offset");
-    fn_frac = getParam("-frac");
-    fix_fractions = checkParam("-fix_fractions");
-    fix_sigma_offset = checkParam("-fix_sigma_offset");
-    fix_sigma_noise = checkParam("-fix_sigma_noise");
-    eps = getDoubleParam("-eps");
-    no_SMALLANGLE = checkParam("-no_SMALLANGLE");
-    do_keep_angles = checkParam("-keep_angles");
-    do_perturb = checkParam("-perturb");
-    pixel_size = getDoubleParam("-pixel_size");
+    fn_sym = getParam("--sym", "c1");
+    Niter = getIntParam("--iter");
+    Niter2 = getIntParam("--impute_iter");
+    istart = getIntParam("--istart");
+    sigma_noise = getDoubleParam("--noise");
+    sigma_offset = getDoubleParam("--offset");
+    fn_frac = getParam("--frac");
+    fix_fractions = checkParam("--fix_fractions");
+    fix_sigma_offset = checkParam("--fix_sigma_offset");
+    fix_sigma_noise = checkParam("--fix_sigma_noise");
+    eps = getDoubleParam("--eps");
+    no_SMALLANGLE = checkParam("--no_SMALLANGLE");
+    do_keep_angles = checkParam("--keep_angles");
+    do_perturb = checkParam("--perturb");
+    pixel_size = getDoubleParam("--pixel_size");
 
     // Low-pass filter
-    do_filter = checkParam("-filter");
-    do_ini_filter = checkParam("-ini_filter");
+    do_filter = checkParam("--filter");
+    do_ini_filter = checkParam("--ini_filter");
 
     // regularization
-    reg0 = getDoubleParam("-reg0");
-    regF = getDoubleParam("-regF");
-    reg_steps = getIntParam("-reg_steps");
+    reg0 = getDoubleParam("--reg0");
+    regF = getDoubleParam("--regF");
+    reg_steps = getIntParam("--reg_steps");
 
     // ML (with/without) imputation, or maxCC
-    do_ml = !checkParam("-maxCC");
-    do_impute = !checkParam("-dont_impute");
-    noimp_threshold = getDoubleParam("-noimp_threshold");
+    do_ml = !checkParam("--maxCC");
+    do_impute = !checkParam("--dont_impute");
+    noimp_threshold = getDoubleParam("--noimp_threshold");
 
     // Angular sampling
-    angular_sampling = getDoubleParam("-ang");
-    psi_sampling = getDoubleParam("-psi_sampling");
-    tilt_range0 = getDoubleParam("-tilt0");
-    tilt_rangeF = getDoubleParam("-tiltF");
-    ang_search = getDoubleParam("-ang_search");
-    do_limit_psirange = !checkParam("-dont_limit_psirange");
-    limit_trans = getDoubleParam("-limit_trans");
+    angular_sampling = getDoubleParam("--ang");
+    psi_sampling = getDoubleParam("--psi_sampling");
+    tilt_range0 = getDoubleParam("--tilt0");
+    tilt_rangeF = getDoubleParam("--tiltF");
+    ang_search = getDoubleParam("--ang_search");
+    do_limit_psirange = !checkParam("--dont_limit_psirange");
+    limit_trans = getDoubleParam("--limit_trans");
 
     // Skip rotation, only translate and classify
-    dont_rotate = checkParam("-dont_rotate");
+    dont_rotate = checkParam("--dont_rotate");
     // Skip rotation and translation, only classify
-    dont_align = checkParam("-dont_align");
+    dont_align = checkParam("--dont_align");
     // Skip rotation and translation and classification
-    do_only_average = checkParam("-only_average");
+    do_only_average = checkParam("--only_average");
 
     // For focussed classification (only in combination with dont_align)
-    fn_mask = getParam("-mask", "");
+    fn_mask = getParam("--mask", "");
 
     // Missing data structures
-    fn_missing = getParam("-missing");
-    dim = getIntParam("-dim");
-    maxres = getDoubleParam("-maxres");
+    fn_missing = getParam("--missing");
+    dim = getIntParam("--dim");
+    maxres = getDoubleParam("--maxres");
 
     // Hidden arguments
-    trymindiff_factor = getDoubleParam("-trymindiff_factor");
+    trymindiff_factor = getDoubleParam("--trymindiff_factor");
 
     // Number of threads
-    threads = getIntParam("-thr");
+    threads = getIntParam("--thr");
 
 }
 
