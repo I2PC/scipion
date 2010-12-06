@@ -79,70 +79,83 @@ public:
    background, the envelope and the power spectrum density
 
    @code
-      #include <Reconstruction/CTF.hh>
-      #include <XmippData/xmippFFT.hh>
+#include <data/args.h>
+#include <data/filters.h>
+#include <reconstruction/fourier_filter.h>
+#include <data/ctf.h>
 
-      int main(int argc, char **argv) {
-         FileName fn_ctf, fn_root;
-         int Xdim;
-         try {
-            fn_ctf=getParameter(argc,argv,"-i");
-            fn_root=getParameter(argc,argv,"-o");
-            Xdim=textToInteger(getParameter(argc,argv,"-xdim"));
-         } catch (XmippError XE) {
-            std::cerr << XE << std::endl
-                 << "Usage: produce_imgs \n"
-                 << "         -i <CTF descr file>\n"
-                 << "         -o <filename root>\n"
-                 << "         -xdim <xdim>\n"
-            ;
-            return 1;
-         }
+#include <data/program.h>
 
-         try {
-            // Read CTF model
-            CTFDescription CTF;
-            CTF.enable_CTF=true;
-            CTF.enable_CTFnoise=true;
-            CTF.read(fn_ctf);
-            CTF.Produce_Side_Info();
 
-            // Produce CTF, background and envelope
-            ImageXmipp Ictf, Ibg, Ienv, Ipsd;
-            Ictf().resize(Xdim,Xdim);
-            Ipsd()=Ienv()=Ibg()=Ictf();
+int main(int argc, char **argv)
+{
+    FileName fn_ctf, fn_root;
+    int Xdim;
+    try
+    {
+        fn_ctf=getParameter(argc,argv,"-i");
+        fn_root=getParameter(argc,argv,"-o");
+        Xdim=textToInteger(getParameter(argc,argv,"-xdim"));
+    }
+    catch (XmippError XE)
+    {
+        std::cerr << XE << std::endl
+        << "Usage: produce_imgs \n"
+        << "         -i <CTF descr file>\n"
+        << "         -o <filename root>\n"
+        << "         -xdim <xdim>\n"
+        ;
+        return 1;
+    }
+    std::cerr << "fn_ctf = "  << fn_ctf <<std::endl
+    << "fn_root = "  << fn_root <<std::endl
+    << "Xdim = "  << Xdim <<std::endl;
 
-            Matrix1D<int>    idx(2);  // Indexes for Fourier plane
-            Matrix1D<double> freq(2); // Frequencies for Fourier plane
-            FOR_ALL_ELEMENTS_IN_ARRAY2D(Ictf()) {
-               XX(idx)=j; YY(idx)=i;
-               FFT_idx2digfreq(Ictf(), idx, freq);
-               digfreq2contfreq(freq, freq, CTF.Tm);
+    try
+    {
+        // Read CTF model
+        Image<double> img(Xdim,Xdim);
+        CTFDescription ctf;
+        ctf.enable_CTF=true;
+        ctf.enable_CTFnoise=true;
+        ctf.read(fn_ctf);
+        ctf.Produce_Side_Info();
 
-               // Background
-               Ibg(i,j)=CTF.CTFnoise_at(XX(freq),YY(freq));
+        double avgdef = (ctf.DeltafU + ctf.DeltafV)/2.;
+        ctf.DeltafU = avgdef;
+        ctf.DeltafV = avgdef;
+        MultidimArray<std::complex<double> >  ctfVal;
 
-               // Envelope
-               double E=CTF.CTFdamping_at(XX(freq),YY(freq));
-               Ienv(i,j)=Ibg(i,j)+E*E;
+        ctf.Generate_CTF(Xdim, Xdim, ctfVal);
+        FOR_ALL_ELEMENTS_IN_ARRAY2D(ctfVal)
+        {
+            img(i,j)=ctfVal(i,j).real();
+        }
+        img.write("ctf.noisy");
 
-               // CTF
-               Ictf(i,j)=CTF.CTFpure_at(XX(freq),YY(freq));
+        ctf.clear();
+        ctf.enable_CTF=true;
+        ctf.enable_CTFnoise=false;
+        ctf.read(fn_ctf);
+        ctf.Produce_Side_Info();
+        ctf.Generate_CTF(Xdim, Xdim, ctfVal);
 
-               // Power spectrum density
-               Ipsd(i,j)=Ibg(i,j)+Ictf(i,j)*Ictf(i,j);
-            }
+        FOR_ALL_ELEMENTS_IN_ARRAY2D(ctfVal)
+        {
+            // Power spectrum density
+            img(i,j)*=ctfVal(i,j).real();
+        }
+        img.write("ctf.noisyless");
 
-            CenterFFT(Ibg() , true); Ibg .write(fn_root+"_bg.xmp");
-            CenterFFT(Ienv(), true); Ienv.write(fn_root+"_env.xmp");
-            CenterFFT(Ictf(), true); Ictf.write(fn_root+"_ctf.xmp");
-            CenterFFT(Ipsd(), true); Ipsd.write(fn_root+"_psd.xmp");
+        //      CenterFFT(Ipsd(), true); Ipsd.write(fn_root+"_psd.xmp");
 
-         } catch (XmippError XE) {
-            std::cout << XE << std::endl;
-         }
-         return 0;
-      }
+    }
+    catch (XmippError XE)
+    {
+        std::cout << XE << std::endl;
+    }
+    return 0;
+}
    @endcode
 
 */
