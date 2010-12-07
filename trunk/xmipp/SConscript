@@ -550,6 +550,7 @@ ReconsSources = [
     'art_crystal.cpp',
     'basic_art.cpp',
     'common_lines.cpp',
+    'convert_pdb2vol.cpp',
     'convert_vol2pseudo.cpp',
     'correct_bfactor.cpp',
     'create_projection_library.cpp',
@@ -577,6 +578,7 @@ ReconsSources = [
     'phantom_create_random.cpp',
     'phantom_simulate_microscope.cpp',
     'precompute_sampling.cpp',
+    'project.cpp',
     'project_crystal.cpp',
     'project_XR.cpp',
     'projection_real_shears.cpp',
@@ -604,12 +606,6 @@ ReconsSources = [
 AddLibrary('XmippRecons', 'libraries/reconstruction', ReconsSources,
            ['#libraries', '#external', '#'],['lib'],['XmippExternal','XmippData','pthread'])
 
-# ReconsInterface
-ReconsInterfaceSources = [
-    'convert_pdb2vol.cpp',
-    'project.cpp',
-]
-
 # Classification
 ClassificationSources = Glob('libraries/classification', '*.cpp', [])
 AddLibrary('XmippClassif', 'libraries/classification', ClassificationSources,
@@ -627,8 +623,8 @@ AddLibrary('XmippInterface', 'libraries/interface', InterfaceSources,
     ['#libraries', '#external', '#'],['lib'],['XmippExternal','XmippData','pthread'])
 
 # Recons Interface
-AddLibrary('XmippRecons_Interface', '#libraries/reconstruction',
-           ReconsInterfaceSources, ['#libraries', '#external', '#'],['lib'],['XmippExternal','XmippData','XmippRecons','XmippInterface'])
+#AddLibrary('XmippRecons_Interface', '#libraries/reconstruction',
+#           ReconsInterfaceSources, ['#libraries', '#external', '#'],['lib'],['XmippExternal','XmippData','XmippRecons','XmippInterface'])
 
 # ImageJ plugins.
 # Installs jvm
@@ -688,7 +684,7 @@ AddXmippProgram('convert_data2descr', ['XmippClassif'])
 AddXmippProgram('convert_data2img', ['XmippClassif'])
 AddXmippProgram('convert_data2pdb', ['XmippClassif'])
 AddXmippProgram('convert_img2data')
-AddXmippProgram('convert_pdb2vol', ['XmippRecons_Interface','XmippRecons','XmippInterface'])
+AddXmippProgram('convert_pdb2vol', ['XmippRecons','XmippInterface'])
 AddXmippProgram('convert_image')
 AddXmippProgram('convert_vol2data')
 AddXmippProgram('convert_vol2pseudo', ['XmippRecons'])
@@ -738,14 +734,14 @@ AddXmippProgram('morphology')
 AddXmippProgram('nma_alignment', ['XmippRecons'])
 AddXmippProgram('normalize')
 AddXmippProgram('operate')
-AddXmippProgram('pdb_dictionary', ['XmippRecons_Interface','XmippRecons','XmippClassif','XmippInterface'])
+AddXmippProgram('pdb_dictionary', ['XmippRecons','XmippClassif','XmippInterface'])
 AddXmippProgram('pdb_project_on_dictionary', ['XmippRecons','XmippClassif'])
 AddXmippProgram('phantom_create', ['XmippRecons'])
 AddXmippProgram('phantom_create_micrograph', ['XmippRecons'])
 AddXmippProgram('phantom_create_random', ['XmippRecons'])
 AddXmippProgram('phantom_simulate_microscope', ['XmippRecons'])
-AddXmippProgram('phantom_transform', ['XmippRecons_Interface','XmippRecons','XmippInterface'])
-AddXmippProgram('project', ['XmippRecons_Interface','XmippRecons','XmippInterface'])
+AddXmippProgram('phantom_transform', ['XmippRecons','XmippInterface'])
+AddXmippProgram('project', ['XmippRecons','XmippInterface'])
 AddXmippProgram('project_tomography', ['XmippRecons'])
 AddXmippProgram('projection_real_shears', ['XmippRecons'])
 AddXmippProgram('project_xr', ['XmippRecons'])
@@ -859,11 +855,11 @@ if int(env['mpi']):
 #    AddXmippMPIProgram('mpi_mlf_align2d', ['XmippRecons'])
     AddXmippMPIProgram('mpi_ml_refine3d', ['XmippRecons'])
 #    AddXmippMPIProgram('mpi_mlf_refine3d', ['XmippRecons'])
-#    AddXmippMPIProgram('mpi_nma_alignment', ['XmippRecons'])
+    AddXmippMPIProgram('mpi_nma_alignment', ['XmippRecons'])
     AddXmippMPIProgram('mpi_projection_real_shears', ['XmippRecons'])
     AddXmippMPIProgram('mpi_project_xr', ['XmippRecons'])
 #    AddXmippMPIProgram('mpi_reconstruct_art', ['XmippRecons'])
-    AddXmippMPIProgram('mpi_reconstruct_wbp', ['XmippRecons'])
+#    AddXmippMPIProgram('mpi_reconstruct_wbp', ['XmippRecons'])
     AddXmippMPIProgram('mpi_reconstruct_fourier', ['XmippRecons'])
     AddXmippMPIProgram('mpi_run', ['XmippRecons'])
 #    AddXmippMPIProgram('template_threads', ['XmippRecons'])
