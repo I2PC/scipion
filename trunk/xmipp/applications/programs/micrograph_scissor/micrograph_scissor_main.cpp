@@ -56,7 +56,7 @@ protected:
         addParamsLine("  [--Ydim <window_Y_dim>]             : If not given Ydim=Xdim");
         addParamsLine("  [--start <N=1>]                     : Number of the first image");
         addParamsLine("  [--invert]                          : Invert contrast");
-        addParamsLine("  [--log]                             : Number of the first image");
+        addParamsLine("  [--log]                             : Take logarithm (compute transmitance)");
         addParamsLine("  [--rmStack]                         : By default files are added to stack");
 
         addUsageLine ("Examples:");
