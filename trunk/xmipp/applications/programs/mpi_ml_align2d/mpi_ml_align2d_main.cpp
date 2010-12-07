@@ -43,7 +43,6 @@ int main(int argc, char **argv)
   catch (XmippError xe)
   {
     std::cerr << xe << std::endl;
-    xe.printStackTrace();
     exit(1);
   }
 
