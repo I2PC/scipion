@@ -2,6 +2,7 @@
 #------------------------------------------------------------------------------------------------
 #
 # General script for Xmipp-based pre-processing of single-particles: 
+#  - phase flipping
 #  - extraction of particles
 #  - normalization
 #  - sort_junk
@@ -14,6 +15,7 @@
 # ./xmipp_preprocess_particles.py
 #
 # Author: Sjors Scheres, March 2007
+#         Carlos Oscar, December 2010
 #
 #------------------------------------------------------------------------------------------------
 # {section} Global parameters
@@ -21,74 +23,76 @@
 # {dir} Working subdirectory:
 """ Use the same directory where you executed xmipp_protocol_preprocess_micrographs.py
 """
-WorkingDir='Preprocessing'
-# {file} Selfile with micrographs on which to perform processing
-MicrographSelfile='Preprocessing/all_micrographs.sel'
-# Is this selfile a list of untilted-tilted pairs?
-""" True for RCT-processing. In that case, provide a 3-column selfile as follows:
-    untilted_pair1.raw tilted_pair1.raw 1
-    untilted_pair2.raw tilted_pair2.raw 1
-    etc...
+WorkingDir='Images'
 
-    Note that for pair lists, only extraction and normalization is performed (ie no CTF or sorting)
-    Also note that the extension of the coordinates files has to be raw.Common.pos!
-"""
-IsPairList=False
+# {dir} Directory with the particle picking
+PickingDir='ParticlePicking'
+
 # {expert} Name for the output selfile:
 """ This name should have extension .sel
 """
 OutSelFile='all_images.sel'
+
 # {expert} Root directory name for this project:
 """ Absolute path to the root directory for this project
 """
 ProjectDir='/home/coss/temp/F22_cib'
-# {expert} Directory name for logfiles:
-LogDir='Logs'
+
 #------------------------------------------------------------------------------------------------
-# {section} Extract particles
+# {section} Processing parameters
 #------------------------------------------------------------------------------------------------
-# Extract particles from micrographs?
-DoExtract=True
-# Family name for the picked coordinates file
-""" By default this is Common, and the posfiles are called <mic>.raw.Common.pos
-    These files are supposed to be in the micrograph-related subdirectories
-"""
-PosFile='Common'
-# Dimension of the particles to extract (in pix.)
+# Box size of the particles to extract (in pix.)
 Size=80
-# {expert} Directory name for particle images:
-""" This directory will be placed in the project directory
-"""
-ImagesDir='Images'
-#------------------------------------------------------------------------------------------------
-# {section} Normalization
-#------------------------------------------------------------------------------------------------
-# Perform particle normalization?
-DoNormalize=True
-# Pixels outside this circle are assumed to be noise and their stddev is set to 1.
-# Radius for background circle definition (in pix.)
-BackGroundRadius=30
+
+# Do phase flipping?
+DoFlip=True
+
+# {expert} Take Logarithm?
+DoLog=False 
+
+# Invert contrast?
+DoInvert=False
+
+# {expert} Background radius
+"""Pixels outside this circle are assumed to be noise and their stddev is set to 1.
+   Radius for background circle definition (in pix.).
+   If this value is 0, then the same as the particle radius is used. """
+BackGroundRadius=0
+
 # Perform ramping background correction?
 """ Correct for inclined background densities by fitting a least-squares plane through the background pixels
 """
-DoUseRamp=False
-# Perform black dust particles removal?
-""" Sets pixels with unusually low values to random values from a Gaussian with zero-mean and unity-standard deviation. For cryo, the default threshold value (see expert options) of 3.5 is a good value. For negative stain with high contrast signals, a higher value may be preferable.
+DoUseRamp=True
+
+# Perform dust particles removal?
+""" Sets pixels with unusually large values to random values from a Gaussian with zero-mean and unity-standard deviation.
 """
-DoRemoveBlackDust=False
-# Perform white dust particles removal?
-""" Sets pixels with unusually high values to random values from a Gaussian with zero-mean and unity-standard deviation. For cryo, the default threshold value (see expert options) of 3.5 is a good value. For negative stain with high contrast signals, a higher value may be preferable.
-"""
-DoRemoveWhiteDust=False
+DoRemoveDust=True
+
 # {expert} Threshold for dust removal:
-""" Pixels with a signal higher or lower than this value times the standard devaition of the image will be affected. For cryo, 3.5 is a good value. For high-contrast negative stain, the signal itself may be affected so that a higher value may be preferable.
+""" Pixels with a signal higher or lower than this value times the standard deviation of the image will be affected. For cryo, 3.5 is a good value. For high-contrast negative stain, the signal itself may be affected so that a higher value may be preferable.
 """
 DustRemovalThreshold=3.5
+
 #------------------------------------------------------------------------------------------------
-# {section} Particle sorting
+# {section} Parallelization issues
 #------------------------------------------------------------------------------------------------
-# Perform particle sorting to identify junk particles?
-DoSorting=False
+# distributed-memory parallelization (MPI)?
+""" This option provides distributed-memory parallelization on multi-node machines. 
+    It requires the installation of some MPI flavour, possibly together with a queueing system
+"""
+DoParallel=True
+
+# Number of MPI processes to use:
+NumberOfMpiProcesses=3
+
+# MPI system Flavour 
+""" Depending on your queuing system and your mpi implementation, different mpirun-like commands have to be given.
+    Ask the person who installed your xmipp version, which option to use. 
+    Or read: http://xmipp.cnb.csic.es/twiki/bin/view/Xmipp/ParallelPage. The following values are available: 
+"""
+SystemFlavour=''
+
 #------------------------------------------------------------------------------------------------
 # {expert} Analysis of results
 """ This script serves only for GUI-assisted visualization of the results
@@ -103,25 +107,58 @@ AnalysisScript='visualize_preprocess_particles.py'
 #
 
 class preprocess_particles_class:
+    def getParameter(prm,filename):
+        f = open(filename, 'r')
+        lines=f.readlines()
+        f.close()
+        for line in lines:
+            tokens=line.split('=')
+            if tokens[0]==prm:
+                return tokens[1]
+        return ""
+
+    def saveAndCompareParameters(self, listOfParameters):
+        fnOut=self.WorkingDir + "/protocolParameters.txt"
+        linesNew=[];
+        for prm in listOfParameters:
+            eval("linesNew.append('"+prm +"='+str("+prm+")+'\\n')")
+        if os.path.exists(fnOut):
+            f = open(fnOut, 'r')
+            linesOld=f.readlines()
+            f.close()
+            same=True;
+            if len(linesOld)==len(linesNew):
+                for i in range(len(linesNew)):
+                    if not linesNew[i]==linesOld[i]:
+                        same=False
+                        break;
+            else:
+                same=False
+            if not same:
+                print("Deleting")
+                self.log.info("Deleting working directory since it is run with different parameters")
+                shutil.rmtree(self.WorkingDir)
+                os.makedirs(self.WorkingDir)
+        f = open(fnOut, 'w')
+        f.writelines(linesNew)
+        f.close()
 
     #init variables
     def __init__(self,
                  WorkingDir,
-                 MicrographSelfile,
-                 IsPairList,
+                 PickingDir,
                  ProjectDir,
-                 LogDir,
-                 DoExtract,
-                 PosFile,
                  Size,
-                 ImagesDir,
-                 DoNormalize,
+                 DoFlip,
+                 DoLog, 
+                 DoInvert,
                  BackGroundRadius,
                  DoUseRamp,
-                 DoRemoveBlackDust,
-                 DoRemoveWhiteDust,
+                 DoRemoveDust,
                  DustRemovalThreshold,
-                 DoSorting,
+                 DoParallel,
+                 NumberOfMpiProcesses,
+                 SystemFlavour
                  ):
 	     
         import os,sys
@@ -129,27 +166,24 @@ class preprocess_particles_class:
         sys.path.append(scriptdir) # add default search path
         import log,xmipp_protocol_preprocess_micrographs
         
-        self.WorkingDir=WorkingDir
-        self.MicrographSelfile=os.path.abspath(MicrographSelfile)
-        self.IsPairList=IsPairList
-        self.ProjectDir=ProjectDir
-        self.LogDir=LogDir
-        self.DoExtract=DoExtract
-        self.PosFile=PosFile.strip()
+        self.WorkingDir=WorkingDir.strip()
+        self.PickingDir=PickingDir.strip()
+        self.ProjectDir=ProjectDir.strip()
+        self.LogDir="Logs"
+        self.PosFile="Common"
         self.Size=Size
-        self.ImagesDir=ImagesDir
-        self.DoNormalize=DoNormalize
+        self.DoFlip=DoFlip
+        self.DoLog=DoLog 
+        self.DoInvert=DoInvert
         self.BackGroundRadius=BackGroundRadius
         self.DoUseRamp=DoUseRamp
-        self.DoRemoveBlackDust=DoRemoveBlackDust
-        self.DoRemoveWhiteDust=DoRemoveWhiteDust
+        self.DoRemoveDust=DoRemoveBlackDust
         self.DustRemovalThreshold=DustRemovalThreshold
-        self.DoSorting=DoSorting
         self.OutSelFile=OutSelFile
 
         # Setup logging
         self.log=log.init_log_system(self.ProjectDir,
-                                     LogDir,
+                                     self.LogDir,
                                      sys.argv[0],
                                      self.WorkingDir)
                 
@@ -157,51 +191,58 @@ class preprocess_particles_class:
         if not os.path.exists(self.WorkingDir):
             os.makedirs(self.WorkingDir)
 
+        # Save parameters and compare to possible previous runs
+        self.saveAndCompareParameters([
+                 "PickingDir",
+                 "Size",
+                 "BackGroundRadius",
+                 "DoUseRamp",
+                 "DoRemoveBlackDust",
+                 "DoRemoveWhiteDust",
+                 "DustRemovalThreshold"]);
+
         # Backup script
         log.make_backup_of_script_file(sys.argv[0],
                                        os.path.abspath(self.WorkingDir))
     
-        # Execute protocol in the working directory
-        os.chdir(self.WorkingDir)
-        
-        # Parameters set from outside
-        self.Down=xmipp_protocol_preprocess_micrographs.Down
-        
-        # Check pairlist file
-        if (not self.IsPairList):
-            self.process_all_micrographs()
+        # Preprocess paticles
+        fnScript=self.WorkingDir+'/pickParticles.sh'
+        self.fh_mpi=os.open(fnScript, os.O_WRONLY | os.O_TRUNC | os.O_CREAT, 0700)
+        self.process_all_micrographs()
+        os.close(self.fh_mpi)
+        self.launchCommandFile(fnScript)
+
+    def launchCommandFile(self, commandFile):
+        import launch_job, log
+        log.cat(self.log, commandFile)
+        if self._DoParallel:
+            command=' -i ' + commandFile
+            launch_job.launch_job("xmipp_run", command, self.log, True,
+                  self._MyNumberOfMpiProcesses, 1, self._MySystemFlavour)
         else:
-            if (not self.PosFile=="Common"):
-                message='Error: for tilted pairs The coordinate family name has to be Common!'
-                print '*',message
-                self.log.error(message)
-                sys.exit()
+            self.log.info(commandFile)     
+            os.system(commandFile)     
 
-            self.process_all_pairs()
-
-        # Return to parent dir
-        os.chdir(os.pardir)
-            
     def process_all_micrographs(self):
         import os
-        import selfile
         print '*********************************************************************'
-        print '*  Pre-processing micrographs in '+os.path.basename(self.MicrographSelfile)
+        print '*  Pre-processing micrographs in '+os.path.basename(self.PickingDir)
 
-        dirname=self.ProjectDir+'/'+self.ImagesDir
-        if not os.path.exists(dirname):
-            os.makedirs(dirname)
-
-        self.allselfile = []
-        self.allctfdatfile = []
-
-        mysel=selfile.selfile()
-        mysel.read(self.MicrographSelfile)
-        for name,state in mysel.sellines:
-            self.shortname,self.allname=os.path.split(name)
-            self.downname=self.allname.replace('.raw','')
-            self.downname=self.downname.replace('.spi','')
-            if (state.find('-1') < 0):
+        fnPickingParameters=self.WorkingDir+"/protocolParameters.txt"
+        isPairTilt=self.getParameter("IsPairTilt",fnPickingParameters)=="True"
+        MicrographSelfile=self.getParameter("MicrographSelfile",fnPickingParameters)
+        mD=xmipp.MetaData();
+        xmipp.readMetaDataWithTwoPossibleImages(MicrographSelfile, mD)
+        for id in mD:
+            micrograph=mD.getValue(xmipp.MDL_IMAGE)
+            if isPairTilt:
+                micrographTilted=mD.getValue(xmipp.MDL_ASSOCIATED_IMAGE1)
+            
+            # Phase flip
+            command=""
+            if self.DoFlip:
+                command+="xmipp_"
+            
                 if (self.check_have_marked()):
                     if (self.DoExtract):
                         self.perform_extract()
@@ -209,15 +250,14 @@ class preprocess_particles_class:
                     if (self.DoNormalize):
                         self.perform_normalize(self.shortname+'/'+self.allname+'.sel')
                              
-        if (self.DoSorting):
-            self.perform_sort_junk()
+        self.perform_sort_junk()
 
     def process_all_pairs(self):
         import os
         print '*********************************************************************'
-        print '*  Pre-processing all micrograph pairs in '+os.path.basename(self.MicrographSelfile)
+        print '*  Pre-processing all micrograph pairs in '+os.path.basename(self.PickingDir)
 
-        dirname=self.ProjectDir+'/'+self.ImagesDir
+        dirname=self.ProjectDir+'/'+self.WorkingDir
         if not os.path.exists(dirname):
             os.makedirs(dirname)
 
@@ -253,17 +293,7 @@ class preprocess_particles_class:
                         self.perform_normalize(self.shortname+'/'+self.allname+'.sel')
                         self.perform_normalize(self.shortname2+'/'+self.allname2+'.sel')
 
-        if (self.DoSorting):
-            self.perform_sort_junk()
-
-    def check_file_exists(self,name):
-        import os
-        if not os.path.exists(name):
-            message='Error: File '+name+' does not exist, exiting...'
-            print '*',message
-            self.log.error(message)
-            sys.exit()
-
+        self.perform_sort_junk()
 
     def check_have_marked(self):
         import os
@@ -281,8 +311,8 @@ class preprocess_particles_class:
         import launch_job
         iname=self.shortname+'/'+self.allname
         iname2=self.shortname2+'/'+self.allname2
-        imgsubdir=self.ProjectDir+'/'+self.ImagesDir+'/'+self.shortname
-        imgsubdir2=self.ProjectDir+'/'+self.ImagesDir+'/'+self.shortname2
+        imgsubdir=self.ProjectDir+'/'+self.WorkingDir+'/'+self.shortname
+        imgsubdir2=self.ProjectDir+'/'+self.WorkingDir+'/'+self.shortname2
         rootname=imgsubdir+'/'+self.shortname+'_' 
         rootname2=imgsubdir2+'/'+self.shortname2+'_'
         selname=self.allname+'.sel' 
@@ -306,11 +336,6 @@ class preprocess_particles_class:
         if not os.path.exists(imgsubdir2):
             os.makedirs(imgsubdir2)
 
-        # Check existence of second pos and ang files
-        self.check_file_exists(posname)
-        self.check_file_exists(posname2)
-        self.check_file_exists(angname)
-
         command=' -i ' + iname + ' -root ' + rootname + \
                  ' -tilted ' + iname2 + ' -root_tilted ' + rootname2 + \
                  ' -Xdim ' + str(self.Size) + \
@@ -327,87 +352,6 @@ class preprocess_particles_class:
         # Remove pairs with one image near the border
         self.remove_empty_images_pairs(selnameb,selnameb2)
         
-    def remove_empty_images_pairs(self,selname,selname2):
-        import os
-        newsel=[]
-        newsel2=[]
-
-        count = 0
-        # read old selfile
-        fh  = open(selname,"r")
-        sel = fh.readlines()
-        fh.close()
-        fh   = open(selname2,"r")
-        sel2 = fh.readlines()
-        fh.close()
-        for i in range(len(sel)):
-            args=sel[i].split()
-            args2=sel2[i].split()
-            if ((args[1].find('-1') > -1) or (args2[1].find('-1') > -1)):
-                # remove empty images
-                if (os.path.exists(args[0])):
-                    os.remove(args[0])
-                if (os.path.exists(args2[0])):
-                    os.remove(args2[0])
-                count += 1
-            else:
-                # or append to new selfile
-                newsel.append(sel[i])
-                newsel2.append(sel2[i])
-                # For allselfiles, use relative paths wrt ProjectDir
-                name= self.ImagesDir+'/'+self.shortname +'/'+os.path.basename(args[0]) 
-                name2=self.ImagesDir+'/'+self.shortname2+'/'+os.path.basename(args2[0])
-                self.allselfile.append(name + " 1\n")
-                self.allselfile2.append(name2 + " 1\n")
-                self.allselfileboth.append(name + " 1\n")
-                self.allselfileboth.append(name2 + " 1\n")
-                # Update all_images.ctfdat (relative paths from ProjectDir)
-                self.allctfdatfile.append(name + ' ' + \
-                                          self.WorkingDir + '/' + \
-                                          self.shortname + '/' + \
-                                          self.downname + '_Periodogramavg.ctfparam\n')
-                self.allctfdatfile.append(name2 + ' ' + \
-                                          self.WorkingDir + '/' + \
-                                          self.shortname2 + '/' + \
-                                          self.downname2 + '_Periodogramavg.ctfparam\n')
-
-
-
-        # write new selfiles
-        fh=open(selname, 'w')
-        fh.writelines(newsel)
-        fh.close()
-        fh=open(selname2, 'w')
-        fh.writelines(newsel2)
-        fh.close()
-
-        # Update allselfiles
-        outselfname=self.ProjectDir+'/'+self.OutSelFile.replace('.sel','_untilted.sel')
-        fh=open(outselfname, 'w')
-        fh.writelines(self.allselfile)
-        fh.close()
-        outselfname=self.ProjectDir+'/'+self.OutSelFile.replace('.sel','_tilted.sel')
-        fh=open(outselfname, 'w')
-        fh.writelines(self.allselfile2)
-        fh.close()
-
-        # Also write out a self.OutSelFile for sorting
-        fh=open(self.ProjectDir+'/'+self.OutSelFile, 'w')
-        fh.writelines(self.allselfileboth)
-        fh.close()
-
-        # Write updated all_images.ctfdat
-        ctfdatname=self.ProjectDir+'/'+self.OutSelFile.replace('.sel','.ctfdat')
-        fh=open(ctfdatname,'w')
-        fh.writelines(self.allctfdatfile)
-        fh.close()
- 
-        # Output to screen
-        message='Removed '+str(count)+' pairs from selfiles because at least one of the particles was too near to the border'
-        print '* ',message
-        self.log.info(message)
-
-
     def perform_extract(self):
         import os
         import launch_job
@@ -416,7 +360,7 @@ class preprocess_particles_class:
         selnameb=self.shortname+'/'+self.allname+'.sel' 
         posname=self.shortname+'/'+self.downname+'.raw.'+self.PosFile+'.pos' 
         posnameauto=self.shortname+'/'+self.downname+'.raw.'+self.PosFile+'.auto.pos' 
-        imgsubdir=self.ProjectDir+'/'+self.ImagesDir+'/'+self.shortname
+        imgsubdir=self.ProjectDir+'/'+self.WorkingDir+'/'+self.shortname
         rootname=imgsubdir+'/'+self.shortname+'_'
         logname=self.shortname+'/scissor.log'
         size=self.Size
@@ -456,59 +400,6 @@ class preprocess_particles_class:
         # Move selfile inside the subdirectory
         os.rename(selname,selnameb)
 
-        # Remove particles near the border:
-        self.remove_empty_images(selnameb)
-
-    def remove_empty_images(self,selname):
-        import os
-        newsel=[]
-        count = 0
-
-        # read old selfile
-        fh  = open(selname,"r")
-        sel = fh.readlines()
-        fh.close()
-        for i in range(len(sel)):
-            args=sel[i].split()
-            if (args[1].find('-1') > -1):
-                # remove empty image
-                os.remove(args[0])
-                count += 1
-            else:
-                # or append to new selfile
-                newsel.append(sel[i])
-                # Update all_images.sel     (relative paths wrt ProjectDir)
-                name=self.ImagesDir+'/'+self.shortname+'/'+os.path.basename(args[0])
-                self.allselfile.append(name+" 1\n")
-                # Update all_images.ctfdat (relative paths from ProjectDir)
-                self.allctfdatfile.append(name + ' ' + \
-                                          self.WorkingDir + '/' + \
-                                          self.shortname + '/' + \
-                                          self.downname + '_Periodogramavg.ctfparam\n')
-
-        # write new selfile
-        fh=open(selname, 'w')
-        fh.writelines(newsel)
-        fh.close()
-        
-        # Write updated all_images selfile
-        outselfname=self.ProjectDir+'/'+self.OutSelFile
-        fh=open(outselfname, 'w')
-        fh.writelines(self.allselfile)
-        fh.close()
-
-        # Write updated all_images.ctfdat
-        ctfdatname=self.ProjectDir+'/'+self.OutSelFile.replace('.sel','.ctfdat')
-        fh=open(ctfdatname,'w')
-        fh.writelines(self.allctfdatfile)
-        fh.close()
-
-        # Output to screen
-        message='Removed '+str(count)+' particles from selfile because they were too near to the border'
-        print '* ',message
-        self.log.info(message)
-
-
     def perform_normalize(self,iname):
         import os
         import launch_job
@@ -541,36 +432,73 @@ class preprocess_particles_class:
                               False,1,1,'')
         os.chdir(os.pardir)
 
-    def close(self):
-        message=" Done pre-processing all"
-        print '* ',message
-        print '*********************************************************************'
-        self.log.info(message)
+# Preconditions
+def preconditions(gui):
+    retval=True
+    # Check if there is workingdir
+    if WorkingDir == "":
+        message="No working directory given"
+        if gui:
+            import tkMessageBox
+            tkMessageBox.showerror("Error", message)
+        else:
+            print message
+        retval=False
+    
+    # Check that there is a valid list of micrographs
+    if not os.path.exists(MicrographSelfile)>0:
+        message="Cannot find "+MicrographSelfile
+        if gui:
+            import tkMessageBox
+            tkMessageBox.showerror("Error", message)
+        else:
+            print message
+        retval=False
+    
+    # Check that all micrographs exist
+    import xmipp
+    mD = xmipp.MetaData()
+    xmipp.readMetaDataWithTwoPossibleImages(MicrographSelfile, mD)
+    message="Cannot find the following micrographs:\n"
+    NnotFound=0
+    for id in mD:
+         micrograph = mD.getValue(xmipp.MDL_IMAGE)
+         if not os.path.exists(micrograph):
+            message+=micrograph+"\n"
+            NnotFound=NnotFound+1
+         if mD.containsLabel(xmipp.MDL_ASSOCIATED_IMAGE1):
+             micrograph = mD.getValue(xmipp.MDL_ASSOCIATED_IMAGE1)
+             if not os.path.exists(micrograph):
+                 message+=micrograph+"\n"
+                 NnotFound=NnotFound+1
+    
+    if not NnotFound>0:
+        if gui:
+            import tkMessageBox
+            tkMessageBox.showerror("Error", message)
+        else:
+            print message
+        retval=False
+            
+    return retval
 
 #		
 # Main
 #     
 if __name__ == '__main__':
-
    	# create preprocess_particles_class object
-
-	preprocess_particles=preprocess_particles_class(WorkingDir,
-                                                        MicrographSelfile,
-                                                        IsPairList,
-                                                        ProjectDir,
-                                                        LogDir,
-                                                        DoExtract,
-                                                        PosFile,
-                                                        Size,
-                                                        ImagesDir,
-                                                        DoNormalize,
-                                                        BackGroundRadius,
-                                                        DoUseRamp,
-                                                        DoRemoveBlackDust,
-                                                        DoRemoveWhiteDust,
-                                                        DustRemovalThreshold,
-                                                        DoSorting)
-
-	# close 
-	preprocess_particles.close()
-
+	preprocess_particles=preprocess_particles_class(
+                 WorkingDir,
+                 PickingDir,
+                 ProjectDir,
+                 Size,
+                 DoFlip,
+                 DoLog, 
+                 DoInvert,
+                 BackGroundRadius,
+                 DoUseRamp,
+                 DoRemoveDust,
+                 DustRemovalThreshold,
+                 DoParallel,
+                 NumberOfMpiProcesses,
+                 SystemFlavour)
