@@ -344,19 +344,19 @@ elif (ARGUMENTS['mode'] == 'compile'):
     dp = False #debug or profile?
     if int(env['profile']):
         dp = True
-        dpFlags = "-g -pg"
+        dpFlags = ['-g', '-pg']
     elif int(env['debug']):
         dp = True
-        dpFlags = "-g"
+        dpFlags = ['-g']
     # profile or debug?
     if dp:
         env.Append(CXXFLAGS=['-D__XMIPP_DEBUG__'])
-        env.Append(CXXFLAGS=[dpFlags])
+        env.Append(CXXFLAGS=dpFlags)
         #required for print stack trace
         env.Append(CXXFLAGS=['-rdynamic'])
         env.Append(CXXFLAGS=['-O0'])
-        env.Append(CCFLAGS=[dpFlags])
-        env.Append(LINKFLAGS=[dpFlags])
+        env.Append(CCFLAGS=dpFlags)
+        env.Append(LINKFLAGS=dpFlags)
     else:
         # "safe" optimization
         env.Append(CXXFLAGS=['-O2'])
