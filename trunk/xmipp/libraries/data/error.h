@@ -247,11 +247,14 @@ public:
                const std::string &fileArg, const long lineArg);
     /** Destructor */
     ~XmippError();
-    /** Function to print the Stack calls */
-    void printStackTrace(std::ostream& o = std::cerr);
+
+    /** Show an error */
     friend std::ostream& operator<<(std::ostream& o, XmippError& XE);
 
+    /** Get Default message */
     char * getDefaultMessage();
+
+    /** Get default message */
     static char * getDefaultMessage(ErrorType e);
 };
 

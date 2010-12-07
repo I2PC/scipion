@@ -58,23 +58,12 @@ XmippError::~XmippError()
     //free(strings);
 }
 
-void XmippError::printStackTrace(std::ostream& o)
-{
-    o << "Obtained " << size << " stack frames:" << std::endl;
-    for (size_t i = 0; i < size; ++i)
-        o << strings[i] << std::endl;
-}
-
 // Show message
 std::ostream& operator << (std::ostream& o, XmippError& XE)
 {
     o << XE.__errno << ":" << XE.getDefaultMessage() << std::endl
     << XE.msg << std::endl
     << "File: " << XE.file << " line: " << XE.line << std::endl;
-#ifdef __XMIPP_DEBUG__
-    XE.printStackTrace(o);
-#endif
-
     return o;
 }
 
