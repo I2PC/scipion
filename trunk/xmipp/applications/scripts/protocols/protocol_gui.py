@@ -472,7 +472,7 @@ class automated_gui_class:
         self.morehelp = StringVar()
       
         # Script title
-        titletext = 'Xmipp protocols (v2.4)'
+        titletext = 'Xmipp protocols (v3.0)'
         self.master.title(titletext)
 
         # Reference
