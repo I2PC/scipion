@@ -30,8 +30,8 @@
 #define _XMIPP_PDB_HH
 
 #include <string>
-#include <data/matrix1d.h>
-#include <data/projection.h>
+#include "matrix1d.h"
+#include "projection.h"
 
 /**@defgroup PDBinterface PDB
    @ingroup InterfaceLibrary */

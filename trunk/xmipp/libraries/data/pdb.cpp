@@ -24,13 +24,13 @@
  ***************************************************************************/
 
 #include "pdb.h"
-#include <fstream>
-#include <data/args.h>
-#include <data/matrix2d.h>
-#include <data/mask.h>
-#include <data/fftw.h>
-#include <data/integration.h>
-#include <data/numerical_tools.h>
+#include "fstream"
+#include "args.h"
+#include "matrix2d.h"
+#include "mask.h"
+#include "fftw.h"
+#include "integration.h"
+#include "numerical_tools.h"
 
 /* Atom charge ------------------------------------------------------------- */
 int atomCharge(const std::string &atom)

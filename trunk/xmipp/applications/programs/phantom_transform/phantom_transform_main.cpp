@@ -27,7 +27,7 @@
 #include <data/args.h>
 #include <data/geometry.h>
 #include <data/phantom.h>
-#include <interface/pdb.h>
+#include <data/pdb.h>
 
 class Phantom_transform_parameters
 {

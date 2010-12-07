@@ -28,7 +28,7 @@
 #include <data/funcs.h>
 #include <data/metadata.h>
 #include <data/projection.h>
-#include <interface/pdb.h>
+#include <data/pdb.h>
 
 #include <data/phantom.h>
 #include "project_crystal.h"
