@@ -23,7 +23,6 @@
  *  e-mail address 'xmipp@cnb.csic.es'
  ***************************************************************************/
 
-
 #include <Python.h>
 
 #include <data/filename.h>
@@ -143,13 +142,25 @@ FileName_isInStack(PyObject *obj, PyObject *args, PyObject *kwargs)
         Py_RETURN_FALSE;
 }
 
-/* isInStack */
+/* isMetadata */
 static PyObject *
 FileName_isMetaData(PyObject *obj, PyObject *args, PyObject *kwargs)
 {
     FileNameObject *self = (FileNameObject*)obj;
 
     if (self->filename->isMetaData(false))
+        Py_RETURN_TRUE;
+    else
+        Py_RETURN_FALSE;
+}
+
+/* isStar1 */
+static PyObject *
+FileName_isStar1(PyObject *obj, PyObject *args, PyObject *kwargs)
+{
+    FileNameObject *self = (FileNameObject*)obj;
+
+    if (self->filename->isStar1(false))
         Py_RETURN_TRUE;
     else
         Py_RETURN_FALSE;
@@ -199,6 +210,9 @@ static PyMethodDef FileName_methods[] = {
                                             },
                                             {"isMetaData", (PyCFunction)FileName_isMetaData, METH_NOARGS,
                                              "True if is a MetaData"
+                                            },
+                                            {"isStar1", (PyCFunction)FileName_isStar1, METH_NOARGS,
+                                             "True if is a Star1"
                                             },
                                             {"getExtension", (PyCFunction)FileName_getExtension, METH_NOARGS,
                                              "Get the last extension from a FileName"
