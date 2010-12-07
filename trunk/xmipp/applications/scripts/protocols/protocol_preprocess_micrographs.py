@@ -33,8 +33,6 @@ RootName='all'
 """ Absolute path to the root directory for this project
 """
 ProjectDir ='/media/usbdisk/Experiments/TestProtocols'
-# {expert} Directory name for logfiles:
-LogDir ='Logs'
 #------------------------------------------------------------------------------------------------
 # {section} Preprocess
 #------------------------------------------------------------------------------------------------
@@ -105,17 +103,9 @@ MaxFocus=100000
 # Use N. Grigorieffs CTFFIND beside Xmipp?
 # {file} Location of the CTFFIND executable
 """ If available, CTFFIND will be used to double check the validity of the defoci """
-CtffindExec='/media/usbdisk/OtherPackages/ctffind/ctf/ctffind3.exe'
+CtffindExec='ctffind3.exe'
 # {expert} Window size
 WinSize=256
-# {expert} Minimum resolution (in norm. freq.)
-""" Lowest resolution to include in CTF estimation. Valid range 0-0.5
-"""
-MinResCTF=0.02
-# {expert} Maximum resolution factor
-""" highest resolution to include in CTF estimation. Valid range 0-0.5
-"""
-MaxResCTF=0.35
 # {expert} Defocus step (in Ang.)
 """ Step size for defocus search (in Angstrom)
 """
@@ -154,7 +144,6 @@ AnalysisScript='visualize_preprocess_micrographs.py'
 #------------------------------------------------------------------------------------------------
 #
 # Taken from Python 2.6
-
 import posixpath
 def relpath(path, start=posixpath.curdir):
     """Return a relative version of a path"""
@@ -211,7 +200,6 @@ class preprocess_A_class:
                  ExtMicrographs,
                  RootName,
                  ProjectDir,
-                 LogDir,
                  DoPreprocess,
                  Crop,
                  Stddev,
@@ -230,8 +218,6 @@ class preprocess_A_class:
                  MaxFocus,
                  CtffindExec,
                  WinSize,
-                 MinResCTF,
-                 MaxResCTF,
                  StepFocus,
                  DoParallel,
                  NumberOfMpiProcesses,
@@ -244,10 +230,10 @@ class preprocess_A_class:
 
         self.WorkingDir=os.path.abspath(WorkingDir)
         self.DirMicrographs=os.path.abspath(DirMicrographs)
-        self.ExtMicrographs=ExtMicrographs
+        self.ExtMicrographs=ExtMicrographs.strip()
         self.ProjectDir=os.path.abspath(ProjectDir)
-        self.LogDir=LogDir
-        self.RootName=RootName
+        self.LogDir="Logs"
+        self.RootName=RootName.strip()
         self.DoPreprocess=DoPreprocess
         self.Crop=Crop
         self.Stddev=Stddev
@@ -269,8 +255,6 @@ class preprocess_A_class:
         self.MaxFocus=MaxFocus
         self.DoCtffind=(not CtffindExec == "")
         self.WinSize=WinSize
-        self.MinResCTF=MinResCTF
-        self.MaxResCTF=MaxResCTF
         self.StepFocus=StepFocus
         self._MySystemFlavour=SystemFlavour
         self._DoParallel=DoParallel
@@ -278,7 +262,7 @@ class preprocess_A_class:
 
         # Setup logging
         self.log=log.init_log_system(self.ProjectDir,
-                                     LogDir,
+                                     self.LogDir,
                                      sys.argv[0],
                                      self.WorkingDir)
 
@@ -312,8 +296,6 @@ class preprocess_A_class:
                  "MinFocus",
                  "MaxFocus",
                  "WinSize",
-                 "MinResCTF",
-                 "MaxResCTF",
                  "StepFocus"]);
         
         # Backup script
@@ -344,7 +326,7 @@ class preprocess_A_class:
         self.SFctf=[]
         self.SFpsd=[]
 
-        fh_mpi=os.open(self.xmpi_run_file + '_1.sh', os.O_WRONLY | os.O_TRUNC | os.O_CREAT, 0700)
+        fh_mpi=os.open(self.xmpi_run_file + '.sh', os.O_WRONLY | os.O_TRUNC | os.O_CREAT, 0700)
         # Preprocessing
         for filename in glob.glob(self.DirMicrographs + '/' + self.ExtMicrographs):
 
@@ -391,7 +373,7 @@ class preprocess_A_class:
 
         # Launch Preprocessing and calculation of the CTF
         os.close(fh_mpi)
-        self.launchCommandFile(xmpi_run_file + '_1.sh')
+        self.launchCommandFile(xmpi_run_file + '.sh')
         
         # Pickup results from CTFFIND
         if self.DoCtfEstimate and self.DoCtffind:
@@ -596,8 +578,8 @@ class preprocess_A_class:
                   str(self.Magnification) + ',' + \
                   str(self.ScannedPixelSize * self.Down) + theNewLine
         command += str(self.WinSize) + ',' + \
-                  str(AngPix / self.MinResCTF) + ',' + \
-                  str(AngPix / self.MaxResCTF) + ',' + \
+                  str(AngPix / self.LowResolCutoff) + ',' + \
+                  str(AngPix / self.HighResolCutoff) + ',' + \
                   str(self.MinFocus) + ',' + \
                   str(self.MaxFocus) + ',' + \
                   str(self.StepFocus) + theNewLine
@@ -726,7 +708,6 @@ if __name__ == '__main__':
                  ExtMicrographs,
                  RootName,
                  ProjectDir,
-                 LogDir,
                  DoPreprocess,
                  Crop,
                  Stddev,
@@ -745,8 +726,6 @@ if __name__ == '__main__':
                  MaxFocus,
                  CtffindExec,
                  WinSize,
-                 MinResCTF,
-                 MaxResCTF,
                  StepFocus,
                  DoParallel,
                  NumberOfMpiProcesses,
