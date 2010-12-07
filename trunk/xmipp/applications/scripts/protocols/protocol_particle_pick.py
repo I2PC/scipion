@@ -23,20 +23,6 @@ WorkingDir='ParticlePicking'
 # {file} Selfile with all micrographs to pick particles from:
 MicrographSelfile='Preprocessing/all_micrographs.sel'
 
-# Is this selfile a list of untilted-tilted pairs?
-""" True for RCT-processing. In that case, provide a 2-column selfile as follows:
-    untilted_pair1.raw tilted_pair1.raw
-    untilted_pair2.raw tilted_pair2.raw
-    etc...
-    Use relative paths from the Preprocessing directory!
-"""
-IsPairList=False
-
-# Name of the position files (or family name)
-""" This is specified inside the micrograph_mark program (Common by default)
-"""
-PosName='Common'
-
 # Perform automatic particle picking
 """ Perform automatic particle picking """
 AutomaticPicking=False
@@ -45,9 +31,6 @@ AutomaticPicking=False
 """ Absolute path to the root directory for this project
 """
 ProjectDir='/media/usbdisk/Experiments/TestProtocols'
-
-# {expert} Directory name for logfiles:
-LogDir='Logs'
 
 #------------------------------------------------------------------------------------------------
 # {section} Parallelization issues for automatic particle picking
@@ -80,16 +63,54 @@ scriptdir=os.path.split(os.path.dirname(os.popen('which xmipp_protocols','r').re
 sys.path.append(scriptdir) # add default search path
 import xmipp
 
+# Taken from Python 2.6
+import posixpath
+def relpath(path, start=posixpath.curdir):
+    """Return a relative version of a path"""
+    if not path:
+        raise ValueError("no path specified")
+    start_list=posixpath.abspath(start).split(posixpath.sep)
+    path_list=posixpath.abspath(path).split(posixpath.sep)
+    # Work out how much of the filepath is shared by start and path.
+    i=len(posixpath.commonprefix([start_list, path_list]))
+    rel_list=[posixpath.pardir] * (len(start_list) - i) + path_list[i:]
+    if not rel_list:
+        return curdir
+    return posixpath.join(*rel_list)
+
 # Create a GUI automatically from a selfile of micrographs
 class particle_pick_class:
+    def saveAndCompareParameters(self, listOfParameters):
+        fnOut=self.WorkingDir + "/protocolParameters.txt"
+        linesNew=[];
+        for prm in listOfParameters:
+            eval("linesNew.append('"+prm +"='+str(self."+prm+")+'\\n')")
+        if os.path.exists(fnOut):
+            f = open(fnOut, 'r')
+            linesOld=f.readlines()
+            f.close()
+            same=True;
+            if len(linesOld)==len(linesNew):
+                for i in range(len(linesNew)):
+                    if not linesNew[i]==linesOld[i]:
+                        same=False
+                        break;
+            else:
+                same=False
+            if not same:
+                print("Deleting")
+                self.log.info("Deleting working directory since it is run with different parameters")
+                shutil.rmtree(self.WorkingDir)
+                os.makedirs(self.WorkingDir)
+        f = open(fnOut, 'w')
+        f.writelines(linesNew)
+        f.close()
+
     def __init__(self,
                  WorkingDir,
                  MicrographSelfile,
-                 IsPairList,
-                 PosName,
                  AutomaticPicking,
                  ProjectDir,
-                 LogDir,
                  DoParallel,
 		         NumberOfMpiProcesses,
                  SystemFlavour
@@ -107,26 +128,32 @@ class particle_pick_class:
         self.BooleanSelectColour=xmipp_protocol_gui.BooleanSelectColour
 
         self.WorkingDir=WorkingDir
-        self.MicrographSelfile=os.path.abspath(MicrographSelfile)
-        self.IsPairList=IsPairList
-        self.PosName=PosName
+        self.MicrographSelfile=MicrographSelfile
+        self.PosName="Common"
         self.AutomaticPicking=AutomaticPicking
         self.ProjectDir=ProjectDir
-        self.LogDir=LogDir
+        self.LogDir="Logs"
         self.DoParallel=DoParallel
         self.NumberOfMpiProcesses=NumberOfMpiProcesses
         self.SystemFlavour=SystemFlavour
 
-        # Delete working directory if exists, make a new one
-        if not os.path.exists(self.WorkingDir):
-            os.makedirs(self.WorkingDir)
-
         # Setup logging
         self.log=log.init_log_system(self.ProjectDir,
-                                     LogDir,
+                                     self.LogDir,
                                      sys.argv[0],
                                      self.WorkingDir)
                 
+        # Read micrographs
+        self.mD=xmipp.MetaData();
+        xmipp.readMetaDataWithTwoPossibleImages(MicrographSelfile, self.mD)
+        self.IsPairList = self.mD.containsLabel(xmipp.MDL_ASSOCIATED_IMAGE1) and \
+                          not xmipp.FileName(MicrographSelfile).isStar1()
+
+        # Store parameters
+        if os.path.exists(self.WorkingDir):
+            self.saveAndCompareParameters(["MicrographSelfile",
+                                           "IsPairList"]);
+            
         # Make working directory if it does not exist yet
         import time
         if not os.path.exists(self.WorkingDir):
@@ -135,6 +162,11 @@ class particle_pick_class:
             fh.write("Process started at " + time.asctime() + "\n")
             fh.write("Step 0: Directory created at " + time.asctime() + "\n")
             fh.close()
+            os.system("ln -s "+\
+                      relpath(os.path.abspath(self.MicrographSelfile),self.WorkingDir)+" "+\
+                    self.WorkingDir+"/micrographs.sel")
+            self.saveAndCompareParameters(["MicrographSelfile",
+                                           "IsPairList"]);
         else:
             fh=open(self.WorkingDir + "/status.txt", "a")
             fh.write("Process started at " + time.asctime() + "\n")
@@ -144,10 +176,6 @@ class particle_pick_class:
         log.make_backup_of_script_file(sys.argv[0],
         			       os.path.abspath(self.WorkingDir))
     
-        # Read micrographs
-        self.mD=xmipp.MetaData();
-        xmipp.readMetaDataWithTwoPossibleImages(MicrographSelfile, self.mD)
-
         # Execute protocol in the working directory
         self.print_warning()
         self.MakeGui()
@@ -553,16 +581,6 @@ def preconditions(gui):
             print message
         retval=False
     
-    # Check that automatic particle picking is not for tilted
-    if IsPairList and AutomaticPicking:
-        message="No working directory given"
-        if gui:
-            import tkMessageBox
-            tkMessageBox.showerror("Error", message)
-        else:
-            print message
-        retval=False
-        
     # Check that there is a valid list of micrographs
     if not os.path.exists(MicrographSelfile)>0:
         message="Cannot find "+MicrographSelfile
@@ -577,6 +595,7 @@ def preconditions(gui):
     import xmipp
     mD = xmipp.MetaData()
     xmipp.readMetaDataWithTwoPossibleImages(MicrographSelfile, mD)
+    isPairList = mD.containsLabel(xmipp.MDL_ASSOCIATED_IMAGE1)
     message="Cannot find the following micrographs:\n"
     NnotFound=0
     for id in mD:
@@ -584,7 +603,7 @@ def preconditions(gui):
          if not os.path.exists(micrograph):
             message+=micrograph+"\n"
             NnotFound=NnotFound+1
-         if mD.containsLabel(xmipp.MDL_ASSOCIATED_IMAGE1):
+         if isPairList:
              micrograph = mD.getValue(xmipp.MDL_ASSOCIATED_IMAGE1)
              if not os.path.exists(micrograph):
                  message+=micrograph+"\n"
@@ -598,6 +617,16 @@ def preconditions(gui):
             print message
         retval=False
             
+    # Check that automatic particle picking is not for tilted
+    if isPairList and AutomaticPicking:
+        message="Automatic particle picking cannot be done on tilt pairs"
+        if gui:
+            import tkMessageBox
+            tkMessageBox.showerror("Error", message)
+        else:
+            print message
+        retval=False
+        
     return retval
 
 #		
@@ -606,11 +635,8 @@ def preconditions(gui):
 if __name__ == '__main__':
 	particle_pick=particle_pick_class(WorkingDir,
                                       MicrographSelfile,
-                                      IsPairList,
-                                      PosName,
                                       AutomaticPicking,
                                       ProjectDir,
-                                      LogDir,
                                       DoParallel,
                                       NumberOfMpiProcesses,
                                       SystemFlavour
