@@ -182,8 +182,8 @@ void XmippProgram::read(int argc, char ** argv, bool reportErrors)
 void XmippProgram::read(const String &argumentsLine)
 {
   int argc;
-  char ** argv;
-  char * copy;
+  char ** argv=NULL;
+  char * copy=NULL;
 
   generateCommandLine(argumentsLine, argc, argv, copy);
   read(argc, argv);
