@@ -380,6 +380,10 @@ MetaData_dealloc(MetaDataObject* self)
 /* Constructor */
 static PyObject *
 MetaData_new(PyTypeObject *type, PyObject *args, PyObject *kwargs);
+static PyObject *
+MetaData_importObjects(PyObject *obj, PyObject *args, PyObject *kwargs);
+static PyObject *
+MetaData_unionAll(PyObject *obj, PyObject *args, PyObject *kwargs);
 
 static int
 MetaData_print(PyObject *obj, FILE *fp, int flags)
@@ -743,40 +747,6 @@ MetaData_addLabel(PyObject *obj, PyObject *args, PyObject *kwargs)
     }
     return NULL;
 }
-/* importObjects */
-static PyObject *
-MetaData_importObjects(PyObject *obj, PyObject *args, PyObject *kwargs)
-{
-    int label, objectId = -1;
-    PyObject *pyMd = NULL;
-    PyObject *pyQuery = NULL;
-
-    if (PyArg_ParseTuple(args, "OO", &pyMd, &pyQuery))
-    {
-        try
-        {
-            //FIXME: if (!MetaData_Check(pyMd))
-            if (0)
-            {
-                PyErr_SetString(PyExc_TypeError, "MetaData::importObjects: Expecting MetaData as first arguments");
-                return NULL;
-            }
-            if (!MDQuery_Check(pyQuery))
-            {
-                PyErr_SetString(PyExc_TypeError, "MetaData::importObjects: Expecting MDQuery as second arguments");
-                return NULL;
-            }
-            MetaDataObject *self = (MetaDataObject*)obj;
-            self->metadata->importObjects(MetaData_Value(pyMd), MDQuery_Value(pyQuery));
-            Py_RETURN_NONE;
-        }
-        catch (XmippError xe)
-        {
-            PyErr_SetString(PyXmippError, xe.msg.c_str());
-        }
-    }
-    return NULL;
-}
 /* removeObjects */
 static PyObject *
 MetaData_removeObjects(PyObject *obj, PyObject *args, PyObject *kwargs)
@@ -949,6 +919,9 @@ static PyMethodDef MetaData_methods[] = {
                                             {"removeObjects", (PyCFunction)MetaData_removeObjects, METH_VARARGS,
                                              "Remove objects from metadata"
                                             },
+                                            {"unionAll", (PyCFunction)MetaData_unionAll, METH_VARARGS,
+                                             "Union of two metadatas. The results is stored in self."
+                                            },
                                             {"sort", (PyCFunction)MetaData_sort, METH_VARARGS,
                                              "Sort metadata according to a label"
                                             },
@@ -1033,6 +1006,67 @@ MetaData_new(PyTypeObject *type, PyObject *args, PyObject *kwargs)
     }
     self->startedIter = false;
     return (PyObject *)self;
+}
+
+/* importObjects */
+static PyObject *
+MetaData_importObjects(PyObject *obj, PyObject *args, PyObject *kwargs)
+{
+    int label, objectId = -1;
+    PyObject *pyMd = NULL;
+    PyObject *pyQuery = NULL;
+
+    if (PyArg_ParseTuple(args, "OO", &pyMd, &pyQuery))
+    {
+        try
+        {
+            if (!MetaData_Check(pyMd)){
+                PyErr_SetString(PyExc_TypeError, "MetaData::importObjects: Expecting MetaData as first argument");
+                return NULL;
+            }
+            if (!MDQuery_Check(pyQuery))
+            {
+                PyErr_SetString(PyExc_TypeError, "MetaData::importObjects: Expecting MDQuery as second argument");
+                return NULL;
+            }
+            MetaDataObject *self = (MetaDataObject*)obj;
+            self->metadata->importObjects(MetaData_Value(pyMd), MDQuery_Value(pyQuery));
+            Py_RETURN_NONE;
+        }
+        catch (XmippError xe)
+        {
+            PyErr_SetString(PyXmippError, xe.msg.c_str());
+        }
+    }
+    return NULL;
+}
+
+/* UnionAll */
+static PyObject *
+MetaData_unionAll(PyObject *obj, PyObject *args, PyObject *kwargs)
+{
+    int label, objectId = -1;
+    PyObject *pyMd = NULL;
+    PyObject *pyQuery = NULL;
+
+    if (PyArg_ParseTuple(args, "O", &pyMd))
+    {
+        try
+        {
+            if (!MetaData_Check(pyMd)){
+                PyErr_SetString(PyExc_TypeError, "MetaData::unionAll: Expecting MetaData as first argument");
+                return NULL;
+            }
+            MetaDataObject *self = (MetaDataObject*)obj;
+            self->metadata->unionAll(MetaData_Value(pyMd));
+            Py_RETURN_NONE;
+        }
+        catch (XmippError xe)
+        {
+            PyErr_SetString(PyXmippError, xe.msg.c_str());
+        }
+    }
+    return NULL;
 }
 
 MDObject *
