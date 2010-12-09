@@ -57,8 +57,8 @@ void ProgRecFourier::defineParams()
     addUsageLine("   xmipp_reconstruct_fourier  -i reconstruction.sel --sym i3 --weight");
 
     addParamsLine("   -i <sel_file>              		: Selection file with input images");
-    addParamsLine("   -o <out_vol=\"rec_fourier.vol\">  : Filename for output volume");
-    addParamsLine("  [--sym <symfile>]            		: Enforce symmetry in projections");
+    addParamsLine("  [-o <out_vol=\"rec_fourier.vol\">]  : Filename for output volume");
+    addParamsLine("  [--sym <symfile=c1>]            		: Enforce symmetry in projections");
     addParamsLine("  [--pad_proj <p=2.0>]         		: Projection padding factor");
     addParamsLine("  [--pad_vol  <p=2.0>]         		: Volume padding factor");
     addParamsLine("  [--prepare_fsc <fscfile>]    		: Filename root for FSC files");
@@ -218,6 +218,7 @@ void ProgRecFourier::produceSideinfo()
     //Following commented line seems to be the right thing but I do not understand it
     //double fourierBlobTableSize = (sqrt(3.)*Xdim*Xdim/2.)*blobFourier.radius *sqrt(1./ (BLOB_TABLE_SIZE_SQRT-1));
     FOR_ALL_ELEMENTS_IN_MATRIX1D(blobTableSqrt)
+
     {
         //use a r*r sample instead of r
         //DIRECT_VEC_ELEM(blob_table,i)         = blob_val(delta*i, blob)  *iw0;
