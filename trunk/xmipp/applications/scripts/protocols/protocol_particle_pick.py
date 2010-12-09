@@ -595,7 +595,8 @@ def preconditions(gui):
     import xmipp
     mD = xmipp.MetaData()
     xmipp.readMetaDataWithTwoPossibleImages(MicrographSelfile, mD)
-    isPairList = mD.containsLabel(xmipp.MDL_ASSOCIATED_IMAGE1)
+    isPairList = mD.containsLabel(xmipp.MDL_ASSOCIATED_IMAGE1) and \
+                 not xmipp.FileName(MicrographSelfile).isStar1()
     message="Cannot find the following micrographs:\n"
     NnotFound=0
     for id in mD:
