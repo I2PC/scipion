@@ -113,11 +113,12 @@ def getParameter(prm,filename):
 class preprocess_particles_class:
 
     def saveAndCompareParameters(self, listOfParameters):
-        import os
+        import os,shutil
         fnOut=self.WorkingDir + "/protocolParameters.txt"
         linesNew=[];
         for prm in listOfParameters:
             eval("linesNew.append('"+prm +"='+str("+prm+")+'\\n')")
+        retval=False
         if os.path.exists(fnOut):
             f = open(fnOut, 'r')
             linesOld=f.readlines()
@@ -135,9 +136,11 @@ class preprocess_particles_class:
                 self.log.info("Deleting working directory since it is run with different parameters")
                 shutil.rmtree(self.WorkingDir)
                 os.makedirs(self.WorkingDir)
+                retval=True
         f = open(fnOut, 'w')
         f.writelines(linesNew)
         f.close()
+        return retval
 
     #init variables
     def __init__(self,
@@ -156,7 +159,7 @@ class preprocess_particles_class:
                  SystemFlavour
                  ):
 	     
-        import os,sys
+        import os,sys,time
         scriptdir=os.path.split(os.path.dirname(os.popen('which xmipp_protocols','r').read()))[0]+'/protocols'
         sys.path.append(scriptdir) # add default search path
         import log,xmipp,launch_job
@@ -192,7 +195,7 @@ class preprocess_particles_class:
             os.makedirs(self.WorkingDir)
 
         # Save parameters and compare to possible previous runs
-        self.saveAndCompareParameters([
+        deleted=self.saveAndCompareParameters([
                  "PickingDir",
                  "Size",
                  "DoFlip",
@@ -202,40 +205,61 @@ class preprocess_particles_class:
                  "DoRemoveDust",
                  "DustRemovalThreshold"]);
 
+        # Update status
+        fh=open(self.WorkingDir + "/status.txt", "a")
+        fh.write("Step 0: Processed started at " + time.asctime() + "\n")
+        fh.close()
+
         # Backup script
         log.make_backup_of_script_file(sys.argv[0],
                                        os.path.abspath(self.WorkingDir))
     
         # Preprocess paticles
-        fnScript=self.WorkingDir+'/pickParticles.sh'
-        self.fh_mpi=os.open(fnScript, os.O_WRONLY | os.O_TRUNC | os.O_CREAT, 0700)
-        self.process_all_micrographs()
-        os.close(self.fh_mpi)
-        self.launchCommandFile(fnScript)
-        
-        # Join results
-        generalMD=xmipp.MetaData()
-        for selfile in self.outputSel:
-            MD=xmipp.MetaData(selfile)
-            for id in MD:
-                imageFrom=MD.getValue(xmipp.MDL_MICROGRAPH)
-                MD.setValue(xmipp.MDL_MICROGRAPH,self.correspondingMicrograph[imageFrom])
-                if (self.correspondingCTF[imageFrom]!=""):
-                    MD.setValue(xmipp.MDL_CTFMODEL,self.correspondingCTF[imageFrom])
-            generalMD.unionAll(MD)
-        generalMD.write(self.OutSelFile)
-        
-        # Sort by statistics
         rootName,dummy=os.path.splitext(self.OutSelFile)
-        launch_job.launch_job("xmipp_sort_by_statistics",
-                              "-i "+self.OutSelFile+" -multivariate -o "+rootName+"_scores",
-                              self.log,
-                              False,1,1,'')        
-
-        # Remove intermediate selfiles
-        for selfile in self.outputSel:
-            os.remove(selfile)
+        if os.path.exists(rootName+"_sorted_by_score.sel") and deleted:
+            os.remove(rootName+"_sorted_by_score.sel")
+        if not os.path.exists(rootName+"_sorted_by_score.sel"):
+            fnScript=self.WorkingDir+'/pickParticles.sh'
+            self.fh_mpi=os.open(fnScript, os.O_WRONLY | os.O_TRUNC | os.O_CREAT, 0700)
+            self.process_all_micrographs()
+            os.close(self.fh_mpi)
+            self.launchCommandFile(fnScript)
         
+            # Join results
+            generalMD=xmipp.MetaData()
+            for selfile in self.outputSel:
+                if not os.path.exists(selfile):
+                    fh=open(self.WorkingDir + "/status.txt", "a")
+                    fh.write("Step E: Cannot read "+selfile+". Finishing at " + time.asctime() + "\n")
+                    fh.close()
+                    sys.exit(1)
+                MD=xmipp.MetaData(selfile)
+                for id in MD:
+                    imageFrom=MD.getValue(xmipp.MDL_MICROGRAPH)
+                    MD.setValue(xmipp.MDL_MICROGRAPH,self.correspondingMicrograph[imageFrom])
+                    if (self.correspondingCTF[imageFrom]!=""):
+                        MD.setValue(xmipp.MDL_CTFMODEL,self.correspondingCTF[imageFrom])
+                generalMD.unionAll(MD)
+            generalMD.write(self.OutSelFile)
+        
+            # Sort by statistics
+            launch_job.launch_job("xmipp_sort_by_statistics",
+                                  "-i "+self.OutSelFile+" -multivariate "+\
+                                  "-o "+rootName+"_sorted_by_score",
+                                  self.log,
+                                  False,1,1,'')
+
+            # Remove intermediate selfiles
+            for selfile in self.outputSel:
+                if os.path.exists(selfile):
+                    os.remove(selfile)
+    
+        # Update status    
+        if os.path.exists(rootName+"_sorted_by_score.sel"):
+            fh=open(self.WorkingDir + "/status.txt", "a")
+            fh.write("Step F: Processed finished at " + time.asctime() + "\n")
+            fh.close()
+
     def launchCommandFile(self, commandFile):
         import launch_job, log
         log.cat(self.log, commandFile)
@@ -269,7 +293,8 @@ class preprocess_particles_class:
                 micrographTilted=mD.getValue(xmipp.MDL_ASSOCIATED_IMAGE1)
             
             # Phase flip
-            command=""
+            fnStack=self.WorkingDir+"/"+micrographWithoutDirs+".stk"
+            command='if [ ! -f  '+fnStack+' ] ; then '
             filesToDelete=[]
             fnToPick=preprocessingDir+"/"+micrograph
             if self.DoFlip and not isPairTilt:
@@ -343,6 +368,9 @@ class preprocess_particles_class:
                 command+=" ; rm -f "+fileToDelete
 
             # Command done
+            command += " ; if [ -e " + fnStack + ' ]; then ' + \
+                        'echo "Step: '+micrograph+' processed " `date` >> ' + self.WorkingDir + "/status.txt; " + \
+                       "fi; fi"
             os.write(self.fh_mpi, command+"\n")
         
 # Preconditions
