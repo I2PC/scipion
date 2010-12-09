@@ -68,14 +68,10 @@ protected:
         }
     }
 
-    void postProcess()
-    {
-        mdIn.write(fn_out);
-    }
-
     void processImage(const FileName &fnImg, const FileName &fnImgOut, long int objId)
     {
-        Image<double> img; img.read(fnImg);; //read data and header
+        Image<double> img;
+        img.read(fnImg); //read data and header
         img.clearHeader();
 
         if (tiltSeries)
