@@ -882,11 +882,13 @@ void Mask::read(int argc, char **argv)
             mode = OUTSIDE_MASK;
         type = SINC_MASK;
     }
-    else
+    else if (strcmp(argv[i+1], "binary_file") == 0)
     {
-        fn_mask = argv[i+1];
+        fn_mask = argv[i+2];
         type = READ_MASK;
     }
+    else
+    	REPORT_ERROR(ERR_ARG_INCORRECT,"Incorrect mask type");
 }
 
 // Show --------------------------------------------------------------------
