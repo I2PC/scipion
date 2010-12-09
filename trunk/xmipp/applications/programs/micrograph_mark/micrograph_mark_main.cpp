@@ -125,7 +125,7 @@ public:
 
         // Configure application .............................................
         AutoParticlePicking *autoPicking=NULL;
-        if (fnRawTilted=="")
+        if (fnAutomaticModel!="")
             autoPicking=new AutoParticlePicking(&m);
 
         QApplication *app=NULL;

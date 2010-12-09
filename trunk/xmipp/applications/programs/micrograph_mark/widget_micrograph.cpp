@@ -373,6 +373,11 @@ void QtWidgetMicrograph::setAutoParticlePicking(
     AutoParticlePicking *_autoPicking)
 {
     __autoPicking=_autoPicking;
+    if (_autoPicking!=NULL)
+    {
+    	QtAutoMenu *autoMenu = new QtAutoMenu(this);
+    	addMenuItem("&AutoSelection", (QtPopupMenuMark *)(autoMenu));
+    }
 }
 
 AutoParticlePicking * QtWidgetMicrograph::getAutoParticlePicking() const
@@ -392,11 +397,6 @@ void QtWidgetMicrograph::openMenus()
 
     addMenuItem("&File", (QtPopupMenuMark *)(__file_menu));
     addMenuItem("F&ilters", (QtPopupMenuMark *)(filterMenu));
-    if (__autoPicking!=NULL)
-    {
-    	QtAutoMenu *autoMenu = new QtAutoMenu(this);
-    	addMenuItem("&AutoSelection", (QtPopupMenuMark *)(autoMenu));
-    }
 
     connect(__file_menu, SIGNAL(signalAddFamily(const char *)),
             this, SLOT(slotAddFamily(const char*)));
