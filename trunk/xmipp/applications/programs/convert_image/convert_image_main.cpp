@@ -75,10 +75,10 @@ protected:
         addParamsLine("                 long");
         addParamsLine("                 float");
         addParamsLine("                 double");
-        addParamsLine("                 cint16");
-        addParamsLine("                 cint32");
-        addParamsLine("                 cfloat");
-        addParamsLine("                 cdouble");
+        addParamsLine("                 cint16 : Complex in16");
+        addParamsLine("                 cint32 : Complex in32");
+        addParamsLine("                 cfloat : Complex float");
+        addParamsLine("                 cdouble: Complex double");
         addParamsLine("                 bool");
         addParamsLine("  alias -d;");
         addParamsLine("  [--rangeAdjust] : Adjust the histogram to fill the gray level range.");
@@ -191,8 +191,6 @@ protected:
             }
         case MD2VOL:
             {
-                std::cout << fnImg <<std::endl;
-                std::cout << "k = " << k <<std::endl;
                 imIn.read(fnImg,true,-1,false,false, NULL,true);
                 imOut->data->setSlice(k++,imIn.data);
                 break;
