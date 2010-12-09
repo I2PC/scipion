@@ -31,27 +31,49 @@
 #include "image.h"
 
 
+/// @addtogroup MultidimensionalArrays
 
+//@{
+
+/**
+ * MultidimArrayGeneric class to handle arrays with independence of the data type
+ */
 class MultidimArrayGeneric
 {
-private:
+public:
+    DataType       datatype;
     MultidimArrayBase *im;
-    DataType          datatype;
 
 public:
 
+    /**
+     * Constructor with pointer to array to be linked and datatype definition of
+     * the linked array.
+     */
     MultidimArrayGeneric(MultidimArrayBase* array, DataType _datatype);
 
+    /**
+     * Destructor.
+     */
     ~MultidimArrayGeneric()
     {}
 
+    /**
+     * Link the internal array base to a specific multidimarray object.
+     */
     void link(MultidimArrayBase* array);
 
+    /**
+     *  Call the resize function of the linked array.
+     */
     void resize(unsigned long int Ndim, int Zdim, int Ydim, int Xdim, bool copy=true)
     {
-      im->resize(Ndim,Zdim,Ydim,Xdim,copy);
+        im->resize(Ndim,Zdim,Ydim,Xdim,copy);
     }
 
+    /**
+     *  Copy a specific slice of the linked array.
+     */
     template <typename T>
     void getSliceT(int k, MultidimArray<T> &M, char axis = 'Z', unsigned long n = 0) const
     {
@@ -81,6 +103,9 @@ public:
         }
     }
 
+    /**
+     *  Copy a specific slice of the linked array.
+     */
     void getSlice(int k, MultidimArrayGeneric* M, char axis = 'Z', unsigned long n = 0) const
     {
         switch(M->datatype)
@@ -109,73 +134,92 @@ public:
         }
     }
 
-
-        template <typename T1>
-        void setSlice(int k, const MultidimArray <T1>& v, unsigned long n = 0)
+    /**
+     *  Set a specific slice of the linked array.
+     */
+    template <typename T1>
+    void setSlice(int k, const MultidimArray <T1>& v, unsigned long n = 0)
+    {
+        switch(datatype)
         {
-            switch(datatype)
-            {
-            case Float:
-                ((MultidimArray<float>*) im)->setSlice(k, v, n);
-                break;
-            case UInt:
-                ((MultidimArray<unsigned int>*) im)->setSlice(k, v, n);
-                break;
-            case Int:
-                ((MultidimArray<int>*) im)->setSlice(k, v, n);
-                break;
-            case Short:
-                ((MultidimArray<short>*) im)->setSlice(k, v, n);
-                break;
-            case UShort:
-                ((MultidimArray<unsigned short>*) im)->setSlice(k, v, n);
-                break;
-            case SChar:
-                ((MultidimArray<char>*) im)->setSlice(k, v, n);
-                break;
-            case UChar:
-                ((MultidimArray<unsigned char>*) im)->setSlice(k, v, n);
-                break;
-            }
+        case Float:
+            ((MultidimArray<float>*) im)->setSlice(k, v, n);
+            break;
+        case UInt:
+            ((MultidimArray<unsigned int>*) im)->setSlice(k, v, n);
+            break;
+        case Int:
+            ((MultidimArray<int>*) im)->setSlice(k, v, n);
+            break;
+        case Short:
+            ((MultidimArray<short>*) im)->setSlice(k, v, n);
+            break;
+        case UShort:
+            ((MultidimArray<unsigned short>*) im)->setSlice(k, v, n);
+            break;
+        case SChar:
+            ((MultidimArray<char>*) im)->setSlice(k, v, n);
+            break;
+        case UChar:
+            ((MultidimArray<unsigned char>*) im)->setSlice(k, v, n);
+            break;
         }
-
-
-        void setSlice(int k, const MultidimArrayGeneric* v, unsigned long n = 0)
-        {
-            switch(v->datatype)
-            {
-            case Float:
-                setSlice(k,*(MultidimArray<float>*) v->im, n);
-                break;
-            case UInt:
-                setSlice(k,*(MultidimArray<unsigned int>*) v->im, n);
-                break;
-            case Int:
-                setSlice(k,*(MultidimArray<int>*) v->im, n);
-                break;
-            case Short:
-                setSlice(k,*(MultidimArray<short>*) v->im, n);
-                break;
-            case UShort:
-                setSlice(k,*(MultidimArray<unsigned short>*) v->im, n);
-                break;
-            case SChar:
-                setSlice(k,*(MultidimArray<char>*) v->im, n);
-                break;
-            case UChar:
-                setSlice(k,*(MultidimArray<unsigned char>*) v->im, n);
-                break;
-            }
-        }
-
-        void getDimensions(int& Xdim, int& Ydim, int& Zdim, unsigned long int &Ndim) const
-        {
-            im->getDimensions(Xdim,Ydim,Zdim,Ndim);
-        }
-
-
     }
-    ;
 
+    /**
+     * Set a specific slice of the linked array.
+     */
+    void setSlice(int k, const MultidimArrayGeneric* v, unsigned long n = 0)
+    {
+        switch(v->datatype)
+        {
+        case Float:
+            setSlice(k,*(MultidimArray<float>*) v->im, n);
+            break;
+        case UInt:
+            setSlice(k,*(MultidimArray<unsigned int>*) v->im, n);
+            break;
+        case Int:
+            setSlice(k,*(MultidimArray<int>*) v->im, n);
+            break;
+        case Short:
+            setSlice(k,*(MultidimArray<short>*) v->im, n);
+            break;
+        case UShort:
+            setSlice(k,*(MultidimArray<unsigned short>*) v->im, n);
+            break;
+        case SChar:
+            setSlice(k,*(MultidimArray<char>*) v->im, n);
+            break;
+        case UChar:
+            setSlice(k,*(MultidimArray<unsigned char>*) v->im, n);
+            break;
+        }
+    }
+
+    /**
+     * Get the dimensions of the linked array.
+     */
+    void getDimensions(int& Xdim, int& Ydim, int& Zdim, unsigned long int &Ndim) const
+    {
+        im->getDimensions(Xdim,Ydim,Zdim,Ndim);
+    }
+    void getDimensions(int& Xdim, int& Ydim, int& Zdim) const
+    {
+        unsigned long
+        int Ndim;
+        im->getDimensions(Xdim,Ydim,Zdim,Ndim);
+    }
+
+    /**
+      * Get the dimensions of the linked array.
+      */
+    void setXmippOrigin()
+    {
+        im->setXmippOrigin();
+    }
+}
+;
+//@}
 
 #endif /* MULTIDIM_ARRAY_GENERIC_H_ */

@@ -29,7 +29,6 @@
 
 #include "image.h"
 
-
 // Get size of datatype
 size_t gettypesize(DataType type)
 {
@@ -77,7 +76,7 @@ size_t gettypesize(DataType type)
     return(size);
 }
 
-
+/** Convert datatype string to datatypr enun */
 DataType datatypeString2Int(std::string str)
 {
     DataType datatype;
@@ -117,12 +116,7 @@ DataType datatypeString2Int(std::string str)
 }
 
 
-
-
-
-
-
-//test
+// Special cases for complex numbers
 template<>
 void Image< std::complex< double > >::castPage2T(char * page,
         std::complex<double> * ptrDest,
@@ -165,7 +159,6 @@ void Image< std::complex< double > >::castPage2T(char * page,
                                 break;
                             }
                         }
-
 }
 
 template<>
@@ -209,8 +202,6 @@ void Image< std::complex< double > >::castPage2Datatype(std::complex<double> * s
                                 break;
                             }
                         }
-
-
 }
 
 template<>
@@ -234,8 +225,6 @@ void Image< std::complex< double > >::castConvertPage2Datatype(std::complex< dou
                 break;
             }
         }
-
-
 }
 
 

@@ -589,6 +589,7 @@ public:
 
   virtual void getDimensions(int& Xdim, int& Ydim, int& Zdim, unsigned long int &Ndim) const =0;
   virtual void resize(unsigned long int Ndim, int Zdim, int Ydim, int Xdim, bool copy=true)=0;
+  virtual void setXmippOrigin()=0;
 };
 
 

@@ -37,6 +37,20 @@ void ImageGeneric::setImageBase()
             data = new MultidimArrayGeneric((MultidimArrayBase*) &(imT->data), datatype);
         }
         break;
+    case UInt:
+           {
+               Image<unsigned int> *imT = new Image<unsigned int>;
+               image = imT;
+               data = new MultidimArrayGeneric((MultidimArrayBase*) &(imT->data), datatype);
+           }
+           break;
+       case Int:
+           {
+               Image<int> *imT = new Image<int>;
+               image = imT;
+               data = new MultidimArrayGeneric((MultidimArrayBase*) &(imT->data), datatype);
+           }
+           break;
     case UShort:
         {
             Image<unsigned short> *imT = new Image<unsigned short>;
@@ -44,9 +58,23 @@ void ImageGeneric::setImageBase()
             data = new MultidimArrayGeneric((MultidimArrayBase*) &(imT->data), datatype);
         }
         break;
+    case Short:
+        {
+            Image<short> *imT = new Image<short>;
+            image = imT;
+            data = new MultidimArrayGeneric((MultidimArrayBase*) &(imT->data), datatype);
+        }
+        break;
     case UChar:
         {
             Image<unsigned char> *imT = new Image<unsigned char>;
+            image = imT;
+            data = new MultidimArrayGeneric((MultidimArrayBase*) &(imT->data), datatype);
+        }
+        break;
+    case SChar:
+        {
+            Image<char> *imT = new Image<char>;
             image = imT;
             data = new MultidimArrayGeneric((MultidimArrayBase*) &(imT->data), datatype);
         }
@@ -73,13 +101,6 @@ int ImageGeneric::read(const FileName &name, bool readdata, int select_img,
     setImageBase();
     image->read(name,readdata,select_img,apply_geo,only_apply_shifts,row,mapData);
 }
-
-
-
-
-
-
-
 
 
 

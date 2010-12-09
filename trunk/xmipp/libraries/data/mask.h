@@ -27,6 +27,7 @@
 #define MASK_H
 
 #include "multidim_array.h"
+#include "multidim_array_generic.h"
 #include "histogram.h"
 #include "blobs.h"
 
@@ -795,8 +796,8 @@ void apply_geo_cont_2D_mask(MultidimArray< double >& mask,
  */
 template<typename T>
 void computeStats_within_binary_mask(const MultidimArray< int >& mask,
-                                     const MultidimArray< T >& m, T& min_val,
-                                     T& max_val,
+                                     const MultidimArray< T >& m, double& min_val,
+                                     double& max_val,
                                      double& avg, double& stddev)
 {
     SPEED_UP_temps;
@@ -833,6 +834,38 @@ void computeStats_within_binary_mask(const MultidimArray< int >& mask,
         stddev = 0;
 }
 
+inline void computeStats_within_binary_mask(const MultidimArray< int >& mask,
+                                     const MultidimArrayGeneric* m, double& min_val,
+                                     double& max_val,
+                                     double& avg, double& stddev)
+{
+    switch (m->datatype)
+    {
+    case Float:
+        computeStats_within_binary_mask(mask,*((MultidimArray<float>*)m->im),min_val,max_val,avg,stddev);
+        break;
+    case UInt:
+        computeStats_within_binary_mask(mask,*((MultidimArray<unsigned int>*)m->im),min_val,max_val,avg,stddev);
+        break;
+    case Int:
+        computeStats_within_binary_mask(mask,*((MultidimArray<int>*)m->im),min_val,max_val,avg,stddev);
+        break;
+    case Short:
+        computeStats_within_binary_mask(mask,*((MultidimArray<short>*)m->im),min_val,max_val,avg,stddev);
+        break;
+    case UShort:
+        computeStats_within_binary_mask(mask,*((MultidimArray<unsigned short>*)m->im),min_val,max_val,avg,stddev);
+        break;
+    case SChar:
+        computeStats_within_binary_mask(mask,*((MultidimArray<char>*)m->im),min_val,max_val,avg,stddev);
+        break;
+    case UChar:
+        computeStats_within_binary_mask(mask,*((MultidimArray<unsigned char>*)m->im),min_val,max_val,avg,stddev);
+        break;
+    }
+}
+
+
 /** Compute statistics in the active area
  *
  * Only the statistics for values in the overlapping between the mask and the
@@ -840,8 +873,8 @@ void computeStats_within_binary_mask(const MultidimArray< int >& mask,
  */
 template<typename T>
 void computeAvgStdev_within_binary_mask(const MultidimArray< int >& mask,
-                                     const MultidimArray< T >& m,
-                                     double& avg, double& stddev)
+                                        const MultidimArray< T >& m,
+                                        double& avg, double& stddev)
 {
     SPEED_UP_temps;
     double sum1 = 0;

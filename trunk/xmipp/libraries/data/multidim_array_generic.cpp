@@ -25,8 +25,6 @@
 
 #include "multidim_array_generic.h"
 
-
-
 MultidimArrayGeneric::MultidimArrayGeneric(MultidimArrayBase* array, DataType _datatype)
 {
     im = array;
