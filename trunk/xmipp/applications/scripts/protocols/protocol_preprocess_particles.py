@@ -59,11 +59,6 @@ DoInvert=False
    If this value is 0, then the same as the particle radius is used. """
 BackGroundRadius=0
 
-# Perform ramping background correction?
-""" Correct for inclined background densities by fitting a least-squares plane through the background pixels
-"""
-DoUseRamp=True
-
 # Perform dust particles removal?
 """ Sets pixels with unusually large values to random values from a Gaussian with zero-mean and unity-standard deviation.
 """
@@ -105,19 +100,20 @@ AnalysisScript='visualize_preprocess_particles.py'
 #------------------------------------------------------------------------------------------------
 #------------------------------------------------------------------------------------------------
 #
+def getParameter(prm,filename):
+    f = open(filename, 'r')
+    lines=f.readlines()
+    f.close()
+    for line in lines:
+        tokens=line.split('=')
+        if tokens[0]==prm:
+            return tokens[1].strip()
+    return ""
 
 class preprocess_particles_class:
-    def getParameter(prm,filename):
-        f = open(filename, 'r')
-        lines=f.readlines()
-        f.close()
-        for line in lines:
-            tokens=line.split('=')
-            if tokens[0]==prm:
-                return tokens[1]
-        return ""
 
     def saveAndCompareParameters(self, listOfParameters):
+        import os
         fnOut=self.WorkingDir + "/protocolParameters.txt"
         linesNew=[];
         for prm in listOfParameters:
@@ -153,7 +149,6 @@ class preprocess_particles_class:
                  DoLog, 
                  DoInvert,
                  BackGroundRadius,
-                 DoUseRamp,
                  DoRemoveDust,
                  DustRemovalThreshold,
                  DoParallel,
@@ -164,7 +159,7 @@ class preprocess_particles_class:
         import os,sys
         scriptdir=os.path.split(os.path.dirname(os.popen('which xmipp_protocols','r').read()))[0]+'/protocols'
         sys.path.append(scriptdir) # add default search path
-        import log,xmipp_protocol_preprocess_micrographs
+        import log,xmipp,launch_job
         
         self.WorkingDir=WorkingDir.strip()
         self.PickingDir=PickingDir.strip()
@@ -175,11 +170,16 @@ class preprocess_particles_class:
         self.DoFlip=DoFlip
         self.DoLog=DoLog 
         self.DoInvert=DoInvert
-        self.BackGroundRadius=BackGroundRadius
-        self.DoUseRamp=DoUseRamp
-        self.DoRemoveDust=DoRemoveBlackDust
+        if BackGroundRadius!=0:
+            self.BackGroundRadius=BackGroundRadius
+        else:
+            self.BackGroundRadius=Size/2
+        self.DoRemoveDust=DoRemoveDust
         self.DustRemovalThreshold=DustRemovalThreshold
         self.OutSelFile=OutSelFile
+        self.DoParallel=DoParallel
+        self.NumberOfMpiProcesses=NumberOfMpiProcesses
+        self.SystemFlavour=SystemFlavour
 
         # Setup logging
         self.log=log.init_log_system(self.ProjectDir,
@@ -195,10 +195,11 @@ class preprocess_particles_class:
         self.saveAndCompareParameters([
                  "PickingDir",
                  "Size",
+                 "DoFlip",
+                 "DoInvert",
+                 "DoLog",
                  "BackGroundRadius",
-                 "DoUseRamp",
-                 "DoRemoveBlackDust",
-                 "DoRemoveWhiteDust",
+                 "DoRemoveDust",
                  "DustRemovalThreshold"]);
 
         # Backup script
@@ -211,229 +212,142 @@ class preprocess_particles_class:
         self.process_all_micrographs()
         os.close(self.fh_mpi)
         self.launchCommandFile(fnScript)
+        
+        # Join results
+        generalMD=xmipp.MetaData()
+        for selfile in self.outputSel:
+            MD=xmipp.MetaData(selfile)
+            for id in MD:
+                imageFrom=MD.getValue(xmipp.MDL_MICROGRAPH)
+                MD.setValue(xmipp.MDL_MICROGRAPH,self.correspondingMicrograph[imageFrom])
+                if (self.correspondingCTF[imageFrom]!=""):
+                    MD.setValue(xmipp.MDL_CTFMODEL,self.correspondingCTF[imageFrom])
+            generalMD.unionAll(MD)
+        generalMD.write(self.OutSelFile)
+        
+        # Sort by statistics
+        rootName,dummy=os.path.splitext(self.OutSelFile)
+        launch_job.launch_job("xmipp_sort_by_statistics",
+                              "-i "+self.OutSelFile+" -multivariate -o "+rootName+"_scores",
+                              self.log,
+                              False,1,1,'')        
 
+        # Remove intermediate selfiles
+        for selfile in self.outputSel:
+            os.remove(selfile)
+        
     def launchCommandFile(self, commandFile):
         import launch_job, log
         log.cat(self.log, commandFile)
-        if self._DoParallel:
+        if self.DoParallel:
             command=' -i ' + commandFile
             launch_job.launch_job("xmipp_run", command, self.log, True,
-                  self._MyNumberOfMpiProcesses, 1, self._MySystemFlavour)
+                  self.NumberOfMpiProcesses, 1, self.SystemFlavour)
         else:
             self.log.info(commandFile)     
             os.system(commandFile)     
 
     def process_all_micrographs(self):
-        import os
+        import os, xmipp
         print '*********************************************************************'
         print '*  Pre-processing micrographs in '+os.path.basename(self.PickingDir)
 
-        fnPickingParameters=self.WorkingDir+"/protocolParameters.txt"
-        isPairTilt=self.getParameter("IsPairTilt",fnPickingParameters)=="True"
-        MicrographSelfile=self.getParameter("MicrographSelfile",fnPickingParameters)
+        self.outputSel=[]
+        self.correspondingMicrograph={}
+        self.correspondingCTF={}
+
+        fnPickingParameters=self.PickingDir+"/protocolParameters.txt"
+        isPairTilt=getParameter("IsPairTilt",fnPickingParameters)=="True"
+        MicrographSelfile=getParameter("MicrographSelfile",fnPickingParameters)
         mD=xmipp.MetaData();
         xmipp.readMetaDataWithTwoPossibleImages(MicrographSelfile, mD)
+        preprocessingDir,dummy=os.path.split(MicrographSelfile)
         for id in mD:
             micrograph=mD.getValue(xmipp.MDL_IMAGE)
+            dummy,micrographWithoutDirs=os.path.split(micrograph)
             if isPairTilt:
                 micrographTilted=mD.getValue(xmipp.MDL_ASSOCIATED_IMAGE1)
             
             # Phase flip
             command=""
-            if self.DoFlip:
-                command+="xmipp_"
+            filesToDelete=[]
+            fnToPick=preprocessingDir+"/"+micrograph
+            if self.DoFlip and not isPairTilt:
+                micrographName,micrographExt=os.path.splitext(micrographWithoutDirs)
+                ctf=mD.getValue(xmipp.MDL_CTFMODEL)
+                fnToPick=self.WorkingDir+"/"+micrographName+"_flipped.raw"
+                command+="xmipp_micrograph_phase_flipping"+\
+                         " -i "+preprocessingDir+"/"+micrograph+\
+                         " -ctf "+preprocessingDir+"/"+ctf+\
+                         " -o "+fnToPick + " ; "
+                filesToDelete.append(fnToPick+"*")
+            self.correspondingMicrograph[fnToPick]=preprocessingDir+"/"+micrograph
+            if mD.containsLabel(xmipp.MDL_CTFMODEL):
+                ctf=mD.getValue(xmipp.MDL_CTFMODEL)
+                self.correspondingCTF[fnToPick]=preprocessingDir+"/"+ctf
+            else:
+                self.correspondingCTF[fnToPick]=""
             
-                if (self.check_have_marked()):
-                    if (self.DoExtract):
-                        self.perform_extract()
+            # Extract particles
+            arguments=""
+            if isPairTilt:
+                pass
+            else:
+                posfile=""
+                candidatePosFile=self.PickingDir+"/"+micrographWithoutDirs+"."+self.PosFile+".pos"
+                if os.path.exists(candidatePosFile):
+                    posfile=candidatePosFile
+                candidatePosFile=self.PickingDir+"/"+micrographWithoutDirs+"."+self.PosFile+".auto.pos"
+                if os.path.exists(candidatePosFile):
+                    if posfile=="":
+                        posfile=candidatePosFile
+                    else:
+                        MD1=xmipp.MetaData(posfile)
+                        MD2=xmipp.MetaData(candidatePosfile)
+                        MD1.unionAll(MD2)
+                        candidatePosFile=self.PickingDir+"/"+micrographWithoutDirs+self.PosFile+".both.pos"
+                        MD1.write(candidatePosFile)
+                        filesToDelete.append(candidatePosFile)
+                if posfile!="":
+                    fnStack=self.WorkingDir+"/"+micrographWithoutDirs+".stk"
+                    self.outputSel.append(fnStack+".sel")
+                    arguments="-i "+fnToPick+" --pos "+posfile+" -o "+fnStack
+            if arguments=="":
+                print "Cannot find positions for "+micrograph
+                continue
+            
+            arguments+=" --Xdim "+str(self.Size)+" --rmStack"
+            if self.DoInvert:
+                arguments+=" --invert"
+            if self.DoLog:
+                arguments+=" --log"
+            command+="xmipp_micrograph_scissor "+arguments+" ; "
+            if isPairTilt:
+                pass
+            
+            # Normalize particles
+            normalizeArguments=\
+                     ' -background circle '+str(self.BackGroundRadius)+\
+                     ' -method Ramp'                
+            if (self.DoRemoveDust):
+                normalizeArguments+='  -remove_black_dust -thr_black_dust -' + \
+                         str(self.DustRemovalThreshold)+\
+                         '  -remove_white_dust -thr_white_dust ' + \
+                         str(self.DustRemovalThreshold)
+            command+='xmipp_normalize -i ' +fnStack+normalizeArguments
+            if isPairTilt:
+                pass
 
-                    if (self.DoNormalize):
-                        self.perform_normalize(self.shortname+'/'+self.allname+'.sel')
-                             
-        self.perform_sort_junk()
+            # Remove temporary files
+            for fileToDelete in filesToDelete:
+                command+=" ; rm -f "+fileToDelete
 
-    def process_all_pairs(self):
-        import os
-        print '*********************************************************************'
-        print '*  Pre-processing all micrograph pairs in '+os.path.basename(self.PickingDir)
-
-        dirname=self.ProjectDir+'/'+self.WorkingDir
-        if not os.path.exists(dirname):
-            os.makedirs(dirname)
-
-        self.allselfile = []
-        self.allselfile2 = []
-        self.allselfileboth = []
-        self.allctfdatfile = []
-
-        fh=open(self.MicrographSelfile,'r')
-        self.pairlines=fh.readlines()
-        fh.close()
-        words=self.pairlines[0].split()
-        if (len(words)<3):
-            message='Error: Selfile is not a pairlist file!'
-            print '*',message
-            self.log.error(message)
-            sys.exit()
-        for line in self.pairlines:
-            words=line.split()
-            self.shortname,self.allname=os.path.split(words[0])
-            self.shortname2,self.allname2=os.path.split(words[1])
-            self.downname=self.allname.replace('.raw','')
-            self.downname2=self.allname2.replace('.raw','')
-            self.downname=self.downname.replace('.spi','')
-            self.downname2=self.downname2.replace('.spi','')
-            state=words[2]
-            if (state.find('-1') < 0):
-                if (self.check_have_marked()):
-                    if (self.DoExtract):
-                        self.perform_extract_pairs()
-
-                    if (self.DoNormalize):
-                        self.perform_normalize(self.shortname+'/'+self.allname+'.sel')
-                        self.perform_normalize(self.shortname2+'/'+self.allname2+'.sel')
-
-        self.perform_sort_junk()
-
-    def check_have_marked(self):
-        import os
-        posname=self.shortname+'/'+self.downname+'.raw.'+self.PosFile+'.pos'
-        if os.path.exists(posname):
-            return True
-        posname=self.shortname+'/'+self.downname+'.raw.'+self.PosFile+'.auto.pos'
-        if os.path.exists(posname):
-            return True
-        else:
-            return False
-
-    def perform_extract_pairs(self):
-        import os,shutil
-        import launch_job
-        iname=self.shortname+'/'+self.allname
-        iname2=self.shortname2+'/'+self.allname2
-        imgsubdir=self.ProjectDir+'/'+self.WorkingDir+'/'+self.shortname
-        imgsubdir2=self.ProjectDir+'/'+self.WorkingDir+'/'+self.shortname2
-        rootname=imgsubdir+'/'+self.shortname+'_' 
-        rootname2=imgsubdir2+'/'+self.shortname2+'_'
-        selname=self.allname+'.sel' 
-        selname2=self.allname2+'.sel' 
-        selnameb=self.shortname+'/'+self.allname+'.sel' 
-        selnameb2=self.shortname2+'/'+self.allname2+'.sel' 
-        # micrograph_mark with tilt pairs expects <micrographname>.Common.pos files
-        unpos   = self.shortname+'/'+self.allname+'.'+self.PosFile+'.pos'
-        tilpos  = self.shortname2+'/'+self.allname2+'.'+self.PosFile+'.pos'
-        posname = self.shortname+'/'+self.downname+'.raw.'+self.PosFile+'.pos'
-        posname2= self.shortname2+'/'+self.downname2+'.raw.'+self.PosFile+'.pos'
-        if (not os.path.exists(unpos)):
-            shutil.copy(posname,unpos)
-        if (not os.path.exists(tilpos)):
-            shutil.copy(posname2,tilpos)
-        angname=self.shortname+'/'+self.downname+'.ang'
-        logname=self.shortname+'/scissor.log'
-        # Make directories if necessary
-        if not os.path.exists(imgsubdir):
-            os.makedirs(imgsubdir)
-        if not os.path.exists(imgsubdir2):
-            os.makedirs(imgsubdir2)
-
-        command=' -i ' + iname + ' -root ' + rootname + \
-                 ' -tilted ' + iname2 + ' -root_tilted ' + rootname2 + \
-                 ' -Xdim ' + str(self.Size) + \
-                 '|grep "corresponding image is set to blank"> ' + logname            
-        launch_job.launch_job("xmipp_micrograph_scissor",
-                              command,
-                              self.log,
-                              False,1,1,'')
-
-        # Move output selfiles inside the sub-directory:
-        os.rename(selname,selnameb)
-        os.rename(selname2,selnameb2)
-
-        # Remove pairs with one image near the border
-        self.remove_empty_images_pairs(selnameb,selnameb2)
+            # Command done
+            os.write(self.fh_mpi, command+"\n")
         
-    def perform_extract(self):
-        import os
-        import launch_job
-        iname=self.shortname+'/'+self.allname
-        selname=self.allname+'.sel' 
-        selnameb=self.shortname+'/'+self.allname+'.sel' 
-        posname=self.shortname+'/'+self.downname+'.raw.'+self.PosFile+'.pos' 
-        posnameauto=self.shortname+'/'+self.downname+'.raw.'+self.PosFile+'.auto.pos' 
-        imgsubdir=self.ProjectDir+'/'+self.WorkingDir+'/'+self.shortname
-        rootname=imgsubdir+'/'+self.shortname+'_'
-        logname=self.shortname+'/scissor.log'
-        size=self.Size
-
-        # Make directory if necessary
-        if not os.path.exists(imgsubdir):
-            os.makedirs(imgsubdir)
-
-        if os.path.exists(posname) and os.path.exists(posnameauto):
-            launch_job.launch_job("cat",
-                                  posname+" "+posnameauto+" > "+iname+"_all.pos",
-                                  self.log,
-                                  False,1,1,'')
-        elif os.path.exists(posname):
-            launch_job.launch_job("cp",
-                                  posname+" "+iname+"_all.pos",
-                                  self.log,
-                                  False,1,1,'')
-        elif os.path.exists(posnameauto):
-            launch_job.launch_job("cp",
-                                  posnameauto+" "+iname+"_all.pos",
-                                  self.log,
-                                  False,1,1,'')
-        
-        command= ' -i ' + iname + ' -pos ' + iname+"_all.pos" + \
-                 ' -root ' + rootname + ' -Xdim ' + str(size) + \
-                 '|grep "corresponding image is set to blank"> ' + logname
-        launch_job.launch_job("xmipp_micrograph_scissor",
-                              command,
-                              self.log,
-                              False,1,1,'')
-        launch_job.launch_job("rm",
-                              iname+"_all.pos",
-                              self.log,
-                              False,1,1,'')
-        
-        # Move selfile inside the subdirectory
-        os.rename(selname,selnameb)
-
-    def perform_normalize(self,iname):
-        import os
-        import launch_job
-        print '*********************************************************************'
-        print '*  Normalize particles in: '+iname
-        param=' -i ' +iname+' -background circle '+str(self.BackGroundRadius)
-        if (self.DoUseRamp):
-            param=param+' -method Ramp'
-        if (self.DoRemoveBlackDust):
-            param=param+'  -remove_black_dust -thr_black_dust -' + \
-                str(self.DustRemovalThreshold)
-        if (self.DoRemoveWhiteDust):
-            param=param+'  -remove_white_dust -thr_white_dust ' + \
-                str(self.DustRemovalThreshold)
-        launch_job.launch_job("xmipp_normalize",
-                              param,
-                              self.log,
-                              False,1,1,'')
-
-    def perform_sort_junk(self):
-        import os
-        import launch_job
-        print '*********************************************************************'
-        print '*  Sorting images by statistics in: '+self.OutSelFile
-        os.chdir(self.ProjectDir)
-        command=' -i '+self.OutSelFile
-        launch_job.launch_job("xmipp_sort_by_statistics",
-                              command,
-                              self.log,
-                              False,1,1,'')
-        os.chdir(os.pardir)
-
 # Preconditions
 def preconditions(gui):
+    import os
     retval=True
     # Check if there is workingdir
     if WorkingDir == "":
@@ -446,8 +360,8 @@ def preconditions(gui):
         retval=False
     
     # Check that there is a valid list of micrographs
-    if not os.path.exists(MicrographSelfile)>0:
-        message="Cannot find "+MicrographSelfile
+    if not os.path.exists(PickingDir)>0:
+        message="Cannot find "+PickingDir
         if gui:
             import tkMessageBox
             tkMessageBox.showerror("Error", message)
@@ -457,22 +371,26 @@ def preconditions(gui):
     
     # Check that all micrographs exist
     import xmipp
-    mD = xmipp.MetaData()
+    fnPickingParameters=PickingDir+"/protocolParameters.txt"
+    isPairTilt=getParameter("IsPairTilt",fnPickingParameters)=="True"
+    MicrographSelfile=getParameter("MicrographSelfile",fnPickingParameters)
+    print os.path.curdir
+    mD=xmipp.MetaData();
     xmipp.readMetaDataWithTwoPossibleImages(MicrographSelfile, mD)
+    preprocessingDir,dummy=os.path.split(MicrographSelfile)
     message="Cannot find the following micrographs:\n"
     NnotFound=0
     for id in mD:
-         micrograph = mD.getValue(xmipp.MDL_IMAGE)
-         if not os.path.exists(micrograph):
-            message+=micrograph+"\n"
+        micrograph=mD.getValue(xmipp.MDL_IMAGE)
+        if not os.path.exists(preprocessingDir+"/"+micrograph):
+            message+=preprocessingDir+"/"+micrograph+"\n"
             NnotFound=NnotFound+1
-         if mD.containsLabel(xmipp.MDL_ASSOCIATED_IMAGE1):
-             micrograph = mD.getValue(xmipp.MDL_ASSOCIATED_IMAGE1)
-             if not os.path.exists(micrograph):
-                 message+=micrograph+"\n"
-                 NnotFound=NnotFound+1
-    
-    if not NnotFound>0:
+        if isPairTilt:
+            micrographTilted=mD.getValue(xmipp.MDL_ASSOCIATED_IMAGE1)
+            if not os.path.exists(preprocessingDir+"/"+micrographTilted):
+                message+=preprocessingDir+"/"+micrographTilted+"\n"
+                NnotFound=NnotFound+1
+    if NnotFound>0:
         if gui:
             import tkMessageBox
             tkMessageBox.showerror("Error", message)
@@ -496,7 +414,6 @@ if __name__ == '__main__':
                  DoLog, 
                  DoInvert,
                  BackGroundRadius,
-                 DoUseRamp,
                  DoRemoveDust,
                  DustRemovalThreshold,
                  DoParallel,
