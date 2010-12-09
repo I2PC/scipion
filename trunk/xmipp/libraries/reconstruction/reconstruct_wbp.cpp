@@ -34,7 +34,7 @@ void ProgRecWbp::readParams()
     fn_out =  getParam("-o");
     fn_sym =  getParam("--sym");
     threshold = getDoubleParam("--threshold");
-    diameter = 2 * getIntParam("--radius");
+    diameter = 2 * getIntParam("--radius");;
     sampling = getDoubleParam("--filsam");
     do_all_matrices = checkParam("--use_each_image");
     do_weights = checkParam("--weight");
@@ -135,7 +135,7 @@ void ProgRecWbp::produceSideInfo()
     ImgSize(SF,dim, dim);
     if (fn_sym != "")
         SL.read_sym_file(fn_sym);
-    if (diameter == 0)
+    if (diameter <= 0)
         diameter = dim;
 
     // Fill arrays of transformation matrices
