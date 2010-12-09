@@ -418,20 +418,19 @@ void Micrograph::produce_all_images(int label, const FileName &fn_root,
         {
             fn_aux.compose(ii++,fn_out);
             SF.addObject();
-            bool t;
-            t=M->scissor(coords[n], (Image<double> &) I, Dmin, Dmax, scaleX, scaleY);
+            SF.setValue( MDL_IMAGE, fn_aux);
+            SF.setValue( MDL_MICROGRAPH, M->fn_micrograph);
+            SF.setValue( MDL_X, (double)coords[n].X);
+            SF.setValue( MDL_Y, (double)coords[n].Y);
+            bool t=M->scissor(coords[n], (Image<double> &) I, Dmin, Dmax, scaleX, scaleY);
             if (!t)
             {
                 std::cout << "Particle " << fn_aux << " is very near the border, "
                 << "corresponding image is set to blank\n";
-                SF.setValue( MDL_IMAGE, fn_aux);
-                SF.setValue( MDL_ENABLED, 1);
+                SF.setValue( MDL_ENABLED, 0);
             }
             else
-            {
-                SF.setValue( MDL_IMAGE, fn_aux);
                 SF.setValue( MDL_ENABLED, 1);
-            }
             //  if (ang!=0) I().rotate(-ang);
             /// FIXME: HEADER MODIFICATION
             /*
@@ -441,16 +440,8 @@ void Micrograph::produce_all_images(int label, const FileName &fn_root,
             */
             SF.writeImage(I,fn_out,-1,true);
         }
-    if (labels[label] != "")
-    {
-        SF.write(fn_micrograph.removeDirectories() + "." + labels[label] + ".sel");
-        write_coordinates(label, -1, fn_micrograph + "." + labels[label] + ".pos");
-    }
-    else
-    {
-        SF.write(fn_micrograph.removeDirectories() + ".sel");
-        write_coordinates(label, -1, fn_micrograph + ".pos");
-    }
+    std::cout << "Writing " << fn_root+".sel" << std::endl;
+    SF.write(fn_root + ".sel");
 
     // Free source image??
     if (fn_image != "")
