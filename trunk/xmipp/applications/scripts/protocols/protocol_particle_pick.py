@@ -58,7 +58,7 @@ SystemFlavour=''
 #------------------------------------------------------------------------------------------------
 #
 from Tkinter import *
-import os,sys
+import os,shutil,sys
 scriptdir=os.path.split(os.path.dirname(os.popen('which xmipp_protocols','r').read()))[0]+'/protocols'
 sys.path.append(scriptdir) # add default search path
 import xmipp
