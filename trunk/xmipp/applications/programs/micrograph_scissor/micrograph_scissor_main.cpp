@@ -93,8 +93,9 @@ protected:
 
         if (!pair_mode)
         {
-            fn_pos        = getParam("--ppos");
-            fn_orig       = getParam("--orig", "");
+            fn_pos        = getParam("--pos");
+            if (checkParam("--orig"))
+            	fn_orig       = getParam("--orig");
         }
         else
         {
