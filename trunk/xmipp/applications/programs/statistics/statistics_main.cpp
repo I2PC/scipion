@@ -24,70 +24,78 @@
  *  e-mail address 'xmipp@cnb.csic.es'
  ***************************************************************************/
 
-#include <data/args.h>
-#include <data/metadata.h>
-#include <data/image.h>
-#include <data/mask.h>
 #include <cstdio>
+#include "data/args.h"
+#include "data/metadata.h"
+#include "data/image_generic.h"
+#include "data/mask.h"
 
-void Usage();
 
-int main(int argc, char **argv)
+
+/* PROGRAM ----------------------------------------------------------------- */
+
+class ProgStatistics: public XmippMetadataProgram
 {
-    FileName        fn_input, fn_stats;
-    MetaData        SF;
-    MetaData        DF_stats;
-    Image<double>  image;
+public:
+    Mask            mask_prm;
 
-    Mask            mask_prm(INT_MASK);
+protected:
+    MetaData        DF_stats;
+    ImageGeneric  image;
+
     int             short_format;     // True if a short line is to be shown
     int             save_mask;        // True if the masks must be saved
     int             repair;           // True if headers are initialized
     bool            show_angles;      // True if angles are to be shown in stats
-    bool            apply_geo;        // True if the header must be taken into account
     MultidimArray<int>   mask;
 
-    // Read arguments --------------------------------------------------------
-    try
-    {
-        fn_input = getParameter(argc, argv, "-i");
-        if (fn_input.isMetaData())
-        {
-            SF.read(fn_input);
-        }
-        else
-        {
-            SF.addObject();
-            SF.setValue( MDL_IMAGE, fn_input);
-            SF.setValue( MDL_ENABLED, 1);
-        }
+    double min_val, max_val, avg, stddev;
+    int min_val_int, max_val_int;
+    double mean_min_val, mean_max_val, mean_avg, mean_stddev;
+    int N;
+    int max_length;
 
+    void defineParams()
+    {
+        each_image_produces_an_output = false;
+        apply_geo = true;
+        allow_time_bar = false;
+        addUsageLine("Display statistics of images or volumes, also applying to the area within a mask.");
+        XmippMetadataProgram::defineParams();
+        addParamsLine("[-o <metadata>]   : Save the statistics in this metadata file");
+        addParamsLine("[-short_format]   : Do not show labels for statistics.");
+        addParamsLine("[-show_angles]    : Also show angles in the image header.");
+        addParamsLine("[-save_mask]      : Save 2D and 3D masks (as \"mask2D\" or \"mask3D\").");
+    }
+
+    void readParams()
+    {
+        XmippMetadataProgram::readParams();
+        short_format = checkParam("-short_format");
+        save_mask    = checkParam("-save_mask");
+        show_angles  = checkParam("-show_angles");
+
+        fn_out = (checkParam("-o"))? getParam("-o"): "";
+
+        mask_prm.allowed_data_types = INT_MASK;
         mask_prm.read(argc, argv);
-        fn_stats     = getParameter(argc, argv, "-o", "");
-        short_format = checkParameter(argc, argv, "-short_format");
-        save_mask    = checkParameter(argc, argv, "-save_mask");
-        show_angles  = checkParameter(argc, argv, "-show_angles");
-        apply_geo    = !checkParameter(argc, argv, "-dont_apply_geo");
-    }
-    catch (XmippError XE)
-    {
-        std::cout << XE;
-        Usage();
-        mask_prm.usage();
-        exit(1);
+
     }
 
-    try
+    void show()
     {
-        DF_stats.setComment((std::string)"# Statistics of " + fn_input);
+        std::cout << " Statistics of " << fn_in << std::endl;
+    }
+
+    void preProcess()
+    {
+        DF_stats.setComment((std::string)"# Statistics of " + fn_in);
         // Get maximum filename size ---------------------------------------------
-        int max_length = SF.MaxStringLength(MDL_IMAGE);
+        max_length = mdIn.MaxStringLength(MDL_IMAGE);
 
         // Process each file -----------------------------------------------------
-        double min_val, max_val, avg, stddev;
-        int min_val_int, max_val_int;
-        double mean_min_val = 0, mean_max_val = 0, mean_avg = 0, mean_stddev = 0;
-        int N = 0;
+        mean_min_val = 0, mean_max_val = 0, mean_avg = 0, mean_stddev = 0;
+        N = 0;
 
         if (short_format)
         {
@@ -96,75 +104,77 @@ int main(int argc, char **argv)
                 std::cout << " <rot tilt psi>";
             std::cout << '>' << std::endl;
         }
+    }
 
-        long int ret=SF.firstObject();
-        if(ret==NO_OBJECTS_STORED)
+    void processImage(const FileName &fnImg, const FileName &fnImgOut, long int objId)
+    {
+        image.read(fnImg);
+        image.data->setXmippOrigin();
+        //        image().setXmippOrigin();
+
+        int xDim,yDim,zDim;
+        double rot, tilt, psi;
+        image.getDimensions(xDim,yDim,zDim);
+        image.getEulerAngles(rot,tilt,psi);
+
+        // Generate mask if necessary
+        mask_prm.generate_mask(zDim, yDim, xDim);
+        mask = mask_prm.get_binary_mask();
+
+        computeStats_within_binary_mask(mask, image(), min_val, max_val,
+                                        avg, stddev);
+        // Show information
+
+
+        std::cout << stringToString(fnImg, max_length + 1);
+        if (zDim > 1)
+            std::cout << integerToString(zDim, 4, ' ') << 'x'
+            << integerToString(yDim, 4, ' ') << 'x'
+            << integerToString(xDim, 4, ' ') << ' ';
+        else
+            std::cout << integerToString(yDim, 4, ' ') << 'x'
+            << integerToString(xDim, 4, ' ') << ' ';
+
+        if (!short_format)
         {
-            std::cerr << "Empty inputFile File\n";
-            exit(1);
+            std::cout << "min= "    << floatToString(min_val, 10) << ' '
+            << "max= "    << floatToString(max_val, 10) << ' '
+            << "avg= "    << floatToString(avg    , 10) << ' '
+            << "stddev= " << floatToString(stddev , 10) << ' ';
+            if (show_angles)
+            {
+                std::cout << "rot= "    << floatToString(rot , 10) << ' '
+                << "tilt= "   << floatToString(tilt, 10) << ' '
+                << "psi= "    << floatToString(psi, 10) << ' ';
+            }
         }
-        FileName file_name;
-        FOR_ALL_OBJECTS_IN_METADATA(SF)
+        else
         {
-            SF.getValue(MDL_IMAGE, file_name);
-            image.read(file_name);
-            image().setXmippOrigin();
+            std::cout << floatToString(min_val, 10) << ' '
+            << floatToString(max_val, 10) << ' '
+            << floatToString(avg    , 10) << ' '
+            << floatToString(stddev , 10) << ' ';
+        }
 
-            // Generate mask if necessary
-            mask_prm.generate_mask(image());
-            mask = mask_prm.get_binary_mask();
+        DF_stats.addObject();
+        DF_stats.setValue(MDL_MIN,min_val);
+        DF_stats.setValue(MDL_MAX,max_val);
+        DF_stats.setValue(MDL_AVG,avg);
+        DF_stats.setValue(MDL_STDDEV,stddev);
 
-            computeStats_within_binary_mask(mask, image(), min_val, max_val,
-                                            avg, stddev);
-            // Show information
-            std::cout << stringToString(file_name, max_length + 1);
-            if (ZSIZE(image()) > 1)
-                std::cout << integerToString(ZSIZE(image()), 4, ' ') << 'x'
-                << integerToString(YSIZE(image()), 4, ' ') << 'x'
-                << integerToString(XSIZE(image()), 4, ' ') << ' ';
-            else
-                std::cout << integerToString(YSIZE(image()), 4, ' ') << 'x'
-                << integerToString(XSIZE(image()), 4, ' ') << ' ';
+        // Total statistics
+        N++;
+        mean_min_val += min_val;
+        mean_max_val += max_val;
+        mean_avg     += avg;
+        mean_stddev  += stddev;
 
-            if (!short_format)
-            {
-                std::cout << "min= "    << floatToString(min_val, 10) << ' '
-                << "max= "    << floatToString(max_val, 10) << ' '
-                << "avg= "    << floatToString(avg    , 10) << ' '
-                << "stddev= " << floatToString(stddev , 10) << ' ';
-                if (show_angles)
-                {
-                    std::cout << "rot= "    << floatToString(image.rot() , 10) << ' '
-                    << "tilt= "   << floatToString(image.tilt(), 10) << ' '
-                    << "psi= "    << floatToString(image.psi() , 10) << ' ';
-                }
-            }
-            else
-            {
-                std::cout << floatToString(min_val, 10) << ' '
-                << floatToString(max_val, 10) << ' '
-                << floatToString(avg    , 10) << ' '
-                << floatToString(stddev , 10) << ' ';
-            }
+        // Finish information .................................................
+        std::cout << std::endl;
+    }
 
-            DF_stats.addObject();
-            DF_stats.setValue(MDL_MIN,min_val);
-            DF_stats.setValue(MDL_MAX,max_val);
-            DF_stats.setValue(MDL_AVG,avg);
-            DF_stats.setValue(MDL_STDDEV,stddev);
-
-            // Total statistics
-            N++;
-            mean_min_val += min_val;
-            mean_max_val += max_val;
-            mean_avg     += avg;
-            mean_stddev  += stddev;
-
-            // Finish information .................................................
-            std::cout << std::endl;
-
-        } // while
-
+    void postProcess()
+    {
         // Show total statistics ------------------------------------------------
         std::cout << "==================================================\n";
         std::cout << "Total number of images/volumes: " << N << std::endl;
@@ -196,30 +206,225 @@ int main(int argc, char **argv)
         }
 
         // Save statistics ------------------------------------------------------
-        if (fn_stats != "")
-            DF_stats.write(fn_stats);
+        if (fn_out != "")
+            DF_stats.write(fn_out);
     }
-    catch (XmippError XE)
+}
+;// end of class ProgStatistics
+
+
+/* MAIN -------------------------------------------------------------------- */
+int main(int argc, char *argv[])
+{
+    try
     {
-        std::cout << XE;
+        ProgStatistics program;
+        program.read(argc, argv);
+        program.run();
+    }
+    catch (XmippError xe)
+    {
+        std::cerr << xe;
     }
     return 0;
-} //main
-
-/* Usage ------------------------------------------------------------------- */
-void Usage()
-{
-    std::cerr << "Purpose:\n";
-    std::cerr << "    Displays statistics of images or volumes \n"
-    << "      (possibly restricted to the area within a mask)\n";
-    std::cerr << "Usage: statistics " << std::endl
-    << "    -i               : Selfile with images/volumes \n"
-    << "                        or individual image or volume \n"
-    << "   [-o <metadata>]   : save the statistics in this metadata file\n"
-    << "   [-dont_apply_geo] : do not apply geo when the image is read\n"
-    << "   [-short_format]   : Don't show labels for statistics\n"
-    << "   [-show_angles]    : Also show angles in the image header \n"
-    << "   [-save_mask]      : save 2D and 3D masks (as \"mask2D\" or \"mask3D\") \n";
-
 }
+//
+//
+//
+//
+//
+//
+//
+//void Usage();
+//
+//int main(int argc, char **argv)
+//{
+//    FileName        fn_input, fn_stats;
+//    MetaData        SF;
+//    MetaData        DF_stats;
+//    Image<double>  image;
+//
+//    Mask            mask_prm(INT_MASK);
+//    int             short_format;     // True if a short line is to be shown
+//    int             save_mask;        // True if the masks must be saved
+//    int             repair;           // True if headers are initialized
+//    bool            show_angles;      // True if angles are to be shown in stats
+//    bool            apply_geo;        // True if the header must be taken into account
+//    MultidimArray<int>   mask;
+//
+//    // Read arguments --------------------------------------------------------
+//    try
+//    {
+//        fn_input = getParameter(argc, argv, "-i");
+//        if (fn_input.isMetaData())
+//        {
+//            SF.read(fn_input);
+//        }
+//        else
+//        {
+//            SF.addObject();
+//            SF.setValue( MDL_IMAGE, fn_input);
+//            SF.setValue( MDL_ENABLED, 1);
+//        }
+//
+//        mask_prm.read(argc, argv);
+//        fn_stats     = getParameter(argc, argv, "-o", "");
+//        short_format = checkParameter(argc, argv, "-short_format");
+//        save_mask    = checkParameter(argc, argv, "-save_mask");
+//        show_angles  = checkParameter(argc, argv, "-show_angles");
+//        apply_geo    = !checkParameter(argc, argv, "-dont_apply_geo");
+//    }
+//    catch (XmippError XE)
+//    {
+//        std::cout << XE;
+//        Usage();
+//        mask_prm.usage();
+//        exit(1);
+//    }
+//
+//    try
+//    {
+//        DF_stats.setComment((std::string)"# Statistics of " + fn_input);
+//        // Get maximum filename size ---------------------------------------------
+//        int max_length = SF.MaxStringLength(MDL_IMAGE);
+//
+//        // Process each file -----------------------------------------------------
+//        double min_val, max_val, avg, stddev;
+//        int min_val_int, max_val_int;
+//        double mean_min_val = 0, mean_max_val = 0, mean_avg = 0, mean_stddev = 0;
+//        int N = 0;
+//
+//        if (short_format)
+//        {
+//            std::cout << "Format: Name ZxYxX min max avg stddev ";
+//            if (show_angles)
+//                std::cout << " <rot tilt psi>";
+//            std::cout << '>' << std::endl;
+//        }
+//
+//        long int ret=SF.firstObject();
+//        if(ret==NO_OBJECTS_STORED)
+//        {
+//            std::cerr << "Empty inputFile File\n";
+//            exit(1);
+//        }
+//        FileName file_name;
+//        FOR_ALL_OBJECTS_IN_METADATA(SF)
+//        {
+//            SF.getValue(MDL_IMAGE, file_name);
+//            image.read(file_name);
+//            image().setXmippOrigin();
+//
+//            // Generate mask if necessary
+//            mask_prm.generate_mask(image());
+//            mask = mask_prm.get_binary_mask();
+//
+//            computeStats_within_binary_mask(mask, image(), min_val, max_val,
+//                                            avg, stddev);
+//            // Show information
+//            std::cout << stringToString(file_name, max_length + 1);
+//            if (ZSIZE(image()) > 1)
+//                std::cout << integerToString(ZSIZE(image()), 4, ' ') << 'x'
+//                << integerToString(YSIZE(image()), 4, ' ') << 'x'
+//                << integerToString(XSIZE(image()), 4, ' ') << ' ';
+//            else
+//                std::cout << integerToString(YSIZE(image()), 4, ' ') << 'x'
+//                << integerToString(XSIZE(image()), 4, ' ') << ' ';
+//
+//            if (!short_format)
+//            {
+//                std::cout << "min= "    << floatToString(min_val, 10) << ' '
+//                << "max= "    << floatToString(max_val, 10) << ' '
+//                << "avg= "    << floatToString(avg    , 10) << ' '
+//                << "stddev= " << floatToString(stddev , 10) << ' ';
+//                if (show_angles)
+//                {
+//                    std::cout << "rot= "    << floatToString(image.rot() , 10) << ' '
+//                    << "tilt= "   << floatToString(image.tilt(), 10) << ' '
+//                    << "psi= "    << floatToString(image.psi() , 10) << ' ';
+//                }
+//            }
+//            else
+//            {
+//                std::cout << floatToString(min_val, 10) << ' '
+//                << floatToString(max_val, 10) << ' '
+//                << floatToString(avg    , 10) << ' '
+//                << floatToString(stddev , 10) << ' ';
+//            }
+//
+//            DF_stats.addObject();
+//            DF_stats.setValue(MDL_MIN,min_val);
+//            DF_stats.setValue(MDL_MAX,max_val);
+//            DF_stats.setValue(MDL_AVG,avg);
+//            DF_stats.setValue(MDL_STDDEV,stddev);
+//
+//            // Total statistics
+//            N++;
+//            mean_min_val += min_val;
+//            mean_max_val += max_val;
+//            mean_avg     += avg;
+//            mean_stddev  += stddev;
+//
+//            // Finish information .................................................
+//            std::cout << std::endl;
+//
+//        } // while
+//
+//        // Show total statistics ------------------------------------------------
+//        std::cout << "==================================================\n";
+//        std::cout << "Total number of images/volumes: " << N << std::endl;
+//        if (N != 0)
+//        {
+//            mean_min_val /= N;
+//            mean_max_val /= N;
+//            mean_avg     /= N;
+//            mean_stddev  /= N;
+//
+//            std::cout << stringToString(" ", max_length + 13);
+//            if (!short_format)
+//                std::cout << "min= "    << floatToString(mean_min_val, 10) << ' '
+//                << "max= "    << floatToString(mean_max_val, 10) << ' '
+//                << "avg= "    << floatToString(mean_avg    , 10) << ' '
+//                << "stddev= " << floatToString(mean_stddev , 10) << ' ';
+//            else
+//                std::cout << floatToString(mean_min_val, 10) << ' '
+//                << floatToString(mean_max_val, 10) << ' '
+//                << floatToString(mean_avg    , 10) << ' '
+//                << floatToString(mean_stddev , 10) << ' ';
+//            std::cout << std::endl;
+//        }
+//
+//        // Save masks -----------------------------------------------------------
+//        if (save_mask)
+//        {
+//            mask_prm.write_mask("mask");
+//        }
+//
+//        // Save statistics ------------------------------------------------------
+//        if (fn_stats != "")
+//            DF_stats.write(fn_stats);
+//    }
+//    catch (XmippError XE)
+//    {
+//        std::cout << XE;
+//    }
+//    return 0;
+//} //main
+//
+///* Usage ------------------------------------------------------------------- */
+//void Usage()
+//{
+//    std::cerr << "Purpose:\n";
+//    std::cerr << "    Displays statistics of images or volumes \n"
+//    << "      (possibly restricted to the area within a mask)\n";
+//    std::cerr << "Usage: statistics " << std::endl
+//    << "    -i               : Selfile with images/volumes \n"
+//    << "                        or individual image or volume \n"
+//    << "   [-o <metadata>]   : save the statistics in this metadata file\n"
+//    << "   [-dont_apply_geo] : do not apply geo when the image is read\n"
+//    << "   [-short_format]   : Don't show labels for statistics\n"
+//    << "   [-show_angles]    : Also show angles in the image header \n"
+//    << "   [-save_mask]      : save 2D and 3D masks (as \"mask2D\" or \"mask3D\") \n";
+//
+//}
 
