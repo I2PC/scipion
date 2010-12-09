@@ -134,7 +134,6 @@ int readMRC(int img_select, bool isStack=false)
     if(isStack)
     {
         _nDim = (size_t) _zDim;
-        std::cerr << "ndim, zdim " << _nDim << " " << _zDim << std::endl;
         _zDim = 1;
         replaceNsize=_nDim;
         std::stringstream Num;
