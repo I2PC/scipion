@@ -427,7 +427,7 @@ void Micrograph::produce_all_images(int label, const FileName &fn_root,
             {
                 std::cout << "Particle " << fn_aux << " is very near the border, "
                 << "corresponding image is set to blank\n";
-                SF.setValue( MDL_ENABLED, 0);
+                SF.setValue( MDL_ENABLED, -1);
             }
             else
                 SF.setValue( MDL_ENABLED, 1);
