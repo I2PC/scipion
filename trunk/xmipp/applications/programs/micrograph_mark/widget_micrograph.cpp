@@ -366,6 +366,10 @@ void QtWidgetMicrograph::setMicrograph(Micrograph *_m)
 void QtWidgetMicrograph::setOutputRoot(const FileName& outputRoot)
 {
     __outputRoot=outputRoot;
+    if (exists(__outputRoot+".Common.pos"))
+    	__file_menu->loadCoords(__outputRoot+".Common.pos");
+    if (exists(__outputRoot+".Common.auto.pos"))
+    	__file_menu->loadCoords(__outputRoot+".Common.auto.pos");
 }
 
 /* Set the class for automatic particle picking ---------------------------- */
