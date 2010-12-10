@@ -36,6 +36,7 @@ import javax.swing.ImageIcon;
 public class Command {
 	
 	public static Command PLAY= new Command("controls.play","", "playPause", false, TomoWindow.PLAY_ICON),
+	PLAY_LOOP= new Command("controls.play_loop","Loop", "changePlayMode", true, null),
 	LOAD=new Command("file.emload","Load","loadEM",true,null),
 	XRAY=new Command("file.xrayload","Import X-Ray","loadXray",true,null),
 	SAVE=new Command("file.save","Save","save",false,null),

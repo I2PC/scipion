@@ -1,5 +1,5 @@
 /***************************************************************************
- *
+ * @deprecated
  * @author: Jesus Cuenca (jcuenca@cnb.csic.es)
  *
  * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC

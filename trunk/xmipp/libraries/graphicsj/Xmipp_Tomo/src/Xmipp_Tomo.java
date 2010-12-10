@@ -141,7 +141,7 @@ public class Xmipp_Tomo implements PlugIn{
 	 * @param cmdline
 	 * @return the exit value of cmdline (@see Process.waitFor())
 	 */
-	public static ExitValues exec(String cmdline){
+	public static ExitValues exec(String cmdline,boolean readStderr){
 		// execution details may change with each OS...
 		//String osName = System.getProperty("os.name" );
 		
@@ -164,11 +164,12 @@ public class Xmipp_Tomo implements PlugIn{
 		// Prepare buffered readers from inputstreams (stderr, stdout) ...
 		InputStream stderr=proc.getErrorStream();
 		InputStreamReader stderr_isr = new InputStreamReader(stderr);
-        BufferedReader stderr_br = new BufferedReader(stderr_isr);
+        BufferedReader stderr_br = new BufferedReader(stderr_isr,10);
 
 		InputStream stdout=proc.getInputStream();
 		InputStreamReader stdout_isr = new InputStreamReader(stdout);
-        BufferedReader stdout_br = new BufferedReader(stdout_isr);
+		// try reading small chunks of output
+        BufferedReader stdout_br = new BufferedReader(stdout_isr,10);
 		
 		String line=null;
 		
@@ -178,8 +179,9 @@ public class Xmipp_Tomo implements PlugIn{
 	            debug(line);    
 	        
 			// print stderr
-			while ( (line = stderr_br.readLine()) != null)
-	            debug(line);    
+			if(readStderr)
+				while ( (line = stderr_br.readLine()) != null)
+		            debug(line);    
 			
         } catch (IOException ex){
             ex.printStackTrace();  
@@ -189,8 +191,13 @@ public class Xmipp_Tomo implements PlugIn{
         	int ev = proc.waitFor();
         	// convert from int ev to ExitValue
         	switch(ev){
+        		case 0:
+        			exitValue = ExitValues.OK;
+        			break;
+        		case 127:
         		default:
         			debug(String.valueOf(ev));
+        			exitValue = ExitValues.ERROR;
         	}
         	
         }catch (java.lang.InterruptedException ex){

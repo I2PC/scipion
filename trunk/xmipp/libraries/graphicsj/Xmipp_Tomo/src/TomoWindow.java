@@ -47,6 +47,7 @@ import javax.swing.BorderFactory;
 import javax.swing.BoxLayout;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
+import javax.swing.JCheckBox;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
@@ -96,6 +97,7 @@ public class TomoWindow extends ImageWindow implements WindowListener,
 	private Hashtable<String, ImageIcon> icons = new Hashtable<String, ImageIcon>();
 
 	private Hashtable<String, JButton> buttons = new Hashtable<String, JButton>();
+	private Hashtable<String, JCheckBox> checkboxes = new Hashtable<String, JCheckBox>();
 
 	// Lists of commands for each menu tab
 	private static java.util.List<Command> commandsMenuFile = new LinkedList<Command>() {
@@ -169,6 +171,10 @@ public class TomoWindow extends ImageWindow implements WindowListener,
 	private boolean changeSaved = true;
 	// true if current projection is changing automatically
 	private boolean playing = false;
+	// true if play follows a loop pattern (after last image, play first), false if pattern is ping-pong (after last, play last-1 and so on)
+	private boolean playLoop=true;
+	// play direction: forward (+1) or backward (-1)
+	private int playDirection = 1;
 	// window identifier - useful when you've got more than 1 window
 	private int windowId = -1;
 	private TomoController controller;
@@ -267,9 +273,26 @@ public class TomoWindow extends ImageWindow implements WindowListener,
 		panel.add(b);
 		buttons.put(cmd.getId(), b);
 	}
+	
+	private JCheckBox addCheckbox(Command cmd, Container panel) throws Exception {
+		TomoAction a = new TomoAction(getController(), cmd);
+		JCheckBox b = new JCheckBox(a);
+		b.setLabel(cmd.getLabel());
+		panel.add(b);
+		checkboxes.put(cmd.getId(), b);
+		return b;
+	}
+	
+	private void addCheckbox(Command cmd, Container panel,boolean checked) throws Exception {
+		addCheckbox(cmd, panel).setSelected(checked);
+	}
 
 	public JButton getButton(String id) {
 		return buttons.get(id);
+	}
+	
+	public JCheckBox getCheckbox(String id) {
+		return checkboxes.get(id);
 	}
 
 	/**
@@ -390,6 +413,7 @@ public class TomoWindow extends ImageWindow implements WindowListener,
 		// addButton(PLAY, controlPanel);
 		try {
 			addButton(Command.PLAY, controlPanel);
+			addCheckbox(Command.PLAY_LOOP, controlPanel,true);
 		} catch (Exception ex) {
 			Xmipp_Tomo.debug("addControls - play");
 		}
@@ -852,7 +876,6 @@ public class TomoWindow extends ImageWindow implements WindowListener,
 			title = title + " > " + getModel().getFileName() + " ("
 					+ getModel().getOriginalWidth() + "x" + getModel().getOriginalHeight()
 					+ ")";
-		Xmipp_Tomo.debug("Title: " + title);
 		
 		return title;
 	}
@@ -1131,5 +1154,33 @@ public class TomoWindow extends ImageWindow implements WindowListener,
 
 	public Command.State getLastCommandState() {
 		return lastCommandState;
+	}
+
+	/**
+	 * @return the playLoop
+	 */
+	public boolean isPlayLoop() {
+		return playLoop;
+	}
+
+	/**
+	 * @param playLoop the playLoop to set
+	 */
+	public void setPlayLoop(boolean playLoop) {
+		this.playLoop = playLoop;
+	}
+
+	/**
+	 * @return the playDirection
+	 */
+	public int getPlayDirection() {
+		return playDirection;
+	}
+
+	/**
+	 * @param playDirection the playDirection to set
+	 */
+	public void setPlayDirection(int playDirection) {
+		this.playDirection = playDirection;
 	}
 }

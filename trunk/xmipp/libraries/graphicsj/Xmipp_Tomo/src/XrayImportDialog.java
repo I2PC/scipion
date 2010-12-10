@@ -272,6 +272,14 @@ public class XrayImportDialog extends JDialog implements ActionListener
 	public  String getCommand() {
 		return command;
 	}
+	
+	/**
+	 * 
+	 * @return path to the mrcs result of the import
+	 */
+	public String getImagePath(){
+		return getText(ROOT_LABEL) + "/" + getText(ROOT_FILE_LABEL) + ".mrcs";
+	}
 
 
 	/**
