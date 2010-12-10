@@ -171,20 +171,17 @@ void QtFileMenu::slotLoadCoords()
 }
 
 void QtFileMenu::loadCoords(const FileName &fn) {
-    Micrograph *m = ((QtWidgetMicrograph*)parentWidget())->getMicrograph();
-    FileName familyName;
-    FileName fnAux=fn.withoutExtension();
-    FileName micrographName=m->micrograph_name().removeDirectories();
-    int i=fnAux.find(micrographName+".");
-    if (i!=-1)
-        familyName=fnAux.substr(i+micrographName.length()+1,
-        					    fnAux.length()-(i+micrographName.length()+1));
+	FileName familyName;
+    if (fn.find(".Common.pos")!=-1)
+    	familyName="Common";
+    else if (fn.find(".Common.auto.pos")!=-1)
+    	familyName="Auto";
     else
-        familyName=fnAux.getExtension().c_str();
+    	REPORT_ERROR(ERR_ARG_INCORRECT,(std::string)"Incorrect coordinate family for "+fn);
     emit signalAddFamily(familyName.c_str());
 
     int activeFamily = ((QtWidgetMicrograph*)parentWidget())->activeFamily();
-    m->read_coordinates(activeFamily,fn);
+    ((QtWidgetMicrograph*)parentWidget())->getMicrograph()->read_coordinates(activeFamily,fn);
     ((QtWidgetMicrograph*)parentWidget())->repaint();
     slotCoordChange();
 }
