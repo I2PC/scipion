@@ -24,6 +24,7 @@
 #define MARK_SQUARE 1
 
 #include "popup_menu_mark.h"
+#include <data/filename.h>
 
 #include <qradiobutton.h>
 
@@ -55,6 +56,8 @@ public:
     // Constructor
     QtFileMenu(QtWidgetMicrograph* _parent);
 
+    // Load coordinates
+    void loadCoords(const FileName &fn);
 public slots:
 
     // Change mark type

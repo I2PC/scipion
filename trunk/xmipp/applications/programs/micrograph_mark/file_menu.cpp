@@ -162,32 +162,31 @@ void QtFileMenu::slotLoadCoords()
         coordFileDialog.setCaption("Coordinates filename");
         coordFileDialog.setFilter("*.pos");
         if (coordFileDialog.exec())
-        {
-            // Get the family name from the filename
-            FileName fn;
-            fn = (char*)coordFileDialog.selectedFile().ascii();
-            fn = fn.withoutExtension();
-            FileName familyName;
-            FileName micrographName=m->micrograph_name().removeDirectories();
-            int i=fn.find(micrographName+".");
-            if (i!=-1)
-                familyName=fn.substr(i+micrographName.length()+1,
-                                     fn.length()-(i+micrographName.length()+1));
-            else
-                familyName=fn.getExtension().c_str();
-            emit signalAddFamily(familyName.c_str());
-
-            int activeFamily = ((QtWidgetMicrograph*)parentWidget())->activeFamily();
-            m->read_coordinates(activeFamily,
-                                (char*)coordFileDialog.selectedFile().ascii());
-            ((QtWidgetMicrograph*)parentWidget())->repaint();
-            slotCoordChange();
-        }
+            loadCoords((char*)coordFileDialog.selectedFile().ascii());
     }
     catch (XmippError XE)
     {
         std::cout << XE;
     }
+}
+
+void QtFileMenu::loadCoords(const FileName &fn) {
+    Micrograph *m = ((QtWidgetMicrograph*)parentWidget())->getMicrograph();
+    FileName familyName;
+    FileName fnAux=fn.withoutExtension();
+    FileName micrographName=m->micrograph_name().removeDirectories();
+    int i=fnAux.find(micrographName+".");
+    if (i!=-1)
+        familyName=fnAux.substr(i+micrographName.length()+1,
+        					    fnAux.length()-(i+micrographName.length()+1));
+    else
+        familyName=fnAux.getExtension().c_str();
+    emit signalAddFamily(familyName.c_str());
+
+    int activeFamily = ((QtWidgetMicrograph*)parentWidget())->activeFamily();
+    m->read_coordinates(activeFamily,fn);
+    ((QtWidgetMicrograph*)parentWidget())->repaint();
+    slotCoordChange();
 }
 
 /* Save coordinates -------------------------------------------------------- */
