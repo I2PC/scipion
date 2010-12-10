@@ -74,19 +74,27 @@ public:
         int nr_imgs = SF.size();
         init_progress_bar(nr_imgs);
         int c = XMIPP_MAX(1, nr_imgs / 60);
-        int imgno = 0;
+        int imgno = 0, imgnoPCA=0;
         MultidimArray<float> v;
         if (do_prepare)
         {
             Zscore.initZeros(SF.size());
             ZscoreMultivariate=Zscore;
         }
+        bool thereIsEnable=SF.containsLabel(MDL_ENABLED);
         FOR_ALL_OBJECTS_IN_METADATA(SF)
         {
             if (do_prepare)
             {
                 FileName fn;
                 SF.getValue(MDL_IMAGE,fn);
+                if (thereIsEnable)
+                {
+                	int enabled;
+                	SF.getValue(MDL_ENABLED,enabled);
+                	if (enabled==-1)
+                		continue;
+                }
                 img.read(fn);
                 img().setXmippOrigin();
                 img().statisticsAdjust(0,1);
@@ -115,7 +123,20 @@ public:
             }
             else
             {
-                v=pcaAnalyzer.v[imgno];
+                if (thereIsEnable)
+                {
+                	int enabled;
+                	SF.getValue(MDL_ENABLED,enabled);
+                	if (enabled==-1)
+                	{
+                        Zscore(imgno)=1000;
+                        if (multivariate)
+                            ZscoreMultivariate(imgno)=1000;
+                		imgno++;
+                		continue;
+                	}
+                }
+                v=pcaAnalyzer.v[imgnoPCA];
                 FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY1D(v)
                 {
                     if (DIRECT_A1D_ELEM(vstddev,i)>0)
@@ -135,6 +156,7 @@ public:
             if (imgno % c == 0)
                 progress_bar(imgno);
             imgno++;
+            imgnoPCA++;
         }
         progress_bar(nr_imgs);
 
@@ -204,11 +226,19 @@ int main(int argc, char **argv)
 
         MultidimArray<int> sorted = finalZscore.indexSort();
         int nr_imgs = SF.size();
+        bool thereIsEnable=SF.containsLabel(MDL_ENABLED);
         for (int imgno = 0; imgno < nr_imgs; imgno++)
         {
             int isort = sorted(imgno) - 1;
             FileName fnImg;
             SF.getValue(MDL_IMAGE,fnImg,isort+1);
+            if (thereIsEnable)
+            {
+            	int enabled;
+            	SF.getValue(MDL_ENABLED,enabled,isort+1);
+            	if (enabled==-1)
+            		continue;
+            }
             SFout.addObject();
             SFout.setValue(MDL_IMAGE,fnImg);
             SFout.setValue(MDL_ENABLED,1);
