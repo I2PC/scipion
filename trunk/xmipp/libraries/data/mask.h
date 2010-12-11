@@ -835,32 +835,32 @@ void computeStats_within_binary_mask(const MultidimArray< int >& mask,
 }
 
 inline void computeStats_within_binary_mask(const MultidimArray< int >& mask,
-                                     const MultidimArrayGeneric* m, double& min_val,
+                                     const MultidimArrayGeneric &m, double& min_val,
                                      double& max_val,
                                      double& avg, double& stddev)
 {
-    switch (m->datatype)
+    switch (m.datatype)
     {
     case Float:
-        computeStats_within_binary_mask(mask,*((MultidimArray<float>*)m->im),min_val,max_val,avg,stddev);
+        computeStats_within_binary_mask(mask,*((MultidimArray<float>*)m.im),min_val,max_val,avg,stddev);
         break;
     case UInt:
-        computeStats_within_binary_mask(mask,*((MultidimArray<unsigned int>*)m->im),min_val,max_val,avg,stddev);
+        computeStats_within_binary_mask(mask,*((MultidimArray<unsigned int>*)m.im),min_val,max_val,avg,stddev);
         break;
     case Int:
-        computeStats_within_binary_mask(mask,*((MultidimArray<int>*)m->im),min_val,max_val,avg,stddev);
+        computeStats_within_binary_mask(mask,*((MultidimArray<int>*)m.im),min_val,max_val,avg,stddev);
         break;
     case Short:
-        computeStats_within_binary_mask(mask,*((MultidimArray<short>*)m->im),min_val,max_val,avg,stddev);
+        computeStats_within_binary_mask(mask,*((MultidimArray<short>*)m.im),min_val,max_val,avg,stddev);
         break;
     case UShort:
-        computeStats_within_binary_mask(mask,*((MultidimArray<unsigned short>*)m->im),min_val,max_val,avg,stddev);
+        computeStats_within_binary_mask(mask,*((MultidimArray<unsigned short>*)m.im),min_val,max_val,avg,stddev);
         break;
     case SChar:
-        computeStats_within_binary_mask(mask,*((MultidimArray<char>*)m->im),min_val,max_val,avg,stddev);
+        computeStats_within_binary_mask(mask,*((MultidimArray<char>*)m.im),min_val,max_val,avg,stddev);
         break;
     case UChar:
-        computeStats_within_binary_mask(mask,*((MultidimArray<unsigned char>*)m->im),min_val,max_val,avg,stddev);
+        computeStats_within_binary_mask(mask,*((MultidimArray<unsigned char>*)m.im),min_val,max_val,avg,stddev);
         break;
     }
 }

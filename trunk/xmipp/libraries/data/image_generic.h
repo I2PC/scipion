@@ -138,9 +138,9 @@ public:
 
     /* MultidimArrayGeneric data access
      */
-    MultidimArrayGeneric* operator()()
+    MultidimArrayGeneric operator()()
     {
-        return data;
+        return *data;
     }
 
     const MultidimArrayGeneric* operator()() const
