@@ -28,15 +28,9 @@
 
 ///@defgroup TIFF TIFF File format
 ///@ingroup ImageFormats
-
-
-/* Minimum size of a TIFF file to be mapped to a tempfile in case of mapping from
- * image file is required
- */
-# define TIFF_MAP_MIN_SIZE 200e6
+//@{
 
 /** TIFF Data Header
-  * @ingroup TIFF
 */
 struct TIFFDirHead
 {                                   // Header for each Directory in TIFF
@@ -51,14 +45,11 @@ struct TIFFDirHead
     uint16 pNumber, pTotal; // pagenumber and total number of pages of current directory
 };
 
-
-/*
-//
-// castTiffTile2T
-//
-// write the content of a tile from a TIFF file to an image array
-//
-*/
+/**
+ * castTiffTile2T
+ *
+ * write the content of a tile from a TIFF file to an image array
+ */
 void castTiffTile2T(
     T * ptrDest ,
     char* tif_buf,
@@ -84,12 +75,9 @@ void castTiffTile2T(
             castPage2T((char*) tif_buf+((j-y)*samplesPerPixel*typeSize*tileWidth+(i-x)*samplesPerPixel*typeSize), ptrDest+(j*imageWidth + i), datatype, (size_t) 1);
 }
 
-/*
-//
-// castTiffLine2T
-//
-// write the content of a line from a TIFF file to an image array
-//
+/** castTiffLine2T
+ *
+ * write the content of a line from a TIFF file to an image array
 */
 void castTiffLine2T(
     T * ptrDest,
@@ -106,9 +94,7 @@ void castTiffLine2T(
         castPage2T((char*) tif_buf+(samplesPerPixel*typeSize * x), ptrDest+(y*imageWidth + x), datatype, (size_t) 1);
 }
 
-
-
-/** TIFF Determine TIFF datatype
+/** Determine datatype of the TIFF format file.
   * @ingroup TIFF
 */
 DataType datatypeTIFF(TIFFDirHead dHead)
@@ -155,10 +141,8 @@ DataType datatypeTIFF(TIFFDirHead dHead)
     return datatype;
 }
 
-
-// I/O prototypes
-/** TIFF Reader
-  * @ingroup TIFF
+/**
+ *  Read TIFF format files.
 */
 int readTIFF(int img_select, bool isStack=false)
 {
@@ -293,7 +277,7 @@ int readTIFF(int img_select, bool isStack=false)
     if (mmapOnRead)
     {
         mmapOnRead = false;
-        if (data.nzyxdim*gettypesize(datatype) > TIFF_MAP_MIN_SIZE)
+        if (data.nzyxdim*gettypesize(datatype) > tiff_map_min_size)
             data.setMmap(true);
     }
 
@@ -384,10 +368,8 @@ int readTIFF(int img_select, bool isStack=false)
     return 0;
 }
 
-
-
-/** TIFF Writer
-  * @ingroup TIFF
+/**
+ * Write TIFF format files.
 */
 int writeTIFF(int img_select, bool isStack=false, int mode=WRITE_OVERWRITE, std::string bitDepth="", bool adjust=false)
 {
@@ -560,4 +542,5 @@ int writeTIFF(int img_select, bool isStack=false, int mode=WRITE_OVERWRITE, std:
     _TIFFfree(tif_buf);
     return(0);
 }
+//@}
 #endif /* RWTIFF_H_ */

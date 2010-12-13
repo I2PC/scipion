@@ -46,6 +46,11 @@
 #include <cstring>
 #include "../../external/tiff-3.9.4/libtiff/tiffio.h"
 
+/* Minimum size of a TIFF file to be mapped to a tempfile in case of mapping from
+ * image file is required
+ */
+const size_t tiff_map_min_size = 200e6;
+
 /// @defgroup Images Images
 /// @ingroup DataLibrary
 
@@ -115,8 +120,8 @@ struct ImageFHandler
     FILE*     fimg;       // Image File handler
     FILE*     fhed;       // Image File header handler
     TIFF*     tif;        // TIFF Image file hander
-    FileName  fileName;
-    FileName  headName;
+    FileName  fileName;   // Image file name
+    FileName  headName;   // Header file name
     FileName  ext_name;   // Filename extension
     bool     exist;       // Shows if the file exists. Equal 0 means file does not exist or not stack.
 };
@@ -214,6 +219,26 @@ DataType datatypeString2Int(std::string str);
 class ImageBase
 {
 public:
+    virtual void getDimensions(int &Xdim, int &Ydim, int &Zdim, unsigned long &Ndim) const =0;
+    virtual void getEulerAngles(double &rot, double &tilt, double &psi,
+                                long int n = 0)=0;
+    virtual int read(const FileName &name, bool readdata=true, int select_img = -1,
+                     bool apply_geo = false, bool only_apply_shifts = false,
+                     MDRow * row = NULL, bool mapData = false)=0;
+    virtual void write(const FileName &name="", int select_img=-1, bool isStack=false,
+                       int mode=WRITE_OVERWRITE,bool adjust=false)=0;
+    virtual void newMappedFile(int Xdim, int Ydim, int Zdim, int Ndim, FileName _filename)=0;
+    virtual void clear()=0;
+};
+
+/** Template class for images.
+ * The image class is the general image handling class.
+ */
+template<typename T>
+class Image: public ImageBase
+{
+public:
+    MultidimArray<T>    data;        // The image data array
     std::vector<MDRow>  MD;                     // data for each subimage
     MDRow               MDMainHeader;           // data for the file
 
@@ -236,28 +261,6 @@ protected:
     bool                mmapOnWrite; // Mapping when writing to file
     int                 mFd;         // Handle the file in reading method and mmap
     size_t              mappedSize;  // Size of the mapped file
-
-public:
-    virtual void getDimensions(int &Xdim, int &Ydim, int &Zdim, unsigned long &Ndim) const =0;
-    virtual void getEulerAngles(double &rot, double &tilt, double &psi,
-                            long int n = 0)=0;
-    virtual int read(const FileName &name, bool readdata=true, int select_img = -1,
-                     bool apply_geo = false, bool only_apply_shifts = false,
-                     MDRow * row = NULL, bool mapData = false)=0;
-    virtual void write(const FileName &name="", int select_img=-1, bool isStack=false,
-                       int mode=WRITE_OVERWRITE,bool adjust=false)=0;
-    virtual void newMappedFile(int Xdim, int Ydim, int Zdim, int Ndim, FileName _filename)=0;
-    virtual void clear()=0;
-};
-
-/** Template class for images.
- * The image class is the general image handling class.
- */
-template<typename T>
-class Image: public ImageBase
-{
-public:
-    MultidimArray<T>    data;        // The image data array
 
 public:
     /** Empty constructor
