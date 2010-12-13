@@ -132,6 +132,7 @@ public:
     barrier_t thread_barrier;
 
     /** scale params */
+    bool do_scale;
     double scale_step;
     double scale_nsteps;
 

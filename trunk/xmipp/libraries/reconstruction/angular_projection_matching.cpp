@@ -54,8 +54,13 @@ void ProgAngularProjectionMatching::readParams()
     phase_flipped = checkParam("--phase_flipped");
     threads = getIntParam("--thr");
 
-    scale_step = getDoubleParam("--scale",0);
-    scale_nsteps = getDoubleParam("--scale",1);
+    do_scale = checkParam("--scale");
+
+    if(do_scale)
+    {
+        scale_step = getDoubleParam("--scale",0);
+        scale_nsteps = getDoubleParam("--scale",1);
+    }
 }
 
 
@@ -887,11 +892,15 @@ void ProgAngularProjectionMatching::processSomeImages(int * my_images, double * 
         opt_yoff += img.Yoff();
 
         opt_scale=1.0;
-        // Compute a better scale (scale_min -> scale_max)
-        scaleAlignOneImage(img(), opt_refno, opt_psi, opt_flip, opt_xoff, opt_yoff, opt_scale, maxcorr);
 
-        //Add the previously applied scale to the newly found one
-        opt_scale *= img.scale();
+        if(do_scale)
+        {
+            // Compute a better scale (scale_min -> scale_max)
+            scaleAlignOneImage(img(), opt_refno, opt_psi, opt_flip, opt_xoff, opt_yoff, opt_scale, maxcorr);
+
+            //Add the previously applied scale to the newly found one
+            opt_scale *= img.scale();
+        }
 
         // Output
         my_output[imgno * MY_OUPUT_SIZE + 1] = this_image;
