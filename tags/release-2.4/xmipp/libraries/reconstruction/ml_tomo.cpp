@@ -399,6 +399,9 @@ void Prog_ml_tomo_prm::produceSideInfo()
     scale_factor= (double)dim/(double)oridim;
     sigma_offset *= scale_factor;
 
+    // Sjors 13dec2010: Ben's bug report
+    pixel_size *= (double)oridim/(double)dim;
+
     if (regF > reg0)
         REPORT_ERROR(1,"regF should be smaller than reg0!");
     reg_current = reg0;
