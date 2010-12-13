@@ -31,6 +31,33 @@
 #include "image.h"
 
 
+
+#define SWITCHDATATYPE(datatype,OP) \
+    switch (datatype)\
+        {\
+        case Float:\
+            OP(float);\
+            break;\
+        case UInt:\
+            OP(unsigned int);\
+            break;\
+        case Int:\
+            OP(int);\
+            break;\
+        case Short:\
+            OP(short);\
+            break;\
+        case UShort:\
+            OP(unsigned short);\
+            break;\
+        case SChar:\
+            OP(char);\
+            break;\
+        case UChar:\
+            OP(unsigned char);\
+            break;\
+        }
+
 /// @addtogroup MultidimensionalArrays
 
 //@{
@@ -75,32 +102,13 @@ public:
      *  Copy a specific slice of the linked array.
      */
     template <typename T>
-    void getSliceT(int k, MultidimArray<T> &M, char axis = 'Z', unsigned long n = 0) const
+    void getSlice(int k, MultidimArray<T> &M, char axis = 'Z', unsigned long n = 0) const
     {
-        switch(datatype)
-        {
-        case Float:
-            ((MultidimArray<float>*) im)->getSlice(k, M, axis, n);
-            break;
-        case UInt:
-            ((MultidimArray<unsigned int>*) im)->getSlice(k, M, axis, n);
-            break;
-        case Int:
-            ((MultidimArray<int>*) im)->getSlice(k, M, axis, n);
-            break;
-        case Short:
-            ((MultidimArray<short>*) im)->getSlice(k, M, axis, n);
-            break;
-        case UShort:
-            ((MultidimArray<unsigned short>*) im)->getSlice(k, M, axis, n);
-            break;
-        case SChar:
-            ((MultidimArray<char>*) im)->getSlice(k, M, axis, n);
-            break;
-        case UChar:
-            ((MultidimArray<unsigned char>*) im)->getSlice(k, M, axis, n);
-            break;
-        }
+#define GETSLICE(type) ((MultidimArray<type>*) im)->getSlice(k, M, axis, n)
+
+      SWITCHDATATYPE(datatype,GETSLICE);
+
+#undef GETSLICE
     }
 
     /**
@@ -108,30 +116,11 @@ public:
      */
     void getSlice(int k, MultidimArrayGeneric* M, char axis = 'Z', unsigned long n = 0) const
     {
-        switch(M->datatype)
-        {
-        case Float:
-            getSliceT(k, *(MultidimArray<float>*)M->im, axis, n);
-            break;
-        case UInt:
-            getSliceT(k, *(MultidimArray<unsigned int>*)M->im, axis, n);
-            break;
-        case Int:
-            getSliceT(k, *(MultidimArray<int>*)M->im, axis, n);
-            break;
-        case Short:
-            getSliceT(k, *(MultidimArray<short>*)M->im, axis, n);
-            break;
-        case UShort:
-            getSliceT(k, *(MultidimArray<unsigned short>*)M->im, axis, n);
-            break;
-        case SChar:
-            getSliceT(k, *(MultidimArray<char>*)M->im, axis, n);
-            break;
-        case UChar:
-            getSliceT(k, *(MultidimArray<unsigned char>*)M->im, axis, n);
-            break;
-        }
+#define GETSLICE(type) getSlice(k, *(MultidimArray<type>*)M->im, axis, n)
+
+      SWITCHDATATYPE(M->datatype,GETSLICE);
+
+#undef GETSLICE
     }
 
     /**
@@ -140,30 +129,11 @@ public:
     template <typename T1>
     void setSlice(int k, const MultidimArray <T1>& v, unsigned long n = 0)
     {
-        switch(datatype)
-        {
-        case Float:
-            ((MultidimArray<float>*) im)->setSlice(k, v, n);
-            break;
-        case UInt:
-            ((MultidimArray<unsigned int>*) im)->setSlice(k, v, n);
-            break;
-        case Int:
-            ((MultidimArray<int>*) im)->setSlice(k, v, n);
-            break;
-        case Short:
-            ((MultidimArray<short>*) im)->setSlice(k, v, n);
-            break;
-        case UShort:
-            ((MultidimArray<unsigned short>*) im)->setSlice(k, v, n);
-            break;
-        case SChar:
-            ((MultidimArray<char>*) im)->setSlice(k, v, n);
-            break;
-        case UChar:
-            ((MultidimArray<unsigned char>*) im)->setSlice(k, v, n);
-            break;
-        }
+#define SETSLICE(type) ((MultidimArray<type>*) im)->setSlice(k, v, n)
+
+      SWITCHDATATYPE(datatype,SETSLICE);
+
+#undef SETSLICE
     }
 
     /**
@@ -171,30 +141,11 @@ public:
      */
     void setSlice(int k, const MultidimArrayGeneric* v, unsigned long n = 0)
     {
-        switch(v->datatype)
-        {
-        case Float:
-            setSlice(k,*(MultidimArray<float>*) v->im, n);
-            break;
-        case UInt:
-            setSlice(k,*(MultidimArray<unsigned int>*) v->im, n);
-            break;
-        case Int:
-            setSlice(k,*(MultidimArray<int>*) v->im, n);
-            break;
-        case Short:
-            setSlice(k,*(MultidimArray<short>*) v->im, n);
-            break;
-        case UShort:
-            setSlice(k,*(MultidimArray<unsigned short>*) v->im, n);
-            break;
-        case SChar:
-            setSlice(k,*(MultidimArray<char>*) v->im, n);
-            break;
-        case UChar:
-            setSlice(k,*(MultidimArray<unsigned char>*) v->im, n);
-            break;
-        }
+#define SETSLICE(type) setSlice(k,*(MultidimArray<type>*) v->im, n);
+
+      SWITCHDATATYPE(v->datatype,SETSLICE);
+
+#undef SETSLICE
     }
 
     /**

@@ -387,7 +387,11 @@ public:
 #define BLOB_CIRCULAR_MASK       16
 #define BLOB_CROWN_MASK          17
 
-    static void defineParams(XmippProgram * program);
+#define INT_MASK    1
+#define DOUBLE_MASK 2
+#define ALL_KINDS   INT_MASK | DOUBLE_MASK
+
+    static void defineParams(XmippProgram * program, int allowed_data_types = ALL_KINDS);
     void readParams(XmippProgram * program);
 
 
@@ -504,10 +508,6 @@ public:
 
 
 public:
-
-#define INT_MASK    1
-#define DOUBLE_MASK 2
-#define ALL_KINDS   INT_MASK | DOUBLE_MASK
 
     /** Constructors
      * Allowed data types are ALL_KINDS, INT_MASK and DOUBLE_MASK used with | .
@@ -835,36 +835,17 @@ void computeStats_within_binary_mask(const MultidimArray< int >& mask,
 }
 
 inline void computeStats_within_binary_mask(const MultidimArray< int >& mask,
-                                     const MultidimArrayGeneric &m, double& min_val,
-                                     double& max_val,
-                                     double& avg, double& stddev)
+        const MultidimArrayGeneric &m, double& min_val,
+        double& max_val,
+        double& avg, double& stddev)
 {
-    switch (m.datatype)
-    {
-    case Float:
-        computeStats_within_binary_mask(mask,*((MultidimArray<float>*)m.im),min_val,max_val,avg,stddev);
-        break;
-    case UInt:
-        computeStats_within_binary_mask(mask,*((MultidimArray<unsigned int>*)m.im),min_val,max_val,avg,stddev);
-        break;
-    case Int:
-        computeStats_within_binary_mask(mask,*((MultidimArray<int>*)m.im),min_val,max_val,avg,stddev);
-        break;
-    case Short:
-        computeStats_within_binary_mask(mask,*((MultidimArray<short>*)m.im),min_val,max_val,avg,stddev);
-        break;
-    case UShort:
-        computeStats_within_binary_mask(mask,*((MultidimArray<unsigned short>*)m.im),min_val,max_val,avg,stddev);
-        break;
-    case SChar:
-        computeStats_within_binary_mask(mask,*((MultidimArray<char>*)m.im),min_val,max_val,avg,stddev);
-        break;
-    case UChar:
-        computeStats_within_binary_mask(mask,*((MultidimArray<unsigned char>*)m.im),min_val,max_val,avg,stddev);
-        break;
-    }
-}
+#define COMPUTESTATS(type) \
+computeStats_within_binary_mask(mask,*((MultidimArray<type>*)m.im),min_val,max_val,avg,stddev);
 
+    SWITCHDATATYPE(m.datatype,COMPUTESTATS);
+
+#undef COMPUTESTATS
+}
 
 /** Compute statistics in the active area
  *

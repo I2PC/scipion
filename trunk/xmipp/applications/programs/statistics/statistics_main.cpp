@@ -54,13 +54,13 @@ protected:
         each_image_produces_an_output = false;
         apply_geo = true;
         allow_time_bar = false;
-        addUsageLine("Display statistics of images or volumes, also applying to the area within a mask.");
+        addUsageLine("Display statistics of images or volumes. A mask can be applied.");
         XmippMetadataProgram::defineParams();
         addParamsLine("[-o <metadata>]   : Save the statistics in this metadata file.");
         addParamsLine("[-short_format]   : Do not show labels for statistics.");
         addParamsLine("[-show_angles]    : Also show angles in the image header.");
         addParamsLine("[-save_mask]      : Save 2D and 3D masks (as \"mask2D\" or \"mask3D\").");
-        Mask::defineParams(this);
+        mask_prm.defineParams(this,INT_MASK);
     }
 
     void readParams()
@@ -202,19 +202,11 @@ protected:
 }
 ;// end of class ProgStatistics
 
-
 /* MAIN -------------------------------------------------------------------- */
 int main(int argc, char *argv[])
 {
-    try
-    {
         ProgStatistics program;
         program.read(argc, argv);
-        program.run();
-    }
-    catch (XmippError xe)
-    {
-        std::cerr << xe;
-    }
+        program.tryRun();
     return 0;
 }

@@ -888,7 +888,7 @@ void Mask::read(int argc, char **argv)
         type = READ_MASK;
     }
     else
-    	REPORT_ERROR(ERR_ARG_INCORRECT,"Incorrect mask type");
+        REPORT_ERROR(ERR_ARG_INCORRECT,"Incorrect mask type");
 }
 
 // Show --------------------------------------------------------------------
@@ -1062,56 +1062,62 @@ void Mask::write_mask(const FileName &fn)
 }
 
 
-void Mask::defineParams(XmippProgram * program)
+void Mask::defineParams(XmippProgram * program, int allowed_data_types)
 {
     program->addParamsLine("   [--center <x0=0> <y0=0> <z0=0>]: Center of the mask");
     program->addParamsLine("   [--mask <mask_type=circular>]");
     program->addParamsLine("        where <mask_type> ");
-   // program->addParamsLine("== INT MASK ==");
-    program->addParamsLine("         circular <R>        : circle/sphere mask");
-    program->addParamsLine("                :if R>0 => outside R");
-    program->addParamsLine("                :if R<0 => inside  R");
-    program->addParamsLine("         DWT_circular <R> <smin> <smax>: circle/sphere mask");
-    program->addParamsLine("                : smin and smax define the scales to be kept");
-    program->addParamsLine("         rectangular <Xrect> <Yrect> <Zrect=0>: 2D or 3D rectangle");
-    program->addParamsLine("                                         :if X,Y,Z > 0 => outside rectangle");
-    program->addParamsLine("                                          :if X,Y,Z < 0 => inside rectangle");
-    program->addParamsLine("         crown <R1> <R2>    : 2D or 3D crown");
-    program->addParamsLine("                                          :if R1,R2 > 0 => outside crown");
-    program->addParamsLine("                                          :if R1,R2 < 0 => inside crown");
-    program->addParamsLine("         cylinder <R> <H>   : 2D circle or 3D cylinder");
-    program->addParamsLine("                                         :if R,H > 0 => outside cylinder");
-    program->addParamsLine("                                          :if R,H < 0 => inside cylinder");
-    program->addParamsLine("         cone <theta>       : 3D cone (parallel to Z) ");
-    program->addParamsLine("                                          :if theta > 0 => outside cone");
-    program->addParamsLine("                                         :if theta < 0 => inside cone");
-    program->addParamsLine("         wedge <th0> <thF>  : 3D missing-wedge mask for data ");
-    program->addParamsLine("                                          :collected between tilting angles ");
-    program->addParamsLine("                                          :th0 and thF (around the Y-axis) ");
-    program->addParamsLine("         binary_file <binary_file>      : Read from file");
+    // program->addParamsLine("== INT MASK ==");
+    if (allowed_data_types & INT_MASK)
+    {
+        program->addParamsLine("         circular <R>        : circle/sphere mask");
+        program->addParamsLine("                :if R>0 => outside R");
+        program->addParamsLine("                :if R<0 => inside  R");
+        program->addParamsLine("         DWT_circular <R> <smin> <smax>: circle/sphere mask");
+        program->addParamsLine("                : smin and smax define the scales to be kept");
+        program->addParamsLine("         rectangular <Xrect> <Yrect> <Zrect=0>: 2D or 3D rectangle");
+        program->addParamsLine("                                         :if X,Y,Z > 0 => outside rectangle");
+        program->addParamsLine("                                          :if X,Y,Z < 0 => inside rectangle");
+        program->addParamsLine("         crown <R1> <R2>    : 2D or 3D crown");
+        program->addParamsLine("                                          :if R1,R2 > 0 => outside crown");
+        program->addParamsLine("                                          :if R1,R2 < 0 => inside crown");
+        program->addParamsLine("         cylinder <R> <H>   : 2D circle or 3D cylinder");
+        program->addParamsLine("                                         :if R,H > 0 => outside cylinder");
+        program->addParamsLine("                                          :if R,H < 0 => inside cylinder");
+        program->addParamsLine("         cone <theta>       : 3D cone (parallel to Z) ");
+        program->addParamsLine("                                          :if theta > 0 => outside cone");
+        program->addParamsLine("                                         :if theta < 0 => inside cone");
+        program->addParamsLine("         wedge <th0> <thF>  : 3D missing-wedge mask for data ");
+        program->addParamsLine("                                          :collected between tilting angles ");
+        program->addParamsLine("                                          :th0 and thF (around the Y-axis) ");
+        program->addParamsLine("         binary_file <binary_file>      : Read from file");
+    }
     //program->addParamsLine("== DOUBLE MASK ==");
-    program->addParamsLine("         gaussian <sigma>   : 2D or 3D gaussian");
-    program->addParamsLine("                              :if sigma > 0 => outside gaussian");
-    program->addParamsLine("                              : if sigma < 0 => inside gaussian");
-    program->addParamsLine("         raised_cosine <R1> <R2>: 2D or 3D raised_cosine");
-    program->addParamsLine("                              : if R1,R2 > 0 => outside sphere");
-    program->addParamsLine("                              : if R1,R2 < 0 => inside sphere");
-    program->addParamsLine("         raised_crown <R1> <R2> <pixwidth>: 2D or 3D raised_crown");
-    program->addParamsLine("                              : if R1,R2 > 0 => outside sphere");
-    program->addParamsLine("                              : if R1,R2 < 0 => inside sphere");
-    program->addParamsLine("         blob_circular <R1> <blob_radius>: 2D or 3D blob circular");
-    program->addParamsLine("                              : if blob_radius > 0 => outside sphere");
-    program->addParamsLine("                              : if blob_radius < 0 => inside sphere");
-    program->addParamsLine("         blob_crown <R1> <R2> <blob_radius>: 2D or 3D blob_crown");
-    program->addParamsLine("                              : if blob_radius > 0 => outside sphere");
-    program->addParamsLine("                              : if blob_radius < 0 => inside sphere");
-    program->addParamsLine("         blackman           : 2D or 3D Blackman mask");
-    program->addParamsLine("                             :  always inside blackman");
-    program->addParamsLine("         sinc <w>          : 2D or 3D sincs");
-    program->addParamsLine("                             :  if w > 0 => outside sinc");
-    program->addParamsLine("                             :  if w < 0 => inside sinc");
-    program->addParamsLine("   [ -m <blob_order=2>]       : Order of blob");
-    program->addParamsLine("   [ -a <blob_alpha=10.4>]    : Alpha of blob");
+    if (allowed_data_types & DOUBLE_MASK)
+    {
+        program->addParamsLine("         gaussian <sigma>   : 2D or 3D gaussian");
+        program->addParamsLine("                              :if sigma > 0 => outside gaussian");
+        program->addParamsLine("                              : if sigma < 0 => inside gaussian");
+        program->addParamsLine("         raised_cosine <R1> <R2>: 2D or 3D raised_cosine");
+        program->addParamsLine("                              : if R1,R2 > 0 => outside sphere");
+        program->addParamsLine("                              : if R1,R2 < 0 => inside sphere");
+        program->addParamsLine("         raised_crown <R1> <R2> <pixwidth>: 2D or 3D raised_crown");
+        program->addParamsLine("                              : if R1,R2 > 0 => outside sphere");
+        program->addParamsLine("                              : if R1,R2 < 0 => inside sphere");
+        program->addParamsLine("         blob_circular <R1> <blob_radius>: 2D or 3D blob circular");
+        program->addParamsLine("                              : if blob_radius > 0 => outside sphere");
+        program->addParamsLine("                              : if blob_radius < 0 => inside sphere");
+        program->addParamsLine("         blob_crown <R1> <R2> <blob_radius>: 2D or 3D blob_crown");
+        program->addParamsLine("                              : if blob_radius > 0 => outside sphere");
+        program->addParamsLine("                              : if blob_radius < 0 => inside sphere");
+        program->addParamsLine("         blackman           : 2D or 3D Blackman mask");
+        program->addParamsLine("                             :  always inside blackman");
+        program->addParamsLine("         sinc <w>          : 2D or 3D sincs");
+        program->addParamsLine("                             :  if w > 0 => outside sinc");
+        program->addParamsLine("                             :  if w < 0 => inside sinc");
+        program->addParamsLine("   [ -m <blob_order=2>]       : Order of blob");
+        program->addParamsLine("   [ -a <blob_alpha=10.4>]    : Alpha of blob");
+    }
 }
 
 void Mask::readParams(XmippProgram * program)
@@ -1121,7 +1127,8 @@ void Mask::readParams(XmippProgram * program)
     y0 = program->getDoubleParam("--center",1);
     z0 = program->getDoubleParam("--center",2);
     mask_type = program->getParam("--mask");
-    /* Circular mask ........................................................*/\
+    /* Circular mask ........................................................*/
+    \
     if (mask_type == "circular")
     {
         if (!(allowed_data_types & INT_MASK))
@@ -1187,7 +1194,8 @@ void Mask::readParams(XmippProgram * program)
     }
     /*// Wedge mask ............................................................*/\
     else if (mask_type == "wedge")
-    {\
+    {
+        \
         if (!(allowed_data_types & DOUBLE_MASK))
             REPORT_ERROR(ERR_ARG_INCORRECT, "MaskProgram: binary masks are not allowed");
         R1 = program->getDoubleParam("--mask","wedge",0);
@@ -1581,7 +1589,7 @@ void apply_geo_binary_2D_mask(MultidimArray<int> &mask,
     FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY2D(mask)
     {
         dAij(mask,i,j)=ROUND(dAij(tmp,i,j));
-//        std::cout << "i, j = " << i << "," << j <<std::endl;
+        //        std::cout << "i, j = " << i << "," << j <<std::endl;
     }
 }
 
@@ -1667,7 +1675,7 @@ void rangeAdjust_within_mask(const MultidimArray<double> *mask,
 /* Define Parameters ----------------------------------------------------------------- */
 void ProgMask::defineParams()
 {
-    addUsageLine("Apply a mask");
+    addUsageLine("Apply a mask.");
     addUsageLine("Example of use: Sample at circular mask inside radius 72");
     addUsageLine("   xmipp_mask  -i reference.vol -o output_volume.vol --mask circular -72");
     addUsageLine("As above but save mask");
