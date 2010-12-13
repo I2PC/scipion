@@ -1783,7 +1783,7 @@ private:
         filename = name;
         dataFName = hFile->fileName;
 
-        if (select_img == -1)
+        if (dump != -1)
             select_img = dump;
 
 #undef DEBUG
