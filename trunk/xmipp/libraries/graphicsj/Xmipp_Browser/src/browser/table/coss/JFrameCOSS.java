@@ -13,6 +13,7 @@ package browser.table.coss;
 import browser.table.coss.renderers.FileNameRenderer;
 import browser.table.coss.renderers.ImageRenderer;
 import browser.table.coss.renderers.InfoRenderer;
+import browser.windows.ImagesWindowFactory;
 import java.awt.Component;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -299,7 +300,7 @@ public class JFrameCOSS extends JFrame {
                         rows[0], cols[0]);
 
                 if (item instanceof TableImageItemCOSS) {
-                    ((TableImageItemCOSS) item).getFullZiseImagePlus().show();
+                    ImagesWindowFactory.openImageWindow(((TableImageItemCOSS) item).getFullZiseImagePlus());
                 }
             }
         } else if (SwingUtilities.isRightMouseButton(evt)) {
