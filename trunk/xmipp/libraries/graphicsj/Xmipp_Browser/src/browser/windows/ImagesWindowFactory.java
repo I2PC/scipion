@@ -66,6 +66,10 @@ public class ImagesWindowFactory {
         }
     }
 
+    public static void openImageWindow(ImagePlus ip) {
+        openImageWindow(ip, false);
+    }
+
     public static void openImageWindow(ImagePlus ip, boolean poll) {
         if (ip != null) {
             if (ip.getStackSize() > 1) {
