@@ -60,7 +60,8 @@ public:
 
     void process_selfile(MetaData &SF, bool do_prepare, bool multivariate)
     {
-        Image<double> img, img2;
+        Image<double> img;
+        MultidimArray<double> img2;
         MultidimArray<int> radial_count;
         MultidimArray<double> radial_avg;
         Matrix1D<int> center(2);
@@ -76,12 +77,15 @@ public:
         int c = XMIPP_MAX(1, nr_imgs / 60);
         int imgno = 0, imgnoPCA=0;
         MultidimArray<float> v;
+        MultidimArray<int> distance;
+        int dim;
         if (do_prepare)
         {
             Zscore.initZeros(SF.size());
             ZscoreMultivariate=Zscore;
         }
         bool thereIsEnable=SF.containsLabel(MDL_ENABLED);
+        bool first=true;
         FOR_ALL_OBJECTS_IN_METADATA(SF)
         {
             if (do_prepare)
@@ -100,24 +104,37 @@ public:
                 img().statisticsAdjust(0,1);
 
                 // Overall statistics
-                double minval, maxval;
-                img().computeDoubleMinMax(minval, maxval);
                 Histogram1D hist;
                 compute_hist(img(),hist,-4,4,31);
 
                 // Radial profile
-                img2()=img();
-                img2()*=img();
-                radialAverage(img2(), center, radial_avg, radial_count);
+                img2.resizeNoCopy(img());
+                double minval=1e38;
+                double maxval=-1e38;
+                FOR_ALL_ELEMENTS_IN_ARRAY2D(img2)
+                {
+                	double val=IMGPIXEL(img,i,j);
+                	if (val<minval)
+                		minval=val;
+                	else if (val>maxval)
+                		maxval=val;
+                	A2D_ELEM(img2,i,j)=val*val;
+                }
+                if (first)
+                {
+                	radialAveragePrecomputeDistance(img2, center, distance, dim);
+                	first=false;
+                }
+                fastRadialAverage(img2, distance, dim, radial_avg, radial_count);
 
                 // Build vector
-                v.initZeros(2+XSIZE(hist)+XSIZE(img())/2);
+                v.initZeros(2+XSIZE(hist)+XSIZE(img2)/2);
                 v(0)=(float)minval;
                 v(1)=(float)maxval;
                 int idx=2;
                 FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY1D(hist)
                 v(idx++)=(float)DIRECT_A1D_ELEM(hist,i);
-                for (int i=0; i<XSIZE(img())/2; i++)
+                for (int i=0; i<XSIZE(img2)/2; i++)
                     v(idx++)=(float)DIRECT_A1D_ELEM(radial_avg,i);
                 pcaAnalyzer.addVector(v);
             }
