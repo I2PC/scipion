@@ -1062,10 +1062,20 @@ void Mask::write_mask(const FileName &fn)
 }
 
 
-void Mask::defineParams(XmippProgram * program, int allowed_data_types)
+void Mask::defineParams(XmippProgram * program, int allowed_data_types, const char* prefix, const char* comment)
 {
-    program->addParamsLine("   [--center <x0=0> <y0=0> <z0=0>]: Center of the mask");
-    program->addParamsLine("   [--mask <mask_type=circular>]");
+  char tempLine[256];
+
+  if(prefix == NULL)
+    sprintf(tempLine, "  [--mask <mask_type=circular>] ");
+  else
+    sprintf(tempLine,"%s  --mask <mask_type=circular> ", prefix);
+  if (comment != NULL)
+    sprintf(tempLine, "%s : %s", tempLine, comment);
+  std::cout << tempLine <<std::endl;
+
+  program->addParamsLine(tempLine);
+//    program->addParamsLine("   [--mask <mask_type=circular>]");
     program->addParamsLine("        where <mask_type> ");
     // program->addParamsLine("== INT MASK ==");
     if (allowed_data_types & INT_MASK)
@@ -1118,6 +1128,7 @@ void Mask::defineParams(XmippProgram * program, int allowed_data_types)
         program->addParamsLine("   [ -m <blob_order=2>]       : Order of blob");
         program->addParamsLine("   [ -a <blob_alpha=10.4>]    : Alpha of blob");
     }
+    program->addParamsLine("   [--center <x0=0> <y0=0> <z0=0>]: Center of the mask");
 }
 
 void Mask::readParams(XmippProgram * program)
