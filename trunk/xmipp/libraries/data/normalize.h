@@ -309,7 +309,7 @@ public:
     /** Apply to an image.
      * The input image is modified.
      */
-    void apply(Image<double> &img);
+    void apply(Image<double> &I);
 public:
     // Mean and standard deviation of the image 0. Used for tomography
     double mu0, sigma0;

@@ -208,7 +208,6 @@ void normalize_NewXmipp2(MultidimArray<double> &I, const MultidimArray<int> &bg_
 
 void normalize_ramp(MultidimArray<double> &I, const MultidimArray<int> &bg_mask)
 {
-
     // Only 2D ramps implemented
     I.checkDimension(2);
 
@@ -238,10 +237,8 @@ void normalize_ramp(MultidimArray<double> &I, const MultidimArray<int> &bg_mask)
         A2D_ELEM(I, i, j) -= pA * j + pB * i + pC;
     }
     // Divide by the remaining std.dev. in the background region
-    computeStats_within_binary_mask(bg_mask, I, minbg, maxbg, avgbg,
-                                     stddevbg);
-    I /= stddevbg;
-
+    computeStats_within_binary_mask(bg_mask, I, minbg, maxbg, avgbg, stddevbg);
+    I *= 1.0/stddevbg;
 }
 
 void normalize_remove_neighbours(MultidimArray<double> &I,
@@ -628,34 +625,35 @@ void Normalize_parameters::apply_geo_mask(Image<double>& img)
         dAij(bg_mask,i,j)=ROUND(dAij(tmp,i,j));
 }
 
-void Normalize_parameters::apply(Image<double> &img)
+void Normalize_parameters::apply(Image<double> &I)
 {
+	MultidimArray<double> &img=I();
     double a, b;
     if (invert_contrast)
-	img() *= -1.;
+	img *= -1.;
 
     if (remove_black_dust || remove_white_dust)
     {
         double avg, stddev, min, max, zz;
-        img().computeStats(avg, stddev, min, max);
+        img.computeStats(avg, stddev, min, max);
 
         if ((min - avg) / stddev < thresh_black_dust && remove_black_dust)
         {
-            FOR_ALL_ELEMENTS_IN_ARRAY3D(img())
+            FOR_ALL_ELEMENTS_IN_ARRAY3D(img)
             {
-                zz = (A3D_ELEM(img(), k, i, j) - avg) / stddev;
+                zz = (A3D_ELEM(img, k, i, j) - avg) / stddev;
                 if (zz < thresh_black_dust)
-                    A3D_ELEM(img(), k, i, j) = rnd_gaus(avg,stddev);
+                    A3D_ELEM(img, k, i, j) = rnd_gaus(avg,stddev);
             }
         }
 
         if ((max - avg) / stddev > thresh_white_dust && remove_white_dust)
         {
-            FOR_ALL_ELEMENTS_IN_ARRAY3D(img())
+            FOR_ALL_ELEMENTS_IN_ARRAY3D(img)
             {
-                zz = (A3D_ELEM(img(), k, i, j) - avg) / stddev;
+                zz = (A3D_ELEM(img, k, i, j) - avg) / stddev;
                 if (zz > thresh_white_dust)
-                    A3D_ELEM(img(), k, i, j) = rnd_gaus(avg,stddev);
+                    A3D_ELEM(img, k, i, j) = rnd_gaus(avg,stddev);
             }
         }
     }
@@ -664,38 +662,38 @@ void Normalize_parameters::apply(Image<double> &img)
     switch (method)
     {
     case OLDXMIPP:
-        normalize_OldXmipp(img());
+        normalize_OldXmipp(img);
         break;
     case NEAR_OLDXMIPP:
-        normalize_Near_OldXmipp(img(), bg_mask);
+        normalize_Near_OldXmipp(img, bg_mask);
         break;
     case NEWXMIPP:
-        normalize_NewXmipp(img(), bg_mask);
+        normalize_NewXmipp(img, bg_mask);
         break;
     case NEWXMIPP2:
-        normalize_NewXmipp2(img(), bg_mask);
+        normalize_NewXmipp2(img, bg_mask);
         break;
     case RAMP:
-        normalize_ramp(img(), bg_mask);
+        normalize_ramp(img, bg_mask);
         break;
     case NEIGHBOUR:
-        normalize_remove_neighbours(img(), bg_mask, thresh_neigh);
+        normalize_remove_neighbours(img, bg_mask, thresh_neigh);
         break;
     case TOMOGRAPHY:
-        normalize_tomography(img(), img.tilt(), mui, sigmai, tiltMask);
+        normalize_tomography(img, I.tilt(), mui, sigmai, tiltMask);
         break;
     case TOMOGRAPHY0:
-        normalize_tomography(img(), img.tilt(), mui, sigmai, tiltMask,
+        normalize_tomography(img, I.tilt(), mui, sigmai, tiltMask,
             true, mu0, sigma0);
         break;
     case MICHAEL:
-        normalize_Michael(img(), bg_mask);
+        normalize_Michael(img, bg_mask);
         break;
     case RANDOM:
         a = rnd_unif(a0, aF);
         b = rnd_unif(b0, bF);
-        FOR_ALL_ELEMENTS_IN_ARRAY3D(img())
-            A3D_ELEM(img(), k, i, j) = a * A3D_ELEM(img(), k, i, j) + b;
+        FOR_ALL_ELEMENTS_IN_ARRAY3D(img)
+            A3D_ELEM(img, k, i, j) = a * A3D_ELEM(img, k, i, j) + b;
         break;
     }
 }
