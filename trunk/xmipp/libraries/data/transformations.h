@@ -100,7 +100,7 @@ void translation2DMatrix(const Matrix1D< double > &v, Matrix2D< double > &m);
  * @endcode
  */
 void rotation3DMatrix(double ang, char axis, Matrix2D< double > &m,
-		bool homogeneous=true);
+                      bool homogeneous=true);
 
 /** Creates a rotational matrix (4x4) for volumes around any axis
  * @ingroup GeometricalTransformations
@@ -114,7 +114,7 @@ void rotation3DMatrix(double ang, char axis, Matrix2D< double > &m,
  * @endcode
  */
 void rotation3DMatrix(double ang, const Matrix1D< double >& axis, Matrix2D< double > &m,
-		bool homogeneous=true);
+                      bool homogeneous=true);
 
 /** Matrix which transforms the given axis into Z
  * @ingroup GeometricalTransformations
@@ -153,7 +153,7 @@ void translation3DMatrix(const Matrix1D< double >& v, Matrix2D< double > &m);
  * that, XX(sc)=scale for X axis, YY(sc)=...
  */
 void scale3DMatrix(const Matrix1D< double >& sc, Matrix2D< double > &m,
-		bool homogeneous=true);
+                   bool homogeneous=true);
 
 /** Applies a geometrical transformation.
  * @ingroup GeometricalTransformations
@@ -392,11 +392,11 @@ void applyGeometry(int SplineDegree,
 
                 if (interp)
                 {
-                	if (SplineDegree==0)
-                	{
-                		dAij(V2, i, j)=A2D_ELEM(V1,ROUND(yp),ROUND(xp));
-                	}
-                	else if (SplineDegree==1)
+                    if (SplineDegree==0)
+                    {
+                        dAij(V2, i, j)=A2D_ELEM(V1,ROUND(yp),ROUND(xp));
+                    }
+                    else if (SplineDegree==1)
                     {
                         // Linear interpolation
 
@@ -441,7 +441,7 @@ void applyGeometry(int SplineDegree,
 
                         if (wy != 0 && n2 < V1.ydim)
                         {
-                        	aux2=wy * (1 - wx);
+                            aux2=wy * (1 - wx);
                             tmp += aux2 * DIRECT_A2D_ELEM(V1, n2, m1);
 
                             if (wx != 0 && m2 < V1.xdim)
@@ -588,11 +588,11 @@ void applyGeometry(int SplineDegree,
 
                     if (interp)
                     {
-                    	if (SplineDegree==0)
-                    	{
-                    		dAkij(V2, k, i, j)=A3D_ELEM(V1,ROUND(zp),ROUND(yp),ROUND(xp));
-                    	}
-                    	else if (SplineDegree == 1)
+                        if (SplineDegree==0)
+                        {
+                            dAkij(V2, k, i, j)=A3D_ELEM(V1,ROUND(zp),ROUND(yp),ROUND(xp));
+                        }
+                        else if (SplineDegree == 1)
                         {
 
                             // Linear interpolation
@@ -1243,6 +1243,96 @@ void radialAverage(const MultidimArray< T >& m,
     // Perform the mean
     FOR_ALL_ELEMENTS_IN_ARRAY1D(radial_mean)
     radial_mean(i) /= (T) radial_count(i);
+}
+
+template<typename T>
+void radialAveragePrecomputeDistance(const MultidimArray< T >& m,
+                                     Matrix1D< int >& center_of_rot,
+                                     MultidimArray< int >& distance,
+                                     int &dim,
+                                     const bool& rounding = false)
+{
+    Matrix1D< double > idx(3);
+
+    // If center_of_rot was written for 2D image
+    if (center_of_rot.size() < 3)
+        center_of_rot.resize(3);
+
+    // First determine the maximum distance that one should expect, to set the
+    // dimension of the radial average vector
+    MultidimArray< int > distances(8);
+
+    double z = STARTINGZ(m) - ZZ(center_of_rot);
+    double y = STARTINGY(m) - YY(center_of_rot);
+    double x = STARTINGX(m) - XX(center_of_rot);
+
+    distances(0) = (int) floor(sqrt(x * x + y * y + z * z));
+    x = FINISHINGX(m) - XX(center_of_rot);
+
+    distances(1) = (int) floor(sqrt(x * x + y * y + z * z));
+    y = FINISHINGY(m) - YY(center_of_rot);
+
+    distances(2) = (int) floor(sqrt(x * x + y * y + z * z));
+    x = STARTINGX(m) - XX(center_of_rot);
+
+    distances(3) = (int) floor(sqrt(x * x + y * y + z * z));
+    z = FINISHINGZ(m) - ZZ(center_of_rot);
+
+    distances(4) = (int) floor(sqrt(x * x + y * y + z * z));
+    x = FINISHINGX(m) - XX(center_of_rot);
+
+    distances(5) = (int) floor(sqrt(x * x + y * y + z * z));
+    y = STARTINGY(m) - YY(center_of_rot);
+
+    distances(6) = (int) floor(sqrt(x * x + y * y + z * z));
+    x = STARTINGX(m) - XX(center_of_rot);
+
+    distances(7) = (int) floor(sqrt(x * x + y * y + z * z));
+
+    dim = (int) CEIL(distances.computeMax()) + 1;
+    if (rounding)
+        dim++;
+
+    // Perform the radial sum and count pixels that contribute to every
+    // distance
+    distance.initZeros(m);
+    FOR_ALL_ELEMENTS_IN_ARRAY3D(m)
+    {
+        ZZ(idx) = k - ZZ(center_of_rot);
+        YY(idx) = i - YY(center_of_rot);
+        XX(idx) = j - XX(center_of_rot);
+
+        // Determine distance to the center
+        if (rounding)
+            A3D_ELEM(distance,k,i,j) = (int) ROUND(idx.module());
+        else
+            A3D_ELEM(distance,k,i,j) = (int) floor(idx.module());
+    }
+}
+
+template<typename T>
+void fastRadialAverage(const MultidimArray< T >& m,
+                       const MultidimArray< int >& distance,
+                       int dim,
+                       MultidimArray< T >& radial_mean,
+                       MultidimArray< int >& radial_count)
+{
+    // Define the vectors
+    radial_mean.initZeros(dim);
+    radial_count.initZeros(dim);
+
+    // Perform the radial sum and count pixels that contribute to every
+    // distance
+    FOR_ALL_ELEMENTS_IN_ARRAY3D(m)
+    {
+    	int d=A3D_ELEM(distance,k,i,j);
+        A1D_ELEM(radial_mean,d) += A3D_ELEM(m, k, i, j);
+        A1D_ELEM(radial_count,d)++;
+    }
+
+    // Perform the mean
+    FOR_ALL_ELEMENTS_IN_ARRAY1D(radial_mean)
+    A1D_ELEM(radial_mean,i) /= A1D_ELEM(radial_count,i);
 }
 
 /** Interpolates the value of the 3D matrix M at the point (x,y,z) knowing
