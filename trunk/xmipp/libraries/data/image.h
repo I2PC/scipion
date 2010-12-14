@@ -509,8 +509,8 @@ public:
                 else
                 {
                     unsigned char * ptr = (unsigned char *) page;
-                    for(int i=0; i<pageSize; i++)
-                        ptrDest[i]=(T) ptr[i];
+                    for(int i=0; i<pageSize; ++i, ++ptr)
+                        ptrDest[i]=(T) *ptr;
                 }
                 break;
             }
@@ -523,8 +523,8 @@ public:
                     else
                     {
                         signed char * ptr = (signed char *) page;
-                        for(int i=0; i<pageSize; i++)
-                            ptrDest[i]=(T) ptr[i];
+                        for(int i=0; i<pageSize; ++i, ++ptr)
+                            ptrDest[i]=(T) *ptr;
                     }
                 break;
             }
@@ -537,8 +537,8 @@ public:
                     else
                     {
                         unsigned short * ptr = (unsigned short *) page;
-                        for(int i=0; i<pageSize; i++)
-                            ptrDest[i]=(T) ptr[i];
+                        for(int i=0; i<pageSize; ++i, ++ptr)
+                            ptrDest[i]=(T) *ptr;
                     }
                 break;
             }
@@ -551,8 +551,8 @@ public:
                     else
                     {
                         short * ptr = (short *) page;
-                        for(int i=0; i<pageSize; i++)
-                            ptrDest[i]=(T) ptr[i];
+                        for(int i=0; i<pageSize; ++i, ++ptr)
+                            ptrDest[i]=(T) *ptr;
                     }
                 break;
             }
@@ -565,8 +565,8 @@ public:
                     else
                     {
                         unsigned int * ptr = (unsigned int *) page;
-                        for(int i=0; i<pageSize; i++)
-                            ptrDest[i]=(T) ptr[i];
+                        for(int i=0; i<pageSize; ++i, ++ptr)
+                            ptrDest[i]=(T) *ptr;
                     }
                 break;
             }
@@ -579,8 +579,8 @@ public:
                     else
                     {
                         int * ptr = (int *) page;
-                        for(int i=0; i<pageSize; i++)
-                            ptrDest[i]=(T) ptr[i];
+                        for(int i=0; i<pageSize; ++i, ++ptr)
+                            ptrDest[i]=(T) *ptr;
                     }
                 break;
             }
@@ -593,8 +593,8 @@ public:
                     else
                     {
                         long * ptr = (long *) page;
-                        for(int i=0; i<pageSize; i++)
-                            ptrDest[i]=(T) ptr[i];
+                        for(int i=0; i<pageSize; ++i, ++ptr)
+                            ptrDest[i]=(T) *ptr;
                     }
                 break;
             }
@@ -607,8 +607,8 @@ public:
                     else
                     {
                         float * ptr = (float *) page;
-                        for(int i=0; i<pageSize; i++)
-                            ptrDest[i]=(T) ptr[i];
+                        for(int i=0; i<pageSize; ++i, ++ptr)
+                            ptrDest[i]=(T) *ptr;
                     }
                 break;
             }
@@ -621,8 +621,8 @@ public:
                     else
                     {
                         double * ptr = (double *) page;
-                        for(int i=0; i<pageSize; i++)
-                            ptrDest[i]=(T) ptr[i];
+                        for(int i=0; i<pageSize; ++i, ++ptr)
+                            ptrDest[i]=(T) *ptr;
                     }
                 break;
             }
@@ -652,8 +652,8 @@ public:
                 else
                 {
                     float * ptr = (float *) page;
-                    for(int i=0; i<pageSize; i++)
-                        ptr[i] = (float)srcPtr[i];
+                    for(int i=0; i<pageSize; ++i, ++ptr)
+                        *ptr = (float)srcPtr[i];
                 }
                 break;
             }
@@ -666,8 +666,8 @@ public:
                     else
                     {
                         double * ptr = (double *) page;
-                        for(int i=0; i<pageSize; i++)
-                            ptr[i] = (double)srcPtr[i];
+                        for(int i=0; i<pageSize; ++i, ++ptr)
+                        	*ptr = (double)srcPtr[i];
                     }
                 break;
             }
@@ -680,8 +680,8 @@ public:
                     else
                     {
                         unsigned short * ptr = (unsigned short *) page;
-                        for(int i=0; i<pageSize; i++)
-                            ptr[i] = (unsigned short)srcPtr[i];
+                        for(int i=0; i<pageSize; ++i, ++ptr)
+                        	*ptr = (unsigned short)srcPtr[i];
                     }
                 break;
             }
@@ -694,8 +694,8 @@ public:
                     else
                     {
                         short * ptr = (short *) page;
-                        for(int i=0; i<pageSize; i++)
-                            ptr[i] = (short)srcPtr[i];
+                        for(int i=0; i<pageSize; ++i, ++ptr)
+                        	*ptr = (short)srcPtr[i];
                     }
                 break;
             }
@@ -708,8 +708,8 @@ public:
                     else
                     {
                         unsigned char * ptr = (unsigned char *) page;
-                        for(int i=0; i<pageSize; i++)
-                            ptr[i] = (unsigned char)srcPtr[i];
+                        for(int i=0; i<pageSize; ++i, ++ptr)
+                        	*ptr = (unsigned char)srcPtr[i];
                     }
                 break;
             }
@@ -722,8 +722,8 @@ public:
                     else
                     {
                         char * ptr = (char *) page;
-                        for(int i=0; i<pageSize; i++)
-                            ptr[i] = (char)srcPtr[i];
+                        for(int i=0; i<pageSize; ++i, ++ptr)
+                        	*ptr = (char)srcPtr[i];
                     }
                 break;
             }
