@@ -26,6 +26,12 @@
 #include "image_generic.h"
 
 
+ImageGeneric::~ImageGeneric()
+{
+  delete image;
+  delete data;
+}
+
 void ImageGeneric::setImageBase()
 {
     switch (datatype)

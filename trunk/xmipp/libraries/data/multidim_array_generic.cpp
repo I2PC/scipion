@@ -32,6 +32,11 @@ MultidimArrayGeneric::MultidimArrayGeneric(MultidimArrayBase* array, DataType _d
 
 }
 
+MultidimArrayGeneric::~MultidimArrayGeneric()
+{
+    delete im;
+}
+
 void MultidimArrayGeneric::link(MultidimArrayBase* array)
 {
     im = array;

@@ -66,8 +66,7 @@ public:
     }
     /** Destructor.
      */
-    ~ImageGeneric()
-    {}
+    ~ImageGeneric();
 
     /** Initialize the parameters.
      */
@@ -116,6 +115,7 @@ public:
         datatype = _datatype;
         setImageBase();
     }
+
     /** Read image from file.
      */
     int read(const FileName &name, bool readdata=true, int select_img = -1,

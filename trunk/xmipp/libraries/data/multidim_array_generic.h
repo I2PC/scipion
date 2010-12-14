@@ -31,7 +31,18 @@
 #include "image.h"
 
 
-
+/* Switch among different datatypes.
+ *
+ * This macro replicates the code for the different data type options.
+ *
+ *@code
+ *
+ *#define MYFUNC(type)  getSlice(k, *(MultidimArray<type>*)image, axis, n)
+ *
+ *SWITCHDATATYPE(datatype,MYFUNC)
+ *
+ *@endcode
+ */
 #define SWITCHDATATYPE(datatype,OP) \
     switch (datatype)\
         {\
@@ -82,8 +93,7 @@ public:
     /**
      * Destructor.
      */
-    ~MultidimArrayGeneric()
-    {}
+    ~MultidimArrayGeneric();
 
     /**
      * Link the internal array base to a specific multidimarray object.
