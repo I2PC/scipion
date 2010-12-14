@@ -1064,18 +1064,16 @@ void Mask::write_mask(const FileName &fn)
 
 void Mask::defineParams(XmippProgram * program, int allowed_data_types, const char* prefix, const char* comment)
 {
-  char tempLine[256];
+    char tempLine[256];
 
-  if(prefix == NULL)
-    sprintf(tempLine, "  [--mask <mask_type=circular>] ");
-  else
-    sprintf(tempLine,"%s  --mask <mask_type=circular> ", prefix);
-  if (comment != NULL)
-    sprintf(tempLine, "%s : %s", tempLine, comment);
-  std::cout << tempLine <<std::endl;
+    if(prefix == NULL)
+        sprintf(tempLine, "  [--mask <mask_type=circular>] ");
+    else
+        sprintf(tempLine,"%s  --mask <mask_type=circular> ", prefix);
+    if (comment != NULL)
+        sprintf(tempLine, "%s : %s", tempLine, comment);
 
-  program->addParamsLine(tempLine);
-//    program->addParamsLine("   [--mask <mask_type=circular>]");
+    program->addParamsLine(tempLine);
     program->addParamsLine("        where <mask_type> ");
     // program->addParamsLine("== INT MASK ==");
     if (allowed_data_types & INT_MASK)
