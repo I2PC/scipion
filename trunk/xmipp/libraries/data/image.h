@@ -222,6 +222,7 @@ public:
     virtual void getDimensions(int &Xdim, int &Ydim, int &Zdim, unsigned long &Ndim) const =0;
     virtual void getEulerAngles(double &rot, double &tilt, double &psi,
                                 long int n = 0)=0;
+    virtual double tilt(const long int n = 0) const =0;
     virtual int read(const FileName &name, bool readdata=true, int select_img = -1,
                      bool apply_geo = false, bool only_apply_shifts = false,
                      MDRow * row = NULL, bool mapData = false)=0;
