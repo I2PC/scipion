@@ -60,7 +60,7 @@ protected:
         addParamsLine("[-short_format]   : Do not show labels for statistics.");
         addParamsLine("[-show_angles]    : Also show angles in the image header.");
         addParamsLine("[-save_mask]      : Save 2D and 3D masks (as \"mask2D\" or \"mask3D\").");
-        mask_prm.defineParams(this,INT_MASK);
+        mask_prm.defineParams(this,INT_MASK,NULL,"Statistics constrained to the mask area.");
     }
 
     void readParams()
@@ -73,7 +73,7 @@ protected:
 
         mask_prm.allowed_data_types = INT_MASK;
         if (checkParam("--mask"))
-          mask_prm.readParams(this);
+            mask_prm.readParams(this);
     }
 
     void show()
@@ -205,8 +205,8 @@ protected:
 /* MAIN -------------------------------------------------------------------- */
 int main(int argc, char *argv[])
 {
-        ProgStatistics program;
-        program.read(argc, argv);
-        program.tryRun();
+    ProgStatistics program;
+    program.read(argc, argv);
+    program.tryRun();
     return 0;
 }

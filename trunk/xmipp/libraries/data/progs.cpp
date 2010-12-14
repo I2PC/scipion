@@ -89,6 +89,7 @@ void Prog_parameters::get_input_size(int &Zdim, int &Ydim, int &Xdim)
         MetaData SF;
         SF.read(fn_in);
         ImgSize(SF, Xdim, Ydim, dum, dum2);
+        Zdim = 1;
     }
     else
     {

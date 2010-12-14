@@ -1069,7 +1069,7 @@ void Mask::defineParams(XmippProgram * program, int allowed_data_types, const ch
     if(prefix == NULL)
         sprintf(tempLine, "  [--mask <mask_type=circular>] ");
     else
-        sprintf(tempLine,"%s  --mask <mask_type=circular> ", prefix);
+        sprintf(tempLine,"%s --mask <mask_type=circular> ", prefix);
     if (comment != NULL)
         sprintf(tempLine, "%s : %s", tempLine, comment);
 
