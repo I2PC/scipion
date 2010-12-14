@@ -1106,9 +1106,11 @@ public:
     double sum2() const
     {
         double sum = 0;
-        for (int j = 0; j < vdim; j++)
+        double *ptr=vdata;
+        for (int j = 0; j < vdim; ++j, ++ptr)
         {
-            sum += vdata[j] * vdata[j];
+        	double val=*ptr;
+            sum += val*val;
         }
         return sum;
     }
