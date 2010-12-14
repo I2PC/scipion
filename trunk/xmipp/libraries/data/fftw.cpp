@@ -213,8 +213,9 @@ void FourierTransformer::Transform(int sign)
             size = MULTIDIM_SIZE(*fComplex);
         else
             REPORT_ERROR(ERR_UNCLASSIFIED,"No complex nor real data defined");
+        double isize=1.0/size;
         FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(fFourier)
-            DIRECT_MULTIDIM_ELEM(fFourier,n) /= size;
+            DIRECT_MULTIDIM_ELEM(fFourier,n) *= isize;
 
     }
     else if (sign == FFTW_BACKWARD)
