@@ -2834,7 +2834,7 @@ public:
         FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY_ptr(*this,n,ptr)
         {
             T Tval=*ptr;
-            double val=static_cast< double >(Tval);
+            double val=Tval;
             avg += val;
             stddev += val * val;
 
