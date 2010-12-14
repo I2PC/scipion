@@ -109,15 +109,9 @@ public:
 
                 // Radial profile
                 img2.resizeNoCopy(img());
-                double minval=1e38;
-                double maxval=-1e38;
                 FOR_ALL_ELEMENTS_IN_ARRAY2D(img2)
                 {
                 	double val=IMGPIXEL(img,i,j);
-                	if (val<minval)
-                		minval=val;
-                	else if (val>maxval)
-                		maxval=val;
                 	A2D_ELEM(img2,i,j)=val*val;
                 }
                 if (first)
@@ -128,10 +122,8 @@ public:
                 fastRadialAverage(img2, distance, dim, radial_avg, radial_count);
 
                 // Build vector
-                v.initZeros(2+XSIZE(hist)+XSIZE(img2)/2);
-                v(0)=(float)minval;
-                v(1)=(float)maxval;
-                int idx=2;
+                v.initZeros(XSIZE(hist)+XSIZE(img2)/2);
+                int idx=0;
                 FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY1D(hist)
                 v(idx++)=(float)DIRECT_A1D_ELEM(hist,i);
                 for (int i=0; i<XSIZE(img2)/2; i++)
