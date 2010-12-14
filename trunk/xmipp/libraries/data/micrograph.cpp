@@ -594,8 +594,20 @@ void downsample(const Micrograph &M, int Xstep, int Ystep,
         // Read the micrograph in memory as doubles
         MultidimArray<double> Mmem(Ydim,Xdim);
         MultidimArray<std::complex<double> > MmemFourier;
-        FOR_ALL_ELEMENTS_IN_ARRAY2D(Mmem)
-        Mmem(i,j)=(double)M(i,j);
+        if (M.datatype == UChar)
+        	typeCast((*M.IUChar)(),Mmem);
+        else if (M.datatype == UShort)
+        	typeCast((*M.IUShort)(),Mmem);
+        else if (M.datatype == Short)
+        	typeCast((*M.IShort)(),Mmem);
+        else if (M.datatype == UInt)
+        	typeCast((*M.IUInt)(),Mmem);
+        else if (M.datatype == Int)
+        	typeCast((*M.IInt)(),Mmem);
+        else if (M.datatype == Float)
+        	typeCast((*M.IFloat)(),Mmem);
+        else
+        	REPORT_ERROR(ERR_TYPE_INCORRECT, "Micrograph::Downsampling: unknown datatype");
 
         // Perform the Fourier transform
         FourierTransformer transformerM;
@@ -632,11 +644,15 @@ void downsample(const Micrograph &M, int Xstep, int Ystep,
         b = -omin;
 
         // Copy back data
+        int depth=Mp.getDatatypeDetph();
         FOR_ALL_ELEMENTS_IN_ARRAY2D(Mpmem)
         {
-            pixval=Mpmem(i,j);
-            if (Mp.getDatatypeDetph() != 32)
-                Mp.set_val(i, j, FLOOR(a*(pixval*scale + b)));
+            pixval=A2D_ELEM(Mpmem,i,j);
+            if (depth != 32)
+            {
+            	double temp=a*(pixval*scale + b);
+                Mp.set_val(i, j, FLOOR(temp));
+            }
             else
                 Mp.set_val(i, j, pixval);
         }
