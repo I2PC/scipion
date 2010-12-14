@@ -24,46 +24,82 @@
  ***************************************************************************/
 
 #include "psf_xr.h"
-#include "args.h"
-#include "fft.h"
-//#include "mask.h"
 
 
 /* Read -------------------------------------------------------------------- */
 void XRayPSF::read(const FileName &fn)
 {
-    FILE *fh_param;
 
     if (fn == "")
     {
         clear();
         return;
     }
-    if ((fh_param = fopen(fn.c_str(), "r")) == NULL)
-        REPORT_ERROR(ERR_IO_NOTOPEN,
-                     (std::string)"XmippXROTF::read: There is a problem "
-                     "opening the file " + fn);
 
-    try
+    if (fn.isMetaData())
     {
-        lambda = textToFloat(getParameter(fh_param, "lambda", 0, "2.43"))* 1e-9;
-        deltaR = textToFloat(getParameter(fh_param, "outer_zone_width", 0, "40")) * 1e-9;
-        Nzp = textToFloat(getParameter(fh_param, "zones_number", 0, "560"));
-        Ms = textToFloat(getParameter(fh_param, "magnification", 0, "2304"));
-        dxo = textToFloat(getParameter(fh_param, "sampling_rate", 0, "1")) *1e-9;
-        if (checkParameter(fh_param, "z_sampling_rate"))
-            dzo = textToFloat(getParameter(fh_param, "z_sampling_rate", 0)) *1e-9;
-        else
-            dzo = dxo;
-        DeltaZo = textToFloat(getParameter(fh_param, "z_axis_shift", 0, "0")) *1e-6;
+        MetaData MD;
+        MD.read(fn);
+
+        if (!MD.getValue(MDL_CTF_XRAY_LAMBDA,lambda))
+            lambda = 2.43;
+        lambda *= 1e-9;
+        if (!MD.getValue(MDL_CTF_XRAY_OUTER_ZONE_WIDTH,deltaR))
+            deltaR = 40;
+        deltaR *= 1e-9;
+        if (!MD.getValue(MDL_CTF_XRAY_ZONES_NUMBER,Nzp))
+            Nzp = 560;
+        if (!MD.getValue(MDL_CTF_XRAY_MAGNIFICATION,Ms))
+            Ms = 2304;
+        if (!MD.getValue(MDL_CTF_SAMPLING_RATE,dxo))
+            dxo = 10;
+        dxo *= 1e-9;
+        if (!MD.getValue(MDL_CTF_SAMPLING_RATE_Z,dzo))
+            dzo = 10;
+        dzo *= 1e-9;
+        if (!MD.getValue(MDL_CTF_LONGITUDINAL_DISPLACEMENT,DeltaZo))
+          DeltaZo = 0;
+        DeltaZo *= 1e-6;
+
+        std::vector<double> dimV;
+        if (!MD.getValue(MDL_CTF_XRAY_DIMENSIONS,dimV))
+          dimV.assign(0,0);
+        Nox = dimV[0];
+        Noy = dimV[1];
+        Noz = dimV[2];
 
     }
-    catch (XmippError XE)
+    else
     {
-        std::cout << XE << std::endl;
-        REPORT_ERROR(ERR_IO_NOREAD, (std::string)"There is an error reading " + fn);
+        FILE *fh_param;
+        if ((fh_param = fopen(fn.c_str(), "r")) == NULL)
+            REPORT_ERROR(ERR_IO_NOTOPEN,
+                         (std::string)"XmippXROTF::read: There is a problem "
+                         "opening the file " + fn);
+
+        try
+        {
+            lambda = textToFloat(getParameter(fh_param, "lambda", 0, "2.43"))* 1e-9;
+            deltaR = textToFloat(getParameter(fh_param, "outer_zone_width", 0, "40")) * 1e-9;
+            Nzp = textToFloat(getParameter(fh_param, "zones_number", 0, "560"));
+            Ms = textToFloat(getParameter(fh_param, "magnification", 0, "2304"));
+            dxo = textToFloat(getParameter(fh_param, "sampling_rate", 0, "1")) *1e-9;
+            if (checkParameter(fh_param, "z_sampling_rate"))
+                dzo = textToFloat(getParameter(fh_param, "z_sampling_rate", 0)) *1e-9;
+            else
+                dzo = dxo;
+            DeltaZo = textToFloat(getParameter(fh_param, "z_axis_shift", 0, "0")) *1e-6;
+
+            Nox = textToFloat(getParameter(fh_param, "x_dim", 0, "0"));
+
+        }
+        catch (XmippError XE)
+        {
+            std::cout << XE << std::endl;
+            REPORT_ERROR(ERR_IO_NOREAD, (std::string)"There is an error reading " + fn);
+        }
+        fclose(fh_param);
     }
-    fclose(fh_param);
 }
 
 /* Write ------------------------------------------------------------------- */
@@ -150,10 +186,6 @@ void XRayPSF::produceSideInfo()
     dxiMax = lambda * Zi / (2 * Rlens);
     DoF = 4*deltaR*deltaR/lambda;
 
-    DoF = log10(DoF);
-
-    //        Z = 0.99999*Zo;
-    //    Z = Zo;
 }
 
 /* Apply the OTF to an image ----------------------------------------------- */
@@ -381,11 +413,14 @@ void lensPD(MultidimArray<std::complex<double> > &Im, double Flens, double lambd
 
         phase = (-PI / lambda / Flens) * (x * x + y * y);
 #ifndef _AIX
+
         (Im(i, j)).real() = cos(phase);
         (Im(i, j)).imag() = sin(phase);
 #else
-         Im(i,j)=std::complex<double>(cos(phase),sin(phase));
+
+        Im(i,j)=std::complex<double>(cos(phase),sin(phase));
 #endif
+
     }
 }
 #undef DEBUG

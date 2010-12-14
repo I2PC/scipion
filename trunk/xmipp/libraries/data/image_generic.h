@@ -108,6 +108,11 @@ public:
         image->getEulerAngles(rot, tilt, psi, n);
     }
 
+    double tilt(const long int n = 0) const
+    {
+       return image->tilt(n);
+    }
+
     /** Set the data type for the generic image
      */
     void setDatatype(DataType _datatype)
@@ -121,6 +126,13 @@ public:
     int read(const FileName &name, bool readdata=true, int select_img = -1,
              bool apply_geo = false, bool only_apply_shifts = false,
              MDRow * row = NULL, bool mapData = false);
+
+    /** Read image mapped from file.
+     */
+    int readMapped(const FileName &name)
+    {
+      read(name,true,-1,false,false,NULL,true);
+    }
     /** Write image to file.
     */
     void write(const FileName &name="", int select_img=-1, bool isStack=false,
@@ -143,9 +155,9 @@ public:
         return *data;
     }
 
-    const MultidimArrayGeneric* operator()() const
+    const MultidimArrayGeneric operator()() const
     {
-        return data;
+        return *data;
     }
 
 private:

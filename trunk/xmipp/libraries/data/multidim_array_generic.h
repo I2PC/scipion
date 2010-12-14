@@ -93,7 +93,9 @@ public:
     /**
      * Destructor.
      */
-    ~MultidimArrayGeneric();
+    ~MultidimArrayGeneric()
+    {
+    }
 
     /**
      * Link the internal array base to a specific multidimarray object.
@@ -175,7 +177,7 @@ public:
     /**
       * Get the dimensions of the linked array.
       */
-    void setXmippOrigin()
+ inline   void setXmippOrigin()
     {
         im->setXmippOrigin();
     }

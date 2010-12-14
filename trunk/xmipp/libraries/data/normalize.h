@@ -112,12 +112,12 @@ void normalize_OldXmipp_decomposition(MultidimArray<double> &I,
    @code
    I'=(I-m(I))/(sqrt(v(I))*cos^2(tilt))
    @endcode
-   
+
    Formula for tomography0:
    @code
    I'=(I/cos(tilt)-m0)/(sqrt(v(I))*cos(tilt))
    @endcode
-   
+
    The estimated mean of the image and the local variance are returned in
    sigmai and mui.
 */
@@ -195,13 +195,14 @@ void normalize_remove_neighbours(MultidimArray<double> &I,
                                  const double &threshold);
 //@}
 
-/** Normalize parameters
- */
-class Normalize_parameters: public Prog_parameters
-{
-public:
 
-	/** Possible normalization modes */
+
+/* Normalize program
+ */
+class ProgNormalize : public XmippMetadataProgram
+{
+protected:
+    /** Possible normalization modes */
     enum NormalizationMode {
         NONE,
         OLDXMIPP,
@@ -228,9 +229,116 @@ public:
 
     /** Possible background modes */
     enum BackgroundMode {
-    	NOBACKGROUND,
-    	FRAME,
-    	CIRCLE
+        NOBACKGROUND,
+        FRAME,
+        CIRCLE
+    };
+
+    /** Background mode.
+     * Valid modes are NONE, FRAME, CIRCLE.
+     */
+    BackgroundMode background_mode;
+
+    /** Frame width or circle radius.
+     */
+    int r;
+
+    /** Upper limit of a in y=ax+b.
+     */
+    double aF;
+
+    /** Lower limit of a in y=ax+b.
+     */
+    double a0;
+
+    /** Upper limit of b in y=ax+b.
+     */
+    double bF;
+
+    /** Lower limit of b in y=ax+b.
+     */
+    double b0;
+
+    /** Flag for inverting contrast
+     */
+    bool invert_contrast;
+
+    /** Flag for applying a mask depending on the tilt
+     */
+    bool tiltMask;
+
+    /** Flags for removing balck/white spots due to dust.
+     */
+    bool remove_black_dust;
+    bool remove_white_dust;
+
+    /** Threshold for removing black/white (dust) spots.
+     */
+    double thresh_black_dust;
+    double thresh_white_dust;
+
+    /** Sigma threshold for neighbour removal.
+     */
+    double thresh_neigh;
+
+    MultidimArray<int> bg_mask, bg_mask_bck;
+    bool enable_mask;
+
+    /* Mask parameter
+     */
+    Mask mask_prm;
+
+public:
+    // Mean and standard deviation of the image 0. Used for tomography
+    double mu0, sigma0;
+
+protected:
+    void defineParams();
+    void readParams();
+    void show();
+    void preProcess();
+    void processImage(const FileName &fnImg, const FileName &fnImgOut, long int objId);
+};
+
+
+
+
+/** Normalize parameters
+ */
+class Normalize_parameters: public Prog_parameters
+{
+public:
+
+    /** Possible normalization modes */
+    enum NormalizationMode {
+        NONE,
+        OLDXMIPP,
+        NEAR_OLDXMIPP,
+        NEWXMIPP,
+        MICHAEL,
+        NEWXMIPP2,
+        RANDOM,
+        RAMP,
+        NEIGHBOUR,
+        TOMOGRAPHY,
+        TOMOGRAPHY0
+    };
+
+    /** Normalizing method.
+     * Valid methods are OLDXMIPP, NEAR_OLDXMIPP, NEWXMIPP, NEWXMIPP2, MICHAEL,
+     * NONE, RANDOM, RAMP, NEIGHBOUR, TOMOGRAPHY, TOMOGRAPHY0.
+     */
+    NormalizationMode method;
+
+    /** Normalization of volumes.
+     */
+    bool volume;
+
+    /** Possible background modes */
+    enum BackgroundMode {
+        NOBACKGROUND,
+        FRAME,
+        CIRCLE
     };
 
     /** Background mode.

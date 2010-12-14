@@ -25,17 +25,27 @@
 
 #include <data/normalize.h>
 
-bool process_img(Image<double> &img, const Prog_parameters *prm)
-{
-    Normalize_parameters * eprm = (Normalize_parameters *) prm;
 
-    if (eprm->apply_geo) eprm->apply_geo_mask(img);
-    eprm->apply(img);
-    return true;
+int main(int argc, char *argv[])
+{
+    ProgNormalize program;
+    program.read(argc, argv);
+    program.tryRun();
+
+    return 0;
 }
 
-int main(int argc, char **argv)
-{
-    Normalize_parameters prm;
-    SF_main(argc, argv, &prm, (void*)&process_img);
-}
+//bool process_img(Image<double> &img, const Prog_parameters *prm)
+//{
+//    Normalize_parameters * eprm = (Normalize_parameters *) prm;
+//
+//    if (eprm->apply_geo) eprm->apply_geo_mask(img);
+//    eprm->apply(img);
+//    return true;
+//}
+//
+//int main(int argc, char **argv)
+//{
+//    Normalize_parameters prm;
+//    SF_main(argc, argv, &prm, (void*)&process_img);
+//}
