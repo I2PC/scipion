@@ -231,6 +231,63 @@ public:
         return compute_inverse;
     }
 
+    /** Templated scissor function.
+     *  This is the one actually doing the work
+     */
+    template <typename T>
+    int templateScissor(const Image<T> &I,
+                        const Particle_coords &P, MultidimArray<double> &result,
+                        double Dmin, double Dmax, double scaleX, double scaleY,
+                        bool only_check)
+    {
+        result.resize(Y_window_size, X_window_size);
+        int i0 = ROUND(scaleY * P.Y) + FIRST_XMIPP_INDEX(Y_window_size);
+        int iF = ROUND(scaleY * P.Y) + LAST_XMIPP_INDEX(Y_window_size);
+        int j0 = ROUND(scaleX * P.X) + FIRST_XMIPP_INDEX(X_window_size);
+        int jF = ROUND(scaleX * P.X) + LAST_XMIPP_INDEX(X_window_size);
+        int retval = 1;
+        double irange=1.0/(Dmax - Dmin);
+
+        if (i0 < 0 || iF >= Ydim || j0 < 0 || jF >= Xdim)
+        {
+            result.initZeros();
+            retval = 0;
+        }
+        else
+            if (!only_check)
+            {
+                for (int i = i0; i <= iF; i++)
+                {
+                    int i_i0=i-i0;
+                    for (int j = j0; j <= jF; j++)
+                    {
+                        int j_j0=j-j0;
+                        double val=IMGPIXEL(I,i,j);
+                        if (compute_transmitance)
+                        {
+                            double temp;
+                            if (val < 1)
+                                temp = val;
+                            else
+                                temp = log10(val);
+                            if (compute_inverse)
+                                A2D_ELEM(result,i_i0, j_j0) = (Dmax - temp) * irange;
+                            else
+                                A2D_ELEM(result,i_i0, j_j0) = (temp - Dmin) * irange;
+                        }
+                        else
+                        {
+                            if (compute_inverse)
+                                A2D_ELEM(result, i_i0, j_j0) = (Dmax - val) * irange;
+                            else
+                                A2D_ELEM(result, i_i0, j_j0) = val;
+                        }
+                    }
+                }
+            }
+        return retval;
+    }
+
     /** Scissor.
         The single particle is selected by an index within the particle
         coordinate list. If the index is beyond the number of particles
@@ -249,7 +306,7 @@ public:
         trnasmitance
 
         Returns 0 if an error ocurred and 1 if everything is all right*/
-    int scissor(const Particle_coords &P, Image<double> &result,
+    int scissor(const Particle_coords &P, MultidimArray<double> &result,
                 double Dmin, double Dmax,
                 double scaleX = 1, double scaleY = 1, bool only_check = false);
 

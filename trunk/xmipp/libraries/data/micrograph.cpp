@@ -302,58 +302,28 @@ void Micrograph::scale_coordinates(const double &c)
 }
 
 /* Scissor ----------------------------------------------------------------- */
-int Micrograph::scissor(const Particle_coords &P, Image<double> &result,
+int Micrograph::scissor(const Particle_coords &P, MultidimArray<double> &result,
                         double Dmin, double Dmax, double scaleX, double scaleY,
                         bool only_check)
 {
     if (X_window_size == -1 || Y_window_size == -1)
         REPORT_ERROR(ERR_MULTIDIM_SIZE, "Micrograph::scissor: window size not set");
 
-    result().resize(Y_window_size, X_window_size);
-    int i0 = ROUND(scaleY * P.Y) + FIRST_XMIPP_INDEX(Y_window_size);
-    int iF = ROUND(scaleY * P.Y) + LAST_XMIPP_INDEX(Y_window_size);
-    int j0 = ROUND(scaleX * P.X) + FIRST_XMIPP_INDEX(X_window_size);
-    int jF = ROUND(scaleX * P.X) + LAST_XMIPP_INDEX(X_window_size);
-    int retval = 1;
-    double range, temp;
-    range = Dmax - Dmin;
-
-    if (i0 < 0 || iF >= Ydim || j0 < 0 || jF >= Xdim)
-    {
-        result().initZeros();
-        retval = 0;
-    }
+    if (datatype == UChar)
+        return templateScissor(*IUChar,P,result,Dmin,Dmax,scaleX,scaleY,only_check);
+    else if (datatype == UShort)
+        return templateScissor(*IUShort,P,result,Dmin,Dmax,scaleX,scaleY,only_check);
+    else if (datatype == Short)
+        return templateScissor(*IShort,P,result,Dmin,Dmax,scaleX,scaleY,only_check);
+    else if (datatype == UInt)
+        return templateScissor(*IUInt,P,result,Dmin,Dmax,scaleX,scaleY,only_check);
+    else if (datatype == Int)
+        return templateScissor(*IInt,P,result,Dmin,Dmax,scaleX,scaleY,only_check);
+    else if (datatype == Float)
+        return templateScissor(*IFloat,P,result,Dmin,Dmax,scaleX,scaleY,only_check);
     else
-        if (!only_check)
-        {
-            for (int i = i0; i <= iF; i++)
-                for (int j = j0; j <= jF; j++)
-                {
-                    if (compute_transmitance)
-                    {
-                        if ((*this)(i, j) < 1)
-                            temp = (*this)(i, j);
-                        else
-                            temp = log10((double)(*this)(i, j));
-                        if (compute_inverse)
-                            A2D_ELEM(result(),i - i0, j - j0) = (Dmax - temp) / range;
-                        else
-                            A2D_ELEM(result(),i - i0, j - j0) = (temp - Dmin) / range;
-                    }
-                    else
-                    {
-                        if (compute_inverse)
-                            A2D_ELEM(result(), i - i0, j - j0) = (Dmax - (*this)(i, j)) / range;
-                        else
-                        {
-                            A2D_ELEM(result(), i - i0, j - j0) = (*this)(i, j);
-                            //std::cerr << "this i j: " << (*this)(i, j) << "(" << i <<","<<j<<")"<<std::endl;
-                        }
+        REPORT_ERROR(ERR_TYPE_INCORRECT, "Micrograph::scissor: unknown datatype");
 
-                    }
-                }
-        }
-    return retval;
 }
 
 /* Produce all images ------------------------------------------------------ */
@@ -422,7 +392,7 @@ void Micrograph::produce_all_images(int label, const FileName &fn_root,
             SF.setValue( MDL_MICROGRAPH, M->fn_micrograph);
             SF.setValue( MDL_X, (double)coords[n].X);
             SF.setValue( MDL_Y, (double)coords[n].Y);
-            bool t=M->scissor(coords[n], (Image<double> &) I, Dmin, Dmax, scaleX, scaleY);
+            bool t=M->scissor(coords[n], I(), Dmin, Dmax, scaleX, scaleY);
             if (!t)
             {
                 std::cout << "Particle " << fn_aux << " is very near the border, "
@@ -695,7 +665,7 @@ void downsample(const Micrograph &M, int Xstep, int Ystep,
                     {
                         int j2 = intWRAP(j + x, 0, xF - 1);
                         int i2 = intWRAP(i + y, 0, yF - 1);
-                    	double aux=M(i2, j2);
+                        double aux=M(i2, j2);
                         if (ifirst)
                         {
                             imin = imax = aux;
