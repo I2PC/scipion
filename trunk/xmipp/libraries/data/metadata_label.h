@@ -74,6 +74,7 @@ enum MDLabel
     MDL_CTFMODEL, ///< Name for the CTF Model (std::string)
     MDL_CTFMODEL2, ///< Name for another CTF model (std::string)
     MDL_CTF_SAMPLING_RATE, ///< Sampling rate
+    MDL_CTF_SAMPLING_RATE_Z, ///< Sampling rate in Z direction
     MDL_CTF_VOLTAGE, ///< Microscope voltage (kV)
     MDL_CTF_DEFOCUSU, ///< Defocus U (Angstroms)
     MDL_CTF_DEFOCUSV, ///< Defocus V (Angstroms)
@@ -115,6 +116,11 @@ enum MDLabel
     MDL_CTF_CRITERION_PSDVARIANCE, ///< PSD variance
     MDL_CTF_CRITERION_PSDPCA1VARIANCE, ///< Variance in the first principal component of the PSDs
     MDL_CTF_CRITERION_PSDPCARUNSTEST, ///< Runs test on the projection of the PSD on the first principal component
+    MDL_CTF_XRAY_DIMENSIONS, // Size in pixels of the 3D PSF to be created (Xdim, Ydim, Zdim)
+    MDL_CTF_XRAY_LAMBDA, /// X-ray wavelength (nm)
+    MDL_CTF_XRAY_MAGNIFICATION, /// Magnification of the X-ray microscope
+    MDL_CTF_XRAY_OUTER_ZONE_WIDTH, /// Outermost zone width of the X-ray Fresnel lens (nm)
+    MDL_CTF_XRAY_ZONES_NUMBER, // Number of zones of the X-ray Fresnel lens
     MDL_DATATYPE, ///< if read from file original image datatype, this is an struct defined in image
     MDL_DEFGROUP, ///< Defocus group
     MDL_DEFOCUSU, ///< microscope defocus U direction (double)
@@ -206,7 +212,7 @@ enum MDLabel
     MDL_ZINT, ///< Z component (int)
     MDL_Z, ///< Z component (double)
     MDL_ZSCORE, ///< Z Score (double)
-    
+
 
     MDL_LAST_LABEL                       // **** NOTE ****: Do keep this label always at the end
     // it is here for looping purposes
@@ -299,6 +305,7 @@ private:
         MDL::addLabel(MDL_CTFMODEL, LABEL_STRING, "CTFModel");
         MDL::addLabel(MDL_CTFMODEL2, LABEL_STRING, "CTFModel2");
         MDL::addLabel(MDL_CTF_SAMPLING_RATE, LABEL_DOUBLE, "CTF_Sampling_rate");
+        MDL::addLabel(MDL_CTF_SAMPLING_RATE_Z, LABEL_DOUBLE, "CTF_Sampling_rate_z");
         MDL::addLabel(MDL_CTF_VOLTAGE, LABEL_DOUBLE, "CTF_Voltage");
         MDL::addLabel(MDL_CTF_DEFOCUSU, LABEL_DOUBLE, "CTF_Defocus_U");
         MDL::addLabel(MDL_CTF_DEFOCUSV, LABEL_DOUBLE, "CTF_Defocus_V");
@@ -340,6 +347,13 @@ private:
         MDL::addLabel(MDL_CTF_CRITERION_PSDVARIANCE, LABEL_DOUBLE, "CTFCrit_PSDStdQ");
         MDL::addLabel(MDL_CTF_CRITERION_PSDPCA1VARIANCE, LABEL_DOUBLE, "CTFCrit_PSDPCA1");
         MDL::addLabel(MDL_CTF_CRITERION_PSDPCARUNSTEST, LABEL_DOUBLE, "CTFCrit_PSDPCARuns");
+
+        MDL::addLabel(MDL_CTF_XRAY_DIMENSIONS, LABEL_VECTOR, "CTFXray_dimensions");
+        MDL::addLabel(MDL_CTF_XRAY_LAMBDA, LABEL_DOUBLE, "CTFXray_lambda");
+        MDL::addLabel(MDL_CTF_XRAY_MAGNIFICATION, LABEL_DOUBLE, "CTFXray_Magnification");
+        MDL::addLabel(MDL_CTF_XRAY_OUTER_ZONE_WIDTH, LABEL_DOUBLE, "CTFXray_OuterZoneWidth");
+        MDL::addLabel(MDL_CTF_XRAY_ZONES_NUMBER, LABEL_DOUBLE, "CTFXray_ZonesN");
+
         MDL::addLabel(MDL_DEFGROUP, LABEL_INT, "defocusGroup");
         MDL::addLabel(MDL_DATATYPE, LABEL_INT, "datatype");
         MDL::addLabel(MDL_DEFOCUSU, LABEL_DOUBLE, "defocusU");
