@@ -31,7 +31,6 @@ class ProgAngleMain: public XmippProgram
 {
     FileName fn_in, fn_out;
     std::string expressionStr;
-    MetaData _mdIn;
 
 protected:
 
@@ -57,13 +56,26 @@ public:
     {
         double rot1,  tilt1,  psi1;
         double rot2,  tilt2,  psi2;
+        double shiftX,shiftY;
+        MetaData _mdIn;
+        Image<double> myImage;
+        FileName s;
         _mdIn.read(fn_in);
+        _mdIn.getValue(MDL_IMAGE,s);
+
+        int xdim,ydim,zdim;
+        long unsigned int ndim;
+        myImage.read(s);
+        std::cerr << myImage <<std::endl;
+        myImage.getDimensions(xdim,ydim,zdim,ndim);
         //test substract 90-omega and use all the symmetries on that
         FOR_ALL_OBJECTS_IN_METADATA(_mdIn)
         {
             _mdIn.getValue(MDL_ANGLEROT,rot1);
             _mdIn.getValue(MDL_ANGLETILT,tilt1);
             _mdIn.getValue(MDL_ANGLEPSI,psi1);
+            _mdIn.getValue(MDL_SHIFTX,shiftX);
+            _mdIn.getValue(MDL_SHIFTY,shiftY);
 
             rot2  = rot1;
             tilt2 = tilt1;
@@ -72,15 +84,22 @@ public:
             //EULER MATRICES
             Matrix2D<double> in(3, 3), temp(3,3), out(3,3);
             Euler_angles2matrix(rot1, tilt1, psi1, in);
-            Euler_angles2matrix(90, 0, 0, temp);
-            out = temp * in;
             Euler_angles2matrix(0, 90, 0, temp);
-            out = out * temp;
+            out = in * temp.inv();
+            Euler_angles2matrix(90, 0, 0, temp);
+            out = temp * out * temp.inv();
+            //out = in * temp.inv();
             Euler_matrix2angles(out, rot2, tilt2, psi2);
 
             _mdIn.setValue(MDL_ANGLEROT,rot2);
             _mdIn.setValue(MDL_ANGLETILT,tilt2);
             _mdIn.setValue(MDL_ANGLEPSI,psi2);
+
+            shiftX = (xdim/2) - shiftX;
+            shiftY = (ydim/2) - shiftY;
+
+            _mdIn.setValue(MDL_SHIFTX, shiftX);
+            _mdIn.setValue(MDL_SHIFTY, shiftY);
 
         }
 
