@@ -372,7 +372,7 @@ void Micrograph::produce_all_images(int label, const FileName &fn_root,
     // Scissor all particles
     if (ang != 0)
         std::cout << "Angle from Y axis to tilt axis " << ang << std::endl
-        << "   applying apropriate rotation\n";
+        << "   applying appropriate rotation\n";
     int i = starting_index;
     int nmax = ParticleNo();
     FileName fn_aux;
@@ -389,8 +389,8 @@ void Micrograph::produce_all_images(int label, const FileName &fn_root,
             SF.addObject();
             SF.setValue( MDL_IMAGE, fn_aux);
             SF.setValue( MDL_MICROGRAPH, M->fn_micrograph);
-            SF.setValue( MDL_X, (double)coords[n].X);
-            SF.setValue( MDL_Y, (double)coords[n].Y);
+            SF.setValue( MDL_XINT, coords[n].X);
+            SF.setValue( MDL_YINT, coords[n].Y);
             bool t=M->scissor(coords[n], I(), Dmin, Dmax, scaleX, scaleY);
             if (!t)
             {
@@ -401,15 +401,8 @@ void Micrograph::produce_all_images(int label, const FileName &fn_root,
             else
                 SF.setValue( MDL_ENABLED, 1);
             //  if (ang!=0) I().rotate(-ang);
-            /// FIXME: HEADER MODIFICATION
-            /*
-            I.set_rot((float)ang);
-            I.set_tilt((float)tilt);
-            I.set_psi((float)psi);
-            */
             SF.writeImage(I,fn_out,-1,true);
         }
-    std::cout << "Writing " << fn_root+".sel" << std::endl;
     SF.write(fn_root + ".sel");
 
     // Free source image??
@@ -591,7 +584,9 @@ void downsample(const Micrograph &M, int Xstep, int Ystep,
     {
         std::cout << "Performing the Fourier downsampling\n";
         // Read the micrograph in memory as doubles
-        MultidimArray<double> Mmem(Ydim,Xdim);
+        MultidimArray<double> Mmem;
+        Mmem.setMmap(true);
+        Mmem.resizeNoCopy(Ydim,Xdim);
         MultidimArray<std::complex<double> > MmemFourier;
         if (M.datatype == UChar)
         	typeCast((*M.IUChar)(),Mmem);
