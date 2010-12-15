@@ -52,7 +52,7 @@ void PCAMahalanobisAnalyzer::subtractAvg()
 void PCAMahalanobisAnalyzer::standardarizeVariables()
 {
     int N=v.size();
-    if (N==0)
+    if (N<=1)
         return;
     // Compute average
     MultidimArray<double> avg;
