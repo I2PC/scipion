@@ -240,7 +240,6 @@ void Micrograph::write_coordinates(int label, double minCost, const FileName &_f
 /* Read coordinates from disk ---------------------------------------------- */
 void Micrograph::read_coordinates(int label, const FileName &_fn_coords)
 {
-    std::cerr << "reading coordinates " <<std::endl;
     std::ifstream  fh;
     int            line_no = 0;
     std::string    line;
