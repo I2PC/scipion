@@ -254,9 +254,9 @@ void Prog_assign_CTF_prm::process()
     // Open the selfile for the CTFs, if there is a selfile of particles
     FileName fn_root;
     if (!selfile_mode)
-        fn_root = image_fn.removeAllExtensions();
+        fn_root = image_fn.withoutExtension();
     else
-        fn_root = selfile_fn.removeAllExtensions();
+        fn_root = selfile_fn.withoutExtension();
     std::ofstream OutputFile_ctf;
     if (selfile_fn != "")
         OutputFile_ctf.open(
