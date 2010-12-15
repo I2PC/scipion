@@ -115,7 +115,7 @@ void ProgRecWbp::produceSideInfo()
     {
         MetaData SF_aux;
         SF_aux.read(fn_sel);
-        FOR_ALL_OBJECTS_IN_METADATA(SF_aux);
+        FOR_ALL_OBJECTS_IN_METADATA(SF_aux)
         {
             SF_aux.getValue(MDL_WEIGHT,weight);
             if (weight != 0)
