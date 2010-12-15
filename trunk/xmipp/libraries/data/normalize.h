@@ -196,7 +196,6 @@ void normalize_remove_neighbours(MultidimArray<double> &I,
 //@}
 
 
-
 /* Normalize program
  */
 class ProgNormalize : public XmippMetadataProgram
@@ -298,129 +297,6 @@ protected:
     void show();
     void preProcess();
     void processImage(const FileName &fnImg, const FileName &fnImgOut, long int objId);
-};
-
-
-
-
-/** Normalize parameters
- */
-class Normalize_parameters: public Prog_parameters
-{
-public:
-
-    /** Possible normalization modes */
-    enum NormalizationMode {
-        NONE,
-        OLDXMIPP,
-        NEAR_OLDXMIPP,
-        NEWXMIPP,
-        MICHAEL,
-        NEWXMIPP2,
-        RANDOM,
-        RAMP,
-        NEIGHBOUR,
-        TOMOGRAPHY,
-        TOMOGRAPHY0
-    };
-
-    /** Normalizing method.
-     * Valid methods are OLDXMIPP, NEAR_OLDXMIPP, NEWXMIPP, NEWXMIPP2, MICHAEL,
-     * NONE, RANDOM, RAMP, NEIGHBOUR, TOMOGRAPHY, TOMOGRAPHY0.
-     */
-    NormalizationMode method;
-
-    /** Normalization of volumes.
-     */
-    bool volume;
-
-    /** Possible background modes */
-    enum BackgroundMode {
-        NOBACKGROUND,
-        FRAME,
-        CIRCLE
-    };
-
-    /** Background mode.
-     * Valid modes are NONE, FRAME, CIRCLE.
-     */
-    BackgroundMode background_mode;
-
-    /** Frame width or circle radius.
-     */
-    int r;
-
-    /** Upper limit of a in y=ax+b.
-     */
-    double aF;
-
-    /** Lower limit of a in y=ax+b.
-     */
-    double a0;
-
-    /** Upper limit of b in y=ax+b.
-     */
-    double bF;
-
-    /** Lower limit of b in y=ax+b.
-     */
-    double b0;
-
-    /** Flag for inverting contrast
-     */
-    bool invert_contrast;
-
-    /** Flag for applying a mask depending on the tilt
-     */
-    bool tiltMask;
-
-    /** Flags for removing balck/white spots due to dust.
-     */
-    bool remove_black_dust;
-    bool remove_white_dust;
-
-    /** Threshold for removing black/white (dust) spots.
-     */
-    double thresh_black_dust;
-    double thresh_white_dust;
-
-    /** Sigma threshold for neighbour removal.
-     */
-    double thresh_neigh;
-
-    MultidimArray< int  > bg_mask, bg_mask_bck;
-    bool apply_geo;
-    bool enable_mask;
-    Mask mask_prm;
-
-    /** Read parameters from command line.
-     */
-    void read(int argc, char** argv);
-
-    /** Produce side information.
-     */
-    void produce_side_info();
-
-    /** Show parameters.
-     */
-    void show();
-
-    /** Usage.
-     */
-    void usage();
-
-    /** Apply inverse geometric transformation.
-     * As stored in image header to the mask.
-     */
-    void apply_geo_mask(Image<double>& img);
-
-    /** Apply to an image.
-     * The input image is modified.
-     */
-    void apply(Image<double> &I);
-public:
-    // Mean and standard deviation of the image 0. Used for tomography
-    double mu0, sigma0;
 };
 //@}
 #endif
