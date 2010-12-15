@@ -104,7 +104,6 @@ protected:
     {
         image.read(fnImg,true,-1,false,false,NULL,true);
         image().setXmippOrigin();
-        //        image().setXmippOrigin();
 
         int xDim,yDim,zDim;
         double rot, tilt, psi;
