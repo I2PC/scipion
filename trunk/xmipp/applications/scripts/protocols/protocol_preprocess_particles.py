@@ -258,7 +258,7 @@ class preprocess_particles_class:
             fh.close()
 
     def launchCommandFile(self, commandFile):
-        import launch_job, log
+        import launch_job, log, os
         log.cat(self.log, commandFile)
         if self.DoParallel:
             command=' -i ' + commandFile
@@ -325,11 +325,12 @@ class preprocess_particles_class:
                         posfile=candidatePosFile
                     else:
                         MD1=xmipp.MetaData(posfile)
-                        MD2=xmipp.MetaData(candidatePosfile)
+                        MD2=xmipp.MetaData(candidatePosFile)
                         MD1.unionAll(MD2)
-                        candidatePosFile=self.PickingDir+"/"+micrographWithoutDirs+self.PosFile+".both.pos"
+                        candidatePosFile=self.PickingDir+"/"+micrographWithoutDirs+"."+self.PosFile+".both.pos"
                         MD1.write(candidatePosFile)
                         filesToDelete.append(candidatePosFile)
+                        posfile=candidatePosFile
                 if posfile!="":
                     fnStack=self.WorkingDir+"/"+micrographWithoutDirs+".stk"
                     self.outputSel.append(fnStack+".sel")
@@ -352,10 +353,8 @@ class preprocess_particles_class:
                      ' -background circle '+str(self.BackGroundRadius)+\
                      ' -method Ramp'                
             if (self.DoRemoveDust):
-                normalizeArguments+='  -remove_black_dust -thr_black_dust -' + \
-                         str(self.DustRemovalThreshold)+\
-                         '  -remove_white_dust -thr_white_dust ' + \
-                         str(self.DustRemovalThreshold)
+                normalizeArguments+=' -thr_black_dust -' + str(self.DustRemovalThreshold)+\
+                         ' -thr_white_dust ' + str(self.DustRemovalThreshold)
             command+='xmipp_normalize -i ' +fnStack+normalizeArguments
             if isPairTilt:
                 pass
