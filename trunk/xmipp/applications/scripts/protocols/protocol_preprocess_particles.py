@@ -9,7 +9,6 @@
 #
 # It is assumed that you have already ran the preprocess_micrographs protocol,
 #  and that you have picked the particles for each micrograph
-# You also need the xmipp_preprocess_micrographs.py file in the current directory
 #
 # Example use:
 # ./xmipp_preprocess_particles.py
@@ -21,7 +20,7 @@
 # {section} Global parameters
 #------------------------------------------------------------------------------------------------
 # {dir} Working subdirectory:
-""" Use the same directory where you executed xmipp_protocol_preprocess_micrographs.py
+""" Output directory for the individual images
 """
 WorkingDir='Images'
 
@@ -223,6 +222,7 @@ class preprocess_particles_class:
 
         # Join results
         generalMD=xmipp.MetaData()
+        i=0
         for selfile in self.outputSel:
             if not os.path.exists(selfile):
                 fh=open(self.WorkingDir + "/status.txt", "a")
@@ -230,11 +230,28 @@ class preprocess_particles_class:
                 fh.close()
                 sys.exit(1)
             MD=xmipp.MetaData(selfile)
-            for id in MD:
-                imageFrom=MD.getValue(xmipp.MDL_MICROGRAPH)
-                MD.setValue(xmipp.MDL_MICROGRAPH,self.correspondingMicrograph[imageFrom])
-                if (self.correspondingCTF[imageFrom]!=""):
-                    MD.setValue(xmipp.MDL_CTFMODEL,self.correspondingCTF[imageFrom])
+            if self.isPairTilt:
+                MDtilt=xmipp.MetaData(self.outputTiltedSel[i])
+                for id in MD:
+                    MD.setValue(xmipp.MDL_IMAGE_TILTED,MDtilt.getValue(xmipp.MDL_IMAGE))
+                    MD.setValue(xmipp.MDL_MICROGRAPH_TILTED,MDtilt.getValue(xmipp.MDL_MICROGRAPH))
+                    xtilt=MDtilt.getValue(xmipp.MDL_XINT)
+                    MD.setValue(xmipp.MDL_XINTTILT,xtilt)
+                    MD.setValue(xmipp.MDL_YINTTILT,MDtilt.getValue(xmipp.MDL_YINT))
+                    enabledTilted=MDtilt.getValue(xmipp.MDL_ENABLED)
+                    enabled=MD.getValue(xmipp.MDL_ENABLED)
+                    if enabled==-1 or enabledTilted==-1:
+                        MD.setValue(xmipp.MDL_ENABLED,-1)
+                    else:
+                        MD.setValue(xmipp.MDL_ENABLED,1)
+                    MDtilt.nextObject()
+                i=i+1
+            else:
+                for id in MD:
+                    imageFrom=MD.getValue(xmipp.MDL_MICROGRAPH)
+                    MD.setValue(xmipp.MDL_MICROGRAPH,self.correspondingMicrograph[imageFrom])
+                    if (self.correspondingCTF[imageFrom]!=""):
+                        MD.setValue(xmipp.MDL_CTFMODEL,self.correspondingCTF[imageFrom])
             generalMD.unionAll(MD)
         generalMD.write(self.OutSelFile)
 
@@ -248,6 +265,9 @@ class preprocess_particles_class:
 
         # Remove intermediate selfiles
         for selfile in self.outputSel:
+            if os.path.exists(selfile):
+                os.remove(selfile)
+        for selfile in self.outputTiltedSel:
             if os.path.exists(selfile):
                 os.remove(selfile)
     
@@ -271,14 +291,15 @@ class preprocess_particles_class:
     def process_all_micrographs(self):
         import os, xmipp
         print '*********************************************************************'
-        print '*  Pre-processing micrographs in '+os.path.basename(self.PickingDir)
+        print '*  Pre-processing particles in '+os.path.basename(self.PickingDir)
 
         self.outputSel=[]
+        self.outputTiltedSel=[]
         self.correspondingMicrograph={}
         self.correspondingCTF={}
 
         fnPickingParameters=self.PickingDir+"/protocolParameters.txt"
-        isPairTilt=getParameter("IsPairTilt",fnPickingParameters)=="True"
+        self.isPairTilt=getParameter("IsPairList",fnPickingParameters)=="True"
         MicrographSelfile=getParameter("MicrographSelfile",fnPickingParameters)
         mD=xmipp.MetaData();
         xmipp.readMetaDataWithTwoPossibleImages(MicrographSelfile, mD)
@@ -286,15 +307,16 @@ class preprocess_particles_class:
         for id in mD:
             micrograph=mD.getValue(xmipp.MDL_IMAGE)
             dummy,micrographWithoutDirs=os.path.split(micrograph)
-            if isPairTilt:
+            if self.isPairTilt:
                 micrographTilted=mD.getValue(xmipp.MDL_ASSOCIATED_IMAGE1)
+                dummy,tiltedMicrographWithoutDirs=os.path.split(micrographTilted)
             
             # Phase flip
             fnStack=self.WorkingDir+"/"+micrographWithoutDirs+".stk"
             command=''
             filesToDelete=[]
             fnToPick=preprocessingDir+"/"+micrograph
-            if self.DoFlip and not isPairTilt:
+            if self.DoFlip and not self.isPairTilt:
                 micrographName,micrographExt=os.path.splitext(micrographWithoutDirs)
                 ctf=mD.getValue(xmipp.MDL_CTFMODEL)
                 fnToPick=self.WorkingDir+"/"+micrographName+"_flipped.raw"
@@ -312,8 +334,17 @@ class preprocess_particles_class:
             
             # Extract particles
             arguments=""
-            if isPairTilt:
-                pass
+            if self.isPairTilt:
+                fnStack=self.WorkingDir+"/"+micrographWithoutDirs+".stk"
+                fnTiltedStack=self.WorkingDir+"/"+tiltedMicrographWithoutDirs+".stk"
+                arguments+="-i "+fnToPick+\
+                           " --tilted "+preprocessingDir+"/"+micrographTilted+\
+                           " -o "+fnStack+" --tiltfn "+fnTiltedStack+\
+                           " --tiltAngles "+self.PickingDir+"/"+micrographWithoutDirs+".angles.txt"\
+                           " --pos "+self.PickingDir+"/"+micrographWithoutDirs+"."+self.PosFile+".pos"+\
+                           " --tiltPos "+self.PickingDir+"/"+micrographWithoutDirs+".tilted."+self.PosFile+".pos"
+                self.outputSel.append(fnStack+".sel")
+                self.outputTiltedSel.append(fnTiltedStack+".sel")
             else:
                 posfile=""
                 candidatePosFile=self.PickingDir+"/"+micrographWithoutDirs+"."+self.PosFile+".pos"
@@ -345,8 +376,6 @@ class preprocess_particles_class:
             if self.DoLog:
                 arguments+=" --log"
             command+="xmipp_micrograph_scissor "+arguments+" ; "
-            if isPairTilt:
-                pass
             
             # Normalize particles
             normalizeArguments=\
@@ -356,8 +385,8 @@ class preprocess_particles_class:
                 normalizeArguments+=' -thr_black_dust -' + str(self.DustRemovalThreshold)+\
                          ' -thr_white_dust ' + str(self.DustRemovalThreshold)
             command+='xmipp_normalize -i ' +fnStack+normalizeArguments
-            if isPairTilt:
-                pass
+            if self.isPairTilt:
+                command+=' ; xmipp_normalize -i ' +fnTiltedStack+normalizeArguments
 
             # Remove temporary files
             for fileToDelete in filesToDelete:
@@ -396,7 +425,7 @@ def preconditions(gui):
     # Check that all micrographs exist
     import xmipp
     fnPickingParameters=PickingDir+"/protocolParameters.txt"
-    isPairTilt=getParameter("IsPairTilt",fnPickingParameters)=="True"
+    isPairTilt=getParameter("IsPairList",fnPickingParameters)=="True"
     MicrographSelfile=getParameter("MicrographSelfile",fnPickingParameters)
     print os.path.curdir
     mD=xmipp.MetaData();
