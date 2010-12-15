@@ -30,15 +30,19 @@
 /* MAIN -------------------------------------------------------------------- */
 int main(int argc, char *argv[])
 {
-  try
-  {
-      ProgCorrectBfactor program;
-      program.read(argc, argv);
-      program.run();
-  }
-  catch (XmippError xe)
-  {
-      std::cerr << xe;
-  }
+
+    ProgCorrectBfactor program;
+    try
+    {
+        program.read(argc, argv);
+        program.run();
+    }
+    catch (XmippError xe)
+    {
+        std::cerr << xe;
+        return 1;
+    }
+    return 0;
+
 }
 
