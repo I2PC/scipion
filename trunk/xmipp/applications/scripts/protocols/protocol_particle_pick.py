@@ -407,7 +407,7 @@ class particle_pick_class:
                 self.selectedForAutomaticPickingTrain[i].set(1)
 
     def AutomaticallyDetect(self):
-        command_file = open("pick.sh", "w")
+        command_file = open(self.WorkingDir+"/pick.sh", "w")
         directoryPreprocessing,dummy=os.path.split(self.MicrographSelfile)
         for i in range(0,len(self.selectedForAutomaticPickingAuto)):
             if (self.selectedForAutomaticPickingAuto[i].get()):
@@ -426,19 +426,18 @@ class particle_pick_class:
         command_file.write("MPI_Barrier\n")
         command_file.write('echo "Step F: " finished marking on `date` >> ' + \
                   self.WorkingDir + "/status.txt \n")
-        command_file.write("rm pick.sh pick.py\n")
         command_file.close();
 
         import tkMessageBox
         answer=tkMessageBox._show("Execute autodetection",
                                   "Use a job queueing system?",
                                   tkMessageBox.QUESTION, 
-                                  tkMessageBox.YESNOCANCEL)
+                                  tkMessageBox.YESNO)
         import launch_job
         command=""
         if self.DoParallel:
             command=launch_job.launch_job("xmipp_run",
-                                 "-i pick.sh",
+                                 "-i "+self.WorkingDir+"/pick.sh",
                                  self.log,
                                  True,
                                  self.NumberOfMpiProcesses,
@@ -446,8 +445,8 @@ class particle_pick_class:
                                  self.SystemFlavour,
                                  answer=="yes" or answer==True)
         else:
-            os.system("chmod 755 pick.sh");
-            command=launch_job.launch_job("./pick.sh",
+            os.system("chmod 755 "+self.WorkingDir+"/pick.sh");
+            command=launch_job.launch_job(self.WorkingDir+"/pick.sh",
                                  "",
                                  self.log,
                                  False,
@@ -457,7 +456,7 @@ class particle_pick_class:
                                  answer=="yes" or answer==True)
         if (answer=="yes" or answer==True):
             import xmipp_protocol_gui
-            python_file = open("pick.py", "w")
+            python_file = open(self.WorkingDir+"/pick.py", "w")
             python_file.write("WorkingDir='"+self.WorkingDir+"'\n")
             python_file.write("DoParallel="+str(self.DoParallel)+"\n")
             python_file.write("NumberOfMpiProcesses="+str(self.NumberOfMpiProcesses)+"\n")
@@ -466,7 +465,7 @@ class particle_pick_class:
             python_file.write('os.system("'+command+'")\n');
             python_file.close();
 
-            d = xmipp_protocol_gui.MyQueueLaunch(self.master,"python pick.py")
+            d = xmipp_protocol_gui.MyQueueLaunch(self.master,"python "+self.WorkingDir+"/pick.py")
         else:
             os.system(command);
 
