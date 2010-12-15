@@ -36,13 +36,13 @@ protected:
     {
         addUsageLine("Apply the geometric transformation stored in the image header.");
         XmippMetadataProgram::defineParams();
-        addParamsLine(" [-dont_wrap]              : By default, the image is wrapped");
+        addParamsLine(" [--dont_wrap]              : By default, the image is wrapped");
     }
 
     void readParams()
     {
         XmippMetadataProgram::readParams();
-        wrap = !checkParam("-dont_wrap");
+        wrap = !checkParam("--dont_wrap");
     }
 
     void show()
