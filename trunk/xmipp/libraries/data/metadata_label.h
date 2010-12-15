@@ -143,6 +143,7 @@ enum MDLabel
     MDL_IMAGE_CLASS, ///< Name of the class representative for this image
     MDL_IMAGE, ///< Name of an image (std::string)
     MDL_IMAGE_ORIGINAL, ///< Name of an image from which MDL_IMAGE is coming from
+    MDL_IMAGE_TILTED, ///< Name of the tilted images associated to MDL_IMAGE
     MDL_IMGMD, ///< Name of Metadata file for all images (string)
     MDL_INTSCALE, ///< Intensity scale for an image
     MDL_ITER, ///< Current iteration number (int)
@@ -153,6 +154,7 @@ enum MDLabel
     MDL_MAXCC, ///< Cross-correlation for the image (double)
     MDL_MAX, ///<maximum value (double)
     MDL_MICROGRAPH, ///< Name of a micrograph (std::string)
+    MDL_MICROGRAPH_TILTED, ///< Name of the corresponding tilted micrograph (std::string)
     MDL_MIN, ///<minimum value (double)
     MDL_MIRRORFRAC, ///< Mirror fraction for a Maximum Likelihood model
     MDL_MISSINGREGION_NR, ///< Number of missing region in subtomogram
@@ -206,8 +208,10 @@ enum MDLabel
     MDL_WEIGHT, ///< Weight assigned to the image (double)
     MDL_WROBUST, ///< Weight of t-student distribution in robust Maximum likelihood
     MDL_XINT, ///< X component (int)
+    MDL_XINTTILT, ///< X component in tilted micrograph (int)
     MDL_X, ///< X component (double)
     MDL_YINT, ///< Y component (int)
+    MDL_YINTTILT, ///< Y component in tilted micrograph (int)
     MDL_Y, ///< Y component (double)
     MDL_ZINT, ///< Z component (int)
     MDL_Z, ///< Z component (double)
@@ -375,6 +379,7 @@ private:
         MDL::addLabel(MDL_IMAGE_CLASS, LABEL_STRING, "class_representative");
         MDL::addLabel(MDL_IMAGE, LABEL_STRING, "image");
         MDL::addLabel(MDL_IMAGE_ORIGINAL, LABEL_STRING, "original_image");
+        MDL::addLabel(MDL_IMAGE_TILTED, LABEL_STRING, "tilted_image");
         MDL::addLabel(MDL_IMGMD, LABEL_STRING, "imageMetaData");
         MDL::addLabel(MDL_INTSCALE, LABEL_DOUBLE, "intScale");
         MDL::addLabel(MDL_ITER, LABEL_INT, "iterationNumber");
@@ -385,6 +390,7 @@ private:
         MDL::addLabel(MDL_MAXCC, LABEL_DOUBLE, "maxCC");
         MDL::addLabel(MDL_MAX, LABEL_DOUBLE, "max");
         MDL::addLabel(MDL_MICROGRAPH, LABEL_STRING, "micrograph");
+        MDL::addLabel(MDL_MICROGRAPH_TILTED, LABEL_STRING, "micrographTilted");
         MDL::addLabel(MDL_MIN, LABEL_DOUBLE, "min");
         MDL::addLabel(MDL_MIRRORFRAC, LABEL_DOUBLE, "mirrorFraction");
         MDL::addLabel(MDL_MISSINGREGION_NR, LABEL_INT, "missingRegionNumber");
@@ -434,8 +440,10 @@ private:
         MDL::addLabel(MDL_WEIGHT, LABEL_DOUBLE, "weight", "Weight");
         MDL::addLabel(MDL_WROBUST, LABEL_DOUBLE, "wRobust");
         MDL::addLabel(MDL_XINT, LABEL_INT, "Xcoor", "<X position>");
+        MDL::addLabel(MDL_XINTTILT, LABEL_INT, "XcoorTilt");
         MDL::addLabel(MDL_X, LABEL_DOUBLE, "X");
         MDL::addLabel(MDL_YINT, LABEL_INT, "Ycoor", "<Y position>");
+        MDL::addLabel(MDL_YINTTILT, LABEL_INT, "YcoorTilt");
         MDL::addLabel(MDL_Y, LABEL_DOUBLE, "Y");
         MDL::addLabel(MDL_ZINT, LABEL_INT, "Zcoor");
         MDL::addLabel(MDL_Z, LABEL_DOUBLE, "Z");

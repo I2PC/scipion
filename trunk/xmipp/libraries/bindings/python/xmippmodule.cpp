@@ -1138,7 +1138,7 @@ getMDObjectValue(MDObject * obj)
         else
             Py_RETURN_FALSE;
     case LABEL_INT:
-        return PyLong_FromLong(obj->data.intValue);
+        return PyInt_FromLong(obj->data.intValue);
     case LABEL_LONG:
         return PyLong_FromLong(obj->data.longintValue);
     case LABEL_DOUBLE:
@@ -1541,6 +1541,7 @@ initxmipp(void)
     addIntConstant(dict,"MDL_IMAGE_CLASS",(long)MDL_IMAGE_CLASS);
     addIntConstant(dict,"MDL_IMAGE",(long)MDL_IMAGE);
     addIntConstant(dict,"MDL_IMAGE_ORIGINAL",(long)MDL_IMAGE_ORIGINAL);
+    addIntConstant(dict,"MDL_IMAGE_TILTED",(long)MDL_IMAGE_TILTED);
     addIntConstant(dict,"MDL_IMGMD",(long)MDL_IMGMD);
     addIntConstant(dict,"MDL_INTSCALE",(long)MDL_INTSCALE);
     addIntConstant(dict,"MDL_ITER",(long)MDL_ITER);
@@ -1551,6 +1552,7 @@ initxmipp(void)
     addIntConstant(dict,"MDL_MAXCC",(long)MDL_MAXCC);
     addIntConstant(dict,"MDL_MAX",(long)MDL_MAX);
     addIntConstant(dict,"MDL_MICROGRAPH",(long)MDL_MICROGRAPH);
+    addIntConstant(dict,"MDL_MICROGRAPH_TILTED",(long)MDL_MICROGRAPH_TILTED);
     addIntConstant(dict,"MDL_MIN",(long)MDL_MIN);
     addIntConstant(dict,"MDL_MIRRORFRAC",(long)MDL_MIRRORFRAC);
     addIntConstant(dict,"MDL_MISSINGREGION_NR",(long)MDL_MISSINGREGION_NR);
@@ -1603,8 +1605,10 @@ initxmipp(void)
     addIntConstant(dict,"MDL_WEIGHT",(long)MDL_WEIGHT);
     addIntConstant(dict,"MDL_WROBUST",(long)MDL_WROBUST);
     addIntConstant(dict,"MDL_XINT",(long)MDL_XINT);
+    addIntConstant(dict,"MDL_XINTTILT",(long)MDL_XINTTILT);
     addIntConstant(dict,"MDL_X",(long)MDL_X);
     addIntConstant(dict,"MDL_YINT",(long)MDL_YINT);
+    addIntConstant(dict,"MDL_YINTTILT",(long)MDL_YINTTILT);
     addIntConstant(dict,"MDL_Y",(long)MDL_Y);
     addIntConstant(dict,"MDL_ZINT",(long)MDL_ZINT);
     addIntConstant(dict,"MDL_Z",(long)MDL_Z);
