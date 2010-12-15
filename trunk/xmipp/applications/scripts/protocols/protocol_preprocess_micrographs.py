@@ -97,16 +97,9 @@ MinFocus=5000
 """ Maximum defocus value (in Angstrom) to include in defocus search
 """
 MaxFocus=100000
-#------------------------------------------------------------------------------------------------
-# {section} CTFFIND
-#------------------------------------------------------------------------------------------------
-# Use N. Grigorieffs CTFFIND beside Xmipp?
-# {file} Location of the CTFFIND executable
-""" If available, CTFFIND will be used to double check the validity of the defoci """
-CtffindExec='ctffind3.exe'
-# {expert} Window size
+# {expert} Window size for CTFFIND
 WinSize=256
-# {expert} Defocus step (in Ang.)
+# {expert} Defocus step for CTFFIND (in Ang.)
 """ Step size for defocus search (in Angstrom)
 """
 StepFocus=500
@@ -167,6 +160,9 @@ def stepPerformed(step,filename):
     return len(filter(expr.search,lines))>0
 
 import glob, os, shutil, sys
+scriptdir=os.path.split(os.path.dirname(os.popen('which xmipp_protocols', 'r').read()))[0] + '/protocols'
+sys.path.append(scriptdir)
+
 class preprocess_A_class:
     def saveAndCompareParameters(self, listOfParameters):
         fnOut=self.WorkingDir + "/protocolParameters.txt"
@@ -216,7 +212,6 @@ class preprocess_A_class:
                  HighResolCutoff,
                  MinFocus,
                  MaxFocus,
-                 CtffindExec,
                  WinSize,
                  StepFocus,
                  DoParallel,
@@ -224,8 +219,6 @@ class preprocess_A_class:
                  SystemFlavour
                  ):
         
-        scriptdir=os.path.split(os.path.dirname(os.popen('which xmipp_protocols', 'r').read()))[0] + '/protocols'
-        sys.path.append(scriptdir)
         import log
 
         self.WorkingDir=os.path.abspath(WorkingDir)
@@ -253,7 +246,6 @@ class preprocess_A_class:
         self.HighResolCutoff=HighResolCutoff
         self.MinFocus=MinFocus
         self.MaxFocus=MaxFocus
-        self.DoCtffind=(not CtffindExec == "")
         self.WinSize=WinSize
         self.StepFocus=StepFocus
         self._MySystemFlavour=SystemFlavour
@@ -267,8 +259,9 @@ class preprocess_A_class:
                                      self.WorkingDir)
 
         # Check ctffind executable
-        if (self.DoCtffind):
-            self.CtffindExec=os.path.abspath(CtffindExec)
+        import which
+        self.CtffindExec=which.which('ctffind3.exe')
+        self.DoCtffind=self.CtffindExec!=''
 
         # Delete working directory if exists, make a new one
         if not os.path.exists(self.WorkingDir):
@@ -301,7 +294,7 @@ class preprocess_A_class:
         # Backup script
         log.make_backup_of_script_file(sys.argv[0],
                                    os.path.abspath(self.WorkingDir))
-        xmpi_run_file=self.WorkingDir + "/xmipp_preprocess_micrographs" 
+        xmpi_run_file=self.WorkingDir + "/preprocess_micrographs" 
         self.xmpi_run_file=os.path.abspath(xmpi_run_file)
 
         # Execute protocol in the working directory
@@ -326,7 +319,7 @@ class preprocess_A_class:
         self.SFctf=[]
         self.SFpsd=[]
 
-        fh_mpi=os.open(self.xmpi_run_file + '.sh', os.O_WRONLY | os.O_TRUNC | os.O_CREAT, 0700)
+        fh_mpi=os.open(xmpi_run_file + '.sh', os.O_WRONLY | os.O_TRUNC | os.O_CREAT, 0700)
         # Preprocessing
         for filename in glob.glob(self.DirMicrographs + '/' + self.ExtMicrographs):
 
@@ -671,17 +664,6 @@ def preconditions(gui):
             print message
         retval=False
     
-    # Check ctffind executable
-    if not CtffindExec == "":
-        if (not os.path.exists(CtffindExec)):
-            message="Cannot find ctffind executable: " + CtffindExec
-            if gui:
-                import tkMessageBox
-                tkMessageBox.showerror("Error", message)
-            else:
-                print message
-            retval=False
-            
     # Check that there are any micrograph to process
     listOfMicrographs=glob.glob(DirMicrographs + '/' + ExtMicrographs)
     if len(listOfMicrographs) == 0:
@@ -724,7 +706,6 @@ if __name__ == '__main__':
                  HighResolCutoff,
                  MinFocus,
                  MaxFocus,
-                 CtffindExec,
                  WinSize,
                  StepFocus,
                  DoParallel,
