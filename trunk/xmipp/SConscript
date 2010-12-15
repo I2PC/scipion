@@ -825,6 +825,7 @@ AddProtocol('visualize_preprocess_particles.py', 'applications/scripts/protocols
 AddProtocol('visualize_projmatch.py', 'applications/scripts/protocols')
 AddProtocol('visualize_rct.py', 'applications/scripts/protocols')
 AddProtocol('visualize_rotspectra.py', 'applications/scripts/protocols')
+AddProtocol('which.py', 'applications/scripts/protocols')
 
 AddProtocol('protocol_gui.py', 'applications/scripts/protocols')
 AddProtocol('protocol_backup.py', 'applications/scripts/protocols')
