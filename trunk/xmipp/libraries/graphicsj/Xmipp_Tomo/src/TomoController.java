@@ -343,6 +343,12 @@ public class TomoController {
 		window.setPlugin(plugin);
 		runIjCmd(Command.GAMMA_CORRECTION, plugin);
 	}
+	
+	public void bandpass() {
+		Plugin plugin = new BandpassPlugin();
+		window.setPlugin(plugin);
+		runIjCmd(Command.BANDPASS, plugin);
+	}
 
 	public void runIjCmd(Command command, Plugin plugin) {
 		String label = command.getLabel();

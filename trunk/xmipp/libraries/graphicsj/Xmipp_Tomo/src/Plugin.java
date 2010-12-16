@@ -48,7 +48,11 @@ public abstract class Plugin {
 	 */
 	public abstract void collectParameters(GenericDialog gd);
 	
-
+/**
+ * The name of the command is the text exactly as it is displayed in the IJ Menu (without including
+ * menus and submenus, just the command label)
+ * @return
+ */
 	public abstract String getCommand();
 	/**
 	 * Note: the names of the parameters (required to set macro options) are the labels of the text fields associated to them.

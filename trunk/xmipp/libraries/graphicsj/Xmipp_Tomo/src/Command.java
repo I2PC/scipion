@@ -45,6 +45,7 @@ public class Command {
 	SUB_BACKGROUND = new Command("proc.sub_background","Substract Background","subBackground",false,null),
 	ENHANCE_CONTRAST = new Command("proc.enhance_contrast","Enhance Contrast","enhanceContrast",false,null),
 	GAMMA_CORRECTION = new Command("proc.gamma_correction","Gamma Correction","gammaCorrection",false,null),
+	BANDPASS = new Command("proc.bandpass","Bandpass Filter","bandpass",false,null),
 	MEASURE = new Command("file.measure","Measure","measure",false,null),
 	APPLY = new Command("proc.apply","Apply","apply",false,null),
 	ALIGN_AUTO = new Command("align.auto","Auto","alignAuto",false,null),

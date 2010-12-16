@@ -119,6 +119,7 @@ public class TomoWindow extends ImageWindow implements WindowListener,
 			add(Command.SUB_BACKGROUND);
 			add(Command.ENHANCE_CONTRAST);
 			add(Command.GAMMA_CORRECTION);
+			add(Command.BANDPASS);
 			add(Command.APPLY);
 		}
 	};
@@ -149,6 +150,7 @@ public class TomoWindow extends ImageWindow implements WindowListener,
 			add(Command.SUB_BACKGROUND);
 			add(Command.ENHANCE_CONTRAST);
 			add(Command.GAMMA_CORRECTION);
+			add(Command.BANDPASS);
 			// disabled until native writing (using Xmipp library) is implemented
 			// add(Command.APPLY);
 			add(Command.PRINT_WORKFLOW);
