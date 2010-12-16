@@ -79,15 +79,17 @@ public:
 
             rot2  = rot1;
             tilt2 = tilt1;
-            psi2  = psi1;
+            //psi2  = psi1;
+            psi2  = -psi1;
 
             //EULER MATRICES
             Matrix2D<double> in(3, 3), temp(3,3), out(3,3);
-            Euler_angles2matrix(rot1, tilt1, psi1, in);
+            Euler_angles2matrix(rot2, tilt2, psi2, in);
             Euler_angles2matrix(0, 90, 0, temp);
             out = in * temp.inv();
-            Euler_angles2matrix(90, 0, 0, temp);
+            Euler_angles2matrix(-90, 0, 0, temp);
             out = temp * out * temp.inv();
+            //out = temp * in  * temp.inv();
             //out = in * temp.inv();
             Euler_matrix2angles(out, rot2, tilt2, psi2);
 
@@ -97,6 +99,8 @@ public:
 
             shiftX = (xdim/2) - shiftX;
             shiftY = (ydim/2) - shiftY;
+            //shiftX =  - shiftX;
+            //shiftY =  - shiftY;
 
             _mdIn.setValue(MDL_SHIFTX, shiftX);
             _mdIn.setValue(MDL_SHIFTY, shiftY);
