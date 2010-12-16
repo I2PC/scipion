@@ -337,6 +337,12 @@ public class TomoController {
 		window.setPlugin(plugin);
 		runIjCmd(Command.ENHANCE_CONTRAST, plugin);
 	}
+	
+	public void gammaCorrection() {
+		Plugin plugin = new GammaCorrectionPlugin();
+		window.setPlugin(plugin);
+		runIjCmd(Command.GAMMA_CORRECTION, plugin);
+	}
 
 	public void runIjCmd(Command command, Plugin plugin) {
 		String label = command.getLabel();

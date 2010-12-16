@@ -44,6 +44,7 @@ public class Command {
 	MEDIAN = new Command("proc.median","Median","median", false,null),
 	SUB_BACKGROUND = new Command("proc.sub_background","Substract Background","subBackground",false,null),
 	ENHANCE_CONTRAST = new Command("proc.enhance_contrast","Enhance Contrast","enhanceContrast",false,null),
+	GAMMA_CORRECTION = new Command("proc.gamma_correction","Gamma Correction","gammaCorrection",false,null),
 	MEASURE = new Command("file.measure","Measure","measure",false,null),
 	APPLY = new Command("proc.apply","Apply","apply",false,null),
 	ALIGN_AUTO = new Command("align.auto","Auto","alignAuto",false,null),
@@ -56,7 +57,6 @@ public class Command {
 	private String id;
 	private String label;
 	private String method;
-	private String imageJCmd;
 	private String iconName;
 	private boolean enabled = true;
 
@@ -70,10 +70,6 @@ public class Command {
 
 	public String getLabel() {
 		return label;
-	}
-
-	public String getImageJCmd() {
-		return imageJCmd;
 	}
 
 	public boolean isEnabled() {

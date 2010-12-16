@@ -28,6 +28,7 @@ import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.event.AdjustmentEvent;
 import java.awt.event.AdjustmentListener;
+import java.text.DecimalFormat;
 
 import javax.swing.BoundedRangeModel;
 import javax.swing.BoxLayout;
@@ -182,8 +183,18 @@ public class LabelScrollbar extends JPanel implements AdjustmentListener, Adjust
 		return scrollbar.getValue();
 	}
 	
+	/**
+	 * 
+	 * @return value as string with filling zeroes (so the component does not need to resize when changing tenths or hundreds)
+	 */
+	public String getStringValue(){
+		DecimalFormat df=new DecimalFormat();
+		df.setMinimumIntegerDigits(String.valueOf(getMaximum()).length());
+		return df.format(getValue());
+	}
+	
 	private void updateTextLabel(){
-		textLabel.setText("<html>" + htmlColor(getText(), DEFAULT_TEXT_COLOR, false) + htmlColor(String.valueOf(getValue()), HIGHLIGHTED_TEXT_COLOR, false)+ "</html>");
+		textLabel.setText("<html>" + htmlColor(getText(), DEFAULT_TEXT_COLOR, false) + htmlColor(getStringValue(), HIGHLIGHTED_TEXT_COLOR, false)+ "</html>");
 	}
 	 
 

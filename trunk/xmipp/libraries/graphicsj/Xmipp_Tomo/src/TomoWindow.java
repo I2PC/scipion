@@ -83,8 +83,9 @@ public class TomoWindow extends ImageWindow implements WindowListener,
 	private static int MAX_DIGITS = 9;
 	// Window title (without extra data; see getTitle() )
 	private final static String TITLE = "XmippTomo";
-	// minimum dimension of tabbed menu panel (window top)
-	private static int MENUPANEL_MINWIDTH = 400, MENUPANEL_MINHEIGHT = 100;
+	// minimum dimension of tabbed menu panel (window top), needed to adjust automatically the window size to
+	// the tabbed menu needs (so it does not turn to a scrollable tabbed menu)
+	private static int MENUPANEL_MINWIDTH = 500, MENUPANEL_MINHEIGHT = 100;
 	// maximum window size
 	private static Rectangle maxWindowSize = new Rectangle(800, 800);
 	// miliseconds to wait for a Plugin dialog to display (so the dialog capture
@@ -117,6 +118,7 @@ public class TomoWindow extends ImageWindow implements WindowListener,
 			add(Command.MEDIAN);
 			add(Command.SUB_BACKGROUND);
 			add(Command.ENHANCE_CONTRAST);
+			add(Command.GAMMA_CORRECTION);
 			add(Command.APPLY);
 		}
 	};
@@ -146,6 +148,7 @@ public class TomoWindow extends ImageWindow implements WindowListener,
 			add(Command.MEDIAN);
 			add(Command.SUB_BACKGROUND);
 			add(Command.ENHANCE_CONTRAST);
+			add(Command.GAMMA_CORRECTION);
 			// disabled until native writing (using Xmipp library) is implemented
 			// add(Command.APPLY);
 			add(Command.PRINT_WORKFLOW);

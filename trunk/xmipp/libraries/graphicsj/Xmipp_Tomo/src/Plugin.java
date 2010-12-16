@@ -32,6 +32,12 @@ import ij.gui.GenericDialog;
  * @author jcuenca
  * Interface to ImageJ plugins - collects parameters from IJ plugin dialogs to run the plugin with them later
  * Each subclass knows the specific parameters of a plugin
+ * 
+ * Protocol for adding a plugin
+ * - Create a subclass of Plugin (see GaussianPlugin for example)
+ * - Add the command definition in Command
+ * - add the action method in TomoController
+ * - Add a button (see TomoWindow)
  */
 public abstract class Plugin {
 	

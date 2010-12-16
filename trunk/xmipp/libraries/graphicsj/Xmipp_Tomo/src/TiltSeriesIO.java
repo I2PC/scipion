@@ -324,6 +324,7 @@ public class TiltSeriesIO {
 			for (int x = 0; x < img.getWidth(); x++)
 				for (int y = 0; y < img.getHeight(); y++)
 					ip.setf(x, y, (float) img.getPixel(x, y));
+		// normalize the image - done by default when calling FloatProcessor(array), here is our responsibility
 		ip.findMinAndMax();
 		
 		ImagePlus imagePlus = new ImagePlus("ImageDouble", ip);
