@@ -104,6 +104,7 @@ public class TomoWindow extends ImageWindow implements WindowListener,
 		{
 			add(Command.LOAD);
 			add(Command.XRAY);
+			add(Command.NORMALIZE_SERIES);
 			add(Command.SAVE);
 			add(Command.DEFINE_TILT);
 			add(Command.MEASURE);
@@ -137,13 +138,16 @@ public class TomoWindow extends ImageWindow implements WindowListener,
 	// which commands to enable after loading a file
 	private static java.util.List<Command> commandsEnabledAfterLoad = new LinkedList<Command>() {
 		{
-			add(Command.SAVE);
+			// disabled until native writing (using Xmipp library) is implemented
+			//add(Command.SAVE);
+			add(Command.NORMALIZE_SERIES);
 			add(Command.DEFINE_TILT);
 			add(Command.GAUSSIAN);
 			add(Command.MEDIAN);
 			add(Command.SUB_BACKGROUND);
 			add(Command.ENHANCE_CONTRAST);
-			add(Command.APPLY);
+			// disabled until native writing (using Xmipp library) is implemented
+			// add(Command.APPLY);
 			add(Command.PRINT_WORKFLOW);
 			add(Command.MEASURE);
 			add(Command.PLAY);
@@ -252,7 +256,7 @@ public class TomoWindow extends ImageWindow implements WindowListener,
 		realWindow.addComponentListener(this);
 		// EXIT_ON_CLOSE finishes ImageJ too...
 		// DO NOTHING allows for closing confirmation dialogs and the like
-		// setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
+		realWindow.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
 		WindowManager.addWindow(this);
 		addMainPanels();
 	}
@@ -700,15 +704,15 @@ public class TomoWindow extends ImageWindow implements WindowListener,
 			return;
 		if (isChangeSaved()) {
 			Xmipp_Tomo.ExitValues choice = dialogYesNoCancel("Close window",
-					"Are you sure you want to close this window?");
+					"Are you sure you want to close this window?",false);
 			switch (choice) {
-			case NO:
-			case CANCEL:
-				return;
+				case NO:
+				case CANCEL:
+					return;
 			}
 		} else {
 			Xmipp_Tomo.ExitValues choice = dialogYesNoCancel("Save changes",
-					"Do you want to save changes?");
+					"Do you want to save changes?",true);
 			switch (choice) {
 			case YES:
 				String path = dialogSave();
@@ -722,9 +726,9 @@ public class TomoWindow extends ImageWindow implements WindowListener,
 		}
 
 		// close the window (no return back...)
-		setVisible(false);
+		realWindow.setVisible(false);
 		setModel(null);
-		dispose();
+		realWindow.dispose();
 		WindowManager.removeWindow(this);
 		closed = true;
 	}
@@ -912,8 +916,8 @@ public class TomoWindow extends ImageWindow implements WindowListener,
 	 *            Dialog message
 	 * @return Xmipp_Tomo.ExitValues.CANCEL / YES / NO
 	 */
-	private Xmipp_Tomo.ExitValues dialogYesNoCancel(String title, String message) {
-		return XrayImportDialog.dialogYesNoCancel(title, message);
+	private Xmipp_Tomo.ExitValues dialogYesNoCancel(String title, String message,boolean showCancelButton) {
+		return XrayImportDialog.dialogYesNoCancel(title, message,showCancelButton);
 	}
 
 	public static void alert(String message) {

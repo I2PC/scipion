@@ -421,4 +421,8 @@ public class TomoController {
 		window.setPlayLoop(!window.isPlayLoop());
 		// cb.setSelected(window.isPlayLoop());
 	}
+	
+	public void normalize(){
+		window.getModel().normalize();
+	}
 }

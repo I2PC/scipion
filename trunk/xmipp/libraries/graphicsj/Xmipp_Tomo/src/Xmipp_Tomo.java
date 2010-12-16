@@ -58,7 +58,8 @@ public class Xmipp_Tomo implements PlugIn{
 	
 	// exit values of methods and dialogs
 	public static enum ExitValues {
-		OK(0),ERROR(1),YES(2),NO(3),CANCEL(4),RUNTIME_ERROR(5),PROGRAM_NOT_FOUND(6);
+		OK(0),ERROR(1),YES(2),NO(3),CANCEL(4),RUNTIME_ERROR(5),PROGRAM_NOT_FOUND(6),
+		EXTERNAL_PROGRAM_BROKEN(7);
 		private final int value;
 		ExitValues(int err) { value=err;}
 		public int value(){return value;}
@@ -195,6 +196,9 @@ public class Xmipp_Tomo implements PlugIn{
         			exitValue = ExitValues.OK;
         			break;
         		case 127:
+        			// recompile the program
+        			exitValue = ExitValues.EXTERNAL_PROGRAM_BROKEN;
+        			break;
         		default:
         			debug(String.valueOf(ev));
         			exitValue = ExitValues.ERROR;

@@ -57,6 +57,10 @@ public class TomoData extends Component {
 	
 	private int width=0,height=0;
 	private int originalWidth=0, originalHeight=0;
+	// minimum and maximum pixel values of the projection series - for normalization
+	private double min=Double.POSITIVE_INFINITY, max=Double.NEGATIVE_INFINITY;
+	
+	
 	public int getOriginalWidth() {
 		return originalWidth;
 	}
@@ -348,6 +352,11 @@ public class TomoData extends Component {
 		firstImageLoaded();
 	}
 	
+	public void normalize(){
+		// Xmipp_Tomo.debug("normalize "+ min + "," + max);
+		getImage().getProcessor().setMinAndMax(getMin(), getMax());
+	}
+	
 	public void waitForLastImage() throws InterruptedException{
 		// Xmipp_Tomo.debug("waitForFirstImage");
 		lastLoaded.acquire();
@@ -386,4 +395,42 @@ public class TomoData extends Component {
 	public void setResized(boolean resized) {
 		this.resized = resized;
 	}
+	
+	/**
+	 * @return the min
+	 */
+	public double getMin() {
+		return min;
+	}
+
+	/**
+	 * @param min the min to set
+	 */
+	public void setMin(double min) {
+		this.min = min;
+	}
+
+	/**
+	 * @return the max
+	 */
+	public double getMax() {
+		return max;
+	}
+
+	/**
+	 * @param max the max to set
+	 */
+	public void setMax(double max) {
+		this.max = max;
+	}
+	
+	public void updateMinMax(ImagePlus image){
+		double min=image.getProcessor().getMin(), max=image.getProcessor().getMax();
+		// Xmipp_Tomo.debug("updateMinMax - "+ min + "," + max);
+		if(min < getMin())
+			setMin(min);
+		if(max > getMax())
+			setMax(max);
+	}
+	
 }

@@ -23,8 +23,6 @@
  *  e-mail address 'xmipp@cnb.csic.es'
  ***************************************************************************/
 
-import java.util.Enumeration;
-
 import javax.swing.ImageIcon;
 
 /**
@@ -40,6 +38,7 @@ public class Command {
 	LOAD=new Command("file.emload","Load","loadEM",true,null),
 	XRAY=new Command("file.xrayload","Import X-Ray","loadXray",true,null),
 	SAVE=new Command("file.save","Save","save",false,null),
+	NORMALIZE_SERIES=new Command("file.normalize","Normalize series","normalize",false,null),
 	DEFINE_TILT = new Command("file.tilt","Set tilt angles","setTilt",false,null),
 	GAUSSIAN = new Command("proc.gaussian","Gaussian","gaussian", false,null),
 	MEDIAN = new Command("proc.median","Median","median", false,null),

@@ -251,11 +251,12 @@ public class XrayImportDialog extends JDialog implements ActionListener
 	 *            Dialog message
 	 * @return Xmipp_Tomo.ExitValues.CANCEL / YES / NO
 	 */
-	public static Xmipp_Tomo.ExitValues dialogYesNoCancel(String title, String message) {
+	public static Xmipp_Tomo.ExitValues dialogYesNoCancel(String title, String message, boolean showCancelButton) {
 		GenericDialog gd = new GenericDialog(title);
 
 		gd.addMessage(message);
-		gd.enableYesNoCancel();
+		if(showCancelButton)
+			gd.enableYesNoCancel();
 		gd.showDialog();
 		if (gd.wasCanceled())
 			return Xmipp_Tomo.ExitValues.CANCEL;

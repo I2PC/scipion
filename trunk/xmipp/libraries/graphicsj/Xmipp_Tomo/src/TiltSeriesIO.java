@@ -64,6 +64,7 @@ public class TiltSeriesIO {
 	// resize images after loading?
 	private boolean resize = true;
 
+
 	// Header of a data file
 	private class ByteHeader {
 		private byte[] bytes;
@@ -279,6 +280,7 @@ public class TiltSeriesIO {
 		// save original image size
 		model.setOriginalHeight(img.getHeight());
 		model.setOriginalWidth(img.getWidth());
+		model.updateMinMax(image);
 		// resize/scale - use an aux image processor for all projections
 		ImageProcessor ipresized = null, ip = image.getProcessor();
 
@@ -289,7 +291,7 @@ public class TiltSeriesIO {
 		} else
 			model.addProjection(ip);
 	}
-
+	
 	/**
 	 * Actions required after reading all the images
 	 * 
@@ -306,6 +308,7 @@ public class TiltSeriesIO {
 		model.lastImageLoaded();
 	}
 
+	
 	/**
 	 * Convert from ImagePlusC to ImagePlus
 	 * 
@@ -321,7 +324,8 @@ public class TiltSeriesIO {
 			for (int x = 0; x < img.getWidth(); x++)
 				for (int y = 0; y < img.getHeight(); y++)
 					ip.setf(x, y, (float) img.getPixel(x, y));
-
+		ip.findMinAndMax();
+		
 		ImagePlus imagePlus = new ImagePlus("ImageDouble", ip);
 		// imagePlus.getProcessor().setPixels(img.getImage());
 		imagePlus.setDimensions(0, img.getNImages(), 0);
@@ -867,4 +871,6 @@ public class TiltSeriesIO {
 	public void setResize(boolean resize) {
 		this.resize = resize;
 	}
+
+
 }
