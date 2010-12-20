@@ -147,7 +147,7 @@ class gnuplot:
                                 X_col=3,
                                 Y_col=4):
        import glob
-       file_patern=docfilename+'[0-9]*.doc'
+       file_patern=str(docfilename)+'[0-9]*.doc'
        self.send(' set title "'+Title+'"')   
        self.send(" set xlabel '"+X_Label+"'")   
        self.send(" set ylabel '"+Y_Label+"'") 
