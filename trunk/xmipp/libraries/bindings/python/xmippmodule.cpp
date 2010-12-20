@@ -384,6 +384,8 @@ static PyObject *
 MetaData_importObjects(PyObject *obj, PyObject *args, PyObject *kwargs);
 static PyObject *
 MetaData_unionAll(PyObject *obj, PyObject *args, PyObject *kwargs);
+static PyObject *
+MetaData_aggregateSingle(PyObject *obj, PyObject *args, PyObject *kwargs);
 
 static int
 MetaData_print(PyObject *obj, FILE *fp, int flags)
@@ -670,6 +672,35 @@ MetaData_setValue(PyObject *obj, PyObject *args, PyObject *kwargs)
     }
     return NULL;
 }
+
+
+/* setValueCol */
+static PyObject *
+MetaData_setValueCol(PyObject *obj, PyObject *args, PyObject *kwargs)
+{
+    int label;
+    PyObject *pyValue; //Only used to skip label and value
+
+    if (PyArg_ParseTuple(args, "iO", &label, &pyValue))
+    {
+        try
+        {
+            MDObject * object = createMDObject(label, pyValue);
+            if (!object)
+                return NULL;
+            MetaDataObject *self = (MetaDataObject*)obj;
+            self->metadata->setValueCol(*object);
+            delete object;
+            Py_RETURN_TRUE;
+        }
+        catch (XmippError xe)
+        {
+            PyErr_SetString(PyXmippError, xe.msg.c_str());
+        }
+    }
+    return NULL;
+}
+
 /* getValue */
 static PyObject *
 MetaData_getValue(PyObject *obj, PyObject *args, PyObject *kwargs)
@@ -899,7 +930,10 @@ static PyMethodDef MetaData_methods[] = {
                                              "Set column format info"
                                             },
                                             {"setValue", (PyCFunction)MetaData_setValue, METH_VARARGS,
-                                             "Set the value for column(label)"
+                                             "Set the value for column(label) for a given object"
+                                            },
+                                            {"setValueCol", (PyCFunction)MetaData_setValueCol, METH_VARARGS,
+                                             "Set the value for column(label) for all objects"
                                             },
                                             {"getValue", (PyCFunction)MetaData_getValue, METH_VARARGS,
                                              "Get the value for column(label)"
@@ -918,6 +952,9 @@ static PyMethodDef MetaData_methods[] = {
                                             },
                                             {"removeObjects", (PyCFunction)MetaData_removeObjects, METH_VARARGS,
                                              "Remove objects from metadata"
+                                            },
+                                            {"aggregateSingle", (PyCFunction)MetaData_aggregateSingle, METH_VARARGS,
+                                             "Aggregate objects to metadata"
                                             },
                                             {"unionAll", (PyCFunction)MetaData_unionAll, METH_VARARGS,
                                              "Union of two metadatas. The results is stored in self."
@@ -1020,7 +1057,8 @@ MetaData_importObjects(PyObject *obj, PyObject *args, PyObject *kwargs)
     {
         try
         {
-            if (!MetaData_Check(pyMd)){
+            if (!MetaData_Check(pyMd))
+            {
                 PyErr_SetString(PyExc_TypeError, "MetaData::importObjects: Expecting MetaData as first argument");
                 return NULL;
             }
@@ -1041,6 +1079,35 @@ MetaData_importObjects(PyObject *obj, PyObject *args, PyObject *kwargs)
     return NULL;
 }
 
+
+/* aggregateSingle */
+static PyObject *
+MetaData_aggregateSingle(PyObject *obj, PyObject *args, PyObject *kwargs)
+{
+    AggregateOperation op;
+    MDLabel label;
+    PyObject *pyValue;
+
+    if (PyArg_ParseTuple(args, "ii", &op, &label))
+    {
+        try
+        {
+            MDObject * object = new MDObject((MDLabel)label);
+            MetaDataObject *self = (MetaDataObject*)obj;
+            self->metadata->aggregateSingle(*object, (AggregateOperation) op, (MDLabel) label);
+            pyValue = getMDObjectValue(object);
+            delete object;
+            return pyValue;
+        }
+        catch (XmippError xe)
+        {
+            PyErr_SetString(PyXmippError, xe.msg.c_str());
+        }
+    }
+    return NULL;
+}
+
+
 /* UnionAll */
 static PyObject *
 MetaData_unionAll(PyObject *obj, PyObject *args, PyObject *kwargs)
@@ -1053,7 +1120,8 @@ MetaData_unionAll(PyObject *obj, PyObject *args, PyObject *kwargs)
     {
         try
         {
-            if (!MetaData_Check(pyMd)){
+            if (!MetaData_Check(pyMd))
+            {
                 PyErr_SetString(PyExc_TypeError, "MetaData::unionAll: Expecting MetaData as first argument");
                 return NULL;
             }
