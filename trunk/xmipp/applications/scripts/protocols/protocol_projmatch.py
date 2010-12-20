@@ -317,8 +317,13 @@ MinimumCrossCorrelation='-1'
 """    
 DiscardPercentage='10'
 
-# Step scale factor size
-""" Scale step factor size (1 means 0.01 in/de-crements arround 1).
+# Perform scale search?
+""" If true perform scale refinement
+"""
+DoScale=False
+
+# Step scale factors size
+""" Scale step factor size (1 means 0.01 in/de-crements arround 1)
 """    
 ScaleStep='1'
 
@@ -611,6 +616,7 @@ class projection_matching_class:
                 _DoRetricSearchbyTiltAngle,
                 _Tilt0,
                 _TiltF,
+                _DoScale,
                 _ScaleStep,
                 _ScaleNumberOfSteps,
                 _ProjMatchingExtra,
@@ -692,8 +698,9 @@ class projection_matching_class:
        self._PerturbProjectionDirections=_PerturbProjectionDirections
        self._Tilt0=_Tilt0
        self._TiltF=_TiltF
-       self._ScaleStep = ScaleStep
-       self._ScaleNumberOfSteps = ScaleNumberOfSteps
+       self._DoScale=_DoScale
+       self._ScaleStep=_ScaleStep
+       self._ScaleNumberOfSteps=_ScaleNumberOfSteps
        self._ProjMatchingExtra=_ProjMatchingExtra
        self._ProjectDir=_ProjectDir
        self._InnerRadius=_InnerRadius
@@ -945,6 +952,7 @@ class projection_matching_class:
                                          self._Search5DStep,
                                          self._MaxChangeOffset, 
                                          self._MaxChangeInAngles,
+                                         self._DoScale,
                                          self._ScaleStep,
                                          self._ScaleNumberOfSteps,
                                          self._ProjMatchingExtra,
@@ -1218,6 +1226,7 @@ def execute_projection_matching(_mylog,
                                 _Search5DStep,
                                 _MaxChangeOffset,
                                 _MaxChangeInAngles,
+                                _DoScale,
                                 _ScaleStep,
                                 _ScaleNumberOfSteps,
                                 _ProjMatchingExtra,
@@ -1342,7 +1351,10 @@ def execute_projection_matching(_mylog,
                   ' --search5d_shift ' + str(_Search5DShift) + \
                   ' --search5d_step  ' + str(_Search5DStep) + \
                   ' --mem '            + str(_AvailableMemory * _MyNumberOfThreads) + \
-                  ' --thr '            + str(_MyNumberOfThreads) + \
+                  ' --thr '            + str(_MyNumberOfThreads)
+      
+      if (_DoScale):
+         parameters += \
                   ' --scale '          + str(_ScaleStep) + ' ' + str(_ScaleNumberOfSteps) 
 
       if (_DoCtfCorrection and _ReferenceIsCtfCorrected):
@@ -1478,14 +1490,13 @@ def make_subset_docfiles(_mylog,
       CtfGroupName = '../' + CtfGroupDirectory + '/' + CtfGroupName
       inselfile = CtfGroupName + '.sel'
       inputdocfile = (os.path.basename(inselfile)).replace('.sel','.doc')
-      command=' -i   ' + _InputDocFileName + \
-              ' --sel ' + inselfile + \
-              ' -o   ' + inputdocfile
+      command=' --join ' + _InputDocFileName + ' ' + inselfile + ' --label image'
       print '*********************************************************************'
-      launch_job.launch_job("xmipp_docfile_select_subset",
+      launch_job.launch_job("xmipp_metadata_utilities",
                             command,
                             _mylog,
                             False,1,1,'')
+      
       docselfile.append(inputdocfile+' 1\n')
 
    # Write the selfile of all these docfiles
@@ -1566,7 +1577,7 @@ def execute_reconstruction(_mylog,
       if (_DoComputeResolution and not _DoSplitReferenceImages):
          myFileName =  ProjMatchDir + '/' + ProjMatchName
          parameters = parameters + ' --prepare_fsc ' + myFileName + ' '
-         rand_command  = ' xmipp_selfile_split -i '
+         rand_command  = ' xmipp_metadata_split -i '
          rand_command += ForReconstructionSel + ' --dont_sort -n 1 ' 
          os.system(rand_command)
          _mylog.info(rand_command)
@@ -1906,6 +1917,7 @@ if __name__ == '__main__':
                 DoRetricSearchbyTiltAngle,      
                 Tilt0,                          
                 TiltF,   
+                DoScale,   
                 ScaleStep,
                 ScaleNumberOfSteps,
                 ProjMatchingExtra,              
