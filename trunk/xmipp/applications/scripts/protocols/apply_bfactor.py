@@ -16,7 +16,7 @@ def apply_bfactor(_DisplayReference_list,\
         ):
     import os
     if len(_CorrectBfactorExtraCommand)<1:
-        _CorrectBfactorExtraCommand=' -auto '
+        _CorrectBfactorExtraCommand=' --auto '
     for name in _DisplayReference_list:
        xmipp_command='xmipp_correct_bfactor '
        aux_name = name.replace(bFactorExtension,'')
@@ -25,8 +25,8 @@ def apply_bfactor(_DisplayReference_list,\
        else:
             argument = ' -i ' + name.replace(bFactorExtension,'') +\
                        ' -o ' + name +\
-                       ' -sampling ' + str(_SamplingRate)+\
-                       ' -maxres '   + str (_MaxRes) +\
+                       ' --sampling ' + str(_SamplingRate)+\
+                       ' --maxres '   + str (_MaxRes) +\
                        ' '
             xmipp_command = xmipp_command + argument
             xmipp_command = xmipp_command + ' ' + _CorrectBfactorExtraCommand
