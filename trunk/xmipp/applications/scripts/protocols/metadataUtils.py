@@ -82,66 +82,51 @@ def intercalate_union_3(inFileName,outFileName, src1,targ1,src2,targ2):
 
 #set rot and tilt between -180,180 and -90,90
 def check_angle_range(inFileName,outFileName):
-    print '[check_angle_range] Need to be implemented' 
-#
-#   mD    = XmippData.MetaData(XmippData.FileName(inFileName))
-#   rotP  = XmippData.doubleP() 
-#   tiltP = XmippData.doubleP() 
-#   id=mD.firstObject()
-#   doWrite=False
-#   while(id != -1 ):
-#    doWrite2=False
-#        XmippData.getValueDouble(mD, XmippData.MDL_ANGLEROT,   rotP)
-#    rot  = rotP.value()
-#    XmippData.getValueDouble(mD, XmippData.MDL_ANGLETILT, tiltP)
-#    tilt = tiltP.value()
-#    if tilt > 90.: 
-#           tilt = -(tilt-180)
-#           rot  += 180.
-#       doWrite=True
-#       doWrite2=True
-#    if tilt < -90.: 
-#           tilt = -(tilt+180)
-#           rot  -= 180. 
-#       doWrite=True
-#       doWrite2=True
-#    if (doWrite2):   
-#       rotP.assign(rot)
-#       tiltP.assign(tilt)
-#       XmippData.setValueDouble(mD, XmippData.MDL_ANGLEROT , rotP)
-#       XmippData.setValueDouble(mD, XmippData.MDL_ANGLETILT, tiltP)
-#     id=mD.nextObject()
-#   if(doWrite or inFileName != outFileName):
-#     mD.write(XmippData.FileName(outFileName))
+
+    mD    = MetaData(inFileName)
+    doWrite=False
+    
+    for id in mD: 
+        doWrite2=False
+        rot = mD.getValue(MDL_ANGLEROT)
+        tilt = mD.getValue(MDL_ANGLETILT)
+        if tilt > 90.: 
+            tilt = -(int(tilt)-180)
+            rot  += 180.
+            doWrite=True
+            doWrite2=True
+        if tilt < -90.: 
+            tilt = -(int(tilt)+180)
+            rot  -= 180. 
+            doWrite=True
+            doWrite2=True
+        if (doWrite2):
+            mD.setValue(MDL_ANGLEROT , rot)
+            mD.setValue(MDL_ANGLETILT, tilt)
+        
+    if(doWrite or inFileName != outFileName):
+        mD.write(outFileName)
 
 
 #compute histogram
-def write_several(mD,bin,col,min,max):
-    print '[write_several] Need to be implemented' 
-#   #add column to metadata MD
-#   outMD = XmippData.MetaData()
-#   allMD = XmippData.MetaData()
-#   a = XmippData.MDL()
-#   iP=XmippData.intP()
-#   _col =  a.label2Str(col)
-#   _bin=(max-min)/bin
-#   for h in range(0,bin):           
-#       #delete next
-#       outMD.clear()
-#       expr = " "
-#       if(h!=0):
-#          expr = _col +" >= " + str(_bin * h + min ) 
-#       if(h!=0 and h!=(bin-1) ):
-#          expr += ' AND '
-#       if(h!=(bin-1)):
-#          expr +=  _col + " < " + str(_bin*(h + 1)+min) 
-#       outMD.importObjects(mD, XmippData.MDExpression(expr));
-#       id=outMD.firstObject()
-#       _sum=outMD.aggregateSingle(XmippData.AGGR_SUM,XmippData.MDL_WEIGHT)
-#       iP.assign(int(_sum+0.1))
-#       XmippData.setValueColInt(outMD, XmippData.MDL_COUNT,iP)
-#       allMD.unionAll(outMD)
-#       #outMD.write(XmippData.FileName("/dev/stderr"))
-#   allMD.setFilename(mD.getFilename())
-#   return allMD
-
+def compute_histogram(mD,bin,col,min,max):
+    
+   allMD = MetaData()
+   outMD = MetaData()   
+   _bin = (max-min)/bin
+   
+   for h in range(0,bin):
+       outMD.removeObjects(MDQuery("*"))
+       if (h==0):
+           outMD.importObjects(mD, MDValueRange(col, float(min), float(_bin*(h + 1)+min)))
+       if (h>0 and h<(bin-1)):
+           outMD.importObjects(mD, MDValueRange(col, float(_bin * h + min), float(_bin*(h + 1)+min)))
+       if (h==(bin-1)):
+           outMD.importObjects(mD, MDValueRange(col, float(_bin * h + min), float(max)))
+       
+       _sum=float(outMD.aggregateSingle(AGGR_SUM,MDL_WEIGHT))
+       outMD.addLabel(MDL_COUNT)
+       outMD.setValueCol(MDL_COUNT, int(_sum+0.1))
+       allMD.unionAll(outMD)
+       
+   return allMD
