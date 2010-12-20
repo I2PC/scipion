@@ -189,9 +189,6 @@ protected:
      */
     void copyMetadata(const MetaData &md);
 
-    //Set the value of all objects in an specified column (both value and colum are specified in mdValueIn)
-    bool _setValueCol(const MDObject &mdValueIn);
-
     /** This have the same logic of the public one,
      * but doesn't perform any range(wich implies do a size()) checks.
      */
@@ -366,6 +363,11 @@ public:
      * @{
      */
 
+
+    /** Set the value of all objects in an specified column (both value and colum are specified in mdValueIn)
+    */
+    bool setValueCol(const MDObject &mdValueIn);
+
     /**Set the value of all objects in an specified column.
      * @code
      * MetaData md;
@@ -376,8 +378,9 @@ public:
     template<class T>
     bool setValueCol(const MDLabel label, const T &valueIn)
     {
-        _setValueCol(MDObject(label, valueIn));
+        setValueCol(MDObject(label, valueIn));
     }
+
     /** Set the value for some label.
      * to the object that has id 'objectId'
      * or to 'activeObject' if is objectId=-1.
@@ -674,7 +677,7 @@ public:
                    MDLabel aggregateLabel, MDLabel operateLabel, MDLabel resultLabel);
     void aggregate(const MetaData &mdIn, const std::vector<AggregateOperation> &ops,
                    MDLabel operateLabel, const std::vector<MDLabel> &resultLabels);
-    double aggregateSingle(AggregateOperation op,
+    void aggregateSingle(MDObject &mdValueOut, AggregateOperation op,
                            MDLabel aggregateLabel);
     /** Union of elements in two Metadatas, without duplicating.
      * Result in calling metadata object

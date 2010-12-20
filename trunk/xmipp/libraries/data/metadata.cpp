@@ -118,7 +118,7 @@ bool MetaData::setValue(const MDObject &mdValueIn, long int objId)
     myMDSql->setObjectValue(objId, mdValueIn);
 }
 
-bool MetaData::_setValueCol(const MDObject &mdValueIn)
+bool MetaData::setValueCol(const MDObject &mdValueIn)
 {
     //add label if not exists, this is checked in addlabel
     addLabel(mdValueIn.label);
@@ -1153,11 +1153,11 @@ void MetaData::merge(const FileName &fn)
     unionAll(md);
 }
 
-double MetaData::aggregateSingle(AggregateOperation op,
+void MetaData::aggregateSingle(MDObject &mdValueOut, AggregateOperation op,
                                  MDLabel aggregateLabel)
 
 {
-    myMDSql->aggregateSingleDouble(op,aggregateLabel);
+	mdValueOut.setValue(myMDSql->aggregateSingleDouble(op,aggregateLabel));
 }
 
 bool MetaData::isColumnFormatFile(char * map,
