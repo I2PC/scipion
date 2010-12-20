@@ -28,11 +28,11 @@ DisplayReference=False
 #display reconstructed volume
 """ Volume as given by the reconstruction algorithm
 """
-DisplayReconstruction=True
+DisplayReconstruction=False
 #display reconstructed volume after filtration
 """ Volume after filtration
 """
-DisplayFilteredReconstruction=False
+DisplayFilteredReconstruction=True
 #------------------------------------------------------------------------------------------------
 # {section} B-factor correction
 #------------------------------------------------------------------------------------------------
@@ -47,14 +47,14 @@ DisplayFilteredReconstruction=False
 DisplayBFactorCorrectedVolume=False
 
 #Sampling rate (only needed for b_factor)
-SamplingRate=2.8
+SamplingRate=5.6
 #Maximum resolution to apply B-factor (in Angstrom)
-MaxRes=10
+MaxRes=12
 # {expert} User defined flags for the correct_bfactor program 
 """ See http://xmipp.cnb.csic.es/twiki/bin/view/Xmipp/Correct_bfactor
-    for details. DEFAULT behaviour is -auto
+    for details. DEFAULT behaviour is --auto
 """
-CorrectBfactorExtraCommand='-auto'
+CorrectBfactorExtraCommand='--auto'
 
 #------------------------------------------------------------------------------------------------
 # {section} Display "3D volumes" options
@@ -90,7 +90,7 @@ DisplayResolutionPlots=True
 #{list}|2D|3D| Display Angular distribution with
 """ 2D option uses gnuplot while 3D chimera
 """
-DisplayAngularDistributionWith='3D'
+DisplayAngularDistributionWith='2D'
 
 #------------------------------------------------------------------------------------------------
 #------------------------------------------------------------------------------------------------
@@ -110,6 +110,16 @@ elif(DisplayVolumeSlicesAlong=='z'):
     VisualizeVolZ=True
 elif(DisplayVolumeSlicesAlong=='surface'):
     VisualizeVolChimera=True
+
+
+import os,sys,shutil
+scriptdir = os.path.split(os.path.dirname(os.popen('which xmipp_protocols', 'r').read()))[0] + '/lib'
+sys.path.append(scriptdir) # add default search path
+scriptdir=os.path.split(os.path.dirname(os.popen('which xmipp_protocols','r').read()))[0]+'/protocols'
+sys.path.append(scriptdir) # add default search path
+import log,logging,arg
+import visualization
+from xmipp import *
 
 
 class visualize_projmatch_class:
@@ -135,13 +145,7 @@ class visualize_projmatch_class:
                 _DisplayAngularDistributionWith,
                 _ProtocolName
                 ):
-	     
-        import os,sys,shutil
-        scriptdir=os.path.split(os.path.dirname(os.popen('which xmipp_protocols','r').read()))[0]+'/protocols'
-        sys.path.append(scriptdir) # add default search path
-        import log,logging,arg
-        import visualization
-
+         
         # Import the corresponding protocol, get WorkingDir and go there
         pardir=os.path.abspath(os.getcwd())
         shutil.copy(_ProtocolName,'protocol.py')
@@ -196,7 +200,7 @@ class visualize_projmatch_class:
         if(_DisplayBFactorCorrectedVolume):
             self._mylog.debug("bfactor Correction activated")
             volExtension=bFactorExtension+volExtension
-	   
+       
         for self._iteration_number in self._DisplayIterationsNo:
            if self._iteration_number==' ':
               continue
@@ -257,8 +261,8 @@ class visualize_projmatch_class:
         os.chdir(self._Iteration_Working_Directory)
 
         #Compute bfactor if needed
-	import apply_bfactor
-	
+        import apply_bfactor
+    
         if (_DisplayReference):
            self._mylog.debug ( "_DisplayReference_list "+str(self._DisplayReference_list))
            visualization.visualize_volumes(self._DisplayReference_list,
@@ -266,11 +270,10 @@ class visualize_projmatch_class:
                                            _VisualizeVolX,
                                            _VisualizeVolY,
                                            _VisualizeVolChimera)
-
-
+           
         if (_DisplayReconstruction):
            if(_DisplayBFactorCorrectedVolume):
-	       apply_bfactor.apply_bfactor(self._DisplayReconstruction_list,
+              apply_bfactor.apply_bfactor(self._DisplayReconstruction_list,
                                            bFactorExtension,
                                            _SamplingRate,
                                            _MaxRes,
@@ -284,10 +287,9 @@ class visualize_projmatch_class:
                                            _VisualizeVolX,
                                            _VisualizeVolY,
                                            _VisualizeVolChimera)
-
         if (_DisplayFilteredReconstruction):
            if(_DisplayBFactorCorrectedVolume):
-	       apply_bfactor.apply_bfactor(self._DisplayFilteredReconstruction_list,
+              apply_bfactor.apply_bfactor(self._DisplayFilteredReconstruction_list,
                                            bFactorExtension,
                                            _SamplingRate,
                                            _MaxRes,
@@ -302,7 +304,6 @@ class visualize_projmatch_class:
                                            _VisualizeVolX,
                                            _VisualizeVolY,
                                            _VisualizeVolChimera)
-
         if (_DisplayProjectionMatchingAlign2d):
             if (protocol.CleanUpFiles==True):
                 print '* You cannot visualize class averages after performing a cleanup! '
@@ -319,7 +320,7 @@ class visualize_projmatch_class:
                                                2*self._MatrixWidth,
                                                "",
                                                False)
-
+                
         if (_DisplayAngularDistribution):
             self._mylog.debug ( "_ShowPlotsList "+str(self._ShowPlotsList))
             self._mylog.debug ( "_TitleList "+str(self._TitleList))
@@ -334,7 +335,7 @@ class visualize_projmatch_class:
                                   displayVolList,
                                   self._mylog
                                   )
-
+            
         if (_DisplayResolutionPlots):
            self._mylog.debug ( "_DisplayResolutionPlots_list "+str(self._DisplayResolutionPlots_list))
            show_plots(self._DisplayResolutionPlots_list,
@@ -355,43 +356,41 @@ def show_ang_distribution(_ShowPlots,
                           _DisplayAngularDistributionWith,
                           _displayVolList,
                           _mylog=""):
-    import os,XmippData
+    import os
     import visualization,metadataUtils
+
     print "_DisplayAngularDistributionWith:" , _DisplayAngularDistributionWith
     if(_DisplayAngularDistributionWith=='3D'):
         visualization.angDistributionChimera(_ShowPlots,_displayVolList,_mylog)
     elif(_DisplayAngularDistributionWith=='2D'):
-        doc=XmippData.MetaData()
+        doc=MetaData()
         for i in range(len(_ShowPlots)):
-	    doc.clear()
             metadataUtils.check_angle_range(_ShowPlots[i],_ShowPlots[i])
-	    doc.read(XmippData.FileName(_ShowPlots[i]))
-            mini=doc.aggregateSingle(XmippData.AGGR_MIN,XmippData.MDL_WEIGHT)
-            maxi=doc.aggregateSingle(XmippData.AGGR_MAX,XmippData.MDL_WEIGHT)
-	    print "_ShowPlots[i]),mini,maxi",_ShowPlots[i],mini,maxi
-	    if not _mylog=="":
+            doc.read(_ShowPlots[i])
+            mini=doc.aggregateSingle(AGGR_MIN,MDL_WEIGHT)
+            maxi=doc.aggregateSingle(AGGR_MAX,MDL_WEIGHT)
+            print "_ShowPlots[i]),mini,maxi",_ShowPlots[i],mini,maxi
+            if not _mylog=="":
                _mylog.debug("mini "+ str(mini) +" maxi "+ str(maxi))
             #if mini==0:
             #   mini=1
             #if maxi<mini:
             #   maxi=mini   
-            doc=metadataUtils.write_several(doc,
+            doc=metadataUtils.compute_histogram(doc,
                               10,
-                              XmippData.MDL_WEIGHT,
+                              MDL_WEIGHT,
                               mini,
                               maxi,
                               )
             plot=visualization.gnuplot()
             _title[i] =_title[i]+'\\n min= '+str(mini)+', max= '+str(maxi) 
-            plot.plot_xy1y2_several_angular_doc_files(doc,
-                                                      _title[i],
-                                                      'degrees',
-                                                      'degrees',
-                                                      XmippData.MDL_ANGLEROT,
-                                                      XmippData.MDL_ANGLETILT,
-						      XmippData.MDL_COUNT)
+            plot.plot_xy1y2_several_angular_doc_files(doc, 
+                                                      _title[i], 
+                                                      'degrees', 
+                                                      'degrees')
+
     else:
-        print "Error: wrong utility to visualizeshow_ang_distribution"
+        print "Error: wrong utility to visualize show_ang_distribution"
         exit(1)
 
 def show_plots(_ShowPlots,_iteration_number,_title,_mylog):
@@ -410,14 +409,14 @@ def show_plots(_ShowPlots,_iteration_number,_title,_mylog):
            else:
               plot.send(" replot '" + _ShowPlots[i] + "' using "+str(X_col)+":"+str(Y_col)+" with lines")   
 
-#		
+#        
 # Main
 #      
 if __name__ == '__main__':
 
     import sys
     ProtocolName=sys.argv[1]
-
+    
     # create projmatch_class object
     visualize_projmatch=visualize_projmatch_class(VisualizeVolZ,
                                                   VisualizeVolX,
