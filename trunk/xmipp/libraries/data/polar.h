@@ -180,36 +180,53 @@ public:
      */
     void operator-=(const T val)
     {
-        for (int i = 0; i < rings.size(); i++)
-            for (int j = 0; j < XSIZE(rings[i]); j++)
-                (*(this))(i,j) -= val;
+    	int imax=rings.size();
+        for (int i = 0; i < imax; i++)
+        {
+        	MultidimArray<T> &rings_i=rings[i];
+            for (int j = 0; j < XSIZE(rings_i); j++)
+            	DIRECT_A1D_ELEM(rings_i,j) -= val;
+        }
     }
 
     /** Add a constant pixel-by-pixel
      */
     void operator+=(const T val)
     {
-        for (int i = 0; i < rings.size(); i++)
-            for (int j = 0; j < XSIZE(rings[i]); j++)
-                (*(this))(i,j) += val;
+    	int imax=rings.size();
+        for (int i = 0; i < imax; i++)
+        {
+        	MultidimArray<T> &rings_i=rings[i];
+            for (int j = 0; j < XSIZE(rings_i); j++)
+            	DIRECT_A1D_ELEM(rings_i,j) += val;
+        }
     }
 
     /** Multiply by a constant pixel-by-pixel
      */
     void operator*=(const T val)
     {
-        for (int i = 0; i < rings.size(); i++)
-            for (int j = 0; j < XSIZE(rings[i]); j++)
-                (*(this))(i,j) *= val;
+    	int imax=rings.size();
+        for (int i = 0; i < imax; i++)
+        {
+        	MultidimArray<T> &rings_i=rings[i];
+            for (int j = 0; j < XSIZE(rings_i); j++)
+            	DIRECT_A1D_ELEM(rings_i,j) *= val;
+        }
     }
 
     /** Divide by a constant pixel-by-pixel
      */
     void operator/=(const T val)
     {
-        for (int i = 0; i < rings.size(); i++)
-            for (int j = 0; j < XSIZE(rings[i]); j++)
-                (*(this))(i,j) /= val;
+    	int imax=rings.size();
+    	double ival=1.0/val;
+        for (int i = 0; i < imax; i++)
+        {
+        	MultidimArray<T> &rings_i=rings[i];
+            for (int j = 0; j < XSIZE(rings_i); j++)
+            	DIRECT_A1D_ELEM(rings_i,j) *= ival;
+        }
     }
 
     /** Subtract two polars pixel-by-pixel
@@ -246,7 +263,6 @@ public:
         for (int i = 0; i < rings.size(); i++)
             for (int j = 0; j < XSIZE(rings[i]); j++)
                 (*(this))(i,j) /= in(i,j);
-
     }
 
     /** Rename polar
@@ -440,7 +456,7 @@ public:
      */
     T& operator()(int r, int f) const
     {
-        return rings[r](f);
+        return DIRECT_A1D_ELEM(rings[r],f);
     }
 
     /** Pixel access
@@ -476,13 +492,15 @@ public:
         else
             REPORT_ERROR(ERR_VALUE_INCORRECT,"Incorrect mode for computeSum");
 
-        for (int i = 0; i < rings.size(); i++)
+        int imax=rings.size();
+        for (int i = 0; i < imax; i++)
         {
             // take varying sampling into account
             w = (twopi * ring_radius[i]) / (double) XSIZE(rings[i]);
-            for (int j = 0; j < XSIZE(rings[i]); j++)
+            MultidimArray<T> &rings_i=rings[i];
+            for (int j = 0; j < XSIZE(rings_i); j++)
             {
-                aux = rings[i](j);
+                aux = DIRECT_A1D_ELEM(rings_i,j);
                 sum += w * aux;
                 N += w;
             }
@@ -507,13 +525,16 @@ public:
         else
             REPORT_ERROR(ERR_VALUE_INCORRECT,"Incorrect mode for computeSum2");
 
-        for (int i = 0; i < rings.size(); i++)
+        int imax=rings.size();
+        for (int i = 0; i < imax; i++)
         {
             // take varying sampling into account
-            w = (twopi * ring_radius[i]) / (double) XSIZE(rings[i]);
-            for (int j = 0; j < XSIZE(rings[i]); j++)
+        	MultidimArray<T> &rings_i=rings[i];
+            w = (twopi * ring_radius[i]) / (double) XSIZE(rings_i);
+            for (int j = 0; j < XSIZE(rings_i); j++)
             {
-                aux = rings[i](j) * rings[i](j);
+            	T val=DIRECT_A1D_ELEM(rings_i,j);
+                aux = val*val;
                 sum2 += w * aux;
                 N += w;
             }
@@ -664,9 +685,9 @@ public:
 
                 // Perform the convolution interpolation
                 if (BsplineOrder==1)
-                    Mring(iphi) = (T) M1.interpolatedElement2D(xp,yp);
+                    DIRECT_A1D_ELEM(Mring,iphi) = (T) M1.interpolatedElement2D(xp,yp);
                 else
-                    Mring(iphi) = (T) M1.interpolatedElementBSpline2D(xp,yp,BsplineOrder);
+                	DIRECT_A1D_ELEM(Mring,iphi) = (T) M1.interpolatedElementBSpline2D(xp,yp,BsplineOrder);
             }
             rings.push_back(Mring);
             ring_radius.push_back(radius);

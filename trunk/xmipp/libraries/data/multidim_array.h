@@ -559,6 +559,11 @@ extern std::string floatToString(float F, int _width, int _prec);
  */
 #define FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY1D(v) \
     for (int i=0; i<v.xdim; i++)
+
+/** Macro to check whether a point is inside or outside a given matrix. */
+#define OUTSIDE(i,j) \
+            ((j) < STARTINGX(*this) || (j) > FINISHINGX(*this) || \
+             (i) < STARTINGY(*this) || (i) > FINISHINGY(*this))
 //@}
 
 // Forward declarations ====================================================
@@ -1489,7 +1494,7 @@ public:
      * TRUE if the logical index given is outside the definition region of this
      * array.
      */
-    bool outside(int i, int j) const
+    inline bool outside(int i, int j) const
     {
         return (j < STARTINGX(*this) || j > FINISHINGX(*this) ||
                 i < STARTINGY(*this) || i > FINISHINGY(*this));
@@ -2162,13 +2167,25 @@ public:
         double fy = y - y0;
         int y1 = y0 + 1;
 
-        T d00 = outside(y0, x0) ? outside_value : NZYX_ELEM(*this, n, 0, y0, x0);
-        T d10 = outside(y1, x0) ? outside_value : NZYX_ELEM(*this, n, 0, y1, x0);
-        T d11 = outside(y1, x1) ? outside_value : NZYX_ELEM(*this, n, 0, y1, x1);
-        T d01 = outside(y0, x1) ? outside_value : NZYX_ELEM(*this, n, 0, y0, x1);
+        int i0=STARTINGY(*this);
+        int j0=STARTINGX(*this);
+        int iF=FINISHINGY(*this);
+        int jF=FINISHINGX(*this);
 
-        double d0 = (T) LIN_INTERP(fx, (double) d00, (double) d01);
-        double d1 = (T) LIN_INTERP(fx, (double) d10, (double) d11);
+#define ASSIGNVAL(d,i,j) \
+	    if ((j) < j0 || (j) > jF || (i) < i0 || (i) > iF) \
+	    	d=outside_value;\
+        else \
+        	d=NZYX_ELEM(*this, n, 0, i, j);
+
+        double d00, d10, d11, d01;
+        ASSIGNVAL(d00,y0,x0);
+        ASSIGNVAL(d01,y0,x1);
+        ASSIGNVAL(d10,y1,x0);
+        ASSIGNVAL(d11,y1,x1);
+
+        double d0 = LIN_INTERP(fx, d00, d01);
+        double d1 = LIN_INTERP(fx, d10, d11);
         return (T) LIN_INTERP(fy, d0, d1);
     }
 

@@ -41,7 +41,7 @@ void fourierTransformRings(Polar<double > & in,
         (plans.transformers[iring]).getFourierAlias(Fring);
         if (conjugated)
             for (int i = 0; i < XSIZE(Fring); i++)
-                Fring(i) = conj(Fring(i));
+                DIRECT_A1D_ELEM(Fring,i) = conj(DIRECT_A1D_ELEM(Fring,i));
         out.rings.push_back(Fring);
     }
     out.mode = in.mode;
@@ -117,7 +117,7 @@ void normalizedPolarFourierTransform(const MultidimArray<double> &in,
     double stddev = polarIn.computeSum2(true);
     stddev = sqrt(stddev - mean * mean);
     polarIn -= mean;
-    polarIn /= stddev;
+    polarIn *= 1/stddev;
     if (plans==NULL)
     {
         plans=new Polar_fftw_plans();

@@ -442,7 +442,7 @@ void correlation_matrix(const MultidimArray< T > & m1,
     // Multiply FFT1 * FFT2'
     double dSize=MULTIDIM_SIZE(R);
     FOR_ALL_ELEMENTS_IN_ARRAY3D(FFT1)
-        FFT1(k, i, j) *= dSize * conj(FFT2(k, i, j));
+        A3D_ELEM(FFT1,k, i, j) *= dSize * conj(A3D_ELEM(FFT2,k, i, j));
 
     // Invert the product, in order to obtain the correlation image
     transformer1.inverseFourierTransform();

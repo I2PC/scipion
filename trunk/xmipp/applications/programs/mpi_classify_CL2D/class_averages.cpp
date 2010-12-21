@@ -289,7 +289,7 @@ double fastCorrentropy(const MultidimArray<double> &x, const MultidimArray<doubl
         if (DIRECT_A2D_ELEM(mask,i,j))
         {
             retvalxy+=G.getValue(isigma*(DIRECT_A2D_ELEM(x,i,j)-DIRECT_A2D_ELEM(y,i,j)));
-            maskSum++;
+            ++maskSum;
         }
     }
     return (retvalxy/maskSum);
