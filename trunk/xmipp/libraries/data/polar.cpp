@@ -84,9 +84,10 @@ void rotationalCorrelation(const Polar<std::complex<double> > &M1,
     // Assume M2 is already complex conjugated!
     for (int iring = 0; iring < nrings; iring++)
     {
-	double w = (2.* PI * M1.ring_radius[iring]);
-        for (int i = 0; i < M1.getSampleNo(iring); i++)
-	    Fsum(i) += w * M1(iring,i) * M2(iring,i);
+    	double w = (2.* PI * M1.ring_radius[iring]);
+    	int imax=M1.getSampleNo(iring);
+        for (int i = 0; i < imax; i++)
+	    DIRECT_A1D_ELEM(Fsum,i) += w * M1(iring,i) * M2(iring,i);
     }
 
     // Inverse FFT to get real-space correlations
@@ -95,7 +96,7 @@ void rotationalCorrelation(const Polar<std::complex<double> > &M1,
 
     angles.resize(XSIZE(local_transformer.getReal()));
     for (int i = 0; i < XSIZE(angles); i++)
-	angles(i)=(double)i*360./XSIZE(angles);
+	DIRECT_A1D_ELEM(angles,i)=(double)i*360./XSIZE(angles);
 }
 
 // Compute the normalized Polar Fourier transform --------------------------

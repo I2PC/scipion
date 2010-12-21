@@ -663,7 +663,7 @@ public:
             nsam = 2 * (int)( 0.5 * oversample * twopi * radius );
             nsam = XMIPP_MAX(1, nsam);
             dphi = twopi / (double)nsam;
-            Mring.resize(nsam);
+            Mring.resizeNoCopy(nsam);
             for (int iphi = 0; iphi < nsam; iphi++)
             {
                 // from polar to original cartesian coordinates
