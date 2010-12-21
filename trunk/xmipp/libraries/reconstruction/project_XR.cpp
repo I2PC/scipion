@@ -32,14 +32,12 @@
 
 void ProgProjectXR::defineParams()
 {
-    //    addParamsLine("xmipp_project_xr");
     addUsageLine("Generate projections as in a X-ray microscope from a 3D Xmipp volume.");
     addParamsLine(" -i <Proj_param_file>   :MetaData file with projection parameters.");
     addParamsLine("                         :Check the manual for a description of the parameters.");
     addParamsLine(" alias --input;");
     addParamsLine("[-psf <psf_param_file=\"\">] : XRay-Microscope parameters file. If not set, then default parameters are chosen.");
-    addParamsLine("[-o <sel_file=\"\">]         : Output Metadata file with all the generated projecions.");
-    //    addParamsLine("[-v]                    : Verbose.");
+    addParamsLine("[-o <sel_file=\"\">]         : Output Metadata file with all the generated projections.");
     addParamsLine("[-show_angles]          : Print angles value for each projection.");
     addParamsLine("[-only_create_angles]   : Projections are not calculated, only the angles values.");
     addParamsLine("[-thr <threads=1>]      : Number of concurrent threads.");
@@ -367,9 +365,7 @@ void project_xr_Volume_offCentered(PROJECT_XR_Side_Info &side, XRayPSF &psf, Pro
     iniYdim = side.phantomVol().ydim;
     iniZdim = side.phantomVol().zdim;
 
-    //    xOffsetN = XX(roffset)/psf.dxo;
-    //    yOffsetN = YY(roffset)/psf.dxo;
-
+    // Projection offset in pixels
     xOffsetN = P.Xoff()/psf.dxo;
     yOffsetN = P.Yoff()/psf.dxo;
 
@@ -578,9 +574,6 @@ void thread_project_xr(ThreadArgument &thArg)
                     imTempP = &imTempSc;
                     break;
                 }
-
-                psf.generateOTF(*imTempP);
-
 
 #ifdef DEBUG
 

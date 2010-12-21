@@ -352,11 +352,11 @@ private:
         MDL::addLabel(MDL_CTF_CRITERION_PSDPCA1VARIANCE, LABEL_DOUBLE, "CTFCrit_PSDPCA1");
         MDL::addLabel(MDL_CTF_CRITERION_PSDPCARUNSTEST, LABEL_DOUBLE, "CTFCrit_PSDPCARuns");
 
-        MDL::addLabel(MDL_CTF_XRAY_DIMENSIONS, LABEL_VECTOR, "CTFXray_dimensions");
-        MDL::addLabel(MDL_CTF_XRAY_LAMBDA, LABEL_DOUBLE, "CTFXray_lambda");
-        MDL::addLabel(MDL_CTF_XRAY_MAGNIFICATION, LABEL_DOUBLE, "CTFXray_Magnification");
-        MDL::addLabel(MDL_CTF_XRAY_OUTER_ZONE_WIDTH, LABEL_DOUBLE, "CTFXray_OuterZoneWidth");
-        MDL::addLabel(MDL_CTF_XRAY_ZONES_NUMBER, LABEL_DOUBLE, "CTFXray_ZonesN");
+        MDL::addLabel(MDL_CTF_XRAY_DIMENSIONS, LABEL_VECTOR, "CTF_Xray_dimensions");
+        MDL::addLabel(MDL_CTF_XRAY_LAMBDA, LABEL_DOUBLE, "CTF_Xray_lambda");
+        MDL::addLabel(MDL_CTF_XRAY_MAGNIFICATION, LABEL_DOUBLE, "CTF_Xray_Magnification");
+        MDL::addLabel(MDL_CTF_XRAY_OUTER_ZONE_WIDTH, LABEL_DOUBLE, "CTF_Xray_OuterZoneWidth");
+        MDL::addLabel(MDL_CTF_XRAY_ZONES_NUMBER, LABEL_DOUBLE, "CTF_Xray_ZonesN");
 
         MDL::addLabel(MDL_DEFGROUP, LABEL_INT, "defocusGroup");
         MDL::addLabel(MDL_DATATYPE, LABEL_INT, "datatype");

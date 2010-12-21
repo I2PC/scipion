@@ -26,11 +26,11 @@
 #ifndef _PSF_XR_HH
 #define _PSF_XR_HH
 
-#include "fftw.h"
-#include "multidim_array.h"
-#include "image.h"
 #include <complex>
+#include "fftw.h"
+#include "image.h"
 #include "projection.h"
+#include "program.h"
 
 
 /**@defgroup PSFXRSupport X-Ray Microscope PSF class
@@ -44,6 +44,16 @@ enum PsfxrAdjust
     PSFXR_STD, /// Standard mode, image size does not changes
     PSFXR_INT, /// Increasing the image size by Interpolating
     PSFXR_ZPAD /// Increasing the image size by Zeropadding
+};
+
+// PSF Generation algorithm
+enum PsfType
+{
+    IDEAL_LENS,
+    ANALITIC_ZP /// Based on  O. Mendoza-Yero et als."PSF analysis of nanometric Fresnel
+    /// zone plates," EOS Topical Meeting on Diffractive Optics 2010,
+    /// ISBN 978-3-00-024193-2, 14th-18th February
+    /// 2010, Koli, Finland. (contact email:omendoza@uji.es)
 };
 
 /** X-ray PSF class.
@@ -92,10 +102,23 @@ enum PsfxrAdjust
 class XRayPSF
 {
 public:
+
+    // Operation modes
+    enum operMode
+    {
+        GENERATE_PSF,
+        PSF_FROM_FILE
+    };
+
+    operMode mode;
+
+    // Define the selected PSF generation algorithm.
+    PsfType type;
+
     // Current OTF
     MultidimArray< std::complex<double> > OTF;
     // 3D PSF
-    Image<double> *PSF;
+    Image<double> PSF;
 
     /* RX Microscope configuration */
     /// Lens Aperture Radius
@@ -170,6 +193,19 @@ public:
         clear();
     }
 
+    /* Destructor
+     */
+    ~XRayPSF()
+    {}
+
+    /* Definition of params to be read from command line
+     */
+    void defineParams(XmippProgram * program);
+
+    /* Read of params from command line
+     */
+    void readParams(XmippProgram * program);
+
     /** Read from file.
         An exception is thrown if the file cannot be open.*/
     void read(const FileName &fn);
@@ -197,6 +233,21 @@ public:
     template <typename T>
     void applyOTF(MultidimArray<T> &Im)
     {
+
+        switch (mode)
+        {
+        case GENERATE_PSF:
+            {
+                if (type == IDEAL_LENS)
+                    generateOTF();
+                break;
+            }
+        case PSF_FROM_FILE:
+            {
+                break;
+            }
+        }
+
         MultidimArray<std::complex<double> > ImFT;
         FourierTransformer transformer;
 
@@ -246,13 +297,19 @@ public:
 
     }
 
-    /// Generate the Optical Transfer Function (OTF) according to Microscope and Im parameters.
-    void generateOTF(MultidimArray<double> &Im) ;
+    /// Generate the Optical Transfer Function (OTF) for a slice according to Microscope and Im parameters.
+    void generateOTF() ;
 
-    void generateOTF(MultidimArray<std::complex<double> > &Im) ;
+    /// Generate the 3D Point Spread Function (PSF) according to Microscope parameters.
+    void generatePSF(PsfType _type = IDEAL_LENS);
 
     /// Calculate if a resize of the X-Y plane is needed to avoid the Nyquist Limit
-    void adjustParam(Image<double> &Vol) ;
+    void adjustParam();
+    void adjustParam(Image<double> &Vol);
+
+protected:
+    /// Generate the PSF for a single plane according to a ideal lens.
+    void generatePSFIdealLens(MultidimArray<double> &PSFi);
 };
 
 /// Generate the quadratic phase distribution of a ideal lens

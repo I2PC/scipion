@@ -26,6 +26,42 @@
 #include "psf_xr.h"
 
 
+/* Definition of command line parameters
+ */
+void XRayPSF::defineParams(XmippProgram * program)
+{
+    program->addParamsLine(" [-file <psf_param_file>]       : Read X-ray psf parameters from file.");
+    program->addParamsLine(" [-lambda <v=2.43>]             : X-ray wavelength (nm).");
+    program->addParamsLine(" [-out_width <deltaR=40>]       : Outermost zone width of the X-ray Fresnel lens (nm).");
+    program->addParamsLine(" [-zones <N=560>]               : Number of zones of the X-ray Fresnel lens.");
+    program->addParamsLine(" [-mag <Ms=2304>]               : Magnification of the X-ray microscope.");
+    program->addParamsLine(" [-sampling <dxy=10> <dz=0>]    : Sampling rate in X-Y plane and Z axis.");
+    program->addParamsLine(" [-zshift <deltaZ=0>]           : Longitudinal displacement along Z axis in microns.");
+    program->addParamsLine(" [-size <sizeX> <sizeY=0> <sizeZ=0>]: Size of the X-ray PSF volume.");
+}
+
+/* Read params
+ */
+void XRayPSF::readParams(XmippProgram * program)
+{
+    lambda  = program->getDoubleParam("-lambda")*1e-9;
+    deltaR  = program->getDoubleParam("-out_width")*1e-9;
+    Nzp     = program->getDoubleParam("-zones");
+    Ms      = program->getDoubleParam("-mag");
+    dxo     = program->getDoubleParam("-sampling",0)*1e-9;
+    dzo     = program->getDoubleParam("-sampling",1)*1e-9;
+    if (dzo == 0)
+        dzo = dxo;
+    DeltaZo = program->getDoubleParam("-zshift")*1e-6;
+    Nox     = program->getDoubleParam("-size",0);
+    Noy     = (double) program->getIntParam("-size",1);
+    if (Noy == 0.)
+        Noy == Nox;
+    Noz     = (double) program->getIntParam("-size",2);
+    if (Noz == 0.)
+        Noz == Nox;
+}
+
 /* Read -------------------------------------------------------------------- */
 void XRayPSF::read(const FileName &fn)
 {
@@ -41,32 +77,44 @@ void XRayPSF::read(const FileName &fn)
         MetaData MD;
         MD.read(fn);
 
+        FileName fnPSF;
+        if (MD.getValue(MDL_IMAGE,fnPSF))
+        {
+            mode = PSF_FROM_FILE;
+            PSF.read(fnPSF);
+            Nox = XSIZE(PSF());
+            Noy = YSIZE(PSF());
+            Noz = ZSIZE(PSF());
+        }
+        else
+        {
+            std::vector<double> dimV;
+            if (!MD.getValue(MDL_CTF_XRAY_DIMENSIONS,dimV))
+                REPORT_ERROR(ERR_ARG_MISSING, MDL::label2Str(MDL_CTF_XRAY_DIMENSIONS) + " argument not present.");
+            Nox = dimV[0];
+            Noy = dimV[1];
+            Noz = dimV[2];
+        }
         if (!MD.getValue(MDL_CTF_XRAY_LAMBDA,lambda))
-            lambda = 2.43;
+            REPORT_ERROR(ERR_ARG_MISSING, MDL::label2Str(MDL_CTF_XRAY_LAMBDA) + " argument not present.");
         lambda *= 1e-9;
         if (!MD.getValue(MDL_CTF_XRAY_OUTER_ZONE_WIDTH,deltaR))
-            deltaR = 40;
+            REPORT_ERROR(ERR_ARG_MISSING, MDL::label2Str(MDL_CTF_XRAY_OUTER_ZONE_WIDTH) + " argument not present.");
         deltaR *= 1e-9;
         if (!MD.getValue(MDL_CTF_XRAY_ZONES_NUMBER,Nzp))
-            Nzp = 560;
+            REPORT_ERROR(ERR_ARG_MISSING, MDL::label2Str(MDL_CTF_XRAY_ZONES_NUMBER) + " argument not present.");
         if (!MD.getValue(MDL_CTF_XRAY_MAGNIFICATION,Ms))
-            Ms = 2304;
+            REPORT_ERROR(ERR_ARG_MISSING, MDL::label2Str(MDL_CTF_XRAY_MAGNIFICATION) + " argument not present.");
         if (!MD.getValue(MDL_CTF_SAMPLING_RATE,dxo))
-            dxo = 10;
+            REPORT_ERROR(ERR_ARG_MISSING, MDL::label2Str(MDL_CTF_SAMPLING_RATE) + " argument not present.");
         dxo *= 1e-9;
         if (!MD.getValue(MDL_CTF_SAMPLING_RATE_Z,dzo))
-            dzo = 10;
+            REPORT_ERROR(ERR_ARG_MISSING, MDL::label2Str(MDL_CTF_SAMPLING_RATE_Z) + " argument not present.");
         dzo *= 1e-9;
         if (!MD.getValue(MDL_CTF_LONGITUDINAL_DISPLACEMENT,DeltaZo))
-          DeltaZo = 0;
+            REPORT_ERROR(ERR_ARG_MISSING, MDL::label2Str(MDL_CTF_LONGITUDINAL_DISPLACEMENT) + " argument not present.");
         DeltaZo *= 1e-6;
 
-        std::vector<double> dimV;
-        if (!MD.getValue(MDL_CTF_XRAY_DIMENSIONS,dimV))
-          dimV.assign(0,0);
-        Nox = dimV[0];
-        Noy = dimV[1];
-        Noz = dimV[2];
 
     }
     else
@@ -105,13 +153,35 @@ void XRayPSF::read(const FileName &fn)
 /* Write ------------------------------------------------------------------- */
 void XRayPSF::write(const FileName &fn)
 {
-    std::ofstream fh_param;
-    fh_param.open(fn.c_str());
-    if (!fh_param)
-        REPORT_ERROR(ERR_IO_NOTOPEN, (std::string)"Xmipp_CTF::write: Cannot open " + fn +
-                     " for output");
-    fh_param << *this << std::endl;
-    fh_param.close();
+    //    std::ofstream fh_param;
+    //    fh_param.open(fn.c_str());
+    //    if (!fh_param)
+    //        REPORT_ERROR(ERR_IO_NOTOPEN, (std::string)"Xmipp_CTF::write: Cannot open " + fn +
+    //                     " for output");
+    //    fh_param << *this << std::endl;
+    //    fh_param.close();
+
+    MetaData MD;
+    MD.setColumnFormat(false);
+    MD.addObject();
+
+    FileName fnPSF = fn.withoutExtension().addExtension("vol");
+    MD.setValue(MDL_IMAGE, fnPSF);
+    MD.setValue(MDL_CTF_XRAY_LAMBDA,lambda*1e9);
+    MD.setValue(MDL_CTF_XRAY_OUTER_ZONE_WIDTH,deltaR*1e9);
+    MD.setValue(MDL_CTF_XRAY_ZONES_NUMBER,Nzp);
+    MD.setValue(MDL_CTF_XRAY_MAGNIFICATION,Ms);
+    MD.setValue(MDL_CTF_SAMPLING_RATE,dxo*1e9);
+    MD.setValue(MDL_CTF_SAMPLING_RATE_Z,dzo*1e9);
+    MD.setValue(MDL_CTF_LONGITUDINAL_DISPLACEMENT,DeltaZo*1e6);
+    std::vector<double> dimV(3);
+    dimV[0] = Nox;
+    dimV[1] = Noy;
+    dimV[2] = Noz;
+    MD.setValue(MDL_CTF_XRAY_DIMENSIONS,dimV);
+
+    MD.write(fn);
+    PSF.write(fnPSF);
 }
 
 /* Usage ------------------------------------------------------------------- */
@@ -163,6 +233,7 @@ void XRayPSF::show()
 /* Default values ---------------------------------------------------------- */
 void XRayPSF::clear()
 {
+    mode = GENERATE_PSF;
     lambda = 2.43e-9;
     //    Flens = 1.4742e-3;
     deltaR = 40e-9;
@@ -196,82 +267,94 @@ void XRayPSF::produceSideInfo()
 /* Generate the Intensity PSF for a specific XR microscope configuration     ------------- */
 /* Generate OTF Image ------------------------------------------------------ */
 
-void XRayPSF::generateOTF(MultidimArray<std::complex<double> > &Im)
+void XRayPSF::generatePSFIdealLens(MultidimArray<double> &PSFi)
 {
-    MultidimArray<double> I2(Im.ydim,Im.xdim);
-    generateOTF(I2);
-}
-
-void XRayPSF::generateOTF(MultidimArray<double> &Im)
-{
-    //#define DEBUG
-    /// REMEMBER TO INCLUDE AND/OR ANALYZE THE MINIMUM RESOLUTION CONDITION !!!! ////
-
-
-    //    double Nx = Im.xdim, Ny = Im.ydim;
     double focalEquiv = 1/(1/Z - 1/Zo); // inverse of defocus = 1/Z - 1/Zo
-    //    double dxl = lambda*Zi / (Nx * dxi); // Pixel X-size en the plane of lens aperture
-    //    double dyl = lambda*Zi / (Ny * dxi); // Pixel Y-size en the plane of lens aperture
 
-
-    //#ifdef DEBUG
-    //
-    //    std::cout << std::endl;
-    //    std::cout << "XRayPSF::GenerateOTF - Parameters:" << std::endl;
-    //    std::cout << "Nx = " << Nx << "   Ny = " << Ny << std::endl;
-    //    std::cout << "dxl = " << dxl << "   dyl = " << dyl << std::endl;
-    //    std::cout << "Equivalent focal = " << focalEquiv << std::endl;
-    //    std::cout << "Discrete X-Radius in pixels = " << Rlens / dxl  << std::endl;
-    //    std::cout << "Discrete Y-Radius in pixels = " << Rlens / dyl  << std::endl;
-    //    std::cout << std::endl;
-    //#endif
-
-    MultidimArray< std::complex<double> > OTFTemp(Niy, Nix), PSFi;
+    MultidimArray< std::complex<double> > OTFTemp(Niy, Nix), PSFiTemp;
     //    Mask_Params mask_prm; TODO do we have to include masks using this method?
 
     lensPD(OTFTemp, focalEquiv, lambda, dxl, dyl);
-
-    //    OTFTemp.window(-128,-128,127,255,10);
-
 
     FOR_ALL_ELEMENTS_IN_ARRAY2D(OTFTemp)
     {
         if (sqrt(double(i*i)*dyl*dyl + double(j*j)*dxl*dxl) > Rlens)
             OTFTemp(i,j)=0;
-        //        if (sqrt(double(i*i)+ double(j*j)) > 64) OTFTemp(i,j)=0;
     }
 
+    //#define DEBUG
 #ifdef DEBUG
     Image<double> _Im;
     _Im().resize(OTFTemp);
     FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY2D(OTFTemp)
     dAij(_Im(),i,j) = abs(dAij(OTFTemp,i,j));
-    _Im.write("psfxr-lens.spi");
+    _Im.write("abs_lens.spi");
 #endif
 
     FourierTransformer transformer;
-    transformer.FourierTransform(OTFTemp, PSFi, false);
-    //    CenterOriginFFT(PSFi, 1);
+    transformer.FourierTransform(OTFTemp, PSFiTemp, false);
     double norm=0;
 
-    //     FOR_ALL_ELEMENTS_IN_ARRAY2D(LPDFT)
+    PSFi.resizeNoCopy(PSFiTemp);
+
+#ifdef DEBUG
+
+    _Im.data.resizeNoCopy(PSFiTemp);
+    CenterOriginFFT(PSFiTemp,0);
+    FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(PSFiTemp)
+    DIRECT_MULTIDIM_ELEM(_Im.data,n) = abs(DIRECT_MULTIDIM_ELEM(PSFiTemp,n));
+    _Im.write("psfitemp.spi");
+#endif
+
     FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(PSFi)
     {
-        PSFi.data[n] = abs(PSFi.data[n]);
-        PSFi.data[n] *= PSFi.data[n];
-        norm +=  PSFi.data[n].real();
+        DIRECT_MULTIDIM_ELEM(PSFi,n) = abs(DIRECT_MULTIDIM_ELEM(PSFiTemp,n));
+        DIRECT_MULTIDIM_ELEM(PSFi,n) *= DIRECT_MULTIDIM_ELEM(PSFi,n);
+        norm += DIRECT_MULTIDIM_ELEM(PSFi,n);
     }
     FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(PSFi)
     {
-        PSFi.data[n] /= norm;
+        DIRECT_MULTIDIM_ELEM(PSFi,n) /= norm;
     }
+
+
+#ifdef DEBUG
 
     transformer.inverseFourierTransform();
 
-    OTF.resize(OTFTemp.ydim, OTFTemp.xdim/2+1);
+    CenterOriginFFT(OTFTemp,0);
+    FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(OTFTemp)
+    {
+        DIRECT_MULTIDIM_ELEM(_Im.data,n) = abs(DIRECT_MULTIDIM_ELEM(OTFTemp,n));
+    }
+    _Im.write("otftemp.spi");
 
-    FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY2D(OTF)
-    dAij(OTF,i,j) = dAij(OTFTemp,i,j);
+    _Im.data.alias(PSFi);
+    _Im.write("psfi.spi");
+#endif
+#undef DEBUG
+}
+
+void XRayPSF::generateOTF()
+{
+
+    MultidimArray<double> PSFi;
+
+    generatePSFIdealLens(PSFi);
+
+    //    MultidimArray< std::complex<double> > OTFTemp;
+    //    OTFTemp.resizeNoCopy(PSFi);
+
+    OTF.resizeNoCopy(PSFi.ydim, PSFi.xdim/2+1);
+
+    FourierTransformer transformer;
+    transformer.FourierTransform(PSFi, OTF, false);
+
+    //    transformer.inverseFourierTransform();
+    //
+    //
+    //    FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY2D(OTF)
+    //    dAij(OTF,i,j) = dAij(OTFTemp,i,j);
 
 
 
@@ -299,11 +382,17 @@ void XRayPSF::generateOTF(MultidimArray<double> &Im)
 
 void XRayPSF::adjustParam(Image<double> &vol)
 {
-
-    produceSideInfo();
-
     Nox = vol().xdim;
     Noy = vol().ydim;
+    Noz = vol().zdim;
+
+    adjustParam();
+}
+
+void XRayPSF::adjustParam()
+{
+
+    produceSideInfo();
 
     dxl = lambda*Zi / (Nox * dxi); // Pixel X-size en the plane of lens aperture
     dyl = lambda*Zi / (Noy * dxi); // Pixel Y-size en the plane of lens aperture
@@ -318,8 +407,8 @@ void XRayPSF::adjustParam(Image<double> &vol)
     {
         std::cout << std::endl;
         std::cout << "XmippXRPSF::Param adjust:" << std::endl;
-        std::cout << "(Nox,Noy,Nz) = (" << Nox << "," << Noy << "," << vol().zdim << ")" << std::endl;
-        std::cout << "Larger volume Z plane = " << (ABS(DeltaZo)+vol().zdim/2*dzo)*1e6 << " um" << std::endl;
+        std::cout << "(Nox,Noy,Nz) = (" << Nox << "," << Noy << "," << Noz << ")" << std::endl;
+        std::cout << "Larger volume Z plane = " << (ABS(DeltaZo)+Noz/2*dzo)*1e6 << " um" << std::endl;
         std::cout << "Larger discrete Z plane (x,y) = (" << deltaZMaxX*1e6 << ", " << deltaZMaxY*1e6 << ") um" << std::endl;
     }
 
@@ -352,24 +441,24 @@ void XRayPSF::adjustParam(Image<double> &vol)
             Niy = ceil(pupileSizeMin * dxiMax/dxi);
             AdjustType = PSFXR_ZPAD;
         }
-        if (DeltaZo + vol().zdim/2*dzo > deltaZMaxX)
+        if (DeltaZo + Noz/2*dzo > deltaZMaxX)
         {
-            Nix = XMIPP_MAX(Nix,ceil(Zi*Rlens*2*ABS(DeltaZo+vol().zdim/2*dzo)/(Zo*dxi*(Zo+DeltaZo+vol().zdim/2*dzo))));
+            Nix = XMIPP_MAX(Nix,ceil(Zi*Rlens*2*ABS(DeltaZo+Noz/2*dzo)/(Zo*dxi*(Zo+DeltaZo+Noz/2*dzo))));
             AdjustType = PSFXR_ZPAD;
         }
-        if (DeltaZo - vol().zdim/2*dzo < deltaZMinX)
+        if (DeltaZo - Noz/2*dzo < deltaZMinX)
         {
-            Nix = XMIPP_MAX(Nix,ceil(Zi*Rlens*2*ABS(DeltaZo-vol().zdim/2*dzo)/(Zo*dxi*(Zo+DeltaZo-vol().zdim/2*dzo))));
+            Nix = XMIPP_MAX(Nix,ceil(Zi*Rlens*2*ABS(DeltaZo-Noz/2*dzo)/(Zo*dxi*(Zo+DeltaZo-Noz/2*dzo))));
             AdjustType = PSFXR_ZPAD;
         }
-        if (DeltaZo + vol().zdim/2*dzo > deltaZMaxY)
+        if (DeltaZo + Noz/2*dzo > deltaZMaxY)
         {
-            Niy = XMIPP_MAX(Niy,ceil(Zi*Rlens*2*ABS(DeltaZo+vol().zdim/2*dzo)/(Zo*dxi*(Zo+DeltaZo+vol().zdim/2*dzo))));
+            Niy = XMIPP_MAX(Niy,ceil(Zi*Rlens*2*ABS(DeltaZo+Noz/2*dzo)/(Zo*dxi*(Zo+DeltaZo+Noz/2*dzo))));
             AdjustType = PSFXR_ZPAD;
         }
-        if ( DeltaZo - vol().zdim/2*dzo < deltaZMinY)
+        if ( DeltaZo - Noz/2*dzo < deltaZMinY)
         {
-            Niy = XMIPP_MAX(Niy,ceil(Zi*Rlens*2*ABS(DeltaZo-vol().zdim/2*dzo)/(Zo*dxi*(Zo+DeltaZo-vol().zdim/2*dzo))));
+            Niy = XMIPP_MAX(Niy,ceil(Zi*Rlens*2*ABS(DeltaZo-Noz/2*dzo)/(Zo*dxi*(Zo+DeltaZo-Noz/2*dzo))));
             AdjustType = PSFXR_ZPAD;
         }
     }
@@ -392,6 +481,59 @@ void XRayPSF::adjustParam(Image<double> &vol)
     }
 
 
+}
+
+void XRayPSF::generatePSF(PsfType _type)
+{
+    type = _type;
+
+    produceSideInfo();
+
+    if (type == IDEAL_LENS)
+    {
+        adjustParam();
+        Nox = Nix;
+        Noy = Niy;
+    }
+
+    PSF().resizeNoCopy(Noz, Noy, Nox);
+    PSF().setXmippOrigin();
+
+    MultidimArray<double> PSFi;
+    int k2;
+
+    init_progress_bar(ZSIZE(PSF()));
+
+    for (int k = STARTINGZ(PSF.data); k <= FINISHINGZ(PSF.data); k++)
+    {
+        Z = Zo + DeltaZo + k*dzo;
+
+        switch (type)
+        {
+        case IDEAL_LENS:
+            {
+                generatePSFIdealLens(PSFi);
+                break;
+            }
+        case ANALITIC_ZP:
+            {
+                break;
+            }
+        }
+
+        PSFi.setXmippOrigin();
+
+        k2 = k-STARTINGZ(PSF.data);
+
+        FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY2D(PSFi)
+        {
+            dAkij(IMGMATRIX(PSF),k2,i,j) = dAij(PSFi,i,j);
+        }
+        progress_bar(k2);
+    }
+
+    progress_bar(ZSIZE(PSF()));
+    std::cout  << std::endl;
 }
 
 /* Generate the quadratic phase distribution of an ideal lens ------------- */

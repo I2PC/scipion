@@ -520,7 +520,7 @@ AddLibrary('XmippData', 'libraries/data', DataSources, ['#'],
 #Xmipp Python Extension
 PyExtSources = Glob('libraries/bindings/python', '*.cpp', [])
 import distutils.sysconfig
-AddLibrary('xmipp', 'libraries/bindings/python', PyExtSources, 
+AddLibrary('xmipp', 'libraries/bindings/python', PyExtSources,
            ['#libraries',"#", distutils.sysconfig.get_python_inc()],
            ['lib'],['XmippData'],'')
 
@@ -744,7 +744,6 @@ AddXmippProgram('phantom_transform', ['XmippRecons','XmippInterface'])
 AddXmippProgram('project', ['XmippRecons','XmippInterface'])
 AddXmippProgram('project_tomography', ['XmippRecons'])
 AddXmippProgram('projection_real_shears', ['XmippRecons'])
-AddXmippProgram('project_xr', ['XmippRecons'])
 AddXmippProgram('psd_enhance', ['XmippRecons'])
 AddXmippProgram('psd_sort', ['XmippRecons'])
 AddXmippProgram('range_adjust', ['XmippRecons'])
@@ -777,7 +776,8 @@ AddXmippProgram('virus_vertex', ['XmippRecons'])
 AddXmippProgram('volume_segment', ['XmippRecons'])
 AddXmippProgram('window')
 AddXmippProgram('xray_import', ['XmippRecons'])
-
+AddXmippProgram('xray_psf_create')
+AddXmippProgram('xray_project', ['XmippRecons'])
 
 # --- Scripts
 
