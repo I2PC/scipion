@@ -3152,8 +3152,7 @@ public:
         if (NZYXSIZE(*this) == 0)
             return;
 
-        T minval, maxval;
-        computeStats(avg0, stddev0, minval, maxval);
+        computeAvgStdev(avg0, stddev0);
 
         if (stddev0 != 0)
             a = stddevF / stddev0;

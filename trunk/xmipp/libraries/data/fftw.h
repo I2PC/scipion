@@ -441,8 +441,14 @@ void correlation_matrix(const MultidimArray< T > & m1,
 
     // Multiply FFT1 * FFT2'
     double dSize=MULTIDIM_SIZE(R);
+    std::complex<double> aux;
     FOR_ALL_ELEMENTS_IN_ARRAY3D(FFT1)
-        A3D_ELEM(FFT1,k, i, j) *= dSize * conj(A3D_ELEM(FFT2,k, i, j));
+    {
+    	aux=A3D_ELEM(FFT2,k, i, j);
+    	aux.imag()*=-1;
+    	aux*=dSize;
+        A3D_ELEM(FFT1,k, i, j) *= aux;
+    }
 
     // Invert the product, in order to obtain the correlation image
     transformer1.inverseFourierTransform();

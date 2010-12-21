@@ -229,15 +229,20 @@ double correlation(const MultidimArray< T >& x,
 
     long N = 0;
     for (k = 0; k < Slices; k++)
+    {
+        kp = k - q;
+        if (kp < 0 || kp >= Slices)
+        	continue;
         for (i = 0; i < Rows; i++)
+        {
+            ip = i - l;
+            if (ip < 0 || ip >= Rows)
+            	continue;
             for (j = 0; j < Cols; j++)
             {
-                ip = i - l;
                 jp = j - m;
-                kp = k - q;
 
-                if (ip >= 0 && ip < Rows && jp >= 0 && jp < Cols && kp >= 0 &&
-                    kp < Slices)
+                if (kp >= 0 && kp < Slices)
                 {
                     if (mask != NULL)
                         if (!DIRECT_A3D_ELEM((*mask), k, i, j))
@@ -248,6 +253,8 @@ double correlation(const MultidimArray< T >& x,
                     N++;
                 }
             }
+        }
+    }
 
     return retval / N;
 }
