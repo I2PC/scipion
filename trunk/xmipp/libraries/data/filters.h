@@ -242,7 +242,7 @@ double correlation(const MultidimArray< T >& x,
             {
                 jp = j - m;
 
-                if (kp >= 0 && kp < Slices)
+                if (jp >= 0 && jp < Cols)
                 {
                     if (mask != NULL)
                         if (!DIRECT_A3D_ELEM((*mask), k, i, j))
