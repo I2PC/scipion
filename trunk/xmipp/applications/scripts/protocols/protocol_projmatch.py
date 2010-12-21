@@ -329,9 +329,9 @@ ScaleStep='1'
 
 # Number of scale steps
 """ Number of scale steps.
-    With default values (ScaleStep='1' and ScaleNumberOfSteps='3'): 1 ±0.01 | ±0.02 | ±0.03.    
+    With default values (ScaleStep='1' and ScaleNumberOfSteps='3'): 1 +/-0.01 | +/-0.02 | +/-0.03.    
     With values ScaleStep='2' and ScaleNumberOfSteps='4' it performs a scale search over:
-     1 ±0.02 | ±0.04 | ±0.06 | ±0.08.    
+     1 +/-0.02 | +/-0.04 | +/-0.06 | +/-0.08.    
 """    
 ScaleNumberOfSteps='3'
 
