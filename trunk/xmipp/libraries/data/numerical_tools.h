@@ -128,7 +128,7 @@ public:
         {
             double aux=x*ixstep;
             int iaux=ROUND(aux);
-            return DIREC_A1D_ELEM(v,iaux);
+            return DIRECT_A1D_ELEM(v,iaux);
         }
     }
 };
