@@ -497,7 +497,7 @@ public:
         {
             // take varying sampling into account
             w = (twopi * ring_radius[i]) / (double) XSIZE(rings[i]);
-            MultidimArray<T> &rings_i=rings[i];
+            const MultidimArray<T> &rings_i=rings[i];
             for (int j = 0; j < XSIZE(rings_i); j++)
             {
                 aux = DIRECT_A1D_ELEM(rings_i,j);
@@ -529,7 +529,7 @@ public:
         for (int i = 0; i < imax; i++)
         {
             // take varying sampling into account
-        	MultidimArray<T> &rings_i=rings[i];
+        	const MultidimArray<T> &rings_i=rings[i];
             w = (twopi * ring_radius[i]) / (double) XSIZE(rings_i);
             for (int j = 0; j < XSIZE(rings_i); j++)
             {
