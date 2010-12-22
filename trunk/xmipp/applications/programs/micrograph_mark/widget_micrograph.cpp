@@ -1106,7 +1106,10 @@ void AutoParticlePicking::produceFeatures(
     int vec_size=0;
     for (int i=0; i<particles.size(); i++)
         if (particles[i].size()!=0)
+        {
             vec_size=(particles[i][0].vec).size();
+            break;
+        }
 
     for(int j = 0; j < __classNo; j++)
     {
