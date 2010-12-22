@@ -7,6 +7,10 @@ SCRIPT=`readlink -f $0`
 SCRIPTPATH=`dirname $SCRIPT`
 XMIPP_BASE="$SCRIPTPATH/../.."
 
+if [ -e $SCRIPTPATH/jvm ]; then 
+    exit 0
+fi
+
 # Which is our OS?
 case "$(uname -s)" in
 Darwin)
