@@ -289,6 +289,8 @@ void applyGeometry(int SplineDegree,
         int cen_x, cen_y, cen_xp, cen_yp;
         double wx, wy;
         int Xdim, Ydim;
+        double Aref00=MAT_ELEM(Aref,0,0);
+        double Aref10=MAT_ELEM(Aref,1,0);
 
         if (outside != 0.)
         {
@@ -464,8 +466,8 @@ void applyGeometry(int SplineDegree,
                 }
 
                 // Compute new point inside input image
-                xp += MAT_ELEM(Aref, 0, 0);
-                yp += MAT_ELEM(Aref, 1, 0);
+                xp += Aref00;
+                yp += Aref10;
             }
         }
     }
@@ -477,6 +479,9 @@ void applyGeometry(int SplineDegree,
         double minxp, minyp, maxxp, maxyp, minzp, maxzp;
         int cen_x, cen_y, cen_z, cen_xp, cen_yp, cen_zp;
         double wx, wy, wz;
+        double Aref00=MAT_ELEM(Aref,0,0);
+        double Aref10=MAT_ELEM(Aref,1,0);
+        double Aref20=MAT_ELEM(Aref,2,0);
 
         // Find center of MultidimArray
         cen_z = (int)(V2.zdim / 2);
@@ -699,9 +704,9 @@ void applyGeometry(int SplineDegree,
                         dAkij(V2, k, i, j) = outside;
 
                     // Compute new point inside input image
-                    xp += MAT_ELEM(Aref, 0, 0);
-                    yp += MAT_ELEM(Aref, 1, 0);
-                    zp += MAT_ELEM(Aref, 2, 0);
+                    xp += Aref00;
+                    yp += Aref10;
+                    zp += Aref20;
                 }
             }
     }
