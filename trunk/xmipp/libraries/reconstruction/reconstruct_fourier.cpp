@@ -29,22 +29,24 @@
 
 // Read arguments ==========================================================
 void ProgRecFourier::readParams()
-	{
-		fn_sel = getParam("-i");
-		if(checkParam("--doc")) fn_doc = getParam("--doc");
-		fn_out = getParam("-o");
-		fn_sym = getParam("--sym");
-		if(checkParam("--prepare_fsc")) fn_fsc = getParam("--prepare_fsc");
-		do_weights = checkParam("--weight");
-		padding_factor_proj = getDoubleParam("--pad_proj");
-		padding_factor_vol = getDoubleParam("--pad_vol");
-		blob.radius   = getDoubleParam("-r");
-		blob.order    = getDoubleParam("-m");
-		blob.alpha    = getDoubleParam("-a");
-		maxResolution = getDoubleParam("--max_resolution");
-		numThreads = getDoubleParam("--thr");
-		thrWidth = getDoubleParam("--thr_width");
-	}
+{
+    fn_sel = getParam("-i");
+    if(checkParam("--doc"))
+        fn_doc = getParam("--doc");
+    fn_out = getParam("-o");
+    fn_sym = getParam("--sym");
+    if(checkParam("--prepare_fsc"))
+        fn_fsc = getParam("--prepare_fsc");
+    do_weights = checkParam("--weight");
+    padding_factor_proj = getDoubleParam("--pad_proj");
+    padding_factor_vol = getDoubleParam("--pad_vol");
+    blob.radius   = getDoubleParam("-r");
+    blob.order    = getDoubleParam("-m");
+    blob.alpha    = getDoubleParam("-a");
+    maxResolution = getDoubleParam("--max_resolution");
+    numThreads = getDoubleParam("--thr");
+    thrWidth = getDoubleParam("--thr_width");
+}
 
 
 // Define params
@@ -56,21 +58,21 @@ void ProgRecFourier::defineParams()
     addUsageLine("Example of use: Reconstruction enforcing i3 symmetry and using stored weights");
     addUsageLine("   xmipp_reconstruct_fourier  -i reconstruction.sel --sym i3 --weight");
 
-    addParamsLine("   -i <sel_file>              		: Selection file with input images");
+    addParamsLine("   -i <sel_file>                : Selection file with input images");
     addParamsLine("  [-o <out_vol=\"rec_fourier.vol\">]  : Filename for output volume");
-    addParamsLine("  [--sym <symfile=c1>]            		: Enforce symmetry in projections");
-    addParamsLine("  [--pad_proj <p=2.0>]         		: Projection padding factor");
-    addParamsLine("  [--pad_vol  <p=2.0>]         		: Volume padding factor");
-    addParamsLine("  [--prepare_fsc <fscfile>]    		: Filename root for FSC files");
-    addParamsLine("  [--doc <docfile> ]          		: Ignore headers and get angles from this docfile");
-    addParamsLine("  [--max_resolution <p=0.5>]   		: Max resolution (Nyquist=0.5)");
-    addParamsLine("  [--weight]                   		: Use weights stored in the image headers or doc file");
-    addParamsLine("  [--thr <threads=1>]          		: Number of concurrent threads");
-    addParamsLine("  [--thr_width <width=1>] 			: Number of image rows processed at a time by a thread");
+    addParamsLine("  [--sym <symfile=c1>]              : Enforce symmetry in projections");
+    addParamsLine("  [--pad_proj <p=2.0>]           : Projection padding factor");
+    addParamsLine("  [--pad_vol  <p=2.0>]           : Volume padding factor");
+    addParamsLine("  [--prepare_fsc <fscfile>]      : Filename root for FSC files");
+    addParamsLine("  [--doc <docfile> ]            : Ignore headers and get angles from this docfile");
+    addParamsLine("  [--max_resolution <p=0.5>]     : Max resolution (Nyquist=0.5)");
+    addParamsLine("  [--weight]                     : Use weights stored in the image headers or doc file");
+    addParamsLine("  [--thr <threads=1>]            : Number of concurrent threads");
+    addParamsLine("  [--thr_width <width=1>]    : Number of image rows processed at a time by a thread");
     //addParamsLine("Interpolation Function");
-    addParamsLine("  [-r <blrad=1.9>]                	: blob radius in pixels");
-    addParamsLine("  [-m <blord=0>]                  	: order of Bessel function in blob");
-    addParamsLine("  [-a <blalpha=15>]               	: blob parameter alpha");
+    addParamsLine("  [-r <blrad=1.9>]                 : blob radius in pixels");
+    addParamsLine("  [-m <blord=0>]                   : order of Bessel function in blob");
+    addParamsLine("  [-a <blalpha=15>]                : blob parameter alpha");
 }
 
 
@@ -130,6 +132,7 @@ void ProgRecFourier::run()
         th_args[nt].parent = this;
         th_args[nt].myThreadID = nt;
         th_args[nt].docFile = new MetaData(DF);
+        th_args[nt].selFile = new MetaData(SF);
         pthread_create( (th_ids+nt) , NULL, processImageThread, (void *)(th_args+nt) );
     }
 
@@ -172,7 +175,7 @@ void ProgRecFourier::produceSideinfo()
     FileName fnImg;
     SF.getValue(MDL_IMAGE,fnImg);
     Image<double> I;
-    I.read(fnImg);
+    I.read(fnImg, false);
     int Ydim=YSIZE(I());
     int Xdim=XSIZE(I());
     if (Ydim!=Xdim)
@@ -287,6 +290,7 @@ void ProgRecFourier::get_angles_for_image(const FileName &fn, double &rot,
 
 void * ProgRecFourier::processImageThread( void * threadArgs )
 {
+
     ImageThreadParams * threadParams = (ImageThreadParams *) threadArgs;
     ProgRecFourier * parent = threadParams->parent;
     barrier_t * barrier = &(parent->barrier);
@@ -307,7 +311,8 @@ void * ProgRecFourier::processImageThread( void * threadArgs )
 
     MetaData * docFile = threadParams->docFile;
     std::vector<long int> objId;
-    parent->SF.findObjects(objId);
+
+    threadParams->selFile->findObjects(objId);
 
     do
     {
@@ -317,12 +322,13 @@ void * ProgRecFourier::processImageThread( void * threadArgs )
         {
         case PRELOAD_IMAGE:
             {
+
                 threadParams->read = 0;
 
                 if ( threadParams->imageIndex >= 0 )
                 {
                     FileName fn_img;
-                    parent->SF.getValue(MDL_IMAGE, fn_img, objId[threadParams->imageIndex] );
+                    threadParams->selFile->getValue(MDL_IMAGE, fn_img, objId[threadParams->imageIndex] );
 
                     // Read input image
                     double rot, tilt, psi, xoff,yoff,weight;
@@ -427,6 +433,7 @@ void * ProgRecFourier::processImageThread( void * threadArgs )
             return NULL;
         case PROCESS_WEIGHTS:
             {
+
                 // Get a first approximation of the reconstruction
                 double corr2D_3D=pow(parent->padding_factor_proj,2.)/
                                  (parent->imgSize* pow(parent->padding_factor_vol,3.));
@@ -447,11 +454,11 @@ void * ProgRecFourier::processImageThread( void * threadArgs )
                                 A3D_ELEM(parent->VoutFourier,k,i,j)=0;
 
                         }
-
                 break;
             }
         case PROCESS_IMAGE:
             {
+
                 MultidimArray< std::complex<double> > *paddedFourier = threadParams->paddedFourier;
                 int * statusArray = parent->statusArray;
 

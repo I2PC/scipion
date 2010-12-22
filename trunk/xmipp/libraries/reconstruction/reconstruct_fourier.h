@@ -77,6 +77,8 @@ struct ImageThreadParams
     MetaData * docFile;
     double weight;
     double localweight;
+
+    MetaData * selFile;
 };
 
 /** Fourier reconstruction parameters. */
