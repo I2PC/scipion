@@ -789,7 +789,7 @@ class projection_matching_class:
           import ctfdat
           myctfdat=ctfdat.ctfdat()
           myctfdat.read(_CTFDatName)
-          newctfdat=myctfdat.makeAbsPath()
+          newctfdat=myctfdat.make_abspath()
           self._CTFDatName=os.path.abspath(self._WorkingDir + '/' + _CTFDatName)
           newctfdat.write(self._CTFDatName)
 
@@ -1130,18 +1130,18 @@ def execute_ctf_groups (_mylog,
    print '*********************************************************************'
    print '* Make CTF groups'
    command=' -i '    + _InPutSelfile + \
-           ' -ctfdat ' + _CtfDatFile + \
+           ' --ctfdat ' + _CtfDatFile + \
            ' -o ' + CtfGroupDirectory + '/' + CtfGroupRootName + \
-           ' -wiener -wc ' + str(_WienerConstant) + \
-           ' -pad ' + str(_PaddingFactor)
+           ' --wiener --wc ' + str(_WienerConstant) + \
+           ' --pad ' + str(_PaddingFactor)
    if (_DataArePhaseFlipped):
-      command += ' -phase_flipped '
+      command += ' --phase_flipped '
    if (_DoAutoCtfGroup):
-      command += ' -error ' + str(_CtfGroupMaxDiff) + \
-                 ' -resol ' + str(_CtfGroupMaxResol)
+      command += ' --error ' + str(_CtfGroupMaxDiff) + \
+                 ' --resol ' + str(_CtfGroupMaxResol)
    else:
       if (len(_SplitDefocusDocFile) > 0):
-         command += ' -split ' + _SplitDefocusDocFile
+         command += ' --split ' + _SplitDefocusDocFile
       else:
          message = "Error: for non-automated ctf grouping, please provide a docfile!"
          print '* ',message
