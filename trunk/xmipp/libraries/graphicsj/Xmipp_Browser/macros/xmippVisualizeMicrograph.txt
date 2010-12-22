@@ -1,0 +1,6 @@
+// This macro allows to launch Xmipp Browser from command line
+// passing parameters to it.
+
+macro "XmippMicrograph" {
+    run("Xmipp Micrograph", getArgument);
+}

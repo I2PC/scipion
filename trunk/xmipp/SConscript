@@ -633,9 +633,9 @@ if int(env['java']):
     JAVA_HOME = 'external/java/jvm'
     os.system("external/java/install_jvm.sh")
     # Checks if jvm exists, otherwise the compilation will be halted if jvm is missing.
-    AddImageJPlugin('Xmipp_IO', 'libraries/graphicsj/Xmipp_IO', 'external/imagej/plugins')
-    AddImageJPlugin('Xmipp_Projections_Explorer', 'libraries/graphicsj/Xmipp_Projections_Explorer', 'external/imagej/plugins')
-    AddImageJPlugin('Xmipp_Browser', 'libraries/graphicsj/Xmipp_Browser', 'external/imagej/plugins')
+###    AddImageJPlugin('Xmipp_IO', 'libraries/graphicsj/Xmipp_IO', 'external/imagej/plugins')
+###    AddImageJPlugin('Xmipp_Projections_Explorer', 'libraries/graphicsj/Xmipp_Projections_Explorer', 'external/imagej/plugins')
+###    AddImageJPlugin('Xmipp_Browser', 'libraries/graphicsj/Xmipp_Browser', 'external/imagej/plugins')
     AddImageJPlugin('Xmipp_Tomo', 'libraries/graphicsj/Xmipp_Tomo', 'external/imagej/plugins')
     AddImageJExternalPlugins('libraries/graphicsj/plugins', 'external/imagej/plugins')
 
@@ -797,7 +797,7 @@ AddBatch('protocols', 'applications/scripts/protocols')
 AddBatch('gui', 'applications/scripts/protocols')
 AddBatch('showj', 'applications/scripts/showj','.sh')
 AddBatch('projections_explorerj', 'applications/scripts/projections_explorerj','.sh')
-#AddBatch('projections_viewerj', 'applications/scripts/projections_viewerj','.sh')
+AddBatch('visualize_preprocessing_micrographj', 'applications/scripts/visualize_preprocessing_micrograph','.sh')
 AddBatch('browserj', 'applications/scripts/browserj','.sh')
 # AddBatch('convert_tia2raw', 'applications/programs/convert_tia2raw')
 AddBatch('move_along_NMAmode', 'applications/scripts/move_along_NMAmode','.pl')
