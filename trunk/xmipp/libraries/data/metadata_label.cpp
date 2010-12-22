@@ -119,7 +119,7 @@ MDLabelType MDL::labelType(const String &labelName)
 
 std::map<String, MDLabel>& MDL::getLabelDict()
 {
-  return names;
+    return names;
 }
 
 
@@ -137,27 +137,27 @@ void MDObject::copy(const MDObject &obj)
     type = obj.type;
     if (type == LABEL_STRING)
     {
-      delete data.stringValue;
-      data.stringValue = new String(*(obj.data.stringValue));
+        delete data.stringValue;
+        data.stringValue = new String(*(obj.data.stringValue));
     }
     else if (type == LABEL_VECTOR)
     {
-      delete data.vectorValue;
+        delete data.vectorValue;
         data.vectorValue = new std::vector<double>(*(obj.data.vectorValue));
     }
     else
-      data = obj.data;
+        data = obj.data;
 }
 
 MDObject::MDObject(const MDObject & obj)
 {
-  data.doubleValue = 0;
+    data.doubleValue = 0;
     copy(obj);
 }
 MDObject & MDObject::operator = (const MDObject &obj)
 {
-  data.doubleValue = 0;
-  copy(obj);
+    data.doubleValue = 0;
+    copy(obj);
     return *this;
 }
 
@@ -185,6 +185,9 @@ inline void MDObject::labelTypeCheck(MDLabelType checkingType) const
         case LABEL_VECTOR:
             ss << "vector";
             break;
+        case LABEL_DOUBLE:
+            ss << "double";
+            break;
         default:
             ss << "weird: " << checkingType;
         }
@@ -207,7 +210,7 @@ MDObject::MDObject(MDLabel label)
             data.vectorValue = new std::vector<double>;
     }
     else
-    	type = LABEL_NOTYPE;
+        type = LABEL_NOTYPE;
 }
 ///Constructors for each Label supported type
 ///these constructor will do the labels type checking
@@ -444,10 +447,10 @@ bool MDObject::fromStream(std::istream &is)
 {
     if (label == MDL_UNDEFINED) //if undefine label, store as a literal string
     {
-    	String s;
-    	is >> s;
+        String s;
+        is >> s;
     }
-    	else
+    else
     {
         // int,bool and long are read as double for compatibility with old doc files
         double d;
