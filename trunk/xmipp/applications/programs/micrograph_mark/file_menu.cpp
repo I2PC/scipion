@@ -175,7 +175,7 @@ void QtFileMenu::loadCoords(const FileName &fn) {
     if (fn.find(".Common.pos")!=-1)
     	familyName="Common";
     else if (fn.find(".Common.auto.pos")!=-1)
-    	familyName="Auto";
+    	familyName="Common.auto";
     else
     	REPORT_ERROR(ERR_ARG_INCORRECT,(std::string)"Incorrect coordinate family for "+fn);
     emit signalAddFamily(familyName.c_str());
