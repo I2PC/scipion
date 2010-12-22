@@ -160,9 +160,7 @@ public class TomoController {
 			int nextProjection = 0;
 
 			if (window.isPlayLoop())
-				nextProjection = window.getModel().getCurrentProjection()
-						% (window.getModel().getNumberOfProjections())
-						+ window.getPlayDirection();
+				nextProjection = window.getModel().getNextProjection();
 			else {
 				if ( window.getModel().getCurrentProjection() == window.getModel().getNumberOfProjections())
 					window.setPlayDirection(-1);
@@ -170,7 +168,7 @@ public class TomoController {
 					window.setPlayDirection(1);
 				nextProjection = window.getModel().getCurrentProjection() + window.getPlayDirection();
 			}
-			window.getProjectionScrollbar().setValue(nextProjection);
+			window.setCurrentProjection(nextProjection);
 			try {
 				Thread.sleep(50);
 			} catch (InterruptedException ex) {
@@ -349,7 +347,55 @@ public class TomoController {
 		window.setPlugin(plugin);
 		runIjCmd(Command.BANDPASS, plugin);
 	}
+	
+	public void histogramEqualization() {
+		// convert to 8 bit
+		window.getModel().convertTo(8);
+		window.addUserAction(new UserAction(window.getWindowId(), "convertToByte"));
+		
+		// histogram equalization is an option of enhance contrast
+		// @todo: it may be better to use a custom dialog, so user does not need to check "Histogram Equalization" and "Normalize all"
+		Plugin plugin = new ContrastEnhancePlugin();
+		window.setPlugin(plugin);
+		runIjCmd(Command.ENHANCE_CONTRAST, plugin);
+		
+		// convert back to 32 bit
+		window.getModel().convertTo(32);
+		window.addUserAction(new UserAction(window.getWindowId(), "convertToFloat"));
+		
+		window.refreshImageCanvas();
+	}
+	
+	public void crop(){
+		window.protectWindow();
+		
+		runIjCmd("Crop");
+		
+		window.unprotectWindow();
+		// @todo: adjust viewPanel to new image size
+	}
 
+	
+	public void runIjCmd(String command) {
+
+		window.setChangeSaved(false);
+
+
+		WindowManager.setTempCurrentImage(window.getModel().getImage());
+		try {
+			IJ.run(command);
+		} catch (Exception ex) {
+			// catch java.lang.RuntimeException: Macro canceled
+			Xmipp_Tomo.debug("actionRunIjCmd - action canceled");
+			return;
+		}
+		window.refreshImageCanvas();
+
+		window.setStatus("Done");
+
+	}
+	
+	
 	public void runIjCmd(Command command, Plugin plugin) {
 		String label = command.getLabel();
 		String cmd = plugin.getCommand();
@@ -359,7 +405,8 @@ public class TomoController {
 
 		window.setChangeSaved(false);
 
-		(new Thread(new DialogCaptureThread(window))).start();
+		if(plugin != null)
+			(new Thread(new DialogCaptureThread(window))).start();
 
 		WindowManager.setTempCurrentImage(window.getModel().getImage());
 		try {
@@ -373,7 +420,8 @@ public class TomoController {
 
 		window.setStatus("Done");
 
-		window.addUserAction(new UserAction(window.getWindowId(), cmd, window
+		if(plugin != null)
+			window.addUserAction(new UserAction(window.getWindowId(), cmd, window
 				.getPlugin()));
 
 		window.setPlugin(null);
@@ -436,5 +484,9 @@ public class TomoController {
 	
 	public void normalize(){
 		window.getModel().normalize();
+	}
+	
+	public void discardProjection(){
+		window.getModel().discardCurrentProjection();
 	}
 }

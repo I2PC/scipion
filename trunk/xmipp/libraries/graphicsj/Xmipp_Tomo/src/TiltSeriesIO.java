@@ -270,9 +270,9 @@ public class TiltSeriesIO {
 	}
 
 	/**
-	 * Actions required after reading 1 image
+	 * Actions required after reading 1 ImagePlusC
 	 * 
-	 * @param model
+	 * @param model where the postprocessed data is saved
 	 * @param img
 	 */
 	private void postReadImage(TomoData model, ImagePlusC img) {

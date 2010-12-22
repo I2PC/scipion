@@ -25,24 +25,21 @@
 
 import ij.IJ;
 import ij.ImagePlus;
+import ij.ImageStack;
 import ij.WindowManager;
 import ij.gui.DialogListener;
 import ij.gui.GenericDialog;
 import ij.gui.ImageCanvas;
 import ij.gui.ImageLayout;
 import ij.gui.ImageWindow;
-import ij.io.SaveDialog;
+import ij.gui.Roi;
 
 import java.awt.*;
 import java.awt.event.*;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
-import java.io.FileNotFoundException;
-import java.io.IOException;
 import java.util.Hashtable;
 import java.util.LinkedList;
-
-import javax.swing.Action;
 import javax.swing.BorderFactory;
 import javax.swing.BoxLayout;
 import javax.swing.ImageIcon;
@@ -55,7 +52,6 @@ import javax.swing.JTabbedPane;
 import javax.swing.JTextField;
 import javax.swing.Timer;
 import javax.swing.UIManager;
-import javax.swing.border.Border;
 import javax.swing.plaf.FontUIResource;
 
 /**
@@ -109,6 +105,7 @@ public class TomoWindow extends ImageWindow implements WindowListener,
 			add(Command.SAVE);
 			add(Command.DEFINE_TILT);
 			add(Command.MEASURE);
+			add(Command.DISCARD_PROJECTION);
 		}
 	};
 
@@ -120,6 +117,8 @@ public class TomoWindow extends ImageWindow implements WindowListener,
 			add(Command.ENHANCE_CONTRAST);
 			add(Command.GAMMA_CORRECTION);
 			add(Command.BANDPASS);
+			add(Command.HISTOGRAM_EQUALIZATION);
+			add(Command.CROP);
 			add(Command.APPLY);
 		}
 	};
@@ -145,12 +144,15 @@ public class TomoWindow extends ImageWindow implements WindowListener,
 			//add(Command.SAVE);
 			add(Command.NORMALIZE_SERIES);
 			add(Command.DEFINE_TILT);
+			add(Command.DISCARD_PROJECTION);
 			add(Command.GAUSSIAN);
 			add(Command.MEDIAN);
 			add(Command.SUB_BACKGROUND);
 			add(Command.ENHANCE_CONTRAST);
 			add(Command.GAMMA_CORRECTION);
 			add(Command.BANDPASS);
+			add(Command.HISTOGRAM_EQUALIZATION);
+			add(Command.CROP);
 			// disabled until native writing (using Xmipp library) is implemented
 			// add(Command.APPLY);
 			add(Command.PRINT_WORKFLOW);
@@ -187,6 +189,9 @@ public class TomoWindow extends ImageWindow implements WindowListener,
 	// window identifier - useful when you've got more than 1 window
 	private int windowId = -1;
 	private TomoController controller;
+	
+	// for protectWindow
+	private Roi tempRoi;
 
 	/* Window GUI components */
 	/* 4 main panels */
@@ -825,6 +830,11 @@ public class TomoWindow extends ImageWindow implements WindowListener,
 		return animation.charAt(i % animation.length());
 	}
 
+	public void setCurrentProjection(int i){
+		// not very elegant... maybe it'd be better to change the model and then propagate to viewers with firePropertyChange
+		getProjectionScrollbar().setValue(i);
+	}
+	
 	void setCursorLocation(int x, int y) {
 		cursorLocation.setLocation(x, y);
 	}
@@ -884,7 +894,7 @@ public class TomoWindow extends ImageWindow implements WindowListener,
 		if (getModel() != null)
 			title = title + " > " + getModel().getFileName() + " ("
 					+ getModel().getOriginalWidth() + "x" + getModel().getOriginalHeight()
-					+ ")";
+					+ ")," + getModel().getBitDepth() + "bits";
 		
 		return title;
 	}
@@ -1191,5 +1201,18 @@ public class TomoWindow extends ImageWindow implements WindowListener,
 	 */
 	public void setPlayDirection(int playDirection) {
 		this.playDirection = playDirection;
+	}
+	
+	/**
+	 * Avoid the image popping out to a new Image Window
+	 * Remember to call unprotect after performing operations
+	 */
+	public void protectWindow(){
+		//tempRoi=getImagePlus().getRoi();
+		getImagePlus().setWindow(null);
+	}
+	
+	public void unprotectWindow(){
+		getImagePlus().setWindow(this);
 	}
 }

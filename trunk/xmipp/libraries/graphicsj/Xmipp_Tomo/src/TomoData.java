@@ -25,7 +25,9 @@
 
 import ij.ImagePlus;
 import ij.ImageStack;
+import ij.WindowManager;
 import ij.process.ImageProcessor;
+import ij.process.StackConverter;
 
 import java.awt.Component;
 import java.io.File;
@@ -86,7 +88,7 @@ public class TomoData extends Component {
 	private ImagePlus imp=null;
 	private TomoWindow window;
 
-	// by now use a vector to store the angles
+	// by now use a vector to store the angles - indexes can be 0..N-1
 	java.util.List <Float> tiltAngles=null;
 	
 	// This class also saves the models of the texfields of its views, one Document per textfield
@@ -115,6 +117,10 @@ public class TomoData extends Component {
 		return tiltTextModel;
 	}
 	
+	public int getBitDepth(){
+		return getImage().getBitDepth();
+	}
+	
 	
 	/**
 	 * @return range 1..numberProjections
@@ -136,7 +142,11 @@ public class TomoData extends Component {
 		
 		this.currentProjection = currentProjection;
 		// update all things depending on current projection/slice
-		getImage().setSlice(getCurrentProjection());
+		try{
+			getImage().setSlice(getCurrentProjection());
+		} catch (IllegalArgumentException ex){
+			Xmipp_Tomo.debug("setCurrentProjection - ", ex);
+		}
 		Float tilt=getCurrentTilt();
 		if(tilt != null)
 			setTiltText(tilt);
@@ -244,6 +254,12 @@ public class TomoData extends Component {
 			setTiltText(t);
 	}
 	
+	public void deleteTiltAngle(int i){
+		if(getTiltAngles() != null)
+			if( (i < getTiltAngles().size()) && (i> 1))
+				getTiltAngles().remove(i-1);
+	}
+	
 	// prepare tilt angles array for later manual setting
 	/* public void emptyTiltAngles(int count){
 		tiltAngles=new Vector<Float> (count);
@@ -252,6 +268,13 @@ public class TomoData extends Component {
 	// there may be no tilts defined - change tilt to Float (so it can handle nulls)
 	private float getInitialTilt(){
 		return getCurrentTilt();
+	}
+	/**
+	 * 
+	 * @return 1..N, cyclic (next to last is 1)
+	 */
+	public int getNextProjection(){
+		return (getCurrentProjection() % getNumberOfProjections()) + 1;
 	}
 	
 	/**
@@ -262,9 +285,10 @@ public class TomoData extends Component {
 	}
 	
 	private void setNumberOfProjections(int n){
-		if(n > 1)
-			firePropertyChange(Properties.NUMBER_OF_PROJECTIONS.name(), numberOfProjections, n);
+		int oldNumberOfProjections=numberOfProjections;
 		numberOfProjections=n;
+		if(n > 1)
+			firePropertyChange(Properties.NUMBER_OF_PROJECTIONS.name(), oldNumberOfProjections, n);
 
 	}
 	
@@ -431,6 +455,42 @@ public class TomoData extends Component {
 			setMin(min);
 		if(max > getMax())
 			setMax(max);
+	}
+	
+	public void discardCurrentProjection(){
+		if(getNumberOfProjections()>1){
+			int projectionToDelete=getCurrentProjection();
+			window.setCurrentProjection(getNextProjection());
+			getImage().getStack().deleteSlice(projectionToDelete);
+			deleteTiltAngle(projectionToDelete);
+			// change current projection here because propagated setSlice fails
+			// here we need to consider the future size (N-1), so cannot use getNextProjection
+			// int nextProjection = (getCurrentProjection() % getNumberOfProjections()-1) + 1;
+	 
+			setNumberOfProjections(getNumberOfProjections()-1);
+		}
+	}
+	
+	public void convertTo(int bitDepth){
+		if(bitDepth == getBitDepth())
+			return;
+		
+		window.protectWindow();
+		
+		switch (bitDepth) {
+			case 8:
+				new StackConverter(getImage()).convertToGray8();
+				break;
+			case 32:
+				new StackConverter(getImage()).convertToGray32();
+				break;
+			default:
+				break;
+			
+		}
+		window.unprotectWindow();
+		
+			
 	}
 	
 }
