@@ -55,7 +55,7 @@ public class TableModelCOSS extends DefaultTableModel {
         "1st Zero Ratio",
         "Fitting Score",
         "Fitting Correlation 1st-3rd Zero",
-        "PSD Correlation At 90º",
+        "PSD Correlation At 90 degrees",
         "PSD Radial Integral",
         "PSD Variance",
         "PSD PCA Runs Test"};
