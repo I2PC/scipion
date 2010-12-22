@@ -680,8 +680,6 @@ public:
                 barrier_destroy( &barrier );
             }
         }
-
-        MPI_Finalize();
     }
 
     /* a short function to print a message and exit */
