@@ -1592,8 +1592,6 @@ initxmipp(void)
     addIntConstant(dict,"MDL_CTF_CRITERION_PSDPCARUNSTEST",(long)MDL_CTF_CRITERION_PSDPCARUNSTEST);
     addIntConstant(dict,"MDL_DATATYPE",(long)MDL_DATATYPE);
     addIntConstant(dict,"MDL_DEFGROUP",(long)MDL_DEFGROUP);
-    addIntConstant(dict,"MDL_DEFOCUSU",(long)MDL_DEFOCUSU);
-    addIntConstant(dict,"MDL_DEFOCUSV",(long)MDL_DEFOCUSV);
     addIntConstant(dict,"MDL_DM3_IDTAG",(long)MDL_DM3_IDTAG);
     addIntConstant(dict,"MDL_DM3_NODEID",(long)MDL_DM3_NODEID);
     addIntConstant(dict,"MDL_DM3_NUMBER_TYPE",(long)MDL_DM3_NUMBER_TYPE);
