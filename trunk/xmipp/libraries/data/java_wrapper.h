@@ -119,4 +119,45 @@ int readImage(ImagePlusC &ip) {
 	return error;
 }
 
+Image<double> readFullImage(const std::string &filename) {
+	try {
+		FileName fn(filename);
+		Image<double> img;
+
+		img.read(fn);
+
+		return img;
+	} catch (XmippError xe) {
+		std::cerr << xe;
+	} catch (std::exception& e) {
+		std::cerr << e.what();
+	} catch (...) {
+		std::cerr << "Unhandled exception";
+	}
+
+	return Image<double>();
+}
+
+Image<double> readImageHeader(const std::string &filename) {
+	try {
+		FileName fn(filename);
+		Image<double> img;
+
+		cout << "FileName: " << fn << endl;
+
+		img.read(fn, false);
+
+		return img;
+	} catch (XmippError xe) {
+		std::cerr << xe;
+	} catch (std::exception& e) {
+		std::cerr << e.what();
+	} catch (...) {
+		std::cerr << "Unhandled exception";
+	}
+
+	return Image<double>();
+}
+
+
 #endif

@@ -157,9 +157,13 @@ class std::string {};
 %}
 %include "../metadata_label.h"
 
-
 %{
 #include "../java_wrapper.h"
 %}
 %include "../java_wrapper.h"
+
+%{
+#include "../fft.h"
+%}
+%include "../fft.h"
 
