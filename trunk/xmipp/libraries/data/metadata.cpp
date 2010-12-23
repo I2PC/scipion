@@ -630,9 +630,9 @@ void MetaData::write(const FileName &outFile,const std::string &blockName, Write
 
 void MetaData::append(const FileName &outFile)
 {
-  std::ofstream ofs(outFile.data(), std::ios_base::app);
-  _writeRows(ofs);
-  ofs.close();
+    std::ofstream ofs(outFile.data(), std::ios_base::app);
+    _writeRows(ofs);
+    ofs.close();
 }
 
 void MetaData::_writeRows(std::ostream &os)
@@ -1010,29 +1010,29 @@ void MetaData::read(const FileName &filename, const std::vector<MDLabel> *desire
     myMDSql->createMd();
     isColumnFormat = true;
 
-  if (!filename.isMetaData())//if not a metadata, try to read as image or stack
-  {
-      Image<char> image;
-      image.read(filename, false);
-      if (image().ndim == 1 || !decomposeStack) //single image
-      {
-          addObject();
-          setValue(MDL_IMAGE, filename);
-          setValue(MDL_ENABLED, 1);
-      }
-      else //stack
-      {
-          FileName fnTemp;
-          for (size_t i = 0; i < image().ndim; ++i)
-          {
-              fnTemp.compose(i, filename);
-              addObject();
-              setValue(MDL_IMAGE, fnTemp);
-              setValue(MDL_ENABLED, 1);
-          }
-      }
-      return;
-  }
+    if (!filename.isMetaData())//if not a metadata, try to read as image or stack
+    {
+        Image<char> image;
+        image.read(filename, false);
+        if (image().ndim == 1 || !decomposeStack) //single image
+        {
+            addObject();
+            setValue(MDL_IMAGE, filename);
+            setValue(MDL_ENABLED, 1);
+        }
+        else //stack
+        {
+            FileName fnTemp;
+            for (size_t i = 0; i < image().ndim; ++i)
+            {
+                fnTemp.compose(i, filename);
+                addObject();
+                setValue(MDL_IMAGE, fnTemp);
+                setValue(MDL_ENABLED, 1);
+            }
+        }
+        return;
+    }
 
     std::ifstream is(filename.data(), std::ios_base::in);
     std::stringstream ss;
@@ -1154,10 +1154,10 @@ void MetaData::merge(const FileName &fn)
 }
 
 void MetaData::aggregateSingle(MDObject &mdValueOut, AggregateOperation op,
-                                 MDLabel aggregateLabel)
+                               MDLabel aggregateLabel)
 
 {
-	mdValueOut.setValue(myMDSql->aggregateSingleDouble(op,aggregateLabel));
+    mdValueOut.setValue(myMDSql->aggregateSingleDouble(op,aggregateLabel));
 }
 
 bool MetaData::isColumnFormatFile(char * map,
