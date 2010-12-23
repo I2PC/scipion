@@ -178,7 +178,7 @@ class CL2D_class:
 	     
         scriptdir=os.path.split(os.path.dirname(os.popen('which xmipp_protocols','r').read()))[0]+'/protocols'
         sys.path.append(scriptdir) # add default search path
-        import log,selfile
+        import log
 
         self.WorkingDir=WorkingDir
         self.ProjectDir=ProjectDir
@@ -246,7 +246,7 @@ class CL2D_class:
             os.remove(fileToDelete)
 
     def preprocess(self):
-        import selfile,launch_job
+        import launch_job
         if self.DoFilter:
             slope=max(self.Highpass/2,0.01)
             fnOut=self.WorkingDir+'/preprocessedImages.stk'
@@ -271,7 +271,7 @@ class CL2D_class:
             self.selFileToUse=self.InSelFile
 
     def execute_CLalign2D(self):
-        import selfile,launch_job       
+        import launch_job       
         params= '-i '+str(self.selFileToUse)+' -o '+WorkingDir+'/class '+\
                 ' -codes '+str(self.NumberOfReferences)+\
                 ' -codes0 '+str(self.NumberOfReferences0)+\
