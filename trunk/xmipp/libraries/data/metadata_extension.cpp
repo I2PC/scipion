@@ -97,6 +97,39 @@ void ImgSize(const FileName &filename, int &Xdim, int &Ydim, int &Zdim, unsigned
     ImgSize(MetaData(filename), Xdim, Ydim, Zdim, Ndim);
 }
 
+void getBlocksAvailableInMetaData(const FileName &inFile, StringVector& blockList)
+{
+    blockList.clear();
+    if (!inFile.isMetaData())
+        return;
+
+    std::ifstream is(inFile.data(), std::ios_base::in);
+    int state=0;
+    String candidateBlock, line;
+    while (!is.eof())
+    {
+    	getline(is,line);
+    	trim(line);
+    	switch (state)
+    	{
+    	case 0:
+        	if (line.find("data_")==0)
+        	{
+        		state=1;
+        		candidateBlock=line.substr(5,line.size()-5);
+        	}
+        	break;
+    	case 1:
+        	if (line.find("loop_")==0)
+        	{
+        		state=0;
+        		blockList.push_back(candidateBlock);
+        	}
+        	break;
+    	}
+    }
+}
+
 int MaxFileNameLength(MetaData &MD)
 {
     int maxLength=0;

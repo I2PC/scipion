@@ -33,6 +33,8 @@ void ImgSize(const FileName &filename, int &Xdim, int &Ydim=null_object,
              int &Zdim=null_object,
              unsigned long &Ndim=null_objectLong);
 
+void getBlocksAvailableInMetaData(const FileName &inFile, StringVector& blockList);
+
 int MaxFileNameLength(MetaData &MD);
 
 void mpiSelectPart(MetaData &md, int rank, int size, int &num_img_tot);
