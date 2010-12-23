@@ -127,6 +127,16 @@ AnalysisScript='visualize_cl2d.py'
 
 import os,sys,shutil
 
+def getParameter(prm,filename):
+    f = open(filename, 'r')
+    lines=f.readlines()
+    f.close()
+    for line in lines:
+        tokens=line.split('=')
+        if tokens[0]==prm:
+            return tokens[1].strip()
+    return ""
+
 class CL2D_class:
     def saveAndCompareParameters(self, listOfParameters):
         fnOut=self.WorkingDir + "/protocolParameters.txt"
@@ -209,7 +219,48 @@ class CL2D_class:
         # Create directory if does not exist
         if not os.path.exists(self.WorkingDir):
             os.makedirs(self.WorkingDir)
+            self.doStep1=True
+            self.doStep2=True
+            self.doStep3=True
+        else:
+            fnParam=self.WorkingDir + "/protocolParameters.txt"
+            oldInSelFile=getParameter("InSelFile",fnParam)
+            oldDoFilter=getParameter("DoFilter",fnParam)
+            oldHighpass=getParameter("Highpass",fnParam)
+            oldLowpass=getParameter("Lowpass",fnParam)
 
+            oldNumberOfReferences=getParameter("NumberOfReferences",fnParam)
+            oldNumberOfReferences0=getParameter("NumberOfReferences0",fnParam)
+            oldNumberOfIterations=getParameter("NumberOfIterations",fnParam)
+            oldDoFast=getParameter("DoFast",fnParam)
+            oldComparisonMethod=getParameter("ComparisonMethod",fnParam)
+            oldClusteringMethod=getParameter("ClusteringMethod",fnParam)
+            oldAdditionalParameters=getParameter("AdditionalParameters",fnParam)
+            
+            oldthGoodClass=getParameter("thGoodClass",fnParam)
+            oldthJunkZscore=getParameter("thJunkZscore",fnParam)
+            oldthPCAZscore=getParameter("thPCAZscore",fnParam)
+            self.doStep1=False
+            self.doStep2=False
+            self.doStep3=False
+            if oldInSelFile!=InSelFile or DoFilter!=oldDoFilter or \
+               oldHighpass!=Highpass or oldLowpass!=Lowpass:
+                self.doStep1=True
+                self.doStep2=True
+                self.doStep3=True
+            elif oldNumberOfReferences!=NumberOfReferences or \
+               oldNumberOfReferences0!=NumberOfReferences0 or \
+               oldNumberOfIterations!=NumberOfIterations or \
+               oldDoFast!=DoFast or \
+               oldComparisonMethod!=ComparisonMethod or \
+               oldClusteringMethod!=ClusteringMethod or \
+               oldAdditionalParameters!=AdditionalParameters:
+                self.doStep2=True
+                self.doStep3=True
+            elif oldthGoodClass!=thGoodClass or oldthJunkZscore!=thJunkZscore or \
+               oldthPCAZscore!=thPCAZscore:
+                self.doStep3=True                
+                
         # Save parameters and compare to possible previous runs
         self.saveAndCompareParameters([
                  "InSelFile",
@@ -232,13 +283,16 @@ class CL2D_class:
             os.path.abspath(self.WorkingDir))
 
         # Preprocess the particles
-        self.preprocess()
+        if self.doStep1:
+            self.preprocess()
      
         # Execute CL2D in the working directory
-        self.execute_CLalign2D()
+        if self.doStep2:
+            self.execute_CLalign2D()
      
         # Execute CL2D core in the working directory
-        self.execute_core_analysis()
+        if self.doStep3:
+            self.execute_core_analysis()
      
         # Finish
         self.close()
@@ -300,7 +354,7 @@ class CL2D_class:
                 str(self.thGoodClass)+' '+\
                 str(self.thJunkZscore)+' '+\
                 str(self.thPCAZscore)+' '+\
-                str(self.thr)
+                str(self.NumberOfMpiProcesses)
 
         launch_job.launch_job("xmipp_classify_CL2D_core_analysis",
                               params,
