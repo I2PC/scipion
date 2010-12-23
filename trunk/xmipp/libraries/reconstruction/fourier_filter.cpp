@@ -256,7 +256,7 @@ void ProgFourierFilter::show()
 
 void ProgFourierFilter::processImage(const FileName &fnImg, const FileName &fnImgOut, long int objId)
 {
-    static bool first = false;
+    static bool first = true;
 
     Image<double> img;
     img.read(fnImg);
@@ -340,11 +340,11 @@ double ProgFourierFilter::maskValue(const Matrix1D<double> &w)
         }
         break;
     case CTF:
-    	ctf.precomputeValues(XX(w)/ctf.Tm,YY(w)/ctf.Tm);
+        ctf.precomputeValues(XX(w)/ctf.Tm,YY(w)/ctf.Tm);
         return ctf.CTF_at();
         break;
     case CTFPOS:
-    	ctf.precomputeValues(XX(w)/ctf.Tm,YY(w)/ctf.Tm);
+        ctf.precomputeValues(XX(w)/ctf.Tm,YY(w)/ctf.Tm);
         return ABS(ctf.CTF_at());
         break;
     case BFACTOR:
@@ -362,7 +362,7 @@ void ProgFourierFilter::generateMask(MultidimArray<double> &v)
         transformer.setReal(v);
         MultidimArray< std::complex<double> > Fourier;
         transformer.getFourierAlias(Fourier);
-        maskFourier.resize(Fourier);
+        maskFourier.initZeros(Fourier);
         maskFourier.setXmippOrigin();
 
         if (FilterShape==WEDGE || FilterShape==CONE)
@@ -382,21 +382,48 @@ void ProgFourierFilter::generateMask(MultidimArray<double> &v)
             }
         }
     }
+    else if (MULTIDIM_SIZE(v)<=1024*1024)
+    {
+        transformer.setReal(v);
+        MultidimArray< std::complex<double> > Fourier;
+        transformer.getFourierAlias(Fourier);
+        maskFourierd.initZeros(Fourier);
+        maskFourierd.setXmippOrigin();
+
+        w.resizeNoCopy(3);
+        for (int k=0; k<ZSIZE(Fourier); k++)
+        {
+            FFT_IDX2DIGFREQ(k,ZSIZE(v),ZZ(w));
+            for (int i=0; i<YSIZE(Fourier); i++)
+            {
+                FFT_IDX2DIGFREQ(i,YSIZE(v),YY(w));
+                for (int j=0; j<XSIZE(Fourier); j++)
+                {
+                    FFT_IDX2DIGFREQ(j,XSIZE(v),XX(w));
+                    DIRECT_A3D_ELEM(maskFourierd,k,i,j)=maskValue(w);
+                }
+            }
+        }
+    }
 }
 
 void ProgFourierFilter::applyMaskSpace(MultidimArray<double> &v)
 {
     MultidimArray< std::complex<double> > aux3D;
     transformer.FourierTransform(v, aux3D, false);
-
-    if (do_generate_3dmask)
+    if (XSIZE(maskFourier)!=0)
     {
         FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(aux3D)
         DIRECT_MULTIDIM_ELEM(aux3D,n)*=DIRECT_MULTIDIM_ELEM(maskFourier,n);
     }
+    else if (XSIZE(maskFourierd)!=0)
+    {
+        FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(aux3D)
+        DIRECT_MULTIDIM_ELEM(aux3D,n)*=DIRECT_MULTIDIM_ELEM(maskFourierd,n);
+    }
     else
     {
-        w.resize(3);
+        w.resizeNoCopy(3);
         for (int k=0; k<ZSIZE(aux3D); k++)
         {
             FFT_IDX2DIGFREQ(k,ZSIZE(v),ZZ(w));

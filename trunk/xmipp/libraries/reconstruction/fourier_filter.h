@@ -144,6 +144,9 @@ public:
     // Auxiliary mask for the filter in 3D
     MultidimArray<int> maskFourier;
 
+    // Auxiliary mask for the filter in 3D
+    MultidimArray<double> maskFourierd;
+
     // Transformer
     FourierTransformer transformer;
 };
