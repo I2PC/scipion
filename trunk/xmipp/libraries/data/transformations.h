@@ -27,9 +27,10 @@
 #ifndef TRANSFORMATIONS_H
 #define TRANSFORMATIONS_H
 
-#include "multidim_array.h"
-#include "geometry.h"
 #include <external/bilib/headers/kerneldiff1.h>
+#include "multidim_array.h"
+#include "multidim_array_generic.h"
+#include "geometry.h"
 
 #define IS_INV true
 #define IS_NOT_INV false
@@ -234,15 +235,15 @@ void scale3DMatrix(const Matrix1D< double >& sc, Matrix2D< double > &m,
 #define BSPLINE3 3
 #define BSPLINE4 4
 
-template<typename T>
+template<typename T1,typename T>
 void applyGeometry(int SplineDegree,
                    MultidimArray<T>& V2,
-                   const MultidimArray<T>& V1,
+                   const MultidimArray<T1>& V1,
                    const Matrix2D< double > &A, bool inv,
                    bool wrap, T outside = 0)
 {
 
-    if (&V1 == &V2)
+    if (&V1 == (MultidimArray<T1>*)&V2)
         REPORT_ERROR(ERR_VALUE_INCORRECT,"ApplyGeometry: Input array cannot be the same as output array");
 
     if ( V1.getDim()==2 && ((MAT_XSIZE(A) != 3) || (MAT_YSIZE(A) != 3)) )
@@ -253,7 +254,7 @@ void applyGeometry(int SplineDegree,
 
     if (A.isIdentity())
     {
-        V2=V1;
+        typeCast(V1,V2);
         return;
     }
 
@@ -396,7 +397,7 @@ void applyGeometry(int SplineDegree,
                 {
                     if (SplineDegree==0)
                     {
-                        dAij(V2, i, j)=A2D_ELEM(V1,ROUND(yp),ROUND(xp));
+                        dAij(V2, i, j) = (T) A2D_ELEM(V1,ROUND(yp),ROUND(xp));
                     }
                     else if (SplineDegree==1)
                     {
@@ -922,10 +923,10 @@ void selfTranslateCenterOfMassToCenter(int SplineDegree,
  * V2 = V1.scaleToSize(128, 128, 128);
  * @endcode
  */
-template<typename T>
+template<typename T1, typename T>
 void scaleToSize(int SplineDegree,
                  MultidimArray<T> &V2,
-                 const MultidimArray<T> &V1,
+                 const MultidimArray<T1> &V1,
                  int Xdim, int Ydim, int Zdim = 1)
 {
 
@@ -949,6 +950,28 @@ void scaleToSize(int SplineDegree,
         REPORT_ERROR(ERR_MULTIDIM_DIM,"scaleToSize ERROR: scaleToSize only valid for 2D or 3D arrays");
 
     applyGeometry(SplineDegree, V2, V1, tmp, IS_NOT_INV, WRAP, (T)0);
+}
+
+/** Scales to a new size.
+ * @ingroup GeometricalTransformations
+ *
+ * The volume is scaled (resampled) to fill a new size.
+ * Same as previous, but in this case the input is a MultidimArrayGeneric.
+ *
+ * @code
+ * scaleToSize(VolumeOut, VolumeGenericInput, 128, 128, 128);
+ * @endcode
+ */
+template<typename T>
+inline void scaleToSize(int SplineDegree,
+                        MultidimArray<T> &V2,
+                        const MultidimArrayGeneric &V1,int Xdim, int Ydim, int Zdim = 1)
+{
+#define SCALETOSIZE(type) scaleToSize(SplineDegree,V2,*((MultidimArray<type>*)(V1.im)),Xdim,Ydim,Zdim)
+
+    SWITCHDATATYPE(V1.datatype,SCALETOSIZE)
+
+#undef SCALETOSIZE
 }
 
 /** Scales to a new size.
@@ -1330,7 +1353,7 @@ void fastRadialAverage(const MultidimArray< T >& m,
     // distance
     FOR_ALL_ELEMENTS_IN_ARRAY3D(m)
     {
-    	int d=A3D_ELEM(distance,k,i,j);
+        int d=A3D_ELEM(distance,k,i,j);
         A1D_ELEM(radial_mean,d) += A3D_ELEM(m, k, i, j);
         A1D_ELEM(radial_count,d)++;
     }
