@@ -19,10 +19,6 @@ InSelFile='sort_junk.sel'
 """ This directory will be created if it doesn't exist, and will be used to store all output from this run. Don't use the same directory for multiple different runs, instead use a structure like run1, run2 etc. 
 """
 WorkingDir='CL2D/classes64'
-# Delete working subdirectory if it already exists?
-""" Just be careful with this option...
-"""
-DoDeleteWorkingDir=False
 # {expert} Root directory name for this project:
 """ Absolute path to the root directory for this project. Often, each data set of a given sample has its own ProjectDir.
 """
@@ -33,32 +29,8 @@ ProjectDir='/gpfs/fs1/home/bioinfo/coss/analu/Mcm467_cdt1_sinOli-7AporPix'
 LogDir='Logs'
 
 #------------------------------------------------------------------------------------------------
-# {section} Preprocessing parameters
-#------------------------------------------------------------------------------------------------
-# Sampling rate
-""" Sampling rate (Angstroms/Pixel) """
-SamplingRate = 1
-
-# Highpass cutoff frequency
-""" In (Angstroms/Pixel). Set to 0 if not desired """
-Highpass =0.02
-
-# Lowpass cutoff frequency
-""" In (Angstroms/Pixel). Set to 0 if not desired """
-Lowpass =0.4
-
-#------------------------------------------------------------------------------------------------
 # {section} Class averages parameters
 #------------------------------------------------------------------------------------------------
-# Perform CL2D
-DoCL2D=True
-
-# Z-score cutoff
-""" Use -1 for no cutoff. The cutoff is defined as the average cutoff
-    of image features (xmipp_sort_by_statistics)
-"""
-CL2Dcutoff=-1
-
 # Number of references (or classes) to be used:
 NumberOfReferences=64
 
@@ -72,11 +44,17 @@ NumberOfReferences0=4
 """
 NumberOfIterations=15
 
-# {expert} Also include mirror transformation in the alignment?
-"""  Including the mirror transformation is useful if your particles have a handedness and may fall either face-up or face-down on the grid.
- Note that when you want to use this CL2D run for later RCT reconstruction, you can NOT include the mirror transformation here.
-"""
-DoMirror=True
+# {expert} Band pass filter
+""" Apply a band pass filter before clustering """
+DoFilter =True
+
+# {expert} Highpass cutoff frequency
+""" In (Angstroms/Pixel). Set to 0 if not desired """
+Highpass =0.02
+
+# {expert} Lowpass cutoff frequency
+""" In (Angstroms/Pixel). Set to 0 if not desired """
+Lowpass =0.4
 
 # {expert} Use the fast version of this algorithm?
 DoFast=True
@@ -90,16 +68,13 @@ ComparisonMethod='correlation'
 ClusteringMethod='classical'
 
 # {expert} Additional parameters for classify_CL2D
-""" -verbose, -alignImages, -corr_split, ...
+""" -verbose, -corr_split, ...
 """
-AdditionalParameters='-verbose'
+AdditionalParameters=''
 
 #------------------------------------------------------------------------------------------------
 # {section} Core analysis
 #------------------------------------------------------------------------------------------------
-# Perform core analysis
-DoCoreAnalysis=False
-
 # Good class core size (%)
 """ A class is a good class if at least this percentage (around 50%) of the
     images assigned to it have been together in all the previous levels.
@@ -112,7 +87,7 @@ thGoodClass=50
     go from 1.5 to 3. For the Gaussian distribution 99.5% of the data is
     within a Z-score of 3. Lower Z-scores reject more images. Higher Z-scores
     accept more images."""
-thJunkZscore=2
+thJunkZscore=3
 
 # PCA Zscore
 """ Which is the PCA Z-score to be considered as junk. Typical values
@@ -121,7 +96,7 @@ thJunkZscore=2
     accept more images.
     
     This Z-score is measured after projecting onto the PCA space."""
-thPCAZscore=1.5
+thPCAZscore=3
 
 #------------------------------------------------------------------------------------------------
 # {section} Parallelization issues
@@ -153,28 +128,48 @@ AnalysisScript='visualize_cl2d.py'
 import os,sys,shutil
 
 class CL2D_class:
+    def saveAndCompareParameters(self, listOfParameters):
+        fnOut=self.WorkingDir + "/protocolParameters.txt"
+        linesNew=[];
+        for prm in listOfParameters:
+            eval("linesNew.append('"+prm +"='+str("+prm+")+'\\n')")
+        if os.path.exists(fnOut):
+            f = open(fnOut, 'r')
+            linesOld=f.readlines()
+            f.close()
+            same=True;
+            if len(linesOld)==len(linesNew):
+                for i in range(len(linesNew)):
+                    if not linesNew[i]==linesOld[i]:
+                        same=False
+                        break;
+            else:
+                same=False
+            if not same:
+                print("Deleting")
+                self.log.info("Deleting working directory since it is run with different parameters")
+                shutil.rmtree(self.WorkingDir)
+                os.makedirs(self.WorkingDir)
+        f = open(fnOut, 'w')
+        f.writelines(linesNew)
+        f.close()
 
     #init variables
     def __init__(self,
                  InSelFile,
                  WorkingDir,
-                 DoDeleteWorkingDir,
                  ProjectDir,
                  LogDir,
-                 SamplingRate,
-                 Highpass,
-                 Lowpass,
-                 DoCL2D,
-                 CL2Dcutoff,
                  NumberOfReferences,
                  NumberOfReferences0,
                  NumberOfIterations,
-                 DoMirror,
+                 DoFilter,
+                 Highpass,
+                 Lowpass,
                  DoFast,
                  ComparisonMethod,
                  ClusteringMethod,
                  AdditionalParameters,
-                 DoCoreAnalysis,
                  thGoodClass,
                  thJunkZscore,
                  thPCAZscore,
@@ -187,26 +182,23 @@ class CL2D_class:
 
         self.WorkingDir=WorkingDir
         self.ProjectDir=ProjectDir
-        self.SamplingRate=SamplingRate
-        self.Highpass=Highpass
-        self.Lowpass=Lowpass
-        self.DoCL2D=DoCL2D
-        self.CL2Dcutoff=CL2Dcutoff
+        self.InSelFile=InSelFile
         self.NumberOfReferences=NumberOfReferences
         self.NumberOfReferences0=NumberOfReferences0
         self.NumberOfIterations=NumberOfIterations
-        self.DoMirror=DoMirror
+        self.DoFilter=DoFilter
+        self.Highpass=Highpass
+        self.Lowpass=Lowpass
         self.DoFast=DoFast
         self.ComparisonMethod=ComparisonMethod
         self.ClusteringMethod=ClusteringMethod
         self.AdditionalParameters=AdditionalParameters
-        self.DoCoreAnalysis=DoCoreAnalysis
         self.thGoodClass=thGoodClass
         self.thJunkZscore=thJunkZscore
         self.thPCAZscore=thPCAZscore
-        self.thr=6
         self.NumberOfMpiProcesses=NumberOfMpiProcesses
         self.SystemFlavour=SystemFlavour
+        self.filesToDelete=[]
    
         # Setup logging
         self.log=log.init_log_system(self.ProjectDir,
@@ -214,62 +206,59 @@ class CL2D_class:
                                      sys.argv[0],
                                      self.WorkingDir)
                 
-        # Delete working directory if it exists, make a new one
-        if (DoDeleteWorkingDir): 
-            if (self.WorkingDir==""):
-               raise RuntimeError,"No working directory given"
-            if os.path.exists(self.WorkingDir):
-                shutil.rmtree(self.WorkingDir)
+        # Create directory if does not exist
         if not os.path.exists(self.WorkingDir):
             os.makedirs(self.WorkingDir)
 
-        # Create a selfile with absolute pathname in the WorkingDir
-        self.InSelFile=os.path.abspath(self.WorkingDir+'/'+InSelFile.rsplit("/")[-1])
-        shutil.copy(InSelFile,self.InSelFile)
+        # Save parameters and compare to possible previous runs
+        self.saveAndCompareParameters([
+                 "InSelFile",
+                 "NumberOfReferences",
+                 "NumberOfReferences0",
+                 "NumberOfIterations",
+                 "DoFilter",
+                 "Highpass",
+                 "Lowpass",
+                 "DoFast",
+                 "ComparisonMethod",
+                 "ClusteringMethod",
+                 "AdditionalParameters",
+                 "thGoodClass",
+                 "thJunkZscore",
+                 "thPCAZscore"]);
 
         # Backup script
         log.make_backup_of_script_file(sys.argv[0],
             os.path.abspath(self.WorkingDir))
 
+        # Preprocess the particles
+        self.preprocess()
+     
         # Execute CL2D in the working directory
-        if self.DoCL2D:
-            self.execute_CLalign2D()
+        self.execute_CLalign2D()
      
         # Execute CL2D core in the working directory
-        if self.DoCoreAnalysis:
-            self.execute_core_analysis()
+        self.execute_core_analysis()
      
         # Finish
         self.close()
+        for fileToDelete in self.filesToDelete:
+            os.remove(fileToDelete)
 
-    def execute_CLalign2D(self):
+    def preprocess(self):
         import selfile,launch_job
-        if not self.Highpass==0 or not self.Lowpass==0:
-            highCutoff=self.Highpass/self.SamplingRate
-            lowCutoff=self.Lowpass/self.SamplingRate
+        if self.DoFilter:
             slope=max(self.Highpass/2,0.01)
-            preprocessedDir=self.WorkingDir+"/Imgs"
-            
-            if os.path.exists(preprocessedDir):
-                shutil.rmtree(preprocessedDir)
-            
-            print '*********************************************************************'
-            print '*  Copying input images' 
-            mysel=selfile.selfile()
-            mysel.read(self.InSelFile)
-            newsel=mysel.copy_sel(preprocessedDir)
-            newsel.write(self.InSelFile)
+            fnOut=self.WorkingDir+'/preprocessedImages.stk'
             params= '-i '+str(self.InSelFile)+\
-                    ' -fourier_mask raised_cosine '+str(slope)
+                    ' --fourier_mask raised_cosine '+str(slope)+\
+                    ' -o '+fnOut
             if self.Highpass>0 and self.Lowpass>0:
-                params+=" -band_pass "+str(highCutoff)+" "+str(lowCutoff)
+                params+=" --band_pass "+str(self.Highpass)+" "+str(self.Lowpass)
             elif self.Highpass>0:
-                params+=" -high_pass "+str(highCutoff)
+                params+=" --high_pass "+str(self.Highpass)
             elif self.Lowpass>0:
-                params+=" -low_pass "+str(lowCutoff)
-            
-            print '*********************************************************************'
-            print '*  Executing Fourier filtering program :' 
+                params+=" --low_pass "+str(self.Lowpass)
             launch_job.launch_job("xmipp_fourier_filter",
                                   params,
                                   self.log,
@@ -277,34 +266,19 @@ class CL2D_class:
                                   1,
                                   1,
                                   self.SystemFlavour)
+            self.selFileToUse=fnOut
+        else:
+            self.selFileToUse=self.InSelFile
 
-        print '*********************************************************************'
-        print '*  Executing CL2D program :' 
-        if (self.NumberOfReferences0>self.NumberOfReferences):
-            self.NumberOfReferences0=self.NumberOfReferences
-        selfileToUse=self.InSelFile
-        if self.CL2Dcutoff>0:
-            fnRoot=self.InSelFile[0:self.InSelFile.rfind('.')]
-            params="-i "+self.InSelFile+" -o "+fnRoot+"_sorted "+\
-                "-zcut "+str(self.CL2Dcutoff)
-            launch_job.launch_job("xmipp_sort_by_statistics",
-                                  params,
-                                  self.log,
-                                  False,
-                                  1,
-                                  1,
-                                  self.SystemFlavour)
-            selfileToUse=fnRoot+"_sorted_good.sel"
-        
-        params= '-i '+str(selfileToUse)+' -o '+WorkingDir+'/class '+\
+    def execute_CLalign2D(self):
+        import selfile,launch_job       
+        params= '-i '+str(self.selFileToUse)+' -o '+WorkingDir+'/class '+\
                 ' -codes '+str(self.NumberOfReferences)+\
                 ' -codes0 '+str(self.NumberOfReferences0)+\
                 ' -iter '+str(self.NumberOfIterations)
         params+=' '+self.AdditionalParameters
         if (self.DoFast):
             params+= ' -fast '
-        if (not self.DoMirror):
-            params+= ' -no_mirror '
         if (self.ComparisonMethod=='correlation'):
             params+= ' -useCorrelation '
         if (self.ClusteringMethod=='classical'):
@@ -341,31 +315,92 @@ class CL2D_class:
         print '*',message
         print '*********************************************************************'
 
+# Preconditions
+def preconditions(gui):
+    retval=True
+    # Check if there is workingdir
+    if WorkingDir == "":
+        message="No working directory given"
+        if gui:
+            import tkMessageBox
+            tkMessageBox.showerror("Error", message)
+        else:
+            print message
+        retval=False
+    
+    # Check that there are any micrograph to process
+    if not os.path.exists(InSelFile):
+        message="The input selfile is not valid"
+        if gui:
+            import tkMessageBox
+            tkMessageBox.showerror("Error", message)
+        else:
+            print message
+        retval=False
+    
+    # Check that the number of classes is correct
+    if NumberOfReferences0<=0:
+        message="The number of initial classes must be positive"
+        if gui:
+            import tkMessageBox
+            tkMessageBox.showerror("Error", message)
+        else:
+            print message
+        retval=False
+        
+    # Check that the number of classes is correct
+    if NumberOfReferences0>NumberOfReferences:
+        message="The number of initial classes cannot be larger than the number of final classes"
+        if gui:
+            import tkMessageBox
+            tkMessageBox.showerror("Error", message)
+        else:
+            print message
+        retval=False
+    
+    # Check filter parameters
+    if DoFilter and (Highpass<0 or Highpass>0.5 or Lowpass<0 or Lowpass>0.5):
+        message="The filter frequencies must be between 0 and 0.5"
+        if gui:
+            import tkMessageBox
+            tkMessageBox.showerror("Error", message)
+        else:
+            print message
+        retval=False
+
+    # Check core parameters
+    if thGoodClass<0 or thGoodClass>100:
+        message="The good class threshold must be between 0 and 100"
+        if gui:
+            import tkMessageBox
+            tkMessageBox.showerror("Error", message)
+        else:
+            print message
+        retval=False
+
+    return retval
+
 #		
 # Main
 #     
 if __name__ == '__main__':
-    CL2D=CL2D_class(InSelFile,
-                    WorkingDir,
-                    DoDeleteWorkingDir,
-                    ProjectDir,
-                    LogDir,
-                    SamplingRate,
-                    Highpass,
-                    Lowpass,
-                    DoCL2D,
-                    CL2Dcutoff,
-                    NumberOfReferences,
-                    NumberOfReferences0,
-                    NumberOfIterations,
-                    DoMirror,
-                    DoFast,
-                    ComparisonMethod,
-                    ClusteringMethod,
-                    AdditionalParameters,
-                    DoCoreAnalysis,
-                    thGoodClass,
-                    thJunkZscore,
-                    thPCAZscore,
-                    NumberOfMpiProcesses,
-                    SystemFlavour)
+    CL2D=CL2D_class(
+                 InSelFile,
+                 WorkingDir,
+                 ProjectDir,
+                 LogDir,
+                 NumberOfReferences,
+                 NumberOfReferences0,
+                 NumberOfIterations,
+                 DoFilter,
+                 Highpass,
+                 Lowpass,
+                 DoFast,
+                 ComparisonMethod,
+                 ClusteringMethod,
+                 AdditionalParameters,
+                 thGoodClass,
+                 thJunkZscore,
+                 thPCAZscore,
+                 NumberOfMpiProcesses,
+                 SystemFlavour)
