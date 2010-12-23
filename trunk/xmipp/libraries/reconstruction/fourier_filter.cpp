@@ -258,7 +258,8 @@ void ProgFourierFilter::processImage(const FileName &fnImg, const FileName &fnIm
 {
     static bool first = false;
 
-    Image<double> img; img.read(fnImg);;
+    Image<double> img;
+    img.read(fnImg);
     if (first)
     {
         generateMask(img());
