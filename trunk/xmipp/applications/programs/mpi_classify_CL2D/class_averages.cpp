@@ -28,6 +28,7 @@
 #include <data/mask.h>
 #include <data/polar.h>
 #include <data/image_collection.h>
+#include <data/image_generic.h>
 
 /* VQProjection basics ---------------------------------------------------- */
 void VQProjection::updateProjection(const MultidimArray<double> &I,
@@ -832,16 +833,16 @@ void VQ::write(const FileName &fnRoot, bool final) const
     Nq.resizeNoCopy(Q);
     Image<double> I;
     FileName fnOut=fnRoot+".stk";
-    FileName fnAux;
+    FileName fnAux, fnClass;
     if (exists(fnOut))
     	unlink(fnOut.c_str());
     for (int q=0; q<Q; q++)
     {
-    	fnAux.compose(q,fnOut);
+    	fnClass.compose(q,fnOut);
         I()=P[q]->P;
         SFout.addObject();
-        SFout.setValue(MDL_IMAGE,fnAux);
-        SFout.writeImage(I,fnAux,q,true);
+        SFout.setValue(MDL_IMAGE,fnClass);
+        SFout.writeImage(I,fnClass,q,true);
         VEC_ELEM(Nq,q)=VEC_ELEM(aux,0)=P[q]->currentListImg.size();
         VEC_ELEM(aux,1)=VEC_ELEM(aux,0)/Nimg;
     }
@@ -852,7 +853,9 @@ void VQ::write(const FileName &fnRoot, bool final) const
 	FileName fnAligned=fnRoot+"_aligned.stk";
     if (final)
     {
-    	std::cerr << "Aligning input images ...\n";
+    	if (exists(fnAligned))
+    		unlink(fnAligned.c_str());
+    	Image<double> I;
     	for (int i=0; i<Nimg; i++)
     	{
     		I.read(SFv[i]);
@@ -863,6 +866,7 @@ void VQ::write(const FileName &fnRoot, bool final) const
     // Make the selfiles of each class
     for (int q=0; q<Q; q++)
     {
+    	fnClass.compose(q,fnOut);
         MetaData SFq;
         int imax=P[q]->currentListImg.size();
         for (int i=0; i<imax; i++)
@@ -871,18 +875,10 @@ void VQ::write(const FileName &fnRoot, bool final) const
             int idx=P[q]->currentListImg[i];
             if (final)
             {
-                I.read(SFv[P[q]->currentListImg[i]]);
-                I().setXmippOrigin();
-
-                double corrCode, likelihood;
-                P[q]->fit(I(), sigma, noMirror, corrCode, likelihood);
-                I.write(fnAligned,idx,true,WRITE_REPLACE);
             	fnAux.compose(idx,fnAligned);
-            }
-            if (final)
-            {
             	SFq.setValue(MDL_IMAGE,fnAux);
             	SFq.setValue(MDL_IMAGE_ORIGINAL,SFv[idx]);
+            	SFq.setValue(MDL_IMAGE_CLASS,fnClass);
             }
             else
             	SFq.setValue(MDL_IMAGE,SFv[idx]);
@@ -1785,23 +1781,23 @@ void VQ::splitFirstNode(int rank)
 }
 
 /* VQPrm I/O --------------------------------------------------------------- */
-void Prog_VQ_prm::read(int argc, char** argv)
+void Prog_VQ_prm::readParams()
 {
-    fnSel=getParameter(argc,argv,"-i");
-    fnOut=getParameter(argc,argv,"-o","class");
-    fnCodes0=getParameter(argc,argv,"-codesSel0","");
-    Niter=textToInteger(getParameter(argc,argv,"-iter","20"));
-    Nneighbours=textToInteger(getParameter(argc,argv,"-neigh","4"));
-    Ncodes0=textToInteger(getParameter(argc,argv,"-codes0","2"));
-    Ncodes=textToInteger(getParameter(argc,argv,"-codes","16"));
-    PminSize=textToFloat(getParameter(argc,argv,"-minsize","20"));
-    noMirror=checkParameter(argc,argv,"-no_mirror");
-    verbose=checkParameter(argc,argv,"-verbose");
-    corrSplit=checkParameter(argc,argv,"-corr_split");
-    fast=checkParameter(argc,argv,"-fast");
-    useCorrelation=checkParameter(argc,argv,"-useCorrelation");
-    useFixedCorrentropy=checkParameter(argc,argv,"-useFixedCorrentropy");
-    classicalMultiref=checkParameter(argc,argv,"-classicalMultiref");
+    fnSel=getParam("-i");
+    fnOut=getParam("-o");
+    fnCodes0=getParam("-codesSel0");
+    Niter=textToInteger(getParam("-iter"));
+    Nneighbours=textToInteger(getParam("-neigh"));
+    Ncodes0=textToInteger(getParam("-codes0"));
+    Ncodes=textToInteger(getParam("-codes"));
+    PminSize=textToFloat(getParam("-minsize"));
+    noMirror=checkParam("-no_mirror");
+    verbose=checkParam("-verbose");
+    corrSplit=checkParam("-corr_split");
+    fast=checkParam("-fast");
+    useCorrelation=checkParam("-useCorrelation");
+    useFixedCorrentropy=checkParam("-useFixedCorrentropy");
+    classicalMultiref=checkParam("-classicalMultiref");
 }
 
 void Prog_VQ_prm::show() const
@@ -1825,26 +1821,24 @@ void Prog_VQ_prm::show() const
     ;
 }
 
-void Prog_VQ_prm::usage() const
+void Prog_VQ_prm::defineParams()
 {
-    std::cerr << "Usage:\n"
-    << "    -i <selfile>         : Selfile with the input images\n"
-    << "   [-o <root=class>]     : Output rootname, by default, class\n"
-    << "   [-iter <N=20>]        : Number of iterations\n"
-    << "   [-codes0 <N=2]        : Initial number of code vectors\n"
-    << "   [-codesSel0 <selfile>]: Selfile with initial code vectors\n"
-    << "   [-codes <N=16>]       : Final number of code vectors\n"
-    << "   [-neigh <N=4>]        : Number of neighbour code vectors\n"
-    << "                         : Set -1 for all\n"
-    << "   [-minsize <N=20>]     : Percentage minimum node size\n"
-    << "   [-no_mirror]          : Do not check mirrors\n"
-    << "   [-verbose]            : Verbose\n"
-    << "   [-corr_split]         : Correlation split\n"
-    << "   [-fast]               : Fast calculations, suboptimal\n"
-    << "   [-useCorrelation]     : Instead of correntropy\n"
-    << "   [-useFixedCorrentropy]: Instead of correntropy\n"
-    << "   [-classicalMultiref]  : Instead of enhanced clustering\n"
-    ;
+    addParamsLine("    -i <selfile>           : Selfile with the input images");
+    addParamsLine("   [-o <root=class>]       : Output rootname, by default, class");
+    addParamsLine("   [-iter <N=20>]          : Number of iterations");
+    addParamsLine("   [-codes0 <N=2>]         : Initial number of code vectors");
+    addParamsLine("   [-codesSel0 <selfile=\"\">]: Selfile with initial code vectors");
+    addParamsLine("   [-codes <N=16>]         : Final number of code vectors");
+    addParamsLine("   [-neigh <N=4>]          : Number of neighbour code vectors");
+    addParamsLine("                           : Set -1 for all");
+    addParamsLine("   [-minsize <N=20>]       : Percentage minimum node size");
+    addParamsLine("   [-no_mirror]            : Do not check mirrors");
+    addParamsLine("   [-verbose]              : Verbose");
+    addParamsLine("   [-corr_split]           : Correlation split");
+    addParamsLine("   [-fast]                 : Fast calculations, suboptimal");
+    addParamsLine("   [-useCorrelation]       : Instead of correntropy");
+    addParamsLine("   [-useFixedCorrentropy]  : Instead of correntropy");
+    addParamsLine("   [-classicalMultiref]    : Instead of enhanced clustering");
 }
 
 void Prog_VQ_prm::produce_side_info(int rank)
@@ -1899,13 +1893,48 @@ void Prog_VQ_prm::run(int rank)
     }
 }
 
+void Prog_VQ_prm::alignInputImages(const FileName &fnSF, int rank, int Nprocessors)
+{
+	MetaData SFBlock;
+	StringVector blockList;
+	getBlocksAvailableInMetaData(fnSF,blockList);
+	int bmax=blockList.size();
+	int currentIdx=0;
+	FileName fnImgIn, fnImgOut, fnClass;
+	Image<double> Iclass, I;
+	Matrix2D<double> M;
+	for (int b=0; b<bmax; b++)
+	{
+		if (blockList[b]=="")
+			continue;
+		SFBlock.read(fnSF,NULL,blockList[b]);
+		SFBlock.getValue(MDL_IMAGE_CLASS,fnClass);
+		Iclass.read(fnClass);
+		FOR_ALL_OBJECTS_IN_METADATA(SFBlock)
+		{
+			if ((currentIdx+1)%Nprocessors==rank)
+			{
+				SFBlock.getValue(MDL_IMAGE,fnImgOut);
+				SFBlock.getValue(MDL_IMAGE_ORIGINAL,fnImgIn);
+
+                I.read(fnImgIn);
+                I().setXmippOrigin();
+                alignImages(Iclass(), I(), M);
+                I.write(fnImgOut,-1,true,WRITE_REPLACE);
+			}
+			++currentIdx;
+		}
+	}
+}
+
 /* Main -------------------------------------------------------------------- */
 int main(int argc, char** argv)
 {
     Prog_VQ_prm prm;
     MPI_Init(&argc, &argv);
-    int rank;
+    int rank, Nprocessors;
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+    MPI_Comm_size(MPI_COMM_WORLD, &Nprocessors);
     try
     {
         prm.read(argc,argv);
@@ -1928,6 +1957,8 @@ int main(int argc, char** argv)
             prm.show();
         prm.produce_side_info(rank);
         prm.run(rank);
+        MPI_Barrier(MPI_COMM_WORLD);
+        prm.alignInputImages(prm.fnOut+".sel",rank,Nprocessors);
     }
     catch (XmippError XE)
     {

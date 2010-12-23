@@ -32,6 +32,7 @@
 #include <data/fftw.h>
 #include <data/histogram.h>
 #include <data/numerical_tools.h>
+#include <data/program.h>
 #include <vector>
 
 /**@defgroup VQforProjections Vector Quantization for Projections
@@ -232,7 +233,7 @@ public:
 };
 
 /** VQ parameters. */
-class Prog_VQ_prm {
+class Prog_VQ_prm: public XmippProgram {
 public:
     /// Input selfile with the images to quantify
     FileName fnSel;
@@ -280,19 +281,22 @@ public:
     bool verbose;
 
     /// Read
-    void read(int argc, char** argv);
+    void readParams();
     
     /// Show
     void show() const;
     
     /// Usage
-    void usage() const;
+    void defineParams();
     
     /// Produce side info
     void produce_side_info(int rank);
     
     /// Run
     void run(int rank);
+
+    /// Align the input images with respect to their respective class
+    void alignInputImages(const FileName &fnSF, int rank, int Nprocessors);
 public:
     // Selfile with all the input images
     MetaData SF;
