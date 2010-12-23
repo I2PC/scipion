@@ -27,6 +27,7 @@
 #include <data/filters.h>
 #include <data/mask.h>
 #include <data/polar.h>
+#include <data/image_collection.h>
 
 /* VQProjection basics ---------------------------------------------------- */
 void VQProjection::updateProjection(const MultidimArray<double> &I,
@@ -822,34 +823,31 @@ void VQ::initialize(MetaData &_SF, int _Niter, int _Nneighbours,
 #undef DEBUG
 
 /* VQ write --------------------------------------------------------- */
-//#define DEBUG
 void VQ::write(const FileName &fnRoot, bool final) const
 {
     int Q=P.size();
     int Nimg=SFv.size();
-    MetaData SFout;
-    Matrix1D<double> aux, Nq, dq;
-    aux.resize(2);
-    Nq.resize(Q);
-    dq.resize(Q);
+    ImageCollection SFout(WRITE_APPEND);
+    Matrix1D<double> aux, Nq;
+    aux.resizeNoCopy(2);
+    Nq.resizeNoCopy(Q);
+    Image<double> I;
+    FileName fnOut=fnRoot+".stk";
+    FileName fnAux;
+    if (exists(fnOut))
+    	unlink(fnOut.c_str());
     for (int q=0; q<Q; q++)
     {
-        FileName fnOut;
-        fnOut.compose(fnRoot,q,"xmp");
-        Image<double> I;
-#ifdef DEBUG
-
-        std::cout << "About to write node " << q << " address=" << &P[q] << std::endl;
-#endif
-
+    	fnAux.compose(q,fnOut);
         I()=P[q]->P;
-        I.write(fnOut);
         SFout.addObject();
-        SFout.setValue(MDL_IMAGE,fnOut);
-        Nq(q)=aux(0)=P[q]->currentListImg.size();
-        aux(1)=aux(0)/Nimg;
+        SFout.setValue(MDL_IMAGE,fnAux);
+        SFout.writeImage(I,fnAux,q,true);
+        VEC_ELEM(Nq,q)=VEC_ELEM(aux,0)=P[q]->currentListImg.size();
+        VEC_ELEM(aux,1)=VEC_ELEM(aux,0)/Nimg;
     }
-    SFout.write(fnRoot+".sel");
+    FileName fnSFout=fnRoot+".sel";
+    SFout.write(fnSFout);
 
     // Make the selfiles of each class
     for (int q=0; q<Q; q++)
@@ -871,10 +869,9 @@ void VQ::write(const FileName &fnRoot, bool final) const
             SFq.addObject();
             SFq.setValue(MDL_IMAGE,SFv[P[q]->currentListImg[i]]);
         }
-        SFq.write(fnRoot+integerToString(q,6)+".sel");
+        SFq.write(fnSFout,"class_"+integerToString(q,6),APPEND);
     }
 }
-#undef DEBUG
 
 void VQ::lookNode(MultidimArray<double> &I, int idx, int oldnode,
                   int &newnode, double &corrCode, double &likelihood)
@@ -1315,7 +1312,7 @@ void VQ::run(const FileName &fnOut, int level, int rank)
 
         currentAssignment=newAssignment;
         if (rank==0)
-            write(fnOut+"_level_"+integerToString(level,2)+"_");
+            write(fnOut+"_level_"+integerToString(level,2));
 
         if (n>0 && Nchanges<0.005*N && Q>1 || n>=(Niter-1))
             goOn=false;
