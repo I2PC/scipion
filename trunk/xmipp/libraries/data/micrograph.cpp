@@ -331,7 +331,6 @@ void Micrograph::produce_all_images(int label, const FileName &fn_root,
                                     double psi, bool rmStack)
 {
     ImageCollection SF(WRITE_APPEND);
-    FileName fn_out;
     Image<double> I;
     Micrograph *M;
 
@@ -376,7 +375,7 @@ void Micrograph::produce_all_images(int label, const FileName &fn_root,
     int i = starting_index;
     int nmax = ParticleNo();
     FileName fn_aux;
-    fn_out          = fn_root;
+    FileName fn_out = fn_root;
     if(exists(fn_out) && rmStack)
     {
         unlink(fn_out.c_str());
