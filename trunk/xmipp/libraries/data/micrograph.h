@@ -240,7 +240,7 @@ public:
                         double Dmin, double Dmax, double scaleX, double scaleY,
                         bool only_check)
     {
-        result.resize(Y_window_size, X_window_size);
+        result.initZeros(Y_window_size, X_window_size);
         int i0 = ROUND(scaleY * P.Y) + FIRST_XMIPP_INDEX(Y_window_size);
         int iF = ROUND(scaleY * P.Y) + LAST_XMIPP_INDEX(Y_window_size);
         int j0 = ROUND(scaleX * P.X) + FIRST_XMIPP_INDEX(X_window_size);
@@ -249,10 +249,7 @@ public:
         double irange=1.0/(Dmax - Dmin);
 
         if (i0 < 0 || iF >= Ydim || j0 < 0 || jF >= Xdim)
-        {
-            result.initZeros();
             retval = 0;
-        }
         else
             if (!only_check)
             {
