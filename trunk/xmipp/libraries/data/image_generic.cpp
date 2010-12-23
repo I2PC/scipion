@@ -24,7 +24,7 @@
  ***************************************************************************/
 
 #include "image_generic.h"
-
+#include "image.h"
 
 ImageGeneric::~ImageGeneric()
 {

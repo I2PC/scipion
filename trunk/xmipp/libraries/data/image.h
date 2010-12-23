@@ -30,207 +30,9 @@
 #ifndef IMAGE_H
 #define IMAGE_H
 
-#include <typeinfo>
-#include <fcntl.h>
-#include <sys/mman.h>
-#include <fcntl.h>
-#include <unistd.h>
-#include <sys/stat.h>
-#include "funcs.h"
-#include "memory.h"
-#include "multidim_array.h"
-#include "transformations.h"
-#include "metadata.h"
-
-// Includes for rwTIFF which cannot be inside it
-#include <cstring>
-#include "../../external/tiff-3.9.4/libtiff/tiffio.h"
-
-/* Minimum size of a TIFF file to be mapped to a tempfile in case of mapping from
- * image file is required
- */
-const size_t tiff_map_min_size = 200e6;
-
-/// @defgroup Images Images
-/// @ingroup DataLibrary
-
-//@{
-/** Transform type.
- *  This type defines the kind of image.
- */
-typedef enum
-{
-    NoTransform = 0,        // No transform
-    Standard = 1,           // Standard transform: origin = (0,0,0)
-    Centered = 2,           // Centered transform: origin = (nx/2,ny/2,nz/2)
-    Hermitian = 3,          // Hermitian half: origin = (0,0,0)
-    CentHerm = 4            // Centered hermitian: origin = (0,ny/2,nz/2)
-} TransformType;
-
-/** Data type.
- * This class defines the datatype of the data inside this image.
- */
-typedef enum
-{
-    Default = -1,           // For writing purposes
-    Unknown_Type = 0,       // Undefined data type
-    UChar = 1,              // Unsigned character or byte type
-    SChar = 2,              // Signed character (for CCP4)
-    UShort = 3,             // Unsigned integer (2-byte)
-    Short = 4,              // Signed integer (2-byte)
-    UInt = 5,               // Unsigned integer (4-byte)
-    Int = 6,                // Signed integer (4-byte)
-    Long = 7,               // Signed integer (4 or 8 byte, depending on system)
-    Float = 8,              // Floating point (4-byte)
-    Double = 9,             // Double precision floating point (8-byte)
-    ComplexShort = 10,      // Complex two-byte integer (4-byte)
-    ComplexInt = 11,        // Complex integer (8-byte)
-    ComplexFloat = 12,      // Complex floating point (8-byte)
-    ComplexDouble = 13,     // Complex floating point (16-byte)
-    Bool = 14,              // Boolean (1-byte?)
-    LastEntry = 15          // This must be the last entry
-} DataType;
-
-/** Write mode
- * This class defines the writing behavior.
- */
-typedef enum
-{
-    WRITE_OVERWRITE, //forget about the old file and overwrite it
-    WRITE_APPEND,    //append and object at the end of a stack, so far can not append stacks
-    WRITE_REPLACE,   //replace a particular object by another
-    WRITE_READONLY   //only can read the file
-} WriteMode;
-
-/* Cast Write mode
- * This enum defines the cast writing behavior
- */
-typedef enum
-{
-    CAST,       //Only cast the data type
-    CONVERT,    //Convert the data from one type to another
-    ADJUST      //Adjust the histogram to fill the gray level range
-} CastWriteMode;
-
-/** Open File struct
- * This struct is used to share the File handlers with Image Collection class
- */
-struct ImageFHandler
-{
-    FILE*     fimg;       // Image File handler
-    FILE*     fhed;       // Image File header handler
-    TIFF*     tif;        // TIFF Image file hander
-    FileName  fileName;   // Image file name
-    FileName  headName;   // Header file name
-    FileName  ext_name;   // Filename extension
-    bool     exist;       // Shows if the file exists. Equal 0 means file does not exist or not stack.
-};
-
-
-/// Returns memory size of datatype
-size_t gettypesize(DataType type);
-
-/** Convert datatype string to datatypr enun */
-DataType datatypeString2Int(std::string str);
-
-/// @name ImagesSpeedUp Images Speed-up
-/// @{
-
-/** Volume Matrix access.
- *
- * This macro does the same as the normal 3D matrix access but in a faster way
- * as no function call is generated.
- *
- * @code
- * VOLMATRIX(V).resize(128, 128, 128);
- *
- * VOLMATRIX(V2) = VOLMATRIX(V1) + VOLMATRIX(V2);
- * @endcode
- */
-#define VOLMATRIX(V) ((V).data)
-
-/** Image Matrix access.
- *
- * This macro does the same as the normal 2D matrix access but in a faster way
- * as no function call is generated.
- *
- * @code
- * IMGMATRIX(V).resize(128, 128);
- *
- * IMGMATRIX(V2) = IMGMATRIX(V1) + IMGMATRIX(V2);
- * @endcode
- */
-#define IMGMATRIX(I) ((I).data)
-
-/** Pixel access.
- * For fast access to pixel values (and for backwards compatibility of the code)
- */
-#define IMGPIXEL(I, i, j) A2D_ELEM(((I).data), (i), (j))
-
-/** Physical pixel access.
- *
- * The physical pixel access gives you access to a pixel by its physical
- * position and not by its logical one. This access shouldn't be used as a
- * custom, use instead the logical access, but there might be cases in which
- * this access might be interesting. Physical positions start at index 0 in C.
- *
- * @code
- * std::cout << "This is the first pixel stored in the Image " <<
- *     DIRECT_IMGPIXEL(V, 0, 0) << std::endl;
- * @endcode
- */
-#define DIRECT_IMGPIXEL(I, i, j) DIRECT_A2D_ELEM(((I).data), (i), (j))
-
-/** Voxel access.
- *
- * This macro does the same as the normal voxel access (remember, logical
- * access) but in a faster way as no function call is generated.
- *
- * @code
- * std::cout << "Grey level of voxel (2,-3,-3) of the Volume = " <<
- *     VOLVOXEL(V, 2, -3, -3) << std::endl;
- *
- * VOLVOXEL(I, 2, -3, -3) = VOLVOXEL(I, 2, -3, -2);
- * @endcode
- */
-#define VOLVOXEL(V, k, i, j) A3D_ELEM(((V).data), (k), (i), (j))
-
-/** Physical voxel access.
- *
- * The physical voxel access gives you access to a voxel by its physical
- * position and not by its logical one. This access shouldn't be used as a
- * custom, use instead the logical access, but there might be cases in which
- * this access might be interesting. Physical positions start at index 0 in C.
- *
- * @code
- * std::cout << "This is the first voxel stored in the Volume " <<
- *     DIRECT_VOLVOXEL(V, 0, 0, 0) << std::endl;
- * @endcode
- */
-#define DIRECT_VOLVOXEL(I, k, i, j) DIRECT_A3D_ELEM(((I).data), (k), (i), (j))
-//@}
-
-/** Swapping trigger.
- * Threshold file z size above which bytes are swapped.
- */
-#define SWAPTRIG     65535
-
-// Image base class
-class ImageBase
-{
-public:
-    virtual void getDimensions(int &Xdim, int &Ydim, int &Zdim, unsigned long &Ndim) const =0;
-    virtual void getEulerAngles(double &rot, double &tilt, double &psi,
-                                long int n = 0)=0;
-    virtual double tilt(const long int n = 0) const =0;
-    virtual int read(const FileName &name, bool readdata=true, int select_img = -1,
-                     bool apply_geo = false, bool only_apply_shifts = false,
-                     MDRow * row = NULL, bool mapData = false)=0;
-    virtual void write(const FileName &name="", int select_img=-1, bool isStack=false,
-                       int mode=WRITE_OVERWRITE,bool adjust=false)=0;
-    virtual void newMappedFile(int Xdim, int Ydim, int Zdim, int Ndim, FileName _filename)=0;
-    virtual void clear()=0;
-};
+#include "image_base.h"
+#include "datatype.h"
+#include "image_generic.h"
 
 /** Template class for images.
  * The image class is the general image handling class.
@@ -461,6 +263,21 @@ public:
         closeFile(hFile);
 
         return err;
+    }
+
+    /* Read an image with a lower resolution as a preview image.
+     * If Zdim parameter is not passed, then all slices are rescaled.
+     */
+    int readPreview(const FileName &name, int Xdim, int Ydim, int Zdim = NULL)
+    {
+      ImageGeneric im;
+      int imXdim, imYdim, imZdim;
+
+      im.readMapped(name);
+      im.getDimensions(imXdim, imYdim, imZdim);
+      im().setXmippOrigin();
+
+      scaleToSize(0,IMGMATRIX(*this),im(),Xdim,Ydim,(Zdim != NULL)? Zdim:imZdim);
     }
 
     /** General write function

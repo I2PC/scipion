@@ -26,7 +26,7 @@
 #ifndef IMAGE_GENERIC_H_
 #define IMAGE_GENERIC_H_
 
-#include "image.h"
+#include "image_base.h"
 #include "multidim_array_generic.h"
 
 /// @addtogroup Images

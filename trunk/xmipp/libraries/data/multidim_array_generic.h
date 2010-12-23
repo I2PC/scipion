@@ -26,10 +26,8 @@
 #ifndef MULTIDIM_ARRAY_GENERIC_H_
 #define MULTIDIM_ARRAY_GENERIC_H_
 
-
-#include"multidim_array.h"
-#include "image.h"
-
+#include "datatype.h"
+#include "multidim_array.h"
 
 /* Switch among different datatypes.
  *
