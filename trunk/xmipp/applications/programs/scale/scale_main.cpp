@@ -79,7 +79,7 @@ protected:
 
     void processImage(const FileName &fnImg, const FileName &fnImgOut, long int objId)
     {
-        Image<double> img; img.read(fnImg);;
+        Image<double> img; img.read(fnImg);
         img().setXmippOrigin();
 
         if (img().getDim()==2)
