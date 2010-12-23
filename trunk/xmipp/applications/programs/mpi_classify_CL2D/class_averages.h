@@ -176,9 +176,6 @@ public:
     /// Classical Multiref
     bool classicalMultiref;
     
-    /// Align original images
-    bool alignImages;
-    
     /// Maximum number of iterations
     int Niter;
 
@@ -201,7 +198,7 @@ public:
         double _PminSize, std::vector< MultidimArray<double> > _codes0,
         int _Ncodes0, bool _noMirror, bool verbose, bool _corrSplit, 
         bool _useCorrelation, bool _useFixedCorrentropy, 
-        bool _classicalMultiref, bool _alignImages, bool _fast, int rank);
+        bool _classicalMultiref, bool _fast, int rank);
     
     /// Write the nodes
     void write(const FileName &fnRoot, bool final=false) const;
@@ -269,9 +266,6 @@ public:
 
     /// Classical Multiref
     bool classicalMultiref;
-    
-    /// Align original images
-    bool alignImages;
     
     /// Fast
     bool fast;

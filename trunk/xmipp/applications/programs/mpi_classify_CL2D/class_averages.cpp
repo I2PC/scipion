@@ -501,7 +501,7 @@ void VQProjection::lookForNeighbours(const std::vector<VQProjection *> listP,
 void VQ::initialize(MetaData &_SF, int _Niter, int _Nneighbours,
                     double _PminSize, std::vector< MultidimArray<double> > _codes0, int _Ncodes0,
                     bool _noMirror, bool _verbose, bool _corrSplit, bool _useCorrelation,
-                    bool _useFixedCorrentropy, bool _classicalMultiref, bool _alignImages,
+                    bool _useFixedCorrentropy, bool _classicalMultiref,
                     bool _fast, int rank)
 {
     // Only "parent" worker prints
@@ -519,7 +519,6 @@ void VQ::initialize(MetaData &_SF, int _Niter, int _Nneighbours,
     useCorrelation=_useCorrelation;
     useFixedCorrentropy=_useFixedCorrentropy;
     classicalMultiref=_classicalMultiref;
-    alignImages=_alignImages;
     fast=_fast;
     int mpi_size;
 
@@ -849,6 +848,18 @@ void VQ::write(const FileName &fnRoot, bool final) const
     FileName fnSFout=fnRoot+".sel";
     SFout.write(fnSFout);
 
+    // Replicate the input data into an aligned stack
+	FileName fnAligned=fnRoot+"_aligned.stk";
+    if (final)
+    {
+    	std::cerr << "Aligning input images ...\n";
+    	for (int i=0; i<Nimg; i++)
+    	{
+    		I.read(SFv[i]);
+    		I.write(fnAligned,i,true,WRITE_APPEND);
+    	}
+    }
+
     // Make the selfiles of each class
     for (int q=0; q<Q; q++)
     {
@@ -856,18 +867,25 @@ void VQ::write(const FileName &fnRoot, bool final) const
         int imax=P[q]->currentListImg.size();
         for (int i=0; i<imax; i++)
         {
-            if (alignImages && final)
+            SFq.addObject();
+            int idx=P[q]->currentListImg[i];
+            if (final)
             {
-                Image<double> I;
                 I.read(SFv[P[q]->currentListImg[i]]);
                 I().setXmippOrigin();
 
                 double corrCode, likelihood;
                 P[q]->fit(I(), sigma, noMirror, corrCode, likelihood);
-                I.write();
+                I.write(fnAligned,idx,true,WRITE_REPLACE);
+            	fnAux.compose(idx,fnAligned);
             }
-            SFq.addObject();
-            SFq.setValue(MDL_IMAGE,SFv[P[q]->currentListImg[i]]);
+            if (final)
+            {
+            	SFq.setValue(MDL_IMAGE,fnAux);
+            	SFq.setValue(MDL_IMAGE_ORIGINAL,SFv[idx]);
+            }
+            else
+            	SFq.setValue(MDL_IMAGE,SFv[idx]);
         }
         SFq.write(fnSFout,"class_"+integerToString(q,6),APPEND);
     }
@@ -1784,12 +1802,12 @@ void Prog_VQ_prm::read(int argc, char** argv)
     useCorrelation=checkParameter(argc,argv,"-useCorrelation");
     useFixedCorrentropy=checkParameter(argc,argv,"-useFixedCorrentropy");
     classicalMultiref=checkParameter(argc,argv,"-classicalMultiref");
-    alignImages=checkParameter(argc,argv,"-alignImages");
 }
 
 void Prog_VQ_prm::show() const
 {
-    std::cout << "Input images:            " << fnSel               << std::endl
+    std::cout
+    << "Input images:            " << fnSel               << std::endl
     << "Output images:           " << fnOut               << std::endl
     << "Iterations:              " << Niter               << std::endl
     << "CodesSel0:               " << fnCodes0            << std::endl
@@ -1804,7 +1822,7 @@ void Prog_VQ_prm::show() const
     << "Use Correlation:         " << useCorrelation      << std::endl
     << "Use Fixed Correntropy:   " << useFixedCorrentropy << std::endl
     << "Classical Multiref:      " << classicalMultiref   << std::endl
-    << "Align images:            " << alignImages         << std::endl;
+    ;
 }
 
 void Prog_VQ_prm::usage() const
@@ -1826,7 +1844,6 @@ void Prog_VQ_prm::usage() const
     << "   [-useCorrelation]     : Instead of correntropy\n"
     << "   [-useFixedCorrentropy]: Instead of correntropy\n"
     << "   [-classicalMultiref]  : Instead of enhanced clustering\n"
-    << "   [-alignImages]        : Align the original images at the end\n"
     ;
 }
 
@@ -1850,7 +1867,7 @@ void Prog_VQ_prm::produce_side_info(int rank)
     }
     vq.initialize(SF,Niter,Nneighbours,PminSize,
                   codes0,Ncodes0,noMirror,verbose,corrSplit,useCorrelation,
-                  useFixedCorrentropy,classicalMultiref,alignImages,fast,rank);
+                  useFixedCorrentropy,classicalMultiref,fast,rank);
 }
 
 void Prog_VQ_prm::run(int rank)
