@@ -41,6 +41,8 @@ public class Command {
 	NORMALIZE_SERIES=new Command("file.normalize","Normalize series","normalize",false,null),
 	DEFINE_TILT = new Command("file.tilt","Set tilt angles","setTilt",false,null),
 	DISCARD_PROJECTION = new Command("file.discard_projection","Discard Projection","discardProjection",false,null),
+	// only here for the label
+	UNDO_DISCARD_PROJECTION = new Command("file.undo_discard_projection","Undo Discard Proj.","discardProjection",false,null),
 	GAUSSIAN = new Command("proc.gaussian","Gaussian","gaussian", false,null),
 	MEDIAN = new Command("proc.median","Median","median", false,null),
 	SUB_BACKGROUND = new Command("proc.sub_background","Substract Background","subBackground",false,null),
@@ -54,7 +56,8 @@ public class Command {
 	ALIGN_AUTO = new Command("align.auto","Auto","alignAuto",false,null),
 	ALIGN_MANUAL = new Command("align.manual","Manual","alignManual",false,null),
 	ALIGN_CORRELATION = new Command("align.correlation","Quick","alignCorrelation",false,null),
-	PRINT_WORKFLOW = new Command("debug.print_workflow","Print workflow","printWorkflow",false,null);
+	PRINT_WORKFLOW = new Command("debug.print_workflow","Print workflow","printWorkflow",false,null), 
+	CURRENT_PROJECTION_INFO = new Command("debug.current_projection_info","Current Projection Info","currentProjectionInfo",false,null);;
 	
 	public static enum State{IDLE,LOADING, LOADED, RELOADING,CANCELED;};
 	

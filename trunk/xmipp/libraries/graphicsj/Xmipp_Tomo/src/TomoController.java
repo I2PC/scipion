@@ -487,6 +487,18 @@ public class TomoController {
 	}
 	
 	public void discardProjection(){
-		window.getModel().discardCurrentProjection();
+		if(window.getModel().isCurrentEnabled()){
+			window.getModel().discardCurrentProjection();
+			window.refreshImageCanvas();
+			window.changeLabel(Command.DISCARD_PROJECTION.getId(), Command.UNDO_DISCARD_PROJECTION.getLabel());
+		}else{
+			window.getModel().enableCurrentProjection();
+			window.refreshImageCanvas();
+			window.changeLabel(Command.DISCARD_PROJECTION.getId(), Command.DISCARD_PROJECTION.getLabel());
+		}
+	}
+	
+	public void currentProjectionInfo(){
+		Xmipp_Tomo.debug(window.getModel().getCurrentProjectionInfo());
 	}
 }

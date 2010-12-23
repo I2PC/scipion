@@ -25,7 +25,6 @@
 
 import ij.IJ;
 import ij.ImagePlus;
-import ij.ImageStack;
 import ij.WindowManager;
 import ij.gui.DialogListener;
 import ij.gui.GenericDialog;
@@ -33,7 +32,6 @@ import ij.gui.ImageCanvas;
 import ij.gui.ImageLayout;
 import ij.gui.ImageWindow;
 import ij.gui.Roi;
-
 import java.awt.*;
 import java.awt.event.*;
 import java.beans.PropertyChangeEvent;
@@ -81,7 +79,7 @@ public class TomoWindow extends ImageWindow implements WindowListener,
 	private final static String TITLE = "XmippTomo";
 	// minimum dimension of tabbed menu panel (window top), needed to adjust automatically the window size to
 	// the tabbed menu needs (so it does not turn to a scrollable tabbed menu)
-	private static int MENUPANEL_MINWIDTH = 500, MENUPANEL_MINHEIGHT = 100;
+	private static int MENUPANEL_MINWIDTH = 600, MENUPANEL_MINHEIGHT = 150;
 	// maximum window size
 	private static Rectangle maxWindowSize = new Rectangle(800, 800);
 	// miliseconds to wait for a Plugin dialog to display (so the dialog capture
@@ -134,6 +132,7 @@ public class TomoWindow extends ImageWindow implements WindowListener,
 	private static java.util.List<Command> commandsMenuDebug = new LinkedList<Command>() {
 		{
 			add(Command.PRINT_WORKFLOW);
+			add(Command.CURRENT_PROJECTION_INFO);
 		}
 	};
 
@@ -156,6 +155,7 @@ public class TomoWindow extends ImageWindow implements WindowListener,
 			// disabled until native writing (using Xmipp library) is implemented
 			// add(Command.APPLY);
 			add(Command.PRINT_WORKFLOW);
+			add(Command.CURRENT_PROJECTION_INFO);
 			add(Command.MEASURE);
 			add(Command.PLAY);
 		}
@@ -378,7 +378,7 @@ public class TomoWindow extends ImageWindow implements WindowListener,
 		for (int i = 0; i < viewPanel.getComponentCount(); i++)
 			viewPanel.remove(i);
 
-		setCanvas(new ImageCanvas(getModel().getImage()));
+		setCanvas(new TomoImageCanvas(getModel()));
 		viewPanel.setLayout(new ImageLayout(getCanvas()));
 		viewPanel.add(getCanvas());
 		getCanvas().addMouseMotionListener(this);
@@ -508,9 +508,11 @@ public class TomoWindow extends ImageWindow implements WindowListener,
 	}
 
 	public void refreshImageCanvas() {
-		if (getCanvas() != null) {
+		if (getCanvas() != null) {	
 			getCanvas().setImageUpdated();
 			getCanvas().repaint();
+			
+
 		}
 	}
 
@@ -526,6 +528,11 @@ public class TomoWindow extends ImageWindow implements WindowListener,
 			getModel().setCurrentProjection(projectionScrollbar.getValue());
 			refreshImageCanvas();
 			updateStatusText(); // projection number
+			// Discard button label
+			if(getModel().isCurrentEnabled())
+				changeLabel(Command.DISCARD_PROJECTION.getId(), Command.DISCARD_PROJECTION.getLabel());
+			else
+				changeLabel(Command.DISCARD_PROJECTION.getId(), Command.UNDO_DISCARD_PROJECTION.getLabel());
 		}
 		notify();
 	}
@@ -567,6 +574,10 @@ public class TomoWindow extends ImageWindow implements WindowListener,
 
 	public void changeIcon(String buttonId, String iconName) {
 		getButton(buttonId).setIcon(getIcon(iconName));
+	}
+	
+	public void changeLabel(String buttonId, String label) {
+		getButton(buttonId).setText(label);
 	}
 
 	public void captureDialog() {

@@ -91,6 +91,10 @@ public class TomoData extends Component {
 	// by now use a vector to store the angles - indexes can be 0..N-1
 	java.util.List <Float> tiltAngles=null;
 	
+	// projection enabled = preserve; projection disabled = discard
+	// when using Metadata enabled field, the tilt series is not modified. Instead the selfile is.
+	java.util.List <Boolean> enabledProjections= new Vector<Boolean>();
+	
 	// This class also saves the models of the texfields of its views, one Document per textfield
 	private Document tiltTextModel=null;
 
@@ -161,8 +165,17 @@ public class TomoData extends Component {
 	}
 	
 	private List<Float> getTiltAngles(){
+		if(tiltAngles == null){
+			Vector <Float> v = new Vector<Float>();
+			v.setSize(getNumberOfProjections());
+			tiltAngles=v;
+		}
 		return tiltAngles;
 	}
+
+	private List<Boolean> getEnabledProjections(){
+		return enabledProjections;
+	} 
 	
 	public Iterator<Float> getTiltAnglesIterator(){
 		return tiltAngles.iterator();
@@ -184,11 +197,26 @@ public class TomoData extends Component {
 	
 	// Helper methods to manage tilt angles "list"
 	
-	// tiltangles list -> 0..N-1
+	/**
+	 * @param i 1..N
+	 */
 	private Float getTiltAngle(int i){
 		if(tiltAngles == null)
 			return null;
 		return getTiltAngles().get(i-1);
+	}
+	
+	/**
+	 * @param i 1..N
+	 */
+	public boolean isEnabled(int i){
+		if(enabledProjections == null)
+			return false;
+		return enabledProjections.get(i-1).booleanValue();
+	}
+	
+	public boolean isCurrentEnabled(){
+		return isEnabled(getCurrentProjection());
 	}
 	
 	
@@ -200,15 +228,20 @@ public class TomoData extends Component {
 		// tiltangles list -> 0..N-1
 		
 		// set() below needs a non-empty vector (size > 0)
-		if(tiltAngles == null){
-			Vector <Float> v = new Vector<Float>();
-			v.setSize(getNumberOfProjections());
-			tiltAngles=v;
-		}
-			
+	
 		getTiltAngles().set(i-1, new Float(t));
 		if(i==getCurrentProjection())
 			setTiltText(t);
+	}
+	
+	/**
+	 * @param i enabledProjections index - from 1 to numberOfProjections
+	 * @param b true=enabled,false=disabled
+	 */
+	private void setEnabled(int i, boolean e){
+
+		// set() below needs a non-empty vector (size > 0)
+		getEnabledProjections().set(i-1, new Boolean(e));
 	}
 	
 	public void setTiltAnglesStep(double start, double step){
@@ -401,6 +434,9 @@ public class TomoData extends Component {
 		}else		
 			getImage().getStack().addSlice(null, imageProcessor);
 		
+		// @todo: should be the value read from metadata
+		getEnabledProjections().add(new Boolean(true));
+		
 		setNumberOfProjections(getNumberOfProjections()+1);
 		if(getNumberOfProjections() == 1)
 			firstImageLoaded();
@@ -459,15 +495,13 @@ public class TomoData extends Component {
 	
 	public void discardCurrentProjection(){
 		if(getNumberOfProjections()>1){
-			int projectionToDelete=getCurrentProjection();
-			window.setCurrentProjection(getNextProjection());
-			getImage().getStack().deleteSlice(projectionToDelete);
-			deleteTiltAngle(projectionToDelete);
-			// change current projection here because propagated setSlice fails
-			// here we need to consider the future size (N-1), so cannot use getNextProjection
-			// int nextProjection = (getCurrentProjection() % getNumberOfProjections()-1) + 1;
-	 
-			setNumberOfProjections(getNumberOfProjections()-1);
+			setEnabled(getCurrentProjection(), false);
+		}
+	}
+	
+	public void enableCurrentProjection(){
+		if(getNumberOfProjections()>1){
+			setEnabled(getCurrentProjection(), true);
 		}
 	}
 	
@@ -491,6 +525,10 @@ public class TomoData extends Component {
 		window.unprotectWindow();
 		
 			
+	}
+	
+	public String getCurrentProjectionInfo(){
+		return "Projection #" + getCurrentProjection() + ", enabled:" + isCurrentEnabled();
 	}
 	
 }
