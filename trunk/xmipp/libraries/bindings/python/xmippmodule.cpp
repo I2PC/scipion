@@ -804,7 +804,7 @@ MetaData_removeObjects(PyObject *obj, PyObject *args, PyObject *kwargs)
     }
     return NULL;
 }
-/* SingleImgSize */
+/* Make absolute path */
 static PyObject *
 MetaData_makeAbsPath(PyObject *obj, PyObject *args, PyObject *kwargs)
 {
@@ -1420,6 +1420,49 @@ xmipp_readMetaDataWithTwoPossibleImages(PyObject *obj, PyObject *args, PyObject 
     return NULL;
 }
 
+/* substituteOriginalImages */
+static PyObject *
+xmipp_substituteOriginalImages(PyObject *obj, PyObject *args, PyObject *kwargs)
+{
+    PyObject *pyStrFn, *pyStrFnOrig, *pyStrFnOut;
+    int label;
+
+    if (PyArg_ParseTuple(args, "OOOi", &pyStrFn, &pyStrFnOrig, &pyStrFnOut, &label))
+    {
+        try
+        {
+        	FileName fn, fnOrig, fnOut;
+        	if (PyString_Check(pyStrFn))
+        		fn=PyString_AsString(pyStrFn);
+        	else if (FileName_Check(pyStrFn))
+        		fn=FileName_Value(pyStrFn);
+        	else
+        		PyErr_SetString(PyExc_TypeError, "Expected string or FileName as first argument");
+
+        	if (PyString_Check(pyStrFnOrig))
+        		fnOrig=PyString_AsString(pyStrFnOrig);
+        	else if (FileName_Check(pyStrFnOrig))
+        		fnOrig=FileName_Value(pyStrFnOrig);
+        	else
+        		PyErr_SetString(PyExc_TypeError, "Expected string or FileName as second argument");
+
+        	if (PyString_Check(pyStrFnOut))
+        		fnOut=PyString_AsString(pyStrFnOut);
+        	else if (FileName_Check(pyStrFnOut))
+        		fnOut=FileName_Value(pyStrFnOut);
+        	else
+        		PyErr_SetString(PyExc_TypeError, "Expected string or FileName as third argument");
+
+        	substituteOriginalImages(fn, fnOrig, fnOut, (MDLabel)label);
+            Py_RETURN_NONE;
+        }
+        catch (XmippError xe)
+        {
+            PyErr_SetString(PyXmippError, xe.msg.c_str());
+        }
+    }
+    return NULL;
+}
 
 static PyMethodDef xmipp_methods[] =
     {
@@ -1452,6 +1495,9 @@ static PyMethodDef xmipp_methods[] =
         },
         {"readMetaDataWithTwoPossibleImages", (PyCFunction)xmipp_readMetaDataWithTwoPossibleImages, METH_VARARGS,
          "Read a 1 or two column list of micrographs"
+        },
+        {"substituteOriginalImages", (PyCFunction)xmipp_substituteOriginalImages, METH_VARARGS,
+         "Subsitute the original images into a given column of a metadata"
         },
         {NULL} /* Sentinel */
     };

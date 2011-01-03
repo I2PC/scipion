@@ -63,4 +63,12 @@ bool setValueColSwig(MetaData &md,  MDLabel label,  T &valueIn)
  */
 void readMetaDataWithTwoPossibleImages(const FileName &fn, MetaData &MD);
 
+/** Substitute original images.
+ *  This function substitutes the images in a given label of the metadata by
+ *  a set of original images. The substituted images are supposed to be in a stack produced
+ *  by processing the original images. The substitution is performed in all blocks.
+ */
+void substituteOriginalImages(const FileName &fn, const FileName &fnOrig, const FileName &fnOut,
+		MDLabel label);
+
 #endif /* METADATA_EXTENSION_H_ */

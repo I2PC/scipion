@@ -189,3 +189,39 @@ void readMetaDataWithTwoPossibleImages(const FileName &fn, MetaData &MD)
     	fhIn.close();
     }
 }
+
+/* Substitute ------------------------------------------------------------- */
+void substituteOriginalImages(const FileName &fn, const FileName &fnOrig, const FileName &fnOut,
+		MDLabel label)
+{
+	// Read the original files
+	MetaData MDorig(fnOrig);
+    if (MDorig.containsLabel(MDL_ENABLED))
+    	MDorig.removeObjects(MDValueEQ(MDL_ENABLED, -1));
+	StringVector filesOrig;
+	MDorig.getColumnValues(MDL_IMAGE,filesOrig);
+
+	// Read the blocks available
+	StringVector blocks;
+	getBlocksAvailableInMetaData(fn, blocks);
+
+	// Process each block
+	for (int b=0; b<blocks.size(); b++)
+	{
+		MetaData MD;
+		MD.read(fn,NULL,blocks[b]);
+		if (MD.containsLabel(label))
+		{
+			FileName fnImg;
+			int stkNo;
+			String stkName;
+			FOR_ALL_OBJECTS_IN_METADATA(MD)
+			{
+				MD.getValue(label,fnImg);
+				fnImg.decompose(stkNo,stkName);
+				MD.setValue(label,filesOrig[stkNo]);
+			}
+		}
+		MD.write(fnOut,blocks[b],APPEND);
+	}
+}
