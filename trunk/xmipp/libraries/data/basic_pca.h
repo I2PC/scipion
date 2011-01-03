@@ -74,6 +74,12 @@ public:
     // Indexes to access in a sorted way
     MultidimArray<int> idx;
 public:
+    /// Resize
+    inline void reserve(int newSize)
+    {
+    	v.reserve(newSize);
+    }
+
     /// Add vector
     inline void addVector(const MultidimArray<float> &_v)
     {
