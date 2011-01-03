@@ -56,9 +56,6 @@ Highpass =0.02
 """ In (Angstroms/Pixel). Set to 0 if not desired """
 Lowpass =0.4
 
-# {expert} Use the fast version of this algorithm?
-DoFast=True
-
 # {expert}{list}|correntropy|correlation| Comparison method
 """ Use correlation or correntropy """
 ComparisonMethod='correlation'
@@ -176,7 +173,6 @@ class CL2D_class:
                  DoFilter,
                  Highpass,
                  Lowpass,
-                 DoFast,
                  ComparisonMethod,
                  ClusteringMethod,
                  AdditionalParameters,
@@ -199,7 +195,6 @@ class CL2D_class:
         self.DoFilter=DoFilter
         self.Highpass=Highpass
         self.Lowpass=Lowpass
-        self.DoFast=DoFast
         self.ComparisonMethod=ComparisonMethod
         self.ClusteringMethod=ClusteringMethod
         self.AdditionalParameters=AdditionalParameters
@@ -208,7 +203,6 @@ class CL2D_class:
         self.thPCAZscore=thPCAZscore
         self.NumberOfMpiProcesses=NumberOfMpiProcesses
         self.SystemFlavour=SystemFlavour
-        self.filesToDelete=[]
    
         # Setup logging
         self.log=log.init_log_system(self.ProjectDir,
@@ -232,7 +226,6 @@ class CL2D_class:
             oldNumberOfReferences=getParameter("NumberOfReferences",fnParam)
             oldNumberOfReferences0=getParameter("NumberOfReferences0",fnParam)
             oldNumberOfIterations=getParameter("NumberOfIterations",fnParam)
-            oldDoFast=getParameter("DoFast",fnParam)
             oldComparisonMethod=getParameter("ComparisonMethod",fnParam)
             oldClusteringMethod=getParameter("ClusteringMethod",fnParam)
             oldAdditionalParameters=getParameter("AdditionalParameters",fnParam)
@@ -251,7 +244,6 @@ class CL2D_class:
             elif oldNumberOfReferences!=NumberOfReferences or \
                oldNumberOfReferences0!=NumberOfReferences0 or \
                oldNumberOfIterations!=NumberOfIterations or \
-               oldDoFast!=DoFast or \
                oldComparisonMethod!=ComparisonMethod or \
                oldClusteringMethod!=ClusteringMethod or \
                oldAdditionalParameters!=AdditionalParameters:
@@ -270,7 +262,6 @@ class CL2D_class:
                  "DoFilter",
                  "Highpass",
                  "Lowpass",
-                 "DoFast",
                  "ComparisonMethod",
                  "ClusteringMethod",
                  "AdditionalParameters",
@@ -282,57 +273,46 @@ class CL2D_class:
         log.make_backup_of_script_file(sys.argv[0],
             os.path.abspath(self.WorkingDir))
 
-        # Preprocess the particles
-        if self.doStep1:
-            self.preprocess()
-     
-        # Execute CL2D in the working directory
-        if self.doStep2:
-            self.execute_CLalign2D()
-     
-        # Execute CL2D core in the working directory
-        if self.doStep3:
-            self.execute_core_analysis()
-     
-        # Finish
-        self.close()
-        for fileToDelete in self.filesToDelete:
-            os.remove(fileToDelete)
+        # Run
+        self.preprocess()
+        self.execute_CLalign2D()
+        self.execute_core_analysis()
 
     def preprocess(self):
         import launch_job
         if self.DoFilter:
             slope=max(self.Highpass/2,0.01)
             fnOut=self.WorkingDir+'/preprocessedImages.stk'
-            params= '-i '+str(self.InSelFile)+\
-                    ' --fourier_mask raised_cosine '+str(slope)+\
-                    ' -o '+fnOut
-            if self.Highpass>0 and self.Lowpass>0:
-                params+=" --band_pass "+str(self.Highpass)+" "+str(self.Lowpass)
-            elif self.Highpass>0:
-                params+=" --high_pass "+str(self.Highpass)
-            elif self.Lowpass>0:
-                params+=" --low_pass "+str(self.Lowpass)
-            launch_job.launch_job("xmipp_fourier_filter",
-                                  params,
-                                  self.log,
-                                  False,
-                                  1,
-                                  1,
-                                  self.SystemFlavour)
             self.selFileToUse=fnOut
+            if self.doStep1:
+                params= '-i '+str(self.InSelFile)+\
+                        ' --fourier_mask raised_cosine '+str(slope)+\
+                        ' -o '+fnOut
+                if self.Highpass>0 and self.Lowpass>0:
+                    params+=" --band_pass "+str(self.Highpass)+" "+str(self.Lowpass)
+                elif self.Highpass>0:
+                    params+=" --high_pass "+str(self.Highpass)
+                elif self.Lowpass>0:
+                    params+=" --low_pass "+str(self.Lowpass)
+                launch_job.launch_job("xmipp_fourier_filter",
+                                      params,
+                                      self.log,
+                                      False,
+                                      1,
+                                      1,
+                                      self.SystemFlavour)
         else:
             self.selFileToUse=self.InSelFile
 
     def execute_CLalign2D(self):
-        import launch_job       
+        import launch_job
+        if not self.doStep2:
+            return
         params= '-i '+str(self.selFileToUse)+' -o '+WorkingDir+'/class '+\
                 ' -codes '+str(self.NumberOfReferences)+\
                 ' -codes0 '+str(self.NumberOfReferences0)+\
                 ' -iter '+str(self.NumberOfIterations)
         params+=' '+self.AdditionalParameters
-        if (self.DoFast):
-            params+= ' -fast '
         if (self.ComparisonMethod=='correlation'):
             params+= ' -useCorrelation '
         if (self.ClusteringMethod=='classical'):
@@ -345,11 +325,22 @@ class CL2D_class:
                               self.NumberOfMpiProcesses,
                               1,
                               self.SystemFlavour)
+        
+        # If the images have been filtered, translate the output of cl2d in
+        # terms of the original images
+        # Construct dictionary
+        fnClasses=WorkingDir+'/class.sel'
+        if os.path.exists(fnClasses) and self.DoFilter:
+            import xmipp
+            xmipp.substituteOriginalImages(fnClasses,self.InSelFile,
+                                           self.WorkingDir+"/intermediate.sel",
+                                           xmipp.MDL_IMAGE_ORIGINAL)
+            os.system("mv -f "+self.WorkingDir+"/intermediate.sel "+fnClasses)
 
     def execute_core_analysis(self):
         import launch_job
-        print '*********************************************************************'
-        print '*  Executing CL2D core analysis :' 
+        if not self.doStep2:
+            return
         params= WorkingDir+'/class '+\
                 str(self.thGoodClass)+' '+\
                 str(self.thJunkZscore)+' '+\
@@ -359,16 +350,11 @@ class CL2D_class:
         launch_job.launch_job("xmipp_classify_CL2D_core_analysis",
                               params,
                               self.log,
-                              False,
+                              True,
+                              self.NumberOfMpiProcesses,
                               1,
-                              self.thr,
                               self.SystemFlavour)
         
-    def close(self):
-        message='Done!'
-        print '*',message
-        print '*********************************************************************'
-
 # Preconditions
 def preconditions(gui):
     retval=True
@@ -449,7 +435,6 @@ if __name__ == '__main__':
                  DoFilter,
                  Highpass,
                  Lowpass,
-                 DoFast,
                  ComparisonMethod,
                  ClusteringMethod,
                  AdditionalParameters,
