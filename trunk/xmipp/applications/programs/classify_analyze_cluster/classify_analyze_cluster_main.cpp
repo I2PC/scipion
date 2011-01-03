@@ -27,35 +27,15 @@
 
 int main(int argc, char **argv)
 {
-    Prog_analyze_cluster_prm prm;
-
-    // Get input parameters
+	ProgAnalyzeCluster program;
     try
     {
-        prm.read(argc, argv);
-        prm.show();
+        program.read(argc, argv);
+        program.run();
     }
-    catch (XmippError XE)
+    catch (XmippError xe)
     {
-        std::cout << XE;
-        prm.usage();
-        exit(1);
-    }
-
-    try
-    {
-        prm.produceSideInfo();
-        prm.run();
-    }
-    catch (XmippError XE)
-    {
-        std::cout << XE;
-        prm.usage();
-        exit(1);
+        std::cerr << xe;
     }
     return 0;
 }
-
-
-
-

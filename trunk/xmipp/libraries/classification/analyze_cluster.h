@@ -29,28 +29,35 @@
 #include <data/metadata.h>
 #include <data/metadata_extension.h>
 #include <data/basic_pca.h>
+#include <data/program.h>
 
 /**@defgroup AnalyzeClusterProgram Analyze cluster
    @ingroup ClassificationLibrary */
 //@{
 /** Analyze cluster parameters. */
-class Prog_analyze_cluster_prm
+class ProgAnalyzeCluster: public XmippProgram
 {
 public:
     /** Filename selection file containing the images */
     FileName fnSel;
 
+    /** Block within that sel */
+    String block;
+
     /** Filename reference image */
     FileName fnRef;
 
-    /**  Output directory */
-    FileName fnOdir;
+    /**  Output metadata */
+    FileName fnOut;
 
-    /**  Filename output extension */
-    FileName oext;
+    /**  Output aligned stack */
+    FileName fnOutAligned;
 
-    /** Boolean to align input images */
-    bool align;
+    /**  Output basis stack */
+    FileName fnOutBasis;
+
+    /** Quiet */
+    bool quiet;
 
     /** PCA dimension */
     int NPCA;
@@ -64,6 +71,9 @@ public:
     /** Don't mask*/
     bool dontMask;
 public:
+    // Produce PCA basis
+    bool basis;
+
     // SelFiles of images
     MetaData SFin, SFout;
 
@@ -78,13 +88,13 @@ public:
 
 public:
     /// Read argument from command line
-    void read(int argc, char **argv);
+    void readParams();
 
     /// Show
     void show();
 
-    /// Usage
-    void usage();
+    /// Define parameters
+    void defineParams();
 
     /// Produce side info
     void produceSideInfo();

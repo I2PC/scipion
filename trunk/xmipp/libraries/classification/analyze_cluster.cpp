@@ -29,60 +29,72 @@
 #include <data/mask.h>
 
 // Read arguments ==========================================================
-void Prog_analyze_cluster_prm::read(int argc, char **argv)
+void ProgAnalyzeCluster::readParams()
 {
-    fnSel = getParameter(argc, argv, "-i");
-    fnRef = getParameter(argc, argv, "-ref");
-    oext  = getParameter(argc, argv, "-oext", "");
-    fnOdir = getParameter(argc, argv, "-odir", "");
-    align = checkParameter(argc, argv, "-produceAligned");
-    NPCA  = textToInteger(getParameter(argc, argv, "-NPCA", "2"));
-    Niter  = textToInteger(getParameter(argc, argv, "-iter", "10"));
-    distThreshold = textToFloat(getParameter(argc, argv, "-maxDist", "2"));
-    dontMask = checkParameter(argc, argv, "-dontMask");
+    fnSel = getParam("-i");
+    fnOut = getParam("-o");
+    fnRef = getParam("--ref");
+    if (checkParam("--block"))
+        block = getParam("--block");
+    if (checkParam("--produceAligned"))
+        fnOutAligned = getParam("--produceAligned");
+    if (checkParam("--basis"))
+        fnOutBasis = getParam("--basis");
+    quiet = checkParam("--quiet");
+    NPCA  = getIntParam("--NPCA");
+    Niter  = getIntParam("--iter");
+    distThreshold = getDoubleParam("--maxDist");
+    dontMask = checkParam("--dontMask");
 }
 
 // Show ====================================================================
-void Prog_analyze_cluster_prm::show()
+void ProgAnalyzeCluster::show()
 {
-    std::cerr << "Input metadata file:    " << fnSel         << std::endl
-    << "Reference:              " << fnRef         << std::endl
-    << "Produce aligned:        " << align         << std::endl
-    << "Output directory:       " << fnOdir        << std::endl
-    << "Output extension:       " << oext          << std::endl
-    << "PCA dimension:          " << NPCA          << std::endl
-    << "Iterations:             " << Niter         << std::endl
-    << "Maximum distance:       " << distThreshold << std::endl
-    << "Don't mask:             " << dontMask      << std::endl
-    ;
+    if (!quiet)
+        std::cerr
+        << "Input metadata file:    " << fnSel         << std::endl
+        << "Block:                  " << block         << std::endl
+        << "Reference:              " << fnRef         << std::endl
+        << "Output metadata:        " << fnOut         << std::endl
+        << "Output aligned stack:   " << fnOutAligned  << std::endl
+        << "Output basis stack:     " << fnOutBasis    << std::endl
+        << "PCA dimension:          " << NPCA          << std::endl
+        << "Iterations:             " << Niter         << std::endl
+        << "Maximum distance:       " << distThreshold << std::endl
+        << "Don't mask:             " << dontMask      << std::endl
+        ;
 }
 
 // usage ===================================================================
-void Prog_analyze_cluster_prm::usage()
+void ProgAnalyzeCluster::defineParams()
 {
-    std::cerr << "Usage:  " << std::endl
-    << "   -i <metadatafile>  : metadata file  with images assigned to the cluster\n"
-    << "   -ref <image>       : class representative\n"
-    << "  [-produceAligned]   : write the aligned images\n"
-    << "  [-odir <dir=''>]    : output directory\n"
-    << "  [-oext <ext=''>]    : in case you want to produce aligned images\n"
-    << "                        use this flag to change the output extension\n"
-    << "                        or the input images will be modified\n"
-    << "  [-NPCA <dim=2>]     : PCA dimension\n"
-    << "  [-iter <N=10>]      : Number of iterations\n"
-    << "  [-maxDist <d=2>]    : Maximum distance\n"
-    << "  [-dontMask]         : Don't use a circular mask\n"
-    ;
+	addUsageLine("Score the images in a cluster according to their PCA projection");
+    addParamsLine("   -i <metadatafile>             : metadata file  with images assigned to the cluster");
+    addParamsLine("   -o <metadatafile>             : output metadata");
+    addParamsLine("   --ref <image>                 : class representative");
+    addParamsLine("  [--block <blockName>]          : block name within the input metadata");
+    addParamsLine("  [--produceAligned <stackName>] : write the aligned images");
+    addParamsLine("  [--basis <stackName>]          : write the average and basis of the PCA in a stack");
+    addParamsLine("  [--NPCA <dim=2>]               : PCA dimension");
+    addParamsLine("  [--iter <N=10>]                : Number of iterations");
+    addParamsLine("  [--maxDist <d=2>]              : Maximum distance");
+    addParamsLine("  [--dontMask]                   : Don't use a circular mask");
+    addParamsLine("  [--quiet]                      : Don't show anything on screen");
 }
 
 // Produce side info  ======================================================
 //#define DEBUG
-void Prog_analyze_cluster_prm::produceSideInfo()
+void ProgAnalyzeCluster::produceSideInfo()
 {
+    bool align = fnOutAligned!="";
+    basis = fnOutBasis!="";
+
     // Read input selfile and reference
-    SFin.read(fnSel, NULL);
-    if (SFin.size()==0) return;
-    SFin.removeObjects(MDValueEQ(MDL_ENABLED, -1));
+    SFin.read(fnSel, NULL, block);
+    if (SFin.size()==0)
+        return;
+    if (SFin.containsLabel(MDL_ENABLED))
+    	SFin.removeObjects(MDValueEQ(MDL_ENABLED, -1));
 
     // Image holding current reference
     Image<double> Iref;
@@ -100,15 +112,18 @@ void Prog_analyze_cluster_prm::produceSideInfo()
 
     // Read all images in the class and substract the mean
     // once aligned
+    Image<double> Iaux;
+    FileName auxFn, fnOutIdx;
+    Matrix2D<double> M;
+    int idxStk=0;
+    pcaAnalyzer.reserve(SFin.size());
+    if (align)
+        Ialigned.reserve(SFin.size());
     FOR_ALL_OBJECTS_IN_METADATA(SFin)
     {
-        Image<double> Iaux;
-        FileName auxFn;
         SFin.getValue( MDL_IMAGE, auxFn );
         Iaux.read( auxFn );
         Iaux().setXmippOrigin();
-        SFout.addObject();
-        SFout.setValue(MDL_IMAGE,auxFn);
 
         // Choose between this image and its mirror
         MultidimArray<double> I, Imirror;
@@ -123,7 +138,6 @@ void Prog_analyze_cluster_prm::produceSideInfo()
         Iaux->write("PPPclass.xmp");
 #endif
 
-        Matrix2D<double> M;
         alignImages(Iref(),I,M);
         alignImages(Iref(),Imirror,M);
         double corr=correlation_index(Iref(),I,&mask);
@@ -135,31 +149,29 @@ void Prog_analyze_cluster_prm::produceSideInfo()
             Iaux()=Imirror;
 
         // Produce aligned
+        SFout.addObject();
         if (align)
         {
-            if (oext=="")
-                Iaux.write();
-            else
-            {
-                FileName fnRoot=auxFn.withoutExtension();
-                if (fnOdir!="")
-                   fnRoot=fnOdir+"/"+Iaux.name().getBaseName();
-                
-                fnRoot = fnRoot + "." + oext;
-                
-                Iaux.write(fnRoot);
-                SFout.setValue(MDL_IMAGE,fnRoot);
-            }
+            fnOutIdx.compose(idxStk,fnOut);
+            Iaux.write(fnOutAligned,idxStk,true,WRITE_APPEND);
+            SFout.setValue(MDL_IMAGE,fnOutIdx);
+            SFout.setValue(MDL_IMAGE_ORIGINAL,auxFn);
+            idxStk++;
         }
+        else
+            SFout.setValue(MDL_IMAGE,auxFn);
 
         MultidimArray<float> v;
         v.initZeros(Npixels);
         int idx=0;
         FOR_ALL_ELEMENTS_IN_ARRAY2D(mask)
-        if (mask(i,j))
-            v(idx++)=Iaux(i,j);
+        if (A2D_ELEM(mask,i,j))
+            A1D_ELEM(v,idx++)=IMGPIXEL(Iaux,i,j);
         pcaAnalyzer.addVector(v);
-        Ialigned.push_back(v);
+        if (basis)
+            Ialigned.push_back(v); // The vector is duplicated because
+        // the pcaAnalyzer normalizes the input vectors
+        // and then, they cannot be reused
 
 #ifdef DEBUG
 
@@ -170,73 +182,67 @@ void Prog_analyze_cluster_prm::produceSideInfo()
         char c;
         std::cin >> c;
 #endif
+
     }
 }
 #undef DEBUG
 
 // Run  ====================================================================
-void Prog_analyze_cluster_prm::run()
+void ProgAnalyzeCluster::run()
 {
-	pcaAnalyzer.evaluateZScore(NPCA, Niter);
+    show();
+    produceSideInfo();
+
+    pcaAnalyzer.evaluateZScore(NPCA, Niter);
 
     // Output
-    FileName fnRoot=fnSel.withoutExtension();
-    if (fnOdir!="")
-        fnRoot=fnOdir+"/"+fnSel.getBaseName();
-    
-    MetaData SFout_good, SFout_bad;
     MultidimArray<double> IalignedAvg;
     int N=SFin.size();
-    if (N>0)
-    	IalignedAvg.initZeros(XSIZE(Ialigned[0]));
+    if (N>0 && basis)
+        IalignedAvg.initZeros(XSIZE(Ialigned[0]));
     double Ngood=0;
-
     for (int n=0; n<N; n++)
     {
-    	int trueIdx=pcaAnalyzer.getSorted(n);
-    	double zscore=pcaAnalyzer.getSortedZscore(n);
-    	FileName fnImg;
-    	SFout.getValue(MDL_IMAGE,fnImg,trueIdx+1);
+        int trueIdx=pcaAnalyzer.getSorted(n);
+        double zscore=pcaAnalyzer.getSortedZscore(n);
+        SFout.goToObject(trueIdx+1);
+        SFout.setValue(MDL_ZSCORE, zscore);
         if (zscore<distThreshold)
         {
-            SFout_good.addObject();
-            SFout_good.setValue( MDL_IMAGE, fnImg);
-            SFout_good.setValue( MDL_ZSCORE, zscore);
-            MultidimArray<float>& Iaux=Ialigned[trueIdx];
-            FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY1D(IalignedAvg)
-				DIRECT_A1D_ELEM(IalignedAvg,i)+=DIRECT_A1D_ELEM(Iaux,i);
-            Ngood++;
+            SFout.setValue(MDL_ENABLED,1);
+            if (basis)
+            {
+                const MultidimArray<float> &Ialigned_trueIdx=Ialigned[trueIdx];
+                FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(IalignedAvg)
+                DIRECT_MULTIDIM_ELEM(IalignedAvg,n)+=DIRECT_MULTIDIM_ELEM(Ialigned_trueIdx,n);
+                Ngood++;
+            }
         }
         else
-        {
-            SFout_bad.addObject();
-            SFout_bad.setValue( MDL_IMAGE, fnImg);
-            SFout_bad.setValue( MDL_ZSCORE, zscore);
-        }
+            SFout.setValue(MDL_ENABLED,-1);
     }
-    SFout_good.write(fnRoot+"_pca.sel");
-    SFout_bad.write(fnRoot+"_outliers.sel");
-    if (Ngood>0)
+    SFout.write(fnOut);
+    if (basis && Ngood>0)
     {
         IalignedAvg/=Ngood;
         int idx=0;
         Image<double> save;
         save().initZeros(mask);
         FOR_ALL_ELEMENTS_IN_ARRAY2D(mask)
-        if (mask(i,j))
-            save(i,j)=IalignedAvg(idx++);
-            idx++;
-        save.write(fnRoot+"_pca.xmp");
-    }
+        {
+            if (A2D_ELEM(mask,i,j))
+                IMGPIXEL(save,i,j)=A1D_ELEM(IalignedAvg,idx++);
+        }
+        save.write(fnOutBasis,0,true,WRITE_APPEND);
 
-    for (int ii=0; ii<pcaAnalyzer.PCAbasis.size(); ii++)
-    {
-        Image<double> save;
-        save().initZeros(mask);
-        int idx=0;
-        FOR_ALL_ELEMENTS_IN_ARRAY2D(mask)
-        if (mask(i,j))
-            save(i,j)=pcaAnalyzer.PCAbasis[ii](idx++);
-        save.write(fnRoot+"_pcabasis_"+integerToString(ii,2)+".xmp");
+        for (int ii=0; ii<pcaAnalyzer.PCAbasis.size(); ii++)
+        {
+            save().initZeros(mask);
+            idx=0;
+            FOR_ALL_ELEMENTS_IN_ARRAY2D(mask)
+            if (A2D_ELEM(mask,i,j))
+                IMGPIXEL(save,i,j)=A1D_ELEM(pcaAnalyzer.PCAbasis[ii],idx++);
+            save.write(fnOutBasis,ii+1,true,WRITE_APPEND);
+        }
     }
 }
