@@ -152,7 +152,7 @@ void XmippProgram::read(int argc, char ** argv, bool reportErrors)
     setProgramName(argv[0]);
 
     ///If not arguments are provided, show the GUI or console program help
-    //this behaivour will be defined with environment variable XMIPP_BEHAVIOR
+    //this behavior will be defined with environment variable XMIPP_BEHAVIOR
     if (argc == 1)
     {
         char * var = getenv("XMIPP_GUI_ON");
