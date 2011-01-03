@@ -1791,10 +1791,10 @@ void Prog_VQ_prm::readParams()
     Ncodes0=textToInteger(getParam("-codes0"));
     Ncodes=textToInteger(getParam("-codes"));
     PminSize=textToFloat(getParam("-minsize"));
-    noMirror=checkParam("-no_mirror");
+    noMirror=checkParam("-noMirror");
     verbose=checkParam("-verbose");
-    corrSplit=checkParam("-corr_split");
-    fast=checkParam("-fast");
+    corrSplit=checkParam("-corrSplit");
+    fast=!checkParam("-dontDoFast");
     useCorrelation=checkParam("-useCorrelation");
     useFixedCorrentropy=checkParam("-useFixedCorrentropy");
     classicalMultiref=checkParam("-classicalMultiref");
@@ -1832,10 +1832,10 @@ void Prog_VQ_prm::defineParams()
     addParamsLine("   [-neigh <N=4>]          : Number of neighbour code vectors");
     addParamsLine("                           : Set -1 for all");
     addParamsLine("   [-minsize <N=20>]       : Percentage minimum node size");
-    addParamsLine("   [-no_mirror]            : Do not check mirrors");
+    addParamsLine("   [-noMirror]             : Do not check mirrors");
     addParamsLine("   [-verbose]              : Verbose");
-    addParamsLine("   [-corr_split]           : Correlation split");
-    addParamsLine("   [-fast]                 : Fast calculations, suboptimal");
+    addParamsLine("   [-corrSplit]            : Correlation split");
+    addParamsLine("   [-dontDoFast]           : Don't do suboptimal, fast calculations");
     addParamsLine("   [-useCorrelation]       : Instead of correntropy");
     addParamsLine("   [-useFixedCorrentropy]  : Instead of correntropy");
     addParamsLine("   [-classicalMultiref]    : Instead of enhanced clustering");
