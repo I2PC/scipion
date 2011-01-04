@@ -200,6 +200,7 @@ void substituteOriginalImages(const FileName &fn, const FileName &fnOrig, const 
     	MDorig.removeObjects(MDValueEQ(MDL_ENABLED, -1));
 	StringVector filesOrig;
 	MDorig.getColumnValues(MDL_IMAGE,filesOrig);
+	MDorig.clear(); // Save memory
 
 	// Read the blocks available
 	StringVector blocks;
