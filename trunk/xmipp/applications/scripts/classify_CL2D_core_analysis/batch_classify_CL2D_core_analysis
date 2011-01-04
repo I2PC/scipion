@@ -6,181 +6,79 @@ from operator import itemgetter
 from threading import Thread
 scriptdir=os.path.split(os.path.dirname(os.popen('which xmipp_protocols','r').read()))[0]+'/lib'
 sys.path.append(scriptdir) # add default search path
-import XmippData
+import xmipp
 
 # --------------------------------------------------------------------
-def readSelfile(fnSel):
-    fh=open(fnSel,'r')
-    lines=fh.readlines()
-    selFile=set()
-    for line in lines:
-        args=line.split()
-        if (len(args)>=1):
-            if args[0]=="#":
-                 continue
-            if args[0]==";":
-                 continue
-            selFile.add(args[0])
-    fh.close()
-    return selFile
-
-def writeSelfile(selfile,fnSel):
-    mD = XmippData.MetaData()
-    ii=XmippData.intP()
-    ii.assign(1)    
-    for img in selfile:
-        mD.addObject();
-        ss=XmippData.stringP()
-        ss.assign(img)
-        XmippData.setValueString(mD, XmippData.MDL_IMAGE, ss)
-        XmippData.setValueInt(mD, XmippData.MDL_ENABLED, ii)
-    mD.write(XmippData.FileName(fnSel))
-
-# --------------------------------------------------------------------
-def readClassF1(fnRoot,nclass,level):
-    return readSelfile(fnRoot+"_level_"+'%02d'%level+"_"+'%06d'%nclass+"_F1.sel")
-
-def readClassF12(fnRoot,nclass,level):
-    return readSelfile(fnRoot+"_level_"+'%02d'%level+"_"+'%06d'%nclass+"_F12.sel")
-
-# --------------------------------------------------------------------
-class sortJunkThread(Thread):
-    def __init__(self,Nthreads,myId,fnRoot,classFiles):
-        Thread.__init__(self)
-        self.Nthreads=Nthreads
-        self.myId=myId
-        self.fnRoot=fnRoot
-        self.classFiles=classFiles
-        self.Zscore={}
-        self.Nscore={}
+def sortByPCAWithinCluster(Nproc,fnRoot,classFiles,thZscore):
+    print "Sorting by PCA Within Cluster ------------------------------------------"
+    fh_mpi=os.open(fnRoot + '_multivariate_analysis.sh', os.O_WRONLY | os.O_TRUNC | os.O_CREAT, 0700)
+    outputFiles=[]
+    classBlocks=[]
+    for classFile in classFiles:
+        stackFile=classFile.replace(".sel",".stk")
+        rootDir,rootFile=os.path.split(classFile.replace(".sel",""))
+        numberOfCodes=xmipp.SingleImgSize(stackFile)[3]
+        for codeNumber in range(numberOfCodes):
+            outputFile=rootDir+"/score_cluster_"+str(codeNumber)+"_"+rootFile+".sel"
+            blockName="class_%06d"%codeNumber
+            classBlocks.append((blockName,classFile))
+            command="xmipp_classify_analyze_cluster"+\
+                " -i "+classFile+\
+                " --block "+blockName+\
+                " --ref "+str(codeNumber)+"@"+stackFile+\
+                " -o "+outputFile+\
+                " --maxDist "+str(thZscore)+\
+                " --quiet"
+            outputFiles.append(outputFile)
+            os.write(fh_mpi, command+"\n");
+    os.close(fh_mpi)
+    if Nproc>1:
+    	os.system("mpirun -np "+str(Nproc)+" xmipp_mpi_run -i "+fnRoot + '_multivariate_analysis.sh')
+    else:
+    	os.system(fnRoot + '_multivariate_analysis.sh')
+    os.remove(fnRoot + '_multivariate_analysis.sh')
     
-    def run(self):
-        if (self.myId==0):
-            print "   Sorting junk (%): ",
-        lastShown=-1
-        idx=1
-        for className in self.classFiles:
-            if (idx % self.Nthreads)==self.myId:
-                if (self.myId==0):
-                    toShow=int(100*float(idx)/len(self.classFiles))
-                    if toShow>lastShown:
-                        print str(toShow)+" ",
-                        lastShown=toShow
-                sys.stdout.flush()
-                fnClass=className[0:className.rfind('.sel')]
-                os.system("xmipp_metadata_utilities --intersection "+\
-                    fnRoot+"_F1_good.sel "+fnClass+\
-                    ".sel --label image -o "+fnClass+"_F1.sel")
-                os.system("xmipp_classify_analyze_cluster -i "+fnClass+"_F1.sel -ref "+\
-                    fnClass+".xmp -dontMask >& /dev/null")
-                fh=open(fnClass+"_F1_outliers.sel");
-                lines=fh.readlines()
-                for line in lines:
-                    args=line.split()
-                    if args[0]==";":
-                        continue
-                    if args[0] in self.Zscore:
-                        self.Zscore[args[0]]=self.Zscore[args[0]]+float(args[1])
-                        self.Nscore[args[0]]=self.Nscore[args[0]]+1
-                    else:
-                        self.Zscore[args[0]]=float(args[1])
-                        self.Nscore[args[0]]=1
-                fh.close()
-                fh=open(fnClass+"_F1_pca.sel");
-                lines=fh.readlines()
-                for line in lines:
-                    args=line.split()
-                    if args[0]==";":
-                        continue
-                    if args[0] in self.Zscore:
-                        self.Zscore[args[0]]=self.Zscore[args[0]]+float(args[1])
-                        self.Nscore[args[0]]=self.Nscore[args[0]]+1
-                    else:
-                        self.Zscore[args[0]]=float(args[1])
-                        self.Nscore[args[0]]=1
-                fh.close()
-                os.system("rm -f "+fnClass+"_F1_pca* "+fnClass+"_F1_outliers.sel ")
-            idx=idx+1
-        if (self.myId==0):
-            print
-
-def sortJunk(Nthreads,fnRoot,classFiles,thZscore):
-    print "Sorting junk ----------------------------------------------"
-    # Sort obvious junk
-    os.system("cat "+fnRoot+"_level_00_??????.sel > "+fnRoot+"_all.sel")
-    os.system("xmipp_sort_by_statistics -i "+fnRoot+"_all.sel -o "+\
-        fnRoot+"_F1 -zcut "+str(thZscore)+" -multivariate")
-    if os.path.exists(fnRoot+"_F1.sel"):
-    	os.system("mv -f "+fnRoot+"_F1.sel "+fnRoot+"_F1_sorted.sel")
-
-    # Sort junk according to clusters, launch threads
-    threadList=[]
-    for i in range(0,Nthreads):
-        currentThread=sortJunkThread(Nthreads,i,fnRoot,classFiles)
-        threadList.append(currentThread)
-        currentThread.start()
-
     # Pickup results
     Zscore={}
     Nscore={}
-    for thread in threadList:
-        thread.join()
-        for image in thread.Zscore:
+    for outputFile in outputFiles:
+        MD=xmipp.MetaData(outputFile)
+        for id in MD:
+            image=MD.getValue(xmipp.MDL_IMAGE)
+            zscore=MD.getValue(xmipp.MDL_ZSCORE)
             if image in Zscore:
-                Zscore[image]=Zscore[image]+thread.Zscore[image]
-                Nscore[image]=Nscore[image]+thread.Nscore[image]
+                Zscore[image]=Zscore[image]+zscore
+                Nscore[image]=Nscore[image]+1
             else:
-                Zscore[image]=thread.Zscore[image]
-                Nscore[image]=thread.Nscore[image]
-    
-    # Build the F1 classification
-    Nlevels=len(glob.glob(fnRoot+"_level_??_.sel"));
-    for level in range(0,Nlevels):
-        levelF1=glob.glob(fnRoot+"_level_"+"%02d"%level+"_??????_F1.sel");
-        writeSelfile(levelF1,fnRoot+"_level_"+"%02d"%level+"_F1_.sel");
+                Zscore[image]=zscore
+                Nscore[image]=1
+        os.remove(outputFile)
     
     # Compute average Zscore
     for image in Zscore:
         Zscore[image]=Zscore[image]/Nscore[image]
 
-    # Sort by Zscore
-    ZscoreSorted=sorted(Zscore.items(), key=itemgetter(1))
-    badImages=set()
-    mD=XmippData.MetaData()
-    for score in ZscoreSorted:
-        mD.addObject();
-
-        ss=XmippData.stringP()
-        ss.assign(score[0])
-        XmippData.setValueString(mD, XmippData.MDL_IMAGE, ss)
-
-        pp=XmippData.doubleP()
-        pp.assign(score[1])    
-        XmippData.setValueDouble(mD, XmippData.MDL_ZSCORE, pp)
-
-        if score[1]>thZscore:
-            badImages.add(score[0])
-    mD.write(XmippData.FileName(fnRoot+"_F12_sorted.sel"));
-    
     # Filter classes
-    for className in classFiles:
-        fnClass=className[0:className.rfind('.sel')]
-        thisClass=readSelfile(fnClass+"_F1.sel")
-        thisClass=thisClass-badImages
-        writeSelfile(thisClass,fnClass+"_F12.sel")
-
-    # Build the F12 classification
-    Nlevels=len(glob.glob(fnRoot+"_level_??_.sel"));
-    for level in range(0,Nlevels):
-        levelF1=glob.glob(fnRoot+"_level_"+"%02d"%level+"_??????_F12.sel");
-        writeSelfile(levelF1,fnRoot+"_level_"+"%02d"%level+"_F12_.sel");
+    print thZscore
+    for classBlock in classBlocks:
+        MDin=xmipp.MetaData()
+        MDin.readBlock(classBlock[1],classBlock[0])
+        MDout=xmipp.MetaData()
+        for id in MDin:
+            image=MDin.getValue(xmipp.MDL_IMAGE)
+            if Zscore[image]<thZscore:
+                MDout.addObject()
+                MDout.setValue(xmipp.MDL_IMAGE,image)
+                MDout.setValue(xmipp.MDL_ZSCORE,Zscore[image])
+        MDout.writeBlock(classBlock[1],classBlock[0]+"_Filtered_by_average_PCAzscore_within_clusters")
+    sys.exit(0)
     
 # --------------------------------------------------------------------
 class buildCoreThread(Thread):
-    def __init__(self,Nthreads,myId,fnRoot,level,Nclasses,\
+    def __init__(self,Nproc,myId,fnRoot,level,Nclasses,\
         thGoodClass):
         Thread.__init__(self)
-        self.Nthreads=Nthreads
+        self.Nproc=Nproc
         self.myId=myId
         self.fnRoot=fnRoot
         self.level=level
@@ -192,7 +90,7 @@ class buildCoreThread(Thread):
 
     def run(self):
         for nclass in range(0,self.Nclasses):
-            if ((nclass+1) % self.Nthreads)==self.myId:
+            if ((nclass+1) % self.Nproc)==self.myId:
                 # Read the selfile for this class and level
                 thisClass=readClassF12(self.fnRoot,nclass,self.level)
                 self.totalSum=self.totalSum+len(thisClass)
@@ -229,15 +127,15 @@ class buildCoreThread(Thread):
                     self.goodSum=self.goodSum+len(core)
                     self.classSum=self.classSum+1
 
-def computeCores(Nthreads,fnRoot,Nlevels):
+def computeCores(Nproc,fnRoot,Nlevels):
     print "Computing cores -------------------------------------------"
     for level in range(1,Nlevels):
         # Get the number of classes in that level
         Nclasses=len(glob.glob(fnRoot+"_level_"+'%02d'%level+"_??????.xmp"));
         print "Analyzing "+str(Nclasses)+" classes at level "+str(level)
         threadList=[]
-        for i in range(0,Nthreads):
-            currentThread=buildCoreThread(Nthreads,i,
+        for i in range(0,Nproc):
+            currentThread=buildCoreThread(Nproc,i,
                 fnRoot,level,Nclasses,thGoodClass)
             threadList.append(currentThread)
             currentThread.start()
@@ -256,9 +154,9 @@ def computeCores(Nthreads,fnRoot,Nlevels):
 
 # --------------------------------------------------------------------
 class purifyCoresThread(Thread):
-    def __init__(self,Nthreads,myId,coreFiles,Zscore):
+    def __init__(self,Nproc,myId,coreFiles,Zscore):
         Thread.__init__(self)
-        self.Nthreads=Nthreads
+        self.Nproc=Nproc
         self.myId=myId
         self.coreFiles=coreFiles
         self.Zscore=Zscore
@@ -269,7 +167,7 @@ class purifyCoresThread(Thread):
         if (self.myId==0):
             print "   Purifying (%): ",
         for image in self.coreFiles:
-            if (idx % self.Nthreads)==self.myId:
+            if (idx % self.Nproc)==self.myId:
                 if (self.myId==0):
                     toShow=int(100*float(idx)/len(self.coreFiles))
                     if toShow>lastShown:
@@ -282,30 +180,30 @@ class purifyCoresThread(Thread):
                     fnClass+"_F1234 -zcut "+str(self.Zscore)+\
                     " -multivariate >& /dev/null")
                 if os.path.exists(fnClass+"_F1234_good.sel"):
-                	os.system("mv -f "+fnClass+"_F1234_good.sel "+fnClass+"_F1234.sel")
+                    os.system("mv -f "+fnClass+"_F1234_good.sel "+fnClass+"_F1234.sel")
                 os.system("xmipp_classify_analyze_cluster -i "+fnClass+\
                     "_F1234.sel -ref "+\
                     fnClass+".xmp -maxDist "+str(self.Zscore)+" -dontMask >& /dev/null")
                 if os.path.exists(fnClass+"_F1234_pca.sel"):
-	                os.system("mv -f "+fnClass+"_F1234_pca.sel "+fnClass+"_F12345.sel")
+                    os.system("mv -f "+fnClass+"_F1234_pca.sel "+fnClass+"_F12345.sel")
                 if os.path.exists(fnClass+"_F1234_pca.xmp"):
-    	            os.system("mv -f "+fnClass+"_F1234_pca.xmp "+fnClass+"_F12345.xmp")
+                    os.system("mv -f "+fnClass+"_F1234_pca.xmp "+fnClass+"_F12345.xmp")
                 if os.path.exists(fnClass+"_F1234_pcabasis_00.xmp"):
-        	        os.system("mv -f "+fnClass+"_F1234_pcabasis_00.xmp "+fnClass+"_F12345_pcabasis_01.xmp")
+                    os.system("mv -f "+fnClass+"_F1234_pcabasis_00.xmp "+fnClass+"_F12345_pcabasis_01.xmp")
                 if os.path.exists(fnClass+"_F1234_pcabasis_01.xmp"):
-            	    os.system("mv -f "+fnClass+"_F1234_pcabasis_01.xmp "+fnClass+"_F12345_pcabasis_00.xmp")
+                    os.system("mv -f "+fnClass+"_F1234_pcabasis_01.xmp "+fnClass+"_F12345_pcabasis_00.xmp")
                 if os.path.exists(fnClass+"_F1234_outliers.sel"):
-                	os.system("mv -f "+fnClass+"_F1234_outliers.sel "+fnClass+"_F12345_outliers.sel")
+                    os.system("mv -f "+fnClass+"_F1234_outliers.sel "+fnClass+"_F12345_outliers.sel")
             idx=idx+1
         if (self.myId==0):
             print
 
-def purifyCores(Nthreads,coreFiles,Zscore):
+def purifyCores(Nproc,coreFiles,Zscore):
     print "Purifying cores -------------------------------------------"
     threadList=[]
     # Launch threads
-    for i in range(0,Nthreads):
-        currentThread=purifyCoresThread(Nthreads,i,coreFiles,Zscore)
+    for i in range(0,Nproc):
+        currentThread=purifyCoresThread(Nproc,i,coreFiles,Zscore)
         threadList.append(currentThread)
         currentThread.start()
 
@@ -368,19 +266,21 @@ if __name__ == "__main__":
     thGoodClass=thGoodClass/100
 
     if len(args)>=3:
-        thJunkZscore=float(args[2])
+        thPCAZscore1=float(args[2])
     else:
-        thJunkZscore=2.5
+        thPCAZscore1=2.5
 
     if len(args)>=4:
-        thPCAZscore=float(args[3])
+        thPCAZscore2=float(args[3])
     else:
-        thPCAZscore=1.5
+        thPCAZscore2=1.5
 
     if len(args)>=5:
-        Nthreads=int(args[4])
+        Nproc=int(args[4])
     else:
-        Nthreads=1
+        Nproc=1
+    if Nproc>1:
+    	Nproc=Nproc+1
 
     # Separate the root into directory and label    
     idx=fnRoot.rfind('/')
@@ -388,18 +288,18 @@ if __name__ == "__main__":
     fnLabel=fnRoot[idx+1:len(fnRoot)]
 
     # Check which are the different existing levels
-    Nlevels=len(glob.glob(fnRoot+"_level_??_.sel"));
+    classFiles=sorted(glob.glob(fnRoot+"_level_??.sel"));
+    Nlevels=len(classFiles);
 
     # Build the sort junk
-    classFiles=sorted(glob.glob(fnRoot+"_level_??_??????.sel"));
-    sortJunk(Nthreads,fnRoot,classFiles,thJunkZscore);
+    sortByPCAWithinCluster(Nproc,fnRoot,classFiles,thPCAZscore1);
 
     # Compute the core of each level
-    computeCores(Nthreads,fnRoot,Nlevels);
+    computeCores(Nproc,fnRoot,Nlevels);
     
     # Purify cores
     coreFiles=sorted(glob.glob(fnRoot+"_level_??_??????_F123.sel"));
-    purifyCores(Nthreads,coreFiles,thPCAZscore)
+    purifyCores(Nproc,coreFiles,thPCAZscore)
     
     # Sort images
     sortImages(fnRoot,Nlevels)
