@@ -444,7 +444,10 @@ void ProgFourierFilter::applyMaskSpace(MultidimArray<double> &v)
 /* Mask power -------------------------------------------------------------- */
 double ProgFourierFilter::maskPower()
 {
-    return maskFourier.sum2()/MULTIDIM_SIZE(maskFourier);
+    if (XSIZE(maskFourier) != 0)
+        return maskFourier.sum2()/MULTIDIM_SIZE(maskFourier);
+    else if (XSIZE(maskFourierd) != 0)
+        return maskFourier.sum2()/MULTIDIM_SIZE(maskFourierd);
 }
 
 // Correct phase -----------------------------------------------------------
