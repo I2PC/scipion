@@ -385,6 +385,8 @@ MetaData_importObjects(PyObject *obj, PyObject *args, PyObject *kwargs);
 static PyObject *
 MetaData_unionAll(PyObject *obj, PyObject *args, PyObject *kwargs);
 static PyObject *
+MetaData_intersection(PyObject *obj, PyObject *args, PyObject *kwargs);
+static PyObject *
 MetaData_aggregateSingle(PyObject *obj, PyObject *args, PyObject *kwargs);
 
 static int
@@ -1042,6 +1044,9 @@ static PyMethodDef MetaData_methods[] = {
                                             {"unionAll", (PyCFunction)MetaData_unionAll, METH_VARARGS,
                                              "Union of two metadatas. The results is stored in self."
                                             },
+                                            {"intersection", (PyCFunction)MetaData_intersection, METH_VARARGS,
+                                             "Intersection of two metadatas using a common label. The results is stored in self."
+                                            },
                                             {"sort", (PyCFunction)MetaData_sort, METH_VARARGS,
                                              "Sort metadata according to a label"
                                             },
@@ -1210,6 +1215,34 @@ MetaData_unionAll(PyObject *obj, PyObject *args, PyObject *kwargs)
             }
             MetaDataObject *self = (MetaDataObject*)obj;
             self->metadata->unionAll(MetaData_Value(pyMd));
+            Py_RETURN_NONE;
+        }
+        catch (XmippError xe)
+        {
+            PyErr_SetString(PyXmippError, xe.msg.c_str());
+        }
+    }
+    return NULL;
+}
+
+/* Intersection */
+static PyObject *
+MetaData_intersection(PyObject *obj, PyObject *args, PyObject *kwargs)
+{
+    int label, objectId = -1;
+    PyObject *pyMd = NULL;
+
+    if (PyArg_ParseTuple(args, "Oi", &pyMd, &label))
+    {
+        try
+        {
+            if (!MetaData_Check(pyMd))
+            {
+                PyErr_SetString(PyExc_TypeError, "MetaData::intersection: Expecting MetaData as first argument");
+                return NULL;
+            }
+            MetaDataObject *self = (MetaDataObject*)obj;
+            self->metadata->intersection(MetaData_Value(pyMd),(MDLabel)label);
             Py_RETURN_NONE;
         }
         catch (XmippError xe)
