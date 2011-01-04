@@ -9,9 +9,10 @@ sys.path.append(scriptdir) # add default search path
 import xmipp
 
 # --------------------------------------------------------------------
-def sortByPCAWithinCluster(Nproc,fnRoot,classFiles,thZscore):
-    print "Sorting by PCA Within Cluster ------------------------------------------"
+def analyzeWithinCluster(Nproc,fnRoot,classFiles,thZscore,thPCAZscore):
+    print "Analyzing within cluster ------------------------------------------"
     fh_mpi=os.open(fnRoot + '_multivariate_analysis.sh', os.O_WRONLY | os.O_TRUNC | os.O_CREAT, 0700)
+    PCAoutputFiles=[]
     outputFiles=[]
     classBlocks=[]
     for classFile in classFiles:
@@ -19,17 +20,27 @@ def sortByPCAWithinCluster(Nproc,fnRoot,classFiles,thZscore):
         rootDir,rootFile=os.path.split(classFile.replace(".sel",""))
         numberOfCodes=xmipp.SingleImgSize(stackFile)[3]
         for codeNumber in range(numberOfCodes):
-            outputFile=rootDir+"/score_cluster_"+str(codeNumber)+"_"+rootFile+".sel"
             blockName="class_%06d"%codeNumber
             classBlocks.append((blockName,classFile))
+
+            PCAoutputFile=rootDir+"/PCAscore_cluster_"+str(codeNumber)+"_"+rootFile+".sel"
             command="xmipp_classify_analyze_cluster"+\
                 " -i "+classFile+\
                 " --block "+blockName+\
                 " --ref "+str(codeNumber)+"@"+stackFile+\
-                " -o "+outputFile+\
-                " --maxDist "+str(thZscore)+\
+                " -o "+PCAoutputFile+\
+                " --maxDist "+str(thPCAZscore)+\
                 " --quiet"
-            outputFiles.append(outputFile)
+            PCAoutputFiles.append(PCAoutputFile)
+            os.write(fh_mpi, command+"\n");
+
+            outputFile=rootDir+"/score_cluster_"+str(codeNumber)+"_"+rootFile
+            command="xmipp_sort_by_statistics"+\
+                " -i "+classFile+\
+                " -o "+outputFile+\
+                " --block "+blockName+\
+                " --multivariate --quiet"
+            outputFiles.append(outputFile+".sel")
             os.write(fh_mpi, command+"\n");
     os.close(fh_mpi)
     if Nproc>1:
@@ -53,10 +64,26 @@ def sortByPCAWithinCluster(Nproc,fnRoot,classFiles,thZscore):
                 Zscore[image]=zscore
                 Nscore[image]=1
         os.remove(outputFile)
+    PCAZscore={}
+    PCANscore={}
+    for outputFile in PCAoutputFiles:
+        MD=xmipp.MetaData(outputFile)
+        for id in MD:
+            image=MD.getValue(xmipp.MDL_IMAGE)
+            PCAzscore=MD.getValue(xmipp.MDL_ZSCORE)
+            if image in PCAZscore:
+                PCAZscore[image]=PCAZscore[image]+PCAzscore
+                PCANscore[image]=PCANscore[image]+1
+            else:
+                PCAZscore[image]=PCAzscore
+                PCANscore[image]=1
+        os.remove(outputFile)
     
-    # Compute average Zscore
+    # Compute average Zscore and PCAZscore
     for image in Zscore:
         Zscore[image]=Zscore[image]/Nscore[image]
+    for image in PCAZscore:
+        PCAZscore[image]=PCAZscore[image]/PCANscore[image]
 
     # Filter classes
     for classBlock in classBlocks:
@@ -65,11 +92,11 @@ def sortByPCAWithinCluster(Nproc,fnRoot,classFiles,thZscore):
         MDout=xmipp.MetaData()
         for id in MDin:
             image=MDin.getValue(xmipp.MDL_IMAGE)
-            if Zscore[image]<thZscore:
+            if Zscore[image]<thZscore and PCAZscore[image]<thPCAZscore:
                 MDout.addObject()
                 MDout.setValue(xmipp.MDL_IMAGE,image)
-                MDout.setValue(xmipp.MDL_ZSCORE,Zscore[image])
-        MDout.writeBlock(classBlock[1],classBlock[0]+"_Filtered_by_average_PCAzscore_within_clusters")
+                MDout.setValue(xmipp.MDL_ZSCORE,(Zscore[image]+PCAZscore[image])/2)
+        MDout.writeBlock(classBlock[1],classBlock[0]+"_filtered")
 
     # Update final classification
     classFile=fnRoot+".sel"
@@ -86,7 +113,7 @@ def sortByPCAWithinCluster(Nproc,fnRoot,classFiles,thZscore):
                 MDout.addObject()
                 MDout.setValue(xmipp.MDL_IMAGE,image)
                 MDout.setValue(xmipp.MDL_ZSCORE,Zscore[imagePreprocessed])
-        MDout.writeBlock(classFile,"class_%06d"%codeNumber+"_Filtered_by_average_PCAzscore_within_clusters")
+        MDout.writeBlock(classFile,"class_%06d"%codeNumber+"_filtered")
     
 # --------------------------------------------------------------------
 class buildCoreThread(Thread):
@@ -112,8 +139,7 @@ class buildCoreThread(Thread):
                 # Read the selfile for this class and level
                 blockName="class_%06d"%nclass
                 thisClass=xmipp.MetaData()
-                thisClass.readBlock(classFile,
-                    blockName+"_Filtered_by_average_PCAzscore_within_clusters")
+                thisClass.readBlock(classFile,blockName+"_filtered")
                 self.totalSum=self.totalSum+thisClass.size()
 
                 # For all previous levels
@@ -125,8 +151,7 @@ class buildCoreThread(Thread):
                     for nclassp in range(0,Nclasses):
                         blockNamep="class_%06d"%nclassp
                         otherClass=xmipp.MetaData()
-                        otherClass.readBlock(classFilep,
-                            blockNamep+"_Filtered_by_average_PCAzscore_within_clusters")
+                        otherClass.readBlock(classFilep,blockNamep+"_filtered")
                         otherClass.intersection(thisClass,xmipp.MDL_IMAGE)
                         
                         if (otherClass.size()>1):
@@ -200,8 +225,7 @@ def computeCores(Nproc,fnRoot,Nlevels):
     numberOfCodes=xmipp.SingleImgSize(stackFile)[3]
     for codeNumber in range(numberOfCodes):
         MDin=xmipp.MetaData()
-        MDin.readBlock(classFile,"class_%06d"%codeNumber+\
-            "_Filtered_by_average_PCAzscore_within_clusters")
+        MDin.readBlock(classFile,"class_%06d"%codeNumber+"_filtered")
         MDout=xmipp.MetaData()
         for id in MDin:
             image=MDin.getValue(xmipp.MDL_IMAGE)
@@ -319,27 +343,27 @@ if __name__ == "__main__":
     args = sys.argv[1:]
     fnRoot=args[0]
     if len(args)>=2:
-        thGoodClass=float(args[1])
-    else:
-        thGoodClass=50.0
-    thGoodClass=thGoodClass/100
-
-    if len(args)>=3:
-        thPCAZscore1=float(args[2])
-    else:
-        thPCAZscore1=2.5
-
-    if len(args)>=4:
-        thPCAZscore2=float(args[3])
-    else:
-        thPCAZscore2=1.5
-
-    if len(args)>=5:
-        Nproc=int(args[4])
+        Nproc=int(args[1])
     else:
         Nproc=1
     if Nproc>1:
         Nproc=Nproc+1
+
+    if len(args)>=3:
+        thGoodClass=float(args[2])
+    else:
+        thGoodClass=50.0
+    thGoodClass=thGoodClass/100
+
+    if len(args)>=4:
+        thZscore=float(args[3])
+    else:
+        thZscore=3
+
+    if len(args)>=5:
+        thPCAZscore=float(args[4])
+    else:
+        thPCAZscore=3
 
     # Separate the root into directory and label    
     idx=fnRoot.rfind('/')
@@ -351,14 +375,13 @@ if __name__ == "__main__":
     Nlevels=len(classFiles);
 
     # Build the sort junk
-    #sortByPCAWithinCluster(Nproc,fnRoot,classFiles,thPCAZscore1);
+    analyzeWithinCluster(Nproc,fnRoot,classFiles,thZscore,thPCAZscore);
 
     # Compute the core of each level
     computeCores(1,fnRoot,Nlevels);
     sys.exit(0)
     
     # Purify cores
-    coreFiles=sorted(glob.glob(fnRoot+"_level_??_??????_F123.sel"));
     purifyCores(Nproc,coreFiles,thPCAZscore)
     
     # Sort images
