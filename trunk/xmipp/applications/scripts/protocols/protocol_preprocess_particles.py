@@ -258,7 +258,7 @@ class preprocess_particles_class:
         # Sort by statistics
         rootName,dummy=os.path.splitext(self.OutSelFile)
         launch_job.launch_job("xmipp_sort_by_statistics",
-                              "-i "+self.OutSelFile+" -multivariate "+\
+                              "-i "+self.OutSelFile+" --multivariate "+\
                               "-o "+rootName+"_sorted_by_score",
                               self.log,
                               False,1,1,'')
