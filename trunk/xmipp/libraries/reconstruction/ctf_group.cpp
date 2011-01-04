@@ -93,10 +93,11 @@ void ProgCtfGroup::show()
 /* Usage ------------------------------------------------------------------- */
 void ProgCtfGroup::defineParams()
 {
-    addUsageLine("Perform direct 3D reconstruction method using ");
-    addUsageLine("   Kaiser windows as interpolators");
-    addUsageLine("Example of use: Reconstruction enforcing i3 symmetry and using stored weights");
-    addUsageLine("   xmipp_reconstruct_fourier  -i reconstruction.sel --sym i3 --weight");
+    addUsageLine("Generate CTF (or defocus) groups from a single CTFdat file");
+    addUsageLine("Example of use: Sample using automated mode (resolution = 15 Ang.)");
+    addUsageLine("   xmipp_ctf_group -i input.sel --ctfdat input.ctfdat --pad 1.5 --wiener --phase_flipped --resol 15");
+    addUsageLine("Example of use: Sample using manual mode (after manual editing of ctf_group_split.doc)");
+    addUsageLine("   xmipp_ctf_group -i input.sel --ctfdat input.ctfdat --pad 1.5 --wiener --phase_flipped --split ctf_group_split.doc");
 
     addParamsLine("   -i <sel_file>              : Input selfile");
     addParamsLine("   --ctfdat <ctfdat_file>     : Input CTFdat file for all data");
