@@ -49,16 +49,18 @@ public:
     {
         std::cout  << " A sorting program for identifying junk particles \n"
         << " Parameters:\n"
-        << " -i <selfile>            : Selfile with (normalized) input images\n"
+        << " -i <selfile>            : Selfile with input images\n"
+        << " [--block <blockname>]   : Block within the input selfile\n"
         << " [-o <root=\"sort_junk\">] : Output rootname\n"
-        << " [-train <selfile>]      : Train on selfile with good particles\n"
-        << " [-zcut <float=-1>]      : Cut-off for Z-scores (negative for no cut-off) \n"
-        << " [-multivariate]         : Identify also multivariate outliers\n"
-        << " [-verbose]              : Save the vectors associated to each image\n"
+        << " [--train <selfile>]     : Train on selfile with good particles\n"
+        << " [--zcut <float=-1>]     : Cut-off for Z-scores (negative for no cut-off) \n"
+        << " [--multivariate]        : Identify also multivariate outliers\n"
+        << " [--verbose]             : Save the vectors associated to each image\n"
+        << " [--quiet]               : Do not show anything on screen\n"
         ;
     }
 
-    void process_selfile(MetaData &SF, bool do_prepare, bool multivariate)
+    void process_selfile(MetaData &SF, bool do_prepare, bool multivariate, bool quiet)
     {
         Image<double> img;
         MultidimArray<double> img2;
@@ -67,13 +69,17 @@ public:
         Matrix1D<int> center(2);
         center.initZeros();
 
-        if (do_prepare)
-            std::cerr << " Processing training set ..." << std::endl;
-        else
-            std::cerr << " Sorting particle set ..." << std::endl;
+        if (!quiet)
+        {
+            if (do_prepare)
+                std::cerr << " Processing training set ..." << std::endl;
+            else
+                std::cerr << " Sorting particle set ..." << std::endl;
+        }
 
         int nr_imgs = SF.size();
-        init_progress_bar(nr_imgs);
+        if (!quiet)
+            init_progress_bar(nr_imgs);
         int c = XMIPP_MAX(1, nr_imgs / 60);
         int imgno = 0, imgnoPCA=0;
         MultidimArray<float> v;
@@ -94,10 +100,10 @@ public:
                 SF.getValue(MDL_IMAGE,fn);
                 if (thereIsEnable)
                 {
-                	int enabled;
-                	SF.getValue(MDL_ENABLED,enabled);
-                	if (enabled==-1)
-                		continue;
+                    int enabled;
+                    SF.getValue(MDL_ENABLED,enabled);
+                    if (enabled==-1)
+                        continue;
                 }
                 img.read(fn);
                 img().setXmippOrigin();
@@ -111,13 +117,13 @@ public:
                 img2.resizeNoCopy(img());
                 FOR_ALL_ELEMENTS_IN_ARRAY2D(img2)
                 {
-                	double val=IMGPIXEL(img,i,j);
-                	A2D_ELEM(img2,i,j)=val*val;
+                    double val=IMGPIXEL(img,i,j);
+                    A2D_ELEM(img2,i,j)=val*val;
                 }
                 if (first)
                 {
-                	radialAveragePrecomputeDistance(img2, center, distance, dim);
-                	first=false;
+                    radialAveragePrecomputeDistance(img2, center, distance, dim);
+                    first=false;
                 }
                 fastRadialAverage(img2, distance, dim, radial_avg, radial_count);
 
@@ -134,16 +140,16 @@ public:
             {
                 if (thereIsEnable)
                 {
-                	int enabled;
-                	SF.getValue(MDL_ENABLED,enabled);
-                	if (enabled==-1)
-                	{
+                    int enabled;
+                    SF.getValue(MDL_ENABLED,enabled);
+                    if (enabled==-1)
+                    {
                         Zscore(imgno)=1000;
                         if (multivariate)
                             ZscoreMultivariate(imgno)=1000;
-                		imgno++;
-                		continue;
-                	}
+                        imgno++;
+                        continue;
+                    }
                 }
                 v=pcaAnalyzer.v[imgnoPCA];
                 FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY1D(v)
@@ -162,12 +168,13 @@ public:
                     ZscoreMultivariate(imgno)=pcaAnalyzer.getZscore(imgno);
             }
 
-            if (imgno % c == 0)
+            if (imgno % c == 0 && !quiet)
                 progress_bar(imgno);
             imgno++;
             imgnoPCA++;
         }
-        progress_bar(nr_imgs);
+        if (!quiet)
+            progress_bar(nr_imgs);
 
         if (do_prepare)
         {
@@ -184,22 +191,25 @@ public:
 int main(int argc, char **argv)
 {
     MetaData SF, SFtrain;
-    bool multivariate, verbose;
+    bool multivariate, verbose, quiet;
 
     // Read input parameters ............................................
-    FileName fn, fn_train;
+    FileName fn, fn_train, fn_block;
     Sort_junk_parameters prm;
     try
     {
         fn = getParameter(argc, argv, "-i");
-        SF.read(fn);
+        if (checkParameter(argc,argv,"--block"))
+            fn_block=getParameter(argc, argv, "--block");
+        SF.read(fn,NULL,fn_block);
         prm.fn_out = getParameter(argc, argv, "-o", "sort_junk");
-        fn_train = getParameter(argc, argv, "-train", "");
-        multivariate = checkParameter(argc, argv, "-multivariate");
-        verbose = checkParameter(argc, argv, "-verbose");
+        fn_train = getParameter(argc, argv, "--train", "");
+        multivariate = checkParameter(argc, argv, "--multivariate");
+        verbose = checkParameter(argc, argv, "--verbose");
+        quiet = checkParameter(argc, argv, "--quiet");
         if (fn_train != "")
             SFtrain.read(fn_train);
-        prm.cutoff = textToFloat(getParameter(argc, argv, "-zcut", "-1"));
+        prm.cutoff = textToFloat(getParameter(argc, argv, "--zcut", "-1"));
     }
     catch (XmippError XE)
     {
@@ -212,10 +222,10 @@ int main(int argc, char **argv)
     {
         // Process input selfile ..............................................
         if (fn_train != "")
-            prm.process_selfile(SFtrain, true, multivariate);
+            prm.process_selfile(SFtrain, true, multivariate, quiet);
         else
-            prm.process_selfile(SF, true, multivariate);
-        prm.process_selfile(SF, false, multivariate);
+            prm.process_selfile(SF, true, multivariate, quiet);
+        prm.process_selfile(SF, false, multivariate, quiet);
 
         // Produce output .....................................................
         MetaData SFout, SFoutGood;
@@ -243,10 +253,10 @@ int main(int argc, char **argv)
             SF.getValue(MDL_IMAGE,fnImg,isort+1);
             if (thereIsEnable)
             {
-            	int enabled;
-            	SF.getValue(MDL_ENABLED,enabled,isort+1);
-            	if (enabled==-1)
-            		continue;
+                int enabled;
+                SF.getValue(MDL_ENABLED,enabled,isort+1);
+                if (enabled==-1)
+                    continue;
             }
             SFout.addObject();
             SFout.setValue(MDL_IMAGE,fnImg);
