@@ -27,6 +27,7 @@
 
 #include "fourier_filter.h"
 
+#include <data/metadata_extension.h>
 #include <data/progs.h>
 
 /**@defgroup MicroscopeProgram phantom_simulate_microscope (Microscope simulation)
@@ -34,7 +35,7 @@
 //@{
 /* Microscope Program Parameters ------------------------------------------- */
 /** Parameter class for the project program */
-class Prog_Microscope_Parameters: public Prog_parameters
+class ProgSimulateMicroscope: public XmippMetadataProgram
 {
 public:
     /// Filename with the CTF
@@ -47,9 +48,6 @@ public:
     bool     after_ctf_noise;
     /// Defocus change (%)
     double   defocus_change;
-    /// True if this program is directly called from the command line
-    bool command_line;
-public:
     /// CTF
     ProgFourierFilter ctf;
     /// Low pass filter, if it is 0 no lowpass filter is applied
@@ -61,25 +59,29 @@ public:
     /// Noise power after CTF
     double   sigma_after_CTF;
     /// Input image Xdim
-    int Xdim;
+    int      Xdim;
     /// Input image Ydim
-    int Ydim;
+    int      Ydim;
+
 public:
     /** Read from a command line.
         An exception might be thrown by any of the internal conversions,
         this would mean that there is an error in the command line and you
         might show a usage message. */
-    void read(int argc, char **argv);
+    void readParams();
 
     /** Usage message.
         This function shows the way of introducing these parameters. */
-    void usage();
+    void defineParams();
 
     /** Show parameters. */
     void show();
 
     /** Produce side information. */
-    void produce_side_info();
+    void preProcess();
+
+
+    void processImage(const FileName &fnImg, const FileName &fnImgOut, long int objId);
 
     /** Apply to a single image. The image is modified.
         If the CTF is randomly selected then a new CTF is generated
