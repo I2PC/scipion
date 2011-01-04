@@ -28,50 +28,60 @@
 #include <data/args.h>
 
 /* Read parameters --------------------------------------------------------- */
-void Prog_Microscope_Parameters::read(int argc, char **argv)
+void ProgSimulateMicroscope::readParams()
 {
-    if (command_line) Prog_parameters::read(argc, argv);
-    fn_ctf = getParameter(argc, argv, "-ctf", "");
-    sigma = textToFloat(getParameter(argc, argv, "-noise", "0"));
-    low_pass_before_CTF = textToFloat(getParameter(argc, argv, "-low_pass", "0"));
-    after_ctf_noise = checkParameter(argc, argv, "-after_ctf_noise");
-    defocus_change = textToFloat(getParameter(argc, argv, "-defocus_change", "0"));
+    XmippMetadataProgram::readParams();
 
-    if (command_line) produce_side_info();
+    fn_ctf = getParam("--ctf");
+    sigma = getDoubleParam("--noise");
+    low_pass_before_CTF = getDoubleParam("--low_pass");
+    after_ctf_noise = checkParam("--after_ctf_noise");
+    defocus_change = getDoubleParam("--defocus_change");
 }
 
 /* Usage ------------------------------------------------------------------- */
-void Prog_Microscope_Parameters::usage()
+void ProgSimulateMicroscope::defineParams()
 {
-    if (command_line) Prog_parameters::usage();
-    std::cerr << "  [-ctf <CTF descr>]        : a CTF description\n"
-              << "  [-defocus_change <v=0%>]  : change in the defocus value\n"
-              << "  [-low_pass <w=0>]         : low pass filter for noise before CTF\n"
-              << "  [-noise <stddev=0>]       : noise to be added\n"
-              << "  [-after_ctf_noise]        : generate noise after the CTF\n"
-    ;
+    each_image_produces_an_output = true;
+    XmippMetadataProgram::defineParams();
+
+    addUsageLine("Simulate the effect of the microscope on ideal projections.");
+    addUsageLine("Example of use: Generate a set of images with the CTF applied without any noise");
+    addUsageLine("   xmipp_phantom_simulate_microscope -i g0ta.sel -oroot g1ta -ctf untilt_ARMAavg.ctfparam");
+    addUsageLine("Example of use: Generate a set of images with the CTF applied and noise before and after CTF");
+    addUsageLine("   xmipp_phantom_simulate_microscope -i g0ta.sel -oroot g2ta -ctf untilt_ARMAavg.ctfparam -noise 4.15773 -after_ctf_noise");
+
+    addParamsLine("  [--ctf <CTFdescr>]       : a CTF description");
+    addParamsLine("  [--defocus_change <v=0>] : change in the defocus value (percentage)");
+    addParamsLine("  [--low_pass <w=0>]       : low pass filter for noise before CTF");
+    addParamsLine("  [--noise <stddev=0>]     : noise to be added");
+    addParamsLine("  [--after_ctf_noise]      : generate noise after the CTF");
+
 }
 
 /* Show -------------------------------------------------------------------- */
-void Prog_Microscope_Parameters::show()
+void ProgSimulateMicroscope::show()
 {
-    if (command_line) Prog_parameters::show();
+    XmippMetadataProgram::show();
     std::cout << "CTF file: " << fn_ctf << std::endl
-              << "Noise: " << sigma << std::endl
-              << "Noise before: " << sigma_before_CTF << std::endl
-              << "Noise after: " << sigma_after_CTF << std::endl
-              << "Low pass freq: " << low_pass_before_CTF << std::endl
-              << "After CTF noise: " << after_ctf_noise << std::endl
-              << "Defocus change: " << defocus_change << std::endl
+    << "Noise: " << sigma << std::endl
+    << "Noise before: " << sigma_before_CTF << std::endl
+    << "Noise after: " << sigma_after_CTF << std::endl
+    << "Low pass freq: " << low_pass_before_CTF << std::endl
+    << "After CTF noise: " << after_ctf_noise << std::endl
+    << "Defocus change: " << defocus_change << std::endl
     ;
 }
 
 
 /* Produce side information ------------------------------------------------ */
-void Prog_Microscope_Parameters::produce_side_info()
+void ProgSimulateMicroscope::preProcess()
 {
-    int Zdim;
-    if (command_line) get_input_size(Zdim, Ydim, Xdim);
+    int dum;
+    unsigned long dum2;
+
+    //if (command_line) get_input_size(Zdim, Ydim, Xdim);
+    ImgSize(mdIn, Xdim, Ydim, dum, dum2);
     MultidimArray<double> aux;
 
     double before_power = 0, after_power = 0;
@@ -85,7 +95,8 @@ void Prog_Microscope_Parameters::produce_side_info()
         ctf.ctf.Produce_Side_Info();
         aux.resize(2*Ydim, 2*Xdim);
         aux.setXmippOrigin();
-        ctf.do_generate_3dmask=true;
+        // ctf.do_generate_3dmask=true;
+        ctf.do_generate_3dmask=false;
         ctf.generateMask(aux);
         before_power = ctf.maskPower();
     }
@@ -126,8 +137,21 @@ void Prog_Microscope_Parameters::produce_side_info()
     }
 }
 
+void ProgSimulateMicroscope::processImage(const FileName &fnImg, const FileName &fnImgOut, long int objId)
+{
+    Image<double> img;
+    img.read(fnImg);
+    if (ZSIZE(img())!=1)
+        REPORT_ERROR(ERR_MULTIDIM_DIM,"This process is not intended for volumes");
+
+    apply(img());
+
+    img.write(fnImgOut);
+}
+
+
 /* Apply ------------------------------------------------------------------- */
-void Prog_Microscope_Parameters::apply(MultidimArray<double> &I)
+void ProgSimulateMicroscope::apply(MultidimArray<double> &I)
 {
     I.setXmippOrigin();
     I.window(FIRST_XMIPP_INDEX(2*Ydim), FIRST_XMIPP_INDEX(2*Xdim),
@@ -137,7 +161,8 @@ void Prog_Microscope_Parameters::apply(MultidimArray<double> &I)
     MultidimArray<double> noisy;
     noisy.resize(I);
     noisy.initRandom(0, sigma_before_CTF, "gaussian");
-    if (low_pass_before_CTF != 0) lowpass.applyMaskSpace(noisy);
+    if (low_pass_before_CTF != 0)
+        lowpass.applyMaskSpace(noisy);
     I += noisy;
 
     // Check if the mask is a defocus changing CTF
@@ -156,11 +181,13 @@ void Prog_Microscope_Parameters::apply(MultidimArray<double> &I)
     }
 
     // Apply CTF
-    if (fn_ctf != "") ctf.applyMaskSpace(I);
+    if (fn_ctf != "")
+        ctf.applyMaskSpace(I);
 
     // Add noise after CTF
     noisy.initRandom(0, sigma_after_CTF, "gaussian");
-    if (after_ctf_noise) after_ctf.applyMaskSpace(noisy);
+    if (after_ctf_noise)
+        after_ctf.applyMaskSpace(noisy);
     I += noisy;
     I.window(FIRST_XMIPP_INDEX(Ydim), FIRST_XMIPP_INDEX(Xdim),
              LAST_XMIPP_INDEX(Ydim), LAST_XMIPP_INDEX(Xdim));
