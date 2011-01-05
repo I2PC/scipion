@@ -27,35 +27,8 @@
 
 int main(int argc, char **argv)
 {
-    Prog_sort_images_prm prm;
-
-    // Get input parameters
-    try
-    {
-        prm.read(argc, argv);
-        prm.show();
-    }
-    catch (XmippError XE)
-    {
-        std::cout << XE;
-        prm.usage();
-        exit(0);
-    }
-
-    try
-    {
-        prm.produceSideInfo();
-        prm.run();
-    }
-    catch (XmippError XE)
-    {
-        std::cout << XE;
-        prm.usage();
-        exit(0);
-    }
-
+	ProgSortImages program;
+    program.read(argc, argv);
+    program.tryRun();
+    return 0;
 }
-
-
-
-
