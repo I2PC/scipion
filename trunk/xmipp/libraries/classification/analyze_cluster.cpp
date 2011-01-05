@@ -152,7 +152,7 @@ void ProgAnalyzeCluster::produceSideInfo()
         SFout.addObject();
         if (align)
         {
-            fnOutIdx.compose(idxStk,fnOut);
+            fnOutIdx.compose(idxStk,fnOutAligned);
             Iaux.write(fnOutAligned,idxStk,true,WRITE_APPEND);
             SFout.setValue(MDL_IMAGE,fnOutIdx);
             SFout.setValue(MDL_IMAGE_ORIGINAL,auxFn);
