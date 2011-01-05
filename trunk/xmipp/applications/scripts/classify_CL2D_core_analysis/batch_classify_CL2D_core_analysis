@@ -277,6 +277,9 @@ def gatherCores(fnRoot,classFile,coreInformation):
         MDclassAveragesAux.setValue(xmipp.MDL_IMAGE,"%06d"%0+"@"+basisStack)
         MDclassAverages.addObject()
         MDclassAverages.setValue(xmipp.MDL_IMAGE,"%06d"%idx+"@"+fnRoot+"_core.stk")
+        MDaux=xmipp.MetaData()
+        MDaux.readBlock(classFile,block+"_filtered")
+        MDclassAverages.setValue(xmipp.MDL_IMAGE_CLASS_COUNT,int(MDaux.size()))
         classIdx[block]=idx
         idx+=1
     MDbasis.write(fnRoot+"_core_basis.sel")
@@ -286,7 +289,10 @@ def gatherCores(fnRoot,classFile,coreInformation):
         "rm -f "+fnRoot+"_coreAux.sel")
     os.system("xmipp_convert_image -i "+fnRoot+"_core_basis.sel -o "+fnRoot+"_core_basis.stk -v 0; "+\
         "rm -f "+fnRoot+"_core_basis.sel")
-        
+    classDir,classRoot=os.path.split(fnRoot)
+    print "Creating "+classDir+"/class_core_classes"
+    os.mkdir(classDir+"/class_core_classes")
+
     for id in coreInformation:
         block=id[0]
         alignedStack=id[1]
@@ -305,7 +311,7 @@ def gatherCores(fnRoot,classFile,coreInformation):
         MDcoreFull=xmipp.MetaData()
         MDcoreAux=xmipp.MetaData()
         idx=0
-        fnClassStack=fnRoot+"_core_%05d"%classIdx[block]+".stk"
+        fnClassStack=classDir+"/class_core_classes/class_core_%05d"%classIdx[block]+".stk"
         for aux in MDcore:
             fnImageStackAligned=MDcore.getValue(xmipp.MDL_IMAGE)
             fnImageClassStack="%06d"%idx+"@"+fnClassStack
@@ -326,7 +332,6 @@ def gatherCores(fnRoot,classFile,coreInformation):
             os.system("xmipp_convert_image -i "+fnRoot+"_inter.sel -o "+fnClassStack+" -v 0")
         os.system("rm -f "+fnRoot+"_inter.sel "+PCAoutput)
         MDcoreFull.writeBlock(fnRoot+"_core.sel",block+"_filtered")
-    classDir,classRoot=os.path.split(fnRoot)
     os.system("rm -rf "+classDir+"/Basis")
 
 # --------------------------------------------------------------------
@@ -396,13 +401,8 @@ def summary(fnRoot,Nlevels):
 # --------------------------------------------------------------------
 def sortImages(fnRoot,Nlevels):
     print "Sorting images --------------------------------------------"
-    for level in range(1,Nlevels):
-        print "Level: "+str(level)
-        fnLevel=fnRoot+"_level_"+'%02d'%level
-        os.system('xmipp_metadata_selfile_create -p "'+fnLevel+'_??????_F12345.xmp" -o '+\
-            fnLevel+"_F12345.sel");
-        os.system('xmipp_classify_CL2D_sort_images -i '+fnLevel+\
-            "_F12345.sel -oroot "+fnLevel+"_F12345_sorted -processSelfiles");
+    os.system('xmipp_sort_images -i '+fnRoot+"_core.sel --oroot "+\
+        fnRoot+"_core_sorted")
 
 # --------------------------------------------------------------------
 if __name__ == "__main__":
@@ -445,11 +445,11 @@ if __name__ == "__main__":
             blockName="class_%06d"%codeNumber
             reference=str(codeNumber)+"@"+stackFile
             classBlockRefs.append((blockName,classFile,reference))
-    # removeOutliersWithinCluster(Nproc,fnRoot,classBlockRefs,thZscore,thPCAZscore,False);
+    removeOutliersWithinCluster(Nproc,fnRoot,classBlockRefs,thZscore,thPCAZscore,False);
 
     # Compute the core of each level
     Nlevels=len(classFiles);
-    #computeCores(1,fnRoot,Nlevels);
+    computeCores(1,fnRoot,Nlevels);
     
     # Purify cores
     classFile=fnRoot+".sel";
@@ -460,16 +460,14 @@ if __name__ == "__main__":
         blockName="class_%06d"%codeNumber+"_core"
         reference=str(codeNumber)+"@"+stackFile
         classBlockRefs.append((blockName,classFile,reference))
-    #coreInformation=removeOutliersWithinCluster(Nproc,fnRoot,classBlockRefs,
-    #    thZscore,thPCAZscore,True);
+    coreInformation=removeOutliersWithinCluster(Nproc,fnRoot,classBlockRefs,
+        thZscore,thPCAZscore,True);
 
     # Gather core information
-    #gatherCores(fnRoot,classFile,coreInformation)
+    gatherCores(fnRoot,classFile,coreInformation)
 
     # Summary
-    #summary(fnRoot,Nlevels)
-    sys.exit(0)
+    summary(fnRoot,Nlevels)
     
     # Sort images
     sortImages(fnRoot,Nlevels)
-
