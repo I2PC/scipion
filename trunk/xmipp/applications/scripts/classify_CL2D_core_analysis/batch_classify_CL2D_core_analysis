@@ -335,24 +335,62 @@ def summary(fnRoot,Nlevels):
     fh=open(fnRoot+"_analysis_summary.txt",'w')
     for level in range(1,Nlevels):
         fh.write("Level: "+str(level)+'\n')
-        Nclasses=len(glob.glob(fnRoot+"_level_"+'%02d'%level+"_??????.xmp"));
+        classFile=fnRoot+"_level_%02d.sel"%level
+        stackFile=classFile.replace(".sel",".stk")
+        Nclasses=xmipp.SingleImgSize(stackFile)[3]
         totalSum=0
         finalSum=0
         goodClasses=0;
         for nclass in range(0,Nclasses):
-            fnClass=fnRoot+"_level_"+'%02d'%level+"_"+'%06d'%nclass;
-            Ninitial=fileLength(fnClass+".sel")-3
-            Nfinal=0
-            if os.path.exists(fnClass+"_F12345.sel"):
-                Nfinal=fileLength(fnClass+"_F12345.sel")-3
+            blockName="class_%06d"%nclass
+            MD=xmipp.MetaData()
+            MD.readBlock(classFile,blockName)
+            Ninitial=MD.size()
+            MD.readBlock(classFile,blockName+"_filtered")
+            Nintermediate=MD.size()
+            MD.readBlock(classFile,blockName+"_core")
+            Nfinal=MD.size()
+            if Nfinal>0:
                 goodClasses=goodClasses+1
-            fh.write("     Class: "+str(nclass)+" from "+str(Ninitial)+\
-                " to "+str(Nfinal)+'\n')
+            fh.write("     Class: "+str(nclass)+": "+str(Ninitial)+\
+                " -> "+str(Nintermediate)+' (filtered) -> '+str(Nfinal)+' (core)\n')
             totalSum=totalSum+Ninitial
             finalSum=finalSum+Nfinal
         fh.write("     There are "+str(goodClasses)+" good classes at this level\n")
         fh.write( "     The number of images represented has shrinked from "+\
             str(totalSum)+" to "+str(finalSum)+'\n')
+    
+    # After filtering the cores
+    fh.write("Final classification --------------------------------\n")
+    classFile=fnRoot+".sel"
+    stackFile=classFile.replace(".sel",".stk")
+    Nclasses=xmipp.SingleImgSize(stackFile)[3]
+    totalSum=0
+    finalSum=0
+    goodClasses=0;
+    for nclass in range(0,Nclasses):
+        blockName="class_%06d"%nclass
+        MD=xmipp.MetaData()
+        MD.readBlock(classFile,blockName)
+        Ninitial=MD.size()
+        MD.readBlock(classFile,blockName+"_filtered")
+        Nintermediate1=MD.size()
+        MD.readBlock(classFile,blockName+"_core")
+        Nintermediate2=MD.size()
+        MD.readBlock(classFile,blockName+"_core_filtered")
+        Nfinal=MD.size()
+        if Nfinal>0:
+            goodClasses=goodClasses+1
+        fh.write("     Class: "+str(nclass)+": "+str(Ninitial)+\
+            " -> "+str(Nintermediate1)+' (filtered) '+
+            " -> "+str(Nintermediate2)+' (core) '+
+            ' -> '+str(Nfinal)+' (core filtered)\n')
+        totalSum=totalSum+Ninitial
+        finalSum=finalSum+Nfinal
+    fh.write("     There are finally "+str(goodClasses)+" good classes\n")
+    fh.write( "     The number of images represented has shrinked from "+\
+        str(totalSum)+" to "+str(finalSum)+'\n')
+    
     fh.close()
 
 # --------------------------------------------------------------------
@@ -422,15 +460,15 @@ if __name__ == "__main__":
         blockName="class_%06d"%codeNumber+"_core"
         reference=str(codeNumber)+"@"+stackFile
         classBlockRefs.append((blockName,classFile,reference))
-    coreInformation=removeOutliersWithinCluster(Nproc,fnRoot,classBlockRefs,
-        thZscore,thPCAZscore,True);
+    #coreInformation=removeOutliersWithinCluster(Nproc,fnRoot,classBlockRefs,
+    #    thZscore,thPCAZscore,True);
 
     # Gather core information
-    gatherCores(fnRoot,classFile,coreInformation)
-    sys.exit(0)
+    #gatherCores(fnRoot,classFile,coreInformation)
 
     # Summary
-    summary(fnRoot,Nlevels)
+    #summary(fnRoot,Nlevels)
+    sys.exit(0)
     
     # Sort images
     sortImages(fnRoot,Nlevels)
