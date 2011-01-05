@@ -845,6 +845,7 @@ void VQ::write(const FileName &fnRoot, bool final) const
         SFout.writeImage(I,fnClass,q,true);
         VEC_ELEM(Nq,q)=VEC_ELEM(aux,0)=P[q]->currentListImg.size();
         VEC_ELEM(aux,1)=VEC_ELEM(aux,0)/Nimg;
+      	SFout.setValue(MDL_IMAGE_CLASS_COUNT,(int)VEC_ELEM(Nq,q));
     }
     FileName fnSFout=fnRoot+".sel";
     SFout.write(fnSFout);
