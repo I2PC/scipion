@@ -28,12 +28,13 @@
 #include <data/funcs.h>
 #include <data/metadata.h>
 #include <data/image.h>
+#include <data/program.h>
 
 /**@defgroup SortImagesProgram sort images
    @ingroup ReconsLibrary */
 //@{
 /** Sort images parameters. */
-class Prog_sort_images_prm
+class ProgSortImages: public XmippProgram
 {
 public:
     /** Filename selection file containing the images */
@@ -41,15 +42,12 @@ public:
 
     /**  Filename output rootname */
     FileName fnRoot;
-
-    /** Also process the corresponding selfiles */
-    bool processSelfiles;
 public:
+    /** Filename of the output stack */
+    FileName fnStack;
+
     // Output selfile
     MetaData SFout;
-
-    // Output selfile
-    MetaData SFoutOriginal;
 
     // SelFile images
     std::vector< FileName > toClassify;
@@ -61,13 +59,13 @@ public:
     MultidimArray<int> mask;
 public:
     /// Read argument from command line
-    void read(int argc, char **argv);
+    void readParams();
 
     /// Show
     void show();
 
     /// Usage
-    void usage();
+    void defineParams();
 
     /// Produce side info
     void produceSideInfo();

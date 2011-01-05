@@ -24,64 +24,64 @@
  ***************************************************************************/
 
 #include "sort_images.h"
-#include <data/args.h>
 #include <data/filters.h>
 #include <data/mask.h>
+#include <data/image_collection.h>
 
 // Read arguments ==========================================================
-void Prog_sort_images_prm::read(int argc, char **argv)
+void ProgSortImages::readParams()
 {
-    fnSel  = getParameter(argc, argv, "-i");
-    fnRoot = getParameter(argc, argv, "-oroot");
-    processSelfiles=checkParameter(argc, argv, "-processSelfiles");
+    fnSel  = getParam("-i");
+    fnRoot = getParam("--oroot");
 }
 
 // Show ====================================================================
-void Prog_sort_images_prm::show()
+void ProgSortImages::show()
 {
     std::cerr << "Input selfile:    " << fnSel           << std::endl
               << "Output rootname:  " << fnRoot          << std::endl
-              << "Process selfiles: " << processSelfiles << std::endl
     ;
 }
 
 // usage ===================================================================
-void Prog_sort_images_prm::usage()
+void ProgSortImages::defineParams()
 {
-    std::cerr << "Usage:  " << std::endl
-              << "   -i <selfile>       : selfile of images\n"
-              << "   -oroot <rootname>  : output rootname\n"
-              << "  [-processSelfiles]  : process selfiles\n"
-    ;
+    addUsageLine("Sort a set of images by local similarity");
+    addParamsLine("   -i <selfile>        : selfile of images");
+    addParamsLine("   --oroot <rootname>  : output rootname");
 }
 
 // Produce side info  ======================================================
 //#define DEBUG
-void Prog_sort_images_prm::produceSideInfo()
+void ProgSortImages::produceSideInfo()
 {
+    fnStack=fnRoot+".stk";
+    if (exists(fnStack))
+    	unlink(fnStack.c_str());
+
     // Read input selfile and reference
-    MetaData SF;
+    ImageCollection SF;
     SF.read(fnSel);
     int idx=0;
+    FileName fnImg;
     FOR_ALL_OBJECTS_IN_METADATA(SF)
     {
         if (idx==0)
         {
-            FileName fnFirst;
-            SF.getValue(MDL_IMAGE,fnFirst);
-            SFoutOriginal.addObject();
-            SFoutOriginal.setValue(MDL_IMAGE,fnFirst);
-            lastImage.read(fnFirst);
+            SF.getValue(MDL_IMAGE,fnImg);
+            lastImage.read(fnImg);
             centerImage(lastImage());
-            lastImage.write(fnRoot+integerToString(1,5)+".xmp");
+            lastImage.write(fnStack,idx,true,WRITE_APPEND);
             SFout.addObject();
-            SFout.setValue(MDL_IMAGE,lastImage.name());
+            FileName fnImageStack;
+            fnImageStack.compose(idx,fnStack);
+            SFout.setValue(MDL_IMAGE,fnImageStack);
+            SFout.setValue(MDL_IMAGE_ORIGINAL,fnImg);
         }
         else
         {
-            FileName fnFirst;
-            SF.getValue(MDL_IMAGE,fnFirst);
-            toClassify.push_back(fnFirst);
+            SF.getValue(MDL_IMAGE,fnImg);
+            toClassify.push_back(fnImg);
         }
         idx++;
     }
@@ -93,15 +93,15 @@ void Prog_sort_images_prm::produceSideInfo()
 }
 
 // Choose next image =======================================================
-void Prog_sort_images_prm::chooseNextImage()
+void ProgSortImages::chooseNextImage()
 {
     int imax=toClassify.size();
-    Image<double> bestImage;
+    Image<double> bestImage, Iaux;
+    Matrix2D<double> M;
     double bestCorr=-1;
     int bestIdx=-1;
     for (int i=0; i<imax; i++)
     {
-        Image<double> Iaux;
         Iaux.read(toClassify[i]);
         Iaux().setXmippOrigin();
         
@@ -112,7 +112,6 @@ void Prog_sort_images_prm::chooseNextImage()
         Imirror.selfReverseX();
         Imirror.setXmippOrigin();
         
-        Matrix2D<double> M;
         alignImages(lastImage(),I,M);
         alignImages(lastImage(),Imirror,M);
         double corr=correlation_index(lastImage(),I,&mask);
@@ -131,47 +130,30 @@ void Prog_sort_images_prm::chooseNextImage()
         }
     }
     
-    SFoutOriginal.addObject();
-    SFoutOriginal.setValue(MDL_IMAGE,toClassify[bestIdx]);
-    bestImage.write(fnRoot+integerToString(SFoutOriginal.size(),5)+".xmp");
-    toClassify.erase(toClassify.begin()+bestIdx);
+    int idxStack=SFout.size();
+    FileName fnImageStack;
+    fnImageStack.compose(idxStack,fnStack);
+    bestImage.write(fnStack,idxStack,true,WRITE_APPEND);
     lastImage=bestImage;
     SFout.addObject();
-    SFout.setValue(MDL_IMAGE,bestImage.name());
+    SFout.setValue(MDL_IMAGE,fnImageStack);
+    SFout.setValue(MDL_IMAGE_ORIGINAL,toClassify[bestIdx]);
+    toClassify.erase(toClassify.begin()+bestIdx);
 }
 
 // Run  ====================================================================
-void Prog_sort_images_prm::run()
+void ProgSortImages::run()
 {
-    std::cout << "Images to go: ";
+	show();
+	produceSideInfo();
+
+	std::cout << "Images to go: ";
     while (toClassify.size()>0) 
     {
-        chooseNextImage();
         std::cout << toClassify.size() << " ";
         std::cout.flush();
+        chooseNextImage();
     }
     std::cout << toClassify.size() << std::endl;
-    SFoutOriginal.write(fnRoot+".sel");
-    SFout.write(fnRoot+"_aligned.sel");
-    
-    if (processSelfiles)
-    {
-        MetaData SFInfo;
-        SFoutOriginal.firstObject();
-        FOR_ALL_OBJECTS_IN_METADATA(SFout)
-        {
-            FileName fnOutOrig; SFoutOriginal.getValue(MDL_IMAGE,fnOutOrig);
-            FileName fnOut; SFout.getValue(MDL_IMAGE,fnOut);
-            FileName fnSel=fnOutOrig.withoutExtension()+".sel";
-            MetaData SFaux;
-            SFaux.read(fnSel);
-            SFInfo.addObject();
-            SFInfo.setValue(MDL_IMAGE,fnOut);
-            SFInfo.setValue(MDL_IMAGE_ORIGINAL,fnOutOrig);
-            SFInfo.setValue(MDL_IMAGE_CLASS_GROUP,fnSel);
-            SFInfo.setValue(MDL_IMAGE_CLASS_COUNT, (int) SFaux.size());
-            SFoutOriginal.nextObject();
-        }
-        SFInfo.write(fnRoot+"_info.txt");
-    }
+    SFout.write(fnRoot+".sel");
 }
