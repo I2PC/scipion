@@ -110,7 +110,7 @@ void ProgAnalyzeCluster::produceSideInfo()
         BinaryCircularMask(mask,XSIZE(Iref())/2, INNER_MASK);
     int Npixels=(int)mask.sum();
 
-    // Read all images in the class and substract the mean
+    // Read all images in the class and subtract the mean
     // once aligned
     Image<double> Iaux;
     FileName auxFn, fnOutIdx;
@@ -118,7 +118,11 @@ void ProgAnalyzeCluster::produceSideInfo()
     int idxStk=0;
     pcaAnalyzer.reserve(SFin.size());
     if (align)
+    {
         Ialigned.reserve(SFin.size());
+        if (exists(fnOutAligned))
+        	unlink(fnOutAligned.c_str());
+    }
     FOR_ALL_OBJECTS_IN_METADATA(SFin)
     {
         SFin.getValue( MDL_IMAGE, auxFn );
@@ -224,6 +228,8 @@ void ProgAnalyzeCluster::run()
     SFout.write(fnOut);
     if (basis && Ngood>0)
     {
+    	if (exists(fnOutBasis))
+    		unlink(fnOutBasis.c_str());
         IalignedAvg/=Ngood;
         int idx=0;
         Image<double> save;
