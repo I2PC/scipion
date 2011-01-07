@@ -7,6 +7,7 @@ def launch_job(programname,
                NumberOfThreads,
                SystemFlavour,
                onlyBuildCommand=False):
+    import os,sys
     command=buildCommand(programname,
                params,
                DoParallel,
