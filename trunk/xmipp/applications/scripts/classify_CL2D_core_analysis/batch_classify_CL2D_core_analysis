@@ -4,13 +4,15 @@ import os
 import sys
 from operator import itemgetter
 from threading import Thread
-scriptdir=os.path.split(os.path.dirname(os.popen('which xmipp_protocols','r').read()))[0]+'/lib'
-sys.path.append(scriptdir) # add default search path
+xmippdir=os.path.split(os.path.dirname(os.popen('which xmipp_protocols','r').read()))[0]
+sys.path.append(xmippdir+'/lib') # add default search path
+sys.path.append(xmippdir+'/protocols') # add default search path
 import xmipp
+import launch_job
 
 # --------------------------------------------------------------------
 def removeOutliersWithinCluster(Nproc,fnRoot,classBlockRefs,thZscore,thPCAZscore,
-    analyzingCore):
+    analyzingCore,systemFlavour):
     print "Analyzing within cluster ------------------------------------------"
     fh_mpi=os.open(fnRoot + '_multivariate_analysis.sh', os.O_WRONLY | os.O_TRUNC | os.O_CREAT, 0700)
     PCAoutputFiles=[]
@@ -49,11 +51,10 @@ def removeOutliersWithinCluster(Nproc,fnRoot,classBlockRefs,thZscore,thPCAZscore
                 " --multivariate --quiet"
         outputFiles.append(outputFile+".sel")
         os.write(fh_mpi, command+"\n");
+    
     os.close(fh_mpi)
-    if Nproc>1:
-        os.system("mpirun -np "+str(Nproc)+" xmipp_mpi_run -i "+fnRoot + '_multivariate_analysis.sh')
-    else:
-        os.system(fnRoot + '_multivariate_analysis.sh')
+    os.system(launch_job.buildCommand('xmipp_run',
+             '-i '+fnRoot + '_multivariate_analysis.sh',True,Nproc,1,systemFlavour))
     os.remove(fnRoot + '_multivariate_analysis.sh')
     
     # Pickup results
@@ -193,6 +194,12 @@ class buildCoreThread(Thread):
                             core.add(key[0])
                             core.add(key[1])
                 if thisClass.size()>0:
+                    if (float(len(core))/thisClass.size())>self.thGoodClass:
+                        self.goodSum=self.goodSum+len(core)
+                        self.classSum=self.classSum+1
+                    else:
+                        core=set()
+                        
                     MDout=xmipp.MetaData()
                     for image in core:
                         MDout.addObject()
@@ -201,9 +208,6 @@ class buildCoreThread(Thread):
                     MDout.writeBlock(classFile,blockName+"_core")
                     if self.level==(self.Nlevels-1):
                         self.allCores=self.allCores.union(core)
-                    if (float(len(core))/thisClass.size())>self.thGoodClass:
-                        self.goodSum=self.goodSum+len(core)
-                        self.classSum=self.classSum+1
 
 def computeCores(Nproc,fnRoot,Nlevels):
     print "Computing cores -------------------------------------------"
@@ -290,8 +294,10 @@ def gatherCores(fnRoot,classFile,coreInformation):
     os.system("xmipp_convert_image -i "+fnRoot+"_core_basis.sel -o "+fnRoot+"_core_basis.stk -v 0; "+\
         "rm -f "+fnRoot+"_core_basis.sel")
     classDir,classRoot=os.path.split(fnRoot)
-    print "Creating "+classDir+"/class_core_classes"
-    os.mkdir(classDir+"/class_core_classes")
+    fnDirCoreClasses=classDir+"/class_core_classes"
+    if os.path.exists(fnDirCoreClasses):
+        os.system('rm -rf '+fnDirCoreClasses)
+    os.mkdir(fnDirCoreClasses)
 
     for id in coreInformation:
         block=id[0]
@@ -399,41 +405,32 @@ def summary(fnRoot,Nlevels):
     fh.close()
 
 # --------------------------------------------------------------------
-def sortImages(fnRoot,Nlevels):
+def sortImages(fnRoot,Nproc,systemFlavour):
     print "Sorting images --------------------------------------------"
-    os.system('xmipp_sort_images -i '+fnRoot+"_core.sel --oroot "+\
-        fnRoot+"_core_sorted")
+    import launch_job
+    os.system(launch_job.buildCommand('xmipp_sort_images',
+               '-i '+fnRoot+"_core.sel --oroot "+fnRoot+"_core_sorted",
+               True,Nproc,1,systemFlavour))
 
 # --------------------------------------------------------------------
 if __name__ == "__main__":
 
-    if not sys.argv[1:]:
-        print "Usage: xmipp_classify_CL2D_core_analysis <rootname> <thGoodClass=50%> <thJunkZscore=2.5> <thPCAZscore=1.5> <thr=1>"
+    if not sys.argv[1:] or len(sys.argv)<=5:
+        print "Usage: xmipp_classify_CL2D_core_analysis <rootname> <thGoodClass> <thJunkZscore> <thPCAZscore> <Nproc> <system-flavour=''>"
         sys.exit()
     args = sys.argv[1:]
     fnRoot=args[0]
-    if len(args)>=2:
-        Nproc=int(args[1])
-    else:
-        Nproc=1
+    thGoodClass=float(args[1])
+    thGoodClass=thGoodClass/100
+    thZscore=float(args[2])
+    thPCAZscore=float(args[3])
+    Nproc=int(args[4])
     if Nproc>1:
         Nproc=Nproc+1
-
-    if len(args)>=3:
-        thGoodClass=float(args[2])
+    if len(args)>=6:
+        systemFlavour=args[5]
     else:
-        thGoodClass=50.0
-    thGoodClass=thGoodClass/100
-
-    if len(args)>=4:
-        thZscore=float(args[3])
-    else:
-        thZscore=3
-
-    if len(args)>=5:
-        thPCAZscore=float(args[4])
-    else:
-        thPCAZscore=3
+        systemFlavour=''
 
     # Analyze the clusters as they currently are
     classFiles=sorted(glob.glob(fnRoot+"_level_??.sel"));
@@ -445,7 +442,8 @@ if __name__ == "__main__":
             blockName="class_%06d"%codeNumber
             reference=str(codeNumber)+"@"+stackFile
             classBlockRefs.append((blockName,classFile,reference))
-    removeOutliersWithinCluster(Nproc,fnRoot,classBlockRefs,thZscore,thPCAZscore,False);
+    removeOutliersWithinCluster(Nproc,fnRoot,classBlockRefs,thZscore,thPCAZscore,
+        False,systemFlavour);
 
     # Compute the core of each level
     Nlevels=len(classFiles);
@@ -461,7 +459,7 @@ if __name__ == "__main__":
         reference=str(codeNumber)+"@"+stackFile
         classBlockRefs.append((blockName,classFile,reference))
     coreInformation=removeOutliersWithinCluster(Nproc,fnRoot,classBlockRefs,
-        thZscore,thPCAZscore,True);
+        thZscore,thPCAZscore,True,systemFlavour);
 
     # Gather core information
     gatherCores(fnRoot,classFile,coreInformation)
@@ -470,4 +468,4 @@ if __name__ == "__main__":
     summary(fnRoot,Nlevels)
     
     # Sort images
-    sortImages(fnRoot,Nlevels)
+    sortImages(fnRoot,Nproc,systemFlavour)
