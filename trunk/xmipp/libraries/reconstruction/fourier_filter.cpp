@@ -195,6 +195,8 @@ void ProgFourierFilter::readParams()
 /* Show -------------------------------------------------------------------- */
 void ProgFourierFilter::show()
 {
+	if (verbose==0)
+		return;
     if (FilterShape == WEDGE)
     {
         std::cout << "Missing wedge for data between tilting angles of " << w1 << " and " << w2 << " deg\n";

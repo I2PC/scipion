@@ -142,7 +142,8 @@ void ProgPdbConverter::atomBlobDescription(
         idx = 6;
         break;
     default:
-        std::cout << "Unknown :" << _element << std::endl;
+    	if (verbose>0)
+    		std::cout << "Unknown :" << _element << std::endl;
         return;
     }
     radius = periodicTable(idx, 0);
@@ -187,12 +188,10 @@ void ProgPdbConverter::readParams()
     intensityColumn = getParam("-intensityColumn");
 }
 
-
-
 /* Show -------------------------------------------------------------------- */
 void ProgPdbConverter::show()
 {
-    if (!verbose)
+    if (verbose==0)
         return;
     std::cout << "PDB file:           " << fn_pdb           << std::endl
     << "Sampling rate:      " << Ts               << std::endl
@@ -246,8 +245,9 @@ void ProgPdbConverter::createProteinAtHighSamplingRate()
         finalDim=output_dim;
     Vhigh().initZeros(finalDim,finalDim,finalDim);
     Vhigh().setXmippOrigin();
-    std::cout << "The highly sampled volume is of size " << XSIZE(Vhigh())
-    << std::endl;
+    if (verbose)
+    	std::cout << "The highly sampled volume is of size " << XSIZE(Vhigh())
+    	<< std::endl;
 
     // Fill the volume with the different atoms
     std::ifstream fh_pdb;
@@ -449,7 +449,8 @@ void ProgPdbConverter::createProteinUsingScatteringProfiles()
         }
         catch (XmippError XE)
         {
-            std::cerr << "Ignoring atom of type *" << atom_type << "*" << std::endl;
+        	if (verbose)
+        		std::cerr << "Ignoring atom of type *" << atom_type << "*" << std::endl;
         }
     }
 
