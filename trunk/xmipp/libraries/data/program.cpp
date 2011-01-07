@@ -181,12 +181,12 @@ void XmippProgram::read(int argc, char ** argv, bool reportErrors)
 
 void XmippProgram::read(const String &argumentsLine)
 {
-  int argc;
-  char ** argv=NULL;
-  char * copy=NULL;
+    int argc;
+    char ** argv=NULL;
+    char * copy=NULL;
 
-  generateCommandLine(argumentsLine, argc, argv, copy);
-  read(argc, argv);
+    generateCommandLine(argumentsLine, argc, argv, copy);
+    read(argc, argv);
 
 }
 
@@ -357,10 +357,10 @@ int XmippProgram::version() const
 
 void XmippProgram::runProgram(XmippProgram * program, const String &arguments, bool destroy)
 {
-  program->read(arguments);
-  program->run();
-  if (destroy)
-    delete program;
+    program->read(arguments);
+    program->run();
+    if (destroy)
+        delete program;
 }
 
 /// Empty constructor
@@ -388,8 +388,9 @@ void XmippMetadataProgram::defineParams()
     {
         addParamsLine("  [-o <output_file=\"\">]  : Output file: metadata, stack, volume or image.");
         addParamsLine("   alias --output;");
-        addParamsLine("  [--oext <extension=\"\">] :  Output file format extension.");
-        addExtensionWhere("extension");
+        //      DO NOT LONGER SUPPORT --OEXT SINCE NOW IT DOES MIND CHANGE FORMAT
+        //        addParamsLine("  [--oext <extension=\"\">] :  Output file format extension.");
+        //        addExtensionWhere("extension");
         addParamsLine("  [--oroot <root=\"\">]     : Rootname of output individual images.");
     }
     else if (produces_an_output)
@@ -417,12 +418,13 @@ void XmippMetadataProgram::readParams()
     {
         fn_out = checkParam("-o") ? getParam("-o") : "";
         oroot = getParam("--oroot");
-        oext = checkParam("--oext") ? getParam("--oext") : "";
-        if (oext == "custom")
-          oext = getParam("--oext",1);
+        //      DO NOT LONGER SUPPORT --OEXT SINCE NOW IT DOES MIND CHANGE FORMAT
+        //oext = checkParam("--oext") ? getParam("--oext") : "";
+        //if (oext == "custom")
+        //  oext = getParam("--oext",1);
     }
 
-    if (fn_out != fn_in && oroot == "" && oext == "")
+    if (fn_out != fn_in && oroot == "" /*&& oext == ""*/)
     {
         FileName fn_stack_plain=fn_out.removeFileFormat();
         if (exists(fn_stack_plain))
@@ -454,8 +456,9 @@ void XmippMetadataProgram::show()
     {
         if (fn_out != "")
             std::cout << "Output File: " << fn_out << std::endl;
-        if (oext != "")
-            std::cout << "Output Extension: " << oext << std::endl;
+        //      DO NOT LONGER SUPPORT --OEXT SINCE NOW IT DOES MIND CHANGE FORMAT
+        //if (oext != "")
+        //    std::cout << "Output Extension: " << oext << std::endl;
         if (oroot != "")
             std::cout << "Output Root: " << oroot << std::endl;
     }
@@ -529,10 +532,10 @@ void XmippMetadataProgram::run()
             if (each_image_produces_an_output)
             {
                 fnImgOut = fnImg;
-                if (oroot != "" || oext != "")
+                if (oroot != "" /*|| oext != ""*/)
                 {
-                    if (oext == "")
-                        oext = oroot.getFileFormat();
+                    //if (oext == "")
+                    oext = oroot.getFileFormat();
                     oroot = oroot.removeFileFormat();
                     if (oext == "")
                         oext = fnImg.getFileFormat();
