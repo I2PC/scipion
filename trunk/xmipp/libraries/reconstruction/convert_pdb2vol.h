@@ -67,9 +67,6 @@ public:
     /** Fixed Gaussian standard deviation */
     double sigmaGaussian;
 
-    /** Do not report anything */
-    bool quiet;
-
     /// Column for the intensity (if any). Only valid for fixed_gaussians
     std::string intensityColumn;
 public:
