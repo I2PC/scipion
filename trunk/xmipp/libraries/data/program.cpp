@@ -388,9 +388,9 @@ void XmippMetadataProgram::defineParams()
     {
         addParamsLine("  [-o <output_file=\"\">]  : Output file: metadata, stack, volume or image.");
         addParamsLine("   alias --output;");
-        addParamsLine("  [-oext <extension=\"\">] :  Output file format extension.");
+        addParamsLine("  [--oext <extension=\"\">] :  Output file format extension.");
         addExtensionWhere("extension");
-        addParamsLine("  [-oroot <root=\"\">]     : Rootname of output individual images.");
+        addParamsLine("  [--oroot <root=\"\">]     : Rootname of output individual images.");
     }
     else if (produces_an_output)
     {
@@ -416,10 +416,10 @@ void XmippMetadataProgram::readParams()
     if (each_image_produces_an_output)
     {
         fn_out = checkParam("-o") ? getParam("-o") : "";
-        oroot = getParam("-oroot");
-        oext = checkParam("-oext") ? getParam("-oext") : "";
+        oroot = getParam("--oroot");
+        oext = checkParam("--oext") ? getParam("--oext") : "";
         if (oext == "custom")
-          oext = getParam("-oext",1);
+          oext = getParam("--oext",1);
     }
 
     if (fn_out != fn_in && oroot == "" && oext == "")
