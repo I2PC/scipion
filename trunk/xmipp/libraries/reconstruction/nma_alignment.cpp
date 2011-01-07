@@ -174,7 +174,8 @@ FileName ProgNmaAlignment::createDeformedPDB(int pyramidLevel) const
     command=(std::string)"xmipp_convert_pdb2vol"+
             " -i deformedPDB_"+fnRandom+".pdb"+
             " -size "+integerToString(ROUND(imgSize))+
-            " -sampling_rate " + floatToString((float)sampling_rate);
+            " -sampling_rate " + floatToString((float)sampling_rate)+
+            " -v 0";
 
     if (do_centerPDB)
         command+=(std::string)" -centerPDB ";
@@ -190,8 +191,6 @@ FileName ProgNmaAlignment::createDeformedPDB(int pyramidLevel) const
             command+=(std::string)" -fixed_Gaussian " + floatToString((float)sigmaGaussian)+ " -intensityColumn Bfactor ";
         }
     }
-    command+=" >& /dev/null";
-
     system(command.c_str());
 
     if (do_FilterPDBVol)
@@ -199,7 +198,8 @@ FileName ProgNmaAlignment::createDeformedPDB(int pyramidLevel) const
         command=(std::string)"xmipp_fourier_filter"+
                 " -i deformedPDB_"+fnRandom+".vol"+
                 " -sampling "+floatToString((float)sampling_rate)+
-                " -low_pass " + floatToString((float)cutoff_LPfilter) + " -fourier_mask raised_cosine 0.1 >& /dev/null";
+                " -low_pass " + floatToString((float)cutoff_LPfilter)+
+                " -fourier_mask raised_cosine 0.1 -v 0";
         system(command.c_str());
     }
 
@@ -238,7 +238,7 @@ void ProgNmaAlignment::performCompleteSearch(
 
     command = (std::string)"xmipp_angular_project_library -i deformedPDB_"+fnRandom+".vol"+
               " -o ref" + fnRandom + "/ref" + fnRandom+".stk"
-              " --sampling_rate 25 -v 0";
+              " --sampling_rate 5 -v 0";
     FileName fnRefSel=(std::string)"ref" + fnRandom + "/ref" + fnRandom+".doc";
     system(command.c_str());
 
