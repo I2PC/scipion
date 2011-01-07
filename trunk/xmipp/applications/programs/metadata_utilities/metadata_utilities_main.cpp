@@ -231,7 +231,6 @@ public:
     void run()
     {
         FileName inFnImg,outFnImg;
-        int ipos, column;
         switch (operationType)
         {
         case _union:
@@ -254,20 +253,7 @@ public:
             break;
         case _sort:
             inMD1.read(inFileName1);
-            // Check if the label has semicolon
-            ipos=_label.find(':');
-            if (ipos!=std::string::npos)
-            {
-            	std::vector< std::string > results;
-            	splitString(_label,":",results);
-            	column=textToInteger(results[1]);
-            	if (MDL::labelType(results[0])!=LABEL_VECTOR)
-            		REPORT_ERROR(ERR_ARG_INCORRECT,"Column specifications cannot be used with non-vector labels");
-            	// COSS Falta poder pasarle la columna a sort
-            	outMD.sort(inMD1, MDL::str2Label(results[0]));
-            }
-            else
-            	outMD.sort(inMD1, MDL::str2Label(_label));
+          	outMD.sort(inMD1, _label);
             outMD.write(outFileName);
             break;
         case _join:
