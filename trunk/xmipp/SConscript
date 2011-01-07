@@ -595,7 +595,6 @@ ReconsSources = [
     'refinement.cpp',
     'resolution_ssnr.cpp',
     'series_remove_fluctuations.cpp',
-    'sort_images.cpp',
     'sparma.cpp',
     'symmetrize.cpp',
     'virus_vertex.cpp',
@@ -760,7 +759,6 @@ AddXmippProgram('separate_objects')
 AddXmippProgram('series_remove_fluctuations', ['XmippRecons'])
 AddXmippProgram('shift')
 AddXmippProgram('sort_by_statistics', ['XmippClassif'])
-AddXmippProgram('sort_images', ['XmippRecons'])
 AddXmippProgram('spider_rename', ['XmippInterface'])
 AddXmippProgram('spider_translate', ['XmippInterface'])
 AddXmippProgram('spider_extract_angles', ['XmippInterface'])
@@ -863,6 +861,7 @@ if int(env['mpi']):
     AddXmippMPIProgram('mpi_reconstruct_wbp', ['XmippRecons'])
     AddXmippMPIProgram('mpi_reconstruct_fourier', ['XmippRecons'])
     AddXmippMPIProgram('mpi_run', ['XmippRecons'])
+    AddXmippMPIProgram('mpi_sort_images', ['XmippRecons'])
 #    AddXmippMPIProgram('template_threads', ['XmippRecons'])
 #    AddXmippMPIProgram('template_mpi', ['XmippRecons'])
 # QT
