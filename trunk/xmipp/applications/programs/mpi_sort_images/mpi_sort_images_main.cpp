@@ -70,7 +70,7 @@ public:
     void show()
     {
         std::cerr << "Input selfile:    " << fnSel           << std::endl
-                  << "Output rootname:  " << fnRoot          << std::endl
+        << "Output rootname:  " << fnRoot          << std::endl
         ;
     }
 
@@ -83,11 +83,11 @@ public:
     }
 
     /// Produce side info
-    void produceSideInfo()
+    void produceSideInfo(int rank)
     {
         fnStack=fnRoot+".stk";
-        if (exists(fnStack))
-        	unlink(fnStack.c_str());
+        if (exists(fnStack) && rank==0)
+            unlink(fnStack.c_str());
 
         // Read input selfile and reference
         ImageCollection SF;
@@ -103,12 +103,17 @@ public:
                 toClassify.push_back(fnImg);
                 lastImage.read(fnImg);
                 centerImage(lastImage());
-                lastImage.write(fnStack,idx,true,WRITE_APPEND);
-                SFout.addObject();
+                if (rank==0)
+                    lastImage.write(fnStack,idx,true,WRITE_APPEND);
                 FileName fnImageStack;
                 fnImageStack.compose(idx,fnStack);
-                SFout.setValue(MDL_IMAGE,fnImageStack);
-                SFout.setValue(MDL_IMAGE_ORIGINAL,fnImg);
+                if (rank==0)
+                {
+                    SFout.addObject();
+                    SFout.setValue(MDL_IMAGE,fnImageStack);
+                    SFout.setValue(MDL_IMAGE_ORIGINAL,fnImg);
+                    SFout.setValue(MDL_MAXCC,1.0);
+                }
             }
             else
             {
@@ -130,70 +135,101 @@ public:
     /// Choose next image
     void chooseNextImage(int rank, int Nproc)
     {
-        Image<double> bestImage, Iaux;
-        Matrix2D<double> M;
+        Image<double> bestImage, I;
         double bestCorr=-1;
         int bestIdx=-1;
+        int count=0;
         FOR_ALL_ELEMENTS_IN_MATRIX1D(stillToDo)
         {
-        	if (!VEC_ELEM(stillToDo,i))
-        		continue;
-            Iaux.read(toClassify[i]);
-            Iaux().setXmippOrigin();
-
-            // Choose between this image and its mirror
-            MultidimArray<double> I, Imirror;
-            I=Iaux();
-            Imirror=I;
-            Imirror.selfReverseX();
-            Imirror.setXmippOrigin();
-
-            alignImages(lastImage(),I,M);
-            alignImages(lastImage(),Imirror,M);
-            double corr=correlation_index(lastImage(),I,&mask);
-            double corrMirror=correlation_index(lastImage(),Imirror,&mask);
+            if (!VEC_ELEM(stillToDo,i))
+                continue;
+            if ((count+1)%Nproc!=rank)
+            {
+            	++count;
+            	continue;
+            }
+            I.read(toClassify[i]);
+            I().setXmippOrigin();
+            double corr=alignImagesConsideringMirrors(lastImage(),I(),&mask);
             if (corr>bestCorr)
             {
                 bestCorr=corr;
-                bestImage()=I;
+                bestImage()=I();
                 bestIdx=i;
             }
-            if (corrMirror>bestCorr)
-            {
-                bestCorr=corrMirror;
-                bestImage()=Imirror;
-                bestIdx=i;
-            }
+            ++count;
         }
 
-        int idxStack=SFout.size();
-        FileName fnImageStack;
-        fnImageStack.compose(idxStack,fnStack);
-        bestImage.write(fnStack,idxStack,true,WRITE_APPEND);
-        lastImage=bestImage;
-        SFout.addObject();
-        SFout.setValue(MDL_IMAGE,fnImageStack);
-        SFout.setValue(MDL_IMAGE_ORIGINAL,toClassify[bestIdx]);
+        // Rank 0 receives from the other nodes their best image
+		double buffer[2];
+        if (rank==0)
+        {
+    		MPI_Status status;
+        	for (int n=1; n<Nproc; ++n)
+        	{
+        		MPI_Recv(buffer, 2, MPI_DOUBLE, n, 0, MPI_COMM_WORLD, &status);
+        		if (buffer[1]>bestCorr)
+        		{
+        			bestIdx=(int)buffer[0];
+        			bestCorr=buffer[1];
+        		}
+        	}
+            std::cout << "Images to go=" << stillToDo.sum()-1 << " current correlation= " << bestCorr << std::endl;
+        }
+        else
+        {
+        	buffer[0]=bestIdx;
+        	buffer[1]=bestCorr;
+        	MPI_Send(buffer, 2, MPI_DOUBLE, 0, 0, MPI_COMM_WORLD);
+        }
+
+        // Now rank 0 redistributes the best image
+        if (rank==0)
+        {
+        	buffer[0]=bestIdx;
+        	MPI_Bcast(buffer, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+        }
+        else
+        {
+        	MPI_Bcast(buffer, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+        	bestIdx=buffer[0];
+        }
+
+        // All compute the best image
+        I.read(toClassify[bestIdx]);
+        I().setXmippOrigin();
+        bestCorr=alignImagesConsideringMirrors(lastImage(),I(),&mask);
+        bestImage()=I();
+
+        lastImage()=bestImage();
+        if (rank==0)
+        {
+            int idxStack=SFout.size();
+            FileName fnImageStack;
+            fnImageStack.compose(idxStack,fnStack);
+            bestImage.write(fnStack,idxStack,true,WRITE_APPEND);
+            SFout.addObject();
+            SFout.setValue(MDL_IMAGE,fnImageStack);
+            SFout.setValue(MDL_IMAGE_ORIGINAL,toClassify[bestIdx]);
+            SFout.setValue(MDL_MAXCC,bestCorr);
+        }
         VEC_ELEM(stillToDo,bestIdx)=0;
     }
 
     /// Main routine
     void run(int rank, int Nproc)
     {
-    	if (rank==0)
-    		show();
-    	produceSideInfo();
         while (stillToDo.sum()>0)
             chooseNextImage(rank,Nproc);
         if (rank==0)
-        	SFout.write(fnRoot+".sel");
+            SFout.write(fnRoot+".sel");
     }
 };
 
 int main(int argc, char **argv)
 {
-	// Read input parameters
-	ProgSortImages program;
+    // Read input parameters
+    ProgSortImages program;
     program.read(argc, argv);
 
     // Start MPI communications
@@ -202,5 +238,16 @@ int main(int argc, char **argv)
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &Nprocessors);
 
+    try
+    {
+        if (rank==0)
+            program.show();
+        program.produceSideInfo(rank);
+        program.run(rank,Nprocessors);
+    }
+    catch (XmippError XE)
+    {
+        std::cerr << XE << std::endl;
+    }
     return 0;
 }
