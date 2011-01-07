@@ -158,6 +158,13 @@ bool MetaData::getRow(MDRow &row, long int objId)
     return true;
 }
 
+void MetaData::setRow(const MDRow &row)
+{
+    int imax=row.size();
+    for (int i=0; i<imax; ++i)
+        setValue(*row[i]);
+}
+
 MetaData::MetaData()
 {
     myMDSql = new MDSql(this);
@@ -1298,6 +1305,65 @@ void MetaData::sort(MetaData &MDin, const MDLabel sortLabel)
     copyInfo(MDin);
     MDin.myMDSql->copyObjects(this, new MDQuery(-1, 0, sortLabel));
     firstObject();
+}
+
+void MetaData::sort(MetaData &MDin, const std::string &sortLabel)
+{
+    // Check if the label has semicolon
+    int ipos=sortLabel.find(':');
+    if (ipos!=std::string::npos || MDL::labelType(sortLabel)==LABEL_VECTOR)
+    {
+        MDLabel label;
+        int column;
+        if (ipos!=std::string::npos)
+        {
+            // Check that the label is a vector field
+            std::vector< std::string > results;
+            splitString(sortLabel,":",results);
+            column=textToInteger(results[1]);
+            if (MDL::labelType(results[0])!=LABEL_VECTOR)
+                REPORT_ERROR(ERR_ARG_INCORRECT,"Column specifications cannot be used with non-vector labels");
+            label=MDL::str2Label(results[0]);
+        }
+        else
+        {
+            label=MDL::str2Label(sortLabel);
+            column=0;
+        }
+
+        // Get the column values
+        MultidimArray<double> v;
+        v.resizeNoCopy(MDin.size());
+        std::vector<double> vectorValues;
+        int i=0;
+        FOR_ALL_OBJECTS_IN_METADATA(MDin)
+        {
+            MDin.getValue(label,vectorValues);
+            if (column>=vectorValues.size())
+                REPORT_ERROR(ERR_MULTIDIM_SIZE,"Trying to access to inexistent column in vector");
+            DIRECT_A1D_ELEM(v,i)=vectorValues[column];
+            i++;
+        }
+
+        // Sort
+        MultidimArray<int> idx;
+        v.indexSort(idx);
+
+        // Construct output Metadata
+        init(&(MDin.activeLabels));
+        copyInfo(MDin);
+        FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY1D(idx)
+        {
+            MDRow row;
+            MDin.getRow(row,DIRECT_A1D_ELEM(idx,i));
+            addObject();
+            setRow(row);
+        }
+
+        firstObject();
+    }
+    else
+        sort(MDin, MDL::str2Label(sortLabel));
 }
 
 void MetaData::split(int n, std::vector<MetaData> &results, const MDLabel sortLabel)

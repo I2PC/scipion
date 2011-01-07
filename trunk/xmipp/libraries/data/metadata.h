@@ -462,6 +462,9 @@ public:
     /** Get all values of an MetaData row of an specified objId*/
     bool getRow(MDRow &row, long int objId = -1);
 
+    /** Copy all the values in the input row in the current metadata*/
+    void setRow(const MDRow &row);
+
     /** Set label values from string representation.
      */
     bool setValueFromStr(const MDLabel label, const std::string &value, long int objectId = -1);
@@ -730,6 +733,17 @@ public:
     * be in the "calling" MetaData.
     */
     void sort(MetaData &MDin, const MDLabel sortLabel);
+
+    /*
+    * Sort a Metadata by a label.
+    * Sort the content of MDin comparing
+    * the label supplied, the result will
+    * be in the "calling" MetaData.
+    * If the input label is a vector field,
+    * you may supply label:col, to sort by that column,
+    * e.g., NMADisplacements:0
+    */
+    void sort(MetaData &MDin, const std::string &sortLabel);
 
     /** Split Metadata in several Metadatas.
      * The Metadata will be divided in 'n'
