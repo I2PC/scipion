@@ -1088,6 +1088,29 @@ void alignImages(const MultidimArray< double >& Iref, MultidimArray< double >& I
     delete plans;
 }
 
+double alignImagesConsideringMirrors(const MultidimArray< double >& Iref,
+                                     MultidimArray< double >& I,
+                                     const MultidimArray< int >* mask)
+{
+    MultidimArray<double> Imirror;
+    Matrix2D<double> M;
+    Imirror=I;
+    Imirror.selfReverseX();
+    Imirror.setXmippOrigin();
+
+    alignImages(Iref,I,M);
+    alignImages(Iref,Imirror,M);
+    double corr=correlation_index(Iref,I,mask);
+    double corrMirror=correlation_index(Iref,Imirror,mask);
+    double bestCorr=corr;
+    if (corrMirror>bestCorr)
+    {
+        bestCorr=corrMirror;
+        I=Imirror;
+    }
+    return bestCorr;
+}
+
 /* Estimate 2D Gaussian ---------------------------------------------------- */
 /* See Brandle, Chen, Bischof, Lapp. Robust parametric and semi-parametric
    spot fitting for spot array images. 2000 */

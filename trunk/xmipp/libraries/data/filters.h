@@ -232,12 +232,12 @@ double correlation(const MultidimArray< T >& x,
     {
         kp = k - q;
         if (kp < 0 || kp >= Slices)
-        	continue;
+            continue;
         for (i = 0; i < Rows; i++)
         {
             ip = i - l;
             if (ip < 0 || ip >= Rows)
-            	continue;
+                continue;
             for (j = 0; j < Cols; j++)
             {
                 jp = j - m;
@@ -319,7 +319,7 @@ double correlation_index(const MultidimArray< T >& x,
                     continue;
 
             retval += (A3D_ELEM(x, k, i, j) - mean_x) *
-            		  (A3D_ELEM(y, k, i, j) - mean_y);
+                      (A3D_ELEM(y, k, i, j) - mean_y);
             n++;
         }
     }
@@ -393,15 +393,27 @@ void best_nonwrapping_shift(const MultidimArray< double >& I1,
                             double& shiftY);
 
 /** Align two images
-* @ingroup Filters
+ * @ingroup Filters
  *
- * This function modifies I2 to be aligned with I1. Translational and
- * rotational alignments are both considered. The matrix transforming I2
- * into I1 is returned.
+ * This function modifies I to be aligned with Iref. Translational and
+ * rotational alignments are both considered. The matrix transforming I
+ * into Iref is returned.
  */
 void alignImages(const MultidimArray< double >& Iref,
                  MultidimArray< double >& I,
                  Matrix2D< double >&M);
+
+/** Align two images considering also the mirrors
+ * @ingroup Filters
+ *
+ * This function modifies I to be aligned with Iref. Translational and
+ * rotational alignments are both considered. The correlation coefficient
+ * between I transformed and Iref is returned. A mask can be supplied for
+ * computing this correlation.
+ */
+double alignImagesConsideringMirrors(const MultidimArray< double >& Iref,
+                                     MultidimArray< double >& I,
+                                     const MultidimArray< int >* mask = NULL);
 
 /** Unnormalized 2D gaussian value using covariance
  * @ingroup NumericalFunctions
