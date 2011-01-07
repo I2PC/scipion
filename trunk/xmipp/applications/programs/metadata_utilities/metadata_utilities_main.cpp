@@ -66,6 +66,9 @@ protected:
         addParamsLine("           requires --label, -o;                                                         ");
 
         addParamsLine("or --sort <md1>                      : sort metadata md1 using label l1");
+        addParamsLine("                                     : for sorting accordind to a component of a vector label");
+        addParamsLine("                                     : use label:col, e.g., NMADisplacements:0");
+        addParamsLine("                                     : The first column is column number 0");
         addParamsLine("           requires --label, -o;                                                         ");
 
         addParamsLine("or --convert2db <md1>                : convert metadata to sqlite database");
@@ -227,6 +230,8 @@ protected:
 public:
     void run()
     {
+        FileName inFnImg,outFnImg;
+        int ipos, column;
         switch (operationType)
         {
         case _union:
@@ -249,7 +254,20 @@ public:
             break;
         case _sort:
             inMD1.read(inFileName1);
-            outMD.sort(inMD1, MDL::str2Label(_label));
+            // Check if the label has semicolon
+            ipos=_label.find(':');
+            if (ipos!=std::string::npos)
+            {
+            	std::vector< std::string > results;
+            	splitString(_label,":",results);
+            	column=textToInteger(results[1]);
+            	if (MDL::labelType(results[0])!=LABEL_VECTOR)
+            		REPORT_ERROR(ERR_ARG_INCORRECT,"Column specifications cannot be used with non-vector labels");
+            	// COSS Falta poder pasarle la columna a sort
+            	outMD.sort(inMD1, MDL::str2Label(results[0]));
+            }
+            else
+            	outMD.sort(inMD1, MDL::str2Label(_label));
             outMD.write(outFileName);
             break;
         case _join:
@@ -267,7 +285,6 @@ public:
                     REPORT_ERROR(ERR_IO_NOPERM, "Run: Cannot create directory "+ tmpFileName);
             FOR_ALL_OBJECTS_IN_METADATA(inMD1)
             {
-                FileName inFnImg,outFnImg;
                 inMD1.getValue(MDL::str2Label(_label),inFnImg);
                 outFnImg = inFnImg.removeDirectories();
                 outMD.addObject();
@@ -285,7 +302,6 @@ public:
                     REPORT_ERROR(ERR_IO_NOPERM, "Run: Cannot create directory "+ tmpFileName);
             FOR_ALL_OBJECTS_IN_METADATA(inMD1)
             {
-                FileName inFnImg,outFnImg;
                 inMD1.getValue(MDL::str2Label(_label),inFnImg);
                 outFnImg = inFnImg.removeDirectories();
                 outMD.addObject();
@@ -299,7 +315,6 @@ public:
             inMD1.read(inFileName1);
             FOR_ALL_OBJECTS_IN_METADATA(inMD1)
             {
-                FileName inFnImg;
                 inMD1.getValue(MDL::str2Label(_label),inFnImg);
                 remove(inFnImg.c_str());
                 std::cerr << "Remove file: " << inFnImg <<std::endl;
@@ -314,17 +329,16 @@ public:
             break;
 
         case _convert2db:
-          {
-              inMD1.read(inFileName1);
-              MDSql::dumpToFile(outFileName);
-          }
+            {
+                inMD1.read(inFileName1);
+                MDSql::dumpToFile(outFileName);
+            }
             break;
 
         default:
             REPORT_ERROR(ERR_ARG_INCORRECT,"Unknown operation");
         }
     }
-
 }
 ;
 
