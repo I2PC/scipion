@@ -635,7 +635,8 @@ void Prog_Angular_CommonLine::optimize(Matrix1D<double> &solution)
             aux.initZeros(eulerAngles[i].size());
             for (int n=0; n<eulerAngles[i].size(); n++)
                 aux(n)=correlations[i][n];
-            MultidimArray<int> idx=aux.indexSort();
+            MultidimArray<int> idx;
+            aux.indexSort(idx);
 
             // Among the top, compute the distance between
             // the different Euler angles
@@ -696,7 +697,8 @@ void Prog_Angular_CommonLine::optimize(Matrix1D<double> &solution)
             aux.initZeros(eulerAngles[besti].size());
             for (int n=0; n<eulerAngles[besti].size(); n++)
                 aux(n)=correlations[besti][n];
-            MultidimArray<int> idx=aux.indexSort();
+            MultidimArray<int> idx;
+            aux.indexSort(idx);
 
             // Keep only the topN
             std::vector< Matrix1D<double> > bestEulerAngles;

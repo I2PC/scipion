@@ -243,7 +243,8 @@ int main(int argc, char **argv)
         FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY1D(finalZscore)
         DIRECT_A1D_ELEM(finalZscore,i)=pow(DIRECT_A1D_ELEM(finalZscore,i),1.0/L);
 
-        MultidimArray<int> sorted = finalZscore.indexSort();
+        MultidimArray<int> sorted;
+        finalZscore.indexSort(sorted);
         int nr_imgs = SF.size();
         bool thereIsEnable=SF.containsLabel(MDL_ENABLED);
         for (int imgno = 0; imgno < nr_imgs; imgno++)

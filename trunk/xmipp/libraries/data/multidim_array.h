@@ -3950,21 +3950,21 @@ public:
      * v2 = v1.indexSort();
      * @endcode
      */
-    MultidimArray< int > indexSort() const
+    void indexSort(MultidimArray< int > &indx) const
     {
         checkDimension(1);
 
-        MultidimArray< int >   indx;
         MultidimArray< double > temp;
+        indx.clear();
 
         if (xdim == 0)
-            return indx;
+            return;
 
         if (xdim == 1)
         {
             indx.resizeNoCopy(1);
-            indx(0) = 1;
-            return indx;
+            DIRECT_A1D_ELEM(indx,0) = 1;
+            return;
         }
 
         // Initialise data
@@ -3975,8 +3975,6 @@ public:
         double* temp_array = temp.adaptForNumericalRecipes1D();
         int* indx_array = indx.adaptForNumericalRecipes1D();
         indexx(XSIZE(*this), temp_array, indx_array);
-
-        return indx;
     }
 
     /** Several thresholding.

@@ -592,7 +592,8 @@ void keep_biggest_component(MultidimArray<double> &I, double percentage,
             continue;
         nlabel(idx)++;
     }
-    MultidimArray<int> best = nlabel.indexSort();
+    MultidimArray<int> best;
+    nlabel.indexSort(best);
     best -= 1;
     int nbest = XSIZE(best) - 1;
     double total = nlabel.sum();

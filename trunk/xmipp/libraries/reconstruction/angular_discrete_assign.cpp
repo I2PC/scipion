@@ -893,7 +893,8 @@ void ProgAngularDiscreteAssign::processImage(const FileName &fnImg, const FileNa
     MultidimArray<double> score(jmax);
     for (int j = 0; j < jmax; j++)
         score(j) = vscore[candidate_local_maxima[j]];
-    MultidimArray<int> idx_score = score.indexSort();
+    MultidimArray<int> idx_score;
+    score.indexSort(idx_score);
 
     if (tell & (TELL_PSI_SHIFT | TELL_OPTIONS))
     {

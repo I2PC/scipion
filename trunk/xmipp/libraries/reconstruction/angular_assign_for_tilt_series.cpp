@@ -1460,7 +1460,8 @@ void * threadgenerateLandmarkSetCriticalPoints( void * args )
                     if (d12<minDistance(q2))
                         minDistance(q2)=d12;
                 }
-            MultidimArray<int> idxDistanceSort=minDistance.indexSort();
+            MultidimArray<int> idxDistanceSort;
+            minDistance.indexSort(idxDistanceSort);
             std::vector< Matrix1D<double> > Qaux;
             int qlimit=XMIPP_MIN(10*(parent->Ncritical),qmax);
             for (int q=0; q<qlimit; q++)
@@ -1544,7 +1545,8 @@ void * threadgenerateLandmarkSetCriticalPoints( void * args )
             progress_bar(ii);
 
         // Sort all chains according to its correlation
-        MultidimArray<int> idx=corrQ.indexSort();
+        MultidimArray<int> idx;
+        corrQ.indexSort(idx);
         int imax=XMIPP_MIN(XSIZE(idx),parent->Ncritical);
         for (int iq=0; iq<imax; iq++)
         {

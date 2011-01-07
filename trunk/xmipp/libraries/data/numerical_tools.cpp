@@ -31,7 +31,7 @@ void randomPermutation(int N, MultidimArray<int>& result)
     aux.resize(N);
     aux.initRandom(0,1);
 
-    result=aux.indexSort();
+    aux.indexSort(result);
     result-=1;
 }
 

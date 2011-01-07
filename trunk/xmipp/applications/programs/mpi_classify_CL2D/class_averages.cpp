@@ -477,7 +477,8 @@ void VQProjection::lookForNeighbours(const std::vector<VQProjection *> listP,
             }
         }
 
-        MultidimArray<int> idx=distanceCode.indexSort();
+        MultidimArray<int> idx;
+        distanceCode.indexSort(idx);
         for (int k=0; k<K; k++)
             neighboursIdx.push_back(idx(Q-k-1)-1);
     }

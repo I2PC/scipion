@@ -224,7 +224,7 @@ void PCAMahalanobisAnalyzer::evaluateZScore(int NPCA, int Niter)
     else if (N==1)
     {
         Zscore.initZeros(N);
-        idx=Zscore.indexSort();
+        Zscore.indexSort(idx);
         return;
     }
     
@@ -303,6 +303,6 @@ void PCAMahalanobisAnalyzer::evaluateZScore(int NPCA, int Niter)
     std::cout << std::endl;
 #endif
 
-    idx=Zscore.indexSort();
+    Zscore.indexSort(idx);
 }
 #undef DEBUG
