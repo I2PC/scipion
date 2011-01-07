@@ -7,7 +7,29 @@ def launch_job(programname,
                NumberOfThreads,
                SystemFlavour,
                onlyBuildCommand=False):
+    command=buildCommand(programname,
+               params,
+               DoParallel,
+               NumberOfMpiProcesses,
+               NumberOfThreads,
+               SystemFlavour)
+    if command=='':
+            message= "Error: unrecognized SystemFlavour: ", SystemFlavour
+            print '* ',message
+            print '*********************************************************************'
+            log.info(message)
+            sys.exit(1)
+    print '* ',command,'\n'
+    log.info(command)
+    if (not onlyBuildCommand): os.system(command)
+    return(command);
 
+def buildCommand(programname,
+               params,
+               DoParallel,
+               NumberOfMpiProcesses,
+               NumberOfThreads,
+               SystemFlavour):
     import os,sys
 
     if not DoParallel:
@@ -41,15 +63,6 @@ def launch_job(programname,
             mpicommand = 'mpirun -mca mpi_yield_when_idle 1 -np ' + str(NumberOfMpiProcesses)
 
         else:
-            message= "Error: unrecognized SystemFlavour: ", SystemFlavour
-            print '* ',message
-            print '*********************************************************************'
-            log.info(message)
-            sys.exit(1)
-
+            return ''
         command = mpicommand + ' `which '+ str(mpiprogramname) +'` ' + params
-
-    print '* ',command,'\n'
-    log.info(command)
-    if (not onlyBuildCommand): os.system(command)
     return(command);
