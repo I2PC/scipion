@@ -23,14 +23,16 @@
  *  e-mail address 'xmipp@cnb.csic.es'
  ***************************************************************************/
 
-#include <reconstruction/sort_images.h>
-
+#include <mpi.h>
+#include <data/filters.h>
 #include <data/funcs.h>
-#include <data/metadata.h>
 #include <data/image.h>
+#include <data/image_collection.h>
+#include <data/mask.h>
+#include <data/metadata.h>
 #include <data/program.h>
 
-class ProgSortImages
+class ProgSortImages: public XmippProgram
 {
 public:
     /** Filename selection file containing the images */
@@ -126,7 +128,7 @@ public:
     }
 
     /// Choose next image
-    void chooseNextImage()
+    void chooseNextImage(int rank, int Nproc)
     {
         Image<double> bestImage, Iaux;
         Matrix2D<double> M;
