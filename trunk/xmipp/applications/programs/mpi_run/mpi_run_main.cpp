@@ -254,14 +254,15 @@ int main(int argc, char *argv[])
     {
         if (prm.rank == 0)
             prm.show();
-        prm.run();
+        if (prm.nprocs==1)
+        	system(((std::string)"chmod x+u "+prm.fn_commands+" ; ./"+prm.fn_commands).c_str());
+        else
+        	prm.run();
     }
     catch (XmippError XE)
     {
-        std::cout << XE;
+        std::cerr << XE;
         exit(1);
     }
     exit(0);
 }
-
-
