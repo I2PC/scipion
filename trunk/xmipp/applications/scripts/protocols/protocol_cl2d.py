@@ -122,7 +122,7 @@ AnalysisScript='visualize_cl2d.py'
 #------------------------------------------------------------------------------------------------
 #------------------------------------------------------------------------------------------------
 
-import os,sys,shutil
+import os,sys,shutil,time
 
 def getParameter(prm,filename):
     f = open(filename, 'r')
@@ -133,6 +133,14 @@ def getParameter(prm,filename):
         if tokens[0]==prm:
             return tokens[1].strip()
     return ""
+
+def stepPerformed(step,filename):
+    import re
+    f = open(filename, 'r')
+    lines=f.readlines()
+    f.close()
+    expr = re.compile(step)
+    return len(filter(expr.search,lines))>0
 
 class CL2D_class:
     def saveAndCompareParameters(self, listOfParameters):
@@ -273,11 +281,20 @@ class CL2D_class:
         log.make_backup_of_script_file(sys.argv[0],
             os.path.abspath(self.WorkingDir))
 
+        # Update status
+        fh=open(self.WorkingDir + "/status.txt", "a")
+        fh.write("Step 0: Process started at " + time.asctime() + "\n")
+        fh.close()
+
         # Run
         self.preprocess()
         self.execute_CLalign2D()
         self.execute_core_analysis()
         self.postprocess()
+        
+        fh=open(self.WorkingDir + "/status.txt", "a")
+        fh.write("Step F: Process finished at " + time.asctime() + "\n")
+        fh.close()
 
     def preprocess(self):
         import launch_job,xmipp
@@ -290,6 +307,8 @@ class CL2D_class:
                 MD=xmipp.MetaData(self.InSelFile)
                 if MD.size()!=numberOfImages:
                     self.doStep1=True
+            if not stepPerformed("Step 1",self.WorkingDir + "/status.txt"):
+                self.doStep1=True
             if self.doStep1:
                 params= '-i '+str(self.InSelFile)+\
                         ' --fourier_mask raised_cosine '+str(slope)+\
@@ -307,13 +326,20 @@ class CL2D_class:
                                       1,
                                       1,
                                       self.SystemFlavour)
+                # Update status    
+                if os.path.exists(self.WorkingDir+'/preprocessedImages.stk'):
+                    fh=open(self.WorkingDir + "/status.txt", "a")
+                    fh.write("Step 1: Preprocessing finished at " + time.asctime() + "\n")
+                    fh.close()
         else:
             self.selFileToUse=self.InSelFile
 
     def execute_CLalign2D(self):
         import launch_job
-        if self.DoFilter and not os.path.exists(self.WorkingDir+'/preprocessedImages.stk'):
+        if self.DoFilter and not stepPerformed("Step 1",self.WorkingDir + "/status.txt"):
             return
+        if not stepPerformed("Step 2",self.WorkingDir + "/status.txt"):
+            self.doStep2=True
         if not self.doStep2:
             if not os.path.exists(WorkingDir+'/class.sel'):
                 self.doStep2=True
@@ -347,11 +373,17 @@ class CL2D_class:
                                            self.WorkingDir+"/intermediate.sel",
                                            xmipp.MDL_IMAGE_ORIGINAL,False)
             os.system("mv -f "+self.WorkingDir+"/intermediate.sel "+fnClasses)
+        if os.path.exists(fnClasses) and self.DoFilter:
+            fh=open(self.WorkingDir + "/status.txt", "a")
+            fh.write("Step 2: CL2D finished at " + time.asctime() + "\n")
+            fh.close()
 
     def execute_core_analysis(self):
         import launch_job
-        if not os.path.exists(WorkingDir+'/class.sel'):
+        if not stepPerformed("Step 2",self.WorkingDir + "/status.txt"):
             return
+        if not stepPerformed("Step 3",self.WorkingDir + "/status.txt"):
+            self.doStep3=True
         if not self.doStep3:
             if not os.path.exists(self.WorkingDir+"/class_core_sorted.sel"):
                 self.doStep3=True
@@ -371,9 +403,13 @@ class CL2D_class:
                               1,
                               self.NumberOfMpiProcesses,
                               self.SystemFlavour)
+        if os.path.exists(self.WorkingDir+"/class_core_sorted.sel"):
+            fh=open(self.WorkingDir + "/status.txt", "a")
+            fh.write("Step 3: Core analysis finished at " + time.asctime() + "\n")
+            fh.close()
         
     def postprocess(self):
-        if not os.path.exists(self.WorkingDir+"/class_core_sorted.sel"):
+        if not stepPerformed("Step 3",self.WorkingDir + "/status.txt"):
             return
         if not self.DoFilter or not os.path.exists(self.WorkingDir+'/preprocessedImages.stk'):
             return
@@ -388,6 +424,9 @@ class CL2D_class:
             os.system("mv -f "+fnClass+"_intermediate.sel "+fnClass)
         os.remove(self.WorkingDir+'/class_aligned.sel')
         os.remove(self.WorkingDir+'/preprocessedImages.stk')
+        fh=open(self.WorkingDir + "/status.txt", "a")
+        fh.write("Step 4: Postprocessing finished at " + time.asctime() + "\n")
+        fh.close()
 
 # Preconditions
 def preconditions(gui):
@@ -477,6 +516,3 @@ if __name__ == '__main__':
                  thPCAZscore,
                  NumberOfMpiProcesses,
                  SystemFlavour)
-
-# Falta eliminar preprocessedImages.stk
-# Falta agnadir el control de que hay que hacer y que no
