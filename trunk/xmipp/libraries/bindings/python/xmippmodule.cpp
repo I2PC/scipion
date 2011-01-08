@@ -1541,9 +1541,10 @@ static PyObject *
 xmipp_substituteOriginalImages(PyObject *obj, PyObject *args, PyObject *kwargs)
 {
     PyObject *pyStrFn, *pyStrFnOrig, *pyStrFnOut;
-    int label;
+    int label, skipFirstBlock;
 
-    if (PyArg_ParseTuple(args, "OOOi", &pyStrFn, &pyStrFnOrig, &pyStrFnOut, &label))
+    if (PyArg_ParseTuple(args, "OOOii", &pyStrFn, &pyStrFnOrig, &pyStrFnOut, &label,
+    	&skipFirstBlock))
     {
         try
         {
@@ -1569,7 +1570,7 @@ xmipp_substituteOriginalImages(PyObject *obj, PyObject *args, PyObject *kwargs)
         	else
         		PyErr_SetString(PyExc_TypeError, "Expected string or FileName as third argument");
 
-        	substituteOriginalImages(fn, fnOrig, fnOut, (MDLabel)label);
+        	substituteOriginalImages(fn, fnOrig, fnOut, (MDLabel)label, (bool)skipFirstBlock);
             Py_RETURN_NONE;
         }
         catch (XmippError xe)
