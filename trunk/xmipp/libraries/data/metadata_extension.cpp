@@ -192,7 +192,7 @@ void readMetaDataWithTwoPossibleImages(const FileName &fn, MetaData &MD)
 
 /* Substitute ------------------------------------------------------------- */
 void substituteOriginalImages(const FileName &fn, const FileName &fnOrig, const FileName &fnOut,
-		MDLabel label)
+		MDLabel label, bool skipFirstBlock)
 {
 	// Read the original files
 	MetaData MDorig(fnOrig);
@@ -206,12 +206,16 @@ void substituteOriginalImages(const FileName &fn, const FileName &fnOrig, const 
 	StringVector blocks;
 	getBlocksAvailableInMetaData(fn, blocks);
 
+	// Delete the output file if it exists
+	if (exists(fnOut))
+		unlink(fnOut.c_str());
+
 	// Process each block
 	for (int b=0; b<blocks.size(); b++)
 	{
 		MetaData MD;
 		MD.read(fn,NULL,blocks[b]);
-		if (MD.containsLabel(label))
+		if (MD.containsLabel(label) && (!skipFirstBlock || b!=0))
 		{
 			FileName fnImg;
 			int stkNo;
