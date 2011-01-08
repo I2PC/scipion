@@ -65,7 +65,7 @@ ComparisonMethod='correlation'
 ClusteringMethod='classical'
 
 # {expert} Additional parameters for classify_CL2D
-""" -verbose, -corr_split, ...
+""" -verbose, -corrSplit, ...
 """
 AdditionalParameters=''
 
@@ -84,7 +84,7 @@ thGoodClass=50
     go from 1.5 to 3. For the Gaussian distribution 99.5% of the data is
     within a Z-score of 3. Lower Z-scores reject more images. Higher Z-scores
     accept more images."""
-thJunkZscore=3
+thZscore=3
 
 # PCA Zscore
 """ Which is the PCA Z-score to be considered as junk. Typical values
@@ -177,7 +177,7 @@ class CL2D_class:
                  ClusteringMethod,
                  AdditionalParameters,
                  thGoodClass,
-                 thJunkZscore,
+                 thZscore,
                  thPCAZscore,
                  NumberOfMpiProcesses,
                  SystemFlavour):
@@ -199,7 +199,7 @@ class CL2D_class:
         self.ClusteringMethod=ClusteringMethod
         self.AdditionalParameters=AdditionalParameters
         self.thGoodClass=thGoodClass
-        self.thJunkZscore=thJunkZscore
+        self.thZscore=thZscore
         self.thPCAZscore=thPCAZscore
         self.NumberOfMpiProcesses=NumberOfMpiProcesses
         self.SystemFlavour=SystemFlavour
@@ -231,27 +231,27 @@ class CL2D_class:
             oldAdditionalParameters=getParameter("AdditionalParameters",fnParam)
             
             oldthGoodClass=getParameter("thGoodClass",fnParam)
-            oldthJunkZscore=getParameter("thJunkZscore",fnParam)
+            oldthZscore=getParameter("thZscore",fnParam)
             oldthPCAZscore=getParameter("thPCAZscore",fnParam)
             self.doStep1=False
             self.doStep2=False
             self.doStep3=False
-            if oldInSelFile!=InSelFile or DoFilter!=oldDoFilter or \
-               oldHighpass!=Highpass or oldLowpass!=Lowpass:
+            if oldInSelFile!=InSelFile or str(DoFilter)!=oldDoFilter or \
+               oldHighpass!=str(Highpass) or oldLowpass!=str(Lowpass):
                 self.doStep1=True
                 self.doStep2=True
                 self.doStep3=True
-            elif oldNumberOfReferences!=NumberOfReferences or \
-               oldNumberOfReferences0!=NumberOfReferences0 or \
-               oldNumberOfIterations!=NumberOfIterations or \
+            elif oldNumberOfReferences!=str(NumberOfReferences) or \
+               oldNumberOfReferences0!=str(NumberOfReferences0) or \
+               oldNumberOfIterations!=str(NumberOfIterations) or \
                oldComparisonMethod!=ComparisonMethod or \
                oldClusteringMethod!=ClusteringMethod or \
                oldAdditionalParameters!=AdditionalParameters:
                 self.doStep2=True
                 self.doStep3=True
-            elif oldthGoodClass!=thGoodClass or oldthJunkZscore!=thJunkZscore or \
-               oldthPCAZscore!=thPCAZscore:
-                self.doStep3=True                
+            elif oldthGoodClass!=str(thGoodClass) or oldthZscore!=str(thZscore) or \
+               oldthPCAZscore!=str(thPCAZscore):
+                self.doStep3=True
                 
         # Save parameters and compare to possible previous runs
         self.saveAndCompareParameters([
@@ -266,7 +266,7 @@ class CL2D_class:
                  "ClusteringMethod",
                  "AdditionalParameters",
                  "thGoodClass",
-                 "thJunkZscore",
+                 "thZscore",
                  "thPCAZscore"]);
 
         # Backup script
@@ -277,13 +277,19 @@ class CL2D_class:
         self.preprocess()
         self.execute_CLalign2D()
         self.execute_core_analysis()
+        self.postprocess()
 
     def preprocess(self):
-        import launch_job
+        import launch_job,xmipp
         if self.DoFilter:
             slope=max(self.Highpass/2,0.01)
             fnOut=self.WorkingDir+'/preprocessedImages.stk'
             self.selFileToUse=fnOut
+            if not self.doStep1 and os.path.exists(fnOut):
+                numberOfImages=xmipp.SingleImgSize(fnOut)[3]
+                MD=xmipp.MetaData(self.InSelFile)
+                if MD.size()!=numberOfImages:
+                    self.doStep1=True
             if self.doStep1:
                 params= '-i '+str(self.InSelFile)+\
                         ' --fourier_mask raised_cosine '+str(slope)+\
@@ -306,8 +312,13 @@ class CL2D_class:
 
     def execute_CLalign2D(self):
         import launch_job
-        if not self.doStep2:
+        if self.DoFilter and not os.path.exists(self.WorkingDir+'/preprocessedImages.stk'):
             return
+        if not self.doStep2:
+            if not os.path.exists(WorkingDir+'/class.sel'):
+                self.doStep2=True
+            else:
+                return
         params= '-i '+str(self.selFileToUse)+' -o '+WorkingDir+'/class '+\
                 ' -codes '+str(self.NumberOfReferences)+\
                 ' -codes0 '+str(self.NumberOfReferences0)+\
@@ -334,27 +345,50 @@ class CL2D_class:
             import xmipp
             xmipp.substituteOriginalImages(fnClasses,self.InSelFile,
                                            self.WorkingDir+"/intermediate.sel",
-                                           xmipp.MDL_IMAGE_ORIGINAL)
+                                           xmipp.MDL_IMAGE_ORIGINAL,False)
             os.system("mv -f "+self.WorkingDir+"/intermediate.sel "+fnClasses)
 
     def execute_core_analysis(self):
         import launch_job
-        if not self.doStep2:
+        if not os.path.exists(WorkingDir+'/class.sel'):
             return
+        if not self.doStep3:
+            if not os.path.exists(self.WorkingDir+"/class_core_sorted.sel"):
+                self.doStep3=True
+            else:
+                return
         params= WorkingDir+'/class '+\
                 str(self.thGoodClass)+' '+\
-                str(self.thJunkZscore)+' '+\
+                str(self.thZscore)+' '+\
                 str(self.thPCAZscore)+' '+\
-                str(self.NumberOfMpiProcesses)
+                str(self.NumberOfMpiProcesses)+' '+\
+                self.SystemFlavour
 
         launch_job.launch_job("xmipp_classify_CL2D_core_analysis",
                               params,
                               self.log,
-                              True,
-                              self.NumberOfMpiProcesses,
+                              False,
                               1,
+                              self.NumberOfMpiProcesses,
                               self.SystemFlavour)
         
+    def postprocess(self):
+        if not os.path.exists(self.WorkingDir+"/class_core_sorted.sel"):
+            return
+        if not self.DoFilter or not os.path.exists(self.WorkingDir+'/preprocessedImages.stk'):
+            return
+        import xmipp,glob
+        fnClasses=glob.glob(WorkingDir+"/class_level_??.sel")
+        os.system('xmipp_metadata_selfile_create -s -q'+\
+                  ' -p '+self.WorkingDir+'/class_aligned.stk '+\
+                  ' -o '+self.WorkingDir+'/class_aligned.sel')
+        for fnClass in fnClasses:
+            xmipp.substituteOriginalImages(fnClass,self.WorkingDir+'/class_aligned.sel',
+                                           fnClass+"_intermediate.sel",xmipp.MDL_IMAGE,True)
+            os.system("mv -f "+fnClass+"_intermediate.sel "+fnClass)
+        os.remove(self.WorkingDir+'/class_aligned.sel')
+        os.remove(self.WorkingDir+'/preprocessedImages.stk')
+
 # Preconditions
 def preconditions(gui):
     retval=True
@@ -439,7 +473,10 @@ if __name__ == '__main__':
                  ClusteringMethod,
                  AdditionalParameters,
                  thGoodClass,
-                 thJunkZscore,
+                 thZscore,
                  thPCAZscore,
                  NumberOfMpiProcesses,
                  SystemFlavour)
+
+# Falta eliminar preprocessedImages.stk
+# Falta agnadir el control de que hay que hacer y que no
