@@ -77,7 +77,8 @@ void ProgAnalyzeCluster::defineParams()
     addParamsLine("  [--basis <stackName>]          : write the average and basis of the PCA in a stack");
     addParamsLine("  [--NPCA <dim=2>]               : PCA dimension");
     addParamsLine("  [--iter <N=10>]                : Number of iterations");
-    addParamsLine("  [--maxDist <d=2>]              : Maximum distance");
+    addParamsLine("  [--maxDist <d=3>]              : Maximum distance");
+    addParamsLine("                                 : Set to -1 if you don't want to filter images");
     addParamsLine("  [--dontMask]                   : Don't use a circular mask");
     addParamsLine("  [--quiet]                      : Don't show anything on screen");
 }
@@ -200,10 +201,13 @@ void ProgAnalyzeCluster::run()
     pcaAnalyzer.evaluateZScore(NPCA, Niter);
 
     // Output
-    MultidimArray<double> IalignedAvg;
+    MultidimArray<double> IalignedAvg, Istddev;
     int N=SFin.size();
     if (N>0 && basis)
+    {
         IalignedAvg.initZeros(XSIZE(Ialigned[0]));
+        Istddev.initZeros(XSIZE(Ialigned[0]));
+    }
     double Ngood=0;
     for (int n=0; n<N; n++)
     {
@@ -211,14 +215,18 @@ void ProgAnalyzeCluster::run()
         double zscore=pcaAnalyzer.getSortedZscore(n);
         SFout.goToObject(trueIdx+1);
         SFout.setValue(MDL_ZSCORE, zscore);
-        if (zscore<distThreshold)
+        if (zscore<distThreshold || distThreshold<0)
         {
             SFout.setValue(MDL_ENABLED,1);
             if (basis)
             {
                 const MultidimArray<float> &Ialigned_trueIdx=Ialigned[trueIdx];
                 FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(IalignedAvg)
-                DIRECT_MULTIDIM_ELEM(IalignedAvg,n)+=DIRECT_MULTIDIM_ELEM(Ialigned_trueIdx,n);
+                {
+                	double pixval=DIRECT_MULTIDIM_ELEM(Ialigned_trueIdx,n);
+                	DIRECT_MULTIDIM_ELEM(IalignedAvg,n)+=pixval;
+                	DIRECT_MULTIDIM_ELEM(Istddev,n)+=pixval*pixval;
+                }
                 Ngood++;
             }
         }
@@ -230,16 +238,34 @@ void ProgAnalyzeCluster::run()
     {
     	if (exists(fnOutBasis))
     		unlink(fnOutBasis.c_str());
-        IalignedAvg/=Ngood;
-        int idx=0;
+    	double iNgood=1.0/Ngood;
+    	FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(IalignedAvg)
+    	{
+    		DIRECT_MULTIDIM_ELEM(IalignedAvg,n)*=iNgood;
+    		DIRECT_MULTIDIM_ELEM(Istddev,n)*=iNgood;
+    		DIRECT_MULTIDIM_ELEM(Istddev,n)=sqrt(DIRECT_MULTIDIM_ELEM(Istddev,n)-
+    			DIRECT_MULTIDIM_ELEM(IalignedAvg,n)*DIRECT_MULTIDIM_ELEM(IalignedAvg,n));
+    	}
+
         Image<double> save;
         save().initZeros(mask);
+        int idx=0;
         FOR_ALL_ELEMENTS_IN_ARRAY2D(mask)
         {
             if (A2D_ELEM(mask,i,j))
                 IMGPIXEL(save,i,j)=A1D_ELEM(IalignedAvg,idx++);
         }
         save.write(fnOutBasis,0,true,WRITE_APPEND);
+        idx=0;
+        double avgStd=Istddev.computeAvg();
+        FOR_ALL_ELEMENTS_IN_ARRAY2D(mask)
+        {
+            if (A2D_ELEM(mask,i,j))
+                IMGPIXEL(save,i,j)=A1D_ELEM(Istddev,idx++);
+            else
+            	IMGPIXEL(save,i,j)=avgStd;
+        }
+        save.write(fnOutBasis,1,true,WRITE_APPEND);
 
         for (int ii=0; ii<pcaAnalyzer.PCAbasis.size(); ii++)
         {
@@ -248,7 +274,7 @@ void ProgAnalyzeCluster::run()
             FOR_ALL_ELEMENTS_IN_ARRAY2D(mask)
             if (A2D_ELEM(mask,i,j))
                 IMGPIXEL(save,i,j)=A1D_ELEM(pcaAnalyzer.PCAbasis[ii],idx++);
-            save.write(fnOutBasis,ii+1,true,WRITE_APPEND);
+            save.write(fnOutBasis,ii+2,true,WRITE_APPEND);
         }
     }
 }
