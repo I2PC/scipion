@@ -1351,11 +1351,11 @@ void fastRadialAverage(const MultidimArray< T >& m,
 
     // Perform the radial sum and count pixels that contribute to every
     // distance
-    FOR_ALL_ELEMENTS_IN_ARRAY3D(m)
+    FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(m)
     {
-        int d=A3D_ELEM(distance,k,i,j);
-        A1D_ELEM(radial_mean,d) += A3D_ELEM(m, k, i, j);
-        A1D_ELEM(radial_count,d)++;
+        int d=DIRECT_MULTIDIM_ELEM(distance,n);
+        A1D_ELEM(radial_mean,d) += DIRECT_MULTIDIM_ELEM(m,n);
+        ++A1D_ELEM(radial_count,d);
     }
 
     // Perform the mean
