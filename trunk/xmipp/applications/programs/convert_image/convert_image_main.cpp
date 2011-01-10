@@ -57,6 +57,8 @@ protected:
         each_image_produces_an_output = true;
         XmippMetadataProgram::defineParams();
         addUsageLine("Convert among stacks, volumes and images, and change the file format.");
+        addParamsLine("  [--oext <extension=\"\">] :  Output file format extension.");
+        addExtensionWhere("extension");
         addParamsLine("  [--type <output_type=img>] : Output file type.");
         addParamsLine("          where <output_type>");
         addParamsLine("          img : Image");
@@ -92,6 +94,10 @@ protected:
         fn_out = (checkParam("-o"))? getParam("-o") : "";
         adjust = checkParam("--rangeAdjust");
         type = getParam("--type");
+
+        oext = checkParam("--oext") ? getParam("--oext") : "";
+        if (oext == "custom")
+            oext = getParam("--oext",1);
 
         if (!checkParam("--type"))
         {
@@ -214,6 +220,16 @@ protected:
             imOut->write();
             break;
         }
+    }
+
+    void show()
+    {
+      XmippMetadataProgram::show();
+      if (each_image_produces_an_output)
+         {
+             if (oext != "")
+                 std::cout << "Output Extension: " << oext << std::endl;
+         }
     }
 };
 

@@ -246,8 +246,8 @@ void XmippProgram::addExtensionWhere(const char * whereName)
     sprintf(whereLine, "       where <%s>", whereName);
     addParamsLine(whereLine);
     addParamsLine("         img : Imagic (Data types: uint8, int16, float* and cfloat).");
-    addParamsLine("         inf : RAW file with header INF file (All data types. See -d option).");
-    addParamsLine("         raw : RAW file with header INF file (All data types. See -d option).");
+    addParamsLine("         inf : RAW file with header INF file (Data types: (u)int8, (u)int16 and float*).");
+    addParamsLine("         raw : RAW file with header INF file (Data types: (u)int8, (u)int16 and float*).");
     addParamsLine("         mrc : CCP4 (Data types: int8, float* and cfloat).");
     addParamsLine("         spi : Spider (Data types: float* and cfloat).");
     addParamsLine("         xmp : Spider (Data types: float* and cfloat).");
@@ -392,6 +392,7 @@ void XmippMetadataProgram::defineParams()
         //        addParamsLine("  [--oext <extension=\"\">] :  Output file format extension.");
         //        addExtensionWhere("extension");
         addParamsLine("  [--oroot <root=\"\">]     : Rootname of output individual images.");
+        addParamsLine("                            : Output extension can be passed adding \":ext\" after rootname.");
     }
     else if (produces_an_output)
     {
@@ -512,7 +513,7 @@ void XmippMetadataProgram::run()
 {
     try
     {
-        FileName fnImg, fnImgOut, basename;
+        FileName fnImg, fnImgOut, baseName, pathBaseName, fullBaseName, oextBaseName;
         long int objId;
         //Perform particular preprocessing
         preProcess();
@@ -520,6 +521,16 @@ void XmippMetadataProgram::run()
         startProcessing();
 
         int kk = 0;
+
+        if (oroot != "" )
+        {
+            if (oext == "")
+                oext           = oroot.getFileFormat();
+            oextBaseName   = oext;
+            fullBaseName   = oroot.removeFileFormat();
+            baseName       = fullBaseName.getBaseName();
+            pathBaseName   = fullBaseName.getRoot();
+        }
 
         //FOR_ALL_OBJECTS_IN_METADATA(mdIn)
         while ((objId = getImageToProcess()) != -1)
@@ -532,23 +543,17 @@ void XmippMetadataProgram::run()
             if (each_image_produces_an_output)
             {
                 fnImgOut = fnImg;
-                if (oroot != "" /*|| oext != ""*/)
+                if (oroot != "" )
                 {
-                    //if (oext == "")
-                    oext = oroot.getFileFormat();
-                    oroot = oroot.removeFileFormat();
                     if (oext == "")
-                        oext = fnImg.getFileFormat();
+                        oextBaseName = fnImg.getFileFormat();
 
-                    basename = oroot.getBaseName();
-                    oroot = oroot.getRoot();
-
-                    if (basename != "")
-                        fnImgOut.compose(oroot,kk++,oext);
+                    if (baseName != "")
+                        fnImgOut.compose(fullBaseName,kk++,oextBaseName);
                     else if (fnImg.isInStack())
-                        fnImgOut.compose(oroot + (fnImg.withoutExtension()).getDecomposedFileName(),kk++,oext);
+                        fnImgOut.compose(pathBaseName + (fnImg.withoutExtension()).getDecomposedFileName(),kk++,oextBaseName);
                     else
-                        fnImgOut = oroot + fnImg.withoutExtension()+"." + oext;
+                        fnImgOut = pathBaseName + fnImg.withoutExtension()+"." + oextBaseName;
 
                     mdOut.addObject();
                     mdOut.setValue(MDL_IMAGE,fnImgOut);
