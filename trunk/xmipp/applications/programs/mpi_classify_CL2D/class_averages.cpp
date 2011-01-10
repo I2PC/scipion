@@ -1905,7 +1905,6 @@ void Prog_VQ_prm::alignInputImages(const FileName &fnSF, int rank, int Nprocesso
     FileName fnImgIn, fnImgOut, fnClass;
     Image<double> Iclass, I;
     Matrix2D<double> M;
-    system("cp Align2D/run1/class_aligned.stk Align2D/run1/class_aligned_before.stk");
     for (int b=0; b<bmax; b++)
     {
         if (blockList[b]=="")
