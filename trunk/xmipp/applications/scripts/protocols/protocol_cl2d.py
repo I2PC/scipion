@@ -123,6 +123,8 @@ AnalysisScript='visualize_cl2d.py'
 #------------------------------------------------------------------------------------------------
 
 import os,sys,shutil,time
+scriptdir=os.path.split(os.path.dirname(os.popen('which xmipp_protocols', 'r').read()))[0] + '/protocols'
+sys.path.append(scriptdir)
 
 def getParameter(prm,filename):
     f = open(filename, 'r')
