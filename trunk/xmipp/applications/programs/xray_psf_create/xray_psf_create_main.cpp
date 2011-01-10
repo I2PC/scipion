@@ -68,7 +68,7 @@ public:
     void run()
     {
       psf.generatePSF(IDEAL_LENS);
-      psf.write(fnPSF.withoutExtension().addExtension("xmd"));
+      psf.write(fnPSF);
 
     }
 };

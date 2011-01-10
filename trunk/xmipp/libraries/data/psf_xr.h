@@ -39,22 +39,22 @@
 
 /** This enum defines which method should be used to
  correct the constraint due to Nyquist limit in diffraction. */
-enum PsfxrAdjust
+typedef enum
 {
     PSFXR_STD, /// Standard mode, image size does not changes
     PSFXR_INT, /// Increasing the image size by Interpolating
     PSFXR_ZPAD /// Increasing the image size by Zeropadding
-};
+} PsfxrAdjust;
 
 // PSF Generation algorithm
-enum PsfType
+typedef enum
 {
     IDEAL_LENS,
     ANALITIC_ZP /// Based on  O. Mendoza-Yero et als."PSF analysis of nanometric Fresnel
     /// zone plates," EOS Topical Meeting on Diffractive Optics 2010,
     /// ISBN 978-3-00-024193-2, 14th-18th February
     /// 2010, Koli, Finland. (contact email:omendoza@uji.es)
-};
+} PsfType;
 
 /** X-ray PSF class.
  * Here goes how to filter an image with the Point Spread Function of a X-ray microscope optics

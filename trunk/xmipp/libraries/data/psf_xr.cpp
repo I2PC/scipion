@@ -35,9 +35,9 @@ void XRayPSF::defineParams(XmippProgram * program)
     program->addParamsLine(" [-out_width <deltaR=40>]       : Outermost zone width of the X-ray Fresnel lens (nm).");
     program->addParamsLine(" [-zones <N=560>]               : Number of zones of the X-ray Fresnel lens.");
     program->addParamsLine(" [-mag <Ms=2304>]               : Magnification of the X-ray microscope.");
-    program->addParamsLine(" [-sampling <dxy=10> <dz=0>]    : Sampling rate in X-Y plane and Z axis.");
+    program->addParamsLine(" [-sampling <dxy=10> <dz=dxy>]  : Sampling rate in X-Y plane and Z axis.");
     program->addParamsLine(" [-zshift <deltaZ=0>]           : Longitudinal displacement along Z axis in microns.");
-    program->addParamsLine(" [-size <sizeX> <sizeY=0> <sizeZ=0>]: Size of the X-ray PSF volume.");
+    program->addParamsLine(" [-size <x> <y=x> <z=x>]        : Size of the X-ray PSF volume.");
 }
 
 /* Read params
@@ -49,17 +49,13 @@ void XRayPSF::readParams(XmippProgram * program)
     Nzp     = program->getDoubleParam("-zones");
     Ms      = program->getDoubleParam("-mag");
     dxo     = program->getDoubleParam("-sampling",0)*1e-9;
-    dzo     = program->getDoubleParam("-sampling",1)*1e-9;
-    if (dzo == 0)
-        dzo = dxo;
+    dzo     = (String(program->getParam("-sampling", 1)) == "dxy") ? dxo : program->getDoubleParam("-sampling", 1)*1e-9;
     DeltaZo = program->getDoubleParam("-zshift")*1e-6;
     Nox     = program->getDoubleParam("-size",0);
-    Noy     = (double) program->getIntParam("-size",1);
-    if (Noy == 0.)
-        Noy == Nox;
-    Noz     = (double) program->getIntParam("-size",2);
-    if (Noz == 0.)
-        Noz == Nox;
+    Noy     = (String(program->getParam("-size", 1)) == "x") ? Nox : program->getDoubleParam("-size", 1);
+    Noz     = (String(program->getParam("-size", 2)) == "x") ? Nox : program->getDoubleParam("-size", 2);
+
+    verbose = program->getIntParam("-v");
 }
 
 /* Read -------------------------------------------------------------------- */
@@ -201,7 +197,7 @@ std::ostream & operator <<(std::ostream &out, const XRayPSF &psf)
 {
 
     out     << std::endl
-    << "XmippXRPSF:: X-Ray Microscope parameters:" << std::endl
+    << "XrayPSF:: X-Ray Microscope parameters:" << std::endl
     << "lambda=               " << psf.lambda * 1e9 << " nm" << std::endl
     << "zones_number=         " << psf.Nzp << std::endl
     << "outer_zone_width=     " << psf.deltaR * 1e9 << " nm" << std::endl
@@ -233,7 +229,6 @@ void XRayPSF::show()
 /* Default values ---------------------------------------------------------- */
 void XRayPSF::clear()
 {
-    mode = GENERATE_PSF;
     lambda = 2.43e-9;
     //    Flens = 1.4742e-3;
     deltaR = 40e-9;
@@ -242,6 +237,9 @@ void XRayPSF::clear()
     dzo = dxo = 1e-9;
     DeltaZo = 0;
     pupileSizeMin = 5;
+
+    mode = GENERATE_PSF;
+    type = IDEAL_LENS;
 }
 
 /* Produce Side Information ------------------------------------------------ */
@@ -282,25 +280,28 @@ void XRayPSF::generatePSFIdealLens(MultidimArray<double> &PSFi)
             OTFTemp(i,j)=0;
     }
 
-    //#define DEBUG
+#define DEBUG
 #ifdef DEBUG
     Image<double> _Im;
     _Im().resize(OTFTemp);
     FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY2D(OTFTemp)
-    dAij(_Im(),i,j) = abs(dAij(OTFTemp,i,j));
-    _Im.write("abs_lens.spi");
+    dAij(_Im(),i,j) = arg(dAij(OTFTemp,i,j));
+    _Im.write("phase_lens.spi");
+    //    dAij(_Im(),i,j) = abs(dAij(OTFTemp,i,j));
+    //    _Im.write("abs_lens.spi");
 #endif
+#undef DEBUG
 
     FourierTransformer transformer;
     transformer.FourierTransform(OTFTemp, PSFiTemp, false);
     double norm=0;
 
     PSFi.resizeNoCopy(PSFiTemp);
+    CenterOriginFFT(PSFiTemp,0);
 
 #ifdef DEBUG
 
     _Im.data.resizeNoCopy(PSFiTemp);
-    CenterOriginFFT(PSFiTemp,0);
     FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(PSFiTemp)
     DIRECT_MULTIDIM_ELEM(_Im.data,n) = abs(DIRECT_MULTIDIM_ELEM(PSFiTemp,n));
     _Im.write("psfitemp.spi");
@@ -358,14 +359,16 @@ void XRayPSF::generateOTF()
 
 
 
-
+#define DEBUG
 #ifdef DEBUG
 
+    Image<double> _Im;
+
     //    CenterOriginFFT(OTFTemp,1);
-    _Im().resize(OTFTemp);
-    FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY2D(OTFTemp)
-    dAij(_Im(),i,j) = abs(dAij(OTFTemp,i,j));
-    _Im.write("psfxr-otf1.spi");
+    //    _Im().resize(OTFTemp);
+    //    FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY2D(OTFTemp)
+    //    dAij(_Im(),i,j) = abs(dAij(OTFTemp,i,j));
+    //    _Im.write("psfxr-otf1.spi");
     //    CenterOriginFFT(OTFTemp,0);
     _Im().resize(OTF);
     FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY2D(OTF)
@@ -378,6 +381,7 @@ void XRayPSF::generateOTF()
     dAij(_Im(),i,j) = abs(dAij(PSFi,i,j));
     _Im.write("psfxr-psfi.spi");
 #endif
+#undef DEBUG
 }
 
 void XRayPSF::adjustParam(Image<double> &vol)
@@ -406,10 +410,10 @@ void XRayPSF::adjustParam()
     if (verbose)
     {
         std::cout << std::endl;
-        std::cout << "XmippXRPSF::Param adjust:" << std::endl;
+        std::cout << "XrayPSF::Param adjust:" << std::endl;
         std::cout << "(Nox,Noy,Nz) = (" << Nox << "," << Noy << "," << Noz << ")" << std::endl;
-        std::cout << "Larger volume Z plane = " << (ABS(DeltaZo)+Noz/2*dzo)*1e6 << " um" << std::endl;
-        std::cout << "Larger discrete Z plane (x,y) = (" << deltaZMaxX*1e6 << ", " << deltaZMaxY*1e6 << ") um" << std::endl;
+        std::cout << "Larger volume Z plane to be calculated = " << (ABS(DeltaZo)+(Noz-1)/2*dzo)*1e6 << " um" << std::endl;
+        std::cout << "Larger allowed discrete Z plane (x,y) = (" << deltaZMaxX*1e6 << ", " << deltaZMaxY*1e6 << ") um" << std::endl;
     }
 
     if (dxi>dxiMax) /// Lens Radius in pixels higher than image
@@ -422,7 +426,7 @@ void XRayPSF::adjustParam()
         AdjustType = PSFXR_INT;
 
         if (verbose)
-            std::cout << "XmippXRPSF: Image plane sampling too small: increasing resolution" << std::endl;
+            std::cout << "XrayPSF: Image plane sampling too small: increasing resolution" << std::endl;
 
     }
     else
@@ -471,7 +475,7 @@ void XRayPSF::adjustParam()
         if (AdjustType!=PSFXR_STD)
         {
             if (AdjustType==PSFXR_ZPAD)
-                std::cout << "XmippXRPSF: Image plane size too small: increasing size" << std::endl;
+                std::cout << "XrayPSF: Image plane size too small: increasing size" << std::endl;
             std::cout << "New slice dimensions:  " <<  "(Nix, Niy) = (" << Nix << ", " << Niy << ")" << std::endl;
         }
         std::cout << "(dxl, dyl) = (" << dxl*1e6 << ", " << dyl*1e6 << ") um" << std::endl;
@@ -479,8 +483,6 @@ void XRayPSF::adjustParam()
         << ", " << ceil(2*Rlens / dyl) << ")"  << std::endl;
         std::cout << std::endl;
     }
-
-
 }
 
 void XRayPSF::generatePSF(PsfType _type)
@@ -540,27 +542,28 @@ void XRayPSF::generatePSF(PsfType _type)
 void lensPD(MultidimArray<std::complex<double> > &Im, double Flens, double lambda, double dx, double dy)
 {
 
-    double Lx0 = Im.xdim * dx, Ly0 = Im.ydim * dy, x, y, phase;
+    double Lx0 = XSIZE(Im)*dx, Ly0 = YSIZE(Im)*dy, x, y, phase;
 
     Im.setXmippOrigin();
 
-    FOR_ALL_ELEMENTS_IN_ARRAY2D(Im)
+    //    FOR_ALL_ELEMENTS_IN_ARRAY2D(Im)
+    FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY2D(Im)
     {
         /// For indices in standard fashion
-        //   x = (double) j * dx + (dx - Lx0) / 2;
-        //   y = (double) i * dx + (dx - Ly0) / 2;
+        x = (double) j * dx + (dx - Lx0) / 2;
+        y = (double) i * dx + (dx - Ly0) / 2;
 
-        x = (double) j * dx + (dx) / 2;
-        y = (double) i * dy + (dy) / 2;
+        //        x = (double) j * dx + (dx) / 2;
+        //        y = (double) i * dy + (dy) / 2;
 
         phase = (-PI / lambda / Flens) * (x * x + y * y);
 #ifndef _AIX
 
-        (Im(i, j)).real() = cos(phase);
-        (Im(i, j)).imag() = sin(phase);
+        dAij(Im,i,j).real() = cos(phase);
+        dAij(Im,i,j).imag() = sin(phase);
 #else
 
-        Im(i,j)=std::complex<double>(cos(phase),sin(phase));
+        dAij(Im,i,j) = std::complex<double>(cos(phase),sin(phase));
 #endif
 
     }
