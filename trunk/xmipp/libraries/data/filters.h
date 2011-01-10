@@ -278,8 +278,8 @@ double fastMaskedCorrelation(const MultidimArray< T >& x,
             retval += DIRECT_MULTIDIM_ELEM(x, n) * DIRECT_MULTIDIM_ELEM(y, n);
             ++N;
         }
-        return retval / N;
     }
+    return retval / N;
 }
 
 /** correlation_index nD
