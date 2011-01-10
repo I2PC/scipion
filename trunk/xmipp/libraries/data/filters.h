@@ -274,7 +274,7 @@ double correlation_index(const MultidimArray< T >& x,
     double mean_x, mean_y;
     double stddev_x, stddev_y;
 
-    long n = 0;
+    long N = 0;
 
     if (mask == NULL)
     {
@@ -304,28 +304,40 @@ double correlation_index(const MultidimArray< T >& x,
                     mean_y);
             A3D_ELEM(*Contributions, k, i, j) = aux;
             retval += aux;
-            n++;
+            ++N;
         }
 
         FOR_ALL_ELEMENTS_IN_ARRAY3D(*Contributions)
-        A3D_ELEM(*Contributions, k, i, j) /= ((stddev_x * stddev_y) * n);
+        A3D_ELEM(*Contributions, k, i, j) /= ((stddev_x * stddev_y) * N);
     }
     else
     {
-        FOR_ALL_ELEMENTS_IN_COMMON_IN_ARRAY3D(x, y)
+        if (mask==NULL && x.sameShape(y))
         {
-            if (mask != NULL)
-                if (!A3D_ELEM(*mask,k, i, j))
-                    continue;
+            FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(x)
+            {
+                retval += (DIRECT_MULTIDIM_ELEM(x, n) - mean_x) *
+                          (DIRECT_MULTIDIM_ELEM(y, n) - mean_y);
+                ++N;
+            }
+        }
+        else
+        {
+            FOR_ALL_ELEMENTS_IN_COMMON_IN_ARRAY3D(x, y)
+            {
+                if (mask != NULL)
+                    if (!A3D_ELEM(*mask,k, i, j))
+                        continue;
 
-            retval += (A3D_ELEM(x, k, i, j) - mean_x) *
-                      (A3D_ELEM(y, k, i, j) - mean_y);
-            n++;
+                retval += (A3D_ELEM(x, k, i, j) - mean_x) *
+                          (A3D_ELEM(y, k, i, j) - mean_y);
+                ++N;
+            }
         }
     }
 
-    if (n != 0)
-        return retval / ((stddev_x * stddev_y) * n);
+    if (N != 0)
+        return retval / ((stddev_x * stddev_y) * N);
     else
         return 0;
 }
