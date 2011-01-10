@@ -53,7 +53,7 @@ void ProgProjectXR::readParams()
     fn_psf_xr   = getParam("-psf");
 
     only_create_angles = checkParam("-only_create_angles");
-    verbose = checkParam("-v");
+    verbose = getParam("-v");
     nThr = getIntParam("-thr");
     tell=0;
     if (checkParam("-show_angles"))
