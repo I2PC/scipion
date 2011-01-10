@@ -250,13 +250,36 @@ double correlation(const MultidimArray< T >& x,
 
                     retval += DIRECT_A3D_ELEM(x, k, i, j) *
                               DIRECT_A3D_ELEM(y, kp, ip, jp);
-                    N++;
+                    ++N;
                 }
             }
         }
     }
 
     return retval / N;
+}
+
+/** Correlation nD
+ * @ingroup Filters
+ */
+template <typename T>
+double fastMaskedCorrelation(const MultidimArray< T >& x,
+                             const MultidimArray< T >& y,
+                             const MultidimArray< int >& mask)
+{
+    SPEED_UP_temps;
+
+    double retval = 0; // returned value
+    long N = 0;
+    FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(x)
+    {
+        if (DIRECT_MULTIDIM_ELEM(mask,n))
+        {
+            retval += DIRECT_MULTIDIM_ELEM(x, n) * DIRECT_MULTIDIM_ELEM(y, n);
+            ++N;
+        }
+        return retval / N;
+    }
 }
 
 /** correlation_index nD
