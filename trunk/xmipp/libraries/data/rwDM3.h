@@ -360,6 +360,8 @@ double readTagDM3(FILE *fimg, DM3head *header, int parentId, int &nodeId, bool i
                 k = 4;
             else if(info[1] == 10 )
                 k = 1;
+            else
+              REPORT_ERROR(ERR_ARG_INCORRECT,"");
 
             fseek( fimg, ftell(fimg)+(info[nnum-1])*k , SEEK_SET );
 
