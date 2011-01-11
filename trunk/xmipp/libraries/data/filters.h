@@ -267,8 +267,6 @@ double fastMaskedCorrelation(const MultidimArray< T >& x,
                              const MultidimArray< T >& y,
                              const MultidimArray< int >& mask)
 {
-    SPEED_UP_temps;
-
     double retval = 0; // returned value
     long N = 0;
     FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(x)
