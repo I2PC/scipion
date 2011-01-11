@@ -18,18 +18,18 @@ else
 	while [ $# -gt 0 ]
 	do
 		case "$1" in
-			--mem)MEM=$2;READIMG=0;shift;;
-			-i)READIMG=1;;	# Activates FILE input mode
+			--mem)MEM=$2;READFILE=0;shift;;
+			-i)READFILE=1;;	# Activates FILE input mode
 			---)shift; break;;
-			-*)READIMG=0;echo >&2 \
+			-*)READFILE=0;echo >&2 \
 				"Unknown parameter: $1"
 				exit 1;;
-			*)test "$READIMG" = "1" && IMG="$IMG $1";;
+			*)test "$READFILE" = "1" && FILE="$FILE $1";;
 		esac
 		shift
 	done
 
-	if test -z "$MEM" || test -z "$IMG"
+	if test -z "$MEM" || test -z "$FILE"
 	then
 		SHOW_HELP=1
 	fi
@@ -40,9 +40,11 @@ else
 		echo "No memory size provided. Using default: $MEM"
 	fi
 
-	if [ -n "$IMG" ]
+	if [ -n "$FILE" ]
 	then
-		IMG="-i$IMG"
+		FILE="-i$FILE"
+	else
+		echo "No file provided."
 	fi
 
 	if [ "$SHOW_HELP" = "1" ]
@@ -50,7 +52,10 @@ else
 		echo "Usage: visualize_preprocessing_micrographj [--mem <memory_ammount>] <-i file1 [file2 [..]]>"
 	fi
 
-	export LD_LIBRARY_PATH=$XMIPP_BASE/lib
-	IMAGEJ_HOME=$XMIPP_BASE/external/imagej
-	$JVM/bin/java -Xmx$MEM -Dplugins.dir=$IMAGEJ_HOME/plugins/ -jar $IMAGEJ_HOME/ij.jar -macro $IMAGEJ_HOME/macros/xmippVisualizeMicrograph.txt "$IMG"
+	if [ ! -z "$FILE" ]
+	then
+		export LD_LIBRARY_PATH=$XMIPP_BASE/lib
+		IMAGEJ_HOME=$XMIPP_BASE/external/imagej
+		$JVM/bin/java -Xmx$MEM -Dplugins.dir=$IMAGEJ_HOME/plugins/ -jar $IMAGEJ_HOME/ij.jar -macro $IMAGEJ_HOME/macros/xmippVisualizeMicrograph.txt "$FILE"
+	fi
 fi
