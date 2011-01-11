@@ -217,7 +217,7 @@ def computeCores(Nproc,fnRoot,Nlevels):
         # Get the number of classes in that level
         Nclasses=xmipp.SingleImgSize(fnRoot+"_level_%02d.stk"%level)[3]
         
-        # Analyz this level in threads
+        # Analyze this level in threads
         print "Analyzing "+str(Nclasses)+" classes at level "+str(level)
         threadList=[]
         for i in range(0,Nproc):
