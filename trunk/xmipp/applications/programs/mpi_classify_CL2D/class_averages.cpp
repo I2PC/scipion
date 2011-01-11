@@ -313,8 +313,8 @@ void VQProjection::fitBasic(MultidimArray<double> &I,
 
         // Shift then rotate
         best_shift(P,IauxSR,shiftX,shiftY);
-        ASR(0,2)+=shiftX;
-        ASR(1,2)+=shiftY;
+        MAT_ELEM(ASR,0,2)+=shiftX;
+        MAT_ELEM(ASR,1,2)+=shiftY;
         applyGeometry(LINEAR,IauxSR,I,ASR,IS_NOT_INV,WRAP);
 
         Polar< std::complex<double> > polarFourierI;
@@ -350,8 +350,8 @@ void VQProjection::fitBasic(MultidimArray<double> &I,
         applyGeometry(LINEAR,IauxRS,I,ARS,IS_NOT_INV,WRAP);
 
         best_shift(P,IauxRS,shiftX,shiftY);
-        ARS(0,2)+=shiftX;
-        ARS(1,2)+=shiftY;
+        MAT_ELEM(ARS,0,2)+=shiftX;
+        MAT_ELEM(ARS,1,2)+=shiftY;
         applyGeometry(LINEAR,IauxRS,I,ARS,IS_NOT_INV,WRAP);
     }
 
@@ -359,8 +359,21 @@ void VQProjection::fitBasic(MultidimArray<double> &I,
     double corrCodeRS, corrCodeSR;
     if (useCorrelation)
     {
-        corrCodeRS=fastMaskedCorrelation(P,IauxRS,*mask);
-        corrCodeSR=fastMaskedCorrelation(P,IauxSR,*mask);
+    	corrCodeRS=corrCodeSR=0;
+        long N = 0;
+        const MultidimArray<int> &imask=*mask;
+        FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(P)
+        {
+            if (DIRECT_MULTIDIM_ELEM(imask,n))
+            {
+            	double Pval=DIRECT_MULTIDIM_ELEM(P, n);
+            	corrCodeRS += Pval * DIRECT_MULTIDIM_ELEM(IauxRS, n);
+            	corrCodeSR += Pval * DIRECT_MULTIDIM_ELEM(IauxSR, n);
+                ++N;
+            }
+        }
+        corrCodeRS/=N;
+        corrCodeSR/=N;
     }
     else
     {
