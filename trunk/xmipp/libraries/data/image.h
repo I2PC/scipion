@@ -64,6 +64,7 @@ protected:
     bool                mmapOnWrite; // Mapping when writing to file
     int                 mFd;         // Handle the file in reading method and mmap
     size_t              mappedSize;  // Size of the mapped file
+    size_t              mappedOffset;// Offset for the mapped file
 
 public:
     /** Empty constructor
@@ -1886,8 +1887,8 @@ private:
                              "images file not compatible. Try selecting a unique image.");
             }
             //            fclose(fimg);
-            offset = selectImgOffset;
-            mappedSize = offset + pagesize;
+            mappedOffset = selectImgOffset;
+            mappedSize = mappedOffset + pagesize;
             mmapFile();
         }
         else
@@ -1991,17 +1992,17 @@ private:
 
         if ( (map = (char*) mmap(0,mappedSize, PROT_READ | PROT_WRITE, MAP_SHARED, mFd, 0)) == (void*) -1 )
             REPORT_ERROR(ERR_MMAP_NOTADDR,"Image Class::ReadData: mmap of image file failed.");
-        data.data = reinterpret_cast<T*> (map+offset);
+        data.data = reinterpret_cast<T*> (map+mappedOffset);
     }
 
     /* Munmap the image file.
      */
     void munmapFile()
     {
-        munmap((char*)(data.data)-offset,mappedSize);
+        munmap((char*)(data.data)-mappedOffset,mappedSize);
         close(mFd);
         data.data = NULL;
-        mappedSize = 0;
+        mappedSize = mappedOffset = 0;
     }
 
     /* Return the datatype of the current image object
