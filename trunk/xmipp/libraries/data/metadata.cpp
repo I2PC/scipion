@@ -1301,9 +1301,14 @@ void MetaData::randomize(MetaData &MDin)
 
 void MetaData::sort(MetaData &MDin, const MDLabel sortLabel)
 {
-    init(&(MDin.activeLabels));
-    copyInfo(MDin);
-    MDin.myMDSql->copyObjects(this, new MDQuery(-1, 0, sortLabel));
+    if (MDin.containsLabel(sortLabel))
+    {
+        init(&(MDin.activeLabels));
+        copyInfo(MDin);
+    	MDin.myMDSql->copyObjects(this, new MDQuery(-1, 0, sortLabel));
+    }
+    else
+    	*this=MDin;
     firstObject();
 }
 
