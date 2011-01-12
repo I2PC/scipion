@@ -1,6 +1,7 @@
 /***************************************************************************
  *
- * Authors:    Carlos Oscar            coss@cnb.csic.es (2007)
+ * Authors:    Carlos Oscar            coss@cnb.csic.es  (2007)
+ *             Joaquin Oton            joton@cnb.csic.es (2010)
  *
  * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
  *
