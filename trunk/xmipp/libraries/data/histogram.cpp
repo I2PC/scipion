@@ -87,7 +87,7 @@ void Histogram1D::insert_value(double val)
     else
     {
         double aux=(val - hmin) * istep_size;
-        i = (int) FLOOR(aux);
+        i = (int) aux;
     }
 
     if (i < 0 || i >= XSIZE(*this))
