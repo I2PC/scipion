@@ -926,7 +926,7 @@ void best_nonwrapping_shift(const MultidimArray<double> &I1,
 
     translate(1, Iaux, I1, vectorR2(-shiftX,-shiftY), DONT_WRAP);
     //I1.translate(vectorR2(-shiftX,-shiftY),Iaux, DONT_WRAP);
-    bestCorr=corr=correlation_index(I2,Iaux);
+    bestCorr=corr=fastCorrelation(I2,Iaux);
     double finalX=shiftX;
     double finalY=shiftY;
 #ifdef DEBUG
@@ -947,7 +947,7 @@ void best_nonwrapping_shift(const MultidimArray<double> &I1,
     double testY=shiftY;
     translate(1, Iaux, I1, vectorR2(-testX,-testY), DONT_WRAP);
     //I1.translate(vectorR2(-testX,-testY),Iaux,DONT_WRAP);
-    corr=correlation_index(I2,Iaux);
+    corr=fastCorrelation(I2,Iaux);
     if (corr>bestCorr)
         finalX=testX;
 #ifdef DEBUG
@@ -963,7 +963,7 @@ void best_nonwrapping_shift(const MultidimArray<double> &I1,
     testY=(shiftY>0) ? (shiftY-YSIZE(I1)):(shiftY+YSIZE(I1));
     translate(1, Iaux, I1, vectorR2(-testX,-testY), DONT_WRAP);
     //I1.translate(vectorR2(-testX,-testY),Iaux,DONT_WRAP);
-    corr=correlation_index(I2,Iaux);
+    corr=fastCorrelation(I2,Iaux);
     if (corr>bestCorr)
         finalY=testY;
 #ifdef DEBUG
@@ -979,7 +979,7 @@ void best_nonwrapping_shift(const MultidimArray<double> &I1,
     testY=(shiftY>0) ? (shiftY-YSIZE(I1)):(shiftY+YSIZE(I1));
     translate(1, Iaux, I1, vectorR2(-testX,-testY), DONT_WRAP);
     //I1.translate(vectorR2(-testX,-testY),Iaux,DONT_WRAP);
-    corr=correlation_index(I2,Iaux);
+    corr=fastCorrelation(I2,Iaux);
     if (corr>bestCorr)
     {
         finalX=testX;
