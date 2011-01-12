@@ -441,12 +441,13 @@ void correlation_matrix(const MultidimArray< T > & m1,
 
     // Multiply FFT1 * FFT2'
     double dSize=MULTIDIM_SIZE(R);
+    double mdSize=-dSize;
     std::complex<double> aux;
     FOR_ALL_ELEMENTS_IN_ARRAY3D(FFT1)
     {
     	aux=A3D_ELEM(FFT2,k, i, j);
-    	aux.imag()*=-1;
-    	aux*=dSize;
+    	aux.imag()*=mdSize;
+    	aux.real()*=dSize;
         A3D_ELEM(FFT1,k, i, j) *= aux;
     }
 
