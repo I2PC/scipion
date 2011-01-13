@@ -100,7 +100,6 @@ class std::string {};
 %}
 %include "../geometry.h"
 
-
 %{
 #include "../error.h"
 %}
@@ -167,3 +166,7 @@ class std::string {};
 %}
 %include "../fft.h"
 
+%{
+#include "../xmipp_java_interface.h"
+%}
+%include "../xmipp_java_interface.h"
