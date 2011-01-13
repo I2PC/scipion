@@ -93,8 +93,8 @@ public:
     /* Pre Run --------------------------------------------------------------------- */
     void preRun()
     {
-    	produceSideInfo();
-    	//        MPI_Bcast(&max_number_of_images_in_around_a_sampling_point,
+        produceSideInfo();
+        //        MPI_Bcast(&max_number_of_images_in_around_a_sampling_point,
         //                  1, MPI_INT, 0, MPI_COMM_WORLD);
         int reserve = 0;
         if (nr_iter > 0)
@@ -194,7 +194,8 @@ public:
                                 DF.setValue(MDL_SHIFTY,output_values[i*AVG_OUPUT_SIZE+10]);
                                 DF.setValue(MDL_REF,output_values[i*AVG_OUPUT_SIZE+11]);
                                 DF.setValue(MDL_FLIP,output_values[i*AVG_OUPUT_SIZE+12]);
-                                DF.setValue(MDL_MAXCC,output_values[i*AVG_OUPUT_SIZE+13]);
+                                DF.setValue(MDL_SCALE,output_values[i*AVG_OUPUT_SIZE+13]);
+                                DF.setValue(MDL_MAXCC,output_values[i*AVG_OUPUT_SIZE+14]);
                             }
                         }
                     }
@@ -298,7 +299,8 @@ public:
                                 DF.setValue(MDL_SHIFTY,output_values[i*AVG_OUPUT_SIZE+10]);
                                 DF.setValue(MDL_REF,output_values[i*AVG_OUPUT_SIZE+11]);
                                 DF.setValue(MDL_FLIP,output_values[i*AVG_OUPUT_SIZE+12]);
-                                DF.setValue(MDL_MAXCC,output_values[i*AVG_OUPUT_SIZE+13]);
+                                DF.setValue(MDL_SCALE,output_values[i*AVG_OUPUT_SIZE+13]);
+                                DF.setValue(MDL_MAXCC,output_values[i*AVG_OUPUT_SIZE+14]);
                             }
                         }
                     }
