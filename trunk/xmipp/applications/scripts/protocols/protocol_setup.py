@@ -24,12 +24,10 @@ SetupPreProcessMicrographs=False
 SetupParticlePick=False
 # {setup-pre} Preprocess particles
 SetupPreProcessParticles=False
+# {setup-2d} Align2D
+SetupAlign2D=False
 # {setup-2d} CL2D classification
 SetupCL2D=False
-# {setup-2d} ML2D classification
-SetupML2D=False
-# {setup-2d} kerdenSOM classification 
-SetupKerdensom=False
 # {setup-2d} Rotational spectra classification
 SetupRotSpectra=False
 # {setup-3d} Random conical tilt
@@ -60,9 +58,8 @@ class setup_protocols_class:
                      SetupPreProcessMicrographs,
                      SetupParticlePick,
                      SetupPreProcessParticles,
+                     SetupAlign2D,
                      SetupCL2D,
-                     SetupML2D,
-                     SetupKerdensom,
                      SetupRotSpectra,
                      SetupRCT,
                      SetupML3D,
@@ -76,9 +73,8 @@ class setup_protocols_class:
             self.SetupPreProcessMicrographs=SetupPreProcessMicrographs
             self.SetupParticlePick=SetupParticlePick
             self.SetupPreProcessParticles=SetupPreProcessParticles
+            self.SetupAlign2D=SetupAlign2D
             self.SetupCL2D=SetupCL2D
-            self.SetupML2D=SetupML2D
-            self.SetupKerdensom=SetupKerdensom
             self.SetupRotSpectra=SetupRotSpectra
             self.SetupRCT=SetupRCT
             self.SetupML3D=SetupML3D
@@ -101,12 +97,10 @@ class setup_protocols_class:
                                                 'xmipp_protocol_particle_pick.py']
             self.library['SetupPreProcessParticles']=[self.SetupPreProcessParticles,
                                                 'xmipp_protocol_preprocess_particles.py']
+            self.library['SetupAlign2D']=[self.SetupAlign2D,
+                                         'xmipp_protocol_align2d.py']
             self.library['SetupCL2D']=[self.SetupCL2D,
                                          'xmipp_protocol_cl2d.py']
-            self.library['SetupML2D']=[self.SetupML2D,
-                                         'xmipp_protocol_ml2d.py']
-            self.library['SetupKerdensom']=[self.SetupKerdensom,
-                                              'xmipp_protocol_kerdensom.py']
             self.library['SetupRotSpectra']=[self.SetupRotSpectra,
                                                'xmipp_protocol_rotspectra.py']
             self.library['SetupRCT']=[self.SetupRCT,
@@ -219,9 +213,8 @@ if __name__ == '__main__':
     setup=setup_protocols_class(SetupPreProcessMicrographs,
                                 SetupParticlePick,
                                 SetupPreProcessParticles,
+                                SetupAlign2D,
                                 SetupCL2D,
-                                SetupML2D,
-                                SetupKerdensom,
                                 SetupRotSpectra,
                                 SetupRCT,
                                 SetupML3D,
