@@ -37,7 +37,7 @@
 
 #include <data/program.h>
 
-#define AVG_OUPUT_SIZE 9
+#define AVG_OUPUT_SIZE 10
 
 /**@defgroup ClassAverage Create class averages from projection
    matching docfiles
