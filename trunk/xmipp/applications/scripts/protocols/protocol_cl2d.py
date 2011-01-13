@@ -112,7 +112,7 @@ SystemFlavour='TORQUE-OPENMPI'
 DoParallel=True
 
 #------------------------------------------------------------------------------------------------
-# {expert} Analysis of results
+# {hidden} Analysis of results
 """ This script serves only for GUI-assisted visualization of the results
 """
 AnalysisScript='visualize_cl2d.py'

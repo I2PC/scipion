@@ -88,7 +88,7 @@ NumberOfMpiProcesses=3
 SystemFlavour=''
 
 #------------------------------------------------------------------------------------------------
-# {expert} Analysis of results
+# {hidden} Analysis of results
 """ This script serves only for GUI-assisted visualization of the results
 """
 AnalysisScript='visualize_preprocess_particles.py'

@@ -107,7 +107,6 @@ StepFocus=500
 #------------------------------------------------------------------------------------------------
 # {section} Parallelization issues
 #------------------------------------------------------------------------------------------------
-
 # distributed-memory parallelization (MPI)?
 """ This option provides distributed-memory parallelization on multi-node machines. 
     It requires the installation of some MPI flavour, possibly together with a queueing system
@@ -125,7 +124,7 @@ NumberOfMpiProcesses=3
 SystemFlavour=''
 
 #------------------------------------------------------------------------------------------------
-# {expert} Analysis of results
+# {hidden} Analysis of results
 """ This script serves only for GUI-assisted visualization of the results
 """
 AnalysisScript='visualize_preprocess_micrographs.py'
