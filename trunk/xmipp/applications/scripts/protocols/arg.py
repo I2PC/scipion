@@ -3,7 +3,7 @@
 # getComponentFromVector
 #---------------------------------------------------------------------------
 def getComponentFromVector(__vector,_iteration):
-   print "getComponentFromVector",__vector,_iteration
+   #print "getComponentFromVector",__vector,_iteration
    _vector=__vector.strip()
    listValues=getListFromVector(_vector)
    if _iteration<0: _iteration=0
