@@ -640,12 +640,6 @@ if int(env['java']):
 
 # --- Programs
 
-##ROB
-# FindSCenter
-#AddProgram('find_center2d', 'applications/legacy/find_center2d', '*.cpp', [],
-#    ['libraries', '#'], ['lib'],
-#    ['XmippData', 'OldXmipp', 'XmippExternal']+FFTWLibs+SQLiteLibs, [], [])
-
 # Src (apps)
 AddXmippProgram('add_noise')
 AddXmippProgram('adjust_volume_grey_levels', ['XmippRecons'])
@@ -703,6 +697,7 @@ AddXmippProgram('detect_missing_wedge', ['XmippRecons'])
 AddXmippProgram('enhance_contrast', ['XmippRecons'])
 AddXmippProgram('filter')
 AddXmippProgram('filter_projections', ['XmippRecons'])
+AddXmippProgram('find_center2d')
 AddXmippProgram('find_center3d')
 AddXmippProgram('fourier_filter', ['XmippRecons'])
 AddXmippProgram('header_apply')
@@ -826,10 +821,11 @@ AddProtocol('visualize_rotspectra.py', 'applications/scripts/protocols')
 AddProtocol('which.py', 'applications/scripts/protocols')
 
 AddProtocol('protocol_gui.py', 'applications/scripts/protocols')
+AddProtocol('protocol_align2d.py', 'applications/scripts/protocols')
 AddProtocol('protocol_backup.py', 'applications/scripts/protocols')
+AddProtocol('protocol_cl2d.py', 'applications/scripts/protocols')
 AddProtocol('protocol_kerdensom.py', 'applications/scripts/protocols')
 AddProtocol('protocol_ml2d.py', 'applications/scripts/protocols')
-AddProtocol('protocol_cl2d.py', 'applications/scripts/protocols')
 AddProtocol('protocol_ml3d.py', 'applications/scripts/protocols')
 AddProtocol('protocol__mltomo.py', 'applications/scripts/protocols')
 AddProtocol('protocol_multires.py', 'applications/scripts/protocols')
