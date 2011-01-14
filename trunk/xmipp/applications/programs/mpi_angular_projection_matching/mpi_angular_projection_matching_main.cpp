@@ -289,7 +289,7 @@ public:
                     //create doc file
                     for (int i = 0; i < number; i++)
                     {
-                        int lineNumber=ROUND(output_values[i*MY_OUPUT_SIZE+1]);
+                        int lineNumber=ROUND(output_values[i*MY_OUPUT_SIZE+1]+1);
                         DFexp.goToObject(lineNumber);
                         DFexp.setValue(MDL_ANGLEROT, output_values[i*MY_OUPUT_SIZE+2]);
                         DFexp.setValue(MDL_ANGLETILT,output_values[i*MY_OUPUT_SIZE+3]);
@@ -298,8 +298,10 @@ public:
                         DFexp.setValue(MDL_SHIFTY,   output_values[i*MY_OUPUT_SIZE+6]);
                         DFexp.setValue(MDL_REF,(int)(output_values[i*MY_OUPUT_SIZE+7]));
                         DFexp.setValue(MDL_FLIP,    (output_values[i*MY_OUPUT_SIZE+8]>0));
-                        DFexp.setValue(MDL_MAXCC,    output_values[i*MY_OUPUT_SIZE+9]);
+                        DFexp.setValue(MDL_SCALE,    output_values[i*MY_OUPUT_SIZE+9]);
+                        DFexp.setValue(MDL_MAXCC,    output_values[i*MY_OUPUT_SIZE+10]);
                     }
+
                 }
                 // worker is free
                 else if (status.MPI_TAG == TAG_FREEWORKER)
@@ -404,7 +406,8 @@ public:
                         DFexp.setValue(MDL_SHIFTY,   output_values[i*MY_OUPUT_SIZE+6]);
                         DFexp.setValue(MDL_REF,(int)(output_values[i*MY_OUPUT_SIZE+7]));
                         DFexp.setValue(MDL_FLIP,    (output_values[i*MY_OUPUT_SIZE+8]>0));
-                        DFexp.setValue(MDL_MAXCC,    output_values[i*MY_OUPUT_SIZE+9]);
+                        DFexp.setValue(MDL_SCALE,    output_values[i*MY_OUPUT_SIZE+9]);
+                        DFexp.setValue(MDL_MAXCC,    output_values[i*MY_OUPUT_SIZE+10]);
                     }
                 }
                 else if (status.MPI_TAG == TAG_FREEWORKER)
@@ -426,7 +429,7 @@ public:
                 }
 
             }
-            //close temperoal file with results
+            //close temporal file with results
             DFexp.write(fn_root + ".doc");
 
 
