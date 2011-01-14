@@ -131,9 +131,7 @@ void ProgAngularProjectLibrary::show()
         std::cout << "perturb_projection_vector: " << perturb_projection_vector << std::endl;
 }
 
-void
-ProgAngularProjectLibrary::project_angle_vector(
-    int my_init, int my_end, bool verbose)
+void ProgAngularProjectLibrary::project_angle_vector (int my_init, int my_end, bool verbose)
 {
     Projection P;
     FileName fn_proj;
@@ -156,9 +154,6 @@ ProgAngularProjectLibrary::project_angle_vector(
         prepareStructVolume(inputVol(),VShears);
         inputVol.clear();
     }
-    //fn_proj.compose(output_file_root, ++myCounter,"xmp");
-
-    unlink(output_file.c_str());
 
     for (int mypsi=0;mypsi<360;mypsi += psi_sampling)
     {
@@ -175,7 +170,6 @@ ProgAngularProjectLibrary::project_angle_vector(
             else
                 project_Volume(inputVol(), P, Ydim, Xdim,rot,tilt,psi);
 
-            //fn_proj.compose(output_file_root, ++myCounter,"xmp");
             P.write(output_file,-1,true,WRITE_APPEND);
         }
     }
@@ -283,6 +277,9 @@ void ProgAngularProjectLibrary::run()
     }
     //release some memory
     mysampling.exp_data_projection_direction_by_L_R.clear();
+
+    unlink(output_file.c_str());
+
     //mpi master should divide doc in chuncks
     //in this serial program there is a unique chunck
     //angle information is in
@@ -297,8 +294,9 @@ void ProgAngularProjectLibrary::run()
     mySFin.read(output_file_root+"_angles.doc");
     int myCounter=-1;
     for (int mypsi=0;mypsi<360;mypsi += psi_sampling)
-    	FOR_ALL_OBJECTS_IN_METADATA(mySFin)
-    	{
+    {
+        FOR_ALL_OBJECTS_IN_METADATA(mySFin)
+        {
             double x,y,z, rot, tilt, psi;
             mySFin.getValue(MDL_ANGLEROT,rot);
             mySFin.getValue(MDL_ANGLETILT,tilt);
@@ -317,6 +315,7 @@ void ProgAngularProjectLibrary::run()
             mySFout.setValue(MDL_Y,y);
             mySFout.setValue(MDL_Z,z);
         }
+    }
     mySFout.write(output_file_root+".doc");
     unlink((output_file_root+"_angles.doc").c_str());
 }
