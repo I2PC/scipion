@@ -68,8 +68,6 @@ int ir, m, mu1, mu4, ntot,  mt, idz, ncic2, ntot4;
 /**************************************************************************/
 
 void **imalloc(int row, int col, int format)
-
-
 {
     int i, j, k;                    /* Counters                             */
     unsigned element_size;          /* Size of element to allocate          */
@@ -598,16 +596,16 @@ public:
 	FileName fnIn;
 
 	/// Radii
-	double r1, r2, r3, r4;
+	double _r1, _r2, _r3, _r4;
 
 	/// Starting center
-	double xc0, yc0;
+	double x0, y0;
 
 	/// Harmonic
-	int ncic;
+	int _ncic;
 
 	/// Optimization type
-    int indmul;
+    int _indmul;
 
 	/// Define parameters
     void defineParams()
@@ -627,28 +625,34 @@ public:
     void readParams()
     {
     	fnIn=getParam("-i");
-    	r1=getDoubleParam("--r1");
-    	r2=getDoubleParam("--r2");
-    	r3=getDoubleParam("--r3");
-    	r4=getDoubleParam("--r4");
-    	xc0=getDoubleParam("--x0");
-    	yc0=getDoubleParam("--y0");
-    	ncic=getIntParam("--harm");
-    	indmul=getIntParam("--opt");
+    	_r1=getDoubleParam("--r1");
+    	_r2=getDoubleParam("--r2");
+    	_r3=getDoubleParam("--r3");
+    	_r4=getDoubleParam("--r4");
+    	if (checkParam("--x0"))
+    		x0=getDoubleParam("--x0");
+    	else
+    		x0=-1;
+    	if (checkParam("--y0"))
+    		y0=getDoubleParam("--y0");
+    	else
+    		y0=-1;
+    	_ncic=getIntParam("--harm");
+    	_indmul=getIntParam("--opt");
     }
 
     void show()
     {
     	if (verbose==0)
     		return;
-    	std::cout << "Input:          " << fnIn   << std::endl
-    			  << "R1:             " << r1     << std::endl
-    			  << "R2:             " << r2     << std::endl
-    			  << "R3:             " << r3     << std::endl
-    			  << "R4:             " << r4     << std::endl
-    			  << "Harmonic:       " << ncic   << std::endl
-    			  << "Opt:            " << indmul << std::endl
-    			  << "Initial center: (" << xc0 << "," << yc0 << ")\n"
+    	std::cout << "Input:          " << fnIn    << std::endl
+    			  << "R1:             " << _r1     << std::endl
+    			  << "R2:             " << _r2     << std::endl
+    			  << "R3:             " << _r3     << std::endl
+    			  << "R4:             " << _r4     << std::endl
+    			  << "Harmonic:       " << _ncic   << std::endl
+    			  << "Opt:            " << _indmul << std::endl
+    			  << "Initial center: (" << x0 << "," << y0 << ")\n"
     	;
     }
 
@@ -658,11 +662,11 @@ public:
 
     	// Get the input image or the average of the input images
     	Image<double> I, Iaux;
-		FileName fnImg;
     	if (fnIn.isMetaData())
     	{
     		MetaData MD(fnIn);
     		int N=0;
+    		FileName fnImg;
     		FOR_ALL_OBJECTS_IN_METADATA(MD)
     		{
     			MD.getValue(MDL_IMAGE,fnImg);
@@ -681,13 +685,14 @@ public:
     		int Xdim, Ydim, Zdim;
     		unsigned long Ndim;
     		I.getDimensions(Xdim, Ydim, Zdim, Ndim);
+    		I.clear();
     		if (Ndim>1)
     		{
     			for (unsigned long n=0; n<Ndim; n++)
     			{
-        			Iaux.read(fnImg,true,n);
+        			Iaux.read(fnIn,true,n);
         			if (n==0)
-        				I()=Iaux();
+        				I=Iaux;
         			else
         				I()+=Iaux();
     			}
@@ -696,12 +701,37 @@ public:
     		else
     			I.read(fnIn);
     	}
+    	I().rangeAdjust(0,255);
+    	I.write("PPPavg.xmp");
 
     	// Adapt to old code
         if ((imagen = (unsigned char **)imalloc(YSIZE(I()) + 1, XSIZE(I()) + 1, NATURAL)) == NULL)
         	REPORT_ERROR(ERR_MEM_NOTENOUGH,"");
         FOR_ALL_ELEMENTS_IN_ARRAY2D(I())
         	imagen[i+1][j+1]=IMGPIXEL(I,i,j);
+        if (x0>=0)
+        	xc0=(float)x0+1; //+1 because of Fortran indexing
+        else
+        	xc0=XSIZE(I())/2+1;
+        if (y0>=0)
+        	yc0=(float)y0+1;
+        else
+        	yc0=YSIZE(I())/2+1;
+        r1=(float)(_r1/100.0*XSIZE(I())/2.0);
+        r2=(float)(_r2/100.0*XSIZE(I())/2.0);
+        r3=1;
+        rbajo=(float)(_r3/100.0*XSIZE(I())/2.0);
+        ralto=(float)(_r4/100.0*XSIZE(I())/2.0);
+        ncic=_ncic;
+        indmul=_indmul;
+        del = DEF_DEL;
+        in = DEF_IN;
+        ni = DEF_IT;
+        mu = (int)(PI / 2 * r2 / ncic);
+        if (mu < 3)
+        	REPORT_ERROR(ERR_ARG_INCORRECT,"A higher integration radius is needed (r2>6*harm/pi)");
+        largo=YSIZE(I());
+        lancho=XSIZE(I());
         busca();
         imfree((char**)imagen, YSIZE(I()) + 1, XSIZE(I()) + 1, NATURAL);
     }
