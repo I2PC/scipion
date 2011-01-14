@@ -596,9 +596,19 @@ CtfGroupDirectory="CtfGroups"
 CtfGroupRootName="ctf"
 CtfGroupSubsetFileName="ctf_groups_subset_docfiles.sel"
 
+# Import libraries and add Xmipp libs to default search path
+import os,sys,shutil
+scriptdir = os.path.split(os.path.dirname(os.popen('which xmipp_protocols', 'r').read()))[0] + '/lib'
+sys.path.append(scriptdir) # add default search path
+scriptdir=os.path.split(os.path.dirname(os.popen('which xmipp_protocols','r').read()))[0]+'/protocols'
+sys.path.append(scriptdir)
+import arg,log,logging
+import launch_job
+from xmipp import *
+ 
 class projection_matching_class:
-
-   #init variables
+    
+    #init variables
    
    def __init__(self,
                 _NumberofIterations,
@@ -673,15 +683,6 @@ class projection_matching_class:
                 _ConstantToAddToFiltration,
                 _DoCenterVolume
                 ):
-       # Import libraries and add Xmipp libs to default search path
-       import os,sys,shutil
-       scriptdir = os.path.split(os.path.dirname(os.popen('which xmipp_protocols', 'r').read()))[0] + '/lib'
-       sys.path.append(scriptdir) # add default search path
-       scriptdir=os.path.split(os.path.dirname(os.popen('which xmipp_protocols','r').read()))[0]+'/protocols'
-       sys.path.append(scriptdir)
-       import arg,log,logging
-       import launch_job
-       from xmipp import *
  
        self._CleanUpFiles=_CleanUpFiles
        self._WorkingDir=os.getcwd()+'/'+_WorkingDir
@@ -786,12 +787,12 @@ class projection_matching_class:
        
        # For ctf groups, also create a CTFdat file with absolute pathname in the WorkingDir
        if (self._DoCtfCorrection):
-          import ctfdat
-          myctfdat=ctfdat.ctfdat()
-          myctfdat.read(_CTFDatName)
-          newctfdat=myctfdat.make_abspath()
+          #import ctfdat
+          myctfdat=MetaData(_CTFDatName)
+          myctfdat.makeAbsPath(MDL_IMAGE)
+          myctfdat.makeAbsPath(MDL_CTFMODEL)
           self._CTFDatName=os.path.abspath(self._WorkingDir + '/' + _CTFDatName)
-          newctfdat.write(self._CTFDatName)
+          myctfdat.write(self._CTFDatName)
 
        # Set self._OuterRadius
        if (_OuterRadius < 0):
@@ -1491,6 +1492,7 @@ def make_subset_docfiles(_mylog,
       inselfile = CtfGroupName + '.sel'
       inputdocfile = (os.path.basename(inselfile)).replace('.sel','.doc')
       command=' --join ' + _InputDocFileName + ' ' + inselfile + ' --label image'
+      command= command + ' -o ' + inputdocfile
       print '*********************************************************************'
       launch_job.launch_job("xmipp_metadata_utilities",
                             command,
@@ -1629,7 +1631,7 @@ def  execute_resolution(_mylog,
             _PaddingFactor):
 
     import os,shutil,math
-    from xmipp import *
+    #from xmipp import *
 
     PerformReconstruction=True
     split_sel_root_name=ProjMatchRootName+'_split'
@@ -1748,7 +1750,7 @@ def  execute_resolution(_mylog,
     #compute resolution
     resolution_fsc_file = Outputvolumes[1]+'.frc'
 
-    from xmipp import *
+    #from xmipp import *
     
     filter_frequence=0. 
     mD = MetaData(resolution_fsc_file)
