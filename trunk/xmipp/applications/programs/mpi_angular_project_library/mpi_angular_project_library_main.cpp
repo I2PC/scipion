@@ -108,6 +108,13 @@ public:
     /* Pre Run PreRun for all nodes but not for all works */
     void preRun()
     {
+
+        if (rank == 0)
+        {
+            unlink(output_file.c_str());
+        }
+
+
         //#define DEBUGTIME
 #ifdef  DEBUGTIME
 #include <ctime>
@@ -349,20 +356,45 @@ public:
             //only rank 0 create sel file
             if(rank==0)
             {
+
+                MetaData  mySFin;
+                mySFin.read(output_file_root + "_angles.doc");
+
                 MetaData  mySF;
                 FileName fn_temp;
+
                 int myCounter=-1;
 
                 for (int mypsi=0;mypsi<360;mypsi += psi_sampling)
-                    for (int i=0;i<=mysampling.no_redundant_sampling_points_angles.size()-1;i++)
-                    {
-                        fn_temp.compose( ++myCounter,output_file);
-                    	mySF.addObject();
-                        mySF.setValue(MDL_IMAGE,fn_temp);
-                        mySF.setValue(MDL_ENABLED,1);
-                    }
-                fn_temp=output_file_root+".sel";
+                    //for (int i=0;i<=mysampling.no_redundant_sampling_points_angles.size()-1;i++)
+                    FOR_ALL_OBJECTS_IN_METADATA(mySFin)
+
+                {
+
+                    double x,y,z, rot, tilt, psi;
+                    mySFin.getValue(MDL_ANGLEROT,rot);
+                    mySFin.getValue(MDL_ANGLETILT,tilt);
+                    mySFin.getValue(MDL_ANGLEPSI,psi);
+                    mySFin.getValue(MDL_X,x);
+                    mySFin.getValue(MDL_Y,y);
+                    mySFin.getValue(MDL_Z,z);
+
+                    fn_temp.compose( ++myCounter,output_file);
+                    mySF.addObject();
+                    mySF.setValue(MDL_IMAGE,fn_temp);
+                    mySF.setValue(MDL_ENABLED,1);
+
+                    mySF.setValue(MDL_ANGLEROT,rot);
+                    mySF.setValue(MDL_ANGLETILT,tilt);
+                    mySF.setValue(MDL_ANGLEPSI,psi+mypsi);
+                    mySF.setValue(MDL_X,x);
+                    mySF.setValue(MDL_Y,y);
+                    mySF.setValue(MDL_Z,z);
+                }
+                fn_temp=output_file_root+".doc";
                 mySF.write(fn_temp);
+
+                unlink((output_file_root+"_angles.doc").c_str());
             }
 
         }
