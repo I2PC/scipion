@@ -154,7 +154,8 @@ int main(int argc, char *argv[])
     }
     catch (XmippError xe)
     {
-        std::cerr << xe;
+        std::cerr << xe << std::endl;
     }
+    return 0;
 }
 
