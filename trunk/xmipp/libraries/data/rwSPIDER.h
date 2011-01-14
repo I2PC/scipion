@@ -347,10 +347,11 @@ int  writeSPIDER(int select_img=-1, bool isStack=false, int mode=WRITE_OVERWRITE
 
     //#define DEBUG
 #ifdef DEBUG
-    printf("DEBUG writeSPIDER: Size: %g %g %g %g\n",
+    printf("DEBUG writeSPIDER: Size: %g %g %g %d %g\n",
            header->nsam,
            header->nrow,
            header->nslice,
+           Ndim,
            header->maxim);
 #endif
 #undef DEBUG
@@ -385,23 +386,7 @@ int  writeSPIDER(int select_img=-1, bool isStack=false, int mode=WRITE_OVERWRITE
             header->sig  = (float)aux;
 
     }
-    // For multi-image files
-    if (Ndim > 1 || mode == WRITE_APPEND || isStack)
-    {
-        header->istack = 2;
-        header->inuse =  1;
-        header->maxim = Ndim;
-        if(mode == WRITE_APPEND)
-            header->maxim = replaceNsize +1;
-        else if(mode == WRITE_REPLACE)
-            header->maxim = replaceNsize;
-    }
-    else
-    {
-        header->istack = 0;
-        header->inuse = 0;
-        header->maxim = 1;
-    }
+
 
     if (Ndim == 1 && mode != WRITE_APPEND && !isStack && !MD.empty())
     {
@@ -457,13 +442,39 @@ int  writeSPIDER(int select_img=-1, bool isStack=false, int mode=WRITE_OVERWRITE
     fl.l_len    = 0;        /* length, 0 = to EOF           */
     fl.l_pid    = getpid(); /* our PID                      */
 
-
     /*
      * BLOCK HEADER IF NEEDED
      */
     fl.l_type   = F_WRLCK;
     fcntl(fileno(fimg), F_SETLKW, &fl); /* locked */
-    if(mode==WRITE_OVERWRITE || mode==WRITE_APPEND)//header must change
+
+    fseek(fimg, 100, SEEK_SET);
+    float faux;
+    fread( &faux, sizeof(float), 1, fimg )   ;
+    replaceNsize = (int) faux;
+    fseek(fimg, 0, SEEK_SET);
+
+    // For multi-image files
+    if (Ndim > 1 || mode == WRITE_APPEND || isStack)
+    {
+        header->istack = 2;
+        header->inuse =  1;
+        header->maxim = Ndim;
+        if(mode == WRITE_APPEND)
+        {
+            header->maxim = replaceNsize +1;
+        }
+        else if(mode == WRITE_REPLACE)
+            header->maxim = replaceNsize;
+    }
+    else
+    {
+        header->istack = 0;
+        header->inuse = 0;
+        header->maxim = 1;
+    }
+
+    if(mode==WRITE_OVERWRITE || mode==WRITE_APPEND) //header must change
         fwrite( header, offset, 1, fimg );
 
     //write only once, ignore select_img
