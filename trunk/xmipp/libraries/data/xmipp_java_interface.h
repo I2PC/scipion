@@ -48,13 +48,13 @@ std::string readImageHeader(Image<double> &image, const std::string &filename) {
 		image.read(fn, false);
 	} catch (XmippError xe) {
 		std::cerr << xe;
-		msg = xe.getDefaultMessage();
+		msg = filename + ": " + xe.getDefaultMessage();
 	} catch (std::exception& e) {
 		std::cerr << e.what();
-		msg = e.what();
+		msg = filename + ": " + e.what();
 	} catch (...) {
 		std::cerr << "Unhandled exception";
-		msg = "Unhandled exception";
+		msg = filename + ": " + "Unhandled exception";
 	}
 
 	return msg;
@@ -69,13 +69,13 @@ std::string readImage(Image<double> &image, const std::string &filename) {
 		image.read(fn);
 	} catch (XmippError xe) {
 		std::cerr << xe;
-		msg = xe.getDefaultMessage();
+		msg = filename + ": " + xe.getDefaultMessage();
 	} catch (std::exception& e) {
 		std::cerr << e.what();
-		msg = e.what();
+		msg = filename + ": " + e.what();
 	} catch (...) {
 		std::cerr << "Unhandled exception";
-		msg = "Unhandled exception";
+		msg = filename + ": " + "Unhandled exception";
 	}
 
 	return msg;
@@ -90,13 +90,13 @@ std::string readImagePreview(Image<double> &image, const std::string &filename, 
 		image.readPreview(fn, w, h, slice);
 	} catch (XmippError xe) {
 		std::cerr << xe;
-		msg = xe.getDefaultMessage();
+		msg = filename + ": " + xe.getDefaultMessage();
 	} catch (std::exception& e) {
 		std::cerr << e.what();
-		msg = e.what();
+		msg = filename + ": " + e.what();
 	} catch (...) {
 		std::cerr << "Unhandled exception";
-		msg = "Unhandled exception";
+		msg = filename + ": " + "Unhandled exception";
 	}
 
 	return msg;
@@ -111,20 +111,37 @@ std::string readMetaData(MetaData &metadata, const std::string &filename) {
 		metadata.read(fn);
 	} catch (XmippError xe) {
 		std::cerr << xe;
-		msg = xe.getDefaultMessage();
+		msg = filename + ": " + xe.getDefaultMessage();
 	} catch (std::exception& e) {
 		std::cerr << e.what();
-		msg = e.what();
+		msg = filename + ": " + e.what();
 	} catch (...) {
 		std::cerr << "Unhandled exception";
-		msg = "Unhandled exception";
+		msg = filename + ": " + "Unhandled exception";
 	}
 
 	return msg;
 }
 
-std::string getFileNamePath(const FileName &fn){
-	return fn;
+std::string writeImage(Image<double> &image, const std::string &filename) {
+	std::string msg = "";
+
+	try {
+		FileName fn(filename);
+
+		image.write(fn);
+	} catch (XmippError xe) {
+		std::cerr << xe;
+		msg = filename + ": " + xe.getDefaultMessage();
+	} catch (std::exception& e) {
+		std::cerr << e.what();
+		msg = filename + ": " + e.what();
+	} catch (...) {
+		std::cerr << "Unhandled exception";
+		msg = filename + ": " + "Unhandled exception";
+	}
+
+	return msg;
 }
 
 /*
@@ -152,40 +169,50 @@ std::string getStrFromValue(MetaData &metadata, const MDLabel MDlabel, std::stri
 // Sometimes java annoys you with "Unsatisfied Link" exceptions. This simple functions
 // can be used for testing purposes.
 std::string testLibraryLink() {
-	return "Xmipp_Java_Interface TEST";
+	std::string msg = "Xmipp_Java_Interface TEST";
+
+	std::cout << msg << std::endl;
+
+	return msg;
 }
 
 /********************** DEBUGGING ****************************/
 double getImageVoxel(Image<double> &image, int k, int i, int j) {
+	std::string msg = "";
+
 	try {
 		return image.data.getVoxel(k, i, j);
 	} catch (XmippError xe) {
 		std::cerr << xe;
-		//msg = xe.getDefaultMessage();
+		msg = xe.getDefaultMessage();
 	} catch (std::exception& e) {
 		std::cerr << e.what();
-		//msg = e.what();
+		msg = e.what();
 	} catch (...) {
 		std::cerr << "Unhandled exception";
-		//msg = "Unhandled exception";
+		msg = "Unhandled exception";
 	}
 
 	return 0;
 }
 
 double getMatrixVoxel(MultidimArray<double> &matrix, int k, int i, int j) {
+	std::string msg = "";
+
 	try {
 		return matrix.getVoxel(k, i, j);
 	} catch (XmippError xe) {
 		std::cerr << xe;
-		//msg = xe.getDefaultMessage();
+		msg = xe.getDefaultMessage();
 	} catch (std::exception& e) {
 		std::cerr << e.what();
-		//msg = e.what();
+		msg = e.what();
 	} catch (...) {
 		std::cerr << "Unhandled exception";
-		//msg = "Unhandled exception";
+		msg = "Unhandled exception";
 	}
+
+	std::cout << "MSG: [" << msg << "]" << std::endl;
 
 	return 0;
 }

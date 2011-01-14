@@ -130,6 +130,13 @@ public:
     /// @name Composing/Decomposing the filename
     /// @{
 
+    /**
+     * Convert to std::string
+     */
+    inline std::string getString() const {
+	return (std::string)(*this);
+    }
+
     /** Compose from root, number and extension
      *
      * @code
