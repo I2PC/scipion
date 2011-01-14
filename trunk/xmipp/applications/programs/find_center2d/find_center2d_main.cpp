@@ -580,8 +580,7 @@ e17:
     }
     goto e23;
 e10:
-    printf("\nOptimal center coordinates: x =%10.3f, y = %10.3f\n",
-           yc0 - 1, xc0 - 1);
+	std::cout << "\nOptimal center coordinates: x= " << yc0-1 << " ,y= " << xc0-1 << " " << std::endl;
     return;
 s1:
     printf("\nNot-converged\n");
@@ -702,7 +701,6 @@ public:
     			I.read(fnIn);
     	}
     	I().rangeAdjust(0,255);
-    	I.write("PPPavg.xmp");
 
     	// Adapt to old code
         if ((imagen = (unsigned char **)imalloc(YSIZE(I()) + 1, XSIZE(I()) + 1, NATURAL)) == NULL)
