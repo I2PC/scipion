@@ -27,70 +27,66 @@
 #include <data/args.h>
 
 // Empty constructor -------------------------------------------------------
-Prog_make_spectra_prm::Prog_make_spectra_prm(): Prog_parameters()
+ProgMakeSpectra::ProgMakeSpectra()
 {
-    each_image_produces_an_output = false;
-    rot_spt.x0 = rot_spt.y0 = -1;
-}
-
-// Read from command line --------------------------------------------------
-void Prog_make_spectra_prm::read(int argc, char **argv)
-{
-    Prog_parameters::read(argc, argv);
-    fn_out = getParameter(argc, argv, "-o");
-    rot_spt.read(argc, argv);
-    produce_side_info();
-}
-
-// Produce side info -------------------------------------------------------
-void Prog_make_spectra_prm::produce_side_info()
-{}
-
-// Show --------------------------------------------------------------------
-void Prog_make_spectra_prm::show()
-{
-    Prog_parameters::show();
-    show_specific();
-}
-
-void Prog_make_spectra_prm::show_specific()
-{
-    std::cout << "Output file: " << fn_out << std::endl;
-    std::cout << rot_spt << std::endl;
+	produces_an_output=true;
+	each_image_produces_an_output=false;
 }
 
 // Usage -------------------------------------------------------------------
-void Prog_make_spectra_prm::usage()
+void ProgMakeSpectra::defineParams()
 {
-    Prog_parameters::usage();
-    usage_specific();
+	addUsageLine("Computes the rotational spectrum of a set of images");
+    XmippMetadataProgram::defineParams();
+	addParamsLine("   --r1 <lowRadius>            : Lowest Integration radius");
+    addParamsLine("   --r2 <highRadius>           : Highest Integration radius");
+    addParamsLine("  [--x0 <xcenter=-1>]          : In physical units.");
+    addParamsLine("  [--y0 <ycenter=-1>]          : By default, the Xmipp origin");
+    addParamsLine("  [--low  <lowerHarmonic=  1>] : Lower harmonic to compute");
+    addParamsLine("  [--high <higherHarmonic=15>] : Higher harmonic to compute");
 }
 
-void Prog_make_spectra_prm::usage_specific()
+// Read from command line --------------------------------------------------
+void ProgMakeSpectra::readParams()
 {
-    std::cerr << "   -o <fn_out>                 : Output file with the spectra\n"
-    ;
-    rot_spt.usage();
+	XmippMetadataProgram::readParams();
+    fn_out = getParam("-o");
+    rot_spt.rl = getIntParam("--r1");
+    rot_spt.rh = getIntParam("--r2");
+    rot_spt.dr = 1;
+    rot_spt.x0 = getDoubleParam("--x0");
+    rot_spt.y0 = getDoubleParam("--y0");
+    rot_spt.numin = getIntParam("--low");
+    rot_spt.numax = getIntParam("--high");
+}
+
+// Show --------------------------------------------------------------------
+void ProgMakeSpectra::show()
+{
+	XmippMetadataProgram::show();
+    std::cout << rot_spt << std::endl;
 }
 
 // Process an image --------------------------------------------------------
-void Prog_make_spectra_prm::process_img(Image<double> &img)
+void ProgMakeSpectra::processImage(const FileName &fnImg, const FileName &fnImgOut,
+	long int objId)
 {
-    rot_spt.compute_rotational_spectrum(img(), rot_spt.rl, rot_spt.rh,
+	Image<double> I;
+	I.read(fnImg);
+    rot_spt.compute_rotational_spectrum(I(), rot_spt.rl, rot_spt.rh,
                                         rot_spt.dr, rot_spt.rh - rot_spt.rl);
     Harmonics.push_back(rot_spt.rot_spectrum);
-    Img_name.push_back(img.name	());
+    Img_name.push_back(fnImg);
 }
 
 // Finish processing -------------------------------------------------------
-void Prog_make_spectra_prm::finish_processing()
+void ProgMakeSpectra::postProcess()
 {
     std::ofstream fh_out;
     fh_out.open(fn_out.c_str());
 
     if (!fh_out)
-        REPORT_ERROR(ERR_IO_NOTOPEN, (std::string)"Prog_make_spectra_prm::finish_processing: "
-                     "Cannot open" + fn_out + " for output");
+        REPORT_ERROR(ERR_IO_NOTOPEN, fn_out);
     if (Harmonics.size() != 0)
     {
         fh_out << XSIZE(Harmonics[0]) << " " << Harmonics.size() << std::endl;

@@ -38,13 +38,9 @@
 /** Make spectra parameters.
  * @ingroup MakeSpectra
  */
-class Prog_make_spectra_prm: public Prog_parameters
+class ProgMakeSpectra: public XmippMetadataProgram
 {
 public:
-    /** Output filename.
-     */
-    FileName fn_out;
-
     /** Rotational spectrum.
      */
     Rotational_Spectrum rot_spt;
@@ -58,41 +54,25 @@ public:
      */
     std::vector< FileName > Img_name;
 
-    /** Empty constructor.
-     */
-    Prog_make_spectra_prm();
+    /** Empty constructor */
+    ProgMakeSpectra();
 
-    /** Read parameters from command line.
-     */
-    void read(int argc, char** argv);
+    /** Define parameters */
+    void defineParams();
 
-    /** Produce side info.
-     */
-    void produce_side_info();
+    /** Read parameters from command line. */
+    void readParams();
 
-    /** Show parameters. This function calls show_specific.
-     */
+    /** Show parameters. */
     void show();
-
-    /** Show specific.
-     */
-    void show_specific();
-
-    /** Usage. This function calls usage_specific.
-         */
-    void usage();
-
-    /** Show specific parameters.
-     */
-    void usage_specific();
 
     /** Process image.
      */
-    void process_img(Image<double>& img);
+    void processImage(const FileName &fnImg, const FileName &fnImgOut, long int objId);
 
     /** Finish processing.
      */
-    void finish_processing();
+    void postProcess();
 };
 
 #endif

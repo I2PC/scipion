@@ -25,18 +25,16 @@
 
 #include <reconstruction/make_spectra.h>
 
-bool process_img(Image<double> &img, const Prog_parameters *prm)
-{
-    Prog_make_spectra_prm *eprm =
-        (Prog_make_spectra_prm *) prm;
-    eprm->process_img(img);
-    return true;
-}
-
 int main(int argc, char **argv)
 {
-    Prog_make_spectra_prm prm;
-    prm.apply_geo = true;
-    SF_main(argc, argv, &prm, (void*)&process_img);
-    prm.finish_processing();
+    try
+    {
+    	ProgMakeSpectra program;
+        program.read(argc, argv);
+        program.run();
+    }
+    catch (XmippError xe)
+    {
+        std::cerr << xe;
+    }
 }
