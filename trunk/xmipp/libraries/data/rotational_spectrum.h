@@ -168,12 +168,6 @@ public:
                                      double xr2,
                                      double xdr,
                                      double xr);
-
-    /// Read parameters from command line.
-    void read(int argc, char* *argv);
-
-    /// Usage.
-    void usage();
 };
 
 #endif
