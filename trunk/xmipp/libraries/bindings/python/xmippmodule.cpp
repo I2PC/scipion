@@ -1608,14 +1608,11 @@ static PyMethodDef xmipp_methods[] =
         {"MDValueRange", (PyCFunction)xmipp_MDValueRange, METH_VARARGS,
          "Construct a range query"},
         {"SingleImgSize", (PyCFunction)xmipp_SingleImgSize, METH_VARARGS,
-         "Get image dimensions"
-        },
+         "Get image dimensions"},
         {"readMetaDataWithTwoPossibleImages", (PyCFunction)xmipp_readMetaDataWithTwoPossibleImages, METH_VARARGS,
-         "Read a 1 or two column list of micrographs"
-        },
+         "Read a 1 or two column list of micrographs"},
         {"substituteOriginalImages", (PyCFunction)xmipp_substituteOriginalImages, METH_VARARGS,
-         "Subsitute the original images into a given column of a metadata"
-        },
+         "Substitute the original images into a given column of a metadata"},
         {NULL} /* Sentinel */
     };
 
