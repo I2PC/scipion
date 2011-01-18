@@ -93,12 +93,12 @@ void ParametersProjectionTomography::read(const FileName &fn_proj_param)
 {
     if (fn_proj_param.isMetaData())
     {
-
+      //TODO Reading from Metadata file to be completed!!
       REPORT_ERROR(ERR_NOT_IMPLEMENTED,"Need to include new LABEL_VECTOR_STRING for MDL.. CUBANITO HELP!!.");
 
-        MetaData MD;
-        MD.read(fn_proj_param);
-        MD.getValue(MDL_PRJ_VOL,fnPhantom);
+//        MetaData MD;
+//        MD.read(fn_proj_param);
+//        MD.getValue(MDL_PRJ_VOL,fnPhantom);
 
     }
     else
