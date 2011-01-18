@@ -32,6 +32,8 @@ LogDir='Logs'
 #-----------------------------------------------------------------------------
 # {section} Rotational spectra calculation
 #-----------------------------------------------------------------------------
+# *** Falta poner diferentes formas de calcular el centro 
+
 # Inner radius for rotational harmonics calculation:
 """ These values are in pixels from the image center
     See http://xmipp.cnb.uam.es/twiki/bin/view/Xmipp/Makespectra
@@ -103,17 +105,21 @@ class rotational_spectra_class:
        self.SpectraOuterRadius=SpectraOuterRadius
        self.SpectraLowHarmonic=SpectraLowHarmonic
        self.SpectraHighHarmonic=SpectraHighHarmonic
-       self.SomXdim=_SomXdim
-       self.SomYdim=_SomYdim
-       self.SomReg0=_SomReg0
-       self.SomReg1=_SomReg1
-       self.SomSteps=_SomSteps              
-       self.KerdensomExtraCommand=_KerdensomExtraCommand
+       self.SomXdim=SomXdim
+       self.SomYdim=SomYdim
+       self.SomReg0=SomReg0
+       self.SomReg1=SomReg1
+       self.SomSteps=SomSteps              
+       self.KerdensomExtraCommand=KerdensomExtraCommand
        self.mylog=log.init_log_system(ProjectDir,
                                       LogDir,
                                       sys.argv[0],
                                       WorkingDir)
        
+       # Create directory if does not exist
+       if not os.path.exists(self.WorkingDir):
+           os.makedirs(self.WorkingDir)
+
        #made backup of this script
        log.make_backup_of_script_file(sys.argv[0],self.WorkingDir)
 
@@ -126,23 +132,28 @@ class rotational_spectra_class:
    #execute_findcenter
    #------------------------------------------------------------------------
    def execute_findcenter(self):
-      import os, string
+      import os, string, xmipp
       print '*********************************************************************'
       print '* Looking for the position of the center of symmetry ...'
+      fn=xmipp.FileName(self.SelFileName)
+      if fn.isMetaData():
+          MD=xmipp.MetaData(self.SelFileName)
+          R=xmipp.SingleImgSize(MD.getValue(xmipp.MDL_IMAGE))[1]/2
+      else:
+          R=xmipp.SingleImgSize(self.SelFileName)[1]/2.0
       command='xmipp_find_center2d'+ \
-              ' -img ' + self.SelFileName + \
-              ' -r1 '  + str(self.SpectraInnerRadius) +   ' -r2 '   + str(self.SpectraOuterRadius) +\
-              ' -low ' + str(self.SpectraOuterRadius+2) + ' -high ' + str(self.SpectraOuterRadius+5)
-              
+              ' -i ' + self.SelFileName + \
+              ' --oroot '+self.WorkingDir+"/center2d" + \
+              ' --r1 ' + str(100.0*self.SpectraInnerRadius/R) + \
+              ' --r2 ' + str(100.0*self.SpectraOuterRadius/R) + \
+              ' --r3 ' + str(100.0*(self.SpectraOuterRadius+2)/R) + \
+              ' --r4 ' + str(100.0*(self.SpectraOuterRadius+5)/R)
       print '* ',command
       self.mylog.info(command)
-      program = os.popen(command,"r")
-      data = program.read()
-      print data
-      data=data.split()
-      aux     = data[12].split(',')[0]
-      self.xOffset = float (aux)
-      self.yOffset = float(data[15])
+      os.system(command)
+      MD=xmipp.MetaData(self.WorkingDir+"/center2d_center.xmd")
+      self.xOffset=MD.getValue(xmipp.MDL_X)
+      self.yOffset=MD.getValue(xmipp.MDL_Y)
 
    #------------------------------------------------------------------------
    #execute_spectra
@@ -150,20 +161,16 @@ class rotational_spectra_class:
    def execute_spectra(self):
       import os, string
       import launch_job
-      if (os.path.exists(self._SpectraName)):
-          os.remove(self._SpectraName)
       print '*********************************************************************'
       print '* Computing rotational power spectra'
-      selFileName=os.path.basename(self._SelFileName)
-      outFileName=(os.path.splitext(selFileName))[0] + '.sim'
-      command=' -i ' + selFileName + \
-              ' -o ' + str(self._SpectraName) + \
-              ' -x0 '  + str(self.xOffset) + \
-              ' -y0 '  + str(self.yOffset) + \
-              ' -r1 '  + str(self._SpectraInnerRadius) + \
-              ' -r2 '   + str(self._SpectraOuterRadius) + \
-              ' -low ' + str(self._SpectraLowHarmonic) + \
-              ' -high ' + str(self._SpectraHighHarmonic)
+      command=' -i ' + self.SelFileName + \
+              ' -o ' + self.WorkingDir+"/rotSpectra.txt" + \
+              ' --x0 '  + str(self.xOffset) + \
+              ' --y0 '  + str(self.yOffset) + \
+              ' --r1 '  + str(self.SpectraInnerRadius) + \
+              ' --r2 '   + str(self.SpectraOuterRadius) + \
+              ' --low ' + str(self.SpectraLowHarmonic) + \
+              ' --high ' + str(self.SpectraHighHarmonic)
       launch_job.launch_job("xmipp_make_spectra",
                             command,
                             self.mylog,
@@ -175,21 +182,21 @@ class rotational_spectra_class:
    def execute_KerDenSOM(self):
       import launch_job
 
-      selFileName=os.path.basename(self._SelFileName)
       print '*********************************************************************'
       print '* Computing kerdensom ...'
-      command=' -verb 1 -i '  + str(self._SpectraName) + \
-              ' -o '    + str(self._SomName)  + \
-              ' -xdim ' + str(self._SomXdim) + \
-              ' -ydim ' + str(self._SomYdim) + \
-              ' -reg0 ' + str(self._SomReg0) + \
-              ' -reg1 ' + str(self._SomReg1) + \
-              ' -steps ' + str(self._SomSteps) + \
-              ' '  + str(self._KerdensomExtraCommand)
+      command=' -v 1 -i '  + self.WorkingDir+"/rotSpectra.txt" + \
+              ' -o '    + self.WorkingDir+"/som"  + \
+              ' --xdim ' + str(self.SomXdim) + \
+              ' --ydim ' + str(self.SomYdim) + \
+              ' --reg0 ' + str(self.SomReg0) + \
+              ' --reg1 ' + str(self.SomReg1) + \
+              ' --steps ' + str(self.SomSteps) + \
+              ' '  + str(self.KerdensomExtraCommand)
       launch_job.launch_job("xmipp_classify_kerdensom",
                             command,
                             self.mylog,
                             False,1,1,'')
+      os.system("rm -f "+self.WorkingDir+"/som_*")
 
 #
 # main
