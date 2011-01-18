@@ -28,263 +28,174 @@
 
 #include <fstream>
 
+#include <data/program.h>
 #include <classification/tstudent_kerdensom.h>
 #include <classification/gaussian_kerdensom.h>
 
-/* Prototypes -============================================================= */
-
-void Usage(char **argv);
-
-/* Main function -============================================================= */
-
-main(int argc, char** argv)
+/* Parameters class ======================================================= */
+class ProgKenderSOM: public XmippProgram
 {
-
-
+public:
     /* Input Parameters ======================================================== */
-
-    FileName       fn_in;     // input file
-    FileName       fn_out;    // output file
-    FileName       cb_in = "";    // Code vectors input file
-    FileName       fn_algo_in = ""; // input algorithm file
-    FileName       tmpN;  // Temporary variable
-    double         eps = 1e-7; // Stopping criteria
-    unsigned       iter = 200; // Iteration number
-    unsigned       verb = 0; // Verbosity level
-    bool           norm = 1; // Normalize?
-    unsigned       xdim;  // X-dimension (-->)
-    unsigned       ydim;  // Y-dimension
-    double         reg0 = 1000; // Initial reg
-    double         reg1 = 100; // Final reg
-    int            df = 3;  // Degrees of freedom
-    std::string    layout = "RECT"; // layout (Topology)
-    unsigned       annSteps = 10;   // Deterministic Annealing steps
-    bool           useCBook = false;    // Use codebook
-    bool           saveClusters = false;    // Save clusters in separate files
-    bool           saveCodebook = false;    // Save codebook in a separate file
-    bool           gaussian = true;         // Gaussian Kernel
-    bool           tStudent = false;        // tStudent Kernel
-
-    /* Parameters ============================================================== */
-
-    try
+    FileName       fn_in;        // input file
+    FileName       fn_out;       // output file
+    FileName       cb_in;        // Code vectors input file
+    FileName       fn_algo_in;   // input algorithm file
+    FileName       tmpN;         // Temporary variable
+    double         eps;          // Stopping criteria
+    unsigned       iter;         // Iteration number
+    bool           norm;         // Normalize?
+    unsigned       xdim;         // X-dimension (-->)
+    unsigned       ydim;         // Y-dimension
+    double         reg0;         // Initial reg
+    double         reg1;         // Final reg
+    int            df;           // Degrees of freedom
+    std::string    layout;       // layout (Topology)
+    unsigned       annSteps;     // Deterministic Annealing steps
+    bool           useCBook;     // Use codebook
+    bool           saveClusters; // Save clusters in separate files
+    bool           saveCodebook; // Save codebook in a separate file
+    bool           gaussian;     // Gaussian Kernel
+    bool           tStudent;     // tStudent Kernel
+public:
+    // Define parameters
+    void defineParams()
     {
+        addUsageLine("Purpose: Kernel Density Estimator Self-Organizing Map");
+        addParamsLine("  -i <file_in>                : Input data file (plain data)");
+        addParamsLine(" [-o <file_out>]              : Base name for output data files");
+        addParamsLine(" [--cvin <file_in>]           : Codevectors input file");
+        addParamsLine(" [--cbin <file_in>]           : Codebook input file");
+        addParamsLine(" [--saveclusters]             : Save clusters in separate files");
+        addParamsLine(" [--savecodebook]             : Save code book");
+        addParamsLine(" [--xdim <Hdimension=10>]     : Horizontal size of the map");
+        addParamsLine(" [--ydim <Vdimension=5>]      : Vertical size of the map");
+        addParamsLine(" [--topology <topology=RECT>] : Lattice topology");
+        addParamsLine("    where <topology> RECT HEXA");
+        addParamsLine(" [--steps <steps=10>]         : Deterministic annealing steps");
+        addParamsLine(" [--reg0  <Initial_reg=1000>] : Initial smoothness factor");
+        addParamsLine(" [--reg1  <Final_reg=100>]    : Final  smoothness factor");
+        addParamsLine(" [--kernel <kernel=gaussian>] : Kernel function");
+        addParamsLine("    where <kernel> gaussian tstudent");
+        addParamsLine(" [--df <df=3>]                : t-Student degrees of freedom");
+        addParamsLine(" [--ain <algorithmFile>]      : algorithm input file");
+        addParamsLine(" [--eps <epsilon=1e-7>]       : Stopping criteria");
+        addParamsLine(" [--iter <N=200>]             : Number of iterations");
+        addParamsLine(" [--norm]                     : Normalize training data");
+    }
 
-        fn_in = getParameter(argc, argv, "-i");
-
-        if (checkParameter(argc, argv, "-o"))
-            fn_out = getParameter(argc, argv, "-o");
-        else
+    // Read parameters
+    void readParams()
+    {
+        fn_in = getParam("-i");
+        if (checkParam("-o"))
+            fn_out=getParam("-o");
+        if (checkParam("--cvin") && checkParam("--cbin"))
+            REPORT_ERROR(ERR_ARG_INCORRECT,"Cannot provide --cvin and --cbin");
+        if (checkParam("--cvin"))
         {
-            Usage(argv);
-            exit(EXIT_FAILURE);
-        }
-
-        if (checkParameter(argc, argv, "-cvin"))
-        {
-            if (checkParameter(argc, argv, "-cbin"))
-            {
-                std::cout << "Error: you can not use two code vectors files" << std::endl;
-                exit(EXIT_FAILURE);
-            }
-            cb_in = getParameter(argc, argv, "-cvin");
+            cb_in=getParam("--cvin");
             useCBook = false;
         }
-
-
-        if (checkParameter(argc, argv, "-cbin"))
+        else if (checkParam("--cbin"))
         {
-            if (checkParameter(argc, argv, "-cvin"))
-            {
-                std::cout << "Error: you can not use two code vectors files" << std::endl;
-                exit(EXIT_FAILURE);
-            }
-            cb_in = getParameter(argc, argv, "-cbin");
+            cb_in=getParam("--cbin");
             useCBook = true;
         }
-
-
-        ydim = textToInteger(getParameter(argc, argv, "-ydim", "5"));
-        xdim = textToInteger(getParameter(argc, argv, "-xdim", "10"));
-
-
-        if (checkParameter(argc, argv, "-hexa"))
+        ydim = getIntParam("--ydim");
+        xdim = getIntParam("--xdim");
+        layout = getParam("--topology");
+        std::string kernel=getParam("--kernel");
+        if (kernel=="gaussian")
         {
-            if (checkParameter(argc, argv, "-rect"))
-            {
-                std::cout << "Error: you can not define two topologies" << std::endl;
-                exit(EXIT_FAILURE);
-            }
-            layout = "HEXA";
-        }
-        else if (checkParameter(argc, argv, "-rect"))
-            layout = "RECT";
-
-        if (checkParameter(argc, argv, "-gaussian"))
-        {
-            if (checkParameter(argc, argv, "-tStudent"))
-            {
-                std::cout << "Error: you can not define two kernels functions" << std::endl;
-                exit(EXIT_FAILURE);
-            }
             gaussian = true;
             tStudent = false;
         }
-        else if (checkParameter(argc, argv, "-tStudent"))
+        else if (kernel=="tstudent")
         {
             gaussian = false;
             tStudent = true;
         }
+        reg0 = getDoubleParam("--reg0");
+        reg1 = getDoubleParam("--reg1");
+        df = getIntParam("--df");
+        if (checkParam("--ain"))
+            fn_algo_in=getParam("--ain");
+        eps = getDoubleParam("--eps");
+        iter = getIntParam("--iter");
+        norm = checkParam("--norm");
+        saveClusters = checkParam("--saveclusters");
+        saveCodebook = checkParam("--savecodebook");
+        annSteps = getIntParam("--steps");
 
-        reg0 = textToFloat(getParameter(argc, argv, "-reg0", "1000.0"));
-        reg1 = textToFloat(getParameter(argc, argv, "-reg1", "100.0"));
-        df = (int) textToInteger(getParameter(argc, argv, "-df", "3"));
+        // Some checks
+        if (iter < 1)
+            REPORT_ERROR(ERR_ARG_INCORRECT,"iter must be > 1");
 
-        fn_algo_in = getParameter(argc, argv, "-ain", "");
+        if ((reg0 <= reg1) && (reg0 != 0) && (annSteps > 1))
+            REPORT_ERROR(ERR_ARG_INCORRECT,"reg0 must be > reg1");
+        if (reg0 == 0)
+            annSteps = 0;
+        if (reg0 < 0)
+            REPORT_ERROR(ERR_ARG_INCORRECT,"reg0 must be > 0");
+        if (reg1 < 0)
+            REPORT_ERROR(ERR_ARG_INCORRECT,"reg1 must be > 0");
+        if (xdim < 1)
+            REPORT_ERROR(ERR_ARG_INCORRECT,"xdim must be >= 1");
+        if (ydim < 1)
+            REPORT_ERROR(ERR_ARG_INCORRECT,"ydim must be >= 1");
+        if (df < 2)
+            REPORT_ERROR(ERR_ARG_INCORRECT,"df must be > 1");
+    }
 
-        eps = textToFloat(getParameter(argc, argv, "-eps", "1e-7"));
-        iter = textToInteger(getParameter(argc, argv, "-iter", "200"));
-        verb = textToInteger(getParameter(argc, argv, "-verb", "0"));
-
-        if (checkParameter(argc, argv, "-norm"))
-            norm = true;
-        else norm = false;
-
-        if (checkParameter(argc, argv, "-saveclusters"))
-            saveClusters = true;
-        else saveClusters = false;
-
-        if (checkParameter(argc, argv, "-savecodebook"))
-            saveCodebook = true;
-        else saveCodebook = false;
-
-        annSteps = textToInteger(getParameter(argc, argv, "-steps", "10"));
-
-        if (argc == 1)
+    void show()
+    {
+        std::cout << "Input data file : " << fn_in << std::endl;
+        std::cout << "Output file name : " << fn_out << std::endl;
+        if (cb_in != "")
+            std::cout << "Input code vectors file name : " << cb_in << std::endl;
+        if (saveClusters)
+            std::cout << "Save clusters in separate files: " << fn_out << ".(cluster number)" << std::endl;
+        std::cout << "Horizontal dimension (Xdim) = " << xdim << std::endl;
+        std::cout << "Vertical dimension (Ydim) = " << ydim << std::endl;
+        if (layout == "HEXA")
+            std::cout << "Hexagonal topology " << std::endl;
+        else
+            std::cout << "Rectangular topology " << std::endl;
+        std::cout << "Initial smoothness factor (reg0) = " << reg0 << std::endl;
+        std::cout << "Final smoothness factor (reg1) = " << reg1 << std::endl;
+        if (gaussian)
+            std::cout << "Gaussian Kernel function " << std::endl;
+        else
         {
-            Usage(argv);
+            std::cout << "t-Student Kernel function" << std::endl;
+            std::cout << "Degrees of freedom (df) = " << df << std::endl;
+        }
+        std::cout << "Deterministic annealing steps = " << annSteps << std::endl;
+        std::cout << "Total number of iterations = " << iter << std::endl;
+        std::cout << "Stopping criteria (eps) = " << eps << std::endl;
+        if (norm)
+            std::cout << "Normalize input data" << std::endl;
+        else
+            std::cout << "Do not normalize input data " << std::endl;
+    }
+
+    // Run
+    void run()
+    {
+        /* Open training vector ================================================= */
+        std::ifstream inStream(fn_in.c_str());
+        if (!inStream)
+        {
+            std::cerr << argv[0] << ": can't open file " << fn_in << std::endl;
+            exit(EXIT_FAILURE);
         }
 
-    }
-    catch (XmippError XE)
-    {
-        std::cout << XE;
-        Usage(argv);
-    }
+        ClassicTrainingVectors ts(0, true);
+        std::cout << std::endl << "Reading input data file " << fn_in << "....." << std::endl;
+        inStream >> ts;
 
-    /* Some validations ===================================================== */
-
-
-    if (iter < 1)
-    {
-        std::cerr << argv[0] << ": invalid value for iter (must be > 1): " << iter << std::endl;
-        exit(EXIT_FAILURE);
-    }
-
-    if (verb < 0 || verb > 2)
-    {
-        std::cerr << argv[0] << ": invalid value for verbosity (must be between 0 and 2): " << verb << std::endl;
-        exit(EXIT_FAILURE);
-    }
-
-
-    if ((reg0 <= reg1) && (reg0 != 0) && (annSteps > 1))
-    {
-        std::cerr << argv[0] << ": invalid value for reg0 and reg1 (reg0 must be > reg1): " << std::endl;
-        exit(EXIT_FAILURE);
-    }
-
-    if (reg0 == 0) annSteps = 0;
-
-    if (reg0 < 0)
-    {
-        std::cerr << argv[0] << ": invalid value for initial smoothness parameter (reg0) (must be > 0): " << reg0 << std::endl;
-        exit(EXIT_FAILURE);
-    }
-
-
-    if (reg1 < 0)
-    {
-        std::cerr << argv[0] << ": invalid value for final smoothness parameter (reg1) (must be > 0): " << reg1 << std::endl;
-        exit(EXIT_FAILURE);
-    }
-
-    if (xdim < 1)
-    {
-        std::cerr << argv[0] << ": invalid value for xdim (must be >= 1): " << xdim << std::endl;
-        exit(EXIT_FAILURE);
-    }
-
-    if (ydim < 1)
-    {
-        std::cerr << argv[0] << ": invalid value for ydim (must be >= 1): " << ydim << std::endl;
-        exit(EXIT_FAILURE);
-    }
-
-    if (df < 2)
-    {
-        std::cerr << argv[0] << ": invalid value for df (must be > 1): " << df << std::endl;
-        exit(EXIT_FAILURE);
-    }
-
-
-
-    /* Shows parameters ===================================================== */
-
-    std::cout << std::endl << "Parameters used: " << std::endl;
-    std::cout << "Input data file : " << fn_in << std::endl;
-    std::cout << "Output file name : " << fn_out << std::endl;
-    if (cb_in != "")
-        std::cout << "Input code vectors file name : " << cb_in << std::endl;
-    if (saveClusters)
-        std::cout << "Save clusters in separate files: " << fn_out << ".(cluster number)" << std::endl;
-    std::cout << "Horizontal dimension (Xdim) = " << xdim << std::endl;
-    std::cout << "Vertical dimension (Ydim) = " << ydim << std::endl;
-    if (layout == "HEXA")
-        std::cout << "Hexagonal topology " << std::endl;
-    else
-        std::cout << "Rectangular topology " << std::endl;
-    std::cout << "Initial smoothness factor (reg0) = " << reg0 << std::endl;
-    std::cout << "Final smoothness factor (reg1) = " << reg1 << std::endl;
-    if (gaussian)
-        std::cout << "Gaussian Kernel function " << std::endl;
-    else
-    {
-        std::cout << "t-Student Kernel function" << std::endl;
-        std::cout << "Degrees of freedom (df) = " << df << std::endl;
-    }
-    std::cout << "Deterministic annealing steps = " << annSteps << std::endl;
-    std::cout << "Total number of iterations = " << iter << std::endl;
-    std::cout << "Stopping criteria (eps) = " << eps << std::endl;
-    std::cout << "verbosity level = " << verb << std::endl;
-    if (norm)
-        std::cout << "Normalize input data" << std::endl;
-    else
-        std::cout << "Do not normalize input data " << std::endl;
-
-
-    /* Open training vector ================================================= */
-
-
-    std::ifstream inStream(fn_in.c_str());
-    if (!inStream)
-    {
-        std::cerr << argv[0] << ": can't open file " << fn_in << std::endl;
-        exit(EXIT_FAILURE);
-    }
-
-    ClassicTrainingVectors ts(0, true);
-    std::cout << std::endl << "Reading input data file " << fn_in << "....." << std::endl;
-    inStream >> ts;
-
-
-
-    /* Real stuff ============================================================== */
-
-
-    try
-    {
-
+        /* Real stuff ============================================================== */
         if (norm)
         {
             std::cout << "Normalizing....." << std::endl;
@@ -342,7 +253,7 @@ main(int argc, char** argv)
         }
 
         TextualListener myListener;       // Define the listener class
-        myListener.setVerbosity() = verb;       // Set verbosity level
+        myListener.setVerbosity() = verbose;       // Set verbosity level
         thisSOM->setListener(&myListener);         // Set Listener
 
         if (cb_in != "")
@@ -492,52 +403,31 @@ main(int argc, char** argv)
         codS << *myMap;
         codS.flush();
 
-
         std::cout << std::endl;
 
         delete myMap;
         delete thisSOM;
+    }
+};
 
+/* Main function -============================================================= */
+int main(int argc, char** argv)
+{
+    try
+    {
+        ProgKenderSOM prm;
+        prm.read(argc,argv);
+        prm.run();
+    }
+    catch (XmippError XE)
+    {
+        std::cout << XE << std::endl;
+        return 1;
     }
     catch (const std::exception& e)
     {
         std::cout << e.what() << std::endl;
+        return 1;
     }
     return 0;
-}
-
-
-/* ------------------------------------------------------------------------- */
-/* Help Message for this Program                                             */
-/* ------------------------------------------------------------------------- */
-void Usage(char **argv)
-{
-    printf(
-        "\nUsage: %s [Purpose and Parameters]"
-        "\nPurpose: Kernel Density Estimator Self-Organizing Map"
-        "\nParameter Values: (note space before value)"
-        "\n    -i      file_in           Input data file (plain data)"
-        "\n    -o      file_out          Base name for output data files"
-        "\n    -cvin   file_in           Codevectors input file"
-        "\n    -saveclusters           save clusters in separate files (Default = No)"
-        "\n    -xdim   H-dimension       Horizontal size of the map"
-        "\n    -ydim   V-dimension       Vertical size of the map"
-        "\n    -hexa               Hexagonal topology"
-        "\n    -rect               Rectangular topology (default)"
-        "\n    -steps  steps           Deterministic annealing steps (default = 10)"
-        "\n    -reg0   Initial reg       Initial smoothness factor (default = 1000)"
-        "\n    -reg1   Final reg        Final  smoothness factor (default = 100)"
-        "\n    -gaussian           Gaussian Kernel Function (default)"
-        "\n    -tStudent           t-Student Kernel Function "
-        "\n    -df     df               t-Student degrees of freedom (default = 3)"
-        "\n    -eps    Epsilon        Stopping criteria (default = 1e-7)"
-        "\n    -iter   iterations        Number of iterations (default = 200)"
-        "\n    -norm                   Normalize training data (default = No)"
-        "\n    -verb   verbosity         Information level while running: "
-        "\n             0: No information (default)"
-        "\n             1: Progress bar"
-        "\n             2: Changes between iterations"
-        "\n"
-        , argv[0]);
-    exit(0);
 }
