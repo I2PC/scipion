@@ -90,7 +90,7 @@ void ProgAngularClassAverage::readParams()
 // Define parameters ==========================================================
 void ProgAngularClassAverage::defineParams()
 {
-    addUsageLine("This program makes class average images and corresponding selfiles from angular_projection_matching docfiles");
+    addUsageLine("Make class average images and corresponding selfiles from angular_projection_matching docfiles.");
     addUsageLine("Example of use: Sample at default values and calculating output averages of random halves of the data");
     addUsageLine("   xmipp_angular_class_average  -i proj_match.doc --lib ref_angles.doc -o out_dir --split");
 
