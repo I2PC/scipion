@@ -42,7 +42,7 @@ extern pthread_mutex_t project_mutex;
 /** Projection class.
  *
  * A projection is a 2D, double Image plus some information (about the direction
- * of prejection) which makes it suitable for 3D reconstruction. A projection
+ * of projection) which makes it suitable for 3D reconstruction. A projection
  * is supposed to have the point (0,0) at the center of the image and not in
  * the corners as usual matrices have.
  *
@@ -54,7 +54,7 @@ extern pthread_mutex_t project_mutex;
  * P.set_angles(30, 45, -50); // Set Euler angles
  * @endcode
  *
- * From now on, the projection can be treated as any other Image. 
+ * From now on, the projection can be treated as any other Image.
  */
 class Projection: public Image<double>
 {
@@ -106,7 +106,7 @@ public:
       * direction is computed and stored in the Projection structure.
       */
     void read(const FileName& fn, const bool& apply_shifts = false,
-    		bool readdata = true, MDRow * row = NULL );
+              bool readdata = true, MDRow * row = NULL );
 
     /** Assignment.
      */
@@ -115,6 +115,67 @@ public:
     /** Another function for assignment.
      */
     void assign(const Projection& P);
+};
+
+/* Projection parameters for tomography --------------------------- */
+/** Projecting parameters. This class reads a set of projection parameters
+ *  in a file (see xmipp_project_tomography for more information about the
+ *  file structure) and extract the useful information from it.*/
+class ParametersProjectionTomography
+{
+public:
+    /** Phantom filename.
+        It must be a Xmipp volume. */
+    FileName fnPhantom;
+    /// Sampling resolution of the phantom.
+    double sampling;
+    /// Starting name for all projections
+    std::string   fnProjectionSeed;
+    /// First projection number. By default, 1.
+    int      starting;
+    /// Extension for projection filenames. This is optional
+    std::string   fn_projection_extension;
+
+    /// Projection Xdim
+    int      proj_Xdim;
+    /// Projection Ydim
+    int      proj_Ydim;
+
+    /// Debugging level. See \ref Prog_Project_Parameters::tell
+    int tell;
+
+    /// Rotational angle of the tilt axis
+    double axisRot;
+    /// Tilt angle of the tilt axis
+    double axisTilt;
+    /// Offset of the tilt axis
+    Matrix1D<double> raxis;
+    /// Minimum tilt around this axis
+    double tilt0;
+    /// Maximum tilt around this axis
+    double tiltF;
+    /// Step in tilt
+    double tiltStep;
+
+    /// Bias to be applied to each pixel grey value */
+    double    Npixel_avg;
+    /// Standard deviation of the noise to be added to each pixel grey value
+    double    Npixel_dev;
+
+    /// Bias to apply to the image center
+    double    Ncenter_avg;
+    /// Standard deviation of the image center
+    double    Ncenter_dev;
+
+    /// Bias to apply to the angles
+    double    Nangle_avg;
+    /// Standard deviation of the angles
+    double    Nangle_dev;
+public:
+    /** Read projection parameters from a file.
+        An exception is thrown if the file is not found or any of the
+        parameters is not found in the right place.*/
+    void read(const FileName &fn_proj_param);
 };
 
 /** Structure for threaded projections.
@@ -173,12 +234,12 @@ void project_SimpleGrid(Image<T> *vol, const SimpleGrid *grid,
     (rot, tilt, psi) (1st, 2nd and 3rd Euler angles) . The projection
     is previously is resized to Ydim x Xdim and initialized to 0.
     The projection itself, from now on, will keep the Euler angles.
-    
+
     The offset is a 3D vector specifying the offset that must be applied
     when going from the projection space to the universal space
-    
+
     rproj=E*r+roffset => r=E^t (rproj-roffset)
-    
+
     Set it to NULL if you don't want to use it
  */
 void project_Volume(MultidimArray<double> &V, Projection &P, int Ydim, int Xdim,
@@ -191,10 +252,10 @@ void project_Volume(MultidimArray<double> &V, Projection &P, int Ydim, int Xdim,
     that passes through the point raxis. The projection can be futher
     inplane rotated and shifted through the parameters
     (inplaneRot) and (rinplane).
-    
+
     All vectors involved must be 3D.
-    
-    The projection model is rproj=H Rinplane Raxis r + 
+
+    The projection model is rproj=H Rinplane Raxis r +
                                   Rinplane (I-Raxis) raxis + rinplane
 
     Where Raxis is the 3D rotation matrix given by the axis and
@@ -959,7 +1020,7 @@ void project_GridVolume(
     int               threads)
 {
 
-	// If projecting forward initialise projections
+    // If projecting forward initialise projections
     if (FORW)
     {
         proj.reset(Ydim, Xdim);
@@ -1023,7 +1084,7 @@ void project_GridVolume(
         }
         else
         {
-          // create no thread to do the job
+            // create no thread to do the job
             project_SimpleGrid(&(vol(i)), &(vol.grid(i)), &basis,
                                &proj, &norm_proj, FORW, eq_mode,
                                VNeq, M, mask, ray_length);

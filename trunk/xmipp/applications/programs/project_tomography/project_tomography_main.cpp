@@ -27,11 +27,9 @@
 
 int main(int argc, char *argv[])
 {
-    Prog_Project_Tomography_Parameters      prog_prm;
-    Projection                      	    proj;
-    MetaData                         	    SF;
+    ProgProjectTomography prog_prm;
 
-// Check the command line
+    // Check the command line
     try
     {
         prog_prm.read(argc, argv);
@@ -43,14 +41,7 @@ int main(int argc, char *argv[])
         exit(1);
     }
 
-    try
-    {
-// Really project
-        ROUT_Tomography_project(prog_prm, proj, SF);
-    }
-    catch (XmippError XE)
-    {
-        std::cout << XE;
-    }
+    prog_prm.tryRun();
+
     return 0;
 }

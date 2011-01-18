@@ -28,132 +28,65 @@
 
 #include <data/args.h>
 
-/* Read from command line ================================================== */
-void Prog_Project_Tomography_Parameters::read(int argc, char **argv)
+void ProgProjectTomography::defineParams()
 {
-    fn_proj_param = getParameter(argc, argv, "-i");
-    fn_sel_file   = getParameter(argc, argv, "-o", "");
-    only_create_angles = checkParameter(argc, argv, "-only_create_angles");
+    addUsageLine("Generate projections as if it were a single axis tomographic series.");
+    addParamsLine(" -i <Proj_param_file>   :MetaData file with projection parameters.");
+    addParamsLine("                        :Check the manual for a description of the parameters.");
+    addParamsLine(" alias --input;");
+    addParamsLine("[-o <metadata_file=\"\">]    : Output Metadata file with all the generated projections.");
+    addParamsLine("[-show_angles]          : Print angles value for each projection.");
+    addParamsLine("[-only_create_angles]   : Projections are not calculated, only the angles values.");
+}
+
+void ProgProjectTomography::readParams()
+{
+    fn_proj_param = getParam("-i");
+    fn_sel_file   = getParam("-o");
+
+    only_create_angles = checkParam("-only_create_angles");
     tell=0;
-    if (checkParameter(argc, argv, "-show_angles"))
+    if (checkParam("-show_angles"))
         tell |= TELL_SHOW_ANGLES;
 }
 
-/* Usage =================================================================== */
-void Prog_Project_Tomography_Parameters::usage()
+void ProgProjectTomography::run()
 {
-    printf("\nUsage:\n\n");
-    printf("project -i <Parameters File> \n"
-           "       [-o <sel_file>]\n"
-           "       [-show_angles]\n"
-           "       [-only_create_angles]\n");
-    printf(
-        "\tWhere:\n"
-        "\t<Parameters File>:  File containing projection parameters\n"
-        "\t                    check the manual for a description of the parameters\n"
-        "\t<sel_file>:         This is a selection file with all the generated\n"
-        "\t                    projections\n");
-}
 
-/* Read Projection Parameters ============================================== */
-void Projection_Tomography_Parameters::read(const FileName &fn_proj_param)
-{
-    FILE    *fh_param;
-    char    line[201];
-    int     lineNo = 0;
-    char    *auxstr;
+    Projection         proj;
+    MetaData           SF;
 
-    if ((fh_param = fopen(fn_proj_param.c_str(), "r")) == NULL)
-        REPORT_ERROR(ERR_IO_NOTOPEN,
-                     (std::string)"Projection_Tomography_Parameters::read: There is a problem "
-                     "opening the file " + fn_proj_param);
-    while (fgets(line, 200, fh_param) != NULL)
+    randomize_random_generator();
+
+    // Read projection parameters and produce side information
+    ParametersProjectionTomography proj_prm;
+    PROJECT_Tomography_Side_Info side;
+    proj_prm.read(fn_proj_param);
+    proj_prm.tell = tell;
+    side.produce_Side_Info(proj_prm);
+
+    // Project
+    int ProjNo = 0;
+    if (!only_create_angles)
     {
-        if (line[0] == 0)
-            continue;
-        if (line[0] == '#')
-            continue;
-        if (line[0] == '\n')
-            continue;
-        switch (lineNo)
-        {
-        case 0:
-            fnPhantom = firstWord(line);
-            lineNo = 1;
-            break;
-        case 1:
-            fnProjectionSeed =
-                firstWord(line);
-            // Next two parameters are optional
-            auxstr = nextToken();
-            if (auxstr != NULL)
-                starting =
-                    textToInteger(auxstr);
-            fn_projection_extension = nextToken();
-            lineNo = 2;
-            break;
-        case 2:
-            proj_Xdim = textToInteger(firstToken(line));
-            proj_Ydim = textToInteger(nextToken());
-            lineNo = 3;
-            break;
-        case 3:
-            axisRot = textToFloat(firstToken(line));
-            axisTilt = textToFloat(nextToken());
-            lineNo = 4;
-            break;
-        case 4:
-            raxis.resize(3);
-            XX(raxis) = textToFloat(firstToken(line));
-            YY(raxis) = textToFloat(nextToken());
-            ZZ(raxis) = textToFloat(nextToken());
-            lineNo = 5;
-            break;
-        case 5:
-            tilt0 = textToFloat(firstToken(line));
-            tiltF = textToFloat(nextToken());
-            tiltStep = textToFloat(nextToken());
-            lineNo = 6;
-            break;
-        case 6:
-            Nangle_dev = textToFloat(firstWord(line));
-            auxstr = nextToken();
-            if (auxstr != NULL)
-                Nangle_avg = textToFloat(auxstr);
-            else
-                Nangle_avg = 0;
-            lineNo = 7;
-            break;
-        case 7:
-            Npixel_dev = textToFloat(firstWord(line));
-            auxstr = nextToken();
-            if (auxstr != NULL)
-                Npixel_avg = textToFloat(auxstr);
-            else
-                Npixel_avg = 0;
-            lineNo = 8;
-            break;
-        case 8:
-            Ncenter_dev = textToFloat(firstWord(line));
-            auxstr = nextToken();
-            if (auxstr != NULL)
-                Ncenter_avg = textToFloat(auxstr);
-            else
-                Ncenter_avg = 0;
-            lineNo = 9;
-            break;
-        } /* switch end */
-    } /* while end */
-    if (lineNo != 9)
-        REPORT_ERROR(ERR_ARG_MISSING, (std::string)"Projection_Tomography_Parameters::read: I "
-                     "couldn't read all parameters from file " + fn_proj_param);
-    fclose(fh_param);
+        // Really project
+        ProjNo = PROJECT_Tomography_Effectively_project(proj_prm, side,
+                 proj, SF);
+        // Save SelFile
+        if (fn_sel_file != "")
+            SF.write(fn_sel_file);
+    }
+    else
+    {
+        side.DF.write("/dev/stdout");
+    }
+    return;
+
 }
 
 /* Produce Side Information ================================================ */
 void PROJECT_Tomography_Side_Info::produce_Side_Info(
-    const Projection_Tomography_Parameters &prm,
-    const Prog_Project_Tomography_Parameters &prog_prm)
+    const ParametersProjectionTomography &prm)
 {
     phantomVol.read(prm.fnPhantom);
     phantomVol().setXmippOrigin();
@@ -161,7 +94,7 @@ void PROJECT_Tomography_Side_Info::produce_Side_Info(
 
 /* Effectively project ===================================================== */
 int PROJECT_Tomography_Effectively_project(
-    const Projection_Tomography_Parameters &prm,
+    const ParametersProjectionTomography &prm,
     PROJECT_Tomography_Side_Info &side, Projection &proj, MetaData &SF)
 {
     int expectedNumProjs = FLOOR((prm.tiltF-prm.tilt0)/prm.tiltStep);
@@ -233,35 +166,4 @@ int PROJECT_Tomography_Effectively_project(
 
     DF_movements.write(prm.fnProjectionSeed + "_movements.txt");
     return numProjs;
-}
-
-/* ROUT_project ============================================================ */
-int ROUT_Tomography_project(Prog_Project_Tomography_Parameters &prm,
-                            Projection &proj, MetaData &SF)
-{
-    randomize_random_generator();
-
-    // Read projection parameters and produce side information
-    Projection_Tomography_Parameters proj_prm;
-    PROJECT_Tomography_Side_Info side;
-    proj_prm.read(prm.fn_proj_param);
-    proj_prm.tell=prm.tell;
-    side.produce_Side_Info(proj_prm, prm);
-
-    // Project
-    int ProjNo = 0;
-    if (!prm.only_create_angles)
-    {
-        // Really project
-        ProjNo = PROJECT_Tomography_Effectively_project(proj_prm, side,
-                 proj, SF);
-        // Save SelFile
-        if (prm.fn_sel_file != "")
-            SF.write(prm.fn_sel_file);
-    }
-    else
-    {
-        side.DF.write("/dev/stdout");
-    }
-    return ProjNo;
 }
