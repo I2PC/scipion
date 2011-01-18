@@ -107,7 +107,7 @@ public:
      * Image I(64,64,1,1,"image.spi");
      * @endcode
      */
-    Image(int Xdim, int Ydim, int Zdim, int Ndim, FileName _filename)
+    Image(int Xdim, int Ydim, int Zdim, int Ndim, const FileName _filename)
     {
         init();
         mmapOnWrite = true;
@@ -233,7 +233,7 @@ public:
      * Image I(64,64,1,1,"image.spi");
      * @endcode
      */
-    void newMappedFile(int Xdim, int Ydim, int Zdim, int Ndim, FileName _filename)
+    void newMappedFile(int Xdim, int Ydim, int Zdim, int Ndim, const FileName _filename)
     {
         clear();
         mmapOnWrite = true;
@@ -269,12 +269,12 @@ public:
     /* Read an image with a lower resolution as a preview image.
      * If Zdim parameter is not passed, then all slices are rescaled.
      */
-    int readPreview(const FileName &name, int Xdim, int Ydim, int Zdim = NULL)
+    int readPreview(const FileName &name, int Xdim, int Ydim, int Zdim = NULL, int select_img = 0)
     {
       ImageGeneric im;
       int imXdim, imYdim, imZdim;
 
-      im.readMapped(name);
+      im.readMapped(name, select_img);
       im.getDimensions(imXdim, imYdim, imZdim);
       im().setXmippOrigin();
 

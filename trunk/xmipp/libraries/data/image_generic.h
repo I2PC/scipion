@@ -129,9 +129,9 @@ public:
 
     /** Read image mapped from file.
      */
-    int readMapped(const FileName &name)
+    int readMapped(const FileName &name, int select_img = 0)
     {
-      read(name,true,-1,false,false,NULL,true);
+      read(name,true,select_img,false,false,NULL,true);
     }
     /** Write image to file.
     */
