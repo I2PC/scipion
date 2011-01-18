@@ -39,27 +39,22 @@ int main(int argc, char **argv)
     float T;
     float tmpR;
 //  char *fname, *iname, *bmname, *imgName, *ext;
-    FileName fname, iname, bmname, imgName, ext;
+    FileName fname, iname, bmname, ext;
     std::string selname, basename;
     Image<int> mask;
     std::vector < std::vector <float> > dataPoints;
     std::vector < std::string > labels;
     bool nomask = false;
     bool noBB = true;
-    FileName  tmpN;
     int rows, cols, planes;
 
-
     // Read arguments
-
     try
     {
-
         fname = getParameter(argc, argv, "-i");
         basename = fname.getBaseName();
         selname = basename + (std::string) ".sel";
         selname = getParameter(argc, argv, "-o", selname.c_str());
-        imgName = getParameter(argc, argv, "-imgName", basename.c_str());
         ext = getParameter(argc, argv, "-ext", "spi");
         bmname = getParameter(argc, argv, "-mask", "mask.spi");
         if (checkParameter(argc, argv, "-nomask"))
@@ -78,7 +73,6 @@ int main(int argc, char **argv)
         std::cout << "Usage:" << std::endl;
         std::cout << "-i             : Input file name (iname)" << std::endl;
         std::cout << "[-o]           : Output sel file name (default: iname.sel)" << std::endl;
-        std::cout << "[-imgName]     : first letters of the images' names (default: iname)" << std::endl;
         std::cout << "[-ext]         : Extension of the output images (default: spi)" << std::endl;
         std::cout << "[-mask]        : Input Mask file name (default: mask.spi)" << std::endl;
 //    std::cout << "[-noBB]        : Images will be inside the Mask's bounding box (default: yes)" << std::endl;
@@ -103,7 +97,8 @@ int main(int argc, char **argv)
 //  if (!noBB)
 //     std::cout << "Generated images will be inside the mask's bounding box" << std::endl;
     std::cout << "input = " << fname << std::endl;
-    std::cout << "imgName = " << imgName << std::endl;
+    if (exists(selname))
+    	unlink(selname.c_str());
 
     // Read spider mask
     if (!nomask)
@@ -114,7 +109,6 @@ int main(int argc, char **argv)
         mask().rangeAdjust(0, 1);   // just in case
         if (noBB)
             mask().setXmippOrigin();   // sets origin at the center of the mask.
-        mask().printShape();
     }
 
     int minXPixel = 32000, maxXPixel = 0;
@@ -159,14 +153,6 @@ int main(int argc, char **argv)
     ClassicTrainingVectors ts(0, true);
     iStream >> ts;
 
-    FILE  *fout;
-    fout = fopen(selname.c_str(), "w");
-    if (fout == NULL)
-    {
-        std::cerr << argv[0] << ": can't open file " << selname << std::endl;
-        exit(EXIT_FAILURE);
-    }
-
     if (nomask && (rows*cols*planes != ts.theItems[0].size()))
     {
         std::cerr << argv[0] << ": Images size doesn't coincide with data file " << std::endl;
@@ -175,9 +161,9 @@ int main(int argc, char **argv)
 
     std::cout << "generating images......" << std::endl;
 
+    Image<double> image;
     for (int i = 0; i < ts.size(); i++)
     {
-        Image<double> image;
         if (nomask)
             image().resize(planes, rows, cols);   // creates image
         else
@@ -215,11 +201,8 @@ int main(int argc, char **argv)
 					} // for x
         } // if nomask.
 
-        tmpN = (std::string) imgName + integerToString(i) + (std::string) "." + (std::string) ext;
-        image.write(tmpN);
-        fprintf(fout, "%s 1 \n", tmpN.c_str());
+        image.write(selname,i,true,WRITE_APPEND);
     }
-    fclose(fout);      // close output file
     exit(0);
 }
 
