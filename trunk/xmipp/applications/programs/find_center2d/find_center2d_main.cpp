@@ -583,6 +583,7 @@ e10:
 	std::cout << "\nOptimal center coordinates: x= " << yc0-1 << " ,y= " << xc0-1 << " " << std::endl;
     return;
 s1:
+    yc0=xc0=-1;
     printf("\nNot-converged\n");
     return;
 }
@@ -591,8 +592,8 @@ s1:
 class ProgFindCenter2D: public XmippProgram
 {
 public:
-	/// Input filename
-	FileName fnIn;
+	/// Filenames
+	FileName fnIn, fnOroot;
 
 	/// Radii
 	double _r1, _r2, _r3, _r4;
@@ -611,6 +612,7 @@ public:
     {
         addUsageLine("Find the best symmetry of rotation of an image or collection of images");
         addParamsLine(" -i <infile>        : Image, image stack or image selfile");
+        addParamsLine(" --oroot <rootname> : Rootname for output files");
         addParamsLine("[--r1 <radius=15>]  : Lowest integration radius (% of the image radius)");
         addParamsLine("[--r2 <radius=80>]  : Highest integration radius (% of the image radius)");
         addParamsLine("[--r3 <radius=90>]  : Lowest smoothing radius (% of the image radius)");
@@ -624,6 +626,7 @@ public:
     void readParams()
     {
     	fnIn=getParam("-i");
+    	fnOroot=getParam("--oroot");
     	_r1=getDoubleParam("--r1");
     	_r2=getDoubleParam("--r2");
     	_r3=getDoubleParam("--r3");
@@ -645,6 +648,7 @@ public:
     	if (verbose==0)
     		return;
     	std::cout << "Input:          " << fnIn    << std::endl
+    			  << "Output root:    " << fnOroot << std::endl
     			  << "R1:             " << _r1     << std::endl
     			  << "R2:             " << _r2     << std::endl
     			  << "R3:             " << _r3     << std::endl
@@ -701,6 +705,7 @@ public:
     			I.read(fnIn);
     	}
     	I().rangeAdjust(0,255);
+    	I.write(fnOroot+"_analyzed_image.xmp");
 
     	// Adapt to old code
         if ((imagen = (unsigned char **)imalloc(YSIZE(I()) + 1, XSIZE(I()) + 1, NATURAL)) == NULL)
@@ -731,6 +736,19 @@ public:
         largo=YSIZE(I());
         lancho=XSIZE(I());
         busca();
+    	MetaData MD;
+    	MD.addObject();
+    	if (yc0>0)
+    	{
+    		MD.setValue(MDL_X,(double)(yc0-1));
+    		MD.setValue(MDL_Y,(double)(xc0-1));
+    	}
+    	else
+    	{
+    		MD.setValue(MDL_X,(double)(XSIZE(I())/2));
+    		MD.setValue(MDL_Y,(double)(YSIZE(I())/2));
+    	}
+    	MD.write(fnOroot+"_center.xmd");
         imfree((char**)imagen, YSIZE(I()) + 1, XSIZE(I()) + 1, NATURAL);
     }
 };
