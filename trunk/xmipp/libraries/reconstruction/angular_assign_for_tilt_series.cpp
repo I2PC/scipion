@@ -526,7 +526,7 @@ void Prog_tomograph_alignment::show()
 
 void Prog_tomograph_alignment::defineParams()
 {
-    addUsageLine("This program aligns a single-axis tilt series without any marker");
+    addUsageLine("Align a single-axis tilt series without any marker.");
     addParamsLine(" == General Options == ");
     addParamsLine("   -i <metadatafile>              : Input images");
     addParamsLine("  [-iorig <metadatafile=\"\">]       : Metadata with images at original scale");
