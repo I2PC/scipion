@@ -282,6 +282,10 @@ class rotational_spectra_class:
                             self.mylog,
                             False,1,1,'')
       os.system("rm -f "+self.WorkingDir+"/som_*")
+      if os.path.exists(self.WorkingDir+"/som.cod"):
+          fh=open(self.WorkingDir + "/status.txt", "a")
+          fh.write("Step 3: KerDenSOM finished at " + time.asctime() + "\n")
+          fh.close()
 
 # Preconditions
 def preconditions(gui):
