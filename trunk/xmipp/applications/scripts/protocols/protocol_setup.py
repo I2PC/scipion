@@ -28,6 +28,8 @@ SetupPreProcessParticles=False
 SetupAlign2D=False
 # {setup-2d} CL2D classification
 SetupCL2D=False
+# {setup-2d} KerDenSOM classification
+SetupKerDenSOM=False
 # {setup-2d} Rotational spectra classification
 SetupRotSpectra=False
 # {setup-3d} Random conical tilt
@@ -60,6 +62,7 @@ class setup_protocols_class:
                      SetupPreProcessParticles,
                      SetupAlign2D,
                      SetupCL2D,
+                     SetupKerDenSOM,
                      SetupRotSpectra,
                      SetupRCT,
                      SetupML3D,
@@ -75,6 +78,7 @@ class setup_protocols_class:
             self.SetupPreProcessParticles=SetupPreProcessParticles
             self.SetupAlign2D=SetupAlign2D
             self.SetupCL2D=SetupCL2D
+            self.SetupKerDenSOM=SetupKerDenSOM
             self.SetupRotSpectra=SetupRotSpectra
             self.SetupRCT=SetupRCT
             self.SetupML3D=SetupML3D
@@ -101,6 +105,8 @@ class setup_protocols_class:
                                          'xmipp_protocol_align2d.py']
             self.library['SetupCL2D']=[self.SetupCL2D,
                                          'xmipp_protocol_cl2d.py']
+            self.library['SetupKerDenSOM']=[self.SetupKerDenSOM,
+                                               'xmipp_protocol_kerdensom.py']
             self.library['SetupRotSpectra']=[self.SetupRotSpectra,
                                                'xmipp_protocol_rotspectra.py']
             self.library['SetupRCT']=[self.SetupRCT,
@@ -215,6 +221,7 @@ if __name__ == '__main__':
                                 SetupPreProcessParticles,
                                 SetupAlign2D,
                                 SetupCL2D,
+                                SetupKerDenSOM,
                                 SetupRotSpectra,
                                 SetupRCT,
                                 SetupML3D,
