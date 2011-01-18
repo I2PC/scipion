@@ -166,17 +166,6 @@ std::string getStrFromValue(MetaData &metadata, const MDLabel MDlabel, std::stri
 	return msg;
 }*/
 
-// Sometimes java annoys you with "Unsatisfied Link" exceptions. This simple functions
-// can be used for testing purposes.
-std::string testLibraryLink() {
-	std::string msg = "Xmipp_Java_Interface TEST";
-
-	std::cout << msg << std::endl;
-
-	return msg;
-}
-
-/********************** DEBUGGING ****************************/
 double getImageVoxel(Image<double> &image, int k, int i, int j) {
 	std::string msg = "";
 
@@ -215,6 +204,17 @@ double getMatrixVoxel(MultidimArray<double> &matrix, int k, int i, int j) {
 	std::cout << "MSG: [" << msg << "]" << std::endl;
 
 	return 0;
+}
+
+/********************** DEBUGGING ****************************/
+// Sometimes java annoys you with "Unsatisfied Link" exceptions. This simple functions
+// can be used for testing purposes.
+std::string testLibraryLink() {
+	std::string msg = "Xmipp_Java_Interface TEST";
+
+	std::cout << msg << std::endl;
+
+	return msg;
 }
 
 #endif

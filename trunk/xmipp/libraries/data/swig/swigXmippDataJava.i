@@ -9,10 +9,18 @@
 // Pointers to base classes
 %include cpointer.i
 %pointer_class(int, intP);
-%pointer_class(char,charP);
-%pointer_class(double,doubleP);
-%pointer_class(float,floatP);
-%pointer_class(std::string,stringP);
+%pointer_class(char, charP);
+%pointer_class(double, doubleP);
+%pointer_class(float, floatP);
+%pointer_class(std::string, stringP);
+
+%pointer_functions(int, intp);
+%pointer_functions(char, charp);
+%pointer_functions(double, doublep);
+%pointer_functions(float, floatp);
+%pointer_functions(std::string, stringp);
+%pointer_functions(long, longP);
+%pointer_functions(unsigned long, unsignedlongP);
 
 // General includes
 %{
