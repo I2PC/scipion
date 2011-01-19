@@ -152,6 +152,7 @@ public class FilterFilesModel extends AbstractListModel implements DocumentListe
     }
 
     protected void refreshList() {
+    	cache.clear();
         buildList();
         fireContentsChanged(this, 0, getSize());
     }
