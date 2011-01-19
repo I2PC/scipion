@@ -450,7 +450,8 @@ int  writeSPIDER(int select_img=-1, bool isStack=false, int mode=WRITE_OVERWRITE
 
     fseek(fimg, 100, SEEK_SET);
     float faux;
-    fread( &faux, sizeof(float), 1, fimg )   ;
+    if (!fread( &faux, sizeof(float), 1, fimg))
+    	faux=0.0;
     replaceNsize = (int) faux;
     fseek(fimg, 0, SEEK_SET);
 
