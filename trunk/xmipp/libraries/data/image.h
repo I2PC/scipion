@@ -269,7 +269,7 @@ public:
     /* Read an image with a lower resolution as a preview image.
      * If Zdim parameter is not passed, then all slices are rescaled.
      */
-    int readPreview(const FileName &name, int Xdim, int Ydim, int Zdim = NULL, int select_img = 0)
+    int readPreview(const FileName &name, int Xdim, int Ydim, int Zdim = -1, int select_img = 0)
     {
       ImageGeneric im;
       int imXdim, imYdim, imZdim;
@@ -278,7 +278,7 @@ public:
       im.getDimensions(imXdim, imYdim, imZdim);
       im().setXmippOrigin();
 
-      scaleToSize(0,IMGMATRIX(*this),im(),Xdim,Ydim,(Zdim != NULL)? Zdim:imZdim);
+      scaleToSize(0,IMGMATRIX(*this),im(),Xdim,Ydim,(Zdim != -1)? Zdim:imZdim);
     }
 
     /** General write function
