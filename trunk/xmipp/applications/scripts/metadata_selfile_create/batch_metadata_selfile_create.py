@@ -76,19 +76,22 @@ inFile = FileName()
 
 nSize = 1
 for file in files:
+    fileAux=file
     if isStack:
-        x, x, x, nSize = SingleImgSize(file)
+        if file.endswith(".mrc"):
+            fileAux=file+":mrcs"
+        x, x, x, nSize = SingleImgSize(fileAux)
     if nSize != 1:
         counter = 0
         for jj in range(nSize):
-            inFile.compose(counter, file)
+            inFile.compose(counter, fileAux)
             mD.addObject()
             mD.setValue(MDL_IMAGE, inFile)
             mD.setValue(MDL_ENABLED, 1)
             counter = counter + 1
     else:
         mD.addObject()
-        mD.setValue(MDL_IMAGE, file)
+        mD.setValue(MDL_IMAGE, fileAux)
         mD.setValue(MDL_ENABLED, 1)
 
 mD.write(outFile)
