@@ -1685,12 +1685,12 @@ void rangeAdjust_within_mask(const MultidimArray<double> *mask,
 void ProgMask::defineParams()
 {
     addUsageLine("Apply a mask.");
-    addUsageLine("Example of use: Sample at circular mask inside radius 72");
-    addUsageLine("   xmipp_mask  -i reference.vol -o output_volume.vol --mask circular -72");
-    addUsageLine("As above but save mask");
-    addUsageLine("   xmipp_mask  -i reference.vol --create_mask  output_volume.vol --mask circular -25");
-    addUsageLine("mask a selection file");
-    addUsageLine("   xmipp_mask  -i t7_10.sel -oext msk --mask circular -72");
+    addExampleLine("Sample at circular mask inside radius 72:", false);
+    addExampleLine("xmipp_mask  -i reference.vol -o output_volume.vol --mask circular -72");
+    addExampleLine("As above but save mask:", false);
+    addExampleLine("xmipp_mask  -i reference.vol --create_mask  output_volume.vol --mask circular -25");
+    addExampleLine("Mask a selection file:", false);
+    addExampleLine("xmipp_mask  -i t7_10.sel -oext msk --mask circular -72");
 
     addParamsLine("   -i <input_volume>           : Input Volume");
     addParamsLine(" alias --input;");
