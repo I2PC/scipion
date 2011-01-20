@@ -271,14 +271,14 @@ public:
      */
     int readPreview(const FileName &name, int Xdim, int Ydim, int Zdim = -1, int select_img = 0)
     {
-      ImageGeneric im;
-      int imXdim, imYdim, imZdim;
+        ImageGeneric im;
+        int imXdim, imYdim, imZdim;
 
-      im.readMapped(name, select_img);
-      im.getDimensions(imXdim, imYdim, imZdim);
-      im().setXmippOrigin();
+        im.readMapped(name, select_img);
+        im.getDimensions(imXdim, imYdim, imZdim);
+        im().setXmippOrigin();
 
-      scaleToSize(0,IMGMATRIX(*this),im(),Xdim,Ydim,(Zdim != -1)? Zdim:imZdim);
+        scaleToSize(0,IMGMATRIX(*this),im(),Xdim,Ydim,(Zdim != -1)? Zdim:imZdim);
     }
 
     /** General write function
@@ -486,7 +486,7 @@ public:
                     {
                         double * ptr = (double *) page;
                         for(int i=0; i<pageSize; ++i, ++ptr)
-                        	*ptr = (double)srcPtr[i];
+                            *ptr = (double)srcPtr[i];
                     }
                 break;
             }
@@ -500,7 +500,7 @@ public:
                     {
                         unsigned short * ptr = (unsigned short *) page;
                         for(int i=0; i<pageSize; ++i, ++ptr)
-                        	*ptr = (unsigned short)srcPtr[i];
+                            *ptr = (unsigned short)srcPtr[i];
                     }
                 break;
             }
@@ -514,7 +514,7 @@ public:
                     {
                         short * ptr = (short *) page;
                         for(int i=0; i<pageSize; ++i, ++ptr)
-                        	*ptr = (short)srcPtr[i];
+                            *ptr = (short)srcPtr[i];
                     }
                 break;
             }
@@ -528,7 +528,7 @@ public:
                     {
                         unsigned char * ptr = (unsigned char *) page;
                         for(int i=0; i<pageSize; ++i, ++ptr)
-                        	*ptr = (unsigned char)srcPtr[i];
+                            *ptr = (unsigned char)srcPtr[i];
                     }
                 break;
             }
@@ -542,7 +542,7 @@ public:
                     {
                         char * ptr = (char *) page;
                         for(int i=0; i<pageSize; ++i, ++ptr)
-                        	*ptr = (char)srcPtr[i];
+                            *ptr = (char)srcPtr[i];
                     }
                 break;
             }
@@ -1419,6 +1419,7 @@ public:
         (*this)()+=aux();
     }
 
+
     /**
      *  Specific read functions for different file formats
      */
@@ -1468,14 +1469,13 @@ private:
             wmChar = "w";
             break;
         case WRITE_APPEND:
+        case WRITE_REPLACE:
             if (hFile->exist)
                 wmChar = "r+";
             else
                 wmChar = "w+";
             break;
-        case WRITE_REPLACE:
-            wmChar = "r+";
-            break;
+
         }
 
         if (ext_name.contains("tif"))
@@ -1748,21 +1748,14 @@ private:
         // CHECK FOR INCONSISTENCIES BETWEEN data.xdim and x, etc???
         int Xdim, Ydim, Zdim;
         unsigned long Ndim;
-        this->getDimensions(Xdim,Ydim, Zdim, Ndim);
+        Xdim=Ydim=Zdim=Ndim=0;
+        if (_exists)
+            this->getDimensions(Xdim,Ydim, Zdim, Ndim);
 
         Image<T> auxI;
         replaceNsize=0;//reset replaceNsize in case image is reused
         if(select_img == -1 && mode == WRITE_REPLACE)
             REPORT_ERROR(ERR_VALUE_INCORRECT,"Please specify object to be replaced");
-        else if(!_exists && mode == WRITE_REPLACE)
-        {
-            std:: stringstream replace_number;
-            replace_number << select_img;
-            REPORT_ERROR(ERR_IO_NOTEXIST,(std::string)"Cannot replace object number: "
-                         + replace_number.str()
-                         + " in file " +filename
-                         + ". It does not exist");
-        }
         else if (_exists && (mode == WRITE_REPLACE || mode == WRITE_APPEND))
         {
             auxI.dataflag = -2;
@@ -1780,7 +1773,7 @@ private:
                 REPORT_ERROR(ERR_MULTIDIM_SIZE,"write: target and source objects have different size");
             }
             if(mode==WRITE_REPLACE && select_img>_Ndim)
-                REPORT_ERROR(ERR_VALUE_INCORRECT,"write: cannot replace image stack is not large enough");
+                replaceNsize = select_img;
             if(auxI.replaceNsize <1 &&
                (mode==WRITE_REPLACE || mode==WRITE_APPEND))
                 REPORT_ERROR(ERR_IO,"write: output file is not an stack");
