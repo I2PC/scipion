@@ -121,6 +121,8 @@ public:
     /* Run --------------------------------------------------------------------- */
     void run()
     {
+        preRun();
+
         double myw[4];
         int number_of_references_image=1;
         if (rank == 0)
@@ -387,6 +389,12 @@ public:
         MPI_Abort(MPI_COMM_WORLD, EXIT_FAILURE);
     }
 
+    void usage(int verb = 0) const
+    {
+      if (rank == 0)
+        ProgAngularClassAverage::usage(verb);
+    }
+
 };
 
 int main(int argc, char *argv[])
@@ -398,48 +406,9 @@ int main(int argc, char *argv[])
     }
 
     ProgMPIAngularClassAverage prm;
-    if (prm.rank == 0)
-    {
-        try
-        {
-            prm.read(argc, argv);
-        }
-
-        catch (XmippError XE)
-        {
-            std::cerr << XE;
-            MPI_Finalize();
-            exit(1);
-        }
-    }
-
+    prm.read(argc, argv);
     MPI_Barrier(MPI_COMM_WORLD);
-
-    if (prm.rank != 0)
-    {
-        try
-        {
-            prm.read(argc, argv);
-        }
-        catch (XmippError XE)
-        {
-            std::cerr << XE;
-            MPI_Finalize();
-            exit(1);
-        }
-    }
-
-    try
-    {
-        prm.preRun();
-        prm.run();
-        MPI_Finalize();
-    }
-    catch (XmippError XE)
-    {
-        std::cerr << XE;
-        exit(1);
-    }
-
+    prm.tryRun();
+    MPI_Finalize();
     exit(0);
 }
