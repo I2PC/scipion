@@ -248,6 +248,7 @@ class ProgramDef: public ASTNode
 public:
     std::vector<SectionDef*> sections;
     CommentList usageComments; ///< comments of usage
+    CommentList examples; ///< examples of use
     std::map<std::string, ParamDef*> paramsMap; ///< Dictionary with all params and alias names
     StringVector pendingRequires; ///< This is for checking that requires names exists
     String keywords;
@@ -324,7 +325,24 @@ public:
   virtual void printSection(const SectionDef &section, int v = 0);
   virtual void printParam(const ParamDef &param, int v = 0);
   virtual void printArgument(const ArgumentDef & argument, int v = 0);
-  virtual void printCommentList(const CommentList &comments, int v = 0);
-  virtual void printToken(ArgToken * token);
+  virtual void printCommentList(const CommentList &comments, int v = 0){};
+  virtual void printToken(ArgToken * token){};
+};
+
+/** Just print to out stream */
+class WikiPrinter: public Printer
+{
+protected:
+  std::ostream * pOut;
+  void printRequiresList(StringVector requires);
+public:
+  /**Constructor */
+  WikiPrinter(std::ostream &out=std::cout);
+    virtual void printProgram(const ProgramDef &program, int v = 0);
+    virtual void printSection(const SectionDef &section, int v = 0);
+    virtual void printParam(const ParamDef &param, int v = 0);
+    virtual void printArgument(const ArgumentDef & argument, int v = 0);
+    virtual void printCommentList(const CommentList &comments, int v = 0);
+    virtual void printToken(ArgToken * token);
 };
 #endif /* ARGSPARSER_H_ */

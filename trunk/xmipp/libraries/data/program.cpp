@@ -44,7 +44,8 @@ void XmippProgram::init()
     ///This are a set of internal command for MetaProgram usage
     ///they should be hidden
     addParamsLine("==+++++ Internal section ==");
-    addParamsLine("[--xmipp_write_definition* <dbname>] : Print metadata info about the program");
+    addParamsLine("[--xmipp_write_definition* <dbname>] : Print metadata info about the program to sqlite database");
+    addParamsLine("[--xmipp_write_wiki* ] : Print metadata info about the program in wiki format");
 
     progDef->parse();
 }
@@ -84,6 +85,10 @@ void XmippProgram::checkBuiltIns()
         writeToDB("programs.db");
         exit(0);
     }
+    if (checkParam("--xmipp_write_wiki"))
+    {
+     createWiki();
+    }
     if (checkParam("--gui"))
     {
         createGUI();
@@ -112,6 +117,15 @@ void XmippProgram::createGUI()
     delete tk;
     //FIXME
     exit(0);
+}
+
+void XmippProgram::createWiki()
+{
+  WikiPrinter * wiki = new WikiPrinter();
+  wiki->printProgram(*progDef, 3);
+  delete wiki;
+  //FIXME
+  exit(0);
 }
 
 XmippProgram::XmippProgram()
@@ -211,6 +225,10 @@ void XmippProgram::setProgramName(const char * name)
 void XmippProgram::addUsageLine(const char * line)
 {
     progDef->usageComments.addComment(line);
+}
+void XmippProgram::addExampleLine(const char * example, bool verbatim)
+{
+  progDef->examples.addComment(example, verbatim ? 1 : 0);
 }
 
 void XmippProgram::clearUsage()

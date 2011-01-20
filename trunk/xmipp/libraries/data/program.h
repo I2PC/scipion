@@ -64,6 +64,8 @@ private:
 
     /** Create Tk GUI */
     void createGUI();
+    /** Create Wiki for help */
+    void createWiki();
 
 protected:
     /// Program definition and arguments parser
@@ -96,6 +98,8 @@ public:
     void addUsageLine(const char * line);
     /** Clear usage */
     void clearUsage();
+    /** Add examples */
+    void addExampleLine(const char * example, bool verbatim=true);
 
     /** Add keywords to the program definition */
     void addKeywords(const char * keywords);

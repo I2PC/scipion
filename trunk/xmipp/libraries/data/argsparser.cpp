@@ -1008,7 +1008,7 @@ const char * ProgramDef::getParam(const char * paramName, const char * subParam,
 }
 
 //-------------------   PRINTER IMPLEMENTATIONS   --------------------------------
-
+//--------- CONSOLE PRINTER -----------------------
 ConsolePrinter::ConsolePrinter(std::ostream & out)
 {
     this->pOut = &out;
@@ -1259,17 +1259,153 @@ void TkPrinter::printArgument(const ArgumentDef & argument, int v)
     }
 }
 
-void TkPrinter::printCommentList(const CommentList &comments, int v)
+//--------- WIKI  PRINTER -----------------------
+WikiPrinter::WikiPrinter(std::ostream & out)
 {
-    //    for (size_t i = 0; i < comments.size(); ++i)
-    //        if (comments.visibility[i] <= v)
-    //            *pOut << "          " << comments.comments[i] << std::endl;
+    this->pOut = &out;
 }
 
-void TkPrinter::printToken(ArgToken * token)
+void WikiPrinter::printProgram(const ProgramDef &program, int v)
 {
-    //    std::cerr << "token: '" << token->lexeme
-    //    << "' type: " << ArgToken::typeString(token->type)
-    //    << " line: " << token->line + 1
-    //    << " pos: " << token->start + 1 << std::endl;
+  //---+ !!Metadata_Operate ( xmipp version 3.0)
+  //%TOC%
+    *pOut << "---+ !!" << program.name << " (xmipp version 3.0)" << std::endl;
+    *pOut << "%TOC%" << std::endl;
+    //print usage
+    if (program.usageComments.size() > 0)
+    {
+        *pOut << "---++ Usage" << std::endl;
+        for (size_t i = 0; i < program.usageComments.size(); ++i)
+            *pOut << "   " << program.usageComments.comments[i] << " %BR%" << std::endl;
+    }
+    //print sections and params
+    if (program.sections.size() > 0)
+    {
+        *pOut << std::endl << "*Parameters*" << std::endl;
+        for (size_t i = 0; i < program.sections.size(); ++i)
+            printSection(*program.sections[i], v);
+    }
+    //print examples
+    if (program.examples.size() > 0)
+    {
+      *pOut << "---++ Examples" << std::endl;
+      for (size_t i = 0; i < program.examples.size(); ++i)
+      {
+        if (program.examples.visibility[i])
+          *pOut << "<pre>";
+          *pOut << "   " << program.examples.comments[i];
+          if (program.examples.visibility[i])
+                    *pOut << " </pre>";
+          *pOut << " %BR%" << std::endl;
+      }
+    }
+    //print user comments
+    *pOut << "---++ User's comments" << std::endl;
+    *pOut << "%COMMENT{type=\"tableappend\"}%" << std::endl;
+}
+
+void WikiPrinter::printSection(const SectionDef &section, int v)
+{
+    if (section.visible <= v)
+    {
+        *pOut << std::endl;
+        String name = section.name;
+        trim(name);
+        if (name.length() > 0)
+            *pOut << "_" << name << "_" << std::endl;
+        for (size_t i = 0; i < section.params.size(); ++i)
+            printParam(*section.params[i], v);
+    }
+}
+
+void WikiPrinter::printRequiresList(StringVector requires)
+{
+    if (!requires.empty())
+    {
+        *pOut << " ( requires ";
+        for (size_t i = 0; i < requires.size(); ++i)
+            *pOut << requires[i] << " ";
+        *pOut << ")";
+    }
+}
+
+void WikiPrinter::printParam(const ParamDef &param, int v)
+{
+  //* =%BLUE%-i [selfile] %ENDCOLOR%= This file contains all the images that are to build the 3D reconstruction
+  //* =%GREEN% -o [output file root name] %ENDCOLOR%= If you don't supply this parameter, the same as the input selection one is taken without extension. If you give, for instance, =-o art0001= the following files are created:
+    if (param.visible <= v)
+    {
+      *pOut << "   $";
+
+      if (param.orBefore)
+            *pOut << " or";
+
+      String color = param.notOptional ? "BLUE" : "GREEN";
+
+      *pOut << " =%" << color << "%" << param.name;
+        //print alias
+        for (size_t i = 0; i < param.aliases.size(); ++i)
+            *pOut << ", " << param.aliases[i];
+        //print arguments
+        for (size_t i = 0; i < param.arguments.size(); ++i)
+        {
+            *pOut << " ";
+            printArgument(*param.arguments[i], v);
+        }
+        *pOut << " %ENDCOLOR%=";
+        printRequiresList(param.requires);
+        *pOut <<": " ;
+        printCommentList(param.comments, v);
+
+        if (param.comments.size() == 0)
+          *pOut << "%BR%" << std::endl;
+
+        for (size_t i = 0; i < param.arguments.size(); ++i)
+        {
+            ArgumentDef &arg = *param.arguments[i];
+            if (!arg.subParams.empty())
+            {
+                *pOut << "      where &lt;" << arg.name << "&gt; can be:" << std::endl;
+                for (size_t j = 0; j < arg.subParams.size(); ++j)
+                {
+                    *pOut << "      * %MAROON% " << arg.subParams[j]->name;
+                    for (size_t k = 0; k < arg.subParams[j]->arguments.size(); ++k)
+                    {
+                        *pOut << " ";
+                        printArgument(*(arg.subParams[j]->arguments[k]));
+                    }
+                    *pOut << " %ENDCOLOR%" << std::endl;
+                    printRequiresList(arg.subParams[j]->requires);
+//                    *pOut << std::endl;
+                    printCommentList(arg.subParams[j]->comments);
+
+                }
+            }
+        }
+
+    }
+}
+
+void WikiPrinter::printArgument(const ArgumentDef & argument, int v)
+{
+    *pOut << "&lt;" << argument.name;
+    if (argument.hasDefault)
+        *pOut << "=" << argument.argDefault;
+    *pOut << "&gt;";
+}
+
+void WikiPrinter::printCommentList(const CommentList &comments, int v)
+{
+    for (size_t i = 0; i < comments.size(); ++i)
+        if (comments.visibility[i] <= v)
+            *pOut << "          " << comments.comments[i] << "%BR%" << std::endl;
+}
+
+void WikiPrinter::printToken(ArgToken * token)
+{
+
+    std::cerr << "token: '" << token->lexeme
+    << "' type: " << ArgToken::typeString(token->type)
+    << " line: " << token->line + 1
+    << " pos: " << token->start + 1 << std::endl;
 }
