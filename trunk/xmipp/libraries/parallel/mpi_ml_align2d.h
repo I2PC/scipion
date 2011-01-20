@@ -59,6 +59,8 @@ public:
     void expectation();
     //Just for debugging
     void printModel(const String &msg, const ModelML2D & model);
+    //Redefine usage, only master should print
+    virtual void usage(int verb = 0) const;
 
 }
 ;//end of class MpiProgML2D

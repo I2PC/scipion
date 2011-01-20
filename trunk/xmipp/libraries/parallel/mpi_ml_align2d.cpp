@@ -174,3 +174,9 @@ void MpiProgML2D::printModel(const String &msg, const ModelML2D & model)
         ProgML2D::printModel(msg, model);
 }
 
+void MpiProgML2D::usage(int verb) const
+{
+  if (node->isMaster())
+    ProgML2D::usage();
+}
+
