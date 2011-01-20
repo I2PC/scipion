@@ -137,9 +137,15 @@ void ProgAngularProjectLibrary::project_angle_vector (int my_init, int my_end, b
     FileName fn_proj;
     double rot,tilt,psi;
     int mySize;
+    int numberStepsPsi = 1;
+
     mySize=my_end-my_init+1;
     if (psi_sampling < 360)
-        mySize *= (int) (359.99999/psi_sampling);
+    {
+        numberStepsPsi = (int) (359.99999/psi_sampling);
+        mySize *= numberStepsPsi;
+    }
+
     if (verbose)
         init_progress_bar(mySize);
     int myCounter=0;
@@ -170,7 +176,7 @@ void ProgAngularProjectLibrary::project_angle_vector (int my_init, int my_end, b
             else
                 project_Volume(inputVol(), P, Ydim, Xdim,rot,tilt,psi);
 
-            P.write(output_file,-1,true,WRITE_APPEND);
+            P.write(output_file,numberStepsPsi * i + mypsi,true,WRITE_REPLACE);
         }
     }
     if (verbose)
