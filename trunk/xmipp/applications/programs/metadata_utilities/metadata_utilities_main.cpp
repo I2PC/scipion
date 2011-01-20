@@ -85,16 +85,24 @@ protected:
         addParamsLine("or --select  <md1> <exp>       : create new metadata with those entries that satisfy the expression 'exp'");
         addParamsLine("           requires -o;                                                         ");
 
-        addUsageLine ("Examples:");
-        addUsageLine ("   xmipp_metadata_utilities --union         mD1.doc mD2.doc  -o out.doc --label image");
-        addUsageLine ("   xmipp_metadata_utilities --intersection  mD1.doc mD2.doc  -o out.doc --label image");
-        addUsageLine ("   xmipp_metadata_utilities --subtraction   mD1.doc mD2.doc  -o out.doc --label image");
-        addUsageLine ("   xmipp_metadata_utilities --join j1.doc   mD1.doc          -o out.doc --label image");
-        addUsageLine ("   xmipp_metadata_utilities --sort          mD1.doc          -o out.doc --label image");
-        addUsageLine ("   xmipp_metadata_utilities --convert2db    mD1.doc          -o out.db; xmipp_sqlite3 out.db");
-        addUsageLine ("   xmipp_metadata_utilities --copy mD1.doc kk                -o out.doc --label image ");
-        addUsageLine ("   xmipp_metadata_utilities --delete out.doc                            --label image");
-        addUsageLine ("   xmipp_metadata_utilities --select mD1.doc \"anglePsi > 0 AND shiftX > -0.5\" -o out.doc");
+        addExampleLine(" Concatenate two metadatas.", false);
+        addExampleLine ("   xmipp_metadata_utilities --union         mD1.doc mD2.doc  -o out.doc --label image");
+        addExampleLine(" Intersect two metadatas.", false);
+        addExampleLine ("   xmipp_metadata_utilities --intersection  mD1.doc mD2.doc  -o out.doc --label image");
+        addExampleLine(" Substract two metadatas.", false);
+        addExampleLine ("   xmipp_metadata_utilities --subtraction   mD1.doc mD2.doc  -o out.doc --label image");
+        addExampleLine(" Combine columns from both metadatas.", false);
+        addExampleLine ("   xmipp_metadata_utilities --join j1.doc   mD1.doc          -o out.doc --label image");
+        addExampleLine(" Sort the elements in metadata.", false);
+        addExampleLine ("   xmipp_metadata_utilities --sort          mD1.doc          -o out.doc --label image");
+        addExampleLine(" Dump metadata content to Sqlite3 database. (use xmipp_sqlite3 to visualize results)", false);
+        addExampleLine ("   xmipp_metadata_utilities --convert2db    mD1.doc          -o out.db; xmipp_sqlite3 out.db");
+        addExampleLine(" Copy files in metadata to a location.", false);
+        addExampleLine ("   xmipp_metadata_utilities --copy mD1.doc kk                -o out.doc --label image ");
+        addExampleLine(" Delete files in metadata.", false);
+        addExampleLine ("   xmipp_metadata_utilities --delete out.doc                            --label image");
+        addExampleLine(" Select elements in metadata that satisfy a given constrain.", false);
+        addExampleLine ("   xmipp_metadata_utilities --select mD1.doc \"anglePsi > 0 AND shiftX > -0.5\" -o out.doc");
 
     }
     typedef enum {
