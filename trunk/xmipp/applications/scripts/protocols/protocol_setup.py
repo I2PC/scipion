@@ -32,6 +32,8 @@ SetupCL2D=False
 SetupKerDenSOM=False
 # {setup-2d} Rotational spectra classification
 SetupRotSpectra=False
+# {setup-3d} Common lines
+SetupCommonLines=False
 # {setup-3d} Random conical tilt
 SetupRCT=False
 # {setup-3d} ML3D classification
@@ -64,6 +66,7 @@ class setup_protocols_class:
                      SetupCL2D,
                      SetupKerDenSOM,
                      SetupRotSpectra,
+                     SetupCommonLines,
                      SetupRCT,
                      SetupML3D,
                      SetupProjMatch,
@@ -80,6 +83,7 @@ class setup_protocols_class:
             self.SetupCL2D=SetupCL2D
             self.SetupKerDenSOM=SetupKerDenSOM
             self.SetupRotSpectra=SetupRotSpectra
+            self.SetupCommonLines=SetupCommonLines
             self.SetupRCT=SetupRCT
             self.SetupML3D=SetupML3D
             self.SetupProjMatch=SetupProjMatch
@@ -108,7 +112,9 @@ class setup_protocols_class:
             self.library['SetupKerDenSOM']=[self.SetupKerDenSOM,
                                                'xmipp_protocol_kerdensom.py']
             self.library['SetupRotSpectra']=[self.SetupRotSpectra,
-                                               'xmipp_protocol_rotspectra.py']
+                                               'xmipp_protocol_rotspectra.py']            
+            self.library['SetupCommonLines']=[self.SetupCommonLines,
+                                        'xmipp_protocol_commonlines.py']
             self.library['SetupRCT']=[self.SetupRCT,
                                         'xmipp_protocol_rct.py']
             self.library['SetupML3D']=[self.SetupML3D,
@@ -223,6 +229,7 @@ if __name__ == '__main__':
                                 SetupCL2D,
                                 SetupKerDenSOM,
                                 SetupRotSpectra,
+                                SetupCommonLines,
                                 SetupRCT,
                                 SetupML3D,
                                 SetupProjMatch,
