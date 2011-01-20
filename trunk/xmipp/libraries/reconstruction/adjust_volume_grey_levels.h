@@ -23,20 +23,20 @@
  *  e-mail address 'xmipp@cnb.csic.es'
  ***************************************************************************/
 #ifndef _PROG_ADJUST_VOLUME_HH
-#  define _PROG_ADJUST_VOLUME_HH
+#define _PROG_ADJUST_VOLUME_HH
 
 #include <data/funcs.h>
 #include <data/metadata.h>
 #include <data/multidim_array.h>
+#include <data/program.h>
 
 /**@defgroup AdjustVolumeProgram adjust_volume_grey_values (Adjust volume grey values to a set of projections)
    @ingroup ReconsLibrary */
 //@{
-/* Adjust volume Program Parameters ------------------------------------------- */
-/** Parameter class for the project program */
-class Prog_Adjust_Volume_Parameters
+/* Adjust volume program*/
+class ProgAdjustVolume: public XmippProgram
 {
-public:
+protected:
     /// Filename with the input volume
     FileName fn_vol;
     /// Filename with the input projections
@@ -48,41 +48,34 @@ public:
     bool optimize;
     /// Probability of being evaluated
     double probb_eval;
+    // verbose mode
+    bool verbose;
+
 public:
     // Input volume
     MultidimArray<double> V;
     // SelFile
     MetaData SF;
-public:
-    /** Read from a command line.
-        An exception might be thrown by any of the internal conversions,
-        this would mean that there is an error in the command line and you
-        might show a usage message. */
-    void read(int argc, char **argv);
 
-    /** Usage message.
-        This function shows the way of introdustd::cing this parameters. */
-    void usage();
+protected:
+    void defineParams();
+    void readParams();
 
     /** Show parameters. */
     void show();
-
-    /** Produce side information. */
-    void produce_side_info();
-
-    /** Mismatching.
-        This function returns the overall mismatiching between the
-        experimental projections and the theoretical projections of the current
-        volume. */
-    double mismatching(double a, double b);
 
     /** Apply.
         This is the function that really does the job */
     void apply(MultidimArray<double> &output_volume);
 
-    /** Run.
-        Calls apply and save the result. */
+public:
+    /** Run. Calls apply and save the result. */
     void run();
+
+    /** Mismatching. This function returns the overall mismatiching between the
+     * experimental projections and the theoretical projections of the current
+     * volume. */
+    double mismatching(double a, double b);
 };
 //@}
 #endif

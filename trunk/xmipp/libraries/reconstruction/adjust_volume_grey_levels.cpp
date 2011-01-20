@@ -29,63 +29,69 @@
 
 #include <data/args.h>
 
-/* Read parameters --------------------------------------------------------- */
-void Prog_Adjust_Volume_Parameters::read(int argc, char **argv)
+void ProgAdjustVolume::defineParams()
 {
-    fn_vol = getParameter(argc, argv, "-i");
-    fn_sel = getParameter(argc, argv, "-sel");
-    fn_out = getParameter(argc, argv, "-o", "");
-    optimize = checkParameter(argc, argv, "-optimize");
-    probb_eval = textToFloat(getParameter(argc, argv, "-probb_eval", "0.2"));
-    produce_side_info();
+    // Usage
+    addUsageLine("Search for a linear transformation of the gray values of a volume so that the");
+    addUsageLine("error between the theoretically projected images and the experimental images");
+    addUsageLine("is minimized. This program must be used before computing the Volumetric SSNR");
+    addUsageLine("if the reconstruction algorithm scales the output volume differently.");
+
+    // Examples
+    addExampleLine("Adjust a volume to a set of images:", false);
+    addExampleLine("xmipp_adjust_volume_grey_levels -i input_volume.vol -m experimental.sel -o output_volume.vol ");
+
+    // Parameters
+    addParamsLine(" -i <volume_file>      : Volume to adjust its range.");
+    addParamsLine(" alias --input;");
+    addParamsLine(" -m  <metadata_file>   : Set of projections of the volume.");
+    addParamsLine(" alias --metadata;");
+    addParamsLine(" [-o <volume_file=\"\">]    : Output adjusted volume. By default, the input one.");
+    addParamsLine(" alias --output;");
+    addParamsLine(" [--optimize]          : Optimize the linear transformation. By default, keep the initially computed.");
+    addParamsLine(" [--probb_eval <p=0.2>] : The goal function is evaluated each time from a random set of projections.");
+    addParamsLine("                       : Each image has a probability of p of being evaluated");
 }
 
-/* Usage ------------------------------------------------------------------- */
-void Prog_Adjust_Volume_Parameters::usage()
+void ProgAdjustVolume::readParams()
 {
-    std::cerr << "Usage: adjust_volume\n";
-    std::cerr << "   -i <Volume>         : Input volume\n"
-    << "   -sel MetaDataFile      : Set of projections\n"
-    << "  [-o <Output Volume>] : By default, the input one\n"
-    << "  [-optimize]          : Optimize\n"
-    << "  [-probb_eval <p=0.2>]: Probability of being evaluated\n"
-    ;
+    fn_vol = getParam("-i");
+    fn_sel = getParam("-m");
+    fn_out = (checkParam("-o"))? getParam("-o") : fn_vol;
+    optimize = checkParam("--optimize");
+    probb_eval = getDoubleParam("--probb_eval");
+    verbose = (checkParam("-v"))? getIntParam("-v"): false;
 }
 
-/* Show -------------------------------------------------------------------- */
-void Prog_Adjust_Volume_Parameters::show()
+void ProgAdjustVolume::run()
 {
-    std::cout << "Input Volume:  " << fn_vol   << std::endl
-    << "Input MetaDAtaFile: " << fn_sel   << std::endl
-    << "Output Volume: " << fn_out   << std::endl
-    << "Optimize:      " << optimize << std::endl
-    ;
-}
+    if (verbose)
+        show();
 
-
-/* Produce side information ------------------------------------------------ */
-void Prog_Adjust_Volume_Parameters::produce_side_info()
-{
     // Read input volume
-    Image<double> IV;
-    IV.read(fn_vol);
-    V = IV();
+    Image<double> Image;
+    Image.read(fn_vol);
+    V = Image();
     V.setXmippOrigin();
 
     // Read input metadataFile
     SF.read(fn_sel,NULL);
+
+    Image.clear();
+
+    apply(Image());
+    Image.write(fn_out);
 }
 
 /* Goal function -----------------------------------------------------------  */
-Prog_Adjust_Volume_Parameters *global_adjust_volume_prm;
-
-double projection_mismatching(double *p, void *prm)
+ProgAdjustVolume *globalAdjustVolumeProg;
+double projectionMismatching(double *p, void *prm)
 {
-    return global_adjust_volume_prm->mismatching(p[1], p[2]);
+    return globalAdjustVolumeProg->mismatching(p[1], p[2]);
 }
 
 //#define DEBUG
-double Prog_Adjust_Volume_Parameters::mismatching(double a, double b)
+double ProgAdjustVolume::mismatching(double a, double b)
 {
     if (a <= 0)
         return 1e38;
@@ -152,7 +158,7 @@ double Prog_Adjust_Volume_Parameters::mismatching(double a, double b)
 #undef DEBUG
 
 /* Apply ------------------------------------------------------------------- */
-void Prog_Adjust_Volume_Parameters::apply(MultidimArray<double> &out)
+void ProgAdjustVolume::apply(MultidimArray<double> &out)
 {
     // Compute the average power and average value of all the projections
     double sum = 0, sum2 = 0, N = 0;
@@ -235,8 +241,8 @@ void Prog_Adjust_Volume_Parameters::apply(MultidimArray<double> &out)
         steps.initConstant(1);
         double ftol = 0.01, fret;
         int iter;
-        global_adjust_volume_prm = this;
-        powellOptimizer(p, 1, 2, &projection_mismatching, NULL,
+        globalAdjustVolumeProg = this;
+        powellOptimizer(p, 1, 2, &projectionMismatching, NULL,
                         ftol, fret, iter, steps, true);
         a = p(0);
         b = p(1);
@@ -247,13 +253,12 @@ void Prog_Adjust_Volume_Parameters::apply(MultidimArray<double> &out)
     FOR_ALL_ELEMENTS_IN_ARRAY3D(V) out(k, i, j) = a * V(k, i, j) + b;
 }
 
-/* Run --------------------------------------------------------------------- */
-void Prog_Adjust_Volume_Parameters::run()
+/* Show -------------------------------------------------------------------- */
+void ProgAdjustVolume::show()
 {
-    Image<double> out;
-    apply(out());
-    if (fn_out == "")
-        out.write(fn_vol);
-    else
-        out.write(fn_out);
+    std::cout << "Input Volume:  " << fn_vol   << std::endl
+    << "Input MetaDAtaFile: " << fn_sel   << std::endl
+    << "Output Volume: " << fn_out   << std::endl
+    << "Optimize:      " << optimize << std::endl;
 }
+
