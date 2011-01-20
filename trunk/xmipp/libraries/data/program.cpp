@@ -50,11 +50,14 @@ void XmippProgram::init()
     progDef->parse();
 }
 
-void XmippProgram::checkBuiltIns()
+bool XmippProgram::checkBuiltIns()
 {
     ///If -more_options provided, show extended usage
     if (checkParam("--more"))
+    {
         usage(1);
+        return true;
+    }
     ///If help requested, print usage message
     if (checkParam("--help"))
     {
@@ -79,20 +82,24 @@ void XmippProgram::checkBuiltIns()
         }
         else
             usage();
+        return true;
     }
     if (checkParam("--xmipp_write_definition"))
     {
         writeToDB("programs.db");
-        exit(0);
+        return true;
     }
     if (checkParam("--xmipp_write_wiki"))
     {
-     createWiki();
+        createWiki();
+        return true;
     }
     if (checkParam("--gui"))
     {
         createGUI();
+        return true;
     }
+    return false;
 }
 
 void XmippProgram::writeToDB(const FileName &dbName)
@@ -115,17 +122,13 @@ void XmippProgram::createGUI()
     TkPrinter * tk = new TkPrinter();
     tk->printProgram(*progDef);
     delete tk;
-    //FIXME
-    exit(0);
 }
 
 void XmippProgram::createWiki()
 {
-  WikiPrinter * wiki = new WikiPrinter();
-  wiki->printProgram(*progDef, 3);
-  delete wiki;
-  //FIXME
-  exit(0);
+    WikiPrinter * wiki = new WikiPrinter();
+    wiki->printProgram(*progDef, 3);
+    delete wiki;
 }
 
 XmippProgram::XmippProgram()
@@ -153,6 +156,12 @@ void XmippProgram::run()
 {
     REPORT_ERROR(ERR_NOT_IMPLEMENTED, "function 'run'");
 }
+
+void XmippProgram::quit(int exit_code) const
+{
+    exit(exit_code);
+}
+
 void XmippProgram::readParams()
 {
     REPORT_ERROR(ERR_NOT_IMPLEMENTED, "function 'readParams'");
@@ -165,6 +174,7 @@ void XmippProgram::read(int argc, char ** argv, bool reportErrors)
 
     setProgramName(argv[0]);
 
+    notRun = true;
     ///If not arguments are provided, show the GUI or console program help
     //this behavior will be defined with environment variable XMIPP_BEHAVIOR
     if (argc == 1)
@@ -175,21 +185,26 @@ void XmippProgram::read(int argc, char ** argv, bool reportErrors)
         else
             usage();
     }
-
-    try
+    else
     {
-        this->argc = argc;
-        this->argv = argv;
-        progDef->read(argc, argv, reportErrors);
-        checkBuiltIns();
-        verbose = getIntParam("--verbose");
-        this->readParams();
-    }
-    catch (XmippError xe)
-    {
-        ///If an input error, shows error message and usage
-        std::cerr << xe;
-        usage();
+        try
+        {
+            this->argc = argc;
+            this->argv = argv;
+            progDef->read(argc, argv, reportErrors);
+            if (!checkBuiltIns())
+            {
+                verbose = getIntParam("--verbose");
+                this->readParams();
+                notRun = false;
+            }
+        }
+        catch (XmippError xe)
+        {
+            ///If an input error, shows error message and usage
+            std::cerr << xe;
+            usage();
+        }
     }
 }
 
@@ -208,12 +223,13 @@ void XmippProgram::tryRun()
 {
     try
     {
-        this->run();
+        if (!notRun)
+            this->run();
     }
     catch (XmippError xe)
     {
         std::cout << xe;
-        exit(xe.__errno);
+        quit(xe.__errno);
     }
 }
 
@@ -228,7 +244,7 @@ void XmippProgram::addUsageLine(const char * line)
 }
 void XmippProgram::addExampleLine(const char * example, bool verbatim)
 {
-  progDef->examples.addComment(example, verbatim ? 1 : 0);
+    progDef->examples.addComment(example, verbatim ? 1 : 0);
 }
 
 void XmippProgram::clearUsage()
@@ -352,7 +368,6 @@ void XmippProgram::usage(int verb) const
 {
     ConsolePrinter cp;
     cp.printProgram(*progDef, verb);
-    exit(1);
 }
 
 void XmippProgram::usage(const std::string & param, int verb)
@@ -362,7 +377,7 @@ void XmippProgram::usage(const std::string & param, int verb)
     if (paramDef == NULL)
         REPORT_ERROR(ERR_ARG_INCORRECT, ((std::string)"Doesn't exists param: " + param));
     cp.printParam(*paramDef, verb);
-    exit(0);
+    quit(0);
 }
 
 void XmippProgram::show() const
@@ -600,7 +615,7 @@ void XmippMetadataProgram::run()
     catch (XmippError xe)
     {
         std::cout << xe;
-        exit(xe.__errno);
+        quit(xe.__errno);
     }
 }
 

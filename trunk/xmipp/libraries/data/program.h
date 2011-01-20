@@ -53,11 +53,13 @@
 class XmippProgram
 {
 private:
-    /** Initialization function */
+  /** Flag to check whether to run or not*/
+  bool notRun;
+  /** Initialization function */
     void init();
 
     /** Function to check built-ins actions like --more, --help...etc */
-    void checkBuiltIns();
+    bool checkBuiltIns();
 
     /** Write Program info to DB */
     void writeToDB(const FileName &dbName);
@@ -176,6 +178,10 @@ public:
      * it also should be implemented by derived classes.
      */
     virtual void run();
+    /** function to exit the program
+     * can be usefull redefined for mpi programs
+     */
+    virtual void quit(int exit_code = 0) const;
     /** Call the run function inside a try/catch block */
     void tryRun();
 
