@@ -46,20 +46,25 @@ protected:
 
     void defineParams()
     {
+        //usage
         addUsageLine("Search for Xmipp programs that are related to some keywords.");
         addUsageLine("Useful for when does not remeber a program name. gaussian noise header");
-        addUsageLine("Examples:");
-        addUsageLine("   xmipp_apropos -k header");
-        addUsageLine("   xmipp_apropos -k \"noise gaussian\"");
-
-        addParamsLine(" --keyword <key>   :keyword to search programs matching");
+        //examples
+        addExampleLine("Search for program containing the keyword 'header'", false);
+        addExampleLine("   xmipp_apropos -k header");
+        addExampleLine("Search for program containing the keywords 'noise' and 'gaussian'", false);
+        addExampleLine("   xmipp_apropos -k \"noise gaussian\"");
+        addExampleLine("List all xmipp programs", false);
+        addExampleLine("   xmipp_apropos --list");
+        //params
+        addParamsLine(" -k <key>   :keyword to search programs matching");
         addParamsLine("                   :if you want to search for more than one keyword,");
         addParamsLine("                   :use quotes. See example above");
-        addParamsLine("   alias -k;");
-        addParamsLine("or --update        : Update the database with programs info");
-        addParamsLine("   alias -up;");
-        addParamsLine("or --list          : List all Xmipp programs");
-        addParamsLine("   alias -l;");
+        addParamsLine("   alias --keyword;");
+        addParamsLine("or -u        : Update the database with programs info");
+        addParamsLine("   alias --update;");
+        addParamsLine("or -l          : List all Xmipp programs");
+        addParamsLine("   alias --list;");
     }
 
     void readParams()
@@ -90,7 +95,7 @@ protected:
 
     void printProgram(DbProgram * prog)
     {
-      size_t endline;
+        size_t endline;
         endline = prog->description.find_first_of('\n');
         std::cout
         << std::left << std::setw(maxlen) << prog->name
@@ -157,7 +162,7 @@ public:
         {
             prog = progs[i];
             if (prog->rank)
-              printProgram(prog);
+                printProgram(prog);
         }
     }
 
@@ -173,7 +178,7 @@ public:
         db.commitTrans();
         std::vector<FileName> files;
 
-        std::string progCmd;
+        String progCmd, mpiPrefix;
         FILE * input;
         getdir(dirPath, files);
         char readbuffer[256];
@@ -191,20 +196,20 @@ public:
         for (iter = files.begin(); iter != files.end(); ++iter)
         {
             if (iter->find("xmipp_") == 0 &&
-                iter->find("_mpi_") == std::string::npos &&
                 iter->rfind("j") != iter->length()-1 &&
                 iter->find("xmipp_test") == std::string::npos)
             {
+                mpiPrefix = iter->find("_mpi_") == std::string::npos  ? "" : "mpirun -np 2 ";
                 int fdOut;
-                progCmd = *iter + " --xmipp_write_definition";
+                progCmd = mpiPrefix + *iter + " --xmipp_write_definition";
                 std::cerr << progCmd << std::endl;
-                dup2(1, fdOut);//save std::cout
-                dup2(pfd[1], 1);
-                input = popen(progCmd.c_str(), "r");
-                int nbytes;
-                bool ok = false;
-                pclose(input);
-                dup2(fdOut, 1);//restore std::cout
+                                dup2(1, fdOut);//save std::cout
+                                dup2(pfd[1], 1);
+                                input = popen(progCmd.c_str(), "r");
+                                int nbytes;
+                                bool ok = false;
+                                pclose(input);
+                                dup2(fdOut, 1);//restore std::cout
             }
         }
     }
@@ -214,15 +219,8 @@ public:
 /* MAIN -------------------------------------------------------------------- */
 int main(int argc, char *argv[])
 {
-    try
-    {
-        ProgApropos program;
-        program.read(argc, argv);
-        program.run();
-    }
-    catch (XmippError xe)
-    {
-        std::cerr << xe;
-    }
+    ProgApropos program;
+    program.read(argc, argv);
+    program.tryRun();
 }
 
