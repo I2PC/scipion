@@ -301,6 +301,7 @@ int  writeSPIDER(int select_img=-1, bool isStack=false, int mode=WRITE_OVERWRITE
     int Ydim = YSIZE(data);
     int Zdim = ZSIZE(data);
     int Ndim = NSIZE(data);
+    bool writeHeaderReplace=false;
 
     DataType wDType;
 
@@ -411,6 +412,7 @@ int  writeSPIDER(int select_img=-1, bool isStack=false, int mode=WRITE_OVERWRITE
     }
     //else end
     // Set time and date
+    /*
     time_t timer;
     time ( &timer );
     tm* t = localtime(&timer);
@@ -418,7 +420,7 @@ int  writeSPIDER(int select_img=-1, bool isStack=false, int mode=WRITE_OVERWRITE
         t->tm_year -= 100;
     sprintf(header->ctim, "%02d:%02d:%02d", t->tm_hour, t->tm_min, t->tm_sec);
     sprintf(header->cdat, "%02d-%02d-%02d", t->tm_mday, t->tm_mon, t->tm_year);
-
+*/
     size_t datasize, datasize_n;
     datasize_n = (size_t)Xdim*Ydim*Zdim;
     datasize = datasize_n * gettypesize(wDType);
@@ -451,11 +453,14 @@ int  writeSPIDER(int select_img=-1, bool isStack=false, int mode=WRITE_OVERWRITE
     fseek(fimg, 100, SEEK_SET);
     float faux;
     if (!fread( &faux, sizeof(float), 1, fimg))
-    	faux=0.0;
+        faux=0.0;
     replaceNsize = (int) faux;
+    if(mode==WRITE_REPLACE && select_img>replaceNsize)
+        replaceNsize = select_img;
     fseek(fimg, 0, SEEK_SET);
 
     // For multi-image files
+    bool writeMainHeaderReplace = false;
     if (Ndim > 1 || mode == WRITE_APPEND || isStack)
     {
         header->istack = 2;
@@ -466,7 +471,13 @@ int  writeSPIDER(int select_img=-1, bool isStack=false, int mode=WRITE_OVERWRITE
             header->maxim = replaceNsize +1;
         }
         else if(mode == WRITE_REPLACE)
-            header->maxim = replaceNsize;
+        {
+            if (select_img >= replaceNsize)
+            {
+                writeMainHeaderReplace=true;
+                header->maxim = select_img+1;
+            }
+        }
     }
     else
     {
@@ -475,7 +486,10 @@ int  writeSPIDER(int select_img=-1, bool isStack=false, int mode=WRITE_OVERWRITE
         header->maxim = 1;
     }
 
-    if(mode==WRITE_OVERWRITE || mode==WRITE_APPEND) //header must change
+    if(mode==WRITE_OVERWRITE ||
+       mode==WRITE_APPEND ||
+       writeMainHeaderReplace
+      ) //header must change
         fwrite( header, offset, 1, fimg );
 
     //write only once, ignore select_img
