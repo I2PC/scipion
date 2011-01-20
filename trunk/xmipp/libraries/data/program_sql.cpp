@@ -137,8 +137,6 @@ bool XmippDB::selectPrograms(std::vector<DbProgram*> &programs)
 
     sqlite3_stmt *stmt;
     char * cmdStr = "SELECT * FROM Program ORDER BY name;";
-    std::cerr << cmdStr << std::endl;
-
     DbProgram * progData;
 
     rc = sqlite3_prepare_v2(db, cmdStr, -1, &stmt, NULL);
