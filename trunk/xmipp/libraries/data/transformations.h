@@ -930,6 +930,13 @@ void scaleToSize(int SplineDegree,
                  int Xdim, int Ydim, int Zdim = 1)
 {
 
+    if (Xdim == XSIZE(V1) && Ydim == YSIZE(V1) && \
+        (!(V1.getDim()==3) || (Zdim == ZSIZE(V1))) )
+    {
+        typeCast(V1,V2);
+        return;
+    }
+
     Matrix2D< double > tmp;
     if (V1.getDim()==2)
     {
