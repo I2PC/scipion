@@ -416,6 +416,9 @@ int  writeIMAGIC(int img_select=-1, int mode=WRITE_OVERWRITE, std::string bitDep
         fseek( fhed, 0, SEEK_SET);
     }
 
+    if (mmapOnWrite)
+        REPORT_ERROR(ERR_NOT_IMPLEMENTED,"To be implemented");
+
 
     i = imgStart;
     for (std::vector<MDRow>::iterator it = MD.begin(); it != MD.end(); ++it)
