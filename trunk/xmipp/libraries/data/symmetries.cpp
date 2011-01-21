@@ -347,8 +347,10 @@ const
     for (k = 4 * i; k < 4*i + 4; k++)
         for (l = 0; l < 4; l++)
         {
-            L(k - 4*i, l) = __L(k, l);
-            R(k - 4*i, l) = __R(k, l);
+            //L(k - 4*i, l) = __L(k, l);
+            //R(k - 4*i, l) = __R(k, l);
+        	dMij(L,k - 4*i, l) = dMij(__L,k, l);
+        	dMij(R,k - 4*i, l) = dMij(__R,k, l);
         }
 }
 
@@ -418,7 +420,8 @@ bool found_not_tried(const Matrix2D<int> &tried, int &i, int &j,
     int n = 0;
     while (n != MAT_YSIZE(tried))
     {
-        if (tried(i, j) == 0 && !(i >= true_symNo && j >= true_symNo))
+ //       if (tried(i, j) == 0 && !(i >= true_symNo && j >= true_symNo))
+            if (dMij(tried,i, j) == 0 && !(i >= true_symNo && j >= true_symNo))
             return true;
         if (i != n)
         {
