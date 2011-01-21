@@ -93,12 +93,12 @@ void ParametersProjectionTomography::read(const FileName &fn_proj_param)
 {
     if (fn_proj_param.isMetaData())
     {
-      //TODO Reading from Metadata file to be completed!!
-      REPORT_ERROR(ERR_NOT_IMPLEMENTED,"Need to include new LABEL_VECTOR_STRING for MDL.. CUBANITO HELP!!.");
+        //TODO Reading from Metadata file to be completed!!
+        REPORT_ERROR(ERR_NOT_IMPLEMENTED,"Need to include new LABEL_VECTOR_STRING for MDL.. CUBANITO HELP!!.");
 
-//        MetaData MD;
-//        MD.read(fn_proj_param);
-//        MD.getValue(MDL_PRJ_VOL,fnPhantom);
+        //        MetaData MD;
+        //        MD.read(fn_proj_param);
+        //        MD.getValue(MDL_PRJ_VOL,fnPhantom);
 
     }
     else
@@ -344,32 +344,35 @@ void project_Volume(MultidimArray<double> &V, Projection &P, int Ydim, int Xdim,
                 // one.
                 double aux, diffx, diffy, diffz, diff_alpha;
                 aux=alpha-alpha_x;
-                diffx = ABS(aux);
+                //diffx = ABS(aux);
+                diffx = fabs(aux);
                 aux=alpha-alpha_y;
-                diffy = ABS(aux);
+                //diffy = ABS(aux);
+                diffy = fabs(aux);
                 diff_alpha = XMIPP_MIN(diffx, diffy);
                 aux=alpha-alpha_z;
-                diffz = ABS(aux);
+                //diffz = ABS(aux);
+                diffz = fabs(aux);
                 diff_alpha=XMIPP_MIN(diff_alpha, diffz);
 
                 ray_sum += diff_alpha * A3D_ELEM(V, zz_idx, yy_idx, xx_idx);
 
                 aux=diff_alpha - diffx;
-                if (ABS(aux) <= XMIPP_EQUAL_ACCURACY)
+                if (fabs(aux) <= XMIPP_EQUAL_ACCURACY)
                 {
                     alpha = alpha_x;
                     xx_idx += x_sign;
                     xx_idxd = xx_idx;
                 }
                 aux=diff_alpha - diffy;
-                if (ABS(aux) <= XMIPP_EQUAL_ACCURACY)
+                if (fabs(aux) <= XMIPP_EQUAL_ACCURACY)
                 {
                     alpha = alpha_y;
                     yy_idx += y_sign;
                     yy_idxd = yy_idx;
                 }
                 aux=diff_alpha - diffz;
-                if (ABS(aux) <= XMIPP_EQUAL_ACCURACY)
+                if (fabs(aux) <= XMIPP_EQUAL_ACCURACY)
                 {
                     alpha = alpha_z;
                     zz_idx += z_sign;
@@ -398,8 +401,10 @@ void project_Volume(MultidimArray<double> &V, Projection &P, int Ydim, int Xdim,
 
         A2D_ELEM(IMGMATRIX(P), i, j) = ray_sum * 0.25;
 #ifdef DEBUG
+
         std::cout << "Assigning P(" << i << "," << j << ")=" << ray_sum << std::endl;
 #endif
+
     }
 }
 #undef DEBUG
@@ -414,8 +419,10 @@ void project_Volume_offCentered(MultidimArray<double> &V, Projection &P,
     // Find Euler rotation matrix
     Matrix1D<double> axis;
     Euler_direction(axisRot,axisTilt,0,axis);
-    Matrix2D<double> Raxis; rotation3DMatrix(angle,axis,Raxis,false);
-    Matrix2D<double> Rinplane; rotation3DMatrix(inplaneRot,'Z',Rinplane,false);
+    Matrix2D<double> Raxis;
+    rotation3DMatrix(angle,axis,Raxis,false);
+    Matrix2D<double> Rinplane;
+    rotation3DMatrix(inplaneRot,'Z',Rinplane,false);
     double rot, tilt, psi;
     Euler_matrix2angles(Rinplane*Raxis, rot, tilt, psi);
 
