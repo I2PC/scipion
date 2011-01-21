@@ -24,8 +24,14 @@
  ***************************************************************************/
 #include "mlf_align2d.h"
 
+// Constructor ===============================================
+ProgMLF2D::ProgMLF2D(bool ML3D)
+{
+    do_ML3D = ML3D;
+}
+
 // Read arguments ==========================================================
-void Prog_MLFalign2D_prm::read(int argc, char **argv, bool ML3D)
+void ProgMLF2D::readParams()
 {
 
     // Generate new command line for restart procedure
@@ -37,7 +43,7 @@ void Prog_MLFalign2D_prm::read(int argc, char **argv, bool ML3D)
     FileName restart_imgmd, restart_refmd;
     int restart_iter, restart_seed;
 
-    if (checkParameter(argc, argv, "-restart"))
+    if (checkParam("-restart"))
     {
         do_restart = true;
         MetaData MDrestart;
@@ -65,67 +71,57 @@ void Prog_MLFalign2D_prm::read(int argc, char **argv, bool ML3D)
         }
     }
 
-    // Read command line
-    if (checkParameter(argc2, argv2, "-more_options"))
-    {
-        usage();
-        extendedUsage();
-    }
-
     // Main parameters
-    n_ref = textToInteger(getParameter(argc2, argv2, "-nref", "0"));
-    fn_ref = getParameter(argc2, argv2, "-ref", "");
-    fn_sel = getParameter(argc2, argv2, "-i");
-    do_ctf_correction = !checkParameter(argc2, argv2, "-no_ctf");
+    n_ref = getIntParam("-nref");
+    fn_ref = getParam("-ref");
+    fn_sel = getParam("-i");
+    do_ctf_correction = !checkParam("-no_ctf");
     if (do_ctf_correction)
     {
-        fn_ctfdat = getParameter(argc2, argv2, "-ctfdat","");
+        fn_ctfdat = getParam("-ctfdat");
     }
     else
     {
-        sampling = textToFloat(getParameter(argc2, argv2, "-pixel_size","1"));
+        sampling = getDoubleParam("-pixel_size");
     }
-    fn_root = getParameter(argc2, argv2, "-o", "mlf2d");
-    search_shift = textToInteger(getParameter(argc2, argv2, "-search_shift", "3"));
-    psi_step = textToFloat(getParameter(argc2, argv2, "-psi_step", "5"));
-    do_mirror = checkParameter(argc2, argv2, "-mirror");
-    lowres_limit = textToInteger(getParameter(argc2, argv2, "-low", "999"));
-    highres_limit = textToInteger(getParameter(argc2, argv2, "-high", "0"));
-    ini_highres_limit = textToInteger(getParameter(argc2, argv2, "-ini_high", "0"));
-    phase_flipped = !checkParameter(argc2, argv2, "-not_phase_flipped");
-    reduce_snr = textToFloat(getParameter(argc2, argv2, "-reduce_snr", "1"));
-    first_iter_noctf = checkParameter(argc2, argv2, "-ctf_affected_refs");
+    fn_root = getParam("-o");
+    search_shift = getIntParam("-search_shift");
+    psi_step = getDoubleParam("-psi_step");
+    do_mirror = checkParam("-mirror");
+    lowres_limit = getIntParam("-low");
+    highres_limit = getIntParam("-high");
+    ini_highres_limit = getIntParam("-ini_high");
+    phase_flipped = !checkParam("-not_phase_flipped");
+    reduce_snr = getDoubleParam("-reduce_snr");
+    first_iter_noctf = checkParam("-ctf_affected_refs");
 
     // Less common stuff
-    Niter = textToInteger(getParameter(argc2, argv2, "-iter", "100"));
-    istart = textToInteger(getParameter(argc2, argv2, "-istart", "1"));
-    sigma_offset = textToFloat(getParameter(argc2, argv2, "-offset", "3"));
-    eps = textToFloat(getParameter(argc2, argv2, "-eps", "5e-5"));
-    fn_frac = getParameter(argc2, argv2, "-frac", "");
-    fix_fractions = checkParameter(argc2, argv2, "-fix_fractions");
-    fix_sigma_offset = checkParameter(argc2, argv2, "-fix_sigma_offset");
-    fix_sigma_noise = checkParameter(argc2, argv2, "-fix_sigma_noise");
-    verb = textToInteger(getParameter(argc2, argv2, "-verb", "1"));
-    C_fast = textToFloat(getParameter(argc2, argv2, "-C", "1e-12"));
-    fn_doc = getParameter(argc2, argv2, "-doc", "");
-    do_include_allfreqs=checkParameter(argc2,argv2,"-include_allfreqs");
-    fix_high = textToFloat(getParameter(argc2, argv2, "-fix_high", "-1"));
+    Niter = getIntParam("-iter");
+    istart = do_ML3D ? 1 : getIntParam("-istart");
+    sigma_offset = getDoubleParam("-offset");
+    eps = getDoubleParam("-eps");
+    fn_frac = getParam("-frac");
+    fix_fractions = checkParam("-fix_fractions");
+    fix_sigma_offset = checkParam("-fix_sigma_offset");
+    fix_sigma_noise = checkParam("-fix_sigma_noise");
+    C_fast = getDoubleParam("-C");
+    fn_doc = getParam("-doc");
+    do_include_allfreqs = checkParam("-include_allfreqs");
+    fix_high = getDoubleParam("-fix_high");
 
-    // Only for interaction with Refine3D:
-    do_ML3D = ML3D;
-    search_rot = textToFloat(getParameter(argc2, argv2, "-search_rot", "999."));
+    search_rot = getDoubleParam("-search_rot");
 
     // Hidden arguments
-    debug = textToInteger(getParameter(argc2, argv2, "-debug","0"));
-    do_variable_psi = checkParameter(argc2, argv2, "-var_psi");
-    do_variable_trans = checkParameter(argc2, argv2, "-var_trans");
-    do_norm = checkParameter(argc2, argv2, "-norm");
-    do_student = checkParameter(argc2, argv2, "-student");
-    df = (double) textToInteger(getParameter(argc2, argv2, "-df", "6"));
-    do_student_sigma_trick = !checkParameter(argc2, argv2, "-no_sigma_trick");
-    do_kstest = checkParameter(argc2, argv2, "-kstest");
-    iter_write_histograms = textToInteger(getParameter(argc2, argv2, "-iter_histogram","-1"));
-    seed = textToInteger(getParameter(argc2, argv2, "-random_seed", "-1"));
+    debug = getIntParam("-debug");
+    do_variable_psi = checkParam("-var_psi");
+    do_variable_trans = checkParam("-var_trans");
+    do_norm = checkParam("-norm");
+    do_student = checkParam("-student");
+    df = getDoubleParam("-df");
+    do_student_sigma_trick = !checkParam("-no_sigma_trick");
+    do_kstest = checkParam("-kstest");
+    iter_write_histograms = getIntParam("-iter_histogram");
+    seed = getIntParam("-random_seed");
 
     // Now reset some stuff for restart
     if (do_restart)
@@ -145,10 +141,10 @@ void Prog_MLFalign2D_prm::read(int argc, char **argv, bool ML3D)
 }
 
 // Show ====================================================================
-void Prog_MLFalign2D_prm::show(bool ML3D)
+void ProgMLF2D::show(bool ML3D)
 {
 
-    if (verb > 0)
+    if (verbose > 0)
     {
         // To screen
         if (!ML3D)
@@ -259,57 +255,133 @@ void Prog_MLFalign2D_prm::show(bool ML3D)
 
 }
 
-// Fourier mode usage ==============================================================
-void Prog_MLFalign2D_prm::usage() const
+void ProgMLF2D::run()
 {
-    std::cerr << "Usage:  mlf_align2d [options] " << std::endl;
-    std::cerr << "   -i <selfile>                : Selfile with all input images \n";
-    std::cerr << "   -ctfdat <ctfdatfile>        : Two-column ASCII file with filenames and CTF parameter files of all images (recommended) \n";
-    std::cerr << "      OR -no_ctf                   OR do not use any CTF correction \n";
-    std::cerr << "   -nref <int>                 : Number of references to generate automatically (recommended)\n";
-    std::cerr << "   OR -ref <selfile/image>         OR selfile with initial references/single reference image \n";
-    std::cerr << " [ -o <rootname> ]             : Output rootname (default = \"mlf2d\")\n";
-    std::cerr << " [ -mirror ]                   : Also check mirror image of each reference \n";
-    std::cerr << " [ -search_shift <int=3>]      : Limited translational searches (in pixels) \n";
-    std::cerr << " [ -reduce_snr <factor=1> ]    : Use a value smaller than one to decrease the estimated SSNRs \n";
-    std::cerr << " [ -not_phase_flipped ]        : Use this if the experimental images have not been phase flipped \n";
-    std::cerr << " [ -ctf_affected_refs ]        : Use this if the references (-ref) are not CTF-deconvoluted \n";
-    std::cerr << " [ -low <Ang=999> ]            : Exclude lowest frequencies from P-calculations (in Ang) \n";
-    std::cerr << " [ -high <Ang=0> ]             : Exclude highest frequencies from P-calculations (in Ang) \n";
-    std::cerr << " [ -ini_high <Ang=0> ]         : Exclude highest frequencies during first iteration (in Ang) \n";
-    std::cerr << " [ -pixel_size <Ang=1> ]       : Pixel size in Angstrom (only necessary for -no_ctf mode) \n";
-    std::cerr << " [ -more_options ]             : Show all possible input parameters \n";
+    int c, nn, imgno, opt_refno;
+    double LL, sumw_allrefs, convv, sumcorr;
+    bool converged;
+    std::vector<double> conv;
+    double aux, wsum_sigma_noise, wsum_sigma_offset;
+    std::vector<MultidimArray<double > > wsum_Mref, wsum_ctfMref;
+    std::vector<double> sumw, sumw2, sumwsc, sumwsc2, sumw_mirror, sumw_defocus;
+    MultidimArray<double> P_phi, Mr2, Maux;
+    std::vector<std::vector<double> > Mwsum_sigma2;
+    FileName fn_img, fn_tmp;
+    MultidimArray<double> spectral_signal;
+
+    produceSideInfo();
+    show();
+    estimateInitialNoiseSpectra();
+    produceSideInfo2();
+
+    Maux.resize(dim, dim);
+    Maux.setXmippOrigin();
+
+    // Loop over all iterations
+    for (int iter = istart; iter <= Niter; iter++)
+    {
+
+        if (verbose > 0)
+            std::cerr << "  Multi-reference refinement:  iteration " << iter << " of " << Niter << std::endl;
+
+        for (int refno = 0;refno < n_ref; refno++)
+            Iold[refno]() = Iref[refno]();
+
+        // Pre-calculate pdfs
+        calculateInPlanePDF();
+
+        // Integrate over all images
+        expectation(Iref, iter,
+                        LL, sumcorr, wsum_Mref, wsum_ctfMref,
+                        Mwsum_sigma2, wsum_sigma_offset,
+                        sumw, sumw2, sumwsc, sumwsc2, sumw_mirror, sumw_defocus);
+
+        // Update model parameters
+        maximization(wsum_Mref, wsum_ctfMref,
+                         Mwsum_sigma2,wsum_sigma_offset,
+                         sumw, sumw2, sumwsc, sumwsc2, sumw_mirror, sumw_defocus,
+                         sumcorr, sumw_allrefs,
+                         spectral_signal);
+
+        // Check convergence
+        converged = checkConvergence(conv);
+
+        addPartialDocfileData(docfiledata, myFirstImg, myLastImg);
+        writeOutputFiles(iter, sumw_allrefs, LL, sumcorr, conv);
+
+        // Calculate new wiener filters
+        updateWienerFilters(spectral_signal, sumw_defocus, iter);
+
+        if (converged)
+        {
+            if (verbose > 0)
+                std::cerr << " Optimization converged!" << std::endl;
+            break;
+        }
+
+    } // end loop iterations
+    writeOutputFiles(-1, sumw_allrefs, LL, sumcorr, conv);
 }
 
-// Extended usage ===================================================================
-void Prog_MLFalign2D_prm::extendedUsage(bool ML3D) const
+// Fourier mode usage ==============================================================
+void ProgMLF2D::defineParams()
 {
-    std::cerr << "Additional options: " << std::endl;
-    std::cerr << " [ -eps <float=5e-5> ]         : Stopping criterium \n";
-    std::cerr << " [ -iter <int=100> ]           : Maximum number of iterations to perform \n";
-    std::cerr << " [ -psi_step <float=5> ]       : In-plane rotation sampling interval [deg]\n";
-    std::cerr << " [ -offset <float=3> ]         : Expected standard deviation for origin offset [pix]\n";
-    std::cerr << " [ -frac <docfile=\"\"> ]        : Docfile with expected model fractions (default: even distr.)\n";
-    std::cerr << " [ -C <double=1e-12> ]         : Significance criterion for fast approach \n";
-    if (!ML3D)
-        std::cerr << " [ -restart <logfile> ]        : restart a run with all parameters as in the logfile \n";
-    if (!ML3D)
-        std::cerr << " [ -istart <int> ]             : number of initial iteration \n";
-    std::cerr << " [ -fix_sigma_noise]           : Do not re-estimate the standard deviation in the noise spectra \n";
-    std::cerr << " [ -fix_sigma_offset]          : Do not re-estimate the standard deviation in the origin offsets \n";
-    std::cerr << " [ -fix_fractions]             : Do not re-estimate the model fractions \n";
-    std::cerr << " [ -dont_output_docfile ]      : Do not write out docfile with most likely angles & translations \n";
-    std::cerr << " [ -dont_output_selfiles ]     : Do not write out selfiles with most likely class assignments \n";
-    std::cerr << " [ -doc <docfile=\"\"> ]         : Read initial angles and offsets from docfile \n";
-    std::cerr << " [ -write_offsets ]            : Save memory by writing optimal offsets to disc (disc-access intensive) \n";
-    std::cerr << std::endl;
-    exit(1);
+    addParamsLine("   -i <selfile>                : Selfile with all input images ");
+    addParamsLine("   -ctfdat <ctfdatfile=\"\">        : Two-column ASCII file with filenames and CTF parameter files of all images (recommended) ");
+    addParamsLine("      or -no_ctf               : OR do not use any CTF correction ");
+    addParamsLine("   -nref <int=0>                 : Number of references to generate automatically (recommended)");
+    addParamsLine("   OR -ref <selfile_or_image=\"\">     : OR selfile with initial references/single reference image ");
+    addParamsLine(" [ -o <rootname=mlf2d> ]             : Output rootname (default = \"mlf2d\")");
+    addParamsLine(" [ -mirror ]                   : Also check mirror image of each reference ");
+    addParamsLine(" [ -search_shift <int=3>]      : Limited translational searches (in pixels) ");
+    addParamsLine(" [ -reduce_snr <factor=1> ]    : Use a value smaller than one to decrease the estimated SSNRs ");
+    addParamsLine(" [ -not_phase_flipped ]        : Use this if the experimental images have not been phase flipped ");
+    addParamsLine(" [ -ctf_affected_refs ]        : Use this if the references (-ref) are not CTF-deconvoluted ");
+    addParamsLine(" [ -low <Ang=999> ]            : Exclude lowest frequencies from P-calculations (in Ang) ");
+    addParamsLine(" [ -high <Ang=0> ]             : Exclude highest frequencies from P-calculations (in Ang) ");
+    addParamsLine(" [ -ini_high <Ang=0> ]         : Exclude highest frequencies during first iteration (in Ang) ");
+    addParamsLine(" [ -pixel_size <Ang=1> ]       : Pixel size in Angstrom (only necessary for -no_ctf mode) ");
+
+    addParamsLine("==+ Additional options ==");
+    addParamsLine(" [ -eps <float=5e-5> ]         : Stopping criterium ");
+    addParamsLine(" [ -iter <int=100> ]           : Maximum number of iterations to perform ");
+    addParamsLine(" [ -psi_step <float=5> ]       : In-plane rotation sampling interval [deg]");
+    addParamsLine(" [ -offset <float=3> ]         : Expected standard deviation for origin offset [pix]");
+    addParamsLine(" [ -frac <docfile=\"\"> ]      : Docfile with expected model fractions (default: even distr.)");
+    addParamsLine(" [ -C <double=1e-12> ]         : Significance criterion for fast approach ");
+    if (!do_ML3D)
+    {
+        addParamsLine(" [ -restart <logfile> ]        : restart a run with all parameters as in the logfile ");
+        addParamsLine(" [ -istart <int=1> ]             : number of initial iteration ");
+    }
+    addParamsLine(" [ -fix_sigma_noise]           : Do not re-estimate the standard deviation in the noise spectra ");
+    addParamsLine(" [ -fix_sigma_offset]          : Do not re-estimate the standard deviation in the origin offsets ");
+    addParamsLine(" [ -fix_fractions]             : Do not re-estimate the model fractions ");
+    addParamsLine(" [ -fix_high <float=-1>]       : ");
+    addParamsLine(" [ -dont_output_docfile ]      : Do not write out docfile with most likely angles & translations ");
+    addParamsLine(" [ -dont_output_selfiles ]     : Do not write out selfiles with most likely class assignments ");
+    addParamsLine(" [ -doc <docfile=\"\"> ]         : Read initial angles and offsets from docfile ");
+    addParamsLine(" [ -write_offsets ]            : Save memory by writing optimal offsets to disc (disc-access intensive) ");
+    addParamsLine(" [ -include_allfreqs ] ");
+
+    addParamsLine("==+++++ Hidden arguments ==");
+    addParamsLine(" [-debug <int=0>]");
+    addParamsLine(" [-var_psi]");
+    addParamsLine(" [-var_trans]");
+    addParamsLine(" [-norm]");
+    addParamsLine(" [-student]");
+    addParamsLine(" [-no_sigma_trick]");
+    addParamsLine(" [-df <float=6.>]");
+    addParamsLine(" [-kstest]");
+    addParamsLine(" [-iter_histogram <int=-1>]");
+    addParamsLine(" [-search_rot <float=999.>]");
+    addParamsLine(" [-random_seed <int=-1>]");
 }
 
 // Set up a lot of general stuff
 // This side info is general, i.e. in parallel mode it is the same for
 // all processors! (in contrast to produceSideInfo2)
-void Prog_MLFalign2D_prm::produceSideInfo(int rank)
+void ProgMLF2D::produceSideInfo(int rank)
 {
 
     FileName                    fn_img, fn_tmp, fn_base, fn_tmp2;
@@ -334,7 +406,8 @@ void Prog_MLFalign2D_prm::produceSideInfo(int rank)
 
     // Get image sizes and total number of images
     int idum;
-    ImgSize(MDimg, dim, idum, idum, idum);
+    unsigned long int ldum;
+    ImgSize(MDimg, dim, idum, idum, ldum);
 
     hdim = dim / 2;
     dim2 = dim * dim;
@@ -478,7 +551,7 @@ void Prog_MLFalign2D_prm::produceSideInfo(int rank)
         // and read CTF-parameters from disc
         FOR_ALL_DEFOCUS_GROUPS()
         {
-            if (count_defocus[ifocus] < 50 && verb > 0)
+            if (count_defocus[ifocus] < 50 && verbose > 0)
                 std::cerr << "WARNING%% CTF group " << ifocus + 1 << " contains less than 50 images!" << std::endl;
 
             Vctf.push_back(dum);
@@ -568,7 +641,7 @@ void Prog_MLFalign2D_prm::produceSideInfo(int rank)
 // Read reference images to memory and initialize offset vectors
 // This side info is NOT general, i.e. in parallel mode it is NOT the
 // same for all processors! (in contrast to produce_Side_info)
-void Prog_MLFalign2D_prm::produceSideInfo2(int nr_vols, int size, int rank)
+void ProgMLF2D::produceSideInfo2(int nr_vols, int size, int rank)
 {
 
     int                       c, idum, refno = 0;
@@ -800,7 +873,7 @@ void Prog_MLFalign2D_prm::produceSideInfo2(int nr_vols, int size, int rank)
 
 
 // Randomize image order
-void Prog_MLFalign2D_prm::randomizeImagesOrder()
+void ProgMLF2D::randomizeImagesOrder()
 {
     //This static flag is for only randomize once
     static bool randomized = false;
@@ -815,7 +888,7 @@ void Prog_MLFalign2D_prm::randomizeImagesOrder()
 
 
 // For initial noise variances
-void Prog_MLFalign2D_prm::estimateInitialNoiseSpectra()
+void ProgMLF2D::estimateInitialNoiseSpectra()
 {
 
     MultidimArray<double>            Maux, Mallave;
@@ -837,10 +910,10 @@ void Prog_MLFalign2D_prm::estimateInitialNoiseSpectra()
     {
         int nn, c, focus = 0;
 
-        if (verb > 0)
+        if (verbose > 0)
             std::cerr << "--> Estimating initial noise models from average power spectra ..." << std::endl;
 
-        if (verb > 0)
+        if (verbose > 0)
         {
             nn = MDimg.size();
             init_progress_bar(nn);
@@ -878,11 +951,11 @@ void Prog_MLFalign2D_prm::estimateInitialNoiseSpectra()
             Msigma2[focus] += Maux;
             Mave[focus] += img();
             imgno++;
-            if (verb > 0)
+            if (verbose > 0)
                 if (imgno % c == 0)
                     progress_bar(imgno);
         }
-        if (verb > 0)
+        if (verbose > 0)
             progress_bar(nn);
 
         // Calculate Vsig vectors and write them to disc
@@ -930,9 +1003,9 @@ void Prog_MLFalign2D_prm::estimateInitialNoiseSpectra()
 
 }
 
-void Prog_MLFalign2D_prm::updateWienerFilters(MultidimArray<double> &spectral_signal,
-        std::vector<double> &sumw_defocus,
-        int iter)
+void ProgMLF2D::updateWienerFilters(MultidimArray<double> &spectral_signal,
+                                    std::vector<double> &sumw_defocus,
+                                    int iter)
 {
 
     // Use formula 2.32b on p60 from Frank's book 2nd ed.,
@@ -1060,7 +1133,7 @@ void Prog_MLFalign2D_prm::updateWienerFilters(MultidimArray<double> &spectral_si
     }
 
     // Write Wiener filters and spectral SNR to text files
-    if (verb > 0)
+    if (verbose > 0)
     {
         fn_base = fn_root;
         fn_base += "_it";
@@ -1191,7 +1264,7 @@ void Prog_MLFalign2D_prm::updateWienerFilters(MultidimArray<double> &spectral_si
 
 
 // Vary psi_step and trans_step with resolution =============================================
-void Prog_MLFalign2D_prm::setCurrentSamplingRates(double current_probres_limit)
+void ProgMLF2D::setCurrentSamplingRates(double current_probres_limit)
 {
 
     int trans_step = 1;
@@ -1255,7 +1328,7 @@ void Prog_MLFalign2D_prm::setCurrentSamplingRates(double current_probres_limit)
             }
         }
     }
-    if (verb > 0 && (do_variable_psi || do_variable_trans))
+    if (verbose > 0 && (do_variable_psi || do_variable_trans))
     {
         std::cerr<<" Current resolution= "<<current_probres_limit<<" Ang; current psi_step = "<<psi_step<<" current trans_step = "<<trans_step<<std::endl;
 
@@ -1263,10 +1336,10 @@ void Prog_MLFalign2D_prm::setCurrentSamplingRates(double current_probres_limit)
 }
 
 // Generate initial references =============================================
-void Prog_MLFalign2D_prm::generateInitialReferences()
+void ProgMLF2D::generateInitialReferences()
 {
 
-    if (verb > 0)
+    if (verbose > 0)
     {
         std::cerr << "  Generating initial references by averaging over random subsets" << std::endl;
         init_progress_bar(n_ref);
@@ -1305,23 +1378,22 @@ void Prog_MLFalign2D_prm::generateInitialReferences()
         MDref.setValue(MDL_IMAGE, fn_tmp);
         MDref.setValue(MDL_ENABLED, 1);
 
-        if (verb > 0)
+        if (verbose > 0)
             progress_bar(refno);
     }//close for refno
 
-    if (verb > 0)
+    if (verbose > 0)
         progress_bar(n_ref);
 
     fn_ref = fn_root + "_it";
     fn_ref.compose(fn_ref, 0, "");
     fn_ref += "_ref.xmd";
     MDref.write(fn_ref);
-
 }
 
 
 // Calculate probability density function of all in-plane transformations phi
-void Prog_MLFalign2D_prm::calculateInPlanePDF()
+void ProgMLF2D::calculateInPlanePDF()
 {
 
     double r2, pdfpix, sum;
@@ -1355,8 +1427,8 @@ void Prog_MLFalign2D_prm::calculateInPlanePDF()
 
 }
 
-void Prog_MLFalign2D_prm::appendFTtoVector(const MultidimArray<std::complex<double> > &in,
-        std::vector<double> &out)
+void ProgMLF2D::appendFTtoVector(const MultidimArray<std::complex<double> > &in,
+                                 std::vector<double> &out)
 {
 
     // First, store the points used in the probability calculations
@@ -1369,10 +1441,10 @@ void Prog_MLFalign2D_prm::appendFTtoVector(const MultidimArray<std::complex<doub
     }
 }
 
-void Prog_MLFalign2D_prm::getFTfromVector(const std::vector<double> &in,
-        const int start_point,
-        MultidimArray<std::complex<double> > &out,
-        bool only_real)
+void ProgMLF2D::getFTfromVector(const std::vector<double> &in,
+                                const int start_point,
+                                MultidimArray<std::complex<double> > &out,
+                                bool only_real)
 {
 
     out.resize(hdim + 1, dim);
@@ -1401,7 +1473,7 @@ void Prog_MLFalign2D_prm::getFTfromVector(const std::vector<double> &in,
 }
 
 // Rotate reference for all models and rotations and fill Fref vectors =============
-void Prog_MLFalign2D_prm::rotateReference(std::vector<double> &out)
+void ProgMLF2D::rotateReference(std::vector<double> &out)
 {
     out.clear();
 
@@ -1447,8 +1519,8 @@ void Prog_MLFalign2D_prm::rotateReference(std::vector<double> &out)
 
 
 // Collect all rotations and sum to update Iref() for all models ==========
-void Prog_MLFalign2D_prm::reverseRotateReference(const std::vector<double> &in,
-        std::vector<MultidimArray<double > > &out)
+void ProgMLF2D::reverseRotateReference(const std::vector<double> &in,
+                                       std::vector<MultidimArray<double > > &out)
 {
 
     double psi;
@@ -1478,8 +1550,8 @@ void Prog_MLFalign2D_prm::reverseRotateReference(const std::vector<double> &in,
 
 }
 
-void Prog_MLFalign2D_prm::preselectDirections(float &phi, float &theta,
-        std::vector<double> &pdf_directions)
+void ProgMLF2D::preselectDirections(float &phi, float &theta,
+                                    std::vector<double> &pdf_directions)
 {
 
     float phi_ref, theta_ref, angle, angle2;
@@ -1513,10 +1585,10 @@ void Prog_MLFalign2D_prm::preselectDirections(float &phi, float &theta,
     }
 }
 
-void Prog_MLFalign2D_prm::fourierTranslate2D(const std::vector<double> &in,
-        MultidimArray<double> &trans,
-        std::vector<double> &out,
-        int point_start)
+void ProgMLF2D::fourierTranslate2D(const std::vector<double> &in,
+                                   MultidimArray<double> &trans,
+                                   std::vector<double> &out,
+                                   int point_start)
 {
     double xx, yy, xxshift, yyshift, dotp;
     double a, b, c, d, ac, bd, ab_cd;
@@ -1541,11 +1613,11 @@ void Prog_MLFalign2D_prm::fourierTranslate2D(const std::vector<double> &in,
 
 }
 
-void Prog_MLFalign2D_prm::calculateFourierOffsets(const MultidimArray<double> &Mimg,
-        const std::vector<double > &offsets,
-        std::vector<double>  &out,
-        MultidimArray<int> &Moffsets,
-        MultidimArray<int> &Moffsets_mirror)
+void ProgMLF2D::calculateFourierOffsets(const MultidimArray<double> &Mimg,
+                                        const std::vector<double > &offsets,
+                                        std::vector<double>  &out,
+                                        MultidimArray<int> &Moffsets,
+                                        MultidimArray<int> &Moffsets_mirror)
 {
 
     int irefmir, ix, iy, iflip_start, iflip_stop, count;
@@ -1649,27 +1721,27 @@ double lcdf_tstudent_mlf30(double t)
 
 // Exclude translations from the MLF_integration
 // For significantly contributing refno+psi: re-calculate optimal shifts
-void Prog_MLFalign2D_prm::processOneImage(const MultidimArray<double> &Mimg,
-        const int focus, bool apply_ctf,
-        const std::vector<double> &Fref,
-        std::vector<double> &Fwsum_imgs,
-        std::vector<double> &Fwsum_ctfimgs,
-        std::vector<double> &Mwsum_sigma2,
-        double &wsum_sigma_offset,
-        std::vector<double> &sumw,
-        std::vector<double> &sumw2,
-        std::vector<double> &sumwsc,
-        std::vector<double> &sumwsc2,
-        std::vector<double> &sumw_mirror,
-        double &LL, double &fracweight, double &maxweight2,
-        double &sum_refw2, double &opt_scale,
-        int &opt_refno, double &opt_psi,
-        int &opt_ipsi, int &opt_iflip,
-        MultidimArray<double> &opt_offsets,
-        std::vector<double> &opt_offsets_ref,
-        std::vector<double > &pdf_directions,
-        bool do_kstest, bool write_histograms,
-        FileName fn_img, double &KSprob)
+void ProgMLF2D::processOneImage(const MultidimArray<double> &Mimg,
+                                const int focus, bool apply_ctf,
+                                const std::vector<double> &Fref,
+                                std::vector<double> &Fwsum_imgs,
+                                std::vector<double> &Fwsum_ctfimgs,
+                                std::vector<double> &Mwsum_sigma2,
+                                double &wsum_sigma_offset,
+                                std::vector<double> &sumw,
+                                std::vector<double> &sumw2,
+                                std::vector<double> &sumwsc,
+                                std::vector<double> &sumwsc2,
+                                std::vector<double> &sumw_mirror,
+                                double &LL, double &fracweight, double &maxweight2,
+                                double &sum_refw2, double &opt_scale,
+                                int &opt_refno, double &opt_psi,
+                                int &opt_ipsi, int &opt_iflip,
+                                MultidimArray<double> &opt_offsets,
+                                std::vector<double> &opt_offsets_ref,
+                                std::vector<double > &pdf_directions,
+                                bool do_kstest, bool write_histograms,
+                                FileName fn_img, double &KSprob)
 {
 
     MultidimArray<double>                             Mweight;
@@ -2386,18 +2458,18 @@ void Prog_MLFalign2D_prm::processOneImage(const MultidimArray<double> &Mimg,
 }
 
 
-void Prog_MLFalign2D_prm::expectation(std::vector< Image<double> > &Iref, int iter,
-                                      double &LL, double &sumcorr,
-                                      std::vector<MultidimArray<double> > &wsum_Mref,
-                                      std::vector<MultidimArray<double> > &wsum_ctfMref,
-                                      std::vector<std::vector<double> > &Mwsum_sigma2,
-                                      double &wsum_sigma_offset,
-                                      std::vector<double> &sumw,
-                                      std::vector<double> &sumw2,
-                                      std::vector<double> &sumwsc,
-                                      std::vector<double> &sumwsc2,
-                                      std::vector<double> &sumw_mirror,
-                                      std::vector<double> &sumw_defocus)
+void ProgMLF2D::expectation(std::vector< Image<double> > &Iref, int iter,
+                            double &LL, double &sumcorr,
+                            std::vector<MultidimArray<double> > &wsum_Mref,
+                            std::vector<MultidimArray<double> > &wsum_ctfMref,
+                            std::vector<std::vector<double> > &Mwsum_sigma2,
+                            double &wsum_sigma_offset,
+                            std::vector<double> &sumw,
+                            std::vector<double> &sumw2,
+                            std::vector<double> &sumwsc,
+                            std::vector<double> &sumwsc2,
+                            std::vector<double> &sumw_mirror,
+                            std::vector<double> &sumw_defocus)
 {
 
     Image<double> img;
@@ -2417,7 +2489,7 @@ void Prog_MLFalign2D_prm::expectation(std::vector< Image<double> > &Iref, int it
     rotateReference(Fref);
 
     // Initialize
-    if (verb > 0)
+    if (verbose > 0)
         init_progress_bar(nr_images_local);
     c = XMIPP_MAX(1, nr_images_local / 60);
 
@@ -2568,12 +2640,12 @@ void Prog_MLFalign2D_prm::expectation(std::vector< Image<double> > &Iref, int it
 
 
         // Output docfile
-        if (verb > 0)
+        if (verbose > 0)
             if (imgno % c == 0)
                 progress_bar(imgno);
     }
 
-    if (verb > 0)
+    if (verbose > 0)
         progress_bar(nr_images_local);
 
     if (do_ctf_correction)
@@ -2585,19 +2657,19 @@ void Prog_MLFalign2D_prm::expectation(std::vector< Image<double> > &Iref, int it
 }
 
 // Update all model parameters
-void Prog_MLFalign2D_prm::maximization(std::vector<MultidimArray<double> > &wsum_Mref,
-                                       std::vector<MultidimArray<double> > &wsum_ctfMref,
-                                       std::vector<std::vector<double> > &Mwsum_sigma2,
-                                       double &wsum_sigma_offset,
-                                       std::vector<double> &sumw,
-                                       std::vector<double> &sumw2,
-                                       std::vector<double> &sumwsc,
-                                       std::vector<double> &sumwsc2,
-                                       std::vector<double> &sumw_mirror,
-                                       std::vector<double> &sumw_defocus,
-                                       double &sumcorr, double &sumw_allrefs,
-                                       MultidimArray<double> &spectral_signal,
-                                       int refs_per_class)
+void ProgMLF2D::maximization(std::vector<MultidimArray<double> > &wsum_Mref,
+                             std::vector<MultidimArray<double> > &wsum_ctfMref,
+                             std::vector<std::vector<double> > &Mwsum_sigma2,
+                             double &wsum_sigma_offset,
+                             std::vector<double> &sumw,
+                             std::vector<double> &sumw2,
+                             std::vector<double> &sumwsc,
+                             std::vector<double> &sumwsc2,
+                             std::vector<double> &sumw_mirror,
+                             std::vector<double> &sumw_defocus,
+                             double &sumcorr, double &sumw_allrefs,
+                             MultidimArray<double> &spectral_signal,
+                             int refs_per_class)
 {
 
     MultidimArray<double> rmean_sigma2, rmean_signal2;
@@ -2776,7 +2848,7 @@ void Prog_MLFalign2D_prm::maximization(std::vector<MultidimArray<double> > &wsum
 }
 
 // Check convergence
-bool Prog_MLFalign2D_prm::checkConvergence(std::vector<double> &conv)
+bool ProgMLF2D::checkConvergence(std::vector<double> &conv)
 {
 
     bool converged = true;
@@ -2811,8 +2883,8 @@ bool Prog_MLFalign2D_prm::checkConvergence(std::vector<double> &conv)
     return converged;
 }
 
-void Prog_MLFalign2D_prm::writeOutputFiles(const int iter, double &sumw_allrefs, double &LL,
-        double &avecorr, std::vector<double> &conv)
+void ProgMLF2D::writeOutputFiles(const int iter, double &sumw_allrefs, double &LL,
+                                 double &avecorr, std::vector<double> &conv)
 {
 
     FileName          fn_tmp, fn_base;
@@ -2856,6 +2928,7 @@ void Prog_MLFalign2D_prm::writeOutputFiles(const int iter, double &sumw_allrefs,
             fn_tmp = fn_base + (i==0 ? "_ref" : "_cref");
             fn_tmp.compose(fn_tmp, refno + 1, "xmp");
             Itmp = Iref[refno];
+            std::cerr << "writing refno " << fn_tmp << std::endl;
             Itmp.write(fn_tmp);
             MDo.addObject();
             MDo.setValue(MDL_IMAGE, fn_tmp);
@@ -2877,12 +2950,12 @@ void Prog_MLFalign2D_prm::writeOutputFiles(const int iter, double &sumw_allrefs,
                 MDref.getValue(MDL_REF3D, ref3d);
                 MDo.setValue(MDL_REF3D, ref3d);
             }
+            ++refno;
         }
 
         // Write out reference md file
         fn_tmp = fn_base + (i == 0 ? "_ref.xmd" : "_cref.xmd");
         MDo.write(fn_tmp);
-        ++refno;
     }
 
     // Write out log-file
@@ -2980,8 +3053,8 @@ void Prog_MLFalign2D_prm::writeOutputFiles(const int iter, double &sumw_allrefs,
 }
 
 /// Add docfiledata to docfile
-void Prog_MLFalign2D_prm::addPartialDocfileData(MultidimArray<double> data,
-        int first, int last)
+void ProgMLF2D::addPartialDocfileData(MultidimArray<double> data,
+                                      int first, int last)
 {
     for (int imgno = first; imgno <= last; imgno++)
     {

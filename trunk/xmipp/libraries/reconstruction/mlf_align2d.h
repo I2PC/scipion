@@ -64,7 +64,7 @@
 
 
 /** MLFalign2D parameters. */
-class Prog_MLFalign2D_prm
+class ProgMLF2D: public XmippProgram
 {
 public:
     /** Filenames reference selfile/image, fraction docfile & output rootname */
@@ -111,10 +111,6 @@ public:
     int nr_images_local;
     /** First and last images, useful for mpi*/
     int myFirstImg, myLastImg;
-    /** Verbose level:
-        1: gives progress bar (=default)
-        0: gives no output to screen at all */
-    int verb;
     /** Stopping criterium */
     double eps;
     /** SelFile images (working, test and reference set) */
@@ -226,19 +222,19 @@ public:
     /** debug flag */
     int debug;
 
-public:
-
+    /// Constructor
+    ProgMLF2D(bool ML3D=false);
     /// Read arguments from command line
-    void read(int argc, char **argv, bool ML3D = false);
+    void readParams();
+    /// Params definition
+    void defineParams();
 
+public:
     /// Show
     void show(bool ML3D = false);
 
-    /// Usage
-    void usage() const;
-
-    /// Extended Usage
-    void extendedUsage(bool ML3D = false) const;
+    //Run
+    virtual void run();
 
     /// Setup lots of stuff
     void produceSideInfo(int rank = 0);
