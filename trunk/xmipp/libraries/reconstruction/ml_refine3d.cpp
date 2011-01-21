@@ -67,7 +67,7 @@ void ProgRefine3D::defineParams()
     addParamsLine(" [-solvent <filename=\"\">]");
     addParamsLine(" [-fourier]");
     addParamsLine(" [-prob_solvent]");
-    addParamsLine(" [-threshold_solvent <float=0.0>]");
+    addParamsLine(" [-threshold_solvent <float=999.>]");
     addParamsLine(" [-deblob_solvent]");
     addParamsLine(" [-dilate_solvent <int=0>]");
     addParamsLine(" [-skip_reconstruction]");
@@ -353,6 +353,7 @@ void ProgRefine3D::run()
     projectReferenceVolume(ml2d->MDref);
     ml2d->produceSideInfo();
     ml2d->produceSideInfo2();
+    ml2d->show();
     Nvols *= ml2d->factor_nref;
     ml2d->Iold.clear(); // To save memory
     ml2d->createThreads();
