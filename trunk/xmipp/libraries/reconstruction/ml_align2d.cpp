@@ -1595,10 +1595,13 @@ void ProgML2D::doThreadExpectationSingleImageRefno()
                             fracpdf = model.alpha_k[refno] * model.mirror_fraction[refno];
 
                         // A. Backward FFT to calculate weights in real-space
+                        //Set this references to avoid indexing inside the heavy loop
+                        MultidimArray<std::complex<double> > & Fimg_flip_aux = Fimg_flip[iflip];
+                        MultidimArray<std::complex<double> > & fref_aux = fref[refnoipsi];
                         FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY2D(Faux)
                         {
                             dAij(Faux,i,j) =
-                                dAij(Fimg_flip[iflip],i,j) * dAij(fref[refnoipsi],i,j);
+                                dAij(Fimg_flip_aux,i,j) * dAij(fref_aux,i,j);
                         }
                         // Takes the input from Faux, and leaves the output in Maux
                         local_transformer.inverseFourierTransform();
@@ -1611,7 +1614,6 @@ void ProgML2D::doThreadExpectationSingleImageRefno()
                         FOR_ALL_ELEMENTS_IN_ARRAY2D(Mweight)
                         {
                             diff = A2_plus_Xi2 - ref_scale * A2D_ELEM(Maux, i, j) * ddim2;
-                            local_mindiff = XMIPP_MIN(local_mindiff, diff);
                             pdf = fracpdf * A2D_ELEM(P_phi, i, j);
 
                             if (!model.do_student)
@@ -1619,10 +1621,7 @@ void ProgML2D::doThreadExpectationSingleImageRefno()
                                 // Normal distribution
                                 aux = (diff - trymindiff) / sigma_noise2;
                                 // next line because of numerical precision of exp-function
-                                if (aux > 1000.)
-                                    weight = 0.;
-                                else
-                                    weight = exp(-aux) * pdf;
+                                weight = (aux > 1000.) ? 0. : exp(-aux) * pdf;
                                 // store weight
                                 stored_weight = weight;
                                 A2D_ELEM(Mweight, i, j) = stored_weight;
@@ -1651,6 +1650,9 @@ void ProgML2D::doThreadExpectationSingleImageRefno()
                                 local_wsum_corr += stored_weight * diff;
                                 refw2[output_refno] += stored_weight;
                             }
+
+                            local_mindiff = XMIPP_MIN(local_mindiff, diff);
+
                             // Accumulate sum weights for this (my) matrix
                             my_sumweight += weight;
                             my_sumstoredweight += stored_weight;
