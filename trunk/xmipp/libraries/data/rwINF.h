@@ -261,8 +261,8 @@ int writeINF(int img_select, bool isStack=false, int mode=WRITE_OVERWRITE, std::
 
     if (mmapOnWrite)
     {
-        offset = 0;
-        mappedSize = offset + datasize;
+        mappedOffset = 0;
+        mappedSize = mappedOffset + datasize;
         fseek(fimg, datasize-1, SEEK_SET);
         fputc(0, fimg);
         mmapFile();

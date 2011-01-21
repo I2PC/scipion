@@ -440,8 +440,8 @@ int writeMRC(int img_select, bool isStack=false, int mode=WRITE_OVERWRITE, std::
     {
         if (mmapOnWrite)
         {
-            offset = ftell(fimg);
-            mappedSize = offset + datasize;
+            mappedOffset = ftell(fimg);
+            mappedSize = mappedOffset + datasize;
             fseek(fimg, datasize-1, SEEK_CUR);
             fputc(0, fimg);
         }

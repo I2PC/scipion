@@ -497,8 +497,8 @@ int  writeSPIDER(int select_img=-1, bool isStack=false, int mode=WRITE_OVERWRITE
     {
         if (mmapOnWrite)
         {
-            offset = ftell(fimg);
-            mappedSize = offset + datasize;
+            mappedOffset = ftell(fimg);
+            mappedSize = mappedOffset + datasize;
             fseek(fimg, datasize-1, SEEK_CUR);
             fputc(0, fimg);
         }
