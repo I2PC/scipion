@@ -24,13 +24,14 @@
  ***************************************************************************/
 
 #include "psf_xr.h"
+#include "fftw.h"
 
 
 /* Definition of command line parameters
  */
 void XRayPSF::defineParams(XmippProgram * program)
 {
-    program->addParamsLine(" [-file <psf_param_file>]       : Read X-ray psf parameters from file.");
+    //    program->addParamsLine(" [-file <psf_param_file>]       : Read X-ray psf parameters from file.");
     program->addParamsLine(" [-lambda <v=2.43>]             : X-ray wavelength (nm).");
     program->addParamsLine(" [-out_width <deltaR=40>]       : Outermost zone width of the X-ray Fresnel lens (nm).");
     program->addParamsLine(" [-zones <N=560>]               : Number of zones of the X-ray Fresnel lens.");
@@ -77,10 +78,11 @@ void XRayPSF::read(const FileName &fn)
         if (MD.getValue(MDL_IMAGE,fnPSF))
         {
             mode = PSF_FROM_FILE;
-            PSF.read(fnPSF);
-            Nox = XSIZE(PSF());
-            Noy = YSIZE(PSF());
-            Noz = ZSIZE(PSF());
+            PSF = new Image<double>;
+            PSF->read(fnPSF);
+            Nox = XSIZE(VOLMATRIX(*PSF));
+            Noy = YSIZE(VOLMATRIX(*PSF));
+            Noz = ZSIZE(VOLMATRIX(*PSF));
         }
         else
         {
@@ -177,7 +179,7 @@ void XRayPSF::write(const FileName &fn)
     MD.setValue(MDL_CTF_XRAY_DIMENSIONS,dimV);
 
     MD.write(fn);
-    PSF.write(fnPSF);
+    PSF->write(fnPSF);
 }
 
 /* Usage ------------------------------------------------------------------- */
@@ -226,8 +228,8 @@ void XRayPSF::show()
     std::cout << *this << std::endl;
 }
 
-/* Default values ---------------------------------------------------------- */
-void XRayPSF::clear()
+/* Initialization of parameters -------------------------------------------  */
+void XRayPSF::init()
 {
     lambda = 2.43e-9;
     //    Flens = 1.4742e-3;
@@ -240,6 +242,16 @@ void XRayPSF::clear()
 
     mode = GENERATE_PSF;
     type = IDEAL_LENS;
+
+    PSF = NULL;
+}
+/* Default values ---------------------------------------------------------- */
+void XRayPSF::clear()
+{
+    if (PSF != NULL)
+        delete PSF;
+
+    init();
 }
 
 /* Produce Side Information ------------------------------------------------ */
@@ -258,82 +270,83 @@ void XRayPSF::produceSideInfo()
 }
 
 /* Apply the OTF to an image ----------------------------------------------- */
-//void XRayPSF::applyOTF(MultidimArray<double> &I) const
-//{
-//}
-
-/* Generate the Intensity PSF for a specific XR microscope configuration     ------------- */
-/* Generate OTF Image ------------------------------------------------------ */
-
-void XRayPSF::generatePSFIdealLens(MultidimArray<double> &PSFi)
+void XRayPSF::applyOTF(MultidimArray<double> &Im, const double sliceOffset)
 {
-    double focalEquiv = 1/(1/Z - 1/Zo); // inverse of defocus = 1/Z - 1/Zo
+//    double Z;
+//    MultidimArray< std::complex<double> > OTF;
 
-    MultidimArray< std::complex<double> > OTFTemp(Niy, Nix), PSFiTemp;
-    //    Mask_Params mask_prm; TODO do we have to include masks using this method?
+    Z = Zo + DeltaZo + sliceOffset;
 
-    lensPD(OTFTemp, focalEquiv, lambda, dxl, dyl);
-
-    FOR_ALL_ELEMENTS_IN_ARRAY2D(OTFTemp)
+    switch (mode)
     {
-        if (sqrt(double(i*i)*dyl*dyl + double(j*j)*dxl*dxl) > Rlens)
-            OTFTemp(i,j)=0;
+    case GENERATE_PSF:
+        {
+            if (type == IDEAL_LENS)
+                generateOTF();
+            break;
+        }
+    case PSF_FROM_FILE:
+        {
+            REPORT_ERROR(ERR_NOT_IMPLEMENTED,"");
+            break;
+        }
     }
 
-#define DEBUG
+    MultidimArray<std::complex<double> > ImFT;
+    FourierTransformer FTransAppOTF;
+
+    //#define DEBUG
 #ifdef DEBUG
+
     Image<double> _Im;
-    _Im().resize(OTFTemp);
-    FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY2D(OTFTemp)
-    dAij(_Im(),i,j) = arg(dAij(OTFTemp,i,j));
-    _Im.write("phase_lens.spi");
-    //    dAij(_Im(),i,j) = abs(dAij(OTFTemp,i,j));
-    //    _Im.write("abs_lens.spi");
+    _Im().resize(Im);
+    FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY2D(Im)
+    dAij(_Im(),i,j) = abs(dAij(Im,i,j));
+
+    _Im.write(("psfxr-Imin.spi"));
 #endif
-#undef DEBUG
 
-    FourierTransformer transformer;
-    transformer.FourierTransform(OTFTemp, PSFiTemp, false);
-    double norm=0;
+    FTransAppOTF.FourierTransform(Im, ImFT, false);
 
-    PSFi.resizeNoCopy(PSFiTemp);
-    CenterOriginFFT(PSFiTemp,0);
+    //#define DEBUG
+#ifdef DEBUG
+
+    Image<double> _Im;
+    _Im().resizeNoCopy(OTF);
+    FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY2D(OTF)
+    dAij(_Im(),i,j) = abs(dAij(OTF,i,j));
+    _Im.write("psfxr-otf2.spi");
+
+    _Im().resizeNoCopy(ImFT);
+    FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY2D(ImFT)
+    dAij(_Im(),i,j) = abs(dAij(ImFT,i,j));
+    _Im.write(("psfxr-imft1.spi"));
+#endif
+
+    FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY2D(ImFT)
+    dAij(ImFT,i,j) *= dAij(OTF,i,j);
 
 #ifdef DEBUG
 
-    _Im.data.resizeNoCopy(PSFiTemp);
-    FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(PSFiTemp)
-    DIRECT_MULTIDIM_ELEM(_Im.data,n) = abs(DIRECT_MULTIDIM_ELEM(PSFiTemp,n));
-    _Im.write("psfitemp.spi");
+    _Im().resize(ImFT);
+    FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY2D(ImFT)
+    dAij(_Im(),i,j) = abs(dAij(ImFT,i,j));
+    _Im.write(("psfxr-imft2.spi"));
 #endif
 
-    FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(PSFi)
-    {
-        DIRECT_MULTIDIM_ELEM(PSFi,n) = abs(DIRECT_MULTIDIM_ELEM(PSFiTemp,n));
-        DIRECT_MULTIDIM_ELEM(PSFi,n) *= DIRECT_MULTIDIM_ELEM(PSFi,n);
-        norm += DIRECT_MULTIDIM_ELEM(PSFi,n);
-    }
-    FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(PSFi)
-    {
-        DIRECT_MULTIDIM_ELEM(PSFi,n) /= norm;
-    }
+    FTransAppOTF.inverseFourierTransform();
 
+    //        CenterOriginFFT(Im, 1);
 
 #ifdef DEBUG
 
-    transformer.inverseFourierTransform();
-
-    CenterOriginFFT(OTFTemp,0);
-    FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(OTFTemp)
-    {
-        DIRECT_MULTIDIM_ELEM(_Im.data,n) = abs(DIRECT_MULTIDIM_ELEM(OTFTemp,n));
-    }
-    _Im.write("otftemp.spi");
-
-    _Im.data.alias(PSFi);
-    _Im.write("psfi.spi");
+    _Im().resize(Im);
+    FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY2D(Im)
+    dAij(_Im(),i,j) = abs(dAij(Im,i,j));
+    _Im.write(("psfxr-imout.spi"));
 #endif
 #undef DEBUG
+
 }
 
 void XRayPSF::generateOTF()
@@ -343,27 +356,15 @@ void XRayPSF::generateOTF()
 
     generatePSFIdealLens(PSFi);
 
-    //    MultidimArray< std::complex<double> > OTFTemp;
-    //    OTFTemp.resizeNoCopy(PSFi);
-
     OTF.resizeNoCopy(PSFi.ydim, PSFi.xdim/2+1);
 
     FourierTransformer transformer;
-    transformer.FourierTransform(PSFi, OTF, false);
+    transformer.FourierTransform(PSFi, OTF);
 
-    //    transformer.inverseFourierTransform();
-    //
-    //
-    //    FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY2D(OTF)
-    //    dAij(OTF,i,j) = dAij(OTFTemp,i,j);
-
-
-
-#define DEBUG
+    //#define DEBUG
 #ifdef DEBUG
 
     Image<double> _Im;
-
     //    CenterOriginFFT(OTFTemp,1);
     //    _Im().resize(OTFTemp);
     //    FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY2D(OTFTemp)
@@ -384,6 +385,141 @@ void XRayPSF::generateOTF()
 #undef DEBUG
 }
 
+/* Generate the Intensity PSF for a specific XR microscope configuration     ------------- */
+void XRayPSF::generatePSF(PsfType _type)
+{
+    type = _type;
+
+    produceSideInfo();
+
+    if (type == IDEAL_LENS)
+    {
+        adjustParam();
+        Nox = Nix;
+        Noy = Niy;
+    }
+
+    PSF = new Image<double>(Nox, Noy, Noz);
+    //    VOLMATRIX(*PSF).resizeNoCopy(Noz, Noy, Nox);
+    VOLMATRIX(*PSF).setXmippOrigin();
+
+    MultidimArray<double> PSFi;
+    int k2;
+
+    init_progress_bar(ZSIZE(VOLMATRIX(*PSF)));
+
+    for (int k = STARTINGZ(VOLMATRIX(*PSF)); k <= FINISHINGZ(VOLMATRIX(*PSF)); k++)
+    {
+        Z = Zo + DeltaZo + k*dzo;
+
+        switch (type)
+        {
+        case IDEAL_LENS:
+            {
+                generatePSFIdealLens(PSFi);
+                break;
+            }
+        case ANALITIC_ZP:
+            {
+                break;
+            }
+        }
+
+        CenterFFT(PSFi,0);
+
+        k2 = k-STARTINGZ(VOLMATRIX(*PSF));
+
+        FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY2D(PSFi)
+        {
+            dAkij(VOLMATRIX(*PSF),k2,i,j) = dAij(PSFi,i,j);
+        }
+        progress_bar(k2);
+    }
+
+    progress_bar(ZSIZE(VOLMATRIX(*PSF)));
+    std::cout  << std::endl;
+}
+
+/* Generate the PSF for a ideal lens --------------------------------------- */
+void XRayPSF::generatePSFIdealLens(MultidimArray<double> &PSFi) const
+{
+    double focalEquiv = 1/(1/Z - 1/Zo); // inverse of defocus = 1/Z - 1/Zo
+
+    MultidimArray< std::complex<double> > OTFTemp(Niy, Nix), PSFiTemp;
+    //    Mask_Params mask_prm; TODO do we have to include masks using this class?
+
+    lensPD(OTFTemp, focalEquiv, lambda, dxl, dyl);
+
+    double x, y;
+
+    FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY2D(OTFTemp) // Circular mask
+    {
+      /// For indices in standard fashion
+        x = (double) j * dxl + dxl*(1 - Nix) / 2;
+        y = (double) i * dyl + dyl*(1 - Niy) / 2;
+
+        if (sqrt(x*x + y*y) > Rlens)
+            dAij(OTFTemp,i,j) = 0;
+    }
+
+    //#define DEBUG
+#ifdef DEBUG
+    Image<double> _Im;
+    _Im().resize(OTFTemp);
+    FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY2D(OTFTemp)
+    dAij(_Im(),i,j) = arg(dAij(OTFTemp,i,j));
+    _Im.write("phase_lens.spi");
+    //    dAij(_Im(),i,j) = abs(dAij(OTFTemp,i,j));
+    //    _Im.write("abs_lens.spi");
+#endif
+#undef DEBUG
+
+    FourierTransformer transformer;
+    transformer.FourierTransform(OTFTemp, PSFiTemp, false);
+    double norm=0, iNorm;
+
+    PSFi.resizeNoCopy(PSFiTemp);
+
+#ifdef DEBUG
+
+    _Im.data.resizeNoCopy(PSFiTemp);
+    FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(PSFiTemp)
+    DIRECT_MULTIDIM_ELEM(_Im.data,n) = abs(DIRECT_MULTIDIM_ELEM(PSFiTemp,n));
+    _Im.write("psfitemp.spi");
+#endif
+
+    FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(PSFi)
+    {
+        DIRECT_MULTIDIM_ELEM(PSFi,n) = abs(DIRECT_MULTIDIM_ELEM(PSFiTemp,n));
+        DIRECT_MULTIDIM_ELEM(PSFi,n) *= DIRECT_MULTIDIM_ELEM(PSFi,n);
+        norm += DIRECT_MULTIDIM_ELEM(PSFi,n);
+    }
+
+    iNorm = 1/norm;
+
+    FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(PSFi)
+    {
+        DIRECT_MULTIDIM_ELEM(PSFi,n) *= iNorm;
+    }
+
+
+#ifdef DEBUG
+
+    transformer.inverseFourierTransform();
+
+    CenterOriginFFT(OTFTemp,0);
+    FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(OTFTemp)
+    {
+        DIRECT_MULTIDIM_ELEM(_Im.data,n) = abs(DIRECT_MULTIDIM_ELEM(OTFTemp,n));
+    }
+    _Im.write("otftemp.spi");
+
+    _Im.data.alias(PSFi);
+    _Im.write("psfi.spi");
+#endif
+#undef DEBUG
+}
+
 void XRayPSF::adjustParam(Image<double> &vol)
 {
     Nox = vol().xdim;
@@ -395,8 +531,6 @@ void XRayPSF::adjustParam(Image<double> &vol)
 
 void XRayPSF::adjustParam()
 {
-
-    produceSideInfo();
 
     dxl = lambda*Zi / (Nox * dxi); // Pixel X-size en the plane of lens aperture
     dyl = lambda*Zi / (Noy * dxi); // Pixel Y-size en the plane of lens aperture
@@ -485,59 +619,6 @@ void XRayPSF::adjustParam()
     }
 }
 
-void XRayPSF::generatePSF(PsfType _type)
-{
-    type = _type;
-
-    produceSideInfo();
-
-    if (type == IDEAL_LENS)
-    {
-        adjustParam();
-        Nox = Nix;
-        Noy = Niy;
-    }
-
-    PSF().resizeNoCopy(Noz, Noy, Nox);
-    PSF().setXmippOrigin();
-
-    MultidimArray<double> PSFi;
-    int k2;
-
-    init_progress_bar(ZSIZE(PSF()));
-
-    for (int k = STARTINGZ(PSF.data); k <= FINISHINGZ(PSF.data); k++)
-    {
-        Z = Zo + DeltaZo + k*dzo;
-
-        switch (type)
-        {
-        case IDEAL_LENS:
-            {
-                generatePSFIdealLens(PSFi);
-                break;
-            }
-        case ANALITIC_ZP:
-            {
-                break;
-            }
-        }
-
-        PSFi.setXmippOrigin();
-
-        k2 = k-STARTINGZ(PSF.data);
-
-        FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY2D(PSFi)
-        {
-            dAkij(IMGMATRIX(PSF),k2,i,j) = dAij(PSFi,i,j);
-        }
-        progress_bar(k2);
-    }
-
-    progress_bar(ZSIZE(PSF()));
-    std::cout  << std::endl;
-}
-
 /* Generate the quadratic phase distribution of an ideal lens ------------- */
 void lensPD(MultidimArray<std::complex<double> > &Im, double Flens, double lambda, double dx, double dy)
 {
@@ -551,12 +632,13 @@ void lensPD(MultidimArray<std::complex<double> > &Im, double Flens, double lambd
     {
         /// For indices in standard fashion
         x = (double) j * dx + (dx - Lx0) / 2;
-        y = (double) i * dx + (dx - Ly0) / 2;
+        y = (double) i * dy + (dy - Ly0) / 2;
 
         //        x = (double) j * dx + (dx) / 2;
         //        y = (double) i * dy + (dy) / 2;
 
         phase = (-PI / lambda / Flens) * (x * x + y * y);
+
 #ifndef _AIX
 
         dAij(Im,i,j).real() = cos(phase);

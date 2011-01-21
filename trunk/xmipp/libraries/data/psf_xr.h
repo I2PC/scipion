@@ -27,11 +27,9 @@
 #define _PSF_XR_HH
 
 #include <complex>
-#include "fftw.h"
 #include "image.h"
 #include "projection.h"
 #include "program.h"
-
 
 /**@defgroup PSFXRSupport X-Ray Microscope PSF class
    @ingroup DataLibrary */
@@ -47,13 +45,15 @@ typedef enum
 } PsfxrAdjust;
 
 // PSF Generation algorithm
+/* ANALITIC_ZP is based on  O. Mendoza-Yero et als."PSF analysis of nanometric Fresnel
+ * zone plates," EOS Topical Meeting on Diffractive Optics 2010,
+ * ISBN 978-3-00-024193-2, 14th-18th February
+ * 2010, Koli, Finland. (contact email:omendoza@uji.es)
+ */
 typedef enum
 {
     IDEAL_LENS,
-    ANALITIC_ZP /// Based on  O. Mendoza-Yero et als."PSF analysis of nanometric Fresnel
-    /// zone plates," EOS Topical Meeting on Diffractive Optics 2010,
-    /// ISBN 978-3-00-024193-2, 14th-18th February
-    /// 2010, Koli, Finland. (contact email:omendoza@uji.es)
+    ANALITIC_ZP
 } PsfType;
 
 /** X-ray PSF class.
@@ -104,11 +104,11 @@ class XRayPSF
 public:
 
     // Operation modes
-    enum operMode
+    typedef enum
     {
         GENERATE_PSF,
         PSF_FROM_FILE
-    };
+    } operMode;
 
     operMode mode;
 
@@ -118,7 +118,7 @@ public:
     // Current OTF
     MultidimArray< std::complex<double> > OTF;
     // 3D PSF
-    Image<double> PSF;
+    Image<double> * PSF;
 
     /* RX Microscope configuration */
     /// Lens Aperture Radius
@@ -187,16 +187,26 @@ public:
     // Number of threads
     int nThr;
 
+public:
     /** Empty constructor. */
     XRayPSF()
     {
-        clear();
+        init();
     }
 
     /* Destructor
      */
     ~XRayPSF()
-    {}
+    {
+        clear();
+    }
+
+    /* Initialization of parameters
+     */
+    void init();
+
+    /// Clear.
+    void clear();
 
     /* Definition of params to be read from command line
      */
@@ -223,82 +233,14 @@ public:
     /// Show
     friend std::ostream & operator <<(std::ostream &out, const XRayPSF &psf);
 
-    /// Clear.
-    void clear();
-
     /// Produce Side information
     void produceSideInfo();
 
     /// Apply the OTF to the image, by means of the convolution
-    template <typename T>
-    void applyOTF(MultidimArray<T> &Im)
-    {
-
-        switch (mode)
-        {
-        case GENERATE_PSF:
-            {
-                if (type == IDEAL_LENS)
-                    generateOTF();
-                break;
-            }
-        case PSF_FROM_FILE:
-            {
-                break;
-            }
-        }
-
-        MultidimArray<std::complex<double> > ImFT;
-        FourierTransformer transformer;
-
-        //#define DEBUG
-#ifdef DEBUG
-
-        Image<double> _Im;
-        _Im().resize(Im);
-        FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY2D(Im)
-        dAij(_Im(),i,j) = abs(dAij(Im,i,j));
-
-        _Im.write(("psfxr-Imin.spi"));
-#endif
-
-        transformer.FourierTransform(Im, ImFT, false);
-
-#ifdef DEBUG
-
-        _Im().resizeNoCopy(ImFT);
-        FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY2D(ImFT)
-        dAij(_Im(),i,j) = abs(dAij(ImFT,i,j));
-        _Im.write(("psfxr-imft1.spi"));
-#endif
-
-        FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY2D(ImFT)
-        dAij(ImFT,i,j) *= dAij(OTF,i,j);
-
-#ifdef DEBUG
-
-        _Im().resize(ImFT);
-        FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY2D(ImFT)
-        dAij(_Im(),i,j) = abs(dAij(ImFT,i,j));
-        _Im.write(("psfxr-imft2.spi"));
-#endif
-
-        transformer.inverseFourierTransform();
-
-        //        CenterOriginFFT(Im, 1);
-
-#ifdef DEBUG
-
-        _Im().resize(Im);
-        FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY2D(Im)
-        dAij(_Im(),i,j) = abs(dAij(Im,i,j));
-        _Im.write(("psfxr-imout.spi"));
-#endif
-
-    }
+    void applyOTF(MultidimArray<double> &Im, const double sliceOffset);
 
     /// Generate the Optical Transfer Function (OTF) for a slice according to Microscope and Im parameters.
-    void generateOTF() ;
+    void generateOTF();
 
     /// Generate the 3D Point Spread Function (PSF) according to Microscope parameters.
     void generatePSF(PsfType _type = IDEAL_LENS);
@@ -309,7 +251,7 @@ public:
 
 protected:
     /// Generate the PSF for a single plane according to a ideal lens.
-    void generatePSFIdealLens(MultidimArray<double> &PSFi);
+    void generatePSFIdealLens(MultidimArray<double> &PSFi) const;
 };
 
 /// Generate the quadratic phase distribution of a ideal lens

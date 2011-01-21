@@ -50,7 +50,7 @@ protected:
 };
 
 
-class Projection_mpi_XR_Parameters: public Projection_XR_Parameters
+class Projection_mpi_XR_Parameters: public ParametersProjectionXR
 {
 public:
     /** Number of Processors **/

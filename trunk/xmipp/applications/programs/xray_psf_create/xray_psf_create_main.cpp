@@ -24,7 +24,7 @@
  ***************************************************************************/
 
 #include "data/psf_xr.h"
-#include "data/progs.h"
+#include "data/program.h"
 
 
 class ProgPSFXrCreate: public XmippProgram
@@ -56,6 +56,7 @@ protected:
         {
             fnParam = getParam("-i");
             psf.read(fnParam);
+            psf.verbose = verbose;
         }
         else
             psf.readParams(this);

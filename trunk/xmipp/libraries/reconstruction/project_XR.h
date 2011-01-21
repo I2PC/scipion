@@ -26,13 +26,8 @@
 #ifndef _PROJECTXR_H_
 #define _PROJECTXR_H_
 
-
-#include <data/funcs.h>
-#include <data/metadata.h>
-#include <data/projection.h>
-#include <data/psf_xr.h>
 #include <data/program.h>
-#include <data/transformations.h>
+#include <data/psf_xr.h>
 #include <data/threads.h>
 
 
@@ -78,64 +73,11 @@ public:
 /* Projection parameters --------------------------------------------------- */
 /** Projecting parameters.
     This class reads a set of projection parameters in a file (see
-    xmipp_project_xr
-    for more information about the file structure) and extract the
+    xmipp_xray_project for more information about the file structure) and extract the
     useful information from it.*/
-class Projection_XR_Parameters
+class ParametersProjectionXR: public ParametersProjectionTomography
 {
 public:
-    /** Phantom filename.
-        It must be a Xmipp volume. */
-    FileName fnPhantom;
-    /// Starting name for all projections
-    std::string   fnProjectionSeed;
-    /// First projection number. By default, 1.
-    int      starting;
-    /// Extension for projection filenames. This is optional
-    std::string   fn_projection_extension;
-
-    /// Projection Xdim
-    int      proj_Xdim;
-    /// Projection Ydim
-    int      proj_Ydim;
-
-    /// Debugging level. See \ref Prog_Project_Parameters::tell
-    int tell;
-
-    /// Rotational angle of the tilt axis
-    double axisRot;
-    /// Tilt angle of the tilt axis
-    double axisTilt;
-    /// Offset of the tilt axis
-    Matrix1D<double> raxis;
-    /// Minimum tilt around this axis
-    double tilt0;
-    /// Maximum tilt around this axis
-    double tiltF;
-    /// Step in tilt
-    double tiltStep;
-
-    /// Bias to be applied to each pixel grey value */
-    double    Npixel_avg;
-    /// Standard deviation of the noise to be added to each pixel grey value
-    double    Npixel_dev;
-
-    /// Bias to apply to the image center
-    double    Ncenter_avg;
-    /// Standard deviation of the image center
-    double    Ncenter_dev;
-
-    /// Bias to apply to the angles
-    double    Nangle_avg;
-    /// Standard deviation of the angles
-    double    Nangle_dev;
-
-public:
-    /** Read projection parameters from a file.
-        An exception is thrown if the file is not found or any of the
-        parameters is not found in the right place.*/
-    void read(const FileName &fn_proj_param);
-
 
     void calculateProjectionAngles(Projection &P, double angle, double inplaneRot,
                                    const Matrix1D<double> &rinplane);
@@ -160,7 +102,7 @@ public:
     /** Produce Project Side information.
         This function produce the side information from the project
         program parameters. Basically it loads the phantom.*/
-    void produce_Side_Info(const Projection_XR_Parameters &prm);
+    void produce_Side_Info(const ParametersProjectionXR &prm);
 };
 
 /* Effectively project ----------------------------------------------------- */
@@ -171,7 +113,7 @@ public:
     to project only one image, although it is also written to disk.
     The returned number is the total number of projections generated.
     A selection file with all images is also returned.*/
-int PROJECT_XR_Effectively_project( Projection_XR_Parameters &prm,
+int PROJECT_XR_Effectively_project( ParametersProjectionXR &prm,
                                     PROJECT_XR_Side_Info &side, Projection &proj,XRayPSF &psf, MetaData &SF);
 
 /** From voxel volumes, off-centered tilt axis.

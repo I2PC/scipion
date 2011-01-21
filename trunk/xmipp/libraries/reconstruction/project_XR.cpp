@@ -24,11 +24,7 @@
  ***************************************************************************/
 
 #include "project_XR.h"
-
-#include <data/args.h>
 #include <data/psf_xr.h>
-
-
 
 void ProgProjectXR::defineParams()
 {
@@ -42,8 +38,6 @@ void ProgProjectXR::defineParams()
     addParamsLine("[-only_create_angles]   : Projections are not calculated, only the angles values.");
     addParamsLine("[-thr <threads=1>]      : Number of concurrent threads.");
 }
-
-
 
 /* Read from command line ================================================== */
 void ProgProjectXR::readParams()
@@ -66,8 +60,6 @@ void ProgProjectXR::run()
     Projection         proj;
     MetaData           SF;
 
-    //    ROUT_XR_project(*this, proj, SF);
-
     randomize_random_generator();
 
     // Read Microscope optics parameters and produce side information
@@ -81,7 +73,7 @@ void ProgProjectXR::run()
 
 
     // Read projection parameters and produce side information
-    Projection_XR_Parameters proj_prm;
+    ParametersProjectionXR proj_prm;
     proj_prm.read(fn_proj_param);
     proj_prm.tell=tell;
     PROJECT_XR_Side_Info side;
@@ -106,115 +98,9 @@ void ProgProjectXR::run()
         side.DF.write("/dev/stdout");
     }
     return;
-
-
-
 }
 
-
-
-/* Read Projection Parameters ============================================== */
-void Projection_XR_Parameters::read(const FileName &fn_proj_param)
-{
-    FILE    *fh_param;
-    char    line[201];
-    int     lineNo = 0;
-    char    *auxstr;
-
-    if (fn_proj_param=="")
-        REPORT_ERROR(ERR_ARG_MISSING,
-                     (std::string)"Projection_XR_Parameters::read: There is no parameters file.");
-
-
-    if ((fh_param = fopen(fn_proj_param.c_str(), "r")) == NULL)
-        REPORT_ERROR(ERR_IO_NOTOPEN,
-                     (std::string)"Projection_XR_Parameters::read: There is a problem "
-                     "opening the file " + fn_proj_param);
-    while (fgets(line, 200, fh_param) != NULL)
-    {
-        if (line[0] == 0)
-            continue;
-        if (line[0] == '#')
-            continue;
-        if (line[0] == '\n')
-            continue;
-        switch (lineNo)
-        {
-        case 0:
-            fnPhantom = firstWord(line);
-            lineNo = 1;
-            break;
-        case 1:
-            fnProjectionSeed =
-                firstWord(line);
-            // Next two parameters are optional
-            auxstr = nextToken();
-            if (auxstr != NULL)
-                starting =
-                    textToInteger(auxstr);
-            fn_projection_extension = nextToken();
-            lineNo = 2;
-            break;
-        case 2:
-            proj_Xdim = textToInteger(firstToken(line));
-            proj_Ydim = textToInteger(nextToken());
-            lineNo = 3;
-            break;
-        case 3:
-            axisRot = textToFloat(firstToken(line));
-            axisTilt = textToFloat(nextToken());
-            lineNo = 4;
-            break;
-        case 4:
-            raxis.resize(3);
-            XX(raxis) = textToFloat(firstToken(line));
-            YY(raxis) = textToFloat(nextToken());
-            ZZ(raxis) = textToFloat(nextToken());
-            lineNo = 5;
-            break;
-        case 5:
-            tilt0 = textToFloat(firstToken(line));
-            tiltF = textToFloat(nextToken());
-            tiltStep = textToFloat(nextToken());
-            lineNo = 6;
-            break;
-        case 6:
-            Nangle_dev = textToFloat(firstWord(line));
-            auxstr = nextToken();
-            if (auxstr != NULL)
-                Nangle_avg = textToFloat(auxstr);
-            else
-                Nangle_avg = 0;
-            lineNo = 7;
-            break;
-        case 7:
-            Npixel_dev = textToFloat(firstWord(line));
-            auxstr = nextToken();
-            if (auxstr != NULL)
-                Npixel_avg = textToFloat(auxstr);
-            else
-                Npixel_avg = 0;
-            lineNo = 8;
-            break;
-        case 8:
-            Ncenter_dev = textToFloat(firstWord(line));
-            auxstr = nextToken();
-            if (auxstr != NULL)
-                Ncenter_avg = textToFloat(auxstr);
-            else
-                Ncenter_avg = 0;
-            lineNo = 9;
-            break;
-        } /* switch end */
-    } /* while end */
-    if (lineNo != 9)
-        REPORT_ERROR(ERR_PARAM_MISSING, (std::string)"Projection_XR_Parameters::read: I "
-                     "couldn't read all parameters from file " + fn_proj_param);
-    fclose(fh_param);
-}
-
-
-void Projection_XR_Parameters::calculateProjectionAngles(Projection &P, double angle, double inplaneRot,
+void ParametersProjectionXR::calculateProjectionAngles(Projection &P, double angle, double inplaneRot,
         const Matrix1D<double> &rinplane)
 {
     // double axisRot, double axisTilt,
@@ -238,7 +124,7 @@ void Projection_XR_Parameters::calculateProjectionAngles(Projection &P, double a
 
 /* Produce Side Information ================================================ */
 void PROJECT_XR_Side_Info::produce_Side_Info(
-    const Projection_XR_Parameters &prm)
+    const ParametersProjectionXR &prm)
 {
     phantomVol.read(prm.fnPhantom);
     phantomVol().setXmippOrigin();
@@ -246,7 +132,7 @@ void PROJECT_XR_Side_Info::produce_Side_Info(
 }
 
 /* Effectively project ===================================================== */
-int PROJECT_XR_Effectively_project(Projection_XR_Parameters &prm,
+int PROJECT_XR_Effectively_project(ParametersProjectionXR &prm,
                                    PROJECT_XR_Side_Info &side,
                                    Projection &proj,
                                    XRayPSF &psf,
@@ -399,7 +285,7 @@ void project_xr_Volume_offCentered(PROJECT_XR_Side_Info &side, XRayPSF &psf, Pro
         std::cout << "Image resize (Nx,Ny): (" << iniXdim << "," << iniYdim << ") --> ("
         << xend - xinit +1<< "," << yend - yinit +1 << ") " << std::endl;
 
-#if DEBUG
+#ifdef DEBUG
 
         std::cout <<"yoffsetN "<< yOffsetN <<std::endl;
         std::cout <<"xoffsetN "<< xOffsetN <<std::endl;
@@ -553,7 +439,7 @@ void thread_project_xr(ThreadArgument &thArg)
                 _Im.write("psfxr-imTemp.spi");
 #endif
 
-                psf.Z = psf.Zo + psf.DeltaZo - k*psf.dzo + imOutGlobal.Zoff();
+//                psf.Z = psf.Zo + psf.DeltaZo - k*psf.dzo + imOutGlobal.Zoff();
 
                 switch (psf.AdjustType)
                 {
@@ -587,7 +473,7 @@ void thread_project_xr(ThreadArgument &thArg)
                 _Im.write("psfxr-imTempEsc.spi");
 #endif
 
-                psf.applyOTF(*imTempP);
+                psf.applyOTF(*imTempP, imOutGlobal.Zoff()- k*psf.dzo);
 
 #ifdef DEBUG
 
