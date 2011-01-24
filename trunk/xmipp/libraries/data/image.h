@@ -254,8 +254,8 @@ public:
      *
      */
     int read(const FileName &name, bool readdata=true, int select_img = -1,
-             bool apply_geo = false, bool only_apply_shifts = false,
-             MDRow * row = NULL, bool mapData = false)
+              bool apply_geo = false, bool only_apply_shifts = false,
+              MDRow * row = NULL, bool mapData = false)
     {
         ImageFHandler* hFile = openFile(name);
         int err = _read(name, hFile, readdata, select_img, apply_geo, only_apply_shifts, row, mapData);
@@ -264,7 +264,35 @@ public:
         return err;
     }
 
-    /** Read an image from metadata*/
+    /** Read an image from metadata, filename is provided*/
+    int read(const FileName &name, const MetaData &md, int objId,
+             bool readdata=true, int select_img = -1,
+             bool only_apply_shifts = false, bool mapData = false)
+    {
+        ImageFHandler* hFile = openFile(name);
+        MDRow row;
+        md.getRow(row, objId);
+        int err = _read(name, hFile, readdata, select_img, true, only_apply_shifts, &row, mapData);
+        closeFile(hFile);
+
+        return err;
+    }
+
+    /** Read an image from metadata, filename is taken from MDL_IMAGE */
+    int read(const MetaData &md, int objId,
+             bool readdata=true, int select_img = -1,
+             bool only_apply_shifts = false, bool mapData = false)
+    {
+        MDRow row;
+        md.getRow(row, objId);
+        FileName name;
+        row.getValue(MDL_IMAGE, name);
+        ImageFHandler* hFile = openFile(name);
+        int err = _read(name, hFile, readdata, select_img, true, only_apply_shifts, &row, mapData);
+        closeFile(hFile);
+
+        return err;
+    }
 
     /* Read an image with a lower resolution as a preview image.
      * If Zdim parameter is not passed, then all slices are rescaled.
@@ -1256,8 +1284,8 @@ public:
     /** Get geometric transformation matrix from 2D-image header
       */
     void getTransformationMatrix(Matrix2D<double> &A,
-        bool only_apply_shifts = false,
-        long int n = 0)
+                                 bool only_apply_shifts = false,
+                                 long int n = 0)
     {
         // This has only been implemented for 2D images...
         MULTIDIM_ARRAY(*this).checkDimension(2);
@@ -1662,7 +1690,7 @@ private:
                 if (rowAux.containsLabel(label))
                     *(rowAux.getObject(label)) = *(*it);
                 else
-                  rowAux.push_back(new MDObject(*(*it)));
+                    rowAux.push_back(new MDObject(*(*it)));
             }
         }
 
@@ -1678,7 +1706,7 @@ private:
             {
                 MultidimArray<T> tmp=MULTIDIM_ARRAY(*this);
                 applyGeometry(BSPLINE3, MULTIDIM_ARRAY(*this), tmp,
-                    A, IS_INV, WRAP);
+                              A, IS_INV, WRAP);
             }
         }
 
