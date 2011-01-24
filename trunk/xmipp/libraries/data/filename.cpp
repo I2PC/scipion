@@ -353,7 +353,6 @@ FileName FileName::getFileFormat() const
     else if ( (first = rfind("."))!=String::npos)
         result = substr(first + 1);
     return result.toLowercase();
-
 }
 
 FileName FileName::removeFileFormat() const
@@ -362,6 +361,27 @@ FileName FileName::removeFileFormat() const
     if (found!=String::npos)
         return substr(0, found);
     found=rfind(":");
+    if (found!=String::npos)
+        return substr(0, found);
+    return *this;
+}
+
+FileName FileName::removeBlockName() const
+{
+    int first;
+    std::string result;
+    if ( (first = rfind("@"))!=String::npos)
+        result = substr(first + 1) ;
+    else
+        result = "";
+    return result;
+
+}
+
+std::string FileName::getBlockName() const
+{
+    size_t found;
+    found=rfind("@");
     if (found!=String::npos)
         return substr(0, found);
     return *this;
