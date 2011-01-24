@@ -214,7 +214,7 @@ void substituteOriginalImages(const FileName &fn, const FileName &fnOrig, const 
 	for (int b=0; b<blocks.size(); b++)
 	{
 		MetaData MD;
-		MD.read(fn,NULL,blocks[b]);
+		MD._read(fn,NULL,blocks[b]);
 		if (MD.containsLabel(label) && (!skipFirstBlock || b!=0))
 		{
 			FileName fnImg;
@@ -227,6 +227,6 @@ void substituteOriginalImages(const FileName &fn, const FileName &fnOrig, const 
 				MD.setValue(label,filesOrig[stkNo]);
 			}
 		}
-		MD.write(fnOut,blocks[b],APPEND);
+		MD._write(fnOut,blocks[b],APPEND);
 	}
 }
