@@ -227,7 +227,7 @@ public:
 
     /** Get blockName from filename
      * @code
-     * fn_meta="md1.doc:block1"
+     * fn_meta="block1@md1.doc"
      * std::string blockName;
      * blockName=fn_meta.getblockName();//blockName="block1"
      * @endcode
@@ -237,7 +237,7 @@ public:
 
     /** Remove blockName from filename
      * @code
-     * fn_meta="md1.doc:block1"
+     * fn_meta="block1@md1.doc"
      * std::string blockName;
      * filename=fn_meta.getblockName();//filename="md1.doc"
      * @endcode
