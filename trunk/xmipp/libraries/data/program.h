@@ -53,9 +53,9 @@
 class XmippProgram
 {
 private:
-  /** Flag to check whether to run or not*/
-  bool notRun;
-  /** Initialization function */
+    /** Flag to check whether to run or not*/
+    bool notRun;
+    /** Initialization function */
     void init();
 
     /** Function to check built-ins actions like --more, --help...etc */
@@ -215,8 +215,6 @@ public:
     /// Filenames of input and output Metadata
     FileName        fn_in, fn_out;
 protected:
-    /// Metadata Blockname (several metadata may go in the same file)
-    std::string blockName;
     /// Metadata writing mode: OVERWRITE, APPEND
     WriteModeMetaData mode;
     /// Input and output metadatas
@@ -263,6 +261,10 @@ protected:
 
 public:
     XmippMetadataProgram();
+    void setMode(WriteModeMetaData _mode)
+    {
+        mode = _mode;
+    }
     virtual void run();
 }
 ;// end of class XmippMetadataProgram
