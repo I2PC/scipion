@@ -36,6 +36,7 @@ class ProgMetadataUtilities: public XmippProgram
 {
 private:
 
+    WriteModeMetaData mode;
 protected:
     void defineParams()
     {
@@ -44,46 +45,56 @@ protected:
         addParamsLine("  [--label <l1> ]                 : metadata label");
         addParamsLine("     alias -l;");
 
+        addParamsLine(" [--mode+ <mode=overwrite>]   : Metadata writing mode.");
+        addParamsLine("    where <mode>");
+        addParamsLine("     overwrite   : Replace the content of the file with the Metadata");
+        addParamsLine("     append      : Write the Metadata as a new block, removing the old one");
+
         addParamsLine("  [--expression <e1> ]                 : constrain applied in select");
         addParamsLine("     alias -e;");
 
-        addParamsLine("   [-o  <w1>]                          : Name of output metadata file");
+        addParamsLine("   [-o  <md>]                          : Name of output metadata file");
 
-        addParamsLine("   --union  <md1> <md2>             : union of metadata files md1 and md2");
+        addParamsLine("   --union  <md11> <md22>             : union of metadata files md1 and md2");
         addParamsLine("     alias -u;");
         addParamsLine("           requires --label, -o;                                                         ");
 
-        addParamsLine("or --intersection <md1> <md2>        : Intersection of md1 and md2");
+        addParamsLine("or --intersection <md11> <md22>        : Intersection of md1 and md2");
         addParamsLine("     alias -i;");
         addParamsLine("           requires --label, -o;                                                         ");
 
-        addParamsLine("or --subtraction <md1> <md2>         : subtraction of md1 and md2");
+        addParamsLine("or --subtraction <md11> <md22>         : subtraction of md1 and md2");
         addParamsLine("     alias -s;");
         addParamsLine("           requires --label, -o;                                                         ");
 
-        addParamsLine("or --join <md1> <md2>                : inner join of md1 and md2 using label l1");
+        addParamsLine("or --join <md11> <md22>                : inner join of md1 and md2 using label l1");
         addParamsLine("     alias -j;");
         addParamsLine("           requires --label, -o;                                                         ");
 
-        addParamsLine("or --sort <md1>                      : sort metadata md1 using label l1");
-        addParamsLine("                                     : for sorting accordind to a component of a vector label");
+        addParamsLine("or --sort <md11>                      : sort metadata md1 using label l1");
+        addParamsLine("                                     : for sorting according to a component of a vector label");
         addParamsLine("                                     : use label:col, e.g., NMADisplacements:0");
         addParamsLine("                                     : The first column is column number 0");
         addParamsLine("           requires --label, -o;                                                         ");
 
-        addParamsLine("or --convert2db <md1>                : convert metadata to sqlite database");
+        addParamsLine("or --convert2db <md11>                : convert metadata to sqlite database");
 
-        addParamsLine("or --copy  <md1> <path>               : copy files in metadata md1 to directory path (file names at lable column)");
+        addParamsLine("or --copy  <md11> <path>               : copy files in metadata md1 to directory path (file names at lable column)");
         addParamsLine("           requires --label, -o;                                                         ");
 
-        addParamsLine("or --move  <md1> <path>               : move files in metadata md1 to directory path (file names at lable column)");
+        addParamsLine("or --move  <md11> <path>               : move files in metadata md1 to directory path (file names at lable column)");
         addParamsLine("           requires --label, -o;                                                         ");
 
-        addParamsLine("or --delete  <md1>                    : delete files in metadata md1 (file names at label column)");
+        addParamsLine("or --delete  <md11>                    : delete files in metadata md1 (file names at label column)");
         addParamsLine("           requires --label;                                                         ");
 
-        addParamsLine("or --select  <md1> <exp>       : create new metadata with those entries that satisfy the expression 'exp'");
+        addParamsLine("or --select  <md11> <exp>       : create new metadata with those entries that satisfy the expression 'exp'");
         addParamsLine("           requires -o;                                                         ");
+
+        addParamsLine("or --count  <md11>              : for each value of a given label create new metadata with the number of times the value appears");
+        addParamsLine("           requires --label, -o;                                                         ");
+
+        addParamsLine("or --size  <md11>              : metadata size");
 
         addExampleLine(" Concatenate two metadatas.", false);
         addExampleLine ("   xmipp_metadata_utilities --union         mD1.doc mD2.doc  -o out.doc --label image");
@@ -103,6 +114,10 @@ protected:
         addExampleLine ("   xmipp_metadata_utilities --delete out.doc                            --label image");
         addExampleLine(" Select elements in metadata that satisfy a given constrain.", false);
         addExampleLine ("   xmipp_metadata_utilities --select mD1.doc \"anglePsi > 0 AND shiftX > -0.5\" -o out.doc");
+        addExampleLine(" Count number of images per CTF", false);
+        addExampleLine ("   xmipp_metadata_utilities --count mD1.doc  -o out.doc --label CTFModel");
+        addExampleLine(" Metadata Size", false);
+        addExampleLine ("   xmipp_metadata_utilities --size mD1.doc");
 
     }
     typedef enum {
@@ -116,7 +131,9 @@ protected:
         _delete=7,
         _select=8,
         _sort=9,
-        _convert2db=10
+        _convert2db=10,
+        _count=11,
+        _size=12
     } OperationType;
     OperationType operationType;
     MetaData inMD1, inMD2, outMD;
@@ -158,6 +175,12 @@ protected:
 
         else if (strcmp(s,"convert2db") == 0)
             operationType = _convert2db;
+
+        else if (strcmp(s,"count") == 0)
+                operationType = _count;
+
+        else if (strcmp(s,"size") == 0)
+                operationType = _size;
     }
 
     void readParams()
@@ -166,6 +189,7 @@ protected:
             outFileName = getParam("-o");
         if (checkParam("--label"))
             _label = getParam("--label");
+        mode = metadataModeConvert(getParam("--mode"));
 
         if (checkParam("--union"))
         {
@@ -234,6 +258,18 @@ protected:
             inFileName1 = getParam("--select",0);
             expression = getParam("--select",1);
         }
+
+        else if (checkParam("--count"))
+        {
+            encode("count");
+            inFileName1 = getParam("--count",0);
+            outFileName  = getParam("-o");
+        }
+        else if (checkParam("--size"))
+        {
+            encode("size");
+            inFileName1 = getParam("--size",0);
+        }
     }
 public:
     void run()
@@ -245,31 +281,31 @@ public:
             inMD1.read(inFileName1);
             inMD2.read(inFileName2);
             inMD1.unionDistinct(inMD2, MDL::str2Label(_label));
-            inMD1.write(outFileName);
+            inMD1.write(outFileName,mode);
             break;
         case _intersection:
             inMD1.read(inFileName1);
             inMD2.read(inFileName2);
             inMD1.intersection(inMD2, MDL::str2Label(_label));
-            inMD1.write(outFileName);
+            inMD1.write(outFileName,mode);
             break;
         case _subtraction:
             inMD1.read(inFileName1);
             inMD2.read(inFileName2);
             inMD1.subtraction(inMD2, MDL::str2Label(_label));
-            inMD1.write(outFileName);
+            inMD1.write(outFileName,mode);
             break;
         case _sort:
             inMD1.read(inFileName1);
           	outMD.sort(inMD1, _label);
-            outMD.write(outFileName);
+            outMD.write(outFileName,mode);
             break;
         case _join:
             inMD1.read(inFileName1);
             inMD2.read(inFileName2);
             MDSql::dumpToFile("pp.db");
             outMD.join(inMD1,inMD2, MDL::str2Label(_label));
-            outMD.write(outFileName);
+            outMD.write(outFileName,mode);
             break;
         case _copy:
             inMD1.read(inFileName1);
@@ -286,7 +322,7 @@ public:
                 outFnImg = tmpFileName + "/" + outFnImg;
                 inFnImg.copyFile(outFnImg);
             }
-            outMD.write(tmpFileName+"/"+outFileName);
+            outMD.write(tmpFileName+"/"+outFileName,mode);
             break;
         case _move:
             inMD1.read(inFileName1);
@@ -303,7 +339,7 @@ public:
                 outFnImg = tmpFileName + "/" + outFnImg;
                 rename(inFnImg.c_str(),outFnImg.c_str());
             }
-            outMD.write(tmpFileName+"/"+outFileName);
+            outMD.write(tmpFileName+"/"+outFileName,mode);
             break;
         case _delete:
             inMD1.read(inFileName1);
@@ -318,10 +354,22 @@ public:
             {
                 inMD1.read(inFileName1);
                 outMD.importObjects(inMD1, MDExpression(expression));
-                outMD.write(outFileName);
+                outMD.write(outFileName,mode);
             }
             break;
-
+        case _count:
+            {
+                inMD1.read(inFileName1);
+                outMD.aggregate(inMD1, AGGR_COUNT,MDL::str2Label(_label),MDL_CTFMODEL,MDL_COUNT);
+                outMD.write(outFileName,mode);
+            }
+            break;
+        case _size:
+            {
+                inMD1.read(inFileName1);
+                std::cout << inFileName1 + " size is: " << inMD1.size() << std::endl;
+            }
+            break;
         case _convert2db:
             {
                 inMD1.read(inFileName1);
@@ -330,7 +378,7 @@ public:
             break;
 
         default:
-            REPORT_ERROR(ERR_ARG_INCORRECT,"Unknown operation");
+            REPORT_ERROR(ERR_ARG_INCORRECT,"Unknown operation.");
         }
     }
 }
@@ -338,15 +386,10 @@ public:
 
 int main(int argc, char **argv)
 {
-    try
-    {
+
         ProgMetadataUtilities program;
         program.read(argc, argv);
-        program.run();
+        program.tryRun();
 
-    }
-    catch (XmippError e)
-    {
-        std::cerr << e.msg <<std::endl;
-    }
+
 }
