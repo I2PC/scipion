@@ -169,6 +169,12 @@ enum MDLabel
     MDL_ORIGINY, ///< Origin for the image in the Y axis (double)
     MDL_ORIGINZ, ///< Origin for the image in the Z axis (double)
     MDL_PMAX, ///< Maximum value of normalized probability function (now called "Pmax/sumP") (double)
+
+    MDL_PRJ_DIMENSIONS,
+    MDL_PRJ_SEED,
+    MDL_PRJ_VOL,
+
+
     MDL_PSD, ///< A Power Spectrum Density file name (std::string)
     MDL_Q0, ///< ctf definition Q0
     MDL_RANDOMSEED, ///< Seed for random number generator
@@ -400,6 +406,7 @@ private:
         MDL::addLabel(MDL_MODELFRAC, LABEL_DOUBLE, "modelFraction");
         MDL::addLabel(MDL_NMA, LABEL_VECTOR, "NMADisplacements");
         MDL::addLabel(MDL_ORDER, LABEL_INT, "order");
+        MDL::addLabel(MDL_ORIGINX, LABEL_DOUBLE, "originX");
         MDL::addLabel(MDL_ORIGINY, LABEL_DOUBLE, "originY");
         MDL::addLabel(MDL_ORIGINZ, LABEL_DOUBLE, "originZ");
         MDL::addLabel(MDL_PMAX, LABEL_DOUBLE, "pMax", "Pmax", "sumP");
