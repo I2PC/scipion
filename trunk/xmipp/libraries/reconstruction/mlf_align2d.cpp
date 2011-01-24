@@ -494,7 +494,7 @@ void ProgMLF2D::produceSideInfo(int rank)
         }
     }
 
-    FileName fnt_img, fnt_ctf, fnt;
+    FileName fnt_img, fnt;
     std::vector<FileName> all_fn_ctfs;
     int iifocus;
 
@@ -531,7 +531,7 @@ void ProgMLF2D::produceSideInfo(int rank)
             MDimg.getValue(MDL_CTFMODEL, fn_ctf);
             is_unique=true;
             for (iifocus = 0; iifocus < all_fn_ctfs.size(); iifocus++)
-                if (fnt_ctf == all_fn_ctfs[iifocus])
+                if (fn_ctf == all_fn_ctfs[iifocus])
                 {
                     count_defocus[iifocus]++;
                     MDimg.setValue(MDL_DEFGROUP,iifocus);
@@ -540,7 +540,7 @@ void ProgMLF2D::produceSideInfo(int rank)
                 }
             if (is_unique)
             {
-                all_fn_ctfs.push_back(fnt_ctf);
+                all_fn_ctfs.push_back(fn_ctf);
                 count_defocus.push_back(0);
                 MDimg.setValue(MDL_DEFGROUP, nr_focus);
                 nr_focus++;
@@ -557,6 +557,7 @@ void ProgMLF2D::produceSideInfo(int rank)
             Vctf.push_back(dum);
             Vdec.push_back(dum);
             Vsig.push_back(dum);
+            FileName ctfname = all_fn_ctfs[ifocus];
             ctf.read(all_fn_ctfs[ifocus]);
 
             // FIXME: make astigmatic CTFs non-astigmatic here!!

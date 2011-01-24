@@ -52,7 +52,7 @@ int main(int argc, char **argv)
     MPI_Comm_size(MPI_COMM_WORLD, &size);
     MPI_Status status;
 
-    Prog_MLFalign2D_prm prm;
+    ProgMLF2D prm;
 
     // Get input parameters
     try
