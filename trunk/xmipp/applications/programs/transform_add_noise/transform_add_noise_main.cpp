@@ -38,8 +38,16 @@ protected:
     {
         each_image_produces_an_output = true;
         XmippMetadataProgram::defineParams();
-        addUsageLine("Add random noise to the input images");
+        //Usage
+        addUsageLine("Add random noise to the input images.");
+        addUsageLine("Noise can be uniformly distributed or distributed after a gaussian.");
         addParamsLine("-gaussian <stddev> <avg=0.>        :Gaussian noise parameters");
+        //Examples
+        addExampleLine("Add noise to a single image, overwriting input image:", false);
+        addExampleLine("add_noise -i g0ta0001.xmp -gaussian 0.1");
+        addExampleLine("Add uniform noise to a volume, writing in a different volume:", false);
+        addExampleLine("add_noise -i g0ta.vol -uniform -0.1 0.1");
+        //Parameters
         addParamsLine("or -student <df> <stddev> <avg=0.> :t-student noise parameters");
         addParamsLine("or -uniform  <min> <max>           :Uniform noise parameters");
         addParamsLine("  [-limit0 <float> ]               :Crop noise histogram below this value ");
