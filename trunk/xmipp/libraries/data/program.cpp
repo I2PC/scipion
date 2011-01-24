@@ -411,8 +411,6 @@ XmippMetadataProgram::XmippMetadataProgram()
 void XmippMetadataProgram::defineParams()
 {
     addInputLine();
-    addParamsLine(" [--bn+ <blockName=\"\">]   : Block name for metadata file");
-    addParamsLine(" alias --blockname;");
     addParamsLine(" [--mode+ <mode=overwrite>]   : Metadata writing mode.");
     addParamsLine("    where <mode>");
     addParamsLine("     overwrite   : Replace the content of the file with the Metadata");
@@ -443,7 +441,6 @@ void XmippMetadataProgram::defineParams()
 void XmippMetadataProgram::readParams()
 {
     fn_in = getParam("-i");
-    blockName = getParam("--blockname");
     mode = metadataModeConvert(getParam("--mode"));
 
     if (produces_an_output)
@@ -465,8 +462,7 @@ void XmippMetadataProgram::readParams()
         if (exists(fn_stack_plain))
             unlink(fn_stack_plain.c_str());
     }
-
-    mdIn.read(fn_in, NULL,blockName,decompose_stacks);
+    mdIn.read(fn_in, NULL,decompose_stacks);
     single_image = !fn_in.isMetaData() && (mdIn.size() == 1);
 
     if (mdIn.containsLabel(MDL_ENABLED))
