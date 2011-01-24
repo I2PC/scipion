@@ -442,7 +442,7 @@ public:
     /** Get all values of a column as a vector.
      */
     template<class T>
-    void getColumnValues(const MDLabel label, std::vector<T> &valuesOut)
+    void getColumnValues(const MDLabel label, std::vector<T> &valuesOut) const
     {
         T value;
         MDObject mdValueOut(label);
@@ -460,7 +460,7 @@ public:
     }
 
     /** Get all values of an MetaData row of an specified objId*/
-    bool getRow(MDRow &row, long int objId = -1);
+    bool getRow(MDRow &row, long int objId = -1) const;
 
     /** Copy all the values in the input row in the current metadata*/
     void setRow(const MDRow &row);
@@ -471,7 +471,7 @@ public:
 
     /** Get string representation from label value.
      */
-    bool getStrFromValue(const MDLabel label, std::string &strOut, long int objectId = -1);
+    bool getStrFromValue(const MDLabel label, std::string &strOut, long int objectId = -1) const;
 
     /**Check whether the metadata is empty.
      */
@@ -605,8 +605,8 @@ public:
      * if called without query, all objects are returned
      * if limit is provided only return a maximun of 'limit'
      */
-    void findObjects(std::vector<long int> &objectsOut, const MDQuery &query);
-    void findObjects(std::vector<long int> &objectsOut, int limit = -1);
+    void findObjects(std::vector<long int> &objectsOut, const MDQuery &query) const;
+    void findObjects(std::vector<long int> &objectsOut, int limit = -1) const;
 
     /**Count all objects that match a query.
      */

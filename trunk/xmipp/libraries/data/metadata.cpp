@@ -144,7 +144,7 @@ bool MetaData::getValue(MDObject &mdValueOut, long int objId) const
     return myMDSql->getObjectValue(objId, mdValueOut);
 }
 
-bool MetaData::getRow(MDRow &row, long int objId)
+bool MetaData::getRow(MDRow &row, long int objId) const
 {
     row.clear();
     MDObject * obj;
@@ -295,7 +295,7 @@ bool MetaData::setValueFromStr(const MDLabel label, const std::string &value, lo
     return myMDSql->setObjectValue(objectId, mdValue);
 }
 
-bool MetaData::getStrFromValue(const MDLabel label, std::string &strOut, long int objectId)
+bool MetaData::getStrFromValue(const MDLabel label, std::string &strOut, long int objectId) const
 {
     MDObject mdValueOut(label);
     if (!getValue(mdValueOut, objectId))
@@ -508,13 +508,13 @@ long int MetaData::goToObject(long int objectId)
 }
 
 //-------------Search functions-------------------
-void MetaData::findObjects(std::vector<long int> &objectsOut, const MDQuery &query)
+void MetaData::findObjects(std::vector<long int> &objectsOut, const MDQuery &query) const
 {
     objectsOut.clear();
     myMDSql->selectObjects(objectsOut, &query);
 }
 
-void MetaData::findObjects(std::vector<long int> &objectsOut, int limit)
+void MetaData::findObjects(std::vector<long int> &objectsOut, int limit) const
 {
     objectsOut.clear();
     MDQuery query(limit);
