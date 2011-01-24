@@ -186,17 +186,753 @@ struct ImageFHandler
 class ImageBase
 {
 public:
-    virtual void getDimensions(int &Xdim, int &Ydim, int &Zdim, unsigned long &Ndim) const =0;
-    virtual void getEulerAngles(double &rot, double &tilt, double &psi,
-                                long int n = 0)=0;
-    virtual double tilt(const long int n = 0) const =0;
-    virtual int read(const FileName &name, bool readdata=true, int select_img = -1,
-                     bool apply_geo = false, bool only_apply_shifts = false,
-                     MDRow * row = NULL, bool mapData = false)=0;
-    virtual void write(const FileName &name="", int select_img=-1, bool isStack=false,
-                       int mode=WRITE_OVERWRITE,bool adjust=false)=0;
-    virtual void newMappedFile(int Xdim, int Ydim, int Zdim, int Ndim, FileName _filename)=0;
+    std::vector<MDRow>  MD;                     // data for each subimage
+    MDRow               MDMainHeader;           // data for the file
+
+protected:
+    FileName            filename;    // File name
+    FileName            dataFName;   // Data File name without flags
+    FILE*                fimg;        // Image File handler
+    FILE*                fhed;        // Image File header handler
+    TIFF*                tif;         // TIFF Image file hander
+    bool                stayOpen;    // To maintain the image file open after read/write
+    int                 dataflag;    // Flag to force reading of the data
+    unsigned long       i;           // Current image number (may be > NSIZE)
+    size_t       offset;      // Data offset
+    int                 swap;        // Perform byte swapping upon reading
+    TransformType       transform;   // Transform type
+    int                 replaceNsize;// Stack size in the replace case
+    bool                 _exists;     // does target file exists?
+    // equal 0 is not exists or not a stack
+    bool                mmapOnRead;  // Mapping when reading from file
+    bool                mmapOnWrite; // Mapping when writing to file
+    int                 mFd;         // Handle the file in reading method and mmap
+    size_t              mappedSize;  // Size of the mapped file
+    size_t              mappedOffset;// Offset for the mapped file
+
+public:
+
+    /** Init.
+     * Initialize everything to 0
+     */
+    void init()
+    {
+        clearHeader();
+        dataflag = -1;
+        if (isComplexT())
+            transform = Standard;
+        else
+            transform = NoTransform;
+        i = 0;
+        filename = "";
+        offset = 0;
+        swap = 0;
+        replaceNsize=0;
+        mmapOnRead = mmapOnWrite = false;
+        mappedSize = 0;
+        mFd    = NULL;
+    }
+
+    /** Clear.
+     * Initialize everything to 0
+     */
     virtual void clear()=0;
+
+    /** Clear the header of the image
+     */
+    void clearHeader()
+    {
+        MDMainHeader.clear();
+        MD.clear();
+        //Just to ensure there is an empty MDRow
+        MD.push_back(MDMainHeader);
+    }
+
+    /** Check whether image is complex based on T
+     */
+    virtual bool isComplexT() const=0;
+
+    /** Check whether image is complex based on transform
+      */
+    bool isComplex() const
+    {
+        return !(transform==NoTransform);
+    }
+
+    /** Destructor.
+     */
+    ~ImageBase()
+    {
+    }
+
+    /** Is this file an image
+     *
+     *  Check whether a real-space image can be read
+     *
+     */
+    bool isImage(const FileName &name)
+    {
+        return !read(name, false);
+    }
+
+    /** Is this file a real-valued image
+     *
+     *  Check whether a real-space image can be read
+     *
+     */
+    bool isRealImage(const FileName &name)
+    {
+        return (isImage(name) && !isComplex());
+    }
+
+    /** Is this file a complex image
+     *
+     *  Check whether a fourier-space (complex) image can be read
+     *
+     */
+    bool isComplexImage(const FileName &name)
+    {
+        return (isImage(name) && isComplex());
+    }
+
+    /** Rename the image
+      */
+    void rename (const FileName &name)
+    {
+        filename = name;
+    }
+
+    /** Create a mapped image file
+     *
+     * An image file, which name and format are given by filename,
+     * is created with the given size. Then the image is mapped to this file.
+     *
+     * @code
+     * Image I(64,64,1,1,"image.spi");
+     * @endcode
+     */
+    virtual void newMappedFile(int Xdim, int Ydim, int Zdim, int Ndim, const FileName _filename)=0;
+
+    /** General read function
+     * you can read a single image from a single image file
+     * or a single image file from an stack, in the second case
+     * the select slide may come in the image name or in the select_img parameter
+     * file name takes precedence over select_img
+     * If -1 is given the whole object is read
+     *
+     */
+    int read(const FileName &name, bool readdata=true, int select_img = -1,
+             bool apply_geo = false, bool only_apply_shifts = false,
+             MDRow * row = NULL, bool mapData = false)
+    {
+        ImageFHandler* hFile = openFile(name);
+        int err = _read(name, hFile, readdata, select_img, apply_geo, only_apply_shifts, row, mapData);
+        closeFile(hFile);
+
+        return err;
+    }
+
+    /** Read an image from metadata, filename is provided*/
+    int read(const FileName &name, const MetaData &md, int objId,
+             bool readdata=true, int select_img = -1,
+             bool only_apply_shifts = false, bool mapData = false)
+    {
+        ImageFHandler* hFile = openFile(name);
+        MDRow row;
+        md.getRow(row, objId);
+        int err = _read(name, hFile, readdata, select_img, true, only_apply_shifts, &row, mapData);
+        closeFile(hFile);
+
+        return err;
+    }
+
+    /** Read an image from metadata, filename is taken from MDL_IMAGE */
+    int read(const MetaData &md, int objId,
+             bool readdata=true, int select_img = -1,
+             bool only_apply_shifts = false, bool mapData = false)
+    {
+        MDRow row;
+        md.getRow(row, objId);
+        FileName name;
+        row.getValue(MDL_IMAGE, name);
+        ImageFHandler* hFile = openFile(name);
+        int err = _read(name, hFile, readdata, select_img, true, only_apply_shifts, &row, mapData);
+        closeFile(hFile);
+
+        return err;
+    }
+
+    /* Read an image with a lower resolution as a preview image.
+     * If Zdim parameter is not passed, then all slices are rescaled.
+     */
+    virtual int readPreview(const FileName &name, int Xdim, int Ydim, int Zdim = -1, int select_img = 0)=0;
+
+    /** General write function
+     * select_img= which slice should I replace
+     * overwrite = 0, append slice
+     * overwrite = 1 overwrite slice
+     */
+    void write(const FileName &name="", int select_img=-1, bool isStack=false,
+               int mode=WRITE_OVERWRITE,bool adjust=false)
+    {
+        // If image is already mapped to file then close the file and clear.
+        if (mmapOnWrite && mappedSize > 0)
+        {
+            munmapFile();
+            return;
+        }
+
+        const FileName &fname = (name == "") ? filename : name;
+
+        /* If the filename is in stack we will suppose you want to write this,
+         * even if you have not set the flags to.
+         */
+        if (fname.isInStack() && isStack == false && mode == WRITE_OVERWRITE)
+        {
+            isStack = true;
+            mode = WRITE_APPEND;
+        }
+
+        ImageFHandler* hFile = openFile(fname, mode);
+        _write(fname, hFile, select_img, isStack, mode, adjust);
+        closeFile(hFile);
+    }
+
+    /** Check file Datatype is same as T type to use mmap.
+     */
+    virtual bool checkMmapT(DataType datatype)=0;
+
+    /** Write an entire page as datatype
+     *
+     * A page of datasize_n elements T is cast to datatype and written to fimg
+     * The memory for the casted page is allocated and freed internally.
+     */
+    virtual void writePageAsDatatype(FILE * fimg, DataType datatype, size_t datasize_n )=0;
+
+    /** Swap an entire page
+      * input pointer char *
+      */
+    void swapPage(char * page, size_t pageNrElements, DataType datatype)
+    {
+        unsigned long datatypesize = gettypesize(datatype);
+#ifdef DEBUG
+
+        std::cerr<<"DEBUG swapPage: Swapping image data with swap= "
+        << swap<<" datatypesize= "<<datatypesize
+        << " pageNrElements " << pageNrElements
+        << " datatype " << datatype
+        <<std::endl;
+        ;
+#endif
+
+        // Swap bytes if required
+        if ( swap == 1 )
+        {
+            if ( datatype >= ComplexShort )
+                datatypesize /= 2;
+            for ( unsigned long i=0; i<pageNrElements; i+=datatypesize )
+                swapbytes(page+i, datatypesize);
+        }
+        else if ( swap > 1 )
+        {
+            for ( unsigned long i=0; i<pageNrElements; i+=swap )
+                swapbytes(page+i, swap);
+        }
+    }
+
+    /** Get file name
+     *
+     * @code
+     * std::cout << "Image name = " << I.name() << std::endl;
+     * @endcode
+     */
+    const FileName & name() const
+    {
+        return filename;
+    }
+
+    /** Get Image dimensions
+     */
+    virtual void getDimensions(int &Xdim, int &Ydim, int &Zdim, unsigned long &Ndim) const=0;
+
+    virtual long unsigned int getSize() const=0;
+
+    /** Get Image offset and swap
+     */
+    void getOffsetAndSwap(size_t &_offset, int &_swap) const
+    {
+        _offset = offset;
+        _swap = swap;
+    }
+
+    /* Is there label in the individual header */
+    bool individualContainsLabel(MDLabel label) const
+    {
+        return (!MD.empty() && MD[0].containsLabel(label));
+    }
+
+    /* Is there label in the main header */
+    bool mainContainsLabel(MDLabel label) const
+    {
+        return MDMainHeader.containsLabel(label);
+    }
+
+    /** Get Rot angle
+    *
+    * @code
+    * std::cout << "First Euler angle " << I.rot() << std::endl;
+    * @endcode
+    */
+    double rot(const long int n = 0) const
+    {
+        double dummy = 0;
+        MD[n].getValue(MDL_ANGLEROT, dummy);
+        return dummy;
+    }
+
+    /** Get Tilt angle
+     *
+     * @code
+     * std::cout << "Second Euler angle " << I.tilt() << std::endl;
+     * @endcode
+     */
+    double tilt(const long int n = 0) const
+    {
+        double dummy = 0;
+        MD[n].getValue(MDL_ANGLETILT, dummy);
+        return dummy;
+    }
+
+    /** Get Psi angle
+     *
+     * @code
+     * std::cout << "Third Euler angle " << I.psi() << std::endl;
+     * @endcode
+     */
+    double psi(const long int n = 0) const
+    {
+        double dummy = 0;
+        MD[n].getValue(MDL_ANGLEPSI, dummy);
+        return dummy;
+    }
+
+    /** Get Xoff
+     *
+     * @code
+     * std::cout << "Origin offset in X " << I.Xoff() << std::endl;
+     * @endcode
+     */
+    double Xoff(const long int n = 0) const
+    {
+        double dummy = 0;
+        MD[n].getValue(MDL_ORIGINX, dummy);
+        return dummy;
+    }
+
+    /** Get Yoff
+     *
+     * @code
+     * std::cout << "Origin offset in Y " << I.Yoff() << std::endl;
+     * @endcode
+     */
+    double Yoff(const long int n = 0) const
+    {
+        double dummy = 0;
+        MD[n].getValue(MDL_ORIGINY, dummy);
+        return dummy;
+    }
+
+    /** Get Zoff
+     *
+     * @code
+     * std::cout << "Origin offset in Z " << I.Zoff() << std::endl;
+     * @endcode
+     */
+    double Zoff(const long int n = 0) const
+    {
+        double dummy = 0;
+        MD[n].getValue(MDL_ORIGINZ, dummy);
+        return dummy;
+    }
+
+    /** Get Weight
+    *
+    * @code
+    * std::cout << "weight= " << I.weight() << std::endl;
+    * @endcode
+    */
+    double weight(const long int n = 0) const
+    {
+        double dummy = 1;
+        MD[n].getValue(MDL_WEIGHT, dummy);
+        return dummy;
+    }
+
+    /** Get Scale factor
+    *
+    * @code
+    * std::cout << "scale= " << I.scale() << std::endl;
+    * @endcode
+    */
+    double scale(const long int n = 0) const
+    {
+        double dummy = 1;
+        MD[n].getValue(MDL_SCALE, dummy);
+        return dummy;
+    }
+
+
+    /** Get Flip
+    *
+    * @code
+    * std::cout << "flip= " << flip() << std::endl;
+    * @endcode
+    */
+    bool flip(const long int n = 0) const
+    {
+        bool dummy = false;
+        MD[n].getValue(MDL_FLIP, dummy);
+        return dummy;
+    }
+
+    /** Data type
+        *
+        * @code
+        * std::cout << "datatype= " << dataType() << std::endl;
+        * @endcode
+        */
+    DataType dataType() const
+    {
+        int dummy;
+        MDMainHeader.getValue(MDL_DATATYPE, dummy);
+        return (DataType)dummy;
+    }
+
+    /** Sampling RateX
+    *
+    * @code
+    * std::cout << "sampling= " << samplingRateX() << std::endl;
+    * @endcode
+    */
+    double samplingRateX() const
+    {
+        double dummy = 1.;
+        MDMainHeader.getValue(MDL_SAMPLINGRATEX, dummy);
+        return dummy;
+    }
+
+    virtual void setDimensions(int Xdim, int Ydim, int Zdim, long int Ndim)=0;
+
+    /** Set file name
+     */
+    void setName(const FileName &_filename)
+    {
+        filename = _filename;
+    }
+
+    /** Set Euler angles in image header
+     */
+    void setEulerAngles(double rot, double tilt, double psi,
+                        long int n = 0)
+    {
+        MD[n].setValue(MDL_ANGLEROT, rot);
+        MD[n].setValue(MDL_ANGLETILT, tilt);
+        MD[n].setValue(MDL_ANGLEPSI, psi);
+    }
+
+    /** Get Euler angles from image header
+     */
+    void getEulerAngles(double &rot, double &tilt, double &psi,
+                        long int n = 0)
+    {
+        MD[n].getValue(MDL_ANGLEROT, rot);
+        MD[n].getValue(MDL_ANGLETILT, tilt);
+        MD[n].getValue(MDL_ANGLEPSI, psi);
+    }
+
+    /** Set Rotation angle to image */
+    void setRot(double rot, long int n = 0)
+    {
+        MD[n].setValue(MDL_ANGLEROT, rot);
+    }
+
+    /** Set Tilt angle to image */
+    void setTilt(double tilt, long int n = 0)
+    {
+        MD[n].setValue(MDL_ANGLETILT, tilt);
+    }
+
+    /** Set Rotation angle to image */
+    void setPsi(double psi, long int n = 0)
+    {
+        MD[n].setValue(MDL_ANGLEPSI, psi);
+    }
+
+    /** Set origin offsets in image header
+     */
+    void setShifts(double xoff, double yoff, double zoff = 0.,
+                   long int n = 0)
+    {
+        MD[n].setValue(MDL_ORIGINX, xoff);
+        MD[n].setValue(MDL_ORIGINY, yoff);
+        MD[n].setValue(MDL_ORIGINZ, zoff);
+    }
+    /** Get origin offsets from image header
+      */
+    void getShifts(double &xoff, double &yoff, double &zoff,
+                   long int n = 0)
+    {
+        MD[n].getValue(MDL_ORIGINX, xoff);
+        MD[n].getValue(MDL_ORIGINY, yoff);
+        MD[n].getValue(MDL_ORIGINZ, zoff);
+    }
+
+    /** Set X offset in image header
+     */
+    void setXoff(double xoff, long int n = 0)
+    {
+        MD[n].setValue(MDL_ORIGINX, xoff);
+    }
+
+    /** Set Y offset in image header
+     */
+    void setYoff(double yoff, long int n = 0)
+    {
+        MD[n].setValue(MDL_ORIGINY, yoff);
+    }
+
+    /** Set Z offset in image header
+     */
+    void setZoff(double zoff, long int n = 0)
+    {
+        MD[n].setValue(MDL_ORIGINZ, zoff);
+    }
+
+    /** Set scale in image header
+     */
+    void setScale(double scale, long int n = 0)
+    {
+        MD[n].setValue(MDL_SCALE, scale);
+    }
+
+    /** Get scale from image header
+     */
+    void getScale(double &scale, long int n = 0)
+    {
+        MD[n].getValue(MDL_SCALE, scale);
+    }
+
+    /** Set flip in image header
+     */
+    void setFlip(bool flip, long int n = 0)
+    {
+        MD[n].setValue(MDL_FLIP, flip);
+    }
+
+    /** Set Weight in image header
+    */
+    void setWeight(double weight, long int n = 0)
+    {
+        MD[n].setValue(MDL_WEIGHT, weight);
+    }
+
+    /** Get geometric transformation matrix from 2D-image header
+      */
+    virtual void getTransformationMatrix(Matrix2D<double> &A,
+                                         bool only_apply_shifts = false,
+                                         long int n = 0)=0;
+
+    /** Sum this object with other file and keep in this object
+      */
+    virtual void sumWithFile(const FileName &fn)=0;
+
+    /**
+     *  Specific read functions for different file formats
+     */
+#include "rwDM3.h"
+//#include "rwIMAGIC.h"
+//#include "rwMRC.h"
+//#include "rwINF.h"
+//#include "rwRAW.h"
+//#include "rwSPIDER.h"
+//#include "rwSPE.h"
+//#include "rwTIA.h"
+    //#include "rwTIFF.h"
+
+protected:
+
+    /** Open file function
+      * Open the image file and returns its file hander.
+      */
+    ImageFHandler* openFile(const FileName &name, int mode = WRITE_READONLY) const
+    {
+        ImageFHandler* hFile = new ImageFHandler;
+        FileName fileName, headName = "";
+        FileName ext_name = name.getFileFormat();
+
+        int dump;
+        name.decompose(dump, fileName);
+
+        fileName = fileName.removeFileFormat();
+
+        size_t found = fileName.find_first_of("%");
+        if (found!=std::string::npos)
+            fileName = fileName.substr(0, found) ;
+
+        hFile->exist = exists(fileName);
+
+        std::string wmChar;
+
+        switch (mode)
+        {
+        case WRITE_READONLY:
+            if (!hFile->exist)
+                REPORT_ERROR(ERR_IO_NOTEXIST,(std::string) "Cannot read file "
+                             + fileName + ". It does not exist" );
+            wmChar = "r";
+            break;
+        case WRITE_OVERWRITE:
+            wmChar = "w";
+            break;
+        case WRITE_APPEND:
+        case WRITE_REPLACE:
+            if (hFile->exist)
+                wmChar = "r+";
+            else
+                wmChar = "w+";
+            break;
+
+        }
+
+        if (ext_name.contains("tif"))
+        {
+            TIFFSetWarningHandler(NULL); // Switch off warning messages
+            if ((hFile->tif = TIFFOpen(fileName.c_str(), wmChar.c_str())) == NULL)
+                REPORT_ERROR(ERR_IO_NOTOPEN,"rwTIFF: There is a problem opening the TIFF file.");
+            hFile->fimg = NULL;
+            hFile->fhed = NULL;
+        }
+        else
+        {
+            hFile->tif = NULL;
+
+            if (ext_name.contains("img") || ext_name.contains("hed"))
+            {
+                fileName = fileName.withoutExtension();
+                headName = fileName.addExtension("hed");
+                fileName = fileName.addExtension("img");
+            }
+            else if (ext_name.contains("raw"))
+            {
+                if (mode != WRITE_READONLY || exists(fileName.addExtension("inf")) )
+                {
+                    headName = fileName.addExtension("inf");
+                    ext_name = "inf";
+                }
+                else
+                    ext_name = "raw";
+            }
+            else if (ext_name.contains("inf"))
+            {
+                headName = fileName;
+                fileName = fileName.withoutExtension();
+                ext_name = "inf";
+            }
+
+            // Open image file
+            if ( ( hFile->fimg = fopen(fileName.c_str(), wmChar.c_str()) ) == NULL )
+                REPORT_ERROR(ERR_IO_NOTOPEN,(std::string)"Image::openFile cannot open: " + fileName);
+
+            if (headName != "")
+            {
+                if ( ( hFile->fhed = fopen(headName.c_str(), wmChar.c_str()) ) == NULL )
+                    REPORT_ERROR(ERR_IO_NOTOPEN,(std::string)"Image::openFile cannot open: " + headName);
+            }
+            else
+                hFile->fhed = NULL;
+
+        }
+        hFile->fileName = fileName;
+        hFile->headName = headName;
+        hFile->ext_name = ext_name;
+
+        return hFile;
+    }
+
+    /** Close file function.
+      * Close the image file according to its name and file handler.
+      */
+    void closeFile(ImageFHandler* hFile = NULL)
+    {
+        FileName ext_name;
+        FILE* fimg, *fhed;
+        TIFF* tif;
+
+        if (hFile != NULL)
+        {
+            ext_name = hFile->ext_name;
+            fimg = hFile->fimg;
+            fhed = hFile->fhed;
+            tif  = hFile->tif;
+        }
+        else
+        {
+            ext_name = filename.getFileFormat();
+            fimg = this->fimg;
+            fhed = this->fhed;
+            tif  = this->tif;
+        }
+
+        if (ext_name.contains("tif"))
+            TIFFClose(tif);
+        else
+        {
+            if (fclose(fimg) != 0 )
+                REPORT_ERROR(ERR_IO_NOCLOSED,(std::string)"Can not close image file "+ filename);
+
+            if (fhed != NULL &&  fclose(fhed) != 0 )
+                REPORT_ERROR(ERR_IO_NOCLOSED,(std::string)"Can not close header file of "
+                             + filename);
+        }
+        delete hFile;
+    }
+
+    /* Internal read image file method.
+     */
+    virtual int _read(const FileName &name, ImageFHandler* hFile, bool readdata=true, int select_img = -1,
+                      bool apply_geo = false, bool only_apply_shifts = false,
+                      MDRow * row = NULL, bool mapData = false)=0;
+
+    /* Internal write image file method.
+     */
+    virtual void _write(const FileName &name, ImageFHandler* hFile, int select_img=-1,
+                        bool isStack=false, int mode=WRITE_OVERWRITE, bool adjust=false)=0;
+
+    /** Read the raw data
+      */
+    virtual void readData(FILE* fimg, int select_img, DataType datatype, unsigned long pad)=0;
+
+    /* Write the raw date after a data type casting.
+     */
+    virtual void writeData(FILE* fimg, size_t offset, DataType wDType, size_t datasize_n,
+                           CastWriteMode castMode=CAST)=0;
+
+    /* Mmap the Image class to an image file.
+     */
+    virtual void mmapFile()=0;
+
+    /* Munmap the image file.
+     */
+    virtual void munmapFile()=0;
+
+    /* Return the datatype of the current image object
+     */
+    virtual DataType myT()=0;
+
+    /* friend declaration for stacks handling purposes
+     */
+    friend class ImageCollection;
+
 };
 
 #endif /* IMAGE_BASE_H_ */
