@@ -572,7 +572,7 @@ protected:
      */
 #include "rwDM3.h"
 #include "rwIMAGIC.h"
-    //#include "rwMRC.h"
+#include "rwMRC.h"
 #include "rwINF.h"
 #include "rwRAW.h"
     //#include "rwSPIDER.h"

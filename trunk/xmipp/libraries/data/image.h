@@ -960,11 +960,6 @@ public:
     /**
      *  Specific read functions for different file formats
      */
-    //#include "rwDM3.h"
-//#include "rwIMAGIC.h"
-    #include "rwMRC.h"
-//    #include "rwINF.h"
-//    #include "rwRAW.h"
     #include "rwSPIDER.h"
     #include "rwSPE.h"
     #include "rwTIA.h"
