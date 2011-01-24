@@ -44,11 +44,11 @@ protected:
         addUsageLine("Assign rotation angles, origin offsets (and optionally weights and mirror flags)");
         addUsageLine("read from input file to the headers of images. ");
 
-        addUsageLine("Example of use: Assign to headers metadata contained in file in_file.doc");
-        addUsageLine("   xmipp_header_assign -i in_file.doc");
-        addUsageLine("Example of use: Assign to headers metadata contained in file in_file.doc with blockname named ONE");
-        addUsageLine("The metadata assign is append to the file out_file.doc");
-        addUsageLine("   xmipp_header_extract -i in_file.doc --bn ONE --mode append -o out_file.doc");
+        addExampleLine("Example of use: Assign to headers metadata contained in file in_file.doc",false);
+        addExampleLine("   xmipp_header_assign -i in_file.doc");
+        addExampleLine("Example of use: Assign to headers metadata contained in file in_file.doc with blockname named ONE",false);
+        addExampleLine("The metadata assign is append to the file out_file.doc",false);
+        addExampleLine("   xmipp_header_extract -i in_file.doc  --mode append -o out_file.doc:ONE");
 
         XmippMetadataProgram::defineParams();
         addParamsLine("   [--round_shifts]    :Round shifts to integers");
@@ -71,7 +71,7 @@ protected:
     void postProcess()
     {
     	if(fn_in != fn_out)
-    		mdIn.write(fn_out,blockName,mode);
+    		mdIn.write(fn_out,mode);
     }
 
     void processImage(const FileName &fnImg, const FileName &fnImgOut, long int objId)
