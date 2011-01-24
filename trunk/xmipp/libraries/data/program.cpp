@@ -203,7 +203,8 @@ void XmippProgram::read(int argc, char ** argv, bool reportErrors)
         {
             ///If an input error, shows error message and usage
             std::cerr << xe;
-            usage();
+            std::cerr << "For more info use --help" << std::endl;
+            //usage();
         }
     }
 }
