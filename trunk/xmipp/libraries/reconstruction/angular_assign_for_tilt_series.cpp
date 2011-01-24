@@ -785,7 +785,6 @@ void Prog_tomograph_alignment::produceSideInfo()
             {
                 //ImageXmipp save;
                 //save()=imgaux(); save.write("PPPoriginal.xmp");
-
                 MultidimArray<double> Ifiltered;
                 Ifiltered=imgaux();
                 Ifiltered.setXmippOrigin();
@@ -831,13 +830,18 @@ void Prog_tomograph_alignment::produceSideInfo()
             img_i->setXmippOrigin();
             img.push_back(img_i);
 
-            tiltList.push_back(imgaux.tilt());
-            if (imgaux.tilt()!=0)
+            double tiltAngle;
+            if (SF.containsLabel(MDL_ANGLETILT))
+            	SF.getValue(MDL_ANGLETILT,tiltAngle);
+            else
+            	tiltAngle=imgaux.tilt();
+            tiltList.push_back(tiltAngle);
+            if (tiltAngle!=0)
                 nonZeroTilt=true;
-            if (ABS(imgaux.tilt())<minTilt)
+            if (ABS(tiltAngle)<minTilt)
             {
                 iMinTilt=n;
-                minTilt=ABS(imgaux.tilt());
+                minTilt=ABS(tiltAngle);
             }
             name_list.push_back(imgaux.name());
 
