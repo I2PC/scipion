@@ -50,12 +50,12 @@ enum MDLabel
     MDL_FIRST_LABEL, ///< The label MDL_OBJID is special and should not be used
     MDL_OBJID = MDL_FIRST_LABEL, ///< object id (int), NOTE: This label is special and shouldn't be used
 
-    MDL_ANGLEPSI2, ///< Psi angle of an image (double)
-    MDL_ANGLEPSI, ///< Psi angle of an image (double)
-    MDL_ANGLEROT2, ///< Rotation angle of an image (double)
-    MDL_ANGLEROT, ///< Rotation angle of an image (double)
-    MDL_ANGLETILT2, ///< Tilting angle of an image (double)
-    MDL_ANGLETILT, ///< Tilting angle of an image (double)
+    MDL_ANGLEPSI2, ///< Psi angle of an image (double,degrees)
+    MDL_ANGLEPSI, ///< Psi angle of an image (double,degrees)
+    MDL_ANGLEROT2, ///< Rotation angle of an image (double,degrees)
+    MDL_ANGLEROT, ///< Rotation angle of an image (double,degrees)
+    MDL_ANGLETILT2, ///< Tilting angle of an image (double,degrees)
+    MDL_ANGLETILT, ///< Tilting angle of an image (double,degrees)
     MDL_ASSOCIATED_IMAGE1, ///< Image associated to this object (std::string)
     MDL_ASSOCIATED_IMAGE2, ///< Image associated to this object (std::string)
     MDL_ASSOCIATED_IMAGE3, ///< Image associated to this object (std::string)
@@ -76,6 +76,7 @@ enum MDLabel
     MDL_CTF_SAMPLING_RATE, ///< Sampling rate
     MDL_CTF_SAMPLING_RATE_Z, ///< Sampling rate in Z direction
     MDL_CTF_VOLTAGE, ///< Microscope voltage (kV)
+    MDL_CTF_DEFOCUSA, ///< aver (Angage defocusstroms)
     MDL_CTF_DEFOCUSU, ///< Defocus U (Angstroms)
     MDL_CTF_DEFOCUSV, ///< Defocus V (Angstroms)
     MDL_CTF_DEFOCUS_ANGLE, ///< Defocus angle (degrees)
@@ -163,7 +164,7 @@ enum MDLabel
     MDL_MISSINGREGION_THXF, ///< Final tilt angle in X for missing region in subtomogram
     MDL_MODELFRAC, ///< Model fraction (alpha_k) for a Maximum Likelihood model
     MDL_NMA, ///< Normal mode displacements (vector double)
-
+    MDL_ORDER, /// auxiliary label to keep used as an index
     MDL_ORIGINX, ///< Origin for the image in the X axis (double)
     MDL_ORIGINY, ///< Origin for the image in the Y axis (double)
     MDL_ORIGINZ, ///< Origin for the image in the Z axis (double)
@@ -309,6 +310,7 @@ private:
         MDL::addLabel(MDL_CTF_SAMPLING_RATE, LABEL_DOUBLE, "CTF_Sampling_rate");
         MDL::addLabel(MDL_CTF_SAMPLING_RATE_Z, LABEL_DOUBLE, "CTF_Sampling_rate_z");
         MDL::addLabel(MDL_CTF_VOLTAGE, LABEL_DOUBLE, "CTF_Voltage");
+        MDL::addLabel(MDL_CTF_DEFOCUSA, LABEL_DOUBLE, "CTF_Defocus_A");//average defocus
         MDL::addLabel(MDL_CTF_DEFOCUSU, LABEL_DOUBLE, "CTF_Defocus_U");
         MDL::addLabel(MDL_CTF_DEFOCUSV, LABEL_DOUBLE, "CTF_Defocus_V");
         MDL::addLabel(MDL_CTF_DEFOCUS_ANGLE, LABEL_DOUBLE, "CTF_Defocus_angle");
@@ -397,7 +399,7 @@ private:
         MDL::addLabel(MDL_MISSINGREGION_THYF, LABEL_DOUBLE, "missingRegionThetaYF");
         MDL::addLabel(MDL_MODELFRAC, LABEL_DOUBLE, "modelFraction");
         MDL::addLabel(MDL_NMA, LABEL_VECTOR, "NMADisplacements");
-        MDL::addLabel(MDL_ORIGINX, LABEL_DOUBLE, "originX");
+        MDL::addLabel(MDL_ORDER, LABEL_INT, "order");
         MDL::addLabel(MDL_ORIGINY, LABEL_DOUBLE, "originY");
         MDL::addLabel(MDL_ORIGINZ, LABEL_DOUBLE, "originZ");
         MDL::addLabel(MDL_PMAX, LABEL_DOUBLE, "pMax", "Pmax", "sumP");
