@@ -225,6 +225,26 @@ public:
      */
     FileName getFileFormat() const;
 
+    /** Get blockName from filename
+     * @code
+     * fn_meta="md1.doc:block1"
+     * std::string blockName;
+     * blockName=fn_meta.getblockName();//blockName="block1"
+     * @endcode
+     */
+
+    FileName removeBlockName() const;
+
+    /** Remove blockName from filename
+     * @code
+     * fn_meta="md1.doc:block1"
+     * std::string blockName;
+     * filename=fn_meta.getblockName();//filename="md1.doc"
+     * @endcode
+     */
+
+    std::string getBlockName() const;
+
     /** Random name
      *
      * Generate a random name of the desired length.
