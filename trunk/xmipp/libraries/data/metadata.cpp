@@ -553,7 +553,19 @@ long int MetaData::gotoFirstObject(const MDQuery &query)
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <sys/mman.h>
-void MetaData::write(const FileName &outFile,const std::string &blockName, WriteModeMetaData mode)
+
+void MetaData::write(const FileName &_outFile, WriteModeMetaData mode)
+{
+    std::string blockName;
+    FileName outFile;
+
+    blockName=_outFile.getBlockName();
+    outFile = _outFile.removeBlockName();
+    _write(outFile, blockName, mode);
+
+}
+
+void MetaData::_write(const FileName &outFile,const std::string &blockName, WriteModeMetaData mode)
 {
     struct stat file_status;
     int fd;
@@ -1009,13 +1021,28 @@ void MetaData::_readRowFormat(std::istream& is)
             setValue(value, objectID);
     }
 }
+void MetaData::read(const FileName &_filename,
+                    const std::vector<MDLabel> *desiredLabels,
+                    bool decomposeStack)
+{
+    std::string BlockName;
+    FileName filename;
+    BlockName = _filename.getBlockName();
+    filename  = _filename.removeBlockName();
+    _read(filename,desiredLabels,BlockName,decomposeStack);
 
-void MetaData::read(const FileName &filename, const std::vector<MDLabel> *desiredLabels, const std::string & blockName, bool decomposeStack)
+}
+
+void MetaData::_read(const FileName &filename,
+                     const std::vector<MDLabel> *desiredLabels,
+                     const std::string & blockName, bool decomposeStack)
 {
     //First try to open the file as a metadata
     _clear();
     myMDSql->createMd();
     isColumnFormat = true;
+
+    std::string dataBlockName = (std::string) "data_" + blockName;
 
     if (!filename.isMetaData())//if not a metadata, try to read as image or stack
     {
@@ -1082,7 +1109,6 @@ void MetaData::read(const FileName &filename, const std::vector<MDLabel> *desire
             REPORT_ERROR(ERR_MEM_BADREQUEST,"Metadata:write can not map memory ");
 
         char * firstData, * secondData, * firstloop;
-        std:: string dataBlockName = (std::string) "data_" + blockName;
         isColumnFormat=isColumnFormatFile(map,
                                           &firstData,
                                           &secondData,
@@ -1178,6 +1204,8 @@ bool MetaData::isColumnFormatFile(char * map,
     //rewind to the first hit and look for loop_
     //std::string _szBlockName = (std::string)("data_") + blockName;
     *firstData  = (char *)  strstr(map, szBlockName);
+    if(*firstData==NULL)
+    	REPORT_ERROR(ERR_MD_WRONGDATABLOCK,(std::string) "Block Named: " + szBlockName + " does not exist");
     *secondData = (char *)  strstr((*firstData+1),"data_");
     *firstloop  = (char *)  strstr((*firstData),"loop_");
     //#define DEBUG
@@ -1305,10 +1333,10 @@ void MetaData::sort(MetaData &MDin, const MDLabel sortLabel)
     {
         init(&(MDin.activeLabels));
         copyInfo(MDin);
-    	MDin.myMDSql->copyObjects(this, new MDQuery(-1, 0, sortLabel));
+        MDin.myMDSql->copyObjects(this, new MDQuery(-1, 0, sortLabel));
     }
     else
-    	*this=MDin;
+        *this=MDin;
     firstObject();
 }
 
