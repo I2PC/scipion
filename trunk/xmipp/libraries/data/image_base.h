@@ -37,6 +37,7 @@
 #include "multidim_array.h"
 #include "transformations.h"
 #include "metadata.h"
+#include "datatype.h"
 
 // Includes for rwTIFF which cannot be inside it
 #include <cstring>
@@ -570,10 +571,10 @@ protected:
      *  Specific read functions for different file formats
      */
 #include "rwDM3.h"
-    //#include "rwIMAGIC.h"
+#include "rwIMAGIC.h"
     //#include "rwMRC.h"
-    //#include "rwINF.h"
-    //#include "rwRAW.h"
+#include "rwINF.h"
+#include "rwRAW.h"
     //#include "rwSPIDER.h"
     //#include "rwSPE.h"
     //#include "rwTIA.h"

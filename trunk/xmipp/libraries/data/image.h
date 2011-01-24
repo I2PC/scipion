@@ -31,7 +31,6 @@
 #define IMAGE_H
 
 #include "image_base.h"
-#include "datatype.h"
 #include "image_generic.h"
 
 /** Template class for images.
@@ -962,10 +961,10 @@ public:
      *  Specific read functions for different file formats
      */
     //#include "rwDM3.h"
-#include "rwIMAGIC.h"
+//#include "rwIMAGIC.h"
     #include "rwMRC.h"
-    #include "rwINF.h"
-    #include "rwRAW.h"
+//    #include "rwINF.h"
+//    #include "rwRAW.h"
     #include "rwSPIDER.h"
     #include "rwSPE.h"
     #include "rwTIA.h"
