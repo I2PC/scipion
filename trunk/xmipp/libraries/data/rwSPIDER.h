@@ -301,7 +301,6 @@ int  writeSPIDER(int select_img=-1, bool isStack=false, int mode=WRITE_OVERWRITE
     int Ydim = YSIZE(data);
     int Zdim = ZSIZE(data);
     int Ndim = NSIZE(data);
-    bool writeHeaderReplace=false;
 
     DataType wDType;
 
@@ -420,7 +419,7 @@ int  writeSPIDER(int select_img=-1, bool isStack=false, int mode=WRITE_OVERWRITE
         t->tm_year -= 100;
     sprintf(header->ctim, "%02d:%02d:%02d", t->tm_hour, t->tm_min, t->tm_sec);
     sprintf(header->cdat, "%02d-%02d-%02d", t->tm_mday, t->tm_mon, t->tm_year);
-*/
+    */
     size_t datasize, datasize_n;
     datasize_n = (size_t)Xdim*Ydim*Zdim;
     datasize = datasize_n * gettypesize(wDType);
@@ -470,13 +469,10 @@ int  writeSPIDER(int select_img=-1, bool isStack=false, int mode=WRITE_OVERWRITE
         {
             header->maxim = replaceNsize +1;
         }
-        else if(mode == WRITE_REPLACE)
+        else if(mode == WRITE_REPLACE && select_img >= replaceNsize)
         {
-            if (select_img >= replaceNsize)
-            {
-                writeMainHeaderReplace=true;
-                header->maxim = select_img+1;
-            }
+            writeMainHeaderReplace=true;
+            header->maxim = select_img+1;
         }
     }
     else
