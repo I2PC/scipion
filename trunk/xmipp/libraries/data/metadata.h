@@ -631,7 +631,13 @@ public:
     /** Write metadata to disk.
      * This will write the metadata content to disk.
      */
-    void write(const FileName &outFile,const std::string & blockName="", WriteModeMetaData mode=OVERWRITE);
+    void _write(const FileName &outFile,const std::string & blockName="", WriteModeMetaData mode=OVERWRITE);
+    /** Write metadata to disk. Guess blockname from filename
+     * @code
+     * outFilename="first@md1.doc" -> filename = md1.doc, blockname = first
+     * @endcode
+     */
+    void write(const FileName &outFile, WriteModeMetaData mode=OVERWRITE);
 
     /** Write metadata to out stream
      */
@@ -648,7 +654,13 @@ public:
 
     /** Read data from file.
      */
-    void read(const FileName &inFile, const std::vector<MDLabel> *desiredLabels = NULL, const std::string & blockName="", bool decomposeStack=true);
+    void _read(const FileName &inFile, const std::vector<MDLabel> *desiredLabels = NULL, const std::string & blockName="", bool decomposeStack=true);
+    /** Read data from file. Guess the blockname from the filename
+     * @code
+     * inFilename="first@md1.doc" -> filename = md1.doc, blockname = first
+     * @endcode
+     */
+    void read(const FileName &inFile, const std::vector<MDLabel> *desiredLabels = NULL, bool decomposeStack=true);
     /** @} */
 
     /** @name Set Operations
