@@ -545,7 +545,7 @@ MetaData_writeBlock(PyObject *obj, PyObject *args, PyObject *kwargs)
                 	block=FileName_Value(blockName);
                 else
                     return NULL;
-                self->metadata->write(fn,block,APPEND);
+                self->metadata->_write(fn,block,APPEND);
                 Py_RETURN_NONE;
             }
             catch (XmippError xe)
