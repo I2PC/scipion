@@ -366,24 +366,23 @@ FileName FileName::removeFileFormat() const
     return *this;
 }
 
-FileName FileName::removeBlockName() const
+String FileName::getBlockName() const
 {
-    int first;
-    std::string result;
-    if ( (first = rfind("@"))!=String::npos)
-        result = substr(first + 1) ;
+    size_t first = rfind("@");
+    String result;
+    if ( first != String::npos)
+        result = substr(0, first);
     else
         result = "";
     return result;
 
 }
 
-std::string FileName::getBlockName() const
+FileName FileName::removeBlockName() const
 {
-    size_t found;
-    found=rfind("@");
-    if (found!=String::npos)
-        return substr(0, found);
+    size_t first = rfind("@");
+    if (first != String::npos)
+        return substr(first + 1);
     return *this;
 }
 
@@ -400,31 +399,31 @@ bool FileName::isMetaData(bool failIfNotExists) const
         return true;
     }
     else
-    	return isStar1(failIfNotExists);
+        return isStar1(failIfNotExists);
 }
 
 bool FileName::isStar1(bool failIfNotExists) const
 {
-        std::ifstream infile(data(), std::ios_base::in);
-        String line;
+    std::ifstream infile(data(), std::ios_base::in);
+    String line;
 
-        if (infile.fail())
-        {
-            if (failIfNotExists)
-                REPORT_ERROR( ERR_IO_NOTEXIST, (String) "File " + *this + " does not exist." );
-            else
-                return false;
-        }
-
-        // Search for xmipp_3,
-        getline(infile, line, '\n');
-        int pos = line.find("XMIPP_STAR_1 *");
-
-        if (pos != String::npos) // xmipp_star_1 token found
-            return true;
+    if (infile.fail())
+    {
+        if (failIfNotExists)
+            REPORT_ERROR( ERR_IO_NOTEXIST, (String) "File " + *this + " does not exist." );
         else
             return false;
     }
+
+    // Search for xmipp_3,
+    getline(infile, line, '\n');
+    int pos = line.find("XMIPP_STAR_1 *");
+
+    if (pos != String::npos) // xmipp_star_1 token found
+        return true;
+    else
+        return false;
+}
 
 // Substitute one extension by other .......................................
 FileName FileName::substituteExtension(const String &ext1,
