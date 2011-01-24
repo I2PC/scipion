@@ -60,7 +60,7 @@ protected:
 
     void postProcess()
     {
-        mdIn.write(fn_out,blockName,mode);
+        mdIn.write(fn_out,mode);
     }
 
     void processImage(const FileName &fnImg, const FileName &fnImgOut, long int objId)
