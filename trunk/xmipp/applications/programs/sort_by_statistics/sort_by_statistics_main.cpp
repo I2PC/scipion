@@ -199,9 +199,7 @@ int main(int argc, char **argv)
     try
     {
         fn = getParameter(argc, argv, "-i");
-        if (checkParameter(argc,argv,"--block"))
-            fn_block=getParameter(argc, argv, "--block");
-        SF.read(fn,NULL,fn_block);
+        SF.read(fn);
         prm.fn_out = getParameter(argc, argv, "-o", "sort_junk");
         fn_train = getParameter(argc, argv, "--train", "");
         multivariate = checkParameter(argc, argv, "--multivariate");
