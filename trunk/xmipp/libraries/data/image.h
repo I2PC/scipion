@@ -257,14 +257,14 @@ public:
              bool apply_geo = false, bool only_apply_shifts = false,
              MDRow * row = NULL, bool mapData = false)
     {
-        int err = 0;
-
         ImageFHandler* hFile = openFile(name);
-        err = _read(name, hFile, readdata, select_img, apply_geo, only_apply_shifts, row, mapData);
+        int err = _read(name, hFile, readdata, select_img, apply_geo, only_apply_shifts, row, mapData);
         closeFile(hFile);
 
         return err;
     }
+
+    /** Read an image from metadata*/
 
     /* Read an image with a lower resolution as a preview image.
      * If Zdim parameter is not passed, then all slices are rescaled.
@@ -1255,32 +1255,33 @@ public:
 
     /** Get geometric transformation matrix from 2D-image header
       */
-    Matrix2D< double > getTransformationMatrix(bool only_apply_shifts = false,
-            long int n = 0)
+    void getTransformationMatrix(Matrix2D<double> &A,
+        bool only_apply_shifts = false,
+        long int n = 0)
     {
         // This has only been implemented for 2D images...
-        (*this)().checkDimension(2);
+        MULTIDIM_ARRAY(*this).checkDimension(2);
+
+        const MDRow &rowAux=MD[n];
 
         double phi,psi,theta,xoff,yoff,scale;
         bool flip;
-        MD[n].getValue(MDL_ANGLEROT, phi);
+        rowAux.getValue(MDL_ANGLEROT, phi);
         phi = realWRAP(phi, 0., 360.);
-        MD[n].getValue(MDL_ANGLETILT, theta);
+        rowAux.getValue(MDL_ANGLETILT, theta);
         theta = realWRAP(theta, 0., 360.);
-        MD[n].getValue(MDL_ANGLEPSI, psi);
+        rowAux.getValue(MDL_ANGLEPSI, psi);
         psi = realWRAP(psi, 0., 360.);
-        MD[n].getValue(MDL_ORIGINX, xoff);
-        MD[n].getValue(MDL_ORIGINY, yoff);
-        MD[n].getValue(MDL_SCALE, scale);
+        rowAux.getValue(MDL_ORIGINX, xoff);
+        rowAux.getValue(MDL_ORIGINY, yoff);
+        rowAux.getValue(MDL_SCALE, scale);
 
-        Matrix2D< double > A(3, 3);
-        A.initIdentity();
-
+        A.initIdentity(3);
         if (only_apply_shifts)
         {
             Euler_angles2matrix(0., 0., 0., A);
-            A(0, 2) = -xoff;
-            A(1, 2) = -yoff;
+            MAT_ELEM(A, 0, 2) = -xoff;
+            MAT_ELEM(A, 1, 2) = -yoff;
         }
         else
         {
@@ -1300,21 +1301,19 @@ public:
                 }
                 Euler_angles2matrix(0., 0., psi, A);
             }
-            A(0, 2) = -xoff;
-            A(1, 2) = -yoff;
+            MAT_ELEM(A, 0, 2) = -xoff;
+            MAT_ELEM(A, 1, 2) = -yoff;
         }
         A *= scale;
 
         // Also for only_apply_shifts: mirror if necessary!
-        MD[n].getValue(MDL_FLIP, flip);
+        rowAux.getValue(MDL_FLIP, flip);
 
         if (flip)
         {
-            A(0, 0) *= -1.;
-            A(0, 1) *= -1.;
+            MAT_ELEM(A, 0, 0) *= -1.;
+            MAT_ELEM(A, 0, 1) *= -1.;
         }
-
-        return A;
     }
 
     /** Show image properties
@@ -1655,14 +1654,15 @@ private:
             if (data.ndim != 1)
                 REPORT_ERROR(ERR_MULTIDIM_SIZE, "Header overwriting not available for stacks!!!");
             MDLabel label;
+            MDRow &rowAux=MD[0];
 
             for (MDRow::const_iterator it = row->begin(); it != row->end(); ++it)
             {
                 label = (*it)->label;
-                if (MD[0].containsLabel(label))
-                    *(MD[0].getObject(label)) = *(*it);
+                if (rowAux.containsLabel(label))
+                    *(rowAux.getObject(label)) = *(*it);
                 else
-                    MD[0].push_back(new MDObject(*(*it)));
+                  rowAux.push_back(new MDObject(*(*it)));
             }
         }
 
@@ -1672,11 +1672,13 @@ private:
 
         if (readdata && (apply_geo || only_apply_shifts))
         {
-            Matrix2D< double > A = getTransformationMatrix(only_apply_shifts);
+            Matrix2D< double > A;
+            getTransformationMatrix(A,only_apply_shifts);
             if (!A.isIdentity())
             {
-                MultidimArray<T> tmp = (*this)();
-                applyGeometry(BSPLINE3, (*this)(), tmp, A, IS_INV, WRAP);
+                MultidimArray<T> tmp=MULTIDIM_ARRAY(*this);
+                applyGeometry(BSPLINE3, MULTIDIM_ARRAY(*this), tmp,
+                    A, IS_INV, WRAP);
             }
         }
 

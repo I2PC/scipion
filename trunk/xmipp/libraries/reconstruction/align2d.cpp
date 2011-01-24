@@ -170,7 +170,7 @@ bool Prog_align2d_prm::align_rot(Image<double> &img, const MultidimArray<double>
 
     Mimg.resize(img());
     Mimg.setXmippOrigin();
-    A = img.getTransformationMatrix();
+    img.getTransformationMatrix(A);
     applyGeometry(LINEAR,Mimg, img(), A, IS_INV, DONT_WRAP, outside);
     Maux.resize(Mimg);
     Maux.setXmippOrigin();
@@ -253,7 +253,7 @@ bool Prog_align2d_prm::align_trans(Image<double> &img, const MultidimArray<doubl
     Mcorr.setXmippOrigin();
 
     // Apply transformation already present in its header
-    A = img.getTransformationMatrix();
+    img.getTransformationMatrix(A);
     applyGeometry(LINEAR,Maux, img(), A, IS_INV, DONT_WRAP, outside);
 
     // Calculate cross-correlation
@@ -366,7 +366,7 @@ bool Prog_align2d_prm::align_complete_search(Image<double> &img, const MultidimA
     Mimg.setXmippOrigin();
     Mcorr.setXmippOrigin();
 
-    A = img.getTransformationMatrix();
+    img.getTransformationMatrix(A);
     applyGeometry(LINEAR, Mimg, img(), A, IS_INV, DONT_WRAP, outside);
 
     if (Rout <= Rin)
@@ -460,14 +460,15 @@ void Prog_align2d_prm::do_pspc()
     barf = XMIPP_MAX(1, (int)(1 + (n_piram / 60)));
 
     imgno = 0;
+    Matrix2D<double> A;
     for (int lev = nlev; lev > 0; lev--)
     {
 
         nlevimgs = (int)pow(2., (double)lev);
         for (int j = 0; j < nlevimgs / 2; j++)
         {
-
-            applyGeometry(LINEAR, Mref, imgpspc[2*j](), imgpspc[2*j].getTransformationMatrix(), IS_INV, DONT_WRAP);
+            imgpspc[2*j].getTransformationMatrix(A);
+            applyGeometry(LINEAR, Mref, imgpspc[2*j](), A, IS_INV, DONT_WRAP);
             Mref.setXmippOrigin();
 
             if (do_complete)
@@ -489,7 +490,8 @@ void Prog_align2d_prm::do_pspc()
             }
 
             // Re-calculate average image
-            applyGeometry(LINEAR, Maux, imgpspc[2*j+1](), imgpspc[2*j+1].getTransformationMatrix(), IS_INV, DONT_WRAP);
+            imgpspc[2*j+1].getTransformationMatrix(A);
+            applyGeometry(LINEAR, Maux, imgpspc[2*j+1](), A, IS_INV, DONT_WRAP);
             Maux.setXmippOrigin();
             Mref = (Mref + Maux) / 2;
             imgpspc[j]() = Mref;
@@ -549,6 +551,7 @@ void Prog_align2d_prm::refinement()
     barf = XMIPP_MAX(1, (int)(1 + (n_images / 60)));
 
     n_refined = 0;
+    Matrix2D<double> A;
     std::cerr << "  Alignment:  iteration " << 1 << " of " << Niter << " (with " << n_images << " images)" << std::endl;
     for (int iter = 0; iter < Niter; iter++)
     {
@@ -576,7 +579,8 @@ void Prog_align2d_prm::refinement()
             if (iter != 0)
             {
                 // Subtract current image from the reference
-                applyGeometry(LINEAR, Maux, images[imgno](), images[imgno].getTransformationMatrix(), IS_INV, DONT_WRAP, outside);
+                images[imgno].getTransformationMatrix(A);
+                applyGeometry(LINEAR, Maux, images[imgno](), A, IS_INV, DONT_WRAP, outside);
                 Maux.setXmippOrigin();
                 FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY2D(Mref)
                 {
@@ -610,7 +614,8 @@ void Prog_align2d_prm::refinement()
                 {
                     // Add refined images to form a new reference
                     n_refined++;
-                    applyGeometry(LINEAR, Maux, images[imgno](), images[imgno].getTransformationMatrix(), IS_INV, DONT_WRAP, outside);
+                    images[imgno].getTransformationMatrix(A);
+                    applyGeometry(LINEAR, Maux, images[imgno](), A, IS_INV, DONT_WRAP, outside);
                     Maux.setXmippOrigin();
                     FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY2D(Msum)
                     {
@@ -620,7 +625,8 @@ void Prog_align2d_prm::refinement()
                 else
                 {
                     // Add refined image to reference again
-                    applyGeometry(LINEAR, Maux, images[imgno](), images[imgno].getTransformationMatrix(), IS_INV, DONT_WRAP, outside);
+                    images[imgno].getTransformationMatrix(A);
+                    applyGeometry(LINEAR, Maux, images[imgno](), A, IS_INV, DONT_WRAP, outside);
                     Maux.setXmippOrigin();
                     FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY2D(Mref)
                     {
@@ -676,9 +682,11 @@ void Prog_align2d_prm::calc_correlation(const MultidimArray<double> &Mref, const
         REPORT_ERROR(ERR_VALUE_INCORRECT, "Align2d: Rout <= Rin");
     BinaryCrownMask(mask, Rin, Rout, INNER_MASK);
 
+    Matrix2D<double> A;
     for (int imgno = 0; imgno < n_images; imgno++)
     {
-        applyGeometry(LINEAR, Mimg, images[imgno](), images[imgno].getTransformationMatrix(), IS_INV, DONT_WRAP);
+        images[imgno].getTransformationMatrix(A);
+        applyGeometry(LINEAR, Mimg, images[imgno](), A, IS_INV, DONT_WRAP);
         Mimg.setXmippOrigin();
         corr[imgno] = correlation_index(Mref, Mimg, &mask);
 

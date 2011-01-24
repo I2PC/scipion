@@ -625,6 +625,7 @@ void ProgNormalize::processImage(const FileName &fnImg, const FileName &fnImgOut
 
     if (apply_geo)
     {
+        Matrix2D<double> A;
         // Applygeo only valid for 2D images for now...
         img.checkDimension(2);
 
@@ -636,7 +637,8 @@ void ProgNormalize::processImage(const FileName &fnImg, const FileName &fnImgOut
         double outside = DIRECT_A2D_ELEM(tmp, 0, 0);
 
         // Instead of IS_INV for images use IS_NOT_INV for masks!
-        selfApplyGeometry(BSPLINE3, tmp, I.getTransformationMatrix(), IS_NOT_INV, DONT_WRAP, outside);
+        I.getTransformationMatrix(A);
+        selfApplyGeometry(BSPLINE3, tmp, A, IS_NOT_INV, DONT_WRAP, outside);
 
         FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY2D(bg_mask)
         dAij(bg_mask,i,j)=ROUND(dAij(tmp,i,j));

@@ -225,7 +225,7 @@ void VirusVertex::processAngles()
                 FileName fn_tmp;
                 proj_aux.setShifts(xoff + XX(proj_vectors[i])*virusRadius,
                                    yoff + YY(proj_vectors[i])*virusRadius);
-                A = proj_aux.getTransformationMatrix(true);
+                proj_aux.getTransformationMatrix(A,true);
                 if (!A.isIdentity())
                 	selfApplyGeometry(BSPLINE3,proj_aux(),A, IS_INV, DONT_WRAP);
                 fn_tmp = fn_img.withoutExtension() + "_";

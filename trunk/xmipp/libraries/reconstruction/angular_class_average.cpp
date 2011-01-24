@@ -648,7 +648,7 @@ void ProgAngularClassAverage::processOneClass(int &dirno,
                 }
 
                 // Apply in-plane transformation
-                A = img.getTransformationMatrix();
+                img.getTransformationMatrix(A);
                 if (!A.isIdentity())
                     selfApplyGeometry(BSPLINE3, img(), A, IS_INV,WRAP);
 

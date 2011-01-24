@@ -1801,7 +1801,7 @@ void ProgMask::run()
                 REPORT_ERROR(ERR_ARG_INCORRECT, "Mask: -center option cannot be combined with apply_geo; use -dont_apply_geo");
             else
                 // Read geometric transformation from the image and store for mask
-                mask.mask_geo = image.getTransformationMatrix();
+                image.getTransformationMatrix(mask.mask_geo);
         }
         mask.generate_mask(image());
 

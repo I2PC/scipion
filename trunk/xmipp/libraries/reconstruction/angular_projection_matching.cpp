@@ -945,7 +945,7 @@ void ProgAngularProjectionMatching::getCurrentImage(int imgno, Image<double> &im
         DFexp.getValue(MDL_SCALE,scale);
     img.setScale(scale);
 
-    A = img.getTransformationMatrix(true);
+    img.getTransformationMatrix(A,true);
     if (!A.isIdentity())
         selfApplyGeometry(BSPLINE3, img(), A, IS_INV, WRAP);
 }

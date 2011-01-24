@@ -353,7 +353,7 @@ void * ProgRecFourier::processImageThread( void * threadArgs )
                         proj.setShifts(xoff,yoff);
                         proj.setFlip(flip);
                         proj.setWeight(weight);
-                        localA = proj.getTransformationMatrix(true);
+                        proj.getTransformationMatrix(localA,true);
                         if (!localA.isIdentity())
                             selfApplyGeometry(BSPLINE3, proj(), localA, IS_INV, WRAP);
                     }

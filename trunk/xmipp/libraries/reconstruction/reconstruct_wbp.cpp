@@ -470,7 +470,7 @@ void ProgRecWbp::apply_2Dfilter_arbitrary_geometry(MetaData &SF, MultidimArray<d
             proj.setShifts(xoff,yoff);
             proj.setFlip(flip);
             proj.setWeight(weight);
-            A = proj.getTransformationMatrix(true);
+            proj.getTransformationMatrix(A,true);
             if (!A.isIdentity())
                 selfApplyGeometry(BSPLINE3, proj(), A, IS_INV, WRAP);
         }
