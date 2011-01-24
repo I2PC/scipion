@@ -40,6 +40,7 @@
 template<typename T>
 class Image: public ImageBase
 {
+
 public:
     MultidimArray<T>    data;        // The image data array
 
@@ -737,9 +738,9 @@ public:
         return A2D_ELEM(data, i, j);
     }
 
-    void setDimensions(int Xdim, int Ydim, int Zdim, long int Ndim)
+    void setDimensions(int Xdim, int Ydim, int Zdim, unsigned long Ndim)
     {
-        data.setDimensions(Xdim,Ydim,Zdim,Ndim);
+      data.setDimensions(Xdim,Ydim,Zdim,Ndim);
     }
 
     /** Set pixel
@@ -1443,8 +1444,9 @@ private:
     }
 
     /* friend declaration for stacks handling purposes
-     */
+    */
     friend class ImageCollection;
+
 }
 ;
 
