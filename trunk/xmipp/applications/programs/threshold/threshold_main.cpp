@@ -124,7 +124,7 @@ int main(int argc, char **argv)
         I.read(fn_in);
         if (ZSIZE(I())==1)
         {
-            mask_prm.mask_geo = I.getTransformationMatrix();
+            I.getTransformationMatrix(mask_prm.mask_geo);
             mask_prm.generate_mask(I(),apply_geo);
         }
         else

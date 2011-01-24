@@ -61,7 +61,9 @@ protected:
             REPORT_ERROR(ERR_MULTIDIM_DIM, "This program is intended only for images");
 
         MultidimArray<double> Maux;
-        applyGeometry(BSPLINE3, Maux, img(), img.getTransformationMatrix(), IS_INV, wrap);
+        Matrix2D<double> A;
+        img.getTransformationMatrix(A);
+        applyGeometry(BSPLINE3, Maux, img(), A, IS_INV, wrap);
         img()=Maux;
         //Reset in-plane transformations of the header
         img.setShifts(0,0);
