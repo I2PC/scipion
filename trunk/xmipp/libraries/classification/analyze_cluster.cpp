@@ -34,8 +34,10 @@ void ProgAnalyzeCluster::readParams()
     fnSel = getParam("-i");
     fnOut = getParam("-o");
     fnRef = getParam("--ref");
-    if (checkParam("--block"))
-        block = getParam("--block");
+    //FIXME
+    //DROP block ROB
+    //if (checkParam("--block"))
+    //    block = getParam("--block");
     if (checkParam("--produceAligned"))
         fnOutAligned = getParam("--produceAligned");
     if (checkParam("--basis"))
@@ -53,7 +55,7 @@ void ProgAnalyzeCluster::show()
     if (!quiet)
         std::cerr
         << "Input metadata file:    " << fnSel         << std::endl
-        << "Block:                  " << block         << std::endl
+        //<< "Block:                  " << block         << std::endl
         << "Reference:              " << fnRef         << std::endl
         << "Output metadata:        " << fnOut         << std::endl
         << "Output aligned stack:   " << fnOutAligned  << std::endl
@@ -72,7 +74,7 @@ void ProgAnalyzeCluster::defineParams()
     addParamsLine("   -i <metadatafile>             : metadata file  with images assigned to the cluster");
     addParamsLine("   -o <metadatafile>             : output metadata");
     addParamsLine("   --ref <image>                 : class representative");
-    addParamsLine("  [--block <blockName>]          : block name within the input metadata");
+    //addParamsLine("  [--block <blockName>]          : block name within the input metadata");
     addParamsLine("  [--produceAligned <stackName>] : write the aligned images");
     addParamsLine("  [--basis <stackName>]          : write the average and basis of the PCA in a stack");
     addParamsLine("  [--NPCA <dim=2>]               : PCA dimension");
@@ -91,7 +93,7 @@ void ProgAnalyzeCluster::produceSideInfo()
     basis = fnOutBasis!="";
 
     // Read input selfile and reference
-    SFin.read(fnSel, NULL, block);
+    SFin.read(fnSel);
     if (SFin.size()==0)
         return;
     if (SFin.containsLabel(MDL_ENABLED))
