@@ -903,7 +903,7 @@ void VQ::write(const FileName &fnRoot, bool final) const
             else
                 SFq.setValue(MDL_IMAGE,SFv[idx]);
         }
-        SFq.write(fnSFout,"class_"+integerToString(q,6),APPEND);
+        SFq._write(fnSFout,"class_"+integerToString(q,6),APPEND);
     }
 }
 
@@ -1922,7 +1922,7 @@ void Prog_VQ_prm::alignInputImages(const FileName &fnSF, int rank, int Nprocesso
     {
         if (blockList[b]=="")
             continue;
-        SFBlock.read(fnSF,NULL,blockList[b]);
+        SFBlock._read(fnSF,NULL,blockList[b]);
         SFBlock.getValue(MDL_IMAGE_CLASS,fnClass);
         Iclass.read(fnClass);
         Iclass().setXmippOrigin();
