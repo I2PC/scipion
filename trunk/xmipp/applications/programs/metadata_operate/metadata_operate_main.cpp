@@ -38,9 +38,8 @@ protected:
     void defineParams()
     {
         addUsageLine("Perform operations on MetaData columns. See examples below.");
-        addUsageLine("Example:  ");
-        addUsageLine("  operate_metadata  -i a.doc -o b.doc -e  \"angleRot=(angleRot*3.1416/180.)\"  ");
-        addUsageLine("  operate_metadata  -i a.doc -o b.doc -e  \"image=replace(image, 'xmp','spi')\"  ");
+        addExampleLine("  xmipp_metadata_operate  -i a.doc -o b.doc -e  \"angleRot=(angleRot*3.1416/180.)\"  ");
+        addExampleLine("  xmipp_metadata_operate  -i a.doc -o b.doc -e  \"image=replace(image, 'xmp','spi')\"  ");
         addParamsLine("  -i <inputMetadata>     :MetaData input file name       ");
         addParamsLine("     alias --input;");
         addParamsLine("  -o <outputMetadata=\"/dev/stdout\"> :MetaData output file name, by default print to screen");
@@ -70,14 +69,7 @@ public:
 /* MAIN -------------------------------------------------------------------- */
 int main(int argc, char *argv[])
 {
-    try
-    {
         ProgMetadataOperate program;
         program.read(argc, argv);
-        program.run();
-    }
-    catch (XmippError xe)
-    {
-        std::cerr << xe;
-    }
+        program.tryRun();
 }
