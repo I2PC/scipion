@@ -136,7 +136,7 @@ int  readIMAGIC(int img_select)
     if( img_select > -1)
         _nDim=1;
 
-    data.setDimensions( //setDimensions do not allocate data
+    setDimensions( //setDimensions do not allocate data
         _xDim,
         _yDim,
         _zDim,
