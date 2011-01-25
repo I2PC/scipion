@@ -1394,7 +1394,7 @@ void * threadgenerateLandmarkSetCriticalPoints( void * args )
             continue;
 
         Image<double> I;
-        I.read(parent->name_list[ii]);
+        I.read2(parent->name_list[ii]);
 
         // Generate mask
         MultidimArray<unsigned char> largeMask;
@@ -2255,12 +2255,12 @@ void Prog_tomograph_alignment::alignImages(const Alignment &alignment)
         SForig.firstObject();
     DF.setComment("First shift by -(shiftX,shiftY), then rotate by psi");
 
+    MultidimArray<double> mask;
+    Image<double> I;
     for (int i=0;i<Nimg; i++)
     {
         // Align the normal image
-        Image<double> I;
-        I.read(name_list[i]);
-        MultidimArray<double> mask;
+        I.read2(name_list[i]);
         mask.initZeros(I());
         FOR_ALL_ELEMENTS_IN_ARRAY2D(I())
         if (I(i,j)!=0)

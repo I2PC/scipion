@@ -163,7 +163,7 @@ void ProgAngularContinuousAssign::processImage(const FileName &fnImg, const File
     MDRow mdrow;
     mdIn.getRow(mdrow);
     Image<double> img;
-    img.read(fnImg, true, -1, false, false, &mdrow, false);
+    img.read2(fnImg, true, -1, false, false, &mdrow, false);
 
     double old_rot=img.rot();
     double old_tilt=img.tilt();
