@@ -11,10 +11,13 @@ void getStatistics(MetaData &MT_in, Image<double> & _ave, Image<double> & _sd, d
                    double& _max, bool apply_geo)
 {
     MetaData MT(MT_in); //copy constructor so original MT is not changed
-    _min = MAXFLOAT;
-    _max = 0.;
+    _min = MAXDOUBLE;
+    _max = -MAXDOUBLE;
     bool first = true;
     int n = 0;
+    //Remove disabled images if present
+    if (MT.containsLabel(MDL_ENABLED))
+        MT.removeObjects(MDValueEQ(MDL_ENABLED, -1));
     // Calculate Mean
     if (MT.isEmpty())
     {
@@ -22,17 +25,13 @@ void getStatistics(MetaData &MT_in, Image<double> & _ave, Image<double> & _sd, d
         exit(1);
     }
 
-    FileName image_name;
     int _enabled;
+    Image<double> image, tmpImg;
+    double min, max, avg, stddev;
+
     FOR_ALL_OBJECTS_IN_METADATA(MT)
     {
-        MT.getValue(MDL_IMAGE, image_name);
-        MT.getValue(MDL_ENABLED, _enabled);
-        if (_enabled == (-1) || image_name == "")
-            continue;
-        Image<double> image;
-        image.read(image_name,true,-1,apply_geo, false);
-        double min, max, avg, stddev;
+        image.read(MT, MT.getActiveObject(), -1, apply_geo);
         image().computeStats(avg, stddev, min, max);
         if (min < _min)
             _min = min;
@@ -57,13 +56,7 @@ void getStatistics(MetaData &MT_in, Image<double> & _ave, Image<double> & _sd, d
     // Calculate SD
     FOR_ALL_OBJECTS_IN_METADATA(MT)
     {
-        MT.getValue(MDL_IMAGE, image_name);
-        MT.getValue(MDL_ENABLED, _enabled);
-        if (_enabled == (-1) || image_name == "")
-            continue;
-
-        Image<double> image, tmpImg;
-        image.read(image_name);
+        image.read(MT, MT.getActiveObject(), -1, apply_geo);
         tmpImg() = ((image() - _ave()));
         tmpImg() *= tmpImg();
         _sd() += tmpImg();
@@ -108,25 +101,25 @@ void getBlocksAvailableInMetaData(const FileName &inFile, StringVector& blockLis
     String candidateBlock, line;
     while (!is.eof())
     {
-    	getline(is,line);
-    	trim(line);
-    	switch (state)
-    	{
-    	case 0:
-        	if (line.find("data_")==0)
-        	{
-        		state=1;
-        		candidateBlock=line.substr(5,line.size()-5);
-        	}
-        	break;
-    	case 1:
-        	if (line.find("loop_")==0)
-        	{
-        		state=0;
-        		blockList.push_back(candidateBlock);
-        	}
-        	break;
-    	}
+        getline(is,line);
+        trim(line);
+        switch (state)
+        {
+        case 0:
+            if (line.find("data_")==0)
+            {
+                state=1;
+                candidateBlock=line.substr(5,line.size()-5);
+            }
+            break;
+        case 1:
+            if (line.find("loop_")==0)
+            {
+                state=0;
+                blockList.push_back(candidateBlock);
+            }
+            break;
+        }
     }
 }
 
@@ -156,77 +149,77 @@ void readMetaDataWithTwoPossibleImages(const FileName &fn, MetaData &MD)
         MD.read(fn);
     else
     {
-    	// Try to read a one or two column file
-    	std::ifstream fhIn;
-    	fhIn.open(fn.c_str());
-    	if (!fhIn)
-    		REPORT_ERROR(ERR_IO_NOTEXIST,fn);
-    	MD.clear();
-    	std::string line;
-    	while (!fhIn.eof())
-    	{
-    		getline(fhIn,line);
-    		std::vector<std::string> tokens;
-    		tokenize(line, tokens, " \t");
-    		switch (tokens.size())
-    		{
-    		case 0:
-    			break;
-    		case 1:
-    			MD.addObject();
-    			MD.setValue(MDL_IMAGE,tokens[0]);
-    			break;
-    		case 2:
-    			MD.addObject();
-    			MD.setValue(MDL_IMAGE,tokens[0]);
-    			MD.setValue(MDL_ASSOCIATED_IMAGE1,tokens[1]);
-    			break;
-    		default:
-    			REPORT_ERROR(ERR_MD_OBJECTNUMBER,
-    				(std::string)"Invalid number of objects in line:"+line);
-    		}
-    	}
-    	fhIn.close();
+        // Try to read a one or two column file
+        std::ifstream fhIn;
+        fhIn.open(fn.c_str());
+        if (!fhIn)
+            REPORT_ERROR(ERR_IO_NOTEXIST,fn);
+        MD.clear();
+        std::string line;
+        while (!fhIn.eof())
+        {
+            getline(fhIn,line);
+            std::vector<std::string> tokens;
+            tokenize(line, tokens, " \t");
+            switch (tokens.size())
+            {
+            case 0:
+                break;
+            case 1:
+                MD.addObject();
+                MD.setValue(MDL_IMAGE,tokens[0]);
+                break;
+            case 2:
+                MD.addObject();
+                MD.setValue(MDL_IMAGE,tokens[0]);
+                MD.setValue(MDL_ASSOCIATED_IMAGE1,tokens[1]);
+                break;
+            default:
+                REPORT_ERROR(ERR_MD_OBJECTNUMBER,
+                             (std::string)"Invalid number of objects in line:"+line);
+            }
+        }
+        fhIn.close();
     }
 }
 
 /* Substitute ------------------------------------------------------------- */
 void substituteOriginalImages(const FileName &fn, const FileName &fnOrig, const FileName &fnOut,
-		MDLabel label, bool skipFirstBlock)
+                              MDLabel label, bool skipFirstBlock)
 {
-	// Read the original files
-	MetaData MDorig(fnOrig);
+    // Read the original files
+    MetaData MDorig(fnOrig);
     if (MDorig.containsLabel(MDL_ENABLED))
-    	MDorig.removeObjects(MDValueEQ(MDL_ENABLED, -1));
-	StringVector filesOrig;
-	MDorig.getColumnValues(MDL_IMAGE,filesOrig);
-	MDorig.clear(); // Save memory
+        MDorig.removeObjects(MDValueEQ(MDL_ENABLED, -1));
+    StringVector filesOrig;
+    MDorig.getColumnValues(MDL_IMAGE,filesOrig);
+    MDorig.clear(); // Save memory
 
-	// Read the blocks available
-	StringVector blocks;
-	getBlocksAvailableInMetaData(fn, blocks);
+    // Read the blocks available
+    StringVector blocks;
+    getBlocksAvailableInMetaData(fn, blocks);
 
-	// Delete the output file if it exists
-	if (exists(fnOut))
-		unlink(fnOut.c_str());
+    // Delete the output file if it exists
+    if (exists(fnOut))
+        unlink(fnOut.c_str());
 
-	// Process each block
-	for (int b=0; b<blocks.size(); b++)
-	{
-		MetaData MD;
-		MD._read(fn,NULL,blocks[b]);
-		if (MD.containsLabel(label) && (!skipFirstBlock || b!=0))
-		{
-			FileName fnImg;
-			int stkNo;
-			String stkName;
-			FOR_ALL_OBJECTS_IN_METADATA(MD)
-			{
-				MD.getValue(label,fnImg);
-				fnImg.decompose(stkNo,stkName);
-				MD.setValue(label,filesOrig[stkNo]);
-			}
-		}
-		MD._write(fnOut,blocks[b],APPEND);
-	}
+    // Process each block
+    for (int b=0; b<blocks.size(); b++)
+    {
+        MetaData MD;
+        MD._read(fn,NULL,blocks[b]);
+        if (MD.containsLabel(label) && (!skipFirstBlock || b!=0))
+        {
+            FileName fnImg;
+            int stkNo;
+            String stkName;
+            FOR_ALL_OBJECTS_IN_METADATA(MD)
+            {
+                MD.getValue(label,fnImg);
+                fnImg.decompose(stkNo,stkName);
+                MD.setValue(label,filesOrig[stkNo]);
+            }
+        }
+        MD._write(fnOut,blocks[b],APPEND);
+    }
 }
