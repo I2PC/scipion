@@ -91,7 +91,7 @@ int main(int argc, char **argv)
         if (!nomask)
         {
             std::cout << std::endl << "reading mask " << bmname << "......" << std::endl << std::endl;
-            mask.read(bmname);        // Reads the mask
+            mask.read2(bmname);        // Reads the mask
             //Adjust the range to 0-1
             mask().rangeAdjust(0, 1); // just in case
             mask().printShape();

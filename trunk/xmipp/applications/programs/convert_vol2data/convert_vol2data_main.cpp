@@ -87,7 +87,7 @@ int main(int argc, char **argv)
     if (!nomask)
     {
         std::cout << std::endl << "reading mask " << bmname << "......" << std::endl << std::endl;
-        mask.read(bmname);        // Reads the mask
+        mask.read2(bmname);        // Reads the mask
         //Adjust the range to 0-1
         mask().rangeAdjust(0, 1); // just in case
         std::cout << mask;    // Output Volumen Information
@@ -104,17 +104,14 @@ int main(int argc, char **argv)
         if (verb)
             std::cout << "generating points for image " << image_name << "......" << std::endl;
         Image<double> image;
-        image.read(image_name);    // reads image
+        image.read(image_name,SF,objId); // reads image
 
         // Extract the data
-
         image().setXmippOrigin();  // sets origin at the center of the image.
         mask().setXmippOrigin();   // sets origin at the center of the mask.
 
         // Generates coordinates (data points)
-
         std::vector <float> imagePoints;
-
         for (int z = STARTINGZ(image()); z <= FINISHINGZ(image()); z++)
             for (int y = STARTINGY(image()); y <= FINISHINGY(image()); y++)
                 for (int x = STARTINGX(image()); x <= FINISHINGX(image()); x++)
