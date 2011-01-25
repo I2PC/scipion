@@ -238,6 +238,8 @@ protected:
     bool single_image;
     /// Flag to treat a stack file as a set of images instead of a unique file
     bool decompose_stacks;
+    /// Flag to save the output metadata when output file is a stack
+    bool save_metadata_stack;
 
     virtual void defineParams();
     virtual void readParams();

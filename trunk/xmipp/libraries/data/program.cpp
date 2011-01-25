@@ -406,6 +406,7 @@ XmippMetadataProgram::XmippMetadataProgram()
     allow_time_bar = true;
     apply_geo = false;
     decompose_stacks = true;
+    save_metadata_stack = false;
 }
 
 void XmippMetadataProgram::defineParams()
@@ -519,7 +520,12 @@ void XmippMetadataProgram::finishProcessing()
         progress_bar(time_bar_size);
 
     if (!single_image && !mdOut.isEmpty())
-        mdOut.write(fn_out);
+    {
+        if (oroot != "") // Out as independent images
+            mdOut.write(fn_out);
+        else if (save_metadata_stack && fn_out != "") // Out as stack
+            mdOut.write(fn_out.withoutExtension().addExtension("sel"));
+    }
 }
 
 void XmippMetadataProgram::showProgress()
@@ -573,7 +579,7 @@ void XmippMetadataProgram::run()
             if (each_image_produces_an_output)
             {
                 fnImgOut = fnImg;
-                if (oroot != "" )
+                if (oroot != "" ) // Compose out name to save as independent images
                 {
                     if (oext == "")
                         oextBaseName = fnImg.getFileFormat();
@@ -584,25 +590,34 @@ void XmippMetadataProgram::run()
                         fnImgOut.compose(pathBaseName + (fnImg.withoutExtension()).getDecomposedFileName(),kk++,oextBaseName);
                     else
                         fnImgOut = pathBaseName + fnImg.withoutExtension()+"." + oextBaseName;
-
-                    mdOut.addObject();
-                    mdOut.setValue(MDL_IMAGE,fnImgOut);
-                    mdOut.setValue(MDL_ENABLED, 1);
                 }
                 else if (fn_out != "")
                 {
                     if (single_image)
                         fnImgOut = fn_out;
                     else
-                        fnImgOut.compose(kk++,fn_out);
+                        fnImgOut.compose(kk++,fn_out); // Compose out name to save as stacks
                 }
                 else
                     fnImgOut = fnImg;
+
+                mdOut.addObject();
+                mdOut.setValue(MDL_IMAGE,fnImgOut);
+                mdOut.setValue(MDL_ENABLED, 1);
             }
 
             processImage(fnImg, fnImgOut, objId);
 
             showProgress();
+        }
+
+        // Generate name to save mdOut when output are independent images
+        if (oroot != "" && fn_out == "")
+        {
+            if (baseName != "")
+                fn_out = baseName.addExtension("sel");
+            else
+                fn_out = fn_in.withoutExtension() + "_" + oextBaseName + ".sel";
         }
 
         finishProcessing();
