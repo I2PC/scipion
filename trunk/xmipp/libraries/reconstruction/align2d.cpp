@@ -732,7 +732,7 @@ void Prog_align2d_prm::align2d()
         SF.getValue(MDL_ENABLED, enabled);
         if(enabled==(-1)||fn_img == "")
             continue;
-        Itmp.read(fn_img);
+        Itmp.read(fn_img,SF,objId);
         Itmp().setXmippOrigin();
         images.push_back(Itmp);
         corr.push_back(zero);
