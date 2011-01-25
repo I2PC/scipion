@@ -732,7 +732,7 @@ void Prog_align2d_prm::align2d()
         SF.getValue(MDL_ENABLED, enabled);
         if(enabled==(-1)||fn_img == "")
             continue;
-        Itmp.read(fn_img,SF,objId);
+        Itmp.readApplyGeo(fn_img,SF,objId);
         Itmp().setXmippOrigin();
         images.push_back(Itmp);
         corr.push_back(zero);
@@ -753,9 +753,9 @@ void Prog_align2d_prm::align2d()
             fmask.applyMaskSpace(images[imgno]());
     }
 
-    // Get Reference (either from file or from piramidal combination of images)
+    // Get Reference (either from file or from pyramidal combination of images)
     if (fn_ref != "")
-        Iref.read2(fn_ref, false, -1, true);
+        Iref.read(fn_ref);
     else
         do_pspc();
 

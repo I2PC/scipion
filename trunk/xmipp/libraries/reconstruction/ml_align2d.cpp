@@ -486,7 +486,7 @@ void ProgML2D::produceSideInfo()
         FOR_ALL_OBJECTS_IN_METADATA(MDimg)
         {
             MDimg.getValue(MDL_IMAGE, fn_tmp);
-            img.read(fn_tmp);
+            img.readApplyGeo(fn_tmp,MDimg,objId);
             img().setXmippOrigin();
             avg() += img();
         }
@@ -543,7 +543,7 @@ void ProgML2D::produceSideInfo2()
     FOR_ALL_OBJECTS_IN_METADATA(MDref)
     {
         MDref.getValue(MDL_IMAGE, fn_tmp);
-        img.read(fn_tmp);
+        img.readApplyGeo(fn_tmp,MDref,objId);
         img().setXmippOrigin();
         model.Iref[refno] = img;
         // Default start is all equal model fractions
@@ -1939,7 +1939,7 @@ void ProgML2D::expectation()
                 mygroup = 0;
 
             MDimg.getValue(MDL_IMAGE, fn_img, img_id[imgno]);
-            img.read(fn_img);
+            img.readApplyGeo(fn_img,MDimg,img_id[imgno]);
             img().setXmippOrigin();
             Xi2 = img().sum2();
             Mimg = img();
@@ -2506,7 +2506,7 @@ void ProgML2D::readModel(ModelML2D &model, FileName fn_base)
     FOR_ALL_OBJECTS_IN_METADATA(MDi)
     {
         MDi.getValue(MDL_IMAGE, fn_img);
-        img.read(fn_img);
+        img.readApplyGeo(fn_img,MDi,objId);
         img().setXmippOrigin();
         model.Iref[refno] = img;
         MDi.getValue(MDL_WEIGHT, model.alpha_k[refno]);

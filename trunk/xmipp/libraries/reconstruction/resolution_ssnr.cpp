@@ -113,9 +113,9 @@ void Prog_SSNR_prm::produce_side_info()
     {
         if (S.isImage(fn_S))
         {
-            S.read(fn_S);
+            S.readApplyGeo(fn_S);
             S().setXmippOrigin();
-            N.read(fn_N);
+            N.readApplyGeo(fn_N);
             N().setXmippOrigin();
             if (!S().sameShape(N()))
                 REPORT_ERROR(ERR_MULTIDIM_SIZE,
@@ -183,10 +183,10 @@ void Prog_SSNR_prm::Estimate_SSNR(int dim, Matrix2D<double> &output)
         Image<double> Is, In, Inp;
         FileName fn_img;
         SF_S.getValue(MDL_IMAGE,fn_img);
-        Is.read(fn_img);
+        Is.readApplyGeo(fn_img,SF_S,objId);
         Is().setXmippOrigin();
         SF_N.getValue(MDL_IMAGE,fn_img);
-        In.read(fn_img);
+        In.readApplyGeo(fn_img,SF_N,objId);
         In().setXmippOrigin();
         Inp() = In();
 

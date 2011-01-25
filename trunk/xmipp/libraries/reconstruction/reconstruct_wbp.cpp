@@ -153,7 +153,7 @@ void ProgRecWbp::get_angles_for_image(const FileName &fn, double &rot, double &t
     if (fn_doc == "")
     {
         Image<double> I;
-        I.read(fn,false);
+        I.readApplyGeo(fn,false);
         rot    = I.rot();
         tilt   = I.tilt();
         psi    = I.psi();

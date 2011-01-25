@@ -91,7 +91,7 @@ int main(int argc, char **argv)
         if (!nomask)
         {
             std::cout << std::endl << "reading mask " << bmname << "......" << std::endl << std::endl;
-            mask.read2(bmname);        // Reads the mask
+            mask.read(bmname);        // Reads the mask
             //Adjust the range to 0-1
             mask().rangeAdjust(0, 1); // just in case
             mask().printShape();
@@ -110,7 +110,10 @@ int main(int argc, char **argv)
         	if (verb)
                 std::cout << "generating points for image " << image_name << "......" << std::endl;
 
-            image.read(image_name, true, -1, apply_geo);     // reads image
+        	if (apply_geo)
+        		image.readApplyGeo(image_name);
+        	else
+        		image.read(image_name);
 
             // Extract the data
             image().setXmippOrigin();  // sets origin at the center of the image.

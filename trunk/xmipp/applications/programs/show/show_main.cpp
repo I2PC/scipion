@@ -175,7 +175,7 @@ int main(int argc, char **argv)
                     if (mode == MODE_IMG )
                     {
                         Image<double> I;
-                        I.read2(argv[i]);
+                        I.read(argv[i]);
                         double maux, Maux;
                         I().computeDoubleMinMax(maux, Maux);
                         if (i == ifirst + 1)

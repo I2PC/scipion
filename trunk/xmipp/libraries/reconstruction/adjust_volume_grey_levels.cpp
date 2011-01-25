@@ -110,22 +110,16 @@ double ProgAdjustVolume::mismatching(double a, double b)
         std::cerr << "Empty inputFile File\n";
         exit(1);
     }
+    Image<double> I;
     FOR_ALL_OBJECTS_IN_METADATA(SF)
     {
-        // Read next image
-        FileName fn;
-        SF.getValue( MDL_IMAGE, fn);
-        if (fn=="")
-            break;
-
         // Skip randomly some images
         double x = rnd_unif(0, 1);
         if (x > probb_eval)
             continue;
         N++;
 
-        Image<double> I;
-        I.read(fn);
+        I.readApplyGeo(SF,objId);
         I().setXmippOrigin();
 
         // Project the auxiliary volume in the same direction
@@ -173,15 +167,11 @@ void ProgAdjustVolume::apply(MultidimArray<double> &out)
         std::cerr << "Empty inputFile File\n";
         exit(1);
     }
+    Image<double> I;
     FOR_ALL_OBJECTS_IN_METADATA(SF)
     {
         // Read image
-        FileName fn;
-        SF.getValue( MDL_IMAGE, fn);
-        if (fn=="")
-            break;
-        Image<double> I;
-        I.read(fn);
+        I.readApplyGeo(SF,objId);
         projXdim = XSIZE(I());
         projYdim = YSIZE(I());
 

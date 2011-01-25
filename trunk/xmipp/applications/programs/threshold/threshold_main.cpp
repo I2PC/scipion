@@ -121,7 +121,7 @@ int main(int argc, char **argv)
 
     try
     {
-        I.read(fn_in);
+        I.readApplyGeo(fn_in);
         if (ZSIZE(I())==1)
         {
             I.getTransformationMatrix(mask_prm.mask_geo);

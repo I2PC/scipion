@@ -170,7 +170,7 @@ protected:
                     mdIn.setValue(MDL_IMAGE, fnTemp);
                     mdIn.setValue(MDL_ENABLED, 1);
                 }
-                imIn.read2(fn_in,true,-1,false,false,NULL,true);
+                imIn.read(fn_in,true,-1,true);
                 imOut = new ImageGeneric(outDataT);
                 k = 0;
             }
@@ -183,22 +183,13 @@ protected:
         {
         case MD2MD:
             {
-                if (fnImgOut.isInStack())
-                {
-                    mdIn.getRow(row);
-                    imIn.read2(fnImg,true,-1,false,false,&row,true);
-                    imIn.write(fnImgOut,-1,true,WRITE_APPEND,adjust);
-                }
-                else
-                {
-                    imIn.read2(fnImg,true,-1,false,false,NULL,true);
-                    imIn.write(fnImgOut,-1,false,WRITE_OVERWRITE,adjust);
-                }
+                imIn.read(fnImg,true,-1,true);
+                imIn.write(fnImgOut,-1,false,WRITE_REPLACE,adjust);
                 break;
             }
         case MD2VOL:
             {
-                imIn.read2(fnImg,true,-1,false,false, NULL,true);
+                imIn.read(fnImg,true,-1,true);
                 imOut->data->setSlice(k++,imIn.data);
                 break;
             }

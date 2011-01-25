@@ -52,13 +52,13 @@ public:
         XmippMetadataProgram::readParams();
         usemask = false;
         fn_ref = getParam("-ref");
-        ref.read(fn_ref, true, -1, apply_geo);
+        ref.read(fn_ref);
         ref().setXmippOrigin();
         fn_msk = getParam("-mask");
         if (fn_msk != "")
         {
             usemask = true;
-            M.read(fn_msk, true, -1, apply_geo);
+            M.read(fn_msk);
             M().setXmippOrigin();
             typeCast(M(),mask);
         }
@@ -79,7 +79,8 @@ public:
 
     void processImage(const FileName &fnImg, const FileName &fnImgOut, long int objId)
     {
-        Image<double> img; img.read(fnImg);;
+        Image<double> img;
+        img.readApplyGeo(fnImg,mdIn,objId);
 
         double co, cc, eu, mi;
         if (!usemask)

@@ -206,9 +206,7 @@ void ProgAngularDiscreteAssign::produce_library()
     int n = 0, nstep = XMIPP_MAX(1, number_of_imgs / 60); // For progress bar
     FOR_ALL_OBJECTS_IN_METADATA(SF_ref)
     {
-        FileName fn_img;
-        SF_ref.getValue(MDL_IMAGE,fn_img);
-        I.read(fn_img, true, -1, true, true);
+        I.readApplyGeo(SF_ref,objId);
         library_name.push_back(I.name());
 
         // Make and distribute its DWT coefficients in the different PCA bins
@@ -661,7 +659,7 @@ void ProgAngularDiscreteAssign::processImage(const FileName &fnImg, const FileNa
     // if they are available. If not, take them from the header.
     // If not, set them to 0.
     Image<double> img;
-    img.read(fnImg, mdIn, objId);
+    img.readApplyGeo(fnImg, mdIn, objId);
 
     double best_rot, best_tilt, best_psi, best_shiftX, best_shiftY,
     best_score = 0, best_rate;
@@ -960,7 +958,7 @@ void ProgAngularDiscreteAssign::processImage(const FileName &fnImg, const FileNa
     if (!search5D)
     {
         Image<double> Iref;
-        Iref.read(library_name[vref_idx[ibest]]);
+        Iref.readApplyGeo(library_name[vref_idx[ibest]]);
         Iref().setXmippOrigin();
         selfRotate(LINEAR,Iref(),-vpsi[ibest]);
         if (Xoff == 0 && Yoff == 0)

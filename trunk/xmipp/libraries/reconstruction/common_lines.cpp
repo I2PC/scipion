@@ -170,14 +170,13 @@ void * threadPrepareImages( void * args )
     bool first=true;
     master->sigma=0;
     int Nsigma=0;
+    Image<double> I;
+    FileName fnImg;
     FOR_ALL_OBJECTS_IN_METADATA(SFi)
     {
         if ((i+1)%parent->Nthr==master->myThreadID)
         {
-            Image<double> I;
-            FileName fnImg;
-            SFi.getValue(MDL_IMAGE,fnImg);
-            I.read(fnImg);
+            I.readApplyGeo(SFi,objId);
             I().setXmippOrigin();
 
             // Bandpass filter images

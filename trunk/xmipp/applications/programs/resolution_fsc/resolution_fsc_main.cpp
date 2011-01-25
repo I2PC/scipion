@@ -125,9 +125,15 @@ public:
     bool process_img()
     {
         Image<double>  refI,img;
-        refI.read(fn_ref, true, -1, apply_geo);
+        if (apply_geo)
+        	refI.readApplyGeo(fn_ref);
+        else
+        	refI.read(fn_ref);
         refI().setXmippOrigin();
-        img.read(fn_img);
+        if (apply_geo)
+        	img.readApplyGeo(fn_ref);
+        else
+        	img.read(fn_ref);
         img().setXmippOrigin();
         MultidimArray<double> freq, frc, dpr, frc_noise, error_l2;
         frc_dpr(refI(), img(), sam, freq, frc, frc_noise, dpr, error_l2);

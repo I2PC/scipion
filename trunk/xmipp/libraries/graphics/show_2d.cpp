@@ -739,7 +739,10 @@ bool ImageViewer::loadImage(const char *fileName,
                 {
                 	isFourierImage = false;
                     Image<double> p;
-                    p.read((FileName)filename, true, -1, apply_geo, FALSE);
+                    if (apply_geo)
+                    	p.readApplyGeo(filename);
+                    else
+                    	p.read(filename);
                 	if (load_mode == ImageViewer::PSD_mode)
                     {
                         // It is only the ARMA model
@@ -759,7 +762,7 @@ bool ImageViewer::loadImage(const char *fileName,
                 {
                     isFourierImage = true;
                     Image<std::complex<double> > If;
-                    If.read2(filename);
+                    If.read(filename);
                     xmippImageFourier = If();
                     CenterFFT(xmippImageFourier, true);
                     generateFFTImage(tmpImage());
@@ -1326,7 +1329,7 @@ void ImageViewer::runEnhancePSD(std::vector<float> enhance_prms)
 
     Image<double> I;
     MultidimArray<double> Iaux;
-    I.read2(filename);
+    I.read(filename);
     int Xdim = XSIZE(I());
     int Ydim = YSIZE(I());
     if (load_mode == ImageViewer::CTF_mode)

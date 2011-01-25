@@ -96,8 +96,6 @@ public:
         {
             if (do_prepare)
             {
-                FileName fn;
-                SF.getValue(MDL_IMAGE,fn);
                 if (thereIsEnable)
                 {
                     int enabled;
@@ -105,7 +103,7 @@ public:
                     if (enabled==-1)
                         continue;
                 }
-                img.read(fn);
+                img.readApplyGeo(SF,objId);
                 img().setXmippOrigin();
                 img().statisticsAdjust(0,1);
 

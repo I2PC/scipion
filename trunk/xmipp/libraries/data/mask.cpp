@@ -1547,7 +1547,7 @@ void Mask::generate_mask(bool apply_geo)
         SincMask(dmask, omega, mode, x0, y0, z0);
         break;
     case READ_MASK:
-        img.read(fn_mask);
+        img.read(fn_mask,true,-1,true);
         typeCast(img(), imask);
         imask.setXmippOrigin();
         break;
@@ -1804,7 +1804,6 @@ void ProgMask::run()
                 image.getTransformationMatrix(mask.mask_geo);
         }
         mask.generate_mask(image());
-
 
         // Apply mask
         if (!create_mask)

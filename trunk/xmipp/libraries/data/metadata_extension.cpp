@@ -28,10 +28,16 @@ void getStatistics(MetaData &MT_in, Image<double> & _ave, Image<double> & _sd, d
     int _enabled;
     Image<double> image, tmpImg;
     double min, max, avg, stddev;
-
+    FileName fnImg;
     FOR_ALL_OBJECTS_IN_METADATA(MT)
     {
-        image.read(MT, MT.getActiveObject(), -1, apply_geo);
+    	if (apply_geo)
+    		image.readApplyGeo(MT, MT.getActiveObject(), -1);
+    	else
+    	{
+    		MT.getValue(MDL_IMAGE,fnImg,MT.getActiveObject());
+    		image.read(fnImg);
+    	}
         image().computeStats(avg, stddev, min, max);
         if (min < _min)
             _min = min;
@@ -56,7 +62,13 @@ void getStatistics(MetaData &MT_in, Image<double> & _ave, Image<double> & _sd, d
     // Calculate SD
     FOR_ALL_OBJECTS_IN_METADATA(MT)
     {
-        image.read(MT, MT.getActiveObject(), -1, apply_geo);
+    	if (apply_geo)
+    		image.readApplyGeo(MT, MT.getActiveObject(), -1);
+    	else
+    	{
+    		MT.getValue(MDL_IMAGE,fnImg,MT.getActiveObject());
+    		image.read(fnImg);
+    	}
         tmpImg() = ((image() - _ave()));
         tmpImg() *= tmpImg();
         _sd() += tmpImg();

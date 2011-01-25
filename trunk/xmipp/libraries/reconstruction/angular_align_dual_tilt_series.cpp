@@ -74,10 +74,10 @@ void Prog_align_dual::readDual()
     imgDual.clear();
     tiltDual.initZeros(SFDual.size());
     int i=0;
+    Image<double> I;
+    FileName fnImg;
     FOR_ALL_OBJECTS_IN_METADATA(SFDual)
     {
-        Image<double> I;
-        FileName fnImg;
         SFDual.getValue(MDL_IMAGE,fnImg);
         I.read(fnImg);
         tiltDual(i++)=I.tilt();
@@ -103,10 +103,10 @@ void Prog_align_dual::produceSideInfo()
     // Read Reference series
     tiltRef.initZeros(SFRef.size());
     int i=0;
+    Image<double> I;
+    FileName fnImg;
     FOR_ALL_OBJECTS_IN_METADATA(SFRef)
     {
-        Image<double> I;
-        FileName fnImg;
         SFRef.getValue(MDL_IMAGE,fnImg);
         I.read(fnImg);
         tiltRef(i++)=I.tilt();
@@ -409,10 +409,11 @@ void Prog_align_dual::alignDual()
     int n=0;
     //std::cout << "Aligning dual" << std::endl;
     SFDual.write(std::cout);
+    Image<double> Idual;
+    Matrix2D<double> Edual;
+    FileName fnImg;
     FOR_ALL_OBJECTS_IN_METADATA(SFDual)
     {
-        Image<double> Idual;
-        FileName fnImg;
         SFDual.getValue(MDL_IMAGE,fnImg);
         Idual.read(fnImg);
         Idual().setXmippOrigin();
@@ -420,7 +421,6 @@ void Prog_align_dual::alignDual()
             selfRotate(BSPLINE3,Idual(),180);
         selfTranslate(BSPLINE3,Idual(),shift2D);
         shiftProjectionInZ(Idual(), n, ZZ(shift3D));
-        Matrix2D<double> Edual;
         Euler_angles2matrix(0, tiltDual(n), 0, Edual);
         Edual=Edual*E;
         double rot, tilt, psi;

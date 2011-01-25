@@ -79,7 +79,7 @@ void XRayPSF::read(const FileName &fn)
         {
             mode = PSF_FROM_FILE;
             PSF = new Image<double>;
-            PSF->read2(fnPSF);
+            PSF->read(fnPSF);
             Nox = XSIZE(VOLMATRIX(*PSF));
             Noy = YSIZE(VOLMATRIX(*PSF));
             Noz = ZSIZE(VOLMATRIX(*PSF));

@@ -254,14 +254,14 @@ void * filterByNormalizationThread(void *args)
         std::cout << "Filtering by normalization ...\n";
         init_progress_bar(Nimg);
     }
+    Image<double> I;
+    FileName fnAux;
     for (int i=0; i<Nimg; i++)
     {
         local_correlations[i]=-2;
         if (i%prm->Nthreads==idThread && prm->valid[i])
         {
             // Get the experimental image
-            Image<double> I;
-            FileName fnAux;
             DF_in_local.getValue(MDL_IMAGE,fnAux,i+1);
             I.read(fnAux);
             selfTranslate(BSPLINE3,I(),vectorR2(I.Xoff(),I.Yoff()));

@@ -94,12 +94,12 @@ void Prog_angular_predict_tomography_prm::produce_side_info()
     MetaData SF(fn_sel);
     FileName fnAux;
     bool masksPresent=SF.getValue(MDL_MASK,fnAux);
+    Image<double> I, Imask;
+    MultidimArray<int> mask;
+    FileName fnImg;
     FOR_ALL_OBJECTS_IN_METADATA(SF)
     {
         AlignmentTomography dummy;
-        Image<double> I, Imask;
-        MultidimArray<int> mask;
-        FileName fnImg;
         SF.getValue(MDL_IMAGE,fnImg);
         I.read(fnImg);
         I().setXmippOrigin();
@@ -259,10 +259,11 @@ void Prog_angular_predict_tomography_prm::predict_angles(int i)
 void Prog_angular_predict_tomography_prm::run()
 {
     MetaData DF;
+    Image<double> I, Imask;
+    MultidimArray<int> mask;
     for (int i=0; i<list_of_assigned.size(); i++)
     {
         // Read input image
-        Image<double> I;
         I.read(list_of_assigned[i].fn_img);
         I().setXmippOrigin();
 
@@ -284,8 +285,6 @@ void Prog_angular_predict_tomography_prm::run()
         // Shift the image and mask
         selfTranslate(LINEAR,I(),
                       vectorR2(list_of_assigned[i].x,list_of_assigned[i].y),DONT_WRAP);
-        Image<double> Imask;
-        MultidimArray<int> mask;
         const MultidimArray<int> *maskPtr=NULL;
         if (list_of_assigned[i].fn_mask!="")
         {

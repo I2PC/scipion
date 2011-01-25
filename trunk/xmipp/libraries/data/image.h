@@ -952,10 +952,9 @@ public:
     void sumWithFile(const FileName &fn)
     {
         Image<T> aux;
-        aux.read2(fn);
+        aux.read(fn,true,-1,true);
         (*this)()+=aux();
     }
-
 
     /**
      *  Specific read functions for different file formats

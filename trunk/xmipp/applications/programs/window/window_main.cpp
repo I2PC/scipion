@@ -158,7 +158,7 @@ public:
     template <typename T>
     void processImage(Image<T> &Iin, const FileName &fnImg, const FileName &fnImgOut)
     {
-        Iin.read(fnImg);
+        Iin.readApplyGeo(fnImg);
         double init_value(padValue);
         if (padType=="avg")
             init_value=Iin().computeAvg();
@@ -195,7 +195,7 @@ public:
 
     void processImage(const FileName &fnImg, const FileName &fnImgOut, long int objId)
     {
-      Image<double> img;
+        Image<double> img;
         img.read(fnImg,false);
 
         switch (img.dataType())

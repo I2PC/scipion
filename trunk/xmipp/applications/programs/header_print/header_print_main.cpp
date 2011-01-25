@@ -52,7 +52,7 @@ protected:
     void processImage(const FileName &fnImg, const FileName &fnImgOut, long int objId)
     {
         Image<double> img;
-        img.read2(fnImg, false, -1, false);
+        img.readApplyGeo(fnImg, mdIn, objId, false);
         std::cout << img << std::endl;
     }
 }

@@ -129,7 +129,7 @@ void ProgAnalyzeCluster::produceSideInfo()
     FOR_ALL_OBJECTS_IN_METADATA(SFin)
     {
         SFin.getValue( MDL_IMAGE, auxFn );
-        Iaux.read( auxFn );
+        Iaux.readApplyGeo( auxFn, SFin, objId );
         Iaux().setXmippOrigin();
 
         // Choose between this image and its mirror

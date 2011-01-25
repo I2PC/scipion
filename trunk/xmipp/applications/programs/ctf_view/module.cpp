@@ -770,7 +770,7 @@ void CTFViewer::setImageViewer()
 
     // Load the CTF in image I
     try {
-       I.read2(fn_root + ".psd");
+       I.read(fn_root + ".psd");
        CenterFFT(I(), true);
        I().setXmippOrigin();
        psdPresent = true;
@@ -817,7 +817,7 @@ void CTFViewer::generate_ctfmodel()
 
     // Get the image size from the .ctfmodel
     Image<double> model;
-    model.read2(fn_root + ".ctfmodel_halfplane");
+    model.read(fn_root + ".ctfmodel_halfplane");
     int Ydim = YSIZE(model());
     int Xdim = XSIZE(model());
 

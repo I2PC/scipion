@@ -61,7 +61,8 @@ protected:
 
     void processImage(const FileName &fnImg, const FileName &fnImgOut, long int objId)
     {
-        Image<double> img; img.read(fnImg);;
+        Image<double> img;
+        img.readApplyGeo(fnImg,mdIn,objId);
 
         if (keep_first_header)
         {

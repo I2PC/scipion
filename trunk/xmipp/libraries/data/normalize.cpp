@@ -617,9 +617,9 @@ void ProgNormalize::processImage(const FileName &fnImg, const FileName &fnImgOut
 {
     Image<double> I;
     if (apply_geo)
-    	I.read(fnImg, mdIn, objId);
+    	I.readApplyGeo(fnImg, mdIn, objId);
     else
-    	I.read2(fnImg);
+    	I.read(fnImg);
     I().setXmippOrigin();
 
     MultidimArray<double> &img=I();

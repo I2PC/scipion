@@ -130,7 +130,7 @@ int main(int argc, char **argv)
 
         std::cout << std::endl << "reading volume " << vname << "......" << std::endl << std::endl;
         Image<double> V;     // Reads the volumen
-        V.read2(vname);
+        V.read(vname);
         std::cout << V;      // Output Volumen Information
 
         // Read spider mask
@@ -138,7 +138,7 @@ int main(int argc, char **argv)
         if (!nomask)
         {
             std::cout << std::endl << "reading mask " << bmname << "......" << std::endl << std::endl;
-            mask.read2(bmname);        // Reads the mask
+            mask.read(bmname);        // Reads the mask
             std::cout << mask;    // Output mask Information
         }
 

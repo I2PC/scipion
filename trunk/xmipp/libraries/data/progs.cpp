@@ -93,7 +93,7 @@ void Prog_parameters::get_input_size(int &Zdim, int &Ydim, int &Xdim)
     }
     else
     {
-        I.read2(fn_in);
+        I.read(fn_in,false);
         I.getDimensions(Xdim, Ydim, Zdim, dum2);
     }
 }
@@ -201,12 +201,10 @@ void SF_main(int argc, char **argv,
                     {
                         MDRow row;
                         SF_in.getRow(row);
-                        img.read(fn_read, true, -1, false, &row);
+                        img.readApplyGeo(fn_read, true, -1, false, &row);
                     }
                     else
-                    {
                         img.read(fn_read);
-                    }
                     img().setXmippOrigin();
                     switch (operation_mode)
                     {
@@ -246,7 +244,7 @@ void SF_main(int argc, char **argv,
                 }
                 else if (IMG.isComplexImage(fn_read))
                 {
-                    IMG.read2(fn_read);
+                    IMG.read(fn_read);
                     IMG().setXmippOrigin();
                     switch (operation_mode)
                     {
@@ -298,7 +296,10 @@ void SF_main(int argc, char **argv,
             if (img.isRealImage(prm->fn_in))
             {
                 // For single image .....................................................
-                img.read(prm->fn_in, true, -1, prm->apply_geo);
+            	if (prm->apply_geo)
+            		img.readApplyGeo(prm->fn_in);
+            	else
+            		img.read(prm->fn_in);
                 img().setXmippOrigin();
                 switch (operation_mode)
                 {
@@ -329,7 +330,7 @@ void SF_main(int argc, char **argv,
             }
             else if (IMG.isComplexImage(prm->fn_in))
             {
-                IMG.read2(prm->fn_in);
+                IMG.read(prm->fn_in);
                 IMG().setXmippOrigin();
                 switch (operation_mode)
                 {

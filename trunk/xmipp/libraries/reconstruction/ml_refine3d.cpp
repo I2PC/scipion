@@ -374,12 +374,10 @@ void ProgRefine3D::run()
             {
                 projectReferenceVolume(ml2d->MDref);
                 int c = 0;
-                FileName fnt;
                 // Read new references from disc (I could just as well keep them in memory, maybe...)
                 FOR_ALL_OBJECTS_IN_METADATA(ml2d->MDref)
                 {
-                    ml2d->MDref.getValue(MDL_IMAGE, fnt);
-                    ml2d->model.Iref[c].read(fnt);
+                    ml2d->model.Iref[c].readApplyGeo(ml2d->MDref,objId);
                     ml2d->model.Iref[c]().setXmippOrigin();
                     ++c;
                 }

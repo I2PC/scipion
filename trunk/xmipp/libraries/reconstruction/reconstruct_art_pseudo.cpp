@@ -256,6 +256,7 @@ void ProgARTPseudo::produceSideInfo()
 void ProgARTPseudo::run()
 {
     produceSideInfo();
+    Image<double> Iexp;
     for (int it=0; it<Nit; it++)
     {
         double itError=0;
@@ -277,7 +278,6 @@ void ProgARTPseudo::run()
             if (NMA.size()>0)
                 DF.getValue( MDL_NMA, lambda);
 
-            Image<double> Iexp;
             Iexp.read(fnExp);
             Iexp().setXmippOrigin();
             itError+=ART_single_step(Iexp(),rot,tilt,psi,shiftX,shiftY,lambda);
@@ -297,7 +297,7 @@ void ProgARTPseudo::writePseudo()
     FileName fnExp;
     DF.getValue( MDL_IMAGE, fnExp);
     Image<double> I;
-    I.read(fnExp);
+    I.read(fnExp,false);
     V().resize(XSIZE(I()),XSIZE(I()),XSIZE(I()));
     V().setXmippOrigin();
 

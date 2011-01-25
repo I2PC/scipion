@@ -123,20 +123,24 @@ public:
 
     /** Read image from file.
      */
-    int read2(const FileName &name, bool readdata=true, int select_img = -1,
-             bool apply_geo = false, bool only_apply_shifts = false,
-             MDRow * row = NULL, bool mapData = false);
+    int read(const FileName &name, bool readdata=true, int select_img = -1,
+             bool mapData = false);
+
+    /** Read image from file with a header applied.
+     */
+    int readApplyGeo(const FileName &name, bool readdata=true, int select_img = -1,
+             bool only_apply_shifts = false, MDRow * row = NULL);
 
     /** Read image from file.
      */
-    int read(const FileName &name, const MetaData &MD, long int objId,
+    int readApplyGeo(const FileName &name, const MetaData &MD, long int objId,
     		 bool readdata=true, int select_img = -1, bool only_apply_shifts = false);
 
     /** Read image mapped from file.
      */
     int readMapped(const FileName &name, int select_img = 0)
     {
-      read2(name,true,select_img,false,false,NULL,true);
+      read(name,true,select_img,true);
     }
     /** Write image to file.
     */

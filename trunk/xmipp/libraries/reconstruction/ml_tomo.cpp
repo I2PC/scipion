@@ -712,7 +712,7 @@ void ProgMLTomo::generateInitialReferences()
         FOR_ALL_OBJECTS_IN_METADATA(MDtmp[refno])
         {
             MDtmp[refno].getValue(MDL_IMAGE, fn_tmp);
-            Itmp.read(fn_tmp);
+            Itmp.readApplyGeo(fn_tmp,MDtmp[refno],objId);
             Itmp().setXmippOrigin();
             reScaleVolume(Itmp(),true);
             if (do_keep_angles || dont_align || dont_rotate)
@@ -1075,7 +1075,7 @@ void ProgMLTomo::produceSideInfo2(int nr_vols)
         FOR_ALL_OBJECTS_IN_METADATA(MDref)
         {
             MDref.getValue(MDL_IMAGE, fn_img);
-            img.read(fn_img);
+            img.readApplyGeo(fn_img,MDref,objId);
             img().setXmippOrigin();
             if (do_mask)
             {

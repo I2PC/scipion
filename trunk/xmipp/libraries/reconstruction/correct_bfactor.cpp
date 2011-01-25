@@ -112,13 +112,11 @@ void ProgCorrectBfactor::processImage(const FileName &fnImg, const FileName &fnI
     vol().checkDimensionWithDebug(3,__FILE__,__LINE__);
     FileName fn_guinier = fn_out + ".guinier";
     bfactor_correction(vol(), fn_guinier);
-
     vol.write(fn_out);
 }
 
 ProgCorrectBfactor::ProgCorrectBfactor()
 {
-
     fit_minres    = -1.;
     fit_maxres    = -1.;
     apply_maxres  = -1.;

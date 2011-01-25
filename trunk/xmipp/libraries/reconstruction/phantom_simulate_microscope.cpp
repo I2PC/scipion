@@ -140,7 +140,7 @@ void ProgSimulateMicroscope::preProcess()
 void ProgSimulateMicroscope::processImage(const FileName &fnImg, const FileName &fnImgOut, long int objId)
 {
     Image<double> img;
-    img.read(fnImg);
+    img.readApplyGeo(fnImg,mdIn,objId);
     if (ZSIZE(img())!=1)
         REPORT_ERROR(ERR_MULTIDIM_DIM,"This process is not intended for volumes");
 

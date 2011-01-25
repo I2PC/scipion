@@ -48,10 +48,10 @@ void Series_remove_fluctuations_parameters::produceSideInfo()
     V.setMmap(true);
     V.initZeros(Zdim,Ydim,Xdim);
     int k=0;
+    Image<double> I;
+    FileName fnImg;
     FOR_ALL_OBJECTS_IN_METADATA(SF)
     {
-        Image<double> I;
-        FileName fnImg;
         SF.getValue(MDL_IMAGE,fnImg);
         I.read(fnImg);
         V.setSlice(k,I());

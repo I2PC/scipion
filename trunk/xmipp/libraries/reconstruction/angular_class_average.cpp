@@ -628,7 +628,7 @@ void ProgAngularClassAverage::processOneClass(int &dirno,
                 _DF.getValue(MDL_SHIFTY, yshift);
                 if (do_mirrors)
                     _DF.getValue(MDL_FLIP,mirror);
-                img.read(fn_img, true, -1, false, false);
+                img.read(fn_img);
                 img().setXmippOrigin();
                 img.setEulerAngles(0., 0., psi);
                 img.setShifts(xshift, yshift);

@@ -677,7 +677,10 @@ bool maskImg::loadImage(const char *fileName)
             {
                 // reads Xmipp Image
                 Image<double> tmpImage;
-                tmpImage.read2(fileName, true, -1, apply_geo);
+                if (apply_geo)
+                	tmpImage.readApplyGeo(fileName);
+                else
+                	tmpImage.read(fileName);
                 ok = TRUE;
                 ok = xmipp2Qt(tmpImage);
 			}

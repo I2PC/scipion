@@ -94,9 +94,8 @@ void ImageGeneric::setImageBase()
     }
 }
 
-int ImageGeneric::read2(const FileName &name, bool readdata, int select_img,
-                       bool apply_geo, bool only_apply_shifts,
-                       MDRow * row, bool mapData)
+int ImageGeneric::read(const FileName &name, bool readdata, int select_img,
+                       bool mapData)
 {
     clear();
 
@@ -105,10 +104,23 @@ int ImageGeneric::read2(const FileName &name, bool readdata, int select_img,
 
     datatype = Im.dataType();
     setImageBase();
-    image->read2(name,readdata,select_img,apply_geo,only_apply_shifts,row,mapData);
+    image->read(name,readdata,select_img,mapData);
 }
 
-int ImageGeneric::read(const FileName &name, const MetaData &MD, long int objId,
+int ImageGeneric::readApplyGeo(const FileName &name, bool readdata, int select_img,
+                       bool only_apply_shifts, MDRow * row)
+{
+    clear();
+
+    Image<char> Im;
+    Im.read(name,false);
+
+    datatype = Im.dataType();
+    setImageBase();
+    image->readApplyGeo(name,readdata,select_img,only_apply_shifts,row);
+}
+
+int ImageGeneric::readApplyGeo(const FileName &name, const MetaData &MD, long int objId,
 		 bool readdata, int select_img, bool only_apply_shifts)
 {
     clear();
@@ -118,8 +130,5 @@ int ImageGeneric::read(const FileName &name, const MetaData &MD, long int objId,
 
     datatype = Im.dataType();
     setImageBase();
-    image->read(name,MD, objId, readdata,select_img,only_apply_shifts);
+    image->readApplyGeo(name,MD, objId, readdata, select_img, only_apply_shifts);
 }
-
-
-

@@ -113,7 +113,7 @@ protected:
     void processImage(const FileName &fnImg, const FileName &fnImgOut, long int objId)
     {
         Image<double> img;
-        img.read(fnImg);
+        img.readApplyGeo(fnImg,mdIn,objId);
         img().addNoise(param1, param2, noise_type, df);
 
         if (do_limit0)

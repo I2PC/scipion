@@ -261,7 +261,7 @@ void ProgFourierFilter::processImage(const FileName &fnImg, const FileName &fnIm
     static bool first = true;
 
     Image<double> img;
-    img.read(fnImg);
+    img.readApplyGeo(fnImg,mdIn,objId);
     if (first)
     {
         generateMask(img());

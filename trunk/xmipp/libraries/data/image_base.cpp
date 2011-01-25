@@ -54,11 +54,22 @@ void ImageBase::clearHeader()
 
 /** General read function
  */
-int ImageBase::read2(const FileName &name, bool readdata, int select_img, bool apply_geo,
-                    bool only_apply_shifts, MDRow * row, bool mapData)
+int ImageBase::read(const FileName &name, bool readdata, int select_img, bool mapData)
 {
     ImageFHandler* hFile = openFile(name);
-    int err = _read(name, hFile, readdata, select_img, apply_geo, only_apply_shifts, row, mapData);
+    int err = _read(name, hFile, readdata, select_img, false, false, NULL, mapData);
+    closeFile(hFile);
+
+    return err;
+}
+
+/** General read function
+ */
+int ImageBase::readApplyGeo(const FileName &name, bool readdata, int select_img,
+                    bool only_apply_shifts, MDRow * row)
+{
+    ImageFHandler* hFile = openFile(name);
+    int err = _read(name, hFile, readdata, select_img, only_apply_shifts, row, false);
     closeFile(hFile);
 
     return err;
@@ -66,7 +77,7 @@ int ImageBase::read2(const FileName &name, bool readdata, int select_img, bool a
 
 /** Read an image from metadata, filename is provided
 */
-int ImageBase::read(const FileName &name, const MetaData &md, long int objId, bool readdata,
+int ImageBase::readApplyGeo(const FileName &name, const MetaData &md, long int objId, bool readdata,
                     int select_img, bool only_apply_shifts)
 {
     ImageFHandler* hFile = openFile(name);
@@ -80,7 +91,7 @@ int ImageBase::read(const FileName &name, const MetaData &md, long int objId, bo
 
 /** Read an image from metadata, filename is taken from MDL_IMAGE
  */
-int ImageBase::read(const MetaData &md, int objId, bool readdata, int select_img,
+int ImageBase::readApplyGeo(const MetaData &md, int objId, bool readdata, int select_img,
                     bool only_apply_shifts)
 {
     MDRow row;

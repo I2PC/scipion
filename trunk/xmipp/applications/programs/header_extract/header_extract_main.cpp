@@ -65,8 +65,8 @@ protected:
 
     void processImage(const FileName &fnImg, const FileName &fnImgOut, long int objId)
     {
-      Image<double> img;
-        img.read(fnImg, false);
+        Image<double> img;
+        img.readApplyGeo(fnImg,mdIn,objId);
         xx = img.Xoff();
         yy = img.Yoff();
         if (round_shifts)

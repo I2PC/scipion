@@ -195,8 +195,8 @@ void Prog_centilt_prm::centilt()
     FOR_ALL_OBJECTS_IN_METADATA2(SFu, SFt)
     {
         // Read in untilted image and apply shifts (center) and Phi (align tilt-axis with y-axis)
-        SFu.getValue( MDL_IMAGE, file_name);
-        Iu.read( file_name);
+        SFu.getValue(MDL_IMAGE, file_name);
+        Iu.read(file_name);
 
         Iu().setXmippOrigin();
         Euler_angles2matrix(Iu.rot(), 0., 0., A);
@@ -207,7 +207,7 @@ void Prog_centilt_prm::centilt()
 
         // Read in tilted image and apply Psi (align tilt-axis with y-axis) and shifts if present
         SFt.getValue( MDL_IMAGE, file_name);
-        It.read( file_name );
+        It.read(file_name );
         // Store original matrix for later output
         Maux.resize(It());
         Maux = It();

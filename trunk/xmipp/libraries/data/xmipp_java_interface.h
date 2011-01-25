@@ -43,9 +43,7 @@ std::string readImageHeader(Image<double> &image, const std::string &filename) {
 	std::string msg = "";
 
 	try {
-		FileName fn(filename);
-
-		image.read2(fn, false);
+		image.read(filename, false);
 	} catch (XmippError xe) {
 		std::cerr << xe;
 		msg = filename + ": " + xe.getDefaultMessage();
@@ -64,9 +62,7 @@ std::string readImage(Image<double> &image, const std::string &filename) {
 	std::string msg = "";
 
 	try {
-		FileName fn(filename);
-
-		image.read2(fn);
+		image.read(filename);
 	} catch (XmippError xe) {
 		std::cerr << xe;
 		msg = filename + ": " + xe.getDefaultMessage();

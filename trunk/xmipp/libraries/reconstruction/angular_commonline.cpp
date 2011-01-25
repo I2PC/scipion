@@ -381,12 +381,10 @@ void Prog_Angular_CommonLine::produceSideInfo()
     int Nimg=SF.size();
     initialSolution.resize(3*Nimg);
     int idx=0;
+    Image<double> I;
     FOR_ALL_OBJECTS_IN_METADATA(SF)
     {
-        FileName fn_img;
-        SF.getValue(MDL_IMAGE,fn_img);
-        Image<double> I;
-        I.read(fn_img);
+        I.readApplyGeo(SF,objId);
         img.push_back(I());
         initialSolution(3*idx)=I.rot();
         initialSolution(3*idx+1)=I.tilt();
@@ -1290,12 +1288,10 @@ void Prog_Angular_CommonLine::run()
         MetaData DF;
 
         int idx=0;
+        Image<double> I;
         FOR_ALL_OBJECTS_IN_METADATA(SF)
         {
-            Image<double> I;
-            FileName fn_img;
-            SF.getValue(MDL_IMAGE,fn_img);
-            I.read(fn_img);
+            I.readApplyGeo(SF,objId);
             I.setEulerAngles(currentSolution(idx),currentSolution(idx+1),
             		currentSolution(idx+2));
             idx+=3;

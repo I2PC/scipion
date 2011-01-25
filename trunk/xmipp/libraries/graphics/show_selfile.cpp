@@ -352,7 +352,10 @@ void ShowSel::producePixmapAt(int i)
     if (I.isRealImage(imgnames[i]))
     {
         // Plain Xmipp images
-        I.read(imgnames[i], true, -1, apply_geo, FALSE);
+    	if (apply_geo)
+    		I.readApplyGeo(imgnames[i]);
+    	else
+    		I.read(imgnames[i]);
         if (load_mode == PSD_mode) xmipp2PSD(I(), I());
     }
     else if (I.isComplexImage(imgnames[i]))

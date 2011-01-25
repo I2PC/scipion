@@ -161,7 +161,7 @@ void ProgAngularContinuousAssign::processImage(const FileName &fnImg, const File
     // if they are available. If not, take them from the header.
     // If not, set them to 0.
     Image<double> img;
-    img.read(fnImg, mdIn, objId);
+    img.readApplyGeo(fnImg, mdIn, objId);
 
     double old_rot=img.rot();
     double old_tilt=img.tilt();

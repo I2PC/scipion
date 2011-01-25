@@ -286,18 +286,31 @@ public:
      * the select slide may come in the image name or in the select_img parameter
      * file name takes precedence over select_img
      * If -1 is given the whole object is read
+     *
+     * This function cannot apply geometrical transformations, but can map the image in disk
      */
-    int read2(const FileName &name, bool readdata=true, int select_img = -1,
-             bool apply_geo = false, bool only_apply_shifts = false,
-             MDRow * row = NULL, bool mapData = false);
+    int read(const FileName &name, bool readdata=true, int select_img = -1,
+             bool mapData = false);
+
+    /** General read function
+     * you can read a single image from a single image file
+     * or a single image file from an stack, in the second case
+     * the select slide may come in the image name or in the select_img parameter
+     * file name takes precedence over select_img
+     * If -1 is given the whole object is read
+     *
+     * This function can apply geometrical transformations, but cannot map the image in disk
+     */
+    int readApplyGeo(const FileName &name, bool readdata=true, int select_img = -1,
+             bool only_apply_shifts = false, MDRow * row = NULL);
 
     /** Read an image from metadata, filename is provided*/
-    int read(const FileName &name, const MetaData &md, long int objId,
+    int readApplyGeo(const FileName &name, const MetaData &md, long int objId,
              bool readdata=true, int select_img = -1,
              bool only_apply_shifts = false);
 
     /** Read an image from metadata, filename is taken from MDL_IMAGE */
-    int read(const MetaData &md, int objId = -1,
+    int readApplyGeo(const MetaData &md, int objId = -1,
              bool readdata=true, int select_img = -1,
              bool only_apply_shifts = false);
 

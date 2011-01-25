@@ -71,7 +71,7 @@ protected:
     void processImage(const FileName &fnImg, const FileName &fnImgOut, long int objId)
     {
         Image<double> img;
-        img.read(fnImg); //read data and header
+        img.readApplyGeo(fnImg,mdIn,objId); //read data and header
         img.clearHeader();
 
         if (tiltSeries)

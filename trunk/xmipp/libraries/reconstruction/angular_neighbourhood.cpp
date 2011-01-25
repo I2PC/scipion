@@ -51,12 +51,10 @@ void Prog_projection_neighbourhood_prm::get_angles(MetaData &SF_in, MetaData &DF
     time_config();
     std::cerr << "Extracting angles ...\n";
     init_progress_bar(SF_in.size());
+    Image<double> H;
     FOR_ALL_OBJECTS_IN_METADATA(SF_in)
     {
-        Image<double> H;
-        FileName fn_img;
-        SF_in.getValue(MDL_IMAGE,fn_img);
-        H.read(fn_img,false);
+        H.readApplyGeo(SF_in,objId,false);
         DF_out.addObject();
         DF_out.setValue(MDL_ANGLEROT,H.rot());
         DF_out.setValue(MDL_ANGLETILT,H.tilt());

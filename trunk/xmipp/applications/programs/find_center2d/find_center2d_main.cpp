@@ -669,11 +669,9 @@ public:
     	{
     		MetaData MD(fnIn);
     		int N=0;
-    		FileName fnImg;
     		FOR_ALL_OBJECTS_IN_METADATA(MD)
     		{
-    			MD.getValue(MDL_IMAGE,fnImg);
-    			Iaux.read(fnImg);
+    			Iaux.readApplyGeo(MD,objId);
     			if (N==0)
     				I()=Iaux();
     			else

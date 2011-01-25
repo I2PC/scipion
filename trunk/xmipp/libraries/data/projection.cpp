@@ -64,7 +64,7 @@ void Projection::set_angles(double _rot, double _tilt, double _psi)
 void Projection::read(const FileName &fn, const bool &apply_shifts,
                       bool readdata , MDRow * row)
 {
-    Image<double>::read2(fn, readdata, 0, true, apply_shifts, row);
+    Image<double>::readApplyGeo(fn, readdata, -1, apply_shifts, row);
     Euler_angles2matrix(rot(), tilt(), psi(), euler);
     eulert = euler.transpose();
     euler.getRow(2, direction);

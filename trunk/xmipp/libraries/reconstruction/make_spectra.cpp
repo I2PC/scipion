@@ -72,7 +72,7 @@ void ProgMakeSpectra::processImage(const FileName &fnImg, const FileName &fnImgO
 	long int objId)
 {
 	Image<double> I;
-	I.read(fnImg);
+	I.readApplyGeo(fnImg,mdIn,objId);
     rot_spt.compute_rotational_spectrum(I(), rot_spt.rl, rot_spt.rh,
                                         rot_spt.dr, rot_spt.rh - rot_spt.rl);
     Harmonics.push_back(rot_spt.rot_spectrum);

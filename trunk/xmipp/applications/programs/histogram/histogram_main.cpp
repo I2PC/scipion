@@ -91,7 +91,7 @@ int main(int argc, char **argv)
         FOR_ALL_OBJECTS_IN_METADATA(SF)
         {
             SF.getValue(MDL_IMAGE,fn_in);
-            image.read(fn_in);
+            image.readApplyGeo(fn_in,SF,objId);
             image().setXmippOrigin();
             mask_prm.generate_mask(image());
 

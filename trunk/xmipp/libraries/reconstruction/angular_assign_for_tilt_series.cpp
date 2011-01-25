@@ -772,14 +772,11 @@ void Prog_tomograph_alignment::produceSideInfo()
         iMinTilt=-1;
         double minTilt=1000;
         bool nonZeroTilt=false;
+        Image<double> imgaux;
+        FileName fn;
         FOR_ALL_OBJECTS_IN_METADATA(SF)
         {
-            FileName fn;
-
             SF.getValue( MDL_IMAGE, fn );
-            if (fn=="")
-                break;
-            Image<double> imgaux;
             imgaux.read(fn);
             if (difficult)
             {
@@ -1388,13 +1385,12 @@ void * threadgenerateLandmarkSetCriticalPoints( void * args )
     mask.setXmippOrigin();
     BinaryCircularMask(mask,4,OUTSIDE_MASK);
 
+    Image<double> I;
     for (int ii=thread_id; ii<=Nimg-1; ii+=numThreads)
     {
         if (parent->isOutlier(ii))
             continue;
-
-        Image<double> I;
-        I.read2(parent->name_list[ii]);
+        I.read(parent->name_list[ii]);
 
         // Generate mask
         MultidimArray<unsigned char> largeMask;
@@ -2256,16 +2252,17 @@ void Prog_tomograph_alignment::alignImages(const Alignment &alignment)
     DF.setComment("First shift by -(shiftX,shiftY), then rotate by psi");
 
     MultidimArray<double> mask;
+    MultidimArray<int> iMask;
     Image<double> I;
+    Matrix2D<double> M, M1, M2, M3;
     for (int i=0;i<Nimg; i++)
     {
         // Align the normal image
-        I.read2(name_list[i]);
+        I.read(name_list[i]);
         mask.initZeros(I());
         FOR_ALL_ELEMENTS_IN_ARRAY2D(I())
         if (I(i,j)!=0)
             mask(i,j)=1;
-        Matrix2D<double> M, M1, M2, M3;
         translation2DMatrix(vectorR2(-z0*sin(DEG2RAD(tiltList[i])),0),M1);
         rotation2DMatrix(90-alignment.rot+alignment.psi(i),M2);
         translation2DMatrix(-(alignment.di[i]+alignment.diaxis[i]),M3);
@@ -2273,7 +2270,6 @@ void Prog_tomograph_alignment::alignImages(const Alignment &alignment)
         selfApplyGeometry(BSPLINE3,I(),M,IS_NOT_INV,DONT_WRAP);
         selfApplyGeometry(LINEAR,mask,M,IS_NOT_INV,DONT_WRAP);
         mask.binarize(0.5);
-        MultidimArray<int> iMask;
         typeCast(mask,iMask);
         double minval, maxval, avg, stddev;
         computeStats_within_binary_mask(iMask,I(),minval, maxval, avg, stddev);
@@ -2290,18 +2286,17 @@ void Prog_tomograph_alignment::alignImages(const Alignment &alignment)
         I.write(fn_corrected);
 
         // Align the original image
+        FileName auxFn;
+        SForig.getValue( MDL_IMAGE, auxFn );
+        Image<double> Iorig;
         if (fnSelOrig!="")
         {
-            Image<double> Iorig;
-            FileName auxFn;
-            SForig.getValue( MDL_IMAGE, auxFn );
             Iorig.read( auxFn );
             SForig.nextObject();
             mask.initZeros(Iorig());
             FOR_ALL_ELEMENTS_IN_ARRAY2D(Iorig())
             if (Iorig(i,j)!=0)
                 mask(i,j)=1;
-            Matrix2D<double> M,M1,M2,M3;
             translation2DMatrix(vectorR2(-z0*sin(DEG2RAD(tiltList[i]))*
                                          (((double)XSIZE(Iorig()))/XSIZE(I())),0),M1);
             rotation2DMatrix(90-alignment.rot+alignment.psi(i),M2);
