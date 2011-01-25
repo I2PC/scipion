@@ -54,7 +54,7 @@ void ImageBase::clearHeader()
 
 /** General read function
  */
-int ImageBase::read(const FileName &name, bool readdata, int select_img, bool apply_geo,
+int ImageBase::read2(const FileName &name, bool readdata, int select_img, bool apply_geo,
                     bool only_apply_shifts, MDRow * row, bool mapData)
 {
     ImageFHandler* hFile = openFile(name);
@@ -84,6 +84,8 @@ int ImageBase::read(const MetaData &md, int objId, bool readdata, int select_img
                     bool only_apply_shifts, bool mapData)
 {
     MDRow row;
+    if (objId == -1)
+      objId = md.getActiveObject();
     md.getRow(row, objId);
     FileName name;
     row.getValue(MDL_IMAGE, name);

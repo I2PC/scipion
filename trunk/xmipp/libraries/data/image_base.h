@@ -287,7 +287,7 @@ public:
      * file name takes precedence over select_img
      * If -1 is given the whole object is read
      */
-    int read(const FileName &name, bool readdata=true, int select_img = -1,
+    int read2(const FileName &name, bool readdata=true, int select_img = -1,
              bool apply_geo = false, bool only_apply_shifts = false,
              MDRow * row = NULL, bool mapData = false);
 
@@ -297,7 +297,7 @@ public:
              bool only_apply_shifts = false, bool mapData = false);
 
     /** Read an image from metadata, filename is taken from MDL_IMAGE */
-    int read(const MetaData &md, int objId,
+    int read(const MetaData &md, int objId = -1,
              bool readdata=true, int select_img = -1,
              bool only_apply_shifts = false, bool mapData = false);
 
