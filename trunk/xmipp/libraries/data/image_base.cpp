@@ -77,7 +77,7 @@ int ImageBase::readApplyGeo(const FileName &name, bool readdata, int select_img,
 
 /** Read an image from metadata, filename is provided
 */
-int ImageBase::readApplyGeo(const FileName &name, const MetaData &md, long int objId, bool readdata,
+int ImageBase::readApplyGeo(const FileName &name, const MetaData &md, size_t objId, bool readdata,
                     int select_img, bool only_apply_shifts)
 {
     ImageFHandler* hFile = openFile(name);
@@ -91,12 +91,10 @@ int ImageBase::readApplyGeo(const FileName &name, const MetaData &md, long int o
 
 /** Read an image from metadata, filename is taken from MDL_IMAGE
  */
-int ImageBase::readApplyGeo(const MetaData &md, int objId, bool readdata, int select_img,
+int ImageBase::readApplyGeo(const MetaData &md, size_t objId, bool readdata, int select_img,
                     bool only_apply_shifts)
 {
     MDRow row;
-    if (objId == -1)
-      objId = md.getActiveObject();
     md.getRow(row, objId);
     FileName name;
     row.getValue(MDL_IMAGE, name);
