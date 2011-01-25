@@ -1090,16 +1090,17 @@ void alignImages(const MultidimArray< double >& Iref, MultidimArray< double >& I
 
 double alignImagesConsideringMirrors(const MultidimArray< double >& Iref,
                                      MultidimArray< double >& I,
+                                     Matrix2D<double> &M,
                                      const MultidimArray< int >* mask)
 {
     MultidimArray<double> Imirror;
-    Matrix2D<double> M;
+    Matrix2D<double> Mmirror;
     Imirror=I;
     Imirror.selfReverseX();
     Imirror.setXmippOrigin();
 
     alignImages(Iref,I,M);
-    alignImages(Iref,Imirror,M);
+    alignImages(Iref,Imirror,Mmirror);
     double corr=correlation_index(Iref,I,mask);
     double corrMirror=correlation_index(Iref,Imirror,mask);
     double bestCorr=corr;
@@ -1107,6 +1108,9 @@ double alignImagesConsideringMirrors(const MultidimArray< double >& Iref,
     {
         bestCorr=corrMirror;
         I=Imirror;
+        M=Mmirror;
+        MAT_ELEM(M,0,0)*=-1;
+        MAT_ELEM(M,0,1)*=-1;
     }
     return bestCorr;
 }

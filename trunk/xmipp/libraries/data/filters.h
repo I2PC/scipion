@@ -468,6 +468,7 @@ void alignImages(const MultidimArray< double >& Iref,
  */
 double alignImagesConsideringMirrors(const MultidimArray< double >& Iref,
                                      MultidimArray< double >& I,
+                                     Matrix2D<double> &M,
                                      const MultidimArray< int >* mask = NULL);
 
 /** Unnormalized 2D gaussian value using covariance

@@ -136,6 +136,7 @@ public:
     void chooseNextImage(int rank, int Nproc)
     {
         Image<double> bestImage, I;
+        Matrix2D<double> M;
         double bestCorr=-1;
         int bestIdx=-1;
         int count=0;
@@ -150,7 +151,7 @@ public:
             }
             I.read(toClassify[i]);
             I().setXmippOrigin();
-            double corr=alignImagesConsideringMirrors(lastImage(),I(),&mask);
+            double corr=alignImagesConsideringMirrors(lastImage(),I(),M,&mask);
             if (corr>bestCorr)
             {
                 bestCorr=corr;
@@ -198,7 +199,7 @@ public:
         // All compute the best image
         I.read(toClassify[bestIdx]);
         I().setXmippOrigin();
-        bestCorr=alignImagesConsideringMirrors(lastImage(),I(),&mask);
+        bestCorr=alignImagesConsideringMirrors(lastImage(),I(),M,&mask);
         bestImage()=I();
 
         lastImage()=bestImage();
