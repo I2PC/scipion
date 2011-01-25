@@ -93,7 +93,7 @@ void Prog_parameters::get_input_size(int &Zdim, int &Ydim, int &Xdim)
     }
     else
     {
-        I.read(fn_in);
+        I.read2(fn_in);
         I.getDimensions(Xdim, Ydim, Zdim, dum2);
     }
 }
@@ -239,7 +239,7 @@ void SF_main(int argc, char **argv,
                 }
                 else if (IMG.isComplexImage(fn_read))
                 {
-                    IMG.read(fn_read);
+                    IMG.read2(fn_read);
                     IMG().setXmippOrigin();
                     switch (operation_mode)
                     {
@@ -322,7 +322,7 @@ void SF_main(int argc, char **argv,
             }
             else if (IMG.isComplexImage(prm->fn_in))
             {
-                IMG.read(prm->fn_in);
+                IMG.read2(prm->fn_in);
                 IMG().setXmippOrigin();
                 switch (operation_mode)
                 {
