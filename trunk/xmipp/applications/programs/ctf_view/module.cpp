@@ -817,7 +817,7 @@ void CTFViewer::generate_ctfmodel()
 
     // Get the image size from the .ctfmodel
     Image<double> model;
-    model.read(fn_root + ".ctfmodel_halfplane");
+    model.read2(fn_root + ".ctfmodel_halfplane");
     int Ydim = YSIZE(model());
     int Xdim = XSIZE(model());
 

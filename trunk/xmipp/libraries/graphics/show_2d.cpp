@@ -759,7 +759,7 @@ bool ImageViewer::loadImage(const char *fileName,
                 {
                     isFourierImage = true;
                     Image<std::complex<double> > If;
-                    If.read(filename);
+                    If.read2(filename);
                     xmippImageFourier = If();
                     CenterFFT(xmippImageFourier, true);
                     generateFFTImage(tmpImage());
@@ -1326,7 +1326,7 @@ void ImageViewer::runEnhancePSD(std::vector<float> enhance_prms)
 
     Image<double> I;
     MultidimArray<double> Iaux;
-    I.read(filename);
+    I.read2(filename);
     int Xdim = XSIZE(I());
     int Ydim = YSIZE(I());
     if (load_mode == ImageViewer::CTF_mode)
