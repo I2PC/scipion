@@ -27,7 +27,6 @@
 #include <data/filters.h>
 #include <data/funcs.h>
 #include <data/image.h>
-#include <data/image_collection.h>
 #include <data/mask.h>
 #include <data/metadata.h>
 #include <data/program.h>
@@ -90,7 +89,7 @@ public:
             unlink(fnStack.c_str());
 
         // Read input selfile and reference
-        ImageCollection SF;
+        MetaData SF;
         SF.read(fnSel);
         int idx=0;
         FileName fnImg;

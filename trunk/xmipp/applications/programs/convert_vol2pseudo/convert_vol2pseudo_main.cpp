@@ -130,7 +130,7 @@ int main(int argc, char **argv)
 
         std::cout << std::endl << "reading volume " << vname << "......" << std::endl << std::endl;
         Image<double> V;     // Reads the volumen
-        V.read(vname);
+        V.read2(vname);
         std::cout << V;      // Output Volumen Information
 
         // Read spider mask
@@ -138,10 +138,9 @@ int main(int argc, char **argv)
         if (!nomask)
         {
             std::cout << std::endl << "reading mask " << bmname << "......" << std::endl << std::endl;
-            mask.read(bmname);        // Reads the mask
-            std::cout << mask;    // Output Volumen Information
+            mask.read2(bmname);        // Reads the mask
+            std::cout << mask;    // Output mask Information
         }
-
 
         // Extract the data
         V().setXmippOrigin();          // sets origin at the center of the volume.
