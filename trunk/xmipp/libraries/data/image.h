@@ -960,7 +960,6 @@ public:
     /**
      *  Specific read functions for different file formats
      */
-    #include "rwSPE.h"
     #include "rwTIA.h"
 #include "rwTIFF.h"
 

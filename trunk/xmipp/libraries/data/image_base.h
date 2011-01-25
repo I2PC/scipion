@@ -576,7 +576,7 @@ protected:
 #include "rwINF.h"
 #include "rwRAW.h"
 #include "rwSPIDER.h"
-    //#include "rwSPE.h"
+#include "rwSPE.h"
     //#include "rwTIA.h"
     //#include "rwTIFF.h"
 
