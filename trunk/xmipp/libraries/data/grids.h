@@ -1361,7 +1361,7 @@ public:
         sG.origin.resize(3);
 
         // Read Reconstructing volume from file .................................
-        V.read3(fn);
+        V.read(fn);
         if (basisName=="voxels")
         {
         	V().setXmippOrigin();
