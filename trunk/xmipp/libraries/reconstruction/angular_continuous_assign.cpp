@@ -160,10 +160,8 @@ void ProgAngularContinuousAssign::processImage(const FileName &fnImg, const File
     // Read the image and take its angles from the Metadata
     // if they are available. If not, take them from the header.
     // If not, set them to 0.
-    MDRow mdrow;
-    mdIn.getRow(mdrow);
     Image<double> img;
-    img.read2(fnImg, true, -1, false, false, &mdrow, false);
+    img.read(fnImg, mdIn, objId);
 
     double old_rot=img.rot();
     double old_tilt=img.tilt();

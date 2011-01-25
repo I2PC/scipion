@@ -660,10 +660,8 @@ void ProgAngularDiscreteAssign::processImage(const FileName &fnImg, const FileNa
     // Read the image and take its angles from the Metadata
     // if they are available. If not, take them from the header.
     // If not, set them to 0.
-    MDRow mdrow;
-    mdIn.getRow(mdrow);
     Image<double> img;
-    img.read(fnImg, true, -1, false, false, &mdrow, false);
+    img.read(fnImg, mdIn, objId);
 
     double best_rot, best_tilt, best_psi, best_shiftX, best_shiftY,
     best_score = 0, best_rate;
