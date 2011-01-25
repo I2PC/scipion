@@ -105,7 +105,7 @@ int ImageGeneric::read(const FileName &name, bool readdata, int select_img,
 
     datatype = Im.dataType();
     setImageBase();
-    image->read(name,readdata,select_img,apply_geo,only_apply_shifts,row,mapData);
+    image->read2(name,readdata,select_img,apply_geo,only_apply_shifts,row,mapData);
 }
 
 
