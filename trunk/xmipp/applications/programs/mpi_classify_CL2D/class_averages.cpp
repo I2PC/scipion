@@ -27,7 +27,6 @@
 #include <data/filters.h>
 #include <data/mask.h>
 #include <data/polar.h>
-#include <data/image_collection.h>
 #include <data/image_generic.h>
 
 /* VQProjection basics ---------------------------------------------------- */
@@ -846,7 +845,7 @@ void VQ::write(const FileName &fnRoot, bool final) const
 {
     int Q=P.size();
     int Nimg=SFv.size();
-    ImageCollection SFout(WRITE_APPEND);
+    MetaData SFout;
     Matrix1D<double> aux, Nq;
     aux.resizeNoCopy(2);
     Nq.resizeNoCopy(Q);
@@ -861,7 +860,7 @@ void VQ::write(const FileName &fnRoot, bool final) const
         I()=P[q]->P;
         SFout.addObject();
         SFout.setValue(MDL_IMAGE,fnClass);
-        SFout.writeImage(I,fnClass,q,true);
+        I.write(fnClass,q,true,WRITE_APPEND);
         VEC_ELEM(Nq,q)=VEC_ELEM(aux,0)=P[q]->currentListImg.size();
         VEC_ELEM(aux,1)=VEC_ELEM(aux,0)/Nimg;
         SFout.setValue(MDL_IMAGE_CLASS_COUNT,(int)VEC_ELEM(Nq,q));
@@ -1935,8 +1934,17 @@ void Prog_VQ_prm::alignInputImages(const FileName &fnSF, int rank, int Nprocesso
 
                 I.read(fnImgIn);
                 I().setXmippOrigin();
-                alignImages(Iclass(), I(), M);
+                Image<double> save1, save2;
+                save1()=I();
+                alignImagesConsideringMirrors(Iclass(), I(), M);
                 I.write(fnImgOut,-1,true,WRITE_REPLACE);
+                applyGeometry(BSPLINE3,save2(),save1(),M,IS_NOT_INV,WRAP);
+                std::cout << M << std::endl;
+                save1.write("PPPsave1.xmp");
+                save2.write("PPPsave2.xmp");
+                save2()=I();
+                save2.write("PPPsave2Bis.xmp");
+                exit(0);
             }
             ++currentIdx;
         }
