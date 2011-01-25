@@ -330,7 +330,7 @@ void Micrograph::produce_all_images(int label, const FileName &fn_root,
                                     int starting_index, const FileName &fn_image, double ang, double tilt,
                                     double psi, bool rmStack)
 {
-    ImageCollection SF(WRITE_APPEND);
+    MetaData SF;
     Image<double> I;
     Micrograph *M;
 
@@ -375,7 +375,7 @@ void Micrograph::produce_all_images(int label, const FileName &fn_root,
     int i = starting_index;
     int nmax = ParticleNo();
     FileName fn_aux;
-    FileName fn_out = fn_root;
+    FileName fn_out = fn_root+".stk";
     if(exists(fn_out) && rmStack)
     {
         unlink(fn_out.c_str());
@@ -400,7 +400,7 @@ void Micrograph::produce_all_images(int label, const FileName &fn_root,
             else
                 SF.setValue( MDL_ENABLED, 1);
             //  if (ang!=0) I().rotate(-ang);
-            SF.writeImage(I,fn_out,-1,true);
+            I.write(fn_out,-1,true,WRITE_APPEND);
         }
     SF.write(fn_root + ".sel");
 

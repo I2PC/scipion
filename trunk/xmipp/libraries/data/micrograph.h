@@ -37,7 +37,6 @@
 #include "fftw.h"
 #include "metadata.h"
 #include "error.h"
-#include "image_collection.h"
 
 /* ************************************************************************* */
 /* FORWARD DEFINITIONS                                                       */
