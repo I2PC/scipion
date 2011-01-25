@@ -3,6 +3,7 @@ import sys
 import os
 import string
 from Tkinter import *
+import tkFont
 """ Guidelines for python script header formatting:
 
 The idea of the GUI class is that it provides a graphical editor of
@@ -166,10 +167,10 @@ class automated_gui_class:
             if line == "":
                 print "Error, this file does not have a {end-of-header} label"
                 sys.exit()
-            if not line.find("{setup-") == -1:
+            if line.find("{setup-") != -1:
                 self.is_setupgui = True
             self.script_header_lines.append(line)
-            if not line.find("{end-of-header}") == -1:
+            if line.find("{end-of-header}") != -1:
                 isheader = True
 
         self.script_body_lines = fh.readlines()
@@ -227,43 +228,40 @@ class automated_gui_class:
                 comment = self.script_header_lines[j][1:]
 
                 # Check setup or expert options
-                if not comment.find("{expert}") == -1:
+                if comment.find("{expert}") != -1:
                     isexpert = "expert"
                     comment = comment.replace ('{expert}', '')
-                elif not comment.find("{setup-pre}") == -1:
+                elif comment.find("{setup-pre}") != -1:
                     isexpert = "setup-pre"
                     comment = comment.replace ('{setup-pre}', '')
-                elif not comment.find("{setup-2d}") == -1:
+                elif comment.find("{setup-2d}") != -1:
                     isexpert = "setup-2d"
                     comment = comment.replace ('{setup-2d}', '')
-                elif not comment.find("{setup-3d}") == -1:
+                elif comment.find("{setup-3d}") != -1:
                     isexpert = "setup-3d"
                     comment = comment.replace ('{setup-3d}', '')
                 else:
                     isexpert = "normal"
 
                 # Check browse options
-                if not comment.find("{file}") == -1:
+                if comment.find("{file}") != -1:
                     browse = "file"
                     comment = comment.replace ('{file}', '')
-                elif not comment.find("{dir}") == -1:
+                elif comment.find("{dir}") != -1:
                     browse = "dir"
                     comment = comment.replace ('{dir}', '')
                 else:
                     browse = "none"
 
                 # Check radio options
-                if not comment.find("{list}") == -1:
+                if comment.find("{list}") != -1:
                     comment = comment.replace ('{file}', '')
                     words = comment.split('|')
                     comment = words[len(words) - 1]
                     radiooptions = words[1:-1]
 
                 # Check hidden options
-                if not comment.find("{hidden}") == -1:
-                    ishidden = True
-                else:
-                    ishidden = False
+                ishidden = comment.find("{hidden}") != -1                
 
         # Checkout more help
         if (i - j > 1):
@@ -389,11 +387,9 @@ class automated_gui_class:
         self.master.mainloop()
 
     def FillProtocolGui(self):
-
         import os, sys
         self.morehelp = StringVar()
         self.whichfile = StringVar()
-
         # Script title
         programname = self.scriptname.replace('.py', '')
         self.master.title(programname)
@@ -492,17 +488,16 @@ class automated_gui_class:
         #self.l1.grid(row=row, column=0,columnspan=5,sticky=EW)
         self.AddSeparator(1)
 
+        # Add launch buttons with grouping columns
+        import xmipp_protocol_setup
+        xmipp_protocol_setup.ProjectDir = str(os.getcwd())
+        setup = xmipp_protocol_setup.setup_protocols_class(xmipp_protocol_setup.ProjectDir,
+                                                         xmipp_protocol_setup.SystemFlavour,
+                                                         xmipp_protocol_setup.LogDir, '')
         # Add labels for different protocol categories
         row = (self.frame.grid_size()[1])
-        self.row_pre = row
-        self.row_2d = row
-        self.row_3d = row
-        self.l = Label(self.frame, text="Preprocessing", fg=TextSectionColour, width=30, bg=LabelBackgroundColour)
-        self.l.grid(row=row, column=self.column_pre, columnspan=1, sticky=E)
-        self.l = Label(self.frame, text="2D analysis", fg=TextSectionColour, width=30, bg=LabelBackgroundColour)
-        self.l.grid(row=row, column=self.column_2d, columnspan=1, sticky=E)
-        self.l = Label(self.frame, text="3D analysis", fg=TextSectionColour, width=30, bg=LabelBackgroundColour)
-        self.l.grid(row=row, column=self.column_3d, columnspan=1, sticky=E)
+        for section in setup.LaunchSections:
+            self.GuiAddLaunchSection(section, row, setup)
 
         # Add all the variables in the script header
         self.widgetexpertlist = []
@@ -524,10 +519,10 @@ class automated_gui_class:
                                       self.variables[var][4],
                                       self.variables[var][5],
                                       self.variables[var][6])
-            elif (self.variables[var][1] == "Boolean"):
-                self.GuiAddLaunchButton(self.variables[var][3],
-                                        var,
-                                        self.variables[var][4])
+#            elif (self.variables[var][1] == "Boolean"):
+#                self.GuiAddLaunchButton(self.variables[var][3],
+#                                        var,
+#                                        self.variables[var][4])
             else:
                 print "ERROR", self.variables[var][1], " variable type not recognized"
                 sys.exit()
@@ -536,6 +531,48 @@ class automated_gui_class:
         self.buttonrow = (self.frame.grid_size()[1])
         self.GuiAddRestSetupButtons()
 
+    def GuiAddLaunchSection(self, section, row, setup):
+        label = Label(self.frame, text=section, fg=TextSectionColour, width=30, bg=LabelBackgroundColour)
+        column = setup.LaunchSections.index(section)
+        label.grid(row=row, column=column, columnspan=1, sticky=E)
+        
+        for button in setup.LaunchButtons.values():
+            if 'section' in button and button['section'] == section:
+                row = row + 1
+                self.GuiAddLaunchButton(button, column, row, setup)
+        
+        
+    def GuiAddLaunchButton(self, button, column, row, setup):
+        label = button['title']
+        if 'section' in button:            
+            if 'script' in button:
+                value = button['script']
+                self.bGet = Radiobutton(self.frame, text=label, variable=self.which_setup, width=30,
+                                        value=value, indicatoron=0, command=self.GuiLaunchSetup,
+                                        bg=ButtonBackgroundColour,
+                                        activebackground=ButtonActiveBackgroundColour,
+                                        highlightbackground=HighlightBackgroundColour,
+                                        selectcolor=ButtonBackgroundColour)
+            else:
+                self.bGet = Menubutton(self.frame, text=label, relief=RAISED,  
+                                       width=30, bg=ButtonBackgroundColour, 
+                                        activebackground=ButtonActiveBackgroundColour,
+                                        highlightbackground=HighlightBackgroundColour); 
+                self.bMenu = Menu(self.bGet)
+                self.bGet["menu"] = self.bMenu          
+                if not 'childs' in button:
+                    print "ERROR: button '", label , "' doesn't have script neither childs."
+                    sys.exit() 
+                childs = button['childs'].split(", ")
+                for child in childs:
+                    option = setup.LaunchButtons[child];
+                    label = option['title']
+                    self.bMenu.add_radiobutton(label=label, variable=self.which_setup, 
+                                             value = option['script'], command=self.GuiLaunchSetup,
+                                             activebackground=ButtonActiveBackgroundColour,                                             
+                                             selectcolor=ButtonBackgroundColour);
+                #self.bGet["menu"] = self.bGet.menu;
+        self.bGet.grid(row=row, column=column, sticky=N+S+W+E)
     def GuiAddSection(self, label):
         row = (self.frame.grid_size()[1])
         line = "-----------------------------------------------------------"
@@ -552,27 +589,6 @@ class automated_gui_class:
         self.l3 = Label(self.frame, text="", bg=LabelBackgroundColour)
         self.l3.grid(row=row + 2)
 
-    def GuiAddLaunchButton(self, label, value, expert):
-        if (expert == "setup-pre"):
-            column = self.column_pre
-            self.row_pre += 1
-            row = self.row_pre
-        elif (expert == "setup-2d"):
-            column = self.column_2d
-            self.row_2d += 1
-            row = self.row_2d
-        elif (expert == "setup-3d"):
-            column = self.column_3d
-            self.row_3d += 1
-            row = self.row_3d
-
-        self.bGet = Radiobutton(self.frame, text=label, variable=self.which_setup, width=30,
-                                value=value, indicatoron=0, command=self.GuiLanchSetup,
-                                bg=ButtonBackgroundColour,
-                                activebackground=ButtonActiveBackgroundColour,
-                                highlightbackground=HighlightBackgroundColour,
-                                selectcolor=ButtonBackgroundColour)
-        self.bGet.grid(row=row, column=column)
 
     def GuiPositionLabel(self, label, default, variable, expert, morehelp, has_browse=False):
         row = (self.frame.grid_size()[1])
@@ -822,20 +838,9 @@ class automated_gui_class:
                                              filetypes=fileformats)
         
         xmipp_protocol_setup.ProjectDir = str(os.getcwd())
-        setup = xmipp_protocol_setup.setup_protocols_class(xmipp_protocol_setup.SetupPreProcessMicrographs,
-                                                         xmipp_protocol_setup.SetupParticlePick,
-                                                         xmipp_protocol_setup.SetupPreProcessParticles,
-                                                         xmipp_protocol_setup.SetupCL2D,
-                                                         xmipp_protocol_setup.SetupML2D,
-                                                         xmipp_protocol_setup.SetupKerdensom,
-                                                         xmipp_protocol_setup.SetupRotSpectra,
-                                                         xmipp_protocol_setup.SetupRCT,
-                                                         xmipp_protocol_setup.SetupML3D,
-                                                         xmipp_protocol_setup.SetupProjMatch,
-                                                         xmipp_protocol_setup.ProjectDir,
+        setup = xmipp_protocol_setup.setup_protocols_class(xmipp_protocol_setup.ProjectDir,
                                                          xmipp_protocol_setup.SystemFlavour,
-                                                         xmipp_protocol_setup.LogDir,
-                                                         '')
+                                                         xmipp_protocol_setup.LogDir, '')
         
         setup.AutoLaunch = "xx"
         setup.setup_protocol(os.path.basename(fname))
@@ -952,7 +957,7 @@ class automated_gui_class:
             self.SetupGuiParameters()
             self.GuiFill()
 
-    def GuiLanchSetup(self):
+    def GuiLaunchSetup(self):
         self.GuiSave()
         command = 'python ' + str(self.scriptname) + ' ' + str(self.which_setup.get()) + ' &'
         os.system(command)
@@ -1069,7 +1074,6 @@ class HyperlinkManager:
                 return
 
 if __name__ == '__main__':
-
     import sys
     args = sys.argv[1]
     if len(sys.argv) == 3:

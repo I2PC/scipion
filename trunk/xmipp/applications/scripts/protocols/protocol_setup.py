@@ -18,31 +18,12 @@
 #------------------------------------------------------------------------
 # Choose the protocol(s) you want to setup:
 #------------------------------------------------------------------------
-# {setup-pre} Preprocess micrographs
-SetupPreProcessMicrographs=False
-# {setup-pre} Particle selection
-SetupParticlePick=False
-# {setup-pre} Preprocess particles
-SetupPreProcessParticles=False
-# {setup-2d} Align2D
-SetupAlign2D=False
-# {setup-2d} CL2D classification
-SetupCL2D=False
-# {setup-2d} KerDenSOM classification
-SetupKerDenSOM=False
-# {setup-2d} Rotational spectra classification
-SetupRotSpectra=False
-# {setup-3d} Common lines
-SetupCommonLines=False
-# {setup-3d} Random conical tilt
-SetupRCT=False
-# {setup-3d} ML3D classification
-SetupML3D=False
-# {setup-3d} Projection matching refinement
-SetupProjMatch=False
+# {setup-} This is need to recognize this script as setup
 #------------------------------------------------------------------------
 # {section} Global Parameters
 #------------------------------------------------------------------------
+
+
 # Absolute path to the root directory name for this project:
 ProjectDir='/home/scheres/test'
 # System flavour for parallelization
@@ -59,34 +40,12 @@ LogDir='Logs'
 class setup_protocols_class:
        #init variables
         def __init__(self,
-                     SetupPreProcessMicrographs,
-                     SetupParticlePick,
-                     SetupPreProcessParticles,
-                     SetupAlign2D,
-                     SetupCL2D,
-                     SetupKerDenSOM,
-                     SetupRotSpectra,
-                     SetupCommonLines,
-                     SetupRCT,
-                     SetupML3D,
-                     SetupProjMatch,
                      ProjectDir,
                      SystemFlavour,
                      LogDir,
                      AutoLaunch):
 
             import os,sys
-            self.SetupPreProcessMicrographs=SetupPreProcessMicrographs
-            self.SetupParticlePick=SetupParticlePick
-            self.SetupPreProcessParticles=SetupPreProcessParticles
-            self.SetupAlign2D=SetupAlign2D
-            self.SetupCL2D=SetupCL2D
-            self.SetupKerDenSOM=SetupKerDenSOM
-            self.SetupRotSpectra=SetupRotSpectra
-            self.SetupCommonLines=SetupCommonLines
-            self.SetupRCT=SetupRCT
-            self.SetupML3D=SetupML3D
-            self.SetupProjMatch=SetupProjMatch
 
             self.ProjectDir=ProjectDir
             self.SystemFlavour=SystemFlavour
@@ -97,30 +56,54 @@ class setup_protocols_class:
             sys.path.append(scriptdir) # add default search path
             self.SYSTEMSCRIPTDIR=scriptdir
 
-            # Which scripts and which directories to use
-            self.library={}
-            self.library['SetupPreProcessMicrographs']=[self.SetupPreProcessMicrographs,
-                                                        'xmipp_protocol_preprocess_micrographs.py']
-            self.library['SetupParticlePick']=[self.SetupParticlePick,
-                                                'xmipp_protocol_particle_pick.py']
-            self.library['SetupPreProcessParticles']=[self.SetupPreProcessParticles,
-                                                'xmipp_protocol_preprocess_particles.py']
-            self.library['SetupAlign2D']=[self.SetupAlign2D,
-                                         'xmipp_protocol_align2d.py']
-            self.library['SetupCL2D']=[self.SetupCL2D,
-                                         'xmipp_protocol_cl2d.py']
-            self.library['SetupKerDenSOM']=[self.SetupKerDenSOM,
-                                               'xmipp_protocol_kerdensom.py']
-            self.library['SetupRotSpectra']=[self.SetupRotSpectra,
-                                               'xmipp_protocol_rotspectra.py']            
-            self.library['SetupCommonLines']=[self.SetupCommonLines,
-                                        'xmipp_protocol_commonlines.py']
-            self.library['SetupRCT']=[self.SetupRCT,
-                                        'xmipp_protocol_rct.py']
-            self.library['SetupML3D']=[self.SetupML3D,
-                                        'xmipp_protocol_ml3d.py']
-            self.library['SetupProjMatch']=[self.SetupProjMatch,
-                                        'xmipp_protocol_projmatch.py']
+            # Which protocols will appears in main windows
+            self.LaunchSections = ["Preprocessing", "2D Analysis", "3D Analysis"]
+            self.LaunchButtons = {};
+            
+            ####### Preprocessing
+            self.LaunchButtons['SetupPreProcessMicrographs'] = {'title': 'Preprocess micrographs',
+                                       'script':  'xmipp_protocol_preprocess_micrographs.py',
+                                       'section': 'Preprocessing'}
+            self.LaunchButtons['SetupParticlePick'] = {'title': 'Particle selection',
+                                       'script':  'xmipp_protocol_particle_pick.py',
+                                       'section': 'Preprocessing'}
+            self.LaunchButtons['SetupPreProcessParticles'] = {'title': 'Preprocess particles',
+                                       'script':  'xmipp_protocol_preprocess_particles.py',
+                                       'section': 'Preprocessing'}           
+            
+            ######## 2D Analysis
+            self.LaunchButtons['SetupAlign'] = {'title': 'Align',
+                                       'section': '2D Analysis',
+                                       'childs': 'SetupML2D, SetupCL2D'}
+            self.LaunchButtons['SetupAlignClassify'] = {'title': 'Align + Classify',
+                                       'section': '2D Analysis',
+                                       'childs': 'SetupML2D, SetupCL2D'}
+            self.LaunchButtons['SetupClassify'] = {'title': 'Classify',
+                                       'section': '2D Analysis',
+                                       'childs': 'SetupKerDenSOM, SetupRotSpectra'} 
+            self.LaunchButtons['SetupML2D'] = {'title': 'ML2D',
+                                               'script': 'xmipp_protocol_ml2d.py'}     
+            self.LaunchButtons['SetupCL2D'] = {'title': 'CL2D',
+                                               'script': 'xmipp_protocol_cl2d.py'}
+            self.LaunchButtons['SetupKerDenSOM'] = {'title': 'KerDenSOM',
+                                               'script': 'xmipp_protocol_kerdensom.py'}     
+            self.LaunchButtons['SetupRotSpectra'] = {'title': 'Rotational Spectra',
+                                               'script': 'xmipp_protocol_rotspectra.py'}
+            
+            ####### 3D Analysis
+            self.LaunchButtons['SetupInitialModel'] = {'title': 'Initial Model',
+                                       'section': '3D Analysis',
+                                       'childs': 'SetupCommonLines, SetupRCT'}
+            self.LaunchButtons['SetupCommonLines'] = {'title': 'Common lines',
+                                       'script': 'xmipp_protocol_commonlines.py'}
+            self.LaunchButtons['SetupRCT'] = {'title': 'Random Conical Tilt',
+                                       'script': 'xmipp_protocol_rct.py'} 
+            self.LaunchButtons['Setup3DClassify'] = {'title': 'ML3D Classification',
+                                       'section': '3D Analysis',
+                                       'script': 'xmipp_protocol_ml3d.py'}
+            self.LaunchButtons['SetupModelRefine'] = {'title': 'Model refinement',
+                                       'section': '3D Analysis',
+                                       'script': 'xmipp_protocol_projmatch.py'} 
 
             # For automated editing of default directories in protocols
             self.DEFAULTDIRS={"ProjectDir":self.ProjectDir,
@@ -130,17 +113,17 @@ class setup_protocols_class:
             
 
             # Perform the actual setup:
-            if (self.AutoLaunch!=""):
+            if (self.AutoLaunch != ""):
                 # A. Setup from GUI (Autolaunch)
                 # This will copy the (modified) protocol script to the corresponding directory
                 # and will automatically launch the GUI for this protocol
-                self.setup_protocol(self.library[self.AutoLaunch][1])
+                self.setup_protocol(self.AutoLaunch)
             else:
                 # B. Setup from this script:
                 # This will only copy the (modified) protocol script to the corresponding directory
-                for var in self.library:
-                    if (self.library[var][0]):
-                        self.setup_protocol(self.library[var][1])
+                for buttonData in self.LaunchButtons:
+                    if 'script' in buttonData:
+                        self.setup_protocol(buttonData['script'])
                         
         def modify_script_header(self,src):
 
@@ -222,19 +205,5 @@ if __name__ == '__main__':
     else:
         AutoLaunch=sys.argv[1]
 
-    setup=setup_protocols_class(SetupPreProcessMicrographs,
-                                SetupParticlePick,
-                                SetupPreProcessParticles,
-                                SetupAlign2D,
-                                SetupCL2D,
-                                SetupKerDenSOM,
-                                SetupRotSpectra,
-                                SetupCommonLines,
-                                SetupRCT,
-                                SetupML3D,
-                                SetupProjMatch,
-                                ProjectDir,
-                                SystemFlavour,
-                                LogDir,
-                                AutoLaunch)
+    setup = setup_protocols_class(ProjectDir, SystemFlavour, LogDir, AutoLaunch)
 
