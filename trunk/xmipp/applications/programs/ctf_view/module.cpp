@@ -770,7 +770,7 @@ void CTFViewer::setImageViewer()
 
     // Load the CTF in image I
     try {
-       I.read(fn_root + ".psd");
+       I.read2(fn_root + ".psd");
        CenterFFT(I(), true);
        I().setXmippOrigin();
        psdPresent = true;
