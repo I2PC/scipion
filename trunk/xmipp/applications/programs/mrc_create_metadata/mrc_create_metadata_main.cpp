@@ -84,6 +84,7 @@ public:
     		MD.addObject();
     		MD.setValue(MDL_IMAGE,fnSlice);
     		MD.setValue(MDL_ANGLETILT,angle);
+    		MD.setValue(MDL_ENABLED,1);
     	}
     	MD.write(fnOut);
     }
