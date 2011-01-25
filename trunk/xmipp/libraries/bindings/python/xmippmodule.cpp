@@ -469,7 +469,7 @@ MetaData_readBlock(PyObject *obj, PyObject *args, PyObject *kwargs)
                 {
                     str = PyString_AsString(pyStr);
                     strBlock = PyString_AsString(pyStrBlock);
-                    self->metadata->read(str,NULL,strBlock);
+                    self->metadata->read((std::string)(strBlock)+"@"+str,NULL);
                     Py_RETURN_NONE;
                 }
                 else
