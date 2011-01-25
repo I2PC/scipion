@@ -292,7 +292,7 @@ public:
              MDRow * row = NULL, bool mapData = false);
 
     /** Read an image from metadata, filename is provided*/
-    int read(const FileName &name, const MetaData &md, int objId,
+    int read(const FileName &name, const MetaData &md, long int objId,
              bool readdata=true, int select_img = -1,
              bool only_apply_shifts = false, bool mapData = false);
 

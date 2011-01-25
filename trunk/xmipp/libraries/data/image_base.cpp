@@ -66,7 +66,7 @@ int ImageBase::read2(const FileName &name, bool readdata, int select_img, bool a
 
 /** Read an image from metadata, filename is provided
 */
-int ImageBase::read(const FileName &name, const MetaData &md, int objId, bool readdata,
+int ImageBase::read(const FileName &name, const MetaData &md, long int objId, bool readdata,
                     int select_img, bool only_apply_shifts, bool mapData)
 {
     ImageFHandler* hFile = openFile(name);
