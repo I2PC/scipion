@@ -755,12 +755,9 @@ void Prog_align2d_prm::align2d()
 
     // Get Reference (either from file or from piramidal combination of images)
     if (fn_ref != "")
-    {
-        Iref.read(fn_ref, false, -1, true);
-    }
+        Iref.read2(fn_ref, false, -1, true);
     else
         do_pspc();
-    std::cerr << "align2d 3 "    << std::endl;
 
     // Circular mask around reference image
     MultidimArray<int> mask;
