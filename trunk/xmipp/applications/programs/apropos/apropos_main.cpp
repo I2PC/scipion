@@ -25,7 +25,6 @@
 
 #include <data/progs.h>
 #include <data/args.h>
-#include <data/image_collection.h>
 #include <data/strings.h>
 #include <iomanip>
 #include <iostream>
