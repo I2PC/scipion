@@ -615,10 +615,11 @@ void ProgNormalize::preProcess()
 
 void ProgNormalize::processImage(const FileName &fnImg, const FileName &fnImgOut, long int objId)
 {
-    MDRow row;
-    mdIn.getRow(row);
     Image<double> I;
-    I.read(fnImg, true, -1, apply_geo, false, &row);
+    if (apply_geo)
+    	I.read(fnImg, mdIn, objId);
+    else
+    	I.read2(fnImg);
     I().setXmippOrigin();
 
     MultidimArray<double> &img=I();

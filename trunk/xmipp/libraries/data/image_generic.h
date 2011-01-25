@@ -123,15 +123,20 @@ public:
 
     /** Read image from file.
      */
-    int read(const FileName &name, bool readdata=true, int select_img = -1,
+    int read2(const FileName &name, bool readdata=true, int select_img = -1,
              bool apply_geo = false, bool only_apply_shifts = false,
              MDRow * row = NULL, bool mapData = false);
+
+    /** Read image from file.
+     */
+    int read(const FileName &name, const MetaData &MD, long int objId,
+    		 bool readdata=true, int select_img = -1, bool only_apply_shifts = false);
 
     /** Read image mapped from file.
      */
     int readMapped(const FileName &name, int select_img = 0)
     {
-      read(name,true,select_img,false,false,NULL,true);
+      read2(name,true,select_img,false,false,NULL,true);
     }
     /** Write image to file.
     */

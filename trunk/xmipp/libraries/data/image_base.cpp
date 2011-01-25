@@ -67,12 +67,12 @@ int ImageBase::read2(const FileName &name, bool readdata, int select_img, bool a
 /** Read an image from metadata, filename is provided
 */
 int ImageBase::read(const FileName &name, const MetaData &md, long int objId, bool readdata,
-                    int select_img, bool only_apply_shifts, bool mapData)
+                    int select_img, bool only_apply_shifts)
 {
     ImageFHandler* hFile = openFile(name);
     MDRow row;
     md.getRow(row, objId);
-    int err = _read(name, hFile, readdata, select_img, true, only_apply_shifts, &row, mapData);
+    int err = _read(name, hFile, readdata, select_img, true, only_apply_shifts, &row, false);
     closeFile(hFile);
 
     return err;
@@ -81,7 +81,7 @@ int ImageBase::read(const FileName &name, const MetaData &md, long int objId, bo
 /** Read an image from metadata, filename is taken from MDL_IMAGE
  */
 int ImageBase::read(const MetaData &md, int objId, bool readdata, int select_img,
-                    bool only_apply_shifts, bool mapData)
+                    bool only_apply_shifts)
 {
     MDRow row;
     if (objId == -1)
@@ -90,7 +90,7 @@ int ImageBase::read(const MetaData &md, int objId, bool readdata, int select_img
     FileName name;
     row.getValue(MDL_IMAGE, name);
     ImageFHandler* hFile = openFile(name);
-    int err = _read(name, hFile, readdata, select_img, true, only_apply_shifts, &row, mapData);
+    int err = _read(name, hFile, readdata, select_img, true, only_apply_shifts, &row, false);
     closeFile(hFile);
 
     return err;

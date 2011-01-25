@@ -88,7 +88,7 @@ void Micrograph::open_micrograph(const FileName &_fn_micrograph)
     // Micrograph name
     fn_micrograph = _fn_micrograph;
     // Look for micrograph dimensions
-    auxI->read(fn_micrograph,false,-1,false,false,NULL,false);
+    auxI->read(fn_micrograph,false);
 
     auxI->getDimensions(Xdim,Ydim, Zdim, Ndim);
     if((Zdim >1 )|| (Ndim >1))

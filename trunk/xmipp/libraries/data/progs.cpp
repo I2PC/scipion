@@ -197,9 +197,16 @@ void SF_main(int argc, char **argv,
 
                 if (img.isRealImage(fn_read))
                 {
-                  MDRow row;
-                  SF_in.getRow(row);
-                    img.read(fn_read, true, -1, prm->apply_geo, false, &row);
+                    if (prm->apply_geo)
+                    {
+                        MDRow row;
+                        SF_in.getRow(row);
+                        img.read(fn_read, true, -1, false, &row);
+                    }
+                    else
+                    {
+                        img.read(fn_read);
+                    }
                     img().setXmippOrigin();
                     switch (operation_mode)
                     {

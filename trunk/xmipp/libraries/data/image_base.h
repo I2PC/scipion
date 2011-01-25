@@ -294,12 +294,12 @@ public:
     /** Read an image from metadata, filename is provided*/
     int read(const FileName &name, const MetaData &md, long int objId,
              bool readdata=true, int select_img = -1,
-             bool only_apply_shifts = false, bool mapData = false);
+             bool only_apply_shifts = false);
 
     /** Read an image from metadata, filename is taken from MDL_IMAGE */
     int read(const MetaData &md, int objId = -1,
              bool readdata=true, int select_img = -1,
-             bool only_apply_shifts = false, bool mapData = false);
+             bool only_apply_shifts = false);
 
     /* Read an image with a lower resolution as a preview image.
      * If Zdim parameter is not passed, then all slices are rescaled.
