@@ -73,10 +73,10 @@ typedef enum
  * }
  * @endcode
  */
-#define FOR_ALL_OBJECTS_IN_METADATA(kkkk_metadata) \
-        for(long int kkkk = (kkkk_metadata).iteratorBegin(); \
-             !(kkkk_metadata).iteratorEnd(); \
-             kkkk=(kkkk_metadata).iteratorNext())
+#define FOR_ALL_OBJECTS_IN_METADATA(metadata) \
+        for(long int objId = (metadata).iteratorBegin(); \
+             !(metadata).iteratorEnd(); \
+             objId=(metadata).iteratorNext())
 
 /** Iterate over all elements of two MetaData at same time.
  *
