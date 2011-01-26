@@ -37,7 +37,9 @@ public:
     bool             store_in_header;
     bool             center_mass;
     MetaData         DF_shifts;
+    MDIterator      shiftsIter;
     MetaData         DF_scales;
+    MDIterator      scalesIter;
     bool             Docfile;
 
     void read(int argc, char **argv)
@@ -50,13 +52,19 @@ public:
         if (fnShift=="" && fnScale=="" && !center_mass)
             REPORT_ERROR(ERR_ARG_MISSING, "Shift_Scale:: Cannot find -shift or -scale");
         Docfile = (fnShift!="" && fnShift.isMetaData(false)) ||
-        		  (fnScale!="" && fnScale.isMetaData(false));
+                  (fnScale!="" && fnScale.isMetaData(false));
         if (Docfile)
         {
             if (fnShift!="" && fnShift.isMetaData(false))
+            {
                 DF_shifts.read(fnShift);
+                shiftsIter = DF_shifts.getIterator();
+            }
             if (fnScale!="" && fnScale.isMetaData(false))
+            {
                 DF_scales.read(fnScale);
+                scalesIter = DF_scales.getIterator();
+            }
         }
         else
         {
@@ -125,6 +133,7 @@ public:
 
 bool process_img(Image<double> &img, const Prog_parameters *prm)
 {
+    size_t id;
     Shift_Scale_parameters *eprm = (Shift_Scale_parameters *) prm;
     Matrix2D<double> A;
     int dim;
@@ -143,11 +152,12 @@ bool process_img(Image<double> &img, const Prog_parameters *prm)
     if (eprm->DF_shifts.getFilename() != "")
     {
         eprm->shift.resize(dim);
-        eprm->DF_shifts.getValue(MDL_SHIFTX,XX(eprm->shift));
-        eprm->DF_shifts.getValue(MDL_SHIFTY,YY(eprm->shift));
+        id = eprm->shiftsIter.objId;
+        eprm->DF_shifts.getValue(MDL_SHIFTX,XX(eprm->shift), id);
+        eprm->DF_shifts.getValue(MDL_SHIFTY,YY(eprm->shift), id);
         if (dim==3)
-            eprm->DF_shifts.getValue(MDL_SHIFTZ,ZZ(eprm->shift));
-        eprm->DF_shifts.nextObject();
+            eprm->DF_shifts.getValue(MDL_SHIFTZ,ZZ(eprm->shift), id);
+        eprm->shiftsIter.next();
     }
     else if (eprm->Docfile)
     {
@@ -174,11 +184,12 @@ bool process_img(Image<double> &img, const Prog_parameters *prm)
     if (eprm->DF_scales.getFilename() != "")
     {
         eprm->scale.resize(dim);
-        eprm->DF_scales.getValue(MDL_SCALE,XX(eprm->scale));
-        eprm->DF_scales.getValue(MDL_SCALE,YY(eprm->scale));
+        id = eprm->scalesIter.objId;
+        eprm->DF_scales.getValue(MDL_SCALE,XX(eprm->scale), id);
+        eprm->DF_scales.getValue(MDL_SCALE,YY(eprm->scale), id);
         if (dim==3)
-            eprm->DF_scales.getValue(MDL_SCALE,XX(eprm->scale));
-        eprm->DF_scales.nextObject();
+            eprm->DF_scales.getValue(MDL_SCALE,XX(eprm->scale), id);
+        eprm->scalesIter.next();
     }
     else if (eprm->Docfile || eprm->center_mass)
     {
@@ -193,10 +204,10 @@ bool process_img(Image<double> &img, const Prog_parameters *prm)
         selfApplyGeometry(BSPLINE3,img(),A, IS_NOT_INV, eprm->wrap);
     else
     {
-    	if (dim==2)
-    		img.setShifts(XX(eprm->shift), YY(eprm->shift));
-    	else
-    		img.setShifts(XX(eprm->shift), YY(eprm->shift), ZZ(eprm->shift));
+        if (dim==2)
+            img.setShifts(XX(eprm->shift), YY(eprm->shift));
+        else
+            img.setShifts(XX(eprm->shift), YY(eprm->shift), ZZ(eprm->shift));
     }
     return true;
 }
