@@ -238,6 +238,8 @@ void runThread(ThreadArgument &thArg)
     Image<double> Iaux;
     FileName fnImg;
     long long int first = -1, last = -1;
+    MultidimArray<char> mask;
+
     while (ptrProg->td->getTasks(first, last))
     {
         for (int i=first; i<=last; i++)
@@ -254,7 +256,6 @@ void runThread(ThreadArgument &thArg)
                 Iaux()/=ptrProg->IavgFlat();
 
             // Assign median filter to zero valued pixels to avoid -inf when applying log10
-            MultidimArray<char> mask;
             Iaux().equal(0,mask);
             if (XSIZE(ptrProg->bpMask()) != 0)
                 mask += ptrProg->bpMask();
@@ -266,9 +267,9 @@ void runThread(ThreadArgument &thArg)
             fnImg.compose(i, ptrProg->fnRoot);
             fnImg = fnImg.addExtension("mrcs");
 
-            localMD.addObject();
-            localMD.setValue(MDL_IMAGE,fnImg);
-            localMD.setValue(MDL_ANGLETILT,Iaux.tilt());
+            size_t objId = localMD.addObject();
+            localMD.setValue(MDL_IMAGE,fnImg,objId);
+            localMD.setValue(MDL_ANGLETILT,Iaux.tilt(),objId);
             Iaux.write(fnImg,i,true,WRITE_APPEND);
             if (thread_id==0)
                 progress_bar(i);
