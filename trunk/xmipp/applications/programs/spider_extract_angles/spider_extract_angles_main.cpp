@@ -76,18 +76,15 @@ protected:
             std::cerr << "Extracting angles ...\n";
     }
 
-    void processImage(const FileName &fnImg, const FileName &fnImgOut, long int objId)
+    void processImage(const FileName &fnImg, const FileName &fnImgOut, size_t objId)
     {
         if (from_metadata)
         {
-            double rot;
-            mdIn.getValue(MDL_ANGLEROT,rot);
-            double tilt;
-            mdIn.getValue(MDL_ANGLETILT,tilt);
-            double psi;
-            mdIn.getValue(MDL_ANGLEPSI,psi);
-            DF_out.append_angles(rot, tilt, psi,
-                                 ang1, ang2, ang3);
+            double rot, tilt, psi;
+            mdIn.getValue(MDL_ANGLEROT,rot, objId);
+            mdIn.getValue(MDL_ANGLETILT,tilt, objId);
+            mdIn.getValue(MDL_ANGLEPSI,psi, objId);
+            DF_out.append_angles(rot, tilt, psi, ang1, ang2, ang3);
         }
         else
         {
