@@ -52,7 +52,7 @@ void Series_remove_fluctuations_parameters::produceSideInfo()
     FileName fnImg;
     FOR_ALL_OBJECTS_IN_METADATA(SF)
     {
-        SF.getValue(MDL_IMAGE,fnImg);
+        SF.getValue(MDL_IMAGE,fnImg,__iter.objId);
         I.read(fnImg);
         V.setSlice(k,I());
         k++;
@@ -96,7 +96,7 @@ void Series_remove_fluctuations_parameters::run()
             line.initZeros(ZSIZE(V));
             for (int k=0; k<ZSIZE(V); k++)
                 line(k)=V(k,i,j);
-    
+
             // Fourier transform
             transformer.setReal(line);
             transformer.FourierTransform();
@@ -117,13 +117,13 @@ void Series_remove_fluctuations_parameters::run()
 
     // Write the results
     int k=0;
+    Image<double> I;
+    FileName fnimg;
     FOR_ALL_OBJECTS_IN_METADATA(SF)
     {
-        Image<double> I;
         V.getSlice(k,I());
 
-        FileName fnimg;
-        if (fn_root=="") SF.getValue(MDL_IMAGE,fnimg);
+        if (fn_root=="") SF.getValue(MDL_IMAGE,fnimg,__iter.objId);
         else fnimg.compose(fn_root,k,"xmp");
         I.write(fnimg);
 
