@@ -52,13 +52,15 @@ void Prog_projection_neighbourhood_prm::get_angles(MetaData &SF_in, MetaData &DF
     std::cerr << "Extracting angles ...\n";
     init_progress_bar(SF_in.size());
     Image<double> H;
+    size_t id;
+
     FOR_ALL_OBJECTS_IN_METADATA(SF_in)
     {
         H.readApplyGeo(SF_in,__iter.objId,false);
-        DF_out.addObject();
-        DF_out.setValue(MDL_ANGLEROT,H.rot());
-        DF_out.setValue(MDL_ANGLETILT,H.tilt());
-        DF_out.setValue(MDL_ANGLEPSI,H.psi());
+        id = DF_out.addObject();
+        DF_out.setValue(MDL_ANGLEROT,H.rot(), id);
+        DF_out.setValue(MDL_ANGLETILT,H.tilt(), id);
+        DF_out.setValue(MDL_ANGLEPSI,H.psi(), id);
         i++;
         if (i % 10 == 0) progress_bar(i);
     }
@@ -154,19 +156,18 @@ void Prog_projection_neighbourhood_prm::compute_neighbourhood()
     double dist = 0.;
     double rot1, tilt1;
     double rot2, tilt2;
+    double auxrot, auxtilt;
     double distp;
     int i = 0;
     MetaData SF_out;
+    FileName fnClosest;
 
     get_angles(SF1, DF1);
     std::cerr << "Calculating ...\n";
     FOR_ALL_OBJECTS_IN_METADATA(DF2)
     {
         // Read reference projection direction
-    	double auxrot;
     	DF2.getValue(MDL_ANGLEROT,auxrot,__iter.objId);
-    	double auxtilt;
-    	//TODO: Check this????
     	DF2.getValue(MDL_ANGLETILT,auxtilt,__iter.objId);
         rot1 = realWRAP(auxrot, -180, 180);
         tilt1 = realWRAP(auxtilt, -180, 180);
@@ -182,10 +183,9 @@ void Prog_projection_neighbourhood_prm::compute_neighbourhood()
             // Fill the output result
             if (distp <= maxdist)
             {
-            	FileName fnClosest;
+
             	DF1.getValue(MDL_IMAGE,fnClosest,__iter.objId);
-            	//FIXME: SF_out doesn't need addObject????
-                //SF_out.setValue(MDL_IMAGE,fnClosest);
+                SF_out.setValue(MDL_IMAGE, fnClosest, SF_out.addObject());
             }
         }
         // finished reading all particles for this neighbourhood
