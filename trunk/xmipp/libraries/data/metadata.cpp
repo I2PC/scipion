@@ -260,8 +260,8 @@ bool MetaData::setValueFromStr(const MDLabel label, const std::string &value, si
 
     if (id == BAD_OBJID)
     {
-            REPORT_ERROR(ERR_MD_NOACTIVE, "setValue: please provide objId other than -1");
-            exit(1);
+        REPORT_ERROR(ERR_MD_NOACTIVE, "setValue: please provide objId other than -1");
+        exit(1);
     }
     MDObject mdValue(label);
     mdValue.fromString(value);
@@ -304,6 +304,18 @@ bool MetaData::addLabel(const MDLabel label, int pos)
     else
         activeLabels.insert(activeLabels.begin() + pos, label);
     myMDSql->addColumn(label);
+    return true;
+}
+
+bool MetaData::removeLabel(const MDLabel label)
+{
+    std::vector<MDLabel>::iterator location;
+    location = std::find(activeLabels.begin(), activeLabels.end(), label);
+
+    if (location == activeLabels.end())
+        return false;
+
+    activeLabels.erase(location);
     return true;
 }
 
@@ -404,10 +416,10 @@ size_t MetaData::firstObject() const
 
 size_t MetaData::firstObject(const MDQuery & query) const
 {
-  std::vector<size_t> ids;
-  findObjects(ids, query);
-  size_t id = ids.size() == 1 ? ids[0] : BAD_OBJID;
-  return id;
+    std::vector<size_t> ids;
+    findObjects(ids, query);
+    size_t id = ids.size() == 1 ? ids[0] : BAD_OBJID;
+    return id;
 }
 
 size_t MetaData::lastObject() const

@@ -469,6 +469,10 @@ public:
      */
     bool addLabel(const MDLabel label, int pos = -1);
 
+    /** Remove a label from the metadata.
+     */
+    bool removeLabel(const MDLabel label);
+
     /** Adds a new, empty object to the objects map. If objectId == -1
      * the new ID will be that for the last object inserted + 1, else
      * the given objectId is used. If there is already an object whose
