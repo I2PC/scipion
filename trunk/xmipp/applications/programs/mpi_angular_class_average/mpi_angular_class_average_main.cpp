@@ -188,16 +188,16 @@ public:
                                 // and 'this_image' is of type int...
                                 REPORT_ERROR(ERR_MD_BADTYPE, "The next line has no sense since the MDL_IMAGE is string \
                                              and 'this_image' is of type int...");
-                                DF.gotoFirstObject(MDValueEQ(MDL_IMAGE,this_image));
-                                DF.setValue(MDL_ANGLEROT,output_values[i*AVG_OUPUT_SIZE+6]);
-                                DF.setValue(MDL_ANGLETILT,output_values[i*AVG_OUPUT_SIZE+7]);
-                                DF.setValue(MDL_ANGLEPSI,output_values[i*AVG_OUPUT_SIZE+8]);
-                                DF.setValue(MDL_SHIFTX,output_values[i*AVG_OUPUT_SIZE+9]);
-                                DF.setValue(MDL_SHIFTY,output_values[i*AVG_OUPUT_SIZE+10]);
-                                DF.setValue(MDL_REF,output_values[i*AVG_OUPUT_SIZE+11]);
-                                DF.setValue(MDL_FLIP,output_values[i*AVG_OUPUT_SIZE+12]);
-                                DF.setValue(MDL_SCALE,output_values[i*AVG_OUPUT_SIZE+13]);
-                                DF.setValue(MDL_MAXCC,output_values[i*AVG_OUPUT_SIZE+14]);
+                                size_t objId = DF.firstObject(MDValueEQ(MDL_IMAGE,this_image));
+                                DF.setValue(MDL_ANGLEROT,output_values[i*AVG_OUPUT_SIZE+6], objId);
+                                DF.setValue(MDL_ANGLETILT,output_values[i*AVG_OUPUT_SIZE+7], objId);
+                                DF.setValue(MDL_ANGLEPSI,output_values[i*AVG_OUPUT_SIZE+8], objId);
+                                DF.setValue(MDL_SHIFTX,output_values[i*AVG_OUPUT_SIZE+9], objId);
+                                DF.setValue(MDL_SHIFTY,output_values[i*AVG_OUPUT_SIZE+10], objId);
+                                DF.setValue(MDL_REF,output_values[i*AVG_OUPUT_SIZE+11], objId);
+                                DF.setValue(MDL_FLIP,output_values[i*AVG_OUPUT_SIZE+12], objId);
+                                DF.setValue(MDL_SCALE,output_values[i*AVG_OUPUT_SIZE+13], objId);
+                                DF.setValue(MDL_MAXCC,output_values[i*AVG_OUPUT_SIZE+14], objId);
                             }
                         }
                     }
@@ -292,17 +292,18 @@ public:
                                 // and 'this_image' is of type int...
                                 REPORT_ERROR(ERR_MD_BADTYPE, "The next line has no sense since the MDL_IMAGE is string \
                                              and 'this_image' is of type int...");
-                                DF.gotoFirstObject(MDValueEQ(MDL_IMAGE,this_image));
 
-                                DF.setValue(MDL_ANGLEROT,output_values[i*AVG_OUPUT_SIZE+6]);
-                                DF.setValue(MDL_ANGLETILT,output_values[i*AVG_OUPUT_SIZE+7]);
-                                DF.setValue(MDL_ANGLEPSI,output_values[i*AVG_OUPUT_SIZE+8]);
-                                DF.setValue(MDL_SHIFTX,output_values[i*AVG_OUPUT_SIZE+9]);
-                                DF.setValue(MDL_SHIFTY,output_values[i*AVG_OUPUT_SIZE+10]);
-                                DF.setValue(MDL_REF,output_values[i*AVG_OUPUT_SIZE+11]);
-                                DF.setValue(MDL_FLIP,output_values[i*AVG_OUPUT_SIZE+12]);
-                                DF.setValue(MDL_SCALE,output_values[i*AVG_OUPUT_SIZE+13]);
-                                DF.setValue(MDL_MAXCC,output_values[i*AVG_OUPUT_SIZE+14]);
+                                size_t objId = DF.firstObject(MDValueEQ(MDL_IMAGE,this_image));
+
+                                DF.setValue(MDL_ANGLEROT,output_values[i*AVG_OUPUT_SIZE+6], objId);
+                                DF.setValue(MDL_ANGLETILT,output_values[i*AVG_OUPUT_SIZE+7], objId);
+                                DF.setValue(MDL_ANGLEPSI,output_values[i*AVG_OUPUT_SIZE+8], objId);
+                                DF.setValue(MDL_SHIFTX,output_values[i*AVG_OUPUT_SIZE+9], objId);
+                                DF.setValue(MDL_SHIFTY,output_values[i*AVG_OUPUT_SIZE+10], objId);
+                                DF.setValue(MDL_REF,output_values[i*AVG_OUPUT_SIZE+11], objId);
+                                DF.setValue(MDL_FLIP,output_values[i*AVG_OUPUT_SIZE+12], objId);
+                                DF.setValue(MDL_SCALE,output_values[i*AVG_OUPUT_SIZE+13], objId);
+                                DF.setValue(MDL_MAXCC,output_values[i*AVG_OUPUT_SIZE+14], objId);
                             }
                         }
                     }
