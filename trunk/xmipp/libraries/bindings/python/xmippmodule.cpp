@@ -692,10 +692,11 @@ MetaData_setColumnFormat(PyObject *obj, PyObject *args, PyObject *kwargs)
 static PyObject *
 MetaData_setValue(PyObject *obj, PyObject *args, PyObject *kwargs)
 {
-    int label, objectId = -1;
+    int label;
+    size_t objectId=BAD_OBJID;
     PyObject *pyValue; //Only used to skip label and value
 
-    if (PyArg_ParseTuple(args, "iO|i", &label, &pyValue, &objectId))
+    if (PyArg_ParseTuple(args, "iOn", &label, &pyValue, &objectId))
     {
         try
         {
@@ -748,10 +749,10 @@ static PyObject *
 MetaData_getValue(PyObject *obj, PyObject *args, PyObject *kwargs)
 {
     int label;
-    long int objectId = -1;
+    size_t objectId=BAD_OBJID;
     PyObject *pyValue;
 
-    if (PyArg_ParseTuple(args, "i|l", &label, &objectId))
+    if (PyArg_ParseTuple(args, "in", &label, &objectId))
     {
         try
         {
@@ -1084,7 +1085,8 @@ MetaData_new(PyTypeObject *type, PyObject *args, PyObject *kwargs)
 static PyObject *
 MetaData_importObjects(PyObject *obj, PyObject *args, PyObject *kwargs)
 {
-    int label, objectId = -1;
+    int label;
+    //size_t objectId=BAD_OBJID; Is this needed?
     PyObject *pyMd = NULL;
     PyObject *pyQuery = NULL;
 
@@ -1147,7 +1149,8 @@ MetaData_aggregateSingle(PyObject *obj, PyObject *args, PyObject *kwargs)
 static PyObject *
 MetaData_unionAll(PyObject *obj, PyObject *args, PyObject *kwargs)
 {
-    int label, objectId = -1;
+    int label;
+    //size_t objectId;
     PyObject *pyMd = NULL;
     PyObject *pyQuery = NULL;
 
@@ -1176,7 +1179,8 @@ MetaData_unionAll(PyObject *obj, PyObject *args, PyObject *kwargs)
 static PyObject *
 MetaData_intersection(PyObject *obj, PyObject *args, PyObject *kwargs)
 {
-    int label, objectId = -1;
+    int label;
+    //size_t objectId;
     PyObject *pyMd = NULL;
 
     if (PyArg_ParseTuple(args, "Oi", &pyMd, &label))
