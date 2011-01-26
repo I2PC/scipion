@@ -56,21 +56,29 @@ void translate_to_Spider_sel(MetaData &SF_in, DocFile &DF_out, bool new_style)
         //if (!SF_in.Is_COMMENT())
         {
             int enabled;
-            
-            SF_in.getValue( MDL_ENABLED, enabled );
-            
+
+            SF_in.getValue( MDL_ENABLED, enabled ,__iter.objId);
+
             if ( enabled ==1)
             {
-                if (!new_style) aux(0) = 1;
+                if (!new_style)
+                    aux(0) = 1;
                 //else            aux(0) = ((FileName)SF_in.get_current_file()).get_number();
-                else            aux(0) = i++;
+                else
+                    aux(0) = i++;
             }
             else
             {
-                if (!new_style) aux(0) = 0;
-                else            {store = false; i++;}
+                if (!new_style)
+                    aux(0) = 0;
+                else
+                {
+                    store = false;
+                    i++;
+                }
             }
-            if (store) DF_out.append_data_line(aux);
+            if (store)
+                DF_out.append_data_line(aux);
         }
     }
 
@@ -86,11 +94,11 @@ void extract_angles(MetaData &SF_in, DocFile &DF_out,
     checkAngle(ang3);
 
     DF_out.clear();
-    
+
     FileName auxFn;
-    
-    SF_in.getValue( MDL_IMAGE, auxFn );
-    
+
+    SF_in.getValue( MDL_IMAGE, auxFn, SF_in.firstObject() );
+
     DF_out.append_comment((std::string)"Angles for " + auxFn +
                           ".   Angle order: " + ang1 + " " + ang2 + " " + ang3);
 
@@ -98,29 +106,34 @@ void extract_angles(MetaData &SF_in, DocFile &DF_out,
     time_config();
     std::cerr << "Extracting angles ...\n";
     init_progress_bar(SF_in.size());
-	Image<double> P;
-	FileName fn_img;
+    Image<double> P;
+    FileName fn_img;
     FOR_ALL_OBJECTS_IN_METADATA(SF_in)
     {
-    	if (fromMetadata)
-    	{
-    		double rot; SF_in.getValue(MDL_ANGLEROT,rot);
-    		double tilt; SF_in.getValue(MDL_ANGLETILT,tilt);
-    		double psi; SF_in.getValue(MDL_ANGLEPSI,psi);
-			DF_out.append_angles(rot, tilt, psi,
-								 ang1, ang2, ang3);
-    	}
-    	else
-    	{
-			// Read image
-			SF_in.getValue( MDL_IMAGE, fn_img);
-			if (fn_img=="") break;
-			P.readApplyGeo(fn_img,SF_in,objId,false);
-			DF_out.append_angles(P.rot(), P.tilt(), P.psi(),
-								 ang1, ang2, ang3);
-    	}
+        if (fromMetadata)
+        {
+            double rot;
+            SF_in.getValue(MDL_ANGLEROT,rot, __iter.objId);
+            double tilt;
+            SF_in.getValue(MDL_ANGLETILT,tilt, __iter.objId);
+            double psi;
+            SF_in.getValue(MDL_ANGLEPSI,psi, __iter.objId);
+            DF_out.append_angles(rot, tilt, psi,
+                                 ang1, ang2, ang3);
+        }
+        else
+        {
+            // Read image
+            SF_in.getValue( MDL_IMAGE, fn_img, __iter.objId);
+            if (fn_img=="")
+                break;
+            P.readApplyGeo(fn_img,SF_in,__iter.objId, false);
+            DF_out.append_angles(P.rot(), P.tilt(), P.psi(),
+                                 ang1, ang2, ang3);
+        }
         i++;
-        if (i % 10 == 0) progress_bar(i);
+        if (i % 10 == 0)
+            progress_bar(i);
     }
 
     progress_bar(SF_in.size());
@@ -132,17 +145,21 @@ void rename_for_Spider(MetaData &SF_in, MetaData &SF_out, const FileName &fn_roo
 {
     FileName fn_in, fn_out;
     int counter = 1;
+    size_t id;
 
     FOR_ALL_OBJECTS_IN_METADATA(SF_out)
     {
-    	SF_in.getValue( MDL_IMAGE, fn_in);
-        if (fn_in=="") break;
+        SF_in.getValue( MDL_IMAGE, fn_in, __iter.objId);
+        if (fn_in=="")
+            break;
         fn_out = fn_root + integerToString(counter, 5);
-        if (out_ext == "") fn_out = fn_out.addExtension(fn_in.getExtension());
-        else             fn_out = fn_out.addExtension(out_ext);
-        SF_out.addObject();
-        SF_out.setValue( MDL_IMAGE, fn_out);
-        SF_out.setValue( MDL_ENABLED, 1);
+        if (out_ext == "")
+            fn_out = fn_out.addExtension(fn_in.getExtension());
+        else
+            fn_out = fn_out.addExtension(out_ext);
+        id = SF_out.addObject();
+        SF_out.setValue( MDL_IMAGE, fn_out, id);
+        SF_out.setValue( MDL_ENABLED, 1, id);
 
         std::cout << "Renaming " << fn_in << " as " << fn_out << std::endl;
         std::string command = (std::string)"cp " + fn_in + " " + fn_out;
