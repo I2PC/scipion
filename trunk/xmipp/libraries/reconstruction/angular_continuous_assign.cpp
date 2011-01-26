@@ -155,7 +155,7 @@ void ProgAngularContinuousAssign::produce_side_info()
 }
 
 // Predict =================================================================
-void ProgAngularContinuousAssign::processImage(const FileName &fnImg, const FileName &fnImgOut, long int objId)
+void ProgAngularContinuousAssign::processImage(const FileName &fnImg, const FileName &fnImgOut, size_t objId)
 {
     // Read the image and take its angles from the Metadata
     // if they are available. If not, take them from the header.
