@@ -100,11 +100,11 @@ int main(int argc, char **argv)
     FOR_ALL_OBJECTS_IN_METADATA(SF)
     {
         std::string image_name;
-        SF.getValue(MDL_IMAGE,image_name);
+        SF.getValue(MDL_IMAGE,image_name,__iter.objId);
         if (verb)
             std::cout << "generating points for image " << image_name << "......" << std::endl;
         Image<double> image;
-        image.readApplyGeo(image_name,SF,objId); // reads image
+        image.readApplyGeo(image_name,SF,__iter.objId); // reads image
 
         // Extract the data
         image().setXmippOrigin();  // sets origin at the center of the image.
