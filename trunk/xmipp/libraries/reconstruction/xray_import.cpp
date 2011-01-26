@@ -346,7 +346,7 @@ void ProgXrayImport::run()
     FOR_ALL_OBJECTS_IN_METADATA(MDSorted)
     {
         double tilt;
-        MDSorted.getValue(MDL_ANGLETILT,tilt);
+        MDSorted.getValue(MDL_ANGLETILT,tilt,__iter.objId);
         fhTlt << tilt << std::endl;
     }
     fhTlt.close();
