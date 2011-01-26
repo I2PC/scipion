@@ -1745,7 +1745,6 @@ initxmipp(void)
     addIntConstant(dict,"MDL_ORIGINZ",(long)MDL_ORIGINZ);
     addIntConstant(dict,"MDL_PMAX",(long)MDL_PMAX);
     addIntConstant(dict,"MDL_PSD",(long)MDL_PSD);
-    addIntConstant(dict,"MDL_Q0",(long)MDL_Q0);
     addIntConstant(dict,"MDL_RANDOMSEED",(long)MDL_RANDOMSEED);
     addIntConstant(dict,"MDL_REF3D",(long)MDL_REF3D);
     addIntConstant(dict,"MDL_REF",(long)MDL_REF);
