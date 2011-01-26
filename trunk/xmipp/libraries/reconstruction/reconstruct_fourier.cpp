@@ -171,9 +171,9 @@ void ProgRecFourier::produceSideinfo()
     }
 
     // Ask for memory for the output volume and its Fourier transform
-    SF.firstObject();
+    size_t objId = SF.firstObject();
     FileName fnImg;
-    SF.getValue(MDL_IMAGE,fnImg);
+    SF.getValue(MDL_IMAGE,fnImg,objId);
     Image<double> I;
     I.read(fnImg, false);
     int Ydim=YSIZE(I());
@@ -267,22 +267,21 @@ void ProgRecFourier::get_angles_for_image(const FileName &fn, double &rot,
         double &tilt, double &psi, double &xoff, double &yoff, bool &flip,
         double &weight, MetaData * docfile)
 {
-    std::vector<long int> found;
+    std::vector<size_t> found;
     (*docfile).findObjects(found,MDValueEQ(MDL_IMAGE,(std::string)fn));
 
     if (found.size()==1)
     {
-        (*docfile).goToObject(found[0]);
-        (*docfile).getValue(MDL_ANGLEROT,rot);
-        (*docfile).getValue(MDL_ANGLETILT,tilt);
-        (*docfile).getValue(MDL_ANGLEPSI,psi);
-        (*docfile).getValue(MDL_SHIFTX,xoff);
-        (*docfile).getValue(MDL_SHIFTY,yoff);
+        (*docfile).getValue(MDL_ANGLEROT,rot,found[0]);
+        (*docfile).getValue(MDL_ANGLETILT,tilt,found[0]);
+        (*docfile).getValue(MDL_ANGLEPSI,psi,found[0]);
+        (*docfile).getValue(MDL_SHIFTX,xoff,found[0]);
+        (*docfile).getValue(MDL_SHIFTY,yoff,found[0]);
         flip=0;
         weight=0;
-        (*docfile).getValue(MDL_FLIP,flip);
+        (*docfile).getValue(MDL_FLIP,flip,found[0]);
         // COSS, ROB porque no coger weight?
-        (*docfile).getValue(MDL_WEIGHT,weight);
+        (*docfile).getValue(MDL_WEIGHT,weight,found[0]);
     }
     else
         REPORT_ERROR(ERR_MD_NOOBJ, (std::string)"Prog_RecFourier_prm: Cannot find " + fn + " in docfile " + fn_doc);
@@ -310,7 +309,7 @@ void * ProgRecFourier::processImageThread( void * threadArgs )
     FourierTransformer localTransformerImg;
 
     MetaData * docFile = threadParams->docFile;
-    std::vector<long int> objId;
+    std::vector<size_t> objId;
 
     threadParams->selFile->findObjects(objId);
 
