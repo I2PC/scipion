@@ -105,7 +105,7 @@ void ProgCorrectBfactor::show()
 }
 
 
-void ProgCorrectBfactor::processImage(const FileName &fnImg, const FileName &fnImgOut, long int objId)
+void ProgCorrectBfactor::processImage(const FileName &fnImg, const FileName &fnImgOut, size_t objId)
 {
     Image<double> vol;
     vol.read(fnImg);
