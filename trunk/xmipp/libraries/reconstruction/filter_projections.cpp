@@ -263,7 +263,7 @@ void * filterByNormalizationThread(void *args)
         {
             // Get the experimental image
             DF_in_local.getValue(MDL_IMAGE,fnAux,i+1);
-            I.readApplyGeo(DF_in, i+1);
+            I.readApplyGeo(DF_in_local, i+1);
             //selfTranslate(BSPLINE3,I(),vectorR2(I.Xoff(),I.Yoff()));
             //I.setShifts(0.0,0.0);
 

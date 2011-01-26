@@ -777,7 +777,6 @@ void Prog_tomograph_alignment::produceSideInfo()
         FOR_ALL_OBJECTS_IN_METADATA(SF)
         {
             SF.getValue( MDL_IMAGE, fn ,__iter.objId);
-            //FIXME: Check this
             imgaux.read(fn);
             if (difficult)
             {
@@ -2482,6 +2481,7 @@ double wrapperError(double *p, void *prm)
 #define DEBUG
 void Prog_tomograph_alignment::run()
 {
+    produceSideInfo();
     generateLandmarkSet();
     produceInformationFromLandmarks();
     Alignment *alignment=new Alignment(this);
