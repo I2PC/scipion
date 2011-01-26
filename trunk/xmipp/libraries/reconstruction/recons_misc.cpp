@@ -31,7 +31,7 @@
 #include <data/wavelet.h>
 
 /* Fill Reconstruction info structure -------------------------------------- */
-void build_recons_info(MetaData &selfile, MetaData &selctf,
+void build_recons_info(MetaData &selfile,
                        const FileName &fn_ctf, const SymList &SL,
                        Recons_info * &IMG_Inf, bool do_not_use_symproj)
 {
@@ -56,15 +56,11 @@ void build_recons_info(MetaData &selfile, MetaData &selctf,
     {
         is_there_ctf = true;
         is_ctf_unique = true;
-        if (fn_ctf.isMetaData())
-        {
-            is_ctf_unique = false;
-            int truectf = selctf.size();
-            selctf.firstObject();
-            int numctf = truectf * (SL.SymsNo() + 1);
-            if (numctf != numIMG)
-                REPORT_ERROR(ERR_VALUE_INCORRECT, "Number of CTF and image files differ");
-        }
+    }
+    else if (selfile.containsLabel(MDL_CTFMODEL))
+    {
+        is_there_ctf = true;
+        is_ctf_unique = false;
     }
 
     if (IMG_Inf != NULL)
@@ -77,15 +73,11 @@ void build_recons_info(MetaData &selfile, MetaData &selctf,
     init_progress_bar(trueIMG);
     FOR_ALL_OBJECTS_IN_METADATA(selfile)
     {
-        selfile.getValue(MDL_IMAGE,fn_proj);
+        selfile.getValue(MDL_IMAGE,fn_proj,__iter.objId);
         if (is_there_ctf && !is_ctf_unique)
-        {
-        	selctf.nextObject();
-        	selctf.getValue(MDL_CTFMODEL,fn_ctf1);
-        }
+        	selfile.getValue(MDL_CTFMODEL,fn_ctf1,__iter.objId);
         if (fn_proj != "")
         {
-            //read_proj.read(fn_proj, false, false, selfile);
         	read_proj.read(fn_proj, false, false);
             // Filling structure
             IMG_Inf[i].fn_proj = fn_proj;
@@ -126,7 +118,7 @@ void build_recons_info(MetaData &selfile, MetaData &selctf,
             }
         }
 
-        i ++; // I have processed one more image
+        ++i; // I have processed one more image
         if (i % 25 == 0)
             progress_bar(i);
     }

@@ -551,7 +551,7 @@ struct Recons_info
 /** Build from a Selection File and a Symmetry List.
     The result is stored in the Recons_info array which should point
     to NULL when it is not initialized. */
-void build_recons_info(MetaData &selfile, MetaData &selctf,
+void build_recons_info(MetaData &selfile,
     const FileName &fn_ctf, const SymList &SL, Recons_info * &IMG_Inf,
     bool do_not_use_symproj);
 

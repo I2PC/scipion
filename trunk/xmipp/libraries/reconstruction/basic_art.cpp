@@ -532,7 +532,7 @@ void sort_randomly(int numIMG, MultidimArray<int> &ordered_list)
 void Basic_ART_Parameters::produce_Side_Info(GridVolume &vol_basis0, int level,
         int rank)
 {
-    MetaData     selfile, selctf;
+    MetaData     selfile;
 
     /* If checking the variability --------------------------------------------- */
     if (variability_analysis)
@@ -578,16 +578,6 @@ void Basic_ART_Parameters::produce_Side_Info(GridVolume &vol_basis0, int level,
         ImgSize(selfile, projXdim, projYdim, idum, idumLong);
     }
 
-    /* Get the CTF correction file ----------------------------------------- */
-    if (fn_ctf != "")
-    {
-        selctf.read(fn_ctf);
-        selctf.removeObjects(MDValueEQ(MDL_ENABLED, -1));
-        if (selctf.size() != selfile.size())
-            REPORT_ERROR(ERR_MD_OBJECTNUMBER, "Basic_ART_Parameters: The number of images in "
-                         "the ctf and original selfiles do not match");
-    }
-
     /* Read symmetry file -------------------------------------------------- */
     if (level >= FULL)
     {
@@ -614,7 +604,7 @@ void Basic_ART_Parameters::produce_Side_Info(GridVolume &vol_basis0, int level,
     /* Fill ART_sort_info structure and Sort ------------------------------- */
     if (level >= FULL)
     {
-        build_recons_info(selfile, selctf, fn_ctf, SL, IMG_Inf,
+        build_recons_info(selfile, fn_ctf, SL, IMG_Inf,
                           do_not_use_symproj);
 
         if (!(tell&TELL_MANUAL_ORDER))
