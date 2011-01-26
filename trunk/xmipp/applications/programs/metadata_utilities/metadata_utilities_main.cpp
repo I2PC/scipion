@@ -177,10 +177,10 @@ protected:
             operationType = _convert2db;
 
         else if (strcmp(s,"count") == 0)
-                operationType = _count;
+            operationType = _count;
 
         else if (strcmp(s,"size") == 0)
-                operationType = _size;
+            operationType = _size;
     }
 
     void readParams()
@@ -275,6 +275,8 @@ public:
     void run()
     {
         FileName inFnImg,outFnImg;
+        size_t id;
+
         switch (operationType)
         {
         case _union:
@@ -297,7 +299,7 @@ public:
             break;
         case _sort:
             inMD1.read(inFileName1);
-          	outMD.sort(inMD1, _label);
+            outMD.sort(inMD1, _label);
             outMD.write(outFileName,mode);
             break;
         case _join:
@@ -315,10 +317,10 @@ public:
                     REPORT_ERROR(ERR_IO_NOPERM, "Run: Cannot create directory "+ tmpFileName);
             FOR_ALL_OBJECTS_IN_METADATA(inMD1)
             {
-                inMD1.getValue(MDL::str2Label(_label),inFnImg);
+                inMD1.getValue(MDL::str2Label(_label),inFnImg, __iter.objId);
                 outFnImg = inFnImg.removeDirectories();
-                outMD.addObject();
-                outMD.setValue(MDL::str2Label(_label),outFnImg);
+                id = outMD.addObject();
+                outMD.setValue(MDL::str2Label(_label),outFnImg, id);
                 outFnImg = tmpFileName + "/" + outFnImg;
                 inFnImg.copyFile(outFnImg);
             }
@@ -332,10 +334,10 @@ public:
                     REPORT_ERROR(ERR_IO_NOPERM, "Run: Cannot create directory "+ tmpFileName);
             FOR_ALL_OBJECTS_IN_METADATA(inMD1)
             {
-                inMD1.getValue(MDL::str2Label(_label),inFnImg);
+                inMD1.getValue(MDL::str2Label(_label),inFnImg, __iter.objId);
                 outFnImg = inFnImg.removeDirectories();
-                outMD.addObject();
-                outMD.setValue(MDL::str2Label(_label),outFnImg);
+                id = outMD.addObject();
+                outMD.setValue(MDL::str2Label(_label),outFnImg, id);
                 outFnImg = tmpFileName + "/" + outFnImg;
                 rename(inFnImg.c_str(),outFnImg.c_str());
             }
@@ -345,7 +347,7 @@ public:
             inMD1.read(inFileName1);
             FOR_ALL_OBJECTS_IN_METADATA(inMD1)
             {
-                inMD1.getValue(MDL::str2Label(_label),inFnImg);
+                inMD1.getValue(MDL::str2Label(_label),inFnImg, __iter.objId);
                 remove(inFnImg.c_str());
                 std::cerr << "Remove file: " << inFnImg <<std::endl;
             }
@@ -387,9 +389,9 @@ public:
 int main(int argc, char **argv)
 {
 
-        ProgMetadataUtilities program;
-        program.read(argc, argv);
-        program.tryRun();
+    ProgMetadataUtilities program;
+    program.read(argc, argv);
+    program.tryRun();
 
 
 }
