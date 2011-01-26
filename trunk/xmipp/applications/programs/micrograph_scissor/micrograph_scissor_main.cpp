@@ -135,9 +135,10 @@ public:
             // Read angles
             double alpha_u, alpha_t, tilt_angle;
             auxMd.read(fn_angles);
-            auxMd.getValue(MDL_ANGLEPSI,alpha_u);
-            auxMd.getValue(MDL_ANGLEPSI2,alpha_t);
-            auxMd.getValue(MDL_ANGLETILT,tilt_angle);
+            size_t objId=auxMd.firstObject();
+            auxMd.getValue(MDL_ANGLEPSI,alpha_u,objId);
+            auxMd.getValue(MDL_ANGLEPSI2,alpha_t,objId);
+            auxMd.getValue(MDL_ANGLETILT,tilt_angle,objId);
 
             // Generate the images for the untilted image
             Micrograph m;

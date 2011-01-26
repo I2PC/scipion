@@ -84,14 +84,14 @@ int main(int argc, char **argv)
             SF.read(fn_sel);
         else
         {
-            SF.addObject();
-            SF.setValue(MDL_IMAGE,fn_in);
+            size_t objId=SF.addObject();
+            SF.setValue(MDL_IMAGE,fn_in,objId);
         }
         SF.firstObject();
         FOR_ALL_OBJECTS_IN_METADATA(SF)
         {
-            SF.getValue(MDL_IMAGE,fn_in);
-            image.readApplyGeo(fn_in,SF,objId);
+            SF.getValue(MDL_IMAGE,fn_in,__iter.objId);
+            image.readApplyGeo(fn_in,SF,__iter.objId);
             image().setXmippOrigin();
             mask_prm.generate_mask(image());
 

@@ -69,7 +69,7 @@ void ProgMakeSpectra::show()
 
 // Process an image --------------------------------------------------------
 void ProgMakeSpectra::processImage(const FileName &fnImg, const FileName &fnImgOut,
-	long int objId)
+	size_t objId)
 {
 	Image<double> I;
 	I.readApplyGeo(fnImg,mdIn,objId);
