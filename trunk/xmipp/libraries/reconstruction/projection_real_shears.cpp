@@ -1046,9 +1046,9 @@ int Projection_real_shears::write_projection_file(int numFile)
     //Projection save
     proj.write(fn_proj);
 
-    SF.addObject();
-    SF.setValue(MDL_IMAGE,fn_proj);
-    SF.setValue(MDL_ENABLED,1);
+    size_t objId = SF.addObject();
+    SF.setValue(MDL_IMAGE,fn_proj, objId);
+    SF.setValue(MDL_ENABLED,1, objId);
 
     if(display) progress_bar(numFile);
 
@@ -1064,12 +1064,14 @@ int Projection_real_shears::read_a_DocLine()
     double shiftX=0;
     double shiftY=0;
 
-    DF.getValue(MDL_SHIFTX,shiftX);
-    DF.getValue(MDL_SHIFTY,shiftY);
+    size_t objId = SF.firstObject();
 
-    DF.getValue(MDL_ANGLEROT,rot);
-    DF.getValue(MDL_ANGLETILT,tilt);
-    DF.getValue(MDL_ANGLEPSI,psi);
+    DF.getValue(MDL_SHIFTX,shiftX,objId);
+    DF.getValue(MDL_SHIFTY,shiftY,objId);
+
+    DF.getValue(MDL_ANGLEROT,rot,objId);
+    DF.getValue(MDL_ANGLETILT,tilt,objId);
+    DF.getValue(MDL_ANGLEPSI,psi,objId);
 
     Data.InitPsiThetaPhi[2] = -DEG2RAD(rot);
     Data.InitPsiThetaPhi[1] = -DEG2RAD(tilt);
