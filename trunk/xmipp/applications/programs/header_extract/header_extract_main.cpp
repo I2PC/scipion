@@ -63,7 +63,7 @@ protected:
         mdIn.write(fn_out,mode);
     }
 
-    void processImage(const FileName &fnImg, const FileName &fnImgOut, long int objId)
+    void processImage(const FileName &fnImg, const FileName &fnImgOut, size_t objId)
     {
         Image<double> img;
         img.readApplyGeo(fnImg,mdIn,objId);
@@ -74,14 +74,14 @@ protected:
             xx = (double)ROUND(xx);
             yy = (double)ROUND(yy);
         }
-        mdIn.setValue(MDL_ANGLEROT,  img.rot());
-        mdIn.setValue(MDL_ANGLETILT, img.tilt());
-        mdIn.setValue(MDL_ANGLEPSI,  img.psi());
-        mdIn.setValue(MDL_SHIFTX,    xx );
-        mdIn.setValue(MDL_SHIFTY,    yy );
-        mdIn.setValue(MDL_WEIGHT,    img.weight());
-        mdIn.setValue(MDL_SCALE,     img.scale());
-        mdIn.setValue(MDL_FLIP,      img.flip());
+        mdIn.setValue(MDL_ANGLEROT,  img.rot(),objId);
+        mdIn.setValue(MDL_ANGLETILT, img.tilt(),objId);
+        mdIn.setValue(MDL_ANGLEPSI,  img.psi(),objId);
+        mdIn.setValue(MDL_SHIFTX,    xx ,objId);
+        mdIn.setValue(MDL_SHIFTY,    yy ,objId);
+        mdIn.setValue(MDL_WEIGHT,    img.weight(),objId);
+        mdIn.setValue(MDL_SCALE,     img.scale(),objId);
+        mdIn.setValue(MDL_FLIP,      img.flip(),objId);
     }
 }
 ;// end of class ProgHeaderExtract
