@@ -859,19 +859,19 @@ void MetaData::read(const FileName &_filename,
 
 bool MetaData::readPlain(const FileName &inFile, const std::vector<MDLabel> &columnLabels)
 {
-//    try
-//    {
-//        std::ifstream is(inFile.data(), std::ios_base::in);
-//        activeLabels = columnLabels;
-//        MDRow row;
-//
-//        _readRows(is, columnLabels, false);
-//        return true;
-//    }
-//    catch (XmippError xe)
-//    {
-//        return false;
-//    }
+    //    try
+    //    {
+    //        std::ifstream is(inFile.data(), std::ios_base::in);
+    //        activeLabels = columnLabels;
+    //        MDRow row;
+    //
+    //        _readRows(is, columnLabels, false);
+    //        return true;
+    //    }
+    //    catch (XmippError xe)
+    //    {
+    //        return false;
+    //    }
 }
 
 void MetaData::_read(const FileName &filename,
@@ -1333,6 +1333,12 @@ bool MDIterator::next()
 
     objId = *iter;
     return true;
+}
+bool MDIterator::has_next()
+{
+    if (objects == NULL)
+        return false;
+    return (iter == objects->end());
 }
 
 WriteModeMetaData metadataModeConvert (String mode)

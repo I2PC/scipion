@@ -82,8 +82,8 @@ void ShowCL2D::readFile(const FileName &_fn_root,
         FOR_ALL_OBJECTS_IN_METADATA(mD)
         {
             FileName fnOriginal, fnSel;
-            mD.getValue(MDL_IMAGE_ORIGINAL,fnOriginal);
-            mD.getValue(MDL_IMAGE_CLASS_GROUP,fnSel);
+            mD.getValue(MDL_IMAGE_ORIGINAL,fnOriginal, __iter.objId);
+            mD.getValue(MDL_IMAGE_CLASS_GROUP,fnSel, __iter.objId);
        	    SFcv[i].read(fnSel);
             hisAssigned[i]=integerToString(SFcv[i].size());
             originalImages[i]=fnOriginal;
@@ -169,12 +169,13 @@ void ShowCL2D::extractRepresented(MetaData &SF_represented)
     {
         if (cellMarks[i])
         {
+          size_t id;
             FOR_ALL_OBJECTS_IN_METADATA(SFcv[i])
             {
                 FileName fnImg;
-                SFcv[i].getValue(MDL_IMAGE,fnImg);
-                SF_represented.addObject();
-                SF_represented.setValue(MDL_IMAGE,fnImg);
+                SFcv[i].getValue(MDL_IMAGE,fnImg,__iter.objId);
+                id = SF_represented.addObject();
+                SF_represented.setValue(MDL_IMAGE,fnImg, id);
             }
             // SF_represented.unionDistinct(SFcv[i]);
         }

@@ -771,6 +771,9 @@ public:
      * return false if there aren't more elements to iterate.
      */
     bool next();
+    /** Function to check if exist next element
+     */
+    bool has_next();
 
     friend class MetaData;
 }
