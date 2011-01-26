@@ -613,7 +613,7 @@ void ProgNormalize::preProcess()
     }
 }
 
-void ProgNormalize::processImage(const FileName &fnImg, const FileName &fnImgOut, long int objId)
+void ProgNormalize::processImage(const FileName &fnImg, const FileName &fnImgOut, size_t objId)
 {
     Image<double> I;
     if (apply_geo)

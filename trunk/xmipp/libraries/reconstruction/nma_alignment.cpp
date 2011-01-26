@@ -360,7 +360,7 @@ ObjFunc_nma_alignment::ObjFunc_nma_alignment(int _t, int _n)
 {
 }
 
-void ProgNmaAlignment::processImage(const FileName &fnImg, const FileName &fnImgOut, long int objId)
+void ProgNmaAlignment::processImage(const FileName &fnImg, const FileName &fnImgOut, size_t objId)
 {
     double rhoStart=1e-0, rhoEnd=1e-3;
 
