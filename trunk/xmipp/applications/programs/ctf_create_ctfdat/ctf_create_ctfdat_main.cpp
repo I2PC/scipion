@@ -72,22 +72,22 @@ public:
         addParamsLine("                         : this file may have either a single column (defocus)");
         addParamsLine("                         : or three columns (defocusU, defocusV, azimuth_angle)");
         addParamsLine(" == MODE 2: == ");
-        addParamsLine("  [--ctfs <selfile>]     : Selfile of CTF param files for each micropgrah ");
+        addParamsLine("  [--ctfs <selfile>]     : Selfile of CTF param files for each micrograph ");
     }
 
 
     void run()
     {
-        MetaData SFsel, SFind, SFctf, ctfdat;
+        MetaData mdIn, SFind, mdCtf, ctfdat;
         FileName fnsel, fnimg, fnctf;
 
-        SFsel.read(fn_sel);
+        mdIn.read(fn_sel);
 
-        if (do_mode2)
+        if (do_mode2)//Mode 2: read directly the ctf file
         {
-            SFctf.read(fn_ctf);
+            mdCtf.read(fn_ctf);
         }
-        else
+        else //Mode 1: create ctf file from defocus file and a common ctfparam file
         {
             // Write param files for each micrograph to disc and make an internal SFctf
             CTFDescription ctf;
@@ -99,17 +99,17 @@ public:
             ctf.enable_CTF = true;
             ctf.enable_CTFnoise = false;
 
-            if (SFsel.size() != DFdef.size())
+            if (mdIn.size() != DFdef.size())
                 REPORT_ERROR(ERR_MD_OBJECTNUMBER,
                              "Selfile -1 and docfile -doc have unequal number of entries! ");
 
             FOR_ALL_OBJECTS_IN_METADATA(DFdef)
             {
                 ii++;
-                DFdef.getValue(MDL_CTF_DEFOCUSU,defU);
-                if (!DFdef.getValue(MDL_CTF_DEFOCUSU,defV))
+                DFdef.getValue(MDL_CTF_DEFOCUSU, defU, __iter.objId);
+                if (!DFdef.getValue(MDL_CTF_DEFOCUSU,defV,__iter.objId))
                     defV=defU;
-                if (!DFdef.getValue(MDL_CTF_DEFOCUS_ANGLE,azi))
+                if (!DFdef.getValue(MDL_CTF_DEFOCUS_ANGLE,azi,__iter.objId))
                     azi=0;
 
                 ctf.DeltafU=defU;
@@ -117,28 +117,28 @@ public:
                 ctf.azimuthal_angle=azi;
                 fnctf.compose(fn_out,ii,"ctfparam");
                 ctf.write(fnctf);
-                SFctf.addObject();
-                SFctf.setValue(MDL_CTFMODEL,fnctf);
-                std::cerr<<" Saved CTF parameter file "<<fnctf<<" for micrograph number "
-                <<ii<<std::endl;
+                mdCtf.setValue(MDL_CTFMODEL,fnctf, mdCtf.addObject());
+                std::cerr<<" Saved CTF parameter file "<<fnctf<<" for micrograph number "<<ii<<std::endl;
             }
         }
 
         // For both modes
-        if (SFsel.size() != SFctf.size())
+        if (mdIn.size() != mdCtf.size())
             REPORT_ERROR(ERR_MD_OBJECTNUMBER, "Selfiles of options -i and -ctfs have unequal number of entries! ");
-        SFctf.firstObject();
-        FOR_ALL_OBJECTS_IN_METADATA(SFsel)
+
+        size_t id;
+
+        FOR_ALL_OBJECTS_IN_METADATA2(mdIn, mdCtf)
         {
-            SFsel.getValue(MDL_SELFILE,fnsel);
-            SFctf.getValue(MDL_IMAGE,fnctf);
+            mdIn.getValue(MDL_SELFILE,fnsel,__iter.objId);
+            mdCtf.getValue(MDL_IMAGE,fnctf,__iter2.objId);
             SFind.read(fnsel);
             FOR_ALL_OBJECTS_IN_METADATA(SFind)
             {
-                SFind.getValue(MDL_IMAGE,fnimg);
-                ctfdat.addObject();
-                ctfdat.setValue(MDL_IMAGE,fnimg);
-                ctfdat.setValue(MDL_CTFMODEL,fnctf);
+                SFind.getValue(MDL_IMAGE,fnimg,__iter.objId);
+                id = ctfdat.addObject();
+                ctfdat.setValue(MDL_IMAGE,fnimg, id);
+                ctfdat.setValue(MDL_CTFMODEL,fnctf, id);
             }
         }
 
@@ -153,16 +153,8 @@ int main(int argc, char **argv)
 {
 
     ProgCtfCreateCtfdat program;
-    try
-    {
-        program.read(argc, argv);
-        program.run();
-    }
-    catch (XmippError xe)
-    {
-        std::cerr << xe;
-        return 1;
-    }
+    program.read(argc, argv);
+    program.tryRun();
     return 0;
 }
 

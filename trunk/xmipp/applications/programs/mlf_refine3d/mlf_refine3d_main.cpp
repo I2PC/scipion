@@ -165,7 +165,7 @@ int main(int argc, char **argv)
                 int c = 0;
                 FOR_ALL_OBJECTS_IN_METADATA(ML2D_prm.MDref)
                 {
-                    ML2D_prm.MDref.getValue(MDL_IMAGE, fn_img);
+                    ML2D_prm.MDref.getValue(MDL_IMAGE, fn_img,__iter.objId);
                     ML2D_prm.Iref[c].read(fn_img);
                     ML2D_prm.Iref[c]().setXmippOrigin();
                     c++;
