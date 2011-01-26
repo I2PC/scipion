@@ -201,15 +201,15 @@ int PROJECT_XR_Effectively_project(ParametersProjectionXR &prm,
 
         proj.setEulerAngles(rot,tilt,psi);
 
-        DF_movements.addObject();
-        DF_movements.setValue(MDL_ANGLEROT,tRot);
-        DF_movements.setValue(MDL_ANGLETILT,tTilt);
-        DF_movements.setValue(MDL_ANGLEPSI,tPsi);
-        DF_movements.setValue(MDL_ANGLEROT2,rot);
-        DF_movements.setValue(MDL_ANGLETILT2,tilt);
-        DF_movements.setValue(MDL_ANGLEPSI2,psi);
-        DF_movements.setValue(MDL_SHIFTX,shiftX);
-        DF_movements.setValue(MDL_SHIFTY,shiftY);
+        size_t objId=DF_movements.addObject();
+        DF_movements.setValue(MDL_ANGLEROT,tRot,objId);
+        DF_movements.setValue(MDL_ANGLETILT,tTilt,objId);
+        DF_movements.setValue(MDL_ANGLEPSI,tPsi,objId);
+        DF_movements.setValue(MDL_ANGLEROT2,rot,objId);
+        DF_movements.setValue(MDL_ANGLETILT2,tilt,objId);
+        DF_movements.setValue(MDL_ANGLEPSI2,psi,objId);
+        DF_movements.setValue(MDL_SHIFTX,shiftX,objId);
+        DF_movements.setValue(MDL_SHIFTY,shiftY,objId);
 
         IMGMATRIX(proj).addNoise(prm.Npixel_avg, prm.Npixel_dev, "gaussian");
 
@@ -223,9 +223,9 @@ int PROJECT_XR_Effectively_project(ParametersProjectionXR &prm,
         proj.write(fn_proj);
         numProjs++;
         idx++;
-        SF.addObject();
-        SF.setValue(MDL_IMAGE,fn_proj);
-        SF.setValue(MDL_ENABLED,1);
+        objId=SF.addObject();
+        SF.setValue(MDL_IMAGE,fn_proj,objId);
+        SF.setValue(MDL_ENABLED,1,objId);
     }
     if (!(prm.tell&TELL_SHOW_ANGLES))
         progress_bar(expectedNumProjs);
