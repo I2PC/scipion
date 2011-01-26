@@ -59,7 +59,7 @@ protected:
         is_first = true;
     }
 
-    void processImage(const FileName &fnImg, const FileName &fnImgOut, long int objId)
+    void processImage(const FileName &fnImg, const FileName &fnImgOut, size_t objId)
     {
         Image<double> img;
         img.readApplyGeo(fnImg,mdIn,objId);
