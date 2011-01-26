@@ -256,7 +256,7 @@ void ProgFourierFilter::show()
     }
 }
 
-void ProgFourierFilter::processImage(const FileName &fnImg, const FileName &fnImgOut, long int objId)
+void ProgFourierFilter::processImage(const FileName &fnImg, const FileName &fnImgOut, size_t objId)
 {
     static bool first = true;
 

@@ -103,7 +103,7 @@ protected:
     void readParams();
 
     /** Process one image */
-    void processImage(const FileName &fnImg, const FileName &fnImgOut, long int objId);
+    void processImage(const FileName &fnImg, const FileName &fnImgOut, size_t objId);
 
 public:
     /** Empty constructor */
