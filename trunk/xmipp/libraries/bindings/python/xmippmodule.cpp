@@ -603,14 +603,14 @@ static PyObject *
 MetaData_firstObject(PyObject *obj, PyObject *args, PyObject *kwargs)
 {
     MetaDataObject *self = (MetaDataObject*)obj;
-    return PyLong_FromLong(self->metadata->firstObject());
+    return PyLong_FromSsize_t(self->metadata->firstObject());
 }
 /* lastObject */
 static PyObject *
 MetaData_lastObject(PyObject *obj, PyObject *args, PyObject *kwargs)
 {
     MetaDataObject *self = (MetaDataObject*)obj;
-    return PyLong_FromLong(self->metadata->lastObject());
+    return PyLong_FromSsize_t(self->metadata->lastObject());
 }
 /* size */
 static PyObject *
@@ -619,7 +619,7 @@ MetaData_size(PyObject *obj, PyObject *args, PyObject *kwargs)
     try
     {
         MetaDataObject *self = (MetaDataObject*)obj;
-        return PyLong_FromLong(self->metadata->size());
+        return PyLong_FromSsize_t(self->metadata->size());
     }
     catch (XmippError xe)
     {
@@ -1087,7 +1087,6 @@ static PyObject *
 MetaData_importObjects(PyObject *obj, PyObject *args, PyObject *kwargs)
 {
     int label;
-    //size_t objectId=BAD_OBJID; Is this needed?
     PyObject *pyMd = NULL;
     PyObject *pyQuery = NULL;
 
@@ -1151,7 +1150,6 @@ static PyObject *
 MetaData_unionAll(PyObject *obj, PyObject *args, PyObject *kwargs)
 {
     int label;
-    //size_t objectId;
     PyObject *pyMd = NULL;
     PyObject *pyQuery = NULL;
 
@@ -1181,7 +1179,6 @@ static PyObject *
 MetaData_intersection(PyObject *obj, PyObject *args, PyObject *kwargs)
 {
     int label;
-    //size_t objectId;
     PyObject *pyMd = NULL;
 
     if (PyArg_ParseTuple(args, "Oi", &pyMd, &label))
@@ -1636,7 +1633,7 @@ initxmipp(void)
     addIntConstant(dict,"LE",(long)LE);
     addIntConstant(dict,"MDL_UNDEFINED",(long)MDL_UNDEFINED);
     addIntConstant(dict,"MDL_FIRST_LABEL",(long)MDL_FIRST_LABEL);
-    addIntConstant(dict,"MDL_OBJID",(long)MDL_OBJID);
+    addIntConstant(dict,"MDL_OBJID",(size_t)MDL_OBJID);
     addIntConstant(dict,"MDL_ANGLEPSI2",(long)MDL_ANGLEPSI2);
     addIntConstant(dict,"MDL_ANGLEPSI",(long)MDL_ANGLEPSI);
     addIntConstant(dict,"MDL_ANGLEROT2",(long)MDL_ANGLEROT2);
