@@ -99,11 +99,11 @@ public:
                 if (thereIsEnable)
                 {
                     int enabled;
-                    SF.getValue(MDL_ENABLED,enabled);
+                    SF.getValue(MDL_ENABLED,enabled,__iter.objId);
                     if (enabled==-1)
                         continue;
                 }
-                img.readApplyGeo(SF,objId);
+                img.readApplyGeo(SF,__iter.objId);
                 img().setXmippOrigin();
                 img().statisticsAdjust(0,1);
 
@@ -139,7 +139,7 @@ public:
                 if (thereIsEnable)
                 {
                     int enabled;
-                    SF.getValue(MDL_ENABLED,enabled);
+                    SF.getValue(MDL_ENABLED,enabled,__iter.objId);
                     if (enabled==-1)
                     {
                         Zscore(imgno)=1000;
@@ -255,16 +255,16 @@ int main(int argc, char **argv)
                 if (enabled==-1)
                     continue;
             }
-            SFout.addObject();
-            SFout.setValue(MDL_IMAGE,fnImg);
-            SFout.setValue(MDL_ENABLED,1);
-            SFout.setValue(MDL_ZSCORE,finalZscore(isort));
+            size_t objId=SFout.addObject();
+            SFout.setValue(MDL_IMAGE,fnImg,objId);
+            SFout.setValue(MDL_ENABLED,1,objId);
+            SFout.setValue(MDL_ZSCORE,finalZscore(isort),objId);
             if (finalZscore(isort)<prm.cutoff && prm.cutoff>0)
             {
-                SFoutGood.addObject();
-                SFoutGood.setValue(MDL_IMAGE,fnImg);
-                SFoutGood.setValue(MDL_ENABLED,1);
-                SFoutGood.setValue(MDL_ZSCORE,finalZscore(isort));
+                size_t objId2=SFoutGood.addObject();
+                SFoutGood.setValue(MDL_IMAGE,fnImg,objId2);
+                SFoutGood.setValue(MDL_ENABLED,1,objId2);
+                SFoutGood.setValue(MDL_ZSCORE,finalZscore(isort),objId2);
             }
             if (verbose)
             {
