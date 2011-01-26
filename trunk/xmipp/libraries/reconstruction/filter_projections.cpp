@@ -154,7 +154,7 @@ void Prog_Filter_Projections_Parameters::show()
 void Prog_Filter_Projections_Parameters::produce_side_info()
 {
     DF_in.read(fn_in);
-    int Nimg=DF_in.size();
+    int Nimg =  DF_in.size();
 
     if (percentil_score>0)
     {
@@ -183,14 +183,12 @@ void Prog_Filter_Projections_Parameters::produce_side_info()
 
     if (percentil_normalization>0)
     {
-        //TODO: CHECK?????
         V.read(fn_vol);
         V().setXmippOrigin();
 
         Image<double> I;
         FileName fnAux;
-        DF_in.getValue(MDL_IMAGE,fnAux, DF_in.firstObject());
-        //TODO: CHECK?????
+        DF_in.getValue(MDL_IMAGE, fnAux, DF_in.firstObject());
         I.read(fnAux);
         I().setXmippOrigin();
 
@@ -265,9 +263,9 @@ void * filterByNormalizationThread(void *args)
         {
             // Get the experimental image
             DF_in_local.getValue(MDL_IMAGE,fnAux,i+1);
-            I.read(fnAux);
-            selfTranslate(BSPLINE3,I(),vectorR2(I.Xoff(),I.Yoff()));
-            I.setShifts(0.0,0.0);
+            I.readApplyGeo(DF_in, i+1);
+            //selfTranslate(BSPLINE3,I(),vectorR2(I.Xoff(),I.Yoff()));
+            //I.setShifts(0.0,0.0);
 
             // Get the corresponding theoretical projection
             Projection P;
