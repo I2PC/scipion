@@ -106,7 +106,7 @@ int main(int argc, char **argv)
         SF.removeObjects(MDValueEQ(MDL_ENABLED, -1));
         FOR_ALL_OBJECTS_IN_METADATA(SF)
         {
-            SF.getValue(MDL_IMAGE,image_name);
+            SF.getValue(MDL_IMAGE,image_name, __iter.objId);
         	if (verb)
                 std::cout << "generating points for image " << image_name << "......" << std::endl;
 

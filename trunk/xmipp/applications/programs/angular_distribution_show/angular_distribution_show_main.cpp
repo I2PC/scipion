@@ -85,7 +85,7 @@ int main(int argc, char *argv[])
             FOR_ALL_OBJECTS_IN_METADATA(angles)
             {
                 double w;
-                angles.getValue(MDL_WEIGHT,w);
+                angles.getValue(MDL_WEIGHT,w,__iter.objId);
                 wmax=XMIPP_MAX(w,wmax);
             }
         }

@@ -28,19 +28,7 @@
 int main(int argc, char **argv)
 {
     Prog_align_dual prm;
-    try {
-        prm.read(argc,argv);
-    } catch (XmippError XE) {
-        std::cout << XE << std::endl;
-        prm.usage();
-        return 1;
-    }
-
-    try {
-        prm.run();
-    } catch (XmippError XE) {
-        std::cout << XE << std::endl;
-        return 1;
-    }
+    prm.read(argc,argv);
+    prm.run();
     return 0;
 }

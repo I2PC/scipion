@@ -28,15 +28,7 @@
 int main(int argc, char **argv)
 {
     Prog_tomograph_alignment prm;
-    try
-    {
-        prm.read(argc,argv);
-        prm.produceSideInfo();
-        prm.tryRun();
-    }
-    catch (XmippError XE)
-    {
-        std::cout << XE;
-    }
+    prm.read(argc,argv);
+    prm.tryRun();
     return 0;
 }

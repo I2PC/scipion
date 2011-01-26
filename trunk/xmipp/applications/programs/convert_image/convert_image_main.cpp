@@ -166,9 +166,9 @@ protected:
                 {
                     fnTemp.compose(k, fn_in);
 
-                    mdIn.addObject();
-                    mdIn.setValue(MDL_IMAGE, fnTemp);
-                    mdIn.setValue(MDL_ENABLED, 1);
+                    size_t id = mdIn.addObject();
+                    mdIn.setValue(MDL_IMAGE, fnTemp, id);
+                    mdIn.setValue(MDL_ENABLED, 1, id);
                 }
                 imIn.read(fn_in,true,-1,true);
                 imOut = new ImageGeneric(outDataT);
