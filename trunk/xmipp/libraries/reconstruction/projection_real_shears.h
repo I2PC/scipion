@@ -166,7 +166,7 @@ class Projection_real_shears
         int start_to_process();
 
         ///Reads a DocLine and fills Data fields
-        int read_a_DocLine();
+        int read_a_DocLine(size_t objId);
 
         ///Writes the projection file obtained
         int write_projection_file(int numFile);

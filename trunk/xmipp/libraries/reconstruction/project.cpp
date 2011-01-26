@@ -420,7 +420,7 @@ void generate_angles(int ExtProjs, const Angle_range &range,
     double ang;
     int   N1, N2;
     int   i, j, k;
-    long int   iproj, idx;
+    size_t iproj, idx;
     int   limit;
 
     // Select loop limit ....................................................
@@ -512,45 +512,45 @@ void generate_angles(int ExtProjs, const Angle_range &range,
                         iproj = proj_number(ExtProjs, j, k, i)+prm.starting;
                         break;
                     }
-                    long int idx_tmp=DF.gotoFirstObject(MDValueEQ(MDL_OBJID,iproj));
+                    long int idx_tmp=DF.firstObject(MDValueEQ(MDL_OBJID,iproj));
                     if (idx_tmp==NO_OBJECTS_STORED || idx_tmp==NO_OBJECT_FOUND)
                     {
-                        DF.addObject(iproj);
-                        //DF.setValue(MDL_OBJID,iproj);
+                        idx_tmp=DF.addObject();
+                        DF.setValue(MDL_OBJID,iproj,idx_tmp);
                     }
                     switch (idx)
                     {
                     case 0:
-                        DF.setValue(MDL_ANGLEROT,ang);
+                        DF.setValue(MDL_ANGLEROT,ang,idx_tmp);
                         break;
                     case 1:
-                        DF.setValue(MDL_ANGLETILT,ang);
+                        DF.setValue(MDL_ANGLETILT,ang,idx_tmp);
                         break;
                     case 2:
-                        DF.setValue(MDL_ANGLEPSI,ang);
+                        DF.setValue(MDL_ANGLEPSI,ang,idx_tmp);
                         break;
                     }
                 }
         }
         else
         {
-            long int iproj=ExtProjs + i + prm.starting;
-            unsigned long int dfidx=DF.gotoFirstObject(MDValueEQ(MDL_OBJID,iproj));
+            size_t iproj=ExtProjs + i + prm.starting;
+            unsigned long int dfidx=DF.firstObject(MDValueEQ(MDL_OBJID,iproj));
             if (dfidx==NO_OBJECTS_STORED || dfidx==NO_OBJECT_FOUND)
             {
-                DF.addObject(dfidx);
-                //DF.setValue(MDL_OBJID,iproj);
+            	dfidx=DF.addObject();
+                DF.setValue(MDL_OBJID,iproj,dfidx);
             }
             switch (idx)
             {
             case 0:
-                DF.setValue(MDL_ANGLEROT,ang);
+                DF.setValue(MDL_ANGLEROT,ang,dfidx);
                 break;
             case 1:
-                DF.setValue(MDL_ANGLETILT,ang);
+                DF.setValue(MDL_ANGLETILT,ang,dfidx);
                 break;
             case 2:
-                DF.setValue(MDL_ANGLEPSI,ang);
+                DF.setValue(MDL_ANGLEPSI,ang,dfidx);
                 break;
             }
         }
@@ -601,16 +601,16 @@ void generate_even_angles(int ExtProjs, int Nrottilt, MetaData &DF,
                 else
                     psi = rnd_unif(prm.psi_range.ang0, prm.psi_range.angF);
 
-                long int iproj = ExtProjs + N + Nrottilt * k;
-                unsigned long int idx_tmp=DF.gotoFirstObject(MDValueEQ(MDL_OBJID,iproj));
+                size_t iproj = ExtProjs + N + Nrottilt * k;
+                size_t idx_tmp=DF.firstObject(MDValueEQ(MDL_OBJID,iproj));
                 if (idx_tmp==NO_OBJECTS_STORED || idx_tmp==NO_OBJECT_FOUND)
                 {
-                    DF.addObject(iproj);
-                    //DF.setValue(MDL_OBJID,iproj);
+                	idx_tmp=DF.addObject();
+                    DF.setValue(MDL_OBJID,iproj,idx_tmp);
                 }
-                DF.setValue(MDL_ANGLEROT,rot);
-                DF.setValue(MDL_ANGLETILT,tilt);
-                DF.setValue(MDL_ANGLEPSI,psi);
+                DF.setValue(MDL_ANGLEROT,rot,idx_tmp);
+                DF.setValue(MDL_ANGLETILT,tilt,idx_tmp);
+                DF.setValue(MDL_ANGLEPSI,psi,idx_tmp);
             }
             N++;
         }
@@ -697,13 +697,13 @@ int Assign_angles(MetaData &DF, const Projection_Parameters &prm,
                 FOR_ALL_OBJECTS_IN_METADATA(DF_aux)
                 {
                     double rot,tilt,psi;
-                    DF_aux.getValue(MDL_ANGLEROT,rot);
-                    DF_aux.getValue(MDL_ANGLETILT,tilt);
-                    DF_aux.getValue(MDL_ANGLEPSI,psi);
-                    DF.addObject();
-                    DF.setValue(MDL_ANGLEROT,rot);
-                    DF.setValue(MDL_ANGLETILT,tilt);
-                    DF.setValue(MDL_ANGLEPSI,psi);
+                    DF_aux.getValue(MDL_ANGLEROT,rot,__iter.objId);
+                    DF_aux.getValue(MDL_ANGLETILT,tilt,__iter.objId);
+                    DF_aux.getValue(MDL_ANGLEPSI,psi,__iter.objId);
+                    size_t DFid=DF.addObject();
+                    DF.setValue(MDL_ANGLEROT,rot,DFid);
+                    DF.setValue(MDL_ANGLETILT,tilt,DFid);
+                    DF.setValue(MDL_ANGLEPSI,psi,DFid);
                 }
             }
         }
@@ -757,22 +757,25 @@ int PROJECT_Effectively_project(const Projection_Parameters &prm,
     DF_movements.setComment("First set of angles=actual angles; Second set of angles=noisy angles");
 
     int projIdx=prm.starting;
+    FileName fn_proj;              // Projection name
+    MDRow mdrow;
     FOR_ALL_OBJECTS_IN_METADATA(side.DF)
     {
         double rot, tilt, psi;         // Actual projecting angles
-        FileName fn_proj;              // Projection name
         fn_proj.compose(prm.fnProjectionSeed, projIdx++, prm.fn_projection_extension);
-        DF_movements.addObject(side.DF.getActiveObject());
-        DF_movements.setValue(MDL_IMAGE,fn_proj);
-        DF_movements.setValue(MDL_ENABLED,1);
+        side.DF.getRow(mdrow,__iter.objId);
+        size_t DFmov_objId=DF_movements.addObject();
+        DF_movements.setRow(mdrow,DFmov_objId);
+        DF_movements.setValue(MDL_IMAGE,fn_proj,DFmov_objId);
+        DF_movements.setValue(MDL_ENABLED,1,DFmov_objId);
 
         // Choose angles .....................................................
-        side.DF.getValue(MDL_ANGLEROT,rot);
-        side.DF.getValue(MDL_ANGLETILT,tilt);
-        side.DF.getValue(MDL_ANGLEPSI,psi);
-        DF_movements.setValue(MDL_ANGLEROT,rot);
-        DF_movements.setValue(MDL_ANGLETILT,tilt);
-        DF_movements.setValue(MDL_ANGLEPSI,psi);
+        side.DF.getValue(MDL_ANGLEROT,rot,__iter.objId);
+        side.DF.getValue(MDL_ANGLETILT,tilt,__iter.objId);
+        side.DF.getValue(MDL_ANGLEPSI,psi,__iter.objId);
+        DF_movements.setValue(MDL_ANGLEROT,rot,DFmov_objId);
+        DF_movements.setValue(MDL_ANGLETILT,tilt,DFmov_objId);
+        DF_movements.setValue(MDL_ANGLEPSI,psi,DFmov_objId);
         if (prm.tell&TELL_SHOW_ANGLES)
         {
             std::cout << rot << "\t" << tilt << "\t" << psi << std::endl;
@@ -834,9 +837,9 @@ int PROJECT_Effectively_project(const Projection_Parameters &prm,
         // Save ..............................................................
         proj.write(fn_proj);
         NumProjs++;
-        SF.addObject();
-        SF.setValue(MDL_IMAGE,fn_proj);
-        SF.setValue(MDL_ENABLED,1);
+        size_t objId=SF.addObject();
+        SF.setValue(MDL_IMAGE,fn_proj,objId);
+        SF.setValue(MDL_ENABLED,1,objId);
     }
     if (!(prm.tell&TELL_SHOW_ANGLES))
         progress_bar(side.DF.size());
@@ -869,25 +872,25 @@ int ROUT_project(Prog_Project_Parameters &prm, Projection &proj, MetaData &SF)
         FOR_ALL_OBJECTS_IN_METADATA(crystal_proj_prm.DF_shift)
         {
             double xcell, ycell;
-            crystal_proj_prm.DF_shift.getValue(MDL_CELLX,xcell);
-            crystal_proj_prm.DF_shift.getValue(MDL_CELLY,ycell);
-            crystal_proj_prm.DF_shift.setValue(MDL_CELLX,xcell*my_scale);
-            crystal_proj_prm.DF_shift.setValue(MDL_CELLY,ycell*my_scale);
+            crystal_proj_prm.DF_shift.getValue(MDL_CELLX,xcell,__iter.objId);
+            crystal_proj_prm.DF_shift.getValue(MDL_CELLY,ycell,__iter.objId);
+            crystal_proj_prm.DF_shift.setValue(MDL_CELLX,xcell*my_scale,__iter.objId);
+            crystal_proj_prm.DF_shift.setValue(MDL_CELLY,ycell*my_scale,__iter.objId);
 
             double x,y,z;
-            crystal_proj_prm.DF_shift.getValue(MDL_SHIFTX,x);
-            crystal_proj_prm.DF_shift.getValue(MDL_SHIFTY,y);
-            crystal_proj_prm.DF_shift.getValue(MDL_SHIFTZ,z);
-            crystal_proj_prm.DF_shift.setValue(MDL_SHIFTX,x*my_scale);
-            crystal_proj_prm.DF_shift.setValue(MDL_SHIFTY,y*my_scale);
-            crystal_proj_prm.DF_shift.setValue(MDL_SHIFTZ,z*my_scale);
+            crystal_proj_prm.DF_shift.getValue(MDL_SHIFTX,x,__iter.objId);
+            crystal_proj_prm.DF_shift.getValue(MDL_SHIFTY,y,__iter.objId);
+            crystal_proj_prm.DF_shift.getValue(MDL_SHIFTZ,z,__iter.objId);
+            crystal_proj_prm.DF_shift.setValue(MDL_SHIFTX,x*my_scale,__iter.objId);
+            crystal_proj_prm.DF_shift.setValue(MDL_SHIFTY,y*my_scale,__iter.objId);
+            crystal_proj_prm.DF_shift.setValue(MDL_SHIFTZ,z*my_scale,__iter.objId);
 
-            crystal_proj_prm.DF_shift.getValue(MDL_SHIFT_CRYSTALX,x);
-            crystal_proj_prm.DF_shift.getValue(MDL_SHIFT_CRYSTALY,y);
-            crystal_proj_prm.DF_shift.getValue(MDL_SHIFT_CRYSTALZ,z);
-            crystal_proj_prm.DF_shift.setValue(MDL_SHIFT_CRYSTALX,x*my_scale);
-            crystal_proj_prm.DF_shift.setValue(MDL_SHIFT_CRYSTALY,y*my_scale);
-            crystal_proj_prm.DF_shift.setValue(MDL_SHIFT_CRYSTALZ,z*my_scale);
+            crystal_proj_prm.DF_shift.getValue(MDL_SHIFT_CRYSTALX,x,__iter.objId);
+            crystal_proj_prm.DF_shift.getValue(MDL_SHIFT_CRYSTALY,y,__iter.objId);
+            crystal_proj_prm.DF_shift.getValue(MDL_SHIFT_CRYSTALZ,z,__iter.objId);
+            crystal_proj_prm.DF_shift.setValue(MDL_SHIFT_CRYSTALX,x*my_scale,__iter.objId);
+            crystal_proj_prm.DF_shift.setValue(MDL_SHIFT_CRYSTALY,y*my_scale,__iter.objId);
+            crystal_proj_prm.DF_shift.setValue(MDL_SHIFT_CRYSTALZ,z*my_scale,__iter.objId);
         }
     }
 

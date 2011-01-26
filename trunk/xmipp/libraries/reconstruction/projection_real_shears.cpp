@@ -1046,9 +1046,9 @@ int Projection_real_shears::write_projection_file(int numFile)
     //Projection save
     proj.write(fn_proj);
 
-    size_t objId = SF.addObject();
-    SF.setValue(MDL_IMAGE,fn_proj, objId);
-    SF.setValue(MDL_ENABLED,1, objId);
+    size_t objId=SF.addObject();
+    SF.setValue(MDL_IMAGE,fn_proj,objId);
+    SF.setValue(MDL_ENABLED,1,objId);
 
     if(display) progress_bar(numFile);
 
@@ -1056,15 +1056,13 @@ int Projection_real_shears::write_projection_file(int numFile)
 }
 
 ///Reads a DocLine and fills Data fields. Returns possibles errors.
-int Projection_real_shears::read_a_DocLine()
+int Projection_real_shears::read_a_DocLine(size_t objId)
 {
     double rot     ;
     double tilt    ;
     double psi     ;
     double shiftX=0;
     double shiftY=0;
-
-    size_t objId = SF.firstObject();
 
     DF.getValue(MDL_SHIFTX,shiftX,objId);
     DF.getValue(MDL_SHIFTY,shiftY,objId);
@@ -1082,7 +1080,6 @@ int Projection_real_shears::read_a_DocLine()
 
     return(!ERROR);
 }
-
 
 ///////////////////////// MAIN INSTRUCTION FOR MPI ////////////////////////////////
 ///Execute instructions for one projection
@@ -1258,7 +1255,7 @@ int Projection_real_shears::ROUT_project_real_shears()
 
     FOR_ALL_OBJECTS_IN_METADATA(DF)
     {
-        if(read_a_DocLine() == ERROR)
+        if(read_a_DocLine(__iter.objId) == ERROR)
             return (ERROR);
 
         if(do_oneProjection(Data) == ERROR)
