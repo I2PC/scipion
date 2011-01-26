@@ -245,7 +245,7 @@ protected:
     virtual void readParams();
     virtual void preProcess();
     virtual void postProcess();
-    virtual void processImage(const FileName &fnImg, const FileName &fnImgOut, long int objId) = 0;
+    virtual void processImage(const FileName &fnImg, const FileName &fnImgOut, size_t objId) = 0;
     virtual void show();
     /** Do some stuff before starting processing
      * in a parallel environment usually this only be executed
