@@ -876,17 +876,17 @@ void init_shift_matrix(const Crystal_Projection_Parameters &prm_crystal,
     {
         //Check that we are not outside the matrix
     	int xcell, ycell;
-    	aux_DF_shift.getValue(MDL_CELLX,xcell);
-    	aux_DF_shift.getValue(MDL_CELLY,ycell);
+    	aux_DF_shift.getValue(MDL_CELLX,xcell,__iter.objId);
+    	aux_DF_shift.getValue(MDL_CELLY,ycell,__iter.objId);
         if (!exp_shifts_matrix_X.outside(xcell,ycell))
         {
-        	aux_DF_shift.getValue(MDL_SHIFTX,exp_shifts_matrix_X(ycell, xcell));
-        	aux_DF_shift.getValue(MDL_SHIFTY,exp_shifts_matrix_Y(ycell, xcell));
-        	aux_DF_shift.getValue(MDL_SHIFTZ,exp_shifts_matrix_Z(ycell, xcell));
+        	aux_DF_shift.getValue(MDL_SHIFTX,exp_shifts_matrix_X(ycell, xcell),__iter.objId);
+        	aux_DF_shift.getValue(MDL_SHIFTY,exp_shifts_matrix_Y(ycell, xcell),__iter.objId);
+        	aux_DF_shift.getValue(MDL_SHIFTZ,exp_shifts_matrix_Z(ycell, xcell),__iter.objId);
 
-        	aux_DF_shift.getValue(MDL_SHIFT_CRYSTALX,exp_normal_shifts_matrix_X(ycell, xcell));
-        	aux_DF_shift.getValue(MDL_SHIFT_CRYSTALY,exp_normal_shifts_matrix_Y(ycell, xcell));
-        	aux_DF_shift.getValue(MDL_SHIFT_CRYSTALZ,exp_normal_shifts_matrix_Z(ycell, xcell));
+        	aux_DF_shift.getValue(MDL_SHIFT_CRYSTALX,exp_normal_shifts_matrix_X(ycell, xcell),__iter.objId);
+        	aux_DF_shift.getValue(MDL_SHIFT_CRYSTALY,exp_normal_shifts_matrix_Y(ycell, xcell),__iter.objId);
+        	aux_DF_shift.getValue(MDL_SHIFT_CRYSTALZ,exp_normal_shifts_matrix_Z(ycell, xcell),__iter.objId);
         }
     }
     //#define DEBUG2

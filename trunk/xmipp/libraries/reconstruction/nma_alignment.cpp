@@ -139,7 +139,7 @@ void ProgNmaAlignment::preProcess()
     FileName tempname;
     FOR_ALL_OBJECTS_IN_METADATA(SFmodelist)
     {
-        SFmodelist.getValue(MDL_IMAGE,tempname);
+        SFmodelist.getValue(MDL_IMAGE,tempname,__iter.objId);
         modeList.push_back(tempname);
     }
     // Get the size of the images in the selfile
@@ -278,15 +278,16 @@ double ProgNmaAlignment::performContinuousAssignment(
     // Pick up results
     MetaData DF;
     DF.read("anglecont_"+fnRandom+".txt");
-    DF.getValue(MDL_ANGLEROT,trial(VEC_XSIZE(trial)-5));
-    DF.getValue(MDL_ANGLETILT,trial(VEC_XSIZE(trial)-4));
-    DF.getValue(MDL_ANGLEPSI,trial(VEC_XSIZE(trial)-3));
-    DF.getValue(MDL_SHIFTX,trial(VEC_XSIZE(trial)-2));
+    size_t objId = DF.firstObject();
+    DF.getValue(MDL_ANGLEROT,trial(VEC_XSIZE(trial)-5),objId);
+    DF.getValue(MDL_ANGLETILT,trial(VEC_XSIZE(trial)-4),objId);
+    DF.getValue(MDL_ANGLEPSI,trial(VEC_XSIZE(trial)-3),objId);
+    DF.getValue(MDL_SHIFTX,trial(VEC_XSIZE(trial)-2),objId);
     trial(VEC_XSIZE(trial)-2)*=pow(2.0,(double)pyramidLevel);
-    DF.getValue(MDL_SHIFTY,trial(VEC_XSIZE(trial)-1));
+    DF.getValue(MDL_SHIFTY,trial(VEC_XSIZE(trial)-1),objId);
     trial(VEC_XSIZE(trial)-1)*=pow(2.0,(double)pyramidLevel);
     double tempvar;
-    DF.getValue(MDL_COST,tempvar);
+    DF.getValue(MDL_COST,tempvar,objId);
     return tempvar;
 }
 
@@ -329,15 +330,15 @@ double ObjFunc_nma_alignment::eval(Vector X, int *nerror)
         xshift = global_NMA_prog->bestStage1(VEC_XSIZE(global_NMA_prog->bestStage1)-2);
         yshift = global_NMA_prog->bestStage1(VEC_XSIZE(global_NMA_prog->bestStage1)-1);
 
-        DF.addObject();
+        size_t objId=DF.addObject();
         FileName fnDown = (std::string)"downimg_"+fnRandom+".xmp";
-        DF.setValue(MDL_IMAGE,fnDown);
-        DF.setValue(MDL_ENABLED,1);
-        DF.setValue(MDL_ANGLEROT,rot);
-        DF.setValue(MDL_ANGLETILT,tilt);
-        DF.setValue(MDL_ANGLEPSI,psi);
-        DF.setValue(MDL_SHIFTX,xshift);
-        DF.setValue(MDL_SHIFTY,yshift);
+        DF.setValue(MDL_IMAGE,fnDown,objId);
+        DF.setValue(MDL_ENABLED,1,objId);
+        DF.setValue(MDL_ANGLEROT,rot,objId);
+        DF.setValue(MDL_ANGLETILT,tilt,objId);
+        DF.setValue(MDL_ANGLEPSI,psi,objId);
+        DF.setValue(MDL_SHIFTX,xshift,objId);
+        DF.setValue(MDL_SHIFTY,yshift,objId);
 
         DF.write((std::string)"angledisc_"+fnRandom+".txt");
         link(global_NMA_prog->currentImgName.c_str(),fnDown.c_str());
@@ -463,14 +464,14 @@ void ProgNmaAlignment::processImage(const FileName &fnImg, const FileName &fnImg
 void ProgNmaAlignment::writeImageParameters(const FileName &fnImg)
 {
   MetaData md;
-  md.addObject();
-  md.setValue(MDL_IMAGE,fnImg);
-  md.setValue(MDL_ENABLED,1);
-  md.setValue(MDL_ANGLEROT,parameters(0));
-  md.setValue(MDL_ANGLETILT,parameters(1));
-  md.setValue(MDL_ANGLEPSI,parameters(2));
-  md.setValue(MDL_SHIFTX,parameters(3));
-  md.setValue(MDL_SHIFTY,parameters(4));
+  size_t objId=md.addObject();
+  md.setValue(MDL_IMAGE,fnImg,objId);
+  md.setValue(MDL_ENABLED,1,objId);
+  md.setValue(MDL_ANGLEROT,parameters(0),objId);
+  md.setValue(MDL_ANGLETILT,parameters(1),objId);
+  md.setValue(MDL_ANGLEPSI,parameters(2),objId);
+  md.setValue(MDL_SHIFTX,parameters(3),objId);
+  md.setValue(MDL_SHIFTY,parameters(4),objId);
 
   int dim=modeList.size();
   std::vector<double> vectortemp;
@@ -479,8 +480,8 @@ void ProgNmaAlignment::writeImageParameters(const FileName &fnImg)
       vectortemp.push_back(parameters(j));
   }
 
-  md.setValue(MDL_NMA,vectortemp);
-  md.setValue(MDL_COST,parameters(5+dim));
+  md.setValue(MDL_NMA,vectortemp,objId);
+  md.setValue(MDL_COST,parameters(5+dim),objId);
 
   md.append("nmaDone.xmd");
 }
