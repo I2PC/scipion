@@ -100,7 +100,7 @@ protected:
         }
     }
 
-    void processImage(const FileName &fnImg, const FileName &fnImgOut, long int objId)
+    void processImage(const FileName &fnImg, const FileName &fnImgOut, size_t objId)
     {
         image.read(fnImg,true,-1,true);
         image().setXmippOrigin();
