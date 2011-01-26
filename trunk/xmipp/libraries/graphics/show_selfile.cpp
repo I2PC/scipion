@@ -164,8 +164,8 @@ void ShowSel::readObject(MetaData &SF, double _minGray, double _maxGray)
     int enabled;
     FOR_ALL_OBJECTS_IN_METADATA(SF)
     {
-    	SF.getValue(MDL_IMAGE, imgnames[i]);
-    	if (SF.getValue(MDL_ENABLED, enabled))
+    	SF.getValue(MDL_IMAGE, imgnames[i],__iter.objId);
+    	if (SF.getValue(MDL_ENABLED, enabled,__iter.objId))
     		selstatus[i] = enabled == 1;
     	else
     		selstatus[i] = true;
@@ -439,18 +439,20 @@ void ShowSel::saveSelFileDiscarded()
 {
     MetaData SFnew;
     bool saveFile = false;
+    size_t id;
+
     for (int i = 0; i < listSize; i++)
     {
-        SFnew.addObject();
-        SFnew.setValue(MDL_IMAGE,imgnames[i]);
+        id = SFnew.addObject();
+        SFnew.setValue(MDL_IMAGE,imgnames[i],id);
         if (cellMarks[i])
         {
             saveFile = true;
-            SFnew.setValue(MDL_ENABLED,-1);
+            SFnew.setValue(MDL_ENABLED,-1, id);
         }
         else
         {
-            SFnew.setValue(MDL_ENABLED, selstatus[i] ? 1 : -1);
+            SFnew.setValue(MDL_ENABLED, selstatus[i] ? 1 : -1, id);
         }
     }
     if (saveFile) writeSelFile(SFnew);
@@ -463,17 +465,19 @@ void ShowSel::saveSelFileActive()
 {
     MetaData SFnew;
     bool saveFile = false;
+    size_t id;
+
     for (int i = 0; i < listSize; i++)
     {
-        SFnew.addObject();
-        SFnew.setValue(MDL_IMAGE,imgnames[i]);
+        id = SFnew.addObject();
+        SFnew.setValue(MDL_IMAGE,imgnames[i], id);
         if (cellMarks[i])
         {
             saveFile = true;
-            SFnew.setValue(MDL_ENABLED,1);
+            SFnew.setValue(MDL_ENABLED,1, id);
         }
         else
-        	SFnew.setValue(MDL_ENABLED,-1);
+        	SFnew.setValue(MDL_ENABLED,-1, id);
     }
     if (saveFile) writeSelFile(SFnew);
     else QMessageBox::about(this, "Error!", "No images selected\n");
@@ -484,14 +488,16 @@ void ShowSel::saveSelFileNew()
 {
     MetaData SFnew;
     bool saveFile = false;
+    size_t id;
+
     for (int i = 0; i < listSize; i++)
     {
-        SFnew.addObject();
-        SFnew.setValue(MDL_IMAGE,imgnames[i]);
+        id = SFnew.addObject();
+        SFnew.setValue(MDL_IMAGE,imgnames[i], id);
         if (cellMarks[i])
         {
             saveFile = true;
-            SFnew.setValue(MDL_ENABLED,1);
+            SFnew.setValue(MDL_ENABLED,1, id);
         }
     }
     if (saveFile) writeSelFile(SFnew);
@@ -504,14 +510,15 @@ void ShowSel::saveSelFileNewOverwrite()
 {
     MetaData SFnew;
     bool saveFile = false;
+    size_t id;
     for (int i = 0; i < listSize; i++)
     {
-        SFnew.addObject();
-        SFnew.setValue(MDL_IMAGE,imgnames[i]);
+        id = SFnew.addObject();
+        SFnew.setValue(MDL_IMAGE, imgnames[i], id);
         if (cellMarks[i])
         {
             saveFile = true;
-            SFnew.setValue(MDL_ENABLED,1);
+            SFnew.setValue(MDL_ENABLED, 1, id);
         }
     }
     if (saveFile) writeSelFile(SFnew, true);
@@ -589,14 +596,16 @@ void ShowSel::changeLabels()
 void ShowSel::showStats()
 {
     MetaData SFnew;
+    size_t id;
+
     for (int i = 0; i < listSize; i++)
     {
-        SFnew.addObject();
-        SFnew.setValue(MDL_IMAGE,imgnames[i]);
+        id = SFnew.addObject();
+        SFnew.setValue(MDL_IMAGE,imgnames[i], id);
         if (cellMarks[i])
-        	SFnew.setValue(MDL_ENABLED,1);
+        	SFnew.setValue(MDL_ENABLED,1, id);
         else
-        	SFnew.setValue(MDL_ENABLED,-1);
+        	SFnew.setValue(MDL_ENABLED,-1, id);
     }
     if (SFnew.size()) ShowTable::showStats(SFnew, apply_geo);
     else QMessageBox::about(this, "Error!", "No images selected\n");
@@ -613,7 +622,7 @@ void ShowSel::showSelStats()
     MetaData SF(fn);
     FOR_ALL_OBJECTS_IN_METADATA(SF)
     {
-    	if (!SF.getValue(MDL_ENABLED, enabled))
+    	if (!SF.getValue(MDL_ENABLED, enabled,__iter.objId))
     		enabled=1;
     	if (enabled==1)
     		active++;

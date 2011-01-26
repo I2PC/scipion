@@ -46,11 +46,16 @@ void ShowSpectraSOM::init()
 
 void ShowSpectraSOM::clear()
 {
-    if (Vdat        != NULL) delete    Vdat;
-    if (SFcv        != NULL) delete [] SFcv;
-    if (SFcvs       != NULL) delete [] SFcvs;
-    if (hisAssigned != NULL) delete [] hisAssigned;
-    if (cv_errors   != NULL) delete [] cv_errors;
+    if (Vdat        != NULL)
+        delete    Vdat;
+    if (SFcv        != NULL)
+        delete [] SFcv;
+    if (SFcvs       != NULL)
+        delete [] SFcvs;
+    if (hisAssigned != NULL)
+        delete [] hisAssigned;
+    if (cv_errors   != NULL)
+        delete [] cv_errors;
     infStr = "";
     ShowSpectra::clear();
 }
@@ -208,6 +213,7 @@ void ShowSpectraSOM::initRightclickMenubar()
     menubar = new Q3PopupMenu();
     Q3PopupMenu * file = new Q3PopupMenu();
 #else
+
     menubar = new QPopupMenu();
     QPopupMenu* file = new QPopupMenu();
 #endif
@@ -219,10 +225,13 @@ void ShowSpectraSOM::initRightclickMenubar()
 
     // Options .............................................................
 #ifdef QT3_SUPPORT
+
     options =  new Q3PopupMenu();
 #else
+
     options = new QPopupMenu();
 #endif
+
     setCommonOptionsRightclickMenubar();
 
     setCommonSpectraOptionsRightclickMenubar();
@@ -260,15 +269,16 @@ void ShowSpectraSOM::initRightclickMenubar()
 /* Extract represented.----------------------------------------------------- */
 void ShowSpectraSOM::extractRepresented(MetaData &SF_represented)
 {
+    size_t id;
     for (int i = 0; i < listSize; i++)
         if (cellMarks[i])
         {
             int jmax = SFcv[i].size();
             for (int j = 0; j < jmax; j++)
             {
-            	SF_represented.addObject();
-            	SF_represented.setValue(MDL_IMAGE, (SFcv[i])[j]);
-            	SF_represented.setValue(MDL_ENABLED, 1);
+                id = SF_represented.addObject();
+                SF_represented.setValue(MDL_IMAGE, (SFcv[i])[j], id);
+                SF_represented.setValue(MDL_ENABLED, 1, id);
             }
         }
 }
@@ -278,7 +288,8 @@ void ShowSpectraSOM::extractRepresented(ClassicTrainingVectors &_v_represented)
     // Count the number of represented vectors
     int counter = 0;
     for (int i = 0; i < listSize; i++)
-        if (cellMarks[i]) counter += SFcvs[i].size();
+        if (cellMarks[i])
+            counter += SFcvs[i].size();
 
     // Resize the represented vectors
     _v_represented.theItems.resize(counter);
@@ -304,8 +315,10 @@ void ShowSpectraSOM::saveAssigned()
 {
     MetaData SFNew;
     extractRepresented(SFNew);
-    if (SFNew.size()) writeSelFile(SFNew);
-    else QMessageBox::about(this, "Error!", "No images selected\n");
+    if (SFNew.size())
+        writeSelFile(SFNew);
+    else
+        QMessageBox::about(this, "Error!", "No images selected\n");
 }
 
 /* Change labels ----------------------------------------------------------- */
@@ -332,16 +345,21 @@ void ShowSpectraSOM::changeLabel(int _clicked_mi)
     options->setItemEnabled(mi_hisAsLabels, true);
     options->setItemEnabled(mi_errAsLabels, true);
     options->setItemEnabled(_clicked_mi,    false);
-    if (_clicked_mi == mi_imgAsLabels) labeltype = Filename_LABEL;
-    else if (_clicked_mi == mi_selAsLabels) labeltype = SFLabel_LABEL;
-    else if (_clicked_mi == mi_hisAsLabels) labeltype = Histogram_LABEL;
-    else if (_clicked_mi == mi_errAsLabels) labeltype = Err_LABEL;
+    if (_clicked_mi == mi_imgAsLabels)
+        labeltype = Filename_LABEL;
+    else if (_clicked_mi == mi_selAsLabels)
+        labeltype = SFLabel_LABEL;
+    else if (_clicked_mi == mi_hisAsLabels)
+        labeltype = Histogram_LABEL;
+    else if (_clicked_mi == mi_errAsLabels)
+        labeltype = Err_LABEL;
     repaintContents();
 }
 
 const char * ShowSpectraSOM::cellLabel(int i) const
 {
-    if (options->isItemEnabled(mi_showLabel)) return NULL;
+    if (options->isItemEnabled(mi_showLabel))
+        return NULL;
     switch (labeltype)
     {
     case SFLabel_LABEL:
@@ -360,8 +378,10 @@ void ShowSpectraSOM::showRepresentedImagesStats()
 {
     MetaData SFNew;
     extractRepresented(SFNew);
-    if (SFNew.size()) ShowTable::showStats(SFNew, apply_geo);
-    else QMessageBox::about(this, "Error!", "No images selected\n");
+    if (SFNew.size())
+        ShowTable::showStats(SFNew, apply_geo);
+    else
+        QMessageBox::about(this, "Error!", "No images selected\n");
 }
 
 void ShowSpectraSOM::showRepresentedSpectraStats()
@@ -389,7 +409,8 @@ void ShowSpectraSOM::showRepresentedSel()
         showsel->initWithObject(10, 10, SFNew, "Represented images");
         showsel->show();
     }
-    else QMessageBox::about(this, "Error!", "No images selected\n");
+    else
+        QMessageBox::about(this, "Error!", "No images selected\n");
 }
 
 /* Show assigned spectra --------------------------------------------------- */
@@ -409,7 +430,8 @@ void ShowSpectraSOM::showErrorSpectrum()
     ClassicTrainingVectors V_represented(0, true);
     int row = currentRow();
     int col = currentColumn();
-    if (row < 0 || col < 0) return;
+    if (row < 0 || col < 0)
+        return;
     int i = indexOf(row, col);
     int represented_images = SFcvs[i].size();
     if (represented_images == 0)

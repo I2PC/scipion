@@ -521,14 +521,14 @@ void QtMainWidgetMark::write_angles()
     FileName fn = __mWidget->__outputRoot+".angles.txt";
     MetaData MD;
     MD.setColumnFormat(false);
-    MD.addObject();
+    size_t id = MD.addObject();
     MD.setComment("Rot first micrograph, rot second, tilt angle and transformation matrix");
-    MD.setValue(MDL_ANGLEPSI,__alpha_u);
-    MD.setValue(MDL_ANGLEPSI2,__alpha_t);
-    MD.setValue(MDL_ANGLETILT,__gamma);
+    MD.setValue(MDL_ANGLEPSI,__alpha_u, id);
+    MD.setValue(MDL_ANGLEPSI2,__alpha_t, id);
+    MD.setValue(MDL_ANGLETILT,__gamma, id);
     std::vector<double> myVector;// ( &__Put.mdata[0], &__Put.mdata[9] );
     __Put.copyToVector(myVector);
-    MD.setValue(MDL_TRANSFORMATIONMTRIX,myVector);
+    MD.setValue(MDL_TRANSFORMATIONMTRIX,myVector, id);
     MD.write(fn);
 }
 
@@ -568,18 +568,18 @@ void QtMainWidgetMark::generated(bool _this_is_tilted,
         if (s1 == 0)
 			REPORT_ERROR(ERR_MD_NOOBJ,"Error: empty selfiles...");
 
+        int stat1, stat2;
         FOR_ALL_OBJECTS_IN_METADATA2(SFUntilted, SFTilted)
         {
-            int stat1, stat2;
-            SFUntilted.getValue(MDL_ENABLED, stat1);
-            SFTilted.getValue(MDL_ENABLED, stat2);
+            SFUntilted.getValue(MDL_ENABLED, stat1,__iter.objId);
+            SFTilted.getValue(MDL_ENABLED, stat2,__iter2.objId);
         	if (stat1 == -1 || stat2 == -1)
             {
                 FileName fn1, fn2;
-        		SFUntilted.setValue(MDL_ENABLED, -1);
-                SFTilted.setValue(MDL_ENABLED, -1);
-                SFUntilted.getValue(MDL_IMAGE, fn1);
-                SFTilted.getValue(MDL_IMAGE, fn2);
+        		SFUntilted.setValue(MDL_ENABLED, -1,__iter.objId);
+                SFTilted.setValue(MDL_ENABLED, -1,__iter2.objId);
+                SFUntilted.getValue(MDL_IMAGE, fn1,__iter.objId);
+                SFTilted.getValue(MDL_IMAGE, fn2,__iter2.objId);
 
                 std::cerr << "Images " << fn1 << " and " << fn2 << " are discarded\n";
             }

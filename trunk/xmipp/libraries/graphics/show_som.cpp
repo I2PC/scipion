@@ -183,6 +183,8 @@ void ShowSOM::readSOMFiles(const FileName &_fn_root)
             }
 
             SFcv = new MetaData[listSize];
+            size_t id;
+
             while (!fh_class.eof())
             {
                 int row, col;
@@ -190,9 +192,9 @@ void ShowSOM::readSOMFiles(const FileName &_fn_root)
                 fh_class >> col >> row >> tmp;
                 getline(fh_class, line);
                 int i = row * NumCols + col;
-                SFcv[i].addObject();
-                SFcv[i].setValue(MDL_IMAGE, (std::string)firstToken(line));
-                SFcv[i].setValue(MDL_ENABLED, 1);
+                id = SFcv[i].addObject();
+                SFcv[i].setValue(MDL_IMAGE, (std::string)firstToken(line), id);
+                SFcv[i].setValue(MDL_ENABLED, 1, id);
 			}
         }
         fh_class.close();
@@ -401,7 +403,7 @@ void ShowSOM::showRepresentedAverageTogether()
 
     // Create a blank Selfile for the averages images.
     MetaData SFAvgs;
-
+    size_t id;
     // Go back through cells and add images to list
     for (int i = 0; i < listSize; i++)
     {
@@ -427,9 +429,9 @@ void ShowSOM::showRepresentedAverageTogether()
             std::string tmpImgfile = makeTempFile(tempfd);
             // Add that image file to the SelFile and save it
             xm_ave.write(tmpImgfile);
-            SFAvgs.addObject();
-            SFAvgs.setValue(MDL_IMAGE,tmpImgfile);
-            SFAvgs.setValue(MDL_ENABLED,1);
+            id = SFAvgs.addObject();
+            SFAvgs.setValue(MDL_IMAGE,tmpImgfile, id);
+            SFAvgs.setValue(MDL_ENABLED,1, id);
             ::close(tempfd);
             /*
             int r, c;
