@@ -136,7 +136,7 @@ int main(int argc, char **argv)
                     // Read new references from disc (I could just as well keep them in memory, maybe...)
                     FOR_ALL_OBJECTS_IN_METADATA(ML2D_prm.MDref)
                     {
-                        ML2D_prm.MDref.getValue(MDL_IMAGE, fnt);
+                        ML2D_prm.MDref.getValue(MDL_IMAGE, fnt,__iter.objId);
                         ML2D_prm.model.Iref[c].read(fnt);
                         ML2D_prm.model.Iref[c]().setXmippOrigin();
                         c++;

@@ -358,16 +358,16 @@ void VQProjection::fitBasic(MultidimArray<double> &I,
     double corrCodeRS, corrCodeSR;
     if (useCorrelation)
     {
-    	corrCodeRS=corrCodeSR=0;
+        corrCodeRS=corrCodeSR=0;
         long N = 0;
         const MultidimArray<int> &imask=*mask;
         FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(P)
         {
             if (DIRECT_MULTIDIM_ELEM(imask,n))
             {
-            	double Pval=DIRECT_MULTIDIM_ELEM(P, n);
-            	corrCodeRS += Pval * DIRECT_MULTIDIM_ELEM(IauxRS, n);
-            	corrCodeSR += Pval * DIRECT_MULTIDIM_ELEM(IauxSR, n);
+                double Pval=DIRECT_MULTIDIM_ELEM(P, n);
+                corrCodeRS += Pval * DIRECT_MULTIDIM_ELEM(IauxRS, n);
+                corrCodeSR += Pval * DIRECT_MULTIDIM_ELEM(IauxSR, n);
                 ++N;
             }
         }
@@ -731,7 +731,7 @@ void VQ::initialize(MetaData &_SF, int _Niter, int _Nneighbours,
     {
         if( rank == 0 )
         {
-        	std::cout << "Computing histogram of correlation values\n";
+            std::cout << "Computing histogram of correlation values\n";
             init_progress_bar(N);
         }
 
@@ -854,16 +854,17 @@ void VQ::write(const FileName &fnRoot, bool final) const
     FileName fnAux, fnClass;
     if (exists(fnOut))
         unlink(fnOut.c_str());
+    size_t id;
     for (int q=0; q<Q; q++)
     {
         fnClass.compose(q,fnOut);
         I()=P[q]->P;
-        SFout.addObject();
-        SFout.setValue(MDL_IMAGE,fnClass);
+        id = SFout.addObject();
+        SFout.setValue(MDL_IMAGE,fnClass, id);
         I.write(fnClass,q,true,WRITE_APPEND);
         VEC_ELEM(Nq,q)=VEC_ELEM(aux,0)=P[q]->currentListImg.size();
         VEC_ELEM(aux,1)=VEC_ELEM(aux,0)/Nimg;
-        SFout.setValue(MDL_IMAGE_CLASS_COUNT,(int)VEC_ELEM(Nq,q));
+        SFout.setValue(MDL_IMAGE_CLASS_COUNT,(int)VEC_ELEM(Nq,q), id);
     }
     FileName fnSFout=fnRoot+".sel";
     SFout.write(fnSFout);
@@ -888,19 +889,21 @@ void VQ::write(const FileName &fnRoot, bool final) const
         fnClass.compose(q,fnOut);
         MetaData SFq;
         int imax=P[q]->currentListImg.size();
+        size_t id;
+
         for (int i=0; i<imax; i++)
         {
-            SFq.addObject();
+            id = SFq.addObject();
             int idx=P[q]->currentListImg[i];
             if (final)
             {
                 fnAux.compose(idx,fnAligned);
-                SFq.setValue(MDL_IMAGE,fnAux);
-                SFq.setValue(MDL_IMAGE_ORIGINAL,SFv[idx]);
-                SFq.setValue(MDL_IMAGE_CLASS,fnClass);
+                SFq.setValue(MDL_IMAGE,fnAux, id);
+                SFq.setValue(MDL_IMAGE_ORIGINAL,SFv[idx], id);
+                SFq.setValue(MDL_IMAGE_CLASS,fnClass, id);
             }
             else
-                SFq.setValue(MDL_IMAGE,SFv[idx]);
+                SFq.setValue(MDL_IMAGE,SFv[idx], id);
         }
         SFq._write(fnSFout,"class_"+integerToString(q,6),APPEND);
     }
@@ -1079,7 +1082,8 @@ void VQ::run(const FileName &fnOut, int level, int rank)
             if( i % mpi_size == rank )
             {
                 FileName fnImg;
-                SF->getValue(MDL_IMAGE,fnImg);
+                SF->getValue(MDL_IMAGE,fnImg, __iter.objId);
+                //TODO: CHECK THIS readApply
                 I.read(fnImg);
                 I().setXmippOrigin();
                 I().statisticsAdjust(0,1);
@@ -1861,12 +1865,15 @@ void Prog_VQ_prm::produce_side_info(int rank)
     std::vector< MultidimArray<double> > codes0;
     if (fnCodes0!="")
     {
+        FileName fnImg;
+        Image<double> I;
         MetaData SFCodes(fnCodes0);
+
         FOR_ALL_OBJECTS_IN_METADATA(SFCodes)
         {
-            FileName fnImg;
-            SFCodes.getValue(MDL_IMAGE,fnImg);
-            Image<double> I;
+
+            SFCodes.getValue(MDL_IMAGE,fnImg,__iter.objId);
+            //TODO: CHECK readApply
             I.read(fnImg);
             I().setXmippOrigin();
             codes0.push_back(I());
@@ -1922,15 +1929,15 @@ void Prog_VQ_prm::alignInputImages(const FileName &fnSF, int rank, int Nprocesso
         if (blockList[b]=="")
             continue;
         SFBlock._read(fnSF,NULL,blockList[b]);
-        SFBlock.getValue(MDL_IMAGE_CLASS,fnClass);
+        SFBlock.getValue(MDL_IMAGE_CLASS,fnClass, SFBlock.firstObject());
         Iclass.read(fnClass);
         Iclass().setXmippOrigin();
         FOR_ALL_OBJECTS_IN_METADATA(SFBlock)
         {
             if ((currentIdx+1)%Nprocessors==rank)
             {
-                SFBlock.getValue(MDL_IMAGE,fnImgOut);
-                SFBlock.getValue(MDL_IMAGE_ORIGINAL,fnImgIn);
+                SFBlock.getValue(MDL_IMAGE,fnImgOut,__iter.objId);
+                SFBlock.getValue(MDL_IMAGE_ORIGINAL,fnImgIn, __iter.objId);
 
                 I.read(fnImgIn);
                 I().setXmippOrigin();
