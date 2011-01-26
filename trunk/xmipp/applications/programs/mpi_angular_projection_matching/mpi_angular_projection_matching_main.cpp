@@ -289,17 +289,16 @@ public:
                     //create doc file
                     for (int i = 0; i < number; i++)
                     {
-                        int lineNumber=ROUND(output_values[i*MY_OUPUT_SIZE+1]+1);
-                        DFexp.goToObject(lineNumber);
-                        DFexp.setValue(MDL_ANGLEROT, output_values[i*MY_OUPUT_SIZE+2]);
-                        DFexp.setValue(MDL_ANGLETILT,output_values[i*MY_OUPUT_SIZE+3]);
-                        DFexp.setValue(MDL_ANGLEPSI, output_values[i*MY_OUPUT_SIZE+4]);
-                        DFexp.setValue(MDL_SHIFTX,   output_values[i*MY_OUPUT_SIZE+5]);
-                        DFexp.setValue(MDL_SHIFTY,   output_values[i*MY_OUPUT_SIZE+6]);
-                        DFexp.setValue(MDL_REF,(int)(output_values[i*MY_OUPUT_SIZE+7]));
-                        DFexp.setValue(MDL_FLIP,    (output_values[i*MY_OUPUT_SIZE+8]>0));
-                        DFexp.setValue(MDL_SCALE,    output_values[i*MY_OUPUT_SIZE+9]);
-                        DFexp.setValue(MDL_MAXCC,    output_values[i*MY_OUPUT_SIZE+10]);
+                        size_t lineNumber = ROUND(output_values[i*MY_OUPUT_SIZE+1]+1);
+                        DFexp.setValue(MDL_ANGLEROT, output_values[i*MY_OUPUT_SIZE+2],lineNumber);
+                        DFexp.setValue(MDL_ANGLETILT,output_values[i*MY_OUPUT_SIZE+3],lineNumber);
+                        DFexp.setValue(MDL_ANGLEPSI, output_values[i*MY_OUPUT_SIZE+4],lineNumber);
+                        DFexp.setValue(MDL_SHIFTX,   output_values[i*MY_OUPUT_SIZE+5],lineNumber);
+                        DFexp.setValue(MDL_SHIFTY,   output_values[i*MY_OUPUT_SIZE+6],lineNumber);
+                        DFexp.setValue(MDL_REF,(int)(output_values[i*MY_OUPUT_SIZE+7]),lineNumber);
+                        DFexp.setValue(MDL_FLIP,    (output_values[i*MY_OUPUT_SIZE+8]>0),lineNumber);
+                        DFexp.setValue(MDL_SCALE,    output_values[i*MY_OUPUT_SIZE+9],lineNumber);
+                        DFexp.setValue(MDL_MAXCC,    output_values[i*MY_OUPUT_SIZE+10],lineNumber);
                     }
 
                 }
@@ -397,17 +396,16 @@ public:
                     //create doc file
                     for (int i = 0; i < number; i++)
                     {
-                        int lineNumber=ROUND(output_values[i*MY_OUPUT_SIZE+1]+1);
-                        DFexp.goToObject(lineNumber);
-                        DFexp.setValue(MDL_ANGLEROT, output_values[i*MY_OUPUT_SIZE+2]);
-                        DFexp.setValue(MDL_ANGLETILT,output_values[i*MY_OUPUT_SIZE+3]);
-                        DFexp.setValue(MDL_ANGLEPSI, output_values[i*MY_OUPUT_SIZE+4]);
-                        DFexp.setValue(MDL_SHIFTX,   output_values[i*MY_OUPUT_SIZE+5]);
-                        DFexp.setValue(MDL_SHIFTY,   output_values[i*MY_OUPUT_SIZE+6]);
-                        DFexp.setValue(MDL_REF,(int)(output_values[i*MY_OUPUT_SIZE+7]));
-                        DFexp.setValue(MDL_FLIP,    (output_values[i*MY_OUPUT_SIZE+8]>0));
-                        DFexp.setValue(MDL_SCALE,    output_values[i*MY_OUPUT_SIZE+9]);
-                        DFexp.setValue(MDL_MAXCC,    output_values[i*MY_OUPUT_SIZE+10]);
+                        size_t lineNumber = ROUND(output_values[i*MY_OUPUT_SIZE+1]+1);
+                        DFexp.setValue(MDL_ANGLEROT, output_values[i*MY_OUPUT_SIZE+2], lineNumber);
+                        DFexp.setValue(MDL_ANGLETILT,output_values[i*MY_OUPUT_SIZE+3], lineNumber);
+                        DFexp.setValue(MDL_ANGLEPSI, output_values[i*MY_OUPUT_SIZE+4], lineNumber);
+                        DFexp.setValue(MDL_SHIFTX,   output_values[i*MY_OUPUT_SIZE+5], lineNumber);
+                        DFexp.setValue(MDL_SHIFTY,   output_values[i*MY_OUPUT_SIZE+6]), lineNumber;
+                        DFexp.setValue(MDL_REF,(int)(output_values[i*MY_OUPUT_SIZE+7]), lineNumber);
+                        DFexp.setValue(MDL_FLIP,    (output_values[i*MY_OUPUT_SIZE+8]>0), lineNumber);
+                        DFexp.setValue(MDL_SCALE,    output_values[i*MY_OUPUT_SIZE+9], lineNumber);
+                        DFexp.setValue(MDL_MAXCC,    output_values[i*MY_OUPUT_SIZE+10], lineNumber);
                     }
                 }
                 else if (status.MPI_TAG == TAG_FREEWORKER)
