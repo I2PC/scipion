@@ -917,7 +917,7 @@ void ProgAngularProjectionMatching::processSomeImages(int * my_images, double * 
 
 }
 
-void ProgAngularProjectionMatching::getCurrentImage(int imgno, Image<double> &img)
+void ProgAngularProjectionMatching::getCurrentImage(size_t imgno, Image<double> &img)
 {
 
     FileName fn_img;
