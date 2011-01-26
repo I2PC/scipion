@@ -195,7 +195,7 @@ void Prog_centilt_prm::centilt()
     FOR_ALL_OBJECTS_IN_METADATA2(SFu, SFt)
     {
         // Read in untilted image and apply shifts (center) and Phi (align tilt-axis with y-axis)
-        SFu.getValue(MDL_IMAGE, file_name);
+        SFu.getValue(MDL_IMAGE, file_name, __iter.objId);
         Iu.read(file_name);
 
         Iu().setXmippOrigin();
@@ -206,7 +206,7 @@ void Prog_centilt_prm::centilt()
         selfApplyGeometry(LINEAR, Iu(), A, IS_INV, DONT_WRAP, outside);
 
         // Read in tilted image and apply Psi (align tilt-axis with y-axis) and shifts if present
-        SFt.getValue( MDL_IMAGE, file_name);
+        SFt.getValue( MDL_IMAGE, file_name, __iter2.objId);
         It.read(file_name );
         // Store original matrix for later output
         Maux.resize(It());
@@ -231,14 +231,14 @@ void Prog_centilt_prm::centilt()
             {
                 fn_img = fn_img.withoutExtension() + "." + oext;
             }
-            SFt.setValue( MDL_ANGLEROT,It.rot() );
-            SFt.setValue( MDL_ANGLETILT,It.tilt() );
-            SFt.setValue( MDL_ANGLEPSI,It.psi() );
-            SFt.setValue( MDL_SHIFTX,It.Xoff() );
-            SFt.setValue( MDL_SHIFTY,It.Yoff() );
-            SFt.setValue( MDL_MAXCC,ccf );
-            SFt.setValue( MDL_IMAGE,fn_img );
-            SFt.setValue( MDL_ENABLED, 1);
+            SFt.setValue( MDL_ANGLEROT,It.rot(), __iter2.objId );
+            SFt.setValue( MDL_ANGLETILT,It.tilt(), __iter2.objId );
+            SFt.setValue( MDL_ANGLEPSI,It.psi(), __iter2.objId );
+            SFt.setValue( MDL_SHIFTX,It.Xoff(), __iter2.objId );
+            SFt.setValue( MDL_SHIFTY,It.Yoff(), __iter2.objId );
+            SFt.setValue( MDL_MAXCC,ccf , __iter2.objId);
+            SFt.setValue( MDL_IMAGE,fn_img, __iter2.objId );
+            SFt.setValue( MDL_ENABLED, 1, __iter2.objId);
 
             // Re-store original matrix & write out tilted image
             It() = Maux;
@@ -246,13 +246,13 @@ void Prog_centilt_prm::centilt()
         }
         else
         {
-            SFt.setValue( MDL_ENABLED, -1);
-            SFt.setValue( MDL_SHIFTX, 0.);
-            SFt.setValue( MDL_SHIFTY, 0.);
-            SFt.setValue( MDL_ENABLED, -1);
-            SFt.setValue( MDL_SHIFTX,0. );
-            SFt.setValue( MDL_SHIFTY,0. );
-            SFt.setValue( MDL_MAXCC,0. );
+            SFt.setValue( MDL_ENABLED, -1, __iter2.objId);
+            SFt.setValue( MDL_SHIFTX, 0., __iter2.objId);
+            SFt.setValue( MDL_SHIFTY, 0., __iter2.objId);
+            SFt.setValue( MDL_ENABLED, -1, __iter2.objId);
+            SFt.setValue( MDL_SHIFTX,0. , __iter2.objId);
+            SFt.setValue( MDL_SHIFTY,0., __iter2.objId );
+            SFt.setValue( MDL_MAXCC,0. , __iter2.objId);
             n_discarded++;
         }
 

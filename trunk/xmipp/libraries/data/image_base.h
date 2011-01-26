@@ -310,7 +310,7 @@ public:
              bool only_apply_shifts = false);
 
     /** Read an image from metadata, filename is taken from MDL_IMAGE */
-    int readApplyGeo(const MetaData &md, size_t objId = -1,
+    int readApplyGeo(const MetaData &md, size_t objId,
              bool readdata=true, int select_img = -1,
              bool only_apply_shifts = false);
 

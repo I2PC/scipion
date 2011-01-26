@@ -172,7 +172,7 @@ void SF_main(int argc, char **argv,
             FOR_ALL_OBJECTS_IN_METADATA(SF_in)
             {
                 FileName fn_read;
-                SF_in.getValue( MDL_IMAGE, fn_read);
+                SF_in.getValue( MDL_IMAGE, fn_read, __iter.objId);
                 if (prm->each_image_produces_an_output)
                     if (prm->oext == "" && prm->oroot == "")
                         prm->fn_out = fn_read;
@@ -200,7 +200,7 @@ void SF_main(int argc, char **argv,
                     if (prm->apply_geo)
                     {
                         MDRow row;
-                        SF_in.getRow(row);
+                        SF_in.getRow(row, __iter.objId);
                         img.readApplyGeo(fn_read, true, -1, false, &row);
                     }
                     else
@@ -270,12 +270,9 @@ void SF_main(int argc, char **argv,
 
                 if (prm->each_image_produces_an_output)
                 {
-                    SF_out.addObject();
-                    SF_out.setValue( MDL_IMAGE, prm->fn_out);
-                    if (success)
-                        SF_out.setValue( MDL_ENABLED, 1);
-                    else
-                        SF_out.setValue( MDL_ENABLED,-1);
+                    size_t id = SF_out.addObject();
+                    SF_out.setValue( MDL_IMAGE, prm->fn_out, id);
+                    SF_out.setValue( MDL_ENABLED, success ? 1 : -1);
                 }
 
                 if (i++ % istep == 0 && prm->allow_time_bar && !prm->quiet)

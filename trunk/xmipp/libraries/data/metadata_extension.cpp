@@ -32,10 +32,10 @@ void getStatistics(MetaData &MT_in, Image<double> & _ave, Image<double> & _sd, d
     FOR_ALL_OBJECTS_IN_METADATA(MT)
     {
     	if (apply_geo)
-    		image.readApplyGeo(MT, MT.getActiveObject(), -1);
+    		image.readApplyGeo(MT,__iter.objId, -1);
     	else
     	{
-    		MT.getValue(MDL_IMAGE,fnImg,MT.getActiveObject());
+    		MT.getValue(MDL_IMAGE,fnImg,__iter.objId);
     		image.read(fnImg);
     	}
         image().computeStats(avg, stddev, min, max);
@@ -63,10 +63,10 @@ void getStatistics(MetaData &MT_in, Image<double> & _ave, Image<double> & _sd, d
     FOR_ALL_OBJECTS_IN_METADATA(MT)
     {
     	if (apply_geo)
-    		image.readApplyGeo(MT, MT.getActiveObject(), -1);
+    		image.readApplyGeo(MT,__iter.objId, -1);
     	else
     	{
-    		MT.getValue(MDL_IMAGE,fnImg,MT.getActiveObject());
+    		MT.getValue(MDL_IMAGE,fnImg,__iter.objId);
     		image.read(fnImg);
     	}
         tmpImg() = ((image() - _ave()));
@@ -89,7 +89,7 @@ void ImgSize(const MetaData &MD, int &Xdim, int &Ydim, int &Zdim, unsigned long 
     if (!MD.isEmpty())
     {
         FileName fn_img;
-        MD.getValue(MDL_IMAGE, fn_img);
+        MD.getValue(MDL_IMAGE, fn_img, MD.firstObject());
         SingleImgSize(fn_img, Xdim, Ydim, Zdim, Ndim);
 
     }
@@ -141,7 +141,7 @@ int MaxFileNameLength(MetaData &MD)
     FOR_ALL_OBJECTS_IN_METADATA(MD)
     {
         FileName fnImg;
-        MD.getValue(MDL_IMAGE,fnImg);
+        MD.getValue(MDL_IMAGE, fnImg, __iter.objId);
         int length=fnImg.length();
         maxLength=XMIPP_MAX(length,maxLength);
     }
@@ -167,7 +167,8 @@ void readMetaDataWithTwoPossibleImages(const FileName &fn, MetaData &MD)
         if (!fhIn)
             REPORT_ERROR(ERR_IO_NOTEXIST,fn);
         MD.clear();
-        std::string line;
+        String line;
+        size_t id;
         while (!fhIn.eof())
         {
             getline(fhIn,line);
@@ -178,17 +179,17 @@ void readMetaDataWithTwoPossibleImages(const FileName &fn, MetaData &MD)
             case 0:
                 break;
             case 1:
-                MD.addObject();
-                MD.setValue(MDL_IMAGE,tokens[0]);
+                id = MD.addObject();
+                MD.setValue(MDL_IMAGE,tokens[0], id);
                 break;
             case 2:
-                MD.addObject();
-                MD.setValue(MDL_IMAGE,tokens[0]);
-                MD.setValue(MDL_ASSOCIATED_IMAGE1,tokens[1]);
+                id = MD.addObject();
+                MD.setValue(MDL_IMAGE,tokens[0], id);
+                MD.setValue(MDL_ASSOCIATED_IMAGE1,tokens[1], id);
                 break;
             default:
                 REPORT_ERROR(ERR_MD_OBJECTNUMBER,
-                             (std::string)"Invalid number of objects in line:"+line);
+                             (String)"Invalid number of objects in line:"+line);
             }
         }
         fhIn.close();
@@ -227,9 +228,9 @@ void substituteOriginalImages(const FileName &fn, const FileName &fnOrig, const 
             String stkName;
             FOR_ALL_OBJECTS_IN_METADATA(MD)
             {
-                MD.getValue(label,fnImg);
+                MD.getValue(label, fnImg, __iter.objId);
                 fnImg.decompose(stkNo,stkName);
-                MD.setValue(label,filesOrig[stkNo]);
+                MD.setValue(label, filesOrig[stkNo], __iter.objId);
             }
         }
         MD._write(fnOut,blocks[b],APPEND);

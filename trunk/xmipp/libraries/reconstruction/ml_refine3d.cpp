@@ -61,7 +61,8 @@ void ProgRefine3D::defineParams()
     addParamsLine(" [ -tiltF <float=91.> ]        : Higher-value for restricted tilt angle search ");
     addParamsLine(" [ -perturb ]                  : Randomly perturb reference projection directions ");
     addParamsLine(" [ -show_all_ML_options* ]      : Show all parameters for the ML-refinement");
-    addParamsLine(" [ -show_all_ART_options* ]     : Show all parameters for the wlsART reconstruction ");;
+    addParamsLine(" [ -show_all_ART_options* ]     : Show all parameters for the wlsART reconstruction ");
+    ;
 
     addParamsLine("==+++++ Hidden arguments ==");
     addParamsLine(" [-solvent <filename=\"\">]");
@@ -195,15 +196,16 @@ void ProgRefine3D::readParams()
         if (fn_vol.isMetaData())
         {
             SFvol.read(fn_vol);
+            if (SFvol.containsLabel(MDL_ENABLED))
+                SFvol.removeObjects(MDValueEQ(MDL_ENABLED, -1));
         }
         else
         {
-            SFvol.addObject();
-            SFvol.setValue(MDL_IMAGE, fn_vol);
-            SFvol.setValue(MDL_ENABLED, 1);
+            size_t id = SFvol.addObject();
+            SFvol.setValue(MDL_IMAGE, fn_vol, id);
+            SFvol.setValue(MDL_ENABLED, 1, id);
         }
-        if (SFvol.containsLabel(MDL_ENABLED))
-            SFvol.removeObjects(MDValueEQ(MDL_ENABLED, -1));
+
         Nvols = SFvol.size();
     }
 
@@ -377,7 +379,7 @@ void ProgRefine3D::run()
                 // Read new references from disc (I could just as well keep them in memory, maybe...)
                 FOR_ALL_OBJECTS_IN_METADATA(ml2d->MDref)
                 {
-                    ml2d->model.Iref[c].readApplyGeo(ml2d->MDref,objId);
+                    ml2d->model.Iref[c].readApplyGeo(ml2d->MDref,__iter.objId);
                     ml2d->model.Iref[c]().setXmippOrigin();
                     ++c;
                 }
@@ -460,10 +462,11 @@ void ProgRefine3D::projectReferenceVolume(MetaData &SFlib, int rank, int size)
     nvol = 0;
     nr_dir = 0;
     fn_tmp = fn_root + "_lib";
+    size_t id;
 
     FOR_ALL_OBJECTS_IN_METADATA(SFvol)
     {
-        SFvol.getValue(MDL_IMAGE, fn_vol);
+        SFvol.getValue(MDL_IMAGE, fn_vol, __iter.objId);
         vol.read(fn_vol);
         vol().setXmippOrigin();
 
@@ -483,14 +486,14 @@ void ProgRefine3D::projectReferenceVolume(MetaData &SFlib, int rank, int size)
             }
 
             // But all ranks gather the information in SFlib (and in eachvol_end and eachvol_start)
-            SFlib.addObject();
-            SFlib.setValue(MDL_IMAGE, fn_proj);
-            SFlib.setValue(MDL_ENABLED, 1);
-            SFlib.setValue(MDL_ANGLEROT, rot);
-            SFlib.setValue(MDL_ANGLETILT, tilt);
-            SFlib.setValue(MDL_ANGLEPSI, psi);
+            id = SFlib.addObject();
+            SFlib.setValue(MDL_IMAGE, fn_proj, id);
+            SFlib.setValue(MDL_ENABLED, 1, id);
+            SFlib.setValue(MDL_ANGLEROT, rot, id);
+            SFlib.setValue(MDL_ANGLETILT, tilt, id);
+            SFlib.setValue(MDL_ANGLEPSI, psi, id);
             // New for metadata: store which volume in SFlib
-            SFlib.setValue(MDL_REF3D, nvol + 1);
+            SFlib.setValue(MDL_REF3D, nvol + 1, id);
             ++nr_dir;
             if (verbose && (nr_dir % XMIPP_MAX(1, nl / 60) == 0))
                 progress_bar(nr_dir);
@@ -520,8 +523,9 @@ void ProgRefine3D::makeNoiseImages(std::vector<Image<double> > &Iref)
     FileName   fn_img;
     MetaData    SFt;
     int volno;
-
+    size_t id;
     SFt.clear();
+
     for (int i = 0; i < Iref.size(); i++)
     {
         img = Iref[i];
@@ -532,16 +536,16 @@ void ProgRefine3D::makeNoiseImages(std::vector<Image<double> > &Iref)
         fn_img = fn_root + "_noise";
         fn_img.compose(fn_img, i, "xmp");
         img.write(fn_img);
-        SFt.addObject();
-        SFt.setValue(MDL_IMAGE, fn_img);
-        SFt.setValue(MDL_ENABLED, 1);
+        id = SFt.addObject();
+        SFt.setValue(MDL_IMAGE, fn_img, id);
+        SFt.setValue(MDL_ENABLED, 1, id);
         //New for metadata: store angles and weights in metadata
-        SFt.setValue(MDL_ANGLEROT, Iref[i].rot());
-        SFt.setValue(MDL_ANGLETILT, Iref[i].tilt());
-        SFt.setValue(MDL_ANGLEPSI, Iref[i].psi());
-        SFt.setValue(MDL_WEIGHT, Iref[i].weight());
+        SFt.setValue(MDL_ANGLEROT, Iref[i].rot(), id);
+        SFt.setValue(MDL_ANGLETILT, Iref[i].tilt(), id);
+        SFt.setValue(MDL_ANGLEPSI, Iref[i].psi(), id);
+        SFt.setValue(MDL_WEIGHT, Iref[i].weight(), id);
         volno = i / nr_projections;
-        SFt.setValue(MDL_REF3D, volno + 1);
+        SFt.setValue(MDL_REF3D, volno + 1, id);
     }
     fn_img = fn_root + "_noise.xmd";
     SFt.write(fn_img);
@@ -732,9 +736,9 @@ void ProgRefine3D::calculate3DSSNR(MultidimArray<double> &spectral_signal, int i
         volweight = 0.;
         FOR_ALL_OBJECTS_IN_METADATA(MDnoise_one)
         {
-            MDnoise_one.getValue(MDL_WEIGHT, weight);
-            MDnoise_one.getValue(MDL_ANGLEROT, rot);
-            MDnoise_one.getValue(MDL_ANGLETILT, tilt);
+            MDnoise_one.getValue(MDL_WEIGHT, weight, __iter.objId);
+            MDnoise_one.getValue(MDL_ANGLEROT, rot, __iter.objId);
+            MDnoise_one.getValue(MDL_ANGLETILT, tilt, __iter.objId);
             // alpha denominator
             if (c == 0)
                 alpha_N = Mone * weight;
@@ -850,7 +854,7 @@ void ProgRefine3D::remakeSFvol(int iter, bool rewrite, bool include_noise)
     {
         FOR_ALL_OBJECTS_IN_METADATA(SFvol)
         {
-            SFvol.getValue(MDL_IMAGE, fn_vol);
+            SFvol.getValue(MDL_IMAGE, fn_vol, __iter.objId);
             ref_vol.read(fn_vol);
             ref_vol().setXmippOrigin();
             if (Nvols > 1)
@@ -867,6 +871,7 @@ void ProgRefine3D::remakeSFvol(int iter, bool rewrite, bool include_noise)
 
     // Update selection file for reference volumes
     SFvol.clear();
+    size_t id;
     if (Nvols > 1)
     {
         fn_tmp += "_vol";
@@ -874,17 +879,17 @@ void ProgRefine3D::remakeSFvol(int iter, bool rewrite, bool include_noise)
         while (volno < Nvols)
         {
             fn_tmp2.compose(fn_tmp, volno + 1, "vol");
-            SFvol.addObject();
-            SFvol.setValue(MDL_IMAGE, fn_tmp2);
-            SFvol.setValue(MDL_ENABLED, 1);
+            id = SFvol.addObject();
+            SFvol.setValue(MDL_IMAGE, fn_tmp2, id);
+            SFvol.setValue(MDL_ENABLED, 1, id);
             volno++;
         }
     }
     else
     {
-        SFvol.addObject();
-        SFvol.setValue(MDL_IMAGE, fn_tmp + ".vol");
-        SFvol.setValue(MDL_ENABLED, 1);
+        id = SFvol.addObject();
+        SFvol.setValue(MDL_IMAGE, fn_tmp + ".vol", id);
+        SFvol.setValue(MDL_ENABLED, 1, id);
     }
     if (include_noise)
     {
@@ -896,17 +901,17 @@ void ProgRefine3D::remakeSFvol(int iter, bool rewrite, bool include_noise)
             while (volno < Nvols)
             {
                 fn_tmp2.compose(fn_tmp, volno + 1, "vol");
-                SFvol.addObject();
-                SFvol.setValue(MDL_IMAGE, fn_tmp2);
-                SFvol.setValue(MDL_ENABLED, 1);
+                id = SFvol.addObject();
+                SFvol.setValue(MDL_IMAGE, fn_tmp2, id);
+                SFvol.setValue(MDL_ENABLED, 1, id);
                 volno++;
             }
         }
         else
         {
-            SFvol.addObject();
-            SFvol.setValue(MDL_IMAGE, fn_tmp + ".vol");
-            SFvol.setValue(MDL_ENABLED, 1);
+            id = SFvol.addObject();
+            SFvol.setValue(MDL_IMAGE, fn_tmp + ".vol", id);
+            SFvol.setValue(MDL_ENABLED, 1, id);
         }
         // Besides noise volumes, also include cref volumes
         fn_tmp = fn_root + "_cref";
@@ -917,17 +922,17 @@ void ProgRefine3D::remakeSFvol(int iter, bool rewrite, bool include_noise)
             while (volno < Nvols)
             {
                 fn_tmp2.compose(fn_tmp, volno + 1, "vol");
-                SFvol.addObject();
-                SFvol.setValue(MDL_IMAGE, fn_tmp2);
-                SFvol.setValue(MDL_ENABLED, 1);
+                id = SFvol.addObject();
+                SFvol.setValue(MDL_IMAGE, fn_tmp2, id);
+                SFvol.setValue(MDL_ENABLED, 1, id);
                 volno++;
             }
         }
         else
         {
-            SFvol.addObject();
-            SFvol.setValue(MDL_IMAGE, fn_tmp + ".vol");
-            SFvol.setValue(MDL_ENABLED, 1);
+            id = SFvol.addObject();
+            SFvol.setValue(MDL_IMAGE, fn_tmp + ".vol", id);
+            SFvol.setValue(MDL_ENABLED, 1, id);
         }
     }
 
@@ -988,7 +993,7 @@ void ProgRefine3D::postProcessVolumes(int argc, char **argv)
 
         FOR_ALL_OBJECTS_IN_METADATA(SFvol)
         {
-            SFvol.getValue(MDL_IMAGE, fn_vol);
+            SFvol.getValue(MDL_IMAGE, fn_vol, __iter.objId);
             // Read corresponding volume from disc
             vol.read(fn_vol);
             vol().setXmippOrigin();

@@ -51,11 +51,12 @@ void ProgMLF2D::readParams()
 
         MDrestart.read(getParameter(argc, argv, "-restart"));
         cline = MDrestart.getComment();
-        MDrestart.getValue(MDL_SIGMAOFFSET, restart_offset);
-        MDrestart.getValue(MDL_IMGMD, restart_imgmd);
-        MDrestart.getValue(MDL_REFMD, restart_refmd);
-        MDrestart.getValue(MDL_ITER, restart_iter);
-        MDrestart.getValue(MDL_RANDOMSEED, restart_seed);
+        size_t id = MDrestart.firstObject();
+        MDrestart.getValue(MDL_SIGMAOFFSET, restart_offset,id);
+        MDrestart.getValue(MDL_IMGMD, restart_imgmd,id);
+        MDrestart.getValue(MDL_REFMD, restart_refmd,id);
+        MDrestart.getValue(MDL_ITER, restart_iter,id);
+        MDrestart.getValue(MDL_RANDOMSEED, restart_seed,id);
         //MDrestart.getValue(MDL_SIGMANOISE, restart_noise);
         generateCommandLine(cline, argc2, argv2, copy);
     }
@@ -528,13 +529,13 @@ void ProgMLF2D::produceSideInfo(int rank)
 
         FOR_ALL_OBJECTS_IN_METADATA(MDimg)
         {
-            MDimg.getValue(MDL_CTFMODEL, fn_ctf);
+            MDimg.getValue(MDL_CTFMODEL, fn_ctf, __iter.objId);
             is_unique=true;
             for (iifocus = 0; iifocus < all_fn_ctfs.size(); iifocus++)
                 if (fn_ctf == all_fn_ctfs[iifocus])
                 {
                     count_defocus[iifocus]++;
-                    MDimg.setValue(MDL_DEFGROUP,iifocus);
+                    MDimg.setValue(MDL_DEFGROUP,iifocus, __iter.objId);
                     is_unique = false;
                     break;
                 }
@@ -660,18 +661,19 @@ void ProgMLF2D::produceSideInfo2(int nr_vols, int size, int rank)
     {
 
         MDref.clear();
-        MDref.addObject();
-        MDref.setValue(MDL_IMAGE, fn_ref);
-        MDref.setValue(MDL_ENABLED, 1);
+        size_t id =  MDref.addObject();
+        MDref.setValue(MDL_IMAGE, fn_ref, id);
+        MDref.setValue(MDL_ENABLED, 1, id);
     }
 
     n_ref = MDref.size();
     refno = 0;
     FOR_ALL_OBJECTS_IN_METADATA(MDref)
     {
-        MDref.getValue(MDL_IMAGE, fn_tmp);
+        MDref.getValue(MDL_IMAGE, fn_tmp, __iter.objId);
 
         //img.read(fn_tmp, false, false, true, false);
+        //TODO: Check this???
         img.read(fn_tmp, true, -1, true);
 
         img().setXmippOrigin();
@@ -690,8 +692,7 @@ void ProgMLF2D::produceSideInfo2(int nr_vols, int size, int rank)
     }
 
     //This will differ from nr_images_global if MPI
-    nr_images_local = divide_equally(nr_images_global, size, rank, myFirstImg,
-                                     myLastImg);
+    nr_images_local = divide_equally(nr_images_global, size, rank, myFirstImg, myLastImg);
     //#define DEBUG
 #ifdef DEBUG
 
@@ -748,42 +749,42 @@ void ProgMLF2D::produceSideInfo2(int nr_vols, int size, int rank)
     if (do_restart)
     {
         // Read optimal image-parameters
-        FOR_ALL_LOCAL_IMAGES()
-        {
-            if (limit_rot || do_norm)
-            {
-                MDimg.getValue(MDL_ANGLEROT, imgs_oldphi[IMG_LOCAL_INDEX]);
-                MDimg.getValue(MDL_ANGLETILT, imgs_oldtheta[IMG_LOCAL_INDEX]);
-            }
-
-            idum = (do_mirror ? 2 : 1) * n_ref;
-            double xoff, yoff;
-            MDimg.getValue(MDL_SHIFTX, xoff);
-            MDimg.getValue(MDL_SHIFTY, yoff);
-            for (int refno = 0; refno < idum; refno++)
-            {
-                imgs_offsets[IMG_LOCAL_INDEX][2 * refno] = xoff;
-                imgs_offsets[IMG_LOCAL_INDEX][2 * refno + 1] = yoff;
-            }
-
-            if (do_norm)
-            {
-                MDimg.getValue(MDL_INTSCALE, imgs_scale[IMG_LOCAL_INDEX]);
-            }
-        }
+//        FOR_ALL_LOCAL_IMAGES()
+//        {
+//            if (limit_rot || do_norm)
+//            {
+//                MDimg.getValue(MDL_ANGLEROT, imgs_oldphi[IMG_LOCAL_INDEX]);
+//                MDimg.getValue(MDL_ANGLETILT, imgs_oldtheta[IMG_LOCAL_INDEX]);
+//            }
+//
+//            idum = (do_mirror ? 2 : 1) * n_ref;
+//            double xoff, yoff;
+//            MDimg.getValue(MDL_SHIFTX, xoff);
+//            MDimg.getValue(MDL_SHIFTY, yoff);
+//            for (int refno = 0; refno < idum; refno++)
+//            {
+//                imgs_offsets[IMG_LOCAL_INDEX][2 * refno] = xoff;
+//                imgs_offsets[IMG_LOCAL_INDEX][2 * refno + 1] = yoff;
+//            }
+//
+//            if (do_norm)
+//            {
+//                MDimg.getValue(MDL_INTSCALE, imgs_scale[IMG_LOCAL_INDEX]);
+//            }
+//        }
 
         // read Model parameters
         refno = 0;
         double sumw = 0.;
         FOR_ALL_OBJECTS_IN_METADATA(MDref)
         {
-            MDref.getValue(MDL_WEIGHT, alpha_k[refno]);
+            MDref.getValue(MDL_WEIGHT, alpha_k[refno], __iter.objId);
             sumw += alpha_k[refno];
             if (do_mirror)
                 MDref.getValue(MDL_MIRRORFRAC,
-                               mirror_fraction[refno]);
+                               mirror_fraction[refno], __iter.objId);
             if (do_norm)
-                MDref.getValue(MDL_INTSCALE, refs_avgscale[refno]);
+                MDref.getValue(MDL_INTSCALE, refs_avgscale[refno], __iter.objId);
             refno++;
         }
         FOR_ALL_MODELS()
@@ -938,11 +939,12 @@ void ProgMLF2D::estimateInitialNoiseSpectra()
         FOR_ALL_OBJECTS_IN_METADATA(MDimg)
         {
             if (do_ctf_correction)
-                MDimg.getValue(MDL_DEFGROUP, focus);
+                MDimg.getValue(MDL_DEFGROUP, focus, __iter.objId);
             else
                 focus = 0;
-            MDimg.getValue(MDL_IMAGE, fn_tmp);
+            MDimg.getValue(MDL_IMAGE, fn_tmp, __iter.objId);
             //img.read(fn_tmp, false, false, false, false);
+            //TODO: Check this????
             img.read(fn_tmp);
             img().setXmippOrigin();
             FourierTransform(img(), Fimg);
@@ -1352,6 +1354,7 @@ void ProgMLF2D::generateInitialReferences()
 
     MDref.clear();
     int nsub, first, last;
+    size_t id;
     for (int refno = 0; refno < n_ref; refno++)
     {
         nsub = divide_equally(nr_images_global,n_ref, refno, first, last);
@@ -1375,9 +1378,9 @@ void ProgMLF2D::generateInitialReferences()
 
         IRef() /= nsub;
         IRef.write(fn_tmp);
-        MDref.addObject();
-        MDref.setValue(MDL_IMAGE, fn_tmp);
-        MDref.setValue(MDL_ENABLED, 1);
+        id = MDref.addObject();
+        MDref.setValue(MDL_IMAGE, fn_tmp, id);
+        MDref.setValue(MDL_ENABLED, 1, id);
 
         if (verbose > 0)
             progress_bar(refno);
@@ -2893,6 +2896,7 @@ void ProgMLF2D::writeOutputFiles(const int iter, double &sumw_allrefs, double &L
     MetaData          MDo;
     std::string       comment;
     std::ofstream     fh;
+    size_t id;
 
     fn_base = fn_root;
     if (iter >= 0)
@@ -2929,27 +2933,27 @@ void ProgMLF2D::writeOutputFiles(const int iter, double &sumw_allrefs, double &L
             fn_tmp = fn_base + (i==0 ? "_ref" : "_cref");
             fn_tmp.compose(fn_tmp, refno + 1, "xmp");
             Itmp = Iref[refno];
-            std::cerr << "writing refno " << fn_tmp << std::endl;
+            //std::cerr << "writing refno " << fn_tmp << std::endl;
             Itmp.write(fn_tmp);
-            MDo.addObject();
-            MDo.setValue(MDL_IMAGE, fn_tmp);
-            MDo.setValue(MDL_ENABLED, 1);
-            MDo.setValue(MDL_WEIGHT, (double)Itmp.weight());
+            id = MDo.addObject();
+            MDo.setValue(MDL_IMAGE, fn_tmp,id);
+            MDo.setValue(MDL_ENABLED, 1,id);
+            MDo.setValue(MDL_WEIGHT, (double)Itmp.weight(),id);
             if (do_mirror)
             {
-                MDo.setValue(MDL_MIRRORFRAC, mirror_fraction[refno]);
+                MDo.setValue(MDL_MIRRORFRAC, mirror_fraction[refno],id);
             }
-            MDo.setValue(MDL_SIGNALCHANGE, conv[refno]*1000);
+            MDo.setValue(MDL_SIGNALCHANGE, conv[refno]*1000,id);
             if (do_norm)
             {
-                MDo.setValue(MDL_INTSCALE, refs_avgscale[refno]);
+                MDo.setValue(MDL_INTSCALE, refs_avgscale[refno],id);
             }
             if (do_ML3D)
             {
-                MDo.setValue(MDL_ANGLEROT, Itmp.rot());
-                MDo.setValue(MDL_ANGLETILT, Itmp.tilt());
-                MDref.getValue(MDL_REF3D, ref3d);
-                MDo.setValue(MDL_REF3D, ref3d);
+                MDo.setValue(MDL_ANGLEROT, Itmp.rot(),id);
+                MDo.setValue(MDL_ANGLETILT, Itmp.tilt(),id);
+                MDref.getValue(MDL_REF3D, ref3d, __iter.objId);
+                MDo.setValue(MDL_REF3D, ref3d,id);
             }
             ++refno;
         }
@@ -2963,20 +2967,20 @@ void ProgMLF2D::writeOutputFiles(const int iter, double &sumw_allrefs, double &L
     MDo.clear();
     MDo.setColumnFormat(false);
     MDo.setComment(cline);
-    MDo.addObject();
-    MDo.setValue(MDL_LL, LL);
-    MDo.setValue(MDL_PMAX, avecorr);
-    MDo.setValue(MDL_SIGMAOFFSET, sigma_offset);
-    MDo.setValue(MDL_RANDOMSEED, seed);
+    id = MDo.addObject();
+    MDo.setValue(MDL_LL, LL,id);
+    MDo.setValue(MDL_PMAX, avecorr,id);
+    MDo.setValue(MDL_SIGMAOFFSET, sigma_offset,id);
+    MDo.setValue(MDL_RANDOMSEED, seed,id);
     if (do_norm)
     {
-        MDo.setValue(MDL_INTSCALE, average_scale);
+        MDo.setValue(MDL_INTSCALE, average_scale,id);
     }
-    MDo.setValue(MDL_ITER, iter);
+    MDo.setValue(MDL_ITER, iter,id);
     fn_tmp = fn_base + "_img.xmd";
-    MDo.setValue(MDL_IMGMD, fn_tmp);
+    MDo.setValue(MDL_IMGMD, fn_tmp,id);
     fn_tmp = fn_base + "_ref.xmd";
-    MDo.setValue(MDL_REFMD, fn_tmp);
+    MDo.setValue(MDL_REFMD, fn_tmp,id);
 
     fn_tmp = fn_base + "_log.xmd";
     MDo.write(fn_tmp);

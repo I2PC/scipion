@@ -73,9 +73,10 @@ void XRayPSF::read(const FileName &fn)
     {
         MetaData MD;
         MD.read(fn);
+        size_t id = MD.firstObject();
 
         FileName fnPSF;
-        if (MD.getValue(MDL_IMAGE,fnPSF))
+        if (MD.getValue(MDL_IMAGE,fnPSF, id))
         {
             mode = PSF_FROM_FILE;
             PSF = new Image<double>;
@@ -87,29 +88,29 @@ void XRayPSF::read(const FileName &fn)
         else
         {
             std::vector<double> dimV;
-            if (!MD.getValue(MDL_CTF_XRAY_DIMENSIONS,dimV))
+            if (!MD.getValue(MDL_CTF_XRAY_DIMENSIONS,dimV, id))
                 REPORT_ERROR(ERR_ARG_MISSING, MDL::label2Str(MDL_CTF_XRAY_DIMENSIONS) + " argument not present.");
             Nox = dimV[0];
             Noy = dimV[1];
             Noz = dimV[2];
         }
-        if (!MD.getValue(MDL_CTF_XRAY_LAMBDA,lambda))
+        if (!MD.getValue(MDL_CTF_XRAY_LAMBDA,lambda, id))
             REPORT_ERROR(ERR_ARG_MISSING, MDL::label2Str(MDL_CTF_XRAY_LAMBDA) + " argument not present.");
         lambda *= 1e-9;
-        if (!MD.getValue(MDL_CTF_XRAY_OUTER_ZONE_WIDTH,deltaR))
+        if (!MD.getValue(MDL_CTF_XRAY_OUTER_ZONE_WIDTH,deltaR, id))
             REPORT_ERROR(ERR_ARG_MISSING, MDL::label2Str(MDL_CTF_XRAY_OUTER_ZONE_WIDTH) + " argument not present.");
         deltaR *= 1e-9;
-        if (!MD.getValue(MDL_CTF_XRAY_ZONES_NUMBER,Nzp))
+        if (!MD.getValue(MDL_CTF_XRAY_ZONES_NUMBER,Nzp, id))
             REPORT_ERROR(ERR_ARG_MISSING, MDL::label2Str(MDL_CTF_XRAY_ZONES_NUMBER) + " argument not present.");
-        if (!MD.getValue(MDL_CTF_XRAY_MAGNIFICATION,Ms))
+        if (!MD.getValue(MDL_CTF_XRAY_MAGNIFICATION,Ms, id))
             REPORT_ERROR(ERR_ARG_MISSING, MDL::label2Str(MDL_CTF_XRAY_MAGNIFICATION) + " argument not present.");
-        if (!MD.getValue(MDL_CTF_SAMPLING_RATE,dxo))
+        if (!MD.getValue(MDL_CTF_SAMPLING_RATE,dxo, id))
             REPORT_ERROR(ERR_ARG_MISSING, MDL::label2Str(MDL_CTF_SAMPLING_RATE) + " argument not present.");
         dxo *= 1e-9;
-        if (!MD.getValue(MDL_CTF_SAMPLING_RATE_Z,dzo))
+        if (!MD.getValue(MDL_CTF_SAMPLING_RATE_Z,dzo, id))
             REPORT_ERROR(ERR_ARG_MISSING, MDL::label2Str(MDL_CTF_SAMPLING_RATE_Z) + " argument not present.");
         dzo *= 1e-9;
-        if (!MD.getValue(MDL_CTF_LONGITUDINAL_DISPLACEMENT,DeltaZo))
+        if (!MD.getValue(MDL_CTF_LONGITUDINAL_DISPLACEMENT,DeltaZo, id))
             REPORT_ERROR(ERR_ARG_MISSING, MDL::label2Str(MDL_CTF_LONGITUDINAL_DISPLACEMENT) + " argument not present.");
         DeltaZo *= 1e-6;
 
@@ -161,22 +162,22 @@ void XRayPSF::write(const FileName &fn)
 
     MetaData MD;
     MD.setColumnFormat(false);
-    MD.addObject();
+    size_t id = MD.addObject();
 
     FileName fnPSF = fn.withoutExtension().addExtension("vol");
-    MD.setValue(MDL_IMAGE, fnPSF);
-    MD.setValue(MDL_CTF_XRAY_LAMBDA,lambda*1e9);
-    MD.setValue(MDL_CTF_XRAY_OUTER_ZONE_WIDTH,deltaR*1e9);
-    MD.setValue(MDL_CTF_XRAY_ZONES_NUMBER,Nzp);
-    MD.setValue(MDL_CTF_XRAY_MAGNIFICATION,Ms);
-    MD.setValue(MDL_CTF_SAMPLING_RATE,dxo*1e9);
-    MD.setValue(MDL_CTF_SAMPLING_RATE_Z,dzo*1e9);
-    MD.setValue(MDL_CTF_LONGITUDINAL_DISPLACEMENT,DeltaZo*1e6);
+    MD.setValue(MDL_IMAGE, fnPSF, id);
+    MD.setValue(MDL_CTF_XRAY_LAMBDA,lambda*1e9, id);
+    MD.setValue(MDL_CTF_XRAY_OUTER_ZONE_WIDTH,deltaR*1e9, id);
+    MD.setValue(MDL_CTF_XRAY_ZONES_NUMBER,Nzp, id);
+    MD.setValue(MDL_CTF_XRAY_MAGNIFICATION,Ms, id);
+    MD.setValue(MDL_CTF_SAMPLING_RATE,dxo*1e9, id);
+    MD.setValue(MDL_CTF_SAMPLING_RATE_Z,dzo*1e9, id);
+    MD.setValue(MDL_CTF_LONGITUDINAL_DISPLACEMENT,DeltaZo*1e6, id);
     std::vector<double> dimV(3);
     dimV[0] = Nox;
     dimV[1] = Noy;
     dimV[2] = Noz;
-    MD.setValue(MDL_CTF_XRAY_DIMENSIONS,dimV);
+    MD.setValue(MDL_CTF_XRAY_DIMENSIONS,dimV, id);
 
     MD.write(fn);
     PSF->write(fnPSF);

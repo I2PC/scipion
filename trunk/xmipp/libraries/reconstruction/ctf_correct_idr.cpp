@@ -85,8 +85,8 @@ void Prog_IDR_ART_Parameters::IDR_correction()
     FOR_ALL_OBJECTS_IN_METADATA(ctfdat)
     {
         FileName fn_img, fn_ctf;
-        ctfdat.getValue(MDL_IMAGE,fn_img);
-        ctfdat.getValue(MDL_CTFMODEL,fn_ctf);
+        ctfdat.getValue(MDL_IMAGE,fn_img, __iter.objId);
+        ctfdat.getValue(MDL_CTFMODEL,fn_ctf, __iter.objId);
         if (fn_img!="" && (imgs%numberOfProcessors==MPIrank))
         {
             // Read current input image

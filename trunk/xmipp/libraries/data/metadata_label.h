@@ -489,7 +489,7 @@ typedef union
  {
     bool boolValue;
     int intValue;
-    long int longintValue;
+    size_t longintValue;
     double doubleValue;
     String * stringValue;
     std::vector<double> * vectorValue;
@@ -522,7 +522,7 @@ public:
     MDObject(MDLabel label, const bool &boolValue);
     MDObject(MDLabel label, const String &stringValue);
     MDObject(MDLabel label, const std::vector<double> &vectorValue);
-    MDObject(MDLabel label, const long int longintValue);
+    MDObject(MDLabel label, const size_t longintValue);
     MDObject(MDLabel label, const float &floatValue);
     MDObject(MDLabel label, const char * &charValue);
 
@@ -538,7 +538,7 @@ public:
     void  getValue(bool &bv) const;
     void  getValue(String &sv) const;
     void  getValue(std::vector<double> &vv) const;
-    void  getValue(long int &lv) const;
+    void  getValue(size_t &lv) const;
     void  getValue(float &floatvalue) const;
     void  getValue(char*  &charvalue) const;
 
@@ -547,7 +547,7 @@ public:
     void  setValue(const bool &bv);
     void  setValue(const String &sv);
     void  setValue(const std::vector<double> &vv);
-    void  setValue(const long int &lv);
+    void  setValue(const size_t &lv);
     void  setValue(const float &floatvalue);
     void  setValue(const char*  &charvalue);
 

@@ -174,7 +174,7 @@ inline void MDObject::labelTypeCheck(MDLabelType checkingType) const
             ss << "int";
             break;
         case LABEL_LONG:
-            ss << "long int";
+            ss << "size_t";
             break;
         case LABEL_STRING:
             ss << "string";
@@ -249,7 +249,7 @@ MDObject::MDObject(MDLabel label, const std::vector<double> &vectorValue)
     labelTypeCheck(LABEL_VECTOR);
     this->data.vectorValue = new std::vector<double>(vectorValue);
 }
-MDObject::MDObject(MDLabel label, const long int longintValue)
+MDObject::MDObject(MDLabel label, const size_t longintValue)
 {
     this->label = label;
     this->type = MDL::labelType(label);
@@ -307,7 +307,7 @@ void  MDObject::getValue(std::vector<double> &vv) const
     labelTypeCheck(LABEL_VECTOR);
     vv = *(this->data.vectorValue);
 }
-void MDObject::getValue(long int &lv) const
+void MDObject::getValue(size_t &lv) const
 {
     labelTypeCheck(LABEL_INT);
     lv = this->data.longintValue;
@@ -358,7 +358,7 @@ void  MDObject::setValue(const std::vector<double> &vv)
     //else
     *(this->data.vectorValue) = vv;
 }
-void MDObject::setValue(const long int &lv)
+void MDObject::setValue(const size_t &lv)
 {
     labelTypeCheck(LABEL_INT);
     this->data.longintValue = lv;
@@ -466,7 +466,7 @@ bool MDObject::fromStream(std::istream &is)
             break;
         case LABEL_LONG:
             is >> d;
-            data.longintValue = (long int) d;
+            data.longintValue = (size_t) d;
             break;
         case LABEL_DOUBLE:
             is >> data.doubleValue;

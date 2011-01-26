@@ -260,8 +260,8 @@ void Micrograph::read_coordinates(int label, const FileName &_fn_coords)
     FOR_ALL_OBJECTS_IN_METADATA(MD)
     {
         int x,y;
-        MD.getValue(MDL_XINT,aux.X); //aux.X=x;
-        MD.getValue(MDL_YINT,aux.Y); //aux.Y=y;
+        MD.getValue(MDL_XINT,aux.X,__iter.objId); //aux.X=x;
+        MD.getValue(MDL_YINT,aux.Y,__iter.objId); //aux.Y=y;
         coords.push_back(aux);
     }
 }
@@ -381,24 +381,25 @@ void Micrograph::produce_all_images(int label, const FileName &fn_root,
         unlink(fn_out.c_str());
     }
     int ii=0;
+    size_t id;
     for (int n = 0; n < nmax; n++)
         if (coords[n].valid && coords[n].label == label)
         {
             fn_aux.compose(ii++,fn_out);
-            SF.addObject();
-            SF.setValue( MDL_IMAGE, fn_aux);
-            SF.setValue( MDL_MICROGRAPH, M->fn_micrograph);
-            SF.setValue( MDL_XINT, coords[n].X);
-            SF.setValue( MDL_YINT, coords[n].Y);
-            bool t=M->scissor(coords[n], I(), Dmin, Dmax, scaleX, scaleY);
+            id = SF.addObject();
+            SF.setValue( MDL_IMAGE, fn_aux, id);
+            SF.setValue( MDL_MICROGRAPH, M->fn_micrograph, id);
+            SF.setValue( MDL_XINT, coords[n].X, id);
+            SF.setValue( MDL_YINT, coords[n].Y, id);
+            bool t = M->scissor(coords[n], I(), Dmin, Dmax, scaleX, scaleY);
             if (!t)
             {
                 std::cout << "Particle " << fn_aux << " is very near the border, "
                 << "corresponding image is set to blank\n";
-                SF.setValue( MDL_ENABLED, -1);
+                SF.setValue( MDL_ENABLED, -1, id);
             }
             else
-                SF.setValue( MDL_ENABLED, 1);
+                SF.setValue( MDL_ENABLED, 1, id);
             //  if (ang!=0) I().rotate(-ang);
             I.write(fn_out,-1,true,WRITE_APPEND);
         }

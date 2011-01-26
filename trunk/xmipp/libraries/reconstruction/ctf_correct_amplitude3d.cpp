@@ -69,10 +69,10 @@ void CorrectAmplitude3DParams::produceSideInfo()
     ctfdat.read(fnCtfdat);
 
     // Get dimensions of the volumes
-    ctfdat.firstObject();
+    size_t id = ctfdat.firstObject();
     FileName fnVol, fnCTF;
-    ctfdat.getValue(MDL_IMAGE,fnVol);
-    ctfdat.getValue(MDL_CTFMODEL,fnCTF);
+    ctfdat.getValue(MDL_IMAGE,fnVol, id);
+    ctfdat.getValue(MDL_CTFMODEL,fnCTF, id);
     Image<double> V;
     V.read(fnVol,false);
     unsigned long Ndim;
@@ -99,7 +99,7 @@ void CorrectAmplitude3DParams::generateCTF1D(const FileName &fnCTF, const double
     {
         if ( (minResol < 0) || (1./res < minResol) )
         {
-        	ctf.ctf.precomputeValues(res, 0.0);
+            ctf.ctf.precomputeValues(res, 0.0);
             CTF1D(step)=ctf.ctf.CTF_at();
             if (isFlipped)
                 CTF1D(step)=ABS(CTF1D(step));
@@ -135,14 +135,14 @@ void CorrectAmplitude3DParams::generateWienerFilters()
     {
         // Calculate 1D CTF
         FileName fnVol, fnCTF;
-        ctfdat.getValue(MDL_IMAGE,fnVol);
-        ctfdat.getValue(MDL_CTFMODEL,fnCTF);
+        ctfdat.getValue(MDL_IMAGE,fnVol,__iter.objId);
+        ctfdat.getValue(MDL_CTFMODEL,fnCTF,__iter.objId);
         generateCTF1D(fnCTF,nr_steps,CTF1D);
         Vctfs1D.push_back(CTF1D);
 
         // Get the number of images contributing to this group
-    	int NumberOfImages;
-    	ctfdat.getValue(MDL_IMAGE_CLASS_COUNT,NumberOfImages);
+        int NumberOfImages;
+        ctfdat.getValue(MDL_IMAGE_CLASS_COUNT,NumberOfImages,__iter.objId);
         tot_nr_imgs += NumberOfImages;
 
         // Calculate denominator of the Wiener filter
@@ -164,12 +164,10 @@ void CorrectAmplitude3DParams::generateWienerFilters()
         sumterm(i) += tot_nr_imgs*wienConst;
     }
 
-    int iimax = ii;
-    // Fill the Wiener filter vector
-    for (ii=0; ii<iimax; ii++)
+    FOR_ALL_OBJECTS_IN_METADATA(ctfdat)
     {
-    	int NumberOfImages;
-    	ctfdat.getValue(MDL_IMAGE_CLASS_COUNT,NumberOfImages);
+        int NumberOfImages;
+        ctfdat.getValue(MDL_IMAGE_CLASS_COUNT,NumberOfImages,__iter.objId);
 
         FOR_ALL_ELEMENTS_IN_ARRAY1D(CTF1D)
         {
@@ -195,6 +193,7 @@ void CorrectAmplitude3DParams::generateWienerFilters()
                 fh << res << " " << Vwien1D[ii](step) << " " << Vctfs1D[ii](step) << "\n";
         }
         fh.close();
+        ii++;
     }
 
     // Some output to screen
@@ -223,8 +222,8 @@ void CorrectAmplitude3DParams::generateVolumes()
     int ii = 0;
     FOR_ALL_OBJECTS_IN_METADATA(ctfdat)
     {
-        ctfdat.getValue(MDL_IMAGE,fnVol);
-        ctfdat.getValue(MDL_CTFMODEL,fnCTF);
+        ctfdat.getValue(MDL_IMAGE,fnVol,__iter.objId);
+        ctfdat.getValue(MDL_CTFMODEL,fnCTF,__iter.objId);
         V.read(fnVol);
         FourierTransform(V(),fft);
         if (ii == 0)
@@ -250,8 +249,8 @@ void CorrectAmplitude3DParams::generateVolumes()
     ii = 0;
     FOR_ALL_OBJECTS_IN_METADATA(ctfdat)
     {
-        ctfdat.getValue(MDL_IMAGE,fnVol);
-        ctfdat.getValue(MDL_CTFMODEL,fnCTF);
+        ctfdat.getValue(MDL_IMAGE,fnVol,__iter.objId);
+        ctfdat.getValue(MDL_CTFMODEL,fnCTF,__iter.objId);
         FOR_ALL_ELEMENTS_IN_ARRAY3D(fft)
         {
             XX(idx) = j;

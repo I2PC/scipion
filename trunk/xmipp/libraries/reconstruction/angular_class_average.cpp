@@ -175,6 +175,7 @@ void ProgAngularClassAverage::run()
         addClassAverage(dirno,w,w1,w2);
 
         // Fill new docfile (with params after realignment)
+        size_t id;
         if (nr_iter > 0)
         {
             nr_images = ROUND(output_values[4] / AVG_OUPUT_SIZE);
@@ -188,16 +189,16 @@ void ProgAngularClassAverage::run()
                     REPORT_ERROR(ERR_UNCLASSIFIED,
                                  "The next line has no sense since the MDL_IMAGE is string \
                                  and 'this_image' is of type int...");
-                    DF.gotoFirstObject(MDValueEQ(MDL_IMAGE,this_image));
+                    id = DF.firstObject(MDValueEQ(MDL_IMAGE,this_image));
 
-                    DF.setValue(MDL_ANGLEROT,output_values[i*AVG_OUPUT_SIZE+6]);
-                    DF.setValue(MDL_ANGLETILT,output_values[i*AVG_OUPUT_SIZE+7]);
-                    DF.setValue(MDL_ANGLEPSI,output_values[i*AVG_OUPUT_SIZE+8]);
-                    DF.setValue(MDL_SHIFTX,output_values[i*AVG_OUPUT_SIZE+9]);
-                    DF.setValue(MDL_SHIFTY,output_values[i*AVG_OUPUT_SIZE+10]);
-                    DF.setValue(MDL_REF,output_values[i*AVG_OUPUT_SIZE+11]);
-                    DF.setValue(MDL_FLIP,output_values[i*AVG_OUPUT_SIZE+12]);
-                    DF.setValue(MDL_MAXCC,output_values[i*AVG_OUPUT_SIZE+13]);
+                    DF.setValue(MDL_ANGLEROT,output_values[i*AVG_OUPUT_SIZE+6],id);
+                    DF.setValue(MDL_ANGLETILT,output_values[i*AVG_OUPUT_SIZE+7],id);
+                    DF.setValue(MDL_ANGLEPSI,output_values[i*AVG_OUPUT_SIZE+8],id);
+                    DF.setValue(MDL_SHIFTX,output_values[i*AVG_OUPUT_SIZE+9],id);
+                    DF.setValue(MDL_SHIFTY,output_values[i*AVG_OUPUT_SIZE+10],id);
+                    DF.setValue(MDL_REF,output_values[i*AVG_OUPUT_SIZE+11],id);
+                    DF.setValue(MDL_FLIP,output_values[i*AVG_OUPUT_SIZE+12],id);
+                    DF.setValue(MDL_MAXCC,output_values[i*AVG_OUPUT_SIZE+13],id);
                 }
             }
         }
@@ -227,14 +228,16 @@ void ProgAngularClassAverage::produceSideInfo()
 
     // get column numbers from NewXmipp-type docfile header
     bool auxflip;
-    DF.firstObject();
-    if (DF.getValue(MDL_FLIP,auxflip))
-        do_mirrors = false;
-    else
-        do_mirrors = true;
+    size_t id = DF.firstObject();
+    //FIXME: CHECK THIS????
+//    if (DF.getValue(MDL_FLIP, auxflip, id))
+//        do_mirrors = false;
+//    else
+//        do_mirrors = true;
+    do_mirrors = DF.getValue(MDL_FLIP, auxflip, id);
 
     // Read empty image with the correct dimensions
-    DF.getValue(MDL_IMAGE,fn_img);
+    DF.getValue(MDL_IMAGE,fn_img, id);
     Iempty.read(fn_img);
     Iempty().setXmippOrigin();
     Iempty().initZeros();
@@ -269,7 +272,7 @@ void ProgAngularClassAverage::produceSideInfo()
         FOR_ALL_OBJECTS_IN_METADATA(DF)
         {
             double auxval;
-            DF.getValue(codifyLabel,auxval);
+            DF.getValue(codifyLabel,auxval,__iter.objId);
             vals.push_back(auxval);
         }
         int nn = vals.size();
@@ -527,13 +530,11 @@ void ProgAngularClassAverage::reAlignClass(Image<double> &avg1,
 
         if (splits[imgno] == 0)
         {
-            SFclass1.addObject();
-            SFclass1.setValue(MDL_IMAGE,imgs[imgno].name());
+            SFclass1.setValue(MDL_IMAGE,imgs[imgno].name(), SFclass1.addObject());
         }
         else if (splits[imgno] == 1)
         {
-            SFclass2.addObject();
-            SFclass2.setValue(MDL_IMAGE,imgs[imgno].name());
+            SFclass2.setValue(MDL_IMAGE,imgs[imgno].name(), SFclass2.addObject());
         }
     }
 }
@@ -603,14 +604,14 @@ void ProgAngularClassAverage::processOneClass(int &dirno,
     }
     FOR_ALL_OBJECTS_IN_METADATA(_DF)
     {
-        _DF.getValue(MDL_IMAGE,fn_img);
+        _DF.getValue(MDL_IMAGE,fn_img, __iter.objId);
         this_image++;
         //_DF.getValue(MDL_REF,ref_number);
         //if (ref_number == dirno)
         {
             bool is_selected = true;
             double auxval;
-            _DF.getValue(MDL::str2Label(col_select),auxval);
+            _DF.getValue(MDL::str2Label(col_select),auxval, __iter.objId);
             if (do_limit0)
             {
                 if (auxval < limit0)
@@ -623,11 +624,12 @@ void ProgAngularClassAverage::processOneClass(int &dirno,
             }
             if (is_selected)
             {
-                _DF.getValue(MDL_ANGLEPSI, psi);
-                _DF.getValue(MDL_SHIFTX, xshift);
-                _DF.getValue(MDL_SHIFTY, yshift);
+                _DF.getValue(MDL_ANGLEPSI, psi, __iter.objId);
+                _DF.getValue(MDL_SHIFTX, xshift, __iter.objId);
+                _DF.getValue(MDL_SHIFTY, yshift, __iter.objId);
                 if (do_mirrors)
-                    _DF.getValue(MDL_FLIP,mirror);
+                    _DF.getValue(MDL_FLIP,mirror, __iter.objId);
+                //TODO: Check this????
                 img.read(fn_img);
                 img().setXmippOrigin();
                 img.setEulerAngles(0., 0., psi);
@@ -657,15 +659,13 @@ void ProgAngularClassAverage::processOneClass(int &dirno,
                 {
                     avg1() += img();
                     w1 += 1.;
-                    SFclass1.addObject();
-                    SFclass1.setValue(MDL_IMAGE,fn_img);
+                    SFclass1.setValue(MDL_IMAGE,fn_img, SFclass1.addObject());
                 }
                 else
                 {
                     avg2() += img();
                     w2 += 1.;
-                    SFclass2.addObject();
-                    SFclass2.setValue(MDL_IMAGE,fn_img);
+                    SFclass2.setValue(MDL_IMAGE,fn_img, SFclass2.addObject());
                 }
             }
         }
@@ -793,21 +793,22 @@ void ProgAngularClassAverage::addClassAverage(int dirno,
     DFlib.getValue(MDL_ANGLETILT,tilt,dirno);
     double d=0.;
     bool f=false;
+    size_t id;
     if (w > 0.)
     {
         fn_tmp.compose(fn_out+"_class",dirno,"xmp");
-        SFclasses.addObject();
-        SFclasses.setValue(MDL_IMAGE,fn_tmp);
-        SFclasses.setValue(MDL_ANGLEROT,rot);
-        SFclasses.setValue(MDL_ANGLETILT,tilt);
+        id = SFclasses.addObject();
+        SFclasses.setValue(MDL_IMAGE,fn_tmp,id);
+        SFclasses.setValue(MDL_ANGLEROT,rot,id);
+        SFclasses.setValue(MDL_ANGLETILT,tilt,id);
         //this may help to keep compatibility with the next program
-        SFclasses.setValue(MDL_ANGLEPSI,d);
-        SFclasses.setValue(MDL_SHIFTX,d);
-        SFclasses.setValue(MDL_SHIFTY,d);
+        SFclasses.setValue(MDL_ANGLEPSI,d,id);
+        SFclasses.setValue(MDL_SHIFTX,d,id);
+        SFclasses.setValue(MDL_SHIFTY,d,id);
 
-        SFclasses.setValue(MDL_WEIGHT,w);
+        SFclasses.setValue(MDL_WEIGHT,w,id);
         //this may help to keep compatibility with the next program
-        SFclasses.setValue(MDL_FLIP,f);
+        SFclasses.setValue(MDL_FLIP,f,id);
 
     }
     if (do_split)
@@ -815,36 +816,36 @@ void ProgAngularClassAverage::addClassAverage(int dirno,
         if (w1 > 0.)
         {
             fn_tmp.compose(fn_out1+"_class",dirno,"xmp");
-            SFclasses1.addObject();
-            SFclasses1.setValue(MDL_IMAGE,fn_tmp);
-            SFclasses1.setValue(MDL_ANGLEROT,rot);
-            SFclasses1.setValue(MDL_ANGLETILT,tilt);
+            id = SFclasses1.addObject();
+            SFclasses1.setValue(MDL_IMAGE,fn_tmp,id);
+            SFclasses1.setValue(MDL_ANGLEROT,rot,id);
+            SFclasses1.setValue(MDL_ANGLETILT,tilt,id);
             //this may help to keep compatibility with the next program
-            SFclasses1.setValue(MDL_ANGLEPSI,d);
-            SFclasses1.setValue(MDL_SHIFTX,d);
-            SFclasses1.setValue(MDL_SHIFTY,d);
+            SFclasses1.setValue(MDL_ANGLEPSI,d,id);
+            SFclasses1.setValue(MDL_SHIFTX,d,id);
+            SFclasses1.setValue(MDL_SHIFTY,d,id);
 
-            SFclasses1.setValue(MDL_WEIGHT,w1);
+            SFclasses1.setValue(MDL_WEIGHT,w1,id);
 
             //this may help to keep compatibility with the next program
-            SFclasses1.setValue(MDL_FLIP,f);
+            SFclasses1.setValue(MDL_FLIP,f,id);
         }
         if (w2 > 0.)
         {
             fn_tmp.compose(fn_out2+"_class",dirno,"xmp");
-            SFclasses2.addObject();
-            SFclasses2.setValue(MDL_IMAGE,fn_tmp);
-            SFclasses2.setValue(MDL_ANGLEROT,rot);
-            SFclasses2.setValue(MDL_ANGLETILT,tilt);
+            id = SFclasses2.addObject();
+            SFclasses2.setValue(MDL_IMAGE,fn_tmp,id);
+            SFclasses2.setValue(MDL_ANGLEROT,rot,id);
+            SFclasses2.setValue(MDL_ANGLETILT,tilt,id);
             //this may help to keep compatibility with the next program
-            SFclasses2.setValue(MDL_ANGLEPSI,d);
-            SFclasses2.setValue(MDL_SHIFTX,d);
-            SFclasses2.setValue(MDL_SHIFTY,d);
+            SFclasses2.setValue(MDL_ANGLEPSI,d,id);
+            SFclasses2.setValue(MDL_SHIFTX,d,id);
+            SFclasses2.setValue(MDL_SHIFTY,d,id);
 
-            SFclasses2.setValue(MDL_WEIGHT,w2);
+            SFclasses2.setValue(MDL_WEIGHT,w2,id);
 
             //this may help to keep compatibility with the next program
-            SFclasses2.setValue(MDL_FLIP,f);
+            SFclasses2.setValue(MDL_FLIP,f,id);
         }
     }
 }

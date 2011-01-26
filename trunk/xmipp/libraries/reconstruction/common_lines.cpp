@@ -176,7 +176,7 @@ void * threadPrepareImages( void * args )
     {
         if ((i+1)%parent->Nthr==master->myThreadID)
         {
-            I.readApplyGeo(SFi,objId);
+            I.readApplyGeo(SFi,__iter.objId);
             I().setXmippOrigin();
 
             // Bandpass filter images

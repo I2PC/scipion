@@ -129,14 +129,15 @@ void make_even_distribution(MetaData &DF, double sampling,
         if (tilt > 0) rot_nstep = CEIL(360. * sin(DEG2RAD(tilt)) / sampling);
         else rot_nstep = 1;
         rot_sam = 360. / (double)rot_nstep;
+        size_t id;
         for (double rot = 0.; rot < 360.; rot += rot_sam)
         {
             // Check whether by symmetry or mirror the angle has been included already
             append = true;
             FOR_ALL_OBJECTS_IN_METADATA(DF)
             {
-            	DF.getValue(MDL_ANGLEROT, dfrot);
-            	DF.getValue(MDL_ANGLETILT, dftilt);
+            	DF.getValue(MDL_ANGLEROT, dfrot, __iter.objId);
+            	DF.getValue(MDL_ANGLETILT, dftilt, __iter.objId);
             	if (!directions_are_unique(rot, tilt, dfrot, dftilt, rot_sam, tilt_sam, SL, include_mirror))
                 {
                     append = false;
@@ -145,10 +146,10 @@ void make_even_distribution(MetaData &DF, double sampling,
             }
             if (append)
             {
-            	DF.addObject();
-            	DF.setValue(MDL_ANGLEROT, rot);
-            	DF.setValue(MDL_ANGLETILT, tilt);
-            	DF.setValue(MDL_ANGLEPSI, 0.);
+            	id = DF.addObject();
+            	DF.setValue(MDL_ANGLEROT, rot, id);
+            	DF.setValue(MDL_ANGLETILT, tilt, id);
+            	DF.setValue(MDL_ANGLEPSI, 0., id);
             }
         }
     }
@@ -176,8 +177,8 @@ int find_nearest_direction(double rot1, double tilt1,
     mindist = 9999.;
     FOR_ALL_OBJECTS_IN_METADATA(DFlib)
     {
-        DFlib.getValue(MDL_ANGLEROT, dfrot);
-        DFlib.getValue(MDL_ANGLETILT, dftilt);
+        DFlib.getValue(MDL_ANGLEROT, dfrot,__iter.objId);
+        DFlib.getValue(MDL_ANGLETILT, dftilt,__iter.objId);
     	dist = distance_directions(rot1, tilt1, dfrot, dftilt, false);
         if (dist < mindist)
         {

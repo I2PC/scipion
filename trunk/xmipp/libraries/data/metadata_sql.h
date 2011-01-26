@@ -91,7 +91,7 @@ private:
 
     /**Add a new row and return the objId(rowId).
      */
-    long int addRow();
+    size_t addRow();
 
     /** Add a new column to a metadata.
      */
@@ -115,19 +115,19 @@ private:
      * Also a query could be specified for selecting objects
      * if no query is provided by default all are returned
      */
-    void selectObjects(std::vector<long int> &objectsOut, const MDQuery *queryPtr = NULL);
+    void selectObjects(std::vector<size_t> &objectsOut, const MDQuery *queryPtr = NULL);
 
     /** This function will delete elements that match the query.
      * If not query is provided, all rows are deleted
      */
-    long int deleteObjects(const MDQuery *queryPtr = NULL);
+    size_t deleteObjects(const MDQuery *queryPtr = NULL);
 
     /** Coppy the objects from a metada to other.
      * return the number of objects copied
      * */
-    long int copyObjects(MDSql * sqlOut,
+    size_t copyObjects(MDSql * sqlOut,
                          const MDQuery *queryPtr = NULL) const;
-    long int copyObjects(MetaData * mdPtrOut,
+    size_t copyObjects(MetaData * mdPtrOut,
                          const MDQuery *queryPtr = NULL) const;
 
     /** This function performs aggregation operations.
@@ -150,10 +150,10 @@ private:
 
     /** Some iteration methods
      */
-    long int firstRow();
-    long int lastRow();
-    long int nextRow(long int currentRow);
-    long int previousRow(long int currentRow);
+    size_t firstRow();
+    size_t lastRow();
+    size_t nextRow(size_t currentRow);
+    size_t previousRow(size_t currentRow);
 
     int columnMaxLength(MDLabel column);
 
@@ -194,7 +194,7 @@ private:
     void prepareStmt(const std::stringstream &ss, sqlite3_stmt *stmt);
     bool execSingleStmt(const std::stringstream &ss);
     bool execSingleStmt(sqlite3_stmt *&stmt, const std::stringstream *ss = NULL);
-    long int execSingleIntStmt(const std::stringstream &ss);
+    size_t execSingleIntStmt(const std::stringstream &ss);
     double execSingleDoubleStmt(const std::stringstream &ss);
 
     String tableName(const int tableId) const;

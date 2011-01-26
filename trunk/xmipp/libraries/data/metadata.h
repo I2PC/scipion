@@ -49,6 +49,8 @@ static double zeroD=0.;
 static double oneD=1.;
 static bool  falseb=false;
 
+#define BAD_OBJID 0
+
 /** Write mode
  */
 typedef enum
@@ -73,10 +75,9 @@ typedef enum
  * }
  * @endcode
  */
-#define FOR_ALL_OBJECTS_IN_METADATA(metadata) \
-        for(long int objId = (metadata).iteratorBegin(); \
-             !(metadata).iteratorEnd(); \
-             objId=(metadata).iteratorNext())
+
+#define FOR_ALL_OBJECTS_IN_METADATA(__md) \
+        for(MDIterator __iter = (__md).getIterator(); __iter.next();)
 
 /** Iterate over all elements of two MetaData at same time.
  *
@@ -101,15 +102,16 @@ typedef enum
  * }
  * @endcode
  */
-#define FOR_ALL_OBJECTS_IN_METADATA2(kkkk_metadata, jjjj_metadata) \
-        for(long int kkkk = (kkkk_metadata).iteratorBegin(), jjjj = (jjjj_metadata).iteratorBegin(); \
-             !(kkkk_metadata).iteratorEnd() && !(jjjj_metadata).iteratorEnd();\
-             kkkk=(kkkk_metadata).iteratorNext(), jjjj=(jjjj_metadata).iteratorNext())
+
+#define FOR_ALL_OBJECTS_IN_METADATA2(__md, __md2) \
+        for(MDIterator __iter = (__md).getIterator(), __iter2 = (__md2).getIterator(); \
+             __iter.next() && __iter2.next();)
 
 
 
 class MDQuery;
 class MDSql;
+class MDIterator;
 
 /** Class to manage data files.
  *
@@ -121,17 +123,10 @@ class MDSql;
 class MetaData
 {
 protected:
-    //std::map<long int, MetaDataContainer *> objects; ///< Effectively stores all metadata
-
-    // Used by firstObject, nextObject and lastObject to keep a pointer
-    // to the "active" object. This way when you call setValue without
-    // an objectId, this one is chosen
-    //std::map<long int, MetaDataContainer *>::iterator objectsIterator;
-
     // Allows a fast search for pairs where the value is
     // a string, i.e. looking for filenames which is quite
     // usual
-    std::map<std::string, long int> fastStringSearch;
+    std::map<std::string, size_t> fastStringSearch;
     MDLabel fastStringSearchLabel;
 
     std::string path; ///< A parameter stored on MetaData Files
@@ -163,17 +158,6 @@ protected:
     /** The table id to do db operations */
     MDSql * myMDSql;
 
-    /** The id of the object that is active
-     * usefull for calling 'setValue' and 'getValue'
-     * without specifying object id
-     * when activeObjId = -1 means that aren't active object
-     */
-    int activeObjId;
-
-    /** This are for iteration */
-    int iterIndex;
-    std::vector<long int> *iterObjectsId;
-
     /** Init, do some initializations tasks, used in constructors
      * @ingroup MetaDataConstructors
      */
@@ -193,7 +177,7 @@ protected:
      * but doesn't perform any range(wich implies do a size()) checks.
      */
     void _selectSplitPart(const MetaData &mdIn,
-                          int n, int part, long int mdSize,
+                          int n, int part, size_t mdSize,
                           const MDLabel sortLabel);
 
     /** This function is for generalizate the sets operations
@@ -205,8 +189,6 @@ protected:
     void _setOperates(const MetaData &mdInLeft, const MetaData &mdInRight, const MDLabel label, SetOperation operation);
     /** clear data and table structure */
     void _clear(bool onlyData=false);
-
-    long int _iteratorBegin(const MDQuery *query = NULL);
 
     /** Some private reading functions */
     void _readColumns(std::istream& is, MDRow & columnValues,
@@ -291,7 +273,7 @@ public:
      * The parsing will be from an input stream(istream)
      * and if parsing fails, an error will be raised
      */
-    void _parseObject(std::istream &is, MDObject &object);
+    void _parseObject(std::istream &is, MDObject &object, size_t id=BAD_OBJID);
 
     /** Get Metadata labels for the block defined by start
      * and end loop pointers. Return pointer to newline after last label
@@ -348,11 +330,6 @@ public:
      */
     std::vector<MDLabel> *geActiveLabelsAddress() const;
 
-    /**Get the active object id.
-     * -1 will be returned if no object is active
-     */
-    long int getActiveObject() const;
-
     /**Get maximum string length of column values.
     */
     int MaxStringLength( const MDLabel thisLabel) const;
@@ -394,9 +371,9 @@ public:
      * @endcode
      */
     template<class T>
-    bool setValue(const MDLabel label, const T &valueIn, long int objectId=-1)
+    bool setValue(const MDLabel label, const T &valueIn, size_t id)
     {
-        setValue(MDObject(label, valueIn), objectId);
+        setValue(MDObject(label, valueIn), id);
     }
 
     /** This functions are using MDObject for set real values
@@ -405,8 +382,8 @@ public:
      * This is done for some type checking of Metadata labels
      * and values
      */
-    bool setValue(const MDObject &mdValueIn, long int objId = -1);
-    bool getValue(MDObject &mdValueOut, long int objId = -1) const;
+    bool setValue(const MDObject &mdValueIn, size_t id);
+    bool getValue(MDObject &mdValueOut, size_t id) const;
 
     /** Get the value of some label.
      * from the object that has id 'objectId'
@@ -423,12 +400,12 @@ public:
      * @endcode
      */
     template<class T>
-    bool getValue(const MDLabel label, T &valueOut, long int objectId = -1) const
+    bool getValue(const MDLabel label, T &valueOut, size_t id) const
     {
         try
         {
             MDObject mdValueOut(label);
-            if (!getValue(mdValueOut,objectId))
+            if (!getValue(mdValueOut, id))
                 return false;
             mdValueOut.getValue(valueOut);
             return true;
@@ -446,7 +423,7 @@ public:
     {
         T value;
         MDObject mdValueOut(label);
-        std::vector<long int> objectsId;
+        std::vector<size_t> objectsId;
         findObjects(objectsId);
         int n = objectsId.size();
         valuesOut.resize(n);
@@ -460,18 +437,18 @@ public:
     }
 
     /** Get all values of an MetaData row of an specified objId*/
-    bool getRow(MDRow &row, long int objId = -1) const;
+    bool getRow(MDRow &row, size_t id) const;
 
     /** Copy all the values in the input row in the current metadata*/
-    void setRow(const MDRow &row);
+    void setRow(const MDRow &row, size_t id);
 
     /** Set label values from string representation.
      */
-    bool setValueFromStr(const MDLabel label, const std::string &value, long int objectId = -1);
+    bool setValueFromStr(const MDLabel label, const std::string &value, size_t id);
 
     /** Get string representation from label value.
      */
-    bool getStrFromValue(const MDLabel label, std::string &strOut, long int objectId = -1) const;
+    bool getStrFromValue(const MDLabel label, std::string &strOut, size_t id) const;
 
     /**Check whether the metadata is empty.
      */
@@ -479,7 +456,7 @@ public:
 
     /**Number of objects contained in the metadata.
      */
-    long int size() const;
+    size_t size() const;
 
     /** Check whether a label is contained in metadata.
      */
@@ -498,7 +475,7 @@ public:
      * objectId == input objectId, just removes it and creates an empty
      * one
      */
-    long int addObject(long int objectId = -1);
+    size_t addObject();
 
     /** Import objects from another metadata.
      * @code
@@ -510,21 +487,21 @@ public:
      * A.importObjects(B);     *
      * @endcode
      */
-    void importObject(const MetaData &md, const long int objId, bool doClear=true);
-    void importObjects(const MetaData &md, const std::vector<long int> &objectsToAdd, bool doClear=true);
+    void importObject(const MetaData &md, const size_t id, bool doClear=true);
+    void importObjects(const MetaData &md, const std::vector<size_t> &objectsToAdd, bool doClear=true);
     void importObjects(const MetaData &md, const MDQuery &query, bool doClear=true);
 
     /** Remove the object with this id.
     * Returns true if the object was removed or false if
     * the object did not exist
     */
-    bool removeObject(long int objectId);
+    bool removeObject(size_t id);
 
     /** Removes the collection of objects of given vector id's
      * NOTE: The iterator will point to the first object after any of these
      * operations
      */
-    void removeObjects(const std::vector<long int> &toRemove);
+    void removeObjects(const std::vector<size_t> &toRemove);
 
     /** Removes objects from metadata.
      * return the number of deleted rows
@@ -547,55 +524,16 @@ public:
      * @{
      */
 
-    /** Goto first metadata object.
-     * This function changes he 'activeObject'
-     * to the first object in the metadata
-     * so all calls to setValue() and getValue() will
-     * be performed to this object.
-     */
-    long int firstObject();
+    MDIterator getIterator(const MDQuery& query) const;
+    MDIterator getIterator() const;
+
+    /** Return the object id of the first element in metadata. */
+    size_t firstObject() const;
+    /** Return the object id of the first element result from query */
+    size_t firstObject(const MDQuery&) const;
 
     /** Goto last metadata object.*/
-    long int lastObject();
-
-    /** Goto next object to the active object.*/
-    long int nextObject();
-
-    /** Goto previous object to the active object.*/
-    long int previousObject();
-
-    /** Goto to specific object */
-    long int goToObject(long int objectId);
-
-    /** Goto to the first object that match the query.
-     * This function will change the active object
-     * to the first object that match the query if
-     * the query results are non-empty
-     */
-    long int gotoFirstObject(const MDQuery &query);
-
-    /** Starts iterating over all objects.
-     * the first object id will be returned.
-     * Also the active object will be changed
-     * to the first object.
-     */
-    long int iteratorBegin();
-
-    /**Starts iterating over a subset of objects.
-     * the first object of the subset will
-     * be returned and active object changed.
-     */
-    long int iteratorBegin(const MDQuery &query);
-
-    /** Check whether the iteration has finished.
-     */
-    bool iteratorEnd() const;
-
-    /** Move to next object on iteration.
-     * return nextObject id
-     */
-    long int iteratorNext();
-    /** @} */
+    size_t lastObject() const;
 
     /** @name Search operations
      * @{
@@ -605,16 +543,16 @@ public:
      * if called without query, all objects are returned
      * if limit is provided only return a maximun of 'limit'
      */
-    void findObjects(std::vector<long int> &objectsOut, const MDQuery &query) const;
-    void findObjects(std::vector<long int> &objectsOut, int limit = -1) const;
+    void findObjects(std::vector<size_t> &objectsOut, const MDQuery &query) const;
+    void findObjects(std::vector<size_t> &objectsOut, int limit = -1) const;
 
     /**Count all objects that match a query.
      */
-    int countObjects(const MDQuery &query);
+    size_t countObjects(const MDQuery &query);
 
     /** Find if the object with this id is present in the metadata
      */
-    bool containsObject(long int objectId);
+    bool containsObject(size_t objectId);
 
     /**Check if exists at least one object that match query.
      */
@@ -693,7 +631,7 @@ public:
     void aggregate(const MetaData &mdIn, const std::vector<AggregateOperation> &ops,
                    MDLabel operateLabel, const std::vector<MDLabel> &resultLabels);
     void aggregateSingle(MDObject &mdValueOut, AggregateOperation op,
-                           MDLabel aggregateLabel);
+                         MDLabel aggregateLabel);
     /** Union of elements in two Metadatas, without duplicating.
      * Result in calling metadata object
      * union is a reserved word so I called this method unionDistinct
@@ -786,7 +724,7 @@ public:
      * if the numberOfObjects is -1, all objects
      * will be returned from startPosition to the end.
     */
-    void selectPart (const MetaData &mdIn, long int startPosition, long int numberOfObjects,
+    void selectPart (const MetaData &mdIn, size_t startPosition, size_t numberOfObjects,
                      const MDLabel sortLabel=MDL_OBJID);
 
     /** Makes filenames with absolute paths
@@ -799,8 +737,35 @@ public:
 
 
     friend class MDSql;
-};
+}
+;//class MetaData
 
+////////////////////////////// MetaData Iterator ////////////////////////////
+/** Iterates over metadatas */
+class MDIterator
+{
+protected:
+    std::vector<size_t> * objects;
+    std::vector<size_t>::const_iterator iter;
+
+
+public:
+    /** Empty constructor */
+    MDIterator();
+    /** Destructor */
+    ~MDIterator();
+    size_t objId;
+
+
+
+    /** Function to move to next element.
+     * return false if there aren't more elements to iterate.
+     */
+    bool next();
+
+    friend class MetaData;
+}
+;//class MDIterator
 
 /** Convert string to write mode metadata enum.
  *

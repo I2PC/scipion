@@ -319,7 +319,7 @@ public:
     //Dont randomize for tests
     //bool randomize;
     //Vector of image IDs in the MetaData object (change order for randomize)
-    std::vector<long int> img_id;
+    std::vector<size_t> img_id;
 
     //Seed for randomize
     int seed;

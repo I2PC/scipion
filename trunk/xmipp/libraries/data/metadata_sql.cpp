@@ -81,7 +81,7 @@ bool MDSql::clearMd()
     return result;
 }
 
-long int MDSql::addRow()
+size_t MDSql::addRow()
 {
     //Fixme: this can be done in the constructor of MDCache only once
     sqlite3_stmt * &stmt = myCache->addRowStmt;
@@ -94,7 +94,7 @@ long int MDSql::addRow()
         rc = sqlite3_prepare_v2(db, ss.str().c_str(), -1, &stmt, &zLeftover);
     }
     rc = sqlite3_reset(stmt);
-    long int id = -1;
+    size_t id = BAD_OBJID;
     if (execSingleStmt(stmt))
         id = sqlite3_last_insert_rowid(db);
 
@@ -201,7 +201,7 @@ bool MDSql::getObjectValue(const int objId, MDObject  &value)
     return true;
 }
 
-void MDSql::selectObjects(std::vector<long int> &objectsOut, const MDQuery *queryPtr)
+void MDSql::selectObjects(std::vector<size_t> &objectsOut, const MDQuery *queryPtr)
 {
     std::stringstream ss;
     sqlite3_stmt *stmt;
@@ -227,7 +227,7 @@ void MDSql::selectObjects(std::vector<long int> &objectsOut, const MDQuery *quer
     rc = sqlite3_finalize(stmt);
 }
 
-long int MDSql::deleteObjects(const MDQuery *queryPtr)
+size_t MDSql::deleteObjects(const MDQuery *queryPtr)
 {
     std::stringstream ss;
     ss << "DELETE FROM " << tableName(tableId);
@@ -242,12 +242,12 @@ long int MDSql::deleteObjects(const MDQuery *queryPtr)
 
 }
 
-long int MDSql::copyObjects(MetaData *mdPtrOut, const MDQuery *queryPtr) const
+size_t MDSql::copyObjects(MetaData *mdPtrOut, const MDQuery *queryPtr) const
 {
-    copyObjects(mdPtrOut->myMDSql, queryPtr);
+    return copyObjects(mdPtrOut->myMDSql, queryPtr);
 }
 
-long int MDSql::copyObjects(MDSql * sqlOut, const MDQuery *queryPtr) const
+size_t MDSql::copyObjects(MDSql * sqlOut, const MDQuery *queryPtr) const
 {
     //NOTE: Is assumed that the destiny table has
     // the same columns that the source table, if not
@@ -372,7 +372,7 @@ void MDSql::indexModify(const MDLabel column, bool create)
     execSingleStmt(ss);
 }
 
-long int MDSql::firstRow()
+size_t MDSql::firstRow()
 {
     std::stringstream ss;
     ss << "SELECT COALESCE(MIN(objID), -1) AS MDSQL_FIRST_ID FROM "
@@ -380,7 +380,7 @@ long int MDSql::firstRow()
     return execSingleIntStmt(ss);
 }
 
-long int MDSql::lastRow()
+size_t MDSql::lastRow()
 {
     std::stringstream ss;
     ss << "SELECT COALESCE(MAX(objID), -1) AS MDSQL_LAST_ID FROM "
@@ -388,7 +388,7 @@ long int MDSql::lastRow()
     return execSingleIntStmt(ss);
 }
 
-long int MDSql::nextRow(long int currentRow)
+size_t MDSql::nextRow(size_t currentRow)
 {
     std::stringstream ss;
     ss << "SELECT COALESCE(MIN(objID), -1) AS MDSQL_NEXT_ID FROM "
@@ -397,7 +397,7 @@ long int MDSql::nextRow(long int currentRow)
     return execSingleIntStmt(ss);
 }
 
-long int MDSql::previousRow(long int currentRow)
+size_t MDSql::previousRow(size_t currentRow)
 {
     std::stringstream ss;
     ss << "SELECT COALESCE(MAX(objID), -1) AS MDSQL_PREV_ID FROM "
@@ -647,12 +647,12 @@ bool MDSql::execSingleStmt(sqlite3_stmt * &stmt, const std::stringstream *ss)
     return r;
 }
 
-long int MDSql::execSingleIntStmt(const std::stringstream &ss)
+size_t MDSql::execSingleIntStmt(const std::stringstream &ss)
 {
     sqlite3_stmt * stmt;
     rc = sqlite3_prepare_v2(db, ss.str().c_str(), -1, &stmt, &zLeftover);
     rc = sqlite3_step(stmt);
-    long int result = sqlite3_column_int(stmt, 0);
+    size_t result = sqlite3_column_int(stmt, 0);
 
     if (rc != SQLITE_OK && rc != SQLITE_ROW && rc != SQLITE_DONE)
     {

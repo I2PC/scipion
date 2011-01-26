@@ -131,21 +131,22 @@ void ProgML2D::readParams()
     if (!do_ML3D  && checkParam("-restart"))
     {
         //TODO-------- Think later -----------
-        do_restart = true;
-        MetaData MDrestart;
-        char *copy  = NULL;
-
-        MDrestart.read(getParam("-restart"));
-        cline = MDrestart.getComment();
-        MDrestart.getValue(MDL_SIGMANOISE, restart_noise);
-        MDrestart.getValue(MDL_SIGMAOFFSET, restart_offset);
-        MDrestart.getValue(MDL_IMGMD, restart_imgmd);
-        MDrestart.getValue(MDL_REFMD, restart_refmd);
-        MDrestart.getValue(MDL_ITER, restart_iter);
-        MDrestart.getValue(MDL_RANDOMSEED, restart_seed);
-        generateCommandLine(cline, argc2, argv2, copy);
-        //Take argument from the restarting command line
-        progDef->read(argc2, argv2);
+      REPORT_ERROR(ERR_NOT_IMPLEMENTED, "Not implemented restart in ml2d for now");
+//        do_restart = true;
+//        MetaData MDrestart;
+//        char *copy  = NULL;
+//
+//        MDrestart.read(getParam("-restart"));
+//        cline = MDrestart.getComment();
+//        MDrestart.getValue(MDL_SIGMANOISE, restart_noise);
+//        MDrestart.getValue(MDL_SIGMAOFFSET, restart_offset);
+//        MDrestart.getValue(MDL_IMGMD, restart_imgmd);
+//        MDrestart.getValue(MDL_REFMD, restart_refmd);
+//        MDrestart.getValue(MDL_ITER, restart_iter);
+//        MDrestart.getValue(MDL_RANDOMSEED, restart_seed);
+//        generateCommandLine(cline, argc2, argv2, copy);
+//        //Take argument from the restarting command line
+//        progDef->read(argc2, argv2);
     }
     else
     {
@@ -485,8 +486,8 @@ void ProgML2D::produceSideInfo()
 
         FOR_ALL_OBJECTS_IN_METADATA(MDimg)
         {
-            MDimg.getValue(MDL_IMAGE, fn_tmp);
-            img.readApplyGeo(fn_tmp,MDimg,objId);
+            MDimg.getValue(MDL_IMAGE, fn_tmp, __iter.objId);
+            img.readApplyGeo(fn_tmp,MDimg, __iter.objId);
             img().setXmippOrigin();
             avg() += img();
         }
@@ -501,9 +502,9 @@ void ProgML2D::produceSideInfo()
         avg.write(fn_tmp);
         fn_ref += "_ref.xmd";
         MDref.clear();
-        MDref.addObject();
-        MDref.setValue(MDL_IMAGE, fn_tmp);
-        MDref.setValue(MDL_ENABLED, 1);
+        size_t id = MDref.addObject();
+        MDref.setValue(MDL_IMAGE, fn_tmp, id);
+        MDref.setValue(MDL_ENABLED, 1, id);
         MDref.write(fn_ref);
     }
 
@@ -524,6 +525,7 @@ void ProgML2D::produceSideInfo2()
 {
     Image<double> img;
     FileName fn_tmp;
+    size_t id;
 
     // Read in all reference images in memory
     if (fn_ref.isMetaData())
@@ -533,17 +535,17 @@ void ProgML2D::produceSideInfo2()
     else
     {
         MDref.clear();
-        MDref.addObject();
-        MDref.setValue(MDL_IMAGE, fn_ref);
-        MDref.setValue(MDL_ENABLED, 1);
+        id = MDref.addObject();
+        MDref.setValue(MDL_IMAGE, fn_ref, id);
+        MDref.setValue(MDL_ENABLED, 1, id);
     }
 
     model.setNRef(MDref.size());
     int refno = 0;
     FOR_ALL_OBJECTS_IN_METADATA(MDref)
     {
-        MDref.getValue(MDL_IMAGE, fn_tmp);
-        img.readApplyGeo(fn_tmp,MDref,objId);
+        MDref.getValue(MDL_IMAGE, fn_tmp, __iter.objId);
+        img.readApplyGeo(fn_tmp,MDref, __iter.objId);
         img().setXmippOrigin();
         model.Iref[refno] = img;
         // Default start is all equal model fractions
@@ -697,49 +699,49 @@ void ProgML2D::produceSideInfo2()
         }
     }
 
+    //TODO: THINK RESTART LATER, NOW NOT WORKING
     if (do_restart)
     {
+      REPORT_ERROR(ERR_NOT_IMPLEMENTED, "Restart option not implement yet in ml2d");
+
         // Read optimal image-parameters
-        FOR_ALL_LOCAL_IMAGES()
-        {
-            if (limit_rot)
-            {
-                MDimg.getValue(MDL_ANGLEROT, imgs_oldphi[IMG_LOCAL_INDEX]);
-                MDimg.getValue(MDL_ANGLETILT, imgs_oldtheta[IMG_LOCAL_INDEX]);
-            }
-            if (zero_offsets)
-            {
-                idum = (do_mirror ? 2 : 1) * model.n_ref;
-                double xx, yy;
-                MDimg.getValue(MDL_SHIFTX, xx);
-                MDimg.getValue(MDL_SHIFTX, yy);
-                for (int refno = 0; refno < idum; refno++)
-                {
-                    imgs_offsets[IMG_LOCAL_INDEX][2 * refno] = xx;
-                    imgs_offsets[IMG_LOCAL_INDEX][2 * refno + 1] = yy;
-                }
-            }
-            if (model.do_norm)
-            {
-                MDimg.getValue(MDL_BGMEAN, imgs_bgmean[IMG_LOCAL_INDEX]);
-                MDimg.getValue(MDL_INTSCALE, imgs_scale[IMG_LOCAL_INDEX]);
-            }
-        }
-
-
-
-        // read Model parameters
-        int refno = 0;
-        FOR_ALL_OBJECTS_IN_METADATA(MDref)
-        {
-            MDref.getValue(MDL_MODELFRAC, model.alpha_k[refno]);
-            if (do_mirror)
-                MDref.getValue(MDL_MIRRORFRAC,
-                               model.mirror_fraction[refno]);
-            if (model.do_norm)
-                MDref.getValue(MDL_INTSCALE, model.scale[refno]);
-            refno++;
-        }
+//        FOR_ALL_LOCAL_IMAGES()
+//        {
+//            if (limit_rot)
+//            {
+//                MDimg.getValue(MDL_ANGLEROT, imgs_oldphi[IMG_LOCAL_INDEX]);
+//                MDimg.getValue(MDL_ANGLETILT, imgs_oldtheta[IMG_LOCAL_INDEX]);
+//            }
+//            if (zero_offsets)
+//            {
+//                idum = (do_mirror ? 2 : 1) * model.n_ref;
+//                double xx, yy;
+//                MDimg.getValue(MDL_SHIFTX, xx);
+//                MDimg.getValue(MDL_SHIFTX, yy);
+//                for (int refno = 0; refno < idum; refno++)
+//                {
+//                    imgs_offsets[IMG_LOCAL_INDEX][2 * refno] = xx;
+//                    imgs_offsets[IMG_LOCAL_INDEX][2 * refno + 1] = yy;
+//                }
+//            }
+//            if (model.do_norm)
+//            {
+//                MDimg.getValue(MDL_BGMEAN, imgs_bgmean[IMG_LOCAL_INDEX]);
+//                MDimg.getValue(MDL_INTSCALE, imgs_scale[IMG_LOCAL_INDEX]);
+//            }
+//        }
+//        // read Model parameters
+//        int refno = 0;
+//        FOR_ALL_OBJECTS_IN_METADATA(MDref)
+//        {
+//            MDref.getValue(MDL_MODELFRAC, model.alpha_k[refno]);
+//            if (do_mirror)
+//                MDref.getValue(MDL_MIRRORFRAC,
+//                               model.mirror_fraction[refno]);
+//            if (model.do_norm)
+//                MDref.getValue(MDL_INTSCALE, model.scale[refno]);
+//            refno++;
+//        }
 
     }
     // Call the first iteration 0 if generating initial references from random subsets
@@ -754,7 +756,7 @@ void ProgML2D::produceSideInfo2()
         {
             FOR_ALL_OBJECTS_IN_METADATA(MDaux)
             {
-                MDaux.setValue(MDL_REF3D, group + 1);
+                MDaux.setValue(MDL_REF3D, group + 1, __iter.objId);
             }
             MDref.unionAll(MDaux);
         }
@@ -2336,26 +2338,27 @@ void ProgML2D::addPartialDocfileData(const MultidimArray<double> &data,
     {
         index = imgno - first;
         //FIXME now directly to MDimg
-        MDimg.setValue(MDL_ANGLEROT, dAij(data, index, 0), img_id[imgno]);
-        MDimg.setValue(MDL_ANGLETILT, dAij(data, index, 1), img_id[imgno]);
-        MDimg.setValue(MDL_ANGLEPSI, dAij(data, index, 2), img_id[imgno]);
-        MDimg.setValue(MDL_SHIFTX, dAij(data, index, 3), img_id[imgno]);
-        MDimg.setValue(MDL_SHIFTY, dAij(data, index, 4), img_id[imgno]);
-        MDimg.setValue(MDL_REF, ROUND(dAij(data, index, 5)), img_id[imgno]);
+        size_t id = img_id[imgno];
+        MDimg.setValue(MDL_ANGLEROT, dAij(data, index, 0), id);
+        MDimg.setValue(MDL_ANGLETILT, dAij(data, index, 1), id);
+        MDimg.setValue(MDL_ANGLEPSI, dAij(data, index, 2), id);
+        MDimg.setValue(MDL_SHIFTX, dAij(data, index, 3), id);
+        MDimg.setValue(MDL_SHIFTY, dAij(data, index, 4), id);
+        MDimg.setValue(MDL_REF, ROUND(dAij(data, index, 5)), id);
         if (do_mirror)
         {
-            MDimg.setValue(MDL_FLIP, dAij(data, index, 6) != 0., img_id[imgno]);
+            MDimg.setValue(MDL_FLIP, dAij(data, index, 6) != 0., id);
         }
-        MDimg.setValue(MDL_PMAX, dAij(data, index, 7), img_id[imgno]);
-        MDimg.setValue(MDL_LL, dAij(data, index, 8), img_id[imgno]);
+        MDimg.setValue(MDL_PMAX, dAij(data, index, 7), id);
+        MDimg.setValue(MDL_LL, dAij(data, index, 8), id);
         if (model.do_norm)
         {
-            MDimg.setValue(MDL_BGMEAN, dAij(data, index, 9), img_id[imgno]);
-            MDimg.setValue(MDL_INTSCALE, dAij(data, index, 10), img_id[imgno]);
+            MDimg.setValue(MDL_BGMEAN, dAij(data, index, 9), id);
+            MDimg.setValue(MDL_INTSCALE, dAij(data, index, 10), id);
         }
         if (model.do_student)
         {
-            MDimg.setValue(MDL_WROBUST, dAij(data, index, 11), img_id[imgno]);
+            MDimg.setValue(MDL_WROBUST, dAij(data, index, 11), id);
         }
     }
 
@@ -2442,16 +2445,16 @@ void ProgML2D::writeOutputFiles(const ModelML2D &model, int outputType)
             Itmp = model.Iref[refno];
             Itmp.write(fn_tmp);
 
-            MDref.setValue(MDL_IMAGE, fn_tmp);
-            MDref.setValue(MDL_ENABLED, 1);
-            MDref.setValue(MDL_WEIGHT, (double)Itmp.weight());
+            MDref.setValue(MDL_IMAGE, fn_tmp, __iter.objId);
+            MDref.setValue(MDL_ENABLED, 1, __iter.objId);
+            MDref.setValue(MDL_WEIGHT, (double)Itmp.weight(), __iter.objId);
             if (do_mirror)
                 MDref.setValue(MDL_MIRRORFRAC,
-                               model.mirror_fraction[refno]);
+                               model.mirror_fraction[refno], __iter.objId);
             if (write_conv)
-                MDref.setValue(MDL_SIGNALCHANGE, conv[refno]*1000);
+                MDref.setValue(MDL_SIGNALCHANGE, conv[refno]*1000, __iter.objId);
             if (write_norm)
-                MDref.setValue(MDL_INTSCALE, model.scale[refno]);
+                MDref.setValue(MDL_INTSCALE, model.scale[refno], __iter.objId);
             refno++;
         }
         fn_tmp = fn_base + "_ref.xmd";
@@ -2461,21 +2464,21 @@ void ProgML2D::writeOutputFiles(const ModelML2D &model, int outputType)
         MDo2.clear();
         MDo2.setColumnFormat(false);
         MDo2.setComment(cline);
-        MDo2.addObject();
-        MDo2.setValue(MDL_LL, model.LL);
-        MDo2.setValue(MDL_PMAX, model.avePmax);
-        MDo2.setValue(MDL_SIGMANOISE, model.sigma_noise);
-        MDo2.setValue(MDL_SIGMAOFFSET, model.sigma_offset);
-        MDo2.setValue(MDL_RANDOMSEED, seed);
+        size_t id = MDo2.addObject();
+        MDo2.setValue(MDL_LL, model.LL,id);
+        MDo2.setValue(MDL_PMAX, model.avePmax,id);
+        MDo2.setValue(MDL_SIGMANOISE, model.sigma_noise,id);
+        MDo2.setValue(MDL_SIGMAOFFSET, model.sigma_offset,id);
+        MDo2.setValue(MDL_RANDOMSEED, seed,id);
         if (write_norm)
         {
             MDo.setValue(MDL_INTSCALE, average_scale);
         }
-        MDo2.setValue(MDL_ITER, iter);
+        MDo2.setValue(MDL_ITER, iter,id);
         fn_tmp = fn_base + "_img.xmd";
-        MDo2.setValue(MDL_IMGMD, fn_tmp);
+        MDo2.setValue(MDL_IMGMD, fn_tmp,id);
         fn_tmp = fn_base + "_ref.xmd";
-        MDo2.setValue(MDL_REFMD, fn_tmp);
+        MDo2.setValue(MDL_REFMD, fn_tmp,id);
 
         fn_tmp = fn_base + "_log.xmd";
         MDo2.write(fn_tmp);
@@ -2490,10 +2493,11 @@ void ProgML2D::readModel(ModelML2D &model, FileName fn_base)
     MetaData MDi;
     MDi.read(fn_base + "_log.xmd");
     model.dim = dim;
-    MDi.getValue(MDL_LL, model.LL);
-    MDi.getValue(MDL_PMAX, model.avePmax);
-    MDi.getValue(MDL_SIGMANOISE, model.sigma_noise);
-    MDi.getValue(MDL_SIGMAOFFSET, model.sigma_offset);
+    size_t id = MDi.firstObject();
+    MDi.getValue(MDL_LL, model.LL, id);
+    MDi.getValue(MDL_PMAX, model.avePmax, id);
+    MDi.getValue(MDL_SIGMANOISE, model.sigma_noise, id);
+    MDi.getValue(MDL_SIGMAOFFSET, model.sigma_offset, id);
 
     //Then read reference model parameters from _ref.xmd
     FileName fn_img;
@@ -2505,15 +2509,15 @@ void ProgML2D::readModel(ModelML2D &model, FileName fn_base)
     model.sumw_allrefs = 0.;
     FOR_ALL_OBJECTS_IN_METADATA(MDi)
     {
-        MDi.getValue(MDL_IMAGE, fn_img);
-        img.readApplyGeo(fn_img,MDi,objId);
+        MDi.getValue(MDL_IMAGE, fn_img, __iter.objId);
+        img.readApplyGeo(fn_img,MDi,__iter.objId);
         img().setXmippOrigin();
         model.Iref[refno] = img;
-        MDi.getValue(MDL_WEIGHT, model.alpha_k[refno]);
+        MDi.getValue(MDL_WEIGHT, model.alpha_k[refno],__iter.objId);
         //Just initialize mirror fraction to 0.
         model.mirror_fraction[refno] = 0.;
         if (do_mirror)
-            MDi.getValue(MDL_MIRRORFRAC, model.mirror_fraction[refno]);
+            MDi.getValue(MDL_MIRRORFRAC, model.mirror_fraction[refno],__iter.objId);
         model.sumw_allrefs += model.alpha_k[refno];
         refno++;
     }

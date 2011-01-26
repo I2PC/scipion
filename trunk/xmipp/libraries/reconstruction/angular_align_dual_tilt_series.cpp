@@ -78,7 +78,7 @@ void Prog_align_dual::readDual()
     FileName fnImg;
     FOR_ALL_OBJECTS_IN_METADATA(SFDual)
     {
-        SFDual.getValue(MDL_IMAGE,fnImg);
+        SFDual.getValue(MDL_IMAGE,fnImg, __iter.objId);
         I.read(fnImg);
         tiltDual(i++)=I.tilt();
         selfScaleToSize(BSPLINE3,I(),ROUND(YSIZE(I())*scaleFactor),
@@ -107,7 +107,7 @@ void Prog_align_dual::produceSideInfo()
     FileName fnImg;
     FOR_ALL_OBJECTS_IN_METADATA(SFRef)
     {
-        SFRef.getValue(MDL_IMAGE,fnImg);
+        SFRef.getValue(MDL_IMAGE,fnImg,__iter.objId);
         I.read(fnImg);
         tiltRef(i++)=I.tilt();
         selfScaleToSize(BSPLINE3,I(),ROUND(YSIZE(I())*scaleFactor),
@@ -414,7 +414,7 @@ void Prog_align_dual::alignDual()
     FileName fnImg;
     FOR_ALL_OBJECTS_IN_METADATA(SFDual)
     {
-        SFDual.getValue(MDL_IMAGE,fnImg);
+        SFDual.getValue(MDL_IMAGE,fnImg,__iter.objId);
         Idual.read(fnImg);
         Idual().setXmippOrigin();
         if (rotatedDual)
@@ -428,10 +428,10 @@ void Prog_align_dual::alignDual()
         Idual.setRot((float)rot);
         Idual.setTilt((float)tilt);
         Idual.setPsi((float)psi);
-        FileName fn=fnOut+"_aligned"+integerToString(n,4)+".xmp";
+        FileName fn = fnOut+"_aligned" + integerToString(n,4)+".xmp";
         Idual.write(fn);
-        SFout.addObject();
-        SFout.setValue(MDL_IMAGE,fn);
+        size_t id = SFout.addObject();
+        SFout.setValue(MDL_IMAGE, fn, id);
         n++;
     }
     SFout.write(fnOut.removeDirectories()+"_aligned.sel");

@@ -1741,26 +1741,27 @@ void ProgMask::run()
     MetaData        SF_in, SF_out;
     Image<double>   image;
     int             max_length = 0;
+    size_t id;
 
     // Read list of images --------------------------------------------------
     //This should be converted to the new xmipp 3.0 standard
     if (!fn_in.isMetaData())
     {
-        SF_in.addObject();
-        SF_in.setValue(MDL_IMAGE,fn_in);
+        id = SF_in.addObject();
+        SF_in.setValue(MDL_IMAGE, fn_in, id);
     }
     else
         SF_in.read(fn_in);
     int Nimg=SF_in.size();
 
     // Mask a selection file ------------------------------------------------
-    if (create_mask && Nimg>1)
+    if (create_mask && Nimg > 1)
         REPORT_ERROR(ERR_MD_NOOBJ, "Mask: Cannot create a mask for a selection file\n");
 
     // Initialize progress bar
     time_config();
     int i = 0;
-    if (!count && Nimg>1)
+    if (!count && Nimg > 1)
         init_progress_bar(Nimg);
     else
         max_length = MaxFileNameLength(SF_in);
@@ -1770,30 +1771,30 @@ void ProgMask::run()
     {
         // In and out filenames ...........................................
         FileName fn_in;
-        SF_in.getValue(MDL_IMAGE,fn_in);
-        if (Nimg>1)
+        SF_in.getValue(MDL_IMAGE, fn_in, __iter.objId);
+        if (Nimg > 1)
         {
             if (oext == "")
                 fn_out = fn_in;
             else
             {
                 fn_out = fn_in.withoutExtension() + "." + oext;
-                SF_out.addObject();
-                SF_out.setValue(MDL_IMAGE,fn_out);
+                id = SF_out.addObject();
+                SF_out.setValue(MDL_IMAGE,fn_out, id);
             }
         }
         else
         {
-            if (fn_out=="")
-                fn_out=fn_in;
+            if (fn_out == "")
+                fn_out = fn_in;
         }
 
         // Read image
-        image.read(fn_in);
+        image.readApplyGeo(SF_in, __iter.objId);
         image().setXmippOrigin();
 
         // Generate mask
-        if (ZSIZE(image())>1)
+        if (ZSIZE(image()) > 1)
             apply_geo=false;
         if (apply_geo)
         {
@@ -1804,6 +1805,7 @@ void ProgMask::run()
                 image.getTransformationMatrix(mask.mask_geo);
         }
         mask.generate_mask(image());
+
 
         // Apply mask
         if (!create_mask)

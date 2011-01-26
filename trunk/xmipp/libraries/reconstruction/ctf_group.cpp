@@ -154,14 +154,14 @@ void ProgCtfGroup::produceSideInfo()
     init_progress_bar(n);
     FOR_ALL_OBJECTS_IN_METADATA(SF)
     {
-        SF.getValue(MDL_IMAGE,fnt);
+        SF.getValue(MDL_IMAGE,fnt,__iter.objId);
 
         // Find which CTF group it belongs to
         found = false;
         FOR_ALL_OBJECTS_IN_METADATA(ctfdat)
         {
-            ctfdat.getValue(MDL_IMAGE,fnt_img);
-            ctfdat.getValue(MDL_CTFMODEL,fnt_ctf);
+            ctfdat.getValue(MDL_IMAGE,fnt_img,__iter.objId);
+            ctfdat.getValue(MDL_CTFMODEL,fnt_ctf,__iter.objId);
 
             if (fnt_img == fnt)
             {
@@ -406,7 +406,7 @@ void ProgCtfGroup::manualRun()
     init_progress_bar(n);
     FOR_ALL_OBJECTS_IN_METADATA(DF)
     {
-        DF.getValue(MDL_CTF_DEFOCUSU,split);
+        DF.getValue(MDL_CTF_DEFOCUSU,split,__iter.objId);
         count = 0;
         for (int imic=0; imic < mics_ctf2d.size(); imic++)
         {
@@ -473,10 +473,11 @@ void ProgCtfGroup::writeOutputToDisc()
             mindef = XMIPP_MIN(mics_defocus[imic],mindef);
             maxdef = XMIPP_MAX(mics_defocus[imic],maxdef);
             // Fill SelFile
+            size_t id;
             for (int iimg=0; iimg < mics_fnimgs[imic].size(); iimg++)
             {
-                SFo.addObject();
-                SFo.setValue(MDL_IMAGE,mics_fnimgs[imic][iimg]);
+                id = SFo.addObject();
+                SFo.setValue(MDL_IMAGE,mics_fnimgs[imic][iimg], id);
             }
         }
         Mavg /= sumw;

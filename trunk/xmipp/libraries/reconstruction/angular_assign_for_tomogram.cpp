@@ -93,14 +93,14 @@ void Prog_angular_predict_tomography_prm::produce_side_info()
     V().setXmippOrigin();
     MetaData SF(fn_sel);
     FileName fnAux;
-    bool masksPresent=SF.getValue(MDL_MASK,fnAux);
+    bool masksPresent = SF.getValue(MDL_MASK, fnAux, SF.firstObject());
     Image<double> I, Imask;
     MultidimArray<int> mask;
     FileName fnImg;
     FOR_ALL_OBJECTS_IN_METADATA(SF)
     {
         AlignmentTomography dummy;
-        SF.getValue(MDL_IMAGE,fnImg);
+        SF.getValue(MDL_IMAGE,fnImg,__iter.objId);
         I.read(fnImg);
         I().setXmippOrigin();
         dummy.rot=I.rot();
@@ -116,7 +116,7 @@ void Prog_angular_predict_tomography_prm::produce_side_info()
         if (masksPresent)
         {
             FileName fnMask;
-            SF.getValue(MDL_MASK,fnMask);
+            SF.getValue(MDL_MASK,fnMask,__iter.objId);
             Imask.read(fnMask);
             Imask().setXmippOrigin();
             dummy.fn_mask=Imask.name();
@@ -261,6 +261,8 @@ void Prog_angular_predict_tomography_prm::run()
     MetaData DF;
     Image<double> I, Imask;
     MultidimArray<int> mask;
+    size_t id;
+
     for (int i=0; i<list_of_assigned.size(); i++)
     {
         // Read input image
@@ -271,16 +273,16 @@ void Prog_angular_predict_tomography_prm::run()
         predict_angles(i);
 
         // Store them in the output docfile
-        DF.addObject();
-        DF.setValue(MDL_IMAGE,fn_out+"_img_"+integerToString(i,4)+".xmp");
-        DF.setValue(MDL_IMAGE_ORIGINAL,list_of_assigned[i].fn_img);
-        DF.setValue(MDL_MASK,fn_out+"_mask_"+integerToString(i,4)+".xmp");
-        DF.setValue(MDL_ANGLEROT,list_of_assigned[i].rot);
-        DF.setValue(MDL_ANGLETILT,list_of_assigned[i].tilt);
-        DF.setValue(MDL_ANGLEPSI,list_of_assigned[i].psi);
-        DF.setValue(MDL_SHIFTX,list_of_assigned[i].x);
-        DF.setValue(MDL_SHIFTY,list_of_assigned[i].y);
-        DF.setValue(MDL_MAXCC,list_of_assigned[i].corr);
+        id = DF.addObject();
+        DF.setValue(MDL_IMAGE,fn_out+"_img_"+integerToString(i,4)+".xmp",id);
+        DF.setValue(MDL_IMAGE_ORIGINAL,list_of_assigned[i].fn_img,id);
+        DF.setValue(MDL_MASK,fn_out+"_mask_"+integerToString(i,4)+".xmp",id);
+        DF.setValue(MDL_ANGLEROT,list_of_assigned[i].rot,id);
+        DF.setValue(MDL_ANGLETILT,list_of_assigned[i].tilt,id);
+        DF.setValue(MDL_ANGLEPSI,list_of_assigned[i].psi,id);
+        DF.setValue(MDL_SHIFTX,list_of_assigned[i].x,id);
+        DF.setValue(MDL_SHIFTY,list_of_assigned[i].y,id);
+        DF.setValue(MDL_MAXCC,list_of_assigned[i].corr,id);
 
         // Shift the image and mask
         selfTranslate(LINEAR,I(),

@@ -39,7 +39,7 @@ int main(int argc, char **argv)
     MetaData                     DFo;
 
     ProgRefine3D           prm;
-    Prog_MLFalign2D_prm         ML2D_prm;
+    ProgMLF2D         ML2D_prm(true); //set 3d flag to true
 
     // Set to true for MLF!
     prm.fourier_mode = true;
@@ -49,14 +49,14 @@ int main(int argc, char **argv)
     {
 
         // Read command line
-        prm.read(argc, argv, argc2, argv2);
+        prm.read(argc, argv);
         prm.produceSideInfo();
         prm.show();
         // Write starting volume(s) to disc with correct name for iteration loop
         prm.remakeSFvol(prm.istart - 1, true);
 
         // Read MLalign2D-stuff
-        ML2D_prm.read(argc2, argv2, true);
+        ML2D_prm.read(argc, argv);
         if (!checkParameter(argc2, argv2, "-psi_step"))
             ML2D_prm.psi_step = prm.angular;
         ML2D_prm.fn_root = prm.fn_root;
@@ -93,7 +93,7 @@ int main(int argc, char **argv)
         while (!converged && iter <= prm.Niter)
         {
 
-            if (prm.verb > 0)
+            if (prm.verbose > 0)
             {
                 std::cerr        << "--> 3D-EM volume refinement:  iteration " << iter << " of " << prm.Niter << std::endl;
                 prm.fh_hist << "--> 3D-EM volume refinement:  iteration " << iter << " of " << prm.Niter << std::endl;
@@ -152,7 +152,7 @@ int main(int argc, char **argv)
             if (prm.checkConvergence(iter))
             {
                 converged = 1;
-                if (prm.verb > 0)
+                if (prm.verbose > 0)
                     std::cerr << "--> Optimization converged!" << std::endl;
             }
 
@@ -178,7 +178,7 @@ int main(int argc, char **argv)
         // Write out converged doc and logfiles
         ML2D_prm.writeOutputFiles(-1, sumw_allrefs, LL, sumcorr, conv);
 
-        if (!converged && prm.verb > 0)
+        if (!converged && prm.verbose > 0)
             std::cerr << "--> Optimization was stopped before convergence was reached!" << std::endl;
     }
     catch (XmippError XE)

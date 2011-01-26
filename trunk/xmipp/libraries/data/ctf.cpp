@@ -35,75 +35,76 @@ void CTFDescription::read(const FileName &fn, bool disable_if_not_K)
     {
         MetaData MD;
         MD.read(fn);
+        size_t id = MD.firstObject();
 
-        if (!MD.getValue(MDL_CTF_SAMPLING_RATE,Tm))
+        if (!MD.getValue(MDL_CTF_SAMPLING_RATE,Tm,id))
             Tm=1;
         if (enable_CTF)
         {
-            if (!MD.getValue(MDL_CTF_VOLTAGE,kV))
+            if (!MD.getValue(MDL_CTF_VOLTAGE,kV,id))
                 kV=100;
-            if (!MD.getValue(MDL_CTF_DEFOCUSU,DeltafU))
+            if (!MD.getValue(MDL_CTF_DEFOCUSU,DeltafU,id))
                 DeltafU=0;
-            if (!MD.getValue(MDL_CTF_DEFOCUSV,DeltafV))
+            if (!MD.getValue(MDL_CTF_DEFOCUSV,DeltafV,id))
                 DeltafV=DeltafU;
-            if (!MD.getValue(MDL_CTF_DEFOCUS_ANGLE,azimuthal_angle))
+            if (!MD.getValue(MDL_CTF_DEFOCUS_ANGLE,azimuthal_angle,id))
                 azimuthal_angle=0;
-            if (!MD.getValue(MDL_CTF_CS,Cs))
+            if (!MD.getValue(MDL_CTF_CS,Cs,id))
                 Cs=0;
-            if (!MD.getValue(MDL_CTF_CA,Ca))
+            if (!MD.getValue(MDL_CTF_CA,Ca,id))
                 Ca=0;
-            if (!MD.getValue(MDL_CTF_ENERGY_LOSS,espr))
+            if (!MD.getValue(MDL_CTF_ENERGY_LOSS,espr,id))
                 espr=0;
-            if (!MD.getValue(MDL_CTF_LENS_STABILITY,ispr))
+            if (!MD.getValue(MDL_CTF_LENS_STABILITY,ispr,id))
                 ispr=0;
-            if (!MD.getValue(MDL_CTF_CONVERGENCE_CONE,alpha))
+            if (!MD.getValue(MDL_CTF_CONVERGENCE_CONE,alpha,id))
                 alpha=0;
-            if (!MD.getValue(MDL_CTF_LONGITUDINAL_DISPLACEMENT,DeltaF))
+            if (!MD.getValue(MDL_CTF_LONGITUDINAL_DISPLACEMENT,DeltaF,id))
                 DeltaF=0;
-            if (!MD.getValue(MDL_CTF_TRANSVERSAL_DISPLACEMENT,DeltaR))
+            if (!MD.getValue(MDL_CTF_TRANSVERSAL_DISPLACEMENT,DeltaR,id))
                 DeltaR=0;
-            if (!MD.getValue(MDL_CTF_Q0,Q0))
+            if (!MD.getValue(MDL_CTF_Q0,Q0,id))
                 Q0=0;
-            if (!MD.getValue(MDL_CTF_K,K))
+            if (!MD.getValue(MDL_CTF_K,K,id))
                 K=1;
             if (K == 0 && disable_if_not_K)
                 enable_CTF = false;
         }
         if (enable_CTFnoise)
         {
-            if (!MD.getValue(MDL_CTFBG_GAUSSIAN_K,gaussian_K))
+            if (!MD.getValue(MDL_CTFBG_GAUSSIAN_K,gaussian_K,id))
                 gaussian_K=0;
-            if (!MD.getValue(MDL_CTFBG_GAUSSIAN_SIGMAU,sigmaU))
+            if (!MD.getValue(MDL_CTFBG_GAUSSIAN_SIGMAU,sigmaU,id))
                 sigmaU=0;
-            if (!MD.getValue(MDL_CTFBG_GAUSSIAN_SIGMAV,sigmaV))
+            if (!MD.getValue(MDL_CTFBG_GAUSSIAN_SIGMAV,sigmaV,id))
                 sigmaV=sigmaU;
-            if (!MD.getValue(MDL_CTFBG_GAUSSIAN_CU,cU))
+            if (!MD.getValue(MDL_CTFBG_GAUSSIAN_CU,cU,id))
                 cU=0;
-            if (!MD.getValue(MDL_CTFBG_GAUSSIAN_CV,cV))
+            if (!MD.getValue(MDL_CTFBG_GAUSSIAN_CV,cV,id))
                 cV=cU;
-            if (!MD.getValue(MDL_CTFBG_GAUSSIAN_ANGLE,gaussian_angle))
+            if (!MD.getValue(MDL_CTFBG_GAUSSIAN_ANGLE,gaussian_angle,id))
                 gaussian_angle=0;
-            if (!MD.getValue(MDL_CTFBG_SQRT_K,sqrt_K))
+            if (!MD.getValue(MDL_CTFBG_SQRT_K,sqrt_K,id))
                 sqrt_K=0;
-            if (!MD.getValue(MDL_CTFBG_SQRT_U,sqU))
+            if (!MD.getValue(MDL_CTFBG_SQRT_U,sqU,id))
                 sqU=0;
-            if (!MD.getValue(MDL_CTFBG_SQRT_V,sqV))
+            if (!MD.getValue(MDL_CTFBG_SQRT_V,sqV,id))
                 sqV=sqU;
-            if (!MD.getValue(MDL_CTFBG_SQRT_ANGLE,sqrt_angle))
+            if (!MD.getValue(MDL_CTFBG_SQRT_ANGLE,sqrt_angle,id))
                 sqrt_angle=0;
-            if (!MD.getValue(MDL_CTFBG_BASELINE,base_line))
+            if (!MD.getValue(MDL_CTFBG_BASELINE,base_line,id))
                 base_line=0;
-            if (!MD.getValue(MDL_CTFBG_GAUSSIAN2_K,gaussian_K2))
+            if (!MD.getValue(MDL_CTFBG_GAUSSIAN2_K,gaussian_K2,id))
                 gaussian_K2=0;
-            if (!MD.getValue(MDL_CTFBG_GAUSSIAN2_SIGMAU,sigmaU2))
+            if (!MD.getValue(MDL_CTFBG_GAUSSIAN2_SIGMAU,sigmaU2,id))
                 sigmaU2=0;
-            if (!MD.getValue(MDL_CTFBG_GAUSSIAN2_SIGMAV,sigmaV2))
+            if (!MD.getValue(MDL_CTFBG_GAUSSIAN2_SIGMAV,sigmaV2,id))
                 sigmaV2=sigmaU2;
-            if (!MD.getValue(MDL_CTFBG_GAUSSIAN2_CU,cU2))
+            if (!MD.getValue(MDL_CTFBG_GAUSSIAN2_CU,cU2,id))
                 cU2=0;
-            if (!MD.getValue(MDL_CTFBG_GAUSSIAN2_CV,cV2))
+            if (!MD.getValue(MDL_CTFBG_GAUSSIAN2_CV,cV2,id))
                 cV2=cU2;
-            if (!MD.getValue(MDL_CTFBG_GAUSSIAN2_ANGLE,gaussian_angle2))
+            if (!MD.getValue(MDL_CTFBG_GAUSSIAN2_ANGLE,gaussian_angle2,id))
                 gaussian_angle2=0;
             if (gaussian_K == 0 && sqrt_K == 0 && base_line == 0 && gaussian_K2 == 0 &&
                 disable_if_not_K)
@@ -201,43 +202,43 @@ void CTFDescription::write(const FileName &fn)
 {
     MetaData MD;
     MD.setColumnFormat(false);
-    MD.addObject();
+    size_t id = MD.addObject();
     MD.setValue(MDL_CTF_SAMPLING_RATE,Tm);
     if (enable_CTF)
     {
-        MD.setValue(MDL_CTF_VOLTAGE,kV);
-        MD.setValue(MDL_CTF_DEFOCUSU,DeltafU);
-        MD.setValue(MDL_CTF_DEFOCUSV,DeltafV);
-        MD.setValue(MDL_CTF_DEFOCUS_ANGLE,azimuthal_angle);
-        MD.setValue(MDL_CTF_CS,Cs);
-        MD.setValue(MDL_CTF_CA,Ca);
-        MD.setValue(MDL_CTF_ENERGY_LOSS,espr);
-        MD.setValue(MDL_CTF_LENS_STABILITY,ispr);
-        MD.setValue(MDL_CTF_CONVERGENCE_CONE,alpha);
-        MD.setValue(MDL_CTF_LONGITUDINAL_DISPLACEMENT,DeltaF);
-        MD.setValue(MDL_CTF_TRANSVERSAL_DISPLACEMENT,DeltaR);
-        MD.setValue(MDL_CTF_Q0,Q0);
-        MD.setValue(MDL_CTF_K,K);
+        MD.setValue(MDL_CTF_VOLTAGE,kV,id);
+        MD.setValue(MDL_CTF_DEFOCUSU,DeltafU,id);
+        MD.setValue(MDL_CTF_DEFOCUSV,DeltafV,id);
+        MD.setValue(MDL_CTF_DEFOCUS_ANGLE,azimuthal_angle,id);
+        MD.setValue(MDL_CTF_CS,Cs,id);
+        MD.setValue(MDL_CTF_CA,Ca,id);
+        MD.setValue(MDL_CTF_ENERGY_LOSS,espr,id);
+        MD.setValue(MDL_CTF_LENS_STABILITY,ispr,id);
+        MD.setValue(MDL_CTF_CONVERGENCE_CONE,alpha,id);
+        MD.setValue(MDL_CTF_LONGITUDINAL_DISPLACEMENT,DeltaF,id);
+        MD.setValue(MDL_CTF_TRANSVERSAL_DISPLACEMENT,DeltaR,id);
+        MD.setValue(MDL_CTF_Q0,Q0,id);
+        MD.setValue(MDL_CTF_K,K,id);
     }
     if (enable_CTFnoise)
     {
-        MD.setValue(MDL_CTFBG_GAUSSIAN_K,gaussian_K);
-        MD.setValue(MDL_CTFBG_GAUSSIAN_SIGMAU,sigmaU);
-        MD.setValue(MDL_CTFBG_GAUSSIAN_SIGMAV,sigmaV);
-        MD.setValue(MDL_CTFBG_GAUSSIAN_CU,cU);
-        MD.setValue(MDL_CTFBG_GAUSSIAN_CV,cV);
-        MD.setValue(MDL_CTFBG_GAUSSIAN_ANGLE,gaussian_angle);
-        MD.setValue(MDL_CTFBG_SQRT_K,sqrt_K);
-        MD.setValue(MDL_CTFBG_SQRT_U,sqU);
-        MD.setValue(MDL_CTFBG_SQRT_V,sqV);
-        MD.setValue(MDL_CTFBG_SQRT_ANGLE,sqrt_angle);
-        MD.setValue(MDL_CTFBG_BASELINE,base_line);
-        MD.setValue(MDL_CTFBG_GAUSSIAN2_K,gaussian_K2);
-        MD.setValue(MDL_CTFBG_GAUSSIAN2_SIGMAU,sigmaU2);
-        MD.setValue(MDL_CTFBG_GAUSSIAN2_SIGMAV,sigmaV2);
-        MD.setValue(MDL_CTFBG_GAUSSIAN2_CU,cU2);
-        MD.setValue(MDL_CTFBG_GAUSSIAN2_CV,cV2);
-        MD.setValue(MDL_CTFBG_GAUSSIAN2_ANGLE,gaussian_angle2);
+        MD.setValue(MDL_CTFBG_GAUSSIAN_K,gaussian_K,id);
+        MD.setValue(MDL_CTFBG_GAUSSIAN_SIGMAU,sigmaU,id);
+        MD.setValue(MDL_CTFBG_GAUSSIAN_SIGMAV,sigmaV,id);
+        MD.setValue(MDL_CTFBG_GAUSSIAN_CU,cU,id);
+        MD.setValue(MDL_CTFBG_GAUSSIAN_CV,cV,id);
+        MD.setValue(MDL_CTFBG_GAUSSIAN_ANGLE,gaussian_angle,id);
+        MD.setValue(MDL_CTFBG_SQRT_K,sqrt_K,id);
+        MD.setValue(MDL_CTFBG_SQRT_U,sqU,id);
+        MD.setValue(MDL_CTFBG_SQRT_V,sqV,id);
+        MD.setValue(MDL_CTFBG_SQRT_ANGLE,sqrt_angle,id);
+        MD.setValue(MDL_CTFBG_BASELINE,base_line,id);
+        MD.setValue(MDL_CTFBG_GAUSSIAN2_K,gaussian_K2,id);
+        MD.setValue(MDL_CTFBG_GAUSSIAN2_SIGMAU,sigmaU2,id);
+        MD.setValue(MDL_CTFBG_GAUSSIAN2_SIGMAV,sigmaV2,id);
+        MD.setValue(MDL_CTFBG_GAUSSIAN2_CU,cU2,id);
+        MD.setValue(MDL_CTFBG_GAUSSIAN2_CV,cV2,id);
+        MD.setValue(MDL_CTFBG_GAUSSIAN2_ANGLE,gaussian_angle2,id);
     }
 
     MD.write(fn);

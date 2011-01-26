@@ -61,9 +61,9 @@ void Prog_align2d_prm::read(int argc, char **argv)
     //get image dimensions
     int Xdim, Ydim, Zdim;
     unsigned long Ndim;
-    SF.firstObject();
+    size_t id = SF.firstObject();
     FileName fnImg;
-    SF.getValue(MDL_IMAGE,fnImg);
+    SF.getValue(MDL_IMAGE,fnImg, id);
     Image<double> Iaux;
     Iaux.read(fnImg,false);
     Iaux.getDimensions(Xdim, Ydim, Zdim, Ndim);
@@ -727,12 +727,12 @@ void Prog_align2d_prm::align2d()
     n_images = 0;
     FOR_ALL_OBJECTS_IN_METADATA(SF)
     {
-        SF.getValue(MDL_IMAGE,fn_img);
+        SF.getValue(MDL_IMAGE,fn_img,__iter.objId);
         int enabled;
-        SF.getValue(MDL_ENABLED, enabled);
+        SF.getValue(MDL_ENABLED, enabled,__iter.objId);
         if(enabled==(-1)||fn_img == "")
             continue;
-        Itmp.readApplyGeo(fn_img,SF,objId);
+        Itmp.readApplyGeo(fn_img,SF,__iter.objId);
         Itmp().setXmippOrigin();
         images.push_back(Itmp);
         corr.push_back(zero);
@@ -773,6 +773,7 @@ void Prog_align2d_prm::align2d()
     // Write out images & selfile
     FileName          fn_out;
     MetaData          SFo;
+    size_t id;
     //SFo.reserve(n_images);
     for (int imgno = 0; imgno < n_images; imgno++)
     {
@@ -790,12 +791,9 @@ void Prog_align2d_prm::align2d()
         }
         else
             images[imgno].write(fn_out);
-        SFo.addObject();
-        SFo.setValue(MDL_IMAGE,fn_out);
-        if (success[imgno])
-            SFo.setValue(MDL_ENABLED,1);
-        else
-            SFo.setValue(MDL_ENABLED,-1);
+        id = SFo.addObject();
+        SFo.setValue(MDL_IMAGE,fn_out, id);
+        SFo.setValue(MDL_ENABLED, success[imgno] ? 1 : -1, id);
     }
     fn_out = fn_sel;
     if (oext != "")
@@ -838,25 +836,26 @@ void Prog_align2d_prm::align2d()
     if (fn_doc != "")
     {
         MetaData           DFo;
+        size_t id;
         for (int imgno = 0; imgno < n_images; imgno++)
         {
-            DFo.addObject();
+            id = DFo.addObject();
             //DFo.setImage(images[imgno].name());
-            DFo.setValue(MDL_IMAGE,images[imgno].name());
+            DFo.setValue(MDL_IMAGE,images[imgno].name(),id);
             //DFo.setEnabled(1);
-            DFo.setValue(MDL_ENABLED,1);
+            DFo.setValue(MDL_ENABLED,1,id);
             //DFo.setAngleRot(images[imgno].Phi());
-            DFo.setValue(MDL_ANGLEROT,(double)images[imgno].rot());
+            DFo.setValue(MDL_ANGLEROT,(double)images[imgno].rot(),id);
             //DFo.setAngleTilt(images[imgno].Theta());
-            DFo.setValue(MDL_ANGLETILT,(double)images[imgno].tilt());
+            DFo.setValue(MDL_ANGLETILT,(double)images[imgno].tilt(),id);
             //DFo.setAnglePsi(images[imgno].psi());
-            DFo.setValue(MDL_ANGLEPSI,(double)images[imgno].psi());
+            DFo.setValue(MDL_ANGLEPSI,(double)images[imgno].psi(),id);
             //DFo.setShiftX(images[imgno].Xoff());
-            DFo.setValue(MDL_SHIFTX,(double)images[imgno].Xoff());
+            DFo.setValue(MDL_SHIFTX,(double)images[imgno].Xoff(),id);
             //DFo.setShiftY(images[imgno].Yoff());
-            DFo.setValue(MDL_SHIFTY,(double)images[imgno].Yoff());
+            DFo.setValue(MDL_SHIFTY,(double)images[imgno].Yoff(),id);
             //DFo.setMaxCC(corr[imgno]);
-            DFo.setValue(MDL_MAXCC,(double)corr[imgno]);
+            DFo.setValue(MDL_MAXCC,(double)corr[imgno],id);
         }
         DFo.write(fn_doc);
     }

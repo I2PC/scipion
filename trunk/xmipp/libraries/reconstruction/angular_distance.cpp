@@ -230,7 +230,10 @@ void Prog_angular_distance_prm::compute_distance(double &angular_distance,
     DF_out.setComment("rot1 rot2 diff_rot tilt1 tilt2 diff_tilt psi1 psi2 diff_psi ang_dist X1 X2 Xdiff Y1 Y2 Ydiff ShiftDiff");
 
     int i = 0;
-    FOR_ALL_OBJECTS_IN_METADATA(DF1)
+    size_t id;
+    FileName fnImg;
+
+    FOR_ALL_OBJECTS_IN_METADATA2(DF1, DF2)
     {
         // Read input data
         double rot1,  tilt1,  psi1;
@@ -238,16 +241,20 @@ void Prog_angular_distance_prm::compute_distance(double &angular_distance,
         double rot2p, tilt2p, psi2p;
         double distp;
         double X1, X2, Y1, Y2;
-        DF1.getValue(MDL_ANGLEROT,rot1);
-        DF2.getValue(MDL_ANGLEROT,rot2);
-        DF1.getValue(MDL_ANGLETILT,tilt1);
-        DF2.getValue(MDL_ANGLETILT,tilt2);
-        DF1.getValue(MDL_ANGLEPSI,psi1);
-        DF2.getValue(MDL_ANGLEPSI,psi2);
-        DF1.getValue(MDL_SHIFTX,X1);
-        DF2.getValue(MDL_SHIFTX,X2);
-        DF1.getValue(MDL_SHIFTY,Y1);
-        DF2.getValue(MDL_SHIFTY,Y2);
+        DF1.getValue(MDL_IMAGE,fnImg,__iter.objId);
+
+        DF1.getValue(MDL_ANGLEROT,rot1,__iter.objId);
+        DF1.getValue(MDL_ANGLETILT,tilt1,__iter.objId);
+        DF1.getValue(MDL_ANGLEPSI,psi1,__iter.objId);
+        DF1.getValue(MDL_SHIFTX,X1,__iter.objId);
+        DF1.getValue(MDL_SHIFTY,Y1,__iter.objId);
+
+        DF2.getValue(MDL_ANGLEROT,rot2,__iter2.objId);
+        DF2.getValue(MDL_ANGLETILT,tilt2,__iter2.objId);
+        DF2.getValue(MDL_ANGLEPSI,psi2,__iter2.objId);
+        DF2.getValue(MDL_SHIFTX,X2,__iter2.objId);
+        DF2.getValue(MDL_SHIFTY,Y2,__iter2.objId);
+
 
         // Bring both angles to a normalized set
         rot1 = realWRAP(rot1, -180, 180);
@@ -294,14 +301,11 @@ void Prog_angular_distance_prm::compute_distance(double &angular_distance,
         output+=floatToString(shift_diff(i))+" ";
         angular_distance += distp;
         shift_distance += shift_diff(i);
-        DF_out.addObject();
-        DF_out.setValue(MDL_COMMENT,output);
-        FileName fnImg;
-        DF1.getValue(MDL_IMAGE,fnImg);
-        DF_out.setValue(MDL_IMAGE,fnImg);
 
-        // Move to next data line
-        DF2.nextObject();
+        id = DF_out.addObject();
+        DF_out.setValue(MDL_IMAGE,fnImg,id);
+        DF_out.setValue(MDL_COMMENT,output, id);
+
         i++;
     }
     angular_distance /= i;

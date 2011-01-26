@@ -1689,6 +1689,8 @@ void Sampling::find_closest_sampling_point(MetaData &DFi,
     int winner_exp_L_R=-1;
     
     MetaData DFo;
+    size_t id;
+
     DFo.setComment("Original rot, tilt, psi, Xoff, Yoff are stored as comments");
 
 //#define DEBUG3
@@ -1698,8 +1700,7 @@ void Sampling::find_closest_sampling_point(MetaData &DFi,
     int exp_image=1;
 #endif
 
-    //FIXME: Change this for a better way of iteration
-    DFi.firstObject();
+    MDIterator iter = DFi.getIterator();
     for(int i=0;i< exp_data_projection_direction_by_L_R.size();)
     {
         my_dotProduct=-2; 
@@ -1739,25 +1740,24 @@ void Sampling::find_closest_sampling_point(MetaData &DFi,
         //add winner to the DOC fILE
         std::string fnImg, comment;
         double aux;
-        DFi.getValue(MDL_IMAGE, fnImg);
-        DFi.getValue(MDL_ANGLEROT,aux);  comment+=floatToString(aux)+" ";
-        DFi.getValue(MDL_ANGLETILT,aux); comment+=floatToString(aux)+" ";
-        DFi.getValue(MDL_ANGLEPSI,aux);  comment+=floatToString(aux)+" ";
-        DFi.getValue(MDL_SHIFTX,aux);    comment+=floatToString(aux)+" ";
-        DFi.getValue(MDL_SHIFTY,aux);    comment+=floatToString(aux);
-        DFo.addObject();
-        DFo.setValue(MDL_COMMENT,comment);
-        DFo.setValue(MDL_IMAGE,fnImg);
-        DFo.setValue(MDL_REF, winner_sampling);
+        DFi.getValue(MDL_IMAGE, fnImg, iter.objId);
+        DFi.getValue(MDL_ANGLEROT,aux, iter.objId);  comment+=floatToString(aux)+" ";
+        DFi.getValue(MDL_ANGLETILT,aux, iter.objId); comment+=floatToString(aux)+" ";
+        DFi.getValue(MDL_ANGLEPSI,aux, iter.objId);  comment+=floatToString(aux)+" ";
+        DFi.getValue(MDL_SHIFTX,aux, iter.objId);    comment+=floatToString(aux)+" ";
+        DFi.getValue(MDL_SHIFTY,aux, iter.objId);    comment+=floatToString(aux);
+        id = DFo.addObject();
+        DFo.setValue(MDL_COMMENT,comment, id);
+        DFo.setValue(MDL_IMAGE,fnImg, id);
+        DFo.setValue(MDL_REF, winner_sampling, id);
         #ifdef MYPSI    
         DFo.set(6, exp_data_projection_direction_by_L_R_psi[winner_exp_L_R]);
         #endif
-        DFo.setValue(MDL_ANGLEROT,XX(no_redundant_sampling_points_angles[winner_sampling]));
-        DFo.setValue(MDL_ANGLETILT,YY(no_redundant_sampling_points_angles[winner_sampling]));  
-        DFo.setValue(MDL_ANGLEPSI,ZZ(no_redundant_sampling_points_angles[winner_sampling]));  
+        DFo.setValue(MDL_ANGLEROT,XX(no_redundant_sampling_points_angles[winner_sampling]), id);
+        DFo.setValue(MDL_ANGLETILT,YY(no_redundant_sampling_points_angles[winner_sampling]), id);
+        DFo.setValue(MDL_ANGLEPSI,ZZ(no_redundant_sampling_points_angles[winner_sampling]), id);
         
-        //FIXME: Change this for a better way of iteration
-        DFi.nextObject();
+        iter.next();
     }//for i 
     if (output_file_root.size() > 0)
         DFo.write(output_file_root+ "_closest_sampling_points.doc");  
@@ -1938,9 +1938,9 @@ void Sampling::fill_exp_data_projection_direction_by_L_R(MetaData &DFi)
     double img_tilt,img_rot,img_psi;
     FOR_ALL_OBJECTS_IN_METADATA(DFi)
     {
-        DFi.getValue(MDL_ANGLEROT,img_rot);
-        DFi.getValue(MDL_ANGLETILT,img_tilt);
-        DFi.getValue(MDL_ANGLEPSI,img_psi);
+        DFi.getValue(MDL_ANGLEROT,img_rot,__iter.objId);
+        DFi.getValue(MDL_ANGLETILT,img_tilt,__iter.objId);
+        DFi.getValue(MDL_ANGLEPSI,img_psi,__iter.objId);
 
         Euler_direction(img_rot, img_tilt, img_psi, direction);
         exp_data_projection_direction.push_back(direction);

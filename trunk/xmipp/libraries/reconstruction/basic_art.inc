@@ -195,9 +195,9 @@ void Basic_ART_Init_history(Basic_ART_Parameters &prm,
     *prm.fh_hist << " Projection angles -----------------------------------------\n";
     FOR_ALL_OBJECTS_IN_METADATA(MD)
     {
-        MD.getValue(MDL_ANGLEROT, dfrot);
-        MD.getValue(MDL_ANGLETILT, dftilt);
-        MD.getValue(MDL_ANGLEPSI, dfpsi);
+        MD.getValue(MDL_ANGLEROT, dfrot,__iter.objId);
+        MD.getValue(MDL_ANGLETILT, dftilt,__iter.objId);
+        MD.getValue(MDL_ANGLEPSI, dfpsi,__iter.objId);
 
         *prm.fh_hist << "rot= "<<dfrot<<" tilt= "<<dftilt<<" psi= "<<dfpsi<<std::endl;
     }
@@ -371,6 +371,7 @@ void Basic_ART_iterations(Basic_ART_Parameters &prm,
         }
 
         // For each projection -----------------------------------------------
+        size_t id;
         for (int act_proj = 0; act_proj < prm.numIMG ; act_proj++)
         {
             POCS.newProjection();
@@ -423,12 +424,12 @@ void Basic_ART_iterations(Basic_ART_Parameters &prm,
                     FileName fn_noise=prm.fn_root+"_noise_proj"+
                                       integerToString(read_proj.name().getNumber(),5)+".xmp";
                     noisy_projection.write(fn_noise);
-                    SF_noise.addObject();
-                    SF_noise.setValue(MDL_IMAGE, fn_noise);
-                    SF_noise.setValue(MDL_ENABLED, 1);
-                    SF_signal.addObject();
-                    SF_signal.setValue(MDL_IMAGE, read_proj.name());
-                    SF_signal.setValue(MDL_ENABLED, 1);
+                    id = SF_noise.addObject();
+                    SF_noise.setValue(MDL_IMAGE, fn_noise, id);
+                    SF_noise.setValue(MDL_ENABLED, 1, id);
+                    id = SF_signal.addObject();
+                    SF_signal.setValue(MDL_IMAGE, read_proj.name(), id);
+                    SF_signal.setValue(MDL_ENABLED, 1, id);
                 }
             }
 

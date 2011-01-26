@@ -587,7 +587,7 @@ void ProgMLTomo::produceSideInfo()
         nr_ref = 0;
         FOR_ALL_OBJECTS_IN_METADATA(MDimg)
         {
-            if (MDimg.getValue(MDL_REF, refno))
+            if (MDimg.getValue(MDL_REF, refno, __iter.objId))
             {
                 nr_ref = XMIPP_MAX(refno, nr_ref);
             }
@@ -709,22 +709,23 @@ void ProgMLTomo::generateInitialReferences()
         Msumwedge1.initZeros();
         Msumwedge2.initZeros();
 
-        FOR_ALL_OBJECTS_IN_METADATA(MDtmp[refno])
+        MetaData &md = MDtmp[refno];
+        FOR_ALL_OBJECTS_IN_METADATA(md)
         {
-            MDtmp[refno].getValue(MDL_IMAGE, fn_tmp);
-            Itmp.readApplyGeo(fn_tmp,MDtmp[refno],objId);
+            md.getValue(MDL_IMAGE, fn_tmp, __iter.objId);
+            Itmp.readApplyGeo(fn_tmp,md,__iter.objId);
             Itmp().setXmippOrigin();
             reScaleVolume(Itmp(),true);
             if (do_keep_angles || dont_align || dont_rotate)
             {
                 // angles from MetaData
-                MDtmp[refno].getValue(MDL_ANGLEROT, my_rot);
-                MDtmp[refno].getValue(MDL_ANGLETILT, my_tilt);
-                MDtmp[refno].getValue(MDL_ANGLEPSI, my_psi);
+                md.getValue(MDL_ANGLEROT, my_rot, __iter.objId);
+                md.getValue(MDL_ANGLETILT, my_tilt, __iter.objId);
+                md.getValue(MDL_ANGLEPSI, my_psi, __iter.objId);
 
-                MDtmp[refno].getValue(MDL_SHIFTX, my_offsets(0));
-                MDtmp[refno].getValue(MDL_SHIFTY, my_offsets(1));
-                MDtmp[refno].getValue(MDL_SHIFTZ, my_offsets(2));
+                md.getValue(MDL_SHIFTX, my_offsets(0), __iter.objId);
+                md.getValue(MDL_SHIFTY, my_offsets(1), __iter.objId);
+                md.getValue(MDL_SHIFTZ, my_offsets(2), __iter.objId);
                 my_offsets *= scale_factor;
 
                 selfTranslate(LINEAR, Itmp(), my_offsets, DONT_WRAP);
@@ -748,7 +749,7 @@ void ProgMLTomo::generateInitialReferences()
                 Iave2() += Itmp();
             if (do_missing)
             {
-                MDtmp[refno].getValue(MDL_MISSINGREGION_NR, missno);
+                md.getValue(MDL_MISSINGREGION_NR, missno, __iter.objId);
                 --missno;
                 getMissingRegion(Mmissing, my_A, missno);
                 if (iran_fsc == 0)
@@ -805,8 +806,7 @@ void ProgMLTomo::generateInitialReferences()
         Iout = Iave1;
         reScaleVolume(Iout(),false);
         Iout.write(fn_tmp);
-        MDref.addObject();
-        MDref.setValue(MDL_IMAGE, fn_tmp);
+        MDref.setValue(MDL_IMAGE, fn_tmp, MDref.addObject());
         // Also write out average wedge of this reference
         fn_tmp = fn_root + "_it";
         fn_tmp.compose(fn_tmp, 0, "");
@@ -875,13 +875,15 @@ void ProgMLTomo::produceSideInfo2(int nr_vols)
     // Read in MetaData with wedge info, optimal angles, etc.
     int imgno = 0;
     MetaData MDsub;
+    size_t id;
+
     FOR_ALL_OBJECTS_IN_METADATA(MDimg)
     {
 
         // Get missing wedge type
         if (do_missing)
         {
-            MDimg.getValue(MDL_MISSINGREGION_NR, imgs_missno[imgno]);
+            MDimg.getValue(MDL_MISSINGREGION_NR, imgs_missno[imgno], __iter.objId);
         }
         // Generate a MetaData from the (possible subset of) images in SF
         if (ang_search > 0. || dont_align || do_only_average || dont_rotate)
@@ -889,14 +891,14 @@ void ProgMLTomo::produceSideInfo2(int nr_vols)
             //DFsub.append_comment(fn_tmp);
             //DL=DF.get_current_line();
             //Get values from new MetaData
-            MDimg.getValue(MDL_IMAGE, fn_tmp);
-            MDimg.getValue(MDL_ANGLEROT, DL[0]);
-            MDimg.getValue(MDL_ANGLETILT, DL[1]);
-            MDimg.getValue(MDL_ANGLEPSI, DL[2]);
-            MDimg.getValue(MDL_SHIFTX, DL[3]);
-            MDimg.getValue(MDL_SHIFTY, DL[4]);
-            MDimg.getValue(MDL_SHIFTZ, DL[5]);
-            MDimg.getValue(MDL_REF, DL[6]);
+            MDimg.getValue(MDL_IMAGE, fn_tmp, __iter.objId);
+            MDimg.getValue(MDL_ANGLEROT, DL[0], __iter.objId);
+            MDimg.getValue(MDL_ANGLETILT, DL[1], __iter.objId);
+            MDimg.getValue(MDL_ANGLEPSI, DL[2], __iter.objId);
+            MDimg.getValue(MDL_SHIFTX, DL[3], __iter.objId);
+            MDimg.getValue(MDL_SHIFTY, DL[4], __iter.objId);
+            MDimg.getValue(MDL_SHIFTZ, DL[5], __iter.objId);
+            MDimg.getValue(MDL_REF, DL[6], __iter.objId);
             if (do_sym)
             {
                 imgs_optpsi[imgno]=DL[0]; // for limited psi (now rot) searches
@@ -910,15 +912,15 @@ void ProgMLTomo::produceSideInfo2(int nr_vols)
                 imgs_optpsi[imgno]=DL[2]; // for limited psi searches
             //DFsub.append_line(DL);
             //Store values in DFsub
-            MDsub.addObject();
-            MDsub.setValue(MDL_IMAGE, fn_tmp);
-            MDsub.setValue(MDL_ANGLEROT, DL[0]);
-            MDsub.setValue(MDL_ANGLETILT, DL[1]);
-            MDsub.setValue(MDL_ANGLEPSI, DL[2]);
-            MDsub.setValue(MDL_SHIFTX, DL[3]);
-            MDsub.setValue(MDL_SHIFTY, DL[4]);
-            MDsub.setValue(MDL_SHIFTZ, DL[5]);
-            MDsub.setValue(MDL_REF, DL[6]);
+            id = MDsub.addObject();
+            MDsub.setValue(MDL_IMAGE, fn_tmp, id);
+            MDsub.setValue(MDL_ANGLEROT, DL[0], id);
+            MDsub.setValue(MDL_ANGLETILT, DL[1], id);
+            MDsub.setValue(MDL_ANGLEPSI, DL[2], id);
+            MDsub.setValue(MDL_SHIFTX, DL[3], id);
+            MDsub.setValue(MDL_SHIFTY, DL[4], id);
+            MDsub.setValue(MDL_SHIFTZ, DL[5], id);
+            MDsub.setValue(MDL_REF, DL[6], id);
             //FIXME: check this
             //imgs_optangno[imgno]=DFsub.dataLineNo()-1;
             imgs_optangno[imgno]= MDsub.size();
@@ -959,9 +961,9 @@ void ProgMLTomo::produceSideInfo2(int nr_vols)
         while (!DFsub.eof())*/
         FOR_ALL_OBJECTS_IN_METADATA(MDsub)
         {
-            MDsub.getValue(MDL_ANGLEROT, DL[0]);
-            MDsub.getValue(MDL_ANGLETILT, DL[1]);
-            MDsub.getValue(MDL_ANGLEPSI, DL[2]);
+            MDsub.getValue(MDL_ANGLEROT, DL[0], __iter.objId);
+            MDsub.getValue(MDL_ANGLETILT, DL[1], __iter.objId);
+            MDsub.getValue(MDL_ANGLEPSI, DL[2], __iter.objId);
             if (do_sym)
             {
                 myinfo.rot = -DL[2];
@@ -1061,8 +1063,7 @@ void ProgMLTomo::produceSideInfo2(int nr_vols)
         // Read in all reference images in memory
         if (!fn_ref.isMetaData())
         {
-            MDref.addObject();
-            MDref.setValue(MDL_IMAGE, fn_ref);
+            MDref.setValue(MDL_IMAGE, fn_ref, MDref.addObject());
         }
         else
         {
@@ -1074,8 +1075,8 @@ void ProgMLTomo::produceSideInfo2(int nr_vols)
         FileName fn_img;
         FOR_ALL_OBJECTS_IN_METADATA(MDref)
         {
-            MDref.getValue(MDL_IMAGE, fn_img);
-            img.readApplyGeo(fn_img,MDref,objId);
+            MDref.getValue(MDL_IMAGE, fn_img, __iter.objId);
+            img.readApplyGeo(fn_img,MDref,__iter.objId);
             img().setXmippOrigin();
             if (do_mask)
             {
@@ -1117,7 +1118,7 @@ void ProgMLTomo::produceSideInfo2(int nr_vols)
         int refno = 0;
         FOR_ALL_OBJECTS_IN_METADATA(MDref)
         {
-            MDref.getValue(MDL_WEIGHT, alpha_k(refno));
+            MDref.getValue(MDL_WEIGHT, alpha_k(refno), __iter.objId);
             //DL = DF.get_current_line();
             //alpha_k(refno) = DL[0];
             sumfrac += alpha_k(refno);
@@ -1216,18 +1217,18 @@ void ProgMLTomo::getMissingRegion(MultidimArray<double> &Mmissing,
     bool do_limit_x, do_limit_y, do_cone, is_observed;
     Mmissing.resize(dim,dim,hdim+1);
 
-    MDmissing.gotoFirstObject(MDValueEQ(MDL_MISSINGREGION_NR, missno));
+    size_t id = MDmissing.firstObject(MDValueEQ(MDL_MISSINGREGION_NR, missno));
     //FIXME: implement here new metadata structure!
     std::string missing_type;
-    MDmissing.getValue(MDL_MISSINGREGION_TYPE, missing_type);
+    MDmissing.getValue(MDL_MISSINGREGION_TYPE, missing_type, id);
     double thx0, thxF, thy0, thyF;
     if (missing_type=="wedge_y")
     {
         do_limit_x = true;
         do_limit_y = false;
         do_cone    = false;
-        MDmissing.getValue(MDL_MISSINGREGION_THY0, thy0);
-        MDmissing.getValue(MDL_MISSINGREGION_THYF, thyF);
+        MDmissing.getValue(MDL_MISSINGREGION_THY0, thy0, id);
+        MDmissing.getValue(MDL_MISSINGREGION_THYF, thyF, id);
         // TODO: Make this more logical!!
         tg0_y = -tan(PI * (-90. - thyF) / 180.);
         tgF_y = -tan(PI * (90. - thy0) / 180.);
@@ -1237,8 +1238,8 @@ void ProgMLTomo::getMissingRegion(MultidimArray<double> &Mmissing,
         do_limit_x = false;
         do_limit_y = true;
         do_cone    = false;
-        MDmissing.getValue(MDL_MISSINGREGION_THX0, thx0);
-        MDmissing.getValue(MDL_MISSINGREGION_THXF, thxF);
+        MDmissing.getValue(MDL_MISSINGREGION_THX0, thx0, id);
+        MDmissing.getValue(MDL_MISSINGREGION_THXF, thxF, id);
         tg0_x = -tan(PI * (-90. - thxF) / 180.);
         tgF_x = -tan(PI * (90. - thx0) / 180.);
     }
@@ -1247,10 +1248,10 @@ void ProgMLTomo::getMissingRegion(MultidimArray<double> &Mmissing,
         do_limit_x = true;
         do_limit_y = true;
         do_cone    = false;
-        MDmissing.getValue(MDL_MISSINGREGION_THY0, thy0);
-        MDmissing.getValue(MDL_MISSINGREGION_THYF, thyF);
-        MDmissing.getValue(MDL_MISSINGREGION_THX0, thx0);
-        MDmissing.getValue(MDL_MISSINGREGION_THXF, thxF);
+        MDmissing.getValue(MDL_MISSINGREGION_THY0, thy0, id);
+        MDmissing.getValue(MDL_MISSINGREGION_THYF, thyF, id);
+        MDmissing.getValue(MDL_MISSINGREGION_THX0, thx0, id);
+        MDmissing.getValue(MDL_MISSINGREGION_THXF, thxF, id);
         tg0_y = -tan(PI * (-90. - thyF) / 180.);
         tgF_y = -tan(PI * (90. - thy0) / 180.);
         tg0_x = -tan(PI * (-90. - thxF) / 180.);
@@ -1261,7 +1262,7 @@ void ProgMLTomo::getMissingRegion(MultidimArray<double> &Mmissing,
         do_limit_x = false;
         do_limit_y = false;
         do_cone    = true;
-        MDmissing.getValue(MDL_MISSINGREGION_THY0, thy0);
+        MDmissing.getValue(MDL_MISSINGREGION_THY0, thy0, id);
         tg = -tan(PI * (-90. - thy0) / 180.);
     }
     else
@@ -2387,7 +2388,7 @@ void * threadMLTomoExpectationSingleImage( void * data )
     std::vector< Image<double> > *Iref = thread_data->Iref;
 
     MultidimArray<double> *sumw = thread_data->sumw;
-    std::vector<long int> * imgs_id = thread_data->imgs_id;
+    std::vector<size_t> * imgs_id = thread_data->imgs_id;
     ThreadTaskDistributor * distributor = thread_data->distributor;
 
     //#define DEBUG_THREAD
@@ -3110,13 +3111,13 @@ void ProgMLTomo::writeOutputFiles(const int iter,
         reScaleVolume(Vt(),false);
         Vt.write(fn_tmp);
 
-        MDref.setValue(MDL_IMAGE, fn_tmp);
-        MDref.setValue(MDL_ENABLED, 1);
+        MDref.setValue(MDL_IMAGE, fn_tmp, __iter.objId);
+        MDref.setValue(MDL_ENABLED, 1, __iter.objId);
         //SFo.insert(fn_tmp, SelLine::ACTIVE);
         //fracline(0) = alpha_k(refno);
         //fracline(1) = 1000 * conv[refno]; // Output 1000x the change for precision
-        MDref.setValue(MDL_WEIGHT, alpha_k(refno));
-        MDref.setValue(MDL_SIGNALCHANGE, conv[refno] * 1000);
+        MDref.setValue(MDL_WEIGHT, alpha_k(refno), __iter.objId);
+        MDref.setValue(MDL_SIGNALCHANGE, conv[refno] * 1000, __iter.objId);
         //DFl.insert_comment(fn_tmp);
         //DFl.insert_data_line(fracline);
 
@@ -3175,17 +3176,19 @@ void ProgMLTomo::writeOutputFiles(const int iter,
     if (iter >= 1)
     {
         //Write out log-file
+      MDo.clear();
         MDo.setColumnFormat(false);
         MDo.setComment(cline);
-        MDo.setValue(MDL_LL, LL);
-        MDo.setValue(MDL_PMAX, avefracweight);
-        MDo.setValue(MDL_SIGMANOISE, sigma_noise);
-        MDo.setValue(MDL_SIGMAOFFSET, sigma_offset);
-        MDo.setValue(MDL_ITER, iter);
+        size_t id = MDo.addObject();
+        MDo.setValue(MDL_LL, LL, id);
+        MDo.setValue(MDL_PMAX, avefracweight, id);
+        MDo.setValue(MDL_SIGMANOISE, sigma_noise, id);
+        MDo.setValue(MDL_SIGMAOFFSET, sigma_offset, id);
+        MDo.setValue(MDL_ITER, iter, id);
         fn_tmp = fn_base + "_img.xmd";
-        MDo.setValue(MDL_IMGMD, fn_tmp);
+        MDo.setValue(MDL_IMGMD, fn_tmp, id);
         fn_tmp = fn_base + "_ref.xmd";
-        MDo.setValue(MDL_REFMD, fn_tmp);
+        MDo.setValue(MDL_REFMD, fn_tmp, id);
 
         /*        fn_tmp = fn_base + "_log.xmd";
                 MDLog.write(fn_tmp);

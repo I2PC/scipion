@@ -259,7 +259,7 @@ protected:
      * or -1 if there are no more images to process.
      * This method will be useful for parallel task distribution
      */
-    virtual long int getImageToProcess();
+    virtual size_t getImageToProcess();
 
 public:
     XmippMetadataProgram();

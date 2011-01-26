@@ -119,7 +119,7 @@ double ProgAdjustVolume::mismatching(double a, double b)
             continue;
         N++;
 
-        I.readApplyGeo(SF,objId);
+        I.readApplyGeo(SF,__iter.objId);
         I().setXmippOrigin();
 
         // Project the auxiliary volume in the same direction
@@ -144,8 +144,9 @@ double ProgAdjustVolume::mismatching(double a, double b)
 #endif
 
     }
-    while (SF.nextObject()!= NO_MORE_OBJECTS)
-        ;
+    //TODO Review this
+//    while (SF.nextObject()!= NO_MORE_OBJECTS)
+//        ;
 
     return retval / N;
 }
@@ -171,7 +172,7 @@ void ProgAdjustVolume::apply(MultidimArray<double> &out)
     FOR_ALL_OBJECTS_IN_METADATA(SF)
     {
         // Read image
-        I.readApplyGeo(SF,objId);
+        I.readApplyGeo(SF,__iter.objId);
         projXdim = XSIZE(I());
         projYdim = YSIZE(I());
 

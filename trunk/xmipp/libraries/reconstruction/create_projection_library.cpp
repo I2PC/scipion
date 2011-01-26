@@ -250,26 +250,27 @@ void Prog_create_projection_library_Parameters::run()
     FileName fn_temp;
     mySFin.read(output_file_root+"_angles.doc");
     int myCounter=-1;
+    size_t id;
     for (int mypsi=0;mypsi<360;mypsi += psi_sampling)
     	FOR_ALL_OBJECTS_IN_METADATA(mySFin)
     	{
             double x,y,z, rot, tilt, psi;
-            mySFin.getValue(MDL_ANGLEROT,rot);
-            mySFin.getValue(MDL_ANGLETILT,tilt);
-            mySFin.getValue(MDL_ANGLEPSI,psi);
-            mySFin.getValue(MDL_X,x);
-            mySFin.getValue(MDL_Y,y);
-            mySFin.getValue(MDL_Z,z);
+            mySFin.getValue(MDL_ANGLEROT,rot,__iter.objId);
+            mySFin.getValue(MDL_ANGLETILT,tilt,__iter.objId);
+            mySFin.getValue(MDL_ANGLEPSI,psi,__iter.objId);
+            mySFin.getValue(MDL_X,x,__iter.objId);
+            mySFin.getValue(MDL_Y,y,__iter.objId);
+            mySFin.getValue(MDL_Z,z,__iter.objId);
             fn_temp.compose(output_file_root, ++myCounter,"xmp");
-            mySFout.addObject();
-            mySFout.setValue(MDL_IMAGE,fn_temp);
-            mySFout.setValue(MDL_ENABLED,1);
-            mySFout.setValue(MDL_ANGLEROT,rot);
-            mySFout.setValue(MDL_ANGLETILT,tilt);
-            mySFout.setValue(MDL_ANGLEPSI,psi+mypsi);
-            mySFout.setValue(MDL_X,x);
-            mySFout.setValue(MDL_Y,y);
-            mySFout.setValue(MDL_Z,z);
+            id = mySFout.addObject();
+            mySFout.setValue(MDL_IMAGE,fn_temp,id);
+            mySFout.setValue(MDL_ENABLED,1,id);
+            mySFout.setValue(MDL_ANGLEROT,rot,id);
+            mySFout.setValue(MDL_ANGLETILT,tilt,id);
+            mySFout.setValue(MDL_ANGLEPSI,psi+mypsi,id);
+            mySFout.setValue(MDL_X,x,id);
+            mySFout.setValue(MDL_Y,y,id);
+            mySFout.setValue(MDL_Z,z,id);
         }
     mySFout.write(output_file_root+".doc");
     unlink((output_file_root+"_angles.doc").c_str());

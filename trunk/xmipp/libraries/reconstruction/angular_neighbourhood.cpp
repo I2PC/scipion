@@ -54,7 +54,7 @@ void Prog_projection_neighbourhood_prm::get_angles(MetaData &SF_in, MetaData &DF
     Image<double> H;
     FOR_ALL_OBJECTS_IN_METADATA(SF_in)
     {
-        H.readApplyGeo(SF_in,objId,false);
+        H.readApplyGeo(SF_in,__iter.objId,false);
         DF_out.addObject();
         DF_out.setValue(MDL_ANGLEROT,H.rot());
         DF_out.setValue(MDL_ANGLETILT,H.tilt());
@@ -163,16 +163,19 @@ void Prog_projection_neighbourhood_prm::compute_neighbourhood()
     FOR_ALL_OBJECTS_IN_METADATA(DF2)
     {
         // Read reference projection direction
-    	double auxrot; DF2.getValue(MDL_ANGLEROT,auxrot);
-    	double auxtilt; DF2.getValue(MDL_ANGLEROT,auxtilt);
+    	double auxrot;
+    	DF2.getValue(MDL_ANGLEROT,auxrot,__iter.objId);
+    	double auxtilt;
+    	//TODO: Check this????
+    	DF2.getValue(MDL_ANGLETILT,auxtilt,__iter.objId);
         rot1 = realWRAP(auxrot, -180, 180);
         tilt1 = realWRAP(auxtilt, -180, 180);
 
         FOR_ALL_OBJECTS_IN_METADATA(DF1)
         {
             // Read assigned angles from document file
-        	DF1.getValue(MDL_ANGLEROT,auxrot);
-        	DF1.getValue(MDL_ANGLEROT,auxtilt);
+        	DF1.getValue(MDL_ANGLEROT,auxrot,__iter.objId);
+        	DF1.getValue(MDL_ANGLETILT,auxtilt,__iter.objId);
             rot2 = realWRAP(auxrot, -180, 180);
             tilt2 = realWRAP(auxtilt, -180, 180);
             distp = check_symmetries(rot1, tilt1, rot2, tilt2);
@@ -180,8 +183,9 @@ void Prog_projection_neighbourhood_prm::compute_neighbourhood()
             if (distp <= maxdist)
             {
             	FileName fnClosest;
-            	DF1.getValue(MDL_IMAGE,fnClosest);
-                SF_out.setValue(MDL_IMAGE,fnClosest);
+            	DF1.getValue(MDL_IMAGE,fnClosest,__iter.objId);
+            	//FIXME: SF_out doesn't need addObject????
+                //SF_out.setValue(MDL_IMAGE,fnClosest);
             }
         }
         // finished reading all particles for this neighbourhood

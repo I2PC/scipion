@@ -365,7 +365,7 @@ typedef struct
 {
     PyObject_HEAD
     MetaData * metadata;
-    bool startedIter;
+    MDIterator iter;
 }
 MetaDataObject;
 
@@ -597,13 +597,6 @@ MetaData_addObject(PyObject *obj, PyObject *args, PyObject *kwargs)
     MetaDataObject *self = (MetaDataObject*)obj;
     return PyLong_FromLong(self->metadata->addObject());
 }
-/* getActiveObject */
-static PyObject *
-MetaData_getActiveObject(PyObject *obj, PyObject *args, PyObject *kwargs)
-{
-    MetaDataObject *self = (MetaDataObject*)obj;
-    return PyLong_FromLong(self->metadata->getActiveObject());
-}
 /* firstObject */
 static PyObject *
 MetaData_firstObject(PyObject *obj, PyObject *args, PyObject *kwargs)
@@ -617,36 +610,6 @@ MetaData_lastObject(PyObject *obj, PyObject *args, PyObject *kwargs)
 {
     MetaDataObject *self = (MetaDataObject*)obj;
     return PyLong_FromLong(self->metadata->lastObject());
-}
-/* nextObject */
-static PyObject *
-MetaData_nextObject(PyObject *obj, PyObject *args, PyObject *kwargs)
-{
-    try
-    {
-        MetaDataObject *self = (MetaDataObject*)obj;
-        return PyLong_FromLong(self->metadata->nextObject());
-    }
-    catch (XmippError xe)
-    {
-        PyErr_SetString(PyXmippError, xe.msg.c_str());
-        return NULL;
-    }
-}
-/* previousObject */
-static PyObject *
-MetaData_previousObject(PyObject *obj, PyObject *args, PyObject *kwargs)
-{
-    try
-    {
-        MetaDataObject *self = (MetaDataObject*)obj;
-        return PyLong_FromLong(self->metadata->previousObject());
-    }
-    catch (XmippError xe)
-    {
-        PyErr_SetString(PyXmippError, xe.msg.c_str());
-        return NULL;
-    }
 }
 /* size */
 static PyObject *
@@ -910,7 +873,7 @@ MetaData_iter(PyObject *obj)
     try
     {
         MetaDataObject *self = (MetaDataObject*)obj;
-        self->startedIter = true;
+        self->iter = self->metadata->getIterator();
         Py_INCREF(self);
         return (PyObject *)self;
         //return Py_BuildValue("l", self->metadata->iteratorBegin());
@@ -927,15 +890,9 @@ MetaData_iternext(PyObject *obj)
     try
     {
         MetaDataObject *self = (MetaDataObject*)obj;
-        long objId;
-        if (self->startedIter)
-        {
-            objId = self->metadata->iteratorBegin();
-            self->startedIter = false;
-        }
-        else
-            objId = self->metadata->iteratorNext();
-        if (self->metadata->iteratorEnd())
+        long objId = (long)self->iter.objId;
+        self->iter.next();
+        if (objId == BAD_OBJID)
             return NULL;
         return Py_BuildValue("l", objId);
     }
@@ -987,20 +944,11 @@ static PyMethodDef MetaData_methods[] = {
                                             {"addObject", (PyCFunction)MetaData_addObject, METH_NOARGS,
                                              "Add a new object and return its id"
                                             },
-                                            {"getActiveObject", (PyCFunction)MetaData_getActiveObject, METH_NOARGS,
-                                             "Return active object id"
-                                            },
                                             {"firstObject", (PyCFunction)MetaData_firstObject, METH_NOARGS,
                                              "Goto first metadata object, return its object id"
                                             },
                                             {"lastObject", (PyCFunction)MetaData_lastObject, METH_NOARGS,
                                              "Goto last metadata object, return its object id"
-                                            },
-                                            {"nextObject", (PyCFunction)MetaData_nextObject, METH_NOARGS,
-                                             "Goto next object to the active object"
-                                            },
-                                            {"previousObject", (PyCFunction)MetaData_previousObject, METH_NOARGS,
-                                             "Goto previous object to the active object"
                                             },
                                             {"size", (PyCFunction)MetaData_size, METH_NOARGS,
                                              "Return number of objects in MetaData"
@@ -1129,7 +1077,6 @@ MetaData_new(PyTypeObject *type, PyObject *args, PyObject *kwargs)
             self->metadata = new MetaData();
         }
     }
-    self->startedIter = false;
     return (PyObject *)self;
 }
 

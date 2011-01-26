@@ -534,15 +534,17 @@ void XmippMetadataProgram::showProgress()
         progress_bar(time_bar_done);
 }
 
-long int XmippMetadataProgram::getImageToProcess()
+size_t XmippMetadataProgram::getImageToProcess()
 {
-    long int nextImg;
+    static MDIterator iter;
     if (time_bar_done == 0)
-        nextImg = mdIn.iteratorBegin();
+    {
+        iter = mdIn.getIterator();
+    }
     else
-        nextImg = mdIn.iteratorNext();
+        iter.next();
     ++time_bar_done;
-    return nextImg;
+    return iter.objId;
 }
 
 void XmippMetadataProgram::run()
@@ -550,7 +552,7 @@ void XmippMetadataProgram::run()
     try
     {
         FileName fnImg, fnImgOut, baseName, pathBaseName, fullBaseName, oextBaseName;
-        long int objId;
+        size_t objId, newId;
         //Perform particular preprocessing
         preProcess();
 
@@ -569,7 +571,7 @@ void XmippMetadataProgram::run()
         }
 
         //FOR_ALL_OBJECTS_IN_METADATA(mdIn)
-        while ((objId = getImageToProcess()) != -1)
+        while ((objId = getImageToProcess()) != BAD_OBJID)
         {
             mdIn.getValue(MDL_IMAGE, fnImg, objId);
 
@@ -601,9 +603,9 @@ void XmippMetadataProgram::run()
                 else
                     fnImgOut = fnImg;
 
-                mdOut.addObject();
-                mdOut.setValue(MDL_IMAGE,fnImgOut);
-                mdOut.setValue(MDL_ENABLED, 1);
+                newId = mdOut.addObject();
+                mdOut.setValue(MDL_IMAGE, fnImgOut, newId);
+                mdOut.setValue(MDL_ENABLED, 1, newId);
             }
 
             processImage(fnImg, fnImgOut, objId);

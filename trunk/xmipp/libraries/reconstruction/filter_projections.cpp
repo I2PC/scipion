@@ -161,7 +161,7 @@ void Prog_Filter_Projections_Parameters::produce_side_info()
         DF_score.read(fn_score);
         if (Nimg!=DF_score.size())
             REPORT_ERROR(ERR_MD_OBJECTNUMBER,
-            		"The number of images in score docfile is not the same as in the input docfile");
+                         "The number of images in score docfile is not the same as in the input docfile");
     }
 
     if (percentil_cost>0)
@@ -169,7 +169,7 @@ void Prog_Filter_Projections_Parameters::produce_side_info()
         DF_cost.read(fn_cost);
         if (Nimg!=DF_cost.size())
             REPORT_ERROR(ERR_MD_OBJECTNUMBER,
-            		"The number of images in cost docfile is not the same as in the input docfile");
+                         "The number of images in cost docfile is not the same as in the input docfile");
     }
 
     if (angleLimit>0)
@@ -178,17 +178,19 @@ void Prog_Filter_Projections_Parameters::produce_side_info()
         angleLimit=DEG2RAD(angleLimit);
         if (Nimg!=DF_movement0.size())
             REPORT_ERROR(ERR_MD_OBJECTNUMBER,
-            		"The number of images in movement docfile is not the same as in the input docfile");
+                         "The number of images in movement docfile is not the same as in the input docfile");
     }
 
     if (percentil_normalization>0)
     {
+        //TODO: CHECK?????
         V.read(fn_vol);
         V().setXmippOrigin();
 
         Image<double> I;
         FileName fnAux;
-        DF_in.getValue(MDL_IMAGE,fnAux);
+        DF_in.getValue(MDL_IMAGE,fnAux, DF_in.firstObject());
+        //TODO: CHECK?????
         I.read(fnAux);
         I().setXmippOrigin();
 
@@ -314,7 +316,7 @@ void Prog_Filter_Projections_Parameters::run()
     if (percentil_score>0)
     {
         // Compute the histogram of the scores
-    	std::vector<double> score;
+        std::vector<double> score;
         DF_score.getColumnValues(MDL_MAXCC,score);
         Histogram1D Hscore;
         compute_hist(score,Hscore,200);
@@ -330,7 +332,7 @@ void Prog_Filter_Projections_Parameters::run()
     if (percentil_cost>0)
     {
         // Compute the histogram of the costs
-    	std::vector<double> cost;
+        std::vector<double> cost;
         DF_cost.getColumnValues(MDL_COST,cost);
         Histogram1D Hcost;
         compute_hist(cost,Hcost,200);
@@ -345,24 +347,22 @@ void Prog_Filter_Projections_Parameters::run()
     // Filter by movement ..................................................
     if (angleLimit>0)
     {
-        DF_movement0.firstObject();
-        DF_in.firstObject();
         int i=0;
-        FOR_ALL_OBJECTS_IN_METADATA(DF_movement0)
+        FOR_ALL_OBJECTS_IN_METADATA2(DF_movement0, DF_in)
         {
             double rot0, tilt0, psi0, shiftX0, shiftY0;
-            DF_movement0.getValue(MDL_ANGLEROT,rot0);
-            DF_movement0.getValue(MDL_ANGLETILT,tilt0);
-            DF_movement0.getValue(MDL_ANGLEPSI,psi0);
-            DF_movement0.getValue(MDL_SHIFTX,shiftX0);
-            DF_movement0.getValue(MDL_SHIFTY,shiftY0);
+            DF_movement0.getValue(MDL_ANGLEROT,rot0,__iter.objId);
+            DF_movement0.getValue(MDL_ANGLETILT,tilt0,__iter.objId);
+            DF_movement0.getValue(MDL_ANGLEPSI,psi0,__iter.objId);
+            DF_movement0.getValue(MDL_SHIFTX,shiftX0,__iter.objId);
+            DF_movement0.getValue(MDL_SHIFTY,shiftY0,__iter.objId);
 
             double rotF, tiltF, psiF, shiftXF, shiftYF;
-            DF_in.getValue(MDL_ANGLEROT,rotF);
-            DF_in.getValue(MDL_ANGLETILT,tiltF);
-            DF_in.getValue(MDL_ANGLEPSI,psiF);
-            DF_in.getValue(MDL_SHIFTX,shiftXF);
-            DF_in.getValue(MDL_SHIFTY,shiftYF);
+            DF_in.getValue(MDL_ANGLEROT,rotF,__iter2.objId);
+            DF_in.getValue(MDL_ANGLETILT,tiltF,__iter2.objId);
+            DF_in.getValue(MDL_ANGLEPSI,psiF,__iter2.objId);
+            DF_in.getValue(MDL_SHIFTX,shiftXF,__iter2.objId);
+            DF_in.getValue(MDL_SHIFTY,shiftYF,__iter2.objId);
 
             double diffX=shiftXF-shiftX0;
             double diffY=shiftYF-shiftY0;
@@ -376,7 +376,6 @@ void Prog_Filter_Projections_Parameters::run()
                 valid[i]=false;
 
             i++;
-            DF_in.nextObject();
         }
     }
 
@@ -432,17 +431,23 @@ void Prog_Filter_Projections_Parameters::run()
 
     // Produce the output docfile ..........................................
     MetaData DF_out;
-    std::vector< std::string > imagenames;
-    DF_in.getColumnValues(MDL_IMAGE,imagenames);
-    for (int i=0; i<Nimg; i++)
+    //TODO: CHECK?????
+    //std::vector< std::string > imagenames;
+    //DF_in.getColumnValues(MDL_IMAGE,imagenames);
+    FileName imgFn;
+    size_t id;
+    int i = 0;
+    //for (int i=0; i<Nimg; i++)
+    FOR_ALL_OBJECTS_IN_METADATA(DF_in)
+    {
         if (valid[i])
         {
-            DF_out.addObject();
-            DF_out.setValue(MDL_IMAGE,imagenames[i]);
+
             double rotF, tiltF, psiF, shiftXF, shiftYF;
-            DF_in.getValue(MDL_ANGLEROT,rotF);
-            DF_in.getValue(MDL_ANGLETILT,tiltF);
-            DF_in.getValue(MDL_ANGLEPSI,psiF);
+            DF_in.getValue(MDL_IMAGE,imgFn,__iter.objId);
+            DF_in.getValue(MDL_ANGLEROT,rotF,__iter.objId);
+            DF_in.getValue(MDL_ANGLETILT,tiltF,__iter.objId);
+            DF_in.getValue(MDL_ANGLEPSI,psiF,__iter.objId);
             if (fn_vol!="")
             {
                 shiftXF=0;
@@ -450,15 +455,19 @@ void Prog_Filter_Projections_Parameters::run()
             }
             else
             {
-                DF_in.getValue(MDL_SHIFTX,shiftXF);
-                DF_in.getValue(MDL_SHIFTY,shiftYF);
+                DF_in.getValue(MDL_SHIFTX,shiftXF,__iter.objId);
+                DF_in.getValue(MDL_SHIFTY,shiftYF,__iter.objId);
             }
-            DF_out.setValue(MDL_ANGLEROT,rotF);
-            DF_out.setValue(MDL_ANGLETILT,tiltF);
-            DF_out.setValue(MDL_ANGLEPSI,psiF);
-            DF_out.setValue(MDL_SHIFTX,shiftXF);
-            DF_out.setValue(MDL_SHIFTY,shiftYF);
+            id = DF_out.addObject();
+            DF_out.setValue(MDL_IMAGE,imgFn,id);
+            DF_out.setValue(MDL_ANGLEROT,rotF,id);
+            DF_out.setValue(MDL_ANGLETILT,tiltF,id);
+            DF_out.setValue(MDL_ANGLEPSI,psiF,id);
+            DF_out.setValue(MDL_SHIFTX,shiftXF,id);
+            DF_out.setValue(MDL_SHIFTY,shiftYF,id);
         }
+        i++;
+    }
     DF_out.write(fn_out+".doc");
     std::cout << DF_out.size() << " images have been kept out of "
     << Nimg << std::endl;

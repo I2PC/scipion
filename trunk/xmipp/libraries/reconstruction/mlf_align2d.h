@@ -106,9 +106,9 @@ public:
     /** Number of reference images */
     int n_ref;
     /** Total number of experimental images */
-    int nr_images_global;
+    size_t nr_images_global;
     /** Total number of local mpi images */
-    int nr_images_local;
+    size_t nr_images_local;
     /** First and last images, useful for mpi*/
     int myFirstImg, myLastImg;
     /** Stopping criterium */
@@ -116,7 +116,7 @@ public:
     /** SelFile images (working, test and reference set) */
     MetaData MDimg, MDref;
     //Vector of image IDs in the MetaData object (change order for randomize)
-    std::vector<long int> img_id;
+    std::vector<size_t> img_id;
     /** vector for flipping (i.e. 90/180-degree rotations) matrices */
     std::vector<Matrix2D<double> > F;
     /** Vector for images to hold references (new & old) */

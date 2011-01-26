@@ -69,7 +69,7 @@ typedef struct
     std::vector<Image<double> > *Iref;
     std::vector<MultidimArray<double> > *docfiledata;
     MultidimArray<double> * sumw;
-    std::vector<long int> * imgs_id;
+    std::vector<size_t> * imgs_id;
     ThreadTaskDistributor * distributor;
 }
 structThreadExpectationSingleImage ;
@@ -219,7 +219,7 @@ public:
     int debug;
 
     /** the vector with the images id in MetaData */
-    std::vector<long int> imgs_id;
+    std::vector<size_t> imgs_id;
 
 public:
     /// Define the arguments accepted

@@ -330,7 +330,8 @@ void Prog_assign_CTF_prm::process()
     // Process each piece ---------------------------------------------------
     PosFile.clear();
     PosFile.seekg(0, std::ios::beg); // Start of file
-    SF.firstObject();
+    //SF.firstObject();
+    MDIterator iter = SF.getIterator();
     Image<double> psd_avg, psd_std;
     std::cerr << "Computing models of each piece ...\n";
     init_progress_bar(div_Number);
@@ -368,7 +369,7 @@ void Prog_assign_CTF_prm::process()
             std::cout << "line" << line << std::endl;
             std::cout << "read from file (j,i)= (" << j << "," << i << ")" << std::endl;
             FileName fnt;
-            SF.getValue(MDL_IMAGE,fnt);
+            SF.getValue(MDL_IMAGE,fnt, iter.objId);
             std::cout << "Particle file name: " <<  fnt << std::endl;
 #endif
 
@@ -419,7 +420,7 @@ void Prog_assign_CTF_prm::process()
         {
             Image<double> I;
             FileName fni;
-            SF.getValue(MDL_IMAGE, fni);
+            SF.getValue(MDL_IMAGE, fni, iter.objId);
             I.read(fni,true,-1,true);
             piece = I();
         }
@@ -511,9 +512,9 @@ void Prog_assign_CTF_prm::process()
             FileName piece_fn, piece_fn_root;
             if (compute_at_particle)
             {
-                SF.getValue(MDL_IMAGE, piece_fn);
+                SF.getValue(MDL_IMAGE, piece_fn, iter.objId);
                 piece_fn_root = piece_fn.getBaseName();
-                SF.nextObject();
+                iter.next();
             }
             else
                 piece_fn_root = PSDfn_root + integerToString(N, 5);
@@ -541,7 +542,7 @@ void Prog_assign_CTF_prm::process()
         // Increment the division counter
         progress_bar(++N);
         if (selfile_mode)
-            SF.nextObject();
+            iter.next();
     }
     M_in.close_micrograph();
     progress_bar(div_Number);
@@ -686,7 +687,6 @@ void Prog_assign_CTF_prm::process()
     if (!compute_at_particle && selfile_fn != "" && !dont_adjust_CTF)
     {
         // Process the Selfile
-        SF.firstObject();
         if (!selfile_mode)
         {
             PosFile.close();
@@ -698,7 +698,7 @@ void Prog_assign_CTF_prm::process()
         FOR_ALL_OBJECTS_IN_METADATA(SF)
         {
             FileName fn_img;
-            SF.getValue(MDL_IMAGE, fn_img);
+            SF.getValue(MDL_IMAGE, fn_img, __iter.objId);
             if (!selfile_mode)
             {
                 std::string line;

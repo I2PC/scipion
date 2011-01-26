@@ -776,7 +776,8 @@ void Prog_tomograph_alignment::produceSideInfo()
         FileName fn;
         FOR_ALL_OBJECTS_IN_METADATA(SF)
         {
-            SF.getValue( MDL_IMAGE, fn );
+            SF.getValue( MDL_IMAGE, fn ,__iter.objId);
+            //FIXME: Check this
             imgaux.read(fn);
             if (difficult)
             {
@@ -829,7 +830,7 @@ void Prog_tomograph_alignment::produceSideInfo()
 
             double tiltAngle;
             if (SF.containsLabel(MDL_ANGLETILT))
-            	SF.getValue(MDL_ANGLETILT,tiltAngle);
+            	SF.getValue(MDL_ANGLETILT,tiltAngle,__iter.objId);
             else
             	tiltAngle=imgaux.tilt();
             tiltList.push_back(tiltAngle);
@@ -2247,8 +2248,11 @@ void Prog_tomograph_alignment::alignImages(const Alignment &alignment)
     << std::endl;
     MetaData DF;
 
+    MDIterator iter;
     if (fnSelOrig!="")
-        SForig.firstObject();
+    {
+        iter = SForig.getIterator();
+    }
     DF.setComment("First shift by -(shiftX,shiftY), then rotate by psi");
 
     MultidimArray<double> mask;
@@ -2287,12 +2291,13 @@ void Prog_tomograph_alignment::alignImages(const Alignment &alignment)
 
         // Align the original image
         FileName auxFn;
-        SForig.getValue( MDL_IMAGE, auxFn );
+        SForig.getValue( MDL_IMAGE, auxFn, iter.objId);
         Image<double> Iorig;
         if (fnSelOrig!="")
         {
             Iorig.read( auxFn );
-            SForig.nextObject();
+            //SForig.nextObject();
+            iter.next();
             mask.initZeros(Iorig());
             FOR_ALL_ELEMENTS_IN_ARRAY2D(Iorig())
             if (Iorig(i,j)!=0)
@@ -2320,11 +2325,11 @@ void Prog_tomograph_alignment::alignImages(const Alignment &alignment)
         }
 
         // Prepare data for the docfile
-        DF.addObject();
-        DF.setValue(MDL_IMAGE, fn_corrected);
-        DF.setValue(MDL_ANGLEPSI, 90.-alignment.rot+alignment.psi(i));
-        DF.setValue(MDL_SHIFTX, XX(alignment.di[i]+alignment.diaxis[i]));
-        DF.setValue(MDL_SHIFTY, YY(alignment.di[i]+alignment.diaxis[i]));
+        size_t id = DF.addObject();
+        DF.setValue(MDL_IMAGE, fn_corrected, id);
+        DF.setValue(MDL_ANGLEPSI, 90.-alignment.rot+alignment.psi(i), id);
+        DF.setValue(MDL_SHIFTX, XX(alignment.di[i]+alignment.diaxis[i]), id);
+        DF.setValue(MDL_SHIFTY, YY(alignment.di[i]+alignment.diaxis[i]), id);
     }
     DF.write(fnRoot+"_correction_parameters.txt");
 

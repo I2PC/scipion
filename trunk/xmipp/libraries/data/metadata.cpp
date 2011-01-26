@@ -44,9 +44,6 @@ void MetaData::_clear(bool onlyData)
         ignoreLabels.clear();
         isColumnFormat = true;
         inFile = FileName();
-        activeObjId = -1;//no active object
-        delete iterObjectsId;
-        iterObjectsId = NULL;
         myMDSql->clearMd();
     }
 }//close clear
@@ -101,21 +98,16 @@ void MetaData::copyMetadata(const MetaData &md)
     }
 }
 
-bool MetaData::setValue(const MDObject &mdValueIn, long int objId)
+bool MetaData::setValue(const MDObject &mdValueIn, size_t id)
 {
-    if (objId == -1)
+    if (id == BAD_OBJID)
     {
-        if (activeObjId != -1)
-            objId = activeObjId;
-        else
-        {
-            REPORT_ERROR(ERR_MD_NOACTIVE, "setValue: please provide objId other than -1");
-            exit(1);
-        }
+        REPORT_ERROR(ERR_MD_NOACTIVE, "setValue: please provide objId other than -1");
+        exit(1);
     }
     //add label if not exists, this is checked in addlabel
     addLabel(mdValueIn.label);
-    myMDSql->setObjectValue(objId, mdValueIn);
+    myMDSql->setObjectValue(id, mdValueIn);
 }
 
 bool MetaData::setValueCol(const MDObject &mdValueIn)
@@ -125,64 +117,56 @@ bool MetaData::setValueCol(const MDObject &mdValueIn)
     myMDSql->setObjectValue(mdValueIn);
 }
 
-bool MetaData::getValue(MDObject &mdValueOut, long int objId) const
+bool MetaData::getValue(MDObject &mdValueOut, size_t id) const
 {
     if (!containsLabel(mdValueOut.label))
         return false;
 
-    if (objId == -1)
+    if (id == BAD_OBJID)
     {
-        if (activeObjId != -1)
-            objId = activeObjId;
-        else
-        {
-            REPORT_ERROR(ERR_MD_NOACTIVE, "getValue: please provide objId other than -1");
-            exit(1);
-        }
+        REPORT_ERROR(ERR_MD_NOACTIVE, "getValue: please provide objId other than -1");
+        exit(1);
     }
     //MDValue mdValue;
-    return myMDSql->getObjectValue(objId, mdValueOut);
+    return myMDSql->getObjectValue(id, mdValueOut);
 }
 
-bool MetaData::getRow(MDRow &row, long int objId) const
+bool MetaData::getRow(MDRow &row, size_t id) const
 {
     row.clear();
     MDObject * obj;
     for (std::vector<MDLabel>::const_iterator it = activeLabels.begin(); it != activeLabels.end(); ++it)
     {
         obj = new MDObject(*it);
-        if (!getValue(*obj, objId))
+        if (!getValue(*obj, id))
             return false;
         row.push_back(obj);
     }
     return true;
 }
 
-void MetaData::setRow(const MDRow &row)
+void MetaData::setRow(const MDRow &row, size_t id)
 {
-    int imax=row.size();
-    for (int i=0; i<imax; ++i)
-        setValue(*row[i]);
+    int imax = row.size();
+    for (int i = 0; i < imax; ++i)
+        setValue(*row[i], id);
 }
 
 MetaData::MetaData()
 {
     myMDSql = new MDSql(this);
-    iterObjectsId = NULL;
     init(NULL);
 }//close MetaData default Constructor
 
 MetaData::MetaData(const std::vector<MDLabel> *labelsVector)
 {
     myMDSql = new MDSql(this);
-    iterObjectsId = NULL;
     init(labelsVector);
 }//close MetaData default Constructor
 
 MetaData::MetaData(const FileName &fileName, const std::vector<MDLabel> *desiredLabels)
 {
     myMDSql = new MDSql(this);
-    iterObjectsId = NULL;
     init(desiredLabels);
     read(fileName, desiredLabels);
 }//close MetaData from file Constructor
@@ -190,7 +174,6 @@ MetaData::MetaData(const FileName &fileName, const std::vector<MDLabel> *desired
 MetaData::MetaData(const MetaData &md)
 {
     myMDSql = new MDSql(this);
-    iterObjectsId = NULL;
     copyMetadata(md);
 }//close MetaData copy Constructor
 
@@ -263,11 +246,6 @@ std::vector<MDLabel>* MetaData::geActiveLabelsAddress() const
     return (std::vector<MDLabel>*) (&activeLabels);
 }
 
-long int  MetaData::getActiveObject() const
-{
-    return activeObjId;
-}
-
 int MetaData::MaxStringLength(const MDLabel thisLabel) const
 {
     if (!containsLabel(thisLabel))
@@ -276,29 +254,24 @@ int MetaData::MaxStringLength(const MDLabel thisLabel) const
     return myMDSql->columnMaxLength(thisLabel);
 }
 
-bool MetaData::setValueFromStr(const MDLabel label, const std::string &value, long int objectId)
+bool MetaData::setValueFromStr(const MDLabel label, const std::string &value, size_t id)
 {
     addLabel(label);
 
-    if (objectId == -1)
+    if (id == BAD_OBJID)
     {
-        if (activeObjId != -1)
-            objectId = activeObjId;
-        else
-        {
             REPORT_ERROR(ERR_MD_NOACTIVE, "setValue: please provide objId other than -1");
             exit(1);
-        }
     }
     MDObject mdValue(label);
     mdValue.fromString(value);
-    return myMDSql->setObjectValue(objectId, mdValue);
+    return myMDSql->setObjectValue(id, mdValue);
 }
 
-bool MetaData::getStrFromValue(const MDLabel label, std::string &strOut, long int objectId) const
+bool MetaData::getStrFromValue(const MDLabel label, String &strOut, size_t id) const
 {
     MDObject mdValueOut(label);
-    if (!getValue(mdValueOut, objectId))
+    if (!getValue(mdValueOut, id))
         return false;
     strOut = mdValueOut.toString();
     return true;
@@ -309,12 +282,12 @@ bool MetaData::isEmpty() const
     return size() == 0;
 }
 
-long int MetaData::size() const
+size_t MetaData::size() const
 {
-    std::vector<long int> objects;
+    std::vector<size_t> objects;
     myMDSql->selectObjects(objects);
 
-    return (long int)objects.size();
+    return objects.size();
 }
 
 bool MetaData::containsLabel(const MDLabel label) const
@@ -334,25 +307,23 @@ bool MetaData::addLabel(const MDLabel label, int pos)
     return true;
 }
 
-long int MetaData::addObject(long int objectId)
+size_t MetaData::addObject()
 {
-    activeObjId = myMDSql->addRow();
-    return activeObjId;
+    return (size_t)myMDSql->addRow();
 }
 
-void MetaData::importObject(const MetaData &md, const long int objId, bool doClear)
+void MetaData::importObject(const MetaData &md, const size_t id, bool doClear)
 {
-    md.myMDSql->copyObjects(this, new MDValueEQ(MDL_OBJID, objId));
+    md.myMDSql->copyObjects(this, new MDValueEQ(MDL_OBJID, id));
 }
 
-void MetaData::importObjects(const MetaData &md, const std::vector<long int> &objectsToAdd, bool doClear)
+void MetaData::importObjects(const MetaData &md, const std::vector<size_t> &objectsToAdd, bool doClear)
 {
     init(&(md.activeLabels));
     copyInfo(md);
     int size = objectsToAdd.size();
     for (int i = 0; i < size; i++)
         importObject(md, objectsToAdd[i]);
-    firstObject();
 }
 
 void MetaData::importObjects(const MetaData &md, const MDQuery &query, bool doClear)
@@ -370,34 +341,30 @@ void MetaData::importObjects(const MetaData &md, const MDQuery &query, bool doCl
             addLabel(md.activeLabels[i]);
     }
     md.myMDSql->copyObjects(this, &query);
-    firstObject();
 }
 
-bool MetaData::removeObject(long int objectId)
+bool MetaData::removeObject(size_t id)
 {
-    int removed = removeObjects(MDValueEQ(MDL_OBJID, objectId));
-    firstObject();
+    int removed = removeObjects(MDValueEQ(MDL_OBJID, id));
     return (removed > 0);
 }
 
-void MetaData::removeObjects(const std::vector<long int> &toRemove)
+void MetaData::removeObjects(const std::vector<size_t> &toRemove)
 {
     int size = toRemove.size();
     for (int i = 0; i < size; i++)
         removeObject(toRemove[i]);
-    firstObject();
 }
 
 int MetaData::removeObjects(const MDQuery &query)
 {
     int removed = myMDSql->deleteObjects(&query);
-    firstObject();
     return removed;
 }
+
 int MetaData::removeObjects()
 {
     int removed = myMDSql->deleteObjects();
-    activeObjId = -1;
     return removed;
 }
 
@@ -411,142 +378,74 @@ void MetaData::removeIndex(MDLabel label)
     myMDSql->indexModify(label, false);
 }
 
-long int MetaData::_iteratorBegin(const MDQuery *query)
-{
-    if (iterObjectsId == NULL)
-        iterObjectsId = new std::vector<long int>;
-    findObjects(*iterObjectsId);
-
-    if (iterObjectsId->size() > 0)
-    {
-        iterIndex = 0;
-        activeObjId = iterObjectsId->at(iterIndex);
-    }
-    else
-    {
-        activeObjId = iterIndex = -1;
-    }
-    return activeObjId;
-}
-
-long int MetaData::iteratorBegin()
-{
-    return _iteratorBegin();
-}
-
-/**Same as previous but iterating over a subset of
- * objects
- */
-long int MetaData::iteratorBegin(const MDQuery &query)
-{
-    return _iteratorBegin(&query);
-}
-
-/** Check whether the iteration if finished */
-bool MetaData::iteratorEnd() const
-{
-    return iterIndex == -1;
-}
-
-/** Move to next object on iteration
- * return nextObject id
- */
-long int MetaData::iteratorNext()
-{
-    if (iterObjectsId != NULL && iterIndex < iterObjectsId->size() - 1)
-    {
-        //The end not reached yet
-        iterIndex++;
-        activeObjId = iterObjectsId->at(iterIndex);
-    }
-    else
-    {
-        activeObjId = iterIndex = -1;
-    }
-    return activeObjId;
-}
 
 //----------Iteration functions -------------------
-long int MetaData::firstObject()
+
+MDIterator MetaData::getIterator(const MDQuery& query) const
 {
-    //std::vector<long int> objects = MDSql::selectObjects(this, 1);
-    //return (objects.size() > 0) ? objects[0] : -1;
-    activeObjId = myMDSql->firstRow();
-    return activeObjId;
+    MDIterator iter = MDIterator();
+    iter.objects = new std::vector<size_t>();
+    myMDSql->selectObjects(*(iter.objects), &query);
+    iter.iter = iter.objects->begin();
 }
 
-long int MetaData::lastObject()
+MDIterator MetaData::getIterator() const
 {
-    activeObjId = myMDSql->lastRow();
-    return activeObjId;
+    MDIterator iter = MDIterator();
+    iter.objects = new std::vector<size_t>();
+    myMDSql->selectObjects(*(iter.objects), NULL);
+    iter.iter = iter.objects->begin();
 }
 
-long int MetaData::nextObject()
+size_t MetaData::firstObject() const
 {
-    if (activeObjId == -1)
-        REPORT_ERROR(ERR_MD_NOACTIVE, "nextObject: Couldn't perform this operation when 'activeObject' is -1");
-    activeObjId = myMDSql->nextRow(activeObjId);
-    return activeObjId;
+    return myMDSql->firstRow();
 }
 
-long int MetaData::previousObject()
+size_t MetaData::firstObject(const MDQuery & query) const
 {
-    if (activeObjId == -1)
-        REPORT_ERROR(ERR_MD_NOACTIVE, "previousObject: Couldn't perform this operation when 'activeObject' is -1");
-    activeObjId = myMDSql->previousRow(activeObjId);
-    return activeObjId;
+  std::vector<size_t> ids;
+  findObjects(ids, query);
+  size_t id = ids.size() == 1 ? ids[0] : BAD_OBJID;
+  return id;
 }
 
-long int MetaData::goToObject(long int objectId)
+size_t MetaData::lastObject() const
 {
-    if (containsObject(objectId))
-        activeObjId = objectId;
-    else
-        REPORT_ERROR(ERR_MD_NOOBJ, (std::string)"gotoObject: object with ID " + integerToString(objectId) + " doesn't exist in metadata");
-    return activeObjId;
-
+    return myMDSql->lastRow();
 }
 
 //-------------Search functions-------------------
-void MetaData::findObjects(std::vector<long int> &objectsOut, const MDQuery &query) const
+void MetaData::findObjects(std::vector<size_t> &objectsOut, const MDQuery &query) const
 {
     objectsOut.clear();
     myMDSql->selectObjects(objectsOut, &query);
 }
 
-void MetaData::findObjects(std::vector<long int> &objectsOut, int limit) const
+void MetaData::findObjects(std::vector<size_t> &objectsOut, int limit) const
 {
     objectsOut.clear();
     MDQuery query(limit);
     myMDSql->selectObjects(objectsOut, &query);
 }
 
-int MetaData::countObjects(const MDQuery &query)
+size_t MetaData::countObjects(const MDQuery &query)
 {
-    std::vector<long int> objects;
+    std::vector<size_t> objects;
     findObjects(objects, query);
     return objects.size();
 }
 
-bool MetaData::containsObject(long int objectId)
+bool MetaData::containsObject(size_t objectId)
 {
     return containsObject(MDValueEQ(MDL_OBJID, objectId));
 }
 
 bool MetaData::containsObject(const MDQuery &query)
 {
-    std::vector<long int> objects;
+    std::vector<size_t> objects;
     findObjects(objects, query);
     return objects.size() > 0;
-}
-
-long int MetaData::gotoFirstObject(const MDQuery &query)
-{
-    std::vector<long int> objects;
-    findObjects(objects, query);
-
-    activeObjId = objects.size() == 1 ? objects[0] : -1;
-    return activeObjId;
 }
 
 //--------------IO functions -----------------------
@@ -665,7 +564,7 @@ void MetaData::_writeRows(std::ostream &os)
             {
                 MDObject mdValue(activeLabels[i]);
                 os.width(1);
-                myMDSql->getObjectValue(activeObjId, mdValue);
+                myMDSql->getObjectValue(__iter.objId, mdValue);
                 mdValue.toStream(os);
                 os << " ";
             }
@@ -699,16 +598,15 @@ void MetaData::write(std::ostream &os,const std::string &blockName, WriteModeMet
 
         _writeRows(os);
         //Put the activeObject to the first, if exists
-        firstObject();
     }
     else //rowFormat
     {
         os << _szBlockName << std::endl;
 
         // Get first object. In this case (row format) there is a single object
-        int objId = firstObject();
+        size_t id = firstObject();
 
-        if (objId != -1)
+        if (id != BAD_OBJID)
         {
             int maxWidth=20;
             for (int i = 0; i < activeLabels.size(); i++)
@@ -727,7 +625,7 @@ void MetaData::write(std::ostream &os,const std::string &blockName, WriteModeMet
                 {
                     MDObject mdValue(activeLabels[i]);
                     os << " _" << MDL::label2Str(activeLabels.at(i)) << " ";
-                    myMDSql->getObjectValue(objId, mdValue);
+                    myMDSql->getObjectValue(id, mdValue);
                     mdValue.toStream(os);
                     os << std::endl;
                 }
@@ -767,7 +665,7 @@ void MetaData::_readColumns(std::istream& is, MDRow & columnValues,
  * The parsing will be from an input stream(istream)
  * and if parsing fails, an error will be raised
  */
-void MetaData::_parseObject(std::istream &is, MDObject &object)
+void MetaData::_parseObject(std::istream &is, MDObject &object, size_t id)
 {
     is >> object;
     if (is.fail())
@@ -776,7 +674,7 @@ void MetaData::_parseObject(std::istream &is, MDObject &object)
     }
     else
         if (object.label != MDL_UNDEFINED)
-            setValue(object, activeObjId);
+            setValue(object, id);
 }//end of function parseObject
 
 #define END_OF_LINE() ((char*) memchr (pchStart, '\n', pEnd-pchStart+1))
@@ -952,17 +850,17 @@ void MetaData::_readRows(std::istream& is, MDRow & columnValues, bool useComment
             }
             else if (!isspace(is.peek()))
             {
-                addObject();
+                size_t id = addObject();
                 if (line != "")//this is for old format files
                 {
                     if (!useCommentAsImage)
-                        setValue(MDL_COMMENT, line);
+                        setValue(MDL_COMMENT, line, id);
                     else
-                        setValue(MDL_IMAGE, line);
+                        setValue(MDL_IMAGE, line, id);
                 }
                 int nCol = columnValues.size();
                 for (int i = 0; i < nCol; ++i)
-                    _parseObject(is, *(columnValues[i]));
+                    _parseObject(is, *(columnValues[i]), id);
             }
 
     }
@@ -1002,7 +900,7 @@ void MetaData::_readRowFormat(std::istream& is)
     std::string line, token;
     MDLabel label;
 
-    long int objectID = addObject();
+    size_t objectID = addObject();
 
     // Read data and fill structures accordingly
     while (getline(is, line, '\n'))
@@ -1047,12 +945,13 @@ void MetaData::_read(const FileName &filename,
     if (!filename.isMetaData())//if not a metadata, try to read as image or stack
     {
         Image<char> image;
+        size_t id;
         image.read(filename, false);
         if (image().ndim == 1 || !decomposeStack) //single image
         {
-            addObject();
-            setValue(MDL_IMAGE, filename);
-            setValue(MDL_ENABLED, 1);
+            id = addObject();
+            setValue(MDL_IMAGE, filename, id);
+            setValue(MDL_ENABLED, 1, id);
         }
         else //stack
         {
@@ -1060,9 +959,9 @@ void MetaData::_read(const FileName &filename,
             for (size_t i = 0; i < image().ndim; ++i)
             {
                 fnTemp.compose(i, filename);
-                addObject();
-                setValue(MDL_IMAGE, fnTemp);
-                setValue(MDL_ENABLED, 1);
+                id = addObject();
+                setValue(MDL_IMAGE, fnTemp, id);
+                setValue(MDL_ENABLED, 1, id);
             }
         }
         return;
@@ -1205,7 +1104,7 @@ bool MetaData::isColumnFormatFile(char * map,
     //std::string _szBlockName = (std::string)("data_") + blockName;
     *firstData  = (char *)  strstr(map, szBlockName);
     if(*firstData==NULL)
-    	REPORT_ERROR(ERR_MD_WRONGDATABLOCK,(std::string) "Block Named: " + szBlockName + " does not exist");
+        REPORT_ERROR(ERR_MD_WRONGDATABLOCK,(std::string) "Block Named: " + szBlockName + " does not exist");
     *secondData = (char *)  strstr((*firstData+1),"data_");
     *firstloop  = (char *)  strstr((*firstData),"loop_");
     //#define DEBUG
@@ -1321,7 +1220,7 @@ void MetaData::operate(const std::string &expression)
 
 void MetaData::randomize(MetaData &MDin)
 {
-    std::vector<long int> objects;
+    std::vector<size_t> objects;
     MDin.myMDSql->selectObjects(objects);
     std::random_shuffle(objects.begin(), objects.end());
     importObjects(MDin, objects);
@@ -1371,7 +1270,7 @@ void MetaData::sort(MetaData &MDin, const std::string &sortLabel)
         int i=0;
         FOR_ALL_OBJECTS_IN_METADATA(MDin)
         {
-            MDin.getValue(label,vectorValues);
+            MDin.getValue(label,vectorValues,__iter.objId);
             if (column>=vectorValues.size())
                 REPORT_ERROR(ERR_MULTIDIM_SIZE,"Trying to access to inexistent column in vector");
             DIRECT_A1D_ELEM(v,i)=vectorValues[column];
@@ -1385,15 +1284,14 @@ void MetaData::sort(MetaData &MDin, const std::string &sortLabel)
         // Construct output Metadata
         init(&(MDin.activeLabels));
         copyInfo(MDin);
+        size_t id;
         FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY1D(idx)
         {
             MDRow row;
             MDin.getRow(row,DIRECT_A1D_ELEM(idx,i));
-            addObject();
-            setRow(row);
+            id = addObject();
+            setRow(row, id);
         }
-
-        firstObject();
     }
     else
         sort(MDin, MDL::str2Label(sortLabel));
@@ -1401,7 +1299,7 @@ void MetaData::sort(MetaData &MDin, const std::string &sortLabel)
 
 void MetaData::split(int n, std::vector<MetaData> &results, const MDLabel sortLabel)
 {
-    long int mdSize = size();
+    size_t mdSize = size();
     if (n > mdSize)
         REPORT_ERROR(ERR_MD, "MetaData::split: Couldn't split a metadata in more parts than its size");
 
@@ -1415,7 +1313,7 @@ void MetaData::split(int n, std::vector<MetaData> &results, const MDLabel sortLa
 }
 
 void MetaData::_selectSplitPart(const MetaData &mdIn,
-                                int n, int part, long int mdSize,
+                                int n, int part, size_t mdSize,
                                 const MDLabel sortLabel)
 {
     int first, last, n_images;
@@ -1423,12 +1321,11 @@ void MetaData::_selectSplitPart(const MetaData &mdIn,
     init(&(mdIn.activeLabels));
     copyInfo(mdIn);
     mdIn.myMDSql->copyObjects(this, new MDQuery(n_images, first, sortLabel));
-    firstObject();
 }
 
 void MetaData::selectSplitPart(const MetaData &mdIn, int n, int part, const MDLabel sortLabel)
 {
-    long int mdSize = mdIn.size();
+    size_t mdSize = mdIn.size();
     if (n > mdSize)
         REPORT_ERROR(ERR_MD, "selectSplitPart: Couldn't split a metadata in more parts than its size");
     if (part < 0 || part >= n)
@@ -1437,27 +1334,15 @@ void MetaData::selectSplitPart(const MetaData &mdIn, int n, int part, const MDLa
 
 }
 
-void MetaData::selectPart(const MetaData &mdIn, long int startPosition, long int numberOfObjects,
+void MetaData::selectPart(const MetaData &mdIn, size_t startPosition, size_t numberOfObjects,
                           const MDLabel sortLabel)
 {
-    long int mdSize = mdIn.size();
+    size_t mdSize = mdIn.size();
     if (startPosition < 0 || startPosition >= mdSize)
         REPORT_ERROR(ERR_MD, "selectPart: 'startPosition' should be between 0 and size()-1");
     init(&(mdIn.activeLabels));
     copyInfo(mdIn);
     mdIn.myMDSql->copyObjects(this, new MDQuery(numberOfObjects, startPosition, sortLabel));
-    firstObject();
-}
-
-
-WriteModeMetaData metadataModeConvert (String mode)
-{
-    toLower(mode);
-    if (mode.npos != mode.find("overwrite"))
-        return OVERWRITE;
-    if (mode.npos != mode.find("append"))
-        return APPEND;
-    REPORT_ERROR(ERR_ARG_INCORRECT,"metadataModeConvert: Invalid mode");
 }
 
 void MetaData::makeAbsPath(const MDLabel label)
@@ -1470,9 +1355,7 @@ void MetaData::makeAbsPath(const MDLabel label)
     getcwd(buffer, 1023);
     std::string path_str(buffer);
     path_str += "/";
-
-    this->firstObject();
-    getValue(label,aux_string);
+    getValue(label, aux_string, firstObject());
 
     if (aux_string[0] == '/')
         return;
@@ -1480,8 +1363,44 @@ void MetaData::makeAbsPath(const MDLabel label)
     FOR_ALL_OBJECTS_IN_METADATA(*this)
     {
         aux_string_path = path_str;
-        getValue(label,aux_string);
+        getValue(label, aux_string, __iter.objId);
         aux_string_path += aux_string;
-        setValue(label,aux_string_path);
+        setValue(label, aux_string_path, __iter.objId);
     }
+}
+
+////////////////////////////// MetaData Iterator ////////////////////////////
+
+MDIterator::MDIterator()
+{
+    objects = NULL;
+}
+MDIterator::~MDIterator()
+{
+    delete objects;
+}
+bool MDIterator::next()
+{
+    if (objects == NULL)
+        return false;
+    iter++;
+
+    if (iter == objects->end())
+    {
+        objId = BAD_OBJID;
+        return false;
+    }
+
+    objId = *iter;
+    return true;
+}
+
+WriteModeMetaData metadataModeConvert (String mode)
+{
+    toLower(mode);
+    if (mode.npos != mode.find("overwrite"))
+        return OVERWRITE;
+    if (mode.npos != mode.find("append"))
+        return APPEND;
+    REPORT_ERROR(ERR_ARG_INCORRECT,"metadataModeConvert: Invalid mode");
 }

@@ -131,8 +131,8 @@ void ProgAngularDiscreteAssign::produce_side_info()
     int i = 0;
     FOR_ALL_OBJECTS_IN_METADATA(SF_ref)
     {
-        SF_ref.getValue(MDL_ANGLEROT, rot[i]);
-        SF_ref.getValue(MDL_ANGLETILT, tilt[i]);
+        SF_ref.getValue(MDL_ANGLEROT, rot[i],__iter.objId);
+        SF_ref.getValue(MDL_ANGLETILT, tilt[i],__iter.objId);
         i++;
     }
 
@@ -206,7 +206,7 @@ void ProgAngularDiscreteAssign::produce_library()
     int n = 0, nstep = XMIPP_MAX(1, number_of_imgs / 60); // For progress bar
     FOR_ALL_OBJECTS_IN_METADATA(SF_ref)
     {
-        I.readApplyGeo(SF_ref,objId);
+        I.readApplyGeo(SF_ref,__iter.objId);
         library_name.push_back(I.name());
 
         // Make and distribute its DWT coefficients in the different PCA bins

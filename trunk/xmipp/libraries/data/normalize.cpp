@@ -589,10 +589,10 @@ void ProgNormalize::preProcess()
         ImageGeneric Ig;
         FOR_ALL_OBJECTS_IN_METADATA(mdIn)
         {
-            mdIn.getValue(MDL_IMAGE,fn_img);
+            mdIn.getValue(MDL_IMAGE,fn_img,__iter.objId);
             if (fn_img=="")
                 break;
-            if (!mdIn.getValue(MDL_ANGLETILT,tiltTemp))
+            if (!mdIn.getValue(MDL_ANGLETILT,tiltTemp,__iter.objId))
             {
                 Ig.readMapped(fn_img);
                 tiltTemp = ABS(Ig.tilt());
