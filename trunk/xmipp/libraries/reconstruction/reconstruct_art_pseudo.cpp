@@ -246,7 +246,7 @@ void ProgARTPseudo::produceSideInfo()
             Matrix2D<double> mode;
             mode.initZeros(atomPosition.size(),3);
             FileName fnMode;
-            DFNMA.getValue( MDL_IMAGE, fnMode);
+            DFNMA.getValue( MDL_IMAGE, fnMode,__iter.objId);
             mode.read(fnMode);
             NMA.push_back(mode);
         }
@@ -263,20 +263,20 @@ void ProgARTPseudo::run()
         FOR_ALL_OBJECTS_IN_METADATA(DF)
         {
             FileName fnExp;
-            DF.getValue( MDL_IMAGE, fnExp);
+            DF.getValue( MDL_IMAGE, fnExp,__iter.objId);
             double rot;
-            DF.getValue( MDL_ANGLEROT, rot);
+            DF.getValue( MDL_ANGLEROT, rot,__iter.objId);
             double tilt;
-            DF.getValue( MDL_ANGLETILT, tilt);
+            DF.getValue( MDL_ANGLETILT, tilt,__iter.objId);
             double psi;
-            DF.getValue( MDL_ANGLEPSI, psi);
+            DF.getValue( MDL_ANGLEPSI, psi,__iter.objId);
             double shiftX;
-            DF.getValue( MDL_SHIFTX, shiftX);
+            DF.getValue( MDL_SHIFTX, shiftX,__iter.objId);
             double shiftY;
-            DF.getValue( MDL_SHIFTY, shiftY);
+            DF.getValue( MDL_SHIFTY, shiftY,__iter.objId);
             std::vector<double> lambda;
             if (NMA.size()>0)
-                DF.getValue( MDL_NMA, lambda);
+                DF.getValue( MDL_NMA, lambda,__iter.objId);
 
             Iexp.read(fnExp);
             Iexp().setXmippOrigin();
@@ -293,9 +293,9 @@ void ProgARTPseudo::writePseudo()
 {
     // Convert from pseudoatoms to volume
     Image<double> V;
-    DF.firstObject();
+    size_t objId = DF.firstObject();
     FileName fnExp;
-    DF.getValue( MDL_IMAGE, fnExp);
+    DF.getValue( MDL_IMAGE, fnExp, objId);
     Image<double> I;
     I.read(fnExp,false);
     V().resize(XSIZE(I()),XSIZE(I()),XSIZE(I()));
