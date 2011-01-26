@@ -157,9 +157,9 @@ int PROJECT_Tomography_Effectively_project(
         proj.write(fn_proj);
         numProjs++;
         idx++;
-        SF.addObject();
-        SF.setValue(MDL_IMAGE,fn_proj);
-        SF.setValue(MDL_ENABLED,1);
+        size_t objId = SF.addObject();
+        SF.setValue(MDL_IMAGE,fn_proj,objId);
+        SF.setValue(MDL_ENABLED,1,objId);
     }
     if (!(prm.tell&TELL_SHOW_ANGLES))
         progress_bar(expectedNumProjs);
