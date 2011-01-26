@@ -7,7 +7,7 @@
  * Structures des Assemblages Macromoleculaires, IMPMC UMR 7590 (Paris, France).
  * IUT de Reims-Chlons-Charleville (Reims, France).
  *
- * Last modifications by JNP the 27/05/2009 15:53:04 
+ * Last modifications by JNP the 27/05/2009 15:53:04
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -85,10 +85,9 @@ public :
         }
 
         // Seed the slaves; send one unit of work to each slave.
-        long int finished=false;
         for (int rank = 1; rank < nTasks; ++rank)
         {
-            if(next_work() == ERROR)
+            if(next_work(DFIter.objId) == ERROR)
             {
                 del_VolumeStruct(Data);
                 return (ERROR);
@@ -103,11 +102,11 @@ public :
                      MPI_COMM_WORLD);  // default communicator
 
             num_file++;
-            finished=DF.nextObject();
+            DFIter.next();
         }
 
         // Loop over getting new work requests until there is no more work to be done
-        while (finished!=NO_MORE_OBJECTS)
+        while (DFIter.objId != BAD_OBJID)
         {
             // Receive results from a slave
             MPI_Recv(Data.Output,       // message buffer
@@ -125,7 +124,7 @@ public :
             }
 
             // Get the next unit of work to be done
-            if(next_work() == ERROR)
+            if(next_work(DFIter.objId) == ERROR)
             {
                 del_VolumeStruct(Data);
                 return (ERROR);
@@ -141,7 +140,7 @@ public :
 
 
             num_file++;
-            finished=DF.nextObject();
+            DFIter.next();
         }
 
         // There's no more work to be done, so receive all the outstanding results from the slaves.
@@ -266,9 +265,9 @@ public :
             MPI_Send(0, 0, MPI_INT, rank, DIETAG, MPI_COMM_WORLD);
     }
 
-    int next_work()
+    int next_work(size_t objId)
     {
-        if(read_a_DocLine() == ERROR)
+        if(read_a_DocLine(objId) == ERROR)
             return (ERROR);
 
         work_toSlave[0] = Data.InitPsiThetaPhi[0];

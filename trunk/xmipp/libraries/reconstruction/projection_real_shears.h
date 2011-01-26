@@ -1,13 +1,13 @@
 /***************************************************************************
  *
  * Authors:     Slavica JONIC (slavica.jonic@impmc.jussieu.fr, slavica.jonic@a3.epfl.ch)
- *              Jean-Noël PIOCHE (jnp95@hotmail.com) 
- *        
+ *              Jean-Noël PIOCHE (jnp95@hotmail.com)
+ *
  * Biomedical Imaging Group, EPFL (Lausanne, Suisse).
  * Structures des Assemblages Macromoléculaires, IMPMC UMR 7590 (Paris, France).
  * IUT de Reims-Châlons-Charleville (Reims, France).
  *
- * Last modifications by JNP the 27/05/2009 15:52:45  
+ * Last modifications by JNP the 27/05/2009 15:52:45
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -31,34 +31,34 @@
 #ifndef __PROJECTION_REAL_SHEARS_H__
 #define __PROJECTION_REAL_SHEARS_H__
 
-/***************************************************************************** 
- *    System includes 
- ****************************************************************************/ 
-#include <stdlib.h> 
+/*****************************************************************************
+ *    System includes
+ ****************************************************************************/
+#include <stdlib.h>
 #include <stdio.h>
 #include <stddef.h>
-#include <math.h> 
-#include <float.h> 
+#include <math.h>
+#include <float.h>
 #include <string.h>
 #include <iostream>
- 
-/***************************************************************************** 
- *    Toolbox defines 
- ****************************************************************************/ 
-#include <external/bilib/configs.h> 
-#include <external/bilib/headers/messagedisplay.h> 
+
+/*****************************************************************************
+ *    Toolbox defines
+ ****************************************************************************/
+#include <external/bilib/configs.h>
+#include <external/bilib/headers/messagedisplay.h>
 #include <data/metadata.h>
- 
-/***************************************************************************** 
- *    Toolbox includes 
- ****************************************************************************/ 
+
+/*****************************************************************************
+ *    Toolbox includes
+ ****************************************************************************/
 #include <external/bilib/headers/linearalgebra.h>
 #include <external/bilib/headers/getput.h>
 #include <external/bilib/headers/getputd.h>
 #include <external/bilib/headers/changebasis.h>
- 
-/***************************************************************************** 
- *    New toolbox includes 
+
+/*****************************************************************************
+ *    New toolbox includes
  ****************************************************************************/
 #include <data/metadata.h>
 #include <data/projection.h>
@@ -72,23 +72,23 @@
 /**@name ProjRealShears Projection library program using Real-Shears */
 //@{
 /// Structure for holding a volume
-typedef struct 
-{ 
-    double *Volume; 
-    long   nx_Volume, ny_Volume, nz_Volume; 
-    short  *Proj_dims; 
-    double *Identity_orientN; 
-    double *Identity_orientV; 
-    double *Identity_orientW; 
-    double *IdentityOrigin; 
-    double *K123; 
-    double *Lambda123; 
-    double *Gama123; 
-    double *InitPsiThetaPhi; // Angles 
-    double *InitDelta123; //Shifts 
-    double *Output; 
-    double PeriodOfSamplingInVDirection; 
-    double PeriodOfSamplingInWDirection; 
+typedef struct
+{
+    double *Volume;
+    long   nx_Volume, ny_Volume, nz_Volume;
+    short  *Proj_dims;
+    double *Identity_orientN;
+    double *Identity_orientV;
+    double *Identity_orientW;
+    double *IdentityOrigin;
+    double *K123;
+    double *Lambda123;
+    double *Gama123;
+    double *InitPsiThetaPhi; // Angles
+    double *InitDelta123; //Shifts
+    double *Output;
+    double PeriodOfSamplingInVDirection;
+    double PeriodOfSamplingInWDirection;
 } VolumeStruct;
 
 /// Prepare a volume to be projected
@@ -98,7 +98,7 @@ void prepareStructVolume(const MultidimArray<double> &V, VolumeStruct &Data);
 void project_Volume(VolumeStruct &Data, Projection &P, int Ydim, int Xdim,
     double rot, double tilt, double psi);
 
-/// Allocates and fixes some VolumeStruct fields 
+/// Allocates and fixes some VolumeStruct fields
 void allocAndInit_VolumeStruct(VolumeStruct &Data2);
 
 /// Deallocate VolumeStruct
@@ -147,13 +147,14 @@ class Projection_real_shears
         std::string fn_projection_extension;
         ///Angular file
         FileName fn_angle;
-        
+
         ///Projection to save
         Projection proj;
         ///Selection file to fill and save
         MetaData SF;
         ///Content of the angle file
         MetaData DF;
+        MDIterator      DFIter;
         ///Basics Data for projections
         VolumeStruct Data;
 
