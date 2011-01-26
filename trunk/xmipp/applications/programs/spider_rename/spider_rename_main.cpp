@@ -38,12 +38,12 @@ protected:
 
     void readParams()
     {
-      XmippMetadataProgram::readParams();
-      if (!checkParam("-o"))
-        REPORT_ERROR(ERR_ARG_MISSING, "-o is required");
+        XmippMetadataProgram::readParams();
+        if (!checkParam("-o"))
+            REPORT_ERROR(ERR_ARG_MISSING, "-o is required");
     }
 
-    void processImage(const FileName &fnImg, const FileName &fnImgOut, long int objId)
+    void processImage(const FileName &fnImg, const FileName &fnImgOut, size_t objId)
     {
         static int counter = 0;
         ++counter;
@@ -55,20 +55,12 @@ protected:
         system(command.c_str());
     }
 
-}; //end of class ProgSpiderRename
+}
+; //end of class ProgSpiderRename
 
 int main(int argc, char *argv[])
 {
-
-    try
-    {
-        ProgSpiderRename program;
-        program.read(argc, argv);
-        program.run();
-
-    }
-    catch(XmippError xe)
-    {
-        std::cerr << xe;
-    }
+    ProgSpiderRename program;
+    program.read(argc, argv);
+    program.tryRun();
 }

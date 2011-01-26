@@ -41,19 +41,19 @@ protected:
 
     void readParams()
     {
-      XmippMetadataProgram::readParams();
-      new_style = checkParam("-new_style");
+        XmippMetadataProgram::readParams();
+        new_style = checkParam("-new_style");
     }
 
     void show()
     {
-      if (!verbose)
-        return;
+        if (!verbose)
+            return;
 
-      std::cout
-      << "Input Selfile = " << fn_in << std::endl
-      << "Spider Selfile style = " << new_style << std::endl
-      << "Output Selfile = " << fn_out << std::endl;
+        std::cout
+        << "Input Selfile = " << fn_in << std::endl
+        << "Spider Selfile style = " << new_style << std::endl
+        << "Output Selfile = " << fn_out << std::endl;
     }
 
     void preProcess()
@@ -62,13 +62,13 @@ protected:
         DF_out.append_comment((std::string)"Translation for Spider of " + fn_in);
     }
 
-    void processImage(const FileName &fnImg, const FileName &fnImgOut, long int objId)
+    void processImage(const FileName &fnImg, const FileName &fnImgOut, size_t objId)
     {
         static Matrix1D<double>   aux(1);
         static int i=1;
         bool store = true;
         int enabled;
-        mdIn.getValue( MDL_ENABLED, enabled );
+        mdIn.getValue( MDL_ENABLED, enabled, objId);
 
         if (enabled == 1)
         {
@@ -90,23 +90,15 @@ protected:
 
     void postProcess()
     {
-      DF_out.write(fn_out);
+        DF_out.write(fn_out);
     }
 
-};//end of class ProgSpiderTranslate
+}
+;//end of class ProgSpiderTranslate
 
 int main(int argc, char *argv[])
 {
-
-    try
-    {
-        ProgSpiderTranslate program;
-        program.read(argc, argv);
-        program.run();
-
-    }
-    catch(XmippError xe)
-    {
-        std::cerr << xe;
-    }
+    ProgSpiderTranslate program;
+    program.read(argc, argv);
+    program.tryRun();
 }
