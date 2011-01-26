@@ -557,8 +557,6 @@ void QtMainWidgetMark::generated(bool _this_is_tilted,
 
         MetaData SFUntilted(fn_untilted);
         MetaData SFTilted(fn_tilted);
-        SFUntilted.firstObject();
-        SFTilted.firstObject();
 
         int s1 = SFUntilted.size();
         int s2 = SFTilted.size();
