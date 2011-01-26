@@ -752,92 +752,6 @@ char * MetaData::_readColumnsStar(char * pStart,
     }
     return pchStart;
 }
-#ifdef NEVERDEFINED
-/** This function will read the possible columns and values from the file
- * in ROW format
- * and mark as MDL_UNDEFINED those who aren't valid labels
- * or those who appears in the IgnoreLabels vector
- * also set the activeLabels (for new STAR files)
- */
-
-char * MetaData::_readRowFormatStar(char * pStart,
-                                    char * pEnd,
-                                    MDRow & columnValues,
-                                    std::vector<MDLabel>* desiredLabels)
-{
-    //search for "_" and "\n"
-    char * pchStart, *pchEnd;
-    pchStart =pStart;
-    pchEnd=pEnd;
-    pchStart = (char*) memchr (pchStart, '\n', pchEnd-pchStart);//after nextline
-    MDLabel label;
-    char * szAux;
-    szAux = (char *) calloc(1024,1);
-    char toks[] = "\t \n"; // tabs, spaces and newlines
-    addObject();
-    while(1)
-    {
-        //Is next char '_'
-        if((pchStart+1)[0]!='_')
-        {
-            if((pchStart+1)[0]=='#')//this is a comment
-            {
-                pchStart = (char*) memchr (pchStart+1, '\n', pchEnd-pchStart-1);//after nextline
-                continue;
-            }
-            else if((pchStart+1)[0]==' '||(pchStart+1)[0]=='\t')//trim spaces at the beginning
-            {
-                ++pchStart;
-                continue;
-            }
-            else
-            {
-                //pchEnd = pchStart;
-                break;
-            }
-        }
-
-        pchStart = (char*) memchr (pchStart, '_' , pEnd-pchStart) ;//begining label
-        if(pchStart==NULL)
-            break;
-        ++pchStart;
-        //pchEnd = (char*) memchr (pchStart, '\n', pEnd-pchStart);//after endlabel
-        if(pchStart<pEnd && pchStart !=NULL)
-        {
-            //will fail is string label has spaces, tabs or newlines
-            memtok(&pchStart,&pchEnd,toks);//get label
-            std::string s(pchStart,pchEnd-pchStart);
-            //trim(s);
-            label = MDL::str2Label(s);
-            if (desiredLabels != NULL && !vectorContainsLabel(*desiredLabels, label))
-            {
-                label = MDL_UNDEFINED; //ignore if not present in desiredLabels
-            }
-            //columnValues[column]->fromChar(szAux);
-            //std::cerr << "rlabel " << MDL::label2Str(label) <<std::endl;
-            pchStart=pchEnd;
-            memtok(&pchStart,&pchEnd,toks);//get value
-            if (label != MDL_UNDEFINED)
-            {
-                strncpy(szAux,pchStart,pchEnd-pchStart);
-                szAux[pchEnd-pchStart]=NULL;
-                MDObject * _mdObject = new MDObject(label);
-                _mdObject->fromChar(szAux);
-                addLabel(label);
-                columnValues.push_back(_mdObject);//add the value here with a char
-
-                setValue(activeObjId, *(_mdObject));
-
-            }
-            pchStart=pchEnd;
-        }
-        else
-            break;
-    }
-    free(szAux);
-    return pchEnd;
-}
-#endif
 
 /** This function will be used to parse the rows data
  * having read the columns labels before and setting wich are desired
@@ -935,12 +849,29 @@ void MetaData::read(const FileName &_filename,
                     const std::vector<MDLabel> *desiredLabels,
                     bool decomposeStack)
 {
-    std::string BlockName;
+    String BlockName;
     FileName filename;
     BlockName = _filename.getBlockName();
     filename  = _filename.removeBlockName();
     _read(filename,desiredLabels,BlockName,decomposeStack);
 
+}
+
+bool MetaData::readPlain(const FileName &inFile, const std::vector<MDLabel> &columnLabels)
+{
+//    try
+//    {
+//        std::ifstream is(inFile.data(), std::ios_base::in);
+//        activeLabels = columnLabels;
+//        MDRow row;
+//
+//        _readRows(is, columnLabels, false);
+//        return true;
+//    }
+//    catch (XmippError xe)
+//    {
+//        return false;
+//    }
 }
 
 void MetaData::_read(const FileName &filename,
@@ -1085,9 +1016,6 @@ void MetaData::_read(const FileName &filename,
 
     if (oldFormat)
         _readRows(is, columnValues, useCommentAsImage);
-    //    else
-    //        _readRowFormat(is);
-    firstObject();
 }
 
 void MetaData::merge(const FileName &fn)

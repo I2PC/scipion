@@ -605,6 +605,11 @@ public:
     void read(const FileName &inFile, const std::vector<MDLabel> *desiredLabels = NULL, bool decomposeStack=true);
     /** @} */
 
+    /** Try to read a metadata from plain text with some columns.
+     * Label for each columns should be provided. Return false if couldn't read
+     */
+    bool readPlain(const FileName &inFile, const std::vector<MDLabel> &columnLabels);
+
     /** @name Set Operations
      * @{
      */
