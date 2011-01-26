@@ -58,12 +58,12 @@ public:
             if (fnShift!="" && fnShift.isMetaData(false))
             {
                 DF_shifts.read(fnShift);
-                shiftsIter = DF_shifts.getIterator();
+                shiftsIter = MDIterator(DF_shifts);
             }
             if (fnScale!="" && fnScale.isMetaData(false))
             {
                 DF_scales.read(fnScale);
-                scalesIter = DF_scales.getIterator();
+                scalesIter = MDIterator(DF_scales);
             }
         }
         else
@@ -157,7 +157,7 @@ bool process_img(Image<double> &img, const Prog_parameters *prm)
         eprm->DF_shifts.getValue(MDL_SHIFTY,YY(eprm->shift), id);
         if (dim==3)
             eprm->DF_shifts.getValue(MDL_SHIFTZ,ZZ(eprm->shift), id);
-        eprm->shiftsIter.next();
+        eprm->shiftsIter.moveNext();
     }
     else if (eprm->Docfile)
     {
@@ -189,7 +189,7 @@ bool process_img(Image<double> &img, const Prog_parameters *prm)
         eprm->DF_scales.getValue(MDL_SCALE,YY(eprm->scale), id);
         if (dim==3)
             eprm->DF_scales.getValue(MDL_SCALE,XX(eprm->scale), id);
-        eprm->scalesIter.next();
+        eprm->scalesIter.moveNext();
     }
     else if (eprm->Docfile || eprm->center_mass)
     {

@@ -788,6 +788,7 @@ void MetaData::_readRowsStar(MDRow & columnValues, char * pchStart, char * pEnd)
     String line;
     std::stringstream ss;
     int nCol = columnValues.size();
+    size_t id;
 
     while (pchStart < pEnd)//while there are data lines
     {
@@ -797,9 +798,9 @@ void MetaData::_readRowsStar(MDRow & columnValues, char * pchStart, char * pEnd)
         if (line != "")
         {
             std::stringstream ss(line);
-            addObject();
+            id = addObject();
             for (int i = 0; i < nCol; ++i)
-                _parseObject(ss, *(columnValues[i]));
+                _parseObject(ss, *(columnValues[i]), id);
         }
         pchStart = pchEnd + 1;//go to next line
     }
@@ -1298,16 +1299,16 @@ void MetaData::makeAbsPath(const MDLabel label)
 
 void MDIterator::init(const MetaData &md, const MDQuery * pQuery)
 {
-    //std::cerr << "=====> getIterator" << std::endl;
+//    std::cerr << "=====> getIterator" << std::endl;
     objects = new std::vector<size_t>();
     md.myMDSql->selectObjects(*objects, pQuery);
-    //std::cerr << "      objects: ";
-    //for (int i = 0; i < objects->size(); i++)
-    //    std::cerr << " " << objects->at(i);
-    //std::cerr << std::endl;
+//    std::cerr << "      objects: ";
+//    for (int i = 0; i < objects->size(); i++)
+ //       std::cerr << " " << objects->at(i);
+//    std::cerr << std::endl;
     iter = objects->begin();
     objId = iter < objects->end() ? *iter : BAD_OBJID;
-    //std::cerr << "      objId: " << iter.objId << std::endl;
+//    std::cerr << "      objId: " << objId << std::endl;
 }
 
 MDIterator::MDIterator()
@@ -1339,11 +1340,9 @@ bool MDIterator::moveNext()
     if (iter < objects->end())
     {
         objId = *iter;
-        std::cerr << "      next: " << objId << std::endl;
         return true;
     }
     objId = BAD_OBJID;
-    exit(1);
     return false;
 
 }
@@ -1351,7 +1350,7 @@ bool MDIterator::hasNext()
 {
     if (objects == NULL)
         return false;
-    return (iter == objects->end());
+    return (iter < objects->end());
 }
 
 WriteModeMetaData metadataModeConvert (String mode)

@@ -373,7 +373,7 @@ protected:
                     md2.read(fn2);
                     if (mdIn.size() != md2.size())
                         REPORT_ERROR(ERR_MD, "Both metadatas operands should be of same size.");
-                    md2Iterator=md2.getIterator();
+                    md2Iterator = MDIterator(md2);
                 }
                 else
                 {
@@ -397,7 +397,7 @@ protected:
             {
                 md2.getValue(MDL_IMAGE, fn2, md2Iterator.objId);
                 img2.readApplyGeo(fn2);
-                md2Iterator.next();
+                md2Iterator.moveNext();
             }
             binaryOperator(img, img2);
         }
