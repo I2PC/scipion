@@ -671,7 +671,7 @@ public:
     		int N=0;
     		FOR_ALL_OBJECTS_IN_METADATA(MD)
     		{
-    			Iaux.readApplyGeo(MD,objId);
+    			Iaux.readApplyGeo(MD,__iter.objId);
     			if (N==0)
     				I()=Iaux();
     			else

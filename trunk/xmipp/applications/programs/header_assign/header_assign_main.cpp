@@ -74,7 +74,7 @@ protected:
     		mdIn.write(fn_out,mode);
     }
 
-    void processImage(const FileName &fnImg, const FileName &fnImgOut, long int objId)
+    void processImage(const FileName &fnImg, const FileName &fnImgOut, size_t objId)
     {
 
         Image<double> img;
@@ -84,19 +84,19 @@ protected:
             switch (activeLabels[iter])
             {
             case MDL_ANGLEROT:
-                mdIn.getValue( MDL_ANGLEROT, rot);
+                mdIn.getValue( MDL_ANGLEROT, rot, objId);
                 img.setRot(rot);
                 break;
             case MDL_ANGLETILT:
-                mdIn.getValue( MDL_ANGLETILT, tilt);
+                mdIn.getValue( MDL_ANGLETILT, tilt, objId);
                 img.setTilt(tilt);
                 break;
             case MDL_ANGLEPSI:
-                mdIn.getValue( MDL_ANGLEPSI, psi);
+                mdIn.getValue( MDL_ANGLEPSI, psi, objId);
                 img.setPsi(psi);
                 break;
             case MDL_SHIFTX:
-                mdIn.getValue( MDL_SHIFTX, xshift);
+                mdIn.getValue( MDL_SHIFTX, xshift, objId);
                 if (levels != 0)
                     xshift /= pow(2.0, levels);
                 if (round_shifts)
@@ -104,7 +104,7 @@ protected:
                 img.setXoff(xshift);
                 break;
             case MDL_SHIFTY:
-                mdIn.getValue(MDL_SHIFTY, yshift);
+                mdIn.getValue(MDL_SHIFTY, yshift, objId);
                 if (levels != 0)
                     yshift /= pow(2.0, levels);
                 if (round_shifts)
@@ -112,15 +112,15 @@ protected:
                 img.setYoff(yshift);
                 break;
             case MDL_WEIGHT:
-                mdIn.getValue( MDL_WEIGHT, weight);
+                mdIn.getValue( MDL_WEIGHT, weight, objId);
                 img.setWeight(weight);
                 break;
             case MDL_SCALE:
-                mdIn.getValue( MDL_SCALE, scale);
+                mdIn.getValue( MDL_SCALE, scale, objId);
                 img.setScale(scale);
                 break;
             case MDL_FLIP:
-                mdIn.getValue( MDL_FLIP, mirror);
+                mdIn.getValue( MDL_FLIP, mirror, objId);
                 img.setFlip(mirror);
                 break;
             default:
