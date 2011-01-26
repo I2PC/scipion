@@ -49,7 +49,7 @@ void ProgEnhanceContrast::readParams()
     produceSideInfo();
 }
 
-void ProgEnhanceContrast::processImage(const FileName &fnImg, const FileName &fnImgOut, long int objId)
+void ProgEnhanceContrast::processImage(const FileName &fnImg, const FileName &fnImgOut, size_t objId)
 {
   Image<double> img;
   img.read(fnImg);

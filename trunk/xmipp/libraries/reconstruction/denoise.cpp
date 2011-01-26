@@ -137,7 +137,7 @@ void ProgDenoise::readParams()
     produceSideInfo();
 }
 
-void ProgDenoise::processImage(const FileName &fnImg, const FileName &fnImgOut, long int objId)
+void ProgDenoise::processImage(const FileName &fnImg, const FileName &fnImgOut, size_t objId)
 {
 	Image<double> img;
     img.readApplyGeo(fnImg,mdIn,objId);

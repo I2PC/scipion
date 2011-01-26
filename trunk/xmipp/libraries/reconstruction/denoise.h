@@ -143,7 +143,7 @@ protected:
     void defineParams();
     void readParams();
 
-    void processImage(const FileName &fnImg, const FileName &fnImgOut, long int objId);
+    void processImage(const FileName &fnImg, const FileName &fnImgOut, size_t objId);
 
 public:
     /** EstimatedS of the Bayesian method.
