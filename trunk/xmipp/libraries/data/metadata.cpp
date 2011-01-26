@@ -393,22 +393,6 @@ void MetaData::removeIndex(MDLabel label)
 
 //----------Iteration functions -------------------
 
-MDIterator MetaData::getIterator(const MDQuery& query) const
-{
-    MDIterator iter = MDIterator();
-    iter.objects = new std::vector<size_t>();
-    myMDSql->selectObjects(*(iter.objects), &query);
-    iter.iter = iter.objects->begin();
-}
-
-MDIterator MetaData::getIterator() const
-{
-    MDIterator iter = MDIterator();
-    iter.objects = new std::vector<size_t>();
-    myMDSql->selectObjects(*(iter.objects), NULL);
-    iter.iter = iter.objects->begin();
-}
-
 size_t MetaData::firstObject() const
 {
     return myMDSql->firstRow();
@@ -570,6 +554,7 @@ void MetaData::_writeRows(std::ostream &os)
 
     FOR_ALL_OBJECTS_IN_METADATA(*this)
     {
+        std::cerr << "id: " << __iter.objId << std::endl;
         for (int i = 0; i < activeLabels.size(); i++)
         {
             if (activeLabels[i] != MDL_COMMENT)
@@ -1311,30 +1296,58 @@ void MetaData::makeAbsPath(const MDLabel label)
 
 ////////////////////////////// MetaData Iterator ////////////////////////////
 
+void MDIterator::init(const MetaData &md, const MDQuery * pQuery)
+{
+    //std::cerr << "=====> getIterator" << std::endl;
+    objects = new std::vector<size_t>();
+    md.myMDSql->selectObjects(*objects, pQuery);
+    //std::cerr << "      objects: ";
+    //for (int i = 0; i < objects->size(); i++)
+    //    std::cerr << " " << objects->at(i);
+    //std::cerr << std::endl;
+    iter = objects->begin();
+    objId = iter < objects->end() ? *iter : BAD_OBJID;
+    //std::cerr << "      objId: " << iter.objId << std::endl;
+}
+
 MDIterator::MDIterator()
 {
     objects = NULL;
+    objId = BAD_OBJID;
 }
+
+MDIterator::MDIterator(const MetaData &md)
+{
+    init(md);
+}
+
+MDIterator::MDIterator(const MetaData &md, const MDQuery &query)
+{
+    init(md, &query);
+}
+
 MDIterator::~MDIterator()
 {
     delete objects;
 }
-bool MDIterator::next()
+bool MDIterator::moveNext()
 {
     if (objects == NULL)
         return false;
     iter++;
 
-    if (iter == objects->end())
+    if (iter < objects->end())
     {
-        objId = BAD_OBJID;
-        return false;
+        objId = *iter;
+        std::cerr << "      next: " << objId << std::endl;
+        return true;
     }
+    objId = BAD_OBJID;
+    exit(1);
+    return false;
 
-    objId = *iter;
-    return true;
 }
-bool MDIterator::has_next()
+bool MDIterator::hasNext()
 {
     if (objects == NULL)
         return false;

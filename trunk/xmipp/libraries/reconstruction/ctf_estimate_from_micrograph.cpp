@@ -330,8 +330,7 @@ void Prog_assign_CTF_prm::process()
     // Process each piece ---------------------------------------------------
     PosFile.clear();
     PosFile.seekg(0, std::ios::beg); // Start of file
-    //SF.firstObject();
-    MDIterator iter = SF.getIterator();
+    MDIterator iter(SF);
     Image<double> psd_avg, psd_std;
     std::cerr << "Computing models of each piece ...\n";
     init_progress_bar(div_Number);
@@ -514,7 +513,7 @@ void Prog_assign_CTF_prm::process()
             {
                 SF.getValue(MDL_IMAGE, piece_fn, iter.objId);
                 piece_fn_root = piece_fn.getBaseName();
-                iter.next();
+                iter.moveNext();
             }
             else
                 piece_fn_root = PSDfn_root + integerToString(N, 5);
@@ -542,7 +541,7 @@ void Prog_assign_CTF_prm::process()
         // Increment the division counter
         progress_bar(++N);
         if (selfile_mode)
-            iter.next();
+            iter.moveNext();
     }
     M_in.close_micrograph();
     progress_bar(div_Number);

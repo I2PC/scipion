@@ -1213,7 +1213,6 @@ int Projection_real_shears::start_to_process()
     }
 
     num_file = starting;
-    DFIter = DF.getIterator();
 
     return (!ERROR);
 }

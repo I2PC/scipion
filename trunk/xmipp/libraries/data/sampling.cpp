@@ -1700,7 +1700,7 @@ void Sampling::find_closest_sampling_point(MetaData &DFi,
     int exp_image=1;
 #endif
 
-    MDIterator iter = DFi.getIterator();
+    MDIterator iter(DFi);
     for(int i=0;i< exp_data_projection_direction_by_L_R.size();)
     {
         my_dotProduct=-2; 
@@ -1757,7 +1757,7 @@ void Sampling::find_closest_sampling_point(MetaData &DFi,
         DFo.setValue(MDL_ANGLETILT,YY(no_redundant_sampling_points_angles[winner_sampling]), id);
         DFo.setValue(MDL_ANGLEPSI,ZZ(no_redundant_sampling_points_angles[winner_sampling]), id);
         
-        iter.next();
+        iter.moveNext();
     }//for i 
     if (output_file_root.size() > 0)
         DFo.write(output_file_root+ "_closest_sampling_points.doc");  

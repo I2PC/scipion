@@ -536,15 +536,13 @@ void XmippMetadataProgram::showProgress()
 
 size_t XmippMetadataProgram::getImageToProcess()
 {
-    static MDIterator iter;
     if (time_bar_done == 0)
-    {
-        iter = mdIn.getIterator();
-    }
+        iter = new MDIterator(mdIn);
     else
-        iter.next();
+       iter->moveNext();
+
     ++time_bar_done;
-    return iter.objId;
+    return iter->objId;
 }
 
 void XmippMetadataProgram::run()

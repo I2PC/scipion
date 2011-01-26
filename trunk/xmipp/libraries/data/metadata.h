@@ -77,7 +77,7 @@ typedef enum
  */
 
 #define FOR_ALL_OBJECTS_IN_METADATA(__md) \
-        for(MDIterator __iter = (__md).getIterator(); __iter.next();)
+        for(MDIterator __iter(__md); __iter.hasNext(); __iter.moveNext())
 
 /** Iterate over all elements of two MetaData at same time.
  *
@@ -104,8 +104,9 @@ typedef enum
  */
 
 #define FOR_ALL_OBJECTS_IN_METADATA2(__md, __md2) \
-        for(MDIterator __iter = (__md).getIterator(), __iter2 = (__md2).getIterator(); \
-             __iter.next() && __iter2.next();)
+        for(MDIterator __iter(__md), __iter2(__md2);\
+             __iter.hasNext() && __iter2.hasNext(); \
+             __iter.moveNext(), __iter2.moveNext())
 
 
 
@@ -282,19 +283,6 @@ public:
                             char * end,
                             MDRow & columnValues,
                             const std::vector<MDLabel>* desiredLabels);
-#ifdef NEVERDEFINED
-    /** This function will read the possible columns and values from the file
-     * in ROW format
-     * and mark as MDL_UNDEFINED those who aren't valid labels
-     * or those who appears in the IgnoreLabels vector
-     * also set the activeLabels (for new STAR files)
-     */
-
-    char * _readRowFormatStar(char * pStart,
-                              char * pEnd,
-                              MDRow & columnValues,
-                              const std::vector<MDLabel>* desiredLabels);
-#endif
     /**Get path.
      */
     std::string getPath() const ;
@@ -528,9 +516,6 @@ public:
      * @{
      */
 
-    MDIterator getIterator(const MDQuery& query) const;
-    MDIterator getIterator() const;
-
     /** Return the object id of the first element in metadata. */
     size_t firstObject() const;
     /** Return the object id of the first element result from query */
@@ -743,9 +728,8 @@ public:
 
 
     /** @} */
-
-
     friend class MDSql;
+    friend class MDIterator;
 }
 ;//class MetaData
 
@@ -757,25 +741,27 @@ protected:
     std::vector<size_t> * objects;
     std::vector<size_t>::const_iterator iter;
 
-
+    /** Internal function to initialize the iterator */
+    void init(const MetaData &md, const MDQuery * pQuery=NULL);
 public:
+
     /** Empty constructor */
     MDIterator();
+    /** Empty constructor, creates an iterator from metadata */
+    MDIterator(const MetaData &md);
+    /** Same as before but iterating over a query */
+    MDIterator(const MetaData &md, const MDQuery &query);
     /** Destructor */
     ~MDIterator();
+
     size_t objId;
-
-
-
     /** Function to move to next element.
      * return false if there aren't more elements to iterate.
      */
-    bool next();
+    bool moveNext();
     /** Function to check if exist next element
      */
-    bool has_next();
-
-    friend class MetaData;
+    bool hasNext();
 }
 ;//class MDIterator
 

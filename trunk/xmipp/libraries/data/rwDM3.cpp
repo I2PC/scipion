@@ -496,7 +496,7 @@ int ImageBase::readDM3(int img_select,bool isStack)
     //Initialize query for later use
     MDValueEQ queryNodeId(MDL_DM3_NODEID, -1);
 
-    for (MDIterator iter = header->tags.getIterator(MDValueEQ(MDL_DM3_TAGNAME,(std::string)"DataType")); iter.next();)
+    for (MDIterator iter(header->tags, MDValueEQ(MDL_DM3_TAGNAME,(std::string)"DataType")); iter.hasNext(); iter.moveNext())
     // Read all the image headers
     //for (int n = 0; n < vIm.size(); n++)
     {

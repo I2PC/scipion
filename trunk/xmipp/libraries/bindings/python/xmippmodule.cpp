@@ -365,7 +365,7 @@ typedef struct
 {
     PyObject_HEAD
     MetaData * metadata;
-    MDIterator iter;
+    MDIterator * iter;
 }
 MetaDataObject;
 
@@ -374,6 +374,7 @@ static void
 MetaData_dealloc(MetaDataObject* self)
 {
     delete self->metadata;
+    delete self->iter;
     self->ob_type->tp_free((PyObject*)self);
 }
 
@@ -874,7 +875,7 @@ MetaData_iter(PyObject *obj)
     try
     {
         MetaDataObject *self = (MetaDataObject*)obj;
-        self->iter = self->metadata->getIterator();
+        self->iter = new MDIterator(*(self->metadata));
         Py_INCREF(self);
         return (PyObject *)self;
         //return Py_BuildValue("l", self->metadata->iteratorBegin());
@@ -891,11 +892,11 @@ MetaData_iternext(PyObject *obj)
     try
     {
         MetaDataObject *self = (MetaDataObject*)obj;
-        long objId = (long)self->iter.objId;
-        self->iter.next();
+        size_t objId = self->iter->objId;
+        self->iter->moveNext();
         if (objId == BAD_OBJID)
             return NULL;
-        return Py_BuildValue("l", objId);
+        return Py_BuildValue("n", objId);
     }
     catch (XmippError xe)
     {

@@ -154,7 +154,6 @@ class Projection_real_shears
         MetaData SF;
         ///Content of the angle file
         MetaData DF;
-        MDIterator      DFIter;
         ///Basics Data for projections
         VolumeStruct Data;
 

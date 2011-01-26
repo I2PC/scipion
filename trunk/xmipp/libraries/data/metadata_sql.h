@@ -214,6 +214,7 @@ private:
 
     friend class MDSqlStaticInit;
     friend class MetaData;
+    friend class MDIterator;
 }
 ;//close class MDSql
 

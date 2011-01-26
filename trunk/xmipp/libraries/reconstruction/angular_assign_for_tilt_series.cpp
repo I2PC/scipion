@@ -2247,10 +2247,10 @@ void Prog_tomograph_alignment::alignImages(const Alignment &alignment)
     << std::endl;
     MetaData DF;
 
-    MDIterator iter;
+    MDIterator * iter;
     if (fnSelOrig!="")
     {
-        iter = SForig.getIterator();
+        iter = new MDIterator(SForig);
     }
     DF.setComment("First shift by -(shiftX,shiftY), then rotate by psi");
 
@@ -2290,13 +2290,13 @@ void Prog_tomograph_alignment::alignImages(const Alignment &alignment)
 
         // Align the original image
         FileName auxFn;
-        SForig.getValue( MDL_IMAGE, auxFn, iter.objId);
+        SForig.getValue( MDL_IMAGE, auxFn, iter->objId);
         Image<double> Iorig;
         if (fnSelOrig!="")
         {
             Iorig.read( auxFn );
             //SForig.nextObject();
-            iter.next();
+            iter->moveNext();
             mask.initZeros(Iorig());
             FOR_ALL_ELEMENTS_IN_ARRAY2D(Iorig())
             if (Iorig(i,j)!=0)
@@ -2331,7 +2331,7 @@ void Prog_tomograph_alignment::alignImages(const Alignment &alignment)
         DF.setValue(MDL_SHIFTY, YY(alignment.di[i]+alignment.diaxis[i]), id);
     }
     DF.write(fnRoot+"_correction_parameters.txt");
-
+    delete iter;
 #ifdef DEBUG
 
     Image<double> save;

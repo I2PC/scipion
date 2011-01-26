@@ -219,6 +219,8 @@ protected:
     WriteModeMetaData mode;
     /// Input and output metadatas
     MetaData     mdIn, mdOut;
+    /// Iterator over input metadata
+    MDIterator * iter;
     /// Filenames of input and output Images
     //FileName        fnImg, fnImgOut;
     /// Output extension and root
