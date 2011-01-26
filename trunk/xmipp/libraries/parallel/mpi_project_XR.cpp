@@ -148,6 +148,7 @@ int PROJECT_mpi_XR_Effectively_project(
     mpiProjData data;
 
     int idx=prm.starting;
+    size_t id;
     for (double angle=prm.tilt0; angle<=prm.tiltF; angle+=prm.tiltStep)
     {
         data.fn_proj.compose(prm.fnProjectionSeed, idx,
@@ -173,19 +174,19 @@ int PROJECT_mpi_XR_Effectively_project(
 
         if (node.isMaster())
         {
-            DF_movements.addObject();
-            DF_movements.setValue(MDL_ANGLEROT,data.tRot);
-            DF_movements.setValue(MDL_ANGLETILT,data.tTilt);
-            DF_movements.setValue(MDL_ANGLEPSI,data.tPsi);
-            DF_movements.setValue(MDL_ANGLEROT2,data.rot);
-            DF_movements.setValue(MDL_ANGLETILT2,data.tilt);
-            DF_movements.setValue(MDL_ANGLEPSI2,data.psi);
-            DF_movements.setValue(MDL_SHIFTX,shiftX);
-            DF_movements.setValue(MDL_SHIFTY,shiftY);
+            id = DF_movements.addObject();
+            DF_movements.setValue(MDL_ANGLEROT,data.tRot, id);
+            DF_movements.setValue(MDL_ANGLETILT,data.tTilt, id);
+            DF_movements.setValue(MDL_ANGLEPSI,data.tPsi, id);
+            DF_movements.setValue(MDL_ANGLEROT2,data.rot, id);
+            DF_movements.setValue(MDL_ANGLETILT2,data.tilt, id);
+            DF_movements.setValue(MDL_ANGLEPSI2,data.psi, id);
+            DF_movements.setValue(MDL_SHIFTX,shiftX, id);
+            DF_movements.setValue(MDL_SHIFTY,shiftY, id);
 
-            SF.addObject();
-            SF.setValue(MDL_IMAGE,data.fn_proj);
-            SF.setValue(MDL_ENABLED,1);
+            id = SF.addObject();
+            SF.setValue(MDL_IMAGE,data.fn_proj, id);
+            SF.setValue(MDL_ENABLED,1, id);
         }
         mpiData.push_back(data);
         idx++;
