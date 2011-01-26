@@ -201,6 +201,7 @@ private:
 
     FileName fn2;
     MetaData md2;
+    MDIterator md2Iterator;
     Image<double> img2;
     bool isValue;
     double value;
@@ -372,6 +373,7 @@ protected:
                     md2.read(fn2);
                     if (mdIn.size() != md2.size())
                         REPORT_ERROR(ERR_MD, "Both metadatas operands should be of same size.");
+                    md2Iterator=md2.getIterator();
                 }
                 else
                 {
@@ -382,7 +384,7 @@ protected:
         }
     }
 
-    void processImage(const FileName &fnImg, const FileName &fnImgOut, long int objId)
+    void processImage(const FileName &fnImg, const FileName &fnImgOut, size_t objId)
     {
         Image<double> img;
         img.readApplyGeo(fnImg,mdIn,objId);
@@ -393,9 +395,9 @@ protected:
         {
             if (!isValue)
             {
-                md2.getValue(MDL_IMAGE, fn2);
+                md2.getValue(MDL_IMAGE, fn2, md2Iterator.objId);
                 img2.readApplyGeo(fn2);
-                md2.nextObject();
+                md2Iterator.next();
             }
             binaryOperator(img, img2);
         }

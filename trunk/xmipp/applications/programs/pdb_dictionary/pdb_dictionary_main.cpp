@@ -268,7 +268,7 @@ int main(int argc, char *argv[])
         FOR_ALL_OBJECTS_IN_METADATA(SF)
         {
             FileName fnPDB;
-            SF.getValue(MDL_IMAGE,fnPDB);
+            SF.getValue(MDL_IMAGE,fnPDB,__iter.objId);
             extractTrainingPatches(fnPDB, patchSize, step, Ts, resolution1,
                 resolution2, training);
         }
