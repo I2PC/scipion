@@ -149,10 +149,10 @@ void VirusVertex::processAngles()
 
     init_progress_bar(DF.size());
     int imgno=0;
+    FileName fn_img;
     FOR_ALL_OBJECTS_IN_METADATA(DF)
     {
-        FileName fn_img;
-        DF.getValue(MDL_IMAGE,fn_img);
+        DF.getValue(MDL_IMAGE,fn_img,__iter.objId);
         if (imgno++%repaint==0)
             progress_bar(imgno);
         proj.read(fn_img, false); //true means apply shifts
@@ -168,24 +168,17 @@ void VirusVertex::processAngles()
         }
         else
         {
-            std::vector<long int> found;
-            DF.findObjects(found,MDValueEQ(MDL_IMAGE,fn_img));
-            if (found.size()>=1)
-            {
-                DF.getValue(MDL_ANGLEROT,rot);
-                DF.getValue(MDL_ANGLETILT,tilt);
-                DF.getValue(MDL_ANGLEPSI,psi);
-                DF.getValue(MDL_SHIFTX,xoff);
-                DF.getValue(MDL_SHIFTY,yoff);
-                DF.getValue(MDL_FLIP,flip);
-                DF.getValue(MDL_WEIGHT,weight);
+                DF.getValue(MDL_ANGLEROT,rot,__iter.objId);
+                DF.getValue(MDL_ANGLETILT,tilt,__iter.objId);
+                DF.getValue(MDL_ANGLEPSI,psi,__iter.objId);
+                DF.getValue(MDL_SHIFTX,xoff,__iter.objId);
+                DF.getValue(MDL_SHIFTY,yoff,__iter.objId);
+                DF.getValue(MDL_FLIP,flip,__iter.objId);
+                DF.getValue(MDL_WEIGHT,weight,__iter.objId);
                 proj.setEulerAngles(rot,tilt,psi);
                 proj.setShifts(xoff,yoff);
                 proj.setFlip(flip);
                 proj.setWeight(weight);
-            }
-            else
-                REPORT_ERROR(ERR_MD_NOOBJ, (std::string)"Cannot find " + fn_img + " in docfile " + fn_doc);
         }
         Matrix2D<double> A;
         Matrix1D<double> projected_point(3);
@@ -245,15 +238,15 @@ void VirusVertex::processAngles()
                 proj_aux.setEulerAngles(rotp,tiltp,psip);
                 proj_aux.write(fn_tmp);
 
-                DFout.addObject();
-                DFout.setValue(MDL_IMAGE,fn_tmp);
-                DFout.setValue(MDL_ANGLEROT,rotp);
-                DFout.setValue(MDL_ANGLETILT,tiltp);
-                DFout.setValue(MDL_ANGLEPSI,psip);
-                DFout.setValue(MDL_SHIFTX,0);
-                DFout.setValue(MDL_SHIFTY,0);
-                DFout.setValue(MDL_FLIP,flip);
-                DFout.setValue(MDL_WEIGHT,weight);
+                size_t objId = DFout.addObject();
+                DFout.setValue(MDL_IMAGE,fn_tmp,objId);
+                DFout.setValue(MDL_ANGLEROT,rotp,objId);
+                DFout.setValue(MDL_ANGLETILT,tiltp,objId);
+                DFout.setValue(MDL_ANGLEPSI,psip,objId);
+                DFout.setValue(MDL_SHIFTX,0,objId);
+                DFout.setValue(MDL_SHIFTY,0,objId);
+                DFout.setValue(MDL_FLIP,flip,objId);
+                DFout.setValue(MDL_WEIGHT,weight,objId);
             }
         }
     }
