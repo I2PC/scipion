@@ -653,7 +653,7 @@ int ProgAngularDiscreteAssign::pick_view(int method,
 // Run ---------------------------------------------------------------------
 // Predict shift and psi ---------------------------------------------------
 //#define DEBUG
-void ProgAngularDiscreteAssign::processImage(const FileName &fnImg, const FileName &fnImgOut, long int objId)
+void ProgAngularDiscreteAssign::processImage(const FileName &fnImg, const FileName &fnImgOut, size_t objId)
 {
     // Read the image and take its angles from the Metadata
     // if they are available. If not, take them from the header.
