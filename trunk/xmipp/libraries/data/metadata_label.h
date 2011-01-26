@@ -570,7 +570,9 @@ public:
 ; //close class MDValue
 
 /** Explicit instantiation */
+#ifndef __MACOSX__
 template class std::vector<MDObject *>;
+#endif
 
 /** Class for holding an entire row of posible MDObject */
 class MDRow: public std::vector<MDObject*>
