@@ -94,11 +94,12 @@ public:
         int idx=0;
         FileName fnImg;
         toClassify.reserve(SF.size());
+        size_t objId;
         FOR_ALL_OBJECTS_IN_METADATA(SF)
         {
             if (idx==0)
             {
-                SF.getValue(MDL_IMAGE,fnImg);
+                SF.getValue(MDL_IMAGE,fnImg,__iter.objId);
                 toClassify.push_back(fnImg);
                 lastImage.read(fnImg);
                 centerImage(lastImage());
@@ -108,15 +109,15 @@ public:
                 fnImageStack.compose(idx,fnStack);
                 if (rank==0)
                 {
-                    SFout.addObject();
-                    SFout.setValue(MDL_IMAGE,fnImageStack);
-                    SFout.setValue(MDL_IMAGE_ORIGINAL,fnImg);
-                    SFout.setValue(MDL_MAXCC,1.0);
+                    objId = SFout.addObject();
+                    SFout.setValue(MDL_IMAGE,fnImageStack,objId);
+                    SFout.setValue(MDL_IMAGE_ORIGINAL,fnImg,objId);
+                    SFout.setValue(MDL_MAXCC,1.0,objId);
                 }
             }
             else
             {
-                SF.getValue(MDL_IMAGE,fnImg);
+                SF.getValue(MDL_IMAGE,fnImg,__iter.objId);
                 toClassify.push_back(fnImg);
             }
             idx++;
@@ -145,8 +146,8 @@ public:
                 continue;
             if ((count+1)%Nproc!=rank)
             {
-            	++count;
-            	continue;
+                ++count;
+                continue;
             }
             I.read(toClassify[i]);
             I().setXmippOrigin();
@@ -161,38 +162,38 @@ public:
         }
 
         // Rank 0 receives from the other nodes their best image
-		double buffer[2];
+        double buffer[2];
         if (rank==0)
         {
-    		MPI_Status status;
-        	for (int n=1; n<Nproc; ++n)
-        	{
-        		MPI_Recv(buffer, 2, MPI_DOUBLE, n, 0, MPI_COMM_WORLD, &status);
-        		if (buffer[1]>bestCorr)
-        		{
-        			bestIdx=(int)buffer[0];
-        			bestCorr=buffer[1];
-        		}
-        	}
+            MPI_Status status;
+            for (int n=1; n<Nproc; ++n)
+            {
+                MPI_Recv(buffer, 2, MPI_DOUBLE, n, 0, MPI_COMM_WORLD, &status);
+                if (buffer[1]>bestCorr)
+                {
+                    bestIdx=(int)buffer[0];
+                    bestCorr=buffer[1];
+                }
+            }
             std::cout << "Images to go=" << stillToDo.sum()-1 << " current correlation= " << bestCorr << std::endl;
         }
         else
         {
-        	buffer[0]=bestIdx;
-        	buffer[1]=bestCorr;
-        	MPI_Send(buffer, 2, MPI_DOUBLE, 0, 0, MPI_COMM_WORLD);
+            buffer[0]=bestIdx;
+            buffer[1]=bestCorr;
+            MPI_Send(buffer, 2, MPI_DOUBLE, 0, 0, MPI_COMM_WORLD);
         }
 
         // Now rank 0 redistributes the best image
         if (rank==0)
         {
-        	buffer[0]=bestIdx;
-        	MPI_Bcast(buffer, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+            buffer[0]=bestIdx;
+            MPI_Bcast(buffer, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
         }
         else
         {
-        	MPI_Bcast(buffer, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
-        	bestIdx=buffer[0];
+            MPI_Bcast(buffer, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+            bestIdx=buffer[0];
         }
 
         // All compute the best image
@@ -200,18 +201,19 @@ public:
         I().setXmippOrigin();
         bestCorr=alignImagesConsideringMirrors(lastImage(),I(),M,&mask);
         bestImage()=I();
-
         lastImage()=bestImage();
+        size_t objId;
+
         if (rank==0)
         {
             int idxStack=SFout.size();
             FileName fnImageStack;
             fnImageStack.compose(idxStack,fnStack);
             bestImage.write(fnStack,idxStack,true,WRITE_APPEND);
-            SFout.addObject();
-            SFout.setValue(MDL_IMAGE,fnImageStack);
-            SFout.setValue(MDL_IMAGE_ORIGINAL,toClassify[bestIdx]);
-            SFout.setValue(MDL_MAXCC,bestCorr);
+            objId = SFout.addObject();
+            SFout.setValue(MDL_IMAGE,fnImageStack,objId);
+            SFout.setValue(MDL_IMAGE_ORIGINAL,toClassify[bestIdx],objId);
+            SFout.setValue(MDL_MAXCC,bestCorr,objId);
         }
         VEC_ELEM(stillToDo,bestIdx)=0;
     }
