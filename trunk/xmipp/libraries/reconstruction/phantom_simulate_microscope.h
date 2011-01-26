@@ -81,7 +81,7 @@ public:
     void preProcess();
 
 
-    void processImage(const FileName &fnImg, const FileName &fnImgOut, long int objId);
+    void processImage(const FileName &fnImg, const FileName &fnImgOut, size_t objId);
 
     /** Apply to a single image. The image is modified.
         If the CTF is randomly selected then a new CTF is generated

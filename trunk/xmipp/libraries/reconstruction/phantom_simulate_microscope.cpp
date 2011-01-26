@@ -137,7 +137,7 @@ void ProgSimulateMicroscope::preProcess()
     }
 }
 
-void ProgSimulateMicroscope::processImage(const FileName &fnImg, const FileName &fnImgOut, long int objId)
+void ProgSimulateMicroscope::processImage(const FileName &fnImg, const FileName &fnImgOut, size_t objId)
 {
     Image<double> img;
     img.readApplyGeo(fnImg,mdIn,objId);

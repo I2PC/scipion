@@ -76,7 +76,7 @@ public:
     	scaleFactor = (float)(pow(2.0, levels));
     }
 
-    void processImage(const FileName &fnImg, const FileName &fnImgOut, long int objId)
+    void processImage(const FileName &fnImg, const FileName &fnImgOut, size_t objId)
     {
     	Image<double> img;
     	img.readApplyGeo(fnImg,mdIn,objId);

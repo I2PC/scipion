@@ -156,13 +156,13 @@ public:
         DF.firstObject();
         FOR_ALL_OBJECTS_IN_METADATA(DF)
         {
-            DF.getValue(MDL_ANGLEROT, rot);
-            DF.getValue(MDL_ANGLETILT, tilt);
-            DF.getValue(MDL_ANGLEPSI, psi);
+            DF.getValue(MDL_ANGLEROT, rot, __iter.objId);
+            DF.getValue(MDL_ANGLETILT, tilt, __iter.objId);
+            DF.getValue(MDL_ANGLEPSI, psi, __iter.objId);
             Euler_apply_transf(A3D, I, rot, tilt, psi, newrot, newtilt, newpsi);
-            DF.setValue(MDL_ANGLEROT, newrot);
-            DF.setValue(MDL_ANGLETILT, newtilt);
-            DF.setValue(MDL_ANGLEPSI, newpsi);
+            DF.setValue(MDL_ANGLEROT, newrot, __iter.objId);
+            DF.setValue(MDL_ANGLETILT, newtilt, __iter.objId);
+            DF.setValue(MDL_ANGLEPSI, newpsi, __iter.objId);
         }
         std::cerr<<" Written output docfile "<<fn_DFout<<std::endl;
     }
