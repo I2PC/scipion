@@ -134,7 +134,6 @@ enum MDLabel
     MDL_DM3_SIZE,
     MDL_DM3_VALUE,
 
-
     MDL_ENABLED, ///< Is this image enabled? (int [-1 or 1])
     MDL_FLIP, ///< Flip the image? (bool)
     MDL_IMAGE_CLASS_COUNT, ///< Number of images assigned to the same class as this image
@@ -174,9 +173,7 @@ enum MDLabel
     MDL_PRJ_SEED,
     MDL_PRJ_VOL,
 
-
     MDL_PSD, ///< A Power Spectrum Density file name (std::string)
-    MDL_Q0, ///< ctf definition Q0
     MDL_RANDOMSEED, ///< Seed for random number generator
     MDL_REF3D, ///< 3D Class to which the image belongs (int)
     MDL_REF, ///< Class to which the image belongs (int)
@@ -411,7 +408,6 @@ private:
         MDL::addLabel(MDL_ORIGINZ, LABEL_DOUBLE, "originZ");
         MDL::addLabel(MDL_PMAX, LABEL_DOUBLE, "pMax", "Pmax", "sumP");
         MDL::addLabel(MDL_PSD, LABEL_STRING, "powerSpectrum");
-        MDL::addLabel(MDL_Q0, LABEL_DOUBLE, "Q0");
         MDL::addLabel(MDL_RANDOMSEED, LABEL_INT, "randomSeed");
         MDL::addLabel(MDL_REF3D, LABEL_INT, "ref3d");
         MDL::addLabel(MDL_REF, LABEL_INT, "ref", "Ref");
