@@ -34,7 +34,8 @@ void ProgRecWbp::readParams()
     fn_out =  getParam("-o");
     fn_sym =  getParam("--sym");
     threshold = getDoubleParam("--threshold");
-    diameter = 2 * getIntParam("--radius");;
+    diameter = 2 * getIntParam("--radius");
+    ;
     sampling = getDoubleParam("--filsam");
     do_all_matrices = checkParam("--use_each_image");
     do_weights = checkParam("--weight");
@@ -115,15 +116,16 @@ void ProgRecWbp::produceSideInfo()
     {
         MetaData SF_aux;
         SF_aux.read(fn_sel);
+        size_t objId;
+        FileName fnImg;
         FOR_ALL_OBJECTS_IN_METADATA(SF_aux)
         {
-            SF_aux.getValue(MDL_WEIGHT,weight);
+            SF_aux.getValue(MDL_WEIGHT,weight,__iter.objId);
             if (weight != 0)
             {
-                SF.addObject();
-                FileName fnImg;
-                SF_aux.getValue(MDL_IMAGE,fnImg);
-                SF.setValue(MDL_IMAGE,fnImg);
+                objId = SF.addObject();
+                SF_aux.getValue(MDL_IMAGE,fnImg,__iter.objId);
+                SF.setValue(MDL_IMAGE,fnImg,objId);
             }
         }
         if (SF.size() == 0)
@@ -148,7 +150,7 @@ void ProgRecWbp::produceSideInfo()
 
 
 void ProgRecWbp::get_angles_for_image(const FileName &fn, double &rot, double &tilt, double &psi,
-        double &xoff, double &yoff, double &flip, double &weight)
+                                      double &xoff, double &yoff, double &flip, double &weight)
 {
     if (fn_doc == "")
     {
@@ -164,18 +166,18 @@ void ProgRecWbp::get_angles_for_image(const FileName &fn, double &rot, double &t
     }
     else
     {
-        unsigned long int id=SF.gotoFirstObject(MDValueEQ(MDL_IMAGE,(std::string)fn));
+        size_t id = SF.firstObject(MDValueEQ(MDL_IMAGE,(std::string)fn));
         if (id!=NO_OBJECT_FOUND && id!=NO_OBJECTS_STORED)
         {
-            SF.getValue(MDL_ANGLEROT,rot);
-            SF.getValue(MDL_ANGLETILT,tilt);
-            SF.getValue(MDL_ANGLEPSI,psi);
-            SF.getValue(MDL_SHIFTX,xoff);
-            SF.getValue(MDL_SHIFTY,yoff);
+            SF.getValue(MDL_ANGLEROT,rot,id);
+            SF.getValue(MDL_ANGLETILT,tilt,id);
+            SF.getValue(MDL_ANGLEPSI,psi,id);
+            SF.getValue(MDL_SHIFTX,xoff,id);
+            SF.getValue(MDL_SHIFTY,yoff,id);
             flip=0;
-            SF.getValue(MDL_FLIP,flip);
+            SF.getValue(MDL_FLIP,flip,id);
             weight=0;
-            SF.getValue(MDL_WEIGHT,weight);
+            SF.getValue(MDL_WEIGHT,weight,id);
         }
         else
             REPORT_ERROR(ERR_MD_NOOBJ, (std::string)"Cannot find " + fn + " in docfile " + fn_doc);
@@ -200,10 +202,10 @@ void ProgRecWbp::get_sampled_matrices(MetaData &SF)
     NN = DFlib.size();
     count_imgs.resize(NN);
     // Each experimental image contributes to the nearest of these directions
+    FileName fn_img;
     FOR_ALL_OBJECTS_IN_METADATA(SF)
     {
-        FileName fn_img;
-        SF.getValue(MDL_IMAGE,fn_img);
+        SF.getValue(MDL_IMAGE,fn_img,__iter.objId);
         get_angles_for_image(fn_img, rot, tilt, dum, dum, dum, dum, weight);
         int idx=find_nearest_direction(rot,tilt,DFlib,SL);
         if (do_weights)
@@ -270,11 +272,11 @@ void ProgRecWbp::get_all_matrices(MetaData &SF)
     NN = SF.size();
     NN *= (SL.SymsNo() + 1);
     mat_g = (column*)malloc(NN * sizeof(column));
+    FileName fn_img;
 
     FOR_ALL_OBJECTS_IN_METADATA(SF)
     {
-        FileName fn_img;
-        SF.getValue(MDL_IMAGE,fn_img);
+        SF.getValue(MDL_IMAGE,fn_img,__iter.objId);
         get_angles_for_image(fn_img, rot, tilt, psi, dum, dum, dum, weight);
         Euler_angles2matrix(rot, -tilt, psi, A);
         mat_g[no_mats].zero = A(2, 0);
@@ -312,7 +314,7 @@ void ProgRecWbp::get_all_matrices(MetaData &SF)
 
 // Simple backprojection of a single image
 void ProgRecWbp::simple_backprojection(Projection &img, MultidimArray<double> &vol,
-        int diameter)
+                                       int diameter)
 {
     int i, j, k, l, m;
     Matrix2D<double> A(3, 3);
@@ -455,7 +457,7 @@ void ProgRecWbp::apply_2Dfilter_arbitrary_geometry(MetaData &SF, MultidimArray<d
     {
         // Check whether to kill job
         //exit_if_not_exists(fn_control);
-        SF.getValue(MDL_IMAGE,fn_img);
+        SF.getValue(MDL_IMAGE,fn_img,__iter.objId);
         if (fn_doc == "")
         {
             proj.read(fn_img, true);
