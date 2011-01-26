@@ -38,8 +38,7 @@ void Prog_SSNR_prm::read(int argc, char **argv)
     {
         fn_S = getParameter(argc, argv, "-S");
         fn_N = getParameter(argc, argv, "-N");
-        fn_Ssel = getParameter(argc, argv, "-selS");
-        fn_Nsel = getParameter(argc, argv, "-selN");
+        fn_SNsel = getParameter(argc, argv, "-selSN");
         generate_VSSNR = checkParameter(argc, argv, "-generate_VSSNR");
         if (generate_VSSNR)
         {
@@ -58,16 +57,16 @@ void Prog_SSNR_prm::read(int argc, char **argv)
 // Show parameters ---------------------------------------------------------
 std::ostream & operator << (std::ostream &out, const Prog_SSNR_prm &prm)
 {
-    out << "Signal:         " << prm.fn_S       << std::endl
-    << "Noise:          " << prm.fn_N       << std::endl
-    << "Signal selfile: " << prm.fn_Ssel    << std::endl
-    << "Noise  selfile: " << prm.fn_Nsel    << std::endl
-    << "Volumetric SSNR:" << prm.fn_VSSNR   << std::endl
-    << "Output images:  " << prm.fn_out     << std::endl
-    << "Ring width:     " << prm.ring_width << std::endl
-    << "Sampling rate:  " << prm.Tm         << std::endl
-    << "Generate VSSNR: " << prm.generate_VSSNR << std::endl
-    << "Radial average: " << prm.radial_avg << std::endl
+    out
+    << "Signal Volume:        " << prm.fn_S       << std::endl
+    << "Noise  Volume:        " << prm.fn_N       << std::endl
+    << "Signal-Noise selfile: " << prm.fn_SNsel   << std::endl
+    << "Volumetric SSNR:      " << prm.fn_VSSNR   << std::endl
+    << "Output images:        " << prm.fn_out     << std::endl
+    << "Ring width:           " << prm.ring_width << std::endl
+    << "Sampling rate:        " << prm.Tm         << std::endl
+    << "Generate VSSNR:       " << prm.generate_VSSNR << std::endl
+    << "Radial average:       " << prm.radial_avg << std::endl
     ;
     return out;
 }
@@ -77,20 +76,18 @@ void Prog_SSNR_prm::usage() const
 {
     std::cerr << " SSNR Estimation ------------------------------------------------\n"
     << "SSNR\n"
-    << "   -S <Volume|Selfile>   : Signal volume or its projections\n"
-    << "   -N <Volume|Selfile>   : Noise volume or its projections\n"
-    << "   -selS <Selfile>       : Selfile with experimental images\n"
-    << "   -selN <Selfile>       : Selfile with noise images\n"
+    << "   -S <Volume>           : Signal volume\n"
+    << "   -N <Volume>           : Noise volume\n"
+    << "   -selSN <Selfile>      : Selfile with experimental and noise images\n"
     << "  [-ring <w=4>]          : Ring width for the SSNR computation\n"
     << "  [-sampling_rate <Tm=1>]: Sampling rate A/pixel\n"
     << "  [-o <SSNR file=\"\">]    : Output file\n"
     << " VSSNR Estimation -----------------------------------------------\n"
     << "SSNR\n"
     << "   -generate_VSSNR       : generate VSSNR\n"
-    << "   -S <Volume|Selfile>   : Signal volume or its projections\n"
-    << "   -N <Volume|Selfile>   : Noise volume or its projections\n"
-    << "   -selS <Selfile>       : Selfile with experimental images\n"
-    << "   -selN <Selfile>       : Selfile with noise images\n"
+    << "   -S <Volume>           : Signal volume\n"
+    << "   -N <Volume>           : Noise volume\n"
+    << "   -selSN <Selfile>      : Selfile with experimental and noise images\n"
     << "   -VSSNR <fn_vol>       : Volume with the Volumetric SSNR\n"
     << "  [-oimages <fn_root>]   : Root name for individual SSNR estimations\n"
     << "  [-ring <w=4>]          : Ring width for the SSNR computation\n"
@@ -111,43 +108,17 @@ void Prog_SSNR_prm::produce_side_info()
 {
     if (!radial_avg)
     {
-        if (S.isImage(fn_S))
-        {
-            S.readApplyGeo(fn_S);
-            S().setXmippOrigin();
-            N.readApplyGeo(fn_N);
-            N().setXmippOrigin();
-            if (!S().sameShape(N()))
-                REPORT_ERROR(ERR_MULTIDIM_SIZE,
-                             "SSNR: Signal and Noise volumes are not of the same size");
-        }
-        else
-        {
-            SF_Sth.read(fn_S);
-            SF_Nth.read(fn_N);
-            if (SF_Sth.size() != SF_Nth.size())
-                REPORT_ERROR(ERR_MD_OBJECTNUMBER,
-                             "SSNR: the number of projections in both selfiles is different");
-        }
+        S.read(fn_S);
+        S().setXmippOrigin();
+        N.read(fn_N);
+        N().setXmippOrigin();
+        if (!S().sameShape(N()))
+            REPORT_ERROR(ERR_MULTIDIM_SIZE,
+                         "SSNR: Signal and Noise volumes are not of the same size");
 
-        SF_S.read(fn_Ssel);
-        SF_N.read(fn_Nsel);
+        SF_SN.read(fn_SNsel);
         int sYdim, sXdim;
-        ImgSize(SF_S, sXdim, sYdim);
-        int nYdim, nXdim;
-        ImgSize(SF_N, nXdim, nYdim);
-        if (sYdim != nYdim || sYdim != YSIZE(S()) ||
-            sXdim != nXdim || sXdim != XSIZE(S()))
-            REPORT_ERROR(ERR_MULTIDIM_SIZE,
-                         "SSNR: conflict among the projection/projection sizes "
-                         "or projection/volume");
-
-        if (SF_S.size() != SF_N.size())
-            REPORT_ERROR(ERR_MD_OBJECTNUMBER,
-                         "SSNR: the number of projections in both selfiles is different");
-        if (XSIZE(S()) == 0 && SF_Sth.size() != SF_S.size())
-            REPORT_ERROR(ERR_MULTIDIM_SIZE,
-                         "SSNR: the number of projections in both selfiles is different");
+        ImgSize(SF_SN, sXdim, sYdim);
 
         if (fn_out_images == "")
             fn_out_images = "individualSSNR";
@@ -176,38 +147,30 @@ void Prog_SSNR_prm::Estimate_SSNR(int dim, Matrix2D<double> &output)
     MetaData SF_individual;
 
     std::cerr << "Computing the SSNR ...\n";
-    init_progress_bar(SF_S.size());
+    init_progress_bar(SF_SN.size());
     int imgno = 0;
-    FOR_ALL_OBJECTS_IN_METADATA(SF_S)
+    Image<double> Is, In, Inp;
+    Projection Iths, Ithn;
+    MultidimArray< std::complex<double> > FFT_Is, FFT_Iths,  FFT_In, FFT_Ithn;
+    MultidimArray<double> S2s, N2s, S2n, N2n;
+    FileName fn_img;
+    FOR_ALL_OBJECTS_IN_METADATA(SF_SN)
     {
-        Image<double> Is, In, Inp;
-        FileName fn_img;
-        SF_S.getValue(MDL_IMAGE,fn_img);
-        Is.readApplyGeo(fn_img,SF_S,objId);
+        SF_SN.getValue(MDL_IMAGE,fn_img,__iter.objId);
+        Is.readApplyGeo(fn_img,SF_SN,__iter.objId);
         Is().setXmippOrigin();
-        SF_N.getValue(MDL_IMAGE,fn_img);
-        In.readApplyGeo(fn_img,SF_N,objId);
+        SF_SN.getValue(MDL_ASSOCIATED_IMAGE1,fn_img,__iter.objId);
+        In.readApplyGeo(fn_img,SF_SN,__iter.objId);
         In().setXmippOrigin();
         Inp() = In();
 
-        Projection Iths, Ithn;
-        if (XSIZE(S()) != 0)
-        {
-            project_Volume(S(), Iths, YSIZE(Is()), XSIZE(Is()),
-                           Is.rot(), Is.tilt(), Is.psi());
-            project_Volume(N(), Ithn, YSIZE(Is()), XSIZE(Is()),
-                           Is.rot(), Is.tilt(), Is.psi());
-        }
-        else
-        {
-            FileName fn_img;
-            SF_Sth.getValue(MDL_IMAGE,fn_img);
-            Iths.read(fn_img);
-            SF_Nth.getValue(MDL_IMAGE,fn_img);
-            Ithn.read(fn_img);
-        }
+        project_Volume(S(), Iths, YSIZE(Is()), XSIZE(Is()),
+                       Is.rot(), Is.tilt(), Is.psi());
+        project_Volume(N(), Ithn, YSIZE(Is()), XSIZE(Is()),
+                       Is.rot(), Is.tilt(), Is.psi());
 
 #ifdef DEBUG
+
         Image<double> save;
         save() = Is();
         save.write("PPPread_signal.xmp");
@@ -222,13 +185,9 @@ void Prog_SSNR_prm::Estimate_SSNR(int dim, Matrix2D<double> &output)
         Is() -= Iths();
         In() -= Ithn();
 
-        MultidimArray< std::complex<double> > FFT_Is;
         FourierTransform(Is(), FFT_Is);
-        MultidimArray< std::complex<double> > FFT_Iths;
         FourierTransform(Iths(), FFT_Iths);
-        MultidimArray< std::complex<double> > FFT_In;
         FourierTransform(In(), FFT_In);
-        MultidimArray< std::complex<double> > FFT_Ithn;
         FourierTransform(Ithn(), FFT_Ithn);
 
 #ifdef DEBUG
@@ -245,18 +204,21 @@ void Prog_SSNR_prm::Estimate_SSNR(int dim, Matrix2D<double> &output)
 #endif
 
         // Compute the amplitudes
-        Image<double> S2s;
-        FFT_magnitude(FFT_Iths, S2s());
-        S2s() *= S2s();
-        Image<double> N2s;
-        FFT_magnitude(FFT_Is  , N2s());
-        N2s() *= N2s();
-        Image<double> S2n;
-        FFT_magnitude(FFT_Ithn, S2n());
-        S2n() *= S2n();
-        Image<double> N2n;
-        FFT_magnitude(FFT_In  , N2n());
-        N2n() *= N2n();
+        S2s.resizeNoCopy(FFT_Iths);
+        N2s.resizeNoCopy(FFT_Iths);
+        S2n.resizeNoCopy(FFT_Iths);
+        N2n.resizeNoCopy(FFT_Iths);
+        FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(FFT_Iths)
+        {
+            DIRECT_MULTIDIM_ELEM(S2s, n) = abs(DIRECT_MULTIDIM_ELEM(FFT_Iths, n));
+            DIRECT_MULTIDIM_ELEM(S2s, n) *= DIRECT_MULTIDIM_ELEM(S2s, n);
+            DIRECT_MULTIDIM_ELEM(N2s, n) = abs(DIRECT_MULTIDIM_ELEM(FFT_Is, n));
+            DIRECT_MULTIDIM_ELEM(N2s, n) *= DIRECT_MULTIDIM_ELEM(N2s, n);
+            DIRECT_MULTIDIM_ELEM(S2n, n) = abs(DIRECT_MULTIDIM_ELEM(FFT_Ithn, n));
+            DIRECT_MULTIDIM_ELEM(S2n, n) *= DIRECT_MULTIDIM_ELEM(S2n, n);
+            DIRECT_MULTIDIM_ELEM(N2n, n) = abs(DIRECT_MULTIDIM_ELEM(FFT_In, n));
+            DIRECT_MULTIDIM_ELEM(N2n, n) *= DIRECT_MULTIDIM_ELEM(N2n, n);
+        }
 
 #ifdef DEBUG
 
@@ -273,24 +235,30 @@ void Prog_SSNR_prm::Estimate_SSNR(int dim, Matrix2D<double> &output)
         if (dim == 2)
         {
             // Compute the SSNR image
-        	Image<double> SSNR2D;
-            SSNR2D().initZeros(S2s());
-            FOR_ALL_ELEMENTS_IN_ARRAY2D(S2s())
+            Image<double> SSNR2D;
+            SSNR2D().initZeros(S2s);
+            const MultidimArray<double> & SSNR2Dmatrix=SSNR2D();
+            FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(S2s)
             {
                 double ISSNR = 0, alpha = 0, SSNR = 0;
-                if (N2s(i, j) > min_power)
-                    ISSNR = S2s(i, j) / N2s(i, j);
-                if (N2n(i, j) > min_power)
-                    alpha = S2n(i, j) / N2n(i, j);
+                double aux=DIRECT_MULTIDIM_ELEM(N2s,n);
+                if (aux > min_power)
+                    ISSNR = DIRECT_MULTIDIM_ELEM(S2s,n) / aux;
+                aux=DIRECT_MULTIDIM_ELEM(N2n,n);
+                if (aux > min_power)
+                    alpha = DIRECT_MULTIDIM_ELEM(S2n,n) / aux;
                 if (alpha   > min_power)
-                    SSNR = XMIPP_MAX(ISSNR / alpha - 1, 0);
+                {
+                	aux=ISSNR / alpha - 1.0;
+                    SSNR = XMIPP_MAX(aux, 0.0);
+                }
                 if (SSNR    > min_power)
-                    SSNR2D(i, j) = 10 * log10(SSNR + 1);
+                	DIRECT_MULTIDIM_ELEM(SSNR2Dmatrix,n) = 10.0 * log10(SSNR + 1.0);
             }
             CenterFFT(SSNR2D(), true);
 #ifdef DEBUG
 
-            save() = SSNR2D();
+            save() = SSNR2Dmatrix;
             save.write("PPPSSNR2D.xmp");
 #endif
 
@@ -298,19 +266,21 @@ void Prog_SSNR_prm::Estimate_SSNR(int dim, Matrix2D<double> &output)
             FileName fn_img_out = fn_out_images + integerToString(Is.name().getNumber(), 5) + ".xmp";
             SSNR2D.setEulerAngles(Is.rot(),Is.tilt(),Is.psi());
             SSNR2D.write(fn_img_out);
-            SF_individual.addObject();
-            SF_individual.setValue(MDL_IMAGE,fn_img_out);
+            size_t objId=SF_individual.addObject();
+            SF_individual.setValue(MDL_IMAGE,fn_img_out,objId);
         }
 
         // Average over rings
         Matrix1D<int>    idx(2);
         Matrix1D<double> freq(2);
 
-        STARTINGX(S2s()) = STARTINGY(S2s()) = 0;
-        STARTINGX(N2s()) = STARTINGY(N2s()) = 0;
-        STARTINGX(S2n()) = STARTINGY(S2n()) = 0;
-        STARTINGX(N2n()) = STARTINGY(N2n()) = 0;
-        FOR_ALL_ELEMENTS_IN_ARRAY2D(S2s())
+        STARTINGX(S2s) = STARTINGY(S2s) = 0;
+        STARTINGX(N2s) = STARTINGY(N2s) = 0;
+        STARTINGX(S2n) = STARTINGY(S2n) = 0;
+        STARTINGX(N2n) = STARTINGY(N2n) = 0;
+        double Xdim=XSIZE(S());
+        double maxwidx=VEC_XSIZE(S_S21D);
+        FOR_ALL_ELEMENTS_IN_ARRAY2D(S2s)
         {
             XX(idx) = j;
             YY(idx) = i;
@@ -320,23 +290,24 @@ void Prog_SSNR_prm::Estimate_SSNR(int dim, Matrix2D<double> &output)
 
             // Look for the index corresponding to this frequency
             double w = freq.module();
-            double widx = w * XSIZE(S());
-            if (widx >= VEC_XSIZE(S_S21D))
+            double widx = w * Xdim;
+            if (widx >= maxwidx)
                 continue;
-            int l0 = XMIPP_MAX(0, CEIL(widx - ring_width));
+            int l0 = CEIL(widx - ring_width);
+            l0=XMIPP_MAX(0, l0);
             int lF = FLOOR(widx);
 
-            double S_signal = S2s(i, j);
-            double S_noise = N2s(i, j);
-            double N_signal = S2n(i, j);
-            double N_noise = N2n(i, j);
+            double S_signal = A2D_ELEM(S2s, i, j);
+            double S_noise = A2D_ELEM(N2s, i, j);
+            double N_signal = A2D_ELEM(S2n, i, j);
+            double N_noise = A2D_ELEM(N2n, i, j);
             for (int l = l0; l <= lF; l++)
             {
-                S_S21D(l) += S_signal;
-                S_N21D(l) += S_noise;
-                N_S21D(l) += N_signal;
-                N_N21D(l) += N_noise;
-                K1D(l)++;
+                VEC_ELEM(S_S21D,l) += S_signal;
+                VEC_ELEM(S_N21D,l) += S_noise;
+                VEC_ELEM(N_S21D,l) += N_signal;
+                VEC_ELEM(N_N21D,l) += N_noise;
+                VEC_ELEM(K1D,l)++;
             }
         }
 
@@ -344,15 +315,15 @@ void Prog_SSNR_prm::Estimate_SSNR(int dim, Matrix2D<double> &output)
         if (++imgno % 50 == 0)
             progress_bar(imgno);
     }
-    progress_bar(SF_S.size());
+    progress_bar(SF_SN.size());
 
     // Compute the SSNR
     S_SSNR1D = S_S21D / S_N21D;
-    S_S21D /= K1D;
-    S_N21D /= K1D;
+    S_S21D *= 1.0/K1D;
+    S_N21D *= 1.0/K1D;
     N_SSNR1D = N_S21D / N_N21D;
-    N_S21D /= K1D;
-    N_N21D /= K1D;
+    N_S21D *= 1.0/K1D;
+    N_N21D *= 1.0/K1D;
 
     output.resize(VEC_XSIZE(S_SSNR1D), 9);
     int imax = 0;

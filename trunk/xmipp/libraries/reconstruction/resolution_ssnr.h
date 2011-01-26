@@ -30,6 +30,7 @@
 
 #include <data/image.h>
 #include <data/metadata.h>
+#include <data/fft.h>
 
 /**@defgroup SSNR resolution_ssnr (Spectral Signal to Noise Ratio)
    @ingroup ReconsLibrary */
@@ -38,17 +39,14 @@
 class Prog_SSNR_prm
 {
 public:
-    /// Signal reconstructed volume or a selfile with its projections
+    /// Signal reconstructed volume
     FileName fn_S;
 
-    /// Noise reconstructed volume or a selfile with its projections
+    /// Noise reconstructed volume
     FileName fn_N;
 
-    /// Selfile with all the experimental images
-    FileName fn_Ssel;
-
-    /// Selfile with all the noise images
-    FileName fn_Nsel;
+    /// Selfile with all the experimental and noise images
+    FileName fn_SNsel;
 
     /// Filename of the Volumetric SSNR, used only for radial averaging
     FileName fn_VSSNR;
@@ -84,16 +82,7 @@ public:
     Image<double> N;
 
     // Selfile with all experimental images
-    MetaData SF_S;
-
-    // Selfile with all noisy images
-    MetaData SF_N;
-
-    // Selfile with all the images projected from the signal volume
-    MetaData SF_Sth;
-
-    // Selfile with all the images projected from the noise volume
-    MetaData SF_Nth;
+    MetaData SF_SN;
 
     // SSNR3D for the radial_avg
     Image<double> VSSNR;
