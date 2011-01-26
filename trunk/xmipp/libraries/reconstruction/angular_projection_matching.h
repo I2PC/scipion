@@ -184,7 +184,7 @@ public:
 
     /** Read current image into memory and translate accoring to
       previous optimal Xoff and Yoff */
-    void getCurrentImage(int imgno, Image<double> &img);
+    void getCurrentImage(size_t imgno, Image<double> &img);
 
 };				
 //@}
