@@ -1,6 +1,6 @@
 /***************************************************************************
  *
- * Authors:  Slavica Jonic slavica.jonic@impmc.jussieu.fr  
+ * Authors:  Slavica Jonic slavica.jonic@impmc.jussieu.fr
  *           Carlos Oscar Sanchez Sorzano coss.eps@ceu.es
  *
  * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
@@ -34,7 +34,7 @@ class MpiProgNMA: public ProgNmaAlignment
 private:
     MpiNode *node;
     FileTaskDistributor *distributor;
-    std::vector<long int> imgsId;
+    std::vector<size_t> imgsId;
 
 public:
     /** Destructor */
@@ -77,7 +77,7 @@ public:
         ProgNmaAlignment::showProgress();
     }
     //Now use the distributor to grasp images
-    long int getImageToProcess()
+    size_t getImageToProcess()
     {
       longint first, last;
       bool moreTasks = distributor->getTasks(first, last);
