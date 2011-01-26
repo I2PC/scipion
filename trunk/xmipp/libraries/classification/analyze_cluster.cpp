@@ -126,10 +126,11 @@ void ProgAnalyzeCluster::produceSideInfo()
         if (exists(fnOutAligned))
         	unlink(fnOutAligned.c_str());
     }
+    size_t id;
     FOR_ALL_OBJECTS_IN_METADATA(SFin)
     {
-        SFin.getValue( MDL_IMAGE, auxFn );
-        Iaux.readApplyGeo( auxFn, SFin, objId );
+        SFin.getValue( MDL_IMAGE, auxFn, __iter.objId);
+        Iaux.readApplyGeo( auxFn, SFin, __iter.objId );
         Iaux().setXmippOrigin();
 
         // Choose between this image and its mirror
@@ -156,17 +157,17 @@ void ProgAnalyzeCluster::produceSideInfo()
             Iaux()=Imirror;
 
         // Produce aligned
-        SFout.addObject();
+        id = SFout.addObject();
         if (align)
         {
             fnOutIdx.compose(idxStk,fnOutAligned);
             Iaux.write(fnOutAligned,idxStk,true,WRITE_APPEND);
-            SFout.setValue(MDL_IMAGE,fnOutIdx);
-            SFout.setValue(MDL_IMAGE_ORIGINAL,auxFn);
+            SFout.setValue(MDL_IMAGE,fnOutIdx, id);
+            SFout.setValue(MDL_IMAGE_ORIGINAL, auxFn, id);
             idxStk++;
         }
         else
-            SFout.setValue(MDL_IMAGE,auxFn);
+            SFout.setValue(MDL_IMAGE, auxFn, id);
 
         MultidimArray<float> v;
         v.initZeros(Npixels);
@@ -215,8 +216,7 @@ void ProgAnalyzeCluster::run()
     {
         int trueIdx=pcaAnalyzer.getSorted(n);
         double zscore=pcaAnalyzer.getSortedZscore(n);
-        SFout.goToObject(trueIdx+1);
-        SFout.setValue(MDL_ZSCORE, zscore);
+        SFout.setValue(MDL_ZSCORE, zscore, trueIdx+1);
         if (zscore<distThreshold || distThreshold<0)
         {
             SFout.setValue(MDL_ENABLED,1);
