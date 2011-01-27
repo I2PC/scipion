@@ -132,7 +132,9 @@ void ProgCtfGroup::produceSideInfo()
 
     std::cerr<<" Reading all data ..."<<std::endl;
     SF.read(fn_sel);
-    ImgSize(SF,dim,ydim);
+    int zdim;
+    unsigned long ndim;
+    ImgSize(SF,dim,ydim,zdim,ndim);
     if ( dim != ydim )
         REPORT_ERROR(ERR_MULTIDIM_SIZE,"Only squared images are allowed!");
 
