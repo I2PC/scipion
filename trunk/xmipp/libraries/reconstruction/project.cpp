@@ -793,8 +793,8 @@ int PROJECT_Effectively_project(const Projection_Parameters &prm,
         // Choose Center displacement ........................................
         double shiftX = rnd_gaus(prm.Ncenter_avg, prm.Ncenter_dev);
         double shiftY = rnd_gaus(prm.Ncenter_avg, prm.Ncenter_dev);
-        DF_movements.setValue(MDL_SHIFTX,-shiftX);
-        DF_movements.setValue(MDL_SHIFTY,-shiftY);
+        DF_movements.setValue(MDL_SHIFTX,-shiftX,DFmov_objId);
+        DF_movements.setValue(MDL_SHIFTY,-shiftY,DFmov_objId);
 
         // Really project ....................................................
         if (side.phantomMode==PROJECT_Side_Info::VOXEL)
@@ -834,9 +834,9 @@ int PROJECT_Effectively_project(const Projection_Parameters &prm,
         rot  += rnd_gaus(prm.rot_range.Navg,  prm.rot_range.Ndev);
         tilt += rnd_gaus(prm.tilt_range.Navg, prm.tilt_range.Ndev);
         psi  += rnd_gaus(prm.psi_range.Navg,  prm.psi_range.Ndev);
-        DF_movements.setValue(MDL_ANGLEROT2,rot);
-        DF_movements.setValue(MDL_ANGLETILT2,tilt);
-        DF_movements.setValue(MDL_ANGLEPSI2,psi);
+        DF_movements.setValue(MDL_ANGLEROT2,rot,DFmov_objId);
+        DF_movements.setValue(MDL_ANGLETILT2,tilt,DFmov_objId);
+        DF_movements.setValue(MDL_ANGLEPSI2,psi,DFmov_objId);
         proj.setEulerAngles(rot, tilt, psi);
         proj.setShifts(-shiftX,-shiftY);
         IMGMATRIX(proj).addNoise(prm.Npixel_avg, prm.Npixel_dev, "gaussian");
