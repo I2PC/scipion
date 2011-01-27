@@ -134,7 +134,9 @@ void ProgRecWbp::produceSideInfo()
     else
         SF.read(fn_sel);
 
-    ImgSize(SF,dim, dim);
+    int zdim;
+    unsigned long ndim;
+    ImgSize(SF,dim, dim, zdim, ndim);
     if (fn_sym != "")
         SL.read_sym_file(fn_sym);
     if (diameter <= 0)

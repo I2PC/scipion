@@ -117,8 +117,9 @@ void Prog_SSNR_prm::produce_side_info()
                          "SSNR: Signal and Noise volumes are not of the same size");
 
         SF_SN.read(fn_SNsel);
-        int sYdim, sXdim;
-        ImgSize(SF_SN, sXdim, sYdim);
+        int sZdim, sYdim, sXdim;
+        unsigned long sNdim;
+        ImgSize(SF_SN, sXdim, sYdim, sZdim, sNdim);
 
         if (fn_out_images == "")
             fn_out_images = "individualSSNR";
