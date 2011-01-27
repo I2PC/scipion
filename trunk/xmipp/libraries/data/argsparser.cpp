@@ -1267,9 +1267,9 @@ WikiPrinter::WikiPrinter(std::ostream & out)
 
 void WikiPrinter::printProgram(const ProgramDef &program, int v)
 {
-  //---+ !!Metadata_Operate ( xmipp version 3.0)
+  //---+ !!Metadata_Operate (v3.0)
   //%TOC%
-    *pOut << "---+ !!" << program.name << " (xmipp version 3.0)" << std::endl;
+    *pOut << "---+ !!" << program.name << " (v3.0)" << std::endl;
     *pOut << "%TOC%" << std::endl;
     //print usage
     if (program.usageComments.size() > 0)
