@@ -40,18 +40,17 @@ protected:
         XmippMetadataProgram::defineParams();
         //Usage
         addUsageLine("Add random noise to the input images.");
-        addUsageLine("Noise can be uniformly distributed or distributed after a gaussian.");
-        addParamsLine("-gaussian <stddev> <avg=0.>        :Gaussian noise parameters");
+        addUsageLine("Noise can be generated using uniform, gaussian or t-student distributions.");
+        //Parameters
+        addParamsLine("--type <rand_mode>                : Type of noise to add");
+        addWhereRandomType();
+        addParamsLine("  [-limit0 <float> ]               :Crop noise histogram below this value ");
+        addParamsLine("  [-limitF <float> ]               :Crop noise histogram above this value ");
         //Examples
         addExampleLine("Add noise to a single image, overwriting input image:", false);
         addExampleLine("add_noise -i g0ta0001.xmp -gaussian 0.1");
         addExampleLine("Add uniform noise to a volume, writing in a different volume:", false);
-        addExampleLine("add_noise -i g0ta.vol -uniform -0.1 0.1");
-        //Parameters
-        addParamsLine("or -student <df> <stddev> <avg=0.> :t-student noise parameters");
-        addParamsLine("or -uniform  <min> <max>           :Uniform noise parameters");
-        addParamsLine("  [-limit0 <float> ]               :Crop noise histogram below this value ");
-        addParamsLine("  [-limitF <float> ]               :Crop noise histogram above this value ");
+        addExampleLine("add_noise -i g0ta.vol -uniform -0.1 0.1 -o g0taNoisy.vol");
 
     }
 
@@ -67,24 +66,23 @@ protected:
 
         ///Default value of df in addNoise function
         df = 3.;
-        if (checkParam("-gaussian"))
+        noise_type = getParam("--type");
+
+        if (noise_type == "gaussian")
         {
-            noise_type = "gaussian";
-            param1 = getDoubleParam("-gaussian", 0);
-            param2 = getDoubleParam("-gaussian", 1);
+            param1 = getDoubleParam("--type", 1);
+            param2 = getDoubleParam("--type", 2);
         }
-        else if (checkParam("-student"))
+        else if (noise_type == "student")
         {
-            noise_type = "student";
-            df = getDoubleParam("-student", 0);
-            param1 = getDoubleParam("-student", 1);
-            param2 = getDoubleParam("-student", 2);
+            df = getDoubleParam("--type", 1);
+            param1 = getDoubleParam("--type", 2);
+            param2 = getDoubleParam("--type", 3);
         }
-        else if (checkParam("-uniform"))
+        else if (noise_type == "uniform")
         {
-            noise_type = "uniform";
-            param1 = getDoubleParam("-uniform", 0);
-            param2 = getDoubleParam("-uniform", 1);
+            param1 = getDoubleParam("--type", 1);
+            param2 = getDoubleParam("--type", 2);
         }
         else
             REPORT_ERROR(ERR_ARG_INCORRECT, "Unknown noise type");
@@ -113,7 +111,7 @@ protected:
     void processImage(const FileName &fnImg, const FileName &fnImgOut, size_t objId)
     {
         Image<double> img;
-        img.readApplyGeo(fnImg,mdIn,objId);
+        img.readApplyGeo(fnImg, mdIn, objId);
         img().addNoise(param1, param2, noise_type, df);
 
         if (do_limit0)
