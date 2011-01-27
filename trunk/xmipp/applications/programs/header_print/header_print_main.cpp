@@ -51,8 +51,15 @@ protected:
 
     void processImage(const FileName &fnImg, const FileName &fnImgOut, size_t objId)
     {
+    	int Xdim, Ydim, Zdim;
+    	unsigned long Ndim;
+    	SingleImgSize(fnImg, Xdim, Ydim, Zdim, Ndim);
+
         Image<double> img;
-        img.readApplyGeo(fnImg, mdIn, objId, false);
+        if (Zdim==1 && Ndim==1)
+        	img.readApplyGeo(fnImg, mdIn, objId, false);
+        else
+        	img.read(fnImg,false);
         std::cout << img << std::endl;
     }
 }
