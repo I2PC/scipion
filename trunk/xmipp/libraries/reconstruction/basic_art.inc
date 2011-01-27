@@ -182,13 +182,14 @@ void Basic_ART_Init_history(Basic_ART_Parameters &prm,
     // Prepare info structure for showing
     MetaData MD;
     double dfrot, dftilt, dfpsi;
+    size_t id;
     for (int i=0; i<prm.numIMG; i++)
     {
-        MD.addObject();
-        MD.setValue(MDL_ANGLEROT, prm.IMG_Inf[i].rot);
-        MD.setValue(MDL_ANGLETILT, prm.IMG_Inf[i].tilt);
-        MD.setValue(MDL_ANGLEPSI, prm.IMG_Inf[i].psi);
-        MD.setValue(MDL_SYMNO, prm.IMG_Inf[i].sym);
+        id=MD.addObject();
+        MD.setValue(MDL_ANGLEROT, prm.IMG_Inf[i].rot,id);
+        MD.setValue(MDL_ANGLETILT, prm.IMG_Inf[i].tilt,id);
+        MD.setValue(MDL_ANGLEPSI, prm.IMG_Inf[i].psi,id);
+        MD.setValue(MDL_SYMNO, prm.IMG_Inf[i].sym,id);
     }
 
     // Now show
