@@ -1016,6 +1016,7 @@ ConsolePrinter::ConsolePrinter(std::ostream & out)
 
 void ConsolePrinter::printProgram(const ProgramDef &program, int v)
 {
+    //print program name and usage
     *pOut << "PROGRAM" << std::endl << "   " << program.name << std::endl;
     if (program.usageComments.size() > 0)
     {
@@ -1023,11 +1024,39 @@ void ConsolePrinter::printProgram(const ProgramDef &program, int v)
         for (size_t i = 0; i < program.usageComments.size(); ++i)
             *pOut << "   " << program.usageComments.comments[i] << std::endl;
     }
+    //print sections and params
     if (program.sections.size() > 0)
     {
         *pOut << "OPTIONS" << std::endl;
         for (size_t i = 0; i < program.sections.size(); ++i)
             printSection(*program.sections[i], v);
+    }
+    //print examples
+    if (program.examples.size() > 0)
+    {
+        bool verbatim = false;
+        *pOut << "EXAMPLES" << std::endl;
+        for (size_t i = 0; i < program.examples.size(); ++i)
+        {
+            if (program.examples.visibility[i])
+            {
+                if (!verbatim)
+                {
+                    //*pOut << std::endl;
+                    verbatim = true;
+                }
+            }
+            else
+            {
+              if (verbatim)
+              {
+                *pOut << std::endl;
+                verbatim = false;
+              }
+            }
+            *pOut << program.examples.comments[i] << std::endl;
+        }
+
     }
 }
 
@@ -1267,8 +1296,7 @@ WikiPrinter::WikiPrinter(std::ostream & out)
 
 void WikiPrinter::printProgram(const ProgramDef &program, int v)
 {
-  //---+ !!Metadata_Operate (v3.0)
-  //%TOC%
+    //print program name and usage
     *pOut << "---+ !!" << program.name << " (v3.0)" << std::endl;
     *pOut << "%TOC%" << std::endl;
     //print usage
@@ -1288,16 +1316,30 @@ void WikiPrinter::printProgram(const ProgramDef &program, int v)
     //print examples
     if (program.examples.size() > 0)
     {
-      *pOut << "---++ Examples" << std::endl;
-      for (size_t i = 0; i < program.examples.size(); ++i)
-      {
-        if (program.examples.visibility[i])
-          *pOut << "<pre>";
-          *pOut << "   " << program.examples.comments[i];
+        *pOut << "---++ Examples" << std::endl;
+        bool verbatim = false;
+        for (size_t i = 0; i < program.examples.size(); ++i)
+        {
           if (program.examples.visibility[i])
-                    *pOut << " </pre>";
-          *pOut << " %BR%" << std::endl;
-      }
+          {
+              if (!verbatim)
+              {
+                  *pOut << "<pre>" << std::endl;
+                  verbatim = true;
+              }
+          }
+          else
+          {
+            if (verbatim)
+            {
+              *pOut << "</pre>" << std::endl;
+              verbatim = false;
+            }
+          }
+            *pOut << "   " << program.examples.comments[i] << std::endl;
+        }
+        if (verbatim)
+          *pOut << "</pre>" << std::endl;
     }
     //print user comments
     *pOut << "---++ User's comments" << std::endl;
@@ -1331,18 +1373,18 @@ void WikiPrinter::printRequiresList(StringVector requires)
 
 void WikiPrinter::printParam(const ParamDef &param, int v)
 {
-  //* =%BLUE%-i [selfile] %ENDCOLOR%= This file contains all the images that are to build the 3D reconstruction
-  //* =%GREEN% -o [output file root name] %ENDCOLOR%= If you don't supply this parameter, the same as the input selection one is taken without extension. If you give, for instance, =-o art0001= the following files are created:
+    //* =%BLUE%-i [selfile] %ENDCOLOR%= This file contains all the images that are to build the 3D reconstruction
+    //* =%GREEN% -o [output file root name] %ENDCOLOR%= If you don't supply this parameter, the same as the input selection one is taken without extension. If you give, for instance, =-o art0001= the following files are created:
     if (param.visible <= v)
     {
-      *pOut << "   $";
+        *pOut << "   $";
 
-      if (param.orBefore)
+        if (param.orBefore)
             *pOut << " or";
 
-      String color = param.notOptional ? "BLUE" : "GREEN";
+        String color = param.notOptional ? "BLUE" : "GREEN";
 
-      *pOut << " =%" << color << "%" << param.name;
+        *pOut << " =%" << color << "%" << param.name;
         //print alias
         for (size_t i = 0; i < param.aliases.size(); ++i)
             *pOut << ", " << param.aliases[i];
@@ -1358,7 +1400,7 @@ void WikiPrinter::printParam(const ParamDef &param, int v)
         printCommentList(param.comments, v);
 
         if (param.comments.size() == 0)
-          *pOut << "%BR%" << std::endl;
+            *pOut << "%BR%" << std::endl;
 
         for (size_t i = 0; i < param.arguments.size(); ++i)
         {
@@ -1376,7 +1418,7 @@ void WikiPrinter::printParam(const ParamDef &param, int v)
                     }
                     *pOut << " %ENDCOLOR%" << std::endl;
                     printRequiresList(arg.subParams[j]->requires);
-//                    *pOut << std::endl;
+                    //                    *pOut << std::endl;
                     printCommentList(arg.subParams[j]->comments);
 
                 }
