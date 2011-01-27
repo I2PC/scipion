@@ -612,9 +612,10 @@ void Prog_assign_CTF_prm::process()
 
                 MetaData MD;
                 MD.read(fn_avg.withoutExtension() + ".ctfparam");
-                MD.setValue(MDL_CTF_CRITERION_PSDVARIANCE,stdQ);
-                MD.setValue(MDL_CTF_CRITERION_PSDPCA1VARIANCE,pstd);
-                MD.setValue(MDL_CTF_CRITERION_PSDPCARUNSTEST,zrandomness);
+                size_t id = MD.firstObject();
+                MD.setValue(MDL_CTF_CRITERION_PSDVARIANCE,stdQ,id);
+                MD.setValue(MDL_CTF_CRITERION_PSDPCA1VARIANCE,pstd,id);
+                MD.setValue(MDL_CTF_CRITERION_PSDPCARUNSTEST,zrandomness,id);
                 MD.write(fn_avg.withoutExtension() + ".ctfparam");
             }
             else
