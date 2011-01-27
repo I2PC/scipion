@@ -1289,6 +1289,7 @@ void Prog_Angular_CommonLine::run()
 
         int idx=0;
         Image<double> I;
+        size_t id;
         FOR_ALL_OBJECTS_IN_METADATA(SF)
         {
             I.readApplyGeo(SF,__iter.objId);
@@ -1297,10 +1298,10 @@ void Prog_Angular_CommonLine::run()
             idx+=3;
             I.write();
 
-            DF.addObject();
-            DF.setValue(MDL_ANGLEROT,I.rot());
-            DF.setValue(MDL_ANGLETILT,I.tilt());
-            DF.setValue(MDL_ANGLEPSI,I.psi());
+            id=DF.addObject();
+            DF.setValue(MDL_ANGLEROT,I.rot(),id);
+            DF.setValue(MDL_ANGLETILT,I.tilt(),id);
+            DF.setValue(MDL_ANGLEPSI,I.psi(),id);
         }
         DF.write(fnOut);
     }
