@@ -662,7 +662,7 @@ public:
     void run()
     {
     	show();
-
+    	size_t id;
     	// Get the input image or the average of the input images
     	Image<double> I, Iaux;
     	if (fnIn.isMetaData())
@@ -735,16 +735,16 @@ public:
         lancho=XSIZE(I());
         busca();
     	MetaData MD;
-    	MD.addObject();
+    	id=MD.addObject();
     	if (yc0>0)
     	{
-    		MD.setValue(MDL_X,(double)(yc0-1));
-    		MD.setValue(MDL_Y,(double)(xc0-1));
+    		MD.setValue(MDL_X,(double)(yc0-1),id);
+    		MD.setValue(MDL_Y,(double)(xc0-1),id);
     	}
     	else
     	{
-    		MD.setValue(MDL_X,(double)(XSIZE(I())/2));
-    		MD.setValue(MDL_Y,(double)(YSIZE(I())/2));
+    		MD.setValue(MDL_X,(double)(XSIZE(I())/2),id);
+    		MD.setValue(MDL_Y,(double)(YSIZE(I())/2),id);
     	}
     	MD.write(fnOroot+"_center.xmd");
         imfree((char**)imagen, YSIZE(I()) + 1, XSIZE(I()) + 1, NATURAL);
