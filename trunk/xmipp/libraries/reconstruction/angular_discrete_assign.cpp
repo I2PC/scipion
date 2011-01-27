@@ -1004,12 +1004,12 @@ void ProgAngularDiscreteAssign::processImage(const FileName &fnImg, const FileNa
     }
 
     // Save results
-    mdIn.setValue(MDL_ANGLEROT,  best_rot);
-    mdIn.setValue(MDL_ANGLETILT, best_tilt);
-    mdIn.setValue(MDL_ANGLEPSI,  best_psi);
-    mdIn.setValue(MDL_SHIFTX,    best_shiftX);
-    mdIn.setValue(MDL_SHIFTY,    best_shiftY);
-    mdIn.setValue(MDL_MAXCC,     best_score);
+    mdIn.setValue(MDL_ANGLEROT,  best_rot, objId);
+    mdIn.setValue(MDL_ANGLETILT, best_tilt, objId);
+    mdIn.setValue(MDL_ANGLEPSI,  best_psi, objId);
+    mdIn.setValue(MDL_SHIFTX,    best_shiftX, objId);
+    mdIn.setValue(MDL_SHIFTY,    best_shiftY, objId);
+    mdIn.setValue(MDL_MAXCC,     best_score, objId);
 }
 #undef DEBUG
 
