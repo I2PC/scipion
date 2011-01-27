@@ -554,7 +554,7 @@ void MetaData::_writeRows(std::ostream &os)
 
     FOR_ALL_OBJECTS_IN_METADATA(*this)
     {
-        std::cerr << "id: " << __iter.objId << std::endl;
+        //std::cerr << "id: " << __iter.objId << std::endl;
         for (int i = 0; i < activeLabels.size(); i++)
         {
             if (activeLabels[i] != MDL_COMMENT)
