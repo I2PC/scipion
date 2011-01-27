@@ -1,2 +1,6 @@
-mkdir -p $1/xmipp_xray_psf_create
-xmipp_xray_psf_create -i input/xray_psf.xmd -o $1/xmipp_xray_psf_create/psf.vol 
+#!/usr/bin/env bash
+
+# xray_psf_create
+PROG=xmipp_xray_psf_create 
+mkdir -p $1/$PROG
+$PROG -i input/xray_psf.xmd -o $1/$PROG/psf.vol 
