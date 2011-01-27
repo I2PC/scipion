@@ -1,6 +1,14 @@
 #!/usr/bin/env bash
 
+# Check that there is an output directory
+if [ $# -ne 1 ]
+then
+  echo "Usage: `basename $0` <directory>"
+  exit 1
+fi
+
 # xray_psf_create
 PROG=xmipp_xray_psf_create 
+
 mkdir -p $1/$PROG
 $PROG -i input/xray_psf.xmd -o $1/$PROG/psf.vol 
