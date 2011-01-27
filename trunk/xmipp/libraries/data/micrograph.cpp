@@ -225,13 +225,14 @@ void Micrograph::write_coordinates(int label, double minCost, const FileName &_f
     MetaData MD;
     MD.setComment((std::string)"Selected Coordinates for file " + fn_coords);
     int imax = coords.size();
+    size_t id;
     for (int i = 0; i < imax; i++)
     {
         if (coords[i].valid && coords[i].cost>minCost && coords[i].label==label)
         {
-            MD.addObject();
-            MD.setValue(MDL_XINT,coords[i].X);
-            MD.setValue(MDL_YINT,coords[i].Y);
+            id = MD.addObject();
+            MD.setValue(MDL_XINT,coords[i].X,id);
+            MD.setValue(MDL_YINT,coords[i].Y,id);
         }
     }
     MD.write(fn_coords);
