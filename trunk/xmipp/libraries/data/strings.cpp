@@ -29,9 +29,9 @@
 #include <math.h>
 #include "gcc_version.h"
 
-std::string removeChar( const std::string& str, char character )
+String removeChar( const String& str, char character )
 {
-    std::string temp;
+    String temp;
 
     for( unsigned int i = 0 ; i < str.length( ) ; i++ )
     {
@@ -42,9 +42,9 @@ std::string removeChar( const std::string& str, char character )
     return temp;
 }
 
-std::string unescape( const std::string& str )
+String unescape( const String& str )
 {
-    std::string temp;
+    String temp;
 
     for( unsigned int i = 0 ; i < str.length( ) ; i++ )
     {
@@ -62,12 +62,12 @@ std::string unescape( const std::string& str )
     return temp;
 }
 
-std::string simplify( const std::string& str )
+String simplify( const String& str )
 {
-    std::string temp;
+    String temp;
 
     // First, unescape string
-    std::string straux = unescape( str );
+    String straux = unescape( str );
 
     // Remove spaces from the beginning
     int pos = straux.find_first_not_of( ' ' );
@@ -102,15 +102,15 @@ std::string simplify( const std::string& str )
 }
 
 /** Trim all spaces from the begining and the end */
-void trim(std::string& str)
+void trim(String& str)
 {
-    std::string::size_type pos = str.find_last_not_of(' ');
+    String::size_type pos = str.find_last_not_of(' ');
 
-    if (pos != std::string::npos)
+    if (pos != String::npos)
     {
         str.erase(pos + 1);
         pos = str.find_first_not_of(' ');
-        if (pos != std::string::npos)
+        if (pos != String::npos)
             str.erase(0, pos);
     }
     else
@@ -190,7 +190,7 @@ int bestPrecision(float F, int _width)
     return advised_prec;
 }
 
-std::string floatToString(float F, int _width, int _prec)
+String floatToString(float F, int _width, int _prec)
 {
 #if GCC_VERSION < 30300
     char aux[15];
@@ -226,10 +226,10 @@ std::string floatToString(float F, int _width, int _prec)
 
 #if GCC_VERSION < 30300
 
-    return std::string(aux);
+    return String(aux);
 #else
 
-    std::string retval = outs.str();
+    String retval = outs.str();
     int i = retval.find('\0');
 
     if (i != -1)
@@ -239,7 +239,7 @@ std::string floatToString(float F, int _width, int _prec)
 #endif
 }
 
-std::string integerToString(int I, int _width, char fill_with)
+String integerToString(int I, int _width, char fill_with)
 {
     char aux[15];
 
@@ -274,9 +274,9 @@ std::string integerToString(int I, int _width, char fill_with)
     while (Iaux != 0);
 
     if (SGN(I) < 0)
-        return static_cast< std::string >("-")  + aux;
+        return static_cast< String >("-")  + aux;
     else
-        return static_cast< std::string >(aux);
+        return static_cast< String >(aux);
 }
 
 int charToInt(const char* str)
@@ -294,7 +294,7 @@ int charToInt(const char* str)
     return 0;
 }
 
-std::string stringToString(const std::string& str, int _width)
+String stringToString(const String& str, int _width)
 {
     if (_width == 0)
         return str;
@@ -302,11 +302,11 @@ std::string stringToString(const std::string& str, int _width)
     if (_width < str.length())
         return str.substr(0, _width);
 
-    std::string aux = str;
+    String aux = str;
     return aux.append(_width - str.length(), ' ');
 }
 
-void checkAngle(const std::string& str)
+void checkAngle(const String& str)
 {
     if (str == "rot")
         return;
@@ -318,13 +318,13 @@ void checkAngle(const std::string& str)
         return;
 
     REPORT_ERROR(ERR_VALUE_INCORRECT,
-                 static_cast< std::string >(
+                 static_cast< String >(
                      "checkAngle: Not recognized angle type: " + str));
 }
 
-std::string removeSpaces(const std::string& _str)
+String removeSpaces(const String& _str)
 {
-    std::string retval;
+    String retval;
     int first = _str.find_first_not_of("\n \t");
     int last = _str.find_last_not_of("\n \t");
     bool after_blank = false;
@@ -352,7 +352,7 @@ std::string removeSpaces(const std::string& _str)
 // Remove quotes ===========================================================
 void removeQuotes(char **_str)
 {
-    std::string retval = *_str;
+    String retval = *_str;
     if (retval.length() == 0)
         return;
     char c = retval[0];
@@ -366,9 +366,9 @@ void removeQuotes(char **_str)
 }
 
 // Split a string ==========================================================
-int splitString(const std::string& input,
-                const std::string& delimiter,
-                std::vector< std::string >& results,
+int splitString(const String& input,
+                const String& delimiter,
+                StringVector & results,
                 bool includeEmpties)
 {
     results.clear();
@@ -400,7 +400,7 @@ int splitString(const std::string& input,
 
     for (int i = 0; i <= static_cast< int >(positions.size()); i++)
     {
-        std::string s("");
+        String s("");
         if (i == 0)
             s = input.substr(i, positions[i]);
         int offset = positions[i-1] + sizeS2;
@@ -430,7 +430,7 @@ void toLower(char *_str)
     }
 }
 
-void toLower(std::string &_str)
+void toLower(String &_str)
 {
     int i = 0;
     while (_str[i] != '\0')
@@ -442,9 +442,9 @@ void toLower(std::string &_str)
 }
 
 // Next token ==============================================================
-std::string nextToken(const std::string &str, int &i)
+String nextToken(const String &str, int &i)
 {
-    std::string retval;
+    String retval;
     if (i >= str.length())
         return retval;
     int j = str.find_first_not_of(" \t\n", i);
@@ -477,16 +477,16 @@ char *firstWord(char *str)
 }
 
 // Tokenize a C++ string ===================================================
-void tokenize(const std::string& str, std::vector<std::string>& tokens,
-              const std::string& delimiters)
+void tokenize(const String& str, StringVector& tokens,
+              const String& delimiters)
 {
     tokens.clear();
     // Skip delimiters at beginning.
-    std::string::size_type lastPos = str.find_first_not_of(delimiters, 0);
+    String::size_type lastPos = str.find_first_not_of(delimiters, 0);
     // Find first "non-delimiter".
-    std::string::size_type pos     = str.find_first_of(delimiters, lastPos);
+    String::size_type pos     = str.find_first_of(delimiters, lastPos);
 
-    while (std::string::npos != pos || std::string::npos != lastPos)
+    while (String::npos != pos || String::npos != lastPos)
     {
         // Found a token, add it to the vector.
         tokens.push_back(str.substr(lastPos, pos - lastPos));
@@ -498,8 +498,8 @@ void tokenize(const std::string& str, std::vector<std::string>& tokens,
 }
 
 // Find and replace =======================================================
-std::string findAndReplace(const std::string& tInput, const std::string &tFind,
-                    const std::string &tReplace)
+String findAndReplace(const String& tInput, const String &tFind,
+                    const String &tReplace)
 {
     size_t uFindLen = tFind.length();
 
@@ -508,8 +508,8 @@ std::string findAndReplace(const std::string& tInput, const std::string &tFind,
 
     size_t uPos = 0;
     size_t uReplaceLen = tReplace.length();
-    std::string tOut=tInput;
-    for( ;(uPos = tOut.find(tFind, uPos)) != std::string::npos; )
+    String tOut=tInput;
+    for( ;(uPos = tOut.find(tFind, uPos)) != String::npos; )
     {
     	tOut=tOut.replace( uPos, uFindLen, tReplace );
         uPos += uReplaceLen;

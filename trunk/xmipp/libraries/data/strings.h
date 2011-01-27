@@ -34,6 +34,10 @@
 #include <string.h>
 #include <stdio.h>
 
+//TODO: For now just a typedef, I think that would be worth to write an String class
+typedef std::string String;
+typedef std::vector<String> StringVector;
+
 /// @defgroup StringUtilities String utilities
 /// @ingroup DataLibrary
 //@{
@@ -43,10 +47,10 @@
 
 /** Removes all occurrences of 'character' from the string no matter
 where they are */
-std::string removeChar( const std::string& str, char character );
+String removeChar( const String& str, char character );
 
 /** Removes escaped symbols ESC+n, t, v, b, r, f, and a */
-std::string unescape( const std::string& str );
+String unescape( const String& str );
 
 /** Best precision for a float number.
  *
@@ -92,8 +96,8 @@ int bestPrecision(float F, int _width);
  */
 float textToFloat(const char* str);
 
-/** String (std::string) to integer conversion. */
-inline float textToFloat(const std::string& str)
+/** String (String) to integer conversion. */
+inline float textToFloat(const String& str)
 {
 	return textToFloat(str.c_str());
 }
@@ -106,8 +110,8 @@ inline float textToFloat(const std::string& str)
  */
 int textToInteger(const char* str);
 
-/** String (std::string) to integer conversion. */
-inline int textToInteger(const std::string& str)
+/** String (String) to integer conversion. */
+inline int textToInteger(const String& str)
 {
 	return textToInteger(str.c_str());
 }
@@ -132,7 +136,7 @@ long long textToLongLong(const char* str);
  * REPORT_ERROR(ERR_VALUE_INCORRECT, "Value not recognised " + floatToString(val));
  * @endcode
  */
-std::string floatToString(float F, int _width = 8, int _prec = 0);
+String floatToString(float F, int _width = 8, int _prec = 0);
 
 /** Integer to string conversion.
  *
@@ -144,7 +148,7 @@ std::string floatToString(float F, int _width = 8, int _prec = 0);
  * REPORT_ERROR(ERR_VALUE_INCORRECT, "Error reading key " + integerToString(key));
  * @endcode
  */
-std::string integerToString(int I, int _width = 0, char fill_with = '0');
+String integerToString(int I, int _width = 0, char fill_with = '0');
 
 /** Character to integer conversion.
  *
@@ -166,13 +170,13 @@ std::string integerToString(int I, int _width = 0, char fill_with = '0');
  * truncated and if it is greater the string is right padded with spaces. If
  * width==0 then the same string is returned.
  */
-std::string stringToString(const std::string& str, int _width = 0);
+String stringToString(const String& str, int _width = 0);
 
 /** Check angle.
  *
  * If the argument is not "rot", "tilt" nor "psi" an exception is thrown
  */
-void checkAngle(const std::string& str);
+void checkAngle(const String& str);
 
 /** To lower.
  *
@@ -183,23 +187,23 @@ void toLower(char* _str);
 
 /** To lower, for STL strings.
  */
-void toLower(std::string& _str);
+void toLower(String& _str);
 
 /** Removes white spaces from the beginning and the end of the string
 as well as escaped characters
 and simplifies the rest of groups of white spaces of the string to
 a single white space */
-std::string simplify( const std::string& str );
+String simplify( const String& str );
 
 /** Remove trailing spaces */
-void trim(std::string& str);
+void trim(String& str);
 
 /** Remove consecutive spaces.
  *
  * All consecutive spaces are replaced by a single one and starting and
  * finishing spaces are removed
  */
-std::string removeSpaces(const std::string& _str);
+String removeSpaces(const String& _str);
 
 /** Remove quotes.
  *
@@ -217,8 +221,8 @@ void removeQuotes(char** _str);
  * This function replaces in the string all the occurrences of tFind and
  * replaces it with tReplace.
  */
-std::string findAndReplace(const std::string& tInput, const std::string &tFind,
-	const std::string &tReplace);
+String findAndReplace(const String& tInput, const String &tFind,
+	const String &tReplace);
 //@}
 
 /** @name Tokenization
@@ -252,9 +256,9 @@ std::string findAndReplace(const std::string& tInput, const std::string &tFind,
  *
  * Returns a the number of tokens found. The tokens are in the variable results.
  */
-int splitString(const std::string& input,
-                const std::string& delimiter,
-                std::vector< std::string >& results,
+int splitString(const String& input,
+                const String& delimiter,
+                StringVector & results,
                 bool includeEmpties = false);
 
 /** Returns first token (char*).
@@ -273,12 +277,12 @@ inline char* firstToken(const char* str)
 /** Returns first token (STL).
  *
  * @code
- * std::string line;
+ * String line;
  *
  * std::cout << "First  word: " << firstToken(line) << std::endl;
  * @endcode
  */
-inline char* firstToken(const std::string& str)
+inline char* firstToken(const String& str)
 {
     return strtok((char*) str.c_str(), " \t\n");
 }
@@ -310,7 +314,7 @@ inline char* nextToken()
  * It reads from position i. Returns (in i) the following position to search on.
  * When there are no more tokens. It returns "".
  */
-std::string nextToken(const std::string& str, int& i);
+String nextToken(const String& str, int& i);
 
 /** Get non empty string (char*).
  *
@@ -326,7 +330,7 @@ char* firstWord(char* str);
  *
  * Same as the previous function but for STL strings
  */
-inline char* firstWord(std::string& str)
+inline char* firstWord(String& str)
 {
     // FIXME C-style cast
     return firstWord((char*) str.c_str());
@@ -345,9 +349,9 @@ inline char* nextWord()
 /** Tokenize a string and return a list of tokens
  *
  */
-void tokenize(const std::string& str,
-              std::vector< std::string >& tokens,
-              const std::string& delimiters = " \t");
+void tokenize(const String& str,
+              StringVector & tokens,
+              const String& delimiters = " \t");
 
 /** Tokenizer  for char arrays. Similar to strtok but does NOT modify
  * the input array
@@ -382,9 +386,7 @@ void tokenize(const std::string& str,
 
 char   *memtok(char **src,  char **_end, const char *sep);
 
-//TODO: For now just a typedef, I think that would be worth to write an String class
-typedef std::string String;
-typedef std::vector<String> StringVector;
+
 
 
 //@}
