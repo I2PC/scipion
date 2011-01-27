@@ -603,14 +603,14 @@ static PyObject *
 MetaData_firstObject(PyObject *obj, PyObject *args, PyObject *kwargs)
 {
     MetaDataObject *self = (MetaDataObject*)obj;
-    return PyLong_FromSsize_t(self->metadata->firstObject());
+    return PyLong_FromUnsignedLong(self->metadata->firstObject());
 }
 /* lastObject */
 static PyObject *
 MetaData_lastObject(PyObject *obj, PyObject *args, PyObject *kwargs)
 {
     MetaDataObject *self = (MetaDataObject*)obj;
-    return PyLong_FromSsize_t(self->metadata->lastObject());
+    return PyLong_FromUnsignedLong(self->metadata->lastObject());
 }
 /* size */
 static PyObject *
@@ -619,7 +619,7 @@ MetaData_size(PyObject *obj, PyObject *args, PyObject *kwargs)
     try
     {
         MetaDataObject *self = (MetaDataObject*)obj;
-        return PyLong_FromSsize_t(self->metadata->size());
+        return PyLong_FromUnsignedLong(self->metadata->size());
     }
     catch (XmippError xe)
     {
