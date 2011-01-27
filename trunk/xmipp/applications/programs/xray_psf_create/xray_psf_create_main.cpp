@@ -48,6 +48,10 @@ protected:
         addParamsLine("-o <output_file>         : PSF Image file.");
         addParamsLine(" alias --output;");
         psf.defineParams(this);
+        addExampleLine("The parameters are in a file",false);
+        addExampleLine("xmipp_xray_psf_create -i psf560.xmd -o psf560.vol");
+        addExampleLine("The parameters are given in the command line",false);
+        addExampleLine("xmipp_xray_psf_create -o psf900.vol -lambda 2.5 -zones 900");
     }
 
     void readParams()
@@ -68,22 +72,15 @@ public:
 
     void run()
     {
-      psf.generatePSF(IDEAL_LENS);
-      psf.write(fnPSF);
+        psf.generatePSF(IDEAL_LENS);
+        psf.write(fnPSF);
 
     }
 };
 
 int main(int argc, char *argv[])
 {
-    try
-    {
-        ProgPSFXrCreate program;
-        program.read(argc, argv);
-        program.run();
-    }
-    catch (XmippError xe)
-    {
-        std::cerr << xe;
-    }
+    ProgPSFXrCreate program;
+    program.read(argc, argv);
+    program.tryRun();
 }
