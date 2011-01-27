@@ -401,7 +401,7 @@ public:
                         DFexp.setValue(MDL_ANGLETILT,output_values[i*MY_OUPUT_SIZE+3], lineNumber);
                         DFexp.setValue(MDL_ANGLEPSI, output_values[i*MY_OUPUT_SIZE+4], lineNumber);
                         DFexp.setValue(MDL_SHIFTX,   output_values[i*MY_OUPUT_SIZE+5], lineNumber);
-                        DFexp.setValue(MDL_SHIFTY,   output_values[i*MY_OUPUT_SIZE+6]), lineNumber;
+                        DFexp.setValue(MDL_SHIFTY,   output_values[i*MY_OUPUT_SIZE+6], lineNumber);
                         DFexp.setValue(MDL_REF,(int)(output_values[i*MY_OUPUT_SIZE+7]), lineNumber);
                         DFexp.setValue(MDL_FLIP,    (output_values[i*MY_OUPUT_SIZE+8]>0), lineNumber);
                         DFexp.setValue(MDL_SCALE,    output_values[i*MY_OUPUT_SIZE+9], lineNumber);
