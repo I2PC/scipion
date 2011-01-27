@@ -1,0 +1,9 @@
+
+XrayPSF::Param adjust:
+(Nox,Noy,Nz) = (201,201,10)
+Larger volume Z plane to be calculated = 0.45 um
+Larger allowed discrete Z plane (x,y) = (0.827984, 0.827984) um
+(dxl, dyl) = (35.6772, 35.6772) um
+Pupile Diameter in pixels (NpX, NpY) = (6, 6)
+
+
