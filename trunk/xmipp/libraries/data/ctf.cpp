@@ -203,7 +203,7 @@ void CTFDescription::write(const FileName &fn)
     MetaData MD;
     MD.setColumnFormat(false);
     size_t id = MD.addObject();
-    MD.setValue(MDL_CTF_SAMPLING_RATE,Tm);
+    MD.setValue(MDL_CTF_SAMPLING_RATE,Tm,id);
     if (enable_CTF)
     {
         MD.setValue(MDL_CTF_VOLTAGE,kV,id);
