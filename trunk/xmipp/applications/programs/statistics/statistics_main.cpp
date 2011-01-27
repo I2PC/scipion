@@ -146,12 +146,12 @@ protected:
             << floatToString(avg    , 10) << ' '
             << floatToString(stddev , 10) << ' ';
         }
-
-        DF_stats.addObject();
-        DF_stats.setValue(MDL_MIN,min_val);
-        DF_stats.setValue(MDL_MAX,max_val);
-        DF_stats.setValue(MDL_AVG,avg);
-        DF_stats.setValue(MDL_STDDEV,stddev);
+        size_t id;
+        id = DF_stats.addObject();
+        DF_stats.setValue(MDL_MIN,min_val,id);
+        DF_stats.setValue(MDL_MAX,max_val,id);
+        DF_stats.setValue(MDL_AVG,avg,id);
+        DF_stats.setValue(MDL_STDDEV,stddev,id);
 
         // Total statistics
         N++;
