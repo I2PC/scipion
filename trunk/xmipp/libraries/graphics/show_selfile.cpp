@@ -146,7 +146,9 @@ void ShowSel::readObject(MetaData &SF, double _minGray, double _maxGray)
     imgnames        = new FileName[listSize];
     selstatus       = new bool[listSize];
     initContents();
-    ImgSize(SF, projXdim, projYdim);
+    int Zdim;
+    unsigned long Ndim;
+    ImgSize(SF, projXdim, projYdim, Zdim, Ndim);
     if (load_mode == PSD_mode && NumRows != -1 && NumCols != -1)
     {
         // Scale to make the images fit into a reasonable window

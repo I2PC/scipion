@@ -357,10 +357,11 @@ protected:
                 isValue = true;
                 value = textToFloat(file_or_value);
                 int xdim, ydim, zdim;
+                unsigned long ndim;
                 if (fn_in.isMetaData())
-                    ImgSize(mdIn, xdim, ydim, zdim);
+                    ImgSize(mdIn, xdim, ydim, zdim, ndim);
                 else
-                    SingleImgSize(fn_in, xdim, ydim, zdim);
+                    SingleImgSize(fn_in, xdim, ydim, zdim, ndim);
                 img2().resizeNoCopy(zdim, ydim, xdim);
                 img2().initConstant(value);
             }

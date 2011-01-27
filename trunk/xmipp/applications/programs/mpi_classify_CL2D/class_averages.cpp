@@ -537,8 +537,9 @@ void VQ::initialize(MetaData &_SF, int _Niter, int _Nneighbours,
     int mpi_size;
 
     MPI_Comm_size( MPI_COMM_WORLD, &mpi_size );
-    int Ydim, Xdim;
-    ImgSize(*SF,Ydim,Xdim);
+    int Zdim, Ydim, Xdim;
+    unsigned long Ndim;
+    ImgSize(*SF,Xdim,Ydim,Zdim,Ndim);
 
     // Prepare mask for evaluating the noise outside
     mask.resize(Ydim,Xdim);
