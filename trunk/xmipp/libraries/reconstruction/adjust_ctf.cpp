@@ -2328,8 +2328,9 @@ double ROUT_Adjust_CTF(Adjust_CTF_Parameters &prm, CTFDescription &output_ctfmod
         global_ctfmodel.write(fn_root + ".ctfparam");
         MetaData MD;
         MD.read(fn_root + ".ctfparam");
-        MD.setValue(MDL_CTF_CRITERION_FITTINGSCORE,fitness);
-        MD.setValue(MDL_CTF_CRITERION_FITTINGCORR13,global_corr13);
+        size_t id = MD.firstObject();
+        MD.setValue(MDL_CTF_CRITERION_FITTINGSCORE,fitness,id);
+        MD.setValue(MDL_CTF_CRITERION_FITTINGCORR13,global_corr13,id);
         MD.write(fn_root + ".ctfparam");
     }
     output_ctfmodel=global_ctfmodel;
