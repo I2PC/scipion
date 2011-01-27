@@ -84,6 +84,8 @@ public :
                      MPI_COMM_WORLD);    // default communicator
         }
 
+        MDIterator DFIter(DF);
+
         // Seed the slaves; send one unit of work to each slave.
         for (int rank = 1; rank < nTasks; ++rank)
         {
@@ -102,7 +104,7 @@ public :
                      MPI_COMM_WORLD);  // default communicator
 
             num_file++;
-            DFIter.next();
+            DFIter.moveNext();
         }
 
         // Loop over getting new work requests until there is no more work to be done
@@ -140,7 +142,7 @@ public :
 
 
             num_file++;
-            DFIter.next();
+            DFIter.moveNext();
         }
 
         // There's no more work to be done, so receive all the outstanding results from the slaves.
