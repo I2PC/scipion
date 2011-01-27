@@ -5,7 +5,8 @@ class Tester:
 
     def testProgram(self,program,arguments):
         print "Testing "+program
-        os.makedirs(self.fnDir+"/"+program)
+        if not os.path.exists(self.fnDir+"/"+program):
+            os.makedirs(self.fnDir+"/"+program)
         os.system(program+" "+arguments+\
             " > "+self.fnDir+"/"+program+"/stdout.txt 2>"+\
             self.fnDir+"/"+program+"/stderr.txt")
