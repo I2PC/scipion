@@ -163,7 +163,7 @@ enum MDLabel
     MDL_MISSINGREGION_THXF, ///< Final tilt angle in X for missing region in subtomogram
     MDL_MODELFRAC, ///< Model fraction (alpha_k) for a Maximum Likelihood model
     MDL_NMA, ///< Normal mode displacements (vector double)
-    MDL_ORDER, /// auxiliary label to keep used as an index
+    MDL_ORDER, /// auxiliary label to be used as an index
     MDL_ORIGINX, ///< Origin for the image in the X axis (double)
     MDL_ORIGINY, ///< Origin for the image in the Y axis (double)
     MDL_ORIGINZ, ///< Origin for the image in the Z axis (double)
@@ -402,7 +402,7 @@ private:
         MDL::addLabel(MDL_MISSINGREGION_THYF, LABEL_DOUBLE, "missingRegionThetaYF");
         MDL::addLabel(MDL_MODELFRAC, LABEL_DOUBLE, "modelFraction");
         MDL::addLabel(MDL_NMA, LABEL_VECTOR, "NMADisplacements");
-        MDL::addLabel(MDL_ORDER, LABEL_INT, "order");
+        MDL::addLabel(MDL_ORDER, LABEL_INT, "order_");
         MDL::addLabel(MDL_ORIGINX, LABEL_DOUBLE, "originX");
         MDL::addLabel(MDL_ORIGINY, LABEL_DOUBLE, "originY");
         MDL::addLabel(MDL_ORIGINZ, LABEL_DOUBLE, "originZ");
