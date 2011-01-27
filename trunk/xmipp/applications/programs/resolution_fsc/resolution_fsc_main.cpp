@@ -46,24 +46,25 @@ public:
 
         FileName  fn_frc;
         fn_frc = fnRoot + ".frc";
+        size_t id;
         FOR_ALL_ELEMENTS_IN_ARRAY1D(freq)
         {
             if (i>0)
             {
-                MD.addObject();
+                id=MD.addObject();
                 if(max_sam >=0 && ((1./dAi(freq, i))<max_sam) )
                 {
                     if(do_dpr)
                         dAi(dpr, i)=0.;
                     dAi(frc, i)=0.;
                 }
-                MD.setValue(MDL_RESOLUTION_FREQ,dAi(freq, i));
-                MD.setValue(MDL_RESOLUTION_FRC,dAi(frc, i));
+                MD.setValue(MDL_RESOLUTION_FREQ,dAi(freq, i),id);
+                MD.setValue(MDL_RESOLUTION_FRC,dAi(frc, i),id);
                 if(do_dpr)
-                    MD.setValue(MDL_RESOLUTION_DPR,dAi(dpr, i));
-                MD.setValue(MDL_RESOLUTION_ERRORL2,dAi(error_l2, i));
-                MD.setValue(MDL_RESOLUTION_FRCRANDOMNOISE,dAi(frc_noise, i));
-                MD.setValue(MDL_RESOLUTION_FREQREAL,1./dAi(freq, i));
+                    MD.setValue(MDL_RESOLUTION_DPR,dAi(dpr, i),id);
+                MD.setValue(MDL_RESOLUTION_ERRORL2,dAi(error_l2, i),id);
+                MD.setValue(MDL_RESOLUTION_FRCRANDOMNOISE,dAi(frc_noise, i),id);
+                MD.setValue(MDL_RESOLUTION_FREQREAL,1./dAi(freq, i),id);
             }
         }
         MD.write(fn_frc);
