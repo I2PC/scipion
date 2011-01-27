@@ -274,7 +274,7 @@ public:
      * The parsing will be from an input stream(istream)
      * and if parsing fails, an error will be raised
      */
-    void _parseObject(std::istream &is, MDObject &object, size_t id=BAD_OBJID);
+    void _parseObject(std::istream &is, MDObject &object, size_t id = BAD_OBJID);
 
     /** Get Metadata labels for the block defined by start
      * and end loop pointers. Return pointer to newline after last label
@@ -282,7 +282,7 @@ public:
     char * _readColumnsStar(char * start,
                             char * end,
                             MDRow & columnValues,
-                            const std::vector<MDLabel>* desiredLabels);
+                            const std::vector<MDLabel>* desiredLabels, size_t id = BAD_OBJID);
     /**Get path.
      */
     std::string getPath() const ;

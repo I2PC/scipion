@@ -683,7 +683,7 @@ void MetaData::_parseObject(std::istream &is, MDObject &object, size_t id)
 char * MetaData::_readColumnsStar(char * pStart,
                                   char * pEnd,
                                   MDRow & columnValues,
-                                  const std::vector<MDLabel>* desiredLabels)
+                                  const std::vector<MDLabel>* desiredLabels, size_t id)
 {
     char * pchStart, *pchEnd;
     pchStart =pStart;
@@ -729,7 +729,7 @@ char * MetaData::_readColumnsStar(char * pStart,
             MDObject * _mdObject = new MDObject(label);
             columnValues.push_back(_mdObject);//add the value here with a char
             if(!isColumnFormat)
-                _parseObject(ss, *_mdObject);
+                _parseObject(ss, *_mdObject, id);
             pchStart = pchEnd + 1;//go to next line character
         }
         else
@@ -869,12 +869,12 @@ void MetaData::_read(const FileName &filename,
     myMDSql->createMd();
     isColumnFormat = true;
 
-    std::string dataBlockName = (std::string) "data_" + blockName;
+    String dataBlockName = (String) "data_" + blockName;
+    size_t id;
 
     if (!filename.isMetaData())//if not a metadata, try to read as image or stack
     {
         Image<char> image;
-        size_t id;
         image.read(filename, false);
         if (image().ndim == 1 || !decomposeStack) //single image
         {
@@ -962,8 +962,8 @@ void MetaData::_read(const FileName &filename,
         }
         else
         {
-            addObject();
-            _readColumnsStar(firstData,secondData, columnValues, desiredLabels);
+          id = addObject();
+            _readColumnsStar(firstData,secondData, columnValues, desiredLabels, id);
         }
         //        }
         //        else//row format
