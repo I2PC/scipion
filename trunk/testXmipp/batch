@@ -1,0 +1,2 @@
+mkdir -p $1/xmipp_xray_psf_create
+xmipp_xray_psf_create -i input/xray_psf.xmd -o $1/xmipp_xray_psf_create/psf.vol 
