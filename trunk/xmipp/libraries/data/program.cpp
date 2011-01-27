@@ -258,7 +258,7 @@ void XmippProgram::addParamsLine(const char * line)
     progDef->pLexer->addLine((std::string)line);
 }
 
-void XmippProgram::addInputLine()
+void XmippProgram::addImageFormatParam()
 {
     addParamsLine(" -i <input_file>   : Input file: metadata, stack, volume or image.");
     addParamsLine("         :+ Supported read formats are:");
@@ -275,7 +275,7 @@ void XmippProgram::addInputLine()
     addParamsLine(" alias --input;");
 }
 
-void XmippProgram::addExtensionWhere(const char * whereName)
+void XmippProgram::addWhereImageFormat(const char * whereName)
 {
     char whereLine[256];
     sprintf(whereLine, "       where <%s>", whereName);
@@ -288,6 +288,16 @@ void XmippProgram::addExtensionWhere(const char * whereName)
     addParamsLine("         xmp : Spider (Data types: float* and cfloat).");
     addParamsLine("         tif : TIFF. (Data types: uint8*, uint16, uint32 and float).");
     addParamsLine("         custom <ext> : Custom extension name, the real format will be Spider.");
+}
+
+void XmippProgram::addWhereRandomType(const char * randomName)
+{
+  char randomLine[256];
+  sprintf(randomLine, "       where <%s>", randomName);
+  addParamsLine(randomLine);
+  addParamsLine("gaussian <stddev> <avg=0.>        :Gaussian distribution parameters");
+  addParamsLine("student <df> <stddev> <avg=0.> :t-student distribution parameters");
+  addParamsLine("uniform  <min> <max>           :Uniform distribution parameters");
 }
 
 void XmippProgram::addKeywords(const char * keywords)
@@ -411,7 +421,7 @@ XmippMetadataProgram::XmippMetadataProgram()
 
 void XmippMetadataProgram::defineParams()
 {
-    addInputLine();
+    addImageFormatParam();
     addParamsLine(" [--mode+ <mode=overwrite>]   : Metadata writing mode.");
     addParamsLine("    where <mode>");
     addParamsLine("     overwrite   : Replace the content of the file with the Metadata");

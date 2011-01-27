@@ -1034,27 +1034,12 @@ void ConsolePrinter::printProgram(const ProgramDef &program, int v)
     //print examples
     if (program.examples.size() > 0)
     {
-        bool verbatim = false;
         *pOut << "EXAMPLES" << std::endl;
         for (size_t i = 0; i < program.examples.size(); ++i)
         {
             if (program.examples.visibility[i])
-            {
-                if (!verbatim)
-                {
-                    //*pOut << std::endl;
-                    verbatim = true;
-                }
-            }
-            else
-            {
-              if (verbatim)
-              {
-                *pOut << std::endl;
-                verbatim = false;
-              }
-            }
-            *pOut << program.examples.comments[i] << std::endl;
+              *pOut << "   ";
+            *pOut << "   " << program.examples.comments[i] << std::endl;
         }
 
     }

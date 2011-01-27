@@ -131,9 +131,9 @@ public:
      * or WHERE's that will represent
      * types commonly used by several programs
      */
-    void addInputLine();
-    void addExtensionWhere(const char * whereName="extension");
-
+    void addImageFormatParam();
+    void addWhereImageFormat(const char * whereName="extension");
+    void addWhereRandomType(const char * randomName="rand_mode");
     /// Verbosity level
     int verbose;
 
