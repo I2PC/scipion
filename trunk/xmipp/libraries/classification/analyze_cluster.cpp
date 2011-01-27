@@ -219,7 +219,7 @@ void ProgAnalyzeCluster::run()
         SFout.setValue(MDL_ZSCORE, zscore, trueIdx+1);
         if (zscore<distThreshold || distThreshold<0)
         {
-            SFout.setValue(MDL_ENABLED,1);
+            SFout.setValue(MDL_ENABLED,1, trueIdx+1);
             if (basis)
             {
                 const MultidimArray<float> &Ialigned_trueIdx=Ialigned[trueIdx];
@@ -233,7 +233,7 @@ void ProgAnalyzeCluster::run()
             }
         }
         else
-            SFout.setValue(MDL_ENABLED,-1);
+            SFout.setValue(MDL_ENABLED,-1, trueIdx+1);
     }
     SFout.write(fnOut);
     if (basis && Ngood>0)
