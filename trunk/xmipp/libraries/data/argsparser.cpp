@@ -1024,6 +1024,13 @@ void ConsolePrinter::printProgram(const ProgramDef &program, int v)
         for (size_t i = 0; i < program.usageComments.size(); ++i)
             *pOut << "   " << program.usageComments.comments[i] << std::endl;
     }
+    //print see also
+    if (!program.seeAlso.empty())
+    {
+      *pOut << "SEE ALSO" << std::endl;
+      *pOut << "   " << program.seeAlso << std::endl;
+    }
+
     //print sections and params
     if (program.sections.size() > 0)
     {
@@ -1290,6 +1297,15 @@ void WikiPrinter::printProgram(const ProgramDef &program, int v)
         *pOut << "---++ Usage" << std::endl;
         for (size_t i = 0; i < program.usageComments.size(); ++i)
             *pOut << "   " << program.usageComments.comments[i] << " %BR%" << std::endl;
+    }
+    if (!program.seeAlso.empty())
+    {
+      *pOut << std::endl << "*See also* %BR%" << std::endl;
+      StringVector links;
+      splitString(program.seeAlso, ",", links);
+      for (int i = 0; i < links.size(); ++i)
+        *pOut << "[[" << links[i] << "][" << links[i] <<"]]  ";
+      *pOut << "%BR%" << std::endl;
     }
     //print sections and params
     if (program.sections.size() > 0)

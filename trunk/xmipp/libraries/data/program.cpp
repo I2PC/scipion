@@ -247,6 +247,10 @@ void XmippProgram::addExampleLine(const char * example, bool verbatim)
 {
     progDef->examples.addComment(example, verbatim ? 1 : 0);
 }
+void XmippProgram::addSeeAlsoLine(const char * seeAlso)
+{
+   progDef->seeAlso = seeAlso;
+}
 
 void XmippProgram::clearUsage()
 {

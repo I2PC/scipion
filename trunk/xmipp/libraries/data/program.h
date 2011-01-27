@@ -102,7 +102,7 @@ public:
     void clearUsage();
     /** Add examples */
     void addExampleLine(const char * example, bool verbatim=true);
-
+    void addSeeAlsoLine(const char * seeAlso);
     /** Add keywords to the program definition */
     void addKeywords(const char * keywords);
 

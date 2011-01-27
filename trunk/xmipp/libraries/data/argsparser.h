@@ -252,6 +252,7 @@ public:
     std::map<std::string, ParamDef*> paramsMap; ///< Dictionary with all params and alias names
     StringVector pendingRequires; ///< This is for checking that requires names exists
     String keywords;
+    String seeAlso;
     ///This flag is used to check if an independent option was found like: --more, --help
     ///that avoid others options restrictions.
     bool singleOption;
