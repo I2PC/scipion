@@ -59,7 +59,7 @@ protected:
         XmippMetadataProgram::defineParams();
         addUsageLine("Convert among stacks, volumes and images, and change the file format.");
         addParamsLine("  [--oext <extension=\"\">] :  Output file format extension.");
-        addExtensionWhere("extension");
+        addWhereImageFormat("extension");
         addParamsLine("  [--type <output_type=img>] : Output file type.");
         addParamsLine("          where <output_type>");
         addParamsLine("          img : Image");
