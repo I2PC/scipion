@@ -272,7 +272,7 @@ void SF_main(int argc, char **argv,
                 {
                     size_t id = SF_out.addObject();
                     SF_out.setValue( MDL_IMAGE, prm->fn_out, id);
-                    SF_out.setValue( MDL_ENABLED, success ? 1 : -1);
+                    SF_out.setValue( MDL_ENABLED, success ? 1 : -1,id);
                 }
 
                 if (i++ % istep == 0 && prm->allow_time_bar && !prm->quiet)
