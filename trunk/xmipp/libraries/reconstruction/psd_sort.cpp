@@ -175,7 +175,7 @@ void Prog_Sort_PSD_Parameters::run()
         evaluate(fnMicrograph, fnPSD, fnCTF, fnCTF2, evaluation);
         SF.setValue(MDL_CTF_CRITERION_DAMPING,evaluation.maxDampingAtBorder,__iter.objId);
         SF.setValue(MDL_CTF_CRITERION_FIRSTZEROAVG,evaluation.firstZeroAvg,__iter.objId);
-        SF.setValue(MDL_CTF_CRITERION_FIRSTZERODISAGREEMENT,evaluation.firstZeroDisagreement),__iter.objId;
+        SF.setValue(MDL_CTF_CRITERION_FIRSTZERODISAGREEMENT,evaluation.firstZeroDisagreement,__iter.objId);
         SF.setValue(MDL_CTF_CRITERION_FIRSTZERORATIO,evaluation.firstZeroRatio,__iter.objId);
         SF.setValue(MDL_CTF_CRITERION_FITTINGSCORE,evaluation.fittingScore),__iter.objId;
         SF.setValue(MDL_CTF_CRITERION_FITTINGCORR13,evaluation.fittingCorr13,__iter.objId);
