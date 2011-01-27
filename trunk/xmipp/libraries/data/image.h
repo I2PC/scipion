@@ -1455,6 +1455,10 @@ template<>
 void Image< std::complex< double > >::castConvertPage2Datatype(std::complex< double > * srcPtr,
         char * page, DataType datatype, size_t pageSize,double min0,double max0,CastWriteMode castMode);
 
+/** What is the size of an image */
+void SingleImgSize(const FileName &filename, int &Xdim, int &Ydim, int &Zdim,
+		unsigned long &Ndim);
+
 /// @defgroup ImageFormats Image Formats
 /// @ingroup Images
 // Functions belonging to this topic are commented in rw*.h

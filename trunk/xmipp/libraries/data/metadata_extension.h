@@ -18,20 +18,9 @@ void getStatistics(MetaData &MT, Image<double> & _ave, Image<double> & _sd, doub
 /** Get image size
  *
  */
-static int null_object=-1;
-static unsigned long null_objectLong=0;
+void ImgSize(const MetaData &MD, int &Xdim, int &Ydim, int &Zdim, unsigned long &Ndim);
 
-void SingleImgSize(const FileName &filename, int &Xdim, int &Ydim=null_object,
-             int &Zdim=null_object,
-             unsigned long &Ndim=null_objectLong);
-
-void ImgSize(const MetaData &MD, int &Xdim, int &Ydim=null_object,
-             int &Zdim=null_object,
-             unsigned long &Ndim=null_objectLong);
-
-void ImgSize(const FileName &filename, int &Xdim, int &Ydim=null_object,
-             int &Zdim=null_object,
-             unsigned long &Ndim=null_objectLong);
+void ImgSize(const FileName &filename, int &Xdim, int &Ydim, int &Zdim, unsigned long &Ndim);
 
 void getBlocksAvailableInMetaData(const FileName &inFile, StringVector& blockList);
 

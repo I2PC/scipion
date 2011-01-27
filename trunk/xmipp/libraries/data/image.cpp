@@ -141,4 +141,9 @@ void Image< std::complex< double > >::castConvertPage2Datatype(std::complex< dou
         }
 }
 
-
+void SingleImgSize(const FileName &filename, int &Xdim, int &Ydim, int &Zdim, unsigned long &Ndim)
+{
+    Image<char> img;
+    img.read(filename, false);
+    img.getDimensions(Xdim, Ydim, Zdim, Ndim);
+}

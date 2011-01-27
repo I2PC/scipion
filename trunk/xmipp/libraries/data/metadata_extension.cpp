@@ -77,13 +77,6 @@ void getStatistics(MetaData &MT_in, Image<double> & _ave, Image<double> & _sd, d
     _sd().selfSQRT();
 }
 
-void SingleImgSize(const FileName &filename, int &Xdim, int &Ydim, int &Zdim, unsigned long &Ndim)
-{
-    Image<char> img;
-    img.read(filename, false);
-    img.getDimensions(Xdim, Ydim, Zdim, Ndim);
-}
-
 void ImgSize(const MetaData &MD, int &Xdim, int &Ydim, int &Zdim, unsigned long &Ndim)
 {
     if (!MD.isEmpty())
