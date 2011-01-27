@@ -1349,13 +1349,13 @@ double Update_surface_Shah(MultidimArray<double> &img,
             double Central  = -2 * W(0) + 2 * wFxx + 2 * wFyy;
             double Neighbors = wFx * Fx + wFy * Fy + wFxx * Fxx + wFyy * Fyy;
 
-            if (ABS(Central) > XMIPP_EQUAL_ACCURACY)
+            if (fabs(Central) > XMIPP_EQUAL_ACCURACY)
                 F = (Constant + Neighbors) / Central;
             F = CLIP(F, 0, 1);
 
             // Compute the difference.
-            Diff += ABS(dAij(surface_strength, i, j) - F);
-            Norm += ABS(dAij(surface_strength, i, j));
+            Diff += fabs(dAij(surface_strength, i, j) - F);
+            Norm += fabs(dAij(surface_strength, i, j));
 
             // Update the new value.
             dAij(surface_strength, i, j) = F;
@@ -1406,8 +1406,8 @@ double Update_edge_Shah(MultidimArray<double> &img,
                 dAij(edge_strength, i, j) = S;
 
             // Compute the difference.
-            Diff += ABS(dAij(edge_strength, i, j) - Old_edge_strength);
-            Norm += ABS(Old_edge_strength);
+            Diff += fabs(dAij(edge_strength, i, j) - Old_edge_strength);
+            Norm += fabs(Old_edge_strength);
         }
     return Diff / Norm; // Return the relative difference.
 }
@@ -1997,12 +1997,12 @@ void centerImage(MultidimArray<double> &I, int Niter, bool limitShift)
         std::cout << "con Ix: " << shiftX << " " << shiftY << std::endl;
 #endif
 
-        if (ABS(shiftX)<XSIZE(I)/3 || !limitShift)
+        if (fabs(shiftX)<XSIZE(I)/3 || !limitShift)
         {
             meanShiftX+=shiftX;
             Nx++;
         }
-        if (ABS(shiftY)<YSIZE(I)/3 || !limitShift)
+        if (fabs(shiftY)<YSIZE(I)/3 || !limitShift)
         {
             meanShiftY+=shiftY;
             Ny++;
@@ -2015,12 +2015,12 @@ void centerImage(MultidimArray<double> &I, int Niter, bool limitShift)
         std::cout << "con Iy: " << shiftX << " " << shiftY << std::endl;
 #endif
 
-        if (ABS(shiftX)<XSIZE(I)/3 || !limitShift)
+        if (fabs(shiftX)<XSIZE(I)/3 || !limitShift)
         {
             meanShiftX+=shiftX;
             Nx++;
         }
-        if (ABS(shiftY)<YSIZE(I)/3 || !limitShift)
+        if (fabs(shiftY)<YSIZE(I)/3 || !limitShift)
         {
             meanShiftY+=shiftY;
             Ny++;
@@ -2033,12 +2033,12 @@ void centerImage(MultidimArray<double> &I, int Niter, bool limitShift)
         std::cout << "con Ixy: " << shiftX << " " << shiftY << std::endl;
 #endif
 
-        if (ABS(shiftX)<XSIZE(I)/3 || !limitShift)
+        if (fabs(shiftX)<XSIZE(I)/3 || !limitShift)
         {
             meanShiftX+=shiftX;
             Nx++;
         }
-        if (ABS(shiftY)<YSIZE(I)/3 || !limitShift)
+        if (fabs(shiftY)<YSIZE(I)/3 || !limitShift)
         {
             meanShiftY+=shiftY;
             Ny++;
