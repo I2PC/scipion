@@ -2472,7 +2472,9 @@ void ProgML2D::writeOutputFiles(const ModelML2D &model, int outputType)
         MDo2.setValue(MDL_RANDOMSEED, seed,id);
         if (write_norm)
         {
-            MDo.setValue(MDL_INTSCALE, average_scale);
+        	//FIXME ROB
+        	std::cerr << "obj_id missing" <<std::endl;
+            MDo.setValue(MDL_INTSCALE, average_scale,id);//<<< DONT KNOw IF ID IS OK
         }
         MDo2.setValue(MDL_ITER, iter,id);
         fn_tmp = fn_base + "_img.xmd";
