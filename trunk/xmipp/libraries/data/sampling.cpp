@@ -1316,6 +1316,7 @@ void Sampling::create_asym_unit_file(const FileName &docfilename)
 	       << std::endl
 	       ;
     #endif
+    size_t id;
     for (int i = 0; i < no_redundant_sampling_points_vector.size(); i++)
     {
         #ifdef CHIMERA
@@ -1325,13 +1326,13 @@ void Sampling::create_asym_unit_file(const FileName &docfilename)
 		   << std::endl
 		   ;
 	#endif
-        DF.addObject();
-        DF.setValue(MDL_ANGLEROT,XX(no_redundant_sampling_points_angles[i]));
-        DF.setValue(MDL_ANGLETILT,YY(no_redundant_sampling_points_angles[i]));
-        DF.setValue(MDL_ANGLEPSI,ZZ(no_redundant_sampling_points_angles[i]));
-        DF.setValue(MDL_X,XX(no_redundant_sampling_points_vector[i]));
-        DF.setValue(MDL_Y,YY(no_redundant_sampling_points_vector[i]));
-        DF.setValue(MDL_Z,ZZ(no_redundant_sampling_points_vector[i]));
+        id=DF.addObject();
+        DF.setValue(MDL_ANGLEROT,XX(no_redundant_sampling_points_angles[i]),id);
+        DF.setValue(MDL_ANGLETILT,YY(no_redundant_sampling_points_angles[i]),id);
+        DF.setValue(MDL_ANGLEPSI,ZZ(no_redundant_sampling_points_angles[i]),id);
+        DF.setValue(MDL_X,XX(no_redundant_sampling_points_vector[i]),id);
+        DF.setValue(MDL_Y,YY(no_redundant_sampling_points_vector[i]),id);
+        DF.setValue(MDL_Z,ZZ(no_redundant_sampling_points_vector[i]),id);
     }
     #ifdef CHIMERA
     filestr.close();
