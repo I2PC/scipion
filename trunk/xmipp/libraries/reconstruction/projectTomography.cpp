@@ -109,6 +109,7 @@ int PROJECT_Tomography_Effectively_project(
 
 
     int idx=prm.starting;
+    size_t id;
     for (double angle=prm.tilt0; angle<=prm.tiltF; angle+=prm.tiltStep)
     {
         FileName fn_proj;              // Projection name
@@ -135,15 +136,15 @@ int PROJECT_Tomography_Effectively_project(
 
         proj.setEulerAngles(rot,tilt,psi);
 
-        DF_movements.addObject();
-        DF_movements.setValue(MDL_ANGLEROT,tRot);
-        DF_movements.setValue(MDL_ANGLETILT,tTilt);
-        DF_movements.setValue(MDL_ANGLEPSI,tPsi);
-        DF_movements.setValue(MDL_ANGLEROT2,rot);
-        DF_movements.setValue(MDL_ANGLETILT2,tilt);
-        DF_movements.setValue(MDL_ANGLEPSI2,psi);
-        DF_movements.setValue(MDL_SHIFTX,shiftX);
-        DF_movements.setValue(MDL_SHIFTY,shiftY);
+        id=DF_movements.addObject();
+        DF_movements.setValue(MDL_ANGLEROT,tRot,id);
+        DF_movements.setValue(MDL_ANGLETILT,tTilt,id);
+        DF_movements.setValue(MDL_ANGLEPSI,tPsi,id);
+        DF_movements.setValue(MDL_ANGLEROT2,rot,id);
+        DF_movements.setValue(MDL_ANGLETILT2,tilt,id);
+        DF_movements.setValue(MDL_ANGLEPSI2,psi,id);
+        DF_movements.setValue(MDL_SHIFTX,shiftX,id);
+        DF_movements.setValue(MDL_SHIFTY,shiftY,id);
 
         IMGMATRIX(proj).addNoise(prm.Npixel_avg, prm.Npixel_dev, "gaussian");
 
