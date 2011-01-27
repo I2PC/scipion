@@ -42,20 +42,20 @@ typedef enum
 class ProgConvImg: public XmippMetadataProgram
 {
 private:
-    std::string type, depth;
-    Image<char> imTemp;
+    std::string  type, depth;
+    Image<char>  imTemp;
     ImageGeneric imIn, *imOut;
     DataType     outDataT;
-    MetaData mdTemp;
-    MDRow    row;
-    ImageConv convMode;
-    bool adjust;
-    int k;
+    MDRow        row;
+    ImageConv    convMode;
+    bool         adjust;
+    int          k;
 
 protected:
     void defineParams()
     {
         each_image_produces_an_output = true;
+        save_metadata_stack = true;
         XmippMetadataProgram::defineParams();
         addUsageLine("Convert among stacks, volumes and images, and change the file format.");
         addParamsLine("  [--oext <extension=\"\">] :  Output file format extension.");
@@ -184,7 +184,7 @@ protected:
         case MD2MD:
             {
                 imIn.read(fnImg,true,-1,true);
-                imIn.write(fnImgOut,-1,false,WRITE_REPLACE,adjust);
+                imIn.write(fnImgOut,-1, type == "stk",WRITE_APPEND,adjust);
                 break;
             }
         case MD2VOL:
@@ -196,15 +196,13 @@ protected:
         case VOL2MD:
             {
                 imIn.data->getSlice(k++,imOut->data);
-                if (fnImgOut.isInStack())
-                    imOut->write(fnImgOut,-1,true,WRITE_APPEND,adjust);
-                else
-                    imOut->write(fnImgOut,-1,false,WRITE_OVERWRITE,adjust);
+                imOut->write(fnImgOut,-1,type == "stk",WRITE_APPEND,adjust);
             }
         }
+        mdIn.setValue(MDL_IMAGE,fnImgOut, objId); // to keep info in output metadata
     }
 
-    void postProcess()
+    void finishProcessing()
     {
         switch(convMode)
         {
@@ -212,16 +210,20 @@ protected:
             imOut->write();
             break;
         }
+
+        // To keep the mdIn info we overwrite the mdOut done by XmippMetadataProgram
+        mdOut = mdIn;
+        XmippMetadataProgram::finishProcessing();
     }
 
     void show()
     {
-      XmippMetadataProgram::show();
-      if (each_image_produces_an_output)
-         {
-             if (oext != "")
-                 std::cout << "Output Extension: " << oext << std::endl;
-         }
+        XmippMetadataProgram::show();
+        if (each_image_produces_an_output)
+        {
+            if (oext != "")
+                std::cout << "Output Extension: " << oext << std::endl;
+        }
     }
 };
 
