@@ -179,7 +179,7 @@ void XRayPSF::write(const FileName &fn)
     dimV[2] = Noz;
     MD.setValue(MDL_CTF_XRAY_DIMENSIONS,dimV, id);
 
-    MD.write(fn);
+    MD.write(fn.withoutExtension().addExtension("xmd"));
     PSF->write(fnPSF);
 }
 
