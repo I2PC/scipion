@@ -73,6 +73,7 @@ public:
     void init()
     {
         image = NULL;
+        data = NULL;
         datatype = Unknown_Type;
     }
 
