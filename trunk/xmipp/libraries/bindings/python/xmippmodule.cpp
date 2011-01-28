@@ -1607,9 +1607,6 @@ initxmipp(void)
     PyObject * dict = PyModule_GetDict(module);
 
     //Add constants
-    addIntConstant(dict,"NO_OBJECTS_STORED",(long)NO_OBJECTS_STORED);
-    addIntConstant(dict,"NO_MORE_OBJECTS",(long)NO_MORE_OBJECTS);
-    addIntConstant(dict,"NO_OBJECT_FOUND",(long)NO_OBJECT_FOUND);
     addIntConstant(dict,"AGGR_COUNT",(long)AGGR_COUNT);
     addIntConstant(dict,"AGGR_MAX",(long)AGGR_MAX);
     addIntConstant(dict,"AGGR_MIN",(long)AGGR_MIN);

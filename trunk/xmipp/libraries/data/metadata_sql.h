@@ -41,14 +41,6 @@ class MDCache;
  * @{
  */
 
-/** Posible error codes in MetaData operations */
-enum MDErrors
-{
-    NO_OBJECTS_STORED = -1, // NOTE: Do not change this value (-1)
-    NO_MORE_OBJECTS = -2,
-    NO_OBJECT_FOUND = -3
-};
-
 /** Posible Aggregation Operations in a MetaData */
 enum AggregateOperation
 {

@@ -420,7 +420,7 @@ void generate_angles(int ExtProjs, const Angle_range &range,
     double ang;
     int   N1, N2;
     int   i, j, k;
-    size_t iproj, idx;
+    int   iproj, idx;
     int   limit;
     MetaData DFaux;
 
@@ -514,7 +514,7 @@ void generate_angles(int ExtProjs, const Angle_range &range,
                         break;
                     }
                     size_t idx_tmp=DFaux.firstObject(MDValueEQ(MDL_ORDER,iproj));
-                    if (idx_tmp==NO_OBJECTS_STORED || idx_tmp==NO_OBJECT_FOUND)
+                    if (idx_tmp==BAD_OBJID)
                     {
                         idx_tmp=DFaux.addObject();
                         DFaux.setValue(MDL_ORDER,iproj,idx_tmp);
@@ -537,7 +537,7 @@ void generate_angles(int ExtProjs, const Angle_range &range,
         {
             size_t iproj=ExtProjs + i + prm.starting;
             unsigned long int dfidx=DFaux.firstObject(MDValueEQ(MDL_ORDER,iproj));
-            if (dfidx==NO_OBJECTS_STORED || dfidx==NO_OBJECT_FOUND)
+            if (dfidx==BAD_OBJID)
             {
             	dfidx=DFaux.addObject();
             	DFaux.setValue(MDL_ORDER,iproj,dfidx);
@@ -608,7 +608,7 @@ void generate_even_angles(int ExtProjs, int Nrottilt, MetaData &DF,
 
                 size_t iproj = ExtProjs + N + Nrottilt * k;
                 size_t idx_tmp=DFaux.firstObject(MDValueEQ(MDL_ORDER,iproj));
-                if (idx_tmp==NO_OBJECTS_STORED || idx_tmp==NO_OBJECT_FOUND)
+                if (idx_tmp==BAD_OBJID)
                 {
                 	idx_tmp=DFaux.addObject();
                 	DFaux.setValue(MDL_ORDER,iproj,idx_tmp);

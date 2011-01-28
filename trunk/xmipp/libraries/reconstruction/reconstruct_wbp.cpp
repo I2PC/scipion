@@ -169,7 +169,7 @@ void ProgRecWbp::get_angles_for_image(const FileName &fn, double &rot, double &t
     else
     {
         size_t id = SF.firstObject(MDValueEQ(MDL_IMAGE,(std::string)fn));
-        if (id!=NO_OBJECT_FOUND && id!=NO_OBJECTS_STORED)
+        if (id!=BAD_OBJID)
         {
             SF.getValue(MDL_ANGLEROT,rot,id);
             SF.getValue(MDL_ANGLETILT,tilt,id);
