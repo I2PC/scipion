@@ -44,13 +44,13 @@ protected:
         //Parameters
         addParamsLine("--type <rand_mode>                : Type of noise to add");
         addWhereRandomType();
-        addParamsLine("  [-limit0 <float> ]               :Crop noise histogram below this value ");
-        addParamsLine("  [-limitF <float> ]               :Crop noise histogram above this value ");
+        addParamsLine("  [--limit0 <float> ]               :Crop noise histogram below this value ");
+        addParamsLine("  [--limitF <float> ]               :Crop noise histogram above this value ");
         //Examples
-        addExampleLine("Add noise to a single image, overwriting input image:", false);
-        addExampleLine("add_noise -i g0ta0001.xmp -gaussian 0.1");
-        addExampleLine("Add uniform noise to a volume, writing in a different volume:", false);
-        addExampleLine("add_noise -i g0ta.vol -uniform -0.1 0.1 -o g0taNoisy.vol");
+        addExampleLine("Add noise to a single image, writing in different image:", false);
+        addExampleLine("xmipp_transform_add_noise -i cleanImage.spi --type gaussian 10 5 -o noisyGaussian.spi");
+        addExampleLine("Add uniform noise to a volume, overriding input volume:", false);
+        addExampleLine("xmipp_transform_add_noise -i g0ta.vol -uniform -0.1 0.1");
 
     }
 
