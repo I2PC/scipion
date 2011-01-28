@@ -57,12 +57,12 @@ protected:
     void readParams()
     {
         XmippMetadataProgram::readParams();
-        do_limit0 = checkParam("-limit0");
+        do_limit0 = checkParam("--limit0");
         if (do_limit0)
             limit0 =  getDoubleParam("-limit0");
-        do_limitF = checkParam("-limitF");
+        do_limitF = checkParam("--limitF");
         if (do_limitF)
-            limitF =  getDoubleParam("-limitF");
+            limitF =  getDoubleParam("--limitF");
 
         ///Default value of df in addNoise function
         df = 3.;
