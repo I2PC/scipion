@@ -59,35 +59,19 @@ public:
      *
      * Defines the data type of the image and then declares the internal image class.
      */
-    ImageGeneric(DataType _datatype)
-    {
-        datatype = _datatype;
-        setImageBase();
-    }
+    ImageGeneric(DataType _datatype);
+
     /** Destructor.
      */
     ~ImageGeneric();
 
     /** Initialize the parameters.
      */
-    void init()
-    {
-        image = NULL;
-        data = NULL;
-        datatype = Unknown_Type;
-    }
+    void init();
 
     /** Clear the parameters and initialize them.
      */
-    void clear()
-    {
-        if (image != NULL)
-        {
-            image->clear();
-            delete image;
-            init();
-        }
-    }
+    void clear();
 
     /** Get Image dimensions
     */
@@ -111,7 +95,7 @@ public:
 
     double tilt(const long int n = 0) const
     {
-       return image->tilt(n);
+        return image->tilt(n);
     }
 
     /** Set the data type for the generic image
@@ -130,42 +114,42 @@ public:
     /** Read image from file with a header applied.
      */
     int readApplyGeo(const FileName &name, bool readdata=true, int select_img = -1,
-             bool only_apply_shifts = false, MDRow * row = NULL);
+                     bool only_apply_shifts = false, MDRow * row = NULL);
 
     /** Read image from file.
      */
     int readApplyGeo(const FileName &name, const MetaData &MD, long int objId,
-    		 bool readdata=true, int select_img = -1, bool only_apply_shifts = false);
+                     bool readdata=true, int select_img = -1, bool only_apply_shifts = false);
 
     /** Read image mapped from file.
      */
-    int readMapped(const FileName &name, int select_img = 0)
+    inline int readMapped(const FileName &name, int select_img = 0)
     {
-      read(name,true,select_img,true);
+        read(name,true,select_img,true);
     }
     /** Write image to file.
     */
-    void write(const FileName &name="", int select_img=-1, bool isStack=false,
-               int mode=WRITE_OVERWRITE,bool adjust=false)
+    inline void write(const FileName &name="", int select_img=-1, bool isStack=false,
+                      int mode=WRITE_OVERWRITE,bool adjust=false)
     {
         image->write(name,select_img,isStack,mode,adjust);
     }
 
     /* Create an empty image file of format given by filename and map it to memory.
      */
-    void newMappedFile(int Xdim, int Ydim, int Zdim, int Ndim, FileName _filename)
+    inline  void newMappedFile(int Xdim, int Ydim, int Zdim, int Ndim, FileName _filename)
     {
         image->newMappedFile(Xdim,Ydim,Zdim,Ndim,_filename);
     }
 
     /* MultidimArrayGeneric data access
      */
-    MultidimArrayGeneric operator()()
+    inline MultidimArrayGeneric operator()()
     {
         return *data;
     }
 
-    const MultidimArrayGeneric operator()() const
+    inline const MultidimArrayGeneric operator()() const
     {
         return *data;
     }

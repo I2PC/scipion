@@ -26,10 +26,34 @@
 #include "image_generic.h"
 #include "image.h"
 
+
+ImageGeneric::ImageGeneric(DataType _datatype)
+{
+    datatype = _datatype;
+    setImageBase();
+}
+
 ImageGeneric::~ImageGeneric()
 {
-  delete image;
-  delete data;
+    delete image;
+    delete data;
+}
+
+void ImageGeneric::init()
+{
+    image = NULL;
+    data = NULL;
+    datatype = Unknown_Type;
+}
+
+void ImageGeneric::clear()
+{
+    if (image != NULL)
+    {
+        image->clear();
+        delete image;
+        init();
+    }
 }
 
 void ImageGeneric::setImageBase()
@@ -44,19 +68,19 @@ void ImageGeneric::setImageBase()
         }
         break;
     case UInt:
-           {
-               Image<unsigned int> *imT = new Image<unsigned int>;
-               image = imT;
-               data = new MultidimArrayGeneric((MultidimArrayBase*) &(imT->data), datatype);
-           }
-           break;
-       case Int:
-           {
-               Image<int> *imT = new Image<int>;
-               image = imT;
-               data = new MultidimArrayGeneric((MultidimArrayBase*) &(imT->data), datatype);
-           }
-           break;
+        {
+            Image<unsigned int> *imT = new Image<unsigned int>;
+            image = imT;
+            data = new MultidimArrayGeneric((MultidimArrayBase*) &(imT->data), datatype);
+        }
+        break;
+    case Int:
+        {
+            Image<int> *imT = new Image<int>;
+            image = imT;
+            data = new MultidimArrayGeneric((MultidimArrayBase*) &(imT->data), datatype);
+        }
+        break;
     case UShort:
         {
             Image<unsigned short> *imT = new Image<unsigned short>;
@@ -108,7 +132,7 @@ int ImageGeneric::read(const FileName &name, bool readdata, int select_img,
 }
 
 int ImageGeneric::readApplyGeo(const FileName &name, bool readdata, int select_img,
-                       bool only_apply_shifts, MDRow * row)
+                               bool only_apply_shifts, MDRow * row)
 {
     clear();
 
@@ -121,7 +145,7 @@ int ImageGeneric::readApplyGeo(const FileName &name, bool readdata, int select_i
 }
 
 int ImageGeneric::readApplyGeo(const FileName &name, const MetaData &MD, long int objId,
-		 bool readdata, int select_img, bool only_apply_shifts)
+                               bool readdata, int select_img, bool only_apply_shifts)
 {
     clear();
 
