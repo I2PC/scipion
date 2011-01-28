@@ -726,6 +726,15 @@ public:
     */
     void makeAbsPath(const MDLabel label=MDL_IMAGE);
 
+    /** Randomize double values of a label column
+     *  following a uniform, gaussian or student distribution
+     *  */
+    void randomizeDoubleValues(MetaData &MDin,
+                                  const MDLabel randLabel,
+                                  double rand_op1,
+                                  double rand_op2,
+                                  const std::string& mode="uniform",
+                                  double rand_op3=3.);
 
     /** @} */
     friend class MDSql;

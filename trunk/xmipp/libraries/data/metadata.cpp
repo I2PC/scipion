@@ -962,7 +962,7 @@ void MetaData::_read(const FileName &filename,
         }
         else
         {
-          id = addObject();
+            id = addObject();
             _readColumnsStar(firstData,secondData, columnValues, desiredLabels, id);
         }
         //        }
@@ -1295,20 +1295,71 @@ void MetaData::makeAbsPath(const MDLabel label)
     }
 }
 
+
+void MetaData::randomizeDoubleValues(MetaData &MDin,
+                                     const MDLabel randLabel,
+                                     double op1,
+                                     double op2,
+                                     const std::string& mode,
+                                     double op3)
+{
+    this->copyMetadata(MDin);
+    MDObject mdValue(randLabel);
+
+    // This function works just with double values, by now.
+    mdValue.labelTypeCheck(LABEL_DOUBLE);
+
+    double d;
+    if (containsLabel(randLabel))
+    {
+        if (mode == "uniform")
+        {
+            FOR_ALL_OBJECTS_IN_METADATA(*this)
+            {
+                getValue(randLabel,d,__iter.objId);
+                d += rnd_unif(op1, op2);
+                setValue(randLabel,d,__iter.objId);
+            }
+        }
+        else if (mode == "gaussian")
+        {
+            FOR_ALL_OBJECTS_IN_METADATA(*this)
+            {
+                getValue(randLabel,d,__iter.objId);
+                d += rnd_gaus(op1, op2);
+                setValue(randLabel,d,__iter.objId);
+            }
+        }
+        else if (mode == "student")
+        {
+            FOR_ALL_OBJECTS_IN_METADATA(*this)
+            {
+                getValue(randLabel,d,__iter.objId);
+                d += rnd_student_t(op3, op1, op2);
+                setValue(randLabel,d,__iter.objId);
+            }
+        }
+        else
+            REPORT_ERROR(ERR_VALUE_INCORRECT,
+                         static_cast< std::string >("AddNoise: Mode not supported (" + mode + ")"));
+
+        //firstObject();
+    }
+}
 ////////////////////////////// MetaData Iterator ////////////////////////////
 
 void MDIterator::init(const MetaData &md, const MDQuery * pQuery)
 {
-//    std::cerr << "=====> getIterator" << std::endl;
+    //    std::cerr << "=====> getIterator" << std::endl;
     objects = new std::vector<size_t>();
     md.myMDSql->selectObjects(*objects, pQuery);
-//    std::cerr << "      objects: ";
-//    for (int i = 0; i < objects->size(); i++)
- //       std::cerr << " " << objects->at(i);
-//    std::cerr << std::endl;
+    //    std::cerr << "      objects: ";
+    //    for (int i = 0; i < objects->size(); i++)
+    //       std::cerr << " " << objects->at(i);
+    //    std::cerr << std::endl;
     iter = objects->begin();
     objId = iter < objects->end() ? *iter : BAD_OBJID;
-//    std::cerr << "      objId: " << objId << std::endl;
+    //    std::cerr << "      objId: " << objId << std::endl;
 }
 
 MDIterator::MDIterator()

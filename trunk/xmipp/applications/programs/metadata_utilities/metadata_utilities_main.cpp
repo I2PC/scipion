@@ -96,6 +96,16 @@ protected:
 
         addParamsLine("or --size  <md11>              : metadata size");
 
+        addParamsLine("or --randValues  <md11> <rand_mode> : randomize double values of a label column (and creates a new metadata)");
+        //addParamsLine("       requires --label, -o;");
+        addParamsLine("   where <rand_mode>");
+        addParamsLine("     uniform  <op1=0.> <op2=1.>          : Follow a uniform distribution between op1 and op2");
+        //addParamsLine("       requires --label, -o;");
+        addParamsLine("     gaussian <op1=0.> <op2=1.>          : Follow a gaussian distribution with mean=op1 and stddev=op2");
+        //addParamsLine("       requires --label, -o;");
+        addParamsLine("     student  <op1=0.> <op2=1.> <op3=3.> : Follow a student distribution with mean=op1, stddev=op2 and op3 degrees of freedom.");
+        //addParamsLine("       requires --label, -o;");
+
         addExampleLine(" Concatenate two metadatas.", false);
         addExampleLine ("   xmipp_metadata_utilities --union         mD1.doc mD2.doc  -o out.doc --label image");
         addExampleLine(" Intersect two metadatas.", false);
@@ -118,6 +128,8 @@ protected:
         addExampleLine ("   xmipp_metadata_utilities --count mD1.doc  -o out.doc --label CTFModel");
         addExampleLine(" Metadata Size", false);
         addExampleLine ("   xmipp_metadata_utilities --size mD1.doc");
+        addExampleLine(" Metadata randomize double values", false);
+        addExampleLine ("   xmipp_metadata_utilities --randValues mD1.doc gaussian 0. 0.15 -o out.doc --label scale");
 
     }
     typedef enum {
@@ -133,7 +145,8 @@ protected:
         _sort=9,
         _convert2db=10,
         _count=11,
-        _size=12
+        _size=12,
+        _randValues=13
     } OperationType;
     OperationType operationType;
     MetaData inMD1, inMD2, outMD;
@@ -141,6 +154,9 @@ protected:
     std::string _label;
     std::string expression;
     double min,max;
+
+    double rand_op1, rand_op2, rand_op3;
+    std::string randMode;
 
     void encode(const char * s)
     {
@@ -181,6 +197,9 @@ protected:
 
         else if (strcmp(s,"size") == 0)
             operationType = _size;
+
+        else if (strcmp(s,"randValues") == 0)
+            operationType = _randValues;
     }
 
     void readParams()
@@ -269,6 +288,31 @@ protected:
         {
             encode("size");
             inFileName1 = getParam("--size",0);
+        }
+        else if (checkParam("--randValues"))
+        {
+            encode("randValues");
+            inFileName1 = getParam("--randValues",0);
+            randMode = getParam("--randValues",1);
+
+            if (randMode == "uniform")
+            {
+                rand_op1 = getDoubleParam("--randValues","uniform",0);
+                rand_op2 = getDoubleParam("--randValues","uniform",1);
+                rand_op3 = 0.;
+            }
+            else if (randMode == "gaussian")
+            {
+                rand_op1 = getDoubleParam("--randValues","gaussian",0);
+                rand_op2 = getDoubleParam("--randValues","gaussian",1);
+                rand_op3 = 0.;
+            }
+            else if (randMode == "student")
+            {
+                rand_op1 = getDoubleParam("--randValues","student",0);
+                rand_op2 = getDoubleParam("--randValues","student",1);
+                rand_op3 = getDoubleParam("--randValues","student",2);
+            }
         }
     }
 public:
@@ -378,6 +422,16 @@ public:
                 MDSql::dumpToFile(outFileName);
             }
             break;
+
+        case _randValues:
+            {
+                inMD1.read(inFileName1);
+                randomize_random_generator();
+                outMD.randomizeDoubleValues(inMD1,MDL::str2Label(_label), rand_op1, rand_op2, randMode, rand_op3);
+                outMD.write(outFileName);
+            }
+            break;
+
 
         default:
             REPORT_ERROR(ERR_ARG_INCORRECT,"Unknown operation.");
