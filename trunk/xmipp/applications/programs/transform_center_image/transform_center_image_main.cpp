@@ -35,48 +35,54 @@ public:
 
     void defineParams()
     {
+        each_image_produces_an_output = true;
         XmippMetadataProgram::defineParams();
-       addParamsLine("  [-iter <N=10>]           : Number of iterations");
-       addParamsLine("  [-limitShift]            : Limit the maximum shift allowed");
+        //usage
+        addUsageLine("Center a set of images (preferably with a good SNR, e.g., class averages).");
+        addUsageLine("After calling the program, all classes will be centered and they will tend ");
+        addUsageLine("to show the same orientation. The program centers the images by comparing ");
+        addUsageLine("the image with its X, Y, and XY mirrors. The orientation is determined by ");
+        addUsageLine("comparing the image with its X mirror. ");
+        //examples
+        addExampleLine("Center images in smallStack.stk and store results in a different file:", false);
+        addExampleLine("xmipp_transform_center_image -i smallStack.stk -o stackCentered.stk ");
+        //params
+        addParamsLine("  [--iter <n=10>]      : Number of iterations");
+        addParamsLine("  [--limit]            : Limit the maximum shift allowed");
+
     }
 
     void readParams()
     {
         XmippMetadataProgram::readParams();
-        Niter = getIntParam("-iter");
-        limitShift = checkParam("-limitShift");
+        Niter = getIntParam("--iter");
+        limitShift = checkParam("--limit");
     }
 
     void show()
     {
         XmippMetadataProgram::show();
-        std::cout << "Iterations = " << Niter << std::endl;
-        std::cout << "LimitShift = " << limitShift << std::endl;
+        std::cout << "iterations = " << Niter << std::endl;
+        std::cout << "limit shift = " << limitShift << std::endl;
     }
 
     void processImage(const FileName &fnImg, const FileName &fnImgOut, size_t objId)
     {
-      Image<double> img;
-      img.readApplyGeo(fnImg,mdIn,objId);
-      img().checkDimensionWithDebug(2,__FILE__,__LINE__);
-      centerImage(img(), Niter, limitShift);
+        Image<double> img;
+        img.readApplyGeo(fnImg, mdIn, objId);
+        img().checkDimensionWithDebug(2,__FILE__,__LINE__);
+        centerImage(img(), Niter, limitShift);
+        img.write(fnImgOut);
     }
 
-
-};///end of class ProgCenterImage
+}
+;///end of class ProgCenterImage
 
 /* MAIN -------------------------------------------------------------------- */
 int main(int argc, char *argv[])
 {
-  try
-  {
-      ProgCenterImage program;
-      program.read(argc, argv);
-      program.run();
-  }
-  catch (XmippError xe)
-  {
-      std::cerr << xe;
-  }
+    ProgCenterImage program;
+    program.read(argc, argv);
+    program.tryRun();
 }
 
