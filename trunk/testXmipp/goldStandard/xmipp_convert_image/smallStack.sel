@@ -1,0 +1,10 @@
+# XMIPP_STAR_1 * 
+# 
+data_
+loop_
+ _image
+ _enabled
+ 000000@goldStandard/xmipp_convert_image/smallStack.mrcs 1 
+ 000001@goldStandard/xmipp_convert_image/smallStack.mrcs 1 
+ 000002@goldStandard/xmipp_convert_image/smallStack.mrcs 1 
+ 000003@goldStandard/xmipp_convert_image/smallStack.mrcs 1 

@@ -57,7 +57,12 @@ protected:
         each_image_produces_an_output = true;
         save_metadata_stack = true;
         XmippMetadataProgram::defineParams();
-        addUsageLine("Convert among stacks, volumes and images, and change the file format.");
+        addUsageLine("Convert among stacks, volumes and images, and change the file format. Conversion to a lower");
+        addUsageLine("bit_depth automatically adjusts the gray level range. If it is between same bit depths and ");
+        addUsageLine("different sign, then only a histogram shift is done. If parameter --depth is not passed, then ");
+        addUsageLine("bit_depth is automatically chosen equal to or higher than input bit_depth. For stack output format, ");
+        addUsageLine("a selection file with the images in the stack is created and replicates the labels of the input sel file.");
+        //Parameters
         addParamsLine("  [--oext <extension=\"\">] :  Output file format extension.");
         addWhereImageFormat("extension");
         addParamsLine("  [--type <output_type=img>] : Output file type.");
@@ -86,6 +91,15 @@ protected:
         addParamsLine("  alias -d;");
         addParamsLine("  [--rangeAdjust] : Adjust the histogram to fill the gray level range.");
         addParamsLine("  alias -r;");
+        //Examples
+        addExampleLine("Put a selection file into a stack:",false);
+        addExampleLine("xmipp_convert_image -i list.sel -o images.stk");
+        addExampleLine("Save images in a stack as independent TIFF files in image directory with \"newimage\" basename in 8bit format:",false);
+        addExampleLine("xmipp_convert_image -i stackFile.stk -o tiffImages.sel --oroot images/newimage:tif -d uint8");
+        addExampleLine("Convert a Spider volume to a MRC stack:",false);
+        addExampleLine("xmipp_convert_image -i spider.vol -o stack.mrcs -t stk");
+        addExampleLine("Convert a selection file of 16bit TIFF images to 8bit and overwrites files and sel file:",false);
+        addExampleLine("xmipp_convert_image -i tiff16.sel -d uint8");
     }
 
     void readParams()
@@ -111,16 +125,14 @@ protected:
         if (checkParam("--depth"))
         {
             depth = getParam("--depth");
-
             outDataT = datatypeString2Int((depth == "default")? "float": depth);
-
-            if (fn_out != "")
-                fn_out += "%" + depth;
-            else
-                oext += "%" + depth;
+            depth = "%"+depth;
         }
         else
+        {
+            depth = "";
             outDataT = Float;
+        }
     }
 
     void preProcess()
@@ -183,8 +195,22 @@ protected:
         {
         case MD2MD:
             {
+                FileName tempName, _fnImgOut;
+                if (fnImg == fnImgOut)
+                {
+                  char seed[256]; sprintf(seed, "%s_tempConvert_XXXXXX", fnImgOut.c_str());
+                    tempName.initUniqueName(seed);
+                    _fnImgOut = tempName + ":" + fnImgOut.getExtension();
+                }
+                else
+                  _fnImgOut= fnImgOut;
+
                 imIn.read(fnImg,true,-1,true);
-                imIn.write(fnImgOut,-1, type == "stk",WRITE_APPEND,adjust);
+                imIn.write(_fnImgOut+depth,-1, type == "stk",WRITE_APPEND,adjust);
+
+                if ((fnImg == fnImgOut) && (rename(tempName.c_str(),fnImgOut.c_str())!=0))
+                    REPORT_ERROR(ERR_IO, "ProgConvImg:: Error renaming the file.");
+
                 break;
             }
         case MD2VOL:
@@ -196,7 +222,7 @@ protected:
         case VOL2MD:
             {
                 imIn.data->getSlice(k++,imOut->data);
-                imOut->write(fnImgOut,-1,type == "stk",WRITE_APPEND,adjust);
+                imOut->write(fnImgOut+depth,-1,type == "stk",WRITE_APPEND,adjust);
             }
         }
         mdIn.setValue(MDL_IMAGE,fnImgOut, objId); // to keep info in output metadata
@@ -208,6 +234,7 @@ protected:
         {
         case MD2VOL:
             imOut->write();
+            single_image = true;
             break;
         }
 

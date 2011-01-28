@@ -12,12 +12,12 @@ class Tester:
         if not os.path.exists(outDir):
             os.makedirs(outDir)
         cmd = "%s %s > %s/stdout.txt 2> %s/stderr.txt" % (program, arguments, outDir, outDir)
-        print "   Running command: ", cmd 
+        print "   Running command: ", cmd
         os.system(cmd)
 
-#		
+#
 # Main
-#     
+#
 import os,sys
 if __name__ == '__main__':
     if not sys.argv[1:] or len(sys.argv)<=1:
@@ -25,7 +25,7 @@ if __name__ == '__main__':
         sys.exit()
     args = sys.argv[1:]
     fnDir=args[0]
-    
+
     # Remove the output directory if it is not goldStandard
     if fnDir!='goldStandard' and fnDir!='goldStandard/':
         if os.path.exists(fnDir):
@@ -34,12 +34,15 @@ if __name__ == '__main__':
 
     # Create tester
     tester=Tester(fnDir)
-    
+
     # Test the programs -------------------------------------------
-    
+
+    program = "xmipp_convert_image"
+    tester.testProgram(program, "-i input/smallStack.stk -o %s/%s/smallStack.mrcs -t stk" % (fnDir, program))
+
     program = "xmipp_transform_add_noise"
     tester.testProgram(program, "-i input/cleanImage.spi --type gaussian 10 5 -o %s/%s/noisyGaussian.spi" % (fnDir, program))
-    
+
     program = "xmipp_transform_center_image"
     tester.testProgram(program, "-i input/smallStack.stk -o %s/%s/smallStackCentered.stk" % (fnDir, program))
 
