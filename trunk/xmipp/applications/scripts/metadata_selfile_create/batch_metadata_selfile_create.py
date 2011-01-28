@@ -90,8 +90,8 @@ for file in files:
             mD.setValue(MDL_ENABLED, 1)
             counter = counter + 1
     else:
-        mD.addObject()
-        mD.setValue(MDL_IMAGE, fileAux)
-        mD.setValue(MDL_ENABLED, 1)
+        objId=mD.addObject()
+        mD.setValue(MDL_IMAGE, fileAux, objId)
+        mD.setValue(MDL_ENABLED, 1, objId)
 
 mD.write(outFile)
