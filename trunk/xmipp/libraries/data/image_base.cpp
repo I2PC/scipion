@@ -66,7 +66,7 @@ int ImageBase::read(const FileName &name, bool readdata, int select_img, bool ma
 /** General read function
  */
 int ImageBase::readApplyGeo(const FileName &name, bool readdata, int select_img,
-                    bool only_apply_shifts, MDRow * row)
+                            bool only_apply_shifts, MDRow * row)
 {
     ImageFHandler* hFile = openFile(name);
     int err = _read(name, hFile, readdata, select_img, only_apply_shifts, row, false);
@@ -78,7 +78,7 @@ int ImageBase::readApplyGeo(const FileName &name, bool readdata, int select_img,
 /** Read an image from metadata, filename is provided
 */
 int ImageBase::readApplyGeo(const FileName &name, const MetaData &md, size_t objId, bool readdata,
-                    int select_img, bool only_apply_shifts)
+                            int select_img, bool only_apply_shifts)
 {
     ImageFHandler* hFile = openFile(name);
     MDRow row;
@@ -92,7 +92,7 @@ int ImageBase::readApplyGeo(const FileName &name, const MetaData &md, size_t obj
 /** Read an image from metadata, filename is taken from MDL_IMAGE
  */
 int ImageBase::readApplyGeo(const MetaData &md, size_t objId, bool readdata, int select_img,
-                    bool only_apply_shifts)
+                            bool only_apply_shifts)
 {
     MDRow row;
     md.getRow(row, objId);
@@ -120,11 +120,13 @@ void ImageBase::write(const FileName &name, int select_img, bool isStack,
     /* If the filename is in stack we will suppose you want to write this,
      * even if you have not set the flags to.
      */
-    if (fname.isInStack() && isStack == false && mode == WRITE_OVERWRITE)
+    if ( fname.isInStack() && !isStack && mode == WRITE_OVERWRITE)
     {
         isStack = true;
         mode = WRITE_APPEND;
     }
+    else if (!isStack && mode != WRITE_OVERWRITE)
+        mode = WRITE_OVERWRITE;
 
     ImageFHandler* hFile = openFile(fname, mode);
     _write(fname, hFile, select_img, isStack, mode, adjust);
