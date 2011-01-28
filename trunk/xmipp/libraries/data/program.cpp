@@ -406,7 +406,7 @@ int XmippProgram::version() const
 void XmippProgram::runProgram(XmippProgram * program, const String &arguments, bool destroy)
 {
     program->read(arguments);
-    program->run();
+    program->tryRun();
     if (destroy)
         delete program;
 }

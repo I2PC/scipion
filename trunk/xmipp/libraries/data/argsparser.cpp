@@ -25,6 +25,7 @@
 
 #include "argsparser.h"
 #include "filename.h"
+#include "program.h"
 
 //-------------------   LEXER IMPLEMENTATIONS --------------------------------
 
@@ -1180,7 +1181,7 @@ TkPrinter::~TkPrinter()
 void TkPrinter::printProgram(const ProgramDef &program, int v)
 {
     //    *pOut << "PROGRAM" << std::endl << "   " << program.name << std::endl;
-    fprintf(output, "XMIPP 3.0 - %s\n", program.name.c_str());
+    fprintf(output, "XMIPP %d.%d - %s\n", XMIPP_MAJOR, XMIPP_MINOR, program.name.c_str());
     //Send number of usage lines
     fprintf(output, "%d\n", program.usageComments.size());
 
@@ -1289,7 +1290,7 @@ WikiPrinter::WikiPrinter(std::ostream & out)
 void WikiPrinter::printProgram(const ProgramDef &program, int v)
 {
     //print program name and usage
-    *pOut << "---+ !!" << program.name << " (v3.0)" << std::endl;
+    *pOut << "---+ !!" << program.name << " (v" << XMIPP_MAJOR <<"." << XMIPP_MINOR << ")" << std::endl;
     *pOut << "%TOC%" << std::endl;
     //print usage
     if (program.usageComments.size() > 0)
@@ -1304,7 +1305,7 @@ void WikiPrinter::printProgram(const ProgramDef &program, int v)
       StringVector links;
       splitString(program.seeAlso, ",", links);
       for (int i = 0; i < links.size(); ++i)
-        *pOut << "[[" << links[i] << "][" << links[i] <<"]]  ";
+        *pOut << "[[" << links[i] << "_v" << XMIPP_MAJOR << "][" << links[i] <<"]]  ";
       *pOut << "%BR%" << std::endl;
     }
     //print sections and params
