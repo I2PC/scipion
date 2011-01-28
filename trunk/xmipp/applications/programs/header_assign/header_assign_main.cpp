@@ -70,15 +70,15 @@ protected:
 
     void postProcess()
     {
-    	if(fn_in != fn_out)
-    		mdIn.write(fn_out,mode);
+        if(fn_in != fn_out)
+            mdIn.write(fn_out,mode);
     }
 
     void processImage(const FileName &fnImg, const FileName &fnImgOut, size_t objId)
     {
 
         Image<double> img;
-        img.readApplyGeo(fnImg,mdIn,objId);
+        img.read(fnImg);
         for (int iter = 0; iter < labelsnumber; iter++)
         {
             switch (activeLabels[iter])
@@ -128,7 +128,6 @@ protected:
             }
         }
         img.write(fnImg);
-
     }
 }
 ;// end of class ProgHeaderAssign
@@ -136,16 +135,9 @@ protected:
 /* MAIN -------------------------------------------------------------------- */
 int main(int argc, char *argv[])
 {
-    try
-    {
-        ProgHeaderAssign program;
-        program.read(argc, argv);
-        program.run();
-    }
-    catch (XmippError xe)
-    {
-        std::cerr << xe;
-    }
+    ProgHeaderAssign program;
+    program.read(argc, argv);
+    program.tryRun();
 }
 
 
