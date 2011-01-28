@@ -252,7 +252,7 @@ void FileName::initUniqueName(const char *templateStr)
 
     if ((fd = mkstemp(filename)) == -1)
     {
-        perror("FileTaskDistributor::Error generating tmp lock file");
+        perror("FileName::Error generating tmp lock file");
         exit(1);
     }
     close(fd);
