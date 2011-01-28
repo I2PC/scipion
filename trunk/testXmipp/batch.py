@@ -1,15 +1,19 @@
 #!/usr/bin/env python
 class Tester:
-    def __init__(self,fnDir):
-        self.fnDir=fnDir
+    def __init__(self, fnDir):
+        self.fnDir = fnDir
 
-    def testProgram(self,program,arguments):
-        print "Testing "+program
-        if not os.path.exists(self.fnDir+"/"+program):
-            os.makedirs(self.fnDir+"/"+program)
-        os.system(program+" "+arguments+\
-            " > "+self.fnDir+"/"+program+"/stdout.txt 2>"+\
-            self.fnDir+"/"+program+"/stderr.txt")
+    def testProgram(self, program, arguments):
+        import os
+        print "------------------------------------------------------------------------------------"
+        print ">>> Testing " + program
+        outDir = os.path.join(self.fnDir, program)
+        print "   Making output directory: ", outDir
+        if not os.path.exists(outDir):
+            os.makedirs(outDir)
+        cmd = "%s %s > %s/stdout.txt 2> %s/stderr.txt" % (program, arguments, outDir, outDir)
+        print "   Running command: ", cmd 
+        os.system(cmd)
 
 #		
 # Main
@@ -30,8 +34,14 @@ if __name__ == '__main__':
 
     # Create tester
     tester=Tester(fnDir)
+    
+    # Test the programs -------------------------------------------
+    
+    program = "xmipp_transform_add_noise"
+    tester.testProgram(program, "-i input/cleanImage.spi --type gaussian 10 5 -o %s/%s/noisyGaussian.spi" % (fnDir, program))
+    
+    program = "xmipp_transform_center_image"
+    tester.testProgram(program, "-i input/smallStack.stk -o %s/%s/smallStackCentered.stk" % (fnDir, program))
 
-    # Test the programs
-    program="xmipp_xray_psf_create"
-    tester.testProgram(program,
-        "-i input/xray_psf.xmd -o "+fnDir+"/"+program+"/psf.vol")
+    program = "xmipp_xray_psf_create"
+    tester.testProgram(program, "-i input/xray_psf.xmd -o %s/%s/psf.vol" % (fnDir, program))
