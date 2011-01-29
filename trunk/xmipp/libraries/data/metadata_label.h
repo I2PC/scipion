@@ -570,7 +570,7 @@ public:
 ; //close class MDValue
 
 /** Explicit instantiation */
-#ifndef __MACOSX__
+#ifndef __APPLE__
 template class std::vector<MDObject *>;
 #endif
 
