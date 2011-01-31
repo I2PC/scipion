@@ -1297,7 +1297,7 @@ void WikiPrinter::printProgram(const ProgramDef &program, int v)
     {
         *pOut << "---++ Usage" << std::endl;
         for (size_t i = 0; i < program.usageComments.size(); ++i)
-            *pOut << "   " << program.usageComments.comments[i] << " %BR%" << std::endl;
+            *pOut << "   " << program.usageComments.comments[i] << std::endl;
     }
     if (!program.seeAlso.empty())
     {
@@ -1350,7 +1350,8 @@ void WikiPrinter::printProgram(const ProgramDef &program, int v)
 
 void WikiPrinter::printSection(const SectionDef &section, int v)
 {
-    if (section.visible <= v)
+    if (section.name != " Common options "
+         && section.visible <= v)
     {
         *pOut << std::endl;
         String name = section.name;

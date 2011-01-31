@@ -265,17 +265,17 @@ void XmippProgram::addParamsLine(const char * line)
 void XmippProgram::addImageFormatParam()
 {
     addParamsLine(" -i <input_file>   : Input file: metadata, stack, volume or image.");
-    addParamsLine("         :+ Supported read formats are:");
-    addParamsLine("         :+ dm3 : Digital Micrograph 3.");
-    addParamsLine("         :+ img : Imagic.");
-    addParamsLine("         :+ inf,raw : RAW file with header INF file.");
-    addParamsLine("         :+ mrc : CCP4.");
-    addParamsLine("         :+ spe : Princeton Instruments CCD camera.");
-    addParamsLine("         :+ spi, xmp : Spider.");
-    addParamsLine("         :+ tif : TIFF.");
-    addParamsLine("         :+ ser : tecnai imaging and analysis.");
-    addParamsLine("         :+ raw#xDim,yDim,[zDim],offset,datatype,[r] : RAW image file without header file.");
-    addParamsLine("         :+ where datatype can be: uint8,int8,uint16,int16,uint32,int32,long,float,double,cint16,cint32,cfloat,cdouble,bool");
+    addParamsLine("         :++ Supported read formats are:");
+    addParamsLine("         :++ dm3 : Digital Micrograph 3.");
+    addParamsLine("         :++ img : Imagic.");
+    addParamsLine("         :++ inf,raw : RAW file with header INF file.");
+    addParamsLine("         :++ mrc : CCP4.");
+    addParamsLine("         :++ spe : Princeton Instruments CCD camera.");
+    addParamsLine("         :++ spi, xmp : Spider.");
+    addParamsLine("         :++ tif : TIFF.");
+    addParamsLine("         :++ ser : tecnai imaging and analysis.");
+    addParamsLine("         :++ raw#xDim,yDim,[zDim],offset,datatype,[r] : RAW image file without header file.");
+    addParamsLine("         :++ where datatype can be: uint8,int8,uint16,int16,uint32,int32,long,float,double,cint16,cint32,cfloat,cdouble,bool");
     addParamsLine(" alias --input;");
 }
 
