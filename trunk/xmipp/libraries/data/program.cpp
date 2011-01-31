@@ -439,7 +439,7 @@ void XmippMetadataProgram::defineParams()
         //        addParamsLine("  [--oext <extension=\"\">] :  Output file format extension.");
         //        addExtensionWhere("extension");
         addParamsLine("  [--oroot <root=\"\">]     : Rootname of output individual images.");
-        addParamsLine("                            : Output extension can be passed adding \":ext\" after rootname.");
+        addParamsLine("                            : Output image format can be set adding extension after rootname as \":ext\".");
     }
     else if (produces_an_output)
     {
