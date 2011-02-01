@@ -246,10 +246,10 @@ void applyGeometry(int SplineDegree,
     if (&V1 == (MultidimArray<T1>*)&V2)
         REPORT_ERROR(ERR_VALUE_INCORRECT,"ApplyGeometry: Input array cannot be the same as output array");
 
-    if ( V1.getDim()==2 && ((MAT_XSIZE(A) != 3) || (MAT_YSIZE(A) != 3)) )
-        REPORT_ERROR(ERR_MATRIX_SIZE,"ApplyGeometry: 2D transformation matrix is not 3x3");
+    if ( V1.getDim() < 2 || V1.getDim() > 3)
+        REPORT_ERROR(ERR_MATRIX_SIZE,"ApplyGeometry: can only work in 2D or 3D space");
 
-    if ( V1.getDim()==3 && ((MAT_XSIZE(A) != 4) || (MAT_YSIZE(A) != 4)) )
+    if ( MAT_XSIZE(A) != 4 || MAT_YSIZE(A) != 4 )
         REPORT_ERROR(ERR_MATRIX_SIZE,"ApplyGeometry: 3D transformation matrix is not 4x4");
 
     if (A.isIdentity())
@@ -345,8 +345,8 @@ void applyGeometry(int SplineDegree,
             // geometrical transformation
             // they are related by
             // coords_output(=x,y) = A * coords_input (=xp,yp)
-            xp = x * MAT_ELEM(Aref, 0, 0) + y * MAT_ELEM(Aref, 0, 1) + MAT_ELEM(Aref, 0, 2);
-            yp = x * MAT_ELEM(Aref, 1, 0) + y * MAT_ELEM(Aref, 1, 1) + MAT_ELEM(Aref, 1, 2);
+            xp = x * MAT_ELEM(Aref, 0, 0) + y * MAT_ELEM(Aref, 0, 1) + MAT_ELEM(Aref, 0, 3);
+            yp = x * MAT_ELEM(Aref, 1, 0) + y * MAT_ELEM(Aref, 1, 1) + MAT_ELEM(Aref, 1, 3);
 
             for (int j = 0; j < XSIZE(V2); j++)
             {

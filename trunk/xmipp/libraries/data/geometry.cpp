@@ -863,17 +863,18 @@ void Euler_apply_transf(const Matrix2D<double> &L,
     Euler_matrix2angles(temp, newrot, newtilt, newpsi);
 }
 
-/* Rotate (3D) MultidimArray with 3 Euler angles ------------------------------------- */
-void Euler_rotation3DMatrix(double rot, double tilt, double psi, Matrix2D<double> &result)
-{
-    Euler_angles2matrix(rot, tilt, psi, result, true);
-}
 
+//void Euler_rotation3DMatrix(double rot, double tilt, double psi, Matrix2D<double> &result)
+//{
+//    Euler_angles2matrix(rot, tilt, psi, result, true);
+//}
+
+/* Rotate (3D) MultidimArray with 3 Euler angles ------------------------------------- */
 void Euler_rotate(const MultidimArray<double> &V, double rot, double tilt, double psi,
                   MultidimArray<double> &result)
 {
 	Matrix2D<double> R;
-	Euler_rotation3DMatrix(rot, tilt, psi,R);
+	Euler_angles2matrix(rot, tilt, psi, R, true);
     applyGeometry(1, result, V, R, IS_NOT_INV, DONT_WRAP);
 }
 
@@ -888,14 +889,14 @@ void computeCircleAroundE(const Matrix2D<double> &E,
     E.getRow(1,perpendicular);
     E.getRow(2,projectionDirection);
     Matrix2D<double> newEt;
-    newEt=E.transpose();
+    newEt = E.transpose();
     Matrix2D<double> rotStep, sampling;
     rotation3DMatrix(angCircle,perpendicular,rotStep,false);
     rotation3DMatrix(angStep,projectionDirection,sampling,false);
 
     // Now rotate
-    newEt=rotStep*newEt;
-    for (double i=0; i<360; i+=angStep)
+    newEt = rotStep*newEt;
+    for (double i = 0; i < 360; i += angStep)
     {
         newEt=sampling*newEt;
 

@@ -739,7 +739,7 @@ void ProgMLTomo::generateInitialReferences()
             }
 
 
-            Euler_rotation3DMatrix(my_rot, my_tilt, my_psi, my_A);
+            Euler_angles2matrix(my_rot, my_tilt, my_psi, my_A, true);
             selfApplyGeometry(LINEAR, Itmp(), my_A, IS_NOT_INV, DONT_WRAP, 0.);
 
             int iran_fsc = ROUND(rnd_unif());
@@ -976,7 +976,7 @@ void ProgMLTomo::produceSideInfo2(int nr_vols)
                 myinfo.tilt = DL[1];
                 myinfo.psi = DL[2];
             }
-            Euler_rotation3DMatrix(myinfo.rot, myinfo.tilt, myinfo.psi, myinfo.A);
+            Euler_angles2matrix(myinfo.rot, myinfo.tilt, myinfo.psi, myinfo.A, true);
             myinfo.direction = nr_ang;
             all_angle_info.push_back(myinfo);
             nr_ang ++;
@@ -1015,7 +1015,7 @@ void ProgMLTomo::produceSideInfo2(int nr_vols)
                     myinfo.tilt = tilt;
                     myinfo.psi = psi;
                 }
-                Euler_rotation3DMatrix(myinfo.rot, myinfo.tilt, myinfo.psi, myinfo.A);
+                Euler_angles2matrix(myinfo.rot, myinfo.tilt, myinfo.psi, myinfo.A, true);
                 myinfo.direction = i;
                 all_angle_info.push_back(myinfo);
                 nr_ang ++;
@@ -1091,7 +1091,7 @@ void ProgMLTomo::produceSideInfo2(int nr_vols)
             // that will be affected by the interpolation due to rotation
             // This makes that the A2 values of the rotated references are much less sensitive to rotation
             Matrix2D<double> E_rot;
-            Euler_rotation3DMatrix(32., 61., 53., E_rot);
+            Euler_angles2matrix(32., 61., 53., E_rot, true);
             selfApplyGeometry(LINEAR, img(), E_rot, IS_NOT_INV,
                               DONT_WRAP, DIRECT_MULTIDIM_ELEM(img(), 0) );
             selfApplyGeometry(LINEAR, img(), E_rot, IS_INV,
@@ -1175,7 +1175,7 @@ void ProgMLTomo::perturbAngularSampling()
     ran1 = rnd_gaus(0., angular_sampling/3.);
     ran2 = rnd_gaus(0., angular_sampling/3.);
     ran3 = rnd_gaus(0., angular_sampling/3.);
-    Euler_rotation3DMatrix(ran1, ran2, ran3, R);
+    Euler_angles2matrix(ran1, ran2, ran3, R, true);
     R.resize(3,3);
 
     //#define DEBUG_PERTURB
@@ -1193,9 +1193,9 @@ void ProgMLTomo::perturbAngularSampling()
                            all_angle_info[angno].rot,
                            all_angle_info[angno].tilt,
                            all_angle_info[angno].psi);
-        Euler_rotation3DMatrix(all_angle_info[angno].rot,
+        Euler_angles2matrix(all_angle_info[angno].rot,
                                all_angle_info[angno].tilt,
-                               all_angle_info[angno].psi, all_angle_info[angno].A);
+                               all_angle_info[angno].psi, all_angle_info[angno].A, true);
     }
 
 }

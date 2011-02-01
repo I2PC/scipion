@@ -820,8 +820,8 @@ void Euler_apply_transf(const Matrix2D< double >& L,
  * Matrix2D< float > euler = Euler_rotation3DMatrix(60, 30, 60);
  * @endcode
  */
-void Euler_rotation3DMatrix(double rot, double tilt, double psi,
-                            Matrix2D<double> &result);
+//void Euler_rotation3DMatrix(double rot, double tilt, double psi,
+//                            Matrix2D<double> &result);
 
 /** Rotate a volume after 3 Euler angles
  *

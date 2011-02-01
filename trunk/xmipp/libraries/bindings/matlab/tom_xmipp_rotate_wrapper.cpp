@@ -50,7 +50,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray*prhs[])
     /*mode: 1 euler, 2 align_with_Z, 3 axis, 4 tform*/
     switch ((int)mxGetScalar(prhs[3])) {
         case 1:
-            A3D = Euler_rotation3DMatrix(angs[0], angs[1], angs[2]);
+            A3D = Euler_angles2matrix(angs[0], angs[1], angs[2], true);
             break;
         case 2:
             A3D = alignWithZ(axis);
