@@ -26,7 +26,7 @@
 #ifndef MACROS_H
 #define MACROS_H
 
-#ifndef _CYGWIN
+#ifndef __CYGWIN__
 #ifdef __APPLE__
 #include <limits.h>
 #else
