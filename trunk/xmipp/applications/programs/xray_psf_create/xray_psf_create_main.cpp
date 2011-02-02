@@ -46,7 +46,7 @@ protected:
         addSeeAlsoLine("xray_project");
         addParamsLine("[-i <psf_param_file>] : XRay-Microscope parameters file.");
         addParamsLine(" alias --input;");
-        addParamsLine("-o <output_file>         : PSF Image file.");
+        addParamsLine("-o <output_name_file>  : Name for output files. It creates a PSF volume file and a PSF parameters file.");
         addParamsLine(" alias --output;");
         psf.defineParams(this);
         addExampleLine("The parameters are in a file",false);

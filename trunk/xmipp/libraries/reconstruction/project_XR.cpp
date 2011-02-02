@@ -26,77 +26,158 @@
 #include "project_XR.h"
 #include <data/psf_xr.h>
 
-void ProgProjectXR::defineParams()
+void ProgXrayProject::defineParams()
 {
     addUsageLine("Generate projections as in a X-ray microscope from a 3D Xmipp volume.");
-    addParamsLine(" -i <Proj_param_file>   :MetaData file with projection parameters.");
-    addParamsLine("                         :Check the manual for a description of the parameters.");
-    addParamsLine(" alias --input;");
-    addParamsLine("[-psf <psf_param_file=\"\">] : XRay-Microscope parameters file. If not set, then default parameters are chosen.");
-    addParamsLine("[-o <sel_file=\"\">]         : Output Metadata file with all the generated projections.");
-    addParamsLine("[-show_angles]          : Print angles value for each projection.");
-    addParamsLine("[-only_create_angles]   : Projections are not calculated, only the angles values.");
-    addParamsLine("[-thr <threads=1>]      : Number of concurrent threads.");
+    addSeeAlsoLine("xray_psf_create, xray_import");
+
+    //Params
+    projParam.defineParams(this); // Projection parameters
+    addParamsLine(" [--sampling <value>]    : Sampling rate of the volume to be projected (nm).");
+    addParamsLine("                         : If empty, same value as X-Y plane sampling from PSF.");
+    addParamsLine("[--psf <psf_param_file=\"\">] : XRay-Microscope parameters file. If not set, then default parameters are chosen.");
+    addParamsLine("[--show_angles]          : Print angles value for each projection.");
+    addParamsLine("[--only_create_angles]   : Projections are not calculated, only the angles values.");
+    addParamsLine("[--thr <threads=1>]      : Number of concurrent threads.");
 }
 
 /* Read from command line ================================================== */
-void ProgProjectXR::readParams()
+void ProgXrayProject::readParams()
 {
-    fn_proj_param = getParam("-i");
-    fn_sel_file   = getParam("-o");
-    fn_psf_xr   = getParam("-psf");
+    //    fn_proj_param = getParam("-i");
+    //    fn_sel_file   = getParam("-o");
+    projParam.readParams(this);
 
-    only_create_angles = checkParam("-only_create_angles");
-    verbose = getParam("-v");
-    nThr = getIntParam("-thr");
-    tell=0;
-    if (checkParam("-show_angles"))
-        tell |= TELL_SHOW_ANGLES;
+    fn_psf_xr = getParam("--psf");
+    dxo  = (checkParam("--sampling"))? getDoubleParam("--sampling")*1e-9 : -1 ;
+    nThr = getIntParam("--thr");
+
+    psf.read(fn_psf_xr);
+    psf.verbose = verbose;
+    psf.nThr = nThr;
+
+    tell = show_angles = checkParam("--show_angles");
+    projParam.tell = tell;
+    only_create_angles = checkParam("--only_create_angles");
 }
 
 
-void ProgProjectXR::run()
+void ProgXrayProject::run()
 {
-    Projection         proj;
-    MetaData           SF;
+    Projection   proj;
+    MetaData     projMD;
 
     randomize_random_generator();
 
-    // Read Microscope optics parameters and produce side information
-    XRayPSF psf;
-    psf.verbose = verbose;
-    psf.nThr = nThr;
-    psf.read(fn_psf_xr);
-    psf.produceSideInfo();
-    if(psf.verbose)
-        psf.show();
+    psf.produceSideInfo(dxo);
+    //    if(psf.verbose)
+    //        psf.show();
 
 
-    // Read projection parameters and produce side information
-    ParametersProjectionXR proj_prm;
-    proj_prm.read(fn_proj_param);
-    proj_prm.tell=tell;
-    PROJECT_XR_Side_Info side;
-    side.produce_Side_Info(proj_prm);
+    XrayProjPhantom phantom;
+    phantom.read(projParam);
 
-
-    //    psf.adjustParam(side.phantomVol);
 
     // Project
-    int ProjNo = 0;
-    if (!only_create_angles)
+
+
+    // Threads stuff
+    XrayThread *dataThread = new XrayThread;
+
+    dataThread->psf= &psf;
+    dataThread->vol = &phantom.rotVol;
+    dataThread->imOut = &proj;
+
+    longint blockSize, numberOfJobs = ZSIZE(MULTIDIM_ARRAY(phantom.iniVol));
+    numberOfThreads = psf.nThr;
+
+    blockSize = (numberOfThreads == 1) ? numberOfJobs : numberOfJobs/numberOfThreads/2;
+
+    //Create the job handler to distribute thread jobs
+    td = new ThreadTaskDistributor(numberOfJobs, blockSize);
+    barrier = new Barrier(numberOfThreads-1);
+
+    //Create threads to start working
+    thMgr = new ThreadManager(numberOfThreads,(void*) dataThread);
+
+    int expectedNumProjs = FLOOR((projParam.tiltF-projParam.tilt0)/projParam.tiltStep);
+    int numProjs=0;
+
+    std::cerr << "Projecting ...\n";
+    if (!(show_angles))
+        init_progress_bar(expectedNumProjs);
+
+    projMD.setComment("True rot, tilt and psi; rot, tilt, psi, X and Y shifts applied");
+    double tRot,tTilt,tPsi,rot,tilt,psi;
+    FileName fn_proj;  // Projection name
+    int idx = 0;
+
+    for (double angle=projParam.tilt0; angle<=projParam.tiltF; angle+=projParam.tiltStep)
     {
-        // Really project
-        ProjNo = PROJECT_XR_Effectively_project(proj_prm, side,
-                                                proj, psf, SF);
-        // Save SelFile
-        if (fn_sel_file != "")
-            SF.write(fn_sel_file);
+        fn_proj.compose(idx, projParam.fnProjectionSeed);
+
+        // Choose Center displacement ........................................
+        double shiftX = rnd_gaus(projParam.Ncenter_avg, projParam.Ncenter_dev);
+        double shiftY = rnd_gaus(projParam.Ncenter_avg, projParam.Ncenter_dev);
+        Matrix1D<double> inPlaneShift(3);
+        VECTOR_R3(inPlaneShift,shiftX,shiftY,0);
+
+        projParam.calculateProjectionAngles(proj,angle, 0,inPlaneShift);
+
+        //Reset thread task distributor
+        td->clear();
+
+        // Really project ....................................................
+        if (!only_create_angles)
+            project_xr_Volume_offCentered(phantom, psf, proj,projParam.proj_Ydim, projParam.proj_Xdim, idx);
+
+        // Add noise in angles and voxels ....................................
+        proj.getEulerAngles(tRot, tTilt,tPsi);
+
+        rot  = tRot  + rnd_gaus(projParam.Nangle_avg,  projParam.Nangle_dev);
+        tilt = tTilt + rnd_gaus(projParam.Nangle_avg,  projParam.Nangle_dev);
+        psi  = tPsi  + rnd_gaus(projParam.Nangle_avg,  projParam.Nangle_dev);
+
+        proj.setEulerAngles(rot,tilt,psi);
+
+        size_t objId = projMD.addObject();
+        if (!only_create_angles)
+        {
+            proj.write(fn_proj, -1, true, WRITE_REPLACE);
+            projMD.setValue(MDL_IMAGE,fn_proj,objId);
+        }
+        projMD.setValue(MDL_ANGLEROT,tRot,objId);
+        projMD.setValue(MDL_ANGLETILT,tTilt,objId);
+        projMD.setValue(MDL_ANGLEPSI,tPsi,objId);
+        projMD.setValue(MDL_ANGLEROT2,rot,objId);
+        projMD.setValue(MDL_ANGLETILT2,tilt,objId);
+        projMD.setValue(MDL_ANGLEPSI2,psi,objId);
+        projMD.setValue(MDL_SHIFTX,shiftX,objId);
+        projMD.setValue(MDL_SHIFTY,shiftY,objId);
+
+        IMGMATRIX(proj).addNoise(projParam.Npixel_avg, projParam.Npixel_dev, "gaussian");
+
+        // Save ..............................................................
+        if (show_angles)
+            std::cout << idx << "\t" << proj.rot() << "\t"
+            << proj.tilt() << "\t" << proj.psi() << std::endl;
+        else if ((expectedNumProjs % XMIPP_MAX(1, numProjs / 60))  == 0)
+            progress_bar(numProjs);
+
+        numProjs++;
+        idx++;
     }
-    else
-    {
-        side.DF.write("/dev/stdout");
-    }
+    if (!(show_angles))
+        progress_bar(expectedNumProjs);
+
+    // Save metadata file with angles and shift info
+    projMD.write(projParam.fnProjectionSeed.withoutExtension()+ ".sel");
+
+    //Terminate threads and free memory
+    delete td;
+    delete thMgr;
+    delete barrier;
+
     return;
 }
 
@@ -117,23 +198,23 @@ void ParametersProjectionXR::calculateProjectionAngles(Projection &P, double ang
     P.set_angles(rot, tilt, psi);
 
     // Find displacement because of axis offset and inplane shift
-    Matrix1D<double> roffset=Rinplane*(raxis-Raxis*raxis)+rinplane;
+    Matrix1D<double> roffset = Rinplane*(raxis-Raxis*raxis) + rinplane;
 
     P.setShifts(XX(roffset), YY(roffset), ZZ(roffset));
 }
 
 /* Produce Side Information ================================================ */
-void PROJECT_XR_Side_Info::produce_Side_Info(
+void XrayProjPhantom::read(
     const ParametersProjectionXR &prm)
 {
-    phantomVol.read(prm.fnPhantom);
-    phantomVol().setXmippOrigin();
-    rotPhantomVol = phantomVol;
+    iniVol.read(prm.fnPhantom);
+    MULTIDIM_ARRAY(iniVol).setXmippOrigin();
+    rotVol.resizeNoCopy(MULTIDIM_ARRAY(iniVol));
 }
 
 /* Effectively project ===================================================== */
-int PROJECT_XR_Effectively_project(ParametersProjectionXR &prm,
-                                   PROJECT_XR_Side_Info &side,
+int PROJECT_XR_Effectively_project(ParametersProjectionXR &projParam,
+                                   XrayProjPhantom &side,
                                    Projection &proj,
                                    XRayPSF &psf,
                                    MetaData &SF)
@@ -144,10 +225,10 @@ int PROJECT_XR_Effectively_project(ParametersProjectionXR &prm,
     XrayThread *dataThread = new XrayThread;
 
     dataThread->psf= &psf;
-    dataThread->vol = &side.rotPhantomVol;
+    dataThread->vol = &side.rotVol;
     dataThread->imOut = &proj;
 
-    longint blockSize, numberOfJobs= side.phantomVol().zdim;
+    longint blockSize, numberOfJobs= side.iniVol().zdim;
     numberOfThreads = psf.nThr;
 
     blockSize = (numberOfThreads == 1) ? numberOfJobs : numberOfJobs/numberOfThreads/2;
@@ -159,11 +240,11 @@ int PROJECT_XR_Effectively_project(ParametersProjectionXR &prm,
     //Create threads to start working
     thMgr = new ThreadManager(numberOfThreads,(void*) dataThread);
 
-    int expectedNumProjs = FLOOR((prm.tiltF-prm.tilt0)/prm.tiltStep);
+    int expectedNumProjs = FLOOR((projParam.tiltF-projParam.tilt0)/projParam.tiltStep);
     int numProjs=0;
 
     std::cerr << "Projecting ...\n";
-    if (!(prm.tell&TELL_SHOW_ANGLES))
+    if (!(projParam.tell))
         init_progress_bar(expectedNumProjs);
 
     SF.clear();
@@ -171,33 +252,33 @@ int PROJECT_XR_Effectively_project(ParametersProjectionXR &prm,
     DF_movements.setComment("True rot, tilt and psi; rot, tilt, psi, X and Y shifts applied");
     double tRot,tTilt,tPsi,rot,tilt,psi;
 
-    int idx=prm.starting;
-    for (double angle=prm.tilt0; angle<=prm.tiltF; angle+=prm.tiltStep)
+    //    int idx=projParam.starting;
+    int idx = 0;
+    for (double angle=projParam.tilt0; angle<=projParam.tiltF; angle+=projParam.tiltStep)
     {
         FileName fn_proj;              // Projection name
-        fn_proj.compose(prm.fnProjectionSeed, idx,
-                        prm.fn_projection_extension);
+        fn_proj.compose(idx, projParam.fnProjectionSeed);
 
         // Choose Center displacement ........................................
-        double shiftX     = rnd_gaus(prm.Ncenter_avg, prm.Ncenter_dev);
-        double shiftY    = rnd_gaus(prm.Ncenter_avg, prm.Ncenter_dev);
+        double shiftX     = rnd_gaus(projParam.Ncenter_avg, projParam.Ncenter_dev);
+        double shiftY    = rnd_gaus(projParam.Ncenter_avg, projParam.Ncenter_dev);
         Matrix1D<double> inPlaneShift(3);
         VECTOR_R3(inPlaneShift,shiftX,shiftY,0);
 
-        prm.calculateProjectionAngles(proj,angle, 0,inPlaneShift);
+        projParam.calculateProjectionAngles(proj,angle, 0,inPlaneShift);
 
         //Reset thread task distributor
         td->clear();
 
         // Really project ....................................................
-        project_xr_Volume_offCentered(side, psf, proj,prm.proj_Ydim, prm.proj_Xdim, idx);
+        project_xr_Volume_offCentered(side, psf, proj,projParam.proj_Ydim, projParam.proj_Xdim, idx);
 
         // Add noise in angles and voxels ....................................
         proj.getEulerAngles(tRot, tTilt,tPsi);
 
-        rot  = tRot  + rnd_gaus(prm.Nangle_avg,  prm.Nangle_dev);
-        tilt = tTilt + rnd_gaus(prm.Nangle_avg,  prm.Nangle_dev);
-        psi  = tPsi  + rnd_gaus(prm.Nangle_avg,  prm.Nangle_dev);
+        rot  = tRot  + rnd_gaus(projParam.Nangle_avg,  projParam.Nangle_dev);
+        tilt = tTilt + rnd_gaus(projParam.Nangle_avg,  projParam.Nangle_dev);
+        psi  = tPsi  + rnd_gaus(projParam.Nangle_avg,  projParam.Nangle_dev);
 
         proj.setEulerAngles(rot,tilt,psi);
 
@@ -211,10 +292,10 @@ int PROJECT_XR_Effectively_project(ParametersProjectionXR &prm,
         DF_movements.setValue(MDL_SHIFTX,shiftX,objId);
         DF_movements.setValue(MDL_SHIFTY,shiftY,objId);
 
-        IMGMATRIX(proj).addNoise(prm.Npixel_avg, prm.Npixel_dev, "gaussian");
+        IMGMATRIX(proj).addNoise(projParam.Npixel_avg, projParam.Npixel_dev, "gaussian");
 
         // Save ..............................................................
-        if (prm.tell&TELL_SHOW_ANGLES)
+        if (projParam.tell)
             std::cout << idx << "\t" << proj.rot() << "\t"
             << proj.tilt() << "\t" << proj.psi() << std::endl;
         else if ((expectedNumProjs % XMIPP_MAX(1, numProjs / 60))  == 0)
@@ -227,10 +308,10 @@ int PROJECT_XR_Effectively_project(ParametersProjectionXR &prm,
         SF.setValue(MDL_IMAGE,fn_proj,objId);
         SF.setValue(MDL_ENABLED,1,objId);
     }
-    if (!(prm.tell&TELL_SHOW_ANGLES))
+    if (!(projParam.tell))
         progress_bar(expectedNumProjs);
 
-    DF_movements.write(prm.fnProjectionSeed + "_movements.txt");
+    DF_movements.write(projParam.fnProjectionSeed + "_movements.txt");
 
     //Terminate threads and free memory
     delete td;
@@ -240,16 +321,16 @@ int PROJECT_XR_Effectively_project(ParametersProjectionXR &prm,
     return numProjs;
 }
 
-void project_xr_Volume_offCentered(PROJECT_XR_Side_Info &side, XRayPSF &psf, Projection &P,
+void project_xr_Volume_offCentered(XrayProjPhantom &phantom, XRayPSF &psf, Projection &P,
                                    int Ydim, int Xdim, int idxSlice)
 {
 
     int iniXdim, iniYdim, iniZdim, newXdim, newYdim;
     int xOffsetN, yOffsetN, zinit, zend, yinit, yend, xinit, xend;
 
-    iniXdim = side.phantomVol().xdim;
-    iniYdim = side.phantomVol().ydim;
-    iniZdim = side.phantomVol().zdim;
+    iniXdim = XSIZE(MULTIDIM_ARRAY(phantom.iniVol));
+    iniYdim = YSIZE(MULTIDIM_ARRAY(phantom.iniVol));
+    iniZdim = ZSIZE(MULTIDIM_ARRAY(phantom.iniVol));
 
     // Projection offset in pixels
     xOffsetN = P.Xoff()/psf.dxo;
@@ -258,32 +339,40 @@ void project_xr_Volume_offCentered(PROJECT_XR_Side_Info &side, XRayPSF &psf, Pro
     newXdim = iniXdim + 2*ABS(xOffsetN);
     newYdim = iniYdim + 2*ABS(yOffsetN);
 
-    zinit = side.phantomVol().zinit;
+    zinit = STARTINGZ(MULTIDIM_ARRAY(phantom.iniVol));
     zend = zinit + iniZdim - 1;
 
     if (yOffsetN<=0)
-        yinit = side.phantomVol().yinit ;
+        yinit = STARTINGY(MULTIDIM_ARRAY(phantom.iniVol));
     else
-        yinit = side.phantomVol().yinit - 2 * yOffsetN;
+        yinit = STARTINGY(MULTIDIM_ARRAY(phantom.iniVol)) - 2 * yOffsetN;
 
     yend = yinit + newYdim -1;
 
     if (xOffsetN<=0)
-        xinit = side.phantomVol().xinit;
+        xinit = STARTINGX(MULTIDIM_ARRAY(phantom.iniVol));
     else
-        xinit = side.phantomVol().xinit - 2 * xOffsetN;
+        xinit = STARTINGX(MULTIDIM_ARRAY(phantom.iniVol)) - 2 * xOffsetN;
 
     xend = xinit + newXdim - 1;
 
 
     if (psf.verbose)
     {
-        std::cout << std::endl;
-        std::cout << "project_XR::Volume_offCentered:" << std::endl;
-        std::cout << "(X,Y,Z) shifts = (" << P.Xoff()*1e6 << "," << P.Yoff()*1e6 << ","
-        << P.Zoff()*1e6 << ") um" << std::endl;
-        std::cout << "Image resize (Nx,Ny): (" << iniXdim << "," << iniYdim << ") --> ("
-        << xend - xinit +1<< "," << yend - yinit +1 << ") " << std::endl;
+        int finalXdim = xend - xinit + 1;
+        int finalYdim = yend - yinit + 1;
+
+        if (finalXdim != iniXdim || finalYdim != iniYdim)
+        {
+            std::cout << std::endl;
+            std::cout << "--------------------------------" << std::endl;
+            std::cout << "XrayProject::Volume_offCentered:" << std::endl;
+            std::cout << "--------------------------------" << std::endl;
+            std::cout << "(X,Y,Z) shifts = (" << P.Xoff()*1e6 << "," << P.Yoff()*1e6 << ","
+            << P.Zoff()*1e6 << ") um" << std::endl;
+            std::cout << "Image resize (Nx,Ny): (" << iniXdim << "," << iniYdim << ") --> ("
+            << finalXdim << "," << finalYdim << ") " << std::endl;
+        }
 
 #ifdef DEBUG
 
@@ -302,18 +391,18 @@ void project_xr_Volume_offCentered(PROJECT_XR_Side_Info &side, XRayPSF &psf, Pro
     // Rotate volume ....................................................
     //    applyGeometry(LINEAR,volTemp(), V, Euler_rotation3DMatrix(rot, tilt, psi), IS_NOT_INV, DONT_WRAP);
 
-    side.rotPhantomVol().resize(iniZdim,iniYdim,iniXdim);
+    phantom.rotVol.resizeNoCopy(iniZdim,iniYdim,iniXdim);
     //    side.rotPhantomVol().zinit = zinit;
     //    side.rotPhantomVol().yinit = yinit;
     //    side.rotPhantomVol().xinit = xinit;
-    side.rotPhantomVol().setXmippOrigin();
+    phantom.rotVol.setXmippOrigin();
 
-    Euler_rotate(side.phantomVol(), P.rot(), P.tilt(), P.psi(),side.rotPhantomVol());
+    Euler_rotate(MULTIDIM_ARRAY(phantom.iniVol), P.rot(), P.tilt(), P.psi(),phantom.rotVol);
 
     // Correct the shift position due to tilt axis is out of optical axis
-    side.rotPhantomVol().window(zinit, yinit, xinit, zend, yend, xend);
+    phantom.rotVol.window(zinit, yinit, xinit, zend, yend, xend);
 
-    psf.adjustParam(side.rotPhantomVol);
+    psf.adjustParam(phantom.rotVol);
 
     //the really really final project routine, I swear by Snoopy.
     //    project_xr(psf,side.rotPhantomVol,P, idxSlice);
@@ -330,44 +419,44 @@ void project_xr_Volume_offCentered(PROJECT_XR_Side_Info &side, XRayPSF &psf, Pro
 }
 
 /// Generate an X-ray microscope projection for volume vol using the microscope configuration psf
-void project_xr(XRayPSF &psf, Image<double> &vol, Image<double> &imOut, int idxSlice)
+void project_xr(XRayPSF &psf, MultidimArray<double> &vol, Image<double> &imOut, int idxSlice)
 {
 
-    XrayThread *dataThread = new XrayThread;
-
-    dataThread->psf= &psf;
-    dataThread->vol = &vol;
-    dataThread->imOut = &imOut;
-
-    longint blockSize, numberOfJobs= vol().zdim;
-    numberOfThreads = psf.nThr;
-
-    blockSize = (numberOfThreads == 1) ? numberOfJobs : numberOfJobs/numberOfThreads;
-
-    //Create the job handler to distribute jobs
-    td = new ThreadTaskDistributor(numberOfJobs, blockSize);
-    //    td = new FileTaskDistributor(numberOfJobs,blockSize);
-    barrier = new Barrier(numberOfThreads-1);
-
-    //Create threads to start working
-
-    ThreadManager * thMgr = new ThreadManager(numberOfThreads,(void*) dataThread);
-
-
-    //    if (numberOfThreads==1)
-    //    {
-    //        ThreadArgument thArg;
-    //        thArg.thread_id = 0;
-    //        thArg.workClass = dataThread;
-    //        thread_project_xr(thArg);
-    //    }
-    //    else
-    thMgr->run(thread_project_xr);
-
-
-    //Terminate threads and free memory
-    delete td;
-    delete thMgr;
+    //    XrayThread *dataThread = new XrayThread;
+    //
+    //    dataThread->psf= &psf;
+    //    dataThread->vol = &vol;
+    //    dataThread->imOut = &imOut;
+    //
+    //    longint blockSize, numberOfJobs= vol().zdim;
+    //    numberOfThreads = psf.nThr;
+    //
+    //    blockSize = (numberOfThreads == 1) ? numberOfJobs : numberOfJobs/numberOfThreads;
+    //
+    //    //Create the job handler to distribute jobs
+    //    td = new ThreadTaskDistributor(numberOfJobs, blockSize);
+    //    //    td = new FileTaskDistributor(numberOfJobs,blockSize);
+    //    barrier = new Barrier(numberOfThreads-1);
+    //
+    //    //Create threads to start working
+    //
+    //    ThreadManager * thMgr = new ThreadManager(numberOfThreads,(void*) dataThread);
+    //
+    //
+    //    //    if (numberOfThreads==1)
+    //    //    {
+    //    //        ThreadArgument thArg;
+    //    //        thArg.thread_id = 0;
+    //    //        thArg.workClass = dataThread;
+    //    //        thread_project_xr(thArg);
+    //    //    }
+    //    //    else
+    //    thMgr->run(thread_project_xr);
+    //
+    //
+    //    //Terminate threads and free memory
+    //    delete td;
+    //    delete thMgr;
 
 
 }
@@ -380,25 +469,25 @@ void thread_project_xr(ThreadArgument &thArg)
 
     XrayThread *dataThread = (XrayThread*) thArg.workClass;
     XRayPSF psf = *(dataThread->psf);
-    Image<double> &vol =  *(dataThread->vol);
+    MultidimArray<double> &vol =  *(dataThread->vol);
     Image<double> &imOutGlobal = *(dataThread->imOut);
 
     long long int first = -1, last = -1, priorLast = -1;
 
     if (thread_id == 0)
     {
-        vol().setXmippOrigin();
-        imOutGlobal().resizeNoCopy(psf.Niy, psf.Nix);
-        imOutGlobal().initZeros();
-        imOutGlobal().setXmippOrigin();
+        vol.setXmippOrigin();
+        MULTIDIM_ARRAY(imOutGlobal).resizeNoCopy(psf.Niy, psf.Nix);
+        MULTIDIM_ARRAY(imOutGlobal).initZeros();
+        MULTIDIM_ARRAY(imOutGlobal).setXmippOrigin();
     }
 
     barrier->wait();
 
-    Image<double> imOut(psf.Nix,psf.Niy);
-    imOut().setXmippOrigin();
+    MultidimArray<double> imOut(psf.Niy, psf.Nix);
+    imOut.setXmippOrigin();
 
-    MultidimArray<double> imTemp(psf.Noy, psf.Nox),intExp(psf.Noy, psf.Nox),imTempSc(imOut()),*imTempP;
+    MultidimArray<double> imTemp(psf.Noy, psf.Nox),intExp(psf.Noy, psf.Nox),imTempSc(imOut),*imTempP;
     intExp.setXmippOrigin();
     imTemp.setXmippOrigin();
     imTempSc.setXmippOrigin();
@@ -413,25 +502,24 @@ void thread_project_xr(ThreadArgument &thArg)
         //        if (first>300)
 
         {
-            for (int k=(vol()).zinit + priorLast + 1; k<=(vol()).zinit + first - 1 ; k++)
+            // Previous addition for threads calculating intermediate slices
+            for (int k = STARTINGZ(vol) + priorLast + 1; k <= STARTINGZ(vol) + first - 1 ; k++)
             {
                 FOR_ALL_ELEMENTS_IN_ARRAY2D(intExp)
-                intExp(i, j) += vol(k, i, j);
+                A2D_ELEM(intExp,i,j) += A3D_ELEM(vol,k,i,j);
             }
-
 
             //#define DEBUG
 #ifdef DEBUG
             Image<double> _Im(imOut);
 #endif
 
-            for (int k=((vol()).zinit + first); k<=((vol()).zinit + last); k++)
+            for (int k = STARTINGZ(vol) + first; k <= STARTINGZ(vol) + last; k++)
             {
                 FOR_ALL_ELEMENTS_IN_ARRAY2D(intExp)
                 {
-                    intExp(i, j) += vol(k, i, j);
-                    imTemp(i, j) = (exp(-intExp(i,j)*psf.dzo))*vol(k,i,j)*psf.dzo;
-                    //            imTemp(i, j) = 1./(exp(intExp(i,j)))*vol(k,i,j);
+                    A2D_ELEM(intExp,i,j) += A3D_ELEM(vol,k,i,j);
+                    A2D_ELEM(imTemp,i,j) = (exp(-A2D_ELEM(intExp,i,j)*psf.dzo))*A3D_ELEM(vol,k,i,j)*psf.dzo;
                 }
 #ifdef DEBUG
                 FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY2D(imTemp)
@@ -439,7 +527,7 @@ void thread_project_xr(ThreadArgument &thArg)
                 _Im.write("psfxr-imTemp.spi");
 #endif
 
-//                psf.Z = psf.Zo + psf.DeltaZo - k*psf.dzo + imOutGlobal.Zoff();
+                //                psf.Z = psf.Zo + psf.DeltaZo - k*psf.dzo + imOutGlobal.Zoff();
 
                 switch (psf.AdjustType)
                 {
@@ -483,7 +571,7 @@ void thread_project_xr(ThreadArgument &thArg)
 #endif
 
                 FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY2D(*imTempP)
-                dAij(imOut(),i,j) += dAij(*imTempP,i,j);
+                dAij(imOut,i,j) += dAij(*imTempP,i,j);
 
                 //        imOut.write("psfxr-imout.spi");
             }
@@ -497,27 +585,26 @@ void thread_project_xr(ThreadArgument &thArg)
     //Lock to update the total summatory
     mutex.lock();
     FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY2D(*imTempP)
-    dAij(imOutGlobal(),i,j) += dAij(imOut(),i,j);
+    dAij(MULTIDIM_ARRAY(imOutGlobal),i,j) += dAij(imOut,i,j);
     mutex.unlock();
 
     barrier->wait();
 
     if (thread_id==0)
     {
-        imOutGlobal() = 1-imOutGlobal();
+        MULTIDIM_ARRAY(imOutGlobal) = 1- MULTIDIM_ARRAY(imOutGlobal);
 
         switch (psf.AdjustType)
         {
         case PSFXR_INT:
-            //    imOut().selfScaleToSize(psf.Noy, psf.Nox);
             selfScaleToSize(LINEAR,imOutGlobal(), psf.Nox, psf.Noy);
             break;
         case PSFXR_ZPAD:
-            imOutGlobal().window(-ROUND(psf.Noy/2)+1,-ROUND(psf.Nox/2)+1,ROUND(psf.Noy/2)-1,ROUND(psf.Nox/2)-1);
+            MULTIDIM_ARRAY(imOutGlobal).window(-ROUND(psf.Noy/2)+1,-ROUND(psf.Nox/2)+1,ROUND(psf.Noy/2)-1,ROUND(psf.Nox/2)-1);
             break;
         }
 
-        imOutGlobal().setXmippOrigin();
+        MULTIDIM_ARRAY(imOutGlobal).setXmippOrigin();
     }
     std::cerr << "th" << thread_id << ": Thread Finished" <<std::endl;
 }

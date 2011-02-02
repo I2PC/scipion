@@ -34,41 +34,6 @@
 /**@defgroup ProjectionXRProgram project_xr (project for tilt series)
    @ingroup ReconsLibrary */
 //@{
-/* Projection XR Program -------------------------------- */
-/** Program class for the project program */
-class ProgProjectXR: public XmippProgram
-{
-
-public:
-    /// Filename with the Projection_Parameters.
-    FileName fn_proj_param;
-    /// Selection file with all projections
-    FileName fn_sel_file;
-    /// Filename with the Microscope Parameters.
-    FileName fn_psf_xr;
-    /// Only create angles, do not project
-    bool only_create_angles;
-    /// Activate verbose mode;
-    bool verbose;
-    /// Number of threads;
-    int nThr;
-
-#define TELL_SHOW_ANGLES 0x1
-    /** Debugging variable.
-        This is a bitwise flag with the following valid labels:
-        \\TELL_SHOW_ANGLES: the program shows the angles for each image.*/
-    int tell;
-
-protected:
-    virtual void defineParams();
-    virtual void readParams();
-
-public:
-
-   virtual void run();
-
-
-};
 
 /* Projection parameters --------------------------------------------------- */
 /** Projecting parameters.
@@ -83,26 +48,60 @@ public:
                                    const Matrix1D<double> &rinplane);
 };
 
+/* Projection XR Program -------------------------------- */
+/** Program class for the project program */
+class ProgXrayProject: public XmippProgram
+{
 
+public:
+    /// Filename with the Projection_Parameters.
+    FileName fn_proj_param;
+    /// Selection file with all projections
+    FileName fn_sel_file;
+    /// Filename with the Microscope Parameters.
+    FileName fn_psf_xr;
+    // Projection parameters
+    ParametersProjectionXR projParam;
+    // Microscope optics parameters
+    XRayPSF psf;
+    // Input volume sampling
+    double dxo;
+    /// Only create angles, do not project
+    bool only_create_angles;
+    // Show angles calculation in std::out
+    bool show_angles;
+    /// Number of threads;
+    int nThr;
+    /*the program shows the angles for each image.*/
+    int tell;
+
+protected:
+    virtual void defineParams();
+    virtual void readParams();
+
+public:
+
+    virtual void run();
+
+
+};
 
 /** Project program Side information.
     This class contains side necessary information for the Project program.
     This information can be obtained from the parameters and is basically
     the Xmipp volume or phantom description plus a flag saying which
     of the two is valid. */
-class PROJECT_XR_Side_Info
+class XrayProjPhantom
 {
 public:
-    /// Document File for the projecting angles. Order: rot, tilt, psi
-    MetaData        DF;
     /// Phantom Xmipp volume
-    Image<double>    phantomVol;
-    Image<double>   rotPhantomVol;
+    Image<double>         iniVol;
+    MultidimArray<double> rotVol;
 public:
     /** Produce Project Side information.
         This function produce the side information from the project
         program parameters. Basically it loads the phantom.*/
-    void produce_Side_Info(const ParametersProjectionXR &prm);
+    void read(const ParametersProjectionXR &prm);
 };
 
 /* Effectively project ----------------------------------------------------- */
@@ -114,7 +113,7 @@ public:
     The returned number is the total number of projections generated.
     A selection file with all images is also returned.*/
 int PROJECT_XR_Effectively_project( ParametersProjectionXR &prm,
-                                    PROJECT_XR_Side_Info &side, Projection &proj,XRayPSF &psf, MetaData &SF);
+                                    XrayProjPhantom &side, Projection &proj,XRayPSF &psf, MetaData &SF);
 
 /** From voxel volumes, off-centered tilt axis.
     This routine projects a volume that is rotating (angle) degrees
@@ -133,7 +132,7 @@ int PROJECT_XR_Effectively_project( ParametersProjectionXR &prm,
 
     Off-centered not implemented. Rotations are around volume center
 */
-void project_xr_Volume_offCentered(PROJECT_XR_Side_Info &side, XRayPSF &psf, Projection &P,
+void project_xr_Volume_offCentered(XrayProjPhantom &side, XRayPSF &psf, Projection &P,
                                    int Ydim, int Xdim, int  idxSlice = 1);
 
 
@@ -143,9 +142,9 @@ void project_xr(XRayPSF &psf, Image<double> &vol, Image<double> &imOut,  int idx
 /// Data struct to be passed to threads
 struct XrayThread
 {
-    XRayPSF        *psf;
-    Image<double> *vol;
-    Image<double> *imOut;
+    XRayPSF                *psf;
+    MultidimArray<double> *vol;
+    Image<double>         *imOut;
 };
 
 //Some global threads management variables

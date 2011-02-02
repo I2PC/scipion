@@ -46,7 +46,7 @@ MPIProgProjectXR::~MPIProgProjectXR()
 
 void MPIProgProjectXR::defineParams()
 {
-    ProgProjectXR::defineParams();
+    ProgXrayProject::defineParams();
     clearUsage();
     addUsageLine("MPI Generate projections as in a X-ray microscope from a 3D Xmipp volume.");
 
@@ -54,7 +54,7 @@ void MPIProgProjectXR::defineParams()
 void MPIProgProjectXR::read(int argc, char** argv)
 {
     node = new MpiNode(argc, argv);
-    ProgProjectXR::read(argc, argv);
+    ProgXrayProject::read(argc, argv);
 }
 
 void MPIProgProjectXR::run()
@@ -76,9 +76,9 @@ void MPIProgProjectXR::run()
     mpi_proj_prm.node = node;
     mpi_proj_prm.read(fn_proj_param);
     mpi_proj_prm.tell=tell;
-    PROJECT_XR_Side_Info side;
+    XrayProjPhantom side;
 
-    side.produce_Side_Info(mpi_proj_prm);
+    side.read(mpi_proj_prm);
     //    psf.adjustParam(side.phantomVol);
 
     // Project
@@ -94,9 +94,9 @@ void MPIProgProjectXR::run()
     }
     else
     {
-        psf.adjustParam(side.phantomVol);
-        if (node->isMaster())
-            side.DF.write("/dev/stdout");
+        psf.adjustParam(side.rotVol);
+//        if (node->isMaster())
+//            side.DF.write("/dev/stdout");
     }
     return;
 }
@@ -111,7 +111,7 @@ void Projection_mpi_XR_Parameters::read(const FileName &fn_proj_param)
 /* Effectively project ===================================================== */
 int PROJECT_mpi_XR_Effectively_project(
     Projection_mpi_XR_Parameters &prm,
-    PROJECT_XR_Side_Info &side,
+    XrayProjPhantom &side,
     Projection &proj,
     XRayPSF &psf,
     MetaData &SF)
@@ -121,10 +121,10 @@ int PROJECT_mpi_XR_Effectively_project(
     XrayThread *dataThread = new XrayThread;
 
     dataThread->psf= &psf;
-    dataThread->vol = &side.rotPhantomVol;
+    dataThread->vol = &side.rotVol;
     dataThread->imOut = &proj;
 
-    longint threadBlockSize, numberOfJobs= side.phantomVol().zdim;
+    longint threadBlockSize, numberOfJobs= side.iniVol().zdim;
     numberOfThreads = psf.nThr;
 
     threadBlockSize = (numberOfThreads == 1) ? numberOfJobs : numberOfJobs/numberOfThreads/2;
@@ -210,7 +210,7 @@ int PROJECT_mpi_XR_Effectively_project(
 
     long long int first = -1, last = -1;
 
-    if (!(prm.tell&TELL_SHOW_ANGLES))
+    if (!(prm.tell))
         init_progress_bar(mpiData.size());
 
     // Parallel node jobs
@@ -233,7 +233,7 @@ int PROJECT_mpi_XR_Effectively_project(
             IMGMATRIX(proj).addNoise(prm.Npixel_avg, prm.Npixel_dev, "gaussian");
 
             // Save ..............................................................
-            if (prm.tell&TELL_SHOW_ANGLES)
+            if (prm.tell)
                 std::cout << "Node: " << node.rank << "\t" << proj.rot() << "\t"
                 << proj.tilt() << "\t" << proj.psi() << std::endl;
 

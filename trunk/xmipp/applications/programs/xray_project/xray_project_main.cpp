@@ -29,19 +29,9 @@
 
 int main(int argc, char *argv[])
 {
-    ProgProjectXR      prog_prm;
+    ProgXrayProject      prog_prm;
 
-    // Check the command line
-    try
-    {
-        prog_prm.read(argc, argv);
-    }
-    catch (XmippError &XE)
-    {
-        std::cout << XE;
-        exit(1);
-    }
-
+    prog_prm.read(argc, argv);
     prog_prm.tryRun();
 
     return 0;

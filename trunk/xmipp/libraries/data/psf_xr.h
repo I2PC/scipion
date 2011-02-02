@@ -181,6 +181,11 @@ public:
     /// Size of the image in image plane, to be rescaled if needed
     double Nix, Niy;
 
+    /// object space XY-plane sampling rate of the PSF Volume
+    double dxoPSF;
+    /// object space Z sampling rate of the PSF Volume
+    double dzoPSF;
+
     /// Switch to control verbose mode
     bool verbose;
 
@@ -234,7 +239,7 @@ public:
     friend std::ostream & operator <<(std::ostream &out, const XRayPSF &psf);
 
     /// Produce Side information
-    void produceSideInfo();
+    void produceSideInfo(double _dxo, double _dzo = -1);
 
     /// Apply the OTF to the image, by means of the convolution
     void applyOTF(MultidimArray<double> &Im, const double sliceOffset);
@@ -247,7 +252,7 @@ public:
 
     /// Calculate if a resize of the X-Y plane is needed to avoid the Nyquist Limit
     void adjustParam();
-    void adjustParam(Image<double> &Vol);
+    void adjustParam(MultidimArray<double> &Vol);
 
 protected:
     /// Generate the PSF for a single plane according to a ideal lens.

@@ -32,29 +32,29 @@
 void XRayPSF::defineParams(XmippProgram * program)
 {
     //    program->addParamsLine(" [-file <psf_param_file>]       : Read X-ray psf parameters from file.");
-    program->addParamsLine(" [-lambda <v=2.43>]             : X-ray wavelength (nm).");
-    program->addParamsLine(" [-out_width <deltaR=40>]       : Outermost zone width of the X-ray Fresnel lens (nm).");
-    program->addParamsLine(" [-zones <N=560>]               : Number of zones of the X-ray Fresnel lens.");
-    program->addParamsLine(" [-mag <Ms=2304>]               : Magnification of the X-ray microscope.");
-    program->addParamsLine(" [-sampling <dxy=10> <dz=dxy>]  : Sampling rate in X-Y plane and Z axis.");
-    program->addParamsLine(" [-zshift <deltaZ=0>]           : Longitudinal displacement along Z axis in microns.");
-    program->addParamsLine(" [-size <x> <y=x> <z=x>]        : Size of the X-ray PSF volume.");
+    program->addParamsLine(" [--lambda <v=2.43>]             : X-ray wavelength (nm).");
+    program->addParamsLine(" [--out_width <deltaR=40>]       : Outermost zone width of the X-ray Fresnel lens (nm).");
+    program->addParamsLine(" [--zones <N=560>]               : Number of zones of the X-ray Fresnel lens.");
+    program->addParamsLine(" [--mag <Ms=2304>]               : Magnification of the X-ray microscope.");
+    program->addParamsLine(" [--sampling <dxy=10> <dz=dxy>]  : Sampling rate in X-Y plane and Z axis (nm).");
+    program->addParamsLine(" [--zshift <deltaZ=0>]           : Longitudinal displacement along Z axis in microns.");
+    program->addParamsLine(" [--size <x> <y=x> <z=x>]        : Size of the X-ray PSF volume.");
 }
 
 /* Read params
  */
 void XRayPSF::readParams(XmippProgram * program)
 {
-    lambda  = program->getDoubleParam("-lambda")*1e-9;
-    deltaR  = program->getDoubleParam("-out_width")*1e-9;
-    Nzp     = program->getDoubleParam("-zones");
-    Ms      = program->getDoubleParam("-mag");
-    dxo     = program->getDoubleParam("-sampling",0)*1e-9;
-    dzo     = (String(program->getParam("-sampling", 1)) == "dxy") ? dxo : program->getDoubleParam("-sampling", 1)*1e-9;
-    DeltaZo = program->getDoubleParam("-zshift")*1e-6;
-    Nox     = program->getDoubleParam("-size",0);
-    Noy     = (String(program->getParam("-size", 1)) == "x") ? Nox : program->getDoubleParam("-size", 1);
-    Noz     = (String(program->getParam("-size", 2)) == "x") ? Nox : program->getDoubleParam("-size", 2);
+    lambda  = program->getDoubleParam("--lambda")*1e-9;
+    deltaR  = program->getDoubleParam("--out_width")*1e-9;
+    Nzp     = program->getDoubleParam("--zones");
+    Ms      = program->getDoubleParam("--mag");
+    dxoPSF  = program->getDoubleParam("--sampling",0)*1e-9;
+    dzoPSF  = (String(program->getParam("--sampling", 1)) == "dxy") ? dxoPSF : program->getDoubleParam("-sampling", 1)*1e-9;
+    DeltaZo = program->getDoubleParam("--zshift")*1e-6;
+    Nox     = program->getDoubleParam("--size",0);
+    Noy     = (String(program->getParam("--size", 1)) == "x") ? Nox : program->getDoubleParam("-size", 1);
+    Noz     = (String(program->getParam("--size", 2)) == "x") ? Nox : program->getDoubleParam("-size", 2);
 
     verbose = program->getIntParam("-v");
 }
@@ -104,12 +104,12 @@ void XRayPSF::read(const FileName &fn)
             REPORT_ERROR(ERR_ARG_MISSING, MDL::label2Str(MDL_CTF_XRAY_ZONES_NUMBER) + " argument not present.");
         if (!MD.getValue(MDL_CTF_XRAY_MAGNIFICATION,Ms, id))
             REPORT_ERROR(ERR_ARG_MISSING, MDL::label2Str(MDL_CTF_XRAY_MAGNIFICATION) + " argument not present.");
-        if (!MD.getValue(MDL_CTF_SAMPLING_RATE,dxo, id))
+        if (!MD.getValue(MDL_CTF_SAMPLING_RATE,dxoPSF, id))
             REPORT_ERROR(ERR_ARG_MISSING, MDL::label2Str(MDL_CTF_SAMPLING_RATE) + " argument not present.");
-        dxo *= 1e-9;
-        if (!MD.getValue(MDL_CTF_SAMPLING_RATE_Z,dzo, id))
+        dxoPSF *= 1e-9;
+        if (!MD.getValue(MDL_CTF_SAMPLING_RATE_Z,dzoPSF, id))
             REPORT_ERROR(ERR_ARG_MISSING, MDL::label2Str(MDL_CTF_SAMPLING_RATE_Z) + " argument not present.");
-        dzo *= 1e-9;
+        dzoPSF *= 1e-9;
         if (!MD.getValue(MDL_CTF_LONGITUDINAL_DISPLACEMENT,DeltaZo, id))
             REPORT_ERROR(ERR_ARG_MISSING, MDL::label2Str(MDL_CTF_LONGITUDINAL_DISPLACEMENT) + " argument not present.");
         DeltaZo *= 1e-6;
@@ -130,11 +130,11 @@ void XRayPSF::read(const FileName &fn)
             deltaR = textToFloat(getParameter(fh_param, "outer_zone_width", 0, "40")) * 1e-9;
             Nzp = textToFloat(getParameter(fh_param, "zones_number", 0, "560"));
             Ms = textToFloat(getParameter(fh_param, "magnification", 0, "2304"));
-            dxo = textToFloat(getParameter(fh_param, "sampling_rate", 0, "1")) *1e-9;
+            dxoPSF = textToFloat(getParameter(fh_param, "sampling_rate", 0, "1")) *1e-9;
             if (checkParameter(fh_param, "z_sampling_rate"))
-                dzo = textToFloat(getParameter(fh_param, "z_sampling_rate", 0)) *1e-9;
+                dzoPSF = textToFloat(getParameter(fh_param, "z_sampling_rate", 0)) *1e-9;
             else
-                dzo = dxo;
+                dzoPSF = dxoPSF;
             DeltaZo = textToFloat(getParameter(fh_param, "z_axis_shift", 0, "0")) *1e-6;
 
             Nox = textToFloat(getParameter(fh_param, "x_dim", 0, "0"));
@@ -170,8 +170,8 @@ void XRayPSF::write(const FileName &fn)
     MD.setValue(MDL_CTF_XRAY_OUTER_ZONE_WIDTH,deltaR*1e9, id);
     MD.setValue(MDL_CTF_XRAY_ZONES_NUMBER,Nzp, id);
     MD.setValue(MDL_CTF_XRAY_MAGNIFICATION,Ms, id);
-    MD.setValue(MDL_CTF_SAMPLING_RATE,dxo*1e9, id);
-    MD.setValue(MDL_CTF_SAMPLING_RATE_Z,dzo*1e9, id);
+    MD.setValue(MDL_CTF_SAMPLING_RATE,dxoPSF*1e9, id);
+    MD.setValue(MDL_CTF_SAMPLING_RATE_Z,dzoPSF*1e9, id);
     MD.setValue(MDL_CTF_LONGITUDINAL_DISPLACEMENT,DeltaZo*1e6, id);
     std::vector<double> dimV(3);
     dimV[0] = Nox;
@@ -200,23 +200,25 @@ std::ostream & operator <<(std::ostream &out, const XRayPSF &psf)
 {
 
     out     << std::endl
+    << "--------------------------------------" << std::endl
     << "XrayPSF:: X-Ray Microscope parameters:" << std::endl
-    << "lambda=               " << psf.lambda * 1e9 << " nm" << std::endl
-    << "zones_number=         " << psf.Nzp << std::endl
-    << "outer_zone_width=     " << psf.deltaR * 1e9 << " nm" << std::endl
-    << "magnification=        " << psf.Ms << std::endl
-    << "sampling_rate=        " << psf.dxo * 1e9 << " nm" << std::endl
-    << "z_sampling_rate=      " << psf.dzo * 1e9 << " nm" << std::endl
-    << "z_axis_shift=         " << psf.DeltaZo * 1e6 << " um" << std::endl
+    << "--------------------------------------" << std::endl
+    << "lambda =           " << psf.lambda * 1e9 << " nm" << std::endl
+    << "zones_number =     " << psf.Nzp << std::endl
+    << "outer_zone_width = " << psf.deltaR * 1e9 << " nm" << std::endl
+    << "magnification =    " << psf.Ms << std::endl
+    << "sampling_rate =    " << psf.dxo * 1e9 << " nm" << std::endl
+    << "z_sampling_rate =  " << psf.dzo * 1e9 << " nm" << std::endl
+    << "z_axis_shift =     " << psf.DeltaZo * 1e6 << " um" << std::endl
     << std::endl
-    << "focal_length=         " << psf.Flens * 1e3 << " mm" << std::endl
-    << "Lens Radius=          " << psf.Rlens * 1e6 << " um" << std::endl
-    << "Zo=                   " << psf.Zo * 1e3 << " mm" << std::endl
-    << "Zi=                   " << psf.Zi * 1e3 << " mm" << std::endl
-    << "Depth_of_Focus=       " << psf.DoF * 1e6 << " um" << std::endl
+    << "focal_length =     " << psf.Flens * 1e3 << " mm" << std::endl
+    << "Lens Radius =      " << psf.Rlens * 1e6 << " um" << std::endl
+    << "Zo =               " << psf.Zo * 1e3 << " mm" << std::endl
+    << "Zi =               " << psf.Zi * 1e3 << " mm" << std::endl
+    << "Depth_of_Focus =   " << psf.DoF * 1e6 << " um" << std::endl
     << std::endl
-    << "dxi=                  " << psf.dxi * 1e6 << " um" << std::endl
-    << "dxiMax=               " << psf.dxiMax * 1e6 << " um" << std::endl
+    << "dxi =              " << psf.dxi * 1e6 << " um" << std::endl
+    << "dxiMax =           " << psf.dxiMax * 1e6 << " um" << std::endl
     ;
 
     return out;
@@ -256,8 +258,12 @@ void XRayPSF::clear()
 }
 
 /* Produce Side Information ------------------------------------------------ */
-void XRayPSF::produceSideInfo()
+void XRayPSF::produceSideInfo(double _dxo, double _dzo)
 {
+
+    dxo = (_dxo > 0)? _dxo : dxoPSF;
+    dzo = (_dzo > 0)? _dzo : dxo;
+
     /// Calculation of the rest of microscope parameters
     Flens = (4*Nzp*deltaR*deltaR)/lambda;
     //    Rlens = sqrt(Nzp * lambda * Flens);
@@ -268,13 +274,15 @@ void XRayPSF::produceSideInfo()
     dxiMax = lambda * Zi / (2 * Rlens);
     DoF = 4*deltaR*deltaR/lambda;
 
+    if(verbose)
+        show();
 }
 
 /* Apply the OTF to an image ----------------------------------------------- */
 void XRayPSF::applyOTF(MultidimArray<double> &Im, const double sliceOffset)
 {
-//    double Z;
-//    MultidimArray< std::complex<double> > OTF;
+    //    double Z;
+    //    MultidimArray< std::complex<double> > OTF;
 
     Z = Zo + DeltaZo + sliceOffset;
 
@@ -391,7 +399,7 @@ void XRayPSF::generatePSF(PsfType _type)
 {
     type = _type;
 
-    produceSideInfo();
+    produceSideInfo(dxoPSF, dzoPSF);
 
     if (type == IDEAL_LENS)
     {
@@ -411,7 +419,7 @@ void XRayPSF::generatePSF(PsfType _type)
 
     for (int k = STARTINGZ(VOLMATRIX(*PSF)); k <= FINISHINGZ(VOLMATRIX(*PSF)); k++)
     {
-        Z = Zo + DeltaZo + k*dzo;
+        Z = Zo + DeltaZo + k*dzoPSF;
 
         switch (type)
         {
@@ -455,7 +463,7 @@ void XRayPSF::generatePSFIdealLens(MultidimArray<double> &PSFi) const
 
     FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY2D(OTFTemp) // Circular mask
     {
-      /// For indices in standard fashion
+        /// For indices in standard fashion
         x = (double) j * dxl + dxl*(1 - Nix) / 2;
         y = (double) i * dyl + dyl*(1 - Niy) / 2;
 
@@ -521,11 +529,11 @@ void XRayPSF::generatePSFIdealLens(MultidimArray<double> &PSFi) const
 #undef DEBUG
 }
 
-void XRayPSF::adjustParam(Image<double> &vol)
+void XRayPSF::adjustParam(MultidimArray<double> &vol)
 {
-    Nox = vol().xdim;
-    Noy = vol().ydim;
-    Noz = vol().zdim;
+    Nox = XSIZE(vol);
+    Noy = YSIZE(vol);
+    Noz = ZSIZE(vol);
 
     adjustParam();
 }
@@ -545,7 +553,9 @@ void XRayPSF::adjustParam()
     if (verbose)
     {
         std::cout << std::endl;
+        std::cout << "----------------------" << std::endl;
         std::cout << "XrayPSF::Param adjust:" << std::endl;
+        std::cout << "----------------------" << std::endl;
         std::cout << "(Nox,Noy,Nz) = (" << Nox << "," << Noy << "," << Noz << ")" << std::endl;
         std::cout << "Larger volume Z plane to be calculated = " << (ABS(DeltaZo)+(Noz-1)/2*dzo)*1e6 << " um" << std::endl;
         std::cout << "Larger allowed discrete Z plane (x,y) = (" << deltaZMaxX*1e6 << ", " << deltaZMaxY*1e6 << ") um" << std::endl;

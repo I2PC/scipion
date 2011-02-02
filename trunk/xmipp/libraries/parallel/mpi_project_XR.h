@@ -35,7 +35,7 @@
 //@{
 /* Projection XR Program -------------------------------- */
 /** Program class for the project program */
-class MPIProgProjectXR: public ProgProjectXR
+class MPIProgProjectXR: public ProgXrayProject
 {
     MpiNode *node;
 public:
@@ -72,7 +72,7 @@ public:
 /* Effectively project ===================================================== */
 int PROJECT_mpi_XR_Effectively_project(
     Projection_mpi_XR_Parameters &prm,
-    PROJECT_XR_Side_Info &side,
+    XrayProjPhantom &side,
     Projection &proj,
     XRayPSF &psf,
     MetaData &SF) ;
