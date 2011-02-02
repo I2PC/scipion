@@ -163,16 +163,17 @@ enum MDLabel
     MDL_MISSINGREGION_THXF, ///< Final tilt angle in X for missing region in subtomogram
     MDL_MODELFRAC, ///< Model fraction (alpha_k) for a Maximum Likelihood model
     MDL_NMA, ///< Normal mode displacements (vector double)
+    MDL_NOISE_ANGLES, ///< Noise description for projected angles
+    MDL_NOISE_PARTICLE_COORD, ///< Noise description for particle's center coordenates (when projecting)
+    MDL_NOISE_PIXEL_LEVEL, ///< Noise description for pixels' gray level (when projecting)
     MDL_ORDER, /// auxiliary label to be used as an index
     MDL_ORIGINX, ///< Origin for the image in the X axis (double)
     MDL_ORIGINY, ///< Origin for the image in the Y axis (double)
     MDL_ORIGINZ, ///< Origin for the image in the Z axis (double)
     MDL_PMAX, ///< Maximum value of normalized probability function (now called "Pmax/sumP") (double)
-
-    MDL_PRJ_DIMENSIONS,
-    MDL_PRJ_SEED,
-    MDL_PRJ_VOL,
-
+    MDL_PRJ_DIMENSIONS, // X,Y dimensions for the generated projections
+    MDL_PRJ_TILT_RANGE, // Vector with the initial and final tilt angle values, and step size
+    MDL_PRJ_VOL,        // Volume file name to generate projections from
     MDL_PSD, ///< A Power Spectrum Density file name (std::string)
     MDL_RANDOMSEED, ///< Seed for random number generator
     MDL_REF3D, ///< 3D Class to which the image belongs (int)
@@ -402,11 +403,17 @@ private:
         MDL::addLabel(MDL_MISSINGREGION_THYF, LABEL_DOUBLE, "missingRegionThetaYF");
         MDL::addLabel(MDL_MODELFRAC, LABEL_DOUBLE, "modelFraction");
         MDL::addLabel(MDL_NMA, LABEL_VECTOR, "NMADisplacements");
+        MDL::addLabel(MDL_NOISE_ANGLES, LABEL_VECTOR, "noiseAngles");
+        MDL::addLabel(MDL_NOISE_PARTICLE_COORD, LABEL_VECTOR, "noiseParticleCoord");
+        MDL::addLabel(MDL_NOISE_PIXEL_LEVEL, LABEL_VECTOR, "noisePixelLevel");
         MDL::addLabel(MDL_ORDER, LABEL_INT, "order_");
         MDL::addLabel(MDL_ORIGINX, LABEL_DOUBLE, "originX");
         MDL::addLabel(MDL_ORIGINY, LABEL_DOUBLE, "originY");
         MDL::addLabel(MDL_ORIGINZ, LABEL_DOUBLE, "originZ");
         MDL::addLabel(MDL_PMAX, LABEL_DOUBLE, "pMax", "Pmax", "sumP");
+        MDL::addLabel(MDL_PRJ_DIMENSIONS, LABEL_VECTOR, "projDimensions");
+        MDL::addLabel(MDL_PRJ_TILT_RANGE, LABEL_VECTOR, "projTiltRange");
+        MDL::addLabel(MDL_PRJ_VOL, LABEL_STRING, "projVolume");
         MDL::addLabel(MDL_PSD, LABEL_STRING, "powerSpectrum");
         MDL::addLabel(MDL_RANDOMSEED, LABEL_INT, "randomSeed");
         MDL::addLabel(MDL_REF3D, LABEL_INT, "ref3d");
