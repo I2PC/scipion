@@ -1315,7 +1315,8 @@ private:
                     readsize_n = readsize/datatypesize;
 
                     //Read page from disc
-                    fread( page, readsize, 1, fimg );
+                    if (fread( page, readsize, 1, fimg )!=1)
+                    	REPORT_ERROR(ERR_IO_NOREAD,"Cannot read the whole page");
                     //swap per page
                     if (swap)
                         swapPage(page, readsize, datatype);
