@@ -25,35 +25,48 @@
 
 #include <reconstruction/align_tilt_pairs.h>
 
-int main(int argc, char **argv)
+
+int main(int argc, char *argv[])
 {
-    Prog_centilt_prm prm;
+    ProgAlignTiltPairs prog;
 
-    // Get input parameters
-    try
-    {
-        prm.read(argc, argv);
-        prm.show();
-    }
-    catch (XmippError XE)
-    {
-        std::cout << XE;
-        prm.usage();
-        exit(0);
-    }
+    prog.read(argc, argv);
+    prog.tryRun();
 
-    try
-    {
-        prm.centilt();
-    }
-    catch (XmippError XE)
-    {
-        std::cout << XE;
-        prm.usage();
-        exit(0);
-    }
-
+    return 0;
 }
+
+
+//
+//int main(int argc, char **argv)
+//{
+//    ProgAlignTiltPairs prm;
+//
+//    // Get input parameters
+//    try
+//    {
+//        prm.read(argc, argv);
+//        prm.show();
+//    }
+//    catch (XmippError XE)
+//    {
+//        std::cout << XE;
+//        prm.usage();
+//        exit(0);
+//    }
+//
+//    try
+//    {
+//        prm.centilt();
+//    }
+//    catch (XmippError XE)
+//    {
+//        std::cout << XE;
+//        prm.usage();
+//        exit(0);
+//    }
+//
+//}
 
 
 

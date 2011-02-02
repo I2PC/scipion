@@ -23,38 +23,63 @@
  *  e-mail address 'xmipp@cnb.csic.es'
  ***************************************************************************/
 #include "align_tilt_pairs.h"
-#define METADATA
 
-// Read arguments ==========================================================
-void Prog_centilt_prm::read(int argc, char **argv)
+//Define Program parameters
+void ProgAlignTiltPairs::defineParams()
 {
+    //Usage
+    addUsageLine("Center the tilted images of all tilted-untilted image pairs. Besides, the in-plane rotation");
+    addUsageLine("of the untilted images Psi, is copied to the first-rotation Phi of the tilted ones. Therefore,");
+    addUsageLine("the untilted images should be aligned (using the align2d program), prior to applying centilt.");
+    //Examples
+    addExampleLine("Typical use of this program:",false);
+    addExampleLine("lign_tilt_pairs -u g0u.sel -t g0t.sel -doc centilt.doc -max_shift 10 -oext cen");
+    addExampleLine("The input images and selfile are not overwritten, instead new images called imagename.cen are written out, with a corresponding selfile called g0t_cen.sel. This selfile could be used in a subsequent volume reconstruction using ART. Any image that would shift more than 10 pixels will be discarded, i.e. it will not be included in the output selfile, and no .cen image is written out.",false);
+    addExampleLine(" It is always a good idea to output document files like centilt.doc, since it allows to restore the angles and shifts from a previous point in the image processing pathway, using the program headerinfo.");
+    // Params
+    addParamsLine(" -u <untilted_metadata_file> : Input metadata with untilted images.");
+    addParamsLine(" -t <tilted_metadata_file>   : Input metadata with tilted images (Untilted and tilted selfile should have");
+    addParamsLine("                             : same number of entries, and the same order is assumed for image pairs).");
+    addParamsLine(" [-o <output_metadata_file>] : Output metadata file with rotations & translations.");
+    addParamsLine(" alias --odoc;");
+    addParamsLine(" [--oext <extension>]        : For output tilted images; if not to overwrite input.");
+    addParamsLine(" [--max_shift <value=0.0>]   : Discard images which shift more (in pixels).");
+    addParamsLine(" [--skip_stretching]         : Default action is to stretch the tilted images in X direction by");
+    addParamsLine("                             : 1/cos(tilt_angle), before centering them. Use this option to skip it.");
+    addParamsLine(" [--force_x_zero]            : Force x-shift to be zero.");
+    addParamsLine(" [-skip_centering]           : Default action is to center tilted images based on cross-correlation with");
+    addParamsLine("                             : the untilted pairs. Use this option to skip it.");
+}
 
-    FileName fn_sel;
+//Read params
+void ProgAlignTiltPairs::readParams()
+{
+  FileName fn_sel;
 
-    // metaData File with untilted images
-    fn_sel = getParameter(argc, argv, "-u");
-    SFu.read(fn_sel);
-    // metaData file with tilted images
-    fn_sel = getParameter(argc, argv, "-t");
-    SFt.read(fn_sel);
-    if (SFu.size() != SFt.size())
-        REPORT_ERROR(ERR_MD_OBJECTNUMBER, "Unequal number of active images in untilted and tilted metadata files");
-    // Extension if not to overwrite input images
-    oext = getParameter(argc, argv, "-oext", "");
-    // Write out document file?
-    fn_doc = getParameter(argc, argv, "-doc", "");
-    // Maximum shift (discard images that shift more in last iteration)
-    max_shift = textToFloat(getParameter(argc, argv, "-max_shift", "0"));
-    // Force x-shift to be zero?
-    force_x_zero = checkParameter(argc, argv, "-force_x_zero");
-    // Perform centering?
-    do_center = !checkParameter(argc, argv, "-skip_centering");
-    // Perform cosine stretching?
-    do_stretch = !checkParameter(argc, argv, "-skip_stretching");
+  // metaData File with untilted images
+  fn_sel = getParam("-u");
+  SFu.read(fn_sel);
+  // metaData file with tilted images
+  fn_sel = getParam("-t");
+  SFt.read(fn_sel);
+  if (SFu.size() != SFt.size())
+      REPORT_ERROR(ERR_MD_OBJECTNUMBER, "Unequal number of active images in untilted and tilted metadata files");
+  // Extension if not to overwrite input images
+  oext = getParam("--oext");
+  // Write out document file?
+  fn_doc = getParam("-o");
+  // Maximum shift (discard images that shift more in last iteration)
+  max_shift = getCountParam("--max_shift");
+  // Force x-shift to be zero?
+  force_x_zero = checkParam("--force_x_zero");
+  // Perform centering?
+  do_center = !checkParam("--skip_centering");
+  // Perform cosine stretching?
+  do_stretch = !checkParam("--skip_stretching");
 }
 
 // Show ====================================================================
-void Prog_centilt_prm::show()
+void ProgAlignTiltPairs::show()
 {
     std::cerr << " MetaData file with untilted images   : " <<  SFu.getFilename() << std::endl;
     std::cerr << " MetaData file with tilted images     : " <<  SFt.getFilename() << std::endl;
@@ -73,24 +98,8 @@ void Prog_centilt_prm::show()
 
 }
 
-// usage ===================================================================
-void Prog_centilt_prm::usage()
-{
-    std::cerr << "Usage:  " << std::endl;
-    std::cerr << "  centilt [options]" << std::endl;
-    std::cerr << "   -u <metadatafile>             : Metadata File  containing untilted images \n"
-    << "   -t <metadatafile>        : Metadata File  containing tilted images \n"
-    << " [ -oext <extension> ]      : For output tilted images; if not to overwrite input\n"
-    << " [ -doc <metadata> ]        : write output document file with rotations & translations \n"
-    << " [ -max_shift <float> ]     : Discard images that shift more [pix]\n"
-    << " [ -force_x_zero ]          : Force x-shift to be zero \n"
-    << " [ -skip_stretching ]       : do not perform cosine stretching \n"
-    << " [ -skip_centering ]        : do not perform centering, i.e. only modify angles \n"
-    << std::endl;
-}
-
 // Center one tilted image  =====================================================
-bool Prog_centilt_prm::center_tilted_image(const Image<double> &Iu, Image<double> &It, double &ccf)
+bool ProgAlignTiltPairs::center_tilted_image(const Image<double> &Iu, Image<double> &It, double &ccf)
 {
 
     Matrix2D<double> A(3, 3);
@@ -165,7 +174,7 @@ bool Prog_centilt_prm::center_tilted_image(const Image<double> &Iu, Image<double
 }
 
 // Main program  ===============================================================
-void Prog_centilt_prm::centilt()
+void ProgAlignTiltPairs::run()
 {
 
     FileName          fn_img;
@@ -184,8 +193,6 @@ void Prog_centilt_prm::centilt()
     imgno = 0;
 
     //while (imgno < n_images)
-    SFu.firstObject();
-    SFt.firstObject();
 
     FileName file_name;
 
@@ -209,7 +216,6 @@ void Prog_centilt_prm::centilt()
         SFt.getValue( MDL_IMAGE, file_name, __iter2.objId);
         It.read(file_name );
         // Store original matrix for later output
-        Maux.resize(It());
         Maux = It();
         Euler_angles2matrix(0., 0., It.psi(), A);
         outside = dAij(It(), 0, 0);

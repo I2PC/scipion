@@ -31,14 +31,15 @@
 #include <data/image.h>
 #include <data/geometry.h>
 #include <data/filters.h>
+#include <data/program.h>
 
 /**@defgroup Centilt align_tilt_pairs (Align tilted and untilted images in a random conical tilt experiment)
    @ingroup ReconsLibrary */
 //@{
 /** Centilt parameters. */
-class Prog_centilt_prm
+class ProgAlignTiltPairs: public XmippProgram
 {
-public:
+protected:
     /** MetaData for untilted and tilted images */
 
 	MetaData SFu, SFt;
@@ -55,20 +56,17 @@ public:
     /** Perform centering */
     bool do_center;
 
+    void defineParams();
+    void readParams();
+    void processImage();
+    void run();
+
 public:
-    /// Read arguments from command line
-    void read(int argc, char **argv);
 
     /// Show
     void show();
 
-    /// Usage
-    void usage();
-
     /// Center one tilted image
     bool center_tilted_image(const Image<double> &Iu, Image<double> &It, double &ccf);
-
-    /// Main routine
-    void centilt();
 };
 //@}
