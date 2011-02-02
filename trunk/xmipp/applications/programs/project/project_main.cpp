@@ -27,30 +27,7 @@
 
 int main(int argc, char *argv[])
 {
-    Prog_Project_Parameters      prog_prm;
-    Projection                   proj;
-    MetaData                     SF;
-
-// Check the command line
-    try
-    {
-        prog_prm.read(argc, argv);
-    }
-    catch (XmippError &XE)
-    {
-        std::cout << XE;
-        prog_prm.usage();
-        exit(1);
-    }
-
-    try
-    {
-// Really project
-        ROUT_project(prog_prm, proj, SF);
-    }
-    catch (XmippError XE)
-    {
-        std::cout << XE;
-    }
-    return 0;
+    ProgProject prm;
+    prm.read(argc, argv);
+    prm.tryRun();
 }
