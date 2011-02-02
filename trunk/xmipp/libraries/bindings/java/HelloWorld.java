@@ -29,15 +29,24 @@ class HelloWorld {
 		    	System.out.println("contains rot");
 		    long[] ids = md.findObjects();
 		    System.out.println(ids.length);
+		    
+		    String img;
 		    for (long id: ids)
 		    {
 		    	System.out.print(id);
-		    	System.out.print("-->");
+		    	System.out.print("  -->  ");
+		    	img = md.getValueString(MDLabel.MDL_IMAGE, id);
+		    	System.out.print(img);
+		    	System.out.print("  -->  ");
 		    	if (hasLabel)
-		    		System.out.print(md.getValueDouble(label, id));
+		    	{
+		    		double v =  md.getValueDouble(label, id);
+		    		md.setValueDouble(label, v*v, id);
+		    	    System.out.print(v);
+		    	}
 		    	System.out.println();
-		    		
 		    }
+		    md.write(s+"modified");
 		
 	}
 }

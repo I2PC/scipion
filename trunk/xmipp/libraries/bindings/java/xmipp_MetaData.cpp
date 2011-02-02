@@ -102,13 +102,19 @@ JNIEXPORT jdouble JNICALL Java_xmipp_MetaData_getValueDouble
 }
 
 JNIEXPORT jstring JNICALL Java_xmipp_MetaData_getValueString
-(JNIEnv *, jobject, jint, jlong);
+(JNIEnv *env, jobject obj, jint label, jlong objId)
+{
+  MetaData * md = GET_INTERNAL_METADATA();
+  if (md != NULL)
+  {
+      String str;
+      if (md->getValue((MDLabel)label, str, objId))
+        return env->NewStringUTF(str.data());
+  }
+  return NULL;
 
-/*
- * Class:     MetaData
- * Method:    getValueBoolean
- * Signature: (I)Z
- */
+}
+
 JNIEXPORT jboolean JNICALL Java_xmipp_MetaData_getValueBoolean
 (JNIEnv *env, jobject obj, jint label, jlong objId)
 {
@@ -132,29 +138,34 @@ JNIEXPORT jboolean JNICALL Java_xmipp_MetaData_setValueInt
 }
 
 JNIEXPORT jboolean JNICALL Java_xmipp_MetaData_setValueDouble
-(JNIEnv *, jobject, jint, jdouble, jlong);
-
-/*
- * Class:     MetaData
- * Method:    setValueString
- * Signature: (ILjava/lang/String;)Z
- */
+(JNIEnv *env, jobject obj, jint label, jdouble value, jlong objId)
+{
+    MetaData * md = GET_INTERNAL_METADATA();
+    if (md != NULL)
+      return md->setValue((MDLabel)label, value, objId);
+    return false;
+}
 JNIEXPORT jboolean JNICALL Java_xmipp_MetaData_setValueString
-(JNIEnv *, jobject, jint, jstring, jlong);
+(JNIEnv *env, jobject obj, jint label, jstring value, jlong objId)
+{
+    MetaData * md = GET_INTERNAL_METADATA();
+    if (md != NULL)
+    {
+      String str(env->GetStringUTFChars(value, false));
+      return md->setValue((MDLabel)label, str, objId);
+    }
+    return false;
+}
 
-/*
- * Class:     MetaData
- * Method:    setValueBoolean
- * Signature: (IZ)Z
- */
 JNIEXPORT jboolean JNICALL Java_xmipp_MetaData_setValueBoolean
-(JNIEnv *, jobject, jint, jboolean, jlong);
+(JNIEnv *env, jobject obj, jint label, jboolean value, jlong objId)
+{
+    MetaData * md = GET_INTERNAL_METADATA();
+    if (md != NULL)
+      return md->setValue((MDLabel)label, value, objId);
+    return false;
+}
 
-/*
- * Class:     MetaData
- * Method:    findObjects
- * Signature: ()[J
- */
 JNIEXPORT jlongArray JNICALL Java_xmipp_MetaData_findObjects
 (JNIEnv *env, jobject obj)
 {
