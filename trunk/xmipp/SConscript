@@ -642,7 +642,6 @@ if int(env['java']):
 
 # Src (apps)
 
-AddXmippProgram('adjust_volume_grey_levels', ['XmippRecons'])
 AddXmippProgram('align2d', ['XmippRecons'])
 AddXmippProgram('align_tilt_pairs', ['XmippRecons'])
 AddXmippProgram('align_volumes')
@@ -762,6 +761,7 @@ AddXmippProgram('statistics')
 AddXmippProgram('symmetrize', ['XmippRecons'])
 AddXmippProgram('threshold')
 AddXmippProgram('transform_add_noise')
+AddXmippProgram('transform_adjust_volume_grey_levels', ['XmippRecons'])
 AddXmippProgram('transform_center_image')
 AddXmippProgram('try_symmetry')
 #AddXmippProgram('test_program')

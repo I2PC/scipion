@@ -35,30 +35,3 @@ int main(int argc, char *argv[])
 
     return 0;
 }
-
-
-
-//int main(int argc, char **argv)
-//{
-//    Prog_Adjust_Volume_Parameters prm;
-//    try
-//    {
-//        prm.read(argc, argv);
-//    }
-//    catch (XmippError XE)
-//    {
-//        std::cout << XE;
-//        prm.usage();
-//        exit(1);
-//    }
-//    try
-//    {
-//        prm.run();
-//    }
-//    catch (XmippError XE)
-//    {
-//        std::cout << XE;
-//    }
-//    return 0;
-//}
-
