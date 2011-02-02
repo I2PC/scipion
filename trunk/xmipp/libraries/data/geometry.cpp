@@ -878,7 +878,6 @@ void Euler_rotate(const MultidimArray<double> &V, double rot, double tilt, doubl
     applyGeometry(1, result, V, R, IS_NOT_INV, DONT_WRAP);
 }
 
-
 void computeCircleAroundE(const Matrix2D<double> &E,
                           double angCircle, double angStep, std::vector<double> &outputEulerAngles)
 {
@@ -891,11 +890,13 @@ void computeCircleAroundE(const Matrix2D<double> &E,
     Matrix2D<double> newEt;
     newEt = E.transpose();
     Matrix2D<double> rotStep, sampling;
-    rotation3DMatrix(angCircle,perpendicular,rotStep,false);
-    rotation3DMatrix(angStep,projectionDirection,sampling,false);
+    rotationMatrix(angCircle,perpendicular,rotStep,false);
+    rotationMatrix(angStep,projectionDirection,sampling,false);
 
     // Now rotate
     newEt = rotStep*newEt;
+    Matrix1D<double> aux;
+    Matrix2D<double> newE;
     for (double i = 0; i < 360; i += angStep)
     {
         newEt=sampling*newEt;
@@ -903,12 +904,11 @@ void computeCircleAroundE(const Matrix2D<double> &E,
         // Normalize
         for (int c=0; c<3; c++)
         {
-            Matrix1D<double> aux;
             newEt.getCol(c,aux);
             aux/=aux.module();
             newEt.setCol(c,aux);
         }
-        Matrix2D<double> newE=newEt.transpose();
+        newE=newEt.transpose();
 
         double newrot, newtilt, newpsi;
         Euler_matrix2angles(newE,newrot,newtilt,newpsi);

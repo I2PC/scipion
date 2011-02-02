@@ -43,30 +43,17 @@
 /// @defgroup GeometricalTransformations Geometrical transformations
 /// @ingroup DataLibrary
 //@{
-/** Creates a rotational matrix (3x3) for images
+/** Creates a rotational matrix (4x4) for images
  * @ingroup GeometricalTransformations
  *
  * The rotation angle is in degrees.
- * m must have been already resized to 3x3
+ * m must have been already resized to 4x4
  *
  * @code
- *  rotation2DMatrix(60,m);
+ *  rotationMatrix(60,m);
  * @endcode
  */
-void rotation2DMatrix(double ang, Matrix2D< double > &m, bool homogeneous=true);
-
-/** Creates a translational matrix (3x3) for images
- * @ingroup GeometricalTransformations
- *
- * The shift is given as a R2 vector (shift_X, shift_Y). An exception is thrown
- * if the displacement is not a R2 vector.
- *
- * @code
- * // Displacement of 1 pixel to the right
- * m = translation2DMatrix(vectorR2(1, 0));
- * @endcode
- */
-void translation2DMatrix(const Matrix1D< double > &v, Matrix2D< double > &m);
+void rotationMatrix(double ang, Matrix2D< double > &m, bool homogeneous=true);
 
 /** Creates a rotational matrix (4x4) for volumes around system axis
  * @ingroup GeometricalTransformations
@@ -100,8 +87,8 @@ void translation2DMatrix(const Matrix1D< double > &v, Matrix2D< double > &m);
  * m = rotation3DMatrix(60, 'X');
  * @endcode
  */
-void rotation3DMatrix(double ang, char axis, Matrix2D< double > &m,
-                      bool homogeneous=true);
+void rotationMatrix(double ang, char axis, Matrix2D< double > &m,
+                    bool homogeneous=true);
 
 /** Creates a rotational matrix (4x4) for volumes around any axis
  * @ingroup GeometricalTransformations
@@ -114,8 +101,8 @@ void rotation3DMatrix(double ang, char axis, Matrix2D< double > &m,
  * m = rotation3DMatrix(60, vectorR3(1, 1, 1));
  * @endcode
  */
-void rotation3DMatrix(double ang, const Matrix1D< double >& axis, Matrix2D< double > &m,
-                      bool homogeneous=true);
+void rotationMatrix(double ang, const Matrix1D< double >& axis, Matrix2D< double > &m,
+		bool homogeneous=true);
 
 /** Matrix which transforms the given axis into Z
  * @ingroup GeometricalTransformations
@@ -132,7 +119,8 @@ void rotation3DMatrix(double ang, const Matrix1D< double >& axis, Matrix2D< doub
  * The returned matrix is such that A*axis=Z, where Z and axis are column
  * vectors.
  */
-void alignWithZ(const Matrix1D< double >& axis, Matrix2D< double > &m, bool homogeneous=true);
+void alignWithZ(const Matrix1D< double >& axis, Matrix2D< double > &m,
+		bool homogeneous=true);
 
 /** Creates a translational matrix (4x4) for volumes
  * @ingroup GeometricalTransformations
@@ -145,7 +133,7 @@ void alignWithZ(const Matrix1D< double >& axis, Matrix2D< double > &m, bool homo
  * m = translation3DMatrix(vectorR3(0, 0, 2));
  * @endcode
  */
-void translation3DMatrix(const Matrix1D< double >& v, Matrix2D< double > &m);
+void translationMatrix(Matrix2D< double > &m, double xshift, double yshift, double zshift=0);
 
 /** Creates a scaling matrix (4x4) for volumes
  * @ingroup GeometricalTransformations
@@ -153,8 +141,7 @@ void translation3DMatrix(const Matrix1D< double >& v, Matrix2D< double > &m);
  * The scaling factors for the different axis must be given as a vector. So
  * that, XX(sc)=scale for X axis, YY(sc)=...
  */
-void scale3DMatrix(const Matrix1D< double >& sc, Matrix2D< double > &m,
-                   bool homogeneous=true);
+void scaleMatrix(Matrix2D< double > &m, double scaleX, double scaleY, double scaleZ=1);
 
 /** Applies a geometrical transformation.
  * @ingroup GeometricalTransformations
@@ -242,15 +229,19 @@ void applyGeometry(int SplineDegree,
                    const Matrix2D< double > &A, bool inv,
                    bool wrap, T outside = 0)
 {
-
+#ifndef RELEASE_MODE
     if (&V1 == (MultidimArray<T1>*)&V2)
         REPORT_ERROR(ERR_VALUE_INCORRECT,"ApplyGeometry: Input array cannot be the same as output array");
 
     if ( V1.getDim() < 2 || V1.getDim() > 3)
         REPORT_ERROR(ERR_MATRIX_SIZE,"ApplyGeometry: can only work in 2D or 3D space");
 
-    if ( MAT_XSIZE(A) != 4 || MAT_YSIZE(A) != 4 )
+    if ( V1.getDim()==3 && (MAT_XSIZE(A) != 4 || MAT_YSIZE(A) != 4 ))
         REPORT_ERROR(ERR_MATRIX_SIZE,"ApplyGeometry: 3D transformation matrix is not 4x4");
+
+    if ( V1.getDim()==2 && (MAT_XSIZE(A) != 3 || MAT_YSIZE(A) != 3 ))
+        REPORT_ERROR(ERR_MATRIX_SIZE,"ApplyGeometry: 2D transformation matrix is not 3x3");
+#endif
 
     if (A.isIdentity())
     {
@@ -805,17 +796,7 @@ void rotate(int SplineDegree,
             bool wrap = DONT_WRAP, T outside = 0)
 {
     Matrix2D< double > tmp;
-    if (V1.getDim()==2)
-    {
-        rotation2DMatrix(ang,tmp);
-    }
-    else if (V1.getDim()==3)
-    {
-        rotation3DMatrix(ang, axis, tmp);
-    }
-    else
-        REPORT_ERROR(ERR_MULTIDIM_DIM,"rotate ERROR: rotate only valid for 2D or 3D arrays");
-
+    rotationMatrix(ang, axis, tmp);
     applyGeometry(SplineDegree, V2, V1, tmp, IS_NOT_INV, wrap, outside);
 }
 
@@ -849,17 +830,11 @@ template<typename T>
 void translate(int SplineDegree,
                MultidimArray<T> &V2,
                const MultidimArray<T> &V1,
-               const Matrix1D< double >& v,
+               double xshift, double yshift, double zshift=0,
                bool wrap = WRAP, T outside = 0)
 {
     Matrix2D< double > tmp;
-    if (V1.getDim()==2)
-        translation2DMatrix(v, tmp);
-    else if (V1.getDim()==3)
-        translation3DMatrix(v, tmp);
-    else
-        REPORT_ERROR(ERR_MULTIDIM_DIM,"translate ERROR: translate only valid for 2D or 3D arrays");
-
+    translationMatrix(tmp,xshift,yshift,zshift);
     applyGeometry(SplineDegree, V2, V1, tmp, IS_NOT_INV, wrap, outside);
 }
 
@@ -871,11 +846,11 @@ void translate(int SplineDegree,
 template<typename T>
 void selfTranslate(int SplineDegree,
                    MultidimArray<T>& V1,
-                   const Matrix1D< double >& v,
+                   double xshift, double yshift, double zshift=0,
                    bool wrap = WRAP, T outside = 0)
 {
     MultidimArray<T> aux = V1;
-    translate(SplineDegree, V1, aux, v, wrap, outside);
+    translate(SplineDegree, V1, aux, xshift, yshift, zshift, wrap, outside);
 }
 
 /** Translate center of mass to center
@@ -894,8 +869,7 @@ void translateCenterOfMassToCenter(int SplineDegree,
     V2.setXmippOrigin();
     Matrix1D< double > center;
     V2.centerOfMass(center);
-    center *= -1;
-    translate(SplineDegree, V2, V1, center, wrap, 0);
+    translate(SplineDegree, V2, V1, -XX(center), -YY(center), -ZZ(center), wrap, 0);
 }
 
 /** Translate center of mass to center

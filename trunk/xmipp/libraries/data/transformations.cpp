@@ -27,7 +27,7 @@
 #include "transformations.h"
 
 /* Rotation 2D ------------------------------------------------------------- */
-void rotation2DMatrix(double ang, Matrix2D< double > &result, bool homogeneous)
+void rotationMatrix(double ang, Matrix2D< double > &result, bool homogeneous)
 {
     double cosine, sine;
 
@@ -37,55 +37,45 @@ void rotation2DMatrix(double ang, Matrix2D< double > &result, bool homogeneous)
 
     if (homogeneous)
     {
-        if (MAT_XSIZE(result)!=3 || MAT_YSIZE(result)!=3)
-            result.resize(3,3);
-        MAT_ELEM(result,0, 2) = 0;
-        MAT_ELEM(result,1, 2) = 0;
-        MAT_ELEM(result,2, 0) = 0;
-        MAT_ELEM(result,2, 1) = 0;
-        MAT_ELEM(result,2, 2) = 1;
+    	result.initZeros(4,4);
+    	MAT_ELEM(result,3,3)=1;
     }
     else
-        if (MAT_XSIZE(result)!=2 || MAT_YSIZE(result)!=2)
-            result.resize(2,2);
-
+    	result.initZeros(3,3);
     MAT_ELEM(result,0, 0) = cosine;
     MAT_ELEM(result,0, 1) = -sine;
 
     MAT_ELEM(result,1, 0) = sine;
     MAT_ELEM(result,1, 1) = cosine;
+
+    MAT_ELEM(result,2, 2) = 1;
 }
 
 /* Translation 2D ---------------------------------------------------------- */
-void translation2DMatrix(const Matrix1D<double> &v,
-                         Matrix2D< double > &result)
+void translationMatrix(Matrix2D< double > &result, double xshift, double yshift,
+                       double zshift)
 {
-    if (VEC_XSIZE(v) != 2)
-        REPORT_ERROR(ERR_MATRIX_SIZE, "Translation2D_matrix: vector is not in R2");
-
-    result.initIdentity(3);
-    MAT_ELEM(result,0, 2) = XX(v);
-    MAT_ELEM(result,1, 2) = YY(v);
+    result.initIdentity(4);
+    MAT_ELEM(result,0, 3) = xshift;
+    MAT_ELEM(result,1, 3) = yshift;
+    MAT_ELEM(result,2, 3) = zshift;
 }
 
 /* Rotation 3D around the system axes -------------------------------------- */
-void rotation3DMatrix(double ang, char axis, Matrix2D< double > &result,
-                      bool homogeneous)
+void rotationMatrix(double ang, char axis, Matrix2D< double > &result, bool homogeneous)
 {
-    if (homogeneous)
-    {
-        result.initZeros(4,4);
-        MAT_ELEM(result,3, 3) = 1;
-    }
-    else
-        result.initZeros(3,3);
-
+	if (homogeneous)
+	{
+		result.initZeros(4,4);
+		MAT_ELEM(result,3,3)=1;
+	}
+	else
+		result.initZeros(3,3);
     double cosine, sine;
     ang = DEG2RAD(ang);
     cosine = cos(ang);
     sine = sin(ang);
 
-    result.initZeros();
     switch (axis)
     {
     case 'Z':
@@ -98,16 +88,16 @@ void rotation3DMatrix(double ang, char axis, Matrix2D< double > &result,
     case 'Y':
         MAT_ELEM(result,0, 0) = cosine;
         MAT_ELEM(result,0, 2) = -sine;
+        MAT_ELEM(result,1, 1) = 1;
         MAT_ELEM(result,2, 0) = sine;
         MAT_ELEM(result,2, 2) = cosine;
-        MAT_ELEM(result,1, 1) = 1;
         break;
     case 'X':
+        MAT_ELEM(result,0, 0) = 1;
         MAT_ELEM(result,1, 1) = cosine;
         MAT_ELEM(result,1, 2) = -sine;
         MAT_ELEM(result,2, 1) = sine;
         MAT_ELEM(result,2, 2) = cosine;
-        MAT_ELEM(result,0, 0) = 1;
         break;
     default:
         REPORT_ERROR(ERR_VALUE_INCORRECT, "rotation3DMatrix: Unknown axis");
@@ -116,17 +106,20 @@ void rotation3DMatrix(double ang, char axis, Matrix2D< double > &result,
 
 /* Align a vector with Z axis */
 void alignWithZ(const Matrix1D<double> &axis, Matrix2D<double>& result,
-                bool homogeneous)
+		bool homogeneous)
 {
+#ifndef RELEASE_MODE
     if (axis.size() != 3)
         REPORT_ERROR(ERR_MATRIX_SIZE, "alignWithZ: Axis is not in R3");
+#endif
+
     if (homogeneous)
     {
-        result.initZeros(4,4);
-        MAT_ELEM(result,3, 3) = 1;
+    	result.initZeros(4,4);
+    	MAT_ELEM(result,3, 3) = 1;
     }
     else
-        result.initZeros(3,3);
+    	result.initZeros(3,3);
     Matrix1D<double>  Axis(axis);
     Axis.selfNormalize();
 
@@ -161,46 +154,25 @@ void alignWithZ(const Matrix1D<double> &axis, Matrix2D<double>& result,
 }
 
 /* Rotation 3D around any axis -------------------------------------------- */
-void rotation3DMatrix(double ang, const Matrix1D<double> &axis,
-                      Matrix2D<double> &result, bool homogeneous)
+void rotationMatrix(double ang, const Matrix1D<double> &axis, Matrix2D<double> &result,
+		bool homogeneous)
 {
     // Compute a matrix which makes the turning axis coincident with Z
     // And turn around this axis
     Matrix2D<double> A,R;
     alignWithZ(axis,A,homogeneous);
-    rotation3DMatrix(ang, 'Z', R, homogeneous);
+    rotationMatrix(ang, 'Z', R,homogeneous);
     result=A.transpose() * R * A;
 }
 
-/* Translation 3D ---------------------------------------------------------- */
-void translation3DMatrix(const Matrix1D<double> &v, Matrix2D<double> &result)
-{
-    if (VEC_XSIZE(v) != 3)
-        REPORT_ERROR(ERR_MATRIX_SIZE, "Translation3D_matrix: vector is not in R3");
-
-    result.initIdentity(4);
-    MAT_ELEM(result,0, 3) = XX(v);
-    MAT_ELEM(result,1, 3) = YY(v);
-    MAT_ELEM(result,2, 3) = ZZ(v);
-}
-
 /* Scale 3D ---------------------------------------------------------------- */
-void scale3DMatrix(const Matrix1D<double> &sc, Matrix2D<double>& result,
-                   bool homogeneous)
+void scaleMatrix(Matrix2D< double > &result, double scaleX, double scaleY, double scaleZ)
 {
-    if (VEC_XSIZE(sc) != 3)
-        REPORT_ERROR(ERR_MATRIX_SIZE, "Scale3D_matrix: vector is not in R3");
-
-    if (homogeneous)
-    {
-        result.initZeros(4,4);
-        MAT_ELEM(result,3, 3) = 1;
-    }
-    else
-        result.initZeros(3,3);
-    MAT_ELEM(result,0, 0) = XX(sc);
-    MAT_ELEM(result,1, 1) = YY(sc);
-    MAT_ELEM(result,2, 2) = ZZ(sc);
+    result.initZeros(4,4);
+    MAT_ELEM(result,3, 3) = 1;
+    MAT_ELEM(result,0, 0) = scaleX;
+    MAT_ELEM(result,1, 1) = scaleY;
+    MAT_ELEM(result,2, 2) = scaleZ;
 }
 
 // Special case for complex numbers

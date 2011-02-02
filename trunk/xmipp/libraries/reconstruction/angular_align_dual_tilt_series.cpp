@@ -419,7 +419,7 @@ void Prog_align_dual::alignDual()
         Idual().setXmippOrigin();
         if (rotatedDual)
             selfRotate(BSPLINE3,Idual(),180);
-        selfTranslate(BSPLINE3,Idual(),shift2D);
+        selfTranslate(BSPLINE3,Idual(),XX(shift2D),YY(shift2D));
         shiftProjectionInZ(Idual(), n, ZZ(shift3D));
         Euler_angles2matrix(0, tiltDual(n), 0, Edual);
         Edual=Edual*E;

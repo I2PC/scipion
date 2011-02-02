@@ -667,7 +667,6 @@ void ProgMLTomo::generateInitialReferences()
     MultidimArray<std::complex<double> > Fave;
     std::vector<MultidimArray<double> > fsc; //1D
     Matrix2D<double> my_A; //2D
-    Matrix1D<double> my_offsets(3);//1D
     FileName fn_tmp;
     //SelLine line;
     MetaData MDrand;
@@ -723,12 +722,12 @@ void ProgMLTomo::generateInitialReferences()
                 md.getValue(MDL_ANGLETILT, my_tilt, __iter.objId);
                 md.getValue(MDL_ANGLEPSI, my_psi, __iter.objId);
 
-                md.getValue(MDL_SHIFTX, my_offsets(0), __iter.objId);
-                md.getValue(MDL_SHIFTY, my_offsets(1), __iter.objId);
-                md.getValue(MDL_SHIFTZ, my_offsets(2), __iter.objId);
-                my_offsets *= scale_factor;
-
-                selfTranslate(LINEAR, Itmp(), my_offsets, DONT_WRAP);
+                double shiftx, shifty, shiftz;
+                md.getValue(MDL_SHIFTX, shiftx, __iter.objId);
+                md.getValue(MDL_SHIFTY, shifty, __iter.objId);
+                md.getValue(MDL_SHIFTZ, shiftz, __iter.objId);
+                selfTranslate(LINEAR, Itmp(), shiftx*scale_factor, shifty*scale_factor,
+                		      shiftz*scale_factor, DONT_WRAP);
             }
             else
             {
@@ -2325,7 +2324,7 @@ void ProgMLTomo::maxConstrainedCorrSingleImage(
     XX(opt_offsets) = -(double)ioptx;
     YY(opt_offsets) = -(double)iopty;
     ZZ(opt_offsets) = -(double)ioptz;
-    selfTranslate(LINEAR, Mimg0, opt_offsets, DONT_WRAP);
+    selfTranslate(LINEAR, Mimg0, XX(opt_offsets), YY(opt_offsets), ZZ(opt_offsets), DONT_WRAP);
     A_rot = (all_angle_info[opt_angno]).A;
     maskSphericalAverageOutside(Mimg0);
     selfApplyGeometry(LINEAR, Mimg0, A_rot, IS_NOT_INV, DONT_WRAP, DIRECT_MULTIDIM_ELEM(Mimg0,0));
@@ -2439,7 +2438,8 @@ void * threadMLTomoExpectationSingleImage( void * data )
 
             if (prm->dont_align || prm->do_only_average)
             {
-                selfTranslate(LINEAR, img(), prm->imgs_optoffsets[imgno], DONT_WRAP);
+            	const Matrix1D<double> &shift=prm->imgs_optoffsets[imgno];
+                selfTranslate(LINEAR, img(), XX(shift), YY(shift), ZZ(shift), DONT_WRAP);
             }
 
             prm->reScaleVolume(img(),true);

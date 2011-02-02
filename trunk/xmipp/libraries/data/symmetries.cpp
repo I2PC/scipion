@@ -137,7 +137,7 @@ int SymList::read_sym_file(FileName fn_sym, double accuracy)
             L.initIdentity();
             for (j = 1, rot_ang = ang_incr; j < fold; j++, rot_ang += ang_incr)
             {
-                rotation3DMatrix(rot_ang, axis, R);
+                rotationMatrix(rot_ang, axis, R);
                 set_shift(i, shift);
                 set_matrices(i++, L, R.transpose());
             }
@@ -168,7 +168,7 @@ int SymList::read_sym_file(FileName fn_sym, double accuracy)
             L.initIdentity();
             L(2, 2) = -1;
             Matrix2D<double> A;
-            alignWithZ(axis,A);
+            alignWithZ(axis,A,false);
             A = A.transpose();
             R = A * L * A.inv();
             set_shift(i, shift);

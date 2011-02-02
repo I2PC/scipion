@@ -444,7 +444,7 @@ void ProgAngularClassAverage::reAlignClass(Image<double> &avg1,
                     }
                     else
                     {
-                        selfTranslate(BSPLINE3,Mimg,vectorR2(opt_xoff,opt_yoff),true);
+                        selfTranslate(BSPLINE3,Mimg,opt_xoff,opt_yoff);
                         new_xoff =  opt_xoff*COSD(opt_psi) + opt_yoff*SIND(opt_psi);
                         new_yoff = -opt_xoff*SIND(opt_psi) + opt_yoff*COSD(opt_psi);
                     }

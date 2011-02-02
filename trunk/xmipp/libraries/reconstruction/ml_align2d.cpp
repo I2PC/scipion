@@ -1071,7 +1071,7 @@ void ProgML2D::expectationSingleImage(Matrix1D<double> &opt_offsets)
     {
         // 1. Calculate optimal setting of Mimg
         MultidimArray<double> Maux2 = Mimg;
-        selfTranslate(LINEAR, Maux2, opt_offsets, true);
+        selfTranslate(LINEAR, Maux2, XX(opt_offsets), YY(opt_offsets));
         selfApplyGeometry(LINEAR, Maux2, F[iopt_flip], IS_INV, WRAP);
         // 2. Calculate optimal setting of Mref
         int refnoipsi = (opt_refno % model.n_ref) * nr_psi + iopt_psi;
@@ -1439,7 +1439,7 @@ void ProgML2D::doThreadPreselectFastSignificantRefno()
                 }
                 else
                 {
-                    translate(LINEAR, Mtrans, Mimg, trans, true);
+                    translate(LINEAR, Mtrans, Mimg, XX(trans), YY(trans));
                     for (int iflip = 0; iflip < nr_nomirror_flips; iflip++)
                     {
                         applyGeometry(LINEAR, Mflip, Mtrans, F[IIFLIP], IS_INV, WRAP);

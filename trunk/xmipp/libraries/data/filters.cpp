@@ -924,8 +924,7 @@ void best_nonwrapping_shift(const MultidimArray<double> &I1,
     double bestCorr, corr;
     MultidimArray<double> Iaux;
 
-    translate(1, Iaux, I1, vectorR2(-shiftX,-shiftY), DONT_WRAP);
-    //I1.translate(vectorR2(-shiftX,-shiftY),Iaux, DONT_WRAP);
+    translate(1, Iaux, I1, -shiftX,-shiftY, 0, DONT_WRAP);
     bestCorr=corr=fastCorrelation(I2,Iaux);
     double finalX=shiftX;
     double finalY=shiftY;
@@ -945,8 +944,7 @@ void best_nonwrapping_shift(const MultidimArray<double> &I1,
     Iaux.initZeros();
     double testX=(shiftX>0) ? (shiftX-XSIZE(I1)):(shiftX+XSIZE(I1));
     double testY=shiftY;
-    translate(1, Iaux, I1, vectorR2(-testX,-testY), DONT_WRAP);
-    //I1.translate(vectorR2(-testX,-testY),Iaux,DONT_WRAP);
+    translate(1, Iaux, I1, -testX,-testY, 0, DONT_WRAP);
     corr=fastCorrelation(I2,Iaux);
     if (corr>bestCorr)
         finalX=testX;
@@ -961,8 +959,7 @@ void best_nonwrapping_shift(const MultidimArray<double> &I1,
     Iaux.initZeros();
     testX=shiftX;
     testY=(shiftY>0) ? (shiftY-YSIZE(I1)):(shiftY+YSIZE(I1));
-    translate(1, Iaux, I1, vectorR2(-testX,-testY), DONT_WRAP);
-    //I1.translate(vectorR2(-testX,-testY),Iaux,DONT_WRAP);
+    translate(1, Iaux, I1, -testX,-testY, 0, DONT_WRAP);
     corr=fastCorrelation(I2,Iaux);
     if (corr>bestCorr)
         finalY=testY;
@@ -977,8 +974,7 @@ void best_nonwrapping_shift(const MultidimArray<double> &I1,
     Iaux.initZeros();
     testX=(shiftX>0) ? (shiftX-XSIZE(I1)):(shiftX+XSIZE(I1));
     testY=(shiftY>0) ? (shiftY-YSIZE(I1)):(shiftY+YSIZE(I1));
-    translate(1, Iaux, I1, vectorR2(-testX,-testY), DONT_WRAP);
-    //I1.translate(vectorR2(-testX,-testY),Iaux,DONT_WRAP);
+    translate(1, Iaux, I1, -testX,-testY, 0, DONT_WRAP);
     corr=fastCorrelation(I2,Iaux);
     if (corr>bestCorr)
     {
@@ -1048,7 +1044,7 @@ void alignImages(const MultidimArray< double >& Iref, MultidimArray< double >& I
 
         double bestRot = best_rotation(polarFourierIref,polarFourierI,
                                        local_transformer);
-        rotation2DMatrix(-bestRot,R);
+        rotationMatrix(-bestRot,R);
         ASR=R*ASR;
         applyGeometry(LINEAR, IauxSR, I, ASR, IS_NOT_INV, WRAP);
 
@@ -1063,7 +1059,7 @@ void alignImages(const MultidimArray< double >& Iref, MultidimArray< double >& I
             1);
         bestRot = best_rotation(polarFourierIref,polarFourierI,
                                 local_transformer);
-        rotation2DMatrix(-bestRot,R);
+        rotationMatrix(-bestRot,R);
         ARS=R*ARS;
         applyGeometry(LINEAR, IauxRS, I, ARS, IS_NOT_INV, WRAP);
 
@@ -1908,11 +1904,8 @@ void centerImageTranslationally(MultidimArray<double> &I)
     meanShiftX/=3;
     meanShiftY/=3;
 
-    Matrix1D<double> shift(2);
-    VECTOR_R2(shift,-meanShiftX,-meanShiftY);
     MultidimArray<double> aux = I;
-    translate(3, I, aux, shift);
-    //I.selfTranslateBSpline(3,shift);
+    translate(BSPLINE3, I, aux, -meanShiftX,-meanShiftY);
 }
 
 /* Center rotationally ----------------------------------------------------- */
@@ -1954,7 +1947,7 @@ void centerImage(MultidimArray<double> &I, int Niter, bool limitShift)
     I-=avg;
 
     MultidimArray<double> Ix, Iy, Ixy, Iaux;
-    Matrix2D<double> A;
+    Matrix2D<double> A,R;
     A.initIdentity(3);
     Iaux=I;
 
@@ -2088,8 +2081,7 @@ void centerImage(MultidimArray<double> &I, int Niter, bool limitShift)
         if (bestRot>90)
             bestRot=bestRot-180;
 
-        Matrix2D<double> R;
-        rotation2DMatrix(-bestRot/2,R);
+        rotationMatrix(-bestRot/2,R);
         A=R*A;
         Iaux.initZeros();
         applyGeometry(LINEAR, Iaux, I, A, IS_NOT_INV, WRAP);
@@ -2136,7 +2128,7 @@ void centerImage(MultidimArray<double> &I, int Niter, bool limitShift)
             yF--;
         if ((xF-x0)>(yF-y0))
         {
-            rotation2DMatrix(90,R);
+            rotationMatrix(90,R);
             A=R*A;
         }
         applyGeometry(LINEAR, Iaux, I, A, IS_NOT_INV, WRAP);

@@ -28,6 +28,7 @@
 #include <data/funcs.h>
 #include <data/metadata.h>
 #include <data/projection.h>
+#include <data/program.h>
 #include <data/pdb.h>
 
 #include <data/phantom.h>
@@ -38,13 +39,16 @@
 //@{
 /* Projection Program Parameters ------------------------------------------- */
 /** Parameter class for the project program */
-class Prog_Project_Parameters
+class ProgProject: public XmippProgram
 {
 public:
     /// Filename with the \ref Projection_Parameters.
     FileName fn_proj_param;
-    /// Selection file with all projections
-    FileName fn_sel_file;
+    /** Phantom filename.
+        It can be a Xmipp volume or a mathematically defined phantom. */
+    FileName  fnPhantom;
+    /// Root filename
+    FileName  fnRoot;
     /** Filename with the special crystal parameters
        (\ref Crystal_Projection_Parameters ) */
     FileName fn_crystal;
@@ -54,22 +58,15 @@ public:
     double samplingRate;
     /// Only create angles, do not project
     bool only_create_angles;
-
-#define TELL_SHOW_ANGLES 0x1
-    /** Debugging variable.
-        This is a bitwise flag with the following valid labels:
-        \\TELL_SHOW_ANGLES: the program shows the angles for each image.*/
-    int tell;
 public:
-    /** Read from a command line.
-        An exception might be thrown by any of the internal conversions,
-        this would mean that there is an error in the command line and you
-        might show a usage message. */
-    void read(int argc, char **argv);
+    /** Read parameters. */
+    void readParams();
 
-    /** Usage message.
-        This function shows the way of introdustd::cing this parameters. */
-    void usage();
+    /** Define parameters */
+    void defineParams();
+
+    /** Run */
+    void run();
 };
 
 /* Angular range ----------------------------------------------------------- */
@@ -132,16 +129,6 @@ struct Angle_range
 class Projection_Parameters
 {
 public:
-    /** Phantom filename.
-        It can be a Xmipp volume or a mathematically defined phantom. */
-    FileName     fnPhantom;
-    /// Starting name for all projections
-    std::string  fnProjectionSeed;
-    /// First projection number. By default, 1.
-    int          starting;
-    /// Extension for projection filenames. This is optional
-    std::string  fn_projection_extension;
-
     /// Projection Xdim
     int      proj_Xdim;
     /// Projection Ydim
@@ -175,18 +162,12 @@ public:
     /** From Program Parameters.
         This function loads the Projection Parameters from the parameters
         given to the program (PROJECT). */
-    void from_prog_params(const Prog_Project_Parameters &prog_prm);
+    void from_prog_params(const ProgProject &prog_prm);
 
     /** Read projection parameters from a file.
         An exception is thrown if the file is not found or any of the
         parameters is not found in the right place.*/
     void read(const FileName &fn_proj_param);
-
-    /** Write projection parameters to a file.
-        The projection parameters are written into a file wth the same
-        structure as always. If the file cannot be openned for output
-        an exception is thrown. */
-    void write(const FileName &fn_proj_param) const;
 };
 
 /** Project program Side information.
@@ -218,7 +199,7 @@ public:
         the phantom mode to voxel or mathematical description and
         generates or read the projection angles.*/
     void produce_Side_Info(const Projection_Parameters &prm,
-                           const Prog_Project_Parameters &prog_prm);
+                           const ProgProject &prog_prm);
 };
 
 /* Assigning angles -------------------------------------------------------- */
@@ -248,7 +229,8 @@ int PROJECT_Assign_angles(MetaData &DF, const Projection_Parameters &prm);
     to project only one image, although it is also written to disk.
     The returned number is the total number of projections generated.
     A selection file with all images is also returned.*/
-int PROJECT_Effectively_project(const Projection_Parameters &prm,
+int PROJECT_Effectively_project(const std::string &fnDir,
+								const Projection_Parameters &prm,
                                 PROJECT_Side_Info &side,
                                 const Crystal_Projection_Parameters &prm_crystal,
                                 Projection &proj, MetaData &SF);
@@ -267,6 +249,6 @@ int PROJECT_Effectively_project(const Projection_Parameters &prm,
     The returned number is the total number of projections generated.
     A selection file with all images is also returned (and saved if any
     name has been given in the parameters).*/
-int ROUT_project(Prog_Project_Parameters &prm, Projection &proj, MetaData &SF);
+int ROUT_project(ProgProject &prm, Projection &proj, MetaData &SF);
 //@}
 #endif

@@ -73,7 +73,7 @@ public:
             Axis_mode = true;
             axis = getVectorParameter(argc, argv, "-axis", 3);
             ang = textToFloat(getParameter(argc, argv, "-ang"));
-            rotation3DMatrix(ang, axis, A3D);
+            rotationMatrix(ang, axis, A3D);
         }
         else
             A3D.initIdentity(4);
