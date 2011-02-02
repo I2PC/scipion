@@ -88,18 +88,80 @@ void Projection::assign(const Projection &P)
     *this = P;
 }
 
+
+void ParametersProjectionTomography::defineParams(XmippProgram* program)
+{
+    program->addParamsLine(" -i <volume_file>        : Volume file to be projected.");
+    program->addParamsLine(" alias --input;");
+    program->addParamsLine(" -p <param_file>         : MetaData file with projection parameters.");
+    program->addParamsLine(" alias --param;");
+    program->addParamsLine(" -o  <project_stack_file>: Stack file with the generated projections.");
+    program->addParamsLine("                         : A metadata file with angles info is also generated, with same seed name.");
+    program->addParamsLine(" alias --output;");
+}
+
+void ParametersProjectionTomography::readParams(XmippProgram * program)
+{
+    fnPhantom = program->getParam("-i");
+    read(program->getParam("-p"));
+    fnProjectionSeed = program->getParam("-o");
+
+}
+
+
 /* Read Projection Parameters ============================================== */
 void ParametersProjectionTomography::read(const FileName &fn_proj_param)
 {
     if (fn_proj_param.isMetaData())
     {
-        //TODO Reading from Metadata file to be completed!!
-        REPORT_ERROR(ERR_NOT_IMPLEMENTED,"Need to include new LABEL_VECTOR_STRING for MDL.. CUBANITO HELP!!.");
+        MetaData MD;
+        size_t objId;
+        MD.read(fn_proj_param);
+        objId = MD.firstObject();
+        //        MD.getValue(MDL_PRJ_VOL, fnPhantom, objId);
+        std::vector<double> vecD;
+        MD.getValue(MDL_PRJ_DIMENSIONS, vecD, objId);
+        proj_Xdim = vecD[0];
+        proj_Ydim = vecD[1];
+        MD.getValue(MDL_ANGLEROT, axisRot, objId);
+        MD.getValue(MDL_ANGLETILT, axisTilt, objId);
 
-        //        MetaData MD;
-        //        MD.read(fn_proj_param);
-        //        MD.getValue(MDL_PRJ_VOL,fnPhantom);
+        raxis.resize(3);
+        if (!MD.getValue(MDL_SHIFTX, XX(raxis), objId))
+            XX(raxis) = 0;
+        if (!MD.getValue(MDL_SHIFTY, YY(raxis), objId))
+            YY(raxis) = 0;
+        if (!MD.getValue(MDL_SHIFTZ, ZZ(raxis), objId))
+            ZZ(raxis) = 0;
 
+        MD.getValue(MDL_PRJ_TILT_RANGE, vecD, objId);
+        tilt0    = vecD[0];
+        tiltF    = vecD[1];
+        tiltStep = vecD[2];
+
+        if (MD.getValue(MDL_NOISE_ANGLES, vecD, objId))
+        {
+            Nangle_dev = vecD[0];
+            Nangle_avg = (vecD.size()>1)? vecD[1]: 0;
+        }
+        else
+            Nangle_dev = Nangle_avg = 0;
+
+        if (MD.getValue(MDL_NOISE_PIXEL_LEVEL, vecD, objId))
+        {
+            Npixel_dev = vecD[0];
+            Npixel_avg = (vecD.size()>1)? vecD[1]: 0;
+        }
+        else
+            Npixel_dev = Npixel_avg = 0;
+
+        if (MD.getValue(MDL_NOISE_PARTICLE_COORD, vecD, objId))
+        {
+            Ncenter_dev = vecD[0];
+            Ncenter_avg = (vecD.size()>1)? vecD[1]: 0;
+        }
+        else
+            Ncenter_dev = Ncenter_avg = 0;
     }
     else
     {

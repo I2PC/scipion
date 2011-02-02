@@ -30,6 +30,7 @@
 #include "threads.h"
 #include "grids.h"
 #include "basis.h"
+#include "program.h"
 
 // These two structures are needed when projecting and backprojecting using
 // threads. They make mutual exclusion and synchronization possible.
@@ -130,7 +131,7 @@ public:
     /// Sampling resolution of the phantom.
     double sampling;
     /// Starting name for all projections
-    std::string   fnProjectionSeed;
+    FileName  fnProjectionSeed;
     /// First projection number. By default, 1.
     int      starting;
     /// Extension for projection filenames. This is optional
@@ -141,7 +142,7 @@ public:
     /// Projection Ydim
     int      proj_Ydim;
 
-    /// Debugging level. See \ref Prog_Project_Parameters::tell
+    /// Debugging level
     int tell;
 
     /// Rotational angle of the tilt axis
@@ -176,6 +177,9 @@ public:
         An exception is thrown if the file is not found or any of the
         parameters is not found in the right place.*/
     void read(const FileName &fn_proj_param);
+
+    void defineParams(XmippProgram * program);
+    void readParams(XmippProgram * program);
 };
 
 /** Structure for threaded projections.
