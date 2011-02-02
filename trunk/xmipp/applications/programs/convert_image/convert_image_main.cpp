@@ -24,12 +24,8 @@
  *  e-mail address 'xmipp@cnb.csic.es'
  ***************************************************************************/
 
-#include <data/args.h>
-#include <data/image.h>
-#include <data/metadata.h>
 #include <data/metadata_extension.h>
-#include <data/progs.h>
-
+#include <data/program.h>
 #include <data/image_generic.h>
 
 typedef enum
