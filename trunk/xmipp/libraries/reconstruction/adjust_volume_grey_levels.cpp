@@ -50,7 +50,7 @@ void ProgAdjustVolume::defineParams()
     addParamsLine(" alias --output;");
     addParamsLine(" [--optimize]          : Optimize the linear transformation. By default, keep the initially computed.");
     addParamsLine(" [--probb_eval <p=0.2>] : The goal function is evaluated each time from a random set of projections.");
-    addParamsLine("                       : Each image has a probability of p of being evaluated");
+    addParamsLine("                       : Each image has a probability of p of being evaluated.");
 }
 
 void ProgAdjustVolume::readParams()
