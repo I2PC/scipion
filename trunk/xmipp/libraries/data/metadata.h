@@ -343,7 +343,7 @@ public:
     template<class T>
     bool setValueCol(const MDLabel label, const T &valueIn)
     {
-        setValueCol(MDObject(label, valueIn));
+        return setValueCol(MDObject(label, valueIn));
     }
 
     /** Set the value for some label.
@@ -361,7 +361,7 @@ public:
     template<class T>
     bool setValue(const MDLabel label, const T &valueIn, size_t id)
     {
-        setValue(MDObject(label, valueIn), id);
+        return setValue(MDObject(label, valueIn), id);
     }
 
     /** This functions are using MDObject for set real values

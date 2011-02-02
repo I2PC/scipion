@@ -107,14 +107,14 @@ bool MetaData::setValue(const MDObject &mdValueIn, size_t id)
     }
     //add label if not exists, this is checked in addlabel
     addLabel(mdValueIn.label);
-    myMDSql->setObjectValue(id, mdValueIn);
+    return myMDSql->setObjectValue(id, mdValueIn);
 }
 
 bool MetaData::setValueCol(const MDObject &mdValueIn)
 {
     //add label if not exists, this is checked in addlabel
     addLabel(mdValueIn.label);
-    myMDSql->setObjectValue(mdValueIn);
+    return myMDSql->setObjectValue(mdValueIn);
 }
 
 bool MetaData::getValue(MDObject &mdValueOut, size_t id) const
