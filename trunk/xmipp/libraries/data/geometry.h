@@ -810,19 +810,6 @@ void Euler_apply_transf(const Matrix2D< double >& L,
                         double& newtilt,
                         double& newpsi);
 
-/** 3D Rotation matrix after 3 Euler angles
- *
- * Creates a rotational matrix (4x4) for volumes around the combination of the 3
- * rotations around ZYZ. All angles are in degrees. You must use it with
- * IS_NOT_INV in applyGeometry.
- *
- * @code
- * Matrix2D< float > euler = Euler_rotation3DMatrix(60, 30, 60);
- * @endcode
- */
-//void Euler_rotation3DMatrix(double rot, double tilt, double psi,
-//                            Matrix2D<double> &result);
-
 /** Rotate a volume after 3 Euler angles
  *
  * Input and output volumes cannot be the same one.
