@@ -63,7 +63,7 @@ public:
             rot  = textToFloat(argv[i+1]);
             tilt = textToFloat(argv[i+2]);
             psi  = textToFloat(argv[i+3]);
-            Euler_rotation3DMatrix(rot, tilt, psi, A3D);
+            Euler_angles2matrix(rot, tilt, psi, A3D, true);
         }
         else if (checkParameter(argc, argv, "-alignWithZ"))
         {
