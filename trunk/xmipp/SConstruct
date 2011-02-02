@@ -32,6 +32,7 @@ opts.Add('LINKERFORPROGRAMS', 'Linker for programs', 'g++')
 #hope is OK roberto
 opts.Add('CCFLAGS', 'The C compiler flags', None)
 opts.Add('CXXFLAGS', 'The C++ compiler flags', None)
+opts.Add(BoolVariable('release', 'Release mode', 'yes'))
 
 opts.Add(BoolVariable('debug', 'Build debug version?', 'no'))
 #Profile version implies debug and then it will be ignored
@@ -148,6 +149,11 @@ if (ARGUMENTS['mode'] == 'configure'):
         print '* Configuring  ...'
         config_dir = base_dir + 'config.tests'
         config_log = base_dir + 'config.log'
+
+    # release?
+    if int(env['release']):
+        env.Append(CCFLAGS='-DRELEASE_MODE')
+        env.Append(CXXFLAGS='-DRELEASE_MODE')
 
     # static?
     if int(env['static']):
