@@ -83,8 +83,8 @@ protected:
         addParamsLine("                 long");
         addParamsLine("                 float");
         addParamsLine("                 double");
-        addParamsLine("                 cint16 : Complex in16");
-        addParamsLine("                 cint32 : Complex in32");
+        addParamsLine("                 cint16 : Complex int16");
+        addParamsLine("                 cint32 : Complex int32");
         addParamsLine("                 cfloat : Complex float");
         addParamsLine("                 cdouble: Complex double");
         addParamsLine("                 bool");
