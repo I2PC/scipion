@@ -26,8 +26,8 @@
 #ifndef _PROJECTXR_H_
 #define _PROJECTXR_H_
 
-#include <data/program.h>
 #include <data/psf_xr.h>
+#include <data/program.h>
 #include <data/threads.h>
 
 
@@ -112,7 +112,7 @@ public:
     to project only one image, although it is also written to disk.
     The returned number is the total number of projections generated.
     A selection file with all images is also returned.*/
-int PROJECT_XR_Effectively_project( ParametersProjectionXR &prm,
+int XrayProjectEffectivelyProject( ParametersProjectionXR &prm,
                                     XrayProjPhantom &side, Projection &proj,XRayPSF &psf, MetaData &SF);
 
 /** From voxel volumes, off-centered tilt axis.
@@ -132,7 +132,7 @@ int PROJECT_XR_Effectively_project( ParametersProjectionXR &prm,
 
     Off-centered not implemented. Rotations are around volume center
 */
-void project_xr_Volume_offCentered(XrayProjPhantom &side, XRayPSF &psf, Projection &P,
+void XrayProjectVolumeOffCentered(XrayProjPhantom &side, XRayPSF &psf, Projection &P,
                                    int Ydim, int Xdim, int  idxSlice = 1);
 
 
@@ -158,7 +158,7 @@ int numberOfThreads;
 
 
 /// Thread Job to generate an X-ray microscope projection
-void thread_project_xr(ThreadArgument &thArg);
+void threadXrayProject(ThreadArgument &thArg);
 //@}
 
 

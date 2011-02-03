@@ -26,8 +26,9 @@
 #ifndef _PSF_XR_HH
 #define _PSF_XR_HH
 
-#include <complex>
+//#include <complex>
 #include "image.h"
+#include "fftw.h"
 #include "projection.h"
 #include "program.h"
 
@@ -37,12 +38,12 @@
 
 /** This enum defines which method should be used to
  correct the constraint due to Nyquist limit in diffraction. */
-typedef enum
+enum PsfxrAdjust
 {
     PSFXR_STD, /// Standard mode, image size does not changes
     PSFXR_INT, /// Increasing the image size by Interpolating
     PSFXR_ZPAD /// Increasing the image size by Zeropadding
-} PsfxrAdjust;
+} ;
 
 // PSF Generation algorithm
 /* ANALITIC_ZP is based on  O. Mendoza-Yero et als."PSF analysis of nanometric Fresnel
@@ -50,11 +51,11 @@ typedef enum
  * ISBN 978-3-00-024193-2, 14th-18th February
  * 2010, Koli, Finland. (contact email:omendoza@uji.es)
  */
-typedef enum
+enum PsfType
 {
-    IDEAL_LENS,
-    ANALITIC_ZP
-} PsfType;
+    IDEAL_FRESNEL_LENS,
+    ANALYTIC_ZP
+};
 
 /** X-ray PSF class.
  * Here goes how to filter an image with the Point Spread Function of a X-ray microscope optics
@@ -154,6 +155,9 @@ public:
     /// Minimum diameter size of the microscope pupile in the lens plane, measured in pixels
     double pupileSizeMin;
 
+    // Fourier Transformer to generate OTF, declared in class to avoid copy output
+    FourierTransformer ftGenOTF;
+
 public:
     /// Lambda of illumination
     double lambda;
@@ -239,7 +243,7 @@ public:
     friend std::ostream & operator <<(std::ostream &out, const XRayPSF &psf);
 
     /// Produce Side information
-    void produceSideInfo(double _dxo, double _dzo = -1);
+    void calculateParams(double _dxo, double _dzo = -1);
 
     /// Apply the OTF to the image, by means of the convolution
     void applyOTF(MultidimArray<double> &Im, const double sliceOffset);
@@ -248,7 +252,7 @@ public:
     void generateOTF();
 
     /// Generate the 3D Point Spread Function (PSF) according to Microscope parameters.
-    void generatePSF(PsfType _type = IDEAL_LENS);
+    void generatePSF(PsfType _type = IDEAL_FRESNEL_LENS);
 
     /// Calculate if a resize of the X-Y plane is needed to avoid the Nyquist Limit
     void adjustParam();

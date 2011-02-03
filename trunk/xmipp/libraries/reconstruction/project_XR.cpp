@@ -22,9 +22,7 @@
  *  All comments concerning this program package may be sent to the
  *  e-mail address 'xmipp@cnb.csic.es'
  ***************************************************************************/
-
 #include "project_XR.h"
-#include <data/psf_xr.h>
 
 void ProgXrayProject::defineParams()
 {
@@ -69,7 +67,7 @@ void ProgXrayProject::run()
 
     randomize_random_generator();
 
-    psf.produceSideInfo(dxo);
+    psf.calculateParams(dxo);
     //    if(psf.verbose)
     //        psf.show();
 
@@ -129,7 +127,7 @@ void ProgXrayProject::run()
 
         // Really project ....................................................
         if (!only_create_angles)
-            project_xr_Volume_offCentered(phantom, psf, proj,projParam.proj_Ydim, projParam.proj_Xdim, idx);
+            XrayProjectVolumeOffCentered(phantom, psf, proj,projParam.proj_Ydim, projParam.proj_Xdim, idx);
 
         // Add noise in angles and voxels ....................................
         proj.getEulerAngles(tRot, tTilt,tPsi);
@@ -213,7 +211,7 @@ void XrayProjPhantom::read(
 }
 
 /* Effectively project ===================================================== */
-int PROJECT_XR_Effectively_project(ParametersProjectionXR &projParam,
+int XrayProjectEffectivelyProject(ParametersProjectionXR &projParam,
                                    XrayProjPhantom &side,
                                    Projection &proj,
                                    XRayPSF &psf,
@@ -271,7 +269,7 @@ int PROJECT_XR_Effectively_project(ParametersProjectionXR &projParam,
         td->clear();
 
         // Really project ....................................................
-        project_xr_Volume_offCentered(side, psf, proj,projParam.proj_Ydim, projParam.proj_Xdim, idx);
+        XrayProjectVolumeOffCentered(side, psf, proj,projParam.proj_Ydim, projParam.proj_Xdim, idx);
 
         // Add noise in angles and voxels ....................................
         proj.getEulerAngles(tRot, tTilt,tPsi);
@@ -321,7 +319,7 @@ int PROJECT_XR_Effectively_project(ParametersProjectionXR &projParam,
     return numProjs;
 }
 
-void project_xr_Volume_offCentered(XrayProjPhantom &phantom, XRayPSF &psf, Projection &P,
+void XrayProjectVolumeOffCentered(XrayProjPhantom &phantom, XRayPSF &psf, Projection &P,
                                    int Ydim, int Xdim, int idxSlice)
 {
 
@@ -406,7 +404,7 @@ void project_xr_Volume_offCentered(XrayProjPhantom &phantom, XRayPSF &psf, Proje
 
     //the really really final project routine, I swear by Snoopy.
     //    project_xr(psf,side.rotPhantomVol,P, idxSlice);
-    thMgr->run(thread_project_xr);
+    thMgr->run(threadXrayProject);
 
     int outXDim = XMIPP_MIN(Xdim,iniXdim);
     int outYDim = XMIPP_MIN(Ydim,iniYdim);
@@ -462,7 +460,7 @@ void project_xr(XRayPSF &psf, MultidimArray<double> &vol, Image<double> &imOut, 
 }
 
 
-void thread_project_xr(ThreadArgument &thArg)
+void threadXrayProject(ThreadArgument &thArg)
 {
 
     int thread_id = thArg.thread_id;
@@ -495,7 +493,7 @@ void thread_project_xr(ThreadArgument &thArg)
     // Parallel thread jobs
     while (td->getTasks(first, last))
     {
-        std::cerr << "th" << thread_id << ": working from " << first << " to " << last <<std::endl;
+//        std::cerr << "th" << thread_id << ": working from " << first << " to " << last <<std::endl;
 
         //        if (numberOfThreads == 1)
         //            first = last -50;
@@ -577,9 +575,7 @@ void thread_project_xr(ThreadArgument &thArg)
             }
         }
         priorLast = last;
-
-        std::cerr << "th" << thread_id << ": Finished work from " << first << " to " << last <<std::endl;
-
+//        std::cerr << "th" << thread_id << ": Finished work from " << first << " to " << last <<std::endl;
     }
 
     //Lock to update the total summatory
@@ -606,5 +602,5 @@ void thread_project_xr(ThreadArgument &thArg)
 
         MULTIDIM_ARRAY(imOutGlobal).setXmippOrigin();
     }
-    std::cerr << "th" << thread_id << ": Thread Finished" <<std::endl;
+//    std::cerr << "th" << thread_id << ": Thread Finished" <<std::endl;
 }

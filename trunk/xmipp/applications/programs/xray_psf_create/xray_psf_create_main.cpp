@@ -40,15 +40,18 @@ protected:
 
     void defineParams()
     {
+        //Usage
         addUsageLine("Create a volume with the 3D PSF of an X-ray microscope.");
         addUsageLine("A param file can be passed or directly setting the microscope parameters.");
         addUsageLine("The program generates a PSF volume file and its associated info file.");
+        //See Also
         addSeeAlsoLine("xray_project");
         addParamsLine("[-i <psf_param_file>] : XRay-Microscope parameters file.");
         addParamsLine(" alias --input;");
         addParamsLine("-o <output_name_file>  : Name for output files. It creates a PSF volume file and a PSF parameters file.");
         addParamsLine(" alias --output;");
         psf.defineParams(this);
+        // Examples
         addExampleLine("The parameters are in a file",false);
         addExampleLine("xmipp_xray_psf_create -i psf560.xmd -o psf560.vol");
         addExampleLine("The parameters are given in the command line",false);
@@ -73,9 +76,8 @@ public:
 
     void run()
     {
-        psf.generatePSF(IDEAL_LENS);
+        psf.generatePSF(IDEAL_FRESNEL_LENS);
         psf.write(fnPSF);
-
     }
 };
 
