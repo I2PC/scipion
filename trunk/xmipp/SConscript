@@ -257,59 +257,36 @@ def AddLibrary(name, basedir, sources, includes, libpath=[], libs=[],
     env.Alias(name, install)
     env.Default(alias)
 
-def AddSwigJavaLibrary(name, basedir, sourceList, includes, libpath=[], libs=[]):
+def AddJavaLibrary(name, basedir, srcdir):#, sourceList, includes, libpath=[], libs=[]):
     import shutil
     import glob
 
-    # Create wrapper
-    # setup
-    env.AppendENVPath('PATH', 'external/java/jvm/bin')
+    # Compiles
+    java_home = 'external/java/jvm/'
+    #java_headers = os.path.join(java_home, 'include')
+    #java_libs = os.path.join(java_home, 'lib')
 
-    basedirswig = AddLastSlash(basedir + '/swig')
-    swigwrapperpath = basedirswig + 'xmipp'
-    libprefix = os.path.join(env['prefix'], 'lib')
+    # Adds javac and jar to PATH
+    env = Environment(tools = ['javac', 'jar'])
+    env.AppendENVPath('PATH', java_home + '/bin')
 
-    if int(env['swig']):
-	# Remove previously generated java and class files.
-	if os.path.exists(swigwrapperpath):
-		shutil.rmtree(swigwrapperpath)
-	os.mkdir(swigwrapperpath)	# Destination dir
-	removeAll(basedirswig,'*.jar')
-	removeAll(basedirswig,'*.cc')
-	removeAll(basedirswig,'*.py')
-	removeAll(basedirswig,'*.so')
-	removeAll(basedirswig,'*.os')
+    env['JAVA_HOME'] = java_home
+    #env['JNI_CPPPATH'] = java_headers
+    #env['JNI_LIBPATH'] = java_libs
+    #env['JAVACFLAGS'] = ''
 
-        wrapper = env.i2java(basedirswig + name + "_wrap.cc", sourceList)
-        Depends(wrapper, Glob(basedir, '*.h', [])+Glob(basedirswig, '*.i', []))
+    env['JARFLAGS'] = '-Mcf'    # Default "cf". "M" = Do not add a manifest file.
+    path = os.path.join(basedir, srcdir)
+    buildJar = env.Jar(target = basedir+'/' + name + '.jar',
+        source = path,
+        JARCHDIR = basedir)
 
-        # alias
-        alias=env.Alias(name,wrapper)
-        env.Default(alias)
+    print "buildJar", buildJar
+    buildClasses = env.Java(basedir, path)
 
-	# Packs everything into a jar file.
-	env['JARFLAGS'] = '-Mcf'    # Default "cf". "M" = Do not add a manifest file.
-	buildJar=env.Jar(target=basedirswig + '/' + name + '.jar',
-		source = swigwrapperpath,
-		JARCHDIR = basedirswig)
-	env.Default(buildJar)
-
-    # Create library
-    import distutils.sysconfig
-    AddLibrary(name, basedirswig, [name+"_wrap.cc"],
-        ['#',env['JNI_CPPPATH'],env['JNI_CPPPATH']+"/linux"],
-        ['lib'],['XmippData'],'lib')
-
-    #
-    """
-    pyFile = libprefix+'/'+name+'.py'
-    if os.path.exists(pyFile):
-       command = "ln -fs "
-    else:
-       command = "ln -s  "
-    command = command + " ../" + basedirswig+name+".py " + libprefix+'/'+name+'.py'
-    print command
-    os.system(command)"""
+    # Packs classes and plugin config file into jar.
+    env.Default(buildClasses)
+    env.Default(buildJar)
 
 def removeAll(basedir, regexp):
 	import glob
@@ -524,12 +501,6 @@ AddLibrary('xmipp', 'libraries/bindings/python', PyExtSources,
            ['#libraries',"#", distutils.sysconfig.get_python_inc()],
            ['lib'],['XmippData'],'')
 
-SwigJavaDataSources = ['libraries/data/swig/swigXmippDataJava.i']
-
-if int(env['java']):
-    AddSwigJavaLibrary('XmippDataJava', 'libraries/data', SwigJavaDataSources, ['#'],
-        [], ['XmippData'])
-
 # Reconstruction
 ReconsSources = [
     'adjust_ctf.cpp',
@@ -631,12 +602,20 @@ if int(env['java']):
     print 'Installing JVM...'
     JAVA_HOME = 'external/java/jvm'
     os.system("external/java/install_jvm.sh")
+    JavaInterfaceSources = Glob('libraries/bindings/java', '*.cpp', [])
+    AddLibrary('XmippJavaInterface', 'libraries/bindings/java', JavaInterfaceSources,
+    ['#libraries', '#external', '#', env['JNI_CPPPATH'],env['JNI_CPPPATH']+"/linux"],['lib'],
+    ['XmippData','pthread'])
     # Checks if jvm exists, otherwise the compilation will be halted if jvm is missing.
     AddImageJPlugin('Xmipp_IO', 'libraries/graphicsj/Xmipp_IO', 'external/imagej/plugins')
 ###    AddImageJPlugin('Xmipp_Projections_Explorer', 'libraries/graphicsj/Xmipp_Projections_Explorer', 'external/imagej/plugins')
     AddImageJPlugin('Xmipp_Browser', 'libraries/graphicsj/Xmipp_Browser', 'external/imagej/plugins')
 ###    AddImageJPlugin('Xmipp_Tomo', 'libraries/graphicsj/Xmipp_Tomo', 'external/imagej/plugins')
     AddImageJExternalPlugins('libraries/graphicsj/plugins', 'external/imagej/plugins')
+    #JavaInterfaceSources = Glob('libraries/bindings/java/xmipp', '*.java', [])
+    AddJavaLibrary('XmippJavaInterface', 'libraries/bindings/java', 'xmipp')#, ['#'],
+    #    [], ['XmippData'])
+
 
 # --- Programs
 
@@ -763,6 +742,7 @@ AddXmippProgram('threshold')
 AddXmippProgram('transform_add_noise')
 AddXmippProgram('transform_adjust_volume_grey_levels', ['XmippRecons'])
 AddXmippProgram('transform_center_image')
+#AddXmippProgram('transform_geometry')
 AddXmippProgram('try_symmetry')
 #AddXmippProgram('test_program')
 #AddXmippProgram('test_sql')
