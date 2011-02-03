@@ -69,7 +69,7 @@ void MPIProgProjectXR::run()
     psf.verbose = verbose;
     psf.nThr = nThr;
     psf.read(fn_psf_xr);
-    psf.produceSideInfo();
+    psf.calculateParams(dxo);
 
     // Read projection parameters and produce side information
     Projection_mpi_XR_Parameters mpi_proj_prm;
@@ -225,7 +225,7 @@ int PROJECT_mpi_XR_Effectively_project(
             //Reset thread task distributor
             td->clear();
             // Really project ....................................................
-            project_xr_Volume_offCentered(side, psf, proj,prm.proj_Ydim, prm.proj_Xdim);
+            XrayProjectVolumeOffCentered(side, psf, proj,prm.proj_Ydim, prm.proj_Xdim);
 
 
             // Add noise in angles and voxels ....................................
