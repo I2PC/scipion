@@ -715,7 +715,10 @@ void ProgAngularDiscreteAssign::processImage(const FileName &fnImg, const FileNa
                 if (shiftX == 0 && shiftY == 0)
                     Ip() = img();
                 else
-                    translate(LINEAR,Ip(),img(),shiftX, shiftY);
+                {
+                    VECTOR_R2(shift, shiftX, shiftY);
+                    translate(LINEAR,Ip(),img(),shift,WRAP);
+                }
 
                 // Rotate image if necessary
                 // Adding 2 is a trick to avoid that the 0, 90, 180 and 270
@@ -962,7 +965,10 @@ void ProgAngularDiscreteAssign::processImage(const FileName &fnImg, const FileNa
         if (Xoff == 0 && Yoff == 0)
             Ip() = img();
         else
-            translate(LINEAR,Ip(),img(),Xoff, Yoff);
+        {
+            VECTOR_R2(shift, Xoff, Yoff);
+            translate(LINEAR,Ip(),img(),shift,WRAP);
+        }
 
         double shiftX, shiftY;
         best_shift(Iref(), Ip(), shiftX, shiftY);

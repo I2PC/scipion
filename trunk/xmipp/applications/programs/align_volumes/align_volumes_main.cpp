@@ -54,6 +54,7 @@ void applyTransformation(const MultidimArray<double> &V2,
                          MultidimArray<double> &Vaux,
                          double *p)
 {
+    Matrix1D<double> r(3);
     Matrix2D<double> A, Aaux;
 
     double greyScale = p[0];
@@ -62,14 +63,14 @@ void applyTransformation(const MultidimArray<double> &V2,
     double tilt      = p[3];
     double psi       = p[4];
     double scale     = p[5];
-    double shiftz    = p[6];
-    double shifty    = p[7];
-    double shiftx    = p[8];
+    ZZ(r)            = p[6];
+    YY(r)            = p[7];
+    XX(r)            = p[8];
 
     Euler_angles2matrix(rot, tilt, psi, A, true);
-    translationMatrix(Aaux,shiftx,shifty,shiftz);
+    translation3DMatrix(r,Aaux);
     A = A * Aaux;
-    scaleMatrix(Aaux, scale, scale, scale);
+    scale3DMatrix(vectorR3(scale, scale, scale),Aaux);
     A = A * Aaux;
 
     applyGeometry(LINEAR, Vaux, V2, A, IS_NOT_INV, WRAP);

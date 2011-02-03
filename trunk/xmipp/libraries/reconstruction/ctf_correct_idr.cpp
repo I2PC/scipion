@@ -91,7 +91,7 @@ void Prog_IDR_ART_Parameters::IDR_correction()
         {
             // Read current input image
             Ireal.read(fn_img);
-            selfTranslate(BSPLINE3,Ireal(),Ireal.Xoff(),Ireal.Yoff());
+            selfTranslate(BSPLINE3,Ireal(),vectorR2(Ireal.Xoff(),Ireal.Yoff()));
 
             // Project the volume in the same direction
             project_Volume(V(), Itheo, YSIZE(Ireal()), XSIZE(Ireal()),

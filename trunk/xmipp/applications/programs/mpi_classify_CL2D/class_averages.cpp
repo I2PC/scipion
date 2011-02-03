@@ -312,8 +312,8 @@ void VQProjection::fitBasic(MultidimArray<double> &I,
 
         // Shift then rotate
         best_shift(P,IauxSR,shiftX,shiftY);
-        MAT_ELEM(ASR,0,3)+=shiftX;
-        MAT_ELEM(ASR,1,3)+=shiftY;
+        MAT_ELEM(ASR,0,2)+=shiftX;
+        MAT_ELEM(ASR,1,2)+=shiftY;
         applyGeometry(LINEAR,IauxSR,I,ASR,IS_NOT_INV,WRAP);
 
         Polar< std::complex<double> > polarFourierI;
@@ -328,8 +328,9 @@ void VQProjection::fitBasic(MultidimArray<double> &I,
 
         double bestRot = best_rotation(polarFourierP,polarFourierI,
                                        local_transformer);
-        rotationMatrix(-bestRot,R);
-        ASR=R*ASR;
+        rotation2DMatrix(-bestRot,R);
+        SPEED_UP_temps;
+        M3x3_BY_M3x3(ASR,R,ASR);
         applyGeometry(LINEAR,IauxSR,I,ASR,IS_NOT_INV,WRAP);
 
         // Rotate then shift
@@ -343,13 +344,13 @@ void VQProjection::fitBasic(MultidimArray<double> &I,
             1);
         bestRot = best_rotation(polarFourierP,polarFourierI,
                                 local_transformer);
-        rotationMatrix(-bestRot,R);
-        ARS=R*ARS;
+        rotation2DMatrix(-bestRot,R);
+        M3x3_BY_M3x3(ARS,R,ARS);
         applyGeometry(LINEAR,IauxRS,I,ARS,IS_NOT_INV,WRAP);
 
         best_shift(P,IauxRS,shiftX,shiftY);
-        MAT_ELEM(ARS,0,3)+=shiftX;
-        MAT_ELEM(ARS,1,3)+=shiftY;
+        MAT_ELEM(ARS,0,2)+=shiftX;
+        MAT_ELEM(ARS,1,2)+=shiftY;
         applyGeometry(LINEAR,IauxRS,I,ARS,IS_NOT_INV,WRAP);
     }
 

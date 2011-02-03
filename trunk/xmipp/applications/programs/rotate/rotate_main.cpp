@@ -41,7 +41,7 @@ public:
     bool linear;
     bool write_matrix;
 
-    Matrix2D<double> A3D;
+    Matrix2D<double> A3D, A2D;
     // Also allow rotation of docfiles
     FileName fn_DFin, fn_DFout;
     MetaData DF;
@@ -79,7 +79,13 @@ public:
             else
                 axis = vectorR3(0., 0., 1.);
             ang = textToFloat(getParameter(argc, argv, "-ang"));
-            rotationMatrix(ang, axis, A3D);
+            rotation3DMatrix(ang, axis, A3D);
+
+            A2D.resize(3,3);
+            FOR_ALL_ELEMENTS_IN_MATRIX2D(A2D)
+            {
+            	dMij(A2D,i,j) = dMij(A3D,i,j);
+            }
         }
         wrap = !checkParameter(argc, argv, "-dont_wrap");
         linear = checkParameter(argc, argv, "-linear");
@@ -88,6 +94,7 @@ public:
         if (checkParameter(argc, argv, "-inverse"))
         {
             A3D=A3D.inv();
+            A2D=A2D.inv();
         }
 
         fn_DFin = getParameter(argc, argv, "-doc","");
@@ -166,12 +173,20 @@ public:
 bool process_img(Image<double> &img, const Prog_parameters *prm)
 {
     Rotate_parameters *eprm = (Rotate_parameters *) prm;
-    if (eprm->write_matrix)
-        std::cerr<<"Transformation matrix = "<< eprm->A3D <<std::endl;
-    if (eprm->linear)
-        selfApplyGeometry(LINEAR, img(), eprm->A3D,  IS_NOT_INV, eprm->wrap);
+    Matrix2D<double> AA;
+    if (img().getDim()==2)
+        AA=eprm->A2D;
+    else if (img().getDim()==3)
+        AA=eprm->A3D;
     else
-        selfApplyGeometry(BSPLINE3, img(), eprm->A3D,  IS_NOT_INV, eprm->wrap);
+        REPORT_ERROR(ERR_MULTIDIM_DIM,"Cannot rotate this image, wrong dimension...");
+
+    if (eprm->write_matrix)
+        std::cerr<<"Transformation matrix = "<<AA<<std::endl;
+    if (eprm->linear)
+        selfApplyGeometry(LINEAR, img(), AA,  IS_NOT_INV, eprm->wrap);
+    else
+        selfApplyGeometry(BSPLINE3, img(), AA,  IS_NOT_INV, eprm->wrap);
 
     return true;
 }

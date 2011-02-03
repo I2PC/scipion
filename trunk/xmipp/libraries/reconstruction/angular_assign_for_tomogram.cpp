@@ -112,7 +112,7 @@ void Prog_angular_predict_tomography_prm::produce_side_info()
         Projection theo;
         project_Volume(V(), theo, YSIZE(V()), XSIZE(V()),
                        dummy.rot, dummy.tilt, dummy.psi);
-        selfTranslate(LINEAR,I(),dummy.x,dummy.y,0,DONT_WRAP);
+        selfTranslate(LINEAR,I(),vectorR2(dummy.x,dummy.y),DONT_WRAP);
         if (masksPresent)
         {
             FileName fnMask;
@@ -120,7 +120,7 @@ void Prog_angular_predict_tomography_prm::produce_side_info()
             Imask.read(fnMask);
             Imask().setXmippOrigin();
             dummy.fn_mask=Imask.name();
-            selfTranslate(LINEAR,Imask(),dummy.x,dummy.y,0,DONT_WRAP);
+            selfTranslate(LINEAR,Imask(),vectorR2(dummy.x,dummy.y),DONT_WRAP);
             Imask().binarize(0.5);
             typeCast(Imask(),mask);
         }
@@ -166,6 +166,7 @@ void Prog_angular_predict_tomography_prm::predict_angles(int i)
             // Compare it to all possible rotations and shifts
             // of the experimental image
             Image<double> Ip, Imaskp;
+            Matrix1D<double> shift(2);
             double xC=list_of_assigned[i].x;
             double yC=list_of_assigned[i].y;
             double x0=xC-max_shift_change;
@@ -190,8 +191,9 @@ void Prog_angular_predict_tomography_prm::predict_angles(int i)
                         }
                         else
                         {
-                            translate(LINEAR, Ip(), I(), x,y,0, DONT_WRAP);
-                            translate(LINEAR, Imaskp(), Imask(), x,y,0, DONT_WRAP);
+                            VECTOR_R2(shift, x, y);
+                            translate(LINEAR, Ip(), I(), shift, DONT_WRAP);
+                            translate(LINEAR, Imaskp(), Imask(), shift, DONT_WRAP);
                         }
 
                         // Rotate image if necessary
@@ -284,14 +286,14 @@ void Prog_angular_predict_tomography_prm::run()
 
         // Shift the image and mask
         selfTranslate(LINEAR,I(),
-                      list_of_assigned[i].x,list_of_assigned[i].y,0,DONT_WRAP);
+                      vectorR2(list_of_assigned[i].x,list_of_assigned[i].y),DONT_WRAP);
         const MultidimArray<int> *maskPtr=NULL;
         if (list_of_assigned[i].fn_mask!="")
         {
             Imask.read(list_of_assigned[i].fn_mask);
             Imask().setXmippOrigin();
             selfTranslate(LINEAR,Imask(),
-                          list_of_assigned[i].x,list_of_assigned[i].y,0,DONT_WRAP);
+                          vectorR2(list_of_assigned[i].x,list_of_assigned[i].y),DONT_WRAP);
             Imask().binarize(0.5);
             typeCast(Imask(),mask);
             maskPtr=&mask;

@@ -634,7 +634,9 @@ int PROJECT_Effectively_project(const std::string &fnRoot,
         {
             project_Volume(side.phantomVol(), proj, prm.proj_Ydim, prm.proj_Xdim,
                            rot, tilt, psi);
-            selfTranslate(LINEAR,IMGMATRIX(proj),shiftX, shiftY);
+            Matrix1D<double> shifts(2);
+            XX(shifts) = shiftX; YY(shifts) = shiftY;
+            selfTranslate(LINEAR,IMGMATRIX(proj), shifts);
         }
         else if (side.phantomMode==PROJECT_Side_Info::PDB)
         {

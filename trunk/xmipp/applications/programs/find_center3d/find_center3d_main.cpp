@@ -121,11 +121,9 @@ int main(int argc, char **argv)
 
         // Move origin to that center of mass
         if (useSplines)
-            selfTranslate(BSPLINE3,volume(),
-            		     -XX(centerOfMass), -YY(centerOfMass), -ZZ(centerOfMass), DONT_WRAP);
+            selfTranslate(BSPLINE3,volume(),-centerOfMass, DONT_WRAP);
         else
-            selfTranslate(LINEAR,volume(),
-            		      -XX(centerOfMass), -YY(centerOfMass), -ZZ(centerOfMass),DONT_WRAP);
+            selfTranslate(LINEAR,volume(),-centerOfMass, DONT_WRAP);
         if (centerVolume)
             volume.write();
 
@@ -244,10 +242,10 @@ double evaluateSymmetry(double *p, void *prm)
 
     // Symmetrize along this axis
     volume_sym() = volume();
-    Matrix2D<double> sym_matrix;
     for (int n = 1; n < rot_sym; n++)
     {
-        rotationMatrix(360.0 / rot_sym * n, sym_axis, sym_matrix);
+        Matrix2D<double> sym_matrix;
+        rotation3DMatrix(360.0 / rot_sym * n, sym_axis, sym_matrix);
         if (useSplines)
             applyGeometry(BSPLINE3, volume_aux(), volume(), sym_matrix,
                                  IS_NOT_INV, DONT_WRAP);

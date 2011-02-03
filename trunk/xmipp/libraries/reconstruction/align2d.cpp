@@ -509,12 +509,15 @@ void Prog_align2d_prm::do_pspc()
     imgpspc.clear();
 
     // Center pspc reference wrt to average image
+    Matrix1D<double> center(2);
     MultidimArray<double> Mcorr;
     Mcorr.resize(Mref);
     int imax, jmax;
     correlation_matrix(Mref, med(), Mcorr);
     Mcorr.maxIndex(imax, jmax);
-    selfTranslate(LINEAR,Mref,-jmax,-imax);
+    XX(center) = -jmax;
+    YY(center) = -imax;
+    selfTranslate(LINEAR,Mref,center);
 
     // Write out inter-mediate reference
     Iref() = Mref;

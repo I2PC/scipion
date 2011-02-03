@@ -696,7 +696,7 @@ void ProgAngularProjectionMatching::translationallyAlignOneImage(MultidimArray<d
 #endif
 
     // Calculate standard cross-correlation coefficient
-    translate(LINEAR,Mtrans,Mimg,opt_xoff,opt_yoff);
+    translate(LINEAR,Mtrans,Mimg,vectorR2(opt_xoff,opt_yoff),true);
     maxcorr = correlation_index(Mref,Mtrans);
 
 #ifdef DEBUG

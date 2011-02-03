@@ -189,8 +189,8 @@ void ParametersProjectionXR::calculateProjectionAngles(Projection &P, double ang
     Matrix1D<double> axis;
     Euler_direction(axisRot,axisTilt,0,axis);
     Matrix2D<double> Raxis, Rinplane;
-    rotationMatrix(angle,axis,Raxis,false);
-    rotationMatrix(inplaneRot,'Z',Rinplane,false);
+    rotation3DMatrix(angle,axis,Raxis,false);
+    rotation3DMatrix(inplaneRot,'Z',Rinplane,false);
     double rot, tilt, psi;
     Euler_matrix2angles(Rinplane*Raxis, rot, tilt, psi);
     P.set_angles(rot, tilt, psi);

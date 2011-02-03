@@ -482,9 +482,9 @@ void project_Volume_offCentered(MultidimArray<double> &V, Projection &P,
     Matrix1D<double> axis;
     Euler_direction(axisRot,axisTilt,0,axis);
     Matrix2D<double> Raxis;
-    rotationMatrix(angle,axis,Raxis,false);
+    rotation3DMatrix(angle,axis,Raxis,false);
     Matrix2D<double> Rinplane;
-    rotationMatrix(inplaneRot,'Z',Rinplane,false);
+    rotation3DMatrix(inplaneRot,'Z',Rinplane,false);
     double rot, tilt, psi;
     Euler_matrix2angles(Rinplane*Raxis, rot, tilt, psi);
 

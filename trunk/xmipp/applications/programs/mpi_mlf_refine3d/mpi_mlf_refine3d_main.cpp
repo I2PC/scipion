@@ -82,7 +82,7 @@ int main(int argc, char **argv)
         // Read and set general MLalign2D-stuff
         ML2D_prm.read(argc2, argv2, true);
         if (rank != 0)
-            ML2D_prm.verb = prm.verb = 0;
+            ML2D_prm.verbose = prm.verbose = 0;
         if (!checkParameter(argc2, argv2, "-psi_step"))
             ML2D_prm.psi_step = prm.angular;
         ML2D_prm.fn_root = prm.fn_root;
@@ -138,7 +138,7 @@ int main(int argc, char **argv)
         while (!converged && iter <= prm.Niter)
         {
 
-            if (prm.verb > 0)
+            if (prm.verbose > 0)
             {
                 std::cerr        << "--> 3D-EM volume refinement:  iteration " << iter << " of " << prm.Niter << std::endl;
                 prm.fh_hist << "--> 3D-EM volume refinement:  iteration " << iter << " of " << prm.Niter << std::endl;
@@ -296,7 +296,7 @@ int main(int argc, char **argv)
                 if (prm.checkConvergence(iter))
                 {
                     converged = 1;
-                    if (prm.verb > 0)
+                    if (prm.verbose > 0)
                         std::cerr << "--> Optimization converged!" << std::endl;
                 }
 
@@ -320,7 +320,7 @@ int main(int argc, char **argv)
                 int c = 0;
                 FOR_ALL_OBJECTS_IN_METADATA(ML2D_prm.MDref)
                 {
-                    ML2D_prm.MDref.getValue(MDL_IMAGE, fn_img);
+                    ML2D_prm.MDref.getValue(MDL_IMAGE, fn_img, __iter.objId);
                     ML2D_prm.Iref[c].read(fn_img);
                     ML2D_prm.Iref[c]().setXmippOrigin();
                     c++;
@@ -333,7 +333,7 @@ int main(int argc, char **argv)
         if (rank == 0)
             ML2D_prm.writeOutputFiles(-1, sumw_allrefs, LL, sumcorr, conv);
 
-        if (!converged && prm.verb > 0)
+        if (!converged && prm.verbose > 0)
             std::cerr << "--> Optimization was stopped before convergence was reached!" << std::endl;
 
     }

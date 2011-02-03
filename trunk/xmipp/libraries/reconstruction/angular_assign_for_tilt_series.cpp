@@ -1781,7 +1781,9 @@ bool Prog_tomograph_alignment::refineLandmark(int ii, int jj,
             // Now try with the best shift
             double shiftX,shiftY;
             best_nonwrapping_shift(pieceii,piecejj,shiftX,shiftY);
-            selfTranslate(LINEAR,piecejj,shiftX,shiftY,0,WRAP);
+            Matrix1D<double> fftShift(2);
+            VECTOR_R2(fftShift,shiftX,shiftY);
+            selfTranslate(LINEAR,piecejj,fftShift,WRAP);
             double corrFFT=correlation_index(pieceii,piecejj);
             if (corrFFT>corrOriginal)
             {
@@ -1794,7 +1796,7 @@ bool Prog_tomograph_alignment::refineLandmark(int ii, int jj,
                 Image<double> save;
                 save()=piecejj;
                 save.write("PPPpiecejjFFT.xmp");
-                std::cout << "FFT shift=" << shiftX << "," << shiftY << std::endl;
+                std::cout << "FFT shift=" << fftShift.transpose() << std::endl;
                 std::cout << "Corr FFT=" << corrFFT << std::endl;
                 if (corrFFT>corrOriginal)
                 {
@@ -2212,7 +2214,7 @@ void Prog_tomograph_alignment::alignImages(const Alignment &alignment)
     for (int i=0; i<MAT_XSIZE(allLandmarksX); i++)
     {
         Matrix2D<double> R;
-        rotationMatrix(90-alignment.rot+alignment.psi(i),R,false);
+        rotation2DMatrix(90-alignment.rot+alignment.psi(i),R,false);
         for (int j=0; j<MAT_YSIZE(allLandmarksX); j++)
             if (allLandmarksX(j,i)!=XSIZE(*img[0]))
             {
@@ -2227,13 +2229,13 @@ void Prog_tomograph_alignment::alignImages(const Alignment &alignment)
     Matrix1D<double> axis;
     Euler_direction(alignment.rot, alignment.tilt, 0, axis);
     double z0=0, z0N=0;
-    Matrix2D<double> Raxismin, Rmin, RtiltYmin;
     for (int j=0; j<MAT_YSIZE(allLandmarksX); j++)
         if (allLandmarksX(j,iMinTilt)!=XSIZE(*img[0]))
         {
-            rotationMatrix(tiltList[iMinTilt],axis,Raxismin,false);
-            rotationMatrix(90-alignment.rot+alignment.psi(iMinTilt),Rmin);
-            rotationMatrix(-tiltList[iMinTilt],'Y',RtiltYmin,false);
+            Matrix2D<double> Raxismin, Rmin, RtiltYmin;
+            rotation3DMatrix(tiltList[iMinTilt],axis,Raxismin,false);
+            rotation2DMatrix(90-alignment.rot+alignment.psi(iMinTilt),Rmin);
+            rotation3DMatrix(-tiltList[iMinTilt],'Y',RtiltYmin,false);
             Matrix1D<double> rjp=RtiltYmin*Rmin*Raxismin*alignment.rj[j];
             z0+=ZZ(rjp);
             z0N++;
@@ -2242,7 +2244,7 @@ void Prog_tomograph_alignment::alignImages(const Alignment &alignment)
         REPORT_ERROR(ERR_VALUE_INCORRECT,"There is no landmark at 0 degrees");
     z0/=z0N;
     std::cout << "Average height of the landmarks at 0 degrees=" << z0
-    		  << std::endl;
+    << std::endl;
     MetaData DF;
 
     MDIterator * iter;
@@ -2261,14 +2263,12 @@ void Prog_tomograph_alignment::alignImages(const Alignment &alignment)
         // Align the normal image
         I.read(name_list[i]);
         mask.initZeros(I());
-        MultidimArray<double> &Iarray=I();
-        FOR_ALL_ELEMENTS_IN_ARRAY2D(Iarray)
-        if (A2D_ELEM(Iarray,i,j)!=0)
-            A2D_ELEM(mask,i,j)=1;
-        translationMatrix(M1,-z0*sin(DEG2RAD(tiltList[i])),0);
-        rotationMatrix(90-alignment.rot+alignment.psi(i),M2);
-        translationMatrix(M3,-(XX(alignment.di[i])+XX(alignment.diaxis[i])),
-        				     -(YY(alignment.di[i])+YY(alignment.diaxis[i])));
+        FOR_ALL_ELEMENTS_IN_ARRAY2D(I())
+        if (I(i,j)!=0)
+            mask(i,j)=1;
+        translation2DMatrix(vectorR2(-z0*sin(DEG2RAD(tiltList[i])),0),M1);
+        rotation2DMatrix(90-alignment.rot+alignment.psi(i),M2);
+        translation2DMatrix(-(alignment.di[i]+alignment.diaxis[i]),M3);
         M=M1*M2*M3;
         selfApplyGeometry(BSPLINE3,I(),M,IS_NOT_INV,DONT_WRAP);
         selfApplyGeometry(LINEAR,mask,M,IS_NOT_INV,DONT_WRAP);
@@ -2277,10 +2277,10 @@ void Prog_tomograph_alignment::alignImages(const Alignment &alignment)
         double minval, maxval, avg, stddev;
         computeStats_within_binary_mask(iMask,I(),minval, maxval, avg, stddev);
         FOR_ALL_ELEMENTS_IN_ARRAY2D(iMask)
-        if (A2D_ELEM(iMask,i,j)==0)
-            A2D_ELEM(Iarray,i,j)=0;
+        if (iMask(i,j)==0)
+            I(i,j)=0;
         else if (!dontNormalize)
-            A2D_ELEM(Iarray,i,j)-=avg;
+            I(i,j)-=avg;
         double rot=0;
         double tilt=tiltList[i];
         double psi=0;
@@ -2292,23 +2292,20 @@ void Prog_tomograph_alignment::alignImages(const Alignment &alignment)
         FileName auxFn;
         SForig.getValue( MDL_IMAGE, auxFn, iter->objId);
         Image<double> Iorig;
-        Matrix1D<double> shift;
         if (fnSelOrig!="")
         {
             Iorig.read( auxFn );
             //SForig.nextObject();
             iter->moveNext();
             mask.initZeros(Iorig());
-            Iarray=Iorig();
-            FOR_ALL_ELEMENTS_IN_ARRAY2D(Iarray)
-            if (A2D_ELEM(Iarray,i,j)!=0)
-                A2D_ELEM(mask,i,j)=1;
-            translationMatrix(M1,-z0*sin(DEG2RAD(tiltList[i]))*
-                                 (((double)XSIZE(Iorig()))/XSIZE(I())),0);
-            rotationMatrix(90-alignment.rot+alignment.psi(i),M2);
-            shift=-(alignment.di[i]+alignment.diaxis[i])*
-                    (((double)XSIZE(Iorig()))/XSIZE(I()));
-            translationMatrix(M3,XX(shift),YY(shift));
+            FOR_ALL_ELEMENTS_IN_ARRAY2D(Iorig())
+            if (Iorig(i,j)!=0)
+                mask(i,j)=1;
+            translation2DMatrix(vectorR2(-z0*sin(DEG2RAD(tiltList[i]))*
+                                         (((double)XSIZE(Iorig()))/XSIZE(I())),0),M1);
+            rotation2DMatrix(90-alignment.rot+alignment.psi(i),M2);
+            translation2DMatrix(-(alignment.di[i]+alignment.diaxis[i])*
+                                (((double)XSIZE(Iorig()))/XSIZE(I())),M3);
             M=M1*M2*M3;
             selfApplyGeometry(BSPLINE3,Iorig(),M,IS_NOT_INV,DONT_WRAP);
             selfApplyGeometry(LINEAR,mask,M,IS_NOT_INV,DONT_WRAP);
@@ -2316,12 +2313,11 @@ void Prog_tomograph_alignment::alignImages(const Alignment &alignment)
             typeCast(mask,iMask);
             computeStats_within_binary_mask(iMask,Iorig(),minval, maxval,
                                             avg, stddev);
-            Iarray=Iorig();
             FOR_ALL_ELEMENTS_IN_ARRAY2D(iMask)
-            if (A2D_ELEM(iMask,i,j)==0)
-                A2D_ELEM(Iarray,i,j)=0;
+            if (iMask(i,j)==0)
+                Iorig(i,j)=0;
             else if (!dontNormalize)
-                A2D_ELEM(Iarray,i,j)-=avg;
+                Iorig(i,j)-=avg;
             Iorig.setEulerAngles(rot, tilt, psi);
             fn_corrected=fnRoot+"_corrected_originalsize_"+integerToString(i,3)+".xmp";
             Iorig.write(fn_corrected);
@@ -2620,15 +2616,13 @@ void Alignment::computeGeometryDependentOfAxis()
     Ip(2,2)=0;
     for (int i=0; i<Nimg; i++)
     {
-        rotationMatrix(prm->tiltList[i],axis,Raxis,false);
-        const Matrix2D<double> &Aipt_i=Aipt[i];
-        const Matrix2D<double> &Aip_i=Aip[i];
-        MAT_ELEM(Aipt_i,0,0)=MAT_ELEM(Aip_i,0,0)=MAT_ELEM(Raxis,0,0);
-        MAT_ELEM(Aipt_i,1,0)=MAT_ELEM(Aip_i,0,1)=MAT_ELEM(Raxis,0,1);
-        MAT_ELEM(Aipt_i,2,0)=MAT_ELEM(Aip_i,0,2)=MAT_ELEM(Raxis,0,2);
-        MAT_ELEM(Aipt_i,0,1)=MAT_ELEM(Aip_i,1,0)=MAT_ELEM(Raxis,1,0);
-        MAT_ELEM(Aipt_i,1,1)=MAT_ELEM(Aip_i,1,1)=MAT_ELEM(Raxis,1,1);
-        MAT_ELEM(Aipt_i,2,1)=MAT_ELEM(Aip_i,1,2)=MAT_ELEM(Raxis,1,2);
+        rotation3DMatrix(prm->tiltList[i],axis,Raxis,false);
+        Aipt[i](0,0)=Aip[i](0,0)=Raxis(0,0);
+        Aipt[i](1,0)=Aip[i](0,1)=Raxis(0,1);
+        Aipt[i](2,0)=Aip[i](0,2)=Raxis(0,2);
+        Aipt[i](0,1)=Aip[i](1,0)=Raxis(1,0);
+        Aipt[i](1,1)=Aip[i](1,1)=Raxis(1,1);
+        Aipt[i](2,1)=Aip[i](1,2)=Raxis(1,2);
 
         B=I-Raxis;
         B=B.transpose()*Ip*B;
@@ -2656,7 +2650,7 @@ void Alignment::computeGeometryDependentOfRotation()
     I(0,0)=I(1,1)=1;
     for (int i=0; i<Nimg; i++)
     {
-        rotationMatrix(-psi(i),'Z',Rinplane,false);
+        rotation3DMatrix(-psi(i),'Z',Rinplane,false);
         B1i[i]=B1i[i]*Rinplane.transpose();
 
         Rinplane.resize(2,2);
@@ -2805,7 +2799,6 @@ void Alignment::updateModel()
     {
         Matrix2D<double> Ri(2,2);
         Matrix2D<double> Aiprj(2,1), Aiprjt(1,2), dim(2,1), Pij(2,1);
-        Matrix2D<double> Rinplane;
         for (int i=0; i<Nimg; i++)
         {
             Ri.initZeros();
@@ -2822,7 +2815,8 @@ void Alignment::updateModel()
             }
             psi(i)=CLIP(RAD2DEG(atan(((Ri(0,1)-Ri(1,0))/(Ri(0,0)+Ri(1,1))))),
                         -(prm->psiMax),prm->psiMax);
-            rotationMatrix(-psi(i),'Z',Rinplane,false);
+            Matrix2D<double> Rinplane;
+            rotation3DMatrix(-psi(i),'Z',Rinplane,false);
         }
     }
 #ifdef DEBUG
