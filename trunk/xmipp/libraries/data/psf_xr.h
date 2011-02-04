@@ -252,7 +252,7 @@ public:
     void generateOTF();
 
     /// Generate the 3D Point Spread Function (PSF) according to Microscope parameters.
-    void generatePSF(PsfType _type = IDEAL_FRESNEL_LENS);
+    void generatePSF();
 
     /// Calculate if a resize of the X-Y plane is needed to avoid the Nyquist Limit
     void adjustParam();

@@ -119,6 +119,7 @@ enum MDLabel
     MDL_CTF_CRITERION_PSDPCARUNSTEST, ///< Runs test on the projection of the PSD on the first principal component
     MDL_CTF_XRAY_DIMENSIONS, // Size in pixels of the 3D PSF to be created (Xdim, Ydim, Zdim)
     MDL_CTF_XRAY_LAMBDA, /// X-ray wavelength (nm)
+    MDL_CTF_XRAY_LENS_TYPE, ///Algorithm used to generate Xray PSF
     MDL_CTF_XRAY_MAGNIFICATION, /// Magnification of the X-ray microscope
     MDL_CTF_XRAY_OUTER_ZONE_WIDTH, /// Outermost zone width of the X-ray Fresnel lens (nm)
     MDL_CTF_XRAY_ZONES_NUMBER, // Number of zones of the X-ray Fresnel lens
@@ -358,6 +359,7 @@ private:
 
         MDL::addLabel(MDL_CTF_XRAY_DIMENSIONS, LABEL_VECTOR, "CTF_Xray_dimensions");
         MDL::addLabel(MDL_CTF_XRAY_LAMBDA, LABEL_DOUBLE, "CTF_Xray_lambda");
+        MDL::addLabel(MDL_CTF_XRAY_LENS_TYPE, LABEL_STRING, "CTF_Xray_lens_type");
         MDL::addLabel(MDL_CTF_XRAY_MAGNIFICATION, LABEL_DOUBLE, "CTF_Xray_Magnification");
         MDL::addLabel(MDL_CTF_XRAY_OUTER_ZONE_WIDTH, LABEL_DOUBLE, "CTF_Xray_OuterZoneWidth");
         MDL::addLabel(MDL_CTF_XRAY_ZONES_NUMBER, LABEL_DOUBLE, "CTF_Xray_ZonesN");

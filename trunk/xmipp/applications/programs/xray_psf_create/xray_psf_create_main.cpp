@@ -76,7 +76,7 @@ public:
 
     void run()
     {
-        psf.generatePSF(IDEAL_FRESNEL_LENS);
+        psf.generatePSF();
         psf.write(fnPSF);
     }
 };

@@ -40,7 +40,7 @@ void XRayPSF::defineParams(XmippProgram * program)
     program->addParamsLine(" [--type  <lens_type=ideal>]     : Lens type to generate the PSF.");
     program->addParamsLine("           where <lens_type>");
     program->addParamsLine("                  ideal          : Ideal phase Fresnel lens.");
-    program->addParamsLine("                  ZP             : Fresnel Zone Plate lens.");
+    program->addParamsLine("                  zp             : Fresnel Zone Plate lens.");
 
 }
 
@@ -53,11 +53,12 @@ void XRayPSF::readParams(XmippProgram * program)
     Nzp     = program->getDoubleParam("--zones");
     Ms      = program->getDoubleParam("--mag");
     dxoPSF  = program->getDoubleParam("--sampling",0)*1e-9;
-    dzoPSF  = (String(program->getParam("--sampling", 1)) == "dxy") ? dxoPSF : program->getDoubleParam("-sampling", 1)*1e-9;
+    dzoPSF  = STR_EQUAL(program->getParam("--sampling", 1), "dxy") ? dxoPSF : program->getDoubleParam("-sampling", 1)*1e-9;
     DeltaZo = program->getDoubleParam("--zshift")*1e-6;
     Nox     = program->getDoubleParam("--size",0);
-    Noy     = (String(program->getParam("--size", 1)) == "x") ? Nox : program->getDoubleParam("-size", 1);
-    Noz     = (String(program->getParam("--size", 2)) == "x") ? Nox : program->getDoubleParam("-size", 2);
+    Noy     = STR_EQUAL(program->getParam("--size", 1),"x") ? Nox : program->getDoubleParam("-size", 1);
+    Noz     = STR_EQUAL(program->getParam("--size", 2),"x") ? Nox : program->getDoubleParam("-size", 2);
+    type    = STR_EQUAL(program->getParam("--type"), "zp") ? ANALYTIC_ZP : IDEAL_FRESNEL_LENS;
 
     verbose = program->getIntParam("-v");
 }
@@ -97,6 +98,14 @@ void XRayPSF::read(const FileName &fn)
             Noy = dimV[1];
             Noz = dimV[2];
         }
+        String typeS;
+        if (!MD.getValue(MDL_CTF_XRAY_LENS_TYPE, typeS, id))
+            REPORT_ERROR(ERR_ARG_MISSING, MDL::label2Str(MDL_CTF_XRAY_LENS_TYPE) + " argument not present.");
+        if (typeS == "ZP")
+            type = ANALYTIC_ZP;
+        else
+            type = IDEAL_FRESNEL_LENS;
+
         if (!MD.getValue(MDL_CTF_XRAY_LAMBDA,lambda, id))
             REPORT_ERROR(ERR_ARG_MISSING, MDL::label2Str(MDL_CTF_XRAY_LAMBDA) + " argument not present.");
         lambda *= 1e-9;
@@ -116,8 +125,6 @@ void XRayPSF::read(const FileName &fn)
         if (!MD.getValue(MDL_CTF_LONGITUDINAL_DISPLACEMENT,DeltaZo, id))
             REPORT_ERROR(ERR_ARG_MISSING, MDL::label2Str(MDL_CTF_LONGITUDINAL_DISPLACEMENT) + " argument not present.");
         DeltaZo *= 1e-6;
-
-
     }
     else
     {
@@ -168,7 +175,10 @@ void XRayPSF::write(const FileName &fn)
     size_t id = MD.addObject();
 
     FileName fnPSF = fn.withoutExtension().addExtension("vol");
+
     MD.setValue(MDL_IMAGE, fnPSF, id);
+    String typeS = (type==ANALYTIC_ZP)? "ZP": "ideal";
+    MD.setValue(MDL_CTF_XRAY_LENS_TYPE, typeS, id);
     MD.setValue(MDL_CTF_XRAY_LAMBDA,lambda*1e9, id);
     MD.setValue(MDL_CTF_XRAY_OUTER_ZONE_WIDTH,deltaR*1e9, id);
     MD.setValue(MDL_CTF_XRAY_ZONES_NUMBER,Nzp, id);
@@ -206,6 +216,7 @@ std::ostream & operator <<(std::ostream &out, const XRayPSF &psf)
     << "--------------------------------------" << std::endl
     << "XrayPSF:: X-Ray Microscope parameters:" << std::endl
     << "--------------------------------------" << std::endl
+    << "type =             " << ((psf.type==ANALYTIC_ZP)? "ZP": "ideal") << std::endl
     << "lambda =           " << psf.lambda * 1e9 << " nm" << std::endl
     << "zones_number =     " << psf.Nzp << std::endl
     << "outer_zone_width = " << psf.deltaR * 1e9 << " nm" << std::endl
@@ -397,10 +408,8 @@ void XRayPSF::generateOTF()
 }
 
 /* Generate the Intensity PSF for a specific XR microscope configuration     ------------- */
-void XRayPSF::generatePSF(PsfType _type)
+void XRayPSF::generatePSF()
 {
-    type = _type;
-
     calculateParams(dxoPSF, dzoPSF);
     adjustParam();
 
@@ -425,7 +434,7 @@ void XRayPSF::generatePSF(PsfType _type)
             }
         case ANALYTIC_ZP:
             {
-                REPORT_ERROR(ERR_NOT_IMPLEMENTED, "Not implemented yet.");
+                REPORT_ERROR(ERR_NOT_IMPLEMENTED, "Zone plates algorithm not implemented yet.");
                 break;
             }
         }
@@ -634,7 +643,7 @@ void XRayPSF::adjustParam()
         }
     case ANALYTIC_ZP:
         {
-            REPORT_ERROR(ERR_NOT_IMPLEMENTED, "Not implemented yet.");
+            REPORT_ERROR(ERR_NOT_IMPLEMENTED, "Zone Plate algorithm not implemented yet.");
             break;
         }
     }
