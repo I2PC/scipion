@@ -47,17 +47,29 @@ public:
     /** Phantom filename.
         It can be a Xmipp volume or a mathematically defined phantom. */
     FileName  fnPhantom;
-    /// Root filename
+    /// Root filename (used for a stack)
     FileName  fnRoot;
+    /// Output filename (used for a singleProjection)
+    FileName  fnOut;
     /** Filename with the special crystal parameters
        (\ref Crystal_Projection_Parameters ) */
     FileName fn_crystal;
     /// Symmetry file
     FileName fn_sym;
+    /// Projection size when fnOut is given
+    int projSize;
     /// Sampling rate: Only used for PDB projections
     double samplingRate;
     /// Only create angles, do not project
     bool only_create_angles;
+    /// Single projection
+    bool singleProjection;
+    /// Rotational angle of a single projection
+    double rotSingle;
+    /// Tilt angle of a single projection
+    double tiltSingle;
+    /// Psi angle of a single projection
+    double psiSingle;
 public:
     /** Read parameters. */
     void readParams();
@@ -198,8 +210,8 @@ public:
         program parameters. Basically it loads the phantom, sets
         the phantom mode to voxel or mathematical description and
         generates or read the projection angles.*/
-    void produce_Side_Info(const Projection_Parameters &prm,
-                           const ProgProject &prog_prm);
+    void produce_Side_Info(Projection_Parameters &prm,
+                           ProgProject &prog_prm);
 };
 
 /* Assigning angles -------------------------------------------------------- */
@@ -229,7 +241,8 @@ int PROJECT_Assign_angles(MetaData &DF, const Projection_Parameters &prm);
     to project only one image, although it is also written to disk.
     The returned number is the total number of projections generated.
     A selection file with all images is also returned.*/
-int PROJECT_Effectively_project(const std::string &fnDir,
+int PROJECT_Effectively_project(const std::string &fnOut,
+								bool singleProjection,
 								const Projection_Parameters &prm,
                                 PROJECT_Side_Info &side,
                                 const Crystal_Projection_Parameters &prm_crystal,

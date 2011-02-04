@@ -31,31 +31,66 @@
 /* Read from command line ================================================== */
 void ProgProject::readParams()
 {
-    fn_proj_param = getParam("--params");
     fnPhantom     = getParam("--vol");
-    fnRoot        = getParam("--oroot");
-    fn_crystal    = getParam("--crystal");
-    fn_sym        = getParam("--sym");
     samplingRate  = getDoubleParam("--sampling_rate");
-    only_create_angles = checkParam("--only_create_angles");
+    if (checkParam("--oroot"))
+    {
+    	fnRoot        = getParam("--oroot");
+    	fn_proj_param = getParam("--params");
+    	if (checkParam("--crystal"))
+    		fn_crystal    = getParam("--crystal");
+    	if (checkParam("--sym"))
+    		fn_sym        = getParam("--sym");
+        only_create_angles = checkParam("--only_create_angles");
+    }
+    else
+    {
+    	fnOut = getParam("-o");
+        singleProjection = checkParam("--angles");
+        projSize = getIntParam("--xdim");
+    }
+    if (singleProjection)
+    {
+        rotSingle  = getDoubleParam("--angles",0);
+        tiltSingle = getDoubleParam("--angles",1);
+        psiSingle  = getDoubleParam("--angles",2);
+    }
 }
 
 /* Usage =================================================================== */
 void ProgProject::defineParams()
 {
     addUsageLine("Generates projections from a volume");
+    addSeeAlsoLine("tomo_project, xray_project, phantom_create");
+    addExampleLine("Generating a set of projections",false);
+    addExampleLine("xmipp_phantom_project --vol volume.vol --oroot images --params projectionParams.xmd");
+    addExampleLine("Generating a top view from Z",false);
+    addExampleLine("xmipp_phantom_project --vol volume.vol -o image.xmp --angles 0 0 0");
+    addExampleLine("Generating a side view from Y",false);
+    addExampleLine("xmipp_phantom_project --vol volume.vol -o image.xmp --angles 0 90 0");
+    addExampleLine("Generating a side view from X",false);
+    addExampleLine("xmipp_phantom_project --vol volume.vol -o image.xmp --angles 90 90 0");
     addParamsLine("   --vol <volume>                        : Voxel volume, PDB or description file");
-    addParamsLine("   --oroot <rootname>                    : Output rootname");
-    addParamsLine("   --params <parameters_file>            : File containing projection parameters");
+    addParamsLine("   --oroot <rootname>                    : Output rootname (use --params)");
+    addParamsLine("or -o <imagename>                        : Output image (use --angles)");
+    addParamsLine("  [--sampling_rate <Ts=1>]               : It is only used for PDB phantoms");
+    addParamsLine("== Generating a set of projections == ");
+    addParamsLine("  [--params <parameters_file>]           : File containing projection parameters");
     addParamsLine("                                         : Check the manual for a description of the parameters");
-    addParamsLine("or --angles <rot> <tilt> <psi>           : Angles for a single projection");
-    addParamsLine("  [--crystal <crystal_parameters_file=\"\">] : It is used for computing the assymetric unit");
-    addParamsLine("      requires --params;");
-    addParamsLine("  [--sym <sym_file=\"\">]                    : It is used for computing the assymetric unit");
-    addParamsLine("      requires --params;");
+    addParamsLine("      requires --oroot;");
+    addParamsLine("  [--crystal <crystal_parameters_file>]  : It is used for computing the assymetric unit");
+    addParamsLine("      requires --oroot;");
+    addParamsLine("  [--sym <sym_file>]                     : It is used for computing the assymetric unit");
+    addParamsLine("      requires --oroot;");
     addParamsLine("  [--only_create_angles]                 : Do not create projections");
-    addParamsLine("      requires --params;");
-    addParamsLine("  [--sampling_rate <Ts=1>]      		    : It is only used for PDB phantoms");
+    addParamsLine("      requires --oroot;");
+    addParamsLine("== Generating a single projection == ");
+    addParamsLine("  [--angles <rot> <tilt> <psi>]          : Angles for a single projection");
+    addParamsLine("      requires -o;");
+    addParamsLine("  [--xdim <size=-1>]                     : Size of the projection");
+    addParamsLine("                                         : For geometric descriptions and voxel volumes");
+    addParamsLine("                                         : this parameter is not necessary");
+    addParamsLine("      requires -o;");
 }
 
 /* Run ===================================================================== */
@@ -365,13 +400,13 @@ void generate_angles(int ExtProjs, const Angle_range &range,
                     switch (idx)
                     {
                     case 0:
-                    	DFaux.setValue(MDL_ANGLEROT,ang,idx_tmp);
+                        DFaux.setValue(MDL_ANGLEROT,ang,idx_tmp);
                         break;
                     case 1:
-                    	DFaux.setValue(MDL_ANGLETILT,ang,idx_tmp);
+                        DFaux.setValue(MDL_ANGLETILT,ang,idx_tmp);
                         break;
                     case 2:
-                    	DFaux.setValue(MDL_ANGLEPSI,ang,idx_tmp);
+                        DFaux.setValue(MDL_ANGLEPSI,ang,idx_tmp);
                         break;
                     }
                 }
@@ -382,19 +417,19 @@ void generate_angles(int ExtProjs, const Angle_range &range,
             unsigned long int dfidx=DFaux.firstObject(MDValueEQ(MDL_ORDER,iproj));
             if (dfidx==BAD_OBJID)
             {
-            	dfidx=DFaux.addObject();
-            	DFaux.setValue(MDL_ORDER,iproj,dfidx);
+                dfidx=DFaux.addObject();
+                DFaux.setValue(MDL_ORDER,iproj,dfidx);
             }
             switch (idx)
             {
             case 0:
-            	DFaux.setValue(MDL_ANGLEROT,ang,dfidx);
+                DFaux.setValue(MDL_ANGLEROT,ang,dfidx);
                 break;
             case 1:
-            	DFaux.setValue(MDL_ANGLETILT,ang,dfidx);
+                DFaux.setValue(MDL_ANGLETILT,ang,dfidx);
                 break;
             case 2:
-            	DFaux.setValue(MDL_ANGLEPSI,ang,dfidx);
+                DFaux.setValue(MDL_ANGLEPSI,ang,dfidx);
                 break;
             }
         }
@@ -410,7 +445,7 @@ void generate_even_angles(int ExtProjs, int Nrottilt, MetaData &DF,
     // then for every tilt angle, a rot_step is computed so that
     // it keeps the same distance in the circle generated by tilt
     // as the sample distance at the equator (tilt=90).
-	MetaData DFaux;
+    MetaData DFaux;
     int N = 0;
     int limit = prm.tilt_range.samples;
     double rot_step_at_equator = (prm.rot_range.angF - prm.rot_range.ang0) /
@@ -451,8 +486,8 @@ void generate_even_angles(int ExtProjs, int Nrottilt, MetaData &DF,
                 size_t idx_tmp=DFaux.firstObject(MDValueEQ(MDL_ORDER,iproj));
                 if (idx_tmp==BAD_OBJID)
                 {
-                	idx_tmp=DFaux.addObject();
-                	DFaux.setValue(MDL_ORDER,iproj,idx_tmp);
+                    idx_tmp=DFaux.addObject();
+                    DFaux.setValue(MDL_ORDER,iproj,idx_tmp);
                 }
                 DFaux.setValue(MDL_ANGLEROT,rot,idx_tmp);
                 DFaux.setValue(MDL_ANGLETILT,tilt,idx_tmp);
@@ -561,17 +596,30 @@ int Assign_angles(MetaData &DF, const Projection_Parameters &prm,
 }
 
 /* Produce Side Information ================================================ */
-void PROJECT_Side_Info::produce_Side_Info(const Projection_Parameters &prm,
-        const ProgProject &prog_prm)
+void PROJECT_Side_Info::produce_Side_Info(Projection_Parameters &prm,
+        ProgProject &prog_prm)
 {
     // Generate Projection angles
-    Assign_angles(DF, prm, prog_prm.fn_sym);
+    if (!prog_prm.singleProjection)
+        Assign_angles(DF, prm, prog_prm.fn_sym);
+    else
+    {
+        size_t DFid=DF.addObject();
+        DF.setValue(MDL_ANGLEROT,prog_prm.rotSingle,DFid);
+        DF.setValue(MDL_ANGLETILT,prog_prm.tiltSingle,DFid);
+        DF.setValue(MDL_ANGLEPSI,prog_prm.psiSingle,DFid);
+    }
 
     // Load Phantom and set working mode
     if (prog_prm.fnPhantom.getExtension()=="descr")
     {
         phantomDescr.read(prog_prm.fnPhantom);
         phantomMode = XMIPP;
+        if (prog_prm.singleProjection)
+        	if (prog_prm.projSize==-1)
+        		prm.proj_Xdim=prm.proj_Ydim=phantomDescr.xdim;
+        	else
+        		prm.proj_Xdim=prm.proj_Ydim=prog_prm.projSize;
     }
     else if (prog_prm.fnPhantom.getExtension()=="pdb")
     {
@@ -580,18 +628,29 @@ void PROJECT_Side_Info::produce_Side_Info(const Projection_Parameters &prm,
         int M=ROUND(prog_prm.samplingRate/highTs);
         interpolator.setup(M,prog_prm.samplingRate/M,true);
         phantomMode = PDB;
+        if (prog_prm.singleProjection)
+        	if (prog_prm.projSize==-1)
+        		REPORT_ERROR(ERR_ARG_MISSING,"--xdim");
+        	else
+        		prm.proj_Xdim=prm.proj_Ydim=prog_prm.projSize;
     }
     else
     {
         phantomVol.read(prog_prm.fnPhantom);
         phantomVol().setXmippOrigin();
         phantomMode = VOXEL;
+        if (prog_prm.singleProjection)
+        	if (prog_prm.projSize==-1)
+        		prm.proj_Xdim=prm.proj_Ydim=XSIZE(phantomVol());
+        	else
+        		prm.proj_Xdim=prm.proj_Ydim=prog_prm.projSize;
     }
 }
 
 /* Effectively project ===================================================== */
-int PROJECT_Effectively_project(const std::string &fnRoot,
-								const Projection_Parameters &prm,
+int PROJECT_Effectively_project(const std::string &fnOut,
+                                bool singleProjection,
+                                const Projection_Parameters &prm,
                                 PROJECT_Side_Info &side,
                                 const Crystal_Projection_Parameters &prm_crystal,
                                 Projection &proj, MetaData &SF)
@@ -604,11 +663,13 @@ int PROJECT_Effectively_project(const std::string &fnRoot,
 
     int projIdx=0;
     FileName fn_proj;              // Projection name
-    FileName fn_stack=fnRoot+".stk";
     FOR_ALL_OBJECTS_IN_METADATA(side.DF)
     {
         size_t DFmov_objId=SF.addObject();
-        fn_proj.compose(projIdx,fn_stack);
+        if (singleProjection)
+            fn_proj=fnOut;
+        else
+            fn_proj.compose(projIdx,fnOut);
         SF.setValue(MDL_IMAGE,fn_proj,DFmov_objId);
         SF.setValue(MDL_ENABLED,1,DFmov_objId);
 
@@ -635,7 +696,8 @@ int PROJECT_Effectively_project(const std::string &fnRoot,
             project_Volume(side.phantomVol(), proj, prm.proj_Ydim, prm.proj_Xdim,
                            rot, tilt, psi);
             Matrix1D<double> shifts(2);
-            XX(shifts) = shiftX; YY(shifts) = shiftY;
+            XX(shifts) = shiftX;
+            YY(shifts) = shiftY;
             selfTranslate(LINEAR,IMGMATRIX(proj), shifts);
         }
         else if (side.phantomMode==PROJECT_Side_Info::PDB)
@@ -677,7 +739,10 @@ int PROJECT_Effectively_project(const std::string &fnRoot,
         IMGMATRIX(proj).addNoise(prm.Npixel_avg, prm.Npixel_dev, "gaussian");
 
         // Save ..............................................................
-        proj.write(fn_proj,projIdx,true,WRITE_APPEND);
+        if (singleProjection)
+            proj.write(fn_proj);
+        else
+            proj.write(fn_proj,projIdx,true,WRITE_APPEND);
         projIdx++;
         NumProjs++;
     }
@@ -693,7 +758,8 @@ int ROUT_project(ProgProject &prm, Projection &proj, MetaData &SF)
     // Read projection parameters and produce side information
     Projection_Parameters proj_prm;
     PROJECT_Side_Info side;
-    proj_prm.from_prog_params(prm);
+    if (!prm.singleProjection)
+        proj_prm.from_prog_params(prm);
     side.produce_Side_Info(proj_prm, prm);
     Crystal_Projection_Parameters crystal_proj_prm;
 
@@ -743,12 +809,18 @@ int ROUT_project(ProgProject &prm, Projection &proj, MetaData &SF)
     if (!prm.only_create_angles)
     {
         // Really project
-        ProjNo = PROJECT_Effectively_project(prm.fnRoot, proj_prm, side, crystal_proj_prm,
-                                             proj, SF);
-        // Save SelFile
-      	SF.write(prm.fnRoot+".sel");
+        if (prm.singleProjection)
+            ProjNo = PROJECT_Effectively_project(prm.fnOut, prm.singleProjection,
+            									 proj_prm, side, crystal_proj_prm, proj, SF);
+        else
+        {
+            ProjNo = PROJECT_Effectively_project(prm.fnRoot+".stk", prm.singleProjection,
+            									 proj_prm, side, crystal_proj_prm, proj, SF);
+            SF.write(prm.fnRoot+".sel");
+        }
     }
     else
-        side.DF.write(prm.fnRoot+".sel");
+        if (!prm.singleProjection)
+            side.DF.write(prm.fnRoot+".sel");
     return ProjNo;
 }
