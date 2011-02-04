@@ -95,6 +95,13 @@
  */
 #define dMij(m, i, j)  MAT_ELEM(m, i, j)
 
+/** Matrix element: Element access
+ *
+ * This is just a redefinition
+ * of the function above
+ */
+#define dMn(m, n)  ((m).mdata[(n)])
+
 /** Matrix (3x3) by vector (3x1) (a=M*b)
  *
  * You must "load" the temporary variables, and create the result vector with
@@ -198,10 +205,10 @@
  * allowed).
  */
 #define M2x2_BY_CT(M2, M1, k) { \
-        dMij(M2, 0, 0) = dMij(M1, 0, 0) * k; \
-        dMij(M2, 0, 1) = dMij(M1, 0, 1) * k; \
-        dMij(M2, 1, 0) = dMij(M1, 1, 0) * k; \
-        dMij(M2, 1, 1) = dMij(M1, 1, 1) * k; }
+        dMn(M2, 0) = dMn(M1, 0) * k; \
+        dMn(M2, 1) = dMn(M1, 1) * k; \
+        dMn(M2, 2) = dMn(M1, 2) * k; \
+        dMn(M2, 3) = dMn(M1, 3) * k; }
 
 /** Matrix (3x3) by constant (M2=M1*k)
  *
@@ -209,15 +216,15 @@
  * matrix M1 to store the results (that is, M2x2_BY_CT(M, M, k);, is allowed).
  */
 #define M3x3_BY_CT(M2, M1, k) { \
-        dMij(M2, 0, 0) = dMij(M1, 0, 0) * k; \
-        dMij(M2, 0, 1) = dMij(M1, 0, 1) * k; \
-        dMij(M2, 0, 2) = dMij(M1, 0, 2) * k; \
-        dMij(M2, 1, 0) = dMij(M1, 1, 0) * k; \
-        dMij(M2, 1, 1) = dMij(M1, 1, 1) * k; \
-        dMij(M2, 1, 2) = dMij(M1, 1, 2) * k; \
-        dMij(M2, 2, 0) = dMij(M1, 2, 0) * k; \
-        dMij(M2, 2, 1) = dMij(M1, 2, 1) * k; \
-        dMij(M2, 2, 2) = dMij(M1, 2, 2) * k; }
+        dMn(M2, 0) = dMn(M1, 0) * k; \
+        dMn(M2, 1) = dMn(M1, 1) * k; \
+        dMn(M2, 2) = dMn(M1, 2) * k; \
+        dMn(M2, 3) = dMn(M1, 3) * k; \
+        dMn(M2, 4) = dMn(M1, 4) * k; \
+        dMn(M2, 5) = dMn(M1, 5) * k; \
+        dMn(M2, 6) = dMn(M1, 6) * k; \
+        dMn(M2, 7) = dMn(M1, 7) * k; \
+        dMn(M2, 8) = dMn(M1, 8) * k; }
 
 /** Inverse of a matrix (2x2)
  *
