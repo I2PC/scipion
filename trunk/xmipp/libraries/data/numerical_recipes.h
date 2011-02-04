@@ -26,7 +26,7 @@
 /* Variable and prototype definitions for the Numerical Core                 */
 /*****************************************************************************/
 #ifndef _NUMERICAL_HH
-#   define _NUMERICAL_HH
+#define _NUMERICAL_HH
 
 #include <math.h>
 #include "memory.h"
@@ -46,8 +46,8 @@ double gasdev(int *idum);                               // Gaussian random
 double tdev(double nu, int *idum);                      // t-student random
 
 // Cumulative distribution functions and Kolmogorov-Smirnov test
-void   ksone(double data[], int n, double(*func)(double), double * d, double * prob);  // Chapter 13.5 
-double probks(double alam);  // Chapter 13.5 
+void   ksone(double data[], int n, double(*func)(double), double * d, double * prob);  // Chapter 13.5
+double probks(double alam);  // Chapter 13.5
 
 // FFT ---------------------------------------------------------------------
 void four1(double data[], int nn, int isign);           // Complex FFT 1D
@@ -92,7 +92,7 @@ void four1(double *data, int nn, int isign);
 
 // Optimization ------------------------------------------------------------
 void powell(double *p, double *xi, int n, double ftol, int &iter,
-            double &fret, double(*func)(double *, void *), void *prm, 
+            double &fret, double(*func)(double *, void *), void *prm,
             bool show);
 
 void amebsa(double **p, double y[], int ndim, double pb[], double *yb,
