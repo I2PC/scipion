@@ -3,11 +3,13 @@ class Tester:
     def __init__(self, fnDir):
         self.fnDir = fnDir
 
-    def testProgram(self, program, arguments):
+    def testProgram(self, program, arguments, testNo=0):
         import os
         print "------------------------------------------------------------------------------------"
         print ">>> Testing " + program
         outDir = os.path.join(self.fnDir, program)
+        if testNo!=0:
+            outDir+="_%02d"%testNo
         print "   Making output directory: ", outDir
         if not os.path.exists(outDir):
             os.makedirs(outDir)
@@ -39,6 +41,15 @@ if __name__ == '__main__':
 
     program = "xmipp_convert_image"
     tester.testProgram(program, "-i input/smallStack.stk -o %s/%s/smallStack.mrcs -t stk" % (fnDir, program))
+
+    program = "xmipp_phantom_project"
+    tester.testProgram(program, "--vol input/phantomBacteriorhodopsin.vol -o %s/%s_%02d/image.xmp --angles 0 0 0" % (fnDir, program,1),1)
+
+    program = "xmipp_phantom_project"
+    tester.testProgram(program, "--vol input/phantomBacteriorhodopsin.vol --oroot %s/%s_%02d/projections --params input/clusterProjection.param" % (fnDir, program,2),2)
+
+    program = "xmipp_phantom_project"
+    tester.testProgram(program, "--vol input/phantomBacteriorhodopsin.vol --oroot %s/%s_%02d/projections --params input/uniformProjection.param" % (fnDir, program,3),3)
 
     program = "xmipp_transform_add_noise"
     tester.testProgram(program, "-i input/cleanImage.spi --type gaussian 10 5 -o %s/%s/noisyGaussian.spi" % (fnDir, program))
