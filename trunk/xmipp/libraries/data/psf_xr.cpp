@@ -455,16 +455,18 @@ void XRayPSF::generatePSFIdealLens(MultidimArray<double> &PSFi) const
 
     lensPD(OTFTemp, focalEquiv, lambda, dxl, dyl);
 
-    double x, y;
-
-    FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY2D(OTFTemp) // Circular mask
+    double Rlens2=Rlens*Rlens;
+    for (int i=0; i<YSIZE(OTFTemp); i++)
     {
-        /// For indices in standard fashion
-        x = (double) j * dxl + dxl*(1 - Nix) / 2;
-        y = (double) i * dyl + dyl*(1 - Niy) / 2;
-
-        if (sqrt(x*x + y*y) > Rlens)
-            dAij(OTFTemp,i,j) = 0;
+        double y = (double) i * dyl + dyl*(1 - Niy) / 2;
+        double y2=y*y;
+        for (int j=0; j<XSIZE(OTFTemp); j++)// Circular mask
+        {
+            /// For indices in standard fashion
+            double x = (double) j * dxl + dxl*(1 - Nix) / 2;
+            if (x*x + y2 > Rlens2)
+                dAij(OTFTemp,i,j) = 0;
+        }
     }
 
     //#define DEBUG
@@ -493,19 +495,17 @@ void XRayPSF::generatePSFIdealLens(MultidimArray<double> &PSFi) const
     _Im.write("psfitemp.spi");
 #endif
 
+    double aux, aux2;
     FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(PSFi)
     {
-        DIRECT_MULTIDIM_ELEM(PSFi,n) = abs(DIRECT_MULTIDIM_ELEM(PSFiTemp,n));
-        DIRECT_MULTIDIM_ELEM(PSFi,n) *= DIRECT_MULTIDIM_ELEM(PSFi,n);
-        norm += DIRECT_MULTIDIM_ELEM(PSFi,n);
+    	aux=abs(DIRECT_MULTIDIM_ELEM(PSFiTemp,n));
+    	DIRECT_MULTIDIM_ELEM(PSFi,n)=aux2=aux*aux;
+        norm += aux2;
     }
 
     iNorm = 1/norm;
-
     FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(PSFi)
-    {
         DIRECT_MULTIDIM_ELEM(PSFi,n) *= iNorm;
-    }
 
 
 #ifdef DEBUG
@@ -658,7 +658,7 @@ void lensPD(MultidimArray<std::complex<double> > &Im, double Flens, double lambd
         //        x = (double) j * dx + (dx) / 2;
         //        y = (double) i * dy + (dy) / 2;
 
-        phase = (-PI / lambda / Flens) * (x * x + y * y);
+        phase = (-PI / (lambda * Flens)) * (x * x + y * y);
 
 #ifndef _AIX
 
