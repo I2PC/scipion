@@ -799,59 +799,7 @@ public:
     {
         // This has only been implemented for 2D images...
         MULTIDIM_ARRAY(*this).checkDimension(2);
-
-        const MDRow &rowAux=MD[n];
-
-        double phi,psi,theta,xoff,yoff,scale;
-        bool flip;
-        rowAux.getValue(MDL_ANGLEROT, phi);
-        phi = realWRAP(phi, 0., 360.);
-        rowAux.getValue(MDL_ANGLETILT, theta);
-        theta = realWRAP(theta, 0., 360.);
-        rowAux.getValue(MDL_ANGLEPSI, psi);
-        psi = realWRAP(psi, 0., 360.);
-        rowAux.getValue(MDL_ORIGINX, xoff);
-        rowAux.getValue(MDL_ORIGINY, yoff);
-        rowAux.getValue(MDL_SCALE, scale);
-
-        A.initIdentity(3);
-        if (only_apply_shifts)
-        {
-            Euler_angles2matrix(0., 0., 0., A);
-            MAT_ELEM(A, 0, 2) = -xoff;
-            MAT_ELEM(A, 1, 2) = -yoff;
-        }
-        else
-        {
-            if (theta == 0.)
-            {
-                // For untilted images: apply Euler matrix
-                Euler_angles2matrix(phi, 0., psi, A);
-            }
-            else
-            {
-                // For tilted images: only apply Psi
-                // Take another_set into account
-                if (theta < 0.)
-                {
-                    theta = -theta;
-                    psi = realWRAP(psi - 180., -180, 180);
-                }
-                Euler_angles2matrix(0., 0., psi, A);
-            }
-            MAT_ELEM(A, 0, 2) = -xoff;
-            MAT_ELEM(A, 1, 2) = -yoff;
-        }
-        A *= scale;
-
-        // Also for only_apply_shifts: mirror if necessary!
-        rowAux.getValue(MDL_FLIP, flip);
-
-        if (flip)
-        {
-            MAT_ELEM(A, 0, 0) *= -1.;
-            MAT_ELEM(A, 0, 1) *= -1.;
-        }
+        geo2TransformationMatrix(MD[n], A, only_apply_shifts);
     }
 
     /** Show image properties

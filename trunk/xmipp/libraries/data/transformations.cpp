@@ -26,6 +26,58 @@
 
 #include "transformations.h"
 
+void geo2TransformationMatrix(const MDRow &imageGeo, Matrix2D<double> &A,
+                                       bool only_apply_shifts)
+{
+    // This has only been implemented for 2D images...
+    double psi = 0, xoff = 0., yoff = 0., scale = 1.;
+    bool flip = false;
+
+    imageGeo.getValue(MDL_ANGLEPSI, psi);
+    imageGeo.getValue(MDL_SHIFTX, xoff);
+    imageGeo.getValue(MDL_SHIFTY, yoff);
+    imageGeo.getValue(MDL_SCALE, scale);
+    imageGeo.getValue(MDL_FLIP, flip);
+
+    psi = realWRAP(psi, 0., 360.);
+
+    if (only_apply_shifts)
+        A.initIdentity(3);
+    else
+        rotation2DMatrix(psi, A, true);
+    MAT_ELEM(A, 0, 2) = -xoff;
+    MAT_ELEM(A, 1, 2) = -yoff;
+
+    if (scale != 1.)
+    {
+        M3x3_BY_CT(A, A, scale);
+        MAT_ELEM(A, 2, 2) = 1.;
+    }
+
+    if (flip)
+    {
+        MAT_ELEM(A, 0, 0) *= -1.;
+        MAT_ELEM(A, 0, 1) *= -1.;
+    }
+}
+
+void transformationMatrix2Geo(const Matrix2D<double> &A, MDRow & imageGeo)
+{
+    double cosine = dMij(A, 0, 0), sine = dMij(A, 1, 0);
+    double scale2 = cosine * cosine +  sine * sine;
+    double invScale = 1 / sqrt(scale2);
+    double psi = atan2(sine * invScale, cosine * invScale);
+    double shiftX = -dMij(A, 0, 2) * invScale;
+    double shiftY = -dMij(A, 1, 2) * invScale;
+    bool flip = ((cosine * dMij(A, 1, 1) - sine * dMij(A, 0, 1) ) < 0);
+
+    imageGeo.setValue(MDL_ANGLEPSI, psi);
+    imageGeo.setValue(MDL_SHIFTX, shiftX);
+    imageGeo.setValue(MDL_SHIFTY, shiftX);
+    imageGeo.setValue(MDL_SCALE, scale2);
+    imageGeo.setValue(MDL_FLIP, flip);
+}
+
 /* Rotation 2D ------------------------------------------------------------- */
 void rotation2DMatrix(double ang, Matrix2D< double > &result, bool homogeneous)
 {
@@ -38,7 +90,7 @@ void rotation2DMatrix(double ang, Matrix2D< double > &result, bool homogeneous)
     if (homogeneous)
     {
         if (MAT_XSIZE(result)!=3 || MAT_YSIZE(result)!=3)
-            result.resize(3,3);
+            result.resizeNoCopy(3,3);
         MAT_ELEM(result,0, 2) = 0;
         MAT_ELEM(result,1, 2) = 0;
         MAT_ELEM(result,2, 0) = 0;
@@ -47,11 +99,9 @@ void rotation2DMatrix(double ang, Matrix2D< double > &result, bool homogeneous)
     }
     else
         if (MAT_XSIZE(result)!=2 || MAT_YSIZE(result)!=2)
-            result.resize(2,2);
-
+            result.resizeNoCopy(2,2);
     MAT_ELEM(result,0, 0) = cosine;
     MAT_ELEM(result,0, 1) = -sine;
-
     MAT_ELEM(result,1, 0) = sine;
     MAT_ELEM(result,1, 1) = cosine;
 }

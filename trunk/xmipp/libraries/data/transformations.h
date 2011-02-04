@@ -31,6 +31,7 @@
 #include "multidim_array.h"
 #include "multidim_array_generic.h"
 #include "geometry.h"
+#include "metadata.h"
 
 #define IS_INV true
 #define IS_NOT_INV false
@@ -43,6 +44,16 @@
 /// @defgroup GeometricalTransformations Geometrical transformations
 /// @ingroup DataLibrary
 //@{
+/** Get geometric transformation matrix from image geometry
+ * Now this info is stored in metadata
+  */
+void geo2TransformationMatrix(const MDRow &imageHeader, Matrix2D<double> &A,
+                              bool only_apply_shifts = false);
+
+/** Retrieve the geometry transfomations from matrix
+ */
+void transformationMatrix2Geo(const Matrix2D<double> &A, MDRow & imageGeo);
+
 /** Creates a rotational matrix (3x3) for images
  * @ingroup GeometricalTransformations
  *
@@ -252,6 +263,7 @@ void applyGeometry(int SplineDegree,
     if ( V1.getDim()==3 && ((MAT_XSIZE(A) != 4) || (MAT_YSIZE(A) != 4)) )
         REPORT_ERROR(ERR_MATRIX_SIZE,"ApplyGeometry: 3D transformation matrix is not 4x4");
 #endif
+
     if (A.isIdentity())
     {
         typeCast(V1,V2);
