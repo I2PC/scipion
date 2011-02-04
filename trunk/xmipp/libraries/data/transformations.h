@@ -242,16 +242,16 @@ void applyGeometry(int SplineDegree,
                    const Matrix2D< double > &A, bool inv,
                    bool wrap, T outside = 0)
 {
-
+#ifndef RELEASE_MODE
     if (&V1 == (MultidimArray<T1>*)&V2)
         REPORT_ERROR(ERR_VALUE_INCORRECT,"ApplyGeometry: Input array cannot be the same as output array");
 
-    if ( V1.getDim() < 2 || V1.getDim() > 3)
-        REPORT_ERROR(ERR_MATRIX_SIZE,"ApplyGeometry: can only work in 2D or 3D space");
+    if ( V1.getDim()==2 && ((MAT_XSIZE(A) != 3) || (MAT_YSIZE(A) != 3)) )
+        REPORT_ERROR(ERR_MATRIX_SIZE,"ApplyGeometry: 2D transformation matrix is not 3x3");
 
-    if ( MAT_XSIZE(A) != 4 || MAT_YSIZE(A) != 4 )
+    if ( V1.getDim()==3 && ((MAT_XSIZE(A) != 4) || (MAT_YSIZE(A) != 4)) )
         REPORT_ERROR(ERR_MATRIX_SIZE,"ApplyGeometry: 3D transformation matrix is not 4x4");
-
+#endif
     if (A.isIdentity())
     {
         typeCast(V1,V2);
@@ -283,7 +283,6 @@ void applyGeometry(int SplineDegree,
     if (V1.getDim() == 2)
     {
         // 2D transformation
-
         int m1, n1, m2, n2;
         double x, y, xp, yp;
         double minxp, minyp, maxxp, maxyp;
@@ -345,8 +344,8 @@ void applyGeometry(int SplineDegree,
             // geometrical transformation
             // they are related by
             // coords_output(=x,y) = A * coords_input (=xp,yp)
-            xp = x * MAT_ELEM(Aref, 0, 0) + y * MAT_ELEM(Aref, 0, 1) + MAT_ELEM(Aref, 0, 3);
-            yp = x * MAT_ELEM(Aref, 1, 0) + y * MAT_ELEM(Aref, 1, 1) + MAT_ELEM(Aref, 1, 3);
+            xp = x * MAT_ELEM(Aref, 0, 0) + y * MAT_ELEM(Aref, 0, 1) + MAT_ELEM(Aref, 0, 2);
+            yp = x * MAT_ELEM(Aref, 1, 0) + y * MAT_ELEM(Aref, 1, 1) + MAT_ELEM(Aref, 1, 2);
 
             for (int j = 0; j < XSIZE(V2); j++)
             {
@@ -929,7 +928,6 @@ void scaleToSize(int SplineDegree,
                  const MultidimArray<T1> &V1,
                  int Xdim, int Ydim, int Zdim = 1)
 {
-
     if (Xdim == XSIZE(V1) && Ydim == YSIZE(V1) && \
         (!(V1.getDim()==3) || (Zdim == ZSIZE(V1))) )
     {
