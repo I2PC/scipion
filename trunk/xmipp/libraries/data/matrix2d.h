@@ -125,14 +125,10 @@
  * @endcode
  */
 #define M3x3_BY_V3x1(a, M, b) { \
-        spduptmp0 = dMij(M, 0, 0) * XX(b) + dMij(M, 0, 1) * YY(b) + dMij(M, 0, 2) \
-                    * ZZ(b); \
-        spduptmp1 = dMij(M, 1, 0) * XX(b) + dMij(M, 1, 1) * YY(b) + dMij(M, 1, 2) \
-                    * ZZ(b); \
-        spduptmp2 = dMij(M, 2, 0) * XX(b) + dMij(M, 2, 1) * YY(b) + dMij(M, 2, 2) \
-                    * ZZ(b); \
+        spduptmp0 = dMn(M, 0) * XX(b) + dMn(M, 1) * YY(b) + dMn(M, 2) * ZZ(b); \
+        spduptmp1 = dMn(M, 3) * XX(b) + dMn(M, 4) * YY(b) + dMn(M, 5) * ZZ(b); \
+        spduptmp2 = dMn(M, 6) * XX(b) + dMn(M, 7) * YY(b) + dMn(M, 8) * ZZ(b); \
         XX(a) = spduptmp0; YY(a) = spduptmp1; ZZ(a) = spduptmp2; }
-
 
 /** Matrix (3x3) by Matrix (3x3) (A=B*C)
  *
@@ -141,33 +137,24 @@
  * results (that is, M3x3_BY_M3x3(A, A, B);, is allowed).
  */
 #define M3x3_BY_M3x3(A, B, C) { \
-        spduptmp0 = dMij(B, 0, 0) * dMij(C, 0, 0) + dMij(B, 0, 1) * dMij(C, 1, 0) \
-                    + dMij(B, 0, 2) * dMij(C, 2, 0); \
-        spduptmp1 = dMij(B, 0, 0) * dMij(C, 0, 1) + dMij(B, 0, 1) * dMij(C, 1, 1) \
-                    + dMij(B, 0, 2) * dMij(C, 2, 1); \
-        spduptmp2 = dMij(B, 0, 0) * dMij(C, 0, 2) + dMij(B, 0, 1) * dMij(C, 1, 2) \
-                    + dMij(B, 0, 2) * dMij(C, 2, 2); \
-        spduptmp3 = dMij(B, 1, 0) * dMij(C, 0, 0) + dMij(B, 1, 1) * dMij(C, 1, 0) \
-                    + dMij(B, 1, 2) * dMij(C, 2, 0); \
-        spduptmp4 = dMij(B, 1, 0) * dMij(C, 0, 1) + dMij(B, 1, 1) * dMij(C, 1, 1) \
-                    + dMij(B, 1, 2) * dMij(C, 2, 1); \
-        spduptmp5 = dMij(B, 1, 0) * dMij(C, 0, 2) + dMij(B, 1, 1) * dMij(C, 1, 2) \
-                    + dMij(B, 1, 2) * dMij(C, 2, 2); \
-        spduptmp6 = dMij(B, 2, 0) * dMij(C, 0, 0) + dMij(B, 2, 1) * dMij(C, 1, 0) \
-                    + dMij(B, 2, 2) * dMij(C, 2, 0); \
-        spduptmp7 = dMij(B, 2, 0) * dMij(C, 0, 1) + dMij(B, 2, 1) * dMij(C, 1, 1) \
-                    + dMij(B, 2, 2) * dMij(C, 2, 1); \
-        spduptmp8 = dMij(B, 2, 0) * dMij(C, 0, 2) + dMij(B, 2, 1) * dMij(C, 1, 2) \
-                    + dMij(B, 2, 2) * dMij(C, 2, 2); \
-        dMij(A, 0, 0) = spduptmp0; \
-        dMij(A, 0, 1) = spduptmp1; \
-        dMij(A, 0, 2) = spduptmp2; \
-        dMij(A, 1, 0) = spduptmp3; \
-        dMij(A, 1, 1) = spduptmp4; \
-        dMij(A, 1, 2) = spduptmp5; \
-        dMij(A, 2, 0) = spduptmp6; \
-        dMij(A, 2, 1) = spduptmp7; \
-        dMij(A, 2, 2) = spduptmp8; }
+        spduptmp0 = dMn(B,0) * dMn(C,0) + dMn(B,1) * dMn(C,3) + dMn(B,2) * dMn(C,6); \
+        spduptmp1 = dMn(B,0) * dMn(C,1) + dMn(B,1) * dMn(C,4) + dMn(B,2) * dMn(C,7); \
+        spduptmp2 = dMn(B,0) * dMn(C,2) + dMn(B,1) * dMn(C,5) + dMn(B,2) * dMn(C,8); \
+        spduptmp3 = dMn(B,3) * dMn(C,0) + dMn(B,4) * dMn(C,3) + dMn(B,5) * dMn(C,6); \
+        spduptmp4 = dMn(B,3) * dMn(C,1) + dMn(B,4) * dMn(C,4) + dMn(B,5) * dMn(C,7); \
+        spduptmp5 = dMn(B,3) * dMn(C,2) + dMn(B,4) * dMn(C,5) + dMn(B,5) * dMn(C,8); \
+        spduptmp6 = dMn(B,6) * dMn(C,0) + dMn(B,7) * dMn(C,3) + dMn(B,8) * dMn(C,6); \
+        spduptmp7 = dMn(B,6) * dMn(C,1) + dMn(B,7) * dMn(C,4) + dMn(B,8) * dMn(C,7); \
+        spduptmp8 = dMn(B,6) * dMn(C,2) + dMn(B,7) * dMn(C,5) + dMn(B,8) * dMn(C,8); \
+        dMn(A, 0) = spduptmp0; \
+        dMn(A, 1) = spduptmp1; \
+        dMn(A, 2) = spduptmp2; \
+        dMn(A, 3) = spduptmp3; \
+        dMn(A, 4) = spduptmp4; \
+        dMn(A, 5) = spduptmp5; \
+        dMn(A, 6) = spduptmp6; \
+        dMn(A, 7) = spduptmp7; \
+        dMn(A, 8) = spduptmp8; }
 
 /** Matrix (2x2) by vector (2x1) (a=M*b)
  *
@@ -193,8 +180,8 @@
  * @endcode
  */
 #define M2x2_BY_V2x1(a, M, b) { \
-        spduptmp0 = dMij(M, 0, 0) * XX(b) + dMij(M, 0, 1) * YY(b); \
-        spduptmp1 = dMij(M, 1, 0) * XX(b) + dMij(M, 1, 1) * YY(b); \
+        spduptmp0 = dMn(M, 0) * XX(b) + dMn(M, 1) * YY(b); \
+        spduptmp1 = dMn(M, 2) * XX(b) + dMn(M, 3) * YY(b); \
         XX(a) = spduptmp0; \
         YY(a) = spduptmp1; }
 
@@ -232,12 +219,12 @@
  * already resized.
  */
 #define M2x2_INV(Ainv, A) { \
-        spduptmp0 = 1.0 / (dMij(A, 0, 0) * dMij(A, 1, 1) - dMij(A, 0, 1) \
-                           * dMij(A, 1, 0)); \
-        dMij(Ainv, 0, 0) = dMij(A, 1, 1); \
-        dMij(Ainv, 0, 1) = -dMij(A, 0, 1); \
-        dMij(Ainv, 1, 0) = -dMij(A, 1, 0); \
-        dMij(Ainv, 1, 1) =  dMij(A, 0, 0); \
+        spduptmp0 = 1.0 / (dMn(A,0) * dMn(A,4) - dMn(A,1) \
+                           * dMn(A,3)); \
+        dMij(Ainv, 0, 0) = dMn(A,4); \
+        dMij(Ainv, 0, 1) = -dMn(A,1); \
+        dMij(Ainv, 1, 0) = -dMn(A,3); \
+        dMij(Ainv, 1, 1) =  dMn(A,0); \
         M2x2_BY_CT(Ainv, Ainv, spduptmp0); }
 
 /** Inverse of a matrix (3x3)
@@ -246,17 +233,16 @@
  * already resized.
  */
 #define M3x3_INV(Ainv, A) { \
-        dMij(Ainv, 0, 0) =   dMij(A, 2, 2)*dMij(A, 1, 1)-dMij(A, 2, 1)*dMij(A, 1, 2); \
-        dMij(Ainv, 0, 1) = -(dMij(A, 2, 2)*dMij(A, 0, 1)-dMij(A, 2, 1)*dMij(A, 0, 2)); \
-        dMij(Ainv, 0, 2) =   dMij(A, 1, 2)*dMij(A, 0, 1)-dMij(A, 1, 1)*dMij(A, 0, 2); \
-        dMij(Ainv, 1, 0) = -(dMij(A, 2, 2)*dMij(A, 1, 0)-dMij(A, 2, 0)*dMij(A, 1, 2)); \
-        dMij(Ainv, 1, 1) =   dMij(A, 2, 2)*dMij(A, 0, 0)-dMij(A, 2, 0)*dMij(A, 0, 2); \
-        dMij(Ainv, 1, 2) = -(dMij(A, 1, 2)*dMij(A, 0, 0)-dMij(A, 1, 0)*dMij(A, 0, 2)); \
-        dMij(Ainv, 2, 0) =   dMij(A, 2, 1)*dMij(A, 1, 0)-dMij(A, 2, 0)*dMij(A, 1, 1); \
-        dMij(Ainv, 2, 1) = -(dMij(A, 2, 1)*dMij(A, 0, 0)-dMij(A, 2, 0)*dMij(A, 0, 1)); \
-        dMij(Ainv, 2, 2) =   dMij(A, 1, 1)*dMij(A, 0, 0)-dMij(A, 1, 0)*dMij(A, 0, 1); \
-        spduptmp0 = 1.0 / (dMij(A, 0, 0)*dMij(Ainv, 0, 0)+dMij(A, 1, 0)*dMij(Ainv, 0, 1)+\
-            dMij(A, 2, 0)*dMij(Ainv, 0, 2)); \
+        dMn(Ainv, 0) =   dMn(A,8)*dMn(A,4)-dMn(A,7)*dMn(A,5); \
+        dMn(Ainv, 1) = -(dMn(A,8)*dMn(A,1)-dMn(A,7)*dMn(A,2)); \
+        dMn(Ainv, 2) =   dMn(A,5)*dMn(A,1)-dMn(A,4)*dMn(A,2); \
+        dMn(Ainv, 3) = -(dMn(A,8)*dMn(A,3)-dMn(A,6)*dMn(A,5)); \
+        dMn(Ainv, 4) =   dMn(A,8)*dMn(A,0)-dMn(A,6)*dMn(A,2); \
+        dMn(Ainv, 5) = -(dMn(A,5)*dMn(A,0)-dMn(A,3)*dMn(A,2)); \
+        dMn(Ainv, 6) =   dMn(A,7)*dMn(A,3)-dMn(A,6)*dMn(A,4); \
+        dMn(Ainv, 7) = -(dMn(A,7)*dMn(A,0)-dMn(A,6)*dMn(A,1)); \
+        dMn(Ainv, 8) =   dMn(A,4)*dMn(A,0)-dMn(A,3)*dMn(A,1); \
+        spduptmp0 = 1.0 / (dMn(A,0)*dMn(Ainv,0)+dMn(A,3)*dMn(Ainv,1)+dMn(A,6)*dMn(Ainv,2)); \
         M3x3_BY_CT(Ainv, Ainv, spduptmp0); }
 
 // Forward declarations
