@@ -66,6 +66,9 @@ public:
 protected:
     // Filenames within the Selfile
     FileName   *imgnames;
+    size_t     *imgids;
+    //Store metadata
+    MetaData    mdInput;
     // Sel file name. Used by the save routine
     FileName selfile_fn;
     // Selstatus of those files

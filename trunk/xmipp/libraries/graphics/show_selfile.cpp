@@ -55,14 +55,16 @@ void ShowSel::init()
 {
     labeltype       = SFLabel_LABEL;
     imgnames        = NULL;
+    imgids          = NULL;
     selstatus       = NULL;
     ShowTable::init();
 }
 
 void ShowSel::clear()
 {
-    if (selstatus != NULL) delete[] selstatus;
-    if (imgnames  != NULL) delete[] imgnames;
+    delete[] selstatus;
+    delete[] imgnames;
+    delete[] imgids;
     ShowTable::clear();
 }
 
@@ -111,7 +113,6 @@ void ShowSel::initWithObject(int _numRows, int _numCols,
     init();
     fn = "";
     setCaption(_title);
-    _SF.firstObject();
     readObject(_SF);
     NumRows = _numRows;
     NumCols = _numCols;
@@ -144,6 +145,7 @@ void ShowSel::readObject(MetaData &SF, double _minGray, double _maxGray)
     if (listSize == 0)
         REPORT_ERROR(ERR_IO_SIZE, "ShowSel::readFile: Input selfile is empty");
     imgnames        = new FileName[listSize];
+    imgids          = new size_t[listSize];
     selstatus       = new bool[listSize];
     initContents();
     int Zdim;
@@ -164,8 +166,10 @@ void ShowSel::readObject(MetaData &SF, double _minGray, double _maxGray)
     maxPixel = _maxGray;
     int i = 0;
     int enabled;
-    FOR_ALL_OBJECTS_IN_METADATA(SF)
+    mdInput = SF;
+    FOR_ALL_OBJECTS_IN_METADATA(mdInput)
     {
+        imgids[i] = __iter.objId;
     	SF.getValue(MDL_IMAGE, imgnames[i],__iter.objId);
     	if (SF.getValue(MDL_ENABLED, enabled,__iter.objId))
     		selstatus[i] = enabled == 1;
@@ -355,7 +359,7 @@ void ShowSel::producePixmapAt(int i)
     {
         // Plain Xmipp images
     	if (apply_geo)
-    		I.readApplyGeo(imgnames[i]);
+    		I.readApplyGeo(imgnames[i], mdInput, imgids[i]);
     	else
     		I.read(imgnames[i]);
         if (load_mode == PSD_mode) xmipp2PSD(I(), I());
