@@ -378,7 +378,7 @@ void MDObject::setValue(const char*  &charvalue)
 #define DOUBLE2STREAM(d) \
     if (withFormat) {\
             (os) << std::setw(12); \
-            (os) << (((d) != 0. && ABS(d) < 0.001) ? std::scientific : std::fixed);\
+            (os) << (((d) != 0. && fabs(d) < 0.001) ? std::scientific : std::fixed);\
         } os << d;
 
 #define INT2STREAM(i) \
