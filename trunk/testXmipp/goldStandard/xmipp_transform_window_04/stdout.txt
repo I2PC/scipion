@@ -1,0 +1,3 @@
+Input File: input/singleImage.spi
+Output File: goldStandard//xmipp_transform_window_04/image.xmp
+Crop: (XxYxZ)=-10x-10x-10

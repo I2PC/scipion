@@ -44,11 +44,7 @@ if __name__ == '__main__':
 
     program = "xmipp_phantom_project"
     tester.testProgram(program, "-i input/phantomBacteriorhodopsin.vol -o %s/%s_%02d/image.xmp --angles 0 0 0" % (fnDir, program,1),1)
-
-    program = "xmipp_phantom_project"
     tester.testProgram(program, "-i input/phantomBacteriorhodopsin.vol --oroot %s/%s_%02d/projections --params input/clusterProjection.param" % (fnDir, program,2),2)
-
-    program = "xmipp_phantom_project"
     tester.testProgram(program, "-i input/phantomBacteriorhodopsin.vol --oroot %s/%s_%02d/projections --params input/uniformProjection.param" % (fnDir, program,3),3)
 
     program = "xmipp_transform_add_noise"
@@ -56,6 +52,12 @@ if __name__ == '__main__':
 
     program = "xmipp_transform_center_image"
     tester.testProgram(program, "-i input/smallStack.stk -o %s/%s/smallStackCentered.stk" % (fnDir, program))
+
+    program = "xmipp_transform_window"
+    tester.testProgram(program, "-i input/singleImage.spi -o %s/%s_%02d/image.xmp --size 32" % (fnDir, program,1),1)
+    tester.testProgram(program, "-i input/singleImage.spi -o %s/%s_%02d/image.xmp --corners -16 -16 15 15" % (fnDir, program,2),2)
+    tester.testProgram(program, "-i input/singleImage.spi -o %s/%s_%02d/image.xmp --corners 0 0 31 31 --physical" % (fnDir, program,3),3)
+    tester.testProgram(program, "-i input/singleImage.spi -o %s/%s_%02d/image.xmp --crop -10" % (fnDir, program,4),4)
 
     program = "xmipp_xray_import"
     tester.testProgram(program, "--data input/xray_import/Images --flat input/xray_import/Flatfields --oroot %s/%s/stack --crop 30" % (fnDir, program))

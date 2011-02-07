@@ -4,4 +4,4 @@ data_
 loop_
  _image
  _angleTilt
- 000000@goldStandard//xmipp_xray_import/stack.mrcs -32 
+ 000000@goldStandard//xmipp_xray_import/stack.mrcs   -32.000000 
