@@ -1,4 +1,4 @@
 Input File: input/cleanImage.spi
-Output File: goldStandard/xmipp_transform_add_noise/noisyGaussian.spi
+Output File: goldStandard//xmipp_transform_add_noise/noisyGaussian.spi
 Noise avg=10
 Noise stddev=5

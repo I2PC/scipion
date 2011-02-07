@@ -43,13 +43,13 @@ if __name__ == '__main__':
     tester.testProgram(program, "-i input/smallStack.stk -o %s/%s/smallStack.mrcs -t stk" % (fnDir, program))
 
     program = "xmipp_phantom_project"
-    tester.testProgram(program, "--vol input/phantomBacteriorhodopsin.vol -o %s/%s_%02d/image.xmp --angles 0 0 0" % (fnDir, program,1),1)
+    tester.testProgram(program, "-i input/phantomBacteriorhodopsin.vol -o %s/%s_%02d/image.xmp --angles 0 0 0" % (fnDir, program,1),1)
 
     program = "xmipp_phantom_project"
-    tester.testProgram(program, "--vol input/phantomBacteriorhodopsin.vol --oroot %s/%s_%02d/projections --params input/clusterProjection.param" % (fnDir, program,2),2)
+    tester.testProgram(program, "-i input/phantomBacteriorhodopsin.vol --oroot %s/%s_%02d/projections --params input/clusterProjection.param" % (fnDir, program,2),2)
 
     program = "xmipp_phantom_project"
-    tester.testProgram(program, "--vol input/phantomBacteriorhodopsin.vol --oroot %s/%s_%02d/projections --params input/uniformProjection.param" % (fnDir, program,3),3)
+    tester.testProgram(program, "-i input/phantomBacteriorhodopsin.vol --oroot %s/%s_%02d/projections --params input/uniformProjection.param" % (fnDir, program,3),3)
 
     program = "xmipp_transform_add_noise"
     tester.testProgram(program, "-i input/cleanImage.spi --type gaussian 10 5 -o %s/%s/noisyGaussian.spi" % (fnDir, program))
