@@ -245,6 +245,8 @@ protected:
     bool decompose_stacks;
     /// Flag to save the output metadata when output file is a stack
     bool save_metadata_stack;
+    /// Object id of the output metadata
+    size_t newId;
 
     virtual void defineParams();
     virtual void readParams();

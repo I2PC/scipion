@@ -564,7 +564,7 @@ void XmippMetadataProgram::run()
     try
     {
         FileName fnImg, fnImgOut, baseName, pathBaseName, fullBaseName, oextBaseName;
-        size_t objId, newId;
+        size_t objId;
         //Perform particular preprocessing
         preProcess();
 
