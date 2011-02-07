@@ -137,7 +137,7 @@ public:
     StringVector comments;
     std::vector<int> visibility;
 
-    void addComment(std::string comment, int visible = 0);
+    void addComment(const std::string &comment, int visible = 0);
     void clear();
     size_t size() const;
 };

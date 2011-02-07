@@ -339,7 +339,7 @@ TokenType ArgLexer::lookahead() const
 
 
 //-------------------   PARSER IMPLEMENTATIONS   --------------------------------
-void CommentList::addComment(std::string comment, int visible)
+void CommentList::addComment(const std::string &comment, int visible)
 {
     comments.push_back(comment);
     visibility.push_back(visible);
@@ -1297,7 +1297,14 @@ void WikiPrinter::printProgram(const ProgramDef &program, int v)
     {
         *pOut << "---++ Usage" << std::endl;
         for (size_t i = 0; i < program.usageComments.size(); ++i)
-            *pOut << "   " << program.usageComments.comments[i] << std::endl;
+        	switch (program.usageComments.visibility[i])
+        	{
+        	case 1:
+            	*pOut << "   <pre>" << program.usageComments.comments[i] << "</pre>\n";
+            	break;
+        	default:
+            	*pOut << "   " << program.usageComments.comments[i] << std::endl;
+        	}
     }
     if (!program.seeAlso.empty())
     {
