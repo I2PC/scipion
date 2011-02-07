@@ -93,12 +93,12 @@ public:
         addExampleLine("xmipp_transform_window -i g0ta.vol --corners -32 -32 -16 31 31 15");
         addExampleLine("Note that r0 and rF are not symmetric because the volume is of an",false);
         addExampleLine("even size, if we wanted to get a 33x65x65 volume, the right indexes",false);
-        addExampleLine("would be");
+        addExampleLine("would be",false);
         addExampleLine("xmipp_transform_window -i g0ta.vol --corners -32 -32 -16 32 32 16");
-        addExampleLine("Reduce the volume by 10 pixels on each direction");
+        addExampleLine("Reduce the volume by 10 pixels on each direction",false);
         addExampleLine("xmipp_transform_window -i g0ta.vol --crop 10");
-        addExampleLine("Enlarge the volume by 10 pixels on each direction (negative crop)");
-        addExampleLine("xmipp_transform_window -i g0ta.vol -crop -10");
+        addExampleLine("Enlarge the volume by 10 pixels on each direction (negative crop)",false);
+        addExampleLine("xmipp_transform_window -i g0ta.vol --crop -10");
     }
 
     void readParams()
@@ -109,7 +109,7 @@ public:
         if (checkParam("--corners"))
         {
             int nparams=getCountParam("--corners");
-            if (nparams==4 && nparams==6)
+            if (nparams==4 || nparams==6)
             {
                 x0=getIntParam("--corners",0);
                 y0=getIntParam("--corners",1);
@@ -117,6 +117,7 @@ public:
                 {
                     xF=getIntParam("--corners",2);
                     yF=getIntParam("--corners",3);
+                    zF=z0=0;
                 }
                 else
                 {
@@ -127,7 +128,7 @@ public:
                 }
             }
             else
-                REPORT_ERROR(ERR_ARG_INCORRECT,"Incorrect number of arguments after -corners");
+                REPORT_ERROR(ERR_ARG_INCORRECT,"Incorrect number of arguments after --corners");
             physical_coords = checkParam("--physical");
             mode=CORNERMODE;
             // TODO Chequear el número de parámetros
@@ -191,6 +192,7 @@ public:
     void processImage(Image<T> &Iin, const FileName &fnImg, const FileName &fnImgOut)
     {
         Iin.readApplyGeo(fnImg);
+        Iin().setXmippOrigin();
         double init_value(padValue);
         if (padType=="avg")
             init_value=Iin().computeAvg();
