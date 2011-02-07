@@ -75,12 +75,8 @@ void ShowSel::initWithFile(int _numRows, int _numCols,
     init();
     selfile_fn = _fn;
     readFile(_fn, _minGray, _maxGray);
-    if (_numRows != -1) NumRows = _numRows;
-    else NumRows = FLOOR(700.0 / projYdim);
-    if (NumRows==0) NumRows=1;
-    if (_numCols != -1) NumCols = _numCols;
-    else NumCols = FLOOR(900.0 / projXdim);
-    if (NumCols==0) NumCols=1;
+    NumRows = XMIPP_MAX(((_numRows != -1) ? _numRows : FLOOR(700.0 / projYdim)), 1);
+    NumCols = XMIPP_MAX(((_numCols != -1) ? _numCols : FLOOR(900.0 / projXdim)), 1);
     initTable();
     initRightclickMenubar();
     repaint();
@@ -92,16 +88,9 @@ void ShowSel::initWithFile(int _numRows, int _numCols,
     init();
     selfile_fn = _fn;
     load_mode = _load_mode;
-    NumRows = _numRows;
-    NumCols = _numCols;
     readFile(_fn, 0, 0);
-    if (_numRows == -1 || _numCols == -1)
-    {
-        NumCols = FLOOR(900.0 / projXdim);
-        NumRows = FLOOR(700.0 / projYdim);
-	if (NumRows==0) NumRows=1;
-	if (NumCols==0) NumCols=1;
-    }
+    NumRows = XMIPP_MAX(((_numRows != -1) ? _numRows : FLOOR(700.0 / projYdim)), 1);
+    NumCols = XMIPP_MAX(((_numCols != -1) ? _numCols : FLOOR(900.0 / projXdim)), 1);
     initTable();
     initRightclickMenubar();
     repaint();
@@ -113,7 +102,8 @@ void ShowSel::initWithObject(int _numRows, int _numCols,
     init();
     fn = "";
     setCaption(_title);
-    readObject(_SF);
+    mdInput = _SF;
+    readObject(mdInput);
     NumRows = _numRows;
     NumCols = _numCols;
     initTable();
@@ -132,9 +122,9 @@ void ShowSel::readFile(const FileName &_fn, double _minGray, double _maxGray)
 
 void ShowSel::readSelFile(const FileName &_fn, double _minGray, double _maxGray)
 {
-    MetaData         SF(_fn);
+    mdInput.read(_fn);
     annotateTime(_fn);
-    readObject(SF, _minGray, _maxGray);
+    readObject(mdInput, _minGray, _maxGray);
 }
 
 void ShowSel::readObject(MetaData &SF, double _minGray, double _maxGray)
@@ -166,8 +156,7 @@ void ShowSel::readObject(MetaData &SF, double _minGray, double _maxGray)
     maxPixel = _maxGray;
     int i = 0;
     int enabled;
-    mdInput = SF;
-    FOR_ALL_OBJECTS_IN_METADATA(mdInput)
+    FOR_ALL_OBJECTS_IN_METADATA(SF)
     {
         imgids[i] = __iter.objId;
     	SF.getValue(MDL_IMAGE, imgnames[i],__iter.objId);
@@ -537,7 +526,7 @@ void ShowSel::writeSelFile(MetaData &_SF, bool overwrite)
 {
 
     if (overwrite)
-        _SF.write((std::string)((const char *)selfile_fn.c_str()));
+        _SF.write(selfile_fn);
     else
     {
 #ifdef QT3_SUPPORT

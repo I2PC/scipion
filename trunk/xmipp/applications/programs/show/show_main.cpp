@@ -25,6 +25,7 @@
  ***************************************************************************/
 
 #include <data/args.h>
+#include <data/program.h>
 #include <graphics/show_2d.h>
 #include <graphics/show_selfile.h>
 #include <graphics/show_vol.h>
@@ -35,228 +36,185 @@
 
 #include <qapplication.h>
 
-void Usage();
 
-#define MODE_IMG      0
-#define MODE_SEL      1
-#define MODE_VOL      2
-#define MODE_SPECT    3
-#define MODE_SOM      4
-#define MODE_SPECTSOM 5
-#define MODE_PSD      6
-#define MODE_CTF      7
-#define MODE_PSDSEL   8
-#define MODE_CTFSEL   9
-#define MODE_CL2D    10
+enum ShowMode { MODE_INPUT, MODE_SPECT, MODE_SOM, MODE_SPECTSOM,
+                MODE_PSD, MODE_CTF, MODE_PSDSEL,MODE_CTFSEL, MODE_CL2D };
 
-int main(int argc, char **argv)
+class ProgShow: public XmippProgram
 {
-    int numCols, numRows, mode, ifirst;
+    ShowMode mode;
+    int numCols, numRows, ifirst;
     FileName fn_dat, fn_assign, fn_assignsel;
-    bool poll, apply_geo = true, common_normalization = false;
-    std::string filterSuffix;
+    bool poll, apply_geo, common_normalization;
+    String filterSuffix;
+    StringVector files;
 
-    try
+protected:
+    void defineParams()
     {
-        if (checkParameter(argc, argv, "-img"))
+        addUsageLine("Provides a Graphical User Interface for visualization and manipulation of");
+        addUsageLine("Electron Microscopy Single Particle Images. The program can show images,");
+        addUsageLine("volumes, stacks or selfiles. Also are provided some specific visualizations");
+        addUsageLine("(like som, cl2d, spectra...etc)");
+        addParamsLine("    -i <...>                   : Input files: accept images, volumes, stacks or metadatas");
+        addParamsLine("or  --ctf <...>                : Input CTFs (in image format)");
+        addParamsLine("or  --psd <...>                : Input PSDs (in image format)");
+        addParamsLine("or  --psdsel <...>             : Input PSD metadata files (in image format)");
+        addParamsLine("or  --ctfsel <...>             : Input CTF metadata files (in image format)");
+        addParamsLine("or  --spect <datafile>         : Spectra .dat file");
+        addParamsLine("or  --som <SOM_rootname>       : SOM images");
+        addParamsLine("or  --cl2d <CL2D_rootname>     : CL2D images");
+        addParamsLine("or  --spectsom <SOM_rootname>  : SOM spectra");
+        addParamsLine("[--spectsom_din <filename>]    : Original data");
+        addParamsLine("      requires --spectsom;");
+        addParamsLine("[--ctf_assign <filename=\"\">]      : Input Assign CTF Parameters file");
+        addParamsLine("      requires --ctfsel;");
+        addParamsLine("[--ctf_assignsel <filename=\"\">]   : Metadatafile of Input Assign CTF Parameters files");
+        addParamsLine("      requires --ctfsel;");
+        addParamsLine("[--cl2d_filter_suffix <s>]     : Filter suffix for the CL2D");
+        addParamsLine("      requires --cl2d;");
+        addParamsLine("   [--dim <w=10> <h=10>]       : Dimensions of the table");
+        addParamsLine("   [--common_norm]             : Normalize all the volumes or images with the same factors");
+        addParamsLine("   [--showall]                 : Only for sel mode, show all images even if sel = -1");
+        addParamsLine("   [--poll]                    : Check file change, NOT for sel files");
+        addParamsLine("   [--dont_apply_geo]          : Do not apply transformations of 2D-images stored in metadata");
+    }
+
+    void readParams()
+    {
+        if (checkParam("-i"))
         {
-            mode = MODE_IMG;
-            ifirst = paremeterPosition(argc, argv, "-img");
+            mode = MODE_INPUT;
+            getListParam("-i", files);
         }
-        else if (checkParameter(argc, argv, "-psdsel"))
+        else if (checkParam("--psdsel"))
         {
             mode = MODE_PSDSEL;
-            ifirst = paremeterPosition(argc, argv, "-psdsel");
+            getListParam("--psdsel", files);
         }
-        else if (checkParameter(argc, argv, "-ctfsel"))
+        else if (checkParam("--ctfsel"))
         {
             mode = MODE_CTFSEL;
-            ifirst = paremeterPosition(argc, argv, "-ctfsel");
-            fn_assign = getParameter(argc, argv, "-assign", "");
-            fn_assignsel = getParameter(argc, argv, "-assignsel", "");
+            getListParam("--ctfsel", files);
+            fn_assign = getParam("--ctf_assign");
+            fn_assignsel = getParam("--ctf_assignsel");
         }
-        else if (checkParameter(argc, argv, "-sel"))
-        {
-            mode = MODE_SEL;
-            ifirst = paremeterPosition(argc, argv, "-sel");
-        }
-        else if (checkParameter(argc, argv, "-vol"))
-        {
-            mode = MODE_VOL;
-            ifirst = paremeterPosition(argc, argv, "-vol");
-        }
-        else if (checkParameter(argc, argv, "-spect"))
+        else if (checkParam("--spect"))
         {
             mode = MODE_SPECT;
-            ifirst = paremeterPosition(argc, argv, "-spect");
+            getListParam("--spect", files);
         }
-        else if (checkParameter(argc, argv, "-som"))
+        else if (checkParam("--som"))
         {
             mode = MODE_SOM;
-            ifirst = paremeterPosition(argc, argv, "-som");
+            getListParam("--som", files);
         }
-        else if (checkParameter(argc, argv, "-cl2d"))
+        else if (checkParam("--cl2d"))
         {
             mode = MODE_CL2D;
-            ifirst = paremeterPosition(argc, argv, "-cl2d");
-            filterSuffix = getParameter(argc,argv,"-filterSuffix","");
+            getListParam("--cl2d", files);
+            filterSuffix = getParam("--cl2d_filter_suffix");
         }
-        else if (checkParameter(argc, argv, "-psd"))
+        else if (checkParam("--psd"))
         {
             mode = MODE_PSD;
-            ifirst = paremeterPosition(argc, argv, "-psd");
+            getListParam("--psd", files);
         }
-        else if (checkParameter(argc, argv, "-ctf"))
+        else if (checkParam("--ctf"))
         {
             mode = MODE_CTF;
-            ifirst = paremeterPosition(argc, argv, "-ctf");
-            fn_assign = getParameter(argc, argv, "-assign", "");
+            getListParam("--ctf", files);
+            fn_assign = getParam("--ctf_assign");
         }
-        else if (checkParameter(argc, argv, "-spectsom"))
+        else if (checkParam("--spectsom"))
         {
             mode = MODE_SPECTSOM;
-            ifirst = paremeterPosition(argc, argv, "-spectsom");
-            fn_dat = getParameter(argc, argv, "-din");
+            //getListParam("--spectsom", files);
+            //ifirst = paremeterPosition(argc, argv, "-spectsom");
+            fn_dat = getParam("--spectsom_din");
         }
         else
             REPORT_ERROR(ERR_ARG_MISSING, "No mode (img/sel/vol) supplied");
-        numCols = textToInteger(getParameter(argc, argv, "-w", "-1"));
-        numRows = textToInteger(getParameter(argc, argv, "-h", "-1"));
-        apply_geo = !checkParameter(argc, argv, "-dont_apply_geo");
-        poll = checkParameter(argc, argv, "-poll");
-        common_normalization = checkParameter(argc, argv, "-common_norm");
-    }
-    catch (XmippError)
-    {
-        Usage();
-        exit(1);
+        numCols = getIntParam("--dim", 0);
+        numRows = getIntParam("--dim", 1);
+        apply_geo = !checkParam("--dont_apply_geo");
+        poll = checkParam("--poll");
+        common_normalization = checkParam("--common_norm");
     }
 
-    try
+    void run()
     {
         QApplication::setFont(QFont("Helvetica", 12));
         QApplication a(argc, argv);
 
         // Get common normalization
-        double m = 0, M = 0;
+        double m = DBL_MAX, M = -m;
+        Image<double> I;
+        FileName fn;
+        MetaData md;
+
+        double maux, Maux;
+
         if (common_normalization)
         {
-            for (int i = ifirst + 1; i < argc; i++)
-            {
-                if (!exists(argv[i]))
-                {
-                    if (argv[i][0] == '-') break; // There is nothing else to show
-                    if (mode == MODE_VOL)
-                    {
-                        FileName fn = argv[i];
-                        if (fn[fn.length()-1] == 'x' || fn[fn.length()-1] == 'y')
-                            fn = fn.substr(0, fn.length() - 1);
-                        if (exists(fn.c_str()))
-                        {
-                            Image<double> V;
-                            V.read(fn);
-                            double maux, Maux;
-                            V().computeDoubleMinMax(maux, Maux);
-                            if (i == ifirst + 1)
-                            {
-                                m = maux;
-                                M = Maux;
-                            }
-                            else
-                            {
-                                m = XMIPP_MIN(m, maux);
-                                M = XMIPP_MAX(M, Maux);
-                            }
-                        }
-                    }
-                }
-                else
-                {
-                    if (mode == MODE_IMG )
-                    {
-                        Image<double> I;
-                        I.read(argv[i]);
-                        double maux, Maux;
-                        I().computeDoubleMinMax(maux, Maux);
-                        if (i == ifirst + 1)
-                        {
-                            m = maux;
-                            M = Maux;
-                        }
-                        else
-                        {
-                            m = XMIPP_MIN(m, maux);
-                            M = XMIPP_MAX(M, Maux);
-                        }
-                    }
-                    else if (mode == MODE_SEL)
-                    {
-                        // Not implemented
-                    }
-                    else if (mode == MODE_SPECT)
-                    {
-                        // Not implemented
-                    }
-                    else if (mode == MODE_SOM)
-                    {
-                        // Not implemented
-                    }
-                    else if (mode == MODE_CL2D)
-                    {
-                        // Not implemented
-                    }
-                    else if (mode == MODE_PSD)
-                    {
-                        // Not implemented
-                    }
-                    else if (mode == MODE_CTF)
-                    {
-                        // Not implemented
-                    }
-                    else if (mode == MODE_SPECTSOM)
-                    {
-                        // Not implemented
-                    }
-                }
-            }
+            //            for (StringVector::const_iterator it = files.begin(); it < files.end(); ++it)
+            //            {
+            //                fn = *it;
+            //                if (exists(fn))
+            //                {
+            //                    if (mode == MODE_INPUT)
+            //                    {
+            //                        I.read(fn);
+            //                        I().computeDoubleMinMax(maux, Maux);
+            //                        m = XMIPP_MIN(m, maux);
+            //                        M = XMIPP_MAX(M, Maux);
+            //                    }
+            //                    else if (mode == MODE_SEL)
+            //                    {
+            //                        // Not implemented
+            //                    }
+            //                    else if (mode == MODE_SPECT)
+            //                    {
+            //                        // Not implemented
+            //                    }
+            //                    else if (mode == MODE_SOM)
+            //                    {
+            //                        // Not implemented
+            //                    }
+            //                    else if (mode == MODE_CL2D)
+            //                    {
+            //                        // Not implemented
+            //                    }
+            //                    else if (mode == MODE_PSD)
+            //                    {
+            //                        // Not implemented
+            //                    }
+            //                    else if (mode == MODE_CTF)
+            //                    {
+            //                        // Not implemented
+            //                    }
+            //                    else if (mode == MODE_SPECTSOM)
+            //                    {
+            //                        // Not implemented
+            //                    }
+            //                }
+            //            }
         }
 
         // Show
         int shown = 0;
-        for (int i = ifirst + 1; i < argc; i++)
+
+        for (StringVector::const_iterator it = files.begin(); it < files.end(); ++it)
         {
-            if (!existsTrim(argv[i]))
+            fn = *it;
+            if (!exists(fn))
             {
-                if (argv[i][0] == '-') break; // There is nothing else to show
-                FileName fn;
                 switch (mode)
                 {
-                case MODE_IMG:
-                    fn = argv[i];
-                    std::cerr << argv[i] << " is not a valid filename\n";
-                    continue;
+                case MODE_INPUT:
                 case MODE_PSDSEL:
                 case MODE_CTFSEL:
-                case MODE_SEL:
-                    std::cerr << argv[i] << " is not a valid filename\n";
-                    continue;
-                case MODE_VOL:
-                    fn = argv[i];
-                    if (fn[fn.length()-1] == 'x' || fn[fn.length()-1] == 'y')
-                    {
-                        fn = fn.substr(0, fn.length() - 1);
-                        if (!exists(fn.c_str()))
-                        {
-                            std::cerr << fn << " is not a valid filename\n";
-                            continue;
-                        }
-                    }
-                    else
-                    {
-                        continue;
-                        std::cerr << fn << " is not a valid filename\n";
-                    }
-                    break;
+                    std::cerr << fn << " is not a valid filename\n";
                 case MODE_SPECT:
                     continue;
                 case MODE_SOM:
@@ -267,38 +225,64 @@ int main(int argc, char **argv)
                     break;
                 }
             }
-            if (mode == MODE_IMG)
+            if (mode == MODE_INPUT)
             {
-                ImageViewer *showimg = new ImageViewer(argv[i], poll);
-                showimg->apply_geo = apply_geo;
-                showimg->loadImage(argv[i]);
-                showimg->show();
+                try
+                {
+                    md.read(fn);
+
+                    if (md.size() > 1)//more than one object
+                    {
+                        ShowSel *showsel = new ShowSel;
+                        showsel->apply_geo = apply_geo;
+                        showsel->showonlyactive = !checkParam("--showall");
+                        md.read(fn);
+                        showsel->initWithObject(numRows, numCols, md, fn.c_str());
+                        showsel->show();
+                    }
+                    else
+                    {
+                        md.getValue(MDL_IMAGE, fn, md.firstObject());
+                        Image<char> img;
+                        img.read(fn, false);
+                        if (img().zdim == 1)
+                        {
+                            ImageViewer *showimg = new ImageViewer(fn.c_str(), poll);
+                            showimg->apply_geo = apply_geo;
+                            showimg->loadImage(fn.c_str());
+                            showimg->show();
+                        }
+                        else
+                        {
+                            ShowVol *showvol = new ShowVol;
+                            if (poll)
+                                showvol->setPoll();
+                            showvol->initWithFile(numRows, numCols, fn);
+                            showvol->show();
+                        }
+                    }
+                }
+                catch (XmippError xe)
+                {
+                  std::cerr << xe << std::endl;
+                }
                 shown++;
             }
             else if (mode == MODE_PSD)
             {
-                ImageViewer *showimg = new ImageViewer(argv[i], poll);
+                ImageViewer *showimg = new ImageViewer(fn.c_str(), poll);
                 showimg->apply_geo = false;
-                showimg->loadImage(argv[i], 0, 0, ImageViewer::PSD_mode);
+                showimg->loadImage(fn.c_str(), 0, 0, ImageViewer::PSD_mode);
                 showimg->show();
                 shown++;
             }
             else if (mode == MODE_CTF)
             {
-                ImageViewer *showimg = new ImageViewer(argv[i], poll);
+                ImageViewer *showimg = new ImageViewer(fn.c_str(), poll);
                 showimg->apply_geo = false;
                 showimg->setAssignCTFfile(fn_assign);
-                showimg->loadImage(argv[i], 0, 0, ImageViewer::CTF_mode);
+                showimg->loadImage(fn.c_str(), 0, 0, ImageViewer::CTF_mode);
                 showimg->show();
-                shown++;
-            }
-            else if (mode == MODE_SEL)
-            {
-                ShowSel *showsel = new ShowSel;
-                showsel->apply_geo = apply_geo;
-                showsel->showonlyactive = !checkParameter(argc, argv, "-showall");
-                showsel->initWithFile(numRows, numCols, argv[i]);
-                showsel->show();
                 shown++;
             }
             else if (mode == MODE_PSDSEL)
@@ -306,7 +290,7 @@ int main(int argc, char **argv)
                 ShowSel *showsel = new ShowSel;
                 showsel->apply_geo = false;
                 showsel->showonlyactive = false;
-                showsel->initWithFile(numRows, numCols, argv[i], ShowSel::PSD_mode);
+                showsel->initWithFile(numRows, numCols, fn, ShowSel::PSD_mode);
                 showsel->show();
                 shown++;
             }
@@ -315,24 +299,16 @@ int main(int argc, char **argv)
                 ShowSel *showsel = new ShowSel;
                 showsel->apply_geo = false;
                 showsel->showonlyactive = false;
-                showsel->initWithFile(numRows, numCols, argv[i], ShowSel::CTF_mode);
+                showsel->initWithFile(numRows, numCols, fn, ShowSel::CTF_mode);
                 showsel->setAssignCTFfile(fn_assign);
                 showsel->setAssignCTFselfile(fn_assignsel);
                 showsel->show();
                 shown++;
             }
-            else if (mode == MODE_VOL)
-            {
-                ShowVol *showvol = new ShowVol;
-                if (poll) showvol->setPoll();
-                showvol->initWithFile(numRows, numCols, argv[i]);
-                showvol->show();
-                shown++;
-            }
             else if (mode == MODE_SPECT)
             {
                 ShowSpectra *showspectra = new ShowSpectra;
-                showspectra->initWithFile(numRows, numCols, argv[i]);
+                showspectra->initWithFile(numRows, numCols, fn);
                 showspectra->show();
                 shown++;
             }
@@ -340,7 +316,7 @@ int main(int argc, char **argv)
             {
                 ShowSOM *showsom = new ShowSOM;
                 showsom->apply_geo = apply_geo;
-                showsom->initWithFile(argv[i]);
+                showsom->initWithFile(fn);
                 showsom->show();
                 shown++;
             }
@@ -349,7 +325,7 @@ int main(int argc, char **argv)
                 ShowCL2D *showcl2d = new ShowCL2D;
                 showcl2d->apply_geo = apply_geo;
                 showcl2d->filterSuffix = filterSuffix;
-                showcl2d->initWithFile(argv[i]);
+                showcl2d->initWithFile(fn);
                 showcl2d->show();
                 shown++;
             }
@@ -357,47 +333,26 @@ int main(int argc, char **argv)
             {
                 ShowSpectraSOM *showspectrasom = new ShowSpectraSOM;
                 showspectrasom->apply_geo = apply_geo;
-                showspectrasom->initWithFile(argv[i], fn_dat);
+                showspectrasom->initWithFile(fn, fn_dat);
                 showspectrasom->show();
                 shown++;
             }
         }
 
-        if (!shown) return 0;
+        if (!shown)
+            return;
 
         QObject::connect(qApp, SIGNAL(lastWindowClosed()), qApp, SLOT(quit()));
-        return a.exec();
+        a.exec();
+
     }
-    catch (XmippError XE)
-    {
-        std::cerr << XE;
-    }
+}
+;//end of class ProgShow
+
+int main(int argc, char **argv)
+{
+    ProgShow prm;
+    prm.read(argc, argv);
+    prm.tryRun();
 }
 
-void Usage()
-{
-    std::cout << "Usage: show [options]\n"
-    << "    -img <images>           |  : Input images\n"
-    << "    -ctf <images>           |  : Input CTFs (in image format)\n"
-    << "    -psd <images>           |  : Input PSDs (in image format)\n"
-    << "    -sel <metadatafiles>    |  : Input metadatafiles\n"
-    << "    -psdsel <metadatafiles> |  : Input PSD metadatafiles (in image format)\n"
-    << "    -ctfsel <metadatafiles> |  : Input CTF metadatafiles (in image format)\n"
-    << "      [-assign <filename>]     : Input Assign CTF Parameters file\n"
-    << "      [-assignsel <filename>]  : Metadatafile of Input Assign CTF Parameters files\n"
-    << "    -vol <XmippVolumes>        : Add x or y to the filename\n"
-    << "                                  to see slices in that direction\n"
-    << "    -spect <datafile>          : Spectra .dat file\n"
-    << "    -som <SOM rootname>        : SOM images\n"
-    << "    -cl2d <CL2D rootname>      : CL2D images\n"
-    << "      [-filterSuffix <s>]      : Filter suffix for the CL2D\n"
-    << "    -spectsom <SOM root>       : SOM spectra\n"
-    << "       -din <Original.dat>     : Original data\n"
-    << "   [-w]                        : width (default: 10)\n"
-    << "   [-h]                        : height (default: 10)\n"
-    << "   [-showall]                  : only for sel mode, show all images even\n"
-    << "                                  if sel = -1\n"
-    << "   [-poll]                     : check file change, NOT for sel files\n"
-    << "   [-dont_apply_geo]           : Do not apply transformation stored in the header of 2D-images\n"
-    ;
-}
