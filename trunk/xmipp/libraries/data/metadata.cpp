@@ -562,7 +562,7 @@ void MetaData::_writeRows(std::ostream &os)
                 MDObject mdValue(activeLabels[i]);
                 os.width(1);
                 myMDSql->getObjectValue(__iter.objId, mdValue);
-                mdValue.toStream(os);
+                mdValue.toStream(os, true);
                 os << " ";
             }
         }
