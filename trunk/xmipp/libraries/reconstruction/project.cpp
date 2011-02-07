@@ -31,7 +31,7 @@
 /* Read from command line ================================================== */
 void ProgProject::readParams()
 {
-    fnPhantom     = getParam("--vol");
+    fnPhantom     = getParam("-i");
     samplingRate  = getDoubleParam("--sampling_rate");
     if (checkParam("--oroot"))
     {
@@ -70,7 +70,7 @@ void ProgProject::defineParams()
     addExampleLine("xmipp_phantom_project --vol volume.vol -o image.xmp --angles 0 90 0");
     addExampleLine("Generating a side view from X",false);
     addExampleLine("xmipp_phantom_project --vol volume.vol -o image.xmp --angles 90 90 0");
-    addParamsLine("   --vol <volume>                        : Voxel volume, PDB or description file");
+    addParamsLine("   -i <volume>                           : Voxel volume, PDB or description file");
     addParamsLine("   --oroot <rootname>                    : Output rootname (use --params)");
     addParamsLine("or -o <imagename>                        : Output image (use --angles)");
     addParamsLine("  [--sampling_rate <Ts=1>]               : It is only used for PDB phantoms");
