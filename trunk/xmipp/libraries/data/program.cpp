@@ -239,9 +239,9 @@ void XmippProgram::setProgramName(const char * name)
     progDef->name = name;
 }
 
-void XmippProgram::addUsageLine(const char * line)
+void XmippProgram::addUsageLine(const char * line, bool verbatim)
 {
-    progDef->usageComments.addComment(line);
+    progDef->usageComments.addComment(line,verbatim?1:0);
 }
 void XmippProgram::addExampleLine(const char * example, bool verbatim)
 {

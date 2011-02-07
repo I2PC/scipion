@@ -100,7 +100,7 @@ public:
     /** Set the program name */
     void setProgramName(const char * name);
     /** Add usage line */
-    void addUsageLine(const char * line);
+    void addUsageLine(const char * line, bool verbatim=false);
     /** Clear usage */
     void clearUsage();
     /** Add examples */
