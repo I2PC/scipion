@@ -1,6 +1,2 @@
-1:Errors on command line parameters
-Unrecognized parameter: -i
-You should provide parameter --vol
-
-File: libraries/data/argsparser.cpp line: 957
-For more info use --help
+Projecting ...
+0000/???? sec. ------------------------------------------------------------   1/   1 sec. ............................................................

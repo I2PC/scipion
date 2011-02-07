@@ -57,5 +57,8 @@ if __name__ == '__main__':
     program = "xmipp_transform_center_image"
     tester.testProgram(program, "-i input/smallStack.stk -o %s/%s/smallStackCentered.stk" % (fnDir, program))
 
+    program = "xmipp_xray_import"
+    tester.testProgram(program, "--data input/xray_import/Images --flat input/xray_import/Flatfields --oroot %s/%s/stack --crop 30" % (fnDir, program))
+
     program = "xmipp_xray_psf_create"
     tester.testProgram(program, "-i input/xray_psf.xmd -o %s/%s/psf.vol" % (fnDir, program))
