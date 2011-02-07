@@ -65,8 +65,9 @@ void transformationMatrix2Geo(const Matrix2D<double> &A, MDRow & imageGeo)
 {
     double cosine = dMij(A, 0, 0), sine = dMij(A, 1, 0);
     double scale2 = cosine * cosine +  sine * sine;
-    double invScale = 1 / sqrt(scale2);
-    double psi = atan2(sine * invScale, cosine * invScale);
+    double scale = sqrt(scale2);
+    double invScale = 1 / scale;
+    double psi = RAD2DEG(atan2(sine * invScale, cosine * invScale));
     double shiftX = -dMij(A, 0, 2) * invScale;
     double shiftY = -dMij(A, 1, 2) * invScale;
     bool flip = ((cosine * dMij(A, 1, 1) - sine * dMij(A, 0, 1) ) < 0);
@@ -74,7 +75,7 @@ void transformationMatrix2Geo(const Matrix2D<double> &A, MDRow & imageGeo)
     imageGeo.setValue(MDL_ANGLEPSI, psi);
     imageGeo.setValue(MDL_SHIFTX, shiftX);
     imageGeo.setValue(MDL_SHIFTY, shiftX);
-    imageGeo.setValue(MDL_SCALE, scale2);
+    imageGeo.setValue(MDL_SCALE, scale);
     imageGeo.setValue(MDL_FLIP, flip);
 }
 
