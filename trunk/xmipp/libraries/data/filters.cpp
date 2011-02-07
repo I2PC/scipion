@@ -2165,6 +2165,7 @@ void centerImage(MultidimArray<double> &I, int Niter, bool limitShift)
 void forcePositive(MultidimArray<double> &V)
 {
     bool negativeRemaining;
+    std::vector<double> neighbours;
 
     if (V.getDim()==2) // IMAGE
     {
@@ -2173,10 +2174,10 @@ void forcePositive(MultidimArray<double> &V)
             negativeRemaining=false;
             int totalNeg=0;
             FOR_ALL_ELEMENTS_IN_ARRAY2D(V)
-            if (V(i, j)<=0)
+            if (A2D_ELEM(V,i, j)<=0)
             {
                 totalNeg++;
-                std::vector<double> neighbours;
+                neighbours.clear();
                 for (int ii=-2; ii<=2; ii++)
                 {
                     int iii=i+ii;
@@ -2201,9 +2202,9 @@ void forcePositive(MultidimArray<double> &V)
                 {
                     std::sort(neighbours.begin(),neighbours.end());
                     if (N%2==0)
-                        V(i,j)=0.5*(neighbours[N/2-1]+neighbours[N/2]);
+                        A2D_ELEM(V,i,j)=0.5*(neighbours[N/2-1]+neighbours[N/2]);
                     else
-                        V(i,j)=neighbours[N/2];
+                        A2D_ELEM(V,i,j)=neighbours[N/2];
                 }
             }
             if (totalNeg>0.05*MULTIDIM_SIZE(V))
@@ -2220,9 +2221,9 @@ void forcePositive(MultidimArray<double> &V)
             negativeRemaining=false;
 
             FOR_ALL_ELEMENTS_IN_ARRAY3D(V)
-            if (V(k, i, j)<=0)
+            if (A3D_ELEM(V,k, i, j)<=0)
             {
-                std::vector<double> neighbours;
+            	neighbours.clear();
                 for (int kk=-2; kk<=2; kk++)
                 {
                     int kkk=k+kk;
@@ -2250,10 +2251,10 @@ void forcePositive(MultidimArray<double> &V)
                     {
                         std::sort(neighbours.begin(),neighbours.end());
                         if (N%2==0)
-                            V(k,i,j)=0.5*(neighbours[N/2-1]+
+                            A3D_ELEM(V,k,i,j)=0.5*(neighbours[N/2-1]+
                                           neighbours[N/2]);
                         else
-                            V(k,i,j)=neighbours[N/2];
+                            A3D_ELEM(V,k,i,j)=neighbours[N/2];
                     }
                 }
             }
