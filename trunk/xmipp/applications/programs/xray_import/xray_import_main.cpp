@@ -30,18 +30,6 @@ void Usage(const ProgXrayImport &prm);
 int main(int argc, char **argv)
 {
     ProgXrayImport prm;
-
-    // Read arguments
-    try
-    {
-        prm.read(argc, argv);
-        prm.show();
-        prm.run();
-    }
-    catch (XmippError Xe)
-    {
-        std::cout << Xe;
-        exit(1);
-    }
-    exit(0);
+    prm.read(argc, argv);
+    prm.tryRun();
 }
