@@ -759,7 +759,7 @@ void Basic_ART_Parameters::compute_CAV_weights(GridVolume &vol_basis0,
 
         // Projection extension? .........................................
         if (proj_ext != 0)
-            read_proj().window(
+            read_proj().selfWindow(
                 STARTINGY(read_proj()) - proj_ext,
                 STARTINGX(read_proj()) - proj_ext,
                 FINISHINGY(read_proj()) + proj_ext,

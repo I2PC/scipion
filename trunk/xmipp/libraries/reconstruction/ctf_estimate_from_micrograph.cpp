@@ -372,7 +372,7 @@ void Prog_assign_CTF_prm::process()
             std::cout << "Particle file name: " <<  fnt << std::endl;
 #endif
 
-            // j,i are the window center, we need the top-left corner
+            // j,i are the selfWindow center, we need the top-left corner
             j -= (int)(N_horizontal / 2);
             i -= (int)(N_vertical / 2);
             if (i < 0)

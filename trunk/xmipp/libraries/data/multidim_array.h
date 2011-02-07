@@ -592,9 +592,9 @@ class MultidimArrayBase
 
 public:
 
-  virtual void getDimensions(int& Xdim, int& Ydim, int& Zdim, unsigned long int &Ndim) const =0;
-  virtual void resize(unsigned long int Ndim, int Zdim, int Ydim, int Xdim, bool copy=true)=0;
-  virtual void setXmippOrigin()=0;
+    virtual void getDimensions(int& Xdim, int& Ydim, int& Zdim, unsigned long int &Ndim) const =0;
+    virtual void resize(unsigned long int Ndim, int Zdim, int Ydim, int Xdim, bool copy=true)=0;
+    virtual void setXmippOrigin()=0;
 };
 
 
@@ -1274,11 +1274,36 @@ public:
         size[3] = ndim;
     }
 
-    /** Generic window routine (dim independent)
+    /** Generic selfWindow routine (dim independent)
      *
-     * This function will call to 3D,2D or 1D specific window routines
+     * This function will call to 3D,2D or 1D specific selfWindow routines
      */
-    void window(int n0,int z0, int y0, int x0,
+    void selfWindow(int n0,int z0, int y0, int x0,
+                    int nF,int zF, int yF, int xF,
+                    T init_value = 0, unsigned long n = 0)
+    {
+        if (this->ndim >1)
+            REPORT_ERROR(ERR_MULTIDIM_DIM,"stack windowing not implemented");
+        if (this->zdim >1)
+        {//call 3Dwindow
+            selfWindow( z0,  y0,  x0,
+                        zF,  yF,  xF,
+                        init_value ,n );
+        }
+        else if (this->ydim >1)
+        {//call 2Dwindow
+            selfWindow( y0,  x0,
+                        yF,  xF,
+                        init_value ,  n );
+
+        }
+        else if (this->xdim >1)
+        {//call 1Dwindow
+            selfWindow( x0, xF, init_value);
+        }
+    }
+
+    void window(MultidimArray<T> &result, int n0,int z0, int y0, int x0,
                 int nF,int zF, int yF, int xF,
                 T init_value = 0, unsigned long n = 0)
     {
@@ -1286,26 +1311,24 @@ public:
             REPORT_ERROR(ERR_MULTIDIM_DIM,"stack windowing not implemented");
         if (this->zdim >1)
         {//call 3Dwindow
-            window( z0,  y0,  x0,
-                    zF,  yF,  xF,
-                    init_value ,n );
+            window(result, z0,  y0,  x0,
+                   zF,  yF,  xF,
+                   init_value ,n );
         }
         else if (this->ydim >1)
         {//call 2Dwindow
-            window( y0,  x0,
-                    yF,  xF,
-                    init_value ,  n );
+            window(result, y0,  x0,
+                   yF,  xF,
+                   init_value ,  n );
 
         }
         else if (this->xdim >1)
         {//call 1Dwindow
-            window( x0,
-                    xF,
-                    init_value = 0,  n );
+            window(result, x0, xF, init_value);
         }
     }
 
-    /** Put a 3D window to the nth volume
+    /** Put a 3D selfWindow to the nth volume
      *
      * The volume is windowed within the two positions given to this function.
      * Indexes always refer to logical indexes. If a position is outside the
@@ -1328,34 +1351,36 @@ public:
      * @endcode
      *
      * @code
-     * V1.window(0, 0, -1, 1, 1, 2);
+     * V1.selfWindow(0, 0, -1, 1, 1, 2);
      * @endcode
      */
-    void window(int z0, int y0, int x0, int zF, int yF, int xF,
+    void window(MultidimArray<T> &result, int z0, int y0, int x0, int zF, int yF, int xF,
                 T init_value = 0, unsigned long n = 0)
     {
-        MultidimArray<T> result(1, zF - z0 + 1, yF - y0 + 1, xF - x0 + 1);
-        result.zinit = z0;
-        result.yinit = y0;
-        result.xinit = x0;
+        result.resizeNoCopy(zF - z0 + 1, yF - y0 + 1, xF - x0 + 1);
+        STARTINGZ(result) = z0;
+        STARTINGY(result) = y0;
+        STARTINGX(result) = x0;
 
-        for (int k = z0; k <= zF; k++)
-            for (int i = y0; i <= yF; i++)
-                for (int j = x0; j <= xF; j++)
-                    if ((k >= STARTINGZ(*this) && k <= FINISHINGZ(*this)) &&
-                        (i >= STARTINGY(*this) && i <= FINISHINGY(*this)) &&
-                        (j >= STARTINGX(*this) && j <= FINISHINGX(*this)))
-                        A3D_ELEM(result, k, i, j) = NZYX_ELEM(*this, n, k, i, j);
-                    else
-                        A3D_ELEM(result, k, i, j) = init_value;
-
-        *this = result;
-        STARTINGZ(*this) = z0;
-        STARTINGY(*this) = y0;
-        STARTINGX(*this) = x0;
+        FOR_ALL_ELEMENTS_IN_ARRAY3D(result)
+        if ((k >= STARTINGZ(*this) && k <= FINISHINGZ(*this)) &&
+            (i >= STARTINGY(*this) && i <= FINISHINGY(*this)) &&
+            (j >= STARTINGX(*this) && j <= FINISHINGX(*this)))
+            A3D_ELEM(result, k, i, j) = NZYX_ELEM(*this, n, k, i, j);
+        else
+            A3D_ELEM(result, k, i, j) = init_value;
     }
 
-    /** Put a 2D window to the nth matrix
+    /** 3D Self window */
+    void selfWindow(int z0, int y0, int x0, int zF, int yF, int xF,
+                    T init_value = 0, unsigned long n = 0)
+    {
+        MultidimArray<T> result;
+        window(result,z0,y0,x0,zF,yF,xF,init_value,n);
+        *this=result;
+    }
+
+    /** Put a 2D selfWindow to the nth matrix
      *
      * The matrix is windowed within the two positions given to this function.
      * Indexes always refer to logical indexes. If a position is outside the
@@ -1371,12 +1396,13 @@ public:
      * @endcode
      *
      * @code
-     * m1.window(-1, -1, 1, 2);
+     * m1.selfWindow(-1, -1, 1, 2);
      * @endcode
      */
-    void window(int y0, int x0, int yF, int xF, T init_value = 0, unsigned long n = 0)
+    void window(MultidimArray<T> &result, int y0, int x0, int yF, int xF,
+                T init_value = 0, unsigned long n = 0)
     {
-        MultidimArray<T> result(1, 1, yF - y0 + 1, xF - x0 + 1);
+        result.resizeNoCopy(yF - y0 + 1, xF - x0 + 1);
         STARTINGY(result) = y0;
         STARTINGX(result) = x0;
 
@@ -1386,13 +1412,18 @@ public:
             A2D_ELEM(result, i, j) = NZYX_ELEM(*this, n, 0, i, j);
         else
             A2D_ELEM(result, i, j) = init_value;
-
-        *this = result;
-        STARTINGY(*this) = y0;
-        STARTINGX(*this) = x0;
     }
 
-    /** Put a 1D window to the nth vector
+    /** 2D Self window */
+    void selfWindow(int y0, int x0, int yF, int xF,
+                    T init_value = 0, unsigned long n = 0)
+    {
+        MultidimArray<T> result;
+        window(result,y0,x0,yF,xF,init_value,n);
+        *this=result;
+    }
+
+    /** Put a 1D selfWindow to the nth vector
      *
      * The vector is windowed within the two indexes given to this function.
      * Indexes always refer to logical indexes. If an index is outside the
@@ -1401,24 +1432,30 @@ public:
      * -2.
      *
      * @code
-     * v1.window(-1, 2); // v1=[-1 0 1 2]; v1.startingX() == -1
+     * v1.selfWindow(-1, 2); // v1=[-1 0 1 2]; v1.startingX() == -1
      *
-     * v1.window(-3, 1); // v1=[0 -2 -1 0 1]; v1.startingX() == -3
+     * v1.selfWindow(-3, 1); // v1=[0 -2 -1 0 1]; v1.startingX() == -3
      * @endcode
      */
-    void window(int x0, int xF, T init_value = 0, unsigned long n = 0)
+    void window(MultidimArray<T> &result, int x0, int xF, T init_value = 0)
     {
-        MultidimArray<T> result(xF - x0 + 1);
+        result.resizeNoCopy(xF - x0 + 1);
         STARTINGX(result) = x0;
 
-        for (int j = x0; j <= xF; j++)
-            if (j >= STARTINGX(*this) && j <= FINISHINGX(*this))
-                A1D_ELEM(result, j) = NZYX_ELEM(*this, n, 0, 0, j);
-            else
-                A1D_ELEM(result, j) = init_value;
+        FOR_ALL_ELEMENTS_IN_ARRAY1D(result)
+        if (i >= STARTINGX(*this) && i <= FINISHINGX(*this))
+            A1D_ELEM(result, i) = A1D_ELEM(*this, i);
+        else
+            A1D_ELEM(result, i) = init_value;
+    }
 
-        *this = result;
-        STARTINGX(*this) = x0;
+    /** 1D Self window */
+    void selfWindow(int x0, int xF,
+                    T init_value = 0)
+    {
+        MultidimArray<T> result;
+        window(result,x0,xF,init_value);
+        *this=result;
     }
 
     /** Print shape of multidimensional array.
@@ -2173,10 +2210,10 @@ public:
         int jF=FINISHINGX(*this);
 
 #define ASSIGNVAL(d,i,j) \
-	    if ((j) < j0 || (j) > jF || (i) < i0 || (i) > iF) \
-	    	d=outside_value;\
+     if ((j) < j0 || (j) > jF || (i) < i0 || (i) > iF) \
+      d=outside_value;\
         else \
-        	d=NZYX_ELEM(*this, n, 0, i, j);
+         d=NZYX_ELEM(*this, n, 0, i, j);
 
         double d00, d10, d11, d01;
         ASSIGNVAL(d00,y0,x0);

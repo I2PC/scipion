@@ -197,7 +197,8 @@ int angles_transcription(double *angles, double *Lambda123)
     double scale_z = Lambda123[2];
 
     double *Bem_1D = MatrixBem(phi, theta, psi, x0, y0, scale_x, scale_y, scale_z);
-    if(Bem_1D==NULL) return (ERROR);
+    if(Bem_1D==NULL)
+        return (ERROR);
 
     double Bem [4][4];
     for(int i=0; i<4; i++)
@@ -224,11 +225,11 @@ int angles_transcription(double *angles, double *Lambda123)
         double sign_cosay;
 
         ax = atan2(-A21, A22);
-             az = atan2(-A10, A00);
+        az = atan2(-A10, A00);
 
-         if(abs(cos(ax)) == 0.0)
-             sign_cosay = SGN(-A21/sin(ax));
-         else
+        if(abs(cos(ax)) == 0.0)
+            sign_cosay = SGN(-A21/sin(ax));
+        else
         {
             if (cos(ax) > 0.0)
                 sign_cosay = SGN(A22);
@@ -266,242 +267,253 @@ int angles_transcription(double *angles, double *Lambda123)
 ///Computes one iteration of the projection. The resulting projection is into the pointer parameter called "Projection".\n
 ///Returns possible error.
 int do_compute_projection    (double *VWOrigin,
-    long   Ndv,
-    long Ndw,
-    double *Identity_orientV,
-    double *Identity_orientW,
-    double dv,
-    double dw,
-    double *CoefVolume,
-    double absscale,
-    double *Binv,
-    double *BinvCscaled,
-    long ksimax,
-    int *arr,
-    long CoefVolumeNx,
-    long CoefVolumeNy,
-    long lmax,
-    long mmax,
-    double *Projection){
-long    i, n, l, l1, l2, m, m1, m2, ksi, CC1, CC2, CC3, row, column, index;
-double  Operhlp[4], X[4], K[4], Arg[4], idw, ndv;
-double  Proj, sc, g, h, rows, columns, Coeff, Difference;
-double  gminusl, hminusm;
+                              long   Ndv,
+                              long Ndw,
+                              double *Identity_orientV,
+                              double *Identity_orientW,
+                              double dv,
+                              double dw,
+                              double *CoefVolume,
+                              double absscale,
+                              double *Binv,
+                              double *BinvCscaled,
+                              long ksimax,
+                              int *arr,
+                              long CoefVolumeNx,
+                              long CoefVolumeNy,
+                              long lmax,
+                              long mmax,
+                              double *Projection)
+{
+    long    i, n, l, l1, l2, m, m1, m2, ksi, CC1, CC2, CC3, row, column, index;
+    double  Operhlp[4], X[4], K[4], Arg[4], idw, ndv;
+    double  Proj, sc, g, h, rows, columns, Coeff, Difference;
+    double  gminusl, hminusm;
 
-CC1 = CoefVolumeNx * CoefVolumeNy;
+    CC1 = CoefVolumeNx * CoefVolumeNy;
 
-for (i = 0L; i < Ndw; i++){
-    idw = (double) i * dw;
-    for (int ii=0; ii<4; ++ii)
-        Operhlp[ii]=Identity_orientW[ii]*idw+VWOrigin[ii];
-    for (n = 0L; n < Ndv; n++){
-        ndv = (double) n * dv;
+    for (i = 0L; i < Ndw; i++)
+    {
+        idw = (double) i * dw;
         for (int ii=0; ii<4; ++ii)
-            X[ii]=Identity_orientV[ii]*ndv+Operhlp[ii];
-        MatrixTimesVector(Binv, X, K, 4L, 4L);
-        Proj = 0.0;
-        for (ksi = 0L; ksi < ksimax; ksi++){
-            CC2 = CC1 * ksi;
-            sc = (double) ksi - K[arr[0]];
+            Operhlp[ii]=Identity_orientW[ii]*idw+VWOrigin[ii];
+        for (n = 0L; n < Ndv; n++)
+        {
+            ndv = (double) n * dv;
             for (int ii=0; ii<4; ++ii)
-                Arg[ii]=BinvCscaled[ii]*sc+K[ii];
-            g = Arg[arr[1]];
-            h = Arg[arr[2]];
+                X[ii]=Identity_orientV[ii]*ndv+Operhlp[ii];
+            MatrixTimesVector(Binv, X, K, 4L, 4L);
+            Proj = 0.0;
+            for (ksi = 0L; ksi < ksimax; ksi++)
+            {
+                CC2 = CC1 * ksi;
+                sc = (double) ksi - K[arr[0]];
+                for (int ii=0; ii<4; ++ii)
+                    Arg[ii]=BinvCscaled[ii]*sc+K[ii];
+                g = Arg[arr[1]];
+                h = Arg[arr[2]];
 
-            double aux=g-2.0;
-            l1 = CEIL(aux);
-            l2 = l1 + 3L;
-            aux=h-2.0;
-            m1 = CEIL(aux);
-            m2 = m1 + 3L;
-            columns = 0.0;
-            for (m = m1; m <= m2; m++){
-                if (m < mmax && m > -1L) {
-                    CC3 = CC2 + CoefVolumeNx * m;
-                    rows = 0.0;
-                    for (l = l1; l <= l2; l++){
-                        if ((l < lmax && l > -1L)) {
-                            gminusl = g - (double) l;
-                            double aux; BSPLINE03(gminusl,aux);
-                            Coeff = (double) CoefVolume[CC3 + l];
-                            rows += Coeff * aux;
+                double aux=g-2.0;
+                l1 = CEIL(aux);
+                l2 = l1 + 3L;
+                aux=h-2.0;
+                m1 = CEIL(aux);
+                m2 = m1 + 3L;
+                columns = 0.0;
+                for (m = m1; m <= m2; m++)
+                {
+                    if (m < mmax && m > -1L)
+                    {
+                        CC3 = CC2 + CoefVolumeNx * m;
+                        rows = 0.0;
+                        for (l = l1; l <= l2; l++)
+                        {
+                            if ((l < lmax && l > -1L))
+                            {
+                                gminusl = g - (double) l;
+                                double aux;
+                                BSPLINE03(gminusl,aux);
+                                Coeff = (double) CoefVolume[CC3 + l];
+                                rows += Coeff * aux;
+                            }
                         }
+                        hminusm = h - (double) m;
+                        double aux;
+                        BSPLINE03(hminusm,aux);
+                        columns +=  rows * aux;
                     }
-                    hminusm = h - (double) m;
-                    double aux; BSPLINE03(hminusm,aux);
-                    columns +=  rows * aux;
                 }
+                Proj += columns;
             }
-            Proj += columns;
+            Proj *= absscale;
+
+            *Projection++ = Proj;
         }
-        Proj *= absscale;
-
-        *Projection++ = Proj;
     }
-}
 
-return(!ERROR);
+    return(!ERROR);
 }/* End of do_compute_projection */
 
 //-----------------------------------------------------------------------------------------------
 ///Computes projection. The resulting projection is into the pointer parameter called "Projection".\n
 ///Returns possible error.
 int Compute_projection(double *Parameters,
-    double *Coef_x,
-    double *Coef_y,
-    double *Coef_z,
-    long Nx,
-    long Ny,
-    long Nz,
-    short *Proj_dims,
-    double *Identity_orientN,
-    double *Identity_orientV,
-    double *Identity_orientW,
-    double *IdentityOrigin,
-    double *PeriodOfSamplingInVDirection,
-    double *PeriodOfSamplingInWDirection,
-    double *RightOperHlp,
-    double *Ac,
-    double *Projection,
-    double *B                ) {
+                       double *Coef_x,
+                       double *Coef_y,
+                       double *Coef_z,
+                       long Nx,
+                       long Ny,
+                       long Nz,
+                       short *Proj_dims,
+                       double *Identity_orientN,
+                       double *Identity_orientV,
+                       double *Identity_orientW,
+                       double *IdentityOrigin,
+                       double *PeriodOfSamplingInVDirection,
+                       double *PeriodOfSamplingInWDirection,
+                       double *RightOperHlp,
+                       double *Ac,
+                       double *Projection,
+                       double *B                )
+{
 
-int     Status=!ERROR, arr[3];
-long    Ndv, Ndw;
-long    CoefVolumeNx, CoefVolumeNy, lmax, mmax, ksimax;
-double  dv, dw, psi, theta, phi, Sinphi, Cosphi, Sinpsi, Cospsi, Sintheta, Costheta;
-double  scale, scale_x, scale_y, scale_z, m_x, m_y, m_z, minm;
-double  *hlp, *R, *At;
-double  *Help1, *Help2, *Help3, *Help4, *Binv;
-double  *C1, *C2, *C3, *VWOrigin, *BinvC, *BinvCscaled;
-double  *Coef_xyz, *Pr;
+    int     Status=!ERROR, arr[3];
+    long    Ndv, Ndw;
+    long    CoefVolumeNx, CoefVolumeNy, lmax, mmax, ksimax;
+    double  dv, dw, psi, theta, phi, Sinphi, Cosphi, Sinpsi, Cospsi, Sintheta, Costheta;
+    double  scale, scale_x, scale_y, scale_z, m_x, m_y, m_z, minm;
+    double  *hlp, *R, *At;
+    double  *Help1, *Help2, *Help3, *Help4, *Binv;
+    double  *C1, *C2, *C3, *VWOrigin, *BinvC, *BinvCscaled;
+    double  *Coef_xyz, *Pr;
 
-Pr = Projection;
+    Pr = Projection;
 
-Ndv = (long) *Proj_dims++;
-Ndw = (long) *Proj_dims;
+    Ndv = (long) *Proj_dims++;
+    Ndw = (long) *Proj_dims;
 
-dv = *PeriodOfSamplingInVDirection;
-dw = *PeriodOfSamplingInWDirection;
+    dv = *PeriodOfSamplingInVDirection;
+    dw = *PeriodOfSamplingInWDirection;
 
-psi = Parameters[0];
-theta =    Parameters[1];
-phi = Parameters[2];
+    psi = Parameters[0];
+    theta =    Parameters[1];
+    phi = Parameters[2];
 
-Sinphi = sin(phi);
-Cosphi = cos(phi);
-Sinpsi = sin(psi);
-Cospsi = cos(psi);
-Sintheta = sin(theta);
-Costheta = cos(theta);
+    Sinphi = sin(phi);
+    Cosphi = cos(phi);
+    Sinpsi = sin(psi);
+    Cospsi = cos(psi);
+    Sintheta = sin(theta);
+    Costheta = cos(theta);
 
-At = (double *)malloc((size_t) 16L * sizeof(double));
-if (At == (double *)NULL)
-    REPORT_ERROR(ERR_MEM_NOTENOUGH, "Projection_real_shears::Compute_projection: "
+    At = (double *)malloc((size_t) 16L * sizeof(double));
+    if (At == (double *)NULL)
+        REPORT_ERROR(ERR_MEM_NOTENOUGH, "Projection_real_shears::Compute_projection: "
                      "ERROR - Not enough memory for At");
 
-if (GetIdentitySquareMatrix(At, 4L) == ERROR)
-    REPORT_ERROR(ERR_NUMERICAL, "Projection_real_shears::Compute_projection: "
+    if (GetIdentitySquareMatrix(At, 4L) == ERROR)
+        REPORT_ERROR(ERR_NUMERICAL, "Projection_real_shears::Compute_projection: "
                      "Error returned by GetIdentitySquareMatrix");
 
-hlp = At + (ptrdiff_t)3L;
-*hlp = Parameters[3];
-hlp += (ptrdiff_t)4L;
-*hlp = Parameters[4];
-hlp += (ptrdiff_t)4L;
-*hlp = Parameters[5];
+    hlp = At + (ptrdiff_t)3L;
+    *hlp = Parameters[3];
+    hlp += (ptrdiff_t)4L;
+    *hlp = Parameters[4];
+    hlp += (ptrdiff_t)4L;
+    *hlp = Parameters[5];
 
-Help1 = (double *)malloc((size_t) 16L * sizeof(double));
-if (Help1 == (double *)NULL)
-    REPORT_ERROR(ERR_MEM_NOTENOUGH, "Projection_real_shears::Compute_projection: "
+    Help1 = (double *)malloc((size_t) 16L * sizeof(double));
+    if (Help1 == (double *)NULL)
+        REPORT_ERROR(ERR_MEM_NOTENOUGH, "Projection_real_shears::Compute_projection: "
                      "ERROR - Not enough memory for Help1");
 
-if (MatrixMultiply(At, Ac, Help1, 4L, 4L, 4L) == ERROR)
-    REPORT_ERROR(ERR_NUMERICAL, "Projection_real_shears::Compute_projection: "
+    if (MatrixMultiply(At, Ac, Help1, 4L, 4L, 4L) == ERROR)
+        REPORT_ERROR(ERR_NUMERICAL, "Projection_real_shears::Compute_projection: "
                      "Error returned by MatrixMultiply");
 
-R = (double *)malloc((size_t) 16L * sizeof(double));
-if (R == (double *)NULL)
-    REPORT_ERROR(ERR_MEM_NOTENOUGH, "Projection_real_shears::Compute_projection: "
+    R = (double *)malloc((size_t) 16L * sizeof(double));
+    if (R == (double *)NULL)
+        REPORT_ERROR(ERR_MEM_NOTENOUGH, "Projection_real_shears::Compute_projection: "
                      "ERROR - Not enough memory for Rx");
 
-if (GetIdentitySquareMatrix(R, 4L) == ERROR)
-    REPORT_ERROR(ERR_NUMERICAL, "Projection_real_shears::Compute_projection: "
+    if (GetIdentitySquareMatrix(R, 4L) == ERROR)
+        REPORT_ERROR(ERR_NUMERICAL, "Projection_real_shears::Compute_projection: "
                      "Error returned by GetIdentitySquareMatrix");
 
-hlp = R;
-hlp += (ptrdiff_t)5L;
-*hlp++ = Cosphi;
-*hlp = - Sinphi;
-hlp += (ptrdiff_t)3L;
-*hlp++ = Sinphi;
-*hlp = Cosphi;
+    hlp = R;
+    hlp += (ptrdiff_t)5L;
+    *hlp++ = Cosphi;
+    *hlp = - Sinphi;
+    hlp += (ptrdiff_t)3L;
+    *hlp++ = Sinphi;
+    *hlp = Cosphi;
 
-Help2 = (double *)malloc((size_t) 16L * sizeof(double));
-if (Help2 == (double *)NULL)
-    REPORT_ERROR(ERR_MEM_NOTENOUGH, "Projection_real_shears::Compute_projection: "
+    Help2 = (double *)malloc((size_t) 16L * sizeof(double));
+    if (Help2 == (double *)NULL)
+        REPORT_ERROR(ERR_MEM_NOTENOUGH, "Projection_real_shears::Compute_projection: "
                      "ERROR - Not enough memory for Help2");
 
-if (MatrixMultiply(Help1, R, Help2, 4L, 4L, 4L) == ERROR)
-    REPORT_ERROR(ERR_NUMERICAL, "Projection_real_shears::Compute_projection: "
+    if (MatrixMultiply(Help1, R, Help2, 4L, 4L, 4L) == ERROR)
+        REPORT_ERROR(ERR_NUMERICAL, "Projection_real_shears::Compute_projection: "
                      "Error returned by MatrixMultiply");
 
-if (GetIdentitySquareMatrix(R, 4L) == ERROR)
-    REPORT_ERROR(ERR_NUMERICAL, "Projection_real_shears::Compute_projection: "
+    if (GetIdentitySquareMatrix(R, 4L) == ERROR)
+        REPORT_ERROR(ERR_NUMERICAL, "Projection_real_shears::Compute_projection: "
                      "Error returned by GetIdentitySquareMatrix");
 
-hlp = R;
-*hlp = Costheta;
-hlp += (ptrdiff_t)2L;
-*hlp = Sintheta;
-hlp += (ptrdiff_t)6L;
-*hlp = - Sintheta;
-hlp += (ptrdiff_t)2L;
-*hlp = Costheta;
+    hlp = R;
+    *hlp = Costheta;
+    hlp += (ptrdiff_t)2L;
+    *hlp = Sintheta;
+    hlp += (ptrdiff_t)6L;
+    *hlp = - Sintheta;
+    hlp += (ptrdiff_t)2L;
+    *hlp = Costheta;
 
-Help3 = (double *)malloc((size_t) 16L * sizeof(double));
-if (Help3 == (double *)NULL)
-    REPORT_ERROR(ERR_MEM_NOTENOUGH, "Projection_real_shears::Compute_projection: "
+    Help3 = (double *)malloc((size_t) 16L * sizeof(double));
+    if (Help3 == (double *)NULL)
+        REPORT_ERROR(ERR_MEM_NOTENOUGH, "Projection_real_shears::Compute_projection: "
                      "ERROR - Not enough memory for Help3");
 
-if (MatrixMultiply(Help2, R, Help3, 4L, 4L, 4L) == ERROR)
-    REPORT_ERROR(ERR_NUMERICAL, "Projection_real_shears::Compute_projection: "
+    if (MatrixMultiply(Help2, R, Help3, 4L, 4L, 4L) == ERROR)
+        REPORT_ERROR(ERR_NUMERICAL, "Projection_real_shears::Compute_projection: "
                      "Error returned by MatrixMultiply");
 
-if (GetIdentitySquareMatrix(R, 4L) == ERROR)
-    REPORT_ERROR(ERR_NUMERICAL, "Projection_real_shears::Compute_projection: "
+    if (GetIdentitySquareMatrix(R, 4L) == ERROR)
+        REPORT_ERROR(ERR_NUMERICAL, "Projection_real_shears::Compute_projection: "
                      "Error returned by GetIdentitySquareMatrix");
 
-hlp = R;
-*hlp++ = Cospsi;
-*hlp = - Sinpsi;
-hlp += (ptrdiff_t)3L;
-*hlp++ = Sinpsi;
-*hlp = Cospsi;
+    hlp = R;
+    *hlp++ = Cospsi;
+    *hlp = - Sinpsi;
+    hlp += (ptrdiff_t)3L;
+    *hlp++ = Sinpsi;
+    *hlp = Cospsi;
 
-Help4 = (double *)malloc((size_t) 16L * sizeof(double));
-if (Help4 == (double *)NULL)
-    REPORT_ERROR(ERR_MEM_NOTENOUGH, "Projection_real_shears::Compute_projection: "
+    Help4 = (double *)malloc((size_t) 16L * sizeof(double));
+    if (Help4 == (double *)NULL)
+        REPORT_ERROR(ERR_MEM_NOTENOUGH, "Projection_real_shears::Compute_projection: "
                      "ERROR - Not enough memory for Help4");
 
-if (MatrixMultiply(Help3, R, Help4, 4L, 4L, 4L) == ERROR)
-    REPORT_ERROR(ERR_NUMERICAL, "Projection_real_shears::Compute_projection: "
+    if (MatrixMultiply(Help3, R, Help4, 4L, 4L, 4L) == ERROR)
+        REPORT_ERROR(ERR_NUMERICAL, "Projection_real_shears::Compute_projection: "
                      "Error returned by MatrixMultiply");
 
-if (MatrixMultiply(Help4, RightOperHlp, B, 4L, 4L, 4L) == ERROR)
-    REPORT_ERROR(ERR_NUMERICAL, "Projection_real_shears::Compute_projection: "
+    if (MatrixMultiply(Help4, RightOperHlp, B, 4L, 4L, 4L) == ERROR)
+        REPORT_ERROR(ERR_NUMERICAL, "Projection_real_shears::Compute_projection: "
                      "Error returned by MatrixMultiply");
-free(Help4);
+    free(Help4);
 
-Binv = (double *)malloc((size_t) 16L * sizeof(double));
-if (Binv == (double *)NULL)
-    REPORT_ERROR(ERR_MEM_NOTENOUGH, "Projection_real_shears::Compute_projection: "
+    Binv = (double *)malloc((size_t) 16L * sizeof(double));
+    if (Binv == (double *)NULL)
+        REPORT_ERROR(ERR_MEM_NOTENOUGH, "Projection_real_shears::Compute_projection: "
                      "ERROR - Not enough memory for Binv");
 
-if (SquareMatrixInvertGauss(B, Binv, 4L, DBL_EPSILON, &Status) == ERROR)
-    REPORT_ERROR(ERR_NUMERICAL, "Projection_real_shears::Compute_projection: "
+    if (SquareMatrixInvertGauss(B, Binv, 4L, DBL_EPSILON, &Status) == ERROR)
+        REPORT_ERROR(ERR_NUMERICAL, "Projection_real_shears::Compute_projection: "
                      "Error returned by SquareMatrixInvertGauss");
-free(R);
-free(At);
+    free(R);
+    free(At);
 
     C1 = (double *)malloc((size_t) 4L * sizeof(double));
     if (C1 == (double *)NULL)
@@ -561,12 +573,13 @@ free(At);
     lmax = Ny;
     mmax = Nz;
     Coef_xyz = Coef_x;
-    if (m_y < minm) {
+    if (m_y < minm)
+    {
         minm = m_y;
         scale = scale_y;
         if (VectorScale(BinvC, BinvCscaled, scale_y, 4L) == ERROR)
             REPORT_ERROR(ERR_NUMERICAL, "Projection_real_shears::Compute_projection: "
-                     "Error returned by VectorScale");
+                         "Error returned by VectorScale");
         ksimax = Ny;
         arr[0] = 1;
         arr[1] = 0;
@@ -577,11 +590,12 @@ free(At);
         mmax = Nz;
         Coef_xyz = Coef_y;
     }
-    if (m_z < minm) {
+    if (m_z < minm)
+    {
         minm = m_z;
         scale = scale_z;
         if (VectorScale(BinvC, BinvCscaled, scale_z, 4L) == ERROR)
-        ksimax = Nz;
+            ksimax = Nz;
         arr[0] = 2;
         arr[1] = 0;
         arr[2] = 1;
@@ -629,8 +643,8 @@ free(At);
     *hlp = 1.0;
 
     do_compute_projection(VWOrigin, Ndv, Ndw, C2, C3,
-        dv, dw, Coef_xyz, minm, Binv, BinvCscaled, ksimax, arr, CoefVolumeNx,
-        CoefVolumeNy, lmax, mmax, Pr);
+                          dv, dw, Coef_xyz, minm, Binv, BinvCscaled, ksimax, arr, CoefVolumeNx,
+                          CoefVolumeNy, lmax, mmax, Pr);
 
     free(BinvCscaled);
     free(C2);
@@ -693,26 +707,29 @@ int ROUT_project_execute(VolumeStruct &Data2)
         REPORT_ERROR(ERR_MEM_NOTENOUGH, "Projection_real_shears::ROUT_project_execute: "
                      "ERROR - Not enough memory for InputVolumePlane");
 
-    for (l = 0L; l < Nx; l++){
+    for (l = 0L; l < Nx; l++)
+    {
 
-        for (m = 0L; m < Nz; m++){
+        for (m = 0L; m < Nz; m++)
+        {
             if (CopyDoubleToDouble(InputVolume, Nx, Ny, Nz, l,    0L,    m,    InputVolumeRow, 1L, Ny, 1L, 0L, 0L, 0L, 1L, Ny, 1L) == ERROR)
                 REPORT_ERROR(ERR_NUMERICAL, "Projection_real_shears::ROUT_project_execute: "
-                     "Error returned by CopyDoubleToDouble");
-            for (i = 0L; i < Ny; i++){
+                             "Error returned by CopyDoubleToDouble");
+            for (i = 0L; i < Ny; i++)
+            {
                 InputVolumePlane[Ny * m + i] = InputVolumeRow[i];
             }
         }
 
         ChangeBasisVolume(InputVolumePlane, VolumeCoef, Ny, Nz, 1L, CardinalSpline,
-                    BasicSpline, 3L, FiniteCoefficientSupport, DBL_EPSILON, &Status);
+                          BasicSpline, 3L, FiniteCoefficientSupport, DBL_EPSILON, &Status);
         if (Status == ERROR)
             REPORT_ERROR(ERR_NUMERICAL, "Projection_real_shears::ROUT_project_execute: "
-                     "ERROR");
+                         "ERROR");
 
         if (CopyDoubleToDouble(VolumeCoef, Ny, Nz, 1L, 0L,    0L,    0L,    Coef_x, Ny, Nz, Nx, 0L, 0L, l, Ny, Nz, 1L) == ERROR)
             REPORT_ERROR(ERR_NUMERICAL, "Projection_real_shears::ROUT_project_execute: "
-                     "Error returned by CopyDoubleToDouble");
+                         "Error returned by CopyDoubleToDouble");
     }
 
     FreeVolumeDouble(&VolumeCoef);
@@ -734,27 +751,29 @@ int ROUT_project_execute(VolumeStruct &Data2)
         REPORT_ERROR(ERR_MEM_NOTENOUGH, "Projection_real_shears::ROUT_project_execute: "
                      "ERROR - Not enough memory for InputVolumePlane");
 
-    for (l = 0L; l < Ny; l++){
-        for (m = 0L; m < Nz; m++){
+    for (l = 0L; l < Ny; l++)
+    {
+        for (m = 0L; m < Nz; m++)
+        {
             if (CopyDoubleToDouble(InputVolume, Nx, Ny, Nz, 0L, l,    m, InputVolumeRow, Nx, 1L, 1L, 0L, 0L, 0L, Nx, 1L, 1L) == ERROR)
                 REPORT_ERROR(ERR_NUMERICAL, "Projection_real_shears::ROUT_project_execute: "
-                     "Error returned by CopyDoubleToDouble");
+                             "Error returned by CopyDoubleToDouble");
 
             if (CopyDoubleToDouble(InputVolumeRow, Nx, 1L, 1L, 0L,    0L,    0L,    InputVolumePlane, Nx, Nz, 1L, 0L, m, 0L, Nx, 1L, 1L) == ERROR)
                 REPORT_ERROR(ERR_NUMERICAL, "Projection_real_shears::ROUT_project_execute: "
-                     "Error returned by CopyDoubleToDouble");
+                             "Error returned by CopyDoubleToDouble");
 
         }
 
         ChangeBasisVolume((double*)InputVolumePlane, (double*)VolumeCoef, Nx, Nz, 1L, CardinalSpline,
-                    BasicSpline, 3L, FiniteCoefficientSupport, DBL_EPSILON, &Status);
+                          BasicSpline, 3L, FiniteCoefficientSupport, DBL_EPSILON, &Status);
         if (Status == ERROR)
             REPORT_ERROR(ERR_NUMERICAL, "Projection_real_shears::ROUT_project_execute: "
-                     "ERROR");
+                         "ERROR");
 
         if (CopyDoubleToDouble(VolumeCoef, Nx, Nz, 1L, 0L,    0L,    0L,    Coef_y, Nx, Nz, Ny, 0L, 0L, l, Nx, Nz, 1L) == ERROR)
             REPORT_ERROR(ERR_NUMERICAL, "Projection_real_shears::ROUT_project_execute: "
-                     "Error returned by CopyDoubleToDouble");
+                         "Error returned by CopyDoubleToDouble");
     }
 
     FreeVolumeDouble(&VolumeCoef);
@@ -776,26 +795,28 @@ int ROUT_project_execute(VolumeStruct &Data2)
         REPORT_ERROR(ERR_MEM_NOTENOUGH, "Projection_real_shears::ROUT_project_execute: "
                      "ERROR - Not enough memory for InputVolumePlane");
 
-    for (l = 0L; l < Nz; l++){
-        for (m = 0L; m < Ny; m++){
+    for (l = 0L; l < Nz; l++)
+    {
+        for (m = 0L; m < Ny; m++)
+        {
             if (CopyDoubleToDouble(InputVolume, Nx, Ny, Nz, 0L, m,    l, InputVolumeRow, Nx, 1L, 1L, 0L, 0L, 0L, Nx, 1L, 1L) == ERROR)
                 REPORT_ERROR(ERR_NUMERICAL, "Projection_real_shears::ROUT_project_execute: "
-                     "Error returned by CopyDoubleToDouble");
+                             "Error returned by CopyDoubleToDouble");
 
             if (CopyDoubleToDouble(InputVolumeRow, Nx, 1L, 1L, 0L,    0L,    0L,    InputVolumePlane, Nx, Ny, 1L, 0L, m, 0L, Nx, 1L, 1L) == ERROR)
                 REPORT_ERROR(ERR_NUMERICAL, "Projection_real_shears::ROUT_project_execute: "
-                     "Error returned by CopyDoubleToDouble");
+                             "Error returned by CopyDoubleToDouble");
         }
 
         ChangeBasisVolume(InputVolumePlane, VolumeCoef, Nx, Ny, 1L, CardinalSpline,
-                    BasicSpline, 3L, FiniteCoefficientSupport, DBL_EPSILON, &Status);
+                          BasicSpline, 3L, FiniteCoefficientSupport, DBL_EPSILON, &Status);
         if (Status == ERROR)
             REPORT_ERROR(ERR_NUMERICAL, "Projection_real_shears::ROUT_project_execute: "
-                     "ERROR");
+                         "ERROR");
 
         if (CopyDoubleToDouble(VolumeCoef, Nx, Ny, 1L, 0L,    0L,    0L,    Coef_z, Nx, Ny, Nz, 0L, 0L, l, Nx, Ny, 1L) == ERROR)
             REPORT_ERROR(ERR_NUMERICAL, "Projection_real_shears::ROUT_project_execute: "
-                     "Error returned by CopyDoubleToDouble");
+                         "Error returned by CopyDoubleToDouble");
     }
 
     FreeVolumeDouble(&VolumeCoef);
@@ -894,10 +915,10 @@ int ROUT_project_execute(VolumeStruct &Data2)
                      "ERROR - Not enough memory for B");
 
     Compute_projection(Parameters, Coef_x, Coef_y, Coef_z, Nx, Ny, Nz, Data2.Proj_dims,
-                        Data2.Identity_orientN, Data2.Identity_orientV, Data2.Identity_orientW,
-                        Data2.IdentityOrigin, &Data2.PeriodOfSamplingInVDirection,
-                        &Data2.PeriodOfSamplingInWDirection, RightOperHlp, Ac,
-                        Data2.Output, B);
+                       Data2.Identity_orientN, Data2.Identity_orientV, Data2.Identity_orientW,
+                       Data2.IdentityOrigin, &Data2.PeriodOfSamplingInVDirection,
+                       &Data2.PeriodOfSamplingInWDirection, RightOperHlp, Ac,
+                       Data2.Output, B);
 
     free(Parameters);
     free(Ac);
@@ -939,63 +960,67 @@ void Projection_real_shears::usage()
 void Projection_real_shears::read(const FileName &fn_proj_param)
 {
     FILE    *fh_param;
-        char    line[201];
-        int     lineNo = 0;
+    char    line[201];
+    int     lineNo = 0;
 
-        if ((fh_param = fopen(fn_proj_param.c_str(), "r")) == NULL)
-            REPORT_ERROR(ERR_IO_NOTOPEN,
-                (std::string)"Projection_real_shears::read: There is a problem "
-                 "opening the file " + fn_proj_param);
+    if ((fh_param = fopen(fn_proj_param.c_str(), "r")) == NULL)
+        REPORT_ERROR(ERR_IO_NOTOPEN,
+                     (std::string)"Projection_real_shears::read: There is a problem "
+                     "opening the file " + fn_proj_param);
 
-        while (fgets(line, 200, fh_param) != NULL)
+    while (fgets(line, 200, fh_param) != NULL)
+    {
+        if (line[0] == 0)
+            continue;
+        if (line[0] == '#')
+            continue;
+        if (line[0] == '\n')
+            continue;
+        switch (lineNo)
         {
-            if (line[0] == 0)    continue;
-            if (line[0] == '#')  continue;
-            if (line[0] == '\n') continue;
-            switch (lineNo)
-            {
-                case 0: //***** Line 1 *****
-                //Volume file
-                        fnPhantom = firstWord(line);
+        case 0: //***** Line 1 *****
+            //Volume file
+            fnPhantom = firstWord(line);
 
-                if (!exists(fnPhantom))
-                            REPORT_ERROR(ERR_IO_NOTEXIST, (std::string)"Projection_real_shears::read: "
-                                         "file " + fnPhantom + " doesn't exist");
+            if (!exists(fnPhantom))
+                REPORT_ERROR(ERR_IO_NOTEXIST, (std::string)"Projection_real_shears::read: "
+                             "file " + fnPhantom + " doesn't exist");
 
-                        lineNo = 1;
-                        break;
-                    case 1: //***** Line 2 *****
-                        fnProjectionSeed = firstWord(line);
+            lineNo = 1;
+            break;
+        case 1: //***** Line 2 *****
+            fnProjectionSeed = firstWord(line);
 
-                    char    *auxstr;
+            char    *auxstr;
 
-                        auxstr = nextToken();
-                        if (auxstr != NULL) starting =
-                                textToInteger(auxstr);
+            auxstr = nextToken();
+            if (auxstr != NULL)
+                starting =
+                    textToInteger(auxstr);
 
-                        fn_projection_extension = nextWord();
+            fn_projection_extension = nextWord();
 
-                        lineNo = 2;
-                        break;
-                case 2: //***** Line 3 *****
-                        proj_Xdim = textToInteger(firstToken(line));
-                        proj_Zdim = proj_Ydim = proj_Xdim ;
+            lineNo = 2;
+            break;
+        case 2: //***** Line 3 *****
+            proj_Xdim = textToInteger(firstToken(line));
+            proj_Zdim = proj_Ydim = proj_Xdim ;
 
-                        lineNo = 3;
-                        break;
-                case 3: //***** Line 4 *****
-                        // Angle file
-                        fn_angle = firstWord(line);
+            lineNo = 3;
+            break;
+        case 3: //***** Line 4 *****
+            // Angle file
+            fn_angle = firstWord(line);
 
-                        if (!exists(fn_angle))
-                            REPORT_ERROR(ERR_IO_NOTEXIST, (std::string)"Projection_real_shears::read: "
-                                         "file " + fn_angle + " doesn't exist");
+            if (!exists(fn_angle))
+                REPORT_ERROR(ERR_IO_NOTEXIST, (std::string)"Projection_real_shears::read: "
+                             "file " + fn_angle + " doesn't exist");
 
-                        lineNo = 4;
-                        break;
-                default:
-                break;
-            } // switch end
+            lineNo = 4;
+            break;
+        default:
+            break;
+        } // switch end
     } // while end
 
     if (lineNo != 4) //If all parameters was not read
@@ -1050,7 +1075,8 @@ int Projection_real_shears::write_projection_file(int numFile)
     SF.setValue(MDL_IMAGE,fn_proj,objId);
     SF.setValue(MDL_ENABLED,1,objId);
 
-    if(display) progress_bar(numFile);
+    if(display)
+        progress_bar(numFile);
 
     return(!ERROR);
 }
@@ -1085,17 +1111,19 @@ int Projection_real_shears::read_a_DocLine(size_t objId)
 ///Execute instructions for one projection
 int do_oneProjection(VolumeStruct &Data2)
 {
-        //Transcription of the angles
-        if (angles_transcription(Data2.InitPsiThetaPhi, Data2.Lambda123)==ERROR) return (ERROR);
+    //Transcription of the angles
+    if (angles_transcription(Data2.InitPsiThetaPhi, Data2.Lambda123)==ERROR)
+        return (ERROR);
 
-        //Calls the compute function
-        if (ROUT_project_execute(Data2) == ERROR) return(ERROR);
+    //Calls the compute function
+    if (ROUT_project_execute(Data2) == ERROR)
+        return(ERROR);
 
     return (!ERROR);
 }
 
 void project_Volume(VolumeStruct &Data, Projection &P, int Ydim, int Xdim,
-    double rot, double tilt, double psi)
+                    double rot, double tilt, double psi)
 {
     // Prepare Data Structure
     Data.InitPsiThetaPhi[2] = -DEG2RAD(rot);
@@ -1108,8 +1136,8 @@ void project_Volume(VolumeStruct &Data, Projection &P, int Ydim, int Xdim,
     do_oneProjection(Data);
     extractProjection(Data, P);
     P().setXmippOrigin();
-    P().window(FIRST_XMIPP_INDEX(Ydim),FIRST_XMIPP_INDEX(Xdim),
-        LAST_XMIPP_INDEX(Ydim),LAST_XMIPP_INDEX(Xdim));
+    P().selfWindow(FIRST_XMIPP_INDEX(Ydim),FIRST_XMIPP_INDEX(Xdim),
+                   LAST_XMIPP_INDEX(Ydim),LAST_XMIPP_INDEX(Xdim));
 }
 
 //////////////////////////////////////////////////////////////////////////////////

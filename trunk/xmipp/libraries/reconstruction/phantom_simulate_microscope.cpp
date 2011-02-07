@@ -154,8 +154,8 @@ void ProgSimulateMicroscope::processImage(const FileName &fnImg, const FileName 
 void ProgSimulateMicroscope::apply(MultidimArray<double> &I)
 {
     I.setXmippOrigin();
-    I.window(FIRST_XMIPP_INDEX(2*Ydim), FIRST_XMIPP_INDEX(2*Xdim),
-             LAST_XMIPP_INDEX(2*Ydim), LAST_XMIPP_INDEX(2*Xdim));
+    I.selfWindow(FIRST_XMIPP_INDEX(2*Ydim), FIRST_XMIPP_INDEX(2*Xdim),
+                 LAST_XMIPP_INDEX(2*Ydim), LAST_XMIPP_INDEX(2*Xdim));
 
     // Add noise before CTF
     MultidimArray<double> noisy;
@@ -189,6 +189,6 @@ void ProgSimulateMicroscope::apply(MultidimArray<double> &I)
     if (after_ctf_noise)
         after_ctf.applyMaskSpace(noisy);
     I += noisy;
-    I.window(FIRST_XMIPP_INDEX(Ydim), FIRST_XMIPP_INDEX(Xdim),
-             LAST_XMIPP_INDEX(Ydim), LAST_XMIPP_INDEX(Xdim));
+    I.selfWindow(FIRST_XMIPP_INDEX(Ydim), FIRST_XMIPP_INDEX(Xdim),
+                 LAST_XMIPP_INDEX(Ydim), LAST_XMIPP_INDEX(Xdim));
 }

@@ -84,7 +84,7 @@ void ScrollParam::init(std::vector<float> &min, std::vector<float> &max,
                        char *caption, int precision)
 {
 
-    // Set the window caption/title
+    // Set the selfWindow caption/title
     setCaption(caption);
 
     // Set precision
@@ -224,7 +224,7 @@ ExclusiveParam::ExclusiveParam(std::vector<std::string> &list_values, int initia
     int tmp_max = (int) 1;
     value  = (int)initial_value;
     QColor col;
-    // Set the window caption/title
+    // Set the selfWindow caption/title
 
     setCaption(caption);
 

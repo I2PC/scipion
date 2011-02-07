@@ -49,7 +49,7 @@ void calculate_and_find_correlation_max_proj(Projection const &proj1,
 /**Correlates two matrices  and finds the maximun of the correlation matrix.
    This center may not be at  an integer position.
    The routine works as follows:
-   - Search for the maximun with pixel acuraccy inside the window
+   - Search for the maximun with pixel acuraccy inside the selfWindow
    - Calculate the gravity centre of the corelation
          in a neighborhood such as maximum/sqrt(2) > value
    - Look for the gravity centre in this neighborhood
@@ -69,7 +69,7 @@ void calculate_and_find_correlation_max_mat(MultidimArray<T> const &mat1,
     correlation_matrix(mat1, mat2, mat_temp);
     mat_temp.setXmippOrigin();
 
-    //search for the maximun inside window "window"
+    //search for the maximun inside selfWindow "selfWindow"
     int max_step_int = (int)ROUND(max_step);
     int imax, jmax;
 

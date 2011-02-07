@@ -102,8 +102,8 @@ void Prog_IDR_ART_Parameters::IDR_correction()
             int Ydim = YSIZE(Itheo());
             int Xdim = XSIZE(Itheo());
             Itheo_CTF().setXmippOrigin();
-            Itheo_CTF().window(FIRST_XMIPP_INDEX(2*Ydim), FIRST_XMIPP_INDEX(2*Xdim),
-                               LAST_XMIPP_INDEX(2*Ydim), LAST_XMIPP_INDEX(2*Xdim));
+            Itheo_CTF().selfWindow(FIRST_XMIPP_INDEX(2*Ydim), FIRST_XMIPP_INDEX(2*Xdim),
+                                   LAST_XMIPP_INDEX(2*Ydim), LAST_XMIPP_INDEX(2*Xdim));
 
             // Read CTF file
             ProgFourierFilter ctf;
@@ -116,8 +116,8 @@ void Prog_IDR_ART_Parameters::IDR_correction()
 
             // Apply CTF
             ctf.applyMaskSpace(Itheo_CTF());
-            Itheo_CTF().window(FIRST_XMIPP_INDEX(Ydim), FIRST_XMIPP_INDEX(Xdim),
-                               LAST_XMIPP_INDEX(Ydim), LAST_XMIPP_INDEX(Xdim));
+            Itheo_CTF().selfWindow(FIRST_XMIPP_INDEX(Ydim), FIRST_XMIPP_INDEX(Xdim),
+                                   LAST_XMIPP_INDEX(Ydim), LAST_XMIPP_INDEX(Xdim));
 
             // Center the all images
             Ireal().setXmippOrigin();

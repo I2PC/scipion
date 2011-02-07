@@ -179,7 +179,7 @@ public:
     // those images that were discarded in only one of them
     void generated(bool _this_is_tilted, const std::string &_label);
 
-    // Close window
+    // Close selfWindow
     void closeEvent(QCloseEvent *event);
 
     // Set output root

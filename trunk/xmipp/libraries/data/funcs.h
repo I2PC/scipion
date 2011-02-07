@@ -130,7 +130,7 @@ public:
  *  The I0 version can be tabulated and interpolated upon
  *  demand, but the max error needs to be checked.  The
  *  "vtable" parameter corresponds to the maximum value of x
- *  for which the I0 window is non-zero.  Setting "vtable"
+ *  for which the I0 selfWindow is non-zero.  Setting "vtable"
  *  different from "v" corresponds to a change in units of x.
  *  In practice, it is often handy to replace x in some sort
  *  of absolute units with x described in terms of grid
@@ -151,7 +151,7 @@ class KaiserBessel
 protected:
     double alpha, v, r; /** Kaiser-Bessel parameters */
     int N; /** size in Ix-space */
-    int K; /** I0 window size */
+    int K; /** I0 selfWindow size */
     double vtable; /** table I0 non-zero domain maximum */
     int ntable;
     std::vector<double> i0table;
@@ -160,7 +160,7 @@ protected:
     double fac; /** 2*pi*alpha*r*v */
     double vadjust;
     double facadj; /** 2*pi*alpha*r*vadjust */
-    void build_I0table(); /** Tabulate I0 window for speed */
+    void build_I0table(); /** Tabulate I0 selfWindow for speed */
     double fltb;
 
 public:
@@ -176,13 +176,13 @@ public:
         return i0table;
     }
 
-    /** Kaiser-Bessel Sinh window function */
+    /** Kaiser-Bessel Sinh selfWindow function */
     double sinhwin(double x) const;
 
-    /** Kaiser-Bessel I0 window function */
+    /** Kaiser-Bessel I0 selfWindow function */
     double i0win(double x) const;
 
-    /** Kaiser-Bessel I0 window function (uses table lookup) */
+    /** Kaiser-Bessel I0 selfWindow function (uses table lookup) */
     inline double i0win_tab(double x) const
     {
         double xt;
@@ -193,7 +193,7 @@ public:
         return i0table[ (int) xt];
     }
 
-    /** Return the size of the I0 window */
+    /** Return the size of the I0 selfWindow */
     int get_window_size() const
     {
         return K;

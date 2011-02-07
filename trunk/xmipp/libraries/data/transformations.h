@@ -927,7 +927,7 @@ void selfTranslateCenterOfMassToCenter(int SplineDegree,
  * @ingroup GeometricalTransformations
  *
  * The volume is scaled (resampled) to fill a new size. It is not the
- * same as "window" in this same class. The size can be larger or smaller
+ * same as "selfWindow" in this same class. The size can be larger or smaller
  * than the actual one.
  *
  * @code

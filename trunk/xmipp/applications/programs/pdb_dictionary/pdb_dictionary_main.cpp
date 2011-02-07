@@ -194,7 +194,7 @@ int main(int argc, char *argv[])
     int S;               // Number of allowed atoms for a patch (OMP)
     double lambda;       // Regularization parameter (LASSO)
     int dictSize;        // Number of atoms in the dictionary
-    int patchSize;       // Size of the window centered at a voxel
+    int patchSize;       // Size of the selfWindow centered at a voxel
     int step;            // Step between patches
     double Ts;           // Sampling rate
     double resolution1;  // Final resolution

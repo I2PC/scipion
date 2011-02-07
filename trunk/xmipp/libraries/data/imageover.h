@@ -137,7 +137,7 @@ public:
 
     /** Window
      *
-     * Set a window in the logical space.
+     * Set a selfWindow in the logical space.
      */
     void window(int _v0, int _u0, int _vF, int _uF);
 

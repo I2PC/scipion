@@ -477,9 +477,9 @@ void hlpf(MultidimArray<double> &f, int M, double T, const std::string &filterTy
         SincKaiserMask(filter,reductionFactor*PI/M,ripple,deltaw);
         filter/=filter.sum();
         if (FINISHINGX(f)>FINISHINGX(filter))
-            filter.window(STARTINGX(f),FINISHINGX(f));
+            filter.selfWindow(STARTINGX(f),FINISHINGX(f));
         else
-            f.window(STARTINGX(filter),FINISHINGX(filter));
+            f.selfWindow(STARTINGX(filter),FINISHINGX(filter));
     }
 }
 
@@ -492,8 +492,8 @@ void fhlpf(const MultidimArray<double> &f, const MultidimArray<double> &filter,
     MultidimArray<double> auxF, auxFilter;
     auxF=f;
     auxFilter=filter;
-    auxF.window(STARTINGX(f)-Nmax,FINISHINGX(f)+Nmax);
-    auxFilter.window(STARTINGX(filter)-Nmax,FINISHINGX(filter)+Nmax);
+    auxF.selfWindow(STARTINGX(f)-Nmax,FINISHINGX(f)+Nmax);
+    auxFilter.selfWindow(STARTINGX(filter)-Nmax,FINISHINGX(filter)+Nmax);
 
     // Convolve in Fourier
     MultidimArray< std::complex<double> > F, Filter;
@@ -565,7 +565,7 @@ double Hlpf_fitness(double *p, void *prm)
     MultidimArray<double> aux, FfilterMag, freq;
     MultidimArray< std::complex<double> > Ffilter;
     aux=fhlpfCoarselySampled;
-    aux.window(-10*FINISHINGX(aux),10*FINISHINGX(aux));
+    aux.selfWindow(-10*FINISHINGX(aux),10*FINISHINGX(aux));
     FourierTransform(aux,Ffilter);
     FFT_magnitude(Ffilter,FfilterMag);
     freq.initZeros(XSIZE(Ffilter));
@@ -602,8 +602,8 @@ double Hlpf_fitness(double *p, void *prm)
     rate T. M is the downsampling factor. atom is the name of the atom
     being optimized. filter is an output parameter with the optimal impulse
     response sampled at a sampling rate T. bestPrm(0)=reduction function
-    of the cutoff frequency, bestPrm(1)=ripple of the Kaiser window,
-    bestPrm(2)=deltaw of the Kaiser window.
+    of the cutoff frequency, bestPrm(1)=ripple of the Kaiser selfWindow,
+    bestPrm(2)=deltaw of the Kaiser selfWindow.
 */
 void optimizeHlpf(MultidimArray<double> &f, int M, double T, const std::string &atom,
 		MultidimArray<double> &filter, Matrix1D<double> &bestPrm)
@@ -662,7 +662,7 @@ void atomRadialProfile(int M, double T, const std::string &atom,
         for (iright=FINISHINGX(profile)-1; iright>=0; iright--)
             if (ABS(profile(iright))>1e-3)
                 break;
-    profile.window(ileft,iright);
+    profile.selfWindow(ileft,iright);
 }
 
 /** Atom projection profile ------------------------------------------------ */

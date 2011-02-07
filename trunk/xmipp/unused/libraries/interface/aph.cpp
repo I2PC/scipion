@@ -361,12 +361,12 @@ void APHFile2D::generate_symmetrical_reflections(int symmetry_group)
     int new_kmax = MAX(-STARTINGY(spots_abs) , FINISHINGY(spots_abs));
     int new_hmax = MAX(-STARTINGX(spots_abs) , FINISHINGX(spots_abs));
 
-    spots_l   .window(new_kmin, new_hmin, new_kmax, new_hmax);
-    spots_abs .window(new_kmin, new_hmin, new_kmax, new_hmax);
-    spots_arg .window(new_kmin, new_hmin, new_kmax, new_hmax);
-    IQ        .window(new_kmin, new_hmin, new_kmax, new_hmax);
-    background.window(new_kmin, new_hmin, new_kmax, new_hmax);
-    CTF       .window(new_kmin, new_hmin, new_kmax, new_hmax);
+    spots_l   .selfWindow(new_kmin, new_hmin, new_kmax, new_hmax);
+    spots_abs .selfWindow(new_kmin, new_hmin, new_kmax, new_hmax);
+    spots_arg .selfWindow(new_kmin, new_hmin, new_kmax, new_hmax);
+    IQ        .selfWindow(new_kmin, new_hmin, new_kmax, new_hmax);
+    background.selfWindow(new_kmin, new_hmin, new_kmax, new_hmax);
+    CTF       .selfWindow(new_kmin, new_hmin, new_kmax, new_hmax);
 
     Matrix2D<int> visited;
     visited.initZeros(YSIZE(spots_abs), XSIZE(spots_abs));

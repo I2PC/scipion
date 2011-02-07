@@ -186,7 +186,7 @@ void VariabilityClass::newUpdateVolume(GridVolume *ptr_vol_out,
     // Select the LLL block and keep it
     int x1, x2, y1, y2, z1, z2;
     SelectDWTBlock(keep_from_iteration, DWTV, "000", x1, x2, y1, y2, z1, z2);
-    DWTV.window(z1, y1, x1, z2, y2, x2);
+    DWTV.selfWindow(z1, y1, x1, z2, y2, x2);
     STARTINGZ(DWTV) = STARTINGY(DWTV) = STARTINGX(DWTV) = 0;
     VA.push_back(DWTV);
 }

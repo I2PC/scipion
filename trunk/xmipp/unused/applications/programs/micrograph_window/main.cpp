@@ -93,7 +93,7 @@ int main(int argc, char **argv)
         fh_inf << "bitspersample=" << bits << std::endl;
         fh_inf.close();
 
-        // Really window
+        // Really selfWindow
         M_out.open_micrograph(fn_out);
         for (int i = 0; i < Ypdim; i++)
             for (int j = 0; j < Xpdim; j++)

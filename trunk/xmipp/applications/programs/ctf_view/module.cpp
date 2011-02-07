@@ -64,7 +64,7 @@ CTFViewer::CTFViewer(QWidget *parent, const char *name,
     this->setMinimumSize(280, 500);
     this->setMaximumSize(790, 500);
 
-    // Set parameter window layout
+    // Set parameter selfWindow layout
     // Group A
 #ifdef QT3_SUPPORT
     Q3GroupBox *GroupA = new Q3GroupBox("Delta fU", this);

@@ -457,19 +457,19 @@ void single_measure_on_FOM(Recons_test_Parameters &prm,
             else if (training_FOM == "scL21")
             {
                 Matrix1D<double> aux = results.scL2_FOMs;
-                aux.window(1, XSIZE(aux) - 1);
+                aux.selfWindow(1, XSIZE(aux) - 1);
                 training_FOMs(k) = aux.computeAvg();
             }
             else if (training_FOM == "scL11")
             {
                 Matrix1D<double> aux = results.scL1_FOMs;
-                aux.window(1, XSIZE(aux) - 1);
+                aux.selfWindow(1, XSIZE(aux) - 1);
                 training_FOMs(k) = aux.computeAvg();
             }
             if (accuracy_mode && k > 0)
             {
                 Matrix1D<double> aux = training_FOMs;
-                aux.window(0, k);
+                aux.selfWindow(0, k);
                 aux.computeStats(training_avg, training_stddev, min, max);
                 double t = student_outside_probb(prm.unluckiness, k + 1);
                 double estimated_sample_size =

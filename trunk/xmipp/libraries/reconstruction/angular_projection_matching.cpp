@@ -383,7 +383,7 @@ int ProgAngularProjectionMatching::getCurrentReference(int refno,
             // pad real-space image
             int x0 = FIRST_XMIPP_INDEX(paddim);
             int xF = LAST_XMIPP_INDEX(paddim);
-            img().window(x0, x0, xF,xF, 0.);
+            img().selfWindow(x0, x0, xF,xF, 0.);
         }
         local_transformer.FourierTransform(img(),Faux);
         FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY2D(Faux)
@@ -396,7 +396,7 @@ int ProgAngularProjectionMatching::getCurrentReference(int refno,
             // de-pad real-space image
             int x0 = FIRST_XMIPP_INDEX(dim);
             int xF = LAST_XMIPP_INDEX(dim);
-            img().window(x0, x0, xF,xF, 0.);
+            img().selfWindow(x0, x0, xF,xF, 0.);
         }
     }
 

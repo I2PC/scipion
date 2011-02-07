@@ -981,7 +981,7 @@ void median(MultidimArray< T >& x, MultidimArray< T >& y, T& m)
                     m = y(4);
 }
 
-/** Median_filter with a 3x3 window
+/** Median_filter with a 3x3 selfWindow
  * @ingroup Filters
  */
 template <typename T>

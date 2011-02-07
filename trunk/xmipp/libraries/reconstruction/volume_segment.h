@@ -33,7 +33,7 @@
 ///@ingroup ReconsLibrary
 //@{
 /** Segment parameters. */
-class Prog_segment_prm
+class ProgSegment
 {
 public:
     /// Input volume
@@ -71,7 +71,7 @@ public:
 
     /// Show
     friend std::ostream & operator << (std::ostream &out,
-        const Prog_segment_prm &prm);
+        const ProgSegment &prm);
 
     /// Usage
     void usage() const;

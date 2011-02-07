@@ -606,7 +606,7 @@ bool ImageViewer::showImage()
     ok = reconvertImage();
     if (ok)
     {
-        setCaption(filename);     // set window caption
+        setCaption(filename);     // set selfWindow caption
         int w = pm.width();
         int h = pm.height();
 
@@ -917,7 +917,7 @@ void ImageViewer::resizeEvent(QResizeEvent *)
     int h = height() - status->height();
     if (width() != pmScaled.width() || h != pmScaled.height())
     {      // if new size,
-        scale();    // scale pmScaled to window
+        scale();    // scale pmScaled to selfWindow
         updateStatus();
     }
 }
@@ -1311,7 +1311,7 @@ void ImageViewer::recomputeCTFmodel()
         fn_psd=findAndReplace(fn_psd,"_ctfmodel_quadrant","");
     }
 
-    // Show this image in a separate window to select the main parameters
+    // Show this image in a separate selfWindow to select the main parameters
     AssignCTFViewer *prm_selector = new AssignCTFViewer(fn_psd, assign_ctf_prm);
 }
 

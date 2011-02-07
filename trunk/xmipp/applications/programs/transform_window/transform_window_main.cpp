@@ -211,14 +211,14 @@ public:
                 zl=zr=0;
             }
             //call to a generic 4D function;
-            Iin().window(0,  STARTINGZ(Iin())+zl, STARTINGY(Iin())+yl,  STARTINGX(Iin())+xl,
+            Iin().selfWindow(0,  STARTINGZ(Iin())+zl, STARTINGY(Iin())+yl,  STARTINGX(Iin())+xl,
                          0, FINISHINGZ(Iin())-zr,FINISHINGY(Iin())-yr, FINISHINGX(Iin())-xr);
         }
         else
             if (!physical_coords)
-                Iin().window(0, z0, y0, x0, 0, zF, yF,xF, init_value);
+                Iin().selfWindow(0, z0, y0, x0, 0, zF, yF,xF, init_value);
             else
-                Iin().window(0,STARTINGZ(Iin()) + z0,
+                Iin().selfWindow(0,STARTINGZ(Iin()) + z0,
                              STARTINGY(Iin()) + y0,
                              STARTINGX(Iin()) + x0,
                              0,STARTINGZ(Iin()) + zF,

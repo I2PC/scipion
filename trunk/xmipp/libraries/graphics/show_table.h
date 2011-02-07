@@ -186,7 +186,7 @@ protected:
     void insertGeneralItemsInRightclickMenubar();
     /* Change a boolean option */
     virtual void changeBoolOption(int _mi, int _mic);
-    /* Adjust label to window size */
+    /* Adjust label to selfWindow size */
     virtual void adjustStatusLabel();
 
     /* Send update to a cell */
@@ -243,7 +243,7 @@ protected:
     /* Make a temp file */
     std::string makeTempFile(int &fd);
 private slots:
-    /* Open window with help about keys */
+    /* Open selfWindow with help about keys */
     void giveHelp();
     /* Link to Xmipp */
     void aboutXmipp();

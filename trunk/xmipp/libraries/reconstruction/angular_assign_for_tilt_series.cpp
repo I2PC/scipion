@@ -264,10 +264,10 @@ void setupAffineFitness(AffineFitness &fitness, const MultidimArray<double> &I1,
     // Remove the borders
     int borderY=CEIL(0.1*YSIZE(I1));
     int borderX=CEIL(0.1*XSIZE(I1));
-    I1aux.window(STARTINGY(I1)+borderY,STARTINGX(I1)+borderX,
-                 FINISHINGY(I1)-borderY,FINISHINGX(I1)-borderX);
-    I2aux.window(STARTINGY(I1)+borderY,STARTINGX(I1)+borderX,
-                 FINISHINGY(I1)-borderY,FINISHINGX(I1)-borderX);
+    I1aux.selfWindow(STARTINGY(I1)+borderY,STARTINGX(I1)+borderX,
+                     FINISHINGY(I1)-borderY,FINISHINGX(I1)-borderX);
+    I2aux.selfWindow(STARTINGY(I1)+borderY,STARTINGX(I1)+borderX,
+                     FINISHINGY(I1)-borderY,FINISHINGX(I1)-borderX);
 
     MultidimArray<double> Mask1;
     Mask1.initZeros(I1aux);
@@ -1412,9 +1412,9 @@ void * threadgenerateLandmarkSetCriticalPoints( void * args )
 
         // Identify low valued points and perform dilation
         MultidimArray<double> Iaux=Ifiltered;
-        Iaux.window(
+        Iaux.selfWindow(
             -ROUND(0.45*YSIZE(Ifiltered)),-ROUND(0.45*XSIZE(Ifiltered)),
-            ROUND(0.45*YSIZE(Ifiltered)), ROUND(0.45*XSIZE(Ifiltered)));
+             ROUND(0.45*YSIZE(Ifiltered)), ROUND(0.45*XSIZE(Ifiltered)));
         Histogram1D hist;
         compute_hist(Iaux, hist, 400);
         double th=hist.percentil(2);

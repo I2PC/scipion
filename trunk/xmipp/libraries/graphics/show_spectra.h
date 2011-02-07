@@ -122,7 +122,7 @@ protected slots:
     virtual void changeFont();
     // Change ticks spacing
     virtual void changeXstep();
-    // returns spacing from scroll window
+    // returns spacing from scroll selfWindow
     virtual void set_spacing(std::vector<float> prm);
 
 public:

@@ -84,7 +84,7 @@ void RaisedCrownMask(MultidimArray< double >& mask,
                      int mode = INNER_MASK,
                      double x0 = 0, double y0 = 0, double z0 = 0);
 
-/** Kaiser window
+/** Kaiser selfWindow
  *  The mask is resized.
  *  delta=ripple (in natural units) in the pass band.
  *  Deltaw=transition bandwidth (normalized to 1.0).
@@ -107,7 +107,7 @@ void SincMask(MultidimArray< double >& mask,
               double omega, int mode = INNER_MASK, double x0 = 0, double y0 = 0, double z0 = 0);
 
 /** Creates a radial-sinc-kaiser mask, the mask is resized.
- *  This function returns a sinc mask windowed by a Kaiser window.
+ *  This function returns a sinc mask windowed by a Kaiser selfWindow.
  *  delta=ripple (in natural units) in the pass band.
  *  Deltaw=transition bandwidth (normalized to 1).
  *  omega=low pass frequency (normalized to 1).
@@ -115,7 +115,7 @@ void SincMask(MultidimArray< double >& mask,
 void SincKaiserMask(MultidimArray<double> &mask,
                     double omega, double delta = 0.01, double Deltaw = 1.0 / 12.0);
 
-/** Blackman window
+/** Blackman selfWindow
  *
  * It receives no parameter.
  */
@@ -124,7 +124,7 @@ void BlackmanMask(MultidimArray< double >& mask, int mode = INNER_MASK,
 
 /** Creates a sinc-blackman mask, the mask is resized
  *
- * This function returns a sinc mask windowed by a Blackman window. The window
+ * This function returns a sinc mask windowed by a Blackman selfWindow. The selfWindow
  * is designed to cover a certain power of the sinc
  */
 void SincBlackmanMask(MultidimArray< double >& mask,
@@ -205,7 +205,7 @@ void BinaryDWTCircularMask2D(MultidimArray< int >& mask,
                              const std::string& quadrant);
 
 /** Creates a 2D separable-sinc-kaiser mask, the mask is resized.
- *  This function returns a sinc mask windowed by a Kaiser window.
+ *  This function returns a sinc mask windowed by a Kaiser selfWindow.
  *  delta=ripple (in natural units) in the pass band.
  *  Deltaw=transition bandwidth (normalized to 1).
  *  omega=low pass frequency (normalized to 1).

@@ -504,7 +504,7 @@ SpectraFilter::SpectraFilter(int min, int max,
     if (!__label_max)
         REPORT_ERROR(ERR_MEM_NOTENOUGH, "SpectraFilter: Cannot allocate memory");
 
-    // Set this window caption
+    // Set this selfWindow caption
     setCaption("Spectra Filter");
 
     // Create a layout to position the widgets

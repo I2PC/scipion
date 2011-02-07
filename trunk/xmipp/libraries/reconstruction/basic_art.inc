@@ -448,7 +448,7 @@ void Basic_ART_iterations(Basic_ART_Parameters &prm,
             // Projection extension? .........................................
             if (prm.proj_ext!=0)
             {
-                read_proj().window(
+                read_proj().selfWindow(
                     STARTINGY (read_proj())-prm.proj_ext,
                     STARTINGX (read_proj())-prm.proj_ext,
                     FINISHINGY(read_proj())+prm.proj_ext,

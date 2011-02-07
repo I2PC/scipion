@@ -360,7 +360,7 @@ void ProgPdbConverter::createProteinAtLowSamplingRate()
     Vlow().setXmippOrigin();
 
     // Return to the desired size
-    Vlow().window(FIRST_XMIPP_INDEX(output_dim), FIRST_XMIPP_INDEX(output_dim),
+    Vlow().selfWindow(FIRST_XMIPP_INDEX(output_dim), FIRST_XMIPP_INDEX(output_dim),
                   FIRST_XMIPP_INDEX(output_dim), LAST_XMIPP_INDEX(output_dim),
                   LAST_XMIPP_INDEX(output_dim), LAST_XMIPP_INDEX(output_dim));
 }

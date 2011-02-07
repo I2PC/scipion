@@ -68,7 +68,7 @@ void KaiserMask(MultidimArray<double> &mask, double delta, double Deltaw)
     // Convert Deltaw from a frequency normalized to 1, to a freq. normalized to PI
     Deltaw *= PI;
 
-    // Design Kaiser window
+    // Design Kaiser selfWindow
     double A = -20 * log10(delta);
     int    M = CEIL((A - 8) / (2.285 * Deltaw));
     double beta;
@@ -79,7 +79,7 @@ void KaiserMask(MultidimArray<double> &mask, double delta, double Deltaw)
     else
         beta = 0;
 
-    // "Draw" Kaiser window
+    // "Draw" Kaiser selfWindow
     if (YSIZE(mask)==1 && ZSIZE(mask)==1)
     {
         // 1D
@@ -336,7 +336,7 @@ void SeparableSincKaiserMask2D(MultidimArray<double> &mask,
     Deltaw *= PI;
     omega *= PI;
 
-    // Design Kaiser window
+    // Design Kaiser selfWindow
     double A = -20 * log10(delta);
     double M = CEIL((A - 8) / (2.285 * Deltaw));
     double beta;
@@ -347,7 +347,7 @@ void SeparableSincKaiserMask2D(MultidimArray<double> &mask,
     else
         beta = 0;
 
-    // "Draw" Separable Kaiser Sinc window
+    // "Draw" Separable Kaiser Sinc selfWindow
     mask.resize(2*M + 1, 2*M + 1);
     mask.setXmippOrigin();
     double iI0Beta = 1.0 / bessi0(beta);

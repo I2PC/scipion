@@ -26,11 +26,11 @@
 #include <data/image.h>
 #include <reconstruction/volume_segment.h>
 
-void Usage(const Prog_segment_prm &prm);
+void Usage(const ProgSegment &prm);
 
 int main(int argc, char **argv)
 {
-    Prog_segment_prm prm;
+    ProgSegment prm;
 
     // Read arguments
     try
@@ -59,7 +59,7 @@ int main(int argc, char **argv)
 }
 
 /* Usage ------------------------------------------------------------------- */
-void Usage(const Prog_segment_prm &prm)
+void Usage(const ProgSegment &prm)
 {
     std::cerr << "Usage: segment [Parameters]\n";
     prm.usage();

@@ -212,10 +212,10 @@ void XrayProjPhantom::read(
 
 /* Effectively project ===================================================== */
 int XrayProjectEffectivelyProject(ParametersProjectionXR &projParam,
-                                   XrayProjPhantom &side,
-                                   Projection &proj,
-                                   XRayPSF &psf,
-                                   MetaData &SF)
+                                  XrayProjPhantom &side,
+                                  Projection &proj,
+                                  XRayPSF &psf,
+                                  MetaData &SF)
 {
 
     // Threads stuff
@@ -320,7 +320,7 @@ int XrayProjectEffectivelyProject(ParametersProjectionXR &projParam,
 }
 
 void XrayProjectVolumeOffCentered(XrayProjPhantom &phantom, XRayPSF &psf, Projection &P,
-                                   int Ydim, int Xdim, int idxSlice)
+                                  int Ydim, int Xdim, int idxSlice)
 {
 
     int iniXdim, iniYdim, iniZdim, newXdim, newYdim;
@@ -398,7 +398,7 @@ void XrayProjectVolumeOffCentered(XrayProjPhantom &phantom, XRayPSF &psf, Projec
     Euler_rotate(MULTIDIM_ARRAY(phantom.iniVol), P.rot(), P.tilt(), P.psi(),phantom.rotVol);
 
     // Correct the shift position due to tilt axis is out of optical axis
-    phantom.rotVol.window(zinit, yinit, xinit, zend, yend, xend);
+    phantom.rotVol.selfWindow(zinit, yinit, xinit, zend, yend, xend);
 
     psf.adjustParam(phantom.rotVol);
 
@@ -409,10 +409,10 @@ void XrayProjectVolumeOffCentered(XrayProjPhantom &phantom, XRayPSF &psf, Projec
     int outXDim = XMIPP_MIN(Xdim,iniXdim);
     int outYDim = XMIPP_MIN(Ydim,iniYdim);
 
-    P().window(-ROUND(outYDim/2),
-               -ROUND(outXDim/2),
-               -ROUND(outYDim/2) + outYDim -1,
-               -ROUND(outXDim/2) + outXDim -1);
+    P().selfWindow(-ROUND(outYDim/2),
+                   -ROUND(outXDim/2),
+                   -ROUND(outYDim/2) + outYDim -1,
+                   -ROUND(outXDim/2) + outXDim -1);
 
 }
 
@@ -493,7 +493,7 @@ void threadXrayProject(ThreadArgument &thArg)
     // Parallel thread jobs
     while (td->getTasks(first, last))
     {
-//        std::cerr << "th" << thread_id << ": working from " << first << " to " << last <<std::endl;
+        //        std::cerr << "th" << thread_id << ": working from " << first << " to " << last <<std::endl;
 
         //        if (numberOfThreads == 1)
         //            first = last -50;
@@ -542,7 +542,7 @@ void threadXrayProject(ThreadArgument &thArg)
                 case PSFXR_ZPAD:
                     //    (*imTempSc).resize(imTemp);
                     imTempSc = imTemp;
-                    imTempSc.window(-ROUND(psf.Niy/2)+1,-ROUND(psf.Nix/2)+1,ROUND(psf.Niy/2)-1,ROUND(psf.Nix/2)-1);
+                    imTempSc.selfWindow(-ROUND(psf.Niy/2)+1,-ROUND(psf.Nix/2)+1,ROUND(psf.Niy/2)-1,ROUND(psf.Nix/2)-1);
                     imTempP = &imTempSc;
                     break;
                 }
@@ -575,7 +575,7 @@ void threadXrayProject(ThreadArgument &thArg)
             }
         }
         priorLast = last;
-//        std::cerr << "th" << thread_id << ": Finished work from " << first << " to " << last <<std::endl;
+        //        std::cerr << "th" << thread_id << ": Finished work from " << first << " to " << last <<std::endl;
     }
 
     //Lock to update the total summatory
@@ -596,11 +596,11 @@ void threadXrayProject(ThreadArgument &thArg)
             selfScaleToSize(LINEAR,imOutGlobal(), psf.Nox, psf.Noy);
             break;
         case PSFXR_ZPAD:
-            MULTIDIM_ARRAY(imOutGlobal).window(-ROUND(psf.Noy/2)+1,-ROUND(psf.Nox/2)+1,ROUND(psf.Noy/2)-1,ROUND(psf.Nox/2)-1);
+            MULTIDIM_ARRAY(imOutGlobal).selfWindow(-ROUND(psf.Noy/2)+1,-ROUND(psf.Nox/2)+1,ROUND(psf.Noy/2)-1,ROUND(psf.Nox/2)-1);
             break;
         }
 
         MULTIDIM_ARRAY(imOutGlobal).setXmippOrigin();
     }
-//    std::cerr << "th" << thread_id << ": Thread Finished" <<std::endl;
+    //    std::cerr << "th" << thread_id << ": Thread Finished" <<std::endl;
 }

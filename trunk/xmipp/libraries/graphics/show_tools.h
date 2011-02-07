@@ -51,16 +51,16 @@
 //@{
 
 /**Scroll param class.
-    This class opens a window for asking for the Scroll parameter.
+    This class opens a selfWindow for asking for the Scroll parameter.
     It emits a signal called new_value(float). (precision is the number of
     digits used by the mantise)
 
     An example of use of this class with a single parameter is
     @code
-      // Create window
+      // Create selfWindow
       ScrollParam* param_window;
       param_window = new ScrollParam(min, max, spacing, "Set spacing", "spacing",
-         0, "new window", WDestructiveClose);
+         0, "new selfWindow", WDestructiveClose);
 
       // Connect its output to my input (set_spacing)
       connect( param_window, SIGNAL(new_value(float)),
@@ -73,7 +73,7 @@
 
     With two parameters
     @code
-      // Create window
+      // Create selfWindow
       ScrollParam* param_window;
       std::vector<float> min; min.push_back(1); min.push_back(1);
       std::vector<float> max; max.push_back(N); max.push_back(N);
@@ -84,7 +84,7 @@
          prm_name.push_back("spacing");
          prm_name.push_back("Tick offset");
       param_window = new ScrollParam(min,max,initial_value,prm_name,
-  "Set spacing", 0, "new window", WDestructiveClose,0);
+  "Set spacing", 0, "new selfWindow", WDestructiveClose,0);
 
       // Connect its output to my input (set_spacing)
       connect( param_window, SIGNAL(new_value(std::vector<float>)),
@@ -143,7 +143,7 @@ signals:
 };
 
 /**Exclusive param class.
-    This class opens a window for asking for a exclusive parameter.
+    This class opens a selfWindow for asking for a exclusive parameter.
     It emits a signal called new_value(int) with the selected value
 
     An example of use of this class is
@@ -151,10 +151,10 @@ signals:
        std::vector<std::string> list_values;
        list_values.push_back("Option 1");
        list_values.push_back("Option 2");
-      // Create window
+      // Create selfWindow
       ExclusiveParam* param_window=
            new ExclusiveParam(list_values, parameter, "Set this exclusive parameter",
-             0, "new window", WDestructiveClose);
+             0, "new selfWindow", WDestructiveClose);
 
       // Connect its output to my input (set_spacing)
       connect( param_window, SIGNAL(new_value(int)),

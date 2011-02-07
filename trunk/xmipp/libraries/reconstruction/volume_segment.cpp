@@ -29,7 +29,7 @@
 #include "volume_segment.h"
 
 // Read arguments ==========================================================
-void Prog_segment_prm::read(int argc, char **argv)
+void ProgSegment::read(int argc, char **argv)
 {
     fn_vol = getParameter(argc, argv, "-i");
     voxel_mass = textToFloat(getParameter(argc, argv, "-voxel_mass", "-1"));
@@ -49,7 +49,7 @@ void Prog_segment_prm::read(int argc, char **argv)
 }
 
 // Show ====================================================================
-std::ostream & operator << (std::ostream &out, const Prog_segment_prm &prm)
+std::ostream & operator << (std::ostream &out, const ProgSegment &prm)
 {
     out << "Input file   : " << prm.fn_vol        << std::endl
         << "Voxel mass   : " << prm.voxel_mass    << std::endl
@@ -67,7 +67,7 @@ std::ostream & operator << (std::ostream &out, const Prog_segment_prm &prm)
 }
 
 // usage ===================================================================
-void Prog_segment_prm::usage() const
+void ProgSegment::usage() const
 {
     std::cerr << "   -i <input volume>       : Volume to segment\n"
     << "  [-voxel_mass  <mass>  |  : Mass in voxels\n"
@@ -83,7 +83,7 @@ void Prog_segment_prm::usage() const
 }
 
 // Produce side information ================================================
-void Prog_segment_prm::produce_side_info()
+void ProgSegment::produce_side_info()
 {
     V.read(fn_vol);
     double sampling_rate3 = sampling_rate * sampling_rate * sampling_rate;
@@ -263,7 +263,7 @@ void probabilistic_solvent(Image<double> *V_in, Image<double> *V_out)
 }
 
 // Really segment ==========================================================
-void Prog_segment_prm::segment(Image<double> &mask)
+void ProgSegment::segment(Image<double> &mask)
 {
     double th_min, th_max, val_min, val_max;
     V().computeDoubleMinMax(val_min, val_max);

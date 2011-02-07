@@ -43,7 +43,7 @@ AssignCTFViewer::AssignCTFViewer(const FileName &_fn_psd,
     if (assign_ctf_prm.adjust_CTF_prm.initial_ctfmodel.K == 0)
         assign_ctf_prm.adjust_CTF_prm.initial_ctfmodel.K = 1;
 
-    // Open a window for the scroll parameters ..............................
+    // Open a selfWindow for the scroll parameters ..............................
     std::vector<float> min, max, initial_value;
     std::vector<char *> prm_name;
 
@@ -77,7 +77,7 @@ AssignCTFViewer::AssignCTFViewer(const FileName &_fn_psd,
         assign_ctf_prm.adjust_CTF_prm.initial_ctfmodel.azimuthal_angle);
     current_prm = initial_value;
 
-    // Open window for scrolls
+    // Open selfWindow for scrolls
     select_prm = new ScrollParam(min, max, initial_value, prm_name,
                                  "Recompute CTF model", 0, "new window", Qt::WDestructiveClose, 0);
     connect(select_prm, SIGNAL(new_value(std::vector<float>)),
@@ -230,7 +230,7 @@ void AssignCTFViewer::okToProceed()
     // Recompute the model
     system(((std::string)"( xmipp_ctf_estimate_from_psd -i " + fn_random + " ; rm " + fn_random + " ) &").c_str());
 
-    // Close this window
+    // Close this selfWindow
     close();
 }
 

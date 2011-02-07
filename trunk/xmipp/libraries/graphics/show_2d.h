@@ -64,7 +64,7 @@
 //@{
 
 /** ImageViewer.
-    This class is in the one in charge of opening a window with the 2D image.
+    This class is in the one in charge of opening a selfWindow with the 2D image.
 
     Example of use:
     @code
@@ -130,7 +130,7 @@ public:
     void drawAngle(double angle);
 
     /** Get Pixmap size.
-        This is the size of the window being currently represented,
+        This is the size of the selfWindow being currently represented,
         taking into account the zoom factor. */
     void getPixmapSize(int &width, int &height)
     {

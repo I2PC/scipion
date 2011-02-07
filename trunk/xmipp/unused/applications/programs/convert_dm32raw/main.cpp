@@ -790,7 +790,7 @@ ffff  The image itself. First 8 bytes specify size and type as 4i2.
 
   16  Display magnification (screen pixels/pixel) (real)
 
-  3e  Position of top left of picture with respect to top left of window
+  3e  Position of top left of picture with respect to top left of selfWindow
       (2i2)
 
   1b  Picture maximum value (real)
@@ -832,7 +832,7 @@ ffff  The image itself. First 8 bytes specify size and type as 4i2.
   25  Annotation, eg text or lines on screen. First 4 bytes is probably number
       of annotations (i4)
 
-  19  position & size of window on screen, top left = 0,0. (4i2)
+  19  position & size of selfWindow on screen, top left = 0,0. (4i2)
       top, left, bot, right
 
    0  End of file (length 0)

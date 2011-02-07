@@ -177,8 +177,8 @@ public:
         _coords = coords;
     }
 
-    /** Set window size.
-        This window is set upon each coordinate and is used to cut all
+    /** Set selfWindow size.
+        This selfWindow is set upon each coordinate and is used to cut all
         images. */
     void set_window_size(int _X_window_size, int _Y_window_size)
     {
@@ -287,13 +287,13 @@ public:
     /** Scissor.
         The single particle is selected by an index within the particle
         coordinate list. If the index is beyond the number of particles
-        \ref ParticleNo , or the window size is not set (\ref set_window_size )
+        \ref ParticleNo , or the selfWindow size is not set (\ref set_window_size )
         an exception is thrown.
 
         Make sure that index n represents a valid particle before cutting it
 
         The scale affects the particle position, such that the position cut
-        is pos*scale, but not the window size.
+        is pos*scale, but not the selfWindow size.
 
         If only check is true then the particle is not scissored, but
         the routine only checks if it can be done.

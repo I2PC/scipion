@@ -225,7 +225,7 @@ void VirusVertex::processAngles()
                 fn_tmp = fn_img.withoutExtension() + "_";
                 fn_tmp.compose(fn_tmp, i, "xmp");
                 proj_aux.setShifts(0,0);//shift already applied, same for flip? I do not think so
-                proj_aux().window((Ydim-dim)/2,(Xdim-dim)/2,(Ydim+dim)/2,(Xdim+dim)/2,0);
+                proj_aux().selfWindow((Ydim-dim)/2,(Xdim-dim)/2,(Ydim+dim)/2,(Xdim+dim)/2,0);
                 Matrix2D<double> Identity(3,3);
                 Identity.initIdentity();
                 int irandom;

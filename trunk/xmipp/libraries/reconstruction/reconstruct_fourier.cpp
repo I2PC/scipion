@@ -987,7 +987,7 @@ void ProgRecFourier::finishComputations( const FileName &out_name )
 
     // Correct by the Fourier transform of the blob
     Vout().setXmippOrigin();
-    Vout().window(FIRST_XMIPP_INDEX(imgSize),FIRST_XMIPP_INDEX(imgSize),
+    Vout().selfWindow(FIRST_XMIPP_INDEX(imgSize),FIRST_XMIPP_INDEX(imgSize),
                   FIRST_XMIPP_INDEX(imgSize),LAST_XMIPP_INDEX(imgSize),
                   LAST_XMIPP_INDEX(imgSize),LAST_XMIPP_INDEX(imgSize));
     double pad_relation= ((double)padding_factor_proj/padding_factor_vol);

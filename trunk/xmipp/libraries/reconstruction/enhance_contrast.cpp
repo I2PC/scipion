@@ -86,12 +86,12 @@ void ProgEnhanceContrast::enhance(MultidimArray<double> &vol)
     // Padd volume with two new rows and cols
     if( FINISHINGZ(vol) - STARTINGZ(vol) > 0 )
     {
-        vol.window( STARTINGZ(vol)-2,STARTINGY(vol)-2,STARTINGX(vol)-2,
+        vol.selfWindow( STARTINGZ(vol)-2,STARTINGY(vol)-2,STARTINGX(vol)-2,
                     FINISHINGZ(vol)+2, FINISHINGY(vol)+2,FINISHINGX(vol)+2, vol_avg );
     }
     else
     {
-        vol.window( STARTINGZ(vol),STARTINGY(vol)-2,STARTINGX(vol)-2,
+        vol.selfWindow( STARTINGZ(vol),STARTINGY(vol)-2,STARTINGX(vol)-2,
                     FINISHINGZ(vol), FINISHINGY(vol)+2,FINISHINGX(vol)+2, vol_avg );
     }
 
@@ -393,12 +393,12 @@ void ProgEnhanceContrast::enhance(MultidimArray<double> &vol)
     // Unpadd volume with two new rows and cols
     if( FINISHINGZ(vol_f) - STARTINGZ(vol_f) > 0 )
     {
-        vol_f.window( STARTINGZ(vol_f)+2,STARTINGY(vol_f)+2,STARTINGX(vol_f)+2,
+        vol_f.selfWindow( STARTINGZ(vol_f)+2,STARTINGY(vol_f)+2,STARTINGX(vol_f)+2,
                       FINISHINGZ(vol_f)-2, FINISHINGY(vol_f)-2,FINISHINGX(vol_f)-2 );
     }
     else
     {
-        vol_f.window( STARTINGZ(vol_f),STARTINGY(vol_f)+2,STARTINGX(vol_f)+2,
+        vol_f.selfWindow( STARTINGZ(vol_f),STARTINGY(vol_f)+2,STARTINGX(vol_f)+2,
                       FINISHINGZ(vol_f), FINISHINGY(vol_f)-2,FINISHINGX(vol_f)-2 );
     }
 

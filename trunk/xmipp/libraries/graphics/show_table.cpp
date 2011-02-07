@@ -285,7 +285,7 @@ void ShowTable::changeBoolOption(int _mi, int _mic)
     repaintContents();
 }
 
-/* Adjust label to window size --------------------------------------------- */
+/* Adjust label to selfWindow size --------------------------------------------- */
 void ShowTable::adjustStatusLabel()
 {
     if (status == NULL) status = new QLabel(this);

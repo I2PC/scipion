@@ -189,7 +189,7 @@ void Basis::changeToVoxels(GridVolume &vol_basis, MultidimArray<double> *vol_vox
         xdiff = (Xdim - XSIZE(*vol_voxels)) / 2;
         ydiff = (Ydim - YSIZE(*vol_voxels)) / 2;
         zdiff = (Zdim - ZSIZE(*vol_voxels)) / 2;
-        vol_voxels->window(
+        vol_voxels->selfWindow(
             STARTINGZ(*vol_voxels) - zdiff,
             STARTINGY(*vol_voxels) - ydiff,
             STARTINGX(*vol_voxels) - xdiff,

@@ -56,7 +56,7 @@ KaiserBessel::KaiserBessel(double alpha_, int K_, double r_, double v_,
     build_I0table();
 }
 
-// Kaiser-Bessel I0 window function
+// Kaiser-Bessel I0 selfWindow function
 double KaiserBessel::i0win(double x) const
 {
     double val0 = double(bessi0(facadj));
@@ -68,7 +68,7 @@ double KaiserBessel::i0win(double x) const
     return res;
 }
 
-// Tabulate I0 window for speed
+// Tabulate I0 selfWindow for speed
 void KaiserBessel::build_I0table()
 {
     i0table.resize(ntable+1); // i0table[0:ntable]
@@ -107,7 +107,7 @@ double KaiserBessel::I0table_maxerror()
     return maxdiff;
 }
 
-// Kaiser-Bessel Sinh window function
+// Kaiser-Bessel Sinh selfWindow function
 double KaiserBessel::sinhwin(double x) const
 {
     double val0 = sinh(fac)/fac;

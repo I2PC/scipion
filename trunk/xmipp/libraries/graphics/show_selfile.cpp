@@ -153,7 +153,7 @@ void ShowSel::readObject(MetaData &SF, double _minGray, double _maxGray)
     ImgSize(SF, projXdim, projYdim, Zdim, Ndim);
     if (load_mode == PSD_mode && NumRows != -1 && NumCols != -1)
     {
-        // Scale to make the images fit into a reasonable window
+        // Scale to make the images fit into a reasonable selfWindow
         double suggested_Xdim = XMIPP_MIN(900.0 / NumCols, projXdim);
         double suggested_Ydim = XMIPP_MIN(700.0 / NumRows, projYdim);
         double scale_X = suggested_Xdim / projXdim;
@@ -383,7 +383,7 @@ void ShowSel::producePixmapAt(int i)
     scale_and_normalize(I(), options->isItemEnabled(mi_Individual_norm),
                         minGray, maxGray);
 
-    // If PSD mode, make the full window fit the current size
+    // If PSD mode, make the full selfWindow fit the current size
     if (load_mode == PSD_mode || load_mode == CTF_mode)
     {
     	selfScaleToSize(LINEAR, I(), rowHeight(0), columnWidth(0));
@@ -838,7 +838,7 @@ void ShowSel::recomputeCTFmodel()
         }
     }
 
-    // Show this image in a separate window to select the main parameters
+    // Show this image in a separate selfWindow to select the main parameters
     AssignCTFViewer *prm_selector = new AssignCTFViewer(fn_psd, assign_ctf_prm);
 }
 

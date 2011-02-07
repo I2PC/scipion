@@ -393,7 +393,7 @@ double correlate_surface_and_volume_gradients(const Image *surf,
 #ifdef _HAVE_INRIA
     // Create surface mask
     create_surface_mask(surf, V, Vsurf, direction);
-    (*Vsurf)().window(MAX(STARTINGZ((*Vsurf)()), ktop - 5),
+    (*Vsurf)().selfWindow(MAX(STARTINGZ((*Vsurf)()), ktop - 5),
                       STARTINGY((*Vsurf)()), STARTINGX((*Vsurf)()),
                       MIN(FINISHINGZ((*Vsurf)()), kbottom + 5),
                       FINISHINGY((*Vsurf)()), FINISHINGX((*Vsurf)()));
