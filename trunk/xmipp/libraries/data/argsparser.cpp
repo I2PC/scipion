@@ -1158,23 +1158,11 @@ TkPrinter::TkPrinter()
 {
     FileName dir = xmippBaseDir();
     dir.append("/applications/scripts/program_gui/program_gui.py");
-    //      std::cout << "Running: " << dir << std::endl;
-
-    //    int pfd[2], fdOut, nbytes;
-    //    if (pipe(pfd) == -1)
-    //    {
-    //        perror("pipe");
-    //        exit(EXIT_FAILURE);
-    //    }
-    //    dup2(1, fdOut);//save std::cout
-    //    dup2(pfd[1], 1);
     output = popen(dir.c_str(), "w");
-
 }
 
 TkPrinter::~TkPrinter()
 {
-
     pclose(output);
 }
 
