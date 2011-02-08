@@ -36,14 +36,17 @@
 #include <error.h>
 #include "image.h"
 #include "filename.h"
+#include "metadata.h"
+#include "image.h"
+#include "xmipp_java_interface.h"
 
 using namespace std;
 
-std::string readImageHeader(Image<double> &image, const std::string &filename) {
+std::string readImage(Image<double> &image, const std::string &filename, int readData, int nimage = 0) {
 	std::string msg = "";
 
 	try {
-		image.read(filename, false);
+		image.read(filename, readData, nimage);
 	} catch (XmippError xe) {
 		std::cerr << xe;
 		msg = filename + ": " + xe.getDefaultMessage();
@@ -58,32 +61,14 @@ std::string readImageHeader(Image<double> &image, const std::string &filename) {
 	return msg;
 }
 
-std::string readImage(Image<double> &image, const std::string &filename) {
+std::string readImagePreview(Image<double> &image, const std::string &filename,
+		int w, int h, int slice = 0, int nimage = 0) {
 	std::string msg = "";
 
 	try {
-		image.read(filename);
-	} catch (XmippError xe) {
-		std::cerr << xe;
-		msg = filename + ": " + xe.getDefaultMessage();
-	} catch (std::exception& e) {
-		std::cerr << e.what();
-		msg = filename + ": " + e.what();
-	} catch (...) {
-		std::cerr << "Unhandled exception";
-		msg = filename + ": " + "Unhandled exception";
-	}
+		image.readPreview(filename, w, h, slice, nimage);
 
-	return msg;
-}
-
-std::string readImagePreview(Image<double> &image, const std::string &filename, int w, int h, int slice) {
-	std::string msg = "";
-
-	try {
-		FileName fn(filename);
-
-		image.readPreview(fn, w, h, slice);
+		image().printShape();
 	} catch (XmippError xe) {
 		std::cerr << xe;
 		msg = filename + ": " + xe.getDefaultMessage();
@@ -102,9 +87,7 @@ std::string readMetaData(MetaData &metadata, const std::string &filename) {
 	std::string msg = "";
 
 	try {
-		FileName fn(filename);
-
-		metadata.read(fn);
+		metadata.read(filename);
 	} catch (XmippError xe) {
 		std::cerr << xe;
 		msg = filename + ": " + xe.getDefaultMessage();
@@ -123,9 +106,7 @@ std::string writeImage(Image<double> &image, const std::string &filename) {
 	std::string msg = "";
 
 	try {
-		FileName fn(filename);
-
-		image.write(fn);
+		image.write(filename);
 	} catch (XmippError xe) {
 		std::cerr << xe;
 		msg = filename + ": " + xe.getDefaultMessage();
@@ -141,28 +122,39 @@ std::string writeImage(Image<double> &image, const std::string &filename) {
 }
 
 /*
-std::string getStrFromValue(MetaData &metadata, const MDLabel MDlabel, std::string &strOut){
-	std::string msg = "";
+ std::string getStrFromValue(MetaData &metadata, const MDLabel MDlabel, std::string &strOut){
+ std::string msg = "";
 
-	try {
-		std::string field;
+ try {
+ std::string field;
 
-		strOut[0] = metadata.getStrFromValue(MDlabel, field);
-	} catch (XmippError xe) {
-		std::cerr << xe;
-		msg = xe.getDefaultMessage();
-	} catch (std::exception& e) {
-		std::cerr << e.what();
-		msg = e.what();
-	} catch (...) {
-		std::cerr << "Unhandled exception";
-		msg = "Unhandled exception";
-	}
+ strOut[0] = metadata.getStrFromValue(MDlabel, field);
+ } catch (XmippError xe) {
+ std::cerr << xe;
+ msg = xe.getDefaultMessage();
+ } catch (std::exception& e) {
+ std::cerr << e.what();
+ msg = e.what();
+ } catch (...) {
+ std::cerr << "Unhandled exception";
+ msg = "Unhandled exception";
+ }
 
-	return msg;
-}*/
+ return msg;
+ }*/
 
-double getImageVoxel(Image<double> &image, int k, int i, int j) {
+double *getMatrixArray(MultidimArray<double> &array) {
+	std::cout << MULTIDIM_ARRAY(array) << std::endl;
+
+	return MULTIDIM_ARRAY(array);
+}
+
+double *getImageArray(Image<double> &image) {
+	image.data.printShape();
+	return getMatrixArray(image.data);
+}
+
+double getImageVoxel_TMP(Image<double> &image, int k, int i, int j) {
 	std::string msg = "";
 
 	try {
@@ -181,7 +173,7 @@ double getImageVoxel(Image<double> &image, int k, int i, int j) {
 	return 0;
 }
 
-double getMatrixVoxel(MultidimArray<double> &matrix, int k, int i, int j) {
+double getMatrixVoxel_TMP(MultidimArray<double> &matrix, int k, int i, int j) {
 	std::string msg = "";
 
 	try {
@@ -203,14 +195,25 @@ double getMatrixVoxel(MultidimArray<double> &matrix, int k, int i, int j) {
 }
 
 /********************** DEBUGGING ****************************/
-// Sometimes java annoys you with "Unsatisfied Link" exceptions. This simple functions
-// can be used for testing purposes.
 std::string testLibraryLink() {
 	std::string msg = "Xmipp_Java_Interface TEST";
 
 	std::cout << msg << std::endl;
 
 	return msg;
+}
+
+void printData(Image<double> &image){
+	image.data.printShape();
+}
+
+int getWidth(Image<double> &image){
+	int w, h, d = 0;
+	long unsigned int n = 0;
+
+	image.getDimensions(w, h, d, n);
+
+	return w;
 }
 
 #endif

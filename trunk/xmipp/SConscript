@@ -281,7 +281,6 @@ def AddJavaLibrary(name, basedir, srcdir):#, sourceList, includes, libpath=[], l
         source = path,
         JARCHDIR = basedir)
 
-    print "buildJar", buildJar
     buildClasses = env.Java(basedir, path)
 
     # Packs classes and plugin config file into jar.

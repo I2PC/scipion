@@ -1,1 +1,1 @@
-rm *.os *.so *.class xmipp/*.class
+rm *.os *.so *.class xmipp/*.class XmippJavaInterface.jar

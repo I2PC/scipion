@@ -41,6 +41,14 @@ JNIEXPORT void JNICALL Java_xmipp_MetaData_read
 
 /*
  * Class:     xmipp_MetaData
+ * Method:    size
+ * Signature: ()I
+ */
+JNIEXPORT jint JNICALL Java_xmipp_MetaData_size
+  (JNIEnv *, jobject);
+
+/*
+ * Class:     xmipp_MetaData
  * Method:    write
  * Signature: (Ljava/lang/String;)V
  */
@@ -133,6 +141,30 @@ JNIEXPORT jboolean JNICALL Java_xmipp_MetaData_setValueBoolean
  * Signature: ()[J
  */
 JNIEXPORT jlongArray JNICALL Java_xmipp_MetaData_findObjects
+  (JNIEnv *, jobject);
+
+/*
+ * Class:     xmipp_MetaData
+ * Method:    addObject
+ * Signature: ()J
+ */
+JNIEXPORT jlong JNICALL Java_xmipp_MetaData_addObject
+  (JNIEnv *, jobject);
+
+/*
+ * Class:     xmipp_MetaData
+ * Method:    addLabel
+ * Signature: (I)V
+ */
+JNIEXPORT void JNICALL Java_xmipp_MetaData_addLabel
+  (JNIEnv *, jobject, jint);
+
+/*
+ * Class:     xmipp_MetaData
+ * Method:    getFilename
+ * Signature: ()Ljava/lang/String;
+ */
+JNIEXPORT jstring JNICALL Java_xmipp_MetaData_getFilename
   (JNIEnv *, jobject);
 
 #ifdef __cplusplus

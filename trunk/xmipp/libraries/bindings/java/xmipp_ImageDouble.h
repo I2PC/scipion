@@ -7,6 +7,12 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+#undef xmipp_ImageDouble_INDEX_WIDTH
+#define xmipp_ImageDouble_INDEX_WIDTH 0L
+#undef xmipp_ImageDouble_INDEX_HEIGHT
+#define xmipp_ImageDouble_INDEX_HEIGHT 1L
+#undef xmipp_ImageDouble_INDEX_DEPTH
+#define xmipp_ImageDouble_INDEX_DEPTH 2L
 /*
  * Class:     xmipp_ImageDouble
  * Method:    storeIds
@@ -33,11 +39,19 @@ JNIEXPORT void JNICALL Java_xmipp_ImageDouble_destroy
 
 /*
  * Class:     xmipp_ImageDouble
- * Method:    read
- * Signature: (Ljava/lang/String;)V
+ * Method:    read_
+ * Signature: (Ljava/lang/String;ZI)V
  */
-JNIEXPORT void JNICALL Java_xmipp_ImageDouble_read
-  (JNIEnv *, jobject, jstring);
+JNIEXPORT void JNICALL Java_xmipp_ImageDouble_read_1
+  (JNIEnv *, jobject, jstring, jboolean, jint);
+
+/*
+ * Class:     xmipp_ImageDouble
+ * Method:    readPreview_
+ * Signature: (Ljava/lang/String;IIII)V
+ */
+JNIEXPORT void JNICALL Java_xmipp_ImageDouble_readPreview_1
+  (JNIEnv *, jobject, jstring, jint, jint, jint, jint);
 
 /*
  * Class:     xmipp_ImageDouble
@@ -57,10 +71,58 @@ JNIEXPORT jdoubleArray JNICALL Java_xmipp_ImageDouble_getData
 
 /*
  * Class:     xmipp_ImageDouble
- * Method:    getSize
+ * Method:    getPixel
+ * Signature: (II)D
+ */
+JNIEXPORT jdouble JNICALL Java_xmipp_ImageDouble_getPixel
+  (JNIEnv *, jobject, jint, jint);
+
+/*
+ * Class:     xmipp_ImageDouble
+ * Method:    setPixel
+ * Signature: (IID)V
+ */
+JNIEXPORT void JNICALL Java_xmipp_ImageDouble_setPixel
+  (JNIEnv *, jobject, jint, jint, jdouble);
+
+/*
+ * Class:     xmipp_ImageDouble
+ * Method:    getVoxel
+ * Signature: (III)D
+ */
+JNIEXPORT jdouble JNICALL Java_xmipp_ImageDouble_getVoxel
+  (JNIEnv *, jobject, jint, jint, jint);
+
+/*
+ * Class:     xmipp_ImageDouble
+ * Method:    setVoxel
+ * Signature: (IIID)V
+ */
+JNIEXPORT void JNICALL Java_xmipp_ImageDouble_setVoxel
+  (JNIEnv *, jobject, jint, jint, jint, jdouble);
+
+/*
+ * Class:     xmipp_ImageDouble
+ * Method:    convertPSD
+ * Signature: ()V
+ */
+JNIEXPORT void JNICALL Java_xmipp_ImageDouble_convertPSD
+  (JNIEnv *, jobject);
+
+/*
+ * Class:     xmipp_ImageDouble
+ * Method:    getDimensions_
  * Signature: ()[I
  */
-JNIEXPORT jintArray JNICALL Java_xmipp_ImageDouble_getSize
+JNIEXPORT jintArray JNICALL Java_xmipp_ImageDouble_getDimensions_1
+  (JNIEnv *, jobject);
+
+/*
+ * Class:     xmipp_ImageDouble
+ * Method:    getNImages_
+ * Signature: ()J
+ */
+JNIEXPORT jlong JNICALL Java_xmipp_ImageDouble_getNImages_1
   (JNIEnv *, jobject);
 
 /*

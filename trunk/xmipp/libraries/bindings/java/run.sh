@@ -1,1 +1,1 @@
-java HelloWorld 3 /home/josem/work/ml_XmippProgram/osoTest/
+javac HelloWorld.java && java HelloWorld tmp/kk.sel
