@@ -536,8 +536,6 @@ ParamDef::~ParamDef()
   for (int i = 0; i < arguments.size(); ++i)
     delete arguments[i];
 
-  for (int i = 0; i < cmdArguments.size(); ++i)
-    delete cmdArguments[i];
 }
 
 bool ParamDef::containsArgument(const String & argName)
