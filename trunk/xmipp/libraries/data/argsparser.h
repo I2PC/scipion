@@ -38,7 +38,7 @@
 #include "strings.h"
 
 
-typedef std::vector<std::string> StringVector;
+typedef std::vector<String> StringVector;
 
 /** Type of tokens for lexical analysis */
 enum TokenType {
@@ -75,7 +75,7 @@ class ArgToken
 {
 public:
     TokenType type; ///< Type of the token
-    std::string lexeme; ///< the string literal value of the token
+    String lexeme; ///< the string literal value of the token
     int line; ///< line where token was found
     int start, end; ///< start and end position of the lexeme.
     /// this info will be used by parser and printers
@@ -102,7 +102,7 @@ private:
     size_t offset; ///< the offset from pos of each token
     ArgToken * pToken; ///< pointer to the input token.
     ///Dictionary for identify reserved words
-    std::map<std::string, TokenType> reservedWords;
+    std::map<String, TokenType> reservedWords;
 
     //Some utils functions
     void readSpaces();
@@ -119,7 +119,7 @@ public:
     /** Destructor */
     ~ArgLexer();
     /** Add input lines to the lexer */
-    void addLine(std::string line);
+    void addLine(String line);
     /** Function to parse a new token.
      * If the token is TOK_END will return false
      * and true otherwise. The current token will be changed.
@@ -137,7 +137,7 @@ public:
     StringVector comments;
     std::vector<int> visibility;
 
-    void addComment(const std::string &comment, int visible = 0);
+    void addComment(const String &comment, int visible = 0);
     void clear();
     size_t size() const;
 };
@@ -163,7 +163,7 @@ public:
     ASTNode * parent;
     ArgLexer * pLexer;
     ArgToken token;
-    std::string name;
+    String name;
     int visible;
 
     virtual bool parse() = 0; //abstract function
@@ -174,8 +174,8 @@ public:
     ArgToken * currentToken() const;
     void nextToken();
     bool parseCommentList(CommentList &comments);
-    void error(std::string msg);
-    void unexpectedToken(std::string msg = "");
+    void error(String msg);
+    void unexpectedToken(String msg = "");
 };
 
 class ParamDef;
@@ -183,13 +183,14 @@ class ParamDef;
 class ArgumentDef: public ASTNode
 {
 public:
-    std::string argDefault;
+    String argDefault;
     bool isList;
     bool isType;
     std::vector<ParamDef*> subParams;
     bool hasDefault;
 
     ArgumentDef(ArgLexer *lexer, ASTNode * parent);
+    ~ArgumentDef();
     virtual bool parse();
     virtual void check(std::stringstream & errors)
     {
@@ -218,14 +219,15 @@ public:
 
     //Empty constructor
     ParamDef(ArgLexer *lexer, ASTNode * parent);
+    ~ParamDef();
     bool parseParamList(TokenType startToken, ProgramDef * prog, StringVector &paramList, bool addName);
     bool parseArgumentList();
     virtual bool parse();
     void checkRequires(std::stringstream & errors, ProgramDef * prog);
     virtual void check(std::stringstream & errors);
-    bool containsArgument(const std::string & argName);
-    ArgumentDef * findArgument(const std::string & argName);
-    bool containsAlias(const std::string & alias);
+    bool containsArgument(const String & argName);
+    ArgumentDef * findArgument(const String & argName);
+    bool containsAlias(const String & alias);
 };
 
 class SectionDef: public ASTNode
@@ -235,6 +237,7 @@ public:
     std::vector<ParamDef*> params; ///< All params defined for the program.
 
     SectionDef(ArgLexer * lexer, ASTNode * parent);
+    ~SectionDef();
     virtual bool parse();
     virtual void check(std::stringstream & errors)
     {
@@ -249,7 +252,7 @@ public:
     std::vector<SectionDef*> sections;
     CommentList usageComments; ///< comments of usage
     CommentList examples; ///< examples of use
-    std::map<std::string, ParamDef*> paramsMap; ///< Dictionary with all params and alias names
+    std::map<String, ParamDef*> paramsMap; ///< Dictionary with all params and alias names
     StringVector pendingRequires; ///< This is for checking that requires names exists
     String keywords;
     String seeAlso;
@@ -261,13 +264,13 @@ public:
     ~ProgramDef();
     virtual bool parse();
     virtual void check(std::stringstream & errors);
-    ParamDef * findParam(const std::string &param);
+    ParamDef * findParam(const String &param);
     /** Find a param and if not provided in cmd line, fill with its defaults values */
-    ParamDef * findAndFillParam(const std::string &param);
+    ParamDef * findAndFillParam(const String &param);
     const char * getParam(const char * paramName, int paramNumber = 0);
     const char * getParam(const char * paramName, const char * subParam, int paramNumber = 0);
-    void addParamName(const std::string & name, ParamDef *param);
-    void addParamRequires(const std::string &name);
+    void addParamName(const String & name, ParamDef *param);
+    void addParamRequires(const String &name);
     ///clear read arguments
     void clear();
     /// Read and validate commmand line

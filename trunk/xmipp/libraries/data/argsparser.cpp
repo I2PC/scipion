@@ -94,7 +94,7 @@ ArgLexer::~ArgLexer()
     delete pToken;
 }
 
-void ArgLexer::addLine(std::string line)
+void ArgLexer::addLine(String line)
 {
     input.push_back(line + " ");
 }
@@ -117,10 +117,10 @@ void ArgLexer::setupToken(TokenType type)
 
         if (type == TOK_ID)
         {
-            std::string s = pToken->lexeme;
+            String s = pToken->lexeme;
             std::transform(s.begin(), s.end(), s.begin(),
                            ::toupper);
-            std::map<std::string, TokenType>::iterator it;
+            std::map<String, TokenType>::iterator it;
             it = reservedWords.find(s);
             if (it != reservedWords.end())
             {
@@ -142,7 +142,7 @@ void ArgLexer::checkVisibility()
 {
     while (input[line][pos] == '+')
     {
-        ++pToken->visibility;
+        ++(pToken->visibility);
         ++pos;
     }
 }
@@ -339,7 +339,7 @@ TokenType ArgLexer::lookahead() const
 
 
 //-------------------   PARSER IMPLEMENTATIONS   --------------------------------
-void CommentList::addComment(const std::string &comment, int visible)
+void CommentList::addComment(const String &comment, int visible)
 {
     comments.push_back(comment);
     visibility.push_back(visible);
@@ -388,7 +388,10 @@ bool ASTNode::consume(TokenType type)
     if (t != type)
         unexpectedToken();
     //Store consumed token
-    token = *currentToken();
+    if (currentToken() != NULL)
+      token = *currentToken();
+    else
+      REPORT_ERROR(ERR_MEM_NULLPOINTER, "current token is null");
 
     //Ask for new token
     nextToken();
@@ -409,17 +412,17 @@ bool ASTNode::parseCommentList(CommentList &comments)
     return true;
 }
 
-void ASTNode::error(std::string msg)
+void ASTNode::error(String msg)
 {
     std::cerr << ">>> ERROR: " << msg << std::endl << "    at line "
     << token.line + 1 << " column " << token.start + 1 << std::endl;
     exit(1);
 }
 
-void ASTNode::unexpectedToken(std::string msg)
+void ASTNode::unexpectedToken(String msg)
 {
     token = *currentToken();
-    error((std::string) "Unexpected token '" + ArgToken::typeString(token.type)
+    error((String) "Unexpected token '" + ArgToken::typeString(token.type)
           + "' " + msg);
 }
 
@@ -428,6 +431,12 @@ ArgumentDef::ArgumentDef(ArgLexer *lexer, ASTNode * parent) :
 {
     isList = false;
     hasDefault = false;
+}
+
+ArgumentDef::~ArgumentDef()
+{
+  for (int i = 0; i < subParams.size(); ++i)
+    delete subParams[i];
 }
 
 bool ArgumentDef::parse()
@@ -487,7 +496,7 @@ bool ArgumentDef::acceptArguments(std::stringstream &errors, size_t & index, std
     if (!subParams.empty())
     {
         bool found = false;
-        std::string optionValue = (std::string)cmdArguments[index];
+        String optionValue = (String)cmdArguments[index];
         for (size_t i = 0; i < subParams.size(); ++i)
         {
             if (subParams[i]->name == optionValue)
@@ -522,12 +531,21 @@ ParamDef::ParamDef(ArgLexer *lexer, ASTNode * parent) :
         ASTNode(lexer, parent)
 {}
 
-bool ParamDef::containsArgument(const std::string & argName)
+ParamDef::~ParamDef()
+{
+  for (int i = 0; i < arguments.size(); ++i)
+    delete arguments[i];
+
+  for (int i = 0; i < cmdArguments.size(); ++i)
+    delete cmdArguments[i];
+}
+
+bool ParamDef::containsArgument(const String & argName)
 {
     return findArgument(argName) == NULL;
 }
 
-ArgumentDef * ParamDef::findArgument(const std::string & argName)
+ArgumentDef * ParamDef::findArgument(const String & argName)
 {
     for (size_t i = 0; i < arguments.size(); ++i)
         if (argName == arguments[i]->name)
@@ -535,7 +553,7 @@ ArgumentDef * ParamDef::findArgument(const std::string & argName)
     return NULL;
 }
 
-bool ParamDef::containsAlias(const std::string & alias)
+bool ParamDef::containsAlias(const String & alias)
 {
     for (size_t i = 0; i < aliases.size(); ++i)
         if (alias == aliases[i])
@@ -672,9 +690,9 @@ bool ParamDef::parseParamList(TokenType startToken, ProgramDef * prog, StringVec
             consume(TOK_OPT);
             paramList.push_back(token.lexeme);
             if (isAlias)
-                ((ProgramDef*) parent->parent)->addParamName(token.lexeme, this);
+                prog->addParamName(token.lexeme, this);
             else
-                ((ProgramDef*) parent->parent)->addParamRequires(token.lexeme);
+                prog->addParamRequires(token.lexeme);
         }
         consume(TOK_SEMI);
     }
@@ -750,6 +768,12 @@ SectionDef::SectionDef(ArgLexer * lexer, ASTNode * parent) :
         ASTNode(lexer, parent)
 {}
 
+SectionDef::~SectionDef()
+{
+  for (int i = 0; i < params.size(); ++i)
+    delete params[i];
+}
+
 bool SectionDef::parse()
 {
     if (lookahead(TOK_SECTION))
@@ -787,6 +811,8 @@ ProgramDef::ProgramDef() :
 ProgramDef::~ProgramDef()
 {
     delete pLexer;
+    for (int i = 0; i < sections.size(); ++i)
+      delete sections[i];
 }
 /** Parse the program definition. */
 bool ProgramDef::parse()
@@ -805,6 +831,7 @@ bool ProgramDef::parse()
     {
         SectionDef * s = new SectionDef(pLexer, this);
         s->parse();
+        String name = s->name;
         sections.push_back(s);
     }
     consume(TOK_END);
@@ -812,7 +839,7 @@ bool ProgramDef::parse()
     return true;
 }
 
-void addOcurrence(std::map<std::string, int> &map, const std::string &name)
+void addOcurrence(std::map<String, int> &map, const String &name)
 {
     if (map.find(name) != map.end())
         map[name]++;
@@ -859,7 +886,7 @@ void ProgramDef::check(std::stringstream & errors)
         for (size_t j = 0; j < section->params.size(); ++j)
         {
             param = section->params[j];
-            std::string name = param->name;
+            String name = param->name;
             bool orBefore = param->orBefore;
             size_t size = exclusive.size();
             //Doesn't check for alias, for doesn't repeat error messages
@@ -872,22 +899,22 @@ void ProgramDef::check(std::stringstream & errors)
     reportExclusiveErrors(errors, exclusive);
 }
 
-ParamDef * ProgramDef::findParam(const std::string &name)
+ParamDef * ProgramDef::findParam(const String &name)
 {
     if (paramsMap.find(name) != paramsMap.end())
         return paramsMap[name];
     return NULL;
 }
 
-void ProgramDef::addParamName(const std::string &name, ParamDef * param)
+void ProgramDef::addParamName(const String &name, ParamDef * param)
 {
     if (paramsMap.find(name) != paramsMap.end())
-        error((std::string) "The param '" + name + "' is repeated.");
+        error((String) "The param '" + name + "' is repeated.");
     else
         paramsMap[name] = param;
 }
 
-void ProgramDef::addParamRequires(const std::string &name)
+void ProgramDef::addParamRequires(const String &name)
 {
     pendingRequires.push_back(name);
 }
@@ -967,11 +994,11 @@ SectionDef * ProgramDef::addSection(String sectionName, int visibility)
     return section;
 }
 
-ParamDef* ProgramDef::findAndFillParam(const std::string &param)
+ParamDef* ProgramDef::findAndFillParam(const String &param)
 {
     ParamDef * paramDef = findParam(param);
     if (paramDef == NULL)
-        REPORT_ERROR(ERR_ARG_INCORRECT, ((std::string)"Doesn't exists param: " + param));
+        REPORT_ERROR(ERR_ARG_INCORRECT, ((String)"Doesn't exists param: " + param));
     ///Param was provided, not need to fill it
     //if (paramDef->counter == 1)
     //    return paramDef;
@@ -1003,7 +1030,7 @@ const char * ProgramDef::getParam(const char * paramName, const char * subParam,
             break;
 
     if (i == param->cmdArguments.size())
-        REPORT_ERROR(ERR_ARG_INCORRECT, ((std::string)"Sub-param " + subParam + " was not supplied in command line."));
+        REPORT_ERROR(ERR_ARG_INCORRECT, ((String)"Sub-param " + subParam + " was not supplied in command line."));
 
     return param->cmdArguments.at(i + 1 + argNumber);
 }
