@@ -34,15 +34,17 @@
 #include <data/transformations.h>
 #include <data/matrix2d.h>
 
+#define INTERP_FOURIER -1
 
 class ProgTransformGeometry: public XmippMetadataProgram
 {
 protected:
-    int             zdim, ydim, xdim, splineDegree;
-    bool            applyGeo, inverse, wrap, doResize;
-    Matrix2D<double> R, T, S;
-    Matrix1D<double>          shiftV, rotV;
-    double scaleX, scaleY, scaleZ;
+    int             zdim, ydim, xdim, splineDegree, dim;
+    bool            applyTransform, inverse, wrap, doResize, isVol;
+    Matrix2D<double> R, T, S, A, B;
+    Matrix1D<double>          shiftV, rotV, scaleV;
+    MDRow            input, transformation;
+    Image<double> img, imgOut;
 
     void defineParams()
     {
@@ -57,7 +59,13 @@ protected:
         //examples
 
         //params
-        addParamsLine("== Scale ==");
+        addParamsLine("== Transformations ==");
+        addParamsLine("[--rotate <rotation_type>]   :Perform rotation");
+        addParamsLine("         where <rotation_type>");
+        addParamsLine("             ang <angle>     : Rotate an image (positive angle values is a clockwise rotation)");
+        addParamsLine("             euler <rot> <tilt> <psi>     : Rotate with these Euler angles");
+        addParamsLine("             alignZ <x> <y> <z>           : Align (x,y,z) with Z axis");
+        addParamsLine("             axis <ang> <x=0> <y=0> <z=1> : Rotate <ang> degrees around (x,y,z)");
         addParamsLine("[--scale <scale_type>]                :Perform scaling");
         addParamsLine("         where <scale_type>");
         addParamsLine("             factor <n=1>           : Scaling factor, 0.5 halves and 2 doubles");
@@ -65,25 +73,17 @@ protected:
         addParamsLine("             dim <x> <y=x> <z=x>    : New x,y and z dimensions");
         addParamsLine("                                    : This cause a change on image dimensions.");
         addParamsLine(" alias -s;");
-
-        addParamsLine("== Rotate ==");
-        addParamsLine("[--rotate <rotation_type>]   :Perform rotation");
-        addParamsLine("         where <rotation_type>");
-        addParamsLine("             euler <rot> <tilt> <psi>     : Rotate with these Euler angles");
-        addParamsLine("             alignZ <x> <y> <z>           : Align (x,y,z) with Z axis");
-        addParamsLine("             axis <ang> <x=0> <y=0> <z=1> : Rotate <ang> degrees around (x,y,z)");
-
-        addParamsLine("== Shift ==");
-        addParamsLine("[--shift <x> <y=x> <z=x>]    : Shift by x, y and z");
-
+        addParamsLine("[--shift <x> <y=0> <z=0>]    : Shift by x, y and z");
+        addParamsLine("[--flip]                                : Flip images, only valid for 2D");
         addParamsLine("== Other options ==");
         addParamsLine(" [--interp <interpolation_type=spline>] : Interpolation type to be used. ");
         addParamsLine("      where <interpolation_type>");
         addParamsLine("        spline          : Use spline interpolation");
         addParamsLine("        linear          : Use bilinear/trilinear interpolation");
         addParamsLine("        fourier <thr=1> : Use padding/windowing in Fourier Space (only for scale in 2D)");
+        addParamsLine("            requires --scale;");
         addParamsLine("[--inverse]                         : Apply inverse transformations");
-        addParamsLine("[--apply_geo]                       : By default, the original images are preserved");
+        addParamsLine("[--apply_transform]                 : By default, the original images are preserved");
         addParamsLine("                                    : and the alignment information is stored in metadata");
         addParamsLine("[--dont_wrap]                       : By default, the image/volume is wrapped");
         addParamsLine("[--write_matrix]                    : Print transformation matrix to screen");
@@ -93,7 +93,7 @@ protected:
     void readParams()
     {
         XmippMetadataProgram::readParams();
-        applyGeo = checkParam("--apply_geo");
+        applyTransform = checkParam("--apply_transform");
         inverse = checkParam("--inverse");
         wrap = ! checkParam("--dont_wrap");
         String degree = getParam("--interp");
@@ -102,147 +102,159 @@ protected:
         else if (degree == "linear")
             splineDegree = LINEAR;
         else
-            splineDegree = -1;//Fourier interpolation, only for scale
+        {
+            splineDegree = INTERP_FOURIER;
+
+        }
     }
+
 
     void preProcess()
     {
         unsigned long n;
         ImgSize(mdIn, xdim, ydim , zdim, n);
-        R.initZeros(4, 4);
-        S.initIdentity(4);
-        T.initZeros(4, 4);
-        shiftV.resizeNoCopy(3);
-        rotV.resizeNoCopy(3);
+        //If zdim greater than 1, is a volume and should apply transform
+        dim = (isVol = (zdim > 1)) ? 3 : 2;
+        //Check that fourier interpolation is only for scale in 2d
+        if (splineDegree == INTERP_FOURIER &&
+            (checkParam("--shift") || checkParam("--rotate") || isVol))
+            REPORT_ERROR(ERR_ARG_INCORRECT, "Fourier interpolation is only allowed for scale in 2D");
+
+        applyTransform = isVol || mdIn.size() == 1;
+        S.initIdentity(dim + 1);
+        R.initIdentity(dim + 1);
+        T.initIdentity(dim + 1);
+        A.initIdentity(dim + 1);
+
+        imgOut().resizeNoCopy(zdim, ydim, xdim);
+        scaleV.resizeNoCopy(dim);
+        shiftV.resizeNoCopy(dim);
+        rotV.resizeNoCopy(dim);
+
+        if (checkParam("--shift"))
+        {
+            XX(shiftV) = getDoubleParam("--shift", 0);
+            YY(shiftV) = getDoubleParam("--shift", 1);
+            if (isVol)
+            {
+                ZZ(shiftV) = getDoubleParam("--shift", 2);
+                translation3DMatrix(shiftV, T);
+            }
+            else
+                translation2DMatrix(shiftV, T);
+        }
 
         if (checkParam("--scale"))
         {
-            if (String(getParam("--scale"))=="dim")
+            if (STR_EQUAL(getParam("--scale" ), "dim"))
             {
                 //Calculate scale factor from images sizes and given dimensions
                 //this approach assumes that all images have equal size
-                applyGeo = doResize = true;
-                int x = getIntParam("--scale", 1);
-                int y = String(getParam("--scale", 2)) == "x" ? x : getIntParam("--scale", 2);
-                scaleX = (double)x / xdim;
-                scaleY = (double)y / ydim;
-                xdim = x;
-                ydim = y;
-                if (zdim > 1)
+                applyTransform = doResize = true;
+                double oxdim = xdim, oydim = ydim, ozdim = zdim;
+                xdim = getIntParam("--scale", 1);
+                ydim = STR_EQUAL(getParam("--scale", 2), "x") ? xdim : getIntParam("--scale", 2);
+
+                XX(scaleV) = (double)xdim / oxdim;
+                YY(scaleV) = (double)ydim / oydim;
+
+                if (isVol)
                 {
-                    int z = String(getParam("--scale", 3)) == "x" ? x : getIntParam("--scale", 3);
-                    scaleZ = (double)z / zdim;
-                    zdim = z;
+                    zdim = STR_EQUAL(getParam("--scale", 3), "x") ? xdim : getIntParam("--scale", 3);
+                    ZZ(scaleV) = (double)zdim / ozdim;
                 }
+                imgOut().resizeNoCopy(zdim, ydim, xdim);
             }
             else //scale factor case
             {
-                scaleX = scaleY = scaleZ = getDoubleParam("--factor");
+                double factor = getDoubleParam("--scale", 1);
+                //Some extra validations for factor
+                if (factor <= 0)
+                    REPORT_ERROR(ERR_VALUE_INCORRECT,"Factor must be a positive number");
+                scaleV.initConstant(factor);
             }
-            //calculate scale matrix
-            scaleMatrix(S, scaleX, scaleY, scaleZ);
+
+            if (isVol)
+                scale3DMatrix(scaleV, S);
+            else
+            {
+                dMij(S, 0, 0) = XX(scaleV);
+                dMij(S, 1, 1) = YY(scaleV);
+            }
         }
 
         if (checkParam("--rotate"))
         {
-            //In any case read following 3 values
-            Matrix1D<double> xyz;
-            XX(xyz) = getDoubleParam("--rotate", 1); //rot
-            YY(xyz) = getDoubleParam("--rotate", 2); //tilt
-            ZZ(xyz) = getDoubleParam("--rotate", 3);//psi
-
-            if (String(getParam("--rotate")) == "euler")
+            if (STR_EQUAL(getParam("--rotate"), "ang"))
             {
-                Euler_angles2matrix(XX(xyz), YY(xyz), ZZ(xyz), R, true);
-            }
-            else if (String(getParam("--rotate")) == "alignZ")
-            {
-                alignWithZ(xyz, R);
+                if (isVol)
+                    REPORT_ERROR(ERR_PARAM_INCORRECT, "The selected rotation option is only valid for images");
+                rotation2DMatrix(getDoubleParam("--rotate", 1), R, true);
             }
             else
             {
-                double ang = getDoubleParam("--rotate", 1);
-                XX(xyz) = getDoubleParam("--rotate", 2); //rot
-                YY(xyz) = getDoubleParam("--rotate", 3); //tilt
-                ZZ(xyz) = getDoubleParam("--rotate", 4);//psi
-                rotationMatrix(ang, xyz, R);
+                if (!isVol)
+                    REPORT_ERROR(ERR_PARAM_INCORRECT, "The selected rotation option is only valid for volumes");
+
+                //In any case read following 3 values, leave euler angles in xyz
+                Matrix1D<double> xyz(3);
+                XX(xyz) = getDoubleParam("--rotate", 1); //rot
+                YY(xyz) = getDoubleParam("--rotate", 2); //tilt
+                ZZ(xyz) = getDoubleParam("--rotate", 3);//psi
+
+                if (STR_EQUAL(getParam("--rotate"), "euler"))
+                {
+                    Euler_angles2matrix(XX(xyz), YY(xyz), ZZ(xyz), R, true);
+                }
+                else if (STR_EQUAL(getParam("--rotate"), "alignZ"))
+                {
+                    alignWithZ(xyz, R);
+                }
+                else
+                {
+                    double ang = getDoubleParam("--rotate", 1);
+                    XX(xyz) = getDoubleParam("--rotate", 2); //rot
+                    YY(xyz) = getDoubleParam("--rotate", 3); //tilt
+                    ZZ(xyz) = getDoubleParam("--rotate", 4);//psi
+                    rotation3DMatrix(ang, xyz, R, true);
+                }
             }
         }
+
+        A = S * T * R;
     }
 
     void processImage(const FileName &fnImg, const FileName &fnImgOut, size_t objId)
     {
-        Image<double> img, imgOut;
         img.read(fnImg); //Doesn't apply geo to work with original images
         img().setXmippOrigin();
+        B.initIdentity(dim + 1);
+
+        if (!isVol)
+        {
+            mdIn.getRow(input, objId);//Get geometric transformation for image
+            geo2TransformationMatrix(input, B);
+        }
         //MultidimArray<double> out;
+        std::cerr << "A: " << std::endl << A;
+        std::cerr << "B: " << std::endl << B;
+        T = A * B;
+        if (checkParam("--write_matrix"))
+            std::cout << T << std::endl;
 
-        double angRot = 0., angTilt = 0., angPsi = 0.;
-
-        //try to values from metadata
-        Matrix1D<double> xyz(3);
-        Matrix2D<double> A(4, 4);
-
-        //------Scale-----------------------
-        if (checkParam("--scale"))
+        if (applyTransform)
         {
-            if (doResize)
-                imgOut().resizeNoCopy(zdim, ydim, xdim);
-
-            A = S;
-            std::cerr << "scaling...matrix: " << S << std::endl;
-        }
-
-        //-------Shift-------------------
-        mdIn.getValue(MDL_SHIFTX, XX(xyz), objId);
-        mdIn.getValue(MDL_SHIFTY, YY(xyz), objId);
-        mdIn.getValue(MDL_SHIFTZ, ZZ(xyz), objId);
-
-        if (checkParam("--shift"))
-        {
-            std::cerr << "shifting..." << std::endl;
-            double x = getDoubleParam("--shift", 0);
-            XX(xyz) += x;
-            YY(xyz) += (String(getParam("--shift", 1)) == "x") ? x : getDoubleParam("--shift", 1);
-            ZZ(xyz) += (String(getParam("--shift", 2)) == "x") ? x : getDoubleParam("--shift", 2);
-        }
-        translationMatrix(T, XX(xyz), YY(xyz), ZZ(xyz));
-
-        //------Rotate----------------------
-        mdIn.getValue(MDL_ANGLEROT, XX(xyz), objId);
-        mdIn.getValue(MDL_ANGLETILT, YY(xyz), objId);
-        mdIn.getValue(MDL_ANGLEPSI, ZZ(xyz), objId);
-
-        Matrix2D<double> R2(R);
-        Euler_angles2matrix(XX(xyz), YY(xyz), ZZ(xyz), R2, true);
-
-        if (checkParam("--rotate"))
-        {
-            std::cerr << "rotating..." << std::endl;
-            A = R2 * R;
-        }
-
-        if (applyGeo)
-        {
-            //A = S * R2 * R * T;
-            applyGeometry(splineDegree, imgOut(), img(), A, inverse, wrap);
+            applyGeometry(splineDegree, imgOut(), img(), T, !inverse, wrap);
         }
         else
         {
-            mdIn.setValue(MDL_IMAGE, fnImgOut, objId);
-            mdIn.setValue(MDL_SHIFTX, XX(xyz), objId);
-            mdIn.setValue(MDL_SHIFTY, YY(xyz), objId);
-            mdIn.setValue(MDL_SHIFTZ, ZZ(xyz), objId);
+            if (inverse)
+                T = T.inv();
+            transformationMatrix2Geo(T, input);
+            mdOut.setRow(input, newId);
+            imgOut() = img();
         }
         imgOut.write(fnImgOut);
-    }
-
-    void finishProcessing()
-    {
-        // To keep the mdIn info we overwrite the mdOut done by XmippMetadataProgram
-        if (!applyGeo)
-            mdOut = mdIn;
-        XmippMetadataProgram::finishProcessing();
     }
 
 public:
@@ -258,5 +270,7 @@ int main(int argc, char **argv)
     ProgTransformGeometry program;
     program.read(argc, argv);
     program.tryRun();
+
+    return 0;
 } //main
 
