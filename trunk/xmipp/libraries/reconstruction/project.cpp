@@ -70,6 +70,11 @@ void ProgProject::defineParams()
     addExampleLine("xmipp_phantom_project -i volume.vol -o image.xmp --angles 0 90 0");
     addExampleLine("Generating a side view from X",false);
     addExampleLine("xmipp_phantom_project -i volume.vol -o image.xmp --angles 90 90 0");
+    addExampleLine("In the following links you can find some examples of projection parameter files",false);
+    addExampleLine(" ",false);
+    addExampleLine("http://newxmipp.svn.sourceforge.net/viewvc/newxmipp/trunk/testXmipp/input/uniformProjection.param",false);
+    addExampleLine(" ",false);
+    addExampleLine("http://newxmipp.svn.sourceforge.net/viewvc/newxmipp/trunk/testXmipp/input/clusterProjection.param",false);
     addParamsLine("   -i <volume_file>                           : Voxel volume, PDB or description file");
     addParamsLine("   --oroot <rootname>                    : Output rootname (use --params)");
     addParamsLine("or -o <image_file>                        : Output image (use --angles)");
