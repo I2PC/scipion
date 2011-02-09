@@ -66,7 +66,7 @@ public:
       * Image I(64,64,1,1,"image.spi");
       * @endcode
       */
-    Image(int Xdim, int Ydim, int Zdim, int Ndim, const FileName _filename)
+    Image(int Xdim, int Ydim, int Zdim, int Ndim, const FileName &_filename)
     {
         init();
         mmapOnWrite = true;
@@ -647,27 +647,6 @@ public:
         }
         //               int * iTemp = (int*) map;
         //                ptrDest = reinterpret_cast<T*> (iTemp);
-    }
-
-    /** Create a mapped image file
-        *
-        * An image file, which name and format are given by filename,
-        * is created with the given size. Then the image is mapped to this file.
-        *
-        * @code
-        * Image I(64,64,1,1,"image.spi");
-        * @endcode
-        */
-    void newMappedFile(int Xdim, int Ydim, int Zdim, int Ndim, const FileName _filename)
-    {
-        clear();
-        mmapOnWrite = true;
-        data.setDimensions(Xdim, Ydim, Zdim, Ndim);
-        MD.resize(Ndim);
-        filename = _filename;
-        ImageFHandler *hFile = openFile(_filename, WRITE_OVERWRITE);
-        _write(_filename, hFile, -1, false, WRITE_OVERWRITE);
-        closeFile(hFile);
     }
 
     /* Read an image with a lower resolution as a preview image.
@@ -1330,6 +1309,7 @@ private:
         if ( (map = (char*) mmap(0,mappedSize, PROT_READ | PROT_WRITE, MAP_SHARED, mFd, 0)) == (void*) -1 )
             REPORT_ERROR(ERR_MMAP_NOTADDR,"Image Class::ReadData: mmap of image file failed.");
         data.data = reinterpret_cast<T*> (map+mappedOffset);
+        data.nzyxdimAlloc = XSIZE(data)*YSIZE(data)*ZSIZE(data)*NSIZE(data);
     }
 
     /* Munmap the image file.

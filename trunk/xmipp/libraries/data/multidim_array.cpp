@@ -72,3 +72,9 @@ void MultidimArray< std::complex< double > >::rangeAdjust(std::complex< double >
     REPORT_ERROR(ERR_NOT_IMPLEMENTED,"MultidimArray::rangeAdjust not implemented for complex.");
 }
 
+template<>
+double MultidimArray< std::complex< double > >::computeAvg() const
+{
+    REPORT_ERROR(ERR_NOT_IMPLEMENTED,"MultidimArray::computeAvg not implemented for complex.");
+}
+

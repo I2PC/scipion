@@ -589,26 +589,7 @@ void coreArrayByArray(const MultidimArray<T>& op1, const MultidimArray<T>& op2,
 
 class MultidimArrayBase
 {
-
 public:
-
-    virtual void getDimensions(int& Xdim, int& Ydim, int& Zdim, unsigned long int &Ndim) const =0;
-    virtual void resize(unsigned long int Ndim, int Zdim, int Ydim, int Xdim, bool copy=true)=0;
-    virtual void setXmippOrigin()=0;
-};
-
-
-template<typename T>
-class MultidimArray: public MultidimArrayBase
-{
-public:
-    /* The array itself.
-       The array is always a 3D array (Z,Y,X). For vectors the size of the array
-       is (1,1,X) and for matrices (1,Y,X). The pixel (i,j) (y,x) is at the
-       position data[i*Xdim+j] or data[y*Xdim+x]
-    */
-    T* data;
-
     // Destroy data
     bool destroyData;
 
@@ -648,6 +629,24 @@ public:
     FILE*      mFd;
     // Number of elements in NZYX in allocated memory
     size_t nzyxdimAlloc;
+public:
+
+    virtual void getDimensions(int& Xdim, int& Ydim, int& Zdim, unsigned long int &Ndim) const =0;
+    virtual void resize(unsigned long int Ndim, int Zdim, int Ydim, int Xdim, bool copy=true)=0;
+    virtual void setXmippOrigin()=0;
+    virtual double computeAvg() const=0;
+};
+
+template<typename T>
+class MultidimArray: public MultidimArrayBase
+{
+public:
+    /* The array itself.
+       The array is always a 3D array (Z,Y,X). For vectors the size of the array
+       is (1,1,X) and for matrices (1,Y,X). The pixel (i,j) (y,x) is at the
+       position data[i*Xdim+j] or data[y*Xdim+x]
+    */
+    T* data;
 
 public:
     /// @name Constructors
@@ -1305,7 +1304,7 @@ public:
 
     void window(MultidimArray<T> &result, int n0,int z0, int y0, int x0,
                 int nF,int zF, int yF, int xF,
-                T init_value = 0, unsigned long n = 0)
+                T init_value = 0, unsigned long n = 0) const
     {
         if (this->ndim >1)
             REPORT_ERROR(ERR_MULTIDIM_DIM,"stack windowing not implemented");
@@ -1355,7 +1354,7 @@ public:
      * @endcode
      */
     void window(MultidimArray<T> &result, int z0, int y0, int x0, int zF, int yF, int xF,
-                T init_value = 0, unsigned long n = 0)
+                T init_value = 0, unsigned long n = 0) const
     {
         result.resizeNoCopy(zF - z0 + 1, yF - y0 + 1, xF - x0 + 1);
         STARTINGZ(result) = z0;
@@ -1400,7 +1399,7 @@ public:
      * @endcode
      */
     void window(MultidimArray<T> &result, int y0, int x0, int yF, int xF,
-                T init_value = 0, unsigned long n = 0)
+                T init_value = 0, unsigned long n = 0) const
     {
         result.resizeNoCopy(yF - y0 + 1, xF - x0 + 1);
         STARTINGY(result) = y0;
@@ -1437,7 +1436,7 @@ public:
      * v1.selfWindow(-3, 1); // v1=[0 -2 -1 0 1]; v1.startingX() == -3
      * @endcode
      */
-    void window(MultidimArray<T> &result, int x0, int xF, T init_value = 0)
+    void window(MultidimArray<T> &result, int x0, int xF, T init_value = 0) const
     {
         result.resizeNoCopy(xF - x0 + 1);
         STARTINGX(result) = x0;
@@ -4797,5 +4796,7 @@ template<>
 void MultidimArray< std::complex< double > >::computeDoubleMinMaxRange(double& minval, double& maxval, size_t pos, size_t size) const;
 template<>
 void MultidimArray< std::complex< double > >::rangeAdjust(std::complex< double > minF, std::complex< double > maxF);
+template<>
+double MultidimArray< std::complex< double > >::computeAvg() const;
 //@}
 #endif

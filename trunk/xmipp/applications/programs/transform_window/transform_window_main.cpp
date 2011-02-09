@@ -25,7 +25,7 @@
 
 #include <data/progs.h>
 #include <data/args.h>
-#include <data/image.h>
+#include <data/image_generic.h>
 
 class ProgWindow: public XmippMetadataProgram
 {
@@ -167,8 +167,8 @@ public:
 
     void show()
     {
-    	if (verbose==0)
-    		return;
+        if (verbose==0)
+            return;
         XmippMetadataProgram::show();
         switch (mode)
         {
@@ -188,16 +188,23 @@ public:
         }
     }
 
-    template <typename T>
-    void processImage(Image<T> &Iin, const FileName &fnImg, const FileName &fnImgOut)
+
+    void processImage(const FileName &fnImg, const FileName &fnImgOut, size_t objId)
     {
-        Iin.readApplyGeo(fnImg);
+        ImageGeneric Iin;
+        bool createTempFile=fnImg==fnImgOut;
+        if (single_image)
+            Iin.read(fnImg,true,-1,true);
+        else
+            Iin.readApplyGeo(fnImg);
+
         Iin().setXmippOrigin();
         double init_value(padValue);
         if (padType=="avg")
             init_value=Iin().computeAvg();
         else if (padType=="corner")
-            init_value=DIRECT_MULTIDIM_ELEM(Iin(), 0);
+            init_value=Iin()(0,0,0,0);
+        ImageGeneric result(Iin.getDatatype());
         if (mode==CROPMODE)
         {
             int xl=cropX/2;
@@ -206,53 +213,48 @@ public:
             int yr=cropY-yl;
             int zl=cropZ/2;
             int zr=cropZ-zl;
-            if (ZSIZE(Iin())==1)
+            if (ZSIZE(Iin()())==1)
             {
                 zl=zr=0;
             }
             //call to a generic 4D function;
-            Iin().selfWindow(0,  STARTINGZ(Iin())+zl, STARTINGY(Iin())+yl,  STARTINGX(Iin())+xl,
-                         0, FINISHINGZ(Iin())-zr,FINISHINGY(Iin())-yr, FINISHINGX(Iin())-xr);
+            result.newMappedFile(FINISHINGZ(Iin()())-zr-(STARTINGZ(Iin()())+zl)+1,
+                                 FINISHINGY(Iin()())-yr-(STARTINGY(Iin()())+yl)+1,
+                                 FINISHINGX(Iin()())-xr-(STARTINGX(Iin()())+xl)+1,
+                                 1,
+                                 fnImgOut,createTempFile);
+            Iin().window(result(),
+                         0,  STARTINGZ(Iin()())+zl, STARTINGY(Iin()())+yl,  STARTINGX(Iin()())+xl,
+                         0, FINISHINGZ(Iin()())-zr,FINISHINGY(Iin()())-yr, FINISHINGX(Iin()())-xr, 0, 0.);
         }
         else
             if (!physical_coords)
-                Iin().selfWindow(0, z0, y0, x0, 0, zF, yF,xF, init_value);
+            {
+                result.newMappedFile(xF-x0+1,
+                                     yF-y0+1,
+                                     zF-z0+1,
+                                     1,
+                                     fnImgOut,
+                                     createTempFile);
+                Iin().window(result(),0, z0, y0, x0, 0, zF, yF,xF, init_value);
+            }
             else
-                Iin().selfWindow(0,STARTINGZ(Iin()) + z0,
-                             STARTINGY(Iin()) + y0,
-                             STARTINGX(Iin()) + x0,
-                             0,STARTINGZ(Iin()) + zF,
-                             STARTINGY(Iin()) + yF, STARTINGX(Iin()) + xF,
+            {
+                result.newMappedFile(zF-z0+1,
+                                     yF-y0+1,
+                                     xF-x0+1,
+                                     1,
+                                     fnImgOut,
+                                     createTempFile);
+                Iin().window(result(),0,STARTINGZ(Iin()()) + z0,
+                             STARTINGY(Iin()()) + y0,
+                             STARTINGX(Iin()()) + x0,
+                             0,STARTINGZ(Iin()()) + zF,
+                             STARTINGY(Iin()()) + yF, STARTINGX(Iin()()) + xF,
                              init_value);
-        Iin.write(fnImgOut);
-    }
-
-    void processImage(const FileName &fnImg, const FileName &fnImgOut, size_t objId)
-    {
-        Image<double> img;
-        img.read(fnImg,false);
-
-        switch (img.dataType())
-        {
-        case Unknown_Type:
-            REPORT_ERROR(ERR_IMG_UNKNOWN,"");
-            break;
-        case UChar:
-            processImage(IUChar,fnImg,fnImgOut);
-            break;
-        case SChar:
-            processImage(IChar,fnImg,fnImgOut);
-            break;
-        case UShort:
-            processImage(IUShort,fnImg,fnImgOut);
-            break;
-        case Short:
-            processImage(IShort,fnImg,fnImgOut);
-            break;
-        default:
-            processImage(IFloat,fnImg,fnImgOut);
-            break;
-        }
+            }
+        Iin.clear(); // Close the input file
+        result.write(fnImgOut);
     }
 };
 

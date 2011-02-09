@@ -92,8 +92,7 @@ public:
      * Destructor.
      */
     ~MultidimArrayGeneric()
-    {
-    }
+    {}
 
     /**
      * Link the internal array base to a specific multidimarray object.
@@ -108,6 +107,20 @@ public:
         im->resize(Ndim,Zdim,Ydim,Xdim,copy);
     }
 
+    /** Window */
+    void window(MultidimArrayGeneric &result, int n0, int z0, int y0, int x0,
+                int nF,int zF, int yF, int xF,
+                double init_value = 0, unsigned long n = 0) const
+    {
+        //        ((MultidimArray<double>*)im)->window(*((MultidimArray<double>*)(result.im)), n0,z0,y0,x0,nF,zF,yF,xF,(double)init_value,n);
+
+#define WINDOW(type) ((MultidimArray<type>*)im)->window(*((MultidimArray<type>*)(result.im)), n0,z0,y0,x0,nF,zF,yF,xF,(type)init_value,n)\
+
+             SWITCHDATATYPE(datatype,WINDOW);
+        #undef WINDOW
+
+    }
+
     /**
      *  Copy a specific slice of the linked array.
      */
@@ -116,9 +129,10 @@ public:
     {
 #define GETSLICE(type) ((MultidimArray<type>*) im)->getSlice(k, M, axis, n)
 
-      SWITCHDATATYPE(datatype,GETSLICE);
+        SWITCHDATATYPE(datatype,GETSLICE);
 
 #undef GETSLICE
+
     }
 
     /**
@@ -128,9 +142,10 @@ public:
     {
 #define GETSLICE(type) getSlice(k, *(MultidimArray<type>*)M->im, axis, n)
 
-      SWITCHDATATYPE(M->datatype,GETSLICE);
+        SWITCHDATATYPE(M->datatype,GETSLICE);
 
 #undef GETSLICE
+
     }
 
     /**
@@ -141,9 +156,10 @@ public:
     {
 #define SETSLICE(type) ((MultidimArray<type>*) im)->setSlice(k, v, n)
 
-      SWITCHDATATYPE(datatype,SETSLICE);
+        SWITCHDATATYPE(datatype,SETSLICE);
 
 #undef SETSLICE
+
     }
 
     /**
@@ -152,10 +168,9 @@ public:
     void setSlice(int k, const MultidimArrayGeneric* v, unsigned long n = 0)
     {
 #define SETSLICE(type) setSlice(k,*(MultidimArray<type>*) v->im, n);
-
-      SWITCHDATATYPE(v->datatype,SETSLICE);
-
+        SWITCHDATATYPE(v->datatype,SETSLICE);
 #undef SETSLICE
+
     }
 
     /**
@@ -175,9 +190,36 @@ public:
     /**
       * Get the dimensions of the linked array.
       */
- inline   void setXmippOrigin()
+    inline   void setXmippOrigin()
     {
         im->setXmippOrigin();
+    }
+
+    /** Compute average */
+    double computeAvg() const
+    {
+        return im->computeAvg();
+    }
+
+    /** Get constant access */
+    double operator()(unsigned long n, int k, int i, int j) const
+    {
+#define GETVALUE(type) return NZYX_ELEM(*(MultidimArray<type>*)im,n,k,i,j)
+        SWITCHDATATYPE(datatype,GETVALUE);
+#undef GETVALUE
+
+    }
+
+    /** Get array */
+    MultidimArrayBase & operator()()
+    {
+        return *im;
+    }
+
+    /** Get array */
+    const MultidimArrayBase & operator()() const
+    {
+        return *im;
     }
 }
 ;

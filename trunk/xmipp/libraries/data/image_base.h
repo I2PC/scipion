@@ -192,6 +192,7 @@ public:
 
 protected:
     FileName            filename;    // File name
+    FileName            tempFilename; // Temporary filename
     FileName            dataFName;   // Data File name without flags
     FILE*                fimg;        // Image File handler
     FILE*                fhed;        // Image File header handler
@@ -273,12 +274,9 @@ public:
      *
      * An image file, which name and format are given by filename,
      * is created with the given size. Then the image is mapped to this file.
-     *
-     * @code
-     * Image I(64,64,1,1,"image.spi");
-     * @endcode
      */
-    virtual void newMappedFile(int Xdim, int Ydim, int Zdim, int Ndim, const FileName _filename)=0;
+    void newMappedFile(int Xdim, int Ydim, int Zdim, int Ndim, const FileName &_filename,
+    				   bool createTempFile=false);
 
     /** General read function
      * you can read a single image from a single image file

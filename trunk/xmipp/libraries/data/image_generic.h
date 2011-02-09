@@ -106,6 +106,13 @@ public:
         setImageBase();
     }
 
+    /** Get the data type
+     */
+    DataType getDatatype()const
+    {
+    	return datatype;
+    }
+
     /** Read image from file.
      */
     int read(const FileName &name, bool readdata=true, int select_img = -1,
@@ -137,19 +144,20 @@ public:
 
     /* Create an empty image file of format given by filename and map it to memory.
      */
-    inline  void newMappedFile(int Xdim, int Ydim, int Zdim, int Ndim, FileName _filename)
+    inline  void newMappedFile(int Xdim, int Ydim, int Zdim, int Ndim, FileName _filename,
+    						bool createTempFile=false)
     {
-        image->newMappedFile(Xdim,Ydim,Zdim,Ndim,_filename);
+        image->newMappedFile(Xdim,Ydim,Zdim,Ndim,_filename,createTempFile);
     }
 
     /* MultidimArrayGeneric data access
      */
-    inline MultidimArrayGeneric operator()()
+    inline MultidimArrayGeneric& operator()()
     {
         return *data;
     }
 
-    inline const MultidimArrayGeneric operator()() const
+    inline const MultidimArrayGeneric& operator()() const
     {
         return *data;
     }

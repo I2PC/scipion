@@ -63,6 +63,29 @@ int ImageBase::read(const FileName &name, bool readdata, int select_img, bool ma
     return err;
 }
 
+/** New mapped file */
+void ImageBase::newMappedFile(int Xdim, int Ydim, int Zdim, int Ndim, const FileName &_filename,
+                              bool createTempFile)
+{
+    clear();
+    mmapOnWrite = true;
+    setDimensions(Xdim, Ydim, Zdim, Ndim);
+    MD.resize(Ndim);
+    filename = _filename;
+    FileName fnToOpen;
+    if (createTempFile)
+    {
+        tempFilename.initUniqueName("temp_XXXXXX");
+        fnToOpen = tempFilename + ":" + _filename.getExtension();
+    }
+    else
+    	fnToOpen=_filename;
+
+    ImageFHandler *hFile = openFile(fnToOpen, WRITE_OVERWRITE);
+    _write(fnToOpen, hFile, -1, false, WRITE_OVERWRITE);
+    closeFile(hFile);
+}
+
 /** General read function
  */
 int ImageBase::readApplyGeo(const FileName &name, bool readdata, int select_img,
@@ -112,6 +135,11 @@ void ImageBase::write(const FileName &name, int select_img, bool isStack,
     if (mmapOnWrite && mappedSize > 0)
     {
         munmapFile();
+        if (tempFilename!="")
+        {
+            if (std::rename(tempFilename.c_str(),name.c_str())!=0)
+                REPORT_ERROR(ERR_IO, "Error renaming the file.");
+        }
         return;
     }
 
