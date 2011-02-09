@@ -196,8 +196,10 @@ public:
             Iin.read(fnImg,true,-1,true);
         else
             Iin.readApplyGeo(fnImg);
-
         Iin().setXmippOrigin();
+        if (ZSIZE(Iin()())==1)
+            zF=z0=0;
+
         double init_value(padValue);
         if (padType=="avg")
             init_value=Iin().computeAvg();
