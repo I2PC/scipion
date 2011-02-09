@@ -60,6 +60,10 @@
  * be the same. Actually set to 1e-6
  */
 #define XMIPP_EQUAL_ACCURACY 1e-6
+/** Compare if two real values are equals
+ */
+#define XMIPP_EQUAL_REAL(x, y) ((ABS(x) - ABS(y)) < XMIPP_EQUAL_ACCURACY)
+#define XMIPP_EQUAL_ZERO(x) (ABS(x) < XMIPP_EQUAL_ACCURACY)
 //@}
 
 /// @name Numerical functions
