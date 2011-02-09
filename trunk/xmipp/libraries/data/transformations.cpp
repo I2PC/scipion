@@ -30,12 +30,12 @@ void geo2TransformationMatrix(const MDRow &imageGeo, Matrix2D<double> &A,
                                        bool only_apply_shifts)
 {
     // This has only been implemented for 2D images...
-    double psi = 0, xoff = 0., yoff = 0., scale = 1.;
+    double psi = 0, shiftX = 0., shiftY = 0., scale = 1.;
     bool flip = false;
 
     imageGeo.getValue(MDL_ANGLEPSI, psi);
-    imageGeo.getValue(MDL_SHIFTX, xoff);
-    imageGeo.getValue(MDL_SHIFTY, yoff);
+    imageGeo.getValue(MDL_SHIFTX, shiftX);
+    imageGeo.getValue(MDL_SHIFTY, shiftY);
     imageGeo.getValue(MDL_SCALE, scale);
     imageGeo.getValue(MDL_FLIP, flip);
 
@@ -45,8 +45,8 @@ void geo2TransformationMatrix(const MDRow &imageGeo, Matrix2D<double> &A,
         A.initIdentity(3);
     else
         rotation2DMatrix(psi, A, true);
-    MAT_ELEM(A, 0, 2) = -xoff;
-    MAT_ELEM(A, 1, 2) = -yoff;
+    MAT_ELEM(A, 0, 2) = shiftX;
+    MAT_ELEM(A, 1, 2) = shiftY;
 
     if (scale != 1.)
     {
@@ -68,8 +68,8 @@ void transformationMatrix2Geo(const Matrix2D<double> &A, MDRow & imageGeo)
     double scale = sqrt(scale2);
     double invScale = 1 / scale;
     double psi = RAD2DEG(atan2(sine * invScale, cosine * invScale));
-    double shiftX = -dMij(A, 0, 2) * invScale;
-    double shiftY = -dMij(A, 1, 2) * invScale;
+    double shiftX = dMij(A, 0, 2) * invScale;
+    double shiftY = dMij(A, 1, 2) * invScale;
     bool flip = ((cosine * dMij(A, 1, 1) - sine * dMij(A, 0, 1) ) < 0);
 
     imageGeo.setValue(MDL_ANGLEPSI, psi);
@@ -102,8 +102,8 @@ void rotation2DMatrix(double ang, Matrix2D< double > &result, bool homogeneous)
         if (MAT_XSIZE(result)!=2 || MAT_YSIZE(result)!=2)
             result.resizeNoCopy(2,2);
     MAT_ELEM(result,0, 0) = cosine;
-    MAT_ELEM(result,0, 1) = -sine;
-    MAT_ELEM(result,1, 0) = sine;
+    MAT_ELEM(result,0, 1) = sine;
+    MAT_ELEM(result,1, 0) = -sine;
     MAT_ELEM(result,1, 1) = cosine;
 }
 
@@ -141,22 +141,22 @@ void rotation3DMatrix(double ang, char axis, Matrix2D< double > &result,
     {
     case 'Z':
         MAT_ELEM(result,0, 0) = cosine;
-        MAT_ELEM(result,0, 1) = -sine;
-        MAT_ELEM(result,1, 0) = sine;
+        MAT_ELEM(result,0, 1) = sine;
+        MAT_ELEM(result,1, 0) = -sine;
         MAT_ELEM(result,1, 1) = cosine;
         MAT_ELEM(result,2, 2) = 1;
         break;
     case 'Y':
         MAT_ELEM(result,0, 0) = cosine;
-        MAT_ELEM(result,0, 2) = -sine;
-        MAT_ELEM(result,2, 0) = sine;
+        MAT_ELEM(result,0, 2) = sine;
+        MAT_ELEM(result,2, 0) = -sine;
         MAT_ELEM(result,2, 2) = cosine;
         MAT_ELEM(result,1, 1) = 1;
         break;
     case 'X':
         MAT_ELEM(result,1, 1) = cosine;
-        MAT_ELEM(result,1, 2) = -sine;
-        MAT_ELEM(result,2, 1) = sine;
+        MAT_ELEM(result,1, 2) = sine;
+        MAT_ELEM(result,2, 1) = -sine;
         MAT_ELEM(result,2, 2) = cosine;
         MAT_ELEM(result,0, 0) = 1;
         break;

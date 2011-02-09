@@ -328,7 +328,7 @@ void VQProjection::fitBasic(MultidimArray<double> &I,
 
         double bestRot = best_rotation(polarFourierP,polarFourierI,
                                        local_transformer);
-        rotation2DMatrix(-bestRot,R);
+        rotation2DMatrix(bestRot, R);
         SPEED_UP_temps;
         M3x3_BY_M3x3(ASR,R,ASR);
         applyGeometry(LINEAR,IauxSR,I,ASR,IS_NOT_INV,WRAP);
@@ -344,7 +344,7 @@ void VQProjection::fitBasic(MultidimArray<double> &I,
             1);
         bestRot = best_rotation(polarFourierP,polarFourierI,
                                 local_transformer);
-        rotation2DMatrix(-bestRot,R);
+        rotation2DMatrix(bestRot, R);
         M3x3_BY_M3x3(ARS,R,ARS);
         applyGeometry(LINEAR,IauxRS,I,ARS,IS_NOT_INV,WRAP);
 

@@ -1048,7 +1048,7 @@ void alignImages(const MultidimArray< double >& Iref, MultidimArray< double >& I
 
         double bestRot = best_rotation(polarFourierIref,polarFourierI,
                                        local_transformer);
-        rotation2DMatrix(-bestRot,R);
+        rotation2DMatrix(bestRot,R);
         ASR=R*ASR;
         applyGeometry(LINEAR, IauxSR, I, ASR, IS_NOT_INV, WRAP);
 
@@ -1063,7 +1063,7 @@ void alignImages(const MultidimArray< double >& Iref, MultidimArray< double >& I
             1);
         bestRot = best_rotation(polarFourierIref,polarFourierI,
                                 local_transformer);
-        rotation2DMatrix(-bestRot,R);
+        rotation2DMatrix(bestRot,R);
         ARS=R*ARS;
         applyGeometry(LINEAR, IauxRS, I, ARS, IS_NOT_INV, WRAP);
 
@@ -2089,7 +2089,7 @@ void centerImage(MultidimArray<double> &I, int Niter, bool limitShift)
             bestRot=bestRot-180;
 
         Matrix2D<double> R;
-        rotation2DMatrix(-bestRot/2,R);
+        rotation2DMatrix(bestRot/2,R);
         A=R*A;
         Iaux.initZeros();
         applyGeometry(LINEAR, Iaux, I, A, IS_NOT_INV, WRAP);
@@ -2136,7 +2136,7 @@ void centerImage(MultidimArray<double> &I, int Niter, bool limitShift)
             yF--;
         if ((xF-x0)>(yF-y0))
         {
-            rotation2DMatrix(90,R);
+            rotation2DMatrix(-90,R);
             A=R*A;
         }
         applyGeometry(LINEAR, Iaux, I, A, IS_NOT_INV, WRAP);
