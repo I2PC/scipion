@@ -249,6 +249,7 @@ void FileName::initUniqueName(const char *templateStr)
     int fd;
     char filename[L_tmpnam];
     strcpy(filename, templateStr);
+    filename[L_tmpnam-1]=0;
 
     if ((fd = mkstemp(filename)) == -1)
     {
