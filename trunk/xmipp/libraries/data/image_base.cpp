@@ -103,9 +103,9 @@ int ImageBase::readApplyGeo(const FileName &name, bool readdata, int select_img,
 int ImageBase::readApplyGeo(const FileName &name, const MetaData &md, size_t objId, bool readdata,
                             int select_img, bool only_apply_shifts)
 {
-    ImageFHandler* hFile = openFile(name);
     MDRow row;
     md.getRow(row, objId);
+    ImageFHandler* hFile = openFile(name);
     int err = _read(name, hFile, readdata, select_img, true, only_apply_shifts, &row, false);
     closeFile(hFile);
 

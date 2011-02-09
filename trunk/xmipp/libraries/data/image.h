@@ -998,7 +998,7 @@ private:
             {
                 MultidimArray<T> tmp=MULTIDIM_ARRAY(*this);
                 applyGeometry(BSPLINE3, MULTIDIM_ARRAY(*this), tmp,
-                              A, IS_INV, WRAP);
+                              A, IS_NOT_INV, WRAP);
             }
         }
 
