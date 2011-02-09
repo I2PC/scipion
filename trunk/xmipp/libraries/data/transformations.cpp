@@ -27,7 +27,7 @@
 #include "transformations.h"
 
 void geo2TransformationMatrix(const MDRow &imageGeo, Matrix2D<double> &A,
-                                       bool only_apply_shifts)
+                              bool only_apply_shifts)
 {
     // This has only been implemented for 2D images...
     double psi = 0, shiftX = 0., shiftY = 0., scale = 1.;
@@ -61,22 +61,27 @@ void geo2TransformationMatrix(const MDRow &imageGeo, Matrix2D<double> &A,
     }
 }
 
+#define ADD_IF_EXIST_NONZERO(label, value) if (imageGeo.containsLabel(label) || !XMIPP_EQUAL_ZERO(value))\
+                                                  imageGeo.setValue(label, value);
+
 void transformationMatrix2Geo(const Matrix2D<double> &A, MDRow & imageGeo)
 {
-    double cosine = dMij(A, 0, 0), sine = dMij(A, 1, 0);
+    double cosine = dMij(A, 0, 0), sine = dMij(A, 0, 1);
     double scale2 = cosine * cosine +  sine * sine;
     double scale = sqrt(scale2);
     double invScale = 1 / scale;
     double psi = RAD2DEG(atan2(sine * invScale, cosine * invScale));
     double shiftX = dMij(A, 0, 2) * invScale;
     double shiftY = dMij(A, 1, 2) * invScale;
-    bool flip = ((cosine * dMij(A, 1, 1) - sine * dMij(A, 0, 1) ) < 0);
+    bool flip = ((cosine * dMij(A, 1, 1) - sine * dMij(A, 1, 0) ) < 0);
 
-    imageGeo.setValue(MDL_ANGLEPSI, psi);
-    imageGeo.setValue(MDL_SHIFTX, shiftX);
-    imageGeo.setValue(MDL_SHIFTY, shiftX);
-    imageGeo.setValue(MDL_SCALE, scale);
-    imageGeo.setValue(MDL_FLIP, flip);
+    ADD_IF_EXIST_NONZERO(MDL_ANGLEPSI, psi);
+    ADD_IF_EXIST_NONZERO(MDL_SHIFTX, shiftX);
+    ADD_IF_EXIST_NONZERO(MDL_SHIFTY, shiftY);
+    if (imageGeo.containsLabel(MDL_SCALE) || !XMIPP_EQUAL_REAL(scale, 1.))
+      imageGeo.setValue(MDL_SCALE, scale);
+    if (imageGeo.containsLabel(MDL_FLIP) || flip)
+        imageGeo.setValue(MDL_FLIP, flip);
 }
 
 /* Rotation 2D ------------------------------------------------------------- */
