@@ -1502,7 +1502,7 @@ void ProgMLTomo::reScaleVolume(MultidimArray<double> &Min, bool down_scale)
     CenterFFT(Fin,true);
     Fin.setXmippOrigin();
     Fin.selfWindow(STARTINGZ(Mout),STARTINGY(Mout),STARTINGX(Mout),
-               FINISHINGZ(Mout),FINISHINGY(Mout), FINISHINGX(Mout),0.);
+               FINISHINGZ(Mout),FINISHINGY(Mout), FINISHINGX(Mout));
     CenterFFT(Fin,false);
     local_transformer_out.setFromCompleteFourier(Fin);
     local_transformer_out.inverseFourierTransform();
