@@ -108,17 +108,23 @@ public:
     }
 
     /** Window */
-    void window(MultidimArrayGeneric &result, int n0, int z0, int y0, int x0,
-                int nF,int zF, int yF, int xF,
-                double init_value = 0, unsigned long n = 0) const
+    void window(MultidimArrayGeneric &result, int z0, int y0, int x0,
+                int zF, int yF, int xF,
+                double init_value = 0.) const
     {
-        //        ((MultidimArray<double>*)im)->window(*((MultidimArray<double>*)(result.im)), n0,z0,y0,x0,nF,zF,yF,xF,(double)init_value,n);
+#define WINDOW(type) _window(*((MultidimArray<type>*)(result.im)), z0,y0,x0,zF,yF,xF,init_value)
+             SWITCHDATATYPE(result.datatype,WINDOW);
+#undef WINDOW
+    }
 
-#define WINDOW(type) ((MultidimArray<type>*)im)->window(*((MultidimArray<type>*)(result.im)), n0,z0,y0,x0,nF,zF,yF,xF,(type)init_value,n)\
-
+    template <class T>
+    void _window(MultidimArray<T> &result, int z0, int y0, int x0,
+                int zF, int yF, int xF,
+                double init_value = 0.) const
+    {
+#define WINDOW(type) ((MultidimArray<type>*)im)->window(result, z0,y0,x0,zF,yF,xF,(T)init_value)
              SWITCHDATATYPE(datatype,WINDOW);
-        #undef WINDOW
-
+#undef WINDOW
     }
 
     /**

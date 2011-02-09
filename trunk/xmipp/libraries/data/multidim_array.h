@@ -630,11 +630,65 @@ public:
     // Number of elements in NZYX in allocated memory
     size_t nzyxdimAlloc;
 public:
-
     virtual void getDimensions(int& Xdim, int& Ydim, int& Zdim, unsigned long int &Ndim) const =0;
     virtual void resize(unsigned long int Ndim, int Zdim, int Ydim, int Xdim, bool copy=true)=0;
     virtual void setXmippOrigin()=0;
     virtual double computeAvg() const=0;
+
+    /** Returns the multidimArray dimension.
+     *
+     * @code
+     * int dim = V.getDim();
+     * @endcode
+     */
+    inline int getDim() const
+    {
+        if (NZYXSIZE(*this) < 1)
+            return 0;
+        if (ZSIZE(*this) > 1)
+            return 3;
+        if (YSIZE(*this) > 1)
+            return 2;
+        else
+            return 1;
+    }
+
+    /** Print shape of multidimensional array.
+     *
+     * This function shows the size, starting and finishing indexes of the
+     * given array. No end of line is printed neither at the beginning nor
+     * the end.
+     *
+     * @code
+     * v.printShape();
+     *
+     * std::ofstream fh;
+     * ...;
+     * v.printShape(fh);
+     * @endcode
+     */
+    void printShape(std::ostream& out = std::cout) const
+    {
+        if (NSIZE(*this) > 1)
+            out << " Number of images = "<<NSIZE(*this);
+
+        int dim = getDim();
+        if (dim == 3)
+            out<< " Size(Z,Y,X): " << ZSIZE(*this) << "x" << YSIZE(*this) << "x" << XSIZE(*this)
+            << " k=[" << STARTINGZ(*this) << ".." << FINISHINGZ(*this) << "]"
+            << " i=[" << STARTINGY(*this) << ".." << FINISHINGY(*this) << "]"
+            << " j=[" << STARTINGX(*this) << ".." << FINISHINGX(*this) << "]";
+        else if (dim == 2)
+            out<< " Size(Y,X): " << YSIZE(*this) << "x" << XSIZE(*this)
+            << " i=[" << STARTINGY(*this) << ".." << FINISHINGY(*this) << "]"
+            << " j=[" << STARTINGX(*this) << ".." << FINISHINGX(*this) << "]";
+        else if (dim == 1)
+            out<< " Size(X): " << XSIZE(*this)
+            << " j=[" << STARTINGX(*this) << ".." << FINISHINGX(*this) << "]";
+        else
+            out << " Empty MultidimArray!";
+        out<<"\n";
+    }
 };
 
 template<typename T>
@@ -1220,24 +1274,6 @@ public:
         return NZYXSIZE(*this);
     }
 
-    /** Returns the multidimArray dimension.
-     *
-     * @code
-     * int dim = V.getDim();
-     * @endcode
-     */
-    inline int getDim() const
-    {
-        if (NZYXSIZE(*this) < 1)
-            return 0;
-        if (ZSIZE(*this) > 1)
-            return 3;
-        if (YSIZE(*this) > 1)
-            return 2;
-        else
-            return 1;
-    }
-
     /** Check dimension.
      *
      * returns true if the dimension is equal to the argument and false otherwise
@@ -1279,7 +1315,7 @@ public:
      */
     void selfWindow(int n0,int z0, int y0, int x0,
                     int nF,int zF, int yF, int xF,
-                    T init_value = 0, unsigned long n = 0)
+                    T init_value = 0)
     {
         if (this->ndim >1)
             REPORT_ERROR(ERR_MULTIDIM_DIM,"stack windowing not implemented");
@@ -1287,13 +1323,13 @@ public:
         {//call 3Dwindow
             selfWindow( z0,  y0,  x0,
                         zF,  yF,  xF,
-                        init_value ,n );
+                        init_value);
         }
         else if (this->ydim >1)
         {//call 2Dwindow
             selfWindow( y0,  x0,
                         yF,  xF,
-                        init_value ,  n );
+                        init_value);
 
         }
         else if (this->xdim >1)
@@ -1302,9 +1338,10 @@ public:
         }
     }
 
-    void window(MultidimArray<T> &result, int n0,int z0, int y0, int x0,
+    template <class T1>
+    void window(MultidimArray<T1> &result, int n0,int z0, int y0, int x0,
                 int nF,int zF, int yF, int xF,
-                T init_value = 0, unsigned long n = 0) const
+                T1 init_value = 0) const
     {
         if (this->ndim >1)
             REPORT_ERROR(ERR_MULTIDIM_DIM,"stack windowing not implemented");
@@ -1312,14 +1349,13 @@ public:
         {//call 3Dwindow
             window(result, z0,  y0,  x0,
                    zF,  yF,  xF,
-                   init_value ,n );
+                   init_value);
         }
         else if (this->ydim >1)
         {//call 2Dwindow
             window(result, y0,  x0,
                    yF,  xF,
-                   init_value ,  n );
-
+                   init_value);
         }
         else if (this->xdim >1)
         {//call 1Dwindow
@@ -1353,8 +1389,9 @@ public:
      * V1.selfWindow(0, 0, -1, 1, 1, 2);
      * @endcode
      */
-    void window(MultidimArray<T> &result, int z0, int y0, int x0, int zF, int yF, int xF,
-                T init_value = 0, unsigned long n = 0) const
+    template <class T1>
+    void window(MultidimArray<T1> &result, int z0, int y0, int x0, int zF, int yF, int xF,
+                T1 init_value = 0) const
     {
         result.resizeNoCopy(zF - z0 + 1, yF - y0 + 1, xF - x0 + 1);
         STARTINGZ(result) = z0;
@@ -1365,17 +1402,17 @@ public:
         if ((k >= STARTINGZ(*this) && k <= FINISHINGZ(*this)) &&
             (i >= STARTINGY(*this) && i <= FINISHINGY(*this)) &&
             (j >= STARTINGX(*this) && j <= FINISHINGX(*this)))
-            A3D_ELEM(result, k, i, j) = NZYX_ELEM(*this, n, k, i, j);
+            A3D_ELEM(result, k, i, j) = A3D_ELEM(*this, k, i, j);
         else
             A3D_ELEM(result, k, i, j) = init_value;
     }
 
     /** 3D Self window */
     void selfWindow(int z0, int y0, int x0, int zF, int yF, int xF,
-                    T init_value = 0, unsigned long n = 0)
+                    T init_value = 0)
     {
         MultidimArray<T> result;
-        window(result,z0,y0,x0,zF,yF,xF,init_value,n);
+        window(result,z0,y0,x0,zF,yF,xF,init_value);
         *this=result;
     }
 
@@ -1398,8 +1435,9 @@ public:
      * m1.selfWindow(-1, -1, 1, 2);
      * @endcode
      */
-    void window(MultidimArray<T> &result, int y0, int x0, int yF, int xF,
-                T init_value = 0, unsigned long n = 0) const
+    template <class T1>
+    void window(MultidimArray<T1> &result, int y0, int x0, int yF, int xF,
+                T1 init_value = 0) const
     {
         result.resizeNoCopy(yF - y0 + 1, xF - x0 + 1);
         STARTINGY(result) = y0;
@@ -1408,17 +1446,17 @@ public:
         FOR_ALL_ELEMENTS_IN_ARRAY2D(result)
         if (j >= STARTINGX(*this) && j <= FINISHINGX(*this) &&
             i >= STARTINGY(*this) && i <= FINISHINGY(*this))
-            A2D_ELEM(result, i, j) = NZYX_ELEM(*this, n, 0, i, j);
+            A2D_ELEM(result, i, j) = A2D_ELEM(*this, i, j);
         else
             A2D_ELEM(result, i, j) = init_value;
     }
 
     /** 2D Self window */
     void selfWindow(int y0, int x0, int yF, int xF,
-                    T init_value = 0, unsigned long n = 0)
+                    T init_value = 0)
     {
         MultidimArray<T> result;
-        window(result,y0,x0,yF,xF,init_value,n);
+        window(result,y0,x0,yF,xF,init_value);
         *this=result;
     }
 
@@ -1436,7 +1474,8 @@ public:
      * v1.selfWindow(-3, 1); // v1=[0 -2 -1 0 1]; v1.startingX() == -3
      * @endcode
      */
-    void window(MultidimArray<T> &result, int x0, int xF, T init_value = 0) const
+    template <class T1>
+    void window(MultidimArray<T1> &result, int x0, int xF, T1 init_value = 0) const
     {
         result.resizeNoCopy(xF - x0 + 1);
         STARTINGX(result) = x0;
@@ -1455,44 +1494,6 @@ public:
         MultidimArray<T> result;
         window(result,x0,xF,init_value);
         *this=result;
-    }
-
-    /** Print shape of multidimensional array.
-     *
-     * This function shows the size, starting and finishing indexes of the
-     * given array. No end of line is printed neither at the beginning nor
-     * the end.
-     *
-     * @code
-     * v.printShape();
-     *
-     * std::ofstream fh;
-     * ...;
-     * v.printShape(fh);
-     * @endcode
-     */
-    void printShape(std::ostream& out = std::cout) const
-    {
-        if (NSIZE(*this) > 1)
-            out << " Number of images = "<<NSIZE(*this);
-
-        int dim = getDim();
-        if (dim == 3)
-            out<< " Size(Z,Y,X): " << ZSIZE(*this) << "x" << YSIZE(*this) << "x" << XSIZE(*this)
-            << " k=[" << STARTINGZ(*this) << ".." << FINISHINGZ(*this) << "]"
-            << " i=[" << STARTINGY(*this) << ".." << FINISHINGY(*this) << "]"
-            << " j=[" << STARTINGX(*this) << ".." << FINISHINGX(*this) << "]";
-        else if (dim == 2)
-            out<< " Size(Y,X): " << YSIZE(*this) << "x" << XSIZE(*this)
-            << " i=[" << STARTINGY(*this) << ".." << FINISHINGY(*this) << "]"
-            << " j=[" << STARTINGX(*this) << ".." << FINISHINGX(*this) << "]";
-        else if (dim == 1)
-            out<< " Size(X): " << XSIZE(*this)
-            << " j=[" << STARTINGX(*this) << ".." << FINISHINGX(*this) << "]";
-        else
-            out << " Empty MultidimArray!";
-        out<<"\n";
-
     }
 
     /** Same shape.
