@@ -188,7 +188,6 @@ public:
         }
     }
 
-
     void processImage(const FileName &fnImg, const FileName &fnImgOut, size_t objId)
     {
         ImageGeneric Iin;
@@ -204,7 +203,11 @@ public:
             init_value=Iin().computeAvg();
         else if (padType=="corner")
             init_value=Iin()(0,0,0,0);
-        ImageGeneric result(Iin.getDatatype());
+        std::string oext=fnImgOut.getExtension();
+        DataType dataType=Iin.getDatatype();
+        if (oext=="spi" || oext=="xmp" || oext=="vol" || oext=="stk")
+            dataType=Float;
+        ImageGeneric result(dataType);
         if (mode==CROPMODE)
         {
             int xl=cropX/2;
@@ -218,14 +221,14 @@ public:
                 zl=zr=0;
             }
             //call to a generic 4D function;
-            result.newMappedFile(FINISHINGZ(Iin()())-zr-(STARTINGZ(Iin()())+zl)+1,
+            result.newMappedFile(FINISHINGX(Iin()())-xr-(STARTINGX(Iin()())+xl)+1,
                                  FINISHINGY(Iin()())-yr-(STARTINGY(Iin()())+yl)+1,
-                                 FINISHINGX(Iin()())-xr-(STARTINGX(Iin()())+xl)+1,
+                                 FINISHINGZ(Iin()())-zr-(STARTINGZ(Iin()())+zl)+1,
                                  1,
                                  fnImgOut,createTempFile);
             Iin().window(result(),
-                         0,  STARTINGZ(Iin()())+zl, STARTINGY(Iin()())+yl,  STARTINGX(Iin()())+xl,
-                         0, FINISHINGZ(Iin()())-zr,FINISHINGY(Iin()())-yr, FINISHINGX(Iin()())-xr, 0, 0.);
+                         STARTINGZ(Iin()())+zl, STARTINGY(Iin()())+yl,  STARTINGX(Iin()())+xl,
+                         FINISHINGZ(Iin()())-zr,FINISHINGY(Iin()())-yr, FINISHINGX(Iin()())-xr);
         }
         else
             if (!physical_coords)
@@ -236,21 +239,23 @@ public:
                                      1,
                                      fnImgOut,
                                      createTempFile);
-                Iin().window(result(),0, z0, y0, x0, 0, zF, yF,xF, init_value);
+                Iin().window(result(),z0, y0, x0, zF, yF,xF, init_value);
             }
             else
             {
-                result.newMappedFile(zF-z0+1,
+                result.newMappedFile(xF-x0+1,
                                      yF-y0+1,
-                                     xF-x0+1,
+                                     zF-z0+1,
                                      1,
                                      fnImgOut,
                                      createTempFile);
-                Iin().window(result(),0,STARTINGZ(Iin()()) + z0,
+                Iin().window(result(),
+                             STARTINGZ(Iin()()) + z0,
                              STARTINGY(Iin()()) + y0,
                              STARTINGX(Iin()()) + x0,
-                             0,STARTINGZ(Iin()()) + zF,
-                             STARTINGY(Iin()()) + yF, STARTINGX(Iin()()) + xF,
+                             STARTINGZ(Iin()()) + zF,
+                             STARTINGY(Iin()()) + yF,
+                             STARTINGX(Iin()()) + xF,
                              init_value);
             }
         Iin.clear(); // Close the input file
