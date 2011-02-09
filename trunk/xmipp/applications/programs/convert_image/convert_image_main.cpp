@@ -194,12 +194,11 @@ protected:
                 FileName tempName, _fnImgOut;
                 if (fnImg == fnImgOut)
                 {
-                  char seed[256]; sprintf(seed, "%s_tempConvert_XXXXXX", fnImgOut.c_str());
-                    tempName.initUniqueName(seed);
+                    tempName.initUniqueName("tempConvert_XXXXXX");
                     _fnImgOut = tempName + ":" + fnImgOut.getExtension();
                 }
                 else
-                  _fnImgOut= fnImgOut;
+                    _fnImgOut= fnImgOut;
 
                 imIn.read(fnImg,true,-1,true);
                 imIn.write(_fnImgOut+depth,-1, type == "stk",WRITE_APPEND,adjust);
@@ -231,6 +230,7 @@ protected:
         case MD2VOL:
             imOut->write();
             single_image = true;
+            progress_bar(time_bar_size);
             break;
         }
 
