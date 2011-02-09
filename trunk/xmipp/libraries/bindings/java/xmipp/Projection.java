@@ -2,6 +2,8 @@ package xmipp;
 
 public class Projection extends ImageDouble {
 
+    private native void create();
+
     public native void reset(int h, int w);
 
     public native void setXmippOrigin();

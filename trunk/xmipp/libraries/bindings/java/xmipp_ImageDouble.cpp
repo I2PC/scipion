@@ -59,13 +59,16 @@ JNIEXPORT void JNICALL Java_xmipp_ImageDouble_read_1
 JNIEXPORT void JNICALL Java_xmipp_ImageDouble_readPreview_1
 (JNIEnv *env, jobject obj, jstring filename, jint w, jint h, jint slice, jint nimage) {
 	std::string msg = "";
-	Image<double> * image = GET_INTERNAL_IMAGE();
+	Image<double> *image = GET_INTERNAL_IMAGE();
 
 	if (image != NULL) {
-		const char * fnStr = env->GetStringUTFChars(filename, false);
+		const char *fnStr = env->GetStringUTFChars(filename, false);
 
 		try {
-			image->readPreview(fnStr, w, h, slice, nimage);
+			std::cout << fnStr << std::endl;
+			std::cout << (int)w << std::endl;
+			std::cout << (int)h << std::endl;
+			image->readPreview(fnStr, (int)w, (int)h);//, (int)slice, (int)nimage);
 		} catch (XmippError xe) {
 			msg = xe.getDefaultMessage();
 		} catch (std::exception& e) {

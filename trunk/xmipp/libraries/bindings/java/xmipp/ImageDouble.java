@@ -30,7 +30,8 @@ public class ImageDouble {
     // Reading.
     private native void read_(String filename, boolean readData, int nimage) throws Exception;
 
-    private native void readPreview_(String filename, int w, int h, int slice, int nimage);
+    private native void readPreview_(String filename,
+            int w, int h, int slice, int nimage) throws Exception;
 
     // Writting.
     public native void write(String filename) throws Exception;
@@ -61,7 +62,7 @@ public class ImageDouble {
     }
 
     public ImageDouble(String filename) throws Exception {
-        create();
+        this();
         this.filename = filename;
         read(filename);
     }
@@ -69,6 +70,7 @@ public class ImageDouble {
     //should be called by GarbageCollector before destroying
     @Override
     protected void finalize() {
+        System.out.println("Destroying image: " + this.filename);
         destroy();
     }
 
@@ -94,15 +96,15 @@ public class ImageDouble {
         storeData(filename);
     }
 
-    public void readPreview(String filename, int w, int h) {
+    public void readPreview(String filename, int w, int h) throws Exception {
         readPreview(filename, w, h, 0, 0);
     }
 
-    public void readPreview(String filename, int w, int h, int slice) {
+    public void readPreview(String filename, int w, int h, int slice) throws Exception {
         readPreview(filename, w, h, slice, 0);
     }
 
-    public void readPreview(String filename, int w, int h, int slice, int nimage) {
+    public void readPreview(String filename, int w, int h, int slice, int nimage) throws Exception {
         readPreview_(filename, w, h, slice, nimage);
 
         storeData(filename);

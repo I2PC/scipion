@@ -15,6 +15,14 @@ extern "C" {
 #define xmipp_Projection_INDEX_DEPTH 2L
 /*
  * Class:     xmipp_Projection
+ * Method:    create
+ * Signature: ()V
+ */
+JNIEXPORT void JNICALL Java_xmipp_Projection_create
+  (JNIEnv *, jobject);
+
+/*
+ * Class:     xmipp_Projection
  * Method:    reset
  * Signature: (II)V
  */
