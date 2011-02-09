@@ -58,6 +58,7 @@ if __name__ == '__main__':
     tester.testProgram(program, "-i input/singleImage.spi -o %s/%s_%02d/image.xmp --corners -16 -16 15 15" % (fnDir, program,2),2)
     tester.testProgram(program, "-i input/singleImage.spi -o %s/%s_%02d/image.xmp --corners 0 0 31 31 --physical" % (fnDir, program,3),3)
     tester.testProgram(program, "-i input/singleImage.spi -o %s/%s_%02d/image.xmp --crop -10" % (fnDir, program,4),4)
+    tester.testProgram(program, "-i input/xray_import/Images/img48949.spe -o %s/%s_%02d/image.xmp --size 512" % (fnDir, program,5),5)
 
     program = "xmipp_xray_import"
     tester.testProgram(program, "--data input/xray_import/Images --flat input/xray_import/Flatfields --oroot %s/%s/stack --crop 30" % (fnDir, program))
