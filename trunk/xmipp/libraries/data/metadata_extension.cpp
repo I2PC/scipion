@@ -6,6 +6,11 @@
  */
 #include "metadata_extension.h"
 
+#ifdef __APPLE__
+#define MAXDOUBLE __DBL_MAX__
+#endif
+
+
 /*----------   Statistics --------------------------------------- */
 void getStatistics(MetaData &MT_in, Image<double> & _ave, Image<double> & _sd, double& _min,
                    double& _max, bool apply_geo)

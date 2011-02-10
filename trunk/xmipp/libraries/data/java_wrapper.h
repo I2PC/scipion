@@ -33,7 +33,7 @@
 #include <string>
 #include <iostream>
 #include <unistd.h>
-#include <error.h>
+#include "error.h"
 #include "image.h"
 #include "filename.h"
 
