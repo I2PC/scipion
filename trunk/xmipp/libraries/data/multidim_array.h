@@ -1411,6 +1411,11 @@ public:
     void selfWindow(int z0, int y0, int x0, int zF, int yF, int xF,
                     T init_value = 0)
     {
+        if (z0 == STARTINGZ(*this) && zF == FINISHINGZ(*this) &&
+            y0 == STARTINGY(*this) && yF == FINISHINGY(*this) &&
+            x0 == STARTINGX(*this) && xF == FINISHINGX(*this))
+            return;
+
         MultidimArray<T> result;
         window(result,z0,y0,x0,zF,yF,xF,init_value);
         *this=result;
