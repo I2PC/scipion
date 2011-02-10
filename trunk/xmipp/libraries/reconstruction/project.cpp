@@ -33,6 +33,8 @@ void ProgProject::readParams()
 {
     fnPhantom     = getParam("-i");
     samplingRate  = getDoubleParam("--sampling_rate");
+    singleProjection = false;
+
     if (checkParam("--oroot"))
     {
     	fnRoot        = getParam("--oroot");
