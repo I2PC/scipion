@@ -504,8 +504,7 @@ bool ArgumentDef::acceptArguments(std::stringstream &errors, size_t & index, std
                 found = true;
                 ++index;
 
-                subParams[i]->checkRequires(errors, prog);
-                if (!errors.str().empty())
+                if (!subParams[i]->checkRequires(errors, prog))
                     return false;
 
                 for (size_t j = 0; j < subParams[i]->arguments.size(); ++j)
@@ -519,6 +518,7 @@ bool ArgumentDef::acceptArguments(std::stringstream &errors, size_t & index, std
             errors << optionValue << " is not a valid option for <" << name <<"> ";
             return false;
         }
+        return true;//not increment index when found subparams, already incremented
     }
 
     //if not list increment index
@@ -698,19 +698,26 @@ bool ParamDef::parseParamList(TokenType startToken, ProgramDef * prog, StringVec
     return true;
 }
 
-void ParamDef::checkRequires(std::stringstream & errors, ProgramDef * prog)
+bool ParamDef::checkRequires(std::stringstream & errors, ProgramDef * prog)
 {
     ParamDef * param;
+    bool correct = true;
     for (size_t i = 0; i < requires.size(); ++i)
     {
         param = prog->findParam(requires[i]);
         if (param->counter < 1)
+        {
             errors << "Parameter " << name << " requires " << requires[i] << std::endl;
+            correct = false;
+        }
     }
+    return correct;
 }
 
 void ParamDef::check(std::stringstream & errors)
 {
+  String aaa = name;
+
     ProgramDef * prog = (ProgramDef*) parent->parent;
     if (counter > 1 )
     {
@@ -740,6 +747,9 @@ void ParamDef::check(std::stringstream & errors)
                     errors << " parameter: " << name << std::endl;
                     return;
                 }
+
+            if (argIndex < cmdArguments.size() && !arguments[arguments.size()-1]->isList)
+              errors << "Too many arguments for parameter " << name << std::endl;
         }
     }
     else
