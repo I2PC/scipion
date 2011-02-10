@@ -203,19 +203,17 @@ protected:
 
         // Show
         int shown = 0;
-        FileName fnTmp;
         for (StringVector::const_iterator it = files.begin(); it < files.end(); ++it)
         {
             fn = *it;
-            fnTmp = fn.removeFileFormat();
-            if (!exists(fnTmp))
+            if (!existsTrim(fn))
             {
                 switch (mode)
                 {
                 case MODE_INPUT:
                 case MODE_PSDSEL:
                 case MODE_CTFSEL:
-                    std::cerr << "Filename: '" << fnTmp << "' doesn't exist" << std::endl;
+
                 case MODE_SPECT:
                     continue;
                 case MODE_SOM:
@@ -231,7 +229,6 @@ protected:
                 try
                 {
                     md.read(fn);
-
                     if (md.size() > 1)//more than one object
                     {
                         ShowSel *showsel = new ShowSel;
