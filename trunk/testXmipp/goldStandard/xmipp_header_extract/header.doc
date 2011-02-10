@@ -1,0 +1,18 @@
+# XMIPP_STAR_1 * 
+# 
+data_
+loop_
+ _image
+ _enabled
+ _angleRot
+ _angleTilt
+ _anglePsi
+ _shiftX
+ _shiftY
+ _weight
+ _scale
+ _flip
+ 000000@input/smallStack.stk          1     0.000000     0.000000     0.000000     0.000000     0.000000     0.000000     1.000000 0 
+ 000001@input/smallStack.stk          1     0.000000     0.000000     0.000000     0.000000     0.000000     0.000000     0.000000 0 
+ 000002@input/smallStack.stk          1     0.000000     0.000000     0.000000     0.000000     0.000000     0.000000     0.000000 0 
+ 000003@input/smallStack.stk          1     0.000000     0.000000     0.000000     0.000000     0.000000     0.000000     0.000000 0 
