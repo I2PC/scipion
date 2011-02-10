@@ -144,7 +144,6 @@ void rotation3DMatrix(double ang, char axis, Matrix2D< double > &result,
     cosine = cos(ang);
     sine = sin(ang);
 
-    result.initZeros();
     switch (axis)
     {
     case 'Z':
@@ -225,10 +224,10 @@ void rotation3DMatrix(double ang, const Matrix1D<double> &axis,
 {
     // Compute a matrix which makes the turning axis coincident with Z
     // And turn around this axis
-    Matrix2D<double> A,R;
-    alignWithZ(axis,A,homogeneous);
+    Matrix2D<double> A, R;
+    alignWithZ(axis, A, homogeneous);
     rotation3DMatrix(ang, 'Z', R, homogeneous);
-    result=A.transpose() * R * A;
+    result = A.transpose() * R * A;
 }
 
 /* Translation 3D ---------------------------------------------------------- */
