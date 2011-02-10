@@ -85,9 +85,9 @@ for file in files:
         counter = 0
         for jj in range(nSize):
             inFile.compose(counter, fileAux)
-            mD.addObject()
-            mD.setValue(MDL_IMAGE, inFile)
-            mD.setValue(MDL_ENABLED, 1)
+            objId = mD.addObject()
+            mD.setValue(MDL_IMAGE, inFile, objId)
+            mD.setValue(MDL_ENABLED, 1, objId)
             counter = counter + 1
     else:
         objId=mD.addObject()
