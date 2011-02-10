@@ -94,11 +94,11 @@ typedef enum
  * {
  *     std::string imageFile;
  *     double angle;
- *     mdA.getValue(MDL_IMAGE, imageFile);
- *     mdB.getValue(MDL_ANGLE_TILT, angle);
- *     mdC.addObject();
- *     mdC.setValue(MDL_IMAGE, imageFile);
- *     mdC.setValue(MDL_ANGLE_TILT, angle);
+ *     mdA.getValue(MDL_IMAGE, imageFile,__iter.objId);
+ *     mdB.getValue(MDL_ANGLE_TILT, angle,__iter.objId);
+ *     size_t objId=mdC.addObject();
+ *     mdC.setValue(MDL_IMAGE, imageFile,objId);
+ *     mdC.setValue(MDL_ANGLE_TILT, angle,objId);
  * }
  * @endcode
  */
@@ -353,9 +353,9 @@ public:
      * fill a metadata.
      * @code
      * MetaData md;
-     * md.addObject();
-     * md.setValue(MDL_IMAGE, "images/image00011.xmp");
-     * md.setValue(MDL_ANGLE_ROT, 0.);
+     * size_t id = md.addObject();
+     * md.setValue(MDL_IMAGE, "images/image00011.xmp",id);
+     * md.setValue(MDL_ANGLE_ROT, 0.,id);
      * @endcode
      */
     template<class T>
@@ -363,7 +363,7 @@ public:
     {
         return setValue(MDObject(label, valueIn), id);
     }
-
+//private:
     /** This functions are using MDObject for set real values
      * there is an explicit function signature
      * foreach type supported in Metadata.
@@ -372,6 +372,7 @@ public:
      */
     bool setValue(const MDObject &mdValueIn, size_t id);
     bool getValue(MDObject &mdValueOut, size_t id) const;
+//public:
 
     /** Get the value of some label.
      * from the object that has id 'objectId'
@@ -739,6 +740,9 @@ public:
     /** @} */
     friend class MDSql;
     friend class MDIterator;
+    //CAn  I do this?
+	//#include <python/Python.h>
+    //friend static PyObject *    MetaData_setValue(PyObject *obj, PyObject *args, PyObject *kwargs);
 }
 ;//class MetaData
 
