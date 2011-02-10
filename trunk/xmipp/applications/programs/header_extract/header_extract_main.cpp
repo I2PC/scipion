@@ -41,12 +41,12 @@ protected:
     {
         produces_an_output = true;
 
-        addUsageLine("Extract the geometric transformation (angles & shifts) in the header of 2D-images");
+        addUsageLine("Extract the geometric transformation from header");
         addUsageLine("and write values to a metadata file.");
-        addUsageLine("Example of use: Extract headers from in_file and overwrite out_file");
-        addUsageLine("   xmipp_header_extract -i in_file.sel -o out_file.doc");
-        addUsageLine("Example of use: Extract headers from in_file and append blockname named ONE to out_file");
-        addUsageLine("   xmipp_header_extract -i in_file.sel --bn ONE --mode append -o out_file.doc");
+        addExampleLine("Example of use: Extract headers from in_file and overwrite out_file",false);
+        addExampleLine("   xmipp_header_extract -i in_file.sel -o out_file.doc");
+        addExampleLine("Example of use: Extract headers from in_file and append blockname named ONE to out_file",false);
+        addExampleLine("   xmipp_header_extract -i in_file.sel --bn ONE --mode append -o out_file.doc");
 
         XmippMetadataProgram::defineParams();
         addParamsLine("   [--round_shifts]    :Round shifts to integers.");
@@ -66,7 +66,9 @@ protected:
     void processImage(const FileName &fnImg, const FileName &fnImgOut, size_t objId)
     {
         Image<double> img;
-        img.readApplyGeo(fnImg,mdIn,objId);
+        std::cerr << "fnImg objId" << fnImg<< " " << objId << std::endl;
+        img.read(fnImg,false);
+        //ApplyGeo(fnImg,mdIn,objId);
         xx = img.Xoff();
         yy = img.Yoff();
         if (round_shifts)

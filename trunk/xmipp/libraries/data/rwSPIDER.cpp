@@ -210,8 +210,6 @@ int  ImageBase::readSPIDER(int img_select)
 
     setDimensions(_xDim, _yDim, _zDim, _nDimSet);
 
-    if (isStack && dataflag<0)   // Don't read the individual header and the data if not necessary
-        return 0;
 
     size_t header_size = offset;
     size_t datasize_n = _xDim*_yDim*_zDim;
@@ -284,6 +282,8 @@ int  ImageBase::readSPIDER(int img_select)
             break;
     }
     delete header;
+    if (isStack && dataflag<0)   // Don't read  data if not necessary but read the header
+        return 0;
 
 #ifdef DEBUG
 
@@ -558,6 +558,8 @@ int  ImageBase::writeSPIDER(int select_img, bool isStack, int mode)
                 header->weight=(float)aux;
             if(it->getValue(MDL_FLIP,    baux))
                 header->flip  =(float)baux;
+            if(it->getValue(MDL_SCALE,    aux))
+                header->scale  =(float)aux;
 
             //do not need to unlock because we are in the overwrite case
             fwrite( header, offset, 1, fimg );
