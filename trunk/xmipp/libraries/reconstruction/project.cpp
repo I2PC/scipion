@@ -69,9 +69,9 @@ void ProgProject::defineParams()
     addExampleLine("Generating a top view from Z",false);
     addExampleLine("xmipp_phantom_project -i volume.vol -o image.xmp --angles 0 0 0");
     addExampleLine("Generating a side view from Y",false);
-    addExampleLine("xmipp_phantom_project -i volume.vol -o image.xmp --angles 0 90 0");
-    addExampleLine("Generating a side view from X",false);
     addExampleLine("xmipp_phantom_project -i volume.vol -o image.xmp --angles 90 90 0");
+    addExampleLine("Generating a side view from X",false);
+    addExampleLine("xmipp_phantom_project -i volume.vol -o image.xmp --angles 0 90 0");
     addExampleLine("In the following links you can find some examples of projection parameter files",false);
     addExampleLine(" ",false);
     addExampleLine("http://newxmipp.svn.sourceforge.net/viewvc/newxmipp/trunk/testXmipp/input/uniformProjection.param",false);
