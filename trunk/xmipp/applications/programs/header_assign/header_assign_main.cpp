@@ -35,6 +35,7 @@ private:
     bool            mirror, round_shifts;
     int             levels, labelsnumber;
     std::vector<MDLabel> activeLabels;
+    bool            isStack;
 
 protected:
     void defineParams()
@@ -66,12 +67,16 @@ protected:
     {
         activeLabels = mdIn.getActiveLabels();
         labelsnumber = activeLabels.size();
+        //FileName auxFn;
+        //mdIn.getValue(MDL_IMAGE,auxFn,mdIn.firstObject());
+        //isStack =auxFn.isInStack();
     }
 
     void postProcess()
     {
-        if(fn_in != fn_out)
-            mdIn.write(fn_out,mode);
+    	;
+        //if(fn_in != fn_out)
+        //    mdIn.write(fn_out,mode);
     }
 
     void processImage(const FileName &fnImg, const FileName &fnImgOut, size_t objId)
@@ -127,7 +132,10 @@ protected:
                 break;
             }
         }
-        img.write(fnImg);
+        int no;
+        FileName stackFn;
+        fnImgOut.decompose(no, stackFn);
+        img.write(stackFn,no,no!=-1,WRITE_REPLACE);
     }
 }
 ;// end of class ProgHeaderAssign
