@@ -26,11 +26,16 @@
 #include <data/metadata_extension.h>
 
 #include <iostream>
-#include <data/args.h>
 #include <unistd.h>
 #include <sys/stat.h>
 #include "../../external/condor/Solver.h"
 #include "../../external/condor/tools.h"
+
+#include "fourier_filter.h"
+#include "angular_project_library.h"
+#include "angular_discrete_assign.h"
+#include "convert_pdb2vol.h"
+#include "angular_continuous_assign.h"
 
 // Empty constructor =======================================================
 ProgNmaAlignment::ProgNmaAlignment()
@@ -109,27 +114,27 @@ ProgNmaAlignment *global_NMA_prog;
 
 void ProgNmaAlignment::createWorkFiles()
 {
-  MetaData mdTodo, mdDone;
-  mdTodo = mdIn;
-  if (exists("nmaDone.xmd"))
-  {
-    mdDone.read("nmaDone.xmd");
-    mdTodo.subtraction(mdDone, MDL_IMAGE);
-  }
-  else//if not exists create metadata only with headers
-  {
-    mdDone.addLabel(MDL_IMAGE);
-    mdDone.addLabel(MDL_ENABLED);
-    mdDone.addLabel(MDL_ANGLEROT);
-    mdDone.addLabel(MDL_ANGLETILT);
-    mdDone.addLabel(MDL_ANGLEPSI);
-    mdDone.addLabel(MDL_SHIFTX);
-    mdDone.addLabel(MDL_SHIFTY);
-    mdDone.addLabel(MDL_NMA);
-    mdDone.addLabel(MDL_COST);
-    mdDone.write("nmaDone.xmd");
-  }
-  mdIn = mdTodo;
+    MetaData mdTodo, mdDone;
+    mdTodo = mdIn;
+    if (exists("nmaDone.xmd"))
+    {
+        mdDone.read("nmaDone.xmd");
+        mdTodo.subtraction(mdDone, MDL_IMAGE);
+    }
+    else//if not exists create metadata only with headers
+    {
+        mdDone.addLabel(MDL_IMAGE);
+        mdDone.addLabel(MDL_ENABLED);
+        mdDone.addLabel(MDL_ANGLEROT);
+        mdDone.addLabel(MDL_ANGLETILT);
+        mdDone.addLabel(MDL_ANGLEPSI);
+        mdDone.addLabel(MDL_SHIFTX);
+        mdDone.addLabel(MDL_SHIFTY);
+        mdDone.addLabel(MDL_NMA);
+        mdDone.addLabel(MDL_COST);
+        mdDone.write("nmaDone.xmd");
+    }
+    mdIn = mdTodo;
 }
 
 void ProgNmaAlignment::preProcess()
@@ -155,64 +160,59 @@ void ProgNmaAlignment::preProcess()
 // Create deformed PDB =====================================================
 FileName ProgNmaAlignment::createDeformedPDB(int pyramidLevel) const
 {
-    std::string command;
+    String arguments;
     FileName fnRandom;
     fnRandom.initUniqueName(nameTemplate);
 
-    command=(std::string)"xmipp_move_along_NMAmode "+fnPDB+" "+modeList[0]+" "+
-            floatToString((float)trial(0)*scale_defamp)+" > inter"+fnRandom+"; mv -f inter"+fnRandom+" deformedPDB_"+
-            fnRandom+".pdb";
-    system(command.c_str());
+    arguments=(std::string)"xmipp_move_along_NMAmode "+fnPDB+" "+modeList[0]+" "+
+              floatToString((float)trial(0)*scale_defamp)+" > inter"+fnRandom+"; mv -f inter"+fnRandom+" deformedPDB_"+
+              fnRandom+".pdb";
+    system(arguments.c_str());
 
     for (int i=1; i<VEC_XSIZE(trial)-5; ++i)
     {
-        command=(std::string)"xmipp_move_along_NMAmode deformedPDB_"+fnRandom+".pdb "+modeList[i]+" "+
-                floatToString((float)trial(i)*scale_defamp)+" > inter"+fnRandom+"; mv -f inter"+fnRandom+" deformedPDB_"+
-                fnRandom+".pdb";
+        arguments=(std::string)"xmipp_move_along_NMAmode deformedPDB_"+fnRandom+".pdb "+modeList[i]+" "+
+                  floatToString((float)trial(i)*scale_defamp)+" > inter"+fnRandom+"; mv -f inter"+fnRandom+" deformedPDB_"+
+                  fnRandom+".pdb";
 
-        system(command.c_str());
+        system(arguments.c_str());
     }
 
-    command=(std::string)"xmipp_convert_pdb2vol"+
-            " -i deformedPDB_"+fnRandom+".pdb"+
-            " -size "+integerToString(ROUND(imgSize))+
-            " -sampling_rate " + floatToString((float)sampling_rate)+
-            " -v 0";
+    arguments=(String)"xmipp_convert_pdb2vol";
+    arguments+=(String)" -i deformedPDB_"+fnRandom+".pdb"+
+              " -size "+integerToString(ROUND(imgSize))+
+              " -sampling_rate " + floatToString((float)sampling_rate)+
+              " -v 0";
 
     if (do_centerPDB)
-        command+=(std::string)" -centerPDB ";
+        arguments.append(" -centerPDB ");
 
     if (useFixedGaussian)
     {
-        if (sigmaGaussian<0)
-        {
-            command+=(std::string)" -fixed_Gaussian ";
-        }
-        else
-        {
-            command+=(std::string)" -fixed_Gaussian " + floatToString((float)sigmaGaussian)+ " -intensityColumn Bfactor ";
-        }
+        arguments.append(" -fixed_Gaussian ");
+        if (sigmaGaussian >= 0)
+            arguments += floatToString((float)sigmaGaussian) + " -intensityColumn Bfactor ";
     }
-    system(command.c_str());
+    system(arguments.c_str());
 
     if (do_FilterPDBVol)
     {
-        command=(std::string)"xmipp_fourier_filter"+
-                " -i deformedPDB_"+fnRandom+".vol"+
-                " -sampling "+floatToString((float)sampling_rate)+
-                " -low_pass " + floatToString((float)cutoff_LPfilter)+
-                " -fourier_mask raised_cosine 0.1 -v 0";
-        system(command.c_str());
+        arguments=(std::string)"xmipp_fourier_filter"+
+                  " -i deformedPDB_"+fnRandom+".vol"+
+                  " -sampling "+floatToString((float)sampling_rate)+
+                  " -low_pass " + floatToString((float)cutoff_LPfilter)+
+                  " -fourier_mask raised_cosine 0.1 -v 0";
+        system(arguments.c_str());
     }
 
     if (pyramidLevel!=0)
     {
-        command=(std::string)"xmipp_scale_pyramid"+
-                " -i deformedPDB_"+fnRandom+".vol"+
-                " -reduce -levels "+integerToString(pyramidLevel)+
-                " -v 0";
+        arguments=(std::string)"xmipp_scale_pyramid"+
+                  " -i deformedPDB_"+fnRandom+".vol"+
+                  " -reduce -levels "+integerToString(pyramidLevel)+
+                  " -v 0";
 
-        system(command.c_str());
+        system(arguments.c_str());
     }
 
     return fnRandom;
@@ -226,12 +226,12 @@ void ProgNmaAlignment::performCompleteSearch(
 
     // Reduce the image
     FileName fnDown=(std::string)"downimg_"+fnRandom+".xmp";
-    if (pyramidLevel!=0)
+    if (pyramidLevel != 0)
     {
-    	Image<double> I, Ireduced;
-    	I.read(currentImgName);
-    	reduceBSpline(BSPLINE3,Ireduced(),I());
-    	Ireduced.write(fnDown);
+        Image<double> I, Ireduced;
+        I.read(currentImgName);
+        pyramidReduce(BSPLINE3, Ireduced(), I(), pyramidLevel);
+        Ireduced.write(fnDown);
     }
     else
         link(currentImgName.c_str(),fnDown.c_str());
@@ -240,7 +240,7 @@ void ProgNmaAlignment::performCompleteSearch(
 
     command = (std::string)"xmipp_angular_project_library -i deformedPDB_"+fnRandom+".vol"+
               " -o ref" + fnRandom + "/ref" + fnRandom+".stk"
-              " --sampling_rate 5 -v 0";
+              " --sampling_rate 25 -v 0";
     FileName fnRefSel=(std::string)"ref" + fnRandom + "/ref" + fnRandom+".doc";
     system(command.c_str());
 
@@ -255,7 +255,7 @@ void ProgNmaAlignment::performCompleteSearch(
             " -i downimg_"+fnRandom+".xmp"+
             " -ref "+fnRefSel+
             " -o angledisc_"+fnRandom+".txt"+
-            " -psi_step 5 "+
+            " -psi_step 25 "+
             " -max_shift_change "+integerToString(ROUND((double)imgSize/
                                                   (10.0*pow(2.0,(double)pyramidLevel))))+
             " -search5D -v 0";
@@ -268,13 +268,13 @@ double ProgNmaAlignment::performContinuousAssignment(
 {
     // Perform alignment
     std::string command=(std::string)"xmipp_angular_continuous_assign"+
-            " -i angledisc_"+fnRandom+".txt"+
-            " -ref deformedPDB_"+fnRandom+".vol"+
-            " -o anglecont_"+fnRandom+".txt"+
-            " -gaussian_Fourier " + floatToString((float)gaussian_DFT_sigma) +
-            " -gaussian_Real " + floatToString((float)gaussian_Real_sigma) +
-            " -zerofreq_weight " + floatToString((float)weight_zero_freq) +
-            " -v 0";
+                        " -i angledisc_"+fnRandom+".txt"+
+                        " -ref deformedPDB_"+fnRandom+".vol"+
+                        " -o anglecont_"+fnRandom+".txt"+
+                        " -gaussian_Fourier " + floatToString((float)gaussian_DFT_sigma) +
+                        " -gaussian_Real " + floatToString((float)gaussian_Real_sigma) +
+                        " -zerofreq_weight " + floatToString((float)weight_zero_freq) +
+                        " -v 0";
     system(command.c_str());
 
     // Pick up results
@@ -305,15 +305,15 @@ void ProgNmaAlignment::updateBestFit(double fitness,int dim)
 // Compute fitness =========================================================
 double ObjFunc_nma_alignment::eval(Vector X, int *nerror)
 {
-    int dim=global_NMA_prog->modeList.size();
+    int dim = global_NMA_prog->modeList.size();
 
     for (int i=0; i<dim; i++)
     {
-        global_NMA_prog->trial(i)=X[i];
+        global_NMA_prog->trial(i) = X[i];
     }
 
-    int pyramidLevelDisc=1;
-    int pyramidLevelCont=(global_NMA_prog->currentStage==1)?1:0;
+    int pyramidLevelDisc = 1;
+    int pyramidLevelCont = (global_NMA_prog->currentStage == 1) ? 1 : 0;
 
     FileName fnRandom=global_NMA_prog->createDeformedPDB(pyramidLevelCont);
 
@@ -359,8 +359,7 @@ double ObjFunc_nma_alignment::eval(Vector X, int *nerror)
 }
 
 ObjFunc_nma_alignment::ObjFunc_nma_alignment(int _t, int _n)
-{
-}
+{}
 
 void ProgNmaAlignment::processImage(const FileName &fnImg, const FileName &fnImgOut, size_t objId)
 {
@@ -384,8 +383,8 @@ void ProgNmaAlignment::processImage(const FileName &fnImg, const FileName &fnImg
 
     currentStage=1;
     std::cerr << std::endl << "DEBUG: ===== Node: " << rangen
-        <<" processing image " << fnImg <<"(" << objId << ")"
-        << " at stage: " << currentStage << std::endl;
+    <<" processing image " << fnImg <<"(" << objId << ")"
+    << " at stage: " << currentStage << std::endl;
     of=new ObjFunc_nma_alignment(1,dim);
 
     of->xStart.setSize(dim);
@@ -415,8 +414,8 @@ void ProgNmaAlignment::processImage(const FileName &fnImg, const FileName &fnImg
 
     currentStage = 2;
     std::cerr << std::endl << "DEBUG: ===== Node: " << rangen
-        <<" processing image " << fnImg <<"(" << objId << ")"
-        << " at stage: " << currentStage << std::endl;
+    <<" processing image " << fnImg <<"(" << objId << ")"
+    << " at stage: " << currentStage << std::endl;
 
     fitness_min(0) = 1000000.0;
 
@@ -465,25 +464,25 @@ void ProgNmaAlignment::processImage(const FileName &fnImg, const FileName &fnImg
 
 void ProgNmaAlignment::writeImageParameters(const FileName &fnImg)
 {
-  MetaData md;
-  size_t objId=md.addObject();
-  md.setValue(MDL_IMAGE,fnImg,objId);
-  md.setValue(MDL_ENABLED,1,objId);
-  md.setValue(MDL_ANGLEROT,parameters(0),objId);
-  md.setValue(MDL_ANGLETILT,parameters(1),objId);
-  md.setValue(MDL_ANGLEPSI,parameters(2),objId);
-  md.setValue(MDL_SHIFTX,parameters(3),objId);
-  md.setValue(MDL_SHIFTY,parameters(4),objId);
+    MetaData md;
+    size_t objId=md.addObject();
+    md.setValue(MDL_IMAGE,fnImg,objId);
+    md.setValue(MDL_ENABLED,1,objId);
+    md.setValue(MDL_ANGLEROT,parameters(0),objId);
+    md.setValue(MDL_ANGLETILT,parameters(1),objId);
+    md.setValue(MDL_ANGLEPSI,parameters(2),objId);
+    md.setValue(MDL_SHIFTX,parameters(3),objId);
+    md.setValue(MDL_SHIFTY,parameters(4),objId);
 
-  int dim=modeList.size();
-  std::vector<double> vectortemp;
-  for (int j = 5; j < 5+dim; j++)
-  {
-      vectortemp.push_back(parameters(j));
-  }
+    int dim=modeList.size();
+    std::vector<double> vectortemp;
+    for (int j = 5; j < 5+dim; j++)
+    {
+        vectortemp.push_back(parameters(j));
+    }
 
-  md.setValue(MDL_NMA,vectortemp,objId);
-  md.setValue(MDL_COST,parameters(5+dim),objId);
+    md.setValue(MDL_NMA,vectortemp,objId);
+    md.setValue(MDL_COST,parameters(5+dim),objId);
 
-  md.append("nmaDone.xmd");
+    md.append("nmaDone.xmd");
 }

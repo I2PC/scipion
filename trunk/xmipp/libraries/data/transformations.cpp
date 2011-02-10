@@ -66,14 +66,17 @@ void geo2TransformationMatrix(const MDRow &imageGeo, Matrix2D<double> &A,
 
 void transformationMatrix2Geo(const Matrix2D<double> &A, MDRow & imageGeo)
 {
-    double cosine = dMij(A, 0, 0), sine = dMij(A, 0, 1);
+
+    //Calculate determinant for getting flip
+    bool flip = ((dMij(A, 0, 0) * dMij(A, 1, 1) - dMij(A, 0, 1) * dMij(A, 1, 0) ) < 0);
+    int sgn = flip ? -1 : 1;
+    double cosine = sgn * dMij(A, 0, 0), sine = sgn * dMij(A, 0, 1);
     double scale2 = cosine * cosine +  sine * sine;
     double scale = sqrt(scale2);
     double invScale = 1 / scale;
-    double psi = RAD2DEG(atan2(sine * invScale, cosine * invScale));
     double shiftX = dMij(A, 0, 2) * invScale;
     double shiftY = dMij(A, 1, 2) * invScale;
-    bool flip = ((cosine * dMij(A, 1, 1) - sine * dMij(A, 1, 0) ) < 0);
+    double psi = RAD2DEG(atan2(sine, cosine));
 
     ADD_IF_EXIST_NONZERO(MDL_ANGLEPSI, psi);
     ADD_IF_EXIST_NONZERO(MDL_SHIFTX, shiftX);

@@ -40,7 +40,7 @@ class ProgTransformGeometry: public XmippMetadataProgram
 {
 protected:
     int             zdim, ydim, xdim, splineDegree, dim;
-    bool            applyTransform, inverse, wrap, doResize, isVol;
+    bool            applyTransform, inverse, wrap, doResize, isVol, flip;
     Matrix2D<double> R, T, S, A, B;
     Matrix1D<double>          shiftV, rotV, scaleV;
     MDRow            input, transformation;
@@ -106,6 +106,7 @@ protected:
             splineDegree = INTERP_FOURIER;
 
         }
+        flip = checkParam("--flip");
     }
 
 
@@ -130,6 +131,44 @@ protected:
         scaleV.resizeNoCopy(dim);
         shiftV.resizeNoCopy(dim);
         rotV.resizeNoCopy(dim);
+
+        if (checkParam("--rotate"))
+        {
+            if (STR_EQUAL(getParam("--rotate"), "ang"))
+            {
+                if (isVol)
+                    REPORT_ERROR(ERR_PARAM_INCORRECT, "The selected rotation option is only valid for images");
+                rotation2DMatrix(getDoubleParam("--rotate", 1), R, true);
+            }
+            else
+            {
+                if (!isVol)
+                    REPORT_ERROR(ERR_PARAM_INCORRECT, "The selected rotation option is only valid for volumes");
+
+                //In any case read following 3 values, leave euler angles in xyz
+                Matrix1D<double> xyz(3);
+                XX(xyz) = getDoubleParam("--rotate", 1); //rot
+                YY(xyz) = getDoubleParam("--rotate", 2); //tilt
+                ZZ(xyz) = getDoubleParam("--rotate", 3);//psi
+
+                if (STR_EQUAL(getParam("--rotate"), "euler"))
+                {
+                    Euler_angles2matrix(XX(xyz), YY(xyz), ZZ(xyz), R, true);
+                }
+                else if (STR_EQUAL(getParam("--rotate"), "alignZ"))
+                {
+                    alignWithZ(xyz, R);
+                }
+                else
+                {
+                    double ang = getDoubleParam("--rotate", 1);
+                    XX(xyz) = getDoubleParam("--rotate", 2); //rot
+                    YY(xyz) = getDoubleParam("--rotate", 3); //tilt
+                    ZZ(xyz) = getDoubleParam("--rotate", 4);//psi
+                    rotation3DMatrix(ang, xyz, R, true);
+                }
+            }
+        }
 
         if (checkParam("--shift"))
         {
@@ -183,45 +222,14 @@ protected:
             }
         }
 
-        if (checkParam("--rotate"))
-        {
-            if (STR_EQUAL(getParam("--rotate"), "ang"))
-            {
-                if (isVol)
-                    REPORT_ERROR(ERR_PARAM_INCORRECT, "The selected rotation option is only valid for images");
-                rotation2DMatrix(getDoubleParam("--rotate", 1), R, true);
-            }
-            else
-            {
-                if (!isVol)
-                    REPORT_ERROR(ERR_PARAM_INCORRECT, "The selected rotation option is only valid for volumes");
-
-                //In any case read following 3 values, leave euler angles in xyz
-                Matrix1D<double> xyz(3);
-                XX(xyz) = getDoubleParam("--rotate", 1); //rot
-                YY(xyz) = getDoubleParam("--rotate", 2); //tilt
-                ZZ(xyz) = getDoubleParam("--rotate", 3);//psi
-
-                if (STR_EQUAL(getParam("--rotate"), "euler"))
-                {
-                    Euler_angles2matrix(XX(xyz), YY(xyz), ZZ(xyz), R, true);
-                }
-                else if (STR_EQUAL(getParam("--rotate"), "alignZ"))
-                {
-                    alignWithZ(xyz, R);
-                }
-                else
-                {
-                    double ang = getDoubleParam("--rotate", 1);
-                    XX(xyz) = getDoubleParam("--rotate", 2); //rot
-                    YY(xyz) = getDoubleParam("--rotate", 3); //tilt
-                    ZZ(xyz) = getDoubleParam("--rotate", 4);//psi
-                    rotation3DMatrix(ang, xyz, R, true);
-                }
-            }
-        }
-
         A = S * T * R;
+        if (flip)
+        {
+            MAT_ELEM(A, 0, 0) *= -1.;
+            MAT_ELEM(A, 0, 1) *= -1.;
+        }
+        if (inverse)
+          A = A.inv();
     }
 
     void processImage(const FileName &fnImg, const FileName &fnImgOut, size_t objId)
@@ -238,18 +246,17 @@ protected:
         //MultidimArray<double> out;
         std::cerr << "A: " << std::endl << A;
         std::cerr << "B: " << std::endl << B;
+
         T = A * B;
         if (checkParam("--write_matrix"))
             std::cout << T << std::endl;
 
         if (applyTransform)
         {
-            applyGeometry(splineDegree, imgOut(), img(), T, !inverse, wrap);
+            applyGeometry(splineDegree, imgOut(), img(), T, IS_NOT_INV, wrap);
         }
         else
         {
-            if (inverse)
-                T = T.inv();
             transformationMatrix2Geo(T, input);
             mdOut.setRow(input, newId);
             imgOut() = img();

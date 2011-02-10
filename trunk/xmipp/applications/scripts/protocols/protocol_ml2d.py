@@ -145,10 +145,11 @@ class ML2D_class:
                  NumberOfMpiProcesses,
                  SystemFlavour):
 	     
-        import os,sys,shutil
+        import os, sys, shutil
         scriptdir=os.path.split(os.path.dirname(os.popen('which xmipp_protocols','r').read()))[0]+'/protocols'
         sys.path.append(scriptdir) # add default search path
-        import log,selfile
+        import log
+        from xmipp import MetaData
 
         self.WorkingDir=WorkingDir
         self.ProjectDir=ProjectDir
@@ -166,6 +167,7 @@ class ML2D_class:
         self.DoParallel=DoParallel
         self.NumberOfMpiProcesses=NumberOfMpiProcesses
         self.SystemFlavour=SystemFlavour
+        self.RestartIter=RestartIter 
    
         # Setup logging
         self.log=log.init_log_system(self.ProjectDir,
@@ -173,6 +175,8 @@ class ML2D_class:
                                      sys.argv[0],
                                      self.WorkingDir)
                 
+        #assume restart
+        restart = True
         # This is not a restart
         if (RestartIter < 1):
             # Delete working directory if it exists, make a new one
@@ -186,84 +190,66 @@ class ML2D_class:
 
 
             # Create a selfile with absolute pathname in the WorkingDir
-            mysel=selfile.selfile()
-            mysel.read(InSelFile)
-            newsel=mysel.make_abspath()
-            self.InSelFile=os.path.abspath(self.WorkingDir+'/'+InSelFile)
-            newsel.write(self.InSelFile)
+            mysel = MetaData(InSelFile);
+            mysel.makeAbsPath();
+            self.InSelFile = os.path.abspath(os.path.join(self.WorkingDir, InSelFile))
+            mysel.write(self.InSelFile)
 
             if (self.DoMlf and self.DoCorrectAmplitudes):
                 # Copy CTFdat to the workingdir as well
-                shutil.copy(InCtfDatFile,self.WorkingDir+'/my.ctfdat')
+                shutil.copy(InCtfDatFile, os.path.join(self.WorkingDir, 'my.ctfdat'))
 
             # Backup script
             log.make_backup_of_script_file(sys.argv[0],
                                                os.path.abspath(self.WorkingDir))
-    
-            # Execute protocol in the working directory
-            os.chdir(self.WorkingDir)
-            if (DoML2D):
-                self.execute_MLalign2D()
-
-        # Restarting a previous run...
-        else:
-            # Execute protocol in the working directory
-            os.chdir(self.WorkingDir)
-            self.restart_MLalign2D(RestartIter)
-     
+            restart = False
+            
+        # Execute protocol in the working directory
+        os.chdir(self.WorkingDir)
+        self.execute_MLalign2D(restart)
         # Return to parent dir
         os.chdir(os.pardir)
 
-    def execute_MLalign2D(self):
+    def execute_MLalign2D(self, restart=False):
         import os
         import launch_job
         print '*********************************************************************'
-        print '*  Executing ml(f)_align2d program :' 
-        params= ' -o ml2d -i '    + str(self.InSelFile) + \
-                ' -nref ' + str(self.NumberOfReferences)
-        params+=' '+self.ExtraParamsMLalign2D
-        if (self.DoFast):
-            params+= ' -fast '
-        if (self.DoNorm):
-            params+= ' -norm '
-        if (self.DoMirror):
-            params+= ' -mirror '
-        if (self.NumberOfThreads > 1):
-            params+= ' -thr ' + str(self.NumberOfThreads)
+        progId = "ml"
         if (self.DoMlf):
-            if (self.DoCorrectAmplitudes):
-                params+= ' -ctfdat my.ctfdat'
-            else:
-                params+= ' -no_ctf -pixel_size ' + str(self.PixelSize)
-            if (not self.ImagesArePhaseFlipped):
-                params+= ' -not_phase_flipped'
-            if (self.HighResLimit > 0):
-                params += ' -high ' + str(self.HighResLimit)
-
-        if (self.DoMlf):
-            program="xmipp_mlf_align2d"
-        else:
-            program="xmipp_ml_align2d"
-           
-        launch_job.launch_job(program,
-                              params,
-                              self.log,
-                              self.DoParallel,
-                              self.NumberOfMpiProcesses,
-                              self.NumberOfThreads,
-                              self.SystemFlavour)
-
-    def restart_MLalign2D(self, iter):
-        import os
-        import launch_job, utils_xmipp
-        print '*********************************************************************'
-        print '*  Restarting ml(f)_align2d program :' 
-        params= ' -restart ' + utils_xmipp.composeFileName('ml2d_it',iter,'log')
-
-        if (self.DoMlf):
-            program="xmipp_mlf_align2d"
-        else:
-            program="xmipp_ml_align2d"
+            progId += "f"  
+        
+        program = "xmipp_%s_align2d" % progId
+        action = "Executing"
+        if (restart):
+            action = "Restarting"
+            
+        print '*  %s %s program :' % (action, program)
+        
+        if (restart):
+            params= ' -restart ' + utils_xmipp.composeFileName('ml2d_it',self.RestartIter,'log')
+        else: 
+            params = ' -o %s2d -i %s' % (progId, self.InSelFile)
+            # Number of references will be ignored if -ref is passed as expert option
+            if self.ExtraParamsMLalign2D.find("-ref") == -1:
+                params += ' -nref ' + str(self.NumberOfReferences)
+            params +=' ' + self.ExtraParamsMLalign2D
+            if (self.DoFast and not self.DoMlf):
+                params += ' -fast '
+            if (self.DoNorm):
+                params += ' -norm '
+            if (self.DoMirror):
+                params += ' -mirror '
+            if (self.NumberOfThreads > 1  and not self.DoMlf):
+                params += ' -thr ' + str(self.NumberOfThreads)
+            if (self.DoMlf):
+                if (self.DoCorrectAmplitudes):
+                    params += ' -ctfdat my.ctfdat'
+                else:
+                    params += ' -no_ctf -pixel_size ' + str(self.PixelSize)
+                if (not self.ImagesArePhaseFlipped):
+                    params += ' -not_phase_flipped'
+                if (self.HighResLimit > 0):
+                    params += ' -high ' + str(self.HighResLimit)
            
         launch_job.launch_job(program,
                               params,

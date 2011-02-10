@@ -202,6 +202,7 @@ public:
     /** Run some program passing some arguments
      * if destroy is true the program pointer will be freed */
     static void runProgram(XmippProgram * program, const String &arguments, bool destroy=true);
+    static XmippProgram * createByName(const char * programName);
 
 };
 
@@ -278,6 +279,8 @@ public:
 }
 ;// end of class XmippMetadataProgram
 
+
+///Declare all programs
 /** @} */
 
 #endif /* PROGRAM_H_ */

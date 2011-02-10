@@ -227,10 +227,11 @@ class ML3D_class:
                  NumberOfMpiProcesses,
                  SystemFlavour):
 	     
-        import os,sys,shutil
+        import os, sys, shutil
         scriptdir=os.path.split(os.path.dirname(os.popen('which xmipp_protocols','r').read()))[0]+'/protocols'
         sys.path.append(scriptdir) # add default search path
-        import log,selfile
+        import log
+        from xmipp import MetaData
 
         self.WorkingDir=WorkingDir
         self.ProjectDir=ProjectDir
@@ -280,11 +281,10 @@ class ML3D_class:
                 os.makedirs(self.WorkingDir)
 
             # Create a selfile with absolute pathname in the WorkingDir
-            mysel=selfile.selfile()
-            mysel.read(InSelFile)
-            newsel=mysel.make_abspath()
-            self.InSelFile=os.path.abspath(self.WorkingDir+'/'+InSelFile)
-            newsel.write(self.InSelFile)
+            mysel = MetaData(InSelFile)
+            mysel.makeAbsPath()
+            self.InSelFile = os.path.abspath(os.path.join(self.WorkingDir, InSelFile))
+            mysel.write(self.InSelFile)
 
             if (self.DoMlf and self.DoCorrectAmplitudes):
                 # Copy CTFdat to the workingdir as well
@@ -328,25 +328,16 @@ class ML3D_class:
         if os.path.exists(self.InitialReference):
             shutil.copy(self.InitialReference,'initial_reference.vol')
         if (self.DoGenerateSeeds==False and DoJustRefine==False):
-            fh=open(self.SeedsSelfile,'r')
-            lines=fh.readlines()
-            fh.close()
-            i = 0
-            newlines=[]
-            for line in lines:
-                i = i + 1
-                oname=utils_xmipp.composeFileName('initial_seed',i,'vol')
-                words=line.split()
-                if words[0][0]=="/":
-                    shutil.copy(words[0],oname)
-                else:
-                    dirname=os.path.dirname(self.SeedsSelfile)
-                    iname=dirname+'/'+words[0]
-                    shutil.copy(iname,oname)
-                newlines.append(oname+' 1\n')
-            fh=open('ml3d_seeds.sel','w')
-            fh.writelines(newlines)
-            fh.close()
+            md = MetaData(self.SeedsSelfile)
+            md_out = MetaData()
+            new_fn = FileName()
+            for id in md:
+                fn = str(md.getValue(MDL_IMAGE))
+                new_fn.compose('initial_seed', i, 'vol')
+                shutil.copy(fn, new_fn)
+                md_out.addObject()
+                md_out.setValue(MDL_IMAGE, new_fn)
+            md_out.write('ml3d_seeds.sel')
 
     # Crude correction of grey-scale, by performing a single iteration of 
     # projection matching and fourier reconstruction

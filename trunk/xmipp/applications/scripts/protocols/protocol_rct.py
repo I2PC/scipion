@@ -140,20 +140,21 @@ class RCT_class:
         import os,sys,shutil
         scriptdir=os.path.split(os.path.dirname(os.popen('which xmipp_protocols','r').read()))[0]+'/protocols'
         sys.path.append(scriptdir) # add default search path
-        import log,selfile
+        from xmipp import MetaData
+        import log
         import utils_xmipp
         
-        self.WorkingDir=WorkingDir
-        self.ProjectDir=ProjectDir
-        self.PreviousDirML2D=os.path.abspath(PreviousDirML2D)
-        self.PreviousML2DRoot=PreviousML2DRoot
-        self.SelectClasses=utils_xmipp.getCommaSeparatedIntegerList(SelectClasses)
-        self.CenterMaxShift=CenterMaxShift
-        self.AlignTiltPairsAdditionalParams=AlignTiltPairsAdditionalParams
-        self.ReconstructMethod=ReconstructMethod
-        self.ReconstructAdditionalParams=ReconstructAdditionalParams
-        self.LowPassFilter=LowPassFilter
-        self.PixelSize=PixelSize
+        self.WorkingDir = WorkingDir
+        self.ProjectDir = ProjectDir
+        self.PreviousDirML2D = os.path.abspath(PreviousDirML2D)
+        self.PreviousML2DRoot = PreviousML2DRoot
+        self.SelectClasses = utils_xmipp.getCommaSeparatedIntegerList(SelectClasses)
+        self.CenterMaxShift = CenterMaxShift
+        self.AlignTiltPairsAdditionalParams = AlignTiltPairsAdditionalParams
+        self.ReconstructMethod = ReconstructMethod
+        self.ReconstructAdditionalParams = ReconstructAdditionalParams
+        self.LowPassFilter = LowPassFilter
+        self.PixelSize = PixelSize
         
         # Setup logging
         self.log=log.init_log_system(self.ProjectDir,
@@ -163,24 +164,20 @@ class RCT_class:
                 
         # Delete working directory if it exists, make a new one, and go there
         if (DoDeleteWorkingDir): 
-            if (self.WorkingDir==""):
+            if (self.WorkingDir == ""):
                 raise RuntimeError,"No working directory given"
             if os.path.exists(self.WorkingDir):
                 shutil.rmtree(self.WorkingDir)
         if not os.path.exists(self.WorkingDir):
             os.makedirs(self.WorkingDir)
 
-        # Create selfiles with absolute pathnames in the WorkingDir
-        mysel=selfile.selfile()
-        mysel2=selfile.selfile()
-        self.UntiltedSelFile=os.path.abspath(self.WorkingDir+'/'+UntiltedSelFile)
-        self.TiltedSelFile=os.path.abspath(self.WorkingDir+'/'+TiltedSelFile)
-        mysel.read(UntiltedSelFile)
-        mysel2.read(TiltedSelFile)
-        newsel=mysel.make_abspath()
-        newsel2=mysel2.make_abspath()
-        newsel.write(self.UntiltedSelFile)
-        newsel2.write(self.TiltedSelFile)
+        # Create metadatas with absolute pathnames in the WorkingDir
+        self.UntiltedSelFile = os.path.abspath(self.WorkingDir+'/'+UntiltedSelFile)
+        self.TiltedSelFile = os.path.abspath(self.WorkingDir+'/'+TiltedSelFile)
+        mysel = MetaData(UntiltedSelFile)
+        mysel2 = MetaData(TiltedSelFile)
+        mysel.write(self.UntiltedSelFile)
+        mysel2.write(self.TiltedSelFile)
 
         # Backup script
         log.make_backup_of_script_file(sys.argv[0],
@@ -192,8 +189,10 @@ class RCT_class:
         
         if (DoImagePreparation):
             self.make_local_copies()
+            
         if (DoUntiltedHeaders):
             self.set_headers_untilted()
+            
         if (DoTiltedHeaders):
             self.set_headers_tilted()
 
@@ -219,11 +218,11 @@ class RCT_class:
         # Set self.PreviousML2DRoot to the ML2D Working dir if empty
         if self.PreviousML2DRoot=='':
             self.PreviousML2DRoot='ml2d'
-        ml2d_abs_rootname=self.PreviousDirML2D+'/'+self.PreviousML2DRoot
+        ml2d_abs_rootname = self.PreviousDirML2D+'/'+self.PreviousML2DRoot
         
         # Check whether the ML2D run has written docfiles already
-        docfiles=glob.glob(ml2d_abs_rootname+'_it??????.doc')
-        lastiter=len(docfiles)
+        docfiles = glob.glob(ml2d_abs_rootname+'_it??????.doc')
+        lastiter = len(docfiles)
         if (lastiter==0):
             message='No ML2D docfiles yet. Continue script after ML2D job completion... '
             print '* ',message
@@ -265,18 +264,19 @@ class RCT_class:
         import os,shutil
         import selfile
         import launch_job
+        from xmipp import MetaData
         # Loop over all selected untilted classes
         for ref in self.untiltclasslist:
-            local_unt_selfile=self.untiltclasslist[ref][0]
-            local_refavg=self.untiltclasslist[ref][1]
-            local_til_selfile=self.untiltclasslist[ref][2]
-            unt_selfile=self.untiltclasslist[ref][3]
-            refavg=self.untiltclasslist[ref][4]
+            local_unt_selfile = self.untiltclasslist[ref][0]
+            local_refavg = self.untiltclasslist[ref][1]
+            local_til_selfile = self.untiltclasslist[ref][2]
+            unt_selfile = self.untiltclasslist[ref][3]
+            refavg = self.untiltclasslist[ref][4]
             # Copy selfiles and average of untilted images
-            shutil.copy(unt_selfile,local_unt_selfile)
-            shutil.copy(refavg,local_refavg)
+            shutil.copy(unt_selfile, local_unt_selfile)
+            shutil.copy(refavg, local_refavg)
             # Generate corresponding tilted selfile
-            self.make_tilted_selfile(local_unt_selfile,local_til_selfile)
+            self.make_tilted_selfile(local_unt_selfile, local_til_selfile)
             # Make a local copy of the images
             message='Making a local copy of the images in '+local_unt_selfile+' and '+local_til_selfile
             print '* ',message
@@ -288,8 +288,7 @@ class RCT_class:
                                   command,
                                   self.log,
                                   False,1,1,'')
-            mysel=selfile.selfile()
-            mysel.read(local_unt_selfile)
+            mysel = MetaData(local_unt_selfile)
             newsel=mysel.copy_sel('local_untilted_images')
             newsel.write(local_unt_selfile)
             mysel.read(local_til_selfile)

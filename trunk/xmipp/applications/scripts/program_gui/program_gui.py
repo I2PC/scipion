@@ -359,10 +359,11 @@ class ProgramGUI(Frame):
               ).pack(side=TOP, padx="5m"); 
         n = int(sys.stdin.readline());
         if n > 0:
-            usageLabel = Label(self, justify=LEFT, bd=BORDER, relief=SUNKEN);
+            usageLabel = Label(self, justify=LEFT, anchor=W, wraplength=500, bd=BORDER, relief=SUNKEN);
             usageText = "";
             for i in range(0, n):
-                usageText += sys.stdin.readline();
+                usageLine = sys.stdin.readline();
+                usageText += usageLine.strip();     
             usageLabel.config(text=usageText);
             usageLabel.pack(side=TOP, padx="5m");
             
