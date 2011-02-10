@@ -89,14 +89,8 @@ protected:
 /* MAIN -------------------------------------------------------------------- */
 int main(int argc, char *argv[])
 {
-    try
-    {
-        ProgHeaderExtract program;
-        program.read(argc, argv);
-        program.run();
-    }
-    catch (XmippError xe)
-    {
-        std::cerr << xe;
-    }
+    ProgHeaderExtract program;
+    program.read(argc, argv);
+    program.tryRun();
+
 }
