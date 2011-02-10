@@ -105,7 +105,8 @@ public:
     {
         XmippMetadataProgram::readParams();
         padType=getParam("--pad");
-        padValue=getDoubleParam("--pad","value");
+        if (padType == "value")
+            padValue=getDoubleParam("--pad","value");
         if (checkParam("--corners"))
         {
             int nparams=getCountParam("--corners");
@@ -196,15 +197,17 @@ public:
             Iin.read(fnImg,true,-1,true);
         else
             Iin.readApplyGeo(fnImg);
-        Iin().setXmippOrigin();
-        if (ZSIZE(Iin()())==1)
-            zF=z0=0;
 
         double init_value(padValue);
         if (padType=="avg")
             init_value=Iin().computeAvg();
         else if (padType=="corner")
             init_value=Iin()(0,0,0,0);
+
+        Iin().setXmippOrigin();
+        if (ZSIZE(Iin()())==1)
+            zF=z0=0;
+
         std::string oext=fnImgOut.getExtension();
         DataType dataType=Iin.getDatatype();
         if (oext=="spi" || oext=="xmp" || oext=="vol" || oext=="stk")
