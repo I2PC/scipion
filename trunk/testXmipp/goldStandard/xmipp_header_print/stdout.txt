@@ -1,0 +1,18 @@
+ Printing the header ... 
+Image type   : Real-space image
+Reversed     : FALSE
+Data type    : Floating point (4-byte)
+dimensions   : 1 x 1 x 64 x 64  (noObjects x slices x rows x columns)
+Euler angles : 
+  Phi   (rotation around Z axis) = 1
+  theta (tilt, second rotation around new Y axis) = 2
+  Psi   (third rotation around new Z axis) = 3
+Origin Offsets : 
+  Xoff  (origin offset in X-direction) = 4
+  Yoff  (origin offset in Y-direction) = 5
+  Zoff  (origin offset in Z-direction) = 0
+Scale  : 2
+Header size  : 2048
+Weight  : 6
+Flip    : 0
+
