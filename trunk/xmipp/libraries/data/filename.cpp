@@ -370,11 +370,9 @@ FileName FileName::removeFileFormat() const
 String FileName::getBlockName() const
 {
     size_t first = rfind("@");
-    String result;
-    if ( first != String::npos)
+    String result = "";
+    if ( first != String::npos && isalpha(this->at(0)))
         result = substr(0, first);
-    else
-        result = "";
     return result;
 
 }
@@ -382,7 +380,7 @@ String FileName::getBlockName() const
 FileName FileName::removeBlockName() const
 {
     size_t first = rfind("@");
-    if (first != String::npos)
+    if ( first != String::npos && isalpha(this->at(0)))
         return substr(first + 1);
     return *this;
 }

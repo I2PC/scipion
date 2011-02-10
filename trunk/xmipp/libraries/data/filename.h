@@ -39,6 +39,8 @@
 #include <typeinfo>
 #include <sys/stat.h>
 #include <errno.h>
+#include <ctype.h>
+
 #ifdef HAVE_UNISTD_H
 #include <unistd.h>
 #endif /* HAVE_UNISTD_H */
@@ -47,7 +49,6 @@
 #include "macros.h"
 #include "error.h"
 #include "strings.h"
-
 #define FILENAMENUMBERLENGTH 6
 
 //@{
@@ -514,10 +515,7 @@ public:
  *     std::cout << "The file exists" << std::endl;
  * @endcode
  */
-int exists(const FileName& fn);
-
-/** True if the path is a directory */
-bool isDirectory (const FileName &fn);
+bool exists(const FileName& fn);
 
 /** True if the file exists in the current directory
  *  Remove leading xx@ and tailing :xx
@@ -527,7 +525,10 @@ bool isDirectory (const FileName &fn);
  *     std::cout << "The file exists" << std::endl;
  * @endcode
  */
-int existsTrim(const FileName& fn);
+bool existsTrim(const FileName& fn);
+
+/** True if the path is a directory */
+bool isDirectory (const FileName &fn);
 
 /** Return the list of files within a directory. */
 void getdir(const std::string &dir, std::vector<FileName> &files);
