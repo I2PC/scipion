@@ -46,10 +46,10 @@ void ProgSimulateMicroscope::defineParams()
     XmippMetadataProgram::defineParams();
 
     addUsageLine("Simulate the effect of the microscope on ideal projections.");
-    addUsageLine("Example of use: Generate a set of images with the CTF applied without any noise");
-    addUsageLine("   xmipp_phantom_simulate_microscope -i g0ta.sel -oroot g1ta -ctf untilt_ARMAavg.ctfparam");
-    addUsageLine("Example of use: Generate a set of images with the CTF applied and noise before and after CTF");
-    addUsageLine("   xmipp_phantom_simulate_microscope -i g0ta.sel -oroot g2ta -ctf untilt_ARMAavg.ctfparam -noise 4.15773 -after_ctf_noise");
+    addExampleLine("Example of use: Generate a set of images with the CTF applied without any noise", false);
+    addExampleLine("   xmipp_phantom_simulate_microscope -i g0ta.sel --oroot g1ta --ctf untilt_ARMAavg.ctfparam");
+    addExampleLine("Example of use: Generate a set of images with the CTF applied and noise before and after CTF", false);
+    addExampleLine("   xmipp_phantom_simulate_microscope -i g0ta.sel --oroot g2ta --ctf untilt_ARMAavg.ctfparam --noise 4.15773 --after_ctf_noise");
 
     addParamsLine("  [--ctf <CTFdescr>]       : a CTF description");
     addParamsLine("  [--defocus_change <v=0>] : change in the defocus value (percentage)");
