@@ -203,18 +203,19 @@ protected:
 
         // Show
         int shown = 0;
-
+        FileName fnTmp;
         for (StringVector::const_iterator it = files.begin(); it < files.end(); ++it)
         {
             fn = *it;
-            if (!exists(fn))
+            fnTmp = fn.removeFileFormat();
+            if (!exists(fnTmp))
             {
                 switch (mode)
                 {
                 case MODE_INPUT:
                 case MODE_PSDSEL:
                 case MODE_CTFSEL:
-                    std::cerr << fn << " is not a valid filename\n";
+                    std::cerr << "Filename: '" << fnTmp << "' doesn't exist" << std::endl;
                 case MODE_SPECT:
                     continue;
                 case MODE_SOM:

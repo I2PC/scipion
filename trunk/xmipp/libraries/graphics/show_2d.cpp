@@ -727,7 +727,8 @@ bool ImageViewer::loadImage(const char *fileName,
     {
 
         // try to read image from standard format.
-    	if (image.load(filename, 0)) ok = Qt2xmipp(image);
+      FileName fnTmp = FileName(filename).removeFileFormat();
+    	if (image.load(fnTmp.c_str(), 0)) ok = Qt2xmipp(image);
 
         if (!ok)
         {
