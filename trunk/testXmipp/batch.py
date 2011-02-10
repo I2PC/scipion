@@ -47,6 +47,9 @@ if __name__ == '__main__':
     tester.testProgram(program, "-i input/phantomBacteriorhodopsin.vol --oroot %s/%s_%02d/projections --params input/clusterProjection.param" % (fnDir, program,2),2)
     tester.testProgram(program, "-i input/phantomBacteriorhodopsin.vol --oroot %s/%s_%02d/projections --params input/uniformProjection.param" % (fnDir, program,3),3)
 
+    program = "xmipp_phantom_simulate_microscope"
+    tester.testProgram(program, "-i input/smallStack.stk -o %s/%s/smallStackPlusCtf.stk --ctf input/input.ctfparam" % (fnDir, program))
+    
     program = "xmipp_transform_add_noise"
     tester.testProgram(program, "-i input/cleanImage.spi --type gaussian 10 5 -o %s/%s/noisyGaussian.spi" % (fnDir, program))
 
