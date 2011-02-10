@@ -223,7 +223,7 @@ public:
     bool parseParamList(TokenType startToken, ProgramDef * prog, StringVector &paramList, bool addName);
     bool parseArgumentList();
     virtual bool parse();
-    void checkRequires(std::stringstream & errors, ProgramDef * prog);
+    bool checkRequires(std::stringstream & errors, ProgramDef * prog);
     virtual void check(std::stringstream & errors);
     bool containsArgument(const String & argName);
     ArgumentDef * findArgument(const String & argName);
