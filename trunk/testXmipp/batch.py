@@ -42,6 +42,9 @@ if __name__ == '__main__':
     program = "xmipp_convert_image"
     tester.testProgram(program, "-i input/smallStack.stk -o %s/%s/smallStack.mrcs -t stk" % (fnDir, program))
 
+    program = "xmipp_header_extract"
+    tester.testProgram(program, "-i input/smallStack.stk -o %s/%s/header.doc" % (fnDir, program))
+    
     program = "xmipp_phantom_project"
     tester.testProgram(program, "-i input/phantomBacteriorhodopsin.vol -o %s/%s_%02d/image.xmp --angles 0 0 0" % (fnDir, program,1),1)
     tester.testProgram(program, "-i input/phantomBacteriorhodopsin.vol --oroot %s/%s_%02d/projections --params input/clusterProjection.param" % (fnDir, program,2),2)
