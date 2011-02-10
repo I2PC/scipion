@@ -446,8 +446,10 @@ void applyGeometry(int SplineDegree,
                         // if wx == 0 means that the rightest point is useless for this
                         // interpolation, and even it might not be defined if m1=xdim-1
                         // The same can be said for wy.
-                        double aux1=(1 - wy);
-                        double aux2=aux1* (1 - wx) ;
+                        double wx_1 = (1-wx);
+                        double wy_1 = (1-wy);
+                        double aux1=wy_1;
+                        double aux2=aux1* wx_1 ;
                         tmp  = aux2 * DIRECT_A2D_ELEM(V1, n1, m1);
 
                         if (wx != 0 && m2 < V1.xdim)
@@ -455,7 +457,7 @@ void applyGeometry(int SplineDegree,
 
                         if (wy != 0 && n2 < V1.ydim)
                         {
-                            aux2=wy * (1 - wx);
+                            aux2=wy * wx_1;
                             tmp += aux2 * DIRECT_A2D_ELEM(V1, n2, m1);
 
                             if (wx != 0 && m2 < V1.xdim)
@@ -651,28 +653,40 @@ void applyGeometry(int SplineDegree,
                             // this interpolation, and even it might not be defined if
                             // m1=xdim-1
                             // The same can be said for wy.
-                            tmp  = (1 - wz) * (1 - wy) * (1 - wx) * DIRECT_A3D_ELEM(V1, o1, n1, m1);
+                            double wx_1=1-wx;
+                            double wy_1=1-wy;
+                            double wz_1=1-wz;
+
+                            double aux1=wz_1 * wy_1;
+                            double aux2=aux1*wx_1;
+                            tmp  =  aux2 * DIRECT_A3D_ELEM(V1, o1, n1, m1);
 
                             if (wx != 0 && m2 < V1.xdim)
-                                tmp += (1 - wz) * (1 - wy) * wx * DIRECT_A3D_ELEM(V1, o1, n1, m2);
+                                tmp += (aux1-aux2)* DIRECT_A3D_ELEM(V1, o1, n1, m2);
 
                             if (wy != 0 && n2 < V1.ydim)
                             {
-                                tmp += (1 - wz) * wy * (1 - wx) * DIRECT_A3D_ELEM(V1, o1, n2, m1);
+                                aux1=wz_1 * wy;
+                                aux2=aux1*wx_1;
+                                tmp += aux2 * DIRECT_A3D_ELEM(V1, o1, n2, m1);
                                 if (wx != 0 && m2 < V1.xdim)
-                                    tmp += (1 - wz) * wy * wx * DIRECT_A3D_ELEM(V1, o1, n2, m2);
+                                    tmp += (aux1-aux2) * DIRECT_A3D_ELEM(V1, o1, n2, m2);
                             }
 
                             if (wz != 0 && o2 < V1.zdim)
                             {
-                                tmp += wz * (1 - wy) * (1 - wx) * DIRECT_A3D_ELEM(V1, o2, n1, m1);
+                                aux1=wz * wy_1;
+                                aux2=aux1*wx_1;
+                                tmp += aux2 * DIRECT_A3D_ELEM(V1, o2, n1, m1);
                                 if (wx != 0 && m2 < V1.xdim)
-                                    tmp += wz * (1 - wy) * wx * DIRECT_A3D_ELEM(V1, o2, n1, m2);
+                                    tmp += (aux1-aux2) * DIRECT_A3D_ELEM(V1, o2, n1, m2);
                                 if (wy != 0 && n2 < V1.ydim)
                                 {
-                                    tmp += wz * wy * (1 - wx) * DIRECT_A3D_ELEM(V1, o2, n2, m1);
+                                    aux1=wz * wy;
+                                    aux2=aux1*wx_1;
+                                    tmp += aux2 * DIRECT_A3D_ELEM(V1, o2, n2, m1);
                                     if (wx != 0 && m2 < V1.xdim)
-                                        tmp += wz * wy * wx * DIRECT_A3D_ELEM(V1, o2, n2, m2);
+                                        tmp += (aux1-aux2) * DIRECT_A3D_ELEM(V1, o2, n2, m2);
                                 }
                             }
 
@@ -680,22 +694,22 @@ void applyGeometry(int SplineDegree,
                             if (show_debug)
                                 std::cout <<
                                 "tmp1=" << DIRECT_A3D_ELEM(V1, o1, n1, m1) << " "
-                                << (T)((1 - wz) *(1 - wy) *(1 - wx) * DIRECT_A3D_ELEM(V1, o1, n1, m1))
+                                << (T)(wz_1 *wy_1 *wx_1 * DIRECT_A3D_ELEM(V1, o1, n1, m1))
                                 << std::endl <<
                                 "tmp2=" << DIRECT_A3D_ELEM(V1, o1, n1, m2) << " "
-                                << (T)((1 - wz) *(1 - wy) * wx * DIRECT_A3D_ELEM(V1, o1, n1, m2))
+                                << (T)(wz_1 *wy_1 * wx * DIRECT_A3D_ELEM(V1, o1, n1, m2))
                                 << std::endl <<
                                 "tmp3=" << DIRECT_A3D_ELEM(V1, o1, n2, m1) << " "
-                                << (T)((1 - wz) * wy *(1 - wx) * DIRECT_A3D_ELEM(V1, o1, n2, m1))
+                                << (T)(wz_1 * wy *wx_1 * DIRECT_A3D_ELEM(V1, o1, n2, m1))
                                 << std::endl <<
                                 "tmp4=" << DIRECT_A3D_ELEM(V1, o1, n2, m2) << " "
-                                << (T)((1 - wz) * wy * wx * DIRECT_A3D_ELEM(V1, o2, n1, m1))
+                                << (T)(wz_1 * wy * wx * DIRECT_A3D_ELEM(V1, o2, n1, m1))
                                 << std::endl <<
                                 "tmp6=" << DIRECT_A3D_ELEM(V1, o2, n1, m2) << " "
-                                << (T)(wz * (1 - wy) * wx * DIRECT_A3D_ELEM(V1, o2, n1, m2))
+                                << (T)(wz * wy_1 * wx * DIRECT_A3D_ELEM(V1, o2, n1, m2))
                                 << std::endl <<
                                 "tmp7=" << DIRECT_A3D_ELEM(V1, o2, n2, m1) << " "
-                                << (T)(wz * wy *(1 - wx) * DIRECT_A3D_ELEM(V1, o2, n2, m1))
+                                << (T)(wz * wy *wx_1 * DIRECT_A3D_ELEM(V1, o2, n2, m1))
                                 << std::endl <<
                                 "tmp8=" << DIRECT_A3D_ELEM(V1, o2, n2, m2) << " "
                                 << (T)(wz * wy * wx * DIRECT_A3D_ELEM(V1, o2, n2, m2))
