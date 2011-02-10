@@ -42,6 +42,10 @@ protected:
         decompose_stacks = false;
         XmippMetadataProgram::defineParams();
         addUsageLine("Print information from the header of 2D-images.");
+        addExampleLine("Print header values in the second image in stack input/smallStack.stk",false);
+        addExampleLine("xmipp_header_print -i 2@input/smallStack.stk");
+        addExampleLine("Print header values in  image kk.img",false);
+        addExampleLine("xmipp_header_print -i kk.img");
     }
 
     void show()
@@ -51,15 +55,15 @@ protected:
 
     void processImage(const FileName &fnImg, const FileName &fnImgOut, size_t objId)
     {
-    	int Xdim, Ydim, Zdim;
-    	unsigned long Ndim;
-    	SingleImgSize(fnImg, Xdim, Ydim, Zdim, Ndim);
+        int Xdim, Ydim, Zdim;
+        unsigned long Ndim;
+        SingleImgSize(fnImg, Xdim, Ydim, Zdim, Ndim);
 
         Image<double> img;
         if (Zdim==1 && Ndim==1)
-        	img.readApplyGeo(fnImg, mdIn, objId, false);
+            img.readApplyGeo(fnImg, mdIn, objId, false);
         else
-        	img.read(fnImg,false);
+            img.read(fnImg,false);
         std::cout << img << std::endl;
     }
 }
@@ -68,16 +72,9 @@ protected:
 /* MAIN -------------------------------------------------------------------- */
 int main(int argc, char *argv[])
 {
-    try
-    {
-        ProgHeaderPrint program;
-        program.read(argc, argv);
-        program.run();
-    }
-    catch (XmippError xe)
-    {
-        std::cerr << xe;
-    }
+    ProgHeaderPrint program;
+    program.read(argc, argv);
+    program.tryRun();
     return 0;
 }
 

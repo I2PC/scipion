@@ -42,18 +42,19 @@ protected:
     {
         each_image_produces_an_output = true;
         apply_geo = false;
-        addUsageLine("Assign rotation angles, origin offsets (and optionally weights and mirror flags)");
+        addUsageLine("Assign geometrical information to header");
         addUsageLine("read from input file to the headers of images. ");
 
         addExampleLine("Example of use: Assign to headers metadata contained in file in_file.doc",false);
         addExampleLine("   xmipp_header_assign -i in_file.doc");
         addExampleLine("Example of use: Assign to headers metadata contained in file in_file.doc with blockname named ONE",false);
         addExampleLine("The metadata assign is append to the file out_file.doc",false);
-        addExampleLine("   xmipp_header_extract -i in_file.doc  --mode append -o out_file.doc:ONE");
+        addExampleLine("   xmipp_header_extract -i in_file.doc  --mode append -o ONE@out_file.doc");
 
         XmippMetadataProgram::defineParams();
         addParamsLine("   [--round_shifts]    :Round shifts to integers");
         addParamsLine("   [--levels <n=0>]    :Levels of pyramidal reduction, n=1, 2, ...");
+
     }
 
     void readParams()
