@@ -798,7 +798,10 @@ bool ImageViewer::loadImage(const char *fileName,
     {
         ok = showImage();
         struct stat info;
-        if (stat(filename, &info))
+        FileName tmpFn(filename),tmp2Fn;
+        tmp2Fn=tmpFn.removeFileFormat();
+        tmpFn=tmp2Fn.getDecomposedFileName();
+        if (stat(tmpFn.c_str(), &info))
         {
             std::cerr << "loadImage: Cannot get time of file " << filename << std::endl;
             modification_time = 0;
