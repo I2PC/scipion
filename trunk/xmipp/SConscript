@@ -343,7 +343,8 @@ def AddImageJPlugin(name, pluginDir, outDir):
     buildJar=env.Jar(target=outDir + '/' + name + '.jar',
         source = buildDir,
         JARCHDIR = buildDir)
-
+    
+    env['ENV']['LANG'] = 'en_GB.UTF-8'
     buildClasses=env.Java(buildDir,sourceDir)
 
     # Packs classes and plugin config file into jar.
@@ -383,7 +384,7 @@ def AddSQLiteLibrary():
             toBuild+=[SQliteDir+'/.libs/'+name1+".0"]
             toCopy+=[name1+".0"]
     lib1 = env.Command(toBuild, SQliteDir+"/sqlite3.c",
-        "cd "+SQliteDir+" ; make clean > /dev/null ; make -j "+str(numJobs)+\
+        "cd "+SQliteDir+" ; make clean > /dev/null ; make " +\
         " > ../../build/sqlite_make.log; "+\
         "chmod 755 sqlite3; mkdir -p ../../bin/; rm -rf ../../bin/xmipp_sqlite3; "+ \
 	    "cp sqlite3 ../../bin/xmipp_sqlite3")
@@ -425,7 +426,7 @@ def AddFFTWLibrary():
                       FFTWDir+'/threads/.libs/'+name2]
             toCopy+=[name1,name2]
     lib1 = env.Command(toBuild, FFTWDir+"/kernel/assert.c",
-        "cd "+FFTWDir+" ; make clean > /dev/null ; make -j "+str(numJobs)+\
+        "cd "+FFTWDir+" ; make clean > /dev/null ; make "+\
         " > ../../build/fftw_make.log ; make install >> ../../build/fftw_make.log")
     alias = env.Alias(toCopy, lib1)
     install = env.Install(libprefix, source=toBuild)
@@ -457,7 +458,7 @@ def AddTIFFLibrary():
             toBuild+=[TIFFDir+'/libtiff/.libs/'+name1]
             toCopy+=[name1]
     lib1 = env.Command(toBuild, TIFFDir+"/libtiff/tif_flush.c",
-        "cd "+TIFFDir+" ; make clean > /dev/null ; make -j "+str(numJobs)+\
+        "cd "+TIFFDir+" ; make clean > /dev/null ; make " +\
         " > ../../build/tiff_make.log ; make install >> ../../build/tiff_make.log")
     alias = env.Alias(toCopy, lib1)
     install = env.Install(libprefix, source=toBuild)
@@ -648,6 +649,7 @@ AddXmippProgram('classify_pca', ['XmippClassif'])
 AddXmippProgram('classify_project_pca', ['XmippClassif'])
 AddXmippProgram('classify_sammon_projection', ['XmippClassif'])
 AddXmippProgram('classify_som',['XmippClassif'])
+#AddXmippProgram('convert_angle')
 AddXmippProgram('convert_data2descr', ['XmippClassif'])
 AddXmippProgram('convert_data2img', ['XmippClassif'])
 AddXmippProgram('convert_data2pdb', ['XmippClassif'])
