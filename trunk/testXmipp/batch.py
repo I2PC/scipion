@@ -66,5 +66,9 @@ if __name__ == '__main__':
     program = "xmipp_xray_import"
     tester.testProgram(program, "--data input/xray_import/Images --flat input/xray_import/Flatfields --oroot %s/%s/stack --crop 30" % (fnDir, program))
 
+    program = "xmipp_xray_project"
+    tester.testProgram(program, "-i input/phantomCandida.vol -o %s/%s_%02d/image.xmp --angles 0 90 90 -s 10 --psf input/xray_psf.xmd" % (fnDir, program,1),1)
+    tester.testProgram(program, "-i input/phantomCandida.vol --oroot %s/%s_%02d/projections --params input/tomoProjection.param -s 10 --psf input/xray_psf.xmd" % (fnDir, program,2),2)
+
     program = "xmipp_xray_psf_create"
     tester.testProgram(program, "-i input/xray_psf.xmd -o %s/%s/psf.vol" % (fnDir, program))

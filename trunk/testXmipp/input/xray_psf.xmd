@@ -1,6 +1,7 @@
 # XMIPP_STAR_1 * 
 # 
 data_
+ _CTF_Xray_lens_type ideal
  _CTF_Xray_lambda 2.43
  _CTF_Xray_OuterZoneWidth 40
  _CTF_Xray_ZonesN 560
