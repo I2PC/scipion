@@ -56,6 +56,9 @@ protected:
         addExampleLine("xmipp_xray_psf_create -i psf560.xmd -o psf560.vol");
         addExampleLine("The parameters are given in the command line",false);
         addExampleLine("xmipp_xray_psf_create -o psf900.vol -lambda 2.5 -zones 900");
+        addExampleLine("In the following link you can find an example of X-ray microscope parameters file:",false);
+        addExampleLine(" ",false);
+        addExampleLine("http://newxmipp.svn.sourceforge.net/viewvc/newxmipp/trunk/testXmipp/input/xray_psf.xmd",false);
     }
 
     void readParams()

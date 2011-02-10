@@ -47,6 +47,10 @@ void ProgXrayProject::defineParams()
     addExampleLine("In the following link you can find an example of projection parameter file:",false);
     addExampleLine(" ",false);
     addExampleLine("http://newxmipp.svn.sourceforge.net/viewvc/newxmipp/trunk/testXmipp/input/tomoProjection.param",false);
+    addExampleLine(" ",false);
+    addExampleLine("In the following link you can find an example of X-ray microscope parameters file:",false);
+    addExampleLine(" ",false);
+    addExampleLine("http://newxmipp.svn.sourceforge.net/viewvc/newxmipp/trunk/testXmipp/input/xray_psf.xmd",false);
 }
 
 /* Read from command line ================================================== */
@@ -473,7 +477,7 @@ void threadXrayProject(ThreadArgument &thArg)
                 A2D_ELEM(intExp,i,j) += A3D_ELEM(vol,k,i,j);
             }
 
-//#define DEBUG
+            //#define DEBUG
 #ifdef DEBUG
             Image<double> _Im;
 #endif
@@ -482,7 +486,7 @@ void threadXrayProject(ThreadArgument &thArg)
             {
                 FOR_ALL_ELEMENTS_IN_ARRAY2D(intExp)
                 {
-                  double tempValue = A3D_ELEM(vol,k,i,j);
+                    double tempValue = A3D_ELEM(vol,k,i,j);
                     A2D_ELEM(intExp,i,j) += tempValue;
                     A2D_ELEM(imTemp,i,j) = (exp(-A2D_ELEM(intExp,i,j)*psf.dzo))*tempValue*psf.dzo;
                 }
