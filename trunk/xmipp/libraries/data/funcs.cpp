@@ -578,7 +578,7 @@ double log2(double value)
 #endif
 
 /* Check if a file exists -------------------------------------------------- */
-int exists(const FileName &fn)
+bool exists(const FileName &fn)
 {
     FILE *aux;
     if ((aux = fopen(fn.c_str(), "r")) == NULL)
@@ -588,7 +588,7 @@ int exists(const FileName &fn)
 }
 
 /* Check if a file exists remove leading @ and tailing : */
-int existsTrim(const FileName &fn)
+bool existsTrim(const FileName &fn)
 {
     FILE *aux;
     FileName auxF;
