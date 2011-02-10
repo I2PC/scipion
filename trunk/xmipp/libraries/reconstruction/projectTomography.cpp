@@ -62,7 +62,7 @@ void ProgProjectTomography::run()
     ParametersProjectionTomography proj_prm;
     PROJECT_Tomography_Side_Info side;
     proj_prm.read(fn_proj_param);
-    proj_prm.tell = tell;
+    proj_prm.show_angles = tell;
     side.produce_Side_Info(proj_prm);
 
     // Project
@@ -101,7 +101,7 @@ int PROJECT_Tomography_Effectively_project(
     int numProjs=0;
     SF.clear();
     std::cerr << "Projecting ...\n";
-    if (!(prm.tell&TELL_SHOW_ANGLES))
+    if (!(prm.show_angles&TELL_SHOW_ANGLES))
         init_progress_bar(expectedNumProjs);
     MetaData DF_movements;
     DF_movements.setComment("True rot, tilt and psi; rot, tilt, psi, X and Y shifts applied");
@@ -113,7 +113,7 @@ int PROJECT_Tomography_Effectively_project(
     for (double angle=prm.tilt0; angle<=prm.tiltF; angle+=prm.tiltStep)
     {
         FileName fn_proj;              // Projection name
-        fn_proj.compose(prm.fnProjectionSeed, idx,
+        fn_proj.compose(prm.fnOut, idx,
                         prm.fn_projection_extension);
 
         // Choose Center displacement ........................................
@@ -149,7 +149,7 @@ int PROJECT_Tomography_Effectively_project(
         IMGMATRIX(proj).addNoise(prm.Npixel_avg, prm.Npixel_dev, "gaussian");
 
         // Save ..............................................................
-        if (prm.tell&TELL_SHOW_ANGLES)
+        if (prm.show_angles&TELL_SHOW_ANGLES)
             std::cout << idx << "\t" << tRot << "\t"
             << tTilt << "\t" << tPsi << std::endl;
         else if ((expectedNumProjs % XMIPP_MAX(1, numProjs / 60))
@@ -162,9 +162,9 @@ int PROJECT_Tomography_Effectively_project(
         SF.setValue(MDL_IMAGE,fn_proj,objId);
         SF.setValue(MDL_ENABLED,1,objId);
     }
-    if (!(prm.tell&TELL_SHOW_ANGLES))
+    if (!(prm.show_angles&TELL_SHOW_ANGLES))
         progress_bar(expectedNumProjs);
 
-    DF_movements.write(prm.fnProjectionSeed + "_movements.txt");
+    DF_movements.write(prm.fnOut + "_movements.txt");
     return numProjs;
 }

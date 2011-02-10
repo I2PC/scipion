@@ -75,7 +75,7 @@ void MPIProgProjectXR::run()
     Projection_mpi_XR_Parameters mpi_proj_prm;
     mpi_proj_prm.node = node;
     mpi_proj_prm.read(fn_proj_param);
-    mpi_proj_prm.tell=tell;
+//    mpi_proj_prm.show_angles=tell;
     XrayProjPhantom side;
 
     side.read(mpi_proj_prm);
@@ -83,7 +83,7 @@ void MPIProgProjectXR::run()
 
     // Project
     int ProjNo = 0;
-    if (!only_create_angles)
+    if (!mpi_proj_prm.only_create_angles)
     {
         // Really project
         ProjNo = PROJECT_mpi_XR_Effectively_project(mpi_proj_prm, side,
@@ -151,7 +151,7 @@ int PROJECT_mpi_XR_Effectively_project(
     size_t id;
     for (double angle=prm.tilt0; angle<=prm.tiltF; angle+=prm.tiltStep)
     {
-        data.fn_proj.compose(prm.fnProjectionSeed, idx,
+        data.fn_proj.compose(prm.fnOut, idx,
                              prm.fn_projection_extension);
 
         // Choose Center displacement ........................................
@@ -203,14 +203,14 @@ int PROJECT_mpi_XR_Effectively_project(
 
     if (node.isMaster())
     {
-        DF_movements.write(prm.fnProjectionSeed + "_movements.txt");
+        DF_movements.write(prm.fnOut + "_movements.txt");
         std::cerr << "Projecting ...\n";
     }
 
 
     long long int first = -1, last = -1;
 
-    if (!(prm.tell))
+    if (!(prm.show_angles))
         init_progress_bar(mpiData.size());
 
     // Parallel node jobs
@@ -233,7 +233,7 @@ int PROJECT_mpi_XR_Effectively_project(
             IMGMATRIX(proj).addNoise(prm.Npixel_avg, prm.Npixel_dev, "gaussian");
 
             // Save ..............................................................
-            if (prm.tell)
+            if (prm.show_angles)
                 std::cout << "Node: " << node.rank << "\t" << proj.rot() << "\t"
                 << proj.tilt() << "\t" << proj.psi() << std::endl;
 

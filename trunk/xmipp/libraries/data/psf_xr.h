@@ -113,13 +113,15 @@ public:
 
     operMode mode;
 
-    // Define the selected PSF generation algorithm.
+    /// Define the selected PSF generation algorithm.
     PsfType type;
 
-    // Current OTF
+    /// Current OTF
     MultidimArray< std::complex<double> > OTF;
-    // 3D PSF
+    /// 3D PSF
     Image<double> * PSF;
+    /// Lens shape Mask
+    MultidimArray<double> mask;
 
     /* RX Microscope configuration */
     /// Lens Aperture Radius
@@ -191,7 +193,7 @@ public:
     double dzoPSF;
 
     /// Switch to control verbose mode
-    bool verbose;
+    int verbose;
 
     // Number of threads
     int nThr;

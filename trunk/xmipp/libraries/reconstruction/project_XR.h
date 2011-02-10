@@ -66,14 +66,8 @@ public:
     XRayPSF psf;
     // Input volume sampling
     double dxo;
-    /// Only create angles, do not project
-    bool only_create_angles;
-    // Show angles calculation in std::out
-    bool show_angles;
     /// Number of threads;
     int nThr;
-    /*the program shows the angles for each image.*/
-    int tell;
 
 protected:
     virtual void defineParams();
@@ -82,8 +76,6 @@ protected:
 public:
 
     virtual void run();
-
-
 };
 
 /** Project program Side information.
@@ -135,10 +127,6 @@ int XrayProjectEffectivelyProject( ParametersProjectionXR &prm,
 void XrayProjectVolumeOffCentered(XrayProjPhantom &side, XRayPSF &psf, Projection &P,
                                    int Ydim, int Xdim, int  idxSlice = 1);
 
-
-/// Generate an X-ray microscope projection for volume vol using the microscope configuration psf
-void project_xr(XRayPSF &psf, Image<double> &vol, Image<double> &imOut,  int idxSlice = 1);
-
 /// Data struct to be passed to threads
 struct XrayThread
 {
@@ -154,12 +142,8 @@ ThreadManager * thMgr;
 ParallelTaskDistributor * td;
 int numberOfThreads;
 
-
-
-
 /// Thread Job to generate an X-ray microscope projection
 void threadXrayProject(ThreadArgument &thArg);
 //@}
-
 
 #endif /* _PROJECTXR_H_ */

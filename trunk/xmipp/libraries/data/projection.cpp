@@ -89,25 +89,81 @@ void Projection::assign(const Projection &P)
 }
 
 
+ParametersProjectionTomography::ParametersProjectionTomography()
+{
+    proj_Xdim = 0;
+    proj_Ydim = 0;
+
+    axisRot = 0;
+    axisTilt = 0;
+    raxis.initZeros(3);
+
+    tilt0    = 0;
+    tiltF    = 0;
+    tiltStep = 0;
+
+    Nangle_dev = 0;
+    Nangle_avg = 0;
+
+    Npixel_dev = 0;
+    Npixel_avg = 0;
+
+    Ncenter_dev = 0;
+    Ncenter_avg = 0;
+}
+
+
 void ParametersProjectionTomography::defineParams(XmippProgram* program)
 {
     program->addParamsLine(" -i <volume_file>        : Volume file to be projected.");
     program->addParamsLine(" alias --input;");
-    program->addParamsLine(" -p <param_file>         : MetaData file with projection parameters.");
-    program->addParamsLine(" alias --param;");
-    program->addParamsLine(" -o  <project_stack_file>: Stack file with the generated projections.");
-    program->addParamsLine("                         : A metadata file with angles info is also generated, with same seed name.");
+    program->addParamsLine("   --oroot <rootname>    : Output rootname (use --params)");
+    program->addParamsLine("or -o <image_file>       : Output image (use --angles)");
     program->addParamsLine(" alias --output;");
+    program->addParamsLine("== Generating a set of projections == ");
+    program->addParamsLine(" [--params <parameters_file>]         : File containing projection parameters");
+    program->addParamsLine("                                    : Check the manual for a description of the parameters");
+    program->addParamsLine("      requires --oroot;");
+    program->addParamsLine("== Generating a single projection == ");
+    program->addParamsLine(" [--angles <tilt> <axisRot=90> <axisTilt=90>]  : Tilt angle for a single projection.");
+    program->addParamsLine("                                              : (axisRot, axisTilt) is the direction of the rotation axis." );
+    program->addParamsLine("   requires -o;");
+    program->addParamsLine("==+ Global projection options== ");
+    program->addParamsLine("[--show_angles]          : Print angles value for each projection.");
+    program->addParamsLine("[--only_create_angles]   : Projections are not calculated, only the angles values.");
 }
 
+// Read params from command line
 void ParametersProjectionTomography::readParams(XmippProgram * program)
 {
     fnPhantom = program->getParam("-i");
-    read(program->getParam("-p"));
-    fnProjectionSeed = program->getParam("-o");
 
+    singleProjection = program->checkParam("-o");
+
+    if (!singleProjection)
+    {
+        fnRoot = program->getParam("--oroot");
+        read(program->getParam("--params"));
+    }
+    else
+    {
+        fnOut = program->getParam("-o");
+
+        tilt0 = tiltF = program->getDoubleParam("--angles",0);
+        tiltStep = 1;
+
+        axisRot = program->getDoubleParam("--angles",1);
+        axisTilt = program->getDoubleParam("--angles",2);
+
+        Image<char> volTemp;
+        volTemp.read(fnPhantom, false);
+        proj_Xdim = XSIZE(VOLMATRIX(volTemp));
+        proj_Ydim = YSIZE(VOLMATRIX(volTemp));
+    }
+
+    show_angles = program->checkParam("--show_angles");
+    only_create_angles = program->checkParam("--only_create_angles");
 }
-
 
 /* Read Projection Parameters ============================================== */
 void ParametersProjectionTomography::read(const FileName &fn_proj_param)
@@ -189,7 +245,7 @@ void ParametersProjectionTomography::read(const FileName &fn_proj_param)
                 lineNo = 1;
                 break;
             case 1:
-                fnProjectionSeed =
+                fnOut =
                     firstWord(line);
                 // Next two parameters are optional
                 auxstr = nextToken();
@@ -306,7 +362,7 @@ void project_Volume(MultidimArray<double> &V, Projection &P, int Ydim, int Xdim,
     // coordinate system attached to the
     // projection
     Matrix1D<double> p1(3);  // coordinates of the pixel in the
-                             // universal space
+    // universal space
     Matrix1D<double> p1_shifted(3); // shifted half a pixel
     FOR_ALL_ELEMENTS_IN_ARRAY2D(mP)
     {
@@ -352,37 +408,37 @@ void project_Volume(MultidimArray<double> &V, Projection &P, int Ydim, int Xdim,
             double auxMin, auxMax;
             if (alpha_xmin<alpha_xmax)
             {
-            	auxMin=alpha_xmin;
-            	auxMax=alpha_xmax;
+                auxMin=alpha_xmin;
+                auxMax=alpha_xmax;
             }
             else
             {
-            	auxMin=alpha_xmax;
-            	auxMax=alpha_xmin;
+                auxMin=alpha_xmax;
+                auxMax=alpha_xmin;
             }
             double alpha_min=auxMin;
             double alpha_max=auxMax;
             if (alpha_ymin<alpha_ymax)
             {
-            	auxMin=alpha_ymin;
-            	auxMax=alpha_ymax;
+                auxMin=alpha_ymin;
+                auxMax=alpha_ymax;
             }
             else
             {
-            	auxMin=alpha_ymax;
-            	auxMax=alpha_ymin;
+                auxMin=alpha_ymax;
+                auxMax=alpha_ymin;
             }
             alpha_min=fmax(auxMin,alpha_min);
             alpha_max=fmin(auxMax,alpha_max);
             if (alpha_zmin<alpha_zmax)
             {
-            	auxMin=alpha_zmin;
-            	auxMax=alpha_zmax;
+                auxMin=alpha_zmin;
+                auxMax=alpha_zmax;
             }
             else
             {
-            	auxMin=alpha_zmax;
-            	auxMax=alpha_zmin;
+                auxMin=alpha_zmax;
+                auxMax=alpha_zmin;
             }
             alpha_min=fmax(auxMin,alpha_min);
             alpha_max=fmin(auxMax,alpha_max);
@@ -1085,6 +1141,7 @@ void project_Crystal_SimpleGrid(Image<double> &vol, const SimpleGrid &grid,
     char c;
     std::cin >> c;
 #endif
+
 }
 #undef DEBUG
 #undef DEBUG_LITTLE

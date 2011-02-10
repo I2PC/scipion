@@ -128,10 +128,12 @@ public:
     /** Phantom filename.
         It must be a Xmipp volume. */
     FileName fnPhantom;
-    /// Sampling resolution of the phantom.
-    double sampling;
-    /// Starting name for all projections
-    FileName  fnProjectionSeed;
+    /// Root filename (used for a stack)
+    FileName  fnRoot;
+    /// Output filename (used for a singleProjection)
+    FileName  fnOut;
+    /// Only project a single image
+    bool singleProjection;
     /// First projection number. By default, 1.
     int      starting;
     /// Extension for projection filenames. This is optional
@@ -142,8 +144,10 @@ public:
     /// Projection Ydim
     int      proj_Ydim;
 
-    /// Debugging level
-    int tell;
+    /// Only create angles, do not project
+    bool only_create_angles;
+    // Show angles calculation in std::out
+    bool show_angles;
 
     /// Rotational angle of the tilt axis
     double axisRot;
@@ -172,7 +176,11 @@ public:
     double    Nangle_avg;
     /// Standard deviation of the angles
     double    Nangle_dev;
+
 public:
+
+    ParametersProjectionTomography();
+
     /** Read projection parameters from a file.
         An exception is thrown if the file is not found or any of the
         parameters is not found in the right place.*/

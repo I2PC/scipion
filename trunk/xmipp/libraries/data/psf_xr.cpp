@@ -288,8 +288,10 @@ void XRayPSF::calculateParams(double _dxo, double _dzo)
     dxiMax = lambda * Zi / (2 * Rlens);
     DoF = 4*deltaR*deltaR/lambda;
 
-    if(verbose)
+    if(verbose > 0)
         show();
+    if (verbose == 1) // To show only once the param adjust info
+        verbose = 2;
 }
 
 /* Apply the OTF to an image ----------------------------------------------- */
@@ -374,7 +376,9 @@ void XRayPSF::generateOTF()
         }
     case PSF_FROM_FILE:
         {
-            REPORT_ERROR(ERR_NOT_IMPLEMENTED,"");
+            REPORT_ERROR(ERR_NOT_IMPLEMENTED," Reading from PSF File not implemented yet.");
+            //FIXME: Complete PSF_FROM_FILE case and remove lower sentence
+            //            generatePSFIdealLens(PSFi);
             break;
         }
     }
@@ -464,18 +468,11 @@ void XRayPSF::generatePSFIdealLens(MultidimArray<double> &PSFi) const
 
     lensPD(OTFTemp, focalEquiv, lambda, dxl, dyl);
 
-    double Rlens2=Rlens*Rlens;
-    for (int i=0; i<YSIZE(OTFTemp); i++)
+    // Apply the Shape mask
+    FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(OTFTemp)
     {
-        double y = (double) i * dyl + dyl*(1 - Niy) / 2;
-        double y2=y*y;
-        for (int j=0; j<XSIZE(OTFTemp); j++)// Circular mask
-        {
-            /// For indices in standard fashion
-            double x = (double) j * dxl + dxl*(1 - Nix) / 2;
-            if (x*x + y2 > Rlens2)
-                dAij(OTFTemp,i,j) = 0;
-        }
+        if (dAi(mask,n) == 0)
+            dAi(OTFTemp,n) = 0;
     }
 
     //#define DEBUG
@@ -507,14 +504,14 @@ void XRayPSF::generatePSFIdealLens(MultidimArray<double> &PSFi) const
     double aux, aux2;
     FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(PSFi)
     {
-    	aux=abs(DIRECT_MULTIDIM_ELEM(PSFiTemp,n));
-    	DIRECT_MULTIDIM_ELEM(PSFi,n)=aux2=aux*aux;
+        aux=abs(DIRECT_MULTIDIM_ELEM(PSFiTemp,n));
+        DIRECT_MULTIDIM_ELEM(PSFi,n)=aux2=aux*aux;
         norm += aux2;
     }
 
     iNorm = 1/norm;
     FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(PSFi)
-        DIRECT_MULTIDIM_ELEM(PSFi,n) *= iNorm;
+    DIRECT_MULTIDIM_ELEM(PSFi,n) *= iNorm;
 
 
 #ifdef DEBUG
@@ -561,9 +558,9 @@ void XRayPSF::adjustParam()
             deltaZMinY = Zo*((Rlens*2*dyl)/(Rlens*2*dyl + Zo*lambda) - 1);
 
 
-            if (verbose)
+            if (verbose > 1)
             {
-                //                std::cout << std::endl;
+                std::cout << std::endl;
                 std::cout << "----------------------" << std::endl;
                 std::cout << "XrayPSF::Param adjust:" << std::endl;
                 std::cout << "----------------------" << std::endl;
@@ -581,7 +578,7 @@ void XRayPSF::adjustParam()
 
                 AdjustType = PSFXR_INT;
 
-                if (verbose)
+                if (verbose > 1)
                     std::cout << "XrayPSF: Image plane sampling too small: increasing resolution" << std::endl;
 
             }
@@ -626,7 +623,7 @@ void XRayPSF::adjustParam()
             dxl = lambda*Zi / (Nix * dxi); // Pixel X-size en the plane of lens aperture
             dyl = lambda*Zi / (Niy * dxi); // Pixel Y-size en the plane of lens aperture
 
-            if (verbose)
+            if (verbose > 1)
             {
                 if (AdjustType!=PSFXR_STD)
                 {
@@ -639,6 +636,29 @@ void XRayPSF::adjustParam()
                 << ", " << ceil(2*Rlens / dyl) << ")"  << std::endl;
                 std::cout << std::endl;
             }
+
+            // Calculate the mask to be applied when generating PSFIdealLens
+
+            mask.initZeros(Niy,Nix);
+
+            double Rlens2=Rlens*Rlens;
+            double auxY = dyl*(1 - Niy);
+            double auxX = dxl*(1 - Nix);
+
+            for (int i=0; i<YSIZE(mask); i++)
+            {
+                double y = (double) i * dyl + auxY * 0.5;
+                double y2 = y * y;
+                for (int j=0; j<XSIZE(mask); j++)// Circular mask
+                {
+                    /// For indices in standard fashion
+                    double x = (double) j * dxl + auxX * 0.5;
+                    if (x*x + y2 <= Rlens2)
+                        dAij(mask,i,j) = 1;
+                }
+            }
+
+
             break;
         }
     case ANALYTIC_ZP:
@@ -647,6 +667,8 @@ void XRayPSF::adjustParam()
             break;
         }
     }
+    if (verbose == 2)
+        verbose = 1;
 }
 
 /* Generate the quadratic phase distribution of an ideal lens ------------- */
@@ -657,27 +679,28 @@ void lensPD(MultidimArray<std::complex<double> > &Im, double Flens, double lambd
 
     Im.setXmippOrigin();
 
-    //    FOR_ALL_ELEMENTS_IN_ARRAY2D(Im)
-    FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY2D(Im)
+    double K = (-PI / (lambda * Flens));
+
+    for (int i=0; i<((Im).ydim); i++)
     {
-        /// For indices in standard fashion
-        x = (double) j * dx + (dx - Lx0) / 2;
-        y = (double) i * dy + (dy - Ly0) / 2;
+        y = (double) i * dy + (dy - Ly0) * 0.5;
+        double y2 =  y * y;
 
-        //        x = (double) j * dx + (dx) / 2;
-        //        y = (double) i * dy + (dy) / 2;
+        for (int j=0; j<((Im).xdim); j++)
+        {
+            /// For indices in standard fashion
+            x = (double) j * dx + (dx - Lx0) *0.5;
 
-        phase = (-PI / (lambda * Flens)) * (x * x + y * y);
+            phase = K * (x * x + y2);
 
-#ifndef _AIX
-
-        dAij(Im,i,j).real() = cos(phase);
-        dAij(Im,i,j).imag() = sin(phase);
-#else
-
-        dAij(Im,i,j) = std::complex<double>(cos(phase),sin(phase));
-#endif
-
+            //#ifndef _AIX
+            //
+            //            dAij(Im,i,j).real() = cos(phase);
+            //            dAij(Im,i,j).imag() = sin(phase);
+            //#else
+            dAij(Im,i,j) = std::complex<double>(cos(phase),sin(phase));
+            //#endif
+        }
     }
 }
 #undef DEBUG
