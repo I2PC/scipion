@@ -199,7 +199,7 @@ void QtFileMenu::slotSaveCoords()
     }
 
     int activeFamily = ((QtWidgetMicrograph*)parentWidget())->activeFamily();
-    m->write_coordinates(activeFamily,  m->micrograph_name() + "." +
+    m->write_coordinates(activeFamily,  -1, m->micrograph_name() + "." +
                          m->get_label(activeFamily) +
                          ".pos");
     __coordinates_are_saved = TRUE;
@@ -295,7 +295,7 @@ void QtFileMenu::slotGenerateImages()
                         this_is_tilted = false;
                     }
                 }
-                m->produce_all_images(activeFamily,
+                m->produce_all_images(activeFamily,-1,
                                       (char*)rootNameLineEdit.text().ascii(),
                                       startingIndexLineEdit.text().toInt(),
                                       (char*)originalMLineEdit.text().ascii(),

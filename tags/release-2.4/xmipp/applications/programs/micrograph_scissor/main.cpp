@@ -98,7 +98,7 @@ int main(int argc, char **argv)
             m.add_label("");
             m.set_transmitance_flag(compute_transmitance);
             m.set_inverse_flag(compute_inverse);
-            m.produce_all_images(0, fn_root, startN, fn_orig, alpha);
+            m.produce_all_images(0, -1, fn_root, startN, fn_orig, alpha);
         }
         else
         {
@@ -123,7 +123,7 @@ int main(int argc, char **argv)
             m.add_label("");
             m.set_transmitance_flag(compute_transmitance);
             m.set_inverse_flag(compute_inverse);
-            m.produce_all_images(0, fn_root, startN, "", alpha_u);
+            m.produce_all_images(0, -1, fn_root, startN, "", alpha_u);
             m.close_micrograph();
 
             // Generate the images for the tilted image
@@ -134,7 +134,7 @@ int main(int argc, char **argv)
             mt.add_label("");
             mt.set_transmitance_flag(compute_transmitance);
             mt.set_inverse_flag(compute_inverse);
-            mt.produce_all_images(0, fn_root_tilted, startN, "", 0., tilt_angle, alpha_t);
+            mt.produce_all_images(0, -1, fn_root_tilted, startN, "", 0., tilt_angle, alpha_t);
             mt.close_micrograph();
         }
     }

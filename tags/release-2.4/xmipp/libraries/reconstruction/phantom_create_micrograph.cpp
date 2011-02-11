@@ -171,7 +171,7 @@ void Prog_Phantom_Create_Micrograph_Parameters::run()
         }
         progress_bar(Nproj);
         DF_out.write(dir_micrograph+"/"+fn_micrograph+".doc");
-        M.write_coordinates(0,dir_micrograph+"/"+fn_micrograph+".pos");
+        M.write_coordinates(0,-1,dir_micrograph+"/"+fn_micrograph+".pos");
         SF_out.write(dir_micrograph+"/"+fn_micrograph_clean+".sel");
         
         // Create the micrograph with noise and CTF ........................

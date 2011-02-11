@@ -356,7 +356,7 @@ void Micrograph::write_as_8_bits(const FileName &fn8bits)
 }
 
 /* Save coordinates to disk ------------------------------------------------ */
-void Micrograph::write_coordinates(int label, const FileName &_fn_coords)
+void Micrograph::write_coordinates(int label, double minCost, const FileName &_fn_coords)
 {
     std::ofstream fh;
     if (_fn_coords != "")
@@ -368,7 +368,7 @@ void Micrograph::write_coordinates(int label, const FileName &_fn_coords)
     int imax = coords.size();
     fh << "# <X position> <Y position>\n";
     for (int i = 0; i < imax; i++)
-        if (coords[i].valid && coords[i].label == label)
+        if (coords[i].valid && coords[i].cost>minCost && coords[i].label == label)
             fh << coords[i].X << " " << coords[i].Y << std::endl;
     fh.close();
 }
@@ -514,7 +514,7 @@ void Micrograph::getLinearTransformatioVal8(double &a, double &b) const
 }
 
 /* Produce all images ------------------------------------------------------ */
-void Micrograph::produce_all_images(int label, const FileName &fn_root,
+void Micrograph::produce_all_images(int label, double minCost, const FileName &fn_root,
                                     int starting_index, const FileName &fn_image, double ang, double tilt,
                                     double psi)
 {
@@ -584,12 +584,12 @@ void Micrograph::produce_all_images(int label, const FileName &fn_root,
     if (labels[label] != "")
     {
         SF.write(fn_micrograph.remove_directories() + "." + labels[label] + ".sel");
-        write_coordinates(label, fn_micrograph + "." + labels[label] + ".pos");
+        write_coordinates(label, minCost, fn_micrograph + "." + labels[label] + ".pos");
     }
     else
     {
         SF.write(fn_micrograph.remove_directories() + ".sel");
-        write_coordinates(label, fn_micrograph + ".pos");
+        write_coordinates(label, minCost, fn_micrograph + ".pos");
     }
 
     // Free source image??
