@@ -70,8 +70,8 @@ protected:
 
         if (noise_type == "gaussian")
         {
-            param1 = getDoubleParam("--type", 1);
-            param2 = getDoubleParam("--type", 2);
+            param2 = getDoubleParam("--type", 1);
+            param1 = getDoubleParam("--type", 2);
         }
         else if (noise_type == "student")
         {
