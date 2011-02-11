@@ -774,7 +774,7 @@ public:
       */
     void getTransformationMatrix(Matrix2D<double> &A,
                                  bool only_apply_shifts = false,
-                                 long int n = 0)
+                                 const size_t n = 0)
     {
         // This has only been implemented for 2D images...
         MULTIDIM_ARRAY(*this).checkDimension(2);

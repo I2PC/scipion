@@ -233,14 +233,17 @@ int  ImageBase::readIMAGIC(int img_select)
                 for ( b = (char *) header; b<hend; b+=4 )
                     swapbytes(b, 4);
 
-            MD[i].setValue(MDL_ORIGINX,  (double)-1. * header->iyold);
-            MD[i].setValue(MDL_ORIGINY,  (double)-1. * header->ixold);
-            MD[i].setValue(MDL_ORIGINZ,  zeroD);
-            MD[i].setValue(MDL_ANGLEROT, (double)-1. * header->euler_alpha);
-            MD[i].setValue(MDL_ANGLETILT,(double)-1. * header->euler_beta);
-            MD[i].setValue(MDL_ANGLEPSI, (double)-1. * header->euler_gamma);
-            MD[i].setValue(MDL_WEIGHT,   (double)oneD);
-            MD[i].setValue(MDL_SCALE, daux);
+            ///DO NOT USE HEADER
+//            MD[i].setValue(MDL_ORIGINX,  (double)-1. * header->iyold);
+//            MD[i].setValue(MDL_ORIGINY,  (double)-1. * header->ixold);
+//            MD[i].setValue(MDL_ORIGINZ,  zeroD);
+//            MD[i].setValue(MDL_ANGLEROT, (double)-1. * header->euler_alpha);
+//            MD[i].setValue(MDL_ANGLETILT,(double)-1. * header->euler_beta);
+//            MD[i].setValue(MDL_ANGLEPSI, (double)-1. * header->euler_gamma);
+//            MD[i].setValue(MDL_WEIGHT,   (double)oneD);
+//            MD[i].setValue(MDL_SCALE, daux);
+            //Initialize geometry
+            initGeometry(i);
             j++;
         }
     }
@@ -446,18 +449,19 @@ int  ImageBase::writeIMAGIC(int img_select, int mode, std::string bitDepth, bool
     for (std::vector<MDRow>::iterator it = MD.begin(); it != MD.end(); ++it)
     {
         header->iyold=header->ixold=header->euler_alpha=header->euler_beta=header->euler_gamma=0.;
-        if(it->getValue(MDL_ORIGINX,  aux))
-            header->iyold  = (float)-aux;
-        if(it->getValue(MDL_ORIGINY,  aux))
-            header->ixold  =(float)-aux;
-        //if(it->getValue(MDL_ORIGINZ,  aux))
-        //    header->zoff  =(float)aux;
-        if(it->getValue(MDL_ANGLEROT, aux))
-            header->euler_alpha   =(float)-aux;
-        if(it->getValue(MDL_ANGLETILT,aux))
-            header->euler_beta    =(float)-aux;
-        if(it->getValue(MDL_ANGLEPSI, aux))
-            header->euler_gamma =(float)-aux;
+        ///DO NOT USE HEADER
+//        if(it->getValue(MDL_ORIGINX,  aux))
+//            header->iyold  = (float)-aux;
+//        if(it->getValue(MDL_ORIGINY,  aux))
+//            header->ixold  =(float)-aux;
+//        //if(it->getValue(MDL_ORIGINZ,  aux))
+//        //    header->zoff  =(float)aux;
+//        if(it->getValue(MDL_ANGLEROT, aux))
+//            header->euler_alpha   =(float)-aux;
+//        if(it->getValue(MDL_ANGLETILT,aux))
+//            header->euler_beta    =(float)-aux;
+//        if(it->getValue(MDL_ANGLEPSI, aux))
+//            header->euler_gamma =(float)-aux;
 
         fwrite( header, IMAGICSIZE, 1, fhed );
         writeData(fimg, i*datasize_n, wDType, datasize_n, castMode);

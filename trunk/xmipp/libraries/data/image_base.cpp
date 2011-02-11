@@ -195,7 +195,7 @@ void ImageBase::swapPage(char * page, size_t pageNrElements, DataType datatype)
     * std::cout << "First Euler angle " << I.rot() << std::endl;
     * @endcode
     */
-double ImageBase::rot(const long int n) const
+double ImageBase::rot(const size_t n) const
 {
     double dummy = 0;
     MD[n].getValue(MDL_ANGLEROT, dummy);
@@ -208,7 +208,7 @@ double ImageBase::rot(const long int n) const
  * std::cout << "Second Euler angle " << I.tilt() << std::endl;
  * @endcode
  */
-double ImageBase::tilt(const long int n) const
+double ImageBase::tilt(const size_t n) const
 {
     double dummy = 0;
     MD[n].getValue(MDL_ANGLETILT, dummy);
@@ -221,7 +221,7 @@ double ImageBase::tilt(const long int n) const
  * std::cout << "Third Euler angle " << I.psi() << std::endl;
  * @endcode
  */
-double ImageBase::psi(const long int n) const
+double ImageBase::psi(const size_t n) const
 {
     double dummy = 0;
     MD[n].getValue(MDL_ANGLEPSI, dummy);
@@ -234,7 +234,7 @@ double ImageBase::psi(const long int n) const
  * std::cout << "Origin offset in X " << I.Xoff() << std::endl;
  * @endcode
  */
-double ImageBase::Xoff(const long int n) const
+double ImageBase::Xoff(const size_t n) const
 {
     double dummy = 0;
     MD[n].getValue(MDL_ORIGINX, dummy);
@@ -247,7 +247,7 @@ double ImageBase::Xoff(const long int n) const
  * std::cout << "Origin offset in Y " << I.Yoff() << std::endl;
  * @endcode
  */
-double ImageBase::Yoff(const long int n) const
+double ImageBase::Yoff(const size_t n) const
 {
     double dummy = 0;
     MD[n].getValue(MDL_ORIGINY, dummy);
@@ -260,7 +260,7 @@ double ImageBase::Yoff(const long int n) const
  * std::cout << "Origin offset in Z " << I.Zoff() << std::endl;
  * @endcode
  */
-double ImageBase::Zoff(const long int n) const
+double ImageBase::Zoff(const size_t n) const
 {
     double dummy = 0;
     MD[n].getValue(MDL_ORIGINZ, dummy);
@@ -273,7 +273,7 @@ double ImageBase::Zoff(const long int n) const
 * std::cout << "weight= " << I.weight() << std::endl;
 * @endcode
 */
-double ImageBase::weight(const long int n) const
+double ImageBase::weight(const size_t n) const
 {
     double dummy = 1;
     MD[n].getValue(MDL_WEIGHT, dummy);
@@ -286,7 +286,7 @@ double ImageBase::weight(const long int n) const
 * std::cout << "scale= " << I.scale() << std::endl;
 * @endcode
 */
-double ImageBase::scale(const long int n) const
+double ImageBase::scale(const size_t n) const
 {
     double dummy = 1;
     MD[n].getValue(MDL_SCALE, dummy);
@@ -300,7 +300,7 @@ double ImageBase::scale(const long int n) const
 * std::cout << "flip= " << flip() << std::endl;
 * @endcode
 */
-bool ImageBase::flip(const long int n) const
+bool ImageBase::flip(const size_t n) const
 {
     bool dummy = false;
     MD[n].getValue(MDL_FLIP, dummy);
@@ -333,10 +333,28 @@ double ImageBase::samplingRateX() const
     return dummy;
 }
 
+/** Init geometry transformation with defaults values
+ */
+void ImageBase::initGeometry(const size_t n)
+{
+  MD[n].setValue(MDL_ORIGINX, zeroD);
+  MD[n].setValue(MDL_ORIGINY, zeroD);
+  MD[n].setValue(MDL_ORIGINZ,  zeroD);
+  MD[n].setValue(MDL_SHIFTX, zeroD);
+  MD[n].setValue(MDL_SHIFTY, zeroD);
+  MD[n].setValue(MDL_SHIFTZ,  zeroD);
+  MD[n].setValue(MDL_ANGLEROT, zeroD);
+  MD[n].setValue(MDL_ANGLETILT,zeroD);
+  MD[n].setValue(MDL_ANGLEPSI, zeroD);
+  MD[n].setValue(MDL_WEIGHT,   oneD);
+  MD[n].setValue(MDL_FLIP,     falseb);
+  MD[n].setValue(MDL_SCALE,    oneD);
+}
+
 /** Set Euler angles in image header
  */
 void ImageBase::setEulerAngles(double rot, double tilt, double psi,
-                               long int n)
+                               const size_t n)
 {
     MD[n].setValue(MDL_ANGLEROT, rot);
     MD[n].setValue(MDL_ANGLETILT, tilt);
@@ -346,7 +364,7 @@ void ImageBase::setEulerAngles(double rot, double tilt, double psi,
 /** Get Euler angles from image header
  */
 void ImageBase::getEulerAngles(double &rot, double &tilt, double &psi,
-                               long int n)
+    const size_t n) const
 {
     MD[n].getValue(MDL_ANGLEROT, rot);
     MD[n].getValue(MDL_ANGLETILT, tilt);
@@ -355,7 +373,7 @@ void ImageBase::getEulerAngles(double &rot, double &tilt, double &psi,
 
 /** Set origin offsets in image header
      */
-void ImageBase::setShifts(double xoff, double yoff, double zoff, long int n)
+void ImageBase::setShifts(double xoff, double yoff, double zoff, const size_t n)
 {
     MD[n].setValue(MDL_ORIGINX, xoff);
     MD[n].setValue(MDL_ORIGINY, yoff);
@@ -363,7 +381,7 @@ void ImageBase::setShifts(double xoff, double yoff, double zoff, long int n)
 }
 /** Get origin offsets from image header
   */
-void ImageBase::getShifts(double &xoff, double &yoff, double &zoff, long int n) const
+void ImageBase::getShifts(double &xoff, double &yoff, double &zoff, const size_t n) const
 {
     MD[n].getValue(MDL_ORIGINX, xoff);
     MD[n].getValue(MDL_ORIGINY, yoff);

@@ -250,7 +250,9 @@ int ImageBase::readMRC(int img_select, bool isStack)
     double daux=1.;
     for ( i = imgStart; i < imgEnd; ++i )
     {
+        initGeometry(i);
         double aux;
+        ///DO NOT USE HEADER
         if(MDMainHeader.getValue(MDL_SAMPLINGRATEX,aux))
         {
             aux = -header->xOrigin/aux;
@@ -267,12 +269,12 @@ int ImageBase::readMRC(int img_select, bool isStack)
             aux = -header->zOrigin/aux;
             MD[i-imgStart].setValue(MDL_ORIGINZ, aux);
         }
-        MD[i-imgStart].setValue(MDL_ANGLEROT, zeroD);
-        MD[i-imgStart].setValue(MDL_ANGLETILT,zeroD);
-        MD[i-imgStart].setValue(MDL_ANGLEPSI, zeroD);
-        MD[i-imgStart].setValue(MDL_WEIGHT,   oneD);
-        MD[i-imgStart].setValue(MDL_FLIP,     falseb);
-        MD[i-imgStart].setValue(MDL_SCALE, daux);
+//        MD[i-imgStart].setValue(MDL_ANGLEROT, zeroD);
+//        MD[i-imgStart].setValue(MDL_ANGLETILT,zeroD);
+//        MD[i-imgStart].setValue(MDL_ANGLEPSI, zeroD);
+//        MD[i-imgStart].setValue(MDL_WEIGHT,   oneD);
+//        MD[i-imgStart].setValue(MDL_FLIP,     falseb);
+//        MD[i-imgStart].setValue(MDL_SCALE, daux);
     }
 
     //#define DEBUG

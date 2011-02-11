@@ -72,17 +72,18 @@ int ImageBase::readSPE(int img_select,bool isStack)
     MD.clear();
     MD.resize(imgEnd - imgStart);
     for ( i = imgStart; i < imgEnd; ++i )
-    {
-        MD[i-imgStart].setValue(MDL_ORIGINX, zeroD);
-        MD[i-imgStart].setValue(MDL_ORIGINY, zeroD);
-        MD[i-imgStart].setValue(MDL_ORIGINZ,  zeroD);
-        MD[i-imgStart].setValue(MDL_ANGLEROT, zeroD);
-        MD[i-imgStart].setValue(MDL_ANGLETILT,zeroD);
-        MD[i-imgStart].setValue(MDL_ANGLEPSI, zeroD);
-        MD[i-imgStart].setValue(MDL_WEIGHT,   oneD);
-        MD[i-imgStart].setValue(MDL_FLIP,     falseb);
-        MD[i-imgStart].setValue(MDL_SCALE,    oneD);
-    }
+      initGeometry(i);
+//    {
+//        MD[i-imgStart].setValue(MDL_ORIGINX, zeroD);
+//        MD[i-imgStart].setValue(MDL_ORIGINY, zeroD);
+//        MD[i-imgStart].setValue(MDL_ORIGINZ,  zeroD);
+//        MD[i-imgStart].setValue(MDL_ANGLEROT, zeroD);
+//        MD[i-imgStart].setValue(MDL_ANGLETILT,zeroD);
+//        MD[i-imgStart].setValue(MDL_ANGLEPSI, zeroD);
+//        MD[i-imgStart].setValue(MDL_WEIGHT,   oneD);
+//        MD[i-imgStart].setValue(MDL_FLIP,     falseb);
+//        MD[i-imgStart].setValue(MDL_SCALE,    oneD);
+//    }
 
     offset = 4100;
     size_t pad = 0;

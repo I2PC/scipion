@@ -256,28 +256,29 @@ int  ImageBase::readSPIDER(int img_select)
                 for ( b = (char *) header; b<hend; b+=4 )
                     swapbytes(b, 4);
         }
-
-        double daux;
-        daux = (double)header->xoff;
-        MD[n].setValue(MDL_ORIGINX, daux);
-        daux = (double)header->yoff;
-        MD[n].setValue(MDL_ORIGINY, daux);
-        daux = (double)header->zoff;
-        MD[n].setValue(MDL_ORIGINZ, daux);
-        daux = (double)header->phi;
-        MD[n].setValue(MDL_ANGLEROT, daux);
-        daux = (double)header->theta;
-        MD[n].setValue(MDL_ANGLETILT, daux);
-        daux = (double)header->gamma;
-        MD[n].setValue(MDL_ANGLEPSI, daux);
-        daux = (double)header->weight;
-        MD[n].setValue(MDL_WEIGHT, daux);
-        bool baux = (header->flip == 1);
-        MD[n].setValue(MDL_FLIP, baux);
-        daux = (double) header->scale;
-        if (daux==0.)
-            daux=1.0;
-        MD[n].setValue(MDL_SCALE, daux);
+        ///DO NOT USE HEADER
+//        double daux;
+//        daux = (double)header->xoff;
+//        MD[n].setValue(MDL_ORIGINX, daux);
+//        daux = (double)header->yoff;
+//        MD[n].setValue(MDL_ORIGINY, daux);
+//        daux = (double)header->zoff;
+//        MD[n].setValue(MDL_ORIGINZ, daux);
+//        daux = (double)header->phi;
+//        MD[n].setValue(MDL_ANGLEROT, daux);
+//        daux = (double)header->theta;
+//        MD[n].setValue(MDL_ANGLETILT, daux);
+//        daux = (double)header->gamma;
+//        MD[n].setValue(MDL_ANGLEPSI, daux);
+//        daux = (double)header->weight;
+//        MD[n].setValue(MDL_WEIGHT, daux);
+//        bool baux = (header->flip == 1);
+//        MD[n].setValue(MDL_FLIP, baux);
+//        daux = (double) header->scale;
+//        if (daux==0.)
+//            daux=1.0;
+//        MD[n].setValue(MDL_SCALE, daux);
+        initGeometry(n);
         if(img_select == i)
             break;
     }
@@ -403,6 +404,7 @@ int  ImageBase::writeSPIDER(int select_img, bool isStack, int mode)
     bool baux;
     header->imami = 0;//never trust max/min
 
+
     if (!MDMainHeader.empty())
     {
         if(MDMainHeader.getValue(MDL_MIN, aux))
@@ -416,28 +418,29 @@ int  ImageBase::writeSPIDER(int select_img, bool isStack, int mode)
 
     }
 
+    ///DO NOT USE HEADER
+//    if (Ndim == 1 && mode != WRITE_APPEND && !isStack && !MD.empty())
+//    {
+//        if(MD[0].getValue(MDL_ORIGINX,  aux))
+//            header->xoff  =(float)aux;
+//        if(MD[0].getValue(MDL_ORIGINY,  aux))
+//            header->yoff  =(float)aux;
+//        if(MD[0].getValue(MDL_ORIGINZ,  aux))
+//            header->zoff  =(float)aux;
+//        if(MD[0].getValue(MDL_ANGLEROT, aux))
+//            header->phi   =(float)aux;
+//        if(MD[0].getValue(MDL_ANGLETILT,aux))
+//            header->theta =(float)aux;
+//        if(MD[0].getValue(MDL_ANGLEPSI, aux))
+//            header->gamma =(float)aux;
+//        if(MD[0].getValue(MDL_WEIGHT,   aux))
+//            header->weight=(float)aux;
+//        if(MD[0].getValue(MDL_FLIP,    baux))
+//            header->flip  =(float)baux;
+//        if(MD[0].getValue(MDL_SCALE,    aux))
+//            header->scale  =(float)aux;
+//    }
 
-    if (Ndim == 1 && mode != WRITE_APPEND && !isStack && !MD.empty())
-    {
-        if(MD[0].getValue(MDL_ORIGINX,  aux))
-            header->xoff  =(float)aux;
-        if(MD[0].getValue(MDL_ORIGINY,  aux))
-            header->yoff  =(float)aux;
-        if(MD[0].getValue(MDL_ORIGINZ,  aux))
-            header->zoff  =(float)aux;
-        if(MD[0].getValue(MDL_ANGLEROT, aux))
-            header->phi   =(float)aux;
-        if(MD[0].getValue(MDL_ANGLETILT,aux))
-            header->theta =(float)aux;
-        if(MD[0].getValue(MDL_ANGLEPSI, aux))
-            header->gamma =(float)aux;
-        if(MD[0].getValue(MDL_WEIGHT,   aux))
-            header->weight=(float)aux;
-        if(MD[0].getValue(MDL_FLIP,    baux))
-            header->flip  =(float)baux;
-        if(MD[0].getValue(MDL_SCALE,    aux))
-            header->scale  =(float)aux;
-    }
     //else end
     // Set time and date
     /*
@@ -542,24 +545,25 @@ int  ImageBase::writeSPIDER(int select_img, bool isStack, int mode)
 
         for (std::vector<MDRow>::iterator it = MD.begin(); it != MD.end(); ++it, ++i)
         {
-            if(it->getValue(MDL_ORIGINX,  aux))
-                header->xoff  =(float)aux;
-            if(it->getValue(MDL_ORIGINY,  aux))
-                header->yoff  =(float)aux;
-            if(it->getValue(MDL_ORIGINZ,  aux))
-                header->zoff  =(float)aux;
-            if(it->getValue(MDL_ANGLEROT, aux))
-                header->phi   =(float)aux;
-            if(it->getValue(MDL_ANGLETILT,aux))
-                header->theta =(float)aux;
-            if(it->getValue(MDL_ANGLEPSI, aux))
-                header->gamma =(float)aux;
-            if(it->getValue(MDL_WEIGHT,   aux))
-                header->weight=(float)aux;
-            if(it->getValue(MDL_FLIP,    baux))
-                header->flip  =(float)baux;
-            if(it->getValue(MDL_SCALE,    aux))
-                header->scale  =(float)aux;
+          ///DO NOT USE HEADER
+//            if(it->getValue(MDL_ORIGINX,  aux))
+//                header->xoff  =(float)aux;
+//            if(it->getValue(MDL_ORIGINY,  aux))
+//                header->yoff  =(float)aux;
+//            if(it->getValue(MDL_ORIGINZ,  aux))
+//                header->zoff  =(float)aux;
+//            if(it->getValue(MDL_ANGLEROT, aux))
+//                header->phi   =(float)aux;
+//            if(it->getValue(MDL_ANGLETILT,aux))
+//                header->theta =(float)aux;
+//            if(it->getValue(MDL_ANGLEPSI, aux))
+//                header->gamma =(float)aux;
+//            if(it->getValue(MDL_WEIGHT,   aux))
+//                header->weight=(float)aux;
+//            if(it->getValue(MDL_FLIP,    baux))
+//                header->flip  =(float)baux;
+//            if(it->getValue(MDL_SCALE,    aux))
+//                header->scale  =(float)aux;
 
             //do not need to unlock because we are in the overwrite case
             fwrite( header, offset, 1, fimg );

@@ -387,7 +387,7 @@ public:
     * std::cout << "First Euler angle " << I.rot() << std::endl;
     * @endcode
     */
-    double rot(const long int n = 0) const;
+    double rot(const size_t n = 0) const;
 
     /** Get Tilt angle
      *
@@ -395,7 +395,7 @@ public:
      * std::cout << "Second Euler angle " << I.tilt() << std::endl;
      * @endcode
      */
-    double tilt(const long int n = 0) const;
+    double tilt(const size_t n = 0) const;
 
     /** Get Psi angle
      *
@@ -403,7 +403,7 @@ public:
      * std::cout << "Third Euler angle " << I.psi() << std::endl;
      * @endcode
      */
-    double psi(const long int n = 0) const;
+    double psi(const size_t n = 0) const;
 
     /** Get Xoff
      *
@@ -411,7 +411,7 @@ public:
      * std::cout << "Origin offset in X " << I.Xoff() << std::endl;
      * @endcode
      */
-    double Xoff(const long int n = 0) const;
+    double Xoff(const size_t n = 0) const;
 
     /** Get Yoff
      *
@@ -419,7 +419,7 @@ public:
      * std::cout << "Origin offset in Y " << I.Yoff() << std::endl;
      * @endcode
      */
-    double Yoff(const long int n = 0) const;
+    double Yoff(const size_t n = 0) const;
 
     /** Get Zoff
      *
@@ -427,7 +427,7 @@ public:
      * std::cout << "Origin offset in Z " << I.Zoff() << std::endl;
      * @endcode
      */
-    double Zoff(const long int n = 0) const;
+    double Zoff(const size_t n = 0) const;
 
     /** Get Weight
     *
@@ -435,7 +435,7 @@ public:
     * std::cout << "weight= " << I.weight() << std::endl;
     * @endcode
     */
-    double weight(const long int n = 0) const;
+    double weight(const size_t n = 0) const;
 
     /** Get Scale factor
     *
@@ -443,7 +443,7 @@ public:
     * std::cout << "scale= " << I.scale() << std::endl;
     * @endcode
     */
-    double scale(const long int n = 0) const;
+    double scale(const size_t n = 0) const;
 
     /** Get Flip
     *
@@ -451,7 +451,7 @@ public:
     * std::cout << "flip= " << flip() << std::endl;
     * @endcode
     */
-    bool flip(const long int n = 0) const;
+    bool flip(const size_t n = 0) const;
 
     /** Data type
         *
@@ -478,30 +478,34 @@ public:
         filename = _filename;
     }
 
+    /** Init geometry transformation with defaults values
+     */
+    void initGeometry(const size_t n = 0);
+
     /** Set Euler angles in image header
      */
     void setEulerAngles(double rot, double tilt, double psi,
-                        long int n = 0);
+                        const size_t n = 0);
 
     /** Get Euler angles from image header
      */
     void getEulerAngles(double &rot, double &tilt, double &psi,
-                        long int n = 0);
+                        const size_t n = 0) const;
 
     /** Set Rotation angle to image */
-    void setRot(double rot, long int n = 0)
+    void setRot(double rot, const size_t n = 0)
     {
         MD[n].setValue(MDL_ANGLEROT, rot);
     }
 
     /** Set Tilt angle to image */
-    void setTilt(double tilt, long int n = 0)
+    void setTilt(double tilt, const size_t n = 0)
     {
         MD[n].setValue(MDL_ANGLETILT, tilt);
     }
 
     /** Set Rotation angle to image */
-    void setPsi(double psi, long int n = 0)
+    void setPsi(double psi, const size_t n = 0)
     {
         MD[n].setValue(MDL_ANGLEPSI, psi);
     }
@@ -509,58 +513,58 @@ public:
     /** Set origin offsets in image header
      */
     void setShifts(double xoff, double yoff, double zoff = 0.,
-                   long int n = 0);
+        const size_t n = 0);
 
     /** Get origin offsets from image header
       */
     void getShifts(double &xoff, double &yoff, double &zoff,
-                   long int n = 0) const;
+        const size_t n = 0) const;
 
     /** Set X offset in image header
      */
-    void setXoff(double xoff, long int n = 0)
+    void setXoff(double xoff, const size_t n = 0)
     {
         MD[n].setValue(MDL_ORIGINX, xoff);
     }
 
     /** Set Y offset in image header
      */
-    void setYoff(double yoff, long int n = 0)
+    void setYoff(double yoff, const size_t n = 0)
     {
         MD[n].setValue(MDL_ORIGINY, yoff);
     }
 
     /** Set Z offset in image header
      */
-    void setZoff(double zoff, long int n = 0)
+    void setZoff(double zoff, const size_t n = 0)
     {
         MD[n].setValue(MDL_ORIGINZ, zoff);
     }
 
     /** Set scale in image header
      */
-    void setScale(double scale, long int n = 0)
+    void setScale(double scale, const size_t n = 0)
     {
         MD[n].setValue(MDL_SCALE, scale);
     }
 
     /** Get scale from image header
      */
-    void getScale(double &scale, long int n = 0)
+    void getScale(double &scale, const size_t n = 0)
     {
         MD[n].getValue(MDL_SCALE, scale);
     }
 
     /** Set flip in image header
      */
-    void setFlip(bool flip, long int n = 0)
+    void setFlip(bool flip, const size_t n = 0)
     {
         MD[n].setValue(MDL_FLIP, flip);
     }
 
     /** Set Weight in image header
     */
-    void setWeight(double weight, long int n = 0)
+    void setWeight(double weight, const size_t n = 0)
     {
         MD[n].setValue(MDL_WEIGHT, weight);
     }
@@ -569,7 +573,7 @@ public:
       */
     virtual void getTransformationMatrix(Matrix2D<double> &A,
                                          bool only_apply_shifts = false,
-                                         long int n = 0)=0;
+                                         const size_t n = 0)=0;
 
     /** Sum this object with other file and keep in this object
       */
