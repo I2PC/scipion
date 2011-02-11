@@ -619,7 +619,7 @@ AdjustContrastWidget::AdjustContrastWidget(int min, int max, float gamma,
 {
     __qtwidgetmicrograph = _qtwidgetmicrograph;
 
-    // Set this selfWindow caption
+    // Set this window caption
     setCaption("Adjust Contrast");
 
     // Create a layout to position the widgets
@@ -734,7 +734,7 @@ CropWidget::CropWidget(QtWidgetMicrograph *_qtwidgetmicrograph,
     int Xdim, Ydim;
     __qtwidgetmicrograph->getMicrograph()->size(Xdim, Ydim);
 
-    // Set this selfWindow caption
+    // Set this window caption
     setCaption("Crop micrograph");
 
     // Create a layout to position the widgets
@@ -901,7 +901,7 @@ void CropWidget::accept()
     std::cout << "Executing:\n" << command << std::endl;
     system(command.c_str());
 
-    // Close the parameters selfWindow
+    // Close the parameters window
     close();
 }
 
@@ -927,7 +927,7 @@ AdjustCircleRadiustWidget::AdjustCircleRadiustWidget(int min, int max,
 {
     __qtwidgetmicrograph = _qtwidgetmicrograph;
 
-    // Set this selfWindow caption
+    // Set this window caption
     setCaption("Change Circle Radius");
 
     // Create a layout to position the widgets

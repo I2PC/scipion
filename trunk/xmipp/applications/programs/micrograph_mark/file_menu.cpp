@@ -308,7 +308,7 @@ void QtFileMenu::slotGenerateImages()
                         this_is_tilted = false;
                     }
                 }
-                m->produce_all_images(activeFamily,
+                m->produce_all_images(activeFamily,-1,
                                       (char*)rootNameLineEdit.text().ascii(),
                                       startingIndexLineEdit.text().toInt(),
                                       (char*)originalMLineEdit.text().ascii(),

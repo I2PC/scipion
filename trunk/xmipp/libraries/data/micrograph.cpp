@@ -327,9 +327,10 @@ int Micrograph::scissor(const Particle_coords &P, MultidimArray<double> &result,
 }
 
 /* Produce all images ------------------------------------------------------ */
-void Micrograph::produce_all_images(int label, const FileName &fn_root,
-                                    int starting_index, const FileName &fn_image, double ang, double tilt,
-                                    double psi, bool rmStack)
+void Micrograph::produce_all_images(int label, double minCost, const FileName &fn_root,
+                                    int starting_index, const FileName &fn_image,
+                                    double ang, double tilt, double psi,
+                                    bool rmStack)
 {
     MetaData SF;
     Image<double> I;
@@ -384,7 +385,7 @@ void Micrograph::produce_all_images(int label, const FileName &fn_root,
     int ii=0;
     size_t id;
     for (int n = 0; n < nmax; n++)
-        if (coords[n].valid && coords[n].label == label)
+        if (coords[n].valid && coords[n].cost>minCost && coords[n].label == label)
         {
             fn_aux.compose(ii++,fn_out);
             id = SF.addObject();

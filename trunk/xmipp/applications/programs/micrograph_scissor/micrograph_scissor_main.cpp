@@ -127,7 +127,7 @@ public:
             m.add_label("");
             m.set_transmitance_flag(compute_transmitance);
             m.set_inverse_flag(compute_inverse);
-            m.produce_all_images(0, fn_root, startN, fn_orig, 0.,0.,0., rmStack);
+            m.produce_all_images(0, -1, fn_root, startN, fn_orig, 0.,0.,0., rmStack);
         }
         else
         {
@@ -148,7 +148,7 @@ public:
             m.add_label("");
             m.set_transmitance_flag(compute_transmitance);
             m.set_inverse_flag(compute_inverse);
-            m.produce_all_images(0, fn_root, startN, "", alpha_u,0.,0.,rmStack);
+            m.produce_all_images(0, -1, fn_root, startN, "", alpha_u,0.,0.,rmStack);
             m.close_micrograph();
 
             // Generate the images for the tilted image
@@ -159,7 +159,7 @@ public:
             mt.add_label("");
             mt.set_transmitance_flag(compute_transmitance);
             mt.set_inverse_flag(compute_inverse);
-            mt.produce_all_images(0, fn_root_tilted, startN, "", 0., tilt_angle, alpha_t, rmStack);
+            mt.produce_all_images(0, -1, fn_root_tilted, startN, "", 0., tilt_angle, alpha_t, rmStack);
             mt.close_micrograph();
         }
     }
