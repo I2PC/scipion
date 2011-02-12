@@ -28,15 +28,7 @@
 int main(int argc, char **argv)
 {
     ProgSimulateMicroscope program;
-    try
-    {
-        program.read(argc, argv);
-        program.run();
-    }
-    catch (XmippError xe)
-    {
-        std::cerr << xe;
-        return 1;
-    }
+    program.read(argc, argv);
+    program.tryRun();
     return 0;
 }
