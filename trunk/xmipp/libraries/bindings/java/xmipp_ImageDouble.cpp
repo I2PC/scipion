@@ -65,10 +65,7 @@ JNIEXPORT void JNICALL Java_xmipp_ImageDouble_readPreview_1
 		const char *fnStr = env->GetStringUTFChars(filename, false);
 
 		try {
-			std::cout << fnStr << std::endl;
-			std::cout << (int)w << std::endl;
-			std::cout << (int)h << std::endl;
-			image->readPreview(fnStr, (int)w, (int)h);//, (int)slice, (int)nimage);
+			image->readPreview(fnStr, (int)w, (int)h, (int)slice, (int)nimage);
 		} catch (XmippError xe) {
 			msg = xe.getDefaultMessage();
 		} catch (std::exception& e) {
