@@ -44,7 +44,7 @@ if __name__ == '__main__':
 
     program = "xmipp_header_extract"
     tester.testProgram(program, "-i input/smallStack.stk -o %s/%s/header.doc" % (fnDir, program))
-    
+
     program = "xmipp_phantom_project"
     tester.testProgram(program, "-i input/phantomBacteriorhodopsin.vol -o %s/%s_%02d/image.xmp --angles 0 0 0" % (fnDir, program,1),1)
     tester.testProgram(program, "-i input/phantomBacteriorhodopsin.vol --oroot %s/%s_%02d/projections --params input/clusterProjection.param" % (fnDir, program,2),2)
@@ -52,7 +52,11 @@ if __name__ == '__main__':
 
     program = "xmipp_phantom_simulate_microscope"
     tester.testProgram(program, "-i input/smallStack.stk -o %s/%s/smallStackPlusCtf.stk --ctf input/input.ctfparam" % (fnDir, program))
-    
+
+    program = "xmipp_tomo_project"
+    tester.testProgram(program, "-i input/phantomCandida.vol -o %s/%s_%02d/image.xmp --angles 0 90 90" % (fnDir, program,1),1)
+    tester.testProgram(program, "-i input/phantomCandida.vol --oroot %s/%s_%02d/projections --params input/tomoProjection.param" % (fnDir, program,2),2)
+
     program = "xmipp_transform_add_noise"
     tester.testProgram(program, "-i input/cleanImage.spi --type gaussian 10 5 -o %s/%s/noisyGaussian.spi" % (fnDir, program))
 
