@@ -269,7 +269,7 @@ void * filterByNormalizationThread(void *args)
 
             // Get the corresponding theoretical projection
             Projection P;
-            project_Volume(prm->V(), P, YSIZE(I()), XSIZE(I()),
+            projectVolume(prm->V(), P, YSIZE(I()), XSIZE(I()),
                            I.rot(), I.tilt(), I.psi());
 
             // Compute correlation within mask

@@ -124,7 +124,7 @@ double ProgAdjustVolume::mismatching(double a, double b)
 
         // Project the auxiliary volume in the same direction
         Projection P;
-        project_Volume(aux, P, YSIZE(I()), XSIZE(I()),
+        projectVolume(aux, P, YSIZE(I()), XSIZE(I()),
                        I.rot(), I.tilt(), I.psi());
 
         // Compute the difference

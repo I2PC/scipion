@@ -110,7 +110,7 @@ void Prog_angular_predict_tomography_prm::produce_side_info()
         dummy.y=I.Yoff();
         dummy.fn_img=I.name();
         Projection theo;
-        project_Volume(V(), theo, YSIZE(V()), XSIZE(V()),
+        projectVolume(V(), theo, YSIZE(V()), XSIZE(V()),
                        dummy.rot, dummy.tilt, dummy.psi);
         selfTranslate(LINEAR,I(),vectorR2(dummy.x,dummy.y),DONT_WRAP);
         if (masksPresent)
@@ -157,7 +157,7 @@ void Prog_angular_predict_tomography_prm::predict_angles(int i)
         {
             // Take a projection from the given direction
             Projection theo;
-            project_Volume(V(), theo, YSIZE(V()), XSIZE(V()), rot, tilt, 0);
+            projectVolume(V(), theo, YSIZE(V()), XSIZE(V()), rot, tilt, 0);
             double theo_avg, theo_stddev, min_val, max_val;
             computeStats_within_binary_mask(mask, theo(),
                                             theo_avg, theo_stddev, min_val, max_val);
@@ -303,7 +303,7 @@ void Prog_angular_predict_tomography_prm::run()
         if (adjustGray)
         {
             Projection theo;
-            project_Volume(V(), theo, YSIZE(V()), XSIZE(V()),
+            projectVolume(V(), theo, YSIZE(V()), XSIZE(V()),
                            list_of_assigned[i].rot,
                            list_of_assigned[i].tilt,
                            list_of_assigned[i].psi);

@@ -173,7 +173,7 @@ void Prog_create_projection_library_Parameters::project_angle_vector(
             if (shears)
                 project_Volume(VShears, P, Ydim, Xdim,rot,tilt,psi);
             else
-                project_Volume(inputVol(), P, Ydim, Xdim,rot,tilt,psi);
+                projectVolume(inputVol(), P, Ydim, Xdim,rot,tilt,psi);
 
             fn_proj.compose(output_file_root, ++myCounter,"xmp");
             P.write(fn_proj);

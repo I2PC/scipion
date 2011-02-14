@@ -159,7 +159,7 @@ void Prog_Break_Sym_prm::process_one_image(Image<double> &img, int &opt_vol,
 
     if (fn_mask != "")
     {
-        project_Volume(mask(), projmask, dim, dim, rot, tilt, psi);
+        projectVolume(mask(), projmask, dim, dim, rot, tilt, psi);
         projmask().setXmippOrigin();
     }
     else
@@ -186,7 +186,7 @@ void Prog_Break_Sym_prm::process_one_image(Image<double> &img, int &opt_vol,
 
     for (int volno = 0; volno < Nvols; volno++)
     {
-        project_Volume(vols[volno], proj, dim, dim, rot, tilt, psi);
+        projectVolume(vols[volno], proj, dim, dim, rot, tilt, psi);
         proj().setXmippOrigin();
         corr = Asq = 0.;
         FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY2D(proj())
@@ -222,7 +222,7 @@ void Prog_Break_Sym_prm::process_one_image(Image<double> &img, int &opt_vol,
             L.resize(3, 3);
             R.resize(3, 3);
             Euler_apply_transf(L, R, rot, tilt, psi, newrot, newtilt, newpsi);
-            project_Volume(vols[volno], proj, dim, dim, newrot, newtilt, newpsi);
+            projectVolume(vols[volno], proj, dim, dim, newrot, newtilt, newpsi);
             proj().setXmippOrigin();
             if (verb > 1)
             {

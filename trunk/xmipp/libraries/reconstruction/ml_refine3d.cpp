@@ -480,7 +480,7 @@ void ProgRefine3D::projectReferenceVolume(MetaData &SFlib, int rank, int size)
             my_rank = nr_dir % size;
             if (rank == my_rank)
             {
-                project_Volume(vol(), proj, vol().rowNumber(), vol().colNumber(), rot, tilt, psi);
+                projectVolume(vol(), proj, vol().rowNumber(), vol().colNumber(), rot, tilt, psi);
                 proj.setEulerAngles(rot, tilt, psi);
                 proj.write(fn_proj);
             }
@@ -745,7 +745,7 @@ void ProgRefine3D::calculate3DSSNR(MultidimArray<double> &spectral_signal, int i
             else
                 alpha_N += Mone * weight;
             // alpha nominator
-            project_Volume(nvol(), proj, dim, dim, rot, tilt, psi);
+            projectVolume(nvol(), proj, dim, dim, rot, tilt, psi);
             apply_cont_mask(mask, proj(), proj());
             FourierTransform(proj(), Faux);
             FFT_magnitude(Faux, Maux);
@@ -757,7 +757,7 @@ void ProgRefine3D::calculate3DSSNR(MultidimArray<double> &spectral_signal, int i
             else
                 alpha_T += Maux * weight;
             // input signal
-            project_Volume(vol(), proj, dim, dim, rot, tilt, psi);
+            projectVolume(vol(), proj, dim, dim, rot, tilt, psi);
             apply_cont_mask(mask, proj(), proj());
             FourierTransform(proj(), Faux);
             FFT_magnitude(Faux, Maux);

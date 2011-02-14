@@ -700,7 +700,7 @@ int PROJECT_Effectively_project(const std::string &fnOut,
         // Really project ....................................................
         if (side.phantomMode==PROJECT_Side_Info::VOXEL)
         {
-            project_Volume(side.phantomVol(), proj, prm.proj_Ydim, prm.proj_Xdim,
+            projectVolume(side.phantomVol(), proj, prm.proj_Ydim, prm.proj_Xdim,
                            rot, tilt, psi);
             Matrix1D<double> shifts(2);
             XX(shifts) = shiftX;

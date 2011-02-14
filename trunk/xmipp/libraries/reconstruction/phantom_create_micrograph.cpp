@@ -115,7 +115,7 @@ void Prog_Phantom_Create_Micrograph_Parameters::run()
             double rot=rnd_unif(0,360);
             double tilt=rnd_unif(0,180);
             double psi=rnd_unif(0,360);
-            project_Volume(V(), P, Xproj, Xproj, rot, tilt, psi);
+            projectVolume(V(), P, Xproj, Xproj, rot, tilt, psi);
             FileName fn_image=fn_proj_clean+"_"+integerToString(l,6)+".xmp";
             P.write(dir_micrograph+"/"+fn_image);
             DF_out_clean.addObject();

@@ -258,7 +258,7 @@ void project_SimpleGrid(Image<T> *vol, const SimpleGrid *grid,
 
     Set it to NULL if you don't want to use it
  */
-void project_Volume(MultidimArray<double> &V, Projection &P, int Ydim, int Xdim,
+void projectVolume(MultidimArray<double> &V, Projection &P, int Ydim, int Xdim,
                     double rot, double tilt, double psi,
                     const Matrix1D<double> *roffset=NULL);
 

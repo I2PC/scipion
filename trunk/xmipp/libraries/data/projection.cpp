@@ -351,7 +351,7 @@ void ParametersProjectionTomography::calculateProjectionAngles(Projection &P, do
 // Projection from a voxel volume ==========================================
 /* Project a voxel volume -------------------------------------------------- */
 //#define DEBUG
-void project_Volume(MultidimArray<double> &V, Projection &P, int Ydim, int Xdim,
+void projectVolume(MultidimArray<double> &V, Projection &P, int Ydim, int Xdim,
                     double rot, double tilt, double psi,
                     const Matrix1D<double> *roffset)
 {
@@ -606,7 +606,7 @@ void projectVolumeOffCentered(MultidimArray<double> &V, Projection &P,
     Matrix1D<double> roffset(3);
     P.getShifts(XX(roffset), YY(roffset), ZZ(roffset));
 
-    project_Volume(V, P, Ydim, Xdim, P.rot(), P.tilt(), P.psi(), &roffset);
+    projectVolume(V, P, Ydim, Xdim, P.rot(), P.tilt(), P.psi(), &roffset);
 }
 
 // Perform a backprojection ================================================

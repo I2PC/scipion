@@ -174,7 +174,7 @@ void ProgAngularProjectLibrary::project_angle_vector (int my_init, int my_end, b
             if (shears)
                 project_Volume(VShears, P, Ydim, Xdim,rot,tilt,psi);
             else
-                project_Volume(inputVol(), P, Ydim, Xdim,rot,tilt,psi);
+                projectVolume(inputVol(), P, Ydim, Xdim,rot,tilt,psi);
 
             P.write(output_file,numberStepsPsi * i + mypsi,true,WRITE_REPLACE);
         }

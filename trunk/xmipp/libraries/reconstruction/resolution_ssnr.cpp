@@ -165,9 +165,9 @@ void Prog_SSNR_prm::Estimate_SSNR(int dim, Matrix2D<double> &output)
         In().setXmippOrigin();
         Inp() = In();
 
-        project_Volume(S(), Iths, YSIZE(Is()), XSIZE(Is()),
+        projectVolume(S(), Iths, YSIZE(Is()), XSIZE(Is()),
                        Is.rot(), Is.tilt(), Is.psi());
-        project_Volume(N(), Ithn, YSIZE(Is()), XSIZE(Is()),
+        projectVolume(N(), Ithn, YSIZE(Is()), XSIZE(Is()),
                        Is.rot(), Is.tilt(), Is.psi());
 
 #ifdef DEBUG

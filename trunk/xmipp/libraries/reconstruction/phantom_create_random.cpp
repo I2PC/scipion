@@ -359,7 +359,7 @@ void ROUT_random_phantom(const Prog_Random_Phantom_Parameters &prm,
                 Realization.project_to(proj, Ydim, Xdim,
                                        rnd_unif(0, 360), rnd_unif(0, 180), rnd_unif(0, 360));
             else
-                project_Volume(side.VoxelPhantom(), proj, Ydim, Xdim,
+                projectVolume(side.VoxelPhantom(), proj, Ydim, Xdim,
                                rnd_unif(0, 360), rnd_unif(0, 180), rnd_unif(0, 360));
 
             // Apply CTF
