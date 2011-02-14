@@ -556,3 +556,19 @@ char   *memtok(char **src,  char **_end, const char *sep)
     *_end=end;
     return (start);
 }
+
+/** Obtain an string from a format in the way of printf works
+ *
+ */
+String formatString(const char * format, ...)
+{
+  char formatBuffer[1024];
+
+  va_list args;
+  va_start(args, format);
+  vsprintf (formatBuffer, format, args);
+  String result(formatBuffer);
+  va_end (args);
+
+  return result;
+}

@@ -33,6 +33,7 @@
 #include <sstream>
 #include <string.h>
 #include <stdio.h>
+#include <stdarg.h>
 
 //TODO: For now just a typedef, I think that would be worth to write an String class
 typedef std::string String;
@@ -389,6 +390,10 @@ void tokenize(const String& str,
 
 char   *memtok(char **src,  char **_end, const char *sep);
 
+/** Obtain an string from a format in the way of printf works
+ *
+ */
+String formatString(const char * format, ...);
 
 
 
