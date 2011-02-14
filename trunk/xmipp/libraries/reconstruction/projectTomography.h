@@ -41,14 +41,8 @@ public:
     FileName fn_proj_param;
     /// Selection file with all projections
     FileName fn_sel_file;
-    /// Only create angles, do not project
-    bool only_create_angles;
-
-#define TELL_SHOW_ANGLES 0x1
-    /** Debugging variable.
-        This is a bitwise flag with the following valid labels:
-        \\TELL_SHOW_ANGLES: the program shows the angles for each image.*/
-    int tell;
+    /// Projection parameters
+    ParametersProjectionTomography projParam;
 
 protected:
     virtual void defineParams();
@@ -76,7 +70,7 @@ public:
     This information can be obtained from the parameters and is basically
     the Xmipp volume or phantom description plus a flag saying which
     of the two is valid. */
-class PROJECT_Tomography_Side_Info
+class TomoProjectSideInfo
 {
 public:
     /// Document File for the projecting angles. Order: rot, tilt, psi
@@ -87,20 +81,7 @@ public:
     /** Produce Project Side information.
         This function produce the side information from the project
         program parameters. Basically it loads the phantom.*/
-    void produce_Side_Info(const ParametersProjectionTomography &prm);
+    void produceSideInfo(const ParametersProjectionTomography &prm);
 };
-
-/* Effectively project ----------------------------------------------------- */
-/** Effectively project.
-    This is the routine which effectively projects, it needs the projection
-    parameters and the side information. The Projection field will keep
-    at the end the last projection, this is useful in case you want
-    to project only one image, although it is also written to disk.
-    The returned number is the total number of projections generated.
-    A selection file with all images is also returned.*/
-int PROJECT_Tomography_Effectively_project(
-    const ParametersProjectionTomography &prm,
-    PROJECT_Tomography_Side_Info &side, Projection &proj, MetaData &SF);
-
 //@}
 #endif

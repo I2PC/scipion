@@ -182,12 +182,16 @@ public:
     ParametersProjectionTomography();
 
     /** Read projection parameters from a file.
-        An exception is thrown if the file is not found or any of the
-        parameters is not found in the right place.*/
+    */
     void read(const FileName &fn_proj_param);
-
     void defineParams(XmippProgram * program);
     void readParams(XmippProgram * program);
+
+    /**
+     * Calculate the Euler angles and X-Y shifts from the tilt axis direction and tilt angle.
+     */
+    void calculateProjectionAngles(Projection &P, double angle, double inplaneRot,
+                                   const Matrix1D<double> &rinplane);
 };
 
 /** Structure for threaded projections.
@@ -273,10 +277,8 @@ void project_Volume(MultidimArray<double> &V, Projection &P, int Ydim, int Xdim,
     Where Raxis is the 3D rotation matrix given by the axis and
     the angle.
 */
-void project_Volume_offCentered(MultidimArray<double> &V, Projection &P,
-                                int Ydim, int Xdim, double axisRot, double axisTilt,
-                                const Matrix1D<double> &raxis, double angle, double inplaneRot,
-                                const Matrix1D<double> &rinplane);
+void projectVolumeOffCentered(MultidimArray<double> &V, Projection &P,
+                              int Ydim, int Xdim);
 
 /** Single Weighted Back Projection.
    Projects a single particle into a voxels volume by updating its components this way:

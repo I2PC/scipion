@@ -343,7 +343,7 @@ def AddImageJPlugin(name, pluginDir, outDir):
     buildJar=env.Jar(target=outDir + '/' + name + '.jar',
         source = buildDir,
         JARCHDIR = buildDir)
-    
+
     env['ENV']['LANG'] = 'en_GB.UTF-8'
     buildClasses=env.Java(buildDir,sourceDir)
 
@@ -714,7 +714,6 @@ AddXmippProgram('phantom_create_random', ['XmippRecons'])
 AddXmippProgram('phantom_project', ['XmippRecons','XmippInterface'])
 AddXmippProgram('phantom_simulate_microscope', ['XmippRecons'])
 AddXmippProgram('phantom_transform', ['XmippRecons','XmippInterface'])
-AddXmippProgram('project_tomography', ['XmippRecons'])
 AddXmippProgram('projection_real_shears', ['XmippRecons'])
 AddXmippProgram('psd_enhance', ['XmippRecons'])
 AddXmippProgram('psd_sort', ['XmippRecons'])
@@ -749,6 +748,7 @@ AddXmippProgram('try_symmetry')
 #AddXmippProgram('test_program')
 #AddXmippProgram('test_sql')
 AddXmippProgram('template_threads')
+AddXmippProgram('tomo_project', ['XmippRecons'])
 AddXmippProgram('virus_vertex', ['XmippRecons'])
 AddXmippProgram('volume_segment', ['XmippRecons'])
 AddXmippProgram('xray_import', ['XmippRecons'])

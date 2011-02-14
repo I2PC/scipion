@@ -35,19 +35,6 @@
    @ingroup ReconsLibrary */
 //@{
 
-/* Projection parameters --------------------------------------------------- */
-/** Projecting parameters.
-    This class reads a set of projection parameters in a file (see
-    xmipp_xray_project for more information about the file structure) and extract the
-    useful information from it.*/
-class ParametersProjectionXR: public ParametersProjectionTomography
-{
-public:
-
-    void calculateProjectionAngles(Projection &P, double angle, double inplaneRot,
-                                   const Matrix1D<double> &rinplane);
-};
-
 /* Projection XR Program -------------------------------- */
 /** Program class for the project program */
 class ProgXrayProject: public XmippProgram
@@ -61,7 +48,7 @@ public:
     /// Filename with the Microscope Parameters.
     FileName fn_psf_xr;
     // Projection parameters
-    ParametersProjectionXR projParam;
+    ParametersProjectionTomography projParam;
     // Microscope optics parameters
     XRayPSF psf;
     // Input volume sampling
@@ -93,19 +80,8 @@ public:
     /** Produce Project Side information.
         This function produce the side information from the project
         program parameters. Basically it loads the phantom.*/
-    void read(const ParametersProjectionXR &prm);
+    void read(const ParametersProjectionTomography &prm);
 };
-
-/* Effectively project ----------------------------------------------------- */
-/** Effectively project.
-    This is the routine which effectively projects, it needs the projection
-    parameters and the side information. The Projection field will keep
-    at the end the last projection, this is useful in case you want
-    to project only one image, although it is also written to disk.
-    The returned number is the total number of projections generated.
-    A selection file with all images is also returned.*/
-int XrayProjectEffectivelyProject( ParametersProjectionXR &prm,
-                                    XrayProjPhantom &side, Projection &proj,XRayPSF &psf, MetaData &SF);
 
 /** From voxel volumes, off-centered tilt axis.
     This routine projects a volume that is rotating (angle) degrees

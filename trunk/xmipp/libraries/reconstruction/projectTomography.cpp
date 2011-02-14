@@ -31,140 +31,122 @@
 void ProgProjectTomography::defineParams()
 {
     addUsageLine("Generate projections as if it were a single axis tomographic series.");
-    addParamsLine(" -i <Proj_param_file>   :MetaData file with projection parameters.");
-    addParamsLine("                        :Check the manual for a description of the parameters.");
-    addParamsLine(" alias --input;");
-    addParamsLine("[-o <metadata_file=\"\">]    : Output Metadata file with all the generated projections.");
-    addParamsLine("[-show_angles]          : Print angles value for each projection.");
-    addParamsLine("[-only_create_angles]   : Projections are not calculated, only the angles values.");
+    addSeeAlsoLine("phantom_create, phantom_project, xray_project");
+    //Params
+    projParam.defineParams(this);
+    //Examples
+    addExampleLine("Generating a set of projections using a projection parameter:", false);
+    addExampleLine("xmipp_xray_project -i volume.vol --oroot images --params projParams.xmd");
+    addExampleLine("Generating a single projection at 45 degrees around X axis:", false);
+    addExampleLine("xmipp_xray_project -i volume.vol -o image.spi --angles 45 0 90");
+    addExampleLine("Generating a single projection at 45 degrees around Y axis:", false);
+    addExampleLine("xmipp_xray_project -i volume.vol -o image.spi --angles 45 90 90");
+    //Example projection file
+    addExampleLine("In the following link you can find an example of projection parameter file:",false);
+    addExampleLine(" ",false);
+    addExampleLine("http://newxmipp.svn.sourceforge.net/viewvc/newxmipp/trunk/testXmipp/input/tomoProjection.param",false);
 }
 
 void ProgProjectTomography::readParams()
 {
-    fn_proj_param = getParam("-i");
-    fn_sel_file   = getParam("-o");
-
-    only_create_angles = checkParam("-only_create_angles");
-    tell=0;
-    if (checkParam("-show_angles"))
-        tell |= TELL_SHOW_ANGLES;
+    projParam.readParams(this);
 }
 
 void ProgProjectTomography::run()
 {
 
     Projection         proj;
-    MetaData           SF;
+    MetaData           projMD;
 
     randomize_random_generator();
 
-    // Read projection parameters and produce side information
-    ParametersProjectionTomography proj_prm;
-    PROJECT_Tomography_Side_Info side;
-    proj_prm.read(fn_proj_param);
-    proj_prm.show_angles = tell;
-    side.produce_Side_Info(proj_prm);
+    TomoProjectSideInfo side;
+    side.produceSideInfo(projParam);
 
     // Project
-    int ProjNo = 0;
-    if (!only_create_angles)
-    {
-        // Really project
-        ProjNo = PROJECT_Tomography_Effectively_project(proj_prm, side,
-                 proj, SF);
-        // Save SelFile
-        if (fn_sel_file != "")
-            SF.write(fn_sel_file);
-    }
-    else
-    {
-        side.DF.write("/dev/stdout");
-    }
-    return;
-
-}
-
-/* Produce Side Information ================================================ */
-void PROJECT_Tomography_Side_Info::produce_Side_Info(
-    const ParametersProjectionTomography &prm)
-{
-    phantomVol.read(prm.fnPhantom);
-    phantomVol().setXmippOrigin();
-}
-
-/* Effectively project ===================================================== */
-int PROJECT_Tomography_Effectively_project(
-    const ParametersProjectionTomography &prm,
-    PROJECT_Tomography_Side_Info &side, Projection &proj, MetaData &SF)
-{
-    int expectedNumProjs = FLOOR((prm.tiltF-prm.tilt0)/prm.tiltStep);
+    int expectedNumProjs = FLOOR((projParam.tiltF-projParam.tilt0)/projParam.tiltStep);
     int numProjs=0;
-    SF.clear();
+
     std::cerr << "Projecting ...\n";
-    if (!(prm.show_angles&TELL_SHOW_ANGLES))
+    if (!(projParam.show_angles))
         init_progress_bar(expectedNumProjs);
-    MetaData DF_movements;
-    DF_movements.setComment("True rot, tilt and psi; rot, tilt, psi, X and Y shifts applied");
+
+    projMD.setComment("True rot, tilt and psi; rot, tilt, psi, X and Y shifts applied");
     double tRot,tTilt,tPsi,rot,tilt,psi;
+    FileName fn_proj;              // Projection name
+    int idx = 0;
+    size_t objId;
 
-
-    int idx=prm.starting;
-    size_t id;
-    for (double angle=prm.tilt0; angle<=prm.tiltF; angle+=prm.tiltStep)
+    for (double angle=projParam.tilt0; angle<=projParam.tiltF; angle+=projParam.tiltStep)
     {
-        FileName fn_proj;              // Projection name
-        fn_proj.compose(prm.fnOut, idx,
-                        prm.fn_projection_extension);
+        if (projParam.singleProjection)
+            fn_proj = projParam.fnOut;
+        else
+            fn_proj.compose(idx, projParam.fnRoot + ".stk");
 
         // Choose Center displacement ........................................
-        double shiftX     = rnd_gaus(prm.Ncenter_avg, prm.Ncenter_dev);
-        double shiftY    = rnd_gaus(prm.Ncenter_avg, prm.Ncenter_dev);
+        double shiftX     = rnd_gaus(projParam.Ncenter_avg, projParam.Ncenter_dev);
+        double shiftY    = rnd_gaus(projParam.Ncenter_avg, projParam.Ncenter_dev);
         Matrix1D<double> inPlaneShift(3);
         VECTOR_R3(inPlaneShift,shiftX,shiftY,0);
 
+        projParam.calculateProjectionAngles(proj,angle, 0,inPlaneShift);
+
         // Really project ....................................................
-        project_Volume_offCentered(side.phantomVol(), proj,
-                                   prm.proj_Ydim, prm.proj_Xdim, prm.axisRot, prm.axisTilt,
-                                   prm.raxis, angle, 0, inPlaneShift);
+        if (!projParam.only_create_angles)
+            projectVolumeOffCentered(side.phantomVol(), proj,
+                                     projParam.proj_Ydim, projParam.proj_Xdim);
 
         // Add noise in angles and voxels ....................................
         proj.getEulerAngles(tRot, tTilt,tPsi);
 
-        rot  = tRot  + rnd_gaus(prm.Nangle_avg,  prm.Nangle_dev);
-        tilt = tTilt + rnd_gaus(prm.Nangle_avg,  prm.Nangle_dev);
-        psi  = tPsi  + rnd_gaus(prm.Nangle_avg,  prm.Nangle_dev);
+        rot  = tRot  + rnd_gaus(projParam.Nangle_avg,  projParam.Nangle_dev);
+        tilt = tTilt + rnd_gaus(projParam.Nangle_avg,  projParam.Nangle_dev);
+        psi  = tPsi  + rnd_gaus(projParam.Nangle_avg,  projParam.Nangle_dev);
 
         proj.setEulerAngles(rot,tilt,psi);
 
-        id=DF_movements.addObject();
-        DF_movements.setValue(MDL_ANGLEROT,tRot,id);
-        DF_movements.setValue(MDL_ANGLETILT,tTilt,id);
-        DF_movements.setValue(MDL_ANGLEPSI,tPsi,id);
-        DF_movements.setValue(MDL_ANGLEROT2,rot,id);
-        DF_movements.setValue(MDL_ANGLETILT2,tilt,id);
-        DF_movements.setValue(MDL_ANGLEPSI2,psi,id);
-        DF_movements.setValue(MDL_SHIFTX,shiftX,id);
-        DF_movements.setValue(MDL_SHIFTY,shiftY,id);
+        objId = projMD.addObject();
+        if (!projParam.only_create_angles)
+        {
+            proj.write(fn_proj, -1, !projParam.singleProjection, WRITE_REPLACE);
+            projMD.setValue(MDL_IMAGE,fn_proj,objId);
+        }
+        projMD.setValue(MDL_ANGLEROT,tRot,objId);
+        projMD.setValue(MDL_ANGLETILT,tTilt,objId);
+        projMD.setValue(MDL_ANGLEPSI,tPsi,objId);
+        projMD.setValue(MDL_ANGLEROT2,rot,objId);
+        projMD.setValue(MDL_ANGLETILT2,tilt,objId);
+        projMD.setValue(MDL_ANGLEPSI2,psi,objId);
+        projMD.setValue(MDL_SHIFTX,shiftX,objId);
+        projMD.setValue(MDL_SHIFTY,shiftY,objId);
 
-        IMGMATRIX(proj).addNoise(prm.Npixel_avg, prm.Npixel_dev, "gaussian");
+        IMGMATRIX(proj).addNoise(projParam.Npixel_avg, projParam.Npixel_dev, "gaussian");
 
         // Save ..............................................................
-        if (prm.show_angles&TELL_SHOW_ANGLES)
+        if (projParam.show_angles)
             std::cout << idx << "\t" << tRot << "\t"
             << tTilt << "\t" << tPsi << std::endl;
         else if ((expectedNumProjs % XMIPP_MAX(1, numProjs / 60))
                  == 0)
             progress_bar(numProjs);
-        proj.write(fn_proj);
+
         numProjs++;
         idx++;
-        size_t objId = SF.addObject();
-        SF.setValue(MDL_IMAGE,fn_proj,objId);
-        SF.setValue(MDL_ENABLED,1,objId);
     }
-    if (!(prm.show_angles&TELL_SHOW_ANGLES))
+    if (!projParam.show_angles)
         progress_bar(expectedNumProjs);
 
-    DF_movements.write(prm.fnOut + "_movements.txt");
-    return numProjs;
+    if (!projParam.singleProjection)
+        projMD.write(projParam.fnRoot + ".sel");
+
+    return;
+}
+
+/* Produce Side Information ================================================ */
+void TomoProjectSideInfo::produceSideInfo(
+    const ParametersProjectionTomography &prm)
+{
+    phantomVol.read(prm.fnPhantom);
+    phantomVol().setXmippOrigin();
 }

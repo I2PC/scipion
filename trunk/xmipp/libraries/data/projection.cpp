@@ -314,6 +314,40 @@ void ParametersProjectionTomography::read(const FileName &fn_proj_param)
     }
 }
 
+void ParametersProjectionTomography::calculateProjectionAngles(Projection &P, double angle, double inplaneRot,
+        const Matrix1D<double> &rinplane)
+{
+    // Find Euler rotation matrix
+    Matrix1D<double> axis;
+    Euler_direction(axisRot,axisTilt,0,axis);
+    Matrix2D<double> Raxis, Rinplane;
+    rotation3DMatrix(angle,axis,Raxis,false);
+    rotation3DMatrix(inplaneRot,'Z',Rinplane,false);
+    double rot, tilt, psi;
+    Euler_matrix2angles(Rinplane*Raxis, rot, tilt, psi);
+    P.set_angles(rot, tilt, psi);
+
+    // Find displacement because of axis offset and inplane shift
+    Matrix1D<double> roffset = Rinplane*(raxis-Raxis*raxis) + rinplane;
+
+    P.setShifts(XX(roffset), YY(roffset), ZZ(roffset));
+
+#ifdef DEBUG
+
+    std::cout << "axisRot=" << axisRot << " axisTilt=" << axisTilt
+    << " axis=" << axis.transpose() << std::endl
+    << "angle=" << angle << std::endl
+    << "Raxis\n" << Raxis
+    << "Rinplane\n" << Rinplane
+    << "Raxis*Rinplane\n" << Raxis*Rinplane
+    << "rot=" << rot << " tilt=" << tilt << " psi=" << psi
+    << std::endl;
+    Matrix2D<double> E;
+    Euler_angles2matrix(rot,tilt,psi,E);
+    std::cout << "E\n" << E << std::endl;
+#endif
+}
+
 // Projection from a voxel volume ==========================================
 /* Project a voxel volume -------------------------------------------------- */
 //#define DEBUG
@@ -566,42 +600,14 @@ void project_Volume(MultidimArray<double> &V, Projection &P, int Ydim, int Xdim,
 
 /* Project a voxel volume with respect to an offcentered axis -------------- */
 //#define DEBUG
-void project_Volume_offCentered(MultidimArray<double> &V, Projection &P,
-                                int Ydim, int Xdim, double axisRot, double axisTilt,
-                                const Matrix1D<double> &raxis, double angle, double inplaneRot,
-                                const Matrix1D<double> &rinplane)
+void projectVolumeOffCentered(MultidimArray<double> &V, Projection &P,
+                              int Ydim, int Xdim)
 {
-    // Find Euler rotation matrix
-    Matrix1D<double> axis;
-    Euler_direction(axisRot,axisTilt,0,axis);
-    Matrix2D<double> Raxis;
-    rotation3DMatrix(angle,axis,Raxis,false);
-    Matrix2D<double> Rinplane;
-    rotation3DMatrix(inplaneRot,'Z',Rinplane,false);
-    double rot, tilt, psi;
-    Euler_matrix2angles(Rinplane*Raxis, rot, tilt, psi);
+    Matrix1D<double> roffset(3);
+    P.getShifts(XX(roffset), YY(roffset), ZZ(roffset));
 
-    // Find displacement because of axis offset and inplane shift
-    Matrix1D<double> roffset=Rinplane*(raxis-Raxis*raxis)+rinplane;
-
-#ifdef DEBUG
-
-    std::cout << "axisRot=" << axisRot << " axisTilt=" << axisTilt
-    << " axis=" << axis.transpose() << std::endl
-    << "angle=" << angle << std::endl
-    << "Raxis\n" << Raxis
-    << "Rinplane\n" << Rinplane
-    << "Raxis*Rinplane\n" << Raxis*Rinplane
-    << "rot=" << rot << " tilt=" << tilt << " psi=" << psi
-    << std::endl;
-    Matrix2D<double> E;
-    Euler_angles2matrix(rot,tilt,psi,E);
-    std::cout << "E\n" << E << std::endl;
-#endif
-
-    project_Volume(V, P, Ydim, Xdim, rot, tilt, psi, &roffset);
+    project_Volume(V, P, Ydim, Xdim, P.rot(), P.tilt(), P.psi(), &roffset);
 }
-#undef DEBUG
 
 // Perform a backprojection ================================================
 /* Backproject a single projection ----------------------------------------- */

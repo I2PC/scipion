@@ -104,7 +104,7 @@ void MPIProgProjectXR::run()
 /* Read parameters --------------------------------------------------------- */
 void Projection_mpi_XR_Parameters::read(const FileName &fn_proj_param)
 {
-    ParametersProjectionXR::read(fn_proj_param);
+    ParametersProjectionTomography::read(fn_proj_param);
 }
 
 

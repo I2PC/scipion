@@ -50,7 +50,7 @@ protected:
 };
 
 
-class Projection_mpi_XR_Parameters: public ParametersProjectionXR
+class Projection_mpi_XR_Parameters: public ParametersProjectionTomography
 {
 public:
     /** Number of Processors **/

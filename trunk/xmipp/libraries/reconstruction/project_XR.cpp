@@ -27,7 +27,7 @@
 void ProgXrayProject::defineParams()
 {
     addUsageLine("Generate projections as in a X-ray microscope from a 3D Xmipp volume.");
-    addSeeAlsoLine("xray_psf_create, xray_import");
+    addSeeAlsoLine("xray_psf_create, xray_import, phantom_create");
     //Params
     projParam.defineParams(this); // Projection parameters
     addParamsLine("== Xray options == ");
@@ -192,144 +192,13 @@ void ProgXrayProject::run()
     return;
 }
 
-void ParametersProjectionXR::calculateProjectionAngles(Projection &P, double angle, double inplaneRot,
-        const Matrix1D<double> &rinplane)
-{
-    // double axisRot, double axisTilt,
-    //                          const Matrix1D<double> &raxis,
-
-    // Find Euler rotation matrix
-    Matrix1D<double> axis;
-    Euler_direction(axisRot,axisTilt,0,axis);
-    Matrix2D<double> Raxis, Rinplane;
-    rotation3DMatrix(angle,axis,Raxis,false);
-    rotation3DMatrix(inplaneRot,'Z',Rinplane,false);
-    double rot, tilt, psi;
-    Euler_matrix2angles(Rinplane*Raxis, rot, tilt, psi);
-    P.set_angles(rot, tilt, psi);
-
-    // Find displacement because of axis offset and inplane shift
-    Matrix1D<double> roffset = Rinplane*(raxis-Raxis*raxis) + rinplane;
-
-    P.setShifts(XX(roffset), YY(roffset), ZZ(roffset));
-}
-
 /* Produce Side Information ================================================ */
 void XrayProjPhantom::read(
-    const ParametersProjectionXR &prm)
+    const ParametersProjectionTomography &prm)
 {
     iniVol.read(prm.fnPhantom);
     MULTIDIM_ARRAY(iniVol).setXmippOrigin();
     rotVol.resizeNoCopy(MULTIDIM_ARRAY(iniVol));
-}
-
-/* Effectively project ===================================================== */
-int XrayProjectEffectivelyProject(ParametersProjectionXR &projParam,
-                                  XrayProjPhantom &side,
-                                  Projection &proj,
-                                  XRayPSF &psf,
-                                  MetaData &SF)
-{
-
-    // Threads stuff
-
-    XrayThread *dataThread = new XrayThread;
-
-    dataThread->psf= &psf;
-    dataThread->vol = &side.rotVol;
-    dataThread->imOut = &proj;
-
-    longint blockSize, numberOfJobs= side.iniVol().zdim;
-    numberOfThreads = psf.nThr;
-
-    blockSize = (numberOfThreads == 1) ? numberOfJobs : numberOfJobs/numberOfThreads/2;
-
-    //Create the job handler to distribute thread jobs
-    td = new ThreadTaskDistributor(numberOfJobs, blockSize);
-    barrier = new Barrier(numberOfThreads-1);
-
-    //Create threads to start working
-    thMgr = new ThreadManager(numberOfThreads,(void*) dataThread);
-
-    int expectedNumProjs = FLOOR((projParam.tiltF-projParam.tilt0)/projParam.tiltStep);
-    int numProjs=0;
-
-    std::cerr << "Projecting ...\n";
-    if (!(projParam.show_angles))
-        init_progress_bar(expectedNumProjs);
-
-    SF.clear();
-    MetaData DF_movements;
-    DF_movements.setComment("True rot, tilt and psi; rot, tilt, psi, X and Y shifts applied");
-    double tRot,tTilt,tPsi,rot,tilt,psi;
-
-    //    int idx=projParam.starting;
-    int idx = 0;
-    for (double angle=projParam.tilt0; angle<=projParam.tiltF; angle+=projParam.tiltStep)
-    {
-        FileName fn_proj;              // Projection name
-        fn_proj.compose(idx, projParam.fnOut);
-
-        // Choose Center displacement ........................................
-        double shiftX     = rnd_gaus(projParam.Ncenter_avg, projParam.Ncenter_dev);
-        double shiftY    = rnd_gaus(projParam.Ncenter_avg, projParam.Ncenter_dev);
-        Matrix1D<double> inPlaneShift(3);
-        VECTOR_R3(inPlaneShift,shiftX,shiftY,0);
-
-        projParam.calculateProjectionAngles(proj,angle, 0,inPlaneShift);
-
-        //Reset thread task distributor
-        td->clear();
-
-        // Really project ....................................................
-        XrayProjectVolumeOffCentered(side, psf, proj,projParam.proj_Ydim, projParam.proj_Xdim, idx);
-
-        // Add noise in angles and voxels ....................................
-        proj.getEulerAngles(tRot, tTilt,tPsi);
-
-        rot  = tRot  + rnd_gaus(projParam.Nangle_avg,  projParam.Nangle_dev);
-        tilt = tTilt + rnd_gaus(projParam.Nangle_avg,  projParam.Nangle_dev);
-        psi  = tPsi  + rnd_gaus(projParam.Nangle_avg,  projParam.Nangle_dev);
-
-        proj.setEulerAngles(rot,tilt,psi);
-
-        size_t objId=DF_movements.addObject();
-        DF_movements.setValue(MDL_ANGLEROT,tRot,objId);
-        DF_movements.setValue(MDL_ANGLETILT,tTilt,objId);
-        DF_movements.setValue(MDL_ANGLEPSI,tPsi,objId);
-        DF_movements.setValue(MDL_ANGLEROT2,rot,objId);
-        DF_movements.setValue(MDL_ANGLETILT2,tilt,objId);
-        DF_movements.setValue(MDL_ANGLEPSI2,psi,objId);
-        DF_movements.setValue(MDL_SHIFTX,shiftX,objId);
-        DF_movements.setValue(MDL_SHIFTY,shiftY,objId);
-
-        IMGMATRIX(proj).addNoise(projParam.Npixel_avg, projParam.Npixel_dev, "gaussian");
-
-        // Save ..............................................................
-        if (projParam.show_angles)
-            std::cout << idx << "\t" << proj.rot() << "\t"
-            << proj.tilt() << "\t" << proj.psi() << std::endl;
-        else if ((expectedNumProjs % XMIPP_MAX(1, numProjs / 60))  == 0)
-            progress_bar(numProjs);
-
-        proj.write(fn_proj);
-        numProjs++;
-        idx++;
-        objId=SF.addObject();
-        SF.setValue(MDL_IMAGE,fn_proj,objId);
-        SF.setValue(MDL_ENABLED,1,objId);
-    }
-    if (!(projParam.show_angles))
-        progress_bar(expectedNumProjs);
-
-    DF_movements.write(projParam.fnOut + "_movements.txt");
-
-    //Terminate threads and free memory
-    delete td;
-    delete thMgr;
-    delete barrier;
-
-    return numProjs;
 }
 
 void XrayProjectVolumeOffCentered(XrayProjPhantom &phantom, XRayPSF &psf, Projection &P,
@@ -432,7 +301,6 @@ void XrayProjectVolumeOffCentered(XrayProjPhantom &phantom, XRayPSF &psf, Projec
 /// Generate an X-ray microscope projection for volume vol using the microscope configuration psf
 void threadXrayProject(ThreadArgument &thArg)
 {
-
     int thread_id = thArg.thread_id;
 
     XrayThread *dataThread = (XrayThread*) thArg.workClass;
