@@ -77,6 +77,10 @@ protected:
         addParamsLine("                                     : The first column is column number 0");
         addParamsLine("           requires --label, -o;                                                         ");
 
+        addParamsLine("or --addColumn <md11>                 : add column to metadata md1 using label l1");
+        addParamsLine("           requires --label, -o;                                                         ");
+
+
         addParamsLine("or --convert2db <md11>                : convert metadata to sqlite database");
 
         addParamsLine("or --copy  <md11> <path>               : copy files in metadata md1 to directory path (file names at lable column)");
@@ -116,6 +120,8 @@ protected:
         addExampleLine ("   xmipp_metadata_utilities --join j1.doc   mD1.doc          -o out.doc --label image");
         addExampleLine(" Sort the elements in metadata.", false);
         addExampleLine ("   xmipp_metadata_utilities --sort          mD1.doc          -o out.doc --label image");
+        addExampleLine(" Add column to metadata.", false);
+        addExampleLine ("   xmipp_metadata_utilities --addColumn     mD1.doc          -o out.doc --label image");
         addExampleLine(" Dump metadata content to Sqlite3 database. (use xmipp_sqlite3 to visualize results)", false);
         addExampleLine ("   xmipp_metadata_utilities --convert2db    mD1.doc          -o out.db; xmipp_sqlite3 out.db");
         addExampleLine(" Copy files in metadata to a location.", false);
@@ -146,7 +152,8 @@ protected:
         _convert2db=10,
         _count=11,
         _size=12,
-        _randValues=13
+        _randValues=13,
+        _addColumn=14
     } OperationType;
     OperationType operationType;
     MetaData inMD1, inMD2, outMD;
@@ -188,6 +195,9 @@ protected:
 
         else if (strcmp(s,"sort") == 0)
             operationType = _sort;
+
+        else if (strcmp(s,"addColumn") == 0)
+            operationType = _addColumn;
 
         else if (strcmp(s,"convert2db") == 0)
             operationType = _convert2db;
@@ -242,6 +252,13 @@ protected:
         {
             encode("sort");
             inFileName1  = getParam("--sort",0);
+            outFileName  = getParam("-o");
+        }
+
+        else if (checkParam("--addColumn"))
+        {
+            encode("addColumn");
+            inFileName1  = getParam("--addColumn",0);
             outFileName  = getParam("-o");
         }
 
@@ -345,6 +362,11 @@ public:
             inMD1.read(inFileName1);
             outMD.sort(inMD1, _label);
             outMD.write(outFileName,mode);
+            break;
+        case _addColumn:
+            inMD1.read(inFileName1);
+            inMD1.addLabel(MDL::str2Label(_label));
+            inMD1.write(outFileName,mode);
             break;
         case _join:
             inMD1.read(inFileName1);
