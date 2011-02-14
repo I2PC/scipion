@@ -36,27 +36,8 @@
 int main(int argc, char *argv[])
 {
     ProgAngularProjectLibrary prm;
-    try
-    {
         prm.read(argc, argv);
-    }
-    catch (XmippError XE)
-    {
-        std::cout << XE;
-        prm.usage();
-        exit(1);
-    }
-
-    try
-    {
-        prm.run();
+        prm.tryRun();
         if (prm.fn_groups!="")
             prm.createGroupSamplingFiles();
-    }
-    catch (XmippError XE)
-    {
-        std::cout << XE;
-        exit(1);
-    }
-    exit(0);
 }
