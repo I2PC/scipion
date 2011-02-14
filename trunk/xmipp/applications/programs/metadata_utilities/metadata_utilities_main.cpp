@@ -101,14 +101,13 @@ protected:
         addParamsLine("or --size  <md11>              : metadata size");
 
         addParamsLine("or --randValues  <md11> <rand_mode> : randomize double values of a label column (and creates a new metadata)");
-        //addParamsLine("       requires --label, -o;");
         addParamsLine("   where <rand_mode>");
         addParamsLine("     uniform  <op1=0.> <op2=1.>          : Follow a uniform distribution between op1 and op2");
-        //addParamsLine("       requires --label, -o;");
+        addParamsLine("       requires --label, -o;");
         addParamsLine("     gaussian <op1=0.> <op2=1.>          : Follow a gaussian distribution with mean=op1 and stddev=op2");
-        //addParamsLine("       requires --label, -o;");
+        addParamsLine("       requires --label, -o;");
         addParamsLine("     student  <op1=0.> <op2=1.> <op3=3.> : Follow a student distribution with mean=op1, stddev=op2 and op3 degrees of freedom.");
-        //addParamsLine("       requires --label, -o;");
+        addParamsLine("       requires --label, -o;");
 
         addExampleLine(" Concatenate two metadatas.", false);
         addExampleLine ("   xmipp_metadata_utilities --union         mD1.doc mD2.doc  -o out.doc --label image");
