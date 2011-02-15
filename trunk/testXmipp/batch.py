@@ -45,10 +45,19 @@ if __name__ == '__main__':
     program = "xmipp_header_extract"
     tester.testProgram(program, "-i input/smallStack.stk -o %s/%s/header.doc" % (fnDir, program))
 
+    program = "xmipp_header_assign"
+    tester.testProgram(program, "-i input/header.doc -o %s/%s/smallStack2.stk"% (fnDir, program) )
+    
+    #program = "xmipp_metadata_utilities"
+    #tester.testProgram(program, "  --union  input/mD1.doc input/mD2.doc  -o %s/%s_%02d/union.doc --label image" % (fnDir, program,1),1)
+    #tester.testProgram(program, "  --intersection  input/mD1.doc input/mD2.doc  -o %s/%s_%02d/intersection.doc --label image" % (fnDir, program,2),2)
+    #tester.testProgram(program, "  --subtraction  input/mD1.doc input/mD2.doc  -o %s/%s_%02d/subtraction.doc --label image" % (fnDir, program,3),3)
+  
     program = "xmipp_phantom_project"
     tester.testProgram(program, "-i input/phantomBacteriorhodopsin.vol -o %s/%s_%02d/image.xmp --angles 0 0 0" % (fnDir, program, 1), 1)
-    tester.testProgram(program, "-i input/phantomBacteriorhodopsin.vol --oroot %s/%s_%02d/projections --params input/clusterProjection.param" % (fnDir, program, 2), 2)
-    tester.testProgram(program, "-i input/phantomBacteriorhodopsin.vol --oroot %s/%s_%02d/projections --params input/uniformProjection.param" % (fnDir, program, 3), 3)
+    tester.testProgram(program, "-i input/phantomBacteriorhodopsin.vol     --oroot %s/%s_%02d/projections --params input/clusterProjection.param" % (fnDir, program, 2), 2)
+    tester.testProgram(program, "-i input/phantomBacteriorhodopsin.vol     --oroot %s/%s_%02d/projections --params input/uniformProjection.param" % (fnDir, program, 3), 3)
+    tester.testProgram(program, "-i input/Crystal/cylinder_with_axis.descr --oroot %s/%s_%02d/MRCproj     --params input/Crystal/MRC_projection.param --crystal input/Crystal/MRC_crystal_projection.param" % (fnDir, program, 4), 4)
 
     program = "xmipp_phantom_simulate_microscope"
     tester.testProgram(program, "-i input/smallStack.stk -o %s/%s/smallStackPlusCtf.stk --ctf input/input.ctfparam" % (fnDir, program))
