@@ -1692,15 +1692,16 @@ public:
      */
     bool isCorner(const Matrix1D< double >& v) const
     {
+
         if (v.size() < 2)
             REPORT_ERROR(ERR_MATRIX_SIZE, "isCorner: index vector has got not enough components");
 
-        else if (XSIZE(*this)==2)
+        else if (ZSIZE(*this)==1)
             return ((XX(v) == STARTINGX(*this)  && YY(v) == STARTINGY(*this))  ||
                     (XX(v) == STARTINGX(*this)  && YY(v) == FINISHINGY(*this)) ||
                     (XX(v) == FINISHINGX(*this) && YY(v) == STARTINGY(*this))  ||
                     (XX(v) == FINISHINGX(*this) && YY(v) == FINISHINGY(*this)));
-        else if (XSIZE(*this)==3)
+        else if (ZSIZE(*this)>1)
             return ((XX(v) == STARTINGX(*this)  && YY(v) == STARTINGY(*this)  && ZZ(v) == STARTINGZ(*this)) ||
                     (XX(v) == STARTINGX(*this)  && YY(v) == FINISHINGY(*this) && ZZ(v) == STARTINGZ(*this)) ||
                     (XX(v) == FINISHINGX(*this) && YY(v) == STARTINGY(*this)  && ZZ(v) == STARTINGZ(*this))  ||
@@ -1710,7 +1711,10 @@ public:
                     (XX(v) == FINISHINGX(*this) && YY(v) == STARTINGY(*this)  && ZZ(v) == FINISHINGZ(*this))  ||
                     (XX(v) == FINISHINGX(*this) && YY(v) == FINISHINGY(*this) && ZZ(v) == FINISHINGZ(*this)));
         else
-            REPORT_ERROR(ERR_MATRIX_SIZE, "isCorner: index vector has too many components");
+            REPORT_ERROR(ERR_MATRIX_SIZE, "isCorner: index vector has too many components. dimV= "\
+            		      + integerToString(v.size())\
+            		      + " matrix dim = " + integerToString(XSIZE(*this))\
+            );
     }
     //@}
 
