@@ -1,7 +1,6 @@
 /***************************************************************************
  *
  * Authors:    Carlos Oscar Sanchez Sorzano      coss@cnb.csic.es (2002)
- *             Sjors H.W. Scheres (2010): -tilt_pairs 
  *
  * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
  *
@@ -184,7 +183,7 @@ double Prog_angular_distance_prm::check_tilt_pairs(double rot1, double tilt1,
         double psi1, double &alpha, double &tilt_angle, double &beta)
 {
     // Transformation matrices
-    Matrix1D<double> axis(3);
+	Matrix1D<double> axis(3);
     Matrix2D<double> E1, E2;
     axis.resize(3);
     double aux, sine_tilt_angle;
@@ -193,10 +192,9 @@ double Prog_angular_distance_prm::check_tilt_pairs(double rot1, double tilt1,
     double rot2 = alpha, tilt2 = tilt_angle, psi2 = beta;
 
     // Calculate the transformation from one setting to the second one.
-    Euler_angles2matrix(rot1, tilt1, psi1, E1);
-    Euler_angles2matrix(rot2, tilt2, psi2, E2);
+    Euler_angles2matrix(psi1, tilt1, rot1, E1);
+    Euler_angles2matrix(psi2, tilt2, rot2, E2);
     E2 = E2 * E1.inv();
-
 
 #ifdef DEBUG
     std::cerr << "  -> angles1= ("<<rot1<<","<<tilt1<<","<<psi1<<")\n";
@@ -206,7 +204,7 @@ double Prog_angular_distance_prm::check_tilt_pairs(double rot1, double tilt1,
     // Get the tilt angle (and its sine)
     aux = (dMij(E2,0,0) + dMij(E2,1,1) + dMij(E2,2,2) - 1.) / 2.;
     if (ABS(aux) - 1. > XMIPP_EQUAL_ACCURACY)
-    	REPORT_ERROR(1,"BUG: |aux|>1");
+    	REPORT_ERROR(1,"BUG: aux>1");
     tilt_angle = ACOSD(aux);
     sine_tilt_angle = 2. * SIND(tilt_angle);
 
@@ -219,10 +217,12 @@ double Prog_angular_distance_prm::check_tilt_pairs(double rot1, double tilt1,
     }
     else
     {
-    	axis(0) = 0.;
-        axis(1) = 0.;
+    	axis(0) = axis(1) = 0.;
     	axis(2) = 1.;
     }
+
+    // Apply E1.inv() to the axis to get everyone in the same coordinate system again
+    axis = E1.inv() * axis;
 
     //Convert to alpha and beta angle
     Euler_direction2angles(axis, alpha, beta, aux, false);
@@ -245,7 +245,7 @@ double Prog_angular_distance_prm::check_tilt_pairs(double rot1, double tilt1,
 #endif
 
 
-    // Return the value that needs to be optimzed
+    // Return the value that needs to be optimized
     double minimizer=0.;
     if (exp_beta < 999.)
     	minimizer = ABS(beta - exp_beta);
