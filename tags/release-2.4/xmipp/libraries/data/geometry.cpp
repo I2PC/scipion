@@ -594,7 +594,7 @@ void Euler_direction2angles(Matrix1D<double> &v0,
                      "for most applications but you never know";
     }
 
-    if (fabs((cb - 1.)) < FLT_EPSILON)
+    if ( (1. - fabs(cb)) <  FLT_EPSILON)
     {
         alpha = 0.;
         beta = 0.;
@@ -603,7 +603,6 @@ void Euler_direction2angles(Matrix1D<double> &v0,
     {/*1*/
 
         aux_beta = acos(cb); /* beta between 0 and PI */
-
 
         sb = sin(aux_beta);
 
