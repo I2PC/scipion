@@ -119,6 +119,14 @@ void Crystal_Projection_Parameters::read(const FileName &fn_crystal, double scal
                      "couldn't read all parameters from file " + fn_crystal);
 
     fclose(fh_param);
+//#define DEBUG
+#ifdef DEBUG
+    std::cerr << "crystal_Xdim"   << crystal_Xdim<<std::endl;
+    std::cerr << "crystal_Ydim"   << crystal_Ydim<<std::endl;
+    std::cerr << "a vector"  << a <<std::endl;
+    std::cerr << "b vector"  << b <<std::endl;
+#endif
+#undef DEBUG
 }
 
 /* Write =================================================================== */
@@ -193,10 +201,14 @@ void project_crystal(Phantom &phantom, Projection &P,
     if (prm_crystal.orthogonal)
     {
         A.resize(2, 2);
-        A(0, 0) = YY(projb) * XSIZE(P());
-        A(0, 1) = -XX(projb) * XSIZE(P());
-        A(1, 0) = -YY(proja) * YSIZE(P());
-        A(1, 1) = XX(proja) * YSIZE(P());
+//        A(0, 0) = YY(projb) * XSIZE(P());
+//        A(0, 1) = -XX(projb) * XSIZE(P());
+//        A(1, 0) = -YY(proja) * YSIZE(P());
+//        A(1, 1) = XX(proja) * YSIZE(P());
+        A(0, 0) =  YY(projb) * prm.proj_Xdim;
+        A(0, 1) = -XX(projb) * prm.proj_Xdim;
+        A(1, 0) = -YY(proja) * prm.proj_Ydim;
+        A(1, 1) =  XX(proja) * prm.proj_Ydim;
         double nor = 1 / (XX(proja) * YY(projb) - XX(projb) * YY(proja));
         M2x2_BY_CT(A, A, nor);
         A.resize(3, 3);
@@ -379,7 +391,7 @@ void project_crystal(Phantom &phantom, Projection &P,
     std::cout << "X proyectado=" << (AE*vectorR3(1.0, 0.0, 0.0)).transpose() << std::endl;
     std::cout << "Y proyectado=" << (AE*vectorR3(0.0, 1.0, 0.0)).transpose() << std::endl;
     std::cout << "P.euler_shape=" << std::endl;
-    (P.euler).printShape();
+    std::cout << P.euler << std::endl;
     std::cout << "P.euler="      << P.euler << std::endl;
     std::cout << "AE="           << AE << std::endl;
     std::cout << "AEinv="        << AEinv << std::endl;
@@ -501,15 +513,36 @@ void find_crystal_limits(
     A.setCol(0, a);
     A.setCol(1, b);
     M2x2_INV(Ainv, A);
+//#define DEBUG
+#ifdef DEBUG
+    std::cerr << "A" << A <<std::endl;
+    std::cerr << "Ainv" << Ainv <<std::endl;
+#endif
+#undef DEBUG
 
     // Now express each corner in the a,b coordinate system
     Matrix1D<double> r(2);
     VECTOR_R2(r, x0, y0);
+//#define DEBUG
+#ifdef DEBUG
+    std::cerr << "r" << r <<std::endl;
+#endif
+#undef DEBUG
     M2x2_BY_V2x1(r, Ainv, r);
     iamin = FLOOR(XX(r));
     iamax = CEIL(XX(r));
     ibmin = FLOOR(YY(r));
     ibmax = CEIL(YY(r));
+//#define DEBUG
+#ifdef DEBUG
+    std::cerr << "r" << r <<std::endl;
+    std::cerr << "Ainv" << Ainv <<std::endl;
+    std::cerr << "iamin" << iamin <<std::endl;
+    std::cerr << "iamax" << iamax <<std::endl;
+    std::cerr << "ibmin" << ibmin <<std::endl;
+    std::cerr << "ibmax" << ibmax <<std::endl;
+#endif
+#undef DEBUG
 
 #define CHANGE_COORDS_AND_CHOOSE_CORNERS2D \
     M2x2_BY_V2x1(r,Ainv,r); \
@@ -689,7 +722,7 @@ void fill_cell_positions(Projection &P,
     find_crystal_limits(vectorR2(STARTINGX(P()), STARTINGY(P())),
                         vectorR2(FINISHINGX(P()), FINISHINGY(P())),
                         corner1, corner2, aprojd, bprojd, iamin, iamax, ibmin, ibmax);
-
+//#define DEBUG
 #ifdef DEBUG
 
     P().printShape();
