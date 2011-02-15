@@ -1286,12 +1286,23 @@ void MetaData::makeAbsPath(const MDLabel label)
     if (aux_string[0] == '/')
         return;
 
+    FileName auxFile;
     FOR_ALL_OBJECTS_IN_METADATA(*this)
     {
-        aux_string_path = path_str;
-        getValue(label, aux_string, __iter.objId);
-        aux_string_path += aux_string;
-        setValue(label, aux_string_path, __iter.objId);
+    	aux_string_path = path_str;
+        getValue(label, auxFile, __iter.objId);
+
+        if (auxFile.isInStack())
+        {
+            size_t id = auxFile.find('@',0);
+            auxFile.insert(id+1,aux_string_path);
+            setValue(label, auxFile, __iter.objId);
+        }
+        else
+        {
+        	auxFile.addPrefix(aux_string_path);
+            setValue(label, auxFile, __iter.objId);
+        }
     }
 }
 
