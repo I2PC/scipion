@@ -853,6 +853,7 @@ void project_Crystal_SimpleGrid(Image<double> &vol, const SimpleGrid &grid,
     grid.Gdir_project_to_plane(actprj, Eulerg, prjaint);
     VECTOR_R3(actprj, XX(bint), YY(bint), 0);
     grid.Gdir_project_to_plane(actprj, Eulerg, prjbint);
+//#define DEBUG_LITTLE
 #ifdef DEBUG_LITTLE
 
     double rot, tilt, psi;
@@ -990,12 +991,12 @@ void project_Crystal_SimpleGrid(Image<double> &vol, const SimpleGrid &grid,
     std::cout << "Norm Proj  ";
     norm_proj().printShape();
     std::cout << std::endl;
-    std::cout << "Footprint  ";
-    footprint().printShape();
-    std::cout << std::endl;
-    std::cout << "Footprint2 ";
-    footprint2().printShape();
-    std::cout << std::endl;
+    //std::cout << "Footprint  ";
+    //footprint().printShape();
+    //std::cout << std::endl;
+    //std::cout << "Footprint2 ";
+    //footprint2().printShape();
+    //std::cout << std::endl;
 #endif
 
     Matrix1D<double> grid_index(3);
