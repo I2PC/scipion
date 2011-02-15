@@ -1,0 +1,15 @@
+# XMIPP_STAR_1 * 
+# First set of angles=actual angles; Second set of angles=noisy angles
+data_
+loop_
+ _image
+ _enabled
+ _angleRot
+ _angleTilt
+ _anglePsi
+ _shiftX
+ _shiftY
+ _angleRot2
+ _angleTilt2
+ _anglePsi2
+ 000000@goldStandard//xmipp_phantom_project_04/MRCproj.stk          1     0.000000     0.000000     0.000000     0.000000     0.000000     0.000000     0.000000     0.000000 
