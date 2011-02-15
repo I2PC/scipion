@@ -219,12 +219,12 @@
  * already resized.
  */
 #define M2x2_INV(Ainv, A) { \
-        spduptmp0 = 1.0 / (dMn(A,0) * dMn(A,4) - dMn(A,1) \
-                           * dMn(A,3)); \
-        dMij(Ainv, 0, 0) = dMn(A,4); \
-        dMij(Ainv, 0, 1) = -dMn(A,1); \
-        dMij(Ainv, 1, 0) = -dMn(A,3); \
-        dMij(Ainv, 1, 1) =  dMn(A,0); \
+        spduptmp0 = 1.0 / (dMn(A,0) * dMn(A,3) - dMn(A,1) \
+                           * dMn(A,2)); \
+        dMn(Ainv, 0) =  dMn(A,3); \
+        dMn(Ainv, 1) = -dMn(A,1); \
+        dMn(Ainv, 2) = -dMn(A,2); \
+        dMn(Ainv, 3) =  dMn(A,0); \
         M2x2_BY_CT(Ainv, Ainv, spduptmp0); }
 
 /** Inverse of a matrix (3x3)
