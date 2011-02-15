@@ -36,6 +36,8 @@ void ProgAdjustVolume::defineParams()
     addUsageLine("error between the theoretically projected images and the experimental images");
     addUsageLine("is minimized. This program must be used before computing the Volumetric SSNR");
     addUsageLine("if the reconstruction algorithm scales the output volume differently.");
+    // See also
+    addSeeAlsoLine("resolution_ssnr");
 
     // Examples
     addExampleLine("Adjust a volume to a set of images:", false);
