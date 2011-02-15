@@ -27,21 +27,10 @@
 
 int main(int argc, char *argv[])
 {
-    ProgProjectTomography prog_prm;
+    ProgProjectTomography prog;
 
-    // Check the command line
-    try
-    {
-        prog_prm.read(argc, argv);
-    }
-    catch (XmippError &XE)
-    {
-        std::cout << XE;
-        prog_prm.usage();
-        exit(1);
-    }
-
-    prog_prm.tryRun();
+    prog.read(argc, argv);
+    prog.tryRun();
 
     return 0;
 }
