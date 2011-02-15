@@ -70,7 +70,7 @@ public class ImageDouble {
     //should be called by GarbageCollector before destroying
     @Override
     protected void finalize() {
-        System.out.println("Destroying image: " + this.filename);
+        //System.out.println("Destroying image: " + this.filename);
         destroy();
     }
 
