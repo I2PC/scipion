@@ -77,6 +77,15 @@ void ProgProject::defineParams()
     addExampleLine("http://newxmipp.svn.sourceforge.net/viewvc/newxmipp/trunk/testXmipp/input/uniformProjection.param",false);
     addExampleLine(" ",false);
     addExampleLine("http://newxmipp.svn.sourceforge.net/viewvc/newxmipp/trunk/testXmipp/input/clusterProjection.param",false);
+    addExampleLine("Creating a 2D crystal",false);
+    addExampleLine(" xmipp_phantom_project   -i cylinder_with_axis.descr --oroot MRCproj --params MRC_projection.param --crystal MRC_crystal_projection.param");
+    addExampleLine("In the following links you can find some examples of projection parameter files",false);
+    addExampleLine(" ",false);
+    addExampleLine("http://newxmipp.svn.sourceforge.net/viewvc/newxmipp/trunk/testXmipp/input/Crystal/MRC_projection.param",false);
+    addExampleLine(" ",false);
+    addExampleLine("http://newxmipp.svn.sourceforge.net/viewvc/newxmipp/trunk/testXmipp/input/Crystal/MRC_crystal_projection.param",false);
+    addExampleLine(" ",false);
+    addExampleLine("http://newxmipp.svn.sourceforge.net/viewvc/newxmipp/trunk/testXmipp/input/Crystal/cylinder_with_axis.descr",false);
     addParamsLine("   -i <volume_file>                           : Voxel volume, PDB or description file");
     addParamsLine("   --oroot <rootname>                    : Output rootname (use --params)");
     addParamsLine("or -o <image_file>                        : Output image (use --angles)");
