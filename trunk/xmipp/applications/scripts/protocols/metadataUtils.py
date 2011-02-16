@@ -56,27 +56,31 @@ def intercalate_union_3(inFileName,outFileName, src1,targ1,src2,targ2):
    mDout = MetaData()
    
    for id in mD:       
-       mDout.addObject()
+       idOut = mDout.addObject()
        sIn = mD.getValue(MDL_IMAGE,id)
-       mDout.setValue(MDL_IMAGE, sIn, id)
+       mDout.setValue(MDL_IMAGE, sIn, idOut)
        enabled= mD.containsLabel(MDL_ENABLED)
-       if  (enabled):
-            i = int(mD.getValue(MDL_ENABLED,id))
-            mDout.setValue(MDL_ENABLED, i, id)
        
-       mDout.addObject()
+       if  (enabled):
+       
+            i = int(mD.getValue(MDL_ENABLED,id))
+            mDout.setValue(MDL_ENABLED, i, idOut)
+       
+       idOut = mDout.addObject()
 
        ss = sIn.replace(src1,targ1)
-       mDout.setValue(MDL_IMAGE, ss, id)
+       mDout.setValue(MDL_IMAGE, ss, idOut)
+       
        if  (enabled):
-           mDout.setValue(MDL_ENABLED, i, id)
+           mDout.setValue(MDL_ENABLED, i, idOut)
            
-       mDout.addObject()
+       idOut = mDout.addObject()
        
        ss = sIn.replace(src2,targ2)
-       mDout.setValue(MDL_IMAGE, ss, id)
+       mDout.setValue(MDL_IMAGE, ss, idOut)
+       
        if  (enabled):
-           mDout.setValue(MDL_ENABLED, i, id)
+           mDout.setValue(MDL_ENABLED, i, idOut)
        
    mDout.write(outFileName)
 
