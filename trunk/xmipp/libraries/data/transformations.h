@@ -769,6 +769,13 @@ void selfApplyGeometry(int SplineDegree,
                        const Matrix2D< double > &A, bool inv,
                        bool wrap, std::complex<double> outside);
 
+void applyGeometry(int SplineDegree,
+                   MultidimArrayGeneric &V2,
+                   const MultidimArrayGeneric &V1,
+                   const Matrix2D< double > &A, bool inv,
+                   bool wrap, double outside);
+
+
 /** Produce spline coefficients.
  * @ingroup  GeometricalTransformations
  *

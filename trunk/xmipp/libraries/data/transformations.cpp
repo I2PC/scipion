@@ -304,6 +304,17 @@ void selfApplyGeometry(int Splinedegree,
     applyGeometry(Splinedegree, V1, aux, A, inv, wrap, outside);
 }
 
+void applyGeometry(int SplineDegree,
+                   MultidimArrayGeneric &V2,
+                   const MultidimArrayGeneric &V1,
+                   const Matrix2D< double > &A, bool inv,
+                   bool wrap, double outside)
+{
+#define APPLYGEO(type)  applyGeometry(SplineDegree,(*(MultidimArray<type>*)(V2.im)), (*(MultidimArray<type>*)(V1.im)), A, inv, wrap, (type) outside)
+    SWITCHDATATYPE(V1.datatype, APPLYGEO)
+#undef APPLYGEO
+ }
+
 // Special case for complex arrays
 void produceSplineCoefficients(int SplineDegree,
                                MultidimArray< double > &coeffs,
