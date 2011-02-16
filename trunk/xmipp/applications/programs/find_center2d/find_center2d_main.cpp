@@ -682,7 +682,7 @@ public:
     	}
     	else
     	{
-    		I.read(fnIn,false);
+    		I.read(fnIn, HEADER);
     		int Xdim, Ydim, Zdim;
     		unsigned long Ndim;
     		I.getDimensions(Xdim, Ydim, Zdim, Ndim);
@@ -691,7 +691,7 @@ public:
     		{
     			for (unsigned long n=0; n<Ndim; n++)
     			{
-        			Iaux.read(fnIn,true,n);
+        			Iaux.read(fnIn,DATA,n);
         			if (n==0)
         				I=Iaux;
         			else

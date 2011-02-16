@@ -65,7 +65,7 @@ void Prog_align2d_prm::read(int argc, char **argv)
     FileName fnImg;
     SF.getValue(MDL_IMAGE,fnImg, id);
     Image<double> Iaux;
-    Iaux.read(fnImg,false);
+    Iaux.read(fnImg, HEADER);
     Iaux.getDimensions(Xdim, Ydim, Zdim, Ndim);
 
     if (Ro == 0)

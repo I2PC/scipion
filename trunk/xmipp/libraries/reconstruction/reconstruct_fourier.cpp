@@ -175,7 +175,7 @@ void ProgRecFourier::produceSideinfo()
     FileName fnImg;
     SF.getValue(MDL_IMAGE,fnImg,objId);
     Image<double> I;
-    I.read(fnImg, false);
+    I.read(fnImg, HEADER);
     int Ydim=YSIZE(I());
     int Xdim=XSIZE(I());
     if (Ydim!=Xdim)

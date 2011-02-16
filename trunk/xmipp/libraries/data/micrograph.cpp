@@ -88,7 +88,7 @@ void Micrograph::open_micrograph(const FileName &_fn_micrograph)
     // Micrograph name
     fn_micrograph = _fn_micrograph;
     // Look for micrograph dimensions
-    auxI->read(fn_micrograph,false);
+    auxI->read(fn_micrograph, HEADER);
 
     auxI->getDimensions(Xdim,Ydim, Zdim, Ndim);
     if((Zdim >1 )|| (Ndim >1))
@@ -115,32 +115,32 @@ void Micrograph::open_micrograph(const FileName &_fn_micrograph)
     {
     case UChar:
         IUChar = new(Image<unsigned char>);
-        result=IUChar->read(fn_micrograph,true,-1,true);
+        result=IUChar->read(fn_micrograph,DATA, -1, true);
         pixelDesvFilter(IUChar->data, stdevFilter);
         break;
     case UShort:
         IUShort = new(Image<unsigned short>);
-        result=IUShort->read(fn_micrograph,true,-1,true);
+        result=IUShort->read(fn_micrograph,DATA, -1, true);
         pixelDesvFilter(IUShort->data, stdevFilter);
         break;
     case Short:
         IShort = new(Image< short>);
-        result=IShort->read(fn_micrograph,true,-1,true);
+        result=IShort->read(fn_micrograph,DATA, -1, true);
         pixelDesvFilter(IShort->data, stdevFilter);
         break;
     case Int:
         IInt = new(Image< int>);
-        result=IInt->read(fn_micrograph,true,-1,true);
+        result=IInt->read(fn_micrograph,DATA, -1, true);
         pixelDesvFilter(IInt->data, stdevFilter);
         break;
     case UInt:
         IUInt = new(Image< unsigned int>);
-        result=IUInt->read(fn_micrograph,true,-1,true);
+        result=IUInt->read(fn_micrograph,DATA, -1, true);
         pixelDesvFilter(IUChar->data, stdevFilter);
         break;
     case Float:
         IFloat = new(Image<float>);
-        result=IFloat->read(fn_micrograph,true,-1,true);
+        result=IFloat->read(fn_micrograph,DATA, -1, true);
         pixelDesvFilter(IFloat->data, stdevFilter);
         break;
     default:

@@ -44,7 +44,7 @@
 /** Imagic reader
   * @ingroup Imagic
 */
-int  readIMAGIC(int img_select);
+int  readIMAGIC(size_t img_select);
 
 /************************************************************************
 @Function: writeIMAGIC
@@ -60,6 +60,6 @@ int  readIMAGIC(int img_select);
 /** Imagic Writer
   * @ingroup Imagic
 */
-int  writeIMAGIC(int img_select=-1, int mode=WRITE_OVERWRITE, std::string bitDepth="", bool adjust=false);
+int  writeIMAGIC(size_t img_select = ALL_IMAGES, int mode=WRITE_OVERWRITE, String bitDepth="", bool adjust=false);
 
 #endif /* RWIMAGIC_H_ */

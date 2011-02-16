@@ -29,12 +29,12 @@
 /** DM3 Reader
   * @ingroup DM3
 */
-int readDM3(int img_select,bool isStack=false);
+int readDM3(size_t img_select,bool isStack=false);
 
 /** DM3 Writer
   * @ingroup DM3
 */
-int writeDM3(int img_select, bool isStack=false, int mode=WRITE_OVERWRITE)
+int writeDM3(size_t img_select, bool isStack=false, int mode=WRITE_OVERWRITE)
 {
     REPORT_ERROR(ERR_IO_NOWRITE, "ERROR: writeDM3 is not implemented.");
     return(-1);

@@ -46,11 +46,14 @@ protected:
         addExampleLine("xmipp_header_print -i 2@input/smallStack.stk");
         addExampleLine("Print header values in  image kk.img",false);
         addExampleLine("xmipp_header_print -i kk.img");
+        addSeeAlsoLine("header_extract, header_assign");
     }
 
     void show()
     {
         std::cout << " Printing the header ... " << std::endl;
+        std::cout << "***** WARNING: the information stored in header is ignored inside Xmipp, it is only relevant" << std::endl
+                  << "***** where importing/exporting data from/to other packages." << std::endl;
     }
 
     void processImage(const FileName &fnImg, const FileName &fnImgOut, size_t objId)
@@ -60,10 +63,7 @@ protected:
         SingleImgSize(fnImg, Xdim, Ydim, Zdim, Ndim);
 
         Image<double> img;
-        if (Zdim==1 && Ndim==1)
-            img.readApplyGeo(fnImg, mdIn, objId, false);
-        else
-            img.read(fnImg,false);
+        img.read(fnImg, HEADER);
         std::cout << img << std::endl;
     }
 }
@@ -75,6 +75,5 @@ int main(int argc, char *argv[])
     ProgHeaderPrint program;
     program.read(argc, argv);
     program.tryRun();
-    return 0;
-}
+ }
 

@@ -420,7 +420,7 @@ void Prog_assign_CTF_prm::process()
             Image<double> I;
             FileName fni;
             SF.getValue(MDL_IMAGE, fni, iter.objId);
-            I.read(fni,true,-1,true);
+            I.read(fni, DATA,-1,true);
             piece = I();
         }
         piece.statisticsAdjust(0, 1);

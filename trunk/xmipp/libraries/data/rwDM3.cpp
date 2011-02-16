@@ -60,7 +60,7 @@ struct DM3dataHead
     int         imageWidth;            //ArraySizeX
     int         imageHeight;           //ArraySizeY
     short int   dataTypeSize;
-    int          headerSize;
+    size_t       headerSize;
     bool   flip;
 };
 
@@ -433,7 +433,7 @@ void printDM3(MetaData MD)
 /** DM3 Reader
   * @ingroup DM3
 */
-int ImageBase::readDM3(int img_select,bool isStack)
+int ImageBase::readDM3(size_t select_img,bool isStack)
 {
 #undef DEBUG
     //#define DEBUG
@@ -470,7 +470,7 @@ int ImageBase::readDM3(int img_select,bool isStack)
     header->tags.addLabel(MDL_DM3_NUMBER_TYPE);
     header->tags.addLabel(MDL_DM3_VALUE);
 
-    int nodeID=0, parentID=0;
+    int nodeID = 0, parentID = 0;
 
     for (int n=1;n<=header->nTags;n++)
         readTagDM3(fimg, header, parentID, nodeID, isLE, swap);
@@ -496,7 +496,7 @@ int ImageBase::readDM3(int img_select,bool isStack)
     //Initialize query for later use
     MDValueEQ queryNodeId(MDL_DM3_NODEID, -1);
 
-    for (MDIterator iter(header->tags, MDValueEQ(MDL_DM3_TAGNAME,(std::string)"DataType")); iter.hasNext(); iter.moveNext())
+    for (MDIterator iter(header->tags, MDValueEQ(MDL_DM3_TAGNAME,(String)"DataType")); iter.hasNext(); iter.moveNext())
     // Read all the image headers
     //for (int n = 0; n < vIm.size(); n++)
     {
@@ -515,7 +515,7 @@ int ImageBase::readDM3(int img_select,bool isStack)
             dataHeaders[header->nIm].dataType = (short int) iValue;
 
             header->tags.getValue(MDL_DM3_VALUE, vValue, id);
-            dataHeaders[header->nIm].headerSize = (int) vValue[0];
+            dataHeaders[header->nIm].headerSize = (size_t) vValue[0];
 
             nodeID = parentID;
             id = gotoTagDM3(header->tags, nodeID, "ImageData,Dimensions");
@@ -551,7 +551,7 @@ int ImageBase::readDM3(int img_select,bool isStack)
     }
 
     // Check images dimensions. Need to be the same
-    for (int i = 1; i < header->nIm; i++)
+    for (size_t i = 1; i < header->nIm; i++)
     {
         if (dataHeaders[0].imageHeight != dataHeaders[i].imageHeight || \
             dataHeaders[0].imageWidth != dataHeaders[i].imageWidth  || \
@@ -562,33 +562,27 @@ int ImageBase::readDM3(int img_select,bool isStack)
 
 
     int _xDim,_yDim;
-    unsigned long int _nDim;
-    _xDim = (int) dataHeaders[0].imageWidth;
-    _yDim = (int) dataHeaders[0].imageHeight;
-    _nDim = (int) header->nIm;
+    size_t _nDim;
+    _xDim = dataHeaders[0].imageWidth;
+    _yDim = dataHeaders[0].imageHeight;
+    _nDim = header->nIm;
 
     //FIXME: Code is not totally implemented to load automatically multiple images if they have same size.
 
     // Map the parameters
-    if (img_select==-1)
+    if (select_img == ALL_IMAGES)
     {
-        if (_nDim>1)
+        if (_nDim > 1)
             REPORT_ERROR(ERR_IO_NOREAD, "readDM3: Reading multiple \
                          images at once in DM3 file are not currently supported. Try to read them individually.");
     }
     else
-        _nDim=1;
+        _nDim = 1;
 
     setDimensions(_xDim, _yDim, 1, _nDim);
 
-    unsigned long   imgStart=0;
-    unsigned long   imgEnd =_nDim;
-
-    if (img_select != -1)
-    {
-        imgStart=img_select;
-        imgEnd=img_select+1;
-    }
+    size_t   imgStart = IMG_INDEX(select_img);
+    size_t   imgEnd = (select_img != ALL_IMAGES) ? select_img + 1 : _nDim;
 
     DataType datatype = datatypeDM3(dataHeaders[0].dataType);
 
@@ -598,27 +592,14 @@ int ImageBase::readDM3(int img_select,bool isStack)
 
     MD.clear();
     MD.resize(imgEnd - imgStart);
-    for (int i = imgStart; i < imgEnd; i++ )
-    {
-        MD[i].setValue(MDL_ORIGINX,  zeroD);
-        MD[i].setValue(MDL_ORIGINY,  zeroD);
-        MD[i].setValue(MDL_ORIGINZ,  zeroD);
+    for (size_t i = 0; i < imgEnd - imgStart; i++ )
+      initGeometry(i);
 
-        MD[i].setValue(MDL_ANGLEROT, zeroD);
-        MD[i].setValue(MDL_ANGLETILT,zeroD);
-        MD[i].setValue(MDL_ANGLEPSI, zeroD);
-        MD[i].setValue(MDL_WEIGHT,   oneD);
-        MD[i].setValue(MDL_FLIP,     falseb);
-        MD[i].setValue(MDL_SCALE,    oneD);
-    }
-
-    offset = (unsigned long) dataHeaders[imgStart].headerSize;
-    size_t pad = 0;
+    offset = dataHeaders[imgStart].headerSize;
     delete header;
 
-    if( dataflag < 0 )
+    if( dataMode < DATA )
         return 0;
-
 
     //#define DEBUG
 #ifdef DEBUG
@@ -627,8 +608,8 @@ int ImageBase::readDM3(int img_select,bool isStack)
     MD.write(std::cerr);
 #endif
 
-
-    readData(fimg, img_select, datatype, pad);
+    size_t pad = 0;
+    readData(fimg, select_img, datatype, pad);
 
     return(0);
 }

@@ -38,13 +38,8 @@ public:
     int x0, y0, z0;
     int xF, yF, zF;
     double padValue;
-    std::string padType;
+    String padType;
     WindowMode mode;
-    Image<char>                IChar;
-    Image<unsigned char>       IUChar;
-    Image<short int>           IShort;
-    Image<unsigned short int>  IUShort;
-    Image<float>               IFloat;
 
     void defineParams()
     {
@@ -192,11 +187,11 @@ public:
     void processImage(const FileName &fnImg, const FileName &fnImgOut, size_t objId)
     {
         ImageGeneric Iin;
-        bool createTempFile=fnImg==fnImgOut;
+        bool createTempFile = (fnImg == fnImgOut);
         if (single_image)
-            Iin.read(fnImg,true,-1,true);
+            Iin.read(fnImg, DATA, ALL_IMAGES, true);
         else
-            Iin.readApplyGeo(fnImg);
+            Iin.readApplyGeo(fnImg, mdIn, objId);
 
         double init_value(padValue);
         if (padType=="avg")
@@ -208,7 +203,7 @@ public:
         if (ZSIZE(Iin()())==1)
             zF=z0=0;
 
-        std::string oext=fnImgOut.getExtension();
+        String oext=fnImgOut.getExtension();
         DataType dataType=Iin.getDatatype();
         if (oext=="spi" || oext=="xmp" || oext=="vol" || oext=="stk")
             dataType=Float;

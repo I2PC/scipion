@@ -87,7 +87,7 @@ int readImage(ImagePlusC &ip) {
 		FileName fn = ip.filename;
 		// cout << fn;
 		// read header / whole file (depending on ip.readHeaderOnly)
-		error = in.read(fn, !ip.readHeaderOnly, ip.slice);
+		error = in.read(fn, (ip.readHeaderOnly)? HEADER : DATA, ip.slice);
 
 		ip.width = in.data.xdim;
 		ip.height = in.data.ydim;

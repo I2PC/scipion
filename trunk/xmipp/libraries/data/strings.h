@@ -114,6 +114,9 @@ inline float textToFloat(const String& str)
  */
 int textToInteger(const char* str);
 
+/** String (String) to size_t conversion. */
+size_t textToSizeT(const char * str);
+
 /** String (String) to integer conversion. */
 inline int textToInteger(const String& str)
 {

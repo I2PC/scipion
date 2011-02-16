@@ -29,8 +29,7 @@
 
 ImageGeneric::ImageGeneric(DataType _datatype)
 {
-    datatype = _datatype;
-    setImageBase();
+    setDatatype(_datatype);
 }
 
 ImageGeneric::~ImageGeneric()
@@ -55,9 +54,17 @@ void ImageGeneric::clear()
         init();
     }
 }
-
-void ImageGeneric::setImageBase()
+DataType ImageGeneric::getImageType(const FileName &imgName)
 {
+    Image<char> Im;
+    Im.read(imgName, HEADER);
+    return Im.dataType();
+}
+
+void ImageGeneric::setDatatype(DataType imgType)
+{
+    clear();
+    datatype = imgType;
     switch (datatype)
     {
     case Float:
@@ -118,41 +125,36 @@ void ImageGeneric::setImageBase()
     }
 }
 
-int ImageGeneric::read(const FileName &name, bool readdata, int select_img,
+int ImageGeneric::read(const FileName &name, DataMode datamode, size_t select_img,
                        bool mapData)
 {
-    clear();
-
-    Image<char> Im;
-    Im.read(name,false);
-
-    datatype = Im.dataType();
-    setImageBase();
-    image->read(name,readdata,select_img,mapData);
+    setDatatype(getImageType(name));
+    image->read(name, datamode, select_img, mapData);
 }
 
-int ImageGeneric::readApplyGeo(const FileName &name, bool readdata, int select_img,
-                               bool only_apply_shifts, MDRow * row)
+int ImageGeneric::readApplyGeo(const FileName &name, const MDRow &row, DataMode datamode, size_t select_img)
 {
-    clear();
-
-    Image<char> Im;
-    Im.read(name,false);
-
-    datatype = Im.dataType();
-    setImageBase();
-    image->readApplyGeo(name,readdata,select_img,only_apply_shifts,row);
+    setDatatype(getImageType(name));
+    image->readApplyGeo(name, row, datamode, select_img);
 }
 
-int ImageGeneric::readApplyGeo(const FileName &name, const MetaData &MD, long int objId,
-                               bool readdata, int select_img, bool only_apply_shifts)
+int ImageGeneric::readApplyGeo(const FileName &name, const MetaData &md, size_t objId, DataMode datamode,
+    size_t select_img)
 {
-    clear();
+    setDatatype(getImageType(name));
+    image->readApplyGeo(name, md, objId, datamode, select_img);
+}
 
-    Image<char> Im;
-    Im.read(name,false);
+/** Read an image from metadata, filename is taken from MDL_IMAGE */
+int ImageGeneric::readApplyGeo(const MetaData &md, size_t objId, DataMode datamode, size_t select_img)
+{
+    FileName name;
+    md.getValue(MDL_IMAGE, name, md.firstObject());
+    setDatatype(getImageType(name));
+    image->readApplyGeo(name, md, objId, datamode, select_img);
+}
 
-    datatype = Im.dataType();
-    setImageBase();
-    image->readApplyGeo(name,MD, objId, readdata, select_img, only_apply_shifts);
+void ImageGeneric::print() const
+{
+  std::cout << *image;
 }

@@ -16,11 +16,11 @@
 /** MRC Reader
   * @ingroup MRC
 */
-int readMRC(int img_select, bool isStack=false);
+int readMRC(size_t select_img, bool isStack=false);
 
 /** MRC Writer
   * @ingroup MRC
 */
-int writeMRC(int img_select, bool isStack=false, int mode=WRITE_OVERWRITE, std::string bitDepth="", bool adjust=false);
+int writeMRC(size_t select_img, bool isStack=false, int mode=WRITE_OVERWRITE, String bitDepth="", bool adjust=false);
 
 #endif

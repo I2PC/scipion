@@ -26,11 +26,12 @@
 #include "filename.h"
 #include "funcs.h"
 
+
 // Constructor with root, number and extension .............................
-void FileName::compose(const String &str, int no, const String &ext)
+void FileName::compose(const String &str, size_t no, const String &ext)
 {
     *this = (FileName) str;
-    if (no != -1)
+    if (no != ALL_IMAGES)
     {
 
         char aux_str[FILENAMENUMBERLENGTH+1];
@@ -47,10 +48,10 @@ void FileName::compose(const String &str, int no, const String &ext)
 }
 
 // Constructor: prefix number and filename, mainly for selfiles..
-void FileName::compose(int no , const String &str)
+void FileName::compose(size_t no , const String &str)
 {
     *this = (FileName) str;
-    if (no != -1)
+    if (no != ALL_IMAGES)
     {
 
         char aux_str[FILENAMENUMBERLENGTH+1];
@@ -74,7 +75,7 @@ bool FileName::isInStack() const
 }
 
 // Decompose ..............................................................
-void FileName::decompose(int &no, String &str) const
+void FileName::decompose(size_t &no, String &str) const
 {
     size_t idx = find('@');
     if(idx != String::npos)
@@ -84,7 +85,7 @@ void FileName::decompose(int &no, String &str) const
     }
     else
     {
-        no=-1;
+        no = ALL_IMAGES;
         str = *this;
     }
 }
@@ -93,7 +94,7 @@ void FileName::decompose(int &no, String &str) const
 String FileName::getDecomposedFileName() const
 {
     String str;
-    int no;
+    size_t no;
     decompose(no, str);
     return str;
 }

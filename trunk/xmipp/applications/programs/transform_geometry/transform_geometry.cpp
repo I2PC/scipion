@@ -121,7 +121,7 @@ protected:
             (checkParam("--shift") || checkParam("--rotate") || isVol))
             REPORT_ERROR(ERR_ARG_INCORRECT, "Fourier interpolation is only allowed for scale in 2D");
 
-        applyTransform = isVol || mdIn.size() == 1;
+        applyTransform = applyTransform || isVol || mdIn.size() == 1;
         S.initIdentity(dim + 1);
         R.initIdentity(dim + 1);
         T.initIdentity(dim + 1);
@@ -162,9 +162,9 @@ protected:
                 else
                 {
                     double ang = getDoubleParam("--rotate", 1);
-                    XX(xyz) = getDoubleParam("--rotate", 2); //rot
-                    YY(xyz) = getDoubleParam("--rotate", 3); //tilt
-                    ZZ(xyz) = getDoubleParam("--rotate", 4);//psi
+                    XX(xyz) = getDoubleParam("--rotate", 2); //axis x
+                    YY(xyz) = getDoubleParam("--rotate", 3); //y
+                    ZZ(xyz) = getDoubleParam("--rotate", 4);//z
                     rotation3DMatrix(ang, xyz, R, true);
                 }
             }
@@ -243,9 +243,6 @@ protected:
             mdIn.getRow(input, objId);//Get geometric transformation for image
             geo2TransformationMatrix(input, B);
         }
-        //MultidimArray<double> out;
-        std::cerr << "A: " << std::endl << A;
-        std::cerr << "B: " << std::endl << B;
 
         T = A * B;
         if (checkParam("--write_matrix"))
@@ -258,6 +255,7 @@ protected:
         else
         {
             transformationMatrix2Geo(T, input);
+            input.setValue(MDL_IMAGE, fnImgOut);
             mdOut.setRow(input, newId);
             imgOut() = img();
         }

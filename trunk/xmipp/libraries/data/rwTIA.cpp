@@ -86,7 +86,6 @@ int ImageBase::readTIA(int img_select,bool isStack)
 
     TIAhead * header = new TIAhead;
 
-
     xmippFREAD(&header->endianess, sizeof(short int), 1, fimg, swap );
 
     // Set Endianess
@@ -223,34 +222,27 @@ int ImageBase::readTIA(int img_select,bool isStack)
     MDMainHeader.setValue(MDL_SAMPLINGRATEY,(double)dataHeaders[0].PIXEL_HEIGHT);
     MDMainHeader.setValue(MDL_DATATYPE,(int)datatype);
 
-    if( dataflag < 0 )
-        return 0;
-
     MD.clear();
     MD.resize(imgEnd - imgStart);
-
-    for ( i = imgStart; i < imgEnd; ++i )
+    double aux;
+    for ( i = 0; i < imgEnd - imgStart; ++i )
     {
-        double aux;
-        if(MDMainHeader.getValue(MDL_SAMPLINGRATEX,aux))
+        initGeometry();
+        if (dataMode == _HEADER_ALL || dataMode == _DATA_ALL)
         {
-            aux = ROUND(dataHeaders[i].CalibrationElementX - \
-                        dataHeaders[i].CalibrationOffsetX/aux - _xDim/2);
-            MD[i-imgStart].setValue(MDL_ORIGINX, aux);
+            if(MDMainHeader.getValue(MDL_SAMPLINGRATEX,aux))
+            {
+                aux = ROUND(dataHeaders[i].CalibrationElementX - \
+                            dataHeaders[i].CalibrationOffsetX/aux - _xDim/2);
+                MD[i].setValue(MDL_ORIGINX, aux);
+            }
+            if(MDMainHeader.getValue(MDL_SAMPLINGRATEY,aux))
+            {
+                aux = ROUND(dataHeaders[i].CalibrationElementY - \
+                            dataHeaders[i].CalibrationOffsetY/aux -_yDim/2);
+                MD[i].setValue(MDL_ORIGINY, aux);
+            }
         }
-        if(MDMainHeader.getValue(MDL_SAMPLINGRATEY,aux))
-        {
-            aux = ROUND(dataHeaders[i].CalibrationElementY - \
-                        dataHeaders[i].CalibrationOffsetY/aux -_yDim/2);
-            MD[i-imgStart].setValue(MDL_ORIGINY, aux);
-        }
-        MD[i-imgStart].setValue(MDL_ORIGINZ,  zeroD);
-        MD[i-imgStart].setValue(MDL_ANGLEROT, zeroD);
-        MD[i-imgStart].setValue(MDL_ANGLETILT,zeroD);
-        MD[i-imgStart].setValue(MDL_ANGLEPSI, zeroD);
-        MD[i-imgStart].setValue(MDL_WEIGHT,   oneD);
-        MD[i-imgStart].setValue(MDL_FLIP,     falseb);
-        MD[i-imgStart].setValue(MDL_SCALE,    oneD);
     }
 
     //#define DEBUG
@@ -261,8 +253,11 @@ int ImageBase::readTIA(int img_select,bool isStack)
 #endif
 
     delete header;
-    size_t pad = TIAdataSIZE;
 
+    if( dataMode < DATA )
+        return 0;
+
+    size_t pad = TIAdataSIZE;
     readData(fimg, img_select, datatype, pad);
 
     return(0);

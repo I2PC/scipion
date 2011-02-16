@@ -147,6 +147,21 @@ int textToInteger(const char* str)
     return 0;
 }
 
+size_t textToSizeT(const char * str)
+{
+  if (str == NULL)
+      REPORT_ERROR(ERR_MEM_NULLPOINTER, "Cannot be converted into int");
+
+  size_t retval;
+  int ok = sscanf(str, "%lu", &retval);
+
+  if (ok)
+      return retval;
+  REPORT_ERROR(ERR_VALUE_INCORRECT, "Conversion to size_t error");
+
+  return 0;
+}
+
 long long textToLongLong(const char* str)
 {
     if (str == NULL)

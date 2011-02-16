@@ -102,7 +102,7 @@ protected:
 
     void processImage(const FileName &fnImg, const FileName &fnImgOut, size_t objId)
     {
-        image.read(fnImg,true,-1,true);
+        image.read(fnImg,DATA,-1,true);
         image().setXmippOrigin();
 
         int xDim,yDim,zDim;

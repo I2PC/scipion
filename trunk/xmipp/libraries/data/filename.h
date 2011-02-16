@@ -50,6 +50,7 @@
 #include "error.h"
 #include "strings.h"
 #define FILENAMENUMBERLENGTH 6
+#define ALL_IMAGES 0
 
 //@{
 /** Filenames.
@@ -59,7 +60,7 @@
  * here, although most of the functions work with the more general model
  * "name.extension"
  */
-class FileName: public std::string
+class FileName: public String
 {
 public:
     /// @name Filename constructors
@@ -74,7 +75,7 @@ public:
      * FileName fn_blobs;
      * @endcode
      */
-    inline FileName(): std::string("")
+    inline FileName(): String("")
     {}
 
     /** Constructor from string
@@ -85,20 +86,20 @@ public:
      * pointer movement instead of a string concatenation.
      *
      * @code
-     * FileName fn_blobs((std::string) "art00001" + ".blobs");
+     * FileName fn_blobs((String) "art00001" + ".blobs");
      * @endcode
      */
-    FileName(const std::string& str): std::string(str)
+    FileName(const String& str): String(str)
     {}
 
     /** Constructor from char*
      */
-    FileName(const char* str) : std::string(str)
+    FileName(const char* str) : String(str)
     {}
 
     /** Copy constructor
      */
-    FileName(const FileName& fn) : std::string(fn)
+    FileName(const FileName& fn) : String(fn)
     {}
 
     /** Constructor from root, number and extension
@@ -111,7 +112,7 @@ public:
      * FileName fn_proj("g1ta",1); // fn_proj = "g1ta000001"
      * @endcode
      */
-    FileName(const char* str, int no, const std::string& ext = "")
+    FileName(const char* str, int no, const String& ext = "")
     {
         compose(str, no, ext);
     }
@@ -124,7 +125,7 @@ public:
      * FileName fn_proj("g1ta00001", "xmp"); // fn_proj = "g1ta00001.xmp"
      * @endcode
      */
-    FileName(const char* str, const std::string& ext): std::string(str + ext)
+    FileName(const char* str, const String& ext): String(str + ext)
     {}
     //@}
 
@@ -132,10 +133,10 @@ public:
     /// @{
 
     /**
-     * Convert to std::string
+     * Convert to String
      */
-    inline std::string getString() const {
-	return (std::string)(*this);
+    inline String getString() const {
+	return (String)(*this);
     }
 
     /** Compose from root, number and extension
@@ -144,7 +145,7 @@ public:
      * fn_proj.compose("g1ta", 1, "xmp");  // fn_proj = "g1ta000001.xmp"
      * @endcode
      */
-    void compose(const std::string& str, int no, const std::string& ext);
+    void compose(const String& str, const size_t no, const String& ext);
 
     /** Prefix with number @. Mainly for selfiles
      *
@@ -152,7 +153,7 @@ public:
      * fn_proj.compose(1,"g1ta.xmp");  // fn_proj = "000001@g1ta000001.xmp"
      * @endcode
      */
-    void compose(int no, const std::string& str);
+    void compose(const size_t no, const String& str);
 
     /** True if this filename belongs to a stack
      */
@@ -166,7 +167,7 @@ public:
      *                                  // filename = "g1ta000001.xmp"
      * @endcode
      */
-    void decompose(int &no, std::string& str) const;
+    void decompose(size_t &no, String& str) const;
 
     /** Get decomposed filename from filenames with @. Mainly from selfiles
          *
@@ -189,7 +190,7 @@ public:
 
     /** Get the base name from a filename
      */
-    std::string getBaseName() const;
+    String getBaseName() const;
 
     /** Get the number from a filename
      *
@@ -208,10 +209,10 @@ public:
      * returned.
      *
      * @code
-     * std::string ext = fn_proj.get_extension();
+     * String ext = fn_proj.get_extension();
      * @endcode
      */
-    std::string getExtension() const;
+    String getExtension() const;
 
     /** Get image format identifier (as in Bsoft)
      *
@@ -229,7 +230,7 @@ public:
     /** Get blockName from filename
      * @code
      * fn_meta="block1@md1.doc"
-     * std::string blockName;
+     * String blockName;
      * blockName=fn_meta.getblockName();//blockName="block1"
      * @endcode
      */
@@ -239,12 +240,12 @@ public:
     /** Remove blockName from filename
      * @code
      * fn_meta="block1@md1.doc"
-     * std::string blockName;
+     * String blockName;
      * filename=fn_meta.getblockName();//filename="md1.doc"
      * @endcode
      */
 
-    std::string getBlockName() const;
+    String getBlockName() const;
 
     /** Random name
      *
@@ -288,7 +289,7 @@ public:
      * if (fn_proj.contains("raw) )  // true
      * @endcode
      */
-    bool contains(const std::string& str) const;
+    bool contains(const String& str) const;
 
     /** Return substring before first instance of argument (as in Bsoft)
      *
@@ -297,7 +298,7 @@ public:
      * fn_proj = fn_proj.before_first_of("#"); // fn_proj = "g1ta00001.raw"
      * @endcode
      */
-    FileName beforeFirstOf(const std::string& str) const;
+    FileName beforeFirstOf(const String& str) const;
 
     /** Return substring before last instance of argument (as in Bsoft)
      *
@@ -306,7 +307,7 @@ public:
      * fn_proj = fn_proj.before_last_of("#"); // fn_proj = "g1ta00001.raw"
      * @endcode
      */
-    FileName beforeLastOf(const std::string& str) const;
+    FileName beforeLastOf(const String& str) const;
 
     /** Return substring after first instance of argument (as in Bsoft)
      *
@@ -315,7 +316,7 @@ public:
      * fn_proj = fn_proj.after_first_of("#"); // fn_proj = "d=f"
      * @endcode
      */
-    FileName afterFirstOf(const std::string& str) const;
+    FileName afterFirstOf(const String& str) const;
 
     /** Return substring after last instance of argument (as in Bsoft)
      *
@@ -324,7 +325,7 @@ public:
      * fn_proj = fn_proj.after_last_of("#"); // fn_proj = "d=f"
      * @endcode
      */
-    FileName afterLastOf(const std::string& str) const;
+    FileName afterLastOf(const String& str) const;
 
     /** Add string at the beginning
      *
@@ -338,7 +339,7 @@ public:
      * fn_proj.add_prefix("h"); // fn_proj == "hg1ta00001"
      * @endcode
      */
-    FileName addPrefix(const std::string& prefix) const;
+    FileName addPrefix(const String& prefix) const;
 
     /** Add extension at the end.
      *
@@ -350,7 +351,7 @@ public:
      * fn_proj.add_extension("xmp"); // fn_proj == "g1ta00001.xmp"
      * @endcode
      */
-    FileName addExtension(const std::string& ext) const;
+    FileName addExtension(const String& ext) const;
 
     /** Remove last extension, if any
      *
@@ -390,7 +391,7 @@ public:
      * // fn_proj=="g1ta00001pp"
      * @endcode
      */
-    FileName insertBeforeExtension(const std::string& str) const;
+    FileName insertBeforeExtension(const String& str) const;
 
     /** Remove a certain extension
      *
@@ -404,7 +405,7 @@ public:
      * // fn_proj == "g1ta00001.bak"
      * @endcode
      */
-    FileName removeExtension(const std::string& ext) const;
+    FileName removeExtension(const String& ext) const;
 
     /** Remove all extensions
      */
@@ -459,15 +460,15 @@ public:
      * // fn_proj=="g1ta00001.xmp.bak"
      * @endcode
      */
-    FileName substituteExtension(const std::string& ext1,
-                                 const std::string& ext2) const;
+    FileName substituteExtension(const String& ext1,
+                                 const String& ext2) const;
 
     /** Without a substring
      *
      * If the substring is not present the same FileName is returned, if it is
      * there the substring is removed.
      */
-    FileName without(const std::string& str) const;
+    FileName without(const String& str) const;
 
     /** Remove until prefix
      *
@@ -475,7 +476,7 @@ public:
      * instance /usr/local/data/ctf-image00001.fft with ctf- yields
      * image00001.fft. If the prefix is not found nothing is done.
      */
-    FileName removeUntilPrefix(const std::string& str) const;
+    FileName removeUntilPrefix(const String& str) const;
 
     /** Remove all directories
      *
@@ -531,7 +532,7 @@ bool existsTrim(const FileName& fn);
 bool isDirectory (const FileName &fn);
 
 /** Return the list of files within a directory. */
-void getdir(const std::string &dir, std::vector<FileName> &files);
+void getdir(const String &dir, std::vector<FileName> &files);
 
 /** This function raised an ERROR if the filename if not empty and if
  * the corresponding file does not exist.

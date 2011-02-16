@@ -125,7 +125,7 @@ struct SPIDERhead
  for each sub-image.
 @Arguments:
  Bimage* p   the image structure.
- int img_select  image selection in multi-image file (-1 = all images).
+ size_t select_img  image selection in multi-image file (-1 = all images).
 @Returns:
  int     error code (<0 means failure).
 **************************************************************************/
@@ -134,7 +134,7 @@ struct SPIDERhead
 */
 #include "metadata_label.h"
 
-int  ImageBase::readSPIDER(int img_select)
+int  ImageBase::readSPIDER(size_t select_img)
 {
 #undef DEBUG
     //#define DEBUG
@@ -164,7 +164,7 @@ int  ImageBase::readSPIDER(int img_select)
     if(header->labbyt != header->labrec*header->lenbyt)
         REPORT_ERROR(ERR_IO_NOTFILE,(std::string)"Invalid Spider file:  " + filename);
 
-    offset = (int) header->labbyt;
+    offset = (size_t) header->labbyt;
     DataType datatype  = Float;
 
     MDMainHeader.setValue(MDL_MIN,(double)header->fmin);
@@ -178,7 +178,7 @@ int  ImageBase::readSPIDER(int img_select)
 
     bool isStack = ( header->istack > 0 );
     int _xDim,_yDim,_zDim;
-    unsigned long int _nDim, _nDimSet;
+    size_t _nDim, _nDimSet;
     _xDim = (int) header->nsam;
     _yDim = (int) header->nrow;
     _zDim = (int) header->nslice;
@@ -186,11 +186,11 @@ int  ImageBase::readSPIDER(int img_select)
 
     if(isStack)
     {
-        _nDim = (unsigned long int) header->maxim;
-        replaceNsize=_nDim;
+        _nDim = (size_t) header->maxim;
+        replaceNsize = _nDim;
     }
     else
-        replaceNsize=0;
+        replaceNsize = 1;
 
     /************
      * BELLOW HERE DO NOT USE HEADER BUT LOCAL VARIABLES
@@ -201,50 +201,34 @@ int  ImageBase::readSPIDER(int img_select)
     if(!isStack)
         _nDimSet = 1;
     else
-    {
-        if(img_select==-1)
-            _nDimSet = _nDim;
-        else
-            _nDimSet = 1;
-    }
+        _nDimSet = (select_img == ALL_IMAGES) ? _nDim : 1;
 
     setDimensions(_xDim, _yDim, _zDim, _nDimSet);
-
 
     size_t header_size = offset;
     size_t datasize_n = _xDim*_yDim*_zDim;
     size_t image_size  = header_size + datasize_n*sizeof(float);
     size_t pad         = 0;
-    unsigned long   imgStart=0;
-    unsigned long   imgEnd =_nDim;
-    if (img_select != -1)
-    {
-        imgStart=img_select;
-        imgEnd=img_select+1;
-    }
+
+    size_t   imgStart = IMG_INDEX(select_img);
+    size_t   imgEnd = (select_img != ALL_IMAGES) ? select_img + 1 : _nDim;
 
     char*   hend;
 
-    std::stringstream Num;
-    std::stringstream Num2;
     //image is in stack? and set right initial and final image
     if ( isStack)
     {
-        pad         = offset;
-        if ( img_select > (int)_nDim )
-        {
-            Num  << img_select;
-            Num2 << _nDim;
-            REPORT_ERROR(ERR_INDEX_OUTOFBOUNDS,(std::string)"readSpider: Image number " + Num.str() +
-                         " exceeds stack size " + Num2.str());
-        }
+        if ( select_img > _nDim )
+            REPORT_ERROR(ERR_INDEX_OUTOFBOUNDS, formatString("readSpider: Image number %lu exceeds stack size %lu" ,select_img, _nDim));
+        pad = offset;
         offset += offset;
     }
 
     MD.clear();
     MD.resize(imgEnd - imgStart);
+    double daux;
 
-    for (int n = 0, i = imgStart; i < imgEnd; ++i, ++n )
+    for (size_t n = 0, i = imgStart; i < imgEnd; ++i, ++n )
     {
         fseek( fimg, header_size + i*image_size, SEEK_SET );
         if(isStack)
@@ -256,43 +240,45 @@ int  ImageBase::readSPIDER(int img_select)
                 for ( b = (char *) header; b<hend; b+=4 )
                     swapbytes(b, 4);
         }
-        ///DO NOT USE HEADER
-//        double daux;
-//        daux = (double)header->xoff;
-//        MD[n].setValue(MDL_ORIGINX, daux);
-//        daux = (double)header->yoff;
-//        MD[n].setValue(MDL_ORIGINY, daux);
-//        daux = (double)header->zoff;
-//        MD[n].setValue(MDL_ORIGINZ, daux);
-//        daux = (double)header->phi;
-//        MD[n].setValue(MDL_ANGLEROT, daux);
-//        daux = (double)header->theta;
-//        MD[n].setValue(MDL_ANGLETILT, daux);
-//        daux = (double)header->gamma;
-//        MD[n].setValue(MDL_ANGLEPSI, daux);
-//        daux = (double)header->weight;
-//        MD[n].setValue(MDL_WEIGHT, daux);
-//        bool baux = (header->flip == 1);
-//        MD[n].setValue(MDL_FLIP, baux);
-//        daux = (double) header->scale;
-//        if (daux==0.)
-//            daux=1.0;
-//        MD[n].setValue(MDL_SCALE, daux);
-        initGeometry(n);
-        if(img_select == i)
-            break;
+        if (dataMode == _HEADER_ALL || dataMode == _DATA_ALL)
+        {
+            daux = (double)header->xoff;
+            MD[n].setValue(MDL_ORIGINX, daux);
+            daux = (double)header->yoff;
+            MD[n].setValue(MDL_ORIGINY, daux);
+            daux = (double)header->zoff;
+            MD[n].setValue(MDL_ORIGINZ, daux);
+            daux = (double)header->phi;
+            MD[n].setValue(MDL_ANGLEROT, daux);
+            daux = (double)header->theta;
+            MD[n].setValue(MDL_ANGLETILT, daux);
+            daux = (double)header->gamma;
+            MD[n].setValue(MDL_ANGLEPSI, daux);
+            daux = (double)header->weight;
+            MD[n].setValue(MDL_WEIGHT, daux);
+            bool baux = (header->flip == 1);
+            MD[n].setValue(MDL_FLIP, baux);
+            daux = (double) header->scale;
+            if (daux==0.)
+                daux=1.0;
+            MD[n].setValue(MDL_SCALE, daux);
+        }
+        else
+            initGeometry(n);
     }
+
     delete header;
-    if (isStack && dataflag<0)   // Don't read  data if not necessary but read the header
+
+    if (dataMode < DATA)   // Don't read  data if not necessary but read the header
         return 0;
 
 #ifdef DEBUG
 
     std::cerr<<"DEBUG readSPIDER: header_size = "<<header_size<<" image_size = "<<image_size<<std::endl;
-    std::cerr<<"DEBUG readSPIDER: img_select= "<<img_select<<" n= "<<Ndim<<" pad = "<<pad<<std::endl;
+    std::cerr<<"DEBUG readSPIDER: select_img= "<<select_img<<" n= "<<Ndim<<" pad = "<<pad<<std::endl;
 #endif
     //offset should point to the begin of the data
-    readData(fimg, img_select, datatype, pad );
+    readData(fimg, select_img, datatype, pad );
 
     return(0);
 }
@@ -309,7 +295,7 @@ int  ImageBase::readSPIDER(int img_select)
 /** Spider Writer
   * @ingroup Spider
 */
-int  ImageBase::writeSPIDER(int select_img, bool isStack, int mode)
+int  ImageBase::writeSPIDER(size_t select_img, bool isStack, int mode)
 {
     //return(1);
 #undef DEBUG
@@ -325,15 +311,10 @@ int  ImageBase::writeSPIDER(int select_img, bool isStack, int mode)
     //IsStack?
     //else
     int Xdim, Ydim, Zdim;
-    unsigned long Ndim;
+    size_t Ndim;
     getDimensions(Xdim, Ydim, Zdim, Ndim);
 
-    DataType wDType;
-
-    if (isComplexT())
-        wDType = ComplexFloat;
-    else
-        wDType = Float;
+    DataType wDType = (isComplexT()) ? ComplexFloat : Float;
 
     if (mmapOnWrite && !checkMmapT(wDType))
         REPORT_ERROR(ERR_MMAP, "File datatype and image declaration not compatible with mmap.");
@@ -360,11 +341,11 @@ int  ImageBase::writeSPIDER(int select_img, bool isStack, int mode)
     header->nrow   = Ydim;
     header->nslice = Zdim;
 
-    unsigned long   imgStart=0;
-    if (select_img != -1)
-        imgStart=select_img;
+    size_t imgStart= IMG_INDEX(select_img);
+
+    //TODO: Check if this works
     if (mode == WRITE_APPEND)
-        imgStart=0;
+        imgStart = 0;
 
     // If a transform, then the physical storage in x is only half+1
     size_t xstore  = Xdim;
@@ -418,28 +399,37 @@ int  ImageBase::writeSPIDER(int select_img, bool isStack, int mode)
 
     }
 
-    ///DO NOT USE HEADER
-//    if (Ndim == 1 && mode != WRITE_APPEND && !isStack && !MD.empty())
-//    {
-//        if(MD[0].getValue(MDL_ORIGINX,  aux))
-//            header->xoff  =(float)aux;
-//        if(MD[0].getValue(MDL_ORIGINY,  aux))
-//            header->yoff  =(float)aux;
-//        if(MD[0].getValue(MDL_ORIGINZ,  aux))
-//            header->zoff  =(float)aux;
-//        if(MD[0].getValue(MDL_ANGLEROT, aux))
-//            header->phi   =(float)aux;
-//        if(MD[0].getValue(MDL_ANGLETILT,aux))
-//            header->theta =(float)aux;
-//        if(MD[0].getValue(MDL_ANGLEPSI, aux))
-//            header->gamma =(float)aux;
-//        if(MD[0].getValue(MDL_WEIGHT,   aux))
-//            header->weight=(float)aux;
-//        if(MD[0].getValue(MDL_FLIP,    baux))
-//            header->flip  =(float)baux;
-//        if(MD[0].getValue(MDL_SCALE,    aux))
-//            header->scale  =(float)aux;
-//    }
+    if (Ndim == 1 && mode != WRITE_APPEND && !isStack && !MD.empty())
+    {
+        if ((dataMode == _HEADER_ALL || dataMode == _DATA_ALL))
+        {
+
+            if(MD[0].getValue(MDL_ORIGINX,  aux))
+                header->xoff  =(float)aux;
+            if(MD[0].getValue(MDL_ORIGINY,  aux))
+                header->yoff  =(float)aux;
+            if(MD[0].getValue(MDL_ORIGINZ,  aux))
+                header->zoff  =(float)aux;
+            if(MD[0].getValue(MDL_ANGLEROT, aux))
+                header->phi   =(float)aux;
+            if(MD[0].getValue(MDL_ANGLETILT,aux))
+                header->theta =(float)aux;
+            if(MD[0].getValue(MDL_ANGLEPSI, aux))
+                header->gamma =(float)aux;
+            if(MD[0].getValue(MDL_WEIGHT,   aux))
+                header->weight=(float)aux;
+            if(MD[0].getValue(MDL_FLIP,    baux))
+                header->flip  =(float)baux;
+            if(MD[0].getValue(MDL_SCALE,    aux))
+                header->scale  =(float)aux;
+        }
+        else
+        {
+            header->xoff = header->yoff = header->zoff =\
+            header->phi = header->theta = header->gamma = header->weight = 0.;
+            header->scale = 1.;
+        }
+    }
 
     //else end
     // Set time and date
@@ -545,29 +535,39 @@ int  ImageBase::writeSPIDER(int select_img, bool isStack, int mode)
 
         for (std::vector<MDRow>::iterator it = MD.begin(); it != MD.end(); ++it, ++i)
         {
-          ///DO NOT USE HEADER
-//            if(it->getValue(MDL_ORIGINX,  aux))
-//                header->xoff  =(float)aux;
-//            if(it->getValue(MDL_ORIGINY,  aux))
-//                header->yoff  =(float)aux;
-//            if(it->getValue(MDL_ORIGINZ,  aux))
-//                header->zoff  =(float)aux;
-//            if(it->getValue(MDL_ANGLEROT, aux))
-//                header->phi   =(float)aux;
-//            if(it->getValue(MDL_ANGLETILT,aux))
-//                header->theta =(float)aux;
-//            if(it->getValue(MDL_ANGLEPSI, aux))
-//                header->gamma =(float)aux;
-//            if(it->getValue(MDL_WEIGHT,   aux))
-//                header->weight=(float)aux;
-//            if(it->getValue(MDL_FLIP,    baux))
-//                header->flip  =(float)baux;
-//            if(it->getValue(MDL_SCALE,    aux))
-//                header->scale  =(float)aux;
-
+            if (dataMode == _HEADER_ALL || dataMode == _DATA_ALL)
+            {
+                if(it->getValue(MDL_ORIGINX,  aux))
+                    header->xoff  =(float)aux;
+                if(it->getValue(MDL_ORIGINY,  aux))
+                    header->yoff  =(float)aux;
+                if(it->getValue(MDL_ORIGINZ,  aux))
+                    header->zoff  =(float)aux;
+                if(it->getValue(MDL_ANGLEROT, aux))
+                    header->phi   =(float)aux;
+                if(it->getValue(MDL_ANGLETILT,aux))
+                    header->theta =(float)aux;
+                if(it->getValue(MDL_ANGLEPSI, aux))
+                    header->gamma =(float)aux;
+                if(it->getValue(MDL_WEIGHT,   aux))
+                    header->weight=(float)aux;
+                if(it->getValue(MDL_FLIP,    baux))
+                    header->flip  =(float)baux;
+                if(it->getValue(MDL_SCALE,    aux))
+                    header->scale  =(float)aux;
+            }
+            else
+            {
+              header->xoff = header->yoff = header->zoff =\
+              header->phi = header->theta = header->gamma = header->weight = 0.;
+              header->scale = 1.;
+            }
             //do not need to unlock because we are in the overwrite case
             fwrite( header, offset, 1, fimg );
-            writeData(fimg, i*datasize_n, wDType, datasize_n, CAST);
+            if (dataMode >= DATA)
+              writeData(fimg, i*datasize_n, wDType, datasize_n, CAST);
+            else
+              fseek(fimg, datasize, SEEK_CUR);
         }
     }
     //I guess I do not need to unlock since we are going to close the file

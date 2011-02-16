@@ -89,7 +89,7 @@ protected:
         else
         {
             Image<double> img;
-            img.readApplyGeo(fnImg,mdIn,objId,false);
+            img.readApplyGeo(fnImg,mdIn,objId, HEADER);
             DF_out.append_angles(img.rot(), img.tilt(), img.psi(),
                                  ang1, ang2, ang3);
         }

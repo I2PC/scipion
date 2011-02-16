@@ -30,5 +30,4 @@ int main(int argc, char **argv)
   ProgNmaAlignment program;
   program.read(argc, argv);
   program.tryRun();
-  return 0;
 }

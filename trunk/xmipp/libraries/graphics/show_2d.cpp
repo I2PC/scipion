@@ -740,9 +740,10 @@ bool ImageViewer::loadImage(const char *fileName,
                 {
                 	isFourierImage = false;
                     Image<double> p;
-                    if (apply_geo)
-                    	p.readApplyGeo(filename);
-                    else
+                    //if (apply_geo)
+                    //	p.readApplyGeo(filename);
+                    //else
+                    //FIXME Check if this work
                     	p.read(filename);
                 	if (load_mode == ImageViewer::PSD_mode)
                     {

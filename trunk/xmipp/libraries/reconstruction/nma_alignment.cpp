@@ -157,32 +157,40 @@ void ProgNmaAlignment::preProcess()
     createWorkFiles();
 }
 
+void runSystem(const String & arguments)
+{
+    static int counter = 0;
+    //if (counter > 10)
+    //   exit(1);
+    std::cerr << ">>> RUNNING: " << arguments << std::endl;
+    system(arguments.c_str());
+    counter++;
+}
+
 // Create deformed PDB =====================================================
 FileName ProgNmaAlignment::createDeformedPDB(int pyramidLevel) const
 {
+    String program;
     String arguments;
     FileName fnRandom;
     fnRandom.initUniqueName(nameTemplate);
+    const char * randStr = fnRandom.c_str();
 
-    arguments=(std::string)"xmipp_move_along_NMAmode "+fnPDB+" "+modeList[0]+" "+
-              floatToString((float)trial(0)*scale_defamp)+" > inter"+fnRandom+"; mv -f inter"+fnRandom+" deformedPDB_"+
-              fnRandom+".pdb";
-    system(arguments.c_str());
+    program = "xmipp_move_along_NMAmode";
+    arguments = formatString("%s %s %s %f > inter%s; mv -f inter%s deformedPDB_%s.pdb", program.c_str(),
+                             fnPDB.c_str(), modeList[0].c_str(), trial(0)*scale_defamp, randStr, randStr, randStr);
+    runSystem(arguments);
 
     for (int i=1; i<VEC_XSIZE(trial)-5; ++i)
     {
-        arguments=(std::string)"xmipp_move_along_NMAmode deformedPDB_"+fnRandom+".pdb "+modeList[i]+" "+
-                  floatToString((float)trial(i)*scale_defamp)+" > inter"+fnRandom+"; mv -f inter"+fnRandom+" deformedPDB_"+
-                  fnRandom+".pdb";
-
-        system(arguments.c_str());
+        arguments = formatString("%s deformedPDB_%s.pdb %s %f > inter%s; mv -f inter%s deformedPDB_%s.pdb", program.c_str(),
+                                 randStr, modeList[i].c_str(), trial(i)*scale_defamp, randStr, randStr, randStr);
+        runSystem(arguments);
     }
 
-    arguments=(String)"xmipp_convert_pdb2vol";
-    arguments+=(String)" -i deformedPDB_"+fnRandom+".pdb"+
-              " -size "+integerToString(ROUND(imgSize))+
-              " -sampling_rate " + floatToString((float)sampling_rate)+
-              " -v 0";
+    program = "xmipp_convert_pdb2vol";
+    arguments = formatString("%s -i deformedPDB_%s.pdb -size %i -sampling_rate %f -v 0", program.c_str(),
+                             randStr, imgSize, sampling_rate);
 
     if (do_centerPDB)
         arguments.append(" -centerPDB ");
@@ -191,28 +199,25 @@ FileName ProgNmaAlignment::createDeformedPDB(int pyramidLevel) const
     {
         arguments.append(" -fixed_Gaussian ");
         if (sigmaGaussian >= 0)
-            arguments += floatToString((float)sigmaGaussian) + " -intensityColumn Bfactor ";
+            arguments += formatString("%f -intensityColumn Bfactor", sigmaGaussian);
     }
-    system(arguments.c_str());
+    runSystem(arguments);
 
     if (do_FilterPDBVol)
     {
-        arguments=(std::string)"xmipp_fourier_filter"+
-                  " -i deformedPDB_"+fnRandom+".vol"+
-                  " -sampling "+floatToString((float)sampling_rate)+
-                  " -low_pass " + floatToString((float)cutoff_LPfilter)+
-                  " -fourier_mask raised_cosine 0.1 -v 0";
-        system(arguments.c_str());
+        program = "xmipp_fourier_filter";
+        arguments = formatString("%s -i deformedPDB_%s.vol -sampling %f -low_pass %f -fourier_mask raised_cosine 0.1 -v 0",
+                                 program.c_str(), randStr, sampling_rate, cutoff_LPfilter);
+        runSystem(arguments);
     }
 
-    if (pyramidLevel!=0)
+    if (pyramidLevel != 0)
     {
-        arguments=(std::string)"xmipp_scale_pyramid"+
-                  " -i deformedPDB_"+fnRandom+".vol"+
-                  " -reduce -levels "+integerToString(pyramidLevel)+
-                  " -v 0";
-
-        system(arguments.c_str());
+        Image<double> I;
+        FileName fnDeformed = formatString("deformedPDB_%s.vol", randStr);
+        I.read(fnDeformed);
+        selfPyramidReduce(BSPLINE3, I(), pyramidLevel);
+        I.write(fnDeformed);
     }
 
     return fnRandom;
@@ -222,44 +227,43 @@ FileName ProgNmaAlignment::createDeformedPDB(int pyramidLevel) const
 void ProgNmaAlignment::performCompleteSearch(
     const FileName &fnRandom, int pyramidLevel) const
 {
-    std::string command;
+    String program;
+    String arguments;
+    const char * randStr = fnRandom.c_str();
 
     // Reduce the image
-    FileName fnDown=(std::string)"downimg_"+fnRandom+".xmp";
+    FileName fnDown = formatString("downimg_%s.xmp", fnRandom.c_str());
     if (pyramidLevel != 0)
     {
-        Image<double> I, Ireduced;
+        Image<double> I;
         I.read(currentImgName);
-        pyramidReduce(BSPLINE3, Ireduced(), I(), pyramidLevel);
-        Ireduced.write(fnDown);
+        selfPyramidReduce(BSPLINE3, I(), pyramidLevel);
+        I.write(fnDown);
     }
     else
         link(currentImgName.c_str(),fnDown.c_str());
 
     mkdir(((std::string)"ref" + fnRandom).c_str(),S_IRWXU);
 
-    command = (std::string)"xmipp_angular_project_library -i deformedPDB_"+fnRandom+".vol"+
-              " -o ref" + fnRandom + "/ref" + fnRandom+".stk"
-              " --sampling_rate 25 -v 0";
-    FileName fnRefSel=(std::string)"ref" + fnRandom + "/ref" + fnRandom+".doc";
-    system(command.c_str());
+    program = "xmipp_angular_project_library";
+    arguments = formatString("%s -i deformedPDB_%s.vol -o ref%s/ref%s.stk --sampling_rate 25 -v 0",
+                             program.c_str(), randStr, randStr, randStr);
+    runSystem(arguments);
+
+    const char * refSelStr = formatString("ref%s/ref%s.doc", randStr, randStr).c_str();
 
     if (fnmask != "")
     {
-        command=(std::string) " xmipp_mask -i "+fnRefSel+" -mask "+fnmask;
-        system(command.c_str());
+        program = "xmipp_mask";
+        arguments = formatString("%s -i %s -mask %s", program.c_str(), refSelStr, fnmask.c_str());
+        runSystem(arguments);
     }
 
     // Perform alignment
-    command=(std::string)" xmipp_angular_discrete_assign"+
-            " -i downimg_"+fnRandom+".xmp"+
-            " -ref "+fnRefSel+
-            " -o angledisc_"+fnRandom+".txt"+
-            " -psi_step 25 "+
-            " -max_shift_change "+integerToString(ROUND((double)imgSize/
-                                                  (10.0*pow(2.0,(double)pyramidLevel))))+
-            " -search5D -v 0";
-    system(command.c_str());
+    program = "xmipp_angular_discrete_assign";
+    arguments = formatString("%s -i downimg_%s.xmp -ref %s -o angledisc_%s.txt -psi_step 25 -max_shift_change %i -search5D -v 0",
+        program.c_str(), randStr, refSelStr, randStr, ROUND((double)imgSize/(10.0*pow(2.0,(double)pyramidLevel))));
+    runSystem(arguments);
 }
 
 // Continuous assignment ===================================================
@@ -267,15 +271,11 @@ double ProgNmaAlignment::performContinuousAssignment(
     const FileName &fnRandom, int pyramidLevel) const
 {
     // Perform alignment
-    std::string command=(std::string)"xmipp_angular_continuous_assign"+
-                        " -i angledisc_"+fnRandom+".txt"+
-                        " -ref deformedPDB_"+fnRandom+".vol"+
-                        " -o anglecont_"+fnRandom+".txt"+
-                        " -gaussian_Fourier " + floatToString((float)gaussian_DFT_sigma) +
-                        " -gaussian_Real " + floatToString((float)gaussian_Real_sigma) +
-                        " -zerofreq_weight " + floatToString((float)weight_zero_freq) +
-                        " -v 0";
-    system(command.c_str());
+  const char * randStr = fnRandom.c_str();
+  String program = "xmipp_angular_continuous_assign";
+  String arguments = formatString("%s -i angledisc_%s.txt -ref deformedPDB_%s.vol -o anglecont_%s.txt -gaussian_Fourier %f -gaussian_Real %f -zerofreq_weight %f -v 0",
+      program.c_str(), randStr, randStr, randStr, gaussian_DFT_sigma, gaussian_Real_sigma, weight_zero_freq);
+  runSystem(arguments);
 
     // Pick up results
     MetaData DF;
@@ -315,7 +315,8 @@ double ObjFunc_nma_alignment::eval(Vector X, int *nerror)
     int pyramidLevelDisc = 1;
     int pyramidLevelCont = (global_NMA_prog->currentStage == 1) ? 1 : 0;
 
-    FileName fnRandom=global_NMA_prog->createDeformedPDB(pyramidLevelCont);
+    FileName fnRandom = global_NMA_prog->createDeformedPDB(pyramidLevelCont);
+    const char * randStr = fnRandom.c_str();
 
     if (global_NMA_prog->currentStage==1)
     {
@@ -333,7 +334,7 @@ double ObjFunc_nma_alignment::eval(Vector X, int *nerror)
         yshift = global_NMA_prog->bestStage1(VEC_XSIZE(global_NMA_prog->bestStage1)-1);
 
         size_t objId=DF.addObject();
-        FileName fnDown = (std::string)"downimg_"+fnRandom+".xmp";
+        FileName fnDown = formatString("downimg_%s.xmp", randStr);
         DF.setValue(MDL_IMAGE,fnDown,objId);
         DF.setValue(MDL_ENABLED,1,objId);
         DF.setValue(MDL_ANGLEROT,rot,objId);
@@ -342,16 +343,12 @@ double ObjFunc_nma_alignment::eval(Vector X, int *nerror)
         DF.setValue(MDL_SHIFTX,xshift,objId);
         DF.setValue(MDL_SHIFTY,yshift,objId);
 
-        DF.write((std::string)"angledisc_"+fnRandom+".txt");
-        link(global_NMA_prog->currentImgName.c_str(),fnDown.c_str());
+        DF.write(formatString("angledisc_%s.txt", randStr));
+        link(global_NMA_prog->currentImgName.c_str(), fnDown.c_str());
     }
-    double fitness=global_NMA_prog->performContinuousAssignment(fnRandom,pyramidLevelCont);
+    double fitness = global_NMA_prog->performContinuousAssignment(fnRandom, pyramidLevelCont);
 
-    std::string command = (std::string)"rm -rf *"+fnRandom+"* &";
-    //std::cerr << "cleanning: " << command << std::endl;
-    system(command.c_str());
-
-    //std::cout << "Trial=" << global_NMA_prog->trial.transpose() << " ---> " << fitness << std::endl;
+    runSystem(formatString("rm -rf *%s* &", randStr));
 
     global_NMA_prog->updateBestFit(fitness,dim);
 
@@ -396,7 +393,7 @@ void ProgNmaAlignment::processImage(const FileName &fnImg, const FileName &fnImg
 
     CONDOR(rhoStart, rhoEnd, niter, of);
     of->printStats();
-    FILE *ff=fopen(("res1_"+integerToString(rangen)+".txt").c_str(),"w");
+    FILE *ff = fopen(("res1_"+integerToString(rangen)+".txt").c_str(),"w");
     fprintf(ff,"%s & %i & %i & (%i) & %e \\\\\n", of->name, of->dim(), of->getNFE(), of->getNFE2(), of->valueBest);
     fclose(ff);
 
@@ -465,7 +462,7 @@ void ProgNmaAlignment::processImage(const FileName &fnImg, const FileName &fnImg
 void ProgNmaAlignment::writeImageParameters(const FileName &fnImg)
 {
     MetaData md;
-    size_t objId=md.addObject();
+    size_t objId = md.addObject();
     md.setValue(MDL_IMAGE,fnImg,objId);
     md.setValue(MDL_ENABLED,1,objId);
     md.setValue(MDL_ANGLEROT,parameters(0),objId);
@@ -474,8 +471,9 @@ void ProgNmaAlignment::writeImageParameters(const FileName &fnImg)
     md.setValue(MDL_SHIFTX,parameters(3),objId);
     md.setValue(MDL_SHIFTY,parameters(4),objId);
 
-    int dim=modeList.size();
+    int dim = modeList.size();
     std::vector<double> vectortemp;
+
     for (int j = 5; j < 5+dim; j++)
     {
         vectortemp.push_back(parameters(j));

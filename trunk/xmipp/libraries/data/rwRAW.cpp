@@ -33,7 +33,7 @@
   * @ingroup RAW
 */
 
-DataType ImageBase::datatypeRAW(std::string strDT)
+DataType ImageBase::datatypeRAW(String strDT)
 {
     DataType datatype;
 
@@ -79,7 +79,7 @@ DataType ImageBase::datatypeRAW(std::string strDT)
   * @ingroup RAW
 */
 
-int ImageBase::readRAW(int img_select,bool isStack)
+int ImageBase::readRAW(size_t select_img, bool isStack)
 {
 #undef DEBUG
     //#define DEBUG
@@ -88,12 +88,12 @@ int ImageBase::readRAW(int img_select,bool isStack)
 #endif
 
     int _xDim,_yDim,_zDim;
-    unsigned long int _nDim;
+    size_t _nDim;
     int rPos;
 
     size_t found;
     FileName infolist;
-    std::vector<std::string> info;
+    StringVector info;
     DataType datatype;
 
     found = filename.find_first_of("#");
@@ -103,7 +103,7 @@ int ImageBase::readRAW(int img_select,bool isStack)
     splitString(infolist,",",info, false);
 
     if (info.size() < 4)
-        REPORT_ERROR(ERR_ARG_MISSING, (std::string) " Cannot open file " + filename +
+        REPORT_ERROR(ERR_ARG_MISSING, (String) " Cannot open file " + filename +
                      ". Not enough header arguments.");
 
     _xDim = textToInteger(info[0]);
@@ -122,51 +122,31 @@ int ImageBase::readRAW(int img_select,bool isStack)
 
     offset = (size_t)textToInteger(info[rPos]);
     datatype = datatypeRAW(info[rPos+1]);
-    _nDim = (int) 1;
+    _nDim = 1;
 
     // Check the reverse argument
-    if (info.back() == "r")
-        swap = true;
-    else
-        swap = false;
-
+    swap = (info.back() == "r");
 
     // Map the parameters
     setDimensions(_xDim, _yDim, _zDim, _nDim);
 
-    unsigned long   imgStart=0;
-    unsigned long   imgEnd =_nDim;
-    if (img_select != -1)
-    {
-        imgStart=img_select;
-        imgEnd=img_select+1;
-    }
+    size_t   imgStart = IMG_INDEX(select_img);
+    size_t   imgEnd = (select_img != ALL_IMAGES) ? select_img + 1 : _nDim;
 
     MDMainHeader.setValue(MDL_SAMPLINGRATEX,(double) -1);
     MDMainHeader.setValue(MDL_SAMPLINGRATEY,(double) -1);
     MDMainHeader.setValue(MDL_DATATYPE,(int)datatype);
 
-    if( dataflag < 0 )
-        return 0;
-
     MD.clear();
     MD.resize(imgEnd - imgStart);
-    for ( i = imgStart; i<imgEnd; ++i )
+    for ( i = 0; i < imgEnd - imgStart; ++i )
       initGeometry(i);
-//    {
-//        MD[i-imgStart].setValue(MDL_ORIGINX, zeroD);
-//        MD[i-imgStart].setValue(MDL_ORIGINY, zeroD);
-//        MD[i-imgStart].setValue(MDL_ORIGINZ,  zeroD);
-//        MD[i-imgStart].setValue(MDL_ANGLEROT, zeroD);
-//        MD[i-imgStart].setValue(MDL_ANGLETILT,zeroD);
-//        MD[i-imgStart].setValue(MDL_ANGLEPSI, zeroD);
-//        MD[i-imgStart].setValue(MDL_WEIGHT,   oneD);
-//        MD[i-imgStart].setValue(MDL_FLIP,     falseb);
-//        MD[i-imgStart].setValue(MDL_SCALE,    oneD);
-//    }
+
+    if( dataMode < DATA )
+        return 0;
 
     size_t pad = 0;
-    readData(fimg, img_select, datatype, pad);
+    readData(fimg, select_img, datatype, pad);
 
     return(0);
 }

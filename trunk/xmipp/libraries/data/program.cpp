@@ -477,7 +477,7 @@ void XmippMetadataProgram::readParams()
         if (exists(fn_stack_plain))
             unlink(fn_stack_plain.c_str());
     }
-    mdIn.read(fn_in, NULL,decompose_stacks);
+    mdIn.read(fn_in, NULL, decompose_stacks);
     single_image = !fn_in.isMetaData() && (mdIn.size() == 1);
 
     if (mdIn.containsLabel(MDL_ENABLED))
@@ -590,9 +590,10 @@ void XmippMetadataProgram::run()
             if (fnImg == "")
                 break;
 
+            fnImgOut = fnImg;
+
             if (each_image_produces_an_output)
             {
-                fnImgOut = fnImg;
                 if (oroot != "" ) // Compose out name to save as independent images
                 {
                     if (oext == "")

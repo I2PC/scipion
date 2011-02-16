@@ -46,6 +46,7 @@ private:
     ImageConv    convMode;
     bool         adjust;
     int          k;
+    int         writeMode;
 
 protected:
     void defineParams()
@@ -129,6 +130,8 @@ protected:
             depth = "";
             outDataT = Float;
         }
+
+        writeMode = type == "stk" ? WRITE_APPEND: WRITE_OVERWRITE;
     }
 
     void preProcess()
@@ -157,7 +160,7 @@ protected:
         {
             int Xdim, Ydim, Zdim;
             unsigned long Ndim;
-            imTemp.read(fn_in,false);
+            imTemp.read(fn_in, HEADER);
             imTemp.getDimensions(Xdim,Ydim,Zdim,Ndim);
 
             //Fill mdIn to allow XmippMetaDataProgram create the fnImgOut
@@ -178,7 +181,7 @@ protected:
                     mdIn.setValue(MDL_IMAGE, fnTemp, id);
                     mdIn.setValue(MDL_ENABLED, 1, id);
                 }
-                imIn.read(fn_in,true,-1,true);
+                imIn.read(fn_in, DATA,-1,true);
                 imOut = new ImageGeneric(outDataT);
                 k = 0;
             }
@@ -200,8 +203,8 @@ protected:
                 else
                     _fnImgOut= fnImgOut;
 
-                imIn.read(fnImg,true,-1,true);
-                imIn.write(_fnImgOut+depth,-1, type == "stk",WRITE_APPEND,adjust);
+                imIn.read(fnImg,DATA,-1,true);
+                imIn.write(_fnImgOut+depth,-1, type == "stk", writeMode, adjust);
 
                 if ((fnImg == fnImgOut) && (rename(tempName.c_str(),fnImgOut.c_str())!=0))
                     REPORT_ERROR(ERR_IO, "ProgConvImg:: Error renaming the file.");
@@ -210,14 +213,14 @@ protected:
             }
         case MD2VOL:
             {
-                imIn.read(fnImg,true,-1,true);
+                imIn.read(fnImg,DATA,-1,true);
                 imOut->data->setSlice(k++,imIn.data);
                 break;
             }
         case VOL2MD:
             {
                 imIn.data->getSlice(k++,imOut->data);
-                imOut->write(fnImgOut+depth,-1,type == "stk",WRITE_APPEND,adjust);
+                imOut->write(fnImgOut+depth,-1, type == "stk", writeMode, adjust);
             }
         }
         mdIn.setValue(MDL_IMAGE,fnImgOut, objId); // to keep info in output metadata

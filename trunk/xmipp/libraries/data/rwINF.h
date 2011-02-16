@@ -33,11 +33,11 @@
 /** INF Reader
   * @ingroup INF
 */
-int readINF(int img_select,bool isStack=false);
+int readINF(size_t img_select,bool isStack=false);
 
 /** INF Writer
   * @ingroup INF
 */
-int writeINF(int img_select, bool isStack=false, int mode=WRITE_OVERWRITE, std::string bitDepth="", bool adjust=false);
+int writeINF(size_t img_select, bool isStack=false, int mode=WRITE_OVERWRITE, String bitDepth="", bool adjust=false);
 
 #endif /* RWINF_H_ */

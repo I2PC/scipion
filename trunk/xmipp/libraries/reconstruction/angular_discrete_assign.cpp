@@ -959,7 +959,9 @@ void ProgAngularDiscreteAssign::processImage(const FileName &fnImg, const FileNa
     if (!search5D)
     {
         Image<double> Iref;
-        Iref.readApplyGeo(library_name[vref_idx[ibest]]);
+        //Iref.readApplyGeo(library_name[vref_idx[ibest]]);
+        //TODO: Check if this is correct
+        Iref.read(library_name[vref_idx[ibest]]);
         Iref().setXmippOrigin();
         selfRotate(LINEAR,Iref(),-vpsi[ibest]);
         if (Xoff == 0 && Yoff == 0)

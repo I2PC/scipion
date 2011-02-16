@@ -133,10 +133,10 @@ protected:
                 break;
             }
         }
-        int no;
+        size_t no;
         FileName stackFn;
         fnImgOut.decompose(no, stackFn);
-        img.write(stackFn,no,no!=-1,WRITE_REPLACE);
+        img.write(stackFn,no,no!=-1, WRITE_REPLACE);
     }
 }
 ;// end of class ProgHeaderAssign

@@ -32,7 +32,7 @@
 /** INF Reader
   * @ingroup INF
 */
-int ImageBase::readINF(int img_select,bool isStack)
+int ImageBase::readINF(size_t select_img,bool isStack)
 {
 #undef DEBUG
     //#define DEBUG
@@ -41,7 +41,7 @@ int ImageBase::readINF(int img_select,bool isStack)
 #endif
 
     int _xDim,_yDim,_zDim, __depth;
-    unsigned long int _nDim;
+    size_t _nDim;
     bool __is_signed;
 
     _xDim = textToInteger(getParameter(fhed, "Xdim"));
@@ -65,20 +65,14 @@ int ImageBase::readINF(int img_select,bool isStack)
     if (IsBigEndian())
         swap = !swap;
 
-
-    _zDim = (int) 1;
-    _nDim = (int) 1;
+    _zDim = 1;
+    _nDim = 1;
 
     // Map the parameters
     setDimensions(_xDim, _yDim, _zDim, _nDim);
 
-    unsigned long   imgStart=0;
-    unsigned long   imgEnd =_nDim;
-    if (img_select != -1)
-    {
-        imgStart=img_select;
-        imgEnd=img_select+1;
-    }
+    size_t   imgStart = IMG_INDEX(select_img);
+    size_t   imgEnd = (select_img != ALL_IMAGES) ? select_img + 1 : _nDim;
 
     DataType datatype;
     switch ( __depth )
@@ -106,40 +100,30 @@ int ImageBase::readINF(int img_select,bool isStack)
     MDMainHeader.setValue(MDL_SAMPLINGRATEY,(double) -1);
     MDMainHeader.setValue(MDL_DATATYPE,(int)datatype);
 
-    if( dataflag < 0 )
-        return 0;
-
     MD.clear();
     MD.resize(imgEnd - imgStart);
-    for ( i = imgStart; i < imgEnd; ++i )
-    {
-        MD[i-imgStart].setValue(MDL_ORIGINX, zeroD);
-        MD[i-imgStart].setValue(MDL_ORIGINY, zeroD);
-        MD[i-imgStart].setValue(MDL_ORIGINZ,  zeroD);
-        MD[i-imgStart].setValue(MDL_ANGLEROT, zeroD);
-        MD[i-imgStart].setValue(MDL_ANGLETILT,zeroD);
-        MD[i-imgStart].setValue(MDL_ANGLEPSI, zeroD);
-        MD[i-imgStart].setValue(MDL_WEIGHT,   oneD);
-        MD[i-imgStart].setValue(MDL_FLIP,     falseb);
-        MD[i-imgStart].setValue(MDL_SCALE,    oneD);
-    }
+    for ( i = 0; i < imgEnd - imgStart; ++i )
+        initGeometry(i);
 
     //#define DEBUG
 #ifdef DEBUG
+
     MDMainHeader.write(std::cerr);
     MD.write(std::cerr);
 #endif
 
+    if( dataMode < DATA )
+        return 0;
 
     size_t pad = 0;
-    readData(fimg, img_select, datatype, pad);
+    readData(fimg, select_img, datatype, pad);
     return(0);
 }
 
 /** INF Writer
   * @ingroup INF
 */
-int ImageBase::writeINF(int img_select, bool isStack, int mode, std::string bitDepth, bool adjust)
+int ImageBase::writeINF(size_t select_img, bool isStack, int mode, String bitDepth, bool adjust)
 {
     //#define DEBUG
 #ifdef DEBUG
@@ -149,7 +133,7 @@ int ImageBase::writeINF(int img_select, bool isStack, int mode, std::string bitD
 #undef DEBUG
 
     int Xdim, Ydim, Zdim;
-    unsigned long Ndim;
+    size_t Ndim;
     getDimensions(Xdim, Ydim, Zdim, Ndim);
 
     int _depth;

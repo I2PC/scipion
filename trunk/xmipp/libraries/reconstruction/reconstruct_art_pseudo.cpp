@@ -297,7 +297,7 @@ void ProgARTPseudo::writePseudo()
     FileName fnExp;
     DF.getValue( MDL_IMAGE, fnExp, objId);
     Image<double> I;
-    I.read(fnExp,false);
+    I.read(fnExp,HEADER);
     V().resize(XSIZE(I()),XSIZE(I()),XSIZE(I()));
     V().setXmippOrigin();
 

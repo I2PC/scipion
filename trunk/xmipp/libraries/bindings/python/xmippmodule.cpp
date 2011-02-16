@@ -194,7 +194,7 @@ static PyObject *
 FileName_decompose(PyObject *obj, PyObject *args, PyObject *kwargs)
 {
     FileNameObject *self = (FileNameObject*)obj;
-    int no;
+    size_t no;
     String str;
     self->filename->decompose(no, str);
     return Py_BuildValue("is", no, str.c_str());

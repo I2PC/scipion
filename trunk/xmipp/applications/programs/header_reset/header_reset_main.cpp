@@ -41,17 +41,17 @@ protected:
         XmippMetadataProgram::defineParams();
 
         addUsageLine("Reset the geometric transformation (angles & shifts) in the header of 2D-images.");
-        addParamsLine("   [-tiltSeries <firstAngle> <angleStep>]: Assign a regularly spaced angular distribution.");
+        addParamsLine("   [--tilt_series <firstAngle> <angleStep>]: Assign a regularly spaced angular distribution.");
     }
 
     void readParams()
     {
         XmippMetadataProgram::readParams();
-        tiltSeries = checkParam("-tiltSeries");
+        tiltSeries = checkParam("--tilt_series");
         if (tiltSeries)
         {
-            firstAngle = getDoubleParam("-tiltSeries", 0);
-            angularStep = getDoubleParam("-tiltSeries", 1);
+            firstAngle = getDoubleParam("--tilt_series", 0);
+            angularStep = getDoubleParam("--tilt_series", 1);
         }
     }
 
@@ -71,7 +71,7 @@ protected:
     void processImage(const FileName &fnImg, const FileName &fnImgOut, size_t objId)
     {
         Image<double> img;
-        img.readApplyGeo(fnImg,mdIn,objId); //read data and header
+        img.readApplyGeo(fnImg, mdIn, objId); //read data and header
         img.clearHeader();
 
         if (tiltSeries)
@@ -89,16 +89,9 @@ protected:
 /* MAIN -------------------------------------------------------------------- */
 int main(int argc, char *argv[])
 {
-    try
-    {
-        ProgHeaderReset program;
-        program.read(argc, argv);
-        program.run();
-    }
-    catch (XmippError xe)
-    {
-        std::cerr << xe;
-    }
+    ProgHeaderReset program;
+    program.read(argc, argv);
+    program.tryRun();
 }
 
 

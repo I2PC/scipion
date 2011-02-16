@@ -47,7 +47,7 @@ int main(int argc, char *argv[])
         int x,y,z;
         unsigned long n;
         double sampling_rate;
-        img.read(fn_in,false);
+        img.read(fn_in, HEADER);
         img.getDimensions(x,y,z,n);
         sampling_rate = (double) img.samplingRateX();
         filestr.open (fn_out.c_str());

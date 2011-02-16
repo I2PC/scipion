@@ -93,7 +93,7 @@ void Prog_parameters::get_input_size(int &Zdim, int &Ydim, int &Xdim)
     }
     else
     {
-        I.read(fn_in,false);
+        I.read(fn_in, HEADER);
         I.getDimensions(Xdim, Ydim, Zdim, dum2);
     }
 }
@@ -201,7 +201,7 @@ void SF_main(int argc, char **argv,
                     {
                         MDRow row;
                         SF_in.getRow(row, __iter.objId);
-                        img.readApplyGeo(fn_read, true, -1, false, &row);
+                        img.readApplyGeo(fn_read, row);
                     }
                     else
                         img.read(fn_read);
@@ -221,8 +221,8 @@ void SF_main(int argc, char **argv,
                             */
                             if (prm->fn_out.isInStack())
                             {
-                                int no;
-                                std::string filename;
+                                size_t no;
+                                String filename;
                                 prm->fn_out.decompose(no,filename);
                                 img.write(filename,no,true,WRITE_REPLACE);
                             }
@@ -293,10 +293,7 @@ void SF_main(int argc, char **argv,
             if (img.isRealImage(prm->fn_in))
             {
                 // For single image .....................................................
-            	if (prm->apply_geo)
-            		img.readApplyGeo(prm->fn_in);
-            	else
-            		img.read(prm->fn_in);
+                img.read(prm->fn_in);
                 img().setXmippOrigin();
                 switch (operation_mode)
                 {

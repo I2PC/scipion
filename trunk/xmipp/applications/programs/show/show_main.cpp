@@ -242,7 +242,7 @@ protected:
                     {
                         md.getValue(MDL_IMAGE, fn, md.firstObject());
                         Image<char> img;
-                        img.read(fn, false);
+                        img.read(fn, HEADER);
                         if (img().zdim == 1)
                         {
                             ImageViewer *showimg = new ImageViewer(fn.c_str(), poll);

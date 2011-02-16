@@ -43,6 +43,11 @@
 #include <cstring>
 #include "../../external/tiff-3.9.4/libtiff/tiffio.h"
 
+/** Macro for represent ALL IMAGES on stack index */
+#define ALL_IMAGES 0
+#define FIRST_IMAGE 1
+#define IMG_INDEX(select_img) ((select_img == ALL_IMAGES) ? 0 : select_img - 1)
+
 /* Minimum size of a TIFF file to be mapped to a tempfile in case of mapping from
  * image file is required
  */
@@ -74,6 +79,19 @@ typedef enum
     WRITE_REPLACE,   //replace a particular object by another
     WRITE_READONLY   //only can read the file
 } WriteMode;
+
+/** Data mode
+ * This enumerate which data will be read/write from image files
+ * We can read/write complete image or only its headers(w/o geometrical information)
+ */
+typedef enum
+{
+  HEADER = -1, //Dont read image data, only info from main header(datatype and dimensions)
+  _HEADER_ALL = 0, //Read complete header(main and geo), useful for header_extract and header_assign
+  DATA = 1, //Read image data and main header, geometrical transformations will be ignored
+  _DATA_ALL = 2, //Read data with complete header(the use of this option is not recommended, all Xmipp
+                // programs should read and write geo info through metadatas
+}DataMode;
 
 /* Cast Write mode
  * This enum defines the cast writing behavior
@@ -198,12 +216,12 @@ protected:
     FILE*                fhed;        // Image File header handler
     TIFF*                tif;         // TIFF Image file hander
     bool                stayOpen;    // To maintain the image file open after read/write
-    int                 dataflag;    // Flag to force reading of the data
-    unsigned long       i;           // Current image number (may be > NSIZE)
+    DataMode             dataMode;    // Flag to force select what will be read/write from image files
+    size_t       i;           // Current image number (may be > NSIZE)
     size_t       offset;      // Data offset
     int                 swap;        // Perform byte swapping upon reading
     TransformType       transform;   // Transform type
-    int                 replaceNsize;// Stack size in the replace case
+    size_t                 replaceNsize;// Stack size in the replace case
     bool                 _exists;     // does target file exists?
     // equal 0 is not exists or not a stack
     bool                mmapOnRead;  // Mapping when reading from file
@@ -243,7 +261,7 @@ public:
      *  Check whether a real-space image can be read*/
     bool isImage(const FileName &name)
     {
-        return !read(name, false);
+        return !read(name, HEADER);
     }
 
     /** Is this file a real-valued image
@@ -275,7 +293,7 @@ public:
      * An image file, which name and format are given by filename,
      * is created with the given size. Then the image is mapped to this file.
      */
-    void newMappedFile(int Xdim, int Ydim, int Zdim, int Ndim, const FileName &_filename,
+    void newMappedFile(int Xdim, int Ydim, int Zdim, size_t Ndim, const FileName &_filename,
     				   bool createTempFile=false);
 
     /** General read function
@@ -287,7 +305,7 @@ public:
      *
      * This function cannot apply geometrical transformations, but can map the image in disk
      */
-    int read(const FileName &name, bool readdata=true, int select_img = -1,
+    int read(const FileName &name, DataMode datamode = DATA, size_t select_img = ALL_IMAGES,
              bool mapData = false);
 
     /** General read function
@@ -299,30 +317,27 @@ public:
      *
      * This function can apply geometrical transformations, but cannot map the image in disk
      */
-    int readApplyGeo(const FileName &name, bool readdata=true, int select_img = -1,
-             bool only_apply_shifts = false, MDRow * row = NULL);
+    int readApplyGeo(const FileName &name, const MDRow &row, DataMode datamode = DATA, size_t select_img = ALL_IMAGES);
 
     /** Read an image from metadata, filename is provided*/
     int readApplyGeo(const FileName &name, const MetaData &md, size_t objId,
-             bool readdata=true, int select_img = -1,
-             bool only_apply_shifts = false);
+             DataMode datamode = DATA, size_t select_img = ALL_IMAGES);
 
     /** Read an image from metadata, filename is taken from MDL_IMAGE */
     int readApplyGeo(const MetaData &md, size_t objId,
-             bool readdata=true, int select_img = -1,
-             bool only_apply_shifts = false);
+             DataMode datamode = DATA, size_t select_img = ALL_IMAGES );
 
     /* Read an image with a lower resolution as a preview image.
      * If Zdim parameter is not passed, then all slices are rescaled.
      */
-    virtual int readPreview(const FileName &name, int Xdim, int Ydim, int Zdim = -1, int select_img = 0)=0;
+    virtual int readPreview(const FileName &name, int Xdim, int Ydim, int Zdim = -1, size_t select_img = FIRST_IMAGE) = 0;
 
     /** General write function
      * select_img= which slice should I replace
      * overwrite = 0, append slice
      * overwrite = 1 overwrite slice
      */
-    void write(const FileName &name="", int select_img=-1, bool isStack=false,
+    void write(const FileName &name="", size_t select_img = ALL_IMAGES, bool isStack=false,
                int mode=WRITE_OVERWRITE,bool adjust=false);
 
     /** Check file Datatype is same as T type to use mmap.
@@ -354,11 +369,11 @@ public:
 
     /** Get Image dimensions
      */
-    virtual void getDimensions(int &Xdim, int &Ydim, int &Zdim, unsigned long &Ndim) const=0;
+    virtual void getDimensions(int &Xdim, int &Ydim, int &Zdim, size_t &Ndim) const = 0;
 
     /** Get whole number of pixels
      */
-    virtual long unsigned int getSize() const=0;
+    virtual size_t getSize() const = 0;
 
     /** Get Image offset and swap
      */
@@ -469,7 +484,8 @@ public:
     */
     double samplingRateX() const;
 
-    virtual void setDimensions(int Xdim, int Ydim, int Zdim, unsigned long Ndim)=0;
+    /** Set image dimensions */
+    virtual void setDimensions(int Xdim, int Ydim, int Zdim, size_t Ndim) = 0;
 
     /** Set file name
      */
@@ -478,6 +494,12 @@ public:
         filename = _filename;
     }
 
+    /** Set dataMode
+     */
+    void setDataMode(DataMode mode)
+    {
+      dataMode = mode;
+    }
     /** Init geometry transformation with defaults values
      */
     void initGeometry(const size_t n = 0);
@@ -606,37 +628,41 @@ protected:
       */
     void closeFile(ImageFHandler* hFile = NULL);
 
+    /* Internal apply geometrical transformations */
+    virtual void applyGeo(const MDRow &row, bool only_apply_shifts = false) = 0;
+
     /* Internal read image file method.
      */
-    virtual int _read(const FileName &name, ImageFHandler* hFile, bool readdata=true, int select_img = -1,
-                      bool apply_geo = false, bool only_apply_shifts = false,
-                      MDRow * row = NULL, bool mapData = false)=0;
+    virtual int _read(const FileName &name, ImageFHandler* hFile, DataMode datamode = DATA, size_t select_img = ALL_IMAGES,
+                      bool mapData = false) = 0;
 
     /* Internal write image file method.
      */
-    virtual void _write(const FileName &name, ImageFHandler* hFile, int select_img=-1,
-                        bool isStack=false, int mode=WRITE_OVERWRITE, bool adjust=false)=0;
+    virtual void _write(const FileName &name, ImageFHandler* hFile, size_t select_img = ALL_IMAGES,
+                        bool isStack=false, int mode=WRITE_OVERWRITE, bool adjust=false) = 0;
 
     /** Read the raw data
       */
-    virtual void readData(FILE* fimg, int select_img, DataType datatype, unsigned long pad)=0;
+    virtual void readData(FILE* fimg, size_t select_img, DataType datatype, size_t pad) = 0;
 
     /* Write the raw date after a data type casting.
      */
     virtual void writeData(FILE* fimg, size_t offset, DataType wDType, size_t datasize_n,
-                           CastWriteMode castMode=CAST)=0;
+                           CastWriteMode castMode=CAST) = 0;
 
     /* Mmap the Image class to an image file.
      */
-    virtual void mmapFile()=0;
+    virtual void mmapFile() = 0;
 
     /* Munmap the image file.
      */
-    virtual void munmapFile()=0;
+    virtual void munmapFile() = 0;
 
     /* Return the datatype of the current image object
      */
     virtual DataType myT()=0;
+
+    friend std::ostream& operator<<(std::ostream& o, const ImageBase& I);
 
 };
 

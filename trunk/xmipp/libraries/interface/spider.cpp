@@ -127,7 +127,7 @@ void extract_angles(MetaData &SF_in, DocFile &DF_out,
             SF_in.getValue( MDL_IMAGE, fn_img, __iter.objId);
             if (fn_img=="")
                 break;
-            P.readApplyGeo(fn_img,SF_in,__iter.objId, false);
+            P.readApplyGeo(fn_img,SF_in,__iter.objId, HEADER);
             DF_out.append_angles(P.rot(), P.tilt(), P.psi(),
                                  ang1, ang2, ang3);
         }

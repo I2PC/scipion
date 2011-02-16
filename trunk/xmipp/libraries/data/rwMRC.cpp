@@ -118,7 +118,7 @@ struct MRChead
 /** MRC Reader
   * @ingroup MRC
 */
-int ImageBase::readMRC(int img_select, bool isStack)
+int ImageBase::readMRC(size_t select_img, bool isStack)
 {
 #undef DEBUG
     //#define DEBUG
@@ -149,51 +149,40 @@ int ImageBase::readMRC(int img_select, bool isStack)
     // Convert VAX floating point types if necessary
     if ( header->amin > header->amax )
         REPORT_ERROR(ERR_UNCLASSIFIED,"readMRC: amin > max: VAX floating point conversion unsupported");
-    size_t _xDim,_yDim,_zDim;
+    int _xDim,_yDim,_zDim;
     size_t _nDim;
-    _xDim = (size_t) header->nx;
-    _yDim = (size_t) header->ny;
-    _zDim = (size_t) header->nz;
+    _xDim = header->nx;
+    _yDim = header->ny;
+    _zDim = header->nz;
     _nDim = 1;
+
     if(isStack)
     {
         _nDim = (size_t) _zDim;
         _zDim = 1;
-        replaceNsize=_nDim;
-        std::stringstream Num;
-        std::stringstream Num2;
-        if ( img_select > (int)_nDim )
-        {
-            Num  << img_select;
-            Num2 << _nDim;
-            REPORT_ERROR(ERR_INDEX_OUTOFBOUNDS,(std::string)"readmrc: Image number " + Num.str() +
-                         " exceeds stack size " + Num2.str());
-        }
+        replaceNsize = _nDim;
+        if ( select_img > _nDim )
+            REPORT_ERROR(ERR_INDEX_OUTOFBOUNDS, formatString("readmrc: Image number %lu exceeds stack size %lu", select_img, _nDim));
     }
     else
         replaceNsize=0;
 
     // Map the parameters
 
-    if (isStack && img_select==-1)
+    if (isStack && select_img == ALL_IMAGES)
         _zDim = 1;
-    else if(isStack && img_select!=-1)
+    else if(isStack && select_img != ALL_IMAGES)
         _zDim = _nDim = 1;
     else
         _nDim = 1;
 
     setDimensions(_xDim, _yDim, _zDim, _nDim);
 
-    unsigned long   imgStart=0;
-    unsigned long   imgEnd =_nDim;
-    if (img_select != -1)
-    {
-        imgStart=img_select;
-        imgEnd=img_select+1;
-    }
+    size_t   imgStart = IMG_INDEX(select_img);
+    size_t   imgEnd = (select_img != ALL_IMAGES) ? select_img + 1 : _nDim;
 
     DataType datatype;
-    switch ( header->mode%5 )
+    switch ( header->mode % 5 )
     {
     case 0:
         datatype = SChar;
@@ -242,39 +231,30 @@ int ImageBase::readMRC(int img_select, bool isStack)
     if ( header->mz && header->c!=0)//zx
         MDMainHeader.setValue(MDL_SAMPLINGRATEZ,(double)header->c/header->mz);
 
-    if (isStack && dataflag<0)   // Don't read the individual header and the data if not necessary
-        return 0;
-
     MD.clear();
     MD.resize(imgEnd - imgStart);
-    double daux=1.;
-    for ( i = imgStart; i < imgEnd; ++i )
+    double aux;
+    for ( i = 0; i < imgEnd - imgStart; ++i )
     {
         initGeometry(i);
-        double aux;
-        ///DO NOT USE HEADER
+
         if(MDMainHeader.getValue(MDL_SAMPLINGRATEX,aux))
         {
             aux = -header->xOrigin/aux;
-            MD[i-imgStart].setValue(MDL_ORIGINX, aux);
+            MD[i].setValue(MDL_ORIGINX, aux);
         }
+
         if(MDMainHeader.getValue(MDL_SAMPLINGRATEY,aux))
         {
             aux = -header->yOrigin/aux;
-            MD[i-imgStart].setValue(MDL_ORIGINY, aux);
+            MD[i].setValue(MDL_ORIGINY, aux);
         }
 
         if(MDMainHeader.getValue(MDL_SAMPLINGRATEZ,aux))
         {
             aux = -header->zOrigin/aux;
-            MD[i-imgStart].setValue(MDL_ORIGINZ, aux);
+            MD[i].setValue(MDL_ORIGINZ, aux);
         }
-//        MD[i-imgStart].setValue(MDL_ANGLEROT, zeroD);
-//        MD[i-imgStart].setValue(MDL_ANGLETILT,zeroD);
-//        MD[i-imgStart].setValue(MDL_ANGLEPSI, zeroD);
-//        MD[i-imgStart].setValue(MDL_WEIGHT,   oneD);
-//        MD[i-imgStart].setValue(MDL_FLIP,     falseb);
-//        MD[i-imgStart].setValue(MDL_SCALE, daux);
     }
 
     //#define DEBUG
@@ -285,7 +265,9 @@ int ImageBase::readMRC(int img_select, bool isStack)
 
     freeMemory(header, sizeof(MRChead));
 
-    readData(fimg, img_select, datatype, 0);
+    if (isStack && dataMode < DATA)   // Don't read the individual header and the data if not necessary
+        return 0;
+    readData(fimg, select_img, datatype, 0);
 
     return(0);
 }
@@ -293,7 +275,7 @@ int ImageBase::readMRC(int img_select, bool isStack)
 /** MRC Writer
   * @ingroup MRC
 */
-int ImageBase::writeMRC(int img_select, bool isStack, int mode, std::string bitDepth, bool adjust)
+int ImageBase::writeMRC(size_t select_img, bool isStack, int mode, std::string bitDepth, bool adjust)
 {
     /*
         if ( transform != NoTransform )
@@ -306,19 +288,17 @@ int ImageBase::writeMRC(int img_select, bool isStack, int mode, std::string bitD
     // FIXME TO BE DONE WITH rwCCP4!!
     //set_CCP4_machine_stamp(header->machst);
     int Xdim, Ydim, Zdim;
-    unsigned long Ndim;
+    size_t Ndim;
     getDimensions(Xdim, Ydim, Zdim, Ndim);
-    unsigned long   imgStart=0;
-    unsigned long   imgEnd =Ndim;
-    if (img_select != -1)
-    {
-        imgStart=img_select;
-        imgEnd=img_select+1;
-    }
+
+    size_t   imgStart = IMG_INDEX(select_img);
+    size_t   imgEnd = (select_img != ALL_IMAGES) ? select_img + 1 : Ndim;
+
     if (mode == WRITE_APPEND)
     {
-        imgStart=0;
-        imgEnd=1;
+      //TODO: Check if this works?
+        imgStart = 0;
+        imgEnd = 1;
     }
     header->nx = Xdim;
     header->ny = Ydim;
@@ -484,7 +464,7 @@ int ImageBase::writeMRC(int img_select, bool isStack, int mode, std::string bitD
         if(mode==WRITE_APPEND)
             fseek( fimg, 0, SEEK_END);
         else if(mode==WRITE_REPLACE)
-            fseek( fimg,offset + (datasize)*img_select, SEEK_SET);
+            fseek( fimg,offset + (datasize)*select_img, SEEK_SET);
 
         for ( size_t i =imgStart; i<imgEnd; i++ )
             writeData(fimg, i*datasize_n, wDType, datasize_n, castMode);

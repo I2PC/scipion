@@ -32,11 +32,11 @@
 /** SPE Reader
   * @ingroup SPE
 */
-int ImageBase::readSPE(int img_select,bool isStack)
+int ImageBase::readSPE(size_t select_img,bool isStack)
 {
 
     int _xDim,_yDim,_zDim;
-    unsigned long int _nDim;
+    size_t _nDim;
 
     short int aux;
     fseek(fimg,42,SEEK_SET);
@@ -46,19 +46,14 @@ int ImageBase::readSPE(int img_select,bool isStack)
     xmippFREAD(&aux, sizeof(short int), 1, fimg, swap );
     _yDim = aux;
 
-    _zDim = (int) 1;
-    _nDim = (int) 1;
+    _zDim = 1;
+    _nDim = 1;
 
     // Map the parameters
     setDimensions(_xDim, _yDim, _zDim, _nDim);
 
-    unsigned long   imgStart=0;
-    unsigned long   imgEnd =_nDim;
-    if (img_select != -1)
-    {
-        imgStart=img_select;
-        imgEnd=img_select+1;
-    }
+    size_t   imgStart = IMG_INDEX(select_img);
+    size_t   imgEnd = (select_img != ALL_IMAGES) ? select_img + 1 : _nDim;
 
     DataType datatype = UShort;
 
@@ -66,29 +61,18 @@ int ImageBase::readSPE(int img_select,bool isStack)
     MDMainHeader.setValue(MDL_SAMPLINGRATEY,(double) -1);
     MDMainHeader.setValue(MDL_DATATYPE,(int)datatype);
 
-    if( dataflag == -2 )
-        return 0;
-
     MD.clear();
     MD.resize(imgEnd - imgStart);
-    for ( i = imgStart; i < imgEnd; ++i )
+    for ( i = 0; i < imgEnd - imgStart; ++i )
       initGeometry(i);
-//    {
-//        MD[i-imgStart].setValue(MDL_ORIGINX, zeroD);
-//        MD[i-imgStart].setValue(MDL_ORIGINY, zeroD);
-//        MD[i-imgStart].setValue(MDL_ORIGINZ,  zeroD);
-//        MD[i-imgStart].setValue(MDL_ANGLEROT, zeroD);
-//        MD[i-imgStart].setValue(MDL_ANGLETILT,zeroD);
-//        MD[i-imgStart].setValue(MDL_ANGLEPSI, zeroD);
-//        MD[i-imgStart].setValue(MDL_WEIGHT,   oneD);
-//        MD[i-imgStart].setValue(MDL_FLIP,     falseb);
-//        MD[i-imgStart].setValue(MDL_SCALE,    oneD);
-//    }
+
+    if( dataMode < DATA )
+        return 0;
 
     offset = 4100;
     size_t pad = 0;
 
-    readData(fimg, img_select, datatype, pad);
+    readData(fimg, select_img, datatype, pad);
 
     return(0);
 }

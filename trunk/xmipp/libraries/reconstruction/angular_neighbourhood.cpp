@@ -56,7 +56,7 @@ void Prog_projection_neighbourhood_prm::get_angles(MetaData &SF_in, MetaData &DF
 
     FOR_ALL_OBJECTS_IN_METADATA(SF_in)
     {
-        H.readApplyGeo(SF_in,__iter.objId,false);
+        H.readApplyGeo(SF_in,__iter.objId, HEADER);
         id = DF_out.addObject();
         DF_out.setValue(MDL_ANGLEROT,H.rot(), id);
         DF_out.setValue(MDL_ANGLETILT,H.tilt(), id);

@@ -60,14 +60,13 @@ protected:
 
     void postProcess()
     {
-        mdIn.write(fn_out,mode);
+        mdIn.write(fn_out, mode);
     }
 
     void processImage(const FileName &fnImg, const FileName &fnImgOut, size_t objId)
     {
         Image<double> img;
-        std::cerr << "fnImg objId" << fnImg<< " " << objId << std::endl;
-        img.read(fnImg,false);
+        img.read(fnImg, _HEADER_ALL);
         //ApplyGeo(fnImg,mdIn,objId);
         xx = img.Xoff();
         yy = img.Yoff();
@@ -94,5 +93,4 @@ int main(int argc, char *argv[])
     ProgHeaderExtract program;
     program.read(argc, argv);
     program.tryRun();
-
 }

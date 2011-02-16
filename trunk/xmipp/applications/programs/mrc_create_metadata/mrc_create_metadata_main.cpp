@@ -69,7 +69,7 @@ public:
     		REPORT_ERROR(ERR_IO_NOTOPEN,fnAngles);
 
     	Image<double> stack;
-    	stack.read(fnStack,false);
+    	stack.read(fnStack, HEADER);
     	int xdim, ydim, zdim;
     	unsigned long ndim;
     	stack.getDimensions(xdim, ydim, zdim, ndim);
@@ -92,15 +92,7 @@ public:
 
 int main(int argc, char *argv[])
 {
-    try
-    {
     	ProgMrcCreateMetaData program;
         program.read(argc, argv);
-        program.run();
-    }
-    catch(XmippError xe)
-    {
-        std::cerr << xe;
-    }
-    return 0;
+        program.tryRun();
 }

@@ -379,7 +379,7 @@ protected:
                 else
                 {
                     isValue = true;
-                    img2.readApplyGeo(fn2);
+                    img2.read(fn2);
                 }
             }
         }
@@ -388,7 +388,7 @@ protected:
     void processImage(const FileName &fnImg, const FileName &fnImgOut, size_t objId)
     {
         Image<double> img;
-        img.readApplyGeo(fnImg,mdIn,objId);
+        img.readApplyGeo(fnImg, mdIn, objId);
 
         if (unaryOperator != NULL)
             unaryOperator(img);
@@ -396,8 +396,7 @@ protected:
         {
             if (!isValue)
             {
-                md2.getValue(MDL_IMAGE, fn2, md2Iterator.objId);
-                img2.readApplyGeo(fn2);
+                img2.readApplyGeo(md2, md2Iterator.objId);
                 md2Iterator.moveNext();
             }
             binaryOperator(img, img2);

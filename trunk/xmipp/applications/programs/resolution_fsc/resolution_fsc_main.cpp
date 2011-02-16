@@ -126,16 +126,17 @@ public:
     bool process_img()
     {
         Image<double>  refI,img;
-        if (apply_geo)
-        	refI.readApplyGeo(fn_ref);
-        else
-        	refI.read(fn_ref);
+        //if (apply_geo)
+        // refI.readApplyGeo(fn_ref);
+        //else
+        refI.read(fn_ref);
         refI().setXmippOrigin();
-        if (apply_geo)
-        	img.readApplyGeo(fn_img);
-        else
-        	img.read(fn_img);
+        //if (apply_geo)
+        // img.readApplyGeo(fn_img);
+        //else
+        img.read(fn_img);
         img().setXmippOrigin();
+
         MultidimArray<double> freq, frc, dpr, frc_noise, error_l2;
         frc_dpr(refI(), img(), sam, freq, frc, frc_noise, dpr, error_l2);
         writeFiles(img.name(), freq, frc, frc_noise, dpr, error_l2, max_sam, do_dpr);
@@ -175,17 +176,7 @@ public:
 
 int main(int argc, char **argv)
 {
-    try
-    {
-        ProgResolutionFsc program;
-        program.read(argc, argv);
-        program.run();
-    }
-    catch (XmippError xe)
-    {
-        std::cerr << xe;
-        return 1;
-    }
-    return 0;
-
+    ProgResolutionFsc program;
+    program.read(argc, argv);
+    program.tryRun();
 }

@@ -144,7 +144,7 @@ DataType datatypeTIFF(TIFFDirHead dHead)
 /**
  *  Read TIFF format files.
 */
-int readTIFF(int img_select, bool isStack=false)
+int readTIFF(size_t select_img, bool isStack=false)
 {
 #undef DEBUG
     //#define DEBUG
@@ -155,15 +155,15 @@ int readTIFF(int img_select, bool isStack=false)
     //    TIFFSetWarningHandler(NULL); // Switch off warning messages
 
     char*  tif_buf = NULL;
-    unsigned int    tileWidth;
-    unsigned int    tileLength;
+    size_t    tileWidth;
+    size_t    tileLength;
     std::vector<TIFFDirHead> dirHead;
     TIFFDirHead dhRef;
 
     uint32 rowsperstrip;
     tsize_t scanline;
 
-    unsigned int    x, y;
+    size_t x, y;
 
     /* Get TIFF image properties */
     do
@@ -192,9 +192,9 @@ int readTIFF(int img_select, bool isStack=false)
     swap = TIFFIsByteSwapped(tif);
 
     // Check images dimensions. Need to be the same
-    if (img_select==-1)
+    if (select_img == ALL_IMAGES)
     {
-        for (int i = 1; i < dirHead.size(); i++)
+        for (size_t i = 1; i < dirHead.size(); i++)
         {
             if (dirHead[0].imageLength != dirHead[i].imageLength || \
                 dirHead[0].imageWidth != dirHead[i].imageWidth)
@@ -228,35 +228,29 @@ int readTIFF(int img_select, bool isStack=false)
 
     // cast image data to image class datatypes
     int _xDim,_yDim,_zDim;
-    unsigned long int _nDim;
+    size_t _nDim;
 
     // Map the parameters
-    if (img_select==-1)
+    if (select_img == ALL_IMAGES)
     {
         _xDim = (int) dirHead[0].imageWidth;
         _yDim = (int) dirHead[0].imageLength;
-        _zDim = (int) 1;
-        _nDim = (int) dirHead.size();
+        _zDim = 1;
+        _nDim = dirHead.size();
     }
     else
     {
-        _xDim = (int) dirHead[img_select].imageWidth;
-        _yDim = (int) dirHead[img_select].imageLength;
-        _zDim = (int) 1;
-        _nDim = (int) 1;
+        _xDim = (int) dirHead[select_img].imageWidth;
+        _yDim = (int) dirHead[select_img].imageLength;
+        _zDim = 1;
+        _nDim = 1;
     }
 
-    data.setDimensions(_xDim, _yDim, 1, _nDim);
+    setDimensions(_xDim, _yDim, 1, _nDim);
     replaceNsize = _nDim;
 
-    unsigned long   imgStart=0;
-    unsigned long   imgEnd =_nDim;
-
-    if (img_select != -1)
-    {
-        imgStart=img_select;
-        imgEnd=img_select+1;
-    }
+    size_t   imgStart = IMG_INDEX(select_img);
+    size_t   imgEnd = (select_img != ALL_IMAGES) ? select_img + 1 : _nDim;
 
     DataType datatype = datatypeTIFF(dirHead[0]);
 
@@ -267,7 +261,7 @@ int readTIFF(int img_select, bool isStack=false)
     MDMainHeader.setValue(MDL_DATATYPE,(int) datatype);
 
     //Read header only
-    if( dataflag < 0 )
+    if( dataMode < DATA )
         return 0;
 
     /* As we cannot mmap a TIFF File, when this option is passed we are going to mmap
@@ -286,7 +280,7 @@ int readTIFF(int img_select, bool isStack=false)
 
     data.coreAllocateReuse();
 
-    int pad = _xDim * _yDim;
+    size_t pad = _xDim * _yDim;
     int imReaded = 0;
 
     MD.clear();
@@ -352,15 +346,7 @@ int readTIFF(int img_select, bool isStack=false)
             }
         }
 
-        MD[i-imgStart].setValue(MDL_ORIGINX,  zeroD);
-        MD[i-imgStart].setValue(MDL_ORIGINY,  zeroD);
-        MD[i-imgStart].setValue(MDL_ORIGINZ,  zeroD);
-        MD[i-imgStart].setValue(MDL_ANGLEROT, zeroD);
-        MD[i-imgStart].setValue(MDL_ANGLETILT,zeroD);
-        MD[i-imgStart].setValue(MDL_ANGLEPSI, zeroD);
-        MD[i-imgStart].setValue(MDL_WEIGHT,   oneD);
-        MD[i-imgStart].setValue(MDL_FLIP,     falseb);
-        MD[i-imgStart].setValue(MDL_SCALE,    oneD);
+        initGeometry();
 
         ++imReaded;
     }
@@ -371,7 +357,7 @@ int readTIFF(int img_select, bool isStack=false)
 /**
  * Write TIFF format files.
 */
-int writeTIFF(int img_select, bool isStack=false, int mode=WRITE_OVERWRITE, std::string bitDepth="", bool adjust=false)
+int writeTIFF(size_t select_img, bool isStack=false, int mode=WRITE_OVERWRITE, String bitDepth="", bool adjust=false)
 {
 #undef DEBUG
 
@@ -386,7 +372,7 @@ int writeTIFF(int img_select, bool isStack=false, int mode=WRITE_OVERWRITE, std:
     int Xdim = XSIZE(data);
     int Ydim = YSIZE(data);
     int Zdim = ZSIZE(data);
-    int Ndim = NSIZE(data);
+    size_t Ndim = NSIZE(data);
 
     // Volumes are not supported
     if (Zdim > 1)
@@ -475,8 +461,8 @@ int writeTIFF(int img_select, bool isStack=false, int mode=WRITE_OVERWRITE, std:
         dhMain.yTiffRes = (MDMainHeader.getValue(MDL_SAMPLINGRATEX, aux)) ? (float) 1e8/aux : 0. ;
     }
 
-    unsigned long   imgStart=0;
-    unsigned long   imgEnd = Ndim;
+    size_t imgStart = 0;
+    size_t imgEnd = Ndim;
 
     size_t bufferSize, datasize_n;
     bufferSize = Xdim*nBytes;
@@ -493,12 +479,12 @@ int writeTIFF(int img_select, bool isStack=false, int mode=WRITE_OVERWRITE, std:
     }
 
     //    if (mode == WRITE_REPLACE)
-    //        tiffsetdirectory(tif,img_select);
+    //        tiffsetdirectory(tif,select_img);
 
     //Write each image in a directory
     for (int i=imgStart; i<imgEnd; i++ )
     {
-        TIFFSetDirectory(tif,img_select);
+        TIFFSetDirectory(tif,select_img);
 
         TIFFSetField(tif, TIFFTAG_BITSPERSAMPLE,  dhMain.bitsPerSample);
         TIFFSetField(tif, TIFFTAG_SAMPLESPERPIXEL,dhMain.samplesPerPixel);

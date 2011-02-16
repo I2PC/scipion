@@ -78,7 +78,7 @@ void build_recons_info(MetaData &selfile,
         	selfile.getValue(MDL_CTFMODEL,fn_ctf1,__iter.objId);
         if (fn_proj != "")
         {
-        	read_proj.read(fn_proj, false, false);
+        	read_proj.read(fn_proj, false, HEADER);
             // Filling structure
             IMG_Inf[i].fn_proj = fn_proj;
             if (is_ctf_unique)

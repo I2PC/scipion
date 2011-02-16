@@ -102,7 +102,7 @@ public:
     /**
      *  Call the resize function of the linked array.
      */
-    void resize(unsigned long int Ndim, int Zdim, int Ydim, int Xdim, bool copy=true)
+    void resize(size_t Ndim, int Zdim, int Ydim, int Xdim, bool copy=true)
     {
         im->resize(Ndim,Zdim,Ydim,Xdim,copy);
     }
@@ -131,7 +131,7 @@ public:
      *  Copy a specific slice of the linked array.
      */
     template <typename T>
-    void getSlice(int k, MultidimArray<T> &M, char axis = 'Z', unsigned long n = 0) const
+    void getSlice(int k, MultidimArray<T> &M, char axis = 'Z', size_t n = 0) const
     {
 #define GETSLICE(type) ((MultidimArray<type>*) im)->getSlice(k, M, axis, n)
 
@@ -144,7 +144,7 @@ public:
     /**
      *  Copy a specific slice of the linked array.
      */
-    void getSlice(int k, MultidimArrayGeneric* M, char axis = 'Z', unsigned long n = 0) const
+    void getSlice(int k, MultidimArrayGeneric* M, char axis = 'Z', size_t n = 0) const
     {
 #define GETSLICE(type) getSlice(k, *(MultidimArray<type>*)M->im, axis, n)
 
@@ -158,7 +158,7 @@ public:
      *  Set a specific slice of the linked array.
      */
     template <typename T1>
-    void setSlice(int k, const MultidimArray <T1>& v, unsigned long n = 0)
+    void setSlice(int k, const MultidimArray <T1>& v, size_t n = 0)
     {
 #define SETSLICE(type) ((MultidimArray<type>*) im)->setSlice(k, v, n)
 
@@ -171,7 +171,7 @@ public:
     /**
      * Set a specific slice of the linked array.
      */
-    void setSlice(int k, const MultidimArrayGeneric* v, unsigned long n = 0)
+    void setSlice(int k, const MultidimArrayGeneric* v, size_t n = 0)
     {
 #define SETSLICE(type) setSlice(k,*(MultidimArray<type>*) v->im, n);
         SWITCHDATATYPE(v->datatype,SETSLICE);
@@ -182,14 +182,13 @@ public:
     /**
      * Get the dimensions of the linked array.
      */
-    void getDimensions(int& Xdim, int& Ydim, int& Zdim, unsigned long int &Ndim) const
+    void getDimensions(int& Xdim, int& Ydim, int& Zdim, size_t &Ndim) const
     {
         im->getDimensions(Xdim,Ydim,Zdim,Ndim);
     }
     void getDimensions(int& Xdim, int& Ydim, int& Zdim) const
     {
-        unsigned long
-        int Ndim;
+        size_t Ndim;
         im->getDimensions(Xdim,Ydim,Zdim,Ndim);
     }
 
@@ -208,7 +207,7 @@ public:
     }
 
     /** Get constant access */
-    double operator()(unsigned long n, int k, int i, int j) const
+    double operator()(size_t n, int k, int i, int j) const
     {
 #define GETVALUE(type) return NZYX_ELEM(*(MultidimArray<type>*)im,n,k,i,j)
         SWITCHDATATYPE(datatype,GETVALUE);

@@ -111,7 +111,7 @@ int main(int argc, char **argv)
                 std::cout << "generating points for image " << image_name << "......" << std::endl;
 
         	if (apply_geo)
-        		image.readApplyGeo(image_name);
+        		image.readApplyGeo(image_name, SF, __iter.objId);
         	else
         		image.read(image_name);
 

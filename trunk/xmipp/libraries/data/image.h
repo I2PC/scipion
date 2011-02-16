@@ -379,7 +379,7 @@ public:
 
         double minF, maxF;
         double slope;
-        unsigned long int n;
+        size_t n;
         DataType  myTypeId = myT();
 
         switch(datatype)
@@ -652,7 +652,7 @@ public:
     /* Read an image with a lower resolution as a preview image.
        * If Zdim parameter is not passed, then all slices are rescaled.
        */
-    int readPreview(const FileName &name, int Xdim, int Ydim, int Zdim = -1, int select_img = 0)
+    int readPreview(const FileName &name, int Xdim, int Ydim, int Zdim = -1, size_t select_img = FIRST_IMAGE)
     {
         ImageGeneric im;
         int imXdim, imYdim, imZdim;
@@ -716,9 +716,9 @@ public:
         return A2D_ELEM(data, i, j);
     }
 
-    void setDimensions(int Xdim, int Ydim, int Zdim, unsigned long Ndim)
+    void setDimensions(int Xdim, int Ydim, int Zdim, size_t Ndim)
     {
-      data.setDimensions(Xdim,Ydim,Zdim,Ndim);
+        data.setDimensions(Xdim,Ydim,Zdim,Ndim);
     }
 
     /** Set pixel
@@ -757,7 +757,7 @@ public:
 
     /** Get Image dimensions
      */
-    void getDimensions(int &Xdim, int &Ydim, int &Zdim, unsigned long &Ndim) const
+    void getDimensions(int &Xdim, int &Ydim, int &Zdim, size_t &Ndim) const
     {
         Xdim = XSIZE(data);
         Ydim = YSIZE(data);
@@ -765,7 +765,7 @@ public:
         Ndim = NSIZE(data);
     }
 
-    long unsigned int getSize() const
+    size_t getSize() const
     {
         return NZYXSIZE(data);
     }
@@ -781,105 +781,14 @@ public:
         geo2TransformationMatrix(MD[n], A, only_apply_shifts);
     }
 
-    /** Show image properties
-          */
-    friend std::ostream& operator<<(std::ostream& o, const Image<T>& I)
-    {
-        o << "Image type   : ";
-        if (I.isComplex())
-            o << "Fourier-space image" << std::endl;
-        else
-            o << "Real-space image" << std::endl;
 
-        o << "Reversed     : ";
-        if (I.swap)
-            o << "TRUE"  << std::endl;
-        else
-            o << "FALSE" << std::endl;
-
-        o << "Data type    : ";
-        switch (I.dataType())
-        {
-        case Unknown_Type:
-            o << "Undefined data type";
-            break;
-        case UChar:
-            o << "Unsigned character or byte type (UInt8)";
-            break;
-        case SChar:
-            o << "Signed character (Int8)";
-            break;
-        case UShort:
-            o << "Unsigned short integer (UInt16)";
-            break;
-        case Short:
-            o << "Signed short integer (Int16)";
-            break;
-        case UInt:
-            o << "Unsigned integer (UInt32)";
-            break;
-        case Int:
-            o << "Signed integer (Int32)";
-            break;
-        case Long:
-            o << "Signed integer (4 or 8 byte, depending on system)";
-            break;
-        case Float:
-            o << "Floating point (4-byte)";
-            break;
-        case Double:
-            o << "Double precision floating point (8-byte)";
-            break;
-        case ComplexShort:
-            o << "Complex two-byte integer (4-byte)";
-            break;
-        case ComplexInt:
-            o << "Complex integer (8-byte)";
-            break;
-        case ComplexFloat:
-            o << "Complex floating point (8-byte)";
-            break;
-        case ComplexDouble:
-            o << "Complex floating point (16-byte)";
-            break;
-        case Bool:
-            o << "Boolean (1-byte?)";
-            break;
-        }
-        o << std::endl;
-
-        o << "dimensions   : " << NSIZE(I()) << " x " << ZSIZE(I()) << " x " << YSIZE(I()) << " x " << XSIZE(I());
-        o << "  (noObjects x slices x rows x columns)" << std::endl;
-        if (I.individualContainsLabel(MDL_ANGLEROT))
-        {
-            o << "Euler angles : " << std::endl;
-            o << "  Phi   (rotation around Z axis) = " << I.rot() << std::endl;
-            o << "  theta (tilt, second rotation around new Y axis) = " << I.tilt() << std::endl;
-            o << "  Psi   (third rotation around new Z axis) = " << I.psi() << std::endl;
-        }
-        if (I.individualContainsLabel(MDL_ORIGINX))
-        {
-            o << "Origin Offsets : " << std::endl;
-            o << "  Xoff  (origin offset in X-direction) = " << I.Xoff() << std::endl;
-            o << "  Yoff  (origin offset in Y-direction) = " << I.Yoff() << std::endl;
-            o << "  Zoff  (origin offset in Z-direction) = " << I.Zoff() << std::endl;
-        }
-        if(I.individualContainsLabel(MDL_SCALE))
-            o << "Scale  : " <<I.scale() << std::endl;
-        o << "Header size  : " << I.offset << std::endl;
-        if (I.individualContainsLabel(MDL_WEIGHT))
-            o << "Weight  : " << I.weight() << std::endl;
-        if (I.individualContainsLabel(MDL_FLIP))
-            o << "Flip    : " << I.flip() << std::endl;
-        return o;
-    }
 
     /** Sum this object with other file and keep in this object
       */
     void sumWithFile(const FileName &fn)
     {
         Image<T> aux;
-        aux.read(fn,true,-1,true);
+        aux.read(fn, DATA, -1, true);
         (*this)()+=aux();
     }
 
@@ -888,21 +797,48 @@ public:
      */
 #include "rwTIFF.h"
 
+protected:
+    void applyGeo(const MDRow &row, bool only_apply_shifts = false)
+    {
+        //This implementation does not handle stacks,
+        //read in a block
+        if (data.ndim != 1)
+            REPORT_ERROR(ERR_MULTIDIM_SIZE, "Header overwriting not available for stacks!!!");
+        MDLabel label;
+        MDRow &rowAux = MD[0];
+
+        for (MDRow::const_iterator it = row.begin(); it != row.end(); ++it)
+        {
+            label = (*it)->label;
+            if (rowAux.containsLabel(label))
+                *(rowAux.getObject(label)) = *(*it);
+            else
+                rowAux.push_back(new MDObject(*(*it)));
+        }
+        //apply geo has not been defined for volumes
+        //and only make sense when reading data
+        if (data.getDim() > 2 && dataMode >= DATA)
+        {
+            Matrix2D< double > A;
+            getTransformationMatrix(A, only_apply_shifts);
+            if (!A.isIdentity())
+            {
+                MultidimArray<T> tmp=MULTIDIM_ARRAY(*this);
+                applyGeometry(BSPLINE3, MULTIDIM_ARRAY(*this), tmp,
+                              A, IS_NOT_INV, WRAP);
+            }
+        }
+    }
+
 private:
 
     /* Internal read image file method.
      */
-    int _read(const FileName &name, ImageFHandler* hFile, bool readdata=true, int select_img = -1,
-              bool apply_geo = false, bool only_apply_shifts = false,
-              MDRow * row = NULL, bool mapData = false)
+    int _read(const FileName &name, ImageFHandler* hFile, DataMode datamode = DATA, size_t select_img = ALL_IMAGES,
+              bool mapData = false)
     {
-        //const MetaData &docFile = *docFilePtr;
-        //std::vector<MDLabel> &activeLabels = *activeLabelsPtr;
-
         int err = 0;
-
-        // Check whether to read the data or only the header
-        dataflag = ( readdata ) ? 1 : -1;
+        dataMode = datamode;
 
         // If Image has been previously used with mmap, then close the previous file
         if (mappedSize != 0)
@@ -916,7 +852,7 @@ private:
         fhed = hFile->fhed;
         tif  = hFile->tif;
 
-        int dump;
+        size_t dump;
         name.decompose(dump, filename);
         filename = name;
         dataFName = hFile->fileName;
@@ -931,7 +867,7 @@ private:
         std::cerr << "READ\n" <<
         "name="<<name <<std::endl;
         std::cerr << "ext= "<<ext_name <<std::endl;
-        std::cerr << " now reading: "<< filename <<" dataflag= "<<dataflag
+        std::cerr << " now reading: "<< filename <<" dataflag= "<<dataMode
         << " select_img "  << select_img << std::endl;
 #endif
 #undef DEBUG
@@ -967,40 +903,6 @@ private:
             err = readSPE(select_img,false);
         else
             err = readSPIDER(select_img);
-        //This implementation does not handle stacks,
-        //read in a block
-        if (row != NULL)
-        {
-            if (data.ndim != 1)
-                REPORT_ERROR(ERR_MULTIDIM_SIZE, "Header overwriting not available for stacks!!!");
-            MDLabel label;
-            MDRow &rowAux=MD[0];
-
-            for (MDRow::const_iterator it = row->begin(); it != row->end(); ++it)
-            {
-                label = (*it)->label;
-                if (rowAux.containsLabel(label))
-                    *(rowAux.getObject(label)) = *(*it);
-                else
-                    rowAux.push_back(new MDObject(*(*it)));
-            }
-        }
-
-        //apply geo has not been defined for volumes
-        if(this->data.getDim()>2)
-            apply_geo=false;
-
-        if (readdata && (apply_geo || only_apply_shifts))
-        {
-            Matrix2D< double > A;
-            getTransformationMatrix(A,only_apply_shifts);
-            if (!A.isIdentity())
-            {
-                MultidimArray<T> tmp=MULTIDIM_ARRAY(*this);
-                applyGeometry(BSPLINE3, MULTIDIM_ARRAY(*this), tmp,
-                              A, IS_NOT_INV, WRAP);
-            }
-        }
 
         // Negative errors are bad.
         return err;
@@ -1008,8 +910,8 @@ private:
 
     /* Internal write image file method.
      */
-    void _write(const FileName &name, ImageFHandler* hFile, int select_img=-1,
-                bool isStack=false, int mode=WRITE_OVERWRITE, bool adjust=false)
+    void _write(const FileName &name, ImageFHandler* hFile, size_t select_img = ALL_IMAGES,
+                bool isStack = false, int mode = WRITE_OVERWRITE, bool adjust = false)
     {
         int err = 0;
 
@@ -1030,25 +932,25 @@ private:
 
         FileName ext_name = hFile->ext_name;
 
-        int aux;
+        size_t aux;
         FileName filNamePlusExt;
         name.decompose(aux, filNamePlusExt);
 
-        if (select_img == -1)
+        if (select_img == ALL_IMAGES)
             select_img = aux;
 
         size_t found = filNamePlusExt.find_first_of("%");
 
-        std::string imParam = "";
+        String imParam = "";
 
-        if (found!=std::string::npos)
+        if (found!=String::npos)
         {
             imParam =  filNamePlusExt.substr(found+1).c_str();
             filNamePlusExt = filNamePlusExt.substr(0, found) ;
         }
 
         found = filNamePlusExt.find_first_of(":");
-        if ( found!=std::string::npos)
+        if ( found!=String::npos)
             filNamePlusExt   = filNamePlusExt.substr(0, found);
 
 
@@ -1069,36 +971,37 @@ private:
 
         // CHECK FOR INCONSISTENCIES BETWEEN data.xdim and x, etc???
         int Xdim, Ydim, Zdim;
-        unsigned long Ndim;
+        size_t Ndim;
         Xdim=Ydim=Zdim=Ndim=0;
         if (_exists)
             this->getDimensions(Xdim,Ydim, Zdim, Ndim);
 
         Image<T> auxI;
-        replaceNsize=0;//reset replaceNsize in case image is reused
-        if(select_img == -1 && mode == WRITE_REPLACE)
+        replaceNsize = 0;//reset replaceNsize in case image is reused
+        if(isStack && select_img == ALL_IMAGES && mode == WRITE_REPLACE)
             REPORT_ERROR(ERR_VALUE_INCORRECT,"Please specify object to be replaced");
         else if (_exists && (mode == WRITE_REPLACE || mode == WRITE_APPEND))
         {
-            auxI.dataflag = -2;
-            auxI._read(filNamePlusExt, hFile, false);
+            auxI._read(filNamePlusExt, hFile, HEADER);
             int _Xdim, _Ydim, _Zdim;
-            unsigned long _Ndim;
+            size_t _Ndim;
             auxI.getDimensions(_Xdim,_Ydim, _Zdim, _Ndim);
-            replaceNsize=_Ndim;
-            if(Xdim!=_Xdim ||
-               Ydim!=_Ydim ||
-               Zdim!=_Zdim)
+            replaceNsize = _Ndim;
+            if(Xdim != _Xdim ||
+               Ydim != _Ydim ||
+               Zdim != _Zdim)
             {
                 std::cerr << "(x,y,z) " << Xdim << " " << Ydim << " " << Zdim << " "<< Ndim << std::endl;
                 std::cerr << "(_x,_y,_z) " << _Xdim << " " << _Ydim << " " << _Zdim << " " <<_Ndim <<std::endl;
                 REPORT_ERROR(ERR_MULTIDIM_SIZE,"write: target and source objects have different size");
             }
-            if(mode==WRITE_REPLACE && select_img>_Ndim)
+
+            if( mode == WRITE_REPLACE && select_img > _Ndim )
                 replaceNsize = select_img;
-            if(auxI.replaceNsize <1 &&
-               (mode==WRITE_REPLACE || mode==WRITE_APPEND))
-                REPORT_ERROR(ERR_IO,"write: output file is not an stack");
+
+            //            if(auxI.replaceNsize < 1 &&
+            //               (mode==WRITE_REPLACE || mode==WRITE_APPEND))
+            //                REPORT_ERROR(ERR_IO,"write: output file is not an stack");
         }
         else if(!_exists && mode==WRITE_APPEND)
         {
@@ -1106,8 +1009,7 @@ private:
         }
         else if (mode == WRITE_READONLY)//If new file we are in the WRITE_OVERWRITE mode
         {
-            REPORT_ERROR(ERR_ARG_INCORRECT, (std::string) "File " + name
-                         + " opened in read-only mode. Cannot write.");
+            REPORT_ERROR(ERR_ARG_INCORRECT, formatString("File %s  opened in read-only mode. Cannot write.", name.c_str()));
         }
         /*
          * SELECT FORMAT
@@ -1155,16 +1057,16 @@ private:
 
     /** Read the raw data
       */
-    void readData(FILE* fimg, int select_img, DataType datatype, unsigned long pad)
+    void readData(FILE* fimg, size_t select_img, DataType datatype, size_t pad)
     {
         //#define DEBUG
 #ifdef DEBUG
         std::cerr<<"entering readdata"<<std::endl;
-        std::cerr<<" readData flag= "<<dataflag<<std::endl;
+        std::cerr<<" readData flag= "<<dataMode<<std::endl;
 #endif
 #undef DEBUG
 
-        if ( dataflag < 1 )
+        if ( dataMode < DATA )
             return;
 
         // If only half of a transform is stored, it needs to be handled
@@ -1174,13 +1076,9 @@ private:
         size_t selectImgOffset, readsize, readsize_n, pagemax = 1073741824; //1Gb
         size_t datatypesize=gettypesize(datatype);
         size_t pagesize  =ZYXSIZE(data)*datatypesize;
-        size_t haveread_n=0;
-        size_t selectImgSizeT=0;
+        size_t haveread_n = 0;
 
-        // Reset select to get the correct offset
-        selectImgSizeT = ( select_img < 0 )? 0 : (size_t) select_img;
-
-        selectImgOffset = offset + selectImgSizeT*(pagesize + pad);
+        selectImgOffset = offset + IMG_INDEX(select_img) * (pagesize + pad);
 
         // Flag to know that data is not going to be mapped although mmapOn is true
         if (mmapOnRead && !checkMmapT(datatype))
@@ -1229,11 +1127,11 @@ private:
             else
                 page = (char *) askMemory(pagesize*sizeof(char));
 
-            if(fseek( fimg, selectImgOffset, SEEK_SET )==-1)
+            if(fseek( fimg, selectImgOffset, SEEK_SET ) == -1)
                 REPORT_ERROR(ERR_IO_SIZE,"readData: can not seek the file pointer");
-            for ( size_t myn=0; myn<NSIZE(data); myn++ )
+            for ( size_t myn = 0; myn < NSIZE(data); myn++ )
             {
-                for (size_t myj=0; myj<pagesize; myj+=pagemax )//pagesize size of object
+                for (size_t myj = 0; myj < pagesize; myj += pagemax )//pagesize size of object
                 {
                     // Read next page. Divide pages larger than pagemax
                     readsize = pagesize - myj;
@@ -1243,7 +1141,7 @@ private:
 
                     //Read page from disc
                     if (fread( page, readsize, 1, fimg )!=1)
-                    	REPORT_ERROR(ERR_IO_NOREAD,"Cannot read the whole page");
+                        REPORT_ERROR(ERR_IO_NOREAD,"Cannot read the whole page");
                     //swap per page
                     if (swap)
                         swapPage(page, readsize, datatype);
@@ -1386,7 +1284,7 @@ void Image< std::complex< double > >::castConvertPage2Datatype(std::complex< dou
 
 /** What is the size of an image */
 void SingleImgSize(const FileName &filename, int &Xdim, int &Ydim, int &Zdim,
-		unsigned long &Ndim);
+                   size_t &Ndim);
 
 /// @defgroup ImageFormats Image Formats
 /// @ingroup Images

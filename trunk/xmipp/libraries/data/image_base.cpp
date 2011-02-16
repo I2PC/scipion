@@ -29,7 +29,7 @@
 void ImageBase::init()
 {
     clearHeader();
-    dataflag = -1;
+    dataMode = HEADER;
     if (isComplexT())
         transform = Standard;
     else
@@ -54,17 +54,17 @@ void ImageBase::clearHeader()
 
 /** General read function
  */
-int ImageBase::read(const FileName &name, bool readdata, int select_img, bool mapData)
+int ImageBase::read(const FileName &name, DataMode datamode, size_t select_img, bool mapData)
 {
     ImageFHandler* hFile = openFile(name);
-    int err = _read(name, hFile, readdata, select_img, false, false, NULL, mapData);
+    int err = _read(name, hFile, datamode, select_img, mapData);
     closeFile(hFile);
 
     return err;
 }
 
 /** New mapped file */
-void ImageBase::newMappedFile(int Xdim, int Ydim, int Zdim, int Ndim, const FileName &_filename,
+void ImageBase::newMappedFile(int Xdim, int Ydim, int Zdim, size_t Ndim, const FileName &_filename,
                               bool createTempFile)
 {
     clear();
@@ -79,7 +79,7 @@ void ImageBase::newMappedFile(int Xdim, int Ydim, int Zdim, int Ndim, const File
         fnToOpen = tempFilename + ":" + _filename.getExtension();
     }
     else
-    	fnToOpen=_filename;
+        fnToOpen=_filename;
 
     ImageFHandler *hFile = openFile(fnToOpen, WRITE_OVERWRITE);
     _write(fnToOpen, hFile, -1, false, WRITE_OVERWRITE);
@@ -88,47 +88,39 @@ void ImageBase::newMappedFile(int Xdim, int Ydim, int Zdim, int Ndim, const File
 
 /** General read function
  */
-int ImageBase::readApplyGeo(const FileName &name, bool readdata, int select_img,
-                            bool only_apply_shifts, MDRow * row)
-{
-    ImageFHandler* hFile = openFile(name);
-    int err = _read(name, hFile, readdata, select_img, only_apply_shifts, row, false);
-    closeFile(hFile);
+/** Macros for dont type */
+#define GET_ROW()               MDRow row; md.getRow(row, objId)
 
-    return err;
+#define READ_AND_RETURN()        ImageFHandler* hFile = openFile(name);\
+                                  int err = _read(name, hFile, datamode, select_img); \
+                                  applyGeo(row); \
+                                  closeFile(hFile); \
+                                  return err
+int ImageBase::readApplyGeo(const FileName &name, const MDRow &row, DataMode datamode, size_t select_img)
+{
+    READ_AND_RETURN();
 }
 
 /** Read an image from metadata, filename is provided
 */
-int ImageBase::readApplyGeo(const FileName &name, const MetaData &md, size_t objId, bool readdata,
-                            int select_img, bool only_apply_shifts)
+int ImageBase::readApplyGeo(const FileName &name, const MetaData &md, size_t objId, DataMode datamode,
+                            size_t select_img)
 {
-    MDRow row;
-    md.getRow(row, objId);
-    ImageFHandler* hFile = openFile(name);
-    int err = _read(name, hFile, readdata, select_img, true, only_apply_shifts, &row, false);
-    closeFile(hFile);
-
-    return err;
+    GET_ROW();
+    READ_AND_RETURN();
 }
 
 /** Read an image from metadata, filename is taken from MDL_IMAGE
  */
-int ImageBase::readApplyGeo(const MetaData &md, size_t objId, bool readdata, int select_img,
-                            bool only_apply_shifts)
+int ImageBase::readApplyGeo(const MetaData &md, size_t objId, DataMode datamode, size_t select_img)
 {
-    MDRow row;
-    md.getRow(row, objId);
+    GET_ROW();
     FileName name;
     row.getValue(MDL_IMAGE, name);
-    ImageFHandler* hFile = openFile(name);
-    int err = _read(name, hFile, readdata, select_img, true, only_apply_shifts, &row, false);
-    closeFile(hFile);
-
-    return err;
+    READ_AND_RETURN();
 }
 
-void ImageBase::write(const FileName &name, int select_img, bool isStack,
+void ImageBase::write(const FileName &name, size_t select_img, bool isStack,
                       int mode, bool adjust)
 {
     // If image is already mapped to file then close the file and clear.
@@ -148,13 +140,13 @@ void ImageBase::write(const FileName &name, int select_img, bool isStack,
     /* If the filename is in stack we will suppose you want to write this,
      * even if you have not set the flags to.
      */
-    if ( fname.isInStack() && !isStack && mode == WRITE_OVERWRITE)
+    if ( fname.isInStack() && mode == WRITE_OVERWRITE)
     {
         isStack = true;
-        mode = WRITE_APPEND;
+        mode = WRITE_REPLACE;
     }
-    else if (!isStack && mode != WRITE_OVERWRITE)
-        mode = WRITE_OVERWRITE;
+    //    else if (!isStack && mode != WRITE_OVERWRITE)
+    //        mode = WRITE_OVERWRITE;
 
     ImageFHandler* hFile = openFile(fname, mode);
     _write(fname, hFile, select_img, isStack, mode, adjust);
@@ -163,7 +155,7 @@ void ImageBase::write(const FileName &name, int select_img, bool isStack,
 
 void ImageBase::swapPage(char * page, size_t pageNrElements, DataType datatype)
 {
-    unsigned long datatypesize = gettypesize(datatype);
+    size_t datatypesize = gettypesize(datatype);
 #ifdef DEBUG
 
     std::cerr<<"DEBUG swapPage: Swapping image data with swap= "
@@ -179,12 +171,12 @@ void ImageBase::swapPage(char * page, size_t pageNrElements, DataType datatype)
     {
         if ( datatype >= ComplexShort )
             datatypesize /= 2;
-        for ( unsigned long i=0; i<pageNrElements; i+=datatypesize )
+        for ( size_t i = 0; i < pageNrElements; i += datatypesize )
             swapbytes(page+i, datatypesize);
     }
     else if ( swap > 1 )
     {
-        for ( unsigned long i=0; i<pageNrElements; i+=swap )
+        for (size_t i=0; i<pageNrElements; i+=swap )
             swapbytes(page+i, swap);
     }
 }
@@ -337,18 +329,18 @@ double ImageBase::samplingRateX() const
  */
 void ImageBase::initGeometry(const size_t n)
 {
-  MD[n].setValue(MDL_ORIGINX, zeroD);
-  MD[n].setValue(MDL_ORIGINY, zeroD);
-  MD[n].setValue(MDL_ORIGINZ,  zeroD);
-  MD[n].setValue(MDL_SHIFTX, zeroD);
-  MD[n].setValue(MDL_SHIFTY, zeroD);
-  MD[n].setValue(MDL_SHIFTZ,  zeroD);
-  MD[n].setValue(MDL_ANGLEROT, zeroD);
-  MD[n].setValue(MDL_ANGLETILT,zeroD);
-  MD[n].setValue(MDL_ANGLEPSI, zeroD);
-  MD[n].setValue(MDL_WEIGHT,   oneD);
-  MD[n].setValue(MDL_FLIP,     falseb);
-  MD[n].setValue(MDL_SCALE,    oneD);
+    MD[n].setValue(MDL_ORIGINX, zeroD);
+    MD[n].setValue(MDL_ORIGINY, zeroD);
+    MD[n].setValue(MDL_ORIGINZ,  zeroD);
+    MD[n].setValue(MDL_SHIFTX, zeroD);
+    MD[n].setValue(MDL_SHIFTY, zeroD);
+    MD[n].setValue(MDL_SHIFTZ,  zeroD);
+    MD[n].setValue(MDL_ANGLEROT, zeroD);
+    MD[n].setValue(MDL_ANGLETILT,zeroD);
+    MD[n].setValue(MDL_ANGLEPSI, zeroD);
+    MD[n].setValue(MDL_WEIGHT,   oneD);
+    MD[n].setValue(MDL_FLIP,     falseb);
+    MD[n].setValue(MDL_SCALE,    oneD);
 }
 
 /** Set Euler angles in image header
@@ -364,7 +356,7 @@ void ImageBase::setEulerAngles(double rot, double tilt, double psi,
 /** Get Euler angles from image header
  */
 void ImageBase::getEulerAngles(double &rot, double &tilt, double &psi,
-    const size_t n) const
+                               const size_t n) const
 {
     MD[n].getValue(MDL_ANGLEROT, rot);
     MD[n].getValue(MDL_ANGLETILT, tilt);
@@ -397,24 +389,24 @@ ImageFHandler* ImageBase::openFile(const FileName &name, int mode) const
     FileName fileName, headName = "";
     FileName ext_name = name.getFileFormat();
 
-    int dump;
+    size_t dump;
     name.decompose(dump, fileName);
 
     fileName = fileName.removeFileFormat();
 
     size_t found = fileName.find_first_of("%");
-    if (found!=std::string::npos)
+    if (found!=String::npos)
         fileName = fileName.substr(0, found) ;
 
     hFile->exist = exists(fileName);
 
-    std::string wmChar;
+    String wmChar;
 
     switch (mode)
     {
     case WRITE_READONLY:
         if (!hFile->exist)
-            REPORT_ERROR(ERR_IO_NOTEXIST,(std::string) "Cannot read file "
+            REPORT_ERROR(ERR_IO_NOTEXIST,(String) "Cannot read file "
                          + fileName + ". It does not exist" );
         wmChar = "r";
         break;
@@ -423,10 +415,7 @@ ImageFHandler* ImageBase::openFile(const FileName &name, int mode) const
         break;
     case WRITE_APPEND:
     case WRITE_REPLACE:
-        if (hFile->exist)
-            wmChar = "r+";
-        else
-            wmChar = "w+";
+        wmChar = (hFile->exist) ? "r+" : "w+";
         break;
 
     }
@@ -468,12 +457,12 @@ ImageFHandler* ImageBase::openFile(const FileName &name, int mode) const
 
         // Open image file
         if ( ( hFile->fimg = fopen(fileName.c_str(), wmChar.c_str()) ) == NULL )
-            REPORT_ERROR(ERR_IO_NOTOPEN,(std::string)"Image::openFile cannot open: " + fileName);
+            REPORT_ERROR(ERR_IO_NOTOPEN,(String)"Image::openFile cannot open: " + fileName);
 
         if (headName != "")
         {
             if ( ( hFile->fhed = fopen(headName.c_str(), wmChar.c_str()) ) == NULL )
-                REPORT_ERROR(ERR_IO_NOTOPEN,(std::string)"Image::openFile cannot open: " + headName);
+                REPORT_ERROR(ERR_IO_NOTOPEN,(String)"Image::openFile cannot open: " + headName);
         }
         else
             hFile->fhed = NULL;
@@ -515,11 +504,107 @@ void ImageBase::closeFile(ImageFHandler* hFile)
     else
     {
         if (fclose(fimg) != 0 )
-            REPORT_ERROR(ERR_IO_NOCLOSED,(std::string)"Can not close image file "+ filename);
+            REPORT_ERROR(ERR_IO_NOCLOSED,(String)"Can not close image file "+ filename);
 
         if (fhed != NULL &&  fclose(fhed) != 0 )
-            REPORT_ERROR(ERR_IO_NOCLOSED,(std::string)"Can not close header file of "
+            REPORT_ERROR(ERR_IO_NOCLOSED,(String)"Can not close header file of "
                          + filename);
     }
     delete hFile;
+}
+
+/** Show image properties
+      */
+std::ostream& operator<<(std::ostream& o, const ImageBase& I)
+{
+    o << "Image type   : ";
+    if (I.isComplex())
+        o << "Fourier-space image" << std::endl;
+    else
+        o << "Real-space image" << std::endl;
+
+    o << "Reversed     : ";
+    if (I.swap)
+        o << "TRUE"  << std::endl;
+    else
+        o << "FALSE" << std::endl;
+
+    o << "Data type    : ";
+    switch (I.dataType())
+    {
+    case Unknown_Type:
+        o << "Undefined data type";
+        break;
+    case UChar:
+        o << "Unsigned character or byte type (UInt8)";
+        break;
+    case SChar:
+        o << "Signed character (Int8)";
+        break;
+    case UShort:
+        o << "Unsigned short integer (UInt16)";
+        break;
+    case Short:
+        o << "Signed short integer (Int16)";
+        break;
+    case UInt:
+        o << "Unsigned integer (UInt32)";
+        break;
+    case Int:
+        o << "Signed integer (Int32)";
+        break;
+    case Long:
+        o << "Signed integer (4 or 8 byte, depending on system)";
+        break;
+    case Float:
+        o << "Floating point (4-byte)";
+        break;
+    case Double:
+        o << "Double precision floating point (8-byte)";
+        break;
+    case ComplexShort:
+        o << "Complex two-byte integer (4-byte)";
+        break;
+    case ComplexInt:
+        o << "Complex integer (8-byte)";
+        break;
+    case ComplexFloat:
+        o << "Complex floating point (8-byte)";
+        break;
+    case ComplexDouble:
+        o << "Complex floating point (16-byte)";
+        break;
+    case Bool:
+        o << "Boolean (1-byte?)";
+        break;
+    }
+    o << std::endl;
+
+    int xdim, ydim, zdim;
+    size_t ndim;
+    I.getDimensions(xdim, ydim, zdim, ndim);
+    o << "dimensions   : " << ndim << " x " << zdim << " x " << ydim << " x " << xdim;
+    o << "  (noObjects x slices x rows x columns)" << std::endl;
+    if (I.individualContainsLabel(MDL_ANGLEROT))
+    {
+        o << "Euler angles : " << std::endl;
+        o << "  Phi   (rotation around Z axis) = " << I.rot() << std::endl;
+        o << "  theta (tilt, second rotation around new Y axis) = " << I.tilt() << std::endl;
+        o << "  Psi   (third rotation around new Z axis) = " << I.psi() << std::endl;
+    }
+    if (I.individualContainsLabel(MDL_ORIGINX))
+    {
+        o << "Origin Offsets : " << std::endl;
+        o << "  Xoff  (origin offset in X-direction) = " << I.Xoff() << std::endl;
+        o << "  Yoff  (origin offset in Y-direction) = " << I.Yoff() << std::endl;
+        o << "  Zoff  (origin offset in Z-direction) = " << I.Zoff() << std::endl;
+    }
+    if(I.individualContainsLabel(MDL_SCALE))
+        o << "Scale  : " <<I.scale() << std::endl;
+    o << "Header size  : " << I.offset << std::endl;
+    if (I.individualContainsLabel(MDL_WEIGHT))
+        o << "Weight  : " << I.weight() << std::endl;
+    if (I.individualContainsLabel(MDL_FLIP))
+        o << "Flip    : " << I.flip() << std::endl;
+    return o;
 }

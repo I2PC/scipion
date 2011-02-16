@@ -38,14 +38,12 @@
  **/
 class ImageGeneric
 {
+
 public:
+    ImageBase* image;
     DataType datatype;
     MultidimArrayGeneric * data;
 
-private:
-    ImageBase* image;
-
-public:
 
     /** Empty constructor.
      *
@@ -72,6 +70,27 @@ public:
     /** Clear the parameters and initialize them.
      */
     void clear();
+
+    /** Clear the image header
+     */
+    void clearHeader()
+    {
+        image->clearHeader();
+    }
+
+    /** Init geometry transformation with defaults values
+     */
+    void initGeometry(const size_t n = 0)
+    {
+        image->initGeometry(n);
+    }
+
+    /** Return geometry row
+     */
+    MDRow& getGeometry(const size_t n = 0)
+    {
+        return image->MD[n];
+    }
 
     /** Get Image dimensions
     */
@@ -100,43 +119,48 @@ public:
 
     /** Set the data type for the generic image
      */
-    void setDatatype(DataType _datatype)
+    void setDatatype(DataType _datatype);
+
+    /** Set image dataMode */
+    void setDataMode(DataMode mode)
     {
-        datatype = _datatype;
-        setImageBase();
+        image->setDataMode(mode);
     }
 
     /** Get the data type
      */
     DataType getDatatype()const
     {
-    	return datatype;
+        return datatype;
     }
 
     /** Read image from file.
      */
-    int read(const FileName &name, bool readdata=true, int select_img = -1,
+    int read(const FileName &name, DataMode datamode = DATA, size_t select_img = ALL_IMAGES,
              bool mapData = false);
 
     /** Read image from file with a header applied.
      */
-    int readApplyGeo(const FileName &name, bool readdata=true, int select_img = -1,
-                     bool only_apply_shifts = false, MDRow * row = NULL);
+    int readApplyGeo(const FileName &name, const MDRow &row, DataMode datamode = DATA, size_t select_img = ALL_IMAGES);
 
     /** Read image from file.
      */
-    int readApplyGeo(const FileName &name, const MetaData &MD, long int objId,
-                     bool readdata=true, int select_img = -1, bool only_apply_shifts = false);
+    int readApplyGeo(const FileName &name, const MetaData &md, size_t objId,
+        DataMode datamode = DATA, size_t select_img = ALL_IMAGES);
+
+    /** Read an image from metadata, filename is taken from MDL_IMAGE */
+    int readApplyGeo(const MetaData &md, size_t objId,
+        DataMode datamode = DATA, size_t select_img = ALL_IMAGES );
 
     /** Read image mapped from file.
      */
     inline int readMapped(const FileName &name, int select_img = 0)
     {
-        read(name,true,select_img,true);
+        read(name, DATA, select_img, true);
     }
     /** Write image to file.
     */
-    inline void write(const FileName &name="", int select_img=-1, bool isStack=false,
+    inline void write(const FileName &name="", size_t select_img = ALL_IMAGES, bool isStack=false,
                       int mode=WRITE_OVERWRITE,bool adjust=false)
     {
         image->write(name,select_img,isStack,mode,adjust);
@@ -145,7 +169,7 @@ public:
     /* Create an empty image file of format given by filename and map it to memory.
      */
     inline  void newMappedFile(int Xdim, int Ydim, int Zdim, int Ndim, FileName _filename,
-    						bool createTempFile=false)
+                               bool createTempFile=false)
     {
         image->newMappedFile(Xdim,Ydim,Zdim,Ndim,_filename,createTempFile);
     }
@@ -162,10 +186,12 @@ public:
         return *data;
     }
 
+    void print() const;
+
 private:
     /* Declare the internal image class with the stored data type
      */
-    void setImageBase();
+    DataType getImageType(const FileName &imgName);
 
 }
 ;

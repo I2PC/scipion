@@ -37,7 +37,7 @@ void getStatistics(MetaData &MT_in, Image<double> & _ave, Image<double> & _sd, d
     FOR_ALL_OBJECTS_IN_METADATA(MT)
     {
     	if (apply_geo)
-    		image.readApplyGeo(MT,__iter.objId, -1);
+    		image.readApplyGeo(MT,__iter.objId, HEADER);
     	else
     	{
     		MT.getValue(MDL_IMAGE,fnImg,__iter.objId);
@@ -68,7 +68,7 @@ void getStatistics(MetaData &MT_in, Image<double> & _ave, Image<double> & _sd, d
     FOR_ALL_OBJECTS_IN_METADATA(MT)
     {
     	if (apply_geo)
-    		image.readApplyGeo(MT,__iter.objId, -1);
+    		image.readApplyGeo(MT,__iter.objId, HEADER);
     	else
     	{
     		MT.getValue(MDL_IMAGE,fnImg,__iter.objId);
@@ -222,7 +222,7 @@ void substituteOriginalImages(const FileName &fn, const FileName &fnOrig, const 
         if (MD.containsLabel(label) && (!skipFirstBlock || b!=0))
         {
             FileName fnImg;
-            int stkNo;
+            size_t stkNo;
             String stkName;
             FOR_ALL_OBJECTS_IN_METADATA(MD)
             {

@@ -100,7 +100,7 @@ struct SPIDERhead
  for each sub-image.
 @Arguments:
  Bimage* p   the image structure.
- int img_select  image selection in multi-image file (-1 = all images).
+ size_t select_img  image selection in multi-image file (-1 = all images).
 @Returns:
  int     error code (<0 means failure).
 **************************************************************************/
@@ -109,7 +109,7 @@ struct SPIDERhead
 */
 #include "metadata_label.h"
 
-int  readSPIDER(int img_select);
+int  readSPIDER(size_t select_img);
 
 /************************************************************************
 @Function: writeSPIDER
@@ -124,6 +124,6 @@ int  readSPIDER(int img_select);
 /** Spider Writer
   * @ingroup Spider
 */
-int  writeSPIDER(int select_img=-1, bool isStack=false, int mode=WRITE_OVERWRITE);
+int  writeSPIDER(size_t select_img = ALL_IMAGES, bool isStack=false, int mode=WRITE_OVERWRITE);
 #endif
 

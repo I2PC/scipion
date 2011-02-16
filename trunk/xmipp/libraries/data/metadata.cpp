@@ -875,7 +875,7 @@ void MetaData::_read(const FileName &filename,
     if (!filename.isMetaData())//if not a metadata, try to read as image or stack
     {
         Image<char> image;
-        image.read(filename, false);
+        image.read(filename, HEADER);
         if (image().ndim == 1 || !decomposeStack) //single image
         {
             id = addObject();

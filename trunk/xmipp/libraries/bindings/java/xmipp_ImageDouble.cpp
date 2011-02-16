@@ -38,7 +38,7 @@ JNIEXPORT void JNICALL Java_xmipp_ImageDouble_read_1
 		const char * fnStr = env->GetStringUTFChars(filename, false);
 
 		try {
-			image->read(fnStr, read_data, nimage);
+			image->read(fnStr, (read_data)? DATA : HEADER, nimage);
 		} catch (XmippError xe) {
 			msg = xe.getDefaultMessage();
 		} catch (std::exception& e) {

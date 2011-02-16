@@ -33,12 +33,12 @@
 /** SPE Reader
   * @ingroup SPE
 */
-int readSPE(int img_select,bool isStack=false);
+int readSPE(size_t select_img,bool isStack=false);
 
 /** SPE Writer
   * @ingroup SPE
 */
-int writeSPE(int img_select, bool isStack=false, int mode=WRITE_OVERWRITE)
+int writeSPE(size_t select_img, bool isStack=false, int mode=WRITE_OVERWRITE)
 {
     REPORT_ERROR(ERR_IMG_NOWRITE, "writeSPE is not implemented.");
     return(-1);

@@ -34,7 +34,7 @@
   * @ingroup RAW
 */
 
-DataType datatypeRAW(std::string strDT);
+DataType datatypeRAW(String strDT);
 
 ///@defgroup RAW RAW File format
 ///@ingroup ImageFormats
@@ -44,6 +44,6 @@ DataType datatypeRAW(std::string strDT);
   * @ingroup RAW
 */
 
-int readRAW(int img_select,bool isStack=false);
+int readRAW(size_t select_img,bool isStack=false);
 
 #endif /* RWINF_H_ */

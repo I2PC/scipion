@@ -116,7 +116,7 @@ struct IMAGIChead
 /** Imagic reader
   * @ingroup Imagic
 */
-int  ImageBase::readIMAGIC(int img_select)
+int  ImageBase::readIMAGIC(size_t img_select)
 {
 #undef DEBUG
     //#define DEBUG
@@ -127,12 +127,12 @@ int  ImageBase::readIMAGIC(int img_select)
     IMAGIChead* header = new IMAGIChead;
 
     if ( fread( header, IMAGICSIZE, 1, fhed ) < 1 )
-        REPORT_ERROR(ERR_IO_NOREAD,(std::string)"readIMAGIC: header file of " + filename + " cannot be read");
+        REPORT_ERROR(ERR_IO_NOREAD,(String)"readIMAGIC: header file of " + filename + " cannot be read");
 
     // Determine byte order and swap bytes if from little-endian machine
     char*   b = (char *) header;
     int    swap = 0;
-    unsigned long i, extent = IMAGICSIZE - 916;  // exclude char bytes from swapping
+    size_t i, extent = IMAGICSIZE - 916;  // exclude char bytes from swapping
     if ( ( abs(header->nyear) > SWAPTRIG ) || ( header->ixlp > SWAPTRIG ) )
     {
         swap = 1;
@@ -141,32 +141,21 @@ int  ImageBase::readIMAGIC(int img_select)
                 swapbytes(b+i, 4);
     }
     int _xDim,_yDim,_zDim;
-    unsigned long int _nDim;
+    size_t _nDim;
     _xDim = (int) header->iylp;
     _yDim = (int) header->ixlp;
     _zDim = (int) 1;
-    _nDim = (unsigned long int) header->ifn + 1 ;
+    _nDim = (size_t) header->ifn + 1 ;
 
-    std::stringstream Num;
-    std::stringstream Num2;
-    if ( img_select > (int)_nDim )
-    {
-        Num  << img_select;
-        Num2 << _nDim;
-        REPORT_ERROR(ERR_INDEX_OUTOFBOUNDS,(std::string)"readImagic: Image number " + Num.str() +
-                     " exceeds stack size " + Num2.str());
-    }
+    if ( img_select > _nDim )
+        REPORT_ERROR(ERR_INDEX_OUTOFBOUNDS, formatString("readImagic: Image number %lu exceeds stack size %lu", img_select, _nDim));
 
-    if( img_select > -1)
-        _nDim=1;
+    if( img_select != ALL_IMAGES )
+        _nDim = 1;
 
-    setDimensions( //setDimensions do not allocate data
-        _xDim,
-        _yDim,
-        _zDim,
-        _nDim );
+    setDimensions(_xDim, _yDim, _zDim, _nDim );
 
-    replaceNsize=_nDim;
+    replaceNsize = _nDim;
     DataType datatype;
 
     if ( strstr(header->type,"PACK") )
@@ -204,26 +193,17 @@ int  ImageBase::readIMAGIC(int img_select)
     MDMainHeader.setValue(MDL_SAMPLINGRATEZ,(double)1.);
     MDMainHeader.setValue(MDL_DATATYPE,(int)datatype);
 
-
     offset = 0;   // separate header file
-
-    unsigned long   Ndim = _nDim, j = 0;
-    if (dataflag<0)   // Don't read the individual header and the data if not necessary
-        return 0;
-
-    // View   view;
+    size_t   j = 0;
     char*   hend;
 
     // Get the header information
-    if ( img_select > -1 )
-        fseek( fhed, img_select * IMAGICSIZE, SEEK_SET );
-    else
-        fseek( fhed, 0, SEEK_SET );
+    fseek( fhed, IMG_INDEX(img_select) * IMAGICSIZE, SEEK_SET );
 
     MD.clear();
-    MD.resize(Ndim);
+    MD.resize(_nDim);
     double daux=1.;
-    for ( i = 0; i < Ndim; ++i )
+    for ( i = 0; i < _nDim; ++i )
     {
         if ( fread( header, IMAGICSIZE, 1, fhed ) < 1 )
             return(-2);
@@ -233,24 +213,29 @@ int  ImageBase::readIMAGIC(int img_select)
                 for ( b = (char *) header; b<hend; b+=4 )
                     swapbytes(b, 4);
 
-            ///DO NOT USE HEADER
-//            MD[i].setValue(MDL_ORIGINX,  (double)-1. * header->iyold);
-//            MD[i].setValue(MDL_ORIGINY,  (double)-1. * header->ixold);
-//            MD[i].setValue(MDL_ORIGINZ,  zeroD);
-//            MD[i].setValue(MDL_ANGLEROT, (double)-1. * header->euler_alpha);
-//            MD[i].setValue(MDL_ANGLETILT,(double)-1. * header->euler_beta);
-//            MD[i].setValue(MDL_ANGLEPSI, (double)-1. * header->euler_gamma);
-//            MD[i].setValue(MDL_WEIGHT,   (double)oneD);
-//            MD[i].setValue(MDL_SCALE, daux);
-            //Initialize geometry
-            initGeometry(i);
+            if (dataMode == _HEADER_ALL || dataMode == _DATA_ALL)
+            {
+                MD[i].setValue(MDL_ORIGINX,  (double)-1. * header->iyold);
+                MD[i].setValue(MDL_ORIGINY,  (double)-1. * header->ixold);
+                MD[i].setValue(MDL_ORIGINZ,  zeroD);
+                MD[i].setValue(MDL_ANGLEROT, (double)-1. * header->euler_alpha);
+                MD[i].setValue(MDL_ANGLETILT,(double)-1. * header->euler_beta);
+                MD[i].setValue(MDL_ANGLEPSI, (double)-1. * header->euler_gamma);
+                MD[i].setValue(MDL_WEIGHT,   (double)oneD);
+                MD[i].setValue(MDL_SCALE, daux);
+            }
+            else
+                initGeometry(i);
             j++;
         }
     }
 
     delete header;
 
-    int pad=0;
+    if (dataMode < DATA)   // Don't read the individual header and the data if not necessary
+        return 0;
+
+    size_t pad = 0;
     readData(fimg, img_select, datatype, pad );
 
     return(0);
@@ -270,7 +255,7 @@ int  ImageBase::readIMAGIC(int img_select)
 /** Imagic Writer
   * @ingroup Imagic
 */
-int  ImageBase::writeIMAGIC(int img_select, int mode, std::string bitDepth, bool adjust)
+int  ImageBase::writeIMAGIC(size_t img_select, int mode, String bitDepth, bool adjust)
 {
 #undef DEBUG
     //#define DEBUG
@@ -280,7 +265,7 @@ int  ImageBase::writeIMAGIC(int img_select, int mode, std::string bitDepth, bool
 
     IMAGIChead* header = new IMAGIChead;
     int Xdim, Ydim, Zdim;
-    unsigned long Ndim;
+    size_t Ndim;
     getDimensions(Xdim, Ydim, Zdim, Ndim);
 
     // fill in the file header
@@ -292,11 +277,11 @@ int  ImageBase::writeIMAGIC(int img_select, int mode, std::string bitDepth, bool
 
     header->ifn = Ndim - 1 ;
     header->imn = 1;
-    int firtIfn=0;
-    if(replaceNsize!=0 && mode == WRITE_APPEND)
+    size_t firtIfn = 0;
+    if(replaceNsize != 0 && mode == WRITE_APPEND)
     {
         firtIfn     = replaceNsize;
-        header->imn = replaceNsize+1;
+        header->imn = replaceNsize + 1;
         header->ifn = 0;//only important in first header
     }
 
@@ -311,15 +296,15 @@ int  ImageBase::writeIMAGIC(int img_select, int mode, std::string bitDepth, bool
     header->nminut = t->tm_min;
     header->nsec = t->tm_sec;
 
-    unsigned long   imgStart=0;
-    if (img_select != -1)
-        imgStart=img_select;
-    if (mode = WRITE_APPEND)
+    size_t  imgStart = IMG_INDEX(img_select);
+
+    //TODO: Check if this works....
+    if (mode == WRITE_APPEND)
         imgStart=0;
 
 
     // Cast T to datatype without convert data
-    DataType wDType,myTypeID = myT();
+    DataType wDType, myTypeID = myT();
     CastWriteMode castMode;
 
     if (bitDepth == "")
@@ -353,7 +338,7 @@ int  ImageBase::writeIMAGIC(int img_select, int mode, std::string bitDepth, bool
             break;
         default:
             wDType = Unknown_Type;
-            REPORT_ERROR(ERR_TYPE_INCORRECT,(std::string)"ERROR: Unsupported data type by IMAGIC format.");
+            REPORT_ERROR(ERR_TYPE_INCORRECT, "ERROR: Unsupported data type by IMAGIC format.");
         }
     }
     else //Convert to other data type
@@ -449,22 +434,25 @@ int  ImageBase::writeIMAGIC(int img_select, int mode, std::string bitDepth, bool
     for (std::vector<MDRow>::iterator it = MD.begin(); it != MD.end(); ++it)
     {
         header->iyold=header->ixold=header->euler_alpha=header->euler_beta=header->euler_gamma=0.;
-        ///DO NOT USE HEADER
-//        if(it->getValue(MDL_ORIGINX,  aux))
-//            header->iyold  = (float)-aux;
-//        if(it->getValue(MDL_ORIGINY,  aux))
-//            header->ixold  =(float)-aux;
-//        //if(it->getValue(MDL_ORIGINZ,  aux))
-//        //    header->zoff  =(float)aux;
-//        if(it->getValue(MDL_ANGLEROT, aux))
-//            header->euler_alpha   =(float)-aux;
-//        if(it->getValue(MDL_ANGLETILT,aux))
-//            header->euler_beta    =(float)-aux;
-//        if(it->getValue(MDL_ANGLEPSI, aux))
-//            header->euler_gamma =(float)-aux;
+        if (dataMode == _HEADER_ALL || dataMode == _DATA_ALL)
+        {
+            if(it->getValue(MDL_ORIGINX,  aux))
+                header->iyold  = (float)-aux;
+            if(it->getValue(MDL_ORIGINY,  aux))
+                header->ixold  =(float)-aux;
+            //if(it->getValue(MDL_ORIGINZ,  aux))
+            //    header->zoff  =(float)aux;
+            if(it->getValue(MDL_ANGLEROT, aux))
+                header->euler_alpha   =(float)-aux;
+            if(it->getValue(MDL_ANGLETILT,aux))
+                header->euler_beta    =(float)-aux;
+            if(it->getValue(MDL_ANGLEPSI, aux))
+                header->euler_gamma =(float)-aux;
+        }
 
         fwrite( header, IMAGICSIZE, 1, fhed );
-        writeData(fimg, i*datasize_n, wDType, datasize_n, castMode);
+        if (dataMode >= DATA)
+          writeData(fimg, i*datasize_n, wDType, datasize_n, castMode);
 
         ++i;
     }

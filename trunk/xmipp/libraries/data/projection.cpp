@@ -61,10 +61,12 @@ void Projection::set_angles(double _rot, double _tilt, double _psi)
 }
 
 /* Read ==================================================================== */
-void Projection::read(const FileName &fn, const bool &apply_shifts,
-                      bool readdata , MDRow * row)
+void Projection::read(const FileName &fn, const bool only_apply_shifts,
+                      DataMode datamode , MDRow * row)
 {
-    Image<double>::readApplyGeo(fn, readdata, -1, apply_shifts, row);
+    Image<double>::read(fn, datamode);
+    if (row != NULL)
+      applyGeo(*row, only_apply_shifts);
     Euler_angles2matrix(rot(), tilt(), psi(), euler);
     eulert = euler.transpose();
     euler.getRow(2, direction);
@@ -156,7 +158,7 @@ void ParametersProjectionTomography::readParams(XmippProgram * program)
         axisTilt = program->getDoubleParam("--angles",2);
 
         Image<char> volTemp;
-        volTemp.read(fnPhantom, false);
+        volTemp.read(fnPhantom, HEADER);
         proj_Xdim = XSIZE(VOLMATRIX(volTemp));
         proj_Ydim = YSIZE(VOLMATRIX(volTemp));
     }
@@ -352,8 +354,8 @@ void ParametersProjectionTomography::calculateProjectionAngles(Projection &P, do
 /* Project a voxel volume -------------------------------------------------- */
 //#define DEBUG
 void projectVolume(MultidimArray<double> &V, Projection &P, int Ydim, int Xdim,
-                    double rot, double tilt, double psi,
-                    const Matrix1D<double> *roffset)
+                   double rot, double tilt, double psi,
+                   const Matrix1D<double> *roffset)
 {
     SPEED_UP_temps;
 
