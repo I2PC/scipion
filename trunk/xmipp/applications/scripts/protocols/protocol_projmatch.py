@@ -987,6 +987,7 @@ class projection_matching_class:
                         ' | grep -v ' +  ProjectLibraryRootName + \
                         ' | grep -v ref.xmp ' + \
                         ' | grep -v \ -1 >' + ForReconstructionSel
+          
           self._mylog.info(command)
           os.system(command)
 
@@ -1019,7 +1020,7 @@ class projection_matching_class:
              self._mylog.info("Skipped Reconstruction") 
           
           if (_DoComputeResolution):
-              filter_frequence=execute_resolution(self._mylog,
+              filter_frequency=execute_resolution(self._mylog,
                                                   self._ARTReconstructionExtraCommand,
                                                   self._WBPReconstructionExtraCommand,
                                                   self._FourierReconstructionExtraCommand,
@@ -1042,7 +1043,7 @@ class projection_matching_class:
                           self._PaddingFactor
                                                   )
           else:
-             filter_frequence=0
+             filter_frequency=0
              self._mylog.info("Skipped Resolution calculation") 
           
           self._ConstantToAddToFiltration=arg.getComponentFromVector(\
@@ -1055,7 +1056,7 @@ class projection_matching_class:
                                      _iteration_number,
                                      self._UseFscForFilter,
                                      self._ConstantToAddToFiltration,
-                                     filter_frequence,
+                                     filter_frequency,
                                      self._ReconstructedVolume[_iteration_number],
                                      self._ReconstructedandfilteredVolume[1+_iteration_number],
                                      self._MySystemFlavour
@@ -1435,7 +1436,7 @@ def execute_projection_matching(_mylog,
                      '.xmp',
                      '.ref.xmp'
                      )
-
+   
 #   #classselfile=selfile.selfile()
 #   #classselfile.read(ProjMatchRootName+'_classes.sel')
 #   classselfile = XmippData.MetaData(XmippData.FileName(ProjMatchRootName+'_classes.sel'))
@@ -1752,26 +1753,21 @@ def  execute_resolution(_mylog,
 
     #from xmipp import *
     
-    filter_frequence=0. 
     mD = MetaData(resolution_fsc_file)
-    id = mD.firstObject()
-    id = mD
-    fsc=0.
     freq=0.
-    while(id != -1):        
-         fsc = mD.getValue(MDL_RESOLUTION_FRC)
-         d = fsc
-         if(d < 0.5):
-             freq=mD.getValue(MDL_RESOLUTION_FREQ)
-             print freq         
-             break
-         id = mD.nextObject()
-    filter_frequence = freq
     
-    print '* maximum resolution (A^-1): ', filter_frequence
-    filter_frequence *= _ResolSam
-    print '* maximum resolution (px^-1): ', filter_frequence
-    return filter_frequence
+    for id in mD:
+         fsc = mD.getValue(MDL_RESOLUTION_FRC, id)
+         if(fsc < 0.5):
+             freq=mD.getValue(MDL_RESOLUTION_FREQ, id)
+             break
+         
+    filter_frequency = freq
+    
+    print '* maximum resolution (A^-1): ', filter_frequency
+    filter_frequency *= _ResolSam
+    print '* maximum resolution (px^-1): ', filter_frequency
+    return filter_frequency
 
 #------------------------------------------------------------------------
 #           filter_at_given_resolution
@@ -1782,7 +1778,7 @@ def filter_at_given_resolution(_DoLowPassFilter,
                                _iteration_number,
                                _UseFscForFilter,
                                _ConstantToAddToFiltration,
-                               _filter_frequence,
+                               _filter_frequency,
                                _ReconstructedVolume,
                                _ReconstructedandfilteredVolume,
                                _MySystemFlavour
@@ -1802,7 +1798,7 @@ def filter_at_given_resolution(_DoLowPassFilter,
         print '**************************************************************'
         print '* Filter reconstruction ' 
         if (_UseFscForFilter):
-           filter_in_pixels_at = float(_filter_frequence) +\
+           filter_in_pixels_at = float(_filter_frequency) +\
                                  float(_ConstantToAddToFiltration)
         else:
            filter_in_pixels_at = float(_ConstantToAddToFiltration)
