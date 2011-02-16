@@ -132,9 +132,9 @@ public:
         	refI.read(fn_ref);
         refI().setXmippOrigin();
         if (apply_geo)
-        	img.readApplyGeo(fn_ref);
+        	img.readApplyGeo(fn_img);
         else
-        	img.read(fn_ref);
+        	img.read(fn_img);
         img().setXmippOrigin();
         MultidimArray<double> freq, frc, dpr, frc_noise, error_l2;
         frc_dpr(refI(), img(), sam, freq, frc, frc_noise, dpr, error_l2);
