@@ -1711,10 +1711,7 @@ public:
                     (XX(v) == FINISHINGX(*this) && YY(v) == STARTINGY(*this)  && ZZ(v) == FINISHINGZ(*this))  ||
                     (XX(v) == FINISHINGX(*this) && YY(v) == FINISHINGY(*this) && ZZ(v) == FINISHINGZ(*this)));
         else
-            REPORT_ERROR(ERR_MATRIX_SIZE, "isCorner: index vector has too many components. dimV= "\
-            		      + integerToString(v.size())\
-            		      + " matrix dim = " + integerToString(XSIZE(*this))\
-            );
+            REPORT_ERROR(ERR_MATRIX_SIZE, stringFormat("isCorner: index vector has too many components. dimV= %lu matrix dim = %i", v.size(), XSIZE(*this)));
     }
     //@}
 
@@ -2285,7 +2282,7 @@ public:
                     else if (l>=XSIZE(*this))
                         equivalent_l=2*XSIZE(*this)-l-1;
                     double Coeff = (double) DIRECT_A3D_ELEM(*this,
-                                   equivalent_nn,equivalent_m,equivalent_l);
+                                                            equivalent_nn,equivalent_m,equivalent_l);
                     switch (SplineDegree)
                     {
                     case 2:
@@ -4118,9 +4115,9 @@ public:
      * condition.
      */
     size_t countThreshold(const std::string& type,
-                                 T a,
-                                 T b,
-                                 MultidimArray<int> * mask = NULL )
+                          T a,
+                          T b,
+                          MultidimArray<int> * mask = NULL )
     {
         int mode;
 
@@ -4670,7 +4667,7 @@ public:
  * If n >= 0, only the nth volumes will be converted, otherwise all NSIZE volumes
  */
 template<typename T1, typename T2>
-void typeCast(const MultidimArray<T1>& v1,  MultidimArray<T2>& v2, size_t n = -1)
+void typeCast(const MultidimArray<T1>& v1,  MultidimArray<T2>& v2)
 {
     if (NZYXSIZE(v1) == 0)
     {
@@ -4678,20 +4675,11 @@ void typeCast(const MultidimArray<T1>& v1,  MultidimArray<T2>& v2, size_t n = -1
         return;
     }
 
-    if (n < 0)
-    {
-        v2.resizeNoCopy(v1);
-        T1* ptr1=NULL;
-        size_t n;
-        FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY_ptr(v1,n,ptr1)
-        DIRECT_MULTIDIM_ELEM(v2,n) = static_cast< T2 >(*ptr1);
-    }
-    else
-    {
-        v2.resizeNoCopy(ZSIZE(v1),YSIZE(v1),XSIZE(v1));
-        FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY3D(v2)
-        DIRECT_A3D_ELEM(v2,k,i,j) = static_cast< T2 >DIRECT_NZYX_ELEM(v1,n,k,i,j);
-    }
+    v2.resizeNoCopy(v1);
+    T1* ptr1 = NULL;
+    size_t n;
+    FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY_ptr(v1,n,ptr1)
+    DIRECT_MULTIDIM_ELEM(v2,n) = static_cast< T2 >(*ptr1);
 
 }
 
