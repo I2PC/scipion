@@ -108,6 +108,12 @@ public class HandleExtraFileTypes extends ImagePlus implements PlugIn {
             return null;
         }
         name = name.toLowerCase();
+//
+//        String ext = XMIPP_EXTS.getFileExtension(name);
+//        if (XMIPP_EXTS.contains(ext)) {
+//            imp = (ImagePlus) IJ.runPlugIn("Xmipp_Reader", path);
+//            return imp;
+//        }
 
         // OK now we get to the interesting bit
 
@@ -293,86 +299,86 @@ public class HandleExtraFileTypes extends ImagePlus implements PlugIn {
         return tryPlugIn("Open_DAT_EMMENU", path);
         }        */
 
-
-        // GJ: added Gatan Digital Micrograph DM3 handler
-        // Note that the DM3_Reader plugin extends the ImagePlus class,
-        // which is why the IJ.runPlugIn() call below returns an ImagePlus object.
-        // ----------------------------------------------
-        // Check if the file ends in .DM3 or .dm3
-        if (name.endsWith(".dm3")) {
-            // These make an int value of 3 which is the DM3 version number
-            if (buf[0] == 0 && buf[1] == 0 && buf[2] == 0 && buf[3] == 3) {
-                // Ok we've identified the file type - now load it
-                imp = (ImagePlus) IJ.runPlugIn("xmipp.io.DM3_Reader", path);
-                if (imp == null) {
-                    width = PLUGIN_NOT_FOUND;
-                }
-                if (imp != null && imp.getWidth() == 0) {
-                    imp = null;
-                }
-                return imp;
-            }
-        }
-
-        // Juanjo Vega: TIA (.ser) files
-        if (name.endsWith(".ser")) {
-            imp = (ImagePlus) IJ.runPlugIn("xmipp.io.TIA_Reader", path);
-            if (imp == null) {
-                width = PLUGIN_NOT_FOUND;
-            }
-            if (imp != null && imp.getWidth() == 0) {
-                imp = null;
-            }
-            return imp;
-        }
-
-        //  Princeton Instruments SPE image file (.spe) handler
-        //  http://rsb.info.nih.gov/ij/plugins/spe.html
-        if (name.endsWith(".spe")) {
-            return (ImagePlus) IJ.runPlugIn("xmipp.io.OpenSPE_", path);
-        }
-
-        if (name.endsWith(".mrc")) {
-            imp = (ImagePlus) IJ.runPlugIn("xmipp.io.MRC_Reader", path);
-            if (imp == null) {
-                width = PLUGIN_NOT_FOUND;
-            }
-            if (imp != null && imp.getWidth() == 0) {
-                imp = null;
-            }
-            return imp;
-        }
-        if (name.toLowerCase().endsWith(".spi") || name.toLowerCase().endsWith(".xmp") || name.toLowerCase().endsWith(".vol")) {
-            imp = (ImagePlus) IJ.runPlugIn("xmipp.io.Spider_Reader", path);
-            if (imp == null) {
-                width = PLUGIN_NOT_FOUND;
-            }
-            if (imp != null && imp.getWidth() == 0) {
-                imp = null;
-            }
-            return imp;
-        }
-        if (name.toLowerCase().endsWith(".sel")) {
-            imp = (ImagePlus) IJ.runPlugIn("xmipp.io.Sel_Reader", path);
-            if (imp == null) {
-                width = PLUGIN_NOT_FOUND;
-            }
-            if (imp != null && imp.getWidth() == 0) {
-                imp = null;
-            }
-            return imp;
-        }
-        if (name.endsWith(".em")) {
-            imp = (ImagePlus) IJ.runPlugIn("xmipp.io.EM_Reader", path);
-            if (imp == null) {
-                width = PLUGIN_NOT_FOUND;
-            }
-            if (imp != null && imp.getWidth() == 0) {
-                imp = null;
-            }
-            return imp;
-        }
-
+//
+//        // GJ: added Gatan Digital Micrograph DM3 handler
+//        // Note that the DM3_Reader plugin extends the ImagePlus class,
+//        // which is why the IJ.runPlugIn() call below returns an ImagePlus object.
+//        // ----------------------------------------------
+//        // Check if the file ends in .DM3 or .dm3
+//        if (name.endsWith(".dm3")) {
+//            // These make an int value of 3 which is the DM3 version number
+//            if (buf[0] == 0 && buf[1] == 0 && buf[2] == 0 && buf[3] == 3) {
+//                // Ok we've identified the file type - now load it
+//                imp = (ImagePlus) IJ.runPlugIn("xmipp.io.DM3_Reader", path);
+//                if (imp == null) {
+//                    width = PLUGIN_NOT_FOUND;
+//                }
+//                if (imp != null && imp.getWidth() == 0) {
+//                    imp = null;
+//                }
+//                return imp;
+//            }
+//        }
+//
+//        // Juanjo Vega: TIA (.ser) files
+//        if (name.endsWith(".ser")) {
+//            imp = (ImagePlus) IJ.runPlugIn("xmipp.io.TIA_Reader", path);
+//            if (imp == null) {
+//                width = PLUGIN_NOT_FOUND;
+//            }
+//            if (imp != null && imp.getWidth() == 0) {
+//                imp = null;
+//            }
+//            return imp;
+//        }
+//
+//        //  Princeton Instruments SPE image file (.spe) handler
+//        //  http://rsb.info.nih.gov/ij/plugins/spe.html
+//        if (name.endsWith(".spe")) {
+//            return (ImagePlus) IJ.runPlugIn("xmipp.io.OpenSPE_", path);
+//        }
+//
+//        if (name.endsWith(".mrc")) {
+//            imp = (ImagePlus) IJ.runPlugIn("xmipp.io.MRC_Reader", path);
+//            if (imp == null) {
+//                width = PLUGIN_NOT_FOUND;
+//            }
+//            if (imp != null && imp.getWidth() == 0) {
+//                imp = null;
+//            }
+//            return imp;
+//        }
+//        if (name.toLowerCase().endsWith(".spi") || name.toLowerCase().endsWith(".xmp") || name.toLowerCase().endsWith(".vol")) {
+//            imp = (ImagePlus) IJ.runPlugIn("xmipp.io.Spider_Reader", path);
+//            if (imp == null) {
+//                width = PLUGIN_NOT_FOUND;
+//            }
+//            if (imp != null && imp.getWidth() == 0) {
+//                imp = null;
+//            }
+//            return imp;
+//        }
+//        if (name.toLowerCase().endsWith(".sel")) {
+//            imp = (ImagePlus) IJ.runPlugIn("xmipp.io.Sel_Reader", path);
+//            if (imp == null) {
+//                width = PLUGIN_NOT_FOUND;
+//            }
+//            if (imp != null && imp.getWidth() == 0) {
+//                imp = null;
+//            }
+//            return imp;
+//        }
+//        if (name.endsWith(".em")) {
+//            imp = (ImagePlus) IJ.runPlugIn("xmipp.io.EM_Reader", path);
+//            if (imp == null) {
+//                width = PLUGIN_NOT_FOUND;
+//            }
+//            if (imp != null && imp.getWidth() == 0) {
+//                imp = null;
+//            }
+//            return imp;
+//        }
+//
 
         if (name.toLowerCase().endsWith(".sdf")) {
             imp = (ImagePlus) IJ.runPlugIn("SDF_reader", path);
@@ -389,6 +395,30 @@ public class HandleExtraFileTypes extends ImagePlus implements PlugIn {
         // and then call appropriate plugin
         // using the above as models
         // eg:
+
+        if (XMIPP_EXTS.isSelFile(name)) {
+            imp = (ImagePlus) IJ.runPlugIn("Xmipp_SelReader", path);
+
+            if (imp == null) {
+                width = PLUGIN_NOT_FOUND;
+            }
+            if (imp != null && imp.getWidth() == 0) {
+                imp = null;
+            }
+
+            return imp;
+        } else if (XMIPP_EXTS.isSupportedType(name)) {
+            imp = (ImagePlus) IJ.runPlugIn("Xmipp_Reader", path);
+
+            if (imp == null) {
+                width = PLUGIN_NOT_FOUND;
+            }
+            if (imp != null && imp.getWidth() == 0) {
+                imp = null;
+            }
+
+            return imp;
+        }
 
         /*
         A. Dent: Added XYZ handler
