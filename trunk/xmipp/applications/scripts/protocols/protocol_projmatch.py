@@ -1074,6 +1074,10 @@ class projection_matching_class:
                              True,
                              True)
 
+       print '\n\n*********************************************************************'
+       print 'Projection Matching Protocol finished!!'
+       print '*********************************************************************'
+
 
 #------------------------------------------------------------------------
 #delete_working directory
