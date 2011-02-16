@@ -28,25 +28,6 @@ int MaxFileNameLength(MetaData &MD);
 
 void mpiSelectPart(MetaData &md, int rank, int size, int &num_img_tot);
 
-///Swig interfaces
-template<class T>
-bool setValueSwig(MetaData &md,  MDLabel label,  T &valueIn, long int objectID = -1)
-{
-    md.setValue(label, valueIn, objectID);
-}
-
-template<class T>
-bool getValueSwig(const MetaData &md, const MDLabel label, T &valueOut, long int objectID = -1)
-{
-    md.getValue(label, valueOut, objectID);
-}
-
-template<class T>
-bool setValueColSwig(MetaData &md,  MDLabel label,  T &valueIn)
-{
-    md.setValueCol(label, valueIn);
-}
-
 /** Read a 1 or two column list of micrographs.
  *  Two column files are interpreted as Random Conical Tilt pairs.
  */
