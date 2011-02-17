@@ -804,20 +804,43 @@ protected:
         //read in a block
         if (data.ndim != 1)
             REPORT_ERROR(ERR_MULTIDIM_SIZE, "Header overwriting not available for stacks!!!");
-        MDLabel label;
         MDRow &rowAux = MD[0];
 
-        for (MDRow::const_iterator it = row.begin(); it != row.end(); ++it)
-        {
-            label = (*it)->label;
-            if (rowAux.containsLabel(label))
-                *(rowAux.getObject(label)) = *(*it);
-            else
-                rowAux.push_back(new MDObject(*(*it)));
-        }
+        double aux;
+        //origins
+        if (row.getValue(MDL_ORIGINX, aux))
+            rowAux.setValue(MDL_ORIGINX, aux);
+        if (row.getValue(MDL_ORIGINY, aux))
+            rowAux.setValue(MDL_ORIGINY, aux);
+        if (row.getValue(MDL_ORIGINZ, aux))
+            rowAux.setValue(MDL_ORIGINZ, aux);
+        //shifts
+        if (row.getValue(MDL_SHIFTX, aux))
+            rowAux.setValue(MDL_SHIFTX, aux);
+        if (row.getValue(MDL_SHIFTY, aux))
+            rowAux.setValue(MDL_SHIFTY, aux);
+        if (row.getValue(MDL_SHIFTZ, aux))
+            rowAux.setValue(MDL_SHIFTZ, aux);
+        //rotations
+        if (row.getValue(MDL_ANGLEROT, aux))
+                  rowAux.setValue(MDL_ANGLEROT, aux);
+        if (row.getValue(MDL_ANGLETILT, aux))
+                  rowAux.setValue(MDL_ANGLETILT, aux);
+        if (row.getValue(MDL_ANGLEPSI, aux))
+                  rowAux.setValue(MDL_ANGLEPSI, aux);
+        //scale
+        if (row.getValue(MDL_SCALE, aux))
+                  rowAux.setValue(MDL_SCALE, aux);
+        //weight
+        if (row.getValue(MDL_WEIGHT, aux))
+                  rowAux.setValue(MDL_WEIGHT, aux);
+        bool auxBool;
+        if (row.getValue(MDL_FLIP, aux))
+                  rowAux.setValue(MDL_FLIP, aux);
+
         //apply geo has not been defined for volumes
         //and only make sense when reading data
-        if (data.getDim() > 2 && dataMode >= DATA)
+        if (data.getDim() < 3 && dataMode >= DATA)
         {
             Matrix2D< double > A;
             getTransformationMatrix(A, only_apply_shifts);
