@@ -114,7 +114,7 @@ JNIEXPORT jdoubleArray JNICALL Java_xmipp_ImageDouble_getData(JNIEnv *env,
 		jobject obj) {
 	Image<double> * image = GET_INTERNAL_IMAGE();
 	if (image != NULL) {
-		unsigned long int size = image->getSize();
+		size_t size = image->getSize();
 		jdoubleArray array = env->NewDoubleArray(size);
 		env->SetDoubleArrayRegion(array, 0, size, MULTIDIM_ARRAY(image->data));
 		return array;
@@ -180,7 +180,7 @@ JNIEXPORT jintArray JNICALL Java_xmipp_ImageDouble_getDimensions_1(JNIEnv *env,
 	jintArray array = env->NewIntArray(3);
 	Image<double> * image = GET_INTERNAL_IMAGE();
 	if (image != NULL) {
-		unsigned long n;
+		size_t n;
 		int xyz[3];
 		image->getDimensions(xyz[0], xyz[1], xyz[2], n);
 		env->SetIntArrayRegion(array, 0, 3, xyz);
@@ -192,7 +192,7 @@ JNIEXPORT jintArray JNICALL Java_xmipp_ImageDouble_getDimensions_1(JNIEnv *env,
 JNIEXPORT jlong JNICALL Java_xmipp_ImageDouble_getNImages_1(JNIEnv *env,
 		jobject obj) {
 	int a, b, c;
-	long unsigned nimages;
+	size_t nimages;
 	Image<double> * image = GET_INTERNAL_IMAGE();
 
 	if (image != NULL) {
