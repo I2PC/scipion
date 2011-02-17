@@ -132,26 +132,26 @@ int ImageGeneric::read(const FileName &name, DataMode datamode, size_t select_im
     image->read(name, datamode, select_img, mapData);
 }
 
-int ImageGeneric::readApplyGeo(const FileName &name, const MDRow &row, DataMode datamode, size_t select_img)
+int ImageGeneric::readApplyGeo(const FileName &name, const MDRow &row, bool only_apply_shifts, DataMode datamode, size_t select_img)
 {
     setDatatype(getImageType(name));
-    image->readApplyGeo(name, row, datamode, select_img);
+    image->readApplyGeo(name, row, only_apply_shifts, datamode, select_img);
 }
 
-int ImageGeneric::readApplyGeo(const FileName &name, const MetaData &md, size_t objId, DataMode datamode,
+int ImageGeneric::readApplyGeo(const FileName &name, const MetaData &md, size_t objId, bool only_apply_shifts, DataMode datamode,
     size_t select_img)
 {
     setDatatype(getImageType(name));
-    image->readApplyGeo(name, md, objId, datamode, select_img);
+    image->readApplyGeo(name, md, objId, only_apply_shifts, datamode, select_img);
 }
 
 /** Read an image from metadata, filename is taken from MDL_IMAGE */
-int ImageGeneric::readApplyGeo(const MetaData &md, size_t objId, DataMode datamode, size_t select_img)
+int ImageGeneric::readApplyGeo(const MetaData &md, size_t objId, bool only_apply_shifts, DataMode datamode, size_t select_img)
 {
     FileName name;
     md.getValue(MDL_IMAGE, name, md.firstObject());
     setDatatype(getImageType(name));
-    image->readApplyGeo(name, md, objId, datamode, select_img);
+    image->readApplyGeo(name, md, objId, only_apply_shifts, datamode, select_img);
 }
 
 void ImageGeneric::print() const

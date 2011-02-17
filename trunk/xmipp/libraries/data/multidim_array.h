@@ -38,7 +38,7 @@
 #include <unistd.h>
 
 extern int bestPrecision(float F, int _width);
-extern std::string floatToString(float F, int _width, int _prec);
+extern String floatToString(float F, int _width, int _prec);
 
 /// @defgroup MultidimensionalArrays Multidimensional Arrays
 /// @ingroup DataLibrary
@@ -1711,7 +1711,7 @@ public:
                     (XX(v) == FINISHINGX(*this) && YY(v) == STARTINGY(*this)  && ZZ(v) == FINISHINGZ(*this))  ||
                     (XX(v) == FINISHINGX(*this) && YY(v) == FINISHINGY(*this) && ZZ(v) == FINISHINGZ(*this)));
         else
-            REPORT_ERROR(ERR_MATRIX_SIZE, stringFormat("isCorner: index vector has too many components. dimV= %lu matrix dim = %i", v.size(), XSIZE(*this)));
+            REPORT_ERROR(ERR_MATRIX_SIZE, formatString("isCorner: index vector has too many components. dimV= %lu matrix dim = %i", v.size(), XSIZE(*this)));
     }
     //@}
 
@@ -1938,7 +1938,7 @@ public:
             break;
         default:
             REPORT_ERROR(ERR_VALUE_INCORRECT,
-                         (std::string) "Slice: not supported axis " + axis);
+                         formatString("Slice: not supported axis %c", axis));
         }
     }
 
@@ -3271,8 +3271,7 @@ public:
     {
         if (!op1.sameShape(op2))
             REPORT_ERROR(ERR_MULTIDIM_SIZE,
-                         (std::string) "Array_by_array: different shapes (" +
-                         operation + ")");
+                         formatString("Array_by_array: different shapes (%c)", operation));
         if (result.data == NULL || !result.sameShape(op1))
             result.resizeNoCopy(op1);
         coreArrayByArray(op1, op2, result, operation);
@@ -3701,7 +3700,7 @@ public:
      * v1.initLinear(0, 10, 6, "steps"); // v1=[0 2 4 6 8 10]
      * @endcode
      */
-    void initLinear(T minF, T maxF, int n = 1, const std::string& mode = "incr")
+    void initLinear(T minF, T maxF, int n = 1, const String& mode = "incr")
     {
         double slope;
         int steps;
@@ -3751,7 +3750,7 @@ public:
      * // gaussian distribution with 0 mean and stddev=1
      * @endcode
      */
-    void initRandom(double op1, double op2, const std::string& mode = "uniform")
+    void initRandom(double op1, double op2, const String& mode = "uniform")
     {
         T* ptr=NULL;
         size_t n;
@@ -3763,8 +3762,7 @@ public:
             *ptr = static_cast< T >(rnd_gaus(op1, op2));
         else
             REPORT_ERROR(ERR_VALUE_INCORRECT,
-                         static_cast< std::string >("InitRandom: Mode not supported (" +
-                                                    mode + ")"));
+                         formatString("InitRandom: Mode not supported (%s)", mode.c_str()));
     }
 
     /** Add noise to actual values.
@@ -3795,7 +3793,7 @@ public:
      */
     void addNoise(double op1,
                   double op2,
-                  const std::string& mode = "uniform",
+                  const String& mode = "uniform",
                   double df = 3.) const
     {
         T* ptr=NULL;
@@ -3811,8 +3809,7 @@ public:
             *ptr += static_cast< T >(rnd_student_t(df, op1, op2));
         else
             REPORT_ERROR(ERR_VALUE_INCORRECT,
-                         static_cast< std::string >("AddNoise: Mode not supported (" +
-                                                    mode + ")"));
+                         formatString("AddNoise: Mode not supported (%s)", mode.c_str()));
     }
     //@}
 
@@ -4052,7 +4049,7 @@ public:
      * // will be substituted by its nearest border
      * @endcode
      */
-    void threshold(const std::string& type,
+    void threshold(const String& type,
                    T a,
                    T b,
                    MultidimArray<int> * mask = NULL )
@@ -4071,8 +4068,7 @@ public:
             mode = 5;
         else
             REPORT_ERROR(ERR_VALUE_INCORRECT,
-                         static_cast< std::string >("Threshold: mode not supported (" +
-                                                    type + ")"));
+                         formatString("Threshold: mode not supported (%s)", type ));
 
         T* ptr=NULL;
         size_t n;
@@ -4114,7 +4110,7 @@ public:
      * This function returns the number of elements meeting the threshold
      * condition.
      */
-    size_t countThreshold(const std::string& type,
+    size_t countThreshold(const String& type,
                           T a,
                           T b,
                           MultidimArray<int> * mask = NULL )
@@ -4133,8 +4129,7 @@ public:
             mode = 5;
         else
             REPORT_ERROR(ERR_VALUE_INCORRECT,
-                         static_cast< std::string >("CountThreshold: mode not supported (" +
-                                                    type + ")"));
+                         formatString("CountThreshold: mode not supported (%s)", type));
 
         size_t ret = 0;
 
@@ -4513,29 +4508,26 @@ public:
      * This function uses gnuplot to plot this vector. You must supply the
      * xlabel, ylabel, and title.
      */
-    void showWithGnuPlot(const std::string& xlabel, const std::string& title)
+    void showWithGnuPlot(const String& xlabel, const String& title)
     {
         checkDimension(1);
 
         FileName fn_tmp;
         fn_tmp.initRandom(10);
-        MultidimArray<T>::write(static_cast<std::string>("PPP") +
-                                fn_tmp + ".txt");
+        const char * fnStr = fn_tmp.c_str();
+        MultidimArray<T>::write(formatString("PPP%s.txt", fnStr));
 
         std::ofstream fh_gplot;
-        fh_gplot.open((static_cast<std::string>("PPP") + fn_tmp +
-                       ".gpl").c_str());
+        fh_gplot.open(formatString("PPP%s.gpl", fnStr).c_str());
         if (!fh_gplot)
             REPORT_ERROR(ERR_IO_NOTOPEN,
-                         static_cast<std::string>("vector::showWithGnuPlot: Cannot open PPP")
-                         + fn_tmp + ".gpl for output");
+                         formatString("vector::showWithGnuPlot: Cannot open PPP%s.gpl for output", fnStr));
         fh_gplot << "set xlabel \"" + xlabel + "\"\n";
         fh_gplot << "plot \"PPP" + fn_tmp + ".txt\" title \"" + title +
         "\" w l\n";
         fh_gplot << "pause 300 \"\"\n";
         fh_gplot.close();
-        system((static_cast<std::string>("(gnuplot PPP") + fn_tmp +
-                ".gpl; rm PPP" + fn_tmp + ".txt PPP" + fn_tmp + ".gpl) &").c_str());
+        system(formatString("(gnuplot PPP%s.gpl; rm PPP%s.txt PPP%s.gpl) &", fnStr, fnStr, fnStr).c_str());
     }
 
     /** Edit with xmipp_editor.
@@ -4549,11 +4541,10 @@ public:
         FileName nam;
         nam.initRandom(15);
 
-        nam = static_cast< std::string >("PPP" + nam + ".txt");
+        nam = formatString("PPP%s.txt", nam.c_str());
         write(nam);
 
-        system((static_cast< std::string >("xmipp_edit -i " + nam +
-                                           " -remove &").c_str()));
+        system(formatString("xmipp_edit -i %s -remove &", nam.c_str()).c_str());
     }
 
     /** Write to an ASCII file.
@@ -4564,8 +4555,7 @@ public:
         out.open(fn.c_str(), std::ios::out);
         if (!out)
             REPORT_ERROR(ERR_IO_NOTOPEN,
-                         static_cast< std::string >("MultidimArray::write: File " + fn
-                                                    + " cannot be opened for output"));
+                         formatString("MultidimArray::write: File %s cannot be opened for output", fn.c_str()));
 
         out << *this;
         out.close();
