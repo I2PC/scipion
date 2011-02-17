@@ -185,7 +185,7 @@ int ImageBase::readMRC(size_t select_img, bool isStack)
     switch ( header->mode % 5 )
     {
     case 0:
-        datatype = SChar;
+        datatype = UChar;
         break;
     case 1:
         datatype = Short;
@@ -302,9 +302,17 @@ int ImageBase::writeMRC(size_t select_img, bool isStack, int mode, std::string b
     }
     header->nx = Xdim;
     header->ny = Ydim;
-    header->nz = Zdim;
+    if(Zdim==0)
+        header->nz = 1;
+    else
+        header->nz = Zdim;
+
     if ( transform == CentHerm )
         header->nx = Xdim/2 + 1;        // If a transform, physical storage is nx/2 + 1
+
+    header->alpha = 90.;
+    header->beta  = 90.;
+    header->gamma = 90.;
 
     // Cast T to datatype
     DataType wDType,myTypeID = myT();
@@ -324,10 +332,10 @@ int ImageBase::writeMRC(size_t select_img, bool isStack, int mode, std::string b
             wDType = Float;
             header->mode = 2;
             break;
+        case SChar:
         case UChar:
             castMode = CONVERT;
-        case SChar:
-            wDType = SChar;
+            wDType = UChar;
             header->mode = 0;
             break;
         case ComplexFloat:
@@ -350,8 +358,11 @@ int ImageBase::writeMRC(size_t select_img, bool isStack, int mode, std::string b
         case Float:
             header->mode = 2;
             break;
-        case SChar:
+        case UChar:
             header->mode = 0;
+            break;
+        case Short:
+            header->mode = 1;
             break;
         case ComplexFloat:
             header->mode = 4;
