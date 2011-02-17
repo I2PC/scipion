@@ -302,10 +302,7 @@ int ImageBase::writeMRC(size_t select_img, bool isStack, int mode, std::string b
     }
     header->nx = Xdim;
     header->ny = Ydim;
-    if(Zdim==0)
-        header->nz = 1;
-    else
-        header->nz = Zdim;
+    header->nz = Zdim;
 
     if ( transform == CentHerm )
         header->nx = Xdim/2 + 1;        // If a transform, physical storage is nx/2 + 1
