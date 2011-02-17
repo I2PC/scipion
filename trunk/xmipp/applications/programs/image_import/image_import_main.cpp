@@ -45,7 +45,7 @@ int main(int argc, char *argv[])
         itemNumber       = getParameter(argc, argv, "-itemNumber");
         fn_out           = getParameter(argc, argv, "-outputFileName");
         int x,y,z;
-        unsigned long n;
+        size_t n;
         double sampling_rate;
         img.read(fn_in, HEADER);
         img.getDimensions(x,y,z,n);

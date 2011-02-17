@@ -83,7 +83,7 @@ public:
     int                      X_window_size;
     int                      Y_window_size;
     int                      Xdim,Ydim,Zdim;
-    unsigned long            Ndim;
+    size_t	             Ndim;
     int                      datatype;
     int                      swapbyte;
     int                      __offset;

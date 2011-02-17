@@ -149,7 +149,7 @@ void ProgNmaAlignment::preProcess()
     }
     // Get the size of the images in the selfile
     int ydim, zdim;
-    unsigned long ndim;
+    size_t ndim;
     ImgSize(mdIn, imgSize, ydim, zdim, ndim);
     // Set the pointer of the program to this object
     global_NMA_prog = this;

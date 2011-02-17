@@ -28,10 +28,10 @@ public class ImageDouble {
     private synchronized native void destroy();
 
     // Reading.
-    private native void read_(String filename, boolean readData, int nimage) throws Exception;
+    private native void read_(String filename, boolean readData, long nimage) throws Exception;
 
     private native void readPreview_(String filename,
-            int w, int h, int slice, int nimage) throws Exception;
+            int w, int h, int slice, long nimage) throws Exception;
 
     // Writting.
     public native void write(String filename) throws Exception;
@@ -82,7 +82,7 @@ public class ImageDouble {
         read(filename, true);
     }
 
-    public void read(String filename, int nimage) throws Exception {
+    public void read(String filename, long nimage) throws Exception {
         read(filename, true, nimage);
     }
 
@@ -90,7 +90,7 @@ public class ImageDouble {
         read(filename, readData, 0);
     }
 
-    private void read(String filename, boolean readData, int nimage) throws Exception {
+    private void read(String filename, boolean readData, long nimage) throws Exception {
         read_(filename, readData, nimage);
 
         storeData(filename);
@@ -104,7 +104,7 @@ public class ImageDouble {
         readPreview(filename, w, h, slice, 0);
     }
 
-    public void readPreview(String filename, int w, int h, int slice, int nimage) throws Exception {
+    public void readPreview(String filename, int w, int h, int slice, long nimage) throws Exception {
         readPreview_(filename, w, h, slice, nimage);
 
         storeData(filename);

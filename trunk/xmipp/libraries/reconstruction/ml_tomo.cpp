@@ -418,7 +418,7 @@ void ProgMLTomo::produceSideInfo()
     MultidimArray<int>          radial_count;
     double                      av;
     int                         xdim, ydim, zdim;
-    unsigned long 				ndim;
+    size_t			ndim;
 
 #ifdef  DEBUG
 

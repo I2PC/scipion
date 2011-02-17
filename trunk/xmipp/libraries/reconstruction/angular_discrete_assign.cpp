@@ -115,7 +115,7 @@ void ProgAngularDiscreteAssign::produce_side_info()
     // Read input reference image names
     SF_ref.read(fn_ref);
     int refYdim, refXdim, refZdim;
-    unsigned long refNdim;
+    size_t refNdim;
     ImgSize(SF_ref,refYdim, refXdim, refZdim, refNdim);
     if (refYdim != NEXT_POWER_OF_2(refYdim) || refXdim != NEXT_POWER_OF_2(refXdim))
         REPORT_ERROR(ERR_MULTIDIM_SIZE,

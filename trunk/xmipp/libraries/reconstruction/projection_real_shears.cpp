@@ -1200,7 +1200,7 @@ void allocAndInit_VolumeStruct(VolumeStruct &Data2)
 void prepareStructVolume(const MultidimArray<double> &V, VolumeStruct &Data)
 {
     int z, y, x;
-    unsigned long int n;
+    size_t n;
     V.getDimensions(x,y,z,n);
     Data.nx_Volume = x;
     Data.ny_Volume = y;

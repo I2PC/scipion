@@ -147,7 +147,7 @@ protected:
             convMode = MD2VOL;
 
             int Xdim, Ydim, Zdim;
-            unsigned long Ndim;
+            size_t Ndim;
             ImgSize(mdIn, Xdim, Ydim, Zdim, Ndim);
             if (Zdim!=1)
                 REPORT_ERROR(ERR_MULTIDIM_DIM,
@@ -159,7 +159,7 @@ protected:
         else if (single_image)
         {
             int Xdim, Ydim, Zdim;
-            unsigned long Ndim;
+            size_t Ndim;
             imTemp.read(fn_in, HEADER);
             imTemp.getDimensions(Xdim,Ydim,Zdim,Ndim);
 

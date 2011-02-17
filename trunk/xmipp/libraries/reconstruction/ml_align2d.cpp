@@ -463,7 +463,7 @@ void ProgML2D::produceSideInfo()
     MDimg.findObjects(img_id);
     // Get original image size
     int idum;
-    unsigned long idumLong;
+    size_t idumLong;
     ImgSize(MDimg, dim, idum, idum, idumLong);
     model.dim = dim;
     hdim = dim / 2;

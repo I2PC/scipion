@@ -684,7 +684,7 @@ public:
     	{
     		I.read(fnIn, HEADER);
     		int Xdim, Ydim, Zdim;
-    		unsigned long Ndim;
+    		size_t Ndim;
     		I.getDimensions(Xdim, Ydim, Zdim, Ndim);
     		I.clear();
     		if (Ndim>1)

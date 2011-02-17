@@ -543,7 +543,7 @@ void ProgNormalize::show()
 void ProgNormalize::preProcess()
 {
     int Zdim, Ydim, Xdim;
-    unsigned long Ndim;
+    size_t Ndim;
     ImgSize(mdIn, Xdim, Ydim, Zdim, Ndim);
 
     if (!enable_mask)

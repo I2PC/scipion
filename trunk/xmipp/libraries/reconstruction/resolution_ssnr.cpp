@@ -118,7 +118,7 @@ void Prog_SSNR_prm::produce_side_info()
 
         SF_SN.read(fn_SNsel);
         int sZdim, sYdim, sXdim;
-        unsigned long sNdim;
+        size_t sNdim;
         ImgSize(SF_SN, sXdim, sYdim, sZdim, sNdim);
 
         if (fn_out_images == "")

@@ -357,7 +357,7 @@ protected:
                 isValue = true;
                 value = textToFloat(file_or_value);
                 int xdim, ydim, zdim;
-                unsigned long ndim;
+                size_t ndim;
                 if (fn_in.isMetaData())
                     ImgSize(mdIn, xdim, ydim, zdim, ndim);
                 else

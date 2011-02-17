@@ -30,7 +30,7 @@ JNIEXPORT void JNICALL Java_xmipp_ImageDouble_destroy
 }
 
 JNIEXPORT void JNICALL Java_xmipp_ImageDouble_read_1
-(JNIEnv *env, jobject obj, jstring filename, jboolean read_data, jint nimage) {
+(JNIEnv *env, jobject obj, jstring filename, jboolean read_data, jlong nimage) {
 	std::string msg = "";
 	Image<double> * image = GET_INTERNAL_IMAGE();
 
@@ -57,7 +57,7 @@ JNIEXPORT void JNICALL Java_xmipp_ImageDouble_read_1
 }
 
 JNIEXPORT void JNICALL Java_xmipp_ImageDouble_readPreview_1
-(JNIEnv *env, jobject obj, jstring filename, jint w, jint h, jint slice, jint nimage) {
+(JNIEnv *env, jobject obj, jstring filename, jint w, jint h, jint slice, jlong nimage) {
 	std::string msg = "";
 	Image<double> *image = GET_INTERNAL_IMAGE();
 

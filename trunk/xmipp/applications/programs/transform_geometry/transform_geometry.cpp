@@ -112,7 +112,7 @@ protected:
 
     void preProcess()
     {
-        unsigned long n;
+        size_t n;
         ImgSize(mdIn, xdim, ydim , zdim, n);
         //If zdim greater than 1, is a volume and should apply transform
         dim = (isVol = (zdim > 1)) ? 3 : 2;

@@ -143,7 +143,7 @@ void VirusVertex::processAngles()
     rot = tilt = psi = xoff = yoff = flip = weight = 0.;
     Projection proj,proj_aux;
     int Zdim, Ydim, Xdim;
-    unsigned long Ndim;
+    size_t Ndim;
     ImgSize(DF, Xdim, Ydim, Zdim, Ndim);
     MetaData DFout;
     int repaint = ceil((double)DF.size()/60);

@@ -71,7 +71,7 @@ public:
     	Image<double> stack;
     	stack.read(fnStack, HEADER);
     	int xdim, ydim, zdim;
-    	unsigned long ndim;
+    	size_t ndim;
     	stack.getDimensions(xdim, ydim, zdim, ndim);
 
     	MetaData MD;

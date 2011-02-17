@@ -1442,7 +1442,7 @@ xmipp_SingleImgSize(PyObject *obj, PyObject *args, PyObject *kwargs)
             PyObject * pyStr = PyObject_Str(pyValue);
             char * str = PyString_AsString(pyStr);
             int xdim, ydim, zdim;
-            unsigned long ndim;
+            size_t ndim;
             SingleImgSize(str, xdim, ydim, zdim, ndim);
             Py_DECREF(pyStr);
             return Py_BuildValue("iiik", xdim, ydim, zdim, ndim);

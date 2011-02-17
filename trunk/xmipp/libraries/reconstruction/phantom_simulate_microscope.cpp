@@ -78,7 +78,7 @@ void ProgSimulateMicroscope::show()
 void ProgSimulateMicroscope::preProcess()
 {
     int dum;
-    unsigned long dum2;
+    size_t dum2;
 
     //if (command_line) get_input_size(Zdim, Ydim, Xdim);
     ImgSize(mdIn, Xdim, Ydim, dum, dum2);

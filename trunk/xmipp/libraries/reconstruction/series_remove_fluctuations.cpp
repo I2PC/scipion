@@ -43,7 +43,7 @@ void Series_remove_fluctuations_parameters::produceSideInfo()
     // Read the selfile into a volume
     SF.read(fn_sel);
     int Zdim, dummy, Ydim, Xdim;
-    unsigned long Ndim;
+    size_t Ndim;
     Zdim=SF.size();
     ImgSize(SF,Xdim,Ydim,dummy,Ndim);
     V.setMmap(true);

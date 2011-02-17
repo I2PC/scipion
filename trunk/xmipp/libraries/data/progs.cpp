@@ -83,7 +83,7 @@ void Prog_parameters::get_input_size(int &Zdim, int &Ydim, int &Xdim)
 {
     Image<double> I;
     int dum;
-    unsigned long dum2;
+    size_t dum2;
     if (fn_in.isMetaData())
     {
         MetaData SF;

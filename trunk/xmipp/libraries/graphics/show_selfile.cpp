@@ -139,7 +139,7 @@ void ShowSel::readObject(MetaData &SF, double _minGray, double _maxGray)
     selstatus       = new bool[listSize];
     initContents();
     int Zdim;
-    unsigned long Ndim;
+    size_t Ndim;
     ImgSize(SF, projXdim, projYdim, Zdim, Ndim);
     if (load_mode == PSD_mode && NumRows != -1 && NumCols != -1)
     {

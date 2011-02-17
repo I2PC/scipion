@@ -686,7 +686,7 @@ void ProgRefine3D::calculate3DSSNR(MultidimArray<double> &spectral_signal, int i
     MultidimArray<double>      alpha_T, alpha_N, Msignal, Maux, Mone, mask;
     Projection                  proj;
     int                         c, dim, idum;
-    unsigned long               idumLong;
+    size_t	               idumLong;
     double                      ssnr, issnr, alpha, resol, volweight, sum, weight, rot, tilt, psi = 0.;
     Matrix1D<int>               center(2);
     MultidimArray<int>          radial_count;

@@ -40,18 +40,18 @@ JNIEXPORT void JNICALL Java_xmipp_ImageDouble_destroy
 /*
  * Class:     xmipp_ImageDouble
  * Method:    read_
- * Signature: (Ljava/lang/String;ZI)V
+ * Signature: (Ljava/lang/String;ZJ)V
  */
 JNIEXPORT void JNICALL Java_xmipp_ImageDouble_read_1
-  (JNIEnv *, jobject, jstring, jboolean, jint);
+  (JNIEnv *, jobject, jstring, jboolean, jlong);
 
 /*
  * Class:     xmipp_ImageDouble
  * Method:    readPreview_
- * Signature: (Ljava/lang/String;IIII)V
+ * Signature: (Ljava/lang/String;IIIJ)V
  */
 JNIEXPORT void JNICALL Java_xmipp_ImageDouble_readPreview_1
-  (JNIEnv *, jobject, jstring, jint, jint, jint, jint);
+  (JNIEnv *, jobject, jstring, jint, jint, jint, jlong);
 
 /*
  * Class:     xmipp_ImageDouble

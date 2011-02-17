@@ -60,7 +60,7 @@ void Prog_align2d_prm::read(int argc, char **argv)
 
     //get image dimensions
     int Xdim, Ydim, Zdim;
-    unsigned long Ndim;
+    size_t Ndim;
     size_t id = SF.firstObject();
     FileName fnImg;
     SF.getValue(MDL_IMAGE,fnImg, id);

@@ -574,7 +574,7 @@ void Basic_ART_Parameters::produce_Side_Info(GridVolume &vol_basis0, int level,
         if (trueIMG == 0)
             REPORT_ERROR(ERR_MD_OBJECTNUMBER, "Produce_Basic_ART_Side_Info: No images !!");
         int idum;
-        unsigned long idumLong;
+        size_t idumLong;
         ImgSize(selfile, projXdim, projYdim, idum, idumLong);
     }
 
