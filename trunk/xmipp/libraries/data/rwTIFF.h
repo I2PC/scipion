@@ -360,7 +360,11 @@ int readTIFF(size_t select_img, bool isStack=false)
 int writeTIFF(size_t select_img, bool isStack=false, int mode=WRITE_OVERWRITE, String bitDepth="", bool adjust=false)
 {
 #undef DEBUG
-
+    if(mmapOnWrite==true)
+    {
+        mmapOnWrite=false;
+        return 0;
+    }
     if (mode == WRITE_REPLACE)
         REPORT_ERROR(ERR_TYPE_INCORRECT,"rwTIFF: Images cannot be replaced in TIFF file.");
     if (typeid(T) == typeid(std::complex<double>))
