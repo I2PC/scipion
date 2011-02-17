@@ -104,6 +104,13 @@ public:
         image->getDimensions(Xdim, Ydim, Zdim, Ndim);
     }
 
+    /** Get number of elements in image
+     */
+    long unsigned int getSize() const
+    {
+        return NZYXSIZE(*(data->im));
+    }
+
     /** Get Euler angles from image header
     */
     void getEulerAngles(double &rot, double &tilt, double &psi,
@@ -112,6 +119,8 @@ public:
         image->getEulerAngles(rot, tilt, psi, n);
     }
 
+    /** Get Tilt angle from image header
+    */
     double tilt(const long int n = 0) const
     {
         return image->tilt(n);
@@ -132,6 +141,13 @@ public:
     DataType getDatatype()const
     {
         return datatype;
+    }
+
+    /** Check if image is mapped on file
+      */
+    inline bool isMapped()
+    {
+        return image->isMapped();
     }
 
     /** Read image from file.
@@ -158,6 +174,15 @@ public:
     {
         read(name, DATA, select_img, true);
     }
+
+    /* Read an image with a lower resolution as a preview image.
+    * If Zdim parameter is not passed, then all slices are rescaled.
+    */
+    int readPreview(const FileName &name, int Xdim, int Ydim, int Zdim = -1, int select_img = 0)
+    {
+        image->readPreview(name, Xdim, Ydim, Zdim, select_img);
+    }
+
     /** Write image to file.
     */
     inline void write(const FileName &name="", size_t select_img = ALL_IMAGES, bool isStack=false,
@@ -186,13 +211,32 @@ public:
         return *data;
     }
 
+    /** Get pixel value
+     */
+    inline double getPixel(unsigned long n, int k, int i, int j) const
+    {
+#define GETVALUE(type) return NZYX_ELEM(*(MultidimArray<type>*)data->im,n,k,i,j)
+        SWITCHDATATYPE(datatype,GETVALUE);
+#undef GETVALUE
+
+    }
+
+    /** Set pixel value
+     */
+    inline void setPixel(unsigned long n, int k, int i, int j, double value) const
+    {
+#define GETVALUE(type) NZYX_ELEM(*(MultidimArray<type>*)data->im,n,k,i,j) = value
+        SWITCHDATATYPE(datatype,GETVALUE);
+#undef GETVALUE
+
+    }
+
     void print() const;
 
 private:
     /* Declare the internal image class with the stored data type
      */
     DataType getImageType(const FileName &imgName);
-
 }
 ;
 

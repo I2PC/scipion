@@ -264,6 +264,13 @@ public:
         return !read(name, HEADER);
     }
 
+    /** Check if image is mapped on file
+      */
+    inline bool isMapped()
+    {
+        return mmapOnRead;
+    }
+
     /** Is this file a real-valued image
      *
      *  Check whether a real-space image can be read
@@ -294,7 +301,7 @@ public:
      * is created with the given size. Then the image is mapped to this file.
      */
     void newMappedFile(int Xdim, int Ydim, int Zdim, size_t Ndim, const FileName &_filename,
-    				   bool createTempFile=false);
+                       bool createTempFile=false);
 
     /** General read function
      * you can read a single image from a single image file
@@ -535,12 +542,12 @@ public:
     /** Set origin offsets in image header
      */
     void setShifts(double xoff, double yoff, double zoff = 0.,
-        const size_t n = 0);
+                   const size_t n = 0);
 
     /** Get origin offsets from image header
       */
     void getShifts(double &xoff, double &yoff, double &zoff,
-        const size_t n = 0) const;
+                   const size_t n = 0) const;
 
     /** Set X offset in image header
      */

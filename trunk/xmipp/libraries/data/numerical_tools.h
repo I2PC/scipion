@@ -122,7 +122,7 @@ public:
 
     /** Value */
     inline double getValue(double x) const {
-        x=ABS(x);
+        x=fabs(x);
         if (x>xmax) return 0;
         else
         {

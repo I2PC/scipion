@@ -158,3 +158,8 @@ void ImageGeneric::print() const
 {
   std::cout << *image;
 }
+
+void ImageGeneric::print() const
+{
+// std::cout << *image;
+}

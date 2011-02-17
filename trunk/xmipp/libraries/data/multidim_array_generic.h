@@ -107,24 +107,26 @@ public:
         im->resize(Ndim,Zdim,Ydim,Xdim,copy);
     }
 
-    /** Window */
+    /** Get a Window from the image*/
     void window(MultidimArrayGeneric &result, int z0, int y0, int x0,
                 int zF, int yF, int xF,
                 double init_value = 0.) const
     {
 #define WINDOW(type) _window(*((MultidimArray<type>*)(result.im)), z0,y0,x0,zF,yF,xF,init_value)
-             SWITCHDATATYPE(result.datatype,WINDOW);
+        SWITCHDATATYPE(result.datatype,WINDOW);
 #undef WINDOW
+
     }
 
     template <class T>
     void _window(MultidimArray<T> &result, int z0, int y0, int x0,
-                int zF, int yF, int xF,
-                double init_value = 0.) const
+                 int zF, int yF, int xF,
+                 double init_value = 0.) const
     {
 #define WINDOW(type) ((MultidimArray<type>*)im)->window(result, z0,y0,x0,zF,yF,xF,(T)init_value)
-             SWITCHDATATYPE(datatype,WINDOW);
+        SWITCHDATATYPE(datatype,WINDOW);
 #undef WINDOW
+
     }
 
     /**
@@ -226,6 +228,28 @@ public:
     {
         return *im;
     }
+
+    /** Copy the image in MultidimarrayGeneric to a specific T MultidimArray
+     */
+    template <typename T>
+    void getImage(MultidimArray<T> M, size_t n = -1) const
+    {
+#define TYPECAST(type) typeCast(*(MultidimArray<type>*)(im), M, n);
+        SWITCHDATATYPE(datatype, TYPECAST)
+#undef TYPECAST
+
+    }
+
+    /** Copy in MultidimarrayGeneric an image from a specific T MultidimArray
+     */
+    template <typename T>
+    void setImage(MultidimArray<T> M, size_t n = -1)
+    {
+#define TYPECAST(type) typeCast(M, *(MultidimArray<type>*)(im), n);
+        SWITCHDATATYPE(datatype, TYPECAST)
+#undef TYPECAST
+    }
+
 }
 ;
 //@}
