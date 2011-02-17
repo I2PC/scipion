@@ -153,7 +153,7 @@ protected:
                 REPORT_ERROR(ERR_MULTIDIM_DIM,
                              "Only 2D images can be converted into volumes");
             imOut = new ImageGeneric(outDataT);
-            imOut->newMappedFile(Xdim,Ydim,mdIn.size(),1,fn_out);
+            imOut->mapFile2Write(Xdim,Ydim,mdIn.size(),1,fn_out);
             k = 0;
         }
         else if (single_image)

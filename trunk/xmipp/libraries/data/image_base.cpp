@@ -64,7 +64,7 @@ int ImageBase::read(const FileName &name, DataMode datamode, size_t select_img, 
 }
 
 /** New mapped file */
-void ImageBase::newMappedFile(int Xdim, int Ydim, int Zdim, size_t Ndim, const FileName &_filename,
+void ImageBase::mapFile2Write(int Xdim, int Ydim, int Zdim, size_t Ndim, const FileName &_filename,
                               bool createTempFile)
 {
     clear();

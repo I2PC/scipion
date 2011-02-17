@@ -26,7 +26,7 @@
 #include "adjust_volume_grey_levels.h"
 #include <data/numerical_tools.h>
 #include <data/projection.h>
-
+#include <data/image.h>
 #include <data/args.h>
 
 void ProgAdjustVolume::defineParams()
@@ -63,6 +63,7 @@ void ProgAdjustVolume::readParams()
     optimize = checkParam("--optimize");
     probb_eval = getDoubleParam("--probb_eval");
     verbose = (checkParam("-v"))? getIntParam("-v"): false;
+    tempFile = (STR_EQUAL(fn_vol.c_str(), fn_out.c_str()));
 }
 
 void ProgAdjustVolume::run()
@@ -71,18 +72,26 @@ void ProgAdjustVolume::run()
         show();
 
     // Read input volume
-    Image<double> Image;
-    Image.read(fn_vol);
-    V = Image();
+    ImIn.read(fn_vol);
+    V.alias(ImIn());
     V.setXmippOrigin();
+
+    int Xdim, Ydim, Zdim;
+    Xdim = XSIZE(V);
+    Ydim = YSIZE(V);
+    Zdim = ZSIZE(V);
+
+    Image<float> ImOut;
+    ImOut.mapFile2Write(Xdim, Ydim, Zdim, 1, fn_out, tempFile);
+    ImOut().setXmippOrigin();
 
     // Read input metadataFile
     SF.read(fn_sel,NULL);
 
-    Image.clear();
+    apply(ImOut());
 
-    apply(Image());
-    Image.write(fn_out);
+    ImIn.clear();
+    ImOut.write();
 }
 
 /* Goal function -----------------------------------------------------------  */
@@ -127,7 +136,7 @@ double ProgAdjustVolume::mismatching(double a, double b)
         // Project the auxiliary volume in the same direction
         Projection P;
         projectVolume(aux, P, YSIZE(I()), XSIZE(I()),
-                       I.rot(), I.tilt(), I.psi());
+                      I.rot(), I.tilt(), I.psi());
 
         // Compute the difference
         MultidimArray<double> diff;
@@ -147,15 +156,15 @@ double ProgAdjustVolume::mismatching(double a, double b)
 
     }
     //TODO Review this
-//    while (SF.nextObject()!= NO_MORE_OBJECTS)
-//        ;
+    //    while (SF.nextObject()!= NO_MORE_OBJECTS)
+    //        ;
 
     return retval / N;
 }
 #undef DEBUG
 
 /* Apply ------------------------------------------------------------------- */
-void ProgAdjustVolume::apply(MultidimArray<double> &out)
+void ProgAdjustVolume::apply(MultidimArray<float> &out)
 {
     // Compute the average power and average value of all the projections
     double sum = 0, sum2 = 0, N = 0;
@@ -242,7 +251,7 @@ void ProgAdjustVolume::apply(MultidimArray<double> &out)
     }
 
     // Apply the transformation
-    out = V;
+//    out = V;
     FOR_ALL_ELEMENTS_IN_ARRAY3D(V) out(k, i, j) = a * V(k, i, j) + b;
 }
 

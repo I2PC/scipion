@@ -300,7 +300,7 @@ public:
      * An image file, which name and format are given by filename,
      * is created with the given size. Then the image is mapped to this file.
      */
-    void newMappedFile(int Xdim, int Ydim, int Zdim, size_t Ndim, const FileName &_filename,
+    void mapFile2Write(int Xdim, int Ydim, int Zdim, size_t Ndim, const FileName &_filename,
                        bool createTempFile=false);
 
     /** General read function

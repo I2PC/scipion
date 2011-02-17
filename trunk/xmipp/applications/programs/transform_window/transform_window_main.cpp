@@ -221,7 +221,7 @@ public:
                 zl=zr=0;
             }
             //call to a generic 4D function;
-            result.newMappedFile(FINISHINGX(Iin()())-xr-(STARTINGX(Iin()())+xl)+1,
+            result.mapFile2Write(FINISHINGX(Iin()())-xr-(STARTINGX(Iin()())+xl)+1,
                                  FINISHINGY(Iin()())-yr-(STARTINGY(Iin()())+yl)+1,
                                  FINISHINGZ(Iin()())-zr-(STARTINGZ(Iin()())+zl)+1,
                                  1,
@@ -233,7 +233,7 @@ public:
         else
             if (!physical_coords)
             {
-                result.newMappedFile(xF-x0+1,
+                result.mapFile2Write(xF-x0+1,
                                      yF-y0+1,
                                      zF-z0+1,
                                      1,
@@ -243,7 +243,7 @@ public:
             }
             else
             {
-                result.newMappedFile(xF-x0+1,
+                result.mapFile2Write(xF-x0+1,
                                      yF-y0+1,
                                      zF-z0+1,
                                      1,
