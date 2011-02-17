@@ -807,13 +807,16 @@ class projection_matching_class:
        # Create a docfile with the current angles in the WorkingDir
        if (self._DocFileName==''):
 
-          params=' -i ' + self._SelFileName + \
-                 ' -o ' + self._WorkingDir + '/' + \
-                 DocFileWithOriginalAngles
-          launch_job.launch_job("xmipp_header_extract",
-                                params,
-                                self._mylog,
-                                False,1,1,'')
+#          params=' -i ' + self._SelFileName + \ 
+#                 ' -o ' + self._WorkingDir + '/' + \
+#                 DocFileWithOriginalAngles
+#          launch_job.launch_job("xmipp_header_extract",
+#                                params,
+#                                self._mylog,
+#                                False,1,1,'')
+          command = "copy" , self._SelFileName ,  self._WorkingDir + '/' + DocFileWithOriginalAngles
+          self._mylog.info(command)
+          shutil.copy(self._SelFileName, self._WorkingDir + '/' + DocFileWithOriginalAngles)
        else:
           command = "copy" , self._DocFileName ,  self._WorkingDir + '/' + DocFileWithOriginalAngles
           self._mylog.info(command)
