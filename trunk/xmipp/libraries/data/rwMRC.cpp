@@ -287,6 +287,21 @@ int ImageBase::writeMRC(size_t select_img, bool isStack, int mode, std::string b
     strncpy(header->map, "MAP ", 4);
     // FIXME TO BE DONE WITH rwCCP4!!
     //set_CCP4_machine_stamp(header->machst);
+    char* machine_stamp;
+    machine_stamp = (char *)(header->machst);
+    if(IsLittleEndian())
+    {
+        machine_stamp[0] = 68;
+        machine_stamp[1] = 65;
+    }
+    else
+    {
+        machine_stamp[0] = machine_stamp[1] = 17;
+    }
+//                    case LittleVAX:
+//                        machine_stamp[0] = 34;
+//                        machine_stamp[1] = 65;
+//                        break;
     int Xdim, Ydim, Zdim;
     size_t Ndim;
     getDimensions(Xdim, Ydim, Zdim, Ndim);
@@ -296,13 +311,13 @@ int ImageBase::writeMRC(size_t select_img, bool isStack, int mode, std::string b
 
     if (mode == WRITE_APPEND)
     {
-      //TODO: Check if this works?
+        //TODO: Check if this works?
         imgStart = 0;
         imgEnd = 1;
     }
-    header->nx = Xdim;
-    header->ny = Ydim;
-    header->nz = Zdim;
+    header->a = header->mx =header->nx = Xdim;
+    header->b = header->my =header->ny = Ydim;
+    header->c = header->mz =header->nz = Zdim;
 
     if ( transform == CentHerm )
         header->nx = Xdim/2 + 1;        // If a transform, physical storage is nx/2 + 1
@@ -374,17 +389,17 @@ int ImageBase::writeMRC(size_t select_img, bool isStack, int mode, std::string b
         REPORT_ERROR(ERR_MMAP, "File datatype and image declaration not compatible with mmap.");
 
     //Set this to zero till we decide if we want to update it
-    header->mx = 0;//(int) (ua/ux + 0.5);
-    header->my = 0;//(int) (ub/uy + 0.5);
-    header->mz = 0;//(int) (uc/uz + 0.5);
+    //    header->mx = 0;//(int) (ua/ux + 0.5);
+    //    header->my = 0;//(int) (ub/uy + 0.5);
+    //    header->mz = 0;//(int) (uc/uz + 0.5);
     header->mapc = 1;
     header->mapr = 2;
     header->maps = 3;
     double aux,aux2;
 
-    header->a = 0.;// ua;
-    header->b = 0.;// ub;
-    header->c = 0.;// uc;
+    //    header->a = 0.;// ua;
+    //    header->b = 0.;// ub;
+    //    header->c = 0.;// uc;
 
     if (!MDMainHeader.empty())
     {
