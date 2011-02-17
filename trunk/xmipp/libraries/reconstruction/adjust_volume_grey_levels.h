@@ -48,11 +48,12 @@ protected:
     bool optimize;
     /// Probability of being evaluated
     double probb_eval;
-    // verbose mode
-    bool verbose;
+    // Create temp file
+    bool tempFile;
 
 public:
     // Input volume
+    Image<double> ImIn;
     MultidimArray<double> V;
     // SelFile
     MetaData SF;
@@ -66,7 +67,7 @@ protected:
 
     /** Apply.
         This is the function that really does the job */
-    void apply(MultidimArray<double> &output_volume);
+    void apply(MultidimArray<float> &output_volume);
 
 public:
     /** Run. Calls apply and save the result. */

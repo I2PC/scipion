@@ -94,19 +94,19 @@ public:
 
     /** Get Image dimensions
     */
-    void getDimensions(int &Xdim, int &Ydim, int &Zdim, unsigned long &Ndim) const
+    void getDimensions(int &Xdim, int &Ydim, int &Zdim, size_t &Ndim) const
     {
         image->getDimensions(Xdim, Ydim, Zdim, Ndim);
     }
     void getDimensions(int &Xdim, int &Ydim, int &Zdim) const
     {
-        unsigned long Ndim;
+        size_t Ndim;
         image->getDimensions(Xdim, Ydim, Zdim, Ndim);
     }
 
     /** Get number of elements in image
      */
-    long unsigned int getSize() const
+    size_t getSize() const
     {
         return NZYXSIZE(*(data->im));
     }
@@ -114,14 +114,14 @@ public:
     /** Get Euler angles from image header
     */
     void getEulerAngles(double &rot, double &tilt, double &psi,
-                        long int n = 0)
+                        size_t n = 0)
     {
         image->getEulerAngles(rot, tilt, psi, n);
     }
 
     /** Get Tilt angle from image header
     */
-    double tilt(const long int n = 0) const
+    double tilt(const size_t n = 0) const
     {
         return image->tilt(n);
     }
@@ -178,7 +178,7 @@ public:
     /* Read an image with a lower resolution as a preview image.
     * If Zdim parameter is not passed, then all slices are rescaled.
     */
-    int readPreview(const FileName &name, int Xdim, int Ydim, int Zdim = -1, int select_img = 0)
+    int readPreview(const FileName &name, int Xdim, int Ydim, int Zdim = -1, size_t select_img = FIRST_IMAGE)
     {
         image->readPreview(name, Xdim, Ydim, Zdim, select_img);
     }
