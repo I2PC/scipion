@@ -885,7 +885,7 @@ void MetaData::_read(const FileName &filename,
         else //stack
         {
             FileName fnTemp;
-            for (size_t i = 0; i < image().ndim; ++i)
+            for (size_t i = 1; i <= image().ndim; ++i)
             {
                 fnTemp.compose(i, filename);
                 id = addObject();

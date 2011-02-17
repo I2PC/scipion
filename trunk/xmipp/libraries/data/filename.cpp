@@ -32,16 +32,7 @@ void FileName::compose(const String &str, size_t no, const String &ext)
 {
     *this = (FileName) str;
     if (no != ALL_IMAGES)
-    {
-
-        char aux_str[FILENAMENUMBERLENGTH+1];
-        String tmp_fileformat;
-        tmp_fileformat = (String) "%0" +
-                         integerToString(FILENAMENUMBERLENGTH)+
-                         (String)"d";
-        sprintf(aux_str, tmp_fileformat.c_str(), no);
-        *this += aux_str;
-    }
+        this->append(formatString("%06lu", no));
 
     if (ext != "")
         *this += (String)"." + ext;
@@ -50,22 +41,9 @@ void FileName::compose(const String &str, size_t no, const String &ext)
 // Constructor: prefix number and filename, mainly for selfiles..
 void FileName::compose(size_t no , const String &str)
 {
-    *this = (FileName) str;
+    *this = str;
     if (no != ALL_IMAGES)
-    {
-
-        char aux_str[FILENAMENUMBERLENGTH+1];
-        String tmp_fileformat;
-        tmp_fileformat = (String) "%0" +
-                         integerToString(FILENAMENUMBERLENGTH)+
-                         (String)"d@";
-        sprintf(aux_str, tmp_fileformat.c_str(), no);
-        *this = aux_str + str;
-    }
-    else
-        *this = str;
-
-
+      this->assign(formatString("%06lu@%s", no, str.c_str()));
 }
 
 // Is in stack ............................................................

@@ -835,8 +835,8 @@ protected:
         if (row.getValue(MDL_WEIGHT, aux))
                   rowAux.setValue(MDL_WEIGHT, aux);
         bool auxBool;
-        if (row.getValue(MDL_FLIP, aux))
-                  rowAux.setValue(MDL_FLIP, aux);
+        if (row.getValue(MDL_FLIP, auxBool))
+                  rowAux.setValue(MDL_FLIP, auxBool);
 
         //apply geo has not been defined for volumes
         //and only make sense when reading data

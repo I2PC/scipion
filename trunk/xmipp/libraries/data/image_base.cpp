@@ -82,7 +82,7 @@ void ImageBase::mapFile2Write(int Xdim, int Ydim, int Zdim, size_t Ndim, const F
         fnToOpen=_filename;
 
     ImageFHandler *hFile = openFile(fnToOpen, WRITE_OVERWRITE);
-    _write(fnToOpen, hFile, -1, false, WRITE_OVERWRITE);
+    _write(filename, hFile, -1, false, WRITE_OVERWRITE);
     closeFile(hFile);
 }
 
@@ -123,19 +123,19 @@ int ImageBase::readApplyGeo(const MetaData &md, size_t objId, bool only_apply_sh
 void ImageBase::write(const FileName &name, size_t select_img, bool isStack,
                       int mode, bool adjust)
 {
+    const FileName &fname = (name == "") ? filename : name;
+
     // If image is already mapped to file then close the file and clear.
     if (mmapOnWrite && mappedSize > 0)
     {
         munmapFile();
-        if (tempFilename!="")
+        if (tempFilename != "")
         {
-            if (std::rename(tempFilename.c_str(),name.c_str())!=0)
-                REPORT_ERROR(ERR_IO, "Error renaming the file.");
+            if (std::rename(tempFilename.c_str(), fname.c_str()) != 0)
+                REPORT_ERROR(ERR_IO, formatString("Error renaming file '%s' to '%s'.", tempFilename.c_str(), fname.c_str()));
         }
         return;
     }
-
-    const FileName &fname = (name == "") ? filename : name;
 
     /* If the filename is in stack we will suppose you want to write this,
      * even if you have not set the flags to.
@@ -406,8 +406,7 @@ ImageFHandler* ImageBase::openFile(const FileName &name, int mode) const
     {
     case WRITE_READONLY:
         if (!hFile->exist)
-            REPORT_ERROR(ERR_IO_NOTEXIST,(String) "Cannot read file "
-                         + fileName + ". It does not exist" );
+            REPORT_ERROR(ERR_IO_NOTEXIST, formatString("Cannot read file '%s'. It doesn't exist", filename.c_str()));
         wmChar = "r";
         break;
     case WRITE_OVERWRITE:

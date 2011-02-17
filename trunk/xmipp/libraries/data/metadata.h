@@ -69,7 +69,7 @@ typedef enum
  *   //...
  * FOR_ALL_OBJECTS_IN_METADATA(md)
  * {
- *     std::string imageFile;
+ *     String imageFile;
  *     md.getValue(MDL_IMAGE, imageFile);
  *     std::cout << "Image file: " << imageFile << " ";
  * }
@@ -92,7 +92,7 @@ typedef enum
  *  //and create a new MetaData.
  * FOR_ALL_OBJECTS_IN_METADATA2(mdA, mdB)
  * {
- *     std::string imageFile;
+ *     String imageFile;
  *     double angle;
  *     mdA.getValue(MDL_IMAGE, imageFile,__iter.objId);
  *     mdB.getValue(MDL_ANGLE_TILT, angle,__iter.objId);
@@ -127,11 +127,11 @@ protected:
     // Allows a fast search for pairs where the value is
     // a string, i.e. looking for filenames which is quite
     // usual
-    std::map<std::string, size_t> fastStringSearch;
+    std::map<String, size_t> fastStringSearch;
     MDLabel fastStringSearchLabel;
 
-    std::string path; ///< A parameter stored on MetaData Files
-    std::string comment; ///< A general comment for the MetaData file
+    String path; ///< A parameter stored on MetaData Files
+    String comment; ///< A general comment for the MetaData file
 
     bool isColumnFormat; ///< Format for the file, column or row formatted
 
@@ -204,7 +204,6 @@ protected:
     void _readRowFormat(std::istream& is);
 
 public:
-
     /** @name Constructors
      *  @{
      */
@@ -285,22 +284,22 @@ public:
                             const std::vector<MDLabel>* desiredLabels, size_t id = BAD_OBJID);
     /**Get path.
      */
-    std::string getPath() const ;
+    String getPath() const ;
 
     /**Set Path.
      * the path will appear in first line
      */
-    void setPath(std::string newPath = "");
+    void setPath(String newPath = "");
 
     /**Get Header Comment.
      * the comment will appear in second line.
      */
-    std::string getComment() const;
+    String getComment() const;
 
     /**Set Header Comment.
      * the comment will appear in second line
      */
-    void setComment(const std::string &newComment = "No comment");
+    void setComment(const String &newComment = "No comment");
 
     /**Get metadata filename.
      */
@@ -433,11 +432,11 @@ public:
 
     /** Set label values from string representation.
      */
-    bool setValueFromStr(const MDLabel label, const std::string &value, size_t id);
+    bool setValueFromStr(const MDLabel label, const String &value, size_t id);
 
     /** Get string representation from label value.
      */
-    bool getStrFromValue(const MDLabel label, std::string &strOut, size_t id) const;
+    bool getStrFromValue(const MDLabel label, String &strOut, size_t id) const;
 
     /**Check whether the metadata is empty.
      */
@@ -559,7 +558,7 @@ public:
     /** Write metadata to disk.
      * This will write the metadata content to disk.
      */
-    void _write(const FileName &outFile,const std::string & blockName="", WriteModeMetaData mode=OVERWRITE);
+    void _write(const FileName &outFile,const String & blockName="", WriteModeMetaData mode=OVERWRITE);
     /** Write metadata to disk. Guess blockname from filename
      * @code
      * outFilename="first@md1.doc" -> filename = md1.doc, blockname = first
@@ -569,7 +568,7 @@ public:
 
     /** Write metadata to out stream
      */
-    void write(std::ostream &os, const std::string & blockName="",WriteModeMetaData mode=OVERWRITE);
+    void write(std::ostream &os, const String & blockName="",WriteModeMetaData mode=OVERWRITE);
 
     /** Append data lines to file.
      * This function can be used to add new data to
@@ -582,7 +581,7 @@ public:
 
     /** Read data from file.
      */
-    void _read(const FileName &inFile, const std::vector<MDLabel> *desiredLabels = NULL, const std::string & blockName="", bool decomposeStack=true);
+    void _read(const FileName &inFile, const std::vector<MDLabel> *desiredLabels = NULL, const String & blockName="", bool decomposeStack=true);
     /** Read data from file. Guess the blockname from the filename
      * @code
      * inFilename="first@md1.doc" -> filename = md1.doc, blockname = first
@@ -663,7 +662,7 @@ public:
      * Mainly perform replacements on string values and
      * basic algebraic operations on numerical ones.
      */
-    void operate(const std::string &expression);
+    void operate(const String &expression);
 
     /** Randomize a metadata.
      * MDin is input and the "randomized"
@@ -688,7 +687,7 @@ public:
     * you may supply label:col, to sort by that column,
     * e.g., NMADisplacements:0
     */
-    void sort(MetaData &MDin, const std::string &sortLabel);
+    void sort(MetaData &MDin, const String &sortLabel);
 
     /** Split Metadata in several Metadatas.
      * The Metadata will be divided in 'n'
@@ -734,7 +733,7 @@ public:
                                   const MDLabel randLabel,
                                   double rand_op1,
                                   double rand_op2,
-                                  const std::string& mode="uniform",
+                                  const String& mode="uniform",
                                   double rand_op3=3.);
 
     /** @} */

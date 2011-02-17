@@ -250,7 +250,7 @@ int readTIFF(size_t select_img, bool isStack=false)
     replaceNsize = _nDim;
 
     size_t   imgStart = IMG_INDEX(select_img);
-    size_t   imgEnd = (select_img != ALL_IMAGES) ? select_img + 1 : _nDim;
+    size_t   imgEnd = (select_img != ALL_IMAGES) ? imgStart + 1 : _nDim;
 
     DataType datatype = datatypeTIFF(dirHead[0]);
 

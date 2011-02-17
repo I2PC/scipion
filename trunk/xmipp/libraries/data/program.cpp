@@ -465,19 +465,25 @@ void XmippMetadataProgram::readParams()
     {
         fn_out = checkParam("-o") ? getParam("-o") : "";
         oroot = getParam("--oroot");
-        //      DO NOT LONGER SUPPORT --OEXT SINCE NOW IT DOES MIND CHANGE FORMAT
-        //oext = checkParam("--oext") ? getParam("--oext") : "";
-        //if (oext == "custom")
-        //  oext = getParam("--oext",1);
     }
 
-    if (fn_out != fn_in && oroot == "" /*&& oext == ""*/)
+    if (fn_out != fn_in && oroot == "")
     {
-        FileName fn_stack_plain=fn_out.removeFileFormat();
+        FileName fn_stack_plain = fn_out.removeFileFormat();
         if (exists(fn_stack_plain))
             unlink(fn_stack_plain.c_str());
     }
+
     mdIn.read(fn_in, NULL, decompose_stacks);
+
+    single_image = input_is_stack = false;
+    if (!fn_in.isMetaData())
+    {
+      if (mdIn.size() == 1)
+        single_image = true;
+      else
+        input_is_stack = true;
+    }
     single_image = !fn_in.isMetaData() && (mdIn.size() == 1);
 
     if (mdIn.containsLabel(MDL_ENABLED))
@@ -600,18 +606,18 @@ void XmippMetadataProgram::run()
                         oextBaseName = fnImg.getFileFormat();
 
                     if (baseName != "")
-                        fnImgOut.compose(fullBaseName,kk++,oextBaseName);
+                        fnImgOut.compose(fullBaseName, ++kk, oextBaseName);
                     else if (fnImg.isInStack())
-                        fnImgOut.compose(pathBaseName + (fnImg.withoutExtension()).getDecomposedFileName(),kk++,oextBaseName);
+                        fnImgOut.compose(pathBaseName + (fnImg.withoutExtension()).getDecomposedFileName(), ++kk, oextBaseName);
                     else
-                        fnImgOut = pathBaseName + fnImg.withoutExtension()+"." + oextBaseName;
+                        fnImgOut = pathBaseName + fnImg.withoutExtension()+ "." + oextBaseName;
                 }
                 else if (fn_out != "")
                 {
                     if (single_image)
                         fnImgOut = fn_out;
                     else
-                        fnImgOut.compose(kk++,fn_out); // Compose out name to save as stacks
+                        fnImgOut.compose(++kk, fn_out); // Compose out name to save as stacks
                 }
                 else
                     fnImgOut = fnImg;

@@ -240,8 +240,9 @@ protected:
     bool allow_time_bar;
     /// Some time bar related counters
     int time_bar_step, time_bar_size, time_bar_done;
-    /// Flag to know when input is a single image
+    /// Flag to know when input is a single image or stack
     bool single_image;
+    bool input_is_stack;
     /// Flag to treat a stack file as a set of images instead of a unique file
     bool decompose_stacks;
     /// Flag to save the output metadata when output file is a stack
