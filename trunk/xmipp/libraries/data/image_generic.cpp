@@ -29,6 +29,7 @@
 
 ImageGeneric::ImageGeneric(DataType _datatype)
 {
+	init();
     setDatatype(_datatype);
 }
 
