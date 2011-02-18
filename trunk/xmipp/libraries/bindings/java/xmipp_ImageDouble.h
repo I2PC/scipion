@@ -55,6 +55,14 @@ JNIEXPORT void JNICALL Java_xmipp_ImageDouble_readPreview_1
 
 /*
  * Class:     xmipp_ImageDouble
+ * Method:    setData
+ * Signature: (III[D)V
+ */
+JNIEXPORT void JNICALL Java_xmipp_ImageDouble_setData
+  (JNIEnv *, jobject, jint, jint, jint, jdoubleArray);
+
+/*
+ * Class:     xmipp_ImageDouble
  * Method:    write
  * Signature: (Ljava/lang/String;)V
  */

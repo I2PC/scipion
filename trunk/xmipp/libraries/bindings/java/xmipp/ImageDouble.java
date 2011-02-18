@@ -33,6 +33,9 @@ public class ImageDouble {
     private native void readPreview_(String filename,
             int w, int h, int slice, long nimage) throws Exception;
 
+    // Set data.
+    public native void setData(int w, int h, int d, double data[]) throws Exception;
+
     // Writting.
     public native void write(String filename) throws Exception;
 

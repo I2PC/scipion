@@ -38,7 +38,7 @@ JNIEXPORT void JNICALL Java_xmipp_ImageDouble_read_1
 		const char * fnStr = env->GetStringUTFChars(filename, false);
 
 		try {
-			image->read(fnStr, (read_data)? DATA : HEADER, nimage);
+			image->read(fnStr, (read_data)? DATA : HEADER, (size_t)nimage);
 		} catch (XmippError xe) {
 			msg = xe.getDefaultMessage();
 		} catch (std::exception& e) {
@@ -65,7 +65,46 @@ JNIEXPORT void JNICALL Java_xmipp_ImageDouble_readPreview_1
 		const char *fnStr = env->GetStringUTFChars(filename, false);
 
 		try {
-			image->readPreview(fnStr, (int)w, (int)h, (int)slice, (int)nimage);
+			image->readPreview(fnStr, (int)w, (int)h, (int)slice, (size_t)nimage);
+		} catch (XmippError xe) {
+			msg = xe.getDefaultMessage();
+		} catch (std::exception& e) {
+			msg = e.what();
+		} catch (...) {
+			msg = "Unhandled exception";
+		}
+	} else {
+		msg = "Image is null";
+	}
+
+	// If there was an exception, sends it to java environment.
+	if(!msg.empty()) {
+		handleXmippException(env, msg);
+	}
+}
+
+JNIEXPORT void JNICALL Java_xmipp_ImageDouble_setData
+  (JNIEnv *env, jobject obj, jint w, jint h, jint d, jdoubleArray data){
+	std::string msg = "";
+	Image<double> *image = GET_INTERNAL_IMAGE();
+
+	if (image != NULL) {
+		try {
+			std::cout << "1. Clear previous data" << std::endl;
+			image->data.clear(); // Frees memory.
+
+			std::cout << "2. Resize image." << std::endl;
+			image->data.resizeNoCopy((int) d, (int) h, (int) w);
+
+			std::cout << "3. Convert java -> C" << std::endl;
+			jdouble *data_array = env->GetDoubleArrayElements(data, 0);
+
+			std::cout << "4. Set data" << std::endl;
+			image->data = *data_array;
+
+//		env->ReleaseDoubleArrayElements(data, data_array, 0);
+
+			std::cout << "DONE!" << std::endl;
 		} catch (XmippError xe) {
 			msg = xe.getDefaultMessage();
 		} catch (std::exception& e) {
@@ -180,8 +219,8 @@ JNIEXPORT jintArray JNICALL Java_xmipp_ImageDouble_getDimensions_1(JNIEnv *env,
 	jintArray array = env->NewIntArray(3);
 	Image<double> * image = GET_INTERNAL_IMAGE();
 	if (image != NULL) {
-		size_t n;
 		int xyz[3];
+		size_t n;
 		image->getDimensions(xyz[0], xyz[1], xyz[2], n);
 		env->SetIntArrayRegion(array, 0, 3, xyz);
 		return array;
