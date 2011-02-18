@@ -875,13 +875,13 @@ private:
         fhed = hFile->fhed;
         tif  = hFile->tif;
 
-        size_t dump;
-        name.decompose(dump, filename);
+        size_t image_num;
+        name.decompose(image_num, filename);
         filename = name;
         dataFName = hFile->fileName;
 
-        if (dump != -1)
-            select_img = dump;
+        if (image_num != ALL_IMAGES)
+            select_img = image_num;
 
 #undef DEBUG
         //#define DEBUG
@@ -1005,7 +1005,7 @@ private:
             REPORT_ERROR(ERR_VALUE_INCORRECT,"Please specify object to be replaced");
         else if (_exists && (mode == WRITE_REPLACE || mode == WRITE_APPEND))
         {
-            auxI._read(filNamePlusExt, hFile, HEADER);
+            auxI._read(filNamePlusExt, hFile, HEADER,FIRST_IMAGE);
             int _Xdim, _Ydim, _Zdim;
             size_t _Ndim;
             auxI.getDimensions(_Xdim,_Ydim, _Zdim, _Ndim);
