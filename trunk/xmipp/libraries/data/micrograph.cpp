@@ -382,12 +382,12 @@ void Micrograph::produce_all_images(int label, double minCost, const FileName &f
     {
         unlink(fn_out.c_str());
     }
-    int ii=0;
+    size_t ii=0;
     size_t id;
     for (int n = 0; n < nmax; n++)
         if (coords[n].valid && coords[n].cost>minCost && coords[n].label == label)
         {
-            fn_aux.compose(ii++,fn_out);
+            fn_aux.compose(++ii,fn_out);
             id = SF.addObject();
             SF.setValue( MDL_IMAGE, fn_aux, id);
             SF.setValue( MDL_MICROGRAPH, M->fn_micrograph, id);
@@ -403,7 +403,7 @@ void Micrograph::produce_all_images(int label, double minCost, const FileName &f
             else
                 SF.setValue( MDL_ENABLED, 1, id);
             //  if (ang!=0) I().rotate(-ang);
-            I.write(fn_out,-1,true,WRITE_APPEND);
+            I.write(fn_out,ii,true,WRITE_APPEND);
         }
     SF.write(fn_root + ".sel");
 
