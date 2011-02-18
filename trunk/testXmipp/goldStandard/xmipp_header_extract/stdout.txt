@@ -1,1 +1,0 @@
-Input File: input/smallStack.stk
