@@ -1,93 +1,130 @@
 #!/usr/bin/env python
+
+import sys, os
+
 class Tester:
     def __init__(self, fnDir):
         self.fnDir = fnDir
+        self.lastProgram = ""
+        self.progDict = {}
+        self.addAllTests()
 
-    def testProgram(self, program, arguments, testNo=0):
-        import os
-        print "------------------------------------------------------------------------------------"
-        print ">>> Testing " + program
-        outDir = os.path.join(self.fnDir, program)
-        if testNo != 0:
-            outDir += "_%02d" % testNo
-        print "   Making output directory: ", outDir
-        if not os.path.exists(outDir):
-            os.makedirs(outDir)
-        cmd = "%s %s > %s/stdout.txt 2> %s/stderr.txt" % (program, arguments, outDir, outDir)
-        print "   Running command: ", cmd
-        os.system(cmd)
-
+    def addProgram(self, program):
+        self.progDict[program] = []
+        self.lastProgram = program
+        
+    def addTest(self, test):
+        self.progDict[self.lastProgram].append(test)
+        
+    def runProgramTests(self, program):
+        tests = self.progDict[program]
+        n = len(tests)
+        outPath = os.path.join(self.fnDir, program)
+        outDir = outPath
+        testName = ""
+        
+        testNo = 1
+        for test in tests:
+            if n > 1:
+                outDir = outPath + "_%02d" % testNo
+                testName = "(%d of %d)" % (testNo, n)
+            print "------------------------------------------------------------------------------------"
+            print ">>> Running test", testName, "of", program
+            print "    Output dir: "
+            print "       ", outDir
+            if not os.path.exists(outDir):
+                os.makedirs(outDir)
+            test = test.replace("%o", outDir)
+            test = test.replace("%p", program)
+            test = test.replace("%d", self.fnDir)
+            cmd = "%s %s > %s/stdout.txt 2> %s/stderr.txt" % (program, test, outDir, outDir)
+            print "    Command: "
+            print "       ", cmd
+            os.system(cmd)
+            testNo += 1
+            
+    
+    def runAllTests(self):
+        for program in self.progDict.keys():
+            self.runProgramTests(program)
+    
+    def addAllTests(self):
+        # Add all desired tests -------------------------------------------
+    
+        self.addProgram("xmipp_convert_image")
+        self.addTest("-i input/smallStack.stk -o %o/smallStack.mrcs -t stk")
+    
+        self.addProgram("xmipp_header")
+        self.addTest("-i input/smallStack.stk --extract -o %o/header.doc")
+        self.addTest("-i input/header.doc --assign -o %o/smallStack2.stk")
+        
+        self.addProgram("xmipp_metadata_utilities")
+        self.addTest("  --union  input/mD1.doc input/mD2.doc  -o %o/union.doc --label image")
+        self.addTest("  --intersection  input/mD1.doc input/mD2.doc  -o %o/intersection.doc --label image")
+        self.addTest("  --subtraction  input/mD1.doc input/mD2.doc  -o %o/subtraction.doc --label image")
+      
+        self.addProgram("xmipp_phantom_project")
+        self.addTest("-i input/phantomBacteriorhodopsin.vol -o %o/image.xmp --angles 0 0 0")
+        self.addTest("-i input/phantomBacteriorhodopsin.vol     --oroot %o/projections --params input/clusterProjection.param")
+        self.addTest("-i input/phantomBacteriorhodopsin.vol     --oroot %o/projections --params input/uniformProjection.param")
+        self.addTest("-i input/Crystal/cylinder_with_axis.descr --oroot %o/MRCproj     --params input/Crystal/MRC_projection.param --crystal input/Crystal/MRC_crystal_projection.param")
+    
+        self.addProgram("xmipp_phantom_simulate_microscope")
+        self.addTest("-i input/smallStack.stk -o %o/smallStackPlusCtf.stk --ctf input/input.ctfparam" )
+    
+        self.addProgram("xmipp_tomo_project")
+        self.addTest("-i input/phantomCandida.vol -o %o/image.xmp --angles 0 90 90" )
+        self.addTest("-i input/phantomCandida.vol --oroot %o/projections --params input/tomoProjection.param")
+    
+        self.addProgram("xmipp_transform_add_noise")
+        self.addTest("-i input/cleanImage.spi --type gaussian 10 5 -o %o/noisyGaussian.spi")
+    
+        self.addProgram("xmipp_transform_adjust_volume_grey_levels")
+        self.addTest("-i input/phantomCandida.vol -m goldStandard/xmipp_tomo_project_02/projections.sel -o %o/adjusted.vol")
+    
+        self.addProgram("xmipp_transform_center_image")
+        self.addTest("-i input/smallStack.stk -o %o/smallStackCentered.stk")
+    
+        self.addProgram("xmipp_transform_window")
+        self.addTest("-i input/singleImage.spi -o %o/image.xmp --size 32")
+        self.addTest("-i input/singleImage.spi -o %o/image.xmp --corners -16 -16 15 15")
+        self.addTest("-i input/singleImage.spi -o %o/image.xmp --corners 0 0 31 31 --physical")
+        self.addTest("-i input/singleImage.spi -o %o/image.xmp --crop -10")
+        self.addTest("-i input/xray_import/Images/img48949.spe -o %o/image.xmp --size 512")
+    
+        self.addProgram("xmipp_xray_import")
+        self.addTest("--data input/xray_import/Images --flat input/xray_import/Flatfields --oroot %o/stack --crop 30")
+    
+        self.addProgram("xmipp_xray_project")
+        self.addTest("-i input/phantomCandida.vol -o %o/image.xmp --angles 0 90 90 -s 10 --psf input/xray_psf.xmd")
+        self.addTest("-i input/phantomCandida.vol --oroot %o/projections --params input/tomoProjection.param -s 10 --psf input/xray_psf.xmd")
+    
+        self.addProgram("xmipp_xray_psf_create")
+        self.addTest("-i input/xray_psf.xmd -o %o/psf.vol")    
 #
 # Main
 #
-import os, sys
 if __name__ == '__main__':
-    if not sys.argv[1:] or len(sys.argv) <= 1:
-        print "Usage: ./batch.py <directory>"
+    
+    argc = len(sys.argv)
+    
+    if argc < 2 or argc > 3:
+        print "Usage: ./batch.py <directory> [program]"
         sys.exit()
-    args = sys.argv[1:]
-    fnDir = args[0]
 
-    # Remove the output directory if it is not goldStandard
-    if fnDir != 'goldStandard' and fnDir != 'goldStandard/':
-        if os.path.exists(fnDir):
-            os.system("rm -rf " + fnDir)
-        os.makedirs(fnDir)
-
+    fnDir = sys.argv[1]
     # Create tester
     tester = Tester(fnDir)
-
-    # Test the programs -------------------------------------------
-
-    program = "xmipp_convert_image"
-    tester.testProgram(program, "-i input/smallStack.stk -o %s/%s/smallStack.mrcs -t stk" % (fnDir, program))
-
-    program = "xmipp_header_extract"
-    tester.testProgram(program, "-i input/smallStack.stk -o %s/%s/header.doc" % (fnDir, program))
-
-    program = "xmipp_header_assign"
-    tester.testProgram(program, "-i input/header.doc -o %s/%s/smallStack2.stk"% (fnDir, program) )
     
-    #program = "xmipp_metadata_utilities"
-    #tester.testProgram(program, "  --union  input/mD1.doc input/mD2.doc  -o %s/%s_%02d/union.doc --label image" % (fnDir, program,1),1)
-    #tester.testProgram(program, "  --intersection  input/mD1.doc input/mD2.doc  -o %s/%s_%02d/intersection.doc --label image" % (fnDir, program,2),2)
-    #tester.testProgram(program, "  --subtraction  input/mD1.doc input/mD2.doc  -o %s/%s_%02d/subtraction.doc --label image" % (fnDir, program,3),3)
-  
-    program = "xmipp_phantom_project"
-    tester.testProgram(program, "-i input/phantomBacteriorhodopsin.vol -o %s/%s_%02d/image.xmp --angles 0 0 0" % (fnDir, program, 1), 1)
-    tester.testProgram(program, "-i input/phantomBacteriorhodopsin.vol     --oroot %s/%s_%02d/projections --params input/clusterProjection.param" % (fnDir, program, 2), 2)
-    tester.testProgram(program, "-i input/phantomBacteriorhodopsin.vol     --oroot %s/%s_%02d/projections --params input/uniformProjection.param" % (fnDir, program, 3), 3)
-    tester.testProgram(program, "-i input/Crystal/cylinder_with_axis.descr --oroot %s/%s_%02d/MRCproj     --params input/Crystal/MRC_projection.param --crystal input/Crystal/MRC_crystal_projection.param" % (fnDir, program, 4), 4)
-
-    program = "xmipp_phantom_simulate_microscope"
-    tester.testProgram(program, "-i input/smallStack.stk -o %s/%s/smallStackPlusCtf.stk --ctf input/input.ctfparam" % (fnDir, program))
-
-    program = "xmipp_tomo_project"
-    tester.testProgram(program, "-i input/phantomCandida.vol -o %s/%s_%02d/image.xmp --angles 0 90 90" % (fnDir, program, 1), 1)
-    tester.testProgram(program, "-i input/phantomCandida.vol --oroot %s/%s_%02d/projections --params input/tomoProjection.param" % (fnDir, program, 2), 2)
-
-    program = "xmipp_transform_add_noise"
-    tester.testProgram(program, "-i input/cleanImage.spi --type gaussian 10 5 -o %s/%s/noisyGaussian.spi" % (fnDir, program))
-
-    program = "xmipp_transform_adjust_volume_grey_levels"
-    tester.testProgram(program, "-i input/phantomCandida.vol -m goldStandard/xmipp_tomo_project_02/projections.sel -o %s/%s/adjusted.vol" % (fnDir, program))
-
-    program = "xmipp_transform_center_image"
-    tester.testProgram(program, "-i input/smallStack.stk -o %s/%s/smallStackCentered.stk" % (fnDir, program))
-
-    program = "xmipp_transform_window"
-    tester.testProgram(program, "-i input/singleImage.spi -o %s/%s_%02d/image.xmp --size 32" % (fnDir, program, 1), 1)
-    tester.testProgram(program, "-i input/singleImage.spi -o %s/%s_%02d/image.xmp --corners -16 -16 15 15" % (fnDir, program, 2), 2)
-    tester.testProgram(program, "-i input/singleImage.spi -o %s/%s_%02d/image.xmp --corners 0 0 31 31 --physical" % (fnDir, program, 3), 3)
-    tester.testProgram(program, "-i input/singleImage.spi -o %s/%s_%02d/image.xmp --crop -10" % (fnDir, program, 4), 4)
-    tester.testProgram(program, "-i input/xray_import/Images/img48949.spe -o %s/%s_%02d/image.xmp --size 512" % (fnDir, program, 5), 5)
-
-    program = "xmipp_xray_import"
-    tester.testProgram(program, "--data input/xray_import/Images --flat input/xray_import/Flatfields --oroot %s/%s/stack --crop 30" % (fnDir, program))
-
-    program = "xmipp_xray_project"
-    tester.testProgram(program, "-i input/phantomCandida.vol -o %s/%s_%02d/image.xmp --angles 0 90 90 -s 10 --psf input/xray_psf.xmd" % (fnDir, program, 1), 1)
-    tester.testProgram(program, "-i input/phantomCandida.vol --oroot %s/%s_%02d/projections --params input/tomoProjection.param -s 10 --psf input/xray_psf.xmd" % (fnDir, program, 2), 2)
-
-    program = "xmipp_xray_psf_create"
-    tester.testProgram(program, "-i input/xray_psf.xmd -o %s/%s/psf.vol" % (fnDir, program))
+    if argc > 2:        
+        program = sys.argv[2]
+        tester.runProgramTests(program)
+        if not os.path.exists(fnDir):
+            os.makedirs(fnDir)
+    else:
+        # Remove the output directory if it is not goldStandard
+        if fnDir != 'goldStandard' and fnDir != 'goldStandard/':
+            if os.path.exists(fnDir):
+                os.system("rm -rf " + fnDir)
+            os.makedirs(fnDir)
+        tester.runAllTests()
