@@ -29,7 +29,7 @@
 void ImageBase::init()
 {
     clearHeader();
-    dataMode = HEADER;
+    dataMode = DATA;
     if (isComplexT())
         transform = Standard;
     else
