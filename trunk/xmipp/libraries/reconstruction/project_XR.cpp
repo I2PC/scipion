@@ -114,7 +114,7 @@ void ProgXrayProject::run()
     projMD.setComment("True rot, tilt and psi; rot, tilt, psi, X and Y shifts applied");
     double tRot,tTilt,tPsi,rot,tilt,psi;
     FileName fn_proj;  // Projection name
-    int idx = 0;
+    size_t idx = FIRST_IMAGE;
 
     for (double angle=projParam.tilt0; angle<=projParam.tiltF; angle+=projParam.tiltStep)
     {
@@ -150,7 +150,7 @@ void ProgXrayProject::run()
         size_t objId = projMD.addObject();
         if (!projParam.only_create_angles)
         {
-            proj.write(fn_proj, -1, !projParam.singleProjection, WRITE_REPLACE);
+            proj.write(fn_proj, ALL_IMAGES, !projParam.singleProjection, WRITE_REPLACE);
             projMD.setValue(MDL_IMAGE,fn_proj,objId);
         }
         projMD.setValue(MDL_ANGLEROT,tRot,objId);

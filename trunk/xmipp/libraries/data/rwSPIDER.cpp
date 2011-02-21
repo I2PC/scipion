@@ -502,7 +502,7 @@ int  ImageBase::writeSPIDER(size_t select_img, bool isStack, int mode)
         else if(mode == WRITE_REPLACE && select_img >= replaceNsize)
         {
             writeMainHeaderReplace=true;
-            header->maxim = select_img+1;
+            header->maxim = select_img;
         }
     }
     else
@@ -535,7 +535,7 @@ int  ImageBase::writeSPIDER(size_t select_img, bool isStack, int mode)
         if (mode == WRITE_APPEND)
             fseek(fimg, 0, SEEK_END);
         else if(mode == WRITE_REPLACE)
-            fseek( fimg,offset + (offset+datasize)*select_img, SEEK_SET);
+            fseek( fimg,offset + (offset+datasize)*(select_img - 1), SEEK_SET);
 
         //for ( size_t i=0; i<Ndim; i++ )
         size_t i = (Ndim == 1) ? 0 : imgStart;
