@@ -30,11 +30,13 @@
 // Constructor with root, number and extension .............................
 void FileName::compose(const String &str, size_t no, const String &ext)
 {
-    *this = (FileName) str;
+  if (no == ALL_IMAGES || no == (size_t) -1)
+    REPORT_ERROR(ERR_DEBUG_TEST, "Don't compose with 0 or -1 index, now images index start at 1");
+
+  *this = (FileName) str;
+
     if (no != ALL_IMAGES)
         this->append(formatString("%06lu", no));
-    else
-      REPORT_ERROR(ERR_DEBUG_TEST, "Don't compose with 0 index, now images index start at 1");
 
     if (ext != "")
         *this += (String)"." + ext;
@@ -43,11 +45,12 @@ void FileName::compose(const String &str, size_t no, const String &ext)
 // Constructor: prefix number and filename, mainly for selfiles..
 void FileName::compose(size_t no , const String &str)
 {
+  if (no == ALL_IMAGES || no == (size_t) -1)
+    REPORT_ERROR(ERR_DEBUG_TEST, "Don't compose with 0 or -1 index, now images index start at 1");
+
     *this = str;
     if (no != ALL_IMAGES)
       this->assign(formatString("%06lu@%s", no, str.c_str()));
-    else
-      REPORT_ERROR(ERR_DEBUG_TEST, "Don't compose with 0 index, now images index start at 1");
 }
 
 // Is in stack ............................................................
