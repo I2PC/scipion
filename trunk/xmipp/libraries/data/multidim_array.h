@@ -79,6 +79,17 @@ extern String floatToString(float F, int _width, int _prec);
  */
 #define FINISHINGZ(v) ((v).zinit + (v).zdim - 1)
 
+/** Check if x is inside logical bounds
+ */
+#define INSIDEX(v, x) ((x) >= STARTINGX(v) && (x) <= FINISHINGX(v))
+/** Check if y is inside logical bounds
+ */
+#define INSIDEY(v, y) ((y) >= STARTINGY(v) && (y) <= FINISHINGY(v))
+
+/** Check if a position x, y is inside the logical index bounds
+ */
+#define INSIDE(v, x, y) (INSIDEX(v, x) && INSIDEY(v, y))
+
 /** Access to X dimension (size)
  */
 #define XSIZE(v) ((v).xdim)
