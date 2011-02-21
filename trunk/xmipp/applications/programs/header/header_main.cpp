@@ -41,22 +41,30 @@ protected:
     void defineParams()
     {
         produces_an_output = true;
-        //each_image_produces_an_output = true;
         XmippMetadataProgram::defineParams();
-        addUsageLine("Operate with image files headers. By default in Xmipp images files headers are ignored.");
-        addUsageLine("This information is read from the images metadata if exist. With this program headers");
-        addUsageLine("can be imported/exported, printed or reset.");
+        addUsageLine("Operate with image files headers. By default in Xmipp, geometrical transformations");
+        addUsageLine("comming in images files headers are ignored. Instead this information is read from");
+        addUsageLine("the images metadata if exist. With this program geometrical transformations can be");
+        addUsageLine("extracted to a metadata or assigned to header, also allows print or reset image file headers.");
         addParamsLine("[   --print <decompose=0>]    : Print the geometrical transformations in image file headers.");
         addParamsLine("                              : if input is stack and decompose=1 print header of each individual image.");
         addParamsLine("       alias -p;");
         addParamsLine("or --extract     : The output is a selfile with geometrical transformations read from image file headers.");
         addParamsLine("       alias -e;");
         addParamsLine("      requires -o;");
-        addParamsLine("or --assign     : Write the geometrical transfromations from selfile to the image file headers.");
+        addParamsLine("or --assign     : Write the geometrical transformations from selfile to the image file headers.");
         addParamsLine("       alias -a;");
         addParamsLine("or --reset      : Reset the geometrical transformations in image file headers.");
         addParamsLine("       alias -r;");
         addParamsLine("   [--round_shifts]    :Round shifts to integers");
+        addExampleLine("Print the header of the images in metadata: ", false);
+        addExampleLine("xmipp_header -i images.sel");
+        addExampleLine("Extract geometrical transformations from image file headers: ", false);
+        addExampleLine("xmipp_header -i smallStack.stk --extract -o header.doc");
+        addExampleLine("Assign the geometrical transformations from the metadata to header: ", false);
+        addExampleLine("xmipp_header -i header.doc --assign");
+        addSeeAlsoLine("transform_geometry");
+        addKeywords("header, geometric, transformation, print");
     }
 
     void readParams()
@@ -78,6 +86,8 @@ protected:
         }
         XmippMetadataProgram::readParams();
         round_shifts = checkParam("--round_shifts");
+        if (operation != EXTRACT && checkParam("-o"))
+          REPORT_ERROR(ERR_PARAM_INCORRECT, "Argument -o is not valid for this operation");
     }
 
     void show()
