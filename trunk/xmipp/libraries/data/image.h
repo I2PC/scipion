@@ -823,20 +823,20 @@ protected:
             rowAux.setValue(MDL_SHIFTZ, aux);
         //rotations
         if (row.getValue(MDL_ANGLEROT, aux))
-                  rowAux.setValue(MDL_ANGLEROT, aux);
+            rowAux.setValue(MDL_ANGLEROT, aux);
         if (row.getValue(MDL_ANGLETILT, aux))
-                  rowAux.setValue(MDL_ANGLETILT, aux);
+            rowAux.setValue(MDL_ANGLETILT, aux);
         if (row.getValue(MDL_ANGLEPSI, aux))
-                  rowAux.setValue(MDL_ANGLEPSI, aux);
+            rowAux.setValue(MDL_ANGLEPSI, aux);
         //scale
         if (row.getValue(MDL_SCALE, aux))
-                  rowAux.setValue(MDL_SCALE, aux);
+            rowAux.setValue(MDL_SCALE, aux);
         //weight
         if (row.getValue(MDL_WEIGHT, aux))
-                  rowAux.setValue(MDL_WEIGHT, aux);
+            rowAux.setValue(MDL_WEIGHT, aux);
         bool auxBool;
         if (row.getValue(MDL_FLIP, auxBool))
-                  rowAux.setValue(MDL_FLIP, auxBool);
+            rowAux.setValue(MDL_FLIP, auxBool);
 
         //apply geo has not been defined for volumes
         //and only make sense when reading data
@@ -860,6 +860,10 @@ private:
     int _read(const FileName &name, ImageFHandler* hFile, DataMode datamode = DATA, size_t select_img = ALL_IMAGES,
               bool mapData = false)
     {
+        // Temporary Error to find old select_img == -1
+        if (select_img == (size_t) -1)
+            REPORT_ERROR(ERR_DEBUG_TEST, "To select all images use ALL_IMAGES macro, or FIRST_IMAGE macro.");
+
         int err = 0;
         dataMode = datamode;
 
@@ -936,6 +940,13 @@ private:
     void _write(const FileName &name, ImageFHandler* hFile, size_t select_img = ALL_IMAGES,
                 bool isStack = false, int mode = WRITE_OVERWRITE, bool adjust = false)
     {
+
+        // Temporary Error to find old select_img == -1
+        if (select_img == (size_t) -1)
+            REPORT_ERROR(ERR_DEBUG_TEST, "To select all images use ALL_IMAGES macro, or FIRST_IMAGE macro.");
+
+
+
         int err = 0;
 
         // if image is mapped to file then close the file and clear
