@@ -29,7 +29,7 @@ JNIEXPORT void JNICALL Java_xmipp_ImageDouble_destroy
 	env->SetLongField(obj, peerId, (long)image);
 }
 
-JNIEXPORT void JNICALL Java_xmipp_ImageDouble_read_1
+JNIEXPORT void JNICALL Java_xmipp_ImageDouble_read
 (JNIEnv *env, jobject obj, jstring filename, jboolean read_data, jlong nimage) {
 	std::string msg = "";
 	Image<double> * image = GET_INTERNAL_IMAGE();
@@ -56,7 +56,7 @@ JNIEXPORT void JNICALL Java_xmipp_ImageDouble_read_1
 	}
 }
 
-JNIEXPORT void JNICALL Java_xmipp_ImageDouble_readPreview_1
+JNIEXPORT void JNICALL Java_xmipp_ImageDouble_readPreview
 (JNIEnv *env, jobject obj, jstring filename, jint w, jint h, jint slice, jlong nimage) {
 	std::string msg = "";
 	Image<double> *image = GET_INTERNAL_IMAGE();
@@ -84,27 +84,14 @@ JNIEXPORT void JNICALL Java_xmipp_ImageDouble_readPreview_1
 }
 
 JNIEXPORT void JNICALL Java_xmipp_ImageDouble_setData
-  (JNIEnv *env, jobject obj, jint w, jint h, jint d, jdoubleArray data){
+(JNIEnv *env, jobject obj, jint w, jint h, jint d, jdoubleArray data) {
 	std::string msg = "";
 	Image<double> *image = GET_INTERNAL_IMAGE();
 
 	if (image != NULL) {
 		try {
-			std::cout << "1. Clear previous data" << std::endl;
-			image->data.clear(); // Frees memory.
-
-			std::cout << "2. Resize image." << std::endl;
 			image->data.resizeNoCopy((int) d, (int) h, (int) w);
-
-			std::cout << "3. Convert java -> C" << std::endl;
-			jdouble *data_array = env->GetDoubleArrayElements(data, 0);
-
-			std::cout << "4. Set data" << std::endl;
-			image->data = *data_array;
-
-//		env->ReleaseDoubleArrayElements(data, data_array, 0);
-
-			std::cout << "DONE!" << std::endl;
+			env->GetDoubleArrayRegion(data, 0, w * h * d, MULTIDIM_ARRAY(image->data));
 		} catch (XmippError xe) {
 			msg = xe.getDefaultMessage();
 		} catch (std::exception& e) {
@@ -189,7 +176,7 @@ JNIEXPORT jdouble JNICALL Java_xmipp_ImageDouble_getVoxel(JNIEnv *env,
 	Image<double> * image = GET_INTERNAL_IMAGE();
 
 	if (image != NULL) {
-		value = image->data.getVoxel((int)x, (int)y, (int)z);
+		value = image->data.getVoxel((int) x, (int) y, (int) z);
 	}
 
 	return value;
@@ -214,31 +201,48 @@ JNIEXPORT void JNICALL Java_xmipp_ImageDouble_convertPSD(JNIEnv *env, jobject ob
 	}
 }
 
-JNIEXPORT jintArray JNICALL Java_xmipp_ImageDouble_getDimensions_1(JNIEnv *env,
+JNIEXPORT jint JNICALL Java_xmipp_ImageDouble_getXsize(JNIEnv * env,
 		jobject obj) {
-	jintArray array = env->NewIntArray(3);
 	Image<double> * image = GET_INTERNAL_IMAGE();
+
 	if (image != NULL) {
-		int xyz[3];
-		size_t n;
-		image->getDimensions(xyz[0], xyz[1], xyz[2], n);
-		env->SetIntArrayRegion(array, 0, 3, xyz);
-		return array;
+		return XSIZE(image->data);
 	}
-	return (jintArray) NULL;
+
+	return 0;
 }
 
-JNIEXPORT jlong JNICALL Java_xmipp_ImageDouble_getNImages_1(JNIEnv *env,
+JNIEXPORT jint JNICALL Java_xmipp_ImageDouble_getYsize(JNIEnv * env,
 		jobject obj) {
-	int a, b, c;
-	size_t nimages;
 	Image<double> * image = GET_INTERNAL_IMAGE();
 
 	if (image != NULL) {
-		image->getDimensions(a, b, c, nimages);
+		return YSIZE(image->data);
 	}
 
-	return nimages;
+	return 0;
+}
+
+JNIEXPORT jint JNICALL Java_xmipp_ImageDouble_getZsize(JNIEnv * env,
+		jobject obj) {
+	Image<double> * image = GET_INTERNAL_IMAGE();
+
+	if (image != NULL) {
+		return ZSIZE(image->data);
+	}
+
+	return 0;
+}
+
+JNIEXPORT jlong JNICALL Java_xmipp_ImageDouble_getNsize(JNIEnv * env,
+		jobject obj) {
+	Image<double> * image = GET_INTERNAL_IMAGE();
+
+	if (image != NULL) {
+		return NSIZE(image->data);
+	}
+
+	return 0;
 }
 
 JNIEXPORT void JNICALL Java_xmipp_ImageDouble_printShape

@@ -7,12 +7,6 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
-#undef xmipp_Projection_INDEX_WIDTH
-#define xmipp_Projection_INDEX_WIDTH 0L
-#undef xmipp_Projection_INDEX_HEIGHT
-#define xmipp_Projection_INDEX_HEIGHT 1L
-#undef xmipp_Projection_INDEX_DEPTH
-#define xmipp_Projection_INDEX_DEPTH 2L
 /*
  * Class:     xmipp_Projection
  * Method:    create

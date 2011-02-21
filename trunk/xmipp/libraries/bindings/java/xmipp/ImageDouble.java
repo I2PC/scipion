@@ -3,9 +3,6 @@ package xmipp;
 public class ImageDouble {
 
     private static final String PSD_EXTENSION = ".psd";
-    private static final int INDEX_WIDTH = 0;
-    private static final int INDEX_HEIGHT = 1;
-    private static final int INDEX_DEPTH = 2;
     //hold pointer to Image class in C++ space
     private long peer;
     private String filename;
@@ -28,9 +25,9 @@ public class ImageDouble {
     private synchronized native void destroy();
 
     // Reading.
-    private native void read_(String filename, boolean readData, long nimage) throws Exception;
+    private native void read(String filename, boolean readData, long nimage) throws Exception;
 
-    private native void readPreview_(String filename,
+    private native void readPreview(String filename,
             int w, int h, int slice, long nimage) throws Exception;
 
     // Set data.
@@ -52,9 +49,13 @@ public class ImageDouble {
 
     public native void convertPSD();
 
-    private native int[] getDimensions_();
+    public native int getXsize();
 
-    private native long getNImages_();
+    public native int getYsize();
+
+    public native int getZsize();
+
+    public native long getNsize();
 
     public native void printShape();
 
@@ -93,12 +94,11 @@ public class ImageDouble {
         read(filename, readData, 0);
     }
 
-    private void read(String filename, boolean readData, long nimage) throws Exception {
-        read_(filename, readData, nimage);
-
-        storeData(filename);
-    }
-
+//    private void read(String filename, boolean readData, long nimage) throws Exception {
+//        read_(filename, readData, nimage);
+///*
+//        storeData(filename);*/
+//    }
     public void readPreview(String filename, int w, int h) throws Exception {
         readPreview(filename, w, h, 0, 0);
     }
@@ -106,39 +106,42 @@ public class ImageDouble {
     public void readPreview(String filename, int w, int h, int slice) throws Exception {
         readPreview(filename, w, h, slice, 0);
     }
-
-    public void readPreview(String filename, int w, int h, int slice, long nimage) throws Exception {
-        readPreview_(filename, w, h, slice, nimage);
-
-        storeData(filename);
-    }
+//
+//    public void readPreview(String filename, int w, int h, int slice, long nimage) throws Exception {
+//        readPreview_(filename, w, h, slice, nimage);
+///*
+//        storeData(filename);*/
+//    }
 
 //    public native int[] getSize();
-    private void storeData(String filename) {
-        this.filename = filename;
+/*    private void storeData(String filename) {
+    this.filename = filename;
 
-        int dimensions[] = getDimensions_();
+    int dimensions[] = getDimensions_();
 
-        width = dimensions[INDEX_WIDTH];
-        height = dimensions[INDEX_HEIGHT];
-        depth = dimensions[INDEX_DEPTH];
-        nimages = getNImages_();
-    }
-
+    width = dimensions[INDEX_WIDTH];
+    height = dimensions[INDEX_HEIGHT];
+    depth = dimensions[INDEX_DEPTH];
+    nimages = getNImages_();
+    }*/
+    /*
     public int getWidth() {
-        return width;
+    return width;
     }
 
     public int getHeight() {
-        return height;
+    return height;
     }
 
     public int getDepth() {
-        return depth;
+    return depth;
     }
 
     public long getNimages() {
-        return nimages;
+    return nimages;
+    }*/
+    public void setFilename(String filename) {
+        this.filename = filename;
     }
 
     public boolean isPSD() {

@@ -7,12 +7,6 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
-#undef xmipp_ImageDouble_INDEX_WIDTH
-#define xmipp_ImageDouble_INDEX_WIDTH 0L
-#undef xmipp_ImageDouble_INDEX_HEIGHT
-#define xmipp_ImageDouble_INDEX_HEIGHT 1L
-#undef xmipp_ImageDouble_INDEX_DEPTH
-#define xmipp_ImageDouble_INDEX_DEPTH 2L
 /*
  * Class:     xmipp_ImageDouble
  * Method:    storeIds
@@ -39,18 +33,18 @@ JNIEXPORT void JNICALL Java_xmipp_ImageDouble_destroy
 
 /*
  * Class:     xmipp_ImageDouble
- * Method:    read_
+ * Method:    read
  * Signature: (Ljava/lang/String;ZJ)V
  */
-JNIEXPORT void JNICALL Java_xmipp_ImageDouble_read_1
+JNIEXPORT void JNICALL Java_xmipp_ImageDouble_read
   (JNIEnv *, jobject, jstring, jboolean, jlong);
 
 /*
  * Class:     xmipp_ImageDouble
- * Method:    readPreview_
+ * Method:    readPreview
  * Signature: (Ljava/lang/String;IIIJ)V
  */
-JNIEXPORT void JNICALL Java_xmipp_ImageDouble_readPreview_1
+JNIEXPORT void JNICALL Java_xmipp_ImageDouble_readPreview
   (JNIEnv *, jobject, jstring, jint, jint, jint, jlong);
 
 /*
@@ -119,18 +113,34 @@ JNIEXPORT void JNICALL Java_xmipp_ImageDouble_convertPSD
 
 /*
  * Class:     xmipp_ImageDouble
- * Method:    getDimensions_
- * Signature: ()[I
+ * Method:    getXsize
+ * Signature: ()I
  */
-JNIEXPORT jintArray JNICALL Java_xmipp_ImageDouble_getDimensions_1
+JNIEXPORT jint JNICALL Java_xmipp_ImageDouble_getXsize
   (JNIEnv *, jobject);
 
 /*
  * Class:     xmipp_ImageDouble
- * Method:    getNImages_
+ * Method:    getYsize
+ * Signature: ()I
+ */
+JNIEXPORT jint JNICALL Java_xmipp_ImageDouble_getYsize
+  (JNIEnv *, jobject);
+
+/*
+ * Class:     xmipp_ImageDouble
+ * Method:    getZsize
+ * Signature: ()I
+ */
+JNIEXPORT jint JNICALL Java_xmipp_ImageDouble_getZsize
+  (JNIEnv *, jobject);
+
+/*
+ * Class:     xmipp_ImageDouble
+ * Method:    getNsize
  * Signature: ()J
  */
-JNIEXPORT jlong JNICALL Java_xmipp_ImageDouble_getNImages_1
+JNIEXPORT jlong JNICALL Java_xmipp_ImageDouble_getNsize
   (JNIEnv *, jobject);
 
 /*
