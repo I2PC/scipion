@@ -29,7 +29,7 @@
 
 ImageGeneric::ImageGeneric(DataType _datatype)
 {
-	init();
+    init();
     setDatatype(_datatype);
 }
 
@@ -140,7 +140,7 @@ int ImageGeneric::readApplyGeo(const FileName &name, const MDRow &row, bool only
 }
 
 int ImageGeneric::readApplyGeo(const FileName &name, const MetaData &md, size_t objId, bool only_apply_shifts, DataMode datamode,
-    size_t select_img)
+                               size_t select_img)
 {
     setDatatype(getImageType(name));
     image->readApplyGeo(name, md, objId, only_apply_shifts, datamode, select_img);
@@ -155,7 +155,22 @@ int ImageGeneric::readApplyGeo(const MetaData &md, size_t objId, bool only_apply
     image->readApplyGeo(name, md, objId, only_apply_shifts, datamode, select_img);
 }
 
+void  ImageGeneric::mapFile2Write(int Xdim, int Ydim, int Zdim, int Ndim, FileName _filename,
+                                  bool createTempFile)
+{
+    image->setDataMode(HEADER); // Use this to ask rw* which datatype to use
+    image->mapFile2Write(Xdim,Ydim,Zdim,Ndim,_filename,createTempFile);
+
+    DataType writeDT = image->dataType();
+    if ( writeDT != datatype)
+    {
+        setDatatype(writeDT);
+        image->mapFile2Write(Xdim,Ydim,Zdim,Ndim,_filename,createTempFile);
+    }
+}
+
+
 void ImageGeneric::print() const
 {
-  std::cout << *image;
+    std::cout << *image;
 }

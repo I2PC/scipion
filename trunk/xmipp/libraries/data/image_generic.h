@@ -193,11 +193,8 @@ public:
 
     /* Create an empty image file of format given by filename and map it to memory.
      */
-    inline  void mapFile2Write(int Xdim, int Ydim, int Zdim, int Ndim, FileName _filename,
-                               bool createTempFile=false)
-    {
-        image->mapFile2Write(Xdim,Ydim,Zdim,Ndim,_filename,createTempFile);
-    }
+    void mapFile2Write(int Xdim, int Ydim, int Zdim, int Ndim, FileName _filename,
+                               bool createTempFile=false);
 
     /* MultidimArrayGeneric data access
      */

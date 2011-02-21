@@ -187,8 +187,21 @@ int ImageBase::writeINF(size_t select_img, bool isStack, int mode, String bitDep
         REPORT_ERROR(ERR_TYPE_INCORRECT,(std::string)"ERROR: Unsupported data type by RAW format.");
     }
 
-    if (mmapOnWrite && !checkMmapT(wDType))
-        REPORT_ERROR(ERR_MMAP, "File datatype and image declaration not compatible with mmap.");
+    if (mmapOnWrite)
+    {
+        if (!checkMmapT(wDType))
+        {
+            if (dataMode < DATA && castMode == CAST) // This means ImageGeneric wants to know which DataType must use in mapFile2Write
+            {
+                MDMainHeader.setValue(MDL_DATATYPE,(int) wDType);
+                return 0;
+            }
+            else
+                REPORT_ERROR(ERR_MMAP, "File datatype and image declaration not compatible with mmap.");
+        }
+        else
+            dataMode = DATA;
+    }
 
     _depth = gettypesize(wDType);
 

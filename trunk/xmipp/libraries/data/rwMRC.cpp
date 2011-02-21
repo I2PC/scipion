@@ -298,10 +298,10 @@ int ImageBase::writeMRC(size_t select_img, bool isStack, int mode, std::string b
     {
         machine_stamp[0] = machine_stamp[1] = 17;
     }
-//                    case LittleVAX:
-//                        machine_stamp[0] = 34;
-//                        machine_stamp[1] = 65;
-//                        break;
+    //                    case LittleVAX:
+    //                        machine_stamp[0] = 34;
+    //                        machine_stamp[1] = 65;
+    //                        break;
     int Xdim, Ydim, Zdim;
     size_t Ndim;
     getDimensions(Xdim, Ydim, Zdim, Ndim);
@@ -385,8 +385,21 @@ int ImageBase::writeMRC(size_t select_img, bool isStack, int mode, std::string b
         castMode = (adjust)? ADJUST : CONVERT;
     }
 
-    if (mmapOnWrite && !checkMmapT(wDType))
-        REPORT_ERROR(ERR_MMAP, "File datatype and image declaration not compatible with mmap.");
+    if (mmapOnWrite)
+    {
+        if (!checkMmapT(wDType))
+        {
+            if (dataMode < DATA && castMode == CAST) // This means ImageGeneric wants to know which DataType must use in mapFile2Write
+            {
+                MDMainHeader.setValue(MDL_DATATYPE,(int) wDType);
+                return 0;
+            }
+            else
+                REPORT_ERROR(ERR_MMAP, "File datatype and image declaration not compatible with mmap.");
+        }
+        else
+            dataMode = DATA;
+    }
 
     //Set this to zero till we decide if we want to update it
     //    header->mx = 0;//(int) (ua/ux + 0.5);

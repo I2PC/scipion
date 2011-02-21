@@ -215,8 +215,8 @@ protected:
     FILE*                fimg;        // Image File handler
     FILE*                fhed;        // Image File header handler
     TIFF*                tif;         // TIFF Image file hander
-    bool                stayOpen;    // To maintain the image file open after read/write
     DataMode             dataMode;    // Flag to force select what will be read/write from image files
+    bool                stayOpen;    // To maintain the image file open after read/write
     size_t       i;           // Current image number (may be > NSIZE)
     size_t       offset;      // Data offset
     int                 swap;        // Perform byte swapping upon reading

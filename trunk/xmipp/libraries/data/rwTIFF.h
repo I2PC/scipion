@@ -360,11 +360,7 @@ int readTIFF(size_t select_img, bool isStack=false)
 int writeTIFF(size_t select_img, bool isStack=false, int mode=WRITE_OVERWRITE, String bitDepth="", bool adjust=false)
 {
 #undef DEBUG
-    if(mmapOnWrite==true)
-    {
-        mmapOnWrite=false;
-        return 0;
-    }
+
     if (mode == WRITE_REPLACE)
         REPORT_ERROR(ERR_TYPE_INCORRECT,"rwTIFF: Images cannot be replaced in TIFF file.");
     if (typeid(T) == typeid(std::complex<double>))
@@ -446,6 +442,25 @@ int writeTIFF(size_t select_img, bool isStack=false, int mode=WRITE_OVERWRITE, S
             REPORT_ERROR(ERR_TYPE_INCORRECT,"ERROR: incorrect TIFF bits depth value.");
         }
         castMode = (adjust)? ADJUST : CONVERT;
+    }
+
+    if (mmapOnWrite)
+    {
+        if (!checkMmapT(wDType))
+        {
+            if (dataMode < DATA ) // This means ImageGeneric wants to know which DataType must use in mapFile2Write
+            {
+                MDMainHeader.setValue(MDL_DATATYPE,(int) wDType);
+                return 0;
+            }
+            else
+                REPORT_ERROR(ERR_MMAP, "File datatype and image declaration not compatible with mmap.");
+        }
+        else
+             dataMode = DATA;
+
+        mmapOnWrite = false;
+        return 0;
     }
 
     int nBytes = gettypesize(wDType);

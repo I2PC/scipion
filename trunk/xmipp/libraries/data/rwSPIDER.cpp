@@ -316,8 +316,21 @@ int  ImageBase::writeSPIDER(size_t select_img, bool isStack, int mode)
 
     DataType wDType = (isComplexT()) ? ComplexFloat : Float;
 
-    if (mmapOnWrite && !checkMmapT(wDType))
-        REPORT_ERROR(ERR_MMAP, "File datatype and image declaration not compatible with mmap.");
+    if (mmapOnWrite)
+    {
+        if (!checkMmapT(wDType))
+        {
+            if (dataMode < DATA) // This means ImageGeneric wants to know which DataType must use in mapFile2Write
+            {
+                MDMainHeader.setValue(MDL_DATATYPE,(int) wDType);
+                return 0;
+            }
+            else
+                REPORT_ERROR(ERR_MMAP, "File datatype and image declaration not compatible with mmap.");
+        }
+        else
+            dataMode = DATA;
+    }
 
     size_t datasize, datasize_n;
     datasize_n = (size_t)Xdim*Ydim*Zdim;
@@ -426,7 +439,7 @@ int  ImageBase::writeSPIDER(size_t select_img, bool isStack, int mode)
         else
         {
             header->xoff = header->yoff = header->zoff =\
-            header->phi = header->theta = header->gamma = header->weight = 0.;
+                                          header->phi = header->theta = header->gamma = header->weight = 0.;
             header->scale = 1.;
         }
     }
@@ -522,9 +535,6 @@ int  ImageBase::writeSPIDER(size_t select_img, bool isStack, int mode)
     }
     else
     {
-        if (mmapOnWrite)
-            REPORT_ERROR(ERR_NOT_IMPLEMENTED,"writeSPIDER: Mmap file not implemented neither for volumes nor stacks.");
-
         if (mode == WRITE_APPEND)
             fseek(fimg, 0, SEEK_END);
         else if(mode == WRITE_REPLACE)
@@ -558,16 +568,26 @@ int  ImageBase::writeSPIDER(size_t select_img, bool isStack, int mode)
             }
             else
             {
-              header->xoff = header->yoff = header->zoff =\
-              header->phi = header->theta = header->gamma = header->weight = 0.;
-              header->scale = 1.;
+                header->xoff = header->yoff = header->zoff =\
+                                              header->phi = header->theta = header->gamma = header->weight = 0.;
+                header->scale = 1.;
             }
             //do not need to unlock because we are in the overwrite case
             fwrite( header, offset, 1, fimg );
             if (dataMode >= DATA)
-              writeData(fimg, i*datasize_n, wDType, datasize_n, CAST);
+            {
+                if (mmapOnWrite && Ndim == 1) // Can map one image at a time only
+                {
+                    mappedOffset = ftell(fimg);
+                    mappedSize = mappedOffset + datasize;
+                    fseek(fimg, datasize-1, SEEK_CUR);
+                    fputc(0, fimg);
+                }
+                else
+                    writeData(fimg, i*datasize_n, wDType, datasize_n, CAST);
+            }
             else
-              fseek(fimg, datasize, SEEK_CUR);
+                fseek(fimg, datasize, SEEK_CUR);
         }
     }
     //I guess I do not need to unlock since we are going to close the file

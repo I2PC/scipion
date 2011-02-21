@@ -366,6 +366,22 @@ int  ImageBase::writeIMAGIC(size_t img_select, int mode, String bitDepth, bool a
         castMode = (adjust)? ADJUST : CONVERT;
     }
 
+    if (mmapOnWrite)
+    {
+        if (!checkMmapT(wDType))
+        {
+            if (dataMode < DATA && castMode == CAST) // This means ImageGeneric wants to know which DataType must use in mapFile2Write
+            {
+                MDMainHeader.setValue(MDL_DATATYPE,(int) wDType);
+                return 0;
+            }
+            else
+                REPORT_ERROR(ERR_MMAP, "File datatype and image declaration not compatible with mmap.");
+        }
+        else
+            dataMode = DATA;
+    }
+
     size_t datasize, datasize_n;
     datasize_n = (size_t)Xdim*Ydim*Zdim;
     datasize = datasize_n * gettypesize(wDType);
@@ -426,10 +442,6 @@ int  ImageBase::writeIMAGIC(size_t img_select, int mode, String bitDepth, bool a
         fseek( fhed, 0, SEEK_SET);
     }
 
-    if (mmapOnWrite)
-        REPORT_ERROR(ERR_NOT_IMPLEMENTED,"To be implemented");
-
-
     i = imgStart;
     for (std::vector<MDRow>::iterator it = MD.begin(); it != MD.end(); ++it)
     {
@@ -452,7 +464,17 @@ int  ImageBase::writeIMAGIC(size_t img_select, int mode, String bitDepth, bool a
 
         fwrite( header, IMAGICSIZE, 1, fhed );
         if (dataMode >= DATA)
-          writeData(fimg, i*datasize_n, wDType, datasize_n, castMode);
+        {
+            if (mmapOnWrite && Ndim == 1) // Can map one image at a time only
+            {
+                mappedOffset = ftell(fimg);
+                mappedSize = mappedOffset + datasize;
+                fseek(fimg, datasize-1, SEEK_CUR);
+                fputc(0, fimg);
+            }
+            else
+                writeData(fimg, i*datasize_n, wDType, datasize_n, castMode);
+        }
 
         ++i;
     }
@@ -463,6 +485,9 @@ int  ImageBase::writeIMAGIC(size_t img_select, int mode, String bitDepth, bool a
     fcntl(fileno(fhed), F_SETLK, &fl); /* unlocked */
 
     delete header;
+
+    if (mmapOnWrite)
+        mmapFile();
 
     return(0);
 }
