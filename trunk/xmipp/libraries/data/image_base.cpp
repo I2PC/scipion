@@ -123,24 +123,26 @@ int ImageBase::readApplyGeo(const MetaData &md, size_t objId, bool only_apply_sh
 void ImageBase::write(const FileName &name, size_t select_img, bool isStack,
                       int mode, bool adjust)
 {
-    const FileName &fname = (name == "") ? filename : name;
+    const FileName &fname = (name.empty()) ? filename : name;
 
-    // If image is already mapped to file then close the file and clear.
     if (mmapOnWrite && mappedSize > 0)
     {
-        munmapFile();
-        if (tempFilename != "")
+        bool hasTempFile = !tempFilename.empty();
+        if (hasTempFile && fname.isInStack())
+            mmapOnWrite = !(mmapOnRead = true); // We change mmap mode from write to read to allow writing the image into a stack.
+        else
         {
-            if (std::rename(tempFilename.c_str(), fname.c_str()) != 0)
+            munmapFile();
+            if (hasTempFile && std::rename(tempFilename.c_str(), fname.c_str()) != 0)
                 REPORT_ERROR(ERR_IO, formatString("Error renaming file '%s' to '%s'.", tempFilename.c_str(), fname.c_str()));
+            return;
         }
-        return;
     }
 
     /* If the filename is in stack we will suppose you want to write this,
      * even if you have not set the flags to.
      */
-    if ( fname.isInStack() && mode == WRITE_OVERWRITE)
+    if ( fname.isInStack())
     {
         isStack = true;
         mode = WRITE_REPLACE;
