@@ -86,6 +86,7 @@ typedef enum
  */
 typedef enum
 {
+  _NONE = -2,  // Nothing to do. Used by ImageGeneric to check the right datatype to be used
   HEADER = -1, //Dont read image data, only info from main header(datatype and dimensions)
   _HEADER_ALL = 0, //Read complete header(main and geo), useful for header_extract and header_assign
   DATA = 1, //Read image data and main header, geometrical transformations will be ignored
@@ -299,6 +300,7 @@ public:
      *
      * An image file, which name and format are given by filename,
      * is created with the given size. Then the image is mapped to this file.
+     * The image object must be cleared prior to use this method.
      */
     void mapFile2Write(int Xdim, int Ydim, int Zdim, size_t Ndim, const FileName &_filename,
                        bool createTempFile=false);
@@ -625,6 +627,10 @@ protected:
 #include "rwTIA.h"
     //#include "rwTIFF.h"
 
+    /// To be deleted once rwTIFF ported to cpp file --------------
+    virtual int readTIFF(size_t select_img, bool isStack=false) = 0;
+    virtual int writeTIFF(size_t select_img, bool isStack=false, int mode=WRITE_OVERWRITE, String bitDepth="", bool adjust=false) = 0;
+    /// ----------------------------------------------------------
 
     /** Open file function
       * Open the image file and returns its file hander.
@@ -641,8 +647,8 @@ protected:
 
     /* Internal read image file method.
      */
-    virtual int _read(const FileName &name, ImageFHandler* hFile, DataMode datamode = DATA, size_t select_img = ALL_IMAGES,
-                      bool mapData = false) = 0;
+    int _read(const FileName &name, ImageFHandler* hFile, DataMode datamode = DATA, size_t select_img = ALL_IMAGES,
+                      bool mapData = false);
 
     /* Internal write image file method.
      */

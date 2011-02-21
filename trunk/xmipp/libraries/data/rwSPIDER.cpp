@@ -318,13 +318,11 @@ int  ImageBase::writeSPIDER(size_t select_img, bool isStack, int mode)
 
     if (mmapOnWrite)
     {
+        MDMainHeader.setValue(MDL_DATATYPE,(int) wDType);
         if (!checkMmapT(wDType))
         {
             if (dataMode < DATA) // This means ImageGeneric wants to know which DataType must use in mapFile2Write
-            {
-                MDMainHeader.setValue(MDL_DATATYPE,(int) wDType);
                 return 0;
-            }
             else
                 REPORT_ERROR(ERR_MMAP, "File datatype and image declaration not compatible with mmap.");
         }
@@ -514,10 +512,9 @@ int  ImageBase::writeSPIDER(size_t select_img, bool isStack, int mode)
         header->maxim = 1;
     }
 
-    if(mode==WRITE_OVERWRITE ||
-       mode==WRITE_APPEND ||
-       writeMainHeaderReplace
-      ) //header must change
+    if( mode == WRITE_OVERWRITE ||
+        mode == WRITE_APPEND ||
+        writeMainHeaderReplace ) //header must change
         fwrite( header, offset, 1, fimg );
 
     //write only once, ignore select_img

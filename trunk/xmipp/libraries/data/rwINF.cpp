@@ -152,7 +152,7 @@ int ImageBase::writeINF(size_t select_img, bool isStack, int mode, String bitDep
 
     if (bitDepth != "")
     {
-        myTypeID = (bitDepth == "default") ? UChar : datatypeRAW(bitDepth);
+        myTypeID = (bitDepth == "default") ? Float : datatypeRAW(bitDepth);
         castMode = (adjust)? ADJUST : CONVERT;
     }
 
@@ -189,13 +189,11 @@ int ImageBase::writeINF(size_t select_img, bool isStack, int mode, String bitDep
 
     if (mmapOnWrite)
     {
+        MDMainHeader.setValue(MDL_DATATYPE,(int) wDType);
         if (!checkMmapT(wDType))
         {
             if (dataMode < DATA && castMode == CAST) // This means ImageGeneric wants to know which DataType must use in mapFile2Write
-            {
-                MDMainHeader.setValue(MDL_DATATYPE,(int) wDType);
                 return 0;
-            }
             else
                 REPORT_ERROR(ERR_MMAP, "File datatype and image declaration not compatible with mmap.");
         }

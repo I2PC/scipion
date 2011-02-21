@@ -305,11 +305,10 @@ int  ImageBase::writeIMAGIC(size_t img_select, int mode, String bitDepth, bool a
 
     // Cast T to datatype without convert data
     DataType wDType, myTypeID = myT();
-    CastWriteMode castMode;
+    CastWriteMode castMode = CAST;
 
     if (bitDepth == "")
     {
-        castMode = CAST;
         switch(myTypeID)
         {
         case Double:
@@ -350,9 +349,11 @@ int  ImageBase::writeIMAGIC(size_t img_select, int mode, String bitDepth, bool a
         {
         case UChar:
             strcpy(header->type,"PACK");
+            castMode = (adjust)? ADJUST : CONVERT;
             break;
         case Short:
             strcpy(header->type,"INTG");
+            castMode = (adjust)? ADJUST : CONVERT;
             break;
         case Float:
             strcpy(header->type,"REAL");
@@ -363,18 +364,15 @@ int  ImageBase::writeIMAGIC(size_t img_select, int mode, String bitDepth, bool a
         default:
             REPORT_ERROR(ERR_TYPE_INCORRECT,"ERROR: incorrect IMAGIC bits depth value.");
         }
-        castMode = (adjust)? ADJUST : CONVERT;
     }
 
     if (mmapOnWrite)
     {
+        MDMainHeader.setValue(MDL_DATATYPE,(int) wDType);
         if (!checkMmapT(wDType))
         {
             if (dataMode < DATA && castMode == CAST) // This means ImageGeneric wants to know which DataType must use in mapFile2Write
-            {
-                MDMainHeader.setValue(MDL_DATATYPE,(int) wDType);
                 return 0;
-            }
             else
                 REPORT_ERROR(ERR_MMAP, "File datatype and image declaration not compatible with mmap.");
         }
