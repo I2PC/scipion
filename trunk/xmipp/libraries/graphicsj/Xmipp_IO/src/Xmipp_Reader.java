@@ -32,6 +32,8 @@ public class Xmipp_Reader extends ImagePlus implements PlugIn {
             show = true;
         }
 
+        IJ.showStatus("Reading: " + filename);
+
         try {
             ImageDouble image = new ImageDouble(filename);
 

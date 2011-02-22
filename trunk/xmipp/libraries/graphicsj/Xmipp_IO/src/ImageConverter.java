@@ -19,26 +19,26 @@ public class ImageConverter {
             image.convertPSD();
         }
 
-        int w = image.getWidth();
-        int h = image.getHeight();
-        int d = image.getDepth();
-        long n = image.getNimages();
+        int w = image.getXsize();
+        int h = image.getYsize();
+        int d = image.getZsize();
+        long n = image.getNsize();
 
-//        System.out.println("(" + w + ", " + h + ", " + d + ", " + n + ")");
-
-        return convertToImagej(image.getData(), w, h, d, path);
+        return convertToImagej(image.getData(), w, h, d, n, path);
     }
 
-    private static ImagePlus convertToImagej(double array[], int w, int h, int d, String title) {
+    private static ImagePlus convertToImagej(double array[], int w, int h, int d, long n, String title) {
         int sliceSize = w * h;
         double out[] = new double[sliceSize];
         ImageStack is = new ImageStack(w, h);
 
-        for (int i = 0; i < d; i++) {
-            System.arraycopy(array, i * sliceSize, out, 0, sliceSize);
+        for (int i = 0; i < n; i++) {
+            for (int j = 0; j < d; j++) {
+                System.arraycopy(array, j * sliceSize, out, 0, sliceSize);
 
-            FloatProcessor processor = new FloatProcessor(w, h, out);
-            is.addSlice(String.valueOf(i), processor);
+                FloatProcessor processor = new FloatProcessor(w, h, out);
+                is.addSlice(String.valueOf(i), processor);
+            }
         }
 
         return new ImagePlus(title, is);

@@ -5,7 +5,6 @@ import ij.ImageStack;
 import ij.io.OpenDialog;
 import ij.plugin.PlugIn;
 import java.io.File;
-import xmipp.ImageDouble;
 import xmipp.MDLabel;
 import xmipp.MetaData;
 
@@ -40,11 +39,13 @@ public class Xmipp_SelReader extends ImagePlus implements PlugIn {
             return;
         }
 
+        IJ.showStatus("Reading: " + filename);
+
         try {
             MetaData md = new MetaData();
             md.read(filename);
 
-            String rootDir = (new File(filename)).getParent() + File.separator;
+            String rootdir = (new File(filename)).getParent() + File.separator;
 
             if (md.containsLabel(MDLabel.MDL_IMAGE)) {
                 long ids[] = md.findObjects();
@@ -54,12 +55,14 @@ public class Xmipp_SelReader extends ImagePlus implements PlugIn {
                 for (long id : ids) {
                     String imagefile = md.getValueString(MDLabel.MDL_IMAGE, id);
 
-                    if (!imagefile.startsWith(File.separator)) {
-                        imagefile = rootDir + imagefile;
+                    // Checks if is necessary to concatenate root dir.
+                    File f = new File(imagefile);
+                    if (!f.isAbsolute()) {
+                        imagefile = rootdir + imagefile;
                     }
 
-                    ImageDouble image = new ImageDouble(imagefile);
-                    ImagePlus imp = ImageConverter.convertToImagej(image, "" + id);
+                    // Opens through ImageJ. It will use Xmipp_Reader :)
+                    ImagePlus imp = IJ.openImage(imagefile);
 
                     if (is == null) {
                         is = new ImageStack(imp.getWidth(), imp.getHeight());

@@ -4,6 +4,7 @@ import ij.ImagePlus;
 import ij.io.SaveDialog;
 import ij.plugin.filter.PlugInFilter;
 import ij.process.ImageProcessor;
+import ij.util.Tools;
 import java.io.File;
 import xmipp.ImageDouble;
 
@@ -25,7 +26,7 @@ public class Xmipp_Writer implements PlugInFilter {
         this.img = img;
 
         File file = new File(filename);
-        rootdir = file.getParent() + File.separator;
+        rootdir = file.isAbsolute() ? "" : file.getParent() + File.separator;
 
         return DOES_32 + DOES_16 + DOES_8G + NO_CHANGES;
     }
@@ -40,19 +41,23 @@ public class Xmipp_Writer implements PlugInFilter {
             }
         }
 
-        System.out.println("Saving: " + rootdir + filename);
+        IJ.showStatus("Saving: " + rootdir + filename);
 
-        IJ.showMessage("@TODO Save!! + ABOUT");
+        try {
+            float data[] = (float[]) img.getProcessor().getPixels();
+            write(filename,
+                    img.getWidth(), img.getHeight(), img.getStackSize(),
+                    Tools.toDouble(data));
+        } catch (Exception ex) {
+            IJ.error(ex.getMessage());
+        }
+    }
 
-        /*        try {
-        // @TODO Convert reversed into ImageDouble:
-        // ImagePlus imp = ImageConverter.convertToImagej(image, filename);
+    protected static void write(String filename, int w, int h, int d, double data[]) throws Exception {
         ImageDouble image = new ImageDouble();
 
+        image.setFilename(filename);
+        image.setData(w, h, d, data);
         image.write(filename);
-
-        } catch (Exception ex) {
-        IJ.error(ex.getMessage());
-        }*/
     }
 }
