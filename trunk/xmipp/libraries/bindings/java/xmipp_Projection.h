@@ -9,10 +9,26 @@ extern "C" {
 #endif
 /*
  * Class:     xmipp_Projection
+ * Method:    storeIds
+ * Signature: ()V
+ */
+JNIEXPORT void JNICALL Java_xmipp_Projection_storeIds
+  (JNIEnv *, jclass);
+
+/*
+ * Class:     xmipp_Projection
  * Method:    create
  * Signature: ()V
  */
 JNIEXPORT void JNICALL Java_xmipp_Projection_create
+  (JNIEnv *, jobject);
+
+/*
+ * Class:     xmipp_Projection
+ * Method:    destroy
+ * Signature: ()V
+ */
+JNIEXPORT void JNICALL Java_xmipp_Projection_destroy
   (JNIEnv *, jobject);
 
 /*
@@ -34,10 +50,58 @@ JNIEXPORT void JNICALL Java_xmipp_Projection_setXmippOrigin
 /*
  * Class:     xmipp_Projection
  * Method:    projectVolume
- * Signature: (Lxmipp/ImageDouble;Lxmipp/Projection;IIDDD)V
+ * Signature: (Lxmipp/ImageDouble;Lxmipp/Projection;DDD)V
  */
 JNIEXPORT void JNICALL Java_xmipp_Projection_projectVolume
-  (JNIEnv *, jclass, jobject, jobject, jint, jint, jdouble, jdouble, jdouble);
+  (JNIEnv *, jclass, jobject, jobject, jdouble, jdouble, jdouble);
+
+/*
+ * Class:     xmipp_Projection
+ * Method:    write
+ * Signature: (Ljava/lang/String;)V
+ */
+JNIEXPORT void JNICALL Java_xmipp_Projection_write
+  (JNIEnv *, jobject, jstring);
+
+/*
+ * Class:     xmipp_Projection
+ * Method:    getData
+ * Signature: ()[D
+ */
+JNIEXPORT jdoubleArray JNICALL Java_xmipp_Projection_getData
+  (JNIEnv *, jobject);
+
+/*
+ * Class:     xmipp_Projection
+ * Method:    getXsize
+ * Signature: ()I
+ */
+JNIEXPORT jint JNICALL Java_xmipp_Projection_getXsize
+  (JNIEnv *, jobject);
+
+/*
+ * Class:     xmipp_Projection
+ * Method:    getYsize
+ * Signature: ()I
+ */
+JNIEXPORT jint JNICALL Java_xmipp_Projection_getYsize
+  (JNIEnv *, jobject);
+
+/*
+ * Class:     xmipp_Projection
+ * Method:    getZsize
+ * Signature: ()I
+ */
+JNIEXPORT jint JNICALL Java_xmipp_Projection_getZsize
+  (JNIEnv *, jobject);
+
+/*
+ * Class:     xmipp_Projection
+ * Method:    printShape
+ * Signature: ()V
+ */
+JNIEXPORT void JNICALL Java_xmipp_Projection_printShape
+  (JNIEnv *, jobject);
 
 #ifdef __cplusplus
 }

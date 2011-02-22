@@ -6,8 +6,6 @@ public class ImageDouble {
     //hold pointer to Image class in C++ space
     private long peer;
     private String filename;
-    private int width, height, depth;
-    private long nimages;
 
     // Initialize library.
     static {
@@ -15,19 +13,19 @@ public class ImageDouble {
         storeIds();
     }
 
-    //caching some ids
+    // Catching some ids
     private static native void storeIds();
 
-    //functions to create images
-    private native void create();
+    // Functions to create objects.
+    protected native void create();
 
     // Destructor.
-    private synchronized native void destroy();
+    protected synchronized native void destroy();
 
     // Reading.
     private native void read(String filename, boolean readData, long nimage) throws Exception;
 
-    private native void readPreview(String filename,
+    public native void readPreview(String filename,
             int w, int h, int slice, long nimage) throws Exception;
 
     // Set data.
@@ -38,14 +36,14 @@ public class ImageDouble {
 
     // Data.
     public native double[] getData();
-
+    /*
     public native double getPixel(int x, int y);
 
     public native void setPixel(int x, int y, double value);
 
     public native double getVoxel(int x, int y, int z);
 
-    public native void setVoxel(int x, int y, int z, double value);
+    public native void setVoxel(int x, int y, int z, double value);*/
 
     public native void convertPSD();
 
@@ -94,11 +92,6 @@ public class ImageDouble {
         read(filename, readData, 0);
     }
 
-//    private void read(String filename, boolean readData, long nimage) throws Exception {
-//        read_(filename, readData, nimage);
-///*
-//        storeData(filename);*/
-//    }
     public void readPreview(String filename, int w, int h) throws Exception {
         readPreview(filename, w, h, 0, 0);
     }
@@ -106,40 +99,7 @@ public class ImageDouble {
     public void readPreview(String filename, int w, int h, int slice) throws Exception {
         readPreview(filename, w, h, slice, 0);
     }
-//
-//    public void readPreview(String filename, int w, int h, int slice, long nimage) throws Exception {
-//        readPreview_(filename, w, h, slice, nimage);
-///*
-//        storeData(filename);*/
-//    }
 
-//    public native int[] getSize();
-/*    private void storeData(String filename) {
-    this.filename = filename;
-
-    int dimensions[] = getDimensions_();
-
-    width = dimensions[INDEX_WIDTH];
-    height = dimensions[INDEX_HEIGHT];
-    depth = dimensions[INDEX_DEPTH];
-    nimages = getNImages_();
-    }*/
-    /*
-    public int getWidth() {
-    return width;
-    }
-
-    public int getHeight() {
-    return height;
-    }
-
-    public int getDepth() {
-    return depth;
-    }
-
-    public long getNimages() {
-    return nimages;
-    }*/
     public void setFilename(String filename) {
         this.filename = filename;
     }

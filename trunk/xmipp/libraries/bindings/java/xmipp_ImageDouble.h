@@ -73,38 +73,6 @@ JNIEXPORT jdoubleArray JNICALL Java_xmipp_ImageDouble_getData
 
 /*
  * Class:     xmipp_ImageDouble
- * Method:    getPixel
- * Signature: (II)D
- */
-JNIEXPORT jdouble JNICALL Java_xmipp_ImageDouble_getPixel
-  (JNIEnv *, jobject, jint, jint);
-
-/*
- * Class:     xmipp_ImageDouble
- * Method:    setPixel
- * Signature: (IID)V
- */
-JNIEXPORT void JNICALL Java_xmipp_ImageDouble_setPixel
-  (JNIEnv *, jobject, jint, jint, jdouble);
-
-/*
- * Class:     xmipp_ImageDouble
- * Method:    getVoxel
- * Signature: (III)D
- */
-JNIEXPORT jdouble JNICALL Java_xmipp_ImageDouble_getVoxel
-  (JNIEnv *, jobject, jint, jint, jint);
-
-/*
- * Class:     xmipp_ImageDouble
- * Method:    setVoxel
- * Signature: (IIID)V
- */
-JNIEXPORT void JNICALL Java_xmipp_ImageDouble_setVoxel
-  (JNIEnv *, jobject, jint, jint, jint, jdouble);
-
-/*
- * Class:     xmipp_ImageDouble
  * Method:    convertPSD
  * Signature: ()V
  */

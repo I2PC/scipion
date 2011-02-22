@@ -8,7 +8,7 @@ static jfieldID ImageDouble_peerId;
 static jfieldID ImageDouble_filenameId;
 
 #define peerId ImageDouble_peerId
-#define GET_INTERNAL_IMAGE() ((Image<double>*)(env->GetLongField(obj, peerId)))
+#define GET_INTERNAL_IMAGE(obj) ((Image<double>*)(env->GetLongField(obj, peerId)))
 
 JNIEXPORT void JNICALL Java_xmipp_ImageDouble_storeIds
 (JNIEnv *env, jclass cls) {
@@ -16,26 +16,26 @@ JNIEXPORT void JNICALL Java_xmipp_ImageDouble_storeIds
 }
 
 JNIEXPORT void JNICALL Java_xmipp_ImageDouble_create
-(JNIEnv *env, jobject obj) {
-	Image<double> * image = new Image<double>();
-	env->SetLongField(obj, peerId, (long)image);
+(JNIEnv *env, jobject jobj) {
+	Image<double> *image = new Image<double>();
+	env->SetLongField(jobj, peerId, (long)image);
 }
 
 JNIEXPORT void JNICALL Java_xmipp_ImageDouble_destroy
-(JNIEnv *env, jobject obj) {
-	Image<double> * image = GET_INTERNAL_IMAGE();
+(JNIEnv *env, jobject jobj) {
+	Image<double> *image = GET_INTERNAL_IMAGE(jobj);
 	delete image;
 	image = NULL;
-	env->SetLongField(obj, peerId, (long)image);
+	env->SetLongField(jobj, peerId, (long)image);
 }
 
 JNIEXPORT void JNICALL Java_xmipp_ImageDouble_read
-(JNIEnv *env, jobject obj, jstring filename, jboolean read_data, jlong nimage) {
+(JNIEnv *env, jobject jobj, jstring filename, jboolean read_data, jlong nimage) {
 	std::string msg = "";
-	Image<double> * image = GET_INTERNAL_IMAGE();
+	Image<double> *image = GET_INTERNAL_IMAGE(jobj);
 
 	if (image != NULL) {
-		const char * fnStr = env->GetStringUTFChars(filename, false);
+		const char *fnStr = env->GetStringUTFChars(filename, false);
 
 		try {
 			image->read(fnStr, (read_data)? DATA : HEADER, (size_t)nimage);
@@ -57,9 +57,9 @@ JNIEXPORT void JNICALL Java_xmipp_ImageDouble_read
 }
 
 JNIEXPORT void JNICALL Java_xmipp_ImageDouble_readPreview
-(JNIEnv *env, jobject obj, jstring filename, jint w, jint h, jint slice, jlong nimage) {
+(JNIEnv *env, jobject jobj, jstring filename, jint w, jint h, jint slice, jlong nimage) {
 	std::string msg = "";
-	Image<double> *image = GET_INTERNAL_IMAGE();
+	Image<double> *image = GET_INTERNAL_IMAGE(jobj);
 
 	if (image != NULL) {
 		const char *fnStr = env->GetStringUTFChars(filename, false);
@@ -84,9 +84,9 @@ JNIEXPORT void JNICALL Java_xmipp_ImageDouble_readPreview
 }
 
 JNIEXPORT void JNICALL Java_xmipp_ImageDouble_setData
-(JNIEnv *env, jobject obj, jint w, jint h, jint d, jdoubleArray data) {
+(JNIEnv *env, jobject jobj, jint w, jint h, jint d, jdoubleArray data) {
 	std::string msg = "";
-	Image<double> *image = GET_INTERNAL_IMAGE();
+	Image<double> *image = GET_INTERNAL_IMAGE(jobj);
 
 	if (image != NULL) {
 		try {
@@ -110,9 +110,9 @@ JNIEXPORT void JNICALL Java_xmipp_ImageDouble_setData
 }
 
 JNIEXPORT void JNICALL Java_xmipp_ImageDouble_write
-(JNIEnv *env, jobject obj, jstring filename) {
+(JNIEnv *env, jobject jobj, jstring filename) {
 	std::string msg = "";
-	Image<double> * image = GET_INTERNAL_IMAGE();
+	Image<double> *image = GET_INTERNAL_IMAGE(jobj);
 
 	if (image != NULL) {
 		const char * fnStr = env->GetStringUTFChars(filename, false);
@@ -137,8 +137,8 @@ JNIEXPORT void JNICALL Java_xmipp_ImageDouble_write
 }
 
 JNIEXPORT jdoubleArray JNICALL Java_xmipp_ImageDouble_getData(JNIEnv *env,
-		jobject obj) {
-	Image<double> * image = GET_INTERNAL_IMAGE();
+		jobject jobj) {
+	Image<double> *image = GET_INTERNAL_IMAGE(jobj);
 	if (image != NULL) {
 		size_t size = image->getSize();
 		jdoubleArray array = env->NewDoubleArray(size);
@@ -150,9 +150,9 @@ JNIEXPORT jdoubleArray JNICALL Java_xmipp_ImageDouble_getData(JNIEnv *env,
 }
 
 JNIEXPORT jdouble JNICALL Java_xmipp_ImageDouble_getPixel(JNIEnv *env,
-		jobject obj, jint x, jint y) {
+		jobject jobj, jint x, jint y) {
 	double value = 0;
-	Image<double> * image = GET_INTERNAL_IMAGE();
+	Image<double> * image = GET_INTERNAL_IMAGE(jobj);
 
 	if (image != NULL) {
 		value = image->getPixel((int) x, (int) y);
@@ -162,8 +162,8 @@ JNIEXPORT jdouble JNICALL Java_xmipp_ImageDouble_getPixel(JNIEnv *env,
 }
 
 JNIEXPORT void JNICALL Java_xmipp_ImageDouble_setPixel
-(JNIEnv *env, jobject obj, jint x, jint y, jdouble value) {
-	Image<double> * image = GET_INTERNAL_IMAGE();
+(JNIEnv *env, jobject jobj, jint x, jint y, jdouble value) {
+	Image<double> *image = GET_INTERNAL_IMAGE(jobj);
 
 	if (image != NULL) {
 		image->setPixel((int)x, (int)y, (double)value);
@@ -171,9 +171,9 @@ JNIEXPORT void JNICALL Java_xmipp_ImageDouble_setPixel
 }
 
 JNIEXPORT jdouble JNICALL Java_xmipp_ImageDouble_getVoxel(JNIEnv *env,
-		jobject obj, jint x, jint y, jint z) {
+		jobject jobj, jint x, jint y, jint z) {
 	double value = 0;
-	Image<double> * image = GET_INTERNAL_IMAGE();
+	Image<double> *image = GET_INTERNAL_IMAGE(jobj);
 
 	if (image != NULL) {
 		value = image->data.getVoxel((int) x, (int) y, (int) z);
@@ -183,16 +183,16 @@ JNIEXPORT jdouble JNICALL Java_xmipp_ImageDouble_getVoxel(JNIEnv *env,
 }
 
 JNIEXPORT void JNICALL Java_xmipp_ImageDouble_setVoxel
-(JNIEnv *env, jobject obj, jint x, jint y, jint z, jdouble value) {
-	Image<double> * image = GET_INTERNAL_IMAGE();
+(JNIEnv *env, jobject jobj, jint x, jint y, jint z, jdouble value) {
+	Image<double> *image = GET_INTERNAL_IMAGE(jobj);
 
 	if (image != NULL) {
 		image->data.setVoxel((int)x, (int)y, (int)z, (double)value);
 	}
 }
 
-JNIEXPORT void JNICALL Java_xmipp_ImageDouble_convertPSD(JNIEnv *env, jobject obj) {
-	Image<double> * image = GET_INTERNAL_IMAGE();
+JNIEXPORT void JNICALL Java_xmipp_ImageDouble_convertPSD(JNIEnv *env, jobject jobj) {
+	Image<double> *image = GET_INTERNAL_IMAGE(jobj);
 	if (image != NULL) {
 		MultidimArray<double> out(image->getSize());
 		xmipp2PSD(image->data, out);
@@ -202,8 +202,8 @@ JNIEXPORT void JNICALL Java_xmipp_ImageDouble_convertPSD(JNIEnv *env, jobject ob
 }
 
 JNIEXPORT jint JNICALL Java_xmipp_ImageDouble_getXsize(JNIEnv * env,
-		jobject obj) {
-	Image<double> * image = GET_INTERNAL_IMAGE();
+		jobject jobj) {
+	Image<double> *image = GET_INTERNAL_IMAGE(jobj);
 
 	if (image != NULL) {
 		return XSIZE(image->data);
@@ -213,8 +213,8 @@ JNIEXPORT jint JNICALL Java_xmipp_ImageDouble_getXsize(JNIEnv * env,
 }
 
 JNIEXPORT jint JNICALL Java_xmipp_ImageDouble_getYsize(JNIEnv * env,
-		jobject obj) {
-	Image<double> * image = GET_INTERNAL_IMAGE();
+		jobject jobj) {
+	Image<double> *image = GET_INTERNAL_IMAGE(jobj);
 
 	if (image != NULL) {
 		return YSIZE(image->data);
@@ -224,8 +224,8 @@ JNIEXPORT jint JNICALL Java_xmipp_ImageDouble_getYsize(JNIEnv * env,
 }
 
 JNIEXPORT jint JNICALL Java_xmipp_ImageDouble_getZsize(JNIEnv * env,
-		jobject obj) {
-	Image<double> * image = GET_INTERNAL_IMAGE();
+		jobject jobj) {
+	Image<double> *image = GET_INTERNAL_IMAGE(jobj);
 
 	if (image != NULL) {
 		return ZSIZE(image->data);
@@ -235,8 +235,8 @@ JNIEXPORT jint JNICALL Java_xmipp_ImageDouble_getZsize(JNIEnv * env,
 }
 
 JNIEXPORT jlong JNICALL Java_xmipp_ImageDouble_getNsize(JNIEnv * env,
-		jobject obj) {
-	Image<double> * image = GET_INTERNAL_IMAGE();
+		jobject jobj) {
+	Image<double> *image = GET_INTERNAL_IMAGE(jobj);
 
 	if (image != NULL) {
 		return NSIZE(image->data);
@@ -246,7 +246,7 @@ JNIEXPORT jlong JNICALL Java_xmipp_ImageDouble_getNsize(JNIEnv * env,
 }
 
 JNIEXPORT void JNICALL Java_xmipp_ImageDouble_printShape
-(JNIEnv *env, jobject obj) {
-	Image<double> * image = GET_INTERNAL_IMAGE();
+(JNIEnv *env, jobject jobj) {
+	Image<double> *image = GET_INTERNAL_IMAGE(jobj);
 	std::cout << (*image) << std::endl;
 }
