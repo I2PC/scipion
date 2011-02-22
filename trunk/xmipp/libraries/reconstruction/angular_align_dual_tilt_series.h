@@ -29,12 +29,13 @@
 #include <data/metadata.h>
 #include <data/multidim_array.h>
 #include <data/matrix2d.h>
+#include <data/program.h>
 
 /**@defgroup AlignDualProgram Align two dual tilt series
    @ingroup ReconsLibrary */
 //@{
 /** Align dual tilt series parameters. */
-class Prog_align_dual
+class Prog_align_dual: public XmippProgram
 {
 public:
     /// Reference tilt series
@@ -48,18 +49,15 @@ public:
 
     /// Scale factor
     double scaleFactor;
-
-    /// Show
-    bool verbose;
 public:
     /// Read parameters from comamnd line
-    void read(int argc, char **argv);
+    void readParams();
 
     /// Show parameters
     void show();
 
     /// Usage
-    void usage();
+    void defineParams();
 
     /// Read dual series
     void readDual();
@@ -91,6 +89,9 @@ public:
     void shiftProjectionInZ(MultidimArray<double> &I, int dualj, double Z) const;
 
 public:
+    // Show debugging information
+    bool debugging;
+
     // Reference tilt series
     MetaData SFRef;
 
@@ -111,6 +112,9 @@ public:
 
     // Dual images are rotated 180 degrees
     bool rotatedDual;
+
+    // Name of the images closer to 0 degrees
+    FileName fnRef0, fnDual0;
 
     // Shift at 0 degrees
     Matrix1D<double> alignment;

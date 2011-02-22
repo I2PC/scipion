@@ -38,19 +38,19 @@ double wrapperDualAligment(double *p, void *prm)
 }
 
 /// Read parameters
-void Prog_align_dual::read(int argc, char **argv)
+void Prog_align_dual::readParams()
 {
-    fnRef=getParameter(argc,argv,"-ref");
-    fnDual=getParameter(argc,argv,"-dual");
-    fnOut=getParameter(argc,argv,"-o","");
-    scaleFactor=textToFloat(getParameter(argc,argv,"-scale","0.25"));
-    verbose=false;
+    fnRef=getParam("--ref");
+    fnDual=getParam("--dual");
+    fnOut=getParam("-o");
+    scaleFactor=getDoubleParam("--scale");
 }
 
 /// Show parameters
 void Prog_align_dual::show()
 {
-    std::cout << "Reference: " << fnRef       << std::endl
+    std::cout
+    << "Reference: " << fnRef       << std::endl
     << "Dual:      " << fnDual      << std::endl
     << "Output:    " << fnOut       << std::endl
     << "Scale:     " << scaleFactor << std::endl
@@ -58,14 +58,13 @@ void Prog_align_dual::show()
 }
 
 /// Usage
-void Prog_align_dual::usage()
+void Prog_align_dual::defineParams()
 {
-    std::cout << "Usage:\n"
-    << "  -ref  <selfile>  : Reference tilt series\n"
-    << "  -dual <selfile>  : Dual tilt series\n"
-    << " [-o <rootname>]   : Rootname for the aligned tilt series\n"
-    << " [-scale <s=0.25>] : Scale for performing the common line comparisons\n"
-    ;
+    addUsageLine("Align two dual tilt series that have been previously internally aligned");
+    addParamsLine("  --ref  <selfile>  : Reference tilt series");
+    addParamsLine("  --dual <selfile>  : Dual tilt series");
+    addParamsLine(" [-o <rootname=\"\">]  : Rootname for the aligned tilt series");
+    addParamsLine(" [--scale <s=0.25>] : Scale for performing the common line comparisons");
 }
 
 /// Read dual series
@@ -76,23 +75,31 @@ void Prog_align_dual::readDual()
     int i=0;
     Image<double> I;
     FileName fnImg;
+    double minAbsTilt=1000;
     FOR_ALL_OBJECTS_IN_METADATA(SFDual)
     {
         SFDual.getValue(MDL_IMAGE,fnImg, __iter.objId);
+        SFDual.getValue(MDL_ANGLETILT,tiltDual(i), __iter.objId);
+        if (fabs(tiltDual(i))<minAbsTilt)
+        {
+            minAbsTilt=fabs(tiltDual(i));
+            fnDual0=fnImg;
+        }
         I.read(fnImg);
-        tiltDual(i++)=I.tilt();
         selfScaleToSize(BSPLINE3,I(),ROUND(YSIZE(I())*scaleFactor),
                         ROUND(XSIZE(I())*scaleFactor));
         I().setXmippOrigin();
         Xdim=XSIZE(I());
         Ydim=YSIZE(I());
         imgDual.push_back(I());
+        i++;
     }
 }
 
 /// Produce side info
 void Prog_align_dual::produceSideInfo()
 {
+	debugging=false;
     if (fnOut=="")
         fnOut=fnDual.withoutExtension();
 
@@ -105,15 +112,22 @@ void Prog_align_dual::produceSideInfo()
     int i=0;
     Image<double> I;
     FileName fnImg;
+    double minAbsTilt=1000;
     FOR_ALL_OBJECTS_IN_METADATA(SFRef)
     {
         SFRef.getValue(MDL_IMAGE,fnImg,__iter.objId);
+        SFRef.getValue(MDL_ANGLETILT,tiltRef(i),__iter.objId);
+        if (fabs(tiltRef(i))<minAbsTilt)
+        {
+            minAbsTilt=fabs(tiltRef(i));
+            fnRef0=fnImg;
+        }
         I.read(fnImg);
-        tiltRef(i++)=I.tilt();
         selfScaleToSize(BSPLINE3,I(),ROUND(YSIZE(I())*scaleFactor),
                         ROUND(XSIZE(I())*scaleFactor));
         I().setXmippOrigin();
         imgRef.push_back(I());
+        i++;
     }
 
     // Read Dual series
@@ -136,33 +150,9 @@ void Prog_align_dual::produceSideInfo()
 //#define DEBUG
 void Prog_align_dual::findParametersAt0degrees(bool rotateDual)
 {
-    // Look for the images at 0 degrees
-    int idxRef0=-1;
-    double minAbsTilt=1000;
-    FOR_ALL_ELEMENTS_IN_ARRAY1D(tiltRef)
-    if (ABS(tiltRef(i))<minAbsTilt)
-    {
-        minAbsTilt=ABS(tiltRef(i));
-        idxRef0=i;
-    }
-
-    // Look for the images at 0 degrees
-    int idxDual0=-1;
-    minAbsTilt=1000;
-    FOR_ALL_ELEMENTS_IN_ARRAY1D(tiltDual)
-    if (ABS(tiltDual(i))<minAbsTilt)
-    {
-        minAbsTilt=ABS(tiltDual(i));
-        idxDual0=i;
-    }
-
-    FileName fnRef, fnDual;
-    SFRef.getValue(MDL_IMAGE,fnRef,idxRef0);
-    SFDual.getValue(MDL_IMAGE,fnDual,idxDual0);
-    Image<double> Iref;
-    Iref.read(fnRef);
-    Image<double> Idual;
-    Idual.read(fnDual);
+    Image<double> Iref, Idual;
+    Iref.read(fnRef0);
+    Idual.read(fnDual0);
     Iref().setXmippOrigin();
     Idual().setXmippOrigin();
     if (rotateDual)
@@ -211,7 +201,7 @@ void Prog_align_dual::findParametersAt0degrees(bool rotateDual)
         std::cout << "First estimate (180) of (rot,tilt,psi,x,y,z)=\n"
         << alignment.transpose() << std::endl;
     /*
-            verbose=true;
+            debugging=true;
     */
 }
 #undef DEBUG
@@ -294,7 +284,7 @@ double Prog_align_dual::distanceBetweenCommonLines(
     save.write("PPPdualAligned.xmp");
 #endif
 
-    if (verbose)
+    if (debugging)
     {
         std::cout << "refi=" << refi << " dualj=" << dualj << std::endl
         << "   tiltRef=" << tiltRef(refi) << " tiltDual=" << tiltDual(dualj) << std::endl
@@ -360,9 +350,9 @@ double Prog_align_dual::optimizeAlignment()
                     iter,steps,true);
 #ifdef DEBUG
 
-    verbose=true;
+    debugging=true;
     evaluateAlignment(alignment);
-    verbose=false;
+    debugging=false;
 #endif
 
     return fitness;
