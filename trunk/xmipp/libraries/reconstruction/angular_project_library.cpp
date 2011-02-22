@@ -176,7 +176,7 @@ void ProgAngularProjectLibrary::project_angle_vector (int my_init, int my_end, b
             else
                 projectVolume(inputVol(), P, Ydim, Xdim,rot,tilt,psi);
 
-            P.write(output_file,numberStepsPsi * i + mypsi,true,WRITE_REPLACE);
+            P.write(output_file,(size_t) (numberStepsPsi * i + mypsi +1),true,WRITE_REPLACE);
         }
     }
     if (verbose)
@@ -298,7 +298,7 @@ void ProgAngularProjectLibrary::run()
     MetaData  mySFin, mySFout;
     FileName fn_temp;
     mySFin.read(output_file_root+"_angles.doc");
-    int myCounter=-1;
+    size_t myCounter=0;
     size_t id;
     for (int mypsi=0;mypsi<360;mypsi += psi_sampling)
     {
