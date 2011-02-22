@@ -29,11 +29,19 @@ import java.lang.reflect.Method;
 import javax.swing.AbstractAction;
 
 /**
- * Handles user interactions connecting commands with the window controller, with the help of Java reflection
- * 
+ * - Why?
+ * It acts like a sweet bridge between Swing components events and our Controller.
+ * Just create a TomoAction and pass it to the component's constructor
+ * @extends AbstractAction - so you can link a TomoAction to a Swing component (say, a JButton). When the 
+ *   component fires an event, TomoAction.actionPerformed is called
+ * Alternatives to "Action paradigm": trying to identify a component in a "if list" by its label
  */
 
 public class TomoAction extends AbstractAction {
+	// Following MVC paradigm, a mechanism is needed to establish which Controller's method to call when
+	// some specific event (like clicking on a button) happens, and hence actionPerformed is called.
+	// I opted for Java reflection, which allows for calling methods using a String.
+	// The alternative would be a long "if list", again
 	private Method methodToCall;
 	private TomoController controller;
 	// right now it's not necessary because controller's method have no
@@ -52,8 +60,7 @@ public class TomoAction extends AbstractAction {
 	}
 
 	/*
-	 * Calls a controller's method according to the command cmd
-	 * 
+	 * Calls the controller's method corresponding to this action
 	 * @see
 	 * java.awt.event.ActionListener#actionPerformed(java.awt.event.ActionEvent)
 	 */

@@ -1,12 +1,3 @@
-import java.awt.BasicStroke;
-import java.awt.Color;
-import java.awt.Graphics;
-import java.awt.Graphics2D;
-import java.awt.geom.Line2D;
-
-import ij.ImagePlus;
-import ij.gui.ImageCanvas;
-
 /***************************************************************************
  * 
  * @author: Jesus Cuenca (jcuenca@cnb.csic.es)
@@ -31,6 +22,17 @@ import ij.gui.ImageCanvas;
  *          All comments concerning this program package may be sent to the
  *          e-mail address 'xmipp@cnb.csic.es'
  ***************************************************************************/
+/**
+ * - Why?
+ * XmippTomo needs some visual customizations which only worked with a custom Canvas
+ */
+
+import java.awt.BasicStroke;
+import java.awt.Color;
+import java.awt.Graphics;
+import java.awt.Graphics2D;
+import java.awt.geom.Line2D;
+import ij.gui.ImageCanvas;
 
 public class TomoImageCanvas extends ImageCanvas {
 	private TomoData model;
@@ -45,7 +47,7 @@ public class TomoImageCanvas extends ImageCanvas {
 
 		if (model != null) {
 			if (model.isCurrentEnabled() == false) {
-				drawDiscarded(g);
+				drawDiscardedMark(g);
 			}
 		}
 	}
@@ -54,7 +56,7 @@ public class TomoImageCanvas extends ImageCanvas {
 	 * Overlay a cross (X) in the canvas
 	 * @param g
 	 */
-	private void drawDiscarded(Graphics g){
+	private void drawDiscardedMark(Graphics g){
 		Graphics2D g2 = (Graphics2D) g;
 		g2.setColor(Color.RED);
 		g2.setStroke(new BasicStroke(4));

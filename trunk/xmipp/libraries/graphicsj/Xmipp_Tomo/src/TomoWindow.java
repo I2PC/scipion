@@ -22,7 +22,6 @@
  *  All comments concerning this program package may be sent to the
  *  e-mail address 'xmipp@cnb.csic.es'
  ***************************************************************************/
-
 import ij.IJ;
 import ij.ImagePlus;
 import ij.WindowManager;
@@ -53,26 +52,46 @@ import javax.swing.UIManager;
 import javax.swing.plaf.FontUIResource;
 
 /**
- * @author jcuenca
- * Custom visualization window, using Swing and MVC paradigm
+ * - Why?
+ * MVC paradigm -> you need a View. Hence TomoWindow
  * 
- * implements: WindowListener, AdjustmentListener (scrollbars), MouseMotionListener, ActionListener, PropertyChangeListener to handle GUI events
- * 			DialogListener to capture GenericDialogs, ComponentListener to handle window resizing
- */
-/**
- * Protocol for adding new buttons to the workflow/UI:
- * - declare its command in Command
- * - define the action method in TomoController
- * - include the command in its menu list (for example, commandsMenuFile) 
- * - set a proper enable/disable cycle along user interaction
- * (tipically start disabled, enable it when user can click it)
+ * TODO: refactor Swing code to a superclass
+ * 
+ * implements: 
+ * - WindowListener: windowclosing and the like
+ * - MouseMotionListener: cursor position
+ * - PropertyChangeListener: model properties changes
+ * - DialogListener to capture GenericDialogs,
+ * - ComponentListener to handle window resizing
+ * - ActionListener: for timers (@see getTimer())
  */
 public class TomoWindow extends ImageWindow implements WindowListener,
-		AdjustmentListener, MouseMotionListener, ActionListener,
+		MouseMotionListener, ActionListener,
 		PropertyChangeListener, DialogListener, ComponentListener {
+	/**
+	 * Protocol for adding new buttons to the workflow/UI:
+	 * - declare its command in Command
+	 * - define the action method in TomoController
+	 * - include the command in its menu list (for example, commandsMenuFile) 
+	 * - set a proper enable/disable cycle along user interaction
+	 * (tipically start disabled, enable it when user can click it)
+	 */
+	
+	// TODO: progress bar that monitors commands stdout / log file / etc. Implement with SwingWorker? (@see example in Swingworker documentation)
+	// TODO: font antialiasing - @see ZZZZ
+	// TODO: zoom, scroll...
+	// TODO: enable load canceling
+	// TODO: preprocessing - non-blocking previews
+	// TODO: Undo - begin with preproc Undo
+	// TODO: preproc.export or option in save dialog - write a file without the disabled (discarded) projections, not simply setting enable in selfile
+	// TODO: move all code related to changes in currentProjection (related to imagecanvas) to TomoImageCanvas
+
 	// for serialization only - just in case
 	private static final long serialVersionUID = -4063711975454855701L;
 
+	// MVC Controller. Controller Should not be needed here (passive window)
+	private TomoController controller;
+	
 	// total number of digits to display as a String
 	private static int MAX_DIGITS = 9;
 	// Window title (without extra data; see getTitle() )
@@ -84,7 +103,7 @@ public class TomoWindow extends ImageWindow implements WindowListener,
 	private static Rectangle maxWindowSize = new Rectangle(800, 800);
 	// miliseconds to wait for a Plugin dialog to display (so the dialog capture
 	// can start)
-	public static int WAIT_FOR_DIALOG = 800;
+	public static int WAIT_FOR_DIALOG_SHOWS = 800;
 
 	public static String PLAY_ICON = "resources/icon-play.png",
 			PAUSE_ICON = "resources/icon-pause.png";
@@ -180,23 +199,16 @@ public class TomoWindow extends ImageWindow implements WindowListener,
 	private Command.State lastCommandState=Command.State.IDLE;
 	// true if changes are saved (so you can close the window without pain)
 	private boolean changeSaved = true;
-	// true if current projection is changing automatically
-	private boolean playing = false;
-	// true if play follows a loop pattern (after last image, play first), false if pattern is ping-pong (after last, play last-1 and so on)
-	private boolean playLoop=true;
-	// play direction: forward (+1) or backward (-1)
-	private int playDirection = 1;
+	
 	// window identifier - useful when you've got more than 1 window
 	private int windowId = -1;
-	private TomoController controller;
-	
-	// for protectWindow
-	private Roi tempRoi;
 
 	/* Window GUI components */
 	/* 4 main panels */
 	private JTabbedPane menuPanel;
 	private JPanel viewPanel, controlPanel, statusPanel;
+	
+	// hack for reusing ImageJ ImageWindow
 	private JFrame realWindow;
 
 	// Text fields and labels
@@ -206,8 +218,7 @@ public class TomoWindow extends ImageWindow implements WindowListener,
 	// Control scrollbars
 	private LabelScrollbar projectionScrollbar;
 
-	// the model stores the data that this window shows - @see TomoData
-	private TomoData model = null;
+
 
 	Point cursorLocation = new Point();
 
@@ -241,7 +252,6 @@ public class TomoWindow extends ImageWindow implements WindowListener,
 
 		setController(new TomoController(this));
 		
-		// change default font
 		Font defaultBoldFont = new Font("Dialog", Font.BOLD, 14), defaultFont = new Font(
 				"Dialog", Font.PLAIN, 14);
 		UIManager.put("Label.font", new FontUIResource(defaultBoldFont));
@@ -261,13 +271,14 @@ public class TomoWindow extends ImageWindow implements WindowListener,
 		imp = new ImagePlus();
 		imp.setWindow(this);
 		realWindow = new JFrame(TITLE);
-		// set this window as listener of general keyboard&mouse events
+
 		realWindow.addWindowListener(this);
 		realWindow.addComponentListener(this);
 		// EXIT_ON_CLOSE finishes ImageJ too...
 		// DO NOTHING allows for closing confirmation dialogs and the like
 		realWindow.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
 		WindowManager.addWindow(this);
+		realWindow.setTitle(getTitle());
 		addMainPanels();
 	}
 
@@ -276,7 +287,7 @@ public class TomoWindow extends ImageWindow implements WindowListener,
 		setWindowId(windowId);
 	}
 
-	// JFrame methods
+	// Interface to the JFrame we are really displaying to
 	private Container getContentPane() {
 		return realWindow.getContentPane();
 	}
@@ -309,14 +320,8 @@ public class TomoWindow extends ImageWindow implements WindowListener,
 		return checkboxes.get(id);
 	}
 
-	/**
-	 * Add the main panels with their components, and associate each text field
-	 * with model's documents (if a model is already set)
-	 */
-	private void addMainPanels() {
-		// Window title
-		realWindow.setTitle(getTitle());
 
+	private void addMainPanels() {
 		realWindow.setLayout(new BoxLayout(getContentPane(),
 				BoxLayout.PAGE_AXIS));
 
@@ -382,6 +387,8 @@ public class TomoWindow extends ImageWindow implements WindowListener,
 		viewPanel.setLayout(new ImageLayout(getCanvas()));
 		viewPanel.add(getCanvas());
 		getCanvas().addMouseMotionListener(this);
+		// listen to ImageWindow properties changes
+		// TODO: addView - is really needed?
 		addPropertyChangeListener(this);
 
 		realWindow.pack(); // adjust window size to host the new view panel
@@ -397,7 +404,6 @@ public class TomoWindow extends ImageWindow implements WindowListener,
 		// only add controls if they are not available already
 		if (projectionScrollbar != null){
 			projectionScrollbar.setMaximum(getModel().getNumberOfProjections());
-			getModel().setTiltModel(tiltTextField.getDocument());
 			return;
 		}
 		
@@ -416,15 +422,13 @@ public class TomoWindow extends ImageWindow implements WindowListener,
 		tiltTextField.setEditable(false);
 		controlPanel.add(tiltTextLabel);
 		controlPanel.add(tiltTextField);
-		getModel().setTiltModel(tiltTextField.getDocument());
 
 		projectionScrollbar = new LabelScrollbar(1, getModel()
 				.getNumberOfProjections());
 		projectionScrollbar.setText("Projection #");
-		projectionScrollbar.addAdjustmentListener(this);
+		projectionScrollbar.addAdjustmentListener(getController());
 		controlPanel.add(projectionScrollbar);
 
-		// addButton(PLAY, controlPanel);
 		try {
 			addButton(Command.PLAY, controlPanel);
 			addCheckbox(Command.PLAY_LOOP, controlPanel,true);
@@ -441,8 +445,7 @@ public class TomoWindow extends ImageWindow implements WindowListener,
 	 */
 	private void addMenuTabs() throws Exception {
 		// File
-		JPanel fileTabPanel = new JPanel(false); // false = no double buffer
-		// (flicker)
+		JPanel fileTabPanel = new JPanel(false); // false = no double buffer (flicker)
 		// menuPanel.setMnemonicAt(0, KeyEvent.VK_1);
 		for (Command c : commandsMenuFile)
 			addButton(c, fileTabPanel);
@@ -516,27 +519,6 @@ public class TomoWindow extends ImageWindow implements WindowListener,
 		}
 	}
 
-	/**
-	 * Scrollbar events
-	 * 
-	 * @param e
-	 */
-	public synchronized void adjustmentValueChanged(AdjustmentEvent e) {
-		// Xmipp_Tomo.debug("TomoWindow.adjustmentValueChanged"+e.getSource().toString());
-		if (e.getSource() == projectionScrollbar) {
-			// scrollbar range is 1..N, like projections array
-			getModel().setCurrentProjection(projectionScrollbar.getValue());
-			refreshImageCanvas();
-			updateStatusText(); // projection number
-			// Discard button label
-			if(getModel().isCurrentEnabled())
-				changeLabel(Command.DISCARD_PROJECTION.getId(), Command.DISCARD_PROJECTION.getLabel());
-			else
-				changeLabel(Command.DISCARD_PROJECTION.getId(), Command.UNDO_DISCARD_PROJECTION.getLabel());
-		}
-		notify();
-	}
-
 	public void enableButtonsAfterLoad() {
 		for (Command c : commandsEnabledAfterLoad) {
 			getButton(c.getId()).setEnabled(true);
@@ -549,8 +531,7 @@ public class TomoWindow extends ImageWindow implements WindowListener,
 	}
 
 	/*
-	 * button/keyboard events - run in a different thread to not to block the
-	 * GUI
+	 * Timer events
 	 * 
 	 * @see
 	 * java.awt.event.ActionListener#actionPerformed(java.awt.event.ActionEvent)
@@ -638,6 +619,7 @@ public class TomoWindow extends ImageWindow implements WindowListener,
 	 * aspect ratio
 	 */
 	public void resizeView() {
+		// TODO: resizeView - window resizing - call pack() with Timers?
 		if ((viewPanel == null) || (getCanvas() == null))
 			return;
 
@@ -721,6 +703,7 @@ public class TomoWindow extends ImageWindow implements WindowListener,
 	 *            windowclosing event (unused)
 	 */
 	public void windowClosing(WindowEvent e) {
+		// TODO: windowClosing - stop running threads (file load, for example)
 		if (closed)
 			return;
 		if (isChangeSaved()) {
@@ -739,7 +722,7 @@ public class TomoWindow extends ImageWindow implements WindowListener,
 				String path = dialogSave();
 				if ("".equals(path))
 					return;
-				saveFile(getModel(), path);
+				controller.saveFile(this, getModel(), path);
 				break;
 			case CANCEL:
 				return;
@@ -748,7 +731,6 @@ public class TomoWindow extends ImageWindow implements WindowListener,
 
 		// close the window (no return back...)
 		realWindow.setVisible(false);
-		setModel(null);
 		realWindow.dispose();
 		WindowManager.removeWindow(this);
 		closed = true;
@@ -784,18 +766,33 @@ public class TomoWindow extends ImageWindow implements WindowListener,
 	public void mousePressed(MouseEvent e) {
 	}
 
-	// Property changes
-	// Handle changes in the number of projections (either first load, or reload
-	// prior to saving)
+	// MVC - handle changes in the Model properties
 	public void propertyChange(PropertyChangeEvent event) {
 		// Xmipp_Tomo.debug(event.getNewValue().toString());
-		if (TomoData.Properties.NUMBER_OF_PROJECTIONS.name().equals(
-				event.getPropertyName()))
+		if (TomoData.Properties.NUMBER_OF_PROJECTIONS.name().equals(event.getPropertyName())){
 			if (isReloadingFile())
 				setStatus("Recovering original file... "
 						+ getStatusChar((Integer) (event.getNewValue())));
 			else
 				setNumberOfProjections((Integer) (event.getNewValue()));
+		}else if(TomoData.Properties.CURRENT_PROJECTION_NUMBER.name().equals(event.getPropertyName())){
+			setCurrentTiltAngleText(String.valueOf(getModel().getCurrentTiltAngle()));
+			getProjectionScrollbar().setValue(getModel().getCurrentProjectionNumber());
+			refreshImageCanvas();
+			// Discard button label
+			if(getModel().isCurrentEnabled())
+				changeLabel(Command.DISCARD_PROJECTION.getId(), Command.DISCARD_PROJECTION.getLabel());
+			else
+				changeLabel(Command.DISCARD_PROJECTION.getId(), Command.UNDO_DISCARD_PROJECTION.getLabel());
+		}else if(TomoData.Properties.CURRENT_TILT_ANGLE.name().equals(event.getPropertyName())){
+			setCurrentTiltAngleText(String.valueOf(getModel().getCurrentTiltAngle()));
+		}else if(TomoData.Properties.CURRENT_PROJECTION_ENABLED.name().equals(event.getPropertyName())){
+			if(getModel().isCurrentEnabled())
+				changeLabel(Command.DISCARD_PROJECTION.getId(), Command.DISCARD_PROJECTION.getLabel());
+			else
+				changeLabel(Command.DISCARD_PROJECTION.getId(), Command.UNDO_DISCARD_PROJECTION.getLabel());
+			refreshImageCanvas();	
+		}
 	}
 
 	/* Getters/ setters --------------------------------------------------- */
@@ -812,25 +809,10 @@ public class TomoWindow extends ImageWindow implements WindowListener,
 		return res;
 	}
 
-	/**
-	 * @return the model
-	 */
-	public TomoData getModel() {
-		return model;
+	private TomoData getModel() {
+		return getController().getModel();
 	}
 
-	/**
-	 * @param model
-	 *            the model to set
-	 */
-	public void setModel(TomoData model) {
-		this.model = model;
-
-		if (this.model != null)
-			// model change events
-			this.model.addPropertyChangeListener(this);
-
-	}
 
 	private JLabel getStatusLabel() {
 		return statusLabel;
@@ -841,9 +823,9 @@ public class TomoWindow extends ImageWindow implements WindowListener,
 		return animation.charAt(i % animation.length());
 	}
 
-	public void setCurrentProjection(int i){
-		// not very elegant... maybe it'd be better to change the model and then propagate to viewers with firePropertyChange
-		getProjectionScrollbar().setValue(i);
+	
+	private void setCurrentTiltAngleText(String tilt){
+		tiltTextField.setText(tilt);
 	}
 	
 	void setCursorLocation(int x, int y) {
@@ -864,11 +846,8 @@ public class TomoWindow extends ImageWindow implements WindowListener,
 	}
 
 	/**
-	 * Update all window components related to the number of projections. The
-	 * number itself is stored in the model
-	 * 
+	 * Update all window components related to the number of projections.  
 	 * @param n
-	 *            - see Tomodata.numberOfProjections
 	 */
 	public void setNumberOfProjections(int n) {
 		if (projectionScrollbar != null)
@@ -950,14 +929,6 @@ public class TomoWindow extends ImageWindow implements WindowListener,
 		IJ.error("XmippTomo", message);
 	}
 
-	public void saveFile(TomoData model, String path) {
-		setStatus("Saving...");
-		model.setFile(path);
-		new TiltSeriesIO(false).write(model);
-		setStatus("Done");
-		setChangeSaved(true);
-	}
-
 	/********************** Main - class testing **************************/
 
 	private void gridBagLayoutTest() {
@@ -996,71 +967,42 @@ public class TomoWindow extends ImageWindow implements WindowListener,
 
 	}
 
-	/**
-	 * @return the firstAction
-	 */
 	public UserAction getFirstAction() {
 		return firstAction;
 	}
 
-	/**
-	 * @param firstAction
-	 *            the firstAction to set
-	 */
 	public void setFirstAction(UserAction firstAction) {
 		this.firstAction = firstAction;
 	}
 
-	/**
-	 * @return the lastAction
-	 */
 	public UserAction getLastAction() {
 		if (lastAction == null)
 			lastAction = firstAction;
 		return lastAction;
 	}
 
-	/**
-	 * @param lastAction
-	 *            the lastAction to set
-	 */
 	public void setLastAction(UserAction lastAction) {
 		this.lastAction = lastAction;
 	}
 
-	/**
-	 * @return the windowId
-	 */
 	public int getWindowId() {
 		return windowId;
 	}
 
-	/**
-	 * @param windowId
-	 *            the windowId to set
-	 */
 	public void setWindowId(int windowId) {
 		this.windowId = windowId;
 	}
 
-	/**
-	 * @return the plugin
-	 */
 	public Plugin getPlugin() {
 		return plugin;
 	}
 
-	/**
-	 * @param plugin
-	 *            the plugin to set
-	 */
 	public void setPlugin(Plugin plugin) {
 		this.plugin = plugin;
 	}
 
 	/**
 	 * @deprecated
-	 * @return the reloadingFile
 	 */
 	private boolean isReloadingFile() {
 		return (getLastCommandState() == Command.State.RELOADING);
@@ -1068,8 +1010,6 @@ public class TomoWindow extends ImageWindow implements WindowListener,
 
 	/**
 	 * @deprecated
-	 * @param reloadingFile
-	 *            the reloadingFile to set
 	 */
 	public void setReloadingFile(boolean reloadingFile) {
 		if(reloadingFile)
@@ -1078,60 +1018,15 @@ public class TomoWindow extends ImageWindow implements WindowListener,
 			setLastCommandState(Command.State.LOADED);
 	}
 
-	/**
-	 * @return the changeSaved
-	 */
 	private boolean isChangeSaved() {
 		return changeSaved;
 	}
 
-	/**
-	 * @param changeSaved
-	 *            the changeSaved to set
-	 */
 	public void setChangeSaved(boolean changeSaved) {
 		this.changeSaved = changeSaved;
 	}
 
-	/**
-	 * @return the playing
-	 */
-	public boolean isPlaying() {
-		return playing;
-	}
 
-	/**
-	 * @param playing
-	 *            the playing to set
-	 */
-	public void setPlaying(boolean playing) {
-		this.playing = playing;
-	}
-
-	/*
-	 * public void paint(Graphics g) { paintComponents(g); // paintAll(g);
-	 * /*menuPanel.paint(g); viewPanel.paint(g); statusPanel.paint(g); //
-	 * root.paint(g); }
-	 */
-
-	/**
-	 * @return the canvas
-	 * 
-	 *         public ImageCanvas getCanvas() { return canvas; }
-	 */
-
-	/**
-	 * @param canvas
-	 *            the canvas to set
-	 */
-	private void setCanvas(ImageCanvas canvas) {
-		// this.canvas = canvas;
-		ic = canvas;
-	}
-
-	/**
-	 * @return the timer
-	 */
 	private Timer getTimer() {
 		if (timer == null) {
 			timer = new Timer(2000, this);
@@ -1140,40 +1035,25 @@ public class TomoWindow extends ImageWindow implements WindowListener,
 		return timer;
 	}
 
-	/**
-	 * @param timer
-	 *            the timer to set
-	 */
 	private void setTimer(Timer timer) {
 		this.timer = timer;
 	}
 
-	/**
-	 * @return the projectionScrollbar
-	 */
 	public LabelScrollbar getProjectionScrollbar() {
 		return projectionScrollbar;
 	}
 
-	/**
-	 * @param projectionScrollbar
-	 *            the projectionScrollbar to set
-	 */
+
 	public void setProjectionScrollbar(LabelScrollbar projectionScrollbar) {
 		this.projectionScrollbar = projectionScrollbar;
 	}
 
-	/**
-	 * @return the controller
-	 */
+
 	public TomoController getController() {
 		return controller;
 	}
 
-	/**
-	 * @param controller
-	 *            the controller to set
-	 */
+
 	public void setController(TomoController controller) {
 		this.controller = controller;
 	}
@@ -1186,44 +1066,29 @@ public class TomoWindow extends ImageWindow implements WindowListener,
 		return lastCommandState;
 	}
 
-	/**
-	 * @return the playLoop
-	 */
-	public boolean isPlayLoop() {
-		return playLoop;
-	}
 
-	/**
-	 * @param playLoop the playLoop to set
-	 */
-	public void setPlayLoop(boolean playLoop) {
-		this.playLoop = playLoop;
-	}
-
-	/**
-	 * @return the playDirection
-	 */
-	public int getPlayDirection() {
-		return playDirection;
-	}
-
-	/**
-	 * @param playDirection the playDirection to set
-	 */
-	public void setPlayDirection(int playDirection) {
-		this.playDirection = playDirection;
-	}
 	
 	/**
 	 * Avoid the image popping out to a new Image Window
 	 * Remember to call unprotect after performing operations
 	 */
 	public void protectWindow(){
-		//tempRoi=getImagePlus().getRoi();
 		getImagePlus().setWindow(null);
 	}
 	
 	public void unprotectWindow(){
 		getImagePlus().setWindow(this);
+	}
+	
+	public boolean isLoadCanceled(){
+		return(getLastCommandState() == Command.State.CANCELED);
+	}
+	
+	/**
+	 * ImageWindow handles the canvas directly (with no setter)
+	 * @param canvas
+	 */
+	private void setCanvas(ImageCanvas canvas) {
+		ic = canvas;
 	}
 }

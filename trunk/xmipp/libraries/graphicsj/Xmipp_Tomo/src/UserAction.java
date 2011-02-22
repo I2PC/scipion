@@ -25,8 +25,8 @@
 
 
 /**
- * @author jcuenca
- * 
+ * - Why?
+ * A simple data structure to save user action's info (for the user action workflow)
  */
 public class UserAction {
 	public static int ROOT_WINDOWID=0;
@@ -56,39 +56,26 @@ public class UserAction {
 		setNeededForFile(true); 
 	}
 	
-	/**
-	 * @return the windowId
-	 */
 	public int getWindowId() {
 		return windowId;
 	}
-	/**
-	 * @param windowId the windowId to set
-	 */
+
 	public void setWindowId(int windowId) {
 		this.windowId = windowId;
 	}
-	/**
-	 * @return the command
-	 */
+
 	public String getCommand() {
 		return command;
 	}
-	/**
-	 * @param command the command to set
-	 */
+
 	public void setCommand(String command) {
 		this.command = command;
 	}
-	/**
-	 * @return the parameters
-	 */
+
 	public String getParameters() {
 		return parameters;
 	}
-	/**
-	 * @param parameters the parameters to set
-	 */
+
 	public void setParameters(String parameters) {
 		this.parameters = parameters;
 	}
@@ -102,30 +89,18 @@ public class UserAction {
 		return res;
 	}
 
-	/**
-	 * @return the plugin
-	 */
 	public Plugin getPlugin() {
 		return plugin;
 	}
 
-	/**
-	 * @param plugin the plugin to set
-	 */
 	public void setPlugin(Plugin plugin) {
 		this.plugin = plugin;
 	}
 
-	/**
-	 * @return the neededForFile
-	 */
 	public boolean isNeededForFile() {
 		return neededForFile;
 	}
 
-	/**
-	 * @param neededForFile the neededForFile to set
-	 */
 	public void setNeededForFile(boolean neededForFile) {
 		this.neededForFile = neededForFile;
 	}

@@ -22,60 +22,64 @@
  *  All comments concerning this program package may be sent to the
  *  e-mail address 'xmipp@cnb.csic.es'
  ***************************************************************************/
-
+/**
+ * Why a FileDialog?
+ * ImageJ default file dialogs are simple AWT. This class uses the more beautiful and powerful Swing dialogs.
+ * 
+ * - Features:
+ * FileNameExtensionFilters
+ * Remember last path
+ */
 import ij.Prefs;
-
 import java.awt.Component;
 import java.io.File;
 import javax.swing.JFileChooser;
 import javax.swing.filechooser.FileNameExtensionFilter;
 
-/**
- * @author jcuenca Swing file dialog
- */
 public class FileDialog {
-	private JFileChooser fc;
-	private Component parent;
-	private static File defaultDirectory;
+	private JFileChooser fileChooser;
+	private static File lastChosenDirectory;
 
-	public void setupOpenDialog(String title, String path, final String fileName) {
-		fc = new JFileChooser();
-		fc.setDialogTitle(title);
-		fc.setFileSelectionMode(JFileChooser.FILES_AND_DIRECTORIES);
-		fc.setCurrentDirectory(getDefaultDirectory());
+	private void setupOpenDialog(String title, String path, final String fileName) {
+		fileChooser = new JFileChooser();
+		fileChooser.setDialogTitle(title);
+		fileChooser.setFileSelectionMode(JFileChooser.FILES_AND_DIRECTORIES);
+		fileChooser.setCurrentDirectory(getLastChosenDirectory());
 
 		File fdir = null;
 		if (path != null)
 			fdir = new File(path);
 		if (fdir != null)
-			fc.setCurrentDirectory(fdir);
+			fileChooser.setCurrentDirectory(fdir);
 		if (fileName != null)
-			fc.setSelectedFile(new File(fileName));
+			fileChooser.setSelectedFile(new File(fileName));
 	}
 
 	public static String openDialog(String title, Component parent) {
 		FileDialog fd = new FileDialog();
-		fd.setParent(parent);
 		fd.setupOpenDialog(title, null, null);
-		FileNameExtensionFilter filter = new FileNameExtensionFilter(
-				"Tomo images", "sel", "mrcs");
+		FileNameExtensionFilter filter = new FileNameExtensionFilter("Tomo images", "sel", "mrcs");
 		fd.setFilter(filter);
-		int status = fd.showOpenDialog();
+		int status = fd.showOpenDialog(parent);
 		if (status != JFileChooser.APPROVE_OPTION)
 			return "";
 		return fd.getPath();
 	}
 
-	public int showOpenDialog() {
-		return fc.showOpenDialog(getParent());
+	/**
+	 * @depends on setupOpenDialog
+	 * @return Cancel, Approve or Error - @see fileChooser.showOpenDialog
+	 */
+	private int showOpenDialog(Component parent) {
+		return fileChooser.showOpenDialog(parent);
 	}
 
 	public String getPath() {
-		File file = fc.getSelectedFile();
+		File file = fileChooser.getSelectedFile();
 		if (file == null)
 			return "";
 		String name = file.getName();
-		String dir = fc.getCurrentDirectory().getPath() + File.separator;
+		String dir = fileChooser.getCurrentDirectory().getPath() + File.separator;
 
 		String returnPath = "";
 		if (name != null)
@@ -84,32 +88,18 @@ public class FileDialog {
 	}
 
 	public void setFilter(FileNameExtensionFilter filter) {
-		fc.setFileFilter(filter);
+		fileChooser.setFileFilter(filter);
 	}
 
 	/**
-	 * @return the parent
+	 * @return path, which may be null.
+	 * This path always ends with the separator character ("/" or "\").
 	 */
-	private Component getParent() {
-		return parent;
-	}
-
-	/**
-	 * @param parent
-	 *            the parent to set
-	 */
-	private void setParent(Component parent) {
-		this.parent = parent;
-	}
-
-	/**
-	 * Returns the current working directory, which may be null. The returned
-	 * string always ends with the separator character ("/" or "\").
-	 */
-	public static File getDefaultDirectory() {
-		if (defaultDirectory == null)
-			defaultDirectory = new File(Prefs.getString(Prefs.DIR_IMAGE));
-		return defaultDirectory;
+	private static File getLastChosenDirectory() {
+		// TODO: getLastChosenDirectory - save a different path for each browse call (so each file dialog remembers its last directory)
+		if (lastChosenDirectory == null)
+			lastChosenDirectory = new File(Prefs.getString(Prefs.DIR_IMAGE));
+		return lastChosenDirectory;
 	}
 
 }

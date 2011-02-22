@@ -23,70 +23,54 @@
  *  e-mail address 'xmipp@cnb.csic.es'
  ***************************************************************************/
 
+/**
+ * - Why?
+ * After choosing MVC paradigm, a Model is needed - hence TomoData
+ * @extends Component because of the Java event mechanism (that is, TomoWindow can listen to this class for changes)
+ */
+
 import ij.ImagePlus;
 import ij.ImageStack;
-import ij.WindowManager;
 import ij.process.ImageProcessor;
 import ij.process.StackConverter;
-
-import java.awt.Component;
+import java.beans.PropertyChangeListener;
+import java.beans.PropertyChangeSupport;
 import java.io.File;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Vector;
 import java.util.concurrent.Semaphore;
-
 import javax.swing.text.BadLocationException;
 import javax.swing.text.Document;
+import javax.swing.text.PlainDocument;
 
-
-/**
- * Data model, following the MVC paradigm
- * @author jcuenca
- * extends Component because of the Java event mechanism (that is, TomoWindow can listen to this class for changes)
- */
-public class TomoData extends Component {
+// TODO: refactor propertyChangeSupport into AbstractModel?
+public class TomoData{
+	// As a general rule, this class should not interact directly with View components: it should fire a propertyChange
+	// that the View processes (modifying the required component)
+	// At the same time, the Controller listens for propertyChange events from components and updates this model accordingly
 	// name(s) of properties in the model that views may listen to 
 	public static enum Properties {
-		NUMBER_OF_PROJECTIONS;
+		NUMBER_OF_PROJECTIONS,CURRENT_PROJECTION_NUMBER,CURRENT_TILT_ANGLE,CURRENT_PROJECTION_ENABLED;
 	};
 
-	
+	private PropertyChangeSupport propertyChangeSupport;
+
+	// PROPERTIES
 	// maybe it's better to move currentProjection to the viewer - in case different views can show different slices
-	private int currentProjection=1;
-	
+	private int currentProjectionNumber=1;
+	private int numberOfProjections=0;
 	private boolean resized=false;
 	
 	private int width=0,height=0;
 	private int originalWidth=0, originalHeight=0;
 	// minimum and maximum pixel values of the projection series - for normalization
 	private double min=Double.POSITIVE_INFINITY, max=Double.NEGATIVE_INFINITY;
-	
-	
-	public int getOriginalWidth() {
-		return originalWidth;
-	}
 
-	public void setOriginalWidth(int originalWidth) {
-		this.originalWidth = originalWidth;
-	}
-
-	public int getOriginalHeight() {
-		return originalHeight;
-	}
-
-	public void setOriginalHeight(int originalHeight) {
-		this.originalHeight = originalHeight;
-	}
-
-
-	private int numberOfProjections=0;
-	
 	private File file;
 
     // Actual tiltseries projections are stored inside an ImagePlus
 	private ImagePlus imp=null;
-	private TomoWindow window;
 
 	// by now use a vector to store the angles - indexes can be 0..N-1
 	java.util.List <Float> tiltAngles=null;
@@ -96,30 +80,27 @@ public class TomoData extends Component {
 	java.util.List <Boolean> enabledProjections= new Vector<Boolean>();
 	
 	// This class also saves the models of the texfields of its views, one Document per textfield
-	private Document tiltTextModel=null;
+	
 
 	// allow Views to wait(lock) while the first (or last) image loads
 	private Semaphore firstLoaded= new Semaphore(0),lastLoaded=new Semaphore(0);
 	
-	public TomoData(String path,TomoWindow tw){
+	public TomoData(String path){
+		propertyChangeSupport = new PropertyChangeSupport(this);
 		setFile(path);
-		window=tw;
 	}
-	
-	public void setTiltModel(Document model){
-		if(tiltTextModel==null){
-			// initialize model with default value
-			try{
-				model.insertString(0, String.valueOf(getInitialTilt()), null);
-			}catch (Exception ex){}
-		}
-		
-		tiltTextModel=model;
-	}
-	
-	public Document getTiltModel(){
-		return tiltTextModel;
-	}
+
+    public void addPropertyChangeListener(PropertyChangeListener listener) {
+        propertyChangeSupport.addPropertyChangeListener(listener);
+    }
+
+    public void removePropertyChangeListener(PropertyChangeListener listener) {
+        propertyChangeSupport.removePropertyChangeListener(listener);
+    }
+
+    protected void firePropertyChange(String propertyName, Object oldValue, Object newValue) {
+        propertyChangeSupport.firePropertyChange(propertyName, oldValue, newValue);
+    }
 	
 	public int getBitDepth(){
 		return getImage().getBitDepth();
@@ -129,31 +110,30 @@ public class TomoData extends Component {
 	/**
 	 * @return range 1..numberProjections
 	 */
-	public int getCurrentProjection() {
-		return currentProjection;
+	public int getCurrentProjectionNumber() {
+		return currentProjectionNumber;
 	}
 
 	
 	/**
-	 * @param currentProjection range 1..numberProjections
+	 * @param newProjectionNumber range 1..numberProjections
 	 */
-	public void setCurrentProjection(int currentProjection) {
+	public void setCurrentProjectionNumber(int newProjectionNumber) {
 		
-		if((currentProjection<1) || (currentProjection > getNumberOfProjections())){
-			Xmipp_Tomo.debug("setCurrentProjection("+currentProjection+")");		
+		if((newProjectionNumber<1) || (newProjectionNumber > getNumberOfProjections())){
+			Xmipp_Tomo.debug("setCurrentProjection("+newProjectionNumber+")");		
 			return;
 		}
-		
-		this.currentProjection = currentProjection;
-		// update all things depending on current projection/slice
+		int oldProjectionNumber=currentProjectionNumber;
+		this.currentProjectionNumber = newProjectionNumber;
+		// possible dependencies on currentProjectionNumber should be handled by the View, not by this model
+		// Unluckily, ImagePlus mixes data and presentation, so it's better to keep ImagePlus related operations here
 		try{
-			getImage().setSlice(getCurrentProjection());
+			getImage().setSlice(getCurrentProjectionNumber());
 		} catch (IllegalArgumentException ex){
 			Xmipp_Tomo.debug("setCurrentProjection - ", ex);
 		}
-		Float tilt=getCurrentTilt();
-		if(tilt != null)
-			setTiltText(tilt);
+		firePropertyChange(Properties.CURRENT_PROJECTION_NUMBER.name(), oldProjectionNumber, currentProjectionNumber);
 	}
 
 	public ImagePlus getImage(){
@@ -185,10 +165,10 @@ public class TomoData extends Component {
 	 * @return null if tilt is undefined, tilt value otherwise
 	 * 
 	 */
-	public Float getCurrentTilt(){
+	public Float getCurrentTiltAngle(){
 		Float t=null;
 		try{
-			t=getTiltAngle(getCurrentProjection());
+			t=getTiltAngle(getCurrentProjectionNumber());
 		}catch (ArrayIndexOutOfBoundsException ex){
 			t=null;
 		}
@@ -216,31 +196,24 @@ public class TomoData extends Component {
 	}
 	
 	public boolean isCurrentEnabled(){
-		return isEnabled(getCurrentProjection());
+		return isEnabled(getCurrentProjectionNumber());
 	}
 	
 	
 	/**
 	 * @param i angle index - from 1 to numberOfProjections
-	 * @param t tilt angle
+	 * @param tilt tilt angle
 	 */
-	private void setTiltAngle(int i, float t){
-		// tiltangles list -> 0..N-1
-		
-		// set() below needs a non-empty vector (size > 0)
-	
-		getTiltAngles().set(i-1, new Float(t));
-		if(i==getCurrentProjection())
-			setTiltText(t);
+	private void setTiltAngle(int i, float tilt){
+		getTiltAngles().set(i-1, new Float(tilt));	
 	}
+	
 	
 	/**
 	 * @param i enabledProjections index - from 1 to numberOfProjections
-	 * @param b true=enabled,false=disabled
+	 * @param e true=enabled,false=disabled
 	 */
 	private void setEnabled(int i, boolean e){
-
-		// set() below needs a non-empty vector (size > 0)
 		getEnabledProjections().set(i-1, new Boolean(e));
 	}
 	
@@ -251,11 +224,13 @@ public class TomoData extends Component {
 			t+=step;
 		}
 		// setCurrentTilt(getCurrentTilt());
+		firePropertyChange(Properties.CURRENT_TILT_ANGLE.name(), null, getCurrentTiltAngle());
 	}
 	
 	public void setTiltAngles(double start, double end){
 		double step= (Math.abs(end-start) / (getNumberOfProjections() - 1));
 		setTiltAnglesStep(start, step);
+		// no need to fire property change since setTiltAnglesStep already fires it
 	}
 	
 	/**
@@ -271,20 +246,19 @@ public class TomoData extends Component {
 		return true;
 	}
 	
-	public void setCurrentTilt(float t){
-		setTiltAngle(getCurrentProjection(),t);
-	}
-
 	
-	// method for loading the angles in sequence (it assumes an implicit order) 
+	/**
+	 * Sequential add (order matters)
+	 * @param t
+	 */
 	public void addTiltAngle(Float t){
 		// add() below needs an empty vector
 		if(tiltAngles == null)
 			tiltAngles = new Vector<Float>();
 			
 		getTiltAngles().add(t);
-		if(tiltAngles.size() == getCurrentProjection())
-			setTiltText(t);
+		if(tiltAngles.size() == getCurrentProjectionNumber())
+			firePropertyChange(Properties.CURRENT_TILT_ANGLE.name(), null, t);
 	}
 	
 	public void deleteTiltAngle(int i){
@@ -293,21 +267,17 @@ public class TomoData extends Component {
 				getTiltAngles().remove(i-1);
 	}
 	
-	// prepare tilt angles array for later manual setting
-	/* public void emptyTiltAngles(int count){
-		tiltAngles=new Vector<Float> (count);
-	}*/
 	
-	// there may be no tilts defined - change tilt to Float (so it can handle nulls)
+	// TODO: there may be no tilts defined - change tilt to Float (so it can handle nulls)
 	private float getInitialTilt(){
-		return getCurrentTilt();
+		return getCurrentTiltAngle();
 	}
+	
 	/**
-	 * 
 	 * @return 1..N, cyclic (next to last is 1)
 	 */
 	public int getNextProjection(){
-		return (getCurrentProjection() % getNumberOfProjections()) + 1;
+		return (getCurrentProjectionNumber() % getNumberOfProjections()) + 1;
 	}
 	
 	/**
@@ -331,25 +301,8 @@ public class TomoData extends Component {
 		int[] v = getImage().getPixel(x, y);
 		// 32bit images
 		return Float.intBitsToFloat(v[0]);
-		//return getImage().getCalibration().getCValue(v[0]);
 	}
 	
-	
-	/**
-	 * wrapper to simulate a settext operation using the Document methods available
-	 * @param d
-	 * @param t
-	 */
-	private void setDocumentText(Document d,String t){
-		try{
-			d.remove(0,d.getLength());
-			d.insertString(0, t, null);
-		}catch (BadLocationException e){}
-	}
-	
-	private void setTiltText(float tilt){
-		setDocumentText(getTiltModel(),String.valueOf(tilt));	
-	}
 	
 	public String getFileName(){
 		return file.getName();
@@ -363,30 +316,18 @@ public class TomoData extends Component {
 		return file.getPath();
 	}
 
-	/**
-	 * @return the width
-	 */
 	public int getWidth() {
 		return width;
 	}
 
-	/**
-	 * @param width the width to set
-	 */
 	public void setWidth(int width) {
 		this.width = width;
 	}
 
-	/**
-	 * @return the height
-	 */
 	public int getHeight() {
 		return height;
 	}
 
-	/**
-	 * @param height the height to set
-	 */
 	public void setHeight(int height) {
 		this.height = height;
 	}
@@ -396,50 +337,49 @@ public class TomoData extends Component {
 	}
 	
 	public void waitForFirstImage() throws InterruptedException{
-		// Xmipp_Tomo.debug("waitForFirstImage");
 		firstLoaded.acquire();
 	}
 	
 	private void firstImageLoaded(){
 		firstLoaded.release();
-		// Xmipp_Tomo.debug("firstImageLoaded");
 	}
 	
+	// TODO
 	public void loadCanceled(){
 		firstImageLoaded();
 	}
 	
 	public void normalize(){
-		// Xmipp_Tomo.debug("normalize "+ min + "," + max);
 		getImage().getProcessor().setMinAndMax(getMin(), getMax());
 	}
 	
 	public void waitForLastImage() throws InterruptedException{
-		// Xmipp_Tomo.debug("waitForFirstImage");
 		lastLoaded.acquire();
 	}
 	
 	public void lastImageLoaded(){
 		lastLoaded.release();
-		// Xmipp_Tomo.debug("firstImageLoaded");
 	}
 	
 	public void addProjection(ImageProcessor imageProcessor){
-		if(getImage()==null){
-			// cannot add empty stack, for example in the constructor. better init all here			
-			ImageStack stack=new ImageStack(imageProcessor.getWidth(), imageProcessor.getHeight());
-			stack.addSlice(null, imageProcessor);
-			setImage(new ImagePlus(getFileName(), stack));
-			getImage().setWindow(window);
-		}else		
-			getImage().getStack().addSlice(null, imageProcessor);
+		if(getImage() == null)
+			createImageStack(imageProcessor);
+		getImage().getStack().addSlice(null, imageProcessor);
 		
-		// @todo: should be the value read from metadata
+		// TODO: addProjection - should be the value read from metadata
 		getEnabledProjections().add(new Boolean(true));
 		
 		setNumberOfProjections(getNumberOfProjections()+1);
 		if(getNumberOfProjections() == 1)
 			firstImageLoaded();
+	}
+	
+	private void createImageStack(ImageProcessor imageProcessor){
+		// cannot add empty stack, for example in the constructor. better init all here			
+		ImageStack stack=new ImageStack(imageProcessor.getWidth(), imageProcessor.getHeight());
+		stack.addSlice(null, imageProcessor);
+		setImage(new ImagePlus(getFileName(), stack));
+		// getImage().setWindow(window);
 	}
 
 
@@ -447,8 +387,10 @@ public class TomoData extends Component {
 		return resized;
 	}
 	
+	// TODO: isLoadCanceled - manage with thread.cancel
 	public boolean isLoadCanceled(){
-		return(window.getLastCommandState() == Command.State.CANCELED);
+//		return(window.getLastCommandState() == Command.State.CANCELED);
+		return false;
 	}
 
 
@@ -456,30 +398,19 @@ public class TomoData extends Component {
 		this.resized = resized;
 	}
 	
-	/**
-	 * @return the min
-	 */
+
 	public double getMin() {
 		return min;
 	}
 
-	/**
-	 * @param min the min to set
-	 */
 	public void setMin(double min) {
 		this.min = min;
 	}
 
-	/**
-	 * @return the max
-	 */
 	public double getMax() {
 		return max;
 	}
 
-	/**
-	 * @param max the max to set
-	 */
 	public void setMax(double max) {
 		this.max = max;
 	}
@@ -495,21 +426,26 @@ public class TomoData extends Component {
 	
 	public void discardCurrentProjection(){
 		if(getNumberOfProjections()>1){
-			setEnabled(getCurrentProjection(), false);
+			setEnabled(getCurrentProjectionNumber(), false);
 		}
+		firePropertyChange(Properties.CURRENT_PROJECTION_ENABLED.name(), true, false);
 	}
 	
 	public void enableCurrentProjection(){
 		if(getNumberOfProjections()>1){
-			setEnabled(getCurrentProjection(), true);
+			setEnabled(getCurrentProjectionNumber(), true);
 		}
+		firePropertyChange(Properties.CURRENT_PROJECTION_ENABLED.name(), false, true);
 	}
 	
+	/**
+	 * Warning - protect your windows before calling this method
+	 * @param bitDepth
+	 */
 	public void convertTo(int bitDepth){
+		// TODO converTo - check if Coss equation fits better than ImageJ convert algorithm
 		if(bitDepth == getBitDepth())
 			return;
-		
-		window.protectWindow();
 		
 		switch (bitDepth) {
 			case 8:
@@ -522,13 +458,27 @@ public class TomoData extends Component {
 				break;
 			
 		}
-		window.unprotectWindow();
 		
 			
 	}
 	
 	public String getCurrentProjectionInfo(){
-		return "Projection #" + getCurrentProjection() + ", enabled:" + isCurrentEnabled();
+		return "Projection #" + getCurrentProjectionNumber() + ", enabled:" + isCurrentEnabled();
 	}
-	
+	public int getOriginalWidth() {
+		return originalWidth;
+	}
+
+	public void setOriginalWidth(int originalWidth) {
+		this.originalWidth = originalWidth;
+	}
+
+	public int getOriginalHeight() {
+		return originalHeight;
+	}
+
+	public void setOriginalHeight(int originalHeight) {
+		this.originalHeight = originalHeight;
+	}
+
 }

@@ -23,29 +23,33 @@
  *  e-mail address 'xmipp@cnb.csic.es'
  ***************************************************************************/
 
-// some recommend that plugin classes must be in the default package...
-// here we used so it has its own submenu
+/**
+ * XmippTomo package-level documentation 
+ * 
+ * XmippTomo is an ImageJ plugin that simplifies 3D-EM & X-Ray tomography tasks with a simple yet powerful workflow
+ * 
+ * - Why "package" is not used?
+ * 
+ * - Why "package" may be used?
+ * Because then the plugin is shown on its own submenu in ImageJ
+ */
+
 
 
 import ij.*;
-
-import java.awt.Dimension;
 import java.io.*;
 import java.util.Calendar;
 import java.util.LinkedList;
 import java.util.List;
-
 import ij.plugin.PlugIn;
 
 /**
- * @author jcuenca
  * implements PlugIn (ImageJ plugins base interface)
  * 
  * Main class, responsible for plugin initialization
  */
 
 // underscore in the name is required for automatic installation in the plugins menu...
-// Requirements: http://u759.curie.u-psud.fr/compteur/download.php?Fichier=software/update/20090928/U759_InputOutput.jar
 public class Xmipp_Tomo implements PlugIn{
 
 	/**
@@ -53,10 +57,6 @@ public class Xmipp_Tomo implements PlugIn{
 	 */
 	private static final long serialVersionUID = -4063711977454855701L;
 	
-	// if image is bigger than this threshold, resize it to this size
-	public static Dimension resizeThreshold = new Dimension(400,400);
-	
-	// exit values of methods and dialogs
 	public static enum ExitValues {
 		OK(0),ERROR(1),YES(2),NO(3),CANCEL(4),RUNTIME_ERROR(5),PROGRAM_NOT_FOUND(6),
 		EXTERNAL_PROGRAM_BROKEN(7);
@@ -175,11 +175,9 @@ public class Xmipp_Tomo implements PlugIn{
 		String line=null;
 		
 		try{
-			// print stdout
 			while ( (line = stdout_br.readLine()) != null)
 	            debug(line);    
 	        
-			// print stderr
 			if(readStderr)
 				while ( (line = stderr_br.readLine()) != null)
 		            debug(line);    

@@ -40,6 +40,8 @@ import ij.gui.GenericDialog;
  * - Add a button (see TomoWindow)
  */
 public abstract class Plugin {
+	// TODO: background plane substraction (@see Xmipp filters.h)
+	// TODO: Roman filter
 	
 	/** Analyze the dialog gd and save its parameters
 	 *  Note: when using the gd.getNextXX() methods, if the user simply presses OK, the method returns 0

@@ -29,7 +29,6 @@ import java.awt.GridBagLayout;
 import java.awt.event.AdjustmentEvent;
 import java.awt.event.AdjustmentListener;
 import java.text.DecimalFormat;
-
 import javax.swing.BoundedRangeModel;
 import javax.swing.BoxLayout;
 import javax.swing.JComponent;
@@ -40,7 +39,6 @@ import javax.swing.JScrollBar;
 import javax.swing.event.EventListenerList;
 
 /**
- * @author jcuenca
  * Horizontal scrollbar with range (min / max) labels, and a current index label (with an optional descriptive prefix)
  * Color is used in labels to highlight the current index
  * extends JPanel
@@ -84,7 +82,6 @@ public class LabelScrollbar extends JPanel implements AdjustmentListener, Adjust
 		gbl= new GridBagLayout();
 		setLayout(gbl);
 		
-		// add each element in a different row
 		add(textLabel,1);
 		add(scrollbar,2);
 		add(minMaxPanel,3);
@@ -104,9 +101,6 @@ public class LabelScrollbar extends JPanel implements AdjustmentListener, Adjust
 		add(c);
 	}
 	
-	/**
-	 * @param n 
-	 */
 	public void setMaximum(int n){
 		// adding the extent is a "requirement" of JScrollbar
 		if(scrollbar != null)
@@ -115,9 +109,6 @@ public class LabelScrollbar extends JPanel implements AdjustmentListener, Adjust
 			maxLabel.setText(htmlColor(String.valueOf(n), DEFAULT_TEXT_COLOR, true));
 	}
 	
-	/**
-	 * @param n 
-	 */
 	public void setMinimum(int n){
 		if(scrollbar != null)
 			scrollbar.setMinimum(n);
@@ -129,12 +120,6 @@ public class LabelScrollbar extends JPanel implements AdjustmentListener, Adjust
 		listenerList.add(AdjustmentListener.class, l);
 	}
 	
-    /**
-     * Removes an AdjustmentEvent listener.
-     *
-     * @param l the AdjustmentLister to remove
-     * @see #addAdjustmentListener
-     */
     public void removeAdjustmentListener(AdjustmentListener l)  {
         listenerList.remove(AdjustmentListener.class, l);
     }
@@ -198,16 +183,10 @@ public class LabelScrollbar extends JPanel implements AdjustmentListener, Adjust
 	}
 	 
 
-	/**
-	 * @return the text
-	 */
 	private String getText() {
 		return text;
 	}
 
-	/**
-	 * @param text the text to set
-	 */
 	public void setText(String text) {
 		this.text = text;
 		updateTextLabel();

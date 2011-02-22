@@ -26,94 +26,84 @@
 import ij.IJ;
 import ij.WindowManager;
 import ij.gui.GenericDialog;
-
+import java.awt.event.AdjustmentEvent;
+import java.awt.event.AdjustmentListener;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.lang.reflect.Method;
-
-import javax.swing.JCheckBox;
 import javax.swing.SwingWorker;
 
+// TODO: make TomoController extend AbstractController?
+
 /**
- * @author jcuenca Collection of GUI action methods
+ * - Why? 
+ * I opted for Model-View-Controller as the overall UI paradigm, hence the Controller: here we
+ * handle the interactive application workflow
+ * @implements AdjustmentListener - slidebar events
+ *   for buttons/commands, @see Command & TomoAction
  */
-public class TomoController {
-	TomoWindow window;
+public class TomoController implements AdjustmentListener{
+	private TomoWindow window;
+	// modelToLoad: to avoid passing parameters in load BackgroundMethods
+	private TomoData modelToLoad,model;
+	
+	// @see TomoController.playPause
+	private boolean projectionsPlaying = false;
+	// true if play follows a loop pattern (after last image, play first), false if pattern is ping-pong (after last, play last-1 and so on)
+	private boolean playLoop=true;
+	// play direction: forward (+1) or backward (-1)
+	private int playDirection = 1;
 
 	TomoController(TomoWindow window) {
 		this.window = window;
 	}
 
+	/**
+	 * - Why?
+	 * For running Controller methods in the background
+	 * @extends SwingWorker
+	 */
 	class BackgroundMethod extends SwingWorker<String, Object> {
-		Method method;
-		Object target;
+		private Method backgroundMethod,doneMethod=null;
+		private Object target;
 
-		public BackgroundMethod(Method m, Object target) {
-			method = m;
+		
+		public BackgroundMethod(Method backgroundMethod, Object target) {
+			this.backgroundMethod = backgroundMethod;
 			this.target = target;
+		}
+		
+		public BackgroundMethod(Object target,Method backgroundMethod, Method doneMethod) {
+			this(backgroundMethod,target);
+			this.doneMethod=doneMethod;
 		}
 
 		@Override
 		public String doInBackground() {
 			try {
-				method.invoke(target);
+				backgroundMethod.invoke(target);
 			} catch (Exception ex) {
-				Xmipp_Tomo.debug("BackgroundMethod.doInBackground()");
+				Xmipp_Tomo.debug("BackgroundMethod.doInBackground()" + ex.toString());
 			}
 			return "";
 		}
 
 		@Override
 		protected void done() {
-		}
-	}
-
-	// ImportDataThread: load & display projections in parallel
-	private class ImportDataThread extends Thread {
-		private TomoData dataModel;
-		private boolean resize = false;
-		private TomoController controller;
-
-		ImportDataThread(TomoData model, boolean resize,
-				TomoController controller) {
-			dataModel = model;
-			this.resize = resize;
-			this.controller = controller;
-		}
-
-		public void run() {
-			String errorMessage = "";
-			try {
-				new TiltSeriesIO(resize).read(dataModel);
-				controller.loadedEM();
-			} catch (FileNotFoundException ex) {
-				Xmipp_Tomo.debug("ImportDataThread.run - ", ex);
-			} catch (IOException ex) {
-				Xmipp_Tomo.debug("ImportDataThread.run - Error opening file ",
-						ex);
-				errorMessage = "Error opening file";
-			} catch (InterruptedException ex) {
-				Xmipp_Tomo.debug(
-						"ImportDataThread.run - Interrupted exception", ex);
-			} catch (OutOfMemoryError err) {
-				Xmipp_Tomo.debug("ImportDataThread.run - Out of memory"
-						+ err.toString());
-				errorMessage = "Out of memory";
+			try{
+				if(doneMethod!=null)
+					doneMethod.invoke(target);
 			} catch (Exception ex) {
-				Xmipp_Tomo.debug("ImportDataThread.run - unexpected exception",
-						ex);
-			} finally {
-				if (dataModel.getNumberOfProjections() < 1) {
-					dataModel.loadCanceled();
-					TomoWindow.alert(errorMessage);
-				}
+				Xmipp_Tomo.debug("BackgroundMethod.done()" + ex.toString());
 			}
-
 		}
-	}
+	} //end BackgroundMethod
 
-	// implement UI concurrency with private class that extends Thread
-	// DialogCaptureThread: intercept generic dialogs
+
+	/**
+	 * - Why?
+	 *  hack to intercept ImageJ generic dialogs
+	 */
 	private class DialogCaptureThread extends Thread {
 		private TomoWindow window;
 
@@ -123,26 +113,24 @@ public class TomoController {
 
 		public void run() {
 			try {
-				sleep(TomoWindow.WAIT_FOR_DIALOG);
+				sleep(TomoWindow.WAIT_FOR_DIALOG_SHOWS);
 				window.captureDialog();
 			} catch (Exception ex) {
 				Xmipp_Tomo.debug(
 						"DialogCaptureThread.run - unexpected exception", ex);
 			}
 		}
-	}
+	} // end DialogCaptureThread
 
-	// Play / pause automatic projection display in its own thread
+	
 	public void playPause() {
-		if (window.isPlaying()) {
+		if (areProjectionsPlaying()) {
 			// switch to pause
-			window.setPlaying(false);
+			setProjectionsPlaying(false);
 			window.changeIcon(Command.PLAY.getId(), TomoWindow.PLAY_ICON);
-			// PLAY.getButton().setIcon(getIcon(PLAY_ICON));
 		} else {
 			try {
-				new BackgroundMethod(getClass().getMethod("play"), this)
-						.execute();
+				new BackgroundMethod(getClass().getMethod("play"), this).execute();
 			} catch (Exception ex) {
 				Xmipp_Tomo.debug("TomoController.playPause() "
 						+ ex.getMessage());
@@ -152,23 +140,22 @@ public class TomoController {
 
 	// this method must be public so Class.getMethod() finds it
 	public void play() {
-		// switch to play
-		window.setPlaying(true);
+		setProjectionsPlaying(true);
 		window.changeIcon(Command.PLAY.getId(), TomoWindow.PAUSE_ICON);
-		while (window.isPlaying()) {
+		while (areProjectionsPlaying()) {
 			// 1..N
 			int nextProjection = 0;
 
-			if (window.isPlayLoop())
-				nextProjection = window.getModel().getNextProjection();
+			if (isPlayLoop())
+				nextProjection = getModel().getNextProjection();
 			else {
-				if ( window.getModel().getCurrentProjection() == window.getModel().getNumberOfProjections())
-					window.setPlayDirection(-1);
-				else if( window.getModel().getCurrentProjection() == 1)
-					window.setPlayDirection(1);
-				nextProjection = window.getModel().getCurrentProjection() + window.getPlayDirection();
+				if ( getModel().getCurrentProjectionNumber() == getModel().getNumberOfProjections())
+					setPlayDirection(-1);
+				else if( getModel().getCurrentProjectionNumber() == 1)
+					setPlayDirection(1);
+				nextProjection = getModel().getCurrentProjectionNumber() + getPlayDirection();
 			}
-			window.setCurrentProjection(nextProjection);
+			getModel().setCurrentProjectionNumber(nextProjection);
 			try {
 				Thread.sleep(50);
 			} catch (InterruptedException ex) {
@@ -176,6 +163,10 @@ public class TomoController {
 		}
 	}
 
+	public void changePlayMode() {
+		setPlayLoop(!isPlayLoop());
+	}
+	
 	public void printWorkflow() {
 		Xmipp_Tomo.printWorkflow();
 	}
@@ -197,51 +188,66 @@ public class TomoController {
 		}
 	}
 	
+	/**
+	 * Remember to set modelToLoad before calling this method
+	 */
+	public void readImage() {
+		String errorMessage = "";
+		try {
+			TiltSeriesIO.read(modelToLoad);
+		} catch (FileNotFoundException ex) {
+			Xmipp_Tomo.debug("ImportDataThread.run - ", ex);
+		} catch (IOException ex) {
+			Xmipp_Tomo.debug("ImportDataThread.run - Error opening file ",
+					ex);
+			errorMessage = "Error opening file";
+		} catch (InterruptedException ex) {
+			Xmipp_Tomo.debug(
+					"ImportDataThread.run - Interrupted exception", ex);
+		} catch (OutOfMemoryError err) {
+			Xmipp_Tomo.debug("ImportDataThread.run - Out of memory"
+					+ err.toString());
+			errorMessage = "Out of memory";
+		} catch (Exception ex) {
+			Xmipp_Tomo.debug("ImportDataThread.run - unexpected exception",
+					ex);
+		} finally {
+			if (modelToLoad.getNumberOfProjections() < 1) {
+				modelToLoad.loadCanceled();
+				TomoWindow.alert(errorMessage);
+			}
+		}
+	}
+	
 	private void loadImage(String path){
 		// free previous model (if any) ??
-		window.setModel(null);
-		window.setModel(new TomoData(path, window));
-		window.getButton(Command.LOAD.getId()).setText(
-				"Cancel " + Command.LOAD.getLabel());
+		setModel(null);
+		modelToLoad=new TomoData(path);
+		setModel(modelToLoad);
+		window.getButton(Command.LOAD.getId()).setText("Cancel " + Command.LOAD.getLabel());
 		window.setLastCommandState(Command.State.LOADING);
 
 		try {
-			// import data in one thread and hold this thread until the
-			// first
-			// projection is loaded
-
-			(new Thread(new ImportDataThread(window.getModel(), true, this)))
-					.start();
-			window.getModel().waitForFirstImage();
-		} catch (InterruptedException ex) {
-			Xmipp_Tomo.debug("Xmipp_Tomo - Interrupted exception");
+			new BackgroundMethod(this, getClass().getMethod("readImage"), getClass().getMethod("loadedEM")).execute();
+			getModel().waitForFirstImage();
+		} catch (Exception ex) {
+			Xmipp_Tomo.debug("TomoController.loadImage() " + ex.getMessage());
 		}
 
-		if (window.getModel().getNumberOfProjections() > 0) {
+		if (getModel().getNumberOfProjections() > 0) {
 			window.setImagePlusWindow();
 
 			window.setTitle(window.getTitle());
 			window.addView();
 			window.addControls();
 			window.addUserAction(new UserAction(window.getWindowId(),
-					"Load", window.getModel().getFileName()));
-
-			// enable buttons
+					"Load", getModel().getFileName()));
 			window.enableButtonsAfterLoad();
-
-			// wait for last image in a different thread
-			try {
-				new BackgroundMethod(getClass().getMethod("loadedEM"), this)
-						.execute();
-			} catch (Exception ex) {
-				Xmipp_Tomo.debug("TomoController.playPause() "
-						+ ex.getMessage());
-			}
 		}
 	}
 
 	/**
-	 * Post-actions (once all the images are loaded)
+	 * Post-actions (after all the projections are loaded)
 	 */
 	public void loadedEM() {
 		if (window.getLastCommandState() == Command.State.LOADING) {
@@ -264,8 +270,7 @@ public class TomoController {
 	}
 
 	/**
-	 * Apply this window's workflow to the file associated to this window
-	 * (through the model)
+	 * Apply this window's workflow 
 	 */
 	public void apply() {
 
@@ -273,37 +278,35 @@ public class TomoController {
 		if ("".equals(path)) {
 			return;
 		}
-
+		
+		TomoData originalModel = getModel(),modelToSave=originalModel;
+		
 		// Reopen the file only if the data was resized
-		TomoData originalModel = window.getModel();
-
-		if (window.getModel().isResized()) {
-			originalModel = new TomoData(window.getModel().getFilePath(),
-					window);
-			originalModel.addPropertyChangeListener(window);
+		if (originalModel.isResized()) {
+			modelToLoad = new TomoData(getModel().getFilePath());
+			modelToSave=modelToLoad;
+			// modelToLoad.addPropertyChangeListener(window);
 			try {
 				window.setLastCommandState(Command.State.RELOADING);
-				(new Thread(new ImportDataThread(originalModel, false, this)))
-						.start();
-				originalModel.waitForLastImage();
+				new BackgroundMethod(this, getClass().getMethod("readImage"), null).execute();
+				modelToLoad.waitForLastImage();
 			} catch (Exception ex) {
 				Xmipp_Tomo.debug("actionApply - unexpected exception", ex);
 			}
 
 			window.setLastCommandState(Command.State.LOADED);
 			// iterate through the user actions that make sense
-			for (UserAction currentAction : Xmipp_Tomo.getWorkflow(window
-					.getLastAction())) {
+			for (UserAction currentAction : Xmipp_Tomo.getWorkflow(window.getLastAction())) {
 				if (currentAction.isNeededForFile()) {
 					// Xmipp_Tomo.debug("Applying " + currentAction.toString());
 					window.setStatus("Applying " + currentAction.getCommand());
-					currentAction.getPlugin().run(originalModel.getImage());
+					currentAction.getPlugin().run(modelToLoad.getImage());
 				}
 			}
 		}
 
 		// write
-		window.saveFile(originalModel, path);
+		saveFile(window, modelToSave, path);
 	}
 
 	public void gaussian() {
@@ -350,7 +353,7 @@ public class TomoController {
 	
 	public void histogramEqualization() {
 		// convert to 8 bit
-		window.getModel().convertTo(8);
+		getModel().convertTo(8);
 		window.addUserAction(new UserAction(window.getWindowId(), "convertToByte"));
 		
 		// histogram equalization is an option of enhance contrast
@@ -360,7 +363,9 @@ public class TomoController {
 		runIjCmd(Command.ENHANCE_CONTRAST, plugin);
 		
 		// convert back to 32 bit
-		window.getModel().convertTo(32);
+		window.protectWindow();
+		getModel().convertTo(32);
+		window.protectWindow();
 		window.addUserAction(new UserAction(window.getWindowId(), "convertToFloat"));
 		
 		window.refreshImageCanvas();
@@ -372,7 +377,7 @@ public class TomoController {
 		runIjCmd("Crop");
 		
 		window.unprotectWindow();
-		// @todo: adjust viewPanel to new image size
+		// TODO: adjust viewPanel to new image size
 	}
 
 	
@@ -380,8 +385,7 @@ public class TomoController {
 
 		window.setChangeSaved(false);
 
-
-		WindowManager.setTempCurrentImage(window.getModel().getImage());
+		WindowManager.setTempCurrentImage(getModel().getImage());
 		try {
 			IJ.run(command);
 		} catch (Exception ex) {
@@ -408,17 +412,7 @@ public class TomoController {
 		if(plugin != null)
 			(new Thread(new DialogCaptureThread(window))).start();
 
-		WindowManager.setTempCurrentImage(window.getModel().getImage());
-		try {
-			IJ.run(cmd);
-		} catch (Exception ex) {
-			// catch java.lang.RuntimeException: Macro canceled
-			Xmipp_Tomo.debug("actionRunIjCmd - action canceled");
-			return;
-		}
-		window.refreshImageCanvas();
-
-		window.setStatus("Done");
+		runIjCmd(cmd);
 
 		if(plugin != null)
 			window.addUserAction(new UserAction(window.getWindowId(), cmd, window
@@ -431,13 +425,12 @@ public class TomoController {
 		String path = window.dialogSave();
 		if ((path == null) || ("".equals(path)))
 			return;
-		window.saveFile(window.getModel(), path);
+		saveFile(window, getModel(), path);
 	}
 
 	public void setTilt() {
 		GenericDialog gd = new GenericDialog("Tilt angles");
-		gd
-				.addMessage("Please fill either start and end angles, or start and step");
+		gd.addMessage("Please fill either start and end angles, or start and step");
 		gd.addNumericField("Start angle", 0.0, 1);
 		gd.addNumericField("End angle", 0.0, 1);
 		gd.addNumericField("Step", 0.0, 1);
@@ -448,10 +441,9 @@ public class TomoController {
 		double end = gd.getNextNumber();
 		double step = gd.getNextNumber();
 		if (step == 0.0)
-			// use start & end
-			window.getModel().setTiltAngles(start, end);
+			getModel().setTiltAngles(start, end);
 		else
-			window.getModel().setTiltAnglesStep(start, step);
+			getModel().setTiltAnglesStep(start, step);
 	}
 
 	/**
@@ -476,29 +468,81 @@ public class TomoController {
 		
 	}
 
-	public void changePlayMode() {
-		// JCheckBox cb = window.getCheckbox(Command.PLAY_LOOP.getId());
-		window.setPlayLoop(!window.isPlayLoop());
-		// cb.setSelected(window.isPlayLoop());
-	}
-	
 	public void normalize(){
-		window.getModel().normalize();
+		getModel().normalize();
 	}
 	
 	public void discardProjection(){
-		if(window.getModel().isCurrentEnabled()){
-			window.getModel().discardCurrentProjection();
-			window.refreshImageCanvas();
-			window.changeLabel(Command.DISCARD_PROJECTION.getId(), Command.UNDO_DISCARD_PROJECTION.getLabel());
+		if(getModel().isCurrentEnabled()){
+			getModel().discardCurrentProjection();
+			/* window.refreshImageCanvas();
+			window.changeLabel(Command.DISCARD_PROJECTION.getId(), Command.UNDO_DISCARD_PROJECTION.getLabel()); */
 		}else{
-			window.getModel().enableCurrentProjection();
-			window.refreshImageCanvas();
-			window.changeLabel(Command.DISCARD_PROJECTION.getId(), Command.DISCARD_PROJECTION.getLabel());
+			getModel().enableCurrentProjection();
+			/* window.refreshImageCanvas();
+			window.changeLabel(Command.DISCARD_PROJECTION.getId(), Command.DISCARD_PROJECTION.getLabel()); */
 		}
 	}
 	
 	public void currentProjectionInfo(){
-		Xmipp_Tomo.debug(window.getModel().getCurrentProjectionInfo());
+		Xmipp_Tomo.debug(getModel().getCurrentProjectionInfo());
+	}
+	
+	/**
+	 * Scrollbar events
+	 * 
+	 * @param e
+	 */
+	public synchronized void adjustmentValueChanged(AdjustmentEvent e) {
+		// Xmipp_Tomo.debug("TomoWindow.adjustmentValueChanged"+e.getSource().toString());
+		// TODO: AdjustmentListener - verify "projectionScrollbar")
+		//if (e.getSource().toString().equals("projectionScrollbar")) {
+			// scrollbar range is 1..N, like projections array
+		if(getModel() != null)
+			getModel().setCurrentProjectionNumber(e.getValue());
+		// }
+		notify();
+	}
+
+	public TomoData getModel() {
+		return model;
+	}
+
+	public void setModel(TomoData model) {
+		this.model = model;
+		if(window != null && model != null)
+			model.addPropertyChangeListener(window);
+	}
+	
+	private boolean isPlayLoop() {
+		return playLoop;
+	}
+
+	private void setPlayLoop(boolean playLoop) {
+		this.playLoop = playLoop;
+	}
+
+	private int getPlayDirection() {
+		return playDirection;
+	}
+
+	private void setPlayDirection(int playDirection) {
+		this.playDirection = playDirection;
+	}
+	
+	private boolean areProjectionsPlaying() {
+		return projectionsPlaying;
+	}
+
+	private void setProjectionsPlaying(boolean playing) {
+		this.projectionsPlaying = playing;
+	}
+
+	public void saveFile(TomoWindow tomoWindow, TomoData model, String path) {
+		tomoWindow.setStatus("Saving...");
+		model.setFile(path);
+		TiltSeriesIO.write(model);
+		tomoWindow.setStatus("Done");
+		tomoWindow.setChangeSaved(true);
 	}
 }

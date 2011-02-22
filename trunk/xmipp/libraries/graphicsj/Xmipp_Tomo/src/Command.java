@@ -22,18 +22,20 @@
  *  All comments concerning this program package may be sent to the
  *  e-mail address 'xmipp@cnb.csic.es'
  ***************************************************************************/
+/**
+ * - Why a Command class?
+ * To provide a simple declaration (using this class constructors) of the program's commands,
+ * independent of whether the program implements them as buttons, menus... 
+ * - Alternatives:
+ * A configuration file parsed at runtime before GUI construction
+ */
 
 import javax.swing.ImageIcon;
 
-/**
- * Data structure that relates an action (method) and its parameters iwith a
- * label, an icon...
- * @author jcuenca
- */
-
 public class Command {
 	
-	public static Command PLAY= new Command("controls.play","", "playPause", false, TomoWindow.PLAY_ICON),
+	public static Command 
+	PLAY= new Command("controls.play","", "playPause", false, TomoWindow.PLAY_ICON),
 	PLAY_LOOP= new Command("controls.play_loop","Loop", "changePlayMode", true, null),
 	LOAD=new Command("file.emload","Load","loadEM",true,null),
 	XRAY=new Command("file.xrayload","Import X-Ray","loadXray",true,null),
@@ -41,7 +43,7 @@ public class Command {
 	NORMALIZE_SERIES=new Command("file.normalize","Normalize series","normalize",false,null),
 	DEFINE_TILT = new Command("file.tilt","Set tilt angles","setTilt",false,null),
 	DISCARD_PROJECTION = new Command("file.discard_projection","Discard Projection","discardProjection",false,null),
-	// only here for the label
+	// defined here only for the label
 	UNDO_DISCARD_PROJECTION = new Command("file.undo_discard_projection","Undo Discard Proj.","discardProjection",false,null),
 	GAUSSIAN = new Command("proc.gaussian","Gaussian","gaussian", false,null),
 	MEDIAN = new Command("proc.median","Median","median", false,null),
@@ -59,6 +61,11 @@ public class Command {
 	PRINT_WORKFLOW = new Command("debug.print_workflow","Print workflow","printWorkflow",false,null), 
 	CURRENT_PROJECTION_INFO = new Command("debug.current_projection_info","Current Projection Info","currentProjectionInfo",false,null);;
 	
+	/* Complex commands may transit through some states.
+	 * For example, loading a file takes time - the command may be canceled.
+	 * Furthermore, the results of other commands may change depending upon the load command is still running,
+	 * or it has finished.
+	 */
 	public static enum State{IDLE,LOADING, LOADED, RELOADING,CANCELED;};
 	
 	private String id;
@@ -67,6 +74,14 @@ public class Command {
 	private String iconName;
 	private boolean enabled = true;
 
+	/**
+	 * 
+	 * @param id unique identifier string, using a dotted syntax, like "align.correlation"
+	 * @param label what the user will read
+	 * @param method to be called when this command takes place
+	 * @param enabled at startup?
+	 * @param iconName (optional) URL like ""resources/icon-play.png", or NULL
+	 */
 	Command(String id,String label, String method, boolean enabled, String iconName) {
 		this.id = id;
 		this.method = method;
@@ -83,9 +98,6 @@ public class Command {
 		return enabled;
 	}
 
-	/**
-	 * @return the method
-	 */
 	public String getMethod() {
 		return method;
 	}
@@ -100,9 +112,6 @@ public class Command {
 			throw new Exception("Command.getIcon() - icon not found");
 	}
 
-	/**
-	 * @return the id
-	 */
 	public String getId() {
 		return id;
 	}
