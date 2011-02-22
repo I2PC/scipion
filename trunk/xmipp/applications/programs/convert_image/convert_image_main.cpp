@@ -45,7 +45,7 @@ private:
     MDRow        row;
     ImageConv    convMode;
     bool         adjust;
-    int          k;
+    size_t        k;
     int         writeMode;
 
 protected:
@@ -173,7 +173,7 @@ protected:
 
                 FileName fnTemp;
 
-                for (k=0;k<Zdim;k++)
+                for (k = 1;k <= Zdim; k++)
                 {
                     fnTemp.compose(k, fn_in);
 
@@ -181,9 +181,9 @@ protected:
                     mdIn.setValue(MDL_IMAGE, fnTemp, id);
                     mdIn.setValue(MDL_ENABLED, 1, id);
                 }
-                imIn.read(fn_in, DATA,-1,true);
+                imIn.read(fn_in, DATA, ALL_IMAGES, true);
                 imOut = new ImageGeneric(outDataT);
-                k = 0;
+                k = 0; // Reset to zero to select the slices when working with volumes
             }
         }
     }
@@ -203,8 +203,8 @@ protected:
                 else
                     _fnImgOut= fnImgOut;
 
-                imIn.read(fnImg,DATA,-1,true);
-                imIn.write(_fnImgOut+depth,-1, type == "stk", writeMode, adjust);
+                imIn.read(fnImg, DATA, ALL_IMAGES, true);
+                imIn.write(_fnImgOut+depth, ALL_IMAGES, type == "stk", writeMode, adjust);
 
                 if ((fnImg == fnImgOut) && (rename(tempName.c_str(),fnImgOut.c_str())!=0))
                     REPORT_ERROR(ERR_IO, "ProgConvImg:: Error renaming the file.");
@@ -213,14 +213,14 @@ protected:
             }
         case MD2VOL:
             {
-                imIn.read(fnImg,DATA,-1,true);
+                imIn.read(fnImg,DATA, ALL_IMAGES,true);
                 imOut->data->setSlice(k++,imIn.data);
                 break;
             }
         case VOL2MD:
             {
                 imIn.data->getSlice(k++,imOut->data);
-                imOut->write(fnImgOut+depth,-1, type == "stk", writeMode, adjust);
+                imOut->write(fnImgOut+depth, ALL_IMAGES, type == "stk", writeMode, adjust);
             }
         }
         mdIn.setValue(MDL_IMAGE,fnImgOut, objId); // to keep info in output metadata
