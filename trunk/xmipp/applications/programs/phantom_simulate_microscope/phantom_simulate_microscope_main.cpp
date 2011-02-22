@@ -29,6 +29,5 @@ int main(int argc, char **argv)
 {
     ProgSimulateMicroscope program;
     program.read(argc, argv);
-    program.tryRun();
-    return 0;
+    return program.tryRun();
 }
