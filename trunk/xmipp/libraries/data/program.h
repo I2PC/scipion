@@ -58,6 +58,8 @@ class XmippProgram
 private:
     /** Flag to check whether to run or not*/
     bool notRun;
+    /** Value to store possible error codes */
+    int errorCode;
     /** Initialization function */
     void init();
 
@@ -185,8 +187,12 @@ public:
      * can be usefull redefined for mpi programs
      */
     virtual void quit(int exit_code = 0) const;
-    /** Call the run function inside a try/catch block */
-    void tryRun();
+    /** Call the run function inside a try/catch block
+     * The function will return the error code when
+     * 0 means success
+     * and a value greater than 0 represents the error type
+     * */
+    int tryRun();
 
     /** @name Constructors
      * @{
@@ -201,7 +207,7 @@ public:
 
     /** Run some program passing some arguments
      * if destroy is true the program pointer will be freed */
-    static void runProgram(XmippProgram * program, const String &arguments, bool destroy=true);
+    static int runProgram(XmippProgram * program, const String &arguments, bool destroy=true);
     static XmippProgram * createByName(const char * programName);
 
 };

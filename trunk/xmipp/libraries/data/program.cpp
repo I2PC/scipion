@@ -134,10 +134,14 @@ void XmippProgram::createWiki()
 XmippProgram::XmippProgram()
 {
     progDef = NULL;
+    notRun = true;
+    errorCode = 0;
 }
 
 XmippProgram::XmippProgram(int argc, char ** argv)
 {
+    notRun = true;
+    errorCode = 0;
     init();
     read(argc, argv);
 }
@@ -175,6 +179,7 @@ void XmippProgram::read(int argc, char ** argv, bool reportErrors)
     setProgramName(argv[0]);
 
     notRun = true;
+    errorCode = 0; //suppose no errors
     ///If not arguments are provided, show the GUI or console program help
     //this behavior will be defined with environment variable XMIPP_BEHAVIOR
     if (argc == 1)
@@ -201,10 +206,10 @@ void XmippProgram::read(int argc, char ** argv, bool reportErrors)
         }
         catch (XmippError xe)
         {
-            ///If an input error, shows error message and usage
+            ///If an input error, shows error message
             std::cerr << xe;
             std::cerr << "For more info use --help" << std::endl;
-            //usage();
+            errorCode = xe.__errno;
         }
     }
 }
@@ -220,7 +225,7 @@ void XmippProgram::read(const String &argumentsLine)
 
 }
 
-void XmippProgram::tryRun()
+int XmippProgram::tryRun()
 {
     try
     {
@@ -229,9 +234,10 @@ void XmippProgram::tryRun()
     }
     catch (XmippError xe)
     {
-        std::cout << xe;
-        quit(xe.__errno);
+        std::cerr << xe;
+        errorCode = xe.__errno;
     }
+    return errorCode;
 }
 
 void XmippProgram::setProgramName(const char * name)
@@ -249,7 +255,7 @@ void XmippProgram::addExampleLine(const char * example, bool verbatim)
 }
 void XmippProgram::addSeeAlsoLine(const char * seeAlso)
 {
-   progDef->seeAlso = seeAlso;
+    progDef->seeAlso = seeAlso;
 }
 
 void XmippProgram::clearUsage()
@@ -296,12 +302,12 @@ void XmippProgram::addWhereImageFormat(const char * whereName)
 
 void XmippProgram::addWhereRandomType(const char * randomName)
 {
-  char randomLine[256];
-  sprintf(randomLine, "       where <%s>", randomName);
-  addParamsLine(randomLine);
-  addParamsLine("gaussian <stddev> <avg=0.>        :Gaussian distribution parameters");
-  addParamsLine("student <df> <stddev> <avg=0.> :t-student distribution parameters");
-  addParamsLine("uniform  <min> <max>           :Uniform distribution parameters");
+    char randomLine[256];
+    sprintf(randomLine, "       where <%s>", randomName);
+    addParamsLine(randomLine);
+    addParamsLine("gaussian <stddev> <avg=0.>        :Gaussian distribution parameters");
+    addParamsLine("student <df> <stddev> <avg=0.> :t-student distribution parameters");
+    addParamsLine("uniform  <min> <max>           :Uniform distribution parameters");
 }
 
 void XmippProgram::addKeywords(const char * keywords)
@@ -403,12 +409,13 @@ int XmippProgram::version() const
     REPORT_ERROR(ERR_NOT_IMPLEMENTED,"");
 }
 
-void XmippProgram::runProgram(XmippProgram * program, const String &arguments, bool destroy)
+int XmippProgram::runProgram(XmippProgram * program, const String &arguments, bool destroy)
 {
     program->read(arguments);
-    program->tryRun();
+    int retCode = program->tryRun();
     if (destroy)
         delete program;
+    return retCode;
 }
 
 /// Empty constructor
@@ -479,10 +486,10 @@ void XmippMetadataProgram::readParams()
     single_image = input_is_stack = false;
     if (!fn_in.isMetaData())
     {
-      if (mdIn.size() == 1)
-        single_image = true;
-      else
-        input_is_stack = true;
+        if (mdIn.size() == 1)
+            single_image = true;
+        else
+            input_is_stack = true;
     }
     single_image = !fn_in.isMetaData() && (mdIn.size() == 1);
 
@@ -559,7 +566,7 @@ size_t XmippMetadataProgram::getImageToProcess()
     if (time_bar_done == 0)
         iter = new MDIterator(mdIn);
     else
-       iter->moveNext();
+        iter->moveNext();
 
     ++time_bar_done;
     return iter->objId;
