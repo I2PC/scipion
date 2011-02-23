@@ -810,7 +810,7 @@ void computeStats_within_binary_mask(const MultidimArray< int >& mask,
 
     FOR_ALL_ELEMENTS_IN_COMMON_IN_ARRAY3D(mask, m)
     {
-        if (A3D_ELEM(mask, k, i, j) != 0)
+        if (A3D_ELEM(mask, k, i, j) > 0)
         {
             N++;
 
