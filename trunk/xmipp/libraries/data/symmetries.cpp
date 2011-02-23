@@ -135,7 +135,6 @@ int SymList::read_sym_file(FileName fn_sym, double accuracy)
             ZZ(axis) = textToFloat(auxstr);
             ang_incr = 360. / fold;
             L.initIdentity();
-            R.initIdentity();//R(3,3) is not always filled
             for (j = 1, rot_ang = ang_incr; j < fold; j++, rot_ang += ang_incr)
             {
                 rotation3DMatrix(rot_ang, axis, R);
@@ -470,6 +469,7 @@ void SymList::compute_subgroup(double accuracy)
         new_chain_length = __chain_length(i) + __chain_length(j);
 
         //if (newL.isIdentity() && newR.isIdentity()) continue;
+        //rounding error make newR different from identity
         if (newL.equal(identity, accuracy) &&
         	newR.equal(identity, accuracy)) continue;
 
@@ -490,19 +490,24 @@ void SymList::compute_subgroup(double accuracy)
         {
 //#define DEBUG
 #ifdef DEBUG
+        	static int kjhg=0;
            /* std::cout << "Matrix size " << tried.Xdim() << " "
             << "trying " << i << " " << j << " "
             << "chain length=" << new_chain_length << std::endl;
             std::cout << "Result R Sh\n" << newR << shift;
             */
-        	std::cerr << "shift" << __shift <<std::endl;
+        	//std::cerr << "shift" << __shift <<std::endl;
+            std::cerr << "newR "  << kjhg++ << "\n" << newR <<std::endl;
 #endif
-#undef DEBUG
             add_matrices(newL, newR, new_chain_length);
             add_shift(shift);
             tried.resize(MAT_YSIZE(tried) + 1, MAT_XSIZE(tried) + 1);
         }
     }
+#ifdef DEBUG
+    std::cerr << "__R" << __R <<std::endl;
+#endif
+#undef DEBUG
 }
 /** Guess Crystallographic space group.
     Return the group number
