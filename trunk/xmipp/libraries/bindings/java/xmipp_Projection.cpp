@@ -4,14 +4,20 @@
 #include "xmipp_ExceptionsHandler.h"
 #include <data/image.h>
 #include <data/projection.h>
-#include <reconstruction/projection_real_shears.h>
+#include "xmipp_InternalData.h"
 
-static jfieldID Projection_peerId;
-static jfieldID Projection_filenameId;
+/*
+ static jfieldID Projection_peerId;
+ //static jfieldID Projection_filenameId;
 
-#define peerId Projection_peerId
-#define GET_INTERNAL_PROJECTION(obj) ((Projection *)(env->GetLongField(obj, peerId)))
-#define GET_INTERNAL_IMAGE(obj) ((Image<double> *)(env->GetLongField(obj, peerId)))
+ #define peerId Projection_peerId
+
+ #ifndef GET_INTERNAL_IMAGE
+ #define GET_INTERNAL_IMAGE(obj) ((Image<double> *)(env->GetLongField(obj, peerId)))
+ #endif
+ #ifndef GET_INTERNAL_PROJECTION
+ #define GET_INTERNAL_PROJECTION(obj) ((Projection *)(env->GetLongField(obj, peerId)))
+ #endif*/
 
 JNIEXPORT void JNICALL Java_xmipp_Projection_storeIds
 (JNIEnv *env, jclass cls) {
@@ -82,7 +88,7 @@ JNIEXPORT void JNICALL Java_xmipp_Projection_setXmippOrigin
 	}
 }
 
-JNIEXPORT void JNICALL Java_xmipp_Projection_projectVolume__Lxmipp_ImageDouble_2Lxmipp_Projection_2DDD
+JNIEXPORT void JNICALL Java_xmipp_Projection_projectVolume
 (JNIEnv *env, jclass cls, jobject jvolume, jobject jprojection, jdouble tilt, jdouble rot, jdouble pshi) {
 	std::string msg = "";
 	Image<double> *volume = GET_INTERNAL_IMAGE(jvolume);
@@ -93,7 +99,7 @@ JNIEXPORT void JNICALL Java_xmipp_Projection_projectVolume__Lxmipp_ImageDouble_2
 			try {
 				int w = XSIZE(projection->data);
 				int h = YSIZE(projection->data);
-				//project_Volume(volume->data, projection, h, w, (double) rot, (double) tilt, (double) pshi);
+				projectVolume(volume->data, *projection, h, w, (double) rot, (double) tilt, (double) pshi);
 			} catch (XmippError xe) {
 				msg = xe.getDefaultMessage();
 			} catch (std::exception& e) {

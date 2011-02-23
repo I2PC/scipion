@@ -4,7 +4,7 @@ public class ImageDouble {
 
     private static final String PSD_EXTENSION = ".psd";
     //hold pointer to Image class in C++ space
-    private long peer;
+//    private long peer;
     private String filename;
 
     // Initialize library.
@@ -36,14 +36,6 @@ public class ImageDouble {
 
     // Data.
     public native double[] getData();
-    /*
-    public native double getPixel(int x, int y);
-
-    public native void setPixel(int x, int y, double value);
-
-    public native double getVoxel(int x, int y, int z);
-
-    public native void setVoxel(int x, int y, int z, double value);*/
 
     public native void convertPSD();
 
@@ -65,7 +57,7 @@ public class ImageDouble {
 
     public ImageDouble(String filename) throws Exception {
         this();
-        this.filename = filename;
+        setFilename(filename);
         read(filename);
     }
 

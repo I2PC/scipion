@@ -3,8 +3,8 @@ package xmipp;
 public class Projection {
 
     //hold pointer to Image class in C++ space
-    private long peer;
-    private String filename;
+/*    private long peer;
+    private String filename;*/
 
     // Initialize library.
     static {
@@ -33,14 +33,6 @@ public class Projection {
 
     // Data.
     public native double[] getData();
-    /*
-    public native double getPixel(int x, int y);
-
-    public native void setPixel(int x, int y, double value);
-
-    public native double getVoxel(int x, int y, int z);
-
-    public native void setVoxel(int x, int y, int z, double value);*/
 
     public native int getXsize();
 

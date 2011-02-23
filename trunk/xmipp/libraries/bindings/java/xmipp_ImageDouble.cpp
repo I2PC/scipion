@@ -3,12 +3,16 @@
 #include "xmipp_ExceptionsHandler.h"
 #include <data/image.h>
 #include <data/fft.h>
+#include "xmipp_InternalData.h"
 
-static jfieldID ImageDouble_peerId;
-static jfieldID ImageDouble_filenameId;
+/*static jfieldID ImageDouble_peerId;
+//static jfieldID ImageDouble_filenameId;
 
 #define peerId ImageDouble_peerId
+
+#ifndef GET_INTERNAL_IMAGE
 #define GET_INTERNAL_IMAGE(obj) ((Image<double>*)(env->GetLongField(obj, peerId)))
+#endif*/
 
 JNIEXPORT void JNICALL Java_xmipp_ImageDouble_storeIds
 (JNIEnv *env, jclass cls) {
