@@ -95,6 +95,19 @@ void ImgSize(const MetaData &MD, int &Xdim, int &Ydim, int &Zdim, size_t &Ndim)
         REPORT_ERROR(ERR_MD_NOOBJ, "Can not read image size from empty metadata");
 }
 
+void ImgSize(const MetaData &MD, int &Xdim, int &Ydim, int &Zdim, size_t &Ndim, DataType &datatype)
+{
+    if (!MD.isEmpty())
+    {
+        FileName fn_img;
+        MD.getValue(MDL_IMAGE, fn_img, MD.firstObject());
+        SingleImgSize(fn_img, Xdim, Ydim, Zdim, Ndim, datatype);
+
+    }
+    else
+        REPORT_ERROR(ERR_MD_NOOBJ, "Can not read image size from empty metadata");
+}
+
 void ImgSize(const FileName &filename, int &Xdim, int &Ydim, int &Zdim, size_t &Ndim)
 {
     ImgSize(MetaData(filename), Xdim, Ydim, Zdim, Ndim);

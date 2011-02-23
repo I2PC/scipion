@@ -19,6 +19,7 @@ void getStatistics(MetaData &MT, Image<double> & _ave, Image<double> & _sd, doub
  *
  */
 void ImgSize(const MetaData &MD, int &Xdim, int &Ydim, int &Zdim, size_t &Ndim);
+void ImgSize(const MetaData &MD, int &Xdim, int &Ydim, int &Zdim, size_t &Ndim, DataType &datatype);
 
 void ImgSize(const FileName &filename, int &Xdim, int &Ydim, int &Zdim, size_t &Ndim);
 
