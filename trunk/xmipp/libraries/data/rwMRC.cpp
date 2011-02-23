@@ -104,7 +104,7 @@ struct MRChead
     int ispg;            // 22           space group number
     int nsymbt;          // 23           bytes used for sym. ops. table
     float extra[25];     // 24           user-defined info
-    float xOrigin;       // 49           phase origin in pixels
+    float xOrigin;       // 49           phase origin in pixels FIXME: is in pixels or [L] units?
     float yOrigin;       // 50
     float zOrigin;       // 51
     char map[4];         // 52       identifier for map file ("MAP ")
@@ -238,6 +238,11 @@ int ImageBase::readMRC(size_t select_img, bool isStack)
     {
         initGeometry(i);
 
+        MD[i].setValue(MDL_SHIFTX, (double) -header->nxStart);
+        MD[i].setValue(MDL_SHIFTY, (double) -header->nyStart);
+        MD[i].setValue(MDL_SHIFTZ, (double) -header->nzStart);
+
+        //FIXME: Check if this conversion is right
         if(MDMainHeader.getValue(MDL_SAMPLINGRATEX,aux))
         {
             aux = -header->xOrigin/aux;
@@ -422,17 +427,20 @@ int ImageBase::writeMRC(size_t select_img, bool isStack, int mode, std::string b
             header->amean = (float)aux;
         if(MDMainHeader.getValue(MDL_STDDEV, aux))
             header->arms  = (float)aux;
-        if(MDMainHeader.getValue(MDL_ORIGINX, aux))
-            header->nxStart = (int)(aux-0.5);
-        if (MDMainHeader.getValue(MDL_SAMPLINGRATEX,aux2))//header is init to zero
+        if(MDMainHeader.getValue(MDL_SHIFTX, aux))
+            header->nxStart = (int)-(aux-0.5);
+        if(MDMainHeader.getValue(MDL_ORIGINX, aux) &&
+           MDMainHeader.getValue(MDL_SAMPLINGRATEX,aux2))//header is init to zero
             header->xOrigin = (float)(aux*aux2);
-        if (MDMainHeader.getValue(MDL_ORIGINY, aux))
-            header->nyStart = (int)(aux-0.5);
-        if (MDMainHeader.getValue(MDL_SAMPLINGRATEY,aux2))//header is init to zero
+        if (MDMainHeader.getValue(MDL_SHIFTY, aux))
+            header->nyStart = (int)-(aux-0.5);
+        if (MDMainHeader.getValue(MDL_ORIGINY, aux) &&
+            MDMainHeader.getValue(MDL_SAMPLINGRATEY,aux2))//header is init to zero
             header->yOrigin = (float)(aux*aux2);
-        if (MDMainHeader.getValue(MDL_ORIGINZ, aux))
-            header->nzStart = (int)(aux-0.5);
-        if (MDMainHeader.getValue(MDL_SAMPLINGRATEZ,aux2))//header is init to zero
+        if (MDMainHeader.getValue(MDL_SHIFTZ, aux))
+            header->nzStart = (int)-(aux-0.5);
+        if (MDMainHeader.getValue(MDL_ORIGINZ, aux) &&
+            MDMainHeader.getValue(MDL_SAMPLINGRATEZ,aux2))//header is init to zero
             header->zOrigin = (float)(aux*aux2);
     }
 

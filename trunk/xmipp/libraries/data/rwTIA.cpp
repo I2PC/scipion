@@ -232,12 +232,14 @@ int ImageBase::readTIA(int img_select,bool isStack)
         {
             if(MDMainHeader.getValue(MDL_SAMPLINGRATEX,aux))
             {
+                MD[i].setValue(MDL_SHIFTX, dataHeaders[i].CalibrationOffsetX/aux);
                 aux = ROUND(dataHeaders[i].CalibrationElementX - \
                             dataHeaders[i].CalibrationOffsetX/aux - _xDim/2);
                 MD[i].setValue(MDL_ORIGINX, aux);
             }
             if(MDMainHeader.getValue(MDL_SAMPLINGRATEY,aux))
             {
+                MD[i].setValue(MDL_SHIFTY, dataHeaders[i].CalibrationOffsetY/aux);
                 aux = ROUND(dataHeaders[i].CalibrationElementY - \
                             dataHeaders[i].CalibrationOffsetY/aux -_yDim/2);
                 MD[i].setValue(MDL_ORIGINY, aux);

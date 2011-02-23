@@ -147,3 +147,11 @@ void SingleImgSize(const FileName &filename, int &Xdim, int &Ydim, int &Zdim, si
     img.read(filename, HEADER);
     img.getDimensions(Xdim, Ydim, Zdim, Ndim);
 }
+
+void SingleImgSize(const FileName &filename, int &Xdim, int &Ydim, int &Zdim, size_t &Ndim, DataType &datatype)
+{
+    Image<char> img;
+    img.read(filename, HEADER);
+    img.getDimensions(Xdim, Ydim, Zdim, Ndim);
+    img.MDMainHeader.getValue(MDL_DATATYPE,(int)datatype);
+}

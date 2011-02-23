@@ -1086,6 +1086,11 @@ void Image< std::complex< double > >::castConvertPage2Datatype(std::complex< dou
 /** What is the size of an image */
 void SingleImgSize(const FileName &filename, int &Xdim, int &Ydim, int &Zdim,
                    size_t &Ndim);
+void SingleImgSize(const FileName &filename, int &Xdim, int &Ydim, int &Zdim,
+    size_t &Ndim, DataType &datatype);
+
+
+
 
 /// @defgroup ImageFormats Image Formats
 /// @ingroup Images

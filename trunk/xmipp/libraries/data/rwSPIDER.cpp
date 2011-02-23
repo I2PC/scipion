@@ -243,11 +243,11 @@ int  ImageBase::readSPIDER(size_t select_img)
         if (dataMode == _HEADER_ALL || dataMode == _DATA_ALL)
         {
             daux = (double)header->xoff;
-            MD[n].setValue(MDL_ORIGINX, daux);
+            MD[n].setValue(MDL_SHIFTX, daux);
             daux = (double)header->yoff;
-            MD[n].setValue(MDL_ORIGINY, daux);
+            MD[n].setValue(MDL_SHIFTY, daux);
             daux = (double)header->zoff;
-            MD[n].setValue(MDL_ORIGINZ, daux);
+            MD[n].setValue(MDL_SHIFTZ, daux);
             daux = (double)header->phi;
             MD[n].setValue(MDL_ANGLEROT, daux);
             daux = (double)header->theta;
@@ -363,8 +363,7 @@ int  ImageBase::writeSPIDER(size_t select_img, bool isStack, int mode)
     size_t xstore  = Xdim;
     if ( transform == Hermitian )
     {
-        xstore = Xdim
-                 /2 + 1;
+        xstore = Xdim * 0.5 + 1;
         header->nsam = 2*xstore;
     }
 
@@ -381,17 +380,13 @@ int  ImageBase::writeSPIDER(size_t select_img, bool isStack, int mode)
 
     if ( Zdim < 2 )
     {
-        if ( transform == NoTransform )
-            header->iform = 1;     // 2D image
-        else
-            header->iform = -12 + (int)header->nsam%2;   // 2D Fourier transform
+        // 2D image or 2D Fourier transform
+        header->iform = ( transform == NoTransform ) ? 1 :  -12 + (int)header->nsam%2;
     }
     else
     {
-        if ( transform == NoTransform )
-            header->iform = 3;     // 3D volume
-        else
-            header->iform = -22 + (int)header->nsam%2;   // 3D Fourier transform
+        // 3D volume or 3D Fourier transform
+        header->iform = ( transform == NoTransform )? 3 : -22 + (int)header->nsam%2;
     }
     double aux;
     bool baux;
@@ -416,11 +411,11 @@ int  ImageBase::writeSPIDER(size_t select_img, bool isStack, int mode)
         if ((dataMode == _HEADER_ALL || dataMode == _DATA_ALL))
         {
 
-            if(MD[0].getValue(MDL_ORIGINX,  aux))
+            if(MD[0].getValue(MDL_SHIFTX,  aux))
                 header->xoff  =(float)aux;
-            if(MD[0].getValue(MDL_ORIGINY,  aux))
+            if(MD[0].getValue(MDL_SHIFTY,  aux))
                 header->yoff  =(float)aux;
-            if(MD[0].getValue(MDL_ORIGINZ,  aux))
+            if(MD[0].getValue(MDL_SHIFTZ,  aux))
                 header->zoff  =(float)aux;
             if(MD[0].getValue(MDL_ANGLEROT, aux))
                 header->phi   =(float)aux;
@@ -551,11 +546,11 @@ int  ImageBase::writeSPIDER(size_t select_img, bool isStack, int mode)
         {
             if (dataMode == _HEADER_ALL || dataMode == _DATA_ALL)
             {
-                if(it->getValue(MDL_ORIGINX,  aux))
+                if(it->getValue(MDL_SHIFTX,  aux))
                     header->xoff  =(float)aux;
-                if(it->getValue(MDL_ORIGINY,  aux))
+                if(it->getValue(MDL_SHIFTY,  aux))
                     header->yoff  =(float)aux;
-                if(it->getValue(MDL_ORIGINZ,  aux))
+                if(it->getValue(MDL_SHIFTZ,  aux))
                     header->zoff  =(float)aux;
                 if(it->getValue(MDL_ANGLEROT, aux))
                     header->phi   =(float)aux;

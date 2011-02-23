@@ -215,9 +215,9 @@ int  ImageBase::readIMAGIC(size_t img_select)
 
             if (dataMode == _HEADER_ALL || dataMode == _DATA_ALL)
             {
-                MD[i].setValue(MDL_ORIGINX,  (double)-1. * header->iyold);
-                MD[i].setValue(MDL_ORIGINY,  (double)-1. * header->ixold);
-                MD[i].setValue(MDL_ORIGINZ,  zeroD);
+                MD[i].setValue(MDL_SHIFTX,  (double)-1. * header->ixold);
+                MD[i].setValue(MDL_SHIFTY,  (double)-1. * header->iyold);
+                MD[i].setValue(MDL_SHIFTZ,  zeroD);
                 MD[i].setValue(MDL_ANGLEROT, (double)-1. * header->euler_alpha);
                 MD[i].setValue(MDL_ANGLETILT,(double)-1. * header->euler_beta);
                 MD[i].setValue(MDL_ANGLEPSI, (double)-1. * header->euler_gamma);
@@ -446,11 +446,11 @@ int  ImageBase::writeIMAGIC(size_t img_select, int mode, String bitDepth, bool a
         header->iyold=header->ixold=header->euler_alpha=header->euler_beta=header->euler_gamma=0.;
         if (dataMode == _HEADER_ALL || dataMode == _DATA_ALL)
         {
-            if(it->getValue(MDL_ORIGINX,  aux))
+            if(it->getValue(MDL_SHIFTX,  aux))
                 header->iyold  = (float)-aux;
-            if(it->getValue(MDL_ORIGINY,  aux))
+            if(it->getValue(MDL_SHIFTY,  aux))
                 header->ixold  =(float)-aux;
-            //if(it->getValue(MDL_ORIGINZ,  aux))
+            //if(it->getValue(MDL_SHIFTZ,  aux))
             //    header->zoff  =(float)aux;
             if(it->getValue(MDL_ANGLEROT, aux))
                 header->euler_alpha   =(float)-aux;

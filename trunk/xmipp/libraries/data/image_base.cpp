@@ -231,7 +231,7 @@ double ImageBase::psi(const size_t n) const
 double ImageBase::Xoff(const size_t n) const
 {
     double dummy = 0;
-    MD[n].getValue(MDL_ORIGINX, dummy);
+    MD[n].getValue(MDL_SHIFTX, dummy);
     return dummy;
 }
 
@@ -244,7 +244,7 @@ double ImageBase::Xoff(const size_t n) const
 double ImageBase::Yoff(const size_t n) const
 {
     double dummy = 0;
-    MD[n].getValue(MDL_ORIGINY, dummy);
+    MD[n].getValue(MDL_SHIFTY, dummy);
     return dummy;
 }
 
@@ -257,7 +257,7 @@ double ImageBase::Yoff(const size_t n) const
 double ImageBase::Zoff(const size_t n) const
 {
     double dummy = 0;
-    MD[n].getValue(MDL_ORIGINZ, dummy);
+    MD[n].getValue(MDL_SHIFTZ, dummy);
     return dummy;
 }
 
@@ -369,17 +369,17 @@ void ImageBase::getEulerAngles(double &rot, double &tilt, double &psi,
      */
 void ImageBase::setShifts(double xoff, double yoff, double zoff, const size_t n)
 {
-    MD[n].setValue(MDL_ORIGINX, xoff);
-    MD[n].setValue(MDL_ORIGINY, yoff);
-    MD[n].setValue(MDL_ORIGINZ, zoff);
+    MD[n].setValue(MDL_SHIFTX, xoff);
+    MD[n].setValue(MDL_SHIFTY, yoff);
+    MD[n].setValue(MDL_SHIFTZ, zoff);
 }
 /** Get origin offsets from image header
   */
 void ImageBase::getShifts(double &xoff, double &yoff, double &zoff, const size_t n) const
 {
-    MD[n].getValue(MDL_ORIGINX, xoff);
-    MD[n].getValue(MDL_ORIGINY, yoff);
-    MD[n].getValue(MDL_ORIGINZ, zoff);
+    MD[n].getValue(MDL_SHIFTX, xoff);
+    MD[n].getValue(MDL_SHIFTY, yoff);
+    MD[n].getValue(MDL_SHIFTZ, zoff);
 }
 
 /** Open file function
@@ -830,7 +830,7 @@ std::ostream& operator<<(std::ostream& o, const ImageBase& I)
         o << "  theta (tilt, second rotation around new Y axis) = " << I.tilt() << std::endl;
         o << "  Psi   (third rotation around new Z axis) = " << I.psi() << std::endl;
     }
-    if (I.individualContainsLabel(MDL_ORIGINX))
+    if (I.individualContainsLabel(MDL_SHIFTX))
     {
         o << "Origin Offsets : " << std::endl;
         o << "  Xoff  (origin offset in X-direction) = " << I.Xoff() << std::endl;
