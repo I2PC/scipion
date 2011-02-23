@@ -192,3 +192,11 @@ void ProgSimulateMicroscope::apply(MultidimArray<double> &I)
     I.selfWindow(FIRST_XMIPP_INDEX(Ydim), FIRST_XMIPP_INDEX(Xdim),
                  LAST_XMIPP_INDEX(Ydim), LAST_XMIPP_INDEX(Xdim));
 }
+
+
+/* PostProcess ------------------------------------------------------------------- */
+void ProgSimulateMicroscope::postProcess()
+{
+    if (oroot == "")
+        mdOut.write(fn_out.withoutExtension().addExtension("doc"));
+}
