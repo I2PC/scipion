@@ -282,54 +282,8 @@ int ImageBase::readMRC(size_t select_img, bool isStack)
 */
 int ImageBase::writeMRC(size_t select_img, bool isStack, int mode, std::string bitDepth, bool adjust)
 {
-    /*
-        if ( transform != NoTransform )
-            img_convert_fourier(p, CentHerm);
-    */
-    MRChead*        header = (MRChead *) askMemory(sizeof(MRChead));
 
-    // Map the parameters
-    strncpy(header->map, "MAP ", 4);
-    // FIXME TO BE DONE WITH rwCCP4!!
-    //set_CCP4_machine_stamp(header->machst);
-    char* machine_stamp;
-    machine_stamp = (char *)(header->machst);
-    if(IsLittleEndian())
-    {
-        machine_stamp[0] = 68;
-        machine_stamp[1] = 65;
-    }
-    else
-    {
-        machine_stamp[0] = machine_stamp[1] = 17;
-    }
-    //                    case LittleVAX:
-    //                        machine_stamp[0] = 34;
-    //                        machine_stamp[1] = 65;
-    //                        break;
-    int Xdim, Ydim, Zdim;
-    size_t Ndim;
-    getDimensions(Xdim, Ydim, Zdim, Ndim);
-
-    size_t   imgStart = IMG_INDEX(select_img);
-    size_t   imgEnd = (select_img != ALL_IMAGES) ? select_img + 1 : Ndim;
-
-    if (mode == WRITE_APPEND)
-    {
-        //TODO: Check if this works?
-        imgStart = 0;
-        imgEnd = 1;
-    }
-    header->a = header->mx =header->nx = Xdim;
-    header->b = header->my =header->ny = Ydim;
-    header->c = header->mz =header->nz = Zdim;
-
-    if ( transform == CentHerm )
-        header->nx = Xdim/2 + 1;        // If a transform, physical storage is nx/2 + 1
-
-    header->alpha = 90.;
-    header->beta  = 90.;
-    header->gamma = 90.;
+    MRChead*  header = (MRChead *) askMemory(sizeof(MRChead));
 
     // Cast T to datatype
     DataType wDType,myTypeID = myT();
@@ -404,6 +358,47 @@ int ImageBase::writeMRC(size_t select_img, bool isStack, int mode, std::string b
             dataMode = DATA;
     }
 
+
+    /*
+         if ( transform != NoTransform )
+             img_convert_fourier(p, CentHerm);
+     */
+
+    // Map the parameters
+    strncpy(header->map, "MAP ", 4);
+    // FIXME TO BE DONE WITH rwCCP4!!
+    //set_CCP4_machine_stamp(header->machst);
+    char* machine_stamp;
+    machine_stamp = (char *)(header->machst);
+    if(IsLittleEndian())
+    {
+        machine_stamp[0] = 68;
+        machine_stamp[1] = 65;
+    }
+    else
+    {
+        machine_stamp[0] = machine_stamp[1] = 17;
+    }
+    //                    case LittleVAX:
+    //                        machine_stamp[0] = 34;
+    //                        machine_stamp[1] = 65;
+    //                        break;
+
+    int Xdim, Ydim, Zdim;
+    size_t Ndim;
+    getDimensions(Xdim, Ydim, Zdim, Ndim);
+
+    header->a = header->mx =header->nx = Xdim;
+    header->b = header->my =header->ny = Ydim;
+    header->c = header->mz =header->nz = Zdim;
+
+    if ( transform == CentHerm )
+        header->nx = Xdim/2 + 1;        // If a transform, physical storage is nx/2 + 1
+
+    header->alpha = 90.;
+    header->beta  = 90.;
+    header->gamma = 90.;
+
     //Set this to zero till we decide if we want to update it
     //    header->mx = 0;//(int) (ua/ux + 0.5);
     //    header->my = 0;//(int) (ub/uy + 0.5);
@@ -459,12 +454,20 @@ int ImageBase::writeMRC(size_t select_img, bool isStack, int mode, std::string b
     printf("DEBUG rwMRC: Offset = %ld,  Datasize_n = %ld\n", offset, datasize_n);
 #endif
 
-    // For multi-image files
-    if (mode == WRITE_APPEND && isStack)
+    size_t imgStart = IMG_INDEX(select_img);
+    header->nz = replaceNsize;
+
+    if( mode == WRITE_APPEND )
     {
-        header->nz = replaceNsize +1;
+        imgStart = replaceNsize;
+        header->nz = replaceNsize + Ndim;
     }
-    //else header-> is correct
+    else if( mode == WRITE_REPLACE && select_img + Ndim - 1 > replaceNsize)
+    {
+        header->nz = select_img + Ndim - 1;
+    }
+    else if (Ndim > replaceNsize)
+        header->nz = Ndim;
 
     //locking
     struct flock fl;
@@ -480,37 +483,33 @@ int ImageBase::writeMRC(size_t select_img, bool isStack, int mode, std::string b
     fl.l_type   = F_WRLCK;
     fcntl(fileno(fimg), F_SETLKW, &fl); /* locked */
 
-    // Write header
-    if(mode==WRITE_OVERWRITE || mode==WRITE_APPEND)
+    // Write header when needed
+    if(replaceNsize < header->nz)
         fwrite( header, MRCSIZE, 1, fimg );
     freeMemory(header, sizeof(MRChead) );
 
-    //write only once, ignore select_img
-    if ( Ndim == 1 && mode==WRITE_OVERWRITE)
+    // Jump to the selected imgStart position
+    fseek( fimg,offset + (datasize)*imgStart, SEEK_SET);
+
+    for ( size_t i = 0; i < Ndim; i++ )
     {
-        if (mmapOnWrite)
+      // If to also write the image data or jump its size
+        if (dataMode >= DATA)
         {
-            mappedOffset = ftell(fimg);
-            mappedSize = mappedOffset + datasize;
-            fseek(fimg, datasize-1, SEEK_CUR);
-            fputc(0, fimg);
+            if (mmapOnWrite && Ndim == 1) // Can map one image at a time only
+            {
+                mappedOffset = ftell(fimg);
+                mappedSize = mappedOffset + datasize;
+                fseek(fimg, datasize-1, SEEK_CUR);
+                fputc(0, fimg);
+            }
+            else
+                writeData(fimg, i*datasize_n, wDType, datasize_n, castMode);
         }
         else
-            writeData(fimg, 0, wDType, datasize_n, castMode);
+            fseek(fimg, datasize, SEEK_CUR);
     }
-    else
-    {
-        if (mmapOnWrite)
-            REPORT_ERROR(ERR_NOT_IMPLEMENTED,"writeSPIDER: Mmap file not implemented neither for volumes nor stacks.");
 
-        if(mode==WRITE_APPEND)
-            fseek( fimg, 0, SEEK_END);
-        else if(mode==WRITE_REPLACE)
-            fseek( fimg,offset + (datasize)*imgStart, SEEK_SET);
-
-        for ( size_t i =imgStart; i<imgEnd; i++ )
-            writeData(fimg, i*datasize_n, wDType, datasize_n, castMode);
-    }
     // Unlock the file
     fl.l_type   = F_UNLCK;
     fcntl(fileno(fimg), F_SETLK, &fl); /* unlocked */

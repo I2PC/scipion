@@ -116,7 +116,7 @@ struct IMAGIChead
 /** Imagic reader
   * @ingroup Imagic
 */
-int  ImageBase::readIMAGIC(size_t img_select)
+int  ImageBase::readIMAGIC(size_t select_img)
 {
 #undef DEBUG
     //#define DEBUG
@@ -147,10 +147,10 @@ int  ImageBase::readIMAGIC(size_t img_select)
     _zDim = (int) 1;
     _nDim = (size_t) header->ifn + 1 ;
 
-    if ( img_select > _nDim )
-        REPORT_ERROR(ERR_INDEX_OUTOFBOUNDS, formatString("readImagic: Image number %lu exceeds stack size %lu", img_select, _nDim));
+    if ( select_img > _nDim )
+        REPORT_ERROR(ERR_INDEX_OUTOFBOUNDS, formatString("readImagic: Image number %lu exceeds stack size %lu", select_img, _nDim));
 
-    if( img_select != ALL_IMAGES )
+    if( select_img != ALL_IMAGES )
         _nDim = 1;
 
     setDimensions(_xDim, _yDim, _zDim, _nDim );
@@ -198,7 +198,7 @@ int  ImageBase::readIMAGIC(size_t img_select)
     char*   hend;
 
     // Get the header information
-    fseek( fhed, IMG_INDEX(img_select) * IMAGICSIZE, SEEK_SET );
+    fseek( fhed, IMG_INDEX(select_img) * IMAGICSIZE, SEEK_SET );
 
     MD.clear();
     MD.resize(_nDim);
@@ -215,8 +215,8 @@ int  ImageBase::readIMAGIC(size_t img_select)
 
             if (dataMode == _HEADER_ALL || dataMode == _DATA_ALL)
             {
-                MD[i].setValue(MDL_SHIFTX,  (double)-1. * header->ixold);
-                MD[i].setValue(MDL_SHIFTY,  (double)-1. * header->iyold);
+                MD[i].setValue(MDL_SHIFTX,  (double)-1. * header->iyold);
+                MD[i].setValue(MDL_SHIFTY,  (double)-1. * header->ixold);
                 MD[i].setValue(MDL_SHIFTZ,  zeroD);
                 MD[i].setValue(MDL_ANGLEROT, (double)-1. * header->euler_alpha);
                 MD[i].setValue(MDL_ANGLETILT,(double)-1. * header->euler_beta);
@@ -236,7 +236,7 @@ int  ImageBase::readIMAGIC(size_t img_select)
         return 0;
 
     size_t pad = 0;
-    readData(fimg, img_select, datatype, pad );
+    readData(fimg, select_img, datatype, pad );
 
     return(0);
 }
@@ -255,7 +255,7 @@ int  ImageBase::readIMAGIC(size_t img_select)
 /** Imagic Writer
   * @ingroup Imagic
 */
-int  ImageBase::writeIMAGIC(size_t img_select, int mode, String bitDepth, bool adjust)
+int  ImageBase::writeIMAGIC(size_t select_img, int mode, String bitDepth, bool adjust)
 {
 #undef DEBUG
     //#define DEBUG
@@ -264,44 +264,6 @@ int  ImageBase::writeIMAGIC(size_t img_select, int mode, String bitDepth, bool a
 #endif
 
     IMAGIChead* header = new IMAGIChead;
-    int Xdim, Ydim, Zdim;
-    size_t Ndim;
-    getDimensions(Xdim, Ydim, Zdim, Ndim);
-
-    // fill in the file header
-    header->nhfr = 1;
-    header->npix2 = Xdim*Ydim;
-    header->npixel = header->npix2;
-    header->iylp = Xdim;
-    header->ixlp = Ydim;
-
-    header->ifn = Ndim - 1 ;
-    header->imn = 1;
-    size_t firtIfn = 0;
-    if(replaceNsize != 0 && mode == WRITE_APPEND)
-    {
-        firtIfn     = replaceNsize;
-        header->imn = replaceNsize + 1;
-        header->ifn = 0;//only important in first header
-    }
-
-    time_t timer;
-    time ( &timer );
-    tm* t = localtime(&timer);
-
-    header->ndate = t->tm_mday;
-    header->nmonth = t->tm_mon + 1;
-    header->nyear = t->tm_year;
-    header->nhour = t->tm_hour;
-    header->nminut = t->tm_min;
-    header->nsec = t->tm_sec;
-
-    size_t  imgStart = IMG_INDEX(img_select);
-
-    //TODO: Check if this works....
-    if (mode == WRITE_APPEND)
-        imgStart = 0;
-
 
     // Cast T to datatype without convert data
     DataType wDType, myTypeID = myT();
@@ -380,9 +342,31 @@ int  ImageBase::writeIMAGIC(size_t img_select, int mode, String bitDepth, bool a
             dataMode = DATA;
     }
 
+    int Xdim, Ydim, Zdim;
+    size_t Ndim;
+    getDimensions(Xdim, Ydim, Zdim, Ndim);
+
     size_t datasize, datasize_n;
     datasize_n = (size_t)Xdim*Ydim*Zdim;
     datasize = datasize_n * gettypesize(wDType);
+
+    // fill in the file header
+    header->nhfr = 1;
+    header->npix2 = Xdim*Ydim;
+    header->npixel = header->npix2;
+    header->iylp = Xdim;
+    header->ixlp = Ydim;
+
+    time_t timer;
+    time ( &timer );
+    tm* t = localtime(&timer);
+
+    header->ndate = t->tm_mday;
+    header->nmonth = t->tm_mon + 1;
+    header->nyear = t->tm_year;
+    header->nhour = t->tm_hour;
+    header->nminut = t->tm_min;
+    header->nsec = t->tm_sec;
 
     double aux;
 
@@ -405,6 +389,23 @@ int  ImageBase::writeIMAGIC(size_t img_select, int mode, String bitDepth, bool a
     memcpy(header->lastpr, "Xmipp", 5);
     memcpy(header->name, filename.c_str(), 80);
 
+
+    size_t  imgStart = IMG_INDEX(select_img);
+
+    header->ifn = replaceNsize - 1 ;
+    header->imn = 1;
+    size_t firtIfn = 0;
+
+    if ( mode == WRITE_APPEND )
+    {
+        imgStart = replaceNsize;
+        header->ifn = replaceNsize + Ndim - 1 ;
+    }
+    else if( mode == WRITE_REPLACE && select_img + Ndim - 1 > replaceNsize)
+        header->ifn = select_img + Ndim - 1;
+    else if (Ndim > replaceNsize)
+        header->ifn = Ndim - 1;
+
     /*
      * BLOCK HEADER IF NEEDED
      */
@@ -418,33 +419,25 @@ int  ImageBase::writeIMAGIC(size_t img_select, int mode, String bitDepth, bool a
     fcntl(fileno(fimg),       F_SETLKW, &fl); /* locked */
     fcntl(fileno(fhed), F_SETLKW, &fl); /* locked */
 
-    if(mode==WRITE_APPEND)
+    // Update number of images when needed
+    if(replaceNsize - 1 < header->ifn && imgStart > 0)
     {
-        if(replaceNsize!=0)
-        {   //rewrite firt record
-            fseek( fhed, sizeof(int), SEEK_SET);
-            fwrite(&firtIfn,SIZEOF_INT,1,fhed);
-        }
-        fseek( fhed, 0, SEEK_END);
-        fseek( fimg, 0, SEEK_END);
-    }
-    else if(mode==WRITE_REPLACE)
-    {
-        fseek( fimg, datasize   * imgStart, SEEK_SET);
-        fseek( fhed, IMAGICSIZE * imgStart, SEEK_SET);
-    }
-    else //mode==WRITE_OVERWRITE
-    {
-        //this is already done in image.h but only for the data file not for the header
-        //fseek( fimg, 0, SEEK_SET);
-        fseek( fhed, 0, SEEK_SET);
+        fseek( fhed, sizeof(int), SEEK_SET);
+        fwrite(&(header->ifn),SIZEOF_INT,1,fhed);
     }
 
-    i = imgStart;
-    for (std::vector<MDRow>::iterator it = MD.begin(); it != MD.end(); ++it)
+    // Jump to the selected imgStart position
+    fseek( fimg, datasize   * imgStart, SEEK_SET);
+    fseek( fhed, IMAGICSIZE * imgStart, SEEK_SET);
+
+    std::vector<MDRow>::iterator it = MD.begin();
+
+    for (size_t i = 0; i < Ndim; ++i, ++it)
     {
         header->iyold=header->ixold=header->euler_alpha=header->euler_beta=header->euler_gamma=0.;
-        if (dataMode == _HEADER_ALL || dataMode == _DATA_ALL)
+
+        // Write the individual image header
+        if (it != MD.end() && (dataMode == _HEADER_ALL || dataMode == _DATA_ALL))
         {
             if(it->getValue(MDL_SHIFTX,  aux))
                 header->iyold  = (float)-aux;
@@ -459,8 +452,11 @@ int  ImageBase::writeIMAGIC(size_t img_select, int mode, String bitDepth, bool a
             if(it->getValue(MDL_ANGLEPSI, aux))
                 header->euler_gamma =(float)-aux;
         }
+        // Update index number of image
+        header->imn = imgStart + i + 1;
 
         fwrite( header, IMAGICSIZE, 1, fhed );
+
         if (dataMode >= DATA)
         {
             if (mmapOnWrite && Ndim == 1) // Can map one image at a time only
@@ -473,8 +469,8 @@ int  ImageBase::writeIMAGIC(size_t img_select, int mode, String bitDepth, bool a
             else
                 writeData(fimg, i*datasize_n, wDType, datasize_n, castMode);
         }
-
-        ++i;
+        else
+            fseek(fimg, datasize, SEEK_CUR);
     }
 
     //Unlock

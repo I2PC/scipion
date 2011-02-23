@@ -297,7 +297,6 @@ int  ImageBase::readSPIDER(size_t select_img)
 */
 int  ImageBase::writeSPIDER(size_t select_img, bool isStack, int mode)
 {
-    //return(1);
 #undef DEBUG
     //#define DEBUG
 #ifdef DEBUG
@@ -306,14 +305,7 @@ int  ImageBase::writeSPIDER(size_t select_img, bool isStack, int mode)
 #endif
 #undef DEBUG
 
-    //check if we are going to add or substitute an slice
-    //in an existing stack
-    //IsStack?
-    //else
-    int Xdim, Ydim, Zdim;
-    size_t Ndim;
-    getDimensions(Xdim, Ydim, Zdim, Ndim);
-
+    // Check datatype compatibility
     DataType wDType = (isComplexT()) ? ComplexFloat : Float;
 
     if (mmapOnWrite)
@@ -330,16 +322,22 @@ int  ImageBase::writeSPIDER(size_t select_img, bool isStack, int mode)
             dataMode = DATA;
     }
 
+    int Xdim, Ydim, Zdim;
+    size_t Ndim;
+    getDimensions(Xdim, Ydim, Zdim, Ndim);
+
     size_t datasize, datasize_n;
     datasize_n = (size_t)Xdim*Ydim*Zdim;
     datasize = datasize_n * gettypesize(wDType);
 
+    // Filling the main header
     float  lenbyt = gettypesize(wDType)*Xdim;  // Record length (in bytes)
     float  labrec = floor(SPIDERSIZE/lenbyt); // # header records
     if ( fmod(SPIDERSIZE,lenbyt) != 0 )
         labrec++;
     float  labbyt = labrec*lenbyt;   // Size of header in bytes
     offset = (size_t) labbyt;
+
     SPIDERhead* header = (SPIDERhead *) askMemory((int)labbyt*sizeof(char));
 
     // Map the parameters
@@ -351,13 +349,6 @@ int  ImageBase::writeSPIDER(size_t select_img, bool isStack, int mode)
     header->nsam   = Xdim;
     header->nrow   = Ydim;
     header->nslice = Zdim;
-
-    size_t imgStart = IMG_INDEX(select_img);
-    size_t   imgEnd = (select_img != ALL_IMAGES) ? select_img + 1 : Ndim;
-
-    //TODO: Check if this works
-    if (mode == WRITE_APPEND)
-        imgStart = 0;
 
     // If a transform, then the physical storage in x is only half+1
     size_t xstore  = Xdim;
@@ -460,33 +451,13 @@ int  ImageBase::writeSPIDER(size_t select_img, bool isStack, int mode)
     printf("DEBUG writeSPIDER: Data offset: %ld\n", offset);
     printf("DEBUG writeSPIDER: File %s\n", filename.c_str());
 #endif
-    //locking
-    struct flock fl;
 
-    fl.l_type   = F_WRLCK;  /* F_RDLCK, F_WRLCK, F_UNLCK    */
-    fl.l_whence = SEEK_SET; /* SEEK_SET, SEEK_CUR, SEEK_END */
-    fl.l_start  = 0;        /* Offset from l_whence         */
-    fl.l_len    = 0;        /* length, 0 = to EOF           */
-    fl.l_pid    = getpid(); /* our PID                      */
 
-    /*
-     * BLOCK HEADER IF NEEDED
-     */
-    fl.l_type   = F_WRLCK;
-    fcntl(fileno(fimg), F_SETLKW, &fl); /* locked */
-
-    //    fseek(fimg, 100, SEEK_SET);
-    //    float faux;
-    //    if (!fread( &faux, sizeof(float), 1, fimg))
-    //        faux=0.0;
-    //    replaceNsize = (int) faux;
-    //    if(mode==WRITE_REPLACE && select_img>replaceNsize)
-    //        replaceNsize = select_img;
-    //    fseek(fimg, 0, SEEK_SET);
-
-    // For multi-image files
+    // Only write mainheader when new file or number of images in stack changed
     bool writeMainHeaderReplace = false;
     header->maxim = replaceNsize;
+
+    size_t imgStart = (mode == WRITE_APPEND)? replaceNsize : IMG_INDEX(select_img);
 
     if (Ndim > 1 || mode == WRITE_APPEND || isStack)
     {
@@ -513,13 +484,29 @@ int  ImageBase::writeSPIDER(size_t select_img, bool isStack, int mode)
 
     }
 
+    //locking
+    struct flock fl;
+
+    fl.l_type   = F_WRLCK;  /* F_RDLCK, F_WRLCK, F_UNLCK    */
+    fl.l_whence = SEEK_SET; /* SEEK_SET, SEEK_CUR, SEEK_END */
+    fl.l_start  = 0;        /* Offset from l_whence         */
+    fl.l_len    = 0;        /* length, 0 = to EOF           */
+    fl.l_pid    = getpid(); /* our PID                      */
+
+    /*
+     * BLOCK HEADER IF NEEDED
+     */
+    fl.l_type   = F_WRLCK;
+    fcntl(fileno(fimg), F_SETLKW, &fl); /* locked */
+
+    // Write main header
     if( mode == WRITE_OVERWRITE ||
         mode == WRITE_APPEND ||
         writeMainHeaderReplace ||
         (replaceNsize == 0 && mode == WRITE_REPLACE )) //header must change
         fwrite( header, offset, 1, fimg );
 
-    //write only once, ignore select_img
+    // write single image if not stack
     if ( Ndim == 1 && !isStack)
     {
         if (mmapOnWrite)
@@ -532,19 +519,17 @@ int  ImageBase::writeSPIDER(size_t select_img, bool isStack, int mode)
         else
             writeData(fimg, 0, wDType, datasize_n, CAST);
     }
-    else
+    else // Jump to the selected imgStart position
     {
-        if (mode == WRITE_APPEND)
-            fseek(fimg, 0, SEEK_END);
-        else if(mode == WRITE_REPLACE)
-            fseek( fimg,offset + (offset+datasize)*imgStart, SEEK_SET);
+        fseek( fimg,offset + (offset+datasize)*imgStart, SEEK_SET);
 
         //for ( size_t i=0; i<Ndim; i++ )
-        size_t i = imgStart;
+        std::vector<MDRow>::iterator it = MD.begin();
 
-        for (std::vector<MDRow>::iterator it = MD.begin(); it != MD.end(); ++it, ++i)
+        for (size_t i = 0; i < Ndim; ++it, ++i)
         {
-            if (dataMode == _HEADER_ALL || dataMode == _DATA_ALL)
+            // Write the individual image header
+            if ( it != MD.end() && (dataMode == _HEADER_ALL || dataMode == _DATA_ALL))
             {
                 if(it->getValue(MDL_SHIFTX,  aux))
                     header->xoff  =(float)aux;
@@ -583,7 +568,7 @@ int  ImageBase::writeSPIDER(size_t select_img, bool isStack, int mode)
                     fputc(0, fimg);
                 }
                 else
-                    writeData(fimg, 0, wDType, datasize_n, CAST);
+                    writeData(fimg, i*datasize_n, wDType, datasize_n, CAST);
             }
             else
                 fseek(fimg, datasize, SEEK_CUR);
