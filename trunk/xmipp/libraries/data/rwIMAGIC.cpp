@@ -300,7 +300,7 @@ int  ImageBase::writeIMAGIC(size_t img_select, int mode, String bitDepth, bool a
 
     //TODO: Check if this works....
     if (mode == WRITE_APPEND)
-        imgStart=0;
+        imgStart = 0;
 
 
     // Cast T to datatype without convert data
@@ -430,8 +430,8 @@ int  ImageBase::writeIMAGIC(size_t img_select, int mode, String bitDepth, bool a
     }
     else if(mode==WRITE_REPLACE)
     {
-        fseek( fimg, datasize   * img_select, SEEK_SET);
-        fseek( fhed, IMAGICSIZE * img_select, SEEK_SET);
+        fseek( fimg, datasize   * imgStart, SEEK_SET);
+        fseek( fhed, IMAGICSIZE * imgStart, SEEK_SET);
     }
     else //mode==WRITE_OVERWRITE
     {

@@ -498,7 +498,7 @@ int ImageBase::writeMRC(size_t select_img, bool isStack, int mode, std::string b
         if(mode==WRITE_APPEND)
             fseek( fimg, 0, SEEK_END);
         else if(mode==WRITE_REPLACE)
-            fseek( fimg,offset + (datasize)*select_img, SEEK_SET);
+            fseek( fimg,offset + (datasize)*imgStart, SEEK_SET);
 
         for ( size_t i =imgStart; i<imgEnd; i++ )
             writeData(fimg, i*datasize_n, wDType, datasize_n, castMode);
