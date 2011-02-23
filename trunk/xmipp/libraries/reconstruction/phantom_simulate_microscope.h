@@ -87,6 +87,12 @@ public:
         If the CTF is randomly selected then a new CTF is generated
         for each image */
     void apply(MultidimArray<double> &I);
+
+    /**
+     * save docfile
+     */
+    void postProcess();
+
 };
 //@}
 #endif
