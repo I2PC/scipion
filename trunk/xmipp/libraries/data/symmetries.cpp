@@ -135,6 +135,7 @@ int SymList::read_sym_file(FileName fn_sym, double accuracy)
             ZZ(axis) = textToFloat(auxstr);
             ang_incr = 360. / fold;
             L.initIdentity();
+            R.initIdentity();//R(3,3) is not always filled
             for (j = 1, rot_ang = ang_incr; j < fold; j++, rot_ang += ang_incr)
             {
                 rotation3DMatrix(rot_ang, axis, R);
@@ -448,12 +449,13 @@ void SymList::compute_subgroup(double accuracy)
 {
     Matrix2D<double> I(4, 4);
     I.initIdentity();
-    Matrix2D<double> L1(4, 4), R1(4, 4), L2(4, 4), R2(4, 4), newL(4, 4), newR(4, 4);
+    Matrix2D<double> L1(4, 4), R1(4, 4), L2(4, 4), R2(4, 4), newL(4, 4), newR(4, 4),identity(4,4);
     Matrix2D<int>    tried(true_symNo, true_symNo);
     Matrix1D<double> shift(3);
     shift.initZeros();
     int i, j;
     int new_chain_length;
+    identity.initIdentity();
     while (found_not_tried(tried, i, j, true_symNo))
     {
         tried(i, j) = 1;
@@ -467,7 +469,9 @@ void SymList::compute_subgroup(double accuracy)
         newR = R1 * R2;
         new_chain_length = __chain_length(i) + __chain_length(j);
 
-        if (newL.isIdentity() && newR.isIdentity()) continue;
+        //if (newL.isIdentity() && newR.isIdentity()) continue;
+        if (newL.equal(identity, accuracy) &&
+        	newR.equal(identity, accuracy)) continue;
 
         // Try to find it in current ones
         bool found;
