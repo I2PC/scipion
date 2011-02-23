@@ -249,6 +249,7 @@ protected:
     /// Flag to know when input is a single image or stack
     bool single_image;
     bool input_is_stack;
+    bool delete_output_stack; // Delete previous output stack file
     /// Flag to treat a stack file as a set of images instead of a unique file
     bool decompose_stacks;
     /// Flag to save the output metadata when output file is a stack

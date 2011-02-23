@@ -47,18 +47,20 @@ private:
     bool         adjust;
     size_t        k;
     int         writeMode;
+    bool        appendToStack;
 
 protected:
     void defineParams()
     {
         each_image_produces_an_output = true;
-        save_metadata_stack = true;
+        save_metadata_stack = false;
+        delete_output_stack = false;
         XmippMetadataProgram::defineParams();
         addUsageLine("Convert among stacks, volumes and images, and change the file format. Conversion to a lower");
         addUsageLine("bit_depth automatically adjusts the gray level range. If it is between same bit depths and ");
         addUsageLine("different sign, then only a histogram shift is done. If parameter --depth is not passed, then ");
         addUsageLine("bit_depth is automatically chosen equal to or higher than input bit_depth. For stack output format, ");
-        addUsageLine("a selection file with the images in the stack is created and replicates the labels of the input sel file.");
+        addUsageLine("a selection file with the images in the stack is optionally created, replicating the labels of the input sel file.");
         //Parameters
         addParamsLine("  [--oext <extension=\"\">] :  Output file format extension.");
         addWhereImageFormat("extension");
@@ -68,6 +70,10 @@ protected:
         addParamsLine("          vol : Volume");
         addParamsLine("          stk : Stack ");
         addParamsLine("  alias -t;");
+        addParamsLine("  [--selfile_stack]    : Create a selfile with the images of the output stack.");
+        addParamsLine("  alias -s;");
+        addParamsLine("  [--append]           : Append the input to the output stack instead of overwrite it.");
+        addParamsLine("  alias -a;");
         addParamsLine("  [--depth+ <bit_depth=default>] : Image bit depth.");
         addParamsLine("          where <bit_depth>");
         addParamsLine("                 default: Default selected value (*).");
@@ -88,15 +94,22 @@ protected:
         addParamsLine("  alias -d;");
         addParamsLine("  [--rangeAdjust] : Adjust the histogram to fill the gray level range.");
         addParamsLine("  alias -r;");
+
         //Examples
         addExampleLine("Put a selection file into a stack:",false);
         addExampleLine("xmipp_convert_image -i list.sel -o images.stk");
-        addExampleLine("Save images in a stack as independent TIFF files in image directory with \"newimage\" basename in 8bit format:",false);
-        addExampleLine("xmipp_convert_image -i stackFile.stk -o tiffImages.sel --oroot images/newimage:tif -d uint8");
         addExampleLine("Convert a Spider volume to a MRC stack:",false);
         addExampleLine("xmipp_convert_image -i spider.vol -o stack.mrcs -t stk");
+        addExampleLine("Save images in a stack as independent TIFF files in image directory with \"newimage\" basename in 8bit format:",false);
+        addExampleLine("xmipp_convert_image -i stackFile.stk -o tiffImages.sel --oroot images/newimage:tif -d uint8");
         addExampleLine("Convert a selection file of 16bit TIFF images to 8bit and overwrites files and sel file:",false);
         addExampleLine("xmipp_convert_image -i tiff16.sel -d uint8");
+        addExampleLine("Append a single image to a stack:",false);
+        addExampleLine("xmipp_convert_image -i img.spi -o stackFile.stk --append");
+        addExampleLine("Append a selection file to a stack:",false);
+        addExampleLine("xmipp_convert_image -i selFile.sel -o stackFile.stk --append");
+        addExampleLine("Replace a single image into a stack:",false);
+        addExampleLine("xmipp_convert_image -i img.spi -o 3@stackFile.stk");
     }
 
     void readParams()
@@ -106,17 +119,33 @@ protected:
         fn_out = (checkParam("-o"))? getParam("-o") : "";
         adjust = checkParam("--rangeAdjust");
         type = getParam("--type");
+        save_metadata_stack = checkParam("--selfile_stack");
+        appendToStack = checkParam("--append");
 
+        // output extension
         oext = checkParam("--oext") ? getParam("--oext") : "";
-        if (oext == "custom")
+        if ( oext == "custom" )
             oext = getParam("--oext",1);
+
+        // Check output type and write mode
+        writeMode = WRITE_OVERWRITE;
 
         if (!checkParam("--type"))
         {
             if (fn_out.getExtension() == "vol" || oext == "vol")
                 type = "vol";
             else if (fn_out.getExtension() == "stk" || oext == "stk")
+            {
                 type = "stk";
+                writeMode = WRITE_APPEND;
+            }
+        }
+
+        // Replace a single image in a stack
+        if (single_image && fn_out.isInStack())
+        {
+            type == "img";
+            writeMode = WRITE_REPLACE;
         }
 
         if (checkParam("--depth"))
@@ -130,14 +159,14 @@ protected:
             depth = "";
             outDataT = Float;
         }
-
-        writeMode = type == "stk" ? WRITE_APPEND: WRITE_OVERWRITE;
     }
 
     void preProcess()
     {
-        FileName fn_stack_plain=fn_out.removeFileFormat();
-        if (exists(fn_stack_plain) && type == "stk")
+        FileName fn_stack_plain = fn_out.removeFileFormat();
+        if (exists(fn_stack_plain) &&
+            type == "stk" &&
+            !appendToStack) // Allow to append a single image to a stack
             unlink(fn_stack_plain.c_str());
 
         convMode = MD2MD;

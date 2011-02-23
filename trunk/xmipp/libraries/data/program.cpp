@@ -428,6 +428,7 @@ XmippMetadataProgram::XmippMetadataProgram()
     apply_geo = false;
     decompose_stacks = true;
     save_metadata_stack = false;
+    delete_output_stack = true;
 }
 
 void XmippMetadataProgram::defineParams()
@@ -474,7 +475,7 @@ void XmippMetadataProgram::readParams()
         oroot = getParam("--oroot");
     }
 
-    if (fn_out != fn_in && oroot == "")
+    if (fn_out != fn_in && oroot.empty() && delete_output_stack)
     {
         FileName fn_stack_plain = fn_out.removeFileFormat();
         if (exists(fn_stack_plain))
@@ -491,7 +492,7 @@ void XmippMetadataProgram::readParams()
         else
             input_is_stack = true;
     }
-    single_image = !fn_in.isMetaData() && (mdIn.size() == 1);
+//    single_image = !fn_in.isMetaData() && (mdIn.size() == 1);
 
     if (mdIn.containsLabel(MDL_ENABLED))
         mdIn.removeObjects(MDValueEQ(MDL_ENABLED, -1));
@@ -513,12 +514,12 @@ void XmippMetadataProgram::show()
         std::cout << "Applying transformation stored in header of 2D-image" << std::endl;
     if (each_image_produces_an_output)
     {
-        if (fn_out != "")
+        if (!fn_out.empty())
             std::cout << "Output File: " << fn_out << std::endl;
         //      DO NOT LONGER SUPPORT --OEXT SINCE NOW IT DOES MIND CHANGE FORMAT
         //if (oext != "")
         //    std::cout << "Output Extension: " << oext << std::endl;
-        if (oroot != "")
+        if (!oroot.empty())
             std::cout << "Output Root: " << oroot << std::endl;
     }
 }
@@ -548,9 +549,9 @@ void XmippMetadataProgram::finishProcessing()
 
     if (!single_image && !mdOut.isEmpty())
     {
-        if (oroot != "") // Out as independent images
+        if (!oroot.empty()) // Out as independent images
             mdOut.write(fn_out);
-        else if (save_metadata_stack && fn_out != "") // Out as stack
+        else if (save_metadata_stack && !fn_out.empty()) // Out as stack
             mdOut.write(fn_out.withoutExtension().addExtension("sel"));
     }
 }
@@ -583,11 +584,11 @@ void XmippMetadataProgram::run()
 
         startProcessing();
 
-        int kk = 0;
+        size_t kk = 0;
 
-        if (oroot != "" )
+        if (!oroot.empty())
         {
-            if (oext == "")
+            if (oext.empty())
                 oext           = oroot.getFileFormat();
             oextBaseName   = oext;
             fullBaseName   = oroot.removeFileFormat();
@@ -600,26 +601,26 @@ void XmippMetadataProgram::run()
         {
             mdIn.getValue(MDL_IMAGE, fnImg, objId);
 
-            if (fnImg == "")
+            if (fnImg.empty())
                 break;
 
             fnImgOut = fnImg;
 
             if (each_image_produces_an_output)
             {
-                if (oroot != "" ) // Compose out name to save as independent images
+                if (!oroot.empty()) // Compose out name to save as independent images
                 {
-                    if (oext == "")
+                    if (oext.empty())
                         oextBaseName = fnImg.getFileFormat();
 
-                    if (baseName != "")
+                    if (!baseName.empty() )
                         fnImgOut.compose(fullBaseName, ++kk, oextBaseName);
                     else if (fnImg.isInStack())
                         fnImgOut.compose(pathBaseName + (fnImg.withoutExtension()).getDecomposedFileName(), ++kk, oextBaseName);
                     else
                         fnImgOut = pathBaseName + fnImg.withoutExtension()+ "." + oextBaseName;
                 }
-                else if (fn_out != "")
+                else if (!fn_out.empty() )
                 {
                     if (single_image)
                         fnImgOut = fn_out;
@@ -640,9 +641,9 @@ void XmippMetadataProgram::run()
         }
 
         // Generate name to save mdOut when output are independent images
-        if (oroot != "" && fn_out == "")
+        if ( !oroot.empty() && fn_out.empty() )
         {
-            if (baseName != "")
+            if ( !baseName.empty() )
                 fn_out = baseName.addExtension("sel");
             else
                 fn_out = fn_in.withoutExtension() + "_" + oextBaseName + ".sel";
