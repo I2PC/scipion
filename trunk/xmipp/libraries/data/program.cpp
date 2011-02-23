@@ -422,10 +422,11 @@ int XmippProgram::runProgram(XmippProgram * program, const String &arguments, bo
 XmippMetadataProgram::XmippMetadataProgram()
 {
     oroot = oext = fn_out = fn_in = "";
+    apply_geo=false;
     produces_an_output = false;
     each_image_produces_an_output = false;
     allow_time_bar = true;
-    apply_geo = false;
+    allow_apply_geo = false;
     decompose_stacks = true;
     save_metadata_stack = false;
     delete_output_stack = true;
@@ -455,7 +456,7 @@ void XmippMetadataProgram::defineParams()
         addParamsLine("   alias --output;");
     }
 
-    if (apply_geo)
+    if (allow_apply_geo)
     {
         addParamsLine("  [--dont_apply_geo]   : for 2D-images: do not apply transformation stored in the header");
     }
@@ -500,9 +501,8 @@ void XmippMetadataProgram::readParams()
     if (mdIn.isEmpty())
         REPORT_ERROR(ERR_MD_NOOBJ, "");
 
-    if (apply_geo)
+    if (allow_apply_geo)
         apply_geo = !checkParam("--dont_apply_geo");
-
 }
 
 void XmippMetadataProgram::show()

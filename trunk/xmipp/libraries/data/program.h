@@ -224,6 +224,8 @@ public:
     //Image<double>   img;
     /// Filenames of input and output Metadata
     FileName        fn_in, fn_out;
+    /// Apply geo
+    bool apply_geo;
 protected:
     /// Metadata writing mode: OVERWRITE, APPEND
     WriteModeMetaData mode;
@@ -237,7 +239,7 @@ protected:
     FileName oext, oroot;
     /// Set this true to allow the option
     /// of applying the transformation as stored in the header
-    bool apply_geo;
+    bool allow_apply_geo;
     /// Use this flag for not writing at every image and when the program produces an unique output
     bool produces_an_output;
     /// Set this flag true when the program produces a metadata/stack result

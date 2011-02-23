@@ -52,7 +52,7 @@ protected:
     void defineParams()
     {
         each_image_produces_an_output = false;
-        apply_geo = true;
+        allow_apply_geo = true;
         allow_time_bar = false;
         addUsageLine("Display statistics of images or volumes. A mask can be applied.");
         XmippMetadataProgram::defineParams();
