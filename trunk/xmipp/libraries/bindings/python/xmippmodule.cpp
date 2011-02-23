@@ -76,7 +76,7 @@ FileName_new(PyTypeObject *type, PyObject *args, PyObject *kwargs)
     {
         PyObject *input = NULL, *pyStr = NULL;
         char *str = "", *ext="";
-        int number = -1;
+        int number = 1;
         if (PyArg_ParseTuple(args, "|Ois", &input, &number, &ext))
             //|| PyArg_ParseTuple(args, "|Os", &input, &ext)) FIXME
         {
