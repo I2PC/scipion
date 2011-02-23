@@ -154,12 +154,12 @@ protected:
                 roundShifts();
             img.readApplyGeo(fnImg, row, HEADER);
             img.setDataMode(_HEADER_ALL);
-            img.write(fnImg, -1, fnImg.isInStack(), WRITE_REPLACE);
+            img.write(fnImg, ALL_IMAGES, fnImg.isInStack(), WRITE_REPLACE);
             break;
         case RESET:
             img.read(fnImg, _HEADER_ALL);
             img.initGeometry();
-            img.write(fnImg, -1, fnImg.isInStack(), WRITE_REPLACE);
+            img.write(fnImg, ALL_IMAGES, fnImg.isInStack(), WRITE_REPLACE);
             break;
         }
     }
