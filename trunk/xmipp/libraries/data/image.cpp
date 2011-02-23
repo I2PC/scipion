@@ -153,5 +153,5 @@ void SingleImgSize(const FileName &filename, int &Xdim, int &Ydim, int &Zdim, si
     Image<char> img;
     img.read(filename, HEADER);
     img.getDimensions(Xdim, Ydim, Zdim, Ndim);
-    img.MDMainHeader.getValue(MDL_DATATYPE,(int)datatype);
+    datatype = img.dataType();
 }
