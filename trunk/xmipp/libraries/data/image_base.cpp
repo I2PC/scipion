@@ -142,7 +142,7 @@ void ImageBase::write(const FileName &name, size_t select_img, bool isStack,
     /* If the filename is in stack we will suppose you want to write this,
      * even if you have not set the flags to.
      */
-    if ( fname.isInStack())
+    if ( fname.isInStack() && mode == WRITE_OVERWRITE)
     {
         isStack = true;
         mode = WRITE_REPLACE;
