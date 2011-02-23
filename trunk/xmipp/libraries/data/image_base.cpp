@@ -24,7 +24,7 @@
  ***************************************************************************/
 
 #include "image_base.h"
-
+#include "image.h"
 
 void ImageBase::init()
 {
@@ -80,8 +80,8 @@ void ImageBase::mapFile2Write(int Xdim, int Ydim, int Zdim, size_t Ndim, const F
     else
         fnToOpen=_filename;
 
-    ImageFHandler *hFile = openFile(fnToOpen, WRITE_OVERWRITE);
-    _write(filename, hFile, ALL_IMAGES, false, WRITE_OVERWRITE);
+    ImageFHandler *hFile = openFile(fnToOpen, WRITE_REPLACE);
+    _write(filename, hFile, ALL_IMAGES, false, WRITE_REPLACE);
     closeFile(hFile);
 }
 
@@ -117,86 +117,6 @@ int ImageBase::readApplyGeo(const MetaData &md, size_t objId, bool only_apply_sh
     FileName name;
     row.getValue(MDL_IMAGE, name);
     READ_AND_RETURN();
-}
-
-/* Internal read image file method.
- */
-int ImageBase::_read(const FileName &name, ImageFHandler* hFile, DataMode datamode, size_t select_img,
-                     bool mapData)
-{
-    // Temporary Error to find old select_img == -1
-    if (select_img == (size_t) -1)
-        REPORT_ERROR(ERR_DEBUG_TEST, "To select all images use ALL_IMAGES macro, or FIRST_IMAGE macro.");
-
-    int err = 0;
-    dataMode = datamode;
-
-    // If Image has been previously used with mmap, then close the previous file
-    if (mappedSize != 0)
-        munmapFile();
-
-    // Check whether to map the data or not
-    mmapOnRead = mapData;
-
-    FileName ext_name = hFile->ext_name;
-    fimg = hFile->fimg;
-    fhed = hFile->fhed;
-    tif  = hFile->tif;
-
-    size_t image_num;
-    name.decompose(image_num, filename);
-    filename = name;
-    dataFName = hFile->fileName;
-
-    if (image_num != ALL_IMAGES)
-        select_img = image_num;
-
-#undef DEBUG
-    //#define DEBUG
-#ifdef DEBUG
-
-    std::cerr << "READ\n" <<
-    "name="<<name <<std::endl;
-    std::cerr << "ext= "<<ext_name <<std::endl;
-    std::cerr << " now reading: "<< filename <<" dataflag= "<<dataMode
-    << " select_img "  << select_img << std::endl;
-#endif
-#undef DEBUG
-
-    //Just clear the header before reading
-    MDMainHeader.clear();
-    //Set the file pointer at beginning
-    if (fimg != NULL)
-        fseek(fimg, 0, SEEK_SET);
-    if (fhed != NULL)
-        fseek(fhed, 0, SEEK_SET);
-
-    if (ext_name.contains("spi") || ext_name.contains("xmp")  ||
-        ext_name.contains("stk") || ext_name.contains("vol"))//mrc stack MUST go BEFORE plain MRC
-        err = readSPIDER(select_img);
-    else if (ext_name.contains("mrcs"))//mrc stack MUST go BEFORE plain MRC
-        err = readMRC(select_img,true);
-    else if (ext_name.contains("mrc"))//mrc
-        err = readMRC(select_img,false);
-    else if (ext_name.contains("img") || ext_name.contains("hed"))//
-        err = readIMAGIC(select_img);//imagic is always an stack
-    else if (ext_name.contains("ser"))//TIA
-        err = readTIA(select_img,false);
-    else if (ext_name.contains("dm3"))//DM3
-        err = readDM3(select_img,false);
-    else if (ext_name.contains("inf"))//RAW with INF file
-        err = readINF(select_img,false);
-    else if (ext_name.contains("raw"))//RAW without INF file
-        err = readRAW(select_img,false);
-    else if (ext_name.contains("tif"))//TIFF
-        err = readTIFF(select_img,false);
-    else if (ext_name.contains("spe"))//SPE
-        err = readSPE(select_img,false);
-    else
-        err = readSPIDER(select_img);
-
-    // Negative errors are bad.
-    return err;
 }
 
 
@@ -559,7 +479,7 @@ ImageFHandler* ImageBase::openFile(const FileName &name, int mode) const
 /** Close file function.
   * Close the image file according to its name and file handler.
   */
-void ImageBase::closeFile(ImageFHandler* hFile)
+void ImageBase::closeFile(ImageFHandler* hFile) const
 {
     FileName ext_name;
     FILE* fimg, *fhed;
@@ -593,6 +513,243 @@ void ImageBase::closeFile(ImageFHandler* hFile)
     }
     delete hFile;
 }
+
+/* Internal read image file method.
+ */
+int ImageBase::_read(const FileName &name, ImageFHandler* hFile, DataMode datamode, size_t select_img,
+                     bool mapData)
+{
+    // Temporary Error to find old select_img == -1
+    if (select_img == (size_t) -1)
+        REPORT_ERROR(ERR_DEBUG_TEST, "To select all images use ALL_IMAGES macro, or FIRST_IMAGE macro.");
+
+    int err = 0;
+    dataMode = datamode;
+
+    // If Image has been previously used with mmap, then close the previous file
+    if (mappedSize != 0)
+        munmapFile();
+
+    // Check whether to map the data or not
+    mmapOnRead = mapData;
+
+    FileName ext_name = hFile->ext_name;
+    fimg = hFile->fimg;
+    fhed = hFile->fhed;
+    tif  = hFile->tif;
+
+    size_t image_num;
+    name.decompose(image_num, filename);
+    filename = name;
+    dataFName = hFile->fileName;
+
+    if (image_num != ALL_IMAGES)
+        select_img = image_num;
+
+#undef DEBUG
+    //#define DEBUG
+#ifdef DEBUG
+
+    std::cerr << "READ\n" <<
+    "name="<<name <<std::endl;
+    std::cerr << "ext= "<<ext_name <<std::endl;
+    std::cerr << " now reading: "<< filename <<" dataflag= "<<dataMode
+    << " select_img "  << select_img << std::endl;
+#endif
+#undef DEBUG
+
+    //Just clear the header before reading
+    MDMainHeader.clear();
+    //Set the file pointer at beginning
+    if (fimg != NULL)
+        fseek(fimg, 0, SEEK_SET);
+    if (fhed != NULL)
+        fseek(fhed, 0, SEEK_SET);
+
+    if (ext_name.contains("spi") || ext_name.contains("xmp")  ||
+        ext_name.contains("stk") || ext_name.contains("vol"))//mrc stack MUST go BEFORE plain MRC
+        err = readSPIDER(select_img);
+    else if (ext_name.contains("mrcs"))//mrc stack MUST go BEFORE plain MRC
+        err = readMRC(select_img,true);
+    else if (ext_name.contains("mrc"))//mrc
+        err = readMRC(select_img,false);
+    else if (ext_name.contains("img") || ext_name.contains("hed"))//
+        err = readIMAGIC(select_img);//imagic is always an stack
+    else if (ext_name.contains("ser"))//TIA
+        err = readTIA(select_img,false);
+    else if (ext_name.contains("dm3"))//DM3
+        err = readDM3(select_img,false);
+    else if (ext_name.contains("inf"))//RAW with INF file
+        err = readINF(select_img,false);
+    else if (ext_name.contains("raw"))//RAW without INF file
+        err = readRAW(select_img,false);
+    else if (ext_name.contains("tif"))//TIFF
+        err = readTIFF(select_img,false);
+    else if (ext_name.contains("spe"))//SPE
+        err = readSPE(select_img,false);
+    else
+        err = readSPIDER(select_img);
+
+    // Negative errors are bad.
+    return err;
+}
+
+/* Internal write image file method.
+ */
+void ImageBase::_write(const FileName &name, ImageFHandler* hFile, size_t select_img,
+                       bool isStack, int mode, bool adjust)
+{
+
+    // Temporary Error to find old select_img == -1
+    if (select_img == (size_t) -1)
+        REPORT_ERROR(ERR_DEBUG_TEST, "To select all images use ALL_IMAGES macro, or FIRST_IMAGE macro.");
+
+
+
+    int err = 0;
+
+    // if image is mapped to file then close the file and clear
+
+    if (mmapOnWrite && mappedSize > 0)
+    {
+        munmapFile();
+        return;
+    }
+
+    filename = name;
+    dataFName = hFile->fileName;
+    _exists = hFile->exist;
+    fimg = hFile->fimg;
+    fhed = hFile->fhed;
+    tif  = hFile->tif;
+
+    FileName ext_name = hFile->ext_name;
+
+    size_t aux;
+    FileName filNamePlusExt;
+    name.decompose(aux, filNamePlusExt);
+
+    if (select_img == ALL_IMAGES)
+        select_img = aux;
+
+    size_t found = filNamePlusExt.find_first_of("%");
+
+    String imParam = "";
+
+    if (found!=String::npos)
+    {
+        imParam =  filNamePlusExt.substr(found+1).c_str();
+        filNamePlusExt = filNamePlusExt.substr(0, found) ;
+    }
+
+    found = filNamePlusExt.find_first_of(":");
+    if ( found!=String::npos)
+        filNamePlusExt   = filNamePlusExt.substr(0, found);
+
+
+    //#define DEBUG
+#ifdef DEBUG
+
+    std::cerr << "write" <<std::endl;
+    std::cerr<<"extension for write= "<<ext_name<<std::endl;
+    std::cerr<<"filename= "<<filename<<std::endl;
+    std::cerr<<"mode= "<<mode<<std::endl;
+    std::cerr<<"isStack= "<<isStack<<std::endl;
+    std::cerr<<"select_img= "<<select_img<<std::endl;
+#endif
+#undef DEBUG
+    // Check that image is not empty
+    if (getSize() < 1)
+        REPORT_ERROR(ERR_MULTIDIM_EMPTY,"write Image ERROR: image is empty!");
+
+    replaceNsize = 0;//reset replaceNsize in case image is reused
+    if(isStack && select_img == ALL_IMAGES && mode == WRITE_REPLACE)
+        REPORT_ERROR(ERR_VALUE_INCORRECT,"Please specify object to be replaced");
+    else if (_exists && (mode == WRITE_REPLACE || mode == WRITE_APPEND))
+    {
+        // CHECK FOR INCONSISTENCIES BETWEEN data.xdim and x, etc???
+        int Xdim, Ydim, Zdim, _Xdim, _Ydim, _Zdim;
+        Xdim = Ydim = Zdim = _Xdim = _Ydim = _Zdim = 0;
+        size_t Ndim, _Ndim;
+        Ndim = _Ndim = 0;
+        Image<char> auxI;
+        auxI._read(filNamePlusExt, hFile, HEADER, ALL_IMAGES);
+
+        this->getDimensions(Xdim, Ydim, Zdim, Ndim);
+        auxI.getDimensions(_Xdim, _Ydim, _Zdim, _Ndim);
+
+        replaceNsize = _Ndim;
+
+        if(Xdim != _Xdim ||
+           Ydim != _Ydim ||
+           Zdim != _Zdim)
+        {
+            std::cerr << "(x,y,z) " << Xdim << " " << Ydim << " " << Zdim << " "<< Ndim << std::endl;
+            std::cerr << "(_x,_y,_z) " << _Xdim << " " << _Ydim << " " << _Zdim << " " <<_Ndim <<std::endl;
+            REPORT_ERROR(ERR_MULTIDIM_SIZE,"write: target and source objects have different size");
+        }
+
+        //            if( mode == WRITE_REPLACE && select_img > _Ndim )
+        //                replaceNsize = select_img;
+
+        //            if(auxI.replaceNsize < 1 &&
+        //               (mode==WRITE_REPLACE || mode==WRITE_APPEND))
+        //                REPORT_ERROR(ERR_IO,"write: output file is not an stack");
+    }
+//    else if (!_exists && mode == WRITE_REPLACE)
+//        mode == WRITE_OVERWRITE; //
+    else if(!_exists && mode == WRITE_APPEND)
+    {
+        ;
+    }
+    else if (mode == WRITE_READONLY)//If new file we are in the WRITE_OVERWRITE mode
+    {
+        REPORT_ERROR(ERR_ARG_INCORRECT, formatString("File %s  opened in read-only mode. Cannot write.", name.c_str()));
+    }
+    /*
+     * SELECT FORMAT
+     */
+    //Set the file pointer at beginning
+    if (fimg != NULL)
+        fseek(fimg, 0, SEEK_SET);
+    if (fhed != NULL)
+        fseek(fhed, 0, SEEK_SET);
+
+    if(ext_name.contains("spi") || ext_name.contains("xmp") ||
+       ext_name.contains("stk") || ext_name.contains("vol"))
+        err = writeSPIDER(select_img,isStack,mode);
+    else if (ext_name.contains("mrcs"))
+        writeMRC(select_img,true,mode);
+    else if (ext_name.contains("mrc"))
+        writeMRC(select_img,false,mode,imParam,adjust);
+    else if (ext_name.contains("img") || ext_name.contains("hed"))
+        writeIMAGIC(select_img,mode,imParam,adjust);
+    else if (ext_name.contains("dm3"))
+        writeDM3(select_img,false,mode);
+    else if (ext_name.contains("ser"))
+        writeTIA(select_img,false,mode);
+    else if (ext_name.contains("raw") || ext_name.contains("inf"))
+        writeINF(select_img,false,mode,imParam,adjust);
+    else if (ext_name.contains("tif"))
+        writeTIFF(select_img,isStack,mode,imParam,adjust);
+    else if (ext_name.contains("spe"))
+        writeSPE(select_img,isStack,mode);
+    else
+        err = writeSPIDER(select_img,isStack,mode);
+
+    if ( err < 0 )
+    {
+        std::cerr << " Filename = " << filename << " Extension= " << ext_name << std::endl;
+        REPORT_ERROR(ERR_IO_NOWRITE, "Error writing file");
+    }
+
+    /* If initially the file did not existed, once the first image is written,
+     * then the file exists
+     */
+    if (!_exists)
+        hFile->exist = _exists = true;
+}
+
 
 /** Show image properties
       */

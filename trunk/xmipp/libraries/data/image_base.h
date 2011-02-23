@@ -640,7 +640,7 @@ protected:
     /** Close file function.
       * Close the image file according to its name and file handler.
       */
-    void closeFile(ImageFHandler* hFile = NULL);
+    void closeFile(ImageFHandler* hFile = NULL) const;
 
     /* Internal apply geometrical transformations */
     virtual void applyGeo(const MDRow &row, bool only_apply_shifts = false) = 0;
@@ -652,8 +652,8 @@ protected:
 
     /* Internal write image file method.
      */
-    virtual void _write(const FileName &name, ImageFHandler* hFile, size_t select_img = ALL_IMAGES,
-                        bool isStack=false, int mode=WRITE_OVERWRITE, bool adjust=false) = 0;
+    void _write(const FileName &name, ImageFHandler* hFile, size_t select_img = ALL_IMAGES,
+                        bool isStack=false, int mode=WRITE_OVERWRITE, bool adjust=false);
 
     /** Read the raw data
       */
