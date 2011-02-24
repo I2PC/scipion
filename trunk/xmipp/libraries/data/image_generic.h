@@ -44,6 +44,11 @@ public:
     DataType datatype;
     MultidimArrayGeneric * data;
 
+protected:
+
+    bool    swap; // To store the swap mode of the image when the datatype is read.
+
+public:
 
     /** Empty constructor.
      *
@@ -233,7 +238,9 @@ public:
 private:
     /* Declare the internal image class with the stored data type
      */
-    DataType getImageType(const FileName &imgName);
+    void getImageType(const FileName &imgName, DataType &datatype);
+
+    void getImageType(const FileName &imgName, DataType &datatype, bool &swap);
 }
 ;
 

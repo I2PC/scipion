@@ -23,8 +23,9 @@
  *  e-mail address 'xmipp@cnb.csic.es'
  ***************************************************************************/
 
-#include "image_generic.h"
 #include "image.h"
+
+#include "image_generic.h"
 
 
 ImageGeneric::ImageGeneric(DataType _datatype)
@@ -55,11 +56,22 @@ void ImageGeneric::clear()
         init();
     }
 }
-DataType ImageGeneric::getImageType(const FileName &imgName)
+
+void ImageGeneric::getImageType(const FileName &imgName, DataType &datatype)
 {
     Image<char> Im;
     Im.read(imgName, HEADER);
-    return Im.dataType();
+    datatype = Im.dataType();
+}
+
+void ImageGeneric::getImageType(const FileName &imgName, DataType &datatype, bool &swap)
+{
+    Image<char> Im;
+    Im.read(imgName, HEADER);
+    datatype = Im.dataType();
+    int iswap;
+    Im.getSwap(iswap);
+    swap = (swap > 0);
 }
 
 void ImageGeneric::setDatatype(DataType imgType)
@@ -129,20 +141,27 @@ void ImageGeneric::setDatatype(DataType imgType)
 int ImageGeneric::read(const FileName &name, DataMode datamode, size_t select_img,
                        bool mapData)
 {
-    setDatatype(getImageType(name));
-    image->read(name, datamode, select_img, mapData);
+    bool swap;
+    DataType datatype;
+    getImageType(name, datatype, swap);
+    setDatatype(datatype);
+    image->read(name, datamode, select_img, mapData && swap);
 }
 
 int ImageGeneric::readApplyGeo(const FileName &name, const MDRow &row, bool only_apply_shifts, DataMode datamode, size_t select_img)
 {
-    setDatatype(getImageType(name));
+    DataType datatype;
+    getImageType(name, datatype);
+    setDatatype(datatype);
     image->readApplyGeo(name, row, only_apply_shifts, datamode, select_img);
 }
 
 int ImageGeneric::readApplyGeo(const FileName &name, const MetaData &md, size_t objId, bool only_apply_shifts, DataMode datamode,
                                size_t select_img)
 {
-    setDatatype(getImageType(name));
+    DataType datatype;
+    getImageType(name, datatype);
+    setDatatype(datatype);
     image->readApplyGeo(name, md, objId, only_apply_shifts, datamode, select_img);
 }
 
@@ -151,7 +170,9 @@ int ImageGeneric::readApplyGeo(const MetaData &md, size_t objId, bool only_apply
 {
     FileName name;
     md.getValue(MDL_IMAGE, name, md.firstObject());
-    setDatatype(getImageType(name));
+    DataType datatype;
+    getImageType(name, datatype);
+    setDatatype(datatype);
     image->readApplyGeo(name, md, objId, only_apply_shifts, datamode, select_img);
 }
 

@@ -86,12 +86,12 @@ typedef enum
  */
 typedef enum
 {
-  _NONE = -2,  // Nothing to do. Used by ImageGeneric to check the right datatype to be used
-  HEADER = -1, //Dont read image data, only info from main header(datatype and dimensions)
-  _HEADER_ALL = 0, //Read complete header(main and geo), useful for header_extract and header_assign
-  DATA = 1, //Read image data and main header, geometrical transformations will be ignored
-  _DATA_ALL = 2, //Read data with complete header(the use of this option is not recommended, all Xmipp
-                // programs should read and write geo info through metadatas
+    _NONE = -2,  // Nothing to do. Used by ImageGeneric to check the right datatype to be used
+    HEADER = -1, //Dont read image data, only info from main header(datatype and dimensions)
+    _HEADER_ALL = 0, //Read complete header(main and geo), useful for header_extract and header_assign
+    DATA = 1, //Read image data and main header, geometrical transformations will be ignored
+    _DATA_ALL = 2, //Read data with complete header(the use of this option is not recommended, all Xmipp
+    // programs should read and write geo info through metadatas
 }DataMode;
 
 /* Cast Write mode
@@ -327,15 +327,15 @@ public:
      * This function can apply geometrical transformations, but cannot map the image in disk
      */
     int readApplyGeo(const FileName &name, const MDRow &row, bool only_apply_shifts = false,
-        DataMode datamode = DATA, size_t select_img = ALL_IMAGES);
+                     DataMode datamode = DATA, size_t select_img = ALL_IMAGES);
 
     /** Read an image from metadata, filename is provided*/
     int readApplyGeo(const FileName &name, const MetaData &md, size_t objId, bool only_apply_shifts = false,
-             DataMode datamode = DATA, size_t select_img = ALL_IMAGES);
+                     DataMode datamode = DATA, size_t select_img = ALL_IMAGES);
 
     /** Read an image from metadata, filename is taken from MDL_IMAGE */
     int readApplyGeo(const MetaData &md, size_t objId, bool only_apply_shifts = false,
-             DataMode datamode = DATA, size_t select_img = ALL_IMAGES);
+                     DataMode datamode = DATA, size_t select_img = ALL_IMAGES);
 
     /* Read an image with a lower resolution as a preview image.
      * If Zdim parameter is not passed, then all slices are rescaled.
@@ -390,6 +390,13 @@ public:
     void getOffsetAndSwap(size_t &_offset, int &_swap) const
     {
         _offset = offset;
+        _swap = swap;
+    }
+
+    /** Get Image swap
+         */
+    void getSwap(int &_swap) const
+    {
         _swap = swap;
     }
 
@@ -508,7 +515,7 @@ public:
      */
     void setDataMode(DataMode mode)
     {
-      dataMode = mode;
+        dataMode = mode;
     }
     /** Init geometry transformation with defaults values
      */
@@ -648,12 +655,12 @@ protected:
     /* Internal read image file method.
      */
     int _read(const FileName &name, ImageFHandler* hFile, DataMode datamode = DATA, size_t select_img = ALL_IMAGES,
-                      bool mapData = false);
+              bool mapData = false);
 
     /* Internal write image file method.
      */
     void _write(const FileName &name, ImageFHandler* hFile, size_t select_img = ALL_IMAGES,
-                        bool isStack=false, int mode=WRITE_OVERWRITE, bool adjust=false);
+                bool isStack=false, int mode=WRITE_OVERWRITE, bool adjust=false);
 
     /** Read the raw data
       */
