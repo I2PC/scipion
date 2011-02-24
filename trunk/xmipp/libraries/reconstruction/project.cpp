@@ -294,8 +294,8 @@ void Projection_Parameters::read(const FileName &fn_proj_param)
         } /* switch end */
     } /* while end */
     if (lineNo != 10)
-        REPORT_ERROR(ERR_PARAM_MISSING, (std::string)"Prog_Project_Parameters::read: I "
-                     "couldn't read all parameters from file " + fn_proj_param);
+        REPORT_ERROR(ERR_PARAM_MISSING, formatString("Prog_Project_Parameters::read: I "
+            "couldn't read all parameters from file %s, only read %d lines", fn_proj_param.c_str(), lineNo));
     fclose(fh_param);
 }
 
