@@ -149,47 +149,14 @@ void ProgAngularProjectionMatching::show()
 /* Run --------------------------------------------------------------------- */
 void ProgAngularProjectionMatching::run()
 {
-    MetaData                         DFo;
-    FileName                         fn_tmp;
-    Matrix1D<double>                 dataline(8);
-
     produceSideInfo();
 
-    int nr_images = DFexp.size();
-    int input_images[nr_images+1];
-    double output_values[MY_OUPUT_SIZE*nr_images+1];
+    processAllImages();
 
-    // Process all images
-    input_images[0]=nr_images;
-    for (int i = 0; i < nr_images; i++)
-    {
-        input_images[i+1]=i;
-    }
-    processSomeImages(input_images,output_values);
+    writeOutputFiles();
 
-    // Fill output docfile
-    size_t id;
-    for (int i = 0; i < nr_images; i++)
-    {
-        id = 1+ROUND(output_values[i*MY_OUPUT_SIZE+1]);
-        DFexp.getValue(MDL_IMAGE, fn_tmp, id);
-
-        id = DFo.addObject();
-        DFo.setValue(MDL_IMAGE,fn_tmp,id);
-        DFo.setValue(MDL_ANGLEROT, output_values[i*MY_OUPUT_SIZE+2],id);
-        DFo.setValue(MDL_ANGLETILT,output_values[i*MY_OUPUT_SIZE+3],id);
-        DFo.setValue(MDL_ANGLEPSI, output_values[i*MY_OUPUT_SIZE+4],id);
-        DFo.setValue(MDL_SHIFTX,   output_values[i*MY_OUPUT_SIZE+5],id);
-        DFo.setValue(MDL_SHIFTY,   output_values[i*MY_OUPUT_SIZE+6],id);
-        DFo.setValue(MDL_REF,(int)(1+output_values[i*MY_OUPUT_SIZE+7]),id);
-        DFo.setValue(MDL_FLIP,    (output_values[i*MY_OUPUT_SIZE+8]>0),id);
-        DFo.setValue(MDL_SCALE,    output_values[i*MY_OUPUT_SIZE+9],id);
-        DFo.setValue(MDL_MAXCC,    output_values[i*MY_OUPUT_SIZE+10],id);
-    }
-
-    fn_tmp=fn_root + ".doc";
-    DFo.write(fn_tmp);
-    std::cerr<<"done!"<<std::endl;
+    if (verbose)
+        std::cout << "done!"<<std::endl;
 }
 
 
@@ -224,7 +191,7 @@ void ProgAngularProjectionMatching::produceSideInfo()
     // Check that the reference and the experimental images are of the same
     // size
     FileName fnt;
-    fnt.compose(0,fn_ref);
+    fnt.compose(FIRST_IMAGE, fn_ref);
     Image<double> imgRef;
     imgRef.read(fnt);
 
@@ -355,6 +322,9 @@ void ProgAngularProjectionMatching::produceSideInfo()
         }
     }
 
+    //Store the id's of each experimental image from metadata
+    DFexp.findObjects(ids);
+
 }
 
 int ProgAngularProjectionMatching::getCurrentReference(int refno,
@@ -370,7 +340,7 @@ int ProgAngularProjectionMatching::getCurrentReference(int refno,
     FourierTransformer                     local_transformer;
 
     // Image was not stored yet: read it from disc and store
-    fnt.compose(refno/*+1*/,fn_ref);
+    fnt.compose(refno + FIRST_IMAGE, fn_ref);
     img.read(fnt);
     img().setXmippOrigin();
 
@@ -446,7 +416,7 @@ void * threadRotationallyAlignOneImage( void * data )
     int thread_num = thread_data->thread_num;
     ProgAngularProjectionMatching *prm = thread_data->prm;
     MultidimArray<double> *img = thread_data->img;
-    int *this_image = thread_data->this_image;
+    size_t *this_image = thread_data->this_image;
     int *opt_refno = thread_data->opt_refno;
     double *opt_psi = thread_data->opt_psi;
     bool *opt_flip = thread_data->opt_flip;
@@ -462,7 +432,7 @@ void * threadRotationallyAlignOneImage( void * data )
     Polar<std::complex <double> > fP,fPm;
     FourierTransformer                   local_transformer;
     Polar_fftw_plans            local_plans;
-    int                         imgno = *this_image;
+    size_t                         imgno = *this_image;
 
 #ifdef TIMING
 
@@ -536,7 +506,7 @@ void * threadRotationallyAlignOneImage( void * data )
 
     // Loop over all relevant "neighbours" (i.e. directions within the search range)
     //for (int i = myinit; i != myfinal; i+=myincr)
-    for (int i = myinit; i != myfinal; i += myincr)
+    for (size_t i = myinit; i != myfinal; i += myincr)
     {
         if (i%thread_num == thread_id)
         {
@@ -823,30 +793,38 @@ void ProgAngularProjectionMatching::scaleAlignOneImage(MultidimArray<double> &im
 
 }
 
+void ProgAngularProjectionMatching::processAllImages()
+{
+    processSomeImages(ids);
+}
 
-
-void ProgAngularProjectionMatching::processSomeImages(int * my_images, double * my_output)
+void ProgAngularProjectionMatching::processSomeImages(const std::vector<size_t> &imagesToProcess)
 {
     Image<double> img;
     double opt_rot, opt_tilt, opt_psi, opt_xoff, opt_yoff, opt_scale, maxcorr=-99.e99;
     bool opt_flip;
     int opt_refno;
 
-    int nr_images = my_images[0];
+    size_t nr_images = imagesToProcess.size();
     // Prepare my_output
-    my_output[0] = nr_images * MY_OUPUT_SIZE;
+    //my_output[0] = nr_images * MY_OUPUT_SIZE;
 
     // Loop over all images
-    for (int imgno = 0; imgno < nr_images; imgno++)
+    //for (size_t imgno = 0; imgno < nr_images; imgno++)
+    size_t idNew, imgid;
+    FileName fn;
+
+    for (size_t imgno = 0; imgno < nr_images; imgno++)
     {
+        imgid = imagesToProcess[imgno];
         // add one because first number is number of elements in the array
-        int this_image = my_images[imgno + 1];
+        //this_image = __iter.objId;
 
         // read experimental image in memory
         //std::cerr << "get_image(this_image,img,true " <<  this_image << std::endl;
         //DFexp.get_image IS NOT EQUIVALENT TO getCurrentImage
         //DFexp.get_image(this_image,img,true);
-        getCurrentImage(this_image+1,img);
+        getCurrentImage(imgid, img);
 
         // Call threads to calculate the rotational alignment of each image in the selfile
         pthread_t * th_ids = (pthread_t *)malloc( threads * sizeof( pthread_t));
@@ -859,7 +837,7 @@ void ProgAngularProjectionMatching::processSomeImages(int * my_images, double * 
             threads_d[c].thread_num = threads;
             threads_d[c].prm = this;
             threads_d[c].img=&img();
-            threads_d[c].this_image=&this_image;
+            threads_d[c].this_image=&imgno;
             threads_d[c].opt_refno=&opt_refno;
             threads_d[c].opt_psi=&opt_psi;
             threads_d[c].opt_flip=&opt_flip;
@@ -903,38 +881,40 @@ void ProgAngularProjectionMatching::processSomeImages(int * my_images, double * 
         }
 
         // Output
-        my_output[imgno * MY_OUPUT_SIZE + 1] = this_image;
-        my_output[imgno * MY_OUPUT_SIZE + 2] = opt_rot;
-        my_output[imgno * MY_OUPUT_SIZE + 3] = opt_tilt;
-        my_output[imgno * MY_OUPUT_SIZE + 4] = opt_psi;
-        my_output[imgno * MY_OUPUT_SIZE + 5] = opt_xoff;
-        my_output[imgno * MY_OUPUT_SIZE + 6] = opt_yoff;
-        my_output[imgno * MY_OUPUT_SIZE + 7] = opt_refno;
-        my_output[imgno * MY_OUPUT_SIZE + 8] = opt_flip;
-        my_output[imgno * MY_OUPUT_SIZE + 9] = opt_scale;
-        my_output[imgno * MY_OUPUT_SIZE + 10] = maxcorr;
+        DFexp.getValue(MDL_IMAGE, fn, imgid);
+
+        idNew = DFo.addObject();
+        DFo.setValue(MDL_IMAGE, fn,idNew);
+        DFo.setValue(MDL_ANGLEROT, opt_rot,idNew);
+        DFo.setValue(MDL_ANGLETILT,opt_tilt,idNew);
+        DFo.setValue(MDL_ANGLEPSI, opt_psi,idNew);
+        DFo.setValue(MDL_SHIFTX,   opt_xoff,idNew);
+        DFo.setValue(MDL_SHIFTY,   opt_yoff,idNew);
+        DFo.setValue(MDL_REF,      opt_refno + FIRST_IMAGE,idNew);
+        DFo.setValue(MDL_FLIP,     opt_flip,idNew);
+        DFo.setValue(MDL_SCALE,    opt_scale,idNew);
+        DFo.setValue(MDL_MAXCC,    maxcorr,idNew);
     }
 
 }
 
-void ProgAngularProjectionMatching::getCurrentImage(size_t imgno, Image<double> &img)
+void ProgAngularProjectionMatching::getCurrentImage(size_t imgid, Image<double> &img)
 {
 
     FileName fn_img;
     Matrix2D<double> A;
 
     // jump to line imgno+1 in DFexp, get data and filename
-    DFexp.getValue(MDL_IMAGE,fn_img, imgno);
+    DFexp.getValue(MDL_IMAGE,fn_img, imgid);
 
     // Read actual image
-    //TODO: Check this????
     img.read(fn_img);
     img().setXmippOrigin();
 
     // Store translation in header and apply it to the actual image
     double shiftX, shiftY;
-    DFexp.getValue(MDL_SHIFTX,shiftX, imgno);
-    DFexp.getValue(MDL_SHIFTY,shiftY, imgno);
+    DFexp.getValue(MDL_SHIFTX,shiftX, imgid);
+    DFexp.getValue(MDL_SHIFTY,shiftY, imgid);
     img.setShifts(shiftX,shiftY);
     img.setEulerAngles(0.,0.,0.);
     img.setFlip(0.);
@@ -942,7 +922,7 @@ void ProgAngularProjectionMatching::getCurrentImage(size_t imgno, Image<double> 
     double scale;
     scale = 1.;
     if(DFexp.containsLabel(MDL_SCALE))
-        DFexp.getValue(MDL_SCALE,scale, imgno);
+        DFexp.getValue(MDL_SCALE, scale, imgid);
     img.setScale(scale);
 
     img.getTransformationMatrix(A,true);
@@ -950,3 +930,7 @@ void ProgAngularProjectionMatching::getCurrentImage(size_t imgno, Image<double> 
         selfApplyGeometry(BSPLINE3, img(), A, IS_INV, WRAP);
 }
 
+void ProgAngularProjectionMatching::writeOutputFiles()
+{
+    DFo.write(fn_root + ".doc");
+}

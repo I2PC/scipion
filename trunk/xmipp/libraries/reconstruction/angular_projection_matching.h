@@ -57,7 +57,7 @@ typedef struct{
     int thread_num;
     ProgAngularProjectionMatching *prm;
     MultidimArray<double> *img;
-    int *this_image;
+    size_t *this_image;
     int *opt_refno;
     double *opt_psi;
     bool *opt_flip;
@@ -77,6 +77,8 @@ public:
     FileName fn_exp, fn_ref, fn_root, fn_ctf;
     /** Docfile with experimental images */
     MetaData DFexp;
+    /** Docfile with results */
+    MetaData DFo;
     /** dimension of the images and padded images */
     int dim, paddim;
     /** Padding factor (only for applying CTF to references) */
@@ -101,6 +103,8 @@ public:
     /** Pointers for reference retrieval */
     std::vector<int> pointer_allrefs2refsinmem;
     std::vector<int> pointer_refsinmem2allrefs;
+    /** Array containing the images ids in metadata */
+    std::vector<size_t> ids;
     /** Array with Polars of references and of translated images and their mirrors */
     Polar<std::complex<double> >   *fP_ref, *fP_img, *fPm_img;
     /** Array with reference images */
@@ -140,10 +144,10 @@ public:
 public:
 
     /// Read arguments from command line
-    void readParams();
+    virtual void readParams();
 
-    /// Read arguments from command line
-    void defineParams();
+    /// Define arguments accepted
+    virtual void defineParams();
 
     /** Show. */
     void show();
@@ -152,7 +156,7 @@ public:
     void run();
 
     /** Make shiftmask and calculate nr_psi */
-    void produceSideInfo();
+    virtual void produceSideInfo();
 
     /** Rotational alignment using polar coordinates
      *  The input image is assumed to be in FTs of polar rings
@@ -179,12 +183,25 @@ public:
       store FT of the polar transform as well as the original image */
     int getCurrentReference(int refno, Polar_fftw_plans &local_plans);
 
+    /** Get images to process.
+     * This function will return the id's of images to process.
+     * It will be specially useful for MPI case when images will be distributed
+     * by the master node.
+     * Return false if there aren't more images to process
+     */
+    virtual void processAllImages();
+
     /** Loop over all images */
-    void processSomeImages(int * my_images, double * my_output);
+    void processSomeImages(const std::vector<size_t> &imagesToProcess);
 
     /** Read current image into memory and translate accoring to
       previous optimal Xoff and Yoff */
-    void getCurrentImage(size_t imgno, Image<double> &img);
+    void getCurrentImage(size_t imgid, Image<double> &img);
+
+    /** Write out results to disk
+     * This function should be override in MPI class, only master should write.
+     */
+    virtual void writeOutputFiles();
 
 };				
 //@}

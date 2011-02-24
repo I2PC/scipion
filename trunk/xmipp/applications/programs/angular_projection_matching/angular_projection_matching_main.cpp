@@ -30,19 +30,9 @@
 /* MAIN -------------------------------------------------------------------- */
 int main(int argc, char **argv)
 {
-
-	ProgAngularProjectionMatching program;
-	try
-	{
-		program.read(argc, argv);
-		program.run();
-	}
-	catch (XmippError xe)
-	{
-		std::cerr << xe;
-		return 1;
-	}
-	return 0;
+    ProgAngularProjectionMatching program;
+    program.read(argc, argv);
+    return  program.tryRun();
 }
 
 
