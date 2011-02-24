@@ -795,7 +795,16 @@ void ProgAngularProjectionMatching::scaleAlignOneImage(MultidimArray<double> &im
 
 void ProgAngularProjectionMatching::processAllImages()
 {
+    //Init progress bar
+    size_t total_number_of_images = DFexp.size();
+    if (verbose)
+    {
+        progress_bar_step = XMIPP_MAX(1, total_number_of_images / 80);
+        init_progress_bar(total_number_of_images);
+    }
     processSomeImages(ids);
+    if (verbose)
+      progress_bar(total_number_of_images);
 }
 
 void ProgAngularProjectionMatching::processSomeImages(const std::vector<size_t> &imagesToProcess)
@@ -806,24 +815,12 @@ void ProgAngularProjectionMatching::processSomeImages(const std::vector<size_t> 
     int opt_refno;
 
     size_t nr_images = imagesToProcess.size();
-    // Prepare my_output
-    //my_output[0] = nr_images * MY_OUPUT_SIZE;
-
-    // Loop over all images
-    //for (size_t imgno = 0; imgno < nr_images; imgno++)
     size_t idNew, imgid;
     FileName fn;
 
     for (size_t imgno = 0; imgno < nr_images; imgno++)
     {
         imgid = imagesToProcess[imgno];
-        // add one because first number is number of elements in the array
-        //this_image = __iter.objId;
-
-        // read experimental image in memory
-        //std::cerr << "get_image(this_image,img,true " <<  this_image << std::endl;
-        //DFexp.get_image IS NOT EQUIVALENT TO getCurrentImage
-        //DFexp.get_image(this_image,img,true);
         getCurrentImage(imgid, img);
 
         // Call threads to calculate the rotational alignment of each image in the selfile
@@ -894,6 +891,9 @@ void ProgAngularProjectionMatching::processSomeImages(const std::vector<size_t> 
         DFo.setValue(MDL_FLIP,     opt_flip,idNew);
         DFo.setValue(MDL_SCALE,    opt_scale,idNew);
         DFo.setValue(MDL_MAXCC,    maxcorr,idNew);
+
+        if (verbose)// && imgno % progress_bar_step == 0)
+          progress_bar(imgno);
     }
 
 }

@@ -140,7 +140,8 @@ public:
     double scale_step;
     double scale_nsteps;
 
-
+    /** Progress bar */
+    int progress_bar_step;
 public:
 
     /// Read arguments from command line
