@@ -69,8 +69,10 @@ public class MetaData {
         read(filename);
     }
 
-    //should be called by GarbageCollector before destroying
-    protected void finalize() {
+    // Should be called by GarbageCollector before destroying
+    @Override
+    protected void finalize() throws Throwable {
+	super.finalize();
         destroy();
     }
 }

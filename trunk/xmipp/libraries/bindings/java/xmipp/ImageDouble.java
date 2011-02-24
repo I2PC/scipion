@@ -61,10 +61,10 @@ public class ImageDouble {
         read(filename);
     }
 
-    //should be called by GarbageCollector before destroying
+    // Should be called by GarbageCollector before destroying
     @Override
-    protected void finalize() {
-        //System.out.println("Destroying image: " + this.filename);
+    protected void finalize() throws Throwable {
+	super.finalize();
         destroy();
     }
 
