@@ -88,11 +88,6 @@ public:
         for each image */
     void apply(MultidimArray<double> &I);
 
-    /**
-     * save docfile
-     */
-    void postProcess();
-
 };
 //@}
 #endif

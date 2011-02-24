@@ -43,6 +43,7 @@ void ProgSimulateMicroscope::readParams()
 void ProgSimulateMicroscope::defineParams()
 {
     each_image_produces_an_output = true;
+    save_metadata_stack = true;
     XmippMetadataProgram::defineParams();
 
     addUsageLine("Simulate the effect of the microscope on ideal projections.");
@@ -193,10 +194,3 @@ void ProgSimulateMicroscope::apply(MultidimArray<double> &I)
                  LAST_XMIPP_INDEX(Ydim), LAST_XMIPP_INDEX(Xdim));
 }
 
-
-/* PostProcess ------------------------------------------------------------------- */
-void ProgSimulateMicroscope::postProcess()
-{
-    if (oroot == "")
-        mdOut.write(fn_out.withoutExtension().addExtension("doc"));
-}
