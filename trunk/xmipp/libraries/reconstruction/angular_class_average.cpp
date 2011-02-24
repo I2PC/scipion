@@ -570,7 +570,7 @@ void ProgAngularClassAverage::processOneClass(int &dirno,
     Image<double> img, avg, avg1, avg2;
     FileName   fn_img, fn_tmp;
     MetaData   SFclass, SFclass1, SFclass2;
-    double     rot, tilt, psi, xshift, yshift, mirror, val, w, w1, w2, my_limitR;
+    double     rot, tilt, psi, xshift, yshift, mirror, val, w, w1, w2, my_limitR, scale;
     int        ref_number, this_image;
     int        isplit;
     Matrix2D<double> A(3,3);
@@ -629,6 +629,8 @@ void ProgAngularClassAverage::processOneClass(int &dirno,
                 _DF.getValue(MDL_SHIFTY, yshift, __iter.objId);
                 if (do_mirrors)
                     _DF.getValue(MDL_FLIP,mirror, __iter.objId);
+                _DF.getValue(MDL_SCALE, scale, __iter.objId);
+
                 //TODO: Check this????
                 img.read(fn_img);
                 img().setXmippOrigin();
@@ -636,6 +638,7 @@ void ProgAngularClassAverage::processOneClass(int &dirno,
                 img.setShifts(xshift, yshift);
                 if (do_mirrors)
                     img.setFlip(mirror);
+                img.setScale(scale);
 
                 if (do_split)
                     isplit = ROUND(rnd_unif());
