@@ -61,6 +61,7 @@ void ProgAngularProjectionMatching::readParams()
         scale_step = getDoubleParam("--scale",0);
         scale_nsteps = getDoubleParam("--scale",1);
     }
+
 }
 
 
@@ -150,6 +151,8 @@ void ProgAngularProjectionMatching::show()
 void ProgAngularProjectionMatching::run()
 {
     produceSideInfo();
+
+    show();
 
     processAllImages();
 
@@ -432,7 +435,7 @@ void * threadRotationallyAlignOneImage( void * data )
     Polar<std::complex <double> > fP,fPm;
     FourierTransformer                   local_transformer;
     Polar_fftw_plans            local_plans;
-    size_t                         imgno = *this_image;
+    size_t                         imgno = (*this_image) - FIRST_IMAGE;
 
 #ifdef TIMING
 
@@ -532,10 +535,12 @@ void * threadRotationallyAlignOneImage( void * data )
 #ifdef TIMING
             get_refs += elapsed_time(t1);
 #endif
+//#define DEBUG
 #ifdef DEBUG
 
             std::cerr<<"Got refno= "<<refno<<" pointer= "<<prm->mysampling.my_neighbors[imgno][i]<<std::endl;
 #endif
+#undef DEBUG
 
             // Loop over all 5D-search translations
             for (int itrans = 0; itrans < prm->nr_trans; itrans++)
@@ -822,7 +827,8 @@ void ProgAngularProjectionMatching::processSomeImages(const std::vector<size_t> 
     {
         imgid = imagesToProcess[imgno];
         getCurrentImage(imgid, img);
-
+//img.write("kk,spi");
+//exit(0);
         // Call threads to calculate the rotational alignment of each image in the selfile
         pthread_t * th_ids = (pthread_t *)malloc( threads * sizeof( pthread_t));
 
@@ -834,7 +840,7 @@ void ProgAngularProjectionMatching::processSomeImages(const std::vector<size_t> 
             threads_d[c].thread_num = threads;
             threads_d[c].prm = this;
             threads_d[c].img=&img();
-            threads_d[c].this_image=&imgno;
+            threads_d[c].this_image=&imgid;
             threads_d[c].opt_refno=&opt_refno;
             threads_d[c].opt_psi=&opt_psi;
             threads_d[c].opt_flip=&opt_flip;
@@ -891,8 +897,7 @@ void ProgAngularProjectionMatching::processSomeImages(const std::vector<size_t> 
         DFo.setValue(MDL_FLIP,     opt_flip,idNew);
         DFo.setValue(MDL_SCALE,    opt_scale,idNew);
         DFo.setValue(MDL_MAXCC,    maxcorr,idNew);
-
-        if (verbose)// && imgno % progress_bar_step == 0)
+        if (verbose && imgno % progress_bar_step == 0)
           progress_bar(imgno);
     }
 
