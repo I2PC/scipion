@@ -30,16 +30,7 @@
 /* MAIN -------------------------------------------------------------------- */
 int main(int argc, char *argv[])
 {
-    try
-    {
-        ProgFourierFilter program;
-        program.read(argc, argv);
-        program.run();
-    }
-    catch (XmippError xe)
-    {
-        std::cerr << xe;
-        return 1;
-    }
-    return 0;
+    ProgFourierFilter program;
+    program.read(argc, argv);
+    return program.tryRun();
 }
