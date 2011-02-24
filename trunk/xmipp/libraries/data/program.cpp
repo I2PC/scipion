@@ -409,15 +409,6 @@ int XmippProgram::version() const
     REPORT_ERROR(ERR_NOT_IMPLEMENTED,"");
 }
 
-int XmippProgram::runProgram(XmippProgram * program, const String &arguments, bool destroy)
-{
-    program->read(arguments);
-    int retCode = program->tryRun();
-    if (destroy)
-        delete program;
-    return retCode;
-}
-
 /// Empty constructor
 XmippMetadataProgram::XmippMetadataProgram()
 {

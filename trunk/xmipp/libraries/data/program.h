@@ -205,12 +205,7 @@ public:
     virtual ~XmippProgram();
     /** @} */
 
-    /** Run some program passing some arguments
-     * if destroy is true the program pointer will be freed */
-    static int runProgram(XmippProgram * program, const String &arguments, bool destroy=true);
-    static XmippProgram * createByName(const char * programName);
-
-};
+};//end of class XmippProgram
 
 /** Special class of XmippProgram that performs some operation related with processing images.
  * It can receive a file with images(MetaData) or a single image.
