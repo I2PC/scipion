@@ -3,8 +3,8 @@ package xmipp;
 public class ImageDouble {
 
     private static final String PSD_EXTENSION = ".psd";
-    //hold pointer to Image class in C++ space
-//    private long peer;
+    // pointer to Image class in C++ space. Needed by native library.
+    private long peer;
     private String filename;
 
     // Initialize library.
@@ -47,6 +47,8 @@ public class ImageDouble {
 
     public native long getNsize();
 
+    public native void setXmippOrigin() throws Exception;
+
     public native void printShape();
 
     //non-native functions
@@ -64,7 +66,7 @@ public class ImageDouble {
     // Should be called by GarbageCollector before destroying
     @Override
     protected void finalize() throws Throwable {
-	super.finalize();
+        super.finalize();
         destroy();
     }
 

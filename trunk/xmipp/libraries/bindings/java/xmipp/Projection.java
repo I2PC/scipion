@@ -2,9 +2,8 @@ package xmipp;
 
 public class Projection {
 
-    //hold pointer to Image class in C++ space
-/*    private long peer;
-    private String filename;*/
+    // pointer to Image class in C++ space. Needed by native library.
+    private long peer;
 
     // Initialize library.
     static {
@@ -23,7 +22,7 @@ public class Projection {
 
     public native void reset(int h, int w) throws Exception;
 
-    public native void setXmippOrigin() throws Exception;
+//    public native void setXmippOrigin() throws Exception;
 
     public static native void projectVolume(ImageDouble image, Projection projection,
             double rot, double tilt, double pshi) throws Exception;

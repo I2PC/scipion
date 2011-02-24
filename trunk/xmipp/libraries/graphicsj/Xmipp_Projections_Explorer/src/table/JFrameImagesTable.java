@@ -18,7 +18,6 @@ import java.awt.Dimension;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.io.File;
-import java.io.RandomAccessFile;
 import java.util.ArrayList;
 import java.util.Vector;
 import javax.swing.ImageIcon;
@@ -26,6 +25,8 @@ import javax.swing.JLabel;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.ListSelectionModel;
+import xmipp.MDLabel;
+import xmipp.MetaData;
 
 /**
  *
@@ -33,10 +34,6 @@ import javax.swing.ListSelectionModel;
  */
 public class JFrameImagesTable extends javax.swing.JFrame {
 
-    private final static String IMAGE = "image";
-    private final static String SCORE = "zscore";
-    private final static int INDEX_IMAGE = 0;
-    private final static int INDEX_SCORE = 1;
     private JTable jtImages;
     private ImagesTableModel tableModel;
     private ScoreImagesTableRenderer tableRenderer;
@@ -134,8 +131,8 @@ public class JFrameImagesTable extends javax.swing.JFrame {
         Vector<ScoreItem> items = new Vector<ScoreItem>();
 
         for (int i = 0; i < score_data.length; i++) {
-            items.add(new ScoreItem(score_data[i][INDEX_IMAGE],
-                    Double.parseDouble(score_data[i][INDEX_SCORE]),
+            items.add(new ScoreItem(score_data[i][0],
+                    Double.parseDouble(score_data[i][1]),
                     good));
         }
 
@@ -151,72 +148,21 @@ public class JFrameImagesTable extends javax.swing.JFrame {
             directory += File.separator;
         }
 
+        // Parse metadata
+        MetaData md = new MetaData(directory + fileName);
+
+        long ids[] = md.findObjects();
+
         ArrayList<String[]> filesList = new ArrayList<String[]>();
 
-        try {
-            RandomAccessFile f = new RandomAccessFile(directory + fileName, "r");
-            String line;
-            boolean oldFormat;
-            int indexes[] = null;
+        for (long id : ids) {
+            String file = md.getValueString(MDLabel.MDL_IMAGE, id);
+            double score = md.getValueDouble(MDLabel.MDL_ZSCORE, id);
 
-            // Skips header
-            line = f.readLine();//; XMIPP_3 * column_format *
-            if (line.toUpperCase().contains("XMIPP_3")) {
-                oldFormat = false;
-
-                f.readLine();// 2nd header line ";"
-
-                // 3rd line contains parameters order.
-                String metadata[] = f.readLine().split("\\s+");
-                indexes = new int[metadata.length];
-                for (int i = 0; i < indexes.length; i++) {
-                    indexes[i] = -1;
-                }
-
-                for (int i = 1; i < metadata.length; i++) { // 0 position is ";"
-                    int index = getFieldIndex(metadata[i]);
-                    if (index >= 0) {
-                        indexes[index] = i - 1;
-                    }
-                }
-            } else {  // Old format.
-                oldFormat = true;
-                f.seek(0);
-            }
-
-            while ((line = f.readLine()) != null && !line.trim().isEmpty()) {
-                String[] s = line.trim().split("\\s+");
-
-                // Gets file depending on format version.
-                String file = (oldFormat ? s[0] : s[indexes[INDEX_IMAGE]]);
-                String score = (oldFormat ? s[1] : s[indexes[INDEX_SCORE]]);
-
-                if (!file.trim().isEmpty()) {
-                    // Fixes file name by adding its parent.
-                    if (!file.startsWith(File.separator)) {
-                        file = directory + File.separator + file;
-                    }
-                    filesList.add(new String[]{file, score});
-                }
-            }
-        } catch (Exception e) {
-            IJ.showStatus("");
-            IJ.showMessage("Sel_Reader", "Sel_Reader : " + e);
-            e.printStackTrace();
-            return null;
+            filesList.add(new String[]{file, String.valueOf(score)});
         }
 
         return filesList.toArray(new String[filesList.size()][2]);
-    }
-
-    private static int getFieldIndex(String field) {
-        if (field.toLowerCase().compareTo(IMAGE) == 0) {
-            return INDEX_IMAGE;
-        } else if (field.toLowerCase().compareTo(SCORE) == 0) {
-            return INDEX_SCORE;
-        }
-
-        return -1;
     }
 
     public void setWidth(int width) {

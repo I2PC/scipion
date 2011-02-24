@@ -113,6 +113,14 @@ JNIEXPORT jlong JNICALL Java_xmipp_ImageDouble_getNsize
 
 /*
  * Class:     xmipp_ImageDouble
+ * Method:    setXmippOrigin
+ * Signature: ()V
+ */
+JNIEXPORT void JNICALL Java_xmipp_ImageDouble_setXmippOrigin
+  (JNIEnv *, jobject);
+
+/*
+ * Class:     xmipp_ImageDouble
  * Method:    printShape
  * Signature: ()V
  */

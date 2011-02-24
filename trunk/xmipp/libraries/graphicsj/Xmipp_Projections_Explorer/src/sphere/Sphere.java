@@ -1,3 +1,4 @@
+package sphere;
 
 import constants.LABELS;
 import ij.IJ;
@@ -6,17 +7,17 @@ import ij.ImageStack;
 import ij.process.ColorProcessor;
 import ij.process.ImageProcessor;
 import java.io.BufferedReader;
-import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileReader;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.util.StringTokenizer;
 import java.util.Vector;
 import javax.vecmath.Point2d;
 import javax.vecmath.Point3d;
 import javax.vecmath.Vector3d;
+import xmipp.ImageDouble;
+import xmipp.Projection;
+import xmipp.MDLabel;
+import xmipp.MetaData;
 
 /*
  * To change this template, choose Tools | Templates
@@ -37,13 +38,9 @@ public class Sphere {
     private SphereCell sphereMap[][];
     private final static String TEMPDIR_PATH = System.getProperty("java.io.tmpdir") + "/explorer";
     private File tempDir;
-    //private final static String work_dir = "unknown! - @TODO: directorio actual.";
     private final static String XMIPP_CLASSIFY_ANALYZE_CLUSTER = "xmipp_classify_analyze_cluster";
 
     public Sphere() {
-    }
-
-    public Sphere(String fileName) {
         sphereMap = new SphereCell[ROT][TILT];
         for (int i = 0; i < sphereMap.length; i++) {
             for (int j = 0; j < sphereMap[0].length; j++) {
@@ -51,7 +48,11 @@ public class Sphere {
             }
         }
 
-        load(fileName);
+    }
+
+    public Sphere(String fileName) {
+        this();
+        loadAngles(fileName);
 
         equalizeValues(sphereMap);
 
@@ -79,49 +80,29 @@ public class Sphere {
         return cell;
     }
 
-    private void load(String filename) {
+    private void loadAngles(String filename) {
         try {
             IJ.showStatus(LABELS.MESSAGE_LOADING_EULER_ANGLES_FILE);
+            MetaData md = new MetaData(filename);
+
             File file = new File(filename);
-            BufferedReader br = new BufferedReader(new FileReader(file));
-
-            int fileSize = (int) file.length();
-            int currentSize = 0;
-
             String baseDir = file.getParent() + File.separator;
 
-            // Skips header.
-            br.readLine();
-            br.readLine();
-            br.readLine();
+            long ids[] = md.findObjects();
 
-            String line;
-            String imageFileName;
-
-            while ((line = br.readLine()) != null) {    // Reads line.
-                StringTokenizer input = new StringTokenizer(line, " ");
-
-                imageFileName = input.nextToken();  // Parses file name.
-
-                input.nextToken();  // Parses enabled.
-
-                // Parses ROT and TILT
-                double rot = Double.parseDouble(input.nextToken());
-                double tilt = Double.parseDouble(input.nextToken());
-
-                // Builds absolute path (if it's not absolute already)
-                if (!imageFileName.startsWith("/")) {
+            for (long id : ids) {
+                String imageFileName = md.getValueString(MDLabel.MDL_IMAGE, id);
+                if (!imageFileName.startsWith("/")) {   // Builds absolute path (if it's not absolute already)
                     imageFileName = baseDir + imageFileName;
                 }
+
+                double rot = md.getValueDouble(MDLabel.MDL_ANGLEROT, id);
+                double tilt = md.getValueDouble(MDLabel.MDL_ANGLETILT, id);
 
                 double angles[] = Geometry.normalizeAngles(rot, tilt);
                 Point2d hit = new Point2d(angles[0], angles[1]);
 
                 spreadHit(hit, imageFileName);
-
-                // Calcualtes and shows progress...
-                currentSize += imageFileName.getBytes().length;
-                IJ.showProgress(currentSize, fileSize);
             }
         } catch (Exception ex) {
             IJ.write(ex.getMessage());
@@ -381,46 +362,40 @@ public class Sphere {
     }
 
     private static void writeSelFile(String selFileName, Vector<String> fileNames) {
-        try {
-            File selFile = new File(selFileName);
-            //selFile.deleteOnExit();
+        MetaData md = new MetaData();
 
-            BufferedWriter out = new BufferedWriter(new FileWriter(selFile, false));
+        md.addLabel(MDLabel.MDL_IMAGE);
+        md.addLabel(MDLabel.MDL_ENABLED);
 
-            // Writes header
-            out.write("; XMIPP_3 * column_format * \n");
-            out.write(";\n");
-            out.write("; image enabled \n");
-
-            // Writes files.
-            for (int i = 0; i < fileNames.size(); i++) {
-                out.write(fileNames.elementAt(i) + "\t1\n");
-            }
-
-            out.close();
-        } catch (IOException e) {
-            IJ.write("Cannot write temporary file to: " + System.getProperty("java.io.tmpdir"));
-            IJ.write(e.getMessage());
+        for (int i = 0; i < fileNames.size(); i++) {
+            long id = md.addObject();
+            md.setValueString(MDLabel.MDL_IMAGE, fileNames.elementAt(i), id);
+            md.setValueInt(MDLabel.MDL_ENABLED, 1, id);
         }
+
+        md.write(selFileName);
     }
 
-    public ImagePlus getProjection(MultidimArrayd xmippVolume, double rot, double tilt, int w, int h) {
-        ImageDouble id = new ImageDouble(w, h);
-
+    public ImagePlus getProjection(ImageDouble xmippVolume, double rot, double tilt) {
         Projection p = new Projection();
-        p.reset(h, w);
+        ImagePlus projection = null;
 
-        IJ.showStatus(LABELS.MESSAGE_RETRIEVING_PROJECTION);
-        XmippData.project_Volume(xmippVolume, p, h, w, rot, tilt, 0);
+        try {
+            p.reset(xmippVolume.getYsize(), xmippVolume.getXsize());
 
-        ImagePlus projection = ImageConverter.xmipp2imagej(p, w, h);   // To imageJ.
+            IJ.showStatus(LABELS.MESSAGE_RETRIEVING_PROJECTION);
+            Projection.projectVolume(xmippVolume, p, rot, tilt, 0);
 
-        p.delete();
+            projection = ImageConverter.convertToImagej(p, "Projection");
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            IJ.error(ex.getMessage());
+        }
 
         return projection;
     }
 
-    public String[] analyzeProjection(MultidimArrayd xmippVolume, double rot, double tilt, int w, int h) {
+    public String[] analyzeProjection(ImageDouble xmippVolume, double rot, double tilt, int w, int h) {
         String pcaFile = "";
         String outliersFile = "";
 
@@ -430,7 +405,7 @@ public class Sphere {
             p.reset(h, w);
 
             IJ.showStatus(LABELS.MESSAGE_RETRIEVING_PROJECTION);
-            XmippData.project_Volume(xmippVolume, p, h, w, rot, tilt, 0);
+            Projection.projectVolume(xmippVolume, p, rot, tilt, 0);
 
             // * Write projection to disk.
             String path = tempDir.getAbsolutePath() + File.separator;
@@ -438,10 +413,7 @@ public class Sphere {
             String projectionExt = ".xmp";
             String selFileName = path + "xmipp_sel_file.sel";
 
-            FileName fn = new FileName(projectionFileName, projectionExt);
-            p.write(fn);
-
-            p.delete();
+            p.write(projectionFileName + projectionExt);
 
             // * Gets file names related to ROT and TILT
             Vector<String> files = getFiles(rot, tilt);
@@ -467,15 +439,20 @@ public class Sphere {
     }
 
     private static void xmipp_classify_analyze_cluster(String selfile, String reffile, String oext) {
-        try {
-            String command[] = new String[]{
-                XMIPP_CLASSIFY_ANALYZE_CLUSTER,
-                "-i", selfile,
-                "-ref", reffile,
-                "-produceAligned",
-                "-oext", oext,
-                "-odir", TEMPDIR_PATH};
+        String command[] = new String[]{
+            XMIPP_CLASSIFY_ANALYZE_CLUSTER,
+            "-i", selfile,
+            "-ref", reffile,
+            "-produceAligned",
+            "-oext", oext,
+            "-odir", TEMPDIR_PATH};
 
+        //xmipp_classify_analyze_cluster -i xmipp_sel_file.sel -ref projection.xmp -produceAligned -oext ali.xmp -odir /tmp/projectionexplorer
+        runCommand(command);
+    }
+
+    private static void runCommand(String command[]) {
+        try {
             //xmipp_classify_analyze_cluster -i xmipp_sel_file.sel -ref projection.xmp -produceAligned -oext ali.xmp -odir /tmp/projectionexplorer
             Process p = Runtime.getRuntime().exec(command);
 
@@ -487,7 +464,7 @@ public class Sphere {
                 System.out.println(s);
             }
         } catch (IOException ioex) {
-            IJ.write("Error executing " + XMIPP_CLASSIFY_ANALYZE_CLUSTER);
+            IJ.write("Error executing [" + command + "]");
             IJ.write(ioex.getMessage());
         }
     }

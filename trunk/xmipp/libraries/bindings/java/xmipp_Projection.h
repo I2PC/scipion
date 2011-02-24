@@ -41,14 +41,6 @@ JNIEXPORT void JNICALL Java_xmipp_Projection_reset
 
 /*
  * Class:     xmipp_Projection
- * Method:    setXmippOrigin
- * Signature: ()V
- */
-JNIEXPORT void JNICALL Java_xmipp_Projection_setXmippOrigin
-  (JNIEnv *, jobject);
-
-/*
- * Class:     xmipp_Projection
  * Method:    projectVolume
  * Signature: (Lxmipp/ImageDouble;Lxmipp/Projection;DDD)V
  */

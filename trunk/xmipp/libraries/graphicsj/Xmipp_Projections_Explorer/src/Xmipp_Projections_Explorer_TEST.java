@@ -40,7 +40,7 @@ import xmipp.ImageDouble;
  *
  * @author Juanjo Vega
  */
-public class Xmipp_Projections_Explorer implements PlugIn, UniverseListener, iAnalyzer {
+public class Xmipp_Projections_Explorer_TEST implements PlugIn, UniverseListener, iAnalyzer {
 
     private boolean use_sphere = false;
     private Sphere sphere;

@@ -1,4 +1,7 @@
+package sphere;
 
+
+import sphere.Sphere;
 import ij.ImagePlus;
 import ij.process.ColorProcessor;
 import ij.process.ImageProcessor;

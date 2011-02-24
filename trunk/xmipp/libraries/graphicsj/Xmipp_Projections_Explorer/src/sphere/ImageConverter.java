@@ -1,8 +1,10 @@
+package sphere;
 
 import ij.ImagePlus;
 import ij.ImageStack;
 import ij.process.FloatProcessor;
 import xmipp.ImageDouble;
+import xmipp.Projection;
 
 /*
  * To change this template, choose Tools | Templates
@@ -27,13 +29,23 @@ public class ImageConverter {
         return convertToImagej(image.getData(), w, h, d, n, path);
     }
 
+    public static ImagePlus convertToImagej(Projection projection, String path) {
+
+        int w = projection.getXsize();
+        int h = projection.getYsize();
+        int d = projection.getZsize();
+
+        return convertToImagej(projection.getData(), w, h, d, 1, path);
+    }
+
     private static ImagePlus convertToImagej(double array[], int w, int h, int d, long n, String title) {
         int sliceSize = w * h;
+        int imageSize = sliceSize * d;
         double out[] = new double[sliceSize];
         ImageStack is = new ImageStack(w, h);
 
         for (int i = 0; i < n; i++) {
-            int offset = d * i;
+            int offset = i * imageSize;
             for (int j = 0; j < d; j++) {
                 System.arraycopy(array, offset + j * sliceSize, out, 0, sliceSize);
 

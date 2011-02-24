@@ -5,15 +5,6 @@
 #include <data/fft.h>
 #include "xmipp_InternalData.h"
 
-/*static jfieldID ImageDouble_peerId;
-//static jfieldID ImageDouble_filenameId;
-
-#define peerId ImageDouble_peerId
-
-#ifndef GET_INTERNAL_IMAGE
-#define GET_INTERNAL_IMAGE(obj) ((Image<double>*)(env->GetLongField(obj, peerId)))
-#endif*/
-
 JNIEXPORT void JNICALL Java_xmipp_ImageDouble_storeIds
 (JNIEnv *env, jclass cls) {
 	peerId = env->GetFieldID(cls, "peer", "J");
@@ -247,6 +238,31 @@ JNIEXPORT jlong JNICALL Java_xmipp_ImageDouble_getNsize(JNIEnv * env,
 	}
 
 	return 0;
+}
+
+JNIEXPORT void JNICALL Java_xmipp_ImageDouble_setXmippOrigin
+(JNIEnv *env, jobject jobj) {
+	std::string msg = "";
+	Image<double> *image = GET_INTERNAL_IMAGE(jobj);
+
+	if(image != NULL) {
+		try {
+			image->data.setXmippOrigin();
+		} catch (XmippError xe) {
+			msg = xe.getDefaultMessage();
+		} catch (std::exception& e) {
+			msg = e.what();
+		} catch (...) {
+			msg = "Unhandled exception";
+		}
+	} else {
+		msg = "Image is NULL";
+	}
+
+	// If there was an exception, sends it to java environment.
+	if(!msg.empty()) {
+		handleXmippException(env, msg);
+	}
 }
 
 JNIEXPORT void JNICALL Java_xmipp_ImageDouble_printShape

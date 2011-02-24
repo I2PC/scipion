@@ -1,3 +1,5 @@
+package window;
+
 
 import constants.LABELS;
 import javax.swing.JDialog;

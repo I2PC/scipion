@@ -10,14 +10,15 @@ static jfieldID ImageDouble_peerId;
 static jfieldID Projection_peerId;
 //static jfieldID Projection_filenameId;
 
+static jfieldID MetaData_peerId;
+//static jfieldID MetaData_filenameId;
+
 #define peerId ImageDouble_peerId
 #define peerId Projection_peerId
+#define peerId MetaData_peerId
 
-#ifndef GET_INTERNAL_IMAGE
 #define GET_INTERNAL_IMAGE(obj) ((Image<double> *)(env->GetLongField(obj, peerId)))
-#endif
-#ifndef GET_INTERNAL_PROJECTION
 #define GET_INTERNAL_PROJECTION(obj) ((Projection *)(env->GetLongField(obj, peerId)))
-#endif
+#define GET_INTERNAL_METADATA(obj) ((MetaData*)(env->GetLongField(obj, peerId)))
 
 #endif
