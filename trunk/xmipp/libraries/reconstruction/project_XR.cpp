@@ -31,7 +31,7 @@ void ProgXrayProject::defineParams()
     //Params
     projParam.defineParams(this); // Projection parameters
     addParamsLine("== Xray options == ");
-    addParamsLine(" [-s <Ts=1>]     : Sampling rate of the volume to be projected (nm).");
+    addParamsLine(" [-s <Ts>]     : Sampling rate of the volume to be projected (nm).");
     addParamsLine("                              : If empty, same value as X-Y plane sampling from PSF.");
     addParamsLine("alias --sampling_rate;");
     addParamsLine("[--psf <psf_param_file=\"\">] : XRay-Microscope parameters file. If not set, then default parameters are chosen.");

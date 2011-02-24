@@ -119,9 +119,11 @@ void ParametersProjectionTomography::defineParams(XmippProgram* program)
 {
     program->addParamsLine(" -i <volume_file>        : Volume file to be projected.");
     program->addParamsLine(" alias --input;");
-    program->addParamsLine("   --oroot <rootname>    : Output rootname (use --params)");
-    program->addParamsLine("or -o <image_file>       : Output image (use --angles)");
+    program->addParamsLine("   --oroot <rootname>    : Output rootname");
+    program->addParamsLine("      requires --params;");
+    program->addParamsLine("or -o <image_file>       : Output image");
     program->addParamsLine(" alias --output;");
+    program->addParamsLine("      requires --angles;");
     program->addParamsLine("== Generating a set of projections == ");
     program->addParamsLine(" [--params <parameters_file>]         : File containing projection parameters");
     program->addParamsLine("                                    : Check the manual for a description of the parameters");
