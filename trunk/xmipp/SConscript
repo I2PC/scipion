@@ -549,6 +549,7 @@ ReconsSources = [
     'phantom_create_random.cpp',
     'phantom_simulate_microscope.cpp',
     'precompute_sampling.cpp',
+    'program_extension.cpp',
     'project.cpp',
     'project_crystal.cpp',
     'project_XR.cpp',
