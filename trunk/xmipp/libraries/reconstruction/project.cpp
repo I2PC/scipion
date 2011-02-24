@@ -677,7 +677,7 @@ int PROJECT_Effectively_project(const std::string &fnOut,
     init_progress_bar(side.DF.size());
     SF.setComment("First set of angles=actual angles; Second set of angles=noisy angles");
 
-    int projIdx=0;
+    int projIdx=FIRST_IMAGE;
     FileName fn_proj;              // Projection name
     FOR_ALL_OBJECTS_IN_METADATA(side.DF)
     {
