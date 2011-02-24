@@ -32,9 +32,12 @@
 /** Destructor */
 MpiProgAngularProjectionMatching::~MpiProgAngularProjectionMatching()
 {
+    if (node->isMaster())
+    {
+        delete [] imagesBuffer;
+        delete [] last_chunk;
+    }
     delete node;//this calls MPI_Finalize
-    delete [] imagesBuffer;
-    delete [] last_chunk;
 }
 
 void MpiProgAngularProjectionMatching::read(int argc, char** argv)
@@ -81,6 +84,7 @@ void MpiProgAngularProjectionMatching::processAllImages()
 {
     if (node->isMaster())//master distribute jobs
     {
+
         int finishingWorkers = 0;
         size_t processedImages = 0, finishedImages = 0, totalImages = DFexp.size();
         MPI_Status status;
@@ -99,7 +103,10 @@ void MpiProgAngularProjectionMatching::processAllImages()
             finishedImages += processedImages;
 
             if (!distributeJobs(imagesBuffer, status.MPI_SOURCE))
+            {
                 ++finishingWorkers;
+//                std::cerr << formatString("master: node %d finished, remaining %d", status.MPI_SOURCE, finishingWorkers) << std::endl;
+            }
             MPI_Send(imagesBuffer, imagesBuffer[0] + 1, MPI_UNSIGNED_LONG, status.MPI_SOURCE, TAG_JOB_REPLY, MPI_COMM_WORLD);
 
             if (verbose && processedImages > 0)
@@ -117,8 +124,8 @@ void MpiProgAngularProjectionMatching::processAllImages()
 //                std::cerr << " " << imagesToProcess[i];
 //            std::cerr << std::endl;
 
-           processSomeImages(imagesToProcess);
-           // sleep(1);
+            processSomeImages(imagesToProcess);
+            //sleep(1);
         }
     }
 
@@ -136,20 +143,22 @@ bool MpiProgAngularProjectionMatching::distributeJobs(size_t * imagesToSent, int
         {
             node_index = chunk_index;
             chunk_index = (chunk_index + 1) % chunk_number;
-            reached_last_chunk = chunk_index == chunk_number;
+            reached_last_chunk = (chunk_index == 0);
         }
         else
         {
             int i = 0;
-            for (; i < chunk_number && !chunk_mysampling.my_exp_img_per_sampling_point[chunk_index].empty();
+            for (; i < chunk_number && chunk_mysampling.my_exp_img_per_sampling_point[chunk_index].empty();
                  ++i, chunk_index = (chunk_index + 1) % chunk_number)
                 ;
+
+//            std::cerr << formatString("DEBUG: master: assigned %d chuck to node %d, i = %d", chunk_index, node, i);
             if (i == chunk_number)
             {
                 imagesToSent[0] = 0;
                 return false;
             }
-            node_index = chunk_index;
+            last_chunk[node] = node_index = chunk_index;
             chunk_index = (chunk_index + 1) % chunk_number;
         }
     }
@@ -157,16 +166,16 @@ bool MpiProgAngularProjectionMatching::distributeJobs(size_t * imagesToSent, int
     size_t assigned_images = XMIPP_MIN(mpi_job_size, chunk_mysampling.my_exp_img_per_sampling_point[node_index].size());
     imagesToSent[0] = assigned_images;
 
-    //std::cerr << formatString("DEBUG: master: assigned %lu images to node %d", assigned_images, node);
+//    std::cerr << formatString("DEBUG: master: assigned %lu images to node %d", assigned_images, node);
 
     for (int i = 1; i <= assigned_images; ++i)
     {
-        imagesToSent[i] = chunk_mysampling.my_exp_img_per_sampling_point[node_index].back();
-        //std::cerr << " " << imagesToSent[i];
+        imagesToSent[i] = chunk_mysampling.my_exp_img_per_sampling_point[node_index].back() + FIRST_IMAGE;
+//        std::cerr << " " << imagesToSent[i];
         chunk_mysampling.my_exp_img_per_sampling_point[node_index].pop_back();
     }
 
-   // std::cerr << std::endl;
+//    std::cerr << std::endl;
 
     return true;
 }
@@ -187,7 +196,7 @@ bool MpiProgAngularProjectionMatching::requestJobs(std::vector<size_t> &imagesTo
 
     imagesToProcess.clear();
     for (int i = 1; i <= numberOfImages; ++i)
-      imagesToProcess.push_back(imagesBuffer[i]);
+        imagesToProcess.push_back(imagesBuffer[i]);
     return true;
 }
 
@@ -196,7 +205,7 @@ void MpiProgAngularProjectionMatching::writeOutputFiles()
 {
     if (!node->isMaster())//workers just write down partial results
     {
-        FileName fn = formatString("node%d_%s.doc", node->rank, fn_root.c_str());
+        FileName fn = formatString("%s.node%d.doc", fn_root.c_str(), node->rank);
         DFo.write(fn);
     }
     ///Wait for all workers write results
@@ -207,7 +216,7 @@ void MpiProgAngularProjectionMatching::writeOutputFiles()
         MetaData md;
         for (int nodeRank = 1; nodeRank < node->size; nodeRank++)
         {
-            fn = formatString("node%d_%s.doc", nodeRank, fn_root.c_str());
+            fn = formatString("%s.node%d.doc", fn_root.c_str(), nodeRank);
             md.read(fn);
             DFo.unionAll(md);
         }
