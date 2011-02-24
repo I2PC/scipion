@@ -27,12 +27,11 @@
 #ifndef TRANSFORMATIONS_H
 #define TRANSFORMATIONS_H
 
-#include <external/bilib/headers/kerneldiff1.h>
+#include "external/bilib/headers/kerneldiff1.h"
 #include "multidim_array.h"
 #include "multidim_array_generic.h"
 #include "geometry.h"
 #include "metadata.h"
-
 #define IS_INV true
 #define IS_NOT_INV false
 #define DONT_WRAP false

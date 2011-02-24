@@ -31,14 +31,14 @@
 #include <iostream>
 #include <iterator>
 #include <sstream>
-#include "funcs.h"
-#include "strings.h"
-#include "metadata_sql.h"
 #include <time.h>
 #include <stdarg.h>
 #include <stdio.h>
 #include <sstream>
 #include <strings.h>
+#include "funcs.h"
+#include "strings.h"
+#include "metadata_sql.h"
 
 /** @defgroup MetaData Metadata Stuff
  * @ingroup DataLibrary

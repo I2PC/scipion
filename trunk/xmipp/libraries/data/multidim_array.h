@@ -27,15 +27,15 @@
 #define MULTIDIM_ARRAY_H
 
 #include <typeinfo>
-
+#include <sys/mman.h>
+#include <fcntl.h>
+#include <unistd.h>
 #include "funcs.h"
 #include "error.h"
 #include "args.h"
 #include "matrix1d.h"
 #include "matrix2d.h"
-#include <sys/mman.h>
-#include <fcntl.h>
-#include <unistd.h>
+
 
 extern int bestPrecision(float F, int _width);
 extern String floatToString(float F, int _width, int _prec);
