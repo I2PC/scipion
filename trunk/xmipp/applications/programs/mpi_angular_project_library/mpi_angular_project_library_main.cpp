@@ -363,7 +363,7 @@ public:
                 MetaData  mySF;
                 FileName fn_temp;
 
-                int myCounter=-1;
+                size_t myCounter = 0;
                 size_t id;
 
                 for (int mypsi=0;mypsi<360;mypsi += psi_sampling)
