@@ -61,6 +61,8 @@ protected:
         addUsageLine("different sign, then only a histogram shift is done. If parameter --depth is not passed, then ");
         addUsageLine("bit_depth is automatically chosen equal to or higher than input bit_depth. For stack output format, ");
         addUsageLine("a selection file with the images in the stack is optionally created, replicating the labels of the input sel file.");
+        addUsageLine("If output file extension is not set when --oroot is used (neither setting --oext nor :ext), then input format is chosen.");
+        addKeywords("conversion, convert, image, stack, volume, format, extension ");
         //Parameters
         addParamsLine("  [--oext <extension=\"\">] :  Output file format extension.");
         addWhereImageFormat("extension");
@@ -70,10 +72,6 @@ protected:
         addParamsLine("          vol : Volume");
         addParamsLine("          stk : Stack ");
         addParamsLine("  alias -t;");
-        addParamsLine("  [--selfile_stack]    : Create a selfile with the images of the output stack.");
-        addParamsLine("  alias -s;");
-        addParamsLine("  [--append]           : Append the input to the output stack instead of overwrite it.");
-        addParamsLine("  alias -a;");
         addParamsLine("  [--depth+ <bit_depth=default>] : Image bit depth.");
         addParamsLine("          where <bit_depth>");
         addParamsLine("                 default: Default selected value (*).");
@@ -94,6 +92,11 @@ protected:
         addParamsLine("  alias -d;");
         addParamsLine("  [--rangeAdjust] : Adjust the histogram to fill the gray level range.");
         addParamsLine("  alias -r;");
+        addParamsLine("== Stack options == ");
+        addParamsLine("  [--selfile_stack]    : Create a selfile with the images of the output stack.");
+        addParamsLine("  alias -s;");
+        addParamsLine("  [--append]           : Append the input to the output stack instead of overwrite it.");
+        addParamsLine("  alias -a;");
 
         //Examples
         addExampleLine("Put a selection file into a stack:",false);
@@ -128,37 +131,26 @@ protected:
             oext = getParam("--oext",1);
 
         // Check output type and write mode
-        writeMode = WRITE_OVERWRITE;
 
         if (!checkParam("--type"))
         {
             if (fn_out.getExtension() == "vol" || oext == "vol")
                 type = "vol";
             else if (fn_out.getExtension() == "stk" || oext == "stk")
-            {
                 type = "stk";
-                writeMode = WRITE_APPEND;
-            }
         }
 
-        // Replace a single image in a stack
-        if (single_image && fn_out.isInStack())
+        if (single_image && fn_out.isInStack()) // Replace a single image in a stack
         {
             type == "img";
             writeMode = WRITE_REPLACE;
         }
-
-        if (checkParam("--depth"))
-        {
-            depth = getParam("--depth");
-            outDataT = datatypeString2Int((depth == "default")? "float": depth);
-            depth = "%"+depth;
-        }
+        else if (type == "stk")
+            writeMode = WRITE_APPEND;
         else
-        {
-            depth = "";
-            outDataT = Float;
-        }
+            writeMode = WRITE_OVERWRITE;
+
+        depth = (checkParam("--depth"))? "%" + (String)getParam("--depth") : "";
     }
 
     void preProcess()
@@ -177,7 +169,7 @@ protected:
 
             int Xdim, Ydim, Zdim;
             size_t Ndim;
-            ImgSize(mdIn, Xdim, Ydim, Zdim, Ndim);
+            ImgSize(mdIn, Xdim, Ydim, Zdim, Ndim, outDataT);
             if (Zdim!=1)
                 REPORT_ERROR(ERR_MULTIDIM_DIM,
                              "Only 2D images can be converted into volumes");
@@ -211,7 +203,7 @@ protected:
                     mdIn.setValue(MDL_ENABLED, 1, id);
                 }
                 imIn.read(fn_in, DATA, ALL_IMAGES, true);
-                imOut = new ImageGeneric(outDataT);
+                imOut = new ImageGeneric(imIn.getDatatype());
                 k = 0; // Reset to zero to select the slices when working with volumes
             }
         }

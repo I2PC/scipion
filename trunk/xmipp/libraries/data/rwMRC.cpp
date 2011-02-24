@@ -422,21 +422,28 @@ int ImageBase::writeMRC(size_t select_img, bool isStack, int mode, std::string b
             header->amean = (float)aux;
         if(MDMainHeader.getValue(MDL_STDDEV, aux))
             header->arms  = (float)aux;
-        if(MDMainHeader.getValue(MDL_SHIFTX, aux))
-            header->nxStart = (int)-(aux-0.5);
-        if(MDMainHeader.getValue(MDL_ORIGINX, aux) &&
-           MDMainHeader.getValue(MDL_SAMPLINGRATEX,aux2))//header is init to zero
-            header->xOrigin = (float)(aux*aux2);
-        if (MDMainHeader.getValue(MDL_SHIFTY, aux))
-            header->nyStart = (int)-(aux-0.5);
-        if (MDMainHeader.getValue(MDL_ORIGINY, aux) &&
-            MDMainHeader.getValue(MDL_SAMPLINGRATEY,aux2))//header is init to zero
-            header->yOrigin = (float)(aux*aux2);
-        if (MDMainHeader.getValue(MDL_SHIFTZ, aux))
-            header->nzStart = (int)-(aux-0.5);
-        if (MDMainHeader.getValue(MDL_ORIGINZ, aux) &&
-            MDMainHeader.getValue(MDL_SAMPLINGRATEZ,aux2))//header is init to zero
-            header->zOrigin = (float)(aux*aux2);
+
+        if ((dataMode == _HEADER_ALL || dataMode == _DATA_ALL))
+        {
+            if(MD[0].getValue(MDL_SHIFTX, aux))
+                header->nxStart = (int)-(aux-0.5);
+            if(MD[0].getValue(MDL_ORIGINX, aux) &&
+               MDMainHeader.getValue(MDL_SAMPLINGRATEX,aux2))//header is init to zero
+                header->xOrigin = (float)(aux*aux2);
+            if (MD[0].getValue(MDL_SHIFTY, aux))
+                header->nyStart = (int)-(aux-0.5);
+            if (MD[0].getValue(MDL_ORIGINY, aux) &&
+                MDMainHeader.getValue(MDL_SAMPLINGRATEY,aux2))//header is init to zero
+                header->yOrigin = (float)(aux*aux2);
+            if (MD[0].getValue(MDL_SHIFTZ, aux))
+                header->nzStart = (int)-(aux-0.5);
+            if (MD[0].getValue(MDL_ORIGINZ, aux) &&
+                MDMainHeader.getValue(MDL_SAMPLINGRATEZ,aux2))//header is init to zero
+                header->zOrigin = (float)(aux*aux2);
+        }
+        else
+            header->nxStart = header->xOrigin = header->nyStart = \
+                                                header->yOrigin = header->nzStart = header->zOrigin = 0;
     }
 
     header->nsymbt = 0;
@@ -454,20 +461,26 @@ int ImageBase::writeMRC(size_t select_img, bool isStack, int mode, std::string b
     printf("DEBUG rwMRC: Offset = %ld,  Datasize_n = %ld\n", offset, datasize_n);
 #endif
 
-    size_t imgStart = IMG_INDEX(select_img);
-    header->nz = replaceNsize;
+    size_t imgStart = 0;
 
-    if( mode == WRITE_APPEND )
+    if (isStack)
     {
-        imgStart = replaceNsize;
-        header->nz = replaceNsize + Ndim;
+        imgStart = IMG_INDEX(select_img);
+        header->nz = replaceNsize;
+
+
+        if( mode == WRITE_APPEND )
+        {
+            imgStart = replaceNsize;
+            header->nz = replaceNsize + Ndim;
+        }
+        else if( mode == WRITE_REPLACE && select_img + Ndim - 1 > replaceNsize)
+        {
+            header->nz = select_img + Ndim - 1;
+        }
+        else if (Ndim > replaceNsize)
+            header->nz = Ndim;
     }
-    else if( mode == WRITE_REPLACE && select_img + Ndim - 1 > replaceNsize)
-    {
-        header->nz = select_img + Ndim - 1;
-    }
-    else if (Ndim > replaceNsize)
-        header->nz = Ndim;
 
     //locking
     struct flock fl;
@@ -484,16 +497,18 @@ int ImageBase::writeMRC(size_t select_img, bool isStack, int mode, std::string b
     fcntl(fileno(fimg), F_SETLKW, &fl); /* locked */
 
     // Write header when needed
-    if(replaceNsize < header->nz)
+    if(!isStack || replaceNsize < header->nz)
         fwrite( header, MRCSIZE, 1, fimg );
     freeMemory(header, sizeof(MRChead) );
 
     // Jump to the selected imgStart position
     fseek( fimg,offset + (datasize)*imgStart, SEEK_SET);
 
-    for ( size_t i = 0; i < Ndim; i++ )
+    size_t imgEnd = (isStack)? Ndim : 1;
+
+    for ( size_t i = 0; i < imgEnd; i++ )
     {
-      // If to also write the image data or jump its size
+        // If to also write the image data or jump its size
         if (dataMode >= DATA)
         {
             if (mmapOnWrite && Ndim == 1) // Can map one image at a time only
