@@ -67,13 +67,13 @@ void normalize_OldXmipp_decomposition(MultidimArray<double> &I, const MultidimAr
 
 //#define DEBUG
 void normalize_tomography(MultidimArray<double> &I, double tilt, double &mui,
-                          double &sigmai, bool tiltMask, bool tomography0, double mu0, double sigma0)
+                          double &sigmai, bool tiltMask, bool tomography0,
+                          double mu0, double sigma0)
 {
     // Tilt series are always 2D
     I.checkDimension(2);
 
     const int L=2;
-    double Npiece=(2*L+1)*(2*L+1);
 
     // Build a mask using the tilt angle
     I.setXmippOrigin();
@@ -82,10 +82,10 @@ void normalize_tomography(MultidimArray<double> &I, double tilt, double &mui,
     int Xdimtilt=XMIPP_MIN(FLOOR(0.5*(XSIZE(I)*cos(DEG2RAD(tilt)))),
                            0.5*(XSIZE(I)-(2*L+1)));
     double N=0;
-    for (int i=STARTINGY(I)+L; i<=FINISHINGY(I)-L; i++)
-        for (int j=-Xdimtilt+L; j<=Xdimtilt-L;j++)
+    for (int i=STARTINGY(I); i<=FINISHINGY(I); i++)
+        for (int j=-Xdimtilt; j<=Xdimtilt;j++)
         {
-            mask(i,j)=1;
+            A2D_ELEM(mask,i,j)=1;
             N++;
         }
 
@@ -93,82 +93,120 @@ void normalize_tomography(MultidimArray<double> &I, double tilt, double &mui,
     MultidimArray<double> localVariance;
     localVariance.initZeros(I);
     double meanVariance=0;
-    FOR_ALL_ELEMENTS_IN_ARRAY2D(mask)
+    FOR_ALL_ELEMENTS_IN_ARRAY2D(I)
     {
-        if (mask(i,j)==0)
-            continue;
         // Center a mask of size 5x5 and estimate the variance within the mask
         double meanPiece=0, variancePiece=0;
+        double Npiece=0;
         for (int ii=i-L; ii<=i+L; ii++)
             for (int jj=j-L; jj<=j+L; jj++)
             {
-                meanPiece+=I(ii,jj);
-                variancePiece+=I(ii,jj)*I(ii,jj);
+                if (INSIDE(I,ii,jj))
+                {
+                	double pixval=A2D_ELEM(I,ii,jj);
+                    meanPiece+=pixval;
+                    variancePiece+=pixval*pixval;
+                    ++Npiece;
+                }
             }
         meanPiece/=Npiece;
         variancePiece=variancePiece/(Npiece-1)-
                       Npiece/(Npiece-1)*meanPiece*meanPiece;
-        localVariance(i,j)=variancePiece;
+        A2D_ELEM(localVariance,i,j)=variancePiece;
         meanVariance+=variancePiece;
     }
-    meanVariance/=N;
+    meanVariance*=1.0/N;
 
     // Test the hypothesis that the variance in this piece is
     // the same as the variance in the whole image
     double iFu=1/icdf_FSnedecor(4*L*L+4*L,N-1,0.975);
     double iFl=1/icdf_FSnedecor(4*L*L+4*L,N-1,0.025);
+    double iMeanVariance=1.0/meanVariance;
     FOR_ALL_ELEMENTS_IN_ARRAY2D(localVariance)
     {
-        if (localVariance(i,j)==0)
-            mask(i,j)=0;
-        else
+        if (A2D_ELEM(localVariance,i,j)==0)
+            A2D_ELEM(mask,i,j)=-2;
+        if (A2D_ELEM(mask,i,j)==1)
         {
-            double ratio=localVariance(i,j)/meanVariance;
+            double ratio=A2D_ELEM(localVariance,i,j)*iMeanVariance;
             double thl=ratio*iFu;
             double thu=ratio*iFl;
             if (thl>1 || thu<1)
-                mask(i,j)=0;
+                A2D_ELEM(mask,i,j)=-1;
         }
     }
 #ifdef DEBUG
     Image<double> save;
     save()=I;
     save.write("PPP.xmp");
+    save()=localVariance;
+    save.write("PPPLocalVariance.xmp");
     Image<int> savemask;
     savemask()=mask;
     savemask.write("PPPmask.xmp");
-    std::cout << "Press any key\n";
-    char c;
-    std::cin >> c;
 #endif
 
     // Compute the statistics again in the reduced mask
     double avg, stddev, min, max;
     computeStats_within_binary_mask(mask, I, min, max, avg, stddev);
     double cosTilt=cos(DEG2RAD(tilt));
+    double iCosTilt=1.0/cosTilt;
     if (tomography0)
     {
-        double adjustedStddev=sigma0*cosTilt;
+        double iadjustedStddev=1.0/(sigma0*cosTilt);
         FOR_ALL_ELEMENTS_IN_ARRAY2D(I)
-        if (!tiltMask || ABS(j)<Xdimtilt)
-            I(i,j)=(I(i,j)/cosTilt-mu0)/adjustedStddev;
-        else if (tiltMask)
-            I(i,j)=0;
+        switch (A2D_ELEM(mask,i,j))
+        {
+        case -2:
+            A2D_ELEM(I,i,j)=0;
+            break;
+        case 0:
+            if (tiltMask)
+                A2D_ELEM(I,i,j)=0;
+            else
+                A2D_ELEM(I,i,j)=(A2D_ELEM(I,i,j)*iCosTilt-mu0)*iadjustedStddev;
+            break;
+        case -1:
+        case 1:
+            A2D_ELEM(I,i,j)=(A2D_ELEM(I,i,j)*iCosTilt-mu0)*iadjustedStddev;
+            break;
+        }
     }
     else
     {
         double adjustedStddev=sqrt(meanVariance)*cosTilt;
         adjustedStddev=stddev*cosTilt;
+        double iAdjustedStddev=1.0/adjustedStddev;
         FOR_ALL_ELEMENTS_IN_ARRAY2D(I)
-        if (!tiltMask || ABS(j)<Xdimtilt)
-            I(i,j)=(I(i,j)-avg)/adjustedStddev;
-        else if (tiltMask)
-            I(i,j)=0;
+        switch (A2D_ELEM(mask,i,j))
+        {
+        case -2:
+            A2D_ELEM(I,i,j)=0;
+            break;
+        case 0:
+            if (tiltMask)
+                A2D_ELEM(I,i,j)=0;
+            else
+                A2D_ELEM(I,i,j)=(A2D_ELEM(I,i,j)-avg)*iAdjustedStddev;
+            break;
+        case -1:
+        case 1:
+            A2D_ELEM(I,i,j)=(A2D_ELEM(I,i,j)-avg)*iAdjustedStddev;
+            break;
+        }
     }
 
     // Prepare values for returning
     mui=avg;
     sigmai=sqrt(meanVariance);
+#ifdef DEBUG
+
+    save()=I;
+    save.write("PPPafter.xmp");
+    std::cout << "Press any key\n";
+    char c;
+    std::cin >> c;
+#endif
 }
 #undef DEBUG
 
@@ -196,8 +234,9 @@ void normalize_NewXmipp(MultidimArray<double> &I, const MultidimArray<int> &bg_m
     double avgbg, stddevbg, minbg, maxbg;
     computeStats_within_binary_mask(bg_mask, I, minbg, maxbg, avgbg,
                                     stddevbg);
-    I -= avgbg;
-    I /= stddevbg;
+    double istddevbg=1.0/stddevbg;
+    FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(I)
+    DIRECT_MULTIDIM_ELEM(I,n)=(DIRECT_MULTIDIM_ELEM(I,n)-avgbg)*istddevbg;
 }
 
 void normalize_NewXmipp2(MultidimArray<double> &I, const MultidimArray<int> &bg_mask)
@@ -207,8 +246,9 @@ void normalize_NewXmipp2(MultidimArray<double> &I, const MultidimArray<int> &bg_
     I.computeStats(avg, stddev, min, max);
     computeStats_within_binary_mask(bg_mask, I, minbg, maxbg, avgbg,
                                     stddevbg);
-    I -= avgbg;
-    I /= ABS(avg - avgbg);
+    double K=1.0/ABS(avg - avgbg);
+    FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(I)
+    DIRECT_MULTIDIM_ELEM(I,n)=(DIRECT_MULTIDIM_ELEM(I,n)-avgbg)*K;
 }
 
 void normalize_ramp(MultidimArray<double> &I, const MultidimArray<int> &bg_mask)
@@ -332,7 +372,7 @@ void normalize_remove_neighbours(MultidimArray<double> &I,
 void ProgNormalize::defineParams()
 {
     each_image_produces_an_output = true;
-    apply_geo = true;
+    allow_apply_geo=true;
     addUsageLine("Change the range of intensity values of pixels.");
     addKeywords("mask,normalization");
     XmippMetadataProgram::defineParams();
@@ -438,8 +478,6 @@ void ProgNormalize::readParams()
                 REPORT_ERROR(ERR_VALUE_INCORRECT, "Normalize: Unknown background mode");
         }
     }
-    else
-        apply_geo = false;
 
     if (method == RANDOM)
     {
@@ -617,9 +655,9 @@ void ProgNormalize::processImage(const FileName &fnImg, const FileName &fnImgOut
 {
     Image<double> I;
     if (apply_geo)
-    	I.readApplyGeo(fnImg, mdIn, objId);
+        I.readApplyGeo(fnImg, mdIn, objId);
     else
-    	I.read(fnImg);
+        I.read(fnImg);
     I().setXmippOrigin();
 
     MultidimArray<double> &img=I();
