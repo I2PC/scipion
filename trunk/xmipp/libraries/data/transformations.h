@@ -863,6 +863,7 @@ void selfRotate(int SplineDegree,
                 bool wrap = DONT_WRAP, T outside = 0)
 {
     MultidimArray<T> aux = V1;
+    V1.initZeros();
     rotate(SplineDegree, V1, aux, ang, axis, wrap, outside);
 }
 
@@ -907,6 +908,7 @@ void selfTranslate(int SplineDegree,
                    bool wrap = WRAP, T outside = 0)
 {
     MultidimArray<T> aux = V1;
+    V1.initZeros();
     translate(SplineDegree, V1, aux, v, wrap, outside);
 }
 
@@ -941,6 +943,7 @@ void selfTranslateCenterOfMassToCenter(int SplineDegree,
                                        bool wrap = WRAP)
 {
     MultidimArray<T> aux = V1;
+    V1.initZeros();
     translateCenterOfMassToCenter(SplineDegree, V1, aux, wrap);
 }
 
@@ -1023,6 +1026,7 @@ void selfScaleToSize(int SplineDegree,
                      int Xdim, int Ydim, int Zdim = 1)
 {
     MultidimArray<T> aux = V1;
+    V1.initZeros();
     scaleToSize(SplineDegree, V1, aux, Xdim, Ydim, Zdim);
 }
 
@@ -1069,6 +1073,7 @@ void selfPyramidReduce(int SplineDegree,
                        int levels = 1)
 {
     MultidimArray<T> aux = V1;
+    V1.initZeros();
     pyramidReduce(SplineDegree, V1, aux, levels);
 }
 
@@ -1105,6 +1110,7 @@ void selfPyramidExpand(int SplineDegree,
                        int levels = 1)
 {
     MultidimArray<T> aux = V1;
+    V1.initZeros();
     pyramidExpand(SplineDegree, V1, aux, levels);
 }
 
