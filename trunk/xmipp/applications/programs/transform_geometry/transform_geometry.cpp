@@ -25,7 +25,7 @@
  *  e-mail address 'xmipp@cnb.csic.es'
  ***************************************************************************/
 
-#include <data/image.h>
+#include <data/image_generic.h>
 #include <data/args.h>
 #include <data/metadata.h>
 #include <data/metadata_extension.h>
@@ -40,15 +40,18 @@ class ProgTransformGeometry: public XmippMetadataProgram
 {
 protected:
     int             zdim, ydim, xdim, splineDegree, dim;
+    size_t          ndim;
     bool            applyTransform, inverse, wrap, doResize, isVol, flip;
     Matrix2D<double> R, T, S, A, B;
     Matrix1D<double>          shiftV, rotV, scaleV;
     MDRow            input, transformation;
-    Image<double> img, imgOut;
+    ImageGeneric img, imgOut;
+    bool          output_is_stack;
 
     void defineParams()
     {
         each_image_produces_an_output = true;
+        save_metadata_stack = true;
         XmippMetadataProgram::defineParams();
         //usage
         addUsageLine("Apply geometric transformations to images.");
@@ -107,13 +110,13 @@ protected:
 
         }
         flip = checkParam("--flip");
+        output_is_stack = (!checkParam("--oroot") && checkParam("-o")) ? true : input_is_stack;
     }
 
 
     void preProcess()
     {
-        size_t n;
-        ImgSize(mdIn, xdim, ydim , zdim, n);
+        ImgSize(mdIn, xdim, ydim , zdim, ndim);
         //If zdim greater than 1, is a volume and should apply transform
         dim = (isVol = (zdim > 1)) ? 3 : 2;
         //Check that fourier interpolation is only for scale in 2d
@@ -127,7 +130,6 @@ protected:
         T.initIdentity(dim + 1);
         A.initIdentity(dim + 1);
 
-        imgOut().resizeNoCopy(zdim, ydim, xdim);
         scaleV.resizeNoCopy(dim);
         shiftV.resizeNoCopy(dim);
         rotV.resizeNoCopy(dim);
@@ -202,7 +204,6 @@ protected:
                     zdim = STR_EQUAL(getParam("--scale", 3), "x") ? xdim : getIntParam("--scale", 3);
                     ZZ(scaleV) = (double)zdim / ozdim;
                 }
-                imgOut().resizeNoCopy(zdim, ydim, xdim);
             }
             else //scale factor case
             {
@@ -229,13 +230,12 @@ protected:
             MAT_ELEM(A, 0, 1) *= -1.;
         }
         if (inverse)
-          A = A.inv();
+            A = A.inv();
     }
 
     void processImage(const FileName &fnImg, const FileName &fnImgOut, size_t objId)
     {
-        img.read(fnImg); //Doesn't apply geo to work with original images
-        img().setXmippOrigin();
+
         B.initIdentity(dim + 1);
 
         if (!isVol)
@@ -245,27 +245,38 @@ protected:
         }
 
         T = A * B;
+
         if (checkParam("--write_matrix"))
             std::cout << T << std::endl;
 
+        if (applyTransform || fnImg != fnImgOut)
+        {
+            img.read(fnImg);
+            img().setXmippOrigin();
+        }
+
         if (applyTransform)
         {
-            applyGeometry(splineDegree, imgOut(), img(), T, IS_NOT_INV, wrap);
+            imgOut.setDatatype(img.getDatatype());
+            imgOut.mapFile2Write(xdim, ydim, zdim, 1, fnImgOut, fnImg == fnImgOut);
+            imgOut().setXmippOrigin();
+            applyGeometry(splineDegree, imgOut(), img(), T, IS_NOT_INV, wrap, 0.);
+            imgOut.write();
         }
         else
         {
             transformationMatrix2Geo(T, input);
             input.setValue(MDL_IMAGE, fnImgOut);
             mdOut.setRow(input, newId);
-            imgOut() = img();
+            if (fnImg != fnImgOut )
+                img.write(fnImgOut);
         }
-        imgOut.write(fnImgOut);
     }
 
 public:
     /** Constructor */
     ProgTransformGeometry()
-{}
+    {}
 }
 ; //end of class ProgScale
 
@@ -274,8 +285,6 @@ int main(int argc, char **argv)
 {
     ProgTransformGeometry program;
     program.read(argc, argv);
-    program.tryRun();
-
-    return 0;
+    return program.tryRun();
 } //main
 
