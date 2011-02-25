@@ -80,8 +80,24 @@ void ImageBase::mapFile2Write(int Xdim, int Ydim, int Zdim, size_t Ndim, const F
     else
         fnToOpen=_filename;
 
-    ImageFHandler *hFile = openFile(fnToOpen, WRITE_REPLACE);
-    _write(filename, hFile, ALL_IMAGES, false, WRITE_REPLACE);
+    /* If the filename is in stack we will suppose you want to write this,
+     * even if you have not set the flags to.
+     */
+    WriteMode mode;
+    bool isStack;
+    if ( filename.isInStack())
+    {
+        isStack = true;
+        mode = WRITE_REPLACE;
+    }
+    else
+    {
+        isStack = false;
+        mode = WRITE_OVERWRITE;
+    }
+
+    ImageFHandler *hFile = openFile(fnToOpen, mode);
+    _write(filename, hFile, ALL_IMAGES, isStack, mode);
     closeFile(hFile);
 }
 
