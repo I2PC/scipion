@@ -1,6 +1,6 @@
 /***************************************************************************
- * Authors:     roberto marabini roberto@cnb.csic.es
- *
+ * Authors:     Roberto Marabini roberto@cnb.csic.es
+ *              J.M. de la Rosa  jmdelarosa@cnb.csic.es
  *
  * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
  *
@@ -32,82 +32,120 @@
 #include <iostream>
 #include <fstream>
 
+
+typedef enum { UNIFORM, GAUSSIAN, STUDENT } RandMode;
+
+/** MDGenerator to generate random values */
+class MDRandGenerator: public MDValueGenerator
+{
+protected:
+    double op1, op2, op3;
+    RandMode mode;
+
+    inline double getRandValue()
+    {
+        switch (mode)
+        {
+        case UNIFORM:
+            return rnd_unif(op1, op2);
+        case GAUSSIAN:
+            return rnd_gaus(op1, op2);
+        case STUDENT:
+            return rnd_student_t(op3, op1, op2);
+        }
+    }
+public:
+    MDRandGenerator(MDLabel label, double op1, double op2, const String &mode, double op3=0.):MDValueGenerator(label)
+    {
+        this->op1 = op1;
+        this->op2 = op2;
+        this->op3 = op3;
+        if (mode == "uniform")
+          this->mode = UNIFORM;
+        else if (mode == "gaussian")
+          this->mode = GAUSSIAN;
+        else if (mode == "student")
+            this->mode = STUDENT;
+        else
+          REPORT_ERROR(ERR_PARAM_INCORRECT, formatString("Unknown random type '%s'", mode.c_str()));
+
+    }
+
+    virtual bool fillValue(MetaData &md, size_t objId)
+    {
+        double aux = getRandValue();
+        md.setValue(label, aux, objId);
+    }
+
+}
+;//end of class MDRandGenerator
+
+
 class ProgMetadataUtilities: public XmippProgram
 {
 private:
-
     WriteModeMetaData mode;
+    FileName fn_in, fn_out, fn_md2;
+    MetaData mdIn, md2;
+    MDLabel label;
+    String operation;
+
 protected:
     void defineParams()
     {
-        addUsageLine ("Perform several operation over the metadata files");
+        addUsageLine ("Perform several operation over the metadata files.");
+        addUsageLine ("If the -o option is not used, the original metadata");
+        addUsageLine ("will be modified.");
 
-        addParamsLine("  [--label <l1> ]                 : metadata label");
-        addParamsLine("     alias -l;");
+        addParamsLine(" -i <metadata>                          : Input metadata file");
+        addParamsLine("   [-o  <metadata>]                    : Output metadata file, if not provided result will be printed on screen");
 
+        addParamsLine("  --set <set_operation> <label=image>    : Set operations");
+        addParamsLine("         where <set_operation>");
+        addParamsLine("   union  <md2>             : Union with metadata md2");
+        addParamsLine("   intersection <md2>       : Intersection with metadata md2");
+        addParamsLine("   subtraction <md2>        : Subtraction with metadata md2");
+        addParamsLine("   join <md2>               : Inner join with md2 using label l1");
+        addParamsLine("   merge <md2>              : Merge columns with md2, label is ignored");
+        addParamsLine("                            : Both metadatas should have same size, and elements should be in same order,");
+        addParamsLine("                            : if not, you should use 'join' instead, but this constrain having a common label");
+        addParamsLine("   sort                     : Sort metadata using label l1");
+        addParamsLine("                            : for sorting according to a component of a vector label");
+        addParamsLine("                            : use label:col, e.g., NMADisplacements:0");
+        addParamsLine("                            : The first column is column number 0");
+        addParamsLine("           alias -s;                                             ");
+
+        addParamsLine("or --operate <operation>     : Operations on the metadata structure");
+        addParamsLine("         where <operation>");
+        addParamsLine("    add_column <label>                 : Add some column(label list) to metadata");
+        addParamsLine("    drop_column <label>                : Drop some columns(label list) from metadata");
+        addParamsLine("    modify <expression>                : Use an SQLite expression to modify the metadata");
+        addParamsLine("                                       : This option requires knowledge of basic SQL syntax(more specific SQLite");
+
+        addParamsLine("or  --file <file_operation>     : File operations");
+        addParamsLine("         where <file_operation>");
+        addParamsLine("   copy <directory> <label=image>  : Copy files in metadata md1 to directory path (file names at label column)");
+        addParamsLine("   move <directory>  <label=image> : Move files in metadata md1 to directory path (file names at label column)");
+        addParamsLine("   delete  <label=image>      : Delete files in metadata md1 (file names at label column)");
+        addParamsLine("   convert2db                 : Convert metadata to sqlite database");
+
+        addParamsLine("or --query <query_operation>   : Query operations");
+        addParamsLine("         where <query_operation>");
+        addParamsLine("   select <exp>               : Create new metadata with those entries that satisfy the expression 'exp'");
+        addParamsLine("   count  <label> <value>     : for each value of a given label create new metadata with the number of times the value appears");
+        addParamsLine("   size                       : print Metadata size");
+
+        addParamsLine("or --fill <label> <fill_mode>                  : Fill a column values(should be numeric)");
+        addParamsLine("   where <fill_mode>");
+        addParamsLine("     constant  <value>                        : Fill with a constant value");
+        addParamsLine("     rand_uniform  <a=0.> <b=1.>              : Follow a uniform distribution between a and b");
+        addParamsLine("     rand_gaussian <mean=0.> <stddev=1.>      : Follow a gaussian distribution with mean and stddev");
+        addParamsLine("     rand_student  <mean=0.> <stddev=1.> <df=3.> : Follow a student distribution with mean, stddev and df degrees of freedom.");
+        addParamsLine("     metadata                                  : Treat the column as the filename of an row metadata and expand values");
         addParamsLine(" [--mode+ <mode=overwrite>]   : Metadata writing mode.");
         addParamsLine("    where <mode>");
         addParamsLine("     overwrite   : Replace the content of the file with the Metadata");
         addParamsLine("     append      : Write the Metadata as a new block, removing the old one");
-
-        addParamsLine("  [--expression <e1> ]                 : constrain applied in select");
-        addParamsLine("     alias -e;");
-
-        addParamsLine("   [-o  <md>]                          : Name of output metadata file");
-
-        addParamsLine("   --union  <md11> <md22>             : union of metadata files md1 and md2");
-        addParamsLine("     alias -u;");
-        addParamsLine("           requires --label, -o;                                                         ");
-
-        addParamsLine("or --intersection <md11> <md22>        : Intersection of md1 and md2");
-        addParamsLine("     alias -i;");
-        addParamsLine("           requires --label, -o;                                                         ");
-
-        addParamsLine("or --subtraction <md11> <md22>         : subtraction of md1 and md2");
-        addParamsLine("     alias -s;");
-        addParamsLine("           requires --label, -o;                                                         ");
-
-        addParamsLine("or --join <md11> <md22>                : inner join of md1 and md2 using label l1");
-        addParamsLine("     alias -j;");
-        addParamsLine("           requires --label, -o;                                                         ");
-
-        addParamsLine("or --sort <md11>                      : sort metadata md1 using label l1");
-        addParamsLine("                                     : for sorting according to a component of a vector label");
-        addParamsLine("                                     : use label:col, e.g., NMADisplacements:0");
-        addParamsLine("                                     : The first column is column number 0");
-        addParamsLine("           requires --label, -o;                                                         ");
-
-        addParamsLine("or --addColumn <md11>                 : add column to metadata md1 using label l1");
-        addParamsLine("           requires --label, -o;                                                         ");
-
-
-        addParamsLine("or --convert2db <md11>                : convert metadata to sqlite database");
-
-        addParamsLine("or --copy  <md11> <path>               : copy files in metadata md1 to directory path (file names at lable column)");
-        addParamsLine("           requires --label, -o;                                                         ");
-
-        addParamsLine("or --move  <md11> <path>               : move files in metadata md1 to directory path (file names at lable column)");
-        addParamsLine("           requires --label, -o;                                                         ");
-
-        addParamsLine("or --delete  <md11>                    : delete files in metadata md1 (file names at label column)");
-        addParamsLine("           requires --label;                                                         ");
-
-        addParamsLine("or --select  <md11> <exp>       : create new metadata with those entries that satisfy the expression 'exp'");
-        addParamsLine("           requires -o;                                                         ");
-
-        addParamsLine("or --count  <md11>              : for each value of a given label create new metadata with the number of times the value appears");
-        addParamsLine("           requires --label, -o;                                                         ");
-
-        addParamsLine("or --size  <md11>              : metadata size");
-
-        addParamsLine("or --randValues  <md11> <rand_mode> : randomize double values of a label column (and creates a new metadata)");
-        addParamsLine("   where <rand_mode>");
-        addParamsLine("     uniform  <op1=0.> <op2=1.>          : Follow a uniform distribution between op1 and op2");
-        addParamsLine("       requires --label, -o;");
-        addParamsLine("     gaussian <op1=0.> <op2=1.>          : Follow a gaussian distribution with mean=op1 and stddev=op2");
-        addParamsLine("       requires --label, -o;");
-        addParamsLine("     student  <op1=0.> <op2=1.> <op3=3.> : Follow a student distribution with mean=op1, stddev=op2 and op3 degrees of freedom.");
-        addParamsLine("       requires --label, -o;");
 
         addExampleLine(" Concatenate two metadatas.", false);
         addExampleLine ("   xmipp_metadata_utilities --union         mD1.doc mD2.doc  -o out.doc --label image");
@@ -137,336 +175,235 @@ protected:
         addExampleLine ("   xmipp_metadata_utilities --randValues mD1.doc gaussian 0. 0.15 -o out.doc --label scale");
 
     }
-    typedef enum {
-        _unknown=0,
-        _union=1,
-        _intersection=2,
-        _subtraction=3,
-        _join=4,
-        _copy=5,
-        _move=6,
-        _delete=7,
-        _select=8,
-        _sort=9,
-        _convert2db=10,
-        _count=11,
-        _size=12,
-        _randValues=13,
-        _addColumn=14
-    } OperationType;
-    OperationType operationType;
-    MetaData inMD1, inMD2, outMD;
-    FileName inFileName1, inFileName2, outFileName, tmpFileName;
-    std::string _label;
-    std::string expression;
-    double min,max;
-
-    double rand_op1, rand_op2, rand_op3;
-    std::string randMode;
-
-    void encode(const char * s)
-    {
-        operationType = _unknown;
-
-        if (strcmp(s,"union") == 0)
-            operationType = _union;
-
-        else if (strcmp(s,"intersection") == 0)
-            operationType = _intersection;
-
-        else if (strcmp(s,"subtraction") == 0)
-            operationType = _subtraction;
-
-        else if (strcmp(s,"join") == 0)
-            operationType = _join;
-
-        else if (strcmp(s,"copy") == 0)
-            operationType = _copy;
-
-        else if (strcmp(s,"move") == 0)
-            operationType = _move;
-
-        else if (strcmp(s,"delete") == 0)
-            operationType = _delete;
-
-        else if (strcmp(s,"select") == 0)
-            operationType = _select;
-
-        else if (strcmp(s,"sort") == 0)
-            operationType = _sort;
-
-        else if (strcmp(s,"addColumn") == 0)
-            operationType = _addColumn;
-
-        else if (strcmp(s,"convert2db") == 0)
-            operationType = _convert2db;
-
-        else if (strcmp(s,"count") == 0)
-            operationType = _count;
-
-        else if (strcmp(s,"size") == 0)
-            operationType = _size;
-
-        else if (strcmp(s,"randValues") == 0)
-            operationType = _randValues;
-    }
 
     void readParams()
     {
-        if (checkParam("-o"))
-            outFileName = getParam("-o");
-        if (checkParam("--label"))
-            _label = getParam("--label");
-        mode = metadataModeConvert(getParam("--mode"));
-
-        if (checkParam("--union"))
-        {
-            encode("union");
-            inFileName1 = getParam("--union",0);
-            inFileName2 = getParam("--union",1);
-        }
-
-        else if (checkParam("--intersection"))
-        {
-            encode("intersection");
-            inFileName1 = getParam("--intersection",0);
-            inFileName2 = getParam("--intersection",1);
-        }
-
-        else if (checkParam("--subtraction"))
-        {
-            encode("subtraction");
-            inFileName1 = getParam("--subtraction",0);
-            inFileName2 = getParam("--subtraction",1);
-        }
-
-        else if (checkParam("--join"))
-        {
-            encode("join");
-            inFileName1 = getParam("--join",0);
-            inFileName2 = getParam("--join",1);
-        }
-
-        else if (checkParam("--sort"))
-        {
-            encode("sort");
-            inFileName1  = getParam("--sort",0);
-            outFileName  = getParam("-o");
-        }
-
-        else if (checkParam("--addColumn"))
-        {
-            encode("addColumn");
-            inFileName1  = getParam("--addColumn",0);
-            outFileName  = getParam("-o");
-        }
-
-        else if (checkParam("--convert2db"))
-        {
-            encode("convert2db");
-            inFileName1 = getParam("--convert2db",0);
-        }
-
-        else if (checkParam("--move"))
-        {
-            encode("move");
-            inFileName1 = getParam("--move",0);
-            tmpFileName = getParam("--move",1);
-        }
-
-        else if (checkParam("--copy"))
-        {
-            encode("copy");
-            inFileName1 = getParam("--copy",0);
-            tmpFileName = getParam("--copy",1);
-        }
-
-        else if (checkParam("--delete"))
-        {
-            encode("delete");
-            inFileName1 = getParam("--delete",0);
-        }
-
-        else if (checkParam("--select"))
-        {
-            encode("select");
-            inFileName1 = getParam("--select",0);
-            expression = getParam("--select",1);
-        }
-
-        else if (checkParam("--count"))
-        {
-            encode("count");
-            inFileName1 = getParam("--count",0);
-            outFileName  = getParam("-o");
-        }
-        else if (checkParam("--size"))
-        {
-            encode("size");
-            inFileName1 = getParam("--size",0);
-        }
-        else if (checkParam("--randValues"))
-        {
-            encode("randValues");
-            inFileName1 = getParam("--randValues",0);
-            randMode = getParam("--randValues",1);
-
-            if (randMode == "uniform")
-            {
-                rand_op1 = getDoubleParam("--randValues","uniform",0);
-                rand_op2 = getDoubleParam("--randValues","uniform",1);
-                rand_op3 = 0.;
-            }
-            else if (randMode == "gaussian")
-            {
-                rand_op1 = getDoubleParam("--randValues","gaussian",0);
-                rand_op2 = getDoubleParam("--randValues","gaussian",1);
-                rand_op3 = 0.;
-            }
-            else if (randMode == "student")
-            {
-                rand_op1 = getDoubleParam("--randValues","student",0);
-                rand_op2 = getDoubleParam("--randValues","student",1);
-                rand_op3 = getDoubleParam("--randValues","student",2);
-            }
-        }
+        fn_in = getParam("-i");
+        mdIn.read(fn_in);
+        fn_out = checkParam("-o") ? getParam("-o") : fn_in;
     }
+
+    void doSet()
+    {
+      operation = getParam("--set", 0);
+      int labelIndex = 1;
+      if (operation != "sort")
+      {
+          labelIndex = 2;
+          md2.read(getParam("--set", 1));
+      }
+      else
+          md2 = mdIn;
+      MDLabel label = MDL::str2Label(getParam("--set", labelIndex));
+      if (operation == "union")
+          mdIn.unionDistinct(md2, label);
+      else if (operation == "intersection")
+          mdIn.intersection(md2, label);
+      else if (operation == "subtraction")
+          mdIn.subtraction(md2, label);
+      else if (operation == "join")
+      {
+          MetaData md;
+          md.join(mdIn, md2, label);
+          mdIn = md;
+      }
+      else if (operation == "merge")
+          mdIn.merge(md2);
+      else if (operation == "sort")
+          mdIn.sort(md2, label);
+    }
+
+    void doOperate()
+    {
+      operation = getParam("--operate", 0);
+      if (operation == "add_column")
+          mdIn.addLabel(MDL::str2Label(getParam("--operate", 1)));
+      else if (operation == "drop_column")
+          REPORT_ERROR(ERR_DEBUG_TEST, "Drop column not yet implemented");
+      else if (operation == "modify")
+          mdIn.operate(getParam("--operate", 1));
+    }
+
+    void doFill()
+    {
+      String labelsStr = getParam("--fill", 0);
+      StringVector labels;
+      splitString(labelsStr, " ", labels);
+      if (labels.empty())
+        REPORT_ERROR(ERR_PARAM_INCORRECT, "You should provide at least one label to fill out");
+      operation = getParam("--fill", 1);
+      MDRandGenerator * generator;
+      if (operation == "constant")
+      {
+
+      }
+      else if (operation.find("rand_") == 0)
+      {
+          double op1 = getDoubleParam("--fill", 2);
+          double op2 = getDoubleParam("--fill", 3);
+          double op3 = 0.;
+          String type = findAndReplace(operation, "rand_", "");
+          if (type == "student")
+              op3 = getDoubleParam("--fill", 4);
+          generator = new MDRandGenerator(label, op1, op2, type, op3);
+      }
+      generator->fill(mdIn);
+
+      delete generator;
+    }
+
 public:
     void run()
     {
-        FileName inFnImg,outFnImg;
-        size_t id;
-
-        switch (operationType)
+        if (checkParam("--set"))
+          doSet();
+        else if (checkParam("--operate"))
+          doOperate();
+        else if (checkParam("--file"))
         {
-        case _union:
-            inMD1.read(inFileName1);
-            inMD2.read(inFileName2);
-            inMD1.unionDistinct(inMD2, MDL::str2Label(_label));
-            inMD1.write(outFileName,mode);
-            break;
-        case _intersection:
-            inMD1.read(inFileName1);
-            inMD2.read(inFileName2);
-            inMD1.intersection(inMD2, MDL::str2Label(_label));
-            inMD1.write(outFileName,mode);
-            break;
-        case _subtraction:
-            inMD1.read(inFileName1);
-            inMD2.read(inFileName2);
-            inMD1.subtraction(inMD2, MDL::str2Label(_label));
-            inMD1.write(outFileName,mode);
-            break;
-        case _sort:
-            inMD1.read(inFileName1);
-            outMD.sort(inMD1, _label);
-            outMD.write(outFileName,mode);
-            break;
-        case _addColumn:
-            inMD1.read(inFileName1);
-            inMD1.addLabel(MDL::str2Label(_label));
-            inMD1.write(outFileName,mode);
-            break;
-        case _join:
-            inMD1.read(inFileName1);
-            inMD2.read(inFileName2);
-            MDSql::dumpToFile("pp.db");
-            outMD.join(inMD1,inMD2, MDL::str2Label(_label));
-            outMD.write(outFileName,mode);
-            break;
-        case _copy:
-            inMD1.read(inFileName1);
-            //create dir
-            if (!exists(tmpFileName))
-                if (mkpath(tmpFileName, 0755) != 0)
-                    REPORT_ERROR(ERR_IO_NOPERM, "Run: Cannot create directory "+ tmpFileName);
-            FOR_ALL_OBJECTS_IN_METADATA(inMD1)
-            {
-                inMD1.getValue(MDL::str2Label(_label),inFnImg, __iter.objId);
-                outFnImg = inFnImg.removeDirectories();
-                id = outMD.addObject();
-                outMD.setValue(MDL::str2Label(_label),outFnImg, id);
-                outFnImg = tmpFileName + "/" + outFnImg;
-                inFnImg.copyFile(outFnImg);
-            }
-            outMD.write(tmpFileName+"/"+outFileName,mode);
-            break;
-        case _move:
-            inMD1.read(inFileName1);
-            //create dir
-            if (!exists(tmpFileName))
-                if (mkpath(tmpFileName, 0755) != 0)
-                    REPORT_ERROR(ERR_IO_NOPERM, "Run: Cannot create directory "+ tmpFileName);
-            FOR_ALL_OBJECTS_IN_METADATA(inMD1)
-            {
-                inMD1.getValue(MDL::str2Label(_label),inFnImg, __iter.objId);
-                outFnImg = inFnImg.removeDirectories();
-                id = outMD.addObject();
-                outMD.setValue(MDL::str2Label(_label),outFnImg, id);
-                outFnImg = tmpFileName + "/" + outFnImg;
-                rename(inFnImg.c_str(),outFnImg.c_str());
-            }
-            outMD.write(tmpFileName+"/"+outFileName,mode);
-            break;
-        case _delete:
-            inMD1.read(inFileName1);
-            FOR_ALL_OBJECTS_IN_METADATA(inMD1)
-            {
-                inMD1.getValue(MDL::str2Label(_label),inFnImg, __iter.objId);
-                remove(inFnImg.c_str());
-                std::cerr << "Remove file: " << inFnImg <<std::endl;
-            }
-            break;
-        case _select:
-            {
-                inMD1.read(inFileName1);
-                outMD.importObjects(inMD1, MDExpression(expression));
-                outMD.write(outFileName,mode);
-            }
-            break;
-        case _count:
-            {
-                inMD1.read(inFileName1);
-                outMD.aggregate(inMD1, AGGR_COUNT,MDL::str2Label(_label),MDL_CTFMODEL,MDL_COUNT);
-                outMD.write(outFileName,mode);
-            }
-            break;
-        case _size:
-            {
-                inMD1.read(inFileName1);
-                std::cout << inFileName1 + " size is: " << inMD1.size() << std::endl;
-            }
-            break;
-        case _convert2db:
-            {
-                inMD1.read(inFileName1);
-                MDSql::dumpToFile(outFileName);
-            }
-            break;
-
-        case _randValues:
-            {
-                inMD1.read(inFileName1);
-                randomize_random_generator();
-                outMD.randomizeDoubleValues(inMD1,MDL::str2Label(_label), rand_op1, rand_op2, randMode, rand_op3);
-                outMD.write(outFileName);
-            }
-            break;
-
-
-        default:
-            REPORT_ERROR(ERR_ARG_INCORRECT,"Unknown operation.");
         }
+        else if (checkParam("--query"))
+        {}
+
+        else if (checkParam("--fill"))
+          doFill();
+
+        if (!checkParam("-o"))
+            mdIn.write(std::cout);
+        else
+            mdIn.write(getParam("-o"));
+
     }
+    //        FileName inFnImg,outFnImg;
+    //        size_t id;
+    //
+    //        switch (operationType)
+    //        {
+    //        case _union:
+    //            inMD1.read(inFileName1);
+    //            inMD2.read(inFileName2);
+    //            inMD1.unionDistinct(inMD2, MDL::str2Label(_label));
+    //            inMD1.write(outFileName,mode);
+    //            break;
+    //        case _intersection:
+    //            inMD1.read(inFileName1);
+    //            inMD2.read(inFileName2);
+    //            inMD1.intersection(inMD2, MDL::str2Label(_label));
+    //            inMD1.write(outFileName,mode);
+    //            break;
+    //        case _subtraction:
+    //            inMD1.read(inFileName1);
+    //            inMD2.read(inFileName2);
+    //            inMD1.subtraction(inMD2, MDL::str2Label(_label));
+    //            inMD1.write(outFileName,mode);
+    //            break;
+    //        case _sort:
+    //            inMD1.read(inFileName1);
+    //            outMD.sort(inMD1, _label);
+    //            outMD.write(outFileName,mode);
+    //            break;
+    //        case _addColumn:
+    //            inMD1.read(inFileName1);
+    //            inMD1.addLabel(MDL::str2Label(_label));
+    //            inMD1.write(outFileName,mode);
+    //            break;
+    //        case _join:
+    //            inMD1.read(inFileName1);
+    //            inMD2.read(inFileName2);
+    //            MDSql::dumpToFile("pp.db");
+    //            outMD.join(inMD1,inMD2, MDL::str2Label(_label));
+    //            outMD.write(outFileName,mode);
+    //            break;
+    //        case _copy:
+    //            inMD1.read(inFileName1);
+    //            //create dir
+    //            if (!exists(tmpFileName))
+    //                if (mkpath(tmpFileName, 0755) != 0)
+    //                    REPORT_ERROR(ERR_IO_NOPERM, "Run: Cannot create directory "+ tmpFileName);
+    //            FOR_ALL_OBJECTS_IN_METADATA(inMD1)
+    //            {
+    //                inMD1.getValue(MDL::str2Label(_label),inFnImg, __iter.objId);
+    //                outFnImg = inFnImg.removeDirectories();
+    //                id = outMD.addObject();
+    //                outMD.setValue(MDL::str2Label(_label),outFnImg, id);
+    //                outFnImg = tmpFileName + "/" + outFnImg;
+    //                inFnImg.copyFile(outFnImg);
+    //            }
+    //            outMD.write(tmpFileName+"/"+outFileName,mode);
+    //            break;
+    //        case _move:
+    //            inMD1.read(inFileName1);
+    //            //create dir
+    //            if (!exists(tmpFileName))
+    //                if (mkpath(tmpFileName, 0755) != 0)
+    //                    REPORT_ERROR(ERR_IO_NOPERM, "Run: Cannot create directory "+ tmpFileName);
+    //            FOR_ALL_OBJECTS_IN_METADATA(inMD1)
+    //            {
+    //                inMD1.getValue(MDL::str2Label(_label),inFnImg, __iter.objId);
+    //                outFnImg = inFnImg.removeDirectories();
+    //                id = outMD.addObject();
+    //                outMD.setValue(MDL::str2Label(_label),outFnImg, id);
+    //                outFnImg = tmpFileName + "/" + outFnImg;
+    //                rename(inFnImg.c_str(),outFnImg.c_str());
+    //            }
+    //            outMD.write(tmpFileName+"/"+outFileName,mode);
+    //            break;
+    //        case _delete:
+    //            inMD1.read(inFileName1);
+    //            FOR_ALL_OBJECTS_IN_METADATA(inMD1)
+    //            {
+    //                inMD1.getValue(MDL::str2Label(_label),inFnImg, __iter.objId);
+    //                remove(inFnImg.c_str());
+    //                std::cerr << "Remove file: " << inFnImg <<std::endl;
+    //            }
+    //            break;
+    //        case _select:
+    //            {
+    //                inMD1.read(inFileName1);
+    //                outMD.importObjects(inMD1, MDExpression(expression));
+    //                outMD.write(outFileName,mode);
+    //            }
+    //            break;
+    //        case _count:
+    //            {
+    //                inMD1.read(inFileName1);
+    //                outMD.aggregate(inMD1, AGGR_COUNT,MDL::str2Label(_label),MDL_CTFMODEL,MDL_COUNT);
+    //                outMD.write(outFileName,mode);
+    //            }
+    //            break;
+    //        case _size:
+    //            {
+    //                inMD1.read(inFileName1);
+    //                std::cout << inFileName1 + " size is: " << inMD1.size() << std::endl;
+    //            }
+    //            break;
+    //        case _convert2db:
+    //            {
+    //                inMD1.read(inFileName1);
+    //                MDSql::dumpToFile(outFileName);
+    //            }
+    //            break;
+    //
+    //        case _randValues:
+    //            {
+    //                inMD1.read(inFileName1);
+    //                randomize_random_generator();
+    //                outMD.randomizeDoubleValues(inMD1,MDL::str2Label(_label), rand_op1, rand_op2, randMode, rand_op3);
+    //                outMD.write(outFileName);
+    //            }
+    //            break;
+    //
+    //
+    //        default:
+    //            REPORT_ERROR(ERR_ARG_INCORRECT,"Unknown operation.");
+    //        }
+    //    }
 }
 ;
 
 int main(int argc, char **argv)
 {
-
     ProgMetadataUtilities program;
     program.read(argc, argv);
-    program.tryRun();
-
-
+    return program.tryRun();
 }
