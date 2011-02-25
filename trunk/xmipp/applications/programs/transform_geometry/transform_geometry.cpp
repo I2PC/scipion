@@ -261,12 +261,12 @@ protected:
             imgOut.mapFile2Write(xdim, ydim, zdim, 1, fnImgOut, fnImg == fnImgOut);
             imgOut().setXmippOrigin();
             applyGeometry(splineDegree, imgOut(), img(), T, IS_NOT_INV, wrap, 0.);
-            imgOut.write();
+            imgOut.write(fnImgOut);
         }
         else
         {
             transformationMatrix2Geo(T, input);
-            input.setValue(MDL_IMAGE, fnImgOut);
+            //input.setValue(MDL_IMAGE, fnImgOut);
             mdOut.setRow(input, newId);
             if (fnImg != fnImgOut )
                 img.write(fnImgOut);
