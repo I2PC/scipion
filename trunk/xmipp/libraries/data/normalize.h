@@ -72,7 +72,7 @@ void normalize_OldXmipp(MultidimArray<double> &I);
     @ingroup NormalizationProcedures
    Formula:
    @code
-   I'=(I-m(I))/a*v(n)
+   I'=(I-m(I))/sqrt(v(bg))
    @endcode
    Properties:
    @code
@@ -194,7 +194,6 @@ void normalize_remove_neighbours(MultidimArray<double> &I,
                                  const MultidimArray<int> &bg_mask,
                                  const double &threshold);
 //@}
-
 
 /* Normalize program
  */

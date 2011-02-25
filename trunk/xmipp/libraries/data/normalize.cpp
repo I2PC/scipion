@@ -366,7 +366,6 @@ void normalize_remove_neighbours(MultidimArray<double> &I,
 
     // Divide the entire image by the new background
     I /= newstddev;
-
 }
 
 void ProgNormalize::defineParams()
@@ -374,34 +373,51 @@ void ProgNormalize::defineParams()
     each_image_produces_an_output = true;
     allow_apply_geo=true;
     addUsageLine("Change the range of intensity values of pixels.");
+    addUsageLine("In general, most of the methods requires a background to separate "
+    		     "particles from noise");
     addKeywords("mask,normalization");
     XmippMetadataProgram::defineParams();
-    addParamsLine(" [-method <mth=NewXmipp>]   : Normalizing method.");
+    addParamsLine(" [--method <mth=NewXmipp>]   	 : Normalizing method.");
     addParamsLine("           where <mth>");
-    addParamsLine("           OldXmipp");
-    addParamsLine("           Near_OldXmipp");
-    addParamsLine("           NewXmipp");
-    addParamsLine("           Tomography");
-    addParamsLine("           Tomography0");
-    addParamsLine("           NewXmipp2");
-    addParamsLine("           Michael");
-    addParamsLine("           None");
-    addParamsLine("           Random");
-    addParamsLine("           Ramp");
-    addParamsLine("           Neighbour");
-    addParamsLine(" [-invert]                       : Invert contrast.");
-    addParamsLine(" [-thr_black_dust <sblack=-3.5>] : Remove black dust particles with sigma threshold sblack.");
-    addParamsLine(" [-thr_white_dust <swhite=3.5>]  : Remove white dust particles with sigma threshold swhite.");
-    addParamsLine(" [-thr_neigh <value=1.2>]        : Sigma threshold for neighbour removal.");
-    addParamsLine(" [-prm <a0> <aF> <b0> <bF>]              : requires -method Random. y=ax+b.");
+    addParamsLine("           OldXmipp          	 : I=(I-m(I))/stddev(I)");
+    addParamsLine("                             	 : Avg(I)=0, Stddev(I)=1, does not need background");
+    addParamsLine("           Near_OldXmipp     	 : I=(I-m(I))/stddev(bg)");
+    addParamsLine("           NewXmipp          	 : I=(I-m(bg))/stddev(bg)");
+    addParamsLine("                             	 : Avg(bg)=0, Stddev(I)=1");
+    addParamsLine("                             	 : Positivity constraints can be added in reconstruction");
+    addParamsLine("           Tomography        	 : I=(I-mean(I))/(stddev(I)*cos(tilt))");
+    addParamsLine("                             	 : does not need background, it assumes the tilt series is vertically aligned");
+    addParamsLine("                             	 : Similar to OldXmipp but with an extra division by the cos(tilt)");
+    addParamsLine("           Tomography0       	 : I=(I-mean(I(0 degrees)))/(stddev(I)*cos(tilt))");
+    addParamsLine("                             	 : does not need background");
+    addParamsLine("                             	 : Similar to Tomography but the average at 0 degrees is used for all images");
+    addParamsLine("           NewXmipp2         	 : I=(I-m(bg))/(m(I)-m(bg))");
+    addParamsLine("           Michael           	 : I=(I-m(bg))/stddev(bg)");
+    addParamsLine("           None                   : Used for removing only dust");
+    addParamsLine("           Random                 : I=aI+b");
+    addParamsLine("           Ramp                   : Substract ramp and then NewXmipp");
+    addParamsLine("           Neighbour              : Replace pixels in the background with random noise");
+    addParamsLine(" [--invert]                       : Invert contrast.");
+    addParamsLine(" [--thr_black_dust <sblack=-3.5>] : Remove black dust particles with sigma threshold sblack.");
+    addParamsLine(" [--thr_white_dust <swhite=3.5>]  : Remove white dust particles with sigma threshold swhite.");
+    addParamsLine(" [--thr_neigh <value=1.2>]        : Sigma threshold for neighbour removal.");
+    addParamsLine(" [--prm <a0> <aF> <b0> <bF>]      : Requires --method Random. I=aI+b.");
     //    addParamsLine("      requires -method Random;");
-    addParamsLine(" [-tiltMask]                     : Apply a mask depending on the tilt.");
-    addParamsLine(" [-background <mode>] ");
+    addParamsLine(" [--tiltMask]                     : Apply a mask depending on the tilt");
+    addParamsLine("                                  : requires --method Tomography or Tomography0");
+    addParamsLine(" [--background <mode>] ");
     addParamsLine("        where <mode>");
-    addParamsLine("           frame <r>             : Rectangular background of r pixels.");
-    addParamsLine("           circle <r>            : Circular background outside radius r.");
+    addParamsLine("           frame <r>              : Rectangular background of r pixels.");
+    addParamsLine("           circle <r>             : Circular background outside radius r.");
     mask_prm.defineParams(this,INT_MASK, "or", "Use an alternative type of background mask.");
-
+    addExampleLine("Normalize using OldXmipp method",false);
+    addExampleLine("xmipp_normalize -i images.sel --method OldXmipp",true);
+    addExampleLine("Normalize 64x64 images using NewXmipp method",false);
+    addExampleLine("xmipp_normalize -i images.sel --method NewXmipp --background circle 29",true);
+    addExampleLine("Normalize 64x64 images using NewXmipp method and a crown mask",false);
+    addExampleLine("xmipp_normalize -i images.sel --method NewXmipp --mask crown 29 32",true);
+    addExampleLine("Normalize a volume to have zero mean and unit variance",false);
+    addExampleLine("xmipp_normalize -i volume.vol",true);
 }
 
 void ProgNormalize::readParams()
@@ -410,7 +426,7 @@ void ProgNormalize::readParams()
 
     // Get normalizing method
     std::string aux;
-    aux = getParam("-method");
+    aux = getParam("--method");
 
     if (aux == "OldXmipp")
         method = OLDXMIPP;
@@ -438,17 +454,17 @@ void ProgNormalize::readParams()
         REPORT_ERROR(ERR_VALUE_INCORRECT, "Normalize: Unknown normalizing method");
 
     // Invert contrast?
-    invert_contrast = checkParam("-invert");
+    invert_contrast = checkParam("--invert");
 
     // Apply a mask depending on the tilt
-    tiltMask = checkParam("-tiltMask");
+    tiltMask = checkParam("--tiltMask");
 
     // Remove dust particles?
-    remove_black_dust = checkParam("-thr_black_dust");
-    remove_white_dust = checkParam("-thr_white_dust");
-    thresh_black_dust = getDoubleParam("-thr_black_dust");
-    thresh_white_dust = getDoubleParam("-thr_white_dust");
-    thresh_neigh      = getDoubleParam("-thr_neigh");
+    remove_black_dust = checkParam("--thr_black_dust");
+    remove_white_dust = checkParam("--thr_white_dust");
+    thresh_black_dust = getDoubleParam("--thr_black_dust");
+    thresh_white_dust = getDoubleParam("--thr_white_dust");
+    thresh_neigh      = getDoubleParam("--thr_neigh");
 
     // Get background mask
     background_mode = NOBACKGROUND;
@@ -463,12 +479,12 @@ void ProgNormalize::readParams()
         }
         else
         {
-            if (!checkParam("-background"))
+            if (!checkParam("--background"))
                 REPORT_ERROR(ERR_ARG_MISSING,
-                             "Normalize: -background or -mask parameter required.");
+                             "Normalize: --background or --mask parameter required.");
 
-            aux = getParam("-background",0);
-            r  =  getIntParam("-background",1);
+            aux = getParam("--background",0);
+            r  =  getIntParam("--background",1);
 
             if (aux == "frame")
                 background_mode = FRAME;
@@ -481,17 +497,16 @@ void ProgNormalize::readParams()
 
     if (method == RANDOM)
     {
-        if (!checkParam("-prm"))
+        if (!checkParam("--prm"))
             REPORT_ERROR(ERR_ARG_MISSING,
                          "Normalize_parameters: -prm parameter required.");
 
-        a0 = getDoubleParam("-prm", 0);
-        aF = getDoubleParam("-prm", 1);
-        b0 = getDoubleParam("-prm", 2);
-        bF = getDoubleParam("-prm", 3);
+        a0 = getDoubleParam("--prm", 0);
+        aF = getDoubleParam("--prm", 1);
+        b0 = getDoubleParam("--prm", 2);
+        bF = getDoubleParam("--prm", 3);
     }
 }
-
 
 void ProgNormalize::show()
 {
