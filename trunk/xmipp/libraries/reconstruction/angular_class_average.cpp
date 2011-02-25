@@ -140,7 +140,7 @@ void ProgAngularClassAverage::run()
         {
             MetaData DFaux = DF;
             // Don't do any fancy merging or sorting because those functions are really slow...
-            DFaux.merge(fn_tmp);
+            DFaux.unionAll(fn_tmp);
             DFaux.write(fn_tmp);
         }
         else
