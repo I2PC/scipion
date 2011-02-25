@@ -28,22 +28,6 @@
 int main(int argc, char **argv)
 {
     Prog_angular_predict_tomography_prm prm;
-    try {
-        prm.read(argc,argv);
-    } catch (XmippError XE) {
-        std::cerr << XE << std::endl;
-        prm.usage();
-        exit(1);
-    }
-    
-    try {
-        prm.produce_side_info();
-        prm.show();
-        prm.run();
-    } catch (XmippError XE) {
-        std::cerr << XE << std::endl;
-        exit(1);
-    }
-    
-    return 0;
+    prm.read(argc,argv);
+    prm.tryRun();
 }
