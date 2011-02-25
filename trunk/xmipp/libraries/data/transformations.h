@@ -294,7 +294,16 @@ void applyGeometry(int SplineDegree,
     // size instead of being resized inside the routine with the
     // same size as the input matrix
     if (XSIZE(V2) == 0)
-        V2.initZeros(V1);
+        V2.resizeNoCopy(V1);
+
+    if (outside != 0.)
+    {
+        // Initialise output matrix with value=outside
+        FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(V2)
+            DIRECT_MULTIDIM_ELEM(V2, n) = outside;
+    }
+    else
+    	V2.initZeros();
 
     if (V1.getDim() == 2)
     {
@@ -307,15 +316,6 @@ void applyGeometry(int SplineDegree,
         int Xdim, Ydim;
         double Aref00=MAT_ELEM(Aref,0,0);
         double Aref10=MAT_ELEM(Aref,1,0);
-
-        if (outside != 0.)
-        {
-            // Initialise output matrix with value=outside
-            FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY2D(V2)
-            {
-                DIRECT_A2D_ELEM(V2, i, j) = outside;
-            }
-        }
 
         // Find center and limits of image
         cen_y  = (int)(YSIZE(V2) / 2);
