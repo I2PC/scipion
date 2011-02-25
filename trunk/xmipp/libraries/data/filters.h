@@ -456,7 +456,8 @@ void best_nonwrapping_shift(const MultidimArray< double >& I1,
  */
 void alignImages(const MultidimArray< double >& Iref,
                  MultidimArray< double >& I,
-                 Matrix2D< double >&M);
+                 Matrix2D< double >&M,
+                 bool wrap=WRAP);
 
 /** Align two images considering also the mirrors
  * @ingroup Filters

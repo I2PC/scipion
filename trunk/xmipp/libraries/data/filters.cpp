@@ -999,7 +999,7 @@ void best_nonwrapping_shift(const MultidimArray<double> &I1,
 
 /* Align two images -------------------------------------------------------- */
 void alignImages(const MultidimArray< double >& Iref, MultidimArray< double >& I,
-                 Matrix2D< double >&M)
+                 Matrix2D< double >&M, bool wrap)
 {
     Iref.checkDimension(2);
     I.checkDimension(2);
@@ -1034,7 +1034,7 @@ void alignImages(const MultidimArray< double >& Iref, MultidimArray< double >& I
         best_nonwrapping_shift(I,IauxSR,shiftX,shiftY);
         ASR(0,2)+=shiftX;
         ASR(1,2)+=shiftY;
-        applyGeometry(LINEAR, IauxSR, I, ASR, IS_NOT_INV, WRAP);
+        applyGeometry(LINEAR, IauxSR, I, ASR, IS_NOT_INV, wrap);
 
         Polar< std::complex<double> > polarFourierI;
         normalizedPolarFourierTransform(
@@ -1050,7 +1050,7 @@ void alignImages(const MultidimArray< double >& Iref, MultidimArray< double >& I
                                        local_transformer);
         rotation2DMatrix(bestRot,R);
         ASR=R*ASR;
-        applyGeometry(LINEAR, IauxSR, I, ASR, IS_NOT_INV, WRAP);
+        applyGeometry(LINEAR, IauxSR, I, ASR, IS_NOT_INV, wrap);
 
         // Rotate then shift
         normalizedPolarFourierTransform(
@@ -1065,12 +1065,12 @@ void alignImages(const MultidimArray< double >& Iref, MultidimArray< double >& I
                                 local_transformer);
         rotation2DMatrix(bestRot,R);
         ARS=R*ARS;
-        applyGeometry(LINEAR, IauxRS, I, ARS, IS_NOT_INV, WRAP);
+        applyGeometry(LINEAR, IauxRS, I, ARS, IS_NOT_INV, wrap);
 
         best_nonwrapping_shift(Iref,IauxRS,shiftX,shiftY);
         ARS(0,2)+=shiftX;
         ARS(1,2)+=shiftY;
-        applyGeometry(LINEAR, IauxRS, I, ARS, IS_NOT_INV, WRAP);
+        applyGeometry(LINEAR, IauxRS, I, ARS, IS_NOT_INV, wrap);
     }
 
     double corrRS=correlation_index(IauxRS,Iref);
