@@ -238,7 +238,6 @@ int readTIFF(size_t select_img, bool isStack=false)
     _zDim = 1;
     _nDim = (select_img == ALL_IMAGES)? dirHead.size() : 1;
 
-
     setDimensions(_xDim, _yDim, 1, _nDim);
     replaceNsize = _nDim;
 
@@ -275,9 +274,9 @@ int readTIFF(size_t select_img, bool isStack=false)
     int imReaded = 0;
 
     MD.clear();
-    MD.resize(imgEnd - imgStart);
+    MD.resize(_nDim);
 
-    for (i = imgStart; i < imgEnd; ++i)
+    for (size_t i = imgStart; i < imgEnd; ++i)
     {
         TIFFSetDirectory(tif,(tdir_t) i);
 
@@ -352,18 +351,17 @@ int writeTIFF(size_t select_img, bool isStack=false, int mode=WRITE_OVERWRITE, S
 {
 #undef DEBUG
 
-    if (mode == WRITE_REPLACE)
-        REPORT_ERROR(ERR_TYPE_INCORRECT,"rwTIFF: Images cannot be replaced in TIFF file.");
+    //    if (mode == WRITE_REPLACE)
+    //        REPORT_ERROR(ERR_TYPE_INCORRECT,"rwTIFF: Images cannot be replaced in TIFF file.");
     if (typeid(T) == typeid(std::complex<double>))
     {
         REPORT_ERROR(ERR_TYPE_INCORRECT,"rwTIFF: Complex images are not supported by TIFF format.");
         return 0;
     }
 
-    int Xdim = XSIZE(data);
-    int Ydim = YSIZE(data);
-    int Zdim = ZSIZE(data);
-    size_t Ndim = NSIZE(data);
+    int Xdim, Ydim, Zdim;
+    size_t Ndim;
+    getDimensions(Xdim, Ydim, Zdim, Ndim);
 
     // Volumes are not supported
     if (Zdim > 1)
@@ -469,8 +467,12 @@ int writeTIFF(size_t select_img, bool isStack=false, int mode=WRITE_OVERWRITE, S
         dhMain.yTiffRes = (MDMainHeader.getValue(MDL_SAMPLINGRATEX, aux)) ? (float) 1e8/aux : 0. ;
     }
 
-    size_t imgStart = 0;
-    size_t imgEnd = Ndim;
+//    size_t imgStart = 0;
+//    size_t imgEnd = Ndim;
+
+    size_t imgStart = (mode == WRITE_APPEND)? replaceNsize : IMG_INDEX(select_img);
+
+
 
     size_t bufferSize, datasize_n;
     bufferSize = Xdim*nBytes;
@@ -490,10 +492,16 @@ int writeTIFF(size_t select_img, bool isStack=false, int mode=WRITE_OVERWRITE, S
     //        tiffsetdirectory(tif,select_img);
 
     //Write each image in a directory
-    for (int i=imgStart; i<imgEnd; i++ )
+    for (size_t i = 0; i < Ndim; i++ )
     {
-        TIFFSetDirectory(tif,select_img);
+        TIFFSetDirectory(tif,(tdir_t) i + imgStart);
+//        TIFFSetDirectory(tif, select_img);
 
+
+//        if (mode == WRITE_REPLACE)
+//          TIFFReadDirectory(tif);
+
+        // Image header
         TIFFSetField(tif, TIFFTAG_BITSPERSAMPLE,  dhMain.bitsPerSample);
         TIFFSetField(tif, TIFFTAG_SAMPLESPERPIXEL,dhMain.samplesPerPixel);
         TIFFSetField(tif, TIFFTAG_SAMPLEFORMAT,   dhMain.imageSampleFormat);
