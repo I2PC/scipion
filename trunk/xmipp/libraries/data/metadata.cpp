@@ -795,7 +795,7 @@ void MetaData::_readRowsStar(MDRow & columnValues, char * pchStart, char * pEnd)
         pchEnd = END_OF_LINE();
         line.assign(pchStart, pchEnd-pchStart);
         trim(line);
-        if (line != "")
+        if (!line.empty())
         {
             std::stringstream ss(line);
             id = addObject();
@@ -843,21 +843,64 @@ void MetaData::read(const FileName &_filename,
 
 }
 
-bool MetaData::readPlain(const FileName &inFile, const std::vector<MDLabel> &columnLabels)
+#define LINE_LENGHT 1024
+void MetaData::readPlain(const FileName &inFile, const StringVector &labelsString, const String &separator)
 {
-    //    try
-    //    {
-    //        std::ifstream is(inFile.data(), std::ios_base::in);
-    //        activeLabels = columnLabels;
-    //        MDRow row;
-    //
-    //        _readRows(is, columnLabels, false);
-    //        return true;
-    //    }
-    //    catch (XmippError xe)
-    //    {
-    //        return false;
-    //    }
+
+  std::vector<MDLabel> labels;
+  StringVector parts;
+
+  for (int i = 0; i < labelsString.size(); ++i)
+      if (MDL::isValidLabel(labelsString[i]))
+          labels.push_back(MDL::str2Label(labelsString[i]));
+      else
+          REPORT_ERROR(ERR_PARAM_INCORRECT, formatString("Invalid label '%s' received.", parts[i].c_str()));
+
+  char lineBuffer[LINE_LENGHT];
+  String line;
+  std::ifstream is(inFile.data(), std::ios_base::in);
+  size_t lineCounter = 0;
+  size_t columnsNumber = labels.size();
+  size_t objId;
+
+  while (is.getline(lineBuffer, LINE_LENGHT))
+  {
+      ++lineCounter;
+      line.assign(lineBuffer);
+      trim(line);
+      if (!line.empty())
+      {
+          std::stringstream ss(line);
+          objId = addObject();
+          for (int i = 0; i < columnsNumber; ++i)
+          {
+            MDObject obj(labels[i]);
+            _parseObject(ss, obj, objId);
+            setValue(obj, objId);
+          }
+      }
+  }
+}
+
+void MetaData::readPlain(const FileName &inFile, const String &labelsString, const String &separator)
+{
+  StringVector parts;
+  splitString(labelsString, " ", parts);
+  readPlain(inFile, parts, separator);
+}
+
+void MetaData::addPlain(const FileName &inFile, const StringVector &labelsString, const String &separator)
+{
+  MetaData md2;
+  md2.readPlain(inFile, labelsString);
+  merge(md2);
+}
+
+void MetaData::addPlain(const FileName &inFile, const String &labelsString, const String &separator)
+{
+  MetaData md2;
+  md2.readPlain(inFile, labelsString);
+  merge(md2);
 }
 
 void MetaData::_read(const FileName &filename,
@@ -1004,11 +1047,17 @@ void MetaData::_read(const FileName &filename,
         _readRows(is, columnValues, useCommentAsImage);
 }
 
-void MetaData::merge(const FileName &fn)
+void MetaData::merge(const MetaData &md2)
 {
-    MetaData md;
-    md.read(fn);
-    unionAll(md);
+  if (size() != md2.size())
+    REPORT_ERROR(ERR_MD, "Size of two metadatas should coincide for merging.");
+
+  MDRow row;
+  FOR_ALL_OBJECTS_IN_METADATA2(*this, md2)
+  {
+    md2.getRow(row, __iter2.objId);
+    setRow(row, __iter.objId);
+  }
 }
 
 void MetaData::aggregateSingle(MDObject &mdValueOut, AggregateOperation op,
@@ -1087,7 +1136,6 @@ void MetaData::_setOperates(const MetaData &mdIn, const MDLabel label, SetOperat
         addLabel(mdIn.activeLabels[i]);
 
     mdIn.myMDSql->setOperate(this, label, operation);
-    firstObject();
 }
 
 void MetaData::_setOperates(const MetaData &mdInLeft, const MetaData &mdInRight, const MDLabel label, SetOperation operation)
@@ -1101,7 +1149,6 @@ void MetaData::_setOperates(const MetaData &mdInLeft, const MetaData &mdInRight,
         addLabel(mdInRight.activeLabels[i]);
 
     myMDSql->setOperate(&mdInLeft, &mdInRight, label, operation);
-    firstObject();
 }
 
 void MetaData::unionDistinct(const MetaData &mdIn, const MDLabel label)
@@ -1289,7 +1336,7 @@ void MetaData::makeAbsPath(const MDLabel label)
     FileName auxFile;
     FOR_ALL_OBJECTS_IN_METADATA(*this)
     {
-    	aux_string_path = path_str;
+        aux_string_path = path_str;
         getValue(label, auxFile, __iter.objId);
 
         if (auxFile.isInStack())
@@ -1300,77 +1347,19 @@ void MetaData::makeAbsPath(const MDLabel label)
         }
         else
         {
-        	auxFile.addPrefix(aux_string_path);
+            auxFile.addPrefix(aux_string_path);
             setValue(label, auxFile, __iter.objId);
         }
     }
 }
 
 
-void MetaData::randomizeDoubleValues(MetaData &MDin,
-                                     const MDLabel randLabel,
-                                     double op1,
-                                     double op2,
-                                     const std::string& mode,
-                                     double op3)
-{
-    this->copyMetadata(MDin);
-    MDObject mdValue(randLabel);
-
-    // This function works just with double values, by now.
-    mdValue.labelTypeCheck(LABEL_DOUBLE);
-
-    double d;
-    if (containsLabel(randLabel))
-    {
-        if (mode == "uniform")
-        {
-            FOR_ALL_OBJECTS_IN_METADATA(*this)
-            {
-                getValue(randLabel,d,__iter.objId);
-                d += rnd_unif(op1, op2);
-                setValue(randLabel,d,__iter.objId);
-            }
-        }
-        else if (mode == "gaussian")
-        {
-            FOR_ALL_OBJECTS_IN_METADATA(*this)
-            {
-                getValue(randLabel,d,__iter.objId);
-                d += rnd_gaus(op1, op2);
-                setValue(randLabel,d,__iter.objId);
-            }
-        }
-        else if (mode == "student")
-        {
-            FOR_ALL_OBJECTS_IN_METADATA(*this)
-            {
-                getValue(randLabel,d,__iter.objId);
-                d += rnd_student_t(op3, op1, op2);
-                setValue(randLabel,d,__iter.objId);
-            }
-        }
-        else
-            REPORT_ERROR(ERR_VALUE_INCORRECT,
-                         static_cast< std::string >("AddNoise: Mode not supported (" + mode + ")"));
-
-        //firstObject();
-    }
-}
-////////////////////////////// MetaData Iterator ////////////////////////////
-
 void MDIterator::init(const MetaData &md, const MDQuery * pQuery)
 {
-    //    std::cerr << "=====> getIterator" << std::endl;
     objects = new std::vector<size_t>();
     md.myMDSql->selectObjects(*objects, pQuery);
-    //    std::cerr << "      objects: ";
-    //    for (int i = 0; i < objects->size(); i++)
-    //       std::cerr << " " << objects->at(i);
-    //    std::cerr << std::endl;
     iter = objects->begin();
     objId = iter < objects->end() ? *iter : BAD_OBJID;
-    //    std::cerr << "      objId: " << objId << std::endl;
 }
 
 MDIterator::MDIterator()
@@ -1414,6 +1403,7 @@ bool MDIterator::hasNext()
         return false;
     return (iter < objects->end());
 }
+
 
 WriteModeMetaData metadataModeConvert (String mode)
 {

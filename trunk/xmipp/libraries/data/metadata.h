@@ -113,6 +113,7 @@ typedef enum
 class MDQuery;
 class MDSql;
 class MDIterator;
+class MDValueGenerator;
 
 /** Class to manage data files.
  *
@@ -591,9 +592,17 @@ public:
     /** @} */
 
     /** Try to read a metadata from plain text with some columns.
-     * Label for each columns should be provided. Return false if couldn't read
+     * Labels for each columns should be provided in an string separated by spaces.
+     *  Return false if couldn't read
      */
-    bool readPlain(const FileName &inFile, const std::vector<MDLabel> &columnLabels);
+    void readPlain(const FileName &inFile, const StringVector &labelsString, const String &separator = " ");
+    void readPlain(const FileName &inFile, const String &labelsString, const String &separator = " ");
+    /** Same as readPlain, but instead of cleanning data, the
+     * readed values will be added. If there are common columns in metadata
+     * and the plain text, the lattest will be setted
+     */
+    void addPlain(const FileName &inFile, const StringVector &labelsString, const String &separator=" ");
+    void addPlain(const FileName &inFile, const String &labelsString, const String &separator=" ");
 
     /** @name Set Operations
      * @{
@@ -638,10 +647,12 @@ public:
      */
     void unionAll(const MetaData &mdIn);
 
-    /** Merge of a Metadata.
-     * This function reads another metadata and makes a union to this one
+    /** Merge of two Metadata.
+     * This function reads another metadata and add all columns values.
+     * The size of the two Metadatas should be the same. If there are
+     * common columns, the values in md2 will be setted.
      */
-    void merge(const FileName &fn);
+    void merge(const MetaData &md2);
 
     /** Intersects two Metadatas.
      * Result in "calling" Metadata
@@ -726,16 +737,6 @@ public:
     */
     void makeAbsPath(const MDLabel label=MDL_IMAGE);
 
-    /** Randomize double values of a label column
-     *  following a uniform, gaussian or student distribution
-     *  */
-    void randomizeDoubleValues(MetaData &MDin,
-                                  const MDLabel randLabel,
-                                  double rand_op1,
-                                  double rand_op2,
-                                  const String& mode="uniform",
-                                  double rand_op3=3.);
-
     /** @} */
     friend class MDSql;
     friend class MDIterator;
@@ -776,6 +777,30 @@ public:
     bool hasNext();
 }
 ;//class MDIterator
+
+////////////////////////////// MetaData Value Generator ////////////////////////
+/** Class to generate values for columns of a metadata*/
+class MDValueGenerator
+{
+public:
+  MDLabel label; //label to which generate values
+
+  /* Constructor */
+  MDValueGenerator(MDLabel label)
+  {
+    this->label = label;
+  }
+  /* Method to be implemented in concrete generators */
+  virtual bool fillValue(MetaData &md, size_t objId) = 0;
+  /* Fill whole metadata */
+  bool fill(MetaData &md)
+  {
+    FOR_ALL_OBJECTS_IN_METADATA(md)
+    {
+      fillValue(md, __iter.objId);
+    }
+  }
+};//end of class MDValueGenerator
 
 /** Convert string to write mode metadata enum.
  *
