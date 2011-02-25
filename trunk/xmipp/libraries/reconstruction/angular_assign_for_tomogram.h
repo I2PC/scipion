@@ -28,6 +28,7 @@
 #include <data/funcs.h>
 #include <data/metadata.h>
 #include <data/image.h>
+#include <data/program.h>
 
 /**@defgroup AngularPredictTomography angular_assign_for_tomogram (Discrete angular assignment for tomography)
    @ingroup ReconsLibrary */
@@ -42,6 +43,7 @@ public:
     double x;
     double y;
     double corr;
+    Matrix2D<double> M;
     FileName fn_img;
     FileName fn_mask;
     
@@ -49,7 +51,7 @@ public:
 };
 
 /** Angular Predict parameters. */
-class Prog_angular_predict_tomography_prm
+class Prog_angular_predict_tomography_prm: public XmippProgram
 {
 public:
     /** Filename of the reference volume */
@@ -80,14 +82,14 @@ public:
     Image<double> V;
     std::vector<AlignmentTomography> list_of_assigned;
 public:
-    /// Read argument from command line
-    void read(int argc, char **argv);
+    /// Read arguments from command line
+    void readParams();
 
     /// Show
     void show();
 
-    /// Usage
-    void usage();
+    /// Define parameters
+    void defineParams();
 
     /** Produce side info.
         An exception is thrown if any of the files is not found*/
