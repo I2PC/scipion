@@ -30,7 +30,7 @@
 
 double wrapperDualAligment(double *p, void *prm)
 {
-    Prog_align_dual *eprm=(Prog_align_dual *)prm;
+    ProgAlignDualTiltSeries *eprm=(ProgAlignDualTiltSeries *)prm;
     Matrix1D<double> aux(6);
     FOR_ALL_ELEMENTS_IN_MATRIX1D(aux)
     aux(i)=p[i+1];
@@ -38,7 +38,7 @@ double wrapperDualAligment(double *p, void *prm)
 }
 
 /// Read parameters
-void Prog_align_dual::readParams()
+void ProgAlignDualTiltSeries::readParams()
 {
     fnRef=getParam("--ref");
     fnDual=getParam("--dual");
@@ -47,7 +47,7 @@ void Prog_align_dual::readParams()
 }
 
 /// Show parameters
-void Prog_align_dual::show()
+void ProgAlignDualTiltSeries::show()
 {
     std::cout
     << "Reference: " << fnRef       << std::endl
@@ -58,7 +58,7 @@ void Prog_align_dual::show()
 }
 
 /// Usage
-void Prog_align_dual::defineParams()
+void ProgAlignDualTiltSeries::defineParams()
 {
     addUsageLine("Align two dual tilt series that have been previously internally aligned");
     addParamsLine("  --ref  <selfile>  : Reference tilt series");
@@ -68,7 +68,7 @@ void Prog_align_dual::defineParams()
 }
 
 /// Read dual series
-void Prog_align_dual::readDual()
+void ProgAlignDualTiltSeries::readDual()
 {
     imgDual.clear();
     tiltDual.initZeros(SFDual.size());
@@ -97,7 +97,7 @@ void Prog_align_dual::readDual()
 }
 
 /// Produce side info
-void Prog_align_dual::produceSideInfo()
+void ProgAlignDualTiltSeries::produceSideInfo()
 {
 	debugging=false;
     if (fnOut=="")
@@ -148,7 +148,7 @@ void Prog_align_dual::produceSideInfo()
 
 /// Find parameters (shift+rotation) at 0 degrees
 //#define DEBUG
-void Prog_align_dual::findParametersAt0degrees(bool rotateDual)
+void ProgAlignDualTiltSeries::findParametersAt0degrees(bool rotateDual)
 {
     Image<double> Iref, Idual;
     Iref.read(fnRef0);
@@ -208,7 +208,7 @@ void Prog_align_dual::findParametersAt0degrees(bool rotateDual)
 
 /// Distance between a pair of common lines
 //#define DEBUG
-double Prog_align_dual::distanceBetweenCommonLines(
+double ProgAlignDualTiltSeries::distanceBetweenCommonLines(
     int refi, int dualj, const Matrix2D<double> &E,
     double X, double Y, double Z)
 {
@@ -311,7 +311,7 @@ double Prog_align_dual::distanceBetweenCommonLines(
 #undef DEBUG
 
 /// Evaluate alignment
-double Prog_align_dual::evaluateAlignment(const Matrix1D<double> &_alignment)
+double ProgAlignDualTiltSeries::evaluateAlignment(const Matrix1D<double> &_alignment)
 {
     Euler_angles2matrix(_alignment(0),_alignment(1),_alignment(2),E);
     Et=E.transpose();
@@ -339,7 +339,7 @@ double Prog_align_dual::evaluateAlignment(const Matrix1D<double> &_alignment)
 }
 
 //#define DEBUG
-double Prog_align_dual::optimizeAlignment()
+double ProgAlignDualTiltSeries::optimizeAlignment()
 {
     Matrix1D<double> steps;
     steps.resize(alignment);
@@ -360,7 +360,7 @@ double Prog_align_dual::optimizeAlignment()
 #undef DEBUG
 
 /// Align dual
-void Prog_align_dual::alignDual()
+void ProgAlignDualTiltSeries::alignDual()
 {
 /* There might be a problem, the code seemingly working in TomoJ is
 
@@ -428,7 +428,7 @@ void Prog_align_dual::alignDual()
 }
 
 /// Run
-void Prog_align_dual::run()
+void ProgAlignDualTiltSeries::run()
 {
     produceSideInfo();
 
@@ -456,7 +456,7 @@ void Prog_align_dual::run()
     alignDual();
 }
 
-void Prog_align_dual::shiftProjectionInZ(MultidimArray<double> &I, int dualj, double Z) const
+void ProgAlignDualTiltSeries::shiftProjectionInZ(MultidimArray<double> &I, int dualj, double Z) const
 {
     if (Z==0)
         return;
