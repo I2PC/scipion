@@ -1,6 +1,6 @@
 /***************************************************************************
  *
- * Authors:     Sjors Scheres (scheres@cnb.csic.es)
+ * Authors:     J.M de la Rosa (jmdelarosa@cnb.csic.es)
  *
  * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
  *
@@ -24,43 +24,59 @@
  ***************************************************************************/
 
 #include <data/metadata.h>
-#include <data/args.h>
 #include <data/program.h>
 
-class ProgMetadataOperate: public XmippProgram
+class ProgMetadataImport: public XmippProgram
 {
     FileName fn_in, fn_out;
-    std::string expressionStr;
-    MetaData mdIn;
+    String sep;
+    StringVector labels;
+    MetaData md;
 
 protected:
 
     void defineParams()
     {
-        addUsageLine("Perform operations on MetaData columns. See examples below.");
+        addUsageLine("Import metadata from plain text files.");
         addExampleLine("  xmipp_metadata_operate  -i a.doc -o b.doc -e  \"angleRot=(angleRot*3.1416/180.)\"  ");
         addExampleLine("  xmipp_metadata_operate  -i a.doc -o b.doc -e  \"image=replace(image, 'xmp','spi')\"  ");
-        addParamsLine("  -i <inputMetadata>     :MetaData input file name       ");
+        addParamsLine("  -i <text_file>     :Input file text file       ");
         addParamsLine("     alias --input;");
-        addParamsLine("  -o <outputMetadata=\"/dev/stdout\"> :MetaData output file name, by default print to screen");
+        addParamsLine(" [ -o <output_metadata>]     :If not provided, the resulting metadata will be printed on screen");
         addParamsLine("     alias --output;");
-        addParamsLine("  -e <expression>                     :any valid operation in SQLite (expression must be between quotes) ");
-        addParamsLine("     alias --expression;");
+        addParamsLine("  -l <...>                   :labels to be imported");
+        addParamsLine("     alias --labels;");
+        addParamsLine(" [ -m <metadata> ]           :merge the imported metadata to an existing one");
+        addParamsLine("     alias --merge;");
+        addParamsLine(" [ -s <sep=\" \">]             :Separator to be used, default is space");
+        addParamsLine("     alias --separator;");
+
     }
 
     void readParams()
     {
         fn_in = getParam("-i");
-        fn_out = getParam("-o");
-        expressionStr = getParam("-e");
+        sep = getParam("-s");
+        getListParam("-l", labels);
+        if (labels.empty())
+            REPORT_ERROR(ERR_ARG_BADCMDLINE, "You should provide at least one label to import");
     }
 
 public:
     void run()
     {
-        mdIn.read(fn_in);
-        mdIn.operate(expressionStr);
-        mdIn.write(fn_out);
+      if (checkParam("-m"))
+      {
+        md.read(getParam("-m"));
+        md.addPlain(fn_in, labels, sep);
+      }
+      else
+        md.readPlain(fn_in, labels, sep);
+
+        if (checkParam("-o"))
+          md.write(getParam("-o"));
+        else
+          md.write(std::cout);
     }
 
 }
@@ -69,7 +85,7 @@ public:
 /* MAIN -------------------------------------------------------------------- */
 int main(int argc, char *argv[])
 {
-        ProgMetadataOperate program;
-        program.read(argc, argv);
-        program.tryRun();
+    ProgMetadataImport program;
+    program.read(argc, argv);
+    return program.tryRun();
 }
