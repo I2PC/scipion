@@ -29,8 +29,7 @@
 class ProgMetadataImport: public XmippProgram
 {
     FileName fn_in, fn_out;
-    String sep;
-    StringVector labels;
+    String labels, sep;
     MetaData md;
 
 protected:
@@ -44,22 +43,20 @@ protected:
         addParamsLine("     alias --input;");
         addParamsLine(" [ -o <output_metadata>]     :If not provided, the resulting metadata will be printed on screen");
         addParamsLine("     alias --output;");
-        addParamsLine("  -l <...>                   :labels to be imported");
+        addParamsLine("  -l <label>                 :label to be imported, you also can pass a list beetween quotes and separated by spaces");
         addParamsLine("     alias --labels;");
         addParamsLine(" [ -m <metadata> ]           :merge the imported metadata to an existing one");
         addParamsLine("     alias --merge;");
-        addParamsLine(" [ -s <sep=\" \">]             :Separator to be used, default is space");
-        addParamsLine("     alias --separator;");
+       // addParamsLine(" [ -s <sep=\" \">]             :Separator to be used, default is space");
+       // addParamsLine("     alias --separator;");
 
     }
 
     void readParams()
     {
         fn_in = getParam("-i");
-        sep = getParam("-s");
-        getListParam("-l", labels);
-        if (labels.empty())
-            REPORT_ERROR(ERR_ARG_BADCMDLINE, "You should provide at least one label to import");
+        //sep = getParam("-s");
+        labels = getParam("-l");
     }
 
 public:

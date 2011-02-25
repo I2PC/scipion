@@ -395,7 +395,7 @@ bool FileName::isStar1(bool failIfNotExists) const
     if (infile.fail())
     {
         if (failIfNotExists)
-            REPORT_ERROR( ERR_IO_NOTEXIST, (String) "File " + *this + " does not exist." );
+            REPORT_ERROR( ERR_IO_NOTEXIST, formatString("File '%s' does not exist.", c_str()));
         else
             return false;
     }
