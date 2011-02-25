@@ -160,7 +160,10 @@ void Prog_angular_predict_tomography_prm::predict_angles(int idx,
             mask.initConstant(1);
             FOR_ALL_ELEMENTS_IN_ARRAY2D(mask)
             if (IMGPIXEL(theo,i,j)==0 || IMGPIXEL(Ip,i,j)==0)
+            {
                 A2D_ELEM(mask,i,j)=0;
+                IMGPIXEL(Ip,i,j)=0;
+            }
             double newCorr=correlation_index(theo(),Ip(),&mask);
             if (newCorr>newAlignment.corr)
             {
@@ -175,7 +178,8 @@ void Prog_angular_predict_tomography_prm::predict_angles(int idx,
 
                 std::cout << "    Improved " << idx << " rot=" << rot << " tilt=" << tilt
                 << " x,y="
-                << newAlignment.x << " " << newAlignment.y << " corr="
+                << newAlignment.x << " " << newAlignment.y << " psi="
+                << newAlignment.psi << " corr="
                 << newCorr << std::endl;
                 Image<double> save;
                 save()=Ip();
@@ -191,13 +195,7 @@ void Prog_angular_predict_tomography_prm::predict_angles(int idx,
             }
 
             // Look for better alignment
-            alignImages(theo(),Ip(),M);
-
-            // Compute the correlation index
-            mask.initConstant(1);
-            FOR_ALL_ELEMENTS_IN_ARRAY2D(mask)
-            if (IMGPIXEL(theo,i,j)==0 || IMGPIXEL(Ip,i,j)==0)
-                A2D_ELEM(mask,i,j)=0;
+            alignImages(theo(),Ip(),M, DONT_WRAP);
 
             // Measure the new correlation
             newCorr=correlation_index(theo(),Ip(),&mask);
@@ -220,7 +218,8 @@ void Prog_angular_predict_tomography_prm::predict_angles(int idx,
 
                 std::cout << "    Improved " << idx << " rot=" << rot << " tilt=" << tilt
                 << " x,y="
-                << newAlignment.x << " " << newAlignment.y << " corr="
+                << newAlignment.x << " " << newAlignment.y << " psi="
+                << newAlignment.psi << " corr="
                 << newCorr << std::endl;
                 newAlignment.corr = newCorr;
                 Image<double> save;
