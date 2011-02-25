@@ -195,10 +195,10 @@ void Prog_align_dual::findParametersAt0degrees(bool rotateDual)
             alignment(5)=5;
     */
     if (rotateDual)
-        std::cout << "First estimate (0) of (rot,tilt,psi,x,y,z)=\n"
+        std::cout << "First estimate (180) of (rot,tilt,psi,x,y,z)=\n"
         << alignment.transpose() << std::endl;
     else
-        std::cout << "First estimate (180) of (rot,tilt,psi,x,y,z)=\n"
+        std::cout << "First estimate (0) of (rot,tilt,psi,x,y,z)=\n"
         << alignment.transpose() << std::endl;
     /*
             debugging=true;
@@ -239,13 +239,13 @@ double Prog_align_dual::distanceBetweenCommonLines(
 
     I=imgRef[refi];
 #ifdef DEBUG
-
+    debugging=true;
     Image<double> save;
     save()=I;
     save.write("PPPref.xmp");
 #endif
 
-    selfRotate(LINEAR,I, angi, DONT_WRAP);
+    selfRotate(LINEAR,I, -angi, DONT_WRAP);
     profilei.initZeros();
     FOR_ALL_ELEMENTS_IN_ARRAY2D(I)
     A1D_ELEM(profilei,j)+=A2D_ELEM(I,i,j);
