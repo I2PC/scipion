@@ -386,6 +386,10 @@ MetaData_importObjects(PyObject *obj, PyObject *args, PyObject *kwargs);
 static PyObject *
 MetaData_unionAll(PyObject *obj, PyObject *args, PyObject *kwargs);
 static PyObject *
+MetaData_merge(PyObject *obj, PyObject *args, PyObject *kwargs);
+static PyObject *
+MetaData_readPlain(PyObject *obj, PyObject *args, PyObject *kwargs);
+static PyObject *
 MetaData_intersection(PyObject *obj, PyObject *args, PyObject *kwargs);
 static PyObject *
 MetaData_aggregateSingle(PyObject *obj, PyObject *args, PyObject *kwargs);
@@ -435,6 +439,43 @@ MetaData_read(PyObject *obj, PyObject *args, PyObject *kwargs)
                 {
                     str = PyString_AsString(pyStr);
                     self->metadata->read(str);
+                    Py_RETURN_NONE;
+                }
+                else
+                    return NULL;
+            }
+            catch (XmippError xe)
+            {
+                PyErr_SetString(PyXmippError, xe.msg.c_str());
+                return NULL;
+            }
+        }
+    }
+    return NULL;
+}
+
+/* read */
+static PyObject *
+MetaData_readPlain(PyObject *obj, PyObject *args, PyObject *kwargs)
+{
+    MetaDataObject *self = (MetaDataObject*)obj;
+
+    if (self != NULL)
+    {
+        PyObject *input = NULL, *input2 = NULL;
+        PyObject *pyStr = NULL, *pyLabels = NULL, *pySep = NULL;
+        char *str = NULL, *sep = NULL, *labels = NULL;
+        int number = -1;
+
+        if (PyArg_ParseTuple(args, "OO|O", &input, &input2, &pySep))
+        {
+            try
+            {
+                if ((pyStr = PyObject_Str(input)) != NULL && (pyLabels = PyObject_Str(input2)))
+                {
+                    str = PyString_AsString(pyStr);
+                    labels = PyString_AsString(pyLabels);
+                    self->metadata->readPlain(str, labels);
                     Py_RETURN_NONE;
                 }
                 else
@@ -994,6 +1035,12 @@ static PyMethodDef MetaData_methods[] = {
                                             {"unionAll", (PyCFunction)MetaData_unionAll, METH_VARARGS,
                                              "Union of two metadatas. The results is stored in self."
                                             },
+                                            {"merge", (PyCFunction)MetaData_merge, METH_VARARGS,
+                                             "Merge columns of two metadatas. The results is stored in self."
+                                            },
+                                            {"readPlain", (PyCFunction)MetaData_readPlain, METH_VARARGS,
+                                             "Import metadata from a plain text file."
+                                            },
                                             {"intersection", (PyCFunction)MetaData_intersection, METH_VARARGS,
                                              "Intersection of two metadatas using a common label. The results is stored in self."
                                             },
@@ -1164,6 +1211,35 @@ MetaData_unionAll(PyObject *obj, PyObject *args, PyObject *kwargs)
             }
             MetaDataObject *self = (MetaDataObject*)obj;
             self->metadata->unionAll(MetaData_Value(pyMd));
+            Py_RETURN_NONE;
+        }
+        catch (XmippError xe)
+        {
+            PyErr_SetString(PyXmippError, xe.msg.c_str());
+        }
+    }
+    return NULL;
+}
+
+/* merge */
+static PyObject *
+MetaData_merge(PyObject *obj, PyObject *args, PyObject *kwargs)
+{
+    int label;
+    PyObject *pyMd = NULL;
+    PyObject *pyQuery = NULL;
+
+    if (PyArg_ParseTuple(args, "O", &pyMd))
+    {
+        try
+        {
+            if (!MetaData_Check(pyMd))
+            {
+                PyErr_SetString(PyExc_TypeError, "MetaData::merge: Expecting MetaData as first argument");
+                return NULL;
+            }
+            MetaDataObject *self = (MetaDataObject*)obj;
+            self->metadata->merge(MetaData_Value(pyMd));
             Py_RETURN_NONE;
         }
         catch (XmippError xe)
