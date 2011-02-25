@@ -505,7 +505,7 @@ AddLibrary('xmipp', 'libraries/bindings/python', PyExtSources,
 ReconsSources = [
     'adjust_ctf.cpp',
     'adjust_volume_grey_levels.cpp',
-    'align2d.cpp',
+#    'align2d.cpp',
     'align_tilt_pairs.cpp',
     'angular_align_dual_tilt_series.cpp',
     'angular_assign_for_tilt_series.cpp',
@@ -622,7 +622,7 @@ if int(env['java']):
 
 # Src (apps)
 
-AddXmippProgram('align2d', ['XmippRecons'])
+#AddXmippProgram('align2d', ['XmippRecons'])
 AddXmippProgram('align_tilt_pairs', ['XmippRecons'])
 AddXmippProgram('align_volumes')
 AddXmippProgram('angular_align_dual_tilt_series', ['XmippRecons'])
@@ -701,7 +701,6 @@ AddXmippProgram('ml_tomo', ['XmippRecons'])
 AddXmippProgram('morphology')
 AddXmippProgram('mrc_create_metadata')
 AddXmippProgram('nma_alignment', ['XmippRecons'])
-AddXmippProgram('normalize')
 AddXmippProgram('operate')
 AddXmippProgram('pdb_dictionary', ['XmippRecons','XmippClassif','XmippInterface'])
 AddXmippProgram('pdb_project_on_dictionary', ['XmippRecons','XmippClassif'])
@@ -740,6 +739,7 @@ AddXmippProgram('transform_add_noise')
 AddXmippProgram('transform_adjust_volume_grey_levels', ['XmippRecons'])
 AddXmippProgram('transform_center_image')
 AddXmippProgram('transform_geometry')
+AddXmippProgram('transform_normalize')
 AddXmippProgram('transform_window')
 AddXmippProgram('try_symmetry')
 #AddXmippProgram('test_program')
