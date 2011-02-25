@@ -101,7 +101,7 @@ void ProgAlignDualTiltSeries::produceSideInfo()
 {
 	debugging=false;
     if (fnOut=="")
-        fnOut=fnDual.withoutExtension();
+        fnOut=fnDual.withoutExtension()+"_aligned";
 
     std::cout << "Reading data...\n";
     SFRef.read(fnRef);
@@ -398,33 +398,32 @@ void ProgAlignDualTiltSeries::alignDual()
     MetaData SFout;
     int n=0;
     //std::cout << "Aligning dual" << std::endl;
-    SFDual.write(std::cout);
     Image<double> Idual;
     Matrix2D<double> Edual;
-    FileName fnImg;
+    FileName fnImg, fn;
     FOR_ALL_OBJECTS_IN_METADATA(SFDual)
     {
         SFDual.getValue(MDL_IMAGE,fnImg,__iter.objId);
         Idual.read(fnImg);
         Idual().setXmippOrigin();
         if (rotatedDual)
-            selfRotate(BSPLINE3,Idual(),180);
-        selfTranslate(BSPLINE3,Idual(),shift2D);
+            selfRotate(BSPLINE3,Idual(),180,DONT_WRAP);
+        selfTranslate(BSPLINE3,Idual(),shift2D,DONT_WRAP);
         shiftProjectionInZ(Idual(), n, ZZ(shift3D));
         Euler_angles2matrix(0, tiltDual(n), 0, Edual);
         Edual=Edual*E;
         double rot, tilt, psi;
         Euler_matrix2angles(Edual, rot, tilt, psi);
-        Idual.setRot((float)rot);
-        Idual.setTilt((float)tilt);
-        Idual.setPsi((float)psi);
-        FileName fn = fnOut+"_aligned" + integerToString(n,4)+".xmp";
+        fn.compose(n,fnOut+".stk");
         Idual.write(fn);
         size_t id = SFout.addObject();
         SFout.setValue(MDL_IMAGE, fn, id);
+        SFout.setValue(MDL_ANGLEROT, rot, id);
+        SFout.setValue(MDL_ANGLETILT, tilt, id);
+        SFout.setValue(MDL_ANGLEPSI, psi, id);
         n++;
     }
-    SFout.write(fnOut.removeDirectories()+"_aligned.sel");
+    SFout.write(fnOut.removeDirectories()+".sel");
 }
 
 /// Run
