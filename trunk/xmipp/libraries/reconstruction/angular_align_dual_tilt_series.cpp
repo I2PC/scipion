@@ -414,7 +414,7 @@ void ProgAlignDualTiltSeries::alignDual()
         Edual=Edual*E;
         double rot, tilt, psi;
         Euler_matrix2angles(Edual, rot, tilt, psi);
-        fn.compose(n,fnOut+".stk");
+        fn.compose(n+1,fnOut+".stk");
         Idual.write(fn);
         size_t id = SFout.addObject();
         SFout.setValue(MDL_IMAGE, fn, id);
