@@ -243,6 +243,7 @@ public:
      * @{
      */
     /** Converts an string to MDLabel */
+    static void str2LabelVector(const String &labelsStr, std::vector<MDLabel> &labels);
     static MDLabel str2Label(const String &labelName);
     /** Converts MDLabel to string */
     static String label2Str(const MDLabel label);
