@@ -230,27 +230,18 @@ int readTIFF(size_t select_img, bool isStack=false)
     int _xDim,_yDim,_zDim;
     size_t _nDim;
 
-    // Map the parameters
-    if (select_img == ALL_IMAGES)
-    {
-        _xDim = (int) dirHead[0].imageWidth;
-        _yDim = (int) dirHead[0].imageLength;
-        _zDim = 1;
-        _nDim = dirHead.size();
-    }
-    else
-    {
-        _xDim = (int) dirHead[select_img].imageWidth;
-        _yDim = (int) dirHead[select_img].imageLength;
-        _zDim = 1;
-        _nDim = 1;
-    }
+    size_t   imgStart = IMG_INDEX(select_img);
+    size_t   imgEnd = (select_img != ALL_IMAGES) ? imgStart + 1 : _nDim;
+
+    _xDim = (int) dirHead[imgStart].imageWidth;
+    _yDim = (int) dirHead[imgStart].imageLength;
+    _zDim = 1;
+    _nDim = (select_img == ALL_IMAGES)? dirHead.size() : 1;
+
 
     setDimensions(_xDim, _yDim, 1, _nDim);
     replaceNsize = _nDim;
 
-    size_t   imgStart = IMG_INDEX(select_img);
-    size_t   imgEnd = (select_img != ALL_IMAGES) ? imgStart + 1 : _nDim;
 
     DataType datatype = datatypeTIFF(dirHead[0]);
 
