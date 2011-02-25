@@ -130,16 +130,19 @@ protected:
         if ( oext == "custom" )
             oext = getParam("--oext",1);
 
-        // Check output type and write mode
-
+        // Check output type
         if (!checkParam("--type"))
         {
-            if (fn_out.getExtension() == "vol" || oext == "vol")
-                type = "vol";
-            else if (fn_out.getExtension() == "stk" || oext == "stk" || oext == "mrcs")
+          // if is stack
+            if (fn_out.getExtension() == "stk" || oext == "stk" || oext == "mrcs")
                 type = "stk";
+            // if is volume, even if not is stack and --oroot is not set
+            if (fn_out.getExtension() == "vol" || oext == "vol" ||
+                (type != "stk" && !checkParam("--oroot")) )
+                type = "vol";
         }
 
+        // Set write mode
         if (single_image && fn_out.isInStack()) // Replace a single image in a stack
         {
             type == "img";
@@ -163,7 +166,7 @@ protected:
 
         convMode = MD2MD;
 
-        if (!single_image && type != "stk")
+        if (!single_image && type == "vol")
         {
             convMode = MD2VOL;
 

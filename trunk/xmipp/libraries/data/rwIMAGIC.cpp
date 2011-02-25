@@ -346,6 +346,9 @@ int  ImageBase::writeIMAGIC(size_t select_img, int mode, String bitDepth, bool a
     size_t Ndim;
     getDimensions(Xdim, Ydim, Zdim, Ndim);
 
+    if (Zdim > 1)
+        REPORT_ERROR(ERR_MULTIDIM_DIM, "writeIMAGIC: Imagic format does not support volumes.");
+
     size_t datasize, datasize_n;
     datasize_n = (size_t)Xdim*Ydim*Zdim;
     datasize = datasize_n * gettypesize(wDType);
