@@ -169,6 +169,7 @@ public class Xmipp_Projections_Explorer implements PlugIn, UniverseListener, iAn
             // Loads image plus for volume.
             IJ.showStatus(LABELS.MESSAGE_LOADING_VOLUME);
             xmippVolume = new ImageDouble(volumeFile);
+            xmippVolume.setXmippOrigin();
 
             // Converts it to show.
             IJ.showStatus(LABELS.MESSAGE_CONVERTING_XMIPP_VOLUME);
@@ -190,7 +191,7 @@ public class Xmipp_Projections_Explorer implements PlugIn, UniverseListener, iAn
 
             // Creates both universes and shows them.
             IJ.showStatus(LABELS.MESSAGE_BUILDING_VOLUME_UNIVERSE);
-            universeVolume = createUniverse(volumeIP, Content.ORTHO);//VOLUME);
+            universeVolume = createUniverse(volumeIP, Content.VOLUME);
 
             ImageWindow3D windowVolume = universeVolume.getWindow();
             windowVolume.setTitle(LABELS.TITLE_VOLUME);
@@ -201,7 +202,7 @@ public class Xmipp_Projections_Explorer implements PlugIn, UniverseListener, iAn
 
             if (use_sphere) {
                 IJ.showStatus(LABELS.MESSAGE_BUILDING_SPHERE_UNIVERSE);
-                universeSphere = createUniverse(sphereIP, Content.ORTHO);//VOLUME);
+                universeSphere = createUniverse(sphereIP, Content.VOLUME);
 
                 ImageWindow3D windowSphere = universeSphere.getWindow();
 
