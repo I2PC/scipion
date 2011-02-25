@@ -61,22 +61,28 @@ void geo2TransformationMatrix(const MDRow &imageGeo, Matrix2D<double> &A,
     }
 }
 
-#define ADD_IF_EXIST_NONZERO(label, value) if (imageGeo.containsLabel(label) || !XMIPP_EQUAL_ZERO(value))\
-                                                  imageGeo.setValue(label, value);
-
-void transformationMatrix2Geo(const Matrix2D<double> &A, MDRow & imageGeo)
+void transformationMatrix2Parameters(const Matrix2D<double> &A, bool &flip,
+		double &scale, double &shiftX, double &shiftY, double &psi)
 {
-
     //Calculate determinant for getting flip
-    bool flip = ((dMij(A, 0, 0) * dMij(A, 1, 1) - dMij(A, 0, 1) * dMij(A, 1, 0) ) < 0);
+    flip = ((dMij(A, 0, 0) * dMij(A, 1, 1) - dMij(A, 0, 1) * dMij(A, 1, 0) ) < 0);
     int sgn = flip ? -1 : 1;
     double cosine = sgn * dMij(A, 0, 0), sine = sgn * dMij(A, 0, 1);
     double scale2 = cosine * cosine +  sine * sine;
-    double scale = sqrt(scale2);
+    scale = sqrt(scale2);
     double invScale = 1 / scale;
-    double shiftX = dMij(A, 0, 2) * invScale;
-    double shiftY = dMij(A, 1, 2) * invScale;
-    double psi = RAD2DEG(atan2(sine, cosine));
+    shiftX = dMij(A, 0, 2) * invScale;
+    shiftY = dMij(A, 1, 2) * invScale;
+    psi = RAD2DEG(atan2(sine, cosine));
+}
+
+#define ADD_IF_EXIST_NONZERO(label, value) if (imageGeo.containsLabel(label) || !XMIPP_EQUAL_ZERO(value))\
+                                                  imageGeo.setValue(label, value);
+void transformationMatrix2Geo(const Matrix2D<double> &A, MDRow & imageGeo)
+{
+	bool flip;
+	double scale, shiftX, shiftY, psi;
+	transformationMatrix2Parameters(A,flip, scale, shiftX, shiftY, psi);
 
     ADD_IF_EXIST_NONZERO(MDL_ANGLEPSI, psi);
     ADD_IF_EXIST_NONZERO(MDL_SHIFTX, shiftX);
