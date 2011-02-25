@@ -16,7 +16,12 @@ JAVA_SRC = $(PACKAGE)/ImageDouble.java $(PACKAGE)/MDLabel.java $(PACKAGE)/MetaDa
 JAVA_CLASSES = $(JAVA_SRC:.java=.class)
 JAVAH_CLASSES = $(subst /,.,$(JAVA_SRC:.java=))
 
-library_wrapper: java jar headers $(OBJS)
+TESTS_PACKAGE = tests
+TESTS_SRC = $(TESTS_PACKAGE)/ImageTest.java $(TESTS_PACKAGE)/MetaDataTest.java $(TESTS_PACKAGE)/ProjectionTest.java
+TESTS_CLASSES = $(TESTS_SRC:.java=.class)
+
+library_wrapper: java jar headers $(OBJS) javatests
+	@echo " *** Compiling main lib... $(SHAREDLIB)"
 	g++ $(MAIN_OPTS) $(LIBS) $(OBJS) -o $(SHAREDLIB)
 
 java:
@@ -36,6 +41,10 @@ headers:
 	@echo " *** Compiling library: $@"
 	$(CC) $? $(OPTS) $(INCLUDES) -o $@
 
+javatests: $(TESTS_SRC)
+	@echo " *** Compiling tests"
+	javac $(TESTS_SRC)
+
 clean:
-	rm $(SHAREDLIB) $(OBJS) $(JAVA_CLASSES) $(JARFILE)
+	rm $(SHAREDLIB) $(OBJS) $(JAVA_CLASSES) $(JARFILE) $(TESTS_CLASSES)
 

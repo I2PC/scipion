@@ -24,7 +24,7 @@ JNIEXPORT void JNICALL Java_xmipp_ImageDouble_destroy
 	env->SetLongField(jobj, peerId, (long)image);
 }
 
-JNIEXPORT void JNICALL Java_xmipp_ImageDouble_read
+JNIEXPORT void JNICALL Java_xmipp_ImageDouble_read_1image
 (JNIEnv *env, jobject jobj, jstring filename, jboolean read_data, jlong nimage) {
 	std::string msg = "";
 	Image<double> *image = GET_INTERNAL_IMAGE(jobj);
@@ -51,7 +51,7 @@ JNIEXPORT void JNICALL Java_xmipp_ImageDouble_read
 	}
 }
 
-JNIEXPORT void JNICALL Java_xmipp_ImageDouble_readPreview
+JNIEXPORT void JNICALL Java_xmipp_ImageDouble_read_1preview
 (JNIEnv *env, jobject jobj, jstring filename, jint w, jint h, jint slice, jlong nimage) {
 	std::string msg = "";
 	Image<double> *image = GET_INTERNAL_IMAGE(jobj);

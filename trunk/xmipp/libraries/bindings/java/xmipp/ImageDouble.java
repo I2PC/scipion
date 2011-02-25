@@ -23,9 +23,9 @@ public class ImageDouble {
     protected synchronized native void destroy();
 
     // Reading.
-    private native void read(String filename, boolean readData, long nimage) throws Exception;
+    private native void read_image(String filename, boolean readData, long nimage) throws Exception;
 
-    public native void readPreview(String filename,
+    private native void read_preview(String filename,
             int w, int h, int slice, long nimage) throws Exception;
 
     // Set data.
@@ -86,6 +86,11 @@ public class ImageDouble {
         read(filename, readData, 0);
     }
 
+    private void read(String filename, boolean readData, long nimage) throws Exception {
+        read_image(filename, readData, nimage);
+        setFilename(filename);
+    }
+
     public void readPreview(String filename, int w, int h) throws Exception {
         readPreview(filename, w, h, 0, 0);
     }
@@ -94,8 +99,17 @@ public class ImageDouble {
         readPreview(filename, w, h, slice, 0);
     }
 
+    public void readPreview(String filename, int w, int h, int slice, long nimage) throws Exception {
+        read_preview(filename, w, h, slice, nimage);
+        setFilename(filename);
+    }
+
     public void setFilename(String filename) {
         this.filename = filename;
+    }
+
+    public String getFilename() {
+        return filename;
     }
 
     public boolean isPSD() {
