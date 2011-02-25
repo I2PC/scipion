@@ -78,6 +78,8 @@ public:
     double shift_step;
     /** Adjust gray */
     bool adjustGray;
+    /** Generate output images */
+    bool generateAligned;
 public:
     Image<double> V;
     std::vector<AlignmentTomography> list_of_assigned;
@@ -98,7 +100,7 @@ public:
     /** Predict angles and shift.
         This function searches in the shift-psi space and for each combination
         it correlates with the whole reference set. */
-    void predict_angles(int i);
+    void predict_angles(int i, const FileName &fnImgOut);
 
     /** Run the algorithm over all images */
     void run();
