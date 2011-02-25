@@ -43,6 +43,9 @@
 #include <cstring>
 #include "../../external/tiff-3.9.4/libtiff/tiffio.h"
 
+// Defines used to select slice in readPreview
+#define CENTRAL_SLICE -1
+#define ALL_SLICES 0
 /** Macro for represent ALL IMAGES on stack index */
 #define ALL_IMAGES 0
 #define FIRST_IMAGE 1
@@ -296,6 +299,9 @@ public:
         filename = name;
     }
 
+    /* Read image mapped from file */
+    int readMapped(const FileName &name, int select_slice = ALL_SLICES, size_t select_img = ALL_IMAGES);
+
     /** Create a mapped image file
      *
      * An image file, which name and format are given by filename,
@@ -340,7 +346,7 @@ public:
     /* Read an image with a lower resolution as a preview image.
      * If Zdim parameter is not passed, then all slices are rescaled.
      */
-    virtual int readPreview(const FileName &name, int Xdim, int Ydim, int Zdim = -1, size_t select_img = FIRST_IMAGE) = 0;
+    virtual int readPreview(const FileName &name, int Xdim, int Ydim, int select_slice = CENTRAL_SLICE, size_t select_img = FIRST_IMAGE) = 0;
 
     /** General write function
      * select_img= which slice should I replace
@@ -395,9 +401,9 @@ public:
 
     /** Get Image swap
          */
-    void getSwap(int &_swap) const
+    int getSwap() const
     {
-        _swap = swap;
+        return swap;
     }
 
     /* Is there label in the individual header

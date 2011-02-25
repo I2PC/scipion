@@ -696,8 +696,8 @@ void ImageBase::_write(const FileName &name, ImageFHandler* hFile, size_t select
         //               (mode==WRITE_REPLACE || mode==WRITE_APPEND))
         //                REPORT_ERROR(ERR_IO,"write: output file is not an stack");
     }
-//    else if (!_exists && mode == WRITE_REPLACE)
-//        mode == WRITE_OVERWRITE; //
+    //    else if (!_exists && mode == WRITE_REPLACE)
+    //        mode == WRITE_OVERWRITE; //
     else if(!_exists && mode == WRITE_APPEND)
     {
         ;

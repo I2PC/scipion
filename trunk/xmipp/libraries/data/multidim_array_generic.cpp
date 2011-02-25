@@ -29,10 +29,119 @@ MultidimArrayGeneric::MultidimArrayGeneric(MultidimArrayBase* array, DataType _d
 {
     im = array;
     datatype = _datatype;
+    destroyData = false;
 
+}
+
+MultidimArrayGeneric::MultidimArrayGeneric(MultidimArrayGeneric &mdim, int select_slice)
+{
+    init();
+    setDatatype(mdim.datatype);
+
+#define ALIAS(type) ((MultidimArray<type>*)(im))->aliasSlice(*((MultidimArray<type>*)mdim.im), select_slice)
+
+    SWITCHDATATYPE(mdim.datatype, ALIAS)
+#undef ALIAS
+}
+
+MultidimArrayGeneric::~MultidimArrayGeneric()
+{
+    if (im != NULL  && destroyData)
+    {
+        im->clear();
+        delete im;
+        init();
+    }
+}
+void MultidimArrayGeneric::init()
+{
+    im = NULL;
+    datatype = Unknown_Type;
+    destroyData = true;
+}
+
+void MultidimArrayGeneric::clear()
+{
+    if (im != NULL && destroyData)
+    {
+        im->clear();
+        delete im;
+        init();
+    }
 }
 
 void MultidimArrayGeneric::link(MultidimArrayBase* array)
 {
     im = array;
+    destroyData = false;
+}
+
+
+void MultidimArrayGeneric::setDatatype(DataType imgType)
+{
+    clear();
+    datatype = imgType;
+    destroyData = true;
+
+    switch (datatype)
+    {
+    case Float:
+        {
+            MultidimArray<float> *imT = new MultidimArray<float>;
+            im = imT;
+        }
+        break;
+    case UInt:
+        {
+            MultidimArray<unsigned int> *imT = new MultidimArray<unsigned int>;
+            im = imT;
+        }
+        break;
+    case Int:
+        {
+            MultidimArray<int> *imT = new MultidimArray<int>;
+            im = imT;
+        }
+        break;
+    case UShort:
+        {
+            MultidimArray<unsigned short> *imT = new MultidimArray<unsigned short>;
+            im = imT;
+        }
+        break;
+    case Short:
+        {
+            MultidimArray<short> *imT = new MultidimArray<short>;
+            im = imT;
+        }
+        break;
+    case UChar:
+        {
+            MultidimArray<unsigned char> *imT = new MultidimArray<unsigned char>;
+            im = imT;
+        }
+        break;
+    case SChar:
+        {
+            MultidimArray<char> *imT = new MultidimArray<char>;
+            im = imT;
+        }
+        break;
+    case Unknown_Type:
+        REPORT_ERROR(ERR_IMG_UNKNOWN,"");
+        break;
+    default:
+        REPORT_ERROR(ERR_NOT_IMPLEMENTED, "Datatype not implemented.");
+        break;
+    }
+}
+
+void MultidimArrayGeneric::aliasSlice(MultidimArrayGeneric &mdim, int select_slice)
+{
+    setDatatype(mdim.datatype);
+
+#define ALIAS(type) ((MultidimArray<type>*)(im))->aliasSlice(*((MultidimArray<type>*)mdim.im), select_slice)
+
+    SWITCHDATATYPE(mdim.datatype, ALIAS)
+#undef ALIAS
 }

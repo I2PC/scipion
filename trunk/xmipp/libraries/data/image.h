@@ -652,16 +652,29 @@ public:
     /* Read an image with a lower resolution as a preview image.
        * If Zdim parameter is not passed, then all slices are rescaled.
        */
-    int readPreview(const FileName &name, int Xdim, int Ydim, int Zdim = -1, size_t select_img = FIRST_IMAGE)
+    int readPreview(const FileName &name, int Xdim, int Ydim, int select_slice = CENTRAL_SLICE, size_t select_img = FIRST_IMAGE)
     {
+        // Zdim is used to choose the slices: -1 = CENTRAL_SLICE, 0 = ALL_SLICES, else This Slice
+
         ImageGeneric im;
-        int imXdim, imYdim, imZdim;
+        int imXdim, imYdim, imZdim, Zdim;
 
         im.readMapped(name, select_img);
         im.getDimensions(imXdim, imYdim, imZdim);
         im().setXmippOrigin();
 
-        scaleToSize(0,IMGMATRIX(*this),im(),Xdim,Ydim,(Zdim != -1)? Zdim:imZdim);
+        if (select_slice > ALL_SLICES)
+        {
+            MultidimArrayGeneric array(im(), select_slice);
+            array.setXmippOrigin();
+
+            scaleToSize(0,IMGMATRIX(*this), array ,Xdim, Ydim);
+        }
+        else
+        {
+            Zdim = (select_slice == ALL_SLICES)? imZdim: 1;
+            scaleToSize(0,IMGMATRIX(*this),im(), Xdim, Ydim, Zdim);
+        }
     }
 
     /** Write an entire page as datatype
@@ -1063,7 +1076,8 @@ private:
     /* friend declaration for stacks handling purposes
     */
     friend class ImageCollection;
-    template <typename TT> friend class Image;
+    template <typename TT>
+    friend class Image;
 
 }
 ;
@@ -1087,7 +1101,7 @@ void Image< std::complex< double > >::castConvertPage2Datatype(std::complex< dou
 void SingleImgSize(const FileName &filename, int &Xdim, int &Ydim, int &Zdim,
                    size_t &Ndim);
 void SingleImgSize(const FileName &filename, int &Xdim, int &Ydim, int &Zdim,
-    size_t &Ndim, DataType &datatype);
+                   size_t &Ndim, DataType &datatype);
 
 
 

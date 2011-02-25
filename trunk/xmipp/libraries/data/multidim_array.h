@@ -641,10 +641,11 @@ public:
     // Number of elements in NZYX in allocated memory
     size_t nzyxdimAlloc;
 public:
-    virtual void getDimensions(int& Xdim, int& Ydim, int& Zdim, size_t &Ndim) const =0;
-    virtual void resize(size_t Ndim, int Zdim, int Ydim, int Xdim, bool copy=true)=0;
-    virtual void setXmippOrigin()=0;
-    virtual double computeAvg() const=0;
+    virtual void clear() = 0;
+    virtual void getDimensions(int& Xdim, int& Ydim, int& Zdim, size_t &Ndim) const = 0;
+    virtual void resize(size_t Ndim, int Zdim, int Ydim, int Xdim, bool copy=true) = 0;
+    virtual void setXmippOrigin() = 0;
+    virtual double computeAvg() const = 0;
 
     /** Returns the multidimArray dimension.
      *
@@ -975,6 +976,23 @@ public:
         copyShape(m);
         this->data=m.data;
         this->destroyData=false;
+    }
+
+    /** Alias a slice in a multidimarray.
+         *
+         * Treat the multidimarray as if it were a single slice. The data is not copied
+         * into new memory, but a pointer to the selected slice in the multidimarray is copied.
+         * You should not make any operation on this volume such that the
+         * memory locations are changed
+         */
+    void aliasSlice(const MultidimArray<T> &m, int select_slice)
+    {
+        if (select_slice > ZSIZE(m))
+            REPORT_ERROR(ERR_MULTIDIM_SIZE, "aliasSlice: Selected slice cannot be higher than Z size.");
+
+        setDimensions(XSIZE(m), YSIZE(m), 1, 1);
+        this->data = m.data + XSIZE(m)*YSIZE(m)*(select_slice - 1);
+        this->destroyData = false;
     }
     //@}
 

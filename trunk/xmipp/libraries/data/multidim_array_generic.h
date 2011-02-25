@@ -80,6 +80,10 @@ public:
     DataType       datatype;
     MultidimArrayBase *im;
 
+protected:
+    // Flag to allow destroy im data.
+    bool destroyData;
+
 public:
 
     /**
@@ -88,11 +92,28 @@ public:
      */
     MultidimArrayGeneric(MultidimArrayBase* array, DataType _datatype);
 
+    /* Get an aliasSlice of the selected slice from the multidimarray
+     */
+    MultidimArrayGeneric(MultidimArrayGeneric &mdim, int select_slice);
+
     /**
      * Destructor.
      */
-    ~MultidimArrayGeneric()
-    {}
+    ~MultidimArrayGeneric();
+
+    /* Initialize
+     */
+    void init();
+
+    /* Clear the MultidimArrayBase and others
+     */
+    void clear();
+
+
+    void setDatatype(DataType imgType);
+
+
+    void aliasSlice(MultidimArrayGeneric &mdim, int select_slice);
 
     /**
      * Link the internal array base to a specific multidimarray object.
@@ -231,25 +252,25 @@ public:
 
     /** Copy the image in MultidimarrayGeneric to a specific T MultidimArray
      */
-//    template <typename T>
-//    void getImage(MultidimArray<T> &M, size_t n = -1) const
-//    {
-//#define TYPECAST(type) typeCast(*(MultidimArray<type>*)(im), M, n);
-//        SWITCHDATATYPE(datatype, TYPECAST)
-//#undef TYPECAST
+    //    template <typename T>
+    //    void getImage(MultidimArray<T> &M, size_t n = -1) const
+    //    {
+    //#define TYPECAST(type) typeCast(*(MultidimArray<type>*)(im), M, n);
+    //        SWITCHDATATYPE(datatype, TYPECAST)
+    //#undef TYPECAST
 
-//    }
+    //    }
 
     /** Copy in MultidimarrayGeneric an image from a specific T MultidimArray
      */
-//    template <typename T>
-//    void setImage(MultidimArray<T> &M, size_t n = -1)
-//    {
-//#define TYPECAST(type) typeCast(M, *(MultidimArray<type>*)(im), n);
-//        SWITCHDATATYPE(datatype, TYPECAST)
-//#undef TYPECAST
-//
-//    }
+    //    template <typename T>
+    //    void setImage(MultidimArray<T> &M, size_t n = -1)
+    //    {
+    //#define TYPECAST(type) typeCast(M, *(MultidimArray<type>*)(im), n);
+    //        SWITCHDATATYPE(datatype, TYPECAST)
+    //#undef TYPECAST
+    //
+    //    }
 
 }
 ;

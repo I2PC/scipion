@@ -175,18 +175,12 @@ public:
 
     /** Read image mapped from file.
      */
-    inline int readMapped(const FileName &name, int select_img = 0)
-    {
-        read(name, DATA, select_img, true);
-    }
+    int readMapped(const FileName &name, size_t select_img = ALL_IMAGES);
 
     /* Read an image with a lower resolution as a preview image.
     * If Zdim parameter is not passed, then all slices are rescaled.
     */
-    int readPreview(const FileName &name, int Xdim, int Ydim, int Zdim = -1, size_t select_img = FIRST_IMAGE)
-    {
-        image->readPreview(name, Xdim, Ydim, Zdim, select_img);
-    }
+    int readPreview(const FileName &name, int Xdim, int Ydim, int select_slice = CENTRAL_SLICE, size_t select_img = FIRST_IMAGE);
 
     /** Write image to file.
     */

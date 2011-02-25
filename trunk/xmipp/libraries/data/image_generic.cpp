@@ -69,9 +69,7 @@ void ImageGeneric::getImageType(const FileName &imgName, DataType &datatype, boo
     Image<char> Im;
     Im.read(imgName, HEADER);
     datatype = Im.dataType();
-    int iswap;
-    Im.getSwap(iswap);
-    swap = (swap > 0);
+    swap = (Im.getSwap() > 0);
 }
 
 void ImageGeneric::setDatatype(DataType imgType)
@@ -145,7 +143,40 @@ int ImageGeneric::read(const FileName &name, DataMode datamode, size_t select_im
     DataType datatype;
     getImageType(name, datatype, swap);
     setDatatype(datatype);
-    image->read(name, datamode, select_img, mapData && swap);
+    image->read(name, datamode, select_img, mapData && !swap);
+}
+
+int ImageGeneric::readMapped(const FileName &name, size_t select_img)
+{
+    bool swap;
+    DataType datatype;
+    getImageType(name, datatype, swap);
+    setDatatype(datatype);
+
+    image->read(name, DATA, select_img, !swap);
+}
+
+int ImageGeneric::readPreview(const FileName &name, int Xdim, int Ydim, int select_slice, size_t select_img)
+{
+    DataType datatype;
+    getImageType(name, datatype);
+    setDatatype(datatype);
+
+    image->readPreview(name, Xdim, Ydim, select_slice, select_img);
+}
+
+void  ImageGeneric::mapFile2Write(int Xdim, int Ydim, int Zdim, int Ndim, FileName _filename,
+                                  bool createTempFile)
+{
+    image->setDataMode(HEADER); // Use this to ask rw* which datatype to use
+    image->mapFile2Write(Xdim,Ydim,Zdim,Ndim,_filename,createTempFile);
+
+    DataType writeDT = image->dataType();
+    if ( writeDT != datatype)
+    {
+        setDatatype(writeDT);
+        image->mapFile2Write(Xdim,Ydim,Zdim,Ndim,_filename,createTempFile);
+    }
 }
 
 int ImageGeneric::readApplyGeo(const FileName &name, const MDRow &row, bool only_apply_shifts, DataMode datamode, size_t select_img)
@@ -174,20 +205,6 @@ int ImageGeneric::readApplyGeo(const MetaData &md, size_t objId, bool only_apply
     getImageType(name, datatype);
     setDatatype(datatype);
     image->readApplyGeo(name, md, objId, only_apply_shifts, datamode, select_img);
-}
-
-void  ImageGeneric::mapFile2Write(int Xdim, int Ydim, int Zdim, int Ndim, FileName _filename,
-                                  bool createTempFile)
-{
-    image->setDataMode(HEADER); // Use this to ask rw* which datatype to use
-    image->mapFile2Write(Xdim,Ydim,Zdim,Ndim,_filename,createTempFile);
-
-    DataType writeDT = image->dataType();
-    if ( writeDT != datatype)
-    {
-        setDatatype(writeDT);
-        image->mapFile2Write(Xdim,Ydim,Zdim,Ndim,_filename,createTempFile);
-    }
 }
 
 
