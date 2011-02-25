@@ -27,8 +27,7 @@
 
 int main(int argc, char **argv)
 {
-    Prog_align_dual prm;
+    ProgAlignDualTiltSeries prm;
     prm.read(argc,argv);
-    prm.run();
-    return 0;
+    prm.tryRun();
 }

@@ -35,7 +35,7 @@
    @ingroup ReconsLibrary */
 //@{
 /** Align dual tilt series parameters. */
-class Prog_align_dual: public XmippProgram
+class ProgAlignDualTiltSeries: public XmippProgram
 {
 public:
     /// Reference tilt series
