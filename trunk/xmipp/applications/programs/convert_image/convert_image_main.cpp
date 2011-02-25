@@ -136,7 +136,7 @@ protected:
         {
             if (fn_out.getExtension() == "vol" || oext == "vol")
                 type = "vol";
-            else if (fn_out.getExtension() == "stk" || oext == "stk")
+            else if (fn_out.getExtension() == "stk" || oext == "stk" || oext == "mrcs")
                 type = "stk";
         }
 
@@ -163,7 +163,7 @@ protected:
 
         convMode = MD2MD;
 
-        if (!single_image && type == "vol")
+        if (!single_image && type != "stk")
         {
             convMode = MD2VOL;
 
