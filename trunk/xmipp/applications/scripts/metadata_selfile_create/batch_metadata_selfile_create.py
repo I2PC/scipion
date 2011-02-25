@@ -82,7 +82,7 @@ for file in files:
             fileAux=file+":mrcs"
         x, x, x, nSize = SingleImgSize(fileAux)
     if nSize != 1:
-        counter = 0
+        counter = 1
         for jj in range(nSize):
             inFile.compose(counter, fileAux)
             objId = mD.addObject()
