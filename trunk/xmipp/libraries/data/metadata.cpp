@@ -844,17 +844,11 @@ void MetaData::read(const FileName &_filename,
 }
 
 #define LINE_LENGHT 1024
-void MetaData::readPlain(const FileName &inFile, const StringVector &labelsString, const String &separator)
+void MetaData::readPlain(const FileName &inFile, const String &labelsString, const String &separator)
 {
 
   std::vector<MDLabel> labels;
-  StringVector parts;
-
-  for (int i = 0; i < labelsString.size(); ++i)
-      if (MDL::isValidLabel(labelsString[i]))
-          labels.push_back(MDL::str2Label(labelsString[i]));
-      else
-          REPORT_ERROR(ERR_PARAM_INCORRECT, formatString("Invalid label '%s' received.", parts[i].c_str()));
+  MDL::str2LabelVector(labelsString, labels);
 
   char lineBuffer[LINE_LENGHT];
   String line;
@@ -862,6 +856,7 @@ void MetaData::readPlain(const FileName &inFile, const StringVector &labelsStrin
   size_t lineCounter = 0;
   size_t columnsNumber = labels.size();
   size_t objId;
+  StringVector parts;
 
   while (is.getline(lineBuffer, LINE_LENGHT))
   {
@@ -880,20 +875,6 @@ void MetaData::readPlain(const FileName &inFile, const StringVector &labelsStrin
           }
       }
   }
-}
-
-void MetaData::readPlain(const FileName &inFile, const String &labelsString, const String &separator)
-{
-  StringVector parts;
-  splitString(labelsString, " ", parts);
-  readPlain(inFile, parts, separator);
-}
-
-void MetaData::addPlain(const FileName &inFile, const StringVector &labelsString, const String &separator)
-{
-  MetaData md2;
-  md2.readPlain(inFile, labelsString);
-  merge(md2);
 }
 
 void MetaData::addPlain(const FileName &inFile, const String &labelsString, const String &separator)
@@ -1110,7 +1091,6 @@ void MetaData::aggregate(const MetaData &mdIn, AggregateOperation op,
     std::vector<AggregateOperation> ops(1);
     ops[0] = op;
     mdIn.myMDSql->aggregateMd(this, ops, operateLabel);
-    firstObject();
 }
 
 void MetaData::aggregate(const MetaData &mdIn, const std::vector<AggregateOperation> &ops,
@@ -1120,7 +1100,6 @@ void MetaData::aggregate(const MetaData &mdIn, const std::vector<AggregateOperat
         REPORT_ERROR(ERR_MD, "Labels vectors should contain one element more than operations");
     init(&resultLabels);
     mdIn.myMDSql->aggregateMd(this, ops, operateLabel);
-    firstObject();
 }
 
 

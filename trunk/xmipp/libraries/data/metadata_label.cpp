@@ -39,6 +39,18 @@ void MDL::addLabel(const MDLabel label, const MDLabelType type, const String &na
         names[name3] = label;
 }//close function addLabel
 
+void MDL::str2LabelVector(const String &labelsStr, std::vector<MDLabel> &labels)
+{
+  labels.clear();
+  StringVector parts;
+  splitString(labelsStr, " ", parts);
+  for (int i = 0; i < parts.size(); ++i)
+    if (MDL::isValidLabel(parts[i]))
+        labels.push_back(MDL::str2Label(parts[i]));
+    else
+        REPORT_ERROR(ERR_PARAM_INCORRECT, formatString("Unknown label '%s' received.", parts[i].c_str()));
+}
+
 MDLabel  MDL::str2Label(const String &labelName)
 {
     if (names.find(labelName) == names.end())

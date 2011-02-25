@@ -595,13 +595,11 @@ public:
      * Labels for each columns should be provided in an string separated by spaces.
      *  Return false if couldn't read
      */
-    void readPlain(const FileName &inFile, const StringVector &labelsString, const String &separator = " ");
     void readPlain(const FileName &inFile, const String &labelsString, const String &separator = " ");
     /** Same as readPlain, but instead of cleanning data, the
      * readed values will be added. If there are common columns in metadata
      * and the plain text, the lattest will be setted
      */
-    void addPlain(const FileName &inFile, const StringVector &labelsString, const String &separator=" ");
     void addPlain(const FileName &inFile, const String &labelsString, const String &separator=" ");
 
     /** @name Set Operations
@@ -785,11 +783,6 @@ class MDValueGenerator
 public:
   MDLabel label; //label to which generate values
 
-  /* Constructor */
-  MDValueGenerator(MDLabel label)
-  {
-    this->label = label;
-  }
   /* Method to be implemented in concrete generators */
   virtual bool fillValue(MetaData &md, size_t objId) = 0;
   /* Fill whole metadata */
