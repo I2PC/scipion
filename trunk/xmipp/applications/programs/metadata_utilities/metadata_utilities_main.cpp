@@ -61,13 +61,13 @@ public:
         this->op2 = op2;
         this->op3 = op3;
         if (mode == "uniform")
-          this->mode = UNIFORM;
+            this->mode = UNIFORM;
         else if (mode == "gaussian")
-          this->mode = GAUSSIAN;
+            this->mode = GAUSSIAN;
         else if (mode == "student")
             this->mode = STUDENT;
         else
-          REPORT_ERROR(ERR_PARAM_INCORRECT, formatString("Unknown random type '%s'", mode.c_str()));
+            REPORT_ERROR(ERR_PARAM_INCORRECT, formatString("Unknown random type '%s'", mode.c_str()));
 
     }
 
@@ -132,7 +132,7 @@ protected:
         addParamsLine("or --query <query_operation>   : Query operations");
         addParamsLine("         where <query_operation>");
         addParamsLine("   select <exp>               : Create new metadata with those entries that satisfy the expression 'exp'");
-        addParamsLine("   count  <label> <value>     : for each value of a given label create new metadata with the number of times the value appears");
+        addParamsLine("   count  <label>             : for each value of a given label create new metadata with the number of times the value appears");
         addParamsLine("   size                       : print Metadata size");
 
         addParamsLine("or --fill <label> <fill_mode>                  : Fill a column values(should be numeric)");
@@ -185,91 +185,111 @@ protected:
 
     void doSet()
     {
-      operation = getParam("--set", 0);
-      int labelIndex = 1;
-      if (operation != "sort")
-      {
-          labelIndex = 2;
-          md2.read(getParam("--set", 1));
-      }
-      else
-          md2 = mdIn;
-      MDLabel label = MDL::str2Label(getParam("--set", labelIndex));
-      if (operation == "union")
-          mdIn.unionDistinct(md2, label);
-      else if (operation == "intersection")
-          mdIn.intersection(md2, label);
-      else if (operation == "subtraction")
-          mdIn.subtraction(md2, label);
-      else if (operation == "join")
-      {
-          MetaData md;
-          md.join(mdIn, md2, label);
-          mdIn = md;
-      }
-      else if (operation == "merge")
-          mdIn.merge(md2);
-      else if (operation == "sort")
-          mdIn.sort(md2, label);
+        operation = getParam("--set", 0);
+        int labelIndex = 1;
+        if (operation != "sort")
+        {
+            labelIndex = 2;
+            md2.read(getParam("--set", 1));
+        }
+        else
+            md2 = mdIn;
+        MDLabel label = MDL::str2Label(getParam("--set", labelIndex));
+        if (operation == "union")
+            mdIn.unionDistinct(md2, label);
+        else if (operation == "intersection")
+            mdIn.intersection(md2, label);
+        else if (operation == "subtraction")
+            mdIn.subtraction(md2, label);
+        else if (operation == "join")
+        {
+            MetaData md;
+            md.join(mdIn, md2, label);
+            mdIn = md;
+        }
+        else if (operation == "merge")
+            mdIn.merge(md2);
+        else if (operation == "sort")
+            mdIn.sort(md2, label);
     }
 
     void doOperate()
     {
-      operation = getParam("--operate", 0);
-      if (operation == "add_column")
-          mdIn.addLabel(MDL::str2Label(getParam("--operate", 1)));
-      else if (operation == "drop_column")
-          REPORT_ERROR(ERR_DEBUG_TEST, "Drop column not yet implemented");
-      else if (operation == "modify")
-          mdIn.operate(getParam("--operate", 1));
+        operation = getParam("--operate", 0);
+        if (operation == "add_column")
+            mdIn.addLabel(MDL::str2Label(getParam("--operate", 1)));
+        else if (operation == "drop_column")
+            REPORT_ERROR(ERR_DEBUG_TEST, "Drop column not yet implemented");
+        else if (operation == "modify")
+            mdIn.operate(getParam("--operate", 1));
     }
 
     void doFill()
     {
-      String labelsStr = getParam("--fill", 0);
-      StringVector labels;
-      splitString(labelsStr, " ", labels);
-      if (labels.empty())
-        REPORT_ERROR(ERR_PARAM_INCORRECT, "You should provide at least one label to fill out");
-      operation = getParam("--fill", 1);
-      MDRandGenerator * generator;
-      if (operation == "constant")
-      {
+        String labelsStr = getParam("--fill", 0);
+        StringVector labels;
+        splitString(labelsStr, " ", labels);
+        if (labels.empty())
+            REPORT_ERROR(ERR_PARAM_INCORRECT, "You should provide at least one label to fill out");
+        operation = getParam("--fill", 1);
+        MDRandGenerator * generator;
+        if (operation == "constant")
+        {}
+        else if (operation.find("rand_") == 0)
+        {
+            double op1 = getDoubleParam("--fill", 2);
+            double op2 = getDoubleParam("--fill", 3);
+            double op3 = 0.;
+            String type = findAndReplace(operation, "rand_", "");
+            if (type == "student")
+                op3 = getDoubleParam("--fill", 4);
+            generator = new MDRandGenerator(label, op1, op2, type, op3);
+        }
+        generator->fill(mdIn);
 
-      }
-      else if (operation.find("rand_") == 0)
-      {
-          double op1 = getDoubleParam("--fill", 2);
-          double op2 = getDoubleParam("--fill", 3);
-          double op3 = 0.;
-          String type = findAndReplace(operation, "rand_", "");
-          if (type == "student")
-              op3 = getDoubleParam("--fill", 4);
-          generator = new MDRandGenerator(label, op1, op2, type, op3);
-      }
-      generator->fill(mdIn);
-
-      delete generator;
+        delete generator;
     }
 
+    void doQuery()
+    {
+        operation = getParam("--query", 0);
+        MDLabel label;
+        String expression;
+
+        if (operation == "count")//note MDL_CTFMODEL is a dummy parameter
+        {
+            label = MDL::str2Label(getParam("--query", 1));
+            md2 = mdIn;
+            mdIn.aggregate(md2, AGGR_COUNT,label,MDL_CTFMODEL,MDL_COUNT);
+        }
+        else if (operation == "select")
+        {
+            expression = getParam("--query", 1);
+            md2 = mdIn;
+            mdIn.importObjects(md2, MDExpression(expression));
+        }
+        else if (operation == "size")
+            std::cout << fn_in + " size is: " << mdIn.size() << std::endl;
+
+    }
 public:
     void run()
     {
         if (checkParam("--set"))
-          doSet();
+            doSet();
         else if (checkParam("--operate"))
-          doOperate();
+            doOperate();
         else if (checkParam("--file"))
-        {
-        }
-        else if (checkParam("--query"))
         {}
+        else if (checkParam("--query"))
+            doQuery();
 
         else if (checkParam("--fill"))
-          doFill();
+            doFill();
 
         if (!checkParam("-o"))
-            mdIn.write(std::cout);
+            //better do nothing since size does not produce a new metadata
+            ;//mdIn.write(std::cout);
         else
             mdIn.write(getParam("-o"));
 
