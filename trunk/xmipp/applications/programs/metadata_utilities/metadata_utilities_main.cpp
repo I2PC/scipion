@@ -55,7 +55,7 @@ protected:
         }
     }
 public:
-    MDRandGenerator(MDLabel label, double op1, double op2, const String &mode, double op3=0.):MDValueGenerator(label)
+    MDRandGenerator(MDLabel label, double op1, double op2, const String &mode, double op3=0.)
     {
         this->op1 = op1;
         this->op2 = op2;
