@@ -261,6 +261,9 @@ def AddJavaLibrary(name, basedir, srcdir):#, sourceList, includes, libpath=[], l
     import shutil
     import glob
 
+    jarname = name + '.jar'
+    jarfile = basedir + '/' + jarname
+
     # Compiles
     java_home = 'external/java/jvm/'
     #java_headers = os.path.join(java_home, 'include')
@@ -276,16 +279,23 @@ def AddJavaLibrary(name, basedir, srcdir):#, sourceList, includes, libpath=[], l
     #env['JAVACFLAGS'] = ''
 
     env['JARFLAGS'] = '-Mcf'    # Default "cf". "M" = Do not add a manifest file.
+
     path = os.path.join(basedir, srcdir)
-    buildJar = env.Jar(target = basedir+'/' + name + '.jar',
+
+    buildJar = env.Jar(target = jarfile,
         source = path,
         JARCHDIR = basedir)
 
     buildClasses = env.Java(basedir, path)
 
+    # Copies jar file to ImageJ plugins folder.
+    copyJar = env.Command('copyJar', jarfile,
+            "cp " + jarfile + " external/imagej/plugins/")
+
     # Packs classes and plugin config file into jar.
     env.Default(buildClasses)
     env.Default(buildJar)
+    env.Default(copyJar)
 
 def removeAll(basedir, regexp):
 	import glob
@@ -304,7 +314,7 @@ def AddImageJPlugin(name, pluginDir, outDir):
     buildDir = pluginDir+"/build/"
 
     # Builds jar files list...
-    libsStr=''
+    libsStr='external/imagej/ij.jar:external/imagej/plugins/XmippJavaInterface.jar'
     if os.path.exists(libsDir) and len(os.listdir(libsDir)) > 0:
 	# Copies libraries to ImageJ plugins dir.
 	for f in os.listdir(libsDir):
@@ -336,7 +346,7 @@ def AddImageJPlugin(name, pluginDir, outDir):
     env['JAVA_HOME'] = java_home
     env['JNI_CPPPATH'] = java_headers
     env['JNI_LIBPATH'] = java_libs
-    env['JAVACFLAGS'] = '-classpath external/imagej/ij.jar' + libsStr +\
+    env['JAVACFLAGS'] = '-classpath ' + libsStr +\
            os.pathsep.join(env['JAVACLASSPATH'])
 
     env['JARFLAGS'] = '-Mcf'    # Default "cf". "M" = Do not add a manifest file.
@@ -607,14 +617,16 @@ if int(env['java']):
     AddLibrary('XmippJavaInterface', 'libraries/bindings/java', JavaInterfaceSources,
     ['#libraries', '#external', '#', env['JNI_CPPPATH'],env['JNI_CPPPATH']+"/linux"],['lib'],
     ['XmippData','pthread'])
-    # Checks if jvm exists, otherwise the compilation will be halted if jvm is missing.
+    # Xmipp interface is needed by plugins.
+    AddJavaLibrary('XmippJavaInterface', 'libraries/bindings/java', 'xmipp')#, ['#'],
+    # ImageJ plugins.
     AddImageJPlugin('Xmipp_IO', 'libraries/graphicsj/Xmipp_IO', 'external/imagej/plugins')
-###    AddImageJPlugin('Xmipp_Projections_Explorer', 'libraries/graphicsj/Xmipp_Projections_Explorer', 'external/imagej/plugins')
-    AddImageJPlugin('Xmipp_Browser', 'libraries/graphicsj/Xmipp_Browser', 'external/imagej/plugins')
+    AddImageJPlugin('Xmipp_Projections_Explorer', 'libraries/graphicsj/Xmipp_Projections_Explorer', 'external/imagej/plugins')
+###    AddImageJPlugin('Xmipp_Browser', 'libraries/graphicsj/Xmipp_Browser', 'external/imagej/plugins')
 ###    AddImageJPlugin('Xmipp_Tomo', 'libraries/graphicsj/Xmipp_Tomo', 'external/imagej/plugins')
+    # Other ImageJ plugins without sources.
     AddImageJExternalPlugins('libraries/graphicsj/plugins', 'external/imagej/plugins')
     #JavaInterfaceSources = Glob('libraries/bindings/java/xmipp', '*.java', [])
-    AddJavaLibrary('XmippJavaInterface', 'libraries/bindings/java', 'xmipp')#, ['#'],
     #    [], ['XmippData'])
 
 
