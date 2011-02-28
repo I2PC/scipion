@@ -37,16 +37,19 @@ protected:
     void defineParams()
     {
         addUsageLine("Import metadata from plain text files.");
-        addExampleLine("  xmipp_metadata_operate  -i a.doc -o b.doc -e  \"angleRot=(angleRot*3.1416/180.)\"  ");
-        addExampleLine("  xmipp_metadata_operate  -i a.doc -o b.doc -e  \"image=replace(image, 'xmp','spi')\"  ");
+        addSeeAlsoLine("metadata_utilities");
         addParamsLine("  -i <text_file>     :Input file text file       ");
         addParamsLine("     alias --input;");
         addParamsLine(" [ -o <output_metadata>]     :If not provided, the resulting metadata will be printed on screen");
         addParamsLine("     alias --output;");
-        addParamsLine("  -l <label>                 :label to be imported, you also can pass a list beetween quotes and separated by spaces");
-        addParamsLine("     alias --labels;");
-        addParamsLine(" [ -m <metadata> ]           :merge the imported metadata to an existing one");
-        addParamsLine("     alias --merge;");
+        addParamsLine("  --labels <label>                 :label to be imported, you also can pass a list beetween quotes and separated by spaces");
+        addParamsLine("     alias -l;");
+        addParamsLine(" [ --merge <metadata> ]           :merge the imported metadata to an existing one");
+        addParamsLine("     alias -m;");
+
+        addKeywords("import file text");
+        addExampleLine("If you have a text file with 2 columns with real values and you want to import as 'angleRot' and 'angleTilt'", false);
+        addExampleLine("xmipp_metadata_import -i angles.txt -o angles.doc --labels \"angleRot angleTilt\"");
        // addParamsLine(" [ -s <sep=\" \">]             :Separator to be used, default is space");
        // addParamsLine("     alias --separator;");
 

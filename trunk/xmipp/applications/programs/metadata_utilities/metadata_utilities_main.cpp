@@ -146,6 +146,7 @@ protected:
         addUsageLine ("Perform several operation over the metadata files.");
         addUsageLine ("If the -o option is not used, the original metadata");
         addUsageLine ("will be modified.");
+        addSeeAlsoLine("metadata_import");
 
         addParamsLine(" -i <metadata>                          : Input metadata file");
         addParamsLine("   [-o  <metadata>]                    : Output metadata file, if not provided result will be printed on screen");
@@ -171,6 +172,7 @@ protected:
         addParamsLine("    drop_column <labels>                : Drop some columns(label list) from metadata");
         addParamsLine("    modify_values <expression>                 : Use an SQLite expression to modify the metadata");
         addParamsLine("                                        : This option requires knowledge of basic SQL syntax(more specific SQLite");
+        addParamsLine("           alias -p;                                             ");
 
         addParamsLine("or  --file <file_operation>     : File operations");
         addParamsLine("         where <file_operation>");
@@ -178,12 +180,14 @@ protected:
         addParamsLine("   move <directory>  <label=image> : Move files in metadata md1 to directory path (file names at label column)");
         addParamsLine("   delete  <label=image>      : Delete files in metadata md1 (file names at label column)");
         addParamsLine("   convert2db                 : Convert metadata to sqlite database");
+        addParamsLine("           alias -f;                                             ");
 
         addParamsLine("or --query <query_operation>   : Query operations");
         addParamsLine("         where <query_operation>");
         addParamsLine("   select <expression>        : Create new metadata with those entries that satisfy the expression");
         addParamsLine("   count  <label>             : for each value of a given label create new metadata with the number of times the value appears");
         addParamsLine("   size                       : print Metadata size");
+        addParamsLine("           alias -q;                                             ");
 
         addParamsLine("or --fill <labels> <fill_mode>                  : Fill a column values(should be of same type)");
         addParamsLine("   where <fill_mode>");
@@ -192,37 +196,49 @@ protected:
         addParamsLine("     rand_gaussian <mean=0.> <stddev=1.>      : Follow a gaussian distribution with mean and stddev");
         addParamsLine("     rand_student  <mean=0.> <stddev=1.> <df=3.> : Follow a student distribution with mean, stddev and df degrees of freedom.");
         addParamsLine("     expand                                   : Treat the column as the filename of an row metadata and expand values");
+        addParamsLine("           alias -l;                                             ");
+
         addParamsLine(" [--mode+ <mode=overwrite>]   : Metadata writing mode.");
         addParamsLine("    where <mode>");
         addParamsLine("     overwrite   : Replace the content of the file with the Metadata");
         addParamsLine("     append      : Write the Metadata as a new block, removing the old one");
 
-        addExampleLine(" Concatenate two metadatas.", false);
-        addExampleLine ("   xmipp_metadata_utilities --union         mD1.doc mD2.doc  -o out.doc --label image");
-        addExampleLine(" Intersect two metadatas.", false);
-        addExampleLine ("   xmipp_metadata_utilities --intersection  mD1.doc mD2.doc  -o out.doc --label image");
-        addExampleLine(" Substract two metadatas.", false);
-        addExampleLine ("   xmipp_metadata_utilities --subtraction   mD1.doc mD2.doc  -o out.doc --label image");
-        addExampleLine(" Combine columns from both metadatas.", false);
-        addExampleLine ("   xmipp_metadata_utilities --join j1.doc   mD1.doc          -o out.doc --label image");
-        addExampleLine(" Sort the elements in metadata.", false);
-        addExampleLine ("   xmipp_metadata_utilities --sort          mD1.doc          -o out.doc --label image");
-        addExampleLine(" Add column to metadata.", false);
-        addExampleLine ("   xmipp_metadata_utilities --addColumn     mD1.doc          -o out.doc --label image");
+        addExampleLine(" Concatenate two metadatas. If label is not provided, by default is 'image'", false);
+        addExampleLine ("   xmipp_metadata_utilities -i mD1.doc --set union mD2.doc  -o out.doc");
+        addExampleLine(" Intersect two metadatas using label 'order_'", false);
+        addExampleLine ("   xmipp_metadata_utilities -i mD1.doc --set intersection  mD2.doc --label order_ -o out.doc");
+        addExampleLine(" Combine columns from two metadatas. Be sure of both have same number of rows and also", false);
+        addExampleLine(" there aren't common columns, in that case second metadata columns will be used", false);
+        addExampleLine ("   xmipp_metadata_utilities -i mD1.doc --set merge mD2.doc -o out.doc --label image");
+        addExampleLine(" Sort the elements in metadata (using default label 'image').", false);
+        addExampleLine ("   xmipp_metadata_utilities -i mD1.doc -s sort -o out.doc");
+        addExampleLine(" Add columns 'shiftX' and 'shiftY' to metadata.", false);
+        addExampleLine ("   xmipp_metadata_utilities -i mD1.doc --operate add_column \"shiftX shiftY\" -o out.doc");
+        addExampleLine(" You can also add columns and 'filling' its values with different options", false);
+        addExampleLine("By example, to add the column 'shiftX' with uniform random value between 0 and 10", false);
+        addExampleLine ("   xmipp_metadata_utilities -i mD1.doc --fill shiftX rand_uniform 0 10 -o out.doc");
+        addExampleLine("Or for initialize metadata columns 'shiftX' and 'shiftY' with a constant value of 5", false);
+        addExampleLine ("   xmipp_metadata_utilities -i mD1.doc -l \"shiftX shiftY\" constant 5 -o out.doc");
+        addExampleLine("If you have columns that represent the filename of a metadata with other data (ex CTFParams)", false);
+        addExampleLine("you cant 'expand' the column with the values in that metadta", false);
+        addExampleLine ("   xmipp_metadata_utilities -i mD1.doc --fill CTFParams expand -o outExpanded.doc");
+        addExampleLine("For check all options availables for 'filling' mode, use: ", false);
+        addExampleLine ("   xmipp_metadata_utilities --help fill");
         addExampleLine(" Dump metadata content to Sqlite3 database. (use xmipp_sqlite3 to visualize results)", false);
-        addExampleLine ("   xmipp_metadata_utilities --convert2db    mD1.doc          -o out.db; xmipp_sqlite3 out.db");
-        addExampleLine(" Copy files in metadata to a location.", false);
-        addExampleLine ("   xmipp_metadata_utilities --copy mD1.doc kk                -o out.doc --label image ");
+        addExampleLine ("   xmipp_metadata_utilities -i mD1.doc --operate convert2db -o mD1.db; xmipp_sqlite3 out.db");
+        addExampleLine(" Copy files in metadata to a location. The metadata will be also copied to new location", false);
+        addExampleLine ("   xmipp_metadata_utilities -i mD1.doc --file copy /home/pepe/newLocation");
         addExampleLine(" Delete files in metadata.", false);
-        addExampleLine ("   xmipp_metadata_utilities --delete out.doc                            --label image");
+        addExampleLine ("   xmipp_metadata_utilities -i mD1.doc --file delete");
         addExampleLine(" Select elements in metadata that satisfy a given constrain.", false);
-        addExampleLine ("   xmipp_metadata_utilities --select mD1.doc \"anglePsi > 0 AND shiftX > -0.5\" -o out.doc");
+        addExampleLine ("   xmipp_metadata_utilities --query select mD1.doc \"anglePsi > 0 AND shiftX > -0.5\" -o out.doc");
+        addExampleLine(" You can also modify your data using SQLite syntax expression", false);
+        addExampleLine("  xmipp_metadata_utilities  -i a.doc --operate modify_values \"angleRot=(angleRot*3.1416/180.)\" -o b.doc");
+        addExampleLine("  xmipp_metadata_utilities  -i a.doc --operate modify_values \"image=replace(image, 'xmp','spi')\" -o b.doc");
         addExampleLine(" Count number of images per CTF", false);
-        addExampleLine ("   xmipp_metadata_utilities --count mD1.doc  -o out.doc --label CTFModel");
-        addExampleLine(" Metadata Size", false);
-        addExampleLine ("   xmipp_metadata_utilities --size mD1.doc");
-        addExampleLine(" Metadata randomize double values", false);
-        addExampleLine ("   xmipp_metadata_utilities --randValues mD1.doc gaussian 0. 0.15 -o out.doc --label scale");
+        addExampleLine ("   xmipp_metadata_utilities -i mD1.doc -q count CTFModel -o out.doc");
+        addExampleLine(" Print the metadata Size", false);
+        addExampleLine ("   xmipp_metadata_utilities -i mD1.doc --query size");
 
     }
 
