@@ -1041,6 +1041,13 @@ void MetaData::merge(const MetaData &md2)
     }
 }
 
+void MetaData::fillExpand(MDLabel label)
+{
+    MDExpandGenerator generator;
+    generator.label=label;
+    generator.fill(*this);
+}
+
 void MetaData::aggregateSingle(MDObject &mdValueOut, AggregateOperation op,
                                MDLabel aggregateLabel)
 
@@ -1440,20 +1447,6 @@ bool MDConstGenerator::fillValue(MetaData &md, size_t objId)
     md.setValueFromStr(label, value, objId);
 }
 
-bool MDExpandGenerator::fillValue(MetaData &md, size_t objId)
-{
-    if (md.getValue(label, fn, objId))
-    {
-        expMd.read(fn);
-        if (expMd.getColumnFormat() || expMd.isEmpty())
-            REPORT_ERROR(ERR_VALUE_INCORRECT, "Only can expand non empty and row formated metadatas");
-        expMd.getRow(row, expMd.firstObject());
-        md.setRow(row, objId);
-    }
-    else
-        REPORT_ERROR(ERR_MD_BADLABEL, formatString("Can't expand missing label '%s'", MDL::label2Str(label).c_str()));
-}
-
 MDLinealGenerator::MDLinealGenerator(double initial, double step)
 {
   this->initValue = initial;
@@ -1478,4 +1471,29 @@ WriteModeMetaData metadataModeConvert (String mode)
     if (mode.npos != mode.find("append"))
         return APPEND;
     REPORT_ERROR(ERR_ARG_INCORRECT,"metadataModeConvert: Invalid mode");
+}
+
+/** Class to generate values for columns of a metadata*/
+bool MDValueGenerator::fill(MetaData &md)
+{
+    FOR_ALL_OBJECTS_IN_METADATA(md)
+    {
+        fillValue(md, __iter.objId);
+    }
+}
+
+/** Class to fill columns with another metadata in row format */
+bool MDExpandGenerator::fillValue(MetaData &md, size_t objId)
+{
+    if (md.getValue(label, fn, objId))
+    {
+        std::cerr << "expanding " << fn << std::endl;
+        expMd.read(fn);
+        if (expMd.getColumnFormat() || expMd.isEmpty())
+            REPORT_ERROR(ERR_VALUE_INCORRECT, "Only can expand non empty and row formated metadatas");
+        expMd.getRow(row, expMd.firstObject());
+        md.setRow(row, objId);
+    }
+    else
+        REPORT_ERROR(ERR_MD_BADLABEL, formatString("Can't expand missing label '%s'", MDL::label2Str(label).c_str()));
 }
