@@ -32,103 +32,6 @@
 #include <iostream>
 #include <fstream>
 
-
-typedef enum { UNIFORM, GAUSSIAN, STUDENT } RandMode;
-
-/** MDGenerator to generate random values on columns */
-class MDRandGenerator: public MDValueGenerator
-{
-protected:
-    double op1, op2, op3;
-    RandMode mode;
-
-    inline double getRandValue()
-    {
-        switch (mode)
-        {
-        case UNIFORM:
-            return rnd_unif(op1, op2);
-        case GAUSSIAN:
-            return rnd_gaus(op1, op2);
-        case STUDENT:
-            return rnd_student_t(op3, op1, op2);
-        }
-    }
-public:
-    MDRandGenerator(double op1, double op2, const String &mode, double op3=0.)
-    {
-        static bool randomized = false;
-
-        if (!randomized)//initialize random seed just once
-        {
-            randomize_random_generator();
-            randomized = true;
-        }
-        this->op1 = op1;
-        this->op2 = op2;
-        this->op3 = op3;
-        if (mode == "uniform")
-            this->mode = UNIFORM;
-        else if (mode == "gaussian")
-            this->mode = GAUSSIAN;
-        else if (mode == "student")
-            this->mode = STUDENT;
-        else
-            REPORT_ERROR(ERR_PARAM_INCORRECT, formatString("Unknown random type '%s'", mode.c_str()));
-
-    }
-
-    bool fillValue(MetaData &md, size_t objId)
-    {
-        double aux = getRandValue();
-        md.setValue(label, aux, objId);
-    }
-
-}
-;//end of class MDRandGenerator
-
-/** Class to fill columns with constant values */
-class MDConstGenerator: public MDValueGenerator
-{
-public:
-    String value;
-
-    MDConstGenerator(const String &value)
-    {
-        this->value = value;
-    }
-    bool fillValue(MetaData &md, size_t objId)
-    {
-        md.setValueFromStr(label, value, objId);
-    }
-}
-;//end of class MDConstGenerator
-
-/** Class to fill columns with another metadata in row format */
-class MDExpandGenerator: public MDValueGenerator
-{
-public:
-    MetaData expMd;
-    FileName fn;
-    MDRow row;
-
-    bool fillValue(MetaData &md, size_t objId)
-    {
-        if (md.getValue(label, fn, objId))
-        {
-            std::cerr << "expanding " << fn << std::endl;
-            expMd.read(fn);
-            if (expMd.getColumnFormat() || expMd.isEmpty())
-                REPORT_ERROR(ERR_VALUE_INCORRECT, "Only can expand non empty and row formated metadatas");
-            expMd.getRow(row, expMd.firstObject());
-            md.setRow(row, objId);
-        }
-        else
-            REPORT_ERROR(ERR_MD_BADLABEL, formatString("Can't expand missing label '%s'", MDL::label2Str(label).c_str()));
-    }
-}
-;//end of class MDExpandGenerator
-
 class ProgMetadataUtilities: public XmippProgram
 {
 private:
@@ -192,6 +95,7 @@ protected:
         addParamsLine("or --fill <labels> <fill_mode>                  : Fill a column values(should be of same type)");
         addParamsLine("   where <fill_mode>");
         addParamsLine("     constant  <value>                        : Fill with a constant value");
+        addParamsLine("     lineal  <init_value> <step>              : Fill with a lineal serie starting at init_value with an step");
         addParamsLine("     rand_uniform  <a=0.> <b=1.>              : Follow a uniform distribution between a and b");
         addParamsLine("     rand_gaussian <mean=0.> <stddev=1.>      : Follow a gaussian distribution with mean and stddev");
         addParamsLine("     rand_student  <mean=0.> <stddev=1.> <df=3.> : Follow a student distribution with mean, stddev and df degrees of freedom.");
@@ -231,7 +135,7 @@ protected:
         addExampleLine(" Delete files in metadata.", false);
         addExampleLine ("   xmipp_metadata_utilities -i mD1.doc --file delete");
         addExampleLine(" Select elements in metadata that satisfy a given constrain.", false);
-        addExampleLine ("   xmipp_metadata_utilities --query select mD1.doc \"anglePsi > 0 AND shiftX > -0.5\" -o out.doc");
+        addExampleLine ("   xmipp_metadata_utilities -i mD1.doc --query select \"anglePsi > 0 AND shiftX > -0.5\" -o out.doc");
         addExampleLine(" You can also modify your data using SQLite syntax expression", false);
         addExampleLine("  xmipp_metadata_utilities  -i a.doc --operate modify_values \"angleRot=(angleRot*3.1416/180.)\" -o b.doc");
         addExampleLine("  xmipp_metadata_utilities  -i a.doc --operate modify_values \"image=replace(image, 'xmp','spi')\" -o b.doc");
@@ -325,6 +229,8 @@ protected:
         }
         else if (operation == "expand")
             generator = new MDExpandGenerator();
+        else if (operation == "lineal")
+          generator = new MDLinealGenerator(getDoubleParam("--fill", 2), getDoubleParam("--fill", 3));
 
         //Fill columns
         for (int i = 0; i < labels.size(); ++i)

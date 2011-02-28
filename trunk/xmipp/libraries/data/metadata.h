@@ -363,7 +363,7 @@ public:
     {
         return setValue(MDObject(label, valueIn), id);
     }
-//private:
+    //private:
     /** This functions are using MDObject for set real values
      * there is an explicit function signature
      * foreach type supported in Metadata.
@@ -372,7 +372,7 @@ public:
      */
     bool setValue(const MDObject &mdValueIn, size_t id);
     bool getValue(MDObject &mdValueOut, size_t id) const;
-//public:
+    //public:
 
     /** Get the value of some label.
      * from the object that has id 'objectId'
@@ -739,7 +739,7 @@ public:
     friend class MDSql;
     friend class MDIterator;
     //CAn  I do this?
-	//#include <python/Python.h>
+    //#include <python/Python.h>
     //friend static PyObject *    MetaData_setValue(PyObject *obj, PyObject *args, PyObject *kwargs);
 }
 ;//class MetaData
@@ -781,20 +781,72 @@ public:
 class MDValueGenerator
 {
 public:
-  MDLabel label; //label to which generate values
+    MDLabel label; //label to which generate values
 
-  /* Method to be implemented in concrete generators */
-  virtual bool fillValue(MetaData &md, size_t objId) = 0;
-  /* Fill whole metadata */
-  bool fill(MetaData &md)
-  {
-    FOR_ALL_OBJECTS_IN_METADATA(md)
+    /* Method to be implemented in concrete generators */
+    virtual bool fillValue(MetaData &md, size_t objId) = 0;
+    /* Fill whole metadata */
+    bool fill(MetaData &md)
     {
-      fillValue(md, __iter.objId);
+        FOR_ALL_OBJECTS_IN_METADATA(md)
+        {
+            fillValue(md, __iter.objId);
+        }
     }
-  }
-};//end of class MDValueGenerator
+}
+;//end of class MDValueGenerator
 
+///////// Some concrete generators ////////////////
+typedef enum { UNIFORM, GAUSSIAN, STUDENT } RandMode;
+
+/** MDGenerator to generate random values on columns */
+class MDRandGenerator: public MDValueGenerator
+{
+protected:
+    double op1, op2, op3;
+    RandMode mode;
+
+    inline double getRandValue();
+public:
+    MDRandGenerator(double op1, double op2, const String &mode, double op3=0.);
+    bool fillValue(MetaData &md, size_t objId);
+}
+;//end of class MDRandGenerator
+
+/** Class to fill columns with constant values */
+class MDConstGenerator: public MDValueGenerator
+{
+public:
+    String value;
+
+    MDConstGenerator(const String &value);
+    bool fillValue(MetaData &md, size_t objId);
+}
+;//end of class MDConstGenerator
+
+/** Class to fill columns with another metadata in row format */
+class MDExpandGenerator: public MDValueGenerator
+{
+public:
+    MetaData expMd;
+    FileName fn;
+    MDRow row;
+
+    bool fillValue(MetaData &md, size_t objId);
+}
+;//end of class MDExpandGenerator
+
+/** Class to fill columns with a lineal serie */
+class MDLinealGenerator: public MDValueGenerator
+{
+public:
+    double initValue, step;
+    size_t counter;
+
+    MDLinealGenerator(double initial, double step);
+    bool fillValue(MetaData &md, size_t objId);
+}
+;//end of class MDExpandGenerator
 /** Convert string to write mode metadata enum.
  *
  */

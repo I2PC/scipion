@@ -847,41 +847,41 @@ void MetaData::read(const FileName &_filename,
 void MetaData::readPlain(const FileName &inFile, const String &labelsString, const String &separator)
 {
 
-  std::vector<MDLabel> labels;
-  MDL::str2LabelVector(labelsString, labels);
+    std::vector<MDLabel> labels;
+    MDL::str2LabelVector(labelsString, labels);
 
-  char lineBuffer[LINE_LENGHT];
-  String line;
-  std::ifstream is(inFile.data(), std::ios_base::in);
-  size_t lineCounter = 0;
-  size_t columnsNumber = labels.size();
-  size_t objId;
-  StringVector parts;
+    char lineBuffer[LINE_LENGHT];
+    String line;
+    std::ifstream is(inFile.data(), std::ios_base::in);
+    size_t lineCounter = 0;
+    size_t columnsNumber = labels.size();
+    size_t objId;
+    StringVector parts;
 
-  while (is.getline(lineBuffer, LINE_LENGHT))
-  {
-      ++lineCounter;
-      line.assign(lineBuffer);
-      trim(line);
-      if (!line.empty())
-      {
-          std::stringstream ss(line);
-          objId = addObject();
-          for (int i = 0; i < columnsNumber; ++i)
-          {
-            MDObject obj(labels[i]);
-            _parseObject(ss, obj, objId);
-            setValue(obj, objId);
-          }
-      }
-  }
+    while (is.getline(lineBuffer, LINE_LENGHT))
+    {
+        ++lineCounter;
+        line.assign(lineBuffer);
+        trim(line);
+        if (!line.empty())
+        {
+            std::stringstream ss(line);
+            objId = addObject();
+            for (int i = 0; i < columnsNumber; ++i)
+            {
+                MDObject obj(labels[i]);
+                _parseObject(ss, obj, objId);
+                setValue(obj, objId);
+            }
+        }
+    }
 }
 
 void MetaData::addPlain(const FileName &inFile, const String &labelsString, const String &separator)
 {
-  MetaData md2;
-  md2.readPlain(inFile, labelsString);
-  merge(md2);
+    MetaData md2;
+    md2.readPlain(inFile, labelsString);
+    merge(md2);
 }
 
 void MetaData::_read(const FileName &filename,
@@ -1030,15 +1030,15 @@ void MetaData::_read(const FileName &filename,
 
 void MetaData::merge(const MetaData &md2)
 {
-  if (size() != md2.size())
-    REPORT_ERROR(ERR_MD, "Size of two metadatas should coincide for merging.");
+    if (size() != md2.size())
+        REPORT_ERROR(ERR_MD, "Size of two metadatas should coincide for merging.");
 
-  MDRow row;
-  FOR_ALL_OBJECTS_IN_METADATA2(*this, md2)
-  {
-    md2.getRow(row, __iter2.objId);
-    setRow(row, __iter.objId);
-  }
+    MDRow row;
+    FOR_ALL_OBJECTS_IN_METADATA2(*this, md2)
+    {
+        md2.getRow(row, __iter2.objId);
+        setRow(row, __iter.objId);
+    }
 }
 
 void MetaData::aggregateSingle(MDObject &mdValueOut, AggregateOperation op,
@@ -1383,6 +1383,82 @@ bool MDIterator::hasNext()
     return (iter < objects->end());
 }
 
+//////////// Generators implementations
+inline double MDRandGenerator::getRandValue()
+{
+    switch (mode)
+    {
+    case UNIFORM:
+        return rnd_unif(op1, op2);
+    case GAUSSIAN:
+        return rnd_gaus(op1, op2);
+    case STUDENT:
+        return rnd_student_t(op3, op1, op2);
+    }
+}
+MDRandGenerator::MDRandGenerator(double op1, double op2, const String &mode, double op3)
+{
+    static bool randomized = false;
+
+    if (!randomized)//initialize random seed just once
+    {
+        randomize_random_generator();
+        randomized = true;
+    }
+    this->op1 = op1;
+    this->op2 = op2;
+    this->op3 = op3;
+    if (mode == "uniform")
+        this->mode = UNIFORM;
+    else if (mode == "gaussian")
+        this->mode = GAUSSIAN;
+    else if (mode == "student")
+        this->mode = STUDENT;
+    else
+        REPORT_ERROR(ERR_PARAM_INCORRECT, formatString("Unknown random type '%s'", mode.c_str()));
+
+}
+
+bool MDRandGenerator::fillValue(MetaData &md, size_t objId)
+{
+    double aux = getRandValue();
+    md.setValue(label, aux, objId);
+}
+
+MDConstGenerator::MDConstGenerator(const String &value)
+{
+    this->value = value;
+}
+bool MDConstGenerator::fillValue(MetaData &md, size_t objId)
+{
+    md.setValueFromStr(label, value, objId);
+}
+
+bool MDExpandGenerator::fillValue(MetaData &md, size_t objId)
+{
+    if (md.getValue(label, fn, objId))
+    {
+        expMd.read(fn);
+        if (expMd.getColumnFormat() || expMd.isEmpty())
+            REPORT_ERROR(ERR_VALUE_INCORRECT, "Only can expand non empty and row formated metadatas");
+        expMd.getRow(row, expMd.firstObject());
+        md.setRow(row, objId);
+    }
+    else
+        REPORT_ERROR(ERR_MD_BADLABEL, formatString("Can't expand missing label '%s'", MDL::label2Str(label).c_str()));
+}
+
+MDLinealGenerator::MDLinealGenerator(double initial, double step)
+{
+  this->initValue = initial;
+  this->step = step;
+  counter = 0;
+}
+
+bool MDLinealGenerator::fillValue(MetaData &md, size_t objId)
+{
+  md.setValue(label, (initValue + step * counter++), objId);
+}
 
 WriteModeMetaData metadataModeConvert (String mode)
 {
