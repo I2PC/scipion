@@ -613,6 +613,7 @@ if int(env['java']):
     print 'Installing JVM...'
     JAVA_HOME = 'external/java/jvm'
     os.system("external/java/install_jvm.sh")
+    os.system("rm external/imagej/plugins/* -rf")
     JavaInterfaceSources = Glob('libraries/bindings/java', '*.cpp', [])
     AddLibrary('XmippJavaInterface', 'libraries/bindings/java', JavaInterfaceSources,
     ['#libraries', '#external', '#', env['JNI_CPPPATH'],env['JNI_CPPPATH']+"/linux"],['lib'],
