@@ -738,9 +738,12 @@ public:
     /** @} */
     friend class MDSql;
     friend class MDIterator;
-    //CAn  I do this?
-    //#include <python/Python.h>
-    //friend static PyObject *    MetaData_setValue(PyObject *obj, PyObject *args, PyObject *kwargs);
+    /** Expand Metadata with metadata pointed by label
+     * Given a metadata md1, with a column containing the name of another column metdata file mdxx
+     * add the columns in mdxx to md1
+     */
+    void fillExpand(MDLabel label);
+
 }
 ;//class MetaData
 
@@ -786,13 +789,7 @@ public:
     /* Method to be implemented in concrete generators */
     virtual bool fillValue(MetaData &md, size_t objId) = 0;
     /* Fill whole metadata */
-    bool fill(MetaData &md)
-    {
-        FOR_ALL_OBJECTS_IN_METADATA(md)
-        {
-            fillValue(md, __iter.objId);
-        }
-    }
+    bool fill(MetaData &md);
 }
 ;//end of class MDValueGenerator
 
