@@ -1172,6 +1172,12 @@ void MetaData::operate(const std::string &expression)
 
 void MetaData::randomize(MetaData &MDin)
 {
+  static bool randomized = false;
+  if (!randomized)
+  {
+    randomize_random_generator();
+    randomized = true;
+  }
     std::vector<size_t> objects;
     MDin.myMDSql->selectObjects(objects);
     std::random_shuffle(objects.begin(), objects.end());
@@ -1457,7 +1463,11 @@ MDLinealGenerator::MDLinealGenerator(double initial, double step)
 
 bool MDLinealGenerator::fillValue(MetaData &md, size_t objId)
 {
-  md.setValue(label, (initValue + step * counter++), objId);
+  double value = initValue + step * counter++;
+  if (MDL::isInt(label))
+    md.setValue(label, ROUND(value), objId);
+  else
+    md.setValue(label, value, objId);
 }
 
 WriteModeMetaData metadataModeConvert (String mode)

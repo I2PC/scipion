@@ -54,26 +54,27 @@ protected:
         addParamsLine(" -i <metadata>                          : Input metadata file");
         addParamsLine("   [-o  <metadata>]                    : Output metadata file, if not provided result will be printed on screen");
 
-        addParamsLine("  --set <set_operation> <label=image>    : Set operations");
+        addParamsLine("  --set <set_operation> <md2> <label=image>    : Set operations");
         addParamsLine("         where <set_operation>");
-        addParamsLine("   union  <md2>             : Union with metadata md2");
-        addParamsLine("   intersection <md2>       : Intersection with metadata md2");
-        addParamsLine("   subtraction <md2>        : Subtraction with metadata md2");
-        addParamsLine("   join <md2>               : Inner join with md2 using label l1");
-        addParamsLine("   merge <md2>              : Merge columns with md2, label is ignored");
-        addParamsLine("                            : Both metadatas should have same size, and elements should be in same order,");
-        addParamsLine("                            : if not, you should use 'join' instead, but this constrain having a common label");
-        addParamsLine("   sort                     : Sort metadata using label l1");
-        addParamsLine("                            : for sorting according to a component of a vector label");
-        addParamsLine("                            : use label:col, e.g., NMADisplacements:0");
-        addParamsLine("                            : The first column is column number 0");
+        addParamsLine("   union               : Union with metadata md2");
+        addParamsLine("   intersection        : Intersection with metadata md2");
+        addParamsLine("   subtraction         : Subtraction with metadata md2");
+        addParamsLine("   join                : Inner join with md2 using label l1");
+        addParamsLine("   merge               : Merge columns with md2, label is ignored");
+        addParamsLine("                       : Both metadatas should have same size, and elements should be in same order,");
+        addParamsLine("                       : if not, you should use 'join' instead, but this constrain having a common label");
         addParamsLine("           alias -s;                                             ");
 
         addParamsLine("or --operate <operation>     : Operations on the metadata structure");
         addParamsLine("         where <operation>");
+        addParamsLine("   sort <label=image>       : Sort metadata using a label as identifier");
+        addParamsLine("                            : for sorting according to a component of a vector label");
+        addParamsLine("                            : use label:col, e.g., NMADisplacements:0");
+        addParamsLine("                            : The first column is column number 0");
+        addParamsLine("   randomize                            : Randomize elements of metadata");
         addParamsLine("    add_column <labels>                 : Add some columns(label list) to metadata");
         addParamsLine("    drop_column <labels>                : Drop some columns(label list) from metadata");
-        addParamsLine("    modify_values <expression>                 : Use an SQLite expression to modify the metadata");
+        addParamsLine("    modify_values <expression>          : Use an SQLite expression to modify the metadata");
         addParamsLine("                                        : This option requires knowledge of basic SQL syntax(more specific SQLite");
         addParamsLine("           alias -p;                                             ");
 
@@ -110,10 +111,10 @@ protected:
         addExampleLine(" Concatenate two metadatas. If label is not provided, by default is 'image'", false);
         addExampleLine ("   xmipp_metadata_utilities -i mD1.doc --set union mD2.doc  -o out.doc");
         addExampleLine(" Intersect two metadatas using label 'order_'", false);
-        addExampleLine ("   xmipp_metadata_utilities -i mD1.doc --set intersection  mD2.doc --label order_ -o out.doc");
+        addExampleLine ("   xmipp_metadata_utilities -i mD1.doc --set intersection mD2.doc order_ -o out.doc");
         addExampleLine(" Combine columns from two metadatas. Be sure of both have same number of rows and also", false);
         addExampleLine(" there aren't common columns, in that case second metadata columns will be used", false);
-        addExampleLine ("   xmipp_metadata_utilities -i mD1.doc --set merge mD2.doc -o out.doc --label image");
+        addExampleLine ("   xmipp_metadata_utilities -i mD1.doc --set merge mD2.doc -o out.doc");
         addExampleLine(" Sort the elements in metadata (using default label 'image').", false);
         addExampleLine ("   xmipp_metadata_utilities -i mD1.doc -s sort -o out.doc");
         addExampleLine(" Add columns 'shiftX' and 'shiftY' to metadata.", false);
@@ -135,7 +136,7 @@ protected:
         addExampleLine(" Delete files in metadata.", false);
         addExampleLine ("   xmipp_metadata_utilities -i mD1.doc --file delete");
         addExampleLine(" Select elements in metadata that satisfy a given constrain.", false);
-        addExampleLine ("   xmipp_metadata_utilities -i mD1.doc --query select \"anglePsi > 0 AND shiftX > -0.5\" -o out.doc");
+        addExampleLine ("   xmipp_metadata_utilities -i mD1.doc --query select \"angleRot > 10 AND anglePsi < 0.5\" -o out.doc");
         addExampleLine(" You can also modify your data using SQLite syntax expression", false);
         addExampleLine("  xmipp_metadata_utilities  -i a.doc --operate modify_values \"angleRot=(angleRot*3.1416/180.)\" -o b.doc");
         addExampleLine("  xmipp_metadata_utilities  -i a.doc --operate modify_values \"image=replace(image, 'xmp','spi')\" -o b.doc");
@@ -157,15 +158,9 @@ protected:
     void doSet()
     {
         operation = getParam("--set", 0);
-        int labelIndex = 1;
-        if (operation != "sort")
-        {
-            labelIndex = 2;
-            md2.read(getParam("--set", 1));
-        }
-        else
-            md2 = mdIn;
-        MDLabel label = MDL::str2Label(getParam("--set", labelIndex));
+        md2.read(getParam("--set", 1));
+        MDLabel label = MDL::str2Label(getParam("--set", 2));
+
         if (operation == "union")
             mdIn.unionDistinct(md2, label);
         else if (operation == "intersection")
@@ -180,15 +175,13 @@ protected:
         }
         else if (operation == "merge")
             mdIn.merge(md2);
-        else if (operation == "sort")
-            mdIn.sort(md2, label);
     }//end of function doSet
 
     void doOperate()
     {
         operation = getParam("--operate", 0);
 
-        if (operation != "modify_values")
+        if (operation == "add_column" || operation == "drop_column")
         {
             MDL::str2LabelVector(getParam("--operate", 1), labels);
             for (int i = 0; i < labels.size(); ++i)
@@ -199,8 +192,16 @@ protected:
                     mdIn.removeLabel(labels[i]);
             }
         }
-        else // modify_values
+        else if (operation == "modify_values")// modify_values
             mdIn.operate(getParam("--operate", 1));
+        else
+        {
+          MetaData md(mdIn);
+          if (operation == "sort")
+            mdIn.sort(md, getParam("--operate", 1));
+          else if (operation == "randomize")
+            mdIn.randomize(md);
+        }
     }//end of function doOperate
 
     void doFill()
@@ -230,7 +231,7 @@ protected:
         else if (operation == "expand")
             generator = new MDExpandGenerator();
         else if (operation == "lineal")
-          generator = new MDLinealGenerator(getDoubleParam("--fill", 2), getDoubleParam("--fill", 3));
+            generator = new MDLinealGenerator(getDoubleParam("--fill", 2), getDoubleParam("--fill", 3));
 
         //Fill columns
         for (int i = 0; i < labels.size(); ++i)
