@@ -106,8 +106,8 @@ void project_Pseudo(const std::vector< Matrix1D<double> > &atomPosition,
                     x_diff2=x_diff2*x_diff2;
                     double r=sqrt(x_diff2+y_diff2);
                     int idx=ROUND(r*1000);
-                    double a=gaussianProjectionTable(idx);
-                    double a2=gaussianProjectionTable(idx);
+                    double a  = gaussianProjectionTable(idx);
+                    double a2 = gaussianProjectionTable2(idx);
 #ifdef DEBUG
 
                     if (condition)
@@ -119,6 +119,7 @@ void project_Pseudo(const std::vector< Matrix1D<double> > &atomPosition,
                         A2D_ELEM(proj, y, x) += atomWeight[n] * a;
                         A2D_ELEM(norm_proj, y, x) += a2;
 #ifdef DEBUG
+
                         if (condition)
                         {
                             std::cout << " proj= " << A2D_ELEM(proj, y, x)
@@ -126,11 +127,13 @@ void project_Pseudo(const std::vector< Matrix1D<double> > &atomPosition,
                             std::cout.flush();
                         }
 #endif
+
                     }
                     else
                     {
                         vol_corr += A2D_ELEM(norm_proj, y, x) * a;
 #ifdef DEBUG
+
                         if (condition)
                         {
                             std::cout << " corr_img= " << A2D_ELEM(norm_proj, y, x)
@@ -138,6 +141,7 @@ void project_Pseudo(const std::vector< Matrix1D<double> > &atomPosition,
                             std::cout.flush();
                         }
 #endif
+
                     }
                 }
             }
@@ -146,12 +150,14 @@ void project_Pseudo(const std::vector< Matrix1D<double> > &atomPosition,
             {
                 atomWeight[n] += vol_corr;
 #ifdef DEBUG
+
                 if (condition)
                 {
                     std::cout << "\nFinal value at ( " << n << ") = "
                     << atomWeight[n] << std::endl;
                 }
 #endif
+
             }
         } // If not collapsed
     }
