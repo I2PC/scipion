@@ -222,7 +222,6 @@ public:
             result.mapFile2Write(FINISHINGX(Iin()())-xr-(STARTINGX(Iin()())+xl)+1,
                                  FINISHINGY(Iin()())-yr-(STARTINGY(Iin()())+yl)+1,
                                  FINISHINGZ(Iin()())-zr-(STARTINGZ(Iin()())+zl)+1,
-                                 1,
                                  fnImgOut,createTempFile);
             Iin().window(result(),
                          STARTINGZ(Iin()())+zl, STARTINGY(Iin()())+yl,  STARTINGX(Iin()())+xl,
@@ -234,7 +233,6 @@ public:
                 result.mapFile2Write(xF-x0+1,
                                      yF-y0+1,
                                      zF-z0+1,
-                                     1,
                                      fnImgOut,
                                      createTempFile);
                 Iin().window(result(),z0, y0, x0, zF, yF,xF, init_value);
@@ -244,7 +242,6 @@ public:
                 result.mapFile2Write(xF-x0+1,
                                      yF-y0+1,
                                      zF-z0+1,
-                                     1,
                                      fnImgOut,
                                      createTempFile);
                 Iin().window(result(),

@@ -64,12 +64,12 @@ int ImageBase::read(const FileName &name, DataMode datamode, size_t select_img, 
 }
 
 /** New mapped file */
-void ImageBase::mapFile2Write(int Xdim, int Ydim, int Zdim, size_t Ndim, const FileName &_filename,
-                              bool createTempFile)
+void ImageBase::mapFile2Write(int Xdim, int Ydim, int Zdim, const FileName &_filename,
+                              bool createTempFile, size_t select_img, bool isStack, int mode)
 {
     mmapOnWrite = true;
-    setDimensions(Xdim, Ydim, Zdim, Ndim);
-    MD.resize(Ndim);
+    setDimensions(Xdim, Ydim, Zdim, 1); // Images with Ndim >1 cannot be mapped to image file
+    MD.resize(1);
     filename = _filename;
     FileName fnToOpen;
     if (createTempFile)
@@ -83,22 +83,24 @@ void ImageBase::mapFile2Write(int Xdim, int Ydim, int Zdim, size_t Ndim, const F
     /* If the filename is in stack we will suppose you want to write this,
      * even if you have not set the flags to.
      */
-    WriteMode mode;
-    bool isStack;
-    if ( filename.isInStack())
+    if ( filename.isInStack() && mode == WRITE_OVERWRITE)
     {
         isStack = true;
         mode = WRITE_REPLACE;
     }
-    else
-    {
-        isStack = false;
-        mode = WRITE_OVERWRITE;
-    }
 
     ImageFHandler *hFile = openFile(fnToOpen, mode);
-    _write(filename, hFile, ALL_IMAGES, isStack, mode);
+    _write(filename, hFile, select_img, isStack, mode);
     closeFile(hFile);
+}
+
+void ImageBase::createEmptyFile(const FileName &filename, int Xdim, int Ydim, int Zdim,
+                                size_t select_img, bool isStack, int mode)
+{
+    setDimensions(Xdim, Ydim, Zdim, 1);
+    setDataMode(HEADER);
+    write(filename, select_img, isStack, mode);
+    clear();
 }
 
 /** General read function

@@ -43,13 +43,15 @@
 #include <cstring>
 #include "../../external/tiff-3.9.4/libtiff/tiffio.h"
 
-// Defines used to select slice in readPreview
+// Macros used to select slice in readPreview
 #define CENTRAL_SLICE -1
 #define ALL_SLICES 0
 /** Macro for represent ALL IMAGES on stack index */
 #define ALL_IMAGES 0
 #define FIRST_IMAGE 1
 #define IMG_INDEX(select_img) ((select_img == ALL_IMAGES) ? 0 : select_img - 1)
+/** Macro for appending an image when doing mapFile2Write */
+#define APPEND_IMAGE 0
 
 /* Minimum size of a TIFF file to be mapped to a tempfile in case of mapping from
  * image file is required
@@ -308,8 +310,19 @@ public:
      * is created with the given size. Then the image is mapped to this file.
      * The image object must be cleared prior to use this method.
      */
-    void mapFile2Write(int Xdim, int Ydim, int Zdim, size_t Ndim, const FileName &_filename,
-                       bool createTempFile=false);
+    void mapFile2Write(int Xdim, int Ydim, int Zdim, const FileName &_filename,
+                       bool createTempFile = false, size_t select_img = APPEND_IMAGE,
+                       bool isStack = false, int mode = WRITE_OVERWRITE);
+
+    /** Create an empty image file
+     *
+     * An image file, which name and format are given by filename,
+     * is created. Only the header info is written, and if image number is given, then disk space
+     * until ndim - 1 is reserved.
+     */
+    void createEmptyFile(const FileName &_filename, int Xdim, int Ydim, int Zdim = 1,
+                         size_t select_img = APPEND_IMAGE, bool isStack = false,
+                         int mode = WRITE_OVERWRITE);
 
     /** General read function
      * you can read a single image from a single image file

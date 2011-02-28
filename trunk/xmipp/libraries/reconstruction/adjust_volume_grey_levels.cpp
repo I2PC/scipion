@@ -82,7 +82,7 @@ void ProgAdjustVolume::run()
     Zdim = ZSIZE(V);
 
     Image<float> ImOut;
-    ImOut.mapFile2Write(Xdim, Ydim, Zdim, 1, fn_out, tempFile);
+    ImOut.mapFile2Write(Xdim, Ydim, Zdim, fn_out, tempFile);
     ImOut().setXmippOrigin();
 
     // Read input metadataFile

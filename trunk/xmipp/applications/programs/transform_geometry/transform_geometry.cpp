@@ -267,7 +267,7 @@ protected:
         if (applyTransform)
         {
             imgOut.setDatatype(img.getDatatype());
-            imgOut.mapFile2Write(xdim, ydim, zdim, 1, fnImgOut, fnImg == fnImgOut);
+            imgOut.mapFile2Write(xdim, ydim, zdim, fnImgOut, fnImg == fnImgOut);
             imgOut().setXmippOrigin();
             applyGeometry(splineDegree, imgOut(), img(), T, IS_NOT_INV, wrap, 0.);
             imgOut.write(fnImgOut);
