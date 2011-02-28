@@ -1487,7 +1487,6 @@ bool MDExpandGenerator::fillValue(MetaData &md, size_t objId)
 {
     if (md.getValue(label, fn, objId))
     {
-        std::cerr << "expanding " << fn << std::endl;
         expMd.read(fn);
         if (expMd.getColumnFormat() || expMd.isEmpty())
             REPORT_ERROR(ERR_VALUE_INCORRECT, "Only can expand non empty and row formated metadatas");
