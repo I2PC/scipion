@@ -85,6 +85,9 @@ class Tester:
         self.addProgram("xmipp_transform_center_image")
         self.addTest("-i input/smallStack.stk -o %o/smallStackCentered.stk")
     
+        self.addProgram("xmipp_transform_normalize")
+        self.addTest("-i input/smallStack.stk -o %o/smallStackNormalized.stk --method NewXmipp --background circle 32")
+
         self.addProgram("xmipp_transform_window")
         self.addTest("-i input/singleImage.spi -o %o/image.xmp --size 32")
         self.addTest("-i input/singleImage.spi -o %o/image.xmp --corners -16 -16 15 15")
