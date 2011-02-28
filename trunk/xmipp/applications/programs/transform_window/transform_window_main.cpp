@@ -205,8 +205,6 @@ public:
 
         String oext=fnImgOut.getExtension();
         DataType dataType=Iin.getDatatype();
-        if (oext=="spi" || oext=="xmp" || oext=="vol" || oext=="stk")
-            dataType=Float;
         ImageGeneric result(dataType);
         if (mode==CROPMODE)
         {
