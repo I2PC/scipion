@@ -99,9 +99,11 @@ void normalize_tomography(MultidimArray<double> &I, double tilt, double &mui,
         double meanPiece=0, variancePiece=0;
         double Npiece=0;
         for (int ii=i-L; ii<=i+L; ii++)
+        {
+        	if (INSIDEY(I,ii))
             for (int jj=j-L; jj<=j+L; jj++)
             {
-                if (INSIDE(I,ii,jj))
+                if (INSIDEX(I,jj))
                 {
                 	double pixval=A2D_ELEM(I,ii,jj);
                     meanPiece+=pixval;
@@ -109,6 +111,7 @@ void normalize_tomography(MultidimArray<double> &I, double tilt, double &mui,
                     ++Npiece;
                 }
             }
+        }
         meanPiece/=Npiece;
         variancePiece=variancePiece/(Npiece-1)-
                       Npiece/(Npiece-1)*meanPiece*meanPiece;
@@ -685,7 +688,7 @@ void ProgNormalize::processImage(const FileName &fnImg, const FileName &fnImgOut
 
         MultidimArray< double > tmp;
         // get copy of the mask
-        tmp.resize(bg_mask_bck);
+        tmp.resizeNoCopy(bg_mask_bck);
         typeCast(bg_mask_bck, tmp);
 
         double outside = DIRECT_A2D_ELEM(tmp, 0, 0);
