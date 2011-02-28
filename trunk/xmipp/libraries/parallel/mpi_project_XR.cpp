@@ -39,92 +39,47 @@ struct mpiProjData
     double zShift;
 };
 
-MPIProgProjectXR::~MPIProgProjectXR()
+ProgMPIXrayProject::~ProgMPIXrayProject()
 {
     delete node;
 }
 
-void MPIProgProjectXR::defineParams()
+void ProgMPIXrayProject::defineParams()
 {
     ProgXrayProject::defineParams();
     clearUsage();
     addUsageLine("MPI Generate projections as in a X-ray microscope from a 3D Xmipp volume.");
 
 }
-void MPIProgProjectXR::read(int argc, char** argv)
+void ProgMPIXrayProject::read(int argc, char** argv)
 {
     node = new MpiNode(argc, argv);
     ProgXrayProject::read(argc, argv);
 }
 
-void MPIProgProjectXR::run()
+void ProgMPIXrayProject::run()
 {
+    Projection  proj;
+    MetaData    projMD;
+
     randomize_random_generator();
 
-    Projection  proj;
-    MetaData    SF;
-
-    // Read Microscope optics parameters and produce side information
-    XRayPSF psf;
-    psf.verbose = verbose;
-    psf.nThr = nThr;
-    psf.read(fn_psf_xr);
     psf.calculateParams(dxo);
 
-    // Read projection parameters and produce side information
-    Projection_mpi_XR_Parameters mpi_proj_prm;
-    mpi_proj_prm.node = node;
-    mpi_proj_prm.read(fn_proj_param);
-//    mpi_proj_prm.show_angles=tell;
-    XrayProjPhantom side;
-
-    side.read(mpi_proj_prm);
-    //    psf.adjustParam(side.phantomVol);
+    XrayProjPhantom phantom;
+    phantom.read(projParam);
 
     // Project
-    int ProjNo = 0;
-    if (!mpi_proj_prm.only_create_angles)
-    {
-        // Really project
-        ProjNo = PROJECT_mpi_XR_Effectively_project(mpi_proj_prm, side,
-                 proj, psf, SF);
-        // Save SelFile
-        if (node->isMaster() && fn_sel_file != "")
-            SF.write(fn_sel_file);
-    }
-    else
-    {
-        psf.adjustParam(side.rotVol);
-//        if (node->isMaster())
-//            side.DF.write("/dev/stdout");
-    }
-    return;
-}
 
-/* Read parameters --------------------------------------------------------- */
-void Projection_mpi_XR_Parameters::read(const FileName &fn_proj_param)
-{
-    ParametersProjectionTomography::read(fn_proj_param);
-}
-
-
-/* Effectively project ===================================================== */
-int PROJECT_mpi_XR_Effectively_project(
-    Projection_mpi_XR_Parameters &prm,
-    XrayProjPhantom &side,
-    Projection &proj,
-    XRayPSF &psf,
-    MetaData &SF)
-{
     // Threads stuff
 
     XrayThread *dataThread = new XrayThread;
 
     dataThread->psf= &psf;
-    dataThread->vol = &side.rotVol;
+    dataThread->vol = &phantom.rotVol;
     dataThread->imOut = &proj;
 
-    longint threadBlockSize, numberOfJobs= side.iniVol().zdim;
+    longint threadBlockSize, numberOfJobs= ZSIZE(MULTIDIM_ARRAY(phantom.iniVol));
     numberOfThreads = psf.nThr;
 
     threadBlockSize = (numberOfThreads == 1) ? numberOfJobs : numberOfJobs/numberOfThreads/2;
@@ -136,118 +91,267 @@ int PROJECT_mpi_XR_Effectively_project(
     //Create threads to start working
     thMgr = new ThreadManager(numberOfThreads,(void*) dataThread);
 
-    int numProjs=0;
-    SF.clear();
-    MpiNode & node = *prm.node;
-    MetaData DF_movements;
-    DF_movements.setComment("True rot, tilt and psi; rot, tilt, psi, X and Y shifts applied");
+    projMD.setComment("True rot, tilt and psi; rot, tilt, psi, X and Y shifts applied");
     double tRot,tTilt,tPsi,rot,tilt,psi;
 
-    // Calculation of data to be distributed in nodes
+    //    // Assign mpi node information
+    //    MpiNode & node = *node;
+
+    // Calculation of data to be distributed in nodes -----------------------------------------
     std::vector<mpiProjData> mpiData;
     mpiProjData data;
 
-    int idx=prm.starting;
+    size_t idx = FIRST_IMAGE;
     size_t id;
-    for (double angle=prm.tilt0; angle<=prm.tiltF; angle+=prm.tiltStep)
+
+    for (double angle = projParam.tilt0; angle <= projParam.tiltF; angle += projParam.tiltStep)
     {
-        data.fn_proj.compose(prm.fnOut, idx,
-                             prm.fn_projection_extension);
+        if (projParam.singleProjection)
+            data.fn_proj = projParam.fnOut;
+        else
+            data.fn_proj.compose(idx, projParam.fnRoot + ".stk");
 
         // Choose Center displacement ........................................
-        double shiftX     = rnd_gaus(prm.Ncenter_avg, prm.Ncenter_dev);
-        double shiftY    = rnd_gaus(prm.Ncenter_avg, prm.Ncenter_dev);
+        double shiftX = rnd_gaus(projParam.Ncenter_avg, projParam.Ncenter_dev);
+        double shiftY = rnd_gaus(projParam.Ncenter_avg, projParam.Ncenter_dev);
         Matrix1D<double> inPlaneShift(3);
         VECTOR_R3(inPlaneShift,shiftX,shiftY,0);
 
-        prm.calculateProjectionAngles(proj,angle, 0,inPlaneShift);
+        projParam.calculateProjectionAngles(proj,angle, 0,inPlaneShift);
         proj.getEulerAngles(data.tRot, data.tTilt,data.tPsi);
         proj.getShifts(data.xShift, data.yShift, data.zShift);
 
         // Add noise in angles and voxels ....................................
 
-        data.rot  = data.tRot  + rnd_gaus(prm.Nangle_avg,  prm.Nangle_dev);
-        data.tilt = data.tTilt + rnd_gaus(prm.Nangle_avg,  prm.Nangle_dev);
-        data.psi  = data.tPsi  + rnd_gaus(prm.Nangle_avg,  prm.Nangle_dev);
+        data.rot  = data.tRot  + rnd_gaus(projParam.Nangle_avg,  projParam.Nangle_dev);
+        data.tilt = data.tTilt + rnd_gaus(projParam.Nangle_avg,  projParam.Nangle_dev);
+        data.psi  = data.tPsi  + rnd_gaus(projParam.Nangle_avg,  projParam.Nangle_dev);
 
         //MPI            proj.setEulerAngles(rot,tilt,psi);
 
-        if (node.isMaster())
+        if (node->isMaster())
         {
-            id = DF_movements.addObject();
-            DF_movements.setValue(MDL_ANGLEROT,data.tRot, id);
-            DF_movements.setValue(MDL_ANGLETILT,data.tTilt, id);
-            DF_movements.setValue(MDL_ANGLEPSI,data.tPsi, id);
-            DF_movements.setValue(MDL_ANGLEROT2,data.rot, id);
-            DF_movements.setValue(MDL_ANGLETILT2,data.tilt, id);
-            DF_movements.setValue(MDL_ANGLEPSI2,data.psi, id);
-            DF_movements.setValue(MDL_SHIFTX,shiftX, id);
-            DF_movements.setValue(MDL_SHIFTY,shiftY, id);
+            id = projMD.addObject();
+            projMD.setValue(MDL_IMAGE,data.fn_proj, id);
 
-            id = SF.addObject();
-            SF.setValue(MDL_IMAGE,data.fn_proj, id);
-            SF.setValue(MDL_ENABLED,1, id);
+            projMD.setValue(MDL_ANGLEROT,data.tRot, id);
+            projMD.setValue(MDL_ANGLETILT,data.tTilt, id);
+            projMD.setValue(MDL_ANGLEPSI,data.tPsi, id);
+            projMD.setValue(MDL_ANGLEROT2,data.rot, id);
+            projMD.setValue(MDL_ANGLETILT2,data.tilt, id);
+            projMD.setValue(MDL_ANGLEPSI2,data.psi, id);
+            projMD.setValue(MDL_SHIFTX,shiftX, id);
+            projMD.setValue(MDL_SHIFTY,shiftY, id);
         }
+
         mpiData.push_back(data);
         idx++;
     }
 
-    MPI_Barrier(MPI_COMM_WORLD);
-
-    // Creation of Job Handler file
+    // Creation of MPI Job Handler file
 
     FileTaskDistributor *jobHandler;
     long long int nodeBlockSize = 1;
-    jobHandler = new FileTaskDistributor(mpiData.size(), nodeBlockSize, &node);
+    jobHandler = new FileTaskDistributor(mpiData.size(), nodeBlockSize, node);
 
+    longint first = 0, last = 0;
 
-    if (node.isMaster())
+    if (node->isMaster())
     {
-        DF_movements.write(prm.fnOut + "_movements.txt");
+        if (!(projParam.show_angles))
+            init_progress_bar(mpiData.size());
+
+        // Creation of output file to reserve space
+        proj.createEmptyFile(mpiData[mpiData.size()-1].fn_proj,
+                             XMIPP_MIN(XSIZE(MULTIDIM_ARRAY(phantom.iniVol)),projParam.proj_Xdim),
+                             XMIPP_MIN(YSIZE(MULTIDIM_ARRAY(phantom.iniVol)),projParam.proj_Ydim));
+
         std::cerr << "Projecting ...\n";
     }
 
-
-    long long int first = -1, last = -1;
-
-    if (!(prm.show_angles))
-        init_progress_bar(mpiData.size());
+    MPI_Barrier(MPI_COMM_WORLD);
 
     // Parallel node jobs
     while (jobHandler->getTasks(first, last))
     {
-        for (long long int k = first; k <= last; k++)
+        for (size_t k = first; k <= last; k++)
         {
-            std::cout << "Node: " << node.rank << " - Task: " << k <<std::endl;
+            std::cout << "Node: " << node->rank << " - Task: " << k <<std::endl;
             proj.setEulerAngles(mpiData[k].tRot, mpiData[k].tTilt,mpiData[k].tPsi);
             proj.setShifts(mpiData[k].xShift, mpiData[k].yShift, mpiData[k].zShift);
 
             //Reset thread task distributor
             td->clear();
-            // Really project ....................................................
-            XrayProjectVolumeOffCentered(side, psf, proj,prm.proj_Ydim, prm.proj_Xdim);
 
+            // Really project ....................................................
+            if (!projParam.only_create_angles)
+            {
+                XrayProjectVolumeOffCentered(phantom, psf, proj,projParam.proj_Ydim, projParam.proj_Xdim);
+                proj.write(mpiData[k].fn_proj);
+            }
 
             // Add noise in angles and voxels ....................................
-            proj.setEulerAngles(mpiData[k].rot,mpiData[k].tilt,mpiData[k].psi);
-            IMGMATRIX(proj).addNoise(prm.Npixel_avg, prm.Npixel_dev, "gaussian");
+            //            proj.setEulerAngles(mpiData[k].rot,mpiData[k].tilt,mpiData[k].psi); // Geo info is not stored in header file
+            IMGMATRIX(proj).addNoise(projParam.Npixel_avg, projParam.Npixel_dev, "gaussian");
 
-            // Save ..............................................................
-            if (prm.show_angles)
-                std::cout << "Node: " << node.rank << "\t" << proj.rot() << "\t"
+            if (projParam.show_angles)
+                std::cout << "Node: " << node->rank << "\t" << proj.rot() << "\t"
                 << proj.tilt() << "\t" << proj.psi() << std::endl;
 
-            proj.write(mpiData[k].fn_proj);
-
-            progress_bar(k+1);
-            numProjs++;
+            if (node->isMaster() && !(projParam.show_angles))
+                progress_bar(k+1);
         }
     }
+
     delete jobHandler;
     //Terminate threads and free memory
     delete td;
     delete thMgr;
     delete barrier;
 
-    return numProjs;
+    return;
 }
+
+///* Effectively project ===================================================== */
+//int PROJECT_mpi_XR_Effectively_project(
+//    ParametersXrayProjectMPI &prm,
+//    XrayProjPhantom &side,
+//    Projection &proj,
+//    XRayPSF &psf,
+//    MetaData &SF)
+//{
+//    // Threads stuff
+//
+//    XrayThread *dataThread = new XrayThread;
+//
+//    dataThread->psf= &psf;
+//    dataThread->vol = &side.rotVol;
+//    dataThread->imOut = &proj;
+//
+//    longint threadBlockSize, numberOfJobs= side.iniVol().zdim;
+//    numberOfThreads = psf.nThr;
+//
+//    threadBlockSize = (numberOfThreads == 1) ? numberOfJobs : numberOfJobs/numberOfThreads/2;
+//
+//    //Create the job handler to distribute thread jobs
+//    td = new ThreadTaskDistributor(numberOfJobs, threadBlockSize);
+//    barrier = new Barrier(numberOfThreads-1);
+//
+//    //Create threads to start working
+//    thMgr = new ThreadManager(numberOfThreads,(void*) dataThread);
+//
+//    int numProjs=0;
+//    SF.clear();
+//    MpiNode & node = *prm.node;
+//    MetaData DF_movements;
+//    DF_movements.setComment("True rot, tilt and psi; rot, tilt, psi, X and Y shifts applied");
+//    double tRot,tTilt,tPsi,rot,tilt,psi;
+//
+//    // Calculation of data to be distributed in nodes
+//    std::vector<mpiProjData> mpiData;
+//    mpiProjData data;
+//
+//    int idx=prm.starting;
+//    size_t id;
+//    for (double angle=prm.tilt0; angle<=prm.tiltF; angle+=prm.tiltStep)
+//    {
+//        data.fn_proj.compose(prm.fnOut, idx,
+//                             prm.fn_projection_extension);
+//
+//        // Choose Center displacement ........................................
+//        double shiftX     = rnd_gaus(prm.Ncenter_avg, prm.Ncenter_dev);
+//        double shiftY    = rnd_gaus(prm.Ncenter_avg, prm.Ncenter_dev);
+//        Matrix1D<double> inPlaneShift(3);
+//        VECTOR_R3(inPlaneShift,shiftX,shiftY,0);
+//
+//        prm.calculateProjectionAngles(proj,angle, 0,inPlaneShift);
+//        proj.getEulerAngles(data.tRot, data.tTilt,data.tPsi);
+//        proj.getShifts(data.xShift, data.yShift, data.zShift);
+//
+//        // Add noise in angles and voxels ....................................
+//
+//        data.rot  = data.tRot  + rnd_gaus(prm.Nangle_avg,  prm.Nangle_dev);
+//        data.tilt = data.tTilt + rnd_gaus(prm.Nangle_avg,  prm.Nangle_dev);
+//        data.psi  = data.tPsi  + rnd_gaus(prm.Nangle_avg,  prm.Nangle_dev);
+//
+//        //MPI            proj.setEulerAngles(rot,tilt,psi);
+//
+//        if (node.isMaster())
+//        {
+//            id = DF_movements.addObject();
+//            DF_movements.setValue(MDL_ANGLEROT,data.tRot, id);
+//            DF_movements.setValue(MDL_ANGLETILT,data.tTilt, id);
+//            DF_movements.setValue(MDL_ANGLEPSI,data.tPsi, id);
+//            DF_movements.setValue(MDL_ANGLEROT2,data.rot, id);
+//            DF_movements.setValue(MDL_ANGLETILT2,data.tilt, id);
+//            DF_movements.setValue(MDL_ANGLEPSI2,data.psi, id);
+//            DF_movements.setValue(MDL_SHIFTX,shiftX, id);
+//            DF_movements.setValue(MDL_SHIFTY,shiftY, id);
+//
+//            id = SF.addObject();
+//            SF.setValue(MDL_IMAGE,data.fn_proj, id);
+//            SF.setValue(MDL_ENABLED,1, id);
+//        }
+//        mpiData.push_back(data);
+//        idx++;
+//    }
+//
+//    MPI_Barrier(MPI_COMM_WORLD);
+//
+//    // Creation of Job Handler file
+//
+//    FileTaskDistributor *jobHandler;
+//    long long int nodeBlockSize = 1;
+//    jobHandler = new FileTaskDistributor(mpiData.size(), nodeBlockSize, &node);
+//
+//
+//    if (node.isMaster())
+//    {
+//        DF_movements.write(prm.fnOut + "_movements.txt");
+//        std::cerr << "Projecting ...\n";
+//    }
+//
+//
+//    long long int first = -1, last = -1;
+//
+//    if (!(prm.show_angles))
+//        init_progress_bar(mpiData.size());
+//
+//    // Parallel node jobs
+//    while (jobHandler->getTasks(first, last))
+//    {
+//        for (long long int k = first; k <= last; k++)
+//        {
+//            std::cout << "Node: " << node.rank << " - Task: " << k <<std::endl;
+//            proj.setEulerAngles(mpiData[k].tRot, mpiData[k].tTilt,mpiData[k].tPsi);
+//            proj.setShifts(mpiData[k].xShift, mpiData[k].yShift, mpiData[k].zShift);
+//
+//            //Reset thread task distributor
+//            td->clear();
+//            // Really project ....................................................
+//            XrayProjectVolumeOffCentered(side, psf, proj,prm.proj_Ydim, prm.proj_Xdim);
+//
+//
+//            // Add noise in angles and voxels ....................................
+//            proj.setEulerAngles(mpiData[k].rot,mpiData[k].tilt,mpiData[k].psi);
+//            IMGMATRIX(proj).addNoise(prm.Npixel_avg, prm.Npixel_dev, "gaussian");
+//
+//            // Save ..............................................................
+//            if (prm.show_angles)
+//                std::cout << "Node: " << node.rank << "\t" << proj.rot() << "\t"
+//                << proj.tilt() << "\t" << proj.psi() << std::endl;
+//
+//            proj.write(mpiData[k].fn_proj);
+//
+//            progress_bar(k+1);
+//            numProjs++;
+//        }
+//    }
+//    delete jobHandler;
+//    //Terminate threads and free memory
+//    delete td;
+//    delete thMgr;
+//    delete barrier;
+//
+//    return numProjs;
+//}

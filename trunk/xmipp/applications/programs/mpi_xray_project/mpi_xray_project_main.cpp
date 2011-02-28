@@ -30,22 +30,11 @@
 
 int main(int argc, char *argv[])
 {
+    ProgMPIXrayProject      prog_prm;
 
-    MPIProgProjectXR      prog_prm;
-
-    // Check the command line
-    try
-    {
         prog_prm.read(argc, argv);
-        prog_prm.run();
+        prog_prm.tryRun();
 
-    }
-    catch (XmippError &XE)
-    {
-        std::cout << XE;
-        prog_prm.usage();
-        exit(1);
-    }
-    return 0;
+        return 0;
 }
 

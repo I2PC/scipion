@@ -35,12 +35,12 @@
 //@{
 /* Projection XR Program -------------------------------- */
 /** Program class for the project program */
-class MPIProgProjectXR: public ProgXrayProject
+class ProgMPIXrayProject: public ProgXrayProject
 {
     MpiNode *node;
 public:
 
-    ~MPIProgProjectXR();
+    ~ProgMPIXrayProject();
     void read(int argc, char** argv);
 
     void run();
@@ -50,28 +50,9 @@ protected:
 };
 
 
-class Projection_mpi_XR_Parameters: public ParametersProjectionTomography
-{
-public:
-    /** Number of Processors **/
-    int nProcs;
-
-    /** Divide the job in this number block with this number of images */
-    //int mpi_job_size;
-
-    MpiNode * node;
-
-    /*  constructor ------------------------------------------------------- */
-    Projection_mpi_XR_Parameters()
-    {}
-
-    /* Read parameters --------------------------------------------------------- */
-    void read(const FileName &fn_proj_param);
-};
-
 /* Effectively project ===================================================== */
 int PROJECT_mpi_XR_Effectively_project(
-    Projection_mpi_XR_Parameters &prm,
+    ParametersProjectionTomography &prm,
     XrayProjPhantom &side,
     Projection &proj,
     XRayPSF &psf,
