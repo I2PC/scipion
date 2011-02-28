@@ -54,13 +54,22 @@ protected:
         save_metadata_stack = true;
         XmippMetadataProgram::defineParams();
         //usage
-        addUsageLine("Apply geometric transformations to images.");
-        addUsageLine("This program allows you to shift (providing 2 or 3 translations),");
-        addUsageLine("rotate (2 or 3 Euler angles) and scale a group of images/volumes.");
-        addUsageLine("By default, if rotation angles and translations are stored in metada");
-        addUsageLine("it will be read, also the original images will be preserved if possible.");
+        addUsageLine("Apply geometric transformations to images. You can shift, rotate and scale");
+        addUsageLine("a group of images/volumes. By default the geometric transformations will be");
+        addUsageLine("read from a metadata, if provided. Also, the original images will be preserved");
+        addUsageLine("if possible, trying to write out transformations to the output metadata.");
+        addUsageLine("If output is not specified, the original images will be overwritten.");
+        //keywords
+        addKeywords("transform, geometry, shift, rotate, scale, flip");
         //examples
-
+        addExampleLine("To simply apply the transformations in a metadata to the images:", false);
+        addExampleLine("xmipp_transform_geometry -i mD1.doc --apply_transform");
+        addExampleLine("Shift a volume by 10, 5 and -10 in x,y and z and dont wrapping", false);
+        addExampleLine("xmipp_transform_geometry -i a.vol --shift 10 5 -10 -o b.vol --dont_wrap");
+        addExampleLine("Scale a group of images to half size, not modifying image dimensions neither original image files", false);
+        addExampleLine("xmipp_transform_geometry -i images.doc --scale factor 0.5 --oroot halvedOriginal");
+        addExampleLine("Scaling (from 128 to 64) but writing changing image dimensions(this will apply tranformations)", false);
+        addExampleLine("xmipp_transform_geometry -i images.doc --scale dim 64 --oroot halvedDim");
         //params
         addParamsLine("== Transformations ==");
         addParamsLine("[--rotate <rotation_type>]   :Perform rotation");
@@ -272,13 +281,8 @@ protected:
                 img.write(fnImgOut);
         }
     }
-
-public:
-    /** Constructor */
-    ProgTransformGeometry()
-    {}
 }
-; //end of class ProgScale
+; //end of class ProgTransformGeometry
 
 
 int main(int argc, char **argv)
