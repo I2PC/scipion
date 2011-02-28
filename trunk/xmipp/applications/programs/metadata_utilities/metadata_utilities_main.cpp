@@ -35,7 +35,7 @@
 
 typedef enum { UNIFORM, GAUSSIAN, STUDENT } RandMode;
 
-/** MDGenerator to generate random values */
+/** MDGenerator to generate random values on columns */
 class MDRandGenerator: public MDValueGenerator
 {
 protected:
@@ -55,8 +55,15 @@ protected:
         }
     }
 public:
-    MDRandGenerator(MDLabel label, double op1, double op2, const String &mode, double op3=0.)//:MDValueGenerator(label)
+    MDRandGenerator(double op1, double op2, const String &mode, double op3=0.)
     {
+        static bool randomized = false;
+
+        if (!randomized)//initialize random seed just once
+        {
+            randomize_random_generator();
+            randomized = true;
+        }
         this->op1 = op1;
         this->op2 = op2;
         this->op3 = op3;
@@ -71,7 +78,7 @@ public:
 
     }
 
-    virtual bool fillValue(MetaData &md, size_t objId)
+    bool fillValue(MetaData &md, size_t objId)
     {
         double aux = getRandValue();
         md.setValue(label, aux, objId);
@@ -80,6 +87,47 @@ public:
 }
 ;//end of class MDRandGenerator
 
+/** Class to fill columns with constant values */
+class MDConstGenerator: public MDValueGenerator
+{
+public:
+    String value;
+
+    MDConstGenerator(const String &value)
+    {
+        this->value = value;
+    }
+    bool fillValue(MetaData &md, size_t objId)
+    {
+        md.setValueFromStr(label, value, objId);
+    }
+}
+;//end of class MDConstGenerator
+
+/** Class to fill columns with another metadata in row format */
+class MDExpandGenerator: public MDValueGenerator
+{
+public:
+    MetaData expMd;
+    FileName fn;
+    MDRow row;
+
+    bool fillValue(MetaData &md, size_t objId)
+    {
+        if (md.getValue(label, fn, objId))
+        {
+            std::cerr << "expanding " << fn << std::endl;
+            expMd.read(fn);
+            if (expMd.getColumnFormat() || expMd.isEmpty())
+                REPORT_ERROR(ERR_VALUE_INCORRECT, "Only can expand non empty and row formated metadatas");
+            expMd.getRow(row, expMd.firstObject());
+            md.setRow(row, objId);
+        }
+        else
+            REPORT_ERROR(ERR_MD_BADLABEL, formatString("Can't expand missing label '%s'", MDL::label2Str(label).c_str()));
+    }
+}
+;//end of class MDExpandGenerator
 
 class ProgMetadataUtilities: public XmippProgram
 {
@@ -88,7 +136,9 @@ private:
     FileName fn_in, fn_out, fn_md2;
     MetaData mdIn, md2;
     MDLabel label;
+    std::vector<MDLabel> labels;
     String operation;
+    bool doWrite;
 
 protected:
     void defineParams()
@@ -117,10 +167,10 @@ protected:
 
         addParamsLine("or --operate <operation>     : Operations on the metadata structure");
         addParamsLine("         where <operation>");
-        addParamsLine("    add_column <label>                 : Add some column(label list) to metadata");
-        addParamsLine("    drop_column <label>                : Drop some columns(label list) from metadata");
-        addParamsLine("    modify <expression>                : Use an SQLite expression to modify the metadata");
-        addParamsLine("                                       : This option requires knowledge of basic SQL syntax(more specific SQLite");
+        addParamsLine("    add_column <labels>                 : Add some columns(label list) to metadata");
+        addParamsLine("    drop_column <labels>                : Drop some columns(label list) from metadata");
+        addParamsLine("    modify_values <expression>                 : Use an SQLite expression to modify the metadata");
+        addParamsLine("                                        : This option requires knowledge of basic SQL syntax(more specific SQLite");
 
         addParamsLine("or  --file <file_operation>     : File operations");
         addParamsLine("         where <file_operation>");
@@ -131,17 +181,17 @@ protected:
 
         addParamsLine("or --query <query_operation>   : Query operations");
         addParamsLine("         where <query_operation>");
-        addParamsLine("   select <exp>               : Create new metadata with those entries that satisfy the expression 'exp'");
+        addParamsLine("   select <expression>        : Create new metadata with those entries that satisfy the expression");
         addParamsLine("   count  <label>             : for each value of a given label create new metadata with the number of times the value appears");
         addParamsLine("   size                       : print Metadata size");
 
-        addParamsLine("or --fill <label> <fill_mode>                  : Fill a column values(should be numeric)");
+        addParamsLine("or --fill <labels> <fill_mode>                  : Fill a column values(should be of same type)");
         addParamsLine("   where <fill_mode>");
         addParamsLine("     constant  <value>                        : Fill with a constant value");
         addParamsLine("     rand_uniform  <a=0.> <b=1.>              : Follow a uniform distribution between a and b");
         addParamsLine("     rand_gaussian <mean=0.> <stddev=1.>      : Follow a gaussian distribution with mean and stddev");
         addParamsLine("     rand_student  <mean=0.> <stddev=1.> <df=3.> : Follow a student distribution with mean, stddev and df degrees of freedom.");
-        addParamsLine("     metadata                                  : Treat the column as the filename of an row metadata and expand values");
+        addParamsLine("     expand                                   : Treat the column as the filename of an row metadata and expand values");
         addParamsLine(" [--mode+ <mode=overwrite>]   : Metadata writing mode.");
         addParamsLine("    where <mode>");
         addParamsLine("     overwrite   : Replace the content of the file with the Metadata");
@@ -180,7 +230,8 @@ protected:
     {
         fn_in = getParam("-i");
         mdIn.read(fn_in);
-        fn_out = checkParam("-o") ? getParam("-o") : fn_in;
+        doWrite = checkParam("-o");
+        fn_out = doWrite ? getParam("-o") : fn_in;
     }
 
     void doSet()
@@ -211,30 +262,41 @@ protected:
             mdIn.merge(md2);
         else if (operation == "sort")
             mdIn.sort(md2, label);
-    }
+    }//end of function doSet
 
     void doOperate()
     {
         operation = getParam("--operate", 0);
-        if (operation == "add_column")
-            mdIn.addLabel(MDL::str2Label(getParam("--operate", 1)));
-        else if (operation == "drop_column")
-            REPORT_ERROR(ERR_DEBUG_TEST, "Drop column not yet implemented");
-        else if (operation == "modify")
+
+        if (operation != "modify_values")
+        {
+            MDL::str2LabelVector(getParam("--operate", 1), labels);
+            for (int i = 0; i < labels.size(); ++i)
+            {
+                if (operation == "add_column")
+                    mdIn.addLabel(labels[i]);
+                else if (operation == "drop_column")
+                    mdIn.removeLabel(labels[i]);
+            }
+        }
+        else // modify_values
             mdIn.operate(getParam("--operate", 1));
-    }
+    }//end of function doOperate
 
     void doFill()
     {
-        String labelsStr = getParam("--fill", 0);
-        StringVector labels;
-        splitString(labelsStr, " ", labels);
+
+        MDL::str2LabelVector(getParam("--fill", 0), labels);
+
         if (labels.empty())
             REPORT_ERROR(ERR_PARAM_INCORRECT, "You should provide at least one label to fill out");
+
         operation = getParam("--fill", 1);
-        MDRandGenerator * generator;
+        MDValueGenerator * generator;
+
+        // Select wich generator to use
         if (operation == "constant")
-        {}
+            generator = new MDConstGenerator(getParam("--fill", 2));
         else if (operation.find("rand_") == 0)
         {
             double op1 = getDoubleParam("--fill", 2);
@@ -243,17 +305,24 @@ protected:
             String type = findAndReplace(operation, "rand_", "");
             if (type == "student")
                 op3 = getDoubleParam("--fill", 4);
-            generator = new MDRandGenerator(label, op1, op2, type, op3);
+            generator = new MDRandGenerator(op1, op2, type, op3);
         }
-        generator->fill(mdIn);
+        else if (operation == "expand")
+            generator = new MDExpandGenerator();
+
+        //Fill columns
+        for (int i = 0; i < labels.size(); ++i)
+        {
+            generator->label = labels[i];
+            generator->fill(mdIn);
+        }
 
         delete generator;
-    }
+    }//end of function doFill
 
     void doQuery()
     {
         operation = getParam("--query", 0);
-        MDLabel label;
         String expression;
 
         if (operation == "count")//note MDL_CTFMODEL is a dummy parameter
@@ -269,9 +338,59 @@ protected:
             mdIn.importObjects(md2, MDExpression(expression));
         }
         else if (operation == "size")
+        {
+            doWrite = false;
             std::cout << fn_in + " size is: " << mdIn.size() << std::endl;
+        }
+    }//end of function doQuery
 
+    void doFile()
+    {
+        operation = getParam("--file", 0);
+
+        if (operation == "convert2db")
+        {
+            doWrite = false;
+            MDSql::dumpToFile(fn_out);
+        }
+        else
+        {
+            bool doDelete;
+            FileName path, inFnImg, outFnImg;
+
+            if (!(doDelete = operation == "delete"))//copy or move
+            {
+                path = getParam("--file", 1);
+                if (!exists(path))
+                    if (mkpath(path, 0755) != 0)
+                        REPORT_ERROR(ERR_IO_NOPERM, (String)"Cannot create directory "+ path);
+            }
+            label = MDL::str2Label(getParam("--file", doDelete ? 1 : 2));
+            doWrite = !doDelete;
+
+            FOR_ALL_OBJECTS_IN_METADATA(mdIn)
+            {
+
+                mdIn.getValue(label, inFnImg, __iter.objId);
+
+                if (doDelete)
+                    remove(inFnImg.c_str());
+                else
+                {
+                    outFnImg = inFnImg.removeDirectories();
+                    mdIn.setValue(label, outFnImg, __iter.objId);
+                    outFnImg = path + "/" + outFnImg;
+
+                    if (operation == "copy")
+                        inFnImg.copyFile(outFnImg);
+                    else if (operation == "move")
+                        rename(inFnImg.c_str(), outFnImg.c_str());
+                }
+            }
+            fn_out = path + "/" + fn_out.removeDirectories();
+        }
     }
+
 public:
     void run()
     {
@@ -280,60 +399,15 @@ public:
         else if (checkParam("--operate"))
             doOperate();
         else if (checkParam("--file"))
-        {}
+            doFile();
         else if (checkParam("--query"))
             doQuery();
-
         else if (checkParam("--fill"))
             doFill();
 
-        if (!checkParam("-o"))
-            //better do nothing since size does not produce a new metadata
-            ;//mdIn.write(std::cout);
-        else
-            mdIn.write(getParam("-o"));
-
+        if (doWrite)
+            mdIn.write(fn_out);
     }
-    //        FileName inFnImg,outFnImg;
-    //        size_t id;
-    //
-    //        switch (operationType)
-    //        {
-    //        case _union:
-    //            inMD1.read(inFileName1);
-    //            inMD2.read(inFileName2);
-    //            inMD1.unionDistinct(inMD2, MDL::str2Label(_label));
-    //            inMD1.write(outFileName,mode);
-    //            break;
-    //        case _intersection:
-    //            inMD1.read(inFileName1);
-    //            inMD2.read(inFileName2);
-    //            inMD1.intersection(inMD2, MDL::str2Label(_label));
-    //            inMD1.write(outFileName,mode);
-    //            break;
-    //        case _subtraction:
-    //            inMD1.read(inFileName1);
-    //            inMD2.read(inFileName2);
-    //            inMD1.subtraction(inMD2, MDL::str2Label(_label));
-    //            inMD1.write(outFileName,mode);
-    //            break;
-    //        case _sort:
-    //            inMD1.read(inFileName1);
-    //            outMD.sort(inMD1, _label);
-    //            outMD.write(outFileName,mode);
-    //            break;
-    //        case _addColumn:
-    //            inMD1.read(inFileName1);
-    //            inMD1.addLabel(MDL::str2Label(_label));
-    //            inMD1.write(outFileName,mode);
-    //            break;
-    //        case _join:
-    //            inMD1.read(inFileName1);
-    //            inMD2.read(inFileName2);
-    //            MDSql::dumpToFile("pp.db");
-    //            outMD.join(inMD1,inMD2, MDL::str2Label(_label));
-    //            outMD.write(outFileName,mode);
-    //            break;
     //        case _copy:
     //            inMD1.read(inFileName1);
     //            //create dir
