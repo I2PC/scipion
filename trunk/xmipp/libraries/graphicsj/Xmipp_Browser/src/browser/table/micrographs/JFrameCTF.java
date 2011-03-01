@@ -10,12 +10,12 @@
  */
 package browser.table.micrographs;
 
+import ij.IJ;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import javax.swing.JDialog;
-import javax.swing.JOptionPane;
 
 /**
  *
@@ -47,9 +47,11 @@ public class JFrameCTF extends JDialog {
 
             jepEditorPane.setText(text.toString());
         } catch (FileNotFoundException fnfex) {
-            JOptionPane.showMessageDialog(this, fnfex.getMessage(), "File not found", JOptionPane.ERROR_MESSAGE);
-        } catch (Exception e) {
-            e.printStackTrace(System.err);
+            IJ.error("File not found: " + fnfex.getMessage());
+//            JOptionPane.showMessageDialog(this, fnfex.getMessage(), "File not found", JOptionPane.ERROR_MESSAGE);
+        } catch (Exception ex) {
+            ex.printStackTrace(System.err);
+            IJ.error(ex.getMessage());
         }
     }
 

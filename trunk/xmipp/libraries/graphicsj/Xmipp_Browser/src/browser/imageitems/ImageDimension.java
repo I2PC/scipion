@@ -12,8 +12,8 @@ import xmipp.ImageDouble;
  */
 public class ImageDimension {
 
-    public int width, height, depth;
-    public long nimages;
+    private int width, height, depth;
+    private long nimages;
 
     public ImageDimension() {
     }
@@ -26,11 +26,43 @@ public class ImageDimension {
     }
 
     public ImageDimension(ImageDouble image) {
-        width = image.getWidth();
-        height = image.getHeight();
-        depth = image.getDepth();
-        nimages = image.getNimages();
+        width = image.getXsize();
+        height = image.getYsize();
+        depth = image.getZsize();
+        nimages = image.getNsize();
 
 //        System.out.println(nimages + " images.");
+    }
+
+    public int getWidth() {
+        return width;
+    }
+
+    public int getHeight() {
+        return height;
+    }
+
+    public int getDepth() {
+        return depth;
+    }
+
+    public long getNimages() {
+        return nimages;
+    }
+
+    public void setWidth(int width) {
+        this.width = width;
+    }
+
+    public void setHeight(int height) {
+        this.height = height;
+    }
+
+    public void setDepth(int depth) {
+        this.depth = depth;
+    }
+
+    public void setNimages(long nimages) {
+        this.nimages = nimages;
     }
 }

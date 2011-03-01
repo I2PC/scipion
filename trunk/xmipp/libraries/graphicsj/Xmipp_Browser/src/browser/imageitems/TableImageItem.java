@@ -8,6 +8,7 @@ import browser.Cache;
 import browser.imageitems.listitems.XmippImageItem;
 import ij.ImagePlus;
 import java.io.File;
+import xmipp.ImageDouble;
 
 /**
  *
@@ -23,11 +24,11 @@ public class TableImageItem extends XmippImageItem {
     //protected double min, max;
 
     public TableImageItem(File file, Cache cache) {//, ImagesTableModel imagesTableModel
-        this(file, cache, FIRST_SLICE);//, imagesTableModel);
+        this(file, cache, ImageDouble.FIRST_SLICE);//, imagesTableModel);
     }
 
     public TableImageItem(File file, Cache cache, int slice) {//, ImagesTableModel imagesTableModel) {
-        this(file, cache, slice, FIRST_IMAGE);//, imagesTableModel);
+        this(file, cache, slice, ImageDouble.FIRST_IMAGE);//, imagesTableModel);
     }
 
     public TableImageItem(File file, Cache cache, int slice, int nimage) {//, ImagesTableModel imagesTableModel) {
@@ -74,16 +75,16 @@ public class TableImageItem extends XmippImageItem {
     }
 
     public int getThumbnailWidth() {
-        return (int) ((double) dimension.width * zoom);
+        return (int) ((double) getWidth() * zoom);
     }
 
     public int getThumbnailHeight() {
-        return (int) ((double) dimension.height * zoom);
+        return (int) ((double) getHeight() * zoom);
     }
 
     public String getTooltipText() {
-        String sliceStr = dimension.depth > 1 ? " slice: " + slice : "";
-        String nimageStr = dimension.nimages > 1 ? " image: " + nimage : "";
+        String sliceStr = isVolume() ? " slice: " + slice : "";
+        String nimageStr = isStack() ? " image: " + nimage : "";
 
         return getLabel() + sliceStr + nimageStr;
     }

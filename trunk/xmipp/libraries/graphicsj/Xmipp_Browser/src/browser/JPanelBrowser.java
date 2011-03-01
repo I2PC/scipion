@@ -25,7 +25,6 @@ import ij.IJ;
 import java.awt.BorderLayout;
 import java.awt.event.KeyEvent;
 import java.io.File;
-import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.border.TitledBorder;
 import ij.ImagePlus;
@@ -33,6 +32,7 @@ import ij.WindowManager;
 import ij.gui.GenericDialog;
 import ij.gui.ImageWindow;
 import java.util.Vector;
+import xmipp.ImageDouble;
 
 /**
  *
@@ -123,7 +123,7 @@ public class JPanelBrowser extends JPanel {
                     XmippImageItem xmippItem = (XmippImageItem) item;
                     int n = 0;
 
-                    if (xmippItem.dimension.nimages > 0) {
+                    if (xmippItem.isStack()) {
                         n = getImageIndexFromUser(xmippItem);
                     }
 
@@ -135,9 +135,11 @@ public class JPanelBrowser extends JPanel {
                     IJ.open(item.getFile().getAbsolutePath());
                 }
             } else {
-                JOptionPane.showMessageDialog(this,
-                        LABELS.MESSAGE_MEMORY_ERROR(file.length(), IJ.maxMemory()),
-                        LABELS.TITLE_ERROR, JOptionPane.ERROR_MESSAGE);
+                IJ.showMessage(LABELS.TITLE_ERROR,
+                        LABELS.MESSAGE_MEMORY_ERROR(file.length(), IJ.maxMemory()));
+                /*JOptionPane.showMessageDialog(this,
+                LABELS.MESSAGE_MEMORY_ERROR(file.length(), IJ.maxMemory()),
+                LABELS.TITLE_ERROR, JOptionPane.ERROR_MESSAGE);*/
             }
         }
     }
@@ -146,10 +148,10 @@ public class JPanelBrowser extends JPanel {
     private static int getImageIndexFromUser(XmippImageItem item) {
         int image = -1;
 
-        if (item.dimension.nimages > 1) {
+        if (item.isStack()) {
             final GenericDialog dialog = new GenericDialog("Select image from: " + item.getFileName());
-            final String[] indexes = new String[(int) item.dimension.nimages];
-            for (int i = 0; i < item.dimension.nimages; i++) {
+            final String[] indexes = new String[(int) item.getNImages()];
+            for (int i = ImageDouble.FIRST_IMAGE; i <= item.getNImages(); i++) {
                 indexes[i] = String.valueOf(i);
             }
 
@@ -178,10 +180,10 @@ public class JPanelBrowser extends JPanel {
             ImagesWindowFactory.openTable((SelFileItem) item);
         } else if (item instanceof XmippImageItem) {
             XmippImageItem xmippItem = (XmippImageItem) item;
-            if (xmippItem.dimension.nimages > 1) { // Volumes.
-                ImagesWindowFactory.openTable(xmippItem);
-            } else {    // Single images.
+            if (xmippItem.isSingleImage()) { // Single images.
                 ImagesWindowFactory.openImage(xmippItem);
+            } else {
+                ImagesWindowFactory.openTable(xmippItem);
             }
         } else {
             IJ.error("@TODO Open standard files with IJ.");

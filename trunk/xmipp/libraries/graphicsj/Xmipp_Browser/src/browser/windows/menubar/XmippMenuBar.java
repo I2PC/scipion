@@ -9,11 +9,11 @@ import browser.windows.ImagesWindowFactory;
 import browser.windows.iPollImageWindow;
 import ij.IJ;
 import ij.ImagePlus;
-import ij.ImageStack;
 import ij.gui.GenericDialog;
 import ij.gui.OvalRoi;
 import ij.gui.Roi;
 import ij.gui.Toolbar;
+import ij.plugin.filter.Duplicater;
 import ij.process.StackConverter;
 import ij3d.Content;
 import ij3d.Image3DUniverse;
@@ -25,7 +25,6 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
-import javax.swing.JOptionPane;
 
 /**
  *
@@ -446,18 +445,8 @@ public class XmippMenuBar extends DynamicMenuBar implements ActionListener {
             } else if (e.getSource() == itemResliceRight) {
                 IJ.run(imp, "Reslice [/]...", "slice=1.000 start=Right");
             } else if (e.getSource() == itemDuplicate) {
-                ImageStack outputStack = new ImageStack(imp.getWidth(), imp.getHeight(), imp.getStackSize());
-
-                for (int i = 1; i <= imp.getStackSize(); i++) {
-                    outputStack.setPixels(imp.getStack().getProcessor(i).getPixelsCopy(), i);
-                }
-
-                ImagePlus imp2 = new ImagePlus();
-                imp2.setStack(imp.getTitle() + "-duplicated", outputStack);
-
-                imp2.getProcessor().setMinAndMax(imp.getProcessor().getMin(), imp.getProcessor().getMax());
-
-                ImagesWindowFactory.openImage(imp2, false);
+                ImagePlus imp2 = (new Duplicater()).duplicateStack(imp, imp.getTitle() + "_duplicated");
+                imp2.show();
             } else if (e.getSource() == itemGoToSlice) {
                 GenericDialog dialog = new GenericDialog(LABELS.TITLE_GO_TO_SLICE);
                 dialog.addNumericField("Slice: ", imp.getCurrentSlice(), String.valueOf(imp.getStackSize()).length());
@@ -709,13 +698,16 @@ public class XmippMenuBar extends DynamicMenuBar implements ActionListener {
 
         imp.updateAndDraw();
 
+        // To avoid windows without our cool menu :)
+        ImagesWindowFactory.openImage(IJ.getImage(), false);
+
         // Tells user about possible internal conversions.
         if (converted) {
-            JOptionPane.showMessageDialog(imp.getWindow(), "Image has been converted to " + imp.getBitDepth() + " bits.");
+            IJ.showMessage("Image changed", "Image has been converted to " + imp.getBitDepth() + " bits.");
         }
 
         if (binarized) {
-            JOptionPane.showMessageDialog(imp.getWindow(), "Image has been binarized.");
+            IJ.showMessage("Image changed", "Image has been binarized.");
         }
     }
 

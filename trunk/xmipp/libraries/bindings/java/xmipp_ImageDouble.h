@@ -7,6 +7,12 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+#undef xmipp_ImageDouble_FIRST_IMAGE
+#define xmipp_ImageDouble_FIRST_IMAGE 1L
+#undef xmipp_ImageDouble_FIRST_SLICE
+#define xmipp_ImageDouble_FIRST_SLICE 1L
+#undef xmipp_ImageDouble_MID_SLICE
+#define xmipp_ImageDouble_MID_SLICE -1L
 /*
  * Class:     xmipp_ImageDouble
  * Method:    storeIds

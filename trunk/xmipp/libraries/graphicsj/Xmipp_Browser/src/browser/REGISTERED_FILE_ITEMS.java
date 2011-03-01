@@ -14,7 +14,7 @@ public class REGISTERED_FILE_ITEMS {
 
     public static final int INDEX_EXT = 0;
     public static final int INDEX_ICON = 1;
-    // @TODO Remove this when porting is completed.
+    // @TODO Set nicer icons :)
     public static final String TABLE[][] = {
         {"dm3", "/resources/type_dm3.png"},
         {"hed", "/resources/type_image.png"},

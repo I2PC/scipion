@@ -2,7 +2,10 @@ package xmipp;
 
 public class ImageDouble {
 
-    private static final String PSD_EXTENSION = ".psd";
+    public final static int FIRST_IMAGE = 1;
+    public final static int FIRST_SLICE = 1;
+    public final static int MID_SLICE = -1;
+    private final static String PSD_EXTENSION = ".psd";
     // pointer to Image class in C++ space. Needed by native library.
     private long peer;
     private String filename;

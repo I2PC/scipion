@@ -55,7 +55,10 @@ public class XmippBrowser implements PlugIn {
         }
 
         if (IMGS != null) {
-            ImagesWindowFactory.openImageFiles(IMGS);
+            for (int i = 0; i < IMGS.length; i++) {
+                //ImagesWindowFactory.openImageFiles(IMGS);
+                ImagesWindowFactory.openImageFiles(IMGS);
+            }
         }
 
         if (VOLS != null) {
@@ -70,7 +73,7 @@ public class XmippBrowser implements PlugIn {
             }
         }
 
-        //DIR = "/home/juanjo/temp/";//Desktop/imgs_Roberto/kk";
+        DIR = "/home/juanjo/temp/";//Desktop/imgs_Roberto/kk";
         if (DIR != null) {
             frameBrowser = new JFrameBrowser(LABELS.TITLE_MAIN_WINDOW, DIR);
             frameBrowser.setVisible(true);

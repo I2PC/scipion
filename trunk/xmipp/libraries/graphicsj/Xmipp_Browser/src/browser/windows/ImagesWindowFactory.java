@@ -33,8 +33,8 @@ public class ImagesWindowFactory {
             }
         }
 
-        if (xmippItems.size() > 0) {
-            openTable(xmippItems);
+        for (int i = 0; i < xmippItems.size(); i++) {
+            openImage(xmippItems.elementAt(i));
         }
     }
 
@@ -70,14 +70,14 @@ public class ImagesWindowFactory {
         return openImage(ip, false);
     }
 
-    public static ImageWindow openImage(ImagePlus ip, boolean poll) {
+    public static ImageWindow openImage(ImagePlus imp, boolean poll) {
         ImageWindow iw = null;
 
-        if (ip != null) {
-            if (ip.getStackSize() > 1) {
-                iw = new StackWindowOperations(ip, poll);
+        if (imp != null) {
+            if (imp.getStackSize() > 1) {
+                iw = new StackWindowOperations(imp, poll);
             } else {
-                iw = new ImageWindowOperations(ip, poll);
+                iw = new ImageWindowOperations(imp, poll);
             }
         } else {
             IJ.error("Trying to open a null image.");
@@ -96,7 +96,7 @@ public class ImagesWindowFactory {
                 XmippImageItem imageItem = (XmippImageItem) item;
 
                 // Volumes are opened in a independent table for each one
-                if (imageItem.dimension.depth > 1 || imageItem.dimension.nimages > 1) {
+                if (!imageItem.isSingleImage()) {
                     if (item instanceof SelFileItem) {
                         openTable((SelFileItem) imageItem);
                     } else {

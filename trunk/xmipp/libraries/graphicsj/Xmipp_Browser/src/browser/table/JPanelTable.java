@@ -142,7 +142,8 @@ public class JPanelTable extends javax.swing.JPanel {
 
             public void actionPerformed(ActionEvent e) {
                 if (!saveAsImages()) {
-                    JOptionPane.showMessageDialog(getParent(), LABELS.MESSAGE_NO_ITEMS_SELECTED);
+                    IJ.error(LABELS.MESSAGE_NO_ITEMS_SELECTED);
+//                    JOptionPane.showMessageDialog(getParent(), LABELS.MESSAGE_NO_ITEMS_SELECTED);
                 }
             }
         });
@@ -280,7 +281,8 @@ public class JPanelTable extends javax.swing.JPanel {
 
             ImagesWindowFactory.openImage(average, false);
         } else {
-            JOptionPane.showMessageDialog(this, LABELS.MESSAGE_NO_ITEMS_SELECTED);
+            IJ.error(LABELS.MESSAGE_NO_ITEMS_SELECTED);
+            //JOptionPane.showMessageDialog(this, LABELS.MESSAGE_NO_ITEMS_SELECTED);
         }
     }
 
@@ -381,10 +383,9 @@ public class JPanelTable extends javax.swing.JPanel {
         tableModel.addImageItem(itemImage);
     }
 
-    public void addImageItem(XmippImageItem itemImage, int image) {
-        tableModel.addImageItem(itemImage, image);
-    }
-
+    /*    public void addImageItem(XmippImageItem itemImage, int image) {
+    tableModel.addImageItem(itemImage, image);
+    }*/
     public void addImageItem(SelFileItem itemImage) {
         tableModel.addImageItem(itemImage);
     }

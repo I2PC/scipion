@@ -41,7 +41,7 @@ public class SelFileItem extends XmippImageItem {
                 loadPreviewFileData();
             }
 
-            dimension.nimages = md.size();
+            dimension.setNimages(md.size());
         } catch (Exception ex) {
             ex.printStackTrace();
             IJ.error(ex.getMessage());

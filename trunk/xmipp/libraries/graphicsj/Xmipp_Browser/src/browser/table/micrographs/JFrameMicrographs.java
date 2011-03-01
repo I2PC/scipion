@@ -15,14 +15,11 @@ import browser.table.renderers.DoubleRenderer;
 import browser.table.renderers.FileNameRenderer;
 import browser.table.renderers.ImageMicrographRenderer;
 import browser.windows.ImagesWindowFactory;
+import ij.IJ;
 import java.awt.Component;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.awt.event.ComponentEvent;
-import java.awt.event.ComponentListener;
 import java.awt.event.MouseEvent;
-import java.awt.event.WindowEvent;
-import java.awt.event.WindowStateListener;
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JMenuItem;
@@ -267,7 +264,8 @@ public class JFrameMicrographs extends JFrame {
 
     private void save(String fileName) {
         if (tableModel.save(table, fileName)) {
-            JOptionPane.showMessageDialog(this, "File " + fileName + " sucessfully saved.", "File saved.", JOptionPane.INFORMATION_MESSAGE);
+            IJ.showMessage("File saved.", "File " + fileName + " sucessfully saved.");
+            //JOptionPane.showMessageDialog(this, "File " + fileName + " sucessfully saved.", "File saved.", JOptionPane.INFORMATION_MESSAGE);
         }
     }
 

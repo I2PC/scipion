@@ -20,12 +20,9 @@ import java.awt.Dimension;
 import java.awt.Rectangle;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
-import java.util.Timer;
-import java.util.TimerTask;
 import javax.swing.JFrame;
 import javax.swing.JSpinner;
 import javax.swing.JSpinner.DefaultEditor;
-import tests.Abort;
 
 /**
  *
@@ -42,12 +39,12 @@ public class JFrameVolumeTable extends JFrame implements iNormalizeListener {
         this(0, 0);
     }
 
-    private void startAbortTask() {
+/*    private void startAbortTask() {
         TimerTask abort = new Abort();
         Timer timer = new Timer();
         timer.scheduleAtFixedRate(abort, 10000, 3000);
         System.err.println(" *** Started thread to avoid hangs!!!...");
-    }
+    }*/
 
     public JFrameVolumeTable(int initialRows, int initialColumns) {
         super();
@@ -131,8 +128,6 @@ public class JFrameVolumeTable extends JFrame implements iNormalizeListener {
     }
 
     protected void setInitialDisplayValues() {
-        System.out.println(" *** Setting initial display values...");
-
         // Calculates and sets the best initial zoom.
         if (jPanelTable.getItemsCount() > 0) {
             int zoom = 100;
@@ -170,19 +165,24 @@ public class JFrameVolumeTable extends JFrame implements iNormalizeListener {
     }
 
     public void addImageItem(XmippImageItem itemImage) {
-        for (int i = 0; i < itemImage.dimension.nimages; i++) {
-            jPanelTable.addImageItem(itemImage, i);
-        }
+        jPanelTable.addImageItem(itemImage);
 
         setTitle(LABELS.TITLE_TABLE_WINDOW(itemImage));
     }
+
+    /*    public void addImageItem(XmippImageItem itemImage) {
+    for (int i = 0; i < itemImage.dimension.nimages; i++) {
+    jPanelTable.addImageItem(itemImage, i);
+    }
+
+    setTitle(LABELS.TITLE_TABLE_WINDOW(itemImage));
+    }*/
 //
 //    public void addImageItem(XmippImageItem itemImage, int n) {
 //        jPanelTable.addImageItem(itemImage, n);
 //
 //        setTitle(LABELS.TITLE_TABLE_WINDOW(itemImage));
 //    }
-
     public void addImageItem(SelFileItem itemImage) {
         jPanelTable.addImageItem(itemImage);
 

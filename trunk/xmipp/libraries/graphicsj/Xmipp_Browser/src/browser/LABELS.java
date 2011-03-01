@@ -27,14 +27,10 @@ public class LABELS {
     }
 
     public final static String TITLE_TABLE_WINDOW(XmippImageItem item) {
-        int depth = item.dimension.depth;
-        long nimages = item.dimension.nimages;
-
         return item.getFileName()
-                + (depth > 1 ? depth + " slices" : "")
-                + (nimages > 1 ? " / " + nimages + " images." : "");
+                + (item.isVolume() ? " / " + item.getDepth() + " slices" : "")
+                + (item.isStack() ? " / " + item.getNImages() + " images" : "");
     }
-
     /**
      * Buttons labels
      */

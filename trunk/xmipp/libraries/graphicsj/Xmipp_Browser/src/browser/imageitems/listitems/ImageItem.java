@@ -5,7 +5,6 @@
 package browser.imageitems.listitems;
 
 import browser.Cache;
-import browser.LABELS;
 import browser.imageitems.ImageDimension;
 import ij.IJ;
 import ij.ImagePlus;
@@ -46,8 +45,8 @@ public class ImageItem extends AbstractImageItem {
 
                 // Stores image info.
                 dimension = new ImageDimension();
-                dimension.width = imgReader.getWidth(0);
-                dimension.height = imgReader.getHeight(0);
+                dimension.setWidth(imgReader.getWidth(0));
+                dimension.setHeight(imgReader.getHeight(0));
 
                 // Closes input stream.
                 imageInputStream.close();
@@ -75,7 +74,7 @@ public class ImageItem extends AbstractImageItem {
                 imgReader.setInput(imageInputStream);
 
                 // Calculates and sets parameters for subsampling.
-                int longEdge = (Math.max(dimension.width, dimension.height));
+                int longEdge = (Math.max(getWidth(), getHeight()));
                 int subSampleX = (int) (longEdge / w * 2.f);
                 int subSampleY = (int) (longEdge / h * 2.f);
 
@@ -95,17 +94,17 @@ public class ImageItem extends AbstractImageItem {
 
         return preview != null ? new ImagePlus("", preview) : null;
     }
-
+    /*
     public String getImageInfo() {
-        loadImageData();
+    loadImageData();
 
-        System.out.println("W=" + dimension.width + " / H=" + dimension.height);
+    System.out.println("W=" + dimension.width + " / H=" + dimension.height);
 
-        return "<html>"
-                + LABELS.LABEL_WIDTH + dimension.width + "<br>"
-                + LABELS.LABEL_HEIGHT + dimension.height + "<br>"
-                + "</html>";
-    }
+    return "<html>"
+    + LABELS.LABEL_WIDTH + dimension.width + "<br>"
+    + LABELS.LABEL_HEIGHT + dimension.height + "<br>"
+    + "</html>";
+    }*/
 
     @Override
     public ImagePlus getImagePlus() {

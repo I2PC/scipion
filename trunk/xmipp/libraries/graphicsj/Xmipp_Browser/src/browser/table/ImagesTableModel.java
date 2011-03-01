@@ -176,13 +176,13 @@ public class ImagesTableModel extends AbstractTableModel {
     }
 
     public void addImageItem(XmippImageItem itemImage) {
-        for (int i = 0; i < itemImage.dimension.nimages; i++) {
+        for (int i = 0; i < itemImage.getNImages(); i++) {
             addImageItem(itemImage, i);
         }
     }
 
-    public void addImageItem(XmippImageItem itemImage, int n) {
-        for (int i = 0; i < itemImage.dimension.depth; i++) {
+    private void addImageItem(XmippImageItem itemImage, int n) {
+        for (int i = 0; i < itemImage.getDepth(); i++) {
             TableImageItem item = new TableImageItem(
                     itemImage.getFile(), cache, i + 1, n);
             data.add(item);
