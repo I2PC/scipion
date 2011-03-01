@@ -90,6 +90,7 @@ protected:
         addParamsLine("         where <query_operation>");
         addParamsLine("   select <expression>        : Create new metadata with those entries that satisfy the expression");
         addParamsLine("   count  <label>             : for each value of a given label create new metadata with the number of times the value appears");
+        addParamsLine("   sum  <label1> <label2>   : group metadata by label1 and add quantities in label2");
         addParamsLine("   size                       : print Metadata size");
         addParamsLine("           alias -q;                                             ");
 
@@ -142,6 +143,8 @@ protected:
         addExampleLine("  xmipp_metadata_utilities  -i a.doc --operate modify_values \"image=replace(image, 'xmp','spi')\" -o b.doc");
         addExampleLine(" Count number of images per CTF", false);
         addExampleLine ("   xmipp_metadata_utilities -i mD1.doc -q count CTFModel -o out.doc");
+        addExampleLine(" images asigned a ctfgroup", false);
+        addExampleLine ("   xmipp_metadata_utilities -i mD1.doc -q sum defocusGroup count -o out.doc");
         addExampleLine(" Print the metadata Size", false);
         addExampleLine ("   xmipp_metadata_utilities -i mD1.doc --query size");
 
@@ -253,6 +256,14 @@ protected:
             label = MDL::str2Label(getParam("--query", 1));
             md2 = mdIn;
             mdIn.aggregate(md2, AGGR_COUNT,label,MDL_CTFMODEL,MDL_COUNT);
+        }
+        else if (operation == "sum")
+        {
+            label = MDL::str2Label(getParam("--query", 1));
+            MDLabel label2;
+            label2 = MDL::str2Label(getParam("--query", 2));
+            md2 = mdIn;
+            mdIn.aggregate(md2, AGGR_SUM,label,label2,MDL_SUM);
         }
         else if (operation == "select")
         {
