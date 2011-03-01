@@ -169,7 +169,7 @@ void  ImageGeneric::mapFile2Write(int Xdim, int Ydim, int Zdim, FileName _filena
                                   bool createTempFile, size_t select_img, bool isStack,int mode)
 {
     image->setDataMode(HEADER); // Use this to ask rw* which datatype to use
-    image->mapFile2Write(Xdim,Ydim,Zdim,_filename,createTempFile);
+    image->mapFile2Write(Xdim,Ydim,Zdim,_filename,createTempFile, select_img, isStack, mode);
 
     DataType writeDT = image->dataType();
     if ( writeDT != datatype)

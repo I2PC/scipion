@@ -162,7 +162,7 @@ void ProgMPIXrayProject::run()
             init_progress_bar(mpiData.size());
 
         // Creation of output file to reserve space
-        proj.createEmptyFile(mpiData[mpiData.size()-1].fn_proj,
+        createEmptyFile(mpiData[mpiData.size()-1].fn_proj,
                              XMIPP_MIN(XSIZE(MULTIDIM_ARRAY(phantom.iniVol)),projParam.proj_Xdim),
                              XMIPP_MIN(YSIZE(MULTIDIM_ARRAY(phantom.iniVol)),projParam.proj_Ydim));
 
