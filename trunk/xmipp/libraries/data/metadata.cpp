@@ -1182,7 +1182,7 @@ void MetaData::randomize(MetaData &MDin)
   static bool randomized = false;
   if (!randomized)
   {
-    randomize_random_generator();
+    srand ( time(NULL) );
     randomized = true;
   }
     std::vector<size_t> objects;
