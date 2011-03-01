@@ -281,7 +281,7 @@ size_t MDSql::copyObjects(MDSql * sqlOut, const MDQuery *queryPtr) const
 
 void MDSql::aggregateMd(MetaData *mdPtrOut,
                         const std::vector<AggregateOperation> &operations,
-                        MDLabel operateLabel)
+                        const std::vector<MDLabel>            &operateLabel)
 {
     std::stringstream ss;
     std::stringstream ss2;
@@ -315,13 +315,14 @@ void MDSql::aggregateMd(MetaData *mdPtrOut,
         default:
             REPORT_ERROR(ERR_MD_SQL, "Invalid aggregate operation.");
         }
-        ss2 << "(" << MDL::label2Str(operateLabel)
+        ss2 << "(" << MDL::label2Str(operateLabel[i])
         << ") AS " << MDL::label2Str(mdPtrOut->activeLabels[i+1]);
     }
     ss << ") SELECT " << ss2.str();
     ss << " FROM " << tableName(tableId);
     ss << " GROUP BY " << aggregateStr;
     ss << " ORDER BY " << aggregateStr << ";";
+    //std::cerr << "ss " << ss.str() <<std::endl;
     execSingleStmt(ss);
 }
 
