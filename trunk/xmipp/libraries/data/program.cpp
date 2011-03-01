@@ -293,7 +293,7 @@ void XmippProgram::addWhereImageFormat(const char * whereName)
     addParamsLine("         img : Imagic (Data types: uint8, int16, float* and cfloat).");
     addParamsLine("         inf : RAW file with header INF file (Data types: (u)int8, (u)int16 and float*).");
     addParamsLine("         raw : RAW file with header INF file (Data types: (u)int8, (u)int16 and float*).");
-    addParamsLine("         mrc : CCP4 (Data types: int8, float* and cfloat).");
+    addParamsLine("         mrc : CCP4 (Data types: uint8, int16, float* and cfloat).");
     addParamsLine("         spi : Spider (Data types: float* and cfloat).");
     addParamsLine("         xmp : Spider (Data types: float* and cfloat).");
     addParamsLine("         tif : TIFF. (Data types: uint8*, uint16, uint32 and float).");
