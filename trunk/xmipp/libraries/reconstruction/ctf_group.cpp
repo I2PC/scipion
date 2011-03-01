@@ -2,6 +2,7 @@
 /***************************************************************************
  *
  * Authors:     Sjors H.W. Scheres (scheres@cnb.csic.es)
+ * Rewritten by Roberto Marabini roberto@cnb.uam.es
  *
  * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
  *
@@ -27,13 +28,18 @@
 #include "ctf_group.h"
 #include <data/fft.h>
 #include <data/metadata_extension.h>
+#include <data/metadata_extension.h>
 
 /* Read parameters from command line. -------------------------------------- */
 void ProgCtfGroup::readParams()
 {
-    fn_sel        = getParam("-i");
+    //    fn_sel        = getParam("-i");
     fn_ctfdat     = getParam("--ctfdat");
     fn_root       = getParam("-o");
+
+    format = fn_root.getFileFormat();
+    fn_root = fn_root.removeFileFormat();
+
     phase_flipped = checkParam("--phase_flipped");
     do_discard_anisotropy = checkParam("--discard_anisotropy");
     do_auto       = !checkParam("--split");
@@ -48,13 +54,15 @@ void ProgCtfGroup::readParams()
         fn_split = getParam("--split");
     }
     do_wiener = checkParam("--wiener");
+    memory = getDoubleParam("--memory");
+    do1Dctf   = checkParam("--do1Dctf");
     wiener_constant = getDoubleParam("--wc");
 }
 
 /* Show -------------------------------------------------------------------- */
 void ProgCtfGroup::show()
 {
-    std::cerr << "  Input sel file          : "<< fn_sel << std::endl;
+    //    std::cerr << "  Input sel file          : "<< fn_sel << std::endl;
     std::cerr << "  Input ctfdat file       : "<< fn_ctfdat << std::endl;
     std::cerr << "  Output rootname         : "<< fn_root << std::endl;
     if (pad > 1.)
@@ -87,6 +95,15 @@ void ProgCtfGroup::show()
     {
         std::cerr << " -> Also calculate Wiener filters, with constant= "<<wiener_constant<<std::endl;
     }
+    std::cerr << "  Available memory (Gb)        : "<< memory << std::endl;
+    if (do1Dctf)
+    {
+        std::cerr << " -> compute CTF groups using 1D CTFs= "<<std::endl;
+    }
+    else
+    {
+        std::cerr << " -> compute CTF groups using 2D CTFs= "<<std::endl;
+    }
     std::cerr << "----------------------------------------------------------"<<std::endl;
 }
 
@@ -99,13 +116,16 @@ void ProgCtfGroup::defineParams()
     addUsageLine("Example of use: Sample using manual mode (after manual editing of ctf_group_split.doc)");
     addUsageLine("   xmipp_ctf_group -i input.sel --ctfdat input.ctfdat --pad 1.5 --wiener --phase_flipped --split ctf_group_split.doc");
 
-    addParamsLine("   -i <sel_file>              : Input selfile");
+    //    addParamsLine("   -i <sel_file>              : Input selfile");
     addParamsLine("   --ctfdat <ctfdat_file>     : Input CTFdat file for all data");
-    addParamsLine("   [-o <oext=\"ctf\">]        : Output root name");
+    addParamsLine("   [-o <oext=\"ctf\">]        : Output root name, you may force format ctf:mrc");
     addParamsLine("   [--pad <float=1>]          : Padding factor ");
     addParamsLine("   [--phase_flipped]          : Output filters for phase-flipped data");
     addParamsLine("   [--discard_anisotropy]     : Exclude anisotropic CTFs from groups");
     addParamsLine("   [--wiener]                 : Also calculate Wiener filters");
+    addParamsLine("   [--memory <double=1.>]     : Available memory in Gb");
+    addParamsLine("   [--do1Dctf]                : Compute Groups using 1D CTF, select this option is you have many \
+                  non astismatic CTFs");
     addParamsLine("   [--wc <float=-1>]          : Wiener-filter constant (if < 0: use FREALIGN default)");
     addParamsLine(" == MODE 1: AUTOMATED: == ");
     addParamsLine("   [--error <float=0.5> ]     : Maximum allowed error");
@@ -118,29 +138,41 @@ void ProgCtfGroup::defineParams()
 /* Produce Side information ------------------------------------------------ */
 void ProgCtfGroup::produceSideInfo()
 {
-    FileName fnt_img, fnt_ctf, fnt;
-    Image<double> img;
+    ;
+    //#ifdef GGGG
+
+    FileName  fnt_ctf;
     CTFDescription ctf;
-    MetaData ctfdat, SF;
+    //MetaData ctfdat,
+    MetaData SF;
     MultidimArray<double> Mctf;
     MultidimArray<std::complex<double> >  ctfmask;
-    std::vector<FileName> dum;
-    int ydim, imgno;
-    bool is_unique, found, is_first;
-    double avgdef;
-    std::vector<FileName> mics_fnctf;
-
-    std::cerr<<" Reading all data ..."<<std::endl;
-    SF.read(fn_sel);
+    int ydim;
     int zdim;
     size_t ndim;
+    double avgdef;
+
+    SF.read(fn_ctfdat);
     ImgSize(SF,dim,ydim,zdim,ndim);
+
     if ( dim != ydim )
         REPORT_ERROR(ERR_MULTIDIM_SIZE,"Only squared images are allowed!");
 
-    paddim = ROUND(pad*dim);
-    Mctf.resize(paddim,paddim);
-    ctfdat.read(fn_ctfdat);
+    paddim=xpaddim = ROUND(pad*dim);
+    if(do1Dctf)
+    {
+        ypaddim=1;
+        ctfxpaddim =  sqrt(2.) *  xpaddim + 1;
+    }
+    else
+    {
+        //ypaddim = xpaddim;
+        //This is ready for the day in which we use anisotropic ctf
+        ypaddim=1;
+        //ctfxpaddim = xpaddim;
+        ctfxpaddim =  sqrt(2.) *  xpaddim + 1;
+    }
+    Mctf.resize(ypaddim,ctfxpaddim);
 
     if (do_wiener)
     {
@@ -148,118 +180,142 @@ void ProgCtfGroup::produceSideInfo()
         Mwien.initZeros();
     }
 
-    mics_fnctf.clear();
-    is_first=true;
-    imgno = 0;
-    int n= SF.size();
-    int c = XMIPP_MAX(1, n / 60);
-    init_progress_bar(n);
-    FOR_ALL_OBJECTS_IN_METADATA(SF)
+    MetaData ctfMD;
+    //number of different CTFs
+    ctfMD.aggregate(SF, AGGR_COUNT,MDL_CTFMODEL,MDL_CTFMODEL,MDL_COUNT);
+    ctfMD.fillExpand(MDL_CTFMODEL);
+    int nCTFs = ctfMD.size();
+    //how much memory do I need to store them
+    double _sizeGb = (double) ypaddim * xpaddim * sizeof(double) * nCTFs /1073741824.;
+    if (_sizeGb > memory)
+        mmapOn=true;
+    else
+        mmapOn=false;
+    mics_ctf2d.setMmap(mmapOn);
+    mics_ctf2d.resize(nCTFs,1,ypaddim,ctfxpaddim);
+
+    int c = XMIPP_MAX(1, nCTFs / 60);
+    init_progress_bar(nCTFs);
+
+    ctf.readFromMetadataRow(ctfMD,ctfMD.firstObject());
+
+    //do not read directly Tm from metadata because it may be not there
+    pixel_size = ctf.Tm;
+
+    if (do_auto)
     {
-        SF.getValue(MDL_IMAGE,fnt,__iter.objId);
-
-        // Find which CTF group it belongs to
-        found = false;
-        FOR_ALL_OBJECTS_IN_METADATA(ctfdat)
+        if (resol_error < 0)
         {
-            ctfdat.getValue(MDL_IMAGE,fnt_img,__iter.objId);
-            ctfdat.getValue(MDL_CTFMODEL,fnt_ctf,__iter.objId);
-
-            if (fnt_img == fnt)
-            {
-                found = true;
-                is_unique=true;
-                for (int i = 0; i< mics_fnctf.size(); i++)
-                {
-                    if (fnt_ctf == mics_fnctf[i])
-                    {
-                        is_unique=false;
-                        mics_fnimgs[i].push_back(fnt_img);
-                        mics_count[i]++;
-                        //std::cerr<<" add "<<fnt_img<<" to mic "<<i<<"count= "<<mics_count[i]<<std::endl;
-                        break;
-                    }
-                }
-                if (is_unique)
-                {
-                    // Read CTF in memory
-                    ctf.read(fnt_ctf);
-                    ctf.enable_CTF = true;
-                    ctf.enable_CTFnoise = false;
-                    ctf.Produce_Side_Info();
-                    if (is_first)
-                    {
-                        pixel_size = ctf.Tm;
-                        if (do_auto)
-                        {
-                            if (resol_error < 0)
-                            {
-                                // Set to Nyquist
-                                resol_error = 2. * pixel_size;
-                            }
-                            // Set resolution limits in dig freq:
-                            resol_error = pixel_size / resol_error;
-                            resol_error = XMIPP_MIN(0.5, resol_error);
-                            // and in pixels:
-
-                            iresol_error = ROUND(resol_error * paddim);
-                            //std::cerr<<" Resolution for error limit = "<<resol_error<< " (dig. freq.) = "<<iresol_error<<" (pixels)"<<std::endl;
-                        }
-                        is_first=false;
-                    }
-                    else if (pixel_size != ctf.Tm)
-                        REPORT_ERROR(ERR_VALUE_INCORRECT,
-                                     "Cannot mix CTFs with different sampling rates!");
-                    if (!do_discard_anisotropy || isIsotropic(ctf))
-                    {
-                        avgdef = (ctf.DeltafU + ctf.DeltafV)/2.;
-                        ctf.DeltafU = avgdef;
-                        ctf.DeltafV = avgdef;
-                        ctf.Generate_CTF(paddim, paddim, ctfmask);
-                        FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY2D(ctfmask)
-                        {
-                            if (phase_flipped)
-                                dAij(Mctf, i, j) = fabs(dAij(ctfmask, i, j).real());
-                            else
-                                dAij(Mctf, i, j) = dAij(ctfmask, i, j).real();
-                        }
-                        // Fill vectors
-                        mics_fnctf.push_back(fnt_ctf);
-                        mics_count.push_back(1);
-                        mics_fnimgs.push_back(dum);
-                        mics_fnimgs[mics_fnimgs.size()-1].push_back(fnt_img);
-                        mics_ctf2d.push_back(Mctf);
-                        mics_defocus.push_back(avgdef);
-                        //std::cerr<<" uniq "<<fnt_img<<" in mic "<<mics_fnimgs.size()-1<<"def= "<<avgdef<<std::endl;
-                    }
-                    else
-                    {
-                        std::cerr<<" Discard CTF "<<fnt_ctf<<" because of too large anisotropy"<<std::endl;
-                    }
-                }
-                break;
-            }
+            // Set to Nyquist
+            resol_error = 2. * pixel_size;
         }
-        if (!found)
-            REPORT_ERROR(ERR_MD_NOOBJ, "Did not find image "+fnt+" in the CTFdat file");
-        imgno++;
-        if (imgno % c == 0)
-            progress_bar(imgno);
-    }
-    progress_bar(n);
+        // Set resolution limits in dig freq:
+        resol_error = pixel_size / resol_error;
+        resol_error = XMIPP_MIN(0.5, resol_error);
+        // and in pixels:
 
+        iresol_error = ROUND(resol_error * paddim);
+    }
+
+    //fill multiarray with ctfs
+    int count;
+    int counter=0;
+    if (verbose!=0)
+        std::cout << "\nFill multiarray with ctfs" <<std::endl;
+    FOR_ALL_OBJECTS_IN_METADATA(ctfMD)
+    {
+        ctf.readFromMetadataRow(ctfMD, __iter.objId);
+        ctf.enable_CTF = true;
+        ctf.enable_CTFnoise = false;
+        ctf.Produce_Side_Info();
+        if (pixel_size != ctf.Tm)
+            REPORT_ERROR(ERR_VALUE_INCORRECT,
+                         "Cannot mix CTFs with different sampling rates!");
+        ctf.Tm /= sqrt(2.);
+        if (!do_discard_anisotropy || isIsotropic(ctf))
+        {
+            avgdef = (ctf.DeltafU + ctf.DeltafV)/2.;
+            ctf.DeltafU = avgdef;
+            ctf.DeltafV = avgdef;
+            ctf.Generate_CTF(ypaddim, ctfxpaddim, ctfmask);
+            FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY2D(ctfmask)
+            {
+                if (phase_flipped)
+                    dAij(Mctf, i, j) = fabs(dAij(ctfmask, i, j).real());
+                else
+                    dAij(Mctf, i, j) =      dAij(ctfmask, i, j).real();
+            }
+
+            //#define DEBUG
+#ifdef  DEBUG
+            {
+                MetaData md1;
+                size_t id;
+                static int counter=0;
+
+                FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY2D(Mctf)
+                {
+                    id=md1.addObject();
+                    md1.setValue(MDL_ORDER,(int)(id-1),id);
+                    md1.setValue(MDL_RESOLUTION_FRC,dAij(Mctf, 0, j),id );
+                }
+                std::stringstream ss;
+                ss << counter;//add number to the stream
+                md1.write(std::string("NEW/CTF_") +  ss.str());
+                counter++;
+            }
+            ctf.write("new.ctfparam");
+#endif
+#undef DEBUG
+            // Fill vectors
+            ctfMD.setValue(MDL_ORDER,counter,__iter.objId);
+            ctfMD.setValue(MDL_CTF_DEFOCUSA,avgdef,__iter.objId);
+            mics_ctf2d.setSlice(0,Mctf,counter++);
+        }
+        else
+        {
+            std::cerr<<" Discard CTF "<<fnt_ctf<<" because of too large anisotropy"<<std::endl;
+            ctfMD.removeObject(__iter.objId);
+        }
+        if (counter % c == 0 && verbose!=0)
+            progress_bar(counter);
+    }
+    int enabled;
     // Precalculate denominator term of the Wiener filter
+    int ii,jj;
     if (do_wiener)
     {
+
+        if (verbose!=0)
+            std::cout << "\nPrecalculate denominator term of the Wiener filter" <<std::endl;
+
         double sumimg = 0.;
-        for (int imic=0; imic < mics_count.size(); imic++)
+        int bar=0;
+        FOR_ALL_OBJECTS_IN_METADATA(ctfMD)
         {
-            sumimg += (double)mics_count[imic];
+            ctfMD.getValue(MDL_COUNT,count,__iter.objId);
+            ctfMD.getValue(MDL_ORDER,counter,__iter.objId);
+            sumimg += (double)count;
             FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY2D(Mwien)
             {
-                dAij(Mwien,i,j) += mics_count[imic] * dAij(mics_ctf2d[imic],i,j) *
-                                   dAij(mics_ctf2d[imic],i,j);
+                double d;
+                if (i <= paddim/2 )
+                    ii=i;
+                else
+                    ii=(paddim-i);
+
+                if (j <= paddim/2)
+                    jj=j;
+                else
+                    jj=(paddim-j);
+
+                int dd = (int)(sqrt(ii*ii+jj*jj)+0.5);
+                d = NZYX_ELEM(mics_ctf2d, counter, 0, 0, dd);
+                //d = NZYX_ELEM(mics_ctf2d, counter, 0, i,j);
+                ////d = NZYX_ELEM(mics_ctf2d, counter, 1, 1, i,j));
+                dAij(Mwien,i,j) += count * d * d ;
             }
+
         }
         // Divide by sumimg (Wiener filter is for summing images, not averaging!)
         Mwien /= sumimg;
@@ -271,40 +327,22 @@ void ProgCtfGroup::produceSideInfo()
             wiener_constant = 0.1 * Mwien.computeAvg();
         }
         Mwien += wiener_constant;
+        //#define DEBUG
+#ifdef DEBUG
+
+        {
+            Image<double> save;
+            save()=Mwien;
+            save.write("vienerA.spi");
+        }
+#endif
+#undef DEBUG
+
     }
+    // Sort by average defocus
+    sortedCtfMD.sort(ctfMD,MDL_CTF_DEFOCUSA,false);
 
-    // Now that we have all information, sort micrographs on defocus value
-    // And update all corresponding pointers and data vectors.
-    std::vector<MultidimArray<double> > newmics_ctf2d=mics_ctf2d;
-    std::vector<int> newmics_count=mics_count;
-    std::vector< std::vector <FileName> > newmics_fnimgs=mics_fnimgs;
-    std::vector<double> sorted_defocus=mics_defocus;
-
-    std::sort(sorted_defocus.begin(), sorted_defocus.end());
-    std::reverse(sorted_defocus.begin(), sorted_defocus.end());
-    for (int isort = 0; isort < sorted_defocus.size(); isort++)
-        for (int imic=0; imic < mics_defocus.size(); imic++)
-            if (ABS(sorted_defocus[isort] -  mics_defocus[imic]) < XMIPP_EQUAL_ACCURACY)
-            {
-                newmics_ctf2d[isort]  = mics_ctf2d[imic];
-                newmics_count[isort]  = mics_count[imic];
-                newmics_fnimgs[isort] = mics_fnimgs[imic];
-                // Make sure this micrograph never gets counted again
-                // (This could happen if two mics have exactly the same defocus value!)
-                mics_defocus[imic] = sorted_defocus[0] + 1.;
-                break;
-            }
-    mics_ctf2d   = newmics_ctf2d;
-    mics_count   = newmics_count;
-    mics_fnimgs  = newmics_fnimgs;
-    mics_defocus = sorted_defocus;
-
-    /*
-        for (int isort = 0; isort < sorted_defocus.size(); isort++)
-            std::cerr<<"sorted mic "<<isort<<" has "<<mics_count[isort]<<" images, and defocus "<<mics_defocus[isort] <<std::endl;
-    */
 }
-
 // Check whether a CTF is anisotropic
 bool ProgCtfGroup::isIsotropic(CTFDescription &ctf)
 {
@@ -337,110 +375,212 @@ bool ProgCtfGroup::isIsotropic(CTFDescription &ctf)
 // Do the actual work
 void ProgCtfGroup::autoRun()
 {
-    double diff, mindiff;
-    int iopt_group, nr_groups;
-    std::vector<int> dum;
+    double diff,mindiff;
+    long int ctfMdSize=sortedCtfMD.size();
+    init_progress_bar(ctfMdSize);
+    int c = XMIPP_MAX(1, ctfMdSize / 60);
+    int counter=0;
+    bool newgroup;
 
-    // Make the actual groups
-    nr_groups = 0;
-    init_progress_bar(mics_ctf2d.size());
-    for (int imic=0; imic < mics_ctf2d.size(); imic++)
+    //size_t id;
+    int orderOut, orderIn,defocusGroup;
+    int groupNumber = 1;
+    std::vector<size_t> vectorID;
+    sortedCtfMD.findObjects(vectorID);
+    sortedCtfMD.setValueCol(MDL_DEFGROUP,-1);
+    //iterate
+    std::vector<size_t>::iterator itOut;
+    std::vector<size_t>::iterator itIn;
+    size_t begin=vectorID.at(0);
+    sortedCtfMD.setValue(MDL_DEFGROUP,groupNumber,begin);
+    init_progress_bar(ctfMdSize);
+
+    if (verbose!=0)
+        std::cout << "\nCompute differences between CTFs" <<std::endl;
+
+    for ( itOut=vectorID.begin()+1 ; itOut < vectorID.end(); itOut++ )
     {
+        counter++;
+        newgroup = true;
         mindiff = 99999.;
-        iopt_group = -1;
-        for (int igroup=0; igroup < nr_groups; igroup++)
+        sortedCtfMD.getValue(MDL_DEFGROUP,defocusGroup,*itOut);
+        if(defocusGroup!=-1)
+            continue;
+        sortedCtfMD.getValue(MDL_ORDER,orderOut,*itOut);//index in mics_ctf2d array
+        for ( itIn=vectorID.begin() ; itIn < itOut; itIn++ )
         {
-            // loop over all mics in this group
-            for (int igmic=0; igmic < pointer_group2mic[igroup].size(); igmic++)
+            sortedCtfMD.getValue(MDL_ORDER,orderIn,*itIn);//index in mics_ctf2d array
+            for (int iresol=0; iresol<=iresol_error; iresol++)
             {
-
-                for (int iresol=0; iresol<=iresol_error; iresol++)
+                //NZYX_ELEM(mics_ctf2d, orderIn, 1, 1, iresol);
+                diff = fabs( NZYX_ELEM(mics_ctf2d, orderIn,  0, 0, iresol) -
+                             NZYX_ELEM(mics_ctf2d, orderOut, 0, 0, iresol) );
+                if (diff > max_error)
                 {
-                    diff = ABS( dAij(mics_ctf2d[imic],iresol,0) -
-                                dAij(mics_ctf2d[pointer_group2mic[igroup][igmic]],iresol,0) );
-                    if (diff > max_error)
-                    {
-                        break;
-                    }
-                }
-                if (diff <= max_error && diff < mindiff)
-                {
-                    mindiff = diff;
-                    iopt_group = igroup;
+                    break;
                 }
             }
+            if (diff < max_error)
+            {
+                newgroup=false;
+                break;
+            }
         }
-        if (iopt_group < 0)
+        if(newgroup)
         {
-            // add new group
-            pointer_group2mic.push_back(dum);
-            pointer_group2mic[nr_groups].push_back(imic);
-            nr_groups++;
-        }
-        else
-        {
-            //add to existing group
-            pointer_group2mic[iopt_group].push_back(imic);
-        }
-        progress_bar(imic);
-    }
-    progress_bar(mics_ctf2d.size());
-    std::cerr<<" Number of CTF groups= "<<nr_groups<<std::endl;
-}
+            groupNumber++;
 
+        }
+        sortedCtfMD.setValue(MDL_DEFGROUP,groupNumber,*itOut);
+        if (counter % c == 0 && verbose!=0)
+            progress_bar(counter);
+    }
+
+    progress_bar(ctfMdSize);
+
+}
+/////////////////////////////////////////////
 void ProgCtfGroup::manualRun()
 {
     MetaData DF;
-    double defocus, split, oldsplit=99.e99;
-    int count, nr_groups = 0;
-    Matrix1D<double> dataline(1);
-    std::vector<int> dum;
-
-    pointer_group2mic.clear();
+    int groupNumber = 0;
     DF.read(fn_split);
-    // Append -99.e-99 to the end of the docfile
-    DF.addObject();
-    DF.setValue(MDL_CTF_DEFOCUSU,-99.e99);
-
-    // Loop over all splits
-    int n=DF.size();
-    int in = 0;
+    int counter=0;
+    DF.setValueCol(MDL_DEFGROUP,-2);
+    sortedCtfMD.setValueCol(MDL_DEFGROUP,-1);
+    MetaData unionMD;
+    DF.unionAll(sortedCtfMD);
+    unionMD.sort(DF,MDL_CTF_DEFOCUSA);
+    int n = unionMD.size();
     init_progress_bar(n);
-    FOR_ALL_OBJECTS_IN_METADATA(DF)
+    int c = XMIPP_MAX(1, n / 60);
+    int defGroup;
+
+    FOR_ALL_OBJECTS_IN_METADATA(unionMD)
     {
-        DF.getValue(MDL_CTF_DEFOCUSU,split,__iter.objId);
-        count = 0;
-        for (int imic=0; imic < mics_ctf2d.size(); imic++)
-        {
-            defocus = mics_defocus[imic];
-            if (defocus < oldsplit && defocus >= split)
-            {
-                if (count == 0)
-                {
-                    // add new group
-                    pointer_group2mic.push_back(dum);
-                }
-                pointer_group2mic[nr_groups].push_back(imic);
-                count++;
-            }
-        }
-        if (count == 0)
-        {
-            std::cerr<<" Warning: group with defocus values between "<<oldsplit<<" and "<<split<<" is empty!"<<std::endl;
-        }
+        unionMD.getValue(MDL_DEFGROUP,defGroup,__iter.objId);
+        if(defGroup==-2)
+            groupNumber++;
         else
-        {
-            nr_groups++;
-        }
-        oldsplit = split;
-        in++;
-        progress_bar(in);
+            unionMD.setValue(MDL_DEFGROUP,groupNumber,__iter.objId);
+        if (counter % c == 0)
+            progress_bar(counter);
     }
     progress_bar(n);
+    sortedCtfMD.importObjects(unionMD, MDValueNE(MDL_DEFGROUP, -2));
 }
 
 void ProgCtfGroup::writeOutputToDisc()
 {
+    //compute no of micrographs, no of images , minimum defocus ,maximum defocus, average defocus per ctf group
+    MetaData ctfInfo,ctfImagesGroup;
+
+    const AggregateOperation MyaggregateOperations[] =
+        {
+            AGGR_COUNT, AGGR_SUM, AGGR_MIN,         AGGR_MAX,          AGGR_AVG
+        };
+    std::vector<AggregateOperation> aggregateOperations(MyaggregateOperations,MyaggregateOperations+5);
+
+    const MDLabel MyoperateLabels[]       =
+        {
+            MDL_COUNT,MDL_COUNT, MDL_CTF_DEFOCUSA, MDL_CTF_DEFOCUSA, MDL_CTF_DEFOCUSA
+        };
+    std::vector<MDLabel> operateLabels(MyoperateLabels,MyoperateLabels+5);
+
+    const MDLabel MyresultLabels[]        =
+        {
+            MDL_DEFGROUP,MDL_COUNT, MDL_SUM,  MDL_MIN,          MDL_MAX,          MDL_AVG
+        };
+    std::vector<MDLabel> resultLabels(MyresultLabels,MyresultLabels+6);
+
+    ctfInfo.aggregate(sortedCtfMD,aggregateOperations,operateLabels,resultLabels);
+    ctfInfo.setComment("N. of micrographs, N. of particles, min defocus, max defocus and avg defocus");
+    ctfInfo.write(fn_root+"Info.xmd");
+
+    // make block-sel per image group
+    MetaData ImagesMD, auxMetaData;
+    ImagesMD.read(fn_ctfdat);
+    ctfImagesGroup.join(ImagesMD,sortedCtfMD,MDL_CTFMODEL,INNER );
+
+    unlink( (fn_root+"s_images.sel").c_str());
+    FileName imagesInDefoculGroup;
+    auxMetaData.setComment("images (particles) per defocus group, block name is defocusgroup No");
+    for(int i=1;i<= ctfInfo.size(); i++)
+    {
+        auxMetaData.importObjects(ctfImagesGroup,MDValueEQ(MDL_DEFGROUP,i));
+        imagesInDefoculGroup.assign( formatString("b%06d@%s_images.sel", i, fn_root.c_str()) );
+        auxMetaData.write( imagesInDefoculGroup,APPEND);
+    }
+
+    //create average ctf<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< check ctfs
+    int olddefGroup,defGroup,order,count;
+    double sumimg=0.;
+    bool changeDefocusGroup;
+
+    MultidimArray<double> ctf2D(Mwien.xdim,Mwien.ydim);
+    Image<double> Ictf2D;
+    Ictf2D.data.alias(ctf2D);
+
+    olddefGroup=1;
+    int jj,ii;
+    bool savefile=false;
+    FileName outFileName,outFileName2;
+    outFileName = fn_root + ".ctf";
+    if (format !="")
+        outFileName=outFileName + ":" + format;
+    std::cerr << "Saving CTFs" <<std::endl;
+    FOR_ALL_OBJECTS_IN_METADATA(sortedCtfMD)
+    {
+        sortedCtfMD.getValue(MDL_DEFGROUP,defGroup,__iter.objId);
+        sortedCtfMD.getValue(MDL_ORDER,order,__iter.objId);
+        sortedCtfMD.getValue(MDL_COUNT,count,__iter.objId);
+        if (defGroup != olddefGroup)
+        {
+            if (sumimg==0)
+                continue;
+            ctf2D /= sumimg;
+            outFileName2.compose(olddefGroup,outFileName);
+            Ictf2D.write(outFileName2);
+            ctf2D.initZeros();
+            olddefGroup=defGroup;
+            sumimg=0.;
+        }
+        sumimg += (double)count;
+        FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY2D(ctf2D)
+        {
+            double d;
+            if (i <= paddim/2 )
+                ii=i;
+            else
+                ii=(paddim-i);
+
+            if (j <= paddim/2)
+                jj=j;
+            else
+                jj=(paddim-j);
+            int dd = (int)(sqrt(ii*ii+jj*jj)+0.5);
+            d = NZYX_ELEM(mics_ctf2d, order, 0, 0, dd);
+            dAij(ctf2D,i,j) += count * d ;
+        }
+    }
+    if (defGroup != olddefGroup)
+    {
+        if (sumimg!=0)
+        {
+            ctf2D /= sumimg;
+            outFileName2.compose(defGroup,outFileName);
+            Ictf2D.write(outFileName2);
+            ctf2D.initZeros();
+            olddefGroup=defGroup;
+            sumimg=0.;
+        }
+    }
+
+    //save ctf per group
+    //save winer per group
+    // save ctf and wienner profiles
+#ifdef NEVER
+
     FileName fnt;
     MetaData SFo, DFo;
     Image<double> img;
@@ -454,7 +594,7 @@ void ProgCtfGroup::writeOutputToDisc()
     fh3.open((fn_root+ "_groups.defocus").c_str(), std::ios::out);
     fh3 << "# Defocus values for each group (avg, max & min) \n";
 
-    for (int igroup=0; igroup < pointer_group2mic.size(); igroup++)
+    for (int igroup=0; igroup < pointer_group2mic.size(); igroup++) //images names for all micrographies
     {
         SFo.clear();
         SFo.setComment("Defocus values to split into "+
@@ -464,11 +604,13 @@ void ProgCtfGroup::writeOutputToDisc()
         avgdef = 0.;
         mindef = 99.e99;
         maxdef = -99.e99;
-        for (int igmic=0; igmic < pointer_group2mic[igroup].size(); igmic++)
+        for (int igmic=0; igmic < pointer_group2mic[igroup].size(); igmic++)//number images per micrograph
         {
             imic = pointer_group2mic[igroup][igmic];
             sumw += (double) mics_count[imic];
             // calculate (weighted) average Mctf
+            //I need a loop here since mics_ctf2d this very likely will be 1D not 2Dtop
+
             Mavg += mics_count[imic] * mics_ctf2d[imic];
             // Calculate avg, min and max defocus values in this group
             avgdef += mics_count[imic] * mics_defocus[imic];
@@ -487,17 +629,17 @@ void ProgCtfGroup::writeOutputToDisc()
         fnt.compose(fn_root+"_group",igroup+1,"");
         std::cerr<<" Group "<<fnt <<" contains "<< pointer_group2mic[igroup].size()<<" ctfs and "<<sumw<<" images and has average defocus "<<avgdef<<std::endl;
 
-        // 1. write selfile
+        // 1. write selfile with images per defocus group -> block now
         SFo.write(fnt+".sel");
-        // 2. write average Mctf
+        // 2. write average Mctf //skip these since we have profiles
         img() = Mavg;
         img.setWeight(sumw);
         img.write(fnt+".ctf");
-        // 3. Output to file with numinsertber of images per group
+        // 3. Output to file with numinsertber of images per group -> _groups.imgno, save the metadafile with this info
         fh << integerToString(igroup+1);
         fh.width(10);
         fh << floatToString(sumw)<<std::endl;
-        // 4. Output to file with avgdef, mindef and maxdef per group
+        // 4. Output to file with avgdef, mindef and maxdef per group save with previous file
         fh3 << integerToString(igroup+1);
         fh3.width(10);
         fh3 << floatToString(avgdef);
@@ -505,7 +647,7 @@ void ProgCtfGroup::writeOutputToDisc()
         fh3 << floatToString(maxdef);
         fh3.width(10);
         fh3 << floatToString(mindef)<<std::endl;
-        // 5. Output to docfile for manual grouping
+        // 5. Output to docfile for manual grouping, OK save al metadata
         if (oldmin < 9.e99)
         {
             split = (oldmin + maxdef) / 2.;
@@ -513,7 +655,7 @@ void ProgCtfGroup::writeOutputToDisc()
             DFo.setValue(MDL_CTF_DEFOCUSU,split);
         }
         oldmin = mindef;
-        // 6. Write file with 1D profiles
+        // 6. Write file with 1D profiles single metadata file
         fh2.open((fnt+".ctf_profiles").c_str(), std::ios::out);
         for (int i=0; i < paddim/2; i++)
         {
@@ -530,7 +672,7 @@ void ProgCtfGroup::writeOutputToDisc()
             fh2 << std::endl;
         }
         fh2.close();
-        // 7. Write Wiener filter
+        // 7. Write Wiener filter stack
         if (do_wiener)
         {
             FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY2D(Mavg)
@@ -559,6 +701,7 @@ void ProgCtfGroup::writeOutputToDisc()
     fh3.close();
     // 5. Write docfile with defocus values to split manually
     DFo.write(fn_root+"_groups_split.doc");
+#endif
 }
 
 void ProgCtfGroup::run()
