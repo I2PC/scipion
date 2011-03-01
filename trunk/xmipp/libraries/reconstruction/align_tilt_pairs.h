@@ -41,12 +41,12 @@ class ProgAlignTiltPairs: public XmippProgram
 {
 protected:
     /** MetaData for untilted and tilted images */
-
-	MetaData SFu, SFt;
+	MetaData mdU, mdT;
+	/** Object id for current image pair */
+	size_t idU, idT;
+    MDRow              rowU, rowT;
     /**  Filename output document file */
-    FileName fn_doc;
-    /**  Filename output extension */
-    FileName oext;
+    FileName mdOut;
     /** Discard images that shift more than max_shift*/
     double max_shift;
     /** Force x-shift to be zero */
@@ -61,12 +61,10 @@ protected:
     void processImage();
     void run();
 
-public:
-
     /// Show
     void show();
 
     /// Center one tilted image
-    bool center_tilted_image(const Image<double> &Iu, Image<double> &It, double &ccf);
+    bool centerTiltedImage(const Image<double> &Iu, Image<double> &It);
 };
 //@}

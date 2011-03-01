@@ -29,45 +29,6 @@
 int main(int argc, char *argv[])
 {
     ProgAlignTiltPairs prog;
-
     prog.read(argc, argv);
-    prog.tryRun();
-
-    return 0;
+    return prog.tryRun();
 }
-
-
-//
-//int main(int argc, char **argv)
-//{
-//    ProgAlignTiltPairs prm;
-//
-//    // Get input parameters
-//    try
-//    {
-//        prm.read(argc, argv);
-//        prm.show();
-//    }
-//    catch (XmippError XE)
-//    {
-//        std::cout << XE;
-//        prm.usage();
-//        exit(0);
-//    }
-//
-//    try
-//    {
-//        prm.centilt();
-//    }
-//    catch (XmippError XE)
-//    {
-//        std::cout << XE;
-//        prm.usage();
-//        exit(0);
-//    }
-//
-//}
-
-
-
-
