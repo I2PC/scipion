@@ -397,7 +397,8 @@ void ImageBase::getShifts(double &xoff, double &yoff, double &zoff, const size_t
 ImageFHandler* ImageBase::openFile(const FileName &name, int mode) const
 {
     ImageFHandler* hFile = new ImageFHandler;
-    FileName fileName, ext_name, headName = "";
+    FileName fileName, headName = "";
+    FileName ext_name = name.getFileFormat();
 
     // Remove image number
     size_t dump;
@@ -408,8 +409,6 @@ ImageFHandler* ImageBase::openFile(const FileName &name, int mode) const
     size_t found = fileName.find_first_of("%");
     if (found!=String::npos)
         fileName = fileName.substr(0, found) ;
-
-    ext_name = fileName.getFileFormat();
 
     hFile->exist = exists(fileName);
 
