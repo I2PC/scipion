@@ -59,9 +59,14 @@ class Tester:
         self.addTest("-i input/header.doc --assign -o %o/smallStack2.stk")
         
         self.addProgram("xmipp_metadata_utilities")
-        self.addTest("  --union  input/mD1.doc input/mD2.doc  -o %o/union.doc --label image")
-        self.addTest("  --intersection  input/mD1.doc input/mD2.doc  -o %o/intersection.doc --label image")
-        self.addTest("  --subtraction  input/mD1.doc input/mD2.doc  -o %o/subtraction.doc --label image")
+        self.addTest ("-i input/mD1.doc --set union input/mD2.doc  -o %o/out.doc");
+        self.addTest ("-i input/mD1.doc --operate sort -o %o/out.doc");
+        self.addTest ("-i input/mD1.doc --operate add_column \"shiftX shiftY\" -o %o/out.doc");
+        self.addTest ("-i input/mD1.doc --fill shiftX rand_uniform 0 10 -o %o/out.doc");
+        self.addTest ("-i input/mD1.doc -l \"shiftX shiftY\" constant 5 -o %o/out.doc");
+        self.addTest ("-i input/mD1.doc --query select \"angleRot > 10 AND anglePsi < 0.5\" -o %o/out.doc");
+        self.addTest("-i input/mD1.doc --operate modify_values \"angleRot=(angleRot*3.1416/180.)\" -o %o/out.doc");
+        self.addTest("-i input/mD1.doc --operate modify_values \"image=replace(image, 'xmp','spi')\" -o %o/out.doc");
       
         self.addProgram("xmipp_phantom_project")
         self.addTest("-i input/phantomBacteriorhodopsin.vol -o %o/image.xmp --angles 0 0 0")
@@ -85,6 +90,12 @@ class Tester:
         self.addProgram("xmipp_transform_center_image")
         self.addTest("-i input/smallStack.stk -o %o/smallStackCentered.stk")
     
+        self.addProgram("xmipp_transform_geometry")
+        self.addTest("-i input/header.doc --apply_transform -o %o/images.stk");
+        self.addTest("-i input/phantomBacteriorhodopsin.vol --shift 10 5 -10 -o %o/volume.vol --dont_wrap");
+        self.addTest("-i input/header.doc --scale factor 0.5 --oroot %o/halvedOriginal");
+        self.addTest("-i input/header.doc --scale dim 64 --oroot %o/halvedDim");
+
         self.addProgram("xmipp_transform_normalize")
         self.addTest("-i input/smallStack.stk -o %o/smallStackNormalized.stk --method NewXmipp --background circle 32")
 
