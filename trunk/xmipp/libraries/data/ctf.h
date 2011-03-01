@@ -75,8 +75,7 @@ public:
       }
    @endcode
 
-   Here is another sample program for generating the CTF, the noise
-   background, the envelope and the power spectrum density
+   Here is another sample program for generating the CTF
 
    @code
 #include <data/args.h>
@@ -277,6 +276,15 @@ public:
         are removed from the model unless the disable_if_not_K is set
         to false*/
     void read(const FileName &fn, bool disable_if_not_K = true);
+
+    /** Read from 1 row of a metadata file.
+
+        If no K or sqrt_K are given then it is assumed that the user
+        does not want to activate that part and the noise or the CTF
+        are removed from the model unless the disable_if_not_K is set
+        to false*/
+    void readFromMetadataRow(const MetaData &MD, size_t id, bool disable_if_not_K=true);
+
 
     /** Write to file.
         An exception is thrown if the file cannot be open.*/
