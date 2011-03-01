@@ -1092,21 +1092,24 @@ void MetaData::aggregate(const MetaData &mdIn, AggregateOperation op,
 
 {
     std::vector<MDLabel> labels(2);
+    std::vector<MDLabel> operateLabels(1);
     labels[0] = aggregateLabel;
     labels[1] = resultLabel;
+    operateLabels[0]=operateLabel;
     init(&labels);
     std::vector<AggregateOperation> ops(1);
     ops[0] = op;
-    mdIn.myMDSql->aggregateMd(this, ops, operateLabel);
+    mdIn.myMDSql->aggregateMd(this, ops, operateLabels);
 }
 
 void MetaData::aggregate(const MetaData &mdIn, const std::vector<AggregateOperation> &ops,
-                         MDLabel operateLabel, const std::vector<MDLabel> &resultLabels)
+		                 const std::vector<MDLabel> &operateLabels,
+		                 const std::vector<MDLabel> &resultLabels)
 {
     if (resultLabels.size() - ops.size() != 1)
         REPORT_ERROR(ERR_MD, "Labels vectors should contain one element more than operations");
     init(&resultLabels);
-    mdIn.myMDSql->aggregateMd(this, ops, operateLabel);
+    mdIn.myMDSql->aggregateMd(this, ops, operateLabels);
 }
 
 
@@ -1191,20 +1194,20 @@ void MetaData::randomize(MetaData &MDin)
     importObjects(MDin, objects);
 }
 
-void MetaData::sort(MetaData &MDin, const MDLabel sortLabel)
+void MetaData::sort(MetaData &MDin, const MDLabel sortLabel,bool asc)
 {
     if (MDin.containsLabel(sortLabel))
     {
         init(&(MDin.activeLabels));
         copyInfo(MDin);
-        MDin.myMDSql->copyObjects(this, new MDQuery(-1, 0, sortLabel));
+        MDin.myMDSql->copyObjects(this, new MDQuery(-1, 0, sortLabel,asc));
     }
     else
         *this=MDin;
     firstObject();
 }
 
-void MetaData::sort(MetaData &MDin, const std::string &sortLabel)
+void MetaData::sort(MetaData &MDin, const std::string &sortLabel,bool asc)
 {
     // Check if the label has semicolon
     int ipos=sortLabel.find(':');
@@ -1259,7 +1262,7 @@ void MetaData::sort(MetaData &MDin, const std::string &sortLabel)
         }
     }
     else
-        sort(MDin, MDL::str2Label(sortLabel));
+        sort(MDin, MDL::str2Label(sortLabel),asc);
 }
 
 void MetaData::split(int n, std::vector<MetaData> &results, const MDLabel sortLabel)
