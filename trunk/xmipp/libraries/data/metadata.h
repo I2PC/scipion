@@ -630,7 +630,7 @@ public:
     void aggregate(const MetaData &mdIn, AggregateOperation op,
                    MDLabel aggregateLabel, MDLabel operateLabel, MDLabel resultLabel);
     void aggregate(const MetaData &mdIn, const std::vector<AggregateOperation> &ops,
-                   MDLabel operateLabel, const std::vector<MDLabel> &resultLabels);
+    		      const std::vector<MDLabel> &operateLabels, const std::vector<MDLabel> &resultLabels);
     void aggregateSingle(MDObject &mdValueOut, AggregateOperation op,
                          MDLabel aggregateLabel);
     /** Union of elements in two Metadatas, without duplicating.
@@ -685,7 +685,7 @@ public:
     * the label supplied, the result will
     * be in the "calling" MetaData.
     */
-    void sort(MetaData &MDin, const MDLabel sortLabel);
+    void sort(MetaData &MDin, const MDLabel sortLabel, bool asc=true);
 
     /*
     * Sort a Metadata by a label.
@@ -696,7 +696,7 @@ public:
     * you may supply label:col, to sort by that column,
     * e.g., NMADisplacements:0
     */
-    void sort(MetaData &MDin, const String &sortLabel);
+    void sort(MetaData &MDin, const String &sortLabel, bool asc=true);
 
     /** Split Metadata in several Metadatas.
      * The Metadata will be divided in 'n'
