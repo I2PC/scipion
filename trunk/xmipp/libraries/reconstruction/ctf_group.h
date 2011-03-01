@@ -41,7 +41,8 @@ class ProgCtfGroup: public XmippProgram
 {
 public:
     /// Filenames
-    FileName fn_sel, fn_ctfdat, fn_root, fn_split;
+    //FileName fn_sel,
+    FileName fn_ctfdat, fn_root, fn_split,format;
 
     /// Maximum allowed error
     double max_error;
@@ -59,7 +60,7 @@ public:
     bool phase_flipped;
 
     // Size of the images and of the output CTFs
-    int dim, paddim;
+    int dim, xpaddim, ypaddim,paddim,ctfxpaddim;
 
     // Padding factor
     double pad;
@@ -76,20 +77,34 @@ public:
     /// Wiener filter constant
     double wiener_constant;
 
+    /// Compute 1D CTF using avg(defocusU + defocusV)/2 as defocus.
+    /// This approach speed up the computation and is recommended for very larg data sets
+    bool do1Dctf;
+
+    /// Available memory, set mmap to on if more memory is needed
+    double memory;// (Gigabits)
+
+    ///do not use ram but map data to a file
+    bool mmapOn;
+
     /// Matrix with denominator term of Wiener filter
     MultidimArray<double> Mwien;
 
-    // Vector with 1D CTF profiles for all micrographs and all groups
-    std::vector<MultidimArray<double> > mics_ctf2d, groups_ctf2d;
+    // Array with  CTF profiles for all micrographs and all groups
+    //std::vector<MultidimArray<double> > mics_ctf2d, groups_ctf2d;
+    MultidimArray<double> mics_ctf2d;//, groups_ctf2d;
 
     // Vector with average defocus value per micrograph and per group
     std::vector<double> mics_defocus;
 
+    //Metadata with ctfs sorted by average defocus
+    MetaData sortedCtfMD;
+
     // Vector with number of images per defocus group
-    std::vector<int> mics_count;
+    //std::vector<int> mics_count;
 
     // Vector of vector with image names for all micrographs
-    std::vector< std::vector <FileName> > mics_fnimgs;
+    //std::vector< std::vector <FileName> > mics_fnimgs;
 
     // Pointers
     std::vector< std::vector <int> > pointer_group2mic;
