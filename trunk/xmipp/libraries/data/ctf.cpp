@@ -29,6 +29,85 @@
 #include "metadata.h"
 
 /* Read -------------------------------------------------------------------- */
+void CTFDescription::readFromMetadataRow(const MetaData &MD, size_t id, bool disable_if_not_K)
+{
+
+    if (!MD.getValue(MDL_CTF_SAMPLING_RATE,Tm,id))
+        Tm=1;
+    if (enable_CTF)
+    {
+        if (!MD.getValue(MDL_CTF_VOLTAGE,kV,id))
+            kV=100;
+        if (!MD.getValue(MDL_CTF_DEFOCUSU,DeltafU,id))
+            DeltafU=0;
+        if (!MD.getValue(MDL_CTF_DEFOCUSV,DeltafV,id))
+            DeltafV=DeltafU;
+        if (!MD.getValue(MDL_CTF_DEFOCUS_ANGLE,azimuthal_angle,id))
+            azimuthal_angle=0;
+        if (!MD.getValue(MDL_CTF_CS,Cs,id))
+            Cs=0;
+        if (!MD.getValue(MDL_CTF_CA,Ca,id))
+            Ca=0;
+        if (!MD.getValue(MDL_CTF_ENERGY_LOSS,espr,id))
+            espr=0;
+        if (!MD.getValue(MDL_CTF_LENS_STABILITY,ispr,id))
+            ispr=0;
+        if (!MD.getValue(MDL_CTF_CONVERGENCE_CONE,alpha,id))
+            alpha=0;
+        if (!MD.getValue(MDL_CTF_LONGITUDINAL_DISPLACEMENT,DeltaF,id))
+            DeltaF=0;
+        if (!MD.getValue(MDL_CTF_TRANSVERSAL_DISPLACEMENT,DeltaR,id))
+            DeltaR=0;
+        if (!MD.getValue(MDL_CTF_Q0,Q0,id))
+            Q0=0;
+        if (!MD.getValue(MDL_CTF_K,K,id))
+            K=1;
+        if (K == 0 && disable_if_not_K)
+            enable_CTF = false;
+    }
+    if (enable_CTFnoise)
+    {
+        if (!MD.getValue(MDL_CTFBG_GAUSSIAN_K,gaussian_K,id))
+            gaussian_K=0;
+        if (!MD.getValue(MDL_CTFBG_GAUSSIAN_SIGMAU,sigmaU,id))
+            sigmaU=0;
+        if (!MD.getValue(MDL_CTFBG_GAUSSIAN_SIGMAV,sigmaV,id))
+            sigmaV=sigmaU;
+        if (!MD.getValue(MDL_CTFBG_GAUSSIAN_CU,cU,id))
+            cU=0;
+        if (!MD.getValue(MDL_CTFBG_GAUSSIAN_CV,cV,id))
+            cV=cU;
+        if (!MD.getValue(MDL_CTFBG_GAUSSIAN_ANGLE,gaussian_angle,id))
+            gaussian_angle=0;
+        if (!MD.getValue(MDL_CTFBG_SQRT_K,sqrt_K,id))
+            sqrt_K=0;
+        if (!MD.getValue(MDL_CTFBG_SQRT_U,sqU,id))
+            sqU=0;
+        if (!MD.getValue(MDL_CTFBG_SQRT_V,sqV,id))
+            sqV=sqU;
+        if (!MD.getValue(MDL_CTFBG_SQRT_ANGLE,sqrt_angle,id))
+            sqrt_angle=0;
+        if (!MD.getValue(MDL_CTFBG_BASELINE,base_line,id))
+            base_line=0;
+        if (!MD.getValue(MDL_CTFBG_GAUSSIAN2_K,gaussian_K2,id))
+            gaussian_K2=0;
+        if (!MD.getValue(MDL_CTFBG_GAUSSIAN2_SIGMAU,sigmaU2,id))
+            sigmaU2=0;
+        if (!MD.getValue(MDL_CTFBG_GAUSSIAN2_SIGMAV,sigmaV2,id))
+            sigmaV2=sigmaU2;
+        if (!MD.getValue(MDL_CTFBG_GAUSSIAN2_CU,cU2,id))
+            cU2=0;
+        if (!MD.getValue(MDL_CTFBG_GAUSSIAN2_CV,cV2,id))
+            cV2=cU2;
+        if (!MD.getValue(MDL_CTFBG_GAUSSIAN2_ANGLE,gaussian_angle2,id))
+            gaussian_angle2=0;
+        if (gaussian_K == 0 && sqrt_K == 0 && base_line == 0 && gaussian_K2 == 0 &&
+            disable_if_not_K)
+            enable_CTFnoise = false;
+    }
+
+}
+
 void CTFDescription::read(const FileName &fn, bool disable_if_not_K)
 {
     if (fn.isMetaData())
