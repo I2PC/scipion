@@ -126,7 +126,7 @@ private:
      */
     void aggregateMd(MetaData *mdPtrOut,
                      const std::vector<AggregateOperation> &operations,
-                     MDLabel operateLabel);
+                     const std::vector<MDLabel> &operateLabel);
 
     /** This function performs aggregation operations.
         without grouping. (i.e. absolute maximum of a metadata column)
@@ -221,19 +221,21 @@ public:
     int limit; ///< If distint of -1 the results will be limited to this value
     int offset; ///< If distint of 0, offset elements will be discarded
     MDLabel orderLabel; ///< Label to wich apply sort of the results
+    bool asc;
 
     /** Constructor. */
-    MDQuery(int limit = -1, int offset = 0, MDLabel orderLabel = MDL_OBJID)
+    MDQuery(int limit = -1, int offset = 0, MDLabel orderLabel = MDL_OBJID,bool asc=true)
     {
         this->limit = limit;
         this->offset = offset;
         this->orderLabel = orderLabel;
+        this->asc=asc;
     }
 
     /** Return the ORDER BY string to be used in SQL query */
     String orderByString() const
     {
-        return (String)" ORDER BY " + MDL::label2Str(orderLabel);
+        return (String)" ORDER BY " + MDL::label2Str(orderLabel) + (asc ? " ASC" : " DESC");
     }
 
     /** Return the LIMIT string to be used in SQL */
