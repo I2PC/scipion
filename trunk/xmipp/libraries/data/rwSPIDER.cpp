@@ -456,6 +456,7 @@ int  ImageBase::writeSPIDER(size_t select_img, bool isStack, int mode)
     // Only write mainheader when new file or number of images in stack changed
     bool writeMainHeaderReplace = false;
     header->maxim = replaceNsize;
+    size_t newNsize = select_img + Ndim - 1;
 
     size_t imgStart = (mode == WRITE_APPEND)? replaceNsize : IMG_INDEX(select_img);
 
@@ -469,10 +470,10 @@ int  ImageBase::writeSPIDER(size_t select_img, bool isStack, int mode)
             writeMainHeaderReplace = true;
             header->maxim += Ndim;
         }
-        else if( mode == WRITE_REPLACE && select_img + Ndim - 1 > replaceNsize)
+        else if( mode == WRITE_REPLACE && newNsize > replaceNsize)
         {
             writeMainHeaderReplace = true;
-            header->maxim = select_img + Ndim - 1;
+            header->maxim = newNsize;
         }
     }
     else
@@ -503,7 +504,7 @@ int  ImageBase::writeSPIDER(size_t select_img, bool isStack, int mode)
     if( mode == WRITE_OVERWRITE ||
         mode == WRITE_APPEND ||
         writeMainHeaderReplace ||
-        (replaceNsize == 0 && mode == WRITE_REPLACE )) //header must change
+        newNsize > replaceNsize) //header must change
         fwrite( header, offset, 1, fimg );
 
     // write single image if not stack

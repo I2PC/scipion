@@ -241,4 +241,14 @@ private:
 
 //@}
 
+/** Create an empty image file
+    *
+    * An image file, which name and format are given by filename,
+    * is created. Only the header info is written, and if image number is given, then disk space
+    * until ndim - 1 is reserved.
+    */
+void createEmptyFile(const FileName &_filename, int Xdim, int Ydim, int Zdim = 1,
+    size_t select_img = APPEND_IMAGE, bool isStack = false,
+    int mode = WRITE_OVERWRITE);
+
 #endif /* IMAGE_GENERIC_H_ */

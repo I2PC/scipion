@@ -94,15 +94,6 @@ void ImageBase::mapFile2Write(int Xdim, int Ydim, int Zdim, const FileName &_fil
     closeFile(hFile);
 }
 
-void ImageBase::createEmptyFile(const FileName &filename, int Xdim, int Ydim, int Zdim,
-                                size_t select_img, bool isStack, int mode)
-{
-    setDimensions(Xdim, Ydim, Zdim, 1);
-    setDataMode(HEADER);
-    write(filename, select_img, isStack, mode);
-    clear();
-}
-
 /** General read function
  */
 /** Macros for dont type */
@@ -406,9 +397,9 @@ void ImageBase::getShifts(double &xoff, double &yoff, double &zoff, const size_t
 ImageFHandler* ImageBase::openFile(const FileName &name, int mode) const
 {
     ImageFHandler* hFile = new ImageFHandler;
-    FileName fileName, headName = "";
-    FileName ext_name = name.getFileFormat();
+    FileName fileName, ext_name, headName = "";
 
+    // Remove image number
     size_t dump;
     name.decompose(dump, fileName);
 
@@ -417,6 +408,8 @@ ImageFHandler* ImageBase::openFile(const FileName &name, int mode) const
     size_t found = fileName.find_first_of("%");
     if (found!=String::npos)
         fileName = fileName.substr(0, found) ;
+
+    ext_name = fileName.getFileFormat();
 
     hFile->exist = exists(fileName);
 
@@ -736,8 +729,8 @@ void ImageBase::_write(const FileName &name, ImageFHandler* hFile, size_t select
     if(ext_name.contains("spi") || ext_name.contains("xmp") ||
        ext_name.contains("stk") || ext_name.contains("vol"))
         err = writeSPIDER(select_img,isStack,mode);
-    else if (ext_name.contains("mrcs"),imParam,adjust)
-        writeMRC(select_img,true,mode);
+    else if (ext_name.contains("mrcs"))
+        writeMRC(select_img,true,mode,imParam,adjust);
     else if (ext_name.contains("mrc"))
         writeMRC(select_img,false,mode,imParam,adjust);
     else if (ext_name.contains("img") || ext_name.contains("hed"))

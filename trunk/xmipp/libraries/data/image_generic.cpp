@@ -212,3 +212,22 @@ void ImageGeneric::print() const
 {
     std::cout << *image;
 }
+
+
+void createEmptyFile(const FileName &filename, int Xdim, int Ydim, int Zdim,
+                     size_t select_img, bool isStack, int mode)
+{
+    ImageGeneric image;
+    size_t found = filename.find_first_of("%");
+    String strType = "";
+
+    if (found == String::npos)
+        image.setDatatype(Float);
+    else
+    {
+        strType = filename.substr(found+1).c_str();
+        image.setDatatype(datatypeString2Int(strType));
+    }
+
+    image.mapFile2Write(Xdim, Ydim, Zdim, filename, false, select_img, isStack, mode);
+}

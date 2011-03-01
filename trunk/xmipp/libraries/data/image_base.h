@@ -314,16 +314,6 @@ public:
                        bool createTempFile = false, size_t select_img = APPEND_IMAGE,
                        bool isStack = false, int mode = WRITE_OVERWRITE);
 
-    /** Create an empty image file
-     *
-     * An image file, which name and format are given by filename,
-     * is created. Only the header info is written, and if image number is given, then disk space
-     * until ndim - 1 is reserved.
-     */
-    void createEmptyFile(const FileName &_filename, int Xdim, int Ydim, int Zdim = 1,
-                         size_t select_img = APPEND_IMAGE, bool isStack = false,
-                         int mode = WRITE_OVERWRITE);
-
     /** General read function
      * you can read a single image from a single image file
      * or a single image file from an stack, in the second case
