@@ -509,7 +509,7 @@ AddLibrary('xmipp', 'libraries/bindings/python', PyExtSources,
 ReconsSources = [
     'adjust_ctf.cpp',
     'adjust_volume_grey_levels.cpp',
-#    'align2d.cpp',
+    'align2d.cpp',
     'align_tilt_pairs.cpp',
     'angular_align_dual_tilt_series.cpp',
     'angular_assign_for_tilt_series.cpp',
@@ -634,7 +634,7 @@ if int(env['java']):
 
 # Src (apps)
 
-#AddXmippProgram('align2d', ['XmippRecons'])
+AddXmippProgram('align2d', ['XmippRecons'])
 AddXmippProgram('align_tilt_pairs', ['XmippRecons'])
 AddXmippProgram('align_volumes')
 AddXmippProgram('angular_align_dual_tilt_series', ['XmippRecons'])
@@ -668,7 +668,6 @@ AddXmippProgram('convert_data2img', ['XmippClassif'])
 AddXmippProgram('convert_data2pdb', ['XmippClassif'])
 AddXmippProgram('convert_img2data')
 AddXmippProgram('convert_pdb2vol', ['XmippRecons','XmippInterface'])
-AddXmippProgram('convert_image')
 AddXmippProgram('convert_vol2data')
 AddXmippProgram('convert_vol2pseudo', ['XmippRecons'])
 AddXmippProgram('convert_voxels22blobs', ['XmippRecons'])
@@ -691,9 +690,11 @@ AddXmippProgram('filter_projections', ['XmippRecons'])
 AddXmippProgram('find_center2d')
 AddXmippProgram('find_center3d')
 AddXmippProgram('fourier_filter', ['XmippRecons'])
-AddXmippProgram('header')
 AddXmippProgram('histogram')
+AddXmippProgram('image_convert')
+AddXmippProgram('image_header')
 AddXmippProgram('image_import')
+AddXmippProgram('image_statistics')
 AddXmippProgram('make_spectra', ['XmippRecons'])
 AddXmippProgram('mask')
 AddXmippProgram('mean_shift')
@@ -744,7 +745,6 @@ AddXmippProgram('spider_rename', ['XmippInterface'])
 AddXmippProgram('spider_translate', ['XmippInterface'])
 AddXmippProgram('spider_extract_angles', ['XmippInterface'])
 AddXmippProgram('spider_generate_count', ['XmippInterface'])
-AddXmippProgram('statistics')
 AddXmippProgram('symmetrize', ['XmippRecons'])
 AddXmippProgram('threshold')
 AddXmippProgram('transform_add_noise')
