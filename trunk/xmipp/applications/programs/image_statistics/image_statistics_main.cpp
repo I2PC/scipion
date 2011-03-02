@@ -35,19 +35,19 @@
 class ProgStatistics: public XmippMetadataProgram
 {
 protected:
-    Image<double>   image;
+    MetaData        DF_stats;
+    ImageGeneric    image;
     Mask            mask_prm;
     MultidimArray<int>   mask;
     int             short_format;     // True if a short line is to be shown
+    int             save_mask;        // True if the masks must be saved
+    int             repair;           // True if headers are initialized
     bool            show_angles;      // True if angles are to be shown in stats
 
     double min_val, max_val, avg, stddev;
     double mean_min_val, mean_max_val, mean_avg, mean_stddev;
     int N;
     int max_length;
-
-    FileName fnImageStats;
-    Image<double> Imean, Ivar;
 
     void defineParams()
     {
@@ -56,24 +56,20 @@ protected:
         allow_time_bar = false;
         addUsageLine("Display statistics of images or volumes. A mask can be applied.");
         XmippMetadataProgram::defineParams();
-        addParamsLine("[-o <metadata=\"\">] : Save the statistics in this metadata file.");
-        addParamsLine("[--short_format]   : Do not show labels for statistics.");
-        addParamsLine("[--show_angles]    : Also show angles in the image header.");
-        addParamsLine("[--image_stats <rootname=\"\">]  : Generate average and standard deviation images.");
+        addParamsLine("[-o <metadata>]   : Save the statistics in this metadata file.");
+        addParamsLine("[-short_format]   : Do not show labels for statistics.");
+        addParamsLine("[-show_angles]    : Also show angles in the image header.");
+        addParamsLine("[-save_mask]      : Save 2D and 3D masks (as \"mask2D\" or \"mask3D\").");
         mask_prm.defineParams(this,INT_MASK,NULL,"Statistics constrained to the mask area.");
-        addExampleLine("Compute the min, max, average and standard deviation of a set of images",false);
-        addExampleLine("xmipp_statistics -i images.sel");
-        addExampleLine("Compute the average image and standard deviation image of a set of images",false);
-        addExampleLine("xmipp_statistics -i images.sel --image_stats stats");
     }
 
     void readParams()
     {
         XmippMetadataProgram::readParams();
-        fnImageStats=getParam("--image_stats");
-        short_format = checkParam("--short_format");
-        show_angles  = checkParam("--show_angles");
-        fn_out = getParam("-o");
+        short_format = checkParam("-short_format");
+        save_mask    = checkParam("-save_mask");
+        show_angles  = checkParam("-show_angles");
+        fn_out = (checkParam("-o"))? getParam("-o"): "";
 
         mask_prm.allowed_data_types = INT_MASK;
         if (checkParam("--mask"))
@@ -83,13 +79,11 @@ protected:
     void show()
     {
         std::cout << " Statistics of " << fn_in << std::endl;
-        if (fnImageStats!="")
-        	std::cout << "Image statistics in " << fnImageStats << "*.xmp\n";
     }
 
     void preProcess()
     {
-        mdOut.setComment((std::string)"Statistics of " + fn_in);
+        DF_stats.setComment((std::string)"Statistics of " + fn_in);
         // Get maximum filename size ---------------------------------------------
         max_length = mdIn.MaxStringLength(MDL_IMAGE);
 
@@ -102,42 +96,35 @@ protected:
             std::cout << "Format: Name ZxYxX min max avg stddev ";
             if (show_angles)
                 std::cout << " <rot tilt psi>";
-            std::cout        << std::endl;
-        }
-
-        if (fnImageStats!="")
-        {
-            int Xdim, Ydim, Zdim;
-            size_t Ndim;
-            ImgSize(mdIn,Xdim,Ydim,Zdim,Ndim);
-            Imean().initZeros(Zdim,Ydim,Xdim);
-            Ivar()=Imean();
+            std::cout << '>' << std::endl;
         }
     }
 
     void processImage(const FileName &fnImg, const FileName &fnImgOut, size_t objId)
     {
-        image.readApplyGeo(fnImg, mdIn, objId);
-    	MultidimArray<double> &mI=image();
-        mI.setXmippOrigin();
+        image.read(fnImg, DATA, ALL_IMAGES, true);
+        image().setXmippOrigin();
 
+        int xDim,yDim,zDim;
         double rot, tilt, psi;
+        image.getDimensions(xDim,yDim,zDim);
         image.getEulerAngles(rot,tilt,psi);
 
         // Generate mask if necessary
-        mask_prm.generate_mask(ZSIZE(mI), YSIZE(mI), XSIZE(mI));
+        mask_prm.generate_mask(zDim, yDim, xDim);
         mask = mask_prm.get_binary_mask();
 
-        computeStats_within_binary_mask(mask, mI, min_val, max_val, avg, stddev);
+        computeStats_within_binary_mask(mask, image(), min_val, max_val,
+                                        avg, stddev);
         // Show information
         std::cout << stringToString(fnImg, max_length + 1);
-        if (ZSIZE(mI) > 1)
-            std::cout << integerToString(ZSIZE(mI), 4, ' ') << 'x'
-            << integerToString(YSIZE(mI), 4, ' ') << 'x'
-            << integerToString(XSIZE(mI), 4, ' ') << ' ';
+        if (zDim > 1)
+            std::cout << integerToString(zDim, 4, ' ') << 'x'
+            << integerToString(yDim, 4, ' ') << 'x'
+            << integerToString(xDim, 4, ' ') << ' ';
         else
-            std::cout << integerToString(YSIZE(mI), 4, ' ') << 'x'
-            << integerToString(XSIZE(mI), 4, ' ') << ' ';
+            std::cout << integerToString(yDim, 4, ' ') << 'x'
+            << integerToString(xDim, 4, ' ') << ' ';
 
         if (!short_format)
         {
@@ -159,16 +146,12 @@ protected:
             << floatToString(avg    , 10) << ' '
             << floatToString(stddev , 10) << ' ';
         }
-        mdOut.setValue(MDL_MIN,min_val,newId);
-        mdOut.setValue(MDL_MAX,max_val,newId);
-        mdOut.setValue(MDL_AVG,avg,newId);
-        mdOut.setValue(MDL_STDDEV,stddev,newId);
-        if (show_angles)
-        {
-        	mdOut.setValue(MDL_ANGLEROT,rot,newId);
-        	mdOut.setValue(MDL_ANGLETILT,tilt,newId);
-        	mdOut.setValue(MDL_ANGLEPSI,psi,newId);
-        }
+        size_t id;
+        id = DF_stats.addObject();
+        DF_stats.setValue(MDL_MIN,min_val,id);
+        DF_stats.setValue(MDL_MAX,max_val,id);
+        DF_stats.setValue(MDL_AVG,avg,id);
+        DF_stats.setValue(MDL_STDDEV,stddev,id);
 
         // Total statistics
         N++;
@@ -176,17 +159,6 @@ protected:
         mean_max_val += max_val;
         mean_avg     += avg;
         mean_stddev  += stddev;
-        if (fnImageStats!="")
-        {
-        	const MultidimArray<double> &mImean=Imean();
-        	const MultidimArray<double> &mIvar=Ivar();
-        	FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(mI)
-        	{
-        		double value=DIRECT_MULTIDIM_ELEM(mI,n);
-        		DIRECT_MULTIDIM_ELEM(mImean,n)+=value;
-        		DIRECT_MULTIDIM_ELEM(mIvar,n)+=value*value;
-        	}
-        }
 
         // Finish information .................................................
         std::cout << std::endl;
@@ -218,32 +190,13 @@ protected:
             std::cout << std::endl;
         }
 
-        if (fnImageStats!="")
-        {
-        	const MultidimArray<double> &mImean=Imean();
-        	const MultidimArray<double> &mIvar=Ivar();
-        	double iN=1.0/N;
-        	FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(mImean)
-        	{
-        		double mean=DIRECT_MULTIDIM_ELEM(mImean,n)*iN;
-        		DIRECT_MULTIDIM_ELEM(mImean,n)=mean;
-        		DIRECT_MULTIDIM_ELEM(mIvar,n)=sqrt(DIRECT_MULTIDIM_ELEM(mIvar,n)*iN-mean*mean);
-        	}
-        	if (ZSIZE(mImean)==1)
-        	{
-        		Imean.write(fnImageStats+"_avg.xmp");
-        		Ivar.write(fnImageStats+"_sig.xmp");
-        	}
-        	else
-        	{
-        		Imean.write(fnImageStats+"_avg.vol");
-        		Ivar.write(fnImageStats+"_sig.vol");
-        	}
-        }
+        // Save masks -----------------------------------------------------------
+        if (save_mask)
+            mask_prm.write_mask("mask");
 
         // Save statistics ------------------------------------------------------
         if (fn_out != "")
-        	mdOut.write(fn_out);
+            DF_stats.write(fn_out);
     }
 }
 ;// end of class ProgStatistics
