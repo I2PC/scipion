@@ -244,6 +244,6 @@ void substituteOriginalImages(const FileName &fn, const FileName &fnOrig, const 
                 MD.setValue(label, filesOrig[stkNo], __iter.objId);
             }
         }
-        MD._write(fnOut,blocks[b],APPEND);
+        MD._write(fnOut,blocks[b],MD_APPEND);
     }
 }

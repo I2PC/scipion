@@ -906,7 +906,7 @@ void VQ::write(const FileName &fnRoot, bool final) const
             else
                 SFq.setValue(MDL_IMAGE,SFv[idx], id);
         }
-        SFq._write(fnSFout,"class_"+integerToString(q,6),APPEND);
+        SFq._write(fnSFout,"class_"+integerToString(q,6),MD_APPEND);
     }
 }
 

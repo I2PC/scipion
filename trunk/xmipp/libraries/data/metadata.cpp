@@ -468,12 +468,12 @@ void MetaData::_write(const FileName &outFile,const std::string &blockName, Writ
 
     //check if file exists or not block name has been given
     //in our format no two identical data_xxx strings may exists
-    if(mode==OVERWRITE)
+    if(mode==MD_OVERWRITE)
         ;
     else if (blockName=="")
-        mode=OVERWRITE;
+        mode=MD_OVERWRITE;
     else if(!exists(outFile))
-        mode=OVERWRITE;
+        mode=MD_OVERWRITE;
     else
     {
         //does blockname exists?
@@ -496,7 +496,7 @@ void MetaData::_write(const FileName &outFile,const std::string &blockName, Writ
 
             if(strncmp(map,"# XMIPP_STAR",12)!=0)
             {
-                mode=OVERWRITE;
+                mode=MD_OVERWRITE;
             }
             else
             {
@@ -526,14 +526,14 @@ void MetaData::_write(const FileName &outFile,const std::string &blockName, Writ
             close(fd);
         }
         else
-            mode=OVERWRITE;
+            mode=MD_OVERWRITE;
 
     }
 
     std::ios_base::openmode openMode;
-    if(mode==OVERWRITE)
+    if(mode==MD_OVERWRITE)
         openMode = std::ios_base::out;
-    else if(mode=APPEND)
+    else if(mode=MD_APPEND)
         openMode = std::ios_base::app;
     std::ofstream ofs(outFile.data(), openMode);
 
@@ -544,9 +544,14 @@ void MetaData::_write(const FileName &outFile,const std::string &blockName, Writ
 
 void MetaData::append(const FileName &outFile)
 {
+  if (exists(outFile))
+  {
     std::ofstream ofs(outFile.data(), std::ios_base::app);
     _writeRows(ofs);
     ofs.close();
+  }
+  else
+    write(outFile);
 }
 
 void MetaData::_writeRows(std::ostream &os)
@@ -572,7 +577,7 @@ void MetaData::_writeRows(std::ostream &os)
 
 void MetaData::write(std::ostream &os,const std::string &blockName, WriteModeMetaData mode )
 {
-    if(mode==OVERWRITE)
+    if(mode==MD_OVERWRITE)
         os << "# XMIPP_STAR_1 * "// << (isColumnFormat ? "column" : "row")
         << std::endl //write wich type of format (column or row) and the path
         << "# " << comment << std::endl;     //write md comment in the 2nd comment line of header
@@ -1470,9 +1475,9 @@ WriteModeMetaData metadataModeConvert (String mode)
 {
     toLower(mode);
     if (mode.npos != mode.find("overwrite"))
-        return OVERWRITE;
+        return MD_OVERWRITE;
     if (mode.npos != mode.find("append"))
-        return APPEND;
+        return MD_APPEND;
     REPORT_ERROR(ERR_ARG_INCORRECT,"metadataModeConvert: Invalid mode");
 }
 

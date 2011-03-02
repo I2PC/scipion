@@ -55,8 +55,8 @@ static bool  falseb=false;
  */
 typedef enum
 {
-    OVERWRITE, //forget about the old file and overwrite it
-    APPEND,    //append a data_ at the file end or replace an existing one
+    MD_OVERWRITE, //forget about the old file and overwrite it
+    MD_APPEND,    //append a data_ at the file end or replace an existing one
 } WriteModeMetaData;
 /** Iterate over all elements in MetaData
  *
@@ -559,17 +559,17 @@ public:
     /** Write metadata to disk.
      * This will write the metadata content to disk.
      */
-    void _write(const FileName &outFile,const String & blockName="", WriteModeMetaData mode=OVERWRITE);
+    void _write(const FileName &outFile,const String & blockName="", WriteModeMetaData mode=MD_OVERWRITE);
     /** Write metadata to disk. Guess blockname from filename
      * @code
      * outFilename="first@md1.doc" -> filename = md1.doc, blockname = first
      * @endcode
      */
-    void write(const FileName &outFile, WriteModeMetaData mode=OVERWRITE);
+    void write(const FileName &outFile, WriteModeMetaData mode=MD_OVERWRITE);
 
     /** Write metadata to out stream
      */
-    void write(std::ostream &os, const String & blockName="",WriteModeMetaData mode=OVERWRITE);
+    void write(std::ostream &os, const String & blockName="",WriteModeMetaData mode=MD_OVERWRITE);
 
     /** Append data lines to file.
      * This function can be used to add new data to

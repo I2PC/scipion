@@ -46,15 +46,17 @@ private:
 protected:
     void defineParams()
     {
-        addUsageLine ("Perform several operation over the metadata files.");
-        addUsageLine ("If the -o option is not used, the original metadata");
-        addUsageLine ("will be modified.");
+        addUsageLine("Perform several operation over the metadata files. If the -o option is not used");
+        addUsageLine("the original metadata will be modified after applying some operations.");
+        addUsageLine("Also you can use the --print option just to print out the result metadata to screen.");
+        addUsageLine("The combination of -i and -o without other operations can serve to extract data blocks");
+        addUsageLine("inside a medata and write to an independet one.");
         addSeeAlsoLine("metadata_import");
 
         addParamsLine(" -i <metadata>                          : Input metadata file");
         addParamsLine("   [-o  <metadata>]                    : Output metadata file, if not provided result will be printed on screen");
 
-        addParamsLine("  --set <set_operation> <md2> <label=image>    : Set operations");
+        addParamsLine("  [--set <set_operation> <md2> <label=image>]   : Set operations");
         addParamsLine("         where <set_operation>");
         addParamsLine("   union               : Union with metadata md2");
         addParamsLine("   intersection        : Intersection with metadata md2");
@@ -76,7 +78,7 @@ protected:
         addParamsLine("    drop_column <labels>                : Drop some columns(label list) from metadata");
         addParamsLine("    modify_values <expression>          : Use an SQLite expression to modify the metadata");
         addParamsLine("                                        : This option requires knowledge of basic SQL syntax(more specific SQLite");
-        addParamsLine("           alias -p;                                             ");
+        addParamsLine("           alias -e;                                             ");
 
         addParamsLine("or  --file <file_operation>     : File operations");
         addParamsLine("         where <file_operation>");
@@ -103,6 +105,10 @@ protected:
         addParamsLine("     rand_student  <mean=0.> <stddev=1.> <df=3.> : Follow a student distribution with mean, stddev and df degrees of freedom.");
         addParamsLine("     expand                                   : Treat the column as the filename of an row metadata and expand values");
         addParamsLine("           alias -l;                                             ");
+
+        addParamsLine("  [--print ]                    : Just print medata to stdout, or if -o is specified written to disk.");
+        addParamsLine("                                : this option is useful for extrating data blocks inside a metadata.");
+        addParamsLine("           alias -p;                                             ");
 
         addParamsLine(" [--mode+ <mode=overwrite>]   : Metadata writing mode.");
         addParamsLine("    where <mode>");
@@ -199,11 +205,11 @@ protected:
             mdIn.operate(getParam("--operate", 1));
         else
         {
-          MetaData md(mdIn);
-          if (operation == "sort")
-            mdIn.sort(md, getParam("--operate", 1));
-          else if (operation == "randomize")
-            mdIn.randomize(md);
+            MetaData md(mdIn);
+            if (operation == "sort")
+                mdIn.sort(md, getParam("--operate", 1));
+            else if (operation == "randomize")
+                mdIn.randomize(md);
         }
     }//end of function doOperate
 
@@ -339,95 +345,14 @@ public:
         else if (checkParam("--fill"))
             doFill();
 
-        if (doWrite)
+        if (checkParam("--print"))
+            mdIn.write(std::cout);
+        else if (doWrite)
             mdIn.write(fn_out);
     }
-    //        case _copy:
-    //            inMD1.read(inFileName1);
-    //            //create dir
-    //            if (!exists(tmpFileName))
-    //                if (mkpath(tmpFileName, 0755) != 0)
-    //                    REPORT_ERROR(ERR_IO_NOPERM, "Run: Cannot create directory "+ tmpFileName);
-    //            FOR_ALL_OBJECTS_IN_METADATA(inMD1)
-    //            {
-    //                inMD1.getValue(MDL::str2Label(_label),inFnImg, __iter.objId);
-    //                outFnImg = inFnImg.removeDirectories();
-    //                id = outMD.addObject();
-    //                outMD.setValue(MDL::str2Label(_label),outFnImg, id);
-    //                outFnImg = tmpFileName + "/" + outFnImg;
-    //                inFnImg.copyFile(outFnImg);
-    //            }
-    //            outMD.write(tmpFileName+"/"+outFileName,mode);
-    //            break;
-    //        case _move:
-    //            inMD1.read(inFileName1);
-    //            //create dir
-    //            if (!exists(tmpFileName))
-    //                if (mkpath(tmpFileName, 0755) != 0)
-    //                    REPORT_ERROR(ERR_IO_NOPERM, "Run: Cannot create directory "+ tmpFileName);
-    //            FOR_ALL_OBJECTS_IN_METADATA(inMD1)
-    //            {
-    //                inMD1.getValue(MDL::str2Label(_label),inFnImg, __iter.objId);
-    //                outFnImg = inFnImg.removeDirectories();
-    //                id = outMD.addObject();
-    //                outMD.setValue(MDL::str2Label(_label),outFnImg, id);
-    //                outFnImg = tmpFileName + "/" + outFnImg;
-    //                rename(inFnImg.c_str(),outFnImg.c_str());
-    //            }
-    //            outMD.write(tmpFileName+"/"+outFileName,mode);
-    //            break;
-    //        case _delete:
-    //            inMD1.read(inFileName1);
-    //            FOR_ALL_OBJECTS_IN_METADATA(inMD1)
-    //            {
-    //                inMD1.getValue(MDL::str2Label(_label),inFnImg, __iter.objId);
-    //                remove(inFnImg.c_str());
-    //                std::cerr << "Remove file: " << inFnImg <<std::endl;
-    //            }
-    //            break;
-    //        case _select:
-    //            {
-    //                inMD1.read(inFileName1);
-    //                outMD.importObjects(inMD1, MDExpression(expression));
-    //                outMD.write(outFileName,mode);
-    //            }
-    //            break;
-    //        case _count:
-    //            {
-    //                inMD1.read(inFileName1);
-    //                outMD.aggregate(inMD1, AGGR_COUNT,MDL::str2Label(_label),MDL_CTFMODEL,MDL_COUNT);
-    //                outMD.write(outFileName,mode);
-    //            }
-    //            break;
-    //        case _size:
-    //            {
-    //                inMD1.read(inFileName1);
-    //                std::cout << inFileName1 + " size is: " << inMD1.size() << std::endl;
-    //            }
-    //            break;
-    //        case _convert2db:
-    //            {
-    //                inMD1.read(inFileName1);
-    //                MDSql::dumpToFile(outFileName);
-    //            }
-    //            break;
-    //
-    //        case _randValues:
-    //            {
-    //                inMD1.read(inFileName1);
-    //                randomize_random_generator();
-    //                outMD.randomizeDoubleValues(inMD1,MDL::str2Label(_label), rand_op1, rand_op2, randMode, rand_op3);
-    //                outMD.write(outFileName);
-    //            }
-    //            break;
-    //
-    //
-    //        default:
-    //            REPORT_ERROR(ERR_ARG_INCORRECT,"Unknown operation.");
-    //        }
-    //    }
+
 }
-;
+;//end of class ProgMetaDataUtilities
 
 int main(int argc, char **argv)
 {
