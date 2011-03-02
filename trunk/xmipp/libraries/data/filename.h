@@ -155,6 +155,17 @@ public:
      */
     void compose(const size_t no, const String& str);
 
+
+    // Constructor: prefix number, filename root and extension, mainly for selfiles..
+    /** Prefix with number and extension @.
+     *
+     * @code
+     * fn_proj.compose(1, "g1ta", "xmp");  // fn_proj = "000001@g1ta000001.xmp"
+     * @endcode
+     */
+    void compose(size_t no , const String &str , const String &ext);
+
+
     /** True if this filename belongs to a stack
      */
     bool isInStack() const;

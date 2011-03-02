@@ -53,6 +53,18 @@ void FileName::compose(size_t no , const String &str)
       this->assign(formatString("%06lu@%s", no, str.c_str()));
 }
 
+// Constructor: prefix number, filename root and extension, mainly for selfiles..
+void FileName::compose(size_t no , const String &str , const String &ext)
+{
+  if (no == ALL_IMAGES || no == (size_t) -1)
+    REPORT_ERROR(ERR_DEBUG_TEST, "Don't compose with 0 or -1 index, now images index start at 1");
+
+    *this = str;
+    if (no != ALL_IMAGES)
+      this->assign(formatString("%06lu@%s.%s", no, str.c_str(), ext.c_str()));
+}
+
+
 // Is in stack ............................................................
 bool FileName::isInStack() const
 {

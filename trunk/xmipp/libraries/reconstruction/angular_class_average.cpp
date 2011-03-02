@@ -94,27 +94,27 @@ void ProgAngularClassAverage::defineParams()
     addUsageLine("Example of use: Sample at default values and calculating output averages of random halves of the data");
     addUsageLine("   xmipp_angular_class_average  -i proj_match.doc --lib ref_angles.doc -o out_dir --split");
 
-    addParamsLine("    -i <doc_file>         	: Docfile with assigned angles for all experimental particles");
-    addParamsLine("   --lib <doc_file>       	: Docfile with angles used to generate the projection matching library");
-    addParamsLine("    -o <root_name>        	: Output rootname for class averages and selfiles");
-    addParamsLine("or --add_to <root_name>   	: Add output to existing files");
-    addParamsLine("   [--split ]             	: Also output averages of random halves of the data");
-    addParamsLine("   [--wien <img=\"\"> ]   	: Apply this Wiener filter to the averages");
-    addParamsLine("   [--pad <factor=1.> ]    	: Padding factor for Wiener correction");
+    addParamsLine("    -i <doc_file>          : Docfile with assigned angles for all experimental particles");
+    addParamsLine("   --lib <doc_file>        : Docfile with angles used to generate the projection matching library");
+    addParamsLine("    -o <root_name>         : Output rootname for class averages and selfiles");
+    addParamsLine("or --add_to <root_name>    : Add output to existing files");
+    addParamsLine("   [--split ]              : Also output averages of random halves of the data");
+    addParamsLine("   [--wien <img=\"\"> ]    : Apply this Wiener filter to the averages");
+    addParamsLine("   [--pad <factor=1.> ]     : Padding factor for Wiener correction");
     addParamsLine("   [--dont_write_selfiles]   : Do not write class selfiles to disc");
 
     addUsageLine("   IMAGE SELECTION BASED ON INPUT DOCFILE ");
-    addParamsLine("   [--select <col=\"\">]    	: Column to use for image selection (limit0, limitF or limitR)");
-    addParamsLine("   [--limit0 <l0>]       	: Discard images below <l0>");
-    addParamsLine("   [--limitF <lF>]       	: Discard images above <lF>");
-    addParamsLine("   [--limitR <lR>]      		: if (lR>0 && lR< 100): discard lowest  <lR> % in each class");
-    addParamsLine("                       		: if (lR<0 && lR>-100): discard highest <lR> % in each class");
+    addParamsLine("   [--select <col=\"\">]     : Column to use for image selection (limit0, limitF or limitR)");
+    addParamsLine("   [--limit0 <l0>]        : Discard images below <l0>");
+    addParamsLine("   [--limitF <lF>]        : Discard images above <lF>");
+    addParamsLine("   [--limitR <lR>]        : if (lR>0 && lR< 100): discard lowest  <lR> % in each class");
+    addParamsLine("                         : if (lR<0 && lR>-100): discard highest <lR> % in each class");
 
     addUsageLine("    REALIGNMENT OF CLASSES ");
     addParamsLine("   [--iter <nr_iter=0>]      : Number of iterations for re-alignment");
     addParamsLine("   [--Ri <ri=1>]             : Inner radius to limit rotational search");
     addParamsLine("   [--Ro <r0=-1>]            : Outer radius to limit rotational search");
-    addParamsLine("                          	: ro = -1 -> dim/2-1");
+    addParamsLine("                           : ro = -1 -> dim/2-1");
     addParamsLine("   [--max_shift <ms=999.>]        : Maximum shift (larger shifts will be set to 0)");
     addParamsLine("   [--max_shift_change <msc=999.>] : Discard images that change shift more in the last iteration ");
     addParamsLine("   [--max_psi_change <mps=360.>]   : Discard images that change psi more in the last iteration ");
@@ -230,10 +230,10 @@ void ProgAngularClassAverage::produceSideInfo()
     bool auxflip;
     size_t id = DF.firstObject();
     //FIXME: CHECK THIS????
-//    if (DF.getValue(MDL_FLIP, auxflip, id))
-//        do_mirrors = false;
-//    else
-//        do_mirrors = true;
+    //    if (DF.getValue(MDL_FLIP, auxflip, id))
+    //        do_mirrors = false;
+    //    else
+    //        do_mirrors = true;
     do_mirrors = DF.getValue(MDL_FLIP, auxflip, id);
 
     // Read empty image with the correct dimensions
@@ -745,7 +745,7 @@ void ProgAngularClassAverage::writeToDisc(Image<double> avg,
     {
         avg()/=w;
         // Write class average to disc
-        fn_tmp.compose(fn,dirno,oext);
+        fn_tmp.compose(dirno,fn,oext);
         if (do_add && exists(fn_tmp) )
         {
             old.read(fn_tmp);
@@ -799,7 +799,7 @@ void ProgAngularClassAverage::addClassAverage(int dirno,
     size_t id;
     if (w > 0.)
     {
-        fn_tmp.compose(fn_out+"_class",dirno,"xmp");
+        fn_tmp.compose(dirno, fn_out+"_class","xmp");
         id = SFclasses.addObject();
         SFclasses.setValue(MDL_IMAGE,fn_tmp,id);
         SFclasses.setValue(MDL_ANGLEROT,rot,id);
@@ -818,7 +818,7 @@ void ProgAngularClassAverage::addClassAverage(int dirno,
     {
         if (w1 > 0.)
         {
-            fn_tmp.compose(fn_out1+"_class",dirno,"xmp");
+            fn_tmp.compose(dirno,fn_out1+"_class","xmp");
             id = SFclasses1.addObject();
             SFclasses1.setValue(MDL_IMAGE,fn_tmp,id);
             SFclasses1.setValue(MDL_ANGLEROT,rot,id);
@@ -835,7 +835,7 @@ void ProgAngularClassAverage::addClassAverage(int dirno,
         }
         if (w2 > 0.)
         {
-            fn_tmp.compose(fn_out2+"_class",dirno,"xmp");
+            fn_tmp.compose(dirno,fn_out2+"_class","xmp");
             id = SFclasses2.addObject();
             SFclasses2.setValue(MDL_IMAGE,fn_tmp,id);
             SFclasses2.setValue(MDL_ANGLEROT,rot,id);
