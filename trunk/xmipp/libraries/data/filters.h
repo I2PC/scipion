@@ -453,8 +453,10 @@ void best_nonwrapping_shift(const MultidimArray< double >& I1,
  * This function modifies I to be aligned with Iref. Translational and
  * rotational alignments are both considered. The matrix transforming I
  * into Iref is returned.
+ *
+ * The function returns the correlation between the two aligned images.
  */
-void alignImages(const MultidimArray< double >& Iref,
+double alignImages(const MultidimArray< double >& Iref,
                  MultidimArray< double >& I,
                  Matrix2D< double >&M,
                  bool wrap=WRAP);
@@ -470,6 +472,7 @@ void alignImages(const MultidimArray< double >& Iref,
 double alignImagesConsideringMirrors(const MultidimArray< double >& Iref,
                                      MultidimArray< double >& I,
                                      Matrix2D<double> &M,
+                                     bool wrap=WRAP,
                                      const MultidimArray< int >* mask = NULL);
 
 /** Unnormalized 2D gaussian value using covariance

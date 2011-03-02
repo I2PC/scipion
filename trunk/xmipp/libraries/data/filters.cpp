@@ -998,7 +998,7 @@ void best_nonwrapping_shift(const MultidimArray<double> &I1,
 #undef DEBUG
 
 /* Align two images -------------------------------------------------------- */
-void alignImages(const MultidimArray< double >& Iref, MultidimArray< double >& I,
+double alignImages(const MultidimArray< double >& Iref, MultidimArray< double >& I,
                  Matrix2D< double >&M, bool wrap)
 {
     Iref.checkDimension(2);
@@ -1075,22 +1075,27 @@ void alignImages(const MultidimArray< double >& Iref, MultidimArray< double >& I
 
     double corrRS=correlation_index(IauxRS,Iref);
     double corrSR=correlation_index(IauxSR,Iref);
+    double corr;
     if (corrRS>corrSR)
     {
         I=IauxRS;
         M=ARS;
+        corr=corrRS;
     }
     else
     {
         I=IauxSR;
         M=ASR;
+        corr=corrSR;
     }
     delete plans;
+    return corr;
 }
 
 double alignImagesConsideringMirrors(const MultidimArray< double >& Iref,
                                      MultidimArray< double >& I,
                                      Matrix2D<double> &M,
+                                     bool wrap,
                                      const MultidimArray< int >* mask)
 {
     MultidimArray<double> Imirror;
@@ -1099,8 +1104,8 @@ double alignImagesConsideringMirrors(const MultidimArray< double >& Iref,
     Imirror.selfReverseX();
     Imirror.setXmippOrigin();
 
-    alignImages(Iref,I,M);
-    alignImages(Iref,Imirror,Mmirror);
+    alignImages(Iref,I,M,wrap);
+    alignImages(Iref,Imirror,Mmirror,wrap);
     double corr=correlation_index(Iref,I,mask);
     double corrMirror=correlation_index(Iref,Imirror,mask);
     double bestCorr=corr;
