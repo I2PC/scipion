@@ -30,7 +30,7 @@
 void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray*prhs[])
 {
     
-    Prog_align2d_prm alignParams;
+    ProgAlign2d alignParams;
     
     ImageXmipp image;
     getMatrix2D(prhs[0],image());
