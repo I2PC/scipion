@@ -27,31 +27,9 @@
 
 int main(int argc, char **argv)
 {
-    Prog_align2d_prm prm;
-
-    // Get input parameters
-    try
-    {
-        prm.read(argc, argv);
-        prm.show();
-    }
-    catch (XmippError XE)
-    {
-        std::cout << XE;
-        prm.usage();
-        exit(0);
-    }
-
-    try
-    {
-        prm.align2d();
-    }
-    catch (XmippError XE)
-    {
-        std::cout << XE;
-        prm.usage();
-        exit(0);
-    }
+    ProgAlign2d prm;
+    prm.read(argc, argv);
+    prm.tryRun();
 }
 
 

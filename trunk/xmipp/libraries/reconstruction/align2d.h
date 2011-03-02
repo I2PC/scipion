@@ -31,102 +31,62 @@
 #include <data/metadata_extension.h>
 #include <data/metadata.h>
 #include <data/image.h>
+#include <data/program.h>
 #include <vector>
 
 /**@defgroup Align2DProgram align2d (Align a set of 2D images)
    @ingroup ReconsLibrary */
 //@{
 /** Align2D parameters. */
-class Prog_align2d_prm
+class ProgAlign2d: public XmippProgram
 {
 public:
     /** Filename selection file containing the images */
-    FileName fn_sel;
+    FileName fnSel;
     /** Filename reference image */
-    FileName fn_ref;
-    /** Filename output reference image */
-    FileName fn_ave;
-    /**  Filename output document file */
-    FileName fn_doc;
-    /**  Filename output extension */
-    FileName oext;
-
-    /** Integer inner radius for rotational alignment */
-    int Ri;
-    /** Integer outer radius for rotational alignment */
-    int Ro;
+    FileName fnRef;
+    /**  Filename output root */
+    FileName fnRoot;
     /** Integer number of iterations to perform */
     int Niter;
-    /** Integer number of images to be aligned */
-    int n_images;
-
-    /** Float maximum allowed shift (discard images that shift more in last iteration)*/
-    float max_shift;
-    /** Float maximum allowed rotational change (discard images that rotate more in last iteration)*/
-    float max_rot;
-    /** Float resolution limit for low-pass filter [Angstrom]*/
-    float resol;
-    /** Float sampling rate (i.e. pixel size) [Angstrom] */
-    float sam;
-
-    /** Boolean to apply low-pass filter to images */
-    bool do_filter;
-    /** Boolean to perform rotational alignment */
-    bool do_rot;
-    /** Boolean to perform translational alignment */
-    bool do_trans;
-
-    /** Boolean to perform complete-search (psi and translations) alignment */
-    bool do_complete;
-    /** Float psi-interval in complete search */
-    float psi_interval;
-
+    /** Maximum allowed shift */
+    double max_shift;
+    /** Maximum allowed rotational change */
+    double max_rot;
+    /** Do not check mirrors */
+    bool dont_mirror;
+    /** Do pspc */
+    bool pspc;
 public:
     // SelFile with the input images
     MetaData SF;
-    // Stack of input images
-    std::vector< Image<double> >  images;
-    // Stack of optimal correlations for all images
-    std::vector<double>  corr;
-    // Boolean for successful alignment of image
-    std::vector<bool>  success;
     // Image holding current reference
     Image<double> Iref;
 
 public:
-    /// Read argument from command line
-    void read(int argc, char **argv);
+    /// Read argument
+    void readParams();
 
     /// Show
     void show();
 
-    /// Usage
-    void usage();
+    /// Define parameters
+    void defineParams();
 
-    /// Rotational alignment of an image
-    bool align_rot(Image<double> &img, const MultidimArray<double> &Mref,
-                   const float &max_rot, const float &Rin, const float &Rout, const double &outside = 0.);
+    /// Align pairs
+    void alignPairs(MetaData &MDin, MetaData &MDout, int level);
 
-    /// Translational alignment of an image
-    bool align_trans(Image<double> &img, const MultidimArray<double> &Mref, const float &max_shift, const double &outside = 0.);
-
-    /// Alignment by complete search of rotations and translations
-    bool align_complete_search(Image<double> &img, const MultidimArray<double> &Mref,
-                               const float &max_shift, const float &max_rot, const float &psi_interval,
-                               const float &Rin, const float &Rout, const double &outside = 0.);
-
-    /// Piramidal combination of images to construct a reference
+    /// Pyramidal combination of images to construct a reference
     void do_pspc();
+
+    /// Compute mean
+    void computeMean();
 
     /// Alignment of all images by iterative refinement
     void refinement();
 
-    /// Calculate optimal correlation for in document file
-    void calc_correlation(const MultidimArray<double> &Mref, const float &Rin, const float &Rout);
-
     /// Main routine
-    void align2d();
-
+    void run();
 };
 //@}
 #endif
