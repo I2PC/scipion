@@ -509,7 +509,7 @@ void ProgCtfGroup::writeOutputToDisc()
     {
         auxMetaData.importObjects(ctfImagesGroup,MDValueEQ(MDL_DEFGROUP,i));
         imagesInDefoculGroup.assign( formatString("b%06d@%s_images.sel", i, fn_root.c_str()) );
-        auxMetaData.write( imagesInDefoculGroup,APPEND);
+        auxMetaData.write( imagesInDefoculGroup,MD_APPEND);
     }
 
     //create average ctf<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< check ctfs
