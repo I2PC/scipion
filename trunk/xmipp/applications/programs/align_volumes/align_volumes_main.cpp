@@ -130,8 +130,8 @@ public:
     {
 
         addUsageLine("Align two volumes varying orientation, position and scale");
-        addUsageLine("Example of use: Align volume1 and volume2 with default options");
-        addUsageLine("   xmipp_align_volumes --i1 volume1.vol --i2 volume2.vol");
+        addExampleLine("Example of use: Align volume1 and volume2 with default options", false);
+        addExampleLine("   xmipp_align_volumes --i1 volume1.vol --i2 volume2.vol");
 
         addParamsLine("   --i1 <volume1>        : the first volume to align");
         addParamsLine("   --i2 <volume2>        : the second one");
@@ -396,17 +396,8 @@ public:
 int main(int argc, char **argv)
 {
     ProgAlignVolumes program;
-    try
-    {
-        program.read(argc, argv);
-        program.run();
-    }
-    catch (XmippError xe)
-    {
-        std::cerr << xe;
-        return 1;
-    }
-    return 0;
+    program.read(argc, argv);
+    return program.tryRun();
 }
 
 
