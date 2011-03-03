@@ -269,6 +269,10 @@ public:
                             char ** secondData,
                             char ** firstloop,
                             const char * blockName);
+    /** Export medatada to xml file.
+     *
+     */
+    void convertXML(FileName fn);
 
     /* Helper function to parse an MDObject and set its value.
      * The parsing will be from an input stream(istream)

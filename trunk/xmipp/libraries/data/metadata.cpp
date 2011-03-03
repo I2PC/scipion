@@ -544,14 +544,14 @@ void MetaData::_write(const FileName &outFile,const std::string &blockName, Writ
 
 void MetaData::append(const FileName &outFile)
 {
-  if (exists(outFile))
-  {
-    std::ofstream ofs(outFile.data(), std::ios_base::app);
-    _writeRows(ofs);
-    ofs.close();
-  }
-  else
-    write(outFile);
+    if (exists(outFile))
+    {
+        std::ofstream ofs(outFile.data(), std::ios_base::app);
+        _writeRows(ofs);
+        ofs.close();
+    }
+    else
+        write(outFile);
 }
 
 void MetaData::_writeRows(std::ostream &os)
@@ -1108,8 +1108,8 @@ void MetaData::aggregate(const MetaData &mdIn, AggregateOperation op,
 }
 
 void MetaData::aggregate(const MetaData &mdIn, const std::vector<AggregateOperation> &ops,
-		                 const std::vector<MDLabel> &operateLabels,
-		                 const std::vector<MDLabel> &resultLabels)
+                         const std::vector<MDLabel> &operateLabels,
+                         const std::vector<MDLabel> &resultLabels)
 {
     if (resultLabels.size() - ops.size() != 1)
         REPORT_ERROR(ERR_MD, "Labels vectors should contain one element more than operations");
@@ -1187,12 +1187,12 @@ void MetaData::operate(const std::string &expression)
 
 void MetaData::randomize(MetaData &MDin)
 {
-  static bool randomized = false;
-  if (!randomized)
-  {
-    srand ( time(NULL) );
-    randomized = true;
-  }
+    static bool randomized = false;
+    if (!randomized)
+    {
+        srand ( time(NULL) );
+        randomized = true;
+    }
     std::vector<size_t> objects;
     MDin.myMDSql->selectObjects(objects);
     std::random_shuffle(objects.begin(), objects.end());
@@ -1353,6 +1353,32 @@ void MetaData::makeAbsPath(const MDLabel label)
     }
 }
 
+void MetaData::convertXML(FileName fn)
+{
+
+    std::ofstream ofs(fn.data(), std::ios_base::out);
+
+    size_t size = activeLabels.size();
+    ofs <<  "<" << fn << ">"<< std::endl;
+    FOR_ALL_OBJECTS_IN_METADATA(*this)
+    {
+        ofs <<  "<ROW ";
+        for (size_t i = 0; i < size; i++)
+        {
+            if (activeLabels[i] != MDL_COMMENT)
+            {
+                ofs << MDL::label2Str(activeLabels[i]) << "=\"";
+                MDObject mdValue(activeLabels[i]);
+                //ofs.width(1);
+                myMDSql->getObjectValue(__iter.objId, mdValue);
+                mdValue.toStream(ofs, true);
+                ofs << "\" ";
+            }
+        }
+        ofs <<  " />" << std::endl;
+    }
+    ofs <<  "</" << fn << ">"<< std::endl;
+}
 
 void MDIterator::init(const MetaData &md, const MDQuery * pQuery)
 {
@@ -1457,18 +1483,18 @@ bool MDConstGenerator::fillValue(MetaData &md, size_t objId)
 
 MDLinealGenerator::MDLinealGenerator(double initial, double step)
 {
-  this->initValue = initial;
-  this->step = step;
-  counter = 0;
+    this->initValue = initial;
+    this->step = step;
+    counter = 0;
 }
 
 bool MDLinealGenerator::fillValue(MetaData &md, size_t objId)
 {
-  double value = initValue + step * counter++;
-  if (MDL::isInt(label))
-    md.setValue(label, ROUND(value), objId);
-  else
-    md.setValue(label, value, objId);
+    double value = initValue + step * counter++;
+    if (MDL::isInt(label))
+        md.setValue(label, ROUND(value), objId);
+    else
+        md.setValue(label, value, objId);
 }
 
 WriteModeMetaData metadataModeConvert (String mode)
