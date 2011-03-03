@@ -38,8 +38,6 @@ int main(int argc, char **argv)
 {
     ProgMask program;
     program.XmippProgram::read(argc, argv);
-    program.tryRun();
-
-    return 0;
+    return program.tryRun();
 }
 
