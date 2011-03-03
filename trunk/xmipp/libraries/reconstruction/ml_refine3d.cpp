@@ -974,13 +974,13 @@ void ProgRefine3D::concatenateSelfiles(int iter)
 void ProgRefine3D::postProcessVolumes(int argc, char **argv)
 {
 
-    ProgSegment       segm_prm;
+    ProgSegment            segm_prm;
     FileName               fn_vol, fn_tmp;
-    Image<double>         vol, Vaux, Vsymmask, Vsolv;
+    Image<double>          vol, Vaux, Vsymmask, Vsolv;
     MultidimArray<int>     mask3D;
     double                 avg, dummy, in, out;
     int                    dim;
-    Sampling          locsampling;
+    Sampling               locsampling;
 
     // Use local sampling because of symmask
     if (!locsampling.SL.isSymmetryGroup(fn_sym, symmetry, sym_order))
@@ -1052,8 +1052,7 @@ void ProgRefine3D::postProcessVolumes(int argc, char **argv)
                     segm_prm.fn_vol = fn_vol;
                     segm_prm.fn_mask = fn_vol + ".solv";
                     segm_prm.do_prob = true;
-                    std::cerr << segm_prm;
-                    fh_hist << segm_prm;
+                    segm_prm.show();
                     segm_prm.produce_side_info();
                     segm_prm.segment(Vsolv);
                 }
