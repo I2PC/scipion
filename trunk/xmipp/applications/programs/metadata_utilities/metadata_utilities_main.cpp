@@ -257,11 +257,11 @@ protected:
         operation = getParam("--query", 0);
         String expression;
 
-        if (operation == "count")//note MDL_CTFMODEL is a dummy parameter
+        if (operation == "count")//note second label is a dummy parameter
         {
             label = MDL::str2Label(getParam("--query", 1));
             md2 = mdIn;
-            mdIn.aggregate(md2, AGGR_COUNT,label,MDL_CTFMODEL,MDL_COUNT);
+            mdIn.aggregate(md2, AGGR_COUNT,label,label,MDL_COUNT);
         }
         else if (operation == "sum")
         {
