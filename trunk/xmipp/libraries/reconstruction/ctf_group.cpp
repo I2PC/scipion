@@ -184,11 +184,35 @@ void ProgCtfGroup::produceSideInfo()
         Mwien.initZeros();
     }
 
+    diff.resize(paddim,paddim);
+    dd.resize(paddim,paddim);
+    {
+        double d;
+        int ii,jj;
+        FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY2D(diff)
+        {
+            if (i <= paddim/2 )
+                ii=i;
+            else
+                ii=(paddim-i);
+
+            if (j <= paddim/2)
+                jj=j;
+            else
+                jj=(paddim-j);
+
+            d      = sqrt(ii*ii+jj*jj);
+            int idd = (int) d ;
+            dAij(diff, i,j)=d-idd;
+            dAij(dd, i,j)=idd;
+        }
+    }
+
+
     MetaData ctfMD;
     //number of different CTFs
     ctfMD.aggregate(SF, AGGR_COUNT,MDL_CTFMODEL,MDL_CTFMODEL,MDL_COUNT);
     ctfMD.fillExpand(MDL_CTFMODEL);
-    ctfMD.write("ctfMD.xmd");///////////////////////////////////////////////////////////////////////////7
     int nCTFs = ctfMD.size();
     //how much memory do I need to store them
     double _sizeGb = (double) ypaddim * xpaddim * sizeof(double) * nCTFs /1073741824.;
@@ -302,34 +326,17 @@ void ProgCtfGroup::produceSideInfo()
         {
             ctfMD.getValue(MDL_COUNT,count,__iter.objId);
             ctfMD.getValue(MDL_ORDER,counter,__iter.objId);
-            sumimg += (double)count;
+            double dCount = (double)count;
+            sumimg += dCount;
             FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY2D(Mwien)
             {
-                if (i <= paddim/2 )
-                    ii=i;
-                else
-                    ii=(paddim-i);
-
-                if (j <= paddim/2)
-                    jj=j;
-                else
-                    jj=(paddim-j);
-
-                d      = sqrt(ii*ii+jj*jj);
-                int dd = (int) d ;
-                double diff;
-                diff=(d-dd);
-                result =     diff  * NZYX_ELEM(mics_ctf2d, counter, 0, 0, dd+1  ) +
-                             (1.-diff) * NZYX_ELEM(mics_ctf2d, counter, 0, 0, dd);
-                dAij(Mwien,i,j) += (double)count * result *result;
-
-
-                //                int dd = (int)(sqrt(ii*ii+jj*jj)+0.5);//plus 0.5 rounds the value
-                //                d = NZYX_ELEM(mics_ctf2d, counter, 0, 0, dd);
-                //                dAij(Mwien,i,j) += count * d * d ;
+                //change DIRECT_N__X_ELEM by DIRECT_N_YX_ELEM if you want to process a 2D ctf
+                result =         dAij(diff, i,j)  * DIRECT_N__X_ELEM(mics_ctf2d, counter, 0, 0, dAij(dd,i,j)+1  ) +
+                                 (1.-dAij(diff, i,j)) * DIRECT_N__X_ELEM(mics_ctf2d, counter, 0, 0, dAij(dd,i,j));
+                dAij(Mwien,i,j) += dCount * result *result;
 
             }
-//#define DEBUG
+            //#define DEBUG
 #ifdef DEBUG
 
             {
@@ -485,14 +492,21 @@ void ProgCtfGroup::autoRun()
 void ProgCtfGroup::manualRun()
 {
     MetaData DF;
-    int groupNumber = 0;
+    int groupNumber = 1;
     DF.read(fn_split);
     int counter=0;
     DF.setValueCol(MDL_DEFGROUP,-2);
     sortedCtfMD.setValueCol(MDL_DEFGROUP,-1);
+#define DEBUG
+#ifdef DEBUG
+
+    sortedCtfMD.write("sortedCtfMD1.xmd");
+#endif
+#undef DEBUG
+
     MetaData unionMD;
     DF.unionAll(sortedCtfMD);
-    unionMD.sort(DF,MDL_CTF_DEFOCUSA);
+    unionMD.sort(DF,MDL_CTF_DEFOCUSA,false);
     int n = unionMD.size();
     init_progress_bar(n);
     int c = XMIPP_MAX(1, n / 60);
@@ -509,7 +523,19 @@ void ProgCtfGroup::manualRun()
             progress_bar(counter);
     }
     progress_bar(n);
+#define DEBUG
+#ifdef DEBUG
+
+    unionMD.write("unionMD.xmd");
+#endif
+#undef DEBUG
     sortedCtfMD.importObjects(unionMD, MDValueNE(MDL_DEFGROUP, -2));
+#define DEBUG
+#ifdef DEBUG
+
+    sortedCtfMD.write("sortedCtfMD3.xmd");
+#endif
+#undef DEBUG
 }
 
 void ProgCtfGroup::writeOutputToDisc()
@@ -552,8 +578,8 @@ void ProgCtfGroup::writeOutputToDisc()
     while(it.moveNext())
     {
         id2=it.objId;
-        ctfInfo.getValue(MDL_MAX,maxDef,id1);
-        ctfInfo.getValue(MDL_MIN,minDef,id2);
+        ctfInfo.getValue(MDL_MIN,minDef,id1);
+        ctfInfo.getValue(MDL_MAX,maxDef,id2);
         id1=id2;
 
         id=auxMetaData.addObject();
@@ -600,6 +626,8 @@ void ProgCtfGroup::writeOutputToDisc()
         sortedCtfMD.getValue(MDL_DEFGROUP,defGroup,__iter.objId);
         sortedCtfMD.getValue(MDL_ORDER,order,__iter.objId);
         sortedCtfMD.getValue(MDL_COUNT,count,__iter.objId);
+        double dCount = (double)count;
+
         if (defGroup != olddefGroup)
         {
             if (sumimg==0)
@@ -622,27 +650,18 @@ void ProgCtfGroup::writeOutputToDisc()
             olddefGroup=defGroup;
             sumimg=0.;
         }
-        sumimg += (double)count;
+        sumimg += dCount;
         FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY2D(ctf2D)
         {
-            double d,result;
-            if (i <= paddim/2 )
-                ii=i;
-            else
-                ii=(paddim-i);
-
-            if (j <= paddim/2)
-                jj=j;
-            else
-                jj=(paddim-j);
-            d      = (sqrt(ii*ii+jj*jj));//0.5 creates round
+            double result;
             //interpolate ctf point from table
-            int dd = (int) d ;
-            double diff;
-            diff=(d-dd);
-            result =     diff  * NZYX_ELEM(mics_ctf2d, order, 0, 0, dd+1  ) +
-                         (1.-diff) * NZYX_ELEM(mics_ctf2d, order, 0, 0, dd);
-            dAij(ctf2D,i,j) += (double)count * result ;
+            //change DIRECT_N__X_ELEM by DIRECT_N_YX_ELEM if you want to process a 2D ctf
+
+            result =     dAij(diff, i,j)      * DIRECT_N__X_ELEM(mics_ctf2d, order, 0, 0, dAij(dd,i,j)+1  ) +
+                         (1.-dAij(diff, i,j)) * DIRECT_N__X_ELEM(mics_ctf2d, order, 0, 0, dAij(dd,i,j));
+            dAij(ctf2D,i,j) += dCount * result ;
+
+
         }
     }
     //Save last CTF
@@ -667,133 +686,6 @@ void ProgCtfGroup::writeOutputToDisc()
         }
     }
 
-    //save ctf per group
-    //save winer per group
-    // save ctf and wienner profiles
-#ifdef NEVER
-
-    FileName fnt;
-    MetaData SFo, DFo;
-    Image<double> img;
-    MultidimArray<double> Mavg;
-    double sumw, avgdef, mindef, maxdef, split, oldmin=99.e99;
-    int imic;
-    std::ofstream fh, fh2, fh3, fh4;
-
-    fh.open((fn_root+ "_groups.imgno").c_str(), std::ios::out);
-    fh  << "# Number of images in each group \n";
-    fh3.open((fn_root+ "_groups.defocus").c_str(), std::ios::out);
-    fh3 << "# Defocus values for each group (avg, max & min) \n";
-
-    for (int igroup=0; igroup < pointer_group2mic.size(); igroup++) //images names for all micrographies
-    {
-        SFo.clear();
-        SFo.setComment("Defocus values to split into "+
-                       integerToString(pointer_group2mic.size())+" ctf groups");
-        Mavg.initZeros(paddim,paddim);
-        sumw = 0.;
-        avgdef = 0.;
-        mindef = 99.e99;
-        maxdef = -99.e99;
-        for (int igmic=0; igmic < pointer_group2mic[igroup].size(); igmic++)//number images per micrograph
-        {
-            imic = pointer_group2mic[igroup][igmic];
-            sumw += (double) mics_count[imic];
-            // calculate (weighted) average Mctf
-            //I need a loop here since mics_ctf2d this very likely will be 1D not 2Dtop
-
-            Mavg += mics_count[imic] * mics_ctf2d[imic];
-            // Calculate avg, min and max defocus values in this group
-            avgdef += mics_count[imic] * mics_defocus[imic];
-            mindef = XMIPP_MIN(mics_defocus[imic],mindef);
-            maxdef = XMIPP_MAX(mics_defocus[imic],maxdef);
-            // Fill SelFile
-            size_t id;
-            for (int iimg=0; iimg < mics_fnimgs[imic].size(); iimg++)
-            {
-                id = SFo.addObject();
-                SFo.setValue(MDL_IMAGE,mics_fnimgs[imic][iimg], id);
-            }
-        }
-        Mavg /= sumw;
-        avgdef /= sumw;
-        fnt.compose(fn_root+"_group",igroup+1,"");
-        std::cerr<<" Group "<<fnt <<" contains "<< pointer_group2mic[igroup].size()<<" ctfs and "<<sumw<<" images and has average defocus "<<avgdef<<std::endl;
-
-        // 1. write selfile with images per defocus group -> block now DONE
-        SFo.write(fnt+".sel");
-        // 2. write average Mctf //skip these since we have profiles DONE
-        img() = Mavg;
-        img.setWeight(sumw);
-        img.write(fnt+".ctf");
-        // 3. Output to file with numinsertber of images per group
-        //-> _groups.imgno, save the metadafile with this info DONE
-        fh << integerToString(igroup+1);
-        fh.width(10);
-        fh << floatToString(sumw)<<std::endl;
-        // 4. Output to file with avgdef, mindef and maxdef per group save with previous file DONE
-        fh3 << integerToString(igroup+1);
-        fh3.width(10);
-        fh3 << floatToString(avgdef);
-        fh3.width(10);
-        fh3 << floatToString(maxdef);
-        fh3.width(10);
-        fh3 << floatToString(mindef)<<std::endl;
-        // 5. Output to docfile for manual grouping, OK save al metadata DONE
-        if (oldmin < 9.e99)
-        {
-            split = (oldmin + maxdef) / 2.;
-            DFo.addObject();
-            DFo.setValue(MDL_CTF_DEFOCUSU,split);
-        }
-        oldmin = mindef;
-        // 6. Write file with 1D profiles single metadata file No body uses them so SKIPIT
-        fh2.open((fnt+".ctf_profiles").c_str(), std::ios::out);
-        for (int i=0; i < paddim/2; i++)
-        {
-            fh2 << floatToString((double)i / (pixel_size*paddim));
-            fh2.width(10);
-            fh2 << floatToString(dAij(Mavg,i,0));
-            fh2.width(10);
-            for (int igmic=0; igmic < pointer_group2mic[igroup].size(); igmic++)
-            {
-                imic = pointer_group2mic[igroup][igmic];
-                fh2 << floatToString(dAij(mics_ctf2d[imic],i,0));
-                fh2.width(10);
-            }
-            fh2 << std::endl;
-        }
-        fh2.close();
-        // 7. Write Wiener filter stack skip profile, noboduy uses it
-        if (do_wiener)
-        {
-            FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY2D(Mavg)
-            {
-                dAij(Mavg,i,j) /= dAij(Mwien,i,j);
-            }
-            img() = Mavg;
-            img.setWeight(sumw);
-            img.write(fnt+".wien");
-            fh4.open((fnt+".wien_profile").c_str(), std::ios::out);
-            for (int i=0; i < paddim/2; i++)
-            {
-                fh4 << floatToString((double)i / (pixel_size*paddim));
-                fh4.width(10);
-                fh4 << floatToString(dAij(Mavg,i,0));
-                fh4.width(10);
-                fh4 << std::endl;
-            }
-            fh4.close();
-        }
-    }
-
-    // 3. Write file with number of images per group
-    fh.close();
-    // 4. Write file with avgdef, mindef and maxdef per group
-    fh3.close();
-    // 5. Write docfile with defocus values to split manually
-    DFo.write(fn_root+"_groups_split.doc");
-#endif
 }
 
 void ProgCtfGroup::run()
