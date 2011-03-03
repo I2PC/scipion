@@ -444,6 +444,7 @@ void opening3D(const MultidimArray<double> &in, MultidimArray<double> &out, int 
 {
     MultidimArray<double> tmp;
     int i;
+    tmp=in;
     for (i = 0;i < size;i++)
     { // erode
         erode3D_step(tmp, out, neig, count);

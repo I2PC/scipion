@@ -148,6 +148,7 @@ double segment_threshold(const Image<double> *V_in, Image<double> *V_out,
     if (!do_prob)
     {
         // Apply morphological opening to input volume
+        aux().initZeros((*V_out)());
         opening3D((*V_out)(), aux(), 18, 0, 1);
         closing3D(aux(), (*V_out)(), 18, 0, 1);
 #ifdef DEBUG
