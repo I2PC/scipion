@@ -318,13 +318,18 @@ void contrast_enhancement(Image<double> *I)
 }
 
 /* Region growing for images ----------------------------------------------- */
+typedef struct {
+	int ii;
+	int jj;
+} Coordinate2D;
+
 void region_growing2D(const MultidimArray<double> &I_in, MultidimArray<double> &I_out,
                       int i, int j,
                       float stop_colour, float filling_colour, bool less, int neighbourhood)
 {
     I_in.checkDimension(2);
 
-    std::list<int> iNeighbours;   /* A list for neighbour pixels */
+    std::list<Coordinate2D> iNeighbours;   /* A list for neighbour pixels */
     int iCurrenti, iCurrentj;     /* Coordinates of the current pixel considered */
 
     /* First task is copying the input image into the output one */
@@ -332,31 +337,32 @@ void region_growing2D(const MultidimArray<double> &I_in, MultidimArray<double> &
 
     /**** Then the region growing is done ****/
     /* Insert at the beginning of the list the seed coordinates */
-    iNeighbours.push_front(j);
-    iNeighbours.push_front(i);
+    Coordinate2D coord;
+    coord.ii=i;
+    coord.jj=j;
+    iNeighbours.push_front(coord);
 
     /* Fill the seed coordinates */
     A2D_ELEM(I_out, i, j) = filling_colour;
 
     while (!iNeighbours.empty())
     {
-        Matrix1D<double> r(2);
-
         /* Take the current pixel to explore */
-        iCurrenti = iNeighbours.front();
+        coord = iNeighbours.front();
         iNeighbours.pop_front();
-        iCurrentj = iNeighbours.front();
-        iNeighbours.pop_front();
+        iCurrenti=coord.ii;
+        iCurrentj=coord.jj;
 
 #define CHECK_POINT(i,j) \
-    XX(r)=j; YY(r)=i; \
-    if (!I_out.outside(r))  { \
-        if (A2D_ELEM(I_out,i,j)!=filling_colour) \
-            if ((less && A2D_ELEM (I_out,i,j) < stop_colour) || \
-                (!less && A2D_ELEM (I_out,i,j) > stop_colour)) { \
-                A2D_ELEM (I_out,i,j)=filling_colour; \
-                iNeighbours.push_front(j); \
-                iNeighbours.push_front(i); \
+    if (INSIDEXY(I_out,j,i))  { \
+    	double pixel=A2D_ELEM(I_out,i,j);\
+        if (pixel!=filling_colour) \
+            if ((less && pixel < stop_colour) || \
+                (!less && pixel > stop_colour)) { \
+                coord.ii=i; \
+                coord.jj=j; \
+                A2D_ELEM (I_out,coord.ii,coord.jj)=filling_colour; \
+                iNeighbours.push_front(coord); \
             } \
     }
 
@@ -376,13 +382,19 @@ void region_growing2D(const MultidimArray<double> &I_in, MultidimArray<double> &
 }
 
 /* Region growing for volumes ----------------------------------------------- */
+typedef struct {
+	int ii;
+	int jj;
+	int kk;
+} Coordinate3D;
+
 void region_growing3D(const MultidimArray<double> &V_in, MultidimArray<double> &V_out,
                       int k, int i, int j,
                       float stop_colour, float filling_colour, bool less)
 {
     V_in.checkDimension(3);
 
-    std::list<int> iNeighbours;       /* A list for neighbour voxels */
+    std::list<Coordinate3D> iNeighbours;       /* A list for neighbour voxels */
     int iCurrentk, iCurrenti, iCurrentj;     /* Coordinates of the current voxel considered */
 
     /* First task is copying the input volume into the output one */
@@ -390,9 +402,11 @@ void region_growing3D(const MultidimArray<double> &V_in, MultidimArray<double> &
 
     /**** Then the region growing is done in output volume ****/
     /* Insert at the beginning of the list the seed coordinates */
-    iNeighbours.push_front(j);
-    iNeighbours.push_front(i);
-    iNeighbours.push_front(k);
+    Coordinate3D coord;
+    coord.ii=i;
+    coord.jj=j;
+    coord.kk=k;
+    iNeighbours.push_front(coord);
 
     /* Fill the seed coordinates */
     A3D_ELEM(V_out, k, i, j) = filling_colour;
@@ -400,25 +414,26 @@ void region_growing3D(const MultidimArray<double> &V_in, MultidimArray<double> &
     while (!iNeighbours.empty())
     {
         /* Take the current pixel to explore */
-        iCurrentk = iNeighbours.front();
+        coord = iNeighbours.front();
         iNeighbours.pop_front();
-        iCurrenti = iNeighbours.front();
-        iNeighbours.pop_front();
-        iCurrentj = iNeighbours.front();
-        iNeighbours.pop_front();
+        iCurrenti=coord.ii;
+        iCurrentj=coord.jj;
+        iCurrentk=coord.kk;
 
         /* a macro for doing exploration of a voxel. If the voxel has a value
         lower than stop_colour, its filled with filling colour and added to the
         list for exploring its neighbours */
 #define CHECK_POINT_3D(k,i,j) \
     if (INSIDEXYZ(V_out,j,i,k))  { \
-        if (A3D_ELEM(V_out,k,i,j)!=filling_colour) \
-            if ((less && A3D_ELEM (V_out,k,i,j) < stop_colour)|| \
-                (!less &&A3D_ELEM (V_out,k,i,j) > stop_colour)) { \
-                A3D_ELEM (V_out,k,i,j)=filling_colour; \
-                iNeighbours.push_front(j); \
-                iNeighbours.push_front(i); \
-                iNeighbours.push_front(k); \
+    	double voxel=A3D_ELEM(V_out,k,i,j); \
+        if (voxel!=filling_colour) \
+            if ((less && voxel < stop_colour)|| \
+                (!less &&voxel > stop_colour)) { \
+                coord.ii=i; \
+                coord.jj=j; \
+                coord.kk=k; \
+                A3D_ELEM (V_out,coord.kk,coord.ii,coord.jj)=filling_colour; \
+                iNeighbours.push_front(coord); \
             } \
     }
 
