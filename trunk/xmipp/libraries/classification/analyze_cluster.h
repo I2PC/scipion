@@ -50,9 +50,6 @@ public:
     /**  Output metadata */
     FileName fnOut;
 
-    /**  Output aligned stack */
-    FileName fnOutAligned;
-
     /**  Output basis stack */
     FileName fnOutBasis;
 

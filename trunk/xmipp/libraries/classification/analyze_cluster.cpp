@@ -34,8 +34,6 @@ void ProgAnalyzeCluster::readParams()
     fnSel = getParam("-i");
     fnOut = getParam("-o");
     fnRef = getParam("--ref");
-    if (checkParam("--produceAligned"))
-        fnOutAligned = getParam("--produceAligned");
     if (checkParam("--basis"))
         fnOutBasis = getParam("--basis");
     quiet = checkParam("--quiet");
@@ -53,7 +51,6 @@ void ProgAnalyzeCluster::show()
         << "Input metadata file:    " << fnSel         << std::endl
         << "Reference:              " << fnRef         << std::endl
         << "Output metadata:        " << fnOut         << std::endl
-        << "Output aligned stack:   " << fnOutAligned  << std::endl
         << "Output basis stack:     " << fnOutBasis    << std::endl
         << "PCA dimension:          " << NPCA          << std::endl
         << "Iterations:             " << Niter         << std::endl
@@ -69,7 +66,6 @@ void ProgAnalyzeCluster::defineParams()
     addParamsLine("   -i <metadatafile>             : metadata file  with images assigned to the cluster");
     addParamsLine("   -o <metadatafile>             : output metadata");
     addParamsLine("   --ref <image>                 : class representative");
-    addParamsLine("  [--produceAligned <stackName>] : write the aligned images");
     addParamsLine("  [--basis <stackName>]          : write the average and basis of the PCA in a stack");
     addParamsLine("  [--NPCA <dim=2>]               : PCA dimension");
     addParamsLine("  [--iter <N=10>]                : Number of iterations");
@@ -83,7 +79,6 @@ void ProgAnalyzeCluster::defineParams()
 //#define DEBUG
 void ProgAnalyzeCluster::produceSideInfo()
 {
-    bool align = fnOutAligned!="";
     basis = fnOutBasis!="";
 
     // Read input selfile and reference
@@ -111,22 +106,18 @@ void ProgAnalyzeCluster::produceSideInfo()
     // once aligned
     Image<double> Iaux;
     FileName auxFn, fnOutIdx;
-    Matrix2D<double> M;
+    Matrix2D<double> M, Mmirror;
     int idxStk=1;
     pcaAnalyzer.reserve(SFin.size());
-    if (align)
-    {
-        Ialigned.reserve(SFin.size());
-        if (exists(fnOutAligned))
-        	unlink(fnOutAligned.c_str());
-    }
-    size_t id;
+    if (basis)
+    	Ialigned.reserve(SFin.size());
     if (verbose>0)
     {
-    	std::cerr << "Processing cluster ...";
+    	std::cerr << "Processing cluster ...\n";
     	init_progress_bar(SFin.size());
     }
     int i=0;
+    MultidimArray<float> v;
     FOR_ALL_OBJECTS_IN_METADATA(SFin)
     {
         SFin.getValue( MDL_IMAGE, auxFn, __iter.objId);
@@ -147,29 +138,31 @@ void ProgAnalyzeCluster::produceSideInfo()
 #endif
 
         alignImages(Iref(),I,M);
-        alignImages(Iref(),Imirror,M);
+        alignImages(Iref(),Imirror,Mmirror);
         double corr=correlation_index(Iref(),I,&mask);
         double corrMirror=correlation_index(Iref(),Imirror,&mask);
 
         if (corr>corrMirror)
             Iaux()=I;
         else
-            Iaux()=Imirror;
-
-        // Produce aligned
-        id = SFout.addObject();
-        if (align)
         {
-            fnOutIdx.compose(idxStk,fnOutAligned);
-            Iaux.write(fnOutAligned,idxStk,true,WRITE_APPEND);
-            SFout.setValue(MDL_IMAGE,fnOutIdx, id);
-            SFout.setValue(MDL_IMAGE_ORIGINAL, auxFn, id);
-            idxStk++;
+        	corr=corrMirror;
+            Iaux()=Imirror;
+            M=Mmirror;
         }
-        else
-            SFout.setValue(MDL_IMAGE, auxFn, id);
+        bool flip;
+        double scale, shiftX, shiftY, psi;
+        transformationMatrix2Parameters(M, flip, scale, shiftX, shiftY, psi);
 
-        MultidimArray<float> v;
+        // Produce alignment parameters
+        size_t id = SFout.addObject();
+        SFout.setValue(MDL_IMAGE, auxFn, id);
+        SFout.setValue(MDL_SHIFTX,shiftX,id);
+        SFout.setValue(MDL_SHIFTY,shiftY,id);
+        SFout.setValue(MDL_ANGLEPSI,psi,id);
+        SFout.setValue(MDL_FLIP,flip,id);
+        SFout.setValue(MDL_MAXCC,corr,id);
+
         v.initZeros(Npixels);
         int idx=0;
         FOR_ALL_ELEMENTS_IN_ARRAY2D(mask)
