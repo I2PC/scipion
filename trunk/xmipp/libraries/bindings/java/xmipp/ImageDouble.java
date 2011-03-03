@@ -86,7 +86,7 @@ public class ImageDouble {
     }
 
     private void read(String filename, boolean readData) throws Exception {
-        read(filename, readData, 0);
+        read(filename, readData, FIRST_IMAGE);
     }
 
     private void read(String filename, boolean readData, long nimage) throws Exception {
@@ -95,11 +95,11 @@ public class ImageDouble {
     }
 
     public void readPreview(String filename, int w, int h) throws Exception {
-        readPreview(filename, w, h, 0, 0);
+        readPreview(filename, w, h, FIRST_SLICE, FIRST_IMAGE);
     }
 
     public void readPreview(String filename, int w, int h, int slice) throws Exception {
-        readPreview(filename, w, h, slice, 0);
+        readPreview(filename, w, h, slice, FIRST_IMAGE);
     }
 
     public void readPreview(String filename, int w, int h, int slice, long nimage) throws Exception {
