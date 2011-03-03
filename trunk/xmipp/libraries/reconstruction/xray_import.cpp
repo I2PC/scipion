@@ -271,7 +271,7 @@ void runThread(ThreadArgument &thArg)
     MetaData localMD;
     Image<double> Iaux;
     FileName fnImg;
-    long long int first = -1, last = -1;
+    size_t first = -1, last = -1;
     MultidimArray<char> mask;
 
     while (ptrProg->td->getTasks(first, last))

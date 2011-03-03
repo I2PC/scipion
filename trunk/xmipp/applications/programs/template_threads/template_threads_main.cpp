@@ -62,12 +62,12 @@ ParallelTaskDistributor * td;
 
 int numberOfThreads = 1;
 
-longint R = 100000;
-longint blockSize = 1000;
-longint totalCounter = 0;
+size_t R = 100000;
+size_t blockSize = 1000;
+size_t totalCounter = 0;
 
 /** Here the number of jobs is the radius R that will be sampled */
-longint &numberOfJobs = R;
+size_t &numberOfJobs = R;
 
 void nothingFunctionNew(ThreadArgument &thArg)
 {
@@ -80,15 +80,15 @@ void nothingFunctionNew(ThreadArgument &thArg)
  */
 void computePoints(int thread_id)
 {
-    longint first = -1, last = -1;
-    longint insideCounter = 0;
+    size_t first = -1, last = -1;
+    size_t insideCounter = 0;
    //ThreadManager tm(2);
 
     while (td->getTasks(first, last))
     {
         std::cerr << "th" << thread_id << ": working from " << first << " to " << last <<std::endl;
-        for (longint x = 0; x <= R; x++)//just for more work to do
-            for (longint y = first; y <= last; y++)
+        for (size_t x = 0; x <= R; x++)//just for more work to do
+            for (size_t y = first; y <= last; y++)
             {
         // MetaData md1;
     //MetaData md2;

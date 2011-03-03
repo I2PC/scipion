@@ -166,7 +166,7 @@ void ThreadManager::wait()
 
 // =================== TASK_DISTRIBUTOR ============================
 
-ParallelTaskDistributor::ParallelTaskDistributor(longint nTasks, longint bSize)
+ParallelTaskDistributor::ParallelTaskDistributor(size_t nTasks, size_t bSize)
 {
     numberOfTasks = nTasks;
     blockSize = bSize;
@@ -180,7 +180,7 @@ void ParallelTaskDistributor::clear()
     unlock();
 }
 
-void ParallelTaskDistributor::setBlockSize(longint bSize)
+void ParallelTaskDistributor::setBlockSize(size_t bSize)
 {
     lock();
     blockSize = bSize;
@@ -192,7 +192,7 @@ int ParallelTaskDistributor::getBlockSize() const
     return blockSize;
 }
 
-bool ParallelTaskDistributor::getTasks(longint &first, longint &last)
+bool ParallelTaskDistributor::getTasks(size_t &first, size_t &last)
 {
     lock();
     bool result = distribute(first, last);
@@ -200,7 +200,7 @@ bool ParallelTaskDistributor::getTasks(longint &first, longint &last)
     return result;
 }
 
-bool ParallelTaskDistributor::setAssignedTasks(longint tasks)
+bool ParallelTaskDistributor::setAssignedTasks(size_t tasks)
 {
   if (tasks < 0 || tasks >= numberOfTasks)
     return false;
@@ -219,7 +219,7 @@ void ThreadTaskDistributor::unlock()
     mutex.unlock();
 }
 
-bool ThreadTaskDistributor::distribute(longint &first, longint &last)
+bool ThreadTaskDistributor::distribute(size_t &first, size_t &last)
 {
     bool result = true;
     first = last = -1;

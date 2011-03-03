@@ -92,7 +92,7 @@ void ProgXrayProject::run()
     dataThread->vol = &phantom.rotVol;
     dataThread->imOut = &proj;
 
-    longint blockSize, numberOfJobs = ZSIZE(MULTIDIM_ARRAY(phantom.iniVol));
+    size_t blockSize, numberOfJobs = ZSIZE(MULTIDIM_ARRAY(phantom.iniVol));
     numberOfThreads = psf.nThr;
 
     blockSize = (numberOfThreads == 1) ? numberOfJobs : numberOfJobs/numberOfThreads/2;
@@ -308,7 +308,7 @@ void threadXrayProject(ThreadArgument &thArg)
     MultidimArray<double> &vol =  *(dataThread->vol);
     Image<double> &imOutGlobal = *(dataThread->imOut);
 
-    long long int first = -1, last = -1, priorLast = -1;
+    size_t first = -1, last = -1, priorLast = -1;
 
     if (thread_id == 0)
     {

@@ -33,7 +33,7 @@ void __threadMpiMasterDistributor(ThreadArgument &arg)
 {
     MpiTaskDistributor * distributor = (MpiTaskDistributor*) arg.workClass;
     int size = distributor->node->size;
-    longint workBuffer[3];
+    size_t workBuffer[3];
     MPI_Status status;
     int finalizedWorkers = 0;
 
@@ -52,7 +52,7 @@ void __threadMpiMasterDistributor(ThreadArgument &arg)
     }
 }
 
-MpiTaskDistributor::MpiTaskDistributor(longint nTasks, longint bSize,
+MpiTaskDistributor::MpiTaskDistributor(size_t nTasks, size_t bSize,
         MpiNode *node) :
     ThreadTaskDistributor(nTasks, bSize)
 {
@@ -74,7 +74,7 @@ MpiTaskDistributor::~MpiTaskDistributor()
     }
 }
 
-bool MpiTaskDistributor::distribute(longint &first, longint &last)
+bool MpiTaskDistributor::distribute(size_t &first, size_t &last)
 {
     if (node->isMaster())
         return ThreadTaskDistributor::distribute(first, last);
@@ -84,7 +84,7 @@ bool MpiTaskDistributor::distribute(longint &first, longint &last)
     //workBuffer[0] = 0 if no more jobs, 1 otherwise
     //workBuffer[1] = first
     //workBuffer[2] = last
-    longint workBuffer[3];
+    size_t workBuffer[3];
     MPI_Status status;
     //any message from the master, is tag is TAG_STOP then stop
     MPI_Send(0, 0, MPI_INT, 0, 0, MPI_COMM_WORLD);
@@ -97,7 +97,7 @@ bool MpiTaskDistributor::distribute(longint &first, longint &last)
     return (workBuffer[0] == 1);
 }
 
-FileTaskDistributor::FileTaskDistributor(longint nTasks, longint bSize,
+FileTaskDistributor::FileTaskDistributor(size_t nTasks, size_t bSize,
         MpiNode * node) :
     ThreadTaskDistributor(nTasks, bSize)
 {

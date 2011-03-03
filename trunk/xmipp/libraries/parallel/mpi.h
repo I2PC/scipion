@@ -71,10 +71,10 @@ protected:
     MpiNode * node;
     ThreadManager * manager;
 
-    virtual bool distribute(longint &first, longint &last);
+    virtual bool distribute(size_t &first, size_t &last);
 
 public:
-    MpiTaskDistributor(longint nTasks, longint bSize, MpiNode *node);
+    MpiTaskDistributor(size_t nTasks, size_t bSize, MpiNode *node);
     ~MpiTaskDistributor();
 
     friend void __threadMpiMasterDistributor(ThreadArgument &arg);
@@ -104,7 +104,7 @@ protected:
     virtual void unlock();
 
 public:
-    FileTaskDistributor(longint nTasks, longint bSize, MpiNode * node  = NULL);
+    FileTaskDistributor(size_t nTasks, size_t bSize, MpiNode * node  = NULL);
     virtual ~FileTaskDistributor();
 }
 ;//end of class FileTaskDistributor

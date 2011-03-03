@@ -79,7 +79,7 @@ public:
     //Now use the distributor to grasp images
     size_t getImageToProcess()
     {
-      longint first, last;
+      size_t first, last;
       bool moreTasks = distributor->getTasks(first, last);
       if (moreTasks)
       {

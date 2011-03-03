@@ -222,9 +222,6 @@ public:
 }
 ;//end of class ThreadManager
 
-/** Just a type definition for shortcut 'long long int' */
-typedef long long int longint;
-
 /** This class distributes dynamically N tasks between parallel workers.
  * @ingroup ParallelLibrary
  * This class is a generalization of a common task in a parallel
@@ -240,11 +237,11 @@ class ParallelTaskDistributor
 {
 protected:
     //The total number of tasks to be distributed
-    longint numberOfTasks;
+    size_t numberOfTasks;
     //How many tasks give in each request
-    longint blockSize;
+    size_t blockSize;
     //The number of tasks that have been assigned
-    longint assignedTasks;
+    size_t assignedTasks;
 
 public:
     /** Constructor.
@@ -252,7 +249,7 @@ public:
      */
     /** Constructor for Master node.
      */
-    ParallelTaskDistributor(longint nTasks, longint bSize);
+    ParallelTaskDistributor(size_t nTasks, size_t bSize);
 
     /** Destructor.
      */
@@ -268,7 +265,7 @@ public:
     void clear();
 
     /** Set the number of tasks assigned in each request */
-    void setBlockSize(longint bSize);
+    void setBlockSize(size_t bSize);
 
     /** Return the number of tasks assigned in each request */
     int getBlockSize() const;
@@ -286,9 +283,9 @@ public:
      *  //to N images executed in parellel
      *  void processSeveralImages()
      *  {
-     *      longint firstImage, lastImage;
+     *      size_t firstImage, lastImage;
      *      while (td->getTasks(firstImage, lastImage))
-     *          for (longint image = firstImage; image <= lastImage; ++image)
+     *          for (size_t image = firstImage; image <= lastImage; ++image)
      *          {
      *              //...
      *              processOneImage(image);
@@ -297,13 +294,13 @@ public:
      *  }
      *  @endcode
      */
-    bool getTasks(longint &first, longint &last); // False = no more jobs, true = more jobs
+    bool getTasks(size_t &first, size_t &last); // False = no more jobs, true = more jobs
     /* This function set the number of completed tasks.
      * Usually this not need to be called. Its more useful
      * for restarting work, when usually the master detect
      * the number of tasks already done.
      */
-    bool setAssignedTasks(longint tasks);
+    bool setAssignedTasks(size_t tasks);
 
 
 protected:
@@ -312,7 +309,7 @@ protected:
     //the specific way of distribute tasks.
     virtual void lock() = 0;
     virtual void unlock() = 0;
-    virtual bool distribute(longint &first, longint &last) = 0;
+    virtual bool distribute(size_t &first, size_t &last) = 0;
 
 }
 ;//class ParallelTaskDistributor
@@ -324,14 +321,14 @@ protected:
 class ThreadTaskDistributor: public ParallelTaskDistributor
 {
 public:
-    ThreadTaskDistributor(longint nTasks, longint bSize):ParallelTaskDistributor(nTasks, bSize)
+    ThreadTaskDistributor(size_t nTasks, size_t bSize):ParallelTaskDistributor(nTasks, bSize)
     {}
     virtual ~ThreadTaskDistributor(){};
 protected:
     Mutex mutex; ///< Mutex to syncronize access to critical region
     virtual void lock();
     virtual void unlock();
-    virtual bool distribute(longint &first, longint &last);
+    virtual bool distribute(size_t &first, size_t &last);
 };//end of class ThreadTaskDistributor
 
 /** @name Old parallel stuff. */
