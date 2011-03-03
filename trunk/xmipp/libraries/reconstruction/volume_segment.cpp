@@ -36,6 +36,8 @@ void ProgSegment::readParams()
     threshold=-1;
     wang_radius=-1;
     en_threshold=false;
+    do_prob=false;
+    otsu=false;
 
     fn_vol = getParam("-i");
     fn_mask = getParam("-o");
@@ -278,15 +280,17 @@ void probabilistic_solvent(Image<double> *V_in, Image<double> *V_out)
 
     // Terwilliger-like calculation of P(x|solv) & P(x|prot)
     // Bayes: P(prot|x)= P(x|prot)/{P(x|prot)+P(x|solv)}
+    double isigs=-1/(2.0*sigs);
+    double isigp=-1/(2.0*sigp);
     FOR_ALL_ELEMENTS_IN_ARRAY3D(mVin)
     {
-        aux = A3D_ELEM(mVin, k, i, j) - avgs;
-        p_solv = solv_frac * exp(-aux * aux / (2 * sigs));
-        aux = A3D_ELEM(mVin, k, i, j) - avgp;
-        p_prot = prot_frac * exp(-aux * aux / (2 * sigp));
+    	double voxelVal=A3D_ELEM(mVin, k, i, j);
+        aux = voxelVal - avgs;
+        p_solv = solv_frac * exp(aux * aux * isigs);
+        aux = voxelVal - avgp;
+        p_prot = prot_frac * exp(aux * aux * isigp);
         A3D_ELEM(mVout, k, i, j) = p_prot / (p_prot + p_solv);
     }
-
 }
 
 // Really segment ==========================================================
