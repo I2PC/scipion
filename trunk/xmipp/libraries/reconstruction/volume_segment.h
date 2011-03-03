@@ -34,7 +34,7 @@
 ///@ingroup ReconsLibrary
 //@{
 /** Segment parameters. */
-class ProgSegment: public XmippProgram
+class ProgVolumeSegment: public XmippProgram
 {
 public:
     /// Input volume

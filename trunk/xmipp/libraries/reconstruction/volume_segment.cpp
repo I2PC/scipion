@@ -29,7 +29,7 @@
 #include "volume_segment.h"
 
 // Read arguments ==========================================================
-void ProgSegment::readParams()
+void ProgVolumeSegment::readParams()
 {
     voxel_mass=dalton_mass=aa_mass=-1;
     sampling_rate=-1;
@@ -69,7 +69,7 @@ void ProgSegment::readParams()
 }
 
 // Show ====================================================================
-void ProgSegment::show() const
+void ProgVolumeSegment::show() const
 {
     std::cout
     << "Input file   : " << fn_vol        << std::endl
@@ -87,7 +87,7 @@ void ProgSegment::show() const
 }
 
 // usage ===================================================================
-void ProgSegment::defineParams()
+void ProgVolumeSegment::defineParams()
 {
     addParamsLine("   -i <volume>              : Volume to segment");
     addParamsLine("  [-o <mask=\"\">]          : Output mask");
@@ -105,7 +105,7 @@ void ProgSegment::defineParams()
 }
 
 // Produce side information ================================================
-void ProgSegment::produce_side_info()
+void ProgVolumeSegment::produce_side_info()
 {
     V.read(fn_vol);
     if (method=="dalton_mass" || method=="aa_mass")
@@ -291,7 +291,7 @@ void probabilistic_solvent(Image<double> *V_in, Image<double> *V_out)
 }
 
 // Really segment ==========================================================
-void ProgSegment::segment(Image<double> &mask)
+void ProgVolumeSegment::segment(Image<double> &mask)
 {
     double th_min, th_max, val_min, val_max;
     V().computeDoubleMinMax(val_min, val_max);
@@ -370,7 +370,7 @@ void ProgSegment::segment(Image<double> &mask)
         std::cout << "Segment: Cannot find an appropriate threshold\n";
 }
 
-void ProgSegment::run()
+void ProgVolumeSegment::run()
 {
     Image<double> mask;
     show();

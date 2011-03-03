@@ -974,7 +974,7 @@ void ProgRefine3D::concatenateSelfiles(int iter)
 void ProgRefine3D::postProcessVolumes(int argc, char **argv)
 {
 
-    ProgSegment            segm_prm;
+    ProgVolumeSegment            segm_prm;
     FileName               fn_vol, fn_tmp;
     Image<double>          vol, Vaux, Vsymmask, Vsolv;
     MultidimArray<int>     mask3D;
