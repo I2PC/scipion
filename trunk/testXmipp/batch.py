@@ -51,12 +51,15 @@ class Tester:
     def addAllTests(self):
         # Add all desired tests -------------------------------------------
     
-        self.addProgram("xmipp_convert_image")
+        self.addProgram("xmipp_image_convert")
         self.addTest("-i input/smallStack.stk -o %o/smallStack.mrcs -t stk")
     
-        self.addProgram("xmipp_header")
+        self.addProgram("xmipp_image_header")
         self.addTest("-i input/smallStack.stk --extract -o %o/header.doc")
         self.addTest("-i input/header.doc --assign -o %o/smallStack2.stk")
+        
+        self.addProgram("xmipp_image_statistics")
+        self.addTest("-i input/smallStack.stk --image_stats %o/stats")
         
         self.addProgram("xmipp_metadata_utilities")
         self.addTest ("-i input/mD1.doc --set union input/mD2.doc  -o %o/out.doc");
