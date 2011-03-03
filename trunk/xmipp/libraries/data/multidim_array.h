@@ -85,10 +85,12 @@ extern String floatToString(float F, int _width, int _prec);
 /** Check if y is inside logical bounds
  */
 #define INSIDEY(v, y) ((y) >= STARTINGY(v) && (y) <= FINISHINGY(v))
-
+/** Check if z is inside logical bounds
+ */
+#define INSIDEZ(v, z) ((y) >= STARTINGZ(v) && (y) <= FINISHINGZ(v))
 /** Check if a position x, y is inside the logical index bounds
  */
-#define INSIDE(v, x, y) (INSIDEX(v, x) && INSIDEY(v, y))
+#define INSIDEXY(v, x, y) (INSIDEX(v, x) && INSIDEY(v, y))
 
 /** Access to X dimension (size)
  */
@@ -2697,19 +2699,22 @@ public:
         imin = STARTINGY(*this);
         jmin = STARTINGX(*this);
         lmin = 0;
-        T minval = NZYX_ELEM(*this, lmin, kmin, imin, jmin);
-
+        size_t n=0;
+        T minval = DIRECT_MULTIDIM_ELEM(*this, n);
 
         FOR_ALL_NZYX_ELEMENTS_IN_MULTIDIMARRAY(*this)
-        if (NZYX_ELEM(*this, l, k, i, j) > minval)
         {
-            minval = NZYX_ELEM(*this, l, k, i, j);
-            lmin = l;
-            kmin = k;
-            imin = i;
-            jmin = j;
+        	T val=DIRECT_MULTIDIM_ELEM(*this,n);
+            if (val > minval)
+            {
+                minval = val;
+                lmin = l;
+                kmin = k;
+                imin = i;
+                jmin = j;
+            }
+            ++n;
         }
-
     }
 
     /** 3D Indices for the minimum element.
@@ -2759,16 +2764,21 @@ public:
         imax = STARTINGY(*this);
         jmax = STARTINGX(*this);
         lmax = 0;
-        T maxval = NZYX_ELEM(*this, lmax, kmax, imax, jmax);
+        size_t n=0;
+        T maxval = DIRECT_MULTIDIM_ELEM(*this, n);
 
         FOR_ALL_NZYX_ELEMENTS_IN_MULTIDIMARRAY(*this)
-        if (NZYX_ELEM(*this, l, k, i, j) > maxval)
         {
-            maxval = NZYX_ELEM(*this, l, k, i, j);
-            lmax = l;
-            kmax = k;
-            imax = i;
-            jmax = j;
+        	T val=DIRECT_MULTIDIM_ELEM(*this, n);
+            if (val > maxval)
+            {
+                maxval = val;
+                lmax = l;
+                kmax = k;
+                imax = i;
+                jmax = j;
+            }
+            ++n;
         }
     }
 
