@@ -1692,7 +1692,7 @@ void ProgMask::defineParams()
     addExampleLine("Mask a selection file:", false);
     addExampleLine("xmipp_mask  -i t7_10.sel -oext msk --mask circular -72");
 
-    addParamsLine("   -i <input_volume>           : Input Volume");
+    addParamsLine("   -i <input_file>           : Input Volume/Image");
     addParamsLine(" alias --input;");
     addParamsLine(" [--bn <blockName=\"\">]   : Block name for metadata file");
     addParamsLine(" alias --blockname;");
