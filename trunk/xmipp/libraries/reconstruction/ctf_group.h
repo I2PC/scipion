@@ -90,6 +90,10 @@ public:
     /// Matrix with denominator term of Wiener filter
     MultidimArray<double> Mwien;
 
+    ///auxiliary matrices to speed up process
+    MultidimArray<double> diff;
+    MultidimArray<int> dd;
+
     // Array with  CTF profiles for all micrographs and all groups
     //std::vector<MultidimArray<double> > mics_ctf2d, groups_ctf2d;
     MultidimArray<double> mics_ctf2d;//, groups_ctf2d;
