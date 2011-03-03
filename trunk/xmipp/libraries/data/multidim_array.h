@@ -2704,7 +2704,7 @@ public:
 
         FOR_ALL_NZYX_ELEMENTS_IN_MULTIDIMARRAY(*this)
         {
-        	T val=DIRECT_MULTIDIM_ELEM(*this,n);
+            T val=DIRECT_MULTIDIM_ELEM(*this,n);
             if (val > minval)
             {
                 minval = val;
@@ -2769,7 +2769,7 @@ public:
 
         FOR_ALL_NZYX_ELEMENTS_IN_MULTIDIMARRAY(*this)
         {
-        	T val=DIRECT_MULTIDIM_ELEM(*this, n);
+            T val=DIRECT_MULTIDIM_ELEM(*this, n);
             if (val > maxval)
             {
                 maxval = val;
@@ -2821,18 +2821,20 @@ public:
         if (NZYXSIZE(*this) <= 0)
             return;
 
-        minval = maxval = static_cast< double >(data[0]);
-
         T* ptr=NULL;
         size_t n;
+        T Tmin=DIRECT_MULTIDIM_ELEM(*this,0);
+        T Tmax=Tmin;
         FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY_ptr(*this,n,ptr)
         {
             T val=*ptr;
-            if (val < minval)
-                minval = static_cast< double >(val);
-            else if (val > maxval)
-                maxval = static_cast< double >(val);
+            if (val < Tmin)
+                Tmin = val;
+            else if (val > Tmax)
+                Tmax = val;
         }
+        minval = static_cast< double >Tmin;
+        maxval = static_cast< double >Tmax;
     }
 
     /** Minimum and maximum of the values in the array.
