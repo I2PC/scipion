@@ -66,13 +66,15 @@ void ProgAnalyzeCluster::defineParams()
     addParamsLine("   -i <metadatafile>             : metadata file  with images assigned to the cluster");
     addParamsLine("   -o <metadatafile>             : output metadata");
     addParamsLine("   --ref <image>                 : class representative");
-    addParamsLine("  [--basis <stackName>]          : write the average and basis of the PCA in a stack");
+    addParamsLine("  [--basis <stackName>]          : write the average (image 1), standard deviation (image 2)");
+    addParamsLine("                                 : and basis of the PCA in a stack");
     addParamsLine("  [--NPCA <dim=2>]               : PCA dimension");
     addParamsLine("  [--iter <N=10>]                : Number of iterations");
     addParamsLine("  [--maxDist <d=3>]              : Maximum distance");
     addParamsLine("                                 : Set to -1 if you don't want to filter images");
     addParamsLine("  [--dontMask]                   : Don't use a circular mask");
     addParamsLine("  [--quiet]                      : Don't show anything on screen");
+    addExampleLine("xmipp_classify_analyze_cluster -i images.sel --ref referenceImage.xmp -o sortedImages.xmd --basis basis.stk");
 }
 
 // Produce side info  ======================================================
