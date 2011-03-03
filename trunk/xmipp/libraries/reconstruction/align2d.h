@@ -49,10 +49,6 @@ public:
     FileName fnRoot;
     /** Integer number of iterations to perform */
     int Niter;
-    /** Maximum allowed shift */
-    double max_shift;
-    /** Maximum allowed rotational change */
-    double max_rot;
     /** Do not check mirrors */
     bool dont_mirror;
     /** Do pspc */

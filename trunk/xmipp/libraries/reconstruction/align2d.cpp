@@ -35,8 +35,6 @@ void ProgAlign2d::readParams()
     fnSel = getParam("-i");
     fnRoot = getParam("--oroot");
     fnRef = getParam("--ref");
-    max_shift = getDoubleParam("--max_shift");
-    max_rot = getDoubleParam("--max_rot");
     Niter = getIntParam("--iter");
     dont_mirror = checkParam("--do_not_check_mirrors");
     pspc = checkParam("--pspc");
@@ -51,8 +49,6 @@ void ProgAlign2d::show()
     << "Input selfile:        " << fnSel       << std::endl
     << "Input reference:      " << fnRef       << std::endl
     << "Output ootname:       " << fnRoot      << std::endl
-    << "Max.shift:            " << max_shift   << std::endl
-    << "Max.rot:              " << max_rot     << std::endl
     << "Number of iterations: " << Niter       << std::endl
     << "Do not check mirrors: " << dont_mirror << std::endl
     << "PSPC:                 " << pspc        << std::endl
@@ -67,8 +63,6 @@ void ProgAlign2d::defineParams()
     addParamsLine("  --oroot <rootname>       : Output rootname");
     addParamsLine(" [--ref <image=\"\">]      : reference image; if none: pyramidal combination of subset of images");
     addParamsLine(" [--iter <N=5>]            : Number of iterations to perform");
-    addParamsLine(" [--max_shift <max=-1>]    : In pixels. If not given, all shifts are accepted");
-    addParamsLine(" [--max_rot <max=-1>]      : In degrees. If not given, all rotations are accepted");
     addParamsLine(" [--do_not_check_mirrors]  : Do not consider mirrors when aligning");
     addParamsLine(" [--pspc]                  : Compute first reference by pspc");
 }
