@@ -39,6 +39,8 @@ class ProgSegment: public XmippProgram
 public:
     /// Input volume
     FileName fn_vol;
+    /// Segmentation method
+    String method;
     /** Desired mass (in voxels), if not given computed from
         the mass and the sampling rate by produce_info. */
     double   voxel_mass;

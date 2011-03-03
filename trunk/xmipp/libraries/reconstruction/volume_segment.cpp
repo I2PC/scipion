@@ -31,18 +31,39 @@
 // Read arguments ==========================================================
 void ProgSegment::readParams()
 {
+    voxel_mass=dalton_mass=aa_mass=-1;
+    sampling_rate=-1;
+    threshold=-1;
+    wang_radius=-1;
+    en_threshold=false;
+
     fn_vol = getParam("-i");
-    voxel_mass = getDoubleParam("--voxel_mass", "-1");
-    dalton_mass = getDoubleParam("--dalton_mass", "-1");
-    aa_mass = getDoubleParam("--aa_mass", "-1");
-    sampling_rate = getDoubleParam("--sampling_rate", "-1");
     fn_mask = getParam("-o");
-    en_threshold = checkParam("--threshold");
-    if (en_threshold)
-    threshold = getDoubleParam("--threshold");
-    otsu=checkParam("--otsu");
-    wang_radius = getIntParam("--wang", "3.");
-    do_prob = checkParam("--prob");
+    method=getParam("--method");
+    if (method=="voxel_mass")
+        voxel_mass = getDoubleParam("--method", 1);
+    else if (method=="dalton_mass")
+    {
+        dalton_mass = getDoubleParam("--method", 1);
+        sampling_rate = getDoubleParam("--method", 2);
+    }
+    else if (method=="aa_mass")
+    {
+        aa_mass = getDoubleParam("--method", 1);
+        sampling_rate = getDoubleParam("--method", 2);
+    }
+    else if (method=="threshold")
+    {
+        en_threshold = true;
+        threshold = getDoubleParam("--method", 1);
+    }
+    else if (method=="otsu")
+        otsu=true;
+    else if (method=="prob")
+    {
+        do_prob = true;
+        wang_radius = getDoubleParam("--method", 1);
+    }
 }
 
 // Show ====================================================================
@@ -70,31 +91,32 @@ void ProgSegment::defineParams()
     addParamsLine("  [-o <mask=\"\">]          : Output mask");
     addParamsLine("   --method <method>        : Segmentation method");
     addParamsLine("      where <method>");
-    addParamsLine("            voxel_mass  <mass>  : Mass in voxels");
-    addParamsLine("            dalton_mass <mass>  : Mass in daltons");
-    addParamsLine("            aa_mass     <mass>  : Mass in aminoacids");
-    addParamsLine("            threshold   <th>    : Thresholding");
-    addParamsLine("            otsu                : Otsu's method segmentation");
-    addParamsLine("            wang        <rad=3> : Radius [pix] for B.C. Wang cone");
-    addParamsLine("            prob                : Probabilistic solvent mask");
-    addParamsLine("  [--sampling_rate <Tm=1>]  : Sampling rate (A/pix)");
+    addParamsLine("            voxel_mass  <mass>        : Mass in voxels");
+    addParamsLine("            dalton_mass <mass> <Tm=1> : Mass in daltons");
+    addParamsLine("                                      : Tm is the sampling rate (A/pixel)");
+    addParamsLine("            aa_mass     <mass> <Tm=1> : Mass in aminoacids");
+    addParamsLine("                                      : Tm is the sampling rate (A/pixel)");
+    addParamsLine("            threshold   <th>          : Thresholding");
+    addParamsLine("            otsu                      : Otsu's method segmentation");
+    addParamsLine("            prob        <radius=-1>   : Probabilistic solvent mask (typical value 3)");
+    addParamsLine("                                      : Radius [pix] is used for B.C. Wang cone smoothing");
 }
 
 // Produce side information ================================================
 void ProgSegment::produce_side_info()
 {
     V.read(fn_vol);
-    double sampling_rate3 = sampling_rate * sampling_rate * sampling_rate;
-    if (voxel_mass == -1 && !en_threshold && !otsu)
+    if (method=="dalton_mass" || method=="aa_mass")
     {
         if ((dalton_mass == -1 && aa_mass == -1) || sampling_rate == -1)
-            REPORT_ERROR(ERR_VALUE_INCORRECT, "Prog_segment_prm: No way to compute voxel mass");
+            REPORT_ERROR(ERR_VALUE_INCORRECT, "No way to compute voxel mass");
+        double sampling_rate3 = sampling_rate * sampling_rate * sampling_rate;
         if (dalton_mass != -1)
             voxel_mass = dalton_mass * 1.207 / sampling_rate3;
         else
             voxel_mass = aa_mass * 110 * 1.207 / sampling_rate3;
+        std::cout << std::endl << "Derived voxel_mass=" << voxel_mass << std::endl;
     }
-    std::cout << std::endl << "Derived voxel_mass=" << voxel_mass << std::endl;
 }
 
 // Count voxels ============================================================
@@ -132,14 +154,14 @@ double segment_threshold(const Image<double> *V_in, Image<double> *V_out,
         save() = (*V_out)();
         save.write("PPP2.vol");
 #endif
-
     }
 
     // Count the number of different objects
     int no_comp = label_image3D((*V_out)(), aux());
     Matrix1D<double> count(no_comp + 1);
-    FOR_ALL_ELEMENTS_IN_ARRAY3D(aux())
-    count((int)aux(k, i, j))++;
+    const MultidimArray<double> &maux=aux();
+    FOR_ALL_ELEMENTS_IN_ARRAY3D(maux)
+    VEC_ELEM(count,(int)A3D_ELEM(maux,k, i, j))++;
 
 #ifdef DEBUG
 
@@ -155,8 +177,9 @@ double segment_threshold(const Image<double> *V_in, Image<double> *V_out,
     count.maxIndex(imax);
 
     // Select the mask with only that piece
-    FOR_ALL_ELEMENTS_IN_ARRAY3D((*V_out)())
-    (*V_out)(k, i, j) = aux(k, i, j) == imax;
+    const MultidimArray<double> &mVout=(*V_out)();
+    FOR_ALL_ELEMENTS_IN_ARRAY3D(mVout)
+    A3D_ELEM(mVout,k, i, j) = A3D_ELEM(maux,k, i, j) == imax;
 
     return count(imax);
 }
@@ -164,32 +187,35 @@ double segment_threshold(const Image<double> *V_in, Image<double> *V_out,
 void wang_smoothing(const Image<double> *V_in, Image<double> *V_out, int radius)
 {
 
-    int r2, radius2 = radius * radius;
+    int r2;
+    double radius2 = radius * radius;
     double sumw, weight;
 
     (*V_out)().resize((*V_in)());
 
-    FOR_ALL_ELEMENTS_IN_ARRAY3D((*V_in)())
+    const MultidimArray<double> &mVin=(*V_in)();
+    const MultidimArray<double> &mVout=(*V_out)();
+    FOR_ALL_ELEMENTS_IN_ARRAY3D(mVin)
     {
         sumw = 0.;
-        A3D_ELEM((*V_out)(), k, i, j) = 0.;
+        A3D_ELEM(mVout, k, i, j) = 0.;
         for (int kp = k - radius; kp < k + radius; kp++)
         {
-            if (kp > STARTINGZ((*V_in)()) && kp < FINISHINGZ((*V_in)()))
+            if (kp > STARTINGZ(mVin) && kp < FINISHINGZ(mVin))
             {
                 for (int ip = i - radius; ip < i + radius; ip++)
                 {
-                    if (ip > STARTINGY((*V_in)()) && ip < FINISHINGY((*V_in)()))
+                    if (ip > STARTINGY(mVin) && ip < FINISHINGY(mVin))
                     {
                         for (int jp = j - radius; jp < j + radius; jp++)
                         {
-                            if (jp > STARTINGX((*V_in)()) && jp < FINISHINGX((*V_in)()))
+                            if (jp > STARTINGX(mVin) && jp < FINISHINGX(mVin))
                             {
                                 r2 = (kp - k) * (kp - k) + (ip - i) * (ip - i) + (jp - j) * (jp - j);
-                                if ((r2 < radius2) && (A3D_ELEM((*V_in)(), kp, ip, jp) > 0.))
+                                if ((r2 < radius2) && (A3D_ELEM(mVin, kp, ip, jp) > 0.))
                                 {
-                                    weight = 1. - sqrt((double)(r2 / radius2));
-                                    A3D_ELEM((*V_out)(), k, i, j) += weight * XMIPP_MAX(0., A3D_ELEM((*V_in)(), kp, ip, jp));
+                                    weight = 1. - sqrt(r2 / radius2);
+                                    A3D_ELEM(mVout, k, i, j) += weight * XMIPP_MAX(0., A3D_ELEM(mVin, kp, ip, jp));
                                     sumw += weight;
                                 }
                             }
@@ -199,31 +225,31 @@ void wang_smoothing(const Image<double> *V_in, Image<double> *V_out, int radius)
             }
         }
         if (sumw > 0.)
-            A3D_ELEM((*V_out)(), k, i, j) /= sumw;
+            A3D_ELEM(mVout, k, i, j) /= sumw;
         else
-            A3D_ELEM((*V_out)(), k, i, j) = 0.;
+            A3D_ELEM(mVout, k, i, j) = 0.;
     }
-
 }
 
 
 void probabilistic_solvent(Image<double> *V_in, Image<double> *V_out)
 {
-
     // Calculate mean and sigma for protein and solvent regions
     // according to the traditional segmentation
     double Np, sump, sum2p, Ns, sums, sum2s;
     double avgp, sigp, avgs, sigs, aux, solv_frac, prot_frac;
     double p_prot, p_solv;
 
-    (*V_in)().setXmippOrigin();
-    (*V_out)().setXmippOrigin();
+    MultidimArray<double> &mVin=(*V_in)();
+    MultidimArray<double> &mVout=(*V_out)();
+    mVin.setXmippOrigin();
+    mVout.setXmippOrigin();
 
     Np = sump = sum2p = Ns = sums = sum2s = 0.;
-    FOR_ALL_ELEMENTS_IN_ARRAY3D((*V_in)())
+    FOR_ALL_ELEMENTS_IN_ARRAY3D(mVin)
     {
-        aux = A3D_ELEM((*V_in)(), k, i, j);
-        if (A3D_ELEM((*V_out)(), k, i, j) < 0.5)
+        aux = A3D_ELEM(mVin, k, i, j);
+        if (A3D_ELEM(mVout, k, i, j) < 0.5)
         {
             sums += aux;
             sum2s += aux * aux;
@@ -247,18 +273,18 @@ void probabilistic_solvent(Image<double> *V_in, Image<double> *V_out)
     }
     else
     {
-        REPORT_ERROR(ERR_NUMERICAL, "Prog_segment_prm: empty solvent or protein region");
+        REPORT_ERROR(ERR_NUMERICAL, "empty solvent or protein region");
     }
 
     // Terwilliger-like calculation of P(x|solv) & P(x|prot)
     // Bayes: P(prot|x)= P(x|prot)/{P(x|prot)+P(x|solv)}
-    FOR_ALL_ELEMENTS_IN_ARRAY3D((*V_in)())
+    FOR_ALL_ELEMENTS_IN_ARRAY3D(mVin)
     {
-        aux = A3D_ELEM((*V_in)(), k, i, j) - avgs;
+        aux = A3D_ELEM(mVin, k, i, j) - avgs;
         p_solv = solv_frac * exp(-aux * aux / (2 * sigs));
-        aux = A3D_ELEM((*V_in)(), k, i, j) - avgp;
+        aux = A3D_ELEM(mVin, k, i, j) - avgp;
         p_prot = prot_frac * exp(-aux * aux / (2 * sigp));
-        A3D_ELEM((*V_out)(), k, i, j) = p_prot / (p_prot + p_solv);
+        A3D_ELEM(mVout, k, i, j) = p_prot / (p_prot + p_solv);
     }
 
 }
