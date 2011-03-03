@@ -141,7 +141,7 @@ void ProgCtfGroup::produceSideInfo()
     ;
     //#ifdef GGGG
 
-    FileName  fnt_ctf;
+    FileName  fnt_ctf,aux;
     CTFDescription ctf;
     //MetaData ctfdat,
     MetaData SF;
@@ -154,6 +154,10 @@ void ProgCtfGroup::produceSideInfo()
 
     SF.read(fn_ctfdat);
     ImgSize(SF,dim,ydim,zdim,ndim);
+    //set output format
+    SF.getValue(MDL_IMAGE,aux,SF.firstObject());
+    if(format=="")
+        format=aux.getFileFormat();
 
     if ( dim != ydim )
         REPORT_ERROR(ERR_MULTIDIM_SIZE,"Only squared images are allowed!");
@@ -184,6 +188,7 @@ void ProgCtfGroup::produceSideInfo()
     //number of different CTFs
     ctfMD.aggregate(SF, AGGR_COUNT,MDL_CTFMODEL,MDL_CTFMODEL,MDL_COUNT);
     ctfMD.fillExpand(MDL_CTFMODEL);
+    ctfMD.write("ctfMD.xmd");///////////////////////////////////////////////////////////////////////////7
     int nCTFs = ctfMD.size();
     //how much memory do I need to store them
     double _sizeGb = (double) ypaddim * xpaddim * sizeof(double) * nCTFs /1073741824.;
@@ -291,6 +296,8 @@ void ProgCtfGroup::produceSideInfo()
 
         double sumimg = 0.;
         int bar=0;
+        double result;
+        double d;
         FOR_ALL_OBJECTS_IN_METADATA(ctfMD)
         {
             ctfMD.getValue(MDL_COUNT,count,__iter.objId);
@@ -298,7 +305,6 @@ void ProgCtfGroup::produceSideInfo()
             sumimg += (double)count;
             FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY2D(Mwien)
             {
-                double d;
                 if (i <= paddim/2 )
                     ii=i;
                 else
@@ -309,15 +315,51 @@ void ProgCtfGroup::produceSideInfo()
                 else
                     jj=(paddim-j);
 
-                int dd = (int)(sqrt(ii*ii+jj*jj)+0.5);
-                d = NZYX_ELEM(mics_ctf2d, counter, 0, 0, dd);
-                //d = NZYX_ELEM(mics_ctf2d, counter, 0, i,j);
-                ////d = NZYX_ELEM(mics_ctf2d, counter, 1, 1, i,j));
-                dAij(Mwien,i,j) += count * d * d ;
+                d      = sqrt(ii*ii+jj*jj);
+                int dd = (int) d ;
+                double diff;
+                diff=(d-dd);
+                result =     diff  * NZYX_ELEM(mics_ctf2d, counter, 0, 0, dd+1  ) +
+                             (1.-diff) * NZYX_ELEM(mics_ctf2d, counter, 0, 0, dd);
+                dAij(Mwien,i,j) += (double)count * result *result;
+
+
+                //                int dd = (int)(sqrt(ii*ii+jj*jj)+0.5);//plus 0.5 rounds the value
+                //                d = NZYX_ELEM(mics_ctf2d, counter, 0, 0, dd);
+                //                dAij(Mwien,i,j) += count * d * d ;
+
             }
+//#define DEBUG
+#ifdef DEBUG
+
+            {
+                std::cerr << "no_micro_per_Group order " << count
+                << " " << counter
+                << " " << NZYX_ELEM(mics_ctf2d, counter, 0, 0, 141)
+                << " " << dAij(Mwien,100,100)
+                << std::endl;
+                Image<double> save;
+                save()=Mwien;
+                save.write("vienertempnew.spi");
+                std::cout << "Press any key\n";
+                char c;
+                std::cin >> c;
+            }
+#endif
+#undef DEBUG
 
         }
         // Divide by sumimg (Wiener filter is for summing images, not averaging!)
+#define DEBUG
+#ifdef DEBUG
+
+        {
+            Image<double> save;
+            save()=Mwien;
+            save.write("vienerB.spi");
+        }
+#endif
+#undef DEBUG
         Mwien /= sumimg;
         // Add Wiener constant
         if (wiener_constant < 0.)
@@ -327,7 +369,7 @@ void ProgCtfGroup::produceSideInfo()
             wiener_constant = 0.1 * Mwien.computeAvg();
         }
         Mwien += wiener_constant;
-        //#define DEBUG
+#define DEBUG
 #ifdef DEBUG
 
         {
@@ -472,8 +514,8 @@ void ProgCtfGroup::manualRun()
 
 void ProgCtfGroup::writeOutputToDisc()
 {
-    //compute no of micrographs, no of images , minimum defocus ,maximum defocus, average defocus per ctf group
-    MetaData ctfInfo,ctfImagesGroup;
+    //(1) compute no of micrographs, no of images , minimum defocus ,maximum defocus, average defocus per ctf group
+    MetaData ctfInfo,ctfImagesGroup,auxMetaData;
 
     const AggregateOperation MyaggregateOperations[] =
         {
@@ -497,13 +539,37 @@ void ProgCtfGroup::writeOutputToDisc()
     ctfInfo.setComment("N. of micrographs, N. of particles, min defocus, max defocus and avg defocus");
     ctfInfo.write(fn_root+"Info.xmd");
 
-    // make block-sel per image group
-    MetaData ImagesMD, auxMetaData;
+    //(2)save auxiliary file for defocus split
+
+    double maxDef,minDef;
+    MDIterator it(ctfInfo);
+    size_t id1,id2,id;
+    auxMetaData.clear();
+    auxMetaData.setComment((std::string)"Defocus values to split into " +
+                           integerToString(ctfInfo.size()) +
+                           " ctf groups");
+    id1=it.objId;
+    while(it.moveNext())
+    {
+        id2=it.objId;
+        ctfInfo.getValue(MDL_MAX,maxDef,id1);
+        ctfInfo.getValue(MDL_MIN,minDef,id2);
+        id1=id2;
+
+        id=auxMetaData.addObject();
+        auxMetaData.setValue(MDL_CTF_DEFOCUSA,(minDef+maxDef)/2.,id);
+    }
+    auxMetaData.write(fn_root+"_split.doc");
+
+
+    //(3) make block-sel per image group
+    MetaData ImagesMD;
     ImagesMD.read(fn_ctfdat);
     ctfImagesGroup.join(ImagesMD,sortedCtfMD,MDL_CTFMODEL,INNER );
 
     unlink( (fn_root+"s_images.sel").c_str());
     FileName imagesInDefoculGroup;
+    auxMetaData.clear();
     auxMetaData.setComment("images (particles) per defocus group, block name is defocusgroup No");
     for(int i=1;i<= ctfInfo.size(); i++)
     {
@@ -512,7 +578,7 @@ void ProgCtfGroup::writeOutputToDisc()
         auxMetaData.write( imagesInDefoculGroup,MD_APPEND);
     }
 
-    //create average ctf<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< check ctfs
+    //(4)create average ctf
     int olddefGroup,defGroup,order,count;
     double sumimg=0.;
     bool changeDefocusGroup;
@@ -521,14 +587,14 @@ void ProgCtfGroup::writeOutputToDisc()
     Image<double> Ictf2D;
     Ictf2D.data.alias(ctf2D);
 
-    olddefGroup=1;
     int jj,ii;
     bool savefile=false;
-    FileName outFileName,outFileName2;
-    outFileName = fn_root + ".ctf";
-    if (format !="")
-        outFileName=outFileName + ":" + format;
-    std::cerr << "Saving CTFs" <<std::endl;
+
+    olddefGroup=1;
+    FileName outFileNameCTF,outFileNameWIEN,outFileName;
+    outFileNameCTF = fn_root + "_ctf."+format;
+    outFileNameWIEN = fn_root + "_wien."+format;
+    std::cerr << "Saving CTF Images" <<std::endl;
     FOR_ALL_OBJECTS_IN_METADATA(sortedCtfMD)
     {
         sortedCtfMD.getValue(MDL_DEFGROUP,defGroup,__iter.objId);
@@ -539,8 +605,19 @@ void ProgCtfGroup::writeOutputToDisc()
             if (sumimg==0)
                 continue;
             ctf2D /= sumimg;
-            outFileName2.compose(olddefGroup,outFileName);
-            Ictf2D.write(outFileName2);
+            outFileName.compose(olddefGroup,outFileNameCTF);
+            //save CTF
+            Ictf2D.write(outFileName);
+            //save winer filter
+            if (do_wiener)
+            {
+                FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY2D(ctf2D)
+                {
+                    dAij(ctf2D,i,j) /= dAij(Mwien,i,j);
+                }
+                outFileName.compose(olddefGroup,outFileNameWIEN);
+                Ictf2D.write(outFileName);
+            }
             ctf2D.initZeros();
             olddefGroup=defGroup;
             sumimg=0.;
@@ -548,7 +625,7 @@ void ProgCtfGroup::writeOutputToDisc()
         sumimg += (double)count;
         FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY2D(ctf2D)
         {
-            double d;
+            double d,result;
             if (i <= paddim/2 )
                 ii=i;
             else
@@ -558,21 +635,35 @@ void ProgCtfGroup::writeOutputToDisc()
                 jj=j;
             else
                 jj=(paddim-j);
-            int dd = (int)(sqrt(ii*ii+jj*jj)+0.5);
-            d = NZYX_ELEM(mics_ctf2d, order, 0, 0, dd);
-            dAij(ctf2D,i,j) += count * d ;
+            d      = (sqrt(ii*ii+jj*jj));//0.5 creates round
+            //interpolate ctf point from table
+            int dd = (int) d ;
+            double diff;
+            diff=(d-dd);
+            result =     diff  * NZYX_ELEM(mics_ctf2d, order, 0, 0, dd+1  ) +
+                         (1.-diff) * NZYX_ELEM(mics_ctf2d, order, 0, 0, dd);
+            dAij(ctf2D,i,j) += (double)count * result ;
         }
     }
+    //Save last CTF
     if (defGroup != olddefGroup)
     {
         if (sumimg!=0)
         {
             ctf2D /= sumimg;
-            outFileName2.compose(defGroup,outFileName);
-            Ictf2D.write(outFileName2);
-            ctf2D.initZeros();
-            olddefGroup=defGroup;
-            sumimg=0.;
+            outFileName.compose(olddefGroup,outFileNameCTF);
+            //save CTF
+            Ictf2D.write(outFileName);
+            //save winer filter
+            if (do_wiener)
+            {
+                FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY2D(ctf2D)
+                {
+                    dAij(ctf2D,i,j) /= dAij(Mwien,i,j);
+                }
+                outFileName.compose(olddefGroup,outFileNameWIEN);
+                Ictf2D.write(outFileName);
+            }
         }
     }
 
@@ -629,17 +720,18 @@ void ProgCtfGroup::writeOutputToDisc()
         fnt.compose(fn_root+"_group",igroup+1,"");
         std::cerr<<" Group "<<fnt <<" contains "<< pointer_group2mic[igroup].size()<<" ctfs and "<<sumw<<" images and has average defocus "<<avgdef<<std::endl;
 
-        // 1. write selfile with images per defocus group -> block now
+        // 1. write selfile with images per defocus group -> block now DONE
         SFo.write(fnt+".sel");
-        // 2. write average Mctf //skip these since we have profiles
+        // 2. write average Mctf //skip these since we have profiles DONE
         img() = Mavg;
         img.setWeight(sumw);
         img.write(fnt+".ctf");
-        // 3. Output to file with numinsertber of images per group -> _groups.imgno, save the metadafile with this info
+        // 3. Output to file with numinsertber of images per group
+        //-> _groups.imgno, save the metadafile with this info DONE
         fh << integerToString(igroup+1);
         fh.width(10);
         fh << floatToString(sumw)<<std::endl;
-        // 4. Output to file with avgdef, mindef and maxdef per group save with previous file
+        // 4. Output to file with avgdef, mindef and maxdef per group save with previous file DONE
         fh3 << integerToString(igroup+1);
         fh3.width(10);
         fh3 << floatToString(avgdef);
@@ -647,7 +739,7 @@ void ProgCtfGroup::writeOutputToDisc()
         fh3 << floatToString(maxdef);
         fh3.width(10);
         fh3 << floatToString(mindef)<<std::endl;
-        // 5. Output to docfile for manual grouping, OK save al metadata
+        // 5. Output to docfile for manual grouping, OK save al metadata DONE
         if (oldmin < 9.e99)
         {
             split = (oldmin + maxdef) / 2.;
@@ -655,7 +747,7 @@ void ProgCtfGroup::writeOutputToDisc()
             DFo.setValue(MDL_CTF_DEFOCUSU,split);
         }
         oldmin = mindef;
-        // 6. Write file with 1D profiles single metadata file
+        // 6. Write file with 1D profiles single metadata file No body uses them so SKIPIT
         fh2.open((fnt+".ctf_profiles").c_str(), std::ios::out);
         for (int i=0; i < paddim/2; i++)
         {
@@ -672,7 +764,7 @@ void ProgCtfGroup::writeOutputToDisc()
             fh2 << std::endl;
         }
         fh2.close();
-        // 7. Write Wiener filter stack
+        // 7. Write Wiener filter stack skip profile, noboduy uses it
         if (do_wiener)
         {
             FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY2D(Mavg)
