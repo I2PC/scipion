@@ -34,10 +34,6 @@ void ProgAnalyzeCluster::readParams()
     fnSel = getParam("-i");
     fnOut = getParam("-o");
     fnRef = getParam("--ref");
-    //FIXME
-    //DROP block ROB
-    //if (checkParam("--block"))
-    //    block = getParam("--block");
     if (checkParam("--produceAligned"))
         fnOutAligned = getParam("--produceAligned");
     if (checkParam("--basis"))
@@ -55,7 +51,6 @@ void ProgAnalyzeCluster::show()
     if (!quiet)
         std::cerr
         << "Input metadata file:    " << fnSel         << std::endl
-        //<< "Block:                  " << block         << std::endl
         << "Reference:              " << fnRef         << std::endl
         << "Output metadata:        " << fnOut         << std::endl
         << "Output aligned stack:   " << fnOutAligned  << std::endl
@@ -74,7 +69,6 @@ void ProgAnalyzeCluster::defineParams()
     addParamsLine("   -i <metadatafile>             : metadata file  with images assigned to the cluster");
     addParamsLine("   -o <metadatafile>             : output metadata");
     addParamsLine("   --ref <image>                 : class representative");
-    //addParamsLine("  [--block <blockName>]          : block name within the input metadata");
     addParamsLine("  [--produceAligned <stackName>] : write the aligned images");
     addParamsLine("  [--basis <stackName>]          : write the average and basis of the PCA in a stack");
     addParamsLine("  [--NPCA <dim=2>]               : PCA dimension");
@@ -118,7 +112,7 @@ void ProgAnalyzeCluster::produceSideInfo()
     Image<double> Iaux;
     FileName auxFn, fnOutIdx;
     Matrix2D<double> M;
-    int idxStk=0;
+    int idxStk=1;
     pcaAnalyzer.reserve(SFin.size());
     if (align)
     {
