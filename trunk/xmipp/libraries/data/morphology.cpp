@@ -107,7 +107,6 @@ void dilate2D(const MultidimArray<double> &in, MultidimArray<double> &out, int n
 {
     MultidimArray<double> tmp;
     int i;
-    tmp.resize(in);
     tmp = in;
     for (i = 0;i < size;i++)
     {
@@ -121,7 +120,6 @@ void erode2D(const MultidimArray<double> &in, MultidimArray<double> &out, int ne
 {
     MultidimArray<double> tmp;
     int i;
-    tmp.resize(in);
     tmp = in;
     for (i = 0;i < size;i++)
     {
@@ -136,7 +134,6 @@ void closing2D(const MultidimArray<double> &in, MultidimArray<double> &out, int 
 {
     MultidimArray<double> tmp;
     int i;
-    tmp.resize(in);
     tmp = in;
     for (i = 0;i < size;i++)
     { //dilate
@@ -155,7 +152,6 @@ void opening2D(const MultidimArray<double> &in, MultidimArray<double> &out, int 
 {
     MultidimArray<double> tmp;
     int i;
-    tmp.resize(in);
     tmp = in;
     for (i = 0;i < size;i++)
     { // erode
@@ -349,12 +345,12 @@ void erode3D_step(const MultidimArray<double> &in, MultidimArray<double> &out, i
         for (int i = STARTINGY(in) + 1;i < FINISHINGY(in); i++)
             for (int j = STARTINGX(in) + 1;j < FINISHINGX(in); j++)
             {
-                if (in(k, i, j) == 1)
+                if (A3D_ELEM(in,k, i, j) == 1)
                 {
                     // 6-environment
                     A3D_ELEM(out,k, i, j) = 1;
 
-                    sum = (int)(in(k - 1, i, j) + A3D_ELEM(in,k + 1, i, j) + A3D_ELEM(in,k, i - 1, j) + A3D_ELEM(in,k, i + 1, j)
+                    sum = (int)(A3D_ELEM(in,k - 1, i, j) + A3D_ELEM(in,k + 1, i, j) + A3D_ELEM(in,k, i - 1, j) + A3D_ELEM(in,k, i + 1, j)
                                 + A3D_ELEM(in,k, i, j - 1) + A3D_ELEM(in,k, i, j + 1));
                     if ((6 - sum) > count)
                     { //change the value to background
@@ -402,7 +398,6 @@ void dilate3D(const MultidimArray<double> &in, MultidimArray<double> &out, int n
 {
     MultidimArray<double> tmp;
     int i;
-    tmp.resize(in);
     tmp = in;
     for (i = 0;i < size;i++)
     {
@@ -416,7 +411,6 @@ void erode3D(const MultidimArray<double> &in, MultidimArray<double> &out, int ne
 {
     MultidimArray<double> tmp;
     int i;
-    tmp.resize(in);
     tmp = in;
     for (i = 0;i < size;i++)
     {
@@ -432,7 +426,6 @@ void closing3D(const MultidimArray<double> &in, MultidimArray<double> &out, int 
 {
     MultidimArray<double> tmp;
     int i;
-    tmp.resize(in);
     tmp = in;
     for (i = 0;i < size;i++)
     { //dilate
@@ -451,8 +444,6 @@ void opening3D(const MultidimArray<double> &in, MultidimArray<double> &out, int 
 {
     MultidimArray<double> tmp;
     int i;
-    tmp.resize(in);
-    tmp = in;
     for (i = 0;i < size;i++)
     { // erode
         erode3D_step(tmp, out, neig, count);
