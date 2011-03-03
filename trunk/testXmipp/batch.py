@@ -51,6 +51,9 @@ class Tester:
     def addAllTests(self):
         # Add all desired tests -------------------------------------------
     
+        self.addProgram("xmipp_image_align")
+        self.addTest("-i input/smallStack.stk --oroot %o/aligned")
+
         self.addProgram("xmipp_image_convert")
         self.addTest("-i input/smallStack.stk -o %o/smallStack.mrcs -t stk")
     
