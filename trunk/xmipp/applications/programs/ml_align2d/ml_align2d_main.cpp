@@ -29,5 +29,5 @@ int main(int argc, char **argv)
 {
     ProgML2D program;
     program.read(argc, argv);
-    program.tryRun();
+    return program.tryRun();
 }
