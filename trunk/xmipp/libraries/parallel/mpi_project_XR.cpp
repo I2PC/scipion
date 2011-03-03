@@ -79,7 +79,7 @@ void ProgMPIXrayProject::run()
     dataThread->vol = &phantom.rotVol;
     dataThread->imOut = &proj;
 
-    longint threadBlockSize, numberOfJobs= ZSIZE(MULTIDIM_ARRAY(phantom.iniVol));
+    size_t threadBlockSize, numberOfJobs= ZSIZE(MULTIDIM_ARRAY(phantom.iniVol));
     numberOfThreads = psf.nThr;
 
     threadBlockSize = (numberOfThreads == 1) ? numberOfJobs : numberOfJobs/numberOfThreads/2;
@@ -154,7 +154,7 @@ void ProgMPIXrayProject::run()
     long long int nodeBlockSize = 1;
     jobHandler = new FileTaskDistributor(mpiData.size(), nodeBlockSize, node);
 
-    longint first = 0, last = 0;
+    size_t first = 0, last = 0;
 
     if (node->isMaster())
     {
@@ -228,7 +228,7 @@ void ProgMPIXrayProject::run()
 //    dataThread->vol = &side.rotVol;
 //    dataThread->imOut = &proj;
 //
-//    longint threadBlockSize, numberOfJobs= side.iniVol().zdim;
+//    size_t threadBlockSize, numberOfJobs= side.iniVol().zdim;
 //    numberOfThreads = psf.nThr;
 //
 //    threadBlockSize = (numberOfThreads == 1) ? numberOfJobs : numberOfJobs/numberOfThreads/2;
