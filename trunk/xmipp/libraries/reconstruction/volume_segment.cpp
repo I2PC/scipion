@@ -148,7 +148,6 @@ double segment_threshold(const Image<double> *V_in, Image<double> *V_out,
     if (!do_prob)
     {
         // Apply morphological opening to input volume
-        aux().resize((*V_out)());
         opening3D((*V_out)(), aux(), 18, 0, 1);
         closing3D(aux(), (*V_out)(), 18, 0, 1);
 #ifdef DEBUG
@@ -193,14 +192,13 @@ void wang_smoothing(const Image<double> *V_in, Image<double> *V_out, int radius)
     double radius2 = radius * radius;
     double sumw, weight;
 
-    (*V_out)().resize((*V_in)());
+    (*V_out)().initZeros((*V_in)());
 
     const MultidimArray<double> &mVin=(*V_in)();
     const MultidimArray<double> &mVout=(*V_out)();
     FOR_ALL_ELEMENTS_IN_ARRAY3D(mVin)
     {
         sumw = 0.;
-        A3D_ELEM(mVout, k, i, j) = 0.;
         for (int kp = k - radius; kp < k + radius; kp++)
         {
             if (kp > STARTINGZ(mVin) && kp < FINISHINGZ(mVin))
@@ -228,8 +226,6 @@ void wang_smoothing(const Image<double> *V_in, Image<double> *V_out, int radius)
         }
         if (sumw > 0.)
             A3D_ELEM(mVout, k, i, j) /= sumw;
-        else
-            A3D_ELEM(mVout, k, i, j) = 0.;
     }
 }
 
