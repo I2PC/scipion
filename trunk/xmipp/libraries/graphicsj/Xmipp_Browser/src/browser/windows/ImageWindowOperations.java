@@ -53,9 +53,25 @@ public class ImageWindowOperations extends ImageWindow implements iPollImageWind
         setLayout(new BorderLayout());
 
         add(previousContent, BorderLayout.CENTER);
+        setMenuBar(new XmippMenuBar(this, imp));
 
         setMaximumSize(getPreferredSize());
 
+        fixSize();
+
+        setInitialPoll(poll);
+    }
+
+    @Override
+    public void windowOpened(WindowEvent e) {
+        pack();
+    }
+
+    public boolean isPoll() {
+        return poll;
+    }
+
+    protected void setInitialPoll(boolean poll) {
         // Sets if image can poll (reloaded from disk) or not.
         FileInfo ofi = imp.getOriginalFileInfo();
 
@@ -66,19 +82,6 @@ public class ImageWindowOperations extends ImageWindow implements iPollImageWind
 
             setPoll(poll);  // If isPoll, starts timer to reload image form disk every period.
         }
-
-        setMenuBar(new XmippMenuBar(this, imp, ofi != null));
-
-        fixSize();
-    }
-
-    @Override
-    public void windowOpened(WindowEvent e) {
-        pack();
-    }
-
-    public boolean isPoll() {
-        return poll;
     }
 
     public synchronized void setPoll(boolean poll) {

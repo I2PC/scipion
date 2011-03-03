@@ -14,24 +14,28 @@ public class REGISTERED_FILE_ITEMS {
 
     public static final int INDEX_EXT = 0;
     public static final int INDEX_ICON = 1;
-    // @TODO Set nicer icons :)
     public static final String TABLE[][] = {
+        {"jpeg", "/resources/type_image.png"},
+        {"jpg", "/resources/type_image.png"},
+        {"gif", "/resources/type_image.png"},
+        {"png", "/resources/type_image.png"},
         {"dm3", "/resources/type_dm3.png"},
-        {"hed", "/resources/type_image.png"},
-        {"inf", "/resources/type_image.png"},
-        {"img", "/resources/type_image.png"},
-        {"mrc", "/resources/type_image.png"},
-        {"mrcs", "/resources/type_image.png"},
-        {"psd", "/resources/type_image.png"},
-        {"raw", "/resources/type_image.png"},
-        {"sel", "/resources/type_selfile.png"},
-        {"ser", "/resources/type_tia.png"},
+        {"hed", "/resources/type_hed.png"},
+        {"inf", "/resources/type_inf.png"},
+        {"img", "/resources/type_img.png"},
+        {"mrc", "/resources/type_mrc.png"},
+        {"mrcs", "/resources/type_mrcs.png"},
+        {"psd", "/resources/type_psd.png"},
+        {"raw", "/resources/type_raw.png"},
+        {"sel", "/resources/type_sel.png"},
+        {"ser", "/resources/type_ser.png"},
         {"spe", "/resources/type_spe.png"},
-        {"spi", "/resources/type_image.png"},
-        {"stk", "/resources/type_image.png"},
-        {"tif", "/resources/type_image.png"},
-        {"vol", "/resources/type_image.png"},
-        {"xmp", "/resources/type_image.png"},};
+        {"spi", "/resources/type_spi.png"},
+        {"stk", "/resources/type_stk.png"},
+        {"tif", "/resources/type_tif.png"},
+        {"vol", "/resources/type_vol.png"},
+        {"xmd", "/resources/type_xmd.png"},
+        {"xmp", "/resources/type_xmp.png"},};
 
     public static String getExtension(int index) {
         return TABLE[index][INDEX_EXT];

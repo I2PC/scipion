@@ -7,7 +7,6 @@ package browser.table.renderers;
 import browser.ICONS_MANAGER;
 import browser.imageitems.TableImageItem;
 import browser.table.ImagesTableModel;
-import browser.table.renderers.ImageMicrographRenderer;
 import ij.ImagePlus;
 import java.awt.Color;
 import java.awt.Component;
@@ -73,18 +72,18 @@ public class ImageRenderer extends ImageMicrographRenderer {
             }
 
             if (item.isEnabled()) {
-                if (item.isSelected()) {
-                    setBorder(BORDER_ENABLED_SELECTED);
-                } else if (hasFocus) {
+                if (hasFocus) {
                     setBorder(BORDER_ENABLED_FOCUSED);
+                } else if (item.isSelected()) {
+                    setBorder(BORDER_ENABLED_SELECTED);
                 } else {
                     setBorder(BORDER_ENABLED);
                 }
             } else {
-                if (item.isSelected()) {
-                    setBorder(BORDER_DISABLED_SELECTED);
-                } else if (hasFocus) {
+                if (hasFocus) {
                     setBorder(BORDER_DISABLED_FOCUSED);
+                } else if (item.isSelected()) {
+                    setBorder(BORDER_DISABLED_SELECTED);
                 } else {
                     setBorder(BORDER_DISABLED);
                 }
@@ -94,7 +93,7 @@ public class ImageRenderer extends ImageMicrographRenderer {
             setText(null);
             setBorder(null);
             setBackground(BACKGROUND);
-            setForeground(FOREGROUND_SELECTED);
+            setForeground(FOREGROUND);
         }
 
         return this;

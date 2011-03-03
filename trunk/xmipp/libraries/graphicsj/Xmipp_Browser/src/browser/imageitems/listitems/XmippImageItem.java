@@ -52,7 +52,7 @@ public class XmippImageItem extends AbstractImageItem {
             image.readPreview(path, w_, h_, slice, nimage);
             ip = ImageConverter.convertToImagej(image, path);
         } catch (Exception e) {
-//            System.err.println(" >>> Error loading preview: " + getKey());
+            System.err.println(" >>> Error loading preview: " + getKey());
             e.printStackTrace();
 //            IJ.error(e.getMessage());
         }

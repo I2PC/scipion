@@ -395,9 +395,11 @@ public class Sphere {
         return projection;
     }
 
-    public String[] analyzeProjection(ImageDouble xmippVolume, double rot, double tilt, int w, int h) {
-        String pcaFile = "";
-        String outliersFile = "";
+    public String analyzeProjection(ImageDouble xmippVolume, double rot, double tilt, int w, int h) {
+        String path = tempDir.getAbsolutePath() + File.separator;
+        String projectionFileName = path + "projection.xmp";
+        String selFileName = path + "analize.sel";
+        String outputFile = path + "score.xmd";
 
         try {
             // * Gets projection.
@@ -408,12 +410,7 @@ public class Sphere {
             Projection.projectVolume(xmippVolume, p, rot, tilt, 0);
 
             // * Write projection to disk.
-            String path = tempDir.getAbsolutePath() + File.separator;
-            String projectionFileName = path + "projection";
-            String projectionExt = ".xmp";
-            String selFileName = path + "xmipp_sel_file.sel";
-
-            p.write(projectionFileName + projectionExt);
+            p.write(projectionFileName);
 
             // * Gets file names related to ROT and TILT
             Vector<String> files = getFiles(rot, tilt);
@@ -424,30 +421,38 @@ public class Sphere {
 
             // * Call xmipp_classify_...
             IJ.showStatus(LABELS.MESSAGE_ANALYZING_PROJECTION);
-            xmipp_classify_analyze_cluster(selFileName, projectionFileName + projectionExt, "ali.xmp");
-
-            // * Builds "good" and "bad" images so aligned images can be shown at table.
-            pcaFile = path + "xmipp_sel_file_pca.sel";
-            outliersFile = path + "xmipp_sel_file_outliers.sel";
+            xmipp_classify_analyze_cluster(selFileName,
+                    projectionFileName,
+                    outputFile);
         } catch (Exception ioex) {
             IJ.write("Error writing projection to temporary file. ");
             IJ.write(ioex.getMessage());
             ioex.printStackTrace();
         }
 
-        return new String[]{pcaFile, outliersFile};
+        return outputFile;
     }
 
-    private static void xmipp_classify_analyze_cluster(String selfile, String reffile, String oext) {
+    // Example:
+    // xmipp_classify_analyze_cluster
+    //      -i xmipp_sel_file.sel
+    //      --ref projection.xmp
+    //      -o score.xmd
+    private static void xmipp_classify_analyze_cluster(String selfile,
+            String reffile, String outputFile) {
         String command[] = new String[]{
             XMIPP_CLASSIFY_ANALYZE_CLUSTER,
             "-i", selfile,
-            "-ref", reffile,
-            "-produceAligned",
-            "-oext", oext,
-            "-odir", TEMPDIR_PATH};
+            "--ref", reffile,
+            //"--produceAligned", alignedFile,
+            "-o", outputFile};
 
-        //xmipp_classify_analyze_cluster -i xmipp_sel_file.sel -ref projection.xmp -produceAligned -oext ali.xmp -odir /tmp/projectionexplorer
+        System.out.print(" >>> ");
+        for (int i = 0; i < command.length; i++) {
+            System.out.print(command[i] + " ");
+        }
+        System.out.println();
+
         runCommand(command);
     }
 
@@ -464,8 +469,8 @@ public class Sphere {
                 System.out.println(s);
             }
         } catch (IOException ioex) {
-            IJ.write("Error executing [" + command + "]");
-            IJ.write(ioex.getMessage());
+            ioex.printStackTrace();
+            IJ.error("Error running command: " + ioex.getMessage());
         }
     }
 }

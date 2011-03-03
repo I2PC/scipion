@@ -1,6 +1,5 @@
 package window;
 
-
 import constants.LABELS;
 import javax.swing.JDialog;
 import javax.swing.JFileChooser;
@@ -91,7 +90,7 @@ public class JFrameLoad extends JDialog {
         jpControls.add(jlVolume, gridBagConstraints);
 
         jtfVolume.setColumns(20);
-        jtfVolume.setEnabled(false);
+        jtfVolume.setEditable(false);
         gridBagConstraints = new java.awt.GridBagConstraints();
         gridBagConstraints.gridx = 1;
         gridBagConstraints.gridy = 0;
@@ -123,7 +122,7 @@ public class JFrameLoad extends JDialog {
         jpControls.add(jcbAngles, gridBagConstraints);
 
         jtfEulerAngles.setColumns(20);
-        jtfEulerAngles.setEnabled(false);
+        jtfEulerAngles.setEditable(false);
         gridBagConstraints = new java.awt.GridBagConstraints();
         gridBagConstraints.gridx = 1;
         gridBagConstraints.gridy = 2;
@@ -194,6 +193,7 @@ public class JFrameLoad extends JDialog {
     private void jcbAnglesActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jcbAnglesActionPerformed
         enableLoadButton();
         jbAngles.setEnabled(jcbAngles.isSelected());
+        jtfEulerAngles.setEnabled(jcbAngles.isSelected());
     }//GEN-LAST:event_jcbAnglesActionPerformed
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton jbAngles;

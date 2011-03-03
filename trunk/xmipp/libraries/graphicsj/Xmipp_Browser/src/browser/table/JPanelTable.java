@@ -276,7 +276,7 @@ public class JPanelTable extends javax.swing.JPanel {
         Vector<TableImageItem> items = tableModel.getSelectedAndEnabledItems();
 
         if (items.size() > 0) {
-            ImagePlus average = ImageTableOperations.average(items);
+            ImagePlus average = ImageOperations.average(items);
             average.setTitle("Average");
 
             ImagesWindowFactory.openImage(average, false);
@@ -290,7 +290,7 @@ public class JPanelTable extends javax.swing.JPanel {
         Vector<TableImageItem> items = tableModel.getSelectedAndEnabledItems();
 
         if (items.size() > 0) {
-            ImagePlus std_dev = ImageTableOperations.std_deviation(items);
+            ImagePlus std_dev = ImageOperations.std_deviation(items);
             std_dev.setTitle("Std. Deviation");
 
             ImagesWindowFactory.openImage(std_dev, false);

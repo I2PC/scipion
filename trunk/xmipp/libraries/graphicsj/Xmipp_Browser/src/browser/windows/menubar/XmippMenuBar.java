@@ -5,11 +5,14 @@
 package browser.windows.menubar;
 
 import browser.LABELS;
+import browser.windows.ImageWindowOperations;
 import browser.windows.ImagesWindowFactory;
+import browser.windows.StackWindowOperations;
 import browser.windows.iPollImageWindow;
 import ij.IJ;
 import ij.ImagePlus;
 import ij.gui.GenericDialog;
+import ij.gui.ImageWindow;
 import ij.gui.OvalRoi;
 import ij.gui.Roi;
 import ij.gui.Toolbar;
@@ -135,12 +138,14 @@ public class XmippMenuBar extends DynamicMenuBar implements ActionListener {
     private MenuItem itemDottedandDashedLines = new MenuItem(LABELS.OPERATION_DOTTED_AND_DASHED_LINES);
     private MenuItem itemRadialGrid = new MenuItem(LABELS.OPERATION_RADIAL_GRID);
 
-    public XmippMenuBar(Container parent, ImagePlus imp, boolean canPoll) {
+    public XmippMenuBar(Container parent, ImagePlus imp) {
         super(parent);
 
         this.imp = imp;
 
         createMenuBar();
+
+        boolean canPoll = imp.getOriginalFileInfo() != null;
 
         enableItems(imp.getStackSize(), canPoll);
     }
@@ -696,10 +701,13 @@ public class XmippMenuBar extends DynamicMenuBar implements ActionListener {
             ex.printStackTrace();
         }
 
-        imp.updateAndDraw();
+        //imp.updateAndDraw();
 
         // To avoid windows without our cool menu :)
-        ImagesWindowFactory.openImage(IJ.getImage(), false);
+        ImageWindow iw = IJ.getImage().getWindow();
+        if (!(iw instanceof StackWindowOperations || iw instanceof ImageWindowOperations)) {
+            ImagesWindowFactory.openImage(iw.getImagePlus(), false);
+        }
 
         // Tells user about possible internal conversions.
         if (converted) {

@@ -273,10 +273,10 @@ public class Xmipp_Projections_Explorer implements PlugIn, UniverseListener, iAn
         int projectionW = sphereIP.getWidth();
         int projectionH = sphereIP.getHeight();
 
-        String scoreFiles[] = sphere.analyzeProjection(xmippVolume, angles[0], angles[1], projectionW, projectionH);
+        String scoreFile = sphere.analyzeProjection(xmippVolume, angles[0], angles[1], projectionW, projectionH);
 
         // Shows table with scores
-        showScoreFiles(scoreFiles);
+        showScoreFiles(scoreFile);
 
         // Let's try to clean up memory.
         System.gc();
@@ -284,14 +284,14 @@ public class Xmipp_Projections_Explorer implements PlugIn, UniverseListener, iAn
         IJ.showStatus("");
     }
 
-    private void showScoreFiles(String scoreFiles[]) {
+    private void showScoreFiles(String scoreFile) {
         IJ.showStatus(LABELS.MESSAGE_LOADING_SCORE_FILE);
 
         if (frameImagesTable == null) {
             frameImagesTable = new JFrameImagesTable();
         }
 
-        frameImagesTable.loadScoreFiles(scoreFiles);
+        frameImagesTable.loadScoreFile(scoreFile);
 
         ImageWindow3D window = universeVolume.getWindow();
         Point location = window.getLocation();

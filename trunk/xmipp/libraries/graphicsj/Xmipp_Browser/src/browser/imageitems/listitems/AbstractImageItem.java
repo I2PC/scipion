@@ -8,9 +8,10 @@ import browser.Cache;
 import browser.ICONS_MANAGER;
 import browser.LABELS;
 import browser.imageitems.ImageDimension;
-import ij.IJ;
+import browser.table.ImageOperations;
 import ij.ImagePlus;
 import java.io.File;
+import java.text.DecimalFormat;
 import xmipp.ImageDouble;
 
 /**
@@ -22,6 +23,7 @@ public abstract class AbstractImageItem extends FileItem {
     //public int width, height;
     protected ImageDimension dimension;
     protected Cache cache;
+    protected double min, max, mean, stdDev;
 
     public AbstractImageItem(File file, Cache cache) {
         super(file);
@@ -47,6 +49,12 @@ public abstract class AbstractImageItem extends FileItem {
 
                 if (preview != null) {
                     cache.put(getKey(), preview);
+
+                    // Stores image info.
+                    min = preview.getProcessor().getMin();
+                    max = preview.getProcessor().getMax();
+                    mean = ImageOperations.mean(preview);
+                    stdDev = ImageOperations.std_dev(preview);
                 }
             }
         } else {    // Null preview.
@@ -104,11 +112,23 @@ public abstract class AbstractImageItem extends FileItem {
     public String getImageInfo() {
         loadImageData();
 
+        DecimalFormat myFormatter = new DecimalFormat("#.###");
+        String strMin = myFormatter.format(min);
+        String strMax = myFormatter.format(max);
+        String strMean = myFormatter.format(mean);
+        String strStdDev = myFormatter.format(stdDev);
+
         return "<html>"
                 + LABELS.LABEL_WIDTH + dimension.getWidth() + "<br>"
                 + LABELS.LABEL_HEIGHT + dimension.getHeight() + "<br>"
                 + (isVolume() ? LABELS.LABEL_DEPTH + dimension.getDepth() + "<br>" : "")
-                + (isStack() ? "<hr>" + LABELS.LABEL_NIMAGES + dimension.getNimages() : "")
+                + (isStack() ? LABELS.LABEL_NIMAGES + dimension.getNimages() : "")
+                + "<br>" + "<br>"
+                + "Min=" + strMin + "<br>"
+                + "Max=" + strMax + "<br>"
+                + "Mean=" + strMean + "<br>"
+                + "Std. dev.=" + strStdDev + "<br>"
+                + "</p>"
                 + "</html>";
     }
 

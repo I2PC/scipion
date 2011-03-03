@@ -2,6 +2,7 @@ package browser.imageitems;
 
 import ij.ImagePlus;
 import ij.ImageStack;
+import ij.io.FileInfo;
 import ij.process.FloatProcessor;
 import xmipp.ImageDouble;
 import xmipp.Projection;
@@ -26,7 +27,12 @@ public class ImageConverter {
         int d = image.getZsize();
         long n = image.getNsize();
 
-        return convertToImagej(image.getData(), w, h, d, n, path);
+        System.out.println("[" + image.getFilename() + "]");
+
+        ImagePlus ip = convertToImagej(image.getData(), w, h, d, n, path);
+        ip.setFileInfo(new FileInfo());
+
+        return ip;
     }
 
     public static ImagePlus convertToImagej(Projection projection, String path) {

@@ -81,35 +81,26 @@ public class JFrameImagesTable extends javax.swing.JFrame {
         add(jsPane, BorderLayout.CENTER);
     }
 
-    public void loadScoreFiles(String scoreFiles[]) {
+    public void loadScoreFile(String scoreFile) {
         clear();
 
         // Loads data from score files.
-        String score_pca[][] = loadScoreFile("", scoreFiles[0]);
-        String score_outliers[][] = loadScoreFile("", scoreFiles[1]);
+        String items[][] = loadScoreFile("", scoreFile);
 
         // Creates graphical items.
-        Vector<ScoreItem> pcaScoreItems = buildScoreItems(score_pca, true);
-        Vector<ScoreItem> outliersScoreItems = buildScoreItems(score_outliers, false);
+        Vector<ScoreItem> pcaScoreItems = buildScoreItems(items, true);
 
-        // Adds GOOD items to table.
+        // Adds items to table.
         for (int i = 0; i < pcaScoreItems.size(); i++) {
             tableModel.addItem(pcaScoreItems.elementAt(i));
         }
 
-        // Shows mean (ONLY for GOOD items).
+        // Shows mean.
         ImagePlus mean = calculateMean();
         jlMean.setIcon(new ImageIcon(mean.getImage()));
 
-        // Adds BAD items to table.
-        for (int i = 0; i < outliersScoreItems.size(); i++) {
-            tableModel.addItem(outliersScoreItems.elementAt(i));
-        }
-
         // Finally sets remaining stuff.
-        setTitle("Analysis Results: " + tableModel.getColumnCount() + " images ("
-                + pcaScoreItems.size() + " good + "
-                + outliersScoreItems.size() + " bad)");
+        setTitle("Analysis Results: " + tableModel.getColumnCount() + " images.");
 
         if (tableModel.getData().size() > 0) {
             adjustTableSize();

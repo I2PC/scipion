@@ -186,7 +186,8 @@ public class JPanelBrowser extends JPanel {
                 ImagesWindowFactory.openTable(xmippItem);
             }
         } else {
-            IJ.error("@TODO Open standard files with IJ.");
+            ImagePlus ip = IJ.openImage(item.getFile().getAbsolutePath());
+            ImagesWindowFactory.openImage(ip);
         }
     }
 

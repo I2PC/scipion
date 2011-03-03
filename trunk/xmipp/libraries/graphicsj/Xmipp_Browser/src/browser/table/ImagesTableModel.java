@@ -65,7 +65,7 @@ public class ImagesTableModel extends AbstractTableModel {
     }
 
     public void setNormalizedAuto() {
-        double min_max[] = ImageTableOperations.getMinAndMax(data);
+        double min_max[] = ImageOperations.getMinAndMax(data);
 
         setNormalized(min_max[0], min_max[1]);
     }
