@@ -2833,8 +2833,8 @@ public:
             else if (val > Tmax)
                 Tmax = val;
         }
-        minval = static_cast< double >Tmin;
-        maxval = static_cast< double >Tmax;
+        minval = static_cast< double >(Tmin);
+        maxval = static_cast< double >(Tmax);
     }
 
     /** Minimum and maximum of the values in the array.
