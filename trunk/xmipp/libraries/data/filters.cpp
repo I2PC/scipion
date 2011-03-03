@@ -399,8 +399,6 @@ void region_growing3D(const MultidimArray<double> &V_in, MultidimArray<double> &
 
     while (!iNeighbours.empty())
     {
-        Matrix1D<double> r(3);
-
         /* Take the current pixel to explore */
         iCurrentk = iNeighbours.front();
         iNeighbours.pop_front();
@@ -413,8 +411,7 @@ void region_growing3D(const MultidimArray<double> &V_in, MultidimArray<double> &
         lower than stop_colour, its filled with filling colour and added to the
         list for exploring its neighbours */
 #define CHECK_POINT_3D(k,i,j) \
-    XX(r)=j; YY(r)=i; ZZ(r)=k; \
-    if (!V_out.outside(r))  { \
+    if (INSIDEXYZ(V_out,j,i,k))  { \
         if (A3D_ELEM(V_out,k,i,j)!=filling_colour) \
             if ((less && A3D_ELEM (V_out,k,i,j) < stop_colour)|| \
                 (!less &&A3D_ELEM (V_out,k,i,j) > stop_colour)) { \
@@ -556,8 +553,8 @@ int label_image3D(const MultidimArray<double> &V, MultidimArray<double> &label)
         colour++;
     }
     FOR_ALL_ELEMENTS_IN_ARRAY3D(label)
-    if (label(k, i, j) != 0)
-        label(k, i, j) = label(k, i, j) - 31999;
+    if (A3D_ELEM(label,k, i, j) != 0)
+    	A3D_ELEM(label,k, i, j) = A3D_ELEM(label,k, i, j) - 31999;
     return colour -32000;
 }
 
