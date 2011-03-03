@@ -86,6 +86,7 @@ protected:
         addParamsLine("   move <directory>  <label=image> : Move files in metadata md1 to directory path (file names at label column)");
         addParamsLine("   delete  <label=image>      : Delete files in metadata md1 (file names at label column)");
         addParamsLine("   convert2db                 : Convert metadata to sqlite database");
+        addParamsLine("   convert2xml                : Convert metadata to xml file");
         addParamsLine("           alias -f;                                             ");
 
         addParamsLine("or --query <query_operation>   : Query operations");
@@ -138,6 +139,8 @@ protected:
         addExampleLine ("   xmipp_metadata_utilities --help fill");
         addExampleLine(" Dump metadata content to Sqlite3 database. (use xmipp_sqlite3 to visualize results)", false);
         addExampleLine ("   xmipp_metadata_utilities -i mD1.doc --operate convert2db -o mD1.db; xmipp_sqlite3 out.db");
+        addExampleLine(" Dump metadata content to xml file.", false);
+        addExampleLine ("   xmipp_metadata_utilities -i mD1.doc --operate convert2xml -o mD1.xml");
         addExampleLine(" Copy files in metadata to a location. The metadata will be also copied to new location", false);
         addExampleLine ("   xmipp_metadata_utilities -i mD1.doc --file copy /home/pepe/newLocation");
         addExampleLine(" Delete files in metadata.", false);
@@ -292,6 +295,11 @@ protected:
         {
             doWrite = false;
             MDSql::dumpToFile(fn_out);
+        }
+        else if (operation == "convert2xml")
+        {
+            doWrite = false;
+            mdIn.convertXML(fn_out);
         }
         else
         {
