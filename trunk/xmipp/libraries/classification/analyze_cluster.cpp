@@ -121,6 +121,12 @@ void ProgAnalyzeCluster::produceSideInfo()
         	unlink(fnOutAligned.c_str());
     }
     size_t id;
+    if (verbose>0)
+    {
+    	std::cerr << "Processing cluster ...";
+    	init_progress_bar(SFin.size());
+    }
+    int i=0;
     FOR_ALL_OBJECTS_IN_METADATA(SFin)
     {
         SFin.getValue( MDL_IMAGE, auxFn, __iter.objId);
@@ -184,8 +190,11 @@ void ProgAnalyzeCluster::produceSideInfo()
         char c;
         std::cin >> c;
 #endif
-
+        if ((++i)%10==0 && verbose>0)
+        	progress_bar(i);
     }
+    if (verbose>0)
+    	progress_bar(SFin.size());
 }
 #undef DEBUG
 
