@@ -299,42 +299,43 @@ void dilate3D_step(const MultidimArray<double> &in, MultidimArray<double> &out, 
         for (int i = STARTINGY(in) + 1;i < FINISHINGY(in); i++)
             for (int j = STARTINGX(in) + 1;j < FINISHINGX(in); j++)
             {
-                if (in(k, i, j) == 0)
+                if (A3D_ELEM(in,k, i, j) == 0)
                 {
                     // 6-environment
-                    out(k, i, j) = 0;
-                    sum = (int)(in(k - 1, i, j) + in(k + 1, i, j) + in(k, i - 1, j) + in(k, i + 1, j)
-                                + in(k, i, j - 1) + in(k, i, j + 1));
+                    A3D_ELEM(out,k, i, j) = 0;
+                    sum = (int)(A3D_ELEM(in,k - 1, i, j) + A3D_ELEM(in,k + 1, i, j) +
+                    		A3D_ELEM(in,k, i - 1, j) + A3D_ELEM(in,k, i + 1, j)
+                                + A3D_ELEM(in,k, i, j - 1) + A3D_ELEM(in,k, i, j + 1));
                     if (sum > count)
                     { //change the value to foreground
-                        out(k, i, j) = 1;
+                        A3D_ELEM(out,k, i, j) = 1;
                     }
                     else if (neig == 18)
                     { //18-environment
-                        sum = (int)(sum + in(k - 1, i, j - 1) + in(k - 1, i, j + 1) + in(k + 1, i, j - 1) + in(k + 1, i, j + 1) +
-                                    in(k, i + 1, j + 1) + in(k, i + 1, j - 1) + in(k, i - 1, j + 1) + in(k, i - 1, j - 1) +
-                                    in(k - 1, i + 1, j) + in(k - 1, i - 1, j) + in(k + 1, i + 1, j) + in(k + 1, i - 1, j));
+                        sum = (int)(sum + A3D_ELEM(in,k - 1, i, j - 1) + A3D_ELEM(in,k - 1, i, j + 1) + A3D_ELEM(in,k + 1, i, j - 1) + A3D_ELEM(in,k + 1, i, j + 1) +
+                                    A3D_ELEM(in,k, i + 1, j + 1) + A3D_ELEM(in,k, i + 1, j - 1) + A3D_ELEM(in,k, i - 1, j + 1) + A3D_ELEM(in,k, i - 1, j - 1) +
+                                    A3D_ELEM(in,k - 1, i + 1, j) + A3D_ELEM(in,k - 1, i - 1, j) + A3D_ELEM(in,k + 1, i + 1, j) + A3D_ELEM(in,k + 1, i - 1, j));
                         if (sum > count)
                         { //change the value to foreground
-                            out(k, i, j) = 1;
+                            A3D_ELEM(out,k, i, j) = 1;
                         }
                     }
                     else if (neig == 26)
                     { //26-environment
-                        sum = (int)(sum + in(k - 1, i + 1, j + 1) + in(k - 1, i + 1, j - 1) +
-                                    in(k - 1, i - 1, j + 1) + in(k - 1, i - 1, j - 1) +
-                                    in(k + 1, i + 1, j + 1) + in(k + 1, i + 1, j - 1) +
-                                    in(k + 1, i - 1, j + 1) + in(k + 1, i - 1, j - 1));
+                        sum = (int)(sum + A3D_ELEM(in,k - 1, i + 1, j + 1) + A3D_ELEM(in,k - 1, i + 1, j - 1) +
+                                    A3D_ELEM(in,k - 1, i - 1, j + 1) + A3D_ELEM(in,k - 1, i - 1, j - 1) +
+                                    A3D_ELEM(in,k + 1, i + 1, j + 1) + A3D_ELEM(in,k + 1, i + 1, j - 1) +
+                                    A3D_ELEM(in,k + 1, i - 1, j + 1) + A3D_ELEM(in,k + 1, i - 1, j - 1));
                         if (sum > count)
                         { //change the value to foreground
-                            out(k, i, j) = 1;
+                            A3D_ELEM(out,k, i, j) = 1;
                         }
                     }
 
                 }
                 else
                 {
-                    out(k, i, j) = in(k, i, j);
+                    A3D_ELEM(out,k, i, j) = A3D_ELEM(in,k, i, j);
                 }
                 sum = 0;
             }
@@ -351,44 +352,44 @@ void erode3D_step(const MultidimArray<double> &in, MultidimArray<double> &out, i
                 if (in(k, i, j) == 1)
                 {
                     // 6-environment
-                    out(k, i, j) = 1;
+                    A3D_ELEM(out,k, i, j) = 1;
 
-                    sum = (int)(in(k - 1, i, j) + in(k + 1, i, j) + in(k, i - 1, j) + in(k, i + 1, j)
-                                + in(k, i, j - 1) + in(k, i, j + 1));
+                    sum = (int)(in(k - 1, i, j) + A3D_ELEM(in,k + 1, i, j) + A3D_ELEM(in,k, i - 1, j) + A3D_ELEM(in,k, i + 1, j)
+                                + A3D_ELEM(in,k, i, j - 1) + A3D_ELEM(in,k, i, j + 1));
                     if ((6 - sum) > count)
                     { //change the value to background
-                        out(k, i, j) = 0;
+                        A3D_ELEM(out,k, i, j) = 0;
                     }
                     else if (neig == 18)
                     { //18-environment
-                        sum = (int)(sum + in(k - 1, i, j - 1) + in(k - 1, i, j + 1) + in(k + 1, i, j - 1) + in(k + 1, i, j + 1) +
-                                    in(k, i + 1, j + 1) + in(k, i + 1, j - 1) + in(k, i - 1, j + 1) + in(k, i - 1, j - 1) +
-                                    in(k - 1, i + 1, j) + in(k - 1, i - 1, j) + in(k + 1, i + 1, j) + in(k + 1, i - 1, j));
+                        sum = (int)(sum + A3D_ELEM(in,k - 1, i, j - 1) + A3D_ELEM(in,k - 1, i, j + 1) + A3D_ELEM(in,k + 1, i, j - 1) + A3D_ELEM(in,k + 1, i, j + 1) +
+                                    A3D_ELEM(in,k, i + 1, j + 1) + A3D_ELEM(in,k, i + 1, j - 1) + A3D_ELEM(in,k, i - 1, j + 1) + A3D_ELEM(in,k, i - 1, j - 1) +
+                                    A3D_ELEM(in,k - 1, i + 1, j) + A3D_ELEM(in,k - 1, i - 1, j) + A3D_ELEM(in,k + 1, i + 1, j) + A3D_ELEM(in,k + 1, i - 1, j));
                         if ((neig - sum) > count)
                         { //change the value to background
-                            out(k, i, j) = 0;
+                            A3D_ELEM(out,k, i, j) = 0;
                         }
                     }
                     else if (neig == 26)
                     { //26-environment
-                        sum = (int)(sum + in(k - 1, i, j - 1) + in(k - 1, i, j + 1) + in(k + 1, i, j - 1) + in(k + 1, i, j + 1) +
-                                    in(k, i + 1, j + 1) + in(k, i + 1, j - 1) + in(k, i - 1, j + 1) + in(k, i - 1, j - 1) +
-                                    in(k - 1, i + 1, j) + in(k - 1, i - 1, j) + in(k + 1, i + 1, j) + in(k + 1, i - 1, j) +
-                                    in(k - 1, i + 1, j + 1) + in(k - 1, i + 1, j - 1) +
-                                    in(k - 1, i - 1, j + 1) + in(k - 1, i - 1, j - 1) +
-                                    in(k + 1, i + 1, j + 1) + in(k + 1, i + 1, j - 1) +
-                                    in(k + 1, i - 1, j + 1) + in(k + 1, i - 1, j - 1));
+                        sum = (int)(sum + A3D_ELEM(in,k - 1, i, j - 1) + A3D_ELEM(in,k - 1, i, j + 1) + A3D_ELEM(in,k + 1, i, j - 1) + A3D_ELEM(in,k + 1, i, j + 1) +
+                                    A3D_ELEM(in,k, i + 1, j + 1) + A3D_ELEM(in,k, i + 1, j - 1) + A3D_ELEM(in,k, i - 1, j + 1) + A3D_ELEM(in,k, i - 1, j - 1) +
+                                    A3D_ELEM(in,k - 1, i + 1, j) + A3D_ELEM(in,k - 1, i - 1, j) + A3D_ELEM(in,k + 1, i + 1, j) + A3D_ELEM(in,k + 1, i - 1, j) +
+                                    A3D_ELEM(in,k - 1, i + 1, j + 1) + A3D_ELEM(in,k - 1, i + 1, j - 1) +
+                                    A3D_ELEM(in,k - 1, i - 1, j + 1) + A3D_ELEM(in,k - 1, i - 1, j - 1) +
+                                    A3D_ELEM(in,k + 1, i + 1, j + 1) + A3D_ELEM(in,k + 1, i + 1, j - 1) +
+                                    A3D_ELEM(in,k + 1, i - 1, j + 1) + A3D_ELEM(in,k + 1, i - 1, j - 1));
 
                         if ((neig - sum) > count)
                         { //change the value to background
-                            out(k, i, j) = 0;
+                            A3D_ELEM(out,k, i, j) = 0;
                         }
                     }
 
                 }
                 else
                 {
-                    out(k, i, j) = in(k, i, j);
+                    A3D_ELEM(out,k, i, j) = A3D_ELEM(in,k, i, j);
                 }
                 sum = 0;
             }
@@ -545,24 +546,26 @@ void sharpening(const MultidimArray<double> &in, double width, double strength,
     FOR_ALL_ELEMENTS_IN_ARRAY3D(kernel)
     {
         double r2=k*k+i*i+j*j;
-        kernel(k,i,j)=a*r2+c;
+        A3D_ELEM(kernel,k,i,j)=a*r2+c;
     }
     
     // Create the dilated and eroded versions
     MultidimArray<double> dilated, eroded;
     dilate3D(in,kernel,dilated);
     erode3D(in,kernel,eroded);
+#ifdef DEBUG
     Image<double> save;
     save()=dilated; save.write("PPPdilated.vol");
     save()=eroded; save.write("PPPeroded.vol");
+#endif
     
     // Sharpen
     out=in;
     double eps=(maxval-minval)*0.01;
     FOR_ALL_ELEMENTS_IN_ARRAY3D(in)
     {
-        double threshold=0.5*(dilated(k,i,j)+eroded(k,i,j));
-        if      (in(k,i,j)>threshold+eps)  out(k,i,j)=dilated(k,i,j);
-        else if (in(k,i,j)<threshold-eps)  out(k,i,j)=eroded(k,i,j);
+        double threshold=0.5*(A3D_ELEM(dilated,k,i,j)+A3D_ELEM(eroded,k,i,j));
+        if      (A3D_ELEM(in,k,i,j)>threshold+eps)  A3D_ELEM(out,k,i,j)=A3D_ELEM(dilated,k,i,j);
+        else if (A3D_ELEM(in,k,i,j)<threshold-eps)  A3D_ELEM(out,k,i,j)=A3D_ELEM(eroded,k,i,j);
     }
 }
