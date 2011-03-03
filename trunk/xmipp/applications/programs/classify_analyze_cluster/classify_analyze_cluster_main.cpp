@@ -27,15 +27,7 @@
 
 int main(int argc, char **argv)
 {
-	ProgAnalyzeCluster program;
-    try
-    {
-        program.read(argc, argv);
-        program.run();
-    }
-    catch (XmippError xe)
-    {
-        std::cerr << xe;
-    }
-    return 0;
+    ProgAnalyzeCluster program;
+    program.read(argc, argv);
+    program.tryRun();
 }
