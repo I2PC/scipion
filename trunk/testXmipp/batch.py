@@ -112,6 +112,11 @@ class Tester:
         self.addTest("-i input/singleImage.spi -o %o/image.xmp --crop -10")
         self.addTest("-i input/xray_import/Images/img48949.spe -o %o/image.xmp --size 512")
     
+        self.addProgram("xmipp_volume_segment")
+        self.addTest("-i input/phantomBacteriorhodopsin.vol -o %o/maskOtsu.vol --method otsu")
+        self.addTest("-i input/phantomBacteriorhodopsin.vol -o %o/maskVoxelMass.vol --method voxel_mass 54000")
+        self.addTest("-i input/phantomBacteriorhodopsin.vol -o %o/maskProb.vol --method prob 1")
+
         self.addProgram("xmipp_xray_import")
         self.addTest("--data input/xray_import/Images --flat input/xray_import/Flatfields --oroot %o/stack --crop 30")
     
