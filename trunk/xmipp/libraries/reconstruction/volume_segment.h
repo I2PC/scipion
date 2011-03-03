@@ -28,12 +28,13 @@
 #include <data/funcs.h>
 #include <data/multidim_array.h>
 #include <data/image.h>
+#include <data/program.h>
 
 ///@defgroup VolumeSegment Volume segmentation
 ///@ingroup ReconsLibrary
 //@{
 /** Segment parameters. */
-class ProgSegment
+class ProgSegment: public XmippProgram
 {
 public:
     /// Input volume
@@ -66,15 +67,14 @@ public:
     // Input volume
     Image<double> V;
 public:
-    /// Read argument from command line
-    void read(int argc, char **argv);
+    /// Read arguments
+    void readParams();
 
     /// Show
-    friend std::ostream & operator << (std::ostream &out,
-        const ProgSegment &prm);
+    void show() const;
 
-    /// Usage
-    void usage() const;
+    /// Define parameters
+    void defineParams();
 
     /** Produce side info.
         Read the input volume, and compute the number of voxels
@@ -85,6 +85,9 @@ public:
     /** Really compute the mask. If a mask name is given then it is
         written to disk.*/
     void segment(Image<double> &mask);
+
+    /** Run */
+    void run();
 };
 //@}
 #endif

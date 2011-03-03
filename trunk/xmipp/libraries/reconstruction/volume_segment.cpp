@@ -29,57 +29,55 @@
 #include "volume_segment.h"
 
 // Read arguments ==========================================================
-void ProgSegment::read(int argc, char **argv)
+void ProgSegment::readParams()
 {
-    fn_vol = getParameter(argc, argv, "-i");
-    voxel_mass = textToFloat(getParameter(argc, argv, "-voxel_mass", "-1"));
-    dalton_mass = textToFloat(getParameter(argc, argv, "-dalton_mass", "-1"));
-    aa_mass = textToFloat(getParameter(argc, argv, "-aa_mass", "-1"));
-    sampling_rate = textToFloat(getParameter(argc, argv, "-sampling_rate", "-1"));
-    fn_mask = getParameter(argc, argv, "-o", "");
-    en_threshold = checkParameter(argc, argv, "-threshold");
+    fn_vol = getParam("-i");
+    voxel_mass = getDoubleParam("--voxel_mass", "-1");
+    dalton_mass = getDoubleParam("--dalton_mass", "-1");
+    aa_mass = getDoubleParam("--aa_mass", "-1");
+    sampling_rate = getDoubleParam("--sampling_rate", "-1");
+    fn_mask = getParam("-o");
+    en_threshold = checkParam("--threshold");
     if (en_threshold)
-        threshold = textToFloat(getParameter(argc, argv, "-threshold"));
-    otsu=checkParameter(argc,argv,"-otsu");
-
-    //Sjors
-    wang_radius = textToInteger(getParameter(argc, argv, "-wang", "3."));
-    do_prob = checkParameter(argc, argv, "-prob");
-
+    threshold = getDoubleParam("--threshold");
+    otsu=checkParam("--otsu");
+    wang_radius = getIntParam("--wang", "3.");
+    do_prob = checkParam("--prob");
 }
 
 // Show ====================================================================
-std::ostream & operator << (std::ostream &out, const ProgSegment &prm)
+void ProgSegment::show() const
 {
-    out << "Input file   : " << prm.fn_vol        << std::endl
-        << "Voxel mass   : " << prm.voxel_mass    << std::endl
-        << "Dalton mass  : " << prm.dalton_mass   << std::endl
-        << "AA mass      : " << prm.aa_mass       << std::endl
-        << "Sampling rate: " << prm.sampling_rate << std::endl
-        << "Output mask  : " << prm.fn_mask       << std::endl
-        << "Enable thres.: " << prm.en_threshold  << std::endl
-        << "Threshold    : " << prm.threshold     << std::endl
-        << "Otsu         : " << prm.otsu          << std::endl
-        << "Wang radius  : " << prm.wang_radius   << std::endl
-        << "Probabilistic: " << prm.do_prob       << std::endl
+    std::cout
+    << "Input file   : " << fn_vol        << std::endl
+    << "Voxel mass   : " << voxel_mass    << std::endl
+    << "Dalton mass  : " << dalton_mass   << std::endl
+    << "AA mass      : " << aa_mass       << std::endl
+    << "Sampling rate: " << sampling_rate << std::endl
+    << "Output mask  : " << fn_mask       << std::endl
+    << "Enable thres.: " << en_threshold  << std::endl
+    << "Threshold    : " << threshold     << std::endl
+    << "Otsu         : " << otsu          << std::endl
+    << "Wang radius  : " << wang_radius   << std::endl
+    << "Probabilistic: " << do_prob       << std::endl
     ;
-    return out;
 }
 
 // usage ===================================================================
-void ProgSegment::usage() const
+void ProgSegment::defineParams()
 {
-    std::cerr << "   -i <input volume>       : Volume to segment\n"
-    << "  [-voxel_mass  <mass>  |  : Mass in voxels\n"
-    << "   [-dalton_mass <mass> |  : Mass in daltons\n"
-    << "    -aa_mass     <mass>]   : Mass in aminoacids\n"
-    << "   -sampling_rate <Tm>]    : Sampling rate (A/pix)\n"
-    << "  [-o <output mask=\"\">]    : Output mask\n"
-    << "  [-threshold <th=-1>]     : Thresholding method\n"
-    << "  [-otsu]                  : Otsu's method segmentation\n"
-    << "  [-wang <rad=3>]          : Radius [pix] for B.C. Wang cone\n"
-    << "  [-prob]                  : Calculate probabilistic solvent mask\n"
-    ;
+    addParamsLine("   -i <volume>              : Volume to segment");
+    addParamsLine("  [-o <mask=\"\">]          : Output mask");
+    addParamsLine("   --method <method>        : Segmentation method");
+    addParamsLine("      where <method>");
+    addParamsLine("            voxel_mass  <mass>  : Mass in voxels");
+    addParamsLine("            dalton_mass <mass>  : Mass in daltons");
+    addParamsLine("            aa_mass     <mass>  : Mass in aminoacids");
+    addParamsLine("            threshold   <th>    : Thresholding");
+    addParamsLine("            otsu                : Otsu's method segmentation");
+    addParamsLine("            wang        <rad=3> : Radius [pix] for B.C. Wang cone");
+    addParamsLine("            prob                : Probabilistic solvent mask");
+    addParamsLine("  [--sampling_rate <Tm=1>]  : Sampling rate (A/pix)");
 }
 
 // Produce side information ================================================
@@ -114,6 +112,7 @@ double segment_threshold(const Image<double> *V_in, Image<double> *V_out,
     (*V_out)().binarize(threshold);
 
 #ifdef DEBUG
+
     std::cout << threshold << std::endl;
     Image<double> save;
     save() = (*V_in)();
@@ -129,6 +128,7 @@ double segment_threshold(const Image<double> *V_in, Image<double> *V_out,
         opening3D((*V_out)(), aux(), 18, 0, 1);
         closing3D(aux(), (*V_out)(), 18, 0, 1);
 #ifdef DEBUG
+
         save() = (*V_out)();
         save.write("PPP2.vol");
 #endif
@@ -142,6 +142,7 @@ double segment_threshold(const Image<double> *V_in, Image<double> *V_out,
     count((int)aux(k, i, j))++;
 
 #ifdef DEBUG
+
     std::cout << count << std::endl << std::endl;
     std::cout << "Press any key\n";
     char c;
@@ -342,3 +343,10 @@ void ProgSegment::segment(Image<double> &mask)
         std::cout << "Segment: Cannot find an appropriate threshold\n";
 }
 
+void ProgSegment::run()
+{
+    Image<double> mask;
+    show();
+    produce_side_info();
+    segment(mask);
+}

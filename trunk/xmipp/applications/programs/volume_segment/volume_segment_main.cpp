@@ -26,42 +26,9 @@
 #include <data/image.h>
 #include <reconstruction/volume_segment.h>
 
-void Usage(const ProgSegment &prm);
-
 int main(int argc, char **argv)
 {
     ProgSegment prm;
-
-    // Read arguments
-    try
-    {
-        prm.read(argc, argv);
-        std::cout << prm;
-    }
-    catch (XmippError Xe)
-    {
-        std::cout << Xe;
-        Usage(prm);
-        exit(1);
-    }
-
-    // Really segment
-    try
-    {
-        Image<double> mask;
-        prm.produce_side_info();
-        prm.segment(mask);
-    }
-    catch (XmippError Xe)
-    {
-        std::cout << Xe;
-    }
+    prm.read(argc, argv);
+    prm.tryRun();
 }
-
-/* Usage ------------------------------------------------------------------- */
-void Usage(const ProgSegment &prm)
-{
-    std::cerr << "Usage: segment [Parameters]\n";
-    prm.usage();
-}
-
