@@ -136,8 +136,10 @@ class CommentList
 public:
     StringVector comments;
     std::vector<int> visibility;
+    std::vector<bool> wikiVerbatim;
 
-    void addComment(const String &comment, int visible = 0);
+    void addComment(const String &comment, int visible = 0, bool wikiVerbatim=false);
+    void addComment(const char * comment, bool verbatim=false);
     void clear();
     size_t size() const;
 };

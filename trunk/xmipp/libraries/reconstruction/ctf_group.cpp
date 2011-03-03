@@ -110,11 +110,19 @@ void ProgCtfGroup::show()
 /* Usage ------------------------------------------------------------------- */
 void ProgCtfGroup::defineParams()
 {
-    addUsageLine("Generate CTF (or defocus) groups from a single CTFdat file");
-    addUsageLine("Example of use: Sample using automated mode (resolution = 15 Ang.)");
-    addUsageLine("   xmipp_ctf_group -i input.sel --ctfdat input.ctfdat --pad 1.5 --wiener --phase_flipped --resol 15");
-    addUsageLine("Example of use: Sample using manual mode (after manual editing of ctf_group_split.doc)");
-    addUsageLine("   xmipp_ctf_group -i input.sel --ctfdat input.ctfdat --pad 1.5 --wiener --phase_flipped --split ctf_group_split.doc");
+    addUsageLine("Generate CTF (or defocus) groups from a single CTFdat file.");
+    addUsageLine("+The automated mode groups all images with absolute difference in");
+    addUsageLine("+CTF-values up to a given resolution below a given threshold.");
+    addUsageLine("+For example the example bellow groups all images together with");
+    addUsageLine("+absolute CTF differences smaller than 0.5 up to 15 Angstroms resolution).");
+    addUsageLine("+A complementary manual mode allows to combine different groups or to split)");
+    addUsageLine("+groups up even further.");
+    addSeeAlsoLine("ctf_create_ctfdat");
+    addExampleLine("Example of use: Sample using automated mode (resolution = 15 Ang.)",false);
+    addExampleLine("   xmipp_ctf_group --ctfdat all_images_new.ctfdat -o CtfGroupsNew/ctfAuto   --wiener --wc -1 --pad 2 --phase_flipped --error 0.5 --resol 15 ");
+    addExampleLine("Example of use: Sample using manual mode (after manual editing of ctf_group_split.doc)",false);
+    addExampleLine("   xmipp_ctf_group --ctfdat all_images_new.ctfdat -o CtfGroupsNew/ctfManual --wiener --wc -1 --pad 2 --phase_flipped --split CtfGroupsNew/ctf_group_split.doc");
+
 
     //    addParamsLine("   -i <sel_file>              : Input selfile");
     addParamsLine("   --ctfdat <ctfdat_file>     : Input CTFdat file for all data");
@@ -357,7 +365,7 @@ void ProgCtfGroup::produceSideInfo()
 
         }
         // Divide by sumimg (Wiener filter is for summing images, not averaging!)
-#define DEBUG
+        //#define DEBUG
 #ifdef DEBUG
 
         {
@@ -376,7 +384,7 @@ void ProgCtfGroup::produceSideInfo()
             wiener_constant = 0.1 * Mwien.computeAvg();
         }
         Mwien += wiener_constant;
-#define DEBUG
+        //#define DEBUG
 #ifdef DEBUG
 
         {
@@ -426,7 +434,6 @@ void ProgCtfGroup::autoRun()
 {
     double diff,mindiff;
     long int ctfMdSize=sortedCtfMD.size();
-    init_progress_bar(ctfMdSize);
     int c = XMIPP_MAX(1, ctfMdSize / 60);
     int counter=0;
     bool newgroup;
@@ -442,10 +449,12 @@ void ProgCtfGroup::autoRun()
     std::vector<size_t>::iterator itIn;
     size_t begin=vectorID.at(0);
     sortedCtfMD.setValue(MDL_DEFGROUP,groupNumber,begin);
-    init_progress_bar(ctfMdSize);
 
     if (verbose!=0)
+    {
         std::cout << "\nCompute differences between CTFs" <<std::endl;
+        init_progress_bar(ctfMdSize);
+    }
 
     for ( itOut=vectorID.begin()+1 ; itOut < vectorID.end(); itOut++ )
     {
@@ -529,6 +538,7 @@ void ProgCtfGroup::manualRun()
     unionMD.write("unionMD.xmd");
 #endif
 #undef DEBUG
+
     sortedCtfMD.importObjects(unionMD, MDValueNE(MDL_DEFGROUP, -2));
 #define DEBUG
 #ifdef DEBUG
@@ -536,6 +546,7 @@ void ProgCtfGroup::manualRun()
     sortedCtfMD.write("sortedCtfMD3.xmd");
 #endif
 #undef DEBUG
+
 }
 
 void ProgCtfGroup::writeOutputToDisc()
@@ -620,7 +631,11 @@ void ProgCtfGroup::writeOutputToDisc()
     FileName outFileNameCTF,outFileNameWIEN,outFileName;
     outFileNameCTF = fn_root + "_ctf."+format;
     outFileNameWIEN = fn_root + "_wien."+format;
-    std::cerr << "Saving CTF Images" <<std::endl;
+    if (verbose!=0)
+    {
+        std::cerr << "Saving CTF Images" <<std::endl;
+    }
+
     FOR_ALL_OBJECTS_IN_METADATA(sortedCtfMD)
     {
         sortedCtfMD.getValue(MDL_DEFGROUP,defGroup,__iter.objId);

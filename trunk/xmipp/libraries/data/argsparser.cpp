@@ -339,16 +339,25 @@ TokenType ArgLexer::lookahead() const
 
 
 //-------------------   PARSER IMPLEMENTATIONS   --------------------------------
-void CommentList::addComment(const String &comment, int visible)
+void CommentList::addComment(const String &comment, int visible, bool verbatim)
 {
     comments.push_back(comment);
     visibility.push_back(visible);
+    wikiVerbatim.push_back(verbatim);
+}
+void CommentList::addComment(const char * comment, bool verbatim)
+{
+    size_t t=0;
+    while(comment[t]=='+' && comment[t]!='\0')
+        t++;
+    addComment(comment+t,t,verbatim);
 }
 
 void CommentList::clear()
 {
     comments.clear();
     visibility.clear();
+    wikiVerbatim.clear();
 }
 size_t CommentList::size() const
 {
@@ -389,9 +398,9 @@ bool ASTNode::consume(TokenType type)
         unexpectedToken();
     //Store consumed token
     if (currentToken() != NULL)
-      token = *currentToken();
+        token = *currentToken();
     else
-      REPORT_ERROR(ERR_MEM_NULLPOINTER, "current token is null");
+        REPORT_ERROR(ERR_MEM_NULLPOINTER, "current token is null");
 
     //Ask for new token
     nextToken();
@@ -435,8 +444,8 @@ ArgumentDef::ArgumentDef(ArgLexer *lexer, ASTNode * parent) :
 
 ArgumentDef::~ArgumentDef()
 {
-  for (int i = 0; i < subParams.size(); ++i)
-    delete subParams[i];
+    for (int i = 0; i < subParams.size(); ++i)
+        delete subParams[i];
 }
 
 bool ArgumentDef::parse()
@@ -533,8 +542,8 @@ ParamDef::ParamDef(ArgLexer *lexer, ASTNode * parent) :
 
 ParamDef::~ParamDef()
 {
-  for (int i = 0; i < arguments.size(); ++i)
-    delete arguments[i];
+    for (int i = 0; i < arguments.size(); ++i)
+        delete arguments[i];
 
 }
 
@@ -716,7 +725,7 @@ bool ParamDef::checkRequires(std::stringstream & errors, ProgramDef * prog)
 
 void ParamDef::check(std::stringstream & errors)
 {
-  String aaa = name;
+    String aaa = name;
 
     ProgramDef * prog = (ProgramDef*) parent->parent;
     if (counter > 1 )
@@ -749,7 +758,7 @@ void ParamDef::check(std::stringstream & errors)
                 }
 
             if (argIndex < cmdArguments.size() && !arguments[arguments.size()-1]->isList)
-              errors << "Too many arguments for parameter " << name << std::endl;
+                errors << "Too many arguments for parameter " << name << std::endl;
         }
     }
     else
@@ -778,8 +787,8 @@ SectionDef::SectionDef(ArgLexer * lexer, ASTNode * parent) :
 
 SectionDef::~SectionDef()
 {
-  for (int i = 0; i < params.size(); ++i)
-    delete params[i];
+    for (int i = 0; i < params.size(); ++i)
+        delete params[i];
 }
 
 bool SectionDef::parse()
@@ -820,7 +829,7 @@ ProgramDef::~ProgramDef()
 {
     delete pLexer;
     for (int i = 0; i < sections.size(); ++i)
-      delete sections[i];
+        delete sections[i];
 }
 /** Parse the program definition. */
 bool ProgramDef::parse()
@@ -1058,13 +1067,14 @@ void ConsolePrinter::printProgram(const ProgramDef &program, int v)
     {
         *pOut << "USAGE" << std::endl;
         for (size_t i = 0; i < program.usageComments.size(); ++i)
-            *pOut << "   " << program.usageComments.comments[i] << std::endl;
+            if (program.usageComments.visibility[i] <= v)
+                *pOut << "   " << program.usageComments.comments[i] << std::endl;
     }
     //print see also
     if (!program.seeAlso.empty())
     {
-      *pOut << "SEE ALSO" << std::endl;
-      *pOut << "   " << program.seeAlso << std::endl;
+        *pOut << "SEE ALSO" << std::endl;
+        *pOut << "   " << program.seeAlso << std::endl;
     }
 
     //print sections and params
@@ -1079,11 +1089,12 @@ void ConsolePrinter::printProgram(const ProgramDef &program, int v)
     {
         *pOut << "EXAMPLES" << std::endl;
         for (size_t i = 0; i < program.examples.size(); ++i)
-        {
-            if (program.examples.visibility[i])
-              *pOut << "   ";
-            *pOut << "   " << program.examples.comments[i] << std::endl;
-        }
+            if (program.examples.visibility[i] <= v)
+            {
+                if (program.examples.wikiVerbatim[i])
+                    *pOut << "   ";
+                *pOut << "   " << program.examples.comments[i] << std::endl;
+            }
 
     }
 }
@@ -1320,23 +1331,19 @@ void WikiPrinter::printProgram(const ProgramDef &program, int v)
     {
         *pOut << "---++ Usage" << std::endl;
         for (size_t i = 0; i < program.usageComments.size(); ++i)
-        	switch (program.usageComments.visibility[i])
-        	{
-        	case 1:
-            	*pOut << "   <pre>" << program.usageComments.comments[i] << "</pre>\n";
-            	break;
-        	default:
-            	*pOut << "   " << program.usageComments.comments[i] << std::endl;
-        	}
+            if (program.usageComments.wikiVerbatim[i])
+                *pOut << "   <pre>" << program.usageComments.comments[i] << "</pre>\n";
+            else
+                *pOut << "   " << program.usageComments.comments[i] << std::endl;
     }
     if (!program.seeAlso.empty())
     {
-      *pOut << std::endl << "*See also* %BR%" << std::endl;
-      StringVector links;
-      splitString(program.seeAlso, ",", links);
-      for (int i = 0; i < links.size(); ++i)
-        *pOut << "[[" << links[i] << "_v" << XMIPP_MAJOR << "][" << links[i] <<"]]  ";
-      *pOut << "%BR%" << std::endl;
+        *pOut << std::endl << "*See also* %BR%" << std::endl;
+        StringVector links;
+        splitString(program.seeAlso, ",", links);
+        for (int i = 0; i < links.size(); ++i)
+            *pOut << "[[" << links[i] << "_v" << XMIPP_MAJOR << "][" << links[i] <<"]]  ";
+        *pOut << "%BR%" << std::endl;
     }
     //print sections and params
     if (program.sections.size() > 0)
@@ -1352,26 +1359,26 @@ void WikiPrinter::printProgram(const ProgramDef &program, int v)
         bool verbatim = false;
         for (size_t i = 0; i < program.examples.size(); ++i)
         {
-          if (program.examples.visibility[i])
-          {
-              if (!verbatim)
-              {
-                  *pOut << "<pre>" << std::endl;
-                  verbatim = true;
-              }
-          }
-          else
-          {
-            if (verbatim)
+            if (program.examples.wikiVerbatim[i])
             {
-              *pOut << "</pre>" << std::endl;
-              verbatim = false;
+                if (!verbatim)
+                {
+                    *pOut << "<pre>" << std::endl;
+                    verbatim = true;
+                }
             }
-          }
+            else
+            {
+                if (verbatim)
+                {
+                    *pOut << "</pre>" << std::endl;
+                    verbatim = false;
+                }
+            }
             *pOut << "   " << program.examples.comments[i] << std::endl;
         }
         if (verbatim)
-          *pOut << "</pre>" << std::endl;
+            *pOut << "</pre>" << std::endl;
     }
     //print user comments
     *pOut << "---++ User's comments" << std::endl;
@@ -1381,7 +1388,7 @@ void WikiPrinter::printProgram(const ProgramDef &program, int v)
 void WikiPrinter::printSection(const SectionDef &section, int v)
 {
     if (section.name != " Common options "
-         && section.visible <= v)
+        && section.visible <= v)
     {
         *pOut << std::endl;
         String name = section.name;

@@ -247,11 +247,11 @@ void XmippProgram::setProgramName(const char * name)
 
 void XmippProgram::addUsageLine(const char * line, bool verbatim)
 {
-    progDef->usageComments.addComment(line,verbatim?1:0);
+    progDef->usageComments.addComment(line,verbatim);
 }
 void XmippProgram::addExampleLine(const char * example, bool verbatim)
 {
-    progDef->examples.addComment(example, verbatim ? 1 : 0);
+    progDef->examples.addComment(example, verbatim);
 }
 void XmippProgram::addSeeAlsoLine(const char * seeAlso)
 {
