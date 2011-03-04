@@ -91,11 +91,8 @@ void ProgAngularClassAverage::readParams()
 void ProgAngularClassAverage::defineParams()
 {
     addUsageLine("Make class average images and corresponding selfiles from angular_projection_matching docfiles.");
-    addUsageLine("Example of use: Sample at default values and calculating output averages of random halves of the data");
-    addUsageLine("   xmipp_angular_class_average  -i proj_match.doc --lib ref_angles.doc -o out_dir --split");
-
     addParamsLine("    -i <doc_file>          : Docfile with assigned angles for all experimental particles");
-    addParamsLine("   --lib <doc_file>        : Docfile with angles used to generate the projection matching library");
+    addParamsLine("    --lib <doc_file>       : Docfile with angles used to generate the projection matching library");
     addParamsLine("    -o <root_name>         : Output rootname for class averages and selfiles");
     addParamsLine("or --add_to <root_name>    : Add output to existing files");
     addParamsLine("   [--split ]              : Also output averages of random halves of the data");
@@ -108,7 +105,7 @@ void ProgAngularClassAverage::defineParams()
     addParamsLine("   [--limit0 <l0>]        : Discard images below <l0>");
     addParamsLine("   [--limitF <lF>]        : Discard images above <lF>");
     addParamsLine("   [--limitR <lR>]        : if (lR>0 && lR< 100): discard lowest  <lR> % in each class");
-    addParamsLine("                         : if (lR<0 && lR>-100): discard highest <lR> % in each class");
+    addParamsLine("                          : if (lR<0 && lR>-100): discard highest <lR> % in each class");
 
     addUsageLine("    REALIGNMENT OF CLASSES ");
     addParamsLine("   [--iter <nr_iter=0>]      : Number of iterations for re-alignment");
@@ -120,6 +117,9 @@ void ProgAngularClassAverage::defineParams()
     addParamsLine("   [--max_psi_change <mps=360.>]   : Discard images that change psi more in the last iteration ");
 
     addKeywords("class average images");
+    addExampleLine("Sample at default values and calculating output averages of random halves of the data",false);
+    addExampleLine("xmipp_angular_class_average -i proj_match.doc --lib ref_angles.doc -o out_dir --split");
+
 }
 
 // Run ====================================================================
