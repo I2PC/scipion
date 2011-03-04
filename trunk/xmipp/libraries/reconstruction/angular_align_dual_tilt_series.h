@@ -50,7 +50,7 @@ public:
     /// Scale factor
     double scaleFactor;
 public:
-    /// Read parameters from comamnd line
+    /// Read parameters from command line
     void readParams();
 
     /// Show parameters

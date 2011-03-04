@@ -61,9 +61,14 @@ void ProgAlignDualTiltSeries::show()
 void ProgAlignDualTiltSeries::defineParams()
 {
     addUsageLine("Align two dual tilt series that have been previously internally aligned");
+    addUsageLine("with xmipp_tomo_align_tilt_series");
+    addSeeAlsoLine("tomo_align_tilt_series");
     addParamsLine("  --ref  <selfile>  : Reference tilt series");
+    addParamsLine("                    : The selfile must contain the list of micrographs");
+    addParamsLine("                    : and its tilt angles");
     addParamsLine("  --dual <selfile>  : Dual tilt series");
     addParamsLine(" [-o <rootname=\"\">]  : Rootname for the aligned tilt series");
+    addParamsLine("                    : If not given, the dual tilt series+_aligned");
     addParamsLine(" [--scale <s=0.25>] : Scale for performing the common line comparisons");
 }
 
@@ -475,7 +480,7 @@ void ProgAlignDualTiltSeries::shiftProjectionInZ(MultidimArray<double> &I, int d
         ZZ(w)=0;
         M3x3_BY_V3x1(w,Edualt,w);
         double arg=ZZ(w)*Z;
-        Ifft(i,j)*=std::complex<double>(cos(arg),sin(arg));
+        A2D_ELEM(Ifft,i,j)*=std::complex<double>(cos(arg),sin(arg));
     }
     transformer.inverseFourierTransform();
 }
