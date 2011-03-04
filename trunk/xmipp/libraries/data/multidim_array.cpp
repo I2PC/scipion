@@ -36,7 +36,7 @@ std::ostream& operator<<(std::ostream& ostrm,
     else
         ostrm << std::endl;
 
-    for (int l = 0; l < NSIZE(v); l++)
+    for (size_t l = 0; l < NSIZE(v); l++)
     {
         if (NSIZE(v)>1)
             ostrm << "Image No. " << l << std::endl;

@@ -369,7 +369,7 @@ String FileName::getBlockName() const
 {
     size_t first = rfind("@");
     String result = "";
-    if ( first != String::npos && isalpha(this->at(0)))
+    if ( first != npos && isalpha(this->at(0)))
         result = substr(0, first);
     return result;
 
@@ -378,7 +378,7 @@ String FileName::getBlockName() const
 FileName FileName::removeBlockName() const
 {
     size_t first = rfind("@");
-    if ( first != String::npos && isalpha(this->at(0)))
+    if ( first != npos && isalpha(this->at(0)))
         return substr(first + 1);
     return *this;
 }
@@ -416,10 +416,7 @@ bool FileName::isStar1(bool failIfNotExists) const
     getline(infile, line, '\n');
     int pos = line.find("XMIPP_STAR_1 *");
 
-    if (pos != String::npos) // xmipp_star_1 token found
-        return true;
-    else
-        return false;
+    return (pos != npos); // xmipp_star_1 token found
 }
 
 // Substitute one extension by other .......................................
