@@ -4720,11 +4720,21 @@ void typeCast(const MultidimArray<T1>& v1,  MultidimArray<T2>& v2)
     }
 
     v2.resizeNoCopy(v1);
-    T1* ptr1 = NULL;
-    size_t n;
-    FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY_ptr(v1,n,ptr1)
-    DIRECT_MULTIDIM_ELEM(v2,n) = static_cast< T2 >(*ptr1);
+    T1* ptr1 = MULTIDIM_ARRAY(v1);
 
+    // Unroll the loop
+    const size_t unroll=4;
+    size_t nmax=(NZYXSIZE(v1)/unroll)*unroll;
+    for (size_t n=0; n<nmax; n+=unroll, ptr1+=unroll)
+    {
+    	DIRECT_MULTIDIM_ELEM(v2,n)   = static_cast< T2 >(*ptr1);
+    	DIRECT_MULTIDIM_ELEM(v2,n+1) = static_cast< T2 >(*(ptr1+1));
+    	DIRECT_MULTIDIM_ELEM(v2,n+2) = static_cast< T2 >(*(ptr1+2));
+    	DIRECT_MULTIDIM_ELEM(v2,n+3) = static_cast< T2 >(*(ptr1+3));
+    }
+    // Do the remaining elements
+    for (size_t n=nmax; n<NZYXSIZE(v1); ++n, ++ptr1)
+    	DIRECT_MULTIDIM_ELEM(v2,n)   = static_cast< T2 >(*ptr1);
 }
 
 /** MultidimArray equality.*/
