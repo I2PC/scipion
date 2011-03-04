@@ -521,7 +521,6 @@ ReconsSources = [
     'angular_project_library.cpp',
     'art_crystal.cpp',
     'basic_art.cpp',
-    'common_lines.cpp',
     'convert_pdb2vol.cpp',
     'convert_vol2pseudo.cpp',
     'correct_bfactor.cpp',
@@ -674,7 +673,6 @@ AddXmippProgram('ctf_estimate_from_micrograph', ['XmippRecons'])
 AddXmippProgram('ctf_estimate_from_psd', ['XmippRecons'])
 AddXmippProgram('ctf_profile')
 AddXmippProgram('ctf_group', ['XmippRecons'])
-AddXmippProgram('common_lines', ['XmippRecons'])
 AddXmippProgram('denoise', ['XmippRecons'])
 AddXmippProgram('detect_missing_wedge', ['XmippRecons'])
 #AddXmippProgram('detect_structures', ['XmippRecons'])
