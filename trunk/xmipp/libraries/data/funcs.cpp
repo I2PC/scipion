@@ -1005,12 +1005,45 @@ void ByteSwap(unsigned char * b, int n)
 // Bsoft function
 void swapbytes(char* v, unsigned long n)
 {
-    char            t;
-    for ( int i=0; i<n/2; i++ )
+    char            t, t0, t1, t2, t3;
+    switch (n)
     {
-        t = v[i];
-        v[i] = v[n-1-i];
-        v[n-1-i] = t;
+    case 4:
+        t0 = v[0];
+        t1 = v[1];
+        v[0]=v[3];
+        v[1]=v[2];
+        v[2]=t1;
+        v[3]=t0;
+        break;
+    case 2:
+        t = v[0];
+        v[0] = v[1];
+        v[1] = t;
+        break;
+    case 1:
+    	break;
+    case 8:
+        t0 = v[0];
+        t1 = v[1];
+        t2 = v[2];
+        t3 = v[4];
+        v[0]=v[7];
+        v[1]=v[6];
+        v[2]=v[5];
+        v[3]=v[4];
+        v[4]=t3;
+        v[5]=t2;
+        v[6]=t1;
+        v[7]=t0;
+        break;
+    default:
+        for ( int i=0; i<n/2; i++ )
+        {
+            t = v[i];
+            v[i] = v[n-1-i];
+            v[n-1-i] = t;
+        }
     }
 }
 
