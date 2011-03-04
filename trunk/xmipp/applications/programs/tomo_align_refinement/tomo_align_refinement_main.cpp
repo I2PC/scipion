@@ -23,11 +23,11 @@
  *  e-mail address 'xmipp@cnb.csic.es'
  ***************************************************************************/
 
-#include <reconstruction/angular_assign_for_tomogram.h>
+#include <reconstruction/tomo_align_refinement.h>
 
 int main(int argc, char **argv)
 {
-    Prog_angular_predict_tomography_prm prm;
+    ProgTomoAlignRefinement prm;
     prm.read(argc,argv);
     prm.tryRun();
 }

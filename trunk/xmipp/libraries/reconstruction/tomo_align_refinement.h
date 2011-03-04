@@ -51,7 +51,7 @@ public:
 };
 
 /** Angular Predict parameters. */
-class Prog_angular_predict_tomography_prm: public XmippProgram
+class ProgTomoAlignRefinement: public XmippProgram
 {
 public:
     /** Filename of the reference volume */

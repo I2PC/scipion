@@ -23,7 +23,7 @@
  *  e-mail address 'xmipp@cnb.csic.es'
  ***************************************************************************/
 
-#include "angular_assign_for_tomogram.h"
+#include "tomo_align_refinement.h"
 #include <data/projection.h>
 
 #include <data/args.h>
@@ -38,7 +38,7 @@ AlignmentTomography::AlignmentTomography()
 }
 
 // Read arguments ==========================================================
-void Prog_angular_predict_tomography_prm::readParams()
+void ProgTomoAlignRefinement::readParams()
 {
     fn_ref = getParam("--ref");
     fn_sel = getParam("--sel");
@@ -57,7 +57,7 @@ void Prog_angular_predict_tomography_prm::readParams()
 }
 
 // Show ====================================================================
-void Prog_angular_predict_tomography_prm::show()
+void ProgTomoAlignRefinement::show()
 {
     std::cout
     << "Reference images:   " << fn_ref           << std::endl
@@ -73,19 +73,27 @@ void Prog_angular_predict_tomography_prm::show()
 }
 
 // usage ===================================================================
-void Prog_angular_predict_tomography_prm::defineParams()
+void ProgTomoAlignRefinement::defineParams()
 {
     addUsageLine("Realign a tilt series");
+    addUsageLine("A tilt series is realigned with respect to a volume following a");
+    addUsageLine("single particles approach (the volume is reprojected and the alignment");
+    addUsageLine("parameters are reoptimized");
     addParamsLine("   --ref <volume>             : Reference volume");
     addParamsLine("   --sel <selfile>            : Images to align");
     addParamsLine("   --oroot <rootname>         : rootname for the output");
-    addParamsLine("  [--max_rot_change <ang=5>]  : Maximum change allowed in rot");
+    addParamsLine("                              : rootname.doc contains a selfile with the");
+    addParamsLine("                              : images realigned");
+    addParamsLine("                              : rootname.stk contains the aligned and");
+    addParamsLine("                              : adjusted images in case --adjustGray or");
+    addParamsLine("                              : --generateAligned are given");
+    addParamsLine("  [--max_rot_change <ang=2>]  : Maximum change allowed in rot");
     addParamsLine("  [--max_tilt_change <ang=2>] : Maximum change allowed in tilt");
-    addParamsLine("  [--max_psi_change <ang=5>]  : Maximum change allowed in psi");
+    addParamsLine("  [--max_psi_change <ang=2>]  : Maximum change allowed in psi");
     addParamsLine("  [--max_shift_change <r=10>] : Maximum change allowed in shift");
-    addParamsLine("  [--rot_step <ang=1>]        : Rot search step");
-    addParamsLine("  [--tilt_step <ang=1>]       : Tilt search step");
-    addParamsLine("  [--psi_step <ang=3>]        : Psi search step");
+    addParamsLine("  [--rot_step <ang=0.5>]      : Rot search step");
+    addParamsLine("  [--tilt_step <ang=0.5>]     : Tilt search step");
+    addParamsLine("  [--psi_step <ang=0.5>]      : Psi search step");
     addParamsLine("  [--shift_step <r=2>]        : Step in shift in pixels");
     addParamsLine("  [--adjustGray]              : Adjust also gray values");
     addParamsLine("  [--generateAligned]         : Generate aligned images");
@@ -93,7 +101,7 @@ void Prog_angular_predict_tomography_prm::defineParams()
 
 // Produce side information ================================================
 //#define DEBUG
-void Prog_angular_predict_tomography_prm::produce_side_info()
+void ProgTomoAlignRefinement::produce_side_info()
 {
     V.read(fn_ref);
     V().setXmippOrigin();
@@ -120,7 +128,7 @@ void Prog_angular_predict_tomography_prm::produce_side_info()
 
 // Look for best angles -------------------------------------------------
 #define DEBUG
-void Prog_angular_predict_tomography_prm::predict_angles(int idx,
+void ProgTomoAlignRefinement::predict_angles(int idx,
         const FileName &fnImgOut)
 {
     AlignmentTomography newAlignment=list_of_assigned[idx];
@@ -241,7 +249,7 @@ void Prog_angular_predict_tomography_prm::predict_angles(int idx,
 #undef DEBUG
 
 // Finish processing ---------------------------------------------------------
-void Prog_angular_predict_tomography_prm::run()
+void ProgTomoAlignRefinement::run()
 {
     MetaData DF;
     FileName fnMaskOut, fnImgOut;
