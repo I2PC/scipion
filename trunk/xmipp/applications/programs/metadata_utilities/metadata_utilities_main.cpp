@@ -165,8 +165,8 @@ protected:
         fn_in = getParam("-i");
         if (!checkParam("--file") || getParam("--file") != "import_txt")
           mdIn.read(fn_in);
-        doWrite = checkParam("-o");
-        fn_out = doWrite ? getParam("-o") : fn_in;
+        doWrite = true;
+        fn_out = checkParam("-o") ? getParam("-o") : fn_in;
     }
 
     void doSet()
