@@ -53,7 +53,6 @@ void ProgTomoAlignRefinement::readParams()
     shift_step = getDoubleParam("--shift_step");
     adjustGray = checkParam("--adjustGray");
     generateAligned = checkParam("--generateAligned");
-    produce_side_info();
 }
 
 // Show ====================================================================
@@ -91,9 +90,9 @@ void ProgTomoAlignRefinement::defineParams()
     addParamsLine("  [--max_tilt_change <ang=2>] : Maximum change allowed in tilt");
     addParamsLine("  [--max_psi_change <ang=2>]  : Maximum change allowed in psi");
     addParamsLine("  [--max_shift_change <r=10>] : Maximum change allowed in shift");
-    addParamsLine("  [--rot_step <ang=0.5>]      : Rot search step");
-    addParamsLine("  [--tilt_step <ang=0.5>]     : Tilt search step");
-    addParamsLine("  [--psi_step <ang=0.5>]      : Psi search step");
+    addParamsLine("  [--rot_step <ang=0.25>]     : Rot search step");
+    addParamsLine("  [--tilt_step <ang=0.25>]    : Tilt search step");
+    addParamsLine("  [--psi_step <ang=0.25>]     : Psi search step");
     addParamsLine("  [--shift_step <r=2>]        : Step in shift in pixels");
     addParamsLine("  [--adjustGray]              : Adjust also gray values");
     addParamsLine("  [--generateAligned]         : Generate aligned images");
@@ -127,7 +126,7 @@ void ProgTomoAlignRefinement::produce_side_info()
 #undef DEBUG
 
 // Look for best angles -------------------------------------------------
-#define DEBUG
+//#define DEBUG
 void ProgTomoAlignRefinement::predict_angles(int idx,
         const FileName &fnImgOut)
 {
@@ -251,6 +250,7 @@ void ProgTomoAlignRefinement::predict_angles(int idx,
 // Finish processing ---------------------------------------------------------
 void ProgTomoAlignRefinement::run()
 {
+    produce_side_info();
     MetaData DF;
     FileName fnMaskOut, fnImgOut;
     Projection theo;
