@@ -86,6 +86,9 @@ class Tester:
         self.addProgram("xmipp_phantom_simulate_microscope")
         self.addTest("-i input/smallStack.stk -o %o/smallStackPlusCtf.stk --ctf input/input.ctfparam" )
     
+        self.addProgram("xmipp_tomo_align_dual_tilt_series")
+        self.addTest("--ref input/tomo_dual_alignment/ref.sel --dual input/tomo_dual_alignment/dual.sel --scale 1")
+
         self.addProgram("xmipp_tomo_project")
         self.addTest("-i input/phantomCandida.vol -o %o/image.xmp --angles 0 90 90" )
         self.addTest("-i input/phantomCandida.vol --oroot %o/projections --params input/tomoProjection.param")
