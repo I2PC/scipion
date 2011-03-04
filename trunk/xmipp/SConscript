@@ -511,7 +511,6 @@ ReconsSources = [
     'adjust_volume_grey_levels.cpp',
     'align2d.cpp',
     'align_tilt_pairs.cpp',
-    'angular_assign_for_tilt_series.cpp',
     'angular_assign_for_tomogram.cpp',
     'angular_commonline.cpp',
     'angular_continuous_assign.cpp',
@@ -572,6 +571,7 @@ ReconsSources = [
     'series_remove_fluctuations.cpp',
     'sparma.cpp',
     'symmetrize.cpp',
+    'tomo_align_tilt_series.cpp',
     'tomo_align_dual_tilt_series.cpp',
     'virus_vertex.cpp',
     'volume_segment.cpp',
@@ -634,7 +634,6 @@ if int(env['java']):
 
 # Src (apps)
 
-AddXmippProgram('angular_assign_for_tilt_series', ['XmippRecons'])
 AddXmippProgram('angular_assign_for_tomogram', ['XmippRecons'])
 AddXmippProgram('angular_class_average', ['XmippRecons'])
 AddXmippProgram('angular_commonline', ['XmippRecons'])
@@ -754,6 +753,7 @@ AddXmippProgram('try_symmetry')
 #AddXmippProgram('test_program')
 #AddXmippProgram('test_sql')
 AddXmippProgram('template_threads')
+AddXmippProgram('tomo_align_tilt_series', ['XmippRecons'])
 AddXmippProgram('tomo_align_dual_tilt_series', ['XmippRecons'])
 AddXmippProgram('tomo_project', ['XmippRecons'])
 AddXmippProgram('virus_vertex', ['XmippRecons'])
