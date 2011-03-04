@@ -23,7 +23,7 @@
  *  e-mail address 'xmipp@cnb.csic.es'
  ***************************************************************************/
 
-#include <reconstruction/angular_align_dual_tilt_series.h>
+#include <reconstruction/tomo_align_dual_tilt_series.h>
 
 int main(int argc, char **argv)
 {

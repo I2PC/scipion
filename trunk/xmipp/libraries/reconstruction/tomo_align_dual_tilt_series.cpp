@@ -23,7 +23,7 @@
  *  e-mail address 'xmipp@cnb.csic.es'
  ***************************************************************************/
 
-#include "angular_align_dual_tilt_series.h"
+#include "tomo_align_dual_tilt_series.h"
 #include <data/args.h>
 #include <data/filters.h>
 #include <data/fftw.h>
