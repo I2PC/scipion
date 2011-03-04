@@ -1449,9 +1449,10 @@ void ProgML2D::doThreadPreselectFastSignificantRefno()
                         for (int ipsi = 0; ipsi < nr_psi; ipsi++)
                         {
                             diff = A2_plus_Xi2;
-                            FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY2D(Mflip)
+                            MultidimArray<double> &mref_ref = mref[refno*nr_psi + ipsi];
+                            FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(Mflip)
                             {
-                                diff -= dAij(Mflip, i, j) * dAij(mref[refno*nr_psi + ipsi], i, j);
+                                diff -= DIRECT_MULTIDIM_ELEM(Mflip, n) * DIRECT_MULTIDIM_ELEM(mref_ref, n);
                             }
                             WEIGHT = diff;
                             if (diff < local_mindiff)
@@ -1756,10 +1757,13 @@ void ProgML2D::doThreadExpectationSingleImageRefno()
                             // Takes the input from Maux and leaves it in Faux
                             local_transformer.FourierTransform();
 
-                            FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY2D(Faux)
+                            MultidimArray< std::complex<double> > &mysumimgs_ref = mysumimgs[output_refnoipsi];
+                            MultidimArray< std::complex<double> > &Fimg_flip_ref = Fimg_flip[iflip];
+
+                            FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(Faux)
                             {
-                                dAij(mysumimgs[output_refnoipsi],i,j) +=
-                                    conj(dAij(Faux,i,j)) * dAij(Fimg_flip[iflip],i,j);
+                              DIRECT_MULTIDIM_ELEM(mysumimgs_ref, n) +=
+                                    conj(DIRECT_MULTIDIM_ELEM(Faux,n)) * DIRECT_MULTIDIM_ELEM(Fimg_flip_ref,n);
                             }
                         }
                     } // close if Msignificant
@@ -2461,7 +2465,6 @@ void ProgML2D::writeOutputFiles(const ModelML2D &model, int outputType)
     }
 
     const char * rootStr = fn_root.c_str(), * prefixStr = fn_prefix.c_str();
-    std::cerr << "fn_prefix: " << fn_prefix << std::endl;
     if (write_img_xmd)
     {
         //Write image metadata, for each iteration a new block will be written
@@ -2469,7 +2472,6 @@ void ProgML2D::writeOutputFiles(const ModelML2D &model, int outputType)
             fn_tmp = formatString("iter%06d@%s_iter_images.xmd", iter, rootStr);
         else
             fn_tmp = formatString("%s_%s_images.xmd", rootStr, prefixStr);
-       // std::cerr << "Writing md images: " << fn_tmp + "_images.xmd"<< std::endl;
         MDimg.write(fn_tmp, MD_APPEND);
     }
 
