@@ -852,6 +852,7 @@ void MetaData::read(const FileName &_filename,
 void MetaData::readPlain(const FileName &inFile, const String &labelsString, const String &separator)
 {
 
+    clear();
     std::vector<MDLabel> labels;
     MDL::str2LabelVector(labelsString, labels);
 
