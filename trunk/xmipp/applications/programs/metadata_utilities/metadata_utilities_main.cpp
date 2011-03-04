@@ -87,6 +87,7 @@ protected:
         addParamsLine("   delete  <label=image>      : Delete files in metadata md1 (file names at label column)");
         addParamsLine("   convert2db                 : Convert metadata to sqlite database");
         addParamsLine("   convert2xml                : Convert metadata to xml file");
+        addParamsLine("   import_txt <labels>        : Import a text file specifying its columns");
         addParamsLine("           alias -f;                                             ");
 
         addParamsLine("or --query <query_operation>   : Query operations");
@@ -162,7 +163,8 @@ protected:
     void readParams()
     {
         fn_in = getParam("-i");
-        mdIn.read(fn_in);
+        if (!checkParam("--file") || getParam("--file") != "import_txt")
+          mdIn.read(fn_in);
         doWrite = checkParam("-o");
         fn_out = doWrite ? getParam("-o") : fn_in;
     }
@@ -300,6 +302,10 @@ protected:
         {
             doWrite = false;
             mdIn.convertXML(fn_out);
+        }
+        else if (operation == "import_txt")
+        {
+          mdIn.readPlain(fn_in, getParam("--file", 1));
         }
         else
         {
