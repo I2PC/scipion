@@ -634,7 +634,6 @@ if int(env['java']):
 
 # Src (apps)
 
-AddXmippProgram('align_tilt_pairs', ['XmippRecons'])
 AddXmippProgram('angular_assign_for_tilt_series', ['XmippRecons'])
 AddXmippProgram('angular_assign_for_tomogram', ['XmippRecons'])
 AddXmippProgram('angular_class_average', ['XmippRecons'])
@@ -689,6 +688,7 @@ AddXmippProgram('find_center3d')
 AddXmippProgram('fourier_filter', ['XmippRecons'])
 AddXmippProgram('histogram')
 AddXmippProgram('image_align', ['XmippRecons'])
+AddXmippProgram('image_align_tilt_pairs', ['XmippRecons'])
 AddXmippProgram('image_convert')
 AddXmippProgram('image_header')
 AddXmippProgram('image_statistics')
