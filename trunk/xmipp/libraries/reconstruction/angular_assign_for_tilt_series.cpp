@@ -454,45 +454,45 @@ double computeAffineTransformation(const MultidimArray<unsigned char> &I1,
 }
 
 /* Parameters -------------------------------------------------------------- */
-void Prog_tomograph_alignment::readParams()
+void ProgTomographAlignment::readParams()
 {
     fnSel=getParam("-i");
-    fnSelOrig=getParam("-iorig");
-    fnRoot=getParam("-oroot");
+    fnSelOrig=getParam("--iorig");
+    fnRoot=getParam("--oroot");
     if (fnRoot=="")
         fnRoot=fnSel.withoutExtension();
-    globalAffine=checkParam("-globalAffine");
-    useCriticalPoints=checkParam("-useCriticalPoints");
+    globalAffine=checkParam("--globalAffine");
+    useCriticalPoints=checkParam("--useCriticalPoints");
     if (useCriticalPoints)
-        Ncritical=getIntParam("-useCriticalPoints");
+        Ncritical=getIntParam("--useCriticalPoints");
     else
         Ncritical=0;
-    seqLength=getIntParam("-seqLength");
-    blindSeqLength=getIntParam("-blindSeqLength");
-    maxStep=getIntParam("-maxStep");
-    gridSamples=getIntParam("-gridSamples");
-    psiMax=getDoubleParam("-psiMax");
-    deltaRot=getDoubleParam("-deltaRot");
-    localSize=getDoubleParam("-localSize");
-    optimizeTiltAngle=checkParam("-optimizeTiltAngle");
-    isCapillar=checkParam("-isCapillar");
-    dontNormalize=checkParam("-dontNormalize");
-    difficult=checkParam("-difficult");
-    corrThreshold=getDoubleParam("-threshold");
-    maxShiftPercentage=getDoubleParam("-maxShiftPercentage");
-    maxIterDE=getIntParam("-maxIterDE");
-    showAffine=checkParam("-showAffine");
-    thresholdAffine=getDoubleParam("-thresholdAffine");
-    identifyOutliersZ = getDoubleParam("-identifyOutliers");
-    doNotIdentifyOutliers = checkParam("-noOutliers");
-    pyramidLevel = getIntParam("-pyramid");
-    numThreads = getIntParam("-thr");
+    seqLength=getIntParam("--seqLength");
+    blindSeqLength=getIntParam("--blindSeqLength");
+    maxStep=getIntParam("--maxStep");
+    gridSamples=getIntParam("--gridSamples");
+    psiMax=getDoubleParam("--psiMax");
+    deltaRot=getDoubleParam("--deltaRot");
+    localSize=getDoubleParam("--localSize");
+    optimizeTiltAngle=checkParam("--optimizeTiltAngle");
+    isCapillar=checkParam("--isCapillar");
+    dontNormalize=checkParam("--dontNormalize");
+    difficult=checkParam("--difficult");
+    corrThreshold=getDoubleParam("--threshold");
+    maxShiftPercentage=getDoubleParam("--maxShiftPercentage");
+    maxIterDE=getIntParam("--maxIterDE");
+    showAffine=checkParam("--showAffine");
+    thresholdAffine=getDoubleParam("--thresholdAffine");
+    identifyOutliersZ = getDoubleParam("--identifyOutliers");
+    doNotIdentifyOutliers = checkParam("--noOutliers");
+    pyramidLevel = getIntParam("--pyramid");
+    numThreads = getIntParam("--thr");
     if (numThreads<1)
         numThreads = 1;
-    lastStep=getIntParam("-lastStep");
+    lastStep=getIntParam("--lastStep");
 }
 
-void Prog_tomograph_alignment::show()
+void ProgTomographAlignment::show()
 {
     std::cout << "Input images:       " << fnSel              << std::endl
     << "Original images:    " << fnSelOrig          << std::endl
@@ -524,45 +524,58 @@ void Prog_tomograph_alignment::show()
     ;
 }
 
-void Prog_tomograph_alignment::defineParams()
+void ProgTomographAlignment::defineParams()
 {
     addUsageLine("Align a single-axis tilt series without any marker.");
+    addSeeAlsoLine("tomo_align_dual_tilt_series");
     addParamsLine(" == General Options == ");
     addParamsLine("   -i <metadatafile>              : Input images");
-    addParamsLine("  [-iorig <metadatafile=\"\">]       : Metadata with images at original scale");
-    addParamsLine("  [-oroot <fn_out=\"\">]             : Output alignment");
-    addParamsLine("  [-thr <num=1>]                  : Parallel processing using \"num\" threads");
-    addParamsLine("  [-lastStep+ <step=-1>]          : Last step to perform");
+    addParamsLine("                                  : The selfile must contain the list of micrographs");
+    addParamsLine("                                  : and its tilt angles");
+    addParamsLine("  [--iorig <metadatafile=\"\">]   : Metadata with images at original scale");
+    addParamsLine("  [--oroot <fn_out=\"\">]         : Output alignment");
+    addParamsLine("                                  : If not given, the input selfile without extension");
+    addParamsLine("  [--thr <num=1>]                 : Parallel processing using \"num\" threads");
+    addParamsLine("  [--lastStep+ <step=-1>]         : Last step to perform");
     addParamsLine("                                  : Step -1 -> Perform all steps");
     addParamsLine("                                  : Step  0 -> Determination of affine transformations");
+    addParamsLine("                                  : Step  1 -> Determination of landmark chains");
+    addParamsLine("                                  : Step  2 -> Determination of alignment parameters");
+    addParamsLine("                                  : Step  3 -> Writing aligned images");
     addParamsLine(" == Step 0 (Affine alignment) Options == ");
-    addParamsLine("  [-maxShiftPercentage <p=0.2>]   : Maximum shift as percentage of image size");
-    addParamsLine("  [-thresholdAffine <th=0.85>]    : Threshold affine");
-    addParamsLine("  [-globalAffine]                 : Look globally for affine transformations");
-    addParamsLine("  [-difficult+]                   : Apply some filters before affine alignment");
-    addParamsLine("  [-maxIterDE+ <n=30>]            : Maximum number of iteration in Differential Evolution");
-    addParamsLine("  [-showAffine+]                  : Show affine transformations as PPP*");
-    addParamsLine("  [-identifyOutliers+ <z=5>]      : Z-score to be an outlier");
-    addParamsLine("  [-noOutliers+]                  : Do not identify outliers");
-    addParamsLine("  [-pyramid+ <level=1>]           : Multiresolution for affine transformations");
+    addParamsLine("  [--maxShiftPercentage <p=0.2>]   : Maximum shift as percentage of image size");
+    addParamsLine("  [--thresholdAffine <th=0.85>]    : Threshold affine");
+    addParamsLine("  [--globalAffine]                 : Look globally for affine transformations");
+    addParamsLine("  [--difficult+]                   : Apply some filters before affine alignment");
+    addParamsLine("  [--maxIterDE+ <n=30>]            : Maximum number of iteration in Differential Evolution");
+    addParamsLine("  [--showAffine+]                  : Show affine transformations as PPP*");
+    addParamsLine("  [--identifyOutliers+ <z=5>]      : Z-score to be an outlier");
+    addParamsLine("  [--noOutliers+]                  : Do not identify outliers");
+    addParamsLine("  [--pyramid+ <level=1>]           : Multiresolution for affine transformations");
     addParamsLine(" == Step 1 (Landmark chain) Options == ");
-    addParamsLine("  [-seqLength <n=5>]              : Sequence length");
-    addParamsLine("  [-localSize <size=0.04>]        : In percentage");
-    addParamsLine("  [-useCriticalPoints <n=0>]      : Use critical points instead of a grid");
-    addParamsLine("                                  : n is the number of critical points to choose");
-    addParamsLine("                                  : in each image");
-    addParamsLine("  [-threshold+ <th=-1>]           : Correlation threshold");
-    addParamsLine("  [-blindSeqLength+ <n=-1>]       : Blind sequence length, -1=No blind landmarks");
-    addParamsLine("  [-maxStep+ <step=4>]            : Maximum step for chain refinement");
-    addParamsLine("  [-gridSamples+ <n=40>]           : Total number of samples=n*n");
-    addParamsLine("  [-isCapillar+]                  : Set this flag if the tilt series is of a capillar");
-    addParamsLine(" == Step 2 (Alignment) Options == ");
-    addParamsLine("  [-psiMax+ <psi=-1>]             : Maximum psi in absolute value (degrees)");
+    addParamsLine("  [--seqLength <n=5>]              : Sequence length");
+    addParamsLine("  [--localSize <size=0.04>]        : In percentage");
+    addParamsLine("  [--useCriticalPoints <n=0>]      : Use critical points instead of a grid");
+    addParamsLine("                                   : n is the number of critical points to choose");
+    addParamsLine("                                   : in each image");
+    addParamsLine("  [--threshold+ <th=-1>]           : Correlation threshold");
+    addParamsLine("  [--blindSeqLength+ <n=-1>]       : Blind sequence length, -1=No blind landmarks");
+    addParamsLine("  [--maxStep+ <step=4>]            : Maximum step for chain refinement");
+    addParamsLine("  [--gridSamples+ <n=40>]           : Total number of samples=n*n");
+    addParamsLine("  [--isCapillar+]                  : Set this flag if the tilt series is of a capillar");
+    addParamsLine(" == Step 2 (Determination of alignment parameters) Options == ");
+    addParamsLine("  [--psiMax+ <psi=-1>]             : Maximum psi in absolute value (degrees)");
     addParamsLine("                                  : -1 -> do not optimize for psi");
-    addParamsLine("  [-deltaRot+ <rot=5>]            : In degrees. For the first optimization stage");
-    addParamsLine("  [-optimizeTiltAngle+]           : Optimize tilt angle");
+    addParamsLine("  [--deltaRot+ <rot=5>]            : In degrees. For the first optimization stage");
+    addParamsLine("  [--optimizeTiltAngle+]           : Optimize tilt angle");
     addParamsLine(" == Step 3 (Produce aligned images) Options == ");
-    addParamsLine("  [-dontNormalize+]               : Don't normalize the output images");
+    addParamsLine("  [--dontNormalize+]               : Don't normalize the output images");
+    addExampleLine("Typical run",false);
+    addExampleLine("xmipp_tomo_align_tilt_series -i tiltseries.sel --thr 8");
+    addExampleLine("If there are image with large shifts",false);
+    addExampleLine("xmipp_tomo_align_tilt_series -i tiltseries.sel --thr 8 --globalAffine");
+    addExampleLine("If there are clear landmarks that can be tracked",false);
+    addExampleLine("xmipp_tomo_align_tilt_series -i tiltseries.sel --thr 8 --criticalPoints");
 }
 
 /* Produce side info ------------------------------------------------------- */
@@ -570,7 +583,7 @@ static pthread_mutex_t printingMutex = PTHREAD_MUTEX_INITIALIZER;
 struct ThreadComputeTransformParams
 {
     int myThreadID;
-    Prog_tomograph_alignment * parent;
+    ProgTomographAlignment * parent;
 };
 
 void * threadComputeTransform( void * args )
@@ -578,7 +591,7 @@ void * threadComputeTransform( void * args )
     ThreadComputeTransformParams * master =
         (ThreadComputeTransformParams *) args;
 
-    Prog_tomograph_alignment * parent = master->parent;
+    ProgTomographAlignment * parent = master->parent;
     int thread_id = master->myThreadID;
     int localnumThreads = parent->numThreads;
     bool isCapillar = parent->isCapillar;
@@ -661,7 +674,7 @@ void * threadComputeTransform( void * args )
     return NULL;
 }
 
-void Prog_tomograph_alignment::computeAffineTransformations(
+void ProgTomographAlignment::computeAffineTransformations(
     bool globalAffineToUse)
 {
     bool oldglobalAffine=globalAffine;
@@ -689,7 +702,7 @@ void Prog_tomograph_alignment::computeAffineTransformations(
     globalAffine=oldglobalAffine;
 }
 
-void Prog_tomograph_alignment::identifyOutliers(bool mark)
+void ProgTomographAlignment::identifyOutliers(bool mark)
 {
     isOutlier.initZeros(Nimg);
     MultidimArray<double> correlationListAux(Nimg);
@@ -729,7 +742,7 @@ void Prog_tomograph_alignment::identifyOutliers(bool mark)
     }
 }
 
-void Prog_tomograph_alignment::produceSideInfo()
+void ProgTomographAlignment::produceSideInfo()
 {
     // Difficult images?
     if (difficult)
@@ -1026,7 +1039,7 @@ static pthread_mutex_t chainRefineMutex = PTHREAD_MUTEX_INITIALIZER;
 struct ThreadGenerateLandmarkSetParams
 {
     int myThreadID;
-    Prog_tomograph_alignment * parent;
+    ProgTomographAlignment * parent;
 
     std::vector<LandmarkChain> *chainList;
 };
@@ -1035,7 +1048,7 @@ void * threadgenerateLandmarkSetGrid( void * args )
 {
     ThreadGenerateLandmarkSetParams * master =
         (ThreadGenerateLandmarkSetParams *) args;
-    Prog_tomograph_alignment * parent = master->parent;
+    ProgTomographAlignment * parent = master->parent;
     int thread_id = master->myThreadID;
     int Nimg=parent->Nimg;
     int numThreads=parent->numThreads;
@@ -1207,7 +1220,7 @@ void * threadgenerateLandmarkSetBlind( void * args )
 {
     ThreadGenerateLandmarkSetParams * master =
         (ThreadGenerateLandmarkSetParams *) args;
-    Prog_tomograph_alignment * parent = master->parent;
+    ProgTomographAlignment * parent = master->parent;
     int thread_id = master->myThreadID;
     int Nimg=parent->Nimg;
     int numThreads=parent->numThreads;
@@ -1365,7 +1378,7 @@ void * threadgenerateLandmarkSetCriticalPoints( void * args )
 {
     ThreadGenerateLandmarkSetParams * master =
         (ThreadGenerateLandmarkSetParams *) args;
-    Prog_tomograph_alignment * parent = master->parent;
+    ProgTomographAlignment * parent = master->parent;
     int thread_id = master->myThreadID;
     int Nimg=parent->Nimg;
     int numThreads=parent->numThreads;
@@ -1610,7 +1623,7 @@ void * threadgenerateLandmarkSetCriticalPoints( void * args )
 }
 #undef DEBUG
 
-void Prog_tomograph_alignment::generateLandmarkSet()
+void ProgTomographAlignment::generateLandmarkSet()
 {
     if (!exists(fnRoot+"_landmarks.txt"))
     {
@@ -1705,7 +1718,7 @@ void Prog_tomograph_alignment::generateLandmarkSet()
 #undef DEBUG
 
 /* Refine landmark --------------------------------------------------------- */
-bool Prog_tomograph_alignment::refineLandmark(int ii, int jj,
+bool ProgTomographAlignment::refineLandmark(int ii, int jj,
         const Matrix1D<double> &rii, Matrix1D<double> &rjj, double &maxCorr,
         bool tryFourier) const
 {
@@ -1821,7 +1834,7 @@ bool Prog_tomograph_alignment::refineLandmark(int ii, int jj,
     return retval;
 }
 
-bool Prog_tomograph_alignment::refineLandmark(const MultidimArray<double> &pieceii,
+bool ProgTomographAlignment::refineLandmark(const MultidimArray<double> &pieceii,
         int jj, Matrix1D<double> &rjj, double actualCorrThreshold,
         bool reversed, double &maxCorr) const
 {
@@ -1962,7 +1975,7 @@ bool Prog_tomograph_alignment::refineLandmark(const MultidimArray<double> &piece
 
 /* Refine chain ------------------------------------------------------------ */
 //#define DEBUG
-bool Prog_tomograph_alignment::refineChain(LandmarkChain &chain,
+bool ProgTomographAlignment::refineChain(LandmarkChain &chain,
         double &corrChain)
 {
 #ifdef DEBUG
@@ -2111,7 +2124,7 @@ bool Prog_tomograph_alignment::refineChain(LandmarkChain &chain,
 #undef DEBUG
 
 /* Read/Write landmark set ------------------------------------------------- */
-void Prog_tomograph_alignment::writeLandmarkSet(const FileName &fnLandmark) const
+void ProgTomographAlignment::writeLandmarkSet(const FileName &fnLandmark) const
 {
     std::ofstream fhOut;
     fhOut.open(fnLandmark.c_str());
@@ -2135,7 +2148,7 @@ void Prog_tomograph_alignment::writeLandmarkSet(const FileName &fnLandmark) cons
     fhOut.close();
 }
 
-void Prog_tomograph_alignment::readLandmarkSet(const FileName &fnLandmark)
+void ProgTomographAlignment::readLandmarkSet(const FileName &fnLandmark)
 {
     std::ifstream fhIn;
     fhIn.open(fnLandmark.c_str());
@@ -2175,7 +2188,7 @@ void Prog_tomograph_alignment::readLandmarkSet(const FileName &fnLandmark)
 }
 
 /* Write affine transformations -------------------------------------------- */
-void Prog_tomograph_alignment::writeTransformations(
+void ProgTomographAlignment::writeTransformations(
     const FileName &fnTransformations) const
 {
     std::ofstream fhOut;
@@ -2207,7 +2220,7 @@ void Prog_tomograph_alignment::writeTransformations(
 
 /* Align images ------------------------------------------------------------ */
 //#define DEBUG
-void Prog_tomograph_alignment::alignImages(const Alignment &alignment)
+void ProgTomographAlignment::alignImages(const Alignment &alignment)
 {
     // Correct all landmarks
     Matrix1D<double> r(2);
@@ -2375,7 +2388,7 @@ void Prog_tomograph_alignment::alignImages(const Alignment &alignment)
 #undef DEBUG
 
 /* Produce information from landmarks -------------------------------------- */
-void Prog_tomograph_alignment::produceInformationFromLandmarks()
+void ProgTomographAlignment::produceInformationFromLandmarks()
 {
     // Produce V sets
     std::vector<int> emptyVector;
@@ -2416,7 +2429,7 @@ void Prog_tomograph_alignment::produceInformationFromLandmarks()
 }
 
 /* Remove outliers ---------------------------------------------------------*/
-void Prog_tomograph_alignment::removeOutlierLandmarks(
+void ProgTomographAlignment::removeOutlierLandmarks(
     const Alignment &alignment)
 {
     std::cout << "Removing outliers ...\n";
@@ -2466,7 +2479,7 @@ void Prog_tomograph_alignment::removeOutlierLandmarks(
 /* Run --------------------------------------------------------------------- */
 namespace TomographAlignment
 {
-const Prog_tomograph_alignment* global_prm;
+const ProgTomographAlignment* global_prm;
 }
 
 double wrapperError(double *p, void *prm)
@@ -2479,7 +2492,7 @@ double wrapperError(double *p, void *prm)
 }
 
 #define DEBUG
-void Prog_tomograph_alignment::run()
+void ProgTomographAlignment::run()
 {
     produceSideInfo();
     generateLandmarkSet();

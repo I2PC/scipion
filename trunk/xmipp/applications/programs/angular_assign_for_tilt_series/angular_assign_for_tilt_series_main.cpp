@@ -27,7 +27,7 @@
 
 int main(int argc, char **argv)
 {
-    Prog_tomograph_alignment prm;
+    ProgTomographAlignment prm;
     prm.read(argc,argv);
     prm.tryRun();
     return 0;

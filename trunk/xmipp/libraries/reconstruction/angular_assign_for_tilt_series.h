@@ -73,7 +73,7 @@ typedef std::vector<Landmark> LandmarkChain;
 class Alignment;
 
 /** This is the main class */
-class Prog_tomograph_alignment: public XmippProgram {
+class ProgTomographAlignment: public XmippProgram {
 public:
     /// MetaData File with all images
     FileName fnSel;
@@ -287,7 +287,7 @@ public:
 
 class Alignment {
 public:
-    const Prog_tomograph_alignment *prm;
+    const ProgTomographAlignment *prm;
     std::vector< Matrix1D<double> > di;
     std::vector< Matrix1D<double> > rj;
     Matrix1D<double> psi;
@@ -296,7 +296,7 @@ public:
     Matrix1D<double> raxis;
 
 public:
-    Alignment(const Prog_tomograph_alignment *_prm)
+    Alignment(const ProgTomographAlignment *_prm)
     {
         prm=_prm;
         Nimg=MAT_XSIZE(_prm->allLandmarksX);
