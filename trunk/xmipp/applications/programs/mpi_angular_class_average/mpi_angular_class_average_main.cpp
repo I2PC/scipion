@@ -80,7 +80,6 @@ public:
     void readParams()
     {
         ProgAngularClassAverage::readParams();
-
     }
 
     /* Usage ------------------------------------------------------------------- */
@@ -201,7 +200,6 @@ public:
                             }
                         }
                     }
-
                 }//TAG_WORKFROMWORKER
                 // worker is free
                 if (status.MPI_TAG == TAG_FREEWORKER)
@@ -392,10 +390,9 @@ public:
 
     void usage(int verb = 0) const
     {
-      if (rank == 0)
-        ProgAngularClassAverage::usage(verb);
+        if (rank == 0)
+            ProgAngularClassAverage::usage(verb);
     }
-
 };
 
 int main(int argc, char *argv[])
