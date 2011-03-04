@@ -1478,9 +1478,11 @@ void WikiPrinter::printArgument(const ArgumentDef & argument, int v)
 
 void WikiPrinter::printCommentList(const CommentList &comments, int v)
 {
+    *pOut << "          ";
     for (size_t i = 0; i < comments.size(); ++i)
         if (comments.visibility[i] <= v)
-            *pOut << "          " << comments.comments[i] << "%BR%" << std::endl;
+            *pOut << comments.comments[i] << " ";
+    *pOut << "%BR%" << std::endl;
 }
 
 void WikiPrinter::printToken(ArgToken * token)
