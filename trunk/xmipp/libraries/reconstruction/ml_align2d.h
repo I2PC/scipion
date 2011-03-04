@@ -162,7 +162,7 @@ public:
     /** Filenames reference selfile/image, fraction docfile & output rootname */
     FileName fn_img, fn_ref, fn_root, fn_frac, fn_sig, fn_doc, fn_oext, fn_scratch, fn_control;
     /** Command line */
-    std::string cline;
+    String cline;
     //double sigma_noise2;
     /** Flag for checking mirror images of all references */
     bool do_mirror;
@@ -428,7 +428,7 @@ public:
     /// Read model from file
     virtual void readModel(ModelML2D &model, FileName fn_base);
     /// Get base name based on fn_root and some number
-    FileName getBaseName(std::string suffix = "", int number = -1);
+    FileName getBaseName(String suffix = "", int number = -1);
 
     virtual void printModel(const String &msg, const ModelML2D & model);
 

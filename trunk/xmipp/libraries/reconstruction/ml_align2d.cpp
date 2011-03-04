@@ -23,7 +23,7 @@
  *  e-mail address 'xmipp@cnb.uam.es'
  ***************************************************************************/
 #include "ml_align2d.h"
-//#define DEBUG
+//#define DEBUG_JM
 
 //Mutex for each thread update sums
 pthread_mutex_t update_mutex =
@@ -46,54 +46,54 @@ void ProgML2D::defineBasicParams(XmippProgram * prog)
 
     if (!do_ML3D)
     {
-        prog->addParamsLine("   -nref <int=1>               : Number of references to generate automatically (recommended)");
-        prog->addParamsLine("or -ref <selfile=\"\">         : or selfile with initial references/single reference image ");
-        prog->addParamsLine(" [ -o <rootname=ml2d> ]        : Output rootname");
-        prog->addParamsLine(" [ -mirror ]                   : Also check mirror image of each reference ");
-        prog->addParamsLine(" [ -fast ]                     : Use pre-centered images to pre-calculate significant orientations");
+        prog->addParamsLine("   --nref <int=1>               : Number of references to generate automatically (recommended)");
+        prog->addParamsLine("or --ref <selfile=\"\">         : or selfile with initial references/single reference image ");
+        prog->addParamsLine(" [ --oroot <rootname=ml2d> ]        : Output rootname");
+        prog->addParamsLine(" [ --mirror ]                   : Also check mirror image of each reference ");
+        prog->addParamsLine(" [ --fast ]                     : Use pre-centered images to pre-calculate significant orientations");
     }
     else
     {
-        prog-> addParamsLine("-ref <selfile=\"\">         : or selfile with initial references/single reference image ");
-        prog->addParamsLine("  [ -nref <int=1> ]              : Number of references to generate automatically (recommended)");
-        prog->addParamsLine(" [ -o <rootname=ml3d> ]        : Output rootname");
+        prog-> addParamsLine("--ref <selfile=\"\">         : or selfile with initial references/single reference image ");
+        prog->addParamsLine("  [ --nref <int=1> ]              : Number of references to generate automatically (recommended)");
+        prog->addParamsLine(" [ --oroot <rootname=ml3d> ]        : Output rootname");
     }
-    prog->addParamsLine(" [ -thr <N=1> ]                : Use N parallel threads ");
-    prog->addParamsLine(" [ -iem <blocks=1>]            : Number of blocks to be used with IEM");
+    prog->addParamsLine(" [ --thr <N=1> ]                : Use N parallel threads ");
+    prog->addParamsLine(" [ --iem <blocks=1>]            : Number of blocks to be used with IEM");
 
 }
 
 void ProgML2D::defineAdditionalParams(XmippProgram * prog, const char * sectionLine)
 {
     prog->addParamsLine(sectionLine);
-    prog->addParamsLine(" [ -eps <float=5e-5> ]         : Stopping criterium");
+    prog->addParamsLine(" [ --eps <float=5e-5> ]         : Stopping criterium");
     if (!do_ML3D)
-        prog->addParamsLine(" [ -iter <int=100> ]           : Maximum number of iterations to perform ");
+        prog->addParamsLine(" [ --iter <int=100> ]           : Maximum number of iterations to perform ");
     else //Only 25 iterations by default in ml3d
-        prog->addParamsLine(" [ -iter <int=25> ]           : Maximum number of iterations to perform ");
-    prog->addParamsLine(" [ -psi_step <float=5> ]       : In-plane rotation sampling interval [deg]");
-    prog->addParamsLine(" [ -noise <float=1> ]          : Expected standard deviation for pixel noise ");
-    prog->addParamsLine(" [ -offset <float=3> ]         : Expected standard deviation for origin offset [pix]");
-    prog->addParamsLine(" [ -frac <docfile=\"\"> ]      : Docfile with expected model fractions (default: even distr.)");
+        prog->addParamsLine(" [ --iter <int=25> ]           : Maximum number of iterations to perform ");
+    prog->addParamsLine(" [ --psi_step <float=5> ]       : In-plane rotation sampling interval [deg]");
+    prog->addParamsLine(" [ --noise <float=1> ]          : Expected standard deviation for pixel noise ");
+    prog->addParamsLine(" [ --offset <float=3> ]         : Expected standard deviation for origin offset [pix]");
+    prog->addParamsLine(" [ --frac <docfile=\"\"> ]      : Docfile with expected model fractions (default: even distr.)");
     prog->addParamsLine(" [ -C <double=1e-12> ]         : Significance criterion for fast approach ");
-    prog->addParamsLine(" [ -zero_offsets ]             : Kick-start the fast algorithm from all-zero offsets ");
+    prog->addParamsLine(" [ --zero_offsets ]             : Kick-start the fast algorithm from all-zero offsets ");
     if (!do_ML3D)
     {
-        prog->addParamsLine(" [ -restart <logfile> ]    : restart a run with all parameters as in the logfile ");
-        prog->addParamsLine(" [ -istart <int=1> ]         : number of initial iteration ");
+        prog->addParamsLine(" [ --restart <logfile> ]    : restart a run with all parameters as in the logfile ");
+        prog->addParamsLine(" [ --istart <int=1> ]         : number of initial iteration ");
     }
-    prog->addParamsLine(" [ -fix_sigma_noise ]           : Do not re-estimate the standard deviation in the pixel noise ");
-    prog->addParamsLine(" [ -fix_sigma_offset ]          : Do not re-estimate the standard deviation in the origin offsets ");
-    prog->addParamsLine(" [ -fix_fractions ]             : Do not re-estimate the model fractions ");
-    prog->addParamsLine(" [ -doc <docfile=\"\"> ]       : Read initial angles and offsets from docfile ");
-    prog->addParamsLine(" [ -student ]                  : Use t-distributed instead of Gaussian model for the noise ");
-    prog->addParamsLine(" [ -df <int=6> ]               : Degrees of freedom for the t-distribution ");
+    prog->addParamsLine(" [ --fix_sigma_noise ]           : Do not re-estimate the standard deviation in the pixel noise ");
+    prog->addParamsLine(" [ --fix_sigma_offset ]          : Do not re-estimate the standard deviation in the origin offsets ");
+    prog->addParamsLine(" [ --fix_fractions ]             : Do not re-estimate the model fractions ");
+    prog->addParamsLine(" [ --doc <docfile=\"\"> ]       : Read initial angles and offsets from docfile ");
+    prog->addParamsLine(" [ --student <df=6>]            : Use t-distributed instead of Gaussian model for the noise ");
+    prog->addParamsLine("                                : df = Degrees of freedom for the t-distribution ");
     prog->addParamsLine("    requires -student;");
-    prog->addParamsLine(" [ -norm ]                     : Refined normalization parameters for each particle ");
-    prog->addParamsLine(" [ -save_memA ]                : Save memory A");
+    prog->addParamsLine(" [ --norm ]                     : Refined normalization parameters for each particle ");
+    prog->addParamsLine(" [ --save_memA ]                : Save memory A");
 
     if (!do_ML3D)
-        prog->addParamsLine(" [ -save_memB ]                : Save memory B");
+        prog->addParamsLine(" [ --save_memB ]                : Save memory B");
 
 
 
@@ -106,13 +106,13 @@ void ProgML2D::defineParams()
     defineBasicParams(this);
     defineAdditionalParams(this, "==+ Additional options ==");
     addParamsLine("==+++++ Hidden arguments ==");
-    addParamsLine(" [-scratch <scratch=\"\">]");
-    addParamsLine(" [-debug <int=0>]");
-    addParamsLine(" [-no_sigma_trick]");
-    addParamsLine(" [-trymindiff_factor <float=0.9>]");
-    addParamsLine(" [-random_seed <int=-1>]");
-    addParamsLine(" [-search_rot <float=999.>]");
-    addParamsLine(" [-load <N=1>]");
+    addParamsLine(" [--scratch <scratch=\"\">]");
+    addParamsLine(" [--debug <int=0>]");
+    addParamsLine(" [--no_sigma_trick]");
+    addParamsLine(" [--trymindiff_factor <float=0.9>]");
+    addParamsLine(" [--random_seed <int=-1>]");
+    addParamsLine(" [--search_rot <float=999.>]");
+    addParamsLine(" [--load <N=1>]");
 }
 
 // Read arguments ==========================================================
@@ -127,40 +127,40 @@ void ProgML2D::readParams()
     FileName restart_imgmd, restart_refmd;
     int restart_iter, restart_seed;
 
-    if (!do_ML3D  && checkParam("-restart"))
+    if (!do_ML3D  && checkParam("--restart"))
     {
         //TODO-------- Think later -----------
-      REPORT_ERROR(ERR_NOT_IMPLEMENTED, "Not implemented restart in ml2d for now");
-//        do_restart = true;
-//        MetaData MDrestart;
-//        char *copy  = NULL;
-//
-//        MDrestart.read(getParam("-restart"));
-//        cline = MDrestart.getComment();
-//        MDrestart.getValue(MDL_SIGMANOISE, restart_noise);
-//        MDrestart.getValue(MDL_SIGMAOFFSET, restart_offset);
-//        MDrestart.getValue(MDL_IMGMD, restart_imgmd);
-//        MDrestart.getValue(MDL_REFMD, restart_refmd);
-//        MDrestart.getValue(MDL_ITER, restart_iter);
-//        MDrestart.getValue(MDL_RANDOMSEED, restart_seed);
-//        generateCommandLine(cline, argc2, argv2, copy);
-//        //Take argument from the restarting command line
-//        progDef->read(argc2, argv2);
+        REPORT_ERROR(ERR_NOT_IMPLEMENTED, "Not implemented restart in ml2d for now");
+        //        do_restart = true;
+        //        MetaData MDrestart;
+        //        char *copy  = NULL;
+        //
+        //        MDrestart.read(getParam("-restart"));
+        //        cline = MDrestart.getComment();
+        //        MDrestart.getValue(MDL_SIGMANOISE, restart_noise);
+        //        MDrestart.getValue(MDL_SIGMAOFFSET, restart_offset);
+        //        MDrestart.getValue(MDL_IMGMD, restart_imgmd);
+        //        MDrestart.getValue(MDL_REFMD, restart_refmd);
+        //        MDrestart.getValue(MDL_ITER, restart_iter);
+        //        MDrestart.getValue(MDL_RANDOMSEED, restart_seed);
+        //        generateCommandLine(cline, argc2, argv2, copy);
+        //        //Take argument from the restarting command line
+        //        progDef->read(argc2, argv2);
     }
     else
     {
         // no restart, just copy argc to argc2 and argv to argv2
         do_restart = false;
         for (int i = 1; i < argc; i++)
-            cline = cline + (std::string) argv[i] + " ";
+            cline = cline + (String) argv[i] + " ";
     }
 
-    factor_nref = getIntParam("-nref");
-    fn_ref = getParam("-ref");
+    factor_nref = getIntParam("--nref");
+    fn_ref = getParam("--ref");
     fn_img = getParam("-i");
-    fn_root = getParam("-o");
-    psi_step = getDoubleParam("-psi_step");
-    Niter = getIntParam("-iter");
+    fn_root = getParam("--oroot");
+    psi_step = getDoubleParam("--psi_step");
+    Niter = getIntParam("--iter");
     //Fixed values for the 3D case
     if (do_ML3D)
     {
@@ -169,41 +169,41 @@ void ProgML2D::readParams()
     }
     else
     {
-        istart = getIntParam("-istart");
-        do_mirror = checkParam("-mirror");
-        save_mem2 = checkParam("-save_memB");
-        fast_mode = checkParam("-fast");
+        istart = getIntParam("--istart");
+        do_mirror = checkParam("--mirror");
+        save_mem2 = checkParam("--save_memB");
+        fast_mode = checkParam("--fast");
     }
-    model.sigma_noise = getDoubleParam("-noise");
-    model.sigma_offset = getDoubleParam("-offset");
+    model.sigma_noise = getDoubleParam("--noise");
+    model.sigma_offset = getDoubleParam("--offset");
 
-    eps = getDoubleParam("-eps");
-    fn_frac = getParam("-frac");
-    fix_fractions = checkParam("-fix_fractions");
-    fix_sigma_offset = checkParam("-fix_sigma_offset");
-    fix_sigma_noise = checkParam("-fix_sigma_noise");
+    eps = getDoubleParam("--eps");
+    fn_frac = getParam("--frac");
+    fix_fractions = checkParam("--fix_fractions");
+    fix_sigma_offset = checkParam("--fix_sigma_offset");
+    fix_sigma_noise = checkParam("--fix_sigma_noise");
 
     C_fast = getDoubleParam("-C");
-    save_mem1 = checkParam("-save_memA");
+    save_mem1 = checkParam("--save_memA");
 
-    zero_offsets = checkParam("-zero_offsets");
-    model.do_student = checkParam("-student");
-    df = getDoubleParam("-df");
-    model.do_norm = checkParam("-norm");
+    zero_offsets = checkParam("--zero_offsets");
+    model.do_student = checkParam("--student");
+    df = getDoubleParam("--student");
+    model.do_norm = checkParam("--norm");
 
     // Number of threads
-    threads = getIntParam("-thr");
+    threads = getIntParam("--thr");
     //testing the thread load in refno
-    refno_load_param = getIntParam("-load");
+    refno_load_param = getIntParam("--load");
     // Hidden arguments
-    fn_scratch = getParameter(argc2, argv2, "-scratch", "");
-    debug = getIntParam("-debug");
-    model.do_student_sigma_trick = !checkParam("-no_sigma_trick");
-    trymindiff_factor = getDoubleParam("-trymindiff_factor");
+    fn_scratch = getParameter(argc2, argv2, "--scratch", "");
+    debug = getIntParam("--debug");
+    model.do_student_sigma_trick = !checkParam("--no_sigma_trick");
+    trymindiff_factor = getDoubleParam("--trymindiff_factor");
     // Random seed to use for image randomization and creation
     // of initial references and blocks order
     // could be passed for restart or for debugging
-    seed = getIntParam("-random_seed");
+    seed = getIntParam("--random_seed");
 
     if (seed == -1)
         seed = time(NULL);
@@ -211,9 +211,9 @@ void ProgML2D::readParams()
         std::cerr << "WARNING: *** Using a non random seed and not in restarting ***" <<std::endl;
 
     // Only for interaction with refine3d:
-    search_rot = getDoubleParam("-search_rot");
+    search_rot = getDoubleParam("--search_rot");
     //IEM stuff
-    blocks = getIntParam("-iem");
+    blocks = getIntParam("--iem");
 
     // Now reset some stuff for restart
     if (do_restart)
@@ -701,46 +701,46 @@ void ProgML2D::produceSideInfo2()
     //TODO: THINK RESTART LATER, NOW NOT WORKING
     if (do_restart)
     {
-      REPORT_ERROR(ERR_NOT_IMPLEMENTED, "Restart option not implement yet in ml2d");
+        REPORT_ERROR(ERR_NOT_IMPLEMENTED, "Restart option not implement yet in ml2d");
 
         // Read optimal image-parameters
-//        FOR_ALL_LOCAL_IMAGES()
-//        {
-//            if (limit_rot)
-//            {
-//                MDimg.getValue(MDL_ANGLEROT, imgs_oldphi[IMG_LOCAL_INDEX]);
-//                MDimg.getValue(MDL_ANGLETILT, imgs_oldtheta[IMG_LOCAL_INDEX]);
-//            }
-//            if (zero_offsets)
-//            {
-//                idum = (do_mirror ? 2 : 1) * model.n_ref;
-//                double xx, yy;
-//                MDimg.getValue(MDL_SHIFTX, xx);
-//                MDimg.getValue(MDL_SHIFTX, yy);
-//                for (int refno = 0; refno < idum; refno++)
-//                {
-//                    imgs_offsets[IMG_LOCAL_INDEX][2 * refno] = xx;
-//                    imgs_offsets[IMG_LOCAL_INDEX][2 * refno + 1] = yy;
-//                }
-//            }
-//            if (model.do_norm)
-//            {
-//                MDimg.getValue(MDL_BGMEAN, imgs_bgmean[IMG_LOCAL_INDEX]);
-//                MDimg.getValue(MDL_INTSCALE, imgs_scale[IMG_LOCAL_INDEX]);
-//            }
-//        }
-//        // read Model parameters
-//        int refno = 0;
-//        FOR_ALL_OBJECTS_IN_METADATA(MDref)
-//        {
-//            MDref.getValue(MDL_MODELFRAC, model.alpha_k[refno]);
-//            if (do_mirror)
-//                MDref.getValue(MDL_MIRRORFRAC,
-//                               model.mirror_fraction[refno]);
-//            if (model.do_norm)
-//                MDref.getValue(MDL_INTSCALE, model.scale[refno]);
-//            refno++;
-//        }
+        //        FOR_ALL_LOCAL_IMAGES()
+        //        {
+        //            if (limit_rot)
+        //            {
+        //                MDimg.getValue(MDL_ANGLEROT, imgs_oldphi[IMG_LOCAL_INDEX]);
+        //                MDimg.getValue(MDL_ANGLETILT, imgs_oldtheta[IMG_LOCAL_INDEX]);
+        //            }
+        //            if (zero_offsets)
+        //            {
+        //                idum = (do_mirror ? 2 : 1) * model.n_ref;
+        //                double xx, yy;
+        //                MDimg.getValue(MDL_SHIFTX, xx);
+        //                MDimg.getValue(MDL_SHIFTX, yy);
+        //                for (int refno = 0; refno < idum; refno++)
+        //                {
+        //                    imgs_offsets[IMG_LOCAL_INDEX][2 * refno] = xx;
+        //                    imgs_offsets[IMG_LOCAL_INDEX][2 * refno + 1] = yy;
+        //                }
+        //            }
+        //            if (model.do_norm)
+        //            {
+        //                MDimg.getValue(MDL_BGMEAN, imgs_bgmean[IMG_LOCAL_INDEX]);
+        //                MDimg.getValue(MDL_INTSCALE, imgs_scale[IMG_LOCAL_INDEX]);
+        //            }
+        //        }
+        //        // read Model parameters
+        //        int refno = 0;
+        //        FOR_ALL_OBJECTS_IN_METADATA(MDref)
+        //        {
+        //            MDref.getValue(MDL_MODELFRAC, model.alpha_k[refno]);
+        //            if (do_mirror)
+        //                MDref.getValue(MDL_MIRRORFRAC,
+        //                               model.mirror_fraction[refno]);
+        //            if (model.do_norm)
+        //                MDref.getValue(MDL_INTSCALE, model.scale[refno]);
+        //            refno++;
+        //        }
 
     }
     // Call the first iteration 0 if generating initial references from random subsets
@@ -1143,14 +1143,18 @@ void ProgML2D::expectationSingleImage(Matrix1D<double> &opt_offsets)
               - ddim2 * log(sqrt(PI * df * sigma_noise2)) + gammln(-df2)
               - gammln(df / 2.);
 
-//    std::cerr << "                             dLL: " << dLL << std::endl;
-//    std::cerr << "                        sum_refw: " << sum_refw << std::endl;
-//    std::cerr << "                      my_mindiff: " << my_mindiff << std::endl;
-//    std::cerr << "                    sigma_noise2: " << sigma_noise2 << std::endl;
-//    std::cerr << "                           ddim2: " << ddim2 << std::endl;
-//    //std::cerr << "                        dfsigma2: " << dfsigma2 << std::endl;
-//    std::cerr << "                       wsum_corr: " << wsum_corr << std::endl;
-//    std::cerr << "                     wsum_offset: " << wsum_offset << std::endl;
+//#define DEBUG_JM1
+#ifdef DEBUG_JM1
+    std::cerr << "----------------------------->>>" << std::endl;
+    std::cerr << "                             dLL: " << dLL << std::endl;
+    std::cerr << "                        sum_refw: " << sum_refw << std::endl;
+    std::cerr << "                      my_mindiff: " << my_mindiff << std::endl;
+    std::cerr << "                    sigma_noise2: " << sigma_noise2 << std::endl;
+    std::cerr << "                           ddim2: " << ddim2 << std::endl;
+    //std::cerr << "                        dfsigma2: " << dfsigma2 << std::endl;
+    std::cerr << "                       wsum_corr: " << wsum_corr << std::endl;
+    std::cerr << "                     wsum_offset: " << wsum_offset << std::endl;
+#endif
 
     LL += dLL;
 
@@ -1314,7 +1318,7 @@ void ProgML2D::doThreadRotateReferenceRefno()
             refnoipsi = refno * nr_psi + ipsi;
             // Add arbitrary number (small_angle) to avoid 0-degree rotation (lacking interpolation)
             psi = (double) (ipsi * psi_max / nr_psi) + SMALLANGLE;
-            rotate(BSPLINE3, Maux, model.Iref[refno](), psi, 'Z', WRAP);
+            rotate(BSPLINE3, Maux, model.Iref[refno](), -psi, 'Z', WRAP);
             apply_binary_mask(mask, Maux, Maux, avg);
             // Normalize the magnitude of the rotated references to 1st rot of that ref
             // This is necessary because interpolation due to rotation can lead to lower overall Fref
@@ -1381,7 +1385,7 @@ void ProgML2D::doThreadReverseRotateReferenceRefno()
             Maux3 = Maux;
             CenterFFT(Maux3, true);
             computeStats_within_binary_mask(omask, Maux3, dum, dum, avg, dum);
-            rotate(BSPLINE3, Maux2, Maux3, -psi, 'Z', WRAP);
+            rotate(BSPLINE3, Maux2, Maux3, psi, 'Z', WRAP);
             apply_binary_mask(mask, Maux2, Maux2, avg);
             wsum_Mref[refno] += Maux2;
         }
@@ -1473,7 +1477,7 @@ void ProgML2D::doThreadPreselectFastSignificantRefno()
     FOR_ALL_THREAD_REFNO_NODECL()
     {
 
-      if (!limit_rot || pdf_directions[refno] > 0.)
+        if (!limit_rot || pdf_directions[refno] > 0.)
         {
             for (int imirror = 0; imirror < nr_mirror; imirror++)
             {
@@ -1557,8 +1561,7 @@ void ProgML2D::doThreadExpectationSingleImageRefno()
         refw[output_refno] = refw2[output_refno] = refw_mirror[output_refno] = 0.;
         local_maxweight = -99.e99;
         local_mindiff = 99.e99;
-        local_wsum_sc = local_wsum_sc2 = local_wsum_corr
-                                         = local_wsum_offset = 0;
+        local_wsum_sc = local_wsum_sc2 = local_wsum_corr = local_wsum_offset = 0;
         // Initialize my weighted sums
         for (int ipsi = 0; ipsi < nr_psi; ipsi++)
         {
@@ -1587,6 +1590,18 @@ void ProgML2D::doThreadExpectationSingleImageRefno()
                     irot = iflip * nr_psi + ipsi;
                     output_irefmir  = FLOOR(iflip / nr_nomirror_flips)
                                       * factor_nref * model.n_ref + refno;
+
+#ifdef DEBUG_JM
+
+                    if (current_image == 0)
+                    {
+                        std::cerr << iter << " iflip, ipsi, refno, irot: " << iflip << " " << ipsi << " " << refno << " " << irot << std::endl;
+                        std::cerr << iter << " A2_plus_Xi2: " << A2_plus_Xi2 << std::endl;
+                        std::cerr << "dAij(Msignificant): " << dAij(Msignificant, refno, irot) << std::endl;
+                    }
+                    else
+                        exit(1);
+#endif
                     // This if is the speed-up caused by the -fast options
                     if (dAij(Msignificant, refno, irot))
                     {
@@ -1608,14 +1623,30 @@ void ProgML2D::doThreadExpectationSingleImageRefno()
                         local_transformer.inverseFourierTransform();
                         CenterFFT(Maux, true);
 
+#ifdef DEBUG_JM2
+                        if (iter == 2)
+                        std::cerr
+                        << "Maux: " <<  std::endl << Maux
+                        << "Fimg_flip[iflip]" <<  std::endl<< Fimg_flip[iflip]
+                        << "fref[refnoipsi]" <<  std::endl<< fref[refnoipsi] << std::endl;
+#endif
+
                         // B. Calculate weights for each pixel within sigdim (Mweight)
                         my_sumweight = my_sumstoredweight = my_maxweight = 0.;
-
 
                         FOR_ALL_ELEMENTS_IN_ARRAY2D(Mweight)
                         {
                             diff = A2_plus_Xi2 - ref_scale * A2D_ELEM(Maux, i, j) * ddim2;
                             pdf = fracpdf * A2D_ELEM(P_phi, i, j);
+#ifdef DEBUG_JM2
+                            if (iter == 2)
+                            std::cerr << "pdf " << pdf << std::endl
+                            << "diff -> A2_plus_Xi2 " << A2_plus_Xi2 << std::endl
+                            << "diff -> A2D_ELEM(Maux, i, j) " << A2D_ELEM(Maux, i, j) << std::endl
+                            << "diff -> ref_scale " << ref_scale << std::endl
+                            << "diff -> ddim2 " << ddim2 << std::endl
+                            << "==========> diff " << diff << std::endl;
+#endif
 
                             if (!model.do_student)
                             {
@@ -1623,9 +1654,12 @@ void ProgML2D::doThreadExpectationSingleImageRefno()
                                 aux = (diff - trymindiff) / sigma_noise2;
                                 // next line because of numerical precision of exp-function
                                 weight = (aux > 1000.) ? 0. : exp(-aux) * pdf;
+#ifdef DEBUG_JM2
+                                if (iter == 2)
+                                std::cerr << "aux " << aux << std::endl << "weight " << weight << std::endl;
+#endif
                                 // store weight
-                                stored_weight = weight;
-                                A2D_ELEM(Mweight, i, j) = stored_weight;
+                                A2D_ELEM(Mweight, i, j) = stored_weight = weight;
                                 // calculate weighted sum of (X-A)^2 for sigma_noise update
                                 local_wsum_corr += weight * diff;
                             }
@@ -1692,7 +1726,14 @@ void ProgML2D::doThreadExpectationSingleImageRefno()
                             }
 
                         } // close for over all elements in Mweight
-
+#ifdef DEBUG_JM2
+                        if (iter == 2)
+                        {
+                        std::cerr << Mweight << std::endl;
+                        std::cerr << "maxweight: " << my_maxweight << " " << my_sumstoredweight << " " << my_sumweight << std::endl;
+                        exit(1);
+                        }
+#endif
                         // C. only for significant settings, store weighted sums
                         if (my_maxweight > SIGNIFICANT_WEIGHT_LOW * maxweight)
                         {
@@ -1746,15 +1787,18 @@ void ProgML2D::doThreadExpectationSingleImageRefno()
         wsum_offset += local_wsum_offset;
         wsum_corr += local_wsum_corr;
 
-        //FIXME: ***** debug printing
-        //        if (iter > istart)
-        //        {
-        //          std::cerr << "Xi2: " << Xi2 << std::endl;
-        //          std::cerr << "A2[refno]: " << A2[refno] << std::endl;
-        //        std::cerr << "sum_refw: " << sum_refw << std::endl;
-        //        std::cerr << "local_wsum_corr: " << local_wsum_corr << std::endl;
-        //        std::cerr << "wsum_corr: " << wsum_corr << std::endl;
-        //        }
+#ifdef DEBUG_JM
+
+        {
+            std::cerr << "Xi2: " << Xi2 << std::endl;
+            std::cerr << "A2[refno]: " << A2[refno] << std::endl;
+            std::cerr << "refw[refno]: " << refw[output_refno] << std::endl;
+            std::cerr << "refw_mirror[refno]: " << refw[output_refno] << std::endl;
+            std::cerr << "sum_refw: " << sum_refw << std::endl;
+            std::cerr << "local_wsum_corr: " << local_wsum_corr << std::endl;
+            std::cerr << "wsum_corr: " << wsum_corr << std::endl;
+        }
+#endif
 
         mindiff = XMIPP_MIN(mindiff, local_mindiff);
 
@@ -1934,22 +1978,21 @@ void ProgML2D::expectation()
         {
             current_image = imgno;
             //std::cerr << "\n ======>>> imgno: " << imgno << std::endl;
-            if (factor_nref > 1)
-                mygroup = divide_equally_group(nr_images_global, factor_nref, imgno);
-            else
-                mygroup = 0;
+            mygroup = (factor_nref > 1) ? divide_equally_group(nr_images_global, factor_nref, imgno) : 0;
 
             MDimg.getValue(MDL_IMAGE, fn_img, img_id[imgno]);
-            img.readApplyGeo(fn_img,MDimg,img_id[imgno]);
+            img.read(fn_img);
             img().setXmippOrigin();
             Xi2 = img().sum2();
             Mimg = img();
 
+#ifdef DEBUG_JM
             ///FIXME: Remove this printing, only for debug
-            //std::cerr << std::endl;
-            //std::cerr << "   ====================>>> ITER_IMAGE: " << iter << "_" << imgno << std::endl;
-            //std::cerr << "                          fn_img: " << fn_img << std::endl;
-            //            std::cerr << "                             Xi2: " << Xi2 << std::endl;
+            std::cerr << std::endl;
+            std::cerr << "   ====================>>> ITER_IMAGE: " << iter << "_" << imgno << std::endl;
+            std::cerr << "                          fn_img: " << fn_img << std::endl;
+            //        //
+#endif
 
             // These two parameters speed up expectationSingleImage
             opt_refno = imgs_optrefno[IMG_LOCAL_INDEX];
@@ -2066,7 +2109,7 @@ void ProgML2D::expectation()
         //        sumfracweight = 0.;
 
         ///FIXME: Remove this printing, only for debug
-       // std::cerr << "                              LL: " << LL << std::endl;
+        // std::cerr << "                              LL: " << LL << std::endl;
         //std::cerr << "                  opt_offsets(0): " << opt_offsets(0) << std::endl;
         //std::cerr << "                  opt_offsets(1): " << opt_offsets(1) << std::endl;
         //std::cerr << "                wsum_sigma_noise: " << wsum_sigma_noise << std::endl;
@@ -2366,13 +2409,16 @@ void ProgML2D::addPartialDocfileData(const MultidimArray<double> &data,
 #endif
 }//close function addDocfileData
 
+//Some macros
+#define ITER_PREFIX "iter"//formatString("iter%06d", iter)
+#define IS_FINAL outputType == OUT_FINAL
+
 void ProgML2D::writeOutputFiles(const ModelML2D &model, int outputType)
 {
-    FileName fn_base;
-    FileName fn_tmp;
+    FileName fn_tmp, fn_prefix;
     Image<double> Itmp;
-    MetaData MDo, MDo2;
-    bool write_img_xmd, write_refs_log, write_conv = !do_ML3D;
+    MetaData MDo;
+    bool write_img_xmd = true, write_refs_log = true, write_conv = !do_ML3D;
     bool write_norm = model.do_norm;
 
     if (iter == 0)
@@ -2381,108 +2427,101 @@ void ProgML2D::writeOutputFiles(const ModelML2D &model, int outputType)
     switch (outputType)
     {
     case OUT_BLOCK:
+        //std::cerr << "OUT_BLOCK" <<std::endl;
         write_img_xmd = false;
-        write_refs_log = true;
         write_conv = false;
         // Sjors 18may2010: why not write scales in blocks? We need this now, don't we?
         //write_norm = false;
-        fn_base = getBaseName("_block", current_block + 1);
+        //fn_base = getBaseName("_block", current_block + 1);
+        fn_prefix = "block";
         break;
     case OUT_ITER:
-        write_img_xmd = true;
-        write_refs_log = true;
-        fn_base = getBaseName("_it", iter);
+        //std::cerr << "OUT_ITER" <<std::endl;
+        //fn_base = getBaseName("_it", iter);
+        fn_prefix = ITER_PREFIX;
         break;
     case OUT_FINAL:
-        write_img_xmd = true;
-        write_refs_log = true;
-        fn_base = fn_root;
+        //std::cerr << "OUT_FINAL" <<std::endl;
+        //fn_base = fn_root;
+        fn_prefix = "final";
         break;
     case OUT_IMGS:
-        write_img_xmd = true;
+        //std::cerr << "OUT_IMGS" <<std::endl;
         write_refs_log = false;
-        fn_base = getBaseName("_it", iter);
+        //fn_base = getBaseName("_it", iter);
+        fn_prefix = ITER_PREFIX;
         break;
     case OUT_REFS:
+        //std::cerr << "OUT_REFS" <<std::endl;
         write_img_xmd = false;
-        write_refs_log = true;
         write_conv = false;
-        fn_base = getBaseName("_it", iter);
+        //fn_base = getBaseName("_it", iter);
+        fn_prefix = ITER_PREFIX;
         break;
     }
 
-    //Write image metadata files, except when writing blocks only
+    const char * rootStr = fn_root.c_str(), * prefixStr = fn_prefix.c_str();
+    std::cerr << "fn_prefix: " << fn_prefix << std::endl;
     if (write_img_xmd)
     {
-        fn_tmp = fn_base + "_img.xmd";
-        MDimg.write(fn_tmp);
-        // Also write out metaData files of all experimental images,
-        // classified according to optimal reference image
-        for (int refno = 0; refno < model.n_ref; refno++)
-        {
-            MDo.clear();
-            MDo.importObjects(MDimg, MDValueEQ(MDL_REF, refno + 1));
-            fn_tmp = fn_root + "_ref";
-            fn_tmp.compose(fn_tmp, refno + 1, "");
-            fn_tmp += "_img.xmd";
-            MDo.write(fn_tmp);
-        }
+        //Write image metadata, for each iteration a new block will be written
+        if (fn_prefix == "iter")
+            fn_tmp = formatString("iter%06d@%s_iter_images.xmd", iter, rootStr);
+        else
+            fn_tmp = formatString("%s_%s_images.xmd", rootStr, prefixStr);
+       // std::cerr << "Writing md images: " << fn_tmp + "_images.xmd"<< std::endl;
+        MDimg.write(fn_tmp, MD_APPEND);
     }
 
 
     if (write_refs_log)
     {
         // Write out current reference images and fill sel & log-file
-        // Re-use the MDref metadata that were read in produceSideInfo2
-        // This way. MLD_ANGLEROT, MDL_ANGLETILT, MDL_REF etc are treated ok for do_ML3D
-        int refno=0;
+        // Re-use the MDref metadata that was read in produceSideInfo2
+        // This way. MDL_ANGLEROT, MDL_ANGLETILT, MDL_REF etc are treated ok for do_ML3D
+        int refno = 0;
+        size_t objId;
+        int select_img;
+
+        if (fn_prefix == "iter")
+            fn_tmp = formatString("%s_iter%06d_refs.stk", rootStr, iter);
+        else
+            fn_tmp = formatString("%s_%s_refs.stk", rootStr, prefixStr);
 
         FOR_ALL_OBJECTS_IN_METADATA(MDref)
         {
-            fn_tmp = fn_base + "_ref";
-            fn_tmp.compose(fn_tmp, refno + 1, "xmp");
+            objId = __iter.objId;
+            select_img = refno + 1;
             Itmp = model.Iref[refno];
-            Itmp.write(fn_tmp);
-
-            MDref.setValue(MDL_IMAGE, fn_tmp, __iter.objId);
-            MDref.setValue(MDL_ENABLED, 1, __iter.objId);
-            MDref.setValue(MDL_WEIGHT, (double)Itmp.weight(), __iter.objId);
+            Itmp.write(fn_tmp, select_img, true, WRITE_REPLACE);
+            MDref.setValue(MDL_ITER, iter, objId);//write out iteration number
+            MDref.setValue(MDL_REF, select_img, objId); //Also write reference number
+            MDref.setValue(MDL_IMAGE, formatString("%06d@%s", select_img, fn_tmp.c_str()), objId);
+            MDref.setValue(MDL_ENABLED, 1, objId);
+            MDref.setValue(MDL_WEIGHT, (double)Itmp.weight(), objId);
             if (do_mirror)
-                MDref.setValue(MDL_MIRRORFRAC,
-                               model.mirror_fraction[refno], __iter.objId);
+                MDref.setValue(MDL_MIRRORFRAC, model.mirror_fraction[refno], objId);
             if (write_conv)
-                MDref.setValue(MDL_SIGNALCHANGE, conv[refno]*1000, __iter.objId);
+                MDref.setValue(MDL_SIGNALCHANGE, conv[refno]*1000, objId);
             if (write_norm)
-                MDref.setValue(MDL_INTSCALE, model.scale[refno], __iter.objId);
+                MDref.setValue(MDL_INTSCALE, model.scale[refno], objId);
             refno++;
         }
-        fn_tmp = fn_base + "_ref.xmd";
-        MDref.write(fn_tmp);
 
+        fn_tmp = formatString("%s_%s", rootStr, prefixStr);
+        MDref.append(fn_tmp + "_refs.xmd");
         // Write out log-file
-        MDo2.clear();
-        MDo2.setColumnFormat(false);
-        MDo2.setComment(cline);
-        size_t id = MDo2.addObject();
-        MDo2.setValue(MDL_LL, model.LL,id);
-        MDo2.setValue(MDL_PMAX, model.avePmax,id);
-        MDo2.setValue(MDL_SIGMANOISE, model.sigma_noise,id);
-        MDo2.setValue(MDL_SIGMAOFFSET, model.sigma_offset,id);
-        MDo2.setValue(MDL_RANDOMSEED, seed,id);
+        MetaData mdLog;
+        objId = mdLog.addObject();
+        mdLog.setValue(MDL_ITER, iter, objId);
+        mdLog.setValue(MDL_LL, model.LL, objId);
+        mdLog.setValue(MDL_PMAX, model.avePmax, objId);
+        mdLog.setValue(MDL_SIGMANOISE, model.sigma_noise, objId);
+        mdLog.setValue(MDL_SIGMAOFFSET, model.sigma_offset, objId);
+        mdLog.setValue(MDL_RANDOMSEED, seed, objId);
         if (write_norm)
-        {
-        	//FIXME ROB
-        	std::cerr << "obj_id missing" <<std::endl;
-            MDo.setValue(MDL_INTSCALE, average_scale,id);//<<< DONT KNOw IF ID IS OK
-        }
-        MDo2.setValue(MDL_ITER, iter,id);
-        fn_tmp = fn_base + "_img.xmd";
-        MDo2.setValue(MDL_IMGMD, fn_tmp,id);
-        fn_tmp = fn_base + "_ref.xmd";
-        MDo2.setValue(MDL_REFMD, fn_tmp,id);
-
-        fn_tmp = fn_base + "_log.xmd";
-        MDo2.write(fn_tmp);
+            mdLog.setValue(MDL_INTSCALE, average_scale, objId);
+        mdLog.append(fn_tmp + "_logs.xmd");
     }
 
 }//close function writeModel
@@ -2531,7 +2570,7 @@ void ProgML2D::readModel(ModelML2D &model, FileName fn_base)
     }
 }//close function readModel
 
-FileName ProgML2D::getBaseName(std::string suffix, int number)
+FileName ProgML2D::getBaseName(String suffix, int number)
 {
     FileName fn_base = fn_root + suffix;
     if (number >= 0)
