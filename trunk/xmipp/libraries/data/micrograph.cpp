@@ -115,32 +115,32 @@ void Micrograph::open_micrograph(const FileName &_fn_micrograph)
     {
     case UChar:
         IUChar = new(Image<unsigned char>);
-        result=IUChar->read(fn_micrograph,DATA, ALL_IMAGES, true);
+        result=IUChar->read(fn_micrograph,DATA, FIRST_IMAGE, true);
         pixelDesvFilter(IUChar->data, stdevFilter);
         break;
     case UShort:
         IUShort = new(Image<unsigned short>);
-        result=IUShort->read(fn_micrograph,DATA, ALL_IMAGES, true);
+        result=IUShort->read(fn_micrograph,DATA, FIRST_IMAGE, true);
         pixelDesvFilter(IUShort->data, stdevFilter);
         break;
     case Short:
         IShort = new(Image< short>);
-        result=IShort->read(fn_micrograph,DATA, ALL_IMAGES, true);
+        result=IShort->read(fn_micrograph,DATA, FIRST_IMAGE, true);
         pixelDesvFilter(IShort->data, stdevFilter);
         break;
     case Int:
         IInt = new(Image< int>);
-        result=IInt->read(fn_micrograph,DATA, ALL_IMAGES, true);
+        result=IInt->read(fn_micrograph,DATA, FIRST_IMAGE, true);
         pixelDesvFilter(IInt->data, stdevFilter);
         break;
     case UInt:
         IUInt = new(Image< unsigned int>);
-        result=IUInt->read(fn_micrograph,DATA, ALL_IMAGES, true);
+        result=IUInt->read(fn_micrograph,DATA, FIRST_IMAGE, true);
         pixelDesvFilter(IUChar->data, stdevFilter);
         break;
     case Float:
         IFloat = new(Image<float>);
-        result=IFloat->read(fn_micrograph,DATA, ALL_IMAGES, true);
+        result=IFloat->read(fn_micrograph,DATA, FIRST_IMAGE, true);
         pixelDesvFilter(IFloat->data, stdevFilter);
         break;
     default:
@@ -533,27 +533,27 @@ void Micrograph::write(const FileName &fileName, bool adjust)
 {
     if (datatype == UChar)
     {
-        IUChar->write(fileName, ALL_IMAGES, false, WRITE_OVERWRITE, adjust);
+        IUChar->write(fileName, FIRST_IMAGE, false, WRITE_OVERWRITE, adjust);
     }
     else if (datatype == UShort)
     {
-        IUShort->write(fileName, ALL_IMAGES, false, WRITE_OVERWRITE, adjust);
+        IUShort->write(fileName, FIRST_IMAGE, false, WRITE_OVERWRITE, adjust);
     }
     else if (datatype == Short)
     {
-        IShort->write(fileName, ALL_IMAGES, false, WRITE_OVERWRITE, adjust);
+        IShort->write(fileName, FIRST_IMAGE, false, WRITE_OVERWRITE, adjust);
     }
     else if (datatype == UInt)
     {
-        IUInt->write(fileName, ALL_IMAGES, false, WRITE_OVERWRITE, adjust);
+        IUInt->write(fileName, FIRST_IMAGE, false, WRITE_OVERWRITE, adjust);
     }
     else if (datatype == Int)
     {
-        IInt->write(fileName, ALL_IMAGES, false, WRITE_OVERWRITE, adjust);
+        IInt->write(fileName, FIRST_IMAGE, false, WRITE_OVERWRITE, adjust);
     }
     else if (datatype == Float)
     {
-        IFloat->write(fileName, ALL_IMAGES, false, WRITE_OVERWRITE, adjust);
+        IFloat->write(fileName, FIRST_IMAGE, false, WRITE_OVERWRITE, adjust);
     }
     else
         REPORT_ERROR(ERR_TYPE_INCORRECT, "Micrograph::set_val::(): unknown datatype");
