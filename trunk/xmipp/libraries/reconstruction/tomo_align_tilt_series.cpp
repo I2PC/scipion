@@ -180,7 +180,7 @@ public:
             FOR_ALL_ELEMENTS_IN_ARRAY2D(maskAux)
             {
                 if (A2D_ELEM(maskAux,i,j)>0.5)
-                	A2D_ELEM(maskInTheSpaceOf2,i,j)=A2D_ELEM(Mask2_level,i,j);
+                    A2D_ELEM(maskInTheSpaceOf2,i,j)=A2D_ELEM(Mask2_level,i,j);
             }
 
             maskAux.initZeros();
@@ -189,8 +189,8 @@ public:
             maskInTheSpaceOf1.setXmippOrigin();
             FOR_ALL_ELEMENTS_IN_ARRAY2D(maskAux)
             {
-            	if (A2D_ELEM(maskAux,i,j)>0.5)
-            		A2D_ELEM(maskInTheSpaceOf1,i,j)=A2D_ELEM(Mask1_level,i,j);
+                if (A2D_ELEM(maskAux,i,j)>0.5)
+                    A2D_ELEM(maskInTheSpaceOf1,i,j)=A2D_ELEM(Mask1_level,i,j);
             }
 
             // Compare the two images
@@ -842,9 +842,9 @@ void ProgTomographAlignment::produceSideInfo()
 
             double tiltAngle;
             if (SF.containsLabel(MDL_ANGLETILT))
-            	SF.getValue(MDL_ANGLETILT,tiltAngle,__iter.objId);
+                SF.getValue(MDL_ANGLETILT,tiltAngle,__iter.objId);
             else
-            	tiltAngle=imgaux.tilt();
+                tiltAngle=imgaux.tilt();
             tiltList.push_back(tiltAngle);
             if (tiltAngle!=0)
                 nonZeroTilt=true;
@@ -1427,7 +1427,7 @@ void * threadgenerateLandmarkSetCriticalPoints( void * args )
         MultidimArray<double> Iaux=Ifiltered;
         Iaux.selfWindow(
             -ROUND(0.45*YSIZE(Ifiltered)),-ROUND(0.45*XSIZE(Ifiltered)),
-             ROUND(0.45*YSIZE(Ifiltered)), ROUND(0.45*XSIZE(Ifiltered)));
+            ROUND(0.45*YSIZE(Ifiltered)), ROUND(0.45*XSIZE(Ifiltered)));
         Histogram1D hist;
         compute_hist(Iaux, hist, 400);
         double th=hist.percentil(2);
@@ -1887,11 +1887,12 @@ bool ProgTomographAlignment::refineLandmark(const MultidimArray<double> &pieceii
                 continue;
             FOR_ALL_ELEMENTS_IN_ARRAY2D(piecejj)
             {
-                A2D_ELEM(piecejj,i,j)=A2D_ELEM(Ijj,
-                                               (int)(YY(rjj)+shifty+i),
-                                               (int)(XX(rjj)+shiftx+j));
-                mean_jj+=A2D_ELEM(piecejj,i,j);
-                stddev_jj+=A2D_ELEM(piecejj,i,j)*A2D_ELEM(piecejj,i,j);
+                double pixval=A2D_ELEM(Ijj,
+                                       (int)(YY(rjj)+shifty+i),
+                                       (int)(XX(rjj)+shiftx+j));
+                A2D_ELEM(piecejj,i,j)=pixval;
+                mean_jj+=pixval;
+                stddev_jj+=pixval*pixval;
             }
             mean_jj/=MULTIDIM_SIZE(piecejj);
             stddev_jj = stddev_jj / MULTIDIM_SIZE(piecejj) - mean_jj * mean_jj;
@@ -1905,10 +1906,11 @@ bool ProgTomographAlignment::refineLandmark(const MultidimArray<double> &pieceii
             double &corrRef=corr(shifty,shiftx);
             if (stddev_jj>XMIPP_EQUAL_ACCURACY)
             {
+            	double istddev_jj=1.0/stddev_jj;
                 FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(piecejj)
                 corrRef+=
                     DIRECT_MULTIDIM_ELEM(pieceii,n)*
-                    (DIRECT_MULTIDIM_ELEM(piecejj,n)-mean_jj)/stddev_jj;
+                    (DIRECT_MULTIDIM_ELEM(piecejj,n)-mean_jj)*istddev_jj;
                 corrRef/=MULTIDIM_SIZE(piecejj);
             }
 
