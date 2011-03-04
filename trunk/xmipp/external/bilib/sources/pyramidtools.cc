@@ -18,13 +18,13 @@
 		IEEE Signal Processing Magazine, 1999.
 			
 	[2]	M. Unser, A. Aldroubi and M. Eden, "B-spline signal processing: 
-		Part II‹efficient design and applications," IEEE Trans. Signal Processing, 
+		Part IIï¿½efficient design and applications," IEEE Trans. Signal Processing, 
 		vol. 41, no. 2, pp. 834-848, February 1993.
 			
 	[3]	M. Unser, A. Aldroubi and M. Eden, "The L2 polynomial spline pyramid," 
 		IEEE Trans. Pattern Anal. Mach. Intell., vol. 15, no. 4, pp. 364-379, April 1993.
 			
-	[4]	P. Brigger, F. Müller, K. Illgner and M. Unser, "Centered pyramids," 
+	[4]	P. Brigger, F. Mï¿½ller, K. Illgner and M. Unser, "Centered pyramids," 
 		IEEE Trans. Image Processing, vol. 6, no. 9, pp. 1254-1264, September 1999.
 			
 	[5]	P.J. Burt and E.H. Adelson, "The Laplacian pyramid as a compact code," 
@@ -881,7 +881,7 @@ long	kk, kn, nred, n;
 				i2 = i2 % kn;
 				if (i2 >= n) i2 = kn-i2-1L;
 			}
-			y_tmp[k] = y_tmp[k] + g[i]*(In[i1]+In[i2]);
+			y_tmp[k] += g[i]*(In[i1]+In[i2]);
 		}
 	}
 	
@@ -946,7 +946,7 @@ long int kk, kn, nexp, n;
 				if (i2 >= n) 
 					i2=kn-i2-1L;
 			}
-			Out[j] = Out[j] + h[k]*(In[i1]+In[i2]);
+			Out[j] += h[k]*(In[i1]+In[i2]);
 		}
 		Out[j+1] = 0.;  
 		for (k=-k0; k<nh; k=k+2L) {
@@ -962,15 +962,14 @@ long int kk, kn, nexp, n;
 				if (i1 >= n) 
 					i1=kn-i1-1;
 			}
-			Out[j+1L] = Out[j+1L] + h[kk]*In[i1];
+			Out[j+1L] += h[kk]*In[i1];
 		}
 	}
 	
 	/* Now apply the Haar[-x] and  */
 	for (j=nexp-1L; j>0L; j--)
-		Out[j] = (Out[j] + Out[j-1])/2.0;
-	Out[0] /= 2.0;
-		
+		Out[j] = 0.5*(Out[j] + Out[j-1]);
+	Out[0] *= 0.5;
 }
 
 /* ----------------------------------------------------------------------------
