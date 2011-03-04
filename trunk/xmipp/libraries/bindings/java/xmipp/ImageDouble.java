@@ -28,6 +28,8 @@ public class ImageDouble {
     // Reading.
     private native void read_image(String filename, boolean readData, long nimage) throws Exception;
 
+    private native void readApplyGeo(MetaData metadata, long id) throws Exception;
+
     private native void read_preview(String filename,
             int w, int h, int slice, long nimage) throws Exception;
 
@@ -62,8 +64,12 @@ public class ImageDouble {
 
     public ImageDouble(String filename) throws Exception {
         this();
-        setFilename(filename);
         read(filename);
+    }
+
+    public ImageDouble(MetaData metadata, long id) throws Exception {
+        this();
+        read(metadata, id);
     }
 
     // Should be called by GarbageCollector before destroying
@@ -92,6 +98,14 @@ public class ImageDouble {
     private void read(String filename, boolean readData, long nimage) throws Exception {
         read_image(filename, readData, nimage);
         setFilename(filename);
+    }
+
+    private void read(MetaData metadata, long id) throws Exception {
+        readApplyGeo(metadata, id);
+
+        if (metadata.containsLabel(MDLabel.MDL_IMAGE)) {
+            setFilename(metadata.getValueString(MDLabel.MDL_IMAGE, id));
+        }
     }
 
     public void readPreview(String filename, int w, int h) throws Exception {

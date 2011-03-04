@@ -47,6 +47,14 @@ JNIEXPORT void JNICALL Java_xmipp_ImageDouble_read_1image
 
 /*
  * Class:     xmipp_ImageDouble
+ * Method:    readApplyGeo
+ * Signature: (Lxmipp/MetaData;J)V
+ */
+JNIEXPORT void JNICALL Java_xmipp_ImageDouble_readApplyGeo
+  (JNIEnv *, jobject, jobject, jlong);
+
+/*
+ * Class:     xmipp_ImageDouble
  * Method:    read_preview
  * Signature: (Ljava/lang/String;IIIJ)V
  */

@@ -50,6 +50,35 @@ JNIEXPORT void JNICALL Java_xmipp_ImageDouble_read_1image
 		handleXmippException(env, msg);
 	}
 }
+JNIEXPORT void JNICALL Java_xmipp_ImageDouble_readApplyGeo(
+		JNIEnv *env, jobject jimage, jobject jmetadata, jlong id) {
+	std::string msg = "";
+	Image<double> *image = GET_INTERNAL_IMAGE(jimage);
+	MetaData *metadata = GET_INTERNAL_METADATA(jmetadata);
+
+	if (image != NULL) {
+		if (metadata != NULL) {
+			try {
+				image->readApplyGeo(*metadata, (long) id);
+			} catch (XmippError xe) {
+				msg = xe.getDefaultMessage();
+			} catch (std::exception& e) {
+				msg = e.what();
+			} catch (...) {
+				msg = "Unhandled exception";
+			}
+		} else {
+			msg = "Metadata is null";
+		}
+	} else {
+		msg = "Image is null";
+	}
+
+	// If there was an exception, sends it to java environment.
+	if (!msg.empty()) {
+		handleXmippException(env, msg);
+	}
+}
 
 JNIEXPORT void JNICALL Java_xmipp_ImageDouble_read_1preview
 (JNIEnv *env, jobject jobj, jstring filename, jint w, jint h, jint slice, jlong nimage) {
