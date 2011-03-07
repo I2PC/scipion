@@ -572,7 +572,6 @@ ReconsSources = [
     'tomo_align_dual_tilt_series.cpp',
     'tomo_align_tilt_series.cpp',
     'tomo_align_refinement.cpp',
-    'virus_vertex.cpp',
     'volume_segment.cpp',
     'xray_import.cpp'
 ]
@@ -754,7 +753,6 @@ AddXmippProgram('tomo_align_dual_tilt_series', ['XmippRecons'])
 AddXmippProgram('tomo_align_refinement', ['XmippRecons'])
 AddXmippProgram('tomo_align_tilt_series', ['XmippRecons'])
 AddXmippProgram('tomo_project', ['XmippRecons'])
-AddXmippProgram('virus_vertex', ['XmippRecons'])
 AddXmippProgram('volume_align')
 AddXmippProgram('volume_segment', ['XmippRecons'])
 AddXmippProgram('xray_import', ['XmippRecons'])
