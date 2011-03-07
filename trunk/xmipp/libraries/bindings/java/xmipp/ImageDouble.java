@@ -4,6 +4,8 @@ public class ImageDouble {
 
     public final static int FIRST_IMAGE = 1;
     public final static int FIRST_SLICE = 1;
+    public final static int ALL_IMAGES = 0;
+    public final static int ALL_SLICES = 0;
     public final static int MID_SLICE = -1;
     private final static String PSD_EXTENSION = ".psd";
     // pointer to Image class in C++ space. Needed by native library.
@@ -80,19 +82,19 @@ public class ImageDouble {
     }
 
     public void readHeader(String filename) throws Exception {
-        read(filename, false);
+        readHeader(filename, ALL_IMAGES);
+    }
+
+    public void readHeader(String filename, long nimage) throws Exception {
+        read(filename, false, nimage);
     }
 
     public void read(String filename) throws Exception {
-        read(filename, true);
+        read(filename, ALL_IMAGES);
     }
 
     public void read(String filename, long nimage) throws Exception {
         read(filename, true, nimage);
-    }
-
-    private void read(String filename, boolean readData) throws Exception {
-        read(filename, readData, FIRST_IMAGE);
     }
 
     private void read(String filename, boolean readData, long nimage) throws Exception {
@@ -109,7 +111,7 @@ public class ImageDouble {
     }
 
     public void readPreview(String filename, int w, int h) throws Exception {
-        readPreview(filename, w, h, FIRST_SLICE, FIRST_IMAGE);
+        readPreview(filename, w, h, FIRST_SLICE);
     }
 
     public void readPreview(String filename, int w, int h, int slice) throws Exception {

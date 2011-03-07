@@ -258,7 +258,7 @@ JNIEXPORT jint JNICALL Java_xmipp_ImageDouble_getZsize(JNIEnv * env,
 	return 0;
 }
 
-JNIEXPORT jlong JNICALL Java_xmipp_ImageDouble_getNsize(JNIEnv * env,
+JNIEXPORT jlong JNICALL Java_xmipp_ImageDouble_getNsize(JNIEnv *env,
 		jobject jobj) {
 	Image<double> *image = GET_INTERNAL_IMAGE(jobj);
 
