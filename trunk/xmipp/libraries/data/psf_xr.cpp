@@ -279,9 +279,10 @@ void XRayPSF::calculateParams(double _dxo, double _dzo)
     dzo = (_dzo > 0)? _dzo : dxo;
 
     /// Calculation of the rest of microscope parameters
-    Flens = (4*Nzp*deltaR*deltaR)/lambda;
-    //    Rlens = sqrt(Nzp * lambda * Flens);
-    Rlens = 4 * Nzp * deltaR;
+
+    Rlens = (4 * Nzp * deltaR)*0.5; // Eq. 9.13 from Soft X-rays and .... David Attwood
+    Flens = (2 * Rlens * deltaR)/lambda;
+
     Zo = (1 + 1 / Ms) * Flens;
     Zi = Zo * Ms;
     dxi = dxo * Ms;
@@ -307,7 +308,7 @@ void XRayPSF::applyOTF(MultidimArray<double> &Im, const double sliceOffset)
     MultidimArray<std::complex<double> > ImFT;
     FourierTransformer FTransAppOTF;
 
-#define DEBUG
+//#define DEBUG
 #ifdef DEBUG
 
     Image<double> _Im;
@@ -321,7 +322,7 @@ void XRayPSF::applyOTF(MultidimArray<double> &Im, const double sliceOffset)
     //#define DEBUG
 #ifdef DEBUG
 
-//    Image<double> _Im;
+    //    Image<double> _Im;
     _Im().resizeNoCopy(OTF);
     FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY2D(OTF)
     dAij(_Im(),i,j) = abs(dAij(OTF,i,j));
@@ -385,7 +386,7 @@ void XRayPSF::generateOTF()
 
     ftGenOTF.FourierTransform(PSFi, OTF, false);
 
-    #define DEBUG
+//#define DEBUG
 #ifdef DEBUG
 
     Image<double> _Im;
@@ -473,15 +474,16 @@ void XRayPSF::generatePSFIdealLens(MultidimArray<double> &PSFi) const
             dAi(OTFTemp,n) = 0;
     }
 
-    //#define DEBUG
+//#define DEBUG
 #ifdef DEBUG
     Image<double> _Im;
     _Im().resize(OTFTemp);
     FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY2D(OTFTemp)
     dAij(_Im(),i,j) = arg(dAij(OTFTemp,i,j));
     _Im.write("phase_lens.spi");
-    //    dAij(_Im(),i,j) = abs(dAij(OTFTemp,i,j));
-    //    _Im.write("abs_lens.spi");
+    FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY2D(OTFTemp)
+    dAij(_Im(),i,j) = abs(dAij(OTFTemp,i,j));
+    _Im.write("abs_lens.spi");
 #endif
 #undef DEBUG
 
