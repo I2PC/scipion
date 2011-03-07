@@ -285,7 +285,8 @@ void CenterFFT(MultidimArray< T >& v, bool forward)
                 for (int i = 0; i < YSIZE(v); i++)
                 {
                     // Shift the input in an auxiliar vector
-                    for (int j = 0; j < l; j++)
+                    T *ptr_vkij = &dAkij(v, k, i, 0);
+                    for (int j = 0; j < l; ++j, ++ptr_vkij)
                     {
                         int jp = j + shift;
 
@@ -294,12 +295,11 @@ void CenterFFT(MultidimArray< T >& v, bool forward)
                         else if (jp >= l)
                             jp -= l;
 
-                        dAi(aux,jp) = dAkij(v, k, i, j);
+                        dAi(aux,jp) = *ptr_vkij;
                     }
 
                     // Copy the vector
-                    for (int j = 0; j < l; j++)
-                      dAkij(v, k, i, j) = dAi(aux, j);
+                    memcpy(&dAkij(v, k, i, 0),&dAi(aux, 0),l*sizeof(T));
                 }
         }
 
