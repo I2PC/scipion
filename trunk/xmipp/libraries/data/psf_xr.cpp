@@ -56,8 +56,8 @@ void XRayPSF::readParams(XmippProgram * program)
     dzoPSF  = STR_EQUAL(program->getParam("--sampling", 1), "dxy") ? dxoPSF : program->getDoubleParam("-sampling", 1)*1e-9;
     DeltaZo = program->getDoubleParam("--zshift")*1e-6;
     Nox     = program->getDoubleParam("--size",0);
-    Noy     = STR_EQUAL(program->getParam("--size", 1),"x") ? Nox : program->getDoubleParam("-size", 1);
-    Noz     = STR_EQUAL(program->getParam("--size", 2),"x") ? Nox : program->getDoubleParam("-size", 2);
+    Noy     = STR_EQUAL(program->getParam("--size", 1),"x") ? Nox : program->getDoubleParam("--size", 1);
+    Noz     = STR_EQUAL(program->getParam("--size", 2),"x") ? Nox : program->getDoubleParam("--size", 2);
     type    = STR_EQUAL(program->getParam("--type"), "zp") ? ANALYTIC_ZP : IDEAL_FRESNEL_LENS;
 
     verbose = program->getIntParam("-v");
@@ -307,15 +307,13 @@ void XRayPSF::applyOTF(MultidimArray<double> &Im, const double sliceOffset)
     MultidimArray<std::complex<double> > ImFT;
     FourierTransformer FTransAppOTF;
 
-    //#define DEBUG
+#define DEBUG
 #ifdef DEBUG
 
     Image<double> _Im;
-    _Im().resize(Im);
-    FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY2D(Im)
-    dAij(_Im(),i,j) = abs(dAij(Im,i,j));
+    _Im().alias(Im);
 
-    _Im.write(("psfxr-Imin.spi"));
+    _Im.write(("psfxr-ImIn.spi"));
 #endif
 
     FTransAppOTF.FourierTransform(Im, ImFT, false);
@@ -323,11 +321,11 @@ void XRayPSF::applyOTF(MultidimArray<double> &Im, const double sliceOffset)
     //#define DEBUG
 #ifdef DEBUG
 
-    Image<double> _Im;
+//    Image<double> _Im;
     _Im().resizeNoCopy(OTF);
     FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY2D(OTF)
     dAij(_Im(),i,j) = abs(dAij(OTF,i,j));
-    _Im.write("psfxr-otf2.spi");
+    _Im.write("psfxr-otf.spi");
 
     _Im().resizeNoCopy(ImFT);
     FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY2D(ImFT)
@@ -387,7 +385,7 @@ void XRayPSF::generateOTF()
 
     ftGenOTF.FourierTransform(PSFi, OTF, false);
 
-    //#define DEBUG
+    #define DEBUG
 #ifdef DEBUG
 
     Image<double> _Im;
