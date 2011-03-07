@@ -117,6 +117,10 @@ class Tester:
         self.addProgram("xmipp_transform_normalize")
         self.addTest("-i input/smallStack.stk -o %o/smallStackNormalized.stk --method NewXmipp --background circle 32")
 
+        self.addProgram("xmipp_transform_symmetrize")
+        self.addTest("-i input/smallStack.stk -o %o/smallStackSymmetrized.stk --sym 5")
+        self.addTest("-i input/phantomBacteriorhodopsin.vol -o %o/symmetrizedVolume.vol --sym C5")
+
         self.addProgram("xmipp_transform_window")
         self.addTest("-i input/singleImage.spi -o %o/image.xmp --size 32")
         self.addTest("-i input/singleImage.spi -o %o/image.xmp --corners -16 -16 15 15")
