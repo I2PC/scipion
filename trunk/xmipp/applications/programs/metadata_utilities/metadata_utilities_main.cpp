@@ -56,7 +56,7 @@ protected:
         addParamsLine(" -i <metadata>                          : Input metadata file");
         addParamsLine("   [-o  <metadata>]                    : Output metadata file, if not provided result will be printed on screen");
 
-        addParamsLine("  [--set <set_operation> <md2> <label=image>]   : Set operations");
+        addParamsLine("  [--set <set_operation> <md2_file> <label=image>]   : Set operations");
         addParamsLine("         where <set_operation>");
         addParamsLine("   union               : Union with metadata md2");
         addParamsLine("   intersection        : Intersection with metadata md2");
