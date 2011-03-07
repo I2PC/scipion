@@ -68,14 +68,17 @@ class Tester:
         self.addTest("-i input/smallStack.stk --image_stats %o/stats")
         
         self.addProgram("xmipp_metadata_utilities")
-        self.addTest ("-i input/mD1.doc --set union input/mD2.doc  -o %o/out.doc");
-        self.addTest ("-i input/mD1.doc --operate sort -o %o/out.doc");
-        self.addTest ("-i input/mD1.doc --operate add_column \"shiftX shiftY\" -o %o/out.doc");
-        self.addTest ("-i input/mD1.doc --fill shiftX rand_uniform 0 10 -o %o/out.doc");
-        self.addTest ("-i input/mD1.doc -l \"shiftX shiftY\" constant 5 -o %o/out.doc");
-        self.addTest ("-i input/mD1.doc --query select \"angleRot > 10 AND anglePsi < 0.5\" -o %o/out.doc");
-        self.addTest("-i input/mD1.doc --operate modify_values \"angleRot=(angleRot*3.1416/180.)\" -o %o/out.doc");
-        self.addTest("-i input/mD1.doc --operate modify_values \"image=replace(image, 'xmp','spi')\" -o %o/out.doc");
+        self.addTest ("-i input/mD1.doc --set union input/mD2.doc  -o %o/out.doc")
+        self.addTest ("-i input/mD1.doc --operate sort -o %o/out.doc")
+        self.addTest ("-i input/mD1.doc --operate add_column \"shiftX shiftY\" -o %o/out.doc")
+        self.addTest ("-i input/mD1.doc --fill shiftX rand_uniform 0 10 -o %o/out.doc")
+        self.addTest ("-i input/mD1.doc -l \"shiftX shiftY\" constant 5 -o %o/out.doc")
+        self.addTest ("-i input/mD1.doc --query select \"angleRot > 10 AND anglePsi < 0.5\" -o %o/out.doc")
+        self.addTest("-i input/mD1.doc --operate modify_values \"angleRot=(angleRot*3.1416/180.)\" -o %o/out.doc")
+        self.addTest("-i input/mD1.doc --operate modify_values \"image=replace(image, 'xmp','spi')\" -o %o/out.doc")
+        
+        self.addProgram("xmipp_ml_align2d")
+        self.addTest("-i input/images_some.stk --ref input/seeds2.stk --oroot %o/ml2d --fast --mirror")
       
         self.addProgram("xmipp_phantom_project")
         self.addTest("-i input/phantomBacteriorhodopsin.vol -o %o/image.xmp --angles 0 0 0")
