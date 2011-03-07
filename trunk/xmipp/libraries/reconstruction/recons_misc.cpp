@@ -500,7 +500,7 @@ void POCSClass::apply(GridVolume &vol_basis, int it, int images)
         // Force symmetry
         if (prm->force_sym != 0)
         {
-            symmetrize(prm->SL, vol_voxels(), vol_aux(), LINEAR, false);
+            symmetrizeVolume(prm->SL, vol_voxels(), vol_aux());
             desired_volume = &vol_aux;
             if (prm->tell&TELL_SAVE_AT_EACH_STEP)
             {

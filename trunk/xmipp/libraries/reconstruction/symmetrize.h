@@ -28,30 +28,23 @@
 #include <data/funcs.h>
 #include <data/image.h>
 #include <data/mask.h>
-//#include <data/matrix3d.h >
-
 #include <data/symmetries.h>
+#include <data/program.h>
 
-/**@defgroup SymmetrizeProgram symmetrize (Symmetrize a volume)
+/**@defgroup SymmetrizeProgram symmetrize (Symmetrize a volume or image)
    @ingroup ReconsLibrary */
 //@{
 /* Test parameters --------------------------------------------------------- */
 /// Symmetrize Parameters
-class ProgSymmetrize : public XmippProgram
+class ProgSymmetrize : public XmippMetadataProgram
 {
 public:
-    /// input file
-    FileName        fn_in;
-    /// output file
-    FileName        fn_out;
     /// symmetry file
     FileName        fn_sym;
     /// Do not generate subgroup
     bool            do_not_generate_subgroup;
     /// wrap or don't wrap input file during symmetrisation
     bool            wrap;
-    /// use Bsplines for interpolating
-    bool            useBsplines;
 public:
     /** Read parameters from command line. */
     void readParams();
@@ -60,17 +53,25 @@ public:
     void defineParams();
 
     /** Run */
-    void run();
+    void preProcess();
 
-    /** Show parameters */
-    //friend std::ostream & operator << (std::ostream &out, const Symmetrize_Parameters &prm);
+    /// Process image or volume
+    void processImage(const FileName &fnImg, const FileName &fnImgOut, size_t objId);
+public:
+    // Symmetry description for volumes
+    SymList SL;
+    // Symmetry descriptio for images
+    int symorder;
 };
 
-/** Really symmetrize.*/
-void symmetrize(const SymList &SL, MultidimArray<double> &V_in, MultidimArray<double> &V_out,
-                int Splinedegree=LINEAR, bool wrap=true, bool show_progress=false,
-                bool do_outside_avg=false);
+/** Symmetrize volume.*/
+void symmetrizeVolume(const SymList &SL, const MultidimArray<double> &V_in,
+                      MultidimArray<double> &V_out,
+                      bool wrap=true, bool do_outside_avg=false);
 
+/** Symmetrize image.*/
+void symmetrizeImage(int symorder, const MultidimArray<double> &I_in,
+                      MultidimArray<double> &I_out,
+                      bool wrap=true, bool do_outside_avg=false);
 //@}
-
 #endif

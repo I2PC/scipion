@@ -498,7 +498,7 @@ void ProgRecWbp::apply_2Dfilter_arbitrary_geometry(MetaData &SF, MultidimArray<d
     {
         MultidimArray<double> Vaux;
         Vaux.resize(vol);
-        symmetrize(SL, vol, Vaux);
+        symmetrizeVolume(SL, vol, Vaux);
         vol = Vaux;
         vol *= (SL.SymsNo() + 1);
         mask_prm.mode = INNER_MASK;

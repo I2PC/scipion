@@ -30,106 +30,127 @@
 /* Read parameters --------------------------------------------------------- */
 void ProgSymmetrize::readParams()
 {
-    fn_in  = getParam("-i");
-    fn_out = getParam("-o");
     fn_sym = getParam("--sym");
     do_not_generate_subgroup = checkParam("--no_group");
     wrap = !checkParam("--dont_wrap");
-    useBsplines = checkParam("--splines");
 }
 
 /* Usage ------------------------------------------------------------------- */
 void ProgSymmetrize::defineParams()
 {
-    addUsageLine("Symmetrize a 3D volume ");
-    addUsageLine("Example of use: Sample at i3 symmetry and the volume is not wrapped");
-    addUsageLine("   xmipp_symmetrize -i input.vol --sym i3 --dont_wrap");
-    addParamsLine("    -i <file_in>        : input 3D Xmipp file");
-    addParamsLine("   [-o <file_out=\"\">]      : if no name is given then the input file is rewritten");
-    addParamsLine("    --sym <sym_file>     : symmetry file (see the manual)");
-    addParamsLine("   [--no_group]          : do not generate symmetry subgroup");
-    addParamsLine("   [--dont_wrap]         : by default, the volume is wrapped");
-    addParamsLine("   [--splines]           : by default, trilinear interpolation");
+    addUsageLine("Symmetrize volumes and images ");
+    XmippMetadataProgram::defineParams();
+    addParamsLine("    --sym <symmetry>     : For 2D images: a number");
+    addParamsLine("                         : For 3D volumes: a symmetry file or point-group description");
+    addParamsLine("                         : Valid point-group descriptions are:");
+    addParamsLine("                         : C1, Ci, Cs, Cn (from here on n must be an integer number with no more than 2 digits)");
+    addParamsLine("                         : Cnv, Cnh, Sn, Dn, Dnv, Dnh, T, Td, Th, O, Oh");
+    addParamsLine("                         : I, I1, I2, I3, I4, I5, Ih");
+    addParamsLine("                         :+ For a full description of symmetries look at");
+    addParamsLine("                         :+ http://xmipp.cnb.uam.es/twiki/bin/view/Xmipp/Symmetry");
+    addParamsLine("   [--no_group]          : For 3D volumes: do not generate symmetry subgroup");
+    addParamsLine("   [--dont_wrap]         : by default, the image/volume is wrapped");
+    addExampleLine("Symmetrize a list of images with 6 fold symmetry",false);
+    addExampleLine("   xmipp_symmetrize -i input.sel --sym 6");
+    addExampleLine("Symmetrize with i3 symmetry and the volume is not wrapped",false);
+    addExampleLine("   xmipp_symmetrize -i input.vol --sym i3 --dont_wrap");
 }
 
 /* Symmetrize ------------------------------------------------------- */
-//#define DEBUG
-void symmetrize(const SymList &SL, MultidimArray<double> &V_in, MultidimArray<double> &V_out,
-                                int Splinedegree,bool wrap, bool show_progress, bool do_outside_avg)
+void symmetrizeVolume(const SymList &SL, const MultidimArray<double> &V_in,
+                      MultidimArray<double> &V_out,
+                      bool wrap, bool do_outside_avg)
 {
     Matrix2D<double> L(4, 4), R(4, 4); // A matrix from the list
-    MultidimArray<double> V_aux, V_aux2;
+    MultidimArray<double> V_aux;
     Matrix1D<double> sh(3);
-    double dum, avg = 0.;
+    double avg = 0.;
 
     if (do_outside_avg)
     {
         MultidimArray<int> mask;
-        int rad;
-        mask.resize(V_in);
+        mask.resizeNoCopy(V_in);
         mask.setXmippOrigin();
-        rad = XMIPP_MIN(V_in.ydim, V_in.xdim);
-        rad = XMIPP_MIN(rad, V_in.zdim);
+        int rad = XMIPP_MIN(XSIZE(V_in), YSIZE(V_in));
+        rad = XMIPP_MIN(rad, ZSIZE(V_in));
         BinaryCircularMask(mask, rad / 2, OUTSIDE_MASK);
+        double dum;
         computeStats_within_binary_mask(mask, V_in, dum, dum, avg, dum);
     }
     V_out = V_in;
-
-    if (show_progress)
-    {
-        std::cerr << "Symmetrizing ...\n";
-        init_progress_bar(SL.SymsNo());
-    }
 
     for (int i = 0; i < SL.SymsNo(); i++)
     {
         SL.get_matrices(i, L, R);
 
         SL.get_shift(i, sh);
-        R(3, 0) = sh(0) * V_aux.xdim;//colNumber();
-        R(3, 1) = sh(1) * V_aux.ydim;//rowNumber();
-        R(3, 2) = sh(2) * V_aux.zdim;//sliceNumber();
-
-        applyGeometry(Splinedegree,V_aux, V_in, R.transpose(), IS_NOT_INV, wrap, avg);
-        //#define DEBUG
-#ifdef DEBUG
-
-        V_aux.write((std::string)"PPPsym_" + integerToString(i) + ".vol");
-#endif
-
-        /* *** CO: I am not very sure about the reason for this, but it
-           seems to work */
-        // applyGeometry(V_aux2(),L,V_aux(),IS_NOT_INV,prm.wrap);
+        R(3, 0) = sh(0) * XSIZE(V_aux);
+        R(3, 1) = sh(1) * YSIZE(V_aux);
+        R(3, 2) = sh(2) * ZSIZE(V_aux);
+        applyGeometry(BSPLINE3, V_aux, V_in, R.transpose(), IS_NOT_INV, wrap, avg);
         arrayByArray(V_out, V_aux, V_out, '+');
-        if (show_progress)
-            progress_bar(i);
     }
-    if (show_progress)
-        progress_bar(SL.SymsNo());
-    arrayByScalar(V_out, SL.SymsNo() + 1.0f, V_out, '/');
+    arrayByScalar(V_out, 1.0/(SL.SymsNo() + 1.0f), V_out, '*');
 }
-#undef DEBUG
 
-/* Main program ------------------------------------------------------------ */
-void ProgSymmetrize::run()
+void symmetrizeImage(int symorder, const MultidimArray<double> &I_in,
+                      MultidimArray<double> &I_out,
+                      bool wrap, bool do_outside_avg)
 {
-    SymList           SL;
-    Image<double>     V_in;
-    Image<double>     V_out;
+    double avg = 0.;
+    if (do_outside_avg)
+    {
+        MultidimArray<int> mask;
+        mask.resizeNoCopy(I_in);
+        mask.setXmippOrigin();
+        int rad = XMIPP_MIN(XSIZE(I_in), YSIZE(I_in));
+        BinaryCircularMask(mask, rad / 2, OUTSIDE_MASK);
+        double dum;
+        computeStats_within_binary_mask(mask, I_in, dum, dum, avg, dum);
+    }
 
-    double accuracy = (do_not_generate_subgroup) ? -1 : 1e-6;
-    SL.read_sym_file(fn_sym, accuracy);
-    std:: cout << "Number of symmetries: " << SL.SymsNo() << std::endl;
-    V_in.read(fn_in);
-
-    //std::cerr << prm;
-    if (!useBsplines)
-        symmetrize(SL, V_in(), V_out(), LINEAR, wrap, true,false);
-    else
-        symmetrize(SL, V_in(), V_out(), 3, wrap, true,true);
-    if (fn_out == "")
-        fn_out = V_in.name();
-    V_out.write(fn_out);
+    I_out = I_in;
+	MultidimArray<double> rotatedImg;
+    for (int i = 1; i < symorder; i++)
+    {
+        rotate(BSPLINE3, rotatedImg, I_in, 360.0 / symorder * i,'Z',wrap,avg);
+        I_out += rotatedImg;
+    }
+    I_out *= 1.0/symorder;
 }
 
+/* Preprocess ------------------------------------------------------------- */
+void ProgSymmetrize::preProcess()
+{
+    if (!exists(fn_sym) && isdigit(fn_sym[0]))
+        symorder=textToInteger(fn_sym);
+    else
+    {
+        double accuracy = (do_not_generate_subgroup) ? -1 : 1e-6;
+        SL.read_sym_file(fn_sym, accuracy);
+        symorder=-1;
+    }
+}
 
+/* Process image ------------------------------------------------------------- */
+void ProgSymmetrize::processImage(const FileName &fnImg, const FileName &fnImgOut, size_t objId)
+{
+    Image<double> Iin;
+    Image<double> Iout;
+    Iin.readApplyGeo(fnImg, mdIn, objId);
+    if (ZSIZE(Iin())==1)
+    {
+    	if (symorder!=-1)
+    		symmetrizeImage(symorder,Iin(),Iout(),wrap,!wrap);
+    	else
+    		REPORT_ERROR(ERR_ARG_MISSING,"The symmetry order is not valid for images");
+    }
+    else
+    {
+    	if (SL.SymsNo()>0)
+    		symmetrizeVolume(SL,Iin(),Iout(),wrap,!wrap);
+    	else
+    		REPORT_ERROR(ERR_ARG_MISSING,"The symmetry description is not valid for volumes");
+    }
+    Iout.write(fnImgOut);
+}

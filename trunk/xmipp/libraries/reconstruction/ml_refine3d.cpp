@@ -1006,7 +1006,7 @@ void ProgRefine3D::postProcessVolumes(int argc, char **argv)
             if (fn_sym != "")
             {
                 Vaux().resize(vol());
-                symmetrize(locsampling.SL, vol(), Vaux());
+                symmetrizeVolume(locsampling.SL, vol(), Vaux());
                 // Read local symmetry mask if requested
                 if (fn_symmask != "")
                 {
