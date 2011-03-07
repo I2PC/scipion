@@ -30,6 +30,7 @@
 /* Read parameters --------------------------------------------------------- */
 void ProgSymmetrize::readParams()
 {
+	XmippMetadataProgram::readParams();
     fn_sym = getParam("--sym");
     do_not_generate_subgroup = checkParam("--no_group");
     wrap = !checkParam("--dont_wrap");
@@ -39,6 +40,7 @@ void ProgSymmetrize::readParams()
 void ProgSymmetrize::defineParams()
 {
     addUsageLine("Symmetrize volumes and images ");
+    each_image_produces_an_output=true;
     XmippMetadataProgram::defineParams();
     addParamsLine("    --sym <symmetry>     : For 2D images: a number");
     addParamsLine("                         : For 3D volumes: a symmetry file or point-group description");
@@ -54,6 +56,18 @@ void ProgSymmetrize::defineParams()
     addExampleLine("   xmipp_symmetrize -i input.sel --sym 6");
     addExampleLine("Symmetrize with i3 symmetry and the volume is not wrapped",false);
     addExampleLine("   xmipp_symmetrize -i input.vol --sym i3 --dont_wrap");
+}
+
+/* Show ------------------------------------------------------------------- */
+void ProgSymmetrize::show()
+{
+	if (verbose==0)
+		return;
+    XmippMetadataProgram::show();
+    std::cout
+    << "Symmetry: " << fn_sym << std::endl
+    << "No group: " << do_not_generate_subgroup << std::endl
+    << "Wrap:     " << wrap << std::endl;
 }
 
 /* Symmetrize ------------------------------------------------------- */
@@ -94,8 +108,8 @@ void symmetrizeVolume(const SymList &SL, const MultidimArray<double> &V_in,
 }
 
 void symmetrizeImage(int symorder, const MultidimArray<double> &I_in,
-                      MultidimArray<double> &I_out,
-                      bool wrap, bool do_outside_avg)
+                     MultidimArray<double> &I_out,
+                     bool wrap, bool do_outside_avg)
 {
     double avg = 0.;
     if (do_outside_avg)
@@ -110,7 +124,7 @@ void symmetrizeImage(int symorder, const MultidimArray<double> &I_in,
     }
 
     I_out = I_in;
-	MultidimArray<double> rotatedImg;
+    MultidimArray<double> rotatedImg;
     for (int i = 1; i < symorder; i++)
     {
         rotate(BSPLINE3, rotatedImg, I_in, 360.0 / symorder * i,'Z',wrap,avg);
@@ -138,19 +152,20 @@ void ProgSymmetrize::processImage(const FileName &fnImg, const FileName &fnImgOu
     Image<double> Iin;
     Image<double> Iout;
     Iin.readApplyGeo(fnImg, mdIn, objId);
+    Iin().setXmippOrigin();
     if (ZSIZE(Iin())==1)
     {
-    	if (symorder!=-1)
-    		symmetrizeImage(symorder,Iin(),Iout(),wrap,!wrap);
-    	else
-    		REPORT_ERROR(ERR_ARG_MISSING,"The symmetry order is not valid for images");
+        if (symorder!=-1)
+            symmetrizeImage(symorder,Iin(),Iout(),wrap,!wrap);
+        else
+            REPORT_ERROR(ERR_ARG_MISSING,"The symmetry order is not valid for images");
     }
     else
     {
-    	if (SL.SymsNo()>0)
-    		symmetrizeVolume(SL,Iin(),Iout(),wrap,!wrap);
-    	else
-    		REPORT_ERROR(ERR_ARG_MISSING,"The symmetry description is not valid for volumes");
+        if (SL.SymsNo()>0)
+            symmetrizeVolume(SL,Iin(),Iout(),wrap,!wrap);
+        else
+            REPORT_ERROR(ERR_ARG_MISSING,"The symmetry description is not valid for volumes");
     }
     Iout.write(fnImgOut);
 }

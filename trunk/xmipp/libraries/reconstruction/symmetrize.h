@@ -52,6 +52,9 @@ public:
     /** Define Parameters */
     void defineParams();
 
+    /** Show parameters */
+    void show();
+
     /** Run */
     void preProcess();
 
