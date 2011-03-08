@@ -76,8 +76,6 @@ void ProgDenoise::defineParams()
     addParamsLine("  [-output_scale <s=0>]      : output_scale");
     addParamsLine("  [-th <th=50>]              : threshold of values (%) to remove");
     addParamsLine("  [-R <r=-1>]                : Radius to keep, by default half the size");
-    //    addParamsLine("  [-SNR0 <SNR=0.1>]          : Smallest SNR");
-    //    addParamsLine("  [-SNRF <SNR=0.2>]          : Largest SNR");
     addParamsLine("  [-white_noise]             : Select if the noise is white");
     addParamsLine("  [-outer <it=10>]           : Difussion outer iterations");
     addParamsLine("  [-inner <it=1>]            : Difussion inner iterations");
