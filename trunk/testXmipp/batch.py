@@ -115,7 +115,7 @@ class Tester:
         self.addTest("-i input/header.doc --apply_transform -o %o/images.stk");
         self.addTest("-i input/phantomBacteriorhodopsin.vol --shift 10 5 -10 -o %o/volume.vol --dont_wrap");
         self.addTest("-i input/header.doc --scale factor 0.5 --oroot %o/halvedOriginal");
-        self.addTest("-i input/header.doc --scale dim 64 --oroot %o/halvedDim");
+        self.addTest("-i input/header.doc --scale fourier 32 --oroot %o/halvedFourierDim");
 
         self.addProgram("xmipp_transform_normalize")
         self.addTest("-i input/smallStack.stk -o %o/smallStackNormalized.stk --method NewXmipp --background circle 32")
