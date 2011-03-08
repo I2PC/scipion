@@ -32,27 +32,31 @@
 void ProgProject::readParams()
 {
     fnPhantom     = getParam("-i");
+    fnOut = getParam("-o");
     samplingRate  = getDoubleParam("--sampling_rate");
     singleProjection = false;
 
-    if (checkParam("--oroot"))
+    bool doParams = checkParam("--params");
+    bool doAngles = checkParam("--angles");
+
+    if (doParams && doAngles)
+        REPORT_ERROR(ERR_ARG_BADCMDLINE, "--params and --angles are mutually exclusive");
+    else if (!doParams && !doAngles)
+        REPORT_ERROR(ERR_ARG_BADCMDLINE, "You should provide --params or --angles");
+
+    if (doParams)
     {
-    	fnRoot        = getParam("--oroot");
-    	fn_proj_param = getParam("--params");
-    	if (checkParam("--crystal"))
-    		fn_crystal    = getParam("--crystal");
-    	if (checkParam("--sym"))
-    		fn_sym        = getParam("--sym");
+        fn_proj_param = getParam("--params");
+        if (checkParam("--crystal"))
+            fn_crystal    = getParam("--crystal");
+        if (checkParam("--sym"))
+            fn_sym        = getParam("--sym");
         only_create_angles = checkParam("--only_create_angles");
     }
-    else
+    else //doAngles = true
     {
-    	fnOut = getParam("-o");
-        singleProjection = checkParam("--angles");
+        singleProjection = true;
         projSize = getIntParam("--xdim");
-    }
-    if (singleProjection)
-    {
         rotSingle  = getDoubleParam("--angles",0);
         tiltSingle = getDoubleParam("--angles",1);
         psiSingle  = getDoubleParam("--angles",2);
@@ -87,22 +91,21 @@ void ProgProject::defineParams()
     addExampleLine(" ",false);
     addExampleLine("http://newxmipp.svn.sourceforge.net/viewvc/newxmipp/trunk/testXmipp/input/Crystal/cylinder_with_axis.descr",false);
     addParamsLine("   -i <volume_file>                           : Voxel volume, PDB or description file");
-    addParamsLine("   --oroot <rootname>                    : Output rootname (use --params)");
-    addParamsLine("or -o <image_file>                        : Output image (use --angles)");
+    addParamsLine("   -o <image_file>                            : Output stack (use --angles)");
     addParamsLine("  [--sampling_rate <Ts=1>]               : It is only used for PDB phantoms");
     addParamsLine("== Generating a set of projections == ");
     addParamsLine("  [--params <parameters_file>]           : File containing projection parameters");
     addParamsLine("                                         : Check the manual for a description of the parameters");
-    addParamsLine("      requires --oroot;");
+    //addParamsLine("      requires --oroot;");
     addParamsLine("  [--crystal <crystal_parameters_file>]  : It is used for computing the assymetric unit");
-    addParamsLine("      requires --oroot;");
+    //addParamsLine("      requires --oroot;");
     addParamsLine("  [--sym <sym_file>]                     : It is used for computing the assymetric unit");
-    addParamsLine("      requires --oroot;");
+    //addParamsLine("      requires --oroot;");
     addParamsLine("  [--only_create_angles]                 : Do not create projections");
-    addParamsLine("      requires --oroot;");
+    //addParamsLine("      requires --oroot;");
     addParamsLine("== Generating a single projection == ");
     addParamsLine("  [--angles <rot> <tilt> <psi>]          : Angles for a single projection");
-    addParamsLine("      requires -o;");
+    //addParamsLine("      requires -o;");
     addParamsLine("  [--xdim <size=-1>]                     : Size of the projection");
     addParamsLine("                                         : For geometric descriptions and voxel volumes");
     addParamsLine("                                         : this parameter is not necessary");
@@ -295,7 +298,7 @@ void Projection_Parameters::read(const FileName &fn_proj_param)
     } /* while end */
     if (lineNo != 10)
         REPORT_ERROR(ERR_PARAM_MISSING, formatString("Prog_Project_Parameters::read: I "
-            "couldn't read all parameters from file %s, only read %d lines", fn_proj_param.c_str(), lineNo));
+                     "couldn't read all parameters from file %s, only read %d lines", fn_proj_param.c_str(), lineNo));
     fclose(fh_param);
 }
 
@@ -632,10 +635,10 @@ void PROJECT_Side_Info::produce_Side_Info(Projection_Parameters &prm,
         phantomDescr.read(prog_prm.fnPhantom);
         phantomMode = XMIPP;
         if (prog_prm.singleProjection)
-        	if (prog_prm.projSize==-1)
-        		prm.proj_Xdim=prm.proj_Ydim=phantomDescr.xdim;
-        	else
-        		prm.proj_Xdim=prm.proj_Ydim=prog_prm.projSize;
+            if (prog_prm.projSize==-1)
+                prm.proj_Xdim=prm.proj_Ydim=phantomDescr.xdim;
+            else
+                prm.proj_Xdim=prm.proj_Ydim=prog_prm.projSize;
     }
     else if (prog_prm.fnPhantom.getExtension()=="pdb")
     {
@@ -645,10 +648,10 @@ void PROJECT_Side_Info::produce_Side_Info(Projection_Parameters &prm,
         interpolator.setup(M,prog_prm.samplingRate/M,true);
         phantomMode = PDB;
         if (prog_prm.singleProjection)
-        	if (prog_prm.projSize==-1)
-        		REPORT_ERROR(ERR_ARG_MISSING,"--xdim");
-        	else
-        		prm.proj_Xdim=prm.proj_Ydim=prog_prm.projSize;
+            if (prog_prm.projSize==-1)
+                REPORT_ERROR(ERR_ARG_MISSING,"--xdim");
+            else
+                prm.proj_Xdim=prm.proj_Ydim=prog_prm.projSize;
     }
     else
     {
@@ -656,10 +659,10 @@ void PROJECT_Side_Info::produce_Side_Info(Projection_Parameters &prm,
         phantomVol().setXmippOrigin();
         phantomMode = VOXEL;
         if (prog_prm.singleProjection)
-        	if (prog_prm.projSize==-1)
-        		prm.proj_Xdim=prm.proj_Ydim=XSIZE(phantomVol());
-        	else
-        		prm.proj_Xdim=prm.proj_Ydim=prog_prm.projSize;
+            if (prog_prm.projSize==-1)
+                prm.proj_Xdim=prm.proj_Ydim=XSIZE(phantomVol());
+            else
+                prm.proj_Xdim=prm.proj_Ydim=prog_prm.projSize;
     }
 }
 
@@ -710,7 +713,7 @@ int PROJECT_Effectively_project(const std::string &fnOut,
         if (side.phantomMode==PROJECT_Side_Info::VOXEL)
         {
             projectVolume(side.phantomVol(), proj, prm.proj_Ydim, prm.proj_Xdim,
-                           rot, tilt, psi);
+                          rot, tilt, psi);
             Matrix1D<double> shifts(2);
             XX(shifts) = shiftX;
             YY(shifts) = shiftY;
@@ -827,12 +830,14 @@ int ROUT_project(ProgProject &prm, Projection &proj, MetaData &SF)
         // Really project
         if (prm.singleProjection)
             ProjNo = PROJECT_Effectively_project(prm.fnOut, prm.singleProjection,
-            									 proj_prm, side, crystal_proj_prm, proj, SF);
+                                                 proj_prm, side, crystal_proj_prm, proj, SF);
         else
         {
-            ProjNo = PROJECT_Effectively_project(prm.fnRoot+".stk", prm.singleProjection,
-            									 proj_prm, side, crystal_proj_prm, proj, SF);
-            SF.write(prm.fnRoot+".sel");
+            FileName stackName = prm.fnOut.removeAllExtensions() + ".stk";
+            FileName mdName = prm.fnOut.removeAllExtensions() + ".sel";
+            ProjNo = PROJECT_Effectively_project(stackName, prm.singleProjection,
+                                                 proj_prm, side, crystal_proj_prm, proj, SF);
+            SF.write(mdName);
         }
     }
     else
