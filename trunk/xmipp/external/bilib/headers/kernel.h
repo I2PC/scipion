@@ -79,6 +79,21 @@ extern double Bspline03
         double Argument   /* input */
     );
 
+/** Bspline03 as a macro */
+#define BSPLINE03(y,x) \
+{\
+	double Argument = x<0?-x:x;\
+	if (Argument < 1.0)\
+		y=Argument * Argument * (Argument - 2.0) * 0.5 + 2.0 / 3.0;\
+	else if (Argument < 2.0)\
+	{\
+		Argument -= 2.0; \
+		y=Argument * Argument * Argument * (-1.0 / 6.0);\
+	} \
+	else\
+		y=0.0;\
+}
+
 /*--------------------------------------------------------------------------*/
 /** Returns the value of a Basic spline function of degree 4 (order 5)
    evaluated at Argument */

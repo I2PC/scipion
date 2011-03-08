@@ -2301,6 +2301,7 @@ public:
         int n2 = n1 + SplineDegree;
 
         double zyxsum = 0.0;
+        double aux;
         for (int nn = n1; nn <= n2; nn++)
         {
             int equivalent_nn=nn;
@@ -2333,7 +2334,8 @@ public:
                         xsum += Coeff * Bspline02(xminusl);
                         break;
                     case 3:
-                        xsum += Coeff * Bspline03(xminusl);
+                    	BSPLINE03(aux,xminusl);
+                        xsum += Coeff * aux;
                         break;
                     case 4:
                         xsum += Coeff * Bspline04(xminusl);
@@ -2363,7 +2365,8 @@ public:
                     yxsum += xsum * Bspline02(yminusm);
                     break;
                 case 3:
-                    yxsum += xsum * Bspline03(yminusm);
+                	BSPLINE03(aux,yminusm);
+                    yxsum += xsum * aux;
                     break;
                 case 4:
                     yxsum += xsum * Bspline04(yminusm);
@@ -2393,7 +2396,8 @@ public:
                 zyxsum += yxsum * Bspline02(zminusn);
                 break;
             case 3:
-                zyxsum += yxsum * Bspline03(zminusn);
+            	BSPLINE03(aux,zminusn);
+                zyxsum += yxsum * aux;
                 break;
             case 4:
                 zyxsum += yxsum * Bspline04(zminusn);
@@ -2449,6 +2453,7 @@ public:
         int m2 = m1 + SplineDegree;
 
         double columns = 0.0;
+        double aux;
         for (int m = m1; m <= m2; m++)
         {
             int equivalent_m=m;
@@ -2473,7 +2478,8 @@ public:
                     break;
 
                 case 3:
-                    rows += Coeff * Bspline03(xminusl);
+                	BSPLINE03(aux,xminusl);
+                    rows += Coeff * aux;
                     break;
 
                 case 4:
@@ -2510,7 +2516,8 @@ public:
                 break;
 
             case 3:
-                columns += rows * Bspline03(yminusm);
+            	BSPLINE03(aux,yminusm);
+                columns += rows * aux;
                 break;
 
             case 4:
