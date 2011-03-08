@@ -426,7 +426,7 @@ public:
     virtual void writeOutputFiles(const ModelML2D &model, int outputType = OUT_FINAL);
 
     /// Read model from file
-    virtual void readModel(ModelML2D &model, FileName fn_base);
+    virtual void readModel(ModelML2D &model, int block);
     /// Get base name based on fn_root and some number
     FileName getBaseName(String suffix = "", int number = -1);
 

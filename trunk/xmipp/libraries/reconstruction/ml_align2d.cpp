@@ -46,11 +46,43 @@ void ProgML2D::defineBasicParams(XmippProgram * prog)
 
     if (!do_ML3D)
     {
+        //usage specific to ml2d
+        addUsageLine("+Our recommended way of performing ML alignment is to introduce as little bias in the intial reference(s) as possible.");
+        addUsageLine("+This can be done by calculting average images of random subsets of the (unaligned!) input experimental images, using the --nref option.");
+        addUsageLine("+Note that the estimates for the standard deviation in the noise and in the origin offsets are re-estimated every iteration,");
+        addUsageLine("+so that the initial values should not matter too much, as long as they are \"reasonable\". For Xmipp-normalized images,");
+        addUsageLine("+the standard deviation in the noise can be assumed to be 1. For reasonably centered particles the default value of 3 for");
+        addUsageLine("+the offsets should do the job.");
+        addUsageLine("+");
+        addUsageLine("+The output of the program consists of the refined reference images (weighted averages over all experimental images).");
+        addUsageLine("+The experimental images are not altered at all. In terms of the ML approach, optimal transformations and references for");
+        addUsageLine("+each image do not play the same role as in the conventional cross-correlation (or least-sqaures) approach. This program");
+        addUsageLine("+can also be used for reference-free 2D-alignment using only a single reference: just supply =--nref 1= .");
+        addUsageLine("+Although the calculations can be rather time-consuming (especially for many, large experimental images and a large number of references),");
+        addUsageLine("+we strongly recommend to let the calculations converge. In our experience this takes in the order of 10-100 iterations, depending on the");
+        addUsageLine("+number images, the amount of noise, etc. The default stopping criterium has yielded satisfactory results in our experience. A parallel ");
+        addUsageLine("+version of this program has been implemented.");
+        addSeeAlsoLine("mpi_ml_align2d");
+
         prog->addParamsLine("   --nref <int=1>               : Number of references to generate automatically (recommended)");
         prog->addParamsLine("or --ref <selfile=\"\">         : or selfile with initial references/single reference image ");
         prog->addParamsLine(" [ --oroot <rootname=ml2d> ]        : Output rootname");
         prog->addParamsLine(" [ --mirror ]                   : Also check mirror image of each reference ");
-        prog->addParamsLine(" [ --fast ]                     : Use pre-centered images to pre-calculate significant orientations");
+        prog->addParamsLine(" [ --fast ]                     : Use pre-centered images to pre-calculate significant orientations.");
+        prog->addParamsLine(":++ If this flag is set part of the integration over all references, rotations and translations is skipped.");
+        prog->addParamsLine(":++ The program will store all (=N_imgs*N_refs=) origin offsets that yield the maximum probability of observing");
+        prog->addParamsLine(":++ each experimental image, given each of the references. In the first iterations a complete integration over");
+        prog->addParamsLine(":++ all references, rotations and translations is performed for all images. In all subsequent iterations, for all");
+        prog->addParamsLine(":++ combinations of experimental images, references and rotations, the probability of observing the image given");
+        prog->addParamsLine(":++ the optimal origin offsets from the previous iteration is calculated. Then, if this probability is not");
+        prog->addParamsLine(":++ considered \"significant\", we assume that none of the other translations will be significant, and we skip");
+        prog->addParamsLine(":++ the integration over the translations. A combination of experimental image, reference and rotation is considered");
+        prog->addParamsLine(":++ as \"significant\" if the probability at the corresponding optimal origin offsets is larger than C times the");
+        prog->addParamsLine(":++ maximum of all these probabilities for that experimental image and reference (by default C=1e-12) This version");
+        prog->addParamsLine(":++ may run up to ten times faster than the original, complete-search approach, while practically identical results may be obtained.");
+
+        addExampleLine("A typical use of this program is:", false);
+        addExampleLine("xmipp_ml_align2d -i input/images_some.stk --ref input/seeds2.stk --oroot output/ml2d --fast --mirror");
     }
     else
     {
@@ -85,10 +117,9 @@ void ProgML2D::defineAdditionalParams(XmippProgram * prog, const char * sectionL
     prog->addParamsLine(" [ --fix_sigma_noise ]           : Do not re-estimate the standard deviation in the pixel noise ");
     prog->addParamsLine(" [ --fix_sigma_offset ]          : Do not re-estimate the standard deviation in the origin offsets ");
     prog->addParamsLine(" [ --fix_fractions ]             : Do not re-estimate the model fractions ");
-    prog->addParamsLine(" [ --doc <docfile=\"\"> ]       : Read initial angles and offsets from docfile ");
+    //prog->addParamsLine(" [ --doc <docfile=\"\"> ]       : Read initial angles and offsets from docfile ");
     prog->addParamsLine(" [ --student <df=6>]            : Use t-distributed instead of Gaussian model for the noise ");
     prog->addParamsLine("                                : df = Degrees of freedom for the t-distribution ");
-    prog->addParamsLine("    requires -student;");
     prog->addParamsLine(" [ --norm ]                     : Refined normalization parameters for each particle ");
     prog->addParamsLine(" [ --save_memA ]                : Save memory A");
 
@@ -101,8 +132,8 @@ void ProgML2D::defineAdditionalParams(XmippProgram * prog, const char * sectionL
 
 void ProgML2D::defineParams()
 {
-    addUsageLine("Perform (multi-reference) 2D-alignment,");
-    addUsageLine("using a maximum-likelihood (ML) target function.");
+    addUsageLine("Perform (multi-reference) 2D-alignment using a maximum-likelihood (ML) target function.");
+
     defineBasicParams(this);
     defineAdditionalParams(this, "==+ Additional options ==");
     addParamsLine("==+++++ Hidden arguments ==");
@@ -477,10 +508,12 @@ void ProgML2D::produceSideInfo()
         dfsigma2 = df * sigma_noise2;
     }
 
-    if (fn_ref == "")
+    if (fn_ref.empty())
     {
+      //generate an initial reference just by averaging the experimental images
         FileName fn_tmp;
         Image<double> img, avg(dim, dim);
+        avg().initZeros();
         avg().setXmippOrigin();
 
         FOR_ALL_OBJECTS_IN_METADATA(MDimg)
@@ -494,17 +527,18 @@ void ProgML2D::produceSideInfo()
         avg() /= MDimg.size();
         model.setNRef(1);
         model.Iref[0] = avg;
-
-        fn_ref = fn_root + "_it";
-        fn_ref.compose(fn_ref, 0, "");
-        fn_tmp = fn_ref + "_ref.xmp";
-        avg.write(fn_tmp);
-        fn_ref += "_ref.xmd";
-        MDref.clear();
-        size_t id = MDref.addObject();
-        MDref.setValue(MDL_IMAGE, fn_tmp, id);
-        MDref.setValue(MDL_ENABLED, 1, id);
-        MDref.write(fn_ref);
+        fn_ref = fn_root + "_images_average.xmp";
+        avg.write(fn_ref);
+//        fn_ref = fn_root + "_it";
+//        fn_ref.compose(fn_ref, 0, "");
+//        fn_tmp = fn_ref + "_ref.xmp";
+//        avg.write(fn_tmp);
+//        fn_ref += "_ref.xmd";
+//        MDref.clear();
+//        size_t id = MDref.addObject();
+//        MDref.setValue(MDL_IMAGE, fn_tmp, id);
+//        MDref.setValue(MDL_ENABLED, 1, id);
+//        MDref.write(fn_ref);
     }
 
     // Print some output to screen
@@ -527,17 +561,7 @@ void ProgML2D::produceSideInfo2()
     size_t id;
 
     // Read in all reference images in memory
-    if (fn_ref.isMetaData())
-    {
-        MDref.read(fn_ref);
-    }
-    else
-    {
-        MDref.clear();
-        id = MDref.addObject();
-        MDref.setValue(MDL_IMAGE, fn_ref, id);
-        MDref.setValue(MDL_ENABLED, 1, id);
-    }
+    MDref.read(fn_ref);
 
     model.setNRef(MDref.size());
     int refno = 0;
@@ -1143,8 +1167,9 @@ void ProgML2D::expectationSingleImage(Matrix1D<double> &opt_offsets)
               - ddim2 * log(sqrt(PI * df * sigma_noise2)) + gammln(-df2)
               - gammln(df / 2.);
 
-//#define DEBUG_JM1
+    //#define DEBUG_JM1
 #ifdef DEBUG_JM1
+
     std::cerr << "----------------------------->>>" << std::endl;
     std::cerr << "                             dLL: " << dLL << std::endl;
     std::cerr << "                        sum_refw: " << sum_refw << std::endl;
@@ -1613,23 +1638,24 @@ void ProgML2D::doThreadExpectationSingleImageRefno()
 
                         // A. Backward FFT to calculate weights in real-space
                         //Set this references to avoid indexing inside the heavy loop
-                        MultidimArray<std::complex<double> > & Fimg_flip_aux = Fimg_flip[iflip];
+                        //MultidimArray<std::complex<double> > & Fimg_flip_aux = Fimg_flip[iflip];
+                        Faux = Fimg_flip[iflip];
                         MultidimArray<std::complex<double> > & fref_aux = fref[refnoipsi];
-                        FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY2D(Faux)
+                        FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(Faux)
                         {
-                            dAij(Faux,i,j) =
-                                dAij(Fimg_flip_aux,i,j) * dAij(fref_aux,i,j);
+                            DIRECT_MULTIDIM_ELEM(Faux, n) *= DIRECT_MULTIDIM_ELEM(fref_aux, n);
                         }
                         // Takes the input from Faux, and leaves the output in Maux
                         local_transformer.inverseFourierTransform();
                         CenterFFT(Maux, true);
 
 #ifdef DEBUG_JM2
+
                         if (iter == 2)
-                        std::cerr
-                        << "Maux: " <<  std::endl << Maux
-                        << "Fimg_flip[iflip]" <<  std::endl<< Fimg_flip[iflip]
-                        << "fref[refnoipsi]" <<  std::endl<< fref[refnoipsi] << std::endl;
+                            std::cerr
+                            << "Maux: " <<  std::endl << Maux
+                            << "Fimg_flip[iflip]" <<  std::endl<< Fimg_flip[iflip]
+                            << "fref[refnoipsi]" <<  std::endl<< fref[refnoipsi] << std::endl;
 #endif
 
                         // B. Calculate weights for each pixel within sigdim (Mweight)
@@ -1640,13 +1666,14 @@ void ProgML2D::doThreadExpectationSingleImageRefno()
                             diff = A2_plus_Xi2 - ref_scale * A2D_ELEM(Maux, i, j) * ddim2;
                             pdf = fracpdf * A2D_ELEM(P_phi, i, j);
 #ifdef DEBUG_JM2
+
                             if (iter == 2)
-                            std::cerr << "pdf " << pdf << std::endl
-                            << "diff -> A2_plus_Xi2 " << A2_plus_Xi2 << std::endl
-                            << "diff -> A2D_ELEM(Maux, i, j) " << A2D_ELEM(Maux, i, j) << std::endl
-                            << "diff -> ref_scale " << ref_scale << std::endl
-                            << "diff -> ddim2 " << ddim2 << std::endl
-                            << "==========> diff " << diff << std::endl;
+                                std::cerr << "pdf " << pdf << std::endl
+                                << "diff -> A2_plus_Xi2 " << A2_plus_Xi2 << std::endl
+                                << "diff -> A2D_ELEM(Maux, i, j) " << A2D_ELEM(Maux, i, j) << std::endl
+                                << "diff -> ref_scale " << ref_scale << std::endl
+                                << "diff -> ddim2 " << ddim2 << std::endl
+                                << "==========> diff " << diff << std::endl;
 #endif
 
                             if (!model.do_student)
@@ -1656,8 +1683,9 @@ void ProgML2D::doThreadExpectationSingleImageRefno()
                                 // next line because of numerical precision of exp-function
                                 weight = (aux > 1000.) ? 0. : exp(-aux) * pdf;
 #ifdef DEBUG_JM2
+
                                 if (iter == 2)
-                                std::cerr << "aux " << aux << std::endl << "weight " << weight << std::endl;
+                                    std::cerr << "aux " << aux << std::endl << "weight " << weight << std::endl;
 #endif
                                 // store weight
                                 A2D_ELEM(Mweight, i, j) = stored_weight = weight;
@@ -1730,9 +1758,9 @@ void ProgML2D::doThreadExpectationSingleImageRefno()
 #ifdef DEBUG_JM2
                         if (iter == 2)
                         {
-                        std::cerr << Mweight << std::endl;
-                        std::cerr << "maxweight: " << my_maxweight << " " << my_sumstoredweight << " " << my_sumweight << std::endl;
-                        exit(1);
+                            std::cerr << Mweight << std::endl;
+                            std::cerr << "maxweight: " << my_maxweight << " " << my_sumstoredweight << " " << my_sumweight << std::endl;
+                            exit(1);
                         }
 #endif
                         // C. only for significant settings, store weighted sums
@@ -1762,7 +1790,7 @@ void ProgML2D::doThreadExpectationSingleImageRefno()
 
                             FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(Faux)
                             {
-                              DIRECT_MULTIDIM_ELEM(mysumimgs_ref, n) +=
+                                DIRECT_MULTIDIM_ELEM(mysumimgs_ref, n) +=
                                     conj(DIRECT_MULTIDIM_ELEM(Faux,n)) * DIRECT_MULTIDIM_ELEM(Fimg_flip_ref,n);
                             }
                         }
@@ -2253,7 +2281,7 @@ void ProgML2D::maximizationBlocks(int refs_per_class)
 
         if (!special_first)
         {
-            readModel(block_model, getBaseName("_block", current_block + 1));
+            readModel(block_model, current_block);
             model.substractModel(block_model);
             // std::cerr << "====== After read, block " << current_block <<": =========" <<std::endl;
             // block_model.print();
@@ -2273,7 +2301,7 @@ void ProgML2D::maximizationBlocks(int refs_per_class)
         {
             for (current_block = 0; current_block < blocks; current_block++)
             {
-                readModel(block_model, getBaseName("_block", current_block + 1));
+                readModel(block_model, current_block);
                 if (current_block == 0)
                     model = block_model;
                 else
@@ -2431,21 +2459,21 @@ void ProgML2D::writeOutputFiles(const ModelML2D &model, int outputType)
     switch (outputType)
     {
     case OUT_BLOCK:
-        //std::cerr << "OUT_BLOCK" <<std::endl;
+        std::cerr << "OUT_BLOCK" <<std::endl;
         write_img_xmd = false;
         write_conv = false;
         // Sjors 18may2010: why not write scales in blocks? We need this now, don't we?
         //write_norm = false;
         //fn_base = getBaseName("_block", current_block + 1);
-        fn_prefix = "block";
+        fn_prefix = formatString("block%03d", current_block + 1);
         break;
     case OUT_ITER:
-        //std::cerr << "OUT_ITER" <<std::endl;
+        std::cerr << "OUT_ITER" <<std::endl;
         //fn_base = getBaseName("_it", iter);
         fn_prefix = ITER_PREFIX;
         break;
     case OUT_FINAL:
-        //std::cerr << "OUT_FINAL" <<std::endl;
+        std::cerr << "OUT_FINAL" <<std::endl;
         //fn_base = fn_root;
         fn_prefix = "final";
         break;
@@ -2511,7 +2539,10 @@ void ProgML2D::writeOutputFiles(const ModelML2D &model, int outputType)
         }
 
         fn_tmp = formatString("%s_%s", rootStr, prefixStr);
-        MDref.append(fn_tmp + "_refs.xmd");
+        if (fn_prefix.contains("block"))
+            MDref.write(fn_tmp + "_refs.xmd");
+        else
+            MDref.append(fn_tmp + "_refs.xmd");
         // Write out log-file
         MetaData mdLog;
         objId = mdLog.addObject();
@@ -2523,17 +2554,21 @@ void ProgML2D::writeOutputFiles(const ModelML2D &model, int outputType)
         mdLog.setValue(MDL_RANDOMSEED, seed, objId);
         if (write_norm)
             mdLog.setValue(MDL_INTSCALE, average_scale, objId);
-        mdLog.append(fn_tmp + "_logs.xmd");
+        if (fn_prefix.contains("block"))
+            MDref.write(fn_tmp + "_logs.xmd");
+        else
+            MDref.append(fn_tmp + "_logs.xmd");
     }
 
 }//close function writeModel
 
-void ProgML2D::readModel(ModelML2D &model, FileName fn_base)
+void ProgML2D::readModel(ModelML2D &model, int block)
 {
 
     // First read general model parameters from _log.xmd
+    FileName fn_base = formatString("%s_block%03d", fn_root.c_str(), (block + 1));
     MetaData MDi;
-    MDi.read(fn_base + "_log.xmd");
+    MDi.read(fn_base + "_logs.xmd");
     model.dim = dim;
     size_t id = MDi.firstObject();
     MDi.getValue(MDL_LL, model.LL, id);
@@ -2545,21 +2580,22 @@ void ProgML2D::readModel(ModelML2D &model, FileName fn_base)
     FileName fn_img;
     Image<double> img;
     MDi.clear();
-    MDi.read(fn_base + "_ref.xmd");
+    MDi.read(fn_base + "_refs.xmd");
     int refno = 0;
 
     model.sumw_allrefs = 0.;
     FOR_ALL_OBJECTS_IN_METADATA(MDi)
     {
-        MDi.getValue(MDL_IMAGE, fn_img, __iter.objId);
-        img.readApplyGeo(fn_img,MDi,__iter.objId);
+        id = __iter.objId;
+        MDi.getValue(MDL_IMAGE, fn_img, id);
+        img.read(fn_img);
         img().setXmippOrigin();
         model.Iref[refno] = img;
-        MDi.getValue(MDL_WEIGHT, model.alpha_k[refno],__iter.objId);
+        MDi.getValue(MDL_WEIGHT, model.alpha_k[refno], id);
         //Just initialize mirror fraction to 0.
         model.mirror_fraction[refno] = 0.;
         if (do_mirror)
-            MDi.getValue(MDL_MIRRORFRAC, model.mirror_fraction[refno],__iter.objId);
+            MDi.getValue(MDL_MIRRORFRAC, model.mirror_fraction[refno], id);
         model.sumw_allrefs += model.alpha_k[refno];
         refno++;
     }
