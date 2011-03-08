@@ -569,6 +569,7 @@ ReconsSources = [
     'series_remove_fluctuations.cpp',
     'sparma.cpp',
     'symmetrize.cpp',
+    'threshold.cpp',
     'tomo_align_dual_tilt_series.cpp',
     'tomo_align_tilt_series.cpp',
     'tomo_align_refinement.cpp',
@@ -736,7 +737,7 @@ AddXmippProgram('spider_rename', ['XmippInterface'])
 AddXmippProgram('spider_translate', ['XmippInterface'])
 AddXmippProgram('spider_extract_angles', ['XmippInterface'])
 AddXmippProgram('spider_generate_count', ['XmippInterface'])
-AddXmippProgram('threshold')
+AddXmippProgram('threshold', ['XmippRecons'])
 AddXmippProgram('transform_add_noise')
 AddXmippProgram('transform_adjust_volume_grey_levels', ['XmippRecons'])
 AddXmippProgram('transform_center_image')

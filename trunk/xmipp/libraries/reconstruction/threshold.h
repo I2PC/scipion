@@ -1,6 +1,6 @@
 /***************************************************************************
  *
- * Authors:    Carlos Oscar            coss@cnb.csic.es (1999)
+ * Authors:     Carlos Oscar S. Sorzano (coss@cnb.csic.es)
  *
  * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
  *
@@ -22,12 +22,54 @@
  *  All comments concerning this program package may be sent to the
  *  e-mail address 'xmipp@cnb.csic.es'
  ***************************************************************************/
+#ifndef _PROG_THRESHOLD_HH
+#define _PROG_THRESHOLD_HH
 
-#include <reconstruction/threshold.h>
+#include <data/funcs.h>
+#include <data/image.h>
+#include <data/mask.h>
+#include <data/symmetries.h>
+#include <data/program.h>
 
-int main(int argc, char **argv)
+/**@defgroup ThresholdProgram Threshold
+   @ingroup ReconsLibrary */
+//@{
+/// Threshold Parameters
+class ProgThreshold : public XmippMetadataProgram
 {
-	ProgThreshold prm;
-	prm.read(argc,argv);
-	prm.tryRun();
-}
+public:
+	// Which pixels should be selected
+	String selectionMethod;
+
+	// Threshold
+	double threshold;
+
+	// Substitution method
+	String substitutionMethod;
+
+	// New value
+	double newValue;
+
+	// Noise average
+	double noiseAvg;
+
+	// Noise stddev
+	double noiseStddev;
+public:
+    /** Read parameters from command line. */
+    void readParams();
+
+    /** Define Parameters */
+    void defineParams();
+
+    /** Show parameters */
+    void show();
+
+    /// Process image or volume
+    void processImage(const FileName &fnImg, const FileName &fnImgOut, size_t objId);
+public:
+    // Selection method as integer
+    int iSelectionMethod;
+};
+//@}
+#endif
