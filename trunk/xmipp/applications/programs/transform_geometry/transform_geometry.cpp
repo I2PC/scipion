@@ -36,12 +36,16 @@
 
 #define INTERP_FOURIER -1
 
+typedef enum { SCALE_NONE, SCALE_FACTOR, SCALE_DIM, SCALE_FOURIER, SCALE_PYRAMID_EXPAND, SCALE_PYRAMID_REDUCE } ScaleType;
+
 class ProgTransformGeometry: public XmippMetadataProgram
 {
 protected:
-    int             zdim, ydim, xdim, splineDegree, dim;
+    ScaleType scale_type;
+
+    int             zdim, ydim, xdim, splineDegree, dim, pyramid_level, fourier_threads;
     size_t          ndim;
-    bool            applyTransform, inverse, wrap, doResize, isVol, flip;
+    bool            applyTransform, inverse, wrap, isVol, flip;
     Matrix2D<double> R, T, S, A, B;
     Matrix1D<double>          shiftV, rotV, scaleV;
     MDRow            input, transformation;
@@ -55,12 +59,12 @@ protected:
         XmippMetadataProgram::defineParams();
         //usage
         addUsageLine("Apply geometric transformations to images. You can shift, rotate and scale");
-        addUsageLine("a group of images/volumes. By default the geometric transformations will be");
-        addUsageLine("read from a metadata, if provided. Also, the original images will be preserved");
-        addUsageLine("if possible, trying to write out transformations to the output metadata.");
-        addUsageLine("If output is not specified, the original images will be overwritten.");
+        addUsageLine("+a group of images/volumes. By default the geometric transformations will be");
+        addUsageLine("+read from a metadata, if provided. Also, the original images will be preserved");
+        addUsageLine("+if possible, trying to write out transformations to the output metadata.");
+        addUsageLine("+If output is not specified, the original images will be overwritten.");
         //keywords
-        addKeywords("transform, geometry, shift, rotate, scale, flip");
+        addKeywords("transform, geometry, shift, rotate, scale, flip, pyramid, fourier");
         //examples
         addExampleLine("To simply apply the transformations in a metadata to the images:", false);
         addExampleLine("xmipp_transform_geometry -i mD1.doc --apply_transform");
@@ -68,8 +72,10 @@ protected:
         addExampleLine("xmipp_transform_geometry -i a.vol --shift 10 5 -10 -o b.vol --dont_wrap");
         addExampleLine("Scale a group of images to half size, not modifying image dimensions neither original image files", false);
         addExampleLine("xmipp_transform_geometry -i images.doc --scale factor 0.5 --oroot halvedOriginal");
-        addExampleLine("Scaling (from 128 to 64) but writing changing image dimensions(this will apply tranformations)", false);
-        addExampleLine("xmipp_transform_geometry -i images.doc --scale dim 64 --oroot halvedDim");
+        addExampleLine("Scaling (from 128 to 64) using Fourier (this will apply tranformations)", false);
+        addExampleLine("xmipp_transform_geometry -i images.doc --scale dim 128 --oroot halvedFourierDim");
+        addExampleLine("For pyramid scaling(reducing image size 4 times):", false);
+        addExampleLine("xmipp_transform_geometry -i images.doc --scale pyramid -2 --oroot halvedPyramidDim");
         //params
         addParamsLine("== Transformations ==");
         addParamsLine("[--rotate <rotation_type>]   :Perform rotation");
@@ -79,11 +85,12 @@ protected:
         addParamsLine("             alignZ <x> <y> <z>           : Align (x,y,z) with Z axis");
         addParamsLine("             axis <ang> <x=0> <y=0> <z=1> : Rotate <ang> degrees around (x,y,z)");
         addParamsLine("[--scale <scale_type>]                :Perform scaling");
+        addParamsLine("                                    : All types of scaling produces a resize of images, except =factor=");
         addParamsLine("         where <scale_type>");
         addParamsLine("             factor <n=1>           : Scaling factor, 0.5 halves and 2 doubles");
-        addParamsLine("                                    : This option doesn't cause a change on image dimensions.");
         addParamsLine("             dim <x> <y=x> <z=x>    : New x,y and z dimensions");
-        addParamsLine("                                    : This cause a change on image dimensions.");
+        addParamsLine("             fourier <x> <y=x> <thr=1>   : Use padding/windowing in Fourier Space");
+        addParamsLine("             pyramid <levels=1>    : Use positive value to expand and negative to reduce");
         addParamsLine(" alias -s;");
         addParamsLine("[--shift <x> <y=0> <z=0>]    : Shift by x, y and z");
         addParamsLine("[--flip]                                : Flip images, only valid for 2D");
@@ -92,8 +99,6 @@ protected:
         addParamsLine("      where <interpolation_type>");
         addParamsLine("        spline          : Use spline interpolation");
         addParamsLine("        linear          : Use bilinear/trilinear interpolation");
-        addParamsLine("        fourier <thr=1> : Use padding/windowing in Fourier Space (only for scale in 2D)");
-        addParamsLine("            requires --scale;");
         addParamsLine("[--inverse]                         : Apply inverse transformations");
         addParamsLine("[--apply_transform]                 : By default, the original images are preserved");
         addParamsLine("                                    : and the alignment information is stored in metadata");
@@ -113,13 +118,9 @@ protected:
             splineDegree = BSPLINE3;
         else if (degree == "linear")
             splineDegree = LINEAR;
-        else
-        {
-            splineDegree = INTERP_FOURIER;
-
-        }
         flip = checkParam("--flip");
         output_is_stack = (!checkParam("--oroot") && checkParam("-o")) ? true : input_is_stack;
+        scale_type = SCALE_NONE;
     }
 
 
@@ -140,6 +141,7 @@ protected:
         A.initIdentity(dim + 1);
 
         scaleV.resizeNoCopy(dim);
+        scaleV.initConstant(1.);
         shiftV.resizeNoCopy(dim);
         rotV.resizeNoCopy(dim);
 
@@ -198,9 +200,10 @@ protected:
         {
             if (STR_EQUAL(getParam("--scale" ), "dim"))
             {
+                scale_type = SCALE_DIM;
                 //Calculate scale factor from images sizes and given dimensions
                 //this approach assumes that all images have equal size
-                applyTransform = doResize = true;
+
                 double oxdim = xdim, oydim = ydim, ozdim = zdim;
                 xdim = getIntParam("--scale", 1);
                 ydim = STR_EQUAL(getParam("--scale", 2), "x") ? xdim : getIntParam("--scale", 2);
@@ -214,6 +217,34 @@ protected:
                     ZZ(scaleV) = (double)zdim / ozdim;
                 }
             }
+            else if (STR_EQUAL(getParam("--scale"), "fourier"))
+            {
+                if (isVol)
+                    REPORT_ERROR(ERR_PARAM_INCORRECT, "The 'fourier' scaling type is only valid for images");
+                int oxdim = xdim, oydim = ydim;
+                if (oxdim < xdim || oydim < ydim)
+                  REPORT_ERROR(ERR_PARAM_INCORRECT, "The 'fourier' scaling type can only be used for reducing size");
+                scale_type = SCALE_FOURIER;
+
+                xdim = getIntParam("--scale", 1);
+                ydim = STR_EQUAL(getParam("--scale", 2), "x") ? xdim : getIntParam("--scale", 2);
+                fourier_threads = getIntParam("--scale", 3);
+            }
+            else if (STR_EQUAL(getParam("--scale"), "pyramid"))
+            {
+                scale_type = SCALE_PYRAMID_EXPAND;
+                pyramid_level = getIntParam("--scale", 1);
+                double scale_factor = (double)(pow(2.0, pyramid_level));
+                xdim *= scale_factor;
+                ydim *= scale_factor;
+                if (isVol)
+                    zdim *= scale_factor;
+                if (pyramid_level < 0)
+                {
+                    pyramid_level *= -1; //change sign, negative means reduce operation
+                    scale_type = SCALE_PYRAMID_REDUCE;
+                }
+            }
             else //scale factor case
             {
                 double factor = getDoubleParam("--scale", 1);
@@ -222,6 +253,9 @@ protected:
                     REPORT_ERROR(ERR_VALUE_INCORRECT,"Factor must be a positive number");
                 scaleV.initConstant(factor);
             }
+
+            if (scale_type != SCALE_FACTOR)
+                applyTransform = true;
 
             if (isVol)
                 scale3DMatrix(scaleV, S);
@@ -267,9 +301,24 @@ protected:
         if (applyTransform)
         {
             imgOut.setDatatype(img.getDatatype());
-            imgOut.mapFile2Write(xdim, ydim, zdim, fnImgOut, fnImg == fnImgOut);
+            //imgOut.mapFile2Write(xdim, ydim, zdim, fnImgOut, fnImg == fnImgOut);
             imgOut().setXmippOrigin();
             applyGeometry(splineDegree, imgOut(), img(), T, IS_NOT_INV, wrap, 0.);
+
+            imgOut.write(fnImgOut + ".before");
+
+            switch (scale_type)
+            {
+            case SCALE_PYRAMID_EXPAND:
+                selfPyramidExpand(splineDegree, imgOut(), pyramid_level);
+                break;
+            case SCALE_PYRAMID_REDUCE:
+                selfPyramidReduce(splineDegree, imgOut(), pyramid_level);
+                break;
+            case SCALE_FOURIER:
+                selfScaleToSizeFourier(ydim, xdim,imgOut(), fourier_threads);
+                break;
+            }
             imgOut.write(fnImgOut);
         }
         else
