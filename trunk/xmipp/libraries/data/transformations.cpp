@@ -330,29 +330,6 @@ void produceSplineCoefficients(int SplineDegree,
     REPORT_ERROR(ERR_NOT_IMPLEMENTED,"Spline coefficients of a complex matrix is not implemented.");
 }
 
-void produceImageFromSplineCoefficients(int SplineDegree,
-                                        MultidimArray< double >& img,
-                                        const MultidimArray< double > &coeffs)
-{
-    img.initZeros(ZSIZE(coeffs), YSIZE(coeffs), XSIZE(coeffs));
-    STARTINGX(img) = STARTINGX(coeffs);
-    STARTINGY(img) = STARTINGY(coeffs);
-    STARTINGZ(img) = STARTINGZ(coeffs);
-
-    int Status;
-    MultidimArray< double > aux;
-    typeCast(coeffs, aux); // This will create a single volume!
-
-    ChangeBasisVolume(MULTIDIM_ARRAY(aux), MULTIDIM_ARRAY(img),
-                      XSIZE(coeffs), YSIZE(coeffs), ZSIZE(coeffs),
-                      BasicSpline, CardinalSpline, SplineDegree,
-                      MirrorOnBounds, DBL_EPSILON, &Status);
-    if (Status)
-        REPORT_ERROR(ERR_UNCLASSIFIED, "Error in ImageFromSplineCoefficients...");
-
-}
-
-
 // Special case for complex arrays
 void scaleToSize(int SplineDegree,
                  MultidimArray< std::complex<double> > &V2,
@@ -390,6 +367,30 @@ void selfScaleToSize(int SplineDegree,
 {
     MultidimArray<std::complex<double> > aux;
     scaleToSize(SplineDegree, V1, aux, Xdim, Ydim, Zdim);
+}
+
+/** Same as template version but for MultidimArrayGeneric */
+void selfPyramidReduce(int SplineDegree,
+                   MultidimArrayGeneric &V1,
+                   int levels)
+{
+  #define SELFPYRAMIDREDUCE(type) selfPyramidReduce(SplineDegree, *((MultidimArray<type>*)(V1.im)), levels)
+
+    SWITCHDATATYPE(V1.datatype,SELFPYRAMIDREDUCE);
+
+#undef SELFPYRAMIDREDUCE
+}
+
+/** Same as previous but for MultidimArrayGeneric */
+void selfPyramidExpand(int SplineDegree,
+                   MultidimArrayGeneric &V1,
+                   int levels)
+{
+  #define SELFPYRAMIDEXPAND(type) selfPyramidExpand(SplineDegree, *((MultidimArray<type>*)(V1.im)), levels)
+
+    SWITCHDATATYPE(V1.datatype,SELFPYRAMIDEXPAND);
+
+#undef SELFPYRAMIDEXPAND
 }
 
 /** Interpolates the value of the 3D matrix M at the point (x,y,z) knowing

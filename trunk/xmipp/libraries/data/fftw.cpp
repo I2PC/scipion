@@ -439,6 +439,13 @@ void selfScaleToSizeFourier(int Ydim, int Xdim, MultidimArray<double>& Mpmem,int
     transformerMp.inverseFourierTransform();
 }
 
+void selfScaleToSizeFourier(int Ydim, int Xdim, MultidimArrayGeneric &Mpmem, int nThreads)
+{
+  MultidimArray<double> aux;
+  Mpmem.getImage(aux);
+  selfScaleToSizeFourier(Ydim, Xdim, aux, nThreads);
+  Mpmem.setImage(aux);
+}
 
 void getSpectrum(MultidimArray<double> &Min,
                  MultidimArray<double> &spectrum,

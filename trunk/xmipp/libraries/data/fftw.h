@@ -30,6 +30,7 @@
 #include <complex>
 #include "../../external/fftw-3.2.2/api/fftw3.h"
 #include "multidim_array.h"
+#include "multidim_array_generic.h"
 #include "fft.h"
 
 /** @defgroup FourierW FFTW Fourier transforms
@@ -502,7 +503,9 @@ void frc_dpr(MultidimArray< double > & m1,
  * @ingroup FourierOperations
  * Ydim and Xdim define the output size, Mpmem is the matrix to scale
  */
-void selfScaleToSizeFourier(int Ydim, int Xdim, MultidimArray<double>& Mpmem, int nthreads=1);
+void selfScaleToSizeFourier(int Ydim, int Xdim, MultidimArray<double> &Mpmem, int nthreads=1);
+/** MultidimArrayGeneric version */
+void selfScaleToSizeFourier(int Ydim, int Xdim, MultidimArrayGeneric &Mpmem, int nthreads=1);
 
 #define POWER_SPECTRUM 0
 #define AMPLITUDE_SPECTRUM 1

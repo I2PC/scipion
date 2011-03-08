@@ -300,10 +300,10 @@ void applyGeometry(int SplineDegree,
     {
         // Initialise output matrix with value=outside
         FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(V2)
-            DIRECT_MULTIDIM_ELEM(V2, n) = outside;
+        DIRECT_MULTIDIM_ELEM(V2, n) = outside;
     }
     else
-    	V2.initZeros();
+        V2.initZeros();
 
     if (V1.getDim() == 2)
     {
@@ -818,9 +818,28 @@ void produceSplineCoefficients(int SplineDegree,
  * @ingroup GeometricalTransformations
  * Note that the coeffs and img are only single images!
  */
+template <typename T>
 void produceImageFromSplineCoefficients(int SplineDegree,
-                                        MultidimArray< double >& img,
-                                        const MultidimArray< double > &coeffs);
+                                        MultidimArray< T >& img,
+                                        const MultidimArray< double > &coeffs)
+{
+    MultidimArray< double > imgD;
+    imgD.initZeros(ZSIZE(coeffs), YSIZE(coeffs), XSIZE(coeffs));
+    STARTINGX(img) = STARTINGX(coeffs);
+    STARTINGY(img) = STARTINGY(coeffs);
+    STARTINGZ(img) = STARTINGZ(coeffs);
+
+    int Status;
+    MultidimArray< double > aux(coeffs);
+
+    ChangeBasisVolume(MULTIDIM_ARRAY(aux), MULTIDIM_ARRAY(imgD),
+                      XSIZE(coeffs), YSIZE(coeffs), ZSIZE(coeffs),
+                      BasicSpline, CardinalSpline, SplineDegree,
+                      MirrorOnBounds, DBL_EPSILON, &Status);
+    if (Status)
+        REPORT_ERROR(ERR_UNCLASSIFIED, "Error in ImageFromSplineCoefficients...");
+    typeCast(imgD, img);
+}
 
 /** Rotate an array around a given system axis.
  * @ingroup GeometricalTransformations
@@ -1045,78 +1064,6 @@ void selfScaleToSize(int SplineDegree,
                      MultidimArray< std::complex<double> > &V1,
                      int Xdim, int Ydim, int Zdim = 1);
 
-/** Reduce the nth volume by 2 using a BSpline pyramid.
- * @ingroup GeometricalTransformations
- */
-template<typename T>
-void pyramidReduce(int SplineDegree,
-                   MultidimArray<T> &V2,
-                   const MultidimArray<T> &V1,
-                   int levels = 1)
-{
-    MultidimArray< double > coeffs;
-    produceSplineCoefficients(SplineDegree, coeffs, V1);
-
-    for (int i = 0; i < levels; i++)
-    {
-        reduceBSpline(SplineDegree, V2, coeffs);
-        coeffs = V2;
-    }
-
-    produceImageFromSplineCoefficients(SplineDegree, V2, coeffs);
-}
-
-/** Reduce the nth volume by 2 using a BSpline pyramid.
- * @ingroup GeometricalTransformations
- *
- * The same as the previous function, but input array is overwritten
- */
-template<typename T>
-void selfPyramidReduce(int SplineDegree,
-                       MultidimArray<T> &V1,
-                       int levels = 1)
-{
-    MultidimArray<T> aux = V1;
-    V1.initZeros();
-    pyramidReduce(SplineDegree, V1, aux, levels);
-}
-
-/** Expand the nth volume by 2 using a BSpline pyramid.
- * @ingroup GeometricalTransformations
- */
-template<typename T>
-void pyramidExpand(int SplineDegree,
-                   MultidimArray<T> &V2,
-                   const MultidimArray<T> &V1,
-                   int levels = 1)
-{
-    MultidimArray< double > coeffs;
-    produceSplineCoefficients(SplineDegree, coeffs, V1);
-
-    for (int i = 0; i < levels; i++)
-    {
-        expandBSpline(SplineDegree, V2, coeffs);
-        coeffs = V2;
-    }
-
-    produceImageFromSplineCoefficients(SplineDegree, V2, coeffs);
-
-}
-
-/** Expand the nth volume by 2 using a BSpline pyramid.
- * @ingroup GeometricalTransformations
- *
- * The same as the previous function, but input array is overwritten
- */
-template<typename T>
-void selfPyramidExpand(int SplineDegree,
-                       MultidimArray<T> &V1,
-                       int levels = 1)
-{
-    MultidimArray<T> aux = V1;
-    V1.initZeros();
-    pyramidExpand(SplineDegree, V1, aux, levels);
-}
 
 /** Reduce a set of B-spline coefficients.
  * @ingroup GeometricalTransformations
@@ -1221,6 +1168,93 @@ void expandBSpline(int SplineDegree,
     else
         REPORT_ERROR(ERR_MULTIDIM_DIM,"expandBSpline ERROR: only valid for 2D or 3D arrays");
 }
+
+/** Reduce the nth volume by 2 using a BSpline pyramid.
+ * @ingroup GeometricalTransformations
+ */
+template<typename T>
+void pyramidReduce(int SplineDegree,
+                   MultidimArray<T> &V2,
+                   const MultidimArray<T> &V1,
+                   int levels = 1)
+{
+    MultidimArray< double > coeffs, coeffs2;
+
+    produceSplineCoefficients(SplineDegree, coeffs, V1);
+
+    for (int i = 0; i < levels; i++)
+    {
+        reduceBSpline(SplineDegree, coeffs2, coeffs);
+        coeffs = coeffs2;
+    }
+
+    produceImageFromSplineCoefficients(SplineDegree, V2, coeffs);
+}
+
+/** Reduce the nth volume by 2 using a BSpline pyramid.
+ * @ingroup GeometricalTransformations
+ *
+ * The same as the previous function, but input array is overwritten
+ */
+template<typename T>
+void selfPyramidReduce(int SplineDegree,
+                       MultidimArray<T> &V1,
+                       int levels = 1)
+{
+    MultidimArray<T> aux = V1;
+    V1.initZeros();
+    pyramidReduce(SplineDegree, V1, aux, levels);
+}
+
+/** Same as previous but for MultidimArrayGeneric */
+void selfPyramidReduce(int SplineDegree,
+                       MultidimArrayGeneric &V1,
+                       int levels = 1);
+
+
+/** Expand the nth volume by 2 using a BSpline pyramid.
+ * @ingroup GeometricalTransformations
+ */
+template<typename T>
+void pyramidExpand(int SplineDegree,
+                   MultidimArray<T> &V2,
+                   const MultidimArray<T> &V1,
+                   int levels = 1)
+{
+    MultidimArray< double > coeffs, coeffs2;
+
+    produceSplineCoefficients(SplineDegree, coeffs, V1);
+
+    for (int i = 0; i < levels; i++)
+    {
+        expandBSpline(SplineDegree, coeffs2, coeffs);
+        coeffs = coeffs2;
+    }
+
+    produceImageFromSplineCoefficients(SplineDegree, V2, coeffs);
+
+}
+
+/** Expand the nth volume by 2 using a BSpline pyramid.
+ * @ingroup GeometricalTransformations
+ *
+ * The same as the previous function, but input array is overwritten
+ */
+template<typename T>
+void selfPyramidExpand(int SplineDegree,
+                       MultidimArray<T> &V1,
+                       int levels = 1)
+{
+    MultidimArray<T> aux = V1;
+    V1.initZeros();
+    pyramidExpand(SplineDegree, V1, aux, levels);
+}
+
+/** Same as previous but for MultidimArrayGeneric */
+void selfPyramidExpand(int SplineDegree,
+                       MultidimArrayGeneric &V1,
+                       int levels = 1);
+
 
 /** Does a radial average of a 2D/3D image, around the voxel where is the origin.
  * @ingroup GeometricalTransformations
