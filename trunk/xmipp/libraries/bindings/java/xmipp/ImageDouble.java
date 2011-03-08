@@ -111,7 +111,7 @@ public class ImageDouble {
     }
 
     public void readPreview(String filename, int w, int h) throws Exception {
-        readPreview(filename, w, h, FIRST_SLICE);
+        readPreview(filename, w, h, MID_SLICE);
     }
 
     public void readPreview(String filename, int w, int h, int slice) throws Exception {
