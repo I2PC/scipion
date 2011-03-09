@@ -53,6 +53,7 @@ void ProgThreshold::defineParams()
     addUsageLine("Threshold volumes and images ");
     each_image_produces_an_output=true;
     XmippMetadataProgram::defineParams();
+    addSeeAlsoLine("transform_mask, transform_morphology");
     addParamsLine("   --select <mode>                        : Select pixels meeting");
     addParamsLine("     where <mode>");
     addParamsLine("           abs_below <th>                 : Absolute value below a threshold");
@@ -64,6 +65,12 @@ void ProgThreshold::defineParams()
     addParamsLine("           value <new=0>                  : New value");
     addParamsLine("           noise <avg=0> <stddev=1>       : Gaussian noise");
     addParamsLine("           avg                            : Average of non-selected");
+    addExampleLine("Threshold a volume below a threshold",false);
+    addExampleLine("xmipp_transform_threshold -i volume.vol -o volumeThresholded.vol --select below 0.01 --substitute value 0");
+    addExampleLine("Generate a binary mask based on a threshold and apply it",false);
+    addExampleLine("xmipp_transform_threshold -i volume.vol -o mask.vol --select below 0.5 --substitute binarize");
+    addExampleLine("xmipp_transform_morphology -i mask.vol --dil");
+    addExampleLine("xmipp_transform_mask -i volume.vol -o volumeMasked.vol --mask mask.vol");
 }
 
 /* Show ------------------------------------------------------------------- */
