@@ -124,6 +124,9 @@ class Tester:
         self.addTest("-i input/smallStack.stk -o %o/smallStackSymmetrized.stk --sym 5")
         self.addTest("-i input/phantomBacteriorhodopsin.vol -o %o/symmetrizedVolume.vol --sym C5")
 
+        self.addProgram("xmipp_transform_threshold")
+        self.addTest("-i input/phantomBacteriorhodopsin.vol -o %o/mask.vol --select below 0.01 --substitute binarize")
+
         self.addProgram("xmipp_transform_window")
         self.addTest("-i input/singleImage.spi -o %o/image.xmp --size 32")
         self.addTest("-i input/singleImage.spi -o %o/image.xmp --corners -16 -16 15 15")
