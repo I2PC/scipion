@@ -36,14 +36,14 @@ void ProgThreshold::readParams()
         iSelectionMethod=1;
     else if (selectionMethod=="above")
         iSelectionMethod=2;
-    threshold=getDoubleParam("--select",2);
+    threshold=getDoubleParam("--select",1);
     substitutionMethod=getParam("--substitute");
     if (substitutionMethod=="value")
-        newValue=getDoubleParam("--substitute",2);
+        newValue=getDoubleParam("--substitute",1);
     else if (substitutionMethod=="noise")
     {
-        noiseAvg=getDoubleParam("--substitute",2);
-        noiseStddev=getDoubleParam("--substitute",3);
+        noiseAvg=getDoubleParam("--substitute",1);
+        noiseStddev=getDoubleParam("--substitute",2);
     }
 }
 
@@ -137,6 +137,7 @@ void ProgThreshold::processImage(const FileName &fnImg, const FileName &fnImgOut
             }
             break;
         }
+        substituteValue/=N;
     }
 
     // Apply threshold
