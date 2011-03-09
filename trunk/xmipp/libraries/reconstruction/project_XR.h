@@ -30,10 +30,37 @@
 #include <data/program.h>
 #include <data/threads.h>
 
-
 /**@defgroup ProjectionXRProgram project_xr (project for tilt series)
    @ingroup ReconsLibrary */
 //@{
+
+/// Data struct to be passed to threads
+struct XrayThread
+{
+    XRayPSF                *psf;
+    MultidimArray<double> *vol;
+    Image<double>         *imOut;
+    ParallelTaskDistributor * td;
+};
+
+/** Project program Side information.
+    This class contains side necessary information for the Project program.
+    This information can be obtained from the parameters and is basically
+    the Xmipp volume or phantom description plus a flag saying which
+    of the two is valid. */
+class XrayProjPhantom
+{
+public:
+    /// Phantom Xmipp volume
+    Image<double>         iniVol;
+    MultidimArray<double> rotVol;
+
+public:
+    /** Produce Project Side information.
+        This function produce the side information from the project
+        program parameters. Basically it loads the phantom.*/
+    void read(const ParametersProjectionTomography &prm);
+};
 
 /* Projection XR Program -------------------------------- */
 /** Program class for the project program */
@@ -56,6 +83,12 @@ public:
     /// Number of threads;
     int nThr;
 
+    XrayProjPhantom phantom;
+    Projection   proj;
+    MetaData     projMD;
+    XrayThread * mainDataThread;
+    ParallelTaskDistributor * td;
+
 protected:
     virtual void defineParams();
     virtual void readParams();
@@ -63,24 +96,11 @@ protected:
 public:
 
     virtual void run();
-};
 
-/** Project program Side information.
-    This class contains side necessary information for the Project program.
-    This information can be obtained from the parameters and is basically
-    the Xmipp volume or phantom description plus a flag saying which
-    of the two is valid. */
-class XrayProjPhantom
-{
-public:
-    /// Phantom Xmipp volume
-    Image<double>         iniVol;
-    MultidimArray<double> rotVol;
-public:
-    /** Produce Project Side information.
-        This function produce the side information from the project
-        program parameters. Basically it loads the phantom.*/
-    void read(const ParametersProjectionTomography &prm);
+protected:
+
+    void preRun();
+    void postRun();
 };
 
 /** From voxel volumes, off-centered tilt axis.
@@ -101,15 +121,7 @@ public:
     Off-centered not implemented. Rotations are around volume center
 */
 void XrayProjectVolumeOffCentered(XrayProjPhantom &side, XRayPSF &psf, Projection &P,
-                                   int Ydim, int Xdim, int  idxSlice = 1);
-
-/// Data struct to be passed to threads
-struct XrayThread
-{
-    XRayPSF                *psf;
-    MultidimArray<double> *vol;
-    Image<double>         *imOut;
-};
+                                  int Ydim, int Xdim, int  idxSlice = 1);
 
 /// Thread Job to generate an X-ray microscope projection
 void threadXrayProject(ThreadArgument &thArg);

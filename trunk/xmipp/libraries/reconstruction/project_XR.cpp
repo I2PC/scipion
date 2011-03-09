@@ -73,42 +73,45 @@ void ProgXrayProject::readParams()
 Mutex mutex;
 Barrier * barrier;
 ThreadManager * thMgr;
-ParallelTaskDistributor * td;
-int numberOfThreads;
 
-void ProgXrayProject::run()
+void ProgXrayProject::preRun()
 {
-    Projection   proj;
-    MetaData     projMD;
-
     randomize_random_generator();
 
     psf.calculateParams(dxo);
-
-    XrayProjPhantom phantom;
     phantom.read(projParam);
 
-
-    // Project
-
     // Threads stuff
-    XrayThread *dataThread = new XrayThread;
+    mainDataThread = new XrayThread;
 
-    dataThread->psf= &psf;
-    dataThread->vol = &phantom.rotVol;
-    dataThread->imOut = &proj;
-
-    size_t blockSize, numberOfJobs = ZSIZE(MULTIDIM_ARRAY(phantom.iniVol));
-    numberOfThreads = psf.nThr;
-
-    blockSize = (numberOfThreads == 1) ? numberOfJobs : numberOfJobs/numberOfThreads/2;
+    mainDataThread->psf= &psf;
+    mainDataThread->vol = &phantom.rotVol;
+    mainDataThread->imOut = &proj;
 
     //Create the job handler to distribute thread jobs
+    size_t blockSize, numberOfJobs = ZSIZE(MULTIDIM_ARRAY(phantom.iniVol));
+    blockSize = (nThr == 1) ? numberOfJobs : numberOfJobs/nThr/2;
     td = new ThreadTaskDistributor(numberOfJobs, blockSize);
-    barrier = new Barrier(numberOfThreads-1);
+    mainDataThread->td = td;
+
+    barrier = new Barrier(nThr-1);
 
     //Create threads to start working
-    thMgr = new ThreadManager(numberOfThreads,(void*) dataThread);
+    thMgr = new ThreadManager(nThr,(void*) mainDataThread);
+
+}
+
+void ProgXrayProject::postRun()
+{
+    //Terminate threads and free memory
+    delete td;
+    delete thMgr;
+    delete barrier;
+}
+
+void ProgXrayProject::run()
+{
+    preRun();
 
     int expectedNumProjs = FLOOR((projParam.tiltF-projParam.tilt0)/projParam.tiltStep);
     int numProjs=0;
@@ -122,6 +125,7 @@ void ProgXrayProject::run()
     FileName fn_proj;  // Projection name
     size_t idx = FIRST_IMAGE;
 
+    // Project
     for (double angle=projParam.tilt0; angle<=projParam.tiltF; angle+=projParam.tiltStep)
     {
         if (projParam.singleProjection)
@@ -190,10 +194,7 @@ void ProgXrayProject::run()
     if (!projParam.singleProjection)
         projMD.write(projParam.fnRoot + ".sel");
 
-    //Terminate threads and free memory
-    delete td;
-    delete thMgr;
-    delete barrier;
+    postRun();
 
     return;
 }
@@ -307,12 +308,14 @@ void XrayProjectVolumeOffCentered(XrayProjPhantom &phantom, XRayPSF &psf, Projec
 /// Generate an X-ray microscope projection for volume vol using the microscope configuration psf
 void threadXrayProject(ThreadArgument &thArg)
 {
+
     int thread_id = thArg.thread_id;
 
     XrayThread *dataThread = (XrayThread*) thArg.workClass;
     XRayPSF psf = *(dataThread->psf);
     MultidimArray<double> &vol =  *(dataThread->vol);
     Image<double> &imOutGlobal = *(dataThread->imOut);
+    ParallelTaskDistributor * td = dataThread->td;
 
     size_t first = 0, last = 0, priorLast = 0;
 

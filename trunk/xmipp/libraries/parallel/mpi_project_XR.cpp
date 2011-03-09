@@ -59,40 +59,13 @@ void ProgMPIXrayProject::read(int argc, char** argv)
 
 void ProgMPIXrayProject::run()
 {
-    Projection  proj;
-    MetaData    projMD;
-
-    randomize_random_generator();
-
-    psf.calculateParams(dxo);
-
-    XrayProjPhantom phantom;
-    phantom.read(projParam);
+    preRun();
 
     // Project
 
-    // Threads stuff
-
-    XrayThread *dataThread = new XrayThread;
-
-    dataThread->psf= &psf;
-    dataThread->vol = &phantom.rotVol;
-    dataThread->imOut = &proj;
-
-    size_t threadBlockSize, numberOfJobs= ZSIZE(MULTIDIM_ARRAY(phantom.iniVol));
-    numberOfThreads = psf.nThr;
-
-    threadBlockSize = (numberOfThreads == 1) ? numberOfJobs : numberOfJobs/numberOfThreads/2;
-
-    //Create the job handler to distribute thread jobs
-    td = new ThreadTaskDistributor(numberOfJobs, threadBlockSize);
-    barrier = new Barrier(numberOfThreads-1);
-
-    //Create threads to start working
-    thMgr = new ThreadManager(numberOfThreads,(void*) dataThread);
-
     projMD.setComment("True rot, tilt and psi; rot, tilt, psi, X and Y shifts applied");
     double tRot,tTilt,tPsi,rot,tilt,psi;
+
 
     //    // Assign mpi node information
     //    MpiNode & node = *node;
@@ -158,13 +131,17 @@ void ProgMPIXrayProject::run()
 
     if (node->isMaster())
     {
+        // Save metadata file with angles and shift info
+        if (!projParam.singleProjection)
+            projMD.write(projParam.fnRoot + ".sel");
+
         if (!(projParam.show_angles))
             init_progress_bar(mpiData.size());
 
         // Creation of output file to reserve space
         createEmptyFile(mpiData[mpiData.size()-1].fn_proj,
-                             XMIPP_MIN(XSIZE(MULTIDIM_ARRAY(phantom.iniVol)),projParam.proj_Xdim),
-                             XMIPP_MIN(YSIZE(MULTIDIM_ARRAY(phantom.iniVol)),projParam.proj_Ydim));
+                        XMIPP_MIN(XSIZE(MULTIDIM_ARRAY(phantom.iniVol)),projParam.proj_Xdim),
+                        XMIPP_MIN(YSIZE(MULTIDIM_ARRAY(phantom.iniVol)),projParam.proj_Ydim));
 
         std::cerr << "Projecting ...\n";
     }
@@ -204,10 +181,7 @@ void ProgMPIXrayProject::run()
     }
 
     delete jobHandler;
-    //Terminate threads and free memory
-    delete td;
-    delete thMgr;
-    delete barrier;
+    postRun();
 
     return;
 }

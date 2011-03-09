@@ -26,9 +26,8 @@
 #ifndef MPI_PROJECT_XR_H_
 #define MPI_PROJECT_XR_H_
 
-#include "parallel/mpi.h"
 #include "reconstruction/project_XR.h"
-
+#include "parallel/mpi.h"
 
 /**@defgroup MPIProjectionXRProgram project_xr (project for tilt series)
    @ingroup ParallelLibrary */
