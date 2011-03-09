@@ -1588,9 +1588,7 @@ void apply_geo_binary_2D_mask(MultidimArray<int> &mask,
     typeCast(mask, tmp);
     double outside = DIRECT_A2D_ELEM(tmp, 0, 0);
     MultidimArray<double> tmp2;
-    std::cerr << tmp2.data << "  tmp= " << tmp.data << std::endl;
     tmp2 = tmp;
-    std::cerr << tmp2.data << "  tmp= " << tmp.data << std::endl;
     // Instead of IS_INV for images use IS_NOT_INV for masks!
     applyGeometry(1, tmp, tmp2, A, IS_NOT_INV, DONT_WRAP, outside);
     // The type cast gives strange results here, using round instead
@@ -1743,15 +1741,7 @@ void ProgMask::run()
     int             max_length = 0;
     size_t id;
 
-    // Read list of images --------------------------------------------------
-    //This should be converted to the new xmipp 3.0 standard
-    if (!fn_in.isMetaData())
-    {
-        id = SF_in.addObject();
-        SF_in.setValue(MDL_IMAGE, fn_in, id);
-    }
-    else
-        SF_in.read(fn_in);
+    SF_in.read(fn_in, NULL, true);
     int Nimg=SF_in.size();
 
     // Mask a selection file ------------------------------------------------
@@ -1766,27 +1756,38 @@ void ProgMask::run()
     else
         max_length = MaxFileNameLength(SF_in);
 
+    // Output file name
+    if (oext != "" && fn_out == "")
+        fn_out = fn_in.withoutExtension() + "." + oext;
+    else if (oext == "" && fn_out != "")
+    {
+        if (fn_out.getExtension() == "")
+        {
+        	if (fn_in.isMetaData())
+        		fn_out = fn_out + ".stk";
+        	else
+        		fn_out = fn_out + "." + fn_in.getExtension();
+        }
+        // else, nothing to do (fn_out = fn_out)
+    }
+    else if (oext != "" && fn_out != "")
+        fn_out = fn_out.withoutExtension() + "." + oext;
+    else // (oext == "" && fn_out=="")
+        fn_out = fn_in;
+
     // Process all selfile
+    String format;
     FOR_ALL_OBJECTS_IN_METADATA(SF_in)
     {
         // In and out filenames ...........................................
-        FileName fn_in;
-        SF_in.getValue(MDL_IMAGE, fn_in, __iter.objId);
-        if (Nimg > 1)
+        FileName img_in, img_out;
+        SF_in.getValue(MDL_IMAGE, img_in, __iter.objId);
+
+        if (img_in.isInStack())
         {
-            if (oext == "")
-                fn_out = fn_in;
-            else
-            {
-                fn_out = fn_in.withoutExtension() + "." + oext;
-                id = SF_out.addObject();
-                SF_out.setValue(MDL_IMAGE,fn_out, id);
-            }
-        }
-        else
-        {
-            if (fn_out == "")
-                fn_out = fn_in;
+        	img_out.compose(__iter.objId,fn_out);
+            id = SF_out.addObject();
+            SF_out.setValue(MDL_IMAGE,img_out, id);
         }
 
         // Read image
@@ -1819,11 +1820,14 @@ void ProgMask::run()
             else
                 subs_val=textToFloat(str_subs_val);
             mask.apply_mask(image(), image(), subs_val, apply_geo);
-            if (!count)
-                if (fn_out == "")
-                    image.write(fn_in);
-                else
-                    image.write(fn_out);
+            if (!count){
+            	if(img_in.isInStack())
+            		image.write(img_out);
+            	else
+            		image.write(fn_out);
+            }
+
+
         }
         else
             mask.write_mask(fn_mask);
@@ -1870,9 +1874,13 @@ void ProgMask::run()
     }
     if (!count)
         progress_bar(Nimg);
-    if (oext != "" && Nimg>1)
+
+    if (Nimg>1)
     {
-        fn_out = fn_in.insertBeforeExtension(oext);
+    	if (oext != "")
+    		fn_out = fn_out.insertBeforeExtension(oext);
+        fn_out = fn_out + ".doc";
+
         SF_out.write(fn_out);
     }
 
