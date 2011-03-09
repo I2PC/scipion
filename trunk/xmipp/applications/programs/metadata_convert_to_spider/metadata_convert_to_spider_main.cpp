@@ -35,14 +35,15 @@ protected:
     void defineParams()
     {
         produces_an_output = true;
+        addUsageLine("Translates a Xmipp selfile into a Spider docfile")
         XmippMetadataProgram::defineParams();
-        addParamsLine("[-new_style]         : Use new style");
+        addParamsLine("[--new_style]         : Use Spider new style for docfiles");
     }
 
     void readParams()
     {
         XmippMetadataProgram::readParams();
-        new_style = checkParam("-new_style");
+        new_style = checkParam("--new_style");
     }
 
     void show()
@@ -64,7 +65,7 @@ protected:
 
     void processImage(const FileName &fnImg, const FileName &fnImgOut, size_t objId)
     {
-        static Matrix1D<double>   aux(1);
+        static double aux;
         static int i=1;
         bool store = true;
         int enabled;
@@ -72,12 +73,12 @@ protected:
 
         if (enabled == 1)
         {
-            aux(0) = (new_style) ? i++ : 1;
+            aux = (new_style) ? i++ : 1;
         }
         else
         {
             if (!new_style)
-                aux(0) = 0;
+                aux = 0;
             else
             {
                 store = false;
