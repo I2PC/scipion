@@ -975,7 +975,8 @@ public:
             else
                 delete[] data;
         }
-        data=NULL;
+        data = NULL;
+        destroyData = true;
         nzyxdimAlloc = 0;
     }
 
