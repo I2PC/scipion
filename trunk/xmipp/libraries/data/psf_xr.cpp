@@ -308,21 +308,26 @@ void XRayPSF::applyOTF(MultidimArray<double> &Im, const double sliceOffset)
     MultidimArray<std::complex<double> > ImFT;
     FourierTransformer FTransAppOTF;
 
-//#define DEBUG
+    //#define DEBUG
 #ifdef DEBUG
 
     Image<double> _Im;
-    _Im().alias(Im);
+    _Im() = Im;
 
     _Im.write(("psfxr-ImIn.spi"));
 #endif
 
     FTransAppOTF.FourierTransform(Im, ImFT, false);
 
-    //#define DEBUG
+    ////#define DEBUG
 #ifdef DEBUG
 
+    _Im() = Im;
+
+    _Im.write(("psfxr-ImIn_after.spi"));
+
     //    Image<double> _Im;
+    _Im().clear();
     _Im().resizeNoCopy(OTF);
     FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY2D(OTF)
     dAij(_Im(),i,j) = abs(dAij(OTF,i,j));
@@ -334,8 +339,10 @@ void XRayPSF::applyOTF(MultidimArray<double> &Im, const double sliceOffset)
     _Im.write(("psfxr-imft1.spi"));
 #endif
 
+    double normSize = MULTIDIM_SIZE(OTF);
+
     FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY2D(ImFT)
-    dAij(ImFT,i,j) *= dAij(OTF,i,j);
+    dAij(ImFT,i,j) *= dAij(OTF,i,j)*normSize;
 
 #ifdef DEBUG
 
@@ -347,17 +354,16 @@ void XRayPSF::applyOTF(MultidimArray<double> &Im, const double sliceOffset)
 
     FTransAppOTF.inverseFourierTransform();
 
-    //        CenterOriginFFT(Im, 1);
-
 #ifdef DEBUG
 
-    _Im().resize(Im);
-    FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY2D(Im)
-    dAij(_Im(),i,j) = abs(dAij(Im,i,j));
+    _Im() = Im;
+
+    //    _Im().resize(Im);
+    //    FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY2D(Im)
+    //    dAij(_Im(),i,j) = abs(dAij(Im,i,j));
     _Im.write(("psfxr-imout.spi"));
 #endif
 #undef DEBUG
-
 }
 
 void XRayPSF::generateOTF()
@@ -382,14 +388,17 @@ void XRayPSF::generateOTF()
         }
     }
 
-    OTF.resizeNoCopy(PSFi.ydim, PSFi.xdim/2+1);
+    //    OTF.resizeNoCopy(PSFi.ydim, PSFi.xdim/2+1);
+    OTF.clear();
 
     ftGenOTF.FourierTransform(PSFi, OTF, false);
 
-//#define DEBUG
+    //#define DEBUG
 #ifdef DEBUG
 
     Image<double> _Im;
+    _Im() = PSFi;
+    _Im.write("psfxr-psfi.spi");
     //    CenterOriginFFT(OTFTemp,1);
     //    _Im().resize(OTFTemp);
     //    FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY2D(OTFTemp)
@@ -402,10 +411,10 @@ void XRayPSF::generateOTF()
     _Im.write("psfxr-otf2.spi");
 
     //    CenterOriginFFT(PSFi,1);
-    _Im().resize(PSFi);
-    FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY2D(PSFi)
-    dAij(_Im(),i,j) = abs(dAij(PSFi,i,j));
-    _Im.write("psfxr-psfi.spi");
+    //    _Im().resize(PSFi);
+    //    FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY2D(PSFi)
+    //    dAij(_Im(),i,j) = abs(dAij(PSFi,i,j));
+    //    _Im.write("psfxr-psfi.spi");
 #endif
 #undef DEBUG
 }
@@ -474,7 +483,7 @@ void XRayPSF::generatePSFIdealLens(MultidimArray<double> &PSFi) const
             dAi(OTFTemp,n) = 0;
     }
 
-//#define DEBUG
+    //#define DEBUG
 #ifdef DEBUG
     Image<double> _Im;
     _Im().resize(OTFTemp);
@@ -513,6 +522,15 @@ void XRayPSF::generatePSFIdealLens(MultidimArray<double> &PSFi) const
     FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(PSFi)
     DIRECT_MULTIDIM_ELEM(PSFi,n) *= iNorm;
 
+    //#define DEBUG
+#ifdef DEBUG
+
+    _Im() = PSFi;
+    CenterFFT(_Im(),0);
+    _Im.write("generate-psfi.spi");
+#endif
+#undef DEBUG
+
 
 #ifdef DEBUG
 
@@ -524,10 +542,8 @@ void XRayPSF::generatePSFIdealLens(MultidimArray<double> &PSFi) const
         DIRECT_MULTIDIM_ELEM(_Im.data,n) = abs(DIRECT_MULTIDIM_ELEM(OTFTemp,n));
     }
     _Im.write("otftemp.spi");
-
-    _Im.data.alias(PSFi);
-    _Im.write("psfi.spi");
 #endif
+
 #undef DEBUG
 }
 
