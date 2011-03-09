@@ -69,6 +69,12 @@ void ProgXrayProject::readParams()
     psf.nThr = nThr;
 }
 
+//Some global threads management variables
+Mutex mutex;
+Barrier * barrier;
+ThreadManager * thMgr;
+ParallelTaskDistributor * td;
+int numberOfThreads;
 
 void ProgXrayProject::run()
 {
