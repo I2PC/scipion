@@ -637,7 +637,7 @@ static PyObject *
 MetaData_addObject(PyObject *obj, PyObject *args, PyObject *kwargs)
 {
     MetaDataObject *self = (MetaDataObject*)obj;
-    return PyLong_FromLong(self->metadata->addObject());
+    return PyLong_FromUnsignedLong(self->metadata->addObject());
 }
 /* firstObject */
 static PyObject *
@@ -735,7 +735,7 @@ static PyObject *
 MetaData_setValue(PyObject *obj, PyObject *args, PyObject *kwargs)
 {
     int label;
-    size_t objectId=BAD_OBJID;
+    size_t objectId = BAD_OBJID;
     PyObject *pyValue; //Only used to skip label and value
 
     if (PyArg_ParseTuple(args, "iOn", &label, &pyValue, &objectId))

@@ -47,7 +47,7 @@ Example:
       (options, args)      = parser.parse_args()
       if(len(options.outMetaDataFile)<1):
           parser.print_help()
-          exit()
+          sys.exit()
       
       if not options.quiet:
           print 'Files pattern:        ', options.pattern
