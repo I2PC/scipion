@@ -36,6 +36,7 @@ public:
 #define OPENING      3
 #define CLOSING      4
 #define SHARPENING   5
+
     int operation;
 
     int size;
@@ -47,10 +48,14 @@ public:
     void read(int argc, char **argv)
     {
         Prog_parameters::read(argc, argv);
-        if (checkParameter(argc, argv, "-dil"))      operation = DILATION;
-        if (checkParameter(argc, argv, "-ero"))      operation = EROSION;
-        if (checkParameter(argc, argv, "-clo"))      operation = CLOSING;
-        if (checkParameter(argc, argv, "-ope"))      operation = OPENING;
+        if (checkParameter(argc, argv, "-dil"))
+            operation = DILATION;
+        if (checkParameter(argc, argv, "-ero"))
+            operation = EROSION;
+        if (checkParameter(argc, argv, "-clo"))
+            operation = CLOSING;
+        if (checkParameter(argc, argv, "-ope"))
+            operation = OPENING;
         if (checkParameter(argc, argv, "-sharp"))
         {
             operation = SHARPENING;
@@ -72,43 +77,43 @@ public:
         std::cout << "Performing a ";
         switch (operation)
         {
-            case DILATION       :
-                std::cout << "Dilation\n";
-                break;
-            case EROSION       :
-                std::cout << "Erosion\n";
-                break;
-            case OPENING       :
-                std::cout << "Opening\n";
-                break;
-            case CLOSING       :
-                std::cout << "Closing\n";
-                break;
-            case SHARPENING    :
-                std::cout << "Sharpening\n"
-                          << "Width = " << width << std::endl
-                          << "Strength = " << strength << std::endl;
+        case DILATION       :
+            std::cout << "Dilation\n";
+            break;
+        case EROSION       :
+            std::cout << "Erosion\n";
+            break;
+        case OPENING       :
+            std::cout << "Opening\n";
+            break;
+        case CLOSING       :
+            std::cout << "Closing\n";
+            break;
+        case SHARPENING    :
+            std::cout << "Sharpening\n"
+            << "Width = " << width << std::endl
+            << "Strength = " << strength << std::endl;
         }
         if (operation!=SHARPENING)
             std::cout << "Size=" << size << std::endl
-                      << "Neighbourhood=" << neig << std::endl
-                      << "Count=" << count << std::endl;
+            << "Neighbourhood=" << neig << std::endl
+            << "Count=" << count << std::endl;
     }
 
     void usage()
     {
         Prog_parameters::usage();
         std::cerr << "  [-dil]             : Apply dilation\n"
-                  << "  [-ero]             : Apply erosion\n"
-                  << "  [-clo]             : Apply closing\n"
-                  << "  [-ope]             : Apply opening\n"
-                  << "  [-neig <n=8 | 18>] : Neighborhood considered \n"
-                  << "                       (2D:4,8 3D:6,18,26)\n"
-                  << "  [-size <s=1>]      : Size of the Strutural element\n"
-                  << "  [-count <c=0>]     : Minimum required neighbors with \n"
-                  << "                       distinct value\n"
-                  << "  [-sharp <w> <s>]   : Sharpening with width (suggested 1 or 2)\n"
-                  << "                       and strength (suggested 0.1-1.0)\n"
+        << "  [-ero]             : Apply erosion\n"
+        << "  [-clo]             : Apply closing\n"
+        << "  [-ope]             : Apply opening\n"
+        << "  [-neig <n=8 | 18>] : Neighborhood considered \n"
+        << "                       (2D:4,8 3D:6,18,26)\n"
+        << "  [-size <s=1>]      : Size of the Strutural element\n"
+        << "  [-count <c=0>]     : Minimum required neighbors with \n"
+        << "                       distinct value\n"
+        << "  [-sharp <w> <s>]   : Sharpening with width (suggested 1 or 2)\n"
+        << "                       and strength (suggested 0.1-1.0)\n"
         ;
     }
 };
@@ -117,34 +122,51 @@ public:
 bool process_img(Image<double> &img, const Prog_parameters *prm)
 {
     Morphology_parameters *eprm = (Morphology_parameters *) prm;
-    if (eprm->neig == -1) eprm->neig = 8;
+    if (eprm->neig == -1)
+        eprm->neig = 8;
     Image<double> retval;
     retval() = img();
 
     if (eprm->operation!=SHARPENING)
         std::cout << "Initially the image has " << img().sum()
-                  << " pixels set to 1\n";
+        << " pixels set to 1\n";
+    bool isVolume=ZSIZE(img())>1;
     switch (eprm->operation)
     {
-        case DILATION:
+    case DILATION:
+        if (isVolume)
+            dilate3D(img(), retval(), eprm->neig, eprm->count, eprm->size);
+        else
             dilate2D(img(), retval(), eprm->neig, eprm->count, eprm->size);
-            break;
-        case EROSION:
+        break;
+    case EROSION:
+        if (isVolume)
+            erode3D(img(), retval(), eprm->neig, eprm->count, eprm->size);
+        else
             erode2D(img(), retval(), eprm->neig, eprm->count, eprm->size);
-            break;
-        case OPENING:
+        break;
+    case OPENING:
+        if (isVolume)
+            opening3D(img(), retval(), eprm->neig, eprm->count, eprm->size);
+        else
             opening2D(img(), retval(), eprm->neig, eprm->count, eprm->size);
-            break;
-        case CLOSING:
+        break;
+    case CLOSING:
+        if (isVolume)
+            closing3D(img(), retval(), eprm->neig, eprm->count, eprm->size);
+        else
             closing2D(img(), retval(), eprm->neig, eprm->count, eprm->size);
-            break;
-        case SHARPENING:
+        break;
+    case SHARPENING:
+        if (isVolume)
+            sharpening(img(), eprm->width, eprm->strength, retval());
+        else
             REPORT_ERROR(ERR_NOT_IMPLEMENTED,"Sharpening has not been implemented for images");
     }
 
     img() = retval();
     if (eprm->operation!=SHARPENING)
-    	std::cout << "Finally the image has " << img().sum() << " pixels set to 1\n";
+        std::cout << "Finally the image has " << img().sum() << " pixels set to 1\n";
     return true;
 }
 
