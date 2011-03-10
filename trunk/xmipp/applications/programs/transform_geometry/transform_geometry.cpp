@@ -223,7 +223,7 @@ protected:
                     REPORT_ERROR(ERR_PARAM_INCORRECT, "The 'fourier' scaling type is only valid for images");
                 int oxdim = xdim, oydim = ydim;
                 if (oxdim < xdim || oydim < ydim)
-                  REPORT_ERROR(ERR_PARAM_INCORRECT, "The 'fourier' scaling type can only be used for reducing size");
+                    REPORT_ERROR(ERR_PARAM_INCORRECT, "The 'fourier' scaling type can only be used for reducing size");
                 scale_type = SCALE_FOURIER;
 
                 xdim = getIntParam("--scale", 1);
@@ -281,11 +281,8 @@ protected:
 
         B.initIdentity(dim + 1);
 
-        if (!isVol)
-        {
-            mdIn.getRow(input, objId);//Get geometric transformation for image
-            geo2TransformationMatrix(input, B);
-        }
+        mdIn.getRow(input, objId);//Get geometric transformation for image
+        geo2TransformationMatrix(input, B);
 
         T = A * B;
 
@@ -305,7 +302,7 @@ protected:
             imgOut().setXmippOrigin();
             applyGeometry(splineDegree, imgOut(), img(), T, IS_NOT_INV, wrap, 0.);
 
-            imgOut.write(fnImgOut + ".before");
+            //imgOut.write(fnImgOut + ".before");
 
             switch (scale_type)
             {
