@@ -624,7 +624,7 @@ public:
     template<typename T>
     void generate_mask(const MultidimArray< T >& m, bool apply_geo = false)
     {
-        resize(m);
+        resizeNoCopy(m);
         generate_mask(apply_geo);
     }
 
