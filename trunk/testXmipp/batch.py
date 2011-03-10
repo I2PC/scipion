@@ -67,6 +67,12 @@ class Tester:
         self.addProgram("xmipp_image_statistics")
         self.addTest("-i input/smallStack.stk --image_stats %o/stats")
         
+        self.addProgram("xmipp_metadata_convert_to_spider")
+        self.addTest ("-i input/smallStack.sel -o %o/listNew.doc --action extract_selfile")
+        self.addTest ("-i input/smallStack.sel -o %o/listOld.doc --action extract_selfile old")
+        self.addTest ("-i input/smallStack.sel -o %o/angles.doc --action extract_angles rot psi tilt --disregard_disabled")
+        self.addTest ("-i input/smallStack.sel -o %o/count.doc --action generate_count")
+
         self.addProgram("xmipp_metadata_utilities")
         self.addTest ("-i input/mD1.doc --set union input/mD2.doc  -o %o/out.doc")
         self.addTest ("-i input/mD1.doc --operate sort -o %o/out.doc")
