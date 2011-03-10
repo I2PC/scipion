@@ -418,7 +418,7 @@ ImageFHandler* ImageBase::openFile(const FileName &name, int mode) const
     {
     case WRITE_READONLY:
         if (!hFile->exist)
-            REPORT_ERROR(ERR_IO_NOTEXIST, formatString("Cannot read file '%s'. It doesn't exist", filename.c_str()));
+            REPORT_ERROR(ERR_IO_NOTEXIST, formatString("Cannot read file '%s'. It doesn't exist", name.c_str()));
         wmChar = "r";
         break;
     case WRITE_OVERWRITE:
