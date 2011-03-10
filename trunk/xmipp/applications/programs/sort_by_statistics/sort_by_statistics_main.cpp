@@ -31,33 +31,61 @@
 #include <data/args.h>
 #include <data/metadata.h>
 #include <data/metadata_extension.h>
+#include <data/program.h>
 
-class Sort_junk_parameters
+class ProgSortByStatistics: public XmippProgram
 {
+public:
+    FileName fn, fn_out, fn_train;
+    bool multivariate;
 
 public:
     double cutoff;
     MultidimArray<double> vavg, vstddev, Zscore, ZscoreMultivariate;
     PCAMahalanobisAnalyzer pcaAnalyzer;
-    FileName fn_out;
+    MetaData SF, SFtrain;
 
 public:
-    Sort_junk_parameters()
+    ProgSortByStatistics()
     {}
 
-    void usage()
+    void readParams()
     {
-        std::cout  << " A sorting program for identifying junk particles \n"
-        << " Parameters:\n"
-        << " -i <selfile>            : Selfile with input images\n"
-        << " [--block <blockname>]   : Block within the input selfile\n"
-        << " [-o <root=\"sort_junk\">] : Output rootname\n"
-        << " [--train <selfile>]     : Train on selfile with good particles\n"
-        << " [--zcut <float=-1>]     : Cut-off for Z-scores (negative for no cut-off) \n"
-        << " [--multivariate]        : Identify also multivariate outliers\n"
-        << " [--verbose]             : Save the vectors associated to each image\n"
-        << " [--quiet]               : Do not show anything on screen\n"
-        ;
+        fn = getParam("-i");
+        SF.read(fn);
+        fn_out = getParam("-o");
+        multivariate = checkParam("--multivariate");
+        fn_train = getParam("--train");
+        if (fn_train != "")
+            SFtrain.read(fn_train);
+        cutoff = getDoubleParam("--zcut");
+    }
+
+    void defineParams()
+    {
+        addUsageLine("Sorts the input images for identifying junk particles");
+        addUsageLine("+The program associates to each image a vector composed by");
+        addUsageLine("+the histogram of the image (this accounts for factors such as");
+        addUsageLine("+min, max, avg, and standard deviation, plus a more complete");
+        addUsageLine("+description of the image gray levels) and the radial profile of");
+        addUsageLine("+the image squared.");
+        addUsageLine("+");
+        addUsageLine("+These vectors are then scored according to a Gaussian distribution");
+        addUsageLine("+that can be chosen to be univariate or multivariate. The multivariate");
+        addUsageLine("+gaussian is more powerful in the sense that it can capture relationships");
+        addUsageLine("+among variables.");
+        addUsageLine("+");
+        addUsageLine("+If you choose a threshold, you must take into account that it is a zscore.");
+        addUsageLine("+For univariate and mulivariate Gaussian distributions, 99% of the individuals");
+        addUsageLine("+have a Z-score below 3");
+        addParamsLine(" -i <selfile>            : Selfile with input images");
+        addParamsLine(" [-o <rootname=\"sort_junk\">] : Output rootname");
+        addParamsLine("                               : rootname.sel contains the list of sorted images with their Z-score");
+        addParamsLine("                               : rootname_vectors.xmd (if verbose>=2) contains the vectors associated to each image");
+        addParamsLine(" [--train <selfile=\"\">]: Train on selfile with good particles");
+        addParamsLine(" [--zcut <float=-1>]     : Cut-off for Z-scores (negative for no cut-off) ");
+        addParamsLine("                         : Images whose Z-score is larger than the cutoff are disabled");
+        addParamsLine(" [--multivariate]        : Identify also multivariate outliers");
     }
 
     void process_selfile(MetaData &SF, bool do_prepare, bool multivariate, bool quiet)
@@ -181,58 +209,26 @@ public:
                 pcaAnalyzer.evaluateZScore(2,20);
         }
     }
-};
 
-/**************************************************************************
-        Main
-/**************************************************************************/
-int main(int argc, char **argv)
-{
-    MetaData SF, SFtrain;
-    bool multivariate, verbose, quiet;
-
-    // Read input parameters ............................................
-    FileName fn, fn_train, fn_block;
-    Sort_junk_parameters prm;
-    try
-    {
-        fn = getParameter(argc, argv, "-i");
-        SF.read(fn);
-        prm.fn_out = getParameter(argc, argv, "-o", "sort_junk");
-        fn_train = getParameter(argc, argv, "--train", "");
-        multivariate = checkParameter(argc, argv, "--multivariate");
-        verbose = checkParameter(argc, argv, "--verbose");
-        quiet = checkParameter(argc, argv, "--quiet");
-        if (fn_train != "")
-            SFtrain.read(fn_train);
-        prm.cutoff = textToFloat(getParameter(argc, argv, "--zcut", "-1"));
-    }
-    catch (XmippError XE)
-    {
-        std::cout << XE;
-        prm.usage();
-        exit(1);
-    }
-
-    try
+    void run()
     {
         // Process input selfile ..............................................
         if (fn_train != "")
-            prm.process_selfile(SFtrain, true, multivariate, quiet);
+            process_selfile(SFtrain, true, multivariate, verbose==0);
         else
-            prm.process_selfile(SF, true, multivariate, quiet);
-        prm.process_selfile(SF, false, multivariate, quiet);
+            process_selfile(SF, true, multivariate, verbose==0);
+        process_selfile(SF, false, multivariate, verbose==0);
 
         // Produce output .....................................................
-        MetaData SFout, SFoutGood;
+        MetaData SFout;
         std::ofstream fh_zind;
-        if (verbose)
-            fh_zind.open((prm.fn_out + ".indZ").c_str(), std::ios::out);
-        MultidimArray<double> finalZscore=prm.Zscore;
+        if (verbose==2)
+            fh_zind.open((fn_out + "_vectors.xmd").c_str(), std::ios::out);
+        MultidimArray<double> finalZscore=Zscore;
         double L=1;
         if (multivariate)
         {
-            finalZscore*=prm.ZscoreMultivariate;
+            finalZscore*=ZscoreMultivariate;
             L++;
         }
 
@@ -257,32 +253,30 @@ int main(int argc, char **argv)
             }
             size_t objId=SFout.addObject();
             SFout.setValue(MDL_IMAGE,fnImg,objId);
-            SFout.setValue(MDL_ENABLED,1,objId);
+            if (finalZscore(isort)>cutoff && cutoff>0)
+            	SFout.setValue(MDL_ENABLED,-1,objId);
+            else
+            	SFout.setValue(MDL_ENABLED,1,objId);
             SFout.setValue(MDL_ZSCORE,finalZscore(isort),objId);
-            if (finalZscore(isort)<prm.cutoff && prm.cutoff>0)
-            {
-                size_t objId2=SFoutGood.addObject();
-                SFoutGood.setValue(MDL_IMAGE,fnImg,objId2);
-                SFoutGood.setValue(MDL_ENABLED,1,objId2);
-                SFoutGood.setValue(MDL_ZSCORE,finalZscore(isort),objId2);
-            }
-            if (verbose)
+            if (verbose==2)
             {
                 fh_zind << fnImg << " : ";
-                FOR_ALL_ELEMENTS_IN_ARRAY1D(prm.pcaAnalyzer.v[isort])
-                fh_zind << prm.pcaAnalyzer.v[isort](i) << "\t";
+                FOR_ALL_ELEMENTS_IN_ARRAY1D(pcaAnalyzer.v[isort])
+                fh_zind << pcaAnalyzer.v[isort](i) << "\n";
             }
         }
-        if (verbose)
+        if (verbose==2)
             fh_zind.close();
-        SFout.write(prm.fn_out + ".sel");
-        if (prm.cutoff>0)
-            SFoutGood.write(prm.fn_out + "_good.sel");
+        SFout.write(fn_out + ".sel");
     }
-    catch (XmippError XE)
-    {
-        std::cout << XE;
-        exit(1);
-    }
-    return 0;
+};
+
+/**************************************************************************
+        Main
+/**************************************************************************/
+int main(int argc, char **argv)
+{
+    ProgSortByStatistics prm;
+    prm.read(argc,argv);
+    return prm.tryRun();
 }
