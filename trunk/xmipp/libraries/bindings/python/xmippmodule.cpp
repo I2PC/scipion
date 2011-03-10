@@ -738,7 +738,7 @@ MetaData_setValue(PyObject *obj, PyObject *args, PyObject *kwargs)
     size_t objectId = BAD_OBJID;
     PyObject *pyValue; //Only used to skip label and value
 
-    if (PyArg_ParseTuple(args, "iOn", &label, &pyValue, &objectId))
+    if (PyArg_ParseTuple(args, "iOk", &label, &pyValue, &objectId))
     {
         try
         {
@@ -791,10 +791,10 @@ static PyObject *
 MetaData_getValue(PyObject *obj, PyObject *args, PyObject *kwargs)
 {
     int label;
-    size_t objectId=BAD_OBJID;
+    size_t objectId = BAD_OBJID;
     PyObject *pyValue;
 
-    if (PyArg_ParseTuple(args, "in", &label, &objectId))
+    if (PyArg_ParseTuple(args, "ik", &label, &objectId))
     {
         try
         {
