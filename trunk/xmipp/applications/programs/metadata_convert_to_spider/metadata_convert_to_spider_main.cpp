@@ -39,7 +39,7 @@ public:
         produces_an_output = true;
         addUsageLine("Extracts information from a Xmipp selfile into a Spider docfile");
         XmippMetadataProgram::defineParams();
-        addParamsLine("--action <action>");
+        addParamsLine("--action <action>                       : Choose one of the following choices");
         addParamsLine("   where <action>");
         addParamsLine("         extract_selfile <style=new>    : Valid styles are new or old");
         addParamsLine("                                        : The old style is 0=not selected, 1=selected");
