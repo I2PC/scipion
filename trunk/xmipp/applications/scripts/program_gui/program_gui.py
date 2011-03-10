@@ -35,7 +35,9 @@ from subprocess import call;
 BORDER = 0;
 PROGRAM_BLUE = "#292987";
 SECTION_GREEN= "#297739";
-
+LARGE_FONT_SIZE  = "16"
+NORMAL_FONT_SIZE = "12"
+SMALL_FONT_SIZE  = "10" 
 
 class OptionWidget(Frame):
     def __init__(self, parent, optionName, default, subOptions=0):
@@ -153,8 +155,8 @@ class ParamWidget(Frame):
         self.isLarge = False; 
         Frame.__init__(self, parent, bd=BORDER, relief=SUNKEN);
         self.pack(anchor="w", fill=X, side=TOP);
-        self.normalFont = tkFont.Font(weight="normal");
-        self.boldFont = tkFont.Font(weight="bold");  
+        self.normalFont = tkFont.Font(weight="normal",size=NORMAL_FONT_SIZE);
+        self.boldFont = tkFont.Font(weight="bold",size=NORMAL_FONT_SIZE);  
         #Add label of radiobutton   
         self.label = parent.addParam(self);
         self.label.pack(side=LEFT); 
@@ -302,7 +304,7 @@ class SectionWidget(LabelFrame):
         LabelFrame.__init__(self, parent, bd=1, relief=SUNKEN,
                             text=self.sectionName,
                             fg=SECTION_GREEN,
-                            font=tkFont.Font(weight="bold"),
+                            font=tkFont.Font(weight="bold",size=NORMAL_FONT_SIZE),
                             labelanchor="nw");
         #To check when to pack params in next line
         self.row = 0;
@@ -354,7 +356,7 @@ class ProgramGUI(Frame):
         self.progName = title.split("-")[1].strip();
         Label(self,
               text=self.progName,
-              font=tkFont.Font(weight="bold", size="16"),
+              font=tkFont.Font(weight="bold", size=LARGE_FONT_SIZE),
               fg=PROGRAM_BLUE, bd=BORDER, relief=SUNKEN
               ).pack(side=TOP, padx="5m"); 
         n = int(sys.stdin.readline());
