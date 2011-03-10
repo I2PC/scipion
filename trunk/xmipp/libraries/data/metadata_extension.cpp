@@ -6,7 +6,7 @@
  */
 #include "metadata_extension.h"
 
-#ifdef __APPLE__
+#ifndef __linux__
 #define MAXDOUBLE __DBL_MAX__
 #endif
 
