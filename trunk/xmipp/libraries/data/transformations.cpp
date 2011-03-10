@@ -41,23 +41,36 @@ void geo2TransformationMatrix(const MDRow &imageGeo, Matrix2D<double> &A,
 
     psi = realWRAP(psi, 0., 360.);
 
+    int dim = A.Xdim() - 1;
+
     if (only_apply_shifts)
-        A.initIdentity(3);
-    else
+        A.initIdentity();
+    else if (dim == 2) //2D geometry
         rotation2DMatrix(psi, A, true);
-    MAT_ELEM(A, 0, 2) = shiftX;
-    MAT_ELEM(A, 1, 2) = shiftY;
+    else if (dim == 3)//3D geometry
+    {
+      double rot = 0., tilt = 0., shiftZ = 0.;
+      imageGeo.getValue(MDL_ANGLEROT, rot);
+      imageGeo.getValue(MDL_ANGLETILT, tilt);
+      imageGeo.getValue(MDL_SHIFTZ, shiftY);
+      Euler_angles2matrix(rot, tilt, psi, A);
+      MAT_ELEM(A, 2, dim) = shiftZ;
+    }
+    MAT_ELEM(A, 0, dim) = shiftX;
+    MAT_ELEM(A, 1, dim) = shiftY;
 
     if (scale != 1.)
     {
         M3x3_BY_CT(A, A, scale);
-        MAT_ELEM(A, 2, 2) = 1.;
+        MAT_ELEM(A, dim, dim) = 1.;
     }
 
     if (flip)
     {
         MAT_ELEM(A, 0, 0) *= -1.;
         MAT_ELEM(A, 0, 1) *= -1.;
+        if (dim == 3)
+          MAT_ELEM(A, 0, 2) *= -1.;
     }
 }
 
