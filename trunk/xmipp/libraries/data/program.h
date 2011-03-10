@@ -251,6 +251,8 @@ protected:
     bool decompose_stacks;
     /// Flag to save the output metadata when output file is a stack
     bool save_metadata_stack;
+    /// Remove disabled images from the input selfile
+    bool remove_disabled;
     /// Object id of the output metadata
     size_t newId;
 

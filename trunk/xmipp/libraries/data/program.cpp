@@ -421,6 +421,7 @@ XmippMetadataProgram::XmippMetadataProgram()
     decompose_stacks = true;
     save_metadata_stack = false;
     delete_output_stack = true;
+    remove_disabled = true;
 }
 
 void XmippMetadataProgram::defineParams()
@@ -486,7 +487,7 @@ void XmippMetadataProgram::readParams()
     }
 //    single_image = !fn_in.isMetaData() && (mdIn.size() == 1);
 
-    if (mdIn.containsLabel(MDL_ENABLED))
+    if (mdIn.containsLabel(MDL_ENABLED) && remove_disabled)
         mdIn.removeObjects(MDValueEQ(MDL_ENABLED, -1));
 
     if (mdIn.isEmpty())
