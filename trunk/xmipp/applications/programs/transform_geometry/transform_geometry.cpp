@@ -93,7 +93,7 @@ protected:
         addParamsLine("             pyramid <levels=1>    : Use positive value to expand and negative to reduce");
         addParamsLine(" alias -s;");
         addParamsLine("[--shift <x> <y=0> <z=0>]    : Shift by x, y and z");
-        addParamsLine("[--flip]                                : Flip images, only valid for 2D");
+        addParamsLine("[--flip]                                : Flip images");
         addParamsLine("== Other options ==");
         addParamsLine(" [--interp <interpolation_type=spline>] : Interpolation type to be used. ");
         addParamsLine("      where <interpolation_type>");
