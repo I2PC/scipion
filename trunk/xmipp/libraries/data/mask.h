@@ -580,11 +580,11 @@ public:
         switch (datatype())
         {
         case INT_MASK:
-            imask.resize(m);
+            imask.resizeNoCopy(m);
             break;
 
         case DOUBLE_MASK:
-            dmask.resize(m);
+            dmask.resizeNoCopy(m);
             break;
         }
     }
@@ -624,7 +624,7 @@ public:
     template<typename T>
     void generate_mask(const MultidimArray< T >& m, bool apply_geo = false)
     {
-        resizeNoCopy(m);
+        resize(m);
         generate_mask(apply_geo);
     }
 
