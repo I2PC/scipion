@@ -791,6 +791,7 @@ public:
     {
         // This has only been implemented for 2D images...
         MULTIDIM_ARRAY(*this).checkDimension(2);
+        A.resizeNoCopy(3,3);
         geo2TransformationMatrix(MD[n], A, only_apply_shifts);
     }
 
