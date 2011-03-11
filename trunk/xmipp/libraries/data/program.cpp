@@ -26,20 +26,36 @@
 #include "program.h"
 #include <stdlib.h>
 
+void XmippProgram::initComments()
+{
+	CommentList comments;
+	comments.addComment("Verbosity level, 0 means no output.");
+	defaultComments["-v"]=comments;
+}
+
+void XmippProgram::processDefaultComment(const char *param, const char *left)
+{
+	addParamsLine(((String)left+":"+defaultComments[param].comments[0]).c_str());
+	int imax=defaultComments[param].comments.size();
+	for (int i=1; i<imax; ++i)
+		addParamsLine(((String)":"+defaultComments[param].comments[i]).c_str());
+}
+
 void XmippProgram::init()
 {
+	initComments();
     progDef = new ProgramDef();
     this->defineParams();
     ///Add some common definitions to all Xmipp programs
     addParamsLine("== Common options ==");
-    addParamsLine("[-v+ <verbose_level=1>] : Verbosity level, 0 means no output.");
+    processDefaultComment("-v","[-v+ <verbose_level=1>]");
     addParamsLine("alias --verbose;");
     addParamsLine("[-h+* <param=\"\">]      : If not param is supplied show this help message.");
-    addParamsLine("                        : Otherwise, specific param help is showed,");
-    addParamsLine("                        : param should be provided without the '-'");
+    addParamsLine("                         : Otherwise, specific param help is showed,");
+    addParamsLine("                         : param should be provided without the '-'");
     addParamsLine("alias --help;");
     addParamsLine("[--gui*]                 : Show a GUI to launch the program.");
-    addParamsLine("[--more*]         : Show additional options.");
+    addParamsLine("[--more*]                : Show additional options.");
 
     ///This are a set of internal command for MetaProgram usage
     ///they should be hidden
@@ -268,48 +284,6 @@ void XmippProgram::addParamsLine(const char * line)
     progDef->pLexer->addLine((std::string)line);
 }
 
-void XmippProgram::addImageFormatParam()
-{
-    addParamsLine(" -i <input_file>   : Input file: metadata, stack, volume or image.");
-    addParamsLine("         :++ Supported read formats are:");
-    addParamsLine("         :++ dm3 : Digital Micrograph 3.");
-    addParamsLine("         :++ img : Imagic.");
-    addParamsLine("         :++ inf,raw : RAW file with header INF file.");
-    addParamsLine("         :++ mrc : CCP4.");
-    addParamsLine("         :++ spe : Princeton Instruments CCD camera.");
-    addParamsLine("         :++ spi, xmp : Spider.");
-    addParamsLine("         :++ tif : TIFF.");
-    addParamsLine("         :++ ser : tecnai imaging and analysis.");
-    addParamsLine("         :++ raw#xDim,yDim,[zDim],offset,datatype,[r] : RAW image file without header file.");
-    addParamsLine("         :++ where datatype can be: uint8,int8,uint16,int16,uint32,int32,long,float,double,cint16,cint32,cfloat,cdouble,bool");
-    addParamsLine(" alias --input;");
-}
-
-void XmippProgram::addWhereImageFormat(const char * whereName)
-{
-    char whereLine[256];
-    sprintf(whereLine, "       where <%s>", whereName);
-    addParamsLine(whereLine);
-    addParamsLine("         img : Imagic (Data types: uint8, int16, float* and cfloat).");
-    addParamsLine("         inf : RAW file with header INF file (Data types: (u)int8, (u)int16 and float*).");
-    addParamsLine("         raw : RAW file with header INF file (Data types: (u)int8, (u)int16 and float*).");
-    addParamsLine("         mrc : CCP4 (Data types: uint8, int16, float* and cfloat).");
-    addParamsLine("         spi : Spider (Data types: float* and cfloat).");
-    addParamsLine("         xmp : Spider (Data types: float* and cfloat).");
-    addParamsLine("         tif : TIFF. (Data types: uint8*, uint16, uint32 and float).");
-    addParamsLine("         custom <ext> : Custom extension name, the real format will be Spider.");
-}
-
-void XmippProgram::addWhereRandomType(const char * randomName)
-{
-    char randomLine[256];
-    sprintf(randomLine, "       where <%s>", randomName);
-    addParamsLine(randomLine);
-    addParamsLine("gaussian <stddev> <avg=0.>        :Gaussian distribution parameters");
-    addParamsLine("student <df> <stddev> <avg=0.> :t-student distribution parameters");
-    addParamsLine("uniform  <min> <max>           :Uniform distribution parameters");
-}
-
 void XmippProgram::addKeywords(const char * keywords)
 {
     progDef->keywords += " ";
@@ -379,6 +353,10 @@ bool XmippProgram::existsParam(const char * param)
 }
 
 
+ParamDef * XmippProgram::getParamDef(const char * param) const
+{
+    return progDef->findParam(param);
+}
 
 const char * XmippProgram::name() const
 {
@@ -424,9 +402,28 @@ XmippMetadataProgram::XmippMetadataProgram()
     remove_disabled = true;
 }
 
+void XmippMetadataProgram::initComments()
+{
+	XmippProgram::initComments();
+
+	CommentList comments;
+	comments.addComment("Input file: metadata, stack, volume or image.");
+	defaultComments["-i"]=comments;
+
+	comments.clear();
+	comments.addComment("Output file: metadata, stack, volume or image.");
+	defaultComments["-o"]=comments;
+
+	comments.clear();
+	comments.addComment("Rootname of output individual images.");
+	comments.addComment("Output image format can be set adding extension after rootname as \":ext\".");
+	defaultComments["--oroot"]=comments;
+}
+
 void XmippMetadataProgram::defineParams()
 {
-    addImageFormatParam();
+    processDefaultComment("-i","-i <input_file>");
+    addParamsLine("alias --input;");
     addParamsLine(" [--mode+ <mode=overwrite>]   : Metadata writing mode.");
     addParamsLine("    where <mode>");
     addParamsLine("     overwrite   : Replace the content of the file with the Metadata");
@@ -434,17 +431,13 @@ void XmippMetadataProgram::defineParams()
 
     if (each_image_produces_an_output)
     {
-        addParamsLine("  [-o <output_file=\"\">]  : Output file: metadata, stack, volume or image.");
+        processDefaultComment("-o","[-o <output_file=\"\">]");
         addParamsLine("   alias --output;");
-        //      DO NOT LONGER SUPPORT --OEXT SINCE NOW IT DOES MIND CHANGE FORMAT
-        //        addParamsLine("  [--oext <extension=\"\">] :  Output file format extension.");
-        //        addExtensionWhere("extension");
-        addParamsLine("  [--oroot <root=\"\">]     : Rootname of output individual images.");
-        addParamsLine("                            : Output image format can be set adding extension after rootname as \":ext\".");
+        processDefaultComment("--oroot","[--oroot <root=\"\">]");
     }
     else if (produces_an_output)
     {
-        addParamsLine("  [-o <output_file=\"\">]  : Output file: metadata, stack, volume or image.");
+        processDefaultComment("-o","[-o <output_file=\"\">]");
         addParamsLine("   alias --output;");
     }
 

@@ -78,6 +78,9 @@ protected:
     /// Program definition and arguments parser
     ProgramDef * progDef;
 
+    /** Default comments */
+    std::map<String, CommentList> defaultComments;
+
     ///Original command line arguments
     int argc;
     char ** argv;
@@ -86,6 +89,10 @@ public:
     /** @name Functions to be implemented by subclasses.
      * @{
      */
+    /** Add the comments for a given default parameter */
+    void processDefaultComment(const char *param, const char *left);
+    /** Initialize comments for -v, ...*/
+    virtual void initComments();
     /** Function in which the param of each Program are defined. */
     virtual void defineParams();
     /** Function in which each program will read parameters that it need.
@@ -132,13 +139,9 @@ public:
     /** Add a params definition line*/
     void addParamsLine(const char * line);
 
-    /** Group of predefined PARAMS
-     * or WHERE's that will represent
-     * types commonly used by several programs
-     */
-    void addImageFormatParam();
-    void addWhereImageFormat(const char * whereName="extension");
-    void addWhereRandomType(const char * randomName="rand_mode");
+    /** Get Parameter definition */
+    ParamDef * getParamDef(const char * param) const;
+
     /// Verbosity level
     int verbose;
 
@@ -256,6 +259,7 @@ protected:
     /// Object id of the output metadata
     size_t newId;
 
+    virtual void initComments();
     virtual void defineParams();
     virtual void readParams();
     virtual void preProcess();
