@@ -158,9 +158,9 @@ public:
                 v.initZeros(XSIZE(hist)+XSIZE(img2)/2);
                 int idx=0;
                 FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY1D(hist)
-                v(idx++)=(float)DIRECT_A1D_ELEM(hist,i);
+                DIRECT_A1D_ELEM(v,idx++)=(float)DIRECT_A1D_ELEM(hist,i);
                 for (int i=0; i<XSIZE(img2)/2; i++)
-                    v(idx++)=(float)DIRECT_A1D_ELEM(radial_avg,i);
+                	DIRECT_A1D_ELEM(v,idx++)=(float)DIRECT_A1D_ELEM(radial_avg,i);
                 pcaAnalyzer.addVector(v);
             }
             else
