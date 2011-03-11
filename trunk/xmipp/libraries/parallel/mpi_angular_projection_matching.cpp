@@ -305,7 +305,7 @@ void MpiProgAngularProjectionMatching::computeChunks()
 
 void MpiProgAngularProjectionMatching::computeChunkAngularDistance(int symmetry, int sym_order)
 {
-    double non_reduntant_area_of_ewald_sphere =
+    double non_reduntant_area_of_sphere =
         chunk_mysampling.SL.non_redundant_evald_sphere(symmetry,sym_order);
     double number_cpus  = (double) node->size - 1;
     //NEXT ONE IS SAMPLING NOT ANOTHERSAMPLING
@@ -324,7 +324,7 @@ void MpiProgAngularProjectionMatching::computeChunkAngularDistance(int symmetry,
             std::cerr << "****************************************************" << std::endl;
             break;
         }
-        double area_chunk=non_reduntant_area_of_ewald_sphere/number_cpus;
+        double area_chunk=non_reduntant_area_of_sphere/number_cpus;
         //area chunk is area of spheric casket=2 PI h
         chunk_angular_distance=acos(1-area_chunk/(2*PI));
         double area_chunck_neigh= 2 * PI *( 1 - cos(chunk_angular_distance+neighborhood_radius));
