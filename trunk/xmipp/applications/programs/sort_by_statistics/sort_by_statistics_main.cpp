@@ -140,11 +140,12 @@ public:
                 compute_hist(img(),hist,-4,4,31);
 
                 // Radial profile
-                img2.resizeNoCopy(img());
-                FOR_ALL_ELEMENTS_IN_ARRAY2D(img2)
+                const MultidimArray<double> &mimg=img();
+                img2.resizeNoCopy(mimg);
+                FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(img2)
                 {
-                    double val=IMGPIXEL(img,i,j);
-                    A2D_ELEM(img2,i,j)=val*val;
+                    double val=DIRECT_MULTIDIM_ELEM(mimg,n);
+                    DIRECT_MULTIDIM_ELEM(img2,n)=val*val;
                 }
                 if (first)
                 {
