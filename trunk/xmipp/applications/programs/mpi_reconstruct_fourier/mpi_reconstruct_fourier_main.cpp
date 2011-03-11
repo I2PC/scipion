@@ -78,8 +78,6 @@ public:
         //parent class constructor will be called by deault without parameters
         MPI_Comm_size(MPI_COMM_WORLD, &(nProcs));
         MPI_Comm_rank(MPI_COMM_WORLD, &(rank));
-        if (nProcs < 2)
-            error_exit("This program cannot be executed in a single working node");
         //Blocks until all process have reached this routine.
         //very likelly this is
         MPI_Barrier(MPI_COMM_WORLD);
@@ -107,6 +105,9 @@ public:
     /* Pre Run PreRun for all nodes but not for all works */
     void preRun()
     {
+        if (nProcs < 2)
+            error_exit("This program cannot be executed in a single working node");
+
         if ( rank > 0)
         {
             produceSideinfo();
@@ -147,6 +148,7 @@ public:
     /* Run --------------------------------------------------------------------- */
     void run()
     {
+        preRun();
         struct timeval start_time, end_time;
         long int total_usecs;
         double total_time;
@@ -737,49 +739,17 @@ int main(int argc, char *argv[])
 
     ProgMPIRecFourier program;
     if (program.rank == 0)
-    {
-        try
-        {
-            program.read(argc, argv);
-        }
-        catch (XmippError XE)
-        {
-            std::cerr << XE;
-            MPI_Finalize();
-            exit(1);
-        }
-    }
+        program.read(argc, argv);
 
     MPI_Barrier(MPI_COMM_WORLD);
 
     if (program.rank != 0)
-    {
-        try
-        {
-            program.read(argc, argv);
-        }
-        catch (XmippError XE)
-        {
-            std::cerr << XE;
-            MPI_Finalize();
-            exit(1);
-        }
-    }
+        program.read(argc, argv);
 
 
-    try
-    {
-        program.preRun();
-        program.run();
-        MPI_Finalize();
-    }
-    catch (XmippError XE)
-    {
-        std::cerr << XE;
-        exit(1);
-    }
-
-    exit(0);
+    int ret = program.tryRun();
+    MPI_Finalize();
+    return ret;
 }
 
 
