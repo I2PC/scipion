@@ -55,7 +55,19 @@ protected:
         each_image_produces_an_output = true;
         save_metadata_stack = false;
         delete_output_stack = false;
+    	defaultComments["-i"].addComment("++ Supported read formats are:");
+    	defaultComments["-i"].addComment("++ dm3 : Digital Micrograph 3.");
+    	defaultComments["-i"].addComment("++ img : Imagic.");
+    	defaultComments["-i"].addComment("++ inf,raw : RAW file with header INF file.");
+    	defaultComments["-i"].addComment("++ mrc : CCP4.");
+    	defaultComments["-i"].addComment("++ spe : Princeton Instruments CCD camera.");
+    	defaultComments["-i"].addComment("++ spi, xmp : Spider.");
+    	defaultComments["-i"].addComment("++ tif : TIFF.");
+    	defaultComments["-i"].addComment("++ ser : tecnai imaging and analysis.");
+    	defaultComments["-i"].addComment("++ raw#xDim,yDim,[zDim],offset,datatype,[r] : RAW image file without header file.");
+    	defaultComments["-i"].addComment("++ where datatype can be: uint8,int8,uint16,int16,uint32,int32,long,float,double,cint16,cint32,cfloat,cdouble,bool");
         XmippMetadataProgram::defineParams();
+
         addUsageLine("Convert among stacks, volumes and images, and change the file format. Conversion to a lower");
         addUsageLine("bit_depth automatically adjusts the gray level range. If it is between same bit depths and ");
         addUsageLine("different sign, then only a histogram shift is done. If parameter --depth is not passed, then ");
@@ -65,7 +77,15 @@ protected:
         addKeywords("conversion, convert, image, stack, volume, format, extension ");
         //Parameters
         addParamsLine("  [--oext <extension=\"\">] :  Output file format extension.");
-        addWhereImageFormat("extension");
+        addParamsLine("    where <extension>");
+        addParamsLine("         img : Imagic (Data types: uint8, int16, float* and cfloat).");
+        addParamsLine("         inf : RAW file with header INF file (Data types: (u)int8, (u)int16 and float*).");
+        addParamsLine("         raw : RAW file with header INF file (Data types: (u)int8, (u)int16 and float*).");
+        addParamsLine("         mrc : CCP4 (Data types: uint8, int16, float* and cfloat).");
+        addParamsLine("         spi : Spider (Data types: float* and cfloat).");
+        addParamsLine("         xmp : Spider (Data types: float* and cfloat).");
+        addParamsLine("         tif : TIFF. (Data types: uint8*, uint16, uint32 and float).");
+        addParamsLine("         custom <ext> : Custom extension name, the real format will be Spider.");
         addParamsLine("  [--type <output_type=img>] : Output file type.");
         addParamsLine("          where <output_type>");
         addParamsLine("          img : Image");

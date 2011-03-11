@@ -43,7 +43,10 @@ protected:
         addUsageLine("Noise can be generated using uniform, gaussian or t-student distributions.");
         //Parameters
         addParamsLine("--type <rand_mode>                : Type of noise to add");
-        addWhereRandomType();
+        addParamsLine("       where <rand_mode>");
+        addParamsLine("              gaussian <stddev> <avg=0.>     :Gaussian distribution parameters");
+        addParamsLine("              student <df> <stddev> <avg=0.> :t-student distribution parameters");
+        addParamsLine("              uniform  <min> <max>           :Uniform distribution parameters");
         addParamsLine("  [--limit0 <float> ]               :Crop noise histogram below this value ");
         addParamsLine("  [--limitF <float> ]               :Crop noise histogram above this value ");
         //Examples
