@@ -93,7 +93,7 @@ protected:
         addParamsLine("             pyramid <levels=1>    : Use positive value to expand and negative to reduce");
         addParamsLine(" alias -s;");
         addParamsLine("[--shift <x> <y=0> <z=0>]    : Shift by x, y and z");
-        addParamsLine("[--flip]                                : Flip images");
+        addParamsLine("[--flip]                                : Flip images, only valid for 2D");
         addParamsLine("== Other options ==");
         addParamsLine(" [--interp <interpolation_type=spline>] : Interpolation type to be used. ");
         addParamsLine("      where <interpolation_type>");
@@ -298,7 +298,18 @@ protected:
         if (applyTransform)
         {
             imgOut.setDatatype(img.getDatatype());
+
+            /*FIXME: Little Cuban!! it is mandatory to assign the size to the image
+             * in order to really be scaled when applyGeometry is runned. If not, then
+             * the old size remains.
+             *
+             * It would be interesting to put a boolean flag to decide when to map
+             */
+
             //imgOut.mapFile2Write(xdim, ydim, zdim, fnImgOut, fnImg == fnImgOut);
+            imgOut().resize(1, zdim, ydim, xdim, false);
+
+
             imgOut().setXmippOrigin();
             applyGeometry(splineDegree, imgOut(), img(), T, IS_NOT_INV, wrap, 0.);
 
