@@ -140,12 +140,11 @@ public:
                 compute_hist(img(),hist,-4,4,31);
 
                 // Radial profile
-                const MultidimArray<double> &mimg=img();
-                img2.resizeNoCopy(mimg);
-                FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(img2)
+                img2.resizeNoCopy(img());
+                FOR_ALL_ELEMENTS_IN_ARRAY2D(img2)
                 {
-                    double val=DIRECT_MULTIDIM_ELEM(mimg,n);
-                    DIRECT_MULTIDIM_ELEM(img2,n)=val*val;
+                    double val=IMGPIXEL(img,i,j);
+                    A2D_ELEM(img2,i,j)=val*val;
                 }
                 if (first)
                 {
@@ -158,9 +157,9 @@ public:
                 v.initZeros(XSIZE(hist)+XSIZE(img2)/2);
                 int idx=0;
                 FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY1D(hist)
-                DIRECT_A1D_ELEM(v,idx++)=(float)DIRECT_A1D_ELEM(hist,i);
+                v(idx++)=(float)DIRECT_A1D_ELEM(hist,i);
                 for (int i=0; i<XSIZE(img2)/2; i++)
-                	DIRECT_A1D_ELEM(v,idx++)=(float)DIRECT_A1D_ELEM(radial_avg,i);
+                    v(idx++)=(float)DIRECT_A1D_ELEM(radial_avg,i);
                 pcaAnalyzer.addVector(v);
             }
             else
