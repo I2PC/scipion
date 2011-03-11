@@ -51,8 +51,8 @@ public class ImageItem extends AbstractImageItem {
                 // Closes input stream.
                 imageInputStream.close();
             }
-        } catch (Exception e) {
-            e.printStackTrace();
+        } catch (Exception ex) {
+            throw new RuntimeException(ex);
         }
     }
 

@@ -15,6 +15,7 @@ import browser.imageitems.listitems.SelFileItem;
 import browser.imageitems.listitems.XmippImageItem;
 import browser.table.normalization.iNormalizeListener;
 import browser.utils.TaskTimer;
+import browser.windows.ImagesWindowFactory;
 import ij.IJ;
 import java.awt.Dimension;
 import java.awt.Rectangle;
@@ -39,13 +40,12 @@ public class JFrameVolumeTable extends JFrame implements iNormalizeListener {
         this(0, 0);
     }
 
-/*    private void startAbortTask() {
-        TimerTask abort = new Abort();
-        Timer timer = new Timer();
-        timer.scheduleAtFixedRate(abort, 10000, 3000);
-        System.err.println(" *** Started thread to avoid hangs!!!...");
+    /*    private void startAbortTask() {
+    TimerTask abort = new Abort();
+    Timer timer = new Timer();
+    timer.scheduleAtFixedRate(abort, 10000, 3000);
+    System.err.println(" *** Started thread to avoid hangs!!!...");
     }*/
-
     public JFrameVolumeTable(int initialRows, int initialColumns) {
         super();
 
@@ -167,7 +167,7 @@ public class JFrameVolumeTable extends JFrame implements iNormalizeListener {
     public void addImageItem(XmippImageItem itemImage) {
         jPanelTable.addImageItem(itemImage);
 
-        setTitle(LABELS.TITLE_TABLE_WINDOW(itemImage));
+        setTitle(LABELS.TITLE_TABLE_WINDOW(jPanelTable.getItemsCount()));
     }
 
     /*    public void addImageItem(XmippImageItem itemImage) {
@@ -260,8 +260,7 @@ public class JFrameVolumeTable extends JFrame implements iNormalizeListener {
     }
 
     private void send2Stack() {
-//        ImagesWindowFactory.openTableAsStack(jPanelTable.getItems());
-        IJ.error("@TODO SEnd to stack");
+        ImagesWindowFactory.openImage(jPanelTable.getItems(), "");
     }
 
     private void autoAdjustColumns() {

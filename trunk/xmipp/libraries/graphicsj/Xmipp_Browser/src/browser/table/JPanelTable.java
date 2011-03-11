@@ -359,6 +359,14 @@ public class JPanelTable extends javax.swing.JPanel {
         return tableModel.getItems();
     }
 
+    public Vector<TableImageItem> getSelectedItems() {
+        return tableModel.getSelectedItems();
+    }
+
+    public Vector<TableImageItem> getSelectedAndEnabledItems() {
+        return tableModel.getSelectedAndEnabledItems();
+    }
+
     public void setTableSize(int rows, int cols) {
         tableModel.setTableSize(rows, cols);
     }

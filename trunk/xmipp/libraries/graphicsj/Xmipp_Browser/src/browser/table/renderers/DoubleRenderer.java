@@ -12,7 +12,7 @@ import javax.swing.JTable;
  *
  * @author Juanjo Vega
  */
-public class DoubleRenderer extends DisablerRenderer {
+public class DoubleRenderer extends RowDisablerRenderer {
 
     public DoubleRenderer() {
         super();

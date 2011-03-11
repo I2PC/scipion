@@ -68,7 +68,7 @@ protected:
         addParamsLine("[--spectsom_din <filename>]    : Original data");
         addParamsLine("      requires --spectsom;");
         addParamsLine("[--ctf_assign <filename=\"\">]      : Input Assign CTF Parameters file");
-        addParamsLine("      requires --ctfsel;");
+        addParamsLine("      requires --ctf;");
         addParamsLine("[--ctf_assignsel <filename=\"\">]   : Metadatafile of Input Assign CTF Parameters files");
         addParamsLine("      requires --ctfsel;");
         addParamsLine("[--cl2d_filter_suffix <s>]     : Filter suffix for the CL2D");

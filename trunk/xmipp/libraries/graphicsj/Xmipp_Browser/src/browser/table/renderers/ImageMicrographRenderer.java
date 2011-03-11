@@ -14,7 +14,7 @@ import javax.swing.JTable;
  *
  * @author Juanjo Vega
  */
-public class ImageMicrographRenderer extends DisablerRenderer {
+public class ImageMicrographRenderer extends RowDisablerRenderer {
 
     public static final int CELL_WIDTH = 128;
     public static final int CELL_HEIGHT = 128;

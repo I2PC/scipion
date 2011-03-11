@@ -4,16 +4,11 @@
  */
 package browser.table;
 
-import browser.imageitems.ImageConverter;
 import browser.imageitems.TableImageItem;
-import ij.IJ;
-import ij.ImageJ;
 import ij.ImagePlus;
 import ij.process.FloatProcessor;
 import ij.process.ImageProcessor;
-import java.text.DecimalFormat;
 import java.util.Vector;
-import xmipp.ImageDouble;
 
 /**
  *
@@ -149,50 +144,4 @@ public class ImageOperations {
 
         return std_dev;
     }
-
-    public static void main(String args[]) {
-        try {
-            new ImageJ();
-            String path = "/home/juanjo/temp/avg10.spi";
-            ImageDouble image = new ImageDouble(path);
-            ImagePlus ip = ImageConverter.convertToImagej(image, path);
-            ip.show();
-
-            double min = ip.getProcessor().getMin();
-            double max = ip.getProcessor().getMax();
-            double mean = mean(ip);
-            double std_dev = std_dev(ip);
-
-            DecimalFormat myFormatter = new DecimalFormat("#.###");
-            String strmin = myFormatter.format(min);
-            String strmax = myFormatter.format(max);
-            String strmean = myFormatter.format(mean);
-            String strstd_dev = myFormatter.format(std_dev);
-
-            System.out.println(" * min    : " + strmin);
-            System.out.println(" * max    : " + strmax);
-            System.out.println(" * mean   : " + strmean);
-            System.out.println(" * std_dev: " + strstd_dev);
-
-            IJ.run(ip, "Measure", "");
-        } catch (Exception ex) {
-            ex.printStackTrace();
-        }
-    }
-    /*    public static ImagePlus clone(ImagePlus image) {
-    float pixels[][] = new float[image.getWidth()][image.getHeight()];
-
-    // Traverses image size.
-    for (int j = 0; j < image.getHeight(); j++) {
-    for (int i = 0; i < image.getWidth(); i++) {
-    pixels[i][j] = image.getProcessor().getPixelValue(i, j);
-    }
-    }
-
-    FloatProcessor processor = new FloatProcessor(pixels);
-    ImagePlus normalized = new ImagePlus();
-    normalized.setProcessor("", processor);
-
-    return normalized;
-    }*/
 }

@@ -15,11 +15,12 @@ import javax.swing.table.TableCellRenderer;
  *
  * @author Juanjo Vega
  */
-public abstract class DisablerRenderer extends JLabel implements TableCellRenderer {
+public abstract class RowDisablerRenderer extends JLabel implements TableCellRenderer {
 
     protected Border FocusedBorder = UIManager.getBorder("Table.focusCellHighlightBorder");
+    private int ENABLED_COLUMN_INDEX = 0;
 
-    public DisablerRenderer() {
+    public RowDisablerRenderer() {
         super();
 
         setHorizontalAlignment(JLabel.LEFT);
@@ -29,7 +30,7 @@ public abstract class DisablerRenderer extends JLabel implements TableCellRender
     abstract public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column);
 
     protected boolean isRowEnabled(JTable table, int row) {
-        return (Boolean) table.getValueAt(row, 0);
+        return (Boolean) table.getValueAt(row, ENABLED_COLUMN_INDEX);
     }
 
     protected String getForegroundColor(JTable table, int row) {

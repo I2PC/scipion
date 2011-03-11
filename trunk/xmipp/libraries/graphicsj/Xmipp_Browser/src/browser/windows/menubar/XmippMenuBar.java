@@ -400,8 +400,7 @@ public class XmippMenuBar extends DynamicMenuBar implements ActionListener {
 
         try {
             if (e.getSource() == itemToTable) {
-                //ImagesWindowFactory.openStackAsTable(imp, true);
-                IJ.error("@TODO open stack as table");
+                ImagesWindowFactory.openTable(imp);
             } else if (e.getSource() == itemFlipV) {
                 imp.getProcessor().flipVertical();
             } else if (e.getSource() == itemFlipH) {
@@ -698,7 +697,7 @@ public class XmippMenuBar extends DynamicMenuBar implements ActionListener {
                 IJ.run(imp, "Options...", "");
             }
         } catch (Exception ex) {
-            ex.printStackTrace();
+            throw new RuntimeException(ex);
         }
 
         //imp.updateAndDraw();

@@ -150,7 +150,9 @@ public class JPanelBrowser extends JPanel {
 
         if (item.isStack()) {
             final GenericDialog dialog = new GenericDialog("Select image from: " + item.getFileName());
-            final String[] indexes = new String[(int) item.getNImages()];
+            final String[] indexes = new String[(int) item.getNImages() + 1];
+
+            indexes[0] = "All";
             for (int i = ImageDouble.FIRST_IMAGE; i <= item.getNImages(); i++) {
                 indexes[i] = String.valueOf(i);
             }

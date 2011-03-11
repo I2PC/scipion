@@ -14,7 +14,7 @@ import javax.swing.JTable;
  *
  * @author Juanjo Vega
  */
-public class FileNameRenderer extends DisablerRenderer {
+public class FileNameRenderer extends RowDisablerRenderer {
 
     public FileNameRenderer() {
         super();

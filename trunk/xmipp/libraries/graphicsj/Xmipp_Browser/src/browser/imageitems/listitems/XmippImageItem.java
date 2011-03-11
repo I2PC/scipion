@@ -51,10 +51,9 @@ public class XmippImageItem extends AbstractImageItem {
 
             image.readPreview(path, w_, h_, slice, nimage);
             ip = ImageConverter.convertToImagej(image, path);
-        } catch (Exception e) {
+        } catch (Exception ex) {
             System.err.println(" >>> Error loading preview: " + getKey());
-            e.printStackTrace();
-//            IJ.error(e.getMessage());
+            throw new RuntimeException(ex);
         }
 
         return ip;
@@ -90,9 +89,9 @@ public class XmippImageItem extends AbstractImageItem {
 
             image.read(path, nimage);
             ip = ImageConverter.convertToImagej(image, path);
-        } catch (Exception e) {
-            e.printStackTrace();
-            IJ.error(e.getMessage());
+        } catch (Exception ex) {
+            IJ.error(ex.getMessage());
+            throw new RuntimeException(ex);
         }
 
         return ip;

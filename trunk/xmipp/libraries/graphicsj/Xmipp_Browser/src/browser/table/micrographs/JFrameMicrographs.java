@@ -15,11 +15,11 @@ import browser.table.renderers.DoubleRenderer;
 import browser.table.renderers.FileNameRenderer;
 import browser.table.renderers.ImageMicrographRenderer;
 import browser.windows.ImagesWindowFactory;
-import ij.IJ;
 import java.awt.Component;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseEvent;
+import java.util.Vector;
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JMenuItem;
@@ -55,15 +55,15 @@ public class JFrameMicrographs extends JFrame {
     private JFrameCTF frameCTF = new JFrameCTF();
 
     /** Creates new form JFrameMicrographs */
-    public JFrameMicrographs(MetaData md) {
+    public JFrameMicrographs(String filename) {
         super();
 
-        setTitle(getTitle(md.getFilename()));
+        setTitle(getTitle(filename));
 
         initComponents();
 
         // Builds table.
-        tableModel = new TableModelMicrographs(md);
+        tableModel = new TableModelMicrographs(filename);
 
         table = new JTable(tableModel) {
 
@@ -136,16 +136,17 @@ public class JFrameMicrographs extends JFrame {
     }
 
     private void hideColumns() {
-        for (int i = 0; i < tableModel.columnsToHide.length; i++) {
-            int index = tableModel.columnsToHide[i];
-            TableColumn column = columnModel.getColumnByModelIndex(index);
+        Vector<Integer> columns = tableModel.getColumnsToHide();
+
+        for (int i = 0; i < columns.size(); i++) {
+            TableColumn column = columnModel.getColumnByModelIndex(columns.elementAt(i));
             columnModel.setColumnVisible(column, false);
         }
     }
 
     private void showCTF(int row) {
         String CTFfile = tableModel.getCTFfile(row);
-
+        System.out.println(" >>>> " + CTFfile);
         frameCTF.setText(CTFfile);
 
         frameCTF.setLocationRelativeTo(this);
@@ -242,7 +243,7 @@ public class JFrameMicrographs extends JFrame {
                 if (item instanceof TableImageItem) {
                     ImagesWindowFactory.openImage(((TableImageItem) item).getImagePlus());
                 }
-            } else if (col == 0) {  // Enabled / Disabled -> Update entire row.
+            } else {
                 tableModel.fireTableRowsUpdated(row, row);
             }
         } else if (SwingUtilities.isRightMouseButton(evt)) {
@@ -263,10 +264,7 @@ public class JFrameMicrographs extends JFrame {
     }
 
     private void save(String fileName) {
-        if (tableModel.save(table, fileName)) {
-            IJ.showMessage("File saved.", "File " + fileName + " sucessfully saved.");
-            //JOptionPane.showMessageDialog(this, "File " + fileName + " sucessfully saved.", "File saved.", JOptionPane.INFORMATION_MESSAGE);
-        }
+        tableModel.save(fileName);
     }
 
     /** This method is called from within the constructor to

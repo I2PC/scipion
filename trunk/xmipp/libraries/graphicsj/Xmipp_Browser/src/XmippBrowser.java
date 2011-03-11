@@ -4,7 +4,6 @@ import browser.JFrameBrowser;
 import browser.LABELS;
 import browser.windows.ImagesWindowFactory;
 import ij.IJ;
-import ij.ImageJ;
 import ij.Macro;
 import ij.plugin.PlugIn;
 import org.apache.commons.cli.BasicParser;
@@ -36,12 +35,6 @@ public class XmippBrowser implements PlugIn {
     private int w = -1, h = -1;   // Initial width and height for table.
     protected JFrameBrowser frameBrowser;
 
-    public static void main(String args[]) {
-        new ImageJ();
-
-        (new XmippBrowser()).run("");
-    }
-
     public void run(String string) {
         ICONS_MANAGER ICONS_MANAGER = new ICONS_MANAGER();  // Forces icons to be loaded
 
@@ -57,6 +50,9 @@ public class XmippBrowser implements PlugIn {
         if (IMGS != null) {
             for (int i = 0; i < IMGS.length; i++) {
                 ImagesWindowFactory.openImageFiles(IMGS);
+                if (POLL) {
+                    System.err.println(" *** POLL is being ignored!");
+                }
             }
         }
 
@@ -72,7 +68,7 @@ public class XmippBrowser implements PlugIn {
             }
         }
 
-        DIR = "/home/juanjo/Desktop/";//Desktop/imgs_Roberto/kk";
+        DIR = "/home/juanjo/Desktop/imgs_Roberto/kk";
         if (DIR != null) {
             frameBrowser = new JFrameBrowser(LABELS.TITLE_MAIN_WINDOW, DIR);
             frameBrowser.setVisible(true);
@@ -143,8 +139,8 @@ public class XmippBrowser implements PlugIn {
                 h = Integer.parseInt(cmdLine.getOptionValue(COMMAND_OPTION_H));
             }
 
-        } catch (Exception e) {
-            e.printStackTrace();
+        } catch (Exception ex) {
+            throw new RuntimeException(ex);
         }
     }
 }

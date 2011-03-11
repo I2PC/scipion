@@ -43,8 +43,8 @@ public class SelFileItem extends XmippImageItem {
 
             dimension.setNimages(md.size());
         } catch (Exception ex) {
-            ex.printStackTrace();
             IJ.error(ex.getMessage());
+            throw new RuntimeException(ex);
         }
     }
 
@@ -119,8 +119,8 @@ public class SelFileItem extends XmippImageItem {
                 ip = new ImagePlus(file.getAbsolutePath(), is);
             }
         } catch (Exception ex) {
-            ex.printStackTrace();
             IJ.error(ex.getMessage());
+            throw new RuntimeException(ex);
         }
 
         return ip;

@@ -4,7 +4,6 @@
  * To change this template, choose Tools | Templates
  * and open the template in the editor.
  */
-import browser.imageitems.ImageConverter;
 import browser.table.micrographs.JFrameMicrographs;
 import ij.IJ;
 import ij.Macro;
@@ -13,7 +12,6 @@ import java.io.File;
 import org.apache.commons.cli.BasicParser;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
-import xmipp.ImageDouble;
 import xmipp.MetaData;
 
 /**
@@ -23,25 +21,6 @@ import xmipp.MetaData;
 public class MicrographsBrowser implements PlugIn {
 
     private final static String COMMAND_OPTION_FILE = "i";
-
-    public static void main_(String args[]) {
-        try {
-            String file = "/home/juanjo/Escritorio/images/image.spi";
-
-            ImageDouble image = new ImageDouble();
-            image.readPreview(file, 80, 80);
-            ImageConverter.convertToImagej(image, file).show();
-        } catch (Exception ex) {
-            ex.printStackTrace();
-            System.out.println("ERROR: " + ex.getMessage());
-        }
-    }
-
-    public static void main(String args[]) {
-        String filename = "/media/PENDRIVE/Ad5GLflagIIIa/all_micrographs_en.sel";
-
-        openFile(filename);
-    }
 
     public void run(String args) {
         if (IJ.isMacro() && Macro.getOptions() != null && !Macro.getOptions().trim().isEmpty()) { // From macro.
@@ -74,15 +53,12 @@ public class MicrographsBrowser implements PlugIn {
 
             path += fileName;
 
-            MetaData md = new MetaData();
-            md.read(path);
-
-            JFrameMicrographs frameMicrographs = new JFrameMicrographs(md);
+            JFrameMicrographs frameMicrographs = new JFrameMicrographs(path);
             frameMicrographs.setLocationRelativeTo(null);
             frameMicrographs.setVisible(true);
-        } catch (Exception e) {
-            e.printStackTrace();
-            IJ.error(e.getMessage());
+        } catch (Exception ex) {
+            IJ.error(ex.getMessage());
+            throw new RuntimeException(ex);
         }
     }
 
@@ -103,10 +79,14 @@ public class MicrographsBrowser implements PlugIn {
             if (cmdLine.hasOption(COMMAND_OPTION_FILE)) {
                 return cmdLine.getOptionValues(COMMAND_OPTION_FILE);
             }
-        } catch (Exception e) {
-            e.printStackTrace();
+        } catch (Exception ex) {
+            throw new RuntimeException(ex);
         }
 
         return null;
+    }
+
+    public static void main(String file) {
+        openFile(file);
     }
 }

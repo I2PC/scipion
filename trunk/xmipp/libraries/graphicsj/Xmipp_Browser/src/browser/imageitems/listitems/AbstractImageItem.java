@@ -103,8 +103,8 @@ public abstract class AbstractImageItem extends FileItem {
             image.readHeader(file.getAbsolutePath());
 
             dimension = new ImageDimension(image);
-        } catch (Exception e) {
-            e.printStackTrace();
+        } catch (Exception ex) {
+            throw new RuntimeException(ex);
         }
     }
 

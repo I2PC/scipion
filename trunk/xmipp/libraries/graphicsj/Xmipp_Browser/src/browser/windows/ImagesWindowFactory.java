@@ -5,6 +5,7 @@
 package browser.windows;
 
 import browser.files.FilterFilesModel;
+import browser.imageitems.ImageConverter;
 import browser.imageitems.TableImageItem;
 import browser.imageitems.listitems.FileItem;
 import browser.imageitems.listitems.XmippImageItem;
@@ -16,12 +17,15 @@ import ij.ImagePlus;
 import ij.gui.ImageWindow;
 import java.io.File;
 import java.util.Vector;
+import xmipp.ImageDouble;
 
 /**
  *
  * @author Juanjo Vega
  */
 public class ImagesWindowFactory {
+
+    private final static String TEMPDIR_PATH = System.getProperty("java.io.tmpdir");
 
     public static void openImageFiles(String files[]) {
         Vector<XmippImageItem> xmippItems = new Vector<XmippImageItem>();
@@ -86,6 +90,25 @@ public class ImagesWindowFactory {
         return iw;
     }
 
+    public static void openImage(Vector<TableImageItem> items, String title) {
+        openImage(ImageConverter.toImagePlus(items, title));
+    }
+
+    public static void openTable(ImagePlus item) {
+        try {
+            // Saves a temporary file...
+            String filename = TEMPDIR_PATH + File.separator + item.getFileInfo().fileName + System.currentTimeMillis() + ".xmp";
+
+            System.err.println(" >>> Saving: " + filename);
+            ImageDouble img = ImageConverter.convertToXmipp(item);
+            img.write(filename);
+
+            openVolumeFile(filename);
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
+    }
+
     public static void openTable(Object items[]) {
         Vector<XmippImageItem> images = new Vector<XmippImageItem>();
 
@@ -139,14 +162,6 @@ public class ImagesWindowFactory {
         //@TODO Normalize
         //volumeTable.setNormalizedAuto();    // Volumes are normalized at startup.
     }
-//
-//    public static void openTable(XmippImageItem item, int n) {
-//        JFrameVolumeTable volumeTable = new JFrameVolumeTable();
-//
-//        volumeTable.addImageItem(item, n);
-//        volumeTable.setVisible(true);
-//        volumeTable.setNormalizedAuto();    // Volumes are normalized at startup.
-//    }
 
     public static void openTable(SelFileItem item) {
         JFrameVolumeTable volumeTable = new JFrameVolumeTable();
