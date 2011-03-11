@@ -42,6 +42,12 @@ void geo2TransformationMatrix(const MDRow &imageGeo, Matrix2D<double> &A,
     psi = realWRAP(psi, 0., 360.);
 
     int dim = A.Xdim() - 1;
+    //This check the case when matrix A is not initialized with correct size
+    if (dim < 2 || dim > 3)
+    {
+      dim = 3;
+      A.resizeNoCopy(dim + 1, dim + 1);
+    }
 
     if (only_apply_shifts)
         A.initIdentity();
