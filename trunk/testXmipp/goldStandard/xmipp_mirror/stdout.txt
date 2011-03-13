@@ -1,0 +1,2 @@
+Input File: input/singleImage.spi
+Output File: goldStandard/xmipp_mirror/singleImage_X.xmp
