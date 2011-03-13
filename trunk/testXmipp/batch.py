@@ -60,6 +60,12 @@ class Tester:
         self.addProgram("xmipp_image_convert")
         self.addTest("-i input/smallStack.stk -o %o/smallStack.mrcs -t stk")
     
+        self.addProgram("xmipp_ctf_group")
+        self.addTest("--ctfdat input/ctf_group/all_images_new.ctfdat -o %o/ctf --wiener --wc -1 --pad 2 --phase_flipped --error 0.5 --resol 5.6" )
+        self.addTest("--ctfdat input/ctf_group/all_images_new.ctfdat -o %o/ctf --wiener --wc -1 --pad 2 --phase_flipped --split input/ctf_group/ctf_split.doc" )
+
+
+
         self.addProgram("xmipp_image_header")
         self.addTest("-i input/smallStack.stk --extract -o %o/header.doc")
         self.addTest("-i input/header.doc --assign -o %o/smallStack2.stk")
@@ -85,6 +91,10 @@ class Tester:
         
         self.addProgram("xmipp_ml_align2d")
         self.addTest("-i input/images_some.stk --ref input/seeds2.stk --oroot %o/ml2d --fast --mirror")
+
+        self.addProgram("xmipp_mirror")
+        self.addTest("-i input/singleImage.spi -o %o/singleImage_X.xmp --flipX")
+
       
         self.addProgram("xmipp_phantom_project")
         self.addTest("-i input/phantomBacteriorhodopsin.vol -o %o/image.xmp --angles 0 0 0")
