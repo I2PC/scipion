@@ -2335,7 +2335,7 @@ public:
                         xsum += Coeff * Bspline02(xminusl);
                         break;
                     case 3:
-                    	BSPLINE03(aux,xminusl);
+                        BSPLINE03(aux,xminusl);
                         xsum += Coeff * aux;
                         break;
                     case 4:
@@ -2366,7 +2366,7 @@ public:
                     yxsum += xsum * Bspline02(yminusm);
                     break;
                 case 3:
-                	BSPLINE03(aux,yminusm);
+                    BSPLINE03(aux,yminusm);
                     yxsum += xsum * aux;
                     break;
                 case 4:
@@ -2397,7 +2397,7 @@ public:
                 zyxsum += yxsum * Bspline02(zminusn);
                 break;
             case 3:
-            	BSPLINE03(aux,zminusn);
+                BSPLINE03(aux,zminusn);
                 zyxsum += yxsum * aux;
                 break;
             case 4:
@@ -2479,7 +2479,7 @@ public:
                     break;
 
                 case 3:
-                	BSPLINE03(aux,xminusl);
+                    BSPLINE03(aux,xminusl);
                     rows += Coeff * aux;
                     break;
 
@@ -2517,7 +2517,7 @@ public:
                 break;
 
             case 3:
-            	BSPLINE03(aux,yminusm);
+                BSPLINE03(aux,yminusm);
                 columns += rows * aux;
                 break;
 
@@ -4440,6 +4440,7 @@ public:
      *
      * Maybe better with an example:
      *
+     *Odd case
      * @code
      * slice 0
      * [01 02 03          [07 08 09
@@ -4454,19 +4455,39 @@ public:
      *  17 18 19]          11 12 13]
      * @endcode
      *
+     *Even case
+     * @code
+     * slice 0
+     * [01 02 03 04         [01 04 03 02
+     *  05 06 06 07          05 07 06 06
+     *  08 09 10 11          08 11 10 09
+     *  12 13 14 15]         12 15 14 13]
+     *
+     * @endcode
      */
     void selfReverseX()
     {
-        for (int l = 0; l < NSIZE(*this); l++)
-            for (int k = 0; k < ZSIZE(*this); k++)
-                for (int i = 0; i < YSIZE(*this); i++)
-                    for (int j = 0; j <= (int)(XSIZE(*this) - 1) / 2; j++)
+        size_t xsize = XSIZE(*this);
+        size_t halfSizeX = (size_t)(xsize-1)/2;
+        size_t ysize = YSIZE(*this);
+        size_t zsize = ZSIZE(*this);
+        size_t nsize = NSIZE(*this);
+        //0 column should be handled in a different way
+        //for even and odd matrices
+        size_t start_x = ((xsize%2) ? 0: 1);
+
+        for (size_t l = 0; l < nsize; l++)
+            for (size_t k = 0; k < zsize; k++)
+                for (size_t i = 0; i < ysize; i++)
+                    for (size_t j = start_x; j <=  halfSizeX; j++)
                     {
                         T aux;
                         SWAP(DIRECT_NZYX_ELEM(*this, l, k, i, j),
-                             DIRECT_NZYX_ELEM(*this, l, k, i, XSIZE(*this) - 1 - j),
+                             DIRECT_NZYX_ELEM(*this, l, k, i, xsize - j),
                              aux);
                     }
+        //NOTE: linea x=0 should not be modified since gets itself by wrapping
+        //center (dimx/2,y,z)  should remain unchanged
 
         STARTINGX(*this) = -FINISHINGX(*this);
     }
@@ -4477,65 +4498,64 @@ public:
      *
      * @code
      * slice 0
-     * [01 02 03          [03 02 01
-     *  04 05 06           06 05 04
-     *  07 08 09]          09 08 07]
+     * [01 02 03          [07 08 09
+     *  04 05 06           04 05 06
+     *  07 08 09]          01 02 03]
      *
-     * ----->
-     *
-     * slice 1
-     * [11 12 13          [13 12 11
-     *  14 15 16           16 15 14
-     *  17 18 19]          19 18 17]
      * @endcode
      *
      */
     void selfReverseY()
     {
-        for (int l = 0; l < NSIZE(*this); l++)
-            for (int k = 0; k < ZSIZE(*this); k++)
-                for (int i = 0; i <= (int)(YSIZE(*this) - 1) / 2; i++)
-                    for (int j = 0; j < XSIZE(*this); j++)
+        size_t xsize = XSIZE(*this);
+        size_t ysize = YSIZE(*this);
+        size_t halfSizeY = (size_t)(ysize-1)/2;
+        size_t zsize = ZSIZE(*this);
+        size_t nsize = NSIZE(*this);
+        //0 column should be handled in a different way
+        //for even and odd matrices
+        size_t start_y = ((ysize%2) ? 0: 1);
+
+        for (size_t l = 0; l < nsize; l++)
+            for (size_t k = 0; k < zsize; k++)
+                for (int i = start_y; i <= halfSizeY; i++)
+                    for (int j = 0; j < xsize; j++)
                     {
                         T aux;
                         SWAP(DIRECT_NZYX_ELEM(*this, l, k, i, j),
-                             DIRECT_NZYX_ELEM(*this, l, k, YSIZE(*this) - 1 - i, j),
+                             DIRECT_NZYX_ELEM(*this, l, k, ysize - i, j),
                              aux);
                     }
 
         STARTINGY(*this) = -FINISHINGY(*this);
     }
 
-    /** Reverse matrix values over Z axis, keep in this object.
+    /** Reverse matrix values over Z axis, keep result in this object.
      *
-     * Maybe better with an example:
-     *
-     * @code
-     * slice 0
-     * [01 02 03          [11 12 13
-     *  04 05 06           14 15 16
-     *  07 08 09]          17 18 19]
-     *
-     *  ----->
-     *
-     * slice 1
-     * [11 12 13          [01 02 03
-     *  14 15 16           04 05 06
-     *  17 18 19]          07 08 09]
-     * @endcode
+
      *
      */
     void selfReverseZ()
     {
 
-        for (int l = 0; l < NSIZE(*this); l++)
-            for (int k = 0; k <= (int)(ZSIZE(*this) - 1) / 2; k++)
-                for (int i = 0; i < YSIZE(*this); i++)
-                    for (int j = 0; j < XSIZE(*this); j++)
+        size_t xsize = XSIZE(*this);
+        size_t ysize = YSIZE(*this);
+        size_t zsize = ZSIZE(*this);
+        size_t halfSizeZ = (size_t)(zsize-1)/2;
+        size_t nsize = NSIZE(*this);
+        //0 column should be handled in a different way
+        //for even and odd matrices
+        size_t start_z = ((zsize%2) ? 0: 1);
+
+
+        for (int l = 0; l < nsize; l++)
+            for (int k = start_z; k <= halfSizeZ; k++)
+                for (int i = 0; i <ysize; i++)
+                    for (int j = 0; j < xsize; j++)
                     {
                         T aux;
                         SWAP(DIRECT_NZYX_ELEM(*this, l, k, i, j),
-                             DIRECT_NZYX_ELEM(*this, l, ZSIZE(*this) - 1 - k, i, j),
+                             DIRECT_NZYX_ELEM(*this, l, zsize- k, i, j),
                              aux);
                     }
 
@@ -4735,14 +4755,14 @@ void typeCast(const MultidimArray<T1>& v1,  MultidimArray<T2>& v2)
     size_t nmax=(NZYXSIZE(v1)/unroll)*unroll;
     for (size_t n=0; n<nmax; n+=unroll, ptr1+=unroll)
     {
-    	DIRECT_MULTIDIM_ELEM(v2,n)   = static_cast< T2 >(*ptr1);
-    	DIRECT_MULTIDIM_ELEM(v2,n+1) = static_cast< T2 >(*(ptr1+1));
-    	DIRECT_MULTIDIM_ELEM(v2,n+2) = static_cast< T2 >(*(ptr1+2));
-    	DIRECT_MULTIDIM_ELEM(v2,n+3) = static_cast< T2 >(*(ptr1+3));
+        DIRECT_MULTIDIM_ELEM(v2,n)   = static_cast< T2 >(*ptr1);
+        DIRECT_MULTIDIM_ELEM(v2,n+1) = static_cast< T2 >(*(ptr1+1));
+        DIRECT_MULTIDIM_ELEM(v2,n+2) = static_cast< T2 >(*(ptr1+2));
+        DIRECT_MULTIDIM_ELEM(v2,n+3) = static_cast< T2 >(*(ptr1+3));
     }
     // Do the remaining elements
     for (size_t n=nmax; n<NZYXSIZE(v1); ++n, ++ptr1)
-    	DIRECT_MULTIDIM_ELEM(v2,n)   = static_cast< T2 >(*ptr1);
+        DIRECT_MULTIDIM_ELEM(v2,n)   = static_cast< T2 >(*ptr1);
 }
 
 /** MultidimArray equality.*/
