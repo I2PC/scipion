@@ -4486,7 +4486,7 @@ public:
                              DIRECT_NZYX_ELEM(*this, l, k, i, xsize - j),
                              aux);
                     }
-        //NOTE: linea x=0 should not be modified since gets itself by wrapping
+        //NOTE: line x=0 should not be modified since gets itself by wrapping
         //center (dimx/2,y,z)  should remain unchanged
 
         STARTINGX(*this) = -FINISHINGX(*this);
