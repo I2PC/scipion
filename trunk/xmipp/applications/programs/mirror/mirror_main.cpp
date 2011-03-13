@@ -23,55 +23,58 @@
  *  e-mail address 'xmipp@cnb.csic.es'
  ***************************************************************************/
 
-#include <data/progs.h>
 #include <data/args.h>
 #include <data/geometry.h>
+#include <data/program.h>
 
-class Flip_parameters: public Prog_parameters
+class FlipParameters: public XmippMetadataProgram
 {
 public:
     bool flipX;
     bool flipY;
     bool flipZ;
+    Image<double> img, imgOut;
 
-    void read(int argc, char **argv)
+    void defineParams()
     {
-        Prog_parameters::read(argc, argv);
-        flipX = checkParameter(argc, argv, "-flipX");
-        flipY = checkParameter(argc, argv, "-flipY");
-        flipZ = checkParameter(argc, argv, "-flipZ");
+        each_image_produces_an_output = true;
+        XmippMetadataProgram::defineParams();
+        addUsageLine("Flip/Mirror around one of the main axis an image/volume");
+        addExampleLine("mirror around x axis:", false);
+        addExampleLine("xmipp_mirror   -i 128.mrc -o 128x.spi -flipX");
+        addParamsLine("--flipX     : flip around X axis");
+        addParamsLine("or --flipY     : flip around Y axis");
+        addParamsLine("or --flipZ     : flip around Z axis");
     }
 
-    void show()
+    void readParams()
     {
-        Prog_parameters::show();
-        std::cout << "FlipX = " << flipX << std::endl
-        << "FlipY = " << flipY << std::endl
-        << "FlipZ = " << flipZ << std::endl;
+        XmippMetadataProgram::readParams();
+        flipX = checkParam("--flipX");
+        flipY = checkParam("--flipY");
+        flipZ = checkParam("--flipZ");
     }
 
-    void usage()
+    void processImage(const FileName &fnImg, const FileName &fnImgOut, size_t objId)
     {
-        Prog_parameters::usage();
-        std::cerr
-        << "  [-flipX]                  : Flip along X\n"
-        << "  [-flipY]                  : Flip along Y\n"
-        << "  [-flipZ]                  : Flip along Z\n";
+        img.read(fnImg);
+std::cerr << "here " << flipX << " " << flipY << " " << flipZ << std::endl;
+        if (flipX)
+            img().selfReverseX();
+        if (flipY)
+            img().selfReverseY();
+        if (flipZ)
+            img().selfReverseZ();
+        img.write(fnImgOut);
     }
+
 };
 
-bool process_img(Image<double> &img, const Prog_parameters *prm)
-{
-    Flip_parameters *eprm = (Flip_parameters *) prm;
-    if (eprm->flipX) img().selfReverseX();
-    if (eprm->flipY) img().selfReverseY();
-    if (eprm->flipZ) img().selfReverseZ();
-    return true;
-}
 
 int main(int argc, char **argv)
 {
-    Flip_parameters prm;
-    SF_main(argc, argv, &prm, (void*)&process_img);
+    FlipParameters program;
+    program.read(argc, argv);
+    return program.tryRun();
 }
 
