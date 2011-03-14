@@ -203,26 +203,8 @@ bool MpiProgAngularProjectionMatching::requestJobs(std::vector<size_t> &imagesTo
 /* Read parameters --------------------------------------------------------- */
 void MpiProgAngularProjectionMatching::writeOutputFiles()
 {
-    if (!node->isMaster())//workers just write down partial results
-    {
-        FileName fn = formatString("%s.node%d.doc", fn_root.c_str(), node->rank);
-        DFo.write(fn);
-    }
-    ///Wait for all workers write results
-    node->barrierWait();
-    if (node->isMaster()) //master should collect and join workers results
-    {
-        FileName fn;
-        MetaData md;
-        for (int nodeRank = 1; nodeRank < node->size; nodeRank++)
-        {
-            fn = formatString("%s.node%d.doc", fn_root.c_str(), nodeRank);
-            md.read(fn);
-            DFo.unionAll(md);
-        }
-        md.sort(DFo, MDL_IMAGE);
-        md.write(fn_root + ".doc");
-    }
+    node->gatherMetadatas(DFo,fn_root + ".doc");
+    DFo.write(fn_root + ".doc");
 }
 
 void MpiProgAngularProjectionMatching::produceSideInfo()
