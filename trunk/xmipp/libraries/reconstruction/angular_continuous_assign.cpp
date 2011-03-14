@@ -608,8 +608,10 @@ int return_gradhesscost(
               double   *DR0, *DR1, *DR2, *mn, *Arg;
               double   *Grad_re, *Grad_im, *Hessian_re, *Hessian_im, *Gradient_re, *Gradient_im;
               double   scx, scy, x, y, z;
-              double   columns, rows, slices, xminusl, yminusm, zminusn, Coeff;
-              double   slices_d1, slices_d2, slices_d3, columns_d1, columns_d2, rows_d1;
+              double   xminusl, yminusm, zminusn, re_Coeff, im_Coeff;
+              double   re_columns, re_rows, im_columns, im_rows;
+              double   re_slices, re_slices_d1, re_slices_d2, re_slices_d3, re_columns_d1, re_columns_d2, re_rows_d1;
+              double   im_slices, im_slices_d1, im_slices_d2, im_slices_d3, im_columns_d1, im_columns_d2, im_rows_d1;
               double   a, b, c, SinC, CosC, redftproj, imdftproj;
               double   da, db, dc, da0[1], da1[1], da2[1], da3[1], da4[1];
               double   db0[1], db1[1], db2[1], db3[1], db4[1], dc0[1], dc1[1], dc2[1], dc3[1], dc4[1];
@@ -621,8 +623,6 @@ int return_gradhesscost(
               double  *pntr_DP_re, *pntr_DP_im, *pntr_DP_0_re, *pntr_DP_0_im, *pntr_DP_1_re, *pntr_DP_1_im;
               double  *pntr_DP_2_re, *pntr_DP_2_im, *pntr_DP_3_re, *pntr_DP_3_im;
               double  *pntr_DP_4_re, *pntr_DP_4_im;
-
-
 
               phi = Parameters[0];
               theta = Parameters[1];
@@ -1957,104 +1957,80 @@ int return_gradhesscost(
                       n1 = (long) ceil(z - 2.0);
                       n2 = n1 + 3L;
 
-                      slices = 0.0;
-                      slices_d1 = 0.0;
-                      slices_d2 = 0.0;
-                      slices_d3 = 0.0;
+                      re_slices = 0.0;
+                      re_slices_d1 = 0.0;
+                      re_slices_d2 = 0.0;
+                      re_slices_d3 = 0.0;
+                      im_slices = 0.0;
+                      im_slices_d1 = 0.0;
+                      im_slices_d2 = 0.0;
+                      im_slices_d3 = 0.0;
                       for (n = n1; n <= n2; n++)
                       {
                     	  long Laux;
                     	  PERIODIZATION(Laux,Nz, n - indz0);
                           CC1 = Nx * Ny * Laux;
-                          columns = 0.0;
-                          columns_d1 = 0.0;
-                          columns_d2 = 0.0;
+                          re_columns = 0.0;
+                          re_columns_d1 = 0.0;
+                          re_columns_d2 = 0.0;
+                          im_columns = 0.0;
+                          im_columns_d1 = 0.0;
+                          im_columns_d2 = 0.0;
                           for (m = m1; m <= m2; m++)
                           {
                         	  PERIODIZATION(Laux,Ny, m - indy0);
                               CC = CC1 + Nx * Laux;
-                              rows = 0.0;
-                              rows_d1 = 0.0;
+                              re_rows = 0.0;
+                              re_rows_d1 = 0.0;
+                              im_rows = 0.0;
+                              im_rows_d1 = 0.0;
                               for (l = l1; l <= l2; l++)
                               {
                                   xminusl = x - (double) l;
                             	  PERIODIZATION(Laux,Nx, l - indx0);
-                                  Coeff = CoefRe[CC + Laux];
+                            	  long Laux2=CC + Laux;
+                                  re_Coeff = CoefRe[Laux2];
+                                  im_Coeff = CoefIm[Laux2];
                                   BSPLINE03(aux,xminusl);
                                   BSPLINE03DIFF1(aux2,xminusl);
-                                  rows += Coeff * aux;
-                                  rows_d1 += Coeff * aux2;
+                                  re_rows += re_Coeff * aux;
+                                  re_rows_d1 += re_Coeff * aux2;
+                                  im_rows += im_Coeff * aux;
+                                  im_rows_d1 += im_Coeff * aux2;
                               }
                               yminusm = y - (double) m;
                               BSPLINE03(aux,yminusm);
                               BSPLINE03DIFF1(aux2,yminusm);
-                              columns +=  rows * aux;
-                              columns_d1 +=  rows_d1 * aux;
-                              columns_d2 +=  rows * aux2;
+                              re_columns +=  re_rows * aux;
+                              re_columns_d1 +=  re_rows_d1 * aux;
+                              re_columns_d2 +=  re_rows * aux2;
+                              im_columns +=  im_rows * aux;
+                              im_columns_d1 +=  im_rows_d1 * aux;
+                              im_columns_d2 +=  im_rows * aux2;
                           }
                           zminusn = z - (double) n;
                           BSPLINE03(aux,zminusn);
                           BSPLINE03DIFF1(aux2,zminusn);
-                          slices +=  columns * aux;
-                          slices_d1 +=  columns_d1 * aux;
-                          slices_d2 +=  columns_d2 * aux;
-                          slices_d3 +=  columns * aux2;
+                          re_slices +=  re_columns * aux;
+                          re_slices_d1 +=  re_columns_d1 * aux;
+                          re_slices_d2 +=  re_columns_d2 * aux;
+                          re_slices_d3 +=  re_columns * aux2;
+                          im_slices +=  im_columns * aux;
+                          im_slices_d1 +=  im_columns_d1 * aux;
+                          im_slices_d2 +=  im_columns_d2 * aux;
+                          im_slices_d3 +=  im_columns * aux2;
                       }
 
-                      a = slices;
-                      Grad_re[0] = slices_d1;
-                      Grad_re[1] = slices_d2;
-                      Grad_re[2] = slices_d3;
+                      a = re_slices;
+                      Grad_re[0] = re_slices_d1;
+                      Grad_re[1] = re_slices_d2;
+                      Grad_re[2] = re_slices_d3;
                       Grad_re[3] = 0.0;
 
-                      slices = 0.0;
-                      slices_d1 = 0.0;
-                      slices_d2 = 0.0;
-                      slices_d3 = 0.0;
-                      for (n = n1; n <= n2; n++)
-                      {
-                    	  long Laux;
-                    	  PERIODIZATION(Laux,Nz, n - indz0);
-                          CC1 = Nx * Ny * Laux;
-                          columns = 0.0;
-                          columns_d1 = 0.0;
-                          columns_d2 = 0.0;
-                          for (m = m1; m <= m2; m++)
-                          {
-                        	  PERIODIZATION(Laux,Ny, m - indy0);
-                              CC = CC1 + Nx * Laux;
-                              rows = 0.0;
-                              rows_d1 = 0.0;
-                              for (l = l1; l <= l2; l++)
-                              {
-                                  xminusl = x - (double) l;
-                            	  PERIODIZATION(Laux,Nx, l - indx0);
-                                  Coeff = CoefIm[CC + Laux];
-                                  BSPLINE03(aux,xminusl);
-                                  BSPLINE03DIFF1(aux2,xminusl);
-                                  rows += Coeff * aux;
-                                  rows_d1 += Coeff * aux2;
-                              }
-                              yminusm = y - (double) m;
-                              BSPLINE03(aux,yminusm);
-                              BSPLINE03DIFF1(aux2,yminusm);
-                              columns +=  rows * aux;
-                              columns_d1 +=  rows_d1 * aux;
-                              columns_d2 +=  rows * aux2;
-                          }
-                          zminusn = z - (double) n;
-                          BSPLINE03(aux,zminusn);
-                          BSPLINE03DIFF1(aux2,zminusn);
-                          slices +=  columns * aux;
-                          slices_d1 +=  columns_d1 * aux;
-                          slices_d2 +=  columns_d2 * aux;
-                          slices_d3 +=  columns * aux2;
-                      }
-
-                      b = slices;
-                      Grad_im[0] = slices_d1;
-                      Grad_im[1] = slices_d2;
-                      Grad_im[2] = slices_d3;
+                      b = im_slices;
+                      Grad_im[0] = im_slices_d1;
+                      Grad_im[1] = im_slices_d2;
+                      Grad_im[2] = im_slices_d3;
                       Grad_im[3] = 0.0;
 
                       c = scx * mn[0] + scy * mn[1];
