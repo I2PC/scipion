@@ -581,12 +581,10 @@ public:
         {
         case INT_MASK:
             imask.resizeNoCopy(m);
-            imask.setXmippOrigin();
             break;
 
         case DOUBLE_MASK:
             dmask.resizeNoCopy(m);
-            dmask.setXmippOrigin();
             break;
         }
     }
