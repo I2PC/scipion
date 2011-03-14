@@ -47,9 +47,7 @@ public:
     /** Phantom filename.
         It can be a Xmipp volume or a mathematically defined phantom. */
     FileName  fnPhantom;
-    /// Root filename (used for a stack)
-    FileName  fnRoot;
-    /// Output filename (used for a singleProjection)
+    /// Output filename (used for a singleProjection or a stack)
     FileName  fnOut;
     /** Filename with the special crystal parameters
        (\ref Crystal_Projection_Parameters ) */

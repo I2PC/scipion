@@ -104,7 +104,6 @@ void ProgProject::defineParams()
     addParamsLine("  [--xdim <size=-1>]                     : Size of the projection");
     addParamsLine("                                         : For geometric descriptions and voxel volumes");
     addParamsLine("                                         : this parameter is not necessary");
-    addParamsLine("      requires -o;");
 }
 
 /* Run ===================================================================== */
@@ -671,6 +670,8 @@ int PROJECT_Effectively_project(const std::string &fnOut,
 {
     int NumProjs = 0;
     SF.clear();
+    if (exists(fnOut))
+    	unlink(fnOut.c_str());
     std::cerr << "Projecting ...\n";
     init_progress_bar(side.DF.size());
     SF.setComment("First set of angles=actual angles; Second set of angles=noisy angles");
@@ -837,6 +838,6 @@ int ROUT_project(ProgProject &prm, Projection &proj, MetaData &SF)
     }
     else
         if (!prm.singleProjection)
-            side.DF.write(prm.fnRoot+".sel");
+            side.DF.write(prm.fnOut.removeAllExtensions()+".sel");
     return ProjNo;
 }
