@@ -53,6 +53,9 @@ public:
     bool isMaster() const;
     /** Wait on a barrier for the other MPI nodes */
     void barrierWait();
+    /** Gather metadatas */
+    void gatherMetadatas(MetaData &MD, const FileName &rootName,
+    		MDLabel sortLabel=MDL_IMAGE);
 };
 
 //mpi macros
@@ -81,6 +84,38 @@ public:
 }
 ;//end of class MpiTaskDistributor
 
+/** Mutex on files.
+ * This class extends threads mutex to also provide file locking.
+ */
+class MpiFileMutex: public Mutex
+{
+protected:
+	MpiNode * node;
+	    int lockFile;
+	    bool fileCreator;
+public:
+    /** Default constructor. */
+	MpiFileMutex(MpiNode * node);
+
+    /** Destructor. */
+    ~MpiFileMutex();
+
+    /** Function to get the access to the mutex.
+     * If the some thread has the mutex and other
+     * ask to lock will be waiting until the first one
+     * release the mutex
+     */
+    void lock();
+
+    /** Function to release the mutex.
+     * This allow the access to the mutex to other
+     * threads that are waiting for it.
+     */
+    void unlock();
+
+    char lockFilename[L_tmpnam];
+}
+;//end of class MpiFileMutex
 /** Another implementation of ParallelTaskDistributor using a file as lock mechanism.
  * It will extends from ThreadTaskDistributor for also be compatible with several
  * threads running in the same process and also syncronization between different
@@ -95,10 +130,8 @@ private:
     void writeVars();
 
 protected:
-    MpiNode * node;
-    int lockFile;
-    char lockFilename[L_tmpnam];
-    bool fileCreator;
+    MpiFileMutex *fileMutex;
+    int           lockFile;
 
     virtual void lock();
     virtual void unlock();
@@ -109,19 +142,23 @@ public:
 }
 ;//end of class FileTaskDistributor
 
-/** Class to extend from XmippProgram for Mpi tasks */
-class XmippMpiProgram: public XmippProgram
+class MpiMetadataProgram
 {
 protected:
-    int mpiRank;
-    MpiNode * mpiNode;
-
+    MpiNode *node;
+    FileTaskDistributor *distributor;
+    std::vector<size_t> imgsId;
+    MpiFileMutex *fileMutex;
+    size_t first, last;
 public:
-    XmippMpiProgram(int rank = 0); //master by default
-    XmippMpiProgram(MpiNode * node);
-    /** Print the usage of the program, reduced version */
-    void usage(int verb = 0) const;
+    /** Destructor */
+    ~MpiMetadataProgram();
+    /** Read arguments */
+    void read(int argc, char **argv);
+    /** Create task distributor */
+    void createTaskDistributor(const MetaData &mdIn);
+    /** Get task to process */
+    size_t getTaskToProcess();
 };
-
 /** @} */
 #endif /* XMIPP_MPI_H_ */

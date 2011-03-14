@@ -97,46 +97,77 @@ bool MpiTaskDistributor::distribute(size_t &first, size_t &last)
     return (workBuffer[0] == 1);
 }
 
-FileTaskDistributor::FileTaskDistributor(size_t nTasks, size_t bSize,
-        MpiNode * node) :
-    ThreadTaskDistributor(nTasks, bSize)
+// ================= FILE MUTEX ==========================
+MpiFileMutex::MpiFileMutex(MpiNode * node)
 {
     fileCreator = false;
 
     if (node == NULL || node->isMaster())
     {
         fileCreator = true;
-        //not using mpi or in master node
-        fileCreator = true;
         strcpy(lockFilename, "pijol_XXXXXX");
         if ((lockFile = mkstemp(lockFilename)) == -1)
         {
-            perror("FileTaskDistributor::Error generating tmp lock file");
+            perror("MpiFileMutex::Error generating tmp lock file");
             exit(1);
         }
-        else
-            close(lockFile);
-        createLockFile();
+        close(lockFile);
     }
     //if using mpi broadcast the filename from master to slaves
     if (node != NULL)
         MPI_Bcast(lockFilename, L_tmpnam, MPI_CHAR, 0, MPI_COMM_WORLD);
+
+    if ((lockFile = open(lockFilename, O_RDWR)) == -1)
+    {
+        perror("MpiFileMutex: Error opening lock file");
+        exit(1);
+    }
+}
+
+void MpiFileMutex::lock()
+{
+    Mutex::lock();
+    lseek(lockFile, 0, SEEK_SET);
+    lockf(lockFile, F_LOCK, 0);
+}
+
+void MpiFileMutex::unlock()
+{
+    lseek(lockFile, 0, SEEK_SET);
+    lockf(lockFile, F_ULOCK, 0);
+    Mutex::unlock();
+}
+
+MpiFileMutex::~MpiFileMutex()
+{
+    close(lockFile);
+    if (fileCreator && remove(lockFilename) == -1)
+    {
+        perror("~MpiFileMutex: error deleting lock file");
+        exit(1);
+    }
+}
+
+FileTaskDistributor::FileTaskDistributor(size_t nTasks, size_t bSize,
+        MpiNode * node):
+    ThreadTaskDistributor(nTasks, bSize)
+{
+	fileMutex=new MpiFileMutex(node);
+    if (node == NULL || node->isMaster())
+        createLockFile();
     loadLockFile();
 }
 
 FileTaskDistributor::~FileTaskDistributor()
 {
-    close(lockFile);
-    if (fileCreator && remove(lockFilename) == -1)
-        perror("FileTaskDistributor: error deleting lock file");
+	delete fileMutex;
 }
 
 void FileTaskDistributor::createLockFile()
 {
-
     int buffer[] = { numberOfTasks, assignedTasks, blockSize };
 
-    if ((lockFile = open(lockFilename, O_CREAT | O_RDWR | O_TRUNC, S_IRUSR
+    if ((lockFile = open(fileMutex->lockFilename, O_CREAT | O_RDWR | O_TRUNC, S_IRUSR
             | S_IWUSR | S_IRGRP | S_IROTH)) == -1)
     {
         perror("FileTaskDistributor::createLockFile: Error opening lock file");
@@ -145,8 +176,7 @@ void FileTaskDistributor::createLockFile()
 
     if (write(lockFile, buffer, 3 * sizeof(int)) == -1)
     {
-        perror(
-                "FileTaskDistributor::createLockFile: Error writing to lock file");
+        perror("FileTaskDistributor::createLockFile: Error writing to lock file");
         exit(1);
     }
 
@@ -155,7 +185,7 @@ void FileTaskDistributor::createLockFile()
 
 void FileTaskDistributor::loadLockFile()
 {
-    if ((lockFile = open(lockFilename, O_RDWR)) == -1)
+    if ((lockFile = open(fileMutex->lockFilename, O_RDWR)) == -1)
     {
         perror("FileTaskDistributor::loadLockFile: Error opening lock file");
         exit(1);
@@ -166,34 +196,31 @@ void FileTaskDistributor::loadLockFile()
 void FileTaskDistributor::readVars()
 {
     lseek(lockFile, 0, SEEK_SET);
-    read(lockFile, &numberOfTasks, sizeof(long long int));
-    read(lockFile, &assignedTasks, sizeof(long long int));
-    read(lockFile, &blockSize, sizeof(long long int));
+    read(lockFile, &numberOfTasks, sizeof(size_t));
+    read(lockFile, &assignedTasks, sizeof(size_t));
+    read(lockFile, &blockSize, sizeof(size_t));
 }
 
 void FileTaskDistributor::writeVars()
 {
     lseek(lockFile, 0, SEEK_SET);
-    write(lockFile, &numberOfTasks, sizeof(long long int));
-    write(lockFile, &assignedTasks, sizeof(long long int));
-    write(lockFile, &blockSize, sizeof(long long int));
+    write(lockFile, &numberOfTasks, sizeof(size_t));
+    write(lockFile, &assignedTasks, sizeof(size_t));
+    write(lockFile, &blockSize, sizeof(size_t));
 }
 
 void FileTaskDistributor::lock()
 {
-    ThreadTaskDistributor::lock();
-    lseek(lockFile, 0, SEEK_SET);
-    lockf(lockFile, F_LOCK, 0);
+    fileMutex->lock();
     readVars();
 }
 
 void FileTaskDistributor::unlock()
 {
     writeVars();
-    lseek(lockFile, 0, SEEK_SET);
-    lockf(lockFile, F_ULOCK, 0);
-    ThreadTaskDistributor::unlock();
+    fileMutex->unlock();
 }
+
 
 //------------ MPI ---------------------------
 MpiNode::MpiNode(int &argc, char ** argv)
@@ -219,19 +246,63 @@ void MpiNode::barrierWait()
   MPI_Barrier(MPI_COMM_WORLD);
 }
 
-XmippMpiProgram::XmippMpiProgram(int rank)
+void MpiNode::gatherMetadatas(MetaData &MD, const FileName &rootname,
+		MDLabel sortLabel)
 {
-  this->mpiRank = rank;
+	FileName fn;
+
+    if (!isMaster())//workers just write down partial results
+    {
+        fn = formatString("%s_node%d.doc", rootname.c_str(), rank);
+        MD.write(fn);
+    }
+    ///Wait for all workers write results
+    barrierWait();
+    if (isMaster()) //master should collect and join workers results
+    {
+        MetaData mdAll(MD), mdSlave;
+        for (int nodeRank = 1; nodeRank < size; nodeRank++)
+        {
+            fn = formatString("%s_node%d.doc", rootname.c_str(), nodeRank);
+            mdSlave.read(fn);
+            mdAll.unionAll(mdSlave);
+            remove(fn.c_str());
+        }
+        MD.sort(mdAll, MDL_IMAGE);
+    }
 }
 
-XmippMpiProgram::XmippMpiProgram(MpiNode * node)
+/* -------------------- MpiMetadataProgram ------------------- */
+MpiMetadataProgram::~MpiMetadataProgram()
 {
-  this->mpiNode = node;
-  mpiRank = node->rank;
+    delete node;
+    delete fileMutex;
 }
 
-void XmippMpiProgram::usage(int verb) const
+void MpiMetadataProgram::read(int argc, char **argv)
 {
-  if (mpiRank == 0)
-    XmippProgram::usage(verb);
+    node = new MpiNode(argc, argv);
+    fileMutex = new MpiFileMutex(node);
+    last=0;
+    first=1;
 }
+
+void MpiMetadataProgram::createTaskDistributor(const MetaData &mdIn)
+{
+    int blockSize=mdIn.size()/(node->size*5);
+    mdIn.findObjects(imgsId);
+    distributor = new FileTaskDistributor(mdIn.size(), blockSize, node);
+}
+
+//Now use the distributor to grasp images
+size_t MpiMetadataProgram::getTaskToProcess()
+{
+    bool moreTasks=true;
+    if (first>last)
+        moreTasks = distributor->getTasks(first, last);
+    if (moreTasks)
+        return imgsId[first++];
+    first = distributor->numberOfTasks-1;
+    return BAD_OBJID;
+}
+
