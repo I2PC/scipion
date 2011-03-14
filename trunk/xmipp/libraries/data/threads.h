@@ -40,17 +40,17 @@ public:
      * ask to lock will be waiting until the first one
      * release the mutex
      */
-    void lock();
+    virtual void lock();
 
     /** Function to release the mutex.
      * This allow the access to the mutex to other
      * threads that are waiting for it.
      */
-    void unlock();
+    virtual void unlock();
 }
 ;//end of class Mutex
 
-/** Class to syncronize several threads in some point of execution.
+/** Class to synchronize several threads in some point of execution.
  * Threads is a way of distributing workload across
  * different workers to solve a problem faster. Nevertheless, sometimes
  * we need synchronization between threads to avoid undesired race
@@ -182,7 +182,7 @@ public:
      *  {
      *      int thread_id = arg.thread_id;
      *
-     *      long long int firstImage, lastImage;
+     *      size_t firstImage, lastImage;
      *      while (td->getTasks(firstImage, lastImage))
      *          for (int image = firstImage; image <= lastImage; ++image)
      *          {
@@ -236,14 +236,14 @@ public:
 class ParallelTaskDistributor
 {
 protected:
-    //The total number of tasks to be distributed
-    size_t numberOfTasks;
     //How many tasks give in each request
     size_t blockSize;
     //The number of tasks that have been assigned
     size_t assignedTasks;
 
 public:
+    //The total number of tasks to be distributed
+    size_t numberOfTasks;
     /** Constructor.
      * The number of jobs and block size should be provided.
      */

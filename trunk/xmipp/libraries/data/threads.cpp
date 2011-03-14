@@ -87,7 +87,7 @@ void * _threadMain(void * data)
         }
         else //exit thread
         {
-            pthread_exit(NULL);            
+            pthread_exit(NULL);
         }
     }
 }
@@ -108,7 +108,7 @@ void ThreadManager::startThreads()
 {
     //Create threads
     int result;
-    
+
     for (int i = 0; i < threads; ++i)
     {
         arguments[i].thread_id = i;
@@ -202,11 +202,11 @@ bool ParallelTaskDistributor::getTasks(size_t &first, size_t &last)
 
 bool ParallelTaskDistributor::setAssignedTasks(size_t tasks)
 {
-  if (tasks < 0 || tasks >= numberOfTasks)
-    return false;
-  lock();
-  assignedTasks = tasks;
-  unlock();
+    if (tasks < 0 || tasks >= numberOfTasks)
+        return false;
+    lock();
+    assignedTasks = tasks;
+    unlock();
 }
 
 void ThreadTaskDistributor::lock()
