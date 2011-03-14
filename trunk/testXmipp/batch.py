@@ -12,17 +12,17 @@ class Tester:
     def addProgram(self, program):
         self.progDict[program] = []
         self.lastProgram = program
-        
+
     def addTest(self, test):
         self.progDict[self.lastProgram].append(test)
-        
+
     def runProgramTests(self, program):
         tests = self.progDict[program]
         n = len(tests)
         outPath = os.path.join(self.fnDir, program)
         outDir = outPath
         testName = ""
-        
+
         testNo = 1
         for test in tests:
             if n > 1:
@@ -42,12 +42,12 @@ class Tester:
             print "       ", cmd
             os.system(cmd)
             testNo += 1
-            
-    
+
+
     def runAllTests(self):
         for program in self.progDict.keys():
             self.runProgramTests(program)
-    
+
     def addAllTests(self):
         # Add all desired tests -------------------------------------------
         self.addProgram("xmipp_angular_continuous_assign")
@@ -61,7 +61,7 @@ class Tester:
 
         self.addProgram("xmipp_image_convert")
         self.addTest("-i input/smallStack.stk -o %o/smallStack.mrcs -t stk")
-    
+
         self.addProgram("xmipp_ctf_group")
         self.addTest("--ctfdat input/ctf_group/all_images_new.ctfdat -o %o/ctf --wiener --wc -1 --pad 2 --phase_flipped --error 0.5 --resol 5.6" )
         self.addTest("--ctfdat input/ctf_group/all_images_new.ctfdat -o %o/ctf --wiener --wc -1 --pad 2 --phase_flipped --split input/ctf_group/ctf_split.doc" )
@@ -69,7 +69,7 @@ class Tester:
         self.addProgram("xmipp_image_header")
         self.addTest("-i input/smallStack.stk --extract -o %o/header.doc")
         self.addTest("-i input/header.doc --assign -o %o/smallStack2.stk")
-        
+
         self.addProgram("xmipp_image_statistics")
         self.addTest("-i input/smallStack.stk --image_stats %o/stats")
         
@@ -100,10 +100,10 @@ class Tester:
         self.addTest("-i input/phantomBacteriorhodopsin.vol     --oroot %o/projections --params input/clusterProjection.param")
         self.addTest("-i input/phantomBacteriorhodopsin.vol     --oroot %o/projections --params input/uniformProjection.param")
         self.addTest("-i input/Crystal/cylinder_with_axis.descr --oroot %o/MRCproj     --params input/Crystal/MRC_projection.param --crystal input/Crystal/MRC_crystal_projection.param")
-    
+
         self.addProgram("xmipp_phantom_simulate_microscope")
         self.addTest("-i input/smallStack.stk -o %o/smallStackPlusCtf.stk --ctf input/input.ctfparam" )
-    
+
         self.addProgram("xmipp_tomo_align_dual_tilt_series")
         self.addTest("--ref input/tomo_dual_alignment/ref.sel --dual input/tomo_dual_alignment/dual.sel --scale 1")
 
@@ -116,16 +116,19 @@ class Tester:
         self.addProgram("xmipp_tomo_project")
         self.addTest("-i input/phantomCandida.vol -o %o/image.xmp --angles 0 90 90" )
         self.addTest("-i input/phantomCandida.vol --oroot %o/projections --params input/tomoProjection.param")
-    
+
         self.addProgram("xmipp_transform_add_noise")
         self.addTest("-i input/cleanImage.spi --type gaussian 10 5 -o %o/noisyGaussian.spi")
-    
+
         self.addProgram("xmipp_transform_adjust_volume_grey_levels")
         self.addTest("-i input/phantomCandida.vol -m goldStandard/xmipp_tomo_project_02/projections.sel -o %o/adjusted.vol")
-    
+
         self.addProgram("xmipp_transform_center_image")
         self.addTest("-i input/smallStack.stk -o %o/smallStackCentered.stk")
-    
+
+        self.addProgram("xmipp_transform_range_adjust")
+        self.addTest("-i input/singleImage.spi -o %o/image.xmp --range -100 100 --noise 10 --mask circular -16")
+
         self.addProgram("xmipp_transform_geometry")
         self.addTest("-i input/header.doc --apply_transform -o %o/images.stk");
         self.addTest("-i input/phantomBacteriorhodopsin.vol --shift 10 5 -10 -o %o/volume.vol --dont_wrap");
@@ -148,7 +151,7 @@ class Tester:
         self.addTest("-i input/singleImage.spi -o %o/image.xmp --corners 0 0 31 31 --physical")
         self.addTest("-i input/singleImage.spi -o %o/image.xmp --crop -10")
         self.addTest("-i input/xray_import/Images/img48949.spe -o %o/image.xmp --size 512")
-    
+
         self.addProgram("xmipp_volume_segment")
         self.addTest("-i input/phantomBacteriorhodopsin.vol -o %o/maskOtsu.vol --method otsu")
         self.addTest("-i input/phantomBacteriorhodopsin.vol -o %o/maskVoxelMass.vol --method voxel_mass 54000")
@@ -156,20 +159,20 @@ class Tester:
 
         self.addProgram("xmipp_xray_import")
         self.addTest("--data input/xray_import/Images --flat input/xray_import/Flatfields --oroot %o/stack --crop 30")
-    
+
         self.addProgram("xmipp_xray_project")
         self.addTest("-i input/phantomCandida.vol -o %o/image.xmp --angles 0 90 90 -s 10 --psf input/xray_psf.xmd")
         self.addTest("-i input/phantomCandida.vol --oroot %o/projections --params input/tomoProjection.param -s 10 --psf input/xray_psf.xmd")
-    
+
         self.addProgram("xmipp_xray_psf_create")
-        self.addTest("-i input/xray_psf.xmd -o %o/psf.vol")    
+        self.addTest("-i input/xray_psf.xmd -o %o/psf.vol")
 #
 # Main
 #
 if __name__ == '__main__':
-    
+
     argc = len(sys.argv)
-    
+
     if argc < 2 or argc > 3:
         print "Usage: ./batch.py <directory> [program]"
         sys.exit()
@@ -177,8 +180,8 @@ if __name__ == '__main__':
     fnDir = sys.argv[1]
     # Create tester
     tester = Tester(fnDir)
-    
-    if argc > 2:        
+
+    if argc > 2:
         program = sys.argv[2]
         tester.runProgramTests(program)
         if not os.path.exists(fnDir):
