@@ -35,18 +35,21 @@ private:
     MpiNode *node;
     FileTaskDistributor *distributor;
     std::vector<size_t> imgsId;
+    MpiFileMutex *fileMutex;
 
 public:
     /** Destructor */
     ~MpiProgNMA()
     {
         delete node;
+        delete fileMutex;
     }
 
     /** Redefine read to initialize MPI environment */
     void read(int argc, char **argv)
     {
         node = new MpiNode(argc, argv);
+        fileMutex = new MpiFileMutex(node);
         ProgNmaAlignment::read(argc, argv);
     }
     /** main body */
@@ -87,7 +90,7 @@ public:
         return imgsId[first];
       }
       time_bar_done = mdIn.size();
-      return -1;
+      return BAD_OBJID;
     }
 
     void finishProcessing()
@@ -98,6 +101,13 @@ public:
       node->barrierWait();
       if (node->isMaster())
         ProgNmaAlignment::finishProcessing();
+    }
+
+    void writeImageParameters(const FileName &fnImg)
+    {
+    	fileMutex->lock();
+    	ProgNmaAlignment::writeImageParameters(fnImg);
+    	fileMutex->unlock();
     }
 }
 ;//end of class MpiProgNMA
