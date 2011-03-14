@@ -56,6 +56,24 @@ extern double Bspline03Diff1
         double Argument   /* input */
     );
 
+/** Bspline03Diff1 as a macro */
+#define BSPLINE03DIFF1(y,x) \
+{\
+	double a = fabs(x); \
+	if (a < 1.0) \
+	{ \
+		a *= a * 1.5 - 2.0; \
+		y=(x>0.0) ? (a) : (-a); \
+	} \
+	else if (a < 2.0) { \
+		a = 2.0 - a; \
+		a *= a * -0.5; \
+		y=(x>0.0) ? (a) : (-a); \
+	} \
+	else \
+		y = 0.0; \
+}
+
 /*--------------------------------------------------------------------------*/
 extern double Bspline04Diff1
     (
