@@ -47,13 +47,6 @@ public:
         createTaskDistributor(mdIn);
     }
 
-    /** Postprocess */
-    void postProcess()
-    {
-        node->gatherMetadatas(mdIn, fn_out);
-        mdIn.write(fn_out);
-    }
-
     //Only master do starting progress bar stuff
     void startProcessing()
     {
@@ -78,7 +71,7 @@ public:
 
     void finishProcessing()
     {
-        node->barrierWait();
+        node->gatherMetadatas(mdOut, fn_out);
         if (node->isMaster())
             ProgAngularContinuousAssign::finishProcessing();
     }
