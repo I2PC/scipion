@@ -127,19 +127,22 @@ class OptionWidget(Frame):
         self.subparams[index].pack()
         self.lastIndex = index; 
         
-    def getValue(self):
+    def getCmdString(self, showDefault):
         if len(self.subparams) == 0:
-            if not self.isDefault():
+            if showDefault or not self.isDefault():
                 return self.entryVar.get().strip()
-            else:
-                return "";
+            return "";
         else:
-            return self.subparams[self.lastIndex].getParamString()
+            if showDefault or not self.isDefault():
+                return self.subparams[self.lastIndex].getCmdString(showDefault)
+            return "";
     
     def isDefault(self):
         if len(self.subparams) == 0:
             return self.default == self.entryVar.get().strip()
         else:
+            if self.lastIndex == -1:
+                return True;                
             if self.default != self.subparams[self.lastIndex].paramName:
                 return False;
             return self.subparams[self.lastIndex].isDefault()
@@ -238,20 +241,20 @@ class ParamWidget(Frame):
     def getHelp(self):
         return "\n".join(self.comments)
     
-    def getParamString(self):
+    def getCmdString(self, showDefault):
         if len(self.options) == 0:
             if self.isSubparam or not self.parent.single or self.checkVar.get() == 1:
                 return " " + self.paramName;
-            else:
-                return "";
+            return "";
         else:
             optStr = "";
-            if self.isDefault():
-                return "";
-            else:
-                for option in self.options:
-                    optStr += " " + option.getValue()
-                return " " + self.paramName + optStr;
+            if showDefault or not self.isDefault():                
+                for option in reversed(self.options):
+                    if not option.isDefault():
+                        showDefault = True;
+                    optStr = option.getCmdString(showDefault) + " " + optStr;
+                optStr = self.paramName + " " +  optStr;
+            return optStr;
             
     def isDefault(self):
         for option in self.options:
@@ -300,8 +303,8 @@ class ParamsGroup(Frame):
     def isLarge(self):
         return not self.single or self.params[0].isLarge;
     
-    def getParamString(self):
-        return self.params[self.lastSelected].getParamString()
+    def getCmdString(self, showDefault = False):
+        return self.params[self.lastSelected].getCmdString(showDefault)
     
     def check(self):
         return self.params[self.lastSelected].check()
@@ -480,10 +483,10 @@ class ProgramGUI(Frame):
         return False;
     
     def getCmd(self):
-        cmdStr = self.progName;
+        cmdStr = self.progName + " ";
         for section in self.sections:
             for group in section.groups:
-                cmdStr = cmdStr + group.getParamString()
+                cmdStr = cmdStr + group.getCmdString()
         return cmdStr;
         
     def buttonCancel_click(self):
