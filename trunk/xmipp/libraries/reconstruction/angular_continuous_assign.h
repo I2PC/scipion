@@ -79,7 +79,7 @@ public:
 
     /** Produce side info.
         An exception is thrown if any of the files is not found*/
-    void produce_side_info();
+    void preProcess();
 
     /** Predict angles and shift.
         At the input the pose parameters must have an initial guess of the

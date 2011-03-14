@@ -28,20 +28,6 @@
 int main(int argc, char **argv)
 {
     ProgAngularContinuousAssign prm;
-    try {
-        prm.read(argc,argv);
-    } catch (XmippError XE) {
-        std::cout << XE;
-        prm.usage();
-        exit(1);
-    }
-    try {
-        prm.produce_side_info();
-        prm.show();
-        prm.run();
-    } catch (XmippError XE) {
-        std::cout << XE;
-        exit(1);
-    }
-    return 0;
+    prm.read(argc,argv);
+    return prm.tryRun();
 }

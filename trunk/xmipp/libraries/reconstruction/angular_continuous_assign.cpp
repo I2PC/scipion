@@ -58,13 +58,13 @@ ProgAngularContinuousAssign::ProgAngularContinuousAssign()
 void ProgAngularContinuousAssign::readParams()
 {
 	XmippMetadataProgram::readParams();
-    fn_ref = getParam("-ref");
-    gaussian_DFT_sigma = getDoubleParam("-gaussian_Fourier");
-    gaussian_Real_sigma = getDoubleParam("-gaussian_Real");
-    weight_zero_freq = getDoubleParam("-zerofreq_weight");
-    max_no_iter = getIntParam("-max_iter");
-    max_shift = getDoubleParam("-max_shift");
-    max_angular_change = getDoubleParam("-max_angular_change");
+    fn_ref = getParam("--ref");
+    gaussian_DFT_sigma = getDoubleParam("--gaussian_Fourier");
+    gaussian_Real_sigma = getDoubleParam("--gaussian_Real");
+    weight_zero_freq = getDoubleParam("--zerofreq_weight");
+    max_no_iter = getIntParam("--max_iter");
+    max_shift = getDoubleParam("--max_shift");
+    max_angular_change = getDoubleParam("--max_angular_change");
 }
 
 // Show ====================================================================
@@ -87,18 +87,52 @@ void ProgAngularContinuousAssign::show()
 void ProgAngularContinuousAssign::defineParams()
 {
     addUsageLine("Make a continuous angular assignment");
-	XmippMetadataProgram::defineParams();
-    addParamsLine("   -ref <volume>              : Reference volume");
-    addParamsLine("  [-gaussian_Fourier <s=0.5>] : Weighting sigma in Fourier space");
-    addParamsLine("  [-gaussian_Real    <s=0.5>] : Weighting sigma in Real space");
-    addParamsLine("  [-zerofreq_weight  <s=0. >] : Zero-frequency weight");
-    addParamsLine("  [-max_iter <max=60>]        : Maximum number of iterations");
-    addParamsLine("  [-max_shift <s=-1>]         : Maximum shift allowed");
-    addParamsLine("  [-max_angular_change <a=-1>]: Maximum angular change allowed");
+    addUsageLine("+This program assigns Euler angles to experimental projections by ");
+    addUsageLine("+minimizing the difference between the given experimental image and ");
+    addUsageLine("+the central slice of a reference volume in Fourier space. All ");
+    addUsageLine("+interpolations are based on a B-spline model of the images and the ");
+    addUsageLine("+volume. The translations are also optimized. Since an iterative ");
+    addUsageLine("+optimization is performed, it must be initialized with some rough ");
+    addUsageLine("+estimate of the angles. The output of xmipp_angular_predict can be ");
+    addUsageLine("+used as initialization without any transformation.");
+    addUsageLine("+The method is fully described at http://www.ncbi.nlm.nih.gov/pubmed/15885434");
+	defaultComments["-i"].clear();
+	defaultComments["-i"].addComment("Metadata with initial alignment");
+	defaultComments["-o"].clear();
+	defaultComments["-o"].addComment("Metadata with output alignment");
+    XmippMetadataProgram::defineParams();
+    addParamsLine("   --ref <volume>              : Reference volume");
+    addParamsLine("  [--gaussian_Fourier <s=0.5>] : Weighting sigma in Fourier space");
+    addParamsLine("                               :+Small values of this parameter concentrate ");
+    addParamsLine("                               :+the optimization on low frequencies. This ");
+    addParamsLine("                               :+value should be below 1.");
+    addParamsLine("  [--gaussian_Real    <s=0.5>] : Weighting sigma in Real space");
+    addParamsLine("                               :+Small values of this parameter concentrate ");
+    addParamsLine("                               :+the optimization in the image center. This ");
+    addParamsLine("                               :+value should be below 1.");
+    addParamsLine("  [--zerofreq_weight  <s=0. >] : Zero-frequency weight");
+    addParamsLine("  [--max_iter <max=60>]        : Maximum number of iterations");
+    addParamsLine("                               :+Convergence might be reached before this number of iterations");
+    addParamsLine("  [--max_shift <s=-1>]         : Maximum shift allowed");
+    addParamsLine("                               :+Use this option to limit the maximum shift that the ");
+    addParamsLine("                               :+optimization process can find. If the minimum is ");
+    addParamsLine("                               :+found beyond this limit (note it is an absolute limit ");
+    addParamsLine("                               :+on the shift and it is not relative to the initial shift), ");
+    addParamsLine("                               :+then the solution given by the initial guess is kept ");
+    addParamsLine("                               :+since the optimized one looks suspicious.");
+    addParamsLine("  [--max_angular_change <a=-1>]: Maximum angular change allowed");
+    addParamsLine("                               :+Use this option to limit the maximum angular ");
+    addParamsLine("                               :+change with respect to the initial solution ");
+    addParamsLine("                               :+that the optimization algorithm can find. If ");
+    addParamsLine("                               :+the solution found is beyond this limit, then ");
+    addParamsLine("                               :+the initial solution is returned instead of the ");
+    addParamsLine("                               :+optimized one since this latter looks suspicious.");
+    addExampleLine("A typical use is:",false);
+    addExampleLine("xmipp_angular_continuous_assign -i anglesFromDiscreteAssignment.doc --ref reference.vol -o assigned_angles.txt");
 }
 
 // Produce side information ================================================
-void ProgAngularContinuousAssign::produce_side_info()
+void ProgAngularContinuousAssign::preProcess()
 {
     // Read the reference volume
     Image<double> V;

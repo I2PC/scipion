@@ -820,6 +820,7 @@ AddProtocol('protocol_setup.py', 'applications/scripts/protocols')
 # MPI
 if int(env['mpi']):
     AddXmippMPIProgram('mpi_angular_class_average', ['XmippRecons'])
+#    AddXmippMPIProgram('mpi_angular_continuous_assign', ['XmippRecons'])
     AddXmippMPIProgram('mpi_angular_projection_matching', ['XmippRecons'])
     AddXmippMPIProgram('mpi_angular_project_library', ['XmippRecons'])
     AddXmippMPIProgram('mpi_classify_CL2D', ['XmippRecons'])
