@@ -245,7 +245,7 @@ protected:
     /// Use this flag for not producing a time bar
     bool allow_time_bar;
     /// Some time bar related counters
-    int time_bar_step, time_bar_size, time_bar_done;
+    size_t time_bar_step, time_bar_size, time_bar_done;
     /// Flag to know when input is a single image or stack
     bool single_image;
     bool input_is_stack;
