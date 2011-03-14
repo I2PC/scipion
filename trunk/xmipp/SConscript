@@ -558,7 +558,6 @@ ReconsSources = [
     'psd_enhance.cpp',
     'psd_sort.cpp',
     'radon.cpp',
-    'range_adjust.cpp',
     'recons_misc.cpp',
     'reconstruct_art.cpp',
     'reconstruct_art_pseudo.cpp',
@@ -720,7 +719,6 @@ AddXmippProgram('phantom_transform', ['XmippRecons','XmippInterface'])
 AddXmippProgram('projection_real_shears', ['XmippRecons'])
 AddXmippProgram('psd_enhance', ['XmippRecons'])
 AddXmippProgram('psd_sort', ['XmippRecons'])
-AddXmippProgram('range_adjust', ['XmippRecons'])
 #Sjors: note that crystal stuff in ART is not working yet....
 AddXmippProgram('reconstruct_art', ['XmippRecons'])
 AddXmippProgram('reconstruct_art_pseudo', ['XmippRecons'])
@@ -735,6 +733,7 @@ AddXmippProgram('transform_adjust_volume_grey_levels', ['XmippRecons'])
 AddXmippProgram('transform_center_image')
 AddXmippProgram('transform_geometry')
 AddXmippProgram('transform_normalize')
+AddXmippProgram('transform_range_adjust')
 AddXmippProgram('transform_symmetrize', ['XmippRecons'])
 AddXmippProgram('transform_threshold', ['XmippRecons'])
 AddXmippProgram('transform_window')
