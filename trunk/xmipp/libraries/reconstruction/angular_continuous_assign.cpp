@@ -52,6 +52,7 @@ ProgAngularContinuousAssign::ProgAngularContinuousAssign()
 {
     produces_an_output = true;
     each_image_produces_an_output = false;
+    save_metadata_stack = true;
 }
 
 // Read arguments ==========================================================
@@ -241,18 +242,12 @@ void ProgAngularContinuousAssign::processImage(const FileName &fnImg, const File
     else
         cost=-1;
 
-    mdIn.setValue(MDL_ANGLEROT,  new_rot,objId);
-    mdIn.setValue(MDL_ANGLETILT, new_tilt,objId);
-    mdIn.setValue(MDL_ANGLEPSI,  new_psi,objId);
-    mdIn.setValue(MDL_SHIFTX,    new_shiftX,objId);
-    mdIn.setValue(MDL_SHIFTY,    new_shiftY,objId);
-    mdIn.setValue(MDL_COST,      cost,objId);
-}
-
-// Finish processing ---------------------------------------------------------
-void ProgAngularContinuousAssign::postProcess()
-{
-    mdIn.write(fn_out);
+    mdOut.setValue(MDL_ANGLEROT,  new_rot,newId);
+    mdOut.setValue(MDL_ANGLETILT, new_tilt,newId);
+    mdOut.setValue(MDL_ANGLEPSI,  new_psi,newId);
+    mdOut.setValue(MDL_SHIFTX,    new_shiftX,newId);
+    mdOut.setValue(MDL_SHIFTY,    new_shiftY,newId);
+    mdOut.setValue(MDL_COST,      cost,newId);
 }
 
 /* ------------------------------------------------------------------------- */
