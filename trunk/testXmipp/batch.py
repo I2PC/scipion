@@ -50,6 +50,8 @@ class Tester:
     
     def addAllTests(self):
         # Add all desired tests -------------------------------------------
+        self.addProgram("xmipp_angular_continuous_assign")
+        self.addTest("-i input/aFewProjections.sel --ref input/phantomBacteriorhodopsin.vol -o %o/assigned_angles.txt")
     
         self.addProgram("xmipp_classify_analyze_cluster")
         self.addTest("-i input/smallStack.stk --ref 1@input/smallStack.stk -o %o/pca.xmd")
@@ -63,8 +65,6 @@ class Tester:
         self.addProgram("xmipp_ctf_group")
         self.addTest("--ctfdat input/ctf_group/all_images_new.ctfdat -o %o/ctf --wiener --wc -1 --pad 2 --phase_flipped --error 0.5 --resol 5.6" )
         self.addTest("--ctfdat input/ctf_group/all_images_new.ctfdat -o %o/ctf --wiener --wc -1 --pad 2 --phase_flipped --split input/ctf_group/ctf_split.doc" )
-
-
 
         self.addProgram("xmipp_image_header")
         self.addTest("-i input/smallStack.stk --extract -o %o/header.doc")
@@ -95,7 +95,6 @@ class Tester:
         self.addProgram("xmipp_mirror")
         self.addTest("-i input/singleImage.spi -o %o/singleImage_X.xmp --flipX")
 
-      
         self.addProgram("xmipp_phantom_project")
         self.addTest("-i input/phantomBacteriorhodopsin.vol -o %o/image.xmp --angles 0 0 0")
         self.addTest("-i input/phantomBacteriorhodopsin.vol     --oroot %o/projections --params input/clusterProjection.param")
