@@ -94,7 +94,7 @@ ArgLexer::~ArgLexer()
     delete pToken;
 }
 
-void ArgLexer::addLine(String line)
+void ArgLexer::addLine(const String &line)
 {
     input.push_back(line + " ");
 }

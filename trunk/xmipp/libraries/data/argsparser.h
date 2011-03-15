@@ -119,7 +119,7 @@ public:
     /** Destructor */
     ~ArgLexer();
     /** Add input lines to the lexer */
-    void addLine(String line);
+    void addLine(const String &line);
     /** Function to parse a new token.
      * If the token is TOK_END will return false
      * and true otherwise. The current token will be changed.
