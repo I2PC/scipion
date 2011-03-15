@@ -1,0 +1,10 @@
+# XMIPP_STAR_1 * 
+# 
+data_
+loop_
+ _image
+ _enabled
+ 000001@goldStandard/xmipp_mask_03/outputStack_mask.stk          1 
+ 000002@goldStandard/xmipp_mask_03/outputStack_mask.stk          1 
+ 000003@goldStandard/xmipp_mask_03/outputStack_mask.stk          1 
+ 000004@goldStandard/xmipp_mask_03/outputStack_mask.stk          1 
