@@ -174,7 +174,7 @@ int main(int argc, char **argv)
                     ML2D_prm.sumwsc2[refno] = aux;
                 }
 
-                ML2D_prm.maximizationBlocks(prm.nr_projections);
+                ML2D_prm.maximization();
 
                 // Write out 2D reference images (to be used in reconstruction)
                 if (IS_MASTER)

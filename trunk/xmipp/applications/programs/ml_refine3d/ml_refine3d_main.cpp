@@ -27,18 +27,7 @@
 
 int main(int argc, char **argv)
 {
-    // Get input parameters
-    try
-    {
-        ProgRefine3D program;
-        //Read arguments
-        program.read(argc, argv);
-        program.run();
-
-    }
-    catch (XmippError XE)
-    {
-        std::cerr << XE;
-        exit(1);
-    }
+    ProgRefine3D program;
+    program.read(argc, argv);
+    return program.tryRun();
 }

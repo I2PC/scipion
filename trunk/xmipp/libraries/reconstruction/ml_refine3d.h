@@ -41,8 +41,7 @@
 #include <data/projection.h>
 #include "directions.h"
 #include "reconstruct_art.h"
-// FIXME:
-//#include "reconstruct_fourier.h"
+#include "reconstruct_fourier.h"
 #include "ml_align2d.h"
 #include "mlf_align2d.h"
 #include "symmetrize.h"
@@ -103,14 +102,13 @@ public:
     int nr_projections;
 
     // A pointer to the 2D alignment and classification program
-    ProgML2D * ml2d;
+    ML2DBaseProgram * ml2d;
 
 private:
     ///Helper function to show to screen and file history
     void showToStream(std::ostream &out);
 
 public:
-
     /// Empty constructor, call the constructor of ProgML2D
     /// with the ML3D flag set to true
     ProgRefine3D(bool fourier = false);
@@ -157,8 +155,6 @@ public:
 
     /// Convergency check
     bool checkConvergence(int iter) ;
-
-
 
     ///Provides implementation of the run function
     void run();

@@ -25,9 +25,19 @@
 #include "mlf_align2d.h"
 
 // Constructor ===============================================
-ProgMLF2D::ProgMLF2D(bool ML3D)
+ProgMLF2D::ProgMLF2D(int nr_vols, int rank, int size)
 {
-    do_ML3D = ML3D;
+    if (nr_vols == 0)
+    {
+        do_ML3D = false;
+        this->nr_vols = 1;
+        refs_per_class = 1;//FIXME: fix for 3d case
+    }
+    else
+        do_ML3D = true;
+
+    this->rank = rank;
+    this->size = size;
 }
 
 // Read arguments ==========================================================
@@ -73,9 +83,9 @@ void ProgMLF2D::readParams()
     }
 
     // Main parameters
-    n_ref = getIntParam("-nref");
+    model.n_ref = getIntParam("-nref");
     fn_ref = getParam("-ref");
-    fn_sel = getParam("-i");
+    fn_img = getParam("-i");
     do_ctf_correction = !checkParam("-no_ctf");
     if (do_ctf_correction)
     {
@@ -127,9 +137,9 @@ void ProgMLF2D::readParams()
     // Now reset some stuff for restart
     if (do_restart)
     {
-        fn_sel = restart_imgmd;
+        fn_img = restart_imgmd;
         fn_ref = restart_refmd;
-        n_ref = 0; // Just to be sure (not strictly necessary)
+        model.n_ref = 0; // Just to be sure (not strictly necessary)
         sigma_offset = restart_offset;
         //sigma_noise = restart_noise;
         seed = restart_seed;
@@ -167,14 +177,14 @@ void ProgMLF2D::show(bool ML3D)
         {
             std::cerr << "--> ignoring CTF effects "<<std::endl;
         }
-        std::cerr << "  Input images            : " << fn_sel << " (" << nr_images_global << ")" << std::endl;
+        std::cerr << "  Input images            : " << fn_img << " (" << nr_images_global << ")" << std::endl;
         if (fn_ref != "")
         {
             std::cerr << "  Reference image(s)      : " << fn_ref << std::endl;
         }
         else
         {
-            std::cerr << "  Number of references:   : " << n_ref << std::endl;
+            std::cerr << "  Number of references:   : " << model.n_ref << std::endl;
         }
         if (do_ctf_correction)
         {
@@ -256,140 +266,49 @@ void ProgMLF2D::show(bool ML3D)
 
 }
 
-void ProgMLF2D::run()
-{
-    int c, nn, imgno, opt_refno;
-    double LL, sumw_allrefs, convv, sumcorr;
-    bool converged;
-    std::vector<double> conv;
-    double aux, wsum_sigma_noise, wsum_sigma_offset;
-    std::vector<MultidimArray<double > > wsum_Mref, wsum_ctfMref;
-    std::vector<double> sumw, sumw2, sumwsc, sumwsc2, sumw_mirror, sumw_defocus;
-    MultidimArray<double> P_phi, Mr2, Maux;
-    std::vector<std::vector<double> > Mwsum_sigma2;
-    FileName fn_img, fn_tmp;
-    MultidimArray<double> spectral_signal;
-
-    produceSideInfo();
-    show();
-    estimateInitialNoiseSpectra();
-    produceSideInfo2();
-
-    Maux.resize(dim, dim);
-    Maux.setXmippOrigin();
-
-    // Loop over all iterations
-    for (int iter = istart; iter <= Niter; iter++)
-    {
-
-        if (verbose > 0)
-            std::cerr << "  Multi-reference refinement:  iteration " << iter << " of " << Niter << std::endl;
-
-        for (int refno = 0;refno < n_ref; refno++)
-            Iold[refno]() = Iref[refno]();
-
-        // Pre-calculate pdfs
-        calculateInPlanePDF();
-
-        // Integrate over all images
-        expectation(Iref, iter,
-                        LL, sumcorr, wsum_Mref, wsum_ctfMref,
-                        Mwsum_sigma2, wsum_sigma_offset,
-                        sumw, sumw2, sumwsc, sumwsc2, sumw_mirror, sumw_defocus);
-
-        // Update model parameters
-        maximization(wsum_Mref, wsum_ctfMref,
-                         Mwsum_sigma2,wsum_sigma_offset,
-                         sumw, sumw2, sumwsc, sumwsc2, sumw_mirror, sumw_defocus,
-                         sumcorr, sumw_allrefs,
-                         spectral_signal);
-
-        // Check convergence
-        converged = checkConvergence(conv);
-
-        addPartialDocfileData(docfiledata, myFirstImg, myLastImg);
-        writeOutputFiles(iter, sumw_allrefs, LL, sumcorr, conv);
-
-        // Calculate new wiener filters
-        updateWienerFilters(spectral_signal, sumw_defocus, iter);
-
-        if (converged)
-        {
-            if (verbose > 0)
-                std::cerr << " Optimization converged!" << std::endl;
-            break;
-        }
-
-    } // end loop iterations
-    writeOutputFiles(-1, sumw_allrefs, LL, sumcorr, conv);
-}
-
 // Fourier mode usage ==============================================================
 void ProgMLF2D::defineParams()
 {
-    addParamsLine("   -i <selfile>                : Selfile with all input images ");
-    addParamsLine("   -ctfdat <ctfdatfile=\"\">        : Two-column ASCII file with filenames and CTF parameter files of all images (recommended) ");
-    addParamsLine("      or -no_ctf               : OR do not use any CTF correction ");
-    addParamsLine("   -nref <int=0>                 : Number of references to generate automatically (recommended)");
-    addParamsLine("   OR -ref <selfile_or_image=\"\">     : OR selfile with initial references/single reference image ");
-    addParamsLine(" [ -o <rootname=mlf2d> ]             : Output rootname (default = \"mlf2d\")");
-    addParamsLine(" [ -mirror ]                   : Also check mirror image of each reference ");
-    addParamsLine(" [ -search_shift <int=3>]      : Limited translational searches (in pixels) ");
-    addParamsLine(" [ -reduce_snr <factor=1> ]    : Use a value smaller than one to decrease the estimated SSNRs ");
-    addParamsLine(" [ -not_phase_flipped ]        : Use this if the experimental images have not been phase flipped ");
-    addParamsLine(" [ -ctf_affected_refs ]        : Use this if the references (-ref) are not CTF-deconvoluted ");
-    addParamsLine(" [ -low <Ang=999> ]            : Exclude lowest frequencies from P-calculations (in Ang) ");
-    addParamsLine(" [ -high <Ang=0> ]             : Exclude highest frequencies from P-calculations (in Ang) ");
-    addParamsLine(" [ -ini_high <Ang=0> ]         : Exclude highest frequencies during first iteration (in Ang) ");
-    addParamsLine(" [ -pixel_size <Ang=1> ]       : Pixel size in Angstrom (only necessary for -no_ctf mode) ");
+  //add usage
 
-    addParamsLine("==+ Additional options ==");
-    addParamsLine(" [ -eps <float=5e-5> ]         : Stopping criterium ");
-    addParamsLine(" [ -iter <int=100> ]           : Maximum number of iterations to perform ");
-    addParamsLine(" [ -psi_step <float=5> ]       : In-plane rotation sampling interval [deg]");
-    addParamsLine(" [ -offset <float=3> ]         : Expected standard deviation for origin offset [pix]");
-    addParamsLine(" [ -frac <docfile=\"\"> ]      : Docfile with expected model fractions (default: even distr.)");
-    addParamsLine(" [ -C <double=1e-12> ]         : Significance criterion for fast approach ");
-    if (!do_ML3D)
-    {
-        addParamsLine(" [ -restart <logfile> ]        : restart a run with all parameters as in the logfile ");
-        addParamsLine(" [ -istart <int=1> ]             : number of initial iteration ");
-    }
-    addParamsLine(" [ -fix_sigma_noise]           : Do not re-estimate the standard deviation in the noise spectra ");
-    addParamsLine(" [ -fix_sigma_offset]          : Do not re-estimate the standard deviation in the origin offsets ");
-    addParamsLine(" [ -fix_fractions]             : Do not re-estimate the model fractions ");
-    addParamsLine(" [ -fix_high <float=-1>]       : ");
-    addParamsLine(" [ -dont_output_docfile ]      : Do not write out docfile with most likely angles & translations ");
-    addParamsLine(" [ -dont_output_selfiles ]     : Do not write out selfiles with most likely class assignments ");
-    addParamsLine(" [ -doc <docfile=\"\"> ]         : Read initial angles and offsets from docfile ");
-    addParamsLine(" [ -write_offsets ]            : Save memory by writing optimal offsets to disc (disc-access intensive) ");
-    addParamsLine(" [ -include_allfreqs ] ");
+  //params
+  defineBasicParams(this);
+    addParamsLine("  --ctfdat <ctfdatfile=\"\">   : Input CTFdat file for all data ");
+    addParamsLine(" or --no_ctf <pixel_size=1>    : do not use any CTF correction, pixel size should be provided");
 
-    addParamsLine("==+++++ Hidden arguments ==");
-    addParamsLine(" [-debug <int=0>]");
-    addParamsLine(" [-var_psi]");
-    addParamsLine(" [-var_trans]");
-    addParamsLine(" [-norm]");
-    addParamsLine(" [-student]");
-    addParamsLine(" [-no_sigma_trick]");
-    addParamsLine(" [-df <float=6.>]");
-    addParamsLine(" [-kstest]");
-    addParamsLine(" [-iter_histogram <int=-1>]");
-    addParamsLine(" [-search_rot <float=999.>]");
-    addParamsLine(" [-random_seed <int=-1>]");
+
+    defineAdditionalParams(this, "==+ Additional options ==");
+    //even more additional params
+    addParamsLine(" [ --search_shift <int=3>]      : Limited translational searches (in pixels) ");
+    addParamsLine(" [ --reduce_snr <factor=1> ]    : Use a value smaller than one to decrease the estimated SSNRs ");
+    addParamsLine(" [ --not_phase_flipped ]        : Use this if the experimental images have not been phase flipped ");
+    addParamsLine(" [ --ctf_affected_refs ]        : Use this if the references (-ref) are not CTF-deconvoluted ");
+    addParamsLine(" [ --exclude_freqs <first_higth=0> <high=0> <low=999>: Exclude frequencies from P-calculations (in Ang)");
+    addParamsLine("                               : First value is highest frequency during first iteration.");
+    addParamsLine("                               : Second is the highest in following iterations and third is lowest");
+    addParamsLine(" [ --fix_high <float=-1>]       : ");
+    addParamsLine(" [ --include_allfreqs ] ");
+
+    //hidden params
+    defineHiddenParams(this);
+    addParamsLine(" [--var_psi]");
+    addParamsLine(" [--var_trans]");
+    addParamsLine(" [--kstest]");
+    addParamsLine(" [--iter_histogram <int=-1>]");
 }
 
 // Set up a lot of general stuff
 // This side info is general, i.e. in parallel mode it is the same for
 // all processors! (in contrast to produceSideInfo2)
-void ProgMLF2D::produceSideInfo(int rank)
+void ProgMLF2D::produceSideInfo()
 {
 
     FileName                    fn_img, fn_tmp, fn_base, fn_tmp2;
     Image<double>              img;
     CTFDescription                    ctf;
-    MultidimArray<double>           offsets(2), dum, rmean_ctf;
+    MultidimArray<double>           dum, rmean_ctf;
     Matrix2D<double>           A(3, 3);
+    Matrix1D<double>           offsets(2);
     MultidimArray<double>      Maux, Maux2;
     MultidimArray<std::complex<double> >  Faux, ctfmask; //2D
     MultidimArray<int>        radial_count; //1D
@@ -398,7 +317,7 @@ void ProgMLF2D::produceSideInfo(int rank)
     double                      Q0;
 
     // Read selfile with experimental images
-    MDimg.read(fn_sel);
+    MDimg.read(fn_img);
     MDimg.removeObjects(MDValueEQ(MDL_ENABLED, -1));
     nr_images_global = MDimg.size();
 
@@ -407,65 +326,14 @@ void ProgMLF2D::produceSideInfo(int rank)
 
     // Get image sizes and total number of images
     int idum;
-    unsigned long int ldum;
-    ImgSize(MDimg, dim, idum, idum, ldum);
-
+    size_t ndum;
+    ImgSize(MDimg, dim, idum, idum, ndum);
     hdim = dim / 2;
     dim2 = dim * dim;
-    nr_images_global = MDimg.size();
 
     // Set sampling stuff: flipping matrices, psi_step etc.
-    psi_max = 90.;
-    nr_psi = CEIL(psi_max / psi_step);
-    psi_step = psi_max / nr_psi;
+    initSamplingStuff();
     max_nr_psi = nr_psi;
-    nr_flip = nr_nomirror_flips = 4;
-    // 0, 90, 180 & 270 degree flipping, as well as mirror
-    A.initIdentity();
-    F.push_back(A);
-    A(0, 0) = 0.;
-    A(1, 1) = 0.;
-    A(1, 0) = 1.;
-    A(0, 1) = -1;
-    F.push_back(A);
-    A(0, 0) = -1.;
-    A(1, 1) = -1.;
-    A(1, 0) = 0.;
-    A(0, 1) = 0;
-    F.push_back(A);
-    A(0, 0) = 0.;
-    A(1, 1) = 0.;
-    A(1, 0) = -1.;
-    A(0, 1) = 1;
-    F.push_back(A);
-    if (do_mirror)
-    {
-        nr_flip = 8;
-        A.initIdentity();
-        A(0, 0) = -1;
-        F.push_back(A);
-        A(0, 0) = 0.;
-        A(1, 1) = 0.;
-        A(1, 0) = 1.;
-        A(0, 1) = 1;
-        F.push_back(A);
-        A(0, 0) = 1.;
-        A(1, 1) = -1.;
-        A(1, 0) = 0.;
-        A(0, 1) = 0;
-        F.push_back(A);
-        A(0, 0) = 0.;
-        A(1, 1) = 0.;
-        A(1, 0) = -1.;
-        A(0, 1) = -1;
-        F.push_back(A);
-    }
-
-    // Set limit_rot & limit_trans
-    if (search_rot < 180.)
-        limit_rot = true;
-    else
-        limit_rot = false;
 
     // Initialization of resolhist
     if (do_kstest)
@@ -481,13 +349,14 @@ void ProgMLF2D::produceSideInfo(int rank)
     nr_trans = 0;
     Maux.resize(dim, dim);
     Maux.setXmippOrigin();
+    int ss = search_shift * search_shift;
     FOR_ALL_ELEMENTS_IN_ARRAY2D(Maux)
     {
-        double rr = (double)i * i + (double)j * j;
-        if (rr <= (double)search_shift*search_shift)
+        int r2 = i * i + j * j;
+        if (r2 <= ss)
         {
-            offsets(0) = (double)j;
-            offsets(1) = (double)i;
+            XX(offsets) = (double)j;
+            YY(offsets) = (double)i;
             Vtrans.push_back(offsets);
             if (i == 0 && j == 0)
                 zero_trans = nr_trans;
@@ -508,16 +377,10 @@ void ProgMLF2D::produceSideInfo(int rank)
         nr_focus = 1;
         count_defocus.push_back(nr_images_global);
         Vctf.push_back(dum);
-        Vdec.push_back(dum);
-        Vsig.push_back(dum);
         Vctf[0].resize(hdim);
-        Vsig[0].resize(hdim);
-        Vdec[0].resize(hdim);
-        for (int irr = 0; irr < hdim; irr++)
-        {
-            dAi(Vctf[0], irr) = 1.;
-            dAi(Vdec[0], irr) = 1.;
-        }
+        Vctf[0].initConstant(1.); //fill with 1.
+        Vdec.push_back(Vctf[0]); //just copy
+        Vsig.push_back(Vctf[0]);
     }
     else
     {
@@ -526,6 +389,12 @@ void ProgMLF2D::produceSideInfo(int rank)
         all_fn_ctfs.clear();
         FileName fn_ctf;
         bool is_unique;
+
+        MetaData ctfMD;
+        //number of different CTFs
+        ctfMD.aggregate(MDimg, AGGR_COUNT,MDL_CTFMODEL,MDL_CTFMODEL,MDL_COUNT);
+        ctfMD.fillExpand(MDL_CTFMODEL);
+        nr_focus = ctfMD.size();
 
         FOR_ALL_OBJECTS_IN_METADATA(MDimg)
         {
@@ -623,7 +492,7 @@ void ProgMLF2D::produceSideInfo(int rank)
     do_generate_refs=false;
     if (fn_ref == "")
     {
-        if (n_ref > 0)
+        if (model.n_ref > 0)
         {
             fn_ref = fn_root + "_it";
             fn_ref.compose(fn_ref, 0, "");
@@ -638,12 +507,14 @@ void ProgMLF2D::produceSideInfo(int rank)
         else
             REPORT_ERROR(ERR_INDEX_OUTOFBOUNDS, "Please provide -ref or -nref larger than zero");
     }
+
+    show();
 }
 
 // Read reference images to memory and initialize offset vectors
 // This side info is NOT general, i.e. in parallel mode it is NOT the
 // same for all processors! (in contrast to produce_Side_info)
-void ProgMLF2D::produceSideInfo2(int nr_vols, int size, int rank)
+void ProgMLF2D::produceSideInfo2()
 {
 
     int                       c, idum, refno = 0;
@@ -651,6 +522,8 @@ void ProgMLF2D::produceSideInfo2(int nr_vols, int size, int rank)
     FileName                  fn_tmp;
     Image<double>                img;
     std::vector<double>       Vdum, sumw_defocus;
+
+    estimateInitialNoiseSpectra();
 
     // Read in all reference images in memory
     if (fn_ref.isMetaData())
@@ -666,7 +539,7 @@ void ProgMLF2D::produceSideInfo2(int nr_vols, int size, int rank)
         MDref.setValue(MDL_ENABLED, 1, id);
     }
 
-    n_ref = MDref.size();
+    model.n_ref = MDref.size();
     refno = 0;
     FOR_ALL_OBJECTS_IN_METADATA(MDref)
     {
@@ -674,15 +547,15 @@ void ProgMLF2D::produceSideInfo2(int nr_vols, int size, int rank)
 
         //img.read(fn_tmp, false, false, true, false);
         //TODO: Check this???
-        img.read(fn_tmp, true, -1, true);
+        img.read(fn_tmp);
 
         img().setXmippOrigin();
-        Iref.push_back(img);
+        model.Iref.push_back(img);
         Iold.push_back(img);
         Ictf.push_back(img);
         // Default start is all equal model fractions
-        alpha_k.push_back((double)1. / n_ref);
-        Iref[refno].setWeight(alpha_k[refno] * (double)nr_images_global);
+        alpha_k.push_back((double)1. / model.n_ref);
+        model.Iref[refno].setWeight(alpha_k[refno] * (double)nr_images_global);
         // Default start is half-half mirrored images
         if (do_mirror)
             mirror_fraction.push_back(0.5);
@@ -722,7 +595,7 @@ void ProgMLF2D::produceSideInfo2(int nr_vols, int size, int rank)
     }
 
     // Fill imgs_offsets vectors with zeros
-    idum = (do_mirror ? 4 : 2) * n_ref;
+    idum = (do_mirror ? 4 : 2) * model.n_ref;
 
     FOR_ALL_LOCAL_IMAGES()
     {
@@ -749,29 +622,29 @@ void ProgMLF2D::produceSideInfo2(int nr_vols, int size, int rank)
     if (do_restart)
     {
         // Read optimal image-parameters
-//        FOR_ALL_LOCAL_IMAGES()
-//        {
-//            if (limit_rot || do_norm)
-//            {
-//                MDimg.getValue(MDL_ANGLEROT, imgs_oldphi[IMG_LOCAL_INDEX]);
-//                MDimg.getValue(MDL_ANGLETILT, imgs_oldtheta[IMG_LOCAL_INDEX]);
-//            }
-//
-//            idum = (do_mirror ? 2 : 1) * n_ref;
-//            double xoff, yoff;
-//            MDimg.getValue(MDL_SHIFTX, xoff);
-//            MDimg.getValue(MDL_SHIFTY, yoff);
-//            for (int refno = 0; refno < idum; refno++)
-//            {
-//                imgs_offsets[IMG_LOCAL_INDEX][2 * refno] = xoff;
-//                imgs_offsets[IMG_LOCAL_INDEX][2 * refno + 1] = yoff;
-//            }
-//
-//            if (do_norm)
-//            {
-//                MDimg.getValue(MDL_INTSCALE, imgs_scale[IMG_LOCAL_INDEX]);
-//            }
-//        }
+        //        FOR_ALL_LOCAL_IMAGES()
+        //        {
+        //            if (limit_rot || do_norm)
+        //            {
+        //                MDimg.getValue(MDL_ANGLEROT, imgs_oldphi[IMG_LOCAL_INDEX]);
+        //                MDimg.getValue(MDL_ANGLETILT, imgs_oldtheta[IMG_LOCAL_INDEX]);
+        //            }
+        //
+        //            idum = (do_mirror ? 2 : 1) * model.n_ref;
+        //            double xoff, yoff;
+        //            MDimg.getValue(MDL_SHIFTX, xoff);
+        //            MDimg.getValue(MDL_SHIFTY, yoff);
+        //            for (int refno = 0; refno < idum; refno++)
+        //            {
+        //                imgs_offsets[IMG_LOCAL_INDEX][2 * refno] = xoff;
+        //                imgs_offsets[IMG_LOCAL_INDEX][2 * refno + 1] = yoff;
+        //            }
+        //
+        //            if (do_norm)
+        //            {
+        //                MDimg.getValue(MDL_INTSCALE, imgs_scale[IMG_LOCAL_INDEX]);
+        //            }
+        //        }
 
         // read Model parameters
         refno = 0;
@@ -807,7 +680,7 @@ void ProgMLF2D::produceSideInfo2(int nr_vols, int size, int rank)
     {
         if (alpha_k[refno] > 0.)
         {
-            FourierTransform(Iref[refno](), Faux);
+            FourierTransform(model.Iref[refno](), Faux);
             FFT_magnitude(Faux, Maux);
             CenterFFT(Maux, true);
             Maux *= Maux;
@@ -834,7 +707,7 @@ void ProgMLF2D::produceSideInfo2(int nr_vols, int size, int rank)
     else
     {
         // Divide by the number of reference images
-        spectral_signal /= (double)n_ref;
+        spectral_signal /= (double)model.n_ref;
     }
 
     // Read in Vsig-vectors with fixed file names
@@ -872,22 +745,6 @@ void ProgMLF2D::produceSideInfo2(int nr_vols, int size, int rank)
     updateWienerFilters(spectral_signal, sumw_defocus, istart - 1);
 
 }
-
-
-// Randomize image order
-void ProgMLF2D::randomizeImagesOrder()
-{
-    //This static flag is for only randomize once
-    static bool randomized = false;
-    if (!randomized)
-    {
-        srand(seed);
-        //-------Randomize the order of images
-        std::random_shuffle(img_id.begin(), img_id.end());
-        randomized = true;
-    }
-}//close function randomizeImagesOrder
-
 
 // For initial noise variances
 void ProgMLF2D::estimateInitialNoiseSpectra()
@@ -1285,7 +1142,7 @@ void ProgMLF2D::setCurrentSamplingRates(double current_probres_limit)
 
     if (do_variable_trans)
     {
-        MultidimArray<double>  offsets(2);
+        Matrix1D<double>  offsets(2);
         nr_trans = 0;
         Vtrans.clear();
         // Sample the in-plane translations 3x the current resolution
@@ -1299,8 +1156,8 @@ void ProgMLF2D::setCurrentSamplingRates(double current_probres_limit)
                 double rr = sqrt((double)(ix * ix + iy * iy));
                 if (rr <= (double)trans_step*search_shift)
                 {
-                    offsets(0) = ix;
-                    offsets(1) = iy;
+                    XX(offsets) = ix;
+                    YY(offsets) = iy;
                     Vtrans.push_back(offsets);
                     nr_trans++;
                     if (ix == 0 && iy == 0)
@@ -1309,20 +1166,20 @@ void ProgMLF2D::setCurrentSamplingRates(double current_probres_limit)
                         // For coarser samplings, always add (-1,0) (1,0) (0,-1) and (0,1)
                         if (trans_step > 1)
                         {
-                            offsets(0) = 1;
-                            offsets(1) = 0;
+                            XX(offsets) = 1;
+                            YY(offsets) = 0;
                             Vtrans.push_back(offsets);
                             nr_trans++;
-                            offsets(0) = -1;
-                            offsets(1) = 0;
+                            XX(offsets) = -1;
+                            YY(offsets) = 0;
                             Vtrans.push_back(offsets);
                             nr_trans++;
-                            offsets(0) = 0;
-                            offsets(1) = 1;
+                            XX(offsets) = 0;
+                            YY(offsets) = 1;
                             Vtrans.push_back(offsets);
                             nr_trans++;
-                            offsets(0) = 0;
-                            offsets(1) = -1;
+                            XX(offsets) = 0;
+                            YY(offsets) = -1;
                             Vtrans.push_back(offsets);
                             nr_trans++;
                         }
@@ -1345,7 +1202,7 @@ void ProgMLF2D::generateInitialReferences()
     if (verbose > 0)
     {
         std::cerr << "  Generating initial references by averaging over random subsets" << std::endl;
-        init_progress_bar(n_ref);
+        init_progress_bar(model.n_ref);
     }
 
     Image<double> IRef, ITemp;
@@ -1355,9 +1212,9 @@ void ProgMLF2D::generateInitialReferences()
     MDref.clear();
     int nsub, first, last;
     size_t id;
-    for (int refno = 0; refno < n_ref; refno++)
+    for (int refno = 0; refno < model.n_ref; refno++)
     {
-        nsub = divide_equally(nr_images_global,n_ref, refno, first, last);
+        nsub = divide_equally(nr_images_global,model.n_ref, refno, first, last);
         //Clear images
         IRef().initZeros(dim, dim);
         IRef().setXmippOrigin();
@@ -1387,7 +1244,7 @@ void ProgMLF2D::generateInitialReferences()
     }//close for refno
 
     if (verbose > 0)
-        progress_bar(n_ref);
+        progress_bar(model.n_ref);
 
     fn_ref = fn_root + "_it";
     fn_ref.compose(fn_ref, 0, "");
@@ -1397,7 +1254,7 @@ void ProgMLF2D::generateInitialReferences()
 
 
 // Calculate probability density function of all in-plane transformations phi
-void ProgMLF2D::calculateInPlanePDF()
+void ProgMLF2D::calculatePdfInplane()
 {
 
     double r2, pdfpix, sum;
@@ -1459,7 +1316,7 @@ void ProgMLF2D::getFTfromVector(const std::vector<double> &in,
         for (int ipoint = 0; ipoint < nr_points_2d; ipoint++)
         {
             int ii = pointer_2d[ipoint];
-            std::complex<double> aux(in[start_point+ipoint],0.);
+            std::complex<double> aux(in[start_point+ipoint], 0.);
             tmp_out[ii] = aux;
         }
     }
@@ -1494,8 +1351,8 @@ void ProgMLF2D::rotateReference(std::vector<double> &out)
         {
             // Add arbitrary number (small_angle) to avoid 0-degree rotation (lacking interpolation)
             psi = (double)(ipsi * psi_max / nr_psi) + SMALLANGLE;
-            //Iref[refno]().rotateBSpline(3, psi, Maux, WRAP);
-            rotate(BSPLINE3, Maux, Iref[refno](), psi, 'Z', WRAP);
+            //model.Iref[refno]().rotateBSpline(3, psi, Maux, WRAP);
+            rotate(BSPLINE3, Maux, model.Iref[refno](), psi, 'Z', WRAP);
             FourierTransformHalf(Maux, Faux);
 
             // Normalize the magnitude of the rotated references to 1st rot of that ref
@@ -1517,7 +1374,7 @@ void ProgMLF2D::rotateReference(std::vector<double> &out)
         }
 
         // Free memory
-        Iref[refno]().resize(0,0);
+        model.Iref[refno]().resize(0,0);
     }
 }
 
@@ -1562,15 +1419,15 @@ void ProgMLF2D::preselectDirections(float &phi, float &theta,
     Matrix1D<double> u, v;
 
     pdf_directions.clear();
-    pdf_directions.resize(n_ref);
+    pdf_directions.resize(model.n_ref);
     FOR_ALL_MODELS()
     {
         if (!limit_rot || (phi == -999. && theta == -999.))
             pdf_directions[refno] = 1.;
         else
         {
-            phi_ref = Iref[refno].rot();
-            theta_ref = Iref[refno].tilt();
+            phi_ref = model.Iref[refno].rot();
+            theta_ref = model.Iref[refno].tilt();
             Euler_direction(phi, theta, 0., u);
             Euler_direction(phi_ref, theta_ref, 0., v);
             u.selfNormalize();
@@ -1663,7 +1520,7 @@ void ProgMLF2D::calculateFourierOffsets(const MultidimArray<double> &Mimg,
     {
         for (int imir = 0; imir < nr_mir; imir++)
         {
-            irefmir = imir * n_ref + refno;
+            irefmir = imir * model.n_ref + refno;
             iflip_start = imir * nr_nomirror_flips;
             iflip_stop = imir * nr_nomirror_flips + nr_nomirror_flips;
             FOR_ALL_LIMITED_TRANSLATIONS()
@@ -1754,7 +1611,7 @@ void ProgMLF2D::processOneImage(const MultidimArray<double> &Mimg,
     std::vector<MultidimArray<double> >               uniq_offsets;
 
 
-    std::vector<double> refw(n_ref), refw2(n_ref), refw_mirror(n_ref), Pmax_refmir(2*n_ref);
+    std::vector<double> refw(model.n_ref), refw2(model.n_ref), refw_mirror(model.n_ref), Pmax_refmir(2*model.n_ref);
     std::vector<double> sigma2, ctf, decctf;
     double aux, fracpdf, pdf, weight, weight2;
     double tmpr, tmpi, sum_refw = 0.;
@@ -1821,7 +1678,7 @@ void ProgMLF2D::processOneImage(const MultidimArray<double> &Mimg,
         annotate_time(&t0);
     }
 
-    Mweight.initZeros(nr_trans, n_ref, nr_flip*nr_psi);
+    Mweight.initZeros(nr_trans, model.n_ref, nr_flip*nr_psi);
     FOR_ALL_MODELS()
     {
         if (!limit_rot || pdf_directions[refno] > 0.)
@@ -1830,7 +1687,7 @@ void ProgMLF2D::processOneImage(const MultidimArray<double> &Mimg,
                 ref_scale = opt_scale / refs_avgscale[refno];
             FOR_ALL_FLIPS()
             {
-                irefmir = FLOOR(iflip / nr_nomirror_flips) * n_ref + refno;
+                irefmir = FLOOR(iflip / nr_nomirror_flips) * model.n_ref + refno;
                 ix = ROUND(opt_offsets_ref[2*irefmir]);
                 iy = ROUND(opt_offsets_ref[2*irefmir+1]);
                 Pmax_refmir[irefmir] = 0.;
@@ -1913,7 +1770,7 @@ void ProgMLF2D::processOneImage(const MultidimArray<double> &Mimg,
             refw_mirror[refno] = 0.;
             FOR_ALL_FLIPS()
             {
-                irefmir = FLOOR(iflip / nr_nomirror_flips) * n_ref + refno;
+                irefmir = FLOOR(iflip / nr_nomirror_flips) * model.n_ref + refno;
                 ix = ROUND(opt_offsets_ref[2*irefmir]);
                 iy = ROUND(opt_offsets_ref[2*irefmir+1]);
                 if (iflip < nr_nomirror_flips)
@@ -2033,7 +1890,7 @@ void ProgMLF2D::processOneImage(const MultidimArray<double> &Mimg,
                 ref_scale = opt_scale / refs_avgscale[refno];
             FOR_ALL_FLIPS()
             {
-                irefmir = FLOOR(iflip / nr_nomirror_flips) * n_ref + refno;
+                irefmir = FLOOR(iflip / nr_nomirror_flips) * model.n_ref + refno;
                 if (iflip < nr_nomirror_flips)
                     fracpdf = alpha_k[refno] * (1. - mirror_fraction[refno]);
                 else
@@ -2328,7 +2185,7 @@ void ProgMLF2D::processOneImage(const MultidimArray<double> &Mimg,
             sumw_mirror[refno] += refw_mirror[refno] / sum_refw;
             FOR_ALL_FLIPS()
             {
-                irefmir = FLOOR(iflip / nr_nomirror_flips) * n_ref + refno;
+                irefmir = FLOOR(iflip / nr_nomirror_flips) * model.n_ref + refno;
                 FOR_ALL_ROTATIONS()
                 {
                     irot = iflip * nr_psi + ipsi;
@@ -2403,7 +2260,7 @@ void ProgMLF2D::processOneImage(const MultidimArray<double> &Mimg,
         {
             for (int imir = 0; imir < nr_mir; imir++)
             {
-                irefmir = imir * n_ref + refno;
+                irefmir = imir * model.n_ref + refno;
                 iflip_start = imir * nr_nomirror_flips;
                 iflip_stop = imir * nr_nomirror_flips + nr_nomirror_flips;
                 opt_itrans = zero_trans;
@@ -2461,25 +2318,21 @@ void ProgMLF2D::processOneImage(const MultidimArray<double> &Mimg,
 
 }
 
+void ProgMLF2D::iteration()
+{
+    // Integrate over all images
+    expectation();
+    // Update model with new estimates
+    maximization();
+}
 
-void ProgMLF2D::expectation(std::vector< Image<double> > &Iref, int iter,
-                            double &LL, double &sumcorr,
-                            std::vector<MultidimArray<double> > &wsum_Mref,
-                            std::vector<MultidimArray<double> > &wsum_ctfMref,
-                            std::vector<std::vector<double> > &Mwsum_sigma2,
-                            double &wsum_sigma_offset,
-                            std::vector<double> &sumw,
-                            std::vector<double> &sumw2,
-                            std::vector<double> &sumwsc,
-                            std::vector<double> &sumwsc2,
-                            std::vector<double> &sumw_mirror,
-                            std::vector<double> &sumw_defocus)
+void ProgMLF2D::expectation()
 {
 
     Image<double> img;
     FileName fn_img, fn_trans;
     std::vector<double> Fref, Fwsum_imgs, Fwsum_ctfimgs, dum;
-    std::vector<double> allref_offsets, pdf_directions(n_ref);
+    std::vector<double> allref_offsets, pdf_directions(model.n_ref);
     MultidimArray<double> trans(2);
     MultidimArray<double> opt_offsets(2);
 
@@ -2488,6 +2341,9 @@ void ProgMLF2D::expectation(std::vector< Image<double> > &Iref, int iter,
     double w2, KSprob = 0.;
     int c, opt_refno, opt_ipsi, opt_iflip, focus = 0;
     bool apply_ctf;
+
+    // Pre-calculate pdfs
+    calculatePdfInplane();
 
     // Generate (FT of) each rotated version of all references
     rotateReference(Fref);
@@ -2519,10 +2375,7 @@ void ProgMLF2D::expectation(std::vector< Image<double> > &Iref, int iter,
             sumw_defocus.push_back((double)count_defocus[ifocus]);
 
         Mwsum_sigma2.push_back(dum);
-        for (int ii = 0; ii < nr_points_2d; ii++)
-        {
-            Mwsum_sigma2[ifocus].push_back(0.);
-        }
+        Mwsum_sigma2[ifocus].assign(nr_points_2d, 0.);
     }
     FOR_ALL_MODELS()
     {
@@ -2533,12 +2386,9 @@ void ProgMLF2D::expectation(std::vector< Image<double> > &Iref, int iter,
         sumw_mirror.push_back(0.);
         FOR_ALL_ROTATIONS()
         {
-            for (int ii = 0; ii < dnr_points_2d; ii++)
-            {
-                Fwsum_imgs.push_back(0.);
-                if (do_ctf_correction)
-                    Fwsum_ctfimgs.push_back(0.);
-            }
+            Fwsum_imgs.assign(dnr_points_2d, 0.);
+            if (do_ctf_correction)
+                Fwsum_ctfimgs.assign(dnr_points_2d, 0.);
         }
     }
 
@@ -2574,10 +2424,8 @@ void ProgMLF2D::expectation(std::vector< Image<double> > &Iref, int iter,
         preselectDirections(old_phi, old_theta, pdf_directions);
 
         // Perform the actual expectation step for this image
-        if (iter == 1 && first_iter_noctf)
-            apply_ctf = false;
-        else
-            apply_ctf = true;
+        apply_ctf = !(iter == 1 && first_iter_noctf);
+
         processOneImage(img(), focus, apply_ctf, Fref,
                         Fwsum_imgs, Fwsum_ctfimgs, Mwsum_sigma2[focus], wsum_sigma_offset,
                         sumw, sumw2, sumwsc,sumwsc2, sumw_mirror, LL, maxcorr, maxweight2, w2,
@@ -2605,8 +2453,8 @@ void ProgMLF2D::expectation(std::vector< Image<double> > &Iref, int iter,
         // Store optimal phi and theta in memory
         if (limit_rot)
         {
-            imgs_oldphi[IMG_LOCAL_INDEX] = Iref[opt_refno].rot();
-            imgs_oldtheta[IMG_LOCAL_INDEX] = Iref[opt_refno].tilt();
+            imgs_oldphi[IMG_LOCAL_INDEX] = model.Iref[opt_refno].rot();
+            imgs_oldtheta[IMG_LOCAL_INDEX] = model.Iref[opt_refno].tilt();
         }
 
         // Output docfile
@@ -2619,9 +2467,9 @@ void ProgMLF2D::expectation(std::vector< Image<double> > &Iref, int iter,
         }
 
         dAij(docfiledata,IMG_LOCAL_INDEX,0)
-        = Iref[opt_refno].rot(); // rot
+        = model.Iref[opt_refno].rot(); // rot
         dAij(docfiledata,IMG_LOCAL_INDEX,1)
-        = Iref[opt_refno].tilt(); // tilt
+        = model.Iref[opt_refno].tilt(); // tilt
         dAij(docfiledata,IMG_LOCAL_INDEX,2) = opt_psi + 360.; // psi
         dAij(docfiledata,IMG_LOCAL_INDEX,3) = trans(0) + opt_offsets(0); // Xoff
         dAij(docfiledata,IMG_LOCAL_INDEX,4) = trans(1) + opt_offsets(1); // Yoff
@@ -2661,19 +2509,7 @@ void ProgMLF2D::expectation(std::vector< Image<double> > &Iref, int iter,
 }
 
 // Update all model parameters
-void ProgMLF2D::maximization(std::vector<MultidimArray<double> > &wsum_Mref,
-                             std::vector<MultidimArray<double> > &wsum_ctfMref,
-                             std::vector<std::vector<double> > &Mwsum_sigma2,
-                             double &wsum_sigma_offset,
-                             std::vector<double> &sumw,
-                             std::vector<double> &sumw2,
-                             std::vector<double> &sumwsc,
-                             std::vector<double> &sumwsc2,
-                             std::vector<double> &sumw_mirror,
-                             std::vector<double> &sumw_defocus,
-                             double &sumcorr, double &sumw_allrefs,
-                             MultidimArray<double> &spectral_signal,
-                             int refs_per_class)
+void ProgMLF2D::maximization()
 {
 
     MultidimArray<double> rmean_sigma2, rmean_signal2;
@@ -2693,9 +2529,9 @@ void ProgMLF2D::maximization(std::vector<MultidimArray<double> > &wsum_Mref,
     {
         if (!do_student && sumw[refno] > 0.)
         {
-            Iref[refno]() = wsum_Mref[refno];
-            Iref[refno]() /= sumwsc2[refno];
-            Iref[refno].setWeight(sumw[refno]);
+            model.Iref[refno]() = wsum_Mref[refno];
+            model.Iref[refno]() /= sumwsc2[refno];
+            model.Iref[refno].setWeight(sumw[refno]);
             sumw_allrefs += sumw[refno];
             if (do_ctf_correction)
             {
@@ -2705,14 +2541,14 @@ void ProgMLF2D::maximization(std::vector<MultidimArray<double> > &wsum_Mref,
             }
             else
             {
-                Ictf[refno]=Iref[refno];
+                Ictf[refno]=model.Iref[refno];
             }
         }
         else if (do_student && sumw2[refno] > 0.)
         {
-            Iref[refno]() = wsum_Mref[refno];
-            Iref[refno]() /= sumwsc2[refno];
-            Iref[refno].setWeight(sumw2[refno]);
+            model.Iref[refno]() = wsum_Mref[refno];
+            model.Iref[refno]() /= sumwsc2[refno];
+            model.Iref[refno].setWeight(sumw2[refno]);
             sumw_allrefs += sumw[refno];
             sumw_allrefs2 += sumw2[refno];
             if (do_ctf_correction)
@@ -2723,14 +2559,14 @@ void ProgMLF2D::maximization(std::vector<MultidimArray<double> > &wsum_Mref,
             }
             else
             {
-                Ictf[refno]=Iref[refno];
+                Ictf[refno]=model.Iref[refno];
             }
         }
         else
         {
-            Iref[refno].setWeight(0.);
+            model.Iref[refno].setWeight(0.);
             Ictf[refno].setWeight(0.);
-            Iref[refno]().initZeros(dim, dim);
+            model.Iref[refno]().initZeros(dim, dim);
             Ictf[refno]().initZeros();
         }
     }
@@ -2738,7 +2574,7 @@ void ProgMLF2D::maximization(std::vector<MultidimArray<double> > &wsum_Mref,
     // Adjust average scale (nr_classes will be smaller than n_ref for the 3D case!)
     if (do_norm)
     {
-        int iclass, nr_classes = ROUND(n_ref / refs_per_class);
+        int iclass, nr_classes = ROUND(model.n_ref / refs_per_class);
         std::vector<double> wsum_scale(nr_classes), sumw_scale(nr_classes);
         ldiv_t temp;
         average_scale = 0.;
@@ -2757,7 +2593,7 @@ void ProgMLF2D::maximization(std::vector<MultidimArray<double> > &wsum_Mref,
             if (sumw_scale[iclass]>0.)
             {
                 refs_avgscale[refno] = wsum_scale[iclass]/sumw_scale[iclass];
-                Iref[refno]() *= refs_avgscale[refno];
+                model.Iref[refno]() *= refs_avgscale[refno];
                 Ictf[refno]() *= refs_avgscale[refno];
             }
             else
@@ -2847,48 +2683,11 @@ void ProgMLF2D::maximization(std::vector<MultidimArray<double> > &wsum_Mref,
             c++;
         }
     }
-    spectral_signal /= (double)n_ref;
+    spectral_signal /= (double)model.n_ref;
 
 }
 
-// Check convergence
-bool ProgMLF2D::checkConvergence(std::vector<double> &conv)
-{
-
-    bool converged = true;
-    double convv;
-    MultidimArray<double> Maux;
-
-    Maux.resize(dim, dim);
-    Maux.setXmippOrigin();
-
-    conv.clear();
-    FOR_ALL_MODELS()
-    {
-        if (Iref[refno].weight() > 0.)
-        {
-            //multiplyElements(Iold[refno](), Iold[refno](), Maux);
-            arrayByArray(Iold[refno](), Iold[refno](), Maux, '*');
-            convv = 1. / (Maux.computeAvg());
-            Maux = Iold[refno]() - Iref[refno]();
-            Maux *= Maux;
-            //multiplyElements(Maux, Maux, Maux);
-            convv *= Maux.computeAvg();
-            conv.push_back(convv);
-            if (convv > eps)
-                converged = false;
-        }
-        else
-        {
-            conv.push_back(-1.);
-        }
-    }
-
-    return converged;
-}
-
-void ProgMLF2D::writeOutputFiles(const int iter, double &sumw_allrefs, double &LL,
-                                 double &avecorr, std::vector<double> &conv)
+void ProgMLF2D::writeOutputFiles(const ModelML2D &model, OutputType outputType)
 {
 
     FileName          fn_tmp, fn_base;
@@ -2910,7 +2709,7 @@ void ProgMLF2D::writeOutputFiles(const int iter, double &sumw_allrefs, double &L
     MDimg.write(fn_tmp);
     // Also write out metaData files of all experimental images,
     // classified according to optimal reference image
-    for (int refno = 0; refno < n_ref; refno++)
+    for (int refno = 0; refno < model.n_ref; refno++)
     {
         MDo.clear();
         MDo.importObjects(MDimg, MDValueEQ(MDL_REF, refno + 1));
@@ -2925,14 +2724,14 @@ void ProgMLF2D::writeOutputFiles(const int iter, double &sumw_allrefs, double &L
     for (int i = 0;  i < 2;  i++)
     {
         MDo.clear();
-        //for (int refno = 0; refno < n_ref; refno++)
+        //for (int refno = 0; refno < model.n_ref; refno++)
         int refno = 0;
         int ref3d = -1;
         FOR_ALL_OBJECTS_IN_METADATA(MDref)
         {
             fn_tmp = fn_base + (i==0 ? "_ref" : "_cref");
             fn_tmp.compose(fn_tmp, refno + 1, "xmp");
-            Itmp = Iref[refno];
+            Itmp = model.Iref[refno];
             //std::cerr << "writing refno " << fn_tmp << std::endl;
             Itmp.write(fn_tmp);
             id = MDo.addObject();
@@ -2969,7 +2768,7 @@ void ProgMLF2D::writeOutputFiles(const int iter, double &sumw_allrefs, double &L
     MDo.setComment(cline);
     id = MDo.addObject();
     MDo.setValue(MDL_LL, LL,id);
-    MDo.setValue(MDL_PMAX, avecorr,id);
+    MDo.setValue(MDL_PMAX, sumw_allrefs,id);
     MDo.setValue(MDL_SIGMAOFFSET, sigma_offset,id);
     MDo.setValue(MDL_RANDOMSEED, seed,id);
     if (do_norm)
@@ -3058,7 +2857,7 @@ void ProgMLF2D::writeOutputFiles(const int iter, double &sumw_allrefs, double &L
 }
 
 /// Add docfiledata to docfile
-void ProgMLF2D::addPartialDocfileData(MultidimArray<double> data,
+void ProgMLF2D::addPartialDocfileData(const MultidimArray<double> &data,
                                       int first, int last)
 {
     for (int imgno = first; imgno <= last; imgno++)

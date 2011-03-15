@@ -26,131 +26,56 @@
 #ifndef MLFALIGN2D_H
 #define MLFALIGN2D_H
 
-#include <data/fftw.h>
-#include <data/args.h>
-#include <data/funcs.h>
-#include <data/metadata.h>
-#include <data/metadata_extension.h>
-#include <data/image.h>
-#include <data/geometry.h>
-#include <data/filters.h>
-#include <data/mask.h>
-#include <data/ctf.h>
-#include <vector>
+#include "ml2d.h"
 #include <numeric>
 
 /**@defgroup MLFalign2D mlf_align2d (Maximum likelihood in 2D in Fourier space)
    @ingroup ReconsLibrary */
 //@{
 
-#define FOR_ALL_MODELS() for (int refno=0;refno<n_ref; refno++)
+#define FOR_ALL_MODELS() for (int refno=0;refno<model.n_ref; refno++)
 #define FOR_ALL_ROTATIONS() for (int ipsi=0; ipsi<nr_psi; ipsi++ )
 #define FOR_ALL_FLIPS() for (int iflip=0; iflip<nr_flip; iflip++)
 #define FOR_ALL_LIMITED_TRANSLATIONS() for (int itrans=0; itrans<nr_trans; itrans++)
 #define FOR_ALL_DEFOCUS_GROUPS() for (int ifocus=0; ifocus<nr_focus; ifocus++)
 #define SIGNIFICANT_WEIGHT_LOW 1e-8
 #define SMALLVALUE 1e-4
-#define SMALLANGLE 1.75
 #define HISTMIN -6.
 #define HISTMAX 6.
 #define HISTSTEPS 120
 #define DATALINELENGTH 11
 
-#define FOR_ALL_GLOBAL_IMAGES() \
-    for (int imgno = 0; imgno < nr_images_global; imgno++)
-#define FOR_ALL_LOCAL_IMAGES() \
-    for (int imgno = myFirstImg; imgno <= myLastImg; imgno++)
-#define IMG_LOCAL_INDEX (imgno - myFirstImg)
-
 
 /** MLFalign2D parameters. */
-class ProgMLF2D: public XmippProgram
+class ProgMLF2D: public ML2DBaseProgram
 {
 public:
-    /** Filenames reference selfile/image, fraction docfile & output rootname */
-    FileName fn_sel, fn_ref, fn_root, fn_frac, fn_sig, fn_doc, fn_ctfdat, fn_oext;
-    /** Command line */
-    std::string cline;
+
+    FileName fn_ctfdat;
     /** sigma-value for origin offsets */
     double sigma_offset;
     /** Vector containing estimated fraction for each model */
     std::vector<double> alpha_k;
     /** Vector containing estimated fraction for mirror of each model */
     std::vector<double> mirror_fraction;
-    /** Flag for checking mirror images of all references */
-    bool do_mirror;
-    /** Flag whether to fix estimates for model fractions */
-    bool fix_fractions;
-    /** Flag whether to fix estimate for sigma of origin offset */
-    bool fix_sigma_offset;
-    /** Flag whether to fix estimate for sigma of noise */
-    bool fix_sigma_noise;
-    /** Starting iteration */
-    int istart;
-    /** Number of iterations to be performed */
-    int Niter;
-    /** dimension of the images */
-    int dim, dim2, hdim;
     /** Number of steps to sample in-plane rotation in 90 degrees */
-    int nr_psi, max_nr_psi;
-    /** Number of operations in "flip-array" (depending on do_mirror) */
-    int nr_flip;
-    /** Sampling rate for in-plane rotation */
-    float psi_step;
-    /** Total degrees in FOR_ALL_ROTATIONS */
-    double psi_max;
+    int max_nr_psi;
     /** Vary psi and translational sampling with resolution */
     bool do_variable_psi, do_variable_trans;
-    /** Total number of no-mirror rotations in FOR_ALL_FLIPS */
-    int nr_nomirror_flips;
-    /** Number of reference images */
-    int n_ref;
-    /** Total number of experimental images */
-    size_t nr_images_global;
-    /** Total number of local mpi images */
-    size_t nr_images_local;
-    /** First and last images, useful for mpi*/
-    int myFirstImg, myLastImg;
-    /** Stopping criterium */
-    double eps;
-    /** SelFile images (working, test and reference set) */
-    MetaData MDimg, MDref;
-    //Vector of image IDs in the MetaData object (change order for randomize)
-    std::vector<size_t> img_id;
-    /** vector for flipping (i.e. 90/180-degree rotations) matrices */
-    std::vector<Matrix2D<double> > F;
     /** Vector for images to hold references (new & old) */
-    std::vector< Image<double> > Iref, Iold, Ictf;
-    /** Matrices for calculating PDF of (in-plane) translations */
-    MultidimArray<double> P_phi, Mr2;
-    /** Fast mode */
-    bool fast_mode;
-    /** Fast mode */
-    double C_fast;
+    std::vector< Image<double> > Iref, Ictf;
     /** Limit translational searches */
     bool limit_trans;
     /** Number of limited translations */
     int nr_trans;
     /** Number for which limited translation is zero */
     int zero_trans;
-    /** Offsets for limited translations */
-    std::vector<MultidimArray<double> > Vtrans;
     /** Limited search range for origin offsets */
     int search_shift;
     /** Limit orientational searches */
     bool limit_rot;
-    /** Limited search range for projection directions */
-    double search_rot;
-    /** Vectors to store old phi and theta for all images */
-    std::vector<float> imgs_oldphi, imgs_oldtheta;
     /** Number of subdirectories to keep for unique offsets filenames */
     int offsets_keepdir;
-    /** Flag for using ML3D */
-    bool do_ML3D;
-    /** Flag for generation of initial models from random subsets */
-    bool do_generate_refs;
-    /** Vector to store optimal origin offsets (if not written to disc) */
-    std::vector<std::vector<double> > imgs_offsets;
 
     /** CTFDat file for all images */
     //CTFDat ctfdat;
@@ -185,12 +110,6 @@ public:
     int nr_points_prob, nr_points_2d, dnr_points_2d;
     /** Current highest resolution shell */
     int current_highres_limit;
-    /** Random number generator seed */
-    int seed;
-    /** MultidimArray for mpi passing of docfiledata */
-    MultidimArray<double> docfiledata;
-    /** Flag for restart */
-    bool do_restart;
 
     /// IN DEVELOPMENT
 
@@ -202,14 +121,6 @@ public:
     /** Perform sigma-trick for faster convergence (Mclachlan&Peel, p. 228)*/
     bool do_student_sigma_trick;
 
-    /// Re-normalize internally
-    /** Flag to refine normalization of each experimental image */
-    bool do_norm;
-    /** Grey-scale correction values */
-    std::vector<double> imgs_scale, refs_avgscale;
-    /** Overall average scale (to be forced to one)*/
-    double average_scale;
-
     /// Statistical analysis of the noise distributions
     /** Perform Kolmogorov-Smirnov test on noise distribution */
     bool do_kstest;
@@ -219,11 +130,23 @@ public:
     Histogram1D sumhist;
     std::vector<Histogram1D > resolhist;
 
-    /** debug flag */
-    int debug;
+    std::vector<double> refs_avgscale;
 
-    /// Constructor
-    ProgMLF2D(bool ML3D=false);
+    //FIXME try to remove this later
+    int rank, size, nr_vols; //mpi rank, size and 3d number of vols
+
+    /** Taken from expectation and/or maximization */
+    double LL, sumcorr, wsum_sigma_offset, sumw_allrefs;
+    std::vector<MultidimArray<double> > wsum_Mref, wsum_ctfMref;
+    std::vector< std::vector<double> > Mwsum_sigma2;
+    std::vector<double> sumw, sumw2, sumwsc, sumwsc2, sumw_mirror, sumw_defocus;
+    MultidimArray<double> spectral_signal;
+
+    /** Constructor
+     * nr_vols: Used for 3D case, if 0, then doML3D = false
+     * rank and size are for MPI use
+     */
+    ProgMLF2D(int nr_vols = 0, int rank = 0, int size = 1);
     /// Read arguments from command line
     void readParams();
     /// Params definition
@@ -233,18 +156,12 @@ public:
     /// Show
     void show(bool ML3D = false);
 
-    //Run
-    virtual void run();
-
     /// Setup lots of stuff
-    void produceSideInfo(int rank = 0);
+    virtual void produceSideInfo();
 
     /// Read reference images in memory & set offset vectors
     /// (This produce_side_info is Selfile-dependent!)
-    void produceSideInfo2(int nr_vols = 1, int size = 1, int rank = 0);
-
-    /// Randomize image order
-    void randomizeImagesOrder();
+    virtual void produceSideInfo2();
 
     /// Calculate initial sigma2 from average power spectrum of the
     /// experimental images
@@ -263,7 +180,7 @@ public:
 
 
     /// Calculate probability density distribution for in-plane transformations
-    void calculateInPlanePDF();
+    void calculatePdfInplane();
 
     // Append a FourierTransform (in half format!) to a vector
     void appendFTtoVector(const MultidimArray<std::complex<double> > &Fin,
@@ -332,52 +249,25 @@ public:
                          bool do_kstest, bool write_histograms,
                          FileName fn_img, double &KSprob);
 
-    /// Perform Kolmogorov-Smirnov test
+        /// Perform Kolmogorov-Smirnov test
     double performKSTest(MultidimArray<double> &Mimg,  const int focus, bool apply_ctf,
                          FileName &fn_img, bool write_histogram,
                          std::vector <std::vector< MultidimArray<std::complex<double> > > > &Fref,
                          double &opt_scale, int &opt_refno, int &opt_ipsi, int &opt_iflip,
                          MultidimArray<double> &opt_offsets);
 
+    /// One iteration of the process
+    void iteration();
     /// Integrate over all experimental images
-    void expectation(std::vector< Image<double> > &Iref, int iter,
-                     double &LL, double &sumcorr,
-                     std::vector<MultidimArray<double> > &wsum_Mref,
-                     std::vector<MultidimArray<double> > &wsum_ctfMref,
-                     std::vector<std::vector<double> > &Mwsum_sigma2,
-                     double &wsum_sigma_offset,
-                     std::vector<double> &sumw,
-                     std::vector<double> &sumw2,
-                     std::vector<double> &sumwsc,
-                     std::vector<double> &sumwsc2,
-                     std::vector<double> &sumw_mirror,
-                     std::vector<double> &sumw_defocus);
+    void expectation();
 
     /// Update all model parameters (maximization step)
-    void maximization(std::vector<MultidimArray<double> > &wsum_Mref,
-                      std::vector<MultidimArray<double> > &wsum_ctfMref,
-                      std::vector<std::vector<double> > &Mwsum_sigma2,
-                      double &wsum_sigma_offset,
-                      std::vector<double> &sumw,
-                      std::vector<double> &sumw2,
-                      std::vector<double> &sumwsc,
-                      std::vector<double> &sumwsc2,
-                      std::vector<double> &sumw_mirror,
-                      std::vector<double> &sumw_defocus,
-                      double &sumcorr, double &sumw_allrefs,
-                      MultidimArray<double> &spectral_signal,
-                      int refs_per_class=1);
-
-    /// check convergence
-    bool checkConvergence(std::vector<double> &conv);
+    void maximization();
 
     /// Write out reference images, selfile and logfile
-    void writeOutputFiles(const int iter,
-                          double &sumw_allrefs, double &LL, double &avecorr,
-                          std::vector<double> &conv);
+    virtual void writeOutputFiles(const ModelML2D &model, OutputType outputType);
 
-    /// Write partial docfile
-    void addPartialDocfileData(MultidimArray<double> data, int first, int last);
+    virtual void addPartialDocfileData(const MultidimArray<double> &data, int first, int last);
 
 };
 //@}

@@ -50,13 +50,12 @@ void ProgRefine3D::defineParams()
     ml2d->defineAdditionalParams(this, "==++ ML additional options: ==");
 
     addParamsLine("==+ Additional options: ==");
-    addParamsLine(" [ -l <float=0.2> ]            : wlsART-relaxation parameter (lambda)  ");
-    addParamsLine(" [ -k <float=0.5> ]            : wlsART-relaxation parameter for residual (kappa)");
-    addParamsLine(" [ -n <int=10> ]               : Number of wlsART-iterations ");
+    addParamsLine(" [ --wlsART <lambda=0.2> <kappa=0.5> <Niter=10> ] : wlsART-relaxation parameters (lambda and kappa)");
+    addParamsLine(" [                                                : also you can provide the number of iterations");
     addParamsLine(" [ -nostart ]                  : Start wlsART reconstructions from all-zero volumes ");
     addParamsLine(" [ -sym <symfile=c1> ]         : Symmetry group ");
     addParamsLine(" [ -filter <digfreq=-1> ]      : Low-pass filter volume every iteration ");
-    addParamsLine(" [ -sym_mask <maskfile=\"\"> ]      : Local symmetry (only inside mask) ");
+    addParamsLine(" [ -sym_mask <maskfile=\"\"> ] : Local symmetry (only inside mask) ");
     addParamsLine(" [ -tilt0 <float=-91.> ]       : Lower-value for restricted tilt angle search ");
     addParamsLine(" [ -tiltF <float=91.> ]        : Higher-value for restricted tilt angle search ");
     addParamsLine(" [ -perturb ]                  : Randomly perturb reference projection directions ");
@@ -95,7 +94,7 @@ void ProgRefine3D::readParams()
     /*
     if (checkParam( "-restart"))
 {
-        std::string   comment, cline = "";
+        String   comment, cline = "";
         DocFile  DFi;
         FileName fn_tmp;
 
@@ -192,20 +191,7 @@ void ProgRefine3D::readParams()
     {
         // Fill volume selfile
         fn_vol = getParam( "-ref");
-        SFvol.clear();
-        if (fn_vol.isMetaData())
-        {
-            SFvol.read(fn_vol);
-            if (SFvol.containsLabel(MDL_ENABLED))
-                SFvol.removeObjects(MDValueEQ(MDL_ENABLED, -1));
-        }
-        else
-        {
-            size_t id = SFvol.addObject();
-            SFvol.setValue(MDL_IMAGE, fn_vol, id);
-            SFvol.setValue(MDL_ENABLED, 1, id);
-        }
-
+        SFvol.read(fn_vol);
         Nvols = SFvol.size();
     }
 
@@ -318,7 +304,7 @@ void ProgRefine3D::show()
         // Also open and fill history file
         fh_hist.open((fn_root + ".hist").c_str(), std::ios::app);
         if (!fh_hist)
-            REPORT_ERROR(ERR_IO_NOTOPEN, (std::string)"Prog_Refine3d: Cannot open file " + fn_root + ".hist");
+            REPORT_ERROR(ERR_IO_NOTOPEN, (String)"Prog_Refine3d: Cannot open file " + fn_root + ".hist");
         showToStream(fh_hist);
     }
 }
@@ -329,13 +315,10 @@ void ProgRefine3D::produceSideInfo()
     FileName fn_sym_loc;
     // Precalculate sampling
     mysampling.SetSampling(angular);
-    if (fn_symmask != "")
-        fn_sym_loc="c1";
-    else
-        fn_sym_loc=fn_sym;
+    fn_sym_loc = fn_symmask.empty() ? fn_sym : "c1";
 
     if (!mysampling.SL.isSymmetryGroup(fn_sym_loc, symmetry, sym_order))
-        REPORT_ERROR(ERR_NUMERICAL, (std::string)"ml_refine3d::run Invalid symmetry" +  fn_sym_loc);
+        REPORT_ERROR(ERR_NUMERICAL, (String)"ml_refine3d::run Invalid symmetry" +  fn_sym_loc);
     mysampling.SL.read_sym_file(fn_sym_loc);
     mysampling.Compute_sampling_points(true, tilt_rangeF, tilt_range0);
     mysampling.remove_redundant_points_exhaustive(symmetry, sym_order, true, 0.75 * angular);
@@ -355,6 +338,7 @@ void ProgRefine3D::run()
     projectReferenceVolume(ml2d->MDref);
     ml2d->produceSideInfo();
     ml2d->produceSideInfo2();
+    ml2d->refs_per_class = nr_projections;
     ml2d->show();
     Nvols *= ml2d->factor_nref;
     ml2d->Iold.clear(); // To save memory
@@ -388,7 +372,7 @@ void ProgRefine3D::run()
             // Integrate over all images
             ml2d->expectation();
 
-            ml2d->maximizationBlocks(nr_projections);
+            ml2d->maximization();
 
             // Write out 2D reference images (to be used in reconstruction)
             ml2d->writeOutputFiles(ml2d->model, OUT_REFS);
@@ -446,7 +430,6 @@ void ProgRefine3D::projectReferenceVolume(MetaData &SFlib, int rank, int size)
 
     // Here all nodes fill SFlib and DFlib, but each node actually projects
     // only a part of the projections. In this way parallellization is obtained
-
     // Total number of projections
     nl = Nvols * nr_projections;
 
@@ -984,7 +967,7 @@ void ProgRefine3D::postProcessVolumes(int argc, char **argv)
 
     // Use local sampling because of symmask
     if (!locsampling.SL.isSymmetryGroup(fn_sym, symmetry, sym_order))
-        REPORT_ERROR(ERR_NUMERICAL, (std::string)"ml_refine3d::run Invalid symmetry" +  fn_sym);
+        REPORT_ERROR(ERR_NUMERICAL, (String)"ml_refine3d::run Invalid symmetry" +  fn_sym);
     locsampling.SL.read_sym_file(fn_sym);
 
     if ( !(fn_sym == "c1" || fn_sym == "C1" ) || (lowpass > 0) ||
@@ -1003,12 +986,12 @@ void ProgRefine3D::postProcessVolumes(int argc, char **argv)
             vol.write(fn_tmp);
 
             // Symmetrize if requested
-            if (fn_sym != "")
+            if (!fn_sym.empty())
             {
                 Vaux().resize(vol());
                 symmetrizeVolume(locsampling.SL, vol(), Vaux());
                 // Read local symmetry mask if requested
-                if (fn_symmask != "")
+                if (!fn_symmask.empty())
                 {
                     Vsymmask.read(fn_symmask);
                     Vsymmask().setXmippOrigin();
@@ -1041,7 +1024,7 @@ void ProgRefine3D::postProcessVolumes(int argc, char **argv)
             }
 
             // Different types of solvent flattening
-            if (do_prob_solvent || (fn_solv != "") || (threshold_solvent != 999))
+            if (do_prob_solvent || !fn_solv.empty() || (threshold_solvent != 999))
             {
                 if (do_prob_solvent)
                 {

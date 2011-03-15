@@ -36,114 +36,37 @@ pthread_mutex_t refno_mutex =
 ProgML2D::ProgML2D(bool ML3D)
 {
     do_ML3D = ML3D;
+    refs_per_class = 1;
 }
 
-void ProgML2D::defineBasicParams(XmippProgram * prog)
-{
-    //There are some params that are fixed
-    //in the 3D case, for example -fast, -mirror
-    prog->addParamsLine("   -i <selfile>                : Selfile with input images ");
-
-    if (!do_ML3D)
-    {
-        //usage specific to ml2d
-        addUsageLine("+Our recommended way of performing ML alignment is to introduce as little bias in the intial reference(s) as possible.");
-        addUsageLine("+This can be done by calculting average images of random subsets of the (unaligned!) input experimental images, using the --nref option.");
-        addUsageLine("+Note that the estimates for the standard deviation in the noise and in the origin offsets are re-estimated every iteration,");
-        addUsageLine("+so that the initial values should not matter too much, as long as they are \"reasonable\". For Xmipp-normalized images,");
-        addUsageLine("+the standard deviation in the noise can be assumed to be 1. For reasonably centered particles the default value of 3 for");
-        addUsageLine("+the offsets should do the job.");
-        addUsageLine("+");
-        addUsageLine("+The output of the program consists of the refined reference images (weighted averages over all experimental images).");
-        addUsageLine("+The experimental images are not altered at all. In terms of the ML approach, optimal transformations and references for");
-        addUsageLine("+each image do not play the same role as in the conventional cross-correlation (or least-sqaures) approach. This program");
-        addUsageLine("+can also be used for reference-free 2D-alignment using only a single reference: just supply =--nref 1= .");
-        addUsageLine("+Although the calculations can be rather time-consuming (especially for many, large experimental images and a large number of references),");
-        addUsageLine("+we strongly recommend to let the calculations converge. In our experience this takes in the order of 10-100 iterations, depending on the");
-        addUsageLine("+number images, the amount of noise, etc. The default stopping criterium has yielded satisfactory results in our experience. A parallel ");
-        addUsageLine("+version of this program has been implemented.");
-        addSeeAlsoLine("mpi_ml_align2d");
-
-        prog->addParamsLine("   --nref <int=1>               : Number of references to generate automatically (recommended)");
-        prog->addParamsLine("or --ref <selfile=\"\">         : or selfile with initial references/single reference image ");
-        prog->addParamsLine(" [ --oroot <rootname=ml2d> ]        : Output rootname");
-        prog->addParamsLine(" [ --mirror ]                   : Also check mirror image of each reference ");
-        prog->addParamsLine(" [ --fast ]                     : Use pre-centered images to pre-calculate significant orientations.");
-        prog->addParamsLine(":++ If this flag is set part of the integration over all references, rotations and translations is skipped.");
-        prog->addParamsLine(":++ The program will store all (=N_imgs*N_refs=) origin offsets that yield the maximum probability of observing");
-        prog->addParamsLine(":++ each experimental image, given each of the references. In the first iterations a complete integration over");
-        prog->addParamsLine(":++ all references, rotations and translations is performed for all images. In all subsequent iterations, for all");
-        prog->addParamsLine(":++ combinations of experimental images, references and rotations, the probability of observing the image given");
-        prog->addParamsLine(":++ the optimal origin offsets from the previous iteration is calculated. Then, if this probability is not");
-        prog->addParamsLine(":++ considered \"significant\", we assume that none of the other translations will be significant, and we skip");
-        prog->addParamsLine(":++ the integration over the translations. A combination of experimental image, reference and rotation is considered");
-        prog->addParamsLine(":++ as \"significant\" if the probability at the corresponding optimal origin offsets is larger than C times the");
-        prog->addParamsLine(":++ maximum of all these probabilities for that experimental image and reference (by default C=1e-12) This version");
-        prog->addParamsLine(":++ may run up to ten times faster than the original, complete-search approach, while practically identical results may be obtained.");
-
-        addExampleLine("A typical use of this program is:", false);
-        addExampleLine("xmipp_ml_align2d -i input/images_some.stk --ref input/seeds2.stk --oroot output/ml2d --fast --mirror");
-    }
-    else
-    {
-        prog-> addParamsLine("--ref <selfile=\"\">         : or selfile with initial references/single reference image ");
-        prog->addParamsLine("  [ --nref <int=1> ]              : Number of references to generate automatically (recommended)");
-        prog->addParamsLine(" [ --oroot <rootname=ml3d> ]        : Output rootname");
-    }
-    prog->addParamsLine(" [ --thr <N=1> ]                : Use N parallel threads ");
-    prog->addParamsLine(" [ --iem <blocks=1>]            : Number of blocks to be used with IEM");
-
-}
-
-void ProgML2D::defineAdditionalParams(XmippProgram * prog, const char * sectionLine)
-{
-    prog->addParamsLine(sectionLine);
-    prog->addParamsLine(" [ --eps <float=5e-5> ]         : Stopping criterium");
-    if (!do_ML3D)
-        prog->addParamsLine(" [ --iter <int=100> ]           : Maximum number of iterations to perform ");
-    else //Only 25 iterations by default in ml3d
-        prog->addParamsLine(" [ --iter <int=25> ]           : Maximum number of iterations to perform ");
-    prog->addParamsLine(" [ --psi_step <float=5> ]       : In-plane rotation sampling interval [deg]");
-    prog->addParamsLine(" [ --noise <float=1> ]          : Expected standard deviation for pixel noise ");
-    prog->addParamsLine(" [ --offset <float=3> ]         : Expected standard deviation for origin offset [pix]");
-    prog->addParamsLine(" [ --frac <docfile=\"\"> ]      : Docfile with expected model fractions (default: even distr.)");
-    prog->addParamsLine(" [ -C <double=1e-12> ]         : Significance criterion for fast approach ");
-    prog->addParamsLine(" [ --zero_offsets ]             : Kick-start the fast algorithm from all-zero offsets ");
-    if (!do_ML3D)
-    {
-        prog->addParamsLine(" [ --restart <logfile> ]    : restart a run with all parameters as in the logfile ");
-        prog->addParamsLine(" [ --istart <int=1> ]         : number of initial iteration ");
-    }
-    prog->addParamsLine(" [ --fix_sigma_noise ]           : Do not re-estimate the standard deviation in the pixel noise ");
-    prog->addParamsLine(" [ --fix_sigma_offset ]          : Do not re-estimate the standard deviation in the origin offsets ");
-    prog->addParamsLine(" [ --fix_fractions ]             : Do not re-estimate the model fractions ");
-    //prog->addParamsLine(" [ --doc <docfile=\"\"> ]       : Read initial angles and offsets from docfile ");
-    prog->addParamsLine(" [ --student <df=6>]            : Use t-distributed instead of Gaussian model for the noise ");
-    prog->addParamsLine("                                : df = Degrees of freedom for the t-distribution ");
-    prog->addParamsLine(" [ --norm ]                     : Refined normalization parameters for each particle ");
-    prog->addParamsLine(" [ --save_memA ]                : Save memory A");
-
-    if (!do_ML3D)
-        prog->addParamsLine(" [ --save_memB ]                : Save memory B");
-
-
-
-}
 
 void ProgML2D::defineParams()
 {
     addUsageLine("Perform (multi-reference) 2D-alignment using a maximum-likelihood (ML) target function.");
+    addUsageLine("+Our recommended way of performing ML alignment is to introduce as little bias in the intial reference(s) as possible.");
+    addUsageLine("+This can be done by calculting average images of random subsets of the (unaligned!) input experimental images, using the --nref option.");
+    addUsageLine("+Note that the estimates for the standard deviation in the noise and in the origin offsets are re-estimated every iteration,");
+    addUsageLine("+so that the initial values should not matter too much, as long as they are \"reasonable\". For Xmipp-normalized images,");
+    addUsageLine("+the standard deviation in the noise can be assumed to be 1. For reasonably centered particles the default value of 3 for");
+    addUsageLine("+the offsets should do the job.");
+    addUsageLine("+");
+    addUsageLine("+The output of the program consists of the refined reference images (weighted averages over all experimental images).");
+    addUsageLine("+The experimental images are not altered at all. In terms of the ML approach, optimal transformations and references for");
+    addUsageLine("+each image do not play the same role as in the conventional cross-correlation (or least-sqaures) approach. This program");
+    addUsageLine("+can also be used for reference-free 2D-alignment using only a single reference: just supply =--nref 1= .");
+    addUsageLine("+Although the calculations can be rather time-consuming (especially for many, large experimental images and a large number of references),");
+    addUsageLine("+we strongly recommend to let the calculations converge. In our experience this takes in the order of 10-100 iterations, depending on the");
+    addUsageLine("+number images, the amount of noise, etc. The default stopping criterium has yielded satisfactory results in our experience. A parallel ");
+    addUsageLine("+version of this program has been implemented.");
+    addSeeAlsoLine("mpi_ml_align2d");
 
     defineBasicParams(this);
+
     defineAdditionalParams(this, "==+ Additional options ==");
-    addParamsLine("==+++++ Hidden arguments ==");
-    addParamsLine(" [--scratch <scratch=\"\">]");
-    addParamsLine(" [--debug <int=0>]");
-    addParamsLine(" [--no_sigma_trick]");
-    addParamsLine(" [--trymindiff_factor <float=0.9>]");
-    addParamsLine(" [--random_seed <int=-1>]");
-    addParamsLine(" [--search_rot <float=999.>]");
-    addParamsLine(" [--load <N=1>]");
+    defineHiddenParams(this);
+
+    addExampleLine("A typical use of this program is:", false);
+    addExampleLine("xmipp_ml_align2d -i input/images_some.stk --ref input/seeds2.stk --oroot output/ml2d --fast --mirror");
 }
 
 // Read arguments ==========================================================
@@ -200,7 +123,8 @@ void ProgML2D::readParams()
     }
     else
     {
-        istart = getIntParam("--istart");
+        //istart = getIntParam("--istart");
+        istart = 1;
         do_mirror = checkParam("--mirror");
         save_mem2 = checkParam("--save_memB");
         fast_mode = checkParam("--fast");
@@ -413,62 +337,7 @@ void ProgML2D::printModel(const String &msg, const ModelML2D & model)
     model.print();
 }
 
-void ProgML2D::run()
-{
-    int c, nn, imgno, opt_refno;
-    bool converged = false;
-    double aux;
-    FileName fn_img, fn_tmp;
 
-    produceSideInfo();
-    //Do some initialization work
-    produceSideInfo2();
-    //Create threads to be ready for work
-    createThreads();
-
-    // Loop over all iterations
-    for (iter = istart; !converged && iter <= Niter; iter++)
-    {
-        if (verbose)
-            std::cout << "  Multi-reference refinement:  iteration " << iter << " of " << Niter << std::endl;
-
-        for (int refno = 0;refno < model.n_ref; refno++)
-            Iold[refno]() = model.Iref[refno]();
-
-        for (current_block = 0; current_block < blocks; current_block++)
-        {
-            // Integrate over all images
-            expectation();
-            //just for debugging.
-            //std::stringstream ss;
-            //ss << "iter: " << iter << " block: " << current_block;
-
-            //printModel(ss.str() + " BEFORE maximization blocks ", model);
-            // Update model with new estimates
-            maximizationBlocks();
-            // printModel(ss.str() + " AFTER maximization blocks ", model);
-        }//close for blocks
-
-        // Check convergence
-        converged = checkConvergence();
-
-        // Write output files
-        addPartialDocfileData(docfiledata, myFirstImg, myLastImg);
-        writeOutputFiles(model, OUT_ITER);
-
-    } // end loop iterations
-
-    if (verbose)
-    {
-        std::cout << (converged ?
-                      "--> Optimization converged!" :
-                      "--> Optimization was stopped before convergence was reached!")
-        << std::endl;
-    }
-
-    writeOutputFiles(model);
-    destroyThreads();
-}
 
 // Trying to merge produceSideInfo 1 y 2
 void ProgML2D::produceSideInfo()
@@ -510,7 +379,7 @@ void ProgML2D::produceSideInfo()
 
     if (fn_ref.empty())
     {
-      //generate an initial reference just by averaging the experimental images
+        //generate an initial reference just by averaging the experimental images
         FileName fn_tmp;
         Image<double> img, avg(dim, dim);
         avg().initZeros();
@@ -529,29 +398,11 @@ void ProgML2D::produceSideInfo()
         model.Iref[0] = avg;
         fn_ref = fn_root + "_images_average.xmp";
         avg.write(fn_ref);
-//        fn_ref = fn_root + "_it";
-//        fn_ref.compose(fn_ref, 0, "");
-//        fn_tmp = fn_ref + "_ref.xmp";
-//        avg.write(fn_tmp);
-//        fn_ref += "_ref.xmd";
-//        MDref.clear();
-//        size_t id = MDref.addObject();
-//        MDref.setValue(MDL_IMAGE, fn_tmp, id);
-//        MDref.setValue(MDL_ENABLED, 1, id);
-//        MDref.write(fn_ref);
     }
 
     // Print some output to screen
     if (!do_ML3D)
         show();
-}
-
-void ProgML2D::setNumberOfLocalImages()
-{
-    nr_images_local = nr_images_global;
-    //the following will be override in the MPI implementation.
-    //  nr_images_local = divide_equally(nr_images_global, size, rank, myFirstImg,
-    //                                   myLastImg);
 }
 
 void ProgML2D::produceSideInfo2()
@@ -589,60 +440,10 @@ void ProgML2D::produceSideInfo2()
     omask.resize(dim, dim);
     omask.setXmippOrigin();
     BinaryCircularMask(omask, hdim, OUTSIDE_MASK);
+
     // Construct matrices for 0, 90, 180 & 270 degree flipping and mirrors
-    Matrix2D<double> A(3, 3);
-    psi_max = 90.;
-    nr_psi = CEIL(psi_max / psi_step);
-    psi_step = psi_max / nr_psi;
-    nr_flip = nr_nomirror_flips = 4;
-    A.initIdentity();
-    F.push_back(A);
+    initSamplingStuff();
 
-    A(0, 0) = 0.;
-    A(1, 1) = 0.;
-    A(1, 0) = 1.;
-    A(0, 1) = -1;
-    F.push_back(A);
-
-    A(0, 0) = -1.;
-    A(1, 1) = -1.;
-    A(1, 0) = 0.;
-    A(0, 1) = 0;
-    F.push_back(A);
-
-    A(0, 0) = 0.;
-    A(1, 1) = 0.;
-    A(1, 0) = -1.;
-    A(0, 1) = 1;
-    F.push_back(A);
-
-    if (do_mirror)
-    {
-        nr_flip = 8;
-        A.initIdentity();
-        A(0, 0) = -1;
-        F.push_back(A);
-
-        A(0, 0) = 0.;
-        A(1, 1) = 0.;
-        A(1, 0) = 1.;
-        A(0, 1) = 1;
-        F.push_back(A);
-
-        A(0, 0) = 1.;
-        A(1, 1) = -1.;
-        A(1, 0) = 0.;
-        A(0, 1) = 0;
-        F.push_back(A);
-
-        A(0, 0) = 0.;
-        A(1, 1) = 0.;
-        A(1, 0) = -1.;
-        A(0, 1) = -1;
-        F.push_back(A);
-    }
-    // Set limit_rot
-    limit_rot = (search_rot < 180.);
     // Set sigdim, i.e. the number of pixels that will be considered in the translations
     sigdim = 2 * CEIL(model.sigma_offset * (save_mem2 ? 3 : 6));
     ++sigdim; // (to get uneven number)
@@ -788,21 +589,7 @@ void ProgML2D::produceSideInfo2()
     //--------Setup for Docfile -----------
     docfiledata.resize(nr_images_local, DATALINELENGTH);
 
-}//close function newProduceSideInfo
-
-void ProgML2D::randomizeImagesOrder()
-{
-    //This static flag is for only randomize once
-    static bool randomized = true;
-
-    if (!randomized)
-    {
-        srand(seed);
-        //-------Randomize the order of images
-        std::random_shuffle(img_id.begin(), img_id.end());
-        randomized = true;
-    }
-}//close function randomizeImagesOrder
+}//close function produceSideInfo
 
 // Calculate probability density function of all in-plane transformations phi
 void ProgML2D::calculatePdfInplane()
@@ -1308,7 +1095,7 @@ int ProgML2D::getThreadRefnoJob(int &refno)
 }//close function getThreadRefnoJob
 
 ///Function for awake threads for different tasks
-void ProgML2D::awakeThreads(int task, int start_refno, int load)
+void ProgML2D::awakeThreads(ThreadTask task, int start_refno, int load)
 {
     threadTask = task;
     refno_index = start_refno;
@@ -1923,6 +1710,18 @@ void ProgML2D::doThreadESIUpdateRefno()
 
 }//close function doThreadESIUpdateRefno
 
+void ProgML2D::iteration()
+{
+    for (current_block = 0; current_block < blocks; current_block++)
+    {
+        // Integrate over all images
+        expectation();
+
+        //Maximize the model
+        maximization();
+    }//close for blocks
+}
+
 
 void ProgML2D::expectation()
 {
@@ -2168,7 +1967,7 @@ void ProgML2D::expectation()
 
 
 // Update all model parameters
-void ProgML2D::maximization(ModelML2D &local_model)
+void ProgML2D::maximizeModel(ModelML2D &local_model)
 {
 
 #ifdef DEBUG
@@ -2265,14 +2064,14 @@ void ProgML2D::maximization(ModelML2D &local_model)
 #endif
 }//close function maximization
 
-void ProgML2D::maximizationBlocks(int refs_per_class)
+void ProgML2D::maximization()
 {
     bool special_first = (!do_restart && iter == istart);
     ModelML2D block_model(model.n_ref);
 
     if (blocks == 1) //ie not IEM, normal maximization
     {
-        maximization(model);
+        maximizeModel(model);
         // After iteration 0, factor_nref will ALWAYS be one
         factor_nref = 1;
     }
@@ -2287,7 +2086,7 @@ void ProgML2D::maximizationBlocks(int refs_per_class)
             // block_model.print();
         }
 
-        maximization(block_model);
+        maximizeModel(block_model);
         //std::cerr << "====== After maximization model " << current_block <<std::endl;
         //block_model.print();
 
@@ -2314,10 +2113,10 @@ void ProgML2D::maximizationBlocks(int refs_per_class)
     //std::cerr << "======After maximization MODEL: =========" <<std::endl;
     //model.print();
     if (do_norm)
-        correctScaleAverage(refs_per_class);
+        correctScaleAverage();
 }//close function maximizationBlocks
 
-void ProgML2D::correctScaleAverage(int refs_per_class)
+void ProgML2D::correctScaleAverage()
 {
 
     int iclass, nr_classes = ROUND(model.n_ref / refs_per_class);
@@ -2350,54 +2149,6 @@ void ProgML2D::correctScaleAverage(int refs_per_class)
     average_scale /= model.sumw_allrefs;
 }//close function correctScaleAverage
 
-// Check convergence
-bool ProgML2D::checkConvergence()
-{
-
-#ifdef DEBUG
-    std::cerr<<"entering checkConvergence"<<std::endl;
-#endif
-
-    if (iter == 0)
-        return false;
-
-    bool converged = true;
-    double convv;
-    MultidimArray<double> Maux;
-
-    Maux.resize(dim, dim);
-    Maux.setXmippOrigin();
-
-    conv.clear();
-
-    for (int refno = 0; refno < model.n_ref; refno++)
-    {
-        if (model.Iref[refno].weight() > 0.)
-        {
-            Maux = Iold[refno]() * Iold[refno]();
-            convv = 1. / (Maux.computeAvg());
-            Maux = Iold[refno]() - model.Iref[refno]();
-            Maux = Maux * Maux;
-            convv *= Maux.computeAvg();
-            conv.push_back(convv);
-
-            if (convv > eps)
-                converged = false;
-        }
-        else
-        {
-            conv.push_back(-1.);
-        }
-    }
-
-#ifdef DEBUG
-    std::cerr<<"leaving checkConvergence"<<std::endl;
-
-#endif
-
-    return converged;
-}//close function checkConvergence
-
 /// Add docfiledata to docfile
 void ProgML2D::addPartialDocfileData(const MultidimArray<double> &data,
                                      int first, int last)
@@ -2411,7 +2162,6 @@ void ProgML2D::addPartialDocfileData(const MultidimArray<double> &data,
     for (int imgno = first; imgno <= last; imgno++)
     {
         index = imgno - first;
-        //FIXME now directly to MDimg
         size_t id = img_id[imgno];
         MDimg.setValue(MDL_ANGLEROT, dAij(data, index, 0), id);
         MDimg.setValue(MDL_ANGLETILT, dAij(data, index, 1), id);
@@ -2445,7 +2195,7 @@ void ProgML2D::addPartialDocfileData(const MultidimArray<double> &data,
 #define ITER_PREFIX "iter"//formatString("iter%06d", iter)
 #define IS_FINAL outputType == OUT_FINAL
 
-void ProgML2D::writeOutputFiles(const ModelML2D &model, int outputType)
+void ProgML2D::writeOutputFiles(const ModelML2D &model, OutputType outputType)
 {
     FileName fn_tmp, fn_prefix;
     Image<double> Itmp;
@@ -2493,6 +2243,7 @@ void ProgML2D::writeOutputFiles(const ModelML2D &model, int outputType)
     }
 
     const char * rootStr = fn_root.c_str(), * prefixStr = fn_prefix.c_str();
+
     if (write_img_xmd)
     {
         //Write image metadata, for each iteration a new block will be written
@@ -2555,9 +2306,9 @@ void ProgML2D::writeOutputFiles(const ModelML2D &model, int outputType)
         if (write_norm)
             mdLog.setValue(MDL_INTSCALE, average_scale, objId);
         if (fn_prefix.contains("block"))
-            MDref.write(fn_tmp + "_logs.xmd");
+            mdLog.write(fn_tmp + "_logs.xmd");
         else
-            MDref.append(fn_tmp + "_logs.xmd");
+            mdLog.append(fn_tmp + "_logs.xmd");
     }
 
 }//close function writeModel
@@ -2616,222 +2367,3 @@ FileName ProgML2D::getBaseName(String suffix, int number)
     return fn_base;
 }
 
-///////////// ModelML2D Implementation ////////////
-ModelML2D::ModelML2D()
-{
-    n_ref = -1;
-    sumw_allrefs2 = 0;
-    initData();
-
-}//close default constructor
-
-ModelML2D::ModelML2D(int n_ref)
-{
-    sumw_allrefs2 = 0;
-    initData();
-    setNRef(n_ref);
-}//close constructor
-
-void ModelML2D::initData()
-{
-    do_student = do_norm = false;
-    do_student_sigma_trick = true;
-    sumw_allrefs = sigma_noise = sigma_offset = LL = avePmax = 0;
-    dim = 0;
-}//close function initData
-
-/** Before call this function model.n_ref should
- * be properly setted. */
-void ModelML2D::setNRef(int n_ref)
-{
-    Image<double> Iempty;
-    Iempty().initZeros(dim,dim);
-    Iempty().setXmippOrigin();
-    this->n_ref = n_ref;
-    Iref.resize(n_ref, Iempty);
-    alpha_k.resize(n_ref, 0.);
-    mirror_fraction.resize(n_ref, 0.);
-    scale.resize(n_ref, 1.);
-
-}//close function setNRef
-
-void ModelML2D::combineModel(ModelML2D model, int sign)
-{
-    if (n_ref != model.n_ref)
-        REPORT_ERROR(ERR_VALUE_INCORRECT, "Can not add models with different 'n_ref'");
-
-    double sumw, sumw_mirror, sumwsc, sumweight;
-    double wsum_sigma_offset = getWsumSigmaOffset() + sign
-                               * model.getWsumSigmaOffset();
-    double wsum_sigma_noise = getWsumSigmaNoise() + sign
-                              * model.getWsumSigmaNoise();
-    double local_sumw_allrefs = sumw_allrefs + sign * model.sumw_allrefs;
-    double sumfracweight = getSumfracweight() + sign
-                           * model.getSumfracweight();
-
-    for (int refno = 0; refno < n_ref; refno++)
-    {
-        sumweight = Iref[refno].weight() + sign * model.Iref[refno].weight();
-        if (sumweight > 0)
-        {
-            Iref[refno]() = (getWsumMref(refno) + sign * model.getWsumMref(
-                                 refno)) / sumweight;
-            Iref[refno].setWeight(sumweight);
-        }
-        else
-        {
-            //std::cerr << "sumweight: " << sumweight << std::endl;
-            Iref[refno]().initZeros();
-            Iref[refno].setWeight(0);
-        }
-
-        //Get all sums first, because function call will change
-        //after updating model parameters.
-        sumw = getSumw(refno) + sign * model.getSumw(refno);
-        sumw_mirror = getSumwMirror(refno) + sign * model.getSumwMirror(
-                          refno);
-        sumwsc = getSumwsc(refno) + sign * model.getSumwsc(refno);
-
-        //Update parameters
-        //alpha_k[refno] = sumw / local_sumw_allrefs;
-        //mirror_fraction[refno] = sumw_mirror / sumw;
-        updateFractions(refno, sumw, sumw_mirror, local_sumw_allrefs);
-        //scale[refno] = sumwsc / sumw;
-        updateScale(refno, sumwsc, sumw);
-    }
-
-    sumw_allrefs = local_sumw_allrefs;
-    sumw_allrefs2 += sign * model.sumw_allrefs2;
-
-    updateSigmaNoise(wsum_sigma_noise);
-    (wsum_sigma_offset);
-    updateAvePmax(sumfracweight);
-    LL += sign * model.LL;
-
-}//close function combineModel
-
-void ModelML2D::addModel(ModelML2D model)
-{
-    combineModel(model, 1);
-}//close function addModel
-
-void ModelML2D::substractModel(ModelML2D model)
-{
-    combineModel(model, -1);
-}//close function substractModel
-
-double ModelML2D::getSumw(int refno) const
-{
-    return alpha_k[refno] * sumw_allrefs;
-}//close function sumw
-
-double ModelML2D::getSumwMirror(int refno) const
-{
-    return getSumw(refno) * mirror_fraction[refno];
-}//close function sumw_mirror
-
-double ModelML2D::getSumwsc(int refno) const
-{
-    return scale[refno] * getSumw(refno);
-}//close function get_sumwsc
-
-MultidimArray<double> ModelML2D::getWsumMref(int refno) const
-{
-    return Iref[refno]() * Iref[refno].weight();
-}//close function get_wsum_Mref
-
-double ModelML2D::getWsumSigmaOffset() const
-{
-    return sigma_offset * sigma_offset * 2 * sumw_allrefs;
-}//close function get_wsum_sigma_offset
-
-double ModelML2D::getWsumSigmaNoise() const
-{
-    double sum = (do_student && do_student_sigma_trick) ? sumw_allrefs2
-                 : sumw_allrefs;
-    return sigma_noise * sigma_noise * dim * dim * sum;
-}//close function get_wsum_sigma_noise
-
-double ModelML2D::getSumfracweight() const
-{
-    return avePmax * sumw_allrefs;
-}//close function get_sumfracweight
-
-void ModelML2D::updateSigmaOffset(double wsum_sigma_offset)
-{
-    if (sumw_allrefs == 0)
-        REPORT_ERROR(ERR_VALUE_INCORRECT, "'sumw_allrefs' couldn't be zero");
-    sigma_offset = sqrt(wsum_sigma_offset / (2. * sumw_allrefs));
-    if (wsum_sigma_offset < 0.)
-        REPORT_ERROR(ERR_VALUE_INCORRECT, "sqrt of negative 'wsum_sigma_offset'");
-    if (sumw_allrefs < 0.)
-        REPORT_ERROR(ERR_VALUE_INCORRECT, "sqrt of negative 'wsum_sigma_offset'");
-}//close function updateSigmaOffset
-
-void ModelML2D::updateSigmaNoise(double wsum_sigma_noise)
-{
-    // The following converges faster according to McLachlan&Peel (2000)
-    // Finite Mixture Models, Wiley p. 228!
-    double sum = (do_student && do_student_sigma_trick) ? sumw_allrefs2
-                 : sumw_allrefs;
-    if (sum == 0)
-        REPORT_ERROR(ERR_VALUE_INCORRECT, "'sumw_allrefs' couldn't be zero");
-
-    double sigma_noise2 = wsum_sigma_noise / (sum * dim * dim);
-    if (sigma_noise2 < 0.)
-        REPORT_ERROR(ERR_VALUE_INCORRECT, "sqrt of negative 'sigma_noise2'");
-    sigma_noise = sqrt(sigma_noise2);
-}//close function updateSigmaNoise
-
-void ModelML2D::updateAvePmax(double sumfracweight)
-{
-    avePmax = sumfracweight / sumw_allrefs;
-}//close function updateAvePmax
-
-void ModelML2D::updateFractions(int refno, double sumw,
-                                double sumw_mirror, double sumw_allrefs)
-{
-    if (sumw_allrefs == 0)
-    {
-        REPORT_ERROR(ERR_VALUE_INCORRECT, "updateFractions: sumw_allrefs == 0 ");
-    }
-
-    if (sumw > 0.)
-    {
-        alpha_k[refno] = sumw / sumw_allrefs;
-        mirror_fraction[refno] = sumw_mirror / sumw;
-    }
-    else
-    {
-        alpha_k[refno] = 0.;
-        mirror_fraction[refno] = 0.;
-    }
-}//close updateFractions
-
-void ModelML2D::updateScale(int refno, double sumwsc, double sumw)
-{
-    if (do_norm)
-        scale[refno] = (sumw > 0) ? sumwsc / sumw : 1;
-
-}//close function updateScale
-
-void ModelML2D::print() const
-{
-    std::cerr << "sumw_allrefs: " << sumw_allrefs << std::endl;
-    std::cerr << "wsum_sigma_offset: " << getWsumSigmaOffset() << std::endl;
-    std::cerr << "wsum_sigma_noise: " << getWsumSigmaNoise() << std::endl;
-    std::cerr << "sigma_offset: " << sigma_offset << std::endl;
-    std::cerr << "sigma_noise: " << sigma_noise << std::endl;
-    std::cerr << "LL: " << LL << std::endl;
-
-    for (int refno = 0; refno < n_ref; refno++)
-    {
-        std::cerr << "refno:       " << refno << std::endl;
-        std::cerr << "sumw:        " << getSumw(refno) << std::endl;
-        std::cerr << "sumw_mirror: " << getSumwMirror(refno) << std::endl;
-        std::cerr << "alpha_k:        " << alpha_k[refno] << std::endl;
-        std::cerr << "mirror_fraction: " << mirror_fraction[refno] << std::endl;
-
-    }
-
-}//close function print
