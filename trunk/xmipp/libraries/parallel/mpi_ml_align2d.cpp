@@ -47,18 +47,9 @@ void MpiProgML2D::read(int argc, char** argv)
     }
 
     //Send "master" seed to slaves for same randomization
-    if (node->isMaster())
-    {
-        //verbose = 1;
-        for (int slave = 1; slave < node->size; ++slave)
-            MPI_Send(&seed, 1, MPI_INT, slave, TAG_SEED, MPI_COMM_WORLD);
-    }
-    else
-    {
-        verbose = 0;
-        MPI_Status status;
-        MPI_Recv(&seed, 1, MPI_INT, 0, TAG_SEED, MPI_COMM_WORLD, &status);
-    }
+    MPI_Bcast(&seed, 1, MPI_INT, 0, MPI_COMM_WORLD);
+    if (!node->isMaster())
+      verbose = 0;
 }
 
 void MpiProgML2D::setNumberOfLocalImages()
@@ -156,7 +147,7 @@ void MpiProgML2D::addPartialDocfileData(const MultidimArray<double> &data, int f
     }
 }
 
-void MpiProgML2D::writeOutputFiles(const ModelML2D &model, int outputType)
+void MpiProgML2D::writeOutputFiles(const ModelML2D &model, OutputType outputType)
 {
     //All nodes should arrive to writeOutput files at same time
     node->barrierWait();

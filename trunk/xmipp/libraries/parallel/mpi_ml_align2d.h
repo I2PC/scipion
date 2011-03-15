@@ -54,7 +54,7 @@ public:
     /// Add docfiledata to docfile
     void addPartialDocfileData(const MultidimArray<double> &data, int first, int last);
     /// Write model parameters
-    void writeOutputFiles(const ModelML2D &model, int outputType = OUT_FINAL);
+    void writeOutputFiles(const ModelML2D &model, OutputType outputType = OUT_FINAL);
     /// After normal ML2D expectation, data must be collected from nodes
     void expectation();
     //Just for debugging
