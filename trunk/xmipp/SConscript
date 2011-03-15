@@ -544,6 +544,7 @@ ReconsSources = [
 ##    'mlf_align2d.cpp',
     'ml_refine3d.cpp',
     'ml_tomo.cpp',
+    'ml2d.cpp',
     'nma_alignment.cpp',
 #    'phantom_create_micrograph.cpp',
     'phantom_create_random.cpp',
