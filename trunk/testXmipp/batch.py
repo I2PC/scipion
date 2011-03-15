@@ -52,7 +52,7 @@ class Tester:
         # Add all desired tests -------------------------------------------
         self.addProgram("xmipp_angular_continuous_assign")
         self.addTest("-i input/aFewProjections.sel --ref input/phantomBacteriorhodopsin.vol -o %o/assigned_angles.txt")
-    
+
         self.addProgram("xmipp_classify_analyze_cluster")
         self.addTest("-i input/smallStack.stk --ref 1@input/smallStack.stk -o %o/pca.xmd")
 
@@ -72,7 +72,7 @@ class Tester:
 
         self.addProgram("xmipp_image_statistics")
         self.addTest("-i input/smallStack.stk --image_stats %o/stats")
-        
+
         self.addProgram("xmipp_metadata_convert_to_spider")
         self.addTest ("-i input/smallStack.sel -o %o/listNew.doc --action extract_selfile")
         self.addTest ("-i input/smallStack.sel -o %o/listOld.doc --action extract_selfile old")
@@ -88,7 +88,7 @@ class Tester:
         self.addTest ("-i input/mD1.doc --query select \"angleRot > 10 AND anglePsi < 0.5\" -o %o/out.doc")
         self.addTest("-i input/mD1.doc --operate modify_values \"angleRot=(angleRot*3.1416/180.)\" -o %o/out.doc")
         self.addTest("-i input/mD1.doc --operate modify_values \"image=replace(image, 'xmp','spi')\" -o %o/out.doc")
-        
+
         self.addProgram("xmipp_ml_align2d")
         self.addTest("-i input/images_some.stk --ref input/seeds2.stk --oroot %o/ml2d --fast --mirror")
 
@@ -103,6 +103,9 @@ class Tester:
 
         self.addProgram("xmipp_phantom_simulate_microscope")
         self.addTest("-i input/smallStack.stk -o %o/smallStackPlusCtf.stk --ctf input/input.ctfparam" )
+
+        self.addProgram("xmipp_resolution_fsc")
+        self.addTest("--ref input/phantomBacteriorhodopsin.vol -i input/phantomBacteriorhodopsinXray.vol --sam 5.6 --do_dpr --oroot %o/phantomBacteriorhodopsin ")
 
         self.addProgram("xmipp_tomo_align_dual_tilt_series")
         self.addTest("--ref input/tomo_dual_alignment/ref.sel --dual input/tomo_dual_alignment/dual.sel --scale 1")
