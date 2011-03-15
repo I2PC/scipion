@@ -1678,43 +1678,38 @@ void rangeAdjust_within_mask(const MultidimArray<double> *mask,
 }
 
 /************** Program Mask implementation ***********************/
-/* Read Parameters ----------------------------------------------------------------- */
 /* Define Parameters ----------------------------------------------------------------- */
 void ProgMask::defineParams()
 {
+    each_image_produces_an_output = true;
+    save_metadata_stack = true;
+    XmippMetadataProgram::defineParams();
+    Mask::defineParams(this);
+
     addUsageLine("Apply a mask.");
     addExampleLine("Sample at circular mask inside radius 72:", false);
     addExampleLine("xmipp_mask  -i reference.vol -o output_volume.vol --mask circular -72");
     addExampleLine("As above but save mask:", false);
-    addExampleLine("xmipp_mask  -i reference.vol --create_mask  output_volume.vol --mask circular -25");
-    addExampleLine("Mask a selection file:", false);
-    addExampleLine("xmipp_mask  -i t7_10.sel -oext msk --mask circular -72");
+    addExampleLine("xmipp_mask  -i reference.vol --create_mask  output_mask.vol --mask circular -25");
+    addExampleLine("Mask and overwrite a selection file:", false);
+    addExampleLine("xmipp_mask  -i t7_10.sel --mask circular -72");
 
-    addParamsLine("   -i <input_file>           : Input Volume/Image");
-    addParamsLine(" alias --input;");
-    addParamsLine(" [--bn <blockName=\"\">]   : Block name for metadata file");
-    addParamsLine(" alias --blockname;");
-
-    addParamsLine("  [-o <root_file_name>]         : Root for output files");
-    addParamsLine("  [-oext <extension=\"\">] :  Output file format extension.");
     addParamsLine("   [--save_mask]     : Apply and save mask");
-    addParamsLine("   [--dont_apply_geo]    : Dont apply (opposite) geometric transformation as stored in header of 2D-image");
     addParamsLine("   [--create_mask <output_mask_file>]  : Don't apply and save mask");
     addParamsLine("   [--count_above <th>]                : Voxels within mask >= th");
     addParamsLine("   [--count_below <th>]                : Voxels within mask <= th");
     addParamsLine("   [--substitute <val=\"0\">]  : Value outside the mask: userProvidedValue|min|max|avg");
-    Mask::defineParams(this);
+
 }
+
+/* Read Parameters ----------------------------------------------------------------- */
 void ProgMask::readParams()
 {
-    fn_in = getParam("-i");
-    blockName = getParam("--blockname");
-    fn_out = checkParam("-o") ? getParam("-o") : fn_in;
-    oext = getParam("-oext");
+    XmippMetadataProgram::readParams();
+    mask.readParams(this);
 
     save_mask    = checkParam("--save_mask");
     count_above  = checkParam("--count_above");
-    apply_geo    = !checkParam("--dont_apply_geo");
     if (count_above)
         th_above  = getDoubleParam("-count_above");
     count_below  = checkParam("--count_below");
@@ -1726,172 +1721,112 @@ void ProgMask::readParams()
     mask.read(argc, argv);
     str_subs_val = getParam("--substitute");
     count = count_below || count_above;
-
-    mask.readParams(this);
 }
 
-void ProgMask::readParamsMask()
-{}
 
-/* RuMAIN -------------------------------------------------------------------- */
-void ProgMask::run()
+/* Preprocess ------------------------------------------------------------- */
+void ProgMask::preProcess()
 {
-    MetaData        SF_in, SF_out;
-    Image<double>   image;
-    int             max_length = 0;
-    size_t id;
+    int max_length = 0;
 
-    SF_in.read(fn_in, NULL, true);
-    int Nimg=SF_in.size();
-
-    // Mask a selection file ------------------------------------------------
-    if (create_mask && Nimg > 1)
+    if (create_mask && input_is_stack)
         REPORT_ERROR(ERR_MD_NOOBJ, "Mask: Cannot create a mask for a selection file\n");
 
     // Initialize progress bar
     time_config();
-    int i = 0;
-    if (!count && Nimg > 1)
-        init_progress_bar(Nimg);
+    if (!count && input_is_stack)
+        init_progress_bar(mdIn.size());
     else
-        max_length = MaxFileNameLength(SF_in);
-
-    // Output file name
-    if (oext != "" && fn_out == "")
-        fn_out = fn_in.withoutExtension() + "." + oext;
-    else if (oext == "" && fn_out != "")
-    {
-        if (fn_out.getExtension() == "")
-        {
-        	if (fn_in.isMetaData())
-        		fn_out = fn_out + ".stk";
-        	else
-        		fn_out = fn_out + "." + fn_in.getExtension();
-        }
-        // else, nothing to do (fn_out = fn_out)
-    }
-    else if (oext != "" && fn_out != "")
-        fn_out = fn_out.withoutExtension() + "." + oext;
-    else // (oext == "" && fn_out=="")
-        fn_out = fn_in;
-
-    // Process all selfile
-    String format;
-    FOR_ALL_OBJECTS_IN_METADATA(SF_in)
-    {
-        // In and out filenames ...........................................
-        FileName img_in, img_out;
-        SF_in.getValue(MDL_IMAGE, img_in, __iter.objId);
-
-        if (img_in.isInStack())
-        {
-        	img_out.compose(__iter.objId,fn_out);
-            id = SF_out.addObject();
-            SF_out.setValue(MDL_IMAGE,img_out, id);
-        }
-
-        // Read image
-        image.readApplyGeo(SF_in, __iter.objId);
-        image().setXmippOrigin();
-
-        // Generate mask
-        if (ZSIZE(image()) > 1)
-            apply_geo=false;
-        if (apply_geo)
-        {
-            if (mask.x0 + mask.y0 != 0.)
-                REPORT_ERROR(ERR_ARG_INCORRECT, "Mask: -center option cannot be combined with apply_geo; use -dont_apply_geo");
-            else
-                // Read geometric transformation from the image and store for mask
-                image.getTransformationMatrix(mask.mask_geo);
-        }
-        mask.generate_mask(image());
-
-
-        // Apply mask
-        if (!create_mask)
-        {
-            if      (str_subs_val=="min")
-                subs_val=image().computeMin();
-            else if (str_subs_val=="max")
-                subs_val=image().computeMax();
-            else if (str_subs_val=="avg")
-                subs_val=image().computeAvg();
-            else
-                subs_val=textToFloat(str_subs_val);
-            mask.apply_mask(image(), image(), subs_val, apply_geo);
-            if (!count){
-            	if(img_in.isInStack())
-            		image.write(img_out);
-            	else
-            		image.write(fn_out);
-            }
-
-
-        }
-        else
-            mask.write_mask(fn_mask);
-
-        // Count
-        if (count)
-        {
-            if (mask.datatype() == INT_MASK)
-            {
-                int count;
-                std::string elem_type="pixels";
-                if (ZSIZE(image())>1)
-                    elem_type="voxels";
-                if      (count_above && !count_below)
-                {
-                    std::cout << stringToString(fn_in,max_length)
-                    << " number of " << elem_type << " above " << th_above;
-                    count=count_with_mask_above(mask.get_binary_mask(),
-                                                image(),th_above);
-                }
-                else if (count_below && !count_above)
-                {
-                    std::cout << stringToString(fn_in,max_length)
-                    << " number of " << elem_type << " below " << th_below;
-                    count=count_with_mask_below(mask.get_binary_mask(),
-                                                image(),th_below);
-                }
-                else if (count_below && count_above)
-                {
-                    std::cout << stringToString(fn_in,max_length)
-                    << " number of " << elem_type << " above " << th_above
-                    << " and below " << th_below << " = ";
-                    count=count_with_mask_between(mask.get_binary_mask(),
-                                                  image(),th_above,th_below);
-                }
-                std::cout << " = " << count << std::endl;
-            }
-            else
-                std::cerr << "Cannot count pixels with a continuous mask\n";
-        }
-
-        if (i++ % 25 == 0 && !count)
-            progress_bar(i);
-    }
-    if (!count)
-        progress_bar(Nimg);
-
-    if (Nimg>1)
-    {
-    	if (oext != "")
-    		fn_out = fn_out.insertBeforeExtension(oext);
-        fn_out = fn_out + ".doc";
-
-        SF_out.write(fn_out);
-    }
-
-    // Save masks -----------------------------------------------------------
-    if (save_mask)
-        mask.write_mask("mask.spi");
-
-    exit(0);
+        max_length = MaxFileNameLength(mdIn);
 }
 
+/* Postprocess ------------------------------------------------------------- */
+void ProgMask::postProcess()
+{
+    if (!count)
+        progress_bar(mdIn.size());
 
-void ProgMask::processImage(const FileName &fnImg, const FileName &fnImgOut, long int objId)
-{}
+    if (save_mask)
+        mask.write_mask("mask.spi");
+}
+
+/* Process image ------------------------------------------------------------- */
+void ProgMask::processImage(const FileName &fnImg, const FileName &fnImgOut, size_t objId)
+{
+    Image<double> image;
+    image.readApplyGeo(fnImg,mdIn,objId);
+    image().setXmippOrigin();
+
+    // Generate mask
+    if (ZSIZE(image()) > 1)
+        apply_geo=false;
+    if (apply_geo)
+    {
+        if (mask.x0 + mask.y0 != 0.)
+            REPORT_ERROR(ERR_ARG_INCORRECT, "Mask: -center option cannot be combined with apply_geo; use -dont_apply_geo");
+        else
+            // Read geometric transformation from the image and store for mask
+            image.getTransformationMatrix(mask.mask_geo);
+    }
+    mask.generate_mask(image());
+
+    // Apply mask
+    if (!create_mask)
+    {
+        if      (str_subs_val=="min")
+            subs_val=image().computeMin();
+        else if (str_subs_val=="max")
+            subs_val=image().computeMax();
+        else if (str_subs_val=="avg")
+            subs_val=image().computeAvg();
+        else
+            subs_val=textToFloat(str_subs_val);
+
+        mask.apply_mask(image(), image(), subs_val, apply_geo);
+        if (!count)
+            image.write(fnImgOut);
+    }
+    else
+        mask.write_mask(fn_mask);
+
+    // Count
+    if (count)
+    {
+        if (mask.datatype() == INT_MASK)
+        {
+            int count;
+            std::string elem_type="pixels";
+            if (ZSIZE(image())>1)
+                elem_type="voxels";
+            if      (count_above && !count_below)
+            {
+                std::cout << stringToString(fn_in,max_length)
+                << " number of " << elem_type << " above " << th_above;
+                count=count_with_mask_above(mask.get_binary_mask(),
+                                            image(),th_above);
+            }
+            else if (count_below && !count_above)
+            {
+                std::cout << stringToString(fn_in,max_length)
+                << " number of " << elem_type << " below " << th_below;
+                count=count_with_mask_below(mask.get_binary_mask(),
+                                            image(),th_below);
+            }
+            else if (count_below && count_above)
+            {
+                std::cout << stringToString(fn_in,max_length)
+                << " number of " << elem_type << " above " << th_above
+                << " and below " << th_below << " = ";
+                count=count_with_mask_between(mask.get_binary_mask(),
+                                              image(),th_above,th_below);
+            }
+            std::cout << " = " << count << std::endl;
+        }
+        else
+            std::cerr << "Cannot count pixels with a continuous mask\n";
+    }
+
+    if (objId % 25 == 0 && !count)
+        progress_bar(objId);
+}
 

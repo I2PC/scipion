@@ -36,8 +36,8 @@
 /* MAIN -------------------------------------------------------------------- */
 int main(int argc, char **argv)
 {
-    ProgMask program;
-    program.XmippProgram::read(argc, argv);
-    return program.tryRun();
+	ProgMask program;
+	program.read(argc, argv);
+	return program.tryRun();
 }
 
