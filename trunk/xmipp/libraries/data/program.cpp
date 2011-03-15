@@ -278,10 +278,14 @@ void XmippProgram::clearUsage()
 {
     progDef->usageComments.clear();
 }
+void XmippProgram::addParamsLine(const String &line)
+{
+    progDef->pLexer->addLine(line);
+}
 
 void XmippProgram::addParamsLine(const char * line)
 {
-    progDef->pLexer->addLine((std::string)line);
+    progDef->pLexer->addLine((String)line);
 }
 
 void XmippProgram::addKeywords(const char * keywords)

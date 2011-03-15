@@ -137,6 +137,7 @@ public:
     bool existsParam(const char * param);
 
     /** Add a params definition line*/
+    void addParamsLine(const String &line);
     void addParamsLine(const char * line);
 
     /** Get Parameter definition */
