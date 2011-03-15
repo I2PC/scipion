@@ -34,6 +34,87 @@ class ProgResolutionFsc : public XmippProgram
 {
 public:
 
+    FileName    fn_ref, fn_root,fn_img;
+    float       sam;
+    float       max_sam;
+    bool        do_dpr, do_set_of_images;
+
+    FileName    fn_sel;
+    bool        apply_geo;
+
+
+    void defineParams()
+    {
+        apply_geo = true;
+
+        addUsageLine("Calculate the resolution of one or more volumes or images with respect to a single reference.");
+        addUsageLine("+ ");
+        addUsageLine("+Three methods are employed:");
+        addUsageLine("+ ");
+        addUsageLine("+* Differential Phase Residual (DPR)",true);
+        addUsageLine("+In this method the the resolution is defined as the spatial frequency at which the average phase");
+        addUsageLine("+discrepancy between the two transforms exceeds 45 degrees.");
+        addUsageLine("+* Fourier Ring Correlation (FRC)", true);
+        addUsageLine("+In this method the resolution is defined as the spatial frequency at which annular samplings of");
+        addUsageLine("+the two Fourier transforms register negligible cross-correlation.");
+        addUsageLine("+* Spectral Signal-to-Noise Ratio (SSNR)", true);
+        addUsageLine("+This method is based on the measurement of the signal-to-noise ratio as a function of spatial");
+        addUsageLine("+frequency. The SSNR is determined by comparing the Fourier transform of individual images with ");
+        addUsageLine("+that of the global average image. (this option is only available for 2D images not for volumes,");
+        addUsageLine("+ see the program ssnr if you are interested in computing the signal to noise ratio in 3D).");
+        addUsageLine("+ ");
+        addUsageLine("+To calculate \"the resolution of a reconstruction\", use --set_of_images, where the program divides the");
+        addUsageLine("+corresponding set of projection images into two subsets and reconstructs two volumes from these subsets.");
+        addUsageLine("+This program may then be used to calculate the DPR and FRC between these two volumes. The resulting plots");
+        addUsageLine("+are commonly used to assess the high-resolution limit of the initial reconstruction (see Frank's book for more details).");
+        addUsageLine(" ");
+        addUsageLine("The program writes out filename.frc files, for each input volume or image, or selfilename.frc, the");
+        addUsageLine("set_of_images mode. These ACSII files contain the DPR, FRC and SSNR as a function of resolution (in 1/Angstrom).");
+        addUsageLine(" The .frc files also contain a column for the FRC expected for pure noise.");
+
+
+        addSeeAlsoLine("resolution_ssnr");
+
+        addParamsLine("   -i <input_file>           : either an image/volume or a selection file");
+        addParamsLine("   requires --ref;");
+        addParamsLine("or --set_of_images <selfile> : selfile containing a set of 2D-images");
+        addParamsLine("   [--oroot <root_file=\"\">] : Root of the output metadata. If not set, input file rootname is taken.");
+        addParamsLine("   [--ref <input_file>]      : filename for reference image/volume");
+        addParamsLine("   --sam <sampling_rate>     : pixel size (Angstrom)");
+        addParamsLine("   [--dont_apply_geo]        : for 2D-images: do not apply transformation stored in the header");
+        addParamsLine("   [--do_dpr]                : compute dpr, by default only frc is computed");
+        addParamsLine("   [--max_sam <max_sr=-1>]   : set fsc to 0 for frequencies above this one (Angstrom), -1 -> all fequencies");
+
+        addExampleLine("Resolution of subset2.vol volume with respect to subset1.vol reference volume using 5.6 pixel size (in Angstrom):", false);
+        addExampleLine("xmipp_resolution_fsc --ref subset1.vol  -i subset2.vol --sam 5.6 ");
+        addExampleLine("Resolution of a set of images using 5.6 pixel size (in Angstrom):", false);
+        addExampleLine("xmipp_resolution_fsc --set_of_images selfile.sel --sam 5.6");
+    }
+
+
+    void readParams()
+    {
+        sam = getDoubleParam("--sam");
+
+        apply_geo = !checkParam("--dont_apply_geo");
+
+        max_sam = getDoubleParam("--max_sam");
+        do_dpr = checkParam("--do_dpr");
+        do_set_of_images = checkParam("--set_of_images");
+        if(do_set_of_images)
+        {
+            fn_sel = getParam("--set_of_images");
+            if (checkParam("-i") || checkParam("--ref"))
+                REPORT_ERROR(ERR_ARG_INCORRECT, "--set_of_images should not be provided with -i or --ref");
+        }
+        else
+        {
+            fn_ref = getParam("--ref");
+            fn_img = getParam("-i");
+        }
+        fn_root = getParam("--oroot");
+    }
+
     void writeFiles(const FileName &fnRoot,
                     const MultidimArray<double> &freq,
                     const MultidimArray<double> &frc,
@@ -70,59 +151,6 @@ public:
         MD.write(fn_frc);
     }
 
-    FileName    fn_ref, fn_root,fn_img;
-    float       sam;
-    float       max_sam;
-    bool        do_dpr, do_set_of_images;
-
-    FileName    fn_sel;
-    bool        apply_geo;
-
-    void readParams()
-    {
-        sam = getDoubleParam("--sam");
-
-        apply_geo = !checkParam("--dont_apply_geo");
-
-
-        max_sam = getDoubleParam("--max_sam");
-        do_dpr = checkParam("--do_dpr");
-        do_set_of_images = checkParam("--set_of_images");
-        if(do_set_of_images)
-        {
-            fn_sel = getParam("--set_of_images");
-            if (checkParam("-i") || checkParam("--ref"))
-                REPORT_ERROR(ERR_ARG_INCORRECT, "--set_of_images should not be provided with -i or --ref");
-        }
-        else
-        {
-            fn_ref = getParam("--ref");
-            fn_img = getParam("-i");
-        }
-    }
-
-    void defineParams()
-    {
-
-        apply_geo = true;
-
-        addUsageLine("Calculate the resolution of one or more volumes or images with respect to a single reference.");
-        addUsageLine("Example of use: Resolution of subset2.vol volume with respect to subset1.vol reference volume using 5.6 pixel size (in Angstrom)");
-        addUsageLine("   xmipp_resolution_fsc --ref subset1.vol  -i subset2.vol --sam 5.6 ");
-        addUsageLine("Example of use: Resolution of a set of images using 5.6 pixel size (in Angstrom)");
-        addUsageLine("   xmipp_resolution_fsc --set_of_images selfile.sel --sam 5.6 ");
-
-        addParamsLine("   -i <input_file>           : either an image/volume or a selection file");
-        addParamsLine("   requires --ref;");
-        addParamsLine("or --set_of_images <selfile> : SelFile containing a set of 2D-images");
-        addParamsLine("   [--ref <input_file>]        : Filename for reference image/volume");
-        addParamsLine("   --sam <sampling_rate>     : i.e. pixel size (in Angstrom)");
-        addParamsLine("   [--dont_apply_geo]        : for 2D-images: do not apply transformation stored in the header");
-        addParamsLine("   [--do_dpr]                : compute dpr, by default only frc is computed");
-        addParamsLine("   [--max_sam <max_sr=-1>]   : set fsc to 0 for frequencies above this one (Ang), -1-> all fequencies");
-    }
-
-
     bool process_img()
     {
         Image<double>  refI,img;
@@ -139,7 +167,7 @@ public:
 
         MultidimArray<double> freq, frc, dpr, frc_noise, error_l2;
         frc_dpr(refI(), img(), sam, freq, frc, frc_noise, dpr, error_l2);
-        writeFiles(img.name(), freq, frc, frc_noise, dpr, error_l2, max_sam, do_dpr);
+        writeFiles((fn_root.empty())?img.name():fn_root, freq, frc, frc_noise, dpr, error_l2, max_sam, do_dpr);
         return true;
     }
 
@@ -161,7 +189,7 @@ public:
         I1().setXmippOrigin();
         I2().setXmippOrigin();
         frc_dpr(I1(), I2(), sam, freq, frc, frc_noise, dpr,error_l2,do_dpr);
-        writeFiles(fn_sel, freq, frc, frc_noise, dpr,error_l2,max_sam,do_dpr);
+        writeFiles((fn_root.empty())?fn_sel:fn_root, freq, frc, frc_noise, dpr,error_l2,max_sam,do_dpr);
     }
 
     void run()
