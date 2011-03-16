@@ -277,6 +277,7 @@ MpiMetadataProgram::~MpiMetadataProgram()
 {
     delete node;
     delete fileMutex;
+    delete distributor;
 }
 
 void MpiMetadataProgram::read(int argc, char **argv)
@@ -290,6 +291,8 @@ void MpiMetadataProgram::read(int argc, char **argv)
 void MpiMetadataProgram::createTaskDistributor(const MetaData &mdIn)
 {
     int blockSize=mdIn.size()/(node->size*5);
+    if (blockSize<1)
+    	blockSize=1;
     mdIn.findObjects(imgsId);
     distributor = new FileTaskDistributor(mdIn.size(), blockSize, node);
 }
