@@ -1,2 +1,0 @@
-Input File: input/smallStack.stk
-Output File: goldStandard/xmipp_mask_03/outputStack_mask.stk
