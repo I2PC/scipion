@@ -270,9 +270,8 @@ void BinaryFrameMask(MultidimArray<int> &mask,
             (j >= x0 + FIRST_XMIPP_INDEX(Xrect)) && (j <= x0 + LAST_XMIPP_INDEX(Xrect)) &&
             (i >= y0 + FIRST_XMIPP_INDEX(Yrect)) && (i <= y0 + LAST_XMIPP_INDEX(Yrect)) &&
             (k >= z0 + FIRST_XMIPP_INDEX(Zrect)) && (k <= z0 + LAST_XMIPP_INDEX(Zrect));
-        if (in_frame  && mode == INNER_MASK)
-            A3D_ELEM(mask, k, i, j) = 1;
-        else if (!in_frame && mode == OUTSIDE_MASK)
+
+        if ((in_frame  && mode == INNER_MASK) || (!in_frame && mode == OUTSIDE_MASK))
             A3D_ELEM(mask, k, i, j) = 1;
     }
 }
@@ -667,7 +666,6 @@ void Mask::read(int argc, char **argv)
         Yrect = textToInteger(argv[i+3]);
         if (i + 4 < argc)
         {
-        	std::cerr << "HERE" <<std::endl;
             Zrect = textToInteger(argv[i+4]);
             if (argv[i+4][0] != '-')
                 Zrect = ABS(Zrect);
@@ -1689,11 +1687,11 @@ void ProgMask::defineParams()
 
     addUsageLine("Apply a mask.");
     addExampleLine("Sample at circular mask inside radius 72:", false);
-    addExampleLine("xmipp_mask  -i reference.vol -o output_volume.vol --mask circular -72");
+    addExampleLine("xmipp_transform_mask  -i reference.vol -o output_volume.vol --mask circular -72");
     addExampleLine("As above but save mask:", false);
-    addExampleLine("xmipp_mask  -i reference.vol --create_mask  output_mask.vol --mask circular -25");
+    addExampleLine("xmipp_transform_mask  -i reference.vol --create_mask  output_mask.vol --mask circular -25");
     addExampleLine("Mask and overwrite a selection file:", false);
-    addExampleLine("xmipp_mask  -i t7_10.sel --mask circular -72");
+    addExampleLine("xmipp_transform_mask  -i t7_10.sel --mask circular -72");
     addExampleLine("Mask using rectangular mask:", false);
     addExampleLine("xmipp_transform_mask -i singleImage.spi -o salida20.spi --mask rectangular -10 -10");
 
