@@ -906,7 +906,7 @@ private:
         {
             // Image mmapOn is not compatible with Multidimarray mmapOn
             if(data.mmapOn)
-                REPORT_ERROR(ERR_MULTIDIM_DIM,"Image Class::ReadData: mmap option can not be selected simoultanesouslly\
+                REPORT_ERROR(ERR_MULTIDIM_DIM,"Image Class::ReadData: mmap option can not be selected simultaneously\
                              for both Image class and its Multidimarray.");
             if ( NSIZE(data) > 1 )
             {
