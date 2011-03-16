@@ -33,7 +33,7 @@ public:
     bool flipX;
     bool flipY;
     bool flipZ;
-    Image<double> img, imgOut;
+    ImageGeneric img, imgOut;
 
     void defineParams()
     {
@@ -58,7 +58,6 @@ public:
     void processImage(const FileName &fnImg, const FileName &fnImgOut, size_t objId)
     {
         img.read(fnImg);
-std::cerr << "here " << flipX << " " << flipY << " " << flipZ << std::endl;
         if (flipX)
             img().selfReverseX();
         if (flipY)

@@ -128,6 +128,22 @@ public:
         im->resize(Ndim,Zdim,Ydim,Xdim,copy);
     }
 
+    /** Reverse matrix values over X axis, keep in this object. */
+    void selfReverseX()
+    {
+        im->selfReverseX();
+    }
+    /** Reverse matrix values over Y axis, keep in this object. */
+    void selfReverseY()
+    {
+        im->selfReverseY();
+    }
+    /** Reverse matrix values over Z axis, keep in this object. */
+    void selfReverseZ()
+    {
+        im->selfReverseZ();
+    }
+
     /** Get a Window from the image*/
     void window(MultidimArrayGeneric &result, int z0, int y0, int x0,
                 int zF, int yF, int xF,
@@ -253,24 +269,25 @@ public:
 
     /** Copy the image in MultidimarrayGeneric to a specific T MultidimArray
      */
-        template <typename T>
-        void getImage(MultidimArray<T> &M) const
-        {
-    #define TYPECAST(type) typeCast(*(MultidimArray<type>*)(im), M);
-            SWITCHDATATYPE(datatype, TYPECAST)
-    #undef TYPECAST
-        }
+    template <typename T>
+    void getImage(MultidimArray<T> &M) const
+    {
+#define TYPECAST(type) typeCast(*(MultidimArray<type>*)(im), M);
+        SWITCHDATATYPE(datatype, TYPECAST)
+#undef TYPECAST
+
+    }
 
     /** Copy in MultidimarrayGeneric an image from a specific T MultidimArray
      */
-        template <typename T>
-        void setImage(MultidimArray<T> &M)
-        {
-    #define TYPECAST(type) typeCast(M, *(MultidimArray<type>*)(im));
-            SWITCHDATATYPE(datatype, TYPECAST)
-    #undef TYPECAST
+    template <typename T>
+    void setImage(MultidimArray<T> &M)
+    {
+#define TYPECAST(type) typeCast(M, *(MultidimArray<type>*)(im));
+        SWITCHDATATYPE(datatype, TYPECAST)
+#undef TYPECAST
 
-        }
+    }
 
 }
 ;

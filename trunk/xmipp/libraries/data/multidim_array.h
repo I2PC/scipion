@@ -659,6 +659,9 @@ public:
     virtual void clear() = 0;
     virtual void getDimensions(int& Xdim, int& Ydim, int& Zdim, size_t &Ndim) const = 0;
     virtual void resize(size_t Ndim, int Zdim, int Ydim, int Xdim, bool copy=true) = 0;
+    virtual void selfReverseX() = 0;
+    virtual void selfReverseY() = 0;
+    virtual void selfReverseZ() = 0;
     virtual void setXmippOrigin() = 0;
     virtual double computeAvg() const = 0;
 
