@@ -13,8 +13,10 @@ class Tester:
         self.progDict[program] = []
         self.lastProgram = program
 
-    def addTest(self, test):
-        self.progDict[self.lastProgram].append(test)
+    def addTest(self, test, mpi=False):
+        self.progDict[self.lastProgram].append((test,False))
+        if mpi:
+            self.progDict[self.lastProgram].append((test,True))
 
     def runProgramTests(self, program):
         tests = self.progDict[program]
@@ -24,7 +26,7 @@ class Tester:
         testName = ""
 
         testNo = 1
-        for test in tests:
+        for test,mpi in tests:
             if n > 1:
                 outDir = outPath + "_%02d" % testNo
                 testName = "(%d of %d)" % (testNo, n)
@@ -37,7 +39,11 @@ class Tester:
             test = test.replace("%o", outDir)
             test = test.replace("%p", program)
             test = test.replace("%d", self.fnDir)
-            cmd = "%s %s > %s/stdout.txt 2> %s/stderr.txt" % (program, test, outDir, outDir)
+            if mpi:
+                cmd="mpirun -np 3 `which %s`"%program.replace("xmipp_","xmipp_mpi_")
+            else:
+                cmd=program
+            cmd += " %s > %s/stdout.txt 2> %s/stderr.txt" % (test, outDir, outDir)
             print "    Command: "
             print "       ", cmd
             os.system(cmd)
@@ -51,7 +57,7 @@ class Tester:
     def addAllTests(self):
         # Add all desired tests -------------------------------------------
         self.addProgram("xmipp_angular_continuous_assign")
-        self.addTest("-i input/aFewProjections.sel --ref input/phantomBacteriorhodopsin.vol -o %o/assigned_angles.txt")
+        self.addTest("-i input/aFewProjections.sel --ref input/phantomBacteriorhodopsin.vol -o %o/assigned_angles.txt",True)
 
         self.addProgram("xmipp_classify_analyze_cluster")
         self.addTest("-i input/smallStack.stk --ref 1@input/smallStack.stk -o %o/pca.xmd")
