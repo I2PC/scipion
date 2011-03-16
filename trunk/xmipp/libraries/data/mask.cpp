@@ -1694,6 +1694,8 @@ void ProgMask::defineParams()
     addExampleLine("xmipp_mask  -i reference.vol --create_mask  output_mask.vol --mask circular -25");
     addExampleLine("Mask and overwrite a selection file:", false);
     addExampleLine("xmipp_mask  -i t7_10.sel --mask circular -72");
+    addExampleLine("Mask using rectangular mask:", false);
+    addExampleLine("xmipp_transform_mask -i singleImage.spi -o salida20.spi --mask rectangular -10 -10");
 
     addParamsLine("   [--save_mask]     : Apply and save mask");
     addParamsLine("   [--create_mask <output_mask_file>]  : Don't apply and save mask");
