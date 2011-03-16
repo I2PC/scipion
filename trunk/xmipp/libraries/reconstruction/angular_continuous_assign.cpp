@@ -242,6 +242,8 @@ void ProgAngularContinuousAssign::processImage(const FileName &fnImg, const File
     else
         cost=-1;
 
+    newId = mdOut.addObject();
+    mdOut.setValue(MDL_IMAGE,     fnImg,newId);
     mdOut.setValue(MDL_ANGLEROT,  new_rot,newId);
     mdOut.setValue(MDL_ANGLETILT, new_tilt,newId);
     mdOut.setValue(MDL_ANGLEPSI,  new_psi,newId);
