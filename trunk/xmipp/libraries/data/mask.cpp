@@ -598,7 +598,7 @@ void Mask::resize(int Zdim, int Ydim, int Xdim)
     }
 }
 
-
+//#ifdef NEVER
 // Read from command lines -------------------------------------------------
 void Mask::read(int argc, char **argv)
 {
@@ -667,6 +667,7 @@ void Mask::read(int argc, char **argv)
         Yrect = textToInteger(argv[i+3]);
         if (i + 4 < argc)
         {
+        	std::cerr << "HERE" <<std::endl;
             Zrect = textToInteger(argv[i+4]);
             if (argv[i+4][0] != '-')
                 Zrect = ABS(Zrect);
@@ -890,7 +891,7 @@ void Mask::read(int argc, char **argv)
     else
         REPORT_ERROR(ERR_ARG_INCORRECT,"Incorrect mask type");
 }
-
+//#endif
 // Show --------------------------------------------------------------------
 void Mask::show() const
 {
@@ -1083,7 +1084,7 @@ void Mask::defineParams(XmippProgram * program, int allowed_data_types, const ch
         program->addParamsLine("                :if R<0 => inside  R");
         program->addParamsLine("         DWT_circular <R> <smin> <smax>: circle/sphere mask");
         program->addParamsLine("                : smin and smax define the scales to be kept");
-        program->addParamsLine("         rectangular <Xrect> <Yrect> <Zrect=0>: 2D or 3D rectangle");
+        program->addParamsLine("         rectangular <Xrect> <Yrect> <Zrect=-1>: 2D or 3D rectangle");
         program->addParamsLine("                                         :if X,Y,Z > 0 => outside rectangle");
         program->addParamsLine("                                          :if X,Y,Z < 0 => inside rectangle");
         program->addParamsLine("         crown <R1> <R2>    : 2D or 3D crown");
@@ -1173,14 +1174,14 @@ void Mask::readParams(XmippProgram * program)
         Xrect = program->getIntParam("--mask","rectangular",0);
         Yrect = program->getIntParam("--mask","rectangular",1);
         Zrect = program->getIntParam("--mask","rectangular",2);
-        if (Xrect < 0 && Yrect < 0 && Zrect <= 0)
+        if (Xrect < 0 && Yrect < 0 && Zrect <= 1)
         {
             Mask::mode = INNER_MASK;
             Xrect = ABS(Xrect);
             Yrect = ABS(Yrect);
             Zrect = ABS(Zrect);
         }
-        else if (Xrect > 0 && Yrect > 0 && Zrect >= 0)
+        else if (Xrect > 0 && Yrect > 0 && Zrect >= -1)
             Mask::mode = OUTSIDE_MASK;
         else
             REPORT_ERROR(ERR_ARG_INCORRECT, "MaskProgram: cannot determine mode for rectangle");
@@ -1718,7 +1719,7 @@ void ProgMask::readParams()
     create_mask  = checkParam("--create_mask");
     if (create_mask)
         fn_mask  = getParam("--create_mask");
-    mask.read(argc, argv);
+    //mask.read(argc, argv);
     str_subs_val = getParam("--substitute");
     count = count_below || count_above;
 }
