@@ -222,7 +222,7 @@ void ThreadTaskDistributor::unlock()
 bool ThreadTaskDistributor::distribute(size_t &first, size_t &last)
 {
     bool result = true;
-    first = last = -1;
+    first = last = 0;
     if (assignedTasks >= numberOfTasks)
     {
         result = false;
