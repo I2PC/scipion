@@ -79,11 +79,6 @@ class Tester:
         self.addProgram("xmipp_image_statistics")
         self.addTest("-i input/smallStack.stk --image_stats %o/stats")
 
-        self.addProgram("xmipp_mask")
-        self.addTest("-i input/singleImage.spi -o %o/singleImage_mask.xmp --mask circular -15")
-	self.addTest("-i input/phantomBacteriorhodopsin.vol -o %o/outputVol_mask.vol --mask circular -20")
-        self.addTest("-i input/smallStack.stk -o %o/outputStack_mask.stk --mask circular -20")
-
         self.addProgram("xmipp_metadata_convert_to_spider")
         self.addTest ("-i input/smallStack.sel -o %o/listNew.doc --action extract_selfile")
         self.addTest ("-i input/smallStack.sel -o %o/listOld.doc --action extract_selfile old")
@@ -148,6 +143,11 @@ class Tester:
         self.addTest("-i input/phantomBacteriorhodopsin.vol --shift 10 5 -10 -o %o/volume.vol --dont_wrap");
         self.addTest("-i input/header.doc --scale factor 0.5 --oroot %o/halvedOriginal");
         self.addTest("-i input/header.doc --scale fourier 32 --oroot %o/halvedFourierDim");
+
+        self.addProgram("xmipp_transform_mask")
+        self.addTest("-i input/singleImage.spi -o %o/singleImage_mask.xmp --mask circular -15")
+	self.addTest("-i input/phantomBacteriorhodopsin.vol -o %o/outputVol_mask.vol --mask rectangular -20 -20 -20")
+        self.addTest("-i input/smallStack.stk -o %o/outputStack_mask.stk --mask circular -20")
 
         self.addProgram("xmipp_transform_normalize")
         self.addTest("-i input/smallStack.stk -o %o/smallStackNormalized.stk --method NewXmipp --background circle 32")
