@@ -30,10 +30,10 @@
 // Constructor with root, number and extension .............................
 void FileName::compose(const String &str, size_t no, const String &ext)
 {
-  if (no == ALL_IMAGES || no == (size_t) -1)
-    REPORT_ERROR(ERR_DEBUG_TEST, "Don't compose with 0 or -1 index, now images index start at 1");
+    if (no == ALL_IMAGES || no == (size_t) -1)
+        REPORT_ERROR(ERR_DEBUG_TEST, "Don't compose with 0 or -1 index, now images index start at 1");
 
-  *this = (FileName) str;
+    *this = (FileName) str;
 
     if (no != ALL_IMAGES)
         this->append(formatString("%06lu", no));
@@ -45,23 +45,23 @@ void FileName::compose(const String &str, size_t no, const String &ext)
 // Constructor: prefix number and filename, mainly for selfiles..
 void FileName::compose(size_t no , const String &str)
 {
-  if (no == ALL_IMAGES || no == (size_t) -1)
-    REPORT_ERROR(ERR_DEBUG_TEST, "Don't compose with 0 or -1 index, now images index start at 1");
+    if (no == ALL_IMAGES || no == (size_t) -1)
+        REPORT_ERROR(ERR_DEBUG_TEST, "Don't compose with 0 or -1 index, now images index start at 1");
 
     *this = str;
     if (no != ALL_IMAGES)
-      this->assign(formatString("%06lu@%s", no, str.c_str()));
+        this->assign(formatString("%06lu@%s", no, str.c_str()));
 }
 
 // Constructor: prefix number, filename root and extension, mainly for selfiles..
 void FileName::compose(size_t no , const String &str , const String &ext)
 {
-  if (no == ALL_IMAGES || no == (size_t) -1)
-    REPORT_ERROR(ERR_DEBUG_TEST, "Don't compose with 0 or -1 index, now images index start at 1");
+    if (no == ALL_IMAGES || no == (size_t) -1)
+        REPORT_ERROR(ERR_DEBUG_TEST, "Don't compose with 0 or -1 index, now images index start at 1");
 
     *this = str;
     if (no != ALL_IMAGES)
-      this->assign(formatString("%06lu@%s.%s", no, str.c_str(), ext.c_str()));
+        this->assign(formatString("%06lu@%s.%s", no, str.c_str(), ext.c_str()));
 }
 
 
@@ -413,7 +413,9 @@ bool FileName::isStar1(bool failIfNotExists) const
     }
 
     // Search for xmipp_3,
-    getline(infile, line, '\n');
+    char cline[128];
+    infile.getline(cline, 128);
+    line = cline;
     int pos = line.find("XMIPP_STAR_1 *");
 
     return (pos != npos); // xmipp_star_1 token found
