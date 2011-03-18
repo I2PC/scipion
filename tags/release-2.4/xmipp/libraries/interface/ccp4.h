@@ -122,7 +122,7 @@ typedef struct MRCheader
 
     int         nsymbt;             /* Number of bytes used for storing   */
     /* symmetry operators. */
-    unsigned long  user[MRC_USER];  /* For user - all set to zero by default. */
+    unsigned int  user[MRC_USER];  /* For user - all set to zero by default. */
     char        map[4];              /* Char string 'MAP ' to identify file type */
     char        machst[4];           /* Machine stamp indicating the machine type
                       which wrote file
