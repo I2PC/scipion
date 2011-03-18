@@ -4133,7 +4133,7 @@ public:
             mode = 5;
         else
             REPORT_ERROR(ERR_VALUE_INCORRECT,
-                         formatString("Threshold: mode not supported (%s)", type ));
+                         formatString("Threshold: mode not supported (%s)", type.c_str() ));
 
         T* ptr=NULL;
         size_t n;
