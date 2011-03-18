@@ -4194,7 +4194,7 @@ public:
             mode = 5;
         else
             REPORT_ERROR(ERR_VALUE_INCORRECT,
-                         formatString("CountThreshold: mode not supported (%s)", type));
+                         formatString("CountThreshold: mode not supported (%s)", type.c_str()));
 
         size_t ret = 0;
 
