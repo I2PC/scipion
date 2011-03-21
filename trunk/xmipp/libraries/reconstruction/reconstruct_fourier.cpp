@@ -27,54 +27,45 @@
 
 #include "reconstruct_fourier.h"
 
+// Define params
+void ProgRecFourier::defineParams()
+{
+    //usage
+    addUsageLine("Generate 3D reconstructions from projections using direct Fourier interpolation with arbitrary geometry.");
+    addUsageLine("Kaisser-windows are used for interpolation in Fourier space.");
+    //params
+    addParamsLine("   -i <sel_file>                : Selection file with input images");
+    addParamsLine("  [-o <volume_file=\"rec_fourier.vol\">]  : Filename for output volume");
+    addParamsLine("  [--sym <symfile=c1>]              : Enforce symmetry in projections");
+    addParamsLine("  [--padding <proj=2.0> <vol=2.0>]  : Padding used for projections and volume");
+    addParamsLine("  [--prepare_fsc <fscfile>]      : Filename root for FSC files");
+    addParamsLine("  [--max_resolution <p=0.5>]     : Max resolution (Nyquist=0.5)");
+    addParamsLine("  [--weight]                     : Use weights stored in the image headers or doc file");
+    addParamsLine("  [--thr <threads=1> <rows=1>]   : Number of concurrent threads and rows processed at time by a thread");
+    addParamsLine("  [--blob <radius=1.9> <order=0> <alpha=15>] : Blob parameters");
+    addParamsLine( "                                  : radius in pixels, order of Bessel function in blob and parameter alpha");
+    addExampleLine("For reconstruct enforcing i3 symmetry and using stored weights:", false);
+    addExampleLine("   xmipp_reconstruct_fourier  -i reconstruction.sel --sym i3 --weight");
+}
+
 // Read arguments ==========================================================
 void ProgRecFourier::readParams()
 {
     fn_sel = getParam("-i");
-    if(checkParam("--doc"))
-        fn_doc = getParam("--doc");
     fn_out = getParam("-o");
     fn_sym = getParam("--sym");
     if(checkParam("--prepare_fsc"))
         fn_fsc = getParam("--prepare_fsc");
     do_weights = checkParam("--weight");
-    padding_factor_proj = getDoubleParam("--pad_proj");
-    padding_factor_vol = getDoubleParam("--pad_vol");
-    blob.radius   = getDoubleParam("-r");
-    blob.order    = getDoubleParam("-m");
-    blob.alpha    = getDoubleParam("-a");
+    padding_factor_proj = getDoubleParam("--padding", 0);
+    padding_factor_vol = getDoubleParam("--padding", 1);
+    blob.radius   = getDoubleParam("--blob", 0);
+    blob.order    = getDoubleParam("--blob", 1);
+    blob.alpha    = getDoubleParam("--blob", 2);
     maxResolution = getDoubleParam("--max_resolution");
     numThreads = getDoubleParam("--thr");
-    thrWidth = getDoubleParam("--thr_width");
+    thrWidth = getDoubleParam("--thr", 1);
 }
-
-
-// Define params
-void ProgRecFourier::defineParams()
-{
-
-    addUsageLine("Perform direct 3D reconstruction method using ");
-    addUsageLine("   Kaiser windows as interpolators");
-    addUsageLine("Example of use: Reconstruction enforcing i3 symmetry and using stored weights");
-    addUsageLine("   xmipp_reconstruct_fourier  -i reconstruction.sel --sym i3 --weight");
-
-    addParamsLine("   -i <sel_file>                : Selection file with input images");
-    addParamsLine("  [-o <out_vol=\"rec_fourier.vol\">]  : Filename for output volume");
-    addParamsLine("  [--sym <symfile=c1>]              : Enforce symmetry in projections");
-    addParamsLine("  [--pad_proj <p=2.0>]           : Projection padding factor");
-    addParamsLine("  [--pad_vol  <p=2.0>]           : Volume padding factor");
-    addParamsLine("  [--prepare_fsc <fscfile>]      : Filename root for FSC files");
-    addParamsLine("  [--doc <docfile> ]            : Ignore headers and get angles from this docfile");
-    addParamsLine("  [--max_resolution <p=0.5>]     : Max resolution (Nyquist=0.5)");
-    addParamsLine("  [--weight]                     : Use weights stored in the image headers or doc file");
-    addParamsLine("  [--thr <threads=1>]            : Number of concurrent threads");
-    addParamsLine("  [--thr_width <width=1>]    : Number of image rows processed at a time by a thread");
-    //addParamsLine("Interpolation Function");
-    addParamsLine("  [-r <blrad=1.9>]                 : blob radius in pixels");
-    addParamsLine("  [-m <blord=0>]                   : order of Bessel function in blob");
-    addParamsLine("  [-a <blalpha=15>]                : blob parameter alpha");
-}
-
 
 // Show ====================================================================
 void ProgRecFourier::show()
@@ -87,8 +78,6 @@ void ProgRecFourier::show()
         std::cerr << " Input selfile             : "  << fn_sel << std::endl;
         std::cerr << " padding_factor_proj       : "  << padding_factor_proj << std::endl;
         std::cerr << " padding_factor_vol        : "  << padding_factor_vol << std::endl;
-        if (fn_doc != "")
-            std::cerr << " Input docfile         : "  << fn_doc << std::endl;
         std::cerr << " Output volume             : "  << fn_out << std::endl;
         if (fn_sym != "")
             std::cerr << " Symmetry file for projections : "  << fn_sym << std::endl;
@@ -111,13 +100,10 @@ void ProgRecFourier::show()
 // Main routine ------------------------------------------------------------
 void ProgRecFourier::run()
 {
-
     produceSideinfo();
-
     // Process all images in the selfile
     if (verb)
         init_progress_bar(SF.size());
-
     // Create threads stuff
     barrier_init( &barrier, numThreads+1 );
     pthread_mutex_init( &workLoadMutex, NULL );
@@ -136,10 +122,7 @@ void ProgRecFourier::run()
         pthread_create( (th_ids+nt) , NULL, processImageThread, (void *)(th_args+nt) );
     }
 
-    if( fn_fsc != "" )
-        processImages(0,SF.size()-1,true);
-    else
-        processImages(0,SF.size()-1,false);
+    processImages(0, SF.size() - 1, !fn_fsc.empty());
 
     finishComputations(fn_out);
 
@@ -163,12 +146,12 @@ void ProgRecFourier::produceSideinfo()
     SF.read(fn_sel);
 
     // Read docfile and get column numbers
-    if (fn_doc != "")
-    {
-        DF.read(fn_doc);
-        if (SF.size() != DF.size())
-            REPORT_ERROR(ERR_MD_OBJECTNUMBER, "docfile and corresponding selfile have unequal (active) entries");
-    }
+    //    if (fn_doc != "")
+    //    {
+    //        DF.read(fn_doc);
+    //        if (SF.size() != DF.size())
+    //            REPORT_ERROR(ERR_MD_OBJECTNUMBER, "docfile and corresponding selfile have unequal (active) entries");
+    //    }
 
     // Ask for memory for the output volume and its Fourier transform
     size_t objId = SF.firstObject();
@@ -326,43 +309,24 @@ void * ProgRecFourier::processImageThread( void * threadArgs )
 
                 if ( threadParams->imageIndex >= 0 )
                 {
-                    FileName fn_img;
-                    threadParams->selFile->getValue(MDL_IMAGE, fn_img, objId[threadParams->imageIndex] );
-
                     // Read input image
                     double rot, tilt, psi, xoff,yoff,weight;
                     bool flip;
                     Projection proj;
 
-                    if (parent->fn_doc == "")
-                    {
-                        proj.read(fn_img, true); //true means apply shifts
-                        rot  = proj.rot();
-                        tilt = proj.tilt();
-                        psi  = proj.psi();
-                        weight = proj.weight();
-                    }
-                    else
-                    {
-                        proj.read(fn_img, false); // do not apply shifts since they are not in
-                        // the header
-                        parent->get_angles_for_image(fn_img, rot, tilt, psi, xoff, yoff, flip, weight, docFile);
-
-                        proj.setEulerAngles(rot, tilt, psi);
-                        proj.setShifts(xoff,yoff);
-                        proj.setFlip(flip);
-                        proj.setWeight(weight);
-                        proj.getTransformationMatrix(localA,true);
-                        if (!localA.isIdentity())
-                            selfApplyGeometry(BSPLINE3, proj(), localA, IS_INV, WRAP);
-                    }
+                    //Read projection from selfile, read also angles and shifts if present
+                    //but only apply shifts
+                    proj.readApplyGeo(*(threadParams->selFile), objId[threadParams->imageIndex], true);
+                    rot  = proj.rot();
+                    tilt = proj.tilt();
+                    psi  = proj.psi();
+                    weight = proj.weight();
 
                     threadParams->weight = 1.;
 
                     if(parent->do_weights)
                         threadParams->weight = weight;
-
-                    if (!parent->do_weights)
+                    else if (!parent->do_weights)
                     {
                         weight=1.0;
                     }
@@ -585,6 +549,8 @@ void * ProgRecFourier::processImageThread( void * threadArgs )
                                 // Loop within the box
                                 double *ptrIn =(double *)&((*paddedFourier)(i,j));
                                 double blobRadiusSquared = parent->blob.radius * parent->blob.radius;
+                                double iDeltaSqrt = parent->iDeltaSqrt;
+                                Matrix1D<double> & blobTableSqrt = parent->blobTableSqrt;
                                 for (int intz = ZZ(corner1); intz <= ZZ(corner2); intz++)
                                 {
                                     for (int inty = YY(corner1); inty <= YY(corner2); inty++)
@@ -593,15 +559,18 @@ void * ProgRecFourier::processImageThread( void * threadArgs )
                                         {
                                             // Compute distance to the center of the blob
                                             // Compute blob value at that distance
-                                            VECTOR_R3(gcurrent, intx, inty, intz);
-                                            V3_MINUS_V3(gcurrent, real_position, gcurrent);
-                                            double d = (XX(gcurrent) * XX(gcurrent) +
-                                                        YY(gcurrent) * YY(gcurrent) +
-                                                        ZZ(gcurrent) * ZZ(gcurrent));
+                                            double x = intx, y = inty, z = intz;
+                                            x -= XX(real_position);
+                                            y -= YY(real_position);
+                                            z -= ZZ(real_position);
+                                            double d = x * x + y * y + z * z;
+
                                             if (d > blobRadiusSquared)
                                                 continue;
                                             // COSS: *** AVOID THE SQUARE ROOTS
-                                            double w = parent->blobTableSqrt(ROUND(d*parent->iDeltaSqrt));
+                                            int aux = (int)(d * iDeltaSqrt + 0.5);//Same as ROUND but avoid comparison
+                                            //double w = blobTableSqrt((int)aux);
+                                            double w = VEC_ELEM(blobTableSqrt, aux);
                                             //double w = parent->blob_table(ROUND(gcurrent.module()*parent->iDelta));
                                             //if(w<MINIMUMWEIGHT)
                                             //   continue;
@@ -988,8 +957,8 @@ void ProgRecFourier::finishComputations( const FileName &out_name )
     // Correct by the Fourier transform of the blob
     Vout().setXmippOrigin();
     Vout().selfWindow(FIRST_XMIPP_INDEX(imgSize),FIRST_XMIPP_INDEX(imgSize),
-                  FIRST_XMIPP_INDEX(imgSize),LAST_XMIPP_INDEX(imgSize),
-                  LAST_XMIPP_INDEX(imgSize),LAST_XMIPP_INDEX(imgSize));
+                      FIRST_XMIPP_INDEX(imgSize),LAST_XMIPP_INDEX(imgSize),
+                      LAST_XMIPP_INDEX(imgSize),LAST_XMIPP_INDEX(imgSize));
     double pad_relation= ((double)padding_factor_proj/padding_factor_vol);
     pad_relation = (pad_relation * pad_relation * pad_relation);
 
