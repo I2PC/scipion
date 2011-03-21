@@ -117,7 +117,6 @@ void ProgRecFourier::run()
         // Passing parameters to each thread
         th_args[nt].parent = this;
         th_args[nt].myThreadID = nt;
-        th_args[nt].docFile = new MetaData(DF);
         th_args[nt].selFile = new MetaData(SF);
         pthread_create( (th_ids+nt) , NULL, processImageThread, (void *)(th_args+nt) );
     }
@@ -144,14 +143,6 @@ void ProgRecFourier::produceSideinfo()
 
     // Read the input images
     SF.read(fn_sel);
-
-    // Read docfile and get column numbers
-    //    if (fn_doc != "")
-    //    {
-    //        DF.read(fn_doc);
-    //        if (SF.size() != DF.size())
-    //            REPORT_ERROR(ERR_MD_OBJECTNUMBER, "docfile and corresponding selfile have unequal (active) entries");
-    //    }
 
     // Ask for memory for the output volume and its Fourier transform
     size_t objId = SF.firstObject();

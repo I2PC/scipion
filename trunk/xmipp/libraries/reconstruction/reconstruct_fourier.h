@@ -74,10 +74,8 @@ struct ImageThreadParams
     int read;
     Matrix2D<double> * localAInv;
     int imageIndex;
-    MetaData * docFile;
     double weight;
     double localweight;
-
     MetaData * selFile;
 };
 
@@ -90,9 +88,6 @@ public:
 
     /** SelFile containing all projections */
     MetaData SF;
-
-    /** DocFile containing all angles */
-    MetaData DF;
 
     /** verbosity flag */
     int verb;
