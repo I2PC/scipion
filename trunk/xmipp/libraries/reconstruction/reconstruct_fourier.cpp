@@ -282,7 +282,6 @@ void * ProgRecFourier::processImageThread( void * threadArgs )
     MultidimArray<double> localPaddedImg;
     FourierTransformer localTransformerImg;
 
-    MetaData * docFile = threadParams->docFile;
     std::vector<size_t> objId;
 
     threadParams->selFile->findObjects(objId);
