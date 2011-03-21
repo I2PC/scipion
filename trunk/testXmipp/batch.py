@@ -59,6 +59,9 @@ class Tester:
         self.addProgram("xmipp_angular_continuous_assign")
         self.addTest("-i input/aFewProjections.sel --ref input/phantomBacteriorhodopsin.vol -o %o/assigned_angles.txt",True)
 
+        self.addProgram("xmipp_angular_project_library")
+        self.addTest("-i input/phantomBacteriorhodopsin.vol -o %o/output_projections.stk --sym c6 --sampling_rate 5")
+
         self.addProgram("xmipp_classify_analyze_cluster")
         self.addTest("-i input/smallStack.stk --ref 1@input/smallStack.stk -o %o/pca.xmd")
 
