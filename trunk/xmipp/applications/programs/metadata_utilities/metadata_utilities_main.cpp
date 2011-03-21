@@ -50,11 +50,11 @@ protected:
         addUsageLine("the original metadata will be modified after applying some operations.");
         addUsageLine("Also you can use the --print option just to print out the result metadata to screen.");
         addUsageLine("The combination of -i and -o without other operations can serve to extract data blocks");
-        addUsageLine("inside a medata and write to an independet one.");
+        addUsageLine("inside a medata and write to an independent one.");
         addSeeAlsoLine("metadata_import");
 
         addParamsLine(" -i <metadata>                          : Input metadata file");
-        addParamsLine("   [-o  <metadata>]                    : Output metadata file, if not provided result will be printed on screen");
+        addParamsLine("   [-o  <metadata>]                    : Output metadata file, if not provided result will overwritten");
 
         addParamsLine("  [--set <set_operation> <md2_file> <label=image>]   : Set operations");
         addParamsLine("         where <set_operation>");
