@@ -112,12 +112,13 @@ void ProgProjectTomography::run()
             proj.write(fn_proj, ALL_IMAGES, !projParam.singleProjection, WRITE_REPLACE);
             projMD.setValue(MDL_IMAGE,fn_proj,objId);
         }
-        projMD.setValue(MDL_ANGLEROT,tRot,objId);
-        projMD.setValue(MDL_ANGLETILT,tTilt,objId);
-        projMD.setValue(MDL_ANGLEPSI,tPsi,objId);
-        projMD.setValue(MDL_ANGLEROT2,rot,objId);
-        projMD.setValue(MDL_ANGLETILT2,tilt,objId);
-        projMD.setValue(MDL_ANGLEPSI2,psi,objId);
+
+        projMD.setValue(MDL_ANGLEROT,rot,objId);
+        projMD.setValue(MDL_ANGLETILT,tilt,objId);
+        projMD.setValue(MDL_ANGLEPSI,psi,objId);
+        projMD.setValue(MDL_ANGLEROT2,tRot,objId);
+        projMD.setValue(MDL_ANGLETILT2,tTilt,objId);
+        projMD.setValue(MDL_ANGLEPSI2,tPsi,objId);
         projMD.setValue(MDL_SHIFTX,shiftX,objId);
         projMD.setValue(MDL_SHIFTY,shiftY,objId);
 
@@ -138,7 +139,10 @@ void ProgProjectTomography::run()
         progress_bar(expectedNumProjs);
 
     if (!projParam.singleProjection)
+    {
+        projMD.setComment("Angles rot,tilt and psi contain noisy projection angles and rot2,tilt2 and psi2 contain actual projection angles");
         projMD.write(projParam.fnRoot + ".sel");
+    }
 
     return;
 }

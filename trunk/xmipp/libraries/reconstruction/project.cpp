@@ -743,12 +743,15 @@ int PROJECT_Effectively_project(const std::string &fnOut,
         }
 
         // Add noise in angles and voxels ....................................
-        rot  += rnd_gaus(prm.rot_range.Navg,  prm.rot_range.Ndev);
-        tilt += rnd_gaus(prm.tilt_range.Navg, prm.tilt_range.Ndev);
-        psi  += rnd_gaus(prm.psi_range.Navg,  prm.psi_range.Ndev);
         SF.setValue(MDL_ANGLEROT2,rot,DFmov_objId);
         SF.setValue(MDL_ANGLETILT2,tilt,DFmov_objId);
         SF.setValue(MDL_ANGLEPSI2,psi,DFmov_objId);
+        rot  += rnd_gaus(prm.rot_range.Navg,  prm.rot_range.Ndev);
+        tilt += rnd_gaus(prm.tilt_range.Navg, prm.tilt_range.Ndev);
+        psi  += rnd_gaus(prm.psi_range.Navg,  prm.psi_range.Ndev);
+        SF.setValue(MDL_ANGLEROT,rot,DFmov_objId);
+        SF.setValue(MDL_ANGLETILT,tilt,DFmov_objId);
+        SF.setValue(MDL_ANGLEPSI,psi,DFmov_objId);
         proj.setEulerAngles(rot, tilt, psi);
         proj.setShifts(-shiftX,-shiftY);
         IMGMATRIX(proj).addNoise(prm.Npixel_avg, prm.Npixel_dev, "gaussian");
@@ -833,6 +836,7 @@ int ROUT_project(ProgProject &prm, Projection &proj, MetaData &SF)
             FileName mdName = prm.fnOut.removeAllExtensions() + ".sel";
             ProjNo = PROJECT_Effectively_project(stackName, prm.singleProjection,
                                                  proj_prm, side, crystal_proj_prm, proj, SF);
+            SF.setComment("Angles rot,tilt and psi contain noisy projection angles and rot2,tilt2 and psi2 contain actual projection angles");
             SF.write(mdName);
         }
     }
