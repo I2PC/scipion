@@ -38,7 +38,6 @@ ProgAngularDiscreteAssign::ProgAngularDiscreteAssign()
 {
     produces_an_output = true;
     each_image_produces_an_output = false;
-    save_metadata_stack = true;
 }
 
 // Read arguments ==========================================================
@@ -89,17 +88,31 @@ void ProgAngularDiscreteAssign::show()
 void ProgAngularDiscreteAssign::defineParams()
 {
     addUsageLine("Make a projection assignment using wavelets on a discrete library of projections");
+    addUsageLine("+This program assigns Euler angles to experimental projections by matching ");
+    addUsageLine("+with ideal projections. This matching is done via a DWT correlation. For ");
+    addUsageLine("+every experimental projection, different in-plane rotations and shifts are ");
+    addUsageLine("+tried (by exhaustive search). For each possible combination of these two ");
+    addUsageLine("+variables, the best correlating ideal projection is sought using a fast ");
+    addUsageLine("+multirresolution algorithm.");
+    addUsageLine("+The method is fully described at http://www.ncbi.nlm.nih.gov/pubmed/15099579");
 	defaultComments["-i"].clear();
 	defaultComments["-i"].addComment("List of images to align");
+	defaultComments["-i"].addComment("+ Alignment parameters can be provided ");
+	defaultComments["-i"].addComment("+ Only the shifts are taken in consideration ");
+	defaultComments["-i"].addComment("+ in global searches; in local searches, all ");
+	defaultComments["-i"].addComment("+ parameters in the initial docfile are considered.");
 	defaultComments["-o"].clear();
 	defaultComments["-o"].addComment("Metadata with output alignment");
     XmippMetadataProgram::defineParams();
-    addParamsLine("   --ref <selfile>             : Selfile with the reference images");
+    addParamsLine("   --ref <selfile>             : Metadata with the reference images and their angles");
+    addParamsLine("                               :+Must be created with [[angular_project_library_v3][angular_project_library]]");
     addParamsLine("  [--sym <symmetry_file=\"\">] : Symmetry file if any");
+    addParamsLine("                               :+The definition of the symmetry is described at [[transform_symmetrize_v3][transform_symmetrize]]");
     addParamsLine("  [--max_shift_change <r=0>]   : Maximum change allowed in shift");
     addParamsLine("  [--psi_step <ang=5>]         : Step in psi in degrees");
     addParamsLine("  [--shift_step <r=1>]         : Step in shift in pixels");
     addParamsLine("==+Extra parameters==");
+    addParamsLine("  [--search5D]                 : Perform a 5D search instead of 3D+2D");
     addParamsLine("  [--max_proj_change <ang=-1>] : Maximum change allowed in rot-tilt");
     addParamsLine("  [--max_psi_change <ang=-1>]  : Maximum change allowed in psi");
     addParamsLine("  [--keep <th=50>]             : How many images are kept each round (%)");
@@ -111,7 +124,9 @@ void ProgAngularDiscreteAssign::defineParams()
     addParamsLine("  [--show_psi_shift]           : Show the psi-shift process");
     addParamsLine("  [--show_options]             : Show final options among which");
     addParamsLine("                               : the angles are selected");
-    addParamsLine("  [--search5D]                 : Perform a 5D search instead of 3D+2D");
+    addExampleLine("Typical use:",false);
+    addExampleLine("xmipp_angular_project_library -i referenceVolume.vol -o reference.stk --sampling_rate 5");
+    addExampleLine("xmipp_angular_discrete_assign -i projections.sel -o discrete_assignment.xmd --ref reference.doc");
 }
 
 // Produce side information ================================================
@@ -285,8 +300,21 @@ void ProgAngularDiscreteAssign::refine_candidate_list_with_correlation(
         if (candidate_list[i])
         {
             double sumxyp = 0.0;
-            for (int j = 0; j < dimp; j++)
-                sumxyp += VEC_ELEM(dwt,j) * DIRECT_A2D_ELEM(library_m,i, j);
+            // Loop unrolling
+            unsigned long jmax=4*(dimp/4);
+            for (int j = 0; j < dimp; j+=4)
+            {
+            	int j_1=j+1;
+            	int j_2=j+2;
+            	int j_3=j+3;
+                sumxyp += VEC_ELEM(dwt,j)   * DIRECT_A2D_ELEM(library_m,i, j) +
+                          VEC_ELEM(dwt,j_1) * DIRECT_A2D_ELEM(library_m,i, j_1) +
+                          VEC_ELEM(dwt,j_2) * DIRECT_A2D_ELEM(library_m,i, j_2) +
+                          VEC_ELEM(dwt,j_3) * DIRECT_A2D_ELEM(library_m,i, j_3);
+            }
+            for (int j = jmax+1;j<dimp;++j)
+                sumxyp += VEC_ELEM(dwt,j)   * DIRECT_A2D_ELEM(library_m,i, j);
+
             sumxy[i] += sumxyp;
 
             double corr = sumxy[i] / sqrt(DIRECT_A2D_ELEM(library_power,i, m) *
@@ -1011,17 +1039,19 @@ void ProgAngularDiscreteAssign::processImage(const FileName &fnImg, const FileNa
     }
 
     // Save results
-    mdIn.setValue(MDL_ANGLEROT,  best_rot, objId);
-    mdIn.setValue(MDL_ANGLETILT, best_tilt, objId);
-    mdIn.setValue(MDL_ANGLEPSI,  best_psi, objId);
-    mdIn.setValue(MDL_SHIFTX,    best_shiftX, objId);
-    mdIn.setValue(MDL_SHIFTY,    best_shiftY, objId);
-    mdIn.setValue(MDL_MAXCC,     best_score, objId);
+    newId = mdOut.addObject();
+    mdOut.setValue(MDL_IMAGE,     fnImg,newId);
+    mdOut.setValue(MDL_ANGLEROT,  best_rot, newId);
+    mdOut.setValue(MDL_ANGLETILT, best_tilt, newId);
+    mdOut.setValue(MDL_ANGLEPSI,  best_psi, newId);
+    mdOut.setValue(MDL_SHIFTX,    best_shiftX, newId);
+    mdOut.setValue(MDL_SHIFTY,    best_shiftY, newId);
+    mdOut.setValue(MDL_MAXCC,     best_score, newId);
 }
 #undef DEBUG
 
 // Finish processing ---------------------------------------------------------
 void ProgAngularDiscreteAssign::postProcess()
 {
-    mdIn.write(fn_out);
+    mdOut.write(fn_out);
 }
