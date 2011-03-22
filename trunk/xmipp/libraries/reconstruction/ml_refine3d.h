@@ -26,57 +26,46 @@
 #ifndef _ML_REFINE3D_H
 #define _ML_REFINE3D_H
 
-#include <data/fft.h>
-#include <data/args.h>
-#include <data/funcs.h>
-#include <data/metadata.h>
-#include <data/image.h>
-#include <data/filters.h>
-#include <data/mask.h>
-#include <data/morphology.h>
-#include <data/grids.h>
-#include <data/blobs.h>
-#include <data/symmetries.h>
-#include <data/sampling.h>
-#include <data/projection.h>
-#include "directions.h"
-#include "reconstruct_art.h"
-#include "reconstruct_fourier.h"
 #include "ml_align2d.h"
 #include "mlf_align2d.h"
-#include "symmetrize.h"
-#include "volume_segment.h"
+#include <data/sampling.h>
+#include "recons.h"
 
-#include <vector>
+//types of reconstructions to be used
+#define RECONS_ART 0
+#define RECONS_FOURIER 1
+
+
 
 /**@defgroup Refine3d ml_refine3d (Maximum likelihood 3D refinement)
    @ingroup ReconsLibrary */
 //@{
 /** Refine3d parameters. */
-class ProgRefine3D: public XmippProgram
+class ProgMLRefine3D: public XmippProgram
 {
 
 public:
-    // Filename for reference volume, symmetry file and output rootname
-    FileName fn_sel, fn_vol, fn_sym, fn_root, fn_solv, fn_iter, fn_symmask;
-    // Selfile with reference volumes
-    MetaData SFvol;
+    // Filenames for input images, reference volumes, symmetry file and output rootname
+    FileName fn_sel, fn_ref, fn_sym, fn_root, fn_solv, fn_iter, fn_symmask;
+    // Metadata with reference volumes
+    MetaData mdVol;
     // Number of volumes to refine
     int Nvols;
     // Iteration numbers
-    int istart, Niter;
+    int iter, istart, Niter;
     // Convergence check
     double eps;
     // Angular sampling interval (degree)
     double angular;
-    /// File handler for the history file
-    std::ofstream fh_hist;
-    // Use fourier-interpolation instead of WLS-ART for reconstruction in ML
-    bool reconstruct_fourier;
+    // Type of reconstruction to use
+    int recons_type;
     // Low-pass filter digital frequency
     double lowpass;
     // For user-provided tilt range
     double tilt_range0, tilt_rangeF;
+    // Parameters of wlsart reconstruction
+    double wlsart_lambda, wlsart_kappa;
+    int wlsart_Niter;
     // Do not use a starting volume in wlsART reconstruction
     bool wlsart_no_start;
     // Threshold for flooding-like solvent mask
@@ -101,6 +90,9 @@ public:
     // Number of reference projections per 3D model
     int nr_projections;
 
+    //MPI related stuff
+    int rank, size;
+
     // A pointer to the 2D alignment and classification program
     ML2DBaseProgram * ml2d;
 
@@ -111,53 +103,65 @@ private:
 public:
     /// Empty constructor, call the constructor of ProgML2D
     /// with the ML3D flag set to true
-    ProgRefine3D(bool fourier = false);
+    ProgMLRefine3D(bool fourier = false);
     /** Destructor */
-    ~ProgRefine3D();
-
-    /// Read additional arguments for 3D-process from command line
-    void readParams();
-
+    ~ProgMLRefine3D();
     /// Define the parameters accepted
     void defineParams();
-
-    /// MLF Usage
-    void MLF_usage();
-
+    /// Read additional arguments for 3D-process from command line
+    void readParams();
     /// Show
     void show();
 
+    /// Create sampling for projecting volumes
+    void createSampling();
     //Call produceSideInfo of ML2D and
     // Fill sampling and create DFlib
     virtual void produceSideInfo();
+    virtual void produceSideInfo2();
 
-    /// Project the reference volume in evenly sampled directions
-    void projectReferenceVolume(MetaData &SFlib, int rank = 0, int size = 1) ;
+    ///Provides implementation of the run function
+    void run();
+
+    /// Project the reference volumes in evenly sampled directions
+    /// fill the metadata mdProj with the projections data
+    void projectVolumes(MetaData &mdProj) ;
 
     /// (For mpi-version only:) calculate noise averages and write to disc
     void makeNoiseImages(std::vector<Image<double>  > &Iref) ;
 
+    /// Create the program to be used for reconstruction of the volumes
+    virtual ProgReconsBase * createReconsProgram();
+
     /// reconstruction by (weighted ART) or Fourier interpolation
-    void reconstruction(int argc, char **argv,
-                        int iter, int volno, int noise = 0);
+    /// the metadata filename with volumes to reconstruct should be passed
+    /// along with the base filename for reconstructed volumes
+    void reconstructVolumes(const MetaData &mdProj, const FileName &outBase);
 
     /// Calculate 3D SSNR according to Unser ea. (2005)
-    void calculate3DSSNR(MultidimArray<double> &spectral_signal, int iter);
+    void calculate3DSSNR(MultidimArray<double> &spectral_signal);
 
-    /// After reconstruction update reference volume selfile
-    void remakeSFvol(int iter, bool rewrite = false, bool include_noise = false) ;
+    /** Copy reference volumes before start processing */
+    void copyVolumes();
+    /** Update the metadata with reference volumes */
+    void updateVolumesMetadata();
 
-    /// Merge MLalign2D classification selfiles into volume classes
-    void concatenateSelfiles(int iter);
 
-    /// Maksing, filtering etc. of the volume
-    void postProcessVolumes(int argc, char **argv) ;
+
+    /// Masking, filtering etc. of the volume
+    void postProcessVolumes();
 
     /// Convergency check
-    bool checkConvergence(int iter) ;
+    bool checkConvergence() ;
 
-    ///Provides implementation of the run function
-    void run();
+
+
+    /**** DEPRECATED *****/
+//    /// After reconstruction update reference volume selfile
+//    void remakeSFvol(int iter, bool rewrite = false, bool include_noise = false);
+//
+//    /// Merge MLalign2D classification selfiles into volume classes
+//    void concatenateSelfiles(int iter);
 };
 //@}
 #endif
