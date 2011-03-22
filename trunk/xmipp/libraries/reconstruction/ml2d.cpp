@@ -204,13 +204,9 @@ void ML2DBaseProgram::run()
 void ML2DBaseProgram::defineBasicParams(XmippProgram * prog)
 {
     prog->addParamsLine("   -i <input_file>                : Metadata or stack with input images ");
-    if (referenceExclusive)
-    {
-        prog->addParamsLine("   --nref <int=1>               : Number of references to generate automatically (recommended)");
-        prog->addParamsLine("or --ref <reference_file=\"\">  : Image, stack or metadata with initial(s) references(s)");
-    }
-    else
-        prog->addParamsLine("--ref <refence_file> <nref=1> : Volume, stack or metadata with initial volume references");
+    String orStr = (referenceExclusive) ? "or" : "";
+    prog->addParamsLine("   --nref <int=1>               : Number of references to generate automatically (recommended)");
+    prog->addParamsLine(orStr + " --ref <reference_file=\"\">  : Image, stack or metadata with initial(s) references(s)");
 
     prog->addParamsLine(formatString(" [ --oroot <rootname=%s> ]    : Output rootname", defaultRoot.c_str()));
     prog->addParamsLine(" [ --mirror ]                   : Also check mirror image of each reference ");
@@ -264,14 +260,14 @@ void ML2DBaseProgram::defineAdditionalParams(XmippProgram * prog, const char * s
 
 void ML2DBaseProgram::defineHiddenParams(XmippProgram *prog)
 {
-  addParamsLine("==+++++ Hidden arguments ==");
-  addParamsLine(" [--scratch <scratch=\"\">]");
-  addParamsLine(" [--debug <int=0>]");
-  addParamsLine(" [--no_sigma_trick]");
-  addParamsLine(" [--trymindiff_factor <float=0.9>]");
-  addParamsLine(" [--random_seed <int=-1>]");
-  addParamsLine(" [--search_rot <float=999.>]");
-  addParamsLine(" [--load <N=1>]");
+    addParamsLine("==+++++ Hidden arguments ==");
+    addParamsLine(" [--scratch <scratch=\"\">]");
+    addParamsLine(" [--debug <int=0>]");
+    addParamsLine(" [--no_sigma_trick]");
+    addParamsLine(" [--trymindiff_factor <float=0.9>]");
+    addParamsLine(" [--random_seed <int=-1>]");
+    addParamsLine(" [--search_rot <float=999.>]");
+    addParamsLine(" [--load <N=1>]");
 }
 
 
