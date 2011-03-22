@@ -49,7 +49,7 @@ int main(int argc, char **argv)
     FileName                    fn_tmp;
     MetaData                     SFo;
 
-    ProgRefine3D           prm;
+    ProgMLRefine3D           prm;
     ProgMLF2D         ML2D_prm;
 
     // Set to true for MLF!
@@ -93,7 +93,7 @@ int main(int argc, char **argv)
         ML2D_prm.fn_ref = prm.fn_root + "_lib.xmd";
 
         // Project the reference volume
-        prm.projectReferenceVolume(ML2D_prm.MDref, rank, size);
+        prm.projectVolumes(ML2D_prm.MDref, rank, size);
         MPI_Barrier(MPI_COMM_WORLD);
 
         // All nodes produce general side-info
@@ -277,7 +277,7 @@ int main(int argc, char **argv)
                     // nn=1: noise reconstruction
                     // nn=2: ctf-corrupted reconstruction
                     if (rank == (volno * 3 + nn) % size)
-                        prm.reconstruction(argc2, argv2, iter, volno, nn);
+                        prm.reconstructVolumes(argc2, argv2, iter, volno, nn);
                 }
             MPI_Barrier(MPI_COMM_WORLD);
 
@@ -314,7 +314,7 @@ int main(int argc, char **argv)
             if (!converged && iter + 1 <= prm.Niter)
             {
                 // All nodes again: project and read new references from disc
-                prm.projectReferenceVolume(ML2D_prm.MDref, rank, size);
+                prm.projectVolumes(ML2D_prm.MDref, rank, size);
                 MPI_Barrier(MPI_COMM_WORLD);
                 FileName fn_img;
                 int c = 0;

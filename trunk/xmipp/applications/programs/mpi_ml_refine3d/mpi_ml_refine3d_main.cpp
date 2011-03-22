@@ -42,7 +42,7 @@ int main(int argc, char **argv)
     MultidimArray<double>            Maux;
     MultidimArray<double>            Vaux;
 
-    ProgRefine3D            prm;
+    ProgMLRefine3D            prm;
     ProgML2D           ML2D_prm(true);
 
     // Set to false for ML3D
@@ -66,7 +66,8 @@ int main(int argc, char **argv)
         if (IS_MASTER)
         {
             prm.show();
-            prm.remakeSFvol(prm.istart - 1, true, false);
+            //FIXME: use copy, check about noise
+            //prm.remakeSFvol(prm.istart - 1, true, false);
         }
         else
             prm.remakeSFvol(prm.istart - 1, false, false);
@@ -84,7 +85,7 @@ int main(int argc, char **argv)
         ML2D_prm.save_mem2 = true;
         ML2D_prm.fn_ref = prm.fn_root + "_lib.xmd";
         // Project the reference volume
-        prm.projectReferenceVolume(ML2D_prm.MDref, rank, size);
+        prm.projectVolumes(ML2D_prm.MDref, rank, size);
         MPI_Barrier(MPI_COMM_WORLD);
 
         // All nodes produce general side-info
@@ -131,7 +132,7 @@ int main(int argc, char **argv)
                 // Project volumes
                 if (ML2D_prm.iter > ML2D_prm.istart || ML2D_prm.current_block > 0)
                 {
-                    prm.projectReferenceVolume(ML2D_prm.MDref, rank, size);
+                    prm.projectVolumes(ML2D_prm.MDref, rank, size);
                     c = 0;
                     // Read new references from disc (I could just as well keep them in memory, maybe...)
                     FOR_ALL_OBJECTS_IN_METADATA(ML2D_prm.MDref)
@@ -192,11 +193,11 @@ int main(int argc, char **argv)
                 // Reconstruct new volumes from the reference images
                 for (volno = 0; volno < prm.Nvols; volno++)
                     if (rank == volno % size)
-                        prm.reconstruction(argc2, argv2, ML2D_prm.iter, volno, 0);
+                        prm.reconstructVolumes(argc2, argv2, ML2D_prm.iter, volno, 0);
 
                 if (rank < prm.Nvols)
                     // new reference reconstruction
-                    prm.reconstruction(argc2, argv2, ML2D_prm.iter, rank, 0);
+                    prm.reconstructVolumes(argc2, argv2, ML2D_prm.iter, rank, 0);
                 MPI_Barrier(MPI_COMM_WORLD);
 
                 // Update filenames in SFvol (now without noise volumes!)
