@@ -390,6 +390,7 @@ public:
                     mySF.setValue(MDL_X,x, id);
                     mySF.setValue(MDL_Y,y, id);
                     mySF.setValue(MDL_Z,z, id);
+                    mySF.setValue(MDL_SCALE,1.0,id);
                 }
                 fn_temp=output_file_root+".doc";
                 mySF.write(fn_temp);

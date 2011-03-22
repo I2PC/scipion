@@ -35,9 +35,7 @@
 /* ------------------------------------------------------------------------- */
 int main(int argc, char *argv[])
 {
-    ProgAngularProjectLibrary prm;
-        prm.read(argc, argv);
-        prm.tryRun();
-        if (prm.fn_groups!="")
-            prm.createGroupSamplingFiles();
+    ProgAngularProjectLibrary program;
+    program.read(argc, argv);
+    return program.tryRun();
 }

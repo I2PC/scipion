@@ -71,20 +71,19 @@ void ProgAngularProjectLibrary::readParams()
 void ProgAngularProjectLibrary::defineParams()
 {
     addUsageLine("Create a gallery of projections from a volume");
-    addUsageLine("Example of use: Sample at 2 degrees and use c6 symmetry");
-    addUsageLine("   xmipp_angular_project_library -i in.vol -o out -sym c6 -sampling_rate 2");
-    addParamsLine("   -i <input_volume_file>           : Input Volume");
-    addParamsLine("   -o <root_file_name>         : Root for output files");
+
+    addParamsLine("   -i <input_volume_file>       : Input Volume");
+    addParamsLine("   -o <output_file_name>        : stack with output files");
     addParamsLine("  [--sym <symmetry=c1>]         : Symmetry to define sampling ");
-    addParamsLine("                               : One of the 17 possible symmetries in");
-    addParamsLine("                               : single particle electron microscopy");
-    addParamsLine("  [--sampling_rate <Ts=5>]          : Distance in degrees between sampling points");
+    addParamsLine("                                : One of the 17 possible symmetries in");
+    addParamsLine("                                : single particle electron microscopy");
+    addParamsLine("  [--sampling_rate <Ts=5>]      : Distance in degrees between sampling points");
     addParamsLine("==+Extra parameters==");
     addParamsLine("  [--sym_neigh <symmetry>]      : symmetry used to define neighbors, by default");
-    addParamsLine("                               : same as sym");
-    addParamsLine("  [--psi_sampling <psi=360>]        : sampling in psi, 360 -> no sampling in psi");
-    addParamsLine("  [--max_tilt_angle <tmax=91>]      : maximum tilt angle in degrees");
-    addParamsLine("  [--min_tilt_angle <tmin=-91>]     : minimum tilt angle in degrees");
+    addParamsLine("                                : same as sym");
+    addParamsLine("  [--psi_sampling <psi=360>]    : sampling in psi, 360 -> no sampling in psi");
+    addParamsLine("  [--max_tilt_angle <tmax=91>]  : maximum tilt angle in degrees");
+    addParamsLine("  [--min_tilt_angle <tmin=-91>] : minimum tilt angle in degrees");
     addParamsLine("  [--experimental_images <docfile=\"\">] : doc file with experimental data");
     addParamsLine("  [--angular_distance <ang=20>]     : Do not search a distance larger than...");
     addParamsLine("  requires --experimental_images;");
@@ -96,11 +95,15 @@ void ProgAngularProjectLibrary::defineParams()
     addParamsLine("  requires --angular_distance;");
     addParamsLine("  [--shears]                    : use projection shears to generate projections");
     addParamsLine("  [--perturb <sigma=0.0>]       : gaussian noise projection unit vectors ");
-    addParamsLine("                         : a value=sin(sampling_rate)/4  ");
-    addParamsLine("                         : may be a good starting point ");
+    addParamsLine("                                : a value=sin(sampling_rate)/4  ");
+    addParamsLine("                                : may be a good starting point ");
     addParamsLine("  [--groups <selfile=\"\">]     : selfile with groups");
     addParamsLine("  [--only_winner]               : if set each experimental");
-    addParamsLine("                               : point will have a unique neighbor");
+    addParamsLine("                                : point will have a unique neighbor");
+
+    addExampleLine("Sample at 2 degrees and use c6 symmetry:", false);
+    addExampleLine("xmipp_angular_project_library -i in.vol -o out.stk --sym c6 --sampling_rate 2");
+
 }
 
 /* Show -------------------------------------------------------------------- */
@@ -321,10 +324,14 @@ void ProgAngularProjectLibrary::run()
             mySFout.setValue(MDL_X,x,id);
             mySFout.setValue(MDL_Y,y,id);
             mySFout.setValue(MDL_Z,z,id);
+            mySFout.setValue(MDL_SCALE,1.0,id);
         }
     }
     mySFout.write(output_file_root+".doc");
     unlink((output_file_root+"_angles.doc").c_str());
+
+    if (fn_groups!="")
+        createGroupSamplingFiles();
 }
 
 void ProgAngularProjectLibrary::createGroupSamplingFiles(void)
