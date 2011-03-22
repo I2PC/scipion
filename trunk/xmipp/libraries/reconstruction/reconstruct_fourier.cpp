@@ -40,7 +40,7 @@ void ProgRecFourier::defineParams()
     addParamsLine("  [--padding <proj=2.0> <vol=2.0>]  : Padding used for projections and volume");
     addParamsLine("  [--prepare_fsc <fscfile>]      : Filename root for FSC files");
     addParamsLine("  [--max_resolution <p=0.5>]     : Max resolution (Nyquist=0.5)");
-    addParamsLine("  [--weight]                     : Use weights stored in the image headers or doc file");
+    addParamsLine("  [--weight]                     : Use weights stored in the image metadata");
     addParamsLine("  [--thr <threads=1> <rows=1>]   : Number of concurrent threads and rows processed at time by a thread");
     addParamsLine("  [--blob <radius=1.9> <order=0> <alpha=15>] : Blob parameters");
     addParamsLine( "                                  : radius in pixels, order of Bessel function in blob and parameter alpha");
@@ -70,24 +70,24 @@ void ProgRecFourier::readParams()
 // Show ====================================================================
 void ProgRecFourier::show()
 {
-    if (verb > 0)
+    if (verbose > 0)
     {
-        std::cerr << " =====================================================================" << std::endl;
-        std::cerr << " Direct 3D reconstruction method using Kaiser windows as interpolators" << std::endl;
-        std::cerr << " =====================================================================" << std::endl;
-        std::cerr << " Input selfile             : "  << fn_sel << std::endl;
-        std::cerr << " padding_factor_proj       : "  << padding_factor_proj << std::endl;
-        std::cerr << " padding_factor_vol        : "  << padding_factor_vol << std::endl;
-        std::cerr << " Output volume             : "  << fn_out << std::endl;
+        std::cout << " =====================================================================" << std::endl;
+        std::cout << " Direct 3D reconstruction method using Kaiser windows as interpolators" << std::endl;
+        std::cout << " =====================================================================" << std::endl;
+        std::cout << " Input selfile             : "  << fn_sel << std::endl;
+        std::cout << " padding_factor_proj       : "  << padding_factor_proj << std::endl;
+        std::cout << " padding_factor_vol        : "  << padding_factor_vol << std::endl;
+        std::cout << " Output volume             : "  << fn_out << std::endl;
         if (fn_sym != "")
-            std::cerr << " Symmetry file for projections : "  << fn_sym << std::endl;
+            std::cout << " Symmetry file for projections : "  << fn_sym << std::endl;
         if (fn_fsc != "")
-            std::cerr << " File root for FSC files: " << fn_fsc << std::endl;
+            std::cout << " File root for FSC files: " << fn_fsc << std::endl;
         if (do_weights)
-            std::cerr << " Use weights stored in the image headers or doc file" << std::endl;
+            std::cout << " Use weights stored in the image headers or doc file" << std::endl;
         else
-            std::cerr << " Do NOT use weights" << std::endl;
-        std::cerr << "\n Interpolation Function"
+            std::cout << " Do NOT use weights" << std::endl;
+        std::cout << "\n Interpolation Function"
         << "\n   blrad                 : "  << blob.radius
         << "\n   blord                 : "  << blob.order
         << "\n   blalpha               : "  << blob.alpha
@@ -100,9 +100,10 @@ void ProgRecFourier::show()
 // Main routine ------------------------------------------------------------
 void ProgRecFourier::run()
 {
+    show();
     produceSideinfo();
     // Process all images in the selfile
-    if (verb)
+    if (verbose)
         init_progress_bar(SF.size());
     // Create threads stuff
     barrier_init( &barrier, numThreads+1 );
@@ -710,7 +711,7 @@ void ProgRecFourier::processImages( int firstImageIndex, int lastImageIndex, boo
             else if ( th_args[nt].read == 1 )
             {
                 processed = true;
-                if (verb && imgno++%repaint==0)
+                if (verbose && imgno++%repaint==0)
                     progress_bar(imgno);
 
                 double weight = th_args[nt].localweight;
@@ -964,3 +965,10 @@ void ProgRecFourier::finishComputations( const FileName &out_name )
 
     Vout.write(out_name);
 }
+
+void ProgRecFourier::setIO(const FileName &fn_in, const FileName &fn_out)
+{
+  this->fn_sel = fn_in;
+  this->fn_out = fn_out;
+}
+
