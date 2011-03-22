@@ -188,7 +188,6 @@ void ProgML2D::readParams()
 // Show ====================================================================
 void ProgML2D::show()
 {
-
     if (verbose)
     {
 
@@ -388,7 +387,7 @@ void ProgML2D::produceSideInfo()
         FOR_ALL_OBJECTS_IN_METADATA(MDimg)
         {
             MDimg.getValue(MDL_IMAGE, fn_tmp, __iter.objId);
-            img.readApplyGeo(fn_tmp,MDimg, __iter.objId);
+            img.read(fn_tmp);
             img().setXmippOrigin();
             avg() += img();
         }
@@ -401,8 +400,7 @@ void ProgML2D::produceSideInfo()
     }
 
     // Print some output to screen
-    if (!do_ML3D)
-        show();
+    show();
 }
 
 void ProgML2D::produceSideInfo2()
@@ -419,7 +417,7 @@ void ProgML2D::produceSideInfo2()
     FOR_ALL_OBJECTS_IN_METADATA(MDref)
     {
         MDref.getValue(MDL_IMAGE, fn_tmp, __iter.objId);
-        img.readApplyGeo(fn_tmp,MDref, __iter.objId);
+        img.read(fn_tmp);
         img().setXmippOrigin();
         model.Iref[refno] = img;
         // Default start is all equal model fractions
