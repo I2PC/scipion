@@ -318,6 +318,7 @@ bool ArgLexer::nextToken()
             std::cerr << "ERROR: Unexpected character '" << c << "'"
             << std::endl << "at line: " << line + 1 << " pos: " << pos
             + 1 << std::endl;
+            std::cerr << "WRONG LINE: " << input[line] << std::endl;
             exit(1);
         }
     }
@@ -431,8 +432,9 @@ void ASTNode::error(String msg)
 void ASTNode::unexpectedToken(String msg)
 {
     token = *currentToken();
-    error((String) "Unexpected token '" + ArgToken::typeString(token.type)
-          + "' " + msg);
+    error(formatString("Unexpected token '%s' (%s) \n %s",
+        token.lexeme.c_str(), ArgToken::typeString(token.type), msg.c_str()));
+
 }
 
 ArgumentDef::ArgumentDef(ArgLexer *lexer, ASTNode * parent) :
@@ -1216,12 +1218,16 @@ void TkPrinter::printProgram(const ProgramDef &program, int v)
 {
     //    *pOut << "PROGRAM" << std::endl << "   " << program.name << std::endl;
     fprintf(output, "XMIPP %d.%d - %s\n", XMIPP_MAJOR, XMIPP_MINOR, program.name.c_str());
+    size_t numberOfComments = 0;
+    for (size_t i = 0; i < program.usageComments.size(); ++i)
+      if (program.usageComments.visibility[i] <= v)
+        ++numberOfComments;
     //Send number of usage lines
-    fprintf(output, "%d\n", program.usageComments.size());
-
-    if (program.usageComments.size() > 0)
+    fprintf(output, "%d\n", numberOfComments);
+    if (numberOfComments > 0)
     {
         for (size_t i = 0; i < program.usageComments.size(); ++i)
+          if (program.usageComments.visibility[i] <= v)
             fprintf(output, "%s\n", program.usageComments.comments[i].c_str());
     }
 
