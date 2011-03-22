@@ -27,7 +27,7 @@
 
 int main(int argc, char **argv)
 {
-    ProgRefine3D program;
+    ProgMLRefine3D program;
     program.read(argc, argv);
     return program.tryRun();
 }

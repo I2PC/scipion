@@ -23,9 +23,7 @@
  *  e-mail address 'xmipp@cnb.csic.es'
  ***************************************************************************/
 
-#include <mpi.h>
 
-#include <reconstruction/ml_align2d.h>
 #include <parallel/mpi_ml_align2d.h>
 
 #define TAG_DOCFILE 12
