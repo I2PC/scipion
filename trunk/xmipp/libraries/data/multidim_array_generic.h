@@ -245,6 +245,23 @@ public:
         return im->computeAvg();
     }
 
+    /** Compute statistics.
+         *
+         * The average, standard deviation, minimum and maximum value are
+         * returned.
+         */
+    void computeStats(double& avg, double& stddev, double& minval, double& maxval) const
+    {
+#define COMPUTESTATS(type) {type Tminval; \
+                           type Tmaxval; \
+                           ((MultidimArray<type>*)(im))->computeStats(avg, stddev, Tminval, Tmaxval);\
+                           minval = Tminval;\
+                           maxval = Tmaxval;}
+
+      SWITCHDATATYPE(datatype,  COMPUTESTATS);
+#undef COMPUTESTATS
+    }
+
     /** Get constant access */
     double operator()(size_t n, int k, int i, int j) const
     {

@@ -43,6 +43,7 @@ protected:
     int             save_mask;        // True if the masks must be saved
     int             repair;           // True if headers are initialized
     bool            show_angles;      // True if angles are to be shown in stats
+    bool            apply_mask;       // True if a mask must be applied
 
     double min_val, max_val, avg, stddev;
     double mean_min_val, mean_max_val, mean_avg, mean_stddev;
@@ -72,7 +73,7 @@ protected:
         fn_out = (checkParam("-o"))? getParam("-o"): "";
 
         mask_prm.allowed_data_types = INT_MASK;
-        if (checkParam("--mask"))
+        if (apply_mask = checkParam("--mask"))
             mask_prm.readParams(this);
     }
 
@@ -105,7 +106,7 @@ protected:
         ImgSize(mdIn, xDim, yDim, zDim, nDim);
 
         if (zDim > 1)
-          apply_geo = false;
+            apply_geo = false;
     }
 
     void processImage(const FileName &fnImg, const FileName &fnImgOut, size_t objId)
@@ -119,11 +120,18 @@ protected:
         image.getEulerAngles(rot,tilt,psi);
 
         // Generate mask if necessary
-        mask_prm.generate_mask(zDim, yDim, xDim);
-        mask = mask_prm.get_binary_mask();
+        if (apply_mask)
+        {
+            mask_prm.generate_mask(zDim, yDim, xDim);
+            mask = mask_prm.get_binary_mask();
 
-        computeStats_within_binary_mask(mask, image(), min_val, max_val,
-                                        avg, stddev);
+            computeStats_within_binary_mask(mask, image(), min_val, max_val,
+                                            avg, stddev);
+        }
+        else
+          image().computeStats(avg, stddev, min_val, max_val);
+
+
         // Show information
         std::cout << stringToString(fnImg, max_length + 1);
         if (zDim > 1)
