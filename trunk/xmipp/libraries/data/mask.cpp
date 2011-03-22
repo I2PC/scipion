@@ -1685,7 +1685,20 @@ void ProgMask::defineParams()
     XmippMetadataProgram::defineParams();
     Mask::defineParams(this);
 
-    addUsageLine("Apply a mask.");
+    addUsageLine("Create or Apply a mask. Count pixels/voxels within a mask");
+    addUsageLine("+ ");
+    addUsageLine("+You don´t need to give the dimensions of the mask but you simply provide ");
+    addUsageLine("+an example of image/volume you are going to apply the mask to, then the dimensions ");
+    addUsageLine("+are taken from this file and the mask is created. In the creation of the mask, ");
+    addUsageLine("+a file with the mask is written to disk but it is not applied to the input file.");
+    addUsageLine("+ ");
+    addUsageLine("+You can generate blank images/volumes with the size of the sample one if you don´t ");
+    addUsageLine("+supply any mask type.You may also apply masks without having to generate the corresponding");
+    addUsageLine("+files (but you also can save them)");
+    addUsageLine("+ ");
+    addUsageLine("+This utility also allows you to count the number of pixels/voxels in an image/volume");
+    addUsageLine("+which are inside a given mask and whose value is below|above or both some threshold.");
+
     addExampleLine("Sample at circular mask inside radius 72:", false);
     addExampleLine("xmipp_transform_mask  -i reference.vol -o output_volume.vol --mask circular -72");
     addExampleLine("As above but save mask:", false);
@@ -1695,7 +1708,6 @@ void ProgMask::defineParams()
     addExampleLine("Mask using rectangular mask:", false);
     addExampleLine("xmipp_transform_mask -i singleImage.spi -o salida20.spi --mask rectangular -10 -10");
 
-    addParamsLine("   [--save_mask]     : Apply and save mask");
     addParamsLine("   [--create_mask <output_mask_file>]  : Don't apply and save mask");
     addParamsLine("   [--count_above <th>]                : Voxels within mask >= th");
     addParamsLine("   [--count_below <th>]                : Voxels within mask <= th");
@@ -1709,7 +1721,6 @@ void ProgMask::readParams()
     XmippMetadataProgram::readParams();
     mask.readParams(this);
 
-    save_mask    = checkParam("--save_mask");
     count_above  = checkParam("--count_above");
     if (count_above)
         th_above  = getDoubleParam("-count_above");
@@ -1746,9 +1757,6 @@ void ProgMask::postProcess()
 {
     if (!count)
         progress_bar(mdIn.size());
-
-    if (save_mask)
-        mask.write_mask("mask.spi");
 }
 
 /* Process image ------------------------------------------------------------- */

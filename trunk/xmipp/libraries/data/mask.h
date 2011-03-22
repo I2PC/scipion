@@ -1071,7 +1071,6 @@ public:
 
     Mask         mask;
     FileName     fn_mask;
-    int          save_mask;
     int          create_mask;
     int          count_above;
     double       th_above;
