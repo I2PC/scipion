@@ -340,20 +340,17 @@ void CCP4::fill_header_from_xmippimage(const ImageXmipp &I, bool reversed,
     double x_length, double y_length, double z_length)
 {
     clear();
-    if (IsLittleEndian())
-    {
-        (my_mrc_header.machst)[0]  = 0x4 << 2;
-        (my_mrc_header.machst)[0] += 0x4 ;
-        (my_mrc_header.machst)[1]  = 0x4 << 2;
-        (my_mrc_header.machst)[1] += 0x4 ;
-    }
-    else /*Big Endian*/
-    {
-        (my_mrc_header.machst)[0]  = 0x1 << 2;
-        (my_mrc_header.machst)[0] += 0x1 ;
-        (my_mrc_header.machst)[1]  = 0x1 << 2;
-        (my_mrc_header.machst)[1] += 0x1 ;
-    }
+        if (IsLittleEndian())
+        {
+            (my_mrc_header.machst)[0]  = 68;
+            (my_mrc_header.machst)[1]  = 65;
+        }
+        else /*Big Endian*/
+        {
+            (my_mrc_header.machst)[0]  = 17;
+            (my_mrc_header.machst)[1]  = 17;
+        }
+
     (my_mrc_header.map)[0] = 'M';
     (my_mrc_header.map)[1] = 'A';
     (my_mrc_header.map)[2] = 'P';
@@ -478,19 +475,17 @@ void CCP4::fill_header3D(int Xdim, int Ydim, int Zdim,
         my_mrc_header.amin  = minval;
         my_mrc_header.amax  = maxval;
         my_mrc_header.amean = avg;
+
+
         if (IsLittleEndian())
         {
-            (my_mrc_header.machst)[0]  = 0x4 << 4;
-            (my_mrc_header.machst)[0] += 0x4 ;
-            (my_mrc_header.machst)[1]  = 0x4 << 4;
-            (my_mrc_header.machst)[1] += 0x4 ;
+            (my_mrc_header.machst)[0]  = 68;
+            (my_mrc_header.machst)[1]  = 65;
         }
         else /*Big Endian*/
         {
-            (my_mrc_header.machst)[0]  = 0x1 << 4;
-            (my_mrc_header.machst)[0] += 0x1 ;
-            (my_mrc_header.machst)[1]  = 0x1 << 4;
-            (my_mrc_header.machst)[1] += 0x1 ;
+            (my_mrc_header.machst)[0]  = 17;
+            (my_mrc_header.machst)[1]  = 17;
         }
     }
     else
@@ -556,17 +551,13 @@ void CCP4::fill_header3D(int Xdim, int Ydim, int Zdim,
 
         if (IsLittleEndian())
         {
-            (my_mrc_header.machst)[0]  = 0x1 << 4;
-            (my_mrc_header.machst)[0] += 0x1 ;
-            (my_mrc_header.machst)[1]  = 0x1 << 4;
-            (my_mrc_header.machst)[1] += 0x1 ;
+            (my_mrc_header.machst)[0]  = 68;
+            (my_mrc_header.machst)[1]  = 65;
         }
         else /*Big Endian*/
         {
-            (my_mrc_header.machst)[0]  = 0x4 << 4;
-            (my_mrc_header.machst)[0] += 0x4 ;
-            (my_mrc_header.machst)[1]  = 0x4 << 4;
-            (my_mrc_header.machst)[1] += 0x4 ;
+            (my_mrc_header.machst)[0]  = 17;
+            (my_mrc_header.machst)[1]  = 17;
         }
 
     }
