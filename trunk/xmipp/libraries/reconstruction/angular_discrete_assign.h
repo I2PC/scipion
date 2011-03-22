@@ -120,7 +120,7 @@ public:
     void defineParams();
 
     /** Produce side info. */
-    void produce_side_info();
+    void preProcess();
 
     /** Produce library.*/
     void produce_library();
