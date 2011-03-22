@@ -13,10 +13,10 @@ class Tester:
         self.progDict[program] = []
         self.lastProgram = program
 
-    def addTest(self, test, mpi=False):
-        self.progDict[self.lastProgram].append((test,False))
+    def addTest(self, test, mpi=False, prerun=""):
+        self.progDict[self.lastProgram].append((test,False,prerun))
         if mpi:
-            self.progDict[self.lastProgram].append((test,True))
+            self.progDict[self.lastProgram].append((test,True,prerun))
 
     def runProgramTests(self, program):
         tests = self.progDict[program]
@@ -26,7 +26,7 @@ class Tester:
         testName = ""
 
         testNo = 1
-        for test,mpi in tests:
+        for test,mpi,prerun in tests:
             if n > 1:
                 outDir = outPath + "_%02d" % testNo
                 testName = "(%d of %d)" % (testNo, n)
@@ -39,6 +39,13 @@ class Tester:
             test = test.replace("%o", outDir)
             test = test.replace("%p", program)
             test = test.replace("%d", self.fnDir)
+            if prerun!="":
+                prerun = prerun.replace("%o", outDir)
+                prerun = prerun.replace("%p", program)
+                prerun = prerun.replace("%d", self.fnDir)
+                cmd = " %s > %s/prerun_stdout.txt 2> %s/prerun_stderr.txt" % (prerun, outDir, outDir)
+                print "    Running prerun: ", cmd
+                os.system(cmd)
             if mpi:
                 cmd="mpirun -np 3 `which %s`"%program.replace("xmipp_","xmipp_mpi_")
             else:
@@ -49,7 +56,6 @@ class Tester:
             os.system(cmd)
             testNo += 1
 
-
     def runAllTests(self):
         for program in self.progDict.keys():
             self.runProgramTests(program)
@@ -58,6 +64,10 @@ class Tester:
         # Add all desired tests -------------------------------------------
         self.addProgram("xmipp_angular_continuous_assign")
         self.addTest("-i input/aFewProjections.sel --ref input/phantomBacteriorhodopsin.vol -o %o/assigned_angles.txt",True)
+
+        self.addProgram("xmipp_angular_discrete_assign")
+        self.addTest("-i input/aFewProjections.sel -o %o/assigned_angles.txt --ref %o/reference.doc",False,
+                     "xmipp_angular_project_library -i input/phantomBacteriorhodopsin.vol -o %o/reference.stk --sampling_rate 10")
 
         self.addProgram("xmipp_angular_project_library")
         self.addTest("-i input/phantomBacteriorhodopsin.vol -o %o/output_projections.stk --sym c6 --sampling_rate 5", True)
