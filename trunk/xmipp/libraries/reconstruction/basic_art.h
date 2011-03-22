@@ -29,11 +29,13 @@
 
 #include <data/image.h>
 #include <data/metadata_extension.h>
+
 #include "refinement.h"
 #include <data/grids.h>
 #include <data/symmetries.h>
 #include <data/basis.h>
-
+#include <data/projection.h>
+#include "fourier_filter.h"
 
 struct Recons_info;
 
