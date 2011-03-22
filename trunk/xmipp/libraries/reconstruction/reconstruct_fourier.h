@@ -42,7 +42,7 @@
 #include <sys/time.h>
 
 #include <data/metadata.h>
-#include <data/program.h>
+#include "recons.h"
 
 #include <reconstruction/directions.h>
 #include <reconstruction/symmetrize.h>
@@ -80,7 +80,7 @@ struct ImageThreadParams
 };
 
 /** Fourier reconstruction parameters. */
-class ProgRecFourier : public XmippProgram
+class ProgRecFourier : public ProgReconsBase
 {
 public:
     /** Filenames */
@@ -89,10 +89,7 @@ public:
     /** SelFile containing all projections */
     MetaData SF;
 
-    /** verbosity flag */
-    int verb;
-
-    /** Flag whether to use the weights in the image headers */
+    /** Flag whether to use the weights in the image metadata */
     bool do_weights;
 
     /** Projection padding Factor */
@@ -216,6 +213,9 @@ public:
 
     /// Correct weight
     void correctWeight();
+
+    ///Functions of common reconstruction interface
+    virtual void setIO(const FileName &fn_in, const FileName &fn_out);
 };
 //@}
 #endif
