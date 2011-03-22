@@ -98,11 +98,19 @@ protected:
                 std::cout << " <rot tilt psi>";
             std::cout << '>' << std::endl;
         }
+
+        // if input is volume do not apply geo
+        int xDim, yDim, zDim;
+        size_t nDim;
+        ImgSize(mdIn, xDim, yDim, zDim, nDim);
+
+        if (zDim > 1)
+          apply_geo = false;
     }
 
     void processImage(const FileName &fnImg, const FileName &fnImgOut, size_t objId)
     {
-        image.read(fnImg, DATA, ALL_IMAGES, true);
+        image.read(fnImg, DATA, ALL_IMAGES, !apply_geo);
         image().setXmippOrigin();
 
         int xDim,yDim,zDim;
