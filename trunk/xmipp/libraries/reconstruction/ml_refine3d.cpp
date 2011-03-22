@@ -562,7 +562,7 @@ ProgReconsBase * ProgMLRefine3D::createReconsProgram()
         //force use of weights and the verbosity will be the same of this program
         //-i and -o options are passed for avoiding errors, this should be changed
         //when reconstructing
-        arguments += formatString(" --weight -v %d -i iii -o ooo", verbose);
+        arguments += formatString(" --weight -v %d --thr -i iii -o ooo", verbose, ml2d->threads);
         program->read(arguments);
         return program;
     }

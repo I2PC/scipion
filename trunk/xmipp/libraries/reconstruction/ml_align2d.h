@@ -60,7 +60,7 @@ class ProgML2D: public ML2DBaseProgram
 public:
     MultidimArray<int> mask, omask;
     /** Thread stuff */
-    int threads, threadTask;
+    int threadTask;
     barrier_t barrier, barrier2, barrier3;
     pthread_t * th_ids;
     structThreadTasks * threads_d;

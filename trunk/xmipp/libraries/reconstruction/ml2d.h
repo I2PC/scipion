@@ -244,6 +244,9 @@ public:
     String defaultRoot;
     int defaultNiter, defaultStartingIter;
 
+    /** Number of threads */
+    int threads;
+
     /** Set sampling stuff; flipping matrices, psi_step etc.
      * Also create 0, 90, 180 & 270 degree flipping, as well as mirror
      */
