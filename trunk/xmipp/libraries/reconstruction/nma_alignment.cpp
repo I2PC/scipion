@@ -261,7 +261,7 @@ void ProgNmaAlignment::performCompleteSearch(
 
     // Perform alignment
     program = "xmipp_angular_discrete_assign";
-    arguments = formatString("%s -i downimg_%s.xmp -ref %s -o angledisc_%s.txt -psi_step 25 -max_shift_change %i -search5D -v 0",
+    arguments = formatString("%s -i downimg_%s.xmp --ref %s -o angledisc_%s.txt --psi_step 5 --max_shift_change %i --search5D -v 0",
         program.c_str(), randStr, refSelStr, randStr, ROUND((double)imgSize/(10.0*pow(2.0,(double)pyramidLevel))));
     runSystem(arguments);
 }
