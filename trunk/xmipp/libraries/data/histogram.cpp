@@ -125,6 +125,7 @@ void Histogram1D::write(const FileName &fn)
     if (!fh)
         REPORT_ERROR(ERR_IO_NOTOPEN, (std::string)"Histogram1D::write: File " + fn +
                      " cannot be openned for output");
+    fh << "; Value Count\n";
     fh << *this;
     fh.close();
 }
