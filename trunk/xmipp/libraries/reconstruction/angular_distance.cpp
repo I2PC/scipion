@@ -29,22 +29,23 @@
 #include <data/histogram.h>
 
 // Read arguments ==========================================================
-void Prog_angular_distance_prm::read(int argc, char **argv)
+void ProgAngularDistance::readParams()
 {
-    fn_ang1 = getParameter(argc, argv, "-ang1");
-    fn_ang2 = getParameter(argc, argv, "-ang2");
-    fn_ang_out = getParameter(argc, argv, "-o", "");
-    fn_sym = getParameter(argc, argv, "-sym", "");
-    check_mirrors = checkParameter(argc, argv, "-check_mirrors");
-    object_rotation = checkParameter(argc, argv, "-object_rotation");
+    fn_ang1 = getParam("--ang1");
+    fn_ang2 = getParam("--ang2");
+    fn_out = getParam("--oroot");
+    fn_sym = getParam("--sym");
+    check_mirrors = checkParam("--check_mirrors");
+    object_rotation = checkParam("--object_rotation");
 }
 
 // Show ====================================================================
-void Prog_angular_distance_prm::show()
+void ProgAngularDistance::show()
 {
-    std::cout << "Angular docfile 1: " << fn_ang1       << std::endl
+    std::cout
+    << "Angular docfile 1: " << fn_ang1       << std::endl
     << "Angular docfile 2: " << fn_ang2       << std::endl
-    << "Angular output   : " << fn_ang_out    << std::endl
+    << "Angular output   : " << fn_out    << std::endl
     << "Symmetry file    : " << fn_sym        << std::endl
     << "Check mirrors    : " << check_mirrors << std::endl
     << "Object rotation  : " << object_rotation<<std::endl
@@ -52,26 +53,27 @@ void Prog_angular_distance_prm::show()
 }
 
 // usage ===================================================================
-void Prog_angular_distance_prm::usage()
+void ProgAngularDistance::defineParams()
 {
-    std::cerr << "   -ang1 <DocFile 1>         : Angular document file 1\n"
-    << "   -ang2 <DocFile 2>         : Angular document file 2\n"
-    << "  [-o <DocFile out>]         : Merge dcfile. If not given it is\n"
-    << "                               not generated\n"
-    << "  [-sym <symmetry file>]     : Symmetry file if any\n"
-    << "  [-check_mirrors]           : Check if mirrored axes give better\n"
-    << "  [-object_rotation]         : Use object rotations rather than projection directions\n"
-    << "                               fit (Spider, APMQ)\n"
-    ;
+	addUsageLine("Computes the angular distance between two angle files. The angular distance ");
+	addUsageLine("is defined as the average angular distance between the 3 vectors of the ");
+	addUsageLine("coordinate system defined by the Euler angles (taking into account any ");
+	addUsageLine("possible symmetry). ");
+    addParamsLine("   --ang1 <Metadata1>        : Angular document file 1");
+    addParamsLine("   --ang2 <Metadata2>        : Angular document file 2");
+    addParamsLine("  [--oroot <rootname=\"\">]  : Output rootname");
+    addParamsLine("  [--sym <symmetry=\"\">]    : Symmetry file if any");
+    addParamsLine("                             :+The definition of the symmetry is described at [[transform_symmetrize_v3][transform_symmetrize]]");
+    addParamsLine("  [--check_mirrors]          : Check if mirrored projections give better results");
+    addParamsLine("  [--object_rotation]        : Use object rotations rather than projection directions");
+    addParamsLine("                             : fit (Spider, APMQ)");
 }
 
 // Produce side information ================================================
-void Prog_angular_distance_prm::produce_side_info()
+void ProgAngularDistance::produce_side_info()
 {
-    if (fn_ang1 != "")
-        DF1.read(fn_ang1);
-    if (fn_ang2 != "")
-        DF2.read(fn_ang2);
+    DF1.read(fn_ang1);
+    DF2.read(fn_ang2);
     if (fn_sym != "")
         SL.read_sym_file(fn_sym);
 
@@ -87,7 +89,7 @@ void Prog_angular_distance_prm::produce_side_info()
     << #tilt << "=" << tilt << " " \
     << #psi  << "=" << psi << " ";
 //#define DEBUG
-double Prog_angular_distance_prm::second_angle_set(double rot1, double tilt1,
+double ProgAngularDistance::second_angle_set(double rot1, double tilt1,
         double psi1, double &rot2, double &tilt2, double &psi2,
         bool projdir_mode)
 {
@@ -132,7 +134,7 @@ double Prog_angular_distance_prm::second_angle_set(double rot1, double tilt1,
 
 // Check symmetries --------------------------------------------------------
 //#define DEBUG
-double Prog_angular_distance_prm::check_symmetries(double rot1, double tilt1,
+double ProgAngularDistance::check_symmetries(double rot1, double tilt1,
         double psi1, double &rot2, double &tilt2, double &psi2,
         bool projdir_mode)
 {
@@ -206,12 +208,13 @@ double Prog_angular_distance_prm::check_symmetries(double rot1, double tilt1,
 
 //#define DEBUG
 // Compute distance --------------------------------------------------------
-void Prog_angular_distance_prm::compute_distance(double &angular_distance,
-        double &shift_distance)
+void ProgAngularDistance::run()
 {
+    produce_side_info();
+
     MetaData DF_out;
-    angular_distance = 0;
-    shift_distance = 0;
+    double angular_distance=0;
+    double shift_distance=0;
 
     MultidimArray<double> rot_diff, tilt_diff, psi_diff, vec_diff,
     X_diff, Y_diff, shift_diff;
@@ -224,7 +227,7 @@ void Prog_angular_distance_prm::compute_distance(double &angular_distance,
     shift_diff.resize(rot_diff);
 
     // Build output comment
-    DF_out.setComment("rot1 rot2 diff_rot tilt1 tilt2 diff_tilt psi1 psi2 diff_psi ang_dist X1 X2 Xdiff Y1 Y2 Ydiff ShiftDiff");
+    DF_out.setComment("image rot1 rot2 diff_rot tilt1 tilt2 diff_tilt psi1 psi2 diff_psi ang_dist X1 X2 Xdiff Y1 Y2 Ydiff ShiftDiff");
 
     int i = 0;
     size_t id;
@@ -251,7 +254,6 @@ void Prog_angular_distance_prm::compute_distance(double &angular_distance,
         DF2.getValue(MDL_ANGLEPSI,psi2,__iter2.objId);
         DF2.getValue(MDL_SHIFTX,X2,__iter2.objId);
         DF2.getValue(MDL_SHIFTY,Y2,__iter2.objId);
-
 
         // Bring both angles to a normalized set
         rot1 = realWRAP(rot1, -180, 180);
@@ -308,23 +310,29 @@ void Prog_angular_distance_prm::compute_distance(double &angular_distance,
     angular_distance /= i;
     shift_distance /=i;
 
-    if (fn_ang_out != "")
+    if (fn_out != "")
     {
-        DF_out.write(fn_ang_out + "_merge.txt");
+        DF_out.write(fn_out + ".xmd");
         Histogram1D hist;
-        compute_hist(rot_diff, hist, 100);
-        hist.write(fn_ang_out + "_rot_diff_hist.txt");
-        compute_hist(tilt_diff, hist, 100);
-        hist.write(fn_ang_out + "_tilt_diff_hist.txt");
-        compute_hist(psi_diff, hist, 100);
-        hist.write(fn_ang_out + "_psi_diff_hist.txt");
         compute_hist(vec_diff, hist, 0, 180, 180);
-        hist.write(fn_ang_out + "_vec_diff_hist.txt");
-        compute_hist(X_diff, hist, 20);
-        hist.write(fn_ang_out + "_X_diff_hist.txt");
-        compute_hist(Y_diff, hist, 20);
-        hist.write(fn_ang_out + "_Y_diff_hist.txt");
+        hist.write(fn_out + "_vec_diff_hist.txt");
         compute_hist(shift_diff, hist, 20);
-        hist.write(fn_ang_out + "_shift_diff_hist.txt");
+        hist.write(fn_out + "_shift_diff_hist.txt");
+        if (verbose==2)
+        {
+            compute_hist(rot_diff, hist, 100);
+            hist.write(fn_out + "_rot_diff_hist.txt");
+            compute_hist(tilt_diff, hist, 100);
+            hist.write(fn_out + "_tilt_diff_hist.txt");
+            compute_hist(psi_diff, hist, 100);
+            hist.write(fn_out + "_psi_diff_hist.txt");
+            compute_hist(X_diff, hist, 20);
+            hist.write(fn_out + "_X_diff_hist.txt");
+            compute_hist(Y_diff, hist, 20);
+            hist.write(fn_out + "_Y_diff_hist.txt");
+        }
     }
+
+    std::cout << "Global angular distance = " << angular_distance << std::endl;
+    std::cout << "Global shift   distance = " << shift_distance   << std::endl;
 }

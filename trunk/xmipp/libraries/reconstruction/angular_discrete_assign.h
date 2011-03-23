@@ -105,7 +105,7 @@ public:
     // Vector with the tilting angles of the library
     std::vector<double> tilt;
     // Parameters for computing distances
-    Prog_angular_distance_prm distance_prm;
+    ProgAngularDistance distance_prm;
 public:
     /// Empty constructor
     ProgAngularDiscreteAssign();

@@ -27,14 +27,14 @@
 
 #include <data/funcs.h>
 #include <data/metadata.h>
-
+#include <data/program.h>
 #include <data/symmetries.h>
 
 /**@defgroup AngularDistance angular_distance (Distance between two angular assignments)
    @ingroup ReconsLibrary */
 //@{
 /** Angular Distance parameters. */
-class Prog_angular_distance_prm
+class ProgAngularDistance: public XmippProgram
 {
 public:
     /** Filename angle doc 1 */
@@ -44,7 +44,7 @@ public:
     /** Filename symmetry file */
     FileName fn_sym;
     /** Filename of output file with merging */
-    FileName fn_ang_out;
+    FileName fn_out;
     /** Check mirrors for Spider APMQ */
     bool check_mirrors;
     /** Use object rotations */
@@ -58,18 +58,17 @@ public:
     SymList SL;
 public:
     /// Read argument from command line
-    void read(int argc, char **argv);
+    void readParams();
 
     /// Show
     void show();
 
-    /// Usage
-    void usage();
+    /// Define parameters
+    void defineParams();
 
     /** Produce side info.
         Read all document files and symmetry list if any.
-
-        An exception is thrown if both files are not of the same length*/
+        An exception is thrown if both files are not of the same length. */
     void produce_side_info();
 
     /** Second angle set.
@@ -96,10 +95,8 @@ public:
         double rot1, double tilt1, double psi1,
         double &rot2, double &tilt2, double &psi2, bool projdir_mode = false);
 
-    /** Compute distance.
-        Compute the distance between the two document files loaded. The
-        average distance is returned.*/
-    void compute_distance(double &angular_distance, double &shift_distance);
+    /** Run */
+    void run();
 };
 //@}
 #endif

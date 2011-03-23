@@ -27,32 +27,7 @@
 
 int main(int argc, char **argv)
 {
-    Prog_angular_distance_prm prm;
-
-    // Get input parameters
-    try
-    {
-        prm.read(argc, argv);
-        prm.show();
-    }
-    catch (XmippError XE)
-    {
-        std::cout << XE;
-        prm.usage();
-        exit(0);
-    }
-
-    // Really process
-    try
-    {
-        prm.produce_side_info();
-        double angular_distance, shift_distance;
-        prm.compute_distance(angular_distance, shift_distance);
-        std::cout << "Global angular distance = " << angular_distance << std::endl;
-        std::cout << "Global shift   distance = " << shift_distance   << std::endl;
-    }
-    catch (XmippError XE)
-    {
-        std::cout << XE;
-    }
+    ProgAngularDistance prm;
+    prm.read(argc, argv);
+    return prm.tryRun();
 }
