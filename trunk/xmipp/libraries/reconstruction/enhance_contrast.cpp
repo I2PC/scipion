@@ -147,25 +147,9 @@ void ProgEnhanceContrast::enhance(MultidimArray<double> &vol)
 #endif
 
     // 3.-BSplines + diff = edges-------------------------------------------
-    MultidimArray<double> BSpline_coefs; // We create the volumen tha is going to
-    BSpline_coefs.resize(vol);  // contain the BSpline coefficients
-    // We compute the BSpline Coefficients
-    produceSplineCoefficients(3,BSpline_coefs,vol);
-    // We create the Edge volume
-    MultidimArray<double> vol_edge; // We create the volumen tha is going to
-    vol_edge.resize(vol);  // contain the BSpline coefficients
+    MultidimArray<double> vol_edge;
+    compute_edges(vol,vol_edge);
 
-    FOR_ALL_ELEMENTS_IN_ARRAY3D(vol)
-    {
-        double V_dx;
-        double V_dy;
-        double V_dz;
-        V_dx=interpolatedElementBSplineDiffX(BSpline_coefs,j,i,k,3);
-        V_dy=interpolatedElementBSplineDiffY(BSpline_coefs,j,i,k,3);
-        V_dz=interpolatedElementBSplineDiffZ(BSpline_coefs,j,i,k,3);
-        A3D_ELEM(vol_edge,k,i,j)=sqrt((V_dx*V_dx)+(V_dy*V_dy)+(V_dz*V_dz));
-
-    }
 #ifdef DEBUG
     save()=vol_edge;
     save.write("PPP3_edge.vol");

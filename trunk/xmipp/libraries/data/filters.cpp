@@ -318,10 +318,12 @@ void contrast_enhancement(Image<double> *I)
 }
 
 /* Region growing for images ----------------------------------------------- */
-typedef struct {
-	int ii;
-	int jj;
-} Coordinate2D;
+typedef struct
+{
+    int ii;
+    int jj;
+}
+Coordinate2D;
 
 void region_growing2D(const MultidimArray<double> &I_in, MultidimArray<double> &I_out,
                       int i, int j,
@@ -355,7 +357,7 @@ void region_growing2D(const MultidimArray<double> &I_in, MultidimArray<double> &
 
 #define CHECK_POINT(i,j) \
     if (INSIDEXY(I_out,j,i))  { \
-    	double pixel=A2D_ELEM(I_out,i,j);\
+     double pixel=A2D_ELEM(I_out,i,j);\
         if (pixel!=filling_colour) \
             if ((less && pixel < stop_colour) || \
                 (!less && pixel > stop_colour)) { \
@@ -382,11 +384,13 @@ void region_growing2D(const MultidimArray<double> &I_in, MultidimArray<double> &
 }
 
 /* Region growing for volumes ----------------------------------------------- */
-typedef struct {
-	int ii;
-	int jj;
-	int kk;
-} Coordinate3D;
+typedef struct
+{
+    int ii;
+    int jj;
+    int kk;
+}
+Coordinate3D;
 
 void region_growing3D(const MultidimArray<double> &V_in, MultidimArray<double> &V_out,
                       int k, int i, int j,
@@ -425,7 +429,7 @@ void region_growing3D(const MultidimArray<double> &V_in, MultidimArray<double> &
         list for exploring its neighbours */
 #define CHECK_POINT_3D(k,i,j) \
     if (INSIDEXYZ(V_out,j,i,k))  { \
-    	double voxel=A3D_ELEM(V_out,k,i,j); \
+     double voxel=A3D_ELEM(V_out,k,i,j); \
         if (voxel!=filling_colour) \
             if ((less && voxel < stop_colour)|| \
                 (!less &&voxel > stop_colour)) { \
@@ -569,7 +573,7 @@ int label_image3D(const MultidimArray<double> &V, MultidimArray<double> &label)
     }
     FOR_ALL_ELEMENTS_IN_ARRAY3D(label)
     if (A3D_ELEM(label,k, i, j) != 0)
-    	A3D_ELEM(label,k, i, j) = A3D_ELEM(label,k, i, j) - 31999;
+        A3D_ELEM(label,k, i, j) = A3D_ELEM(label,k, i, j) - 31999;
     return colour -32000;
 }
 
@@ -1011,7 +1015,7 @@ void best_nonwrapping_shift(const MultidimArray<double> &I1,
 
 /* Align two images -------------------------------------------------------- */
 double alignImages(const MultidimArray< double >& Iref, MultidimArray< double >& I,
-                 Matrix2D< double >&M, bool wrap)
+                   Matrix2D< double >&M, bool wrap)
 {
     Iref.checkDimension(2);
     I.checkDimension(2);
@@ -2240,7 +2244,7 @@ void forcePositive(MultidimArray<double> &V)
             FOR_ALL_ELEMENTS_IN_ARRAY3D(V)
             if (A3D_ELEM(V,k, i, j)<=0)
             {
-            	neighbours.clear();
+                neighbours.clear();
                 for (int kk=-2; kk<=2; kk++)
                 {
                     int kkk=k+kk;
@@ -2269,7 +2273,7 @@ void forcePositive(MultidimArray<double> &V)
                         std::sort(neighbours.begin(),neighbours.end());
                         if (N%2==0)
                             A3D_ELEM(V,k,i,j)=0.5*(neighbours[N/2-1]+
-                                          neighbours[N/2]);
+                                                   neighbours[N/2]);
                         else
                             A3D_ELEM(V,k,i,j)=neighbours[N/2];
                     }
@@ -2282,3 +2286,22 @@ void forcePositive(MultidimArray<double> &V)
         REPORT_ERROR(ERR_NOT_IMPLEMENTED,"");
 }
 
+void compute_edges (const MultidimArray <double>& vol, MultidimArray<double> &vol_edge)
+{
+    MultidimArray<double> BSpline_coefs;
+    BSpline_coefs.initZeros(vol);
+    produceSplineCoefficients(3,BSpline_coefs,vol);
+    vol_edge.initZeros(vol);
+
+    FOR_ALL_ELEMENTS_IN_ARRAY3D(vol)
+    {
+        double V_dx;
+        double V_dy;
+        double V_dz;
+        V_dx=interpolatedElementBSplineDiffX(BSpline_coefs,j,i,k,3);
+        V_dy=interpolatedElementBSplineDiffY(BSpline_coefs,j,i,k,3);
+        V_dz=interpolatedElementBSplineDiffZ(BSpline_coefs,j,i,k,3);
+        A3D_ELEM(vol_edge,k,i,j)=sqrt((V_dx*V_dx)+(V_dy*V_dy)+(V_dz*V_dz));
+
+    }
+}

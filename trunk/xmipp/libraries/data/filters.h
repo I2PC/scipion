@@ -1303,4 +1303,7 @@ void pixelDesvFilter(MultidimArray< T > &V, double thresFactor)
     }
 }
 
+/** Compute edges with Sobel */
+void compute_edges (const MultidimArray <double>& vol, MultidimArray<double> &vol_edge);
+
 #endif
