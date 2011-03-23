@@ -795,8 +795,8 @@ void apply_geo_cont_2D_mask(MultidimArray< double >& mask,
  * Only the statistics for values in the overlapping between the mask and the
  * volume for those the mask is not 0 are computed.
  */
-template<typename T>
-void computeStats_within_binary_mask(const MultidimArray< int >& mask,
+template<typename T1, typename T>
+void computeStats_within_binary_mask(const MultidimArray< T1 >& mask,
                                      const MultidimArray< T >& m, double& min_val,
                                      double& max_val,
                                      double& avg, double& stddev)
