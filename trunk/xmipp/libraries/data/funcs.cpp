@@ -412,11 +412,11 @@ void  randomize_random_generator()
     seed = (unsigned int)rand_return;
 }
 
-float rnd_unif()
+double rnd_unif()
 {
     return ran1(&idum);
 }
-float rnd_unif(float a, float b)
+double rnd_unif(double a, double b)
 {
     if (a == b)
         return a;
@@ -425,11 +425,11 @@ float rnd_unif(float a, float b)
 }
 
 // t-distribution
-float rnd_student_t(double nu)
+double rnd_student_t(double nu)
 {
     return tdev(nu, &idum);
 }
-float rnd_student_t(double nu, float a, float b)
+double rnd_student_t(double nu, double a, double b)
 {
     if (b == 0)
         return a;
@@ -438,30 +438,30 @@ float rnd_student_t(double nu, float a, float b)
 }
 
 // Gaussian distribution ...................................................
-float rnd_gaus()
+double rnd_gaus()
 {
     return gasdev(&idum);
 }
-float rnd_gaus(float a, float b)
+double rnd_gaus(double a, double b)
 {
     if (b == 0)
         return a;
     else
         return b*gasdev(&idum) + a;
 }
-float gaus_within_x0(float x0, float mean, float stddev)
+double gaus_within_x0(double x0, double mean, double stddev)
 {
-    float z0 = (x0 - mean) / stddev;
+    double z0 = (x0 - mean) / stddev;
     return erf(ABS(z0) / sqrt(2.0));
 }
 
-float gaus_outside_x0(float x0, float mean, float stddev)
+double gaus_outside_x0(double x0, double mean, double stddev)
 {
-    float z0 = (x0 - mean) / stddev;
+    double z0 = (x0 - mean) / stddev;
     return erfc(ABS(z0) / sqrt(2.0));
 }
 
-float gaus_up_to_x0(float x0, float mean, float stddev)
+double gaus_up_to_x0(double x0, double mean, double stddev)
 {
     if (x0 > mean)
         return 1.0 -gaus_outside_x0(x0, mean, stddev) / 2;
@@ -471,7 +471,7 @@ float gaus_up_to_x0(float x0, float mean, float stddev)
         return gaus_outside_x0(x0, mean, stddev) / 2;
 }
 
-float gaus_from_x0(float x0, float mean, float stddev)
+double gaus_from_x0(double x0, double mean, double stddev)
 {
     if (x0 > mean)
         return gaus_outside_x0(x0, mean, stddev) / 2;
@@ -481,10 +481,10 @@ float gaus_from_x0(float x0, float mean, float stddev)
         return 1.0 -gaus_outside_x0(x0, mean, stddev) / 2;
 }
 
-float gaus_outside_probb(float p, float mean, float stddev)
+double gaus_outside_probb(double p, double mean, double stddev)
 {
     // Make a Bolzano search for the right value
-    float p1, p2, pm, x1, x2, xm;
+    double p1, p2, pm, x1, x2, xm;
     x1 = mean;
     x2 = mean + 5 * stddev;
     do
@@ -503,18 +503,18 @@ float gaus_outside_probb(float p, float mean, float stddev)
 }
 
 // See Numerical Recipes, Chap. 6.3
-float student_within_t0(float t0, float degrees_of_freedom)
+double student_within_t0(double t0, double degrees_of_freedom)
 {
     return 1 -betai(degrees_of_freedom / 2, 0.5,
                     degrees_of_freedom / (degrees_of_freedom + t0*t0));
 }
 
-float student_outside_t0(float t0, float degrees_of_freedom)
+double student_outside_t0(double t0, double degrees_of_freedom)
 {
     return 1 -student_within_t0(t0, degrees_of_freedom);
 }
 
-float student_up_to_t0(float t0, float degrees_of_freedom)
+double student_up_to_t0(double t0, double degrees_of_freedom)
 {
     if (t0 >= 0)
         return 1.0 -student_outside_t0(t0, degrees_of_freedom) / 2;
@@ -522,15 +522,15 @@ float student_up_to_t0(float t0, float degrees_of_freedom)
         return student_outside_t0(t0, degrees_of_freedom) / 2;
 }
 
-float student_from_t0(float t0, float degrees_of_freedom)
+double student_from_t0(double t0, double degrees_of_freedom)
 {
     return 1 -student_up_to_t0(t0, degrees_of_freedom);
 }
 
-float student_outside_probb(float p, float degrees_of_freedom)
+double student_outside_probb(double p, double degrees_of_freedom)
 {
     // Make a Bolzano search for the right value
-    float p1, p2, pm, t1, t2, tm;
+    double p1, p2, pm, t1, t2, tm;
     t1 = 0;
     t2 = 100;
     do
@@ -548,18 +548,18 @@ float student_outside_probb(float p, float degrees_of_freedom)
     return tm;
 }
 
-float chi2_up_to_t0(float t0, float degrees_of_freedom)
+double chi2_up_to_t0(double t0, double degrees_of_freedom)
 {
     return gammp(degrees_of_freedom / 2, t0 / 2);
 }
 
-float chi2_from_t0(float t0, float degrees_of_freedom)
+double chi2_from_t0(double t0, double degrees_of_freedom)
 {
     return 1 -chi2_up_to_t0(t0, degrees_of_freedom);
 }
 
 // Log uniform distribution ................................................
-float rnd_log(float a, float b)
+double rnd_log(double a, double b)
 {
     if (a == b)
         return a;
@@ -730,9 +730,9 @@ void annotate_time(TimeStamp *time)
 {}
 void print_elapsed_time(TimeStamp &time)
 {}
-float elapsed_time(TimeStamp &time)
+double elapsed_time(TimeStamp &time)
 {}
-float time_to_go(TimeStamp &time, float fraction_done)
+double time_to_go(TimeStamp &time, double fraction_done)
 {}
 void TimeMessage(const std::string &message)
 {}
@@ -769,8 +769,8 @@ void print_elapsed_time(TimeStamp &time, bool _IN_SECS)
 {
     TimeStamp now;
     times(&now);
-    float userTime = now.tms_utime - time.tms_utime;
-    float sysTime = now.tms_stime - time.tms_stime;
+    double userTime = now.tms_utime - time.tms_utime;
+    double sysTime = now.tms_stime - time.tms_stime;
     if (_IN_SECS)
     {
         userTime /= XmippTICKS;
@@ -781,12 +781,12 @@ void print_elapsed_time(TimeStamp &time, bool _IN_SECS)
 }
 
 // Calculate elapsed time since last annotation .............................
-float elapsed_time(TimeStamp &time, bool _IN_SECS)
+double elapsed_time(TimeStamp &time, bool _IN_SECS)
 {
     TimeStamp now;
     times(&now);
-    float userTime = now.tms_utime - time.tms_utime;
-    float sysTime = now.tms_stime - time.tms_stime;
+    double userTime = now.tms_utime - time.tms_utime;
+    double sysTime = now.tms_stime - time.tms_stime;
     if (_IN_SECS)
     {
         userTime /= XmippTICKS;
@@ -796,11 +796,11 @@ float elapsed_time(TimeStamp &time, bool _IN_SECS)
 }
 
 // Compute the predicted time left .........................................
-float time_to_go(TimeStamp &time, float fraction_done)
+double time_to_go(TimeStamp &time, double fraction_done)
 {
     TimeStamp now;
     times(&now);
-    float totalTime = (now.tms_utime - time.tms_utime +
+    double totalTime = (now.tms_utime - time.tms_utime +
                        now.tms_stime - time.tms_stime) / XmippTICKS;
     return totalTime*(1 - fraction_done) / fraction_done;
 }
@@ -836,7 +836,7 @@ void progress_bar(long rlen)
     static long totlen;
     long t1, t2;
     int min, i, hour;
-    float h1, h2, m1, m2;
+    double h1, h2, m1, m2;
 
     if (rlen == 0)
         return;
@@ -854,19 +854,19 @@ void progress_bar(long rlen)
     else if (totlen > 0)
     {
         t1 = currt - startt;               // Elapsed time
-        t2 = (long)(t1 * (float)totlen / rlen); // Total time
+        t2 = (long)(t1 * (double)totlen / rlen); // Total time
 
         hour = 0;
         min = 0;
         if (t2 > 60)
         {
-            m1 = (float)t1 / 60.0;
-            m2 = (float)t2 / 60.0;
+            m1 = (double)t1 / 60.0;
+            m2 = (double)t2 / 60.0;
             min = 1;
             if (m2 > 60)
             {
-                h1 = (float)m1 / 60.0;
-                h2 = (float)m2 / 60.0;
+                h1 = (double)m1 / 60.0;
+                h2 = (double)m2 / 60.0;
                 hour = 1;
                 min = 0;
             }
@@ -883,7 +883,7 @@ void progress_bar(long rlen)
         else
             fprintf(stderr, "\r%4u/%4u %4s ", (int)t1, (int)t2, "sec.");
 
-        i = (int)(60 * (1 - (float)(totlen - rlen) / totlen));
+        i = (int)(60 * (1 - (double)(totlen - rlen) / totlen));
         while (i--)
             fprintf(stderr, ".");
         if (rlen == totlen)

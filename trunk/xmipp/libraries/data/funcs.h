@@ -500,7 +500,7 @@ void randomize_random_generator();
  * << std::endl;
  * @endcode
  */
-float rnd_unif();
+double rnd_unif();
 
 /** Produce a uniform random number between a and b
  *
@@ -509,7 +509,7 @@ float rnd_unif();
  * << std::endl;
  * @endcode
  */
-float rnd_unif(float a, float b);
+double rnd_unif(double a, double b);
 
 /** Produce a t-distributed random number with mean 0 and standard deviation 1 and nu degrees of freedom
  *
@@ -518,7 +518,7 @@ float rnd_unif(float a, float b);
  * << std::endl;
  * @endcode
  */
-float rnd_student_t(double nu);
+double rnd_student_t(double nu);
 
 /** Produce a gaussian random number with mean a and standard deviation b and nu degrees of freedom
  *
@@ -527,7 +527,7 @@ float rnd_student_t(double nu);
  * << std::endl;
  * @endcode
  */
-float rnd_student_t(double nu, float a, float b);
+double rnd_student_t(double nu, double a, double b);
 
 /** Produce a gaussian random number with mean 0 and standard deviation 1
  *
@@ -536,7 +536,7 @@ float rnd_student_t(double nu, float a, float b);
  * << std::endl;
  * @endcode
  */
-float rnd_gaus();
+double rnd_gaus();
 
 /** Produce a gaussian random number with mean a and standard deviation b
  *
@@ -545,84 +545,84 @@ float rnd_gaus();
  * << std::endl;
  * @endcode
  */
-float rnd_gaus(float a, float b);
+double rnd_gaus(double a, double b);
 
 /** Gaussian area from -x0 to x0
  *
  * By default the gaussian mean is 0 and the gaussian standard deviation is 1.
  * x0 must be positive
  */
-float gaus_within_x0(float x0, float mean = 0, float stddev = 1);
+double gaus_within_x0(double x0, double mean = 0, double stddev = 1);
 
 /** Gaussian area outisde -x0 to x0
  *
  * By default the gaussian mean is 0 and the gaussian standard deviation is 1.
  * x0 must be positive
  */
-float gaus_outside_x0(float x0, float mean = 0, float stddev = 1);
+double gaus_outside_x0(double x0, double mean = 0, double stddev = 1);
 
 /** Gaussian area from -inf to x0
  *
  * By default the gaussian mean is 0 and the gaussian standard deviation is 1.
  * There is no restriction over the sign of x0
  */
-float gaus_up_to_x0(float x0, float mean = 0, float stddev = 1);
+double gaus_up_to_x0(double x0, double mean = 0, double stddev = 1);
 
 /** Gaussian area from x0 to inf
  *
  * By default the gaussian mean is 0 and the gaussian standard deviation is 1.
  * There is no restriction over the sign of x0
  */
-float gaus_from_x0(float x0, float mean = 0, float stddev = 1);
+double gaus_from_x0(double x0, double mean = 0, double stddev = 1);
 
 /** t0 for a given two-sided probability
  *
  * This function returns t0 such that the student probability outside t0 is
  * equal to p
  */
-float student_outside_probb(float p, float degrees_of_freedom);
+double student_outside_probb(double p, double degrees_of_freedom);
 
 /** student area from -t0 to t0
  *
  * By default the student mean is 0 and the student standard deviation is 1.
  * t0 must be positive
  */
-float student_within_t0(float t0, float degrees_of_freedom);
+double student_within_t0(double t0, double degrees_of_freedom);
 
 /** student area outisde -t0 to t0
  *
  * By default the student mean is 0 and the student standard deviation is 1.
  * t0 must be positive
  */
-float student_outside_t0(float t0, float degrees_of_freedom);
+double student_outside_t0(double t0, double degrees_of_freedom);
 
 /** student area from -inf to t0
  *
  * By default the student mean is 0 and the student standard deviation is 1.
  * There is no restriction over the sign of t0
  */
-float student_up_to_t0(float t0, float degrees_of_freedom);
+double student_up_to_t0(double t0, double degrees_of_freedom);
 
 /** student area from t0 to inf
  *
  * By default the student mean is 0 and the student standard deviation is 1.
  * There is no restriction over the sign of t0
  */
-float student_from_t0(float t0, float degrees_of_freedom);
+double student_from_t0(double t0, double degrees_of_freedom);
 
 /** chi2 area from -inf to t0
  *
  * By default the chi2 mean is 0 and the chi2 standard deviation is 1.
  * There is no restriction over the sign of t0
  */
-float chi2_up_to_t0(float t0, float degrees_of_freedom);
+double chi2_up_to_t0(double t0, double degrees_of_freedom);
 
 /** chi2 area from t0 to inf
  *
  * By default the chi2 mean is 0 and the chi2 standard deviation is 1.
  * There is no restriction over the sign of t0
  */
-float chi2_from_t0(float t0, float degrees_of_freedom);
+double chi2_from_t0(double t0, double degrees_of_freedom);
 
 /** Produce a log uniform random number between a and b
  *
@@ -633,7 +633,7 @@ float chi2_from_t0(float t0, float degrees_of_freedom);
  * << rnd_log(10,1000)<< std::endl;
  * @endcode
  */
-float rnd_log(float a, float b);
+double rnd_log(double a, double b);
 //@}
 
 /** @name Filename handling
@@ -701,7 +701,7 @@ float rnd_log(float a, float b);
  * @code
  * // Variable declaration
  * TimeStamp t0;
- * float to_go;
+ * double to_go;
  *
  * // Beginning of the program
  * time_config();
@@ -713,7 +713,7 @@ float rnd_log(float a, float b);
  * {
  *     ...
  *     // Compute the time to go with the fraction of work already done
- *     to_go = time_to_go(t0, (float) (i + 1) / 60);
+ *     to_go = time_to_go(t0, (double) (i + 1) / 60);
  *     std::cout << "I think you will be here " << to_go << "seconds more\n";
  * }
  * @endcode
@@ -802,17 +802,17 @@ void acum_time(TimeStamp* orig, TimeStamp* dest);
  * TimeStamp t0;
  * annotate_time(&t0);
  * ...;
- * float elapsed = elapsed_time(t0);
+ * double elapsed = elapsed_time(t0);
  *
  * TimeStamp t0;
  * annotate_time(&t0);
  * ...;
- * float elapsed = elapsed_time(t0, FALSE);
+ * double elapsed = elapsed_time(t0, FALSE);
  * @endcode
  *
  * This function is not ported to Python.
  */
-float elapsed_time(TimeStamp& time, bool _IN_SECS = true);
+double elapsed_time(TimeStamp& time, bool _IN_SECS = true);
 
 /** Show on screen the elapsed time since a given annotation
  *
@@ -842,7 +842,7 @@ void print_elapsed_time(TimeStamp& time, bool _IN_SECS = true);
  *
  * This function is not ported to Python.
  */
-float time_to_go(TimeStamp& time, float fraction_done);
+double time_to_go(TimeStamp& time, double fraction_done);
 
 /** Initialise the progress bar
  *
@@ -1025,11 +1025,11 @@ void TimeMessage(const std::string &message);
  * saying if data should be read in reverse order or not.
  *
  * @code
- * float f;
- * xmippFREAD(&f, sizeof(float), 1, fp, TRUE); // Reverse order
+ * double f;
+ * xmippFREAD(&f, sizeof(double), 1, fp, TRUE); // Reverse order
  *
- * float f;
- * xmippFREAD(&f, sizeof(float), 1, fp); // Normal order
+ * double f;
+ * xmippFREAD(&f, sizeof(double), 1, fp); // Normal order
  * @endcode
  *
  * This function is not ported to Python.
@@ -1097,7 +1097,7 @@ bool IsLittleEndian(void);
  * source for those who absolutely positively have to have a large, reliable set
  * of random numbers for serious simulation (Monte Carlo) studies."
  *
- * When the random numbers are floats, by default they are in the interval [0,1]
+ * When the random numbers are doubles, by default they are in the interval [0,1]
  *
  * This class is not ported to Python.
  */
@@ -1155,14 +1155,14 @@ public:
 
             random_vector = new char[(Number_of_Numbers * Type_size)];
             T_random_vector = (T*) random_vector;
-            in.seekg((std::streampos) FLOOR(rnd_unif(0.f, (float)(sp -
+            in.seekg((std::streampos) FLOOR(rnd_unif(0.f, (double)(sp -
                                             (std::streamoff)(Number_of_Numbers * Type_size)))), std::ios::beg);
             in.read(random_vector, (Number_of_Numbers * Type_size));
 
             in.close();
         }
-        if (typeid(float) == typeid(T))
-            Verify_float();
+        if (typeid(double) == typeid(T))
+            Verify_double();
     }
 
     /** Get a random number from the memory
@@ -1173,16 +1173,16 @@ public:
     T Get_One_Number()
     {
         if (pointer_in_memory >= Number_of_Numbers)
-            pointer_in_memory = (int) FLOOR(rnd_unif(0.f, (float)
+            pointer_in_memory = (int) FLOOR(rnd_unif(0.f, (double)
                                             (Number_of_Numbers - 1)));
         return (T_random_vector[pointer_in_memory++]);
     }
 
-    /** Calculate random vector log (use only with floats)
+    /** Calculate random vector log (use only with doubles)
      */
     void Marsaglia_log()
     {
-        if (typeid(float) != typeid(T) && typeid(double) != typeid(T))
+        if (typeid(double) != typeid(T) && typeid(double) != typeid(T))
             REPORT_ERROR(ERR_TYPE_INCORRECT,
                          "Marsaglia: I do not know how to calculate integer logs");
 
@@ -1235,7 +1235,7 @@ public:
         m_max;
 
         // get a random number to set the file pointer at a random position
-        in.seekg((std::streampos) FLOOR(rnd_unif(0.f, (float)(sp -
+        in.seekg((std::streampos) FLOOR(rnd_unif(0.f, (double)(sp -
                                         (std::streamoff)(Number_of_Numbers*Type_size)))), std::ios::beg);
         for (int ii = 0; ii < Number_of_Numbers;)
         {
@@ -1245,7 +1245,7 @@ public:
                 (T_random_vector[ii] <= 0) && (aux_number == 0))
             {
                 if (in.eof())
-                    in.seekg((std::streampos) FLOOR(rnd_unif(0.f, (float)
+                    in.seekg((std::streampos) FLOOR(rnd_unif(0.f, (double)
                                                     (sp - (std::streamoff)(Number_of_Numbers*Type_size)))),
                              std::ios::beg);
                 in.read((char*) &(T_random_vector[ii]), Type_size);
@@ -1260,22 +1260,22 @@ public:
     }
 
 private:
-    /** Verify float
+    /** Verify double
      *
      * Be aware that Marsaglia reads blindly the data, therefore if the type
-     * float is selected several of the "random" numbers may not be valid (the
+     * double is selected several of the "random" numbers may not be valid (the
      * number are created from a source of random bits and although 4 random
-     * bits are one random integer, four random bits may not be a valid float).
-     * If Marsaglia is "float" The constructor will run the following function
+     * bits are one random integer, four random bits may not be a valid double).
+     * If Marsaglia is "double" The constructor will run the following function
      * that will fix the problem
      */
-    void Verify_float()
+    void Verify_double()
     {
         unsigned int* int_random_vector;
         long long MaxInteger;
-        if (sizeof(float) != sizeof(int))
+        if (sizeof(double) != sizeof(int))
             REPORT_ERROR(ERR_TYPE_INCORRECT,
-                         "Marsaglia: I do not know how to make the float correction");
+                         "Marsaglia: I do not know how to make the double correction");
         MaxInteger = (long long) pow(2.0, sizeof(unsigned int) * 8.0);
         int_random_vector = (unsigned int*) random_vector;
         for (int hh = 0; hh < Number_of_Numbers; hh++)
