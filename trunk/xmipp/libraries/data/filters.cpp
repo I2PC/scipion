@@ -241,16 +241,14 @@ void detect_background(const MultidimArray<double> &vol, MultidimArray<double> &
         //We compute stat when is needed
         if(cont==n)
         {
-            // Calculamos los estad�sticos
-            double avg, stddev, minval, maxval;
-            computeStats(bg_values,avg,stddev,minval,maxval);
+            // Compute statistics
+            double avg, stddev;
+            computeAvgStddev(bg_values,avg,stddev);
             final_mean=avg;
-            // Calculamos el intervalo de confianza
+            // Compute confidence interval
             A=avg-(z*stddev);
             B=avg+(z*stddev);
-            cont=0; // aumentamos el contador
-            //std::cout << "Pulsa una tecla\n";
-            //  char c; std::cin >> c;
+            cont=0;
         } // end of if
         // Now we start to take coords from the list_for_compute
         int x_coord=list_for_compute.front();
@@ -272,7 +270,6 @@ void detect_background(const MultidimArray<double> &vol, MultidimArray<double> &
             bg_values.push_back(value);
             // We update the cont variable
             cont++;
-
 
             // We add his neighbours in the list_for_compute
             for(int xx=x_coord-1;xx<=x_coord+1;xx++)
@@ -301,7 +298,6 @@ void detect_background(const MultidimArray<double> &vol, MultidimArray<double> &
         DIRECT_A3D_ELEM(bg,k,i,j)=0;
 
     // End of 2.1-----------------------------------------------------------
-
     // 2.2.-Matematical Morphology
     MultidimArray<double> bg_mm; // We create the output volumen
     bg_mm.resize(vol);
