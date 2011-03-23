@@ -57,9 +57,9 @@ ProgMLRefine3D::ProgMLRefine3D(bool fourier)
 {
     fourier_mode = fourier;
     if (fourier)
-        ml2d = new ProgMLF2D(true);
+        ml2d = new ProgMLF2D();
     else
-        ml2d = new ProgML2D(true);
+        ml2d = new ProgML2D();
     rank = 0;
     size = 1;
 }
@@ -228,7 +228,7 @@ void ProgMLRefine3D::readParams()
     fn_symmask = getParam( "--sym_mask");
     lowpass = getDoubleParam( "--low_pass");
 
-    //    wlsart_no_start = checkParam( "--nostart");
+    wlsart_no_start = checkParam( "--nostart");
     //    if (checkParam("--wlsart"))
     //    {
     //        wlsart_lambda = getDoubleParam("--wlsart", 0);
@@ -256,6 +256,7 @@ void ProgMLRefine3D::readParams()
         REPORT_ERROR(ERR_VALUE_INCORRECT, "Digital frequency for low-pass filter should be smaller than 0.5");
 
     //Read ml2d params
+    ml2d->do_ML3D = true;
     ml2d->read(argc, argv, false);
 
     if (!checkParam("--psi_step"))
@@ -562,7 +563,7 @@ ProgReconsBase * ProgMLRefine3D::createReconsProgram()
         //force use of weights and the verbosity will be the same of this program
         //-i and -o options are passed for avoiding errors, this should be changed
         //when reconstructing
-        arguments += formatString(" --weight -v %d --thr -i iii -o ooo", verbose, ml2d->threads);
+        arguments += formatString(" --weight -v 0 --thr %d -i iii -o ooo", ml2d->threads);
         program->read(arguments);
         return program;
     }
@@ -620,14 +621,18 @@ void ProgMLRefine3D::reconstructVolumes(const MetaData &mdProj, const FileName &
 
     for (int volno = 1; volno <= Nvols; ++volno)
     {
-        fn_vol.compose(volno, outBase);
-        fn_one.compose(outBase, volno, "projections.xmd");
-        // Select only relevant projections to reconstruct
-        mdOne.importObjects(mdProj, MDValueEQ(MDL_REF3D, volno));
-        mdOne.write(fn_one);
-        // Set input/output for the reconstruction algorithm
-        reconsProgram->setIO(fn_one, fn_vol);
-        reconsProgram->tryRun();
+        //for now each node reconstruct one volume
+        if ((volno - 1) % size == rank)
+        {
+            fn_vol.compose(volno, outBase);
+            fn_one.compose(outBase, volno, "projections.xmd");
+            // Select only relevant projections to reconstruct
+            mdOne.importObjects(mdProj, MDValueEQ(MDL_REF3D, volno));
+            mdOne.write(fn_one);
+            // Set input/output for the reconstruction algorithm
+            reconsProgram->setIO(fn_one, fn_vol);
+            reconsProgram->tryRun();
+        }
     }
 
     // Free reconsProgram

@@ -142,14 +142,14 @@ public:
     void calculate3DSSNR(MultidimArray<double> &spectral_signal);
 
     /** Copy reference volumes before start processing */
-    void copyVolumes();
+    virtual void copyVolumes();
     /** Update the metadata with reference volumes */
     void updateVolumesMetadata();
 
 
 
     /// Masking, filtering etc. of the volume
-    void postProcessVolumes();
+    virtual void postProcessVolumes();
 
     /// Convergency check
     bool checkConvergence() ;
