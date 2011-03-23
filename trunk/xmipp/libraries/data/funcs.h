@@ -317,11 +317,11 @@ void computeStats(const std::vector<T> &V, double& avg, double& stddev,
 
     minval = maxval = V[0];
 
-    unsigned long int n, nmax;
-    nmax=V.size();
-    for (n=0; n<nmax; n++)
+    size_t nmax=V.size();
+    const T* ptr=&V[0];
+    for(size_t n=0; n<nmax; ++n, ++ptr)
     {
-    	double val=V[n];
+    	double val=*ptr;
         avg += val;
         stddev += val * val;
 
@@ -330,7 +330,38 @@ void computeStats(const std::vector<T> &V, double& avg, double& stddev,
         else if (val < minval)
             minval = val;
     }
+    avg /= nmax;
 
+    if (nmax > 1)
+    {
+        stddev = stddev / nmax - avg * avg;
+        stddev *= nmax / (nmax - 1);
+
+        // Foreseeing numerical instabilities
+        stddev = sqrt(static_cast< double >(ABS(stddev)));
+    }
+    else
+        stddev = 0;
+}
+
+/** Compute statistics of a std::vector
+ */
+template <class T>
+void computeAvgStddev(const std::vector<T> &V, double& avg, double& stddev)
+{
+    if (V.size()<= 0) return;
+
+    avg = 0;
+    stddev = 0;
+
+    size_t nmax=V.size();
+    const T* ptr=&V[0];
+    for(size_t n=0; n<nmax; ++n, ++ptr)
+    {
+    	double val=*ptr;
+        avg += val;
+        stddev += val * val;
+    }
     avg /= nmax;
 
     if (nmax > 1)
