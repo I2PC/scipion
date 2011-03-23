@@ -50,6 +50,7 @@ enum MDLabel
     MDL_FIRST_LABEL, ///< The label MDL_OBJID is special and should not be used
     MDL_OBJID = MDL_FIRST_LABEL, ///< object id (int), NOTE: This label is special and shouldn't be used
 
+    MDL_ANGLE_COMPARISON, ///< Angular comparison (see angular_distance.cpp)
     MDL_ANGLEPSI2, ///< Psi angle of an image (double,degrees)
     MDL_ANGLEPSI, ///< Psi angle of an image (double,degrees)
     MDL_ANGLEROT2, ///< Rotation angle of an image (double,degrees)
@@ -290,6 +291,7 @@ private:
         //The label MDL_OBJID is special and should not be used
         MDL::addLabel(MDL_OBJID, LABEL_LONG, "objId");
 
+        MDL::addLabel(MDL_ANGLE_COMPARISON, LABEL_VECTOR, "angleComparison", "psi2");
         MDL::addLabel(MDL_ANGLEPSI2, LABEL_DOUBLE, "anglePsi2", "psi2");
         MDL::addLabel(MDL_ANGLEPSI, LABEL_DOUBLE, "anglePsi", "psi");
         MDL::addLabel(MDL_ANGLEROT2, LABEL_DOUBLE, "angleRot2", "rot2");
