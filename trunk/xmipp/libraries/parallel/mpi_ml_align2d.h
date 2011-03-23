@@ -28,7 +28,7 @@
 
 #include "parallel/mpi.h"
 #include "reconstruction/ml_align2d.h"
-
+#include "reconstruction/ml_refine3d.h"
 
 /**@defgroup MPI_Programs Programs that parallelize using MPI library
    @ingroup ParallelLibrary */
@@ -38,13 +38,17 @@ class MpiProgML2D: public ProgML2D
 {
 private:
     MpiNode *node;
+    bool created_node;
 
 public:
-
+    /** Default constructor */
+    MpiProgML2D();
+    /** Constructor passing the MpiNode */
+    MpiProgML2D(MpiNode * node);
     /** Destructor */
     ~MpiProgML2D();
     /** Redefine XmippProgram read to perform some syncronization */
-    void read(int argc, char** argv);
+    void read(int argc, char ** argv, bool reportErrors = true);
     /** Only take a part of images for process */
     void setNumberOfLocalImages();
     /** All mpi nodes should syncronize at this point
@@ -64,5 +68,25 @@ public:
 
 }
 ;//end of class MpiProgML2D
+
+class MpiProgMLRefine3D: public ProgMLRefine3D
+{
+private:
+    MpiNode *node;
+
+public:
+    /** Constructor */
+    MpiProgMLRefine3D(int argc, char ** argv, bool fourier = false);
+    /** Destructor */
+    virtual ~MpiProgMLRefine3D();
+    /** Redefine XmippProgram read to perform some syncronization */
+    void read(int argc, char ** argv, bool reportErrors = true);
+    /** Only master copy reference volumes before start processing */
+    void copyVolumes();
+    /** Only master postprocess volumnes */
+    void postProcessVolumes();
+
+}
+;//end of class  MpiProgMLRefine3D
 
 #endif /* MPI_ML_ALIGN2D_H_ */

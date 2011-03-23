@@ -30,26 +30,42 @@
 #define TAG_DOCFILESIZE 2
 #define TAG_DOCFILE 3
 
-MpiProgML2D::~MpiProgML2D()
+MpiProgML2D::MpiProgML2D()
 {
-    delete node;
+    node = NULL;
 }
 
-void MpiProgML2D::read(int argc, char** argv)
+MpiProgML2D::MpiProgML2D(MpiNode * node)
 {
-    node = new MpiNode(argc, argv);
+    this->node = node;
+    created_node = false;
+}
+
+MpiProgML2D::~MpiProgML2D()
+{
+    if (created_node)
+        delete node;
+}
+
+void MpiProgML2D::read(int argc, char** argv, bool report)
+{
+    if (node == NULL)
+    {
+        node = new MpiNode(argc, argv);
+        created_node = true;
+    }
     // Read subsequently to avoid problems in restart procedure
     for (int proc = 0; proc < node->size; ++proc)
     {
         if (proc == node->rank)
-            ProgML2D::read(argc, argv);
+            ProgML2D::read(argc, argv, report);
         node->barrierWait();
     }
 
     //Send "master" seed to slaves for same randomization
     MPI_Bcast(&seed, 1, MPI_INT, 0, MPI_COMM_WORLD);
     if (!node->isMaster())
-      verbose = 0;
+        verbose = 0;
 }
 
 void MpiProgML2D::setNumberOfLocalImages()
@@ -167,7 +183,59 @@ void MpiProgML2D::printModel(const String &msg, const ModelML2D & model)
 
 void MpiProgML2D::usage(int verb) const
 {
-  if (node->isMaster())
-    ProgML2D::usage();
+    if (node->isMaster())
+        ProgML2D::usage();
+}
+
+MpiProgMLRefine3D::MpiProgMLRefine3D(int argc, char ** argv, bool fourier)
+{
+    //create mpi node, which will be passed to ml2d
+    node = new MpiNode(argc, argv);
+
+    fourier_mode = fourier;
+
+    if (fourier)
+        ml2d = NULL; //fixme new ProgMLF2D(true);
+    else
+        ml2d = new MpiProgML2D(node);
+
+    rank = node->rank;
+    size = node->size;
+}
+
+MpiProgMLRefine3D::~MpiProgMLRefine3D()
+{
+    delete ml2d;
+}
+
+void MpiProgMLRefine3D::copyVolumes()
+{
+    //only master copy volumes before processing
+    if (node->isMaster())
+        ProgMLRefine3D::copyVolumes();
+    //all nodes waiting until volumes are copied
+    node->barrierWait();
+}
+
+void MpiProgMLRefine3D::postProcessVolumes()
+{
+    //only master post process
+    if (node->isMaster())
+        ProgMLRefine3D::postProcessVolumes();
+    //all nodes waiting until volumes are copied
+    node->barrierWait();
+}
+
+void MpiProgMLRefine3D::read(int argc, char** argv, bool report)
+{
+    // Read subsequently to avoid problems in restart procedure
+    for (int proc = 0; proc < node->size; ++proc)
+    {
+        if (proc == node->rank)
+            ProgMLRefine3D::read(argc, argv, report);
+        node->barrierWait();
+    }
+    if (!node->isMaster())
+        verbose = 0;
 }
 
