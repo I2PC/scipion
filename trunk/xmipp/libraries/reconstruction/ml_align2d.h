@@ -115,7 +115,7 @@ public:
 
 
 public:
-    ProgML2D(bool ML3D = false);
+    ProgML2D();
     ///Show info at starting program
     virtual void show();
     ///Try to merge produceSideInfo1 and 2

@@ -33,9 +33,9 @@ pthread_mutex_t refno_mutex =
     PTHREAD_MUTEX_INITIALIZER;
 
 // Constructor
-ProgML2D::ProgML2D(bool ML3D)
+ProgML2D::ProgML2D()
 {
-    do_ML3D = ML3D;
+    do_ML3D = false;
     refs_per_class = 1;
 }
 
@@ -73,7 +73,8 @@ void ProgML2D::defineParams()
 void ProgML2D::readParams()
 {
     // Generate new command line for restart procedure
-    cline = "";
+
+  cline = "";
     int argc2 = 0;
     char ** argv2 = NULL;
 
@@ -2207,7 +2208,6 @@ void ProgML2D::writeOutputFiles(const ModelML2D &model, OutputType outputType)
     switch (outputType)
     {
     case OUT_BLOCK:
-        std::cerr << "OUT_BLOCK" <<std::endl;
         write_img_xmd = false;
         write_conv = false;
         // Sjors 18may2010: why not write scales in blocks? We need this now, don't we?
@@ -2216,12 +2216,10 @@ void ProgML2D::writeOutputFiles(const ModelML2D &model, OutputType outputType)
         fn_prefix = formatString("block%03d", current_block + 1);
         break;
     case OUT_ITER:
-        std::cerr << "OUT_ITER" <<std::endl;
         //fn_base = getBaseName("_it", iter);
         fn_prefix = ITER_PREFIX;
         break;
     case OUT_FINAL:
-        std::cerr << "OUT_FINAL" <<std::endl;
         //fn_base = fn_root;
         fn_prefix = "final";
         break;
