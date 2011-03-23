@@ -69,6 +69,9 @@ class Tester:
         self.addTest("-i input/aFewProjections.sel -o %o/assigned_angles.txt --ref %o/reference.doc",False,
                      "xmipp_angular_project_library -i input/phantomBacteriorhodopsin.vol -o %o/reference.stk --sampling_rate 10")
 
+        self.addProgram("xmipp_angular_distance")
+        self.addTest("--ang1 input/discreteAssignment.xmd --ang2 input/aFewProjections.sel --oroot %o/angleComparison --sym c3 -v 2")
+
         self.addProgram("xmipp_angular_project_library")
         self.addTest("-i input/phantomBacteriorhodopsin.vol -o %o/output_projections.stk --sym c6 --sampling_rate 5", True)
 
