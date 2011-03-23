@@ -38,8 +38,7 @@ MultidimArrayGeneric::MultidimArrayGeneric(MultidimArrayGeneric &mdim, int selec
     init();
     setDatatype(mdim.datatype);
 
-#define ALIAS(type) ((MultidimArray<type>*)(im))->aliasSlice(*((MultidimArray<type>*)mdim.im), select_slice)
-
+#define ALIAS(type) ((MultidimArray<type>*)(im))->aliasSlice(*((MultidimArray<type>*)mdim.im), select_slice);
     SWITCHDATATYPE(mdim.datatype, ALIAS)
 #undef ALIAS
 }
@@ -140,7 +139,7 @@ void MultidimArrayGeneric::aliasSlice(MultidimArrayGeneric &mdim, int select_sli
 {
     setDatatype(mdim.datatype);
 
-#define ALIAS(type) ((MultidimArray<type>*)(im))->aliasSlice(*((MultidimArray<type>*)mdim.im), select_slice)
+#define ALIAS(type) ((MultidimArray<type>*)(im))->aliasSlice(*((MultidimArray<type>*)mdim.im), select_slice);
 
     SWITCHDATATYPE(mdim.datatype, ALIAS)
 #undef ALIAS

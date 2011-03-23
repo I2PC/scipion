@@ -1031,10 +1031,8 @@ inline void scaleToSize(int SplineDegree,
                         MultidimArray<T> &V2,
                         const MultidimArrayGeneric &V1,int Xdim, int Ydim, int Zdim = 1)
 {
-#define SCALETOSIZE(type) scaleToSize(SplineDegree,V2,*((MultidimArray<type>*)(V1.im)),Xdim,Ydim,Zdim)
-
+#define SCALETOSIZE(type) scaleToSize(SplineDegree,V2,*((MultidimArray<type>*)(V1.im)),Xdim,Ydim,Zdim);
     SWITCHDATATYPE(V1.datatype,SCALETOSIZE)
-
 #undef SCALETOSIZE
 }
 

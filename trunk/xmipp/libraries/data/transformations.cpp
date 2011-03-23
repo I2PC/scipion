@@ -45,8 +45,8 @@ void geo2TransformationMatrix(const MDRow &imageGeo, Matrix2D<double> &A,
     //This check the case when matrix A is not initialized with correct size
     if (dim < 2 || dim > 3)
     {
-      dim = 3;
-      A.resizeNoCopy(dim + 1, dim + 1);
+        dim = 3;
+        A.resizeNoCopy(dim + 1, dim + 1);
     }
 
     if (only_apply_shifts)
@@ -55,12 +55,12 @@ void geo2TransformationMatrix(const MDRow &imageGeo, Matrix2D<double> &A,
         rotation2DMatrix(psi, A, true);
     else if (dim == 3)//3D geometry
     {
-      double rot = 0., tilt = 0., shiftZ = 0.;
-      imageGeo.getValue(MDL_ANGLEROT, rot);
-      imageGeo.getValue(MDL_ANGLETILT, tilt);
-      imageGeo.getValue(MDL_SHIFTZ, shiftY);
-      Euler_angles2matrix(rot, tilt, psi, A, true);
-      MAT_ELEM(A, 2, dim) = shiftZ;
+        double rot = 0., tilt = 0., shiftZ = 0.;
+        imageGeo.getValue(MDL_ANGLEROT, rot);
+        imageGeo.getValue(MDL_ANGLETILT, tilt);
+        imageGeo.getValue(MDL_SHIFTZ, shiftY);
+        Euler_angles2matrix(rot, tilt, psi, A, true);
+        MAT_ELEM(A, 2, dim) = shiftZ;
     }
     MAT_ELEM(A, 0, dim) = shiftX;
     MAT_ELEM(A, 1, dim) = shiftY;
@@ -76,12 +76,12 @@ void geo2TransformationMatrix(const MDRow &imageGeo, Matrix2D<double> &A,
         MAT_ELEM(A, 0, 0) *= -1.;
         MAT_ELEM(A, 0, 1) *= -1.;
         if (dim == 3)
-          MAT_ELEM(A, 0, 2) *= -1.;
+            MAT_ELEM(A, 0, 2) *= -1.;
     }
 }
 
 void transformationMatrix2Parameters(const Matrix2D<double> &A, bool &flip,
-		double &scale, double &shiftX, double &shiftY, double &psi)
+                                     double &scale, double &shiftX, double &shiftY, double &psi)
 {
     //Calculate determinant for getting flip
     flip = ((dMij(A, 0, 0) * dMij(A, 1, 1) - dMij(A, 0, 1) * dMij(A, 1, 0) ) < 0);
@@ -99,15 +99,15 @@ void transformationMatrix2Parameters(const Matrix2D<double> &A, bool &flip,
                                                   imageGeo.setValue(label, value);
 void transformationMatrix2Geo(const Matrix2D<double> &A, MDRow & imageGeo)
 {
-	bool flip;
-	double scale, shiftX, shiftY, psi;
-	transformationMatrix2Parameters(A,flip, scale, shiftX, shiftY, psi);
+    bool flip;
+    double scale, shiftX, shiftY, psi;
+    transformationMatrix2Parameters(A,flip, scale, shiftX, shiftY, psi);
 
     ADD_IF_EXIST_NONZERO(MDL_ANGLEPSI, psi);
     ADD_IF_EXIST_NONZERO(MDL_SHIFTX, shiftX);
     ADD_IF_EXIST_NONZERO(MDL_SHIFTY, shiftY);
     if (imageGeo.containsLabel(MDL_SCALE) || !XMIPP_EQUAL_REAL(scale, 1.))
-      imageGeo.setValue(MDL_SCALE, scale);
+        imageGeo.setValue(MDL_SCALE, scale);
     if (imageGeo.containsLabel(MDL_FLIP) || flip)
         imageGeo.setValue(MDL_FLIP, flip);
 }
@@ -335,10 +335,11 @@ void applyGeometry(int SplineDegree,
                    const Matrix2D< double > &A, bool inv,
                    bool wrap, double outside)
 {
-#define APPLYGEO(type)  applyGeometry(SplineDegree,(*(MultidimArray<type>*)(V2.im)), (*(MultidimArray<type>*)(V1.im)), A, inv, wrap, (type) outside)
+#define APPLYGEO(type)  applyGeometry(SplineDegree,(*(MultidimArray<type>*)(V2.im)), (*(MultidimArray<type>*)(V1.im)), A, inv, wrap, (type) outside);
     SWITCHDATATYPE(V1.datatype, APPLYGEO)
 #undef APPLYGEO
- }
+
+}
 
 // Special case for complex arrays
 void produceSplineCoefficients(int SplineDegree,
@@ -390,25 +391,21 @@ void selfScaleToSize(int SplineDegree,
 
 /** Same as template version but for MultidimArrayGeneric */
 void selfPyramidReduce(int SplineDegree,
-                   MultidimArrayGeneric &V1,
-                   int levels)
+                       MultidimArrayGeneric &V1,
+                       int levels)
 {
-  #define SELFPYRAMIDREDUCE(type) selfPyramidReduce(SplineDegree, *((MultidimArray<type>*)(V1.im)), levels)
-
+#define SELFPYRAMIDREDUCE(type) selfPyramidReduce(SplineDegree, *((MultidimArray<type>*)(V1.im)), levels);
     SWITCHDATATYPE(V1.datatype,SELFPYRAMIDREDUCE);
-
 #undef SELFPYRAMIDREDUCE
 }
 
 /** Same as previous but for MultidimArrayGeneric */
 void selfPyramidExpand(int SplineDegree,
-                   MultidimArrayGeneric &V1,
-                   int levels)
+                       MultidimArrayGeneric &V1,
+                       int levels)
 {
-  #define SELFPYRAMIDEXPAND(type) selfPyramidExpand(SplineDegree, *((MultidimArray<type>*)(V1.im)), levels)
-
+#define SELFPYRAMIDEXPAND(type) selfPyramidExpand(SplineDegree, *((MultidimArray<type>*)(V1.im)), levels);
     SWITCHDATATYPE(V1.datatype,SELFPYRAMIDEXPAND);
-
 #undef SELFPYRAMIDEXPAND
 }
 

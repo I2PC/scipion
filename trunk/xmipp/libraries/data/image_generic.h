@@ -212,8 +212,8 @@ public:
      */
     inline double getPixel(unsigned long n, int k, int i, int j) const
     {
-#define GETVALUE(type) return NZYX_ELEM(*(MultidimArray<type>*)data->im,n,k,i,j)
-        SWITCHDATATYPE(datatype,GETVALUE);
+#define GETVALUE(type) return NZYX_ELEM(*(MultidimArray<type>*)data->im,n,k,i,j);
+        SWITCHDATATYPE(datatype,GETVALUE)
 #undef GETVALUE
 
     }
@@ -222,8 +222,8 @@ public:
      */
     inline void setPixel(unsigned long n, int k, int i, int j, double value) const
     {
-#define GETVALUE(type) NZYX_ELEM(*(MultidimArray<type>*)data->im,n,k,i,j) = value
-        SWITCHDATATYPE(datatype,GETVALUE);
+#define GETVALUE(type) NZYX_ELEM(*(MultidimArray<type>*)data->im,n,k,i,j) = value;
+        SWITCHDATATYPE(datatype,GETVALUE)
 #undef GETVALUE
 
     }

@@ -111,7 +111,11 @@ protected:
 
     void processImage(const FileName &fnImg, const FileName &fnImgOut, size_t objId)
     {
-        image.read(fnImg, DATA, ALL_IMAGES, !apply_geo);
+        if (apply_geo)
+            image.readApplyGeo(fnImg, mdIn, objId);
+        else
+            image.read(fnImg, DATA, ALL_IMAGES, true);
+
         image().setXmippOrigin();
 
         int xDim,yDim,zDim;
@@ -129,7 +133,7 @@ protected:
                                             avg, stddev);
         }
         else
-          image().computeStats(avg, stddev, min_val, max_val);
+            image().computeStats(avg, stddev, min_val, max_val);
 
 
         // Show information

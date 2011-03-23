@@ -45,25 +45,25 @@
     switch (datatype)\
         {\
         case Float:\
-            OP(float);\
+            {OP(float)};\
             break;\
         case UInt:\
-            OP(unsigned int);\
+            {OP(unsigned int)};\
             break;\
         case Int:\
-            OP(int);\
+            {OP(int)};\
             break;\
         case Short:\
-            OP(short);\
+            {OP(short)};\
             break;\
         case UShort:\
-            OP(unsigned short);\
+            {OP(unsigned short)};\
             break;\
         case SChar:\
-            OP(char);\
+            {OP(char)};\
             break;\
         case UChar:\
-            OP(unsigned char);\
+            {OP(unsigned char)};\
             break;\
         }
 
@@ -149,8 +149,8 @@ public:
                 int zF, int yF, int xF,
                 double init_value = 0.) const
     {
-#define WINDOW(type) _window(*((MultidimArray<type>*)(result.im)), z0,y0,x0,zF,yF,xF,init_value)
-        SWITCHDATATYPE(result.datatype,WINDOW);
+#define WINDOW(type) _window(*((MultidimArray<type>*)(result.im)), z0,y0,x0,zF,yF,xF,init_value);
+        SWITCHDATATYPE(result.datatype,WINDOW)
 #undef WINDOW
 
     }
@@ -160,8 +160,8 @@ public:
                  int zF, int yF, int xF,
                  double init_value = 0.) const
     {
-#define WINDOW(type) ((MultidimArray<type>*)im)->window(result, z0,y0,x0,zF,yF,xF,(T)init_value)
-        SWITCHDATATYPE(datatype,WINDOW);
+#define WINDOW(type) ((MultidimArray<type>*)im)->window(result, z0,y0,x0,zF,yF,xF,(T)init_value);
+        SWITCHDATATYPE(datatype,WINDOW)
 #undef WINDOW
 
     }
@@ -172,9 +172,9 @@ public:
     template <typename T>
     void getSlice(int k, MultidimArray<T> &M, char axis = 'Z', size_t n = 0) const
     {
-#define GETSLICE(type) ((MultidimArray<type>*) im)->getSlice(k, M, axis, n)
+#define GETSLICE(type) ((MultidimArray<type>*) im)->getSlice(k, M, axis, n);
 
-        SWITCHDATATYPE(datatype,GETSLICE);
+        SWITCHDATATYPE(datatype,GETSLICE)
 
 #undef GETSLICE
 
@@ -185,9 +185,9 @@ public:
      */
     void getSlice(int k, MultidimArrayGeneric* M, char axis = 'Z', size_t n = 0) const
     {
-#define GETSLICE(type) getSlice(k, *(MultidimArray<type>*)M->im, axis, n)
+#define GETSLICE(type) getSlice(k, *(MultidimArray<type>*)M->im, axis, n);
 
-        SWITCHDATATYPE(M->datatype,GETSLICE);
+        SWITCHDATATYPE(M->datatype,GETSLICE)
 
 #undef GETSLICE
 
@@ -199,9 +199,9 @@ public:
     template <typename T1>
     void setSlice(int k, const MultidimArray <T1>& v, size_t n = 0)
     {
-#define SETSLICE(type) ((MultidimArray<type>*) im)->setSlice(k, v, n)
+#define SETSLICE(type) ((MultidimArray<type>*) im)->setSlice(k, v, n);
 
-        SWITCHDATATYPE(datatype,SETSLICE);
+        SWITCHDATATYPE(datatype,SETSLICE)
 
 #undef SETSLICE
 
@@ -252,21 +252,21 @@ public:
          */
     void computeStats(double& avg, double& stddev, double& minval, double& maxval) const
     {
-#define COMPUTESTATS(type) {type Tminval; \
+#define COMPUTESTATS(type) type Tminval; \
                            type Tmaxval; \
                            ((MultidimArray<type>*)(im))->computeStats(avg, stddev, Tminval, Tmaxval);\
                            minval = Tminval;\
-                           maxval = Tmaxval;}
+                           maxval = Tmaxval;
 
-      SWITCHDATATYPE(datatype,  COMPUTESTATS);
+      SWITCHDATATYPE(datatype,  COMPUTESTATS)
 #undef COMPUTESTATS
     }
 
     /** Get constant access */
     double operator()(size_t n, int k, int i, int j) const
     {
-#define GETVALUE(type) return NZYX_ELEM(*(MultidimArray<type>*)im,n,k,i,j)
-        SWITCHDATATYPE(datatype,GETVALUE);
+#define GETVALUE(type) return NZYX_ELEM(*(MultidimArray<type>*)im,n,k,i,j);
+        SWITCHDATATYPE(datatype,GETVALUE)
 #undef GETVALUE
 
     }
