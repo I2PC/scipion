@@ -55,10 +55,10 @@ void ProgAngularDistance::show()
 // usage ===================================================================
 void ProgAngularDistance::defineParams()
 {
-	addUsageLine("Computes the angular distance between two angle files. The angular distance ");
-	addUsageLine("is defined as the average angular distance between the 3 vectors of the ");
-	addUsageLine("coordinate system defined by the Euler angles (taking into account any ");
-	addUsageLine("possible symmetry). ");
+    addUsageLine("Computes the angular distance between two angle files. The angular distance ");
+    addUsageLine("is defined as the average angular distance between the 3 vectors of the ");
+    addUsageLine("coordinate system defined by the Euler angles (taking into account any ");
+    addUsageLine("possible symmetry). ");
     addParamsLine("   --ang1 <Metadata1>        : Angular document file 1");
     addParamsLine("   --ang2 <Metadata2>        : Angular document file 2");
     addParamsLine("  [--oroot <rootname=\"\">]  : Output rootname");
@@ -232,7 +232,9 @@ void ProgAngularDistance::run()
     int i = 0;
     size_t id;
     FileName fnImg;
-
+    std::vector<double> output;
+    output.resize(17,0);
+    bool fillOutput=fn_out!="";
     FOR_ALL_OBJECTS_IN_METADATA2(DF1, DF2)
     {
         // Read input data
@@ -269,6 +271,7 @@ void ProgAngularDistance::run()
         tilt2p = tilt2;
         psi2p = psi2;
         distp = check_symmetries(rot1, tilt1, psi1, rot2p, tilt2p, psi2p);
+        angular_distance += distp;
 
         // Compute angular difference
         rot_diff(i) = rot1 - rot2p;
@@ -278,39 +281,40 @@ void ProgAngularDistance::run()
         X_diff(i) = X1 - X2;
         Y_diff(i) = Y1 - Y2;
         shift_diff(i) = sqrt(X_diff(i)*X_diff(i)+Y_diff(i)*Y_diff(i));
-
-        // Fill the output result
-        std::string output;
-        output+=floatToString(rot1)+" ";
-        output+=floatToString(rot2p)+" ";
-        output+=floatToString(rot_diff(i))+" ";
-        output+=floatToString(tilt1)+" ";
-        output+=floatToString(tilt2p)+" ";
-        output+=floatToString(tilt_diff(i))+" ";
-        output+=floatToString(psi1)+" ";
-        output+=floatToString(psi2p)+" ";
-        output+=floatToString(psi_diff(i))+" ";
-        output+=floatToString(distp)+" ";
-        output+=floatToString(X1)+" ";
-        output+=floatToString(X2)+" ";
-        output+=floatToString(X_diff(i))+" ";
-        output+=floatToString(Y1)+" ";
-        output+=floatToString(Y2)+" ";
-        output+=floatToString(Y_diff(i))+" ";
-        output+=floatToString(shift_diff(i))+" ";
-        angular_distance += distp;
         shift_distance += shift_diff(i);
 
-        id = DF_out.addObject();
-        DF_out.setValue(MDL_IMAGE,fnImg,id);
-        DF_out.setValue(MDL_COMMENT,output, id);
+        // Fill the output result
+        if (fillOutput)
+        {
+            output[0]=rot1;
+            output[1]=rot2p;
+            output[2]=rot_diff(i);
+            output[3]=tilt1;
+            output[4]=tilt2p;
+            output[5]=tilt_diff(i);
+            output[6]=psi1;
+            output[7]=psi2p;
+            output[8]=psi_diff(i);
+            output[9]=distp;
+            output[10]=X1;
+            output[11]=X2;
+            output[12]=X_diff(i);
+            output[13]=Y1;
+            output[14]=Y2;
+            output[15]=Y_diff(i);
+            output[16]=shift_diff(i);
+
+            id = DF_out.addObject();
+            DF_out.setValue(MDL_IMAGE,fnImg,id);
+            DF_out.setValue(MDL_ANGLE_COMPARISON,output, id);
+        }
 
         i++;
     }
     angular_distance /= i;
     shift_distance /=i;
 
-    if (fn_out != "")
+    if (fillOutput)
     {
         DF_out.write(fn_out + ".xmd");
         Histogram1D hist;
