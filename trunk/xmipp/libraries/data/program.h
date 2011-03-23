@@ -172,10 +172,10 @@ public:
     /** Read the command line arguments
      * If an error occurs while reading arguments,
      * the error message will be printed and the
-     * usage of the program showed. So the is no need
+     * usage of the program showed. So you don't need
      * to do that in readParams();
      * */
-    void read(int argc, char ** argv, bool reportErrors = true);
+    virtual void read(int argc, char ** argv, bool reportErrors = true);
     /** Read arguments from an string.
      * This function should do the same as reading arguments
      * but first convert the string to arguments.
