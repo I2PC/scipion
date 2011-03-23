@@ -62,6 +62,14 @@ void ProgAngularDistance::defineParams()
     addParamsLine("   --ang1 <Metadata1>        : Angular document file 1");
     addParamsLine("   --ang2 <Metadata2>        : Angular document file 2");
     addParamsLine("  [--oroot <rootname=\"\">]  : Output rootname");
+    addParamsLine("                             : rootname.xmd Angular comparison;");
+    addParamsLine("                             : rootname_vec_diff_hist.txt Histogram of the differences in vector directions;");
+    addParamsLine("                             : rootname_shift_diff_hist.txt Histogram of the differences in shifts;");
+    addParamsLine("                             :+ rootname_rot_diff_hist.txt (verbose>=2) Histogram of the differences in rot;");
+    addParamsLine("                             :+ rootname_tilt_diff_hist.txt (verbose>=2) Histogram of the differences in tilt;");
+    addParamsLine("                             :+ rootname_psi_diff_hist.txt (verbose>=2) Histogram of the differences in psi;");
+    addParamsLine("                             :+ rootname_X_diff_hist.txt (verbose>=2) Histogram of the differences in shiftX;");
+    addParamsLine("                             :+ rootname_Y_diff_hist.txt (verbose>=2) Histogram of the differences in shiftY;");
     addParamsLine("  [--sym <symmetry=\"\">]    : Symmetry file if any");
     addParamsLine("                             :+The definition of the symmetry is described at [[transform_symmetrize_v3][transform_symmetrize]]");
     addParamsLine("  [--check_mirrors]          : Check if mirrored projections give better results");
