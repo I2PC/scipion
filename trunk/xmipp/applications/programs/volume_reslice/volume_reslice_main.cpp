@@ -34,8 +34,6 @@ private:
     ImageGeneric imgIn;   // Input Volume
     ImageGeneric imgOut;  // Output Volume
     String      face;
-    Matrix2D<double> R;
-
 
     void defineParams()
     {
@@ -51,6 +49,9 @@ private:
         addParamsLine("                 left   : Align -X axis to Z axis, rotating -90 degrees around Y axis");
         addParamsLine("                 bottom : Align Y axis to Z axis, rotating -90 degrees around X axis");
         addParamsLine("                 right  : Align X axis to Z axis, rotating 90 degrees around Y axis");
+
+        addExampleLine("Reslice a volume showing left face as new front face:", false);
+        addExampleLine("xmipp_volume_reslice -i original.vol -o resliced.vol --face left ");
     }
 
     void readParams()
@@ -64,48 +65,46 @@ private:
     void run()
     {
         imgIn.readMapped(fnImgIn);
-        imgIn().setXmippOrigin();
 
         int xDim, yDim, zDim, XdimOut, yDimOut, zDimOut;
         imgIn.getDimensions(xDim, yDim, zDim);
 
-        Matrix1D<double> xyz(3);
-        xyz.initZeros();
+        char axis;
+        bool reverse;
 
         if (face == "top" || face == "bottom")
         {
+            axis = 'Y';
             XdimOut = xDim;
             yDimOut = zDim;
             zDimOut = yDim;
-
-            YY(xyz) = (face == "bottom") ? 1 : -1;
+            reverse = (face == "top");
         }
         else if (face == "left" || face == "right")
         {
+            axis = 'X';
             XdimOut = zDim;
             yDimOut = yDim;
             zDimOut = xDim;
-
-            XX(xyz) = (face == "right") ? 1 : -1;
+            reverse = (face == "left");
         }
-
-        alignWithZ(xyz, R);
-
 
         // Create output file
         imgOut.setDatatype(imgIn.getDatatype());
         imgOut.mapFile2Write(XdimOut, yDimOut, zDimOut, fnImgOut, fnImgIn == fnImgOut);
-        imgOut().setXmippOrigin();
 
-        applyGeometry(NEAREST, imgOut(), imgIn(), R, IS_NOT_INV, false, 0.);
+        MultidimArrayGeneric imTemp;
+        int index;
 
+        for (int k = 0; k < zDim; k++)
+        {
+            imTemp.aliasSlice(imgOut(), k);
+            index = k + (zDim - 1 - 2*k) * (int)reverse;
+            imgIn().getSlice(index, &imTemp, axis, !reverse);
+        }
         imgOut.write(fnImgOut);
-
     }
-
-
-}
-;
+};
 
 int main(int argc, char **argv)
 {
