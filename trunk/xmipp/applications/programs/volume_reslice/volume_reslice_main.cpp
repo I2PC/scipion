@@ -57,7 +57,7 @@ private:
     void readParams()
     {
         fnImgIn = getParam("-i");
-        fnImgOut = getParam("-o");
+        fnImgOut = (checkParam("-o"))? getParam("-o") : fnImgIn;
         face = getParam("--face");
     }
 
