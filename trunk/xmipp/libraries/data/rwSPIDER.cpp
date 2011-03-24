@@ -475,6 +475,8 @@ int  ImageBase::writeSPIDER(size_t select_img, bool isStack, int mode)
             writeMainHeaderReplace = true;
             header->maxim = newNsize;
         }
+        else if (mode == WRITE_OVERWRITE)
+          header->maxim = Ndim;
     }
     else
     {

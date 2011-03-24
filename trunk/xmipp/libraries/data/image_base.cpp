@@ -726,8 +726,10 @@ void ImageBase::_write(const FileName &name, ImageFHandler* hFile, size_t select
         fseek(fhed, 0, SEEK_SET);
 
     if(ext_name.contains("spi") || ext_name.contains("xmp") ||
-       ext_name.contains("stk") || ext_name.contains("vol"))
+       ext_name.contains("vol"))
         err = writeSPIDER(select_img,isStack,mode);
+    else if (ext_name.contains("stk"))
+        err = writeSPIDER(select_img,true,mode);
     else if (ext_name.contains("mrcs"))
         writeMRC(select_img,true,mode,imParam,adjust);
     else if (ext_name.contains("mrc"))
