@@ -1955,7 +1955,8 @@ public:
                              "Slice: Multidim subscript (k) out of range");
 
             M.resize(1, 1, YSIZE(*this), XSIZE(*this),false);
-            ptr=&(NZYX_ELEM(*this, n, k, 0, 0));
+            k = k - STARTINGZ(*this);
+            ptr=&(DIRECT_NZYX_ELEM(*this, n, k, 0, 0));
             FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(M)
             DIRECT_MULTIDIM_ELEM(M, n) = (T1) *(ptr++);
             STARTINGX(M) = STARTINGX(*this);
@@ -2015,7 +2016,8 @@ public:
             REPORT_ERROR(ERR_MULTIDIM_DIM,
                          "setSlice: MultidimArray dimensions different from the matrix ones");
 
-        T *ptr=&(NZYX_ELEM(*this, n, k, 0, 0));
+        k-=STARTINGZ(*this);
+        T *ptr=&(DIRECT_NZYX_ELEM(*this, n, k, 0, 0));
         FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(v)
         *(ptr++) = (T) DIRECT_MULTIDIM_ELEM(v, n);
     }
