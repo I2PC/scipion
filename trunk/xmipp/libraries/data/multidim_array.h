@@ -2001,7 +2001,7 @@ public:
      * @endcode
      */
     template <typename T1>
-    void setSlice(int k, const MultidimArray<T1>& v, size_t n = 0)
+    void setSlice(int k, const MultidimArray<T1>& v, size_t n=0)
     {
         if (xdim == 0)
             return;
@@ -2014,10 +2014,9 @@ public:
             REPORT_ERROR(ERR_MULTIDIM_DIM,
                          "setSlice: MultidimArray dimensions different from the matrix ones");
 
-        k = k - STARTINGZ(*this);
-
-        FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY2D(v)
-        DIRECT_NZYX_ELEM(*this, n, k, i, j) = (T) DIRECT_A2D_ELEM(v, i, j);
+        T *ptr=&(NZYX_ELEM(*this, n, k, 0, 0));
+        FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(v)
+        *(ptr++) = (T) DIRECT_MULTIDIM_ELEM(v, n);
     }
 
     /** Get Column
