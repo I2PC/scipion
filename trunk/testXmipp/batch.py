@@ -142,6 +142,9 @@ class Tester:
         self.addTest("-i input/phantomCandida.vol -o %o/image.xmp --angles 0 90 90" )
         self.addTest("-i input/phantomCandida.vol --oroot %o/projections --params input/tomoProjection.param")
 
+        self.addProgram("xmipp_tomo_remove_fluctuations")
+        self.addTest("-i input/xraySeries.stk -o %o/processed.stk")
+
         self.addProgram("xmipp_transform_add_noise")
         self.addTest("-i input/cleanImage.spi --type gaussian 10 5 -o %o/noisyGaussian.spi")
 
