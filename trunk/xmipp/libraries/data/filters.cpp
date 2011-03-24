@@ -352,16 +352,20 @@ void region_growing2D(const MultidimArray<double> &I_in, MultidimArray<double> &
         iCurrentj=coord.jj;
 
 #define CHECK_POINT(i,j) \
-    if (INSIDEXY(I_out,j,i))  { \
-     double pixel=A2D_ELEM(I_out,i,j);\
-        if (pixel!=filling_colour) \
-            if ((less && pixel < stop_colour) || \
-                (!less && pixel > stop_colour)) { \
-                coord.ii=i; \
-                coord.jj=j; \
-                A2D_ELEM (I_out,coord.ii,coord.jj)=filling_colour; \
-                iNeighbours.push_front(coord); \
-            } \
+    { \
+		int I=i; \
+        int J=j; \
+		if (INSIDEXY(I_out,J,I))  { \
+		 double pixel=A2D_ELEM(I_out,I,J);\
+			if (pixel!=filling_colour) \
+				if ((less && pixel < stop_colour) || \
+					(!less && pixel > stop_colour)) { \
+					coord.ii=I; \
+					coord.jj=J; \
+					A2D_ELEM (I_out,coord.ii,coord.jj)=filling_colour; \
+					iNeighbours.push_front(coord); \
+				} \
+		} \
     }
 
         /* Make the exploration of the pixel's neighbours */
@@ -424,20 +428,25 @@ void region_growing3D(const MultidimArray<double> &V_in, MultidimArray<double> &
         lower than stop_colour, its filled with filling colour and added to the
         list for exploring its neighbours */
 #define CHECK_POINT_3D(k,i,j) \
-    if (INSIDEXYZ(V_out,j,i,k))  { \
-     double voxel=A3D_ELEM(V_out,k,i,j); \
-        if (voxel!=filling_colour) \
-            if ((less && voxel < stop_colour)|| \
-                (!less &&voxel > stop_colour)) { \
-                coord.ii=i; \
-                coord.jj=j; \
-                coord.kk=k; \
-                A3D_ELEM (V_out,coord.kk,coord.ii,coord.jj)=filling_colour; \
-                iNeighbours.push_front(coord); \
-            } \
-    }
+	{\
+	    int I=i; \
+        int J=j; \
+        int K=k; \
+		if (INSIDEXYZ(V_out,J,I,K))  { \
+		 double voxel=A3D_ELEM(V_out,K,I,J); \
+			if (voxel!=filling_colour) \
+				if ((less && voxel < stop_colour)|| \
+					(!less &&voxel > stop_colour)) { \
+					coord.ii=I; \
+					coord.jj=J; \
+					coord.kk=K; \
+					A3D_ELEM (V_out,coord.kk,coord.ii,coord.jj)=filling_colour; \
+					iNeighbours.push_front(coord); \
+				} \
+		}\
+	}
 
-        /* Make the exploration of the pixel�s neighbours */
+        /* Make the exploration of the pixel neighbours */
         CHECK_POINT_3D(iCurrentk  , iCurrenti  , iCurrentj - 1);
         CHECK_POINT_3D(iCurrentk  , iCurrenti  , iCurrentj + 1);
         CHECK_POINT_3D(iCurrentk  , iCurrenti - 1, iCurrentj);
