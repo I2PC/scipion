@@ -1946,6 +1946,7 @@ public:
             return;
         }
 
+        T* ptr=NULL;
         switch (axis)
         {
         case 'Z':
@@ -1953,10 +1954,10 @@ public:
                 REPORT_ERROR(ERR_INDEX_OUTOFBOUNDS,
                              "Slice: Multidim subscript (k) out of range");
 
-            k = k - STARTINGZ(*this);
             M.resize(1, 1, YSIZE(*this), XSIZE(*this),false);
-            FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY2D(M)
-            DIRECT_A2D_ELEM(M, i, j) = (T1) DIRECT_NZYX_ELEM(*this, n, k, i, j);
+            ptr=&(NZYX_ELEM(*this, n, k, 0, 0));
+            FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(M)
+            DIRECT_MULTIDIM_ELEM(M, n) = (T1) *(ptr++);
             STARTINGX(M) = STARTINGX(*this);
             STARTINGY(M) = STARTINGY(*this);
             break;
