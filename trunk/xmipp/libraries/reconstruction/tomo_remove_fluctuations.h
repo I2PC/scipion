@@ -35,7 +35,7 @@
 
 /// Parameters for the program removing the fluctuations
 /// @ingroup RemoveFluctuations
-class ProgSeriesRemoveFluctuations: public XmippProgram
+class ProgTomoRemoveFluctuations: public XmippProgram
 {
 public:
     /// Input images

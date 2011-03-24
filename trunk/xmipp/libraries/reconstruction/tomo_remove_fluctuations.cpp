@@ -23,14 +23,14 @@
  *  e-mail address 'xmipp@cnb.csic.es'
  ***************************************************************************/
 
-#include "series_remove_fluctuations.h"
+#include "tomo_remove_fluctuations.h"
 #include <data/args.h>
 #include <data/fftw.h>
 #include <data/metadata_extension.h>
 #include <data/image.h>
 
 // Read from command line --------------------------------------------------
-void ProgSeriesRemoveFluctuations::readParams()
+void ProgTomoRemoveFluctuations::readParams()
 {
     fnIn  = getParam("-i");
     fnOut = getParam("-o");
@@ -38,7 +38,7 @@ void ProgSeriesRemoveFluctuations::readParams()
 }
 
 // Usage -------------------------------------------------------------------
-void ProgSeriesRemoveFluctuations::defineParams()
+void ProgTomoRemoveFluctuations::defineParams()
 {
 	addUsageLine("Removes the flickering in a tilt series. This is a phenomenon rather ");
 	addUsageLine("common in X-ray microscopy. For doing so, a low-pass filter of a given ");
@@ -52,7 +52,7 @@ void ProgSeriesRemoveFluctuations::defineParams()
 }
 
 // Produce side info -------------------------------------------------------
-void ProgSeriesRemoveFluctuations::produceSideInfo()
+void ProgTomoRemoveFluctuations::produceSideInfo()
 {
     // Read the selfile into a volume
     SF.read(fnIn);
@@ -75,7 +75,7 @@ void ProgSeriesRemoveFluctuations::produceSideInfo()
 }
 
 // Show --------------------------------------------------------------------
-void ProgSeriesRemoveFluctuations::show() const
+void ProgTomoRemoveFluctuations::show() const
 {
 	if (verbose==0)
 		return;
@@ -87,7 +87,7 @@ void ProgSeriesRemoveFluctuations::show() const
 }
 
 // Denoise image -----------------------------------------------------------
-void ProgSeriesRemoveFluctuations::run()
+void ProgTomoRemoveFluctuations::run()
 {
 	produceSideInfo();
 

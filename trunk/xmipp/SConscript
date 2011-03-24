@@ -567,13 +567,13 @@ ReconsSources = [
     'refinement.cpp',
     'resolution_ibw.cpp',
     'resolution_ssnr.cpp',
-    'series_remove_fluctuations.cpp',
     'sparma.cpp',
     'symmetrize.cpp',
     'threshold.cpp',
     'tomo_align_dual_tilt_series.cpp',
     'tomo_align_tilt_series.cpp',
     'tomo_align_refinement.cpp',
+    'tomo_remove_fluctuations.cpp',
     'volume_segment.cpp',
     'xray_import.cpp'
 ]
@@ -728,7 +728,6 @@ AddXmippProgram('resolution_fsc')
 AddXmippProgram('resolution_ibw', ['XmippRecons'])
 AddXmippProgram('resolution_ssnr', ['XmippRecons'])
 AddXmippProgram('separate_objects')
-AddXmippProgram('series_remove_fluctuations', ['XmippRecons'])
 AddXmippProgram('transform_add_noise')
 AddXmippProgram('transform_adjust_volume_grey_levels', ['XmippRecons'])
 AddXmippProgram('transform_center_image')
@@ -747,6 +746,7 @@ AddXmippProgram('tomo_align_dual_tilt_series', ['XmippRecons'])
 AddXmippProgram('tomo_align_refinement', ['XmippRecons'])
 AddXmippProgram('tomo_align_tilt_series', ['XmippRecons'])
 AddXmippProgram('tomo_project', ['XmippRecons'])
+AddXmippProgram('tomo_remove_fluctuations', ['XmippRecons'])
 AddXmippProgram('volume_align')
 AddXmippProgram('volume_reslice')
 AddXmippProgram('volume_segment', ['XmippRecons'])

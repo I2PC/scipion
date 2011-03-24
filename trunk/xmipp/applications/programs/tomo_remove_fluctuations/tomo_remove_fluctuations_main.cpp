@@ -23,11 +23,11 @@
  *  e-mail address 'xmipp@cnb.csic.es'
  ***************************************************************************/
 
-#include <reconstruction/series_remove_fluctuations.h>
+#include <reconstruction/tomo_remove_fluctuations.h>
 
 int main(int argc, char **argv)
 {
-    ProgSeriesRemoveFluctuations prm;
+    ProgTomoRemoveFluctuations prm;
     prm.read(argc,argv);
     return prm.tryRun();
 }
