@@ -77,6 +77,12 @@ public:
     /** Show parameters. */
     void show();
 
+    /** Prepare fourier filter */
+    void setupFourierFilter(ProgFourierFilter &filter, bool isBackground, double &power);
+
+    /** Update ctfs */
+    void updateCtfs();
+
     /** Produce side information. */
     void preProcess();
 
