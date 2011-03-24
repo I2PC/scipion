@@ -188,6 +188,9 @@ class Tester:
         self.addTest("-i input/singleImage.spi -o %o/image.xmp --crop -10")
         self.addTest("-i input/xray_import/Images/img48949.spe -o %o/image.xmp --size 512")
 
+        self.addProgram("xmipp_volume_reslice")
+        self.addTest("-i input/phantomCandida.vol -o %o/resliced.vol --face top")
+
         self.addProgram("xmipp_volume_segment")
         self.addTest("-i input/phantomBacteriorhodopsin.vol -o %o/maskOtsu.vol --method otsu")
         self.addTest("-i input/phantomBacteriorhodopsin.vol -o %o/maskVoxelMass.vol --method voxel_mass 54000")
