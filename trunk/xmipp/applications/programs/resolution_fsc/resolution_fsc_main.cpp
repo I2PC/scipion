@@ -42,7 +42,6 @@ public:
     FileName    fn_sel;
     bool        apply_geo;
 
-
     void defineParams()
     {
         apply_geo = true;
@@ -71,8 +70,6 @@ public:
         addUsageLine("The program writes out filename.frc files, for each input volume or image, or selfilename.frc, the");
         addUsageLine("set_of_images mode. These ACSII files contain the DPR, FRC and SSNR as a function of resolution (in 1/Angstrom).");
         addUsageLine(" The .frc files also contain a column for the FRC expected for pure noise.");
-
-
         addSeeAlsoLine("resolution_ssnr");
 
         addParamsLine("   -i <input_file>           : either an image/volume or a selection file");
@@ -90,7 +87,6 @@ public:
         addExampleLine("Resolution of a set of images using 5.6 pixel size (in Angstrom):", false);
         addExampleLine("xmipp_resolution_fsc --set_of_images selfile.sel --sam 5.6");
     }
-
 
     void readParams()
     {
@@ -166,7 +162,7 @@ public:
         img().setXmippOrigin();
 
         MultidimArray<double> freq, frc, dpr, frc_noise, error_l2;
-        frc_dpr(refI(), img(), sam, freq, frc, frc_noise, dpr, error_l2);
+        frc_dpr(refI(), img(), sam, freq, frc, frc_noise, dpr, error_l2, do_dpr);
         writeFiles((fn_root.empty())?img.name():fn_root, freq, frc, frc_noise, dpr, error_l2, max_sam, do_dpr);
         return true;
     }
@@ -199,7 +195,6 @@ public:
         else
             process_sel();
     }
-
 };
 
 int main(int argc, char **argv)
