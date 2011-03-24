@@ -2,7 +2,7 @@
 # Projection Parameters
 data_
 # X and Y projection dimensions [Xdim Ydim]
-_projDimensions [650 650]
+_projDimensions [64 64]
 # Angle Set Source -----------------------------------------------------------
 # tilt axis, direction defined by rot and tilt angles
 _angleRot 90
