@@ -86,6 +86,12 @@ protected:
 
 public:
 
+    /* Empty constructor */
+    MultidimArrayGeneric()
+    {
+      init();
+    }
+
     /**
      * Constructor with pointer to array to be linked and datatype definition of
      * the linked array.
@@ -170,9 +176,9 @@ public:
      *  Copy a specific slice of the linked array.
      */
     template <typename T>
-    void getSlice(int k, MultidimArray<T> &M, char axis = 'Z', size_t n = 0) const
+    void getSlice(int k, MultidimArray<T> &M, char axis = 'Z', bool reverse = false,  size_t n = 0) const
     {
-#define GETSLICE(type) ((MultidimArray<type>*) im)->getSlice(k, M, axis, n);
+#define GETSLICE(type) ((MultidimArray<type>*) im)->getSlice(k, M, axis, reverse, n);
 
         SWITCHDATATYPE(datatype,GETSLICE)
 
@@ -183,9 +189,9 @@ public:
     /**
      *  Copy a specific slice of the linked array.
      */
-    void getSlice(int k, MultidimArrayGeneric* M, char axis = 'Z', size_t n = 0) const
+    void getSlice(int k, MultidimArrayGeneric* M, char axis = 'Z', bool reverse = false, size_t n = 0) const
     {
-#define GETSLICE(type) getSlice(k, *(MultidimArray<type>*)M->im, axis, n);
+#define GETSLICE(type) getSlice(k, *(MultidimArray<type>*)M->im, axis, reverse, n);
 
         SWITCHDATATYPE(M->datatype,GETSLICE)
 
@@ -258,8 +264,9 @@ public:
                            minval = Tminval;\
                            maxval = Tmaxval;
 
-      SWITCHDATATYPE(datatype,  COMPUTESTATS)
+        SWITCHDATATYPE(datatype,  COMPUTESTATS)
 #undef COMPUTESTATS
+
     }
 
     /** Get constant access */

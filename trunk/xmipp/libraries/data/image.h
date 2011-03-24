@@ -665,7 +665,7 @@ public:
 
         if (select_slice > ALL_SLICES)
         {
-            MultidimArrayGeneric array(im(), select_slice);
+            MultidimArrayGeneric array(im(), select_slice - 1);
             array.setXmippOrigin();
 
             scaleToSize(0,IMGMATRIX(*this), array ,Xdim, Ydim);
@@ -887,7 +887,7 @@ private:
         if (transform == Hermitian || transform == CentHerm )
             data.setXdim(XSIZE(data)/2 + 1);
 
-        size_t selectImgOffset, readsize, readsize_n, pagemax = 1073741824; //1Gb
+        size_t selectImgOffset, readsize, readsize_n, pagemax = 4096; //16Mb
         size_t datatypesize=gettypesize(datatype);
         size_t pagesize  =ZYXSIZE(data)*datatypesize;
         size_t haveread_n = 0;

@@ -1002,15 +1002,17 @@ public:
          * Treat the multidimarray as if it were a single slice. The data is not copied
          * into new memory, but a pointer to the selected slice in the multidimarray is copied.
          * You should not make any operation on this volume such that the
-         * memory locations are changed
+         * memory locations are changed.
+         * Select_slice starts at 0 towards Zsize.
          */
     void aliasSlice(const MultidimArray<T> &m, int select_slice)
     {
-        if (select_slice > ZSIZE(m))
+        if (select_slice >= ZSIZE(m))
             REPORT_ERROR(ERR_MULTIDIM_SIZE, "aliasSlice: Selected slice cannot be higher than Z size.");
 
         setDimensions(XSIZE(m), YSIZE(m), 1, 1);
-        this->data = m.data + XSIZE(m)*YSIZE(m)*(select_slice - 1);
+        this->data = m.data + XSIZE(m)*YSIZE(m)*(select_slice);
+        this->nzyxdimAlloc = this->nzyxdim;
         this->destroyData = false;
     }
     //@}
@@ -1124,6 +1126,8 @@ public:
             nzyxdim = Ndim * zyxdim;
             return;
         }
+        else if (!destroyData)
+            REPORT_ERROR(ERR_MULTIDIM_SIZE, "Cannot resize array when accessing through alias.");
 
         if (Xdim <= 0 || Ydim <= 0 || Zdim <= 0 || Ndim <= 0)
         {
@@ -1938,7 +1942,7 @@ public:
      * @endcode
      */
     template <typename T1>
-    void getSlice(int k, MultidimArray<T1>& M, char axis = 'Z', size_t n = 0) const
+    void getSlice(int k, MultidimArray<T1>& M, char axis = 'Z', bool reverse = false, size_t n = 0) const
     {
         if (XSIZE(*this) == 0)
         {
@@ -1956,9 +1960,20 @@ public:
 
             M.resize(1, 1, YSIZE(*this), XSIZE(*this),false);
             k = k - STARTINGZ(*this);
-            ptr=&(DIRECT_NZYX_ELEM(*this, n, k, 0, 0));
-            FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(M)
-            DIRECT_MULTIDIM_ELEM(M, n) = (T1) *(ptr++);
+
+            if (reverse)
+            {
+                int zEnd = ZSIZE(*this) - 1;
+                FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY2D(M)
+                DIRECT_A2D_ELEM(M, i, j) = (T1) DIRECT_NZYX_ELEM(*this, n, k,  zEnd-i, j);
+            }
+            else
+            {
+                ptr=&(DIRECT_NZYX_ELEM(*this, n, k, 0, 0));
+                FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(M)
+                DIRECT_MULTIDIM_ELEM(M, n) = (T1) *(ptr++);
+            }
+
             STARTINGX(M) = STARTINGX(*this);
             STARTINGY(M) = STARTINGY(*this);
             break;
@@ -1969,8 +1984,19 @@ public:
 
             k = k - STARTINGY(*this);
             M.resizeNoCopy(ZSIZE(*this), XSIZE(*this));
-            FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY2D(M)
-            DIRECT_A2D_ELEM(M, i, j) = (T1) DIRECT_NZYX_ELEM(*this, n, i, k, j);
+
+            if (reverse)
+            {
+                int zEnd = ZSIZE(*this) - 1;
+                FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY2D(M)
+                DIRECT_A2D_ELEM(M, i, j) = (T1) DIRECT_NZYX_ELEM(*this, n, zEnd-i, k, j);
+            }
+            else
+            {
+                FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY2D(M)
+                DIRECT_A2D_ELEM(M, i, j) = (T1) DIRECT_NZYX_ELEM(*this, n, i, k, j);
+            }
+
             STARTINGX(M) = STARTINGX(*this);
             STARTINGY(M) = STARTINGZ(*this);
             break;
@@ -1981,8 +2007,19 @@ public:
 
             k = k - STARTINGX(*this);
             M.resizeNoCopy(ZSIZE(*this), YSIZE(*this));
-            FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY2D(M)
-            DIRECT_A2D_ELEM(M, i, j) = (T1) DIRECT_NZYX_ELEM(*this, n, i, j, k);
+
+            if (reverse)
+            {
+                int zEnd = ZSIZE(*this) - 1;
+                FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY2D(M)
+                DIRECT_A2D_ELEM(M, i, j) = (T1) DIRECT_NZYX_ELEM(*this, n, zEnd-j, i, k);
+            }
+            else
+            {
+                FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY2D(M)
+                DIRECT_A2D_ELEM(M, i, j) = (T1) DIRECT_NZYX_ELEM(*this, n, j, i, k);
+            }
+
             STARTINGX(M) = STARTINGY(*this);
             STARTINGY(M) = STARTINGZ(*this);
             break;
