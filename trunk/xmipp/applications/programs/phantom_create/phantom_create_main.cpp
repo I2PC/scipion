@@ -36,9 +36,7 @@ protected:
 
     void defineParams()
     {
-        addUsageLine("Create phantom XMIPP volumes");
-        addUsageLine("from a phantom feature description file.");
-
+        addUsageLine("Create phantom XMIPP volume from a phantom feature description file.");
         addParamsLine("-i <description_file>");
         addParamsLine("-o <output_file>");
     }
@@ -64,14 +62,7 @@ public:
 /* MAIN -------------------------------------------------------------------- */
 int main(int argc, char *argv[])
 {
-    try
-    {
-        ProgPhantomCreate program;
-        program.read(argc, argv);
-        program.run();
-    }
-    catch (XmippError xe)
-    {
-        std::cerr << xe;
-    }
+    ProgPhantomCreate program;
+    program.read(argc, argv);
+    return program.tryRun();
 }
