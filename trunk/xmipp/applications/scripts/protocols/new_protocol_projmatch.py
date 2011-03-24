@@ -599,85 +599,143 @@ OutputFsc = "resolution.fsc"
 CtfGroupDirectory = "CtfGroups"
 CtfGroupRootName = "ctf"
 CtfGroupSubsetFileName = "ctf_groups_subset_docfiles.sel"
+tableNameRoot = "wrappers"
+tableName = tableNameRoot
 
 
 
 import log, logging
 import os, sys
 #import launch_job
-from xmipp import *
-from ProjMatchActionsToBePerformedBeforeLoop import *
-
-def actionsToBePerformedBeforeLoop(_log):
-    #1) Delete working dir
-    if (DoDeleteWorkingDir):
-        deleteWorkingDirectory(_log, ProjectDir, WorkingDir, ContinueAtIteration)
-
-    #2 create directory three
-    createRequiredDirectories(_log, ProjectDir, WorkingDir, NumberofIterations)
-
-    #2.5 backup protocol file
-    log.make_backup_of_script_file(sys.argv[0], ProjectDir + "/" + WorkingDir)
-
-    #3 change to directory. Execute everything from ProjDir
-    os.chdir(ProjectDir)
-
-    #4a Convert vectors to list
-    from arg import getListFromVector
-    global ReferenceFileNames
-    ReferenceFileNames = getListFromVector(ReferenceFileNames)
-
-    #4b Convert directories/files  to absolute path from projdir
-    global CtfGroupDirectory
-    CtfGroupDirectory = WorkingDir + '/' + CtfGroupDirectory
-
-    #5 Check references and projections size match
-    if (ContinueAtIteration == 1):
-        checkVolumeProjSize(ReferenceFileNames, SelFileName)
-
-    #6Mask references radious
-    #6a init mask radius if not set 
-    global OuterRadius
-    OuterRadius = initOuterRadius(OuterRadius, ReferenceFileNames[0], SelFileName, _log)
-
-    #7 make CTF groups
-    # Make CTF groups
-    global NumberOfCtfGroups
-
-    #too many variableS, pass them as a dictionary
-    NumberOfGroupsDictiorary = {
-                                  'CTFDatName': CTFDatName
-                                , 'CtfGroupDirectory': CtfGroupDirectory
-                                , 'CtfGroupMaxDiff': CtfGroupMaxDiff
-                                , 'CtfGroupMaxResol': CtfGroupMaxResol
-                                , 'CtfGroupRootName': CtfGroupRootName
-                                , 'DataArePhaseFlipped': DataArePhaseFlipped
-                                , 'DoAutoCtfGroup': DoAutoCtfGroup
-                                , '_log':_log
-                                , 'PaddingFactor': PaddingFactor
-                                , 'SelFileName': SelFileName
-                                , 'SplitDefocusDocFile': SplitDefocusDocFile
-                                , 'WienerConstant': WienerConstant
-                               }
-
-    if (DoCtfCorrection):
-        NumberOfCtfGroups = execute_ctf_groups(NumberOfGroupsDictiorary)
-    else:
-        NumberOfCtfGroups = 1
-
-    #end, the rest go to loop
-def mainLoop(_log):
-    a = 0
-
-
-#######
-# PROTOCOL STARTS HERE
-#######
 #add to pythonPATH
 scriptdir = os.path.split(os.path.dirname(os.popen('which xmipp_protocols', 'r').read()))[0] + '/lib'
 sys.path.append(scriptdir) # add default search path
 scriptdir = os.path.split(os.path.dirname(os.popen('which xmipp_protocols', 'r').read()))[0] + '/protocols'
 sys.path.append(scriptdir)
+from pysqlite2 import dbapi2 as sqlite
+
+
+from xmipp import *
+from ProjMatchActionsToBePerformedBeforeLoop import *
+
+def initDataBase(projectdir, logdir, scriptname, WorkDirectory):
+    if logdir[0] == '/':
+        LogName = logdir
+    else:
+        LogName = projectdir + '/' + logdir
+    if not LogName[-1] == '/':
+        LogName += '/'
+    if not os.path.exists(LogName):
+        os.makedirs(LogName)
+    scriptname = os.path.basename(scriptname)
+    LogName += scriptname.replace('.py', '')
+    if not (WorkDirectory == "." or WorkDirectory == '.'):
+        LogName += '_'
+        LogName += os.path.basename(WorkDirectory)
+    LogName += '.db'
+
+    conn = sqlite.Connection(LogName)
+    # Create table
+    #check if table already exists
+    global tableName
+    tableName = tableNameRoot
+    sqlCommand = "SELECT count(*) from sqlite_master where tbl_name = '" + tableName + "';"
+    cur = conn.execute(sqlCommand)
+
+    #if table exists create an auxiliary table and clean it
+    sqlCommand = 'create table if not exists '
+    #if user has not requested to start from the beginning
+    if cur.fetchone()[0] == 1 and ContinueAtIteration != 1:
+        tableName = tableNameRoot + '_aux'
+    sqlCommand += tableName + '''
+        (id INTEGER PRIMARY KEY,
+         command text, 
+         init date, 
+         finish date,
+         verified bool)'''
+    sqlCommand += ';delete from ' + tableName
+    conn.executescript(sqlCommand)
+    return conn
+
+def actionsToBePerformedBeforeLoopThatDoNotModifyTheFileSystem(_log):
+    #1 Convert vectors to list
+    from arg import getListFromVector
+    global ReferenceFileNames
+    ReferenceFileNames = getListFromVector(ReferenceFileNames)
+
+    #2 Convert directories/files  to absolute path from projdir
+    global CtfGroupDirectory
+    CtfGroupDirectory = WorkingDir + '/' + CtfGroupDirectory
+
+def otherActionsToBePerformedBeforeLoop(_log, conn):
+    sqlBegin = "insert into " + tableName + "(command) VALUES ('"
+    sqlEnd = "');"
+
+    #1) Delete working dir
+    command = 'deleteWorkingDirectory(_log, ProjectDir, WorkingDir, DoDeleteWorkingDir, ContinueAtIteration)'
+    conn.execute ('select 1')
+    conn.execute(sqlBegin + command + sqlEnd)
+
+    #2 create directory three
+    command = 'createRequiredDirectories(_log, ProjectDir, WorkingDir, NumberofIterations)'
+    conn.execute(sqlBegin + command + sqlEnd)
+
+    #2.5 backup protocol file
+    command = 'log.make_backup_of_script_file(sys.argv[0], ProjectDir + "/" + WorkingDir)'
+    conn.execute(sqlBegin + command + sqlEnd)
+
+    #3 change to directory. Execute everything from ProjDir
+    command = 'os.chdir(ProjectDir)'
+    conn.execute(sqlBegin + command + sqlEnd)
+
+    #4 Check references and projections size match
+    command = 'checkVolumeProjSize(ReferenceFileNames, SelFileName, ContinueAtIteration,_log)'
+    conn.execute(sqlBegin + command + sqlEnd)
+
+    #5 Init Mask references radius
+    command = '''global OuterRadius
+    OuterRadius = initOuterRadius(OuterRadius, ReferenceFileNames[0], SelFileName, _log)'''
+    conn.execute(sqlBegin + command.replace("    ", "") + sqlEnd)
+
+    #7 make CTF groups
+    #too many variables, pass them as a dictionary
+    command = '''global NumberOfCtfGroups
+    NumberOfGroupsDictiorary = {
+                                  ''CTFDatName'': CTFDatName
+                                , ''CtfGroupDirectory'': CtfGroupDirectory
+                                , ''CtfGroupMaxDiff'': CtfGroupMaxDiff
+                                , ''CtfGroupMaxResol'': CtfGroupMaxResol
+                                , ''CtfGroupRootName'': CtfGroupRootName
+                                , ''DataArePhaseFlipped'': DataArePhaseFlipped
+                                , ''DoAutoCtfGroup'': DoAutoCtfGroup
+                                , ''DoCtfCorrection'': DoCtfCorrection
+                                , ''_log'':_log
+                                , ''PaddingFactor'': PaddingFactor
+                                , ''SelFileName'': SelFileName
+                                , ''SplitDefocusDocFile'': SplitDefocusDocFile
+                                , ''WienerConstant'': WienerConstant
+                               }
+    NumberOfCtfGroups = execute_ctf_groups(NumberOfGroupsDictiorary)'''
+    conn.execute(sqlBegin + command.replace("    ", "") + sqlEnd)
+    conn.commit()
+
+def mainLoop(_log, iter):
+    conn.row_factory = sqlite.Row
+    cur = conn.cursor()
+    cur.execute("select id, command from " + tableNameRoot)
+
+    for row in cur:
+        #print row["command"], row["id"]
+        sqlCommand = "update " + tableNameRoot + " set init   = CURRENT_TIMESTAMP where id=%d" % row["id"]
+        conn.execute(sqlCommand)
+        exec (row["command"])
+        sqlCommand = "update " + tableNameRoot + " set finish   = CURRENT_TIMESTAMP where id=%d" % row["id"]
+        conn.execute(sqlCommand)
+#        >>>>>>>>>>>>>>> verify if adecuate
+    conn.commit()
+#######
+# PROTOCOL STARTS HERE
+#######
 #create Logging system
 # Set up logging
 _log = log.init_log_system(ProjectDir,
@@ -688,12 +746,18 @@ _log = log.init_log_system(ProjectDir,
 # Uncomment next line to get Debug level logging
 _log.setLevel(logging.DEBUG)
 _log.debug("Debug level logging enabled")
+#init DataBase
+conn = initDataBase(ProjectDir,
+                    LogDir,
+                    sys.argv[0],
+                    WorkingDir)
 
 #preprocessing
-actionsToBePerformedBeforeLoop(_log)
 
-#perform loop
-mainLoop(_log) #(in another file) <<<<< define list with actions and parameters
+actionsToBePerformedBeforeLoopThatDoNotModifyTheFileSystem(_log)
+otherActionsToBePerformedBeforeLoop(_log, conn)
+mainLoop(_log, iter)
+                #(in another file) <<<<< define list with actions and parameters
                 #                  <<<<< store list in database as it is made
                 #                  <<<<< link with restart
 #postprocesing

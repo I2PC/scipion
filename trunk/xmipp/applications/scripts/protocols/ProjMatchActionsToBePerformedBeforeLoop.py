@@ -2,6 +2,33 @@ from distutils.errors   import DistutilsInternalError
 from types              import StringTypes
 import os
 from xmipp import *
+#from pysqlite2 import dbapi2 as sqlite
+#
+#def initDataBase(projectdir, logdir, scriptname, WorkDirectory):
+#    if logdir[0] == '/':
+#       LogName = logdir
+#    else:
+#       LogName = projectdir + '/' + logdir
+#    if not LogName[-1] == '/':
+#       LogName += '/'
+#    if not os.path.exists(LogName):
+#        os.makedirs(LogName)
+#    scriptname = os.path.basename(scriptname)
+#    LogName += scriptname.replace('.py', '')
+#    if not (WorkDirectory == "." or WorkDirectory == '.'):
+#        LogName += '_'
+#        LogName += os.path.basename(WorkDirectory)
+#    LogName += '.db'
+#
+#    conn = sqlite.Connection(LogName)
+#    # Create table
+#    conn.execute('''create table if not exists wrappers
+#    (  id INTEGER PRIMARY KEY AUTOINCREMENT
+#    ,command text 
+#    ,init date
+#    ,finish date
+#    ,verified bool)''')
+#    return conn
 
 def createDirectoryTree(dirName):
     """ Create directory or directory branch"""
@@ -17,11 +44,12 @@ def createRequiredDirectories(_log, ProjectDir, WorkingDir, NumberofIterations):
     absPath = ProjectDir + "/" + WorkingDir
     for i in range(1, NumberofIterations + 1):
         createDirectoryTree(absPath + "/Iter_" + str(i).zfill(2))
-    _log.info("Creating directory tree" + absPath)
+    _log.info("Creating directory tree " + absPath)
 
-def deleteWorkingDirectory(_mylog, _ProjectDir, _WorkingDir, ContinueAtIteration):
+def deleteWorkingDirectory(_mylog, _ProjectDir, _WorkingDir, DoDeleteWorkingDir, ContinueAtIteration):
 
-    print "delete"
+    if (not DoDeleteWorkingDir):
+        return
     if ContinueAtIteration != 1 :
         print "You can not delete the working directory"
         print " and start at iteration: ", ContinueAtIteration
@@ -29,14 +57,18 @@ def deleteWorkingDirectory(_mylog, _ProjectDir, _WorkingDir, ContinueAtIteration
 
     from distutils.dir_util import remove_tree
     dirName = _ProjectDir + "/" + _WorkingDir
-    _mylog.info("Delete working directory tree" + dirName)
+    _mylog.info("Delete working directory tree " + dirName)
     if not isinstance(_WorkingDir, StringTypes):
         raise DistutilsInternalError, "mkpath: 'name' must be a string (got %r)" % (dirName,)
     if os.path.exists(dirName):
         remove_tree(dirName, True)
 
-def checkVolumeProjSize(ReferenceFileNames, SelFileName):
+def checkVolumeProjSize(ReferenceFileNames, SelFileName, ContinueAtIteration, _log):
+
     """ check references y projection size match"""
+    #if this is not the firt iteration you may skip it
+    if (ContinueAtIteration != 1):
+        return
     #5a check volumes have same size
     (xdim, ydim, zdim, ndim) = SingleImgSize(ReferenceFileNames[0])
     for reference in ReferenceFileNames:
@@ -51,11 +83,16 @@ def checkVolumeProjSize(ReferenceFileNames, SelFileName):
     if (xdim2, ydim2) != (xdim, ydim):
             print "Volume and reference images have not the same size"
             exit(1)
+    _log.debug("checkVolumeProjSize")
+
 
 def initOuterRadius(OuterRadius, volName, selfFileName, _log):
     """ init mask radius for volumes. If suggested value is negative set to half dim"""
     if (OuterRadius < 0):
-        (xdim, ydim, zdim, ndim) = ImgSize(SelFileName)
+        try:
+            (xdim, ydim, zdim, ndim) = ImgSize(SelFileName)
+        except:
+            print "Unexpected error:", sys.exc_info()[0]
         OuterRadius = (xdim / 2) - 1
         comment = "InitOuterRadius: Outer radius set to: " + str(OuterRadius)
         print '* ' + comment
@@ -72,6 +109,7 @@ def initOuterRadius(OuterRadius, volName, selfFileName, _log):
 #  , 'CtfGroupRootName': CtfGroupRootName
 #  , 'DataArePhaseFlipped': DataArePhaseFlipped
 #  , 'DoAutoCtfGroup'      : DoAutoCtfGroup
+#  , 'DoCtfCorrection'      : DoCtfCorrectio
 #  , '_log'                :_log
 #  , 'PaddingFactor'       : PaddingFactor
 #  , 'SelFileName'         : SelFileName
@@ -79,6 +117,8 @@ def initOuterRadius(OuterRadius, volName, selfFileName, _log):
 #  , 'WienerConstant'      : WienerConstant
 def execute_ctf_groups (dict):
 
+    if (not dict['DoCtfCorrection']):
+        return 1
     import glob, sys
     import utils_xmipp
     import launch_job
