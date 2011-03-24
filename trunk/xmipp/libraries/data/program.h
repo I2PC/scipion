@@ -114,6 +114,9 @@ public:
     void clearUsage();
     /** Add examples */
     void addExampleLine(const char * example, bool verbatim=true);
+    /** Add other programs.
+     * Separated by commas and without xmipp_
+     */
     void addSeeAlsoLine(const char * seeAlso);
     /** Add keywords to the program definition */
     void addKeywords(const char * keywords);
