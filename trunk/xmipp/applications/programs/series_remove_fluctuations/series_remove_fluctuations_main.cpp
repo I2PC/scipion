@@ -27,27 +27,7 @@
 
 int main(int argc, char **argv)
 {
-    Series_remove_fluctuations_parameters prm;
-    try
-    {
-        prm.read(argc,argv);
-    }
-    catch (XmippError XE)
-    {
-        std::cerr << XE << std::endl;
-        prm.usage();
-        exit(1);
-    }
-    try
-    {
-        prm.show();
-        prm.produceSideInfo();
-        prm.run();
-    }
-    catch (XmippError XE)
-    {
-        std::cerr << XE << std::endl;
-        exit(2);
-    }
-    exit(0);
+    ProgSeriesRemoveFluctuations prm;
+    prm.read(argc,argv);
+    return prm.tryRun();
 }

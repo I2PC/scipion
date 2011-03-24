@@ -30,24 +30,38 @@
 #include <data/image.h>
 
 // Read from command line --------------------------------------------------
-void Series_remove_fluctuations_parameters::read(int argc, char **argv)
+void ProgSeriesRemoveFluctuations::readParams()
 {
-    fn_sel  = getParameter(argc, argv, "-i");
-    fn_root = getParameter(argc, argv, "-oroot", "");
-    maxFreq = textToFloat(getParameter(argc, argv, "-lpf", "0.25"));
+    fnIn  = getParam("-i");
+    fnOut = getParam("-o");
+    maxFreq = getDoubleParam("--lpf");
+}
+
+// Usage -------------------------------------------------------------------
+void ProgSeriesRemoveFluctuations::defineParams()
+{
+	addUsageLine("Removes the flickering in a tilt series. This is a phenomenon rather ");
+	addUsageLine("common in X-ray microscopy. For doing so, a low-pass filter of a given ");
+	addUsageLine("frequency (normalized to 0.5) is applied across the time series, i.e., a ");
+	addUsageLine("line is formed with all the lines at the same position along the tilt series. ");
+	addUsageLine("This time series is the filtered and put back into the tilt series. ");
+	addParamsLine("  -i <file>                 : Input images (selfile or stack)");
+	addParamsLine("  -o <outputStack>          : Output stack");
+    addParamsLine(" [--lpf <f=0.25>]           : Low pass filter");
+    addParamsLine("                            : Frequency is normalized to 0.5");
 }
 
 // Produce side info -------------------------------------------------------
-void Series_remove_fluctuations_parameters::produceSideInfo()
+void ProgSeriesRemoveFluctuations::produceSideInfo()
 {
     // Read the selfile into a volume
-    SF.read(fn_sel);
+    SF.read(fnIn);
     int Zdim, dummy, Ydim, Xdim;
     size_t Ndim;
     Zdim=SF.size();
     ImgSize(SF,Xdim,Ydim,dummy,Ndim);
-    V.setMmap(true);
-    V.initZeros(Zdim,Ydim,Xdim);
+    V().setMmap(true);
+    V().initZeros(Zdim,Ydim,Xdim);
     int k=0;
     Image<double> I;
     FileName fnImg;
@@ -55,79 +69,67 @@ void Series_remove_fluctuations_parameters::produceSideInfo()
     {
         SF.getValue(MDL_IMAGE,fnImg,__iter.objId);
         I.read(fnImg);
-        V.setSlice(k,I());
+        V().setSlice(k,I());
         k++;
     }
 }
 
 // Show --------------------------------------------------------------------
-void Series_remove_fluctuations_parameters::show() const
+void ProgSeriesRemoveFluctuations::show() const
 {
+	if (verbose==0)
+		return;
     std::cout << "Removing fluctuations from a tilt series\n";
-    std::cout << "Input series:   " << fn_sel  << std::endl
-              << "Output root:    " << fn_root << std::endl
+    std::cout << "Input series:   " << fnIn    << std::endl
+              << "Output root:    " << fnOut   << std::endl
               << "Max freq (LPF): " << maxFreq << std::endl
     ;
 }
 
-// Usage -------------------------------------------------------------------s
-void Series_remove_fluctuations_parameters::usage() const
-{
-    std::cerr << "series_remove_fluctuations\n"
-              << "  -i <selfile>               : Input images\n"
-              << " [-oroot <rootname>]         : If not given, the input is rewritten\n"
-              << " [-lpf <f=0.25>]             : Max. Freq. for the low pass filter\n"
-    ;
-}
-
 // Denoise image -----------------------------------------------------------
-void Series_remove_fluctuations_parameters::run()
+void ProgSeriesRemoveFluctuations::run()
 {
-    // Filter each line in the series
-    int maxPixel=CEIL(ZSIZE(V)*maxFreq);
-    std::cout << "Maxpixel=" << maxPixel << std::endl;
+	produceSideInfo();
+
+	// Filter each line in the series
+	MultidimArray<double> &mV=V();
+    int maxPixel=CEIL(ZSIZE(mV)*maxFreq);
     FourierTransformer transformer;
-    init_progress_bar(YSIZE(V));
-    for (int i=0; i<YSIZE(V); i++)
+    if (verbose>=1)
+    	init_progress_bar(YSIZE(mV));
+    MultidimArray<double> line;
+    MultidimArray< std::complex<double> > lineFourier;
+    std::complex<double> zero=0;
+    line.initZeros(ZSIZE(mV));
+    for (int i=0; i<YSIZE(mV); i++)
     {
-        for (int j=0; j<XSIZE(V); j++)
+        for (int j=0; j<XSIZE(mV); j++)
         {
             // Get line
-            MultidimArray<double> line;
-            line.initZeros(ZSIZE(V));
-            for (int k=0; k<ZSIZE(V); k++)
-                line(k)=V(k,i,j);
+            for (int k=0; k<ZSIZE(mV); k++)
+                DIRECT_A1D_ELEM(line,k)=DIRECT_A3D_ELEM(mV,k,i,j);
 
             // Fourier transform
             transformer.setReal(line);
             transformer.FourierTransform();
 
             // Filter
-            MultidimArray< std::complex<double> > lineFourier;
             transformer.getFourierAlias(lineFourier);
             for (int k=maxPixel; k<XSIZE(lineFourier); k++)
-                lineFourier(k)=0;
+            	DIRECT_A1D_ELEM(lineFourier,k)=zero;
 
             // Inverse Fourier transform and back to the volume
             transformer.inverseFourierTransform();
-            for (int k=0; k<ZSIZE(V); k++)
-                V(k,i,j)=line(k);
+            for (int k=0; k<ZSIZE(mV); k++)
+            	DIRECT_A3D_ELEM(mV,k,i,j)=DIRECT_A1D_ELEM(line,k);
         }
-        progress_bar(i+1);
+        if (verbose>=1)
+        	progress_bar(i+1);
     }
+    if (verbose>=1)
+    	progress_bar(YSIZE(mV));
 
     // Write the results
-    int k=0;
-    Image<double> I;
-    FileName fnimg;
-    FOR_ALL_OBJECTS_IN_METADATA(SF)
-    {
-        V.getSlice(k,I());
-
-        if (fn_root=="") SF.getValue(MDL_IMAGE,fnimg,__iter.objId);
-        else fnimg.compose(fn_root,k,"xmp");
-        I.write(fnimg);
-
-        k++;
-    }
+    mV.setDimensions(XSIZE(mV),YSIZE(mV),1,ZSIZE(mV));
+    V.write(fnOut,ALL_IMAGES,true);
 }

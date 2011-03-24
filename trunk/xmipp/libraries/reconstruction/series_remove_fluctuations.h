@@ -28,20 +28,21 @@
 
 #include <data/multidim_array.h>
 #include <data/metadata.h>
+#include <data/program.h>
 
 /// @defgroup RemoveFluctuations Remove fluctuations in tilt series
 /// @ingroup ReconsLibrary
 
 /// Parameters for the program removing the fluctuations
 /// @ingroup RemoveFluctuations
-class Series_remove_fluctuations_parameters
+class ProgSeriesRemoveFluctuations: public XmippProgram
 {
 public:
     /// Input images
-    FileName fn_sel;
+    FileName fnIn;
     
     /// Rootname for the output
-    FileName fn_root;
+    FileName fnOut;
     
     /// Cutoff frequency of the lowpass filter (<0.5)
     double maxFreq;
@@ -50,20 +51,20 @@ public:
     MetaData SF;
     
     // Volume for holding the whole tilt series
-    MultidimArray<double> V;
+    Image<double> V;
 
 public:
     /// Read parameters from command line
-    void read(int argc, char** argv);
+    void readParams();
+
+    /// Define params
+    void defineParams();
 
     /// Produce side info.
     void produceSideInfo();
 
     /// Show parameters
     void show() const;
-
-    /// Usage
-    void usage() const;
 
     /// Run
     void run();
