@@ -130,7 +130,7 @@ class Tester:
         self.addTest("-i input/smallStack.stk -o %o/smallStackPlusCtf.stk --ctf input/input.ctfparam" )
 
         self.addProgram("xmipp_resolution_fsc")
-        self.addTest("--ref input/phantomBacteriorhodopsin.vol -i input/phantomBacteriorhodopsinXray.vol --sam 5.6 --do_dpr --oroot %o/phantomBacteriorhodopsin ")
+        self.addTest("--ref input/phantomBacteriorhodopsin.vol -i input/phantomCandida.vol --sam 5.6 --do_dpr --oroot %o/phantomBacteriorhodopsin ")
 
         self.addProgram("xmipp_tomo_align_dual_tilt_series")
         self.addTest("--ref input/tomo_dual_alignment/ref.sel --dual input/tomo_dual_alignment/dual.sel --scale 1")
