@@ -92,6 +92,9 @@ class Tester:
         self.addTest("-i input/smallStack.stk --extract -o %o/header.doc")
         self.addTest("-i input/header.doc --assign -o %o/smallStack2.stk")
 
+        self.addProgram("xmipp_image_separate_objects")
+        self.addTest("-i input/maskBacteriorhodopsin.vol --oroot %o/mask")
+
         self.addProgram("xmipp_image_statistics")
         self.addTest("-i input/smallStack.stk --image_stats %o/stats")
 
