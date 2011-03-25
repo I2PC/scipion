@@ -61,9 +61,19 @@ private:
         face = getParam("--face");
     }
 
+    void show()
+    {
+        std::cout
+        << "Input file     : " << fnImgIn   << std::endl
+        << "Output file    : " << fnImgOut  << std::endl
+        << "New front face : " << face      << std::endl
+        ;
+    }
 
     void run()
     {
+        show();
+
         imgIn.readMapped(fnImgIn);
 
         int xDim, yDim, zDim, XdimOut, yDimOut, zDimOut;
@@ -96,11 +106,15 @@ private:
         MultidimArrayGeneric imTemp;
         int index;
 
+        init_progress_bar(zDim);
+
         for (int k = 0; k < zDim; k++)
         {
             imTemp.aliasSlice(imgOut(), k);
             index = k + (zDim - 1 - 2*k) * (int)reverse;
             imgIn().getSlice(index, &imTemp, axis, !reverse);
+
+            progress_bar(k+1);
         }
         imgOut.write(fnImgOut);
     }
