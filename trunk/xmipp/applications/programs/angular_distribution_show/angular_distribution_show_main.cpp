@@ -25,163 +25,152 @@
  ***************************************************************************/
 
 #include <data/args.h>
-#include <data/metadata.h>
 #include <data/geometry.h>
 #include <data/histogram.h>
+#include <data/metadata.h>
+#include <data/program.h>
 #include <interface/spider.h>
-
 #include <fstream>
 
-void Usage();
-
-int main(int argc, char *argv[])
+class ProgAngularDistributionShow: public XmippProgram
 {
-    FileName         fn_ang, fn_hist, fn_ps, fn_bild;
-    int              steps;
-    int              tell;
-    double           R, r, rmax, wmax = -99.e99;
-    double           rot_view;
-    double           tilt_view;
-    int              up_down_correction;
-    bool             solid_sphere;
-    double           shift_center;
+public:
+    FileName fnIn, fnOut;
+    String type;
+    double R, rmax;
+    int shift_center, solid_sphere, steps;
+    double rot_view, tilt_view;
+    bool up_down_correction;
 
-    // Check the command line ==================================================
-    try
+    void readParams()
     {
-        fn_ang = getParameter(argc, argv, "-ang");
-        fn_hist = getParameter(argc, argv, "-hist", "");
-        fn_ps = getParameter(argc, argv, "-ps", "");
-        fn_bild = getParameter(argc, argv, "-bild", "");
-        steps = textToInteger(getParameter(argc, argv, "-steps", "100"));
-        tell = checkParameter(argc, argv, "-show_process");
-        R = textToFloat(getParameter(argc, argv, "-R", "60"));
-        rmax = textToFloat(getParameter(argc, argv, "-r", "1.5"));
-        rot_view = textToFloat(getParameter(argc, argv, "-rot_view",  "0"));
-        tilt_view = textToFloat(getParameter(argc, argv, "-tilt_view", "30"));
-        up_down_correction = checkParameter(argc, argv, "-up_down_correction");
-        solid_sphere = checkParameter(argc, argv, "-solid_sphere");
-        shift_center= textToFloat(getParameter(argc, argv, "-shift_center", "0"));
-    }
-    catch (XmippError XE)
-    {
-        std::cout << XE;
-        Usage();
-        exit(1);
+        fnIn = getParam("-i");
+        fnOut = getParam("-o");
+        type = getParam("-o",1);
+        if (type=="chimera")
+        {
+            R=getDoubleParam("-o",2);
+            rmax=getDoubleParam("-o",3);
+            shift_center=getIntParam("-o",4);
+        }
+        else if (type=="ps")
+        {
+            R=getDoubleParam("-o",2);
+            rmax=getDoubleParam("-o",3);
+            rot_view=getDoubleParam("-o",4);
+            tilt_view=getDoubleParam("-o",5);
+            solid_sphere=getIntParam("-o",6);
+        }
+        else if (type=="histogram")
+            steps = getIntParam("-o",2);
+        up_down_correction = checkParam("--up_down_correction");
     }
 
-    try
+    void defineParams()
+    {
+        addUsageLine("Shows which is the angular distribution of a set of projections.");
+        addUsageLine("+There are three kinds of outputs: a bild file (chimera understands this format), a distance histogram and a postscript file. ");
+        addUsageLine("+In postcript, each projection is represented by a small isosceles triangles (the longest part is pointing to Y in the projection plane). ");
+        addUsageLine("+In chimera, each projection direction has a sphere whose radius is proportional to the number of images assigned to it");
+        addUsageLine("+The histogram output is the histogram of the minimum distance among projections. The distance is measured on the sphere surface. This gives an idea of how compact is the angular distribution.");
+        addParamsLine(" -i <metadata>                 : Metadata file with the angles");
+        addParamsLine(" -o <file> <type>              : Output file");
+        addParamsLine("    where <type>");
+        addParamsLine("          chimera <R=60> <rmax=1.5> <shift_center=0>               : R=sphere radius, rmax=maximum point radius, shift_center=shift in pixels applied to all coordinates");
+        addParamsLine("          ps <R=60> <rmax=1.5> <rot=0> <tilt=30> <solid_sphere=0>  : R=sphere radius, rmax=maximum point radius, rot and tilt defines the point of view, solid_sphere=0 (=no) or 1 (=yes)");
+        addParamsLine("                                                                : If the sphere is solid, projections in the back plane are not shown");
+        addParamsLine("          histogram <stepno=100> : Number of divisions in the histogram");
+        addParamsLine("[--up_down_correction]         : correct angles so that a semisphere is shown");
+    }
+
+    void run()
     {
         // Get angles ==============================================================
         MetaData angles;
-        angles.read(fn_ang);
+        angles.read(fnIn);
         int AngleNo = angles.size();
         if (AngleNo == 0 || !angles.containsLabel(MDL_ANGLEROT))
             REPORT_ERROR(ERR_MD_BADLABEL, "Input file doesn't contain angular information");
 
+        double maxWeight = -99.e99;
+        MultidimArray<double> weight;
+        weight.initZeros(AngleNo);
         if (angles.containsLabel(MDL_WEIGHT))
         {
             // Find maximum weight
+            int i=0;
             FOR_ALL_OBJECTS_IN_METADATA(angles)
             {
                 double w;
                 angles.getValue(MDL_WEIGHT,w,__iter.objId);
-                wmax=XMIPP_MAX(w,wmax);
+                DIRECT_A1D_ELEM(weight,i++)=w;
+                maxWeight=XMIPP_MAX(w,maxWeight);
             }
         }
+        double imaxWeight=1.0/maxWeight;
 
         // Build vector tables ======================================================
-#define GET_ANGLES(i) \
-    angles.getValue(MDL_ANGLEROT,rot,i); \
-    angles.getValue(MDL_ANGLETILT,tilt,i); \
-    angles.getValue(MDL_ANGLEPSI,psi,i); \
-    if (up_down_correction && ABS(tilt)>90) \
-        Euler_up_down(rot,tilt,psi,rot,tilt,psi);
-
-        double rot, tilt, psi;
         std::vector< Matrix1D<double> > v, v_ang;
         v.reserve(AngleNo);
         v_ang.reserve(AngleNo);
-        for (int i = 0; i < AngleNo; i++)
+        Matrix1D<double> aux(3);
+        Matrix1D<double> aux_ang(3);
+        FOR_ALL_OBJECTS_IN_METADATA(angles)
         {
-            Matrix1D<double> aux(3);
-            Matrix1D<double> aux_ang(6);
-
-            GET_ANGLES(i + 1);
+            double rot, tilt, psi;
+            angles.getValue(MDL_ANGLEROT,rot,__iter.objId);
+            angles.getValue(MDL_ANGLETILT,tilt,__iter.objId);
+            angles.getValue(MDL_ANGLEPSI,psi,__iter.objId);
+            if (up_down_correction && fabs(tilt)>90)
+                \
+                Euler_up_down(rot,tilt,psi,rot,tilt,psi);
             Euler_direction(rot, tilt, psi, aux);
             v.push_back(aux);
-
-            aux_ang = vectorR3(rot, tilt, psi);
+            VECTOR_R3(aux_ang, rot, tilt, psi);
             v_ang.push_back(aux_ang);
         }
 
-        // Compute histogram of distances =============================================
-        if (fn_hist != "")
+        if (type=="histogram")
         {
-            MultidimArray<double> dist;
-
-#define di A1D_ELEM(dist,i)
-#define dj A1D_ELEM(dist,j)
-
-#define SHOW {\
-			GET_ANGLES(i+1); \
-			std::cout << i << " " << rot << " " << tilt << " v[i]=" \
-			<< v[i].transpose() << std::endl; \
-			GET_ANGLES(j+1); \
-			std::cout << j << " " << rot << " " << tilt << " v[j]=" \
-			<< v[j].transpose() << std::endl; \
-			std::cout << " d= " << d << std::endl << std::endl; \
-        }
-
             // Compute minimum distance table
+            MultidimArray<double> dist;
             dist.initZeros(AngleNo);
             for (int i = 0; i < AngleNo; i++)
+            {
+                const Matrix1D<double> &vi=v[i];
                 for (int j = i + 1; j < AngleNo; j++)
                 {
-                    double d = spherical_distance(v[i], v[j]);
-                    if (di == 0 || d < di)
-                    {
-                        di = d;
-                        if (tell)
-                            SHOW;
-                    }
-                    if (dj == 0 || d < dj)
-                    {
-                        dj = d;
-                        if (tell)
-                            SHOW;
-                    }
+                    const Matrix1D<double> &vj=v[j];
+                    // Since the two vectors are in the unit sphere, the spherical distance
+                    // is simply the arc cosine
+                    double d = acos(XX(vi)*XX(vj) + YY(vi)*YY(vj) + ZZ(vi)*ZZ(vj));
+                    if (DIRECT_A1D_ELEM(dist,i) == 0 || d < DIRECT_A1D_ELEM(dist,i))
+                    	DIRECT_A1D_ELEM(dist,i) = d;
+                    if (DIRECT_A1D_ELEM(dist,j) == 0 || d < DIRECT_A1D_ELEM(dist,j))
+                    	DIRECT_A1D_ELEM(dist,j) = d;
                 }
+            }
 
             Histogram1D dist_hist;
-            double min, max;
-            dist.computeDoubleMinMax(min, max);
-            dist_hist.init(min, max, steps);
-            for (int i = 0; i < AngleNo; i++)
-                dist_hist.insert_value(di);
-            dist_hist.write(fn_hist);
+            compute_hist(dist, dist_hist, steps);
+            dist_hist.write(fnOut);
         }
-
-        // Show distribution in chimera as bild file ==========================================
-        if (fn_bild != "")
+        else if (type=="chimera")
         {
             std::ofstream fh_bild;
-            fh_bild.open(fn_bild.c_str(), std::ios::out);
+            fh_bild.open(fnOut.c_str(), std::ios::out);
             if (!fh_bild)
-                REPORT_ERROR(ERR_IO_NOWRITE, fn_ps);
+                REPORT_ERROR(ERR_IO_NOWRITE, fnOut);
             fh_bild << ".color 1 0 0" << std::endl;
 
-            for (int i = 0; i < AngleNo; i++)
+            int imax=v.size();
+            for (int i=0; i<imax; i++)
             {
-                // Triangle size depedent on w
-                if (wmax>0)
-                {
-                    angles.getValue(MDL_WEIGHT,r, i+1);
-                    r *= rmax / wmax;
-                }
-                else
-                    r = rmax;
-                fh_bild << ".sphere "
+                double r=rmax;
+                if (maxWeight>0)
+                    r *= DIRECT_A1D_ELEM(weight,i)*imaxWeight;
+                fh_bild
+                << ".sphere "
                 << R*XX(v[i])  + shift_center << " "
                 << R*YY(v[i])  + shift_center << " "
                 << R*ZZ(v[i])  + shift_center << " "
@@ -190,39 +179,34 @@ int main(int argc, char *argv[])
             }
             fh_bild.close();
         }
-        // Show distribution as triangles ==========================================
-        if (fn_ps != "")
+        else if (type=="ps")
         {
             std::ofstream fh_ps;
-            fh_ps.open(fn_ps.c_str(), std::ios::out);
+            fh_ps.open(fnOut.c_str(), std::ios::out);
             if (!fh_ps)
-                REPORT_ERROR(ERR_IO_NOWRITE, fn_ps);
+                REPORT_ERROR(ERR_IO_NOWRITE, fnOut);
 
             fh_ps << "%%!PS-Adobe-2.0\n";
             fh_ps << "%% Creator: Angular Distribution\n";
-            fh_ps << "%% Title: Angular distribution of " << fn_ang << "\n";
+            fh_ps << "%% Title: Angular distribution of " << fnIn << "\n";
             fh_ps << "%% Pages: 1\n";
 
 #define TO_PS(x,y) \
-    tmp=y; \
-    y=400.0f-x*250.0f/60; \
-    x=300.0f+tmp*250.0f/60;
+        tmp=y; \
+        y=400.0f-x*250.0f/60; \
+        x=300.0f+tmp*250.0f/60;
 
-            Matrix1D<double> p0(4), p1(4), p2(4), p3(4), origin(3);
+            Matrix1D<double> p0(4), p1(4), p2(4), p3(4), view_direction, pp(3);
             Matrix2D<double> A, euler_view;
             Euler_angles2matrix(rot_view, tilt_view, 0.0f, euler_view);
-            origin.initZeros();
+            euler_view.getRow(2, view_direction);
             double tmp;
-            for (int i = 0; i < AngleNo; i++)
+            int imax=v.size();
+            for (int i=0; i<imax; i++)
             {
-                // Triangle size dependent on w
-                if (wmax>0)
-                {
-                    angles.getValue(MDL_WEIGHT,r,i+1);
-                    r *= rmax / wmax;
-                }
-                else
-                    r = rmax;
+                double r=rmax;
+                if (maxWeight>0)
+                    r *= DIRECT_A1D_ELEM(weight,i)*imaxWeight;
 
                 // Initially the triangle is on the floor of the projection plane
                 VECTOR_R3(p0,    0   ,      0        , 0);
@@ -237,19 +221,16 @@ int main(int argc, char *argv[])
                 p3(3) = 1;
 
                 // Compute Transformation matrix
-                GET_ANGLES(i + 1);
-                Euler_angles2matrix(rot, tilt, psi, A);
+                const Matrix1D<double> &v_angi=v_ang[i];
+                const Matrix1D<double> &vi=v[i];
+                Euler_angles2matrix(VEC_ELEM(v_angi,1), VEC_ELEM(v_angi,2),
+                                    VEC_ELEM(v_angi,3), A, true);
+                A = A.transpose(); // We go from the projection plane to the universal coordinates
 
-                // We go from the projeciton plane to the universal coordinates
-                A = A.transpose();
-
-                // Convert to homogeneous coordinates and apply a translation
-                // to the sphere of radius R
-                A.resize(4, 4);
-                A(0, 3) = R * XX(v[i]);
-                A(1, 3) = R * YY(v[i]);
-                A(2, 3) = R * ZZ(v[i]);
-                A(3, 3) = 1;
+                // Apply a translation to the sphere of radius R
+                MAT_ELEM(A, 0, 3) = R * XX(vi);
+                MAT_ELEM(A, 1, 3) = R * YY(vi);
+                MAT_ELEM(A, 2, 3) = R * ZZ(vi);
 
                 // Convert triangle coordinates to universal ones
                 p0 = A * p0;
@@ -260,16 +241,15 @@ int main(int argc, char *argv[])
                 // Check if this triangle must be drawn
                 if (solid_sphere)
                 {
-                    Matrix1D<double> view_direction, p0p;
-                    euler_view.getRow(2, view_direction);
-                    p0p = p0;
-                    p0p.resize(3);
-                    if (point_plane_distance_3D(p0, origin, view_direction) < 0)
+                	// Point-plane distance
+                	double d=XX(p0)*XX(view_direction)+
+                			 YY(p0)*YY(view_direction)+
+                			 ZZ(p0)*ZZ(view_direction);
+                    if (d < 0)
                         continue;
                 }
 
                 // Project this triangle onto the view plane and write in PS
-                Matrix1D<double> pp(3);
                 Uproject_to_plane(p1, euler_view, pp);
                 TO_PS(XX(pp), YY(pp));
                 fh_ps << "newpath\n";
@@ -292,35 +272,12 @@ int main(int argc, char *argv[])
             fh_ps << "showpage\n";
             fh_ps.close();
         }
-
     }
-    catch (XmippError XE)
-    {
-        std::cout << XE;
-    }
-}
+};
 
-/* Usage ------------------------------------------------------------------- */
-void Usage()
+int main(int argc, char *argv[])
 {
-    std::cout << "Usage:\n";
-    std::cout << "   ang_distribution <options>\n";
-    std::cout << "   Where <options> are:\n";
-    std::cout
-    << "       -ang <metadata>              : Metadata file with the angles\n"
-    << "      [-bild <-chimera file out>    : Chimera file\n"
-    << "      [-hist <doc_file>]            : histogram of distances\n"
-    << "      [-steps <stepno=100>]         : number of divisions in the histogram\n"
-    << "      [-show_process]               : show distances.\n"
-    << "      [-ps <PS file out>]           : PS file with the topological sphere\n"
-    << "      [-R <big_sphere_radius=60>]   : sphere radius for the PS/bild file\n"
-    << "      [-r <triangle side=1.5>]      : triangle size for the PS/bild file\n"
-    << "      [-rot_view <rot angle=0>]     : rotational angle for the view\n"
-    << "      [-tilt_view <tilt angle=30>]  : tilting angle for the view\n"
-    << "      [-shift_center <shift_center=0>]: shift coordinates center for bild file\n"
-    << "      [-up_down_correction]         : correct angles so that a semisphere\n"
-    << "                                      is shown\n"
-    << "      [-solid_sphere]               : projections in the back plane are\n"
-    << "                                      not shown\n"
-    ;
+    ProgAngularDistributionShow prm;
+    prm.read(argc,argv);
+    return prm.tryRun();
 }
