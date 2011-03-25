@@ -77,6 +77,7 @@ public:
         addParamsLine(" -o <file> <type>              : Output file");
         addParamsLine("    where <type>");
         addParamsLine("          chimera <R=60> <rmax=1.5> <shift_center=0>               : R=sphere radius, rmax=maximum point radius, shift_center=shift in pixels applied to all coordinates");
+        addParamsLine("                                                                   : shift_center should be half the volume size and R should be 2/3 the volume size");
         addParamsLine("          ps <R=60> <rmax=1.5> <rot=0> <tilt=30> <solid_sphere=0>  : R=sphere radius, rmax=maximum point radius, rot and tilt defines the point of view, solid_sphere=0 (=no) or 1 (=yes)");
         addParamsLine("                                                                : If the sphere is solid, projections in the back plane are not shown");
         addParamsLine("          histogram <stepno=100> : Number of divisions in the histogram");
@@ -144,6 +145,7 @@ public:
                     // Since the two vectors are in the unit sphere, the spherical distance
                     // is simply the arc cosine
                     double d = acos(XX(vi)*XX(vj) + YY(vi)*YY(vj) + ZZ(vi)*ZZ(vj));
+                    d=RAD2DEG(d);
                     if (DIRECT_A1D_ELEM(dist,i) == 0 || d < DIRECT_A1D_ELEM(dist,i))
                     	DIRECT_A1D_ELEM(dist,i) = d;
                     if (DIRECT_A1D_ELEM(dist,j) == 0 || d < DIRECT_A1D_ELEM(dist,j))
