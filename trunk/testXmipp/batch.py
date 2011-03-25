@@ -72,6 +72,11 @@ class Tester:
         self.addProgram("xmipp_angular_distance")
         self.addTest("--ang1 input/discreteAssignment.xmd --ang2 input/aFewProjections.sel --oroot %o/angleComparison --sym c3 -v 2")
 
+        self.addProgram("xmipp_angular_distribution_show")
+        self.addTest("-i input/randomAngularDistribution.sel -o %o/distribution.ps ps")
+        self.addTest("-i input/randomAngularDistribution.sel -o %o/distribution.hist histogram")
+        self.addTest("-i input/randomAngularDistribution.sel -o %o/distribution.bild chimera")
+
         self.addProgram("xmipp_angular_project_library")
         self.addTest("-i input/phantomBacteriorhodopsin.vol -o %o/output_projections.stk --sym c6 --sampling_rate 5", True)
 
