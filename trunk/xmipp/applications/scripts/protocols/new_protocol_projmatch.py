@@ -217,6 +217,7 @@ AngSamplingRateDeg = '6 4 2 1'
     is ("2x1000 2x10", i.e.,
     2 iterations with value 1000, and 2 with value 10).
     Note: if there are less values than iterations the last value is reused
+MaskRadius = 16
     Note: if there are more values than iterations the extra value are ignored
 """
 MaxChangeInAngles = '1000 16 12 8 4 2'
@@ -594,13 +595,21 @@ MultiAlign2dSel = "multi_align2d.sel"
 DocFileWithOriginalAngles = 'original_angles.doc'
 docfile_with_current_angles = 'current_angles.doc'
 FilteredReconstruction = "filtered_reconstruction"
-ReconstructedVolume = "reconstruction"
+
+ReconstructedVolume = "reconstruction"#
+maskReferenceVolume = "mask_reference"#
+
 OutputFsc = "resolution.fsc"
 CtfGroupDirectory = "CtfGroups"
 CtfGroupRootName = "ctf"
 CtfGroupSubsetFileName = "ctf_groups_subset_docfiles.sel"
 tableNameRoot = "wrappers"
 tableName = tableNameRoot
+
+reconstructedFileNamesIter = []# names for reconstructed volumes
+maskedFileNamesIter = []# names masked volumes used as reference
+referenceNumber = 1#number of references
+createAuxTable = False
 
 
 
@@ -617,6 +626,11 @@ from pysqlite2 import dbapi2 as sqlite
 
 from xmipp import *
 from ProjMatchActionsToBePerformedBeforeLoop import *
+from ProjMatchActionsToBePerformedInLoop import *
+import pickle
+
+sqlCommand = ""
+sqlCommandV = ""
 
 def initDataBase(projectdir, logdir, scriptname, WorkDirectory):
     if logdir[0] == '/':
@@ -629,106 +643,244 @@ def initDataBase(projectdir, logdir, scriptname, WorkDirectory):
         os.makedirs(LogName)
     scriptname = os.path.basename(scriptname)
     LogName += scriptname.replace('.py', '')
-    if not (WorkDirectory == "." or WorkDirectory == '.'):
+    if not (WorkDirectory == "."):
         LogName += '_'
         LogName += os.path.basename(WorkDirectory)
     LogName += '.db'
-
     conn = sqlite.Connection(LogName)
     # Create table
     #check if table already exists
+    #if table exists create an auxiliary table and clean it
+    #if user has not requested to start from the beginning
     global tableName
     tableName = tableNameRoot
-    sqlCommand = "SELECT count(*) from sqlite_master where tbl_name = '" + tableName + "';"
-    cur = conn.execute(sqlCommand)
+    sqlCommand = "SELECT count(*) from sqlite_master where tbl_name = ?;"
+    cur = conn.cursor()
+    cur.execute(sqlCommand, [tableName])
+    global createAuxTable
+    createAuxTable = cur.fetchone()[0] == 1 and ContinueAtIteration != 1
 
-    #if table exists create an auxiliary table and clean it
-    sqlCommand = 'create table if not exists '
-    #if user has not requested to start from the beginning
-    if cur.fetchone()[0] == 1 and ContinueAtIteration != 1:
-        tableName = tableNameRoot + '_aux'
-    sqlCommand += tableName + '''
-        (id INTEGER PRIMARY KEY,
-         command text, 
-         init date, 
-         finish date,
-         verified bool)'''
+    if createAuxTable:
+        tableName += '_aux'
+    sqlCommand = '''create table if not exists ''' + tableName + \
+                    '''(id INTEGER PRIMARY KEY,
+                     command text, 
+                     parameters text,
+                     verifyfiles text,
+                     init date, 
+                     finish date,
+                     verified bool)'''
+
     sqlCommand += ';delete from ' + tableName
-    conn.executescript(sqlCommand)
+    cur.executescript(sqlCommand)
+    global sqlCommand
+    global sqlCommandV
+    sqlCommand = "insert into " + tableName + "(command,parameters)             VALUES (?,?)"
+    sqlCommandV = "insert into " + tableName + "(command,parameters,verifyfiles) VALUES (?,?,?)"
+
     return conn
+
+def compareParameters (conn):
+    '''return 0 if new execution of script (tableName) is a subset of and old execution
+   this is interesting for continue at iteration option'''
+    sqlCommand = '''SELECT count(*) FROM
+                          (SELECT * FROM ''' + tableName + ''' 
+                           except
+                           SELECT * FROM ''' + tableNameRoot + ''' 
+                          )'''
+    print sqlCommand
+    cur = conn.cursor()
+    cur.execute(sqlCommand)
+    return cur.fetchone()[0]
 
 def actionsToBePerformedBeforeLoopThatDoNotModifyTheFileSystem(_log):
     #1 Convert vectors to list
     from arg import getListFromVector
     global ReferenceFileNames
     ReferenceFileNames = getListFromVector(ReferenceFileNames)
+    global referenceNumber
+    referenceNumber = len(ReferenceFileNames)
 
-    #2 Convert directories/files  to absolute path from projdir
+    #name of masked volumes
+    global maskedFileNamesIter
+    auxList = (referenceNumber + 1) * [None]
+    #add dummy name so indexes start a 1
+    maskedFileNamesIter.append(auxList)
+    for iterN in range(NumberofIterations):
+        for refN in range(referenceNumber):
+            auxList[refN + 1] = WorkingDir + "/Iter_" + \
+                                      str(iterN + 1).zfill(2) + \
+                                      '/' + \
+                                      maskReferenceVolume + \
+                                      "_ref_" + str(refN + 1).zfill(2) + ".vol"
+        maskedFileNamesIter.append(list(auxList))
+
+    global reconstructedFileNamesIter
+    #add initial reference, useful for mark
+    #NOTE THAT INDEXES START AT 1
+    reconstructedFileNamesIter.append([""] + ReferenceFileNames)
+    for iterN in range(NumberofIterations):
+        for refN in range(referenceNumber):
+            auxList[refN + 1] = WorkingDir + "/Iter_" + \
+                                      str(iterN + 1).zfill(2) + \
+                                      '/' + \
+                                      ReconstructedVolume + \
+                                      "_ref_" + str(refN + 1).zfill(2) + ".vol"
+        reconstructedFileNamesIter.append(list(auxList))
+    #add initial reference, useful for mark
+    reconstructedFileNamesIter.append(ReferenceFileNames)
+
+    #Convert directories/files  to absolute path from projdir
     global CtfGroupDirectory
     CtfGroupDirectory = WorkingDir + '/' + CtfGroupDirectory
 
+
 def otherActionsToBePerformedBeforeLoop(_log, conn):
-    sqlBegin = "insert into " + tableName + "(command) VALUES ('"
-    sqlEnd = "');"
 
-    #1) Delete working dir
-    command = 'deleteWorkingDirectory(_log, ProjectDir, WorkingDir, DoDeleteWorkingDir, ContinueAtIteration)'
-    conn.execute ('select 1')
-    conn.execute(sqlBegin + command + sqlEnd)
+    #1Delete working dir
+    _Parameters = {
+          'ProjectDir':ProjectDir
+        , 'WorkingDir':WorkingDir
+        , 'DoDeleteWorkingDir':DoDeleteWorkingDir
+        , 'ContinueAtIteration':ContinueAtIteration
+        }
+    parameters = pickle.dumps(_Parameters, 0)
+    command = 'deleteWorkingDirectory'
+    conn.execute(sqlCommand, [command, parameters])
 
-    #2 create directory three
-    command = 'createRequiredDirectories(_log, ProjectDir, WorkingDir, NumberofIterations)'
-    conn.execute(sqlBegin + command + sqlEnd)
+    #Create directory three
+    _Parameters = {
+          'ProjectDir':ProjectDir
+        , 'WorkingDir':WorkingDir
+        , 'NumberofIterations':NumberofIterations
+        }
+    parameters = pickle.dumps(_Parameters, 0)
+    command = 'createRequiredDirectories'
+    conn.execute(sqlCommand, [command, parameters])
 
-    #2.5 backup protocol file
-    command = 'log.make_backup_of_script_file(sys.argv[0], ProjectDir + "/" + WorkingDir)'
-    conn.execute(sqlBegin + command + sqlEnd)
+    #Backup protocol file
 
-    #3 change to directory. Execute everything from ProjDir
-    command = 'os.chdir(ProjectDir)'
-    conn.execute(sqlBegin + command + sqlEnd)
+    _Parameters = {
+          'ProjectDir':ProjectDir
+        , 'WorkingDir':WorkingDir
+        , 'progName'  :sys.argv[0]
+        }
+    parameters = pickle.dumps(_Parameters, 0)
+    command = 'pm_make_backup_of_script_file'
+    conn.execute(sqlCommand, [command, parameters])
 
-    #4 Check references and projections size match
-    command = 'checkVolumeProjSize(ReferenceFileNames, SelFileName, ContinueAtIteration,_log)'
-    conn.execute(sqlBegin + command + sqlEnd)
+    #Check references and projections size match
 
-    #5 Init Mask references radius
-    command = '''global OuterRadius
-    OuterRadius = initOuterRadius(OuterRadius, ReferenceFileNames[0], SelFileName, _log)'''
-    conn.execute(sqlBegin + command.replace("    ", "") + sqlEnd)
+    _Parameters = {
+          'ReferenceFileNames':ReferenceFileNames
+        , 'SelFileName':SelFileName
+        , 'ContinueAtIteration' :ContinueAtIteration
+        }
+    parameters = pickle.dumps(_Parameters, 0)
+    command = 'checkVolumeProjSize'
+    conn.execute(sqlCommand, [command, parameters])
+
+    #Check Option compatibility
+    _Parameters = {
+          'DoAlign2D':DoAlign2D
+        , 'DoCtfCorrection':DoCtfCorrection
+        }
+    parameters = pickle.dumps(_Parameters, 0)
+    command = 'checkOptionsCompatibility'
+    conn.execute(sqlCommand, [command, parameters])
+
+    #Init Mask references radius
+    _Parameters = {
+          'OuterRadius':OuterRadius
+        , 'ReferenceFileNames_0':ReferenceFileNames[0]
+        , 'SelFileName':SelFileName
+        }
+    parameters = pickle.dumps(_Parameters, 0)
+    command = 'global OuterRadius;OuterRadius = initOuterRadius'
+    conn.execute(sqlCommand, [command, parameters])
 
     #7 make CTF groups
     #too many variables, pass them as a dictionary
-    command = '''global NumberOfCtfGroups
-    NumberOfGroupsDictiorary = {
-                                  ''CTFDatName'': CTFDatName
-                                , ''CtfGroupDirectory'': CtfGroupDirectory
-                                , ''CtfGroupMaxDiff'': CtfGroupMaxDiff
-                                , ''CtfGroupMaxResol'': CtfGroupMaxResol
-                                , ''CtfGroupRootName'': CtfGroupRootName
-                                , ''DataArePhaseFlipped'': DataArePhaseFlipped
-                                , ''DoAutoCtfGroup'': DoAutoCtfGroup
-                                , ''DoCtfCorrection'': DoCtfCorrection
-                                , ''_log'':_log
-                                , ''PaddingFactor'': PaddingFactor
-                                , ''SelFileName'': SelFileName
-                                , ''SplitDefocusDocFile'': SplitDefocusDocFile
-                                , ''WienerConstant'': WienerConstant
-                               }
-    NumberOfCtfGroups = execute_ctf_groups(NumberOfGroupsDictiorary)'''
-    conn.execute(sqlBegin + command.replace("    ", "") + sqlEnd)
+    _Parameters = {
+                  'CTFDatName': CTFDatName
+                , 'CtfGroupDirectory': CtfGroupDirectory
+                , 'CtfGroupMaxDiff': CtfGroupMaxDiff
+                , 'CtfGroupMaxResol': CtfGroupMaxResol
+                , 'CtfGroupRootName': CtfGroupRootName
+                , 'DataArePhaseFlipped': DataArePhaseFlipped
+                , 'DoAutoCtfGroup': DoAutoCtfGroup
+                , 'DoCtfCorrection': DoCtfCorrection
+                , 'PaddingFactor': PaddingFactor
+                , 'SelFileName': SelFileName
+                , 'SplitDefocusDocFile': SplitDefocusDocFile
+                , 'WienerConstant': WienerConstant
+               }
+    parameters = pickle.dumps(_Parameters, 0)
+    _VerifyFiles = []
+    _VerifyFiles.append(CtfGroupRootName + 'Info.xmd')
+    verifyfiles = pickle.dumps(_VerifyFiles, 0)
+    command = 'global NumberOfCtfGroups;NumberOfCtfGroups = execute_ctf_groups'
+    conn.execute(sqlCommandV, [command, parameters, verifyfiles])
+
+    conn.commit()
+
+def actionsToBePerformedInsideLoop(_log, conn):
+    print reconstructedFileNamesIter
+    print maskedFileNamesIter
+    for iterN in range(ContinueAtIteration, NumberofIterations + 1):
+        print "iterN=", iterN
+        #############conn.execute(sqlBegin + "MPI_ON" + sqlEnd)
+        # Mask reference volume
+        for refN in range(1, referenceNumber + 1):
+            print "refN=", refN
+            # Mask reference volume
+            ##############REMOVE SHUTIL.COPY
+            _Parameters = {
+                                  'DoMask'             : DoMask
+                                , 'reconstructedFileName' : reconstructedFileNamesIter[iterN - 1][refN]
+                                , 'maskedFileName'     : maskedFileNamesIter[iterN][refN]
+                                , 'DoSphericalMask'    : DoSphericalMask
+                                , 'maskRadius'         : MaskRadius
+                                , 'DoSphericalMask'    : DoSphericalMask
+                                , 'userSuppliedMask'   : MaskFileName
+                                }
+            parameters = pickle.dumps(_Parameters, 0)
+            _VerifyFiles = []
+            _VerifyFiles.append(maskedFileNamesIter[iterN][refN])
+            verifyfiles = pickle.dumps(_VerifyFiles, 0)
+            command = "execute_mask"
+            conn.execute(sqlCommandV, [command, parameters, verifyfiles])
+
+            #REMOVE
+            command = "shutil.copy('%s','%s');dummy" % (ReferenceFileNames[0], reconstructedFileNamesIter[iterN][refN])
+            parameters = pickle.dumps("")
+            conn.execute(sqlCommand, [command, parameters])
+
     conn.commit()
 
 def mainLoop(_log, iter):
     conn.row_factory = sqlite.Row
     cur = conn.cursor()
-    cur.execute("select id, command from " + tableNameRoot)
+    #check if tableName and tablename_aux are identical if not abort
+    if createAuxTable:
+        compareParameters(conn)
+
+
+    cur.execute('''select id, command, parameters 
+                   FROM ''' + tableNameRoot +
+               ''' WHERE finish IS NOT NULL 
+                   ORDER BY id''')
+
+    #Change to Projectdir Execute everything from ProjDir
+    os.chdir(ProjectDir)
 
     for row in cur:
         #print row["command"], row["id"]
         sqlCommand = "update " + tableNameRoot + " set init   = CURRENT_TIMESTAMP where id=%d" % row["id"]
         conn.execute(sqlCommand)
-        exec (row["command"])
+        dict = pickle.loads(str(row["parameters"]))
+        print row["command"], _log, dict
+        exec (row["command"] + '(_log, dict)')
         sqlCommand = "update " + tableNameRoot + " set finish   = CURRENT_TIMESTAMP where id=%d" % row["id"]
         conn.execute(sqlCommand)
 #        >>>>>>>>>>>>>>> verify if adecuate
@@ -753,10 +905,14 @@ conn = initDataBase(ProjectDir,
                     WorkingDir)
 
 #preprocessing
+try:
+    actionsToBePerformedBeforeLoopThatDoNotModifyTheFileSystem(_log)
+##########################################    otherActionsToBePerformedBeforeLoop(_log, conn)
+    actionsToBePerformedInsideLoop(_log, conn)
+    mainLoop(_log, iter)
+except sqlite.Error, e:
+    print "An error occurred:", e.args[0]
 
-actionsToBePerformedBeforeLoopThatDoNotModifyTheFileSystem(_log)
-otherActionsToBePerformedBeforeLoop(_log, conn)
-mainLoop(_log, iter)
                 #(in another file) <<<<< define list with actions and parameters
                 #                  <<<<< store list in database as it is made
                 #                  <<<<< link with restart
