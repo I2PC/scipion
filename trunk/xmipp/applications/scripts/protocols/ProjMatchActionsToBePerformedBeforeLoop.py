@@ -1,6 +1,6 @@
 from distutils.errors   import DistutilsInternalError
 from types              import StringTypes
-import os
+import os, sys
 from xmipp import *
 #from pysqlite2 import dbapi2 as sqlite
 #
@@ -38,66 +38,83 @@ def createDirectoryTree(dirName):
         raise DistutilsInternalError, "mkpath: 'name' must be a string (got %r)" % (dirName,)
     mkpath(dirName, 0777, True)
 
-def createRequiredDirectories(_log, ProjectDir, WorkingDir, NumberofIterations):
+def createRequiredDirectories(_log, dict):
     """ Create all required directories, I do not want to bother about that 
         later """
-    absPath = ProjectDir + "/" + WorkingDir
-    for i in range(1, NumberofIterations + 1):
+    absPath = dict['ProjectDir'] + "/" + dict['WorkingDir']
+    for i in range(1, dict['NumberofIterations'] + 1):
         createDirectoryTree(absPath + "/Iter_" + str(i).zfill(2))
     _log.info("Creating directory tree " + absPath)
 
-def deleteWorkingDirectory(_mylog, _ProjectDir, _WorkingDir, DoDeleteWorkingDir, ContinueAtIteration):
+def deleteWorkingDirectory(_mylog, dict):
 
-    if (not DoDeleteWorkingDir):
+    if (not dict['DoDeleteWorkingDir']):
         return
-    if ContinueAtIteration != 1 :
+    if dict['ContinueAtIteration'] != 1 :
         print "You can not delete the working directory"
-        print " and start at iteration: ", ContinueAtIteration
+        print " and start at iteration: ", dict['ContinueAtIteration']
         exit(1)
 
     from distutils.dir_util import remove_tree
-    dirName = _ProjectDir + "/" + _WorkingDir
+    dirName = dict['ProjectDir'] + "/" + dict['WorkingDir']
     _mylog.info("Delete working directory tree " + dirName)
-    if not isinstance(_WorkingDir, StringTypes):
+    if not isinstance(dict['WorkingDir'], StringTypes):
         raise DistutilsInternalError, "mkpath: 'name' must be a string (got %r)" % (dirName,)
     if os.path.exists(dirName):
         remove_tree(dirName, True)
 
-def checkVolumeProjSize(ReferenceFileNames, SelFileName, ContinueAtIteration, _log):
+def checkVolumeProjSize(_log, dict):
 
     """ check references y projection size match"""
     #if this is not the firt iteration you may skip it
-    if (ContinueAtIteration != 1):
+    if (dict['ContinueAtIteration'] != 1):
         return
     #5a check volumes have same size
-    (xdim, ydim, zdim, ndim) = SingleImgSize(ReferenceFileNames[0])
-    for reference in ReferenceFileNames:
-        (xdim2, ydim2, zdim2, ndim2) = SingleImgSize(reference)
-        if (xdim2, ydim2, zdim2, ndim2) != (xdim, ydim, zdim, ndim):
-            print "Reference %s and %s have not the same size" % \
-                  (ReferenceFileNames[0], reference)
-            exit(1)
+    try:
+        (xdim, ydim, zdim, ndim) = SingleImgSize(dict['ReferenceFileNames'][0])
+        for reference in dict['ReferenceFileNames']:
+            (xdim2, ydim2, zdim2, ndim2) = SingleImgSize(reference)
+    except XmippError as e:
+        print __name__, 'checkVolumeProjSize:', e
+        exit(1)
+    if (xdim2, ydim2, zdim2, ndim2) != (xdim, ydim, zdim, ndim):
+        print "Reference %s and %s have not the same size" % \
+              (dict['ReferenceFileNames'][0], reference)
+        exit(1)
 
     #5b check volume and projections  have same size
-    (xdim2, ydim2, zdim2, ndim2) = ImgSize(SelFileName)
+    (xdim2, ydim2, zdim2, ndim2) = ImgSize(dict['SelFileName'])
     if (xdim2, ydim2) != (xdim, ydim):
             print "Volume and reference images have not the same size"
             exit(1)
     _log.debug("checkVolumeProjSize")
 
 
-def initOuterRadius(OuterRadius, volName, selfFileName, _log):
+def initOuterRadius(_log, dict):
     """ init mask radius for volumes. If suggested value is negative set to half dim"""
+    OuterRadius = dict['OuterRadius']
+
+#    print "REMOVE -34"
+#    OuterRadius = -34
+
+    xdim = 0
     if (OuterRadius < 0):
         try:
-            (xdim, ydim, zdim, ndim) = ImgSize(SelFileName)
-        except:
-            print "Unexpected error:", sys.exc_info()[0]
+            (xdim, ydim, zdim, ndim) = ImgSize(dict['SelFileName'])
+        except XmippError as e:
+            print __name__, 'initOuterRadius:', e
+            exit(1)
         OuterRadius = (xdim / 2) - 1
         comment = "InitOuterRadius: Outer radius set to: " + str(OuterRadius)
         print '* ' + comment
         _log.info(comment)
     return OuterRadius
+
+# wrapper for log.make_backup_of_script_file
+def pm_make_backup_of_script_file(_log, dict):
+    import log
+    _log.info("make backup script file: " + dict['progName'])
+    log.make_backup_of_script_file(dict['progName'], dict['ProjectDir'] + "/" + dict['WorkingDir'])
 
 #------------------------------------------------------------------------
 #make ctf groups
@@ -115,7 +132,7 @@ def initOuterRadius(OuterRadius, volName, selfFileName, _log):
 #  , 'SelFileName'         : SelFileName
 #  , 'SplitDefocusDocFile' : SplitDefocusDocFile
 #  , 'WienerConstant'      : WienerConstant
-def execute_ctf_groups (dict):
+def execute_ctf_groups (_log, dict):
 
     if (not dict['DoCtfCorrection']):
         return 1
@@ -145,16 +162,31 @@ def execute_ctf_groups (dict):
         else:
             message = "Error: for non-automated ctf grouping, please provide a docfile!"
             print '* ', message
-            _mylog.info(message)
+            _log.info(message)
             sys.exit()
 
-    launch_job.launch_job("xmipp_ctf_group",
+    (_command, retcode) = launch_job.launch_job("xmipp_ctf_group",
                           command,
-                          dict['_log'],
+                          _log,
                           False, 1, 1, '')
 
+    if(retcode):
+        print "command", command, "failed with exit status", retcode
+        exit(1)
     wildcardname = utils_xmipp.composeWildcardFileName(dict['CtfGroupDirectory'] + '/'
                                                      + dict['CtfGroupRootName']
                                                      + '_group', 'ctf')
     ctflist = glob.glob(wildcardname)
     return len(ctflist)
+
+def checkOptionsCompatibility(_log, dict):
+    import arg
+    # Never allow DoAlign2D and DoCtfCorrection together
+    if (int(arg.getComponentFromVector(dict['DoAlign2D'], 0)) and int (dict['DoCtfCorrection'])):
+        error_message = "You cannot realign classes AND perform CTF-correction. Switch either of them off!"
+        dict['_log'].error(error_message)
+        print error_message
+        exit(1)
+
+def dummy(_log, dict):
+    print "inside dummy"
