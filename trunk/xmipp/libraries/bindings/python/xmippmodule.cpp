@@ -1530,6 +1530,31 @@ xmipp_SingleImgSize(PyObject *obj, PyObject *args, PyObject *kwargs)
     }
     return NULL;
 }
+/* ImgSize (from metadata filename)*/
+static PyObject *
+xmipp_ImgSize(PyObject *obj, PyObject *args, PyObject *kwargs)
+{
+    PyObject *pyValue; //Only used to skip label and value
+
+    if (PyArg_ParseTuple(args, "O", &pyValue))
+    {
+        try
+        {
+            PyObject * pyStr = PyObject_Str(pyValue);
+            char * str = PyString_AsString(pyStr);
+            int xdim, ydim, zdim;
+            size_t ndim;
+            ImgSize(str, xdim, ydim, zdim, ndim);
+            Py_DECREF(pyStr);
+            return Py_BuildValue("iiik", xdim, ydim, zdim, ndim);
+        }
+        catch (XmippError xe)
+        {
+            PyErr_SetString(PyXmippError, xe.msg.c_str());
+        }
+    }
+    return NULL;
+}
 /* readMetaDataWithTwoPossibleImages */
 static PyObject *
 xmipp_readMetaDataWithTwoPossibleImages(PyObject *obj, PyObject *args, PyObject *kwargs)
@@ -1634,6 +1659,8 @@ static PyMethodDef xmipp_methods[] =
          "Construct a range query"},
         {"SingleImgSize", (PyCFunction)xmipp_SingleImgSize, METH_VARARGS,
          "Get image dimensions"},
+         {"ImgSize", (PyCFunction)xmipp_ImgSize, METH_VARARGS,
+          "Get image dimensions of first metadata entry"},
         {"readMetaDataWithTwoPossibleImages", (PyCFunction)xmipp_readMetaDataWithTwoPossibleImages, METH_VARARGS,
          "Read a 1 or two column list of micrographs"},
         {"substituteOriginalImages", (PyCFunction)xmipp_substituteOriginalImages, METH_VARARGS,
@@ -1676,9 +1703,9 @@ initxmipp(void)
     PyModule_AddObject(module, "MetaData", (PyObject *)&MetaDataType);
 
     //Add PyXmippError
-    PyXmippError = PyErr_NewException("xmipp.error", NULL, NULL);
+	PyXmippError = PyErr_NewException("xmipp.XmippError", NULL, NULL);
     Py_INCREF(PyXmippError);
-    PyModule_AddObject(module, "error", PyXmippError);
+    PyModule_AddObject(module, "XmippError", PyXmippError);
 
     PyObject * dict = PyModule_GetDict(module);
 
