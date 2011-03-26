@@ -86,7 +86,7 @@ protected:
     {
         DF_stats.setComment((std::string)"Statistics of " + fn_in);
         // Get maximum filename size ---------------------------------------------
-        max_length = mdIn.MaxStringLength(MDL_IMAGE);
+        max_length = mdIn.getMaxStringLength(MDL_IMAGE);
 
         // Process each file -----------------------------------------------------
         mean_min_val = 0, mean_max_val = 0, mean_avg = 0, mean_stddev = 0;
