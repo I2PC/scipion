@@ -241,12 +241,12 @@ std::vector<MDLabel> MetaData::getActiveLabels() const
     return activeLabels;
 }
 
-std::vector<MDLabel>* MetaData::geActiveLabelsAddress() const
+std::vector<MDLabel>* MetaData::getActiveLabelsAddress() const
 {
     return (std::vector<MDLabel>*) (&activeLabels);
 }
 
-int MetaData::MaxStringLength(const MDLabel thisLabel) const
+int MetaData::getMaxStringLength(const MDLabel thisLabel) const
 {
     if (!containsLabel(thisLabel))
         return -1;

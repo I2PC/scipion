@@ -25,8 +25,6 @@
 
 #include <Python.h>
 
-#include <data/filename.h>
-#include <data/metadata.h>
 #include <data/metadata_extension.h>
 
 static PyObject * PyXmippError;
@@ -507,7 +505,7 @@ MetaData_readBlock(PyObject *obj, PyObject *args, PyObject *kwargs)
             try
             {
                 if ((pyStr = PyObject_Str(input)) != NULL &&
-                	(pyStrBlock = PyObject_Str(blockName)) != NULL)
+                    (pyStrBlock = PyObject_Str(blockName)) != NULL)
                 {
                     str = PyString_AsString(pyStr);
                     strBlock = PyString_AsString(pyStrBlock);
@@ -574,7 +572,7 @@ MetaData_writeBlock(PyObject *obj, PyObject *args, PyObject *kwargs)
         {
             try
             {
-            	String fn, block;
+                String fn, block;
                 if (PyString_Check(input))
                     fn=PyString_AsString(input);
                 else if (FileName_Check(input))
@@ -582,9 +580,9 @@ MetaData_writeBlock(PyObject *obj, PyObject *args, PyObject *kwargs)
                 else
                     return NULL;
                 if (PyString_Check(blockName))
-                	block=PyString_AsString(blockName);
+                    block=PyString_AsString(blockName);
                 else if (FileName_Check(blockName))
-                	block=FileName_Value(blockName);
+                    block=FileName_Value(blockName);
                 else
                     return NULL;
                 self->metadata->_write(fn,block,MD_APPEND);
@@ -819,6 +817,56 @@ MetaData_getValue(PyObject *obj, PyObject *args, PyObject *kwargs)
     }
     return NULL;
 }
+
+/* containsLabel */
+static PyObject *
+MetaData_getActiveLabels(PyObject *obj, PyObject *args, PyObject *kwargs)
+{
+    int label;
+    PyObject *pyValue;
+    try
+    {
+        MetaDataObject *self = (MetaDataObject*)obj;
+        std::vector<MDLabel>* labels = self->metadata->getActiveLabelsAddress();
+        int size = labels->size();
+        PyObject * list = PyList_New(size);
+
+        for (int i = 0; i < size; ++i)
+          PyList_SetItem(list, i, PyInt_FromLong(labels->at(i)));
+
+        return list;
+
+    }
+    catch (XmippError xe)
+    {
+        PyErr_SetString(PyXmippError, xe.msg.c_str());
+    }
+    return NULL;
+}
+
+/* containsLabel */
+static PyObject *
+MetaData_getMaxStringLength(PyObject *obj, PyObject *args, PyObject *kwargs)
+{
+    int label;
+    PyObject *pyValue;
+    if (PyArg_ParseTuple(args, "i", &label))
+    {
+        try
+        {
+            MetaDataObject *self = (MetaDataObject*)obj;
+            int length = self->metadata->getMaxStringLength((MDLabel)label);
+
+            return PyInt_FromLong(length);
+        }
+        catch (XmippError xe)
+        {
+            PyErr_SetString(PyXmippError, xe.msg.c_str());
+        }
+    }
+    return NULL;
+}
+
 /* containsLabel */
 static PyObject *
 MetaData_containsLabel(PyObject *obj, PyObject *args, PyObject *kwargs)
@@ -1014,6 +1062,12 @@ static PyMethodDef MetaData_methods[] = {
                                             {"getValue", (PyCFunction)MetaData_getValue, METH_VARARGS,
                                              "Get the value for column(label)"
                                             },
+                                            {"getActiveLabels", (PyCFunction)MetaData_getActiveLabels, METH_VARARGS,
+                                             "Return a list with the labels of the Metadata"
+                                            },
+                                            {"getMaxStringLength", (PyCFunction)MetaData_getMaxStringLength, METH_VARARGS,
+                                               "Return the maximun lenght of a value on this column(label)"
+                                              },
                                             {"containsLabel", (PyCFunction)MetaData_containsLabel, METH_VARARGS,
                                              "True if this metadata contains this label"
                                             },
@@ -1594,33 +1648,33 @@ xmipp_substituteOriginalImages(PyObject *obj, PyObject *args, PyObject *kwargs)
     int label, skipFirstBlock;
 
     if (PyArg_ParseTuple(args, "OOOii", &pyStrFn, &pyStrFnOrig, &pyStrFnOut, &label,
-    	&skipFirstBlock))
+                         &skipFirstBlock))
     {
         try
         {
-        	FileName fn, fnOrig, fnOut;
-        	if (PyString_Check(pyStrFn))
-        		fn=PyString_AsString(pyStrFn);
-        	else if (FileName_Check(pyStrFn))
-        		fn=FileName_Value(pyStrFn);
-        	else
-        		PyErr_SetString(PyExc_TypeError, "Expected string or FileName as first argument");
+            FileName fn, fnOrig, fnOut;
+            if (PyString_Check(pyStrFn))
+                fn=PyString_AsString(pyStrFn);
+            else if (FileName_Check(pyStrFn))
+                fn=FileName_Value(pyStrFn);
+            else
+                PyErr_SetString(PyExc_TypeError, "Expected string or FileName as first argument");
 
-        	if (PyString_Check(pyStrFnOrig))
-        		fnOrig=PyString_AsString(pyStrFnOrig);
-        	else if (FileName_Check(pyStrFnOrig))
-        		fnOrig=FileName_Value(pyStrFnOrig);
-        	else
-        		PyErr_SetString(PyExc_TypeError, "Expected string or FileName as second argument");
+            if (PyString_Check(pyStrFnOrig))
+                fnOrig=PyString_AsString(pyStrFnOrig);
+            else if (FileName_Check(pyStrFnOrig))
+                fnOrig=FileName_Value(pyStrFnOrig);
+            else
+                PyErr_SetString(PyExc_TypeError, "Expected string or FileName as second argument");
 
-        	if (PyString_Check(pyStrFnOut))
-        		fnOut=PyString_AsString(pyStrFnOut);
-        	else if (FileName_Check(pyStrFnOut))
-        		fnOut=FileName_Value(pyStrFnOut);
-        	else
-        		PyErr_SetString(PyExc_TypeError, "Expected string or FileName as third argument");
+            if (PyString_Check(pyStrFnOut))
+                fnOut=PyString_AsString(pyStrFnOut);
+            else if (FileName_Check(pyStrFnOut))
+                fnOut=FileName_Value(pyStrFnOut);
+            else
+                PyErr_SetString(PyExc_TypeError, "Expected string or FileName as third argument");
 
-        	substituteOriginalImages(fn, fnOrig, fnOut, (MDLabel)label, (bool)skipFirstBlock);
+            substituteOriginalImages(fn, fnOrig, fnOut, (MDLabel)label, (bool)skipFirstBlock);
             Py_RETURN_NONE;
         }
         catch (XmippError xe)
@@ -1659,8 +1713,8 @@ static PyMethodDef xmipp_methods[] =
          "Construct a range query"},
         {"SingleImgSize", (PyCFunction)xmipp_SingleImgSize, METH_VARARGS,
          "Get image dimensions"},
-         {"ImgSize", (PyCFunction)xmipp_ImgSize, METH_VARARGS,
-          "Get image dimensions of first metadata entry"},
+        {"ImgSize", (PyCFunction)xmipp_ImgSize, METH_VARARGS,
+         "Get image dimensions of first metadata entry"},
         {"readMetaDataWithTwoPossibleImages", (PyCFunction)xmipp_readMetaDataWithTwoPossibleImages, METH_VARARGS,
          "Read a 1 or two column list of micrographs"},
         {"substituteOriginalImages", (PyCFunction)xmipp_substituteOriginalImages, METH_VARARGS,
@@ -1703,7 +1757,7 @@ initxmipp(void)
     PyModule_AddObject(module, "MetaData", (PyObject *)&MetaDataType);
 
     //Add PyXmippError
-	PyXmippError = PyErr_NewException("xmipp.XmippError", NULL, NULL);
+    PyXmippError = PyErr_NewException("xmipp.XmippError", NULL, NULL);
     Py_INCREF(PyXmippError);
     PyModule_AddObject(module, "XmippError", PyXmippError);
 

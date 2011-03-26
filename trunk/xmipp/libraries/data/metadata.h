@@ -320,11 +320,11 @@ public:
 
     /**Get unsafe pointer to active labels.
      */
-    std::vector<MDLabel> *geActiveLabelsAddress() const;
+    std::vector<MDLabel> *getActiveLabelsAddress() const;
 
     /**Get maximum string length of column values.
     */
-    int MaxStringLength( const MDLabel thisLabel) const;
+    int getMaxStringLength( const MDLabel thisLabel) const;
 
     /** @} */
 
