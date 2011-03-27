@@ -2,33 +2,6 @@ from distutils.errors   import DistutilsInternalError
 from types              import StringTypes
 import os, sys
 from xmipp import *
-#from pysqlite2 import dbapi2 as sqlite
-#
-#def initDataBase(projectdir, logdir, scriptname, WorkDirectory):
-#    if logdir[0] == '/':
-#       LogName = logdir
-#    else:
-#       LogName = projectdir + '/' + logdir
-#    if not LogName[-1] == '/':
-#       LogName += '/'
-#    if not os.path.exists(LogName):
-#        os.makedirs(LogName)
-#    scriptname = os.path.basename(scriptname)
-#    LogName += scriptname.replace('.py', '')
-#    if not (WorkDirectory == "." or WorkDirectory == '.'):
-#        LogName += '_'
-#        LogName += os.path.basename(WorkDirectory)
-#    LogName += '.db'
-#
-#    conn = sqlite.Connection(LogName)
-#    # Create table
-#    conn.execute('''create table if not exists wrappers
-#    (  id INTEGER PRIMARY KEY AUTOINCREMENT
-#    ,command text 
-#    ,init date
-#    ,finish date
-#    ,verified bool)''')
-#    return conn
 
 def createDirectoryTree(dirName):
     """ Create directory or directory branch"""
@@ -50,9 +23,9 @@ def deleteWorkingDirectory(_mylog, dict):
 
     if (not dict['DoDeleteWorkingDir']):
         return
-    if dict['ContinueAtIteration'] != 1 :
+    if not dict['firstIteration'] :
         print "You can not delete the working directory"
-        print " and start at iteration: ", dict['ContinueAtIteration']
+        print " and start at a iteration different from 1 "
         exit(1)
 
     from distutils.dir_util import remove_tree
@@ -67,7 +40,7 @@ def checkVolumeProjSize(_log, dict):
 
     """ check references y projection size match"""
     #if this is not the firt iteration you may skip it
-    if (dict['ContinueAtIteration'] != 1):
+    if not dict['firstIteration']:
         return
     #5a check volumes have same size
     try:
@@ -189,4 +162,4 @@ def checkOptionsCompatibility(_log, dict):
         exit(1)
 
 def dummy(_log, dict):
-    print "inside dummy"
+    print dict['dummy']

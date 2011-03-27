@@ -15,7 +15,7 @@ def execute_mask(_log, dict):
         else:
             command += ' --mask ' + dict[userSuppliedMask]
 
-        launch_job.launch_job("xmipp_mask",
+        launch_job.launch_job("xmipp_transform_mask",
                               command,
                               _mylog,
                               False, 1, 1, '')
