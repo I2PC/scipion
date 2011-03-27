@@ -609,6 +609,10 @@ if int(env['java']):
     os.system("external/java/install_jvm.sh")
     os.system("rm external/imagej/plugins/* -rf")
     os.system("rm external/imagej/macros/* -rf")
+
+    # Generates MDLabel.java, so MDLabels will be up to date.
+    os.system("cd libraries/bindings/java/;./extract_labels.py")
+
     JavaInterfaceSources = Glob('libraries/bindings/java', '*.cpp', [])
     AddLibrary('XmippJavaInterface', 'libraries/bindings/java', JavaInterfaceSources,
     ['#libraries', '#external', '#', env['JNI_CPPPATH'],env['JNI_CPPPATH']+"/linux"],['lib'],

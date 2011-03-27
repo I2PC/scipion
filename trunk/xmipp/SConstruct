@@ -421,7 +421,7 @@ elif (ARGUMENTS['mode'] == 'compile'):
                      suffix='.cc',
                      src_suffix='.i')
         env.Append(BUILDERS={'i2cc': swigBuilder})
-        swigBuilder = Builder(action=env['SWIG'] + ' -java -package xmipp -outdir libraries/data/swig/xmipp/ -c++ -o $TARGET $SOURCE; javac libraries/data/swig/xmipp/*.java',
+        swigBuilder = Builder(action=env['SWIG'] + ' -Wall -java -package xmipp -outdir libraries/data/swig/xmipp/ -c++ -o $TARGET $SOURCE; javac libraries/data/swig/xmipp/*.java',
                      suffix='.cc',
                      src_suffix='.i')
         env.Append(BUILDERS={'i2java': swigBuilder})
