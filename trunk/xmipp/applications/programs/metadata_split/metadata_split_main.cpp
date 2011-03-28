@@ -44,10 +44,7 @@ protected:
     {
         addUsageLine("Split a metadata (randomly by default) in any number of equally sized output metadata.");
         addUsageLine("By default, only enabled entries in the input file will be written to the output files.");
-        addUsageLine("Example: Splits input.sel in two parts (output_1.sel and output_2.sel) ");
-        addUsageLine("  xmipp_metadata_split -i input.sel -o output");
-        addUsageLine("Example: Splits input.sel in 4 output files without generating random groups.");
-        addUsageLine("  xmipp_metadata_split -i input.sel -n 4 --dont_randomize  ");
+
         addParamsLine("    -i <inputSelfile>    : Input MetaData File");
         addParamsLine("  [ -n <parts=2> ] : Number of output MetaDatas");
         addParamsLine("  [ --oroot <rootname=\"\"> ] : Rootname for output MetaDatas");
@@ -56,6 +53,11 @@ protected:
         addParamsLine("  [--dont_sort ]          : Do not sort the outputs MetaData");
         addParamsLine("  [--dont_remove_disabled]: Do not remove disabled images from MetaData");
         addParamsLine("  [-l <label=\"image\">] : sort using a label, default image");
+
+        addExampleLine("Splits input.sel in two parts", false);
+        addExampleLine("  xmipp_metadata_split -i input.sel --oroot output_part");
+        addExampleLine("Splits input.sel in 4 output files without randomizing input metdata", false);
+        addExampleLine("  xmipp_metadata_split -i input.sel -n 4 --dont_randomize");
     }
 
     void readParams()
