@@ -231,16 +231,16 @@ int readTIFF(size_t select_img, bool isStack=false)
     size_t _nDim;
 
     size_t   imgStart = IMG_INDEX(select_img);
-    size_t   imgEnd = (select_img != ALL_IMAGES) ? imgStart + 1 : _nDim;
 
     _xDim = (int) dirHead[imgStart].imageWidth;
     _yDim = (int) dirHead[imgStart].imageLength;
     _zDim = 1;
     _nDim = (select_img == ALL_IMAGES)? dirHead.size() : 1;
 
+    size_t   imgEnd = (select_img != ALL_IMAGES) ? imgStart + 1 : _nDim;
+
     setDimensions(_xDim, _yDim, 1, _nDim);
     replaceNsize = _nDim;
-
 
     DataType datatype = datatypeTIFF(dirHead[0]);
 
@@ -467,8 +467,8 @@ int writeTIFF(size_t select_img, bool isStack=false, int mode=WRITE_OVERWRITE, S
         dhMain.yTiffRes = (MDMainHeader.getValue(MDL_SAMPLINGRATEX, aux)) ? (float) 1e8/aux : 0. ;
     }
 
-//    size_t imgStart = 0;
-//    size_t imgEnd = Ndim;
+    //    size_t imgStart = 0;
+    //    size_t imgEnd = Ndim;
 
     size_t imgStart = (mode == WRITE_APPEND)? replaceNsize : IMG_INDEX(select_img);
 
@@ -495,11 +495,11 @@ int writeTIFF(size_t select_img, bool isStack=false, int mode=WRITE_OVERWRITE, S
     for (size_t i = 0; i < Ndim; i++ )
     {
         TIFFSetDirectory(tif,(tdir_t) i + imgStart);
-//        TIFFSetDirectory(tif, select_img);
+        //        TIFFSetDirectory(tif, select_img);
 
 
-//        if (mode == WRITE_REPLACE)
-//          TIFFReadDirectory(tif);
+        //        if (mode == WRITE_REPLACE)
+        //          TIFFReadDirectory(tif);
 
         // Image header
         TIFFSetField(tif, TIFFTAG_BITSPERSAMPLE,  dhMain.bitsPerSample);
