@@ -1847,26 +1847,6 @@ public:
         return A3D_ELEM(*this, k, i, j);
     }
 
-    /** 3D element access via index (getVoxel).
-    *
-    * Same function as operator() but with a name. Needed by swig.
-    *
-    */
-    inline T getVoxel(int k, int i, int j) const
-    {
-        return A3D_ELEM(*this, k, i, j);
-    }
-
-    /** 3D element access via index (setVoxel).
-    *
-    * Same function as operator() but with a name. Needed by swig.
-    *
-    */
-    inline void setVoxel(int k, int i, int j, T newval)
-    {
-        A3D_ELEM(*this, k, i, j)=newval;
-    }
-
     /** Matrix element access via index
      *
      * Returns the value of a matrix logical position. In our example we could

@@ -179,7 +179,7 @@ JNIEXPORT jdouble JNICALL Java_xmipp_ImageDouble_getPixel(JNIEnv *env,
 	Image<double> * image = GET_INTERNAL_IMAGE(jobj);
 
 	if (image != NULL) {
-		value = image->getPixel((int) x, (int) y);
+		value = IMGPIXEL(*image, (int) x, (int) y);
 	}
 
 	return value;
@@ -190,7 +190,7 @@ JNIEXPORT void JNICALL Java_xmipp_ImageDouble_setPixel
 	Image<double> *image = GET_INTERNAL_IMAGE(jobj);
 
 	if (image != NULL) {
-		image->setPixel((int)x, (int)y, (double)value);
+	  IMGPIXEL(*image, (int) x, (int) y) = (double)value;
 	}
 }
 
@@ -200,7 +200,7 @@ JNIEXPORT jdouble JNICALL Java_xmipp_ImageDouble_getVoxel(JNIEnv *env,
 	Image<double> *image = GET_INTERNAL_IMAGE(jobj);
 
 	if (image != NULL) {
-		value = image->data.getVoxel((int) x, (int) y, (int) z);
+	  A3D_ELEM(image->data,  (int) x, (int) y, (int) z);
 	}
 
 	return value;
@@ -211,7 +211,7 @@ JNIEXPORT void JNICALL Java_xmipp_ImageDouble_setVoxel
 	Image<double> *image = GET_INTERNAL_IMAGE(jobj);
 
 	if (image != NULL) {
-		image->data.setVoxel((int)x, (int)y, (int)z, (double)value);
+	  A3D_ELEM(image->data,  (int) x, (int) y, (int) z) = (double)value;
 	}
 }
 

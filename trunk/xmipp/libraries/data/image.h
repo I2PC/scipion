@@ -734,22 +734,6 @@ public:
         data.setDimensions(Xdim,Ydim,Zdim,Ndim);
     }
 
-    /** Set pixel
-     * (direct access) needed by swig
-     */
-    void setPixel(int i, int j, T v)
-    {
-        IMGPIXEL(*this,i,j)=v;
-    }
-
-    /** Get pixel
-     * (direct acces) needed by swig
-     */
-    T getPixel(int i, int j) const
-    {
-        return IMGPIXEL(*this,i,j);
-    }
-
     /** Voxel access
      *
      * This operator is used to access a voxel within a 3D image. This is a

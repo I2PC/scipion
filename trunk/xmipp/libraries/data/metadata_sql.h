@@ -617,28 +617,4 @@ private:
 }
 ;//close class MDSqlStaticInit
 
-
-template<class T>
-MDValueEQ MDValueEqualSwig(MDLabel label, const T &value)
-{
-    return MDValueEQ(label, value);
-}
-
-template<class T>
-MDValueRange MDValueRangeSwig(MDLabel label, const T &valueMin, const T &valueMax)
-{
-    return MDValueRange(label, valueMin, valueMax);
-}
-
-template<class T>
-MDValueGE MDValueAboveSwig(MDLabel label, const T &valueMin)
-{
-    return MDValueGE(label, valueMin);
-}
-
-template<class T>
-MDValueLE MDValueBelowSwig(MDLabel label, const T &valueMax)
-{
-    return MDValueLE(label, valueMax);
-}
 #endif
