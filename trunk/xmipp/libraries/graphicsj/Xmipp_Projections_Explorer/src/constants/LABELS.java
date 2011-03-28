@@ -16,7 +16,7 @@ public class LABELS {
     public final static String TITLE_PROJECTION = "Projection";
     public final static String LABEL_VOLUME_FILE = "Volume file:";
     public final static String LABEL_ANGLES_FILE = "Angles file:";
-    public final static String LABEL_MEAN_IMAGE = "Mean";
+    public final static String LABEL_AVERAGE_IMAGE = "Average";
     //public final static String LABEL_VOLUME = "Volume:";
     //public final static String LABEL_ANGLES = "Angles:";
 

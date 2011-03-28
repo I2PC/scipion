@@ -34,7 +34,7 @@ public class ScoreImagesTableRenderer extends JLabel implements TableCellRendere
         ScoreItem item = (ScoreItem) object;
 
         if (item != null) {
-            setIcon(new ImageIcon(item.getImage()));
+            setIcon(new ImageIcon(item.getImagePlus().getImage()));
 
             setOpaque(true);
             setHorizontalAlignment(CENTER);

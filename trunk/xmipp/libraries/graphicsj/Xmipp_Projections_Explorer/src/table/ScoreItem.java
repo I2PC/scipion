@@ -4,42 +4,57 @@
  */
 package table;
 
-import ij.IJ;
 import ij.ImagePlus;
-import java.awt.Image;
 import java.io.File;
+import sphere.ImageConverter;
+import xmipp.ImageDouble;
+import xmipp.MDLabel;
+import xmipp.MetaData;
 
 /**
  *
  * @author Juanjo Vega
  */
-public class ScoreItem {
+public class ScoreItem implements Comparable<ScoreItem> {
 
-    public String fileName;
-    public double score = 0.0;
-    public boolean good;
-    public Image image;
-    public String label;
-    public int w, h;
+    protected MetaData md;
+    protected long id;
+    protected String fileName;
+    protected double score = 0.0;
+    protected boolean good;
+    protected ImagePlus ip;
+    protected String label;
 
-    public ScoreItem(String fileName, double score, boolean good) {
-        this.fileName = fileName;
-        this.score = score;
-        this.good = good;
+    public ScoreItem(MetaData md, long id) {
+        this.md = md;
+        this.id = id;
+        fileName = md.getValueString(MDLabel.MDL_IMAGE, id);
+        score = md.getValueDouble(MDLabel.MDL_ZSCORE, id);
+        good = md.getValueInt(MDLabel.MDL_ENABLED, id) != 0;
 
         label = (new File(fileName)).getName();
     }
 
-    public Image getImage() {
-        if (image == null) {
-            ImagePlus ip = IJ.openImage(fileName);
-            image = ip.getImage();
+    public ImagePlus getImagePlus() {
+        try {
+            if (ip == null) {
+                ImageDouble image = new ImageDouble(md, id);
 
-            w = ip.getWidth();
-            h = ip.getHeight();
+                ip = ImageConverter.convertToImagej(image, fileName);
+            }
+        } catch (Exception ex) {
+            throw new RuntimeException(ex);
+        } finally {
+            return ip;
         }
+    }
 
-        return image;
+    public int getWidth() {
+        return getImagePlus().getWidth();
+    }
+
+    public int getHeight() {
+        return getImagePlus().getHeight();
     }
 
     public String getLabel() {
@@ -48,5 +63,17 @@ public class ScoreItem {
 
     public String getTooltip() {
         return "score = " + score;
+    }
+
+    public int compareTo(ScoreItem item) {
+        if (good != item.good) {
+            return good ? -1 : 1;
+        } else {
+            if (score != item.score) {
+                return score < item.score ? -1 : 1;
+            } else {
+                return fileName.compareTo(item.fileName);
+            }
+        }
     }
 }

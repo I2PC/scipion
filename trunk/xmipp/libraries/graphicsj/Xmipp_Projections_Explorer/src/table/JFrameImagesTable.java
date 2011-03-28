@@ -11,21 +11,21 @@
 package table;
 
 import constants.LABELS;
-import ij.IJ;
 import ij.ImagePlus;
 import java.awt.BorderLayout;
 import java.awt.Dimension;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
-import java.io.File;
 import java.util.ArrayList;
 import java.util.Vector;
 import javax.swing.ImageIcon;
+import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.ListSelectionModel;
-import xmipp.MDLabel;
+import sphere.ImageConverter;
+import xmipp.ImageDouble;
 import xmipp.MetaData;
 
 /**
@@ -70,7 +70,13 @@ public class JFrameImagesTable extends javax.swing.JFrame {
 
                     ScoreItem item = (ScoreItem) tableModel.getValueAt(row, col);
 
-                    IJ.open(item.fileName);
+                    try {
+                        String filename = item.fileName;
+                        ImageDouble image = new ImageDouble(filename);
+                        ImageConverter.convertToImagej(image, filename).show();
+                    } catch (Exception ex) {
+                        throw new RuntimeException(ex);
+                    }
                 }
             }
         });
@@ -84,76 +90,49 @@ public class JFrameImagesTable extends javax.swing.JFrame {
     public void loadScoreFile(String scoreFile) {
         clear();
 
-        // Loads data from score files.
-        String items[][] = loadScoreFile("", scoreFile);
-
-        // Creates graphical items.
-        Vector<ScoreItem> pcaScoreItems = buildScoreItems(items, true);
-
-        // Adds items to table.
-        for (int i = 0; i < pcaScoreItems.size(); i++) {
-            tableModel.addItem(pcaScoreItems.elementAt(i));
-        }
+        buildImagesTableModel(scoreFile, tableModel);
 
         // Shows mean.
-        ImagePlus mean = calculateMean();
+        ImagePlus mean = calculateMean(tableModel.getData());
         jlMean.setIcon(new ImageIcon(mean.getImage()));
 
         // Finally sets remaining stuff.
-        setTitle("Analysis Results: " + tableModel.getColumnCount() + " images.");
+        setTitle("Analysis Results: " + tableModel.getColumnCount() + " images ("
+                + tableModel.getGoodCount() + " good / " + tableModel.getBadCount() + " bad)");
 
         if (tableModel.getData().size() > 0) {
             adjustTableSize();
         }
     }
 
-    private ImagePlus calculateMean() {
-        Vector<ScoreItem> data = tableModel.getData();
-        String files[] = new String[data.size()];
+    private static ImagePlus calculateMean(ArrayList<ScoreItem> data) {
+        Vector<String> files = new Vector<String>();
 
         for (int i = 0; i < data.size(); i++) {
-            files[i] = tableModel.getData().elementAt(i).fileName;
+            ScoreItem item = data.get(i);
+
+            if (item.good) {    // Only "good" results are used for mean.
+                files.add(item.fileName);
+            }
         }
 
         return ImagesTableModel.mean(files);
     }
 
-    private Vector<ScoreItem> buildScoreItems(String score_data[][], boolean good) {
-        Vector<ScoreItem> items = new Vector<ScoreItem>();
-
-        for (int i = 0; i < score_data.length; i++) {
-            items.add(new ScoreItem(score_data[i][0],
-                    Double.parseDouble(score_data[i][1]),
-                    good));
+    private static void buildImagesTableModel(String filename, ImagesTableModel tablemodel) {
+        if ((filename == null) || (filename.isEmpty())) {
+            return;
         }
 
-        return items;
-    }
-
-    private static String[][] loadScoreFile(String directory, String fileName) {
-        if ((fileName == null) || (fileName.isEmpty())) {
-            return null;
-        }
-
-        if (!directory.isEmpty() && !directory.endsWith(File.separator)) {
-            directory += File.separator;
-        }
-
-        // Parse metadata
-        MetaData md = new MetaData(directory + fileName);
+        // Parse md
+        MetaData md = new MetaData(filename);
 
         long ids[] = md.findObjects();
-
-        ArrayList<String[]> filesList = new ArrayList<String[]>();
-
         for (long id : ids) {
-            String file = md.getValueString(MDLabel.MDL_IMAGE, id);
-            double score = md.getValueDouble(MDLabel.MDL_ZSCORE, id);
-
-            filesList.add(new String[]{file, String.valueOf(score)});
+            tablemodel.addItem(new ScoreItem(md, id));
         }
 
-        return filesList.toArray(new String[filesList.size()][2]);
+        tablemodel.sortItems();
     }
 
     public void setWidth(int width) {
@@ -176,16 +155,16 @@ public class JFrameImagesTable extends javax.swing.JFrame {
     private void adjustTableSize() {
         // Tricky way to calculate table height
         ScoreItem item = ((ScoreItem) tableModel.getValueAt(0, 0));
-        item.getImage();
+        item.getImagePlus();
 
         int fontHeight = getFontMetrics((new JLabel(item.getLabel())).getFont()).getHeight();
 
-        jtImages.setRowHeight(item.h + fontHeight * 2);
+        jtImages.setRowHeight(item.getHeight() + fontHeight * 2);
         for (int i = 0; i < jtImages.getColumnCount(); i++) {
-            jtImages.getColumnModel().getColumn(i).setPreferredWidth(item.w);
+            jtImages.getColumnModel().getColumn(i).setPreferredWidth(item.getWidth());
         }
 
-        setHeight(item.h + fontHeight * 8);  // Window height.
+        setHeight(item.getHeight() + fontHeight * 8);  // Window height.
     }
 
     public void clear() {
@@ -202,6 +181,20 @@ public class JFrameImagesTable extends javax.swing.JFrame {
 
     public void addImage(ScoreItem scoreItem) {
         tableModel.addItem(scoreItem);
+    }
+
+    public static void main(String args[]) {
+        try {
+            JFrameImagesTable frame = new JFrameImagesTable();
+            frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+            frame.loadScoreFile("/home/juanjo/Desktop/score.xmd");
+            frame.pack();
+            frame.setLocationRelativeTo(null);
+
+            frame.setVisible(true);
+        } catch (Exception ex) {
+            throw new RuntimeException(ex);
+        }
     }
 
     /** This method is called from within the constructor to
@@ -221,7 +214,7 @@ public class JFrameImagesTable extends javax.swing.JFrame {
             }
         });
 
-        jlMean.setBorder(javax.swing.BorderFactory.createTitledBorder(LABELS.LABEL_MEAN_IMAGE));
+        jlMean.setBorder(javax.swing.BorderFactory.createTitledBorder(LABELS.LABEL_AVERAGE_IMAGE));
         getContentPane().add(jlMean, java.awt.BorderLayout.WEST);
 
         pack();

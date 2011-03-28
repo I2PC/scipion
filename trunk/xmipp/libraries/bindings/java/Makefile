@@ -1,13 +1,15 @@
+XMIPP_DIR = $$HOME/xmipp
+
 # Makefile for Xmipp JNI libraries
 CC = g++
 SHAREDLIB = XmippJavaInterface.so
 MAIN_OPTS = -s -pthread -shared
-LIBS = -L/home/juanjo/xmipp/lib -lXmippData
+LIBS = -L$(XMIPP_DIR)/lib -lXmippData
 
 SRC = xmipp_ImageDouble.cpp xmipp_MetaData.cpp xmipp_Projection.cpp
 OBJS = $(SRC:.cpp=.os)
 OPTS = -c -O2 -pthread -w -fPIC
-INCLUDES = -I. -I/usr/lib/jvm/java-6-sun/include -I/usr/lib/jvm/java-6-sun/include/linux -I/home/juanjo/xmipp -I/home/juanjo/xmipp/libraries
+INCLUDES = -I. -I/usr/lib/jvm/java-6-sun/include -I/usr/lib/jvm/java-6-sun/include/linux -I$(XMIPP_DIR) -I$(XMIPP_DIR)/libraries
 
 JARFILE = XmippJavaInterface.jar
 JAROPTS = -Mcf
@@ -17,7 +19,7 @@ JAVA_CLASSES = $(JAVA_SRC:.java=.class)
 JAVAH_CLASSES = $(subst /,.,$(JAVA_SRC:.java=))
 
 TESTS_PACKAGE = tests
-TESTS_SRC = $(TESTS_PACKAGE)/ImageTest.java $(TESTS_PACKAGE)/MetaDataTest.java $(TESTS_PACKAGE)/ProjectionTest.java
+TESTS_SRC = $(TESTS_PACKAGE)/ImageTest.java $(TESTS_PACKAGE)/MetaDataTest.java $(TESTS_PACKAGE)/ProjectionTest.java $(TESTS_PACKAGE)/PreviewTest.java
 TESTS_CLASSES = $(TESTS_SRC:.java=.class)
 
 library_wrapper: java jar headers $(OBJS) javatests

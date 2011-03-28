@@ -10,6 +10,7 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.util.ArrayList;
 import java.util.Vector;
 import javax.vecmath.Point2d;
 import javax.vecmath.Point3d;
@@ -61,9 +62,9 @@ public class Sphere {
         try {
             Runtime.getRuntime().exec("rm -rf " + TEMPDIR_PATH);
             Runtime.getRuntime().exec("mkdir " + TEMPDIR_PATH);
-        } catch (IOException ioex) {
-            IJ.write(ioex.getMessage());
-            ioex.printStackTrace();
+        } catch (IOException ex) {
+            IJ.error("Error creating sphere: " + ex.getMessage());
+            throw new RuntimeException(ex);
         }
 
         tempDir.deleteOnExit();
@@ -105,8 +106,8 @@ public class Sphere {
                 spreadHit(hit, imageFileName);
             }
         } catch (Exception ex) {
-            IJ.write(ex.getMessage());
-            ex.printStackTrace();
+            IJ.error("Error loading angles: " + ex.getMessage());
+            throw new RuntimeException(ex);
         }
     }
 
@@ -120,19 +121,20 @@ public class Sphere {
 
         setLocked(hitted, false);   // Finally unlocks all the points.
         for (int i = 0; i < points.size(); i++) {
-            setLocked(points.elementAt(i), false);
+            setLocked(points.get(i), false);
         }
     }
 
-    private void spreadHit(Point2d hitted, Point2d current, double value, String imageFileName, Vector<Point2d> points) {
+    private void spreadHit(Point2d hitted, Point2d current, double value,
+            String imageFileName, Vector<Point2d> points) {
         if (value > MIN_SPREAD_VALUE) {
             // Calculates all neighbours.
-            Vector<Point2d> neighbours = getNeighbours(current);
+            ArrayList<Point2d> neighbours = getNeighbours(current);
             double values[] = new double[neighbours.size()];    // Individual values.
 
             // For each neighbour...
             for (int i = 0; i < neighbours.size(); i++) {
-                Point2d neighbour = neighbours.elementAt(i);
+                Point2d neighbour = neighbours.get(i);
 
                 // ...adds value (stores it to spread it later)...
                 values[i] = addHit(neighbour, hitted, imageFileName);
@@ -144,7 +146,7 @@ public class Sphere {
             // After every neighbour is locked an calculated, spreads it
             // recursively (keeping the last value added to know when to stop it.)
             for (int i = 0; i < neighbours.size(); i++) {
-                spreadHit(hitted, neighbours.elementAt(i), values[i], imageFileName, points);
+                spreadHit(hitted, neighbours.get(i), values[i], imageFileName, points);
             }
         }
     }
@@ -154,8 +156,8 @@ public class Sphere {
      * @param center
      * @return
      */
-    private Vector<Point2d> getNeighbours(Point2d center) {
-        Vector<Point2d> points = new Vector<Point2d>();
+    private ArrayList<Point2d> getNeighbours(Point2d center) {
+        ArrayList<Point2d> points = new ArrayList<Point2d>();
 
         // For all neighbours.
         for (double i = center.x - 1; i <= center.x + 1; i++) {
@@ -369,7 +371,7 @@ public class Sphere {
 
         for (int i = 0; i < fileNames.size(); i++) {
             long id = md.addObject();
-            md.setValueString(MDLabel.MDL_IMAGE, fileNames.elementAt(i), id);
+            md.setValueString(MDLabel.MDL_IMAGE, fileNames.get(i), id);
             md.setValueInt(MDLabel.MDL_ENABLED, 1, id);
         }
 
@@ -388,8 +390,8 @@ public class Sphere {
 
             projection = ImageConverter.convertToImagej(p, "Projection");
         } catch (Exception ex) {
-            ex.printStackTrace();
-            IJ.error(ex.getMessage());
+            IJ.error("Error retrieving projection: " + ex.getMessage());
+            throw new RuntimeException(ex);
         }
 
         return projection;
@@ -416,7 +418,6 @@ public class Sphere {
             Vector<String> files = getFiles(rot, tilt);
 
             // * Generate .sel file
-            //IJ.write("File: " + selFileName);
             writeSelFile(selFileName, files);
 
             // * Call xmipp_classify_...
@@ -424,10 +425,9 @@ public class Sphere {
             xmipp_classify_analyze_cluster(selFileName,
                     projectionFileName,
                     outputFile);
-        } catch (Exception ioex) {
-            IJ.write("Error writing projection to temporary file. ");
-            IJ.write(ioex.getMessage());
-            ioex.printStackTrace();
+        } catch (Exception ex) {
+            IJ.error("Error writing projection to temporary file: " + ex.getMessage());
+            throw new RuntimeException(ex);
         }
 
         return outputFile;
@@ -468,9 +468,9 @@ public class Sphere {
             while ((s = stdInput.readLine()) != null) {
                 System.out.println(s);
             }
-        } catch (IOException ioex) {
-            ioex.printStackTrace();
-            IJ.error("Error running command: " + ioex.getMessage());
+        } catch (IOException ex) {
+            IJ.error("Error running command: " + ex.getMessage());
+            throw new RuntimeException(ex);
         }
     }
 }

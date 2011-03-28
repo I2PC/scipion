@@ -4,11 +4,15 @@
  */
 package table;
 
-import ij.IJ;
 import ij.ImagePlus;
+import ij.gui.Plot;
 import ij.process.FloatProcessor;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Vector;
 import javax.swing.table.AbstractTableModel;
+import sphere.ImageConverter;
+import xmipp.ImageDouble;
 
 /**
  *
@@ -16,8 +20,9 @@ import javax.swing.table.AbstractTableModel;
  */
 public class ImagesTableModel extends AbstractTableModel {
 
-    protected Vector<ScoreItem> data = new Vector<ScoreItem>();
+    protected ArrayList<ScoreItem> data = new ArrayList<ScoreItem>();
     protected ImagePlus focusedItem;
+    int good, bad;
 
     public ImagesTableModel() {
         super();
@@ -30,12 +35,27 @@ public class ImagesTableModel extends AbstractTableModel {
     public void addItem(ScoreItem scoreItem) {
         data.add(scoreItem);
 
+        // Counts "good" and "bad" items.
+        if (scoreItem.good) {
+            good++;
+        } else {
+            bad++;
+        }
+
         fireTableStructureChanged();
     }
 
     @Override
     public String getColumnName(int column) {
         return "" + column;
+    }
+
+    public int getGoodCount() {
+        return good;
+    }
+
+    public int getBadCount() {
+        return bad;
     }
 
     public int getRowCount() {
@@ -57,42 +77,57 @@ public class ImagesTableModel extends AbstractTableModel {
         return object != null ? object.getClass() : null;
     }
 
-    public Vector<ScoreItem> getData() {
+    public ArrayList<ScoreItem> getData() {
         return data;
     }
 
-    public static ImagePlus mean(String images[]) {
-        ImagePlus current = IJ.openImage(images[0]);
-        int w = current.getWidth();
-        int h = current.getHeight();
-        float sum[][] = new float[w][h];
+    public void sortItems() {
+        Collections.sort(data);
+    }
 
-        // For all images...
-        for (int k = 1; k < images.length; k++) {
-            // Adds current image to sum.
+    public static ImagePlus mean(Vector<String> images) {
+        try {
+            ImageDouble firstImage = new ImageDouble();
+
+            firstImage.readHeader(images.get(0));
+            int w = firstImage.getXsize();
+            int h = firstImage.getYsize();
+            float mean[][] = new float[w][h];
+
+            String currentFileName;
+
+            // For all images...
+            for (int k = 0; k < images.size(); k++) {
+                ImageDouble currentImage = new ImageDouble();
+                currentFileName = images.get(k);
+
+                currentImage.read(currentFileName);
+                ImagePlus ip = ImageConverter.convertToImagej(currentImage, currentFileName);
+
+                // Adds current image to sum.
+                for (int j = 0; j < h; j++) {
+                    for (int i = 0; i < w; i++) {
+                        mean[i][j] += ip.getProcessor().getf(i, j);
+                    }
+                }
+
+                ip.close();
+            }
+
+            // Calculates mean...
             for (int j = 0; j < h; j++) {
                 for (int i = 0; i < w; i++) {
-                    sum[i][j] += current.getProcessor().getPixelValue(i, j);
+                    mean[i][j] /= images.size(); // ...by dividing with the #images
                 }
             }
 
-            current.close();
-            current = IJ.openImage(images[k]);
+            FloatProcessor processor = new FloatProcessor(mean);
+            ImagePlus meanIp = new ImagePlus();
+            meanIp.setProcessor("", processor);
+
+            return meanIp;
+        } catch (Exception ex) {
+            throw new RuntimeException(ex);
         }
-
-        float mean[][] = new float[w][h];
-
-        // Calculates mean...
-        for (int j = 0; j < h; j++) {
-            for (int i = 0; i < w; i++) {
-                mean[i][j] = sum[i][j] / images.length; // ...by dividing with the #images
-            }
-        }
-
-        FloatProcessor processor = new FloatProcessor(mean);
-        ImagePlus meanIp = new ImagePlus();
-        meanIp.setProcessor("", processor);
-
-        return meanIp;
     }
 }

@@ -19,6 +19,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
 import java.io.IOException;
+import java.util.Vector;
 import javax.media.j3d.Transform3D;
 import javax.media.j3d.View;
 import javax.swing.Timer;
@@ -29,7 +30,6 @@ import org.apache.commons.cli.Options;
 import table.JFrameImagesTable;
 import window.ProjectionWindow;
 import window.iAnalyzer;
-import java.util.Vector;
 import xmipp.ImageDouble;
 
 /*
@@ -145,8 +145,8 @@ public class Xmipp_Projections_Explorer implements PlugIn, UniverseListener, iAn
             if (cmdLine.hasOption(COMMAND_OPTION_EULER_ANGLES)) {
                 parameters[INDEX_EULER_ANGLES] = cmdLine.getOptionValue(COMMAND_OPTION_EULER_ANGLES);
             }
-        } catch (Exception e) {
-            e.printStackTrace();
+        } catch (Exception ex) {
+            throw new RuntimeException(ex);
         }
 
         return parameters;
@@ -223,8 +223,8 @@ public class Xmipp_Projections_Explorer implements PlugIn, UniverseListener, iAn
 
             IJ.showStatus(LABELS.MESSAGE_DONE);
         } catch (Exception ex) {
-            IJ.write(ex.getMessage());
-            ex.printStackTrace();
+            IJ.error("Error at run: " + ex.getMessage());
+            throw new RuntimeException(ex);
         }
     }
 

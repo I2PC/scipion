@@ -11,6 +11,10 @@ extern "C" {
 #define xmipp_ImageDouble_FIRST_IMAGE 1L
 #undef xmipp_ImageDouble_FIRST_SLICE
 #define xmipp_ImageDouble_FIRST_SLICE 1L
+#undef xmipp_ImageDouble_ALL_IMAGES
+#define xmipp_ImageDouble_ALL_IMAGES 0L
+#undef xmipp_ImageDouble_ALL_SLICES
+#define xmipp_ImageDouble_ALL_SLICES 0L
 #undef xmipp_ImageDouble_MID_SLICE
 #define xmipp_ImageDouble_MID_SLICE -1L
 /*
