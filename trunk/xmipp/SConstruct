@@ -59,9 +59,6 @@ opts.Add('MPI_INCLUDE', 'MPI headers dir ', '/usr/include')
 opts.Add('MPI_LIBDIR', 'MPI libraries dir ', '/usr/lib')
 opts.Add('MPI_LIB', 'MPI library', 'mpich')
 
-opts.Add(BoolVariable('swig', 'Build the Xmipp pythonization?', 'no'))
-opts.Add('SWIG', 'SWIG compiler', 'swig')
-
 opts.Add('prefix', 'Base installation directory', Dir('.').abspath)
 
 opts.Add(BoolVariable('matlab', 'Build the Matlab bindings?', 'no'))
@@ -414,17 +411,6 @@ elif (ARGUMENTS['mode'] == 'compile'):
         env['QT_MOCFROMCXXCOMSTR'] = 'MOCing source $SOURCE'
         env['TARCOMSTR'] = 'Archiving $TARGET'
         env['INSTALLSTR'] = 'Installing $TARGET'
-
-    # SWIG
-    if int(env['swig']):
-        swigBuilder = Builder(action=env['SWIG'] + ' -python -c++ -o $TARGET $SOURCE',
-                     suffix='.cc',
-                     src_suffix='.i')
-        env.Append(BUILDERS={'i2cc': swigBuilder})
-        swigBuilder = Builder(action=env['SWIG'] + ' -Wall -java -package xmipp -outdir libraries/data/swig/xmipp/ -c++ -o $TARGET $SOURCE; javac libraries/data/swig/xmipp/*.java',
-                     suffix='.cc',
-                     src_suffix='.i')
-        env.Append(BUILDERS={'i2java': swigBuilder})
 
     Export('env')
     env.SConscript('SConscript')
