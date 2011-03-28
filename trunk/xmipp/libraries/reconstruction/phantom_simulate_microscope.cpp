@@ -76,7 +76,6 @@ void ProgSimulateMicroscope::defineParams()
     addParamsLine(" [--defocus_change <v=0>] : change in the defocus value (percentage)");
     addParamsLine(" [--low_pass <w=0>]       : low pass filter for noise before CTF");
     addParamsLine(" [--noise <stddev=0>]     : noise to be added");
-    addParamsLine(" or --snr <value>         : add noise to have this SNR");
 
 
 
