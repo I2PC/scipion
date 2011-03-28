@@ -44,6 +44,7 @@ public:
     void defineParams()
     {
         each_image_produces_an_output = true;
+        allow_apply_geo = true;
         XmippMetadataProgram::defineParams();
         addUsageLine("This program takes a region from the input images");
         addUsageLine(" ");
@@ -188,10 +189,10 @@ public:
     {
         ImageGeneric Iin;
         bool createTempFile = (fnImg == fnImgOut);
-        if (single_image)
-            Iin.read(fnImg, DATA, ALL_IMAGES, true);
-        else
+        if (apply_geo)
             Iin.readApplyGeo(fnImg, mdIn, objId);
+        else
+            Iin.read(fnImg, DATA, ALL_IMAGES, true);
 
         double init_value(padValue);
         if (padType=="avg")

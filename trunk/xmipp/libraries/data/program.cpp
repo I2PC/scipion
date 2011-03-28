@@ -24,26 +24,27 @@
  ***************************************************************************/
 
 #include "program.h"
+#include "metadata_extension.h"
 #include <stdlib.h>
 
 void XmippProgram::initComments()
 {
-	CommentList comments;
-	comments.addComment("Verbosity level, 0 means no output.");
-	defaultComments["-v"]=comments;
+    CommentList comments;
+    comments.addComment("Verbosity level, 0 means no output.");
+    defaultComments["-v"]=comments;
 }
 
 void XmippProgram::processDefaultComment(const char *param, const char *left)
 {
-	addParamsLine(((String)left+":"+defaultComments[param].comments[0]).c_str());
-	int imax=defaultComments[param].comments.size();
-	for (int i=1; i<imax; ++i)
-		addParamsLine(((String)":"+defaultComments[param].comments[i]).c_str());
+    addParamsLine(((String)left+":"+defaultComments[param].comments[0]).c_str());
+    int imax=defaultComments[param].comments.size();
+    for (int i=1; i<imax; ++i)
+        addParamsLine(((String)":"+defaultComments[param].comments[i]).c_str());
 }
 
 void XmippProgram::init()
 {
-	initComments();
+    initComments();
     progDef = new ProgramDef();
     this->defineParams();
     ///Add some common definitions to all Xmipp programs
@@ -404,24 +405,25 @@ XmippMetadataProgram::XmippMetadataProgram()
     save_metadata_stack = false;
     delete_output_stack = true;
     remove_disabled = true;
+    single_image = input_is_stack = false;
 }
 
 void XmippMetadataProgram::initComments()
 {
-	XmippProgram::initComments();
+    XmippProgram::initComments();
 
-	CommentList comments;
-	comments.addComment("Input file: metadata, stack, volume or image.");
-	defaultComments["-i"]=comments;
+    CommentList comments;
+    comments.addComment("Input file: metadata, stack, volume or image.");
+    defaultComments["-i"]=comments;
 
-	comments.clear();
-	comments.addComment("Output file: metadata, stack, volume or image.");
-	defaultComments["-o"]=comments;
+    comments.clear();
+    comments.addComment("Output file: metadata, stack, volume or image.");
+    defaultComments["-o"]=comments;
 
-	comments.clear();
-	comments.addComment("Rootname of output individual images.");
-	comments.addComment("Output image format can be set adding extension after rootname as \":ext\".");
-	defaultComments["--oroot"]=comments;
+    comments.clear();
+    comments.addComment("Rootname of output individual images.");
+    comments.addComment("Output image format can be set adding extension after rootname as \":ext\".");
+    defaultComments["--oroot"]=comments;
 }
 
 void XmippMetadataProgram::defineParams()
@@ -474,7 +476,6 @@ void XmippMetadataProgram::readParams()
 
     mdIn.read(fn_in, NULL, decompose_stacks);
 
-    single_image = input_is_stack = false;
     if (!fn_in.isMetaData())
     {
         if (mdIn.size() == 1)
@@ -482,7 +483,7 @@ void XmippMetadataProgram::readParams()
         else
             input_is_stack = true;
     }
-//    single_image = !fn_in.isMetaData() && (mdIn.size() == 1);
+    //    single_image = !fn_in.isMetaData() && (mdIn.size() == 1);
 
     if (mdIn.containsLabel(MDL_ENABLED) && remove_disabled)
         mdIn.removeObjects(MDValueEQ(MDL_ENABLED, -1));
@@ -490,7 +491,12 @@ void XmippMetadataProgram::readParams()
     if (mdIn.isEmpty())
         REPORT_ERROR(ERR_MD_NOOBJ, "");
 
-    if (allow_apply_geo)
+    // if input is volume do not apply geo
+    int xDim, yDim, zDim;
+    size_t nDim;
+    ImgSize(mdIn, xDim, yDim, zDim, nDim);
+
+    if (allow_apply_geo && zDim == 1)
         apply_geo = !checkParam("--dont_apply_geo");
 }
 

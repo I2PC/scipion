@@ -100,13 +100,13 @@ protected:
             std::cout << '>' << std::endl;
         }
 
-        // if input is volume do not apply geo
-        int xDim, yDim, zDim;
-        size_t nDim;
-        ImgSize(mdIn, xDim, yDim, zDim, nDim);
-
-        if (zDim > 1)
-            apply_geo = false;
+//        // if input is volume do not apply geo
+//        int xDim, yDim, zDim;
+//        size_t nDim;
+//        ImgSize(mdIn, xDim, yDim, zDim, nDim);
+//
+//        if (zDim > 1)
+//            apply_geo = false;
     }
 
     void processImage(const FileName &fnImg, const FileName &fnImgOut, size_t objId)
