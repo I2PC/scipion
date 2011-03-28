@@ -342,7 +342,6 @@ void ProgML2D::printModel(const String &msg, const ModelML2D & model)
 // Trying to merge produceSideInfo 1 y 2
 void ProgML2D::produceSideInfo()
 {
-
     // Read selfile with experimental images
     // and set some global variables
     MDimg.read(fn_img);
@@ -799,19 +798,8 @@ void ProgML2D::expectationSingleImage(Matrix1D<double> &opt_offsets)
         wsum_corr = wsum_offset = wsum_sc = wsum_sc2 = 0.;
         maxweight = maxweight2 = sum_refw = sum_refw2 = 0.;
 
-        // TODO initialize mysumimgs (in producesideinfo?)
-#ifdef TIMING
-
-        timer.tic(ESI_E2TH);
-#endif
-
         awakeThreads(TH_ESI_REFNO, opt_refno, refno_load_param);
 
-#ifdef TIMING
-
-        timer.toc(ESI_E2TH);
-        timer.tic(ESI_E3);
-#endif
         // Now check whether our trymindiff was OK.
         // The limit of the exp-function lies around
         // exp(700)=1.01423e+304, exp(800)=inf; exp(-700) = 9.85968e-305; exp(-88) = 0
@@ -824,8 +812,12 @@ void ProgML2D::expectationSingleImage(Matrix1D<double> &opt_offsets)
             // Re-do whole calculation now with the real mindiff
             trymindiff = mindiff;
             redo_counter++;
-            // Never re-do more than once!
+            // On iteration 0 images that will go to references other than first
+            // will store optimus references but not yet expanded number of references
+            if (iter == 0)
+              opt_refno = (opt_refno % model.n_ref);
 
+            // Never re-do more than once!
             if (redo_counter > 1)
             {
                 std::cerr << "ml_align2d BUG% redo_counter > 1" << std::endl;
@@ -1348,7 +1340,6 @@ void ProgML2D::doThreadExpectationSingleImageRefno()
     int local_iopty, local_ioptx, local_iopt_psi, local_iopt_flip,
     local_opt_refno;
 
-    //TODO: this will not be here
     MultidimArray<double> Maux, Mweight;
     MultidimArray<std::complex<double> > Faux, Fzero(dim, hdim + 1);
     FourierTransformer local_transformer;
@@ -1359,7 +1350,6 @@ void ProgML2D::doThreadExpectationSingleImageRefno()
     Mweight.resize(sigdim, sigdim);
     Mweight.setXmippOrigin();
     Fzero.initZeros();
-    // FIXME: recalculating plan each time is a waste!
     local_transformer.setReal(Maux);
     local_transformer.getFourierAlias(Faux);
 
@@ -1821,7 +1811,7 @@ void ProgML2D::expectation()
             std::cerr << std::endl;
             std::cerr << "   ====================>>> ITER_IMAGE: " << iter << "_" << imgno << std::endl;
             std::cerr << "                          fn_img: " << fn_img << std::endl;
-            //        //
+            std::cerr << "                           mygroup: " <<                            mygroup << std::endl;
 #endif
 
             // These two parameters speed up expectationSingleImage
@@ -1850,7 +1840,6 @@ void ProgML2D::expectation()
                 old_phi = imgs_oldphi[IMG_LOCAL_INDEX];
                 old_theta = imgs_oldtheta[IMG_LOCAL_INDEX];
             }
-
             // For limited orientational search: preselect relevant directions
             preselectLimitedDirections(old_phi, old_theta);
 
@@ -1860,7 +1849,6 @@ void ProgML2D::expectation()
                 preselectFastSignificant();
             else
                 Msignificant.initConstant(1);
-
 
             expectationSingleImage(opt_offsets);
 

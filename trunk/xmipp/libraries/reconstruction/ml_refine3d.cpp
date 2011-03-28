@@ -617,10 +617,11 @@ void ProgMLRefine3D::reconstructVolumes(const MetaData &mdProj, const FileName &
     FileName               fn_vol, fn_one;
     MetaData               mdOne;
 
-    ProgReconsBase * reconsProgram = createReconsProgram();
+    ProgReconsBase * reconsProgram;// = createReconsProgram();
 
     for (int volno = 1; volno <= Nvols; ++volno)
     {
+      reconsProgram = createReconsProgram();
         //for now each node reconstruct one volume
         if ((volno - 1) % size == rank)
         {
@@ -630,13 +631,16 @@ void ProgMLRefine3D::reconstructVolumes(const MetaData &mdProj, const FileName &
             mdOne.importObjects(mdProj, MDValueEQ(MDL_REF3D, volno));
             mdOne.write(fn_one);
             // Set input/output for the reconstruction algorithm
+            std::cerr << "DEBUG_JM: reconstructing from " << fn_one << " volume " << fn_vol << std::endl;
             reconsProgram->setIO(fn_one, fn_vol);
             reconsProgram->tryRun();
         }
+        // Free reconsProgram
+        delete reconsProgram;
     }
 
     // Free reconsProgram
-    delete reconsProgram;
+    //delete reconsProgram;
 }
 
 void ProgMLRefine3D::calculate3DSSNR(MultidimArray<double> &spectral_signal)
