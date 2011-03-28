@@ -529,31 +529,31 @@ void Micrograph::resize(int Xdim, int Ydim, FileName filename)
         REPORT_ERROR(ERR_TYPE_INCORRECT, "Micrograph::set_val::(): unknown datatype");
 
 }
-void Micrograph::write(const FileName &fileName, bool adjust)
+void Micrograph::write(const FileName &fileName, CastWriteMode castMode)
 {
     if (datatype == UChar)
     {
-        IUChar->write(fileName, FIRST_IMAGE, false, WRITE_OVERWRITE, adjust);
+        IUChar->write(fileName, FIRST_IMAGE, false, WRITE_OVERWRITE, castMode);
     }
     else if (datatype == UShort)
     {
-        IUShort->write(fileName, FIRST_IMAGE, false, WRITE_OVERWRITE, adjust);
+        IUShort->write(fileName, FIRST_IMAGE, false, WRITE_OVERWRITE, castMode);
     }
     else if (datatype == Short)
     {
-        IShort->write(fileName, FIRST_IMAGE, false, WRITE_OVERWRITE, adjust);
+        IShort->write(fileName, FIRST_IMAGE, false, WRITE_OVERWRITE, castMode);
     }
     else if (datatype == UInt)
     {
-        IUInt->write(fileName, FIRST_IMAGE, false, WRITE_OVERWRITE, adjust);
+        IUInt->write(fileName, FIRST_IMAGE, false, WRITE_OVERWRITE, castMode);
     }
     else if (datatype == Int)
     {
-        IInt->write(fileName, FIRST_IMAGE, false, WRITE_OVERWRITE, adjust);
+        IInt->write(fileName, FIRST_IMAGE, false, WRITE_OVERWRITE, castMode);
     }
     else if (datatype == Float)
     {
-        IFloat->write(fileName, FIRST_IMAGE, false, WRITE_OVERWRITE, adjust);
+        IFloat->write(fileName, FIRST_IMAGE, false, WRITE_OVERWRITE, castMode);
     }
     else
         REPORT_ERROR(ERR_TYPE_INCORRECT, "Micrograph::set_val::(): unknown datatype");

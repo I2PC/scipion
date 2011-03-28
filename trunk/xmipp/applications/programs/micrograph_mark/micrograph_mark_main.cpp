@@ -105,7 +105,7 @@ public:
         m.open_micrograph(fnRaw);
         std::vector<FileName> filesToDelete;
         fn8bits=fnRaw+"_8bits.raw";
-        m.write(fn8bits+"%uint8",true);
+        m.write(fn8bits+"%uint8", ADJUST);
         m.close_micrograph();
 
         m.open_micrograph(fn8bits);

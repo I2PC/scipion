@@ -130,7 +130,7 @@ int ImageBase::readApplyGeo(const MetaData &md, size_t objId, bool only_apply_sh
 
 
 void ImageBase::write(const FileName &name, size_t select_img, bool isStack,
-                      int mode, bool adjust)
+                      int mode, CastWriteMode castMode)
 {
     const FileName &fname = (name.empty()) ? filename : name;
 
@@ -160,7 +160,7 @@ void ImageBase::write(const FileName &name, size_t select_img, bool isStack,
     //        mode = WRITE_OVERWRITE;
 
     ImageFHandler* hFile = openFile(fname, mode);
-    _write(fname, hFile, select_img, isStack, mode, adjust);
+    _write(fname, hFile, select_img, isStack, mode, castMode);
     closeFile(hFile);
 }
 
@@ -607,7 +607,7 @@ int ImageBase::_read(const FileName &name, ImageFHandler* hFile, DataMode datamo
 /* Internal write image file method.
  */
 void ImageBase::_write(const FileName &name, ImageFHandler* hFile, size_t select_img,
-                       bool isStack, int mode, bool adjust)
+                       bool isStack, int mode, CastWriteMode castMode)
 {
 
     // Temporary Error to find old select_img == -1
@@ -731,19 +731,19 @@ void ImageBase::_write(const FileName &name, ImageFHandler* hFile, size_t select
     else if (ext_name.contains("stk"))
         err = writeSPIDER(select_img,true,mode);
     else if (ext_name.contains("mrcs"))
-        writeMRC(select_img,true,mode,imParam,adjust);
+        writeMRC(select_img,true,mode,imParam,castMode);
     else if (ext_name.contains("mrc"))
-        writeMRC(select_img,false,mode,imParam,adjust);
+        writeMRC(select_img,false,mode,imParam,castMode);
     else if (ext_name.contains("img") || ext_name.contains("hed"))
-        writeIMAGIC(select_img,mode,imParam,adjust);
+        writeIMAGIC(select_img,mode,imParam,castMode);
     else if (ext_name.contains("dm3"))
         writeDM3(select_img,false,mode);
     else if (ext_name.contains("ser"))
         writeTIA(select_img,false,mode);
     else if (ext_name.contains("raw") || ext_name.contains("inf"))
-        writeINF(select_img,false,mode,imParam,adjust);
+        writeINF(select_img,false,mode,imParam,castMode);
     else if (ext_name.contains("tif"))
-        writeTIFF(select_img,isStack,mode,imParam,adjust);
+        writeTIFF(select_img,isStack,mode,imParam,castMode);
     else if (ext_name.contains("spe"))
         writeSPE(select_img,isStack,mode);
     else

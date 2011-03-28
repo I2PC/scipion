@@ -347,7 +347,7 @@ int readTIFF(size_t select_img, bool isStack=false)
 /**
  * Write TIFF format files.
 */
-int writeTIFF(size_t select_img, bool isStack=false, int mode=WRITE_OVERWRITE, String bitDepth="", bool adjust=false)
+int writeTIFF(size_t select_img, bool isStack=false, int mode=WRITE_OVERWRITE, String bitDepth="", CastWriteMode castMode = CAST)
 {
 #undef DEBUG
 
@@ -375,7 +375,6 @@ int writeTIFF(size_t select_img, bool isStack=false, int mode=WRITE_OVERWRITE, S
     //Selection of output datatype
 
     DataType wDType,myTypeID = myT();
-    CastWriteMode castMode;
 
     if (bitDepth == "")
     {
@@ -430,7 +429,6 @@ int writeTIFF(size_t select_img, bool isStack=false, int mode=WRITE_OVERWRITE, S
             wDType = Unknown_Type;
             REPORT_ERROR(ERR_TYPE_INCORRECT,"ERROR: incorrect TIFF bits depth value.");
         }
-        castMode = (adjust)? ADJUST : CONVERT;
     }
 
     if (mmapOnWrite)
@@ -531,8 +529,11 @@ int writeTIFF(size_t select_img, bool isStack=false, int mode=WRITE_OVERWRITE, S
 
         for (uint32 y = 0; y < Ydim; y++)
         {
-            castConvertPage2Datatype(MULTIDIM_ARRAY(data)+i*datasize_n + y*Xdim,
-                                     (char *)tif_buf, wDType, (size_t) Xdim,min0 ,max0, castMode);
+            if (castMode == CAST)
+                castPage2Datatype(MULTIDIM_ARRAY(data)+i*datasize_n + y*Xdim, (char *)tif_buf, wDType, (size_t) Xdim);
+            else
+                castConvertPage2Datatype(MULTIDIM_ARRAY(data)+i*datasize_n + y*Xdim,
+                                         (char *)tif_buf, wDType, (size_t) Xdim,min0 ,max0, castMode);
 
             TIFFWriteScanline(tif, tif_buf,y,0);
         }

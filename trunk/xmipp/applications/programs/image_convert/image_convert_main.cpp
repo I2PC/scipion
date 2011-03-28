@@ -45,6 +45,7 @@ private:
     MDRow        row;
     ImageConv    convMode;
     bool         adjust;
+    CastWriteMode  castMode;
     size_t        k;
     int         writeMode;
     bool        appendToStack;
@@ -141,6 +142,8 @@ protected:
 
         fn_out = (checkParam("-o"))? getParam("-o") : "";
         adjust = checkParam("--rangeAdjust");
+        castMode = (checkParam("--rangeAdjust"))? ADJUST: CONVERT;
+
         type = getParam("--type");
         save_metadata_stack = checkParam("--selfile_stack");
         appendToStack = checkParam("--append");
@@ -248,7 +251,7 @@ protected:
                     _fnImgOut= fnImgOut;
 
                 imIn.read(fnImg, DATA, ALL_IMAGES, true);
-                imIn.write(_fnImgOut+depth, ALL_IMAGES, type == "stk", writeMode, adjust);
+                imIn.write(_fnImgOut+depth, ALL_IMAGES, type == "stk", writeMode, castMode);
 
                 if ((fnImg == fnImgOut) && (rename(tempName.c_str(),fnImgOut.c_str())!=0))
                     REPORT_ERROR(ERR_IO, "ProgConvImg:: Error renaming the file.");
@@ -264,7 +267,7 @@ protected:
         case VOL2MD:
             {
                 imIn.data->getSlice(k++,imOut->data);
-                imOut->write(fnImgOut+depth, ALL_IMAGES, type == "stk", writeMode, adjust);
+                imOut->write(fnImgOut+depth, ALL_IMAGES, type == "stk", writeMode, castMode);
             }
         }
         mdIn.setValue(MDL_IMAGE,fnImgOut, objId); // to keep info in output metadata

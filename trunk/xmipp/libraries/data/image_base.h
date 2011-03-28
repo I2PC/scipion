@@ -357,7 +357,7 @@ public:
      * overwrite = 1 overwrite slice
      */
     void write(const FileName &name="", size_t select_img = ALL_IMAGES, bool isStack=false,
-               int mode=WRITE_OVERWRITE,bool adjust=false);
+               int mode=WRITE_OVERWRITE,CastWriteMode castMode = CAST);
 
     /** Check file Datatype is same as T type to use mmap.
      */
@@ -645,7 +645,7 @@ protected:
 
     /// To be deleted once rwTIFF ported to cpp file --------------
     virtual int readTIFF(size_t select_img, bool isStack=false) = 0;
-    virtual int writeTIFF(size_t select_img, bool isStack=false, int mode=WRITE_OVERWRITE, String bitDepth="", bool adjust=false) = 0;
+    virtual int writeTIFF(size_t select_img, bool isStack=false, int mode=WRITE_OVERWRITE, String bitDepth="", CastWriteMode castMode=CAST) = 0;
     /// ----------------------------------------------------------
 
     /** Open file function
@@ -669,7 +669,7 @@ protected:
     /* Internal write image file method.
      */
     void _write(const FileName &name, ImageFHandler* hFile, size_t select_img = ALL_IMAGES,
-                bool isStack=false, int mode=WRITE_OVERWRITE, bool adjust=false);
+                bool isStack=false, int mode=WRITE_OVERWRITE,CastWriteMode castMode = CAST);
 
     /** Read the raw data
       */

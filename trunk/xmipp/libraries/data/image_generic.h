@@ -185,9 +185,9 @@ public:
     /** Write image to file.
     */
     inline void write(const FileName &name="", size_t select_img = ALL_IMAGES, bool isStack=false,
-                      int mode=WRITE_OVERWRITE,bool adjust=false)
+                      int mode=WRITE_OVERWRITE, CastWriteMode castMode = CAST)
     {
-        image->write(name,select_img,isStack,mode,adjust);
+        image->write(name,select_img,isStack,mode,castMode);
     }
 
     /* Create an empty image file of format given by filename and map it to memory.
