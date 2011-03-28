@@ -30,31 +30,31 @@
 class ProgMetadataSplit: public XmippProgram
 {
     FileName fn_in, fn_out, fn_root;
-    std::string sortLabelStr;
+    String sortLabelStr, extension;
     MDLabel sortLabel;
-    MetaData  SFin;
-    MetaData *SFtmp, *SFtmp2;
+    MetaData  mdIn;
+    MetaData *mdPtr, *mdPtr2;
     std::vector<MetaData> mdVector;
-    bool     dont_randomize;
-    bool     dont_sort;
-    int N;
+    bool     dont_randomize, dont_remove_disabled, dont_sort;
+    size_t N;
 
 protected:
 
     void defineParams()
     {
-        addUsageLine("Split a selfile (randomly by default) in any number of equally sized output selfiles.");
-        addUsageLine("Only active entries in the input file will be written to the output files.");
+        addUsageLine("Split a metadata (randomly by default) in any number of equally sized output metadata.");
+        addUsageLine("By default, only enabled entries in the input file will be written to the output files.");
         addUsageLine("Example: Splits input.sel in two parts (output_1.sel and output_2.sel) ");
         addUsageLine("  xmipp_metadata_split -i input.sel -o output");
         addUsageLine("Example: Splits input.sel in 4 output files without generating random groups.");
         addUsageLine("  xmipp_metadata_split -i input.sel -n 4 --dont_randomize  ");
         addParamsLine("    -i <inputSelfile>    : Input MetaData File");
-        addParamsLine("  [ -n <n_metadatas=2> ] : Number of output MetaDatas");
-        addParamsLine("  [ -o <rootname=\"\"> ] : Rootname for output MetaDatas");
-        addParamsLine("                         : output will be rootname_<n>.xpd");
-        addParamsLine("  [--dont_randomize ]    : Do not generate random groups");
-        addParamsLine("  [--dont_sort ]         : Do not sort the output MetaData");
+        addParamsLine("  [ -n <parts=2> ] : Number of output MetaDatas");
+        addParamsLine("  [ --oroot <rootname=\"\"> ] : Rootname for output MetaDatas");
+        addParamsLine("                          : output will be rootname_<n>.xpd");
+        addParamsLine("  [--dont_randomize ]     : Do not generate random groups");
+        addParamsLine("  [--dont_sort ]          : Do not sort the outputs MetaData");
+        addParamsLine("  [--dont_remove_disabled]: Do not remove disabled images from MetaData");
         addParamsLine("  [-l <label=\"image\">] : sort using a label, default image");
     }
 
@@ -62,10 +62,12 @@ protected:
     {
 
         fn_in = getParam("-i");
+        extension = fn_in.getExtension();
         N = getIntParam("-n");
-        fn_root = getParam("-o");
+        fn_root = getParam("--oroot");
         dont_randomize = checkParam("--dont_randomize");
         dont_sort      = checkParam("--dont_sort");
+        dont_remove_disabled = checkParam("--dont_remove_disabled");
 
         sortLabelStr = "objId"; //if not sort, by default is objId
         if(!dont_sort)
@@ -73,9 +75,9 @@ protected:
 
         sortLabel = MDL::str2Label(sortLabelStr);
         if (sortLabel == MDL_UNDEFINED)
-            REPORT_ERROR(ERR_MD_UNDEFINED, (std::string)"Unrecognized label '" + sortLabelStr + "'");
+            REPORT_ERROR(ERR_MD_UNDEFINED, (String)"Unrecognized label '" + sortLabelStr + "'");
 
-        if (fn_root == "")
+        if (fn_root.empty())
             fn_root = fn_in.withoutExtension();
     }
 
@@ -83,35 +85,33 @@ public:
     void run()
     {
 
-        SFin.read(fn_in);
+        mdIn.read(fn_in);
 
-        if (!dont_randomize)
-        {
-            SFtmp = new MetaData();
-            SFtmp->randomize(SFin);
-        }
+        if (dont_randomize)
+          mdPtr = &mdIn;
         else
-            SFtmp = &SFin;
-
-        int Num_images = (int)SFtmp->size();
-        int Num_groups = XMIPP_MIN(N, Num_images);
-        SFtmp->split(Num_groups, mdVector); //Split MD in Num_groups
-        //Write splitted groups to disk
-        for (int i = 0; i < Num_groups; i++)
         {
-            fn_out = fn_root;
-            if (Num_groups != 1 )
-            {
-                //std::string num = "_" + integerToString(i + 1);
-                fn_out += "_" + integerToString(i + 1);
-            }
-            //fn_out += ".xmd";
-            fn_out += ".sel";
+            mdPtr = new MetaData();
+            mdPtr->randomize(mdIn);
+        }
+
+        if (!dont_remove_disabled && mdPtr->containsLabel(MDL_ENABLED)) //remove disabled entries by default
+          mdPtr->removeObjects(MDValueEQ(MDL_ENABLED, -1));
+
+        size_t Num_images = mdPtr->size();
+        int Num_groups = XMIPP_MIN(N, Num_images);
+        mdPtr->split(Num_groups, mdVector); //Split MD in Num_groups
+        //Write splitted groups to disk
+        for (size_t i = 0; i < Num_groups; ++i)
+        {
+            fn_out.compose(fn_root, i + 1, extension);
+
             if(!dont_sort)
-                SFtmp->sort(mdVector[i], sortLabel);
+                mdPtr->sort(mdVector[i], sortLabel);
             else
-                SFtmp = &(mdVector[i]);
-            SFtmp->write(fn_out);
+                mdPtr = &(mdVector[i]);
+
+            mdPtr->write(fn_out);
         }
     }
 
@@ -121,17 +121,8 @@ public:
 /* MAIN -------------------------------------------------------------------- */
 int main(int argc, char *argv[])
 {
-    try
-    {
-        ProgMetadataSplit program;
-        program.read(argc, argv);
-        program.run();
-    }
-    catch (XmippError xe)
-    {
-        std::cerr << xe;
-        return 1;
-    }
-    return 0;
+    ProgMetadataSplit program;
+    program.read(argc, argv);
+    return program.tryRun();
 }
 
