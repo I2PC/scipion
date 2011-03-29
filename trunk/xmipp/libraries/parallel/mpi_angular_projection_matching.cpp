@@ -288,7 +288,7 @@ void MpiProgAngularProjectionMatching::computeChunks()
 void MpiProgAngularProjectionMatching::computeChunkAngularDistance(int symmetry, int sym_order)
 {
     double non_reduntant_area_of_sphere =
-        chunk_mysampling.SL.non_redundant_evald_sphere(symmetry,sym_order);
+        chunk_mysampling.SL.non_redundant_projection_sphere(symmetry,sym_order);
     double number_cpus  = (double) node->size - 1;
     //NEXT ONE IS SAMPLING NOT ANOTHERSAMPLING
     double neighborhood_radius= fabs(acos(mysampling.cos_neighborhood_radius));
