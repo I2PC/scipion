@@ -557,7 +557,7 @@ int ImageBase::readDM3(size_t select_img,bool isStack)
 
     // Map the parameters
     if (select_img >  _nDim)
-        REPORT_ERROR(ERR_INDEX_OUTOFBOUNDS, formatString("readDM3: Image number %lu exceeds stack size %lu", select_img, header->NUMBER_IMAGES));
+        REPORT_ERROR(ERR_INDEX_OUTOFBOUNDS, formatString("readDM3: Image number %lu exceeds stack size %lu", select_img, _nDim));
     else if (select_img == ALL_IMAGES)
     {
         // Check images dimensions. Need to be the same
