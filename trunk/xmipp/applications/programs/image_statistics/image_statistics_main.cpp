@@ -37,8 +37,8 @@ class ProgStatistics: public XmippMetadataProgram
 protected:
     MetaData        DF_stats;
     ImageGeneric    image;
-    Mask            mask_prm;
-    MultidimArray<int>   mask;
+    Mask            mask;
+    MultidimArray<int>   maskArray;
     int             short_format;     // True if a short line is to be shown
     int             save_mask;        // True if the masks must be saved
     int             repair;           // True if headers are initialized
@@ -58,23 +58,23 @@ protected:
         addUsageLine("Display statistics of images or volumes. A mask can be applied.");
         XmippMetadataProgram::defineParams();
         addParamsLine("[-o <metadata>]   : Save the statistics in this metadata file.");
-        addParamsLine("[-short_format]   : Do not show labels for statistics.");
-        addParamsLine("[-show_angles]    : Also show angles in the image header.");
-        addParamsLine("[-save_mask]      : Save 2D and 3D masks (as \"mask2D\" or \"mask3D\").");
-        mask_prm.defineParams(this,INT_MASK,NULL,"Statistics constrained to the mask area.");
+        addParamsLine("[--short_format]   : Do not show labels for statistics.");
+        addParamsLine("[--show_angles]    : Also show angles in the image header.");
+        addParamsLine("[--save_mask]      : Save 2D and 3D masks (as \"mask2D\" or \"mask3D\").");
+        mask.defineParams(this,INT_MASK,NULL,"Statistics constrained to the mask area.");
     }
 
     void readParams()
     {
         XmippMetadataProgram::readParams();
-        short_format = checkParam("-short_format");
-        save_mask    = checkParam("-save_mask");
-        show_angles  = checkParam("-show_angles");
+        short_format = checkParam("--short_format");
+        save_mask    = checkParam("--save_mask");
+        show_angles  = checkParam("--show_angles");
         fn_out = (checkParam("-o"))? getParam("-o"): "";
 
-        mask_prm.allowed_data_types = INT_MASK;
+        mask.allowed_data_types = INT_MASK;
         if (apply_mask = checkParam("--mask"))
-            mask_prm.readParams(this);
+            mask.readParams(this);
     }
 
     void show()
@@ -100,13 +100,13 @@ protected:
             std::cout << '>' << std::endl;
         }
 
-//        // if input is volume do not apply geo
-//        int xDim, yDim, zDim;
-//        size_t nDim;
-//        ImgSize(mdIn, xDim, yDim, zDim, nDim);
-//
-//        if (zDim > 1)
-//            apply_geo = false;
+        //        // if input is volume do not apply geo
+        //        int xDim, yDim, zDim;
+        //        size_t nDim;
+        //        ImgSize(mdIn, xDim, yDim, zDim, nDim);
+        //
+        //        if (zDim > 1)
+        //            apply_geo = false;
     }
 
     void processImage(const FileName &fnImg, const FileName &fnImgOut, size_t objId)
@@ -126,10 +126,10 @@ protected:
         // Generate mask if necessary
         if (apply_mask)
         {
-            mask_prm.generate_mask(zDim, yDim, xDim);
-            mask = mask_prm.get_binary_mask();
+            mask.generate_mask(zDim, yDim, xDim);
+            maskArray = mask.get_binary_mask();
 
-            computeStats_within_binary_mask(mask, image(), min_val, max_val,
+            computeStats_within_binary_mask(maskArray, image(), min_val, max_val,
                                             avg, stddev);
         }
         else
@@ -139,33 +139,21 @@ protected:
         // Show information
         std::cout << stringToString(fnImg, max_length + 1);
         if (zDim > 1)
-            std::cout << integerToString(zDim, 4, ' ') << 'x'
-            << integerToString(yDim, 4, ' ') << 'x'
-            << integerToString(xDim, 4, ' ') << ' ';
+            formatString("%4dx%4dx%4d ", zDim, yDim, xDim);
         else
-            std::cout << integerToString(yDim, 4, ' ') << 'x'
-            << integerToString(xDim, 4, ' ') << ' ';
+            formatString("%4dx%4d", yDim, xDim);
 
         if (!short_format)
         {
-            std::cout << "min= "    << floatToString(min_val, 10) << ' '
-            << "max= "    << floatToString(max_val, 10) << ' '
-            << "avg= "    << floatToString(avg    , 10) << ' '
-            << "stddev= " << floatToString(stddev , 10) << ' ';
+            std::cout << formatString("min=%10f max=%10f avg=%10f stddev=%10f",
+                                      min_val, max_val, avg, stddev);
+
             if (show_angles)
-            {
-                std::cout << "rot= "    << floatToString(rot , 10) << ' '
-                << "tilt= "   << floatToString(tilt, 10) << ' '
-                << "psi= "    << floatToString(psi, 10) << ' ';
-            }
+                std::cout << formatString("rot=%10f tilt=%10f psi=%10f", rot, tilt, psi);
         }
         else
-        {
-            std::cout << floatToString(min_val, 10) << ' '
-            << floatToString(max_val, 10) << ' '
-            << floatToString(avg    , 10) << ' '
-            << floatToString(stddev , 10) << ' ';
-        }
+            std::cout << formatString("%10f %10f %10f %10f", min_val, max_val, avg, stddev);
+
         size_t id;
         id = DF_stats.addObject();
         DF_stats.setValue(MDL_MIN,min_val,id);
@@ -198,21 +186,16 @@ protected:
 
             std::cout << stringToString(" ", max_length + 13);
             if (!short_format)
-                std::cout << "min= "    << floatToString(mean_min_val, 10) << ' '
-                << "max= "    << floatToString(mean_max_val, 10) << ' '
-                << "avg= "    << floatToString(mean_avg    , 10) << ' '
-                << "stddev= " << floatToString(mean_stddev , 10) << ' ';
+                std::cout << formatString("min=%10f max=%10f avg=%10f stddev=%10f",
+                                          min_val, max_val, avg, stddev);
             else
-                std::cout << floatToString(mean_min_val, 10) << ' '
-                << floatToString(mean_max_val, 10) << ' '
-                << floatToString(mean_avg    , 10) << ' '
-                << floatToString(mean_stddev , 10) << ' ';
+                std::cout << formatString("%10f %10f %10f %10f", mean_min_val, mean_max_val, mean_avg, mean_stddev);
             std::cout << std::endl;
         }
 
         // Save masks -----------------------------------------------------------
         if (save_mask)
-            mask_prm.write_mask("mask");
+            mask.write_mask("mask");
 
         // Save statistics ------------------------------------------------------
         if (fn_out != "")
@@ -226,6 +209,5 @@ int main(int argc, char *argv[])
 {
     ProgStatistics program;
     program.read(argc, argv);
-    program.tryRun();
-    return 0;
+    return program.tryRun();
 }
