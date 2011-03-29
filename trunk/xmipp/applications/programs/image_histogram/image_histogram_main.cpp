@@ -58,6 +58,8 @@ public:
         addExampleLine("You can use the =hist.txt= file with =gnuplot= to produce graphical histogram", false);
         addExampleLine("After you enter =gnuplot= terminal you can use:", false);
         addExampleLine("gnuplot> plot \"kk.txt\" using 1:2 title \"Histogram\" with steps");
+
+        addSeeAlsoLine("metadata_histogram");
     }
 
     void readParams()

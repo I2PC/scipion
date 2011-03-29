@@ -22,222 +22,139 @@
  *  e-mail address 'xmipp@cnb.csic.es'
  ***************************************************************************/
 
-#include <data/args.h>
 #include <data/histogram.h>
-#include <data/metadata.h>
-#include <data/image.h>
+#include <data/program.h>
 
-void Usage();
-
-
-int main(int argc, char *argv[])
+class ProgMetadataHistogram: public XmippProgram
 {
-    MetaData         MD;
-    FileName         fn_out;
-    FileName         fn_img;
-    int              generate_img;
+public:
+    MetaData         mdIn;
+    FileName         fn_in, fn_out, fn_img;
     MDLabel          col, col2;         // Columns for histogram
     double           m, M, m2, M2;      // range for histogram
-    int              automatic_range, automatic_range2;
+    bool             do_hist2d, write_img, automatic_range, automatic_range2;
     int              StepsNo, StepsNo2;
     Histogram1D      hist;
     Histogram2D      hist2;
     double           percentil;
 
-    // Check the command line ==================================================
-    try
+    void defineParams()
     {
-        int i;
-        MD.read(getParameter(argc, argv, "-i"));
-        fn_out = getParameter(argc, argv, "-o", "");
-        percentil = textToFloat(getParameter(argc, argv, "-percentil", "50"));
-        col = MDL::str2Label(std::string(getParameter(argc, argv, "-col")));
-        std::string col2String(getParameter(argc, argv, "-col2", ""));
-        col2 = MDL::str2Label(col2String);
+        addUsageLine("Calculate histogram from a metadata column(1D) or from a couple of columns(2D)");
+        addParamsLine("   -i <input_metadata>          : input metadata");
+        addParamsLine("  [-o <text_file=\"/dev/stdout\">] : output text file with histogram, by default standard output");
+        addParamsLine("  --col <label>                 : column to create the histogram");
+        addParamsLine("  [--range <m> <M>]             : range for the histogram, automatic calculated if not provided");
+        addParamsLine("  [--steps <N=100>]             : number of subdivisions");
+        addParamsLine("  [--col2 <label=\"\"> ]        : if specified, a 2D histogram is calculated");
+        addParamsLine("  [--range2 <m> <M>]            : range for second column in 2D histogram");
+        addParamsLine("       requires --col2;");
+        addParamsLine("  [--steps2 <N=100>]            : number of subdivisions in second column");
+        addParamsLine("       requires --col2;");
+        addParamsLine("  [--percentil <p=50.>]         : Only for 1D histograms");
+        addParamsLine("  [--write_as_image <image_file>]   : Only for 2D histograms");
+        addParamsLine("       requires --col2;");
 
-        StepsNo = textToInteger(getParameter(argc, argv, "-steps", "100"));
-        if ((i = paremeterPosition(argc, argv, "-range")) != -1)
+        addExampleLine("Calculate the histogram of the column 'angleRot' from a metadata:", false);
+        addExampleLine("xmipp_metadata_histogram -i images.xmd --col angleRot -o hist.txt");
+
+        addSeeAlsoLine("image_histogram");
+
+    }
+
+    void readColumn(MDLabel &column, bool &automatic, double &m, double &M, int &steps, bool second=false)
+    {
+        const char* colStr = second ? "--col2" : "--col";
+        const char* rangeStr = second ? "--range2" : "--range";
+        const char* stepStr = second ? "--steps2" : "--steps";
+
+        column = MDL::str2Label(getParam(colStr));
+        steps = getIntParam(stepStr);
+        automatic = true;
+        if (checkParam(rangeStr))
         {
-            if (i + 2 >= argc)
-                REPORT_ERROR(ERR_PARAM_MISSING, "Metadata Histogram: Not enough parameters behind -range\n");
-            m = textToFloat(argv[i+1]);
-            M = textToFloat(argv[i+2]);
-            automatic_range = false;
+            m = getDoubleParam(rangeStr, 0);
+            M = getDoubleParam(rangeStr, 1);
+            automatic = false;
         }
-        else
-            automatic_range = true;
 
-        StepsNo2 = textToInteger(getParameter(argc, argv, "-steps2", "100"));
-        if ((i = paremeterPosition(argc, argv, "-range2")) != -1)
-        {
-            if (i + 2 >= argc)
-                REPORT_ERROR(ERR_PARAM_MISSING, "Metadata Histogram: Not enough parameters behind -range2\n");
-            m2 = textToFloat(argv[i+1]);
-            M2 = textToFloat(argv[i+2]);
-            automatic_range2 = false;
-        }
-        else
-            automatic_range2 = true;
-
-        // Check columns are possible
-        if (col == MDL_UNDEFINED)
+        // Check if valid columns where provided
+        if (column == MDL_UNDEFINED)
             REPORT_ERROR(ERR_MD_UNDEFINED, "Metadata Histogram: Column for histogram not valid");
-        else if (!MDL::isDouble(col))
+        else if (!MDL::isDouble(column))
             REPORT_ERROR(ERR_MD_BADTYPE, "Metadata Histogram: Column type for histogram should be double");
-
-        if (col2 == MDL_UNDEFINED && col2String != "")
-            REPORT_ERROR(ERR_MD_UNDEFINED, "Metadata Histogram: Column 2 for histogram not valid");
-
-        // Check if the 2D histogram must be an image
-        if (col2 != MDL_UNDEFINED)
-        {
-            if (!MDL::isDouble(col2))
-                REPORT_ERROR(ERR_MD_BADTYPE, "Metadata Histogram: Column 2 type for histogram should be double");
-            fn_img = getParameter(argc, argv, "-img", "");
-            generate_img = (fn_img != "");
-        }
-    }
-    catch (XmippError XE)
-    {
-        std::cout << XE;
-        Usage();
-        exit(1);
     }
 
-    // Compute Histogram =======================================================
-    try
+    void getColumnValues(const MDLabel column, MultidimArray<double> &values, const bool automatic, double &m, double &M)
     {
-        double avg, stddev, dummy;
         std::vector<double> columnValues;
+        mdIn.getColumnValues(column, columnValues);
+        values = columnValues;
+        if (automatic)
+           values.computeDoubleMinMax(m, M);
+    }
 
-        // 1D histograms -----------------------------------------------------
-        if (col2 == MDL_UNDEFINED)
+    void readParams()
+    {
+        fn_in = getParam("-i");
+        mdIn.read(fn_in);
+        fn_out = getParam("-o");
+        percentil = getDoubleParam("--percentil");
+        readColumn(col, automatic_range, m, M, StepsNo);
+
+        if (do_hist2d = checkParam("--col2"))
+            readColumn(col2, automatic_range2, m2, M2, StepsNo2, true);
+
+        if (write_img = checkParam("--write_as_image"))
+            fn_img = getParam("--write_as_image");
+    }
+
+    void run()
+    {
+
+        double avg, stddev, dummy;
+        MultidimArray<double> C;
+        getColumnValues(col, C, automatic_range, m, M);
+
+        if (!do_hist2d)
         {
-            MD.getColumnValues(col, columnValues);
-            MultidimArray<double>  C(columnValues);
-
-            if (automatic_range)
-                C.computeDoubleMinMax(m, M);
             compute_hist(C, hist, m, M, StepsNo);
-            std::cerr << "Min: " << m << " max: " << M
-            << " Steps: " << StepsNo << std::endl;
+            std::cout << formatString("min: %f max: %f steps: %d", m, M, StepsNo) << std::endl;
             C.computeStats(avg, stddev, dummy, dummy);
-            std::cerr << "Mean: " << avg << " Stddev: " << stddev << std::endl;
-            std::cerr << "Percentil (" << percentil << "): "
-            << hist.percentil(percentil) << std::endl;
-            if (fn_out != "")
-                hist.write(fn_out);
-            else
-                std::cout << hist;
-
-
+            std::cout << formatString("mean: %f stddev: %f", avg, stddev) << std::endl;
+            std::cout << formatString("percentil (%f)", hist.percentil(percentil)) << std::endl;
+            hist.write(fn_out);
         }
-        // 2D histograms -----------------------------------------------------
         else
         {
-            MD.getColumnValues(col, columnValues);
-            MultidimArray<double>  C(columnValues);
-            MD.getColumnValues(col2, columnValues);
-            MultidimArray<double>  C2(columnValues);
-            if (automatic_range)
-            {
-                C.computeDoubleMinMax(m, M);
-                C2.computeDoubleMinMax(m2, M2);
-            }
+            MultidimArray<double> C2;
+            getColumnValues(col2, C2, automatic_range2, m2, M2);
             compute_hist(C, C2, hist2, m, M, m2, M2, StepsNo, StepsNo2);
-            std::cerr << "Min1: "   << m        << " max1: " << M
-            << " Steps1: " << StepsNo  << std::endl;
+            //stats for column 1
+            std::cout << formatString("min1: %f max1: %f steps1: %d", m, M, StepsNo) << std::endl;
             C.computeStats(avg, stddev, dummy, dummy);
-            std::cerr << "Mean: " << avg << " Stddev: " << stddev << std::endl;
-            std::cerr << "Min2: "   << m2       << " max2: " << M2
-            << " Steps2: " << StepsNo2 << std::endl;
+            std::cout << formatString("mean: %f stddev: %f", avg, stddev) << std::endl;
+            //stats for column 2
+            std::cout << formatString("min2: %f max2: %f steps2: %d", m2, M2, StepsNo2) << std::endl;
             C2.computeStats(avg, stddev, dummy, dummy);
-            std::cerr << "Mean: " << avg << " Stddev: " << stddev << std::endl;
-            if (fn_out != "")
-                hist2.write(fn_out);
-            else
-                std::cout << hist2;
-            if (generate_img)
+            std::cout << formatString("mean: %f stddev: %f", avg, stddev) << std::endl;
+            hist2.write(fn_out);
+
+            if (write_img)
             {
-                Image<double> I;
-                I() = hist2;
-                I.write(fn_img);
+              Image<double> img;
+              img() = hist2;
+              img.write(fn_img);
             }
         }
     }
-    catch (XmippError XE)
-    {
-        std::cout << XE;
-    }
-}
-/* Usage ------------------------------------------------------------------- */
-void Usage()
-{
-    printf("Purpose:\n");
-    printf("   This program performs the histogram of a column or a \n"
-           "   couple of columns in a document file\n");
-    printf("Usage:\n");
-    printf("   docfile_histogram <options>\n");
-    printf("   Where <options> are:\n");
-    printf("      -i <docfile>                 : Spider document file\n"
-           "      [-o <text file>]             : Output histogram\n"
-           "      [-img <img_file>]            : only for 2D histograms\n"
-           "      [-col LABEL]                 : by default, histogram1D for \n"
-           "                                     the first column\n"
-           "      [-range <m> <M>]             : range for the first column\n"
-           "                                     by default, it is automatic\n"
-           "      [-steps <N=100>]             : number of subdivisions for column 1\n"
-           "      [-percentil <p=50>]          : Only for 1D histograms\n"
-           "      [-col2 LABEL2]                  : if specified, then a 2D histogram\n"
-           "                                     is calculated\n"
-           "      [-range2 <m> <M>]            : range for the second column\n"
-           "                                     by default, it is automatic\n"
-           "      [-steps2 <N=100>]            : number of subdivisions for column 2\n"
-          );
-}
 
-/* Menus ------------------------------------------------------------------- */
-/*Colimate:
-   PROGRAM DocFile_Histogram {
-      url="http://www.cnb.uam.es/~bioinfo/NewXmipp/Applications/Src/DocFile_Histogram/Help/docfile_histogram.html";
-      help="Computes 1D and 2D histograms of Document Files";
-      OPEN MENU DocFile_Histogram;
-      COMMAND LINES {
-         + usual: docfile_histogram -i $DOCFILE [-o $TEXTFILE] [-img $IMGFILE]
-            [-col $N1]  [-range $MIN1 $MAX1]  [-steps $STEPS1]
-            [-col2 $N2] [-range2 $MIN2 $MAX2] [-steps2 $STEPS2]
-      }
-      PARAMETER DEFINITIONS {
-         $DOCFILE {label="Input Document File"; type=FILE EXISTING;}
-         $TEXTFILE {label="Output histogram"; type=FILE;}
-         $IMGFILE {label="Output image";
-                   help="Only for 2D histograms"; type=FILE;}
-         $N1 {label="Column 1"; type=NATURAL;}
-         OPT(-range) {label="Range for the first column";}
-            $MIN1 {label="Minimum"; type=FLOAT;}
-            $MAX1 {label="Maximum"; type=FLOAT;}
-         $STEPS1 {label="Steps for column 1"; type=NATURAL;
-            by default=100;}
-         $N2 {label="Column 2"; type=NATURAL;}
-         OPT(-range2) {label="Range for the second column";}
-            $MIN2 {label="Minimum"; type=FLOAT;}
-            $MAX2 {label="Maximum"; type=FLOAT;}
-         $STEPS2 {label="Steps for column 2"; type=NATURAL;
-            by default=100;}
-      }
-   }
-   MENU DocFile_Histogram {
-      "I/O Parameters"
-      $DOCFILE
-      OPT(-o)
-      "First Column Parameters"
-      OPT(-col)
-      OPT(-range)
-      OPT(-steps)
-      "2D histograms"
-      OPT(-img)
-      OPT(-col2)
-      OPT(-range2)
-      OPT(-steps2)
-   }
-*/
+}
+;//end of class ProgHistogram
+
+int main(int argc, char *argv[])
+{
+  ProgMetadataHistogram program;
+  program.read(argc, argv);
+  return program.tryRun();
+}
