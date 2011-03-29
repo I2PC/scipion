@@ -482,7 +482,7 @@ void Euler_angles2matrix(double alpha, double beta, double gamma,
     }
     else
         if (MAT_XSIZE(A) != 3 || MAT_YSIZE(A) != 3)
-            A.resize(3, 3);
+            A.resizeNoCopy(3, 3);
 
     alpha = DEG2RAD(alpha);
     beta  = DEG2RAD(beta);
