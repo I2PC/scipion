@@ -72,7 +72,7 @@ public:
         addUsageLine("+There are three kinds of outputs: a bild file (chimera understands this format), a distance histogram and a postscript file. ");
         addUsageLine("+In postcript, each projection is represented by a small isosceles triangles (the longest part is pointing to Y in the projection plane). ");
         addUsageLine("+In chimera, each projection direction has a sphere whose radius is proportional to the number of images assigned to it");
-        addUsageLine("+The histogram output is the histogram of the minimum distance among projections. The distance is measured on the sphere surface. This gives an idea of how compact is the angular distribution.");
+        addUsageLine("+The histogram output is the histogram of the minimum distance (in degrees) among projections. The distance is measured on the sphere surface. This gives an idea of how compact is the angular distribution.");
         addParamsLine(" -i <metadata>                 : Metadata file with the angles");
         addParamsLine(" -o <file> <type>              : Output file");
         addParamsLine("    where <type>");
