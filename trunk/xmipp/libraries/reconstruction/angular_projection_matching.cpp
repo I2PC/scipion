@@ -66,10 +66,20 @@ void ProgAngularProjectionMatching::readParams()
 
 void ProgAngularProjectionMatching::defineParams()
 {
-    addUsageLine("Perform a discrete angular assignment using a new projection matching");
-    addUsageLine("Example of use: Sample at 2 pixel step size for 5D shift search");
-    addUsageLine("   xmipp_angular_projection_matching -i in.doc -o out_dir --ref ref_dir --search5d_step 2");
-
+    addUsageLine("Perform a discrete angular assignment using projection matching in real space.");
+    addUsageLine("This program is relatively fast, using polar coordinates for the in-plane ");
+    addUsageLine("angular searches and the 5-dimensional search of rotation angles and origin ");
+    addUsageLine("offsets is broken in two: first the angles are search in a 3D-search; then, ");
+    addUsageLine("for the optimal orientation the origin offsets are searched (2D).");
+    addUsageLine(" ");
+    addUsageLine("The output of the program consists of a document file with all assigned angles");
+    addUsageLine("and rotations. This file also contains a column for the maximum cross-correlation ");
+    addUsageLine("coefficient. Note that the program does not alter the image headers. ");
+    addUsageLine("The recommended use of this program is within the python script of the ");
+    addUsageLine("xmipp_protocol_projmatch.py");
+    addSeeAlsoLine("angular_discrete_assign, angular_continuous_assign, angular_project_library");
+    addExampleLine("Example of use: Sample at 2 pixel step size for 5D shift search",false);
+    addExampleLine("xmipp_angular_projection_matching -i experimental.doc -o assigned_angles.doc --ref reference.stk --search5d_step 2");
     addParamsLine("   -i <doc_file>                : Docfile with input images");
     addParamsLine("   -o <output_rootname>         : Output rootname");
     addParamsLine("   -r <stackFile>               : Reference projections");
