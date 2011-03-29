@@ -8,13 +8,13 @@
 
 JNIEXPORT void JNICALL Java_xmipp_MetaData_storeIds
 (JNIEnv *env, jclass cls) {
-	peerId = env->GetFieldID(cls, "peer", "J");
+	MetaData_peerId = env->GetFieldID(cls, "peer", "J");
 }
 
 JNIEXPORT void JNICALL Java_xmipp_MetaData_create
 (JNIEnv *env, jobject jobj) {
 	MetaData * md = new MetaData();
-	env->SetLongField(jobj, peerId, (long)md);
+	env->SetLongField(jobj, MetaData_peerId, (long)md);
 }
 
 JNIEXPORT void JNICALL Java_xmipp_MetaData_destroy
@@ -22,7 +22,7 @@ JNIEXPORT void JNICALL Java_xmipp_MetaData_destroy
 	MetaData * md = GET_INTERNAL_METADATA(jobj);
 	delete md;
 	md = NULL;
-	env->SetLongField(jobj, peerId, (long)md);
+	env->SetLongField(jobj, MetaData_peerId, (long)md);
 }
 
 JNIEXPORT void JNICALL Java_xmipp_MetaData_read

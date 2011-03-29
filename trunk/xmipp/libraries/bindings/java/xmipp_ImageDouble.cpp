@@ -7,13 +7,13 @@
 
 JNIEXPORT void JNICALL Java_xmipp_ImageDouble_storeIds
 (JNIEnv *env, jclass cls) {
-	peerId = env->GetFieldID(cls, "peer", "J");
+	ImageDouble_peerId = env->GetFieldID(cls, "peer", "J");
 }
 
 JNIEXPORT void JNICALL Java_xmipp_ImageDouble_create
 (JNIEnv *env, jobject jobj) {
 	Image<double> *image = new Image<double>();
-	env->SetLongField(jobj, peerId, (long)image);
+	env->SetLongField(jobj, ImageDouble_peerId, (long)image);
 }
 
 JNIEXPORT void JNICALL Java_xmipp_ImageDouble_destroy
@@ -21,7 +21,7 @@ JNIEXPORT void JNICALL Java_xmipp_ImageDouble_destroy
 	Image<double> *image = GET_INTERNAL_IMAGE(jobj);
 	delete image;
 	image = NULL;
-	env->SetLongField(jobj, peerId, (long)image);
+	env->SetLongField(jobj, ImageDouble_peerId, (long)image);
 }
 
 JNIEXPORT void JNICALL Java_xmipp_ImageDouble_read_1image
