@@ -69,7 +69,9 @@ void ProgAngularNeighbourhood::defineParams()
     addParamsLine("                           :+images in Metadata1 within its neighbourhood.");
     addParamsLine("  [--dist  <d=10>        ] : Maximum neighbourhood distance ");
     addParamsLine("  [--sym <symmetry=\"\"> ] : Symmetry description if any");
+    addParamsLine("                             :+The definition of the symmetry is described at [[transform_symmetrize_v3][transform_symmetrize]]");
     addParamsLine("  [--check_mirrors]        : Check mirrors");
+    addSeeAlsoLine("angular_distance");
 }
 
 // Compute Projection Neighbourhood -----------------------------------------
