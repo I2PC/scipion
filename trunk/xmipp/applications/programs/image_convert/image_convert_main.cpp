@@ -44,7 +44,6 @@ private:
     DataType     outDataT;
     MDRow        row;
     ImageConv    convMode;
-    bool         adjust;
     CastWriteMode  castMode;
     size_t        k;
     int         writeMode;
@@ -56,17 +55,17 @@ protected:
         each_image_produces_an_output = true;
         save_metadata_stack = false;
         delete_output_stack = false;
-    	defaultComments["-i"].addComment("++ Supported read formats are:");
-    	defaultComments["-i"].addComment("++ dm3 : Digital Micrograph 3.");
-    	defaultComments["-i"].addComment("++ img : Imagic.");
-    	defaultComments["-i"].addComment("++ inf,raw : RAW file with header INF file.");
-    	defaultComments["-i"].addComment("++ mrc : CCP4.");
-    	defaultComments["-i"].addComment("++ spe : Princeton Instruments CCD camera.");
-    	defaultComments["-i"].addComment("++ spi, xmp : Spider.");
-    	defaultComments["-i"].addComment("++ tif : TIFF.");
-    	defaultComments["-i"].addComment("++ ser : tecnai imaging and analysis.");
-    	defaultComments["-i"].addComment("++ raw#xDim,yDim,[zDim],offset,datatype,[r] : RAW image file without header file.");
-    	defaultComments["-i"].addComment("++ where datatype can be: uint8,int8,uint16,int16,uint32,int32,long,float,double,cint16,cint32,cfloat,cdouble,bool");
+        defaultComments["-i"].addComment("++ Supported read formats are:");
+        defaultComments["-i"].addComment("++ dm3 : Digital Micrograph 3.");
+        defaultComments["-i"].addComment("++ img : Imagic.");
+        defaultComments["-i"].addComment("++ inf,raw : RAW file with header INF file.");
+        defaultComments["-i"].addComment("++ mrc : CCP4.");
+        defaultComments["-i"].addComment("++ spe : Princeton Instruments CCD camera.");
+        defaultComments["-i"].addComment("++ spi, xmp : Spider.");
+        defaultComments["-i"].addComment("++ tif : TIFF.");
+        defaultComments["-i"].addComment("++ ser : tecnai imaging and analysis.");
+        defaultComments["-i"].addComment("++ raw#xDim,yDim,[zDim],offset,datatype,[r] : RAW image file without header file.");
+        defaultComments["-i"].addComment("++ where datatype can be: uint8,int8,uint16,int16,uint32,int32,long,float,double,cint16,cint32,cfloat,cdouble,bool");
         XmippMetadataProgram::defineParams();
 
         addUsageLine("Convert among stacks, volumes and images, and change the file format. Conversion to a lower");
@@ -93,6 +92,7 @@ protected:
         addParamsLine("          vol : Volume");
         addParamsLine("          stk : Stack ");
         addParamsLine("  alias -t;");
+        addParamsLine("== Bit options == ");
         addParamsLine("  [--depth+ <bit_depth=default>] : Image bit depth.");
         addParamsLine("          where <bit_depth>");
         addParamsLine("                 default: Default selected value (*).");
@@ -113,6 +113,8 @@ protected:
         addParamsLine("  alias -d;");
         addParamsLine("  [--rangeAdjust] : Adjust the histogram to fill the gray level range.");
         addParamsLine("  alias -r;");
+        addParamsLine("or --dont_convert : Do not apply any conversion to gray levels when writing");
+        addParamsLine("                  : in a lower bit depth or changing the sign.");
         addParamsLine("== Stack options == ");
         addParamsLine("  [--selfile_stack]    : Create a selfile with the images of the output stack.");
         addParamsLine("  alias -s;");
@@ -141,8 +143,8 @@ protected:
         XmippMetadataProgram::readParams();
 
         fn_out = (checkParam("-o"))? getParam("-o") : "";
-        adjust = checkParam("--rangeAdjust");
-        castMode = (checkParam("--rangeAdjust"))? ADJUST: CONVERT;
+        castMode = (checkParam("--rangeAdjust"))? ADJUST: \
+                   (checkParam("--dont_convert"))? CAST: CONVERT;
 
         type = getParam("--type");
         save_metadata_stack = checkParam("--selfile_stack");
@@ -156,7 +158,7 @@ protected:
         // Check output type
         if (!checkParam("--type"))
         {
-          // if is stack
+            // if is stack
             if (fn_out.getExtension() == "stk" || oext == "stk" || oext == "mrcs")
                 type = "stk";
             // if is volume, even if not is stack and --oroot is not set
