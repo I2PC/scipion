@@ -1135,8 +1135,8 @@ void Mask::readParams(XmippProgram * program)
     y0 = program->getDoubleParam("--center",1);
     z0 = program->getDoubleParam("--center",2);
     mask_type = program->getParam("--mask");
+
     /* Circular mask ........................................................*/
-    \
     if (mask_type == "circular")
     {
         if (!(allowed_data_types & INT_MASK))
@@ -1153,7 +1153,7 @@ void Mask::readParams(XmippProgram * program)
             REPORT_ERROR(ERR_ARG_INCORRECT, "MaskProgram: circular mask with radius 0");
         type = BINARY_CIRCULAR_MASK;
     }
-    /*// Circular DWT mask ....................................................*/\
+    /*// Circular DWT mask ....................................................*/
     else if (mask_type == "DWT_circular")
     {
         if (!(allowed_data_types & INT_MASK))
@@ -1164,7 +1164,7 @@ void Mask::readParams(XmippProgram * program)
         quadrant = program->getParam("--mask","DWT_circular",3);
         type = BINARY_DWT_CIRCULAR_MASK;
     }
-    /*// Rectangular mask .....................................................*/\
+    /*// Rectangular mask .....................................................*/
     else if (mask_type == "rectangular")
     {
         if (!(allowed_data_types & INT_MASK))
@@ -1185,7 +1185,7 @@ void Mask::readParams(XmippProgram * program)
             REPORT_ERROR(ERR_ARG_INCORRECT, "MaskProgram: cannot determine mode for rectangle");
         type = BINARY_FRAME_MASK;
     }
-    /*// Cone mask ............................................................*/\
+    /*// Cone mask ............................................................*/
     else if (mask_type == "cone")
     {
         if (!(allowed_data_types & INT_MASK))
@@ -1200,291 +1200,199 @@ void Mask::readParams(XmippProgram * program)
             Mask::mode = OUTSIDE_MASK;
         type = BINARY_CONE_MASK;
     }
-    /*// Wedge mask ............................................................*/\
+    /*// Wedge mask ............................................................*/
     else if (mask_type == "wedge")
     {
-        \
         if (!(allowed_data_types & DOUBLE_MASK))
             REPORT_ERROR(ERR_ARG_INCORRECT, "MaskProgram: binary masks are not allowed");
         R1 = program->getDoubleParam("--mask","wedge",0);
         R2 = program->getDoubleParam("--mask","wedge",1);
         type = BINARY_WEDGE_MASK;
-    }\
-    /*// Crown mask ...........................................................*/\
+    }
+    /*// Crown mask ...........................................................*/
     else if (mask_type == "crown")
-        \
-    {\
-        if (!(allowed_data_types & INT_MASK))
-            \
-            REPORT_ERROR(ERR_ARG_INCORRECT, "MaskProgram: binary masks are not allowed");
-        \
-        R1 = program->getDoubleParam("--mask","crown",0);
-        \
-        R2 = program->getDoubleParam("--mask","crown",1);
-        \
-        if (R1 < 0 && R2 < 0)
-            \
-        {\
-            Mask::mode = INNER_MASK;
-            \
-            R1 = ABS(R1);
-            \
-            R2 = ABS(R2);
-            \
-        }\
-        else if (R1 > 0 && R2 > 0)
-            \
-            Mask::mode = OUTSIDE_MASK;
-        \
-        else
-            \
-            REPORT_ERROR(ERR_ARG_INCORRECT, "MaskProgram: cannot determine mode for crown");
-        \
-        type = BINARY_CROWN_MASK;
-        \
-    }\
-    /*// Cylinder mask ........................................................*/\
-    else if (mask_type == "cylinder")
-        \
-    {\
-        if (!(allowed_data_types & INT_MASK))
-            \
-            REPORT_ERROR(ERR_ARG_INCORRECT, "MaskProgram: binary masks are not allowed");
-        \
-        R1 = program->getDoubleParam("--mask","cylinder",0);
-        \
-        H = program->getDoubleParam("--mask","cylinder",1);
-        \
-        if (R1 < 0 && H < 0)
-            \
-        {\
-            Mask::mode = INNER_MASK;
-            \
-            R1 = ABS(R1);
-            \
-            H = ABS(H);
-            \
-        }\
-        else if (R1 > 0 && H > 0)
-            \
-            Mask::mode = OUTSIDE_MASK;
-        \
-        else
-            \
-            REPORT_ERROR(ERR_ARG_INCORRECT, "MaskProgram: cannot determine mode for cylinder");
-        \
-        type = BINARY_CYLINDER_MASK;
-        \
-    }\
-    /*// Gaussian mask ........................................................*/\
-    else if (mask_type == "gaussian")
-        \
-    {\
-        if (!(allowed_data_types & DOUBLE_MASK))
-            \
-            REPORT_ERROR(ERR_ARG_INCORRECT, "MaskProgram: continuous masks are not allowed");
-        \
-        sigma = program->getDoubleParam("--mask","gaussian");
-        \
-        if (sigma < 0)
-            \
-        {\
-            Mask::mode = INNER_MASK;
-            \
-            sigma = ABS(sigma);
-            \
-        }\
-        else
-            \
-            Mask::mode = OUTSIDE_MASK;
-        \
-        type = GAUSSIAN_MASK;
-        \
-    }\
-    /*// Raised cosine mask ...................................................*/\
-    else if (mask_type == "raised_cosine")
-        \
-    {\
-        if (!(allowed_data_types & INT_MASK))
-            \
-            REPORT_ERROR(ERR_ARG_INCORRECT, "MaskProgram: continuous masks are not allowed");
-        \
-        R1 = program->getDoubleParam("--mask","raised_cosine",0);
-        \
-        R2 = program->getDoubleParam("--mask","raised_cosine",1);
-        \
-        if (R1 < 0 && R2 < 0)
-            \
-        {\
-            Mask::mode = INNER_MASK;
-            \
-            R1 = ABS(R1);
-            \
-            R2 = ABS(R2);
-            \
-        }\
-        else if (R1 > 0 && R2 > 0)
-            \
-            Mask::mode = OUTSIDE_MASK;
-        \
-        else
-            \
-            REPORT_ERROR(ERR_ARG_INCORRECT, "MaskProgram: cannot determine mode for raised_cosine");
-        \
-        type = RAISED_COSINE_MASK;
-        \
-    }\
-    /*// Raised crown mask ....................................................*/\
-    else if (mask_type == "raised_crown")
-        \
-    {\
-        if (!(allowed_data_types & INT_MASK))
-            \
-            REPORT_ERROR(ERR_ARG_INCORRECT, "MaskProgram: continuous masks are not allowed");
-        \
-        R1 = program->getDoubleParam("--mask","raised_crown",0);
-        \
-        R2 = program->getDoubleParam("--mask","raised_crown",1);
-        \
-        pix_width = program->getDoubleParam("--mask","raised_crown",2);
-        \
-        if (R1 < 0 && R2 < 0)
-            \
-        {\
-            Mask::mode = INNER_MASK;
-            \
-            R1 = ABS(R1);
-            \
-            R2 = ABS(R2);
-            \
-        }\
-        else if (R1 > 0 && R2 > 0)
-            \
-            Mask::mode = OUTSIDE_MASK;
-        \
-        else
-            \
-            REPORT_ERROR(ERR_ARG_INCORRECT, "MaskProgram: cannot determine mode for raised_cosine");
-        \
-        type = RAISED_CROWN_MASK;
-        \
-    }\
-    /*// Blob circular mask ....................................................*/\
-    else if (mask_type == "blob_circular")
-        \
-    {\
-        if (!(allowed_data_types & INT_MASK))
-            \
-            REPORT_ERROR(ERR_ARG_INCORRECT, "MaskProgram: continuous masks are not allowed");
-        \
-        R1 = program->getDoubleParam("--mask","blob_circular",0);
-        \
-        double aux = program->getDoubleParam("--mask","blob_circular",1);
-        \
-        blob_radius= ABS(aux);
-        \
-        if (aux < 0)
-            \
-            Mask::mode = INNER_MASK;
-        \
-        else if (aux > 0)
-            \
-            Mask::mode = OUTSIDE_MASK;
-        \
-        else
-            \
-            REPORT_ERROR(ERR_ARG_INCORRECT, "MaskProgram: cannot determine mode for blob_circular");
-        \
-        type = BLOB_CIRCULAR_MASK;
-        \
-        blob_order= program->getDoubleParam("-m");
-        \
-        blob_alpha= program->getDoubleParam("-a");
-        \
-        /*// Raised crown mask ....................................................*/\
-    }\
-    else if (mask_type == "blob_crown")
-        \
-    {\
-        if (!(allowed_data_types & INT_MASK))
-            \
-            REPORT_ERROR(ERR_ARG_INCORRECT, "MaskProgram: continuous masks are not allowed");
-        \
-        R1 = program->getDoubleParam("--mask","blob_crown",0);
-        \
-        R2 = program->getDoubleParam("--mask","blob_crown",1);
-        \
-        double aux = program->getDoubleParam("--mask","blob_crown",2);
-        \
-        blob_radius= ABS(aux);
-        \
-        if (aux < 0)
-            \
-            Mask::mode = INNER_MASK;
-        \
-        else if (aux > 0)
-            \
-            Mask::mode = OUTSIDE_MASK;
-        \
-        else
-            \
-            REPORT_ERROR(ERR_ARG_INCORRECT, "MaskProgram: cannot determine mode for blob_crown");
-        \
-        type = BLOB_CROWN_MASK;
-        \
-        blob_order= program->getDoubleParam("-m");
-        \
-        blob_alpha= program->getDoubleParam("-a");
-        \
-    }\
-    /*// Blackman mask ........................................................*/\
-    else if (mask_type == "blackman")
-        \
-    {\
-        Mask::mode = INNER_MASK;
-        \
-        type = BLACKMAN_MASK;
-        \
-    }\
-    /*// Sinc mask ............................................................*/\
-    else if (mask_type == "sinc")
-        \
-    {\
-        if (!(allowed_data_types & INT_MASK))
-            \
-            REPORT_ERROR(ERR_ARG_INCORRECT, "MaskProgram: binary masks are not allowed");
-        \
-        omega = program->getDoubleParam("--mask","sinc");
-        \
-        if (omega < 0)
-            \
-        {\
-            Mask::mode = INNER_MASK;
-            \
-            omega = ABS(omega);
-            \
-        }\
-        else
-            \
-            Mask::mode = OUTSIDE_MASK;
-        \
-        type = SINC_MASK;
-        \
-    }\
-    else
-        \
     {
-        \
-        /*fn_mask = argv[i+1];*/\
-        type = READ_MASK;
-        \
-    }\
+        if (!(allowed_data_types & INT_MASK))
+            REPORT_ERROR(ERR_ARG_INCORRECT, "MaskProgram: binary masks are not allowed");
 
+        R1 = program->getDoubleParam("--mask","crown",0);
+        R2 = program->getDoubleParam("--mask","crown",1);
+
+        if (R1 < 0 && R2 < 0)
+        {
+            Mask::mode = INNER_MASK;
+            R1 = ABS(R1);
+            R2 = ABS(R2);
+        }
+        else if (R1 > 0 && R2 > 0)
+            Mask::mode = OUTSIDE_MASK;
+        else
+            REPORT_ERROR(ERR_ARG_INCORRECT, "MaskProgram: cannot determine mode for crown");
+
+        type = BINARY_CROWN_MASK;
+    }
+    /*// Cylinder mask ........................................................*/
+    else if (mask_type == "cylinder")
+    {
+        if (!(allowed_data_types & INT_MASK))
+            REPORT_ERROR(ERR_ARG_INCORRECT, "MaskProgram: binary masks are not allowed");
+
+        R1 = program->getDoubleParam("--mask","cylinder",0);
+        H = program->getDoubleParam("--mask","cylinder",1);
+
+        if (R1 < 0 && H < 0)
+        {
+            Mask::mode = INNER_MASK;
+            R1 = ABS(R1);
+            H = ABS(H);
+        }
+        else if (R1 > 0 && H > 0)
+            Mask::mode = OUTSIDE_MASK;
+        else
+            REPORT_ERROR(ERR_ARG_INCORRECT, "MaskProgram: cannot determine mode for cylinder");
+
+        type = BINARY_CYLINDER_MASK;
+    }
+    /*// Gaussian mask ........................................................*/
+    else if (mask_type == "gaussian")
+    {
+        if (!(allowed_data_types & DOUBLE_MASK))
+            REPORT_ERROR(ERR_ARG_INCORRECT, "MaskProgram: continuous masks are not allowed");
+
+        sigma = program->getDoubleParam("--mask","gaussian");
+
+        if (sigma < 0)
+        {
+            Mask::mode = INNER_MASK;
+            sigma = ABS(sigma);
+        }
+        else
+            Mask::mode = OUTSIDE_MASK;
+
+        type = GAUSSIAN_MASK;
+    }
+    /*// Raised cosine mask ...................................................*/
+    else if (mask_type == "raised_cosine")
+    {
+        if (!(allowed_data_types & INT_MASK))
+            REPORT_ERROR(ERR_ARG_INCORRECT, "MaskProgram: continuous masks are not allowed");
+
+        R1 = program->getDoubleParam("--mask","raised_cosine",0);
+        R2 = program->getDoubleParam("--mask","raised_cosine",1);
+
+        if (R1 < 0 && R2 < 0)
+        {
+            Mask::mode = INNER_MASK;
+            R1 = ABS(R1);
+            R2 = ABS(R2);
+        }
+        else if (R1 > 0 && R2 > 0)
+            Mask::mode = OUTSIDE_MASK;
+        else
+            REPORT_ERROR(ERR_ARG_INCORRECT, "MaskProgram: cannot determine mode for raised_cosine");
+
+        type = RAISED_COSINE_MASK;
+    }
+    /*// Raised crown mask ....................................................*/
+    else if (mask_type == "raised_crown")
+    {
+        if (!(allowed_data_types & INT_MASK))
+            REPORT_ERROR(ERR_ARG_INCORRECT, "MaskProgram: continuous masks are not allowed");
+
+        R1 = program->getDoubleParam("--mask","raised_crown",0);
+        R2 = program->getDoubleParam("--mask","raised_crown",1);
+        pix_width = program->getDoubleParam("--mask","raised_crown",2);
+
+        if (R1 < 0 && R2 < 0)
+        {
+            Mask::mode = INNER_MASK;
+            R1 = ABS(R1);
+            R2 = ABS(R2);
+        }
+        else if (R1 > 0 && R2 > 0)
+            Mask::mode = OUTSIDE_MASK;
+        else
+            REPORT_ERROR(ERR_ARG_INCORRECT, "MaskProgram: cannot determine mode for raised_cosine");
+
+        type = RAISED_CROWN_MASK;
+    }
+    /*// Blob circular mask ....................................................*/
+    else if (mask_type == "blob_circular")
+    {
+        if (!(allowed_data_types & INT_MASK))
+            REPORT_ERROR(ERR_ARG_INCORRECT, "MaskProgram: continuous masks are not allowed");
+
+        R1 = program->getDoubleParam("--mask","blob_circular",0);
+        double aux = program->getDoubleParam("--mask","blob_circular",1);
+        blob_radius= ABS(aux);
+
+        if (aux < 0)
+            Mask::mode = INNER_MASK;
+        else if (aux > 0)
+            Mask::mode = OUTSIDE_MASK;
+        else
+            REPORT_ERROR(ERR_ARG_INCORRECT, "MaskProgram: cannot determine mode for blob_circular");
+
+        type = BLOB_CIRCULAR_MASK;
+        blob_order= program->getDoubleParam("-m");
+        blob_alpha= program->getDoubleParam("-a");
+    }
+    /*// Raised crown mask ....................................................*/
+    else if (mask_type == "blob_crown")
+    {
+        if (!(allowed_data_types & INT_MASK))
+            REPORT_ERROR(ERR_ARG_INCORRECT, "MaskProgram: continuous masks are not allowed");
+
+        R1 = program->getDoubleParam("--mask","blob_crown",0);
+        R2 = program->getDoubleParam("--mask","blob_crown",1);
+        double aux = program->getDoubleParam("--mask","blob_crown",2);
+        blob_radius= ABS(aux);
+
+        if (aux < 0)
+            Mask::mode = INNER_MASK;
+        else if (aux > 0)
+            Mask::mode = OUTSIDE_MASK;
+        else
+            REPORT_ERROR(ERR_ARG_INCORRECT, "MaskProgram: cannot determine mode for blob_crown");
+
+        type = BLOB_CROWN_MASK;
+        blob_order= program->getDoubleParam("-m");
+        blob_alpha= program->getDoubleParam("-a");
+    }
+    /*// Blackman mask ........................................................*/
+    else if (mask_type == "blackman")
+    {
+        Mask::mode = INNER_MASK;
+        type = BLACKMAN_MASK;
+    }
+    /*// Sinc mask ............................................................*/
+    else if (mask_type == "sinc")
+    {
+        if (!(allowed_data_types & INT_MASK))
+            REPORT_ERROR(ERR_ARG_INCORRECT, "MaskProgram: binary masks are not allowed");
+
+        omega = program->getDoubleParam("--mask","sinc");
+
+        if (omega < 0)
+        {
+            Mask::mode = INNER_MASK;
+            omega = ABS(omega);
+        }
+        else
+            Mask::mode = OUTSIDE_MASK;
+
+        type = SINC_MASK;
+    }
+    else
+    {
+       fn_mask = program->getParam("--mask","binary_file");
+        type = READ_MASK;
+    }
 }
 // Generate mask --------------------------------------------------------
 void Mask::generate_mask(bool apply_geo)
 {
-    Image<double> img;
+    ImageGeneric img;
     Matrix2D<double> AA(4, 4);
     AA.initIdentity();
     blobtype blob;
@@ -1546,8 +1454,8 @@ void Mask::generate_mask(bool apply_geo)
         SincMask(dmask, omega, mode, x0, y0, z0);
         break;
     case READ_MASK:
-        img.read(fn_mask, DATA, -1, true);
-        typeCast(img(), imask);
+        img.readMapped(fn_mask);
+        img().getImage(imask);
         imask.setXmippOrigin();
         break;
     default:
