@@ -269,8 +269,10 @@ void ProgAngularDiscreteAssign::build_ref_candidate_list(const Image<double> &I,
         if (max_proj_change != -1)
         {
             double dummy_rot = rot[i], dummy_tilt = tilt[i], dummy_psi;
-            double ang_distance = distance_prm.check_symmetries(
-                                      I.rot(), I.tilt(), 0, dummy_rot, dummy_tilt, dummy_psi, true);
+            double ang_distance = distance_prm.SL.computeDistance(
+                                      I.rot(), I.tilt(), 0,
+                                      dummy_rot, dummy_tilt, dummy_psi,
+                                      true, false, false);
             candidate_list[i] = (ang_distance <= max_proj_change);
 #ifdef DEBUG
 
@@ -520,8 +522,9 @@ void ProgAngularDiscreteAssign::group_views(const std::vector<double> &vrot,
             for (int jp = 0; jp < groups[g].size(); jp++)
             {
                 int ip = candidate_idx[groups[g][jp]];
-                double ang_distance = distance_prm.check_symmetries(
-                                          vrot[ip], vtilt[ip], vpsi[ip], roti, tilti, psii, false);
+                double ang_distance = distance_prm.SL.computeDistance(
+                                          vrot[ip], vtilt[ip], vpsi[ip],
+                                          roti, tilti, psii, false, false, false);
 #ifdef DEBUG
 
                 std::cout << "   comparing with " << groups[g][jp] << " d="
@@ -770,9 +773,10 @@ void ProgAngularDiscreteAssign::processImage(const FileName &fnImg, const FileNa
                     predict_rot_tilt_angles(Ip, rotp, tiltp, best_ref_idx);
 
                 double aux_rot = rotp, aux_tilt = tiltp, aux_psi = psi;
-                double ang_jump = distance_prm.check_symmetries(
+                double ang_jump = distance_prm.SL.computeDistance(
                                       img.rot(), img.tilt(), img.psi(),
-                                      aux_rot, aux_tilt, aux_psi, false);
+                                      aux_rot, aux_tilt, aux_psi,
+                                      false, false, false);
 
                 vshiftX.push_back(shiftX);
                 vshiftY.push_back(shiftY);
