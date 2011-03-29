@@ -254,7 +254,7 @@ public:
       that vector and vecn is the elements. 
 
     */
-    void read_sampling_file(FileName infilename,bool read_vectors=true);
+    void read_sampling_file(const FileName &infilename,bool read_vectors=true);
 
     /** remove all those points that are further away from experimental data
         than neighborhood_radius_rad */

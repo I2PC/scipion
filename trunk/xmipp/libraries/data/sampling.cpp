@@ -1399,19 +1399,16 @@ void Sampling::create_asym_unit_file(const FileName &docfilename)
 }
 
 
-void Sampling::read_sampling_file(FileName infilename, bool read_vectors)
+void Sampling::read_sampling_file(const FileName &infilename, bool read_vectors)
 {
     FileName tmp_filename;
-    tmp_filename = infilename + "_sampling.txt";
+    tmp_filename = infilename.withoutExtension() + "_sampling.txt";
     std::ifstream infile; 
     int num_elem = 0;
     int num_elem2 = 0;
     infile.open(tmp_filename.c_str(), std::ios::binary); 
     if (infile.fail())
-       {
-       std::cerr << "Can not open file" << tmp_filename << std::endl ;
-       exit(0);
-       }
+       REPORT_ERROR(ERR_IO_NOTOPEN,tmp_filename);
     //total number of vectors
     infile >> num_elem;
     my_neighbors.resize(num_elem);
