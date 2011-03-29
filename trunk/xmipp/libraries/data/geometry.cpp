@@ -516,8 +516,41 @@ double Euler_distanceBetweenMatrices(const Matrix2D<double> &E1,
 {
     double retval=0;
     FOR_ALL_ELEMENTS_IN_MATRIX2D(E1)
-    retval+=E1(i,j)*E2(i,j);
+    retval+=MAT_ELEM(E1,i,j)*MAT_ELEM(E2,i,j);
     return retval/3.0;
+}
+
+double Euler_distanceBetweenAngleSets(double rot1, double tilt1, double psi1,
+                                      double rot2, double tilt2, double psi2,
+                                      bool only_projdir)
+{
+    Matrix2D<double> E1, E2;
+    Euler_angles2matrix(rot1, tilt1, psi1, E1, false);
+    return Euler_distanceBetweenAngleSets_fast(E1,rot2,tilt2,psi2,only_projdir,E2);
+}
+
+double Euler_distanceBetweenAngleSets_fast(const Matrix2D<double> &E1,
+        								   double rot2, double tilt2, double psi2,
+        								   bool only_projdir, Matrix2D<double> &E2)
+{
+    Euler_angles2matrix(rot2, tilt2, psi2, E2, false);
+    double aux=MAT_ELEM(E1,2,0)*MAT_ELEM(E2,2,0)+
+               MAT_ELEM(E1,2,1)*MAT_ELEM(E2,2,1)+
+               MAT_ELEM(E1,2,2)*MAT_ELEM(E2,2,2);
+    double axes_dist=acos(CLIP(aux, -1, 1));
+    if (!only_projdir)
+    {
+        for (int i = 0; i < 2; i++)
+        {
+            double aux=MAT_ELEM(E1,i,0)*MAT_ELEM(E2,i,0)+
+                       MAT_ELEM(E1,i,1)*MAT_ELEM(E2,i,1)+
+                       MAT_ELEM(E1,i,2)*MAT_ELEM(E2,i,2);
+            double dist=acos(CLIP(aux, -1, 1));
+            axes_dist += dist;
+        }
+        axes_dist /= 3.0;
+    }
+    return RAD2DEG(axes_dist);
 }
 
 /* Euler direction --------------------------------------------------------- */
@@ -873,8 +906,8 @@ void Euler_apply_transf(const Matrix2D<double> &L,
 void Euler_rotate(const MultidimArray<double> &V, double rot, double tilt, double psi,
                   MultidimArray<double> &result)
 {
-	Matrix2D<double> R;
-	Euler_angles2matrix(rot, tilt, psi, R, true);
+    Matrix2D<double> R;
+    Euler_angles2matrix(rot, tilt, psi, R, true);
     applyGeometry(1, result, V, R, IS_NOT_INV, DONT_WRAP);
 }
 

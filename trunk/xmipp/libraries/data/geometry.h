@@ -568,6 +568,21 @@ void Euler_angles2matrix(double a, double b, double g, Matrix2D< double >& A,
 double Euler_distanceBetweenMatrices(const Matrix2D<double> &E1,
                                      const Matrix2D<double> &E2);
 
+/** Average distance between two angle sets.
+ * If the only_projdir is set, then only the projection direction is considered.
+ */
+double Euler_distanceBetweenAngleSets(double rot1, double tilt1, double psi1,
+                                      double rot2, double tilt2, double psi2,
+                                      bool only_projdir);
+
+/** Average distance between two angle sets.
+ * E1 must contain the Euler matrix corresponding to set1, E2 is used as
+ * an auxiliary variable for storing the second Euler matrix.
+ */
+double Euler_distanceBetweenAngleSets_fast(const Matrix2D<double> &E1,
+        								   double rot2, double tilt2, double psi2,
+        								   bool only_projdir, Matrix2D<double> &E2);
+
 /** Angles after compresion
  *
  * Let be two volumes f and g related by g(x,y,z) = f(D(x,y,z)) (where D is a
