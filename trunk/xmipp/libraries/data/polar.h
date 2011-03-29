@@ -480,6 +480,58 @@ public:
     /** Compute sum or average of all pixels in polar rings.
      *
      */
+    void computeAverageAndStddev(double &avg, double &stddev,
+    		bool average = DONT_AVERAGE, int mode = FULL_CIRCLES) const
+    {
+        double aux, sum = 0., sum2=0.;
+        double twopi, w, N = 0;
+
+        if (mode == FULL_CIRCLES)
+            twopi = 2.*PI;
+        else if (mode == HALF_CIRCLES)
+            twopi = PI;
+        else
+            REPORT_ERROR(ERR_VALUE_INCORRECT,"Incorrect mode for computeAverageAndStddev");
+
+        int imax=rings.size();
+        for (int i = 0; i < imax; i++)
+        {
+            // take varying sampling into account
+            w = (twopi * ring_radius[i]) / (double) XSIZE(rings[i]);
+            const MultidimArray<T> &rings_i=rings[i];
+            for (int j = 0; j < XSIZE(rings_i); j++)
+            {
+                aux = DIRECT_A1D_ELEM(rings_i,j);
+                sum += w * aux;
+                sum2 += w * aux * aux;
+                N += w;
+            }
+        }
+        if (N != 0. && average)
+        {
+            sum2 = sum2 / N;
+            avg = sum / N;
+            stddev=sqrt(sum2-average*average);
+        }
+        else
+        	stddev=avg=0;
+    }
+
+    void normalize(double average, double stddev)
+    {
+    	int imax=rings.size();
+    	double istddev=1.0/stddev;
+        for (int i = 0; i < imax; i++)
+        {
+        	MultidimArray<T> &rings_i=rings[i];
+            for (int j = 0; j < XSIZE(rings_i); j++)
+            	DIRECT_A1D_ELEM(rings_i,j) = (DIRECT_A1D_ELEM(rings_i,j)-average)*istddev;
+        }
+    }
+
+    /** Compute sum or average of all pixels in polar rings.
+     *
+     */
     T computeSum(bool average = DONT_AVERAGE, int mode = FULL_CIRCLES) const
     {
         T aux, sum = 0.;
@@ -509,40 +561,6 @@ public:
             sum = sum / N;
 
         return sum;
-    }
-
-    /** Compute squared-sum or average squared-sum of all pixels in polar rings.
-     */
-    T computeSum2(bool average = DONT_AVERAGE, int mode = FULL_CIRCLES) const
-    {
-        T aux, sum2 = 0.;
-        double twopi, w, N = 0;
-
-        if (mode == FULL_CIRCLES)
-            twopi = 2.*PI;
-        else if (mode == HALF_CIRCLES)
-            twopi = PI;
-        else
-            REPORT_ERROR(ERR_VALUE_INCORRECT,"Incorrect mode for computeSum2");
-
-        int imax=rings.size();
-        for (int i = 0; i < imax; i++)
-        {
-            // take varying sampling into account
-        	const MultidimArray<T> &rings_i=rings[i];
-            w = (twopi * ring_radius[i]) / (double) XSIZE(rings_i);
-            for (int j = 0; j < XSIZE(rings_i); j++)
-            {
-            	T val=DIRECT_A1D_ELEM(rings_i,j);
-                aux = val*val;
-                sum2 += w * aux;
-                N += w;
-            }
-        }
-        if (N != 0. && average)
-            sum2 = sum2 / N;
-
-        return sum2;
     }
 
     /** Get Cartesian Coordinates of the Polar sampling

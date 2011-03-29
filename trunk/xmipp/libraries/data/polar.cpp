@@ -24,8 +24,6 @@
  ***************************************************************************/
 #include "polar.h"
 
-
-
 void fourierTransformRings(Polar<double > & in,
                            Polar<std::complex<double> > &out,
                            Polar_fftw_plans &plans,
@@ -114,11 +112,9 @@ void normalizedPolarFourierTransform(const MultidimArray<double> &in,
         produceSplineCoefficients(3, Maux, in);
         polarIn.getPolarFromCartesianBSpline(Maux,first_ring,last_ring,BsplineOrder);
     }
-    double mean = polarIn.computeSum(true);
-    double stddev = polarIn.computeSum2(true);
-    stddev = sqrt(stddev - mean * mean);
-    polarIn -= mean;
-    polarIn *= 1/stddev;
+    double mean, stddev;
+    polarIn.computeAverageAndStddev(mean,stddev,true);
+    polarIn.normalize(mean,stddev);
     if (plans==NULL)
     {
         plans=new Polar_fftw_plans();
