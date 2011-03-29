@@ -77,6 +77,9 @@ class Tester:
         self.addTest("-i input/randomAngularDistribution.sel -o %o/distribution.hist histogram")
         self.addTest("-i input/randomAngularDistribution.sel -o %o/distribution.bild chimera")
 
+        self.addProgram("xmipp_angular_neighbourhood")
+        self.addTest("-i1 input/randomAngularDistribution.sel -i2 input/aFewProjections.sel -o %o/neighborhood.sel")
+
         self.addProgram("xmipp_angular_project_library")
         self.addTest("-i input/phantomBacteriorhodopsin.vol -o %o/output_projections.stk --sym c6 --sampling_rate 5", True)
 
