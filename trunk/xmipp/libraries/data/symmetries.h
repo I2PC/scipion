@@ -183,7 +183,8 @@ public:
 
     /** Get matrices from the symmetry list.
         The number of matrices inside the list is given by SymsNo.
-        This function return the 4x4 transformation matrices associated to
+        This function return the 4x4 (homogeneous=true) or 3x3 (homogeneous=false)
+        transformation matrices associated to
         the one in the list which occupies the position 'i'. The matrix
         numbering within the list starts at 0. The output transformation
         matrices is given as a pointer to gain speed.
@@ -194,7 +195,8 @@ public:
                ...
            }
         @endcode */
-    void get_matrices(int i, Matrix2D<double> &L, Matrix2D<double> &R) const;
+    void get_matrices(int i, Matrix2D<double> &L, Matrix2D<double> &R,
+                      bool homogeneous=true) const;
 
     /** Set a couple of matrices in the symmetry list.
         The number of matrices inside the list is given by SymsNo.
@@ -287,9 +289,23 @@ public:
                                       double mag_b,
                                       double ang_a2b_deg) const;
 
-    /** Return the area of the non redundant part of the Ewald sphere
+    /** Return the area of the non redundant part of the projection sphere
     */
-    double  non_redundant_evald_sphere(int pgGroup, int pgOrder);
+    double non_redundant_projection_sphere(int pgGroup, int pgOrder);
+
+    /** Check symmetries.
+     * Given two sets of angles, modify set2 to be as close to set1 as possible
+     * considering the symmetries. Distances are measured over the sphere. If
+     * the projdir_mode is set to true, then the similarity is measured only
+     * using the projection direction. The function returns the minimum distance
+     * between the two angle sets after the symmetry is considered. If check_mirrors
+     * is set, up-down corrections are also considered. Object_rotation controls the way
+     * that symmetry is applied (LR if object_rotation=false or RL if object_rotation=true).
+     * Normally it is set to false.
+     */
+    double computeDistance(double rot1, double tilt1,
+                           double psi1, double &rot2, double &tilt2, double &psi2,
+                           bool projdir_mode, bool check_mirrors, bool object_rotation=false);
 };
 
 /** Applies to the crystal vectors de n-th symmetry  matrix, It also

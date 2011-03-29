@@ -50,19 +50,20 @@ int SymList::read_sym_file(FileName fn_sym, double accuracy)
         //check if reserved word and return group and order
         if (isSymmetryGroup(fn_sym, pgGroup, pgOrder))
         {
-	    fill_symmetry_class(fn_sym, pgGroup, pgOrder,fileContent);
+            fill_symmetry_class(fn_sym, pgGroup, pgOrder,fileContent);
         }
         else
             REPORT_ERROR(ERR_IO_NOTOPEN, (std::string)"SymList::read_sym_file:Can't open file: "
-                     + " or do not recognize symmetry group" + fn_sym);
+                         + " or do not recognize symmetry group" + fn_sym);
     }
     else
     {
         while (fgets(line, 79, fpoii) != NULL)
         {
-            if (line[0] == ';' || line[0] == '#' || line[0] == '\0') continue;
-	    fileContent.push_back(line);
-	}
+            if (line[0] == ';' || line[0] == '#' || line[0] == '\0')
+                continue;
+            fileContent.push_back(line);
+        }
         fclose(fpoii);
     }
 
@@ -103,9 +104,12 @@ int SymList::read_sym_file(FileName fn_sym, double accuracy)
             true_symNo += 1;
             no_inversion_points = 1;
         }
-        else if (strcmp(auxstr, "P4212") == 0) true_symNo += 7;
-        else if (strcmp(auxstr, "P2_122") == 0) true_symNo += 3;
-        else if (strcmp(auxstr, "P22_12") == 0) true_symNo += 3;
+        else if (strcmp(auxstr, "P4212") == 0)
+            true_symNo += 7;
+        else if (strcmp(auxstr, "P2_122") == 0)
+            true_symNo += 3;
+        else if (strcmp(auxstr, "P22_12") == 0)
+            true_symNo += 3;
     }
     // Ask for memory
     __L.resize(4*true_symNo, 4);
@@ -299,7 +303,8 @@ int SymList::read_sym_file(FileName fn_sym, double accuracy)
         }
     }
 
-    if (accuracy > 0) compute_subgroup(accuracy);
+    if (accuracy > 0)
+        compute_subgroup(accuracy);
 
     //possible crystallographic symmetry
     if (no_axis == 0 && no_mirror_planes == 0 && no_inversion_points == 0 &&
@@ -338,20 +343,33 @@ int SymList::read_sym_file(FileName fn_sym, double accuracy)
 }
 
 // Get matrix ==============================================================
-void SymList::get_matrices(int i, Matrix2D<double> &L, Matrix2D<double> &R)
+void SymList::get_matrices(int i, Matrix2D<double> &L, Matrix2D<double> &R,
+                           bool homogeneous)
 const
 {
-    int k, l;
-    L.initZeros(4, 4);
-    R.initZeros(4, 4);
-    for (k = 4 * i; k < 4*i + 4; k++)
-        for (l = 0; l < 4; l++)
-        {
-            //L(k - 4*i, l) = __L(k, l);
-            //R(k - 4*i, l) = __R(k, l);
-        	dMij(L,k - 4*i, l) = dMij(__L,k, l);
-        	dMij(R,k - 4*i, l) = dMij(__R,k, l);
-        }
+    int k, kp, l;
+    if (homogeneous)
+    {
+        L.initZeros(4, 4);
+        R.initZeros(4, 4);
+        for (k = 4 * i, kp=0; k < 4*i + 4; k++, kp++)
+            for (l = 0; l < 4; l++)
+            {
+                dMij(L,kp, l) = dMij(__L,k, l);
+                dMij(R,kp, l) = dMij(__R,k, l);
+            }
+    }
+    else
+    {
+        L.initZeros(3, 3);
+        R.initZeros(3, 3);
+        for (k = 4 * i, kp=0; k < 4*i + 3; k++, kp++)
+            for (l = 0; l < 3; l++)
+            {
+                dMij(L,kp, l) = dMij(__L,k, l);
+                dMij(R,kp, l) = dMij(__R,k, l);
+            }
+    }
 }
 
 // Set matrix ==============================================================
@@ -420,8 +438,8 @@ bool found_not_tried(const Matrix2D<int> &tried, int &i, int &j,
     int n = 0;
     while (n != MAT_YSIZE(tried))
     {
- //       if (tried(i, j) == 0 && !(i >= true_symNo && j >= true_symNo))
-            if (dMij(tried,i, j) == 0 && !(i >= true_symNo && j >= true_symNo))
+        //       if (tried(i, j) == 0 && !(i >= true_symNo && j >= true_symNo))
+        if (dMij(tried,i, j) == 0 && !(i >= true_symNo && j >= true_symNo))
             return true;
         if (i != n)
         {
@@ -471,7 +489,8 @@ void SymList::compute_subgroup(double accuracy)
         //if (newL.isIdentity() && newR.isIdentity()) continue;
         //rounding error make newR different from identity
         if (newL.equal(identity, accuracy) &&
-        	newR.equal(identity, accuracy)) continue;
+            newR.equal(identity, accuracy))
+            continue;
 
         // Try to find it in current ones
         bool found;
@@ -488,17 +507,18 @@ void SymList::compute_subgroup(double accuracy)
 
         if (!found)
         {
-//#define DEBUG
+            //#define DEBUG
 #ifdef DEBUG
-        	static int kjhg=0;
-           /* std::cout << "Matrix size " << tried.Xdim() << " "
-            << "trying " << i << " " << j << " "
-            << "chain length=" << new_chain_length << std::endl;
-            std::cout << "Result R Sh\n" << newR << shift;
-            */
-        	//std::cerr << "shift" << __shift <<std::endl;
+            static int kjhg=0;
+            /* std::cout << "Matrix size " << tried.Xdim() << " "
+             << "trying " << i << " " << j << " "
+             << "chain length=" << new_chain_length << std::endl;
+             std::cout << "Result R Sh\n" << newR << shift;
+             */
+            //std::cerr << "shift" << __shift <<std::endl;
             std::cerr << "newR "  << kjhg++ << "\n" << newR <<std::endl;
 #endif
+
             add_matrices(newL, newR, new_chain_length);
             add_shift(shift);
             tried.resize(MAT_YSIZE(tried) + 1, MAT_XSIZE(tried) + 1);
@@ -562,7 +582,8 @@ int  SymList::crystallographic_space_group(double mag_a, double mag_b,
             std::cerr << "\nWARNING: P1 is assumed\n";
             return(sym_P1);
         }
-        else  return(space_group);
+        else
+            return(space_group);
         break;
     default:
         std::cerr << "\n Congratulations: you have found a bug in the\n"
@@ -595,7 +616,7 @@ void symmetrize_crystal_vectors(Matrix1D<double> &aint,
                                 const Matrix1D<double> &eprm_aint,
                                 const Matrix1D<double> &eprm_bint)
 {
-//Notice that we should use R.inv and not R to relate eprm.aint and aint
+    //Notice that we should use R.inv and not R to relate eprm.aint and aint
     shift.initZeros();//I think this init is OK even the vector dim=0
     switch (space_group)
     {
@@ -823,8 +844,8 @@ void symmetrize_crystal_volume(GridVolume &vol_in,
                                int eprm_space_group,
                                const MultidimArray<int> &mask, int grid_type)
 {
-//SO FAR ONLY THE GRID CENTERED IN 0,0,0 IS SYMMETRIZED, THE OTHER
-//ONE SINCE REQUIRE INTERPOLATION IS IGNORED
+    //SO FAR ONLY THE GRID CENTERED IN 0,0,0 IS SYMMETRIZED, THE OTHER
+    //ONE SINCE REQUIRE INTERPOLATION IS IGNORED
     switch (eprm_space_group)
     {
     case(sym_undefined):
@@ -898,12 +919,15 @@ void symmetry_P2_122(Image<double> &vol, const SimpleGrid &grid,
 
     //if there is an extra slice in the z direction there is no way
     //to calculate the -z slice
-    if (ABS(ZZ_lowest) > ABS(ZZ_highest)) ZZ_lowest = -(ZZ_highest);
-    else ZZ_highest = ABS(ZZ_lowest);
+    if (ABS(ZZ_lowest) > ABS(ZZ_highest))
+        ZZ_lowest = -(ZZ_highest);
+    else
+        ZZ_highest = ABS(ZZ_lowest);
 
     while (1)
     {
-        if (mask(0, XX_lowest) == 0) XX_lowest++;
+        if (mask(0, XX_lowest) == 0)
+            XX_lowest++;
         else
             break;
         if (XX_lowest == XX_highest)
@@ -914,7 +938,8 @@ void symmetry_P2_122(Image<double> &vol, const SimpleGrid &grid,
     }
     while (1)
     {
-        if (mask(0, XX_highest) == 0) XX_highest--;
+        if (mask(0, XX_highest) == 0)
+            XX_highest--;
         else
             break;
         if (XX_lowest == XX_highest)
@@ -925,7 +950,8 @@ void symmetry_P2_122(Image<double> &vol, const SimpleGrid &grid,
     }
     while (1)
     {
-        if (mask(YY_lowest, 0) == 0) YY_lowest++;
+        if (mask(YY_lowest, 0) == 0)
+            YY_lowest++;
         else
             break;
         if (YY_lowest == YY_highest)
@@ -936,7 +962,8 @@ void symmetry_P2_122(Image<double> &vol, const SimpleGrid &grid,
     }
     while (1)
     {
-        if (mask(YY_highest, 0) == 0) YY_highest--;
+        if (mask(YY_highest, 0) == 0)
+            YY_highest--;
         else
             break;
         if (YY_lowest == YY_highest)
@@ -1014,7 +1041,7 @@ void symmetry_P2_122(Image<double> &vol, const SimpleGrid &grid,
                 xx = -x;
                 yy = -y;
                 zz = z;
-//    xx = x; yy=-y; zz=-z;
+                //    xx = x; yy=-y; zz=-z;
                 if (volume_no == 1)
                 {
                     xx--;
@@ -1037,7 +1064,7 @@ void symmetry_P2_122(Image<double> &vol, const SimpleGrid &grid,
                 xx = XXaint_2 - x;
                 yy = y;
                 zz = -z;
-//    xx = -x; yy= -y+YYbint_2; zz= -z;
+                //    xx = -x; yy= -y+YYbint_2; zz= -z;
                 if (volume_no == 1)
                 {
                     xx--;
@@ -1060,7 +1087,7 @@ void symmetry_P2_122(Image<double> &vol, const SimpleGrid &grid,
                 xx = XXaint_2 + x;
                 yy = -y;
                 zz = -z;
-//    xx = -x; yy= y+YYbint_2; zz= -z;
+                //    xx = -x; yy= y+YYbint_2; zz= -z;
                 if (volume_no == 1)
                 {
                     yy--;
@@ -1081,18 +1108,18 @@ void symmetry_P2_122(Image<double> &vol, const SimpleGrid &grid,
 
                 //only the first simple grid center and the origen is the same
                 //point.
-//    if(volume_no==1)
-//    {
-//      switch (grid_type) {
-//  case FCC: std::cerr<< "\nSimetries using FCC not implemented\n";break;
-//  case BCC: x0--;y0--;               z1--;
-//            x2--;y2--;z2--;     y3--;
-//     x4--;          x5--;     z5--;
-//          y6--;z6--;
-//            break;
-//  case CC:  break;
-//      }
-//    }
+                //    if(volume_no==1)
+                //    {
+                //      switch (grid_type) {
+                //  case FCC: std::cerr<< "\nSimetries using FCC not implemented\n";break;
+                //  case BCC: x0--;y0--;               z1--;
+                //            x2--;y2--;z2--;     y3--;
+                //     x4--;          x5--;     z5--;
+                //          y6--;z6--;
+                //            break;
+                //  case CC:  break;
+                //      }
+                //    }
 
                 VOLVOXEL(vol, z , y , x) = VOLVOXEL(vol, z0, y0, x0) =
                                                VOLVOXEL(vol, z1, y1, x1) = VOLVOXEL(vol, z2, y2, x2) =
@@ -1118,12 +1145,15 @@ void symmetry_P22_12(Image<double> &vol, const SimpleGrid &grid,
 
     //if there is an extra slice in the z direction there is no way
     //to calculate the -z slice
-    if (ABS(ZZ_lowest) > ABS(ZZ_highest)) ZZ_lowest = -(ZZ_highest);
-    else ZZ_highest = ABS(ZZ_lowest);
+    if (ABS(ZZ_lowest) > ABS(ZZ_highest))
+        ZZ_lowest = -(ZZ_highest);
+    else
+        ZZ_highest = ABS(ZZ_lowest);
 
     while (1)
     {
-        if (mask(0, XX_lowest) == 0) XX_lowest++;
+        if (mask(0, XX_lowest) == 0)
+            XX_lowest++;
         else
             break;
         if (XX_lowest == XX_highest)
@@ -1134,7 +1164,8 @@ void symmetry_P22_12(Image<double> &vol, const SimpleGrid &grid,
     }
     while (1)
     {
-        if (mask(0, XX_highest) == 0) XX_highest--;
+        if (mask(0, XX_highest) == 0)
+            XX_highest--;
         else
             break;
         if (XX_lowest == XX_highest)
@@ -1145,7 +1176,8 @@ void symmetry_P22_12(Image<double> &vol, const SimpleGrid &grid,
     }
     while (1)
     {
-        if (mask(YY_lowest, 0) == 0) YY_lowest++;
+        if (mask(YY_lowest, 0) == 0)
+            YY_lowest++;
         else
             break;
         if (YY_lowest == YY_highest)
@@ -1156,7 +1188,8 @@ void symmetry_P22_12(Image<double> &vol, const SimpleGrid &grid,
     }
     while (1)
     {
-        if (mask(YY_highest, 0) == 0) YY_highest--;
+        if (mask(YY_highest, 0) == 0)
+            YY_highest--;
         else
             break;
         if (YY_lowest == YY_highest)
@@ -1234,7 +1267,7 @@ void symmetry_P22_12(Image<double> &vol, const SimpleGrid &grid,
                 xx = -x;
                 yy = -y;
                 zz = z;
-//    xx = x; yy=-y; zz=-z;
+                //    xx = x; yy=-y; zz=-z;
                 if (volume_no == 1)
                 {
                     xx--;
@@ -1254,7 +1287,7 @@ void symmetry_P22_12(Image<double> &vol, const SimpleGrid &grid,
                 z0 = zz;
 
                 //sym=1----------------------------------------------------------
-//    xx = XXaint_2-x; yy= y; zz= -z;
+                //    xx = XXaint_2-x; yy= y; zz= -z;
                 xx = x;
                 yy = -y + YYbint_2;
                 zz = -z;
@@ -1277,7 +1310,7 @@ void symmetry_P22_12(Image<double> &vol, const SimpleGrid &grid,
                 z1 = zz;
 
                 //sym=2----------------------------------------------------------
-//    xx = XXaint_2+x; yy= -y; zz= -z;
+                //    xx = XXaint_2+x; yy= -y; zz= -z;
                 xx = -x;
                 yy = y + YYbint_2;
                 zz = -z;
@@ -1301,18 +1334,18 @@ void symmetry_P22_12(Image<double> &vol, const SimpleGrid &grid,
 
                 //only the first simple grid center and the origen is the same
                 //point.
-//    if(volume_no==1)
-//    {
-//      switch (grid_type) {
-//  case FCC: std::cerr<< "\nSimetries using FCC not implemented\n";break;
-//  case BCC: x0--;y0--;               z1--;
-//            x2--;y2--;z2--;     y3--;
-//     x4--;          x5--;     z5--;
-//          y6--;z6--;
-//            break;
-//  case CC:  break;
-//      }
-//    }
+                //    if(volume_no==1)
+                //    {
+                //      switch (grid_type) {
+                //  case FCC: std::cerr<< "\nSimetries using FCC not implemented\n";break;
+                //  case BCC: x0--;y0--;               z1--;
+                //            x2--;y2--;z2--;     y3--;
+                //     x4--;          x5--;     z5--;
+                //          y6--;z6--;
+                //            break;
+                //  case CC:  break;
+                //      }
+                //    }
 
                 VOLVOXEL(vol, z , y , x) = VOLVOXEL(vol, z0, y0, x0) =
                                                VOLVOXEL(vol, z1, y1, x1) = VOLVOXEL(vol, z2, y2, x2) =
@@ -1335,7 +1368,8 @@ void symmetry_P4(Image<double> &vol, const SimpleGrid &grid,
 
     while (1)
     {
-        if (mask(0, XX_lowest) == 0) XX_lowest++;
+        if (mask(0, XX_lowest) == 0)
+            XX_lowest++;
         else
             break;
         if (XX_lowest == XX_highest)
@@ -1346,7 +1380,8 @@ void symmetry_P4(Image<double> &vol, const SimpleGrid &grid,
     }
     while (1)
     {
-        if (mask(0, XX_highest) == 0) XX_highest--;
+        if (mask(0, XX_highest) == 0)
+            XX_highest--;
         else
             break;
         if (XX_lowest == XX_highest)
@@ -1357,7 +1392,8 @@ void symmetry_P4(Image<double> &vol, const SimpleGrid &grid,
     }
     while (1)
     {
-        if (mask(YY_lowest, 0) == 0) YY_lowest++;
+        if (mask(YY_lowest, 0) == 0)
+            YY_lowest++;
         else
             break;
         if (YY_lowest == YY_highest)
@@ -1368,7 +1404,8 @@ void symmetry_P4(Image<double> &vol, const SimpleGrid &grid,
     }
     while (1)
     {
-        if (mask(YY_highest, 0) == 0) YY_highest--;
+        if (mask(YY_highest, 0) == 0)
+            YY_highest--;
         else
             break;
         if (YY_lowest == YY_highest)
@@ -1379,12 +1416,12 @@ void symmetry_P4(Image<double> &vol, const SimpleGrid &grid,
 
     }
 
-//   int ZZ_lowest =(int) ZZ(grid.lowest);
-//   int YY_lowest =MAX((int) YY(grid.lowest),STARTINGY(mask));
-//   int XX_lowest =MAX((int) XX(grid.lowest),STARTINGX(mask));
-//   int ZZ_highest=(int) ZZ(grid.highest);
-//   int YY_highest=MIN((int) YY(grid.highest),FINISHINGY(mask));
-//   int XX_highest=MIN((int) XX(grid.highest),FINISHINGX(mask));
+    //   int ZZ_lowest =(int) ZZ(grid.lowest);
+    //   int YY_lowest =MAX((int) YY(grid.lowest),STARTINGY(mask));
+    //   int XX_lowest =MAX((int) XX(grid.lowest),STARTINGX(mask));
+    //   int ZZ_highest=(int) ZZ(grid.highest);
+    //   int YY_highest=MIN((int) YY(grid.highest),FINISHINGY(mask));
+    //   int XX_highest=MIN((int) XX(grid.highest),FINISHINGX(mask));
 
     int maxZ, maxY, maxX, minZ, minY, minX;
     int x, y, z;
@@ -1530,12 +1567,15 @@ void symmetry_P42_12(Image<double> &vol, const SimpleGrid &grid,
 
     //if there is an extra slice in the z direction there is no way
     //to calculate the -z slice
-    if (ABS(ZZ_lowest) > ABS(ZZ_highest)) ZZ_lowest = -(ZZ_highest);
-    else ZZ_highest = ABS(ZZ_lowest);
+    if (ABS(ZZ_lowest) > ABS(ZZ_highest))
+        ZZ_lowest = -(ZZ_highest);
+    else
+        ZZ_highest = ABS(ZZ_lowest);
 
     while (1)
     {
-        if (mask(0, XX_lowest) == 0) XX_lowest++;
+        if (mask(0, XX_lowest) == 0)
+            XX_lowest++;
         else
             break;
         if (XX_lowest == XX_highest)
@@ -1546,7 +1586,8 @@ void symmetry_P42_12(Image<double> &vol, const SimpleGrid &grid,
     }
     while (1)
     {
-        if (mask(0, XX_highest) == 0) XX_highest--;
+        if (mask(0, XX_highest) == 0)
+            XX_highest--;
         else
             break;
         if (XX_lowest == XX_highest)
@@ -1557,7 +1598,8 @@ void symmetry_P42_12(Image<double> &vol, const SimpleGrid &grid,
     }
     while (1)
     {
-        if (mask(YY_lowest, 0) == 0) YY_lowest++;
+        if (mask(YY_lowest, 0) == 0)
+            YY_lowest++;
         else
             break;
         if (YY_lowest == YY_highest)
@@ -1568,7 +1610,8 @@ void symmetry_P42_12(Image<double> &vol, const SimpleGrid &grid,
     }
     while (1)
     {
-        if (mask(YY_highest, 0) == 0) YY_highest--;
+        if (mask(YY_highest, 0) == 0)
+            YY_highest--;
         else
             break;
         if (YY_lowest == YY_highest)
@@ -1579,12 +1622,12 @@ void symmetry_P42_12(Image<double> &vol, const SimpleGrid &grid,
 
     }
 
-//   int ZZ_lowest =(int) ZZ(grid.lowest);
-//   int YY_lowest =MAX((int) YY(grid.lowest),STARTINGY(mask));
-//   int XX_lowest =MAX((int) XX(grid.lowest),STARTINGX(mask));
-//   int ZZ_highest=(int) ZZ(grid.highest);
-//   int YY_highest=MIN((int) YY(grid.highest),FINISHINGY(mask));
-//   int XX_highest=MIN((int) XX(grid.highest),FINISHINGX(mask));
+    //   int ZZ_lowest =(int) ZZ(grid.lowest);
+    //   int YY_lowest =MAX((int) YY(grid.lowest),STARTINGY(mask));
+    //   int XX_lowest =MAX((int) XX(grid.lowest),STARTINGX(mask));
+    //   int ZZ_highest=(int) ZZ(grid.highest);
+    //   int YY_highest=MIN((int) YY(grid.highest),FINISHINGY(mask));
+    //   int XX_highest=MIN((int) XX(grid.highest),FINISHINGX(mask));
 
     int maxZ, maxY, maxX, minZ, minY, minX;
     int x, y, z;
@@ -1806,18 +1849,18 @@ void symmetry_P42_12(Image<double> &vol, const SimpleGrid &grid,
 
                 //only the first simple grid center and the origen is the same
                 //point.
-//    if(volume_no==1)
-//    {
-//      switch (grid_type) {
-//  case FCC: std::cerr<< "\nSimetries using FCC not implemented\n";break;
-//  case BCC: x0--;y0--;               z1--;
-//            x2--;y2--;z2--;     y3--;
-//     x4--;          x5--;     z5--;
-//          y6--;z6--;
-//            break;
-//  case CC:  break;
-//      }
-//    }
+                //    if(volume_no==1)
+                //    {
+                //      switch (grid_type) {
+                //  case FCC: std::cerr<< "\nSimetries using FCC not implemented\n";break;
+                //  case BCC: x0--;y0--;               z1--;
+                //            x2--;y2--;z2--;     y3--;
+                //     x4--;          x5--;     z5--;
+                //          y6--;z6--;
+                //            break;
+                //  case CC:  break;
+                //      }
+                //    }
 
                 VOLVOXEL(vol, z , y , x) = VOLVOXEL(vol, z0, y0, x0) =
                                                VOLVOXEL(vol, z1, y1, x1) = VOLVOXEL(vol, z2, y2, x2) =
@@ -1847,7 +1890,8 @@ void symmetry_P6(Image<double> &vol, const SimpleGrid &grid,
 
     while (1)
     {
-        if (mask(0, XX_lowest) == 0) XX_lowest++;
+        if (mask(0, XX_lowest) == 0)
+            XX_lowest++;
         else
             break;
         if (XX_lowest == XX_highest)
@@ -1858,7 +1902,8 @@ void symmetry_P6(Image<double> &vol, const SimpleGrid &grid,
     }
     while (1)
     {
-        if (mask(0, XX_highest) == 0) XX_highest--;
+        if (mask(0, XX_highest) == 0)
+            XX_highest--;
         else
             break;
         if (XX_lowest == XX_highest)
@@ -1869,7 +1914,8 @@ void symmetry_P6(Image<double> &vol, const SimpleGrid &grid,
     }
     while (1)
     {
-        if (mask(YY_lowest, 0) == 0) YY_lowest++;
+        if (mask(YY_lowest, 0) == 0)
+            YY_lowest++;
         else
             break;
         if (YY_lowest == YY_highest)
@@ -1880,7 +1926,8 @@ void symmetry_P6(Image<double> &vol, const SimpleGrid &grid,
     }
     while (1)
     {
-        if (mask(YY_highest, 0) == 0) YY_highest--;
+        if (mask(YY_highest, 0) == 0)
+            YY_highest--;
         else
             break;
         if (YY_lowest == YY_highest)
@@ -1891,12 +1938,12 @@ void symmetry_P6(Image<double> &vol, const SimpleGrid &grid,
 
     }
 
-//   int ZZ_lowest =(int) ZZ(grid.lowest);
-//   int YY_lowest =MAX((int) YY(grid.lowest),STARTINGY(mask));
-//   int XX_lowest =MAX((int) XX(grid.lowest),STARTINGX(mask));
-//   int ZZ_highest=(int) ZZ(grid.highest);
-//   int YY_highest=MIN((int) YY(grid.highest),FINISHINGY(mask));
-//   int XX_highest=MIN((int) XX(grid.highest),FINISHINGX(mask));
+    //   int ZZ_lowest =(int) ZZ(grid.lowest);
+    //   int YY_lowest =MAX((int) YY(grid.lowest),STARTINGY(mask));
+    //   int XX_lowest =MAX((int) XX(grid.lowest),STARTINGX(mask));
+    //   int ZZ_highest=(int) ZZ(grid.highest);
+    //   int YY_highest=MIN((int) YY(grid.highest),FINISHINGY(mask));
+    //   int XX_highest=MIN((int) XX(grid.highest),FINISHINGX(mask));
 
     int maxZ, maxY, maxX, minZ, minY, minX;
     int x, y, z;
@@ -2069,290 +2116,291 @@ void symmetry_P6(Image<double> &vol, const SimpleGrid &grid,
 }
 #undef wrap_as_Crystal
 #undef DEBUG
-    /** translate string fn_sym to symmetry group, return false
-        is translation is not possible. See URL
-        http://xmipp.cnb.uam.es/twiki/bin/view/Xmipp/Symmetry
-         for details  */
+/** translate string fn_sym to symmetry group, return false
+    is translation is not possible. See URL
+    http://xmipp.cnb.uam.es/twiki/bin/view/Xmipp/Symmetry
+     for details  */
 
 bool SymList::isSymmetryGroup(FileName fn_sym, int &pgGroup, int &pgOrder)
 {
-   char G1,G2,G3,G4;
-   char auxChar[3];
-   //each case check lenght, check first letter, second, is number
-   //Non a point group
+    char G1,G2,G3,G4;
+    char auxChar[3];
+    //each case check lenght, check first letter, second, is number
+    //Non a point group
 
-   //remove path
-   FileName fn_sym_tmp;
-   fn_sym_tmp=fn_sym.removeDirectories();
-   int mySize=fn_sym_tmp.size();
-   bool return_true;
-   return_true=false;
-   auxChar[2]='\0';
-   //size maybe 4 because n maybe a 2 digit number
-   if(mySize>4 || mySize<1)
-   {
-      pgGroup=-1;
-      pgOrder=-1;
-      return false;
-   }
-   //get the group character by character
-   G1=toupper((fn_sym_tmp.c_str())[0]);
-   G2=toupper((fn_sym_tmp.c_str())[1]);
-   if (mySize > 2)
-   {   G3=toupper((fn_sym_tmp.c_str())[2]);
-       if(mySize > 3)
-           G4=toupper((fn_sym.c_str())[3]);
-   }
-   else
-       G4='\0';
-   //CN
-   if (mySize==2 && G1=='C' && isdigit(G2))
-   {
-       pgGroup=pg_CN;
-       pgOrder=int(G2)-48;
-       return_true=true;
-   }
-   if (mySize==3 && G1=='C' && isdigit(G2) && isdigit(G3))
-   {
-       pgGroup=pg_CN;
-       auxChar[0]=G2;
-       auxChar[1]=G3;
-       pgOrder=atoi(auxChar);
-       return_true=true;
-   }
-   //CI
-   else if (mySize==2 && G1=='C' && G2=='I')
-   {
-       pgGroup=pg_CI;
-       pgOrder=-1;
-       return_true=true;
-   }
-   //CS
-   else if (mySize==2 && G1=='C' && G2=='S')
-   {
-       pgGroup=pg_CS;
-       pgOrder=-1;
-       return_true=true;
-   }
-   //CNH
-   else if (mySize==3 && G1=='C' && isdigit(G2) && G3=='H')
-   {
-       pgGroup=pg_CNH;
-       pgOrder=int(G2)-48;
-       return_true=true;
-   }
-   else if (mySize==4 && G1=='C' && isdigit(G2) && isdigit(G3) && G4=='H')
-   {
-       pgGroup=pg_CNH;
-       auxChar[0]=G2;
-       auxChar[1]=G3;
-       pgOrder=atoi(auxChar);
-       return_true=true;
-   }
-   //CNV
-   else if (mySize==3 && G1=='C' && isdigit(G2) && G3=='V')
-   {
-       pgGroup=pg_CNV;
-       pgOrder=int(G2)-48;
-       return_true=true;
-   }
-   else if (mySize==4 && G1=='C' && isdigit(G2) && isdigit(G3) && G4=='V')
-   {
-       pgGroup=pg_CNV;
-       auxChar[0]=G2;
-       auxChar[1]=G3;
-       pgOrder=atoi(auxChar);
-       return_true=true;
-   }
-   //SN
-   else if (mySize==2 && G1=='S' && isdigit(G2) )
-   {
-       pgGroup=pg_SN;
-       pgOrder=int(G2)-48;
-       return_true=true;
-   }
-   else if (mySize==3 && G1=='S' && isdigit(G2) && isdigit(G3) )
-   {
-       pgGroup=pg_SN;
-       auxChar[0]=G2;
-       auxChar[1]=G3;
-       pgOrder=atoi(auxChar);
-       return_true=true;
-   }
-   //DN
-   else if (mySize==2 && G1=='D' && isdigit(G2) )
-   {
-       pgGroup=pg_DN;
-       pgOrder=int(G2)-48;
-       return_true=true;
-   }
-   if (mySize==3 && G1=='D' && isdigit(G2) && isdigit(G3))
-   {
-       pgGroup=pg_DN;
-       auxChar[0]=G2;
-       auxChar[1]=G3;
-       pgOrder=atoi(auxChar);
-       return_true=true;
-   }
-   //DNV
-   else if (mySize==3 && G1=='D' && isdigit(G2) && G3=='V')
-   {
-       pgGroup=pg_DNV;
-       pgOrder=int(G2)-48;
-       return_true=true;
-   }
-   else if (mySize==4 && G1=='D' && isdigit(G2) && isdigit(G3) && G4=='V')
-   {
-       pgGroup=pg_DNV;
-       auxChar[0]=G2;
-       auxChar[1]=G3;
-       pgOrder=atoi(auxChar);
-       return_true=true;
-   }
-   //DNH
-   else if (mySize==3 && G1=='D' && isdigit(G2) && G3=='H')
-   {
-       pgGroup=pg_DNH;
-       pgOrder=int(G2)-48;
-       return_true=true;
-   }
-   else if (mySize==4 && G1=='D' && isdigit(G2) && isdigit(G3) && G4=='H')
-   {
-       pgGroup=pg_DNH;
-       auxChar[0]=G2;
-       auxChar[1]=G3;
-       pgOrder=atoi(auxChar);
-       return_true=true;
-   }
-   //T
-   else if (mySize==1 && G1=='T')
-   {
-       pgGroup=pg_T;
-       pgOrder=-1;
-       return_true=true;
-   }
-   //TD
-   else if (mySize==2 && G1=='T' && G2=='D')
-   {
-       pgGroup=pg_TD;
-       pgOrder=-1;
-       return_true=true;
-   }
-   //TH
-   else if (mySize==2 && G1=='T' && G2=='H')
-   {
-       pgGroup=pg_TH;
-       pgOrder=-1;
-       return_true=true;
-   }
-   //O
-   else if (mySize==1 && G1=='O')
-   {
-       pgGroup=pg_O;
-       pgOrder=-1;
-       return_true=true;
-   }
-   //OH
-   else if (mySize==2 && G1=='O'&& G2=='H')
-   {
-       pgGroup=pg_OH;
-       pgOrder=-1;
-       return_true=true;
-   }
-   //I
-   else if (mySize==1 && G1=='I')
-   {
-       pgGroup=pg_I;
-       pgOrder=-1;
-       return_true=true;
-   }
-   //I1
-   else if (mySize==2 && G1=='I'&& G2=='1')
-   {
-       pgGroup=pg_I1;
-       pgOrder=-1;
-       return_true=true;
-   }
-   //I2
-   else if (mySize==2 && G1=='I'&& G2=='2')
-   {
-       pgGroup=pg_I2;
-       pgOrder=-1;
-       return_true=true;
-   }
-   //I3
-   else if (mySize==2 && G1=='I'&& G2=='3')
-   {
-       pgGroup=pg_I3;
-       pgOrder=-1;
-       return_true=true;
-   }
-   //I4
-   else if (mySize==2 && G1=='I'&& G2=='4')
-   {
-       pgGroup=pg_I4;
-       pgOrder=-1;
-       return_true=true;
-   }
-   //I5
-   else if (mySize==2 && G1=='I'&& G2=='5')
-   {
-       pgGroup=pg_I5;
-       pgOrder=-1;
-       return_true=true;
-   }
-   //IH
-   else if (mySize==2 && G1=='I'&& G2=='H')
-   {
-       pgGroup=pg_IH;
-       pgOrder=-1;
-       return_true=true;
-   }
-   //I1H
-   else if (mySize==3 && G1=='I'&& G2=='1'&& G3=='H')
-   {
-       pgGroup=pg_I1H;
-       pgOrder=-1;
-       return_true=true;
-   }
-   //I2H
-   else if (mySize==3 && G1=='I'&& G2=='2'&& G3=='H')
-   {
-       pgGroup=pg_I2H;
-       pgOrder=-1;
-       return_true=true;
-   }
-   //I3H
-   else if (mySize==3 && G1=='I'&& G2=='3'&& G3=='H')
-   {
-       pgGroup=pg_I3H;
-       pgOrder=-1;
-       return_true=true;
-   }
-   //I4H
-   else if (mySize==3 && G1=='I'&& G2=='4'&& G3=='H')
-   {
-       pgGroup=pg_I4H;
-       pgOrder=-1;
-       return_true=true;
-   }
-   //I5H
-   else if (mySize==3 && G1=='I'&& G2=='5'&& G3=='H')
-   {
-       pgGroup=pg_I5H;
-       pgOrder=-1;
-       return_true=true;
-   }
-//#define DEBUG7
+    //remove path
+    FileName fn_sym_tmp;
+    fn_sym_tmp=fn_sym.removeDirectories();
+    int mySize=fn_sym_tmp.size();
+    bool return_true;
+    return_true=false;
+    auxChar[2]='\0';
+    //size maybe 4 because n maybe a 2 digit number
+    if(mySize>4 || mySize<1)
+    {
+        pgGroup=-1;
+        pgOrder=-1;
+        return false;
+    }
+    //get the group character by character
+    G1=toupper((fn_sym_tmp.c_str())[0]);
+    G2=toupper((fn_sym_tmp.c_str())[1]);
+    if (mySize > 2)
+    {
+        G3=toupper((fn_sym_tmp.c_str())[2]);
+        if(mySize > 3)
+            G4=toupper((fn_sym.c_str())[3]);
+    }
+    else
+        G4='\0';
+    //CN
+    if (mySize==2 && G1=='C' && isdigit(G2))
+    {
+        pgGroup=pg_CN;
+        pgOrder=int(G2)-48;
+        return_true=true;
+    }
+    if (mySize==3 && G1=='C' && isdigit(G2) && isdigit(G3))
+    {
+        pgGroup=pg_CN;
+        auxChar[0]=G2;
+        auxChar[1]=G3;
+        pgOrder=atoi(auxChar);
+        return_true=true;
+    }
+    //CI
+    else if (mySize==2 && G1=='C' && G2=='I')
+    {
+        pgGroup=pg_CI;
+        pgOrder=-1;
+        return_true=true;
+    }
+    //CS
+    else if (mySize==2 && G1=='C' && G2=='S')
+    {
+        pgGroup=pg_CS;
+        pgOrder=-1;
+        return_true=true;
+    }
+    //CNH
+    else if (mySize==3 && G1=='C' && isdigit(G2) && G3=='H')
+    {
+        pgGroup=pg_CNH;
+        pgOrder=int(G2)-48;
+        return_true=true;
+    }
+    else if (mySize==4 && G1=='C' && isdigit(G2) && isdigit(G3) && G4=='H')
+    {
+        pgGroup=pg_CNH;
+        auxChar[0]=G2;
+        auxChar[1]=G3;
+        pgOrder=atoi(auxChar);
+        return_true=true;
+    }
+    //CNV
+    else if (mySize==3 && G1=='C' && isdigit(G2) && G3=='V')
+    {
+        pgGroup=pg_CNV;
+        pgOrder=int(G2)-48;
+        return_true=true;
+    }
+    else if (mySize==4 && G1=='C' && isdigit(G2) && isdigit(G3) && G4=='V')
+    {
+        pgGroup=pg_CNV;
+        auxChar[0]=G2;
+        auxChar[1]=G3;
+        pgOrder=atoi(auxChar);
+        return_true=true;
+    }
+    //SN
+    else if (mySize==2 && G1=='S' && isdigit(G2) )
+    {
+        pgGroup=pg_SN;
+        pgOrder=int(G2)-48;
+        return_true=true;
+    }
+    else if (mySize==3 && G1=='S' && isdigit(G2) && isdigit(G3) )
+    {
+        pgGroup=pg_SN;
+        auxChar[0]=G2;
+        auxChar[1]=G3;
+        pgOrder=atoi(auxChar);
+        return_true=true;
+    }
+    //DN
+    else if (mySize==2 && G1=='D' && isdigit(G2) )
+    {
+        pgGroup=pg_DN;
+        pgOrder=int(G2)-48;
+        return_true=true;
+    }
+    if (mySize==3 && G1=='D' && isdigit(G2) && isdigit(G3))
+    {
+        pgGroup=pg_DN;
+        auxChar[0]=G2;
+        auxChar[1]=G3;
+        pgOrder=atoi(auxChar);
+        return_true=true;
+    }
+    //DNV
+    else if (mySize==3 && G1=='D' && isdigit(G2) && G3=='V')
+    {
+        pgGroup=pg_DNV;
+        pgOrder=int(G2)-48;
+        return_true=true;
+    }
+    else if (mySize==4 && G1=='D' && isdigit(G2) && isdigit(G3) && G4=='V')
+    {
+        pgGroup=pg_DNV;
+        auxChar[0]=G2;
+        auxChar[1]=G3;
+        pgOrder=atoi(auxChar);
+        return_true=true;
+    }
+    //DNH
+    else if (mySize==3 && G1=='D' && isdigit(G2) && G3=='H')
+    {
+        pgGroup=pg_DNH;
+        pgOrder=int(G2)-48;
+        return_true=true;
+    }
+    else if (mySize==4 && G1=='D' && isdigit(G2) && isdigit(G3) && G4=='H')
+    {
+        pgGroup=pg_DNH;
+        auxChar[0]=G2;
+        auxChar[1]=G3;
+        pgOrder=atoi(auxChar);
+        return_true=true;
+    }
+    //T
+    else if (mySize==1 && G1=='T')
+    {
+        pgGroup=pg_T;
+        pgOrder=-1;
+        return_true=true;
+    }
+    //TD
+    else if (mySize==2 && G1=='T' && G2=='D')
+    {
+        pgGroup=pg_TD;
+        pgOrder=-1;
+        return_true=true;
+    }
+    //TH
+    else if (mySize==2 && G1=='T' && G2=='H')
+    {
+        pgGroup=pg_TH;
+        pgOrder=-1;
+        return_true=true;
+    }
+    //O
+    else if (mySize==1 && G1=='O')
+    {
+        pgGroup=pg_O;
+        pgOrder=-1;
+        return_true=true;
+    }
+    //OH
+    else if (mySize==2 && G1=='O'&& G2=='H')
+    {
+        pgGroup=pg_OH;
+        pgOrder=-1;
+        return_true=true;
+    }
+    //I
+    else if (mySize==1 && G1=='I')
+    {
+        pgGroup=pg_I;
+        pgOrder=-1;
+        return_true=true;
+    }
+    //I1
+    else if (mySize==2 && G1=='I'&& G2=='1')
+    {
+        pgGroup=pg_I1;
+        pgOrder=-1;
+        return_true=true;
+    }
+    //I2
+    else if (mySize==2 && G1=='I'&& G2=='2')
+    {
+        pgGroup=pg_I2;
+        pgOrder=-1;
+        return_true=true;
+    }
+    //I3
+    else if (mySize==2 && G1=='I'&& G2=='3')
+    {
+        pgGroup=pg_I3;
+        pgOrder=-1;
+        return_true=true;
+    }
+    //I4
+    else if (mySize==2 && G1=='I'&& G2=='4')
+    {
+        pgGroup=pg_I4;
+        pgOrder=-1;
+        return_true=true;
+    }
+    //I5
+    else if (mySize==2 && G1=='I'&& G2=='5')
+    {
+        pgGroup=pg_I5;
+        pgOrder=-1;
+        return_true=true;
+    }
+    //IH
+    else if (mySize==2 && G1=='I'&& G2=='H')
+    {
+        pgGroup=pg_IH;
+        pgOrder=-1;
+        return_true=true;
+    }
+    //I1H
+    else if (mySize==3 && G1=='I'&& G2=='1'&& G3=='H')
+    {
+        pgGroup=pg_I1H;
+        pgOrder=-1;
+        return_true=true;
+    }
+    //I2H
+    else if (mySize==3 && G1=='I'&& G2=='2'&& G3=='H')
+    {
+        pgGroup=pg_I2H;
+        pgOrder=-1;
+        return_true=true;
+    }
+    //I3H
+    else if (mySize==3 && G1=='I'&& G2=='3'&& G3=='H')
+    {
+        pgGroup=pg_I3H;
+        pgOrder=-1;
+        return_true=true;
+    }
+    //I4H
+    else if (mySize==3 && G1=='I'&& G2=='4'&& G3=='H')
+    {
+        pgGroup=pg_I4H;
+        pgOrder=-1;
+        return_true=true;
+    }
+    //I5H
+    else if (mySize==3 && G1=='I'&& G2=='5'&& G3=='H')
+    {
+        pgGroup=pg_I5H;
+        pgOrder=-1;
+        return_true=true;
+    }
+    //#define DEBUG7
 #ifdef DEBUG7
-std::cerr << "pgGroup" << pgGroup << " pgOrder " << pgOrder << std::endl;
+    std::cerr << "pgGroup" << pgGroup << " pgOrder " << pgOrder << std::endl;
 #endif
 #undef DEBUG7
 
-   return return_true;
+    return return_true;
 }
 void SymList::fill_symmetry_class(const FileName &symmetry, int pgGroup, int pgOrder,
-   std::vector<std::string> &fileContent)
+                                  std::vector<std::string> &fileContent)
 {
     std::ostringstream line1;
     std::ostringstream line2;
@@ -2383,11 +2431,11 @@ void SymList::fill_symmetry_class(const FileName &symmetry, int pgGroup, int pgO
     else if (pgGroup == pg_SN)
     {
         int order = pgOrder / 2;
-	if(2*order != pgOrder)
-	{
+        if(2*order != pgOrder)
+        {
             std::cerr << "ERROR: order for SN group must be even" << std::endl;
             exit(0);
-	}
+        }
         line1 << "rot_axis " << order << " 0 0 1";
         line2 << "inversion ";
     }
@@ -2444,7 +2492,7 @@ void SymList::fill_symmetry_class(const FileName &symmetry, int pgGroup, int pgO
     }
     else if (pgGroup == pg_I1)
     {
-        line1 << "rot_axis 2  1  	   0	       0";
+        line1 << "rot_axis 2  1      0        0";
         line2 << "rot_axis 5 0.85065080702670 0 -0.5257311142635";
         line3 << "rot_axis 3 0.9341723640 0.3568220765 0";
     }
@@ -2474,7 +2522,7 @@ void SymList::fill_symmetry_class(const FileName &symmetry, int pgGroup, int pgO
     }
     else if (pgGroup == pg_I1H)
     {
-        line1 << "rot_axis 2  1  	   0	       0";
+        line1 << "rot_axis 2  1      0        0";
         line2 << "rot_axis 5 0.85065080702670 0 -0.5257311142635";
         line3 << "rot_axis 3 0.9341723640 0.3568220765 0";
         line4 << "mirror_plane 0 0 -1";
@@ -2504,22 +2552,23 @@ void SymList::fill_symmetry_class(const FileName &symmetry, int pgGroup, int pgO
         exit(0);
     }
     if (line1.str().size()>0)
-	fileContent.push_back(line1.str());
+        fileContent.push_back(line1.str());
     if (line2.str().size()>0)
-	fileContent.push_back(line2.str());
+        fileContent.push_back(line2.str());
     if (line3.str().size()>0)
-	fileContent.push_back(line3.str());
+        fileContent.push_back(line3.str());
     if (line4.str().size()>0)
-	fileContent.push_back(line4.str());
+        fileContent.push_back(line4.str());
     //#define DEBUG5
-    #ifdef DEBUG5
-        for (int n=0; n<fileContent.size(); n++)
-            std::cerr << fileContent[n] << std::endl;
-	std::cerr << "fileContent.size()" << fileContent.size() << std::endl;
-    #endif
+#ifdef DEBUG5
+
+    for (int n=0; n<fileContent.size(); n++)
+        std::cerr << fileContent[n] << std::endl;
+    std::cerr << "fileContent.size()" << fileContent.size() << std::endl;
+#endif
     #undef DEBUG5
 }
-double SymList::non_redundant_evald_sphere(int pgGroup, int pgOrder)
+double SymList::non_redundant_projection_sphere(int pgGroup, int pgOrder)
 {
     if (pgGroup == pg_CN)
     {
@@ -2620,10 +2669,74 @@ double SymList::non_redundant_evald_sphere(int pgGroup, int pgOrder)
     else
     {
         std::cerr << "ERROR: Symmetry group, order=" << pgGroup
-                                                     << " "
-                                                     <<  pgOrder
-                                                     << "is not known"
-                                                     << std::endl;
+        << " "
+        <<  pgOrder
+        << "is not known"
+        << std::endl;
         exit(0);
     }
+}
+
+double SymList::computeDistance(double rot1, double tilt1, double psi1,
+                                double &rot2, double &tilt2, double &psi2,
+                                bool projdir_mode, bool check_mirrors,
+                                bool object_rotation)
+{
+    Matrix2D<double> E1, E2;
+    Euler_angles2matrix(rot1, tilt1, psi1, E1, false);
+
+    int imax = SymsNo() + 1;
+    Matrix2D<double>  L(3, 3), R(3, 3);  // A matrix from the list
+    double best_ang_dist = 3600;
+    double best_rot2, best_tilt2, best_psi2;
+
+    for (int i = 0; i < imax; i++)
+    {
+        double rot2p, tilt2p, psi2p;
+        if (i == 0)
+        {
+            rot2p = rot2;
+            tilt2p = tilt2;
+            psi2p = psi2;
+        }
+        else
+        {
+            get_matrices(i - 1, L, R, false);
+            if (object_rotation)
+                Euler_apply_transf(R, L, rot2, tilt2, psi2, rot2p, tilt2p, psi2p);
+            else
+                Euler_apply_transf(L, R, rot2, tilt2, psi2, rot2p, tilt2p, psi2p);
+        }
+
+        double ang_dist = Euler_distanceBetweenAngleSets_fast(E1,rot2p, tilt2p, psi2p,
+                          projdir_mode, E2);
+
+        if (ang_dist < best_ang_dist)
+        {
+            best_rot2 = rot2p;
+            best_tilt2 = tilt2p;
+            best_psi2 = psi2p;
+            best_ang_dist = ang_dist;
+        }
+
+        if (check_mirrors)
+        {
+            Euler_up_down(rot2p, tilt2p, psi2p, rot2p, tilt2p, psi2p);
+            double ang_dist_mirror = Euler_distanceBetweenAngleSets_fast(E1,
+                                     rot2p, tilt2p, psi2p,projdir_mode, E2);
+
+            if (ang_dist_mirror < best_ang_dist)
+            {
+                best_rot2 = rot2p;
+                best_tilt2 = tilt2p;
+                best_psi2 = psi2p;
+                best_ang_dist = ang_dist_mirror;
+            }
+
+        }
+    }
+    rot2 = best_rot2;
+    tilt2 = best_tilt2;
+    psi2 = best_psi2;
+    return best_ang_dist;
 }
