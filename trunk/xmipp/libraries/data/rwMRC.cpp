@@ -162,7 +162,7 @@ int ImageBase::readMRC(size_t select_img, bool isStack)
         _zDim = 1;
         replaceNsize = _nDim;
         if ( select_img > _nDim )
-            REPORT_ERROR(ERR_INDEX_OUTOFBOUNDS, formatString("readmrc: Image number %lu exceeds stack size %lu", select_img, _nDim));
+            REPORT_ERROR(ERR_INDEX_OUTOFBOUNDS, formatString("readMRC: Image number %lu exceeds stack size %lu", select_img, _nDim));
     }
     else
         replaceNsize=0;

@@ -393,7 +393,6 @@ int space;
 */
 void printDM3node(MetaData &MD, size_t id)
 {
-
     std::string tag;
     MD.getValue(MDL_DM3_TAGNAME, tag, id);
 
@@ -497,8 +496,8 @@ int ImageBase::readDM3(size_t select_img,bool isStack)
     MDValueEQ queryNodeId(MDL_DM3_NODEID, -1);
 
     for (MDIterator iter(header->tags, MDValueEQ(MDL_DM3_TAGNAME,(String)"DataType")); iter.hasNext(); iter.moveNext())
-    // Read all the image headers
-    //for (int n = 0; n < vIm.size(); n++)
+        // Read all the image headers
+        //for (int n = 0; n < vIm.size(); n++)
     {
         //header->tags.goToObject(vIm[n]);
         header->tags.getValue(MDL_DM3_VALUE, vValue, iter.objId);
@@ -550,28 +549,27 @@ int ImageBase::readDM3(size_t select_img,bool isStack)
 
     }
 
-    // Check images dimensions. Need to be the same
-    for (size_t i = 1; i < header->nIm; i++)
-    {
-        if (dataHeaders[0].imageHeight != dataHeaders[i].imageHeight || \
-            dataHeaders[0].imageWidth != dataHeaders[i].imageWidth  || \
-            dataHeaders[0].dataType != dataHeaders[i].dataType)
-            REPORT_ERROR(ERR_IMG_NOREAD, "readDM3: images in DM3 file with different \
-                         dimensions and data types are not currently supported. Try to read them individually.");
-    }
-
-
     int _xDim,_yDim;
     size_t _nDim;
     _xDim = dataHeaders[0].imageWidth;
     _yDim = dataHeaders[0].imageHeight;
     _nDim = header->nIm;
 
-    //FIXME: Code is not totally implemented to load automatically multiple images if they have same size.
-
     // Map the parameters
-    if (select_img == ALL_IMAGES)
+    if (select_img >  _nDim)
+        REPORT_ERROR(ERR_INDEX_OUTOFBOUNDS, formatString("readDM3: Image number %lu exceeds stack size %lu", select_img, header->NUMBER_IMAGES));
+    else if (select_img == ALL_IMAGES)
     {
+        // Check images dimensions. Need to be the same
+        for (size_t i = 1; i < _nDim ; i++)
+        {
+            if (dataHeaders[0].imageHeight != dataHeaders[i].imageHeight || \
+                dataHeaders[0].imageWidth != dataHeaders[i].imageWidth  || \
+                dataHeaders[0].dataType != dataHeaders[i].dataType)
+                REPORT_ERROR(ERR_IMG_NOREAD, "readDM3: images in DM3 file with different \
+                             dimensions and data types are not currently supported. Try to read them individually.");
+        }
+        //FIXME: Code is not totally implemented to load automatically multiple images if they have same size.
         if (_nDim > 1)
             REPORT_ERROR(ERR_IO_NOREAD, "readDM3: Reading multiple \
                          images at once in DM3 file are not currently supported. Try to read them individually.");
@@ -593,7 +591,7 @@ int ImageBase::readDM3(size_t select_img,bool isStack)
     MD.clear();
     MD.resize(imgEnd - imgStart);
     for (size_t i = 0; i < imgEnd - imgStart; i++ )
-      initGeometry(i);
+        initGeometry(i);
 
     offset = dataHeaders[imgStart].headerSize;
     delete header;

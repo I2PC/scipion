@@ -191,8 +191,10 @@ int readTIFF(size_t select_img, bool isStack=false)
 
     swap = TIFFIsByteSwapped(tif);
 
-    // Check images dimensions. Need to be the same
-    if (select_img == ALL_IMAGES)
+    //Check select_img is in lower than stack size
+    if (select_img > dirHead.size())
+        REPORT_ERROR(ERR_INDEX_OUTOFBOUNDS, formatString("readTIFF: Image number %lu exceeds stack size %lu", select_img, dirHead.size()));
+    else if (select_img == ALL_IMAGES)// Check images dimensions. Need to be the same
     {
         for (size_t i = 1; i < dirHead.size(); i++)
         {
