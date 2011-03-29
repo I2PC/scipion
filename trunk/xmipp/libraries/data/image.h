@@ -871,7 +871,7 @@ private:
         if (transform == Hermitian || transform == CentHerm )
             data.setXdim(XSIZE(data)/2 + 1);
 
-        size_t selectImgOffset, readsize, readsize_n, pagemax = 4096; //16Mb
+        size_t selectImgOffset, readsize, readsize_n, pagemax = 4194304; //4Mb
         size_t datatypesize=gettypesize(datatype);
         size_t pagesize  =ZYXSIZE(data)*datatypesize;
         size_t haveread_n = 0;
