@@ -83,6 +83,10 @@ class Tester:
         self.addProgram("xmipp_angular_project_library")
         self.addTest("-i input/phantomBacteriorhodopsin.vol -o %o/output_projections.stk --sym c6 --sampling_rate 5", True)
 
+        self.addProgram("xmipp_angular_projection_matching")
+        self.addTest("-i input/aFewProjections.sel -o %o/assigned_angles.txt --ref %o/reference.stk",False,
+                     "xmipp_angular_project_library -i input/phantomBacteriorhodopsin.vol --experimental_images input/aFewProjections.sel -o %o/reference.stk --sampling_rate 10 --compute_neighbors --angular_distance -1")
+
         self.addProgram("xmipp_classify_analyze_cluster")
         self.addTest("-i input/smallStack.stk --ref 1@input/smallStack.stk -o %o/pca.xmd")
 
