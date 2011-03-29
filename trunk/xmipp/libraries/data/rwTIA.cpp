@@ -72,18 +72,8 @@ struct TIAdataHead
 /** TIA Reader
   * @ingroup TIA
 */
-int ImageBase::readTIA(int img_select,bool isStack)
+int ImageBase::readTIA(int select_img,bool isStack)
 {
-#undef DEBUG
-    //#define DEBUG
-#ifdef DEBUG
-    printf("DEBUG readTIA: Reading TIA file\n");
-#endif
-
-    FILE        *fimg;
-    if ( ( fimg = fopen(filename.c_str(), "r") ) == NULL )
-        return(-1);
-
     TIAhead * header = new TIAhead;
 
     xmippFREAD(&header->endianess, sizeof(short int), 1, fimg, swap );
@@ -130,13 +120,17 @@ int ImageBase::readTIA(int img_select,bool isStack)
         xmippFREAD(&dataHeaders[i].IMAGE_HEIGHT, sizeof(int), 1, fimg, swap);
     }
 
-    // Check images dimensions. Need to be the same
     int _xDim,_yDim;
     unsigned long int _nDim;
 
-    if (img_select==-1)
+    size_t   imgStart = IMG_INDEX(select_img);
+    size_t   imgEnd = (select_img != ALL_IMAGES) ? imgStart + 1 : header->NUMBER_IMAGES;
+
+    if (select_img >  header->NUMBER_IMAGES)
+      REPORT_ERROR(ERR_INDEX_OUTOFBOUNDS, formatString("readTIA: Image number %lu exceeds stack size %lu", select_img, header->NUMBER_IMAGES));
+    else if (select_img == ALL_IMAGES)
     {
-        for (i = 1; i < header->NUMBER_IMAGES; i++)
+        for (i = 1; i < header->NUMBER_IMAGES; i++)    // Check images dimensions. Need to be the same
         {
             if (dataHeaders[0].IMAGE_HEIGHT != dataHeaders[i].IMAGE_HEIGHT || \
                 dataHeaders[0].IMAGE_WIDTH != dataHeaders[i].IMAGE_WIDTH  || \
@@ -149,35 +143,19 @@ int ImageBase::readTIA(int img_select,bool isStack)
     }
     else
     {
-        _xDim = (int) dataHeaders[img_select].IMAGE_WIDTH;
-        _yDim = (int) dataHeaders[img_select].IMAGE_HEIGHT;
+        _xDim = (int) dataHeaders[imgStart].IMAGE_WIDTH;
+        _yDim = (int) dataHeaders[imgStart].IMAGE_HEIGHT;
         _nDim = (int) 1;
     }
 
     // Map the parameters
     setDimensions(_xDim, _yDim, 1, _nDim);
 
-    unsigned long   imgStart=0;
-    unsigned long   imgEnd =_nDim;
-    if (img_select != -1)
-    {
-        imgStart=img_select;
-        imgEnd=img_select+1;
-    }
-
     DataType datatype;
     //    dataHeaders[0].isSigned = false;
     int tiaDT;
-    if (img_select==-1)
-    {
-        tiaDT = dataHeaders[0].DATA_TYPE;
-        offset = header->pDATA_OFFSET[0] + TIAdataSIZE;
-    }
-    else
-    {
-        tiaDT = dataHeaders[img_select].DATA_TYPE;
-        offset = header->pDATA_OFFSET[img_select] + TIAdataSIZE;
-    }
+    tiaDT = dataHeaders[imgStart].DATA_TYPE;
+    offset = header->pDATA_OFFSET[imgStart] + TIAdataSIZE;
 
     switch ( tiaDT )
     {
@@ -247,20 +225,13 @@ int ImageBase::readTIA(int img_select,bool isStack)
         }
     }
 
-    //#define DEBUG
-#ifdef DEBUG
-
-    MDMainHeader.write(std::cerr);
-    MD.write(std::cerr);
-#endif
-
     delete header;
 
     if( dataMode < DATA )
         return 0;
 
     size_t pad = TIAdataSIZE;
-    readData(fimg, img_select, datatype, pad);
+    readData(fimg, select_img, datatype, pad);
 
     return(0);
 }
