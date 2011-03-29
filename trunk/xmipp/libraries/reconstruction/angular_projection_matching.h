@@ -74,7 +74,7 @@ class ProgAngularProjectionMatching : public XmippProgram
 public:
 
     /** Filenames */
-    FileName fn_exp, fn_ref, fn_root, fn_ctf;
+    FileName fn_exp, fn_ref, fn_out, fn_ctf;
     /** Docfile with experimental images */
     MetaData DFexp;
     /** Docfile with results */
@@ -203,7 +203,6 @@ public:
      * This function should be override in MPI class, only master should write.
      */
     virtual void writeOutputFiles();
-
 };				
 //@}
 #endif

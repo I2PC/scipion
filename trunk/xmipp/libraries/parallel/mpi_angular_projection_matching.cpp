@@ -203,8 +203,8 @@ bool MpiProgAngularProjectionMatching::requestJobs(std::vector<size_t> &imagesTo
 /* Read parameters --------------------------------------------------------- */
 void MpiProgAngularProjectionMatching::writeOutputFiles()
 {
-    node->gatherMetadatas(DFo,fn_root + ".doc");
-    DFo.write(fn_root + ".doc");
+    node->gatherMetadatas(DFo,fn_out);
+    DFo.write(fn_out);
 }
 
 void MpiProgAngularProjectionMatching::produceSideInfo()

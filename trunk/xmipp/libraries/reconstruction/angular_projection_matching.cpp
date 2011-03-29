@@ -38,7 +38,7 @@ void ProgAngularProjectionMatching::readParams()
 
 {
     fn_exp  = getParam("-i");
-    fn_root = getParam("-o");
+    fn_out  = getParam("-o");
     fn_ref  = getParam("--ref");
 
     // Additional commands
@@ -64,8 +64,6 @@ void ProgAngularProjectionMatching::readParams()
 
 }
 
-
-
 void ProgAngularProjectionMatching::defineParams()
 {
     addUsageLine("Perform a discrete angular assignment using a new projection matching");
@@ -73,8 +71,8 @@ void ProgAngularProjectionMatching::defineParams()
     addUsageLine("   xmipp_angular_projection_matching -i in.doc -o out_dir --ref ref_dir --search5d_step 2");
 
     addParamsLine("   -i <doc_file>                : Docfile with input images");
-    addParamsLine("   -o <output_rootname=\"out\">  : Output rootname");
-    addParamsLine("   -r <ref_rootname=\"ref\">    : Reference projection files rootname");
+    addParamsLine("   -o <output_rootname>         : Output rootname");
+    addParamsLine("   -r <stackFile>               : Reference projections");
     addParamsLine("     alias --ref;");
     addParamsLine("  [--search5d_shift <s5dshift=0>]: Search range (in +/- pix) for 5D shift search");
     addParamsLine("  [--search5d_step <s5dstep=2>]  : Step size for 5D shift search (in pix)");
@@ -100,8 +98,9 @@ void ProgAngularProjectionMatching::show()
     if (!verbose)
         return;
 
-    std::cout << "  Input images            : "<< fn_exp << std::endl
-    << "  Output rootname         : "<< fn_root << std::endl
+    std::cout
+    << "  Input images            : "<< fn_exp << std::endl
+    << "  Output file             : "<< fn_out << std::endl
     ;
     if (Ri>0)
         std::cout << "  Inner radius rot-search : " << Ri<< std::endl;
@@ -144,7 +143,6 @@ void ProgAngularProjectionMatching::show()
         std::cout << "  -> Using "<<threads<<" parallel threads"<<std::endl;
     }
     std::cout << " ================================================================="<<std::endl;
-
 }
 
 /* Run --------------------------------------------------------------------- */
@@ -196,7 +194,7 @@ void ProgAngularProjectionMatching::produceSideInfo()
     FileName fnt;
     fnt.compose(FIRST_IMAGE, fn_ref);
     Image<double> imgRef;
-    imgRef.read(fnt);
+    imgRef.read(fnt,HEADER);
 
     if (!imgRef().sameShape(img()))
         REPORT_ERROR(ERR_MULTIDIM_SIZE,
@@ -327,13 +325,11 @@ void ProgAngularProjectionMatching::produceSideInfo()
 
     //Store the id's of each experimental image from metadata
     DFexp.findObjects(ids);
-
 }
 
 int ProgAngularProjectionMatching::getCurrentReference(int refno,
         Polar_fftw_plans &local_plans)
 {
-
     FileName                      fnt;
     Image<double>                 img;
     double                        mean,stddev;
@@ -360,9 +356,7 @@ int ProgAngularProjectionMatching::getCurrentReference(int refno,
         }
         local_transformer.FourierTransform(img(),Faux);
         FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY2D(Faux)
-        {
             dAij(Faux,i,j) *= dAij(Mctf,i,j);
-        }
         local_transformer.inverseFourierTransform(Faux,img());
         if (paddim > dim)
         {
@@ -376,9 +370,7 @@ int ProgAngularProjectionMatching::getCurrentReference(int refno,
     // Calculate FTs of polar rings and its stddev
     produceSplineCoefficients(BSPLINE3,Maux,img());
     P.getPolarFromCartesianBSpline(Maux,Ri,Ro);
-    mean = P.computeSum(true);
-    stddev = P.computeSum2(true);
-    stddev = sqrt(stddev - mean * mean);
+    P.computeAverageAndStddev(mean,stddev,true);
     P -= mean;
     fourierTransformRings(P,fP,local_plans,true);
 
@@ -456,9 +448,7 @@ void * threadRotationallyAlignOneImage( void * data )
         P.getPolarFromCartesianBSpline(Maux,prm->Ri,prm->Ro,3,
                                        (double)prm->search5d_xoff[itrans],
                                        (double)prm->search5d_yoff[itrans]);
-        mean = P.computeSum(true);
-        stddev = P.computeSum2(true);
-        stddev = sqrt(stddev - mean * mean);
+        P.computeAverageAndStddev(mean,stddev);
         P -= mean; // for normalized cross-correlation coefficient
         if (itrans == myinit)
             P.calculateFftwPlans(local_plans);
@@ -535,7 +525,7 @@ void * threadRotationallyAlignOneImage( void * data )
 #ifdef TIMING
             get_refs += elapsed_time(t1);
 #endif
-//#define DEBUG
+            //#define DEBUG
 #ifdef DEBUG
 
             std::cerr<<"Got refno= "<<refno<<" pointer= "<<prm->mysampling.my_neighbors[imgno][i]<<std::endl;
@@ -550,10 +540,10 @@ void * threadRotationallyAlignOneImage( void * data )
                 corr /= prm->stddev_ref[refno] * prm->stddev_img[itrans]; // for normalized ccf
                 for (int k = 0; k < XSIZE(corr); k++)
                 {
-                    if (corr(k)> *maxcorr)
+                    if (DIRECT_A1D_ELEM(corr,k)> *maxcorr)
                     {
-                        *maxcorr = corr(k);
-                        *opt_psi = ang(k);
+                        *maxcorr = DIRECT_A1D_ELEM(corr,k);
+                        *opt_psi = DIRECT_A1D_ELEM(ang,k);
                         *opt_refno = prm->mysampling.my_neighbors[imgno][i];
                         *opt_flip = false;
                     }
@@ -567,10 +557,10 @@ void * threadRotationallyAlignOneImage( void * data )
                 corr /= prm->stddev_ref[refno] * prm->stddev_img[itrans]; // for normalized ccf
                 for (int k = 0; k < XSIZE(corr); k++)
                 {
-                    if (corr(k)> *maxcorr)
+                    if (DIRECT_A1D_ELEM(corr,k)> *maxcorr)
                     {
-                        *maxcorr = corr(k);
-                        *opt_psi = ang(k);
+                        *maxcorr = DIRECT_A1D_ELEM(corr,k);
+                        *opt_psi = DIRECT_A1D_ELEM(ang,k);
                         *opt_refno = prm->mysampling.my_neighbors[imgno][i];
                         *opt_flip = true;
                     }
@@ -609,7 +599,6 @@ void ProgAngularProjectionMatching::translationallyAlignOneImage(MultidimArray<d
         double &opt_yoff,
         double &maxcorr)
 {
-
     MultidimArray<double> Mtrans,Mimg,Mref;
     int refno;
     Mtrans.setXmippOrigin();
@@ -650,8 +639,7 @@ void ProgAngularProjectionMatching::translationallyAlignOneImage(MultidimArray<d
         // Flip experimental image
         Matrix2D<double> A(3,3);
         A.initIdentity();
-        A(0, 0) *= -1.;
-        A(0, 1) *= -1.;
+        MAT_ELEM(A,0, 0) = -1;
         applyGeometry(LINEAR, Mimg, img, A, IS_INV, DONT_WRAP);
     }
     else
@@ -701,7 +689,6 @@ void ProgAngularProjectionMatching::scaleAlignOneImage(MultidimArray<double> &im
         double &opt_scale,
         double &maxcorr)
 {
-
     MultidimArray<double> Mscale,Mtrans,Mref;
     int refno;
 
@@ -726,19 +713,19 @@ void ProgAngularProjectionMatching::scaleAlignOneImage(MultidimArray<double> &im
     sine = sin(ang);
 
     // Rotation
-    A(0, 0) = cosine;
-    A(0, 1) = -sine;
-    A(1, 0) = sine;
-    A(1, 1) = cosine;
+    MAT_ELEM(A,0, 0) = cosine;
+    MAT_ELEM(A,0, 1) = -sine;
+    MAT_ELEM(A,1, 0) = sine;
+    MAT_ELEM(A,1, 1) = cosine;
 
     // Shift
-    A(0, 2) = -opt_xoff;
-    A(1, 2) = -opt_yoff;
+    MAT_ELEM(A,0, 2) = -opt_xoff;
+    MAT_ELEM(A,1, 2) = -opt_yoff;
 
     if (opt_flip)
     {
-        A(0, 0) *= -1.;
-        A(0, 1) *= -1.;
+    	MAT_ELEM(A,0, 0) *= -1.;
+    	MAT_ELEM(A,0, 1) *= -1.;
     }
 
     applyGeometry(LINEAR, Mtrans, img, A, IS_INV, DONT_WRAP);
@@ -754,12 +741,11 @@ void ProgAngularProjectionMatching::scaleAlignOneImage(MultidimArray<double> &im
     }
     Mref = proj_ref[refno];
 
-    // Mtrans is already rotated and shifted
-    double ref_mean, trans_mean;
-
     // Means
-    ref_mean=Mref.computeMedian();
-    trans_mean=Mtrans.computeMedian();
+    double ref_mean=Mref.computeAvg();
+    Mref-=ref_mean;
+    // Mtrans is already rotated and shifted
+    double trans_mean=Mtrans.computeAvg();
 
     // Scale search
     double corr;
@@ -772,15 +758,14 @@ void ProgAngularProjectionMatching::scaleAlignOneImage(MultidimArray<double> &im
         scale += 0.01 * scale_step)
     {
         // apply current scale
-        Matrix2D<double> A(3,3);
         A.initIdentity();
         A *= scale;
         applyGeometry(LINEAR, Mscale, Mtrans, A, IS_INV, DONT_WRAP);
 
         // SUM (Mscale - trans_mean) * (Mref - ref_mean)
-        Mscale.operator -=(trans_mean);
-        Mscale.operator *=(Mref.operator -(ref_mean));
-        corr = Mscale.sum();
+        corr=0;
+        FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(Mscale)
+        corr+=(DIRECT_MULTIDIM_ELEM(Mscale,n)-trans_mean)*DIRECT_MULTIDIM_ELEM(Mref,n);
 
         // best scale update
         if(corr > maxcorr)
@@ -809,7 +794,7 @@ void ProgAngularProjectionMatching::processAllImages()
     }
     processSomeImages(ids);
     if (verbose)
-      progress_bar(total_number_of_images);
+        progress_bar(total_number_of_images);
 }
 
 void ProgAngularProjectionMatching::processSomeImages(const std::vector<size_t> &imagesToProcess)
@@ -827,8 +812,8 @@ void ProgAngularProjectionMatching::processSomeImages(const std::vector<size_t> 
     {
         imgid = imagesToProcess[imgno];
         getCurrentImage(imgid, img);
-//img.write("kk,spi");
-//exit(0);
+        //img.write("kk,spi");
+        //exit(0);
         // Call threads to calculate the rotational alignment of each image in the selfile
         pthread_t * th_ids = (pthread_t *)malloc( threads * sizeof( pthread_t));
 
@@ -898,14 +883,12 @@ void ProgAngularProjectionMatching::processSomeImages(const std::vector<size_t> 
         DFo.setValue(MDL_SCALE,    opt_scale,idNew);
         DFo.setValue(MDL_MAXCC,    maxcorr,idNew);
         if (verbose && imgno % progress_bar_step == 0)
-          progress_bar(imgno);
+            progress_bar(imgno);
     }
-
 }
 
 void ProgAngularProjectionMatching::getCurrentImage(size_t imgid, Image<double> &img)
 {
-
     FileName fn_img;
     Matrix2D<double> A;
 
@@ -937,5 +920,5 @@ void ProgAngularProjectionMatching::getCurrentImage(size_t imgid, Image<double> 
 
 void ProgAngularProjectionMatching::writeOutputFiles()
 {
-    DFo.write(fn_root + ".doc");
+    DFo.write(fn_out);
 }
