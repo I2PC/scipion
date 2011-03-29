@@ -881,7 +881,7 @@ private:
         // Flag to know that data is not going to be mapped although mmapOn is true
         if (mmapOnRead && !checkMmapT(datatype))
         {
-            std::cout << "WARNING: Image Class. File datatype and image declaration not compatible with mmap. Loading into memory." <<std::endl;
+            std::cout << " === WARNING === Image Class::readData: File datatype and image declaration not compatible with mmap. Loading into memory." <<std::endl;
             mmapOnRead = false;
             mFd = -1;
         }
