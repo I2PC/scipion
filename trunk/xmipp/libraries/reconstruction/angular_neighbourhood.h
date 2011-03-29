@@ -27,6 +27,7 @@
 
 #include <data/funcs.h>
 #include <data/metadata.h>
+#include <data/program.h>
 
 #include <data/symmetries.h>
 
@@ -34,7 +35,7 @@
    @ingroup ReconsLibrary */
 //@{
 /** Projection Neighbourhood parameters. */
-class Prog_projection_neighbourhood_prm
+class ProgAngularNeighbourhood: public XmippProgram
 {
 public:
     /** Filename reference projection directions document file */
@@ -45,31 +46,26 @@ public:
     double maxdist;
     /** Filename symmetry file */
     FileName fn_sym;
-    /** Filename of output file with merging */
-    char* fn_root_out;
-
+    /** Filename of output file*/
+    FileName fn_out;
+    /** Check mirrors */
+    bool check_mirrors;
 public:
     // DocFile images
     MetaData DF1;
     // DocFile nbhoods
     MetaData DF2;
-    // SelFile images
-    MetaData SF1;
     // Symmetry List
     SymList SL;
 public:
     /// Read argument from command line
-    /// Also read document & selection files and symmetry list if any.
-    void read(int argc, char **argv);
+    void readParams();
 
     /// Show
     void show();
 
     /// Usage
-    void usage();
-
-    /// Extract angles
-    void get_angles(MetaData &SF_in, MetaData &DF_out);
+    void defineParams();
 
     /** Check symmetries.
         Given two sets of angles, this function modifies set 2 so that
@@ -81,7 +77,7 @@ public:
     /** Compute distance.
         Compute the distance between the two document files loaded. The
         average distance is returned.*/
-    void compute_neighbourhood();
+    void run();
 };
 //@}
 #endif
