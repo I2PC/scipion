@@ -91,129 +91,6 @@ void ProgAngularDistance::produce_side_info()
                      "Angular_distance: Input Docfiles with different number of entries");
 }
 
-// 2nd angle set -----------------------------------------------------------
-#define SHOW_ANGLES(rot,tilt,psi) \
-    std::cout << #rot  << "=" << rot << " " \
-    << #tilt << "=" << tilt << " " \
-    << #psi  << "=" << psi << " ";
-//#define DEBUG
-double ProgAngularDistance::second_angle_set(double rot1, double tilt1,
-        double psi1, double &rot2, double &tilt2, double &psi2,
-        bool projdir_mode)
-{
-#ifdef DEBUG
-    std::cout << "   ";
-    SHOW_ANGLES(rot2, tilt2, psi2);
-#endif
-
-    // Distance based on Euler axes
-    Matrix2D<double> E1, E2;
-    Euler_angles2matrix(rot1, tilt1, psi1, E1);
-    Euler_angles2matrix(rot2, tilt2, psi2, E2);
-    Matrix1D<double> v1, v2;
-    double axes_dist = 0;
-    double N = 0;
-    for (int i = 0; i < 3; i++)
-    {
-        if (projdir_mode && i != 2)
-            continue;
-        E1.getRow(i, v1);
-        E2.getRow(i, v2);
-        double dist = RAD2DEG(acos(CLIP(dotProduct(v1, v2), -1, 1)));
-        axes_dist += dist;
-        N++;
-#ifdef DEBUG
-
-        std::cout << "d(" << i << ")=" << dist << " ";
-#endif
-
-    }
-    axes_dist /= N;
-
-
-#ifdef DEBUG
-
-    std::cout << "-->" << axes_dist << std::endl;
-#endif
-
-    return axes_dist;
-}
-#undef DEBUG
-
-// Check symmetries --------------------------------------------------------
-//#define DEBUG
-double ProgAngularDistance::check_symmetries(double rot1, double tilt1,
-        double psi1, double &rot2, double &tilt2, double &psi2,
-        bool projdir_mode)
-{
-#ifdef DEBUG
-    SHOW_ANGLES(rot1, tilt1, psi1);
-    std::cout << std::endl;
-#endif
-
-    int imax = SL.SymsNo() + 1;
-    Matrix2D<double>  L(4, 4), R(4, 4);  // A matrix from the list
-    double best_ang_dist = 3600;
-    double best_rot2, best_tilt2, best_psi2;
-
-    for (int i = 0; i < imax; i++)
-    {
-        double rot2p, tilt2p, psi2p;
-        if (i == 0)
-        {
-            rot2p = rot2;
-            tilt2p = tilt2;
-            psi2p = psi2;
-        }
-        else
-        {
-            SL.get_matrices(i - 1, L, R);
-            L.resize(3, 3); // Erase last row and column
-            R.resize(3, 3); // as only the relative orientation
-            // is useful and not the translation
-            if (object_rotation)
-                Euler_apply_transf(R, L, rot2, tilt2, psi2, rot2p, tilt2p, psi2p);
-            else
-                Euler_apply_transf(L, R, rot2, tilt2, psi2, rot2p, tilt2p, psi2p);
-        }
-
-        double ang_dist = second_angle_set(rot1, tilt1, psi1, rot2p, tilt2p, psi2p,
-                                           projdir_mode);
-
-        if (ang_dist < best_ang_dist)
-        {
-            best_rot2 = rot2p;
-            best_tilt2 = tilt2p;
-            best_psi2 = psi2p;
-            best_ang_dist = ang_dist;
-        }
-
-        if (check_mirrors)
-        {
-            Euler_up_down(rot2p, tilt2p, psi2p, rot2p, tilt2p, psi2p);
-            double ang_dist_mirror = second_angle_set(rot1, tilt1, psi1, rot2p, tilt2p, psi2p,
-                                     projdir_mode);
-
-            if (ang_dist_mirror < best_ang_dist)
-            {
-                best_rot2 = rot2p;
-                best_tilt2 = tilt2p;
-                best_psi2 = psi2p;
-                best_ang_dist = ang_dist_mirror;
-            }
-
-        }
-    }
-#ifdef DEBUG
-    std::cout << "   Best=" << best_ang_dist << std::endl;
-#endif
-
-    rot2 = best_rot2;
-    tilt2 = best_tilt2;
-    psi2 = best_psi2;
-    return best_ang_dist;
-}
-
 //#define DEBUG
 // Compute distance --------------------------------------------------------
 void ProgAngularDistance::run()
@@ -278,7 +155,8 @@ void ProgAngularDistance::run()
         rot2p = rot2;
         tilt2p = tilt2;
         psi2p = psi2;
-        distp = check_symmetries(rot1, tilt1, psi1, rot2p, tilt2p, psi2p);
+        distp = SL.computeDistance(rot1, tilt1, psi1, rot2p, tilt2p, psi2p, false,
+                                   check_mirrors, object_rotation);
         angular_distance += distp;
 
         // Compute angular difference
