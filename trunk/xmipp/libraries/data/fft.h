@@ -81,8 +81,15 @@ void FFT_idx2digfreq(T& v, const Matrix1D< int >& idx, Matrix1D< double >& freq)
     int size[3];
     v.getSize(size);
 
-    FOR_ALL_ELEMENTS_IN_MATRIX1D(idx)
-    FFT_IDX2DIGFREQ(VEC_ELEM(idx,i), size[i], VEC_ELEM(freq,i));
+    switch (VEC_XSIZE(idx))
+    {
+    case 3:
+    	FFT_IDX2DIGFREQ(VEC_ELEM(idx,2), size[2], VEC_ELEM(freq,2));
+    case 2:
+    	FFT_IDX2DIGFREQ(VEC_ELEM(idx,1), size[1], VEC_ELEM(freq,1));
+    case 1:
+    	FFT_IDX2DIGFREQ(VEC_ELEM(idx,0), size[0], VEC_ELEM(freq,0));
+    }
 }
 
 /** Frequency to index
