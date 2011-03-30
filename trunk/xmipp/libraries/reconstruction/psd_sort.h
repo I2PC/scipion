@@ -53,7 +53,7 @@ public:
 
 /* Sort PSD Program Parameters ------------------------------------------ */
 /** Parameter class for the project program */
-class Prog_Sort_PSD_Parameters: public XmippProgram
+class ProgPSDSort: public XmippProgram
 {
 public:
     /// List of micrographs to classify

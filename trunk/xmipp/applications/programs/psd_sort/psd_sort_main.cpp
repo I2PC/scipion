@@ -31,7 +31,7 @@ int main(int argc, char **argv)
     // Get input parameters
     try
     {
-    	Prog_Sort_PSD_Parameters program;
+    	ProgPSDSort program;
         program.read(argc, argv);
         program.run();
 

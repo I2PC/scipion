@@ -31,7 +31,7 @@
 #include <data/transformations.h>
 
 /* Read parameters --------------------------------------------------------- */
-void Prog_Sort_PSD_Parameters::readParams()
+void ProgPSDSort::readParams()
 {
     fnSel = getParam("-i");
     filter_w1 = getDoubleParam("-f1");
@@ -42,11 +42,62 @@ void Prog_Sort_PSD_Parameters::readParams()
 }
 
 /* Usage ------------------------------------------------------------------- */
-void Prog_Sort_PSD_Parameters::defineParams()
+void ProgPSDSort::defineParams()
 {
-    addUsageLine("Evaluate the CTFs and PSDs of a set of micrographs");
-    addUsageLine("as produced by the preprocessing micrographs step of the Xmipp protocols");
-    addParamsLine("   -i <selfile>              : Selfile with micrographs");
+    addUsageLine("Evaluate the CTFs and PSDs of a set of micrographs.");
+    addUsageLine("This process is strongly coupled to the output produced by the preprocessing micrographs step of the Xmipp protocols");
+    addUsageLine("For each input PSD, the program writes its enhanced version since it is used in the computation of some of the criteria.");
+    addUsageLine("+The different criteria for evaluating the PSDs are:");
+    addUsageLine("+ ");
+    addUsageLine("+Damping: this is the envelope value at the border of the PSD. Micrographs ");
+    addUsageLine("+with a high envelope value at border are either wrongly estimated strongly undersampled.");
+    addUsageLine("+ ");
+    addUsageLine("+First zero average: this is average in Angstroms of the first zero. ");
+    addUsageLine("+Normally, this value should be between 4x and 10x the sampling rate in Angstroms.");
+    addUsageLine("+ ");
+    addUsageLine("+First zero disagreement: if the CTF has been estimated by two different methods ");
+    addUsageLine("+(normally Xmipp and Ctffind), then this criterion measures the average disagreement ");
+    addUsageLine("+in Angstroms between the first zero in the two estimates. Low disagreements are ");
+    addUsageLine("+indicative of correct fit.");
+    addUsageLine("+ ");
+    addUsageLine("+First zero ratio: this measures the astigmatism of the CTF by computing the ratio ");
+    addUsageLine("+between the largest and smallest axes of the first zero ellipse. Ratios close to 1 ");
+    addUsageLine("+indicate no astigmatism.");
+    addUsageLine("+ ");
+    addUsageLine("+Fitting score: the CTF is computed by fitting a theoretical model to the experimentally observed PSD. ");
+    addUsageLine("+This criterion is the fitting score. Smaller scores correspond to better fits.");
+    addUsageLine("+ ");
+    addUsageLine("+Fitting correlation between zeros 1 and 3: the region between the first and third zeroes ");
+    addUsageLine("+is particularly important since it is where the Thon rings are most visible. ");
+    addUsageLine("+This criterion reports the correlation between the experimental and theoretical PSDs ");
+    addUsageLine("+within this region. High correlations indicate good fits.");
+    addUsageLine("+ ");
+    addUsageLine("+PSD correlation at 90 degrees: The PSD of non-astigmatic micrographs correlate well ");
+    addUsageLine("+with itself after rotating the micrograph 90 degrees. This is so because non-astigmatic ");
+    addUsageLine("+PSDs are circularly symmetrical, while astigmatic micrographs are elliptically symmetrical.");
+    addUsageLine("+High correlation when rotating 90 degrees is an indicator of non-astigmatism.");
+    addUsageLine("+This criterion is computed on the enhanced PSD. See [[psd_enhance_v3][psd_enhance]].");
+    addUsageLine("+ ");
+    addUsageLine("+PSD radial integral: this criterion reports the integral of the radially symmetrized PSD.");
+    addUsageLine("+This criterion can highlight differences among the background noises of micrographs. ");
+    addUsageLine("+This criterion is computed on the enhanced PSD. See [[psd_enhance_v3][psd_enhance]].");
+    addUsageLine("+ ");
+    addUsageLine("+PSD variance: the PSD is estimated by averaging different PSD local estimates in small regions of the micrograph. ");
+    addUsageLine("+This criterion measures the variance of the different PSD local estimates. Untilted micrographs ");
+    addUsageLine("+have equal defoci all over the micrograph, and therefore, the variance is due only to noise. ");
+    addUsageLine("+However, tilted micrographs have an increased PSD variance since different regions of the micrograph ");
+    addUsageLine("+have different defoci. Low variance of the PSD are indicative of non-tilted micrographs");
+    addUsageLine("+ ");
+    addUsageLine("+PSD Principal Component 1 Variance: when considering the local PSDs previously defined as vectors ");
+    addUsageLine("+in a multidimensional space, we can compute the variance of their projection onto the first principal component axis. ");
+    addUsageLine("+Low variance of this projection is indicative of a uniformity of local PSDs, i.e., this is another measure ");
+    addUsageLine("+of the presence of tilt in the micrograph.");
+    addUsageLine("+ ");
+    addUsageLine("+PSD PCA Runs test: when computing the projections onto the first principal component, as discussed in the previous criterion, ");
+    addUsageLine("+one might expect that the sign of the projection is random for untilted micrographs. Micrographs with a marked ");
+    addUsageLine("+non-random pattern of projections are indicative of tilted micrographs. The larger the value of this criterion, the less random the pattern is.");
+    addParamsLine("   -i <selfile>              : Selfile with micrographs, it needs the columns image, psd and ctfmodel");
+    addParamsLine("                             : This file is modified by the addition of the evaluation criteria");
     addParamsLine("==+ Enhancement filter parameters");
     addParamsLine("  [-f1 <freq_low=0.02>]      : Low freq. for band pass filtration, max 0.5");
     addParamsLine("  [-f2 <freq_high=0.2>]      : High freq. for band pass filtration, max 0.5");
@@ -56,7 +107,7 @@ void Prog_Sort_PSD_Parameters::defineParams()
 }
 
 /* Show -------------------------------------------------------------------- */
-void Prog_Sort_PSD_Parameters::show() const
+void ProgPSDSort::show() const
 {
     std::cout << "Selfile:      " << fnSel << std::endl
     << "Filter w1:    " << filter_w1 << std::endl
@@ -67,7 +118,7 @@ void Prog_Sort_PSD_Parameters::show() const
 }
 
 /* Compute Correlation ----------------------------------------------------- */
-double Prog_Sort_PSD_Parameters::evaluate(const FileName &fnMicrograph,
+double ProgPSDSort::evaluate(const FileName &fnMicrograph,
     const FileName &fnPSD, const FileName &fnCTF, const FileName &fnCTF2,
     PSDEvaluation &evaluation) const
 {
@@ -128,7 +179,7 @@ double Prog_Sort_PSD_Parameters::evaluate(const FileName &fnMicrograph,
     double maxModule=0, minModule=1e38, min;
     double N=0;
     evaluation.maxDampingAtBorder=0;
-    evaluation.firstZeroDisagreement=0;
+    evaluation.firstZeroDisagreement=-1;
     evaluation.firstZeroAvg=0;
     for (double alpha=0; alpha<=PI; alpha+=PI/180, N++)
     {
@@ -158,7 +209,7 @@ double Prog_Sort_PSD_Parameters::evaluate(const FileName &fnMicrograph,
 }
 
 /* Run --------------------------------------------------------------------- */
-void Prog_Sort_PSD_Parameters::run()
+void ProgPSDSort::run()
 {
     MetaData SF(fnSel);
     PSDEvaluation evaluation;
@@ -175,13 +226,15 @@ void Prog_Sort_PSD_Parameters::run()
         evaluate(fnMicrograph, fnPSD, fnCTF, fnCTF2, evaluation);
         SF.setValue(MDL_CTF_CRITERION_DAMPING,evaluation.maxDampingAtBorder,__iter.objId);
         SF.setValue(MDL_CTF_CRITERION_FIRSTZEROAVG,evaluation.firstZeroAvg,__iter.objId);
-        SF.setValue(MDL_CTF_CRITERION_FIRSTZERODISAGREEMENT,evaluation.firstZeroDisagreement,__iter.objId);
+        if (evaluation.firstZeroDisagreement>0)
+        	SF.setValue(MDL_CTF_CRITERION_FIRSTZERODISAGREEMENT,evaluation.firstZeroDisagreement,__iter.objId);
         SF.setValue(MDL_CTF_CRITERION_FIRSTZERORATIO,evaluation.firstZeroRatio,__iter.objId);
         SF.setValue(MDL_CTF_CRITERION_FITTINGSCORE,evaluation.fittingScore,__iter.objId);
         SF.setValue(MDL_CTF_CRITERION_FITTINGCORR13,evaluation.fittingCorr13,__iter.objId);
         SF.setValue(MDL_CTF_CRITERION_PSDCORRELATION90,evaluation.PSDcorrelation90,__iter.objId);
         SF.setValue(MDL_CTF_CRITERION_PSDRADIALINTEGRAL,evaluation.PSDradialIntegral,__iter.objId);
         SF.setValue(MDL_CTF_CRITERION_PSDVARIANCE,evaluation.PSDVariance,__iter.objId);
+        SF.setValue(MDL_CTF_CRITERION_PSDPCA1VARIANCE,evaluation.PSDPC1Variance,__iter.objId);
         SF.setValue(MDL_CTF_CRITERION_PSDPCARUNSTEST,evaluation.PSDPCRunsTest,__iter.objId);
         progress_bar(++idx);
     }
