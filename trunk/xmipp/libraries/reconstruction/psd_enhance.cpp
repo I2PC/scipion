@@ -40,7 +40,7 @@
 /* Read parameters --------------------------------------------------------- */
 void ProgCTFEnhancePSD::readParams()
 {
-    XmippMetadataProgram::read(argc, argv);
+	XmippMetadataProgram::readParams();
     center = !checkParam("--dont_center");
     take_log = !checkParam("--dont_log");
     filter_w1 = getDoubleParam("--f1");
@@ -53,15 +53,23 @@ void ProgCTFEnhancePSD::readParams()
 /* Usage ------------------------------------------------------------------- */
 void ProgCTFEnhancePSD::defineParams()
 {
+	each_image_produces_an_output=true;
+	defaultComments["-i"].clear();
+	defaultComments["-i"].addComment("Metadata with PSDs or a single PSD");
     XmippMetadataProgram::defineParams();
-    addParamsLine("  [--dont_center]            : By default, it is assumed that the image");
-    addParamsLine("                             : needs to be centered");
+    addUsageLine("Enhances the visibility of the Thon rings in a Power Spectrum Density (PSD).");
+    addUsageLine("+The algorithm is fully described at [[http://www.ncbi.nlm.nih.gov/pubmed/16987671][this article]]");
+    addSeeAlsoLine("ctf_estimate_from_micrograph");
+    addParamsLine("==+ Output parameters");
+    addParamsLine("  [--dont_center]            : By default, the output is centered");
     addParamsLine("  [--dont_log]               : Don't take log10 before working");
+    addParamsLine("==+ Bandpass parameters");
     addParamsLine("  [--f1 <freq_low=0.05>]     : Low freq. for band pass filtration, max 0.5");
     addParamsLine("  [--f2 <freq_high=0.2>]     : High freq. for band pass filtration, max 0.5");
     addParamsLine("  [--decay <freq_decay=0.02>]: Decay for the transition bands");
+    addParamsLine("==+ Output mask parameters");
     addParamsLine("  [--m1 <freq_low=0.025>]    : Low freq. for frequency mask, max 0.5");
-    addParamsLine("  [--m2 <freq_high=0.2>]     : High freq. for frequency mask, max 0.5");
+    addParamsLine("  [--m2 <freq_high=0.3>]     : High freq. for frequency mask, max 0.5");
 }
 
 /* Show -------------------------------------------------------------------- */
@@ -129,12 +137,17 @@ void ProgCTFEnhancePSD::apply(MultidimArray<double> &PSD)
     mask.resize(PSD);
     Matrix1D<int>    idx(2);  // Indexes for Fourier plane
     Matrix1D<double> freq(2); // Frequencies for Fourier plane
+    double limit0_2=mask_w1;
+    limit0_2=limit0_2*limit0_2;
+    double limitF_2=mask_w2;
+    limitF_2=limitF_2*limitF_2;
     FOR_ALL_ELEMENTS_IN_ARRAY2D(PSD)
     {
         XX(idx) = j;
         YY(idx) = i;
         FFT_idx2digfreq(PSD, idx, freq);
-        if (freq.module() < mask_w1 || freq.module() > mask_w2)
+        double freq2=XX(freq)*XX(freq)+YY(freq)*YY(freq);
+        if (freq2 < limit0_2 || freq2 > limitF_2)
             A2D_ELEM(PSD, i, j) = 0;
         else
             A2D_ELEM(mask, i, j) = 1;
@@ -144,12 +157,17 @@ void ProgCTFEnhancePSD::apply(MultidimArray<double> &PSD)
     //close to the border and normalize the PSD image
     MultidimArray<int> tighterMask;
     tighterMask.resizeNoCopy(PSD);
+    limit0_2=mask_w2*0.9;
+    limit0_2=limit0_2*limit0_2;
+    limitF_2=mask_w2;
+    limitF_2=limitF_2*limitF_2;
     FOR_ALL_ELEMENTS_IN_ARRAY2D(PSD)
     {
         XX(idx) = j;
         YY(idx) = i;
         FFT_idx2digfreq(PSD, idx, freq);
-        if (freq.module() > mask_w2*0.9 && freq.module() < mask_w2)
+        double freq2=XX(freq)*XX(freq)+YY(freq)*YY(freq);
+        if (freq2 > limit0_2 && freq2 < limitF_2)
             A2D_ELEM(tighterMask, i, j) = 1;
         else
             A2D_ELEM(tighterMask,i,j) = 0;
@@ -163,12 +181,17 @@ void ProgCTFEnhancePSD::apply(MultidimArray<double> &PSD)
         A2D_ELEM(PSD, i, j) = (A2D_ELEM(PSD, i, j) - avg) *istddev;
 
     // Mask again
+    limit0_2=mask_w1;
+    limit0_2=limit0_2*limit0_2;
+    limitF_2=mask_w2*0.9;
+    limitF_2=limitF_2*limitF_2;
     FOR_ALL_ELEMENTS_IN_ARRAY2D(PSD)
     {
         XX(idx) = j;
         YY(idx) = i;
         FFT_idx2digfreq(PSD, idx, freq);
-        if (freq.module() < mask_w1 || freq.module() > mask_w2*0.9)
+        double freq2=XX(freq)*XX(freq)+YY(freq)*YY(freq);
+        if (freq2 < limit0_2 || freq2 > limitF_2)
             A2D_ELEM(PSD, i, j) = 0;
     }
 
