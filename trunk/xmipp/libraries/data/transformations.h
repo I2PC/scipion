@@ -1336,21 +1336,22 @@ void radialAverage(const MultidimArray< T >& m,
 
         // Determine distance to the center
         int distance;
+        double module=sqrt(ZZ(idx)*ZZ(idx)+YY(idx)*YY(idx)+XX(idx)*XX(idx));
         if (rounding)
-            distance = (int) ROUND(idx.module());
+            distance = (int) round(module);
         else
-            distance = (int) floor(idx.module());
+            distance = (int) floor(module);
 
         // Sum te value to the pixels with the same distance
-        radial_mean(distance) += A3D_ELEM(m, k, i, j);
+        DIRECT_MULTIDIM_ELEM(radial_mean,distance) += A3D_ELEM(m, k, i, j);
 
         // Count the pixel
-        radial_count(distance)++;
+        DIRECT_MULTIDIM_ELEM(radial_count,distance)++;
     }
 
     // Perform the mean
     FOR_ALL_ELEMENTS_IN_ARRAY1D(radial_mean)
-    radial_mean(i) /= (T) radial_count(i);
+    DIRECT_MULTIDIM_ELEM(radial_mean,i) /= (T) DIRECT_MULTIDIM_ELEM(radial_count,i);
 }
 
 template<typename T>
