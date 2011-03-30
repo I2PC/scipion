@@ -527,6 +527,7 @@ ReconsSources = [
     'create_projection_library.cpp',
     'ctf_correct_amplitude3d.cpp',
     'ctf_correct_idr.cpp',
+    'ctf_enhance_psd.cpp',
     'ctf_estimate_from_micrograph.cpp',
     'ctf_group.cpp',
     'ctf_sort_psds.cpp',
@@ -557,7 +558,6 @@ ReconsSources = [
     'project_XR.cpp',
     'projection_real_shears.cpp',
     'projectTomography.cpp',
-    'psd_enhance.cpp',
     'radon.cpp',
     'recons_misc.cpp',
     'reconstruct_art.cpp',
@@ -673,6 +673,7 @@ AddXmippProgram('correlation')
 AddXmippProgram('ctf_correct_amplitude3d', ['XmippRecons'])
 AddXmippProgram('ctf_correct_idr', ['XmippRecons'])
 AddXmippProgram('ctf_create_ctfdat', ['XmippRecons'])
+AddXmippProgram('ctf_enhance_psd', ['XmippRecons'])
 AddXmippProgram('ctf_estimate_from_micrograph', ['XmippRecons'])
 AddXmippProgram('ctf_estimate_from_psd', ['XmippRecons'])
 AddXmippProgram('ctf_group', ['XmippRecons'])
@@ -721,7 +722,6 @@ AddXmippProgram('phantom_project', ['XmippRecons','XmippInterface'])
 AddXmippProgram('phantom_simulate_microscope', ['XmippRecons'])
 AddXmippProgram('phantom_transform', ['XmippRecons','XmippInterface'])
 AddXmippProgram('projection_real_shears', ['XmippRecons'])
-AddXmippProgram('psd_enhance', ['XmippRecons'])
 #Sjors: note that crystal stuff in ART is not working yet....
 AddXmippProgram('reconstruct_art', ['XmippRecons'])
 AddXmippProgram('reconstruct_art_pseudo', ['XmippRecons'])

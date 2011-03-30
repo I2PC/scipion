@@ -30,7 +30,7 @@
  *  e-mail address 'xmipp@cnb.csic.es'
  ***************************************************************************/
 
-#include "psd_enhance.h"
+#include "ctf_enhance_psd.h"
 #include "fourier_filter.h"
 
 #include <data/args.h>
@@ -70,6 +70,7 @@ void ProgCTFEnhancePSD::defineParams()
     addParamsLine("==+ Output mask parameters");
     addParamsLine("  [--m1 <freq_low=0.025>]    : Low freq. for frequency mask, max 0.5");
     addParamsLine("  [--m2 <freq_high=0.3>]     : High freq. for frequency mask, max 0.5");
+    addExampleLine("xmipp_ctf_enhance_psd -i myPSD.psd -o myPSD_enhanced.psd");
 }
 
 /* Show -------------------------------------------------------------------- */

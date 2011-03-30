@@ -24,7 +24,7 @@
  ***************************************************************************/
 
 #include <data/progs.h>
-#include <reconstruction/psd_enhance.h>
+#include <reconstruction/ctf_enhance_psd.h>
 
 int main(int argc, char **argv)
 {

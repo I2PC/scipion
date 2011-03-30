@@ -25,7 +25,7 @@
  ***************************************************************************/
 
 #include "adjust_ctf.h"
-#include "psd_enhance.h"
+#include "ctf_enhance_psd.h"
 #include "fourier_filter.h"
 
 #include <data/args.h>

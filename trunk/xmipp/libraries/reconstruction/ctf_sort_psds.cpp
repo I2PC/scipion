@@ -24,7 +24,7 @@
 
 #include <vector>
 #include "ctf_sort_psds.h"
-#include "psd_enhance.h"
+#include "ctf_enhance_psd.h"
 #include "ctf_estimate_from_micrograph.h"
 #include <data/args.h>
 #include <data/filters.h>
