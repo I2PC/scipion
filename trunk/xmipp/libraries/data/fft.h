@@ -78,17 +78,14 @@ void FFT_idx2digfreq(T& v, const Matrix1D< int >& idx, Matrix1D< double >& freq)
 
     freq.resizeNoCopy(VEC_XSIZE(idx));
 
-    int size[3];
-    v.getSize(size);
-
     switch (VEC_XSIZE(idx))
     {
     case 3:
-    	FFT_IDX2DIGFREQ(VEC_ELEM(idx,2), size[2], VEC_ELEM(freq,2));
+    	FFT_IDX2DIGFREQ(VEC_ELEM(idx,2), ZSIZE(v), VEC_ELEM(freq,2));
     case 2:
-    	FFT_IDX2DIGFREQ(VEC_ELEM(idx,1), size[1], VEC_ELEM(freq,1));
+    	FFT_IDX2DIGFREQ(VEC_ELEM(idx,1), YSIZE(v), VEC_ELEM(freq,1));
     case 1:
-    	FFT_IDX2DIGFREQ(VEC_ELEM(idx,0), size[0], VEC_ELEM(freq,0));
+    	FFT_IDX2DIGFREQ(VEC_ELEM(idx,0), XSIZE(v), VEC_ELEM(freq,0));
     }
 }
 
