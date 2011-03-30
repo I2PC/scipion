@@ -8,13 +8,13 @@
 
 JNIEXPORT void JNICALL Java_xmipp_Projection_storeIds
 (JNIEnv *env, jclass cls) {
-	Projection_peerId = env->GetFieldID(cls, "peer", "J");
+	peerId = env->GetFieldID(cls, "peer", "J");
 }
 
 JNIEXPORT void JNICALL Java_xmipp_Projection_create
 (JNIEnv *env, jobject jobj) {
 	Projection *projection = new Projection();
-	env->SetLongField(jobj, Projection_peerId, (long)projection);
+	env->SetLongField(jobj, peerId, (long)projection);
 }
 
 JNIEXPORT void JNICALL Java_xmipp_Projection_destroy
@@ -22,7 +22,7 @@ JNIEXPORT void JNICALL Java_xmipp_Projection_destroy
 	Projection *projection = GET_INTERNAL_PROJECTION(jobj);
 	delete projection;
 	projection = NULL;
-	env->SetLongField(jobj, Projection_peerId, (long)projection);
+	env->SetLongField(jobj, peerId, (long)projection);
 }
 
 JNIEXPORT void JNICALL Java_xmipp_Projection_reset
