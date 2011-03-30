@@ -13,10 +13,10 @@ class Tester:
         self.progDict[program] = []
         self.lastProgram = program
 
-    def addTest(self, test, mpi=False, prerun=""):
-        self.progDict[self.lastProgram].append((test,False,prerun))
+    def addTest(self, test, mpi=False, prerun="", changeDirectory=False):
+        self.progDict[self.lastProgram].append((test,False,prerun,changeDirectory))
         if mpi:
-            self.progDict[self.lastProgram].append((test,True,prerun))
+            self.progDict[self.lastProgram].append((test,True,prerun,changeDirectory))
 
     def runProgramTests(self, program):
         tests = self.progDict[program]
@@ -26,7 +26,7 @@ class Tester:
         testName = ""
 
         testNo = 1
-        for test,mpi,prerun in tests:
+        for test,mpi,prerun,changeDirectory in tests:
             if n > 1:
                 outDir = outPath + "_%02d" % testNo
                 testName = "(%d of %d)" % (testNo, n)
@@ -50,7 +50,10 @@ class Tester:
                 cmd="mpirun -np 3 `which %s`"%program.replace("xmipp_","xmipp_mpi_")
             else:
                 cmd=program
-            cmd += " %s > %s/stdout.txt 2> %s/stderr.txt" % (test, outDir, outDir)
+            if changeDirectory:
+                cmd="cd %s ; "%outDir+cmd+" %s > stdout.txt 2> stderr.txt"%test
+            else:
+                cmd += " %s > %s/stdout.txt 2> %s/stderr.txt" % (test, outDir, outDir)
             print "    Command: "
             print "       ", cmd
             os.system(cmd)
@@ -90,15 +93,21 @@ class Tester:
         self.addProgram("xmipp_classify_analyze_cluster")
         self.addTest("-i input/smallStack.stk --ref 1@input/smallStack.stk -o %o/pca.xmd")
 
+        self.addProgram("xmipp_ctf_group")
+        self.addTest("--ctfdat input/ctf_group/all_images_new.ctfdat -o %o/ctf --wiener --wc -1 --pad 2 --phase_flipped --error 0.5 --resol 5.6" )
+        self.addTest("--ctfdat input/ctf_group/all_images_new.ctfdat -o %o/ctf --wiener --wc -1 --pad 2 --phase_flipped --split input/ctf_group/ctf_split.doc" )
+
+        self.addProgram("xmipp_ctf_enhance_psd")
+        self.addTest("-i input/down1_01nov26b.001.001.001.002_Periodogramavg.psd -o %o/enhanced_psd.xmp" )
+
+        self.addProgram("xmipp_ctf_sort_psds")
+        self.addTest("-i all_micrographs.sel",False,"cp -r input/Protocol_Preprocess_Micrographs/Preprocessing/* %o",True)
+
         self.addProgram("xmipp_image_align")
         self.addTest("-i input/smallStack.stk --oroot %o/aligned")
 
         self.addProgram("xmipp_image_convert")
         self.addTest("-i input/smallStack.stk -o %o/smallStack.mrcs -t stk")
-
-        self.addProgram("xmipp_ctf_group")
-        self.addTest("--ctfdat input/ctf_group/all_images_new.ctfdat -o %o/ctf --wiener --wc -1 --pad 2 --phase_flipped --error 0.5 --resol 5.6" )
-        self.addTest("--ctfdat input/ctf_group/all_images_new.ctfdat -o %o/ctf --wiener --wc -1 --pad 2 --phase_flipped --split input/ctf_group/ctf_split.doc" )
 
         self.addProgram("xmipp_image_header")
         self.addTest("-i input/smallStack.stk --extract -o %o/header.doc")
@@ -180,7 +189,7 @@ class Tester:
 
         self.addProgram("xmipp_transform_mask")
         self.addTest("-i input/singleImage.spi -o %o/singleImage_mask.xmp --mask circular -15")
-	self.addTest("-i input/phantomBacteriorhodopsin.vol -o %o/outputVol_mask.vol --mask rectangular -20 -20 -20")
+        self.addTest("-i input/phantomBacteriorhodopsin.vol -o %o/outputVol_mask.vol --mask rectangular -20 -20 -20")
         self.addTest("-i input/smallStack.stk -o %o/outputStack_mask.stk --mask circular -20")
 
         self.addProgram("xmipp_transform_normalize")
