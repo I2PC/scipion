@@ -26,20 +26,9 @@
 #include <data/progs.h>
 #include <reconstruction/psd_enhance.h>
 
-bool process_img(Image<double> &img, const Prog_parameters *prm)
-{
-	if (ZSIZE(img())!=1)
-	{
-	    std::cerr << "This process is not valid for volumes\n";
-	    return false;
-	}
-    Prog_Enhance_PSD_Parameters *eprm = (Prog_Enhance_PSD_Parameters *) prm;
-    eprm->apply(img());
-    return true;
-}
-
 int main(int argc, char **argv)
 {
-    Prog_Enhance_PSD_Parameters prm;
-    SF_main(argc, argv, &prm, (void*)&process_img);
+    ProgCTFEnhancePSD prm;
+    prm.read(argc, argv);
+    return prm.tryRun();
 }

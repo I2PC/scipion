@@ -32,7 +32,7 @@
 //@{
 /* Enhance PSD Program Parameters ------------------------------------------ */
 /** Parameter class for the project program */
-class Prog_Enhance_PSD_Parameters: public Prog_parameters
+class ProgCTFEnhancePSD: public XmippMetadataProgram
 {
 public:
     /// Center PSD before working
@@ -56,18 +56,17 @@ public:
     /// Higher frequency for the mask (in Fourier space, max 0.5)
     double mask_w2;
 public:
-    /** Read from a command line.
-        An exception might be thrown by any of the internal conversions,
-        this would mean that there is an error in the command line and you
-        might show a usage message. */
-    void read(int argc, char **argv);
+    /** Read from a command line.*/
+    void readParams();
 
-    /** Usage message.
-        This function shows the way of introdustd::cing this parameters. */
-    void usage();
+    /** Define parameters. */
+    void defineParams();
 
     /** Show parameters. */
     void show();
+
+    /** Process one image */
+    void processImage(const FileName &fnImg, const FileName &fnImgOut, size_t objId);
 
     /** Apply to a single PSD.
         The steps are basically: outlier removal, band pass filtration, masking

@@ -665,7 +665,7 @@ void Adjust_CTF_Parameters::produce_side_info()
     }
 
     // Enhance PSD for ctfmodels
-    Prog_Enhance_PSD_Parameters prm;
+    ProgCTFEnhancePSD prm;
     prm.center = true;
     prm.take_log = true;
     prm.filter_w1 = 0.02;

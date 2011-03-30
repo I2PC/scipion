@@ -33,7 +33,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray*prhs[])
     Matrix2D<double> image;
     getMatrix2D(prhs[0],image);
     
-    Prog_Enhance_PSD_Parameters psdParams;
+    ProgCTFEnhancePSD psdParams;
     
     /*read center flag*/
     psdParams.center = (bool) mxGetScalar(prhs[1]);

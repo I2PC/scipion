@@ -38,37 +38,36 @@
 #include <data/fft.h>
 
 /* Read parameters --------------------------------------------------------- */
-void Prog_Enhance_PSD_Parameters::read(int argc, char **argv)
+void ProgCTFEnhancePSD::readParams()
 {
-    Prog_parameters::read(argc, argv);
-    center = !checkParameter(argc, argv, "-dont_center");
-    take_log = !checkParameter(argc, argv, "-dont_log");
-    filter_w1 = textToFloat(getParameter(argc, argv, "-f1", "0.05"));
-    filter_w2 = textToFloat(getParameter(argc, argv, "-f2", "0.2"));
-    decay_width = textToFloat(getParameter(argc, argv, "-decay", "0.02"));
-    mask_w1 = textToFloat(getParameter(argc, argv, "-m1", "0.025"));
-    mask_w2 = textToFloat(getParameter(argc, argv, "-m2", "0.2"));
+    XmippMetadataProgram::read(argc, argv);
+    center = !checkParam("--dont_center");
+    take_log = !checkParam("--dont_log");
+    filter_w1 = getDoubleParam("--f1");
+    filter_w2 = getDoubleParam("--f2");
+    decay_width = getDoubleParam("--decay");
+    mask_w1 = getDoubleParam("--m1");
+    mask_w2 = getDoubleParam("--m2");
 }
 
 /* Usage ------------------------------------------------------------------- */
-void Prog_Enhance_PSD_Parameters::usage()
+void ProgCTFEnhancePSD::defineParams()
 {
-    Prog_parameters::usage();
-    std::cerr << "  [-dont_center]            : By default, it is assumed that the image\n"
-    << "                              needs to be centered\n"
-    << "  [-dont_log]               : Don't take log10 before working\n"
-    << "  [-f1 <freq_low=0.05>]     : Low freq. for band pass filtration, max 0.5\n"
-    << "  [-f2 <freq_high=0.2>]     : High freq. for band pass filtration, max 0.5\n"
-    << "  [-decay <freq_decay=0.02>]: Decay for the transition bands\n"
-    << "  [-m1 <freq_low=0.025>]    : Low freq. for mask, max 0.5\n"
-    << "  [-m2 <freq_high=0.2>      : High freq. for mask, max 0.5\n"
-    ;
+    XmippMetadataProgram::defineParams();
+    addParamsLine("  [--dont_center]            : By default, it is assumed that the image");
+    addParamsLine("                             : needs to be centered");
+    addParamsLine("  [--dont_log]               : Don't take log10 before working");
+    addParamsLine("  [--f1 <freq_low=0.05>]     : Low freq. for band pass filtration, max 0.5");
+    addParamsLine("  [--f2 <freq_high=0.2>]     : High freq. for band pass filtration, max 0.5");
+    addParamsLine("  [--decay <freq_decay=0.02>]: Decay for the transition bands");
+    addParamsLine("  [--m1 <freq_low=0.025>]    : Low freq. for frequency mask, max 0.5");
+    addParamsLine("  [--m2 <freq_high=0.2>]     : High freq. for frequency mask, max 0.5");
 }
 
 /* Show -------------------------------------------------------------------- */
-void Prog_Enhance_PSD_Parameters::show()
+void ProgCTFEnhancePSD::show()
 {
-    Prog_parameters::show();
+    XmippMetadataProgram::show();
     std::cout << "Centering:    " << center      << std::endl
     << "Log10:        " << take_log    << std::endl
     << "Filter w1:    " << filter_w1   << std::endl
@@ -81,13 +80,24 @@ void Prog_Enhance_PSD_Parameters::show()
 
 
 /* Apply ------------------------------------------------------------------- */
+void ProgCTFEnhancePSD::processImage(const FileName &fnImg, const FileName &fnImgOut,
+                                     size_t objId)
+{
+	Image<double> PSD;
+	PSD.read(fnImg);
+	if (ZSIZE(PSD())!=1)
+		REPORT_ERROR(ERR_MATRIX_DIM,"This program is not intended for volumes");
+	apply(PSD());
+	PSD.write(fnImgOut);
+}
+
 //#define DEBUG
-void Prog_Enhance_PSD_Parameters::apply(MultidimArray<double> &PSD)
+void ProgCTFEnhancePSD::apply(MultidimArray<double> &PSD)
 {
     // Take the logarithm
     if (take_log)
         FOR_ALL_ELEMENTS_IN_ARRAY2D(PSD)
-        PSD(i, j) = log10(1 + PSD(i, j));
+        A2D_ELEM(PSD, i, j) = log10(1 + A2D_ELEM(PSD, i, j));
 
     // Remove single outliers
     if (center)
@@ -125,9 +135,9 @@ void Prog_Enhance_PSD_Parameters::apply(MultidimArray<double> &PSD)
         YY(idx) = i;
         FFT_idx2digfreq(PSD, idx, freq);
         if (freq.module() < mask_w1 || freq.module() > mask_w2)
-            PSD(i, j) = 0;
+            A2D_ELEM(PSD, i, j) = 0;
         else
-            mask(i, j) = 1;
+            A2D_ELEM(mask, i, j) = 1;
     }
 
     //Compute the mean and the standard deviation under a tighter mask
@@ -140,16 +150,17 @@ void Prog_Enhance_PSD_Parameters::apply(MultidimArray<double> &PSD)
         YY(idx) = i;
         FFT_idx2digfreq(PSD, idx, freq);
         if (freq.module() > mask_w2*0.9 && freq.module() < mask_w2)
-            tighterMask(i, j) = 1;
+            A2D_ELEM(tighterMask, i, j) = 1;
         else
-            tighterMask(i,j) = 0;
+            A2D_ELEM(tighterMask,i,j) = 0;
     }
 
     double min_val, max_val, avg, stddev;
     computeStats_within_binary_mask(tighterMask, PSD, min_val, max_val, avg, stddev);
+    double istddev=1.0/stddev;
     FOR_ALL_ELEMENTS_IN_ARRAY2D(PSD)
-    if (mask(i, j))
-        PSD(i, j) = (PSD(i, j) - avg) / stddev;
+    if (A2D_ELEM(mask, i, j))
+        A2D_ELEM(PSD, i, j) = (A2D_ELEM(PSD, i, j) - avg) *istddev;
 
     // Mask again
     FOR_ALL_ELEMENTS_IN_ARRAY2D(PSD)
@@ -158,7 +169,7 @@ void Prog_Enhance_PSD_Parameters::apply(MultidimArray<double> &PSD)
         YY(idx) = i;
         FFT_idx2digfreq(PSD, idx, freq);
         if (freq.module() < mask_w1 || freq.module() > mask_w2*0.9)
-            PSD(i, j) = 0;
+            A2D_ELEM(PSD, i, j) = 0;
     }
 
     CenterFFT(PSD, true);

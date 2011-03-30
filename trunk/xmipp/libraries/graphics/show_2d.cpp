@@ -1323,7 +1323,7 @@ void ImageViewer::recomputeCTFmodel()
 // Run Enhance PSD ---------------------------------------------------------
 void ImageViewer::runEnhancePSD(std::vector<float> enhance_prms)
 {
-    Prog_Enhance_PSD_Parameters prm;
+    ProgCTFEnhancePSD prm;
     prm.center = true;
     prm.take_log = true;
     prm.filter_w1 = enhance_prms[0];
