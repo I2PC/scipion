@@ -289,13 +289,13 @@ double fastCorrelation(const MultidimArray< T >& x,
     // loop unrolling
     for (size_t n=0; n<nmax; n+=4)
     {
-    	size_t n_1=n+1;
-    	size_t n_2=n+2;
-    	size_t n_3=n+3;
+        size_t n_1=n+1;
+        size_t n_2=n+2;
+        size_t n_3=n+3;
         retval += DIRECT_MULTIDIM_ELEM(x, n)   * DIRECT_MULTIDIM_ELEM(y, n)+
-        		  DIRECT_MULTIDIM_ELEM(x, n_1) * DIRECT_MULTIDIM_ELEM(y, n_1)+
-        		  DIRECT_MULTIDIM_ELEM(x, n_2) * DIRECT_MULTIDIM_ELEM(y, n_2)+
-        		  DIRECT_MULTIDIM_ELEM(x, n_3) * DIRECT_MULTIDIM_ELEM(y, n_3);
+                  DIRECT_MULTIDIM_ELEM(x, n_1) * DIRECT_MULTIDIM_ELEM(y, n_1)+
+                  DIRECT_MULTIDIM_ELEM(x, n_2) * DIRECT_MULTIDIM_ELEM(y, n_2)+
+                  DIRECT_MULTIDIM_ELEM(x, n_3) * DIRECT_MULTIDIM_ELEM(y, n_3);
     }
     for (size_t n=nmax; n<MULTIDIM_SIZE(x); ++n)
         retval += DIRECT_MULTIDIM_ELEM(x, n)   * DIRECT_MULTIDIM_ELEM(y, n);
@@ -457,9 +457,9 @@ void best_nonwrapping_shift(const MultidimArray< double >& I1,
  * The function returns the correlation between the two aligned images.
  */
 double alignImages(const MultidimArray< double >& Iref,
-                 MultidimArray< double >& I,
-                 Matrix2D< double >&M,
-                 bool wrap=WRAP);
+                   MultidimArray< double >& I,
+                   Matrix2D< double >&M,
+                   bool wrap=WRAP);
 
 /** Align two images considering also the mirrors
  * @ingroup Filters
@@ -706,39 +706,39 @@ void sort(T a, T b, T c, MultidimArray< T >& v)
     if (a < b)
         if (b < c)
         {
-            v(0) = a;
-            v(1) = b;
-            v(2) = c;
+            DIRECT_MULTIDIM_ELEM(v,0) = a;
+            DIRECT_MULTIDIM_ELEM(v,1) = b;
+            DIRECT_MULTIDIM_ELEM(v,2) = c;
         }
         else if (a < c)
         {
-            v(0) = a;
-            v(1) = c;
-            v(2) = b;
+            DIRECT_MULTIDIM_ELEM(v,0) = a;
+            DIRECT_MULTIDIM_ELEM(v,1) = c;
+            DIRECT_MULTIDIM_ELEM(v,2) = b;
         }
         else
         {
-            v(0) = c;
-            v(1) = a;
-            v(2) = b;
+            DIRECT_MULTIDIM_ELEM(v,0) = c;
+            DIRECT_MULTIDIM_ELEM(v,1) = a;
+            DIRECT_MULTIDIM_ELEM(v,2) = b;
         }
     else if (a < c)
     {
-        v(0) = b;
-        v(1) = a;
-        v(2) = c;
+        DIRECT_MULTIDIM_ELEM(v,0) = b;
+        DIRECT_MULTIDIM_ELEM(v,1) = a;
+        DIRECT_MULTIDIM_ELEM(v,2) = c;
     }
     else if (b < c)
     {
-        v(0) = b;
-        v(1) = c;
-        v(2) = a;
+        DIRECT_MULTIDIM_ELEM(v,0) = b;
+        DIRECT_MULTIDIM_ELEM(v,1) = c;
+        DIRECT_MULTIDIM_ELEM(v,2) = a;
     }
     else
     {
-        v(0) = c;
-        v(1) = b;
-        v(2) = a;
+        DIRECT_MULTIDIM_ELEM(v,0) = c;
+        DIRECT_MULTIDIM_ELEM(v,1) = b;
+        DIRECT_MULTIDIM_ELEM(v,2) = a;
     }
 }
 
