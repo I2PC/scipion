@@ -24,22 +24,11 @@
  *  e-mail address 'xmipp@cnb.csic.es'
  ***************************************************************************/
 
-#include <reconstruction/psd_sort.h>
+#include <reconstruction/ctf_sort_psds.h>
 
 int main(int argc, char **argv)
 {
-    // Get input parameters
-    try
-    {
-    	ProgPSDSort program;
-        program.read(argc, argv);
-        program.run();
-
-    }
-    catch (XmippError XE)
-    {
-        std::cerr << XE;
-        exit(1);
-    }
-    return 0;
+    ProgPSDSort program;
+    program.read(argc, argv);
+    return program.tryRun();
 }

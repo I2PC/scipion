@@ -23,8 +23,8 @@
  *  All comments concerning this program package may be sent to the
  *  e-mail address 'xmipp@cnb.csic.es'
  ***************************************************************************/
-#ifndef _PROG_SORT_PSD_HH
-#  define _PROG_SORT_PSD_HH
+#ifndef _PROG_CTF_SORT_PSDS_HH
+#  define _PROG_CTF_SORT_PSDS_HH
 
 #include <data/funcs.h>
 #include <data/metadata.h>
