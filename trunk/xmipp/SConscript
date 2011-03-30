@@ -529,6 +529,7 @@ ReconsSources = [
     'ctf_correct_idr.cpp',
     'ctf_estimate_from_micrograph.cpp',
     'ctf_group.cpp',
+    'ctf_sort_psds.cpp',
     'denoise.cpp',
     'detect_missing_wedge.cpp',
 ##    'detect_structures.cpp',
@@ -557,7 +558,6 @@ ReconsSources = [
     'projection_real_shears.cpp',
     'projectTomography.cpp',
     'psd_enhance.cpp',
-    'psd_sort.cpp',
     'radon.cpp',
     'recons_misc.cpp',
     'reconstruct_art.cpp',
@@ -675,8 +675,9 @@ AddXmippProgram('ctf_correct_idr', ['XmippRecons'])
 AddXmippProgram('ctf_create_ctfdat', ['XmippRecons'])
 AddXmippProgram('ctf_estimate_from_micrograph', ['XmippRecons'])
 AddXmippProgram('ctf_estimate_from_psd', ['XmippRecons'])
-AddXmippProgram('ctf_profile')
 AddXmippProgram('ctf_group', ['XmippRecons'])
+AddXmippProgram('ctf_profile')
+AddXmippProgram('ctf_sort_psds', ['XmippRecons'])
 AddXmippProgram('denoise', ['XmippRecons'])
 AddXmippProgram('detect_missing_wedge', ['XmippRecons'])
 #AddXmippProgram('detect_structures', ['XmippRecons'])
@@ -721,7 +722,6 @@ AddXmippProgram('phantom_simulate_microscope', ['XmippRecons'])
 AddXmippProgram('phantom_transform', ['XmippRecons','XmippInterface'])
 AddXmippProgram('projection_real_shears', ['XmippRecons'])
 AddXmippProgram('psd_enhance', ['XmippRecons'])
-AddXmippProgram('psd_sort', ['XmippRecons'])
 #Sjors: note that crystal stuff in ART is not working yet....
 AddXmippProgram('reconstruct_art', ['XmippRecons'])
 AddXmippProgram('reconstruct_art_pseudo', ['XmippRecons'])
