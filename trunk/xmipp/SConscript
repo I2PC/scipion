@@ -507,7 +507,6 @@ AddLibrary('xmipp', 'libraries/bindings/python', PyExtSources,
 
 # Reconstruction
 ReconsSources = [
-    'adjust_ctf.cpp',
     'adjust_volume_grey_levels.cpp',
     'align2d.cpp',
     'align_tilt_pairs.cpp',
@@ -528,6 +527,8 @@ ReconsSources = [
     'ctf_correct_idr.cpp',
     'ctf_enhance_psd.cpp',
     'ctf_estimate_from_micrograph.cpp',
+    'ctf_estimate_from_psd.cpp',
+    'ctf_estimate_psd_with_arma.cpp',
     'ctf_group.cpp',
     'ctf_sort_psds.cpp',
     'denoise.cpp',
@@ -566,7 +567,6 @@ ReconsSources = [
     'refinement.cpp',
     'resolution_ibw.cpp',
     'resolution_ssnr.cpp',
-    'sparma.cpp',
     'symmetrize.cpp',
     'threshold.cpp',
     'tomo_align_dual_tilt_series.cpp',

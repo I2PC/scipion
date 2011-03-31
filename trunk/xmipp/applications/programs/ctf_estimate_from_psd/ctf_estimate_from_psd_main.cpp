@@ -24,7 +24,7 @@
  ***************************************************************************/
 
 #include <data/args.h>
-#include <reconstruction/adjust_ctf.h>
+#include <reconstruction/ctf_estimate_from_psd.h>
 
 int main (int argc,char *argv[]) {
    Adjust_CTF_Parameters      prog_prm;

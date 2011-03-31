@@ -24,7 +24,8 @@
  *  e-mail address 'xmipp@cnb.csic.es'
  ***************************************************************************/
 
-#include "adjust_ctf.h"
+#include "ctf_estimate_psd_with_arma.h"
+#include "ctf_estimate_from_psd.h"
 #include "ctf_enhance_psd.h"
 #include "fourier_filter.h"
 

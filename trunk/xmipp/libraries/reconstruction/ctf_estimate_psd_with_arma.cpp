@@ -24,7 +24,7 @@
  *  e-mail address 'xmipp@cnb.csic.es'
  ***************************************************************************/
 
-#include "sparma.h"
+#include "ctf_estimate_psd_with_arma.h"
 
 #include <data/args.h>
 #include <data/fftw.h>

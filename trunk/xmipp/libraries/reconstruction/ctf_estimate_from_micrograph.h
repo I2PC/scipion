@@ -27,8 +27,8 @@
 #ifndef _PROG_ASSIGN_CTF
 #define _PROG_ASSIGN_CTF
 
-#include "adjust_ctf.h"
-#include "sparma.h"
+#include "ctf_estimate_from_psd.h"
+#include "ctf_estimate_psd_with_arma.h"
 
 /**@defgroup AssignCTF ctf_estimate_from_micrograph (CTF estimation from a micrograph)
    @ingroup ReconsLibrary
