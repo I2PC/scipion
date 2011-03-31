@@ -62,7 +62,7 @@ void ProgAnalyzeCluster::show()
 // usage ===================================================================
 void ProgAnalyzeCluster::defineParams()
 {
-	addUsageLine("Score the images in a cluster according to their PCA projection");
+    addUsageLine("Score the images in a cluster according to their PCA projection");
     addParamsLine("   -i <metadatafile>             : metadata file  with images assigned to the cluster");
     addParamsLine("   -o <metadatafile>             : output metadata");
     addParamsLine("   --ref <image>                 : class representative");
@@ -88,7 +88,7 @@ void ProgAnalyzeCluster::produceSideInfo()
     if (SFin.size()==0)
         return;
     if (SFin.containsLabel(MDL_ENABLED))
-    	SFin.removeObjects(MDValueEQ(MDL_ENABLED, -1));
+        SFin.removeObjects(MDValueEQ(MDL_ENABLED, -1));
 
     // Image holding current reference
     Image<double> Iref;
@@ -112,11 +112,11 @@ void ProgAnalyzeCluster::produceSideInfo()
     int idxStk=1;
     pcaAnalyzer.reserve(SFin.size());
     if (basis)
-    	Ialigned.reserve(SFin.size());
+        Ialigned.reserve(SFin.size());
     if (verbose>0)
     {
-    	std::cerr << "Processing cluster ...\n";
-    	init_progress_bar(SFin.size());
+        std::cerr << "Processing cluster ...\n";
+        init_progress_bar(SFin.size());
     }
     int i=0;
     MultidimArray<float> v;
@@ -132,7 +132,6 @@ void ProgAnalyzeCluster::produceSideInfo()
         Imirror=I;
         Imirror.selfReverseX();
         Imirror.setXmippOrigin();
-
 #ifdef DEBUG
 
         Iref.write("PPPref.xmp");
@@ -148,7 +147,7 @@ void ProgAnalyzeCluster::produceSideInfo()
             Iaux()=I;
         else
         {
-        	corr=corrMirror;
+            corr=corrMirror;
             Iaux()=Imirror;
             M=Mmirror;
         }
@@ -175,7 +174,6 @@ void ProgAnalyzeCluster::produceSideInfo()
             Ialigned.push_back(v); // The vector is duplicated because
         // the pcaAnalyzer normalizes the input vectors
         // and then, they cannot be reused
-
 #ifdef DEBUG
 
         std::cout << "Correlation=" << corr << " mirror=" << corrMirror
@@ -185,11 +183,12 @@ void ProgAnalyzeCluster::produceSideInfo()
         char c;
         std::cin >> c;
 #endif
+
         if ((++i)%10==0 && verbose>0)
-        	progress_bar(i);
+            progress_bar(i);
     }
     if (verbose>0)
-    	progress_bar(SFin.size());
+        progress_bar(SFin.size());
 }
 #undef DEBUG
 
@@ -223,9 +222,9 @@ void ProgAnalyzeCluster::run()
                 const MultidimArray<float> &Ialigned_trueIdx=Ialigned[trueIdx];
                 FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(IalignedAvg)
                 {
-                	double pixval=DIRECT_MULTIDIM_ELEM(Ialigned_trueIdx,n);
-                	DIRECT_MULTIDIM_ELEM(IalignedAvg,n)+=pixval;
-                	DIRECT_MULTIDIM_ELEM(Istddev,n)+=pixval*pixval;
+                    double pixval=DIRECT_MULTIDIM_ELEM(Ialigned_trueIdx,n);
+                    DIRECT_MULTIDIM_ELEM(IalignedAvg,n)+=pixval;
+                    DIRECT_MULTIDIM_ELEM(Istddev,n)+=pixval*pixval;
                 }
                 Ngood++;
             }
@@ -236,16 +235,16 @@ void ProgAnalyzeCluster::run()
     SFout.write(fnOut);
     if (basis && Ngood>0)
     {
-    	if (exists(fnOutBasis))
-    		unlink(fnOutBasis.c_str());
-    	double iNgood=1.0/Ngood;
-    	FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(IalignedAvg)
-    	{
-    		DIRECT_MULTIDIM_ELEM(IalignedAvg,n)*=iNgood;
-    		DIRECT_MULTIDIM_ELEM(Istddev,n)*=iNgood;
-    		DIRECT_MULTIDIM_ELEM(Istddev,n)=sqrt(DIRECT_MULTIDIM_ELEM(Istddev,n)-
-    			DIRECT_MULTIDIM_ELEM(IalignedAvg,n)*DIRECT_MULTIDIM_ELEM(IalignedAvg,n));
-    	}
+        if (exists(fnOutBasis))
+            unlink(fnOutBasis.c_str());
+        double iNgood=1.0/Ngood;
+        FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(IalignedAvg)
+        {
+            DIRECT_MULTIDIM_ELEM(IalignedAvg,n)*=iNgood;
+            DIRECT_MULTIDIM_ELEM(Istddev,n)*=iNgood;
+            DIRECT_MULTIDIM_ELEM(Istddev,n)=sqrt(DIRECT_MULTIDIM_ELEM(Istddev,n)-
+                                                 DIRECT_MULTIDIM_ELEM(IalignedAvg,n)*DIRECT_MULTIDIM_ELEM(IalignedAvg,n));
+        }
 
         Image<double> save;
         save().initZeros(mask);
@@ -263,7 +262,7 @@ void ProgAnalyzeCluster::run()
             if (A2D_ELEM(mask,i,j))
                 IMGPIXEL(save,i,j)=A1D_ELEM(Istddev,idx++);
             else
-            	IMGPIXEL(save,i,j)=avgStd;
+                IMGPIXEL(save,i,j)=avgStd;
         }
         save.write(fnOutBasis,1,true,WRITE_APPEND);
 
