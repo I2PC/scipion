@@ -524,7 +524,6 @@ ReconsSources = [
     'convert_pdb2vol.cpp',
     'convert_vol2pseudo.cpp',
     'correct_bfactor.cpp',
-    'create_projection_library.cpp',
     'ctf_correct_amplitude3d.cpp',
     'ctf_correct_idr.cpp',
     'ctf_enhance_psd.cpp',
