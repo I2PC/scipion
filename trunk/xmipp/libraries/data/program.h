@@ -69,8 +69,11 @@ private:
     /** Write Program info to DB */
     void writeToDB(const FileName &dbName);
 
-    /** Create Tk GUI */
-    void createGUI();
+    /** Create program GUI */
+    /** By default, a simple Tk GUI is create based on parameters definition.
+     * If an specific program implements a more specialized GUI, should redefine this function.
+     */
+    virtual void createGUI();
     /** Create Wiki for help */
     void createWiki();
 
