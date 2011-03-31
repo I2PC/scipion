@@ -31,7 +31,7 @@
 #include <data/funcs.h>
 #include <data/histogram.h>
 #include <data/fft.h>
-#include <reconstruction/psd_enhance.h>
+#include <reconstruction/ctf_enhance_psd.h>
 
 #include <qmenubar.h>
 #include <qmessagebox.h>
