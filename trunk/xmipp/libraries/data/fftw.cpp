@@ -34,20 +34,32 @@ static pthread_mutex_t fftw_plan_mutex = PTHREAD_MUTEX_INITIALIZER;
 // Constructors and destructors --------------------------------------------
 FourierTransformer::FourierTransformer()
 {
-    fPlanForward=NULL;
-    fPlanBackward=NULL;
-    fReal=NULL;
-    fComplex=NULL;
-    dataPtr=NULL;
-    complexDataPtr=NULL;
+    init();
     nthreads=1;
     threadsSetOn=false;
+    normSign = FFTW_FORWARD;
+}
+
+FourierTransformer::FourierTransformer(int _normSign)
+{
+    init();
+    nthreads=1;
+    threadsSetOn=false;
+    normSign = _normSign;
+}
+
+void FourierTransformer::init()
+{
+    fReal=NULL;
+    fComplex=NULL;
+    fPlanForward     = NULL;
+    fPlanBackward    = NULL;
+    dataPtr          = NULL;
+    complexDataPtr   = NULL;
 }
 
 void FourierTransformer::clear()
 {
-    fReal=NULL;
-    fComplex=NULL;
     fFourier.clear();
     // Anything to do with plans has to be protected for threads!
     pthread_mutex_lock(&fftw_plan_mutex);
@@ -56,10 +68,7 @@ void FourierTransformer::clear()
     if (fPlanBackward!=NULL)
         fftw_destroy_plan(fPlanBackward);
     pthread_mutex_unlock(&fftw_plan_mutex);
-    fPlanForward     = NULL;
-    fPlanBackward    = NULL;
-    dataPtr          = NULL;
-    complexDataPtr   = NULL;
+    init();
 }
 
 FourierTransformer::~FourierTransformer()
@@ -206,20 +215,48 @@ void FourierTransformer::Transform(int sign)
     if (sign == FFTW_FORWARD)
     {
         fftw_execute(fPlanForward);
-        unsigned long int size=0;
-        if(fReal!=NULL)
-            size = MULTIDIM_SIZE(*fReal);
-        else if (fComplex!= NULL)
-            size = MULTIDIM_SIZE(*fComplex);
-        else
-            REPORT_ERROR(ERR_UNCLASSIFIED,"No complex nor real data defined");
-        double isize=1.0/size;
-        FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(fFourier)
-            DIRECT_MULTIDIM_ELEM(fFourier,n) *= isize;
 
+        if (sign == normSign)
+        {
+            unsigned long int size=0;
+            if(fReal!=NULL)
+                size = MULTIDIM_SIZE(*fReal);
+            else if (fComplex!= NULL)
+                size = MULTIDIM_SIZE(*fComplex);
+            else
+                REPORT_ERROR(ERR_UNCLASSIFIED,"No complex nor real data defined");
+
+            double isize=1.0/size;
+            FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(fFourier)
+            DIRECT_MULTIDIM_ELEM(fFourier,n) *= isize;
+        }
     }
     else if (sign == FFTW_BACKWARD)
+    {
         fftw_execute(fPlanBackward);
+
+        if (sign == normSign)
+        {
+            unsigned long int size=0;
+            if(fReal!=NULL)
+            {
+                size = MULTIDIM_SIZE(*fReal);
+                double isize=1.0/size;
+                FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(*fReal)
+                DIRECT_MULTIDIM_ELEM(*fReal,n) *= isize;
+            }
+            else if (fComplex!= NULL)
+            {
+                size = MULTIDIM_SIZE(*fComplex);
+                double isize=1.0/size;
+                FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(*fComplex)
+                DIRECT_MULTIDIM_ELEM(*fComplex,n) *= isize;
+            }
+            else
+                REPORT_ERROR(ERR_UNCLASSIFIED,"No complex nor real data defined");
+        }
+    }
+
 }
 
 void FourierTransformer::FourierTransform()
@@ -294,7 +331,7 @@ void FFT_magnitude(const MultidimArray< std::complex<double> > &v,
 {
     mag.resizeNoCopy(v);
     FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(v)
-        DIRECT_MULTIDIM_ELEM(mag, n) = abs(DIRECT_MULTIDIM_ELEM(v, n));
+    DIRECT_MULTIDIM_ELEM(mag, n) = abs(DIRECT_MULTIDIM_ELEM(v, n));
 }
 
 /* FFT Phase ------------------------------------------------------- */
@@ -303,7 +340,7 @@ void FFT_phase(const MultidimArray< std::complex<double> > &v,
 {
     phase.resizeNoCopy(v);
     FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(v)
-        DIRECT_MULTIDIM_ELEM(phase, n) = atan2(DIRECT_MULTIDIM_ELEM(v,n).imag(), DIRECT_MULTIDIM_ELEM(v, n).real());
+    DIRECT_MULTIDIM_ELEM(phase, n) = atan2(DIRECT_MULTIDIM_ELEM(v,n).imag(), DIRECT_MULTIDIM_ELEM(v, n).real());
 }
 
 // Fourier ring correlation -----------------------------------------------
@@ -316,21 +353,25 @@ void frc_dpr(MultidimArray< double > & m1,
              MultidimArray< double >& frc_noise,
              MultidimArray< double >& dpr,
              MultidimArray< double >& error_l2,
-             bool skipdpr)
+             bool dodpr)
 {
     if (!m1.sameShape(m2))
         REPORT_ERROR(ERR_MULTIDIM_SIZE,"MultidimArrays have different shapes!");
 
+    int m1sizeX = XSIZE(m1), m1sizeY = YSIZE(m1), m1sizeZ = ZSIZE(m1);
+
     MultidimArray< std::complex< double > > FT1;
-    FourierTransformer transformer1;
+    FourierTransformer transformer1(FFTW_BACKWARD);
     transformer1.FourierTransform(m1, FT1, false);
+    m1.clear(); // Free memory
 
     MultidimArray< std::complex< double > > FT2;
-    FourierTransformer transformer2;
+    FourierTransformer transformer2(FFTW_BACKWARD);
     transformer2.FourierTransform(m2, FT2, false);
+    m2.clear(); // Free memory
 
-    MultidimArray< int > radial_count(XSIZE(m1)/2+1);
-    MultidimArray<double> num, den1, den2;
+    MultidimArray< int > radial_count(m1sizeX/2+1);
+    MultidimArray<double> num, den1, den2, den_dpr;
     Matrix1D<double> f(3);
     num.initZeros(radial_count);
     den1.initZeros(radial_count);
@@ -339,7 +380,11 @@ void frc_dpr(MultidimArray< double > & m1,
     //dpr calculation takes for ever in large volumes
     //since atan2 is called many times
     //untill atan2 is changed by a table let us make dpr an option
-    dpr.initZeros(radial_count);
+    if (dodpr)
+    {
+        dpr.initZeros(radial_count);
+        den_dpr.initZeros(radial_count);
+    }
     freq.initZeros(radial_count);
     frc.initZeros(radial_count);
     frc_noise.initZeros(radial_count);
@@ -350,45 +395,66 @@ void frc_dpr(MultidimArray< double > & m1,
         new std::vector<double>[XSIZE(radial_count)];
 #endif
 
-    FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY3D(FT1)
+    int sizeZ_2 = m1sizeZ/2;
+    double isizeZ = 1.0/m1sizeZ;
+    int sizeY_2 = m1sizeY/2;
+    double iysize = 1.0/m1sizeY;
+    int sizeX_2 = m1sizeX/2;
+    double ixsize = 1.0/m1sizeX;
+
+    for (int k=0; k<ZSIZE(FT1); k++)
     {
-        FFT_IDX2DIGFREQ(j,XSIZE(m1),XX(f));
-        FFT_IDX2DIGFREQ(i,YSIZE(m1),YY(f));
-        FFT_IDX2DIGFREQ(k,ZSIZE(m1),ZZ(f));
-        double R=f.module();
-        if (R>0.5)
-            continue;
-        int idx=ROUND(R*XSIZE(m1));
-        std::complex<double> z1=dAkij(FT1, k, i, j);
-        std::complex<double> z2=dAkij(FT2, k, i, j);
-        double absz1=abs(z1);
-        double absz2=abs(z2);
-        num(idx)+=real(conj(z1) * z2);
-        den1(idx)+= absz1*absz1;
-        den2(idx)+= absz2*absz2;
-        error_l2(idx)+=abs(z1-z2);
-        if (skipdpr) //this takes to long for a huge volume
+        FFT_IDX2DIGFREQ_FAST(k,m1sizeZ,sizeZ_2,isizeZ,ZZ(f));
+        double fz2=ZZ(f)*ZZ(f);
+        for (int i=0; i<YSIZE(FT1); i++)
         {
-            double phaseDiff=realWRAP(RAD2DEG((atan2(z1.imag(), z1.real())) -
-                                              (atan2(z2.imag(), z2.real()))),-180, 180);
-            dpr(idx)+=sqrt((absz1+absz2)*phaseDiff*phaseDiff/(absz1+absz2));
+            FFT_IDX2DIGFREQ_FAST(i,YSIZE(m1),sizeY_2, iysize, YY(f));
+            double fz2_fy2=fz2 + YY(f)*YY(f);
+            for (int j=0; j<XSIZE(FT1); j++)
+            {
+                FFT_IDX2DIGFREQ_FAST(j,m1sizeX, sizeX_2, ixsize, XX(f));
+
+                double R2 =fz2_fy2 + XX(f)*XX(f);
+
+                if (R2>0.25)
+                    continue;
+
+                double R = sqrt(R2);
+                int idx = ROUND(R * m1sizeX);
+                std::complex<double> &z1 = dAkij(FT1, k, i, j);
+                std::complex<double> &z2 = dAkij(FT2, k, i, j);
+                double absz1 = abs(z1);
+                double absz2 = abs(z2);
+                num(idx) += real(conj(z1) * z2);
+                den1(idx) += absz1*absz1;
+                den2(idx) += absz2*absz2;
+                error_l2(idx) += abs(z1-z2);
+                if (dodpr) //this takes to long for a huge volume
+                {
+                    double phaseDiff = realWRAP(RAD2DEG((atan2(z1.imag(), z1.real())) -
+                                                        (atan2(z2.imag(), z2.real()))),-180, 180);
+                    dpr(idx) += ((absz1+absz2)*phaseDiff*phaseDiff);
+                    den_dpr(idx) += (absz1+absz2);
 #ifdef SAVE_REAL_PART
 
-            realPart[idx].push_back(z1.real());
+                    realPart[idx].push_back(z1.real());
 #endif
 
+                }
+                radial_count(idx)++;
+            }
         }
-        radial_count(idx)++;
     }
 
     FOR_ALL_ELEMENTS_IN_ARRAY1D(freq)
     {
-        freq(i) = (double) i / (XSIZE(m1) * sampling_rate);
+        freq(i) = (double) i / (m1sizeX * sampling_rate);
         frc(i) = num(i)/sqrt(den1(i)*den2(i));
         frc_noise(i) = 2 / sqrt((double) radial_count(i));
-        error_l2(i)/=radial_count(i);
-        if (skipdpr)
-            dpr(i)/=radial_count(i);
+        error_l2(i) /= radial_count(i);
+
+        if (dodpr)
+            dpr(i) = sqrt(dpr(i) / den_dpr(i));
 #ifdef SAVE_REAL_PART
 
         std::ofstream fhOut;
@@ -441,10 +507,10 @@ void selfScaleToSizeFourier(int Ydim, int Xdim, MultidimArray<double>& Mpmem,int
 
 void selfScaleToSizeFourier(int Ydim, int Xdim, MultidimArrayGeneric &Mpmem, int nThreads)
 {
-  MultidimArray<double> aux;
-  Mpmem.getImage(aux);
-  selfScaleToSizeFourier(Ydim, Xdim, aux, nThreads);
-  Mpmem.setImage(aux);
+    MultidimArray<double> aux;
+    Mpmem.getImage(aux);
+    selfScaleToSizeFourier(Ydim, Xdim, aux, nThreads);
+    Mpmem.setImage(aux);
 }
 
 void getSpectrum(MultidimArray<double> &Min,

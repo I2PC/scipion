@@ -79,11 +79,16 @@ public:
     /* Threads has been used in this program*/
     bool threadsSetOn;
 
+    /* Sign where the normalization is applied */
+    int normSign;
+
 // Public methods
 public:
     /** Default constructor */
     FourierTransformer();
 
+    /* Constructor setting the sign of normalization application*/
+    FourierTransformer(int _normSign);
     /** Destructor */
     ~FourierTransformer();
 
@@ -284,6 +289,8 @@ public:
     /* Pointer to the array of complex<double> with which the plan was computed */
     std::complex<double> * complexDataPtr;
 
+    /* Init object*/
+    void init();
     /** Clear object */
     void clear();
 
@@ -319,6 +326,15 @@ public:
         the one for the Fourier array are already resized.
         No plan is updated. */
     void setFourier(MultidimArray<std::complex<double> > &imgFourier);
+
+    /* Set normalization sign.
+     * It defines when the normalization must be applied, when doing
+     * FFTW_FORWARD OR FFTW_BACKWARD. By default, FFTW_FORWARD.*/
+    void setNormSign(int _normSign)
+    {
+      normSign = _normSign;
+    }
+
 };
 
 /** FFT Magnitude 1D

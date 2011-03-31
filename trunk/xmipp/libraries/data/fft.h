@@ -47,6 +47,8 @@
     freq = (size<=1)? 0:(((double) ((idx) < ((size) >> 1)) ? (idx) : -(size) + (idx)) / \
            (double)(size));
 
+#define FFT_IDX2DIGFREQ_FAST(idx, size, size_2, isize, freq) \
+    freq = ( ((idx) < (size_2)) ? (idx) : -(size) + (idx) ) * (isize);
 /** Frequency to index (int)
  *
  * Given a frequency and a size of the FFT, this macro returns the corresponding
