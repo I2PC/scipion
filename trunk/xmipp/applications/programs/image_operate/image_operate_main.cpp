@@ -239,7 +239,24 @@ protected:
         addParamsLine("or --radial_avg              :Compute the radial average of an image");
 
         addExampleLine("Sum two volumes and save result", false);
-        addExampleLine("xmipp_operate -i volume1.vol --plus volume2.vol -o result.vol");
+        addExampleLine("xmipp_image_operate -i volume1.vol --plus volume2.vol -o result.vol");
+        addExampleLine("Calculate the log10 of an image called example.xmp and store the resulting one in example_log.xmp", false);
+        addExampleLine("xmipp_image_operate -i example.xmp --log10 -o example_log.xmp");
+        addExampleLine("Calculate the square root of a volume called example.vol and store it in expample_sq.vol", false);
+        addExampleLine("xmipp_image_operate -i example.vol --sqrt  -o expample_sq.vol");
+        addExampleLine("Extract the slice number 10 of a set of of volumes given in the sel file called volumes.sel. The names of the output images its supposed to be in the selfile images.sel", false);
+        addExampleLine("xmipp_image_operate -i volumes.sel --slice 10 -o images.sel");
+        addExampleLine("Sum 5 to every image in images.sel and rewrite the input images", false);
+        addExampleLine("xmipp_image_operate -i images.sel --plus 5");
+        addExampleLine("Substract two volumes:", false);
+        addExampleLine("xmipp_image_operate -i volume1.vol --minus volume2.vol -o volume3.vol");
+        addExampleLine("Multiply an image by 2 in every pixel:", false);
+        addExampleLine("xmipp_image_operate -i image.xmp --mult 2 -o image2.xmp");
+        addExampleLine("Divide 2 by the value of every pixel in the image:", false);
+        addExampleLine("xmipp_image_operate -i 2 -divide image.xmp -o image2.xmp");
+        addExampleLine(" Rotational average", false);
+        addExampleLine("xmipp_image_operate -i image.xmp -radial_avg -o image.rad");
+        addExampleLine("where image.rad is an ascii file for plotting the radial_averaged profile, image.rad.img a radial_averaged image", false);
     }
 
     void readParams()
