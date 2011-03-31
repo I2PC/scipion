@@ -214,29 +214,29 @@ protected:
         addUsageLine("A simple Xmipp images calculator. Binary and unary operations");
         XmippMetadataProgram::defineParams();
         addParamsLine("== Binary operations: ==");
-        addParamsLine("   -plus <file_or_value>    :Sums two images, volumes or adds a numerical value to an image");
-        addParamsLine("or -minus <file_or_value>   :Substracts two images, volumes or substracts a numerical value to an image");
-        addParamsLine("or -mult <file_or_value>    :Multiplies two images, volumes, or multiplies per a given number");
-        addParamsLine("or -divide <file_or_value>  :Divides two images, volumes, or divides per a given number");
-        addParamsLine("or -min <file_or_value>     :Minimum of two images, volumes, or number (pixel-wise)");
-        addParamsLine("or -max <file_or_value>     :Maximum of two images, volumes, or number (pixel-wise)");
-        addParamsLine("or -compare <file_or_value> :Returns -1 if the left value is less, 0 if are equal or 1 if greater.(pixel-wise)");
+        addParamsLine("   --plus <file_or_value>    :Sums two images, volumes or adds a numerical value to an image");
+        addParamsLine("or --minus <file_or_value>   :Substracts two images, volumes or substracts a numerical value to an image");
+        addParamsLine("or --mult <file_or_value>    :Multiplies two images, volumes, or multiplies per a given number");
+        addParamsLine("or --divide <file_or_value>  :Divides two images, volumes, or divides per a given number");
+        addParamsLine("or --min <file_or_value>     :Minimum of two images, volumes, or number (pixel-wise)");
+        addParamsLine("or --max <file_or_value>     :Maximum of two images, volumes, or number (pixel-wise)");
+        addParamsLine("or --compare <file_or_value> :Returns -1 if the left value is less, 0 if are equal or 1 if greater.(pixel-wise)");
         addParamsLine("==+ Relational operations: ==");
-        addParamsLine("or -eq <file_or_value>      :Returns 1 if the pixels values are equal, 0 otherwise (pixel-wise)");
-        addParamsLine("or -le <file_or_value>      :Returns 1 if the pixels values are equal  less, 0 otherwise (pixel-wise)");
-        addParamsLine("or -lt <file_or_value>      :Returns 1 if the pixels values are equal  less, 0 otherwise (pixel-wise)");
-        addParamsLine("or -ge <file_or_value>      :Returns 1 if the pixels values are equal  less, 0 otherwise (pixel-wise)");
-        addParamsLine("or -gt <file_or_value>      :Returns 1 if the pixels values are equal  less, 0 otherwise (pixel-wise)");
-        addParamsLine("or -ne <file_or_value>      :Returns 1 if the pixels values are equal  less, 0 otherwise (pixel-wise)");
+        addParamsLine("or --eq <file_or_value>      :Returns 1 if the pixels values are equal, 0 otherwise (pixel-wise)");
+        addParamsLine("or --le <file_or_value>      :Returns 1 if the pixels values are equal  less, 0 otherwise (pixel-wise)");
+        addParamsLine("or --lt <file_or_value>      :Returns 1 if the pixels values are equal  less, 0 otherwise (pixel-wise)");
+        addParamsLine("or --ge <file_or_value>      :Returns 1 if the pixels values are equal  less, 0 otherwise (pixel-wise)");
+        addParamsLine("or --gt <file_or_value>      :Returns 1 if the pixels values are equal  less, 0 otherwise (pixel-wise)");
+        addParamsLine("or --ne <file_or_value>      :Returns 1 if the pixels values are equal  less, 0 otherwise (pixel-wise)");
 
         addParamsLine("== Unary operations: ==");
-        addParamsLine("or -log10                   :Computes the logarithm of an image");
-        addParamsLine("or -sqrt                    :Computes the square root of an image");
-        addParamsLine("or -pow <value=2>           :Computes the power of an image");
-        addParamsLine("or -slice  <value>          :Extracts a given slice from a volume");
-        addParamsLine("or -column <value>          :Extracts a given column from a image or volume");
-        addParamsLine("or -row    <value>          :Extracts a given row from a image or volume");
-        addParamsLine("or -radial_avg              :Compute the radial average of an image");
+        addParamsLine("or --log10                   :Computes the logarithm of an image");
+        addParamsLine("or --sqrt                    :Computes the square root of an image");
+        addParamsLine("or --pow <value=2>           :Computes the power of an image");
+        addParamsLine("or --slice  <value>          :Extracts a given slice from a volume");
+        addParamsLine("or --column <value>          :Extracts a given column from a image or volume");
+        addParamsLine("or --row    <value>          :Extracts a given row from a image or volume");
+        addParamsLine("or --radial_avg              :Compute the radial average of an image");
     }
 
     void readParams()
@@ -247,106 +247,106 @@ protected:
         isValue = false;
         // Check operation to do
         //Binary operations
-        if (checkParam("-plus"))
+        if (checkParam("--plus"))
         {
-            file_or_value = getParam("-plus");
+            file_or_value = getParam("--plus");
             binaryOperator = plus;
         }
-        else if (checkParam("-minus"))
+        else if (checkParam("--minus"))
         {
-            file_or_value = getParam("-minus");
+            file_or_value = getParam("--minus");
             binaryOperator = minus;
         }
-        else if (checkParam("-mult"))
+        else if (checkParam("--mult"))
         {
-            file_or_value = getParam("-mult");
+            file_or_value = getParam("--mult");
             binaryOperator = mult;
         }
-        else if (checkParam("-divide"))
+        else if (checkParam("--divide"))
         {
-            file_or_value = getParam("-divide");
+            file_or_value = getParam("--divide");
             binaryOperator = divide;
         }
-        else if (checkParam("-max"))
+        else if (checkParam("--max"))
         {
-            file_or_value = getParam("-max");
+            file_or_value = getParam("--max");
             binaryOperator = max;
         }
-        else if (checkParam("-min"))
+        else if (checkParam("--min"))
         {
-            file_or_value = getParam("-min");
+            file_or_value = getParam("--min");
             binaryOperator = min;
         }
-        else if (checkParam("-compare"))
+        else if (checkParam("--compare"))
         {
-            file_or_value = getParam("-compare");
+            file_or_value = getParam("--compare");
             binaryOperator = compare;
         }
         ///Relational operations
-        else if (checkParam("-eq"))
+        else if (checkParam("--eq"))
         {
-            file_or_value = getParam("-eq");
+            file_or_value = getParam("--eq");
             binaryOperator = eq;
         }
-        else if (checkParam("-ne"))
+        else if (checkParam("--ne"))
         {
-            file_or_value = getParam("-ne");
+            file_or_value = getParam("--ne");
             binaryOperator = ne;
         }
-        else if (checkParam("-lt"))
+        else if (checkParam("--lt"))
         {
-            file_or_value = getParam("-lt");
+            file_or_value = getParam("--lt");
             binaryOperator = lt;
         }
-        else if (checkParam("-le"))
+        else if (checkParam("--le"))
         {
-            file_or_value = getParam("-le");
+            file_or_value = getParam("--le");
             binaryOperator = le;
         }
-        else if (checkParam("-gt"))
+        else if (checkParam("--gt"))
         {
-            file_or_value = getParam("-gt");
+            file_or_value = getParam("--gt");
             binaryOperator = gt;
         }
-        else if (checkParam("-ge"))
+        else if (checkParam("--ge"))
         {
-            file_or_value = getParam("-ge");
+            file_or_value = getParam("--ge");
             binaryOperator = ge;
         }
         ///Unary operations
-        else if (checkParam("-log10"))
+        else if (checkParam("--log10"))
             unaryOperator = log10;
-        else if (checkParam("-sqrt"))
+        else if (checkParam("--sqrt"))
             unaryOperator = sqrt;
-        else if (checkParam("-pow"))
+        else if (checkParam("--pow"))
         {
-            powerExp = getDoubleParam("-pow");
+            powerExp = getDoubleParam("--pow");
             unaryOperator = power;
         }
-        else if (checkParam("-slice"))
+        else if (checkParam("--slice"))
         {
             axis = 'Z';
-            nSlice = getIntParam("-slice");
+            nSlice = getIntParam("--slice");
             unaryOperator = getSlice;
         }
-        else if (checkParam("-column"))
+        else if (checkParam("--column"))
         {
             axis = 'X';
-            nSlice = getIntParam("-column");
+            nSlice = getIntParam("--column");
             unaryOperator = getSlice;
         }
-        else if (checkParam("-row"))
+        else if (checkParam("--row"))
         {
             axis = 'Y';
-            nSlice = getIntParam("-row");
+            nSlice = getIntParam("--row");
             unaryOperator = getSlice;
         }
-        else if (checkParam("-radial_avg"))
+        else if (checkParam("--radial_avg"))
         {
             fnOut = fn_out;
             unaryOperator = radialAvg;
         }
-        else if (checkParam("-forcePositive"))
+        else if (checkParam("--log10"))
             unaryOperator = log10;
         else
             REPORT_ERROR(ERR_VALUE_INCORRECT, "No valid operation specified");
