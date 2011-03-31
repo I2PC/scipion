@@ -498,6 +498,17 @@ void * ProgRecFourier::processImageThread( void * threadArgs )
                     Matrix1D<double> freq(3), gcurrent(3), real_position(3);
                     Matrix1D<int> corner1(3), corner2(3);
 
+                    // Some alias and calculations moved from heavy loops
+                    double blobRadiusSquared = parent->blob.radius * parent->blob.radius;
+                    double iDeltaSqrt = parent->iDeltaSqrt;
+                    Matrix1D<double> & blobTableSqrt = parent->blobTableSqrt;
+                    int xsize_1 = XSIZE(parent->VoutFourier) - 1;
+                    int ysize_1 = YSIZE(parent->VoutFourier) - 1;
+                    int zsize_1 = ZSIZE(parent->VoutFourier) - 1;
+                    MultidimArray< std::complex<double> > &VoutFourier=parent->VoutFourier;
+                    MultidimArray<double> &fourierWeights = parent->FourierWeights;
+                    double thWeight = threadParams->weight;
+
                     // Get i value for the thread
                     for (int i = minAssignedRow; i <= maxAssignedRow ; i ++ )
                     {
@@ -538,33 +549,34 @@ void * ProgRecFourier::processImageThread( void * threadArgs )
 #endif
 
                                 // Loop within the box
-                                double *ptrIn =(double *)&((*paddedFourier)(i,j));
-                                double blobRadiusSquared = parent->blob.radius * parent->blob.radius;
-                                double iDeltaSqrt = parent->iDeltaSqrt;
-                                Matrix1D<double> & blobTableSqrt = parent->blobTableSqrt;
+                                double *ptrIn =(double *)&(A2D_ELEM(*paddedFourier, i,j));
+
                                 for (int intz = ZZ(corner1); intz <= ZZ(corner2); intz++)
                                 {
+                                    double z = intz - ZZ(real_position);
+                                    double z2 = z * z;
+                                    int iz = intWRAP(intz, 0, zsize_1);
+                                    int izneg = intWRAP(-iz,0,zsize_1);
+
                                     for (int inty = YY(corner1); inty <= YY(corner2); inty++)
                                     {
+                                        double y = inty - YY(real_position);
+                                        double y2z2 = y * y + z2;
+                                        int iy = intWRAP(inty, 0, zsize_1);
+                                        int iyneg = intWRAP(-iy, 0, zsize_1);
+
                                         for (int intx = XX(corner1); intx <= XX(corner2); intx++)
                                         {
+                                            double x = intx - XX(real_position);
                                             // Compute distance to the center of the blob
                                             // Compute blob value at that distance
-                                            double x = intx, y = inty, z = intz;
-                                            x -= XX(real_position);
-                                            y -= YY(real_position);
-                                            z -= ZZ(real_position);
-                                            double d = x * x + y * y + z * z;
+                                            double d2 = x * x + y2z2;
 
-                                            if (d > blobRadiusSquared)
+                                            if (d2 > blobRadiusSquared)
                                                 continue;
-                                            // COSS: *** AVOID THE SQUARE ROOTS
-                                            int aux = (int)(d * iDeltaSqrt + 0.5);//Same as ROUND but avoid comparison
+                                            int aux = (int)(d2 * iDeltaSqrt + 0.5);//Same as ROUND but avoid comparison
                                             //double w = blobTableSqrt((int)aux);
                                             double w = VEC_ELEM(blobTableSqrt, aux);
-                                            //double w = parent->blob_table(ROUND(gcurrent.module()*parent->iDelta));
-                                            //if(w<MINIMUMWEIGHT)
-                                            //   continue;
                                             // Look for the location of this logical index
                                             // in the physical layout
 #ifdef DEBUG
@@ -576,22 +588,26 @@ void * ProgRecFourier::processImageThread( void * threadArgs )
                                             << " intz=" << intz << std::endl;
 #endif
 
-                                            int iz=intWRAP(intz,0,ZSIZE(parent->VoutFourier)-1);
-                                            int iy=intWRAP(inty,0,ZSIZE(parent->VoutFourier)-1);
-                                            int ix=intWRAP(intx,0,ZSIZE(parent->VoutFourier)-1);
+                                            int ix=intWRAP(intx,0,zsize_1);
 #ifdef DEBUG
-
                                             std::cout << "   2: ix=" << ix << " iy=" << iy
                                             << " iz=" << iz << std::endl;
 #endif
 
                                             bool conjugate=false;
-                                            if (ix>=XSIZE(parent->VoutFourier))
+                                            int izp, iyp, ixp;
+                                            if (ix > xsize_1)
                                             {
-                                                iz=intWRAP(-iz,0,ZSIZE(parent->VoutFourier)-1);
-                                                iy=intWRAP(-iy,0,ZSIZE(parent->VoutFourier)-1);
-                                                ix=intWRAP(-ix,0,ZSIZE(parent->VoutFourier)-1);
+                                                izp = izneg;
+                                                iyp = iyneg;
+                                                ixp = intWRAP(-ix,0,zsize_1);
                                                 conjugate=true;
+                                            }
+                                            else
+                                            {
+                                                izp=iz;
+                                                iyp=iy;
+                                                ixp=ix;
                                             }
 #ifdef DEBUG
                                             std::cout << "   3: ix=" << ix << " iy=" << iy
@@ -600,14 +616,15 @@ void * ProgRecFourier::processImageThread( void * threadArgs )
 #endif
 
                                             // Add the weighted coefficient
-                                            double *ptrOut=(double *)&((parent->VoutFourier)(iz,iy,ix));
-                                            ptrOut[0]+=w*ptrIn[0];
+                                            double *ptrOut=(double *)&(A3D_ELEM(VoutFourier, izp,iyp,ixp));
+                                            ptrOut[0] += w * ptrIn[0];
+
                                             if (conjugate)
                                                 ptrOut[1]-=w*ptrIn[1];
                                             else
                                                 ptrOut[1]+=w*ptrIn[1];
 
-                                            (parent->FourierWeights)(iz,iy,ix)+=w*threadParams->weight ;
+                                            A3D_ELEM(fourierWeights, izp,iyp,ixp) += w * thWeight;
                                         }
                                     }
                                 }
@@ -968,7 +985,7 @@ void ProgRecFourier::finishComputations( const FileName &out_name )
 
 void ProgRecFourier::setIO(const FileName &fn_in, const FileName &fn_out)
 {
-  this->fn_sel = fn_in;
-  this->fn_out = fn_out;
+    this->fn_sel = fn_in;
+    this->fn_out = fn_out;
 }
 
