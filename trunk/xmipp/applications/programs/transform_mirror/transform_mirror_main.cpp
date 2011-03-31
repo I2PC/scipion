@@ -41,7 +41,7 @@ public:
         XmippMetadataProgram::defineParams();
         addUsageLine("Flip/Mirror around one of the main axis an image/volume");
         addExampleLine("mirror around x axis:", false);
-        addExampleLine("xmipp_mirror   -i 128.mrc -o 128x.spi -flipX");
+        addExampleLine("xmipp_transform_mirror   -i 128.mrc -o 128x.spi --flipX");
         addParamsLine("--flipX     : flip around X axis");
         addParamsLine("or --flipY     : flip around Y axis");
         addParamsLine("or --flipZ     : flip around Z axis");
