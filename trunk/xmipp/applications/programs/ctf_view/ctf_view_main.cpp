@@ -27,35 +27,47 @@
 
 #include <qapplication.h>
 
-#include <data/args.h>
-
+#include <data/program.h>
 #include "module.h"
+
+class ProgCtfView: public XmippProgram
+{
+public:
+  FileName fn_ctf;
+
+  void defineParams()
+  {
+    addUsageLine("Display the CTF parameters");
+    addUsageLine("+This program allows you visualize how a CTF fitting really fits the experimental Power Spectrum Density");
+    addUsageLine("+long a line whose angle can be selected in the graphical interface. The program can draw the theoretical CTF,");
+    addUsageLine("+its damping envelope, and the background noise independently. Measurements can also be done in decibels (10*log10)");
+    addUsageLine("+to help visualization. The user can control the plotter number of ticks and visualization region. Press the reset");
+    addUsageLine("+button (on the plotter itself, not the menu) to reset the plot settings (sometimes this is needed after resizing or zooming).");
+    addParamsLine("   [-i <ctf_file=\"\">] : The file is assumed to be of kind .ctfparam");
+  }
+
+  void readParams()
+  {
+    fn_ctf = getParam("-i");
+  }
+
+  void createGUI()
+  {
+    QApplication app(argc, argv);
+    CTFViewer * Viewer = new CTFViewer(0, 0, fn_ctf);
+    app.setMainWidget(Viewer);
+    app.exec();
+  }
+
+  void run()
+  {
+    createGUI();
+  }
+};//end of class ProgCtfView
 
 int main(int argc, char *argv[])
 {
-    FileName fn_ctf;
-    try
-    {
-        fn_ctf = getParameter(argc, argv, "-i", "");
-    }
-    catch (XmippError XE)
-    {
-        std::cerr << XE;
-        std::cerr << "Usage: CTFViewer\n"
-        << "   [-i <CTF file>] : The file is assumed to be of kind .ctfparam\n";
-        exit(1);
-    }
-    try
-    {
-        QApplication app(argc, argv);
-        CTFViewer * Viewer = new CTFViewer(0, 0, fn_ctf);
-        app.setMainWidget(Viewer);
-        return app.exec();
-    }
-    catch (XmippError XE)
-    {
-        std::cerr << XE;
-        exit(1);
-    }
-    return 0;
+    ProgCtfView program;
+    program.read(argc, argv);
+    return program.tryRun();
 }
