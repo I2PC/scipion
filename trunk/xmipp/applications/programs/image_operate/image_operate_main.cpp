@@ -237,6 +237,9 @@ protected:
         addParamsLine("or --column <value>          :Extracts a given column from a image or volume");
         addParamsLine("or --row    <value>          :Extracts a given row from a image or volume");
         addParamsLine("or --radial_avg              :Compute the radial average of an image");
+
+        addExampleLine("Sum two volumes and save result", false);
+        addExampleLine("xmipp_operate -i volume1.vol --plus volume2.vol -o result.vol");
     }
 
     void readParams()
@@ -411,5 +414,5 @@ int main(int argc, char **argv)
 {
     ProgOperate program;
     program.read(argc, argv);
-    program.tryRun();
+    return program.tryRun();
 }
