@@ -140,6 +140,13 @@ extern String floatToString(float F, int _width, int _prec);
  * i and j) within the slice.
  */
 #define DIRECT_NZYX_ELEM(v, l, k, i, j) ((v).data[(l)*ZYXSIZE(v)+(k)*YXSIZE(v)+((i)*XSIZE(v))+(j)])
+
+/** Access to a direct element.
+ * v is the array, l is the image, k is the slice, i is the Y index and j is the X index.
+ * i and j) within the slice.
+ */
+#define DIRECT_ZYX_ELEM(v, k, i, j) ((v).data[(k)*YXSIZE(v)+((i)*XSIZE(v))+(j)])
+
 /** Access to a direct element.
  * v is the array, l is the image, k =0, i is the Y index and j is the X index.
  * i and j) within the slice.
@@ -4489,28 +4496,18 @@ public:
      */
     void selfReverseX()
     {
-        size_t xsize = XSIZE(*this);
-        size_t halfSizeX = (size_t)(xsize-1)/2;
-        size_t ysize = YSIZE(*this);
-        size_t zsize = ZSIZE(*this);
-        size_t nsize = NSIZE(*this);
-        //0 column should be handled in a different way
-        //for even and odd matrices
-        size_t start_x = ((xsize%2) ? 0: 1);
-
-        for (size_t l = 0; l < nsize; l++)
-            for (size_t k = 0; k < zsize; k++)
-                for (size_t i = 0; i < ysize; i++)
-                    for (size_t j = start_x; j <=  halfSizeX; j++)
-                    {
-                        T aux;
-                        SWAP(DIRECT_NZYX_ELEM(*this, l, k, i, j),
-                             DIRECT_NZYX_ELEM(*this, l, k, i, xsize - j),
-                             aux);
-                    }
-        //NOTE: line x=0 should not be modified since gets itself by wrapping
-        //center (dimx/2,y,z)  should remain unchanged
-
+        int xsize=XSIZE(*this);
+        int halfSizeX = (xsize-2)/2;
+        int xsize_1=xsize-1;
+        for (int k = 0; k < ZSIZE(*this); k++)
+            for (int i = 0; i < YSIZE(*this); i++)
+                for (int j = 0; j <=halfSizeX; j++)
+                {
+                    T aux;
+                    T& d1=DIRECT_ZYX_ELEM(*this, k, i, j);
+                    T& d2=DIRECT_ZYX_ELEM(*this, k, i, xsize_1 - j);
+                    SWAP(d1,d2,aux);
+                }
         STARTINGX(*this) = -FINISHINGX(*this);
     }
 
@@ -4529,26 +4526,18 @@ public:
      */
     void selfReverseY()
     {
-        size_t xsize = XSIZE(*this);
-        size_t ysize = YSIZE(*this);
-        size_t halfSizeY = (size_t)(ysize-1)/2;
-        size_t zsize = ZSIZE(*this);
-        size_t nsize = NSIZE(*this);
-        //0 column should be handled in a different way
-        //for even and odd matrices
-        size_t start_y = ((ysize%2) ? 0: 1);
-
-        for (size_t l = 0; l < nsize; l++)
-            for (size_t k = 0; k < zsize; k++)
-                for (int i = start_y; i <= halfSizeY; i++)
-                    for (int j = 0; j < xsize; j++)
-                    {
-                        T aux;
-                        SWAP(DIRECT_NZYX_ELEM(*this, l, k, i, j),
-                             DIRECT_NZYX_ELEM(*this, l, k, ysize - i, j),
-                             aux);
-                    }
-
+        int ysize=YSIZE(*this);
+        size_t halfSizeY = (ysize-2)/2;
+        int ysize_1=ysize-1;
+        for (int k = 0; k < ZSIZE(*this); k++)
+            for (int i = 0; i <= halfSizeY; i++)
+                for (int j = 0; j < XSIZE(*this); j++)
+                {
+                    T aux;
+                    T& d1=DIRECT_ZYX_ELEM(*this, k, i, j);
+                    T& d2=DIRECT_ZYX_ELEM(*this, k, ysize_1 - i, j);
+                    SWAP(d1,d2,aux);
+                }
         STARTINGY(*this) = -FINISHINGY(*this);
     }
 
@@ -4559,28 +4548,18 @@ public:
      */
     void selfReverseZ()
     {
-
-        size_t xsize = XSIZE(*this);
-        size_t ysize = YSIZE(*this);
-        size_t zsize = ZSIZE(*this);
-        size_t halfSizeZ = (size_t)(zsize-1)/2;
-        size_t nsize = NSIZE(*this);
-        //0 column should be handled in a different way
-        //for even and odd matrices
-        size_t start_z = ((zsize%2) ? 0: 1);
-
-
-        for (int l = 0; l < nsize; l++)
-            for (int k = start_z; k <= halfSizeZ; k++)
-                for (int i = 0; i <ysize; i++)
-                    for (int j = 0; j < xsize; j++)
-                    {
-                        T aux;
-                        SWAP(DIRECT_NZYX_ELEM(*this, l, k, i, j),
-                             DIRECT_NZYX_ELEM(*this, l, zsize- k, i, j),
-                             aux);
-                    }
-
+        int zsize=ZSIZE(*this);
+        int halfSizeZ = (zsize-2)/2;
+        int zsize_1=zsize-1;
+        for (int k = 0; k <= halfSizeZ; k++)
+            for (int i = 0; i <YSIZE(*this); i++)
+                for (int j = 0; j < XSIZE(*this); j++)
+                {
+                    T aux;
+                    T& d1=DIRECT_ZYX_ELEM(*this, k, i, j);
+                    T& d2=DIRECT_ZYX_ELEM(*this, zsize_1- k, i, j);
+                    SWAP(d1,d2,aux);
+                }
         STARTINGZ(*this) = -FINISHINGZ(*this);
     }
 
