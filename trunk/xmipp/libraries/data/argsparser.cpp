@@ -611,7 +611,7 @@ bool ParamDef::parse()
     parseCommentList(comments);
 
     //WHERE section
-    if (lookahead(TOK_WHERE))
+    while (lookahead(TOK_WHERE))
     {
         consume(TOK_WHERE);
         while (lookahead(TOK_LAN))
