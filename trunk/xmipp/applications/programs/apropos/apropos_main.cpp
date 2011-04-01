@@ -220,6 +220,6 @@ int main(int argc, char *argv[])
 {
     ProgApropos program;
     program.read(argc, argv);
-    program.tryRun();
+    return program.tryRun();
 }
 
