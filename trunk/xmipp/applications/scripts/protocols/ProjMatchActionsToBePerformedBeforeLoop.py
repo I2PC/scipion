@@ -13,12 +13,23 @@ def createDir(_log, dict):
     elif i > 0:
         _Path = dict['WorkingDir'] + "/" + "Iter_" + str(i).zfill(2)
     try:
-        print "path", _Path
         mkpath(_Path, 0777, True)
     except DistutilsFileError, e:
         print "could not create '%s': %s" % (os.path.abspath(_Path), e)
         exit(1)
     _log.info("Create directory " + _Path)
+
+def createDir2(_log, dict):
+    """ Create directory no add workingdir"""
+    from distutils.dir_util import mkpath
+    from distutils.errors import DistutilsFileError
+    _path=dict['path']
+    try:
+        mkpath(_path, 0777, True)
+    except DistutilsFileError, e:
+        print "could not create '%s': %s" % (os.path.abspath(_path), e)
+        exit(1)
+    _log.info("Create directory " + _path)
 
 def deleteWorkingDirectory(_mylog, dict):
 
