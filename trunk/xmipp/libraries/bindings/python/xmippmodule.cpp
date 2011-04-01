@@ -74,7 +74,7 @@ FileName_new(PyTypeObject *type, PyObject *args, PyObject *kwargs)
     {
         PyObject *input = NULL, *pyStr = NULL;
         char *str = "", *ext="";
-        int number = 1;
+        int number = ALL_IMAGES;
         if (PyArg_ParseTuple(args, "|Ois", &input, &number, &ext))
             //|| PyArg_ParseTuple(args, "|Os", &input, &ext)) FIXME
         {
@@ -82,8 +82,11 @@ FileName_new(PyTypeObject *type, PyObject *args, PyObject *kwargs)
             if (pyStr != NULL)
                 str = PyString_AsString(pyStr);
         }
+        if(number!=ALL_IMAGES)
+            self->filename = new FileName(str, number, ext);
+        else
+            self->filename = new FileName(str);
 
-        self->filename = new FileName(str, number, ext);
     }
     return (PyObject *)self;
 }
@@ -832,13 +835,53 @@ MetaData_getActiveLabels(PyObject *obj, PyObject *args, PyObject *kwargs)
         PyObject * list = PyList_New(size);
 
         for (int i = 0; i < size; ++i)
-          PyList_SetItem(list, i, PyInt_FromLong(labels->at(i)));
+            PyList_SetItem(list, i, PyInt_FromLong(labels->at(i)));
 
         return list;
 
     }
     catch (XmippError xe)
     {
+        PyErr_SetString(PyXmippError, xe.msg.c_str());
+    }
+    return NULL;
+}
+/* containsLabel */
+static PyObject *
+xmipp_getBlocksInMetaDataFile(PyObject *obj,PyObject *args)
+{
+	std::cerr << "xmipp_getBlocksInMetaDataFile" <<std::endl;
+    int label;
+    PyObject *input;
+    FileName fn;
+    StringVector blocks;
+
+    try
+    {
+        if (PyArg_ParseTuple(args, "O", &input))
+        {
+
+            if (PyString_Check(input))
+                fn = PyString_AsString(input);
+            else if (FileName_Check(input))
+                fn = FileName_Value(input);
+            else
+                return NULL;
+            getBlocksInMetaDataFile(fn, blocks);
+            int size = blocks.size();
+            PyObject * list = PyList_New(size);
+
+
+            for (int i = 0; i < size; ++i)
+            {
+                PyList_SetItem(list, i, PyString_FromString(blocks[i].c_str()));
+            }
+            return list;
+        }
+    }
+    catch (XmippError xe)
+    {
+    	std::cerr << "exception" <<std::endl;
         PyErr_SetString(PyXmippError, xe.msg.c_str());
     }
     return NULL;
@@ -1066,8 +1109,8 @@ static PyMethodDef MetaData_methods[] = {
                                              "Return a list with the labels of the Metadata"
                                             },
                                             {"getMaxStringLength", (PyCFunction)MetaData_getMaxStringLength, METH_VARARGS,
-                                               "Return the maximun lenght of a value on this column(label)"
-                                              },
+                                             "Return the maximun lenght of a value on this column(label)"
+                                            },
                                             {"containsLabel", (PyCFunction)MetaData_containsLabel, METH_VARARGS,
                                              "True if this metadata contains this label"
                                             },
@@ -1687,12 +1730,15 @@ xmipp_substituteOriginalImages(PyObject *obj, PyObject *args, PyObject *kwargs)
 
 static PyMethodDef xmipp_methods[] =
     {
-        {"str2Label",  xmipp_str2Label, METH_VARARGS,
-         "Convert an string to MDLabel"},
+
+        {"getBlocksInMetaDataFile",  xmipp_getBlocksInMetaDataFile, METH_VARARGS,
+         "return list with metadata blocks in a file"},
         {"label2Str",  xmipp_label2Str, METH_VARARGS,
          "Convert MDLabel to string"},
         {"labelType",  xmipp_labelType, METH_VARARGS,
          "Return the type of a label"},
+        {"str2Label",  xmipp_str2Label, METH_VARARGS,
+         "Convert an string to MDLabel"},
         {"isValidLabel", (PyCFunction)xmipp_isValidLabel, METH_VARARGS,
          "Check if the label is a valid one"},
         {"MDValueRelational", (PyCFunction)xmipp_MDValueRelational, METH_VARARGS,
