@@ -1,32 +1,34 @@
 from distutils.errors   import DistutilsInternalError
 from types              import StringTypes
-import os, sys
+import os
 from xmipp import *
 
-def createDirectoryTree(dirName):
-    """ Create directory or directory branch"""
+def createDir(_log, dict):
+    """ Create directory """
     from distutils.dir_util import mkpath
-    #
-    if not isinstance(dirName, StringTypes):
-        raise DistutilsInternalError, "mkpath: 'name' must be a string (got %r)" % (dirName,)
-    mkpath(dirName, 0777, True)
-
-def createRequiredDirectories(_log, dict):
-    """ Create all required directories, I do not want to bother about that 
-        later """
-    absPath = dict['ProjectDir'] + "/" + dict['WorkingDir']
-    for i in range(1, dict['NumberofIterations'] + 1):
-        createDirectoryTree(absPath + "/Iter_" + str(i).zfill(2))
-    _log.info("Creating directory tree " + absPath)
+    from distutils.errors import DistutilsFileError
+    i = dict['iter']
+    if i == 0:
+        _Path = dict['ProjectDir'] + "/" + dict['WorkingDir'] + "/"
+    elif i > 0:
+        _Path = dict['WorkingDir'] + "/" + "Iter_" + str(i).zfill(2)
+    try:
+        print "path", _Path
+        mkpath(_Path, 0777, True)
+    except DistutilsFileError, e:
+        print "could not create '%s': %s" % (os.path.abspath(_Path), e)
+        exit(1)
+    _log.info("Create directory " + _Path)
 
 def deleteWorkingDirectory(_mylog, dict):
 
     if (not dict['DoDeleteWorkingDir']):
         return
-    if not dict['firstIteration'] :
-        print "You can not delete the working directory"
-        print " and start at a iteration different from 1 "
-        exit(1)
+    #in theory this cannot happen
+#    if not dict['firstIteration'] :
+#        print "You can not delete the working directory"
+#        print " and start at a iteration different from 1 "
+#        exit(1)
 
     from distutils.dir_util import remove_tree
     dirName = dict['ProjectDir'] + "/" + dict['WorkingDir']
@@ -37,30 +39,36 @@ def deleteWorkingDirectory(_mylog, dict):
         remove_tree(dirName, True)
 
 def checkVolumeProjSize(_log, dict):
-
-    """ check references y projection size match"""
-    #if this is not the firt iteration you may skip it
-    if not dict['firstIteration']:
-        return
+    """ check references and projection size match"""
     #5a check volumes have same size
+    result = True
+    message=""
     try:
         (xdim, ydim, zdim, ndim) = SingleImgSize(dict['ReferenceFileNames'][0])
         for reference in dict['ReferenceFileNames']:
             (xdim2, ydim2, zdim2, ndim2) = SingleImgSize(reference)
     except XmippError as e:
         print __name__, 'checkVolumeProjSize:', e
-        exit(1)
+        exit(False,message)
     if (xdim2, ydim2, zdim2, ndim2) != (xdim, ydim, zdim, ndim):
-        print "Reference %s and %s have not the same size" % \
-              (dict['ReferenceFileNames'][0], reference)
-        exit(1)
-
-    #5b check volume and projections  have same size
-    (xdim2, ydim2, zdim2, ndim2) = ImgSize(dict['SelFileName'])
-    if (xdim2, ydim2) != (xdim, ydim):
-            print "Volume and reference images have not the same size"
+        message = "Reference %s and %s have not the same size" % \
+              (dict['ReferenceFileNames'][0], reference) 
+        result = False
+    
+    if result:
+        #5b check volume and projections  have same size
+        (xdim2, ydim2, zdim2, ndim2) = ImgSize(dict['SelFileName'])
+        if (xdim2, ydim2) != (xdim, ydim):
+            message = "Volume and reference images have not the same size"
+            result = False
+    #exit(1)
+    #print message
+    if (_log):
+        _log.debug("checkVolumeProjSize")
+        if (not result):
+            print message
             exit(1)
-    _log.debug("checkVolumeProjSize")
+    return (result,message)
 
 
 def initOuterRadius(_log, dict):
@@ -106,20 +114,23 @@ def pm_make_backup_of_script_file(_log, dict):
 #  , 'SplitDefocusDocFile' : SplitDefocusDocFile
 #  , 'WienerConstant'      : WienerConstant
 def execute_ctf_groups (_log, dict):
-
     if (not dict['DoCtfCorrection']):
         return 1
+    CtfGroupDirectory  = dict['CtfGroupDirectory']
+    CtfGroupRootName   = dict['CtfGroupRootName']
+    #Verify
+
     import glob, sys
     import utils_xmipp
     import launch_job
-    if not os.path.exists(dict['CtfGroupDirectory']):
-        os.makedirs(dict['CtfGroupDirectory'])
+    if not os.path.exists(CtfGroupDirectory):
+        os.makedirs(CtfGroupDirectory)
 
-    print '*********************************************************************'
-    print '* Make CTF groups'
+#    print '*********************************************************************'
+#    print '* Make CTF groups'
     command = \
               ' --ctfdat ' + dict['CTFDatName' ] + \
-              ' -o ' + dict['CtfGroupDirectory'] + '/' + dict['CtfGroupRootName'] + \
+              ' -o ' + CtfGroupDirectory + '/' + CtfGroupRootName + \
               ' --wiener --wc ' + str(dict['WienerConstant']) + \
               ' --pad ' + str(dict['PaddingFactor'])
 
@@ -146,20 +157,31 @@ def execute_ctf_groups (_log, dict):
     if(retcode):
         print "command", command, "failed with exit status", retcode
         exit(1)
-    wildcardname = utils_xmipp.composeWildcardFileName(dict['CtfGroupDirectory'] + '/'
-                                                     + dict['CtfGroupRootName']
+    wildcardname = utils_xmipp.composeWildcardFileName(CtfGroupDirectory + '/'
+                                                     + CtfGroupRootName
                                                      + '_group', 'ctf')
     ctflist = glob.glob(wildcardname)
     return len(ctflist)
 
 def checkOptionsCompatibility(_log, dict):
-    import arg
     # Never allow DoAlign2D and DoCtfCorrection together
-    if (int(arg.getComponentFromVector(dict['DoAlign2D'], 0)) and int (dict['DoCtfCorrection'])):
+    if (int(dict['DoAlign2D'][0]) and int (dict['DoCtfCorrection'])):
         error_message = "You cannot realign classes AND perform CTF-correction. Switch either of them off!"
-        dict['_log'].error(error_message)
+        _log.error(error_message)
         print error_message
         exit(1)
+
+def initAngularReferenceFile(_log,dict):
+    '''Create Initial angular file. Either fill it with zeros or copy input'''
+    import shutil
+    if len(dict['DocFileName'])>1:
+        shutil.copy(dict['DocFileName'],dict['DocFileWithOriginalAngles'])
+    else:
+        MD=MetaData(dict['SelFileName'])
+        MD.addLabel(MDL_ANGLEROT)
+        MD.addLabel(MDL_ANGLETILT)
+        MD.addLabel(MDL_ANGLEPSI)
+        MD.write(dict['DocFileWithOriginalAngles'])
 
 def dummy(_log, dict):
     print dict['dummy']
