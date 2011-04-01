@@ -330,7 +330,7 @@ public:
     /* Set normalization sign.
      * It defines when the normalization must be applied, when doing
      * FFTW_FORWARD OR FFTW_BACKWARD. By default, FFTW_FORWARD.*/
-    void setNormSign(int _normSign)
+    void setNormalizationSign(int _normSign)
     {
       normSign = _normSign;
     }
