@@ -7,7 +7,7 @@
 #
 # Authors: Roberto Marabini,
 #          Sjors Scheres,    March 2008
-#
+#        Rewritten by Roberto Marabini
 #-----------------------------------------------------------------------------
 # {section} Global parameters
 #-----------------------------------------------------------------------------
@@ -15,7 +15,7 @@
 #from XmippData import SingleImgSize
 """ This selfile points to the spider single-file format images that make up your data set. The filenames can have relative or absolute paths, but it is strictly necessary that you put this selfile IN THE PROJECTDIR. 
 """
-SelFileName = 'smallStack.sel'
+SelFileName ='proj_ctf.ctfdat'
 
 # {file} {expert} Docfile with the input angles:
 """ Do not provide anything if there are no angles yet. 
@@ -23,47 +23,57 @@ SelFileName = 'smallStack.sel'
     This docfile should be in newXmipp-style format (with filenames as comments)
     Note that all filenames in this docfile should be with absolute paths!
 """
-DocFileName = ''
+DocFileName =' '
 
 # {file} Initial 3D reference map:
 """ Write down the reference/es name. For example "Reference1.vol Reference2.vol"
     specifies two references
 """
-ReferenceFileNames = 'volume.spi volum2.spi'
+ReferenceFileNames ='ico_ref1.vol ico_ref2.vol'
 
 # Working subdirectory: 
 """ This directory will be created if it doesn't exist, and will be used to store all output from this run. Don't use the same directory for multiple different runs, instead use a structure like run1, run2 etc. 
 """
-WorkingDir = 'ProjMatch/run1'
+WorkingDir ='ProjMatch/run1'
 
 # Delete working subdirectory if it already exists?
 """ Just be careful with this option...
 """
-DoDeleteWorkingDir = True
+DoDeleteWorkingDir =False
 
 # Number of iterations to perform
-NumberofIterations = 4
+NumberofIterations = 1
+
+# {expert} Resume at Iter (vs Step)
+"""This option control how to resume a previously performed run.
+    Set to TRUE to restart at the beginning of iteration N
+    or FALSE to continue at step N. (N is set in the next parameter).
+    NOTE:If you do not know what are you doing make it equal to False
+"""
+IsIter =False
 
 # Resume at iteration
-""" This option may be used to finish a previously performed run.
-    Set to 1 to start a new run 
-    Note: Do NOT delete working directory if this option is not set to 1
+""" Set to 1 to start a new run, set to -1 to continue the process (where you left it),
+    set to a positive number N to restart at the begining of iteration N
+    Note1: Do NOT delete working directory if this option is not set to 1
+    Note2: Set this option to -1 if you want to perform extra iterations after
+           successfully finish an execution
 """
-ContinueAtIteration = 1
+ContinueAtIteration =1
 
 # {expert} Save disc space by cleaning up intermediate files?
 """ Be careful, many options of the visualization protocol will not work anymore, 
     since all class averages, selfiles etc will be deleted.
 """
-CleanUpFiles = True
+CleanUpFiles =False
 
 # {expert} Root directory name for this project:
 """ Absolute path to the root directory for this project. Often, each data set of a given sample has its own ProjectDir.
 """
-ProjectDir = '/home/roberto/tmp/Test'
+ProjectDir ='/home/roberto/PhantomIco'
 
 # {expert} Directory name for logfiles:
-LogDir = 'Logs'
+LogDir ='Logs'
 
 #-----------------------------------------------------------------------------
 # {section} CTF correction
@@ -74,7 +84,7 @@ LogDir = 'Logs'
     and the data will be processed in CTF groups.
     Note that you cannot combine CTF-correction with re-alignment of the classes.
 """
-DoCtfCorrection = True
+DoCtfCorrection =True
 
 # {file} CTFDat file with CTF data:
 """ The input selfile may be a subset of the images in the CTFDat file, but all 
@@ -83,21 +93,21 @@ DoCtfCorrection = True
     Note that this file should be positioned in the project directory, and that the
     image names and ctf parameter filenames should be in absolute paths.
 """
-CTFDatName = 'all_images_new.ctfdat'
+CTFDatName ='proj_ctf.ctfdat'
 
 # Make CTF groups automatically?
 """ Make CTF groups based on a maximum differences at a given resolution limit.
     If this option is set to false, a docfile with the defocus values where to 
     split the images in distinct defocus group has to be provided (see expert option below)
 """
-DoAutoCtfGroup = True
+DoAutoCtfGroup =True
 
 # Maximum difference in CTF-values in one group
 """ If the difference between the CTF-values up to the resolution limit specified 
     below is larger than the value given here, two images will be placed in 
     distinct CTF groups.
 """
-CtfGroupMaxDiff = 0.5
+CtfGroupMaxDiff = 0.1
 
 # Resolution limit (Ang) for CTF-differences in one group
 """ Maximum resolution where to consider CTF-differences among different groups.
@@ -110,7 +120,7 @@ CtfGroupMaxResol = 5.6
     Note that the requested docfile can be made initially with the xmipp_ctf_group program,
     and then it can be edited manually to suit your needs. 
 """
-SplitDefocusDocFile = ''
+SplitDefocusDocFile =''
 
 # {expert} Padding factor
 """ Application of CTFs to reference projections and of Wiener filter to class averages will be done using padded images.
@@ -128,10 +138,10 @@ PaddingFactor = 1.
 WienerConstant = -1
 
 # Images have been phase flipped?
-DataArePhaseFlipped = True
+DataArePhaseFlipped =False
 
 # Is the initial reference map CTF (amplitude) corrected?
-ReferenceIsCtfCorrected = True
+ReferenceIsCtfCorrected =False
 
 #-----------------------------------------------------------------------------
 # {section} Mask
@@ -141,25 +151,25 @@ ReferenceIsCtfCorrected = True
     Do not provide a very tight mask.
     See http://xmipp.cnb.uam.es/twiki/bin/view/Xmipp/Mask for details
 """
-DoMask = True
+DoMask =True
 
 # Use a spherical mask?
 """ If set to true, provide the radius of the mask in the next input field
     if set to false, provide a binary mask file in the second next input field
 """
-DoSphericalMask = True
+DoSphericalMask =True
 
 # Radius of spherical mask
 """ This is the radius (in pixels) of the spherical mask 
 """
-MaskRadius = 72
+MaskRadius = 16
 
 # {file} Binary mask file
 """ This should be a binary (only 0/1-valued) Xmipp volume of equal dimension as your reference
     The protein region should be white (1) and the solvent should be black (0).
     Note that this entry is only relevant if no spherical mask is used.
 """
-MaskFileName = 'mask.vol'
+MaskFileName ='mask.vol'
 
 #-----------------------------------------------------------------------------
 # {section} Projection Matching
@@ -168,12 +178,12 @@ MaskFileName = 'mask.vol'
 """ See http://xmipp.cnb.uam.es/twiki/bin/view/Xmipp/Projection_matching and
         http://xmipp.cnb.uam.es/twiki/bin/view/Xmipp/Mpi_projection_matching for details
 """
-DoProjectionMatching = True
+DoProjectionMatching =False
 
 # {expert} Show projection maching library and classes
 """ Show average of projections. Do not set this option to true for non-interactive processing (jobs sent to queues)
 """
-DisplayProjectionMatching = False
+DisplayProjectionMatching =False
 
 # Inner radius for rotational correlation:
 """ In pixels from the image center
@@ -197,7 +207,7 @@ AvailableMemory = 1
 
 # Angular sampling rate
 """Angular distance (in degrees) between neighboring projection  points
-    You must specify this option for each iteration. 
+    You may specify this option for each iteration. 
     This can be done by a sequence of numbers (for instance, "8 8 2 2 " 
     specifies 4 iterations, the first two set the value to 8 
     and the last two to 2. An alternative compact notation 
@@ -206,11 +216,11 @@ AvailableMemory = 1
     Note: if there are less values than iterations the last value is reused
     Note: if there are more values than iterations the extra value are ignored
 """
-AngSamplingRateDeg = '6 4 2 1'
+AngSamplingRateDeg ='6 4 2 1'
 
 # Angular search range 
 """Maximum change in rot & tilt  (in +/- degrees)
-    You must specify this option for each iteration. 
+    You may specify this option for each iteration. 
     This can be done by a sequence of numbers (for instance, "1000 1000 10 10 " 
     specifies 4 iterations, the first two set the value to 1000 (no restriction)
     and the last two to 10degrees. An alternative compact notation 
@@ -220,14 +230,22 @@ AngSamplingRateDeg = '6 4 2 1'
 MaskRadius = 16
     Note: if there are more values than iterations the extra value are ignored
 """
-MaxChangeInAngles = '1000 16 12 8 4 2'
+MaxChangeInAngles ='1000 16 12 8 4 2'
 
 # {expert} Perturb projection directions?
-""" If set to true, this option will result to a Gaussian perturbation to the 
+""" If set to 1, this option will result to a Gaussian perturbation to the 
     evenly sampled projection directions of the reference library. 
     This may serve to decrease the effects of model bias.
+    You may specify this option for each iteration. 
+    This can be done by a sequence of numbers (for instance, "1 1 0" 
+    specifies 3 iterations, the first two set the value to 1 
+    and the last to 0. An alternative compact notation 
+    is ("2x1 0", i.e.,
+    2 iterations with value 1, and 1 with value 0).
+    Note: if there are less values than iterations the last value is reused
+    Note: if there are more values than iterations the extra value are ignored
 """
-PerturbProjectionDirections = False
+PerturbProjectionDirections ='0'
 
 # Maximum change in origin offset
 """ Maximum allowed change in shift in the 3D+2D searches (in +/- pixels).
@@ -241,7 +259,7 @@ PerturbProjectionDirections = False
     Note: if there are less values than iterations the last value is reused
     Note: if there are more values than iterations the extra value are ignored
 """
-MaxChangeOffset = '1000 10 5'
+MaxChangeOffset ='1000 10 5'
 
 # Search range for 5D translational search 
 """ Give search range from the image center for 5D searches (in +/- pixels).
@@ -257,7 +275,7 @@ MaxChangeOffset = '1000 10 5'
     Note: if there are more values than iterations the extra value are ignored
     
 """
-Search5DShift = '4x5 0'
+Search5DShift ='4x5 0'
 
 # {expert} Step size for 5D translational search
 """ Provide a sequence of numbers (for instance, "2 2 1 1" specifies 4 iterations,
@@ -268,10 +286,10 @@ Search5DShift = '4x5 0'
     Note: if there are more values than iterations the extra value are ignored
     
 """
-Search5DStep = '2'
+Search5DStep ='2'
 
 # {expert} Restrict tilt angle search?
-DoRetricSearchbyTiltAngle = False
+DoRetricSearchbyTiltAngle =False
 
 # {expert} Lower-value for restricted tilt angle search
 Tilt0 = 40
@@ -284,7 +302,7 @@ TiltF = 90
     for a description of the symmetry groups format
     If no symmetry is present, give c1
 """
-SymmetryGroup = 'i3'
+SymmetryGroup ='i3'
 
 # {expert} Symmetry group for Neighbourhood computations
 """ If you do not know what this is leave it blank.
@@ -294,13 +312,21 @@ SymmetryGroup = 'i3'
     for a description of the symmetry groups format
     If no symmetry is present, give c1
 """
-SymmetryGroupNeighbourhood = ''
+SymmetryGroupNeighbourhood =''
 
 # {expert} compute only closest neighbor 
 """ This option is only relevant if SymmetryGroupNeighbourhood !=''
-    If set to True only one neighbor will be computed per sampling point
+    If set to 1 only one neighbor will be computed per sampling point
+    You may specify this option for each iteration. 
+    This can be done by a sequence of numbers (for instance, "1 1 0" 
+    specifies 3 iterations, the first two set the value to 1 
+    and the last to 0. An alternative compact notation 
+    is ("2x1 0", i.e.,
+    2 iterations with value 1, and 1 with value 0).
+    Note: if there are less values than iterations the last value is reused
+    Note: if there are more values than iterations the extra value are ignored
 """
-OnlyWinner = False
+OnlyWinner ='0'
 
 # Discard images with ccf below
 """ Provide a sequence of numbers (for instance, "0.3 0.3 0.5 0.5" specifies 4 iterations,
@@ -310,7 +336,7 @@ OnlyWinner = False
     Note: if there are more values than iterations the extra value are ignored
     Set to -1 to prevent discarding any images
 """
-MinimumCrossCorrelation = '-1'
+MinimumCrossCorrelation ='-1'
 
 # Discard percentage of images with ccf below
 """ Provide a sequence of numbers (for instance, "20 20 10 10" specifies 4 iterations,
@@ -320,17 +346,17 @@ MinimumCrossCorrelation = '-1'
     Note: if there are more values than iterations the extra value are ignored
     Set to zero to prevent discarding any images
 """
-DiscardPercentage = '10'
+DiscardPercentage ='10'
 
 # Perform scale search?
 """ If true perform scale refinement
 """
-DoScale = False
+DoScale =False
 
 # Step scale factors size
 """ Scale step factor size (1 means 0.01 in/de-crements arround 1)
 """
-ScaleStep = '1'
+ScaleStep ='1'
 
 # Number of scale steps
 """ Number of scale steps.
@@ -338,7 +364,7 @@ ScaleStep = '1'
     With values ScaleStep='2' and ScaleNumberOfSteps='4' it performs a scale search over:
      1 +/-0.02 | +/-0.04 | +/-0.06 | +/-0.08.    
 """
-ScaleNumberOfSteps = '3'
+ScaleNumberOfSteps ='3'
 
 
 # {expert} Additional options for Projection_Matching
@@ -348,7 +374,7 @@ ScaleNumberOfSteps = '3'
     the particle inner and outter radius)
     
 """
-ProjMatchingExtra = ''
+ProjMatchingExtra =''
 
 #-----------------------------------------------------------------------------
 # {section} 2D re-alignment of classes
@@ -371,7 +397,7 @@ ProjMatchingExtra = ''
     IMPORTANT: if you set this variable to 0 the output  of the projection
     muching step will be copied as output of align2d
 """
-DoAlign2D = '0'
+DoAlign2D ='0'
 
 # {expert} Number of align2d iterations:
 """ Use at least 3 iterations
@@ -389,7 +415,7 @@ Align2DIterNr = 4
     Note: if there are less values than iterations the last value is reused
     Note: if there are more values than iterations the extra value are ignored
 """
-Align2dMaxChangeOffset = '2x1000 2x10'
+Align2dMaxChangeOffset ='2x1000 2x10'
 
 # {expert} Maximum change in rotation (+/- degrees)
 """Maximum change in shift  (+/- pixels)
@@ -402,7 +428,7 @@ Align2dMaxChangeOffset = '2x1000 2x10'
     Note: if there are less values than iterations the last value is reused
     Note: if there are more values than iterations the extra value are ignored
 """
-Align2dMaxChangeRot = '2x1000 2x20'
+Align2dMaxChangeRot ='2x1000 2x20'
 
 #-----------------------------------------------------------------------------
 # {section} 3D Reconstruction
@@ -415,15 +441,15 @@ Align2dMaxChangeRot = '2x1000 2x20'
         http://xmipp.cnb.uam.es/twiki/bin/view/Xmipp/Mpi_fourier
         for details
 """
-DoReconstruction = True
+DoReconstruction =False
 
 # {expert} Display reconstructed volume?
-DisplayReconstruction = False
+DisplayReconstruction =False
 
 # {list}|fourier|art|wbp| Reconstruction method
 """ Choose between wbp, art or fourier
 """
-ReconstructionMethod = 'fourier'
+ReconstructionMethod ='fourier'
 
 # {expert} Values of lambda for art
 """ IMPORTANT: ou must specify a value of lambda for each iteration even
@@ -441,26 +467,26 @@ ReconstructionMethod = 'fourier'
     Note: if there are less values than iterations the last value is reused
     Note: if there are more values than iterations the extra value are ignored
 """
-ARTLambda = '0.2'
+ARTLambda ='0.2'
 
 # {expert} Additional reconstruction parameters for ART
 """ See http://xmipp.cnb.uam.es/twiki/bin/view/Xmipp/Art
         for details
 """
-ARTReconstructionExtraCommand = '-k 0.5 -n 10 '
+ARTReconstructionExtraCommand ='-k 0.5 -n 10 '
 
 # Initial maximum frequency used by reconstruct fourier
 """ This number os only used in the first iteration. 
     From then on, it will be set to resolution computed in the resolution section
 """
-FourierMaxFrequencyOfInterest = '0.25'
+FourierMaxFrequencyOfInterest ='0.25'
 
 # {expert} Additional reconstruction parameters for WBP
 """ See http://xmipp.cnb.uam.es/twiki/bin/view/Xmipp/Wbp and
         http://xmipp.cnb.uam.es/twiki/bin/view/Xmipp/Mpi_wbp and
         for details
 """
-WBPReconstructionExtraCommand = ' '
+WBPReconstructionExtraCommand =''
 
 # {expert} Additional reconstruction parameters for Fourier
 """ See http://xmipp.cnb.uam.es/twiki/bin/view/Xmipp/Fourier and
@@ -468,7 +494,7 @@ WBPReconstructionExtraCommand = ' '
         for details
     -thr_width 
 """
-FourierReconstructionExtraCommand = ' '
+FourierReconstructionExtraCommand =''
 
 #-----------------------------------------------------------------------------
 # {section} Compute Resolution
@@ -476,7 +502,7 @@ FourierReconstructionExtraCommand = ' '
 # Compute resolution?
 """ See http://xmipp.cnb.uam.es/twiki/bin/view/Xmipp/Resolution fo details
 """
-DoComputeResolution = True
+DoComputeResolution =False
 
 # {expert} Split references averages
 """In theory each reference average should be splited
@@ -492,7 +518,7 @@ DoComputeResolution = True
    reconstruction method. Other reconstruction methods require this
    flag to be set to True
 """
-DoSplitReferenceImages = True
+DoSplitReferenceImages =False
 
 
 # Pixel size (in Ang.)
@@ -501,13 +527,13 @@ DoSplitReferenceImages = True
 ResolSam = 5.6
 
 # {expert} Display resolution?
-DisplayResolution = False
+DisplayResolution =False
 
 #-----------------------------------------------------------------------------
 # {section} Postprocessing
 #-----------------------------------------------------------------------------
 # Low-pass filter the reference?
-DoLowPassFilter = True
+DoLowPassFilter =False
 
 # Use estimated resolution for low-pass filtering?
 """If set to true, the volume will be filtered at a frecuency equal to
@@ -518,7 +544,7 @@ DoLowPassFilter = True
    value provided by the user in the next box (in digital frequency, 
    i.e. pixel-1: minimum 0, maximum 0.5) 
 """
-UseFscForFilter = True
+UseFscForFilter =False
 
 # Constant to by add to the estimated resolution
 """ The meaning of this field depends on the previous flag.
@@ -538,11 +564,11 @@ UseFscForFilter = True
     Note: if there are less values than iterations the last value is reused
     Note: if there are more values than iterations the extra value are ignored
 """
-ConstantToAddToFiltration = '0.1'
+ConstantToAddToFiltration ='0.1'
 
 # {expert} Center volume
 """ Center volume after each iteration """
-DoCenterVolume = False
+DoCenterVolume =False
 
 #------------------------------------------------------------------------------------------------
 # {section} Parallelization issues
@@ -557,26 +583,44 @@ NumberOfThreads = 1
 """ This option provides distributed-memory parallelization on multi-node machines. 
     It requires the installation of some MPI flavour, possibly together with a queueing system
 """
-DoParallel = False
+DoParallel =False
 
 # Number of MPI processes to use:
 NumberOfMpiProcesses = 5
 
 # minumum size of jobs in mpi processe. Set to 1 for large images (e.g. 500x500) and to 10 for small images (e.g. 100x100)
-MpiJobSize = '10'
+MpiJobSize ='10'
 
 # MPI system Flavour 
 """ Depending on your queuing system and your mpi implementation, different mpirun-like commands have to be given.
     Ask the person who installed your xmipp version, which option to use. 
     Or read: http://xmipp.cnb.csic.es/twiki/bin/view/Xmipp/ParallelPage. The following values are available: 
 """
-SystemFlavour = ''
+SystemFlavour =' '
 
 #------------------------------------------------------------------------------------------------
 # {expert} Analysis of results
 """ This script serves only for GUI-assisted visualization of the results
 """
-AnalysisScript = 'visualize_projmatch.py'
+AnalysisScript ='visualize_projmatch.py'
+#-----------------------------------------------------------------------------
+# {section} Debug
+#-----------------------------------------------------------------------------
+#------------------------------------------------------------------------------------------------
+
+#Verify
+"""Check that some output files are created. 
+"""
+Verify=True
+
+# {expert} print wrapper name
+PrintWrapperCommand=True
+
+# {expert} print wrapper parameters
+PrintWrapperParameters=True
+
+# {expert} show file verification
+ViewVerifyedFiles=True 
 
 #-----------------------------------------------------------------------------
 #-----------------------------------------------------------------------------
@@ -585,7 +629,7 @@ AnalysisScript = 'visualize_projmatch.py'
 #Do not change these variables
 ReferenceVolumeName = 'reference_volume.vol'
 LibraryDir = "ReferenceLibrary"
-ProjectLibraryRootName = LibraryDir + "/ref"
+ProjectLibraryRootName = LibraryDir + "/gallery"
 ProjMatchDir = "ProjMatchClasses"
 ProjMatchName = 'proj_match'
 ProjMatchRootName = ProjMatchDir + "/" + ProjMatchName
@@ -593,7 +637,7 @@ ForReconstructionSel = "reconstruction.sel"
 ForReconstructionDoc = "reconstruction.doc"
 MultiAlign2dSel = "multi_align2d.sel"
 DocFileWithOriginalAngles = 'original_angles.doc'
-docfile_with_current_angles = 'current_angles.doc'
+docfile_with_current_angles = 'current_angles'
 FilteredReconstruction = "filtered_reconstruction"
 
 ReconstructedVolume = "reconstruction"#
@@ -608,10 +652,9 @@ reconstructedFileNamesIter = []# names for reconstructed volumes
 maskedFileNamesIter = []# names masked volumes used as reference
 referenceNumber = 1#number of references
 createAuxTable = False
+NumberOfCtfGroups = 1
 
 
-
-import log, logging
 import os, sys
 #import launch_job
 #add to pythonPATH
@@ -619,7 +662,9 @@ scriptdir = os.path.split(os.path.dirname(os.popen('which xmipp_protocols', 'r')
 sys.path.append(scriptdir) # add default search path
 scriptdir = os.path.split(os.path.dirname(os.popen('which xmipp_protocols', 'r').read()))[0] + '/protocols'
 sys.path.append(scriptdir)
+import log, logging
 from pysqlite2 import dbapi2 as sqlite
+from arg import getListFromVector
 import dataBase
 global _dataBase
 
@@ -627,18 +672,56 @@ from xmipp import *
 #import pickle
 
 def actionsToBePerformedBeforeLoopThatDoNotModifyTheFileSystem():
-    #1 Convert vectors to list
-    from arg import getListFromVector
+
+    #Convert directories/files  to absolute path from projdir
+    global CtfGroupDirectory
+    CtfGroupDirectory = WorkingDir + '/' + CtfGroupDirectory
+#vector for iterations??????
+#    global ProjMatchDir
+#    ProjMatchDir = WorkingDir +'/' + ProjMatchDir
+    global DocFileWithOriginalAngles
+    DocFileWithOriginalAngles = WorkingDir +'/' + DocFileWithOriginalAngles
+
+    
+    # Convert vectors to list
     global ReferenceFileNames
     ReferenceFileNames = getListFromVector(ReferenceFileNames)
     global referenceNumber
     referenceNumber = len(ReferenceFileNames)
 
+    #directory with ProjMatchClasses
+    global ProjMatchDirs,LibraryDirs
+    ProjMatchDirs=[" "]
+    LibraryDirs=[" "]
+    for iterN in range(NumberofIterations):
+        ProjMatchDirs.append(WorkingDir + "/Iter_" + \
+                                  str(iterN + 1).zfill(2) + \
+                                  '/' + \
+                                  ProjMatchDir)
+        LibraryDirs.append( WorkingDir + "/Iter_" + \
+                                  str(iterN + 1).zfill(2) + \
+                                  '/' + \
+                                  LibraryDir)
+    print ProjMatchDirs,LibraryDirs
+    
+    auxList = (referenceNumber + 1) * [None]
+    global ProjectLibraryRootNames
+    ProjectLibraryRootNames=[]
+    ProjectLibraryRootNames.append([None])
+    for iterN in range(NumberofIterations):
+        for refN in range(referenceNumber):
+            auxList[refN + 1]=WorkingDir + "/Iter_" + \
+                                      str(iterN + 1).zfill(2) + \
+                                      '/' + \
+                                      ProjectLibraryRootName + \
+                                      "_ref_" + str(refN + 1).zfill(2)+\
+                                      ".stk"
+        ProjectLibraryRootNames.append(list(auxList))
+
     #name of masked volumes
     global maskedFileNamesIter
-    auxList = (referenceNumber + 1) * [None]
     #add dummy name so indexes start a 1
-    maskedFileNamesIter.append(list(""))
+    maskedFileNamesIter.append([None])
     for iterN in range(NumberofIterations):
         for refN in range(referenceNumber):
             auxList[refN + 1] = WorkingDir + "/Iter_" + \
@@ -649,9 +732,10 @@ def actionsToBePerformedBeforeLoopThatDoNotModifyTheFileSystem():
         maskedFileNamesIter.append(list(auxList))
 
     global reconstructedFileNamesIter
-    #add initial reference, useful for mark
+    ####################################################################
+    #add initial reference, useful for many routines
     #NOTE THAT INDEXES START AT 1
-    reconstructedFileNamesIter.append([""] + ReferenceFileNames)
+    reconstructedFileNamesIter.append([None] + ReferenceFileNames)
     for iterN in range(NumberofIterations):
         for refN in range(referenceNumber):
             auxList[refN + 1] = WorkingDir + "/Iter_" + \
@@ -661,15 +745,53 @@ def actionsToBePerformedBeforeLoopThatDoNotModifyTheFileSystem():
                                       "_ref_" + str(refN + 1).zfill(2) + ".vol"
         reconstructedFileNamesIter.append(list(auxList))
     #add initial reference, useful for mark
-    reconstructedFileNamesIter.append(ReferenceFileNames)
+    #reconstructedFileNamesIter.append(ReferenceFileNames)
 
-    #Convert directories/files  to absolute path from projdir
-    global CtfGroupDirectory
-    CtfGroupDirectory = WorkingDir + '/' + CtfGroupDirectory
+    # Optimal angles from previous iteration or user-provided at the beginning
+    global DocFileInputAngles
+    DocFileInputAngles=[]
+    aux=[DocFileWithOriginalAngles]*(refN+1)#+1 fills the zero
+    DocFileInputAngles.append([None] + aux)
+    for iterN in range(NumberofIterations):
+        for refN in range(referenceNumber):
+            auxList[refN + 1] = WorkingDir + "/Iter_" + \
+                                      str(iterN + 1).zfill(2) + \
+                                      '/' + \
+                                      docfile_with_current_angles + \
+                                      "_ref_" + str(refN + 1).zfill(2) + ".doc"
+        DocFileInputAngles.append(list(auxList))
 
+    #parameter for projection matching
+    global AngSamplingRateDeg
+    AngSamplingRateDeg     = [-1]+getListFromVector(AngSamplingRateDeg,NumberofIterations)
+    global MaxChangeOffset
+    MaxChangeOffset        = [-1]+getListFromVector(MaxChangeOffset,NumberofIterations)
+    global MaxChangeInAngles
+    MaxChangeInAngles      = [-1]+getListFromVector(MaxChangeInAngles,NumberofIterations)
+    global PerturbProjectionDirections
+    PerturbProjectionDirections= [-1]+getListFromVector(PerturbProjectionDirections,NumberofIterations)
+    global Search5DShift
+    Search5DShift          = [-1]+getListFromVector(Search5DShift,NumberofIterations)
+    global Search5DStep
+    Search5DStep           = [-1]+getListFromVector(Search5DStep,NumberofIterations)
+    global MinimumCrossCorrelation
+    MinimumCrossCorrelation= [-1]+getListFromVector(MinimumCrossCorrelation,NumberofIterations)
+    global DiscardPercentage
+    DiscardPercentage      = [-1]+getListFromVector(DiscardPercentage,NumberofIterations)
+    global DoAlign2D
+    DoAlign2D              = [-1]+getListFromVector(DoAlign2D,NumberofIterations)
+    global Align2dMaxChangeOffset
+    Align2dMaxChangeOffset = [-1]+getListFromVector(Align2dMaxChangeOffset,NumberofIterations)
+    global Align2dMaxChangeRot
+    Align2dMaxChangeRot    = [-1]+getListFromVector(Align2dMaxChangeRot,NumberofIterations)
+    global ReferenceIsCtfCorrected#set to true after first iteration
+    ReferenceIsCtfCorrected= [-1]+getListFromVector(str(ReferenceIsCtfCorrected) + " True", NumberofIterations)
+    global OnlyWinner
+    OnlyWinner             = [-1]+getListFromVector(OnlyWinner,NumberofIterations)
+    
 def otherActionsToBePerformedBeforeLoop():
 
-    firstIteration = True
+    global OuterRadius, NumberOfCtfGroups
     #1Delete working dir
     _Parameters = {
           'ProjectDir':ProjectDir
@@ -677,44 +799,43 @@ def otherActionsToBePerformedBeforeLoop():
         , 'DoDeleteWorkingDir':DoDeleteWorkingDir
         }
     command = 'deleteWorkingDirectory'
-    _dataBase.insertCommand(command, _Parameters)
+    _dataBase.insertCommand(command, _Parameters, 1)
 
-    #Create directory three
+    #Create directory
     _Parameters = {
           'ProjectDir':ProjectDir
         , 'WorkingDir':WorkingDir
-        , 'NumberofIterations':NumberofIterations
+        , 'iter':0
         }
-    command = 'createRequiredDirectories'
-    _dataBase.insertCommand(command, _Parameters)
+    command = 'createDir'
+    _dataBase.insertCommand(command, _Parameters, 1)
 
     #Backup protocol file
-
     _Parameters = {
           'ProjectDir':ProjectDir
         , 'WorkingDir':WorkingDir
         , 'progName'  :sys.argv[0]
         }
     command = 'pm_make_backup_of_script_file'
-    _dataBase.insertCommand(command, _Parameters)
+    _dataBase.insertCommand(command, _Parameters, dataBase.dataBaseStruct.doAlways)#backup always
 
     #Check references and projections size match
-
+    #Is already done in preconditions but I like to
+    #run protocols from command line bypassing the gui
     _Parameters = {
           'ReferenceFileNames':ReferenceFileNames
         , 'SelFileName':SelFileName
-        , 'firstIteration' :firstIteration
         }
     command = 'checkVolumeProjSize'
-    _dataBase.insertCommand(command, _Parameters)
+    _dataBase.insertCommand(command, _Parameters, 1)
 
     #Check Option compatibility
     _Parameters = {
-          'DoAlign2D':DoAlign2D
+          'DoAlign2D':DoAlign2D[1]
         , 'DoCtfCorrection':DoCtfCorrection
         }
     command = 'checkOptionsCompatibility'
-    _dataBase.insertCommand(command, _Parameters)
+    _dataBase.insertCommand(command, _Parameters, 1)
 
     #Init Mask references radius
     _Parameters = {
@@ -723,7 +844,7 @@ def otherActionsToBePerformedBeforeLoop():
         , 'SelFileName':SelFileName
         }
     command = 'global OuterRadius;OuterRadius = initOuterRadius'
-    _dataBase.insertCommand(command, _Parameters)
+    _dataBase.insertCommand(command, _Parameters, 1)
 
     #7 make CTF groups
     _Parameters = {
@@ -741,82 +862,225 @@ def otherActionsToBePerformedBeforeLoop():
                 , 'WienerConstant': WienerConstant
                }
     command = 'global NumberOfCtfGroups;NumberOfCtfGroups = execute_ctf_groups'
-    _dataBase.insertCommand(command, _Parameters)
-#    _VerifyFiles = []
-#    _VerifyFiles.append(dataBase.Verify(maskedFileNamesIter[iterN][refN], dataBase.Verify.IMAGE))
-#    verifyfiles = pickle.dumps(_VerifyFiles)
+    _VerifyFiles = []
+    _VerifyFiles.append(CtfGroupDirectory+"/"+CtfGroupRootName+'Info.xmd')
+    _VerifyFiles.append(CtfGroupDirectory+"/"+CtfGroupRootName+'_ctf.stk')
+    _VerifyFiles.append(CtfGroupDirectory+"/"+CtfGroupRootName+'_wien.stk')
+    _dataBase.insertCommand(command, _Parameters, 1,_VerifyFiles)
 
+    #Create Initial angular file. Either fill it with zeros or copy input
+    _Parameters = {
+          'DocFileName':DocFileName
+        , 'DocFileWithOriginalAngles':DocFileWithOriginalAngles
+        , 'SelFileName':SelFileName
+        }
+    command = 'initAngularReferenceFile'
+    _VerifyFiles = []
+    _VerifyFiles.append(DocFileWithOriginalAngles)
+    _dataBase.insertCommand(command, _Parameters, 1,_VerifyFiles)
 
-#    _VerifyFiles = []
-#    _VerifyFiles.append(CtfGroupRootName + 'Info.xmd')
-#    verifyfiles = pickle.dumps(_VerifyFiles, 0)
+    #Save global parameters for future runs
+    if (ContinueAtIteration == 1):
+        _Parameters = {
+          'OuterRadius':OuterRadius
+        , 'NumberOfCtfGroups':NumberOfCtfGroups
+        }
+        _dataBase.saveParameters(_Parameters)
+    else:
+        (OuterRadius, NumberOfCtfGroups) = _dataBase.loadParameters()
 
     _dataBase.commit()
 
 def actionsToBePerformedInsideLoop(_log):
     for iterN in range(1, NumberofIterations + 1):
         #############conn.execute(sqlBegin + "MPI_ON" + sqlEnd)
-        # Mask reference volume
+        # create working dir
+        _Parameters = {
+             'iter':iterN
+           , 'WorkingDir':WorkingDir
+            }
+        command = 'createDir'
+        _dataBase.insertCommand(command, _Parameters, iterN)
+
+        #Create directory with classes
+        _Parameters = {
+              'path':ProjMatchDirs[iterN]
+            , 'iter':iterN
+            }
+        command = 'createDir2'
+        _dataBase.insertCommand(command, _Parameters, 1)
+    
+        #Create directory with image libraries
+        _Parameters = {
+              'path':LibraryDirs[iterN]
+            , 'iter':0
+            }
+        command = 'createDir2'
+        _dataBase.insertCommand(command, _Parameters, 1)
+
         for refN in range(1, referenceNumber + 1):
-            # Mask reference volume
             ##############REMOVE SHUTIL.COPY
+            # Mask reference volume
             _Parameters = {
                                   'DoMask'             : DoMask
-                                , 'reconstructedFileName' : reconstructedFileNamesIter[iterN - 1][refN]
+                                , 'DoSphericalMask'    : DoSphericalMask
                                 , 'maskedFileName'     : maskedFileNamesIter[iterN][refN]
-                                , 'DoSphericalMask'    : DoSphericalMask
                                 , 'maskRadius'         : MaskRadius
-                                , 'DoSphericalMask'    : DoSphericalMask
+                                , 'reconstructedFileName' : reconstructedFileNamesIter[iterN - 1][refN]
                                 , 'userSuppliedMask'   : MaskFileName
                                 }
-            import pickle
+            
             command = "execute_mask"
-            _dataBase.insertCommand(command, _Parameters)
+            _VerifyFiles = []
+            _VerifyFiles.append(maskedFileNamesIter[iterN][refN])
+            _dataBase.insertCommand(command, _Parameters, iterN,_VerifyFiles)
 
+
+            # angular_project_library
+            _Parameters = {
+#                                , 'ProjMatchDir' : ProjMatchDir
+#                                , 'DocFileOutAngles':DocFileInputAngles[iterN]
+                                  'AngSamplingRateDeg':AngSamplingRateDeg[iterN]
+                                , 'CtfGroupRootName': CtfGroupRootName
+                                , 'CtfGroupDirectory': CtfGroupDirectory
+                                , 'CtfGroupSubsetFileName':CtfGroupSubsetFileName
+                                , 'DoCtfCorrection': DoCtfCorrection
+                                , 'DocFileInputAngles':DocFileInputAngles[iterN-1][refN]
+                                , 'DoParallel': DoParallel
+                                , 'DoRetricSearchbyTiltAngle':DoRetricSearchbyTiltAngle
+                                , 'MaxChangeInAngles':MaxChangeInAngles[iterN]
+                                , 'maskedFileNamesIter':maskedFileNamesIter[iterN][refN]
+                                , 'MpiJobSize':MpiJobSize
+                                , 'NumberOfCtfGroups':NumberOfCtfGroups
+                                , 'NumberOfMpiProcesses':NumberOfMpiProcesses
+                                , 'NumberOfThreads':NumberOfThreads
+                                , 'OnlyWinner':OnlyWinner[iterN]
+                                , 'PerturbProjectionDirections':PerturbProjectionDirections
+                                , 'ProjectLibraryRootName':ProjectLibraryRootNames[iterN][refN]
+                                , 'reconstructedFileName':reconstructedFileNamesIter[iterN-1][refN]
+                                , 'SystemFlavour':SystemFlavour
+                                , 'SymmetryGroup':SymmetryGroup
+                                , 'SymmetryGroupNeighbourhood':SymmetryGroupNeighbourhood
+                                , 'Tilt0':Tilt0
+                                , 'TiltF':TiltF
+                                }
+
+            command = "angular_project_library"
+            _VerifyFiles = []
+            auxFn=ProjectLibraryRootNames[iterN][refN]
+            _VerifyFiles.append(auxFn)
+            auxFn=auxFn[:-4]
+            _VerifyFiles.append(auxFn + ".doc")
+            _VerifyFiles.append(auxFn + "_sampling.txt")
+            _dataBase.insertCommand(command, _Parameters, iterN,_VerifyFiles)
+            
+######################
+######################
+########################            
             #REMOVE
+            #Create directory
+            _Parameters = {
+                 'iter':iterN + 1
+           , 'WorkingDir':WorkingDir
+                }
+            command = 'createDir'
+            _dataBase.insertCommand(command, _Parameters, iterN)
+
+            _Parameters = {'dummy':''}
             command = "shutil.copy('%s','%s');dummy" % (ReferenceFileNames[0], reconstructedFileNamesIter[iterN][refN])
-            _Parameters = {'dummy':command}
-            _dataBase.insertCommand(command, _Parameters)
+            _VerifyFiles = []
+            _VerifyFiles.append(reconstructedFileNamesIter[iterN][refN])
+            _dataBase.insertCommand(command, _Parameters, iterN)
+
+            
+
+
+######################################
+    _Parameters = {'dummy':''}
+    command = "print 'ALL DONE';dummy"
+    _dataBase.insertCommand(command, _Parameters, dataBase.dataBaseStruct.doAlways)
 
     _dataBase.commit()
 
 def mainLoop(_log, iter):
+    global ContinueAtIteration
     _import = 'from ProjMatchActionsToBePerformedBeforeLoop import *;\
-                 from ProjMatchActionsToBePerformedInLoop import *'
-    _dataBase.mainLoop(_log, iter, ProjectDir, _import)
+               from ProjMatchActionsToBePerformedInLoop import *'
+    _dataBase.setPrintWrapperParameters(PrintWrapperParameters)
+    _dataBase.setPrintWrapperCommand(PrintWrapperCommand)
+    _dataBase.setProjDir(ProjectDir)
+    _dataBase.setVerify(Verify,ViewVerifyedFiles)
+    StartAtStepN=_dataBase.getStartingStep(IsIter)
+    _dataBase.mainLoop(_log, StartAtStepN, _import)
 
+# Preconditions
+def preconditions(gui):
+    
+    retval=True
+    
+    # Check if there is workingdir 
+    # move this to gui
+    if WorkingDir == "":
+        message="No working directory given"
+        if gui:
+            import tkMessageBox
+            tkMessageBox.showerror("Error", message)
+        else:
+            print message
+        retval=False
+    
+    #Check references and projections size match
+    global ReferenceFileNames
+    ReferenceFileNames = getListFromVector(ReferenceFileNames)
+    _Parameters = {
+          'ReferenceFileNames':ReferenceFileNames
+        , 'SelFileName':SelFileName
+        }
+    from ProjMatchActionsToBePerformedBeforeLoop import checkVolumeProjSize
+    retval,message=checkVolumeProjSize(None,_Parameters)
+
+    if not retval:
+        if gui:
+            import tkMessageBox
+            tkMessageBox.showerror("Error", message)
+        else:
+            print message
+        retval=False
+
+    return retval
 #######
 # PROTOCOL STARTS HERE
 #######
-#create Logging system
-# Set up logging
-_log = log.init_log_system(ProjectDir,
-                            LogDir,
-                            sys.argv[0],
-                            WorkingDir)
-
-# Uncomment next line to get Debug level logging
-_log.setLevel(logging.DEBUG)
-_log.debug("Debug level logging enabled")
-#init DataBase
-global _dataBase
-_dataBase = dataBase.dataBase(ProjectDir,
-                            LogDir,
-                            sys.argv[0],
-                            WorkingDir,
-                            ProjMatchName,
-                            ContinueAtIteration)
-
-#preprocessing
-try:
-    actionsToBePerformedBeforeLoopThatDoNotModifyTheFileSystem()
-    otherActionsToBePerformedBeforeLoop()
-    actionsToBePerformedInsideLoop(_log)
-    mainLoop(_log, iter)
-except sqlite.Error, e:
-    print "An error occurred:", e.args[0]
-
-                #(in another file) <<<<< define list with actions and parameters
-                #                  <<<<< store list in database as it is made
-                #                  <<<<< link with restart
-#postprocesing
+if __name__ == '__main__':
+    #create Logging system
+    # Set up logging
+    _log = log.init_log_system(ProjectDir,
+                                LogDir,
+                                sys.argv[0],
+                                WorkingDir)
+    
+    # Uncomment next line to get Debug level logging
+    _log.setLevel(logging.DEBUG)
+    _log.debug("Debug level logging enabled")
+    #init DataBase
+    global _dataBase
+    _dataBase = dataBase.dataBase(ProjectDir,
+                                LogDir,
+                                sys.argv[0],
+                                WorkingDir,
+                                ProjMatchName,
+                                ContinueAtIteration)
+    
+    #preprocessing
+    try:
+        actionsToBePerformedBeforeLoopThatDoNotModifyTheFileSystem()
+        otherActionsToBePerformedBeforeLoop()
+        actionsToBePerformedInsideLoop(_log)
+        mainLoop(_log, iter)
+    except sqlite.Error, e:
+        print "An error occurred:", e.args[0]
+    
+                    #(in another file) <<<<< define list with actions and parameters
+                    #                  <<<<< store list in database as it is made
+                    #                  <<<<< link with restart
+    #postprocesing
