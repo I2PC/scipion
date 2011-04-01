@@ -113,7 +113,7 @@ void ImgSize(const FileName &filename, int &Xdim, int &Ydim, int &Zdim, size_t &
     ImgSize(MetaData(filename), Xdim, Ydim, Zdim, Ndim);
 }
 
-void getBlocksAvailableInMetaData(const FileName &inFile, StringVector& blockList)
+void getBlocksInMetaDataFile(const FileName &inFile, StringVector& blockList)
 {
     blockList.clear();
     if (!inFile.isMetaData())
@@ -221,7 +221,7 @@ void substituteOriginalImages(const FileName &fn, const FileName &fnOrig, const 
 
     // Read the blocks available
     StringVector blocks;
-    getBlocksAvailableInMetaData(fn, blocks);
+    getBlocksInMetaDataFile(fn, blocks);
 
     // Delete the output file if it exists
     if (exists(fnOut))
