@@ -694,7 +694,7 @@ void Adjust_CTF_Parameters::produce_side_info()
     if (global_mask(i, j)<=0)
         enhanced_ctftomodel()(i, j) = min_val;
     MultidimArray<double> aux;
-    median_filter3x3(enhanced_ctftomodel(), aux);
+    medianFilter3x3(enhanced_ctftomodel(), aux);
     enhanced_ctftomodel() = aux;
     enhanced_ctftomodel().rangeAdjust(0, 1);
 

@@ -273,7 +273,7 @@ void * filterByNormalizationThread(void *args)
                            I.rot(), I.tilt(), I.psi());
 
             // Compute correlation within mask
-            local_correlations[i]=correlation_index(P(),I(),
+            local_correlations[i]=correlationIndex(P(),I(),
                                                     &(prm->ihardMask));
 
             // Make the noise within the mask to be zero mean and with

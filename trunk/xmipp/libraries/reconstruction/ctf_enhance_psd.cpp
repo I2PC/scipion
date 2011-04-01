@@ -112,7 +112,7 @@ void ProgCTFEnhancePSD::apply(MultidimArray<double> &PSD)
     if (center)
         CenterFFT(PSD, true);
     MultidimArray<double> aux;
-    median_filter3x3(PSD, aux);
+    medianFilter3x3(PSD, aux);
     PSD = aux;
     CenterFFT(PSD, false);
 

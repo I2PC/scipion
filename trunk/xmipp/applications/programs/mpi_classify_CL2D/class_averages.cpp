@@ -311,7 +311,7 @@ void VQProjection::fitBasic(MultidimArray<double> &I,
         double shiftX, shiftY;
 
         // Shift then rotate
-        best_shift(P,IauxSR,shiftX,shiftY);
+        bestShift(P,IauxSR,shiftX,shiftY);
         MAT_ELEM(ASR,0,2)+=shiftX;
         MAT_ELEM(ASR,1,2)+=shiftY;
         applyGeometry(LINEAR,IauxSR,I,ASR,IS_NOT_INV,WRAP);
@@ -348,7 +348,7 @@ void VQProjection::fitBasic(MultidimArray<double> &I,
         M3x3_BY_M3x3(ARS,R,ARS);
         applyGeometry(LINEAR,IauxRS,I,ARS,IS_NOT_INV,WRAP);
 
-        best_shift(P,IauxRS,shiftX,shiftY);
+        bestShift(P,IauxRS,shiftX,shiftY);
         MAT_ELEM(ARS,0,2)+=shiftX;
         MAT_ELEM(ARS,1,2)+=shiftY;
         applyGeometry(LINEAR,IauxRS,I,ARS,IS_NOT_INV,WRAP);

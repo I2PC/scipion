@@ -297,7 +297,7 @@ void commonLineTwoImages(std::vector< MultidimArray<double> > &RTsi, int idxi,
             // Compute distance between the two lines
             double distance=0;
             if (parent->distance==CORRELATION)
-                distance=1-(correlation_index(linei,linej)+1)/2;
+                distance=1-(correlationIndex(linei,linej)+1)/2;
             else if (parent->distance==CORRENTROPY)
                 distance=1-fastCorrentropy(linei,linej,parent->sigma,
                                            parent->gaussianInterpolator);

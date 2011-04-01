@@ -105,7 +105,7 @@ void ProgEnhanceContrast::enhance(MultidimArray<double> &vol)
     // 2.-Elimination of the background-----------------------------------
     MultidimArray<double> mask;
     double bg_mean;
-    detect_background(vol,mask,0.01,bg_mean);
+    detectBackground(vol,mask,0.01,bg_mean);
 #ifdef DEBUG
 
     save()=mask;
@@ -148,7 +148,7 @@ void ProgEnhanceContrast::enhance(MultidimArray<double> &vol)
 
     // 3.-BSplines + diff = edges-------------------------------------------
     MultidimArray<double> vol_edge;
-    compute_edges(vol,vol_edge);
+    computeEdges(vol,vol_edge);
 
 #ifdef DEBUG
     save()=vol_edge;

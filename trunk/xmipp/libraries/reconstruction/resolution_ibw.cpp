@@ -54,7 +54,7 @@ void ProgResolutionIBW::run()
 	Image<double> aux;
     double bg_mean;
     MultidimArray<double> Vmask;
-    detect_background(V(),aux(),0.1,bg_mean);
+    detectBackground(V(),aux(),0.1,bg_mean);
     aux.write("mascara_no_ero_03.vol");
 
     //Mask volume erosion to expand the mask boundaries
@@ -72,7 +72,7 @@ void ProgResolutionIBW::run()
 
 	//Sobel edge detection applied to original volume
 	Image<double> Vedge;
-	compute_edges(V(),Vedge());
+	computeEdges(V(),Vedge());
 	Vedge.write("volumen_sobel_unmask_03.vol");
 
 	//Masked volume generation

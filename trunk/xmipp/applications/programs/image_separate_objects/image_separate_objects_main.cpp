@@ -71,9 +71,9 @@ public:
         I.read(fn_in);
         int object_no;
         if (ZSIZE(I())==1)
-            object_no=label_image2D(I(), label());
+            object_no=labelImage2D(I(), label());
         else
-            object_no=label_image3D(I(), label());
+            object_no=labelImage3D(I(), label());
         for (int o = 0; o <= object_no; o++)
         {
             I() = label();

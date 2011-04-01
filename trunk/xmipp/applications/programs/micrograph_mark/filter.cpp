@@ -62,7 +62,7 @@ void QtEnhanceContrastFilter::apply(Image<double> *_img)
 {
     if (_img != NULL)
     {
-        contrast_enhancement(_img);
+        contrastEnhancement(_img);
     }
 }
 
@@ -73,7 +73,7 @@ void QtSubstractBackgroundFilter::apply(Image<double> *_img)
 {
     if (_img != NULL)
     {
-        substract_background_plane(IMGMATRIX(*_img));
+        substractBackgroundPlane(IMGMATRIX(*_img));
         I.rangeAdjust(0, 255);
     }
 }

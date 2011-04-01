@@ -283,7 +283,7 @@ void random_convex_hull(const MultidimArray<double> &img, MultidimArray<double> 
     closing2D(hull,aux,8,0,1);
     hull=aux;
     */
-    fill_binary_object(hull);
+    fillBinaryObject(hull);
 }
 
 /* Dilate/erode 3D steps --------------------------------------------------- */

@@ -159,7 +159,7 @@ double segment_threshold(const Image<double> *V_in, Image<double> *V_out,
     }
 
     // Count the number of different objects
-    int no_comp = label_image3D((*V_out)(), aux());
+    int no_comp = labelImage3D((*V_out)(), aux());
     Matrix1D<double> count(no_comp + 1);
     const MultidimArray<double> &maux=aux();
     FOR_ALL_ELEMENTS_IN_ARRAY3D(maux)

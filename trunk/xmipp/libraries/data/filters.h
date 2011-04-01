@@ -43,7 +43,7 @@
  * The background is computed as the plane which best fits all density values,
  * then this plane is substracted from the image.
  */
-void substract_background_plane(MultidimArray<double> &I);
+void substractBackgroundPlane(MultidimArray<double> &I);
 
 /** Substract background
  * @ingroup Filters
@@ -54,7 +54,7 @@ void substract_background_plane(MultidimArray<double> &I);
  * This code has been implemented after the one of "Subtract background" in
  * ImageJ.
  */
-void substract_background_rolling_ball(MultidimArray<double> &I, int radius);
+void substractBackgroundRollingBall(MultidimArray<double> &I, int radius);
 
 /** Detect background
  * @ingroup Filters
@@ -64,7 +64,7 @@ void substract_background_rolling_ball(MultidimArray<double> &I, int radius);
  * Mask is of the same size of vol, and is the soluti�n, mask have
  * value 1 if background else value 0
 */
-void detect_background(const MultidimArray<double> &vol, MultidimArray<double> &mask, double alpha,
+void detectBackground(const MultidimArray<double> &vol, MultidimArray<double> &mask, double alpha,
                        double &final_mean);
 
 /** Constrast enhancement
@@ -72,7 +72,7 @@ void detect_background(const MultidimArray<double> &vol, MultidimArray<double> &
  *
  * The minimum density value is brought to 0 and the maximum to 255.
  */
-void contrast_enhancement(Image<double>* I);
+void contrastEnhancement(Image<double>* I);
 
 /** Region growing for images
  * @ingroup Filters
@@ -87,7 +87,7 @@ void contrast_enhancement(Image<double>* I);
  *
  * Valid neighbourhoods are 4 or 8.
  */
-void region_growing2D(const MultidimArray< double >& I_in,
+void regionGrowing2D(const MultidimArray< double >& I_in,
                       MultidimArray< double >& I_out,
                       int i,
                       int j,
@@ -107,7 +107,7 @@ void region_growing2D(const MultidimArray< double >& I_in,
  * border are greater than the region voxels. If less is false the region is
  * grown so that all voxels on its border are smaller than the region voxels.
  */
-void region_growing3D(const MultidimArray< double >& V_in,
+void regionGrowing3D(const MultidimArray< double >& V_in,
                       MultidimArray< double >& V_out,
                       int k,
                       int i,
@@ -122,7 +122,7 @@ void region_growing3D(const MultidimArray< double >& V_in,
   * If wrap is set, the image borders are wrapped around.
   * This is useful if the image coordinates represent angles
   */
-void distance_transform(const MultidimArray<int> &in,
+void distanceTransform(const MultidimArray<int> &in,
                         MultidimArray<int> &out, bool wrap=false);
 
 /** Label a binary image
@@ -132,7 +132,7 @@ void distance_transform(const MultidimArray<int> &in,
  * components. The background is labeled as 0, and the components as 1, 2, 3
  * ...
  */
-int label_image2D(const MultidimArray< double >& I,
+int labelImage2D(const MultidimArray< double >& I,
                   MultidimArray< double >& label,
                   int neighbourhood = 8);
 
@@ -143,14 +143,14 @@ int label_image2D(const MultidimArray< double >& I,
  * components. The background is labeled as 0, and the components as 1, 2, 3
  * ...
  */
-int label_image3D(const MultidimArray< double >& V, MultidimArray< double >& label);
+int labelImage3D(const MultidimArray< double >& V, MultidimArray< double >& label);
 
 /** Remove connected components
  * @ingroup Filters
  *
  * Remove connected components smaller than a given size. They are set to 0.
  */
-void remove_small_components(MultidimArray< double >& I,
+void removeSmallComponents(MultidimArray< double >& I,
                              int size,
                              int neighbourhood = 8);
 
@@ -160,7 +160,7 @@ void remove_small_components(MultidimArray< double >& I,
  * If the biggest component does not cover the percentage required (by default,
  * 0), more big components are taken until this is accomplished.
  */
-void keep_biggest_component(MultidimArray< double >& I,
+void keepBiggestComponent(MultidimArray< double >& I,
                             double percentage = 0,
                             int neighbourhood = 8);
 
@@ -169,7 +169,7 @@ void keep_biggest_component(MultidimArray< double >& I,
  *
  * Everything that is not background is assumed to be object.
  */
-void fill_binary_object(MultidimArray< double >&I, int neighbourhood = 8);
+void fillBinaryObject(MultidimArray< double >&I, int neighbourhood = 8);
 
 /** Segment an object using Otsu's method
  * @ingroup Filters
@@ -302,11 +302,11 @@ double fastCorrelation(const MultidimArray< T >& x,
     return retval / MULTIDIM_SIZE(x);
 }
 
-/** correlation_index nD
+/** correlationIndex nD
  * @ingroup Filters
  */
 template <typename T>
-double correlation_index(const MultidimArray< T >& x,
+double correlationIndex(const MultidimArray< T >& x,
                          const MultidimArray< T >& y,
                          const MultidimArray< int >* mask = NULL,
                          MultidimArray< double >* Contributions = NULL)
@@ -429,7 +429,7 @@ double correntropy(const MultidimArray<T> &x, const MultidimArray<T> &y,
  * To apply these results you must shift I1 by (-shiftX,-shiftY) or
  * I2 by (shiftX, shiftY)
  */
-void best_shift(const MultidimArray< double >& I1,
+void bestShift(const MultidimArray< double >& I1,
                 const MultidimArray< double >& I2,
                 double& shiftX,
                 double& shiftY,
@@ -442,7 +442,7 @@ void best_shift(const MultidimArray< double >& I1,
  * images. You can restrict the shift to a region defined by a mask (the maximum
  * will be sought where the mask is 1).
  */
-void best_nonwrapping_shift(const MultidimArray< double >& I1,
+void bestNonwrappingShift(const MultidimArray< double >& I1,
                             const MultidimArray< double >& I2,
                             double& shiftX,
                             double& shiftY);
@@ -504,7 +504,7 @@ void estimateGaussian2D(const MultidimArray<double> &I,
  * @ingroup Filters
  */
 template <typename T>
-double euclidian_distance(const MultidimArray< T >& x,
+double euclidianDistance(const MultidimArray< T >& x,
                           const MultidimArray< T >& y,
                           const MultidimArray< int >* mask = NULL)
 {
@@ -547,7 +547,7 @@ double euclidian_distance(const MultidimArray< T >& x,
  * (according to: Tourassi et al. (2001) Med. Phys. 28 pp. 2394-2402.)
  */
 template <typename T>
-double mutual_information(const MultidimArray< T >& x,
+double mutualInformation(const MultidimArray< T >& x,
                           const MultidimArray< T >& y,
                           int nx = 0,
                           int ny = 0,
@@ -686,7 +686,7 @@ double rms(const MultidimArray< T >& x,
  * shape, and the image logical origin is used for the decomposition.
  * k1 and k2 determines the harmonic coefficients to be computed.
  */
-void FourierBesselDecomposition(const MultidimArray< double >& img_in,
+void fourierBesselDecomposition(const MultidimArray< double >& img_in,
                                 MultidimArray< double >& m_out,
                                 double r1,
                                 double r2,
@@ -768,7 +768,7 @@ void mergeSort(MultidimArray< T >& v1, MultidimArray< T >& v2, MultidimArray< T 
 // elements. This way is guaranteed a minimum number of comparisons (maximum
 // number of comparisons to perform the sort, 5)
 template <typename T>
-void fast_merge_sort(MultidimArray< T >& x, MultidimArray< T >& y, MultidimArray< T >& v)
+void fastMergeSort(MultidimArray< T >& x, MultidimArray< T >& y, MultidimArray< T >& v)
 {
     if (DIRECT_MULTIDIM_ELEM(x,0) < DIRECT_MULTIDIM_ELEM(y,0))
     {
@@ -989,7 +989,7 @@ void median(MultidimArray< T >& x, MultidimArray< T >& y, T& m)
  * @ingroup Filters
  */
 template <typename T>
-void median_filter3x3(MultidimArray< T >&m, MultidimArray< T >& out)
+void medianFilter3x3(MultidimArray< T >&m, MultidimArray< T >& out)
 {
     int backup_startingx = STARTINGX(m);
     int backup_startingy = STARTINGY(m);
@@ -1038,7 +1038,7 @@ void median_filter3x3(MultidimArray< T >&m, MultidimArray< T >& out)
                 v2 = v4;
                 sort(DIRECT_A2D_ELEM(m, i - 1, j + 1), DIRECT_A2D_ELEM(m, i, j + 1),
                      DIRECT_A2D_ELEM(m, i + 1, j + 1), v3);
-                fast_merge_sort(v2, v3, v);
+                fastMergeSort(v2, v3, v);
                 median(v1, v, DIRECT_A2D_ELEM(out,i, j));
             }
             else
@@ -1050,7 +1050,7 @@ void median_filter3x3(MultidimArray< T >&m, MultidimArray< T >& out)
                      DIRECT_A2D_ELEM(m, i + 1, j + 2), v4);
 
                 // Merge sort the second and third vectors
-                fast_merge_sort(v2, v3, v);
+                fastMergeSort(v2, v3, v);
 
                 // Find the first median and assign it to the output
                 median(v1, v, DIRECT_A2D_ELEM(out, i, j));
@@ -1083,7 +1083,7 @@ void median_filter3x3(MultidimArray< T >&m, MultidimArray< T >& out)
  *
  * Paper: Teboul, et al. IEEE-Trans. on Image Proc. Vol. 7, 387-397.
  */
-void SmoothingShah(MultidimArray< double >& img,
+void smoothingShah(MultidimArray< double >& img,
                    MultidimArray< double >& surface_strength,
                    MultidimArray< double >& edge_strength,
                    const Matrix1D< double >& W,
@@ -1304,6 +1304,6 @@ void pixelDesvFilter(MultidimArray< T > &V, double thresFactor)
 }
 
 /** Compute edges with Sobel */
-void compute_edges (const MultidimArray <double>& vol, MultidimArray<double> &vol_edge);
+void computeEdges (const MultidimArray <double>& vol, MultidimArray<double> &vol_edge);
 
 #endif

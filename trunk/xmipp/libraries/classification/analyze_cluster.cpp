@@ -140,8 +140,8 @@ void ProgAnalyzeCluster::produceSideInfo()
 
         alignImages(Iref(),I,M);
         alignImages(Iref(),Imirror,Mmirror);
-        double corr=correlation_index(Iref(),I,&mask);
-        double corrMirror=correlation_index(Iref(),Imirror,&mask);
+        double corr=correlationIndex(Iref(),I,&mask);
+        double corrMirror=correlationIndex(Iref(),Imirror,&mask);
 
         if (corr>corrMirror)
             Iaux()=I;

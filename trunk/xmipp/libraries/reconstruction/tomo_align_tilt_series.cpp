@@ -195,8 +195,8 @@ public:
 
             // Compare the two images
             double distLevel=0.5*(
-                                 1-correlation_index(transformedI1,*(I2[level]),&maskInTheSpaceOf2)+
-                                 1-correlation_index(transformedI2,*(I1[level]),&maskInTheSpaceOf1));
+                                 1-correlationIndex(transformedI1,*(I2[level]),&maskInTheSpaceOf2)+
+                                 1-correlationIndex(transformedI2,*(I1[level]),&maskInTheSpaceOf1));
 
             if (showMode)
             {
@@ -395,14 +395,14 @@ double computeAffineTransformation(const MultidimArray<unsigned char> &I1,
                 double tx, ty;
                 pthread_mutex_lock( &globalAffineMutex );
                 if (!isMirror)
-                    best_shift(I1d,I2d,tx,ty);
+                    bestShift(I1d,I2d,tx,ty);
                 else
                 {
                     MultidimArray<double> auxI2d=I2d;
                     auxI2d.selfReverseY();
                     STARTINGX(auxI2d)=STARTINGX(I2d);
                     STARTINGY(auxI2d)=STARTINGY(I2d);
-                    best_shift(I1d,auxI2d,tx,ty);
+                    bestShift(I1d,auxI2d,tx,ty);
                     ty=-ty;
                 }
                 pthread_mutex_unlock( &globalAffineMutex );
@@ -803,10 +803,10 @@ void ProgTomographAlignment::produceSideInfo()
                 reject_outliers(Ifiltered,0.5);
 
                 // Substract background plane
-                substract_background_plane(Ifiltered);
+                substractBackgroundPlane(Ifiltered);
 
                 // Substract the background (rolling ball)
-                substract_background_rolling_ball(Ifiltered,
+                substractBackgroundRollingBall(Ifiltered,
                                                   XSIZE(Ifiltered)/10);
 
                 // Bandpass the image
@@ -1782,7 +1782,7 @@ bool ProgTomographAlignment::refineLandmark(int ii, int jj,
                                            (int)(YY(rjj)+i),(int)(XX(rjj)+j));
 
             // Compute its correlation with pieceii
-            double corrOriginal=correlation_index(pieceii,piecejj);
+            double corrOriginal=correlationIndex(pieceii,piecejj);
             if (showRefinement)
             {
                 Image<double> save;
@@ -1793,11 +1793,11 @@ bool ProgTomographAlignment::refineLandmark(int ii, int jj,
 
             // Now try with the best shift
             double shiftX,shiftY;
-            best_nonwrapping_shift(pieceii,piecejj,shiftX,shiftY);
+            bestNonwrappingShift(pieceii,piecejj,shiftX,shiftY);
             Matrix1D<double> fftShift(2);
             VECTOR_R2(fftShift,shiftX,shiftY);
             selfTranslate(LINEAR,piecejj,fftShift,WRAP);
-            double corrFFT=correlation_index(pieceii,piecejj);
+            double corrFFT=correlationIndex(pieceii,piecejj);
             if (corrFFT>corrOriginal)
             {
                 XX(rjj)-=shiftX;

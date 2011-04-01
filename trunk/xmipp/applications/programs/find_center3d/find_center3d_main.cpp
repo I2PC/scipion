@@ -256,6 +256,6 @@ double evaluateSymmetry(double *p, void *prm)
     }
 
     // Measure correlation
-    return -correlation_index(volume(), volume_sym(),
+    return -correlationIndex(volume(), volume_sym(),
                               &mask_prm.get_binary_mask());
 }

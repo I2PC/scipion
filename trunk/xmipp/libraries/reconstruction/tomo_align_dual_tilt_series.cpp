@@ -301,7 +301,7 @@ double ProgAlignDualTiltSeries::distanceBetweenCommonLines(
         << "   commonlinej=" << commonlinej.transpose() << std::endl
         << "   angi=" << angi << " angj=" << angj << std::endl
         << "   A\n" << A << std::endl
-        << "   corr=" << correlation_index(profilei,profilej) << std::endl
+        << "   corr=" << correlationIndex(profilei,profilej) << std::endl
         ;
 
         profilei.write("PPPi.txt");
@@ -311,7 +311,7 @@ double ProgAlignDualTiltSeries::distanceBetweenCommonLines(
         char c;
         std::cin >> c;
     }
-    return 1-correlation_index(profilei,profilej);
+    return 1-correlationIndex(profilei,profilej);
 }
 #undef DEBUG
 

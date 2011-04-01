@@ -88,22 +88,22 @@ public:
             if (doco)
                 co = correlation(ref(), img());
             if (docc)
-                cc = correlation_index(ref(), img());
+                cc = correlationIndex(ref(), img());
             if (doeu)
-                eu = euclidian_distance(ref(), img());
+                eu = euclidianDistance(ref(), img());
             if (domi)
-                mi = mutual_information(ref(), img());
+                mi = mutualInformation(ref(), img());
         }
         else
         {
             if (doco)
                 co = correlation(ref(), img(), &mask);
             if (docc)
-                cc = correlation_index(ref(), img(), &mask);
+                cc = correlationIndex(ref(), img(), &mask);
             if (doeu)
-                eu = euclidian_distance(ref(), img(), &mask);
+                eu = euclidianDistance(ref(), img(), &mask);
             if (domi)
-                mi = mutual_information(ref(), img(), 0, 0, &mask);
+                mi = mutualInformation(ref(), img(), 0, 0, &mask);
         }
 
         std::cout << img.name() << ": ";
@@ -124,14 +124,7 @@ public:
 /* MAIN -------------------------------------------------------------------- */
 int main(int argc, char *argv[])
 {
-  try
-  {
-      ProgCorrelation program;
-      program.read(argc, argv);
-      program.run();
-  }
-  catch (XmippError xe)
-  {
-      std::cerr << xe;
-  }
+    ProgCorrelation program;
+    program.read(argc, argv);
+    return program.tryRun();
 }

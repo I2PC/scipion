@@ -171,7 +171,7 @@ void ProgTomoAlignRefinement::predict_angles(int idx,
                 A2D_ELEM(mask,i,j)=0;
                 IMGPIXEL(Ip,i,j)=0;
             }
-            double newCorr=correlation_index(theo(),Ip(),&mask);
+            double newCorr=correlationIndex(theo(),Ip(),&mask);
             if (newCorr>newAlignment.corr)
             {
                 newAlignment.rot = rot;
@@ -205,7 +205,7 @@ void ProgTomoAlignRefinement::predict_angles(int idx,
             alignImages(theo(),Ip(),M, DONT_WRAP);
 
             // Measure the new correlation
-            newCorr=correlation_index(theo(),Ip(),&mask);
+            newCorr=correlationIndex(theo(),Ip(),&mask);
 
             // Keep the value
             if (newCorr>newAlignment.corr)

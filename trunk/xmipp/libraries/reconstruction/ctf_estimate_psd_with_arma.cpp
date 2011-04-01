@@ -314,7 +314,7 @@ void ARMAFilter(MultidimArray<double> &Img, MultidimArray< double > &Filter,
     if (apply_final_median_filter)
     {
         MultidimArray<double> aux;
-        median_filter3x3(Filter, aux);
+        medianFilter3x3(Filter, aux);
         // Copy all but the borders
         for (int i = 1; i < YSIZE(Filter) - 1; i++)
             for (int j = 1; j < XSIZE(Filter) - 1; j++)

@@ -657,7 +657,7 @@ void ProgAngularProjectionMatching::translationallyAlignOneImage(MultidimArray<d
 
     // Perform the actual search for the optimal shift
     if (max_shift>0)
-        best_shift(Mref,Mimg,opt_xoff,opt_yoff);
+        bestShift(Mref,Mimg,opt_xoff,opt_yoff);
     else
         opt_xoff = opt_yoff = 0.;
     if (opt_xoff * opt_xoff + opt_yoff * opt_yoff > max_shift * max_shift)
@@ -670,7 +670,7 @@ void ProgAngularProjectionMatching::translationallyAlignOneImage(MultidimArray<d
 
     // Calculate standard cross-correlation coefficient
     translate(LINEAR,Mtrans,Mimg,vectorR2(opt_xoff,opt_yoff),true);
-    maxcorr = correlation_index(Mref,Mtrans);
+    maxcorr = correlationIndex(Mref,Mtrans);
 
 #ifdef DEBUG
 

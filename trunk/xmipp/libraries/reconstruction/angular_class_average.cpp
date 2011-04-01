@@ -437,7 +437,7 @@ void ProgAngularClassAverage::reAlignClass(Image<double> &avg1,
 
                 if (max_shift > 0)
                 {
-                    best_shift(Mref,Mimg,opt_xoff,opt_yoff);
+                    bestShift(Mref,Mimg,opt_xoff,opt_yoff);
                     if (opt_xoff * opt_xoff + opt_yoff * opt_yoff > max_shift * max_shift)
                     {
                         new_xoff = new_yoff = 0.;
@@ -473,7 +473,7 @@ void ProgAngularClassAverage::reAlignClass(Image<double> &avg1,
 
             if (!do_discard)
             {
-                ccfs[imgno] = correlation_index(Mref,Mimg);
+                ccfs[imgno] = correlationIndex(Mref,Mimg);
                 imgs[imgno].setPsi(opt_psi);
                 imgs[imgno].setFlip(opt_flip);
                 imgs[imgno].setShifts(new_xoff,new_yoff);

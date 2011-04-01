@@ -1094,7 +1094,7 @@ void ProgMLRefine3D::postProcessVolumes()
                     int object_no, maxo;
                     double nr_vox, max_vox = 0.;
                     Image<double> label;
-                    object_no = label_image3D(Vsolv(), label());
+                    object_no = labelImage3D(Vsolv(), label());
                     max_vox = 0;
                     for (int o = 0; o <= object_no; o++)
                     {

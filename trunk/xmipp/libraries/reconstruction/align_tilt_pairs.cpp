@@ -157,7 +157,7 @@ bool ProgAlignTiltPairs::centerTiltedImage(const Image<double> &imgU, Image<doub
     A(1, 2) = yshift;
     selfApplyGeometry(LINEAR, Maux, A, IS_INV, DONT_WRAP);
     Maux.setXmippOrigin();
-    // ccf = correlation_index(imgU(), Maux);
+    // ccf = correlationIndex(imgU(), Maux);
 
     if (do_stretch)
         xshift *= cos_tilt;
@@ -170,7 +170,7 @@ bool ProgAlignTiltPairs::centerTiltedImage(const Image<double> &imgU, Image<doub
         double cos_psi = COSD(imgT_psi), sin_psi = SIND(imgT_psi);
         rowT.setValue(MDL_SHIFTX, (-xshift * cos_psi - yshift * sin_psi));
         rowT.setValue(MDL_SHIFTY, (xshift * sin_psi - yshift * cos_psi));
-        aux = correlation_index(imgU(), Maux);
+        aux = correlationIndex(imgU(), Maux);
         rowT.setValue(MDL_MAXCC, aux);
         return true;
     }

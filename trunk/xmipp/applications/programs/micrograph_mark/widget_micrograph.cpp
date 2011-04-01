@@ -2083,7 +2083,7 @@ bool AutoParticlePicking::build_vector(const MultidimArray<int> &piece,
         sectorCorr.initZeros(angleBins);
         for (int i = 0; i<angleBins; i++)
         {
-            DIRECT_A1D_ELEM(sectorCorr,i)=correlation_index(
+            DIRECT_A1D_ELEM(sectorCorr,i)=correlationIndex(
                                               sector[i],
                                               sector[intWRAP(i+step,0,angleBins-1)]);
         }

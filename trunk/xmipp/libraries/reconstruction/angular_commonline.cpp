@@ -259,7 +259,7 @@ double EulerSolver::similarityBetweenTwoLines(int imgi, int imgj)
     int idxAngj = (int)intWRAP(-((int)angj),0,359);
 
     double retval1=
-        correlation_index(parent->radon[imgi][idxAngi],
+        correlationIndex(parent->radon[imgi][idxAngi],
                           parent->radon[imgj][idxAngj]);
     int idxBesti=parent->bestLine(imgi,imgj);
     int idxBestj=parent->bestLine(imgj,imgi);
@@ -303,7 +303,7 @@ double EulerSolver::similarityBetweenTwoLines(int imgi, int imgj)
     for (idxAngi=0; idxAngi<360; idxAngi++)
     {
         double retval3=
-            correlation_index(parent->radon[imgi][idxAngi],
+            correlationIndex(parent->radon[imgi][idxAngi],
                               parent->radon[imgj][idxAngj]);
         ;
 
@@ -453,7 +453,7 @@ void Prog_Angular_CommonLine::produceSideInfo()
             for (int l1=0; l1<lmax; l1++)
                 for (int l2=0; l2<lmax; l2++)
                 {
-                    double corrl1l2=correlation_index(radon[n1][l1],
+                    double corrl1l2=correlationIndex(radon[n1][l1],
                                                       radon[n2][l2]);
                     if (corrl1l2>bestLineCorrelation(n1,n2))
                     {

@@ -29,7 +29,7 @@
 #include <list>
 
 /* Substract background ---------------------------------------------------- */
-void substract_background_plane(MultidimArray<double> &I)
+void substractBackgroundPlane(MultidimArray<double> &I)
 {
 
     I.checkDimension(2);
@@ -63,7 +63,7 @@ void substract_background_plane(MultidimArray<double> &I)
 }
 
 /* Substract background ---------------------------------------------------- */
-void substract_background_rolling_ball(MultidimArray<double> &I, int radius)
+void substractBackgroundRollingBall(MultidimArray<double> &I, int radius)
 {
 
     I.checkDimension(2);
@@ -183,7 +183,7 @@ void substract_background_rolling_ball(MultidimArray<double> &I, int radius)
 }
 
 /* Detect background ------------------------------------------------------ */
-void detect_background(const MultidimArray<double> &vol, MultidimArray<double> &mask,
+void detectBackground(const MultidimArray<double> &vol, MultidimArray<double> &mask,
                        double alpha,double &final_mean)
 {
 
@@ -308,7 +308,7 @@ void detect_background(const MultidimArray<double> &vol, MultidimArray<double> &
 }
 
 /* Contranst enhancement --------------------------------------------------- */
-void contrast_enhancement(Image<double> *I)
+void contrastEnhancement(Image<double> *I)
 {
     (*I)().rangeAdjust(0, 255);
 }
@@ -321,7 +321,7 @@ typedef struct
 }
 Coordinate2D;
 
-void region_growing2D(const MultidimArray<double> &I_in, MultidimArray<double> &I_out,
+void regionGrowing2D(const MultidimArray<double> &I_in, MultidimArray<double> &I_out,
                       int i, int j,
                       float stop_colour, float filling_colour, bool less, int neighbourhood)
 {
@@ -392,7 +392,7 @@ typedef struct
 }
 Coordinate3D;
 
-void region_growing3D(const MultidimArray<double> &V_in, MultidimArray<double> &V_out,
+void regionGrowing3D(const MultidimArray<double> &V_in, MultidimArray<double> &V_out,
                       int k, int i, int j,
                       float stop_colour, float filling_colour, bool less)
 {
@@ -476,7 +476,7 @@ void region_growing3D(const MultidimArray<double> &V_in, MultidimArray<double> &
     }
 }
 
-void distance_transform(const MultidimArray<int> &in,
+void distanceTransform(const MultidimArray<int> &in,
                         MultidimArray<int> &out, bool wrap)
 {
     std::list<int> toExplore;   /* A list of points to explore */
@@ -540,7 +540,7 @@ void distance_transform(const MultidimArray<int> &in,
 }
 
 /* Label image ------------------------------------------------------------ */
-int label_image2D(const MultidimArray<double> &I, MultidimArray<double> &label,
+int labelImage2D(const MultidimArray<double> &I, MultidimArray<double> &label,
                   int neighbourhood)
 {
     I.checkDimension(2);
@@ -552,7 +552,7 @@ int label_image2D(const MultidimArray<double> &I, MultidimArray<double> &label,
     {
         if (label(i, j) != 1)
             continue;
-        region_growing2D(label, label, i, j, 0, colour, false, neighbourhood);
+        regionGrowing2D(label, label, i, j, 0, colour, false, neighbourhood);
         colour++;
     }
     FOR_ALL_ELEMENTS_IN_ARRAY2D(label)
@@ -562,7 +562,7 @@ int label_image2D(const MultidimArray<double> &I, MultidimArray<double> &label,
 }
 
 /* Label volume ------------------------------------------------------------ */
-int label_image3D(const MultidimArray<double> &V, MultidimArray<double> &label)
+int labelImage3D(const MultidimArray<double> &V, MultidimArray<double> &label)
 {
     V.checkDimension(3);
 
@@ -573,7 +573,7 @@ int label_image3D(const MultidimArray<double> &V, MultidimArray<double> &label)
     {
         if (label(k, i, j) != 1)
             continue;
-        region_growing3D(label, label, k, i, j, 0, colour, false);
+        regionGrowing3D(label, label, k, i, j, 0, colour, false);
         colour++;
     }
     FOR_ALL_ELEMENTS_IN_ARRAY3D(label)
@@ -583,13 +583,13 @@ int label_image3D(const MultidimArray<double> &V, MultidimArray<double> &label)
 }
 
 /* Remove small components ------------------------------------------------- */
-void remove_small_components(MultidimArray<double> &I, int size,
+void removeSmallComponents(MultidimArray<double> &I, int size,
                              int neighbourhood)
 {
     I.checkDimension(2);
 
     MultidimArray<double> label;
-    int imax = label_image2D(I, label, neighbourhood);
+    int imax = labelImage2D(I, label, neighbourhood);
     MultidimArray<int> nlabel(imax + 1);
     FOR_ALL_ELEMENTS_IN_ARRAY2D(label) nlabel((int)(label(i, j)))++;
     FOR_ALL_ELEMENTS_IN_ARRAY2D(label)
@@ -598,13 +598,13 @@ void remove_small_components(MultidimArray<double> &I, int size,
 }
 
 /* Keep biggest component -------------------------------------------------- */
-void keep_biggest_component(MultidimArray<double> &I, double percentage,
+void keepBiggestComponent(MultidimArray<double> &I, double percentage,
                             int neighbourhood)
 {
     I.checkDimension(2);
 
     MultidimArray<double> label;
-    int imax = label_image2D(I, label, neighbourhood);
+    int imax = labelImage2D(I, label, neighbourhood);
     MultidimArray<int> nlabel(imax + 1);
     FOR_ALL_ELEMENTS_IN_ARRAY2D(label)
     {
@@ -640,13 +640,13 @@ void keep_biggest_component(MultidimArray<double> &I, double percentage,
 }
 
 /* Fill object ------------------------------------------------------------- */
-void fill_binary_object(MultidimArray<double> &I, int neighbourhood)
+void fillBinaryObject(MultidimArray<double> &I, int neighbourhood)
 {
     I.checkDimension(2);
 
     MultidimArray<double> label;
     FOR_ALL_ELEMENTS_IN_ARRAY2D(I) I(i, j) = 1 - I(i, j);
-    label_image2D(I, label, neighbourhood);
+    labelImage2D(I, label, neighbourhood);
     double l0 = label(STARTINGY(I), STARTINGX(I));
     FOR_ALL_ELEMENTS_IN_ARRAY2D(label)
     if (label(i, j) == l0)
@@ -855,7 +855,7 @@ void EntropyOtsuSegmentation(MultidimArray<double> &V, double percentil)
 }
 
 /* Best shift -------------------------------------------------------------- */
-void best_shift(const MultidimArray<double> &I1, const MultidimArray<double> &I2,
+void bestShift(const MultidimArray<double> &I1, const MultidimArray<double> &I2,
                 double &shiftX, double &shiftY, const MultidimArray<int> *mask)
 {
     I1.checkDimension(2);
@@ -935,13 +935,13 @@ void best_shift(const MultidimArray<double> &I1, const MultidimArray<double> &I2
 
 /* Best non-wrapping shift ------------------------------------------------- */
 //#define DEBUG
-void best_nonwrapping_shift(const MultidimArray<double> &I1,
+void bestNonwrappingShift(const MultidimArray<double> &I1,
                             const MultidimArray<double> &I2, double &shiftX, double &shiftY)
 {
     I1.checkDimension(2);
     I2.checkDimension(2);
 
-    best_shift(I1, I2, shiftX, shiftY);
+    bestShift(I1, I2, shiftX, shiftY);
     double bestCorr, corr;
     MultidimArray<double> Iaux;
 
@@ -1052,7 +1052,7 @@ double alignImages(const MultidimArray< double >& Iref, MultidimArray< double >&
         double shiftX, shiftY;
 
         // Shift then rotate
-        best_nonwrapping_shift(I,IauxSR,shiftX,shiftY);
+        bestNonwrappingShift(I,IauxSR,shiftX,shiftY);
         ASR(0,2)+=shiftX;
         ASR(1,2)+=shiftY;
         applyGeometry(LINEAR, IauxSR, I, ASR, IS_NOT_INV, wrap);
@@ -1088,14 +1088,14 @@ double alignImages(const MultidimArray< double >& Iref, MultidimArray< double >&
         ARS=R*ARS;
         applyGeometry(LINEAR, IauxRS, I, ARS, IS_NOT_INV, wrap);
 
-        best_nonwrapping_shift(Iref,IauxRS,shiftX,shiftY);
+        bestNonwrappingShift(Iref,IauxRS,shiftX,shiftY);
         ARS(0,2)+=shiftX;
         ARS(1,2)+=shiftY;
         applyGeometry(LINEAR, IauxRS, I, ARS, IS_NOT_INV, wrap);
     }
 
-    double corrRS=correlation_index(IauxRS,Iref);
-    double corrSR=correlation_index(IauxSR,Iref);
+    double corrRS=correlationIndex(IauxRS,Iref);
+    double corrSR=correlationIndex(IauxSR,Iref);
     double corr;
     if (corrRS>corrSR)
     {
@@ -1127,8 +1127,8 @@ double alignImagesConsideringMirrors(const MultidimArray< double >& Iref,
 
     alignImages(Iref,I,M,wrap);
     alignImages(Iref,Imirror,Mmirror,wrap);
-    double corr=correlation_index(Iref,I,mask);
-    double corrMirror=correlation_index(Iref,Imirror,mask);
+    double corr=correlationIndex(Iref,I,mask);
+    double corrMirror=correlationIndex(Iref,Imirror,mask);
     double bestCorr=corr;
     if (corrMirror>bestCorr)
     {
@@ -1234,7 +1234,7 @@ void estimateGaussian2D(const MultidimArray<double> &I,
 }
 
 /* Fourier-Bessel decomposition. ------------------------------------------- */
-void FourierBesselDecomposition(const MultidimArray<double> &img_in,
+void fourierBesselDecomposition(const MultidimArray<double> &img_in,
                                 MultidimArray<double> &m_out, double r1, double r2, int k1, int k2)
 {
     img_in.checkDimension(2);
@@ -1440,7 +1440,7 @@ double Update_edge_Shah(MultidimArray<double> &img,
 
 /* Smoothing Shah ---------------------------------------------------------- */
 #define SHAH_CONVERGENCE_THRESHOLD  0.0001
-void SmoothingShah(MultidimArray<double> &img,
+void smoothingShah(MultidimArray<double> &img,
                    MultidimArray<double> &surface_strength,
                    MultidimArray<double> &edge_strength,
                    const Matrix1D<double> &W,
@@ -1924,11 +1924,11 @@ void centerImageTranslationally(MultidimArray<double> &I)
     Ixy.setXmippOrigin();
 
     double meanShiftX=0, meanShiftY=0, shiftX, shiftY;
-    best_nonwrapping_shift(I,Ix, meanShiftX,meanShiftY);
-    best_nonwrapping_shift(I,Iy, shiftX,shiftY);
+    bestNonwrappingShift(I,Ix, meanShiftX,meanShiftY);
+    bestNonwrappingShift(I,Iy, shiftX,shiftY);
     meanShiftX+=shiftX;
     meanShiftY+=shiftY;
-    best_nonwrapping_shift(I,Ixy,shiftX,shiftY);
+    bestNonwrappingShift(I,Ixy,shiftX,shiftY);
     meanShiftX+=shiftX;
     meanShiftY+=shiftY;
     meanShiftX/=3;
@@ -2014,7 +2014,7 @@ void centerImage(MultidimArray<double> &I, int Niter, bool limitShift)
         Ixy.setXmippOrigin();
 
         double meanShiftX=0, meanShiftY=0, shiftX, shiftY, Nx=0, Ny=0;
-        best_nonwrapping_shift(Iaux,Ix, shiftX,shiftY);
+        bestNonwrappingShift(Iaux,Ix, shiftX,shiftY);
 #ifdef DEBUG
 
         ImageXmipp save;
@@ -2033,7 +2033,7 @@ void centerImage(MultidimArray<double> &I, int Niter, bool limitShift)
             meanShiftY+=shiftY;
             Ny++;
         }
-        best_nonwrapping_shift(Iaux,Iy, shiftX,shiftY);
+        bestNonwrappingShift(Iaux,Iy, shiftX,shiftY);
 #ifdef DEBUG
 
         save()=Iy;
@@ -2051,7 +2051,7 @@ void centerImage(MultidimArray<double> &I, int Niter, bool limitShift)
             meanShiftY+=shiftY;
             Ny++;
         }
-        best_nonwrapping_shift(Iaux,Ixy,shiftX,shiftY);
+        bestNonwrappingShift(Iaux,Ixy,shiftX,shiftY);
 #ifdef DEBUG
 
         save()=Ixy;
@@ -2291,7 +2291,7 @@ void forcePositive(MultidimArray<double> &V)
         REPORT_ERROR(ERR_NOT_IMPLEMENTED,"");
 }
 
-void compute_edges (const MultidimArray <double>& vol, MultidimArray<double> &vol_edge)
+void computeEdges (const MultidimArray <double>& vol, MultidimArray<double> &vol_edge)
 {
     MultidimArray<double> BSpline_coefs;
     BSpline_coefs.initZeros(vol);

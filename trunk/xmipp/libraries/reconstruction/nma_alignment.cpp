@@ -23,7 +23,8 @@
  ***************************************************************************/
 
 #include "nma_alignment.h"
-#include <data/metadata_extension.h>
+#include "data/metadata_extension.h"
+#include "program_extension.h"
 
 #include <iostream>
 #include <unistd.h>
@@ -31,11 +32,7 @@
 #include "../../external/condor/Solver.h"
 #include "../../external/condor/tools.h"
 
-#include "fourier_filter.h"
-#include "angular_project_library.h"
-#include "angular_discrete_assign.h"
-#include "convert_pdb2vol.h"
-#include "angular_continuous_assign.h"
+
 
 // Empty constructor =======================================================
 ProgNmaAlignment::ProgNmaAlignment()
@@ -59,7 +56,7 @@ void ProgNmaAlignment::defineParams()
     addParamsLine("  [-gaussian_Real    <s=0.5>]         : Weighting sigma in Real space");
     addParamsLine("  [-zerofreq_weight  <s=0.>]          : Zero-frequency weight");
     addParamsLine("  [-centerPDB]                        : Center the PDB structure");
-    addParamsLine("  [-filterVol <cutoff=15.>]           : Flter the volume from the PDB structure. Default cut-off is 15 A.");
+    addParamsLine("  [-filterVol <cutoff=15.>]           : Filter the volume from the PDB structure. Default cut-off is 15 A.");
     addParamsLine("  [-fixed_Gaussian <std=-1>]          : For pseudo atoms fixed_Gaussian must be used.");
     addParamsLine("                                      : Default standard deviation <std> is read from PDB file.");
 }
@@ -157,14 +154,17 @@ void ProgNmaAlignment::preProcess()
     createWorkFiles();
 }
 
-void runSystem(const String & arguments)
+void runSystem(const String &program, const String &arguments, bool useSystem = true)
 {
-    static int counter = 0;
-    //if (counter > 10)
-    //   exit(1);
-    std::cerr << ">>> RUNNING: " << arguments << std::endl;
-    system(arguments.c_str());
-    counter++;
+    if (useSystem || true)
+    {
+        String cmd = formatString("%s %s", program.c_str(), arguments.c_str());
+        std::cerr << std::endl << ">>> RUNNING: " << cmd << std::endl;
+        system(cmd.c_str());
+    }
+    else
+      runProgram(program, arguments);
+
 }
 
 // Create deformed PDB =====================================================
@@ -177,19 +177,19 @@ FileName ProgNmaAlignment::createDeformedPDB(int pyramidLevel) const
     const char * randStr = fnRandom.c_str();
 
     program = "xmipp_move_along_NMAmode";
-    arguments = formatString("%s %s %s %f > inter%s; mv -f inter%s deformedPDB_%s.pdb", program.c_str(),
+    arguments = formatString("%s %s %f > inter%s; mv -f inter%s deformedPDB_%s.pdb",
                              fnPDB.c_str(), modeList[0].c_str(), trial(0)*scale_defamp, randStr, randStr, randStr);
-    runSystem(arguments);
+    runSystem(program, arguments);
 
     for (int i=1; i<VEC_XSIZE(trial)-5; ++i)
     {
-        arguments = formatString("%s deformedPDB_%s.pdb %s %f > inter%s; mv -f inter%s deformedPDB_%s.pdb", program.c_str(),
+        arguments = formatString("deformedPDB_%s.pdb %s %f > inter%s; mv -f inter%s deformedPDB_%s.pdb", program.c_str(),
                                  randStr, modeList[i].c_str(), trial(i)*scale_defamp, randStr, randStr, randStr);
-        runSystem(arguments);
+        runSystem(program, arguments);
     }
 
     program = "xmipp_convert_pdb2vol";
-    arguments = formatString("%s -i deformedPDB_%s.pdb -size %i -sampling_rate %f -v 0", program.c_str(),
+    arguments = formatString("-i deformedPDB_%s.pdb -size %i -sampling_rate %f -v 0",
                              randStr, imgSize, sampling_rate);
 
     if (do_centerPDB)
@@ -201,14 +201,14 @@ FileName ProgNmaAlignment::createDeformedPDB(int pyramidLevel) const
         if (sigmaGaussian >= 0)
             arguments += formatString("%f -intensityColumn Bfactor", sigmaGaussian);
     }
-    runSystem(arguments);
+    runSystem(program, arguments, false);
 
     if (do_FilterPDBVol)
     {
         program = "xmipp_fourier_filter";
-        arguments = formatString("%s -i deformedPDB_%s.vol -sampling %f -low_pass %f -fourier_mask raised_cosine 0.1 -v 0",
-                                 program.c_str(), randStr, sampling_rate, cutoff_LPfilter);
-        runSystem(arguments);
+        arguments = formatString("-i deformedPDB_%s.vol -sampling %f -low_pass %f -fourier_mask raised_cosine 0.1 -v 0",
+                                 randStr, sampling_rate, cutoff_LPfilter);
+        runSystem(program, arguments, false);
     }
 
     if (pyramidLevel != 0)
@@ -246,24 +246,24 @@ void ProgNmaAlignment::performCompleteSearch(
     mkdir(((std::string)"ref" + fnRandom).c_str(),S_IRWXU);
 
     program = "xmipp_angular_project_library";
-    arguments = formatString("%s -i deformedPDB_%s.vol -o ref%s/ref%s.stk --sampling_rate 25 -v 0",
-                             program.c_str(), randStr, randStr, randStr);
-    runSystem(arguments);
+    arguments = formatString("-i deformedPDB_%s.vol -o ref%s/ref%s.stk --sampling_rate 25 -v 0",
+                             randStr, randStr, randStr);
+    runSystem(program, arguments, false);
 
     const char * refSelStr = formatString("ref%s/ref%s.doc", randStr, randStr).c_str();
 
     if (fnmask != "")
     {
         program = "xmipp_mask";
-        arguments = formatString("%s -i %s -mask %s", program.c_str(), refSelStr, fnmask.c_str());
-        runSystem(arguments);
+        arguments = formatString("-i %s -mask %s", refSelStr, fnmask.c_str());
+        runSystem(program, arguments, false);
     }
 
     // Perform alignment
     program = "xmipp_angular_discrete_assign";
-    arguments = formatString("%s -i downimg_%s.xmp --ref %s -o angledisc_%s.txt --psi_step 5 --max_shift_change %i --search5D -v 0",
-        program.c_str(), randStr, refSelStr, randStr, ROUND((double)imgSize/(10.0*pow(2.0,(double)pyramidLevel))));
-    runSystem(arguments);
+    arguments = formatString("-i downimg_%s.xmp --ref %s -o angledisc_%s.txt --psi_step 5 --max_shift_change %i --search5D -v 0",
+        randStr, refSelStr, randStr, ROUND((double)imgSize/(10.0*pow(2.0,(double)pyramidLevel))));
+    runSystem(program, arguments);
 }
 
 // Continuous assignment ===================================================
@@ -271,11 +271,11 @@ double ProgNmaAlignment::performContinuousAssignment(
     const FileName &fnRandom, int pyramidLevel) const
 {
     // Perform alignment
-  const char * randStr = fnRandom.c_str();
-  String program = "xmipp_angular_continuous_assign";
-  String arguments = formatString("%s -i angledisc_%s.txt -ref deformedPDB_%s.vol -o anglecont_%s.txt -gaussian_Fourier %f -gaussian_Real %f -zerofreq_weight %f -v 0",
-      program.c_str(), randStr, randStr, randStr, gaussian_DFT_sigma, gaussian_Real_sigma, weight_zero_freq);
-  runSystem(arguments);
+    const char * randStr = fnRandom.c_str();
+    String program = "xmipp_angular_continuous_assign";
+    String arguments = formatString("-i angledisc_%s.txt -ref deformedPDB_%s.vol -o anglecont_%s.txt -gaussian_Fourier %f -gaussian_Real %f -zerofreq_weight %f -v 0",
+                                    randStr, randStr, randStr, gaussian_DFT_sigma, gaussian_Real_sigma, weight_zero_freq);
+    runSystem(program, arguments, false);
 
     // Pick up results
     MetaData DF;
@@ -348,7 +348,7 @@ double ObjFunc_nma_alignment::eval(Vector X, int *nerror)
     }
     double fitness = global_NMA_prog->performContinuousAssignment(fnRandom, pyramidLevelCont);
 
-    runSystem(formatString("rm -rf *%s* &", randStr));
+    runSystem("rm", formatString("-rf *%s* &", randStr));
 
     global_NMA_prog->updateBestFit(fitness,dim);
 

@@ -161,7 +161,7 @@ double ProgPSDSort::evaluate(const FileName &fnMicrograph,
     // Rotate 90 degrees and compute correlation
     Image<double> PSDrotated(PSD);
     selfRotate(BSPLINE3, PSDrotated(), 90);
-    evaluation.PSDcorrelation90=correlation_index(PSD(), PSDrotated());
+    evaluation.PSDcorrelation90=correlationIndex(PSD(), PSDrotated());
 
     // Get the fitting score
     MetaData MD;
