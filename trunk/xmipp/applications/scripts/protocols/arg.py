@@ -14,7 +14,7 @@ def getComponentFromVector(__vector, _iteration):
 #---------------------------------------------------------------------------
 # getListFromVector
 #---------------------------------------------------------------------------
-def getListFromVector(_vector):
+def getListFromVector(_vector,numberIteration=None):
     import string
     intervalos = string.split(_vector)
     if len(intervalos) == 0:
@@ -29,4 +29,9 @@ def getListFromVector(_vector):
             listValues += [ listaIntervalo[1] ] * string.atoi(listaIntervalo[0])
         else:
             raise RuntimeError, "Unknown syntax: " + intervalos
+    #fill with last value the iterations
+    if( numberIteration):
+        for i in range(len(listValues),numberIteration):
+            listValues.append(listValues[-1])
+        
     return listValues
