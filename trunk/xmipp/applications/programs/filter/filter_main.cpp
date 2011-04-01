@@ -54,7 +54,7 @@ void stdDesvFilter(Image<double> &op, FilterParam &params)
 }
 
 /** Apply some filter operation on images, or selfiles */
-class ProgFilter: public XmippMetadataProgram
+class ProgFilter2: public XmippMetadataProgram
 {
 private:
     ///Functions pointers to selected operation
@@ -75,7 +75,7 @@ protected:
         each_image_produces_an_output = true;
         addUsageLine("Apply some filters to images.");
         XmippMetadataProgram::defineParams();
-        addParamsLine(" === Boundary Median Filter ===");
+        addParamsLine(" === Median Filter ===");
         addParamsLine("   -forcePositive          :Applied at those negative values. Positive values are untouched.");
         addParamsLine("or -badPixels <mask>       :Applied at those pixels given by mask.");
         addParamsLine("or -desvPixels <factor>    :Applied at those pixels out of the range [mean - factor*std, mean + factor*std].");
@@ -121,7 +121,7 @@ protected:
 
 int main(int argc, char **argv)
 {
-    ProgFilter program;
+    ProgFilter2 program;
     program.read(argc, argv);
     program.tryRun();
 }

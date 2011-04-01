@@ -810,7 +810,7 @@ void ProgTomographAlignment::produceSideInfo()
                                                   XSIZE(Ifiltered)/10);
 
                 // Bandpass the image
-                ProgFourierFilter FilterBP;
+                FourierFilter FilterBP;
                 FilterBP.FilterBand=BANDPASS;
                 FilterBP.w1=1.0/XSIZE(Ifiltered);
                 FilterBP.w2=100.0/XSIZE(Ifiltered);
@@ -1414,7 +1414,7 @@ void * threadgenerateLandmarkSetCriticalPoints( void * args )
         MultidimArray<double> Ifiltered;
         Ifiltered=I();
         Ifiltered.setXmippOrigin();
-        ProgFourierFilter FilterBP;
+        FourierFilter FilterBP;
         FilterBP.FilterBand=BANDPASS;
         FilterBP.w1=2.0/XSIZE(Ifiltered);
         FilterBP.w2=128.0/XSIZE(Ifiltered);

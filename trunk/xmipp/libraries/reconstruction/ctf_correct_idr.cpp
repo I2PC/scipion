@@ -106,7 +106,7 @@ void Prog_IDR_ART_Parameters::IDR_correction()
                                    LAST_XMIPP_INDEX(2*Ydim), LAST_XMIPP_INDEX(2*Xdim));
 
             // Read CTF file
-            ProgFourierFilter ctf;
+            FourierFilter ctf;
             ctf.FilterBand = CTF;
             ctf.ctf.read(fn_ctf);
             ctf.ctf.enable_CTFnoise = false;

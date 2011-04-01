@@ -2307,7 +2307,7 @@ bool AutoParticlePicking::prepare_piece(MultidimArray<double> &piece,
 
     // Band pass filter
     pthread_mutex_lock( &preparePieceMutex );
-    ProgFourierFilter Filter;
+    FourierFilter Filter;
     Filter.FilterShape = RAISED_COSINE;
     Filter.FilterBand = BANDPASS;
     Filter.w1 = __highpass_cutoff;

@@ -91,7 +91,7 @@ class QtLowPassFilter : public QtFilter
 public:
     QtLowPassFilter(const Micrograph *_M);
     static QString name;
-    ProgFourierFilter filter;
+    FourierFilter filter;
     virtual void apply(Image<double> *_img);
 };
 
@@ -101,7 +101,7 @@ class QtHighPassFilter : public QtFilter
 public:
     QtHighPassFilter(const Micrograph *_M);
     static QString name;
-    ProgFourierFilter filter;
+    FourierFilter filter;
     virtual void apply(Image<double> *_img);
 };
 

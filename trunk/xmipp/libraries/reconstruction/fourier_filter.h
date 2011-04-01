@@ -53,7 +53,7 @@
    For volumes you the mask is computed on the fly and
    in this way memory is saved (unless do_generate_3dmask == true).
 */
-class ProgFourierFilter: public XmippMetadataProgram
+class FourierFilter: public XmippMetadataProgram
 {
 public:
 #define RAISED_COSINE 1
@@ -107,16 +107,10 @@ protected:
 
 public:
     /** Empty constructor */
-    ProgFourierFilter();
-
-    /** Assignment */
-    ProgFourierFilter & operator = (const ProgFourierFilter &F);
-
-    /** Another function for assignment */
-    void assign(const ProgFourierFilter &F);
+    FourierFilter();
 
     /** Clear */
-    void clear();
+    void init();
 
     /** Show. */
     void show();

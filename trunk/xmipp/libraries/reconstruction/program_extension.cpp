@@ -54,7 +54,7 @@ int runProgram(const String &programName, const String &arguments)
 XmippProgram * getProgramByName(const String &programName)
 {
   if (programName == "xmipp_fourier_filter")
-    return new ProgFourierFilter();
+    return new FourierFilter();
 
   if (programName == "xmipp_convert_pdb2vol")
     return new ProgPdbConverter();

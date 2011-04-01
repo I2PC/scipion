@@ -318,7 +318,7 @@ void ROUT_random_phantom(const Prog_Random_Phantom_Parameters &prm,
     }
     else
     {
-        ProgFourierFilter ctf;
+        FourierFilter ctf;
         if (prm.fn_CTF != "")
         {
             ctf.FilterBand = CTF;

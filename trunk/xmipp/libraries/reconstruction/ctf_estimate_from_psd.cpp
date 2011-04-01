@@ -698,7 +698,7 @@ void Adjust_CTF_Parameters::produce_side_info()
     enhanced_ctftomodel() = aux;
     enhanced_ctftomodel().rangeAdjust(0, 1);
 
-    ProgFourierFilter Filter;
+    FourierFilter Filter;
     Filter.FilterShape = RAISED_COSINE;
     Filter.FilterBand = HIGHPASS;
     Filter.w1 = 0.01;

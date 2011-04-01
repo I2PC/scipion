@@ -202,7 +202,7 @@ void ProgConvertVol2Pseudo::placeSeeds(int Nseeds)
 {
     // Convolve the difference with the Gaussian to know
     // where it would be better to put a Gaussian
-    ProgFourierFilter Filter;
+    FourierFilter Filter;
     Filter.FilterBand=LOWPASS;
     Filter.FilterShape=REALGAUSSIAN;
     Filter.w1=sigma;

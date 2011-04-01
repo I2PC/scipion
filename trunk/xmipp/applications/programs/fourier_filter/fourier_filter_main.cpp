@@ -30,7 +30,7 @@
 /* MAIN -------------------------------------------------------------------- */
 int main(int argc, char *argv[])
 {
-    ProgFourierFilter program;
+    FourierFilter program;
     program.read(argc, argv);
     return program.tryRun();
 }

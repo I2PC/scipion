@@ -96,7 +96,7 @@ void ProgSimulateMicroscope::show()
         ;
 }
 
-void ProgSimulateMicroscope::setupFourierFilter(ProgFourierFilter &filter, bool isBackground, double &power)
+void ProgSimulateMicroscope::setupFourierFilter(FourierFilter &filter, bool isBackground, double &power)
 {
     static int dXdim = 2 * Xdim, dYdim = 2 * Ydim;
     static MultidimArray<double> aux;

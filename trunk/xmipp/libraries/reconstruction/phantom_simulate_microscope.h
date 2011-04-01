@@ -49,11 +49,11 @@ public:
     /// Defocus change (%)
     double   defocus_change;
     /// CTF
-    ProgFourierFilter ctf;
+    FourierFilter ctf;
     /// Low pass filter, if it is 0 no lowpass filter is applied
-    ProgFourierFilter lowpass;
+    FourierFilter lowpass;
     /// After CTF noise root squared spectrum
-    ProgFourierFilter after_ctf;
+    FourierFilter after_ctf;
     /// Noise power before CTF
     double   sigma_before_CTF;
     /// Noise power after CTF
@@ -78,7 +78,7 @@ public:
     void show();
 
     /** Prepare fourier filter */
-    void setupFourierFilter(ProgFourierFilter &filter, bool isBackground, double &power);
+    void setupFourierFilter(FourierFilter &filter, bool isBackground, double &power);
 
     /** Update ctfs */
     void updateCtfs();

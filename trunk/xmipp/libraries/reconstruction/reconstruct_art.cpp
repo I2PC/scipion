@@ -197,7 +197,7 @@ void ART_single_step(
     bool                    refine)          // Refine experimental projection before correcting
 {
     // Prepare to work with CTF ................................................
-    ProgFourierFilter ctf;
+    FourierFilter ctf;
     ImageOver *footprint = (ImageOver *) & prm.basis.blobprint;
     ImageOver *footprint2 = (ImageOver *) & prm.basis.blobprint2;
     bool remove_footprints = false;

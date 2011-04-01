@@ -59,7 +59,7 @@ public:
     int Zdim, Ydim, Xdim;
 	
     /// Side Info: CTF
-    ProgFourierFilter ctf;
+    FourierFilter ctf;
     
     /// Side Info: ctfdat
     MetaData ctfdat;

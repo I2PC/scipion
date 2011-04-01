@@ -31,7 +31,7 @@
 #include <data/fft.h>
 
 /* Clear ------------------------------------------------------------------- */
-void ProgFourierFilter::clear()
+void FourierFilter::init()
 {
     FilterShape = RAISED_COSINE;
     FilterBand = LOWPASS;
@@ -44,141 +44,71 @@ void ProgFourierFilter::clear()
 }
 
 /* Empty constructor ---------------------------------------------------------*/
-ProgFourierFilter::ProgFourierFilter()
+FourierFilter::FourierFilter()
 {
-    clear();
+    init();
 }
-
-/* Assignment -------------------------------------------------------------- */
-ProgFourierFilter & ProgFourierFilter::operator = (const ProgFourierFilter &F)
-{
-    if (this != &F)
-    {
-        clear();
-
-        FilterShape = F.FilterShape;
-        FilterBand = F.FilterBand;
-        w2 = F.w2;
-        w1 = F.w1;
-        raised_w = F.raised_w;
-        ctf = F.ctf;
-    }
-    return *this;
-}
-
-/* Another function for assignment ----------------------------------------- */
-void ProgFourierFilter::assign(const ProgFourierFilter &F)
-{
-    *this = F;
-}
-
 
 /* Define params ------------------------------------------------------------------- */
-void ProgFourierFilter::defineParams()
+void FourierFilter::defineParams()
 {
     each_image_produces_an_output = true;
     XmippMetadataProgram::defineParams();
-    addParamsLine("   --low_pass  <w1>                   : Cutoff freq (<1/2 or A)");
-    addParamsLine("or --high_pass <w1>                   : Cutoff freq (<1/2 or A)");
-    addParamsLine("or --band_pass <w1> <w2>              : Cutoff freq (<1/2 or A)");
-    addParamsLine("or --stop_band <w1> <w2>              : Cutoff freq (<1/2 or A)");
-    addParamsLine("  [--fourier_mask <mask_type=raised_cosine>]: Fourier mask that will be applied.");
-    addParamsLine("        where <mask_type> ");
-    addParamsLine("         raised_cosine <raisedw=0.02>     : Use raised cosine edges (in dig.freq.)");
-    addParamsLine("         wedge <th0> <thF>           : Missing wedge (along y) for data between th0-thF ");
-    addParamsLine("         cone <th0>                  : Missing cone for tilt angles up to th0 ");
-    addParamsLine("         gaussian                    : sigma=<w1>");
-    addParamsLine("         real_gaussian               : convolution with a Gaussian in real-space with sigma=<w1>");
-    addParamsLine("         ctf <ctfile>                : Provide a .ctfparam file");
-    addParamsLine("         ctfpos <ctfile>             : Provide a .ctfparam file");
-    addParamsLine("                                     : The CTF phase will be corrected before applying");
-    addParamsLine("         bfactor <B>                 : Exponential filter (positive values for decay) ");
-    addParamsLine("           requires --sampling;                                                         ");
+    addParamsLine("   --fourier <cuttoff_type> <mask_type=raised_cosine>    : Filter in Fourier space");
+    addParamsLine("         where <cuttoff_type>");
+    addParamsLine("            low_pass  <w1>                   : Cutoff freq (<1/2 or A)");
+    addParamsLine("            high_pass <w1>                   : Cutoff freq (<1/2 or A)");
+    addParamsLine("            band_pass <w1> <w2>              : Cutoff freq (<1/2 or A)");
+    addParamsLine("            stop_band <w1> <w2>              : Cutoff freq (<1/2 or A)");
+    addParamsLine("         where <mask_type> ");
+    addParamsLine("            raised_cosine <raisedw=0.02>     : Use raised cosine edges (in dig.freq.)");
+    addParamsLine("            wedge <th0> <thF>                : Missing wedge (along y) for data between th0-thF ");
+    addParamsLine("            cone <th0>                       : Missing cone for tilt angles up to th0 ");
+    addParamsLine("            gaussian                         : sigma=<w1>");
+    addParamsLine("            real_gaussian                    : convolution with a Gaussian in real-space with sigma=<w1>");
+    addParamsLine("            ctf <ctfile>                     : Provide a .ctfparam file");
+    addParamsLine("            ctfpos <ctfile>                  : Provide a .ctfparam file");
+    addParamsLine("                                             : The CTF phase will be corrected before applying");
+    addParamsLine("            bfactor <B>                      : Exponential filter (positive values for decay) ");
+    addParamsLine("               requires --sampling;                                                         ");
     addParamsLine("  [--sampling <sampling_rate>]        : If provided pass frequencies are taken in Ang ");
+    addParamsLine("         alias -s;");
+    addParamsLine("         requires --fourier;");
 }
 
 /* Read parameters from command line. -------------------------------------- */
-void ProgFourierFilter::readParams()
+void FourierFilter::readParams()
 {
-    clear();
+    init();
     XmippMetadataProgram::readParams();
     // Filter shape .........................................................
-    std::string mask_type;
-    mask_type = getParam("--fourier_mask");
+    String cuttoff, mask;
+    int maskPos = 2;
+    cuttoff = getParam("--fourier");
 
-    if (mask_type == "raised_cosine")
+    // Read frequencies cuttoff options
+    if (cuttoff == "low_pass")
     {
-        raised_w = getDoubleParam("--fourier_mask", "raised_cosine");
-        FilterShape = RAISED_COSINE;
-    }
-    else if (mask_type == "wedge")
-    {
-        w1 = getDoubleParam("--fourier_mask", "wedge", 0);
-        w2 = getDoubleParam("--fourier_mask", "wedge", 1);
-        FilterShape = WEDGE;
-        do_generate_3dmask = true;
-    }
-    else if (mask_type == "cone")
-    {
-        w1 = getDoubleParam("--fourier_mask", "cone", 0);
-        FilterShape = CONE;
-        do_generate_3dmask = true;
-    }
-    else if (mask_type == "gaussian")
-    {
-        FilterShape = GAUSSIAN;
+        w1 = getDoubleParam("--fourier", "low_pass");
         FilterBand = LOWPASS;
     }
-    else if (mask_type == "real_gaussian")
+    else if (cuttoff == "high_pass")
     {
-        FilterShape = REALGAUSSIAN;
-        FilterBand = LOWPASS;
-    }
-    else if (mask_type == "ctf")
-    {
-        FilterShape = FilterBand = CTF;
-        ctf.enable_CTFnoise = false;
-        ctf.read( getParam("--fourier_mask", "ctf") );
-        ctf.Produce_Side_Info();
-    }
-    else if (mask_type == "ctfpos")
-    {
-        FilterShape = FilterBand = CTFPOS;
-        ctf.enable_CTFnoise = false;
-        ctf.read( getParam("--fourier_mask", "ctfpos") );
-        ctf.Produce_Side_Info();
-        do_correct_phase = true;
-    }
-    else if (mask_type == "bfactor")
-    {
-        FilterShape = FilterBand = BFACTOR;
-        w1 = getDoubleParam("--fourier_mask", "bfactor");
-        w2 = getDoubleParam("--sampling");
-    }
-    else
-        REPORT_ERROR(ERR_DEBUG_IMPOSIBLE, "This couldn't happen, check argument parser or params definition");
-
-    // Filter band ..........................................................
-    if (checkParam("--low_pass"))
-    {
-        w1 = getDoubleParam("--low_pass");
-        FilterBand = LOWPASS;
-    }
-    else if (checkParam("--high_pass"))
-    {
-        w1 = getDoubleParam("--high_pass");
+        w1 = getDoubleParam("--fourier", "high_pass");
         FilterBand = HIGHPASS;
     }
-    else if (checkParam("--band_pass"))
+    else if (cuttoff == "band_pass")
     {
-        w1 = getDoubleParam("--band_pass", 0);
-        w2 = getDoubleParam("--band_pass", 1);
+        w1 = getDoubleParam("--fourier", "band_pass");
+        w2 = getDoubleParam("--fourier", "band_pass", 1);
+        maskPos = 3;
         FilterBand = BANDPASS;
     }
-    else if (checkParam("--stop_band"))
+    else if (cuttoff == "stop_band")
     {
-        w1 = getDoubleParam("--stop_band", 0);
-        w2 = getDoubleParam("--stop_band", 1);
+        w1 = getDoubleParam("--fourier", "stop_band");
+        w2 = getDoubleParam("--fourier", "stop_band", 1);
+        maskPos = 3;
         FilterBand = STOPBAND;
     }
 
@@ -190,10 +120,65 @@ void ProgFourierFilter::readParams()
         if (w2 != 0)
             w2 = sampling_rate / w2;
     }
+
+    //Read mask options
+    mask = getParam("--fourier", maskPos);
+
+    if (mask == "raised_cosine")
+    {
+        raised_w = getDoubleParam("--fourier", "raised_cosine");
+        FilterShape = RAISED_COSINE;
+    }
+    else if (mask == "wedge")
+    {
+        w1 = getDoubleParam("--fourier", "wedge", 0);
+        w2 = getDoubleParam("--fourier", "wedge", 1);
+        FilterShape = WEDGE;
+        do_generate_3dmask = true;
+    }
+    else if (mask == "cone")
+    {
+        w1 = getDoubleParam("--fourier", "cone", 0);
+        FilterShape = CONE;
+        do_generate_3dmask = true;
+    }
+    else if (mask == "gaussian")
+    {
+        FilterShape = GAUSSIAN;
+        FilterBand = LOWPASS;
+    }
+    else if (mask == "real_gaussian")
+    {
+        FilterShape = REALGAUSSIAN;
+        FilterBand = LOWPASS;
+    }
+    else if (mask == "ctf")
+    {
+        FilterShape = FilterBand = CTF;
+        ctf.enable_CTFnoise = false;
+        ctf.read( getParam("--fourier", "ctf") );
+        ctf.Produce_Side_Info();
+    }
+    else if (mask == "ctfpos")
+    {
+        FilterShape = FilterBand = CTFPOS;
+        ctf.enable_CTFnoise = false;
+        ctf.read( getParam("--fourier", "ctfpos") );
+        ctf.Produce_Side_Info();
+        do_correct_phase = true;
+    }
+    else if (mask == "bfactor")
+    {
+        FilterShape = FilterBand = BFACTOR;
+        w1 = getDoubleParam("--fourier", "bfactor");
+        w2 = getDoubleParam("--sampling");
+    }
+    else
+        REPORT_ERROR(ERR_DEBUG_IMPOSIBLE, "This couldn't happen, check argument parser or params definition");
 }
 
 /* Show -------------------------------------------------------------------- */
-void ProgFourierFilter::show()
+void FourierFilter::show()
 {
 	if (verbose==0)
 		return;
@@ -256,7 +241,7 @@ void ProgFourierFilter::show()
     }
 }
 
-void ProgFourierFilter::processImage(const FileName &fnImg, const FileName &fnImgOut, size_t objId)
+void FourierFilter::processImage(const FileName &fnImg, const FileName &fnImgOut, size_t objId)
 {
     static bool first = true;
 
@@ -272,7 +257,7 @@ void ProgFourierFilter::processImage(const FileName &fnImg, const FileName &fnIm
 }
 
 /* Get mask value ---------------------------------------------------------- */
-double ProgFourierFilter::maskValue(const Matrix1D<double> &w)
+double FourierFilter::maskValue(const Matrix1D<double> &w)
 {
     double absw = w.module();
 
@@ -357,7 +342,7 @@ double ProgFourierFilter::maskValue(const Matrix1D<double> &w)
 }
 
 /* Generate mask ----------------------------------------------------------- */
-void ProgFourierFilter::generateMask(MultidimArray<double> &v)
+void FourierFilter::generateMask(MultidimArray<double> &v)
 {
     if (do_generate_3dmask)
     {
@@ -409,7 +394,7 @@ void ProgFourierFilter::generateMask(MultidimArray<double> &v)
     }
 }
 
-void ProgFourierFilter::applyMaskSpace(MultidimArray<double> &v)
+void FourierFilter::applyMaskSpace(MultidimArray<double> &v)
 {
     MultidimArray< std::complex<double> > aux3D;
     transformer.FourierTransform(v, aux3D, false);
@@ -444,7 +429,7 @@ void ProgFourierFilter::applyMaskSpace(MultidimArray<double> &v)
 }
 
 /* Mask power -------------------------------------------------------------- */
-double ProgFourierFilter::maskPower()
+double FourierFilter::maskPower()
 {
     if (XSIZE(maskFourier) != 0)
         return maskFourier.sum2()/MULTIDIM_SIZE(maskFourier);
@@ -453,7 +438,7 @@ double ProgFourierFilter::maskPower()
 }
 
 // Correct phase -----------------------------------------------------------
-void ProgFourierFilter::correctPhase()
+void FourierFilter::correctPhase()
 {
     FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(maskFourier)
     if (DIRECT_MULTIDIM_ELEM(maskFourier,n)< 0)

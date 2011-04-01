@@ -121,7 +121,7 @@ void ProgCTFEnhancePSD::apply(MultidimArray<double> &PSD)
 
     // Band pass filter
     CenterFFT(PSD, true);
-    ProgFourierFilter Filter;
+    FourierFilter Filter;
     Filter.FilterShape = RAISED_COSINE;
     Filter.FilterBand = BANDPASS;
     Filter.w1 = filter_w1;
