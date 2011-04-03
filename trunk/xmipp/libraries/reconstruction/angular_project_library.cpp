@@ -215,7 +215,7 @@ void ProgAngularProjectLibrary::run()
         mysampling.SetNoise(perturb_projection_vector,my_seed);
     }
     if(angular_distance_bool!=0)
-        mysampling.SetNeighborhoodRadius(angular_distance);//irelevant
+        mysampling.SetNeighborhoodRadius(angular_distance);//irrelevant
     //true -> half_sphere
     mysampling.Compute_sampling_points(false,max_tilt_angle,min_tilt_angle);
     //only rank 0
@@ -237,11 +237,12 @@ void ProgAngularProjectLibrary::run()
     //=========================
     //======================
     //recompute symmetry with neigh symmetry
-    if (!mysampling.SL.isSymmetryGroup(fn_sym_neigh, symmetry, sym_order))
-        REPORT_ERROR(ERR_VALUE_INCORRECT,
-                     (std::string)"Invalid neig symmetry" +  fn_sym_neigh);
-    mysampling.SL.read_sym_file(fn_sym_neigh);
-    mysampling.fill_L_R_repository();
+    // If uncomment neighbour are not OK. BE CAREFULL
+    //    if (!mysampling.SL.isSymmetryGroup(fn_sym_neigh, symmetry, sym_order))
+    //        REPORT_ERROR(ERR_VALUE_INCORRECT,
+    //                     (std::string)"Invalid neig symmetry" +  fn_sym_neigh);
+    //    mysampling.SL.read_sym_file(fn_sym_neigh);
+    //    mysampling.fill_L_R_repository();
     //precompute product between symmetry matrices and experimental data
     if (FnexperimentalImages.size() > 0)
         mysampling.fill_exp_data_projection_direction_by_L_R(FnexperimentalImages);
@@ -261,7 +262,7 @@ void ProgAngularProjectLibrary::run()
         mysampling.find_closest_sampling_point(FnexperimentalImages,output_file_root);
     }
     //only rank 0
-    //write docfil with vectors and angles
+    //write docfile with vectors and angles
     mysampling.create_asym_unit_file(output_file_root);
     //all nodes
     //If there is no reference available exit
@@ -327,6 +328,7 @@ void ProgAngularProjectLibrary::run()
             mySFout.setValue(MDL_SCALE,1.0,id);
         }
     }
+    mySFout.setComment("x,y,z refer to the coordinates of the unitary vector at direction given by the euler angles");
     mySFout.write(output_file_root+".doc");
     unlink((output_file_root+"_angles.doc").c_str());
 
@@ -339,8 +341,6 @@ void ProgAngularProjectLibrary::createGroupSamplingFiles(void)
 
     //#define DEBUGTIME
 #ifdef  DEBUGTIME
-    #include <ctime>
-
     time_t start,end;
     double time_dif;
     time (&start);
@@ -356,22 +356,28 @@ void ProgAngularProjectLibrary::createGroupSamplingFiles(void)
     printf ("re-read entire sampling file after %.2lf seconds\n", time_dif );
 #endif
 
-    MetaData mySF(fn_groups);
+    StringVector blockList;
+    getBlocksInMetaDataFile(fn_groups,blockList);
     FileName fn_temp;
     FileName my_output_file_root;
-    int igrp = 0;
-    FOR_ALL_OBJECTS_IN_METADATA(mySF)
+    int bmax=blockList.size();
+    MetaData SFBlock;
+
+    int igrp=1;
+    for (StringVector::iterator it= blockList.begin();
+         it!=blockList.end(); it++,igrp++)
     {
-        igrp++;
-        mySF.getValue(MDL_IMAGE,fn_temp,__iter.objId);
-        if (fn_temp=="")
-            break;
         my_output_file_root.compose(output_file_root + "_group",igrp,"");
         std::cerr<<"Writing group sampling file "<< my_output_file_root<<std::endl;
 
-        if (fn_temp.size() > 0)
+        fn_temp.compose(*it,fn_groups);
+        SFBlock.read(fn_temp);
+        std::cerr << "SFBlock.size()" << SFBlock.size() <<std::endl;
+        if (SFBlock.size() > 0)//Do we really need this check?
+            //I guess so since user may have supplied a particular
+            //defocus classification. ROB
         {
-            mysampling.fill_exp_data_projection_direction_by_L_R(fn_temp);
+            mysampling.fill_exp_data_projection_direction_by_L_R(fn_temp);//SFBlock@fn_groups
             if(compute_closer_sampling_point_bool)
             {
                 //find sampling point closer to experimental point (only 0) and bool
