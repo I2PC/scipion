@@ -372,7 +372,6 @@ void ProgAngularProjectLibrary::createGroupSamplingFiles(void)
 
         fn_temp.compose(*it,fn_groups);
         SFBlock.read(fn_temp);
-        std::cerr << "SFBlock.size()" << SFBlock.size() <<std::endl;
         if (SFBlock.size() > 0)//Do we really need this check?
             //I guess so since user may have supplied a particular
             //defocus classification. ROB
