@@ -165,6 +165,15 @@ public:
      */
     void compose(size_t no , const String &str , const String &ext);
 
+    // Constructor: string  and filename, mainly for metadata blocks..
+    /** Prefix with string (blockname) .
+     *
+     * @code
+     * fn_proj.compose(b00001, "g1ta.xmp");  // fn_proj = "b000001@g1ta.xmp"
+     * @endcode
+     */
+    void compose(const String &blockName , const String &str);
+
 
     /** True if this filename belongs to a stack
      */
