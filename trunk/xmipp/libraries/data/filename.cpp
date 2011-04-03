@@ -64,6 +64,12 @@ void FileName::compose(size_t no , const String &str , const String &ext)
         this->assign(formatString("%06lu@%s.%s", no, str.c_str(), ext.c_str()));
 }
 
+// Constructor: string  and filename, mainly for metadata blocks..
+void FileName::compose(const String &blockName , const String &str)
+{
+    *this = (FileName)( blockName + (String)"@" + str);
+}
+
 
 // Is in stack ............................................................
 bool FileName::isInStack() const
@@ -389,7 +395,13 @@ bool FileName::isMetaData(bool failIfNotExists) const
     size_t found = this->find('@');
     if (find_first_of("@:#") != npos)
         return false;
-
+    //check if file exists
+    if (!exists(*this))
+    	REPORT_ERROR(ERR_IO_NOTFILE,(String)"file: " + *this + (String)" does not exist");
+    //This is dangerous and should be removed
+    //in next version. only star1 files should be OK
+    //ROB
+    //FIXME
     FileName ext = getFileFormat();
     if (ext=="sel" || ext=="xmd" || ext=="doc")
     {
