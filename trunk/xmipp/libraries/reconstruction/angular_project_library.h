@@ -36,6 +36,7 @@
 #include <data/funcs.h>
 #include <data/program.h>
 #include "projection_real_shears.h"
+#include <data/metadata_extension.h>
 
 /**@name Projection library program */
 //@{
