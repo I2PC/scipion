@@ -89,7 +89,7 @@ double fitness(double *p)
     switch (params.alignment_method)
     {
     case (COVARIANCE):
-                    fit = -correlation_index(params.V1(), params.Vaux(), params.mask_ptr);
+                    fit = -correlationIndex(params.V1(), params.Vaux(), params.mask_ptr);
         break;
     case (LEAST_SQUARES):
                     fit = rms(params.V1(), params.Vaux(), params.mask_ptr);
