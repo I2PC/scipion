@@ -586,7 +586,7 @@ NumberOfThreads = 1
 DoParallel =False
 
 # Number of MPI processes to use:
-NumberOfMpiProcesses = 5
+NumberOfMpiProcesses = 3
 
 # minumum size of jobs in mpi processe. Set to 1 for large images (e.g. 500x500) and to 10 for small images (e.g. 100x100)
 MpiJobSize ='10'
@@ -596,7 +596,7 @@ MpiJobSize ='10'
     Ask the person who installed your xmipp version, which option to use. 
     Or read: http://xmipp.cnb.csic.es/twiki/bin/view/Xmipp/ParallelPage. The following values are available: 
 """
-SystemFlavour =' '
+SystemFlavour =''
 
 #------------------------------------------------------------------------------------------------
 # {expert} Analysis of results
@@ -972,6 +972,7 @@ def actionsToBePerformedInsideLoop(_log):
             auxFn=auxFn[:-4]
             _VerifyFiles.append(auxFn + ".doc")
             _VerifyFiles.append(auxFn + "_sampling.txt")
+            #_VerifyFiles.append(auxFn + "ewetgerg")
             _dataBase.insertCommand(command, _Parameters, iterN,_VerifyFiles)
             
 ######################

@@ -31,6 +31,16 @@ def createDir2(_log, dict):
         exit(1)
     _log.info("Create directory " + _path)
 
+def changeDir(_log, dict):
+    """ Change to Directory """
+    _Path = dict['ProjectDir'] + "/" + dict['WorkingDir'] + "/"
+    _log.info("Create directory " + _Path)
+    try:
+        os.chdir(_Path)
+    except os.error, (errno, errstr):
+        print "could not change to directory '%s'" % _Path
+        print "Error(%d): %s" % (errno, errstr)
+        exit(1)
 def deleteWorkingDirectory(_mylog, dict):
 
     if (not dict['DoDeleteWorkingDir']):

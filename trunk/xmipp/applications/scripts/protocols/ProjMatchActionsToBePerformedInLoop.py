@@ -76,11 +76,11 @@ def angular_project_library(_log,dict):
               ' --groups '              + dict['CtfGroupSubsetFileName']
     _DoParallel=dict['DoParallel']
     if (dict['DoParallel']):
-        parameters = parameters + ' --mpi_job_size ' + str(dict['MyMpiJobSize'])
+        parameters = parameters + ' --mpi_job_size ' + str(dict['MpiJobSize'])
     if (len(dict['SymmetryGroupNeighbourhood'])>1):
         parameters+= \
           ' --sym_neigh ' + dict['SymmetryGroupNeighbourhood'] + 'h'
-    if (dict['OnlyWinner']):
+    if (dict['OnlyWinner']!='0'):
         parameters+= \
               ' --only_winner '
 
@@ -91,3 +91,6 @@ def angular_project_library(_log,dict):
                          dict['NumberOfMpiProcesses']*dict['NumberOfThreads'],
                          1,
                          dict['SystemFlavour'])
+
+def projection_matching(_log,dict):
+    a=0
