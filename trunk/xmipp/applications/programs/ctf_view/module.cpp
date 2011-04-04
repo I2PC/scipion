@@ -765,7 +765,7 @@ void CTFViewer::setImageViewer()
     imageViewer = new ImageViewer((fn_root + ".ctfmodel_halfplane").c_str() , false);
     imageViewer->apply_geo = false;
     imageViewer->loadImage((fn_root + ".ctfmodel_halfplane").c_str(), 0, 0,
-                           ImageViewer::CTF_mode);
+                           ImageViewer::Normal_mode);
     imageViewer->show();
 
     // Load the CTF in image I
@@ -846,7 +846,7 @@ void CTFViewer::generate_ctfmodel()
     recomputeCurves();
 
     // Reload and redraw image
-    imageViewer->loadMatrix(model(), 0, 0, ImageViewer::CTF_mode);
+    imageViewer->loadMatrix(model(), 0, 0, ImageViewer::Normal_mode);
 }
 
 // Key press events --------------------------------------------------------
