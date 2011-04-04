@@ -33,25 +33,23 @@
    @ingroup ReconsLibrary */
 //@{
 /** Adjust CTF parameters. */
-class Adjust_CTF_Parameters
+class ProgCTFEstimateFromPSD: public XmippProgram
 {
 public:
     /// CTF filename
     FileName             fn_psd;
-    /// Model to which the current one must be similar
-    FileName             fn_similar_model;
     /// CTF amplitude to model
-    Image<double>           ctftomodel;
+    Image<double>        ctftomodel;
     /// CTF amplitude to model
-    Image<double>           enhanced_ctftomodel;
+    Image<double>        enhanced_ctftomodel;
     /// CTF amplitude to model
-    Image<double>           enhanced_ctftomodel_fullsize;
+    Image<double>        enhanced_ctftomodel_fullsize;
     /// CTF model
-    CTFDescription             initial_ctfmodel;
+    CTFDescription       initial_ctfmodel;
     /// Show convergence values
     bool                 show_optimization;
     /// X dimension of particle projections (-1=the same as the psd)
-    int   ctfmodelSize;
+    int                  ctfmodelSize;
     /// Bootstrap estimation
     bool                 bootstrap;
 
@@ -63,9 +61,6 @@ public:
     double               Tm;
     /// Defocus range
     double               defocus_range;
-
-    /// Initial Chromatic aberration
-    double               initial_Ca;
 
     /// Enhancement filter low freq
     double               f1;
@@ -81,16 +76,16 @@ public:
     int                  modelSimplification;
 public:
     /// Read parameters from file
-    void read(const FileName &fn_param);
-
-    /// Write to a file
-    void write(const FileName &fn, bool rewrite = true);
+    void readParams();
 
     /// Show parameters
     void show();
 
-    /// Usage
-    void Usage();
+    /// Define basic parameters
+    static void defineBasicParams(XmippProgram * program);
+
+    /// Define Parameters
+    void defineParams();
 
     /// Produce side information
     void produce_side_info();
@@ -102,12 +97,15 @@ public:
     /** Generate quadrant model at a given size.
         It is assumed that ROUT_Adjust_CTF has been already run */
     void generate_model_quadrant(int Ydim, int Xdim, MultidimArray<double> &model);
+
+    /** Run */
+    void run();
 };
 
 /** Core of the Adjust CTF routine.
     This is the routine which does everything. It returns the fitting error
     committed in the best fit.*/
-double ROUT_Adjust_CTF(Adjust_CTF_Parameters &prm, CTFDescription &output_ctfmodel, 
+double ROUT_Adjust_CTF(ProgCTFEstimateFromPSD &prm, CTFDescription &output_ctfmodel, 
     bool standalone = true);
 //@}
 #endif

@@ -31,10 +31,30 @@
 #define SIGMA       2   // returned by functions.
 
 #include <data/multidim_array.h>
+#include <data/program.h>
 
 /**@defgroup SpARMA Spectrum modelling by ARMA filters
    @ingroup ReconsLibrary */
 //@{
+/** Class to perform the ARMA estimate of the PSD from the command line */
+class ARMA_parameters
+{
+public:
+    int       N_AR;               // order in the Rows direction of the AR part of the model
+    int       M_AR;               // order in the Cols direction of the AR part of the model
+    int       N_MA;               // order in the Rows direction of the MA part of the model
+    int       M_MA;               // order in the Cols direction of the MA part of the model
+public:
+    MultidimArray<double> ARParameters; // Output parameters
+    MultidimArray<double> MAParameters; // Output parameters
+    double dSigma;                      // Noise variance
+public:
+    /// Read parameters from command line
+    void readParams(XmippProgram *program);
+    /// Define parameters
+    static void defineParams(XmippProgram *program);
+};
+
 /** CausalARMA.
 
    This function determines the coeficients of an 2D - ARMA model
@@ -67,11 +87,8 @@
    ARMA Models, " IEEE Transactions on Information Theory, Vol. IT-30, No.
    5, pp. 736-745, September 1984.
 
-
-
-
     PARAMETERS:
-       Img - The matrix - Here it's supposed that it comes from an image
+    Img - The matrix - Here it's supposed that it comes from an image
     N_AR, M_AR - The order in Rows and Columns directions of the AR part
                  of the model.
     N_AR, M_AR - The order in Rows and Columns directions of the MA part
@@ -89,9 +106,7 @@
 
    DATE:        26-3-2001
 */
-double CausalARMA(MultidimArray<double> &Img, int N_AR, int M_AR,
-                  int N_MA, int M_MA, MultidimArray<double> &ARParameters,
-                  MultidimArray<double> &MAParameters);
+void CausalARMA(MultidimArray<double> &Img, ARMA_parameters &prm);
 
 
 /** ARMAFilter.
@@ -113,33 +128,7 @@ double CausalARMA(MultidimArray<double> &Img, int N_AR, int M_AR,
    DATE:        26-3-2001
 */
 void ARMAFilter(MultidimArray<double> &Img, MultidimArray< double > &Filter,
-                MultidimArray<double> &ARParameters, MultidimArray<double> &MAParameters,
-                double dSigma);
-//@}
-
-/**@defgroup SpARMAProg sparma (Spectrum modelling by ARMA filters)
-   @ingroup ReconsLibrary */
-//@{
-/** Class to perform the ARMA estimate of the PSD from the command line */
-class ARMA_parameters
-{
-public:
-    FileName  fn_in;              // Name of input image
-    FileName  fn_filter;          // Name of filter image
-    int       N_AR;               // order in the Rows direction of the AR part of the model
-    int       M_AR;               // order in the Cols direction of the AR part of the model
-    int       N_MA;               // order in the Rows direction of the MA part of the model
-    int       M_MA;               // order in the Cols direction of the MA part of the model
-
-public:
-    /// Read parameters from command line
-    void read(int argc, char **argv);
-    /// Read parameters from command line
-    void read(const FileName &file);
-    /// Write to a file
-    void write(const FileName &fn, bool rewrite = true);
-};
-
+                ARMA_parameters &prm);
 //@}
 
 #endif

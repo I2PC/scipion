@@ -29,7 +29,7 @@
 void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray*prhs[])
 {
 
-    Adjust_CTF_Parameters adjustParams;
+    ProgCTFEstimateFromPSD adjustParams;
     adjustParams.show_optimization=false;
     getMatrix2D(prhs[0],adjustParams.ctftomodel());
     adjustParams.min_freq=(double) mxGetScalar(prhs[1]);

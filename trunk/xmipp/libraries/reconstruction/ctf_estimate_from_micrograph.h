@@ -24,8 +24,8 @@
  *  e-mail address 'xmipp@cnb.csic.es'
  ***************************************************************************/
 
-#ifndef _PROG_ASSIGN_CTF
-#define _PROG_ASSIGN_CTF
+#ifndef _PROG_CTF_ESTIMATE_FROM_MICROGRAPH
+#define _PROG_CTF_ESTIMATE_FROM_MICROGRAPH
 
 #include "ctf_estimate_from_psd.h"
 #include "ctf_estimate_psd_with_arma.h"
@@ -36,63 +36,39 @@
 //@{
 
 /** Assign CTF parameters. */
-class Prog_assign_CTF_prm
+class ProgCTFEstimateFromMicrograph: public XmippProgram
 {
 public:
-    typedef enum {ARMA, Periodogram} TPSD_mode;
+    typedef enum {ARMA, Periodogram} TPSDEstimator_mode;
+    typedef enum {OnePerMicrograph, OnePerRegion, OnePerParticle} TPSD_mode;
 
 public:
     /// Parameters for adjust_CTF program
-    Adjust_CTF_Parameters   adjust_CTF_prm;
+    ProgCTFEstimateFromPSD  prmEstimateCTFFromPSD;
     /// Parameters for ARMA
     ARMA_parameters         ARMA_prm;
-    /// Reversed endian
-    bool                  reversed;
-    /// X dimension of micrograph pieces
-    int                     N_horizontal;
-    /// Y dimension of micrograph pieces
-    int                     N_vertical;
-    /// Selfile with all projections
-    FileName                selfile_fn;
     /// Position file
-    FileName                picked_fn;
-    /// PSD files root
-    FileName                PSDfn_root;
+    FileName                fn_pos;
     /// Micrograph filename
-    FileName                image_fn;
-    /** the center of the windows in which the CTF is computed
-        are the particles (stored at the .pos file) instead of
-        a regular grid. By default this is false.
-    */
-    bool                    compute_at_particle;
-    /** Perform averaging. */
-    bool                    micrograph_averaging;
-    /** Perform averaging. */
-    bool                    piece_averaging;
-    /** Number of pieces (Nside_piece x Nside_piece) for the piece averaging */
-    int                     Nside_piece;
-    /** PSD_mode */
-    TPSD_mode               PSD_mode;
-    /** Don't adjust CTF.
-        That is, only compute the PSD */
-    bool                    dont_adjust_CTF;
+    FileName                fn_micrograph;
+    /// Partition mode
+    TPSD_mode               psd_mode;
+    /// Dimension of micrograph pieces
+    int                     pieceDim;
+    /** Number of pieces (Nsubpiece x Nsubpiece) for the piece averaging */
+    int                     Nsubpiece;
+    /** PSDEstimator_mode */
+    TPSDEstimator_mode      PSDEstimator_mode;
     /** Bootstrap N */
     int                     bootstrapN;
+    /// Estimate a CTF for each PSD
+    bool 					estimate_ctf;
 public:
-    /** Selfile mode.
-        If image_fn finishes in .sel, then the selfile_mode is on,
-        otherwise is off */
-    bool                    selfile_mode;
+    /** Read parameters */
+    void readParams();
 
-public:
-    /** Read parameters from file.
-        If do_not_read_files is TRUE then all FileNames parameters
-        are not read */
-    void read(const FileName &fn_prm, bool do_not_read_files = false);
-
-    /** Write parameters to file.
-        The directory is an option used in the grid. */
-    void write(const FileName &fn_prm, const std::string & directory = "");
+    /** Define parameters */
+    void defineParams();
 
     /** PSD averaging within a piece.
         Compute the PSD of a piece by subdividing it in smaller pieces and
@@ -102,7 +78,7 @@ public:
                                 MultidimArray<double> &psd);
 
     /// Process the whole thing
-    void process();
+    void run();
 };
 //@}
 #endif

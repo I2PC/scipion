@@ -34,122 +34,75 @@
 #include <data/basic_pca.h>
 
 /* Read parameters ========================================================= */
-void Prog_assign_CTF_prm::read(const FileName &fn_prm, bool do_not_read_files)
+void ProgCTFEstimateFromMicrograph::readParams()
 {
-    // Read parameters for adjust CTF from input file
-    adjust_CTF_prm.read(fn_prm);
-
-    // Read specific parameters for this program from input file
-    FILE *fh_param;
-    if ((fh_param = fopen(fn_prm.c_str(), "r")) == NULL)
-        REPORT_ERROR(ERR_IO_NOTOPEN, (std::string)"assign_CTF: There is a problem "
-                     "opening the file " + fn_prm);
-
-    reversed          = checkParameter(fh_param, "reverse endian");
-    N_horizontal      = textToInteger(getParameter(fh_param, "N_horizontal", 0));
-    N_vertical        = textToInteger(getParameter(fh_param, "N_vertical", 0, "-1"));
-    if (N_vertical == -1)
-        N_vertical = N_horizontal;
-
-    compute_at_particle  = checkParameter(fh_param, "compute_at_particle");
-    micrograph_averaging = checkParameter(fh_param, "micrograph_averaging");
-    piece_averaging      = checkParameter(fh_param, "piece_averaging");
-    Nside_piece          = textToInteger(getParameter(fh_param, "Nside_piece", 0, "5"));
-    if (checkParameter(fh_param, "periodogram"))
-        PSD_mode = Periodogram;
+    fn_micrograph=getParam("--micrograph");
+    pieceDim = getIntParam("--pieceDim");
+    if (getParam("--psd_estimator")=="periodogram")
+        PSDEstimator_mode = Periodogram;
     else
-        PSD_mode = ARMA;
-    dont_adjust_CTF      = checkParameter(fh_param, "dont_adjust_CTF");
-    bootstrapN           = textToInteger(getParameter(fh_param, "bootstrapN", 0, "-1"));
-
-    if (!do_not_read_files)
     {
-        image_fn          = getParameter(fh_param, "image", 0, "");
-        selfile_mode = image_fn == "";
-        if (selfile_mode)
-            micrograph_averaging = true;
-        if (selfile_mode)
-            selfile_fn = getParameter(fh_param, "selfile", 0);
-        else
-            selfile_fn = getParameter(fh_param, "selfile", 0, "");
-        picked_fn         = getParameter(fh_param, "picked", 0, "");
-        FileName fn_root  = image_fn.withoutExtension();
-        if (PSD_mode == ARMA)
-            PSDfn_root = fn_root + "_ARMA";
-        else
-            PSDfn_root = fn_root + "_Periodogram";
+        PSDEstimator_mode = ARMA;
+        ARMA_prm.readParams(this);
     }
-    fclose(fh_param);
+    Nsubpiece          = getIntParam("--Nsubpiece");
 
-    // Read ARMA parameters from input file
-    if (PSD_mode == ARMA)
-        ARMA_prm.read(fn_prm);
+    String mode=getParam("--mode");
+    if (mode=="micrograph")
+        psd_mode=OnePerMicrograph;
+    else if (mode=="regions")
+        psd_mode=OnePerRegion;
+    else if (mode=="particles")
+    {
+        psd_mode=OnePerParticle;
+        fn_pos=getParam("--mode",1);
+    }
+    estimate_ctf=!checkParam("--dont_estimate_ctf");
+    if (estimate_ctf)
+        prmEstimateCTFFromPSD.readParams();
+    bootstrapN     = getIntParam("--bootstrapFit");
 }
 
-/* Write parameters ========================================================= */
-void Prog_assign_CTF_prm::write(const FileName &fn_prm,
-                                const std::string &directory)
+void ProgCTFEstimateFromMicrograph::defineParams()
 {
-    std::ofstream fh_param;
-    fh_param.open(fn_prm.c_str(), std::ios::out);
-    if (!fh_param)
-        REPORT_ERROR(ERR_IO_NOTOPEN, (std::string)"assign_CTF: There is a problem "
-                     "opening the file " + fn_prm + " for write");
-    fh_param << "# Assign CTF parameters\n";
-    std::string aux;
-    bool remove_directories = directory != "";
-    if (!remove_directories)
-        aux = image_fn;
-    else
-        aux = directory + "/" + image_fn.removeDirectories();
-    if (!selfile_mode)
-        fh_param << "image="                << aux                  << std::endl;
-    fh_param << "N_horizontal="         << N_horizontal         << std::endl
-    << "N_vertical="           << N_vertical           << std::endl;
-    if (!remove_directories)
-        aux = selfile_fn;
-    else
-        aux = directory + "/" + selfile_fn.removeDirectories();
-    fh_param << "selfile="              << aux                  << std::endl;
-    if (!remove_directories)
-        aux = picked_fn;
-    else
-        aux = directory + "/" + picked_fn.removeDirectories();
-    fh_param << "picked="               << aux                  << std::endl;
-    if (compute_at_particle)
-        fh_param << "compute_at_particle=yes\n";
-    if (micrograph_averaging)
-        fh_param << "micrograph_averaging=yes\n";
-    if (piece_averaging)
-    {
-        fh_param << "piece_averaging=yes\n"
-        << "Nside_piece=" << Nside_piece << std::endl;
-    }
-    if (PSD_mode == Periodogram)
-        fh_param << "Periodogram=yes\n";
-    if (dont_adjust_CTF)
-        fh_param << "dont_adjust_CTF=yes\n";
-    if (bootstrapN>-1)
-        fh_param << "bootstrapN=" << bootstrapN << std::endl;
-
-    fh_param << std::endl;
-    fh_param.close();
-
-    adjust_CTF_prm.write(fn_prm, false);
-    ARMA_prm.write(fn_prm, false);
+    addUsageLine("Estimate the CTF from a micrograph.");
+    addParamsLine("   --micrograph <file>         : File with the micrograph");
+    addParamsLine("== PSD estimation");
+    addParamsLine("  [--psd_estimator+ <method=periodogram>] : Method for estimating the PSD");
+    addParamsLine("         where <method>");
+    addParamsLine("                  periodogram");
+    addParamsLine("                  ARMA");
+    addParamsLine("  [--pieceDim+ <d=512>]       : Size of the piece");
+    addParamsLine("  [--Nsubpiece+ <N=1>]        : Each piece is further subdivided into NxN subpieces.");
+    addParamsLine("                              : This option is useful for small micrographs in which ");
+    addParamsLine("                              : not many pieces of size pieceDim x pieceDim can be defined. ");
+    addParamsLine("                              :++ Note that this is not the same as defining a smaller pieceDim. ");
+    addParamsLine("                              :++ Defining a smaller pieceDim, would result in a small PSD, while ");
+    addParamsLine("                              :++ subdividing the piece results in a large PSD, although smoother.");
+    addParamsLine("  [--mode+ <mode=micrograph>]");
+    addParamsLine("         where <mode>");
+    addParamsLine("                  micrograph  : Single PSD for the whole micrograph");
+    addParamsLine("                  regions     : The micrograph is divided into a region grid ");
+    addParamsLine("                              : and a PSD is computed for each one.");
+    addParamsLine("                  particles <file> : One PSD per particle.");
+    addParamsLine("                              : The file is metadata with the position of each particle within the micrograph");
+    addParamsLine("==+ CTF fit");
+    addParamsLine("  [--dont_estimate_ctf]       : Do not fit a CTF to PSDs");
+    ARMA_parameters::defineParams(this);
+    ProgCTFEstimateFromPSD::defineBasicParams(this);
 }
 
 /* Compute PSD by piece averaging ========================================== */
 //#define DEBUG
-void Prog_assign_CTF_prm::PSD_piece_by_averaging(MultidimArray<double> &piece,
+void ProgCTFEstimateFromMicrograph::PSD_piece_by_averaging(MultidimArray<double> &piece,
         MultidimArray<double> &psd)
 {
-    int small_Ydim = 2 * YSIZE(piece) / Nside_piece;
-    int small_Xdim = 2 * XSIZE(piece) / Nside_piece;
+    int small_Ydim = 2 * YSIZE(piece) / Nsubpiece;
+    int small_Xdim = 2 * XSIZE(piece) / Nsubpiece;
     MultidimArray<double> small_piece(small_Ydim, small_Xdim);
 
-    int Xstep = (XSIZE(piece) - small_Xdim) / (Nside_piece - 1);
-    int Ystep = (YSIZE(piece) - small_Ydim) / (Nside_piece - 1);
+    int Xstep = (XSIZE(piece) - small_Xdim) / (Nsubpiece - 1);
+    int Ystep = (YSIZE(piece) - small_Ydim) / (Nsubpiece - 1);
     psd.initZeros(small_piece);
 #ifdef DEBUG
 
@@ -158,8 +111,10 @@ void Prog_assign_CTF_prm::PSD_piece_by_averaging(MultidimArray<double> &piece,
     save.write("PPPpiece.xmp");
 #endif
 
-    for (int ii = 0; ii < Nside_piece; ii++)
-        for (int jj = 0; jj < Nside_piece; jj++)
+    MultidimArray< std::complex<double> > Periodogram;
+    MultidimArray<double> small_psd;
+    for (int ii = 0; ii < Nsubpiece; ii++)
+        for (int jj = 0; jj < Nsubpiece; jj++)
         {
             // Take the corresponding small piece from the piece
             int i0 = ii * Xstep;
@@ -178,20 +133,14 @@ void Prog_assign_CTF_prm::PSD_piece_by_averaging(MultidimArray<double> &piece,
 #endif
 
             // Compute the PSD of the small piece
-            MultidimArray<double> small_psd;
             small_psd.initZeros(small_piece);
-            if (PSD_mode == ARMA)
+            if (PSDEstimator_mode == ARMA)
             {
-                // Compute the ARMA model
-                MultidimArray<double> ARParameters, MAParameters;
-                double dSigma = CausalARMA(small_piece, ARMA_prm.N_AR, ARMA_prm.M_AR,
-                                           ARMA_prm.N_MA, ARMA_prm.M_MA, ARParameters, MAParameters);
-                ARMAFilter(small_piece, small_psd, ARParameters, MAParameters, dSigma);
+                CausalARMA(small_piece, ARMA_prm);
+                ARMAFilter(small_piece, small_psd, ARMA_prm);
             }
             else
             {
-                // Compute the periodogram
-                MultidimArray< std::complex<double> > Periodogram;
                 FourierTransform(small_piece, Periodogram);
                 FFT_magnitude(Periodogram, small_psd);
                 small_psd *= small_psd;
@@ -208,7 +157,7 @@ void Prog_assign_CTF_prm::PSD_piece_by_averaging(MultidimArray<double> &piece,
         }
 
     // Compute the average of all the small pieces and enlarge
-    psd /= (Nside_piece * Nside_piece);
+    psd *= 1.0/(Nsubpiece * Nsubpiece);
 
 #ifdef DEBUG
 
@@ -235,214 +184,113 @@ void Prog_assign_CTF_prm::PSD_piece_by_averaging(MultidimArray<double> &piece,
 
 /* Main ==================================================================== */
 //#define DEBUG
-void Prog_assign_CTF_prm::process()
+void ProgCTFEstimateFromMicrograph::run()
 {
     // Open input files -----------------------------------------------------
     // Open coordinates
-    std::ifstream PosFile; // File with picked coordinates
-    if (picked_fn != "")
-        PosFile.open(picked_fn.c_str());
+    MetaData posFile;
+    if (fn_pos != "")
+        posFile.read(fn_pos);
+    MDIterator iterPosFile(posFile);
 
-    // Open selfile with images
-    MetaData SF; // Selfile
-    if (selfile_fn != "")
-    {
-        SF.read(selfile_fn);
-        SF.removeObjects(MDValueEQ(MDL_ENABLED,-1));
-    }
-
-    // Open the selfile for the CTFs, if there is a selfile of particles
-    FileName fn_root;
-    if (!selfile_mode)
-        fn_root = image_fn.withoutExtension();
-    else
-        fn_root = selfile_fn.withoutExtension();
-    std::ofstream OutputFile_ctf;
-    if (selfile_fn != "")
-        OutputFile_ctf.open(
-            (selfile_fn.withoutExtension() + ".ctfdat").c_str());
-
-    // Open the micrograph
-    Micrograph M_in;
-    //bits is never used
-    //**int bits; // Micrograph depth
-    int Ydim, Xdim; // Micrograph dimensions
-    if (!selfile_mode)
-    {
-        M_in.open_micrograph(image_fn/*, reversed*/);
-        //**bits = M_in.depth();
-        M_in.size(Xdim, Ydim);
-    }
+    // Open the micrograph --------------------------------------------------
+    ImageGeneric M_in;
+    int Zdim, Ydim, Xdim; // Micrograph dimensions
+    M_in.readMapped(fn_micrograph);
+    M_in.getDimensions(Xdim, Ydim,Zdim);
 
     // Compute the number of divisions --------------------------------------
     int div_Number = 0;
     int div_NumberX, div_NumberY;
-    if (compute_at_particle)
+    if (psd_mode==OnePerParticle)
+        div_Number=posFile.size();
+    else if (psd_mode==OnePerMicrograph)
     {
-        // Check if sel file is empty
-        if (SF.size() == 0)
-        {
-            REPORT_ERROR(ERR_MD_OBJECTNUMBER, (std::string)"Prog_assign_CTF_prm: sel file " + SF.getFilename() +
-                         "is empty ");
-        }
-
-        // Count the number of lines in the Position file
-        std::string line;
-        PosFile.clear();
-        PosFile.seekg(0, std::ios::beg);
-        while (getline(PosFile, line))
-            if (line[0] != '#')
-                div_Number++;
-
-        // check that the number of entries in the pos file is the right one
-        if (SF.size() != div_Number)
-        {
-            std::cerr << "Prog_assign_CTF_prm: number of entries in "
-            << "pos file: " << picked_fn.c_str()
-            << "(" << div_Number << ") "
-            << " and sel file "
-            << SF.getFilename() << "(" << SF.size() << ") "
-            << "is different.\n"
-            << "I cannot go any further sorry\n";
-            exit(1);
-        }
+        div_NumberX = CEIL((double)Xdim / (pieceDim / 2)) - 1;
+        div_NumberY = CEIL((double)Ydim / (pieceDim / 2)) - 1;
+        div_Number = div_NumberX * div_NumberY;
     }
-    else if (micrograph_averaging)
+    else if (psd_mode==OnePerRegion)
     {
-        if (!selfile_mode)
-        {
-            // If averaging, allow overlap among pieces
-            div_NumberX = CEIL((double)Xdim / (N_horizontal / 2)) - 1;
-            div_NumberY = CEIL((double)Ydim / (N_vertical  / 2)) - 1;
-            div_Number = div_NumberX * div_NumberY;
-        }
-        else
-            div_Number = SF.size();
-    }
-    else
-    {
-        // If not averaging, do not allow overlap
-        div_NumberX = CEIL((double)Xdim / N_horizontal);
-        div_NumberY = CEIL((double)Ydim / N_vertical);
+        div_NumberX = CEIL((double)Xdim / pieceDim);
+        div_NumberY = CEIL((double)Ydim / pieceDim);
         div_Number = div_NumberX * div_NumberY;
     }
 
     // Process each piece ---------------------------------------------------
-    PosFile.clear();
-    PosFile.seekg(0, std::ios::beg); // Start of file
-    MDIterator iter(SF);
-    Image<double> psd_avg, psd_std;
-    std::cerr << "Computing models of each piece ...\n";
-    init_progress_bar(div_Number);
-
-    // Prepare these filenames in case they are needed
-    FileName fn_avg, fn_avg_model;
-    if (micrograph_averaging && PSD_mode == ARMA)
-        fn_avg = fn_root + "_ARMAavg.psd";
-    else if (micrograph_averaging && PSD_mode == Periodogram)
-        fn_avg = fn_root + "_Periodogramavg.psd";
-    int N = 1;    // Index of current piece
-    int i = 0, j = 0; // top-left corner of the current piece
+    Image<double> psd_avg, psd_std, psd, psd2;
     MultidimArray< std::complex<double> > Periodogram;
-    MultidimArray<double> piece(N_vertical, N_horizontal);
+    MultidimArray<double> piece(pieceDim, pieceDim);
+    psd().resizeNoCopy(piece);
+    MultidimArray<double> &mpsd=psd();
     PCAMahalanobisAnalyzer pcaAnalyzer;
     MultidimArray<int> PCAmask;
     MultidimArray<float> PCAv;
-    Image<double> psd, psd2;
+    std::cerr << "Computing models of each piece ...\n";
+
+    // Prepare these filenames in case they are needed
+    FileName fn_root= fn_micrograph.withoutExtension();
+    FileName fn_psd;
+    if (psd_mode==OnePerMicrograph)
+        fn_psd=fn_root+".psd";
+    else
+        fn_psd=fn_root+".psdstk";
+
+    init_progress_bar(div_Number);
+    int N = 1; // Index of current piece
+    int i = 0, j = 0; // top-left corner of the current piece
     while (N <= div_Number)
     {
         // Compute the top-left corner of the piece ..........................
-        if (compute_at_particle)
+        if (psd_mode==OnePerParticle)
         {
             // Read position of the particle
-            std::string line;
-            getline(PosFile, line);
-            while (line[0] == '#')
-                getline(PosFile, line);
-            float fi, fj;
-            sscanf(line.c_str(), "%f %f", &fj, &fi);
-            i = (int) fi;
-            j = (int) fj;
-#ifdef DEBUG
-
-            std::cout << "line" << line << std::endl;
-            std::cout << "read from file (j,i)= (" << j << "," << i << ")" << std::endl;
-            FileName fnt;
-            SF.getValue(MDL_IMAGE,fnt, iter.objId);
-            std::cout << "Particle file name: " <<  fnt << std::endl;
-#endif
+            posFile.getValue(MDL_X,j,iterPosFile.objId);
+            posFile.getValue(MDL_Y,i,iterPosFile.objId);
 
             // j,i are the selfWindow center, we need the top-left corner
-            j -= (int)(N_horizontal / 2);
-            i -= (int)(N_vertical / 2);
+            j -= (int)(pieceDim / 2);
+            i -= (int)(pieceDim / 2);
             if (i < 0)
                 i = 0;
             if (j < 0)
                 j = 0;
-            if (i > Ydim - N_horizontal)
-                i = Ydim - N_horizontal - 1;
-            if (j > Xdim - N_vertical)
-                j = Xdim - N_vertical - 1;
         }
         else
         {
-            if (!selfile_mode)
-            {
-                int Xstep = N_horizontal, Ystep = N_vertical;
-                if (micrograph_averaging)
-                {
-                    Xstep /= 2;
-                    Ystep /= 2;
-                }
-                i = ((N - 1) / div_NumberX) * Ystep;
-                j = ((N - 1) % div_NumberX) * Xstep;
-            }
+            int step = pieceDim;
+            if (psd_mode==OnePerMicrograph)
+                step /= 2;
+            i = ((N - 1) / div_NumberX) * step;
+            j = ((N - 1) % div_NumberX) * step;
         }
 
         // test if the full piece is inside the micrograph
-        if (!selfile_mode)
-        {
-            if (i + N_vertical > Ydim)
-                i = Ydim - N_vertical;
-            if (j + N_horizontal > Xdim)
-                j = Xdim - N_horizontal;
-        }
+        if (i + pieceDim > Ydim)
+            i = Ydim - pieceDim;
+        if (j + pieceDim > Xdim)
+            j = Xdim - pieceDim;
 
         // Extract micrograph piece ..........................................
-        if (!selfile_mode)
-        {
-            for (int k = 0; k < YSIZE(piece); k++)
-                for (int l = 0; l < XSIZE(piece); l++)
-                    DIRECT_A2D_ELEM(piece, k, l) = M_in(i+k, j+l);
-        }
-        else
-        {
-            Image<double> I;
-            FileName fni;
-            SF.getValue(MDL_IMAGE, fni, iter.objId);
-            I.read(fni, DATA,-1,true);
-            piece = I();
-        }
+        const MultidimArrayGeneric& mM_in=M_in();
+        for (int k = 0; k < YSIZE(piece); k++)
+            for (int l = 0; l < XSIZE(piece); l++)
+                DIRECT_A2D_ELEM(piece, k, l) = mM_in(i+k, j+l);
         piece.statisticsAdjust(0, 1);
 
         // Estimate the power spectrum .......................................
-        psd().resize(piece);
-        if (!piece_averaging)
-            if (PSD_mode == ARMA)
+        if (Nsubpiece>1)
+            if (PSDEstimator_mode == ARMA)
             {
-                // Compute the ARMA model
-                MultidimArray<double> ARParameters, MAParameters;
-                double dSigma = CausalARMA(piece, ARMA_prm.N_AR, ARMA_prm.M_AR,
-                                           ARMA_prm.N_MA, ARMA_prm.M_MA, ARParameters, MAParameters);
-                ARMAFilter(piece, psd(), ARParameters, MAParameters, dSigma);
+                CausalARMA(piece, ARMA_prm);
+                ARMAFilter(piece, psd(), ARMA_prm);
             }
             else
             {
-                // Compute the periodogram
                 FourierTransform(piece, Periodogram);
                 FFT_magnitude(Periodogram, psd());
                 psd() *= psd();
-                psd() *= N_vertical * N_horizontal;
+                psd() *= pieceDim * pieceDim;
             }
         else
             PSD_piece_by_averaging(piece, psd());
@@ -450,7 +298,7 @@ void Prog_assign_CTF_prm::process()
         psd2()*=psd();
 
         // Perform averaging if applicable ...................................
-        if (micrograph_averaging)
+        if (psd_mode==OnePerMicrograph)
         {
             // Compute average and standard deviation
             if (N == 1)
@@ -470,7 +318,7 @@ void Prog_assign_CTF_prm::process()
                 PCAmask.initZeros(psd());
                 Matrix1D<int>    idx(2);  // Indexes for Fourier plane
                 Matrix1D<double> freq(2); // Frequencies for Fourier plane
-                int PCAdim=0;
+                size_t PCAdim=0;
                 FOR_ALL_ELEMENTS_IN_ARRAY2D(PCAmask)
                 {
                     VECTOR_R2(idx, j, i);
@@ -478,7 +326,7 @@ void Prog_assign_CTF_prm::process()
                     double w = freq.module();
                     if (w>0.05 && w<0.4)
                     {
-                        PCAmask(i,j)=1;
+                        A2D_ELEM(PCAmask,i,j)=1;
                         ++PCAdim;
                     }
                 }
@@ -488,87 +336,72 @@ void Prog_assign_CTF_prm::process()
             int ii=-1;
             FOR_ALL_ELEMENTS_IN_ARRAY2D(PCAmask)
             if (A2D_ELEM(PCAmask,i,j))
-                A1D_ELEM(PCAv,++ii)=(float)psd(i,j);
+                A1D_ELEM(PCAv,++ii)=(float)A2D_ELEM(mpsd,i,j);
             pcaAnalyzer.addVector(PCAv);
-
-            // Write the PSD if ARMA
-            if (micrograph_averaging && PSD_mode == ARMA)
-            {
-                psd_avg.write(fn_avg);
-                if (N == 1)
-                    system(((std::string)"xmipp_show -psd " +
-                            fn_avg + " -poll &").c_str());
-            }
         }
 
         // Compute the theoretical model if not averaging ....................
-        if (!micrograph_averaging)
+        if (psd_mode!=OnePerMicrograph)
         {
             if (bootstrapN!=-1)
                 REPORT_ERROR(ERR_VALUE_INCORRECT,
                              "Bootstrapping is only available for micrograph averages");
 
-            FileName piece_fn, piece_fn_root;
-            if (compute_at_particle)
-            {
-                SF.getValue(MDL_IMAGE, piece_fn, iter.objId);
-                piece_fn_root = piece_fn.getBaseName();
-                iter.moveNext();
-            }
-            else
-                piece_fn_root = PSDfn_root + integerToString(N, 5);
+            FileName fn_psd_piece;
+            fn_psd_piece.compose(N,fn_psd);
+            psd.write(fn_psd_piece);
+            if (psd_mode==OnePerParticle)
+                posFile.setValue(MDL_PSD,fn_psd_piece,iterPosFile.objId);
 
-            psd.write(piece_fn_root + ".psd");
-            std::cerr << psd.name() << "\t top-left corner located at (X,Y)=("
-            << j << "," << i << ")\n";
-
-            if (!dont_adjust_CTF)
+            if (estimate_ctf)
             {
                 // Estimate the CTF parameters of this piece
-                adjust_CTF_prm.fn_psd = piece_fn_root + ".psd";
-                if (!dont_adjust_CTF)
-                {
-                    CTFDescription ctfmodel;
-                    double fitting_error = ROUT_Adjust_CTF(adjust_CTF_prm,
-                                                           ctfmodel, false);
-                    if (compute_at_particle)
-                        OutputFile_ctf << piece_fn << " "
-                        << piece_fn_root+".psd\n";
-                }
+                prmEstimateCTFFromPSD.fn_psd=fn_psd_piece;
+                CTFDescription ctfmodel;
+                double fitting_error = ROUT_Adjust_CTF(prmEstimateCTFFromPSD,
+                                                       ctfmodel, false);
+                if (psd_mode==OnePerParticle)
+                    posFile.setValue(MDL_CTFMODEL,fn_psd_piece.withoutExtension()+".ctfparam",
+                                     iterPosFile.objId);
             }
         }
 
         // Increment the division counter
         progress_bar(++N);
-        if (selfile_mode)
-            iter.moveNext();
+        if (psd_mode==OnePerParticle)
+            iterPosFile.moveNext();
     }
-    M_in.close_micrograph();
     progress_bar(div_Number);
 
     // If averaging, compute the CTF model ----------------------------------
-    if (micrograph_averaging)
+    if (psd_mode==OnePerMicrograph)
     {
         // Compute the avg and stddev of the local PSDs
-        psd_avg() /= div_Number;
-        psd_avg.write(fn_avg);
+        const MultidimArray<double> &mpsd_std=psd_std();
+        const MultidimArray<double> &mpsd_avg=psd_avg();
+        double idiv_Number=1.0/div_Number;
+        FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(mpsd_avg)
+        {
+            DIRECT_MULTIDIM_ELEM(mpsd_avg,n)*=idiv_Number;
+            DIRECT_MULTIDIM_ELEM(mpsd_std,n)*=idiv_Number;
+            DIRECT_MULTIDIM_ELEM(mpsd_std,n)-=DIRECT_MULTIDIM_ELEM(mpsd_avg,n)*
+                                              DIRECT_MULTIDIM_ELEM(mpsd_avg,n);
+            if (DIRECT_MULTIDIM_ELEM(mpsd_std,n)<0)
+            	DIRECT_MULTIDIM_ELEM(mpsd_std,n)=0;
+            else
+            	DIRECT_MULTIDIM_ELEM(mpsd_std,n)=sqrt(DIRECT_MULTIDIM_ELEM(mpsd_std,n));
+        }
+        psd_avg.write(fn_psd);
 
-        psd_std() /= div_Number;
-        psd_std() -= psd_avg()*psd_avg();
-        FOR_ALL_ELEMENTS_IN_ARRAY2D(psd_std())
-        if (psd_std(i,j)<0)
-            psd_std(i,j)=0;
-        else
-            psd_std(i,j)=sqrt(psd_std(i,j));
-
-        if (!dont_adjust_CTF)
+        if (estimate_ctf)
         {
             // Estimate the CTF parameters
             std::cerr << "Adjusting CTF model to the PSD ...\n";
-            adjust_CTF_prm.fn_psd = fn_avg;
+            prmEstimateCTFFromPSD.fn_psd = fn_psd;
             CTFDescription ctfmodel;
             if (bootstrapN==-1)
             {
+            	// No bootstrapping
                 // Compute the PCA of the local PSDs
                 pcaAnalyzer.standardarizeVariables();
                 // pcaAnalyzer.subtractAvg();
@@ -601,34 +434,35 @@ void Prog_assign_CTF_prm::process()
                     psign+="+";
                 double zrandomness=checkRandomness(psign);
 
-                double fitting_error = ROUT_Adjust_CTF(adjust_CTF_prm,
+                double fitting_error = ROUT_Adjust_CTF(prmEstimateCTFFromPSD,
                                                        ctfmodel, false);
 
                 // Evaluate PSD variance and write into the CTF
                 double stdQ=0;
-                FOR_ALL_ELEMENTS_IN_ARRAY2D(psd_std())
-                stdQ+=psd_std(i,j)/psd_avg(i,j);
+                FOR_ALL_ELEMENTS_IN_ARRAY2D(mpsd_std)
+                stdQ+=A2D_ELEM(mpsd_std,i,j)/A2D_ELEM(mpsd_avg,i,j);
                 stdQ/=MULTIDIM_SIZE(psd_std());
 
                 MetaData MD;
-                MD.read(fn_avg.withoutExtension() + ".ctfparam");
+                MD.read(fn_psd.withoutExtension() + ".ctfparam");
                 size_t id = MD.firstObject();
                 MD.setValue(MDL_CTF_CRITERION_PSDVARIANCE,stdQ,id);
                 MD.setValue(MDL_CTF_CRITERION_PSDPCA1VARIANCE,pstd,id);
                 MD.setValue(MDL_CTF_CRITERION_PSDPCARUNSTEST,zrandomness,id);
-                MD.write(fn_avg.withoutExtension() + ".ctfparam");
+                MD.write(fn_psd.withoutExtension() + ".ctfparam");
             }
             else
             {
+            	// If bootstrapping
                 MultidimArray<double> CTFs(bootstrapN,32);
-                adjust_CTF_prm.bootstrap=true;
-                adjust_CTF_prm.show_optimization=true;
-                FileName fnBase=fn_avg.withoutExtension();
+                prmEstimateCTFFromPSD.bootstrap=true;
+                prmEstimateCTFFromPSD.show_optimization=true;
+                FileName fnBase=fn_psd.withoutExtension();
                 std::cerr << "Computing bootstrap ...\n";
                 init_progress_bar(bootstrapN);
                 for (int n=0; n<bootstrapN; n++)
                 {
-                    CTFs(n,31) = ROUT_Adjust_CTF(adjust_CTF_prm,
+                    CTFs(n,31) = ROUT_Adjust_CTF(prmEstimateCTFFromPSD,
                                                  ctfmodel, false);
                     CTFs(n, 0)=ctfmodel.Tm;
                     CTFs(n, 1)=ctfmodel.kV;
@@ -678,61 +512,29 @@ void Prog_assign_CTF_prm::process()
                     progress_bar(n);
                 }
                 progress_bar(bootstrapN);
-                //CTFs.write("bootstrap.txt");
             }
         }
     }
 
     // Assign a CTF to each particle ----------------------------------------
-    if (!compute_at_particle && selfile_fn != "" && !dont_adjust_CTF)
+    if (psd_mode==OnePerRegion && fn_pos != "" && estimate_ctf)
     {
-        // Process the Selfile
-        if (!selfile_mode)
+        FileName fn_img, fn_psd_piece, fn_ctfparam_piece;
+        int Y, X;
+        FOR_ALL_OBJECTS_IN_METADATA(posFile)
         {
-            PosFile.close();
-            PosFile.open(picked_fn.c_str());
-            if (!PosFile)
-                REPORT_ERROR(ERR_IO_NOTOPEN, (std::string)"Prog_assign_CTF_prm::process: Could not open " +
-                             picked_fn + " for reading");
-        }
-        FOR_ALL_OBJECTS_IN_METADATA(SF)
-        {
-            FileName fn_img;
-            SF.getValue(MDL_IMAGE, fn_img, __iter.objId);
-            if (!selfile_mode)
-            {
-                std::string line;
-                getline(PosFile, line);
-                while (line[0] == '#')
-                    getline(PosFile, line);
-                if (!micrograph_averaging)
-                {
-                    // Read coordinates of the particle
-                    float fX, fY;
-                    sscanf(line.c_str(), "%f %f", &fX, &fY);
-                    int Y = (int) fY;
-                    int X = (int) fX;
+        	posFile.getValue(MDL_IMAGE, fn_img, __iter.objId);
+        	posFile.getValue(MDL_X,X,__iter.objId);
+        	posFile.getValue(MDL_Y,Y,__iter.objId);
+            int idx_X = floor((double)X / pieceDim);
+            int idx_Y = floor((double)Y / pieceDim);
+            int N = idx_Y * div_NumberX + idx_X + 1;
 
-                    // Decide which is its piece
-                    int idx_X = FLOOR((double)X / N_horizontal);
-                    int idx_Y = FLOOR((double)Y / N_vertical);
-                    int idx_piece = idx_Y * div_NumberX + idx_X + 1;
-                    OutputFile_ctf << fn_img << " "
-                    << PSDfn_root + integerToString(idx_piece, 5) + ".psd\n";
-                }
-                else
-                    OutputFile_ctf << fn_img << " "
-                    << fn_avg.withoutExtension() + ".psd\n";
-
-            }
-            else
-            {
-                OutputFile_ctf << fn_img << " "
-                << fn_avg.withoutExtension() + ".psd\n";
-            }
+            fn_psd_piece.compose(N,fn_psd);
+            fn_ctfparam_piece=fn_psd_piece.withoutExtension()+".ctfparam";
+            posFile.setValue(MDL_PSD,fn_psd_piece,__iter.objId);
+            posFile.setValue(MDL_CTFMODEL,fn_ctfparam_piece,__iter.objId);
         }
     }
-    if (selfile_fn != "")
-        OutputFile_ctf.close();
-    PosFile.close();
+    posFile.write(fn_pos);
 }

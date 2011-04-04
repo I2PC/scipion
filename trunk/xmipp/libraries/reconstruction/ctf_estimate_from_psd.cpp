@@ -53,7 +53,7 @@ double CTF_fitness(double *, void *);
 namespace AdjustCTF
 {
 // Some aliases
-Adjust_CTF_Parameters  *global_prm;
+ProgCTFEstimateFromPSD *global_prm;
 MultidimArray<double>  *f;               // The CTF to model
 Matrix1D<double>       *global_adjust;   // Current theoretical adjustment
 double                  global_corr13;   // Correlation with enhanced PSD between rings 1 and 3
@@ -462,133 +462,104 @@ void assign_parameters_from_CTF(CTFDescription &ctfmodel, double *p,
                                global_prm->modelSimplification);
 
 /* Read parameters --------------------------------------------------------- */
-void Adjust_CTF_Parameters::read(const FileName &fn_param)
+void ProgCTFEstimateFromPSD::readParams()
 {
-    FILE *fh_param;
-    if ((fh_param = fopen(fn_param.c_str(), "r")) == NULL)
-        REPORT_ERROR(ERR_IO_NOTEXIST, fn_param);
-
-    fn_psd = getParameter(fh_param, "psd", 0, "");
-    fn_similar_model = getParameter(fh_param, "similar_model", 0, "");
-
-    show_optimization = checkParameter(fh_param, "show_optimization");
-    min_freq = textToFloat(getParameter(fh_param, "min_freq", 0, "0.03"));
-    max_freq = textToFloat(getParameter(fh_param, "max_freq", 0, "0.35"));
-    defocus_range = textToFloat(getParameter(fh_param, "defocus_range", 0, "8000"));
-    initial_Ca = textToFloat(getParameter(fh_param, "initial_Ca", 0, "2"));
-    modelSimplification = textToInteger(getParameter(fh_param, "model_simplification", 0, "1"));
-    bootstrap = checkParameter(fh_param, "bootstrap");
-
-    ctfmodelSize = textToInteger(getParameter(fh_param, "ctfmodelSize", 0, "128"));
+    if (checkParam("--psd"))
+        fn_psd=getParam("--psd");
+    show_optimization = checkParam("--show_optimization");
+    min_freq = getDoubleParam("--min_freq");
+    max_freq = getDoubleParam("--max_freq");
+    defocus_range = getDoubleParam("--defocus_range");
+    modelSimplification = getIntParam("--model_simplification");
+    bootstrap = checkParam("--bootstrapFit");
+    ctfmodelSize = getIntParam("--ctfmodelSize");
+    enhanced_weight = getDoubleParam("--enhance_weight");
+    if (!checkParam("--enhance_min_freq"))
+    {
+        if (max_freq > 0.35)
+            f1 = 0.01;
+        else
+            f1 = 0.02;
+    }
+    else
+    	f1=getDoubleParam("--enhance_min_freq");
+    if (!checkParam("--enhance_max_freq"))
+    {
+        if (max_freq > 0.35)
+            f2 = 0.08;
+        else
+            f2 = 0.15;
+    }
+    else
+    	f2=getDoubleParam("--enhance_max_freq");
 
     initial_ctfmodel.enable_CTF = initial_ctfmodel.enable_CTFnoise = true;
-    if (fn_similar_model == "")
-        initial_ctfmodel.read(fn_param, false);
-    else
-        initial_ctfmodel.read(fn_similar_model, false);
+    initial_ctfmodel.readParams(this);
     Tm = initial_ctfmodel.Tm;
-
-    // Enhance parameters
-    std::string default_f1, default_f2;
-    if (max_freq > 0.35)
-    {
-        default_f1 = "0.01";
-        default_f2 = "0.08";
-    }
-    else
-    {
-        default_f1 = "0.02";
-        default_f2 = "0.15";
-    }
-    f1 = textToFloat(getParameter(fh_param, "enhance_min_freq", 0, default_f1.c_str()));
-    f2 = textToFloat(getParameter(fh_param, "enhance_max_freq", 0, default_f2.c_str()));
-    enhanced_weight = textToFloat(getParameter(fh_param, "enhance_weight", 0, "1"));
-}
-
-/* Write to a file --------------------------------------------------------- */
-void Adjust_CTF_Parameters::write(const FileName &fn_prm, bool rewrite)
-{
-    std::ofstream fh_param;
-    if (!rewrite)
-        fh_param.open(fn_prm.c_str(), std::ios::app);
-    else
-        fh_param.open(fn_prm.c_str(), std::ios::out);
-    if (!fh_param)
-        REPORT_ERROR(ERR_IO_NOTEXIST, fn_prm);
-    fh_param << "# Adjust CTF parameters\n";
-    if (fn_psd != "")
-        fh_param << "psd="               << fn_psd                  << std::endl;
-    if (fn_similar_model != "")
-        fh_param << "similar_model="     << fn_similar_model        << std::endl;
-    fh_param << "min_freq="             << min_freq                << std::endl
-    << "max_freq="             << max_freq                << std::endl;
-    fh_param << "defocus_range="        << defocus_range           << std::endl;
-    fh_param << "initial_Ca="           << initial_Ca              << std::endl;
-    if (show_optimization)
-        fh_param    << "show_optimization=yes\n";
-    fh_param << "ctfmodelSize="         << ctfmodelSize            << std::endl;
-    fh_param << "enhance_min_freq="     << f1                      << std::endl
-    << "enhance_max_freq="     << f2                      << std::endl
-    << "enhance_weight="       << enhanced_weight         << std::endl
-    << "model_simplification=" << modelSimplification     << std::endl
-    << "bootstrap="            << bootstrap               << std::endl
-    ;
-
-    fh_param << initial_ctfmodel << std::endl;
-    fh_param.close();
 }
 
 /* Show -------------------------------------------------------------------- */
-void Adjust_CTF_Parameters::show()
+void ProgCTFEstimateFromPSD::show()
 {
-    std::cout << "CTF file:            " << fn_psd              << std::endl
-    << "Similar model:       " << fn_similar_model    << std::endl
+    std::cout
+    << "PSD file:            " << fn_psd              << std::endl
     << "Min Freq.:           " << min_freq            << std::endl
     << "Max Freq.:           " << max_freq            << std::endl
     << "Sampling:            " << Tm                  << std::endl
     << "Defocus range:       " << defocus_range       << std::endl
-    << "Initial Ca:          " << initial_Ca          << std::endl
     << "ctfmodelSize:        " << ctfmodelSize        << std::endl
     << "Enhance min freq:    " << f1                  << std::endl
     << "Enhance max freq:    " << f2                  << std::endl
     << "Enhance weight:      " << enhanced_weight     << std::endl
     << "Model simplification:" << modelSimplification << std::endl
     << "Bootstrap:           " << bootstrap           << std::endl
-    << "Starting:\n"           << initial_ctfmodel    << std::endl
+    << "Starting CTF:\n"       << initial_ctfmodel    << std::endl
     ;
 }
 
 /* Usage ------------------------------------------------------------------- */
-void Adjust_CTF_Parameters::Usage()
+void ProgCTFEstimateFromPSD::defineBasicParams(XmippProgram * program)
 {
-    std::cerr << "This program tries to adjust a parametric model to a CTF file.\n"
-    << "Usage: ctf_estimate_from_psd -i <parameters file>\n"
-    << "   Where the parameters file may contain the description of a\n"
-    << "      CTF and CTFnoise plus any of the following parameters\n"
-    << "   [psd=<PSD file>]            : PSD file\n"
-    << "   [similar_model=<CTF and CTFnoisemodel>]: If known\n"
-    << "   [show_optimization=yes]     : Show optimization process\n"
-    << "   [min_freq=<f=0.05>]         : Minimum digital frequency to use in adjust. Its value\n"
-    << "                                 should be a little lower than the dig. freq. of the first \n"
-    << "                                 CTF zero.\n"
-    << "   [max_freq=<f=0.35>]         : Maximum digital frequency to use in adjust.\n"
-    << "                                 It should be higher than the last zero of the CTF.\n"
-    << "   [defocus_range=<D=8000>]    : Defocus range\n"
-    << "   [initial_Ca=<Ca=2>]         : Chromatic aberration\n"
-    << "   [radial_noise=yes|no]       : By default, noise is astigmatic\n"
-    << "   [ctfmodelSize=128]          : Size for the ctfmodel\n"
-    << "   [enhance_min_freq=<f=0.02>] : Normalized to 0.5\n"
-    << "   [enhance_max_freq=<f=0.15>] : Normalized to 0.5\n"
-    << "   [enhance_weight=<w=5>]      : Weight of the enhanced term\n"
-    << "   [model_simplification=<s=0>]: 0 (no simplification)\n"
-    << "                                 1 (simplified envelope)\n"
-    << "                                 2 (last Gaussian removal)\n"
-    << "                                 3 (symmetric intermediate Gaussian)\n"
-    ;
+    program->addSeeAlsoLine("ctf_enhance_psd");
+	program->addParamsLine("== CTF fit: Optimization constraints");
+    program->addParamsLine("   [--min_freq <fmin=0.03>]     : Minimum digital frequency (<0.5) to use in adjust. Its value");
+    program->addParamsLine("                                : should be a little lower than the dig. freq. of the first ");
+    program->addParamsLine("                                : CTF zero.");
+    program->addParamsLine("   [--max_freq <fmax=0.35>]     : Maximum digital frequency (<0.5) to use in adjust.");
+    program->addParamsLine("                                : It should be higher than the last zero of the CTF.");
+    program->addParamsLine("   [--defocus_range <D=8000>]   : Defocus range in Angstroms");
+    program->addParamsLine("   [--show_optimization+]       : Show optimization process");
+    program->addParamsLine("   [--radial_noise++]           : By default, noise is astigmatic");
+    program->addParamsLine("   [--enhance_weight++ <w=1>]   : Weight of the enhanced term");
+    program->addParamsLine("   [--model_simplification++ <s=0>]: 0 (no simplification)");
+    program->addParamsLine("                                : 1 (simplified envelope)");
+    program->addParamsLine("                                : 2 (last Gaussian removal)");
+    program->addParamsLine("                                : 3 (symmetric intermediate Gaussian)");
+    program->addParamsLine("   [--bootstrapFit++ <N=-1>]    : Perform bootstrap fit (Fourier pixels are randomly chosen)");
+    program->addParamsLine("                                : This is used to test the variability of the fit");
+    program->addParamsLine("                                : N defines the number of times the fit is repeated");
+    program->addParamsLine("==+ CTF fit: Output CTF models");
+    program->addParamsLine("   [--ctfmodelSize <size=128>]  : Size for the ctfmodel thumbnails");
+    program->addParamsLine("==+ PSD enhancement");
+    program->addParamsLine("   [--enhance_min_freq <f1>]    : Bandpass cutoff. Normalized to 0.5");
+    program->addParamsLine("                                : If fmax>0.35, f1 default=0.01");
+    program->addParamsLine("                                : If fmax<0.35, f1 default=0.02");
+    program->addParamsLine("   [--enhance_max_freq <f2>]    : Bandpass cutoff. Normalized to 0.5.");
+    program->addParamsLine("                                : If fmax>0.35, f2 default=0.08");
+    program->addParamsLine("                                : If fmax<0.35, f2 default=0.15");
+    CTFDescription::defineParams(program);
+}
+
+void ProgCTFEstimateFromPSD::defineParams()
+{
+    addUsageLine("Adjust a parametric model to a PSD file.");
+    addParamsLine("   --psd <PSDfile> : PSD file");
+    addSeeAlsoLine("ctf_estimate_from_micrograph");
+    defineBasicParams(this);
 }
 
 /* Produce side information ------------------------------------------------ */
-void Adjust_CTF_Parameters::produce_side_info()
+void ProgCTFEstimateFromPSD::produce_side_info()
 {
     adjust.resize(ALL_CTF_PARAMETERS);
     assign_parameters_from_CTF(initial_ctfmodel, MATRIX1D_ARRAY(adjust), 0,
@@ -853,7 +824,7 @@ void save_intermediate_results(const FileName &fn_root, bool
 }
 
 /* Generate model at a given size ------------------------------------------ */
-void Adjust_CTF_Parameters::generate_model_quadrant(int Ydim, int Xdim,
+void ProgCTFEstimateFromPSD::generate_model_quadrant(int Ydim, int Xdim,
         MultidimArray<double> &model)
 {
     Matrix1D<int>    idx(2);  // Indexes for Fourier plane
@@ -906,7 +877,7 @@ void Adjust_CTF_Parameters::generate_model_quadrant(int Ydim, int Xdim,
     CenterFFT(model, true);
 }
 
-void Adjust_CTF_Parameters::generate_model_halfplane(int Ydim, int Xdim,
+void ProgCTFEstimateFromPSD::generate_model_halfplane(int Ydim, int Xdim,
         MultidimArray<double> &model)
 {
     Matrix1D<int>    idx(2);  // Indexes for Fourier plane
@@ -1150,7 +1121,7 @@ double CTF_fitness(double *p, void *)
                     DIRECT_A2D_ELEM(global_w_digfreq,i, j) > lowerLimit)
                 {
                     if (global_action==3 ||
-                    	(global_action==4 && DIRECT_A2D_ELEM(global_mask_between_zeroes,i,j)==1) ||
+                        (global_action==4 && DIRECT_A2D_ELEM(global_mask_between_zeroes,i,j)==1) ||
                         (global_action==6 && DIRECT_A2D_ELEM(global_mask_between_zeroes,i,j)==1))
                     {
                         double enhanced_ctf = DIRECT_A2D_ELEM(local_enhanced_ctf, i, j);
@@ -1796,15 +1767,14 @@ void estimate_envelope_parameters()
         std::cout << "Looking for best fitting envelope ...\n";
 
     // Set the envelope
-    global_ctfmodel.Ca              = global_prm->initial_Ca;
-    global_ctfmodel.K               = 1.0;
-    global_ctfmodel.espr            = 0.0;
-    global_ctfmodel.ispr            = 0.0;
-    global_ctfmodel.alpha           = 0.0;
-    global_ctfmodel.DeltaF          = 0.0;
-    global_ctfmodel.DeltaR          = 0.0;
-    if (global_prm->initial_ctfmodel.Q0 != 0)
-        global_ctfmodel.Q0 = global_prm->initial_ctfmodel.Q0;
+    global_ctfmodel.Ca     = global_prm->initial_ctfmodel.Ca;
+    global_ctfmodel.K      = 1.0;
+    global_ctfmodel.espr   = 0.0;
+    global_ctfmodel.ispr   = 0.0;
+    global_ctfmodel.alpha  = 0.0;
+    global_ctfmodel.DeltaF = 0.0;
+    global_ctfmodel.DeltaR = 0.0;
+    global_ctfmodel.Q0     = global_prm->initial_ctfmodel.Q0;
     COPY_ctfmodel_TO_CURRENT_GUESS;
 
     // Now optimize the envelope
@@ -2106,7 +2076,7 @@ void estimate_defoci()
 
 /* Main routine ------------------------------------------------------------ */
 //#define DEBUG
-double ROUT_Adjust_CTF(Adjust_CTF_Parameters &prm, CTFDescription &output_ctfmodel,
+double ROUT_Adjust_CTF(ProgCTFEstimateFromPSD &prm, CTFDescription &output_ctfmodel,
                        bool standalone)
 {
     global_prm = &prm;
@@ -2337,4 +2307,10 @@ double ROUT_Adjust_CTF(Adjust_CTF_Parameters &prm, CTFDescription &output_ctfmod
     output_ctfmodel=global_ctfmodel;
 
     return fitness;
+}
+
+void ProgCTFEstimateFromPSD::run()
+{
+    CTFDescription ctfmodel;
+    ROUT_Adjust_CTF(*this,ctfmodel);
 }
