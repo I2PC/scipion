@@ -55,7 +55,10 @@ void ProgCTFEstimateFromMicrograph::readParams()
     if (mode=="micrograph")
         psd_mode=OnePerMicrograph;
     else if (mode=="regions")
+    {
         psd_mode=OnePerRegion;
+        fn_pos=getParam("--mode",1);
+    }
     else if (mode=="particles")
     {
         psd_mode=OnePerParticle;
@@ -89,14 +92,25 @@ void ProgCTFEstimateFromMicrograph::defineParams()
     addParamsLine("  [--mode <mode=micrograph>]");
     addParamsLine("         where <mode>");
     addParamsLine("                  micrograph  : Single PSD for the whole micrograph");
-    addParamsLine("                  regions     : The micrograph is divided into a region grid ");
+    addParamsLine("                  regions <file> : The micrograph is divided into a region grid ");
     addParamsLine("                              : and a PSD is computed for each one.");
+    addParamsLine("                              : The file is metadata with the position of each particle within the micrograph");
     addParamsLine("                  particles <file> : One PSD per particle.");
     addParamsLine("                              : The file is metadata with the position of each particle within the micrograph");
     addParamsLine("==+ CTF fit");
     addParamsLine("  [--dont_estimate_ctf]       : Do not fit a CTF to PSDs");
     ARMA_parameters::defineParams(this);
     ProgCTFEstimateFromPSD::defineBasicParams(this);
+    addExampleLine("Estimate PSD",false);
+    addExampleLine("xmipp_ctf_estimate_from_micrograph --micrograph micrograph.mrc --dont_estimate_ctf");
+    addExampleLine("Estimate a single CTF for the whole micrograph",false);
+    addExampleLine("xmipp_ctf_estimate_from_micrograph --micrograph micrograph.mrc --sampling_rate 1.4 --voltage 200 --spherical_aberration 2.5");
+    addExampleLine("Estimate a single CTF for the whole micrograph providing a starting point for the defocus",false);
+    addExampleLine("xmipp_ctf_estimate_from_micrograph --micrograph micrograph.mrc --sampling_rate 1.4 --voltage 200 --spherical_aberration 2.5 --defocusU -15000");
+    addExampleLine("Estimate a CTF per region",false);
+    addExampleLine("xmipp_ctf_estimate_from_micrograph --micrograph micrograph.mrc --mode regions micrograph.pos --sampling_rate 1.4 --voltage 200 --spherical_aberration 2.5 --defocusU -15000");
+    addExampleLine("Estimate a CTF per particle",false);
+    addExampleLine("xmipp_ctf_estimate_from_micrograph --micrograph micrograph.mrc --mode particles micrograph.pos --sampling_rate 1.4 --voltage 200 --spherical_aberration 2.5 --defocusU -15000");
 }
 
 /* Compute PSD by piece averaging ========================================== */
