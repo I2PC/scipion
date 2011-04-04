@@ -278,6 +278,15 @@ public:
 
     }
 
+    /** Get constant access */
+    double operator()(int i, int j) const
+    {
+#define GETVALUE(type) return A2D_ELEM(*(MultidimArray<type>*)im,i,j);
+        SWITCHDATATYPE(datatype,GETVALUE)
+#undef GETVALUE
+
+    }
+
     /** Get array */
     MultidimArrayBase & operator()()
     {
