@@ -30,7 +30,6 @@ MultidimArrayGeneric::MultidimArrayGeneric(MultidimArrayBase* array, DataType _d
     im = array;
     datatype = _datatype;
     destroyData = false;
-
 }
 
 MultidimArrayGeneric::MultidimArrayGeneric(MultidimArrayGeneric &mdim, int select_slice)
