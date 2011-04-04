@@ -41,7 +41,8 @@ void ProgCTFEstimateFromMicrograph::readParams()
     if (fn_root=="")
     	fn_root=fn_micrograph.withoutExtension();
     pieceDim = getIntParam("--pieceDim");
-    if (getParam("--psd_estimator")=="periodogram")
+    String aux=getParam("--psd_estimator");
+    if (aux=="periodogram")
         PSDEstimator_mode = Periodogram;
     else
     {
@@ -284,7 +285,7 @@ void ProgCTFEstimateFromMicrograph::run()
         piece.statisticsAdjust(0, 1);
 
         // Estimate the power spectrum .......................................
-        if (Nsubpiece>1)
+        if (Nsubpiece==1)
             if (PSDEstimator_mode == ARMA)
             {
                 CausalARMA(piece, ARMA_prm);
