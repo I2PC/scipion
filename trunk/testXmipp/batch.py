@@ -93,12 +93,21 @@ class Tester:
         self.addProgram("xmipp_classify_analyze_cluster")
         self.addTest("-i input/smallStack.stk --ref 1@input/smallStack.stk -o %o/pca.xmd")
 
+        self.addProgram("xmipp_ctf_enhance_psd")
+        self.addTest("-i input/down1_01nov26b.001.001.001.002_Periodogramavg.psd -o %o/enhanced_psd.xmp" )
+
+        self.addProgram("xmipp_ctf_estimate_from_micrograph")
+        self.addTest("--micrograph input/Protocol_Preprocess_Micrographs/Micrographs/01nov26b.001.001.001.002.mrc --oroot %o/micrograph --dont_estimate_ctf")
+        self.addTest("--micrograph input/Protocol_Preprocess_Micrographs/Micrographs/01nov26b.001.001.001.002.mrc --oroot %o/micrograph --sampling_rate 1.4 --voltage 200 --spherical_aberration 2.5")
+        self.addTest("--micrograph input/Protocol_Preprocess_Micrographs/Micrographs/01nov26b.001.001.001.002.mrc --oroot %o/micrograph --sampling_rate 1.4 --voltage 200 --spherical_aberration 2.5 --defocusU -15000 --mode regions --pieceDim 1024 --Nsubpiece 5")
+
+        self.addProgram("xmipp_ctf_estimate_from_psd")
+        self.addTest("--psd down1_01nov26b.001.001.001.002_Periodogramavg.psd --sampling_rate 1.4 --voltage 200 --spherical_aberration 2.5 --defocusU -15000",False,
+        "cp input/down1_01nov26b.001.001.001.002_Periodogramavg.psd %o",True)
+
         self.addProgram("xmipp_ctf_group")
         self.addTest("--ctfdat input/ctf_group/all_images_new.ctfdat -o %o/ctf --wiener --wc -1 --pad 2 --phase_flipped --error 0.5 --resol 5.6" )
         self.addTest("--ctfdat input/ctf_group/all_images_new.ctfdat -o %o/ctf --wiener --wc -1 --pad 2 --phase_flipped --split input/ctf_group/ctf_split.doc" )
-
-        self.addProgram("xmipp_ctf_enhance_psd")
-        self.addTest("-i input/down1_01nov26b.001.001.001.002_Periodogramavg.psd -o %o/enhanced_psd.xmp" )
 
         self.addProgram("xmipp_ctf_sort_psds")
         self.addTest("-i all_micrographs.sel",False,"cp -r input/Protocol_Preprocess_Micrographs/Preprocessing/* %o",True)
