@@ -368,8 +368,14 @@ void auto_correlation_vector(const MultidimArray< T > & Img, MultidimArray< doub
 
     // Multiply FFT1 * FFT1'
     double dSize=XSIZE(Img);
-    FOR_ALL_ELEMENTS_IN_ARRAY1D(FFT1)
-        FFT1(i) *= dSize * conj(FFT1(i));
+    FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(FFT1)
+    {
+    	double *ptr=(double*)&DIRECT_MULTIDIM_ELEM(FFT1,n);
+    	double &realPart=*ptr;
+    	double &imagPart=*(ptr+1);
+    	realPart=dSize*(realPart*realPart+imagPart*imagPart);
+    	imagPart=0;
+    }
 
     // Invert the product, in order to obtain the correlation image
     transformer1.inverseFourierTransform();
@@ -488,12 +494,18 @@ void auto_correlation_matrix(const MultidimArray< T > & Img, MultidimArray< doub
     MultidimArray< std::complex< double > > FFT1;
     FourierTransformer transformer1;
     R=Img;
-    transformer1.FourierTransform(R, FFT1);
+    transformer1.FourierTransform(R, FFT1, false);
 
     // Multiply FFT1 * FFT1'
     double dSize=MULTIDIM_SIZE(Img);
-    FOR_ALL_ELEMENTS_IN_ARRAY3D(FFT1)
-        FFT1(k, i, j) *= dSize * conj(FFT1(k, i, j));
+    FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(FFT1)
+    {
+    	double *ptr=(double*)&DIRECT_MULTIDIM_ELEM(FFT1,n);
+    	double &realPart=*ptr;
+    	double &imagPart=*(ptr+1);
+    	realPart=dSize*(realPart*realPart+imagPart*imagPart);
+    	imagPart=0;
+    }
 
     // Invert the product, in order to obtain the correlation image
     transformer1.inverseFourierTransform();
