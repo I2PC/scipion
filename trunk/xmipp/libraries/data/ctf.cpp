@@ -326,25 +326,25 @@ void CTFDescription::write(const FileName &fn)
 void CTFDescription::defineParams(XmippProgram * program)
 {
     program->addParamsLine("== CTF description");
-    program->addParamsLine("  [--ctf_similar_to <ctfFile>]          : ctfparam file");
-    program->addParamsLine("                                        :+Parameters from this file are ");
-    program->addParamsLine("                                        :+overriden by the parameters in the command line");
-    program->addParamsLine("  [--sampling_rate <Tm=1>]              : Angstroms/pixel. Ex: 1.4");
-    program->addParamsLine("  [--voltage <kV>]                      : Accelerating voltage (kV). Ex: 200");
+    program->addParamsLine("  [--ctf_similar_to++ <ctfFile>]        : ctfparam file");
+    program->addParamsLine("                                        : Parameters from this file are ");
+    program->addParamsLine("                                        : overriden by the parameters in the command line");
+    program->addParamsLine("  --sampling_rate <Tm=1>                : Angstroms/pixel. Ex: 1.4");
+    program->addParamsLine("  --voltage <kV>                        : Accelerating voltage (kV). Ex: 200");
     program->addParamsLine("     alias --kV;");
-    program->addParamsLine("  [--spherical_aberration <Cs>]         : Milimiters. Ex: 5.6");
+    program->addParamsLine("  --spherical_aberration <Cs>           : Milimiters. Ex: 5.6");
     program->addParamsLine("     alias --Cs;");
     program->addParamsLine("  [--defocusU <DeltafU>]                : Defocus in Angstroms (Ex: -2000)");
-    program->addParamsLine("  [++--defocusV <DeltafV>]              : If astigmatic");
-    program->addParamsLine("  [++--azimuthal_angle <ang=0>]         : Angle between X and U (degrees)");
-    program->addParamsLine("  [++--chromatic_aberration <Ca=0>]     : Milimiters. Ex: 2");
-    program->addParamsLine("  [++--energy_loss <espr=0>]            : eV. Ex: 1");
-    program->addParamsLine("  [++--lens_stability <ispr=0>]         : ppm. Ex: 1");
-    program->addParamsLine("  [++--convergence_cone <alpha=0>]      : mrad. Ex: 0.5");
-    program->addParamsLine("  [++--longitudinal_displace <DeltaF=0>]: Angstrom. Ex: 100");
-    program->addParamsLine("  [++--transversal_displace <DeltaR=0>] : Angstrom. Ex: 3");
-    program->addParamsLine("  [++--Q0 <Q0=0>]                       : Percentage of cosine");
-    program->addParamsLine("  [++--K <K=1>]                         : Global gain");
+    program->addParamsLine("  [--defocusV++ <DeltafV>]              : If astigmatic");
+    program->addParamsLine("  [--azimuthal_angle++ <ang=0>]         : Angle between X and U (degrees)");
+    program->addParamsLine("  [--chromatic_aberration++ <Ca=0>]     : Milimiters. Ex: 2");
+    program->addParamsLine("  [--energy_loss++ <espr=0>]            : eV. Ex: 1");
+    program->addParamsLine("  [--lens_stability++ <ispr=0>]         : ppm. Ex: 1");
+    program->addParamsLine("  [--convergence_cone++ <alpha=0>]      : mrad. Ex: 0.5");
+    program->addParamsLine("  [--longitudinal_displace++ <DeltaF=0>]: Angstrom. Ex: 100");
+    program->addParamsLine("  [--transversal_displace++ <DeltaR=0>] : Angstrom. Ex: 3");
+    program->addParamsLine("  [--Q0++ <Q0=0>]                       : Percentage of cosine");
+    program->addParamsLine("  [--K++ <K=1>]                         : Global gain");
 }
 
 /* Read from command line -------------------------------------------------- */

@@ -67,19 +67,19 @@ void ProgCTFEstimateFromMicrograph::defineParams()
 {
     addUsageLine("Estimate the CTF from a micrograph.");
     addParamsLine("   --micrograph <file>         : File with the micrograph");
-    addParamsLine("== PSD estimation");
-    addParamsLine("  [--psd_estimator+ <method=periodogram>] : Method for estimating the PSD");
+    addParamsLine("==+ PSD estimation");
+    addParamsLine("  [--psd_estimator <method=periodogram>] : Method for estimating the PSD");
     addParamsLine("         where <method>");
     addParamsLine("                  periodogram");
     addParamsLine("                  ARMA");
-    addParamsLine("  [--pieceDim+ <d=512>]       : Size of the piece");
-    addParamsLine("  [--Nsubpiece+ <N=1>]        : Each piece is further subdivided into NxN subpieces.");
+    addParamsLine("  [--pieceDim <d=512>]       : Size of the piece");
+    addParamsLine("  [--Nsubpiece <N=1>]        : Each piece is further subdivided into NxN subpieces.");
     addParamsLine("                              : This option is useful for small micrographs in which ");
     addParamsLine("                              : not many pieces of size pieceDim x pieceDim can be defined. ");
     addParamsLine("                              :++ Note that this is not the same as defining a smaller pieceDim. ");
     addParamsLine("                              :++ Defining a smaller pieceDim, would result in a small PSD, while ");
     addParamsLine("                              :++ subdividing the piece results in a large PSD, although smoother.");
-    addParamsLine("  [--mode+ <mode=micrograph>]");
+    addParamsLine("  [--mode <mode=micrograph>]");
     addParamsLine("         where <mode>");
     addParamsLine("                  micrograph  : Single PSD for the whole micrograph");
     addParamsLine("                  regions     : The micrograph is divided into a region grid ");
