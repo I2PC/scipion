@@ -68,16 +68,16 @@ void Half2Whole(const MultidimArray<std::complex<double> > &in,
     if (in.getDim() == 1)
     {
         // 1D
-        out.resize(oridim);
+        out.resizeNoCopy(oridim);
         for (int j = 0; j < XSIZE(in); j++)
-            out(j) = in(j);
+            DIRECT_A1D_ELEM(out,j) = DIRECT_A1D_ELEM(in,j);
         for (int j = XSIZE(in); j < oridim; j++)
-	out(j) = conj(in(oridim - j));
+        	DIRECT_A1D_ELEM(out,j) = conj(DIRECT_A1D_ELEM(in,oridim - j));
     }
     else if (in.getDim() == 2)
     {
         // 2D
-        out.resize(oridim, XSIZE(in));
+        out.resizeNoCopy(oridim, XSIZE(in));
 
         // Old part
         for (int i = 0; i < YSIZE(in); i++)
@@ -103,8 +103,8 @@ void Complex2RealImag(const MultidimArray< std::complex< double > > & in,
                       MultidimArray< double > & real,
                       MultidimArray< double > & imag)
 {
-    real.resize(in);
-    imag.resize(in);
+    real.resizeNoCopy(in);
+    imag.resizeNoCopy(in);
     Complex2RealImag(MULTIDIM_ARRAY(in), MULTIDIM_ARRAY(real),
         MULTIDIM_ARRAY(imag), MULTIDIM_SIZE(in));
 }
@@ -114,7 +114,7 @@ void RealImag2Complex(const MultidimArray< double > & real,
                       const MultidimArray< double > & imag,
                       MultidimArray< std::complex< double > > & out)
 {
-    out.resize(real);
+    out.resizeNoCopy(real);
     RealImag2Complex(MULTIDIM_ARRAY(real), MULTIDIM_ARRAY(imag),
         MULTIDIM_ARRAY(out), MULTIDIM_SIZE(real));
 }
@@ -123,13 +123,12 @@ void RealImag2Complex(const MultidimArray< double > & real,
 void FourierTransform(const MultidimArray<double> &in,
                       MultidimArray< std::complex<double> > &out)
 {
-
     if ( in.getDim() == 1 )
     {
         // 1D
         int N = XSIZE(in);
         MultidimArray<double> re(in), tmp(N), im(N), cas(N);
-        out.resize(N);
+        out.resizeNoCopy(N);
 
         GetCaS(MULTIDIM_ARRAY(cas), N);
         DftRealToRealImaginary(MULTIDIM_ARRAY(re), MULTIDIM_ARRAY(im),
@@ -142,15 +141,14 @@ void FourierTransform(const MultidimArray<double> &in,
         // 2D and 3D
         int Status;
         MultidimArray<double> re(in), im;
-        im.resize(in);
-        out.resize(in);
+        im.resizeNoCopy(in);
+        out.resizeNoCopy(in);
         VolumeDftRealToRealImaginary(MULTIDIM_ARRAY(re),
                                      MULTIDIM_ARRAY(im), XSIZE(in), YSIZE(in), ZSIZE(in), &Status);
         RealImag2Complex(re,im,out);
     }
 
 }
-
 
 /** Inverse Fourier Transform nD. ----------------------------------------- */
 void InverseFourierTransform(const MultidimArray< std::complex<double> > &in,
@@ -161,7 +159,7 @@ void InverseFourierTransform(const MultidimArray< std::complex<double> > &in,
         // 1D
         int N = XSIZE(in);
         MultidimArray<double> tmp(N), im(N), cas(N);
-        out.resize(N);
+        out.resizeNoCopy(N);
 
         GetCaS(MULTIDIM_ARRAY(cas), N);
         Complex2RealImag(MULTIDIM_ARRAY(in), MULTIDIM_ARRAY(out),
@@ -174,8 +172,8 @@ void InverseFourierTransform(const MultidimArray< std::complex<double> > &in,
         // 2D and 3D
         int Status;
         MultidimArray<double> im;
-        out.resize(in);
-        im.resize(in);
+        out.resizeNoCopy(in);
+        im.resizeNoCopy(in);
         Complex2RealImag(in, out, im);
         VolumeInvDftRealImaginaryToReal(MULTIDIM_ARRAY(out),
                                         MULTIDIM_ARRAY(im),
@@ -216,7 +214,7 @@ void FourierTransform(const MultidimArray<std::complex<double> > &in,
 
 	int N = XSIZE(in);
     MultidimArray<double> re(N), tmpre(N), tmpim(N), im(N), cas(N);
-    out.resize(N);
+    out.resizeNoCopy(N);
 
     GetCaS(MULTIDIM_ARRAY(cas), N);
     Complex2RealImag(MULTIDIM_ARRAY(in), MULTIDIM_ARRAY(re),
@@ -237,7 +235,7 @@ void InverseFourierTransform(const MultidimArray< std::complex<double> > &in,
 
 	int N = XSIZE(in);
     MultidimArray<double> tmpre(N), tmpim(N), re(N), im(N), cas(N);
-    out.resize(N);
+    out.resizeNoCopy(N);
 
     GetCaS(MULTIDIM_ARRAY(cas), N);
     Complex2RealImag(MULTIDIM_ARRAY(in), MULTIDIM_ARRAY(re),
