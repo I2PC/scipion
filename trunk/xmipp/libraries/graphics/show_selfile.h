@@ -55,8 +55,7 @@ class ShowSel: public ShowTable
 public:
     typedef enum {
         Normal_mode,
-        PSD_mode,
-        CTF_mode
+        PSD_mode
     } TLoadMode;
 
     // Show only active images (!= -1 in showsel). 1-> show active, 0-> show all
@@ -160,10 +159,6 @@ protected slots:
     virtual void showSelStats();
     /* Show this image separately */
     virtual void showThisImage();
-    /* Show this image separately */
-    virtual void recomputeCTFmodel();
-    /* Show CTF model parameters */
-    virtual void editCTFmodel();
     /* Change the global/individual normalization status */
     virtual void changeNormalize();
     /* Change the show/hide labels status */
@@ -186,12 +181,6 @@ public:
     /** Initialize with a Selfile. */
     virtual void initWithObject(int _numRows, int _numCols,
                                 MetaData &_SF, const char *_title);
-
-    /** For CTF mode, set assign CTF file. */
-    void setAssignCTFfile(const FileName &_fn_assign);
-
-    /** For CTF mode, set assign CTF file. */
-    void setAssignCTFselfile(const FileName &_fn_assign_sel);
 };
 //@}
 #endif

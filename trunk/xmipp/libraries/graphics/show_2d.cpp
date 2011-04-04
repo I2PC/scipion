@@ -26,8 +26,6 @@
 
 #include "show_2d.h"
 #include "show_tools.h"
-#include "show_ctf_estimate.h"
-
 #include <data/funcs.h>
 #include <data/histogram.h>
 #include <data/fft.h>
@@ -110,10 +108,6 @@ void ImageViewer::Init()
     options->setItemEnabled(sfft, false);
 
     // Add CTF actions
-    editctfmodel = options->insertItem("Edit CTF model");
-    options->setItemEnabled(editctfmodel, false);
-    recomputectfmodel = options->insertItem("Recompute CTF model");
-    options->setItemEnabled(recomputectfmodel, false);
     enhancePSD = options->insertItem("Enhance PSD");
     options->setItemEnabled(enhancePSD, false);
 
@@ -359,17 +353,6 @@ void ImageViewer::doOption(int item)
             xf + STARTINGX(xmippImage()), yf + STARTINGY(xmippImage()), 100, profile);
         profile.showWithGnuPlot("Length (%)", "Profile");
         profile.edit();
-    }
-    else if (item == editctfmodel)
-    {
-        FileName fn_param = ((FileName)filename).withoutExtension() + ".ctfparam";
-        std::string command = (std::string)"xmipp_edit -i " + fn_param + " &";
-        std::cout << command << std::endl;
-        system(command.c_str());
-    }
-    else if (item == recomputectfmodel)
-    {
-        recomputeCTFmodel();
     }
     else if (item == enhancePSD)
     {
@@ -751,24 +734,7 @@ bool ImageViewer::loadImage(const char *fileName,
                         xmipp2PSD(p(), p());
                         options->setItemEnabled(enhancePSD, true);
                     }
-                    else if (load_mode == ImageViewer::CTF_mode)
-                    {
-                        // It is ARMA and CTF together
-                        options->setItemEnabled(editctfmodel, true);
-                        if (fn_assign != "")
-                            options->setItemEnabled(recomputectfmodel, true);
-                    }
                     tmpImage = p;
-                }
-                else if (tmpImage.isComplexImage(filename))
-                {
-                    isFourierImage = true;
-                    Image<std::complex<double> > If;
-                    If.read(filename);
-                    xmippImageFourier = If();
-                    CenterFFT(xmippImageFourier, true);
-                    generateFFTImage(tmpImage());
-                    options->setItemEnabled(sfft, true);
                 }
                 else REPORT_ERROR(ERR_VALUE_INCORRECT, "ImageViewer::loadImage: Unknown format");
 
@@ -828,11 +794,6 @@ bool ImageViewer::loadMatrix(MultidimArray<double> &_matrix,
         // It is only the ARMA model
         xmipp2PSD(_matrix, _matrix);
         options->setItemEnabled(enhancePSD, true);
-    }
-    else if (load_mode == ImageViewer::CTF_mode)
-    {
-        // It is ARMA and CTF together
-        options->setItemEnabled(editctfmodel, true);
     }
     tmpImage() = _matrix;
 
@@ -1280,48 +1241,8 @@ void ImageViewer::check_file()
     }
 }
 
-// Set Assign CTF file -----------------------------------------------------
-void ImageViewer::setAssignCTFfile(const FileName &_fn_assign)
-{
-    fn_assign = _fn_assign;
-}
-
-// Recompute CTF model -----------------------------------------------------
-void ImageViewer::recomputeCTFmodel()
-{
-    if (fn_assign == "")
-    {
-        QMessageBox::about(this, "Error!", "No Assign CTF file provided\n");
-        return;
-    }
-
-    // Read the Assign CTF parameters
-    Prog_assign_CTF_prm assign_ctf_prm;
-    assign_ctf_prm.read(fn_assign);
-
-    // Get the PSD name
-    FileName fn_psd;
-    if (assign_ctf_prm.selfile_mode)
-    {
-        FileName fn_root;
-        fn_root = assign_ctf_prm.selfile_fn.removeAllExtensions();
-        if (assign_ctf_prm.PSD_mode == Prog_assign_CTF_prm::ARMA)
-            fn_psd = fn_root + "_ARMAavg.psd";
-        else fn_psd = fn_root + "_Periodogramavg.psd";
-    }
-    else
-    {
-        fn_psd = ((FileName) filename).removeAllExtensions() + ".psd";
-        fn_psd=findAndReplace(fn_psd,"_ctfmodel_halfplane","");
-        fn_psd=findAndReplace(fn_psd,"_ctfmodel_quadrant","");
-    }
-
-    // Show this image in a separate selfWindow to select the main parameters
-    AssignCTFViewer *prm_selector = new AssignCTFViewer(fn_psd, assign_ctf_prm);
-}
-
 // Run Enhance PSD ---------------------------------------------------------
-void ImageViewer::runEnhancePSD(std::vector<float> enhance_prms)
+void ImageViewer::runEnhancePSD(std::vector<float> &enhance_prms)
 {
     ProgCTFEnhancePSD prm;
     prm.center = true;
@@ -1337,24 +1258,7 @@ void ImageViewer::runEnhancePSD(std::vector<float> enhance_prms)
     I.read(filename);
     int Xdim = XSIZE(I());
     int Ydim = YSIZE(I());
-    if (load_mode == ImageViewer::CTF_mode)
-    {
-        Iaux = I();
-        // Remove the part of the model
-        FOR_ALL_ELEMENTS_IN_ARRAY2D(I())
-            if ((i < Ydim / 2 && j < Xdim / 2) || (i >= Ydim / 2 && j >= Xdim / 2))
-                I()(i, j) = I()(i, XSIZE(I()) - 1 - j);
-    }
     prm.apply(I());
-    if (load_mode == ImageViewer::CTF_mode)
-    {
-        CenterFFT(I(), true);
-        // Copy the part of the model
-        FOR_ALL_ELEMENTS_IN_ARRAY2D(I())
-            if ((i < Ydim / 2 && j < Xdim / 2) || (i >= Ydim / 2 && j >= Xdim / 2))
-                I()(i, j) = ABS(Iaux(i, j));
-        CenterFFT(I(), false);
-    }
     I().setXmippOrigin();
     xmipp2Qt(I);
     showImage();

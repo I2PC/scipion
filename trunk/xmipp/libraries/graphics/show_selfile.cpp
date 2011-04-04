@@ -27,10 +27,6 @@
 #include "show_selfile.h"
 #include "show_2d.h"
 #include "show_tools.h"
-#include "show_ctf_estimate.h"
-
-#include <reconstruction/ctf_estimate_from_micrograph.h>
-
 #include <data/args.h>
 #include <qmessagebox.h>
 
@@ -129,9 +125,9 @@ void ShowSel::readSelFile(const FileName &_fn, double _minGray, double _maxGray)
 
 void ShowSel::readObject(MetaData &SF, double _minGray, double _maxGray)
 {
-	if (showonlyactive && SF.containsLabel(MDL_ENABLED))
-		SF.removeObjects(MDValueEQ(MDL_ENABLED, -1));
-	listSize        = SF.size();
+    if (showonlyactive && SF.containsLabel(MDL_ENABLED))
+        SF.removeObjects(MDValueEQ(MDL_ENABLED, -1));
+    listSize        = SF.size();
     if (listSize == 0)
         REPORT_ERROR(ERR_IO_SIZE, "ShowSel::readFile: Input selfile is empty");
     imgnames        = new FileName[listSize];
@@ -159,11 +155,11 @@ void ShowSel::readObject(MetaData &SF, double _minGray, double _maxGray)
     FOR_ALL_OBJECTS_IN_METADATA(SF)
     {
         imgids[i] = __iter.objId;
-    	SF.getValue(MDL_IMAGE, imgnames[i],__iter.objId);
-    	if (SF.getValue(MDL_ENABLED, enabled,__iter.objId))
-    		selstatus[i] = enabled == 1;
-    	else
-    		selstatus[i] = true;
+        SF.getValue(MDL_IMAGE, imgnames[i],__iter.objId);
+        if (SF.getValue(MDL_ENABLED, enabled,__iter.objId))
+            selstatus[i] = enabled == 1;
+        else
+            selstatus[i] = true;
         i++;
     }
 }
@@ -176,11 +172,14 @@ void ShowSel::compute_global_normalization_params()
     {
         Image<double> I;
         I.read(imgnames[i]);
-        if (load_mode == PSD_mode) xmipp2PSD(I(), I());
+        if (load_mode == PSD_mode)
+            xmipp2PSD(I(), I());
         double min_val, max_val;
         I().computeDoubleMinMax(min_val, max_val);
-        if (first || min_val < minPixel) minPixel = min_val;
-        if (first || max_val > maxPixel) maxPixel = max_val;
+        if (first || min_val < minPixel)
+            minPixel = min_val;
+        if (first || max_val > maxPixel)
+            maxPixel = max_val;
         first = false;
     }
 }
@@ -190,8 +189,10 @@ void ShowSel::initTable()
 {
     ShowTable::initTable();
 #ifdef QT3_SUPPORT
+
     setFocusPolicy(Qt::StrongFocus);   // keyboard focus is accepted
 #else
+
     setFocusPolicy(StrongFocus);
 #endif
     // Really set size
@@ -205,16 +206,21 @@ void ShowSel::initRightclickMenubar()
 #ifdef QT3_SUPPORT
     menubar = new Q3PopupMenu();
 #else
+
     menubar = new QPopupMenu();
 #endif
+
     setFileRightclickMenubar();
 
     // Options .............................................................
 #ifdef QT3_SUPPORT
+
     options =  new Q3PopupMenu();
 #else
+
     options = new QPopupMenu();
 #endif
+
     setCommonOptionsRightclickMenubar();
 
     // What kind of labels
@@ -235,17 +241,6 @@ void ShowSel::initRightclickMenubar()
     options->insertItem("Show this image separately", this, SLOT(showThisImage()));
     options->insertSeparator();
 
-    // Recalculate CTF model
-    if (load_mode == CTF_mode)
-    {
-        options->insertItem("Edit CTF model", this, SLOT(editCTFmodel()));
-        options->insertItem("Recompute CTF model", this, SLOT(recomputeCTFmodel()));
-        options->insertSeparator();
-
-        options->setItemEnabled(mi_imgAsLabels, false);
-        options->setItemEnabled(mi_selAsLabels, false);
-    }
-
     // Form the menu
     menubar->insertItem("&Options", options);
     menubar->insertSeparator();
@@ -258,9 +253,11 @@ void ShowSel::setFileRightclickMenubar()
     Q3PopupMenu * file = new Q3PopupMenu();
     Q3PopupMenu * fileSave = new Q3PopupMenu();
 #else
+
     QPopupMenu * file = new QPopupMenu();
     QPopupMenu * fileSave = new QPopupMenu();
 #endif
+
     file->insertItem("Open...", this,  SLOT(GUIopenFile()));
 
     fileSave->insertItem("As discarded...",
@@ -289,12 +286,7 @@ void ShowSel::setCommonOptionsRightclickMenubar()
     // Show/Hide labels
     mi_showLabel = options->insertItem("Show Labels", this,  SLOT(changeShowLabels()));
     mi_hideLabel = options->insertItem("Hide Labels", this,  SLOT(changeShowLabels()));
-    if (load_mode == Normal_mode || load_mode == CTF_mode)
-    {
-        options->setItemEnabled(mi_showLabel, false);
-        options->setItemEnabled(mi_hideLabel, true);
-    }
-    else if (load_mode == PSD_mode)
+    if (load_mode == PSD_mode)
     {
         options->setItemEnabled(mi_showLabel, true);
         options->setItemEnabled(mi_hideLabel, false);
@@ -310,33 +302,15 @@ void ShowSel::setCommonOptionsRightclickMenubar()
 /* Cell label -------------------------------------------------------------- */
 const char * ShowSel::cellLabel(int i) const
 {
-    if (options->isItemEnabled(mi_showLabel)) return NULL;
-    if (load_mode == CTF_mode)
+    if (options->isItemEnabled(mi_showLabel))
+        return NULL;
+    switch (labeltype)
     {
-        // Get the defocus parameters from the ctfparam file
-        FileName fn_param = imgnames[i].withoutExtension() + ".ctfparam";
-        try
-        {
-            CTFDescription ctf;
-            ctf.read(fn_param, false);
-            std::string defocus_val = integerToString(ROUND(XMIPP_MIN(ctf.DeltafU, ctf.DeltafV)), 6) + " " +
-                                      integerToString(ROUND(XMIPP_MAX(ctf.DeltafU, ctf.DeltafV)), 6) + " " +
-                                      integerToString(ABS(ROUND(ctf.DeltafU - ctf.DeltafV)));
-            return defocus_val.c_str();
-        }
-        catch (XmippError XE)
-        {
-            return ((std::string)"Cannot open " + fn_param).c_str();
-        }
+    case SFLabel_LABEL:
+        return (selstatus[i]) ? "1" : "-1";
+    case Filename_LABEL:
+        return imgnames[i].c_str();
     }
-    else
-        switch (labeltype)
-        {
-        case SFLabel_LABEL:
-            return (selstatus[i]) ? "1" : "-1";
-        case Filename_LABEL:
-            return imgnames[i].c_str();
-        }
 }
 
 /* Produce pixmap ---------------------------------------------------------- */
@@ -347,21 +321,12 @@ void ShowSel::producePixmapAt(int i)
     if (I.isRealImage(imgnames[i]))
     {
         // Plain Xmipp images
-    	if (apply_geo)
-    		I.readApplyGeo(imgnames[i], mdInput, imgids[i]);
-    	else
-    		I.read(imgnames[i]);
-        if (load_mode == PSD_mode) xmipp2PSD(I(), I());
-    }
-    else if (I.isComplexImage(imgnames[i]))
-    {
-        // FFT Xmipp images: plot log10(1+|I|^2)
-        Image<std::complex<double> > If;
-        If.read(imgnames[i]);
-        FFT_magnitude(If(), I());
-        FOR_ALL_ELEMENTS_IN_ARRAY2D(I())
-            A2D_ELEM(I(), i, j) =
-                log10(1 + A2D_ELEM(I(), i, j) * A2D_ELEM(I(), i, j));
+        if (apply_geo)
+            I.readApplyGeo(imgnames[i], mdInput, imgids[i]);
+        else
+            I.read(imgnames[i]);
+        if (load_mode == PSD_mode)
+            xmipp2PSD(I(), I());
     }
     else
         // Unknown image
@@ -373,9 +338,9 @@ void ShowSel::producePixmapAt(int i)
                         minGray, maxGray);
 
     // If PSD mode, make the full selfWindow fit the current size
-    if (load_mode == PSD_mode || load_mode == CTF_mode)
+    if (load_mode == PSD_mode)
     {
-    	selfScaleToSize(LINEAR, I(), rowHeight(0), columnWidth(0));
+        selfScaleToSize(LINEAR, I(), rowHeight(0), columnWidth(0));
     }
 
     // Convert Xmipp image to Pixmap
@@ -386,7 +351,8 @@ void ShowSel::producePixmapAt(int i)
 /* Grow older all contents ------------------------------------------------- */
 void ShowSel::insert_content_in_queue(int i)
 {
-    if (listSize < NumRows*NumCols) return;
+    if (listSize < NumRows*NumCols)
+        return;
     // Check if the image i is already in the queue
     int jmax = content_queue.size();
     bool found = false;
@@ -400,7 +366,8 @@ void ShowSel::insert_content_in_queue(int i)
         }
         ptr++;
     }
-    if (found) content_queue.erase(ptr);
+    if (found)
+        content_queue.erase(ptr);
     content_queue.push_back(i);
 
     // If the queue is longer than 3 times the visible area then remove some
@@ -450,8 +417,10 @@ void ShowSel::saveSelFileDiscarded()
             SFnew.setValue(MDL_ENABLED, selstatus[i] ? 1 : -1, id);
         }
     }
-    if (saveFile) writeSelFile(SFnew);
-    else QMessageBox::about(this, "Error!", "No images selected\n");
+    if (saveFile)
+        writeSelFile(SFnew);
+    else
+        QMessageBox::about(this, "Error!", "No images selected\n");
 }
 
 /* This function saves the sel file with the selected images as active and
@@ -472,10 +441,12 @@ void ShowSel::saveSelFileActive()
             SFnew.setValue(MDL_ENABLED,1, id);
         }
         else
-        	SFnew.setValue(MDL_ENABLED,-1, id);
+            SFnew.setValue(MDL_ENABLED,-1, id);
     }
-    if (saveFile) writeSelFile(SFnew);
-    else QMessageBox::about(this, "Error!", "No images selected\n");
+    if (saveFile)
+        writeSelFile(SFnew);
+    else
+        QMessageBox::about(this, "Error!", "No images selected\n");
 }
 
 /* This function saves a new sel file with the selected images as active.*/
@@ -495,8 +466,10 @@ void ShowSel::saveSelFileNew()
             SFnew.setValue(MDL_ENABLED,1, id);
         }
     }
-    if (saveFile) writeSelFile(SFnew);
-    else QMessageBox::about(this, "Error!", "No images selected\n");
+    if (saveFile)
+        writeSelFile(SFnew);
+    else
+        QMessageBox::about(this, "Error!", "No images selected\n");
 }
 
 /* This function saves a  sel file with the selected images as active.
@@ -516,8 +489,10 @@ void ShowSel::saveSelFileNewOverwrite()
             SFnew.setValue(MDL_ENABLED, 1, id);
         }
     }
-    if (saveFile) writeSelFile(SFnew, true);
-    else QMessageBox::about(this, "Error!", "No images selected\n");
+    if (saveFile)
+        writeSelFile(SFnew, true);
+    else
+        QMessageBox::about(this, "Error!", "No images selected\n");
 }
 
 /* Save a Selfile.
@@ -530,29 +505,38 @@ void ShowSel::writeSelFile(MetaData &_SF, bool overwrite)
     else
     {
 #ifdef QT3_SUPPORT
-         QString newfilename = Q3FileDialog::getSaveFileName(
-#else
-         QString newfilename = QFileDialog::getSaveFileName(
-#endif
+        QString newfilename = Q3FileDialog::getSaveFileName(
                                   selfile_fn.c_str(), "*.sel", this, "Sel files");
+#else
+
+        QString newfilename = QFileDialog::getSaveFileName(
+                                  selfile_fn.c_str(), "*.sel", this, "Sel files");
+#endif
+
         if (!newfilename.isEmpty())
         {
-            QFileInfo fi(newfilename);
+            QFileInfo fi(newfilename)
+            ;
             if (fi.extension(false) != "sel")
             {
                 if (QMessageBox::information(this, "Showsel application",
                                              "The file has no ""sel"" extension. add it? ",
-                                             "Yes", "No") == 0) newfilename += ".sel";
+                                             "Yes", "No") == 0)
+                    newfilename += ".sel";
             }
             fi.setFile(newfilename);
             if (fi.exists())
                 if (QMessageBox::information(this, "Showsel application",
                                              "The file already exist. Overwrite?",
-                                             "Yes", "No") == 0) _SF.write((std::string)((const char *)newfilename));
-                else QMessageBox::about(this, "Warning!", "Saving aborted\n");
-            else _SF.write((std::string)((const char *)newfilename));
+                                             "Yes", "No") == 0)
+                    _SF.write((std::string)((const char *)newfilename));
+                else
+                    QMessageBox::about(this, "Warning!", "Saving aborted\n");
+            else
+                _SF.write((std::string)((const char *)newfilename));
         }
-        else  QMessageBox::about(this, "Warning!", "Saving aborted\n");
+        else
+            QMessageBox::about(this, "Warning!", "Saving aborted\n");
     }
 }
 
@@ -582,8 +566,10 @@ void ShowSel::changeShowLabels()
 }
 void ShowSel::changeLabels()
 {
-    if (options->isItemEnabled(mi_imgAsLabels)) labeltype = Filename_LABEL;
-    else if (options->isItemEnabled(mi_selAsLabels)) labeltype = SFLabel_LABEL;
+    if (options->isItemEnabled(mi_imgAsLabels))
+        labeltype = Filename_LABEL;
+    else if (options->isItemEnabled(mi_selAsLabels))
+        labeltype = SFLabel_LABEL;
     changeBoolOption(mi_imgAsLabels, mi_selAsLabels);
 }
 
@@ -598,12 +584,14 @@ void ShowSel::showStats()
         id = SFnew.addObject();
         SFnew.setValue(MDL_IMAGE,imgnames[i], id);
         if (cellMarks[i])
-        	SFnew.setValue(MDL_ENABLED,1, id);
+            SFnew.setValue(MDL_ENABLED,1, id);
         else
-        	SFnew.setValue(MDL_ENABLED,-1, id);
+            SFnew.setValue(MDL_ENABLED,-1, id);
     }
-    if (SFnew.size()) ShowTable::showStats(SFnew, apply_geo);
-    else QMessageBox::about(this, "Error!", "No images selected\n");
+    if (SFnew.size())
+        ShowTable::showStats(SFnew, apply_geo);
+    else
+        QMessageBox::about(this, "Error!", "No images selected\n");
 }
 
 // Show Sel Stats ----------------------------------------------------------
@@ -617,13 +605,13 @@ void ShowSel::showSelStats()
     MetaData SF(fn);
     FOR_ALL_OBJECTS_IN_METADATA(SF)
     {
-    	if (!SF.getValue(MDL_ENABLED, enabled,__iter.objId))
-    		enabled=1;
-    	if (enabled==1)
-    		active++;
-    	else if (enabled==-1)
-    		discarded++;
-    	total++;
+        if (!SF.getValue(MDL_ENABLED, enabled,__iter.objId))
+            enabled=1;
+        if (enabled==1)
+            active++;
+        else if (enabled==-1)
+            discarded++;
+        total++;
     }
     QString tmpS, Str1;
     Str1 = "Sel File Name : ";
@@ -668,167 +656,7 @@ void ShowSel::showThisImage()
         showimg->loadImage(imgnames[i].c_str());
     else if (load_mode == PSD_mode)
         showimg->loadImage(imgnames[i].c_str(), 0, 0, ImageViewer::PSD_mode);
-    else if (load_mode == CTF_mode)
-        showimg->loadImage(imgnames[i].c_str(), 0, 0, ImageViewer::CTF_mode);
     showimg->show();
-}
-
-// Edit CTF model ----------------------------------------------------------
-void ShowSel::editCTFmodel()
-{
-    if (fn_assign == "" && fn_assign_sel == "")
-    {
-        QMessageBox::about(this, "Error!", "No Assign CTF file provided\n");
-        return;
-    }
-
-    FileName fn_param;
-    if (fn_assign != "")
-    { // Single micrograph with or without pieces
-        // Read the Assign CTF parameters
-        Prog_assign_CTF_prm assign_ctf_prm;
-        assign_ctf_prm.read(fn_assign);
-
-        // Check if the CTF is computed at each particle
-        FileName fn_root = assign_ctf_prm.image_fn.removeAllExtensions();
-
-        // Get the piece name
-        if (assign_ctf_prm.compute_at_particle)
-        {
-            int i = indexOf(currentRow(), currentColumn());
-            fn_param = imgnames[i].withoutExtension() + ".ctfparam";
-        }
-        else if (assign_ctf_prm.micrograph_averaging)
-        {
-            // If it is the average of the micrograph
-            if (assign_ctf_prm.PSD_mode == Prog_assign_CTF_prm::ARMA)
-                fn_param = fn_root + "_ARMAavg.ctfparam";
-            else fn_param = fn_root + "_Periodogramavg.ctfparam";
-        }
-        else
-        {
-            // If the micrograph was divided into pieces
-            if (assign_ctf_prm.PSD_mode == Prog_assign_CTF_prm::ARMA)
-                fn_param = fn_root + "_ARMA";
-            else fn_param = fn_root + "_Periodogram";
-            // Get the piece to edit
-            int i = indexOf(currentRow(), currentColumn()) + 1;
-            fn_param += integerToString(i, 5);
-            fn_param += ".ctfparam";
-        }
-    }
-    else
-    {   // Multiple micrographs all with micrograph_averaging
-        // Get the assign filename
-        MetaData SF_assign;
-        SF_assign.read(fn_assign_sel);
-        FileName fn_assign;
-        SF_assign.getValue(MDL_IMAGE, fn_assign,indexOf(currentRow(), currentColumn()));
-
-        // Read the corresponding assignment parameter file
-        Prog_assign_CTF_prm assign_ctf_prm;
-        assign_ctf_prm.read(fn_assign);
-        FileName fn_root = assign_ctf_prm.image_fn.removeAllExtensions();
-
-        // Get the piece name
-        if (assign_ctf_prm.micrograph_averaging)
-        {
-            // If it is the average of the micrograph
-            if (assign_ctf_prm.PSD_mode == Prog_assign_CTF_prm::ARMA)
-                fn_param = fn_root + "_ARMAavg.ctfparam";
-            else fn_param = fn_root + "_Periodogramavg.ctfparam";
-        }
-        else
-        {
-            REPORT_ERROR(ERR_VALUE_INCORRECT, "This function is intended"
-                         " only for micrograph averages");
-        }
-    }
-
-    // Edit the CTF
-    system(((std::string)"xmipp_edit -i " + fn_param + " &").c_str());
-}
-
-// Recompute CTF model -----------------------------------------------------
-void ShowSel::recomputeCTFmodel()
-{
-    if (fn_assign == "" && fn_assign_sel == "")
-    {
-        QMessageBox::about(this, "Error!", "No Assign CTF file provided\n");
-        return;
-    }
-
-    FileName fn_psd;
-    Prog_assign_CTF_prm assign_ctf_prm;
-    if (fn_assign!="")
-    {
-	try
-	{
-            assign_ctf_prm.read(fn_assign);
-	}
-	catch (XmippError XE)
-	{
-            std::cout << XE;
-            std::cout << "It seems that " << fn_assign << " is not the parameter file"
-            << " that you used to estimate the CTFs\n";
-            return;
-	}
-
-	// Get the PSD name
-	FileName fn_root = assign_ctf_prm.image_fn.removeAllExtensions();
-	if (assign_ctf_prm.compute_at_particle)
-	{
-            int i = indexOf(currentRow(), currentColumn());
-            fn_psd = imgnames[i].withoutExtension() + ".psd";
-	}
-	else if (assign_ctf_prm.micrograph_averaging)
-	{
-            // If it is the average of the micrograph
-            if (assign_ctf_prm.PSD_mode == Prog_assign_CTF_prm::ARMA)
-        	fn_psd = fn_root + "_ARMAavg.psd";
-            else fn_psd = fn_root + "_Periodogramavg.psd";
-	}
-	else
-	{
-            // If the micrograph was divided into pieces
-            if (assign_ctf_prm.PSD_mode == Prog_assign_CTF_prm::ARMA)
-        	fn_psd = fn_root + "_ARMA";
-            else fn_psd = fn_root + "_Periodogram";
-            // Get the piece to recompute
-            int i = indexOf(currentRow(), currentColumn()) + 1;
-            fn_psd += integerToString(i, 5);
-            fn_psd += ".psd";
-	}
-    }
-    else
-    {   // Multiple micrographs all with micrograph_averaging
-        // Get the assign filename
-        MetaData SF_assign;
-        SF_assign.read(fn_assign_sel);
-        FileName fn_assign;
-        SF_assign.getValue(MDL_IMAGE, fn_assign,indexOf(currentRow(), currentColumn()));
-
-        // Read the corresponding assignment parameter file
-        assign_ctf_prm.read(fn_assign);
-        FileName fn_root = assign_ctf_prm.image_fn.removeAllExtensions();
-
-        // Get the piece name
-        if (assign_ctf_prm.micrograph_averaging)
-        {
-            // If it is the average of the micrograph
-            if (assign_ctf_prm.PSD_mode == Prog_assign_CTF_prm::ARMA)
-                fn_psd = fn_root + "_ARMAavg.psd";
-            else fn_psd = fn_root + "_Periodogramavg.psd";
-        }
-        else
-        {
-            REPORT_ERROR(ERR_VALUE_INCORRECT, " This function is intended"
-                         " only for micrograph averages");
-        }
-    }
-
-    // Show this image in a separate selfWindow to select the main parameters
-    AssignCTFViewer *prm_selector = new AssignCTFViewer(fn_psd, assign_ctf_prm);
 }
 
 // Unselect/Select all -----------------------------------------------------
@@ -858,24 +686,14 @@ void ShowSel::contentsMouseMoveEvent(QMouseEvent* e)
     QPoint Pos = e->pos(); // extract pointer position
     int row = rowAt(Pos.y());
     int col = columnAt(Pos.x());
-    if (row < 0 || col < 0) return;
+    if (row < 0 || col < 0)
+        return;
     updateStatus(indexOf(row, col));
 }
 
 void ShowSel::updateStatus(int i)
 {
-    if (i > listSize) return;
+    if (i > listSize)
+        return;
     status->setText(imgnames[i].c_str());
-}
-
-// Set Assign CTF file -----------------------------------------------------
-void ShowSel::setAssignCTFfile(const FileName &_fn_assign)
-{
-    fn_assign = _fn_assign;
-}
-
-// Set Assign CTF selfile --------------------------------------------------
-void ShowSel::setAssignCTFselfile(const FileName &_fn_assign_sel)
-{
-    fn_assign_sel = _fn_assign_sel;
 }

@@ -79,8 +79,7 @@ class ImageViewer : public QWidget
 public:
     typedef enum {
         Normal_mode,
-        PSD_mode,
-        CTF_mode
+        PSD_mode
     } TLoadMode;
 
     /** Empty constructor. */
@@ -116,9 +115,6 @@ public:
     {
         isFourierImage = true;
     }
-
-    /** For CTF mode, set assign CTF file. */
-    void setAssignCTFfile(const FileName &_fn_assign);
 
     /** Flag whether or not to apply header transformation **/
     bool apply_geo;
@@ -187,8 +183,8 @@ protected:
     QPrinter   *printer;
     QLabel     *status;
     QTimer     *timer;
-    int  ss, si, pi, ravg, profile, sfft, line_setup, editctfmodel;
-    int         recomputectfmodel, enhancePSD;
+    int  ss, si, pi, ravg, profile, sfft, line_setup;
+    int         enhancePSD;
     void Init();
     bool  xmipp2Qt(Image<double>& _image);
     bool  Qt2xmipp(QImage &_image);
@@ -211,12 +207,8 @@ protected:
     QMultiLineEdit *ed1;
 #endif
 
-    // Assign CTF file
-    FileName    fn_assign;
-    void        recomputeCTFmodel();
-
 public slots:
-    void runEnhancePSD(std::vector<float> enhance_prms);
+    void runEnhancePSD(std::vector<float> &enhance_prms);
 
 protected slots:
     void newWindow();

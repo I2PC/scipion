@@ -38,13 +38,13 @@
 
 
 enum ShowMode { MODE_INPUT, MODE_SPECT, MODE_SOM, MODE_SPECTSOM,
-                MODE_PSD, MODE_CTF, MODE_PSDSEL,MODE_CTFSEL, MODE_CL2D };
+                MODE_PSD, MODE_CL2D };
 
 class ProgShow: public XmippProgram
 {
     ShowMode mode;
     int numCols, numRows, ifirst;
-    FileName fn_dat, fn_assign, fn_assignsel;
+    FileName fn_dat;
     bool poll, apply_geo, common_normalization;
     String filterSuffix;
     StringVector files;
@@ -57,20 +57,13 @@ protected:
         addUsageLine("volumes, stacks or selfiles. Also are provided some specific visualizations");
         addUsageLine("(like som, cl2d, spectra...etc)");
         addParamsLine("    -i <...>                   : Input files: accept images, volumes, stacks or metadatas");
-        addParamsLine("or  --ctf <...>                : Input CTFs (in image format)");
         addParamsLine("or  --psd <...>                : Input PSDs (in image format)");
-        addParamsLine("or  --psdsel <...>             : Input PSD metadata files (in image format)");
-        addParamsLine("or  --ctfsel <...>             : Input CTF metadata files (in image format)");
         addParamsLine("or  --spect <datafile>         : Spectra .dat file");
         addParamsLine("or  --som <SOM_rootname>       : SOM images");
         addParamsLine("or  --cl2d <CL2D_rootname>     : CL2D images");
         addParamsLine("or  --spectsom <SOM_rootname>  : SOM spectra");
         addParamsLine("[--spectsom_din <filename>]    : Original data");
         addParamsLine("      requires --spectsom;");
-        addParamsLine("[--ctf_assign <filename=\"\">]      : Input Assign CTF Parameters file");
-        addParamsLine("      requires --ctf;");
-        addParamsLine("[--ctf_assignsel <filename=\"\">]   : Metadatafile of Input Assign CTF Parameters files");
-        addParamsLine("      requires --ctfsel;");
         addParamsLine("[--cl2d_filter_suffix <s>]     : Filter suffix for the CL2D");
         addParamsLine("      requires --cl2d;");
         addParamsLine("   [--dim <w=10> <h=10>]       : Dimensions of the table");
@@ -86,18 +79,6 @@ protected:
         {
             mode = MODE_INPUT;
             getListParam("-i", files);
-        }
-        else if (checkParam("--psdsel"))
-        {
-            mode = MODE_PSDSEL;
-            getListParam("--psdsel", files);
-        }
-        else if (checkParam("--ctfsel"))
-        {
-            mode = MODE_CTFSEL;
-            getListParam("--ctfsel", files);
-            fn_assign = getParam("--ctf_assign");
-            fn_assignsel = getParam("--ctf_assignsel");
         }
         else if (checkParam("--spect"))
         {
@@ -119,12 +100,6 @@ protected:
         {
             mode = MODE_PSD;
             getListParam("--psd", files);
-        }
-        else if (checkParam("--ctf"))
-        {
-            mode = MODE_CTF;
-            getListParam("--ctf", files);
-            fn_assign = getParam("--ctf_assign");
         }
         else if (checkParam("--spectsom"))
         {
@@ -211,9 +186,6 @@ protected:
                 switch (mode)
                 {
                 case MODE_INPUT:
-                case MODE_PSDSEL:
-                case MODE_CTFSEL:
-
                 case MODE_SPECT:
                     continue;
                 case MODE_SOM:
@@ -272,35 +244,6 @@ protected:
                 showimg->apply_geo = false;
                 showimg->loadImage(fn.c_str(), 0, 0, ImageViewer::PSD_mode);
                 showimg->show();
-                shown++;
-            }
-            else if (mode == MODE_CTF)
-            {
-                ImageViewer *showimg = new ImageViewer(fn.c_str(), poll);
-                showimg->apply_geo = false;
-                showimg->setAssignCTFfile(fn_assign);
-                showimg->loadImage(fn.c_str(), 0, 0, ImageViewer::CTF_mode);
-                showimg->show();
-                shown++;
-            }
-            else if (mode == MODE_PSDSEL)
-            {
-                ShowSel *showsel = new ShowSel;
-                showsel->apply_geo = false;
-                showsel->showonlyactive = false;
-                showsel->initWithFile(numRows, numCols, fn, ShowSel::PSD_mode);
-                showsel->show();
-                shown++;
-            }
-            else if (mode == MODE_CTFSEL)
-            {
-                ShowSel *showsel = new ShowSel;
-                showsel->apply_geo = false;
-                showsel->showonlyactive = false;
-                showsel->initWithFile(numRows, numCols, fn, ShowSel::CTF_mode);
-                showsel->setAssignCTFfile(fn_assign);
-                showsel->setAssignCTFselfile(fn_assignsel);
-                showsel->show();
                 shown++;
             }
             else if (mode == MODE_SPECT)
