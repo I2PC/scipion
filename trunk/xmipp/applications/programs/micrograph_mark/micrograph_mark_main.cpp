@@ -29,7 +29,6 @@
 #include <qapplication.h>
 
 #include "main_widget_mark.h"
-#include "widget_psd.h"
 #include "widget_micrograph.h"
 
 class ProgMicrographMark: public XmippProgram
@@ -46,8 +45,6 @@ protected:
         addParamsLine("     alias --untilted;");
         addParamsLine("  [-t <input_tilted_micrograph>]      : File with tilted image");
         addParamsLine("     alias --tilted;");
-        addParamsLine("  [--psd+ <assign_CTF_prm_file>]      : Show the PSDs\n");
-        addParamsLine("  [--ctf+ <assign_CTF_prm_file>]      : Show the CTF models\n");
         addParamsLine("  [--auto <model_rootname>]           : For autoselection\n");
         addParamsLine("  [--autoSelect]                      : Autoselect without user interaction\n");
         addParamsLine("  [--thr <p=1>]                       : Number of threads for automatic picking\n");
@@ -57,16 +54,12 @@ protected:
     FileName fnRaw;
     FileName fnRawTilted;
     FileName fnAutomaticModel;
-    //bool     reversed;
-    FileName fn_assign_CTF;
     FileName outputRoot;
-    bool     ctf_mode;
     bool     autoSelect;
     int      numThreads;
 
     void readParams()
     {
-        ctf_mode   = false;
         autoSelect = false;
         // Get input parameters .................................................
         fnRaw         = getParam( "-i");
@@ -74,15 +67,6 @@ protected:
             fnRawTilted   = getParam("--tilted");
         else
             fnRawTilted   ="";
-        if(checkParam("--psd"))
-            fn_assign_CTF = getParam("--psd");
-        else
-            fn_assign_CTF="";
-        if (checkParam("--ctf"))
-        {
-            ctf_mode = true;
-            fn_assign_CTF = getParam("--ctf");
-        }
         if(checkParam("--auto"))
             fnAutomaticModel = getParam("--auto");
         else
@@ -143,16 +127,6 @@ public:
                 mainWidget = new QtMainWidgetMark(&m, &mTilted);
             for (int i=0; i<filesToDelete.size(); i++)
                 mainWidget->__filesToDelete.push_back(filesToDelete[i]);
-        }
-
-        // Check if the PSDs must be shown ...................................
-        if (fn_assign_CTF != "")
-        {
-            QtWidgetPSD PSDshow;
-            if (ctf_mode)
-                PSDshow.set_CTF_mode();
-            PSDshow.set_assign_CTF_file(m, fn_assign_CTF);
-            PSDshow.show();
         }
 
         // Check if a model has been provided ................................
