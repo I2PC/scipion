@@ -99,7 +99,6 @@ class Tester:
         self.addProgram("xmipp_ctf_estimate_from_micrograph")
         self.addTest("--micrograph input/Protocol_Preprocess_Micrographs/Micrographs/01nov26b.001.001.001.002.mrc --oroot %o/micrograph --dont_estimate_ctf")
         self.addTest("--micrograph input/Protocol_Preprocess_Micrographs/Micrographs/01nov26b.001.001.001.002.mrc --oroot %o/micrograph --sampling_rate 1.4 --voltage 200 --spherical_aberration 2.5")
-        self.addTest("--micrograph input/Protocol_Preprocess_Micrographs/Micrographs/01nov26b.001.001.001.002.mrc --oroot %o/micrograph --sampling_rate 1.4 --voltage 200 --spherical_aberration 2.5 --defocusU -15000 --mode regions --pieceDim 1024 --Nsubpiece 5")
 
         self.addProgram("xmipp_ctf_estimate_from_psd")
         self.addTest("--psd down1_01nov26b.001.001.001.002_Periodogramavg.psd --sampling_rate 1.4 --voltage 200 --spherical_aberration 2.5 --defocusU -15000",False,
