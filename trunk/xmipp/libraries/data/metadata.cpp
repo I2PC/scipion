@@ -1436,11 +1436,11 @@ inline double MDRandGenerator::getRandValue()
 {
     switch (mode)
     {
-    case UNIFORM:
+    case GTOR_UNIFORM:
         return rnd_unif(op1, op2);
-    case GAUSSIAN:
+    case GTOR_GAUSSIAN:
         return rnd_gaus(op1, op2);
-    case STUDENT:
+    case GTOR_STUDENT:
         return rnd_student_t(op3, op1, op2);
     }
 }
@@ -1457,11 +1457,11 @@ MDRandGenerator::MDRandGenerator(double op1, double op2, const String &mode, dou
     this->op2 = op2;
     this->op3 = op3;
     if (mode == "uniform")
-        this->mode = UNIFORM;
+        this->mode = GTOR_UNIFORM;
     else if (mode == "gaussian")
-        this->mode = GAUSSIAN;
+        this->mode = GTOR_GAUSSIAN;
     else if (mode == "student")
-        this->mode = STUDENT;
+        this->mode = GTOR_STUDENT;
     else
         REPORT_ERROR(ERR_PARAM_INCORRECT, formatString("Unknown random type '%s'", mode.c_str()));
 

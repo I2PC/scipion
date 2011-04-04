@@ -798,7 +798,7 @@ public:
 ;//end of class MDValueGenerator
 
 ///////// Some concrete generators ////////////////
-typedef enum { UNIFORM, GAUSSIAN, STUDENT } RandMode;
+typedef enum { GTOR_UNIFORM, GTOR_GAUSSIAN, GTOR_STUDENT } RandMode;
 
 /** MDGenerator to generate random values on columns */
 class MDRandGenerator: public MDValueGenerator
