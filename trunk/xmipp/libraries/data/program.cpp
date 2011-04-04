@@ -272,7 +272,13 @@ void XmippProgram::addExampleLine(const char * example, bool verbatim)
 }
 void XmippProgram::addSeeAlsoLine(const char * seeAlso)
 {
-    progDef->seeAlso = seeAlso;
+	if (progDef->seeAlso=="")
+		progDef->seeAlso = seeAlso;
+	else
+	{
+		progDef->seeAlso +=", ";
+		progDef->seeAlso +=seeAlso;
+	}
 }
 
 void XmippProgram::clearUsage()
