@@ -28,6 +28,7 @@
 
 #include "image.h"
 #include "metadata.h"
+#include "program.h"
 #include <map>
 
 /**@defgroup CTFSupport CTF support classes
@@ -285,13 +286,15 @@ public:
         to false*/
     void readFromMetadataRow(const MetaData &MD, size_t id, bool disable_if_not_K=true);
 
-
     /** Write to file.
         An exception is thrown if the file cannot be open.*/
     void write(const FileName &fn);
 
-    /// Usage
-    void Usage();
+    /// Define parameters in the command line
+    static void defineParams(XmippProgram * program);
+
+    /// Read parameters from the command line
+    void readParams(XmippProgram * program);
 
     /// Show
     friend std::ostream & operator << (std::ostream &out, const CTFDescription &ctf);

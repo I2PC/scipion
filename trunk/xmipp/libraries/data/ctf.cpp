@@ -265,7 +265,6 @@ void CTFDescription::read(const FileName &fn, bool disable_if_not_K)
                     disable_if_not_K)
                     enable_CTFnoise = false;
             }
-
         }
         catch (XmippError XE)
         {
@@ -323,42 +322,64 @@ void CTFDescription::write(const FileName &fn)
     MD.write(fn);
 }
 
-/* Usage ------------------------------------------------------------------- */
-void CTFDescription::Usage()
+/* Define Params ------------------------------------------------------------------- */
+void CTFDescription::defineParams(XmippProgram * program)
 {
-    std::cerr << "  [defocusU=<DeltafU>]              : Defocus in Angstroms (Ex: -800)\n"
-    << "  [defocusV=<DeltafV=DeltafU>]      : If astigmatism\n"
-    << "  [azimuthal_angle=<ang=0>]         : Angle between X and U (degrees)\n"
-    << "  [sampling_rate=<Tm=1>]            : Angstroms/pixel\n"
-    << "  [voltage=<kV=100>]                : Accelerating voltage (kV)\n"
-    << "  [spherical_aberration=<Cs=0>]     : Milimiters. Ex: 5.6\n"
-    << "  [chromatic_aberration=<Ca=0>]     : Milimiters. Ex: 2\n"
-    << "  [energy_loss=<espr=0>]            : eV. Ex: 1\n"
-    << "  [lens_stability=<ispr=0>]         : ppm. Ex: 1\n"
-    << "  [convergence_cone=<alpha=0>]      : mrad. Ex: 0.5\n"
-    << "  [longitudinal_displace=<DeltaF=0>]: Angstrom. Ex: 100\n"
-    << "  [transversal_displace=<DeltaR=0>] : Angstrom. Ex: 3\n"
-    << "  [Q0=<Q0=0>]                       : Percentage of cosine\n"
-    << "  [K=<K=1>]                         : Global gain\n"
-    << std::endl
-    << "  [base_line=<b=0>]                 : Global base line\n"
-    << "  [gaussian_K=<K=0>]                : Gaussian gain\n"
-    << "  [sigmaU=<s=0>]                    : Gaussian width\n"
-    << "  [sigmaV=<s=0>]                    : if astigmatism\n"
-    << "  [cU=<s=0>]                        : Gaussian center (in cont. freq)\n"
-    << "  [cV=<s=0>]                        : if astigmatism\n"
-    << "  [gaussian_angle=<ang=0>]          : Angle between X and U (degrees)\n"
-    << "  [sqrt_K=<K=0>]                    : Square root gain\n"
-    << "  [sqU=<sqU=0>]                     : Square root width\n"
-    << "  [sqV=<sqV=0>]                     : if astigmatism\n"
-    << "  [sqrt_angle=<ang=0>]              : Angle between X and U (degrees)\n"
-    << "  [gaussian_K2=<K=0>]               : Second Gaussian gain\n"
-    << "  [sigmaU2=<s=0>]                   : Second Gaussian width\n"
-    << "  [sigmaV2=<s=0>]                   : if astigmatism\n"
-    << "  [cU2=<s=0>]                       : Second Gaussian center (in cont. freq)\n"
-    << "  [cV2=<s=0>]                       : if astigmatism\n"
-    << "  [gaussian_angle2=<ang=0>]         : Angle between X and U (degrees)\n"
-    ;
+    program->addParamsLine("== CTF description");
+    program->addParamsLine("  [--ctf_similar_to <ctfFile>]          : ctfparam file");
+    program->addParamsLine("                                        :+Parameters from this file are ");
+    program->addParamsLine("                                        :+overriden by the parameters in the command line");
+    program->addParamsLine("  [--sampling_rate <Tm=1>]              : Angstroms/pixel. Ex: 1.4");
+    program->addParamsLine("  [--voltage <kV>]                      : Accelerating voltage (kV). Ex: 200");
+    program->addParamsLine("     alias --kV;");
+    program->addParamsLine("  [--spherical_aberration <Cs>]         : Milimiters. Ex: 5.6");
+    program->addParamsLine("     alias --Cs;");
+    program->addParamsLine("  [--defocusU <DeltafU>]                : Defocus in Angstroms (Ex: -2000)");
+    program->addParamsLine("  [++--defocusV <DeltafV>]              : If astigmatic");
+    program->addParamsLine("  [++--azimuthal_angle <ang=0>]         : Angle between X and U (degrees)");
+    program->addParamsLine("  [++--chromatic_aberration <Ca=0>]     : Milimiters. Ex: 2");
+    program->addParamsLine("  [++--energy_loss <espr=0>]            : eV. Ex: 1");
+    program->addParamsLine("  [++--lens_stability <ispr=0>]         : ppm. Ex: 1");
+    program->addParamsLine("  [++--convergence_cone <alpha=0>]      : mrad. Ex: 0.5");
+    program->addParamsLine("  [++--longitudinal_displace <DeltaF=0>]: Angstrom. Ex: 100");
+    program->addParamsLine("  [++--transversal_displace <DeltaR=0>] : Angstrom. Ex: 3");
+    program->addParamsLine("  [++--Q0 <Q0=0>]                       : Percentage of cosine");
+    program->addParamsLine("  [++--K <K=1>]                         : Global gain");
+}
+
+/* Read from command line -------------------------------------------------- */
+void CTFDescription::readParams(XmippProgram * program)
+{
+    kV=Tm=Cs=0;
+    if (program->checkParam("--ctf_similar_to"))
+        read(program->getParam("--ctf_similar_to"));
+    if (program->checkParam("--sampling_rate"))
+        Tm=program->getDoubleParam("--sampling_rate");
+    if (Tm==0)
+        REPORT_ERROR(ERR_ARG_MISSING,"--sampling_rate");
+    if (program->checkParam("--voltage"))
+        kV=program->getDoubleParam("--voltage");
+    if (kV==0)
+        REPORT_ERROR(ERR_ARG_MISSING,"--voltage");
+    if (program->checkParam("--spherical_aberration"))
+        Cs=program->getDoubleParam("--spherical_aberration");
+    if (Cs==0)
+        REPORT_ERROR(ERR_ARG_MISSING,"--spherical_aberration");
+    if (program->checkParam("--defocusU"))
+    	DeltafU=program->getDoubleParam("--defocusU");
+    if (program->checkParam("--defocusV"))
+    	DeltafV=program->getDoubleParam("--defocusV");
+    else
+    	DeltafV=DeltafU;
+    azimuthal_angle=program->getDoubleParam("--azimuthal_angle");
+    Ca=program->getDoubleParam("--chromatic_aberration");
+    espr=program->getDoubleParam("--energy_loss");
+    ispr=program->getDoubleParam("--lens_stability");
+    alpha=program->getDoubleParam("--convergence_cone");
+    DeltaF=program->getDoubleParam("--longitudinal_displace");
+    DeltaR=program->getDoubleParam("--transversal_displace");
+    Q0=program->getDoubleParam("--Q0");
+    K=program->getDoubleParam("-K");
 }
 
 /* Show -------------------------------------------------------------------- */
@@ -366,7 +387,8 @@ std::ostream & operator << (std::ostream &out, const CTFDescription &ctf)
 {
     if (ctf.enable_CTF)
     {
-        out << "sampling_rate=        " << ctf.Tm              << std::endl
+        out
+        << "sampling_rate=        " << ctf.Tm              << std::endl
         << "voltage=              " << ctf.kV              << std::endl
         << "defocusU=             " << ctf.DeltafU         << std::endl
         << "defocusV=             " << ctf.DeltafV         << std::endl
@@ -384,7 +406,8 @@ std::ostream & operator << (std::ostream &out, const CTFDescription &ctf)
     }
     if (ctf.enable_CTFnoise)
     {
-        out << "gaussian_K=           " << ctf.gaussian_K      << std::endl
+        out
+        << "gaussian_K=           " << ctf.gaussian_K      << std::endl
         << "sigmaU=               " << ctf.sigmaU          << std::endl
         << "sigmaV=               " << ctf.sigmaV          << std::endl
         << "cU=                   " << ctf.cU              << std::endl
@@ -489,15 +512,15 @@ void CTFDescription::precomputeValues(const MultidimArray<double> &cont_x_freq,
 
     FOR_ALL_ELEMENTS_IN_ARRAY2D(cont_x_freq)
     {
-    	double X=A2D_ELEM(cont_x_freq,i,j);
-    	double Y=A2D_ELEM(cont_y_freq,i,j);
+        double X=A2D_ELEM(cont_x_freq,i,j);
+        double Y=A2D_ELEM(cont_y_freq,i,j);
         precomputeValues(X, Y);
         if (ABS(X) < XMIPP_EQUAL_ACCURACY &&
             ABS(Y) < XMIPP_EQUAL_ACCURACY)
             precomputed.deltaf=0;
         else
-        	precomputed.deltaf=-1;
-    	precomputedImage.push_back(precomputed);
+            precomputed.deltaf=-1;
+        precomputedImage.push_back(precomputed);
     }
 }
 
@@ -541,6 +564,7 @@ void CTFDescription::zero(int n, const Matrix1D<double> &u, Matrix1D<double> &fr
 
         std::cout << " final w= " << w << " final freq=" << freq.transpose() << std::endl;
 #endif
+
     }
 }
 #undef DEBUG
