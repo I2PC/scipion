@@ -58,7 +58,7 @@ void geo2TransformationMatrix(const MDRow &imageGeo, Matrix2D<double> &A,
         double rot = 0., tilt = 0., shiftZ = 0.;
         imageGeo.getValue(MDL_ANGLEROT, rot);
         imageGeo.getValue(MDL_ANGLETILT, tilt);
-        imageGeo.getValue(MDL_SHIFTZ, shiftY);
+        imageGeo.getValue(MDL_SHIFTZ, shiftZ);
         Euler_angles2matrix(rot, tilt, psi, A, true);
         MAT_ELEM(A, 2, dim) = shiftZ;
     }
