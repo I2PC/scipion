@@ -49,7 +49,7 @@ else
 
 ${cursor}
 
-}  // namespace ${name}</template><template autoinsert="true" context="org.eclipse.cdt.ui.text.templates.c" deleted="false" description="create new object" enabled="true" id="org.eclipse.cdt.ui.text.templates.cpp.new" name="new">${type} ${name} = new ${type}(${arguments});</template><template autoinsert="true" context="org.eclipse.cdt.ui.text.templates.c" deleted="false" description="XMIPP ERROR" enabled="true" name="REPORT_ERROR">REPORT_ERROR(${var},"${cursor}");</template><template autoinsert="true" context="org.eclipse.cdt.ui.text.templates.c" deleted="false" description="switch case statement" enabled="true" id="org.eclipse.cdt.ui.text.templates.c.switch" name="switch">switch (${key}) 
+}  // namespace ${name}</template><template autoinsert="true" context="org.eclipse.cdt.ui.text.templates.c" deleted="false" description="create new object" enabled="true" id="org.eclipse.cdt.ui.text.templates.cpp.new" name="new">${type} ${name} = new ${type}(${arguments});</template><template autoinsert="true" context="org.eclipse.cdt.ui.text.templates.c" deleted="false" description="XMIPP ERROR" enabled="true" name="REPORT_ERROR">REPORT_ERROR(${var},"${cursor}");</template><template autoinsert="true" context="org.eclipse.cdt.ui.text.templates.c" deleted="false" description="print to standard output" enabled="true" id="org.eclipse.cdt.ui.text.templates.c.printf" name="stdout">printf(${cursor});</template><template autoinsert="true" context="org.eclipse.cdt.ui.text.templates.c" deleted="false" description="switch case statement" enabled="true" id="org.eclipse.cdt.ui.text.templates.c.switch" name="switch">switch (${key}) 
 {
 	case ${value}:
 		${cursor}
@@ -63,4 +63,4 @@ ${cursor}
 catch (${Exception} e) 
 {
 }</template><template autoinsert="true" context="org.eclipse.cdt.ui.text.templates.c" deleted="false" description="using a namespace" enabled="true" id="org.eclipse.cdt.ui.text.templates.cpp.using" name="using">using namespace ${name};
-</template></templates>
+</template><template autoinsert="true" context="org.eclipse.cdt.ui.text.templates.c" deleted="false" description="print a variable to standart error for debugging" enabled="true" name="vcerr">std::cerr &lt;&lt; "DEBUG_JM: ${var}: " &lt;&lt; ${var} &lt;&lt; std::endl;</template></templates>
