@@ -24,66 +24,10 @@
  ***************************************************************************/
 
 #include <reconstruction/ctf_estimate_from_micrograph.h>
-#include <data/args.h>
 
-/****************************************************************************
-
-   NAME:        Usage function
-
-   DESCRIPTION: Show program usage
-
-   INPUT:
-
-   OUTPUT:      Values are shown in standar output
-
-****************************************************************************/
-void Usage()
-{
-    std::cerr << "This program generates and assigns a CTF to a selfile of particles.\n"
-    << "   -i <parameters file>         : Name of the file of parameters with all info for the program.\n"
-    ;
-}
-
-/****************************************************************************
-
-   NAME:        main
-
-   DESCRIPTION: This program calculates and assings a CTF for every particle
-       picked in a micrograph
-
-   INPUT:
-
-   OUTPUT:
-
-****************************************************************************/
 int main(int argc, char *argv[])
 {
-    Prog_assign_CTF_prm     prm;
-
-    /*****************************************************************************
-       Check the command line and get the parameters
-    /*****************************************************************************/
-    try
-    {
-        // Read the file with all the program parameters
-        prm.read(getParameter(argc, argv, "-i"));
-    }
-    catch (XmippError &XE)
-    {
-        std::cout << XE;
-        Usage();
-        exit(1);
-    }
-
-    try
-    {
-        prm.process();
-    }
-    catch (XmippError &XE)
-    {
-        std::cout << XE;
-        exit(1);
-    }
+    ProgCTFEstimateFromMicrograph prm;
+    prm.read(argc,argv);
+    return prm.tryRun();
 }
-
-/* Menus ------------------------------------------------------------------- */

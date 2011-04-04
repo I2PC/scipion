@@ -23,31 +23,10 @@
  *  e-mail address 'xmipp@cnb.csic.es'                                  
  ***************************************************************************/
 
-#include <data/args.h>
 #include <reconstruction/ctf_estimate_from_psd.h>
 
 int main (int argc,char *argv[]) {
-   Adjust_CTF_Parameters      prog_prm;
-   FileName                   fn_in;
-
-   try 
-   {
-       fn_in=getParameter(argc,argv,"-i");
-       prog_prm.read(fn_in);
-   }
-   catch (XmippError &XE)
-   {
-       std::cout << XE; prog_prm.Usage(); exit(1);
-   }
-
-   try
-   {
-      CTFDescription ctfmodel;
-      ROUT_Adjust_CTF(prog_prm,ctfmodel);
-   }
-   catch (XmippError XE)
-   {
-   std::cout << XE;
-   }
-   return 0;
+   ProgCTFEstimateFromPSD prog_prm;
+   prog_prm.read(argc,argv);
+   return prog_prm.tryRun();
 }
