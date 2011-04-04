@@ -51,6 +51,8 @@ public:
     FileName                fn_pos;
     /// Micrograph filename
     FileName                fn_micrograph;
+    /// Output rootname
+    FileName                fn_root;
     /// Partition mode
     TPSD_mode               psd_mode;
     /// Dimension of micrograph pieces

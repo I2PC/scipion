@@ -75,8 +75,11 @@ public:
     /// Model simplification
     int                  modelSimplification;
 public:
-    /// Read parameters from file
+    /// Read parameters
     void readParams();
+
+    /// Read parameters
+    void readBasicParams(XmippProgram *program);
 
     /// Show parameters
     void show();

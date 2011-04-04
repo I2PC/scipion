@@ -462,19 +462,16 @@ void assign_parameters_from_CTF(CTFDescription &ctfmodel, double *p,
                                global_prm->modelSimplification);
 
 /* Read parameters --------------------------------------------------------- */
-void ProgCTFEstimateFromPSD::readParams()
-{
-    if (checkParam("--psd"))
-        fn_psd=getParam("--psd");
-    show_optimization = checkParam("--show_optimization");
-    min_freq = getDoubleParam("--min_freq");
-    max_freq = getDoubleParam("--max_freq");
-    defocus_range = getDoubleParam("--defocus_range");
-    modelSimplification = getIntParam("--model_simplification");
-    bootstrap = checkParam("--bootstrapFit");
-    ctfmodelSize = getIntParam("--ctfmodelSize");
-    enhanced_weight = getDoubleParam("--enhance_weight");
-    if (!checkParam("--enhance_min_freq"))
+void ProgCTFEstimateFromPSD::readBasicParams(XmippProgram *program) {
+    show_optimization = program->checkParam("--show_optimization");
+    min_freq = program->getDoubleParam("--min_freq");
+    max_freq = program->getDoubleParam("--max_freq");
+    defocus_range = program->getDoubleParam("--defocus_range");
+    modelSimplification = program->getIntParam("--model_simplification");
+    bootstrap = program->checkParam("--bootstrapFit");
+    ctfmodelSize = program->getIntParam("--ctfmodelSize");
+    enhanced_weight = program->getDoubleParam("--enhance_weight");
+    if (!program->checkParam("--enhance_min_freq"))
     {
         if (max_freq > 0.35)
             f1 = 0.01;
@@ -482,8 +479,8 @@ void ProgCTFEstimateFromPSD::readParams()
             f1 = 0.02;
     }
     else
-    	f1=getDoubleParam("--enhance_min_freq");
-    if (!checkParam("--enhance_max_freq"))
+    	f1=program->getDoubleParam("--enhance_min_freq");
+    if (!program->checkParam("--enhance_max_freq"))
     {
         if (max_freq > 0.35)
             f2 = 0.08;
@@ -491,11 +488,17 @@ void ProgCTFEstimateFromPSD::readParams()
             f2 = 0.15;
     }
     else
-    	f2=getDoubleParam("--enhance_max_freq");
+    	f2=program->getDoubleParam("--enhance_max_freq");
 
     initial_ctfmodel.enable_CTF = initial_ctfmodel.enable_CTFnoise = true;
-    initial_ctfmodel.readParams(this);
+    initial_ctfmodel.readParams(program);
     Tm = initial_ctfmodel.Tm;
+}
+
+void ProgCTFEstimateFromPSD::readParams()
+{
+    fn_psd=getParam("--psd");
+	readBasicParams(this);
 }
 
 /* Show -------------------------------------------------------------------- */

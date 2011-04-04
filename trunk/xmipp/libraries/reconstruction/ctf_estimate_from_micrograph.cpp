@@ -37,6 +37,9 @@
 void ProgCTFEstimateFromMicrograph::readParams()
 {
     fn_micrograph=getParam("--micrograph");
+    fn_root=getParam("--oroot");
+    if (fn_root=="")
+    	fn_root=fn_micrograph.withoutExtension();
     pieceDim = getIntParam("--pieceDim");
     if (getParam("--psd_estimator")=="periodogram")
         PSDEstimator_mode = Periodogram;
@@ -59,7 +62,7 @@ void ProgCTFEstimateFromMicrograph::readParams()
     }
     estimate_ctf=!checkParam("--dont_estimate_ctf");
     if (estimate_ctf)
-        prmEstimateCTFFromPSD.readParams();
+        prmEstimateCTFFromPSD.readBasicParams(this);
     bootstrapN     = getIntParam("--bootstrapFit");
 }
 
@@ -67,6 +70,9 @@ void ProgCTFEstimateFromMicrograph::defineParams()
 {
     addUsageLine("Estimate the CTF from a micrograph.");
     addParamsLine("   --micrograph <file>         : File with the micrograph");
+    addParamsLine("  [--oroot <rootname=\"\">]    : Rootname for output");
+    addParamsLine("                               : If not given, the micrograph without extensions is taken");
+    addParamsLine("                               :++ rootname.psd or .psdstk contains the PSD or PSDs");
     addParamsLine("==+ PSD estimation");
     addParamsLine("  [--psd_estimator <method=periodogram>] : Method for estimating the PSD");
     addParamsLine("         where <method>");
@@ -229,7 +235,6 @@ void ProgCTFEstimateFromMicrograph::run()
     std::cerr << "Computing models of each piece ...\n";
 
     // Prepare these filenames in case they are needed
-    FileName fn_root= fn_micrograph.withoutExtension();
     FileName fn_psd;
     if (psd_mode==OnePerMicrograph)
         fn_psd=fn_root+".psd";
