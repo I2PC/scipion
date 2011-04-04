@@ -1036,7 +1036,7 @@ double CTF_fitness(double *p, void *)
             std::cout << "Too large defocus\n";
         return global_heavy_penalization;
     }
-    if (global_prm->initial_ctfmodel.DeltafU != 0)
+    if (global_prm->initial_ctfmodel.DeltafU != 0 && global_action>=3)
     {
         // If there is an initial model, the true solution
         // cannot be too far
