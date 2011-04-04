@@ -88,7 +88,6 @@ void Second_Quadrant_Neighbors(int N, int M, MultidimArray<double> &Neighbors)
     }
 }
 
-
 // Compute ARMA model ------------------------------------------------------
 void CausalARMA(MultidimArray<double> &Img, ARMA_parameters &prm)
 {
