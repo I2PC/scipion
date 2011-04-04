@@ -89,7 +89,7 @@ void ProgCTFEstimateFromMicrograph::defineParams()
     addParamsLine("                              :++ Note that this is not the same as defining a smaller pieceDim. ");
     addParamsLine("                              :++ Defining a smaller pieceDim, would result in a small PSD, while ");
     addParamsLine("                              :++ subdividing the piece results in a large PSD, although smoother.");
-    addParamsLine("  [--mode <mode=micrograph>]");
+    addParamsLine("  [--mode <mode=micrograph>]  : How many PSDs are to be estimated");
     addParamsLine("         where <mode>");
     addParamsLine("                  micrograph  : Single PSD for the whole micrograph");
     addParamsLine("                  regions <file> : The micrograph is divided into a region grid ");
