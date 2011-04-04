@@ -1919,7 +1919,7 @@ void Prog_VQ_prm::alignInputImages(const FileName &fnSF, int rank, int Nprocesso
 {
     MetaData SFBlock;
     StringVector blockList;
-    getBlocksAvailableInMetaData(fnSF,blockList);
+    getBlocksInMetaDataFile(fnSF,blockList);
     int bmax=blockList.size();
     int currentIdx=0;
     FileName fnImgIn, fnImgOut, fnClass;
