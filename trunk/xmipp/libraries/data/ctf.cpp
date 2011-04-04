@@ -329,7 +329,7 @@ void CTFDescription::defineParams(XmippProgram * program)
     program->addParamsLine("  [--ctf_similar_to++ <ctfFile>]        : ctfparam file");
     program->addParamsLine("                                        : Parameters from this file are ");
     program->addParamsLine("                                        : overriden by the parameters in the command line");
-    program->addParamsLine("  --sampling_rate <Tm=1>                : Angstroms/pixel. Ex: 1.4");
+    program->addParamsLine("  --sampling_rate <Tm>                  : Angstroms/pixel. Ex: 1.4");
     program->addParamsLine("  --voltage <kV>                        : Accelerating voltage (kV). Ex: 200");
     program->addParamsLine("     alias --kV;");
     program->addParamsLine("  --spherical_aberration <Cs>           : Milimiters. Ex: 5.6");
@@ -379,7 +379,7 @@ void CTFDescription::readParams(XmippProgram * program)
     DeltaF=program->getDoubleParam("--longitudinal_displace");
     DeltaR=program->getDoubleParam("--transversal_displace");
     Q0=program->getDoubleParam("--Q0");
-    K=program->getDoubleParam("-K");
+    K=program->getDoubleParam("--K");
 }
 
 /* Show -------------------------------------------------------------------- */
