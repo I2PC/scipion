@@ -26,7 +26,7 @@
 #include "program_extension.h"
 
 //Needed includes for instanciate programs
-#include "fourier_filter.h"
+#include "data/filters.h"
 #include "angular_project_library.h"
 #include "angular_discrete_assign.h"
 #include "convert_pdb2vol.h"
@@ -53,8 +53,8 @@ int runProgram(const String &programName, const String &arguments)
 
 XmippProgram * getProgramByName(const String &programName)
 {
-  if (programName == "xmipp_fourier_filter")
-    return new FourierFilter();
+//  if (programName == "xmipp_tranform_filter")
+//    return new ProgFilter();
 
   if (programName == "xmipp_convert_pdb2vol")
     return new ProgPdbConverter();

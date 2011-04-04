@@ -27,9 +27,8 @@
 #define _FOURIER_FILTER_HH
 
 #include <data/ctf.h>
-#include <data/multidim_array.h>
 #include <data/fftw.h>
-#include <data/program.h>
+#include <data/filters.h>
 
 /**@defgroup FourierMasks Masks in Fourier space
    @ingroup ReconsLibrary */
@@ -53,7 +52,7 @@
    For volumes you the mask is computed on the fly and
    in this way memory is saved (unless do_generate_3dmask == true).
 */
-class FourierFilter: public XmippMetadataProgram
+class FourierFilter: public XmippFilter
 {
 public:
 #define RAISED_COSINE 1
@@ -94,18 +93,18 @@ public:
 
     /** Flag to generate 3D mask */
     bool do_generate_3dmask;
-protected:
+
+public:
     /** Define parameters */
-    void defineParams();
+    static void defineParams(XmippProgram * program);
 
     /** Read parameters from command line.
         If a CTF description file is provided it is read. */
-    void readParams();
+    void readParams(XmippProgram * program);
 
     /** Process one image */
-    void processImage(const FileName &fnImg, const FileName &fnImgOut, size_t objId);
+    void apply(MultidimArray<double> &img);
 
-public:
     /** Empty constructor */
     FourierFilter();
 

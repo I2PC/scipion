@@ -1306,4 +1306,34 @@ void pixelDesvFilter(MultidimArray< T > &V, double thresFactor)
 /** Compute edges with Sobel */
 void computeEdges (const MultidimArray <double>& vol, MultidimArray<double> &vol_edge);
 
+
+/** Abstract class that will be the base for all filters */
+class XmippFilter
+{
+public:
+  virtual void apply(MultidimArray<double> &img) = 0;
+
+  /** Virtual destructor */
+  virtual ~XmippFilter(){};
+};
+
+/** Some concrete filters */
+/** Apply filter on bad pixels */
+typedef enum {BADPIXEL_NEGATIVE, BADPIXEL_MASK, BADPIXEL_OUTLIER } BadPixelFilterType;
+
+class BadPixelFilter: public XmippFilter
+{
+public:
+  BadPixelFilterType type; //type of filter
+  double factor;    //for the case of outliers bad pixels
+  Image<char> *mask; //for the case of mask bad pixels
+
+  /** Define the parameters for use inside an Xmipp program */
+  static void defineParams(XmippProgram * program);
+  /** Read from program command line */
+  void readParams(XmippProgram * program);
+  /** Apply the filter to an image or volume*/
+  void apply(MultidimArray<double> &img);
+};
+
 #endif

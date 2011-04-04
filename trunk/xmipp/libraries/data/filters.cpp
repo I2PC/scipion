@@ -184,7 +184,7 @@ void substractBackgroundRollingBall(MultidimArray<double> &I, int radius)
 
 /* Detect background ------------------------------------------------------ */
 void detectBackground(const MultidimArray<double> &vol, MultidimArray<double> &mask,
-                       double alpha,double &final_mean)
+                      double alpha,double &final_mean)
 {
 
     // 2.1.-Background detection------------------------------------------
@@ -322,8 +322,8 @@ typedef struct
 Coordinate2D;
 
 void regionGrowing2D(const MultidimArray<double> &I_in, MultidimArray<double> &I_out,
-                      int i, int j,
-                      float stop_colour, float filling_colour, bool less, int neighbourhood)
+                     int i, int j,
+                     float stop_colour, float filling_colour, bool less, int neighbourhood)
 {
     I_in.checkDimension(2);
 
@@ -353,19 +353,19 @@ void regionGrowing2D(const MultidimArray<double> &I_in, MultidimArray<double> &I
 
 #define CHECK_POINT(i,j) \
     { \
-		int I=i; \
+  int I=i; \
         int J=j; \
-		if (INSIDEXY(I_out,J,I))  { \
-		 double pixel=A2D_ELEM(I_out,I,J);\
-			if (pixel!=filling_colour) \
-				if ((less && pixel < stop_colour) || \
-					(!less && pixel > stop_colour)) { \
-					coord.ii=I; \
-					coord.jj=J; \
-					A2D_ELEM (I_out,coord.ii,coord.jj)=filling_colour; \
-					iNeighbours.push_front(coord); \
-				} \
-		} \
+  if (INSIDEXY(I_out,J,I))  { \
+   double pixel=A2D_ELEM(I_out,I,J);\
+   if (pixel!=filling_colour) \
+    if ((less && pixel < stop_colour) || \
+     (!less && pixel > stop_colour)) { \
+     coord.ii=I; \
+     coord.jj=J; \
+     A2D_ELEM (I_out,coord.ii,coord.jj)=filling_colour; \
+     iNeighbours.push_front(coord); \
+    } \
+  } \
     }
 
         /* Make the exploration of the pixel's neighbours */
@@ -393,8 +393,8 @@ typedef struct
 Coordinate3D;
 
 void regionGrowing3D(const MultidimArray<double> &V_in, MultidimArray<double> &V_out,
-                      int k, int i, int j,
-                      float stop_colour, float filling_colour, bool less)
+                     int k, int i, int j,
+                     float stop_colour, float filling_colour, bool less)
 {
     V_in.checkDimension(3);
 
@@ -428,23 +428,23 @@ void regionGrowing3D(const MultidimArray<double> &V_in, MultidimArray<double> &V
         lower than stop_colour, its filled with filling colour and added to the
         list for exploring its neighbours */
 #define CHECK_POINT_3D(k,i,j) \
-	{\
-	    int I=i; \
+ {\
+     int I=i; \
         int J=j; \
         int K=k; \
-		if (INSIDEXYZ(V_out,J,I,K))  { \
-		 double voxel=A3D_ELEM(V_out,K,I,J); \
-			if (voxel!=filling_colour) \
-				if ((less && voxel < stop_colour)|| \
-					(!less &&voxel > stop_colour)) { \
-					coord.ii=I; \
-					coord.jj=J; \
-					coord.kk=K; \
-					A3D_ELEM (V_out,coord.kk,coord.ii,coord.jj)=filling_colour; \
-					iNeighbours.push_front(coord); \
-				} \
-		}\
-	}
+  if (INSIDEXYZ(V_out,J,I,K))  { \
+   double voxel=A3D_ELEM(V_out,K,I,J); \
+   if (voxel!=filling_colour) \
+    if ((less && voxel < stop_colour)|| \
+     (!less &&voxel > stop_colour)) { \
+     coord.ii=I; \
+     coord.jj=J; \
+     coord.kk=K; \
+     A3D_ELEM (V_out,coord.kk,coord.ii,coord.jj)=filling_colour; \
+     iNeighbours.push_front(coord); \
+    } \
+  }\
+ }
 
         /* Make the exploration of the pixel neighbours */
         CHECK_POINT_3D(iCurrentk  , iCurrenti  , iCurrentj - 1);
@@ -477,7 +477,7 @@ void regionGrowing3D(const MultidimArray<double> &V_in, MultidimArray<double> &V
 }
 
 void distanceTransform(const MultidimArray<int> &in,
-                        MultidimArray<int> &out, bool wrap)
+                       MultidimArray<int> &out, bool wrap)
 {
     std::list<int> toExplore;   /* A list of points to explore */
 
@@ -541,7 +541,7 @@ void distanceTransform(const MultidimArray<int> &in,
 
 /* Label image ------------------------------------------------------------ */
 int labelImage2D(const MultidimArray<double> &I, MultidimArray<double> &label,
-                  int neighbourhood)
+                 int neighbourhood)
 {
     I.checkDimension(2);
 
@@ -584,7 +584,7 @@ int labelImage3D(const MultidimArray<double> &V, MultidimArray<double> &label)
 
 /* Remove small components ------------------------------------------------- */
 void removeSmallComponents(MultidimArray<double> &I, int size,
-                             int neighbourhood)
+                           int neighbourhood)
 {
     I.checkDimension(2);
 
@@ -599,7 +599,7 @@ void removeSmallComponents(MultidimArray<double> &I, int size,
 
 /* Keep biggest component -------------------------------------------------- */
 void keepBiggestComponent(MultidimArray<double> &I, double percentage,
-                            int neighbourhood)
+                          int neighbourhood)
 {
     I.checkDimension(2);
 
@@ -856,7 +856,7 @@ void EntropyOtsuSegmentation(MultidimArray<double> &V, double percentil)
 
 /* Best shift -------------------------------------------------------------- */
 void bestShift(const MultidimArray<double> &I1, const MultidimArray<double> &I2,
-                double &shiftX, double &shiftY, const MultidimArray<int> *mask)
+               double &shiftX, double &shiftY, const MultidimArray<int> *mask)
 {
     I1.checkDimension(2);
     I2.checkDimension(2);
@@ -936,7 +936,7 @@ void bestShift(const MultidimArray<double> &I1, const MultidimArray<double> &I2,
 /* Best non-wrapping shift ------------------------------------------------- */
 //#define DEBUG
 void bestNonwrappingShift(const MultidimArray<double> &I1,
-                            const MultidimArray<double> &I2, double &shiftX, double &shiftY)
+                          const MultidimArray<double> &I2, double &shiftX, double &shiftY)
 {
     I1.checkDimension(2);
     I2.checkDimension(2);
@@ -2310,3 +2310,57 @@ void computeEdges (const MultidimArray <double>& vol, MultidimArray<double> &vol
 
     }
 }
+
+
+/////////////// FILTERS IMPLEMENTATIONS /////////////////
+
+/** Define the parameters for use inside an Xmipp program */
+void BadPixelFilter::defineParams(XmippProgram * program)
+{
+  program->addParamsLine(" === Bad pixels ===");
+  program->addParamsLine("   --bad_pixels <type>            : Applied filters on bad pixels of the image.");
+  program->addParamsLine("         where <type>  ");
+  program->addParamsLine("            negative              : Applied at those negative values. Positive values are untouched.");
+  program->addParamsLine("            mask <mask_file>      : Applied at those pixels given by mask.");
+  program->addParamsLine("            outliers <factor>     : Applied at those pixels out of the range [mean - factor*std, mean + factor*std].");
+}
+
+/** Read from program command line */
+void BadPixelFilter::readParams(XmippProgram * program)
+{
+  type = BADPIXEL_NEGATIVE;
+  // Check operation to do
+  String typeStr = program->getParam("--bad_pixels");
+  if (typeStr == "negative")
+      ;//nothing to do type already equal to BADPIXEL_NEGATIVE
+  else if (typeStr == "mask")
+  {
+      mask = new Image<char>;
+      mask->read(program->getParam("--bad_pixels", "mask"));
+      type = BADPIXEL_MASK;
+  }
+  else if (typeStr == "outliers")
+  {
+      factor = program->getDoubleParam("--bad_pixels", "outliers");
+      type = BADPIXEL_OUTLIER;
+  }
+}
+
+/** Apply the filter to an image or volume*/
+void BadPixelFilter::apply(MultidimArray<double> &img)
+{
+  switch (type)
+  {
+    case BADPIXEL_NEGATIVE:
+      forcePositive(img);
+      break;
+    case BADPIXEL_MASK:
+      boundMedianFilter(img, mask->data);
+      break;
+    case BADPIXEL_OUTLIER:
+      pixelDesvFilter(img, factor);
+      break;
+
+  }
+}
+
