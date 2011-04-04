@@ -36,7 +36,7 @@ void QtWidgetPSD::set_assign_CTF_file(Micrograph &m,
     // Read the input assign CTF file
     fn_assign_CTF = _fn_assign_CTF;
     assign_ctf_prm.read(fn_assign_CTF);
-    FileName fn_root = assign_ctf_prm.image_fn.removeAllExtensions();
+    FileName fn_root = assign_ctf_prm.fn_micrograph.removeAllExtensions();
 
     // Check if the CTF is computed at each particle
     if (assign_ctf_prm.compute_at_particle)
@@ -61,13 +61,13 @@ void QtWidgetPSD::set_assign_CTF_file(Micrograph &m,
         FileName fn_avg;
         if (!ctf_mode)
         {
-            if (assign_ctf_prm.PSD_mode == Prog_assign_CTF_prm::ARMA)
+            if (assign_ctf_prm.PSDEstimator_mode == ProgCTFEstimateFromMicrograph::ARMA)
                 fn_avg = fn_root + "_ARMAavg.psd";
             else fn_avg = fn_root + "_Periodogramavg.psd";
         }
         else
         {
-            if (assign_ctf_prm.PSD_mode == Prog_assign_CTF_prm::ARMA)
+            if (assign_ctf_prm.PSDEstimator_mode == ProgCTFEstimateFromMicrograph::ARMA)
                 fn_avg = fn_root + "_ARMAavg.ctfmodel_halfplane";
             else fn_avg = fn_root + "_Periodogramavg.ctfmodel_halfplane";
         }
@@ -78,7 +78,7 @@ void QtWidgetPSD::set_assign_CTF_file(Micrograph &m,
     {
         // The CTF must have been computed by pieces
         FileName PSDfn_root;
-        if (assign_ctf_prm.PSD_mode == Prog_assign_CTF_prm::ARMA)
+        if (assign_ctf_prm.PSDEstimator_mode == ProgCTFEstimateFromMicrograph::ARMA)
             PSDfn_root = fn_root + "_ARMA";
         else PSDfn_root = fn_root + "_Periodogram";
         std::string command;
@@ -90,8 +90,8 @@ void QtWidgetPSD::set_assign_CTF_file(Micrograph &m,
 
         int Ydim, Xdim;
         m.size(Xdim, Ydim);
-        div_NumberX = CEIL((double)Xdim / assign_ctf_prm.N_horizontal);
-        div_NumberY = CEIL((double)Ydim / assign_ctf_prm.N_vertical);
+        div_NumberX = CEIL((double)Xdim / assign_ctf_prm.pieceDim);
+        div_NumberY = CEIL((double)Ydim / assign_ctf_prm.pieceYdim);
     }
     
     // Show the selfile

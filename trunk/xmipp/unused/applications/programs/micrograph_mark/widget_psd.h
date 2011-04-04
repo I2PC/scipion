@@ -62,7 +62,7 @@ public:
                              const FileName &_fn_assign_CTF);
 public:
     // Assign CTF parameters
-    Prog_assign_CTF_prm assign_ctf_prm;
+    ProgCTFEstimateFromMicrograph assign_ctf_prm;
 
     // Filenames to remove when this object is destroyed
     std::vector<FileName> files_to_remove;
