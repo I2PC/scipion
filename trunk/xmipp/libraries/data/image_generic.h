@@ -87,7 +87,7 @@ public:
      */
     void initGeometry(const size_t n = 0)
     {
-        image->MD[n]=ImageBase::staticFields.emptyHeader;
+        image->MD[n]=MDL::emptyHeader;
     }
 
     /** Return geometry row

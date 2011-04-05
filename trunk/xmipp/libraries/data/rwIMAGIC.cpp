@@ -225,7 +225,7 @@ int  ImageBase::readIMAGIC(size_t select_img)
                 MD[i].setValue(MDL_SCALE, daux);
             }
             else
-            	MD[i]=staticFields.emptyHeader;
+            	MD[i]=MDL::emptyHeader;
             j++;
         }
     }

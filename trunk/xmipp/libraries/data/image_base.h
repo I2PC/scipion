@@ -208,35 +208,11 @@ struct ImageFHandler
 
 
 // Image base class
-class ImageBaseStatic
-{
-public:
-	MDRow emptyHeader;
-private:
-	ImageBaseStatic()
-    {
-		emptyHeader.setValue(MDL_ORIGINX,  0.);
-	    emptyHeader.setValue(MDL_ORIGINY,  0.);
-	    emptyHeader.setValue(MDL_ORIGINZ,  0.);
-	    emptyHeader.setValue(MDL_SHIFTX,   0.);
-	    emptyHeader.setValue(MDL_SHIFTY,   0.);
-	    emptyHeader.setValue(MDL_SHIFTZ,   0.);
-	    emptyHeader.setValue(MDL_ANGLEROT, 0.);
-	    emptyHeader.setValue(MDL_ANGLETILT,0.);
-	    emptyHeader.setValue(MDL_ANGLEPSI, 0.);
-	    emptyHeader.setValue(MDL_WEIGHT,   1.);
-	    emptyHeader.setValue(MDL_FLIP,     false);
-	    emptyHeader.setValue(MDL_SCALE,    1.);
-    }
-    friend class ImageBase;
-};
-
 class ImageBase
 {
 public:
     std::vector<MDRow>  MD;                     // data for each subimage
     MDRow               MDMainHeader;           // data for the file
-    static ImageBaseStatic staticFields;
 
 protected:
     FileName            filename;    // File name

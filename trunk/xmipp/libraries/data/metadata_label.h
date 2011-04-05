@@ -233,6 +233,183 @@ enum MDLabelType
     LABEL_NOTYPE = -1, LABEL_INT, LABEL_BOOL, LABEL_DOUBLE, LABEL_FLOAT, LABEL_STRING, LABEL_VECTOR, LABEL_LONG
 };
 
+
+
+/**Just an utility function */
+bool vectorContainsLabel(const std::vector<MDLabel>& labelsVector, const MDLabel label);
+
+//Just an struct to store type and string alias
+class MDLabelData
+{
+public:
+    MDLabelType type;
+    String str;
+    //Default constructor
+    MDLabelData()
+    {
+        type = LABEL_NOTYPE;
+    }
+
+    MDLabelData(MDLabelType t, const String &s)
+    {
+        type = t;
+        str = s;
+    }
+}
+;//close class MDLabelData
+
+/** Union to store values */
+typedef union
+{
+    bool boolValue;
+    int intValue;
+    size_t longintValue;
+    double doubleValue;
+    String * stringValue;
+    std::vector<double> * vectorValue;
+} ObjectData;
+
+/** Class to hold the labels values and type
+ *
+ */
+class MDObject
+{
+public:
+    ObjectData data;
+
+    void labelTypeCheck(MDLabelType checkingType) const;
+    void copy(const MDObject &obj);
+
+    MDLabel label;
+    MDLabelType type;
+    /** Copy constructor */
+    MDObject(const MDObject & obj);
+    /** Assign operator */
+    MDObject & operator = (const MDObject &obj);
+    //Just a simple constructor with the label
+    //dont do any type checking as have not value yet
+    MDObject(MDLabel label);
+    ///Constructors for each Label supported type
+    ///these constructor will do the labels type checking
+    MDObject(MDLabel label, const int &intValue);
+    MDObject(MDLabel label, const double &doubleValue);
+    MDObject(MDLabel label, const bool &boolValue);
+    MDObject(MDLabel label, const String &stringValue);
+    MDObject(MDLabel label, const std::vector<double> &vectorValue);
+    MDObject(MDLabel label, const size_t longintValue);
+    MDObject(MDLabel label, const float &floatValue);
+    MDObject(MDLabel label, const char * &charValue);
+
+    /// Destructor
+    ~MDObject();
+
+    //These getValue also do a compilation type checking
+    //when expanding templates functions and only
+    //will allow the supported types
+    //TODO: think if the type check if needed here
+    void  getValue(int &iv) const;
+    void  getValue(double &dv) const;
+    void  getValue(bool &bv) const;
+    void  getValue(String &sv) const;
+    void  getValue(std::vector<double> &vv) const;
+    void  getValue(size_t &lv) const;
+    void  getValue(float &floatvalue) const;
+    void  getValue(char*  &charvalue) const;
+
+    void  setValue(const int &iv);
+    void  setValue(const double &dv);
+    void  setValue(const bool &bv);
+    void  setValue(const String &sv);
+    void  setValue(const std::vector<double> &vv);
+    void  setValue(const size_t &lv);
+    void  setValue(const float &floatvalue);
+    void  setValue(const char*  &charvalue);
+
+#define DOUBLE2STREAM(d) \
+        if (withFormat) {\
+                (os) << std::setw(12); \
+                (os) << (((d) != 0. && ABS(d) < 0.001) ? std::scientific : std::fixed);\
+            } os << d;
+
+#define INT2STREAM(i) \
+        if (withFormat) os << std::setw(10); \
+        os << i;
+
+    void toStream(std::ostream &os, bool withFormat = false, bool isSql=false) const;
+    String toString(bool withFormat = false, bool isSql=false) const;
+    bool fromStream(std::istream &is);
+    friend std::istream& operator>> (std::istream& is, MDObject &value);
+    friend std::ostream& operator<< (std::ostream& is, MDObject &value);
+    bool fromString(const String &str);
+    bool fromChar(const char * str);
+
+    friend class MDSql;
+}
+; //close class MDValue
+
+/** Explicit instantiation */
+#ifndef __APPLE__
+template class std::vector<MDObject *>
+;
+#endif
+
+/** Class for holding an entire row of posible MDObject */
+class MDRow: public std::vector<MDObject*>
+{
+public:
+    //MDObject & operator [](MDLabel label);
+    /** True if this row contains this label */
+    bool containsLabel(MDLabel label) const;
+
+    /** Get object */
+    MDObject * getObject(MDLabel label);
+
+    /** Get value */
+    template <typename T>
+    bool getValue(MDLabel label, T &d) const
+    {
+        for (const_iterator it = begin(); it != end(); ++it)
+            if ((*it)->label == label)
+            {
+                (*it)->getValue(d);
+                return true;
+            }
+
+        return false;
+    }
+
+    /** Set value */
+    template <typename T>
+    void setValue(MDLabel label, const T &d)
+    {
+        for (const_iterator it = begin(); it != end(); ++it)
+            if ((*it)->label == label)
+            {
+                (*it)->setValue(d);
+                return;
+            }
+        push_back(new MDObject(label, d));
+    }
+
+    /** Copy constructor */
+    MDRow(const MDRow & row);
+
+    /** Empty constructor */
+    MDRow();
+
+    /** Assignment */
+    MDRow& operator = (const MDRow &row);
+
+    /** Destructor */
+    ~MDRow();
+
+    /** Show */
+    friend std::ostream& operator << (std::ostream &out, const MDRow &row);
+
+private:
+    void copy(const MDRow &row);
+};
+
 /** Static class to group some functions with labels.
  * This class holds several function to work with labels.
  * Also performs the static initialization of the labels data.
@@ -266,12 +443,15 @@ public:
     static MDLabelType labelType(const MDLabel label);
     static MDLabelType labelType(const String &labelName);
     static std::map<String, MDLabel>& getLabelDict();
+    static MDRow emptyHeader;
     /** @} */
 
 private:
-    static std::map<MDLabel, MDLabelData> data;
+    //Array of MDLabelData pointers
+    static MDLabelData * data[256];
     static std::map<std::string, MDLabel> names;
     static MDLabelStaticInit initialization; //Just for initialization
+
 
     static void addLabel(MDLabel label, MDLabelType type, const String &name, const String &name2 = "", const String &name3 = "");
 
@@ -462,185 +642,29 @@ private:
         MDL::addLabel(MDL_Z, LABEL_DOUBLE, "Z");
         MDL::addLabel(MDL_ZSCORE, LABEL_DOUBLE, "Zscore");
 
+        //Create an static empty header for image initialization
+        MDL::emptyHeader.setValue(MDL_ORIGINX,  0.);
+        MDL::emptyHeader.setValue(MDL_ORIGINY,  0.);
+        MDL::emptyHeader.setValue(MDL_ORIGINZ,  0.);
+        MDL::emptyHeader.setValue(MDL_SHIFTX,   0.);
+        MDL::emptyHeader.setValue(MDL_SHIFTY,   0.);
+        MDL::emptyHeader.setValue(MDL_SHIFTZ,   0.);
+        MDL::emptyHeader.setValue(MDL_ANGLEROT, 0.);
+        MDL::emptyHeader.setValue(MDL_ANGLETILT,0.);
+        MDL::emptyHeader.setValue(MDL_ANGLEPSI, 0.);
+        MDL::emptyHeader.setValue(MDL_WEIGHT,   1.);
+        MDL::emptyHeader.setValue(MDL_FLIP,     false);
+        MDL::emptyHeader.setValue(MDL_SCALE,    1.);
+
     }
 
     ~MDLabelStaticInit()
-    {}
+    {
+      //Free memory allocated for labels data
+      for (int i = 0; i < 256; ++i)
+        delete MDL::data[i];
+    }
     friend class MDL;
-};
-
-/**Just an utility function */
-bool vectorContainsLabel(const std::vector<MDLabel>& labelsVector, const MDLabel label);
-
-//Just an struct to store type and string alias
-class MDLabelData
-{
-public:
-    MDLabelType type;
-    String str;
-    //Default constructor
-    MDLabelData()
-    {
-        type = LABEL_NOTYPE;
-    }
-
-    MDLabelData(MDLabelType t, const String &s)
-    {
-        type = t;
-        str = s;
-    }
-}
-;//close class MDLabelData
-
-/** Union to store values */
-typedef union
- {
-    bool boolValue;
-    int intValue;
-    size_t longintValue;
-    double doubleValue;
-    String * stringValue;
-    std::vector<double> * vectorValue;
-} ObjectData;
-
-/** Class to hold the labels values and type
- *
- */
-class MDObject
-{
-public:
-  ObjectData data;
-
-    void labelTypeCheck(MDLabelType checkingType) const;
-    void copy(const MDObject &obj);
-
-    MDLabel label;
-    MDLabelType type;
-    /** Copy constructor */
-    MDObject(const MDObject & obj);
-    /** Assign operator */
-    MDObject & operator = (const MDObject &obj);
-    //Just a simple constructor with the label
-    //dont do any type checking as have not value yet
-    MDObject(MDLabel label);
-    ///Constructors for each Label supported type
-    ///these constructor will do the labels type checking
-    MDObject(MDLabel label, const int &intValue);
-    MDObject(MDLabel label, const double &doubleValue);
-    MDObject(MDLabel label, const bool &boolValue);
-    MDObject(MDLabel label, const String &stringValue);
-    MDObject(MDLabel label, const std::vector<double> &vectorValue);
-    MDObject(MDLabel label, const size_t longintValue);
-    MDObject(MDLabel label, const float &floatValue);
-    MDObject(MDLabel label, const char * &charValue);
-
-    /// Destructor
-    ~MDObject();
-
-    //These getValue also do a compilation type checking
-    //when expanding templates functions and only
-    //will allow the supported types
-    //TODO: think if the type check if needed here
-    void  getValue(int &iv) const;
-    void  getValue(double &dv) const;
-    void  getValue(bool &bv) const;
-    void  getValue(String &sv) const;
-    void  getValue(std::vector<double> &vv) const;
-    void  getValue(size_t &lv) const;
-    void  getValue(float &floatvalue) const;
-    void  getValue(char*  &charvalue) const;
-
-    void  setValue(const int &iv);
-    void  setValue(const double &dv);
-    void  setValue(const bool &bv);
-    void  setValue(const String &sv);
-    void  setValue(const std::vector<double> &vv);
-    void  setValue(const size_t &lv);
-    void  setValue(const float &floatvalue);
-    void  setValue(const char*  &charvalue);
-
-#define DOUBLE2STREAM(d) \
-        if (withFormat) {\
-                (os) << std::setw(12); \
-                (os) << (((d) != 0. && ABS(d) < 0.001) ? std::scientific : std::fixed);\
-            } os << d;
-
-#define INT2STREAM(i) \
-        if (withFormat) os << std::setw(10); \
-        os << i;
-
-    void toStream(std::ostream &os, bool withFormat = false, bool isSql=false) const;
-    String toString(bool withFormat = false, bool isSql=false) const;
-    bool fromStream(std::istream &is);
-    friend std::istream& operator>> (std::istream& is, MDObject &value);
-    friend std::ostream& operator<< (std::ostream& is, MDObject &value);
-    bool fromString(const String &str);
-    bool fromChar(const char * str);
-
-    friend class MDSql;
-}
-; //close class MDValue
-
-/** Explicit instantiation */
-#ifndef __APPLE__
-template class std::vector<MDObject *>;
-#endif
-
-/** Class for holding an entire row of posible MDObject */
-class MDRow: public std::vector<MDObject*>
-{
-public:
-    //MDObject & operator [](MDLabel label);
-	/** True if this row contains this label */
-    bool containsLabel(MDLabel label) const;
-
-    /** Get object */
-    MDObject * getObject(MDLabel label);
-
-    /** Get value */
-    template <typename T>
-    bool getValue(MDLabel label, T &d) const
-    {
-        for (const_iterator it = begin(); it != end(); ++it)
-            if ((*it)->label == label)
-            {
-                (*it)->getValue(d);
-                return true;
-            }
-
-        return false;
-    }
-
-    /** Set value */
-    template <typename T>
-    void setValue(MDLabel label, const T &d)
-    {
-        for (const_iterator it = begin(); it != end(); ++it)
-            if ((*it)->label == label)
-            {
-                (*it)->setValue(d);
-                return;
-            }
-        push_back(new MDObject(label, d));
-    }
-
-    /** Copy constructor */
-    MDRow(const MDRow & row);
-
-    /** Empty constructor */
-    MDRow();
-
-    /** Assignment */
-    MDRow& operator = (const MDRow &row);
-
-    /** Destructor */
-    ~MDRow();
-
-    /** Show */
-    friend std::ostream& operator << (std::ostream &out, const MDRow &row);
-
-private:
-    void copy(const MDRow &row);
 };
 /** @} */
 

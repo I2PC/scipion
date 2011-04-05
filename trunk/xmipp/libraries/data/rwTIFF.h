@@ -338,7 +338,7 @@ int readTIFF(size_t select_img, bool isStack=false)
             }
         }
 
-    	MD[i]=staticFields.emptyHeader;
+    	MD[i]=MDL::emptyHeader;
 
         ++imReaded;
     }

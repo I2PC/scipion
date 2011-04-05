@@ -264,7 +264,7 @@ int  ImageBase::readSPIDER(size_t select_img)
             MD[n].setValue(MDL_SCALE, daux);
         }
         else
-        	MD[n]=staticFields.emptyHeader;
+        	MD[n]=MDL::emptyHeader;
     }
 
     delete header;

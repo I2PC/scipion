@@ -205,7 +205,7 @@ int ImageBase::readTIA(int select_img,bool isStack)
     double aux;
     for ( i = 0; i < imgEnd - imgStart; ++i )
     {
-    	MD[i]=staticFields.emptyHeader;
+    	MD[i]=MDL::emptyHeader;
         if (dataMode == _HEADER_ALL || dataMode == _DATA_ALL)
         {
             if(MDMainHeader.getValue(MDL_SAMPLINGRATEX,aux))

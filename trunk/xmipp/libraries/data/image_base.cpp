@@ -27,7 +27,6 @@
 #include "image.h"
 
 //This is needed for static memory allocation
-ImageBaseStatic ImageBase::staticFields; //Just for initialization
 
 void ImageBase::init()
 {

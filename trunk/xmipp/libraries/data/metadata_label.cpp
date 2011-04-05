@@ -25,13 +25,17 @@
 #include "metadata_label.h"
 
 //This is needed for static memory allocation
-std::map<MDLabel, MDLabelData> MDL::data;
+//std::map<MDLabel, MDLabelData> MDL::data;
+MDLabelData * MDL::data[256];
 std::map<std::string, MDLabel> MDL::names;
 MDLabelStaticInit MDL::initialization; //Just for initialization
+MDRow MDL::emptyHeader;
 
 void MDL::addLabel(const MDLabel label, const MDLabelType type, const String &name, const String &name2, const String &name3)
 {
-    data[label] = MDLabelData(type, name);
+    int index = (int)label;
+    std::cerr << "DEBUG_JM: index: " << index << std::endl;
+    data[index] = new MDLabelData(type, name);
     names[name] = label;
     if (name2 != "")
         names[name2] = label;
@@ -60,9 +64,7 @@ MDLabel  MDL::str2Label(const String &labelName)
 
 String  MDL::label2Str(const MDLabel label)
 {
-    if (data.find(label) == data.end())
-        return "";
-    return data[label].str;
+  return  (isValidLabel(label)) ? data[(int)label]->str : "";
 }//close function label2Str
 
 String MDL::label2SqlColumn(const MDLabel label)
@@ -90,23 +92,23 @@ String MDL::label2SqlColumn(const MDLabel label)
 
 bool MDL::isInt(const MDLabel label)
 {
-    return (data[label].type == LABEL_INT);
+    return (data[(int)label]->type == LABEL_INT);
 }
 bool MDL::isBool(const MDLabel label)
 {
-    return (data[label].type == LABEL_BOOL);
+    return (data[(int)label]->type == LABEL_BOOL);
 }
 bool MDL::isString(const MDLabel label)
 {
-    return (data[label].type == LABEL_STRING);
+    return (data[(int)label]->type == LABEL_STRING);
 }
 bool MDL::isDouble(const MDLabel label)
 {
-    return (data[label].type == LABEL_DOUBLE);
+    return (data[(int)label]->type == LABEL_DOUBLE);
 }
 bool MDL::isVector(const MDLabel label)
 {
-    return (data[label].type == LABEL_VECTOR);
+    return (data[(int)label]->type == LABEL_VECTOR);
 }
 
 bool MDL::isValidLabel(const MDLabel label)
@@ -121,12 +123,12 @@ bool MDL::isValidLabel(const String &labelName)
 
 MDLabelType MDL::labelType(const MDLabel label)
 {
-    return data[label].type;
+    return data[(int)label]->type;
 }
 
 MDLabelType MDL::labelType(const String &labelName)
 {
-    return data[str2Label(labelName)].type;
+    return data[str2Label(labelName)]->type;
 }
 
 std::map<String, MDLabel>& MDL::getLabelDict()

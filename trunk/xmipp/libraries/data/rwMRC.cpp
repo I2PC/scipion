@@ -236,7 +236,7 @@ int ImageBase::readMRC(size_t select_img, bool isStack)
     double aux;
     for ( i = 0; i < imgEnd - imgStart; ++i )
     {
-    	MD[i]=staticFields.emptyHeader;
+    	MD[i]=MDL::emptyHeader;
 
         MD[i].setValue(MDL_SHIFTX, (double) -header->nxStart);
         MD[i].setValue(MDL_SHIFTY, (double) -header->nyStart);
