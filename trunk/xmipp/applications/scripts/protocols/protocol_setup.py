@@ -61,47 +61,47 @@ class setup_protocols_class:
             self.LaunchButtons = {};
             
             ####### Preprocessing
-            self.LaunchButtons['SetupPreProcessMicrographs'] = {'title': 'Preprocess micrographs',
+            self.LaunchButtons['K100_SetupPreProcessMicrographs'] = {'title': 'Preprocess micrographs',
                                        'script':  'xmipp_protocol_preprocess_micrographs.py',
                                        'section': 'Preprocessing'}
-            self.LaunchButtons['SetupParticlePick'] = {'title': 'Particle selection',
+            self.LaunchButtons['K110_SetupParticlePick'] = {'title': 'Particle selection',
                                        'script':  'xmipp_protocol_particle_pick.py',
                                        'section': 'Preprocessing'}
-            self.LaunchButtons['SetupPreProcessParticles'] = {'title': 'Preprocess particles',
+            self.LaunchButtons['K120_SetupPreProcessParticles'] = {'title': 'Preprocess particles',
                                        'script':  'xmipp_protocol_preprocess_particles.py',
                                        'section': 'Preprocessing'}           
             
             ######## 2D Analysis
-            self.LaunchButtons['SetupAlign'] = {'title': 'Align',
+            self.LaunchButtons['K200_SetupAlign'] = {'title': 'Align',
                                        'section': '2D Analysis',
-                                       'childs': 'SetupML2D, SetupCL2D'}
-            self.LaunchButtons['SetupAlignClassify'] = {'title': 'Align + Classify',
+                                       'childs': 'K230_SetupML2D, K240_SetupCL2D'}
+            self.LaunchButtons['K210_SetupAlignClassify'] = {'title': 'Align + Classify',
                                        'section': '2D Analysis',
-                                       'childs': 'SetupML2D, SetupCL2D'}
-            self.LaunchButtons['SetupClassify'] = {'title': 'Classify',
+                                       'childs': 'K230_SetupML2D, K240_SetupCL2D'}
+            self.LaunchButtons['K220_SetupClassify'] = {'title': 'Classify',
                                        'section': '2D Analysis',
-                                       'childs': 'SetupKerDenSOM, SetupRotSpectra'} 
-            self.LaunchButtons['SetupML2D'] = {'title': 'ML2D',
+                                       'childs': 'K250_SetupKerDenSOM, K260_SetupRotSpectra'} 
+            self.LaunchButtons['K230_SetupML2D'] = {'title': 'ML2D',
                                                'script': 'xmipp_protocol_ml2d.py'}     
-            self.LaunchButtons['SetupCL2D'] = {'title': 'CL2D',
+            self.LaunchButtons['K240_SetupCL2D'] = {'title': 'CL2D',
                                                'script': 'xmipp_protocol_cl2d.py'}
-            self.LaunchButtons['SetupKerDenSOM'] = {'title': 'KerDenSOM',
+            self.LaunchButtons['K250_SetupKerDenSOM'] = {'title': 'KerDenSOM',
                                                'script': 'xmipp_protocol_kerdensom.py'}     
-            self.LaunchButtons['SetupRotSpectra'] = {'title': 'Rotational Spectra',
+            self.LaunchButtons['K260_SetupRotSpectra'] = {'title': 'Rotational Spectra',
                                                'script': 'xmipp_protocol_rotspectra.py'}
             
             ####### 3D Analysis
-            self.LaunchButtons['SetupInitialModel'] = {'title': 'Initial Model',
+            self.LaunchButtons['K300_SetupInitialModel'] = {'title': 'Initial Model',
                                        'section': '3D Analysis',
-                                       'childs': 'SetupCommonLines, SetupRCT'}
-            self.LaunchButtons['SetupCommonLines'] = {'title': 'Common lines',
+                                       'childs': 'K310_SetupCommonLines, K320_SetupRCT'}
+            self.LaunchButtons['K310_SetupCommonLines'] = {'title': 'Common lines',
                                        'script': 'xmipp_protocol_commonlines.py'}
-            self.LaunchButtons['SetupRCT'] = {'title': 'Random Conical Tilt',
+            self.LaunchButtons['K320_SetupRCT'] = {'title': 'Random Conical Tilt',
                                        'script': 'xmipp_protocol_rct.py'} 
-            self.LaunchButtons['Setup3DClassify'] = {'title': 'ML3D Classification',
+            self.LaunchButtons['K330_Setup3DClassify'] = {'title': 'ML3D Classification',
                                        'section': '3D Analysis',
                                        'script': 'xmipp_protocol_ml3d.py'}
-            self.LaunchButtons['SetupModelRefine'] = {'title': 'Model refinement',
+            self.LaunchButtons['K340_SetupModelRefine'] = {'title': 'Model refinement',
                                        'section': '3D Analysis',
                                        'script': 'xmipp_protocol_projmatch.py'} 
 

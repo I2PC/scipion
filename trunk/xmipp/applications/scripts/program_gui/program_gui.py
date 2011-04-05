@@ -42,11 +42,14 @@ SMALL_FONT_SIZE = "10"
 def isEntryFile(name):
     return name.find("file") != -1 or name.find("metadata") != -1 or name.find("directory") != -1
 
-def getEntryWith(name):
+def getEntryWith(name, default=None):
     if isEntryFile(name):
         return 40;
     if name.endswith("s") or name.find("expression") != -1: # get a plural optionName
         return 20;
+    if default:
+        return max(10, len(default));
+    return 10;
     
 class OptionWidget(Frame):
     def __init__(self, parent, optionName, default, subOptions=0):
@@ -58,10 +61,9 @@ class OptionWidget(Frame):
         Label(self, text=str(optionName)).pack(side=LEFT, padx="2m")
         self.isFile = False;
         if subOptions == 0:
-            entryWidth = max(6, len(default))
             iName = optionName.lower()
             self.isFile = isEntryFile(iName)
-            entryWidth = getEntryWith(iName)
+            entryWidth = getEntryWith(iName, default)
             self.entryVar = StringVar()
             self.entryVar.set(str(default))
             self.entry = Entry(self,
