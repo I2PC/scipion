@@ -64,7 +64,7 @@ int ImageBase::readSPE(size_t select_img,bool isStack)
     MD.clear();
     MD.resize(imgEnd - imgStart);
     for ( i = 0; i < imgEnd - imgStart; ++i )
-      initGeometry(i);
+    	MD[i]=staticFields.emptyHeader;
 
     if( dataMode < DATA )
         return 0;

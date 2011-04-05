@@ -26,6 +26,9 @@
 #include "image_base.h"
 #include "image.h"
 
+//This is needed for static memory allocation
+ImageBaseStatic ImageBase::staticFields; //Just for initialization
+
 void ImageBase::init()
 {
     clearHeader();
@@ -334,24 +337,6 @@ double ImageBase::samplingRateX() const
     double dummy = 1.;
     MDMainHeader.getValue(MDL_SAMPLINGRATEX, dummy);
     return dummy;
-}
-
-/** Init geometry transformation with defaults values
- */
-void ImageBase::initGeometry(const size_t n)
-{
-    MD[n].setValue(MDL_ORIGINX, zeroD);
-    MD[n].setValue(MDL_ORIGINY, zeroD);
-    MD[n].setValue(MDL_ORIGINZ,  zeroD);
-    MD[n].setValue(MDL_SHIFTX, zeroD);
-    MD[n].setValue(MDL_SHIFTY, zeroD);
-    MD[n].setValue(MDL_SHIFTZ,  zeroD);
-    MD[n].setValue(MDL_ANGLEROT, zeroD);
-    MD[n].setValue(MDL_ANGLETILT,zeroD);
-    MD[n].setValue(MDL_ANGLEPSI, zeroD);
-    MD[n].setValue(MDL_WEIGHT,   oneD);
-    MD[n].setValue(MDL_FLIP,     falseb);
-    MD[n].setValue(MDL_SCALE,    oneD);
 }
 
 /** Set Euler angles in image header

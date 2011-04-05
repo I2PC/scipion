@@ -338,7 +338,7 @@ int readTIFF(size_t select_img, bool isStack=false)
             }
         }
 
-        initGeometry();
+    	MD[i]=staticFields.emptyHeader;
 
         ++imReaded;
     }
