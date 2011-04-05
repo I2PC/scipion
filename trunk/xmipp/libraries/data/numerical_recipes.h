@@ -78,6 +78,16 @@ double gammln(double xx);
 double gammp(double a, double x);
 double betacf(double a, double b, double x);
 double betai(double a, double b, double x);
+inline double sinc(double x)
+{
+    if (fabs(x)<0.0001)
+        return 1;
+    else
+    {
+        double arg=PI*x;
+        return sin(arg)/arg;
+    }
+}
 
 // Singular value descomposition of matrix a (numerical recipes, chapter 2-6 for details)
 void svdcmp(double *a, int m, int n, double *w, double *v);
