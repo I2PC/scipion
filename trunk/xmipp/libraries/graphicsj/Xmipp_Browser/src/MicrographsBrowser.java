@@ -12,7 +12,6 @@ import java.io.File;
 import org.apache.commons.cli.BasicParser;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
-import xmipp.MetaData;
 
 /**
  *
@@ -44,7 +43,7 @@ public class MicrographsBrowser implements PlugIn {
         }
     }
 
-    private static void openFile(String fileName) {
+    public static void openFile(String fileName) {
         try {
             String path = "";
             if (!fileName.startsWith(File.separator)) {
@@ -84,9 +83,5 @@ public class MicrographsBrowser implements PlugIn {
         }
 
         return null;
-    }
-
-    public static void main(String file) {
-        openFile(file);
     }
 }

@@ -22,10 +22,12 @@ public class LABELS {
     public final static String TITLE_MAIN_WINDOW = "ImageJ/Xmipp Browser";
     public final static String TITLE_GO_TO_SLICE = "Go to slice";
 
+    // @TODO Remove
     public final static String TITLE_TABLE_WINDOW(int items) {
         return items + " images";
     }
 
+    // @TODO Remove
     public final static String TITLE_TABLE_WINDOW(XmippImageItem item) {
         return item.getFileName()
                 + (item.isVolume() ? " / " + item.getDepth() + " slices" : "")
@@ -42,7 +44,6 @@ public class LABELS {
     public final static String BUTTON_CANCEL = "Cancel";
     public final static String BUTTON_OPEN = "Open Selected";
     public final static String BUTTON_SEND2TABLE = "Send to table";
-    public final static String BUTTON_SHOW_LABELS = "Show labels";
     public final static String BUTTON_SELECT_ALL = "Select All";
     public final static String BUTTON_INVERT_SELECTION = "Invert Selection";
     public final static String BUTTON_REFRESH = "Refresh";
@@ -152,6 +153,7 @@ public class LABELS {
      * Labels for browser
      */
     public final static String LABEL_AUTO_AJUST_COLUMNS = "Auto adjust columns";
+    public final static String LABEL_SHOW_LABELS = "Show labels";
     public final static String LABEL_FILTER = "Filter: ";
     public final static String LABEL_WIDTH = "Width: ";
     public final static String LABEL_HEIGHT = "Height: ";
@@ -161,6 +163,7 @@ public class LABELS {
     public final static String LABEL_TABLE_DISABLE = "Disable";
     public final static String LABEL_TABLE_ENABLE = "Enable";
     public final static String LABEL_TABLE_ENABLE_ALL = "Enable All";
+    public final static String LABEL_TABLE_HIDE_DISABLED = "Hide disabled";
     public final static String LABEL_TABLE_DISABLE_ALL = "Disable All";
     public final static String LABEL_TABLE_SAVE_AS_IMAGES = "Save as images";
     public final static String LABEL_TABLE_SAVE_AS_STACK = "Save as stack";

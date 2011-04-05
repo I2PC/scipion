@@ -30,7 +30,7 @@ public class JFrameCTF extends JDialog {
         initComponents();
     }
 
-    public void setText(String fileName) {
+    public void loadFile(String fileName) {
         setTitle(fileName);
 
         File file = new File(fileName);
@@ -48,7 +48,6 @@ public class JFrameCTF extends JDialog {
             jepEditorPane.setText(text.toString());
         } catch (FileNotFoundException fnfex) {
             IJ.error("File not found: " + fnfex.getMessage());
-//            JOptionPane.showMessageDialog(this, fnfex.getMessage(), "File not found", JOptionPane.ERROR_MESSAGE);
         } catch (Exception ex) {
             ex.printStackTrace(System.err);
             IJ.error(ex.getMessage());

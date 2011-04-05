@@ -11,7 +11,6 @@ import browser.imageitems.listitems.FileItem;
 import browser.imageitems.listitems.XmippImageItem;
 import browser.imageitems.listitems.SelFileItem;
 import browser.table.JFrameImagesTable;
-import browser.table.JFrameVolumeTable;
 import ij.IJ;
 import ij.ImagePlus;
 import ij.gui.ImageWindow;
@@ -41,15 +40,16 @@ public class ImagesWindowFactory {
             openImage(xmippItems.elementAt(i));
         }
     }
-
-    public static void openVolumeFile(String filename) {
-        FileItem item = FilterFilesModel.createSuitableFileItem(new File(filename));
-        if (item instanceof SelFileItem) {
-            openTable((SelFileItem) item);
-        } else if (item instanceof XmippImageItem) {
-            openTable((XmippImageItem) item);
-        }
-    }
+//
+//    public static void openVolumeFile(String filename) {
+//        /*FileItem item = FilterFilesModel.createSuitableFileItem(new File(filename));
+//        if (item instanceof SelFileItem) {
+//        openTable((SelFileItem) item);
+//        } else if (item instanceof XmippImageItem) {
+//        openTable((XmippImageItem) item);
+//        }*/
+//        openTable(filename);
+//    }
 
     public static void openImage(TableImageItem item) {
         ImageWindow iw = openImage(item.getImagePlus());
@@ -99,18 +99,18 @@ public class ImagesWindowFactory {
             // Saves a temporary file...
             String filename = TEMPDIR_PATH + File.separator + item.getFileInfo().fileName + System.currentTimeMillis() + ".xmp";
 
-            System.err.println(" >>> Saving: " + filename);
+            System.err.println(" >>> Saving temporary file to open it as table: " + filename);
             ImageDouble img = ImageConverter.convertToXmipp(item);
             img.write(filename);
 
-            openVolumeFile(filename);
+            openTable(filename);
         } catch (Exception ex) {
             ex.printStackTrace();
         }
     }
 
     public static void openTable(Object items[]) {
-        Vector<XmippImageItem> images = new Vector<XmippImageItem>();
+        Vector<String> images = new Vector<String>();
 
         for (int i = 0; i < items.length; i++) {
             Object item = items[i];
@@ -121,12 +121,14 @@ public class ImagesWindowFactory {
                 // Volumes are opened in a independent table for each one
                 if (!imageItem.isSingleImage()) {
                     if (item instanceof SelFileItem) {
-                        openTable((SelFileItem) imageItem);
+                        //openTable((SelFileItem) imageItem);
+                        openTable(imageItem.getFile().getAbsolutePath());
                     } else {
-                        openTable(imageItem);
+                        //openTable(imageItem);
+                        openTable(imageItem.getFile().getAbsolutePath());
                     }
                 } else {    // Images will be at the same table.
-                    images.add(imageItem);
+                    images.add(imageItem.getFile().getAbsolutePath());
                 }
             } else {
                 IJ.error(((FileItem) item).getFile().getName() + " is not an xmipp file.");
@@ -135,39 +137,17 @@ public class ImagesWindowFactory {
 
         // If there was any image file.
         if (images.size() > 0) {
-            openTable(images);
+            openTable(images.toArray(new String[images.size()]));
         }
     }
 
-    public static void openTable(Vector<XmippImageItem> images) {
-        openTable(images, -1, -1);
+    public static void openTable(String filename) {
+        JFrameImagesTable table = new JFrameImagesTable(filename);
+        table.setVisible(true);
     }
 
-    public static void openTable(Vector<XmippImageItem> images, int w, int h) {
-        JFrameImagesTable imagesTable = new JFrameImagesTable(h, w);
-
-        for (int i = 0; i < images.size(); i++) {
-            imagesTable.addImageItem(images.elementAt(i));
-        }
-
-        imagesTable.setVisible(true);
-    }
-
-    public static void openTable(XmippImageItem item) {
-        JFrameVolumeTable volumeTable = new JFrameVolumeTable();
-
-        volumeTable.addImageItem(item);
-        volumeTable.setVisible(true);
-
-        //@TODO Normalize
-        //volumeTable.setNormalizedAuto();    // Volumes are normalized at startup.
-    }
-
-    public static void openTable(SelFileItem item) {
-        JFrameVolumeTable volumeTable = new JFrameVolumeTable();
-
-        volumeTable.addImageItem(item);
-        volumeTable.setVisible(true);
-        volumeTable.setNormalizedAuto();    // Volumes are normalized at startup.
+    public static void openTable(String filenames[]) {
+        JFrameImagesTable table = new JFrameImagesTable(filenames);
+        table.setVisible(true);
     }
 }

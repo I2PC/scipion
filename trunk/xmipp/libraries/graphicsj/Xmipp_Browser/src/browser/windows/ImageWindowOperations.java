@@ -99,6 +99,7 @@ public class ImageWindowOperations extends ImageWindow implements iPollImageWind
         }
     }
 
+    // @TODO Check poll. "Revert" might work just for standard images file types.
     private void startTimer() {
         // Avoid multiple timers running simultaneously.
         if (timer == null) {

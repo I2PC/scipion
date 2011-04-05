@@ -6,6 +6,7 @@ package browser.table.micrographs;
 
 import browser.Cache;
 import browser.imageitems.TableImageItem;
+import ij.IJ;
 import java.io.File;
 import java.util.Vector;
 import javax.swing.event.TableModelEvent;
@@ -18,8 +19,10 @@ import xmipp.MetaData;
  *
  * @author Juanjo Vega
  */
-public class TableModelMicrographs extends DefaultTableModel implements TableModelListener {
+public class MicrographsTableModel extends DefaultTableModel implements TableModelListener {
 
+    public final static int ID_COLUMN_INDEX = 0;
+    public final static int ENABLED_COLUMN_INDEX = 1;
     public final static int MD_LABELS[] = {
         MDLabel.MDL_ENABLED,
         MDLabel.MDL_IMAGE,
@@ -74,7 +77,7 @@ public class TableModelMicrographs extends DefaultTableModel implements TableMod
     private String rootDir;
     private MetaData md;
 
-    public TableModelMicrographs(String filename) {
+    public MicrographsTableModel(String filename) {
         super();
 
         md = new MetaData(filename);
@@ -94,7 +97,7 @@ public class TableModelMicrographs extends DefaultTableModel implements TableMod
     private void buildTable(MetaData md) {
         try {
             // Read metadata.
-            Object row[] = new Object[MD_LABELS.length + 1];
+            Object row[] = new Object[MD_LABELS.length + 1];    // Field #0 is used for MDRow id.
 
             // Contains field enabled ?
             boolean hasEnabledField = true;
@@ -215,21 +218,10 @@ public class TableModelMicrographs extends DefaultTableModel implements TableMod
         return md.containsLabel(MDLabel.MDL_CTFMODEL);
     }
 
-    /*
-     * JTable uses this method to determine the default renderer/
-     * editor for each cell.  If we didn't implement this method,
-     * then the first column would contain text ("true"/"false"),
-     * rather than a check box.
-     */
     @Override
     public Class getColumnClass(int column) {
         Object item = getValueAt(0, column);
         return item != null ? item.getClass() : Object.class;
-    }
-
-    @Override
-    public Object getValueAt(int row, int column) {
-        return super.getValueAt(row, column);
     }
 
     @Override
@@ -260,13 +252,32 @@ public class TableModelMicrographs extends DefaultTableModel implements TableMod
     public void tableChanged(TableModelEvent e) {
         int row = e.getFirstRow();
 
-        long id = (Long) getValueAt(row, 0);
-        boolean enabled = (Boolean) getValueAt(row, 1);
+        long id = (Long) getValueAt(row, ID_COLUMN_INDEX);
+        boolean enabled = (Boolean) getValueAt(row, ENABLED_COLUMN_INDEX);
 
         md.setValueInt(MDLabel.MDL_ENABLED, enabled ? 1 : 0, id);
     }
 
-    public void save(String fileName) {
-        md.write(fileName);
+    public boolean save(String fileName) {
+        boolean saved = true;
+
+        try {
+            md.write(fileName);
+        } catch (Exception ex) {
+            IJ.error(ex.getMessage());
+            saved = false;
+        }
+
+        return saved;
+    }
+
+    public void print() {
+        for (int i = 0; i < getRowCount(); i++) {
+            for (int j = 0; j < getColumnCount(); j++) {
+                System.out.print(getValueAt(i, j) + " / ");
+            }
+            System.out.println();
+        }
+        System.out.println("** ** ** ** ** ** ** ** [" + getColumnCount() + " items]");
     }
 }

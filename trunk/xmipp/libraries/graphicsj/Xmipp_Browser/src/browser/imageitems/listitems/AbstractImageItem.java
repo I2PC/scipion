@@ -44,7 +44,7 @@ public abstract class AbstractImageItem extends FileItem {
 
             // If not in cache.
             if (preview == null) {
-                System.out.println("Reading from disk: " + getKey());
+//                System.out.println("Reading from disk: " + getKey());
                 preview = loadPreview(w, h);
 
                 if (preview != null) {
@@ -53,8 +53,8 @@ public abstract class AbstractImageItem extends FileItem {
                     // Stores image info.
                     min = preview.getProcessor().getMin();
                     max = preview.getProcessor().getMax();
-                    mean = ImageOperations.mean(preview);
-                    stdDev = ImageOperations.std_dev(preview);
+                    mean = ImageOperations.averagePixelValue(preview);
+                    stdDev = ImageOperations.stdDevPixelValue(preview);
                 }
             }
         } else {    // Null preview.

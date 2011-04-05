@@ -12,7 +12,6 @@ package browser;
 
 import browser.windows.ImagesWindowFactory;
 import browser.files.FileBrowser;
-import browser.files.JComboBoxRootsModel;
 import browser.files.FileListRenderer;
 import browser.imageitems.listitems.FileItem;
 import browser.files.FilterFilesModel;
@@ -44,7 +43,6 @@ public class JPanelBrowser extends JPanel {
     protected boolean SHOW_PREVIEWS = true;
     protected FilterFilesModel filteringFilesModel;
     protected FileListRenderer fileListRenderer = new FileListRenderer();
-    protected JComboBoxRootsModel comboBoxRootsModel = new JComboBoxRootsModel();
     protected JSearchBox searchBox = new JSearchBox(LABELS.LABEL_FILTER);
 
     /** Creates new form JPanelBrowser */
@@ -58,8 +56,6 @@ public class JPanelBrowser extends JPanel {
         jlFilterFiles.setCellRenderer(fileListRenderer);
 
         updateTitle();
-
-        jcbRoots.setSelectedItem(filteringFilesModel.getCurrentRoot());
 
         jpFileBrowser.add(searchBox, BorderLayout.SOUTH);
     }
@@ -179,13 +175,15 @@ public class JPanelBrowser extends JPanel {
             filteringFilesModel.changeDirectory(item.getFile());
             updateListStatus();
         } else if (item instanceof SelFileItem) {
-            ImagesWindowFactory.openTable((SelFileItem) item);
+            //ImagesWindowFactory.openTable((SelFileItem) item);
+            ImagesWindowFactory.openTable(item.getFile().getAbsolutePath());
         } else if (item instanceof XmippImageItem) {
             XmippImageItem xmippItem = (XmippImageItem) item;
             if (xmippItem.isSingleImage()) { // Single images.
                 ImagesWindowFactory.openImage(xmippItem);
             } else {
-                ImagesWindowFactory.openTable(xmippItem);
+                //ImagesWindowFactory.openTable(xmippItem);
+                ImagesWindowFactory.openTable(xmippItem.getFileName());
             }
         } else {
             ImagePlus ip = IJ.openImage(item.getFile().getAbsolutePath());
@@ -229,7 +227,6 @@ public class JPanelBrowser extends JPanel {
     private void initComponents() {
 
         jpFileBrowser = new javax.swing.JPanel();
-        jcbRoots = new javax.swing.JComboBox();
         jPanel1 = new javax.swing.JPanel();
         jspFilesFiltering = new javax.swing.JScrollPane();
         jlFilterFiles = new browser.files.JListFilterFiles();
@@ -248,15 +245,6 @@ public class JPanelBrowser extends JPanel {
         setLayout(new java.awt.BorderLayout());
 
         jpFileBrowser.setLayout(new java.awt.BorderLayout());
-
-        jcbRoots.setModel(comboBoxRootsModel);
-        jcbRoots.setSelectedIndex(0);
-        jcbRoots.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jcbRootsActionPerformed(evt);
-            }
-        });
-        jpFileBrowser.add(jcbRoots, java.awt.BorderLayout.NORTH);
 
         jPanel1.setLayout(new java.awt.BorderLayout());
 
@@ -365,16 +353,6 @@ public class JPanelBrowser extends JPanel {
         updateListStatus();
     }//GEN-LAST:event_jbParentActionPerformed
 
-    private void jcbRootsActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jcbRootsActionPerformed
-        // Changes unit
-        File file = (File) jcbRoots.getSelectedItem();
-
-        if (filteringFilesModel.getCurrentRoot().compareTo(file) != 0) {
-            filteringFilesModel.changeDirectory((File) jcbRoots.getSelectedItem());
-            updateListStatus();
-        }
-    }//GEN-LAST:event_jcbRootsActionPerformed
-
     private void jbOpenActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jbOpenActionPerformed
         openFiles(jlFilterFiles.getSelectedValues());
     }//GEN-LAST:event_jbOpenActionPerformed
@@ -418,7 +396,6 @@ public class JPanelBrowser extends JPanel {
     private javax.swing.JButton jbRefresh;
     private javax.swing.JButton jbSend2Table;
     private javax.swing.JCheckBox jcbPreview;
-    private javax.swing.JComboBox jcbRoots;
     private browser.files.JListFilterFiles jlFilterFiles;
     private javax.swing.JLabel jlFiltering;
     private javax.swing.JPanel jpButtons;

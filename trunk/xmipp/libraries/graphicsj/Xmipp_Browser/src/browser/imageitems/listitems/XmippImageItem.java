@@ -35,7 +35,7 @@ public class XmippImageItem extends AbstractImageItem {
     }
 
     protected ImagePlus loadPreview(int w, int h, int slice, int nimage) {
-        System.out.println(" >>> Loading preview: " + getKey());
+//        System.out.println(" >>> Loading preview: " + getKey());
         ImagePlus ip = null;
 
         try {
@@ -53,7 +53,8 @@ public class XmippImageItem extends AbstractImageItem {
             ip = ImageConverter.convertToImagej(image, path);
         } catch (Exception ex) {
             System.err.println(" >>> Error loading preview: " + getKey());
-            throw new RuntimeException(ex);
+            ex.printStackTrace();
+            //throw new RuntimeException(ex);
         }
 
         return ip;
@@ -84,7 +85,7 @@ public class XmippImageItem extends AbstractImageItem {
 
         try {
             String path = file.getAbsolutePath();
-            System.out.println(" *** Reading ImagePlus [from disk]: " + getFileName() + " #image: " + nimage);
+            System.out.println(" *** Reading ImagePlus [from disk]: " + getFileName() + "@" + nimage + "#" + slice);
             ImageDouble image = new ImageDouble();
 
             image.read(path, nimage);

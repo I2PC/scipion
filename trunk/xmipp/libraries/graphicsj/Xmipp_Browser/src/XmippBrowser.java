@@ -4,6 +4,7 @@ import browser.JFrameBrowser;
 import browser.LABELS;
 import browser.windows.ImagesWindowFactory;
 import ij.IJ;
+import ij.ImageJ;
 import ij.Macro;
 import ij.plugin.PlugIn;
 import org.apache.commons.cli.BasicParser;
@@ -20,6 +21,7 @@ import org.apache.commons.cli.Options;
  */
 public class XmippBrowser implements PlugIn {
 
+    public final static boolean DEBUG = true;
     private final static String COMMAND_OPTION_DIR = "dir";
     private final static String COMMAND_OPTION_IMG = "img";
     private final static String COMMAND_OPTION_VOL = "vol";
@@ -34,6 +36,12 @@ public class XmippBrowser implements PlugIn {
     private boolean POLL = false;
     private int w = -1, h = -1;   // Initial width and height for table.
     protected JFrameBrowser frameBrowser;
+
+    public static void main(String args[]) {
+        new ImageJ();
+
+        (new XmippBrowser()).run("");
+    }
 
     public void run(String string) {
         ICONS_MANAGER ICONS_MANAGER = new ICONS_MANAGER();  // Forces icons to be loaded
@@ -58,17 +66,20 @@ public class XmippBrowser implements PlugIn {
 
         if (VOLS != null) {
             for (int i = 0; i < VOLS.length; i++) {
-                ImagesWindowFactory.openVolumeFile(VOLS[i]);//, h, w);
+                ImagesWindowFactory.openTable(VOLS[i]);//, h, w);
             }
         }
 
         if (SELS != null) {
             for (int i = 0; i < SELS.length; i++) {
-                ImagesWindowFactory.openVolumeFile(SELS[i]);//, h, w);
+                ImagesWindowFactory.openTable(SELS[i]);//, h, w);
             }
         }
 
-        DIR = "/home/juanjo/Desktop/imgs_Roberto/kk";
+        if (DEBUG) {
+            DIR = "/home/juanjo/Desktop/imgs_Roberto/kk";
+        }
+
         if (DIR != null) {
             frameBrowser = new JFrameBrowser(LABELS.TITLE_MAIN_WINDOW, DIR);
             frameBrowser.setVisible(true);

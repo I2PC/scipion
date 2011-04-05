@@ -18,7 +18,7 @@ public class TableImageItem extends XmippImageItem {
 
     protected boolean enabled = true;
     protected boolean selected = false;
-    protected double zoom = 1.0;
+    //protected double zoom = 1.0;
     protected boolean normalized = false;
     //protected ImagesTableModel imagesTableModel;
     //protected double min, max;
@@ -52,10 +52,15 @@ public class TableImageItem extends XmippImageItem {
         this.selected = selected;
     }
 
-    public void setNormalized(boolean normalized/*double min, double max*/) {
-        this.normalized = normalized;
-//        this.min = min;
-//        this.max = max;
+    public void setNormalized(double min, double max) {
+        this.normalized = true;
+
+        this.min = min;
+        this.max = max;
+    }
+
+    public void resetNormalized() {
+        this.normalized = false;
     }
 
     public boolean isEnabled() {
@@ -66,26 +71,54 @@ public class TableImageItem extends XmippImageItem {
         return selected;
     }
 
-    public void setZoom(int zoom) {
-        this.zoom = (double) zoom / 100.0;
-    }
-
+    /*    public ImagePlus getPreview() {
+    return getPreview(getThumbnailWidth(), getThumbnailHeight());
+    }*/
     public ImagePlus getPreview() {
-        return getPreview(getThumbnailWidth(), getThumbnailHeight());
+        return getPreview(getWidth(), getHeight());
     }
 
-    public int getThumbnailWidth() {
-        return (int) ((double) getWidth() * zoom);
+    public ImagePlus getPreview(double zoom) {
+        ImagePlus preview = getPreview(
+                (int) ((double) getWidth() * zoom),
+                (int) ((double) getHeight() * zoom));
+
+        // If normalization is active...
+        if (normalized) {
+            preview.getProcessor().setMinAndMax(min, max);
+        }
+
+        return preview;
+    }
+
+    @Override
+    public String getLabel() {
+        String sliceStr = isVolume() ? String.valueOf(slice) : "";
+        String nimageStr = isStack() ? String.valueOf(nimage) : "";
+        String delim = isVolume() && isStack() ? "/" : "";
+
+        String extra = isVolume() || isStack() ? "[" + sliceStr + delim + nimageStr + "]" : "";
+
+        return super.getLabel() + extra;
+    }
+
+    /*    public int getThumbnailWidth() {
+    return (int) ((double) getWidth() * zoom);
     }
 
     public int getThumbnailHeight() {
-        return (int) ((double) getHeight() * zoom);
-    }
-
+    return (int) ((double) getHeight() * zoom);
+    }*/
     public String getTooltipText() {
-        String sliceStr = isVolume() ? " slice: " + slice : "";
+        /*        String sliceStr = isVolume() ? " slice: " + slice : "";
         String nimageStr = isStack() ? " image: " + nimage : "";
 
-        return getLabel() + sliceStr + nimageStr;
+        return getLabel() + sliceStr + nimageStr;*/
+        return getLabel();
+    }
+
+    @Override
+    public String toString() {
+        return file.getName() + "@" + nimage + "#" + slice;
     }
 }

@@ -5,13 +5,17 @@
 package browser.table;
 
 import browser.Cache;
-import browser.files.FilterFilesModel;
+import browser.files.FileBrowser;
 import browser.imageitems.TableImageItem;
-import browser.imageitems.listitems.SelFileItem;
-import browser.imageitems.listitems.XmippImageItem;
+import ij.IJ;
 import java.io.File;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Vector;
 import javax.swing.table.AbstractTableModel;
+import xmipp.ImageDouble;
+import xmipp.MDLabel;
+import xmipp.MetaData;
 
 /**
  *
@@ -19,67 +23,197 @@ import javax.swing.table.AbstractTableModel;
  */
 public class ImagesTableModel extends AbstractTableModel {
 
+    private String filename;
+    private MetaData md;
+    private long nimages = ImageDouble.FIRST_IMAGE;
+    private int nslices = ImageDouble.FIRST_SLICE;
+    private double zoomScale = 1.0; // For zoom.
     private Vector<TableImageItem> data = new Vector<TableImageItem>();
-    private Vector<TableImageItem> selectedItems = new Vector<TableImageItem>();
+    //private Vector<TableImageItem> selectedItems = new Vector<TableImageItem>();
+    private LinkedList<TableImageItem> selectedItems = new LinkedList<TableImageItem>();
     private int rows, cols;
-    private boolean showLabels = true;
     private Cache cache = new Cache();
-    protected boolean normalize;
-    protected double min, max;
+    private boolean normalize = false;
+    private double min = Double.MIN_VALUE, max = Double.MAX_VALUE;
 
-    public ImagesTableModel() {
-        this(1, 1);
-    }
-
-    public ImagesTableModel(int rows, int cols) {
+    public ImagesTableModel(String filename) {
         super();
 
-        this.rows = rows;
-        this.cols = cols;
+        this.filename = filename;
+        String message = null;
+
+        File f = new File(filename);
+        if (f.exists()) {
+            if (FileBrowser.isFileType(new File(filename), ".sel")) {
+                message = loadMetaData(filename);
+            } else {
+                message = loadStackOrVolume(filename);
+            }
+
+            if (message != null) {
+                IJ.error(filename);
+            }
+        } else {
+            IJ.error("File not found: " + filename);
+        }
+
+        //@TODO Auto normalize
+        //volumeTable.setNormalizedAuto();    // Volumes are normalized at startup.
     }
 
-    /**
-     * Refreshes entire table by clearing cache.
-     */
-    public void refresh() {
-        cache.clear();
+    public ImagesTableModel(String filenames[]) {
+        super();
 
-//        updateNormalizeValues();
+        loadImages(filenames);
     }
 
-    /**
-     * Clears data.
-     */
-    public void clear() {
-        clearSelection();
+    private String loadStackOrVolume(String filename) {
+        try {
+            ImageDouble image = new ImageDouble();
 
-        data.clear();
-        rows = cols = 1;
+            image.readHeader(filename);
+
+            image.printShape();
+
+            nslices = image.getZsize();
+            nimages = image.getNsize();
+
+            System.out.println(" -> " + filename + " n:" + nimages + " d:" + nslices);
+
+            for (int i = ImageDouble.FIRST_IMAGE; i <= nimages; i++) {
+                for (int j = ImageDouble.FIRST_SLICE; j <= nslices; j++) {
+                    addItem(filename, j, i, true);
+                }
+            }
+        } catch (Exception ex) {
+            return ex.getMessage();
+        }
+
+        return null;
     }
 
-    public void setNormalized(double min, double max) {
-        this.min = min;
-        this.max = max;
+    private void loadImages(String filenames[]) {
+        nimages = filenames.length;
 
-        setNormalized(true);
+        for (int i = 0; i < nimages; i++) {
+            addItem(filenames[i], ImageDouble.FIRST_SLICE, ImageDouble.FIRST_IMAGE, true);
+        }
     }
 
-    public void setNormalizedAuto() {
-        double min_max[] = ImageOperations.getMinAndMax(data);
+    private String loadMetaData(String filename) {
+        try {
+            String rootDir = (new File(filename)).getParent();
 
-        setNormalized(min_max[0], min_max[1]);
+            md = new MetaData(filename);
+
+            long ids[] = md.findObjects();
+
+            nimages = ids.length;
+
+            for (long id : ids) {
+                boolean enabled = md.getValueInt(MDLabel.MDL_ENABLED, id) == 0 ? false : true;
+                String imagefilename = md.getValueString(MDLabel.MDL_IMAGE, id);
+
+                if (!imagefilename.startsWith(File.separator)) {
+                    imagefilename = rootDir + File.separator + imagefilename;
+                }
+
+                //System.out.println(imagefilename + " ? " + enabled);
+
+                addItem(imagefilename, ImageDouble.FIRST_SLICE, ImageDouble.FIRST_IMAGE, enabled);
+            }
+        } catch (Exception ex) {
+            return ex.getMessage();
+        }
+
+        return null;
     }
 
-    public void disableNormalization() {
-        setNormalized(false);
+    protected void addItem(String filename, int slice, int image, boolean enabled) {
+//        System.out.println("Adding... " + slice + " / " + image);
+        TableImageItem item = new TableImageItem(new File(filename), cache, slice, image);
+        item.setEnabled(enabled);
+
+        data.add(item);
     }
 
-    private void setNormalized(boolean normalize) {
-        this.normalize = normalize;
+    public Vector<TableImageItem> getAllItems() {
+        return data;
+    }
 
-        // Refreshes items.
-        for (int i = 0; i < data.size(); i++) {
-            data.get(i).setNormalized(normalize);
+    public LinkedList<TableImageItem> getSelectedItems() {
+        return selectedItems;
+    }
+
+    @Override
+    public String getColumnName(int column) {
+        return "" + (column + 1);
+    }
+
+    @Override
+    public Class getColumnClass(int c) {
+        Object object = getValueAt(0, c);
+
+        return object != null ? object.getClass() : null;
+    }
+
+    public int getRowCount() {
+        return rows;
+    }
+
+    public int getColumnCount() {
+        return cols;
+    }
+
+    public Object getValueAt(int rowIndex, int columnIndex) {
+        int index = getDataIndex(rowIndex, columnIndex);
+
+        return index < data.size() ? data.get(index) : null;
+    }
+
+    private int getDataIndex(int rowIndex, int columnIndex) {
+        return rowIndex * getColumnCount() + columnIndex;
+    }
+
+    public int getSize() {
+        return data.size();
+    }
+
+    public String getTitle() {
+        String title = "";
+
+        if (filename != null) {
+            File f = new File(filename);
+            title = f.getName() + " /";
+        }
+
+        if (nimages > ImageDouble.FIRST_IMAGE) {
+            title += " " + nimages + " images";
+        }
+
+        if (nslices > ImageDouble.FIRST_SLICE) {
+            title += " " + nslices + " slices";
+        }
+
+        return title;
+    }
+
+    // Selected items:
+    public void setSelected(int row, int col, boolean selected) {
+        TableImageItem item = (TableImageItem) getValueAt(row, col);
+
+        if (item != null) {
+            item.setSelected(selected);
+
+            if (selected) {
+                if (!selectedItems.contains(item)) {
+                    selectedItems.addLast(item);
+                }
+            } else {
+                if (selectedItems.contains(item)) {
+                    selectedItems.remove(item);
+                }
+            }
         }
     }
 
@@ -91,61 +225,13 @@ public class ImagesTableModel extends AbstractTableModel {
         }
     }
 
-    public void setSelected(int row, int col, boolean selected) {
-        TableImageItem item = (TableImageItem) getValueAt(row, col);
-
-        if (item != null) {
-            item.setSelected(selected);
-
-            if (selected) {
-                if (!selectedItems.contains(item)) {
-                    selectedItems.add(item);
-                }
-            } else {
-                if (selectedItems.contains(item)) {
-                    selectedItems.remove(item);
-                }
-            }
-        }
-    }
-
-    public Vector<TableImageItem> getItems() {
-        return data;
-    }
-
-    public Vector<TableImageItem> getSelectedItems() {
-        return selectedItems;
-    }
-
-    public Vector<TableImageItem> getSelectedAndEnabledItems() {
-        Vector<TableImageItem> enabledItems = new Vector<TableImageItem>();
-
-        for (int i = 0; i < selectedItems.size(); i++) {
-            TableImageItem tableImageItem = selectedItems.elementAt(i);
-            if (tableImageItem.isEnabled()) {
-                enabledItems.add(tableImageItem);
-            }
-        }
-
-        return enabledItems;
-    }
-
-    public double getMin() {
-        //System.out.println("m=" + min);
-        return min;
-    }
-
-    public double getMax() {
-        //System.out.println("M=" + max);
-        return max;
-    }
-
+    // To select image directly
     public void setSelected(int index) {
         clearSelection();
 
         TableImageItem item = data.elementAt(index);
         item.setSelected(true);
-        selectedItems.add(item);
+        selectedItems.addLast(item);
     }
 
     public void selectAll() {
@@ -155,7 +241,7 @@ public class ImagesTableModel extends AbstractTableModel {
             TableImageItem item = data.elementAt(i);
 
             item.setSelected(true);
-            selectedItems.add(item);
+            selectedItems.addLast(item);
         }
     }
 
@@ -168,54 +254,48 @@ public class ImagesTableModel extends AbstractTableModel {
     }
 
     public void clearSelection() {
-        for (int i = 0; i < selectedItems.size(); i++) {
-            selectedItems.elementAt(i).setSelected(false);
-        }
+        int n = selectedItems.size();   // Size will change over iterations while index will be increased.
 
-        selectedItems.clear();
-    }
-
-    public void addImageItem(XmippImageItem itemImage) {
-        for (int i = 0; i < itemImage.getNImages(); i++) {
-            addImageItem(itemImage, i);
+        for (int i = 0; i < n; i++) {
+            selectedItems.getLast().setSelected(false);
+            selectedItems.removeLast();
         }
     }
 
-    private void addImageItem(XmippImageItem itemImage, int n) {
-        for (int i = 0; i < itemImage.getDepth(); i++) {
-            TableImageItem item = new TableImageItem(
-                    itemImage.getFile(), cache, i + 1, n);
-            data.add(item);
-        }
+    private void enableItems(boolean enable, List<TableImageItem> items) {
+        if (items != null) {
+            for (int i = 0; i < items.size(); i++) {
+                items.get(i).setEnabled(enable);
+            }
 
-        fireTableStructureChanged();
-    }
-
-    public void addImageItem(SelFileItem selItem) {
-        String fileNames[] = selItem.getFileNames();
-
-        for (int i = 0; i < fileNames.length; i++) {
-            XmippImageItem item = (XmippImageItem) FilterFilesModel.createSuitableFileItem(new File(fileNames[i]));
-            addImageItem(item);
+            fireTableDataChanged();
         }
     }
 
-    @Override
-    public String getColumnName(int column) {
-        return "" + (column + 1);
+    public void enableAllItems() {
+        enableItems(true, data);
     }
 
-    public int getRowCount() {
-        return rows;
+    public void disableAllItems() {
+        enableItems(false, data);
     }
 
-    public int getColumnCount() {
-        return cols;
+    public void enableSelectedItems() {
+        enableItems(true, selectedItems);
     }
 
-    public void setTableSize(int rows, int cols) {
-        this.rows = rows;
-        this.cols = cols;
+    public void disableSelectedItems() {
+        enableItems(false, selectedItems);
+    }
+
+    public void setZoomScale(double zoomScale) {
+        this.zoomScale = zoomScale;
+
+        fireTableDataChanged();
+    }
+
+    public double getZoomScale() {
+        return zoomScale;
     }
 
     public void setRows(int rows) {
@@ -238,12 +318,24 @@ public class ImagesTableModel extends AbstractTableModel {
         }
     }
 
-    public void setShowLabels(boolean show) {
-        showLabels = show;
+    public void autoAdjustColumns(int width) {
+        int displayableColumns = getDisplayableColumns(width);
+
+        if (getColumnCount() != displayableColumns) {
+            setColumns(displayableColumns);
+        }
     }
 
-    public boolean isShowingLabels() {
-        return showLabels;
+    private int getDisplayableColumns(int width) {
+        return width / getCellWidth();
+    }
+
+    public int getCellWidth() {
+        return (int) (getAllItems().elementAt(0).getWidth() * zoomScale);
+    }
+
+    public int getCellHeight() {
+        return (int) (getAllItems().elementAt(0).getHeight() * zoomScale);
     }
 
     @SuppressWarnings("empty-statement")
@@ -264,52 +356,60 @@ public class ImagesTableModel extends AbstractTableModel {
         return cols_;
     }
 
-    /**
-     * Returns index at data vector depending on the specified items arrangement.
-     * @param rowIndex
-     * @param columnIndex
-     * @return
-     */
-    public int getDataIndex(int rowIndex, int columnIndex) {
-        return rowIndex * getColumnCount() + columnIndex;
+    // Images normalization
+/*    public void setNormalized(double min, double max) {
+    this.min = min;
+    this.max = max;
+
+    setNormalized(true);
+    }*/
+    public void setNormalized() {
+        if (min == Double.MIN_VALUE && max == Double.MAX_VALUE) {
+            getMinAndMax();
+        }
+
+        setNormalized(true);
     }
 
-    public int[] getRowColForIndex(int index) {
-        int row = index / getColumnCount();
-        int col = index % getColumnCount();
+    private void getMinAndMax() {
+        double min_max[] = ImageOperations.getMinAndMax(data);
 
-        return new int[]{row, col};
+        min = min_max[0];
+        max = min_max[1];
     }
 
-    public Object getValueAt(int rowIndex, int columnIndex) {
-        int index = getDataIndex(rowIndex, columnIndex);
-
-        return index < data.size() ? data.get(index) : null;
+    public void disableNormalization() {
+        setNormalized(false);
     }
 
-    public int getSize() {
-        return data.size();
-    }
+    private void setNormalized(boolean normalize) {
+        this.normalize = normalize;
 
-    @Override
-    public Class getColumnClass(int c) {
-//        Object object = getValueAt(0, c);
-
-//        return object != null ? object.getClass() : null;
-        return TableImageItem.class;
-    }
-
-    /**
-     * Sets zoom in all objects.
-     * @param zoom
-     */
-    public void setZoom(int zoom) {
         for (int i = 0; i < data.size(); i++) {
-            data.elementAt(i).setZoom(zoom);
+            TableImageItem item = data.get(i);
+
+            if (normalize) {
+                item.setNormalized(min, max);
+            } else {
+                item.resetNormalized();
+            }
         }
     }
 
-    protected void resizeCache(int newLimit) {
-        cache.resize(newLimit);
+    public boolean isNormalizing() {
+        return normalize;
+    }
+
+    public double getNormalizeMin() {
+        return min;
+    }
+
+    public double getNormalizeMax() {
+        return max;
+    }
+
+    public void printStuff() {
+        System.out.println("Normalize " + (normalize ? "ON" : "OFF") + " > "
+                + (normalize ? "m=" + min + "/M=" + max : ""));
     }
 }

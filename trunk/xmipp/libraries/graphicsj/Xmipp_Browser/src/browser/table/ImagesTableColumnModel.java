@@ -21,13 +21,24 @@ public class ImagesTableColumnModel extends DefaultTableColumnModel {
         super.addColumn(tc);
     }
 
+    @Override
+    public TableColumn getColumn(int columnIndex) {
+        try {
+            return super.getColumn(columnIndex);
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            System.out.println("*** Exception getting column: " + columnIndex + " / " + getColumnCount());
+            return super.getColumn(columnIndex);
+        }
+    }
+
     public void setWidth(int width) {
         this.width = width;
 
-        autoadjustColumns();
+        adjustColumnsWidth();
     }
 
-    public void autoadjustColumns() {
+    private void adjustColumnsWidth() {
         for (int i = 0; i < getColumnCount(); i++) {
             getColumn(i).setPreferredWidth(width);
         }

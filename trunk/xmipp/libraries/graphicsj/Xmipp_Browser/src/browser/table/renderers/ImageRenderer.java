@@ -6,50 +6,57 @@ package browser.table.renderers;
 
 import browser.ICONS_MANAGER;
 import browser.imageitems.TableImageItem;
-import browser.table.ImagesTableModel;
 import ij.ImagePlus;
-import java.awt.Color;
 import java.awt.Component;
-import javax.swing.BorderFactory;
 import javax.swing.ImageIcon;
 import javax.swing.JLabel;
 import javax.swing.JTable;
-import javax.swing.UIManager;
-import javax.swing.border.BevelBorder;
+import browser.table.ImagesTableModel;
+import java.awt.Color;
+import javax.swing.BorderFactory;
 import javax.swing.border.Border;
+import javax.swing.table.DefaultTableCellRenderer;
 
 /**
  *
  * @author Juanjo Vega
  */
-public class ImageRenderer extends ImageMicrographRenderer {
+public class ImageRenderer extends DefaultTableCellRenderer {
 
-    protected final static Border BORDER_ENABLED = BorderFactory.createBevelBorder(BevelBorder.RAISED);
-    protected final static Border BORDER_DISABLED = null;//BorderFactory.createBevelBorder(EtchedBorder.LOWERED);
-    protected final static Border BORDER_SELECTED = BorderFactory.createLineBorder(Color.RED, 1);
-    protected final static Border BORDER_FOCUSED = BorderFactory.createLineBorder(Color.RED, 3);
-    protected final static Border BORDER_ENABLED_SELECTED = BorderFactory.createCompoundBorder(BORDER_ENABLED, BORDER_SELECTED);
-    protected final static Border BORDER_ENABLED_FOCUSED = BorderFactory.createCompoundBorder(BORDER_ENABLED, BORDER_FOCUSED);
-    protected final static Border BORDER_DISABLED_SELECTED = BorderFactory.createCompoundBorder(BORDER_DISABLED, BORDER_SELECTED);
-    protected final static Border BORDER_DISABLED_FOCUSED = BorderFactory.createCompoundBorder(BORDER_DISABLED, BORDER_FOCUSED);
-    protected final static Color BACKGROUND = UIManager.getColor("Table.background");
-    protected final static Color BACKGROUND_SELECTED = UIManager.getColor("Table.selectionBackground");
-    protected final static Color FOREGROUND = UIManager.getColor("Table.foreground");
-    protected final static Color FOREGROUND_SELECTED = UIManager.getColor("Table.selectionForeground");
+    protected Border BORDER_SELECTED = BorderFactory.createLineBorder(Color.RED, 1);
+    protected Border BORDER_FOCUSED = BorderFactory.createLineBorder(Color.RED, 3);
+    protected boolean showLabels = false;
+
+    public void setShowLabels(boolean showLabels) {
+        this.showLabels = showLabels;
+    }
+
+    public boolean isShowingLabels() {
+        return showLabels;
+    }
 
     @Override
     public Component getTableCellRendererComponent(JTable table, Object object, boolean isSelected, boolean hasFocus, int row, int column) {
         TableImageItem item = (TableImageItem) object;
 
+        // Calls super class so foreground, background, borders and rest of stuff is set.
+        super.getTableCellRendererComponent(table, null,
+                item != null && item.isSelected(),
+                item != null && hasFocus, row, column);
+
         if (item != null) {
             //System.out.println("*** Rendering: " + item + " S: " + item.slice + " N: " + item.nimage);
+            ImagesTableModel tableModel = (ImagesTableModel) table.getModel();
 
             // Loads image...
-            ImagePlus img = item.getPreview();
+            ImagePlus img = item.getPreview(tableModel.getZoomScale());
 
             // ... and sets it.
             if (img != null) {
                 setEnabled(item.isEnabled());
+
+                // Normalizes image (if sets in tablemodel)
+                normalize(img, tableModel);
 
                 setIcon(new ImageIcon(img.getImage()));
             } else {
@@ -65,37 +72,36 @@ public class ImageRenderer extends ImageMicrographRenderer {
             setToolTipText(item.getTooltipText());
 
             // (Shows label only when required).
-            if (((ImagesTableModel) table.getModel()).isShowingLabels()) {
+            if (isShowingLabels()) {
                 setText(item.getLabel());
             } else {
                 setText(null);
             }
 
-            if (item.isEnabled()) {
-                if (hasFocus) {
-                    setBorder(BORDER_ENABLED_FOCUSED);
-                } else if (item.isSelected()) {
-                    setBorder(BORDER_ENABLED_SELECTED);
-                } else {
-                    setBorder(BORDER_ENABLED);
-                }
-            } else {
-                if (hasFocus) {
-                    setBorder(BORDER_DISABLED_FOCUSED);
-                } else if (item.isSelected()) {
-                    setBorder(BORDER_DISABLED_SELECTED);
-                } else {
-                    setBorder(BORDER_DISABLED);
-                }
+            // Hacking borders to enhance the default one.
+            if (item.isSelected()) {
+                setBorder(BORDER_SELECTED);
+            }
+
+            if (hasFocus) {
+                setBorder(BORDER_FOCUSED);
             }
         } else {
             setIcon(null);
             setText(null);
-            setBorder(null);
-            setBackground(BACKGROUND);
-            setForeground(FOREGROUND);
         }
 
         return this;
+    }
+
+    private void normalize(ImagePlus image, ImagesTableModel tableModel) {
+        if (tableModel.isNormalizing()) {
+            image.getProcessor().setMinAndMax(tableModel.getNormalizeMin(),
+                    tableModel.getNormalizeMax());
+        } else {
+            image.getProcessor().resetMinAndMax();
+        }
+
+        image.updateImage();  // Repaint
     }
 }

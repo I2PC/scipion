@@ -147,10 +147,10 @@ public class XmippMenuBar extends DynamicMenuBar implements ActionListener {
 
         boolean canPoll = imp.getOriginalFileInfo() != null;
 
-        enableItems(imp.getStackSize(), canPoll);
+        enableMenuItems(imp.getStackSize(), canPoll);
     }
 
-    private void enableItems(int nslices, boolean canPoll) {
+    private void enableMenuItems(int nslices, boolean canPoll) {
         // Enables / disables depending on context (image or stack)
         menuReslice.setEnabled(nslices > 1);
         itemGoToSlice.setEnabled(nslices > 1);
