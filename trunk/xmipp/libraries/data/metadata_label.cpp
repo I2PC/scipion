@@ -34,7 +34,6 @@ MDRow MDL::emptyHeader;
 void MDL::addLabel(const MDLabel label, const MDLabelType type, const String &name, const String &name2, const String &name3)
 {
     int index = (int)label;
-    std::cerr << "DEBUG_JM: index: " << index << std::endl;
     data[index] = new MDLabelData(type, name);
     names[name] = label;
     if (name2 != "")
