@@ -308,7 +308,6 @@ class preprocess_A_class:
             (self.filepath, self.name)=os.path.split(self.filename)
             print '*  ' + self.name
 
-        self.SFinputparams=[]
         self.SFmicrograph=[]
         self.SFctffindmrc=[]
         self.SFquadrant=[]
@@ -354,11 +353,10 @@ class preprocess_A_class:
                 shortname=self.SFshort[idx]
                 names=self.perform_ctfestimate_xmipp(shortname, filename, fh_mpi)
                 self.SFpsd.append(names[0])
-                self.SFinputparams.append(names[1])
                 if not self.OnlyEstimatePSD:                    
-                    self.SFctf.append(names[2])
-                    self.SFhalf.append(names[3])
-                    self.SFquadrant.append(names[4])
+                    self.SFctf.append(names[1])
+                    self.SFhalf.append(names[2])
+                    self.SFquadrant.append(names[3])
                 if self.DoCtffind:
                     self.perform_ctfestimate_ctffind(shortname, filename, fh_mpi)
             idx += 1
@@ -392,8 +390,6 @@ class preprocess_A_class:
             MD.setValue(xmipp.MDL_IMAGE, filename,objId)
             if self.DoCtfEstimate:
                 MD.setValue(xmipp.MDL_PSD,   self.SFpsd[idx],objId)
-            if len(self.SFinputparams) > 0:
-                MD.setValue(xmipp.MDL_CTFINPUTPARAMS, self.SFinputparams[idx],objId)
             if len(self.SFctf) > 0:
                 MD.setValue(xmipp.MDL_CTFMODEL,          self.SFctf[idx],objId)
                 MD.setValue(xmipp.MDL_ASSOCIATED_IMAGE1, self.SFhalf[idx],objId)
@@ -499,42 +495,33 @@ class preprocess_A_class:
     def perform_ctfestimate_xmipp(self, shortname, filename, fh_mpi):
         (filepath, micrographName)=os.path.split(filename)
         (fnRoot, extension)=os.path.splitext(micrographName)
-        pname=shortname + '/' + fnRoot + '_estimate_ctf_input.param'
-        retval=[]
-        
-        retval.append(shortname + '/' + fnRoot + "_Periodogramavg.psd")
-        retval.append(pname)
+        retval=[shortname + '/' + fnRoot + ".psd"]
 
         # prepare parameter file
-        paramlist=[]
-        paramlist.append('image= ' + filename + '\n')
-        paramlist.append('micrograph_averaging= yes \n')
-        paramlist.append('N_horizontal= 512 \n')
-        paramlist.append('periodogram= yes \n')
+        params="--micrograph "+filename
         if not self.OnlyEstimatePSD:
             AngPix=(10000. * self.ScannedPixelSize * self.Down) / self.Magnification
-            paramlist.append('voltage= ' + str(self.Voltage) + '\n')
-            paramlist.append('spherical_aberration= ' + str(self.SphericalAberration) + '\n')
-            paramlist.append('sampling_rate= ' + str(AngPix) + '\n')
-            paramlist.append('particle_horizontal= 256 \n')
-            paramlist.append('Q0= -' + str(self.AmplitudeContrast) + '\n')
-            paramlist.append('min_freq= ' + str(self.LowResolCutoff) + '\n')
-            paramlist.append('max_freq= ' + str(self.HighResolCutoff) + '\n')
-            retval.append(shortname + '/' + fnRoot + "_Periodogramavg.ctfparam")
-            retval.append(shortname + '/' + fnRoot + "_Periodogramavg_ctfmodel_halfplane.xmp")
-            retval.append(shortname + '/' + fnRoot + "_Periodogramavg_ctfmodel_quadrant.xmp")
+            params+=" --kV "+str(self.Voltage)+\
+                    " --Cs "+str(self.SphericalAberration)+\
+                    " --sampling_rate "+str(AngPix)+\
+                    " --ctfmodelSize 256"+\
+                    " --Q0 "+str(self.AmplitudeContrast)+\
+                    " --min_freq "+str(self.LowResolCutoff)+\
+                    " --max_freq "+str(self.HighResolCutoff)
+            retval.append(shortname + '/' + fnRoot + ".ctfparam")
+            retval.append(shortname + '/' + fnRoot + "_ctfmodel_halfplane.xmp")
+            retval.append(shortname + '/' + fnRoot + "_ctfmodel_quadrant.xmp")
+        else:
+            params+=" --dont_estimate_ctf"
 
         # Check if the preprocessing has already been done
         if stepPerformed("Step 2",shortname + "/status.txt"):
             return retval
 
         # Perform CTF estimation
-        fh=open(pname, "w")
-        fh.writelines(paramlist)
-        fh.close()
         command='if grep -q "Step 1" ' + shortname + '/status.txt ; then ' + \
-            'xmipp_ctf_estimate_from_micrograph -i ' + pname + ' ; ' + \
-            'if [ -e ' + shortname + '/' + fnRoot + '_Periodogramavg.ctfparam ] ; then ' + \
+            'xmipp_ctf_estimate_from_micrograph ' + params + ' ; ' + \
+            'if [ -e ' + shortname + '/' + fnRoot + '.ctfparam ] ; then ' + \
                'echo "Step 2: CTF estimated with Xmipp " `date` >> ' + shortname + '/status.txt;' + \
             ' fi; fi'
         command += '\n'
