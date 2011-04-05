@@ -27,15 +27,14 @@
 #define DENOISE_H
 
 #include <string>
-
-#include <data/progs.h>
+#include <data/filters.h>
 
 /// @defgroup Denoise Image denoising
 /// @ingroup ReconsLibrary
 
 /// Parameters for denoise program
 /// @ingroup Denoise
-class ProgDenoise: public XmippMetadataProgram
+class DenoiseFilter: public XmippFilter
 {
 public:
     typedef enum
@@ -52,7 +51,7 @@ public:
      *
      * Valid types DAUB4, DAUB12, DAUB20
      */
-    std::string DWT_type;
+    String DWT_type;
 
     /** Denoising type.
      *
@@ -126,11 +125,10 @@ public:
      */
     bool adjust_range;
 
-    /** Debugging level.
-     *
-     * 0, no dubug
+    /** Verbosity used by denoiser.
+     * By default will be 0, programs using denoiser should set this
      */
-    int tell;
+    int verbose;
 
     /** Don't denoise.
      *
@@ -139,11 +137,8 @@ public:
      */
     bool dont_denoise;
 
-protected:
-    void defineParams();
-    void readParams();
-
-    void processImage(const FileName &fnImg, const FileName &fnImgOut, size_t objId);
+    static void defineParams(XmippProgram *program);
+    void readParams(XmippProgram *program);
 
 public:
     /** EstimatedS of the Bayesian method.
@@ -152,7 +147,7 @@ public:
 
     /** Empty constructor
      */
-    ProgDenoise();
+    DenoiseFilter();
 
     /** Produce side info.
      *
@@ -164,7 +159,7 @@ public:
 
     /** Denoise an image.
      */
-    void denoise(MultidimArray< double >& img);
+    void apply(MultidimArray< double >& img);
 
     /** Denoise a volume using a precalculated estimate of the bayesian
      * parameters.

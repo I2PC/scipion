@@ -52,7 +52,8 @@ FourierFilter::FourierFilter()
 /* Define params ------------------------------------------------------------------- */
 void FourierFilter::defineParams(XmippProgram *program)
 {
-    program->addParamsLine("   --fourier <cuttoff_type> <mask_type=raised_cosine>    : Filter in Fourier space");
+    program->addParamsLine("== Fourier ==");
+    program->addParamsLine("  [ --fourier <cuttoff_type> <mask_type=raised_cosine>]    : Filter in Fourier space");
     program->addParamsLine("         where <cuttoff_type>");
     program->addParamsLine("            low_pass  <w1>                   : Cutoff freq (<1/2 or A)");
     program->addParamsLine("            high_pass <w1>                   : Cutoff freq (<1/2 or A)");
@@ -69,6 +70,7 @@ void FourierFilter::defineParams(XmippProgram *program)
     program->addParamsLine("                                             : The CTF phase will be corrected before applying");
     program->addParamsLine("            bfactor <B>                      : Exponential filter (positive values for decay) ");
     program->addParamsLine("               requires --sampling;                                                         ");
+    program->addParamsLine("         alias -f;");
     program->addParamsLine("  [--sampling <sampling_rate>]        : If provided pass frequencies are taken in Ang ");
     program->addParamsLine("         alias -s;");
     program->addParamsLine("         requires --fourier;");
@@ -239,8 +241,6 @@ void FourierFilter::show()
 void FourierFilter::apply(MultidimArray<double> &img)
 {
     static bool firstTime = true;
-
-    std::cerr << "DEBUG_JM: firstTime: " << firstTime << std::endl;
 
     if (firstTime)
     {

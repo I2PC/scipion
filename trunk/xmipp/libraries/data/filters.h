@@ -65,7 +65,7 @@ void substractBackgroundRollingBall(MultidimArray<double> &I, int radius);
  * value 1 if background else value 0
 */
 void detectBackground(const MultidimArray<double> &vol, MultidimArray<double> &mask, double alpha,
-                       double &final_mean);
+                      double &final_mean);
 
 /** Constrast enhancement
  * @ingroup Filters
@@ -88,13 +88,13 @@ void contrastEnhancement(Image<double>* I);
  * Valid neighbourhoods are 4 or 8.
  */
 void regionGrowing2D(const MultidimArray< double >& I_in,
-                      MultidimArray< double >& I_out,
-                      int i,
-                      int j,
-                      float stop_colour = 1,
-                      float filling_colour = 1,
-                      bool less = true,
-                      int neighbourhood = 8);
+                     MultidimArray< double >& I_out,
+                     int i,
+                     int j,
+                     float stop_colour = 1,
+                     float filling_colour = 1,
+                     bool less = true,
+                     int neighbourhood = 8);
 
 /** Region growing for volumes
  * @ingroup Filter
@@ -108,13 +108,13 @@ void regionGrowing2D(const MultidimArray< double >& I_in,
  * grown so that all voxels on its border are smaller than the region voxels.
  */
 void regionGrowing3D(const MultidimArray< double >& V_in,
-                      MultidimArray< double >& V_out,
-                      int k,
-                      int i,
-                      int j,
-                      float stop_colour = 1,
-                      float filling_colour = 1,
-                      bool less = true);
+                     MultidimArray< double >& V_out,
+                     int k,
+                     int i,
+                     int j,
+                     float stop_colour = 1,
+                     float filling_colour = 1,
+                     bool less = true);
 
 /** L1 distance transform
   * @ingroup Filters
@@ -123,7 +123,7 @@ void regionGrowing3D(const MultidimArray< double >& V_in,
   * This is useful if the image coordinates represent angles
   */
 void distanceTransform(const MultidimArray<int> &in,
-                        MultidimArray<int> &out, bool wrap=false);
+                       MultidimArray<int> &out, bool wrap=false);
 
 /** Label a binary image
  * @ingroup Filters
@@ -133,8 +133,8 @@ void distanceTransform(const MultidimArray<int> &in,
  * ...
  */
 int labelImage2D(const MultidimArray< double >& I,
-                  MultidimArray< double >& label,
-                  int neighbourhood = 8);
+                 MultidimArray< double >& label,
+                 int neighbourhood = 8);
 
 /** Label a binary volume
  * @ingroup Filters
@@ -151,8 +151,8 @@ int labelImage3D(const MultidimArray< double >& V, MultidimArray< double >& labe
  * Remove connected components smaller than a given size. They are set to 0.
  */
 void removeSmallComponents(MultidimArray< double >& I,
-                             int size,
-                             int neighbourhood = 8);
+                           int size,
+                           int neighbourhood = 8);
 
 /** Keep the biggest connected component
  * @ingroup Filters
@@ -161,8 +161,8 @@ void removeSmallComponents(MultidimArray< double >& I,
  * 0), more big components are taken until this is accomplished.
  */
 void keepBiggestComponent(MultidimArray< double >& I,
-                            double percentage = 0,
-                            int neighbourhood = 8);
+                          double percentage = 0,
+                          int neighbourhood = 8);
 
 /** Fill object
  * @ingroup Filters
@@ -307,9 +307,9 @@ double fastCorrelation(const MultidimArray< T >& x,
  */
 template <typename T>
 double correlationIndex(const MultidimArray< T >& x,
-                         const MultidimArray< T >& y,
-                         const MultidimArray< int >* mask = NULL,
-                         MultidimArray< double >* Contributions = NULL)
+                        const MultidimArray< T >& y,
+                        const MultidimArray< int >* mask = NULL,
+                        MultidimArray< double >* Contributions = NULL)
 {
     SPEED_UP_temps;
 
@@ -430,10 +430,10 @@ double correntropy(const MultidimArray<T> &x, const MultidimArray<T> &y,
  * I2 by (shiftX, shiftY)
  */
 void bestShift(const MultidimArray< double >& I1,
-                const MultidimArray< double >& I2,
-                double& shiftX,
-                double& shiftY,
-                const MultidimArray< int >* mask = NULL);
+               const MultidimArray< double >& I2,
+               double& shiftX,
+               double& shiftY,
+               const MultidimArray< int >* mask = NULL);
 
 /** Translational search (non-wrapping)
  * @ingroup Filters
@@ -443,9 +443,9 @@ void bestShift(const MultidimArray< double >& I1,
  * will be sought where the mask is 1).
  */
 void bestNonwrappingShift(const MultidimArray< double >& I1,
-                            const MultidimArray< double >& I2,
-                            double& shiftX,
-                            double& shiftY);
+                          const MultidimArray< double >& I2,
+                          double& shiftX,
+                          double& shiftY);
 
 /** Align two images
  * @ingroup Filters
@@ -505,8 +505,8 @@ void estimateGaussian2D(const MultidimArray<double> &I,
  */
 template <typename T>
 double euclidianDistance(const MultidimArray< T >& x,
-                          const MultidimArray< T >& y,
-                          const MultidimArray< int >* mask = NULL)
+                         const MultidimArray< T >& y,
+                         const MultidimArray< int >* mask = NULL)
 {
     SPEED_UP_temps;
 
@@ -548,10 +548,10 @@ double euclidianDistance(const MultidimArray< T >& x,
  */
 template <typename T>
 double mutualInformation(const MultidimArray< T >& x,
-                          const MultidimArray< T >& y,
-                          int nx = 0,
-                          int ny = 0,
-                          const MultidimArray< int >* mask = NULL)
+                         const MultidimArray< T >& y,
+                         int nx = 0,
+                         int ny = 0,
+                         const MultidimArray< int >* mask = NULL)
 {
     SPEED_UP_temps;
 
@@ -1265,41 +1265,21 @@ void pixelDesvFilter(MultidimArray< T > &V, double thresFactor)
 {
     if (thresFactor > 0 )
     {
-        double temp, avg, stddev;
+        double avg, stddev, high, low;
+        T dummy;
         double size = YXSIZE(V);
+        MultidimArray<char> mask(ZSIZE(V), YSIZE(V), XSIZE(V));
+        avg = stddev = low = high = 0;
+        V.computeStats(avg, stddev, dummy, dummy);//min and max not used
+        low  = (avg - thresFactor * stddev);
+        high = (avg + thresFactor * stddev);
 
-        avg = 0;
-        stddev = 0;
-
-        MultidimArray<char> mask(YSIZE(V), XSIZE(V));
-
-        for ( int n=0; n<NSIZE(V); n++ )
+        FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(V)
         {
-            FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY3D(V)
-            {
-                temp = abs(DIRECT_NZYX_ELEM(V,n,0,i,j));
-                avg += temp;
-                stddev += temp * temp;
-            }
-            avg /= size;
-            stddev = stddev/size - avg * avg;
-            stddev *= size/(size -1);
-            stddev = sqrt(stddev);
-
-            double low  = (avg - thresFactor * stddev);
-            double high = (avg + thresFactor * stddev);
-
-            FOR_ALL_ELEMENTS_IN_ARRAY3D(V)
-            {
-                if (abs(DIRECT_NZYX_ELEM(V,n,0,i,j)) < low)
-                    DIRECT_A2D_ELEM(mask,i,j) = 1;
-                else if (abs(DIRECT_NZYX_ELEM(V,n,0,i,j)) > high)
-                    DIRECT_A2D_ELEM(mask,i,j) = 1;
-                else
-                    DIRECT_A2D_ELEM(mask,i,j) = 0;
-            }
-            boundMedianFilter(V, mask, n);
+            double x = DIRECT_MULTIDIM_ELEM(V, n);
+            DIRECT_MULTIDIM_ELEM(mask, n) = (x < low || x > high) ? 1 : 0;
         }
+        boundMedianFilter(V, mask);
     }
 }
 
@@ -1311,29 +1291,53 @@ void computeEdges (const MultidimArray <double>& vol, MultidimArray<double> &vol
 class XmippFilter
 {
 public:
-  virtual void apply(MultidimArray<double> &img) = 0;
+    /** Read params from a program */
+    virtual void readParams(XmippProgram *program)
+    {}//do nothing by default
+    /** Apply filter to an image */
+    virtual void apply(MultidimArray<double> &img) = 0;
 
-  /** Virtual destructor */
-  virtual ~XmippFilter(){};
+    /** Virtual destructor */
+    virtual ~XmippFilter()
+    {}
+    ;
 };
 
 /** Some concrete filters */
-/** Apply filter on bad pixels */
-typedef enum {BADPIXEL_NEGATIVE, BADPIXEL_MASK, BADPIXEL_OUTLIER } BadPixelFilterType;
+
 
 class BadPixelFilter: public XmippFilter
 {
 public:
-  BadPixelFilterType type; //type of filter
-  double factor;    //for the case of outliers bad pixels
-  Image<char> *mask; //for the case of mask bad pixels
+    /** Apply filter on bad pixels */
+    typedef enum { NEGATIVE, MASK, OUTLIER } BadPixelFilterType;
 
-  /** Define the parameters for use inside an Xmipp program */
-  static void defineParams(XmippProgram * program);
-  /** Read from program command line */
-  void readParams(XmippProgram * program);
-  /** Apply the filter to an image or volume*/
-  void apply(MultidimArray<double> &img);
+    BadPixelFilterType type; //type of filter
+    double factor;    //for the case of outliers bad pixels
+    Image<char> *mask; //for the case of mask bad pixels
+
+    /** Define the parameters for use inside an Xmipp program */
+    static void defineParams(XmippProgram * program);
+    /** Read from program command line */
+    void readParams(XmippProgram * program);
+    /** Apply the filter to an image or volume*/
+    void apply(MultidimArray<double> &img);
+};
+
+class BackgroundFilter: public XmippFilter
+{
+  /** Apply filter on bad pixels */
+  typedef enum { PLANE, ROLLINGBALL } BackgroundType;
+  BackgroundType type;
+  int radius;
+
+public:
+    /** Define the parameters for use inside an Xmipp program */
+    static void defineParams(XmippProgram * program);
+    /** Read from program command line */
+    void readParams(XmippProgram * program);
+    /** Apply the filter to an image or volume*/
+    void apply(MultidimArray<double> &img);
 };
 
 #endif

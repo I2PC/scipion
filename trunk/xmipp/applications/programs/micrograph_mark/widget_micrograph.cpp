@@ -2277,14 +2277,14 @@ bool AutoParticlePicking::prepare_piece(MultidimArray<double> &piece,
 #endif
 
     // Denoise the piece
-    ProgDenoise denoiser;
-    denoiser.denoising_type = ProgDenoise::BAYESIAN;
+    DenoiseFilter denoiser;
+    denoiser.denoising_type = DenoiseFilter::BAYESIAN;
     denoiser.scale = 3;
     denoiser.output_scale = 1;
     //    denoiser.scale = __output_scale + 3;
     //    denoiser.output_scale = __output_scale;
     denoiser.produceSideInfo();
-    denoiser.denoise(piece);
+    denoiser.apply(piece);
     if (!(piece(0, 0) == piece(0, 0)))
         return false;
 #ifdef DEBUG_PREPARE

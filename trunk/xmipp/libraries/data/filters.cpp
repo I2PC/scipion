@@ -2317,32 +2317,33 @@ void computeEdges (const MultidimArray <double>& vol, MultidimArray<double> &vol
 /** Define the parameters for use inside an Xmipp program */
 void BadPixelFilter::defineParams(XmippProgram * program)
 {
-  program->addParamsLine(" === Bad pixels ===");
-  program->addParamsLine("   --bad_pixels <type>            : Applied filters on bad pixels of the image.");
+  program->addParamsLine("== Bad pixels ==");
+  program->addParamsLine("  [ --bad_pixels <type>]            : Applied filters on bad pixels of the image.");
   program->addParamsLine("         where <type>  ");
   program->addParamsLine("            negative              : Applied at those negative values. Positive values are untouched.");
   program->addParamsLine("            mask <mask_file>      : Applied at those pixels given by mask.");
   program->addParamsLine("            outliers <factor>     : Applied at those pixels out of the range [mean - factor*std, mean + factor*std].");
+  program->addParamsLine("         alias -b; ");
 }
 
 /** Read from program command line */
 void BadPixelFilter::readParams(XmippProgram * program)
 {
-  type = BADPIXEL_NEGATIVE;
+  type = NEGATIVE;
   // Check operation to do
   String typeStr = program->getParam("--bad_pixels");
   if (typeStr == "negative")
-      ;//nothing to do type already equal to BADPIXEL_NEGATIVE
+      ;//nothing to do type already equal to NEGATIVE
   else if (typeStr == "mask")
   {
       mask = new Image<char>;
       mask->read(program->getParam("--bad_pixels", "mask"));
-      type = BADPIXEL_MASK;
+      type = MASK;
   }
   else if (typeStr == "outliers")
   {
       factor = program->getDoubleParam("--bad_pixels", "outliers");
-      type = BADPIXEL_OUTLIER;
+      type = OUTLIER;
   }
 }
 
@@ -2351,14 +2352,56 @@ void BadPixelFilter::apply(MultidimArray<double> &img)
 {
   switch (type)
   {
-    case BADPIXEL_NEGATIVE:
+    case NEGATIVE:
       forcePositive(img);
       break;
-    case BADPIXEL_MASK:
+    case MASK:
       boundMedianFilter(img, mask->data);
       break;
-    case BADPIXEL_OUTLIER:
+    case OUTLIER:
       pixelDesvFilter(img, factor);
+      break;
+
+  }
+}
+
+
+/** Define the parameters for use inside an Xmipp program */
+void BackgroundFilter::defineParams(XmippProgram * program)
+{
+  program->addParamsLine("== Background removal ==");
+  program->addParamsLine("  [ --background <type=plane> ]            : Filters to remove the background.");
+  program->addParamsLine("         where <type>  ");
+  program->addParamsLine("            plane                          : Remove the plane that best fits the pixels.");
+  program->addParamsLine("            rollingball <radius>           : The background is computed as a rolling ball operation.");
+  program->addParamsLine("         alias -g; ");
+}
+
+/** Read from program command line */
+void BackgroundFilter::readParams(XmippProgram * program)
+{
+  type = PLANE;
+  // Check operation to do
+  String typeStr = program->getParam("--background");
+  if (typeStr == "plane")//Nothing to do, plane by default
+    ;
+  else if (typeStr == "rollingball")
+  {
+    type = ROLLINGBALL;
+    radius = program->getIntParam("--background", "rollingball");
+  }
+}
+
+/** Apply the filter to an image or volume*/
+void BackgroundFilter::apply(MultidimArray<double> &img)
+{
+  switch (type)
+  {
+    case PLANE:
+      substractBackgroundPlane(img);
+      break;
+    case ROLLINGBALL:
+      substractBackgroundRollingBall(img, radius);
       break;
 
   }

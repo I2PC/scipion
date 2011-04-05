@@ -543,6 +543,7 @@ ReconsSources = [
     'micrograph_downsample.cpp',
     'ml_align2d.cpp',
 ###    'ml_align3d.cpp',
+    'mean_shift.cpp',
     'mlf_align2d.cpp',
     'ml_refine3d.cpp',
     'ml_tomo.cpp',
@@ -669,7 +670,7 @@ AddXmippProgram('ctf_estimate_from_micrograph', ['XmippRecons'])
 AddXmippProgram('ctf_estimate_from_psd', ['XmippRecons'])
 AddXmippProgram('ctf_group', ['XmippRecons'])
 AddXmippProgram('ctf_sort_psds', ['XmippRecons'])
-AddXmippProgram('denoise', ['XmippRecons'])
+#AddXmippProgram('denoise', ['XmippRecons'])
 AddXmippProgram('detect_missing_wedge', ['XmippRecons'])
 #AddXmippProgram('detect_structures', ['XmippRecons'])
 AddXmippProgram('enhance_contrast', ['XmippRecons'])
@@ -686,7 +687,7 @@ AddXmippProgram('image_sort', ['XmippClassif'])
 AddXmippProgram('image_separate_objects')
 AddXmippProgram('image_statistics')
 AddXmippProgram('make_spectra', ['XmippRecons'])
-AddXmippProgram('mean_shift')
+#AddXmippProgram('mean_shift')
 AddXmippProgram('metadata_convert_to_spider', ['XmippInterface'])
 AddXmippProgram('metadata_histogram')
 AddXmippProgram('metadata_import')

@@ -26,6 +26,8 @@
 #include "data/program.h"
 #include "data/filters.h"
 #include "reconstruction/fourier_filter.h"
+#include "reconstruction/denoise.h"
+#include "reconstruction/mean_shift.h"
 
 /** Apply some filter operation on images, or selfiles */
 class ProgFilter: public XmippMetadataProgram
@@ -41,7 +43,10 @@ protected:
         addUsageLine("Apply different type of filters to images or volumes.");
         XmippMetadataProgram::defineParams();
         FourierFilter::defineParams(this);
+        DenoiseFilter::defineParams(this);
         BadPixelFilter::defineParams(this);
+        MeanShiftFilter::defineParams(this);
+        BackgroundFilter::defineParams(this);
     }
 
     void readParams()
@@ -49,23 +54,23 @@ protected:
         XmippMetadataProgram::readParams();
 
         if (checkParam("--fourier"))
-        {
-          FourierFilter *ff = new FourierFilter();
-          ff->readParams(this);
-          filter = ff;
-        }
+          filter = new FourierFilter();
+        else if (checkParam("--wavelet"))
+          filter = new DenoiseFilter();
         else if (checkParam("--bad_pixels"))
-        {
-          BadPixelFilter *bpf = new BadPixelFilter();
-          bpf->readParams(this);
-          filter = bpf;
-        }
+          filter = new BadPixelFilter();
+        else if (checkParam("--mean_shift"))
+          filter = new MeanShiftFilter();
+        else if (checkParam("--background"))
+            filter = new BackgroundFilter();
+        //Read params
+        filter->readParams(this);
     }
 
     void processImage(const FileName &fnImg, const FileName &fnImgOut, size_t objId)
     {
         Image<double> img;
-        img.readApplyGeo(fnImg,mdIn,objId);
+        img.readApplyGeo(fnImg, mdIn, objId);
         filter->apply(img());
         img.write(fnImgOut);
     }
