@@ -661,6 +661,16 @@ def preconditions(gui):
             print message
         retval=False
     
+    # Check that Q0 is negative
+    if Q0>0:
+        message="Q0 should be negative "
+        if gui:
+            import tkMessageBox
+            tkMessageBox.showerror("Error", message)
+        else:
+            print message
+        retval=False
+
     return retval
 
 #        
