@@ -261,6 +261,8 @@ void XRayPSF::init()
     type = IDEAL_FRESNEL_LENS;
 
     PSF = NULL;
+
+    ftGenOTF.setNormalizationSign(FFTW_BACKWARD);
 }
 /* Default values ---------------------------------------------------------- */
 void XRayPSF::clear()
@@ -306,9 +308,9 @@ void XRayPSF::applyOTF(MultidimArray<double> &Im, const double sliceOffset)
     generateOTF();
 
     MultidimArray<std::complex<double> > ImFT;
-    FourierTransformer FTransAppOTF;
+    FourierTransformer FTransAppOTF(FFTW_BACKWARD);
 
-    //#define DEBUG
+//    #define DEBUG
 #ifdef DEBUG
 
     Image<double> _Im;
@@ -339,10 +341,10 @@ void XRayPSF::applyOTF(MultidimArray<double> &Im, const double sliceOffset)
     _Im.write(("psfxr-imft1.spi"));
 #endif
 
-    double normSize = MULTIDIM_SIZE(OTF);
+//    double normSize = MULTIDIM_SIZE(OTF);
 
     FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY2D(ImFT)
-    dAij(ImFT,i,j) *= dAij(OTF,i,j)*normSize;
+    dAij(ImFT,i,j) *= dAij(OTF,i,j);
 
 #ifdef DEBUG
 
@@ -496,7 +498,7 @@ void XRayPSF::generatePSFIdealLens(MultidimArray<double> &PSFi) const
 #endif
 #undef DEBUG
 
-    FourierTransformer transformer;
+    FourierTransformer transformer(FFTW_BACKWARD);
     transformer.FourierTransform(OTFTemp, PSFiTemp, false);
     double norm=0, iNorm;
 
@@ -720,4 +722,3 @@ void lensPD(MultidimArray<std::complex<double> > &Im, double Flens, double lambd
     }
 }
 #undef DEBUG
-
