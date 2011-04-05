@@ -39,7 +39,7 @@ void ProgCTFEstimateFromMicrograph::readParams()
     fn_micrograph=getParam("--micrograph");
     fn_root=getParam("--oroot");
     if (fn_root=="")
-    	fn_root=fn_micrograph.withoutExtension();
+        fn_root=fn_micrograph.withoutExtension();
     pieceDim = getIntParam("--pieceDim");
     String aux=getParam("--psd_estimator");
     if (aux=="periodogram")
@@ -73,6 +73,11 @@ void ProgCTFEstimateFromMicrograph::readParams()
 void ProgCTFEstimateFromMicrograph::defineParams()
 {
     addUsageLine("Estimate the CTF from a micrograph.");
+    addUsageLine("The PSD of the micrograph is first estimated using periodogram averaging or ");
+    addUsageLine("ARMA models ([[http://www.ncbi.nlm.nih.gov/pubmed/12623169][See article]]). ");
+    addUsageLine("Then, the PSD is enhanced ([[http://www.ncbi.nlm.nih.gov/pubmed/16987671][See article]]). ");
+    addUsageLine("And finally, the CTF is fitted to the PSD, being guided by the enhanced PSD ");
+    addUsageLine("([[http://www.ncbi.nlm.nih.gov/pubmed/17911028][See article]]).");
     addParamsLine("   --micrograph <file>         : File with the micrograph");
     addParamsLine("  [--oroot <rootname=\"\">]    : Rootname for output");
     addParamsLine("                               : If not given, the micrograph without extensions is taken");
@@ -244,9 +249,11 @@ void ProgCTFEstimateFromMicrograph::run()
     MultidimArray<double> piece(pieceDim, pieceDim);
     psd().resizeNoCopy(piece);
     MultidimArray<double> &mpsd=psd();
+    MultidimArray<double> &mpsd2=psd2();
     PCAMahalanobisAnalyzer pcaAnalyzer;
     MultidimArray<int> PCAmask;
     MultidimArray<float> PCAv;
+    double pieceDim2=pieceDim*pieceDim;
     std::cerr << "Computing models of each piece ...\n";
 
     // Prepare these filenames in case they are needed
@@ -303,19 +310,23 @@ void ProgCTFEstimateFromMicrograph::run()
             if (PSDEstimator_mode == ARMA)
             {
                 CausalARMA(piece, ARMA_prm);
-                ARMAFilter(piece, psd(), ARMA_prm);
+                ARMAFilter(piece, mpsd, ARMA_prm);
             }
             else
             {
                 FourierTransform(piece, Periodogram);
-                FFT_magnitude(Periodogram, psd());
-                psd() *= psd();
-                psd() *= pieceDim * pieceDim;
+                FFT_magnitude(Periodogram, mpsd);
+                FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(mpsd)
+                DIRECT_MULTIDIM_ELEM(mpsd,n)*=DIRECT_MULTIDIM_ELEM(mpsd,n)*pieceDim2;
             }
         else
-            PSD_piece_by_averaging(piece, psd());
-        psd2()=psd();
-        psd2()*=psd();
+            PSD_piece_by_averaging(piece, mpsd);
+        mpsd2.resizeNoCopy(mpsd);
+        FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(mpsd2)
+        {
+            double psdval=DIRECT_MULTIDIM_ELEM(mpsd,n);
+            DIRECT_MULTIDIM_ELEM(mpsd2,n)=psdval*psdval;
+        }
 
         // Perform averaging if applicable ...................................
         if (psd_mode==OnePerMicrograph)
@@ -323,26 +334,26 @@ void ProgCTFEstimateFromMicrograph::run()
             // Compute average and standard deviation
             if (N == 1)
             {
-                psd_avg() = psd();
+                psd_avg() = mpsd;
                 psd_std() = psd2();
             }
             else
             {
-                psd_avg() += psd();
+                psd_avg() += mpsd;
                 psd_std() += psd2();
             }
 
             // Keep psd for the PCA
             if (XSIZE(PCAmask)==0)
             {
-                PCAmask.initZeros(psd());
+                PCAmask.initZeros(mpsd);
                 Matrix1D<int>    idx(2);  // Indexes for Fourier plane
                 Matrix1D<double> freq(2); // Frequencies for Fourier plane
                 size_t PCAdim=0;
                 FOR_ALL_ELEMENTS_IN_ARRAY2D(PCAmask)
                 {
                     VECTOR_R2(idx, j, i);
-                    FFT_idx2digfreq(psd(), idx, freq);
+                    FFT_idx2digfreq(mpsd, idx, freq);
                     double w = freq.module();
                     if (w>0.05 && w<0.4)
                     {
@@ -353,10 +364,10 @@ void ProgCTFEstimateFromMicrograph::run()
                 PCAv.initZeros(PCAdim);
             }
 
-            int ii=-1;
-            FOR_ALL_ELEMENTS_IN_ARRAY2D(PCAmask)
-            if (A2D_ELEM(PCAmask,i,j))
-                A1D_ELEM(PCAv,++ii)=(float)A2D_ELEM(mpsd,i,j);
+            size_t ii=-1;
+            FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(PCAmask)
+            if (DIRECT_MULTIDIM_ELEM(PCAmask,n))
+                A1D_ELEM(PCAv,++ii)=(float)DIRECT_MULTIDIM_ELEM(mpsd,n);
             pcaAnalyzer.addVector(PCAv);
         }
 
@@ -407,9 +418,9 @@ void ProgCTFEstimateFromMicrograph::run()
             DIRECT_MULTIDIM_ELEM(mpsd_std,n)-=DIRECT_MULTIDIM_ELEM(mpsd_avg,n)*
                                               DIRECT_MULTIDIM_ELEM(mpsd_avg,n);
             if (DIRECT_MULTIDIM_ELEM(mpsd_std,n)<0)
-            	DIRECT_MULTIDIM_ELEM(mpsd_std,n)=0;
+                DIRECT_MULTIDIM_ELEM(mpsd_std,n)=0;
             else
-            	DIRECT_MULTIDIM_ELEM(mpsd_std,n)=sqrt(DIRECT_MULTIDIM_ELEM(mpsd_std,n));
+                DIRECT_MULTIDIM_ELEM(mpsd_std,n)=sqrt(DIRECT_MULTIDIM_ELEM(mpsd_std,n));
         }
         psd_avg.write(fn_psd);
 
@@ -421,7 +432,7 @@ void ProgCTFEstimateFromMicrograph::run()
             CTFDescription ctfmodel;
             if (bootstrapN==-1)
             {
-            	// No bootstrapping
+                // No bootstrapping
                 // Compute the PCA of the local PSDs
                 pcaAnalyzer.standardarizeVariables();
                 // pcaAnalyzer.subtractAvg();
@@ -473,7 +484,7 @@ void ProgCTFEstimateFromMicrograph::run()
             }
             else
             {
-            	// If bootstrapping
+                // If bootstrapping
                 MultidimArray<double> CTFs(bootstrapN,32);
                 prmEstimateCTFFromPSD.bootstrap=true;
                 prmEstimateCTFFromPSD.show_optimization=true;
@@ -543,9 +554,9 @@ void ProgCTFEstimateFromMicrograph::run()
         int Y, X;
         FOR_ALL_OBJECTS_IN_METADATA(posFile)
         {
-        	posFile.getValue(MDL_IMAGE, fn_img, __iter.objId);
-        	posFile.getValue(MDL_X,X,__iter.objId);
-        	posFile.getValue(MDL_Y,Y,__iter.objId);
+            posFile.getValue(MDL_IMAGE, fn_img, __iter.objId);
+            posFile.getValue(MDL_X,X,__iter.objId);
+            posFile.getValue(MDL_Y,Y,__iter.objId);
             int idx_X = floor((double)X / pieceDim);
             int idx_Y = floor((double)Y / pieceDim);
             int N = idx_Y * div_NumberX + idx_X + 1;

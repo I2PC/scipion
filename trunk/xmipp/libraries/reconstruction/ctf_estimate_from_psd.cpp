@@ -556,6 +556,9 @@ void ProgCTFEstimateFromPSD::defineBasicParams(XmippProgram * program)
 void ProgCTFEstimateFromPSD::defineParams()
 {
     addUsageLine("Adjust a parametric model to a PSD file.");
+    addUsageLine("The PSD is enhanced ([[http://www.ncbi.nlm.nih.gov/pubmed/16987671][See article]]). ");
+    addUsageLine("And finally, the CTF is fitted to the PSD, being guided by the enhanced PSD ");
+    addUsageLine("([[http://www.ncbi.nlm.nih.gov/pubmed/17911028][See article]]).");
     addParamsLine("   --psd <PSDfile> : PSD file");
     addSeeAlsoLine("ctf_estimate_from_micrograph");
     defineBasicParams(this);
@@ -1027,10 +1030,10 @@ double CTF_fitness(double *p, void *)
         return global_heavy_penalization;
     }
     if (global_action > 3 && (
-            ABS(global_ctfmodel.DeltafU - global_ctfmodel_defoci.DeltafU)/
-            ABS(global_ctfmodel_defoci.DeltafU) > 0.2 ||
-            ABS(global_ctfmodel.DeltafV - global_ctfmodel_defoci.DeltafV)/
-            ABS(global_ctfmodel_defoci.DeltafU) > 0.2))
+            fabs((global_ctfmodel.DeltafU - global_ctfmodel_defoci.DeltafU)/
+                 global_ctfmodel_defoci.DeltafU) > 0.2 ||
+            fabs((global_ctfmodel.DeltafV - global_ctfmodel_defoci.DeltafV)/
+                 global_ctfmodel_defoci.DeltafU) > 0.2))
     {
         if (global_show >= 2)
             std::cout << "Too large defocus\n";
@@ -1040,10 +1043,10 @@ double CTF_fitness(double *p, void *)
     {
         // If there is an initial model, the true solution
         // cannot be too far
-        if (ABS(global_prm->initial_ctfmodel.DeltafU -
-                global_ctfmodel.DeltafU) > 10000 ||
-            ABS(global_prm->initial_ctfmodel.DeltafV -
-                global_ctfmodel.DeltafV) > 10000)
+        if (fabs(global_prm->initial_ctfmodel.DeltafU -
+                 global_ctfmodel.DeltafU) > 10000 ||
+            fabs(global_prm->initial_ctfmodel.DeltafV -
+                 global_ctfmodel.DeltafV) > 10000)
         {
             if (global_show >= 2)
                 std::cout << "Too far from hint\n";
@@ -1099,19 +1102,18 @@ double CTF_fitness(double *p, void *)
             // Compute distance
             double ctf2 = DIRECT_A2D_ELEM(*f, i, j);
             double dist = 0;
-            int r = DIRECT_A2D_ELEM(global_w_digfreq_r, i, j);
             double ctf_with_damping2;
             switch (global_action)
             {
             case 0:
             case 1:
-                dist = ABS(ctf2 - bg);
+                dist = fabs(ctf2 - bg);
                 if (global_penalize && bg > ctf2 &&
                     DIRECT_A2D_ELEM(global_w_digfreq, i, j) > global_max_gauss_freq)
                     dist *= global_current_penalty;
                 break;
             case 2:
-                dist = ABS(ctf2 - ctf2_th);
+                dist = fabs(ctf2 - ctf2_th);
                 if (global_penalize && ctf2_th < ctf2 &&
                     DIRECT_A2D_ELEM(global_w_digfreq, i, j) > global_max_gauss_freq)
                     dist *= global_current_penalty;
@@ -1138,9 +1140,9 @@ double CTF_fitness(double *p, void *)
                     }
                 }
                 if (envelope > 1e-2)
-                    dist = ABS(ctf2 - ctf2_th) / (envelope * envelope);
+                    dist = fabs(ctf2 - ctf2_th) / (envelope * envelope);
                 else
-                    dist = ABS(ctf2 - ctf2_th);
+                    dist = fabs(ctf2 - ctf2_th);
                 // This expression comes from mapping any value so that
                 // bg becomes 0, and bg+envelope^2 becomes 1
                 // This is the transformation
@@ -1166,9 +1168,9 @@ double CTF_fitness(double *p, void *)
         model_avg /= Ncorr;
         enhanced_avg /= Ncorr;
         double correlation_coeff = enhanced_model / Ncorr - model_avg * enhanced_avg;
-        double sigma1 = sqrt(ABS(enhanced2 / Ncorr - enhanced_avg * enhanced_avg));
-        double sigma2 = sqrt(ABS(model2 / Ncorr - model_avg * model_avg));
-        if (ABS(sigma2) < XMIPP_EQUAL_ACCURACY)
+        double sigma1 = sqrt(fabs(enhanced2 / Ncorr - enhanced_avg * enhanced_avg));
+        double sigma2 = sqrt(fabs(model2 / Ncorr - model_avg * model_avg));
+        if (fabs(sigma2) < XMIPP_EQUAL_ACCURACY)
             retval = global_heavy_penalization;
         else
         {
@@ -1558,8 +1560,8 @@ void estimate_background_gauss_parameters()
     }
     A(1, 0) = A(0, 1);
     b = A.inv() * b;
-    global_ctfmodel.sigmaU = XMIPP_MIN(ABS(b(1)), 95e3); // This value should be
-    global_ctfmodel.sigmaV = XMIPP_MIN(ABS(b(1)), 95e3); // conformant with the physical
+    global_ctfmodel.sigmaU = XMIPP_MIN(fabs(b(1)), 95e3); // This value should be
+    global_ctfmodel.sigmaV = XMIPP_MIN(fabs(b(1)), 95e3); // conformant with the physical
     // meaning routine in CTF.cc
     global_ctfmodel.gaussian_K = exp(b(0));
 
@@ -1702,8 +1704,8 @@ void estimate_background_gauss_parameters2()
     {
         A(1, 0) = A(0, 1);
         b = A.inv() * b;
-        global_ctfmodel.sigmaU2 = XMIPP_MIN(ABS(b(1)), 95e3); // This value should be
-        global_ctfmodel.sigmaV2 = XMIPP_MIN(ABS(b(1)), 95e3); // conformant with the physical
+        global_ctfmodel.sigmaU2 = XMIPP_MIN(fabs(b(1)), 95e3); // This value should be
+        global_ctfmodel.sigmaV2 = XMIPP_MIN(fabs(b(1)), 95e3); // conformant with the physical
         // meaning routine in CTF.cc
         global_ctfmodel.gaussian_K2 = exp(b(0));
     }
@@ -1906,7 +1908,7 @@ void estimate_defoci()
             for (defocusU = defocusU0, j = 0; defocusU >= defocusUF; defocusU -= defocusStep, j++)
             {
                 bool first_angle = true;
-                if (ABS(defocusU - defocusV) > 30e3)
+                if (fabs(defocusU - defocusV) > 30e3)
                 {
                     error(i, j) = global_heavy_penalization;
                     continue;
@@ -2010,7 +2012,7 @@ void estimate_defoci()
                     std::cout << i << "," << j << " " << error(i, j) << " " << defocusU << " " << defocusV << std::endl
                     << best_defocusUmin << " " << best_defocusUmax << std::endl
                     << best_defocusVmin << " " << best_defocusVmax << std::endl;
-                if (ABS(error(i, j) - errmin) / ABS(errmax - errmin) <= 0.1)
+                if (fabs((error(i, j) - errmin) / (errmax - errmin)) <= 0.1)
                 {
                     if (defocusV < best_defocusVmin)
                         best_defocusVmin = defocusV;
