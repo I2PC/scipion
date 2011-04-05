@@ -518,8 +518,8 @@ void CTFDescription::precomputeValues(const MultidimArray<double> &cont_x_freq,
         double X=A2D_ELEM(cont_x_freq,i,j);
         double Y=A2D_ELEM(cont_y_freq,i,j);
         precomputeValues(X, Y);
-        if (ABS(X) < XMIPP_EQUAL_ACCURACY &&
-            ABS(Y) < XMIPP_EQUAL_ACCURACY)
+        if (fabs(X) < XMIPP_EQUAL_ACCURACY &&
+            fabs(Y) < XMIPP_EQUAL_ACCURACY)
             precomputed.deltaf=0;
         else
             precomputed.deltaf=-1;

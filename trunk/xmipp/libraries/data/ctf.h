@@ -27,6 +27,7 @@
 #define _CTF_HH
 
 #include "image.h"
+#include "numerical_recipes.h"
 #include "metadata.h"
 #include "program.h"
 #include <map>
@@ -319,15 +320,17 @@ public:
         precomputed.u = sqrt(precomputed.u2);
         precomputed.u4 = precomputed.u2 * precomputed.u2;
         precomputed.u_sqrt = sqrt(precomputed.u);
-        if (ABS(X) < XMIPP_EQUAL_ACCURACY &&
-            ABS(Y) < XMIPP_EQUAL_ACCURACY)
+        if (fabs(X) < XMIPP_EQUAL_ACCURACY &&
+            fabs(Y) < XMIPP_EQUAL_ACCURACY)
             precomputed.deltaf=0;
         else
         {
             double ellipsoid_ang = precomputed.ang - rad_azimuth;
-            double DeltafUp = DeltafU * cos(ellipsoid_ang);
-            double DeltafVp = DeltafV * sin(ellipsoid_ang);
-            precomputed.deltaf=SGN(DeltafU)*sqrt(DeltafUp*DeltafUp + DeltafVp*DeltafVp);
+            double cos_ellipsoid_ang = cos(ellipsoid_ang);
+            double cos_ellipsoid_ang_2=cos_ellipsoid_ang*cos_ellipsoid_ang;
+            double sin_ellipsoid_ang_2=1.0-cos_ellipsoid_ang_2;
+            precomputed.deltaf=SGN(DeltafU)*sqrt(DeltafU*DeltafU*cos_ellipsoid_ang_2 +
+                                                 DeltafV*DeltafV*sin_ellipsoid_ang_2);
         }
     }
 
@@ -342,9 +345,11 @@ public:
         if (precomputed.deltaf==-1)
         {
             double ellipsoid_ang = precomputed.ang - rad_azimuth;
-            double DeltafUp = DeltafU * cos(ellipsoid_ang);
-            double DeltafVp = DeltafV * sin(ellipsoid_ang);
-            precomputed.deltaf=SGN(DeltafU)*sqrt(DeltafUp*DeltafUp + DeltafVp*DeltafVp);
+            double cos_ellipsoid_ang = cos(ellipsoid_ang);
+            double cos_ellipsoid_ang_2=cos_ellipsoid_ang*cos_ellipsoid_ang;
+            double sin_ellipsoid_ang_2=1.0-cos_ellipsoid_ang_2;
+            precomputed.deltaf=SGN(DeltafU)*sqrt(DeltafU*DeltafU*cos_ellipsoid_ang_2 +
+                                                 DeltafV*DeltafV*sin_ellipsoid_ang_2);
         }
     }
 
@@ -457,7 +462,7 @@ public:
         double Eespr = exp(-K3 * u4); // OK
         //CO: double Eispr=exp(-K4*u4); // OK
         double EdeltaF = bessj0(K5 * u2); // OK
-        double EdeltaR = SINC(u * DeltaR); // OK
+        double EdeltaR = sinc(u * DeltaR); // OK
         double Ealpha = exp(-K6 * (K7 * u2 * u + deltaf * u) * (K7 * u2 * u + deltaf * u)); // OK
         // CO: double E=Eespr*Eispr*EdeltaF*EdeltaR*Ealpha;
         double E = Eespr * EdeltaF * EdeltaR * Ealpha;
@@ -484,13 +489,15 @@ public:
     /// Deltaf at a given direction
     double DeltafNoPrecomputed(double X, double Y) const
     {
-        if (ABS(X) < XMIPP_EQUAL_ACCURACY &&
-            ABS(Y) < XMIPP_EQUAL_ACCURACY)
+        if (fabs(X) < XMIPP_EQUAL_ACCURACY &&
+            fabs(Y) < XMIPP_EQUAL_ACCURACY)
             return 0;
         double ellipsoid_ang = atan2(Y, X) - rad_azimuth;
-        double DeltafUp = DeltafU * cos(ellipsoid_ang);
-        double DeltafVp = DeltafV * sin(ellipsoid_ang);
-        return SGN(DeltafU)*sqrt(DeltafUp*DeltafUp + DeltafVp*DeltafVp);
+        double cos_ellipsoid_ang=cos(ellipsoid_ang);
+        double cos_ellipsoid_ang_2=cos_ellipsoid_ang*cos_ellipsoid_ang;
+        double sin_ellipsoid_ang_2=1.0-cos_ellipsoid_ang_2;
+        return SGN(DeltafU)*sqrt(DeltafU*DeltafU*cos_ellipsoid_ang_2 +
+                                 DeltafV*DeltafV*sin_ellipsoid_ang_2);
     }
 
     /// Compute noise at (X,Y). Continuous frequencies, notice it is squared
@@ -501,39 +508,32 @@ public:
         double ellipsoid_ang2 = precomputed.ang - rad_gaussian2;
         double ellipsoid_sqrt_ang = precomputed.ang - rad_sqrt;
         double cos_sqrt_ang = cos(ellipsoid_sqrt_ang);
-        double sin_sqrt_ang = sin(ellipsoid_sqrt_ang);
-        double sqUp = sqU * cos_sqrt_ang;
-        double sqVp = sqV * sin_sqrt_ang;
-        double sq = sqrt(sqUp * sqUp + sqVp * sqVp);
+        double cos_sqrt_ang_2 = cos_sqrt_ang*cos_sqrt_ang;
+        double sin_sqrt_ang_2 = 1.0-cos_sqrt_ang_2;
+        double sq = sqrt(sqU * sqU * cos_sqrt_ang_2 + sqV * sqV * sin_sqrt_ang_2);
 
         double cos_ang = cos(ellipsoid_ang);
-        double sin_ang = sin(ellipsoid_ang);
-        double cUp = cU * cos_ang;
-        double cVp = cV * sin_ang;
-        double c = sqrt(cUp * cUp + cVp * cVp);
-        double sigmaUp = sigmaU * cos_ang;
-        double sigmaVp = sigmaV * sin_ang;
-        double sigma = sqrt(sigmaUp * sigmaUp + sigmaVp * sigmaVp);
+        double cos_ang_2 = cos_ang*cos_ang;
+        double sin_ang_2 = 1.0-cos_ang_2;
+        double c = sqrt(cU * cU * cos_ang_2 + cV * cV * sin_ang_2);
+        double sigma = sqrt(sigmaU * sigmaU * cos_ang_2 + sigmaV * sigmaV * sin_ang_2);
 
         double cos_ang2 = cos(ellipsoid_ang2);
-        double sin_ang2 = sin(ellipsoid_ang2);
-        double cUp2 = cU2 * cos_ang2;
-        double cVp2 = cV2 * sin_ang2;
-        double c2 = sqrt(cUp2 * cUp2 + cVp2 * cVp2);
-        double sigmaUp2 = sigmaU2 * cos_ang2;
-        double sigmaVp2 = sigmaV2 * sin_ang2;
-        double sigma2 = sqrt(sigmaUp2 * sigmaUp2 + sigmaVp2 * sigmaVp2);
+        double cos_ang2_2 = cos_ang2*cos_ang2;
+        double sin_ang2_2 = 1.0-cos_ang2_2;
+        double c2 = sqrt(cU2 * cU2 * cos_ang2 + cV2 * cV2 * sin_ang2_2);
+        double sigma2 = sqrt(sigmaU2 * sigmaU2 * cos_ang2_2 + sigmaV2 * sigmaV2 * sin_ang2_2);
 
         if (show)
         {
             std::cout << "   ellipsoid_ang=" << RAD2DEG(ellipsoid_ang) << std::endl
             << "   ellipsoid_sqrt_ang=" << RAD2DEG(ellipsoid_sqrt_ang) << std::endl
-            << "   sqUp, sqVp=" << sqUp << "," << sqVp << " (" << sq << ")\n"
-            << "   cUp, cVp=" << cUp << "," << cVp << " (" << c << ")\n"
-            << "   sigmaUp, sigmaVp=" << sigmaUp << "," << sigmaVp << " (" << sigma << ")\n"
+            << "   sq=" << sq << "\n"
+            << "   c=" << c << "\n"
+            << "   sigma=" << sigma << "\n"
             << "   ellipsoid_ang2=" << RAD2DEG(ellipsoid_ang2) << std::endl
-            << "   cUp2, cVp2=" << cUp2 << "," << cVp2 << " (" << c2 << ")\n"
-            << "   sigmaUp2, sigmaVp2=" << sigmaUp2 << "," << sigmaVp2 << " (" << sigma2 << ")\n";
+            << "   cU2=" << c2 << "\n"
+            << "   sigmaU2=" << sigma2 << "\n";
             std::cout << "   u=" << precomputed.u << ") CTFnoise="
             << base_line +
             gaussian_K*exp(-sigma*(precomputed.u - c)*(precomputed.u - c)) +
