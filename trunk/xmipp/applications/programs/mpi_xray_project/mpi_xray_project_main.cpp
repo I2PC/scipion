@@ -24,17 +24,14 @@
  *  e-mail address 'xmipp@cnb.csic.es'
  ***************************************************************************/
 
-
 #include "parallel/mpi_project_XR.h"
 
 
 int main(int argc, char *argv[])
 {
-    ProgMPIXrayProject      prog_prm;
+    ProgMPIXrayProject  prog;
 
-        prog_prm.read(argc, argv);
-        prog_prm.tryRun();
-
-        return 0;
+    prog.read(argc, argv);
+    return prog.tryRun();
 }
 
