@@ -53,8 +53,8 @@ protected:
         addUsageLine("inside a medata and write to an independent one.");
         addSeeAlsoLine("metadata_import");
 
-        addParamsLine(" -i <metadata>                          : Input metadata file");
-        addParamsLine("   [-o  <metadata>]                    : Output metadata file, if not provided result will overwritten");
+        addParamsLine(" -i <metadata>         : Input metadata file");
+        addParamsLine("   [-o  <metadata>]    : Output metadata file, if not provided result will overwrite input file");
 
         addParamsLine("  [--set <set_operation> <md2_file> <label=image>]   : Set operations");
         addParamsLine("         where <set_operation>");
