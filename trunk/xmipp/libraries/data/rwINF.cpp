@@ -101,9 +101,7 @@ int ImageBase::readINF(size_t select_img,bool isStack)
     MDMainHeader.setValue(MDL_DATATYPE,(int)datatype);
 
     MD.clear();
-    MD.resize(imgEnd - imgStart);
-    for ( i = 0; i < imgEnd - imgStart; ++i )
-    	MD[i]=MDL::emptyHeader;
+    MD.resize(imgEnd - imgStart,MDL::emptyHeader);
 
     //#define DEBUG
 #ifdef DEBUG

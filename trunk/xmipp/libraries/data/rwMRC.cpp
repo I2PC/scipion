@@ -232,12 +232,10 @@ int ImageBase::readMRC(size_t select_img, bool isStack)
         MDMainHeader.setValue(MDL_SAMPLINGRATEZ,(double)header->c/header->mz);
 
     MD.clear();
-    MD.resize(imgEnd - imgStart);
+    MD.resize(imgEnd - imgStart,MDL::emptyHeader);
     double aux;
     for ( i = 0; i < imgEnd - imgStart; ++i )
     {
-    	MD[i]=MDL::emptyHeader;
-
         MD[i].setValue(MDL_SHIFTX, (double) -header->nxStart);
         MD[i].setValue(MDL_SHIFTY, (double) -header->nyStart);
         MD[i].setValue(MDL_SHIFTZ, (double) -header->nzStart);

@@ -225,7 +225,7 @@ int  ImageBase::readSPIDER(size_t select_img)
     }
 
     MD.clear();
-    MD.resize(imgEnd - imgStart);
+    MD.resize(imgEnd - imgStart,MDL::emptyHeader);
     double daux;
 
     for (size_t n = 0, i = imgStart; i < imgEnd; ++i, ++n )
@@ -263,8 +263,6 @@ int  ImageBase::readSPIDER(size_t select_img)
                 daux=1.0;
             MD[n].setValue(MDL_SCALE, daux);
         }
-        else
-        	MD[n]=MDL::emptyHeader;
     }
 
     delete header;

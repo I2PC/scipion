@@ -201,7 +201,7 @@ int  ImageBase::readIMAGIC(size_t select_img)
     fseek( fhed, IMG_INDEX(select_img) * IMAGICSIZE, SEEK_SET );
 
     MD.clear();
-    MD.resize(_nDim);
+    MD.resize(_nDim,MDL::emptyHeader);
     double daux=1.;
     for ( i = 0; i < _nDim; ++i )
     {
@@ -224,8 +224,6 @@ int  ImageBase::readIMAGIC(size_t select_img)
                 MD[i].setValue(MDL_WEIGHT,   (double)oneD);
                 MD[i].setValue(MDL_SCALE, daux);
             }
-            else
-            	MD[i]=MDL::emptyHeader;
             j++;
         }
     }

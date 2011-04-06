@@ -276,7 +276,7 @@ int readTIFF(size_t select_img, bool isStack=false)
     int imReaded = 0;
 
     MD.clear();
-    MD.resize(_nDim);
+    MD.resize(_nDim,MDL::emptyHeader);
 
     for (size_t i = imgStart; i < imgEnd; ++i)
     {
@@ -337,8 +337,6 @@ int readTIFF(size_t select_img, bool isStack=false)
                                datatype);
             }
         }
-
-    	MD[i]=MDL::emptyHeader;
 
         ++imReaded;
     }

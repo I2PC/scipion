@@ -201,11 +201,10 @@ int ImageBase::readTIA(int select_img,bool isStack)
     MDMainHeader.setValue(MDL_DATATYPE,(int)datatype);
 
     MD.clear();
-    MD.resize(imgEnd - imgStart);
+    MD.resize(imgEnd - imgStart,MDL::emptyHeader);
     double aux;
     for ( i = 0; i < imgEnd - imgStart; ++i )
     {
-    	MD[i]=MDL::emptyHeader;
         if (dataMode == _HEADER_ALL || dataMode == _DATA_ALL)
         {
             if(MDMainHeader.getValue(MDL_SAMPLINGRATEX,aux))
