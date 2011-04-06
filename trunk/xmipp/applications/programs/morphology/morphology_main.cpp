@@ -24,11 +24,10 @@
  *  e-mail address 'xmipp@cnb.csic.es'
  ***************************************************************************/
 
-#include <data/progs.h>
-#include <data/args.h>
+#include <data/program.h>
 #include <data/morphology.h>
 
-class Morphology_parameters: public Prog_parameters
+class ProgMorphology: public XmippMetadataProgram
 {
 public:
 #define DILATION     1
@@ -37,43 +36,98 @@ public:
 #define CLOSING      4
 #define SHARPENING   5
 
+	bool binaryOperation;
     int operation;
-
     int size;
     int count;
-    int neig;
+    int neig2D, neig3D;
     double width;
     double strength;
 public:
-    void read(int argc, char **argv)
+    void defineParams()
     {
-        Prog_parameters::read(argc, argv);
-        if (checkParameter(argc, argv, "-dil"))
-            operation = DILATION;
-        if (checkParameter(argc, argv, "-ero"))
-            operation = EROSION;
-        if (checkParameter(argc, argv, "-clo"))
-            operation = CLOSING;
-        if (checkParameter(argc, argv, "-ope"))
-            operation = OPENING;
-        if (checkParameter(argc, argv, "-sharp"))
-        {
-            operation = SHARPENING;
-            int i = paremeterPosition(argc, argv, "-sharp");
-            if (i+2>=argc)
-                REPORT_ERROR(ERR_ARG_MISSING,"Not enough parameters after -sharp");
-            width=textToFloat(argv[i+1]);
-            strength=textToFloat(argv[i+2]);
-        }
+        each_image_produces_an_output = true;
+        addUsageLine("Apply morphological operations to binary or gray images/volumes.");
+        addUsageLine("+You may learn about morphological operations in general from");
+        addUsageLine("[[http://en.wikipedia.org/wiki/Mathematical_morphology][here]].");
+        addUsageLine("");
+        XmippMetadataProgram::defineParams();
+        addParamsLine("--binaryOperation <op>: Morphological operation on binary images");
+        addParamsLine("       where <op>");
+        addParamsLine("             dilation   : Dilate white region");
+        addParamsLine("             erosion    : Erode white region");
+        addParamsLine("             closing    : Dilation+Erosion, removes black spots");
+        addParamsLine("             opening    : Erosion+Dilation, removes white spots");
+        addParamsLine("or --grayOperation <op>: Morphological operation on gray images");
+        addParamsLine("       where <op>");
+        addParamsLine("             sharpening <w=1> <s=0.5>: Sharpening with width (suggested 1 or 2)");
+        addParamsLine("                                     : and strength (suggested 0.1-1.0).");
+        addParamsLine("                                     : Only valid for volumes, not images.");
+        addParamsLine("                                     :++ Implemented according to JGM Schavemaker, MJT Reinders, JJ Gerbrands,");
+        addParamsLine("                                     :++ E Backer. Image sharpening by morphological filtering. Pattern Recognition");
+        addParamsLine("                                     :++ 33: 997-1012 (2000)");
+        addParamsLine("[--neigh2D+ <n=Neigh8>] : Neighbourhood in 2D.");
+        addParamsLine("          where <n>");
+        addParamsLine("                 Neigh4");
+        addParamsLine("                 Neigh8");
+        addParamsLine("     requires --binaryOperation;");
+        addParamsLine("[--neigh3D+ <n=Neigh18>] : Neighbourhood in 3D.");
+        addParamsLine("          where <n>");
+        addParamsLine("                 Neigh6");
+        addParamsLine("                 Neigh18");
+        addParamsLine("                 Neigh26");
+        addParamsLine("     requires --binaryOperation;");
+        addParamsLine("[--size <s=1>]: Size of the Strutural element.");
+        addParamsLine("     requires --binaryOperation;");
+        addParamsLine("[--count+ <c=0>]: Minimum required neighbors with distinct value.");
+        addParamsLine("     requires --binaryOperation;");
+    }
 
-        size = textToInteger(getParameter(argc, argv, "-size", "1"));
-        neig = textToInteger(getParameter(argc, argv, "-neig", "-1"));
-        count = textToInteger(getParameter(argc, argv, "-count", "0"));
+    void readParams()
+    {
+        XmippMetadataProgram::readParams();
+        binaryOperation=checkParam("--binaryOperation");
+        if (binaryOperation)
+        {
+            String strOperation=getParam("--binaryOperation");
+            if (strOperation=="dilation")
+                operation = DILATION;
+            else if (strOperation=="erosion")
+                operation = EROSION;
+            else if (strOperation=="closing")
+                operation = CLOSING;
+            else if (strOperation=="opening")
+                operation = OPENING;
+
+            size = getIntParam("--size");
+            String neighbourhood=getParam("--neigh2D");
+            if (neighbourhood=="Neigh8")
+            	neig2D = 8;
+            else
+            	neig2D = 4;
+            neighbourhood=getParam("--neigh3D");
+            if (neighbourhood=="Neigh6")
+            	neig3D = 6;
+            else if (neighbourhood=="Neigh18")
+            	neig3D = 18;
+            else
+            	neig3D = 26;
+            count = getIntParam("--count");
+        }
+        else if (checkParam("--grayOperation"))
+        {
+            String strOperation=getParam("--grayOperation");
+            if (strOperation=="sharpening")
+            {
+                operation = SHARPENING;
+                width=getDoubleParam("--grayOperation",1);
+                strength=getDoubleParam("--grayOperation",2);
+            }
+        }
     }
 
     void show()
     {
-        Prog_parameters::show();
         std::cout << "Performing a ";
         switch (operation)
         {
@@ -94,84 +148,64 @@ public:
             << "Width = " << width << std::endl
             << "Strength = " << strength << std::endl;
         }
-        if (operation!=SHARPENING)
+        if (binaryOperation)
             std::cout << "Size=" << size << std::endl
-            << "Neighbourhood=" << neig << std::endl
+            << "Neighbourhood2D=" << neig2D << std::endl
+            << "Neighbourhood3D=" << neig3D << std::endl
             << "Count=" << count << std::endl;
     }
-
-    void usage()
+    void processImage(const FileName &fnImg, const FileName &fnImgOut, size_t objId)
     {
-        Prog_parameters::usage();
-        std::cerr << "  [-dil]             : Apply dilation\n"
-        << "  [-ero]             : Apply erosion\n"
-        << "  [-clo]             : Apply closing\n"
-        << "  [-ope]             : Apply opening\n"
-        << "  [-neig <n=8 | 18>] : Neighborhood considered \n"
-        << "                       (2D:4,8 3D:6,18,26)\n"
-        << "  [-size <s=1>]      : Size of the Strutural element\n"
-        << "  [-count <c=0>]     : Minimum required neighbors with \n"
-        << "                       distinct value\n"
-        << "  [-sharp <w> <s>]   : Sharpening with width (suggested 1 or 2)\n"
-        << "                       and strength (suggested 0.1-1.0)\n"
-        ;
+        Image<double> img, imgOut;
+        img.readApplyGeo(fnImg, mdIn, objId);
+        imgOut().resizeNoCopy(img());
+
+        if (binaryOperation)
+            std::cout << "Initially the image has " << img().sum()
+            << " pixels set to 1\n";
+        bool isVolume=ZSIZE(img())>1;
+        switch (operation)
+        {
+        case DILATION:
+            if (isVolume)
+                dilate3D(img(), imgOut(), neig3D, count, size);
+            else
+                dilate2D(img(), imgOut(), neig2D, count, size);
+            break;
+        case EROSION:
+            if (isVolume)
+                erode3D(img(), imgOut(), neig3D, count, size);
+            else
+                erode2D(img(), imgOut(), neig2D, count, size);
+            break;
+        case OPENING:
+            if (isVolume)
+                opening3D(img(), imgOut(), neig3D, count, size);
+            else
+                opening2D(img(), imgOut(), neig2D, count, size);
+            break;
+        case CLOSING:
+            if (isVolume)
+                closing3D(img(), imgOut(), neig3D, count, size);
+            else
+                closing2D(img(), imgOut(), neig2D, count, size);
+            break;
+        case SHARPENING:
+            if (isVolume)
+                sharpening(img(), width, strength, imgOut());
+            else
+                REPORT_ERROR(ERR_NOT_IMPLEMENTED,"Sharpening has not been implemented for images");
+        }
+
+        if (binaryOperation)
+            std::cout << "Finally the image has " << imgOut().sum() << " pixels set to 1\n";
+        imgOut.write(fnImgOut);
     }
 };
 
-
-bool process_img(Image<double> &img, const Prog_parameters *prm)
-{
-    Morphology_parameters *eprm = (Morphology_parameters *) prm;
-    if (eprm->neig == -1)
-        eprm->neig = 8;
-    Image<double> retval;
-    retval() = img();
-
-    if (eprm->operation!=SHARPENING)
-        std::cout << "Initially the image has " << img().sum()
-        << " pixels set to 1\n";
-    bool isVolume=ZSIZE(img())>1;
-    switch (eprm->operation)
-    {
-    case DILATION:
-        if (isVolume)
-            dilate3D(img(), retval(), eprm->neig, eprm->count, eprm->size);
-        else
-            dilate2D(img(), retval(), eprm->neig, eprm->count, eprm->size);
-        break;
-    case EROSION:
-        if (isVolume)
-            erode3D(img(), retval(), eprm->neig, eprm->count, eprm->size);
-        else
-            erode2D(img(), retval(), eprm->neig, eprm->count, eprm->size);
-        break;
-    case OPENING:
-        if (isVolume)
-            opening3D(img(), retval(), eprm->neig, eprm->count, eprm->size);
-        else
-            opening2D(img(), retval(), eprm->neig, eprm->count, eprm->size);
-        break;
-    case CLOSING:
-        if (isVolume)
-            closing3D(img(), retval(), eprm->neig, eprm->count, eprm->size);
-        else
-            closing2D(img(), retval(), eprm->neig, eprm->count, eprm->size);
-        break;
-    case SHARPENING:
-        if (isVolume)
-            sharpening(img(), eprm->width, eprm->strength, retval());
-        else
-            REPORT_ERROR(ERR_NOT_IMPLEMENTED,"Sharpening has not been implemented for images");
-    }
-
-    img() = retval();
-    if (eprm->operation!=SHARPENING)
-        std::cout << "Finally the image has " << img().sum() << " pixels set to 1\n";
-    return true;
-}
-
 int main(int argc, char **argv)
 {
-    Morphology_parameters prm;
-    SF_main(argc, argv, &prm, (void*)&process_img);
+    ProgMorphology prm;
+    prm.read(argc,argv);
+    return prm.tryRun();
 }
