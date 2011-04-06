@@ -749,19 +749,19 @@ void ImageBase::_write(const FileName &name, ImageFHandler* hFile, size_t select
       */
 std::ostream& operator<<(std::ostream& o, const ImageBase& I)
 {
-    o << "Image type   : ";
+    o << "Image type     : ";
     if (I.isComplex())
         o << "Fourier-space image" << std::endl;
     else
         o << "Real-space image" << std::endl;
 
-    o << "Reversed     : ";
+    o << "Reversed       : ";
     if (I.swap)
-        o << "TRUE"  << std::endl;
+        o << "True"  << std::endl;
     else
-        o << "FALSE" << std::endl;
+        o << "False" << std::endl;
 
-    o << "Data type    : ";
+    o << "Data type      : ";
     switch (I.dataType())
     {
     case Unknown_Type:
@@ -815,28 +815,35 @@ std::ostream& operator<<(std::ostream& o, const ImageBase& I)
     int xdim, ydim, zdim;
     size_t ndim;
     I.getDimensions(xdim, ydim, zdim, ndim);
-    o << "dimensions   : " << ndim << " x " << zdim << " x " << ydim << " x " << xdim;
-    o << "  (noObjects x slices x rows x columns)" << std::endl;
+    o << "Dimensions     : " << ndim << " x " << zdim << " x " << ydim << " x " << xdim;
+    o << "  ((N)Objects x (Z)Slices x (Y)Rows x (X)Columns)" << std::endl;
+    o << "Data offset    : " << I.offset << std::endl;
+
+    std::stringstream oGeo;
+
     if (I.individualContainsLabel(MDL_ANGLEROT))
     {
-        o << "Euler angles : " << std::endl;
-        o << "  Phi   (rotation around Z axis) = " << I.rot() << std::endl;
-        o << "  theta (tilt, second rotation around new Y axis) = " << I.tilt() << std::endl;
-        o << "  Psi   (third rotation around new Z axis) = " << I.psi() << std::endl;
+        oGeo << "Euler angles   : " << std::endl;
+        oGeo << "                 Phi   (rotation around Z axis)                  = " << I.rot() << std::endl;
+        oGeo << "                 theta (tilt, second rotation around new Y axis) = " << I.tilt() << std::endl;
+        oGeo << "                 Psi   (third rotation around new Z axis)        = " << I.psi() << std::endl;
     }
     if (I.individualContainsLabel(MDL_SHIFTX))
     {
-        o << "Origin Offsets : " << std::endl;
-        o << "  Xoff  (origin offset in X-direction) = " << I.Xoff() << std::endl;
-        o << "  Yoff  (origin offset in Y-direction) = " << I.Yoff() << std::endl;
-        o << "  Zoff  (origin offset in Z-direction) = " << I.Zoff() << std::endl;
+        oGeo << "Origin Offsets : " << std::endl;
+        oGeo << "                 Xoff  (origin offset in X-direction) = " << I.Xoff() << std::endl;
+        oGeo << "                 Yoff  (origin offset in Y-direction) = " << I.Yoff() << std::endl;
+        oGeo << "                 Zoff  (origin offset in Z-direction) = " << I.Zoff() << std::endl;
     }
-    if(I.individualContainsLabel(MDL_SCALE))
-        o << "Scale  : " <<I.scale() << std::endl;
-    o << "Header size  : " << I.offset << std::endl;
+    if (I.individualContainsLabel(MDL_SCALE))
+        oGeo << "Scale          : " <<I.scale() << std::endl;
     if (I.individualContainsLabel(MDL_WEIGHT))
-        o << "Weight  : " << I.weight() << std::endl;
+        oGeo << "Weight         : " << I.weight() << std::endl;
     if (I.individualContainsLabel(MDL_FLIP))
-        o << "Flip    : " << I.flip() << std::endl;
+        oGeo << "Flip    : " << I.flip() << std::endl;
+
+    if (!oGeo.str().empty())
+        o << "--- Geometry ---" << std::endl << oGeo.str();
+
     return o;
 }
