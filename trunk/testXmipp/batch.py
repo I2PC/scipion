@@ -200,6 +200,9 @@ class Tester:
         self.addTest("-i input/phantomBacteriorhodopsin.vol -o %o/outputVol_mask.vol --mask rectangular -20 -20 -20")
         self.addTest("-i input/smallStack.stk -o %o/outputStack_mask.stk --mask circular -20")
 
+        self.addProgram("xmipp_transform_morphology")
+        self.addTest("-i input/maskBacteriorhodopsin.vol -o %o/dilated.spi --binaryOperation dilation")
+
         self.addProgram("xmipp_transform_normalize")
         self.addTest("-i input/smallStack.stk -o %o/smallStackNormalized.stk --method NewXmipp --background circle 32")
 
