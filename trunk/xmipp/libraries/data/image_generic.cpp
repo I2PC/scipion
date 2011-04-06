@@ -53,6 +53,7 @@ void ImageGeneric::clear()
     {
         image->clear();
         delete image;
+        delete data;
         init();
     }
 }
