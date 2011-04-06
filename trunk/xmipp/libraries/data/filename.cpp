@@ -48,9 +48,10 @@ void FileName::compose(size_t no , const String &str)
     if (no == ALL_IMAGES || no == (size_t) -1)
         REPORT_ERROR(ERR_DEBUG_TEST, "Don't compose with 0 or -1 index, now images index start at 1");
 
-    *this = str;
     if (no != ALL_IMAGES)
-        this->assign(formatString("%06lu@%s", no, str.c_str()));
+        formatStringFast(*this,"%06lu@%s", no, str.c_str());
+    else
+        *this = str;
 }
 
 // Constructor: prefix number, filename root and extension, mainly for selfiles..
@@ -59,9 +60,10 @@ void FileName::compose(size_t no , const String &str , const String &ext)
     if (no == ALL_IMAGES || no == (size_t) -1)
         REPORT_ERROR(ERR_DEBUG_TEST, "Don't compose with 0 or -1 index, now images index start at 1");
 
-    *this = str;
     if (no != ALL_IMAGES)
-        this->assign(formatString("%06lu@%s.%s", no, str.c_str(), ext.c_str()));
+        formatStringFast(*this,"%06lu@%s.%s", no, str.c_str(), ext.c_str());
+    else
+        *this = str;
 }
 
 // Constructor: string  and filename, mainly for metadata blocks..
@@ -69,7 +71,6 @@ void FileName::compose(const String &blockName , const String &str)
 {
     *this = (FileName)( blockName + (String)"@" + str);
 }
-
 
 // Is in stack ............................................................
 bool FileName::isInStack() const
@@ -80,17 +81,15 @@ bool FileName::isInStack() const
 // Decompose ..............................................................
 void FileName::decompose(size_t &no, String &str) const
 {
-    size_t idx = find('@');
-    if(idx != String::npos)
-    {
-        no = textToInteger(substr(0,idx));
-        str = substr(idx+1,length()-idx);
-    }
-    else
+    char buffer[1024];
+    int ok = sscanf(c_str(), "%lu@%s", &no,&buffer);
+    if (!ok)
     {
         no = ALL_IMAGES;
         str = *this;
+        return;
     }
+    str = buffer;
 }
 
 // Get decomposed filename .......................................
@@ -397,7 +396,7 @@ bool FileName::isMetaData(bool failIfNotExists) const
         return false;
     //check if file exists
     if (!exists(*this))
-    	REPORT_ERROR(ERR_IO_NOTFILE,(String)"file: " + *this + (String)" does not exist");
+        REPORT_ERROR(ERR_IO_NOTFILE,(String)"file: " + *this + (String)" does not exist");
     //This is dangerous and should be removed
     //in next version. only star1 files should be OK
     //ROB
