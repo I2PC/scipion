@@ -802,6 +802,8 @@ protected:
         //read in a block
         if (data.ndim != 1)
             REPORT_ERROR(ERR_MULTIDIM_SIZE, "Header overwriting not available for stacks!!!");
+        if (MD.size()==0)
+        	MD.push_back(MDL::emptyHeader);
         MDRow &rowAux = MD[0];
 
         double aux;
