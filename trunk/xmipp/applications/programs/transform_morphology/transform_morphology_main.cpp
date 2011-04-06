@@ -81,6 +81,7 @@ public:
         addParamsLine("     requires --binaryOperation;");
         addParamsLine("[--count+ <c=0>]: Minimum required neighbors with distinct value.");
         addParamsLine("     requires --binaryOperation;");
+        addExampleLine("xmipp_transform_morphology -i binaryVolume.vol --binaryOperation dilation");
     }
 
     void readParams()
