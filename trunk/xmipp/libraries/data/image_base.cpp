@@ -49,6 +49,7 @@ void ImageBase::init()
 void ImageBase::clearHeader()
 {
     MDMainHeader.clear();
+    MDMainHeader.reserve(8); // Optimization of memory management
     MD.clear();
     //Just to ensure there is an empty MDRow
     MD.push_back(MDMainHeader);
@@ -598,12 +599,9 @@ void ImageBase::_write(const FileName &name, ImageFHandler* hFile, size_t select
     if (select_img == (size_t) -1)
         REPORT_ERROR(ERR_DEBUG_TEST, "To select all images use ALL_IMAGES macro, or FIRST_IMAGE macro.");
 
-
-
     int err = 0;
 
     // if image is mapped to file then close the file and clear
-
     if (mmapOnWrite && mappedSize > 0)
     {
         munmapFile();
