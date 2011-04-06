@@ -48,8 +48,7 @@ void ImageBase::init()
 
 void ImageBase::clearHeader()
 {
-    MDMainHeader.clear();
-    MDMainHeader.reserve(8); // Optimization of memory management
+    MDMainHeader.clear();    
     MD.clear();
     //Just to ensure there is an empty MDRow
     MD.push_back(MDMainHeader);

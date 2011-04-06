@@ -212,8 +212,7 @@ int ImageBase::readTIA(int select_img,bool isStack)
     for ( i = 0; i < imgEnd - imgStart; ++i )
     {
         if (dataMode == _HEADER_ALL || dataMode == _DATA_ALL)
-        {
-            MD[i].reserve(4);
+        {            
             if(MDMainHeader.getValue(MDL_SAMPLINGRATEX,aux))
             {
                 MD[i].setValue(MDL_SHIFTX, dataHeaders[i].CalibrationOffsetX/aux);

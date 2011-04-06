@@ -34,6 +34,6 @@ int main(int argc, char **argv)
 {
     ProgAngularClassAverage program;
     program.read(argc, argv);
-    program.tryRun();
+    return program.tryRun();
 }
 

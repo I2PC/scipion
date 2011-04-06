@@ -576,8 +576,6 @@ size_t XmippMetadataProgram::getImageToProcess()
 
 void XmippMetadataProgram::run()
 {
-    try
-    {
         FileName fnImg, fnImgOut, baseName, pathBaseName, fullBaseName, oextBaseName;
         size_t objId;
         //Perform particular preprocessing
@@ -641,6 +639,9 @@ void XmippMetadataProgram::run()
             showProgress();
         }
 
+        //free iterator memory
+        delete iter;
+
         // Generate name to save mdOut when output are independent images
         if ( !oroot.empty() && fn_out.empty() )
         {
@@ -653,12 +654,6 @@ void XmippMetadataProgram::run()
         finishProcessing();
 
         postProcess();
-    }
-    catch (XmippError xe)
-    {
-        std::cout << xe;
-        quit(xe.__errno);
-    }
 }
 
 

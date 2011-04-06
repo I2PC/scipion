@@ -241,7 +241,6 @@ int  ImageBase::readSPIDER(size_t select_img)
         }
         if (dataMode == _HEADER_ALL || dataMode == _DATA_ALL)
         {
-            MD[n].reserve(9);
             daux = (double)header->xoff;
             MD[n].setValue(MDL_SHIFTX, daux);
             daux = (double)header->yoff;

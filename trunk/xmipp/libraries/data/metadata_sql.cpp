@@ -727,7 +727,7 @@ int MDSql::extractValue(sqlite3_stmt *stmt, const int position, MDObject &valueO
         break;
     case LABEL_STRING:
         ss << sqlite3_column_text(stmt, position);
-        valueOut.data.stringValue = new std::string(ss.str());
+        valueOut.data.stringValue->assign(ss.str());
         break;
     case LABEL_VECTOR:
         //FIXME: Now are stored as string in DB

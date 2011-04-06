@@ -193,15 +193,15 @@ protected:
     void _clear(bool onlyData=false);
 
     /** Some private reading functions */
-    void _readColumns(std::istream& is, MDRow & columnValues,
+    void _readColumns(std::istream& is, std::vector<MDObject*> & columnValues,
                       const std::vector<MDLabel>* desiredLabels = NULL);
-    void _readRows(std::istream& is, MDRow & columnValues, bool useCommentAsImage);
+    void _readRows(std::istream& is, std::vector<MDObject*> & columnValues, bool useCommentAsImage);
     /** This function will be used to parse the rows data in START format
      * @param[out] columnValues MDRow with values to fill in
      * @param pchStar pointer to the position of '_loop' in memory
      * @param pEnd  pointer to the position of the next '_data' in memory
      */
-    void _readRowsStar(MDRow & columnValues, char * pchStart, char * pEnd);
+    void _readRowsStar(std::vector<MDObject*> & columnValues, char * pchStart, char * pEnd);
     void _readRowFormat(std::istream& is);
 
 public:
@@ -285,7 +285,7 @@ public:
      */
     char * _readColumnsStar(char * start,
                             char * end,
-                            MDRow & columnValues,
+                            std::vector<MDObject*> & columnValues,
                             const std::vector<MDLabel>* desiredLabels, size_t id = BAD_OBJID);
     /**Get path.
      */

@@ -227,6 +227,9 @@ enum MDLabel
     // it is here for looping purposes
 };//close enum Label
 
+/** Macro for iterate over all labels */
+#define FOR_ALL_LABELS() for (int _label = MDL_FIRST_LABEL; _label < MDL_LAST_LABEL; ++_label)
+
 /** Possible types of the values of labels */
 enum MDLabelType
 {
@@ -354,54 +357,67 @@ template class std::vector<MDObject *>
 #endif
 
 /** Class for holding an entire row of posible MDObject */
-class MDRow: public std::vector<MDObject*>
+class MDRow
 {
+private:
+    //Reserve space for the maximum different labels
+    //this will allows constant access to each object indexing by labels
+    MDObject * objects[MDL_LAST_LABEL];
+    int _size; //Number of active labels
+
 public:
-    //MDObject & operator [](MDLabel label);
-    /** True if this row contains this label */
-    bool containsLabel(MDLabel label) const;
-
-    /** Get object */
-    MDObject * getObject(MDLabel label);
-
-    /** Get value */
-    template <typename T>
-    bool getValue(MDLabel label, T &d) const
-    {
-        for (const_iterator it = begin(); it != end(); ++it)
-            if ((*it)->label == label)
-            {
-                (*it)->getValue(d);
-                return true;
-            }
-
-        return false;
-    }
-
-    /** Set value */
-    template <typename T>
-    void setValue(MDLabel label, const T &d)
-    {
-        for (const_iterator it = begin(); it != end(); ++it)
-            if ((*it)->label == label)
-            {
-                (*it)->setValue(d);
-                return;
-            }
-        push_back(new MDObject(label, d));
-    }
-
-    /** Copy constructor */
-    MDRow(const MDRow & row);
-
     /** Empty constructor */
     MDRow();
+    /** Copy constructor */
+    MDRow(const MDRow & row);
 
     /** Assignment */
     MDRow& operator = (const MDRow &row);
 
     /** Destructor */
     ~MDRow();
+    /** True if this row contains this label */
+    bool containsLabel(MDLabel label) const;
+    /** Add a new label */
+    bool addLabel(MDLabel label);
+
+    /** Clear elements of the row */
+    void clear();
+    /** Return number of labels present */
+    int size() const;
+    /** Function to test whether is empty */
+    bool empty() const;
+
+    /** Get object */
+    MDObject * getObject(MDLabel label) const;
+
+    /** Get value */
+    template <typename T>
+    bool getValue(MDLabel label, T &d) const
+    {
+        if (objects[label] == NULL)
+            return false;
+
+        objects[label]->getValue(d);
+        return true;
+    }
+
+    bool getValue(MDObject &object) const;
+
+    /** Set value */
+    template <typename T>
+    void setValue(MDLabel label, const T &d)
+    {
+      if (objects[label] == NULL)
+      {
+        objects[label] = new MDObject(label, d);
+        ++_size;
+      }
+      else
+        objects[label]->setValue(d);
+    }
+
+    void setValue(const MDObject &object);
 
     /** Show */
     friend std::ostream& operator << (std::ostream &out, const MDRow &row);
@@ -448,7 +464,7 @@ public:
 
 private:
     //Array of MDLabelData pointers
-    static MDLabelData * data[256];
+    static MDLabelData * data[MDL_LAST_LABEL];
     static std::map<std::string, MDLabel> names;
     static MDLabelStaticInit initialization; //Just for initialization
 
@@ -660,9 +676,9 @@ private:
 
     ~MDLabelStaticInit()
     {
-      //Free memory allocated for labels data
-      for (int i = 0; i < 256; ++i)
-        delete MDL::data[i];
+        //Free memory allocated for labels data
+        for (int i = MDL_FIRST_LABEL; i < MDL_LAST_LABEL; ++i)
+            delete MDL::data[i];
     }
     friend class MDL;
 };

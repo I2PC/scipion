@@ -26,10 +26,11 @@
 
 //This is needed for static memory allocation
 //std::map<MDLabel, MDLabelData> MDL::data;
-MDLabelData * MDL::data[256];
+MDLabelData * MDL::data[MDL_LAST_LABEL];
 std::map<std::string, MDLabel> MDL::names;
-MDLabelStaticInit MDL::initialization; //Just for initialization
 MDRow MDL::emptyHeader;
+MDLabelStaticInit MDL::initialization; //Just for initialization
+
 
 void MDL::addLabel(const MDLabel label, const MDLabelType type, const String &name, const String &name2, const String &name3)
 {
@@ -44,14 +45,14 @@ void MDL::addLabel(const MDLabel label, const MDLabelType type, const String &na
 
 void MDL::str2LabelVector(const String &labelsStr, std::vector<MDLabel> &labels)
 {
-  labels.clear();
-  StringVector parts;
-  splitString(labelsStr, " ", parts);
-  for (int i = 0; i < parts.size(); ++i)
-    if (MDL::isValidLabel(parts[i]))
-        labels.push_back(MDL::str2Label(parts[i]));
-    else
-        REPORT_ERROR(ERR_PARAM_INCORRECT, formatString("Unknown label '%s' received.", parts[i].c_str()));
+    labels.clear();
+    StringVector parts;
+    splitString(labelsStr, " ", parts);
+    for (int i = 0; i < parts.size(); ++i)
+        if (MDL::isValidLabel(parts[i]))
+            labels.push_back(MDL::str2Label(parts[i]));
+        else
+            REPORT_ERROR(ERR_PARAM_INCORRECT, formatString("Unknown label '%s' received.", parts[i].c_str()));
 }
 
 MDLabel  MDL::str2Label(const String &labelName)
@@ -63,7 +64,7 @@ MDLabel  MDL::str2Label(const String &labelName)
 
 String  MDL::label2Str(const MDLabel label)
 {
-  return  (isValidLabel(label)) ? data[(int)label]->str : "";
+    return  (isValidLabel(label)) ? data[(int)label]->str : "";
 }//close function label2Str
 
 String MDL::label2SqlColumn(const MDLabel label)
@@ -526,34 +527,102 @@ bool MDObject::fromChar(const char * szChar)
 //    return *pObj;
 //}
 
-bool MDRow::containsLabel(MDLabel label) const
+void MDRow::clear()
 {
-    for (const_iterator it = begin(); it != end(); ++it)
-        if ((*it)->label == label)
-            return true;
-    return false;
+    _size = 0;
+    //Just initialize all pointers with NULL value
+    FOR_ALL_LABELS()
+    {
+        delete objects[_label];
+        objects[_label] = NULL;
+    }
 }
 
-MDObject * MDRow::getObject(MDLabel label)
+bool MDRow::empty() const
 {
-    for (const_iterator it = begin(); it != end(); ++it)
-        if ((*it)->label == label)
-            return *it;
-    return NULL;
+    return _size == 0;
 }
+
+int MDRow::size() const
+{
+    return _size;
+}
+
+bool MDRow::containsLabel(MDLabel label) const
+{
+    return objects[label] != NULL;
+}
+
+bool MDRow::addLabel(MDLabel label)
+{
+    if (objects[label] == NULL)
+    {
+        objects[label] = new MDObject(label);
+        ++_size;
+    }
+}
+
+MDObject * MDRow::getObject(MDLabel label) const
+{
+    return objects[label];
+}
+
+/** Get value */
+bool MDRow::getValue(MDObject &object) const
+{
+    int _label = object.label;
+    if (objects[_label] == NULL)
+        return false;
+    object.copy(*(objects[_label]));
+    return true;
+}
+
+/** Usefull macro for copy values */
+/** Set value */
+void MDRow::setValue(const MDObject &object)
+{
+    int _label = object.label;
+    if (objects[_label] == NULL)
+    {
+        objects[_label] = new MDObject(object);
+        ++_size;
+    }
+    else
+        objects[_label]->copy(object);
+}
+
 MDRow::~MDRow()
 {
-    for (iterator it = begin(); it != end(); ++it)
-        delete *it;
+    FOR_ALL_LABELS()
+    {
+      if (objects[_label] != NULL)
+      {
+        delete objects[_label];
+      }
+
+    }
 }
 
 MDRow::MDRow(const MDRow & row)
 {
+    _size = 0;
+    //Just initialize all pointers with NULL value
+    FOR_ALL_LABELS()
+    {
+        objects[_label] = NULL;
+    }
     copy(row);
 }
 
-MDRow::MDRow():std::vector<MDObject*>()
-{}
+MDRow::MDRow()
+{
+    _size = 0;
+    //Just initialize all pointers with NULL value
+    FOR_ALL_LABELS()
+    {
+        objects[_label] = NULL;
+    }
+}
 
 MDRow& MDRow::operator = (const MDRow &row)
 {
@@ -563,23 +632,31 @@ MDRow& MDRow::operator = (const MDRow &row)
 
 void MDRow::copy(const MDRow &row)
 {
-    resize(row.size());
-    int pos = 0;
-    for (iterator it = begin(); it != end(); ++it)
+    //Copy existing MDObjects from row
+    //and delete unexisting ones
+    _size = row._size;
+    FOR_ALL_LABELS()
     {
-        if (*it == NULL)
-            *it = new MDObject(*(row[pos]));
+        if (row.objects[_label] == NULL)
+        {
+            delete objects[_label];
+            objects[_label] = NULL;
+        }
         else
-            *(*it) = *(row[pos]);
-        ++pos;
+        {
+            if (objects[_label] == NULL)
+                objects[_label] = new MDObject(*(row.objects[_label]));
+            else
+                objects[_label]->copy(*(row.objects[_label]));
+        }
     }
 }
 
 std::ostream& operator << (std::ostream &out, const MDRow &row)
 {
-    for (MDRow::const_iterator it = row.begin(); it != row.end(); ++it)
+    FOR_ALL_LABELS()
     {
-        (*it)->toStream(out);
+        row.objects[_label]->toStream(out);
         out << " ";
     }
     return out;

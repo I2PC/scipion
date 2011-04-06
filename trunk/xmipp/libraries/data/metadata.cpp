@@ -134,22 +134,25 @@ bool MetaData::getValue(MDObject &mdValueOut, size_t id) const
 bool MetaData::getRow(MDRow &row, size_t id) const
 {
     row.clear();
-    MDObject * obj;
     for (std::vector<MDLabel>::const_iterator it = activeLabels.begin(); it != activeLabels.end(); ++it)
     {
-        obj = new MDObject(*it);
-        if (!getValue(*obj, id))
+        MDObject obj(*it);
+        if (!getValue(obj, id))
             return false;
-        row.push_back(obj);
+        row.setValue(obj);
     }
     return true;
 }
 
 void MetaData::setRow(const MDRow &row, size_t id)
 {
-    int imax = row.size();
-    for (int i = 0; i < imax; ++i)
-        setValue(*row[i], id);
+    //todo: could be improve in a query for update the entire row
+    FOR_ALL_LABELS()
+    {
+      MDLabel label = (MDLabel)_label;
+      if (row.containsLabel(label))
+        setValue(*(row.getObject(label)), id);
+    }
 }
 
 MetaData::MetaData()
@@ -642,7 +645,7 @@ void MetaData::write(std::ostream &os,const std::string &blockName, WriteModeMet
  * or those who appears in the IgnoreLabels vector
  * also set the activeLabels (for OLD doc files)
  */
-void MetaData::_readColumns(std::istream& is, MDRow & columnValues,
+void MetaData::_readColumns(std::istream& is, std::vector<MDObject*> & columnValues,
                             const std::vector<MDLabel>* desiredLabels)
 {
     std::string token;
@@ -687,7 +690,7 @@ void MetaData::_parseObject(std::istream &is, MDObject &object, size_t id)
  */
 char * MetaData::_readColumnsStar(char * pStart,
                                   char * pEnd,
-                                  MDRow & columnValues,
+                                  std::vector<MDObject*> & columnValues,
                                   const std::vector<MDLabel>* desiredLabels, size_t id)
 {
     char * pchStart, *pchEnd;
@@ -748,7 +751,7 @@ char * MetaData::_readColumnsStar(char * pStart,
  * the useCommentAsImage is for compatibility with old DocFile format
  * where the image were in comments
  */
-void MetaData::_readRows(std::istream& is, MDRow & columnValues, bool useCommentAsImage)
+void MetaData::_readRows(std::istream& is, std::vector<MDObject*> & columnValues, bool useCommentAsImage)
 {
     std::string line = "";
     while (!is.eof() && !is.fail())
@@ -787,7 +790,7 @@ void MetaData::_readRows(std::istream& is, MDRow & columnValues, bool useComment
  * @param pchStar pointer to the position of '_loop' in memory
  * @param pEnd  pointer to the position of the next '_data' in memory
  */
-void MetaData::_readRowsStar(MDRow & columnValues, char * pchStart, char * pEnd)
+void MetaData::_readRowsStar(std::vector<MDObject*> & columnValues, char * pchStart, char * pEnd)
 {
     char * pchEnd;
     String line;
@@ -929,7 +932,7 @@ void MetaData::_read(const FileName &filename,
     std::ifstream is(filename.data(), std::ios_base::in);
     std::stringstream ss;
     std::string line, token;
-    MDRow columnValues;
+    std::vector<MDObject*> columnValues;
 
     getline(is, line); //get first line to identify the type of file
 
@@ -1032,6 +1035,11 @@ void MetaData::_read(const FileName &filename,
 
     if (oldFormat)
         _readRows(is, columnValues, useCommentAsImage);
+
+    //free memory of column values
+    int nCols = columnValues.size();
+    for (int i = 0; i < nCols; ++i)
+      delete columnValues[i];
 }
 
 void MetaData::merge(const MetaData &md2)

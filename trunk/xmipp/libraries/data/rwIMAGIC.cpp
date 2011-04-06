@@ -222,8 +222,7 @@ int  ImageBase::readIMAGIC(size_t select_img)
                     swapbytes(b, 4);
 
             if (dataMode == _HEADER_ALL || dataMode == _DATA_ALL)
-            {
-                MD[i].reserve(8);
+            {                
                 MD[i].setValue(MDL_SHIFTX,  (double)-1. * header->iyold);
                 MD[i].setValue(MDL_SHIFTY,  (double)-1. * header->ixold);
                 MD[i].setValue(MDL_SHIFTZ,  zeroD);

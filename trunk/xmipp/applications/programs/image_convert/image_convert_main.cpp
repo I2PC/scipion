@@ -39,7 +39,6 @@ class ProgConvImg: public XmippMetadataProgram
 {
 private:
     std::string  type, depth;
-    Image<char>  imTemp;
     ImageGeneric imIn, *imOut;
     DataType     outDataT;
     MDRow        row;
@@ -209,6 +208,7 @@ protected:
         {
             int Xdim, Ydim, Zdim;
             size_t Ndim;
+            Image<char>  imTemp;
             imTemp.read(fn_in, HEADER);
             imTemp.getDimensions(Xdim,Ydim,Zdim,Ndim);
 
@@ -306,7 +306,5 @@ int main(int argc, char *argv[])
 {
     ProgConvImg program;
     program.read(argc, argv);
-    program.tryRun();
-
-    return 0;
+    return program.tryRun();
 }
