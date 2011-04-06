@@ -587,3 +587,17 @@ String formatString(const char * format, ...)
 
   return result;
 }
+
+/** Obtain an string from a format in the way of printf works
+ *
+ */
+void formatStringFast(String &str, const char * format, ...)
+{
+  char formatBuffer[1024];
+
+  va_list args;
+  va_start(args, format);
+  vsprintf (formatBuffer, format, args);
+  str=formatBuffer;
+  va_end (args);
+}

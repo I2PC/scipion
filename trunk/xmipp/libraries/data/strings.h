@@ -398,7 +398,10 @@ char   *memtok(char **src,  char **_end, const char *sep);
  */
 String formatString(const char * format, ...);
 
-
+/** Obtain an string from a format in the way of printf works
+ *
+ */
+void formatStringFast(String &str, const char * format, ...);
 
 //@}
 //@}
