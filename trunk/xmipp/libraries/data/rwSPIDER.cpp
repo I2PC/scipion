@@ -224,6 +224,18 @@ int  ImageBase::readSPIDER(size_t select_img)
         offset += offset;
     }
 
+    if (dataMode==HEADER) // Stop reading if not necessary
+    {
+        delete header;
+        return 0;
+    }
+
+    if (dataMode==HEADER) // Stop reading if not necessary
+    {
+        delete header;
+        return 0;
+    }
+
     MD.clear();
     MD.resize(imgEnd - imgStart,MDL::emptyHeader);
     double daux;

@@ -200,6 +200,12 @@ int  ImageBase::readIMAGIC(size_t select_img)
     // Get the header information
     fseek( fhed, IMG_INDEX(select_img) * IMAGICSIZE, SEEK_SET );
 
+    if (dataMode==HEADER) // Stop reading if not necessary
+    {
+        delete header;
+        return 0;
+    }
+
     MD.clear();
     MD.resize(_nDim,MDL::emptyHeader);
     double daux=1.;

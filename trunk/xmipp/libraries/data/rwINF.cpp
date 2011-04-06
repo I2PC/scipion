@@ -100,6 +100,9 @@ int ImageBase::readINF(size_t select_img,bool isStack)
     MDMainHeader.setValue(MDL_SAMPLINGRATEY,(double) -1);
     MDMainHeader.setValue(MDL_DATATYPE,(int)datatype);
 
+    if (dataMode==HEADER) // Stop reading if not necessary
+        return 0;
+
     MD.clear();
     MD.resize(imgEnd - imgStart,MDL::emptyHeader);
 

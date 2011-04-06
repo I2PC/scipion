@@ -231,6 +231,12 @@ int ImageBase::readMRC(size_t select_img, bool isStack)
     if ( header->mz && header->c!=0)//zx
         MDMainHeader.setValue(MDL_SAMPLINGRATEZ,(double)header->c/header->mz);
 
+    if (dataMode==HEADER) // Stop reading if not necessary
+    {
+        delete header;
+        return 0;
+    }
+
     MD.clear();
     MD.resize(imgEnd - imgStart,MDL::emptyHeader);
     double aux;

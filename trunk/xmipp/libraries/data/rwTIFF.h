@@ -275,6 +275,9 @@ int readTIFF(size_t select_img, bool isStack=false)
     size_t pad = _xDim * _yDim;
     int imReaded = 0;
 
+    if (dataMode==HEADER) // Stop reading if not necessary
+        return 0;
+
     MD.clear();
     MD.resize(_nDim,MDL::emptyHeader);
 

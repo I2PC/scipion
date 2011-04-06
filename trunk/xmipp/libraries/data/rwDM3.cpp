@@ -588,6 +588,12 @@ int ImageBase::readDM3(size_t select_img,bool isStack)
     MDMainHeader.setValue(MDL_SAMPLINGRATEY,(double)dataHeaders[0].pixelHeight);
     MDMainHeader.setValue(MDL_DATATYPE,(int)datatype);
 
+    if (dataMode==HEADER) // Stop reading if not necessary
+    {
+        delete header;
+        return 0;
+    }
+
     MD.clear();
     MD.resize(imgEnd - imgStart,MDL::emptyHeader);
     offset = dataHeaders[imgStart].headerSize;
