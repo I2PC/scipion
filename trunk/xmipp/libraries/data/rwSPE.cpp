@@ -52,9 +52,7 @@ int ImageBase::readSPE(size_t select_img,bool isStack)
     // Map the parameters
     setDimensions(_xDim, _yDim, _zDim, _nDim);
 
-    size_t   imgStart = IMG_INDEX(select_img);
-    size_t   imgEnd = (select_img != ALL_IMAGES) ? imgStart + 1 : _nDim;
-
+    offset = 4100;
     DataType datatype = UShort;
 
     MDMainHeader.setValue(MDL_SAMPLINGRATEX,(double) -1);
@@ -64,12 +62,14 @@ int ImageBase::readSPE(size_t select_img,bool isStack)
     if (dataMode==HEADER) // Stop reading if not necessary
         return 0;
 
+    size_t   imgStart = IMG_INDEX(select_img);
+    size_t   imgEnd = (select_img != ALL_IMAGES) ? imgStart + 1 : _nDim;
+
     MD.clear();
     MD.resize(imgEnd - imgStart,MDL::emptyHeader);
     if( dataMode < DATA )
         return 0;
 
-    offset = 4100;
     size_t pad = 0;
 
     readData(fimg, select_img, datatype, pad);

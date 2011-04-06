@@ -140,22 +140,7 @@ int  ImageBase::readIMAGIC(size_t select_img)
             if ( i != 56 )          // exclude type string
                 swapbytes(b+i, 4);
     }
-    int _xDim,_yDim,_zDim;
-    size_t _nDim;
-    _xDim = (int) header->iylp;
-    _yDim = (int) header->ixlp;
-    _zDim = (int) 1;
-    _nDim = (size_t) header->ifn + 1 ;
 
-    if ( select_img > _nDim )
-        REPORT_ERROR(ERR_INDEX_OUTOFBOUNDS, formatString("readImagic: Image number %lu exceeds stack size %lu", select_img, _nDim));
-
-    if( select_img != ALL_IMAGES )
-        _nDim = 1;
-
-    setDimensions(_xDim, _yDim, _zDim, _nDim );
-
-    replaceNsize = _nDim;
     DataType datatype;
 
     if ( strstr(header->type,"PACK") )
@@ -184,6 +169,8 @@ int  ImageBase::readIMAGIC(size_t select_img)
         header->densmax = header->avdens + header->sigma;
     }
 
+    offset = 0;   // separate header file
+
     MDMainHeader.setValue(MDL_MIN,(double)header->densmin);
     MDMainHeader.setValue(MDL_MAX,(double)header->densmax);
     MDMainHeader.setValue(MDL_AVG,(double)header->avdens);
@@ -193,18 +180,33 @@ int  ImageBase::readIMAGIC(size_t select_img)
     MDMainHeader.setValue(MDL_SAMPLINGRATEZ,(double)1.);
     MDMainHeader.setValue(MDL_DATATYPE,(int)datatype);
 
-    offset = 0;   // separate header file
+    int _xDim,_yDim,_zDim;
+    size_t _nDim;
+    _xDim = (int) header->iylp;
+    _yDim = (int) header->ixlp;
+    _zDim = (int) 1;
+    _nDim = (size_t) header->ifn + 1 ;
+
+    if ( select_img > _nDim )
+        REPORT_ERROR(ERR_INDEX_OUTOFBOUNDS, formatString("readImagic: Image number %lu exceeds stack size %lu", select_img, _nDim));
+
+    if( select_img != ALL_IMAGES )
+        _nDim = 1;
+
+    replaceNsize = _nDim;
+    setDimensions(_xDim, _yDim, _zDim, _nDim );
+
+    if (dataMode == HEADER || dataMode == _HEADER_ALL && _nDim > 1) // Stop reading if not necessary
+    {
+        delete header;
+        return 0;
+    }
+
     size_t   j = 0;
     char*   hend;
 
     // Get the header information
     fseek( fhed, IMG_INDEX(select_img) * IMAGICSIZE, SEEK_SET );
-
-    if (dataMode==HEADER) // Stop reading if not necessary
-    {
-        delete header;
-        return 0;
-    }
 
     MD.clear();
     MD.resize(_nDim,MDL::emptyHeader);
@@ -221,6 +223,7 @@ int  ImageBase::readIMAGIC(size_t select_img)
 
             if (dataMode == _HEADER_ALL || dataMode == _DATA_ALL)
             {
+                MD[i].reserve(8);
                 MD[i].setValue(MDL_SHIFTX,  (double)-1. * header->iyold);
                 MD[i].setValue(MDL_SHIFTY,  (double)-1. * header->ixold);
                 MD[i].setValue(MDL_SHIFTZ,  zeroD);
@@ -233,7 +236,6 @@ int  ImageBase::readIMAGIC(size_t select_img)
             j++;
         }
     }
-
     delete header;
 
     if (dataMode < DATA)   // Don't read the individual header and the data if not necessary

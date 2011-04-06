@@ -68,12 +68,6 @@ int ImageBase::readINF(size_t select_img,bool isStack)
     _zDim = 1;
     _nDim = 1;
 
-    // Map the parameters
-    setDimensions(_xDim, _yDim, _zDim, _nDim);
-
-    size_t   imgStart = IMG_INDEX(select_img);
-    size_t   imgEnd = (select_img != ALL_IMAGES) ? imgStart + 1 : _nDim;
-
     DataType datatype;
     switch ( __depth )
     {
@@ -100,7 +94,13 @@ int ImageBase::readINF(size_t select_img,bool isStack)
     MDMainHeader.setValue(MDL_SAMPLINGRATEY,(double) -1);
     MDMainHeader.setValue(MDL_DATATYPE,(int)datatype);
 
-    if (dataMode==HEADER) // Stop reading if not necessary
+    // Map the parameters
+    setDimensions(_xDim, _yDim, _zDim, _nDim);
+
+    size_t   imgStart = IMG_INDEX(select_img);
+    size_t   imgEnd = (select_img != ALL_IMAGES) ? imgStart + 1 : _nDim;
+
+    if (dataMode == HEADER || dataMode == _HEADER_ALL && _nDim > 1) // Stop reading if not necessary
         return 0;
 
     MD.clear();

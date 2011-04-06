@@ -182,15 +182,9 @@ int  ImageBase::readSPIDER(size_t select_img)
     _xDim = (int) header->nsam;
     _yDim = (int) header->nrow;
     _zDim = (int) header->nslice;
-    _nDim = 1;
+    _nDim = (isStack)? header->maxim : 1;
 
-    if(isStack)
-    {
-        _nDim = (size_t) header->maxim;
-        replaceNsize = _nDim;
-    }
-    else
-        replaceNsize = 1;
+    replaceNsize = _nDim;
 
     /************
      * BELLOW HERE DO NOT USE HEADER BUT LOCAL VARIABLES
@@ -205,36 +199,29 @@ int  ImageBase::readSPIDER(size_t select_img)
 
     setDimensions(_xDim, _yDim, _zDim, _nDimSet);
 
-    size_t header_size = offset;
-    size_t datasize_n = _xDim*_yDim*_zDim;
-    size_t image_size  = header_size + datasize_n*sizeof(float);
-    size_t pad         = 0;
-
-    size_t   imgStart = IMG_INDEX(select_img);
-    size_t   imgEnd = (select_img != ALL_IMAGES) ? imgStart + 1 : _nDim;
-
-    char*   hend;
-
     //image is in stack? and set right initial and final image
     if ( isStack)
     {
         if ( select_img > _nDim )
             REPORT_ERROR(ERR_INDEX_OUTOFBOUNDS, formatString("readSpider: Image number %lu exceeds stack size %lu" ,select_img, _nDim));
-        pad = offset;
         offset += offset;
     }
 
-    if (dataMode==HEADER) // Stop reading if not necessary
+    if (dataMode == HEADER || dataMode == _HEADER_ALL && _nDimSet > 1) // Stop reading if not necessary
     {
         delete header;
         return 0;
     }
 
-    if (dataMode==HEADER || dataMode==_HEADER_ALL && isStack && _nDimSet>1) // Stop reading if not necessary
-    {
-        delete header;
-        return 0;
-    }
+    size_t header_size = offset;
+    size_t datasize_n = _xDim*_yDim*_zDim;
+    size_t image_size  = header_size + datasize_n*sizeof(float);
+    size_t pad         = (size_t) header->labbyt;
+
+    size_t   imgStart = IMG_INDEX(select_img);
+    size_t   imgEnd = (select_img != ALL_IMAGES) ? imgStart + 1 : _nDim;
+
+    char*   hend;
 
     MD.clear();
     MD.resize(imgEnd - imgStart,MDL::emptyHeader);
@@ -277,7 +264,6 @@ int  ImageBase::readSPIDER(size_t select_img)
             MD[n].setValue(MDL_SCALE, daux);
         }
     }
-
     delete header;
 
     if (dataMode < DATA)   // Don't read  data if not necessary but read the header
@@ -487,7 +473,7 @@ int  ImageBase::writeSPIDER(size_t select_img, bool isStack, int mode)
             header->maxim = newNsize;
         }
         else if (mode == WRITE_OVERWRITE)
-          header->maxim = Ndim;
+            header->maxim = Ndim;
     }
     else
     {

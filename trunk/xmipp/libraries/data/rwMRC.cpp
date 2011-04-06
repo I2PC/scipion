@@ -126,7 +126,8 @@ int ImageBase::readMRC(size_t select_img, bool isStack)
     printf("DEBUG readMRC: Reading MRC file\n");
 #endif
 
-    MRChead*        header = (MRChead *) askMemory(sizeof(MRChead));
+    MRChead* header = new MRChead;
+
     if ( fread( header, MRCSIZE, 1, fimg ) < 1 )
         return(-2);
 
@@ -154,32 +155,20 @@ int ImageBase::readMRC(size_t select_img, bool isStack)
     _xDim = header->nx;
     _yDim = header->ny;
     _zDim = header->nz;
-    _nDim = 1;
 
     if(isStack)
     {
+        if ( select_img > _zDim ) // When isStack slices in Z are supposed to be a stack of images
+            REPORT_ERROR(ERR_INDEX_OUTOFBOUNDS, formatString("readMRC: Image number %lu exceeds stack size %lu", select_img, _nDim));
+
         _nDim = (size_t) _zDim;
         _zDim = 1;
-        replaceNsize = _nDim;
-        if ( select_img > _nDim )
-            REPORT_ERROR(ERR_INDEX_OUTOFBOUNDS, formatString("readMRC: Image number %lu exceeds stack size %lu", select_img, _nDim));
     }
-    else
-        replaceNsize=0;
-
-    // Map the parameters
-
-    if (isStack && select_img == ALL_IMAGES)
-        _zDim = 1;
-    else if(isStack && select_img != ALL_IMAGES)
-        _zDim = _nDim = 1;
     else
         _nDim = 1;
 
+    replaceNsize = _nDim;
     setDimensions(_xDim, _yDim, _zDim, _nDim);
-
-    size_t   imgStart = IMG_INDEX(select_img);
-    size_t   imgEnd = (select_img != ALL_IMAGES) ? imgStart + 1 : _nDim;
 
     DataType datatype;
     switch ( header->mode % 5 )
@@ -231,11 +220,14 @@ int ImageBase::readMRC(size_t select_img, bool isStack)
     if ( header->mz && header->c!=0)//zx
         MDMainHeader.setValue(MDL_SAMPLINGRATEZ,(double)header->c/header->mz);
 
-    if (dataMode==HEADER) // Stop reading if not necessary
+    if (dataMode==HEADER || dataMode == _HEADER_ALL && _nDim > 1) // Stop reading if not necessary
     {
         delete header;
         return 0;
     }
+
+    size_t   imgStart = IMG_INDEX(select_img);
+    size_t   imgEnd = (select_img != ALL_IMAGES) ? imgStart + 1 : _nDim;
 
     MD.clear();
     MD.resize(imgEnd - imgStart,MDL::emptyHeader);
@@ -272,10 +264,11 @@ int ImageBase::readMRC(size_t select_img, bool isStack)
     MD.write("/dev/stderr");
 #endif
 
-    freeMemory(header, sizeof(MRChead));
+    delete header;
 
-    if (isStack && dataMode < DATA)   // Don't read the individual header and the data if not necessary
+    if ( dataMode < DATA )   // Don't read the individual header and the data if not necessary
         return 0;
+
     readData(fimg, select_img, datatype, 0);
 
     return(0);

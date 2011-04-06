@@ -238,11 +238,10 @@ int readTIFF(size_t select_img, bool isStack=false)
     _yDim = (int) dirHead[imgStart].imageLength;
     _zDim = 1;
     _nDim = (select_img == ALL_IMAGES)? dirHead.size() : 1;
+    replaceNsize = _nDim;
+    setDimensions(_xDim, _yDim, 1, _nDim);
 
     size_t   imgEnd = (select_img != ALL_IMAGES) ? imgStart + 1 : _nDim;
-
-    setDimensions(_xDim, _yDim, 1, _nDim);
-    replaceNsize = _nDim;
 
     DataType datatype = datatypeTIFF(dirHead[0]);
 
@@ -253,13 +252,12 @@ int readTIFF(size_t select_img, bool isStack=false)
     MDMainHeader.setValue(MDL_DATATYPE,(int) datatype);
 
     //Read header only
-    if( dataMode < DATA )
+    if( dataMode < DATA || dataMode == _HEADER_ALL && _nDim > 1)
         return 0;
 
     /* As we cannot mmap a TIFF File, when this option is passed we are going to mmap
      * the multidimarray of Image
      */
-
     if (mmapOnRead)
     {
         mmapOnRead = false;
@@ -275,7 +273,7 @@ int readTIFF(size_t select_img, bool isStack=false)
     size_t pad = _xDim * _yDim;
     int imReaded = 0;
 
-    if (dataMode==HEADER) // Stop reading if not necessary
+    if (dataMode == HEADER) // Stop reading if not necessary
         return 0;
 
     MD.clear();

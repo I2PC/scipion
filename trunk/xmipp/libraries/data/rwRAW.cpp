@@ -130,18 +130,19 @@ int ImageBase::readRAW(size_t select_img, bool isStack)
     // Map the parameters
     setDimensions(_xDim, _yDim, _zDim, _nDim);
 
-    size_t   imgStart = IMG_INDEX(select_img);
-    size_t   imgEnd = (select_img != ALL_IMAGES) ? imgStart + 1 : _nDim;
-
     MDMainHeader.setValue(MDL_SAMPLINGRATEX,(double) -1);
     MDMainHeader.setValue(MDL_SAMPLINGRATEY,(double) -1);
     MDMainHeader.setValue(MDL_DATATYPE,(int)datatype);
 
-    if (dataMode==HEADER) // Stop reading if not necessary
+    if (dataMode==HEADER || dataMode == _HEADER_ALL && _nDim > 1) // Stop reading if not necessary
         return 0;
+
+    size_t   imgStart = IMG_INDEX(select_img);
+    size_t   imgEnd = (select_img != ALL_IMAGES) ? imgStart + 1 : _nDim;
 
     MD.clear();
     MD.resize(imgEnd - imgStart,MDL::emptyHeader);
+
     if( dataMode < DATA )
         return 0;
 

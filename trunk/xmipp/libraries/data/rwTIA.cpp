@@ -127,7 +127,7 @@ int ImageBase::readTIA(int select_img,bool isStack)
     size_t   imgEnd = (select_img != ALL_IMAGES) ? imgStart + 1 : header->NUMBER_IMAGES;
 
     if (select_img >  header->NUMBER_IMAGES)
-      REPORT_ERROR(ERR_INDEX_OUTOFBOUNDS, formatString("readTIA: Image number %lu exceeds stack size %lu", select_img, header->NUMBER_IMAGES));
+        REPORT_ERROR(ERR_INDEX_OUTOFBOUNDS, formatString("readTIA: Image number %lu exceeds stack size %lu", select_img, header->NUMBER_IMAGES));
     else if (select_img == ALL_IMAGES)
     {
         for (i = 1; i < header->NUMBER_IMAGES; i++)    // Check images dimensions. Need to be the same
@@ -200,7 +200,7 @@ int ImageBase::readTIA(int select_img,bool isStack)
     MDMainHeader.setValue(MDL_SAMPLINGRATEY,(double)dataHeaders[0].PIXEL_HEIGHT);
     MDMainHeader.setValue(MDL_DATATYPE,(int)datatype);
 
-    if (dataMode==HEADER) // Stop reading if not necessary
+    if (dataMode == HEADER || dataMode == _HEADER_ALL && _nDim > 1) // Stop reading if not necessary
     {
         delete header;
         return 0;
@@ -213,6 +213,7 @@ int ImageBase::readTIA(int select_img,bool isStack)
     {
         if (dataMode == _HEADER_ALL || dataMode == _DATA_ALL)
         {
+            MD[i].reserve(4);
             if(MDMainHeader.getValue(MDL_SAMPLINGRATEX,aux))
             {
                 MD[i].setValue(MDL_SHIFTX, dataHeaders[i].CalibrationOffsetX/aux);
