@@ -230,7 +230,7 @@ int  ImageBase::readSPIDER(size_t select_img)
         return 0;
     }
 
-    if (dataMode==HEADER) // Stop reading if not necessary
+    if (dataMode==HEADER || dataMode==_HEADER_ALL && isStack && _nDimSet>1) // Stop reading if not necessary
     {
         delete header;
         return 0;
@@ -254,6 +254,7 @@ int  ImageBase::readSPIDER(size_t select_img)
         }
         if (dataMode == _HEADER_ALL || dataMode == _DATA_ALL)
         {
+            MD[n].reserve(9);
             daux = (double)header->xoff;
             MD[n].setValue(MDL_SHIFTX, daux);
             daux = (double)header->yoff;
