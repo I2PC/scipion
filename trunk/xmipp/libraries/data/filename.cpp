@@ -83,7 +83,7 @@ void FileName::decompose(size_t &no, String &str) const
 {
     char buffer[1024];
     int ok = sscanf(c_str(), "%lu@%s", &no,&buffer);
-    if (!ok)
+    if (ok!=2)
     {
         no = ALL_IMAGES;
         str = *this;
