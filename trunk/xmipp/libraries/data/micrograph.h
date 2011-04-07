@@ -558,7 +558,7 @@ public:
     }
 
     /// Set micrograph size (when you do not read the file from disk)
-    void resize(int Xdim, int Ydim, FileName filename="");
+    void resize(int Xdim, int Ydim, const FileName &filename="");
 
     /** Write micrograph.
         Set adjust to true if the values should be scaled within the minimum

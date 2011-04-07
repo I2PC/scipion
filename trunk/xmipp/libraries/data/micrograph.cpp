@@ -458,13 +458,12 @@ void Micrograph::move_last_coord_to(int x, int y)
     }
 }
 
-void Micrograph::resize(int Xdim, int Ydim, FileName filename)
+void Micrograph::resize(int Xdim, int Ydim, const FileName &filename)
 {
     this->Xdim = Xdim;
     this->Ydim = Ydim;
     this->Zdim = 1;
     this->Ndim = 1;
-
     if (datatype == UChar)
     {
         if (IUChar == NULL)
@@ -526,7 +525,7 @@ void Micrograph::resize(int Xdim, int Ydim, FileName filename)
         }
     }
     else
-        REPORT_ERROR(ERR_TYPE_INCORRECT, "Micrograph::set_val::(): unknown datatype");
+        REPORT_ERROR(ERR_TYPE_INCORRECT, "Unknown datatype");
 
 }
 void Micrograph::write(const FileName &fileName, CastWriteMode castMode)
