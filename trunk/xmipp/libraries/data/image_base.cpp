@@ -36,7 +36,7 @@ void ImageBase::init()
         transform = Standard;
     else
         transform = NoTransform;
-    i = 0;
+
     filename = "";
     offset = 0;
     swap = 0;
@@ -48,7 +48,7 @@ void ImageBase::init()
 
 void ImageBase::clearHeader()
 {
-    MDMainHeader.clear();    
+    MDMainHeader.clear();
     MD.clear();
     //Just to ensure there is an empty MDRow
     MD.push_back(MDMainHeader);
@@ -839,7 +839,7 @@ std::ostream& operator<<(std::ostream& o, const ImageBase& I)
     if (I.individualContainsLabel(MDL_WEIGHT))
         oGeo << "Weight         : " << I.weight() << std::endl;
     if (I.individualContainsLabel(MDL_FLIP))
-        oGeo << "Flip    : " << I.flip() << std::endl;
+        oGeo << "Flip           : " << I.flip() << std::endl;
 
     if (!oGeo.str().empty())
         o << "--- Geometry ---" << std::endl << oGeo.str();

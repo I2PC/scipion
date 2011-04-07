@@ -106,7 +106,7 @@ int ImageBase::readTIA(int select_img,bool isStack)
     TIAdataHead* dataHeaders = new TIAdataHead [header->NUMBER_IMAGES];
 
     // Read all the image headers
-    for (i = 0; i < header->NUMBER_IMAGES; i++)
+    for (int i = 0; i < header->NUMBER_IMAGES; i++)
     {
         fseek(fimg, header->pDATA_OFFSET[i], SEEK_SET);
         xmippFREAD(&(dataHeaders[i].CalibrationOffsetX), sizeof(double), 1, fimg, swap);
@@ -121,7 +121,7 @@ int ImageBase::readTIA(int select_img,bool isStack)
     }
 
     int _xDim,_yDim;
-    unsigned long int _nDim;
+    size_t _nDim;
 
     size_t   imgStart = IMG_INDEX(select_img);
     size_t   imgEnd = (select_img != ALL_IMAGES) ? imgStart + 1 : header->NUMBER_IMAGES;
@@ -130,22 +130,22 @@ int ImageBase::readTIA(int select_img,bool isStack)
         REPORT_ERROR(ERR_INDEX_OUTOFBOUNDS, formatString("readTIA: Image number %lu exceeds stack size %lu", select_img, header->NUMBER_IMAGES));
     else if (select_img == ALL_IMAGES)
     {
-        for (i = 1; i < header->NUMBER_IMAGES; i++)    // Check images dimensions. Need to be the same
+        for (int i = 1; i < header->NUMBER_IMAGES; i++)    // Check images dimensions. Need to be the same
         {
             if (dataHeaders[0].IMAGE_HEIGHT != dataHeaders[i].IMAGE_HEIGHT || \
                 dataHeaders[0].IMAGE_WIDTH != dataHeaders[i].IMAGE_WIDTH  || \
                 dataHeaders[0].DATA_TYPE != dataHeaders[i].DATA_TYPE)
                 REPORT_ERROR(ERR_IMG_NOREAD, "readTIA: images in TIA file with different dimensions and data types are not supported");
         }
-        _xDim = (int) dataHeaders[0].IMAGE_WIDTH;
-        _yDim = (int) dataHeaders[0].IMAGE_HEIGHT;
-        _nDim = (int) header->NUMBER_IMAGES;
+        _xDim = dataHeaders[0].IMAGE_WIDTH;
+        _yDim = dataHeaders[0].IMAGE_HEIGHT;
+        _nDim = (size_t) header->NUMBER_IMAGES;
     }
     else
     {
-        _xDim = (int) dataHeaders[imgStart].IMAGE_WIDTH;
-        _yDim = (int) dataHeaders[imgStart].IMAGE_HEIGHT;
-        _nDim = (int) 1;
+        _xDim = dataHeaders[imgStart].IMAGE_WIDTH;
+        _yDim = dataHeaders[imgStart].IMAGE_HEIGHT;
+        _nDim = 1;
     }
 
     // Map the parameters
@@ -209,10 +209,10 @@ int ImageBase::readTIA(int select_img,bool isStack)
     MD.clear();
     MD.resize(imgEnd - imgStart,MDL::emptyHeader);
     double aux;
-    for ( i = 0; i < imgEnd - imgStart; ++i )
+    for ( size_t i = 0; i < imgEnd - imgStart; ++i )
     {
         if (dataMode == _HEADER_ALL || dataMode == _DATA_ALL)
-        {            
+        {
             if(MDMainHeader.getValue(MDL_SAMPLINGRATEX,aux))
             {
                 MD[i].setValue(MDL_SHIFTX, dataHeaders[i].CalibrationOffsetX/aux);

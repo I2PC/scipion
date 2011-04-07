@@ -218,18 +218,17 @@ protected:
     FileName            filename;    // File name
     FileName            tempFilename; // Temporary filename
     FileName            dataFName;   // Data File name without flags
-    FILE*                fimg;        // Image File handler
-    FILE*                fhed;        // Image File header handler
-    TIFF*                tif;         // TIFF Image file hander
-    DataMode             dataMode;    // Flag to force select what will be read/write from image files
+    FILE*               fimg;        // Image File handler
+    FILE*               fhed;        // Image File header handler
+    TIFF*               tif;         // TIFF Image file hander
+    DataMode            dataMode;    // Flag to force select what will be read/write from image files
     bool                stayOpen;    // To maintain the image file open after read/write
-    size_t       i;           // Current image number (may be > NSIZE)
-    size_t       offset;      // Data offset
+    size_t              offset;      // Data offset
     int                 swap;        // Perform byte swapping upon reading
     TransformType       transform;   // Transform type
-    size_t                 replaceNsize;// Stack size in the replace case
-    bool                 _exists;     // does target file exists?
-    // equal 0 is not exists or not a stack
+    size_t              replaceNsize;// Stack size in the replace case
+    bool                _exists;     // does target file exists?
+                                     // equal 0 is not exists or not a stack
     bool                mmapOnRead;  // Mapping when reading from file
     bool                mmapOnWrite; // Mapping when writing to file
     int                 mFd;         // Handle the file in reading method and mmap
@@ -274,7 +273,7 @@ public:
       */
     inline bool isMapped()
     {
-        return mmapOnRead;
+        return (mmapOnRead || mmapOnWrite);
     }
 
     /** Is this file a real-valued image
