@@ -209,7 +209,7 @@ public class XrayImportDialog extends JDialog implements ActionListener
 
 	private void actionBrowse(String fieldName){
 		String path=FileDialog.openDialog(fieldName, this);
-		if(! ("".equals(path))) 
+		if(path != null) 
 			textFields.get(fieldName).setText(path);
 	}
 	
@@ -269,6 +269,8 @@ public class XrayImportDialog extends JDialog implements ActionListener
 	 *            Dialog message
 	 * @return Xmipp_Tomo.ExitValues.CANCEL / YES / NO
 	 */
+	
+	// TODO: use swing dialog
 	public static Xmipp_Tomo.ExitValues dialogYesNoCancel(String title, String message, boolean showCancelButton) {
 		GenericDialog gd = new GenericDialog(title);
 

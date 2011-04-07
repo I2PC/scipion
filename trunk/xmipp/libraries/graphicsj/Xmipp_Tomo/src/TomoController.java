@@ -83,7 +83,7 @@ public class TomoController implements AdjustmentListener{
 			try {
 				backgroundMethod.invoke(target);
 			} catch (Exception ex) {
-				Xmipp_Tomo.debug("BackgroundMethod.doInBackground()" + ex.toString());
+				Xmipp_Tomo.debug("BackgroundMethod.doInBackground()", ex);
 			}
 			return "";
 		}
@@ -94,7 +94,7 @@ public class TomoController implements AdjustmentListener{
 				if(doneMethod!=null)
 					doneMethod.invoke(target);
 			} catch (Exception ex) {
-				Xmipp_Tomo.debug("BackgroundMethod.done()" + ex.toString());
+				Xmipp_Tomo.debug("BackgroundMethod.done()", ex);
 			}
 		}
 	} //end BackgroundMethod
@@ -132,8 +132,7 @@ public class TomoController implements AdjustmentListener{
 			try {
 				new BackgroundMethod(getClass().getMethod("play"), this).execute();
 			} catch (Exception ex) {
-				Xmipp_Tomo.debug("TomoController.playPause() "
-						+ ex.getMessage());
+				Xmipp_Tomo.debug("TomoController.playPause() ", ex);
 			}
 		}
 	}
@@ -181,7 +180,7 @@ public class TomoController implements AdjustmentListener{
 			Xmipp_Tomo.debug("loadEM - cancelled");
 		} else {
 			String path = FileDialog.openDialog("Load EM", window);
-			if ((path == null) || ("".equals(path)))
+			if (path == null)
 				return;
 			loadImage(path);
 
@@ -231,7 +230,7 @@ public class TomoController implements AdjustmentListener{
 			new BackgroundMethod(this, getClass().getMethod("readImage"), getClass().getMethod("loadedEM")).execute();
 			getModel().waitForFirstImage();
 		} catch (Exception ex) {
-			Xmipp_Tomo.debug("TomoController.loadImage() " + ex.getMessage());
+			Xmipp_Tomo.debug("TomoController.loadImage() ", ex);
 		}
 
 		if (getModel().getNumberOfProjections() > 0) {
@@ -274,11 +273,12 @@ public class TomoController implements AdjustmentListener{
 	 */
 	public void apply() {
 
-		String path = window.dialogSave();
-		if ("".equals(path)) {
+		String path = FileDialog.saveDialog("Save...", window);
+		if (path == null) {
 			return;
 		}
 		
+		// TODO: bug - modelToSave has wrong properties: path(not updated), width&height =  0, always resized
 		TomoData originalModel = getModel(),modelToSave=originalModel;
 		
 		// Reopen the file only if the data was resized
@@ -295,13 +295,14 @@ public class TomoController implements AdjustmentListener{
 			}
 
 			window.setLastCommandState(Command.State.LOADED);
-			// iterate through the user actions that make sense
-			for (UserAction currentAction : Xmipp_Tomo.getWorkflow(window.getLastAction())) {
-				if (currentAction.isNeededForFile()) {
-					// Xmipp_Tomo.debug("Applying " + currentAction.toString());
-					window.setStatus("Applying " + currentAction.getCommand());
-					currentAction.getPlugin().run(modelToLoad.getImage());
-				}
+		}
+		
+		// iterate through the user actions that make sense
+		for (UserAction currentAction : Xmipp_Tomo.getWorkflow(window.getLastAction())) {
+			if (currentAction.isNeededForFile()) {
+				// Xmipp_Tomo.debug("Applying " + currentAction.toString());
+				window.setStatus("Applying " + currentAction.getCommand());
+				currentAction.getPlugin().run(modelToSave.getImage());
 			}
 		}
 
@@ -371,6 +372,16 @@ public class TomoController implements AdjustmentListener{
 		window.refreshImageCanvas();
 	}
 	
+	// TODO: hotspotRemoval
+	public void hotspotRemoval(){
+		
+	}
+	
+	// TODO: adjustbc
+	public void adjustbc(){
+		
+	}
+	
 	public void crop(){
 		window.protectWindow();
 		
@@ -421,10 +432,13 @@ public class TomoController implements AdjustmentListener{
 		window.setPlugin(null);
 	}
 
+	// Allow user to just make a copy of a file
 	public void save() {
-		String path = window.dialogSave();
-		if ((path == null) || ("".equals(path)))
+		String path = FileDialog.saveDialog("Save...", window);
+		if (path == null) {
 			return;
+		}
+		// TODO: should include resize code (see apply() )
 		saveFile(window, getModel(), path);
 	}
 
@@ -545,4 +559,6 @@ public class TomoController implements AdjustmentListener{
 		tomoWindow.setStatus("Done");
 		tomoWindow.setChangeSaved(true);
 	}
+	
+	// TODO: xmipp_tomo_remove_fluctuations (preprocessing)
 }

@@ -32,7 +32,7 @@ public class UserAction {
 	public static int ROOT_WINDOWID=0;
 	
 	private int windowId;
-	private String command=null,parameters=null;
+	private String command=null,parameters=null,name="";
 	private Plugin plugin;
 	private boolean neededForFile=false;
 	
@@ -81,11 +81,7 @@ public class UserAction {
 	}
 	
 	public String toString(){
-		String res= "UserAction - windowId=" + getWindowId() + ".Cmd=" + getCommand();
-		if(getPlugin()!=null)
-			res= res +  ".Plugin " + getPlugin().toString();
-		else if (getParameters() != null)
-			res = res + ".Params=" + getParameters();
+		String res= getName() + ". " + getCommand();
 		return res;
 	}
 
@@ -103,6 +99,14 @@ public class UserAction {
 
 	public void setNeededForFile(boolean neededForFile) {
 		this.neededForFile = neededForFile;
+	}
+
+	public String getName() {
+		return name;
+	}
+
+	public void setName(String name) {
+		this.name = name;
 	}
 	
 }

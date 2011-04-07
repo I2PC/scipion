@@ -42,103 +42,134 @@ import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.util.Enumeration;
 import java.util.Iterator;
 
+import xmipp.*;
+
 public class TiltSeriesIO {
-	// this class uses JNI mechanisms to call C++ code
-	// TODO: file formats: spider (MRC and XMP already work)
-	static {
-		// loads the XMIPP C++ library for data
-		System.loadLibrary("XmippDataJava");
-	}
-	
+	// this class uses JNI mechanisms to call C++ code through the xmipp package
 	// if an image is bigger than this threshold, resize it to this size
 	// This optimization makes sense since for interactive use no more detail is needed
 	public static Dimension resizeThreshold = new Dimension(400,400);
 
-	/**
-	 * @param model
-	 *            stores relevant data following MVC paradigm
-	 * @throws java.io.IOException
-	 * @throws InterruptedException
-	 *             Threads issues
-	 */
+	public static boolean isImage(String path){
+		// right now, identify file type by its extension
+		// should check also uppercase like .SEL
+		return path.endsWith(".mrc") || path.endsWith(".mrcs") || path.endsWith(".stk") || path.endsWith(".vol") || path.endsWith(".spi");
+	}
+	
+	public static boolean isSelFile(String path){
+		// right now, identify file type by its extension
+		// should check also uppercase like .SEL
+		return path.endsWith(".sel");
+	}
+	
+	public static boolean isTltFile(String path){
+		// right now, identify file type by its extension
+		// should check also uppercase like .SEL
+		return path.endsWith(".tlt");
+	}
+	
 	public static void read(TomoData model) throws java.io.IOException,
 			InterruptedException {
 
-		String path = model.getFilePath();
+		String absolutePath = model.getFilePath();
 
-		if ((path == null) || (path.equals("")))
+		if ((absolutePath == null) || (absolutePath.equals("")))
 			throw new IOException("Empty path");
-
-		// path=path.toLowerCase();
-
-		// right now, identify file type by its extension
-		// should check also uppercase like .SEL
-		if (path.endsWith(".mrc") || path.endsWith(".mrcs")) {
-			readImages(path, model);
-		} else if (path.endsWith(".sel")) {
-			readSel(path, model);
-		} else
-			throw new IOException("Unknown file type");
-
-	}
-
-	public static void write(TomoData model) {
-		// TODO: write(model) - use C++ version
-		// TODO: write(model) - check destination path, so we write to the desired file (and not to some unexpected other)
-		// TODO: write(model) - fill the ENABLED field in sel file (so discarded projections are marked as disabled)
-		String path = model.getFilePath();
-
-		if (path.endsWith(".mrc")) {
-			MrcIOJava.writeMRC(model);
-		}
-	}
-
-	/**
-	 * @param path
-	 *            absolute path to selfile
-	 * @param model
-	 * @throws IOException
-	 */
-	private static void readSel(String path, TomoData model) throws IOException {
-		// TODO: readSel - read tilt angles (from Metadata)
-		// TODO: readSel - CRASH - old selfiles use relative paths, new selfiles use absolute paths
 		
-		// files inside selfiles are relative to selfile location
-		// baseDir only needed with ImageJ FileDialog
-		// XmippTomo FileDialog returns absolute path
-		//String baseDir = new File(path).getParent();
-		String baseDir=null;
-
-		MetaData md = new MetaData();
-
-		FileName fn = new FileName(path);
+		// initial assumption: the paths inside the selfile  need no traslation / rebuild
+		boolean buildPath=false;
+		
+		model.readMetadata(absolutePath);
 		// Xmipp_Tomo.debug(fn.getBaseName());
-		md.read(fn);
-		md.iteratorBegin();
-		while (!md.iteratorEnd()) {
-			// store in filenameString the field MDL_IMAGE of each row of the
-			// selfile
-			String filenameString[] = new String[1];
-			md.getStrFromValue(MDLabel.MDL_IMAGE, filenameString);
-			try {
-				// Xmipp_Tomo.debug(filenameString[0]);
-				ImagePlusC ip = readImage(filenameString[0], baseDir, false);
-				postReadImage(model, ip);
-			} catch (IOException ex) {
-				// don't throw exception, so it tries to read next image
-				Xmipp_Tomo.debug("readimages - ", ex);
+		
+		long ids[]=model.getImageIds();
+		for(long id:ids) {
+			String fileName=model.getFilename(id);
+			if(buildPath)
+				fileName=buildAbsolutePath(absolutePath, fileName);
+			ImageDouble image = null;
+			if(fileName != null){
+				try {
+					image= readSlice(fileName, null, false);
+				} catch (IOException ex) {
+					// maybe the exception was due to the need of absolute paths
+					// give a second try with absolute path
+					buildPath = true;
+					fileName=buildAbsolutePath(absolutePath, fileName);
+					// another option would be to change the current working directory, but Java does not allow for it
+					image = readSlice(fileName, null, false);
+					
+				}
+				if(image != null)
+					postReadSlice(model, image);
 			}
-			md.iteratorNext();
 		}
 
-		postReadImages(model);
+		postReadStack(model);
+		
+		if(! isSelFile(absolutePath)){
+			// read tilt angles
+			String tltFilePath = getTiltFilePath(absolutePath);
+			model.readMetadata(tltFilePath);
+		}
 	}
 
-	private static ImagePlusC readImage(String path, String base, boolean headerOnly)
+		// TODO: bug - write fails (the written file cannot be read back again)
+	// TODO: write details (below)
+	// First show dialog to choose file type to save (primarily sel vs stack)
+	// Sel: ideally ask for sel and stack file paths (defaults to same paths, obviously warning about overwriting in both cases)
+	//      right now use same base and change extension only - for instance, pp.sel & pp.stk
+	//      adjust stack filenames in metadata if necessary
+	// Stack: ask only for stack file path (same overwrite warning), then save both stack and tlt
+	public static void write(TomoData model) {
+		String path = model.getFilePath();
+		Xmipp_Tomo.debug("writing " + path);
+		try{
+			if(isImage(path)){
+				writeStack(path,model);
+				String tltFilePath = getTiltFilePath(path);
+				writeTiltAngles(tltFilePath, model);
+			}else if(isSelFile(path)){
+				String stackPath=changeExtension(path, ".stk");
+				writeSel(path,stackPath,model);
+			}
+				
+		}catch (Exception ex){
+			Xmipp_Tomo.debug("write", ex);
+		}
+	}
+	
+	private static void writeStack(String absolutePath, TomoData model) throws Exception{	
+		ImageDouble img = convert(model.getImage());
+		img.setFilename(absolutePath);
+		img.write(absolutePath);
+	}
+
+	// TODO: - CURRENT - writeSel
+	private static void writeSel(String selAbsolutePath, String stackAbsolutePath, TomoData model) throws Exception{
+
+		model.getMetadata().write(selAbsolutePath);
+	}
+
+
+	
+
+private static String buildAbsolutePath(String selFilePath, String path){
+	// syntax of absolute paths: slice@/absolute/path/file.ext
+	String baseDir=new File(selFilePath).getParent();
+	int separatorIndex=path.indexOf("@");
+	String slice = path.substring(0,separatorIndex+1);
+	String fileName = path.substring(separatorIndex+1,path.length());
+	return slice + baseDir + "/" + fileName;
+}
+
+	private static ImageDouble readSlice(String path, String base, boolean headerOnly)
 			throws IOException {
-		return readImage(path, base, headerOnly, -1);
+		// watch out: slice = -1 has special meaning for image_base.read
+		return readSlice(path, base, headerOnly, -10);
 	}
 
 	/**
@@ -151,11 +182,11 @@ public class TiltSeriesIO {
 	 * @param headerOnly
 	 *            - read only the header of the image (vs whole image data)
 	 * @param slice
-	 *            - slice number (0..N-1)
-	 * @return image as ImagePlusC
+	 *            - slice number (1..N) (depends on Metadata convention for numbering slices)
+	 * @return image as ImageDouble
 	 * @throws IOException
 	 */
-	private static ImagePlusC readImage(String path, String base, boolean headerOnly,
+	private static ImageDouble readSlice(String path, String base, boolean headerOnly,
 			int slice) throws IOException {
 		String filepath = path;
 		if (base != null)
@@ -163,36 +194,36 @@ public class TiltSeriesIO {
 
 		// Xmipp_Tomo.debug(filepath);
 
-		ImagePlusC ipc = new ImagePlusC();
-		ipc.setFilename(filepath);
-		ipc.setReadHeaderOnly(headerOnly);
-		ipc.setSlice(slice);
-		int err = XmippData.readImage(ipc);
-
-		if (err != 0)
-			throw new IOException("Image.read error " + err);
-
-		return ipc;
+		ImageDouble image = new ImageDouble();
+		try{
+			if(headerOnly)
+				image.readHeader(filepath);
+			else
+				image.read(filepath, slice);
+		}catch (Exception ex){
+			throw new IOException(ex);
+		}
+		return image;
 	}
 
 	/**
-	 * Actions required after reading 1 ImagePlusC
+	 * Actions required after reading 1 image
 	 * 
 	 * @param model where the postprocessed data is saved
 	 * @param img
 	 * @depends readImage
 	 */
-	private static void postReadImage(TomoData model, ImagePlusC img) {
+	private static void postReadSlice(TomoData model, ImageDouble img) {
 		ImagePlus image = convert(img);
 
-		model.setOriginalHeight(img.getHeight());
-		model.setOriginalWidth(img.getWidth());
+		model.setOriginalHeight(img.getYsize());
+		model.setOriginalWidth(img.getXsize());
 		model.updateMinMax(image);
 
 		// resize/scale - use an aux image processor for all projections
 		ImageProcessor ipresized = null, ip = image.getProcessor();
 
-		if (shouldResize(img.getWidth(),img.getHeight())) {
+		if (shouldResize(img.getXsize(),img.getYsize())) {
 			ipresized = ip.resize(resizeThreshold.width,resizeThreshold.height);
 			model.addProjection(ipresized);
 			model.setResized(true);
@@ -201,108 +232,80 @@ public class TiltSeriesIO {
 	}
 	
 	/**
-	 * Actions required after reading all the images
+	 * Actions required after reading all the images of a stack
 	 * 
 	 * @param model
 	 */
-	private static void postReadImages(TomoData model) {
+	private static void postReadStack(TomoData model) {
 		model.lastImageLoaded();
 	}
 
 	
-	/**
-	 * @param img
-	 * @return
-	 */
-	private static ImagePlus convert(ImagePlusC img) {
-
-		// Creates image
-		FloatProcessor convertedImageProcessor = new FloatProcessor(img.getWidth(), img.getHeight());
-
-		if (img.getReadHeaderOnly() == false)
-			for (int x = 0; x < img.getWidth(); x++)
-				for (int y = 0; y < img.getHeight(); y++)
-					convertedImageProcessor.setf(x, y, (float) img.getPixel(x, y));
+	private static ImagePlus convert(ImageDouble img) {
+		double [] imageData = img.getData();
+		if (imageData == null)
+			return null;
+		
+		// Create image
+		int width=img.getXsize(), height=img.getYsize();
+		FloatProcessor convertedImageProcessor = new FloatProcessor(width,height);
+		int i=0;
+		for (int y = 0; y < height; y++)
+			for (int x = 0; x < width; x++)	
+					convertedImageProcessor.setf(x, y, (float) imageData[i++]);
 
 		// normalize the image - done by default when calling FloatProcessor(array), here is our responsibility
 		convertedImageProcessor.findMinAndMax();
 		
 		ImagePlus imagePlus = new ImagePlus("ImageDouble", convertedImageProcessor);
-		// imagePlus.getProcessor().setPixels(img.getImage());
-		imagePlus.setDimensions(0, img.getNImages(), 0);
 		return imagePlus;
 	}
-
-	/**
-	 * @param path
-	 *            absolute path to file
-	 * @param model
-	 * @throws java.io.IOException
-	 * @throws InterruptedException
-	 * @throws OutOfMemoryError
-	 */
-	private static void readImages(String path, TomoData model)
-			throws java.io.IOException, InterruptedException, OutOfMemoryError {
-		// files are relative to selfile location
-		ImagePlusC img = readImage(path, null, true);
-		int nImages = img.getNImages();
-
-		model.setHeight(img.getHeight());
-		model.setWidth(img.getWidth());
-
-		// load images into model
-		// Xmipp_Tomo.debug("Number of images: " + nImages);
-		for (int i = 1; i <= nImages; i++) {
-			if (model.isLoadCanceled())
-				break;
-			try {
-				ImagePlusC image = readImage(path, null, false, i - 1);
-				postReadImage(model, image);
-			} catch (IOException ex) {
-				// don't throw exception, so it tries to read next image
-				Xmipp_Tomo.debug("readimages - ", ex);
-			}
-			// uncomment for concurrency tests
-			// if(Xmipp_Tomo.TESTING != 0)
-			// Thread.sleep(250);
+	
+	private static ImageDouble convert(ImagePlus img) {
+		if(img == null){
+			Xmipp_Tomo.debug("Null image");
+			return null;
 		}
-		postReadImages(model);
+		// Creates image
+		int width=img.getWidth(), height=img.getHeight(), numberOfProjections=img.getStackSize();
+		ImageDouble imageDouble=new ImageDouble();
 
-		// read tilt angles
-		String tltFilePath = getTiltFilePath(path);
-		try {
-			readTiltAngles(tltFilePath, model);
-		} catch (FileNotFoundException ex) {
-			// model.emptyTiltAngles(model.getNumberOfProjections());
-			Xmipp_Tomo.debug("readImages - problem reading tlt. "
-					+ ex.toString());
+		int imageSize=width*height;
+		double data[]=new double[imageSize*numberOfProjections];
+		int i=0;
+		for(int p=1;p<=numberOfProjections;p++){
+			FloatProcessor projection=(FloatProcessor) img.getStack().getProcessor(p);
+			float [] pixels =(float[]) projection.getPixels();
+			for (int j = 0; j < imageSize; j++)
+					data[i++]=pixels[j]; 
 		}
-
+		
+		try{
+			imageDouble.setData(width, height, numberOfProjections, data);
+		}catch (Exception ex){
+			Xmipp_Tomo.debug("convert ImagePlus->ImageDouble", ex);
+		}
+		return imageDouble;
 	}
 
-
-
-	/**
-	 * @param tltFilePath
-	 * @param model
-	 * @throws java.io.IOException
-	 */
-	public static void readTiltAngles(String tltFilePath, TomoData model)
-			throws java.io.IOException {
+	// TODO: Metadata can also import columns from text files
+	public static void readTiltAngles(String tltFilePath, MetaData md) {
 		// .tlt syntax: one float angle per line, stored as text
-		
-		BufferedReader brin = new BufferedReader(new FileReader(tltFilePath));
-		String line = null;
-		while ((line = brin.readLine()) != null) {
-			model.addTiltAngle(new Float(line));
+		try{		
+			BufferedReader brin = new BufferedReader(new FileReader(tltFilePath));
+	
+			String line = null;
+			long i=1;
+			while ((line = brin.readLine()) != null) {
+				md.setValueDouble(MDLabel.MDL_ANGLETILT, new Double(line), i++);
+			}
+		}catch (IOException ex){
+			Xmipp_Tomo.debug("readTiltAngles", ex);
 		}
 	}
 
 	/**
 	 * TODO: writeTiltAngles - test
-	 * @param tltFilePath
-	 * @param model
-	 * @throws java.io.IOException
 	 */
 	public static void writeTiltAngles(String tltFilePath, TomoData model)
 			throws IllegalArgumentException {
@@ -325,10 +328,10 @@ public class TiltSeriesIO {
 		PrintWriter output = null;
 		try {
 			output = new PrintWriter(f);
-			Iterator<Float> i = model.getTiltAnglesIterator();
-			do {
-				output.println(i.next());
-			} while (i.hasNext());
+			Enumeration<Double> tiltAngles = model.getTiltAngles();
+			while (tiltAngles.hasMoreElements()){
+				output.println(tiltAngles.nextElement());
+			}
 
 		} catch (FileNotFoundException ex) {
 			Xmipp_Tomo.debug("writeTlt - file not found");
@@ -337,8 +340,6 @@ public class TiltSeriesIO {
 		}
 
 	}
-
-
 
 	protected static String getTiltFilePath(String path) {
 		return changeExtension(path, ".tlt");
@@ -360,6 +361,39 @@ public class TiltSeriesIO {
 		// TODO: shouldResize - when applying changes to the original image, don't resize
 		return (width > resizeThreshold.width ) || (height > resizeThreshold.height);
 	}
+	
+	public static void test1(String filepath){
+		try {
+			for(int i=1;i<=3; i++){
+				ImageDouble image = readSlice(filepath, null, false, i);
+				String firstFilePath=changeExtension(filepath, "" + i + ".xmp");
+				image.write(firstFilePath);
+			}
+		} catch (Exception ex){
+			Xmipp_Tomo.debug("test1",ex);
+		}
+	}
+	
+	public static void test2(String filepath){
+		try {
+			TomoData model=new TomoData(filepath);
+			TiltSeriesIO.read(model);
+			String extension=filepath.substring(filepath.lastIndexOf("."),filepath.length());
+			String copyFilePath=changeExtension(filepath, "copy"+extension);
+			model.setFile(copyFilePath);
+			TiltSeriesIO.write(model);
+		} catch (Exception ex){
+			Xmipp_Tomo.debug("test1",ex);
+		}
+	}
 
+	public static void main(String[] args){
+		if(args.length < 1){
+			System.out.println("Please specify the data file for tests");
+			System.exit(1);
+		}
+		String filepath=args[0];
+		test1(filepath);
+	}
 
 }

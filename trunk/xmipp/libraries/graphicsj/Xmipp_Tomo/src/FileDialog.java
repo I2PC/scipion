@@ -34,17 +34,19 @@ import ij.Prefs;
 import java.awt.Component;
 import java.io.File;
 import javax.swing.JFileChooser;
+import javax.swing.JOptionPane;
 import javax.swing.filechooser.FileNameExtensionFilter;
 
 public class FileDialog {
 	private JFileChooser fileChooser;
 	private static File lastChosenDirectory;
 
-	private void setupOpenDialog(String title, String path, final String fileName) {
+	private void setupDialog(String title, String path, final String fileName,int type) {
 		fileChooser = new JFileChooser();
 		fileChooser.setDialogTitle(title);
 		fileChooser.setFileSelectionMode(JFileChooser.FILES_AND_DIRECTORIES);
 		fileChooser.setCurrentDirectory(getLastChosenDirectory());
+		fileChooser.setDialogType(type);
 
 		File fdir = null;
 		if (path != null)
@@ -54,16 +56,33 @@ public class FileDialog {
 		if (fileName != null)
 			fileChooser.setSelectedFile(new File(fileName));
 	}
+	
+	private void setupDialog(String title, String path, final String fileName, int type, FileNameExtensionFilter filter){
+		setupDialog(title, path, fileName, type);
+		setFilter(filter);
+	}
 
 	public static String openDialog(String title, Component parent) {
 		FileDialog fd = new FileDialog();
-		fd.setupOpenDialog(title, null, null);
-		FileNameExtensionFilter filter = new FileNameExtensionFilter("Tomo images", "sel", "mrcs");
-		fd.setFilter(filter);
+		fd.setupDialog(title, null, null,JFileChooser.OPEN_DIALOG,tomoImagesFileExtensionFilter());
 		int status = fd.showOpenDialog(parent);
 		if (status != JFileChooser.APPROVE_OPTION)
 			return "";
 		return fd.getPath();
+	}
+	
+	public static String saveDialog(String title, Component parent) {
+		FileDialog fd = new FileDialog();
+		fd.setupDialog(title, null, null,JFileChooser.SAVE_DIALOG, tomoImagesFileExtensionFilter());
+		
+		int status = fd.showSaveDialog(parent);
+		if (status != JFileChooser.APPROVE_OPTION)
+			return "";
+		return fd.getPath();
+	}
+	
+	public static FileNameExtensionFilter tomoImagesFileExtensionFilter(){
+		return new FileNameExtensionFilter("Tomo images", "sel", "mrcs", "vol", "stk", "spi");
 	}
 
 	/**
@@ -73,12 +92,30 @@ public class FileDialog {
 	private int showOpenDialog(Component parent) {
 		return fileChooser.showOpenDialog(parent);
 	}
+	
+	/**
+	 * @depends on setupOpenDialog
+	 * @return Cancel, Approve or Error - @see fileChooser.showOpenDialog
+	 */
+	private int showSaveDialog(Component parent) {
+		return fileChooser.showSaveDialog(parent);
+	}
 
 	public String getPath() {
-		File file = fileChooser.getSelectedFile();
-		if (file == null)
-			return "";
-		String name = file.getName();
+		File selectedFile = fileChooser.getSelectedFile();
+		if (selectedFile == null)
+			return null;
+
+		if (fileChooser.getDialogType() == JFileChooser.SAVE_DIALOG)
+			if ((selectedFile != null) && selectedFile.exists()) {
+				int response = JOptionPane.showConfirmDialog(fileChooser,"The file " + selectedFile.getName() + " already exists. Do you want to replace it?",
+						"Ovewrite file", JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
+				if (response != JOptionPane.YES_OPTION)
+					return null;
+			}
+
+
+		String name = selectedFile.getName();
 		String dir = fileChooser.getCurrentDirectory().getPath() + File.separator;
 
 		String returnPath = "";

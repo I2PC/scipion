@@ -331,12 +331,13 @@ public class MrcIOJava {
 		model.lastImageLoaded();
 
 		// read tilt angles
+		/*
 		String tltFilePath = TiltSeriesIO.getTiltFilePath(path);
 		try {
 			TiltSeriesIO.readTiltAngles(tltFilePath, model);
 		} catch (FileNotFoundException ex) {
 			// model.emptyTiltAngles(model.getNumberOfProjections());
-		}
+		}*/
 	}
 
 	/**

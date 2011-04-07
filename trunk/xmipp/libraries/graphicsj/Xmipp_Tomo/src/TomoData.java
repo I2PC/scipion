@@ -36,13 +36,15 @@ import ij.process.StackConverter;
 import java.beans.PropertyChangeListener;
 import java.beans.PropertyChangeSupport;
 import java.io.File;
+import java.util.Enumeration;
+import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Vector;
 import java.util.concurrent.Semaphore;
-import javax.swing.text.BadLocationException;
-import javax.swing.text.Document;
-import javax.swing.text.PlainDocument;
+
+import xmipp.MDLabel;
+import xmipp.MetaData;
 
 // TODO: refactor propertyChangeSupport into AbstractModel?
 public class TomoData{
@@ -58,6 +60,9 @@ public class TomoData{
 
 	// PROPERTIES
 	// maybe it's better to move currentProjection to the viewer - in case different views can show different slices
+	// TODO: strictly speaking, the order of the projections is not specified by the sequence of the images in the
+	// stack file, it is specified by the tilt angle. It's just a coincidence that the first image in the sequence is
+	// the one with the smallest tilt angle.
 	private int currentProjectionNumber=1;
 	private int numberOfProjections=0;
 	private boolean resized=false;
@@ -73,14 +78,17 @@ public class TomoData{
 	private ImagePlus imp=null;
 
 	// by now use a vector to store the angles - indexes can be 0..N-1
-	java.util.List <Float> tiltAngles=null;
+	// java.util.List <Float> tiltAngles=null;
 	
 	// projection enabled = preserve; projection disabled = discard
 	// when using Metadata enabled field, the tilt series is not modified. Instead the selfile is.
-	java.util.List <Boolean> enabledProjections= new Vector<Boolean>();
+	// java.util.List <Boolean> enabledProjections= new Vector<Boolean>();
 	
-	// This class also saves the models of the texfields of its views, one Document per textfield
+	// 0.. N-1
+	//List <Long> ids=new Vector<Long>();
 	
+	// TODO: use native Xmipp metadata class
+	MetaData imageMetadata;
 
 	// allow Views to wait(lock) while the first (or last) image loads
 	private Semaphore firstLoaded= new Semaphore(0),lastLoaded=new Semaphore(0);
@@ -113,6 +121,10 @@ public class TomoData{
 	public int getCurrentProjectionNumber() {
 		return currentProjectionNumber;
 	}
+	
+	private long getCurrentProjectionId(){
+		return getImageIds() [getCurrentProjectionNumber()-1];
+	}
 
 	
 	/**
@@ -140,11 +152,18 @@ public class TomoData{
 		return imp;
 	}
 	
+	public long[] getImageIds(){
+		long [] result=new long[getNumberOfProjections()];
+		if(getMetadata() != null)
+			result= getMetadata().findObjects();
+		return result;
+	}
+	
 	private void setImage(ImagePlus i){
 		imp=i;
 	}
 	
-	private List<Float> getTiltAngles(){
+	/* private List<Float> getTiltAngles(){
 		if(tiltAngles == null){
 			Vector <Float> v = new Vector<Float>();
 			v.setSize(getNumberOfProjections());
@@ -159,20 +178,28 @@ public class TomoData{
 	
 	public Iterator<Float> getTiltAnglesIterator(){
 		return tiltAngles.iterator();
-	}
+	}*/
 	
 	/**
 	 * @return null if tilt is undefined, tilt value otherwise
 	 * 
 	 */
-	public Float getCurrentTiltAngle(){
-		Float t=null;
+	public Double getCurrentTiltAngle(){
+		Double t=null;
 		try{
-			t=getTiltAngle(getCurrentProjectionNumber());
+			t=getTiltAngle(getCurrentProjectionId());
 		}catch (ArrayIndexOutOfBoundsException ex){
 			t=null;
 		}
 		return t;
+	}
+	
+	public Enumeration<Double> getTiltAngles(){
+		int size=getImageIds().length;
+		Vector<Double> tiltAngles=new Vector<Double>(size);
+		for(int i=0; i< size; i++)
+			tiltAngles.add(getTiltAngle(getImageIds()[i]));
+		return tiltAngles.elements();
 	}
 	
 	// Helper methods to manage tilt angles "list"
@@ -180,23 +207,29 @@ public class TomoData{
 	/**
 	 * @param i 1..N
 	 */
-	private Float getTiltAngle(int i){
-		if(tiltAngles == null)
+	private Double getTiltAngle(long id){
+		/*if(tiltAngles == null)
 			return null;
-		return getTiltAngles().get(i-1);
+		return getTiltAngles().get(i-1);*/
+		return getMetadata().getValueDouble(MDLabel.MDL_ANGLETILT,id);
 	}
 	
 	/**
 	 * @param i 1..N
 	 */
-	public boolean isEnabled(int i){
-		if(enabledProjections == null)
+	public boolean isEnabled(long id){
+		/* if(enabledProjections == null)
 			return false;
 		return enabledProjections.get(i-1).booleanValue();
+		*/
+		boolean enabled=true;
+		if(getMetadata().getValueInt(MDLabel.MDL_ENABLED, id) != 1)
+			enabled=false;
+		return enabled;
 	}
 	
 	public boolean isCurrentEnabled(){
-		return isEnabled(getCurrentProjectionNumber());
+		return isEnabled(getCurrentProjectionId());
 	}
 	
 	
@@ -204,8 +237,9 @@ public class TomoData{
 	 * @param i angle index - from 1 to numberOfProjections
 	 * @param tilt tilt angle
 	 */
-	private void setTiltAngle(int i, float tilt){
-		getTiltAngles().set(i-1, new Float(tilt));	
+	private void setTiltAngle(long id, double tilt){
+		//getTiltAngles().set(i-1, new Float(tilt));
+		getMetadata().setValueDouble(MDLabel.MDL_ANGLETILT, tilt, id);
 	}
 	
 	
@@ -213,12 +247,17 @@ public class TomoData{
 	 * @param i enabledProjections index - from 1 to numberOfProjections
 	 * @param e true=enabled,false=disabled
 	 */
-	private void setEnabled(int i, boolean e){
-		getEnabledProjections().set(i-1, new Boolean(e));
+	private void setEnabled(long id, boolean e){
+		//getEnabledProjections().set(i-1, new Boolean(e));
+		int enabled=0;
+		if(e)
+			enabled=1;
+		getMetadata().setValueInt(MDLabel.MDL_ENABLED, enabled, id);
 	}
 	
+	// TODO: use ids
 	public void setTiltAnglesStep(double start, double step){
-		float t=(float)start;
+		double t=start;
 		for(int i=1;i<=getNumberOfProjections();i++){
 			setTiltAngle(i, (float)Math.ceil(t));
 			t+=step;
@@ -251,26 +290,31 @@ public class TomoData{
 	 * Sequential add (order matters)
 	 * @param t
 	 */
-	public void addTiltAngle(Float t){
+	// TODO: use imageMetadata
+	public void addTiltAngle(Double t){
 		// add() below needs an empty vector
-		if(tiltAngles == null)
+		/* if(tiltAngles == null)
 			tiltAngles = new Vector<Float>();
 			
 		getTiltAngles().add(t);
 		if(tiltAngles.size() == getCurrentProjectionNumber())
-			firePropertyChange(Properties.CURRENT_TILT_ANGLE.name(), null, t);
-	}
-	
-	public void deleteTiltAngle(int i){
-		if(getTiltAngles() != null)
-			if( (i < getTiltAngles().size()) && (i> 1))
-				getTiltAngles().remove(i-1);
+			firePropertyChange(Properties.CURRENT_TILT_ANGLE.name(), null, t);*/
 	}
 	
 	
 	// TODO: there may be no tilts defined - change tilt to Float (so it can handle nulls)
-	private float getInitialTilt(){
+	private double getInitialTilt(){
 		return getCurrentTiltAngle();
+	}
+	
+	// TODO: use imageMetadata
+	public void addEnabled(boolean t){
+		// add() below needs an empty vector
+		/*if(getEnabledProjections() != null){
+			getEnabledProjections().add(t);
+			if(getEnabledProjections().size() == getCurrentProjectionNumber())
+				firePropertyChange(Properties.CURRENT_PROJECTION_ENABLED.name(), null, t);
+		}*/
 	}
 	
 	/**
@@ -306,6 +350,10 @@ public class TomoData{
 	
 	public String getFileName(){
 		return file.getName();
+	}
+	
+	public String getFilename(long id) {
+		return getMetadata().getValueString(MDLabel.MDL_IMAGE,id);
 	}
 	
 	public String getDirectory(){
@@ -344,7 +392,7 @@ public class TomoData{
 		firstLoaded.release();
 	}
 	
-	// TODO
+	// TODO: loadCanceled
 	public void loadCanceled(){
 		firstImageLoaded();
 	}
@@ -362,27 +410,19 @@ public class TomoData{
 	}
 	
 	public void addProjection(ImageProcessor imageProcessor){
-		if(getImage() == null)
-			createImageStack(imageProcessor);
-		getImage().getStack().addSlice(null, imageProcessor);
-		
-		// TODO: addProjection - should be the value read from metadata
-		getEnabledProjections().add(new Boolean(true));
+		if(getImage() == null){
+			ImageStack stack=new ImageStack(imageProcessor.getWidth(), imageProcessor.getHeight());
+			// ImagePlus does not allow to add an empty stack, hence the need to add one slice here		
+			stack.addSlice(null, imageProcessor);
+			setImage(new ImagePlus(getFileName(), stack));
+		}else
+			getImage().getStack().addSlice(null, imageProcessor);
 		
 		setNumberOfProjections(getNumberOfProjections()+1);
 		if(getNumberOfProjections() == 1)
 			firstImageLoaded();
 	}
 	
-	private void createImageStack(ImageProcessor imageProcessor){
-		// cannot add empty stack, for example in the constructor. better init all here			
-		ImageStack stack=new ImageStack(imageProcessor.getWidth(), imageProcessor.getHeight());
-		stack.addSlice(null, imageProcessor);
-		setImage(new ImagePlus(getFileName(), stack));
-		// getImage().setWindow(window);
-	}
-
-
 	public boolean isResized() {
 		return resized;
 	}
@@ -426,14 +466,14 @@ public class TomoData{
 	
 	public void discardCurrentProjection(){
 		if(getNumberOfProjections()>1){
-			setEnabled(getCurrentProjectionNumber(), false);
+			setEnabled(getCurrentProjectionId(), false);
 		}
 		firePropertyChange(Properties.CURRENT_PROJECTION_ENABLED.name(), true, false);
 	}
 	
 	public void enableCurrentProjection(){
 		if(getNumberOfProjections()>1){
-			setEnabled(getCurrentProjectionNumber(), true);
+			setEnabled(getCurrentProjectionId(), true);
 		}
 		firePropertyChange(Properties.CURRENT_PROJECTION_ENABLED.name(), false, true);
 	}
@@ -463,7 +503,7 @@ public class TomoData{
 	}
 	
 	public String getCurrentProjectionInfo(){
-		return "Projection #" + getCurrentProjectionNumber() + ", enabled:" + isCurrentEnabled();
+		return "Projection #" + getCurrentProjectionNumber() + " ("+ getCurrentMetadata();
 	}
 	public int getOriginalWidth() {
 		return originalWidth;
@@ -481,4 +521,57 @@ public class TomoData{
 		this.originalHeight = originalHeight;
 	}
 
+	private void setMetadata(MetaData md){
+		imageMetadata=md;
+	}
+	
+	public MetaData getMetadata(){
+		if(imageMetadata==null)
+			imageMetadata = new MetaData();
+		return imageMetadata;
+	}
+	
+	// TODO: -CURRENT- first tilt is not displayed automatically (requires scrolling). Only happens with selfiles
+	public void readMetadata(String path){
+		if(TiltSeriesIO.isSelFile(path) || TiltSeriesIO.isImage(path))
+			getMetadata().read(path);
+		else if(TiltSeriesIO.isTltFile(path))
+			TiltSeriesIO.readTiltAngles(path, getMetadata());
+		else{
+			Xmipp_Tomo.debug("readMetadata - Unknown file type: " + path);
+			return;
+		}
+		firePropertyChange(Properties.CURRENT_TILT_ANGLE.name(), null, 0.0);
+		firePropertyChange(Properties.CURRENT_PROJECTION_ENABLED.name(), null, false);
+	}
+	
+	/* private Object getImageMetadata(long id,int label){
+		return getMetadata().get(Long.valueOf(id)).get(Integer.valueOf(label));
+	}
+	
+	private void setImageMetadata(long id,int label,Object value){
+		Hashtable<Integer,Object> row=imageMetadata.get(id);
+		if(row == null)
+			row = new Hashtable<Integer,Object>();
+		
+		row.put(Integer.valueOf(label),value);
+		imageMetadata.put(Long.valueOf(id),row);
+	}
+	
+	public void copyMetadata(MetaData md,long id){
+		ids.add(id);
+		// filename
+		setImageMetadata(id, MDLabel.MDL_IMAGE, md.getValueString(MDLabel.MDL_IMAGE, id));
+		setImageMetadata(id, MDLabel.MDL_ANGLETILT, md.getValueDouble(MDLabel.MDL_ANGLETILT, id));
+
+		boolean enabled=true;
+		if(md.getValueInt(MDLabel.MDL_ENABLED, id) != 1)
+			enabled=false;
+		setImageMetadata(id, MDLabel.MDL_ENABLED, enabled);
+	} */
+	
+	private String getCurrentMetadata(){
+		long id=getCurrentProjectionId();
+		return "(" + getMetadata().getValueString(MDLabel.MDL_IMAGE, id) + "). Enabled: " + getMetadata().getValueInt(MDLabel.MDL_ENABLED, id);
+	}
 }

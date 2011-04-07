@@ -45,11 +45,16 @@ import javax.swing.JCheckBox;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+import javax.swing.JSplitPane;
 import javax.swing.JTabbedPane;
 import javax.swing.JTextField;
+import javax.swing.JTree;
 import javax.swing.Timer;
 import javax.swing.UIManager;
 import javax.swing.plaf.FontUIResource;
+import javax.swing.tree.DefaultMutableTreeNode;
+import javax.swing.tree.TreeSelectionModel;
 
 /**
  * - Why?
@@ -84,7 +89,6 @@ public class TomoWindow extends ImageWindow implements WindowListener,
 	// TODO: preprocessing - non-blocking previews
 	// TODO: Undo - begin with preproc Undo
 	// TODO: preproc.export or option in save dialog - write a file without the disabled (discarded) projections, not simply setting enable in selfile
-	// TODO: move all code related to changes in currentProjection (related to imagecanvas) to TomoImageCanvas
 
 	// for serialization only - just in case
 	private static final long serialVersionUID = -4063711975454855701L;
@@ -118,16 +122,16 @@ public class TomoWindow extends ImageWindow implements WindowListener,
 		{
 			add(Command.LOAD);
 			add(Command.XRAY);
-			add(Command.NORMALIZE_SERIES);
 			add(Command.SAVE);
 			add(Command.DEFINE_TILT);
-			add(Command.MEASURE);
 			add(Command.DISCARD_PROJECTION);
 		}
 	};
 
 	private static java.util.List<Command> commandsMenuPreproc = new LinkedList<Command>() {
 		{
+			add(Command.NORMALIZE_SERIES);
+			add(Command.HOTSPOT_REMOVAL);
 			add(Command.GAUSSIAN);
 			add(Command.MEDIAN);
 			add(Command.SUB_BACKGROUND);
@@ -171,8 +175,10 @@ public class TomoWindow extends ImageWindow implements WindowListener,
 			add(Command.BANDPASS);
 			add(Command.HISTOGRAM_EQUALIZATION);
 			add(Command.CROP);
+			add(Command.HOTSPOT_REMOVAL);
 			// disabled until native writing (using Xmipp library) is implemented
-			// add(Command.APPLY);
+			add(Command.APPLY);
+			add(Command.SAVE);
 			add(Command.PRINT_WORKFLOW);
 			add(Command.CURRENT_PROJECTION_INFO);
 			add(Command.MEASURE);
@@ -206,7 +212,11 @@ public class TomoWindow extends ImageWindow implements WindowListener,
 	/* Window GUI components */
 	/* 4 main panels */
 	private JTabbedPane menuPanel;
-	private JPanel viewPanel, controlPanel, statusPanel;
+	private JPanel imagePanel, controlPanel, statusPanel;
+	private JPanel viewsPanel;
+
+	private JScrollPane projectPanel;
+	private JTree projectView; // other tree views: Prefuse
 	
 	// hack for reusing ImageJ ImageWindow
 	private JFrame realWindow;
@@ -223,7 +233,8 @@ public class TomoWindow extends ImageWindow implements WindowListener,
 	Point cursorLocation = new Point();
 
 	// action history hints - so we can navigate the workflow
-	private UserAction firstAction, lastAction;
+	// TODO: is firstAction really needed?
+	private DefaultMutableTreeNode firstAction, lastAction;
 
 	// for window resizing
 	Timer timer;
@@ -333,7 +344,7 @@ public class TomoWindow extends ImageWindow implements WindowListener,
 		try{
 			addMenuTabs();
 		}catch (Exception ex){
-			Xmipp_Tomo.debug("Tomowindow.addMainPanels - addmenutabs " + ex.toString());
+			Xmipp_Tomo.debug("Tomowindow.addMainPanels - addmenutabs ", ex);
 		}
 		menuPanel.setTabLayoutPolicy(JTabbedPane.SCROLL_TAB_LAYOUT);
 		menuPanel.setPreferredSize(new Dimension(MENUPANEL_MINWIDTH,
@@ -341,8 +352,29 @@ public class TomoWindow extends ImageWindow implements WindowListener,
 		getContentPane().add(menuPanel);
 
 		// VIEW & CONTROLS PANELS
-		viewPanel = new JPanel();
-		getContentPane().add(viewPanel);
+		// TODO: - CURRENT - viewsPanel uses only 1/2 of the available space...
+		/* viewsPanel = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT);
+		viewsPanel.setMinimumSize(new Dimension(MENUPANEL_MINWIDTH,100));
+		imagePanel = new JPanel();
+		imagePanel.setMinimumSize(new Dimension(MENUPANEL_MINWIDTH/2,100));
+		viewsPanel.setLeftComponent(imagePanel); */
+		viewsPanel = new JPanel();
+		imagePanel = new JPanel();
+		viewsPanel.add(imagePanel);
+		
+		
+		// TODO: start with all nodes expanded
+		// TODO: projectview - add tree selection listener? Or just get selected node when performing a tree action
+		projectView = new JTree(Xmipp_Tomo.getWorkflow());
+		projectView.setShowsRootHandles(true);
+		projectView.getSelectionModel().setSelectionMode(TreeSelectionModel.SINGLE_TREE_SELECTION);
+		projectPanel = new JScrollPane(projectView);
+		projectPanel.setMinimumSize(new Dimension(MENUPANEL_MINWIDTH/2,TiltSeriesIO.resizeThreshold.height));
+		
+		viewsPanel.add(projectPanel);
+		// viewsPanel.setDividerLocation(MENUPANEL_MINWIDTH / 2); 
+		// viewsPanel.setPreferredSize(new Dimension(MENUPANEL_MINWIDTH, 100));
+		getContentPane().add(viewsPanel);
 
 		controlPanel = new JPanel();
 		getContentPane().add(controlPanel);
@@ -380,12 +412,12 @@ public class TomoWindow extends ImageWindow implements WindowListener,
 			return;
 
 		// remove previous canvas if any
-		for (int i = 0; i < viewPanel.getComponentCount(); i++)
-			viewPanel.remove(i);
+		for (int i = 0; i < imagePanel.getComponentCount(); i++)
+			imagePanel.remove(i);
 
 		setCanvas(new TomoImageCanvas(getModel()));
-		viewPanel.setLayout(new ImageLayout(getCanvas()));
-		viewPanel.add(getCanvas());
+		imagePanel.setLayout(new ImageLayout(getCanvas()));
+		imagePanel.add(getCanvas());
 		getCanvas().addMouseMotionListener(this);
 		// listen to ImageWindow properties changes
 		// TODO: addView - is really needed?
@@ -432,6 +464,8 @@ public class TomoWindow extends ImageWindow implements WindowListener,
 		try {
 			addButton(Command.PLAY, controlPanel);
 			addCheckbox(Command.PLAY_LOOP, controlPanel,true);
+			addButton(Command.MEASURE, controlPanel);
+			addButton(Command.ADJUSTBC, controlPanel);
 		} catch (Exception ex) {
 			Xmipp_Tomo.debug("addControls - play");
 		}
@@ -494,6 +528,7 @@ public class TomoWindow extends ImageWindow implements WindowListener,
 		realWindow.setVisible(true);
 	}
 
+	// TODO: sometimes the label does not refresh automatically (for example, when saving a file)
 	public void setStatus(String text) {
 		getStatusLabel().setText(text);
 	}
@@ -548,9 +583,9 @@ public class TomoWindow extends ImageWindow implements WindowListener,
 
 	/* -------------------------- Action management -------------------- */
 
+	// TODO: useractions setname (S0, S1...)
 	public void addUserAction(UserAction a) {
-		Xmipp_Tomo.addUserAction(getLastAction(), a);
-		setLastAction(a);
+		setLastAction(Xmipp_Tomo.addUserAction(getLastAction(), a));
 	}
 
 	public void changeIcon(String buttonId, String iconName) {
@@ -620,12 +655,12 @@ public class TomoWindow extends ImageWindow implements WindowListener,
 	 */
 	public void resizeView() {
 		// TODO: resizeView - window resizing - call pack() with Timers?
-		if ((viewPanel == null) || (getCanvas() == null))
+		if ((imagePanel == null) || (getCanvas() == null))
 			return;
 
-		double factorWidth = viewPanel.getWidth()
+		double factorWidth = imagePanel.getWidth()
 				/ getCanvas().getPreferredSize().getWidth();
-		double factorHeight = viewPanel.getHeight()
+		double factorHeight = imagePanel.getHeight()
 				/ getCanvas().getPreferredSize().getHeight();
 		double factor = 1;
 
@@ -719,7 +754,7 @@ public class TomoWindow extends ImageWindow implements WindowListener,
 					"Do you want to save changes?",true);
 			switch (choice) {
 			case YES:
-				String path = dialogSave();
+				String path = FileDialog.saveDialog("Save...", this);
 				if ("".equals(path))
 					return;
 				controller.saveFile(this, getModel(), path);
@@ -776,7 +811,7 @@ public class TomoWindow extends ImageWindow implements WindowListener,
 			else
 				setNumberOfProjections((Integer) (event.getNewValue()));
 		}else if(TomoData.Properties.CURRENT_PROJECTION_NUMBER.name().equals(event.getPropertyName())){
-			setCurrentTiltAngleText(String.valueOf(getModel().getCurrentTiltAngle()));
+			updateCurrentTiltAngleText();
 			getProjectionScrollbar().setValue(getModel().getCurrentProjectionNumber());
 			refreshImageCanvas();
 			// Discard button label
@@ -785,7 +820,7 @@ public class TomoWindow extends ImageWindow implements WindowListener,
 			else
 				changeLabel(Command.DISCARD_PROJECTION.getId(), Command.UNDO_DISCARD_PROJECTION.getLabel());
 		}else if(TomoData.Properties.CURRENT_TILT_ANGLE.name().equals(event.getPropertyName())){
-			setCurrentTiltAngleText(String.valueOf(getModel().getCurrentTiltAngle()));
+			updateCurrentTiltAngleText();
 		}else if(TomoData.Properties.CURRENT_PROJECTION_ENABLED.name().equals(event.getPropertyName())){
 			if(getModel().isCurrentEnabled())
 				changeLabel(Command.DISCARD_PROJECTION.getId(), Command.DISCARD_PROJECTION.getLabel());
@@ -795,6 +830,14 @@ public class TomoWindow extends ImageWindow implements WindowListener,
 		}
 	}
 
+	private void updateCurrentTiltAngleText(){
+		String text="";
+		Double tilt=getModel().getCurrentTiltAngle();
+		if(tilt != null)
+			text=String.valueOf(tilt);
+		setCurrentTiltAngleText(text);
+	}
+	
 	/* Getters/ setters --------------------------------------------------- */
 
 	private ImageIcon getIcon(String name) {
@@ -825,7 +868,8 @@ public class TomoWindow extends ImageWindow implements WindowListener,
 
 	
 	private void setCurrentTiltAngleText(String tilt){
-		tiltTextField.setText(tilt);
+		if((tilt != null) && (tiltTextField != null))
+			tiltTextField.setText(tilt);
 	}
 	
 	void setCursorLocation(int x, int y) {
@@ -894,27 +938,6 @@ public class TomoWindow extends ImageWindow implements WindowListener,
 	}
 
 	/**
-	 * Show a file open browser and...
-	 * 
-	 * @return the path of the file chosen by the user, or empty string (not
-	 *         null) if the user cancels the dialog
-	 * @deprecated Use {@link FileDialog#dialogOpen()} instead
-	 */
-	private String dialogOpen() {
-		return FileDialog.openDialog("Import...", this);
-	}
-
-	/**
-	 * Show a file save browser and...
-	 * 
-	 * @return the path of the file chosen by the user, or empty string (not
-	 *         null) if the user cancels the dialog
-	 */
-	public String dialogSave() {
-		return XrayImportDialog.dialogSave(getModel().getFilePath(), ".mrc");
-	}
-
-	/**
 	 * @param title
 	 *            Dialog title
 	 * @param message
@@ -967,21 +990,21 @@ public class TomoWindow extends ImageWindow implements WindowListener,
 
 	}
 
-	public UserAction getFirstAction() {
+	public DefaultMutableTreeNode getFirstAction() {
 		return firstAction;
 	}
 
-	public void setFirstAction(UserAction firstAction) {
+	public void setFirstAction(DefaultMutableTreeNode firstAction) {
 		this.firstAction = firstAction;
 	}
 
-	public UserAction getLastAction() {
+	public DefaultMutableTreeNode getLastAction() {
 		if (lastAction == null)
 			lastAction = firstAction;
 		return lastAction;
 	}
 
-	public void setLastAction(UserAction lastAction) {
+	public void setLastAction(DefaultMutableTreeNode lastAction) {
 		this.lastAction = lastAction;
 	}
 

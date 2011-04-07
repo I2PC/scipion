@@ -34,13 +34,35 @@
  * Because then the plugin is shown on its own submenu in ImageJ
  */
 
-
+// TODO: Project management. Nodes of graph are the results (Series, alignment Parameters, Landmarks, Volumes...)
+// Transitions are actions (crop, align...)
+// Now all the results are in disk, so it goes like this:
+// - open the first image of the series
+// - apply the action to this first image and show the result (like a preview)
+// - if the user agrees, then apply the action to all the series in disk
+// - show the results in the canvas as each image is saved
+// TODO: organize a directory tree that replicates the graph structure (each subdirectory stores the results of 1 action)
+// TODO: visualization - add a "Thumbnail" checkbox. When enabled, display the scaled series from memory (faster).
+// When disabled, display the original from disk (slower)
+// TODO: Project management - save the workflow to disk
+// TODO: Project management - action to delete the results file of a node (to save disk space)
+// Objects of same type (for example, Landmarks) share the same Color.
+// Compact view: display nodes as Type-Sequence # (action). For example:
+// - S0
+// - S1 (crop S0)
+// TODO: memory management - for storing slices, use a cache (Juanjo). This way, when the user disables Thumbnails and the memory
+// fills up after loading a few slices, the oldest are removed from the cache (to provide memory for the newest)
 
 import ij.*;
 import java.io.*;
 import java.util.Calendar;
+import java.util.Enumeration;
 import java.util.LinkedList;
 import java.util.List;
+
+import javax.swing.tree.DefaultMutableTreeNode;
+import javax.swing.tree.TreeNode;
+
 import ij.plugin.PlugIn;
 
 /**
@@ -71,7 +93,7 @@ public class Xmipp_Tomo implements PlugIn{
 	// UI elements
 	private static TomoWindow tw=null;
 	
-	private static Tree<UserAction> workflow;
+	private static DefaultMutableTreeNode workflow;
 	
 	private int lastWindowId=0;
 	
@@ -88,32 +110,29 @@ public class Xmipp_Tomo implements PlugIn{
 			tw.display();
 	}
 	
-	public static void addUserAction(UserAction last, UserAction newAction){
+	public static DefaultMutableTreeNode addUserAction(DefaultMutableTreeNode last, UserAction newAction){
 		if(last == null){
 			Xmipp_Tomo.debug("Xmipp_Tomo.addUserAction - last is null");
-			return;
-		}
-		getWorkflow().addLeaf(last,newAction);
-		
+		}else
+			last.add(new DefaultMutableTreeNode(newAction));
+		return last;
 	}
 	
 	/** 
 	 * @param last
 	 * @return the section of the workflow which last action is the one passed as a parameter
 	 */
-	public static List<UserAction> getWorkflow(UserAction last){
+	public static List<UserAction> getWorkflow(DefaultMutableTreeNode last){
 		LinkedList <UserAction> res=new LinkedList<UserAction>();
-		res.push(last);
-		UserAction current=last;
-		Tree<UserAction> current_node=getWorkflow().getTree(last);
-		while(current != getWorkflow().getHead()){
-			Tree<UserAction> parent_node= current_node.getParent();
+		res.push((UserAction)last.getUserObject());
+		DefaultMutableTreeNode current_node=last;
+		while(current_node != getWorkflow().getRoot()){
+			DefaultMutableTreeNode parent_node= (DefaultMutableTreeNode)current_node.getParent();
 			if (parent_node == null)
 				debug("Null parent");
 			else{
-				current=parent_node.getHead();
-				current_node = parent_node;
-				res.push(current);
+				current_node=parent_node;
+				res.push((UserAction)current_node.getUserObject());
 			}
 		}
 		
@@ -121,20 +140,22 @@ public class Xmipp_Tomo implements PlugIn{
 	}
 	
 	// workflow is a singleton
-	private static Tree<UserAction> getWorkflow(){
+	public static DefaultMutableTreeNode getWorkflow(){
 		if(workflow == null){
-			UserAction workflowRoot = new UserAction(UserAction.ROOT_WINDOWID,"Plugin start");
-			setWorkflow(new Tree<UserAction>(workflowRoot));
+			UserAction workflowRoot = new UserAction(UserAction.ROOT_WINDOWID,"Project");
+			setWorkflow(new DefaultMutableTreeNode(workflowRoot));
 		}
 		return workflow;
 	}
 	
 	private static UserAction getWorkflowRoot(){
-		return getWorkflow().getHead();
+		return (UserAction)((DefaultMutableTreeNode)getWorkflow().getRoot()).getUserObject();
 	}
 	
 	public static void printWorkflow(){
-		debug(getWorkflow().toString());
+		Enumeration e = getWorkflow().breadthFirstEnumeration();
+		while(e.hasMoreElements())
+			debug((e.nextElement()).toString());
 	}
 
 	
@@ -245,8 +266,8 @@ public class Xmipp_Tomo implements PlugIn{
 	private void createTomoWindow(){
 			tw= new TomoWindow(getNextWindowId());
 			UserAction newWindow= new UserAction(UserAction.ROOT_WINDOWID,"New Window");
-			addUserAction(getWorkflowRoot(),newWindow);
-			tw.setFirstAction(newWindow);
+			addUserAction(getWorkflow(),newWindow);
+			tw.setFirstAction(getWorkflow());
 	}
 		
 	
@@ -265,8 +286,9 @@ public class Xmipp_Tomo implements PlugIn{
 	}
 	
 	public void testWorkflow(){
-		// create tree
-		UserAction root=new UserAction(1),n2=new UserAction(2),n3=new UserAction(3),n4=new UserAction(4),n5=new UserAction(5);
+		/* // create tree
+		DefaultMutableTreeNode root=new DefaultMutableTreeNode("1"),n2=new DefaultMutableTreeNode("2"),
+		n3=new DefaultMutableTreeNode("3"),n4=new DefaultMutableTreeNode("4"),n5=new DefaultMutableTreeNode("5");
 		// get one lineage
 		addUserAction(root, n2);
 		addUserAction(root, n4);
@@ -277,7 +299,7 @@ public class Xmipp_Tomo implements PlugIn{
 		List <UserAction> l=getWorkflow(n5);
 		// should print root - n4 - n5
 		for(UserAction ua:l)
-			debug(ua.toString());
+			debug(ua.toString());*/
 	}
 	
 	public static void main(String[] args) {
@@ -288,7 +310,7 @@ public class Xmipp_Tomo implements PlugIn{
 	/**
 	 * @param workflow the workflow to set
 	 */
-	private static void setWorkflow(Tree<UserAction> workflow) {
+	private static void setWorkflow(DefaultMutableTreeNode workflow) {
 		Xmipp_Tomo.workflow = workflow;
 	}
 	
