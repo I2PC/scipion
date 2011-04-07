@@ -77,7 +77,8 @@ public:
         addParamsLine("or --set_of_images <selfile> : selfile containing a set of 2D-images");
         addParamsLine("   [--oroot <root_file=\"\">] : Root of the output metadata. If not set, input file rootname is taken.");
         addParamsLine("   [--ref <input_file>]      : filename for reference image/volume");
-        addParamsLine("   --sam <sampling_rate>     : pixel size (Angstrom)");
+        addParamsLine("   [--sampling_rate <Ts=1>]  : Pixel size (Angstrom)");
+        addParamsLine("  alias -s;");
         addParamsLine("   [--dont_apply_geo]        : for 2D-images: do not apply transformation stored in the header");
         addParamsLine("   [--do_dpr]                : compute dpr, by default only frc is computed");
         addParamsLine("   [--max_sam <max_sr=-1>]   : set fsc to 0 for frequencies above this one (Angstrom), -1 -> all fequencies");
@@ -90,7 +91,7 @@ public:
 
     void readParams()
     {
-        sam = getDoubleParam("--sam");
+        sam = getDoubleParam("--sampling_rate");
 
         apply_geo = !checkParam("--dont_apply_geo");
 
