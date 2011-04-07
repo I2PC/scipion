@@ -74,7 +74,7 @@ public:
         MD.resize(Ndim);
         filename = _filename;
         ImageFHandler *hFile = openFile(_filename, WRITE_OVERWRITE);
-        _write(_filename, hFile, -1, false, WRITE_OVERWRITE);
+        _write(_filename, hFile, ALL_IMAGES, false, WRITE_OVERWRITE);
         closeFile(hFile);
     }
 
