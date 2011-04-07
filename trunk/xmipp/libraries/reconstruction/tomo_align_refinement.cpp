@@ -215,7 +215,7 @@ void ProgTomoAlignRefinement::predict_angles(int idx,
                 bool flip;
                 double scale;
                 newAlignment.M=M;
-                transformationMatrix2Parameters(M, flip, scale, newAlignment.x, newAlignment.y,
+                transformationMatrix2Parameters2D(M, flip, scale, newAlignment.x, newAlignment.y,
                                                 newAlignment.psi);
                 if (adjustGray)
                     Ip().rangeAdjust(theo(),&mask);

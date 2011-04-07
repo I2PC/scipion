@@ -49,10 +49,15 @@
 void geo2TransformationMatrix(const MDRow &imageHeader, Matrix2D<double> &A,
                               bool only_apply_shifts = false);
 
-/** Retrieve the geometry transformations from matrix. */
-void transformationMatrix2Parameters(const Matrix2D<double> &A, bool &flip,
+/** Retrieve the geometry transformations from matrix for 2D. */
+void transformationMatrix2Parameters2D(const Matrix2D<double> &A, bool &flip,
                                      double &scale, double &shiftX, double &shiftY,
                                      double &psi);
+
+/** Retrieve the geometry transformations from matrix for D. */
+void transformationMatrix2Parameters3D(const Matrix2D<double> &A, bool &flip,
+                                       double &scale, double &shiftX, double &shiftY,
+                                       double &shiftZ, double &rot, double &tilt, double &psi);
 
 /** Retrieve the geometry transfomations from matrix
  */

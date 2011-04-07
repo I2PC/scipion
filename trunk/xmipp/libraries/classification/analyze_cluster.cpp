@@ -153,7 +153,7 @@ void ProgAnalyzeCluster::produceSideInfo()
         }
         bool flip;
         double scale, shiftX, shiftY, psi;
-        transformationMatrix2Parameters(M, flip, scale, shiftX, shiftY, psi);
+        transformationMatrix2Parameters2D(M, flip, scale, shiftX, shiftY, psi);
 
         // Produce alignment parameters
         size_t id = SFout.addObject();

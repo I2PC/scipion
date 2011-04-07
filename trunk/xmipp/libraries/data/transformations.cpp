@@ -80,8 +80,8 @@ void geo2TransformationMatrix(const MDRow &imageGeo, Matrix2D<double> &A,
     }
 }
 
-void transformationMatrix2Parameters(const Matrix2D<double> &A, bool &flip,
-                                     double &scale, double &shiftX, double &shiftY, double &psi)
+void transformationMatrix2Parameters2D(const Matrix2D<double> &A, bool &flip,
+                                       double &scale, double &shiftX, double &shiftY, double &psi)
 {
     //Calculate determinant for getting flip
     flip = ((dMij(A, 0, 0) * dMij(A, 1, 1) - dMij(A, 0, 1) * dMij(A, 1, 0) ) < 0);
@@ -95,17 +95,58 @@ void transformationMatrix2Parameters(const Matrix2D<double> &A, bool &flip,
     psi = RAD2DEG(atan2(sine, cosine));
 }
 
+void transformationMatrix2Parameters3D(const Matrix2D<double> &A, bool &flip, double &scale,
+                                       double &shiftX, double &shiftY, double &shiftZ,
+                                       double &rot, double &tilt, double &psi)
+{
+    Matrix2D<double> eulerMatrix(3,3);
+    FOR_ALL_ELEMENTS_IN_MATRIX2D(eulerMatrix)
+    dMij(eulerMatrix,i,j) = dMij(A, i, j);
+
+    Euler_matrix2angles(eulerMatrix, rot, tilt, psi);
+
+    // Flip
+    if (!XMIPP_EQUAL_ZERO(dMij(A,0,0)))
+        flip = !XMIPP_EQUAL_ZERO(dMij(A,0,0)-( COSD(rot)*COSD(psi)*COSD(tilt) - SIND(rot)*SIND(psi) ));
+    else if (!XMIPP_EQUAL_ZERO(dMij(A,0,1)))
+        flip = !XMIPP_EQUAL_ZERO(dMij(A,0,1)-( COSD(psi)*COSD(tilt)*SIND(rot) + SIND(psi)*COSD(rot) ));
+    else if (!XMIPP_EQUAL_ZERO(dMij(A,0,2)))
+        flip = !XMIPP_EQUAL_ZERO(dMij(A,0,2)+(COSD(psi)*SIND(tilt)));
+    else
+        flip = false;
+
+    double scale2 = dMij(A,2,0)*dMij(A,2,0) \
+                    + dMij(A,2,1)*dMij(A,2,1)\
+                    + dMij(A,2,2)*dMij(A,2,2) ;
+
+    scale = sqrt(scale2);
+    double invScale = 1 / scale;
+    shiftX = dMij(A, 0, 3) * invScale;
+    shiftY = dMij(A, 1, 3) * invScale;
+    shiftZ = dMij(A, 2, 3) * invScale;
+}
+
 #define ADD_IF_EXIST_NONZERO(label, value) if (imageGeo.containsLabel(label) || !XMIPP_EQUAL_ZERO(value))\
                                                   imageGeo.setValue(label, value);
 void transformationMatrix2Geo(const Matrix2D<double> &A, MDRow & imageGeo)
 {
     bool flip;
-    double scale, shiftX, shiftY, psi;
-    transformationMatrix2Parameters(A,flip, scale, shiftX, shiftY, psi);
+    double scale, shiftX, shiftY, psi, shiftZ = 0, rot = 0, tilt = 0;
 
+    int dim = A.Xdim() -1;
+
+    if (dim == 2)
+        transformationMatrix2Parameters2D(A,flip, scale, shiftX, shiftY, psi);
+    else if (dim == 3)
+        transformationMatrix2Parameters3D(A, flip, scale, shiftX, shiftY, shiftZ, rot,tilt, psi);
+
+    ADD_IF_EXIST_NONZERO(MDL_ANGLEROT, rot);
+    ADD_IF_EXIST_NONZERO(MDL_ANGLETILT, tilt);
     ADD_IF_EXIST_NONZERO(MDL_ANGLEPSI, psi);
     ADD_IF_EXIST_NONZERO(MDL_SHIFTX, shiftX);
     ADD_IF_EXIST_NONZERO(MDL_SHIFTY, shiftY);
+    ADD_IF_EXIST_NONZERO(MDL_SHIFTZ, shiftZ);
+
     if (imageGeo.containsLabel(MDL_SCALE) || !XMIPP_EQUAL_REAL(scale, 1.))
         imageGeo.setValue(MDL_SCALE, scale);
     if (imageGeo.containsLabel(MDL_FLIP) || flip)

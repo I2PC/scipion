@@ -222,7 +222,7 @@ void ProgAlign2d::refinement()
         // Save alignment
         bool flip;
         double scale, shiftX, shiftY, psi;
-        transformationMatrix2Parameters(M, flip, scale, shiftX, shiftY, psi);
+        transformationMatrix2Parameters2D(M, flip, scale, shiftX, shiftY, psi);
         SF.setValue(MDL_SHIFTX,shiftX,__iter.objId);
         SF.setValue(MDL_SHIFTY,shiftY,__iter.objId);
         SF.setValue(MDL_ANGLEPSI,psi,__iter.objId);
