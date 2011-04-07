@@ -14,9 +14,9 @@ class Tester:
         self.lastProgram = program
 
     def addTest(self, test, mpi=False, prerun="", changeDirectory=False):
-        self.progDict[self.lastProgram].append((test,False,prerun,changeDirectory))
+        self.progDict[self.lastProgram].append((test, False, prerun, changeDirectory))
         if mpi:
-            self.progDict[self.lastProgram].append((test,True,prerun,changeDirectory))
+            self.progDict[self.lastProgram].append((test, True, prerun, changeDirectory))
 
     def runProgramTests(self, program):
         tests = self.progDict[program]
@@ -26,7 +26,7 @@ class Tester:
         testName = ""
 
         testNo = 1
-        for test,mpi,prerun,changeDirectory in tests:
+        for test, mpi, prerun, changeDirectory in tests:
             if n > 1:
                 outDir = outPath + "_%02d" % testNo
                 testName = "(%d of %d)" % (testNo, n)
@@ -39,7 +39,7 @@ class Tester:
             test = test.replace("%o", outDir)
             test = test.replace("%p", program)
             test = test.replace("%d", self.fnDir)
-            if prerun!="":
+            if prerun != "":
                 prerun = prerun.replace("%o", outDir)
                 prerun = prerun.replace("%p", program)
                 prerun = prerun.replace("%d", self.fnDir)
@@ -47,11 +47,11 @@ class Tester:
                 print "    Running prerun: ", cmd
                 os.system(cmd)
             if mpi:
-                cmd="mpirun -np 3 `which %s`"%program.replace("xmipp_","xmipp_mpi_")
+                cmd = "mpirun -np 3 `which %s`" % program.replace("xmipp_", "xmipp_mpi_")
             else:
-                cmd=program
+                cmd = program
             if changeDirectory:
-                cmd="cd %s ; "%outDir+cmd+" %s > stdout.txt 2> stderr.txt"%test
+                cmd = "cd %s ; " % outDir + cmd + " %s > stdout.txt 2> stderr.txt" % test
             else:
                 cmd += " %s > %s/stdout.txt 2> %s/stderr.txt" % (test, outDir, outDir)
             print "    Command: "
@@ -66,10 +66,10 @@ class Tester:
     def addAllTests(self):
         # Add all desired tests -------------------------------------------
         self.addProgram("xmipp_angular_continuous_assign")
-        self.addTest("-i input/aFewProjections.sel --ref input/phantomBacteriorhodopsin.vol -o %o/assigned_angles.txt",True)
+        self.addTest("-i input/aFewProjections.sel --ref input/phantomBacteriorhodopsin.vol -o %o/assigned_angles.txt", True)
 
         self.addProgram("xmipp_angular_discrete_assign")
-        self.addTest("-i input/aFewProjections.sel -o %o/assigned_angles.txt --ref %o/reference.doc",False,
+        self.addTest("-i input/aFewProjections.sel -o %o/assigned_angles.txt --ref %o/reference.doc", False,
                      "xmipp_angular_project_library -i input/phantomBacteriorhodopsin.vol -o %o/reference.stk --sampling_rate 10")
 
         self.addProgram("xmipp_angular_distance")
@@ -87,29 +87,32 @@ class Tester:
         self.addTest("-i input/phantomBacteriorhodopsin.vol -o %o/output_projections.stk --sym c6 --sampling_rate 5", True)
 
         self.addProgram("xmipp_angular_projection_matching")
-        self.addTest("-i input/aFewProjections.sel -o %o/assigned_angles.txt --ref %o/reference.stk",False,
+        self.addTest("-i input/aFewProjections.sel -o %o/assigned_angles.txt --ref %o/reference.stk", False,
                      "xmipp_angular_project_library -i input/phantomBacteriorhodopsin.vol --experimental_images input/aFewProjections.sel -o %o/reference.stk --sampling_rate 10 --compute_neighbors --angular_distance -1")
+
+        self.addProgram("xmipp_angular_rotate")
+        self.addTest("-i input/aFewProjections.sel --axis 10 1 2 3 -o %o/newAnglesFewProjections.sel")
 
         self.addProgram("xmipp_classify_analyze_cluster")
         self.addTest("-i input/smallStack.stk --ref 1@input/smallStack.stk -o %o/pca.xmd")
 
         self.addProgram("xmipp_ctf_enhance_psd")
-        self.addTest("-i input/down1_01nov26b.001.001.001.002_Periodogramavg.psd -o %o/enhanced_psd.xmp" )
+        self.addTest("-i input/down1_01nov26b.001.001.001.002_Periodogramavg.psd -o %o/enhanced_psd.xmp")
 
         self.addProgram("xmipp_ctf_estimate_from_micrograph")
         self.addTest("--micrograph input/Protocol_Preprocess_Micrographs/Micrographs/01nov26b.001.001.001.002.mrc --oroot %o/micrograph --dont_estimate_ctf")
         self.addTest("--micrograph input/Protocol_Preprocess_Micrographs/Micrographs/01nov26b.001.001.001.002.mrc --oroot %o/micrograph --sampling_rate 1.4 --voltage 200 --spherical_aberration 2.5")
 
         self.addProgram("xmipp_ctf_estimate_from_psd")
-        self.addTest("--psd down1_01nov26b.001.001.001.002_Periodogramavg.psd --sampling_rate 1.4 --voltage 200 --spherical_aberration 2.5 --defocusU -15000",False,
-        "cp input/down1_01nov26b.001.001.001.002_Periodogramavg.psd %o",True)
+        self.addTest("--psd down1_01nov26b.001.001.001.002_Periodogramavg.psd --sampling_rate 1.4 --voltage 200 --spherical_aberration 2.5 --defocusU -15000", False,
+        "cp input/down1_01nov26b.001.001.001.002_Periodogramavg.psd %o", True)
 
         self.addProgram("xmipp_ctf_group")
-        self.addTest("--ctfdat input/ctf_group/all_images_new.ctfdat -o %o/ctf --wiener --wc -1 --pad 2 --phase_flipped --error 0.5 --resol 5.6" )
-        self.addTest("--ctfdat input/ctf_group/all_images_new.ctfdat -o %o/ctf --wiener --wc -1 --pad 2 --phase_flipped --split input/ctf_group/ctf_split.doc" )
+        self.addTest("--ctfdat input/ctf_group/all_images_new.ctfdat -o %o/ctf --wiener --wc -1 --pad 2 --phase_flipped --error 0.5 --resol 5.6")
+        self.addTest("--ctfdat input/ctf_group/all_images_new.ctfdat -o %o/ctf --wiener --wc -1 --pad 2 --phase_flipped --split input/ctf_group/ctf_split.doc")
 
         self.addProgram("xmipp_ctf_sort_psds")
-        self.addTest("-i all_micrographs.sel",False,"cp -r input/Protocol_Preprocess_Micrographs/Preprocessing/* %o",True)
+        self.addTest("-i all_micrographs.sel", False, "cp -r input/Protocol_Preprocess_Micrographs/Preprocessing/* %o", True)
 
         self.addProgram("xmipp_image_align")
         self.addTest("-i input/smallStack.stk --oroot %o/aligned")
@@ -156,7 +159,7 @@ class Tester:
         self.addTest("-i input/Crystal/cylinder_with_axis.descr --oroot %o/MRCproj     --params input/Crystal/MRC_projection.param --crystal input/Crystal/MRC_crystal_projection.param")
 
         self.addProgram("xmipp_phantom_simulate_microscope")
-        self.addTest("-i input/smallStack.stk -o %o/smallStackPlusCtf.stk --ctf input/input.ctfparam" )
+        self.addTest("-i input/smallStack.stk -o %o/smallStackPlusCtf.stk --ctf input/input.ctfparam")
 
         self.addProgram("xmipp_resolution_fsc")
         self.addTest("--ref input/phantomBacteriorhodopsin.vol -i input/phantomCandida.vol --sam 5.6 --do_dpr --oroot %o/phantomBacteriorhodopsin ")
@@ -171,7 +174,7 @@ class Tester:
         self.addTest("--ref input/tomo_align_refinement/volume.vol --sel input/tomo_align_refinement/tilt_series.sel --oroot %o/refined --max_tilt_change 1 --max_rot_change 1 --tilt_step 1 --rot_step 1 --adjustGray")
 
         self.addProgram("xmipp_tomo_project")
-        self.addTest("-i input/phantomCandida.vol -o %o/image.xmp --angles 0 90 90" )
+        self.addTest("-i input/phantomCandida.vol -o %o/image.xmp --angles 0 90 90")
         self.addTest("-i input/phantomCandida.vol --oroot %o/projections --params input/tomoProjection.param")
 
         self.addProgram("xmipp_tomo_remove_fluctuations")
