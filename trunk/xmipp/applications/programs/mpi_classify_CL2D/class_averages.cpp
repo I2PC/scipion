@@ -858,7 +858,7 @@ void VQ::write(const FileName &fnRoot, bool final) const
     size_t id;
     for (int q=0; q<Q; q++)
     {
-        fnClass.compose(q,fnOut);
+        fnClass.compose(q+1,fnOut);
         I()=P[q]->P;
         id = SFout.addObject();
         SFout.setValue(MDL_IMAGE,fnClass, id);
@@ -887,7 +887,7 @@ void VQ::write(const FileName &fnRoot, bool final) const
     // Make the selfiles of each class
     for (int q=0; q<Q; q++)
     {
-        fnClass.compose(q,fnOut);
+        fnClass.compose(q+1,fnOut);
         MetaData SFq;
         int imax=P[q]->currentListImg.size();
         size_t id;
@@ -898,7 +898,7 @@ void VQ::write(const FileName &fnRoot, bool final) const
             int idx=P[q]->currentListImg[i];
             if (final)
             {
-                fnAux.compose(idx,fnAligned);
+                fnAux.compose(idx+1,fnAligned);
                 SFq.setValue(MDL_IMAGE,fnAux, id);
                 SFq.setValue(MDL_IMAGE_ORIGINAL,SFv[idx], id);
                 SFq.setValue(MDL_IMAGE_CLASS,fnClass, id);
