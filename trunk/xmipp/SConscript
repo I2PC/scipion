@@ -340,6 +340,7 @@ def AddImageJPlugin(name, pluginDir, outDir):
     env['JAVA_HOME'] = java_home
     env['JNI_CPPPATH'] = java_headers
     env['JNI_LIBPATH'] = java_libs
+    # Add -g to JAVACFLAGS if you need Java debugging
     env['JAVACFLAGS'] = '-classpath ' + libsStr +\
            os.pathsep.join(env['JAVACLASSPATH'])
 
