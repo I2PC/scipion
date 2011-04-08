@@ -2277,8 +2277,8 @@ bool AutoParticlePicking::prepare_piece(MultidimArray<double> &piece,
 #endif
 
     // Denoise the piece
-    DenoiseFilter denoiser;
-    denoiser.denoising_type = DenoiseFilter::BAYESIAN;
+    WaveletFilter denoiser;
+    denoiser.denoising_type = WaveletFilter::BAYESIAN;
     denoiser.scale = 3;
     denoiser.output_scale = 1;
     //    denoiser.scale = __output_scale + 3;

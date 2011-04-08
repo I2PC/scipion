@@ -1204,15 +1204,18 @@ template <typename T>
 void boundMedianFilter(MultidimArray< T > &V, MultidimArray<char> mask, int n=0)
 {
     bool badRemaining;
+    T neighbours[125];
+    T aux;
+    int N = 0, index;
 
     do
     {
         badRemaining=false;
 
         FOR_ALL_ELEMENTS_IN_ARRAY3D(V)
-        if (NZYX_ELEM(mask, n, k, i, j) != 0)
+        if (A3D_ELEM(mask, k, i, j) != 0)
         {
-            std::vector<double> neighbours;
+            N = 0;
             for (int kk=-2; kk<=2; kk++)
             {
                 int kkk=k+kk;
@@ -1228,23 +1231,30 @@ void boundMedianFilter(MultidimArray< T > &V, MultidimArray<char> mask, int n=0)
                         int jjj=j+jj;
                         if (jjj<0 || jjj>=XSIZE(V))
                             continue;
-                        double val = NZYX_ELEM(V, n, kkk,iii,jjj);
-                        if (NZYX_ELEM(mask, n, kkk, iii, jjj) == 0)
-                            neighbours.push_back(val);
+
+                        if (A3D_ELEM(mask, kkk, iii, jjj) == 0)
+                        {
+                            index = N++;
+                            neighbours[index] = A3D_ELEM(V, kkk,iii,jjj);
+                            //insertion sort
+                            while (index > 0 && neighbours[index-1] > neighbours[index])
+                            {
+                                SWAP(neighbours[index-1], neighbours[index], aux);
+                                --index;
+                            }
+                        }
                     }
                 }
-                int N=neighbours.size();
-                if (N==0)
-                    badRemaining=true;
+                if (N == 0)
+                    badRemaining = true;
                 else
                 {
-                    std::sort(neighbours.begin(),neighbours.end());
-                    if (N%2==0)
-                        NZYX_ELEM(V,n,k,i,j) = 0.5*(neighbours[N/2-1]+
-                                                    neighbours[N/2]);
+                    //std::sort(neighbours.begin(),neighbours.end());
+                    if (N % 2 == 0)
+                      A3D_ELEM(V, k, i, j) = 0.5*(neighbours[N/2-1]+ neighbours[N/2]);
                     else
-                        NZYX_ELEM(V,n,k,i,j) = neighbours[N/2];
-                    NZYX_ELEM(mask,n,k,i,j) = false;
+                      A3D_ELEM(V, k, i, j) = neighbours[N/2];
+                    A3D_ELEM(mask, k, i, j) = false;
                 }
             }
         }
@@ -1326,11 +1336,22 @@ public:
 
 class BackgroundFilter: public XmippFilter
 {
-  /** Apply filter on bad pixels */
-  typedef enum { PLANE, ROLLINGBALL } BackgroundType;
-  BackgroundType type;
-  int radius;
+    /** Apply filter on bad pixels */
+    typedef enum { PLANE, ROLLINGBALL } BackgroundType;
+    BackgroundType type;
+    int radius;
 
+public:
+    /** Define the parameters for use inside an Xmipp program */
+    static void defineParams(XmippProgram * program);
+    /** Read from program command line */
+    void readParams(XmippProgram * program);
+    /** Apply the filter to an image or volume*/
+    void apply(MultidimArray<double> &img);
+};
+
+class MedianFilter: public XmippFilter
+{
 public:
     /** Define the parameters for use inside an Xmipp program */
     static void defineParams(XmippProgram * program);

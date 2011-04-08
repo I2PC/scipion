@@ -2190,105 +2190,13 @@ void centerImage(MultidimArray<double> &I, int Niter, bool limitShift)
 /** Force positive -------------------------------------------------------- */
 void forcePositive(MultidimArray<double> &V)
 {
-    bool negativeRemaining;
-    std::vector<double> neighbours;
-
-    if (V.getDim()==2) // IMAGE
-    {
-        do
-        {
-            negativeRemaining=false;
-            int totalNeg=0;
-            FOR_ALL_ELEMENTS_IN_ARRAY2D(V)
-            if (A2D_ELEM(V,i, j)<=0)
-            {
-                totalNeg++;
-                neighbours.clear();
-                for (int ii=-2; ii<=2; ii++)
-                {
-                    int iii=i+ii;
-                    if (iii<0 || iii>=YSIZE(V))
-                        continue;
-                    for (int jj=-2; jj<=2; jj++)
-                    {
-                        int jjj=j+jj;
-                        if (jjj<0 || jjj>=XSIZE(V))
-                            continue;
-                        double val=V(iii,jjj);
-                        if (val>0)
-                            neighbours.push_back(val);
-                    }
-                }
-                int N=neighbours.size();
-                if (N==0)
-                {
-                    negativeRemaining=true;
-                }
-                else
-                {
-                    std::sort(neighbours.begin(),neighbours.end());
-                    if (N%2==0)
-                        A2D_ELEM(V,i,j)=0.5*(neighbours[N/2-1]+neighbours[N/2]);
-                    else
-                        A2D_ELEM(V,i,j)=neighbours[N/2];
-                }
-            }
-            if (totalNeg>0.05*MULTIDIM_SIZE(V))
-                REPORT_ERROR(ERR_UNCLASSIFIED,(std::string)
-                             "The number of negative pixels exceeds the scope of this function: "+
-                             floatToString((float)totalNeg/MULTIDIM_SIZE(V)));
-        }
-        while (negativeRemaining);
-    }
-    else if (V.getDim()==3) // VOLUME
-    {
-        do
-        {
-            negativeRemaining=false;
-
-            FOR_ALL_ELEMENTS_IN_ARRAY3D(V)
-            if (A3D_ELEM(V,k, i, j)<=0)
-            {
-                neighbours.clear();
-                for (int kk=-2; kk<=2; kk++)
-                {
-                    int kkk=k+kk;
-                    if (kkk<0 || kkk>=ZSIZE(V))
-                        continue;
-                    for (int ii=-2; ii<=2; ii++)
-                    {
-                        int iii=i+ii;
-                        if (iii<0 || iii>=YSIZE(V))
-                            continue;
-                        for (int jj=-2; jj<=2; jj++)
-                        {
-                            int jjj=j+jj;
-                            if (jjj<0 || jjj>=XSIZE(V))
-                                continue;
-                            double val=V(kkk,iii,jjj);
-                            if (val>0)
-                                neighbours.push_back(val);
-                        }
-                    }
-                    int N=neighbours.size();
-                    if (N==0)
-                        negativeRemaining=true;
-                    else
-                    {
-                        std::sort(neighbours.begin(),neighbours.end());
-                        if (N%2==0)
-                            A3D_ELEM(V,k,i,j)=0.5*(neighbours[N/2-1]+
-                                                   neighbours[N/2]);
-                        else
-                            A3D_ELEM(V,k,i,j)=neighbours[N/2];
-                    }
-                }
-            }
-        }
-        while (negativeRemaining);
-    }
-    else
-        REPORT_ERROR(ERR_NOT_IMPLEMENTED,"");
+  MultidimArray<char> mask(ZSIZE(V), YSIZE(V), XSIZE(V));
+  FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(V)
+  {
+      double x = DIRECT_MULTIDIM_ELEM(V, n);
+      DIRECT_MULTIDIM_ELEM(mask, n) = (x <= 0);
+  }
+  boundMedianFilter(V, mask);
 }
 
 void computeEdges (const MultidimArray <double>& vol, MultidimArray<double> &vol_edge)
@@ -2317,93 +2225,115 @@ void computeEdges (const MultidimArray <double>& vol, MultidimArray<double> &vol
 /** Define the parameters for use inside an Xmipp program */
 void BadPixelFilter::defineParams(XmippProgram * program)
 {
-  program->addParamsLine("== Bad pixels ==");
-  program->addParamsLine("  [ --bad_pixels <type>]            : Applied filters on bad pixels of the image.");
-  program->addParamsLine("         where <type>  ");
-  program->addParamsLine("            negative              : Applied at those negative values. Positive values are untouched.");
-  program->addParamsLine("            mask <mask_file>      : Applied at those pixels given by mask.");
-  program->addParamsLine("            outliers <factor>     : Applied at those pixels out of the range [mean - factor*std, mean + factor*std].");
-  program->addParamsLine("         alias -b; ");
+    program->addParamsLine("== Bad pixels ==");
+    program->addParamsLine("  [ --bad_pixels <type>]            : Applied filters on bad pixels of the image.");
+    program->addParamsLine("         where <type>  ");
+    program->addParamsLine("            negative              : Applied at those negative values. Positive values are untouched.");
+    program->addParamsLine("            mask <mask_file>      : Applied at those pixels given by mask.");
+    program->addParamsLine("            outliers <factor>     : Applied at those pixels out of the range [mean - factor*std, mean + factor*std].");
+    program->addParamsLine("         alias -b; ");
 }
 
 /** Read from program command line */
 void BadPixelFilter::readParams(XmippProgram * program)
 {
-  type = NEGATIVE;
-  // Check operation to do
-  String typeStr = program->getParam("--bad_pixels");
-  if (typeStr == "negative")
-      ;//nothing to do type already equal to NEGATIVE
-  else if (typeStr == "mask")
-  {
-      mask = new Image<char>;
-      mask->read(program->getParam("--bad_pixels", "mask"));
-      type = MASK;
-  }
-  else if (typeStr == "outliers")
-  {
-      factor = program->getDoubleParam("--bad_pixels", "outliers");
-      type = OUTLIER;
-  }
+    type = NEGATIVE;
+    // Check operation to do
+    String typeStr = program->getParam("--bad_pixels");
+    if (typeStr == "negative")
+        ;//nothing to do type already equal to NEGATIVE
+    else if (typeStr == "mask")
+    {
+        mask = new Image<char>;
+        mask->read(program->getParam("--bad_pixels", "mask"));
+        type = MASK;
+    }
+    else if (typeStr == "outliers")
+    {
+        factor = program->getDoubleParam("--bad_pixels", "outliers");
+        type = OUTLIER;
+    }
 }
 
 /** Apply the filter to an image or volume*/
 void BadPixelFilter::apply(MultidimArray<double> &img)
 {
-  switch (type)
-  {
+    switch (type)
+    {
     case NEGATIVE:
-      forcePositive(img);
-      break;
+        forcePositive(img);
+        break;
     case MASK:
-      boundMedianFilter(img, mask->data);
-      break;
+        boundMedianFilter(img, mask->data);
+        break;
     case OUTLIER:
-      pixelDesvFilter(img, factor);
-      break;
+        pixelDesvFilter(img, factor);
+        break;
 
-  }
+    }
 }
 
 
 /** Define the parameters for use inside an Xmipp program */
 void BackgroundFilter::defineParams(XmippProgram * program)
 {
-  program->addParamsLine("== Background removal ==");
-  program->addParamsLine("  [ --background <type=plane> ]            : Filters to remove the background.");
-  program->addParamsLine("         where <type>  ");
-  program->addParamsLine("            plane                          : Remove the plane that best fits the pixels.");
-  program->addParamsLine("            rollingball <radius>           : The background is computed as a rolling ball operation.");
-  program->addParamsLine("         alias -g; ");
+    program->addParamsLine("== Background removal ==");
+    program->addParamsLine("  [ --background <type=plane> ]            : Filters to remove the background.");
+    program->addParamsLine("         where <type>  ");
+    program->addParamsLine("            plane                          : Remove the plane that best fits the pixels.");
+    program->addParamsLine("            rollingball <radius>           : The background is computed as a rolling ball operation.");
+    program->addParamsLine("         alias -g; ");
 }
 
 /** Read from program command line */
 void BackgroundFilter::readParams(XmippProgram * program)
 {
-  type = PLANE;
-  // Check operation to do
-  String typeStr = program->getParam("--background");
-  if (typeStr == "plane")//Nothing to do, plane by default
-    ;
-  else if (typeStr == "rollingball")
-  {
-    type = ROLLINGBALL;
-    radius = program->getIntParam("--background", "rollingball");
-  }
+    type = PLANE;
+    // Check operation to do
+    String typeStr = program->getParam("--background");
+    if (typeStr == "plane")//Nothing to do, plane by default
+        ;
+    else if (typeStr == "rollingball")
+    {
+        type = ROLLINGBALL;
+        radius = program->getIntParam("--background", "rollingball");
+    }
 }
 
 /** Apply the filter to an image or volume*/
 void BackgroundFilter::apply(MultidimArray<double> &img)
 {
-  switch (type)
-  {
+    switch (type)
+    {
     case PLANE:
-      substractBackgroundPlane(img);
-      break;
+        substractBackgroundPlane(img);
+        break;
     case ROLLINGBALL:
-      substractBackgroundRollingBall(img, radius);
-      break;
+        substractBackgroundRollingBall(img, radius);
+        break;
 
-  }
+    }
 }
+
+/** Define the parameters for use inside an Xmipp program */
+void MedianFilter::defineParams(XmippProgram * program)
+{
+    program->addParamsLine("== Median ==");
+    program->addParamsLine("  [ --median ]            : Use median filter.");
+    program->addParamsLine("         alias -m; ");
+}
+
+/** Read from program command line */
+void MedianFilter::readParams(XmippProgram * program)
+{ //Do nothing by now
+}
+
+/** Apply the filter to an image or volume*/
+void MedianFilter::apply(MultidimArray<double> &img)
+{
+  static MultidimArray<double> tmp;
+  tmp = img;
+  medianFilter3x3(tmp, img);
+}
+
 

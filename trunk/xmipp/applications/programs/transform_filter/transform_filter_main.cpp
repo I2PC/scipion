@@ -43,10 +43,22 @@ protected:
         addUsageLine("Apply different type of filters to images or volumes.");
         XmippMetadataProgram::defineParams();
         FourierFilter::defineParams(this);
-        DenoiseFilter::defineParams(this);
+        WaveletFilter::defineParams(this);
         BadPixelFilter::defineParams(this);
         MeanShiftFilter::defineParams(this);
         BackgroundFilter::defineParams(this);
+        MedianFilter::defineParams(this);
+
+        //examples
+        addExampleLine("Filter a volume using a mask =volumeMask.vol= to remove bad pixels:", true);
+        addExampleLine("xmipp_transform_filter -i volume.vol -o volumeFiltered1.vol --bad_pixels mask volumeMask.vol");
+        addExampleLine("Remove extreme pixels:", true);
+        addExampleLine("xmipp_transform_filter -i volume.vol  -o volumeFiltered2.vol --bad_pixels outliers 0.5");
+        addExampleLine("Apply a Fourier filter on a volume:", true);
+        addExampleLine("xmipp_transform_filter -i volume.vol -o volumeFiltered.vol --fourier low_pass 0.05");
+        addExampleLine("xmipp_transform_filter  -i volume.vol -o volumeFiltered.vol -f band_pass 0.1 0.3");
+        addExampleLine("xmipp_transform_filter  -i image.ser  -o imageFiltered.xmp --background plane");
+        addExampleLine("xmipp_transform_filter  -i smallStack.stk -o smallFiltered.stk -w DAUB12 difussion");
     }
 
     void readParams()
@@ -54,15 +66,19 @@ protected:
         XmippMetadataProgram::readParams();
 
         if (checkParam("--fourier"))
-          filter = new FourierFilter();
+            filter = new FourierFilter();
         else if (checkParam("--wavelet"))
-          filter = new DenoiseFilter();
+            filter = new WaveletFilter();
         else if (checkParam("--bad_pixels"))
-          filter = new BadPixelFilter();
+            filter = new BadPixelFilter();
         else if (checkParam("--mean_shift"))
-          filter = new MeanShiftFilter();
+            filter = new MeanShiftFilter();
         else if (checkParam("--background"))
             filter = new BackgroundFilter();
+        else if (checkParam("--median"))
+            filter = new MedianFilter();
+        else
+          REPORT_ERROR(ERR_ARG_MISSING, "You should provide some filter");
         //Read params
         filter->readParams(this);
     }

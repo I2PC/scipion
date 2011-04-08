@@ -32,7 +32,7 @@
 #include <iomanip>
 
 // Empty constructor -------------------------------------------------------
-DenoiseFilter::DenoiseFilter()
+WaveletFilter::WaveletFilter()
 {
     DWT_type = "DAUB12";
     denoising_type = REMOVE_SCALE;
@@ -56,7 +56,7 @@ DenoiseFilter::DenoiseFilter()
 }
 
 // defineParams -------------------------------------------------------------------s
-void DenoiseFilter::defineParams(XmippProgram *program)
+void WaveletFilter::defineParams(XmippProgram *program)
 {
     program->addParamsLine("== Wavelet ==");
     program->addParamsLine("  [--wavelet <DWT_type=DAUB12> <mode=remove_scale>]   : Different types of filters using wavelets");
@@ -85,11 +85,11 @@ void DenoiseFilter::defineParams(XmippProgram *program)
 }
 
 // Read from command line --------------------------------------------------
-void DenoiseFilter::readParams(XmippProgram *program)
+void WaveletFilter::readParams(XmippProgram *program)
 {
 
-    DWT_type = program->getParam("--denoise", 0);
-    String mode = program->getParam("--denoise", 1);
+    DWT_type = program->getParam("--wavelet", 0);
+    String mode = program->getParam("--wavelet", 1);
 
     if (mode == "remove_scale")
         denoising_type = REMOVE_SCALE;
@@ -130,7 +130,7 @@ void DenoiseFilter::readParams(XmippProgram *program)
 }
 
 // Produce side info -------------------------------------------------------
-void DenoiseFilter::produceSideInfo()
+void WaveletFilter::produceSideInfo()
 {
     if (DWT_type == "DAUB4")
         set_DWT_type(DAUB4);
@@ -143,7 +143,7 @@ void DenoiseFilter::produceSideInfo()
 }
 
 // Show --------------------------------------------------------------------
-void DenoiseFilter::show()
+void WaveletFilter::show()
 {
   if (!verbose)
     return;
@@ -187,7 +187,7 @@ void DenoiseFilter::show()
 }
 
 // Denoise volume ----------------------------------------------------------
-void DenoiseFilter::apply(MultidimArray<double> &img)
+void WaveletFilter::apply(MultidimArray<double> &img)
 {
     if (img.getDim()==2)
     {
@@ -311,7 +311,7 @@ void DenoiseFilter::apply(MultidimArray<double> &img)
     }
 }
 
-void DenoiseFilter::denoiseAvgBayesian(MultidimArray<double> &vol)
+void WaveletFilter::denoiseAvgBayesian(MultidimArray<double> &vol)
 {
     DWT(vol, vol);
     bayesian_wiener_filtering3D(vol, scale, estimatedS);

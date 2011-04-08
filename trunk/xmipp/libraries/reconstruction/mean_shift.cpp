@@ -283,17 +283,18 @@ void MeanShiftFilter::defineParams(XmippProgram *program)
     program->addParamsLine("                                  :+ hs: Sigma for the range domain");
     program->addParamsLine("                                  :+ hr: Sigma for the spatial domain");
     program->addParamsLine("                                  :+ iter: Number of iterations to be used");
+    program->addParamsLine("      alias -t;");
     program->addParamsLine("[--thr <n=1>]                     : Number of processing threads");
     program->addParamsLine("[--fast]                          : Use faster processing (avoid gaussian calculations)");
     program->addParamsLine("[--save_iters]                    : Save result image/volume for each iteration");
-    program->addParamsLine("      alias -m;");
+
 }
 
 void MeanShiftFilter::readParams(XmippProgram *program)
 {
-    sigma_r = program->getDoubleParam("-m", 0);//hr
-    sigma_s = program->getDoubleParam("-m", 1);//hs
-    iters = program->getDoubleParam("-m", 2);//iters
+    sigma_r = program->getDoubleParam("--mean_shift", 0);//hr
+    sigma_s = program->getDoubleParam("--mean_shift", 1);//hs
+    iters = program->getDoubleParam("--mean_shift", 2);//iters
     fast = program->checkParam("--fast");
     numThreads = program->getIntParam("--thr");
     save_iters = program->checkParam("--save_iters");

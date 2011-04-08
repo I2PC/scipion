@@ -34,7 +34,7 @@
 
 /// Parameters for denoise program
 /// @ingroup Denoise
-class DenoiseFilter: public XmippFilter
+class WaveletFilter: public XmippFilter
 {
 public:
     typedef enum
@@ -147,7 +147,7 @@ public:
 
     /** Empty constructor
      */
-    DenoiseFilter();
+    WaveletFilter();
 
     /** Produce side info.
      *

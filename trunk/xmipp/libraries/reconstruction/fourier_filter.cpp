@@ -63,8 +63,8 @@ void FourierFilter::defineParams(XmippProgram *program)
     program->addParamsLine("            raised_cosine <raisedw=0.02>     : Use raised cosine edges (in dig.freq.)");
     program->addParamsLine("            wedge <th0> <thF>                : Missing wedge (along y) for data between th0-thF ");
     program->addParamsLine("            cone <th0>                       : Missing cone for tilt angles up to th0 ");
-    program->addParamsLine("            gaussian                         : sigma=<w1>");
-    program->addParamsLine("            real_gaussian                    : convolution with a Gaussian in real-space with sigma=<w1>");
+    program->addParamsLine("            gaussian                         : Gaussian with sigma = w1");
+    program->addParamsLine("            real_gaussian                    : Convolution with a Gaussian in real-space with sigma = w1");
     program->addParamsLine("            ctf <ctfile>                     : Provide a .ctfparam file");
     program->addParamsLine("            ctfpos <ctfile>                  : Provide a .ctfparam file");
     program->addParamsLine("                                             : The CTF phase will be corrected before applying");
