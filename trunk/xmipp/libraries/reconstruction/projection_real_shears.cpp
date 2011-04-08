@@ -332,14 +332,14 @@ int do_compute_projection    (double *VWOrigin,
                             {
                                 gminusl = g - (double) l;
                                 double aux;
-                                BSPLINE03(gminusl,aux);
+                                BSPLINE03(aux,gminusl);
                                 Coeff = (double) CoefVolume[CC3 + l];
                                 rows += Coeff * aux;
                             }
                         }
                         hminusm = h - (double) m;
                         double aux;
-                        BSPLINE03(hminusm,aux);
+                        BSPLINE03(aux,hminusm);
                         columns +=  rows * aux;
                     }
                 }

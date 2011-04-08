@@ -302,20 +302,6 @@
  */
 #define LIN_INTERP(a, l, h) ((l) + ((h) - (l)) * (a))
 
-/** Cubic B-spline
- *
- */
-#define BSPLINE03(arg,result) {\
-	double x = ABS(arg); \
-	if (x < 1.0) \
-	    result=(x * x * (x - 2.0) * (1.0 / 2.0) + 2.0 / 3.0);\
-	else if (x < 2.0) { \
-	    x -= 2.0;\
-	    result=x*x*x*(-1.0 / 6.0); \
-	} else \
-            result=0;\
-    }
-
 /** XOR
  *
  * Logical Xor
