@@ -341,7 +341,7 @@ def AddImageJPlugin(name, pluginDir, outDir):
     env['JNI_CPPPATH'] = java_headers
     env['JNI_LIBPATH'] = java_libs
     # Add -g to JAVACFLAGS if you need Java debugging
-    env['JAVACFLAGS'] = '-classpath ' + libsStr +\
+    env['JAVACFLAGS'] = '-g -classpath ' + libsStr +\
            os.pathsep.join(env['JAVACLASSPATH'])
 
     env['JARFLAGS'] = '-Mcf'    # Default "cf". "M" = Do not add a manifest file.
@@ -630,7 +630,7 @@ if int(env['java']):
     AddImageJPlugin('Xmipp_IO', 'libraries/graphicsj/Xmipp_IO', 'external/imagej/plugins')
     AddImageJPlugin('Xmipp_Projections_Explorer', 'libraries/graphicsj/Xmipp_Projections_Explorer', 'external/imagej/plugins')
     AddImageJPlugin('Xmipp_Browser', 'libraries/graphicsj/Xmipp_Browser', 'external/imagej/plugins')
-###    AddImageJPlugin('Xmipp_Tomo', 'libraries/graphicsj/Xmipp_Tomo', 'external/imagej/plugins')
+    AddImageJPlugin('Xmipp_Tomo', 'libraries/graphicsj/Xmipp_Tomo', 'external/imagej/plugins')
 
     # Other ImageJ plugins without sources.
     AddImageJExternalPlugins('libraries/graphicsj/plugins', 'external/imagej/plugins')
