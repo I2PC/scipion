@@ -432,8 +432,8 @@ public:
             std::cout << "   Deltaf=" << precomputed.deltaf << std::endl;
             std::cout << "   u,u2,u4=" << precomputed.u << " " << precomputed.u2
             << " " << precomputed.u4 << std::endl;
-            std::cout << "   K1,K2,sin=" << K1 << " " << K2 << " "
-            << sine_part << std::endl;
+            std::cout << "   K1,K2,argument=" << K1 << " " << K2 << " " << argument << std::endl;
+            std::cout << "   cos,sin=" << cosine_part << " " << sine_part << std::endl;
             std::cout << "   K3,Eespr=" << K3 << " " << Eespr << std::endl;
             std::cout << "   K4,Eispr=" << K4 << " " << /*Eispr <<*/ std::endl;
             std::cout << "   K5,EdeltaF=" << K5 << " " << EdeltaF << std::endl;
