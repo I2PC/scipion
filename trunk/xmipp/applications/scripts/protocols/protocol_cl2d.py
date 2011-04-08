@@ -313,15 +313,16 @@ class CL2D_class:
                 self.doStep1=True
             if self.doStep1:
                 params= '-i '+str(self.InSelFile)+\
-                        ' --fourier_mask raised_cosine '+str(slope)+\
-                        ' -o '+fnOut
+                        ' -o '+fnOut+\
+                        ' --fourier '
                 if self.Highpass>0 and self.Lowpass>0:
-                    params+=" --band_pass "+str(self.Highpass)+" "+str(self.Lowpass)
+                    params+=" band_pass "+str(self.Highpass)+" "+str(self.Lowpass)
                 elif self.Highpass>0:
-                    params+=" --high_pass "+str(self.Highpass)
+                    params+=" high_pass "+str(self.Highpass)
                 elif self.Lowpass>0:
-                    params+=" --low_pass "+str(self.Lowpass)
-                launch_job.launch_job("xmipp_fourier_filter",
+                    params+=" low_pass "+str(self.Lowpass)
+                params+=' raised_cosine '+str(slope)
+                launch_job.launch_job("xmipp_transform_filter",
                                       params,
                                       self.log,
                                       False,
