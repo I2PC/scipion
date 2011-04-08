@@ -18,6 +18,7 @@ public class MicrographImageRenderer extends MicrographRowDisablerRenderer {
 
     public static final int CELL_WIDTH = 128;
     public static final int CELL_HEIGHT = 128;
+    public final static int CELL_WIDTH_MIN = 50;
 
     @Override
     public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {

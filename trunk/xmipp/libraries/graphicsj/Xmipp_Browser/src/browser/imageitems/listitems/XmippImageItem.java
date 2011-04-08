@@ -17,7 +17,8 @@ import xmipp.ImageDouble;
  */
 public class XmippImageItem extends AbstractImageItem {
 
-    public int slice = ImageDouble.MID_SLICE, nimage = ImageDouble.FIRST_IMAGE;
+    public int nslice = ImageDouble.MID_SLICE;
+    public long nimage = ImageDouble.FIRST_IMAGE;
 
     public XmippImageItem(File file, Cache cache) {
         super(file, cache);
@@ -27,14 +28,14 @@ public class XmippImageItem extends AbstractImageItem {
 
     @Override
     public String getKey() {
-        return super.getKey() + "_" + slice + "_" + nimage;
+        return super.getKey() + "_" + nslice + "_" + nimage;
     }
 
     protected ImagePlus loadPreview(int w, int h) {
-        return loadPreview(w, h, slice, nimage);
+        return loadPreview(w, h, nslice, nimage);
     }
 
-    protected ImagePlus loadPreview(int w, int h, int slice, int nimage) {
+    protected ImagePlus loadPreview(int w, int h, int slice, long nimage) {
 //        System.out.println(" >>> Loading preview: " + getKey());
         ImagePlus ip = null;
 
@@ -42,7 +43,7 @@ public class XmippImageItem extends AbstractImageItem {
             String path = file.getAbsolutePath();
             //String fileName = file.getName();
             ImageDouble image = new ImageDouble();
-            //System.out.println(" *** Loading preview: " + path + " / w=" + w + " / h=" + h + " / d=" + slice + " n=" + nimage);
+            //System.out.println(" *** Loading preview: " + path + " / w=" + w + " / h=" + h + " / d=" + nslice + " n=" + nimage);
 
             double factor = getFactor(getWidth(), getHeight(), w, h);
 
@@ -77,18 +78,26 @@ public class XmippImageItem extends AbstractImageItem {
     }
 
     public ImagePlus getImagePlus() {
-        return getImagePlus(nimage);
+        return getImagePlus(nimage, nslice);
     }
 
-    public ImagePlus getImagePlus(int nimage) {
+    public ImagePlus getImagePlus(long nimage) {
+        return getImagePlus(nimage, ImageDouble.ALL_SLICES);
+    }
+
+    public ImagePlus getImagePlus(int nslice) {
+        return getImagePlus(ImageDouble.FIRST_IMAGE, nslice);
+    }
+
+    public ImagePlus getImagePlus(long nimage, int nslice) {
         ImagePlus ip = null;
 
         try {
             String path = file.getAbsolutePath();
-            System.out.println(" *** Reading ImagePlus [from disk]: " + getFileName() + "@" + nimage + "#" + slice);
+            System.out.println(" *** Reading ImagePlus [from disk]: " + getKey());
             ImageDouble image = new ImageDouble();
 
-            image.read(path, nimage);
+            image.readPreview(path, getWidth(), getHeight(), nslice, nimage);
             ip = ImageConverter.convertToImagej(image, path);
         } catch (Exception ex) {
             IJ.error(ex.getMessage());

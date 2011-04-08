@@ -34,9 +34,10 @@ public class MicrographRowDisablerRenderer extends DefaultTableCellRenderer {
     }
 
     protected boolean isRowEnabled(JTable table, int row) {
-        boolean en = (Boolean) table.getModel().getValueAt(table.convertRowIndexToModel(row), MicrographsTableModel.ENABLED_COLUMN_INDEX);
+        int modelRow = table.convertRowIndexToModel(row);
 
-        return en;
+        return (Boolean) ((MicrographsTableModel) table.getModel()).getValueAt(
+                modelRow, MicrographsTableModel.ENABLED_COLUMN_INDEX);
     }
 
     protected String getFontForegroundColor(JTable table, int row) {

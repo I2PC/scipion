@@ -27,7 +27,7 @@ public class ImagesTableModel extends AbstractTableModel {
     private MetaData md;
     private long nimages = ImageDouble.FIRST_IMAGE;
     private int nslices = ImageDouble.FIRST_SLICE;
-    private double zoomScale = 1.0; // For zoom.
+    //private double zoomScale = 1.0; // For zoom.
     private Vector<TableImageItem> data = new Vector<TableImageItem>();
     //private Vector<TableImageItem> selectedItems = new Vector<TableImageItem>();
     private LinkedList<TableImageItem> selectedItems = new LinkedList<TableImageItem>();
@@ -130,7 +130,8 @@ public class ImagesTableModel extends AbstractTableModel {
     }
 
     protected void addItem(String filename, int slice, int image, boolean enabled) {
-//        System.out.println("Adding... " + slice + " / " + image);
+        System.out.println(" *** Filename: " + filename);
+
         TableImageItem item = new TableImageItem(new File(filename), cache, slice, image);
         item.setEnabled(enabled);
 
@@ -173,6 +174,13 @@ public class ImagesTableModel extends AbstractTableModel {
 
     private int getDataIndex(int rowIndex, int columnIndex) {
         return rowIndex * getColumnCount() + columnIndex;
+    }
+
+    public int[] getRowColForIndex(int index) {
+        int row = index / getColumnCount();
+        int col = index % getColumnCount();
+
+        return new int[]{row, col};
     }
 
     public int getSize() {
@@ -289,17 +297,24 @@ public class ImagesTableModel extends AbstractTableModel {
     }
 
     public void setZoomScale(double zoomScale) {
-        this.zoomScale = zoomScale;
+        /*        this.zoomScale = zoomScale;
 
-        fireTableDataChanged();
+        fireTableDataChanged();*/
+        for (int i = 0; i < getSize(); i++) {
+            data.elementAt(i).setZoomScale(zoomScale);
+        }
     }
-
+    /*
     public double getZoomScale() {
-        return zoomScale;
-    }
+    return zoomScale;
+    }*/
 
     public void setRows(int rows) {
-        if (rows > 0 && rows <= getSize()) {
+        if (rows > getSize()) {
+            rows = getSize();
+        }
+
+        if (rows > 0) {
             this.rows = rows;
 
             cols = getNecessaryCols(rows);
@@ -309,7 +324,11 @@ public class ImagesTableModel extends AbstractTableModel {
     }
 
     public void setColumns(int cols) {
-        if (cols > 0 && cols <= getSize()) {
+        if (cols > getSize()) {
+            cols = getSize();
+        }
+
+        if (cols > 0) {
             this.cols = cols;
 
             rows = getNecessaryRows(cols);
@@ -319,23 +338,19 @@ public class ImagesTableModel extends AbstractTableModel {
     }
 
     public void autoAdjustColumns(int width) {
-        int displayableColumns = getDisplayableColumns(width);
+        int displayableColumns = width / getCellWidth();
 
         if (getColumnCount() != displayableColumns) {
             setColumns(displayableColumns);
         }
     }
 
-    private int getDisplayableColumns(int width) {
-        return width / getCellWidth();
-    }
-
     public int getCellWidth() {
-        return (int) (getAllItems().elementAt(0).getWidth() * zoomScale);
+        return getAllItems().elementAt(0).getThumbnailWidth();//(int) (getAllItems().elementAt(0).getWidth() * zoomScale);
     }
 
     public int getCellHeight() {
-        return (int) (getAllItems().elementAt(0).getHeight() * zoomScale);
+        return getAllItems().elementAt(0).getThumbnailHeight();//(int) (getAllItems().elementAt(0).getHeight() * zoomScale);
     }
 
     @SuppressWarnings("empty-statement")
@@ -356,44 +371,43 @@ public class ImagesTableModel extends AbstractTableModel {
         return cols_;
     }
 
-    // Images normalization
-/*    public void setNormalized(double min, double max) {
-    this.min = min;
-    this.max = max;
+    /*    public void setNormalized() {
+    if (min == Double.MIN_VALUE && max == Double.MAX_VALUE) {
+    getMinAndMax();
+    }
 
     setNormalized(true);
     }*/
-    public void setNormalized() {
-        if (min == Double.MIN_VALUE && max == Double.MAX_VALUE) {
-            getMinAndMax();
-        }
-
-        setNormalized(true);
-    }
-
     private void getMinAndMax() {
         double min_max[] = ImageOperations.getMinAndMax(data);
 
         min = min_max[0];
         max = min_max[1];
     }
-
+    /*
     public void disableNormalization() {
-        setNormalized(false);
+    setNormalized(false);
     }
+     */
 
-    private void setNormalized(boolean normalize) {
+    public void setNormalized(boolean normalize) {
         this.normalize = normalize;
 
-        for (int i = 0; i < data.size(); i++) {
-            TableImageItem item = data.get(i);
-
-            if (normalize) {
-                item.setNormalized(min, max);
-            } else {
-                item.resetNormalized();
-            }
+        if (normalize) {
+//            if (min == Double.MIN_VALUE && max == Double.MAX_VALUE) {
+            getMinAndMax();
+//            }
         }
+        /*
+        for (int i = 0; i < data.size(); i++) {
+        TableImageItem item = data.get(i);
+
+        if (normalize) {
+        item.setNormalized(min, max);
+        } else {
+        item.resetNormalized();
+        }
+        }*/
     }
 
     public boolean isNormalizing() {
@@ -407,8 +421,20 @@ public class ImagesTableModel extends AbstractTableModel {
     public double getNormalizeMax() {
         return max;
     }
+//
+//    public boolean isSingleImage() {
+//        return !isStack() && !isVolume();
+//    }
 
-    public void printStuff() {
+    public boolean isStack() {
+        return ((TableImageItem) getValueAt(0, 0)).isStack();
+    }
+
+    public boolean isVolume() {
+        return ((TableImageItem) getValueAt(0, 0)).isVolume();
+    }
+
+    public void printNormalizationInfo() {
         System.out.println("Normalize " + (normalize ? "ON" : "OFF") + " > "
                 + (normalize ? "m=" + min + "/M=" + max : ""));
     }

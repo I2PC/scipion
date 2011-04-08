@@ -13,14 +13,14 @@ import browser.imageitems.listitems.XmippImageItem;
  */
 public class LABELS {
 
-    public final static String APP_NAME = "XMipp Browser";
-    public final static String TITLE_ABOUT = "About " + APP_NAME;
+    public final static String APP_NAME = "Xmipp Browser";
     public final static String MESAGE_ABOUT = "About " + APP_NAME;
-    public final static String TITLE_PREVIEW = "Preview";
+    public final static String TITLE_ABOUT = "About " + APP_NAME;
     public final static String TITLE_ERROR = "Memory error";
-    public final static String TITLE_SEND2WINDOW = "Send image to window";
-    public final static String TITLE_MAIN_WINDOW = "ImageJ/Xmipp Browser";
     public final static String TITLE_GO_TO_SLICE = "Go to slice";
+    public final static String TITLE_MAIN_WINDOW = "ImageJ/Xmipp Browser";
+    public final static String TITLE_PREVIEW = "Preview";
+    public final static String TITLE_SEND2WINDOW = "Send image to window";
 
     // @TODO Remove
     public final static String TITLE_TABLE_WINDOW(int items) {
@@ -36,20 +36,21 @@ public class LABELS {
     /**
      * Buttons labels
      */
-    public final static String BUTTON_TO_STACK = "To Stack";
-    public final static String BUTTON_PARENT_DIRECTORY = "Parent";
-    public final static String BUTTON_REFRESH_DIRECTORY = "Refresh";
-    public final static String BUTTON_CAPTURE_WINDOW = "Capture";
-    public final static String BUTTON_OK = "Ok";
-    public final static String BUTTON_CANCEL = "Cancel";
-    public final static String BUTTON_OPEN = "Open Selected";
-    public final static String BUTTON_SEND2TABLE = "Send to table";
-    public final static String BUTTON_SELECT_ALL = "Select All";
-    public final static String BUTTON_INVERT_SELECTION = "Invert Selection";
-    public final static String BUTTON_REFRESH = "Refresh";
     public final static String BUTTON_AVERAGE = "Average";
-    public final static String BUTTON_STD_DEVIATION = "Std. Deviation";
+    public final static String BUTTON_CANCEL = "Cancel";
+    public final static String BUTTON_CAPTURE_WINDOW = "Capture";
+    public final static String BUTTON_INVERT_SELECTION = "Invert Selection";
     public final static String BUTTON_NORMALIZE = "Normalize";
+    public final static String BUTTON_OPEN = "Open Selected";
+    public final static String BUTTON_OK = "Ok";
+    public final static String BUTTON_PARENT_DIRECTORY = "Parent";
+    public final static String BUTTON_REFRESH = "Refresh";
+    public final static String BUTTON_REFRESH_DIRECTORY = "Refresh";
+    public final static String BUTTON_SAVE = "Save";
+    public final static String BUTTON_SELECT_ALL = "Select All";
+    public final static String BUTTON_SEND2TABLE = "Send to table";
+    public final static String BUTTON_STD_DEVIATION = "Std. Deviation";
+    public final static String BUTTON_TO_STACK = "To Stack";
     /**
      * Labels for operations
      */
@@ -149,6 +150,8 @@ public class LABELS {
     //public final static String OPERATION_FLOWJ = "FlowJ";
     //public final static String OPERATION_FLOW3J = "Flow3J";
     //public final static String OPERATION_OBJECTJ = "ObjectJ";
+    public final static String LABEL_SHOW_CTF = "Show CTF";
+    public final static String LABEL_EXTRACT_COLUMN = "Extract Column";
     /**
      * Labels for browser
      */

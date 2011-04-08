@@ -39,7 +39,8 @@ public class MicrographsTableModel extends DefaultTableModel implements TableMod
         MDLabel.MDL_CTF_CRITERION_PSDCORRELATION90,
         MDLabel.MDL_CTF_CRITERION_PSDRADIALINTEGRAL,
         MDLabel.MDL_CTF_CRITERION_PSDVARIANCE,
-        MDLabel.MDL_CTF_CRITERION_PSDPCARUNSTEST
+        MDLabel.MDL_CTF_CRITERION_PSDPCARUNSTEST,
+        MDLabel.MDL_CTF_CRITERION_COMBINED
     };
     private static final String COLUMNS_NAMES[] = new String[]{
         "ID",
@@ -58,7 +59,8 @@ public class MicrographsTableModel extends DefaultTableModel implements TableMod
         "PSD Correlation At 90 degree",
         "PSD Radial Integral",
         "PSD Variance",
-        "PSD PCA Runs Test"};
+        "PSD PCA Runs Test",
+        "Criterion Combined"};
     private static final int EXTRA_COLUMNS_LABELS[] = {
         MDLabel.MDL_CTF_DEFOCUSU,
         MDLabel.MDL_CTF_DEFOCUSV};
@@ -72,7 +74,7 @@ public class MicrographsTableModel extends DefaultTableModel implements TableMod
     // Data type contained by columns to set renderes properly.
     public final static int filenameColumnIndex[] = new int[]{2};
     public final static int imagesColumnIndex[] = new int[]{3, 4, 5, 6};
-    public final static int doubleColumnIndex[] = new int[]{7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18};
+    public final static int doubleColumnIndex[] = new int[]{7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19};
     protected static Cache cache = new Cache();
     private String rootDir;
     private MetaData md;
@@ -145,6 +147,7 @@ public class MicrographsTableModel extends DefaultTableModel implements TableMod
                             case MDLabel.MDL_CTF_CRITERION_PSDRADIALINTEGRAL:
                             case MDLabel.MDL_CTF_CRITERION_PSDVARIANCE:
                             case MDLabel.MDL_CTF_CRITERION_PSDPCARUNSTEST:
+                            case MDLabel.MDL_CTF_CRITERION_COMBINED:
                                 row[col] = md.getValueDouble(label, id);
                                 break;
                             default:
@@ -212,6 +215,10 @@ public class MicrographsTableModel extends DefaultTableModel implements TableMod
         }
 
         return toHide;
+    }
+
+    public boolean isRowEnabled(int row) {
+        return (Boolean) getValueAt(row, ENABLED_COLUMN_INDEX);
     }
 
     public boolean hasCtfData() {

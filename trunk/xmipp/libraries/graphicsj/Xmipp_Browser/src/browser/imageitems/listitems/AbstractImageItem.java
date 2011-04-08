@@ -9,6 +9,7 @@ import browser.ICONS_MANAGER;
 import browser.LABELS;
 import browser.imageitems.ImageDimension;
 import browser.table.ImageOperations;
+import ij.IJ;
 import ij.ImagePlus;
 import java.io.File;
 import java.text.DecimalFormat;
@@ -65,7 +66,7 @@ public abstract class AbstractImageItem extends FileItem {
     }
 
     public String getKey() {
-        return file.getAbsolutePath() + "_" + dimension.getWidth() + "_" + dimension.getHeight();
+        return file.getAbsolutePath() + "_" + getHeight() + "_" + getWidth();
     }
 
     public int getWidth() {
@@ -85,7 +86,7 @@ public abstract class AbstractImageItem extends FileItem {
     }
 
     public boolean isSingleImage() {
-        return !isStack() & !isVolume();
+        return !isStack() && !isVolume();
     }
 
     public boolean isStack() {
@@ -104,7 +105,8 @@ public abstract class AbstractImageItem extends FileItem {
 
             dimension = new ImageDimension(image);
         } catch (Exception ex) {
-            throw new RuntimeException(ex);
+            //throw new RuntimeException(ex);
+            IJ.error(ex.getMessage() + ": " + file.getAbsolutePath());
         }
     }
 

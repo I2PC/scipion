@@ -65,8 +65,8 @@ public class ImagesWindowFactory {
         openImage(item, 0);
     }
 
-    public static void openImage(XmippImageItem item, int n) {
-        ImageWindow iw = openImage(item.getImagePlus(n));
+    public static void openImage(XmippImageItem item, long nimage) {
+        ImageWindow iw = openImage(item.getImagePlus(nimage));
         iw.setTitle(item.getLabel());
     }
 

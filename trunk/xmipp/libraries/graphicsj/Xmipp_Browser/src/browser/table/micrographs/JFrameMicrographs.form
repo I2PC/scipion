@@ -37,7 +37,7 @@
         <Component class="javax.swing.JButton" name="bSave">
           <Properties>
             <Property name="text" type="java.lang.String" editor="org.netbeans.modules.form.RADConnectionPropertyEditor">
-              <Connection code="BUTTON_SAVE" type="code"/>
+              <Connection code="LABELS.BUTTON_SAVE" type="code"/>
             </Property>
             <Property name="focusable" type="boolean" value="false"/>
             <Property name="horizontalTextPosition" type="int" value="0"/>
@@ -56,17 +56,6 @@
           </Properties>
           <Events>
             <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="jbPrintActionPerformed"/>
-          </Events>
-        </Component>
-        <Component class="javax.swing.JButton" name="jbExtractColumn">
-          <Properties>
-            <Property name="text" type="java.lang.String" value="[[ExtractColumn]]"/>
-            <Property name="focusable" type="boolean" value="false"/>
-            <Property name="horizontalTextPosition" type="int" value="0"/>
-            <Property name="verticalTextPosition" type="int" value="3"/>
-          </Properties>
-          <Events>
-            <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="jbExtractColumnActionPerformed"/>
           </Events>
         </Component>
       </SubComponents>
