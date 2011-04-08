@@ -144,8 +144,8 @@ int  ImageBase::readSPIDER(size_t select_img)
 #undef DEBUG
 
     SPIDERhead* header = new SPIDERhead;
-    if ( fread( header, SPIDERSIZE, 1, fimg ) < 1 )
-        REPORT_ERROR(ERR_IO_NOREAD,"rwSPIDER: cannot allocate memory for header");
+    if ( fread( header, SPIDERSIZE, 1, fimg ) != 1 )
+        REPORT_ERROR(ERR_IO_NOREAD,"rwSPIDER: cannot read Spider main header");
 
     swap = 0;
 
@@ -200,6 +200,8 @@ int  ImageBase::readSPIDER(size_t select_img)
     setDimensions(_xDim, _yDim, _zDim, _nDimSet);
 
     //image is in stack? and set right initial and final image
+    size_t single_header = offset; //save offset before duplicating offset in stack case
+
     if ( isStack)
     {
         if ( select_img > _nDim )
@@ -215,25 +217,32 @@ int  ImageBase::readSPIDER(size_t select_img)
 
     size_t header_size = offset;
     size_t datasize_n = _xDim*_yDim*_zDim;
-    size_t image_size  = header_size + datasize_n*sizeof(float);
+    size_t image_size  = single_header + datasize_n*sizeof(float);
     size_t pad         = (size_t) header->labbyt;
 
     size_t   imgStart = IMG_INDEX(select_img);
     size_t   imgEnd = (select_img != ALL_IMAGES) ? imgStart + 1 : _nDim;
-
+    size_t   img_seek = header_size + imgStart * image_size;
     char*   hend;
 
     MD.clear();
     MD.resize(imgEnd - imgStart,MDL::emptyHeader);
     double daux;
 
-    for (size_t n = 0, i = imgStart; i < imgEnd; ++i, ++n )
+    //std::cerr << formatString("DEBUG_JM: header_size: %10lu, datasize_n: %10lu, image_size: %10lu, imgStart: %10lu, img_seek: %10lu",
+    //    header_size, datasize_n, image_size, imgStart, img_seek) <<std::endl;
+
+    for (size_t n = 0, i = imgStart; i < imgEnd; ++i, ++n, img_seek += image_size )
     {
-        fseek( fimg, header_size + i*image_size, SEEK_SET );
+        if (fseek( fimg, img_seek, SEEK_SET ) != 0)//fseek return 0 on success
+          REPORT_ERROR(ERR_IO, formatString("rwSPIDER: error seeking %lu for read image %lu", img_seek, i));
+
+       // std::cerr << formatString("DEBUG_JM: rwSPIDER: seeking %lu for read image %lu", img_seek, i) <<std::endl;
+
         if(isStack)
         {
-            if ( fread( header, SPIDERSIZE, 1, fimg ) < 1 )
-                REPORT_ERROR(ERR_IO_NOREAD,"rwSPIDER: cannot read multifile header information");
+            if ( fread( header, SPIDERSIZE, 1, fimg ) != 1 )
+                REPORT_ERROR(ERR_IO_NOREAD, formatString("rwSPIDER: cannot read Spider image %lu header", i));
             hend = (char *) header + extent;
             if ( swap )
                 for ( b = (char *) header; b<hend; b+=4 )
