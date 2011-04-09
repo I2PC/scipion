@@ -44,11 +44,10 @@ def removeOutliersWithinCluster(Nproc,fnRoot,classBlockRefs,thZscore,thPCAZscore
         os.write(fh_mpi, command+"\n");
 
         outputFile=classDir+"/score_cluster_"+blockName+"_"+classRoot
-        command="xmipp_sort_by_statistics"+\
-                " -i "+classFile+\
+        command="xmipp_image_sort"+\
+                " -i "+blockName+"@"+classFile+\
                 " -o "+outputFile+\
-                " --block "+blockName+\
-                " --multivariate --quiet"
+                " --multivariate -v 0"
         outputFiles.append(outputFile+".sel")
         os.write(fh_mpi, command+"\n");
     
