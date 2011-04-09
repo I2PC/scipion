@@ -30,7 +30,7 @@ def removeOutliersWithinCluster(Nproc,fnRoot,classBlockRefs,thZscore,thPCAZscore
                 " --ref "+reference+\
                 " -o "+PCAoutputFile+\
                 " --maxDist "+str(thPCAZscore)+\
-                " -v 0"
+                " --quiet"
         if analyzingCore:
             if not os.path.exists(classDir+"/Basis"):
                 os.mkdir(classDir+"/Basis")
