@@ -26,12 +26,11 @@ def removeOutliersWithinCluster(Nproc,fnRoot,classBlockRefs,thZscore,thPCAZscore
 
         PCAoutputFile=classDir+"/PCAscore_cluster_"+blockName+"_"+classRoot+".sel"
         command="xmipp_classify_analyze_cluster"+\
-                " -i "+classFile+\
-                " --block "+blockName+\
+                " -i "+blockName+"@"+classFile+\
                 " --ref "+reference+\
                 " -o "+PCAoutputFile+\
                 " --maxDist "+str(thPCAZscore)+\
-                " --quiet"
+                " -v 0"
         if analyzingCore:
             if not os.path.exists(classDir+"/Basis"):
                 os.mkdir(classDir+"/Basis")
