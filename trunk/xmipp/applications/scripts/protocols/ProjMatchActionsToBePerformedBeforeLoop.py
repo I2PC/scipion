@@ -178,11 +178,17 @@ def execute_ctf_groups (_log, dict):
     if(retcode):
         print "command", command, "failed with exit status", retcode
         exit(1)
-    wildcardname = utils_xmipp.composeWildcardFileName(CtfGroupDirectory + '/'
-                                                     + CtfGroupRootName
-                                                     + '_group', 'ctf')
-    ctflist = glob.glob(wildcardname)
-    return len(ctflist)
+    fn = CtfGroupDirectory + '/'+\
+                  CtfGroupRootName+\
+                 'Info.xmd'
+#    ctflist = glob.glob(wildcardname)
+#    print ctflist, wildcardname
+#    exit(1)
+#    return len(ctflist)
+    MD = MetaData(fn)
+    return MD.size()
+
+    
 
 def checkOptionsCompatibility(_log, dict):
     # Never allow DoAlign2D and DoCtfCorrection together
