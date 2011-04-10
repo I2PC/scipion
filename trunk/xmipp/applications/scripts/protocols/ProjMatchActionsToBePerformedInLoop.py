@@ -28,19 +28,6 @@ def execute_mask(_log, dict):
 #        print '*********************************************************************'
         print '* Skipped Mask'
 
-##                                , 'ProjMatchDir' : ProjMatchDir
-##                                , 'DocFileOutAngles':DocFileInputAngles[iterN]
-#                                  'AngSamplingRateDeg':AngSamplingRateDeg[iterN]
-#                                , 'CtfGroupRootName': CtfGroupRootName
-#                                , 'CtfGroupDirectory': CtfGroupDirectory
-#                                , 'CtfGroupSubsetFileName':CtfGroupSubsetFileName
-#                                , 'DoCtfCorrection': DoCtfCorrection
-#                                , 'DocFileInputAngles':DocFileInputAngles[iterN-1][refN]
-#                                , 'NumberOfCtfGroups':NumberOfCtfGroups
-#                                , 'ProjectLibraryRootName':ProjectLibraryRootNames[iterN][refN]
-#                                , 'reconstructedFileName':reconstructedFileNamesIter[iterN-1][refN]
-#                                , 'SymmetryGroup':SymmetryGroup
-#                                }
 
 def angular_project_library(_log,dict):
     _log.debug("execute_projection_matching")
@@ -66,7 +53,7 @@ def angular_project_library(_log,dict):
         parameters+= \
            ' --perturb ' + str(perturb)
 
-    if (dict['DoRetricSearchbyTiltAngle']):
+    if (dict['DoRestricSearchbyTiltAngle']):
         parameters+=  \
               ' --min_tilt_angle '      + str(dict['Tilt0']) + \
               ' --max_tilt_angle '      + str(dict['TiltF'])
@@ -92,5 +79,107 @@ def angular_project_library(_log,dict):
                          1,
                          dict['SystemFlavour'])
 
+
 def projection_matching(_log,dict):
-    a=0
+    # Loop over all CTF groups
+    # Use reverse order to have same order in add_to docfiles from angular_class_average
+    # get all ctf groups
+   
+    print dict['NumberOfCtfGroups']
+    for ii in range(dict['NumberOfCtfGroups']):
+        ictf = dict['NumberOfCtfGroups'] - ii + 1
+
+#      refname          = ProjectLibraryRootName
+#      if (_DoCtfCorrection):
+#         CtfGroupName = utils_xmipp.composeFileName(CtfGroupRootName + '_group',ictf+1,'')
+#         outputname   = ProjMatchRootName + '_' + CtfGroupName 
+#         CtfGroupName = '../' + CtfGroupDirectory + '/' + CtfGroupName
+#         inselfile    = CtfGroupName + '.sel'
+#         inputdocfile = (os.path.basename(inselfile)).replace('.sel','.doc')
+#         txtfile      = ProjectLibraryRootName + '_sampling.txt'
+#         if (os.path.exists(txtfile)):
+#            os.remove(txtfile)
+#         txtfileb     = utils_xmipp.composeFileName(ProjectLibraryRootName + '_group',ictf+1,'')
+#         txtfileb     += '_sampling.txt'
+#         shutil.copy(txtfileb, txtfile)
+#      else:
+#         outputname   = ProjMatchRootName
+#         inputdocfile = _InputDocFileName
+#
+#      print '*********************************************************************'
+#      print '* Perform projection matching'
+#      parameters= ' -i '              + inputdocfile + \
+#                  ' -o '              + outputname + \
+#                  ' --ref '            + refname + \
+#                  ' --Ri '             + str(_Ri)           + \
+#                  ' --Ro '             + str(_Ro)           + \
+#                  ' --max_shift '      + str(_MaxChangeOffset) + \
+#                  ' --search5d_shift ' + str(_Search5DShift) + \
+#                  ' --search5d_step  ' + str(_Search5DStep) + \
+#                  ' --mem '            + str(_AvailableMemory * _MyNumberOfThreads) + \
+#                  ' --thr '            + str(_MyNumberOfThreads)
+#      
+#      if (_DoScale):
+#         parameters += \
+#                  ' --scale '          + str(_ScaleStep) + ' ' + str(_ScaleNumberOfSteps) 
+#
+#      if (_DoCtfCorrection and _ReferenceIsCtfCorrected):
+#         ctffile = CtfGroupName + '.ctf'
+#         parameters += \
+#                  ' --pad '            + str(_PaddingFactor) + \
+#                  ' --ctf '            + ctffile
+#
+#      if (_DoParallel):
+#         parameters = parameters + ' --mpi_job_size ' + str(_MyMpiJobSize)
+#
+#      launch_job.launch_job('xmipp_angular_projection_matching',
+#                            parameters,
+#                            _mylog,
+#                            _DoParallel,
+#                            _MyNumberOfMpiProcesses,
+#                            _MyNumberOfThreads,
+#                            _MySystemFlavour)
+#
+#      # Now make the class averages
+#      parameters =  ' -i '      + outputname + '.doc'  + \
+#                    ' --lib '    + ProjectLibraryRootName + '.doc' + \
+#                    ' --dont_write_selfiles ' + \
+#                    ' --limit0 ' + str(_MinimumCrossCorrelation) + \
+#                    ' --limitR ' + str(_DiscardPercentage)
+#      if (_DoCtfCorrection):
+#         # On-the fly apply Wiener-filter correction and add all CTF groups together
+#         parameters += \
+#                    ' --wien '             + CtfGroupName + '.wien' + \
+#                    ' --pad '              + str(_PaddingFactor) + \
+#                    ' --add_to '           + ProjMatchRootName
+#      else:
+#         parameters += \
+#                    ' -o '                + ProjMatchRootName
+#      if (_DoAlign2D == '1'):
+#         parameters += \
+#                    ' --iter '             + str(_Align2DIterNr) + \
+#                    ' --Ri '               + str(_Ri)           + \
+#                    ' --Ro '               + str(_Ro)           + \
+#                    ' --max_shift '        + str(_MaxChangeOffset) + \
+#                    ' --max_shift_change ' + str(_Align2dMaxChangeOffset) + \
+#                    ' --max_psi_change '   + str(_Align2dMaxChangeRot) 
+#      if (_DoComputeResolution and _DoSplitReferenceImages):
+#         parameters += \
+#                    ' --split '
+#
+#      launch_job.launch_job('xmipp_angular_class_average',
+#                            parameters,
+#                            _mylog,
+#                            _DoParallel,
+#                            _MyNumberOfMpiProcesses*_MyNumberOfThreads,
+#                            1,
+#                            _MySystemFlavour)
+#
+#      if (_DoAlign2D == '1'):
+#         outputdocfile =  ProjMatchRootName + '_realigned.doc'
+#      else:
+#         outputdocfile =  ProjMatchRootName + '.doc'
+#
+#      if (_DoCtfCorrection):
+#         os.remove(outputname + '.doc')
+#         os.remove(inputdocfile)

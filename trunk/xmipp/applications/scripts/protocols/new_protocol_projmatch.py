@@ -289,7 +289,7 @@ Search5DShift ='4x5 0'
 Search5DStep ='2'
 
 # {expert} Restrict tilt angle search?
-DoRetricSearchbyTiltAngle =False
+DoRestricSearchbyTiltAngle =False
 
 # {expert} Lower-value for restricted tilt angle search
 Tilt0 = 40
@@ -646,7 +646,7 @@ maskReferenceVolume = "masked_reference"#
 OutputFsc = "resolution.fsc"
 CtfGroupDirectory = "CtfGroups"
 CtfGroupRootName = "ctf"
-CtfGroupSubsetFileName = "ctf_groups_subset_docfiles.sel"
+CtfGroupSubsetFileName = CtfGroupRootName + "_images.sel"
 
 reconstructedFileNamesIter = []# names for reconstructed volumes
 maskedFileNamesIter = []# names masked volumes used as reference
@@ -676,6 +676,8 @@ def actionsToBePerformedBeforeLoopThatDoNotModifyTheFileSystem():
     #Convert directories/files  to absolute path from projdir
     global CtfGroupDirectory
     CtfGroupDirectory = WorkingDir + '/' + CtfGroupDirectory
+    global CtfGroupSubsetFileName
+    CtfGroupSubsetFileName = CtfGroupDirectory + '/'+CtfGroupSubsetFileName
 #vector for iterations??????
 #    global ProjMatchDir
 #    ProjMatchDir = WorkingDir +'/' + ProjMatchDir
@@ -688,7 +690,6 @@ def actionsToBePerformedBeforeLoopThatDoNotModifyTheFileSystem():
     ReferenceFileNames = getListFromVector(ReferenceFileNames)
     global referenceNumber
     referenceNumber = len(ReferenceFileNames)
-
     #directory with ProjMatchClasses
     global ProjMatchDirs,LibraryDirs
     ProjMatchDirs=[" "]
@@ -843,7 +844,7 @@ def otherActionsToBePerformedBeforeLoop():
         , 'ReferenceFileNames_0':ReferenceFileNames[0]
         , 'SelFileName':SelFileName
         }
-    command = 'global OuterRadius;OuterRadius = initOuterRadius'
+    command = 'self.OuterRadius = initOuterRadius'
     _dataBase.insertCommand(command, _Parameters, 1)
 
     #7 make CTF groups
@@ -861,7 +862,7 @@ def otherActionsToBePerformedBeforeLoop():
                 , 'SplitDefocusDocFile': SplitDefocusDocFile
                 , 'WienerConstant': WienerConstant
                }
-    command = 'global NumberOfCtfGroups;NumberOfCtfGroups = execute_ctf_groups'
+    command = 'self.NumberOfCtfGroups = execute_ctf_groups'
     _VerifyFiles = []
     _VerifyFiles.append(CtfGroupDirectory+"/"+CtfGroupRootName+'Info.xmd')
     _VerifyFiles.append(CtfGroupDirectory+"/"+CtfGroupRootName+'_ctf.stk')
@@ -881,13 +882,19 @@ def otherActionsToBePerformedBeforeLoop():
 
     #Save global parameters for future runs
     if (ContinueAtIteration == 1):
+        #create a dummy dictionary
         _Parameters = {
-          'OuterRadius':OuterRadius
-        , 'NumberOfCtfGroups':NumberOfCtfGroups
+          'dummy':0
         }
-        _dataBase.saveParameters(_Parameters)
+        command = 'self.saveParameters'
+        _dataBase.insertCommand(command, _Parameters, 1)
     else:
-        (OuterRadius, NumberOfCtfGroups) = _dataBase.loadParameters()
+        #create a dummy dictionary
+        _Parameters = {
+          'dummy':0
+        }
+        command = 'self.loadParameters'
+        _dataBase.insertCommand(command, _Parameters, 1)
 
     _dataBase.commit()
 
@@ -935,29 +942,22 @@ def actionsToBePerformedInsideLoop(_log):
             _VerifyFiles.append(maskedFileNamesIter[iterN][refN])
             _dataBase.insertCommand(command, _Parameters, iterN,_VerifyFiles)
 
-
             # angular_project_library
             _Parameters = {
-#                                , 'ProjMatchDir' : ProjMatchDir
-#                                , 'DocFileOutAngles':DocFileInputAngles[iterN]
                                   'AngSamplingRateDeg':AngSamplingRateDeg[iterN]
-                                , 'CtfGroupRootName': CtfGroupRootName
-                                , 'CtfGroupDirectory': CtfGroupDirectory
                                 , 'CtfGroupSubsetFileName':CtfGroupSubsetFileName
                                 , 'DoCtfCorrection': DoCtfCorrection
                                 , 'DocFileInputAngles':DocFileInputAngles[iterN-1][refN]
                                 , 'DoParallel': DoParallel
-                                , 'DoRetricSearchbyTiltAngle':DoRetricSearchbyTiltAngle
+                                , 'DoRestricSearchbyTiltAngle':DoRestricSearchbyTiltAngle
                                 , 'MaxChangeInAngles':MaxChangeInAngles[iterN]
                                 , 'maskedFileNamesIter':maskedFileNamesIter[iterN][refN]
                                 , 'MpiJobSize':MpiJobSize
-                                , 'NumberOfCtfGroups':NumberOfCtfGroups
                                 , 'NumberOfMpiProcesses':NumberOfMpiProcesses
                                 , 'NumberOfThreads':NumberOfThreads
                                 , 'OnlyWinner':OnlyWinner[iterN]
                                 , 'PerturbProjectionDirections':PerturbProjectionDirections
                                 , 'ProjectLibraryRootName':ProjectLibraryRootNames[iterN][refN]
-                                , 'reconstructedFileName':reconstructedFileNamesIter[iterN-1][refN]
                                 , 'SystemFlavour':SystemFlavour
                                 , 'SymmetryGroup':SymmetryGroup
                                 , 'SymmetryGroupNeighbourhood':SymmetryGroupNeighbourhood
@@ -974,6 +974,40 @@ def actionsToBePerformedInsideLoop(_log):
             _VerifyFiles.append(auxFn + "_sampling.txt")
             #_VerifyFiles.append(auxFn + "ewetgerg")
             _dataBase.insertCommand(command, _Parameters, iterN,_VerifyFiles)
+
+            # projectionMatching
+            _Parameters = {
+#                                  'AngSamplingRateDeg':AngSamplingRateDeg[iterN]
+#                                , 'CtfGroupRootName': CtfGroupRootName
+#                                , 'CtfGroupDirectory': CtfGroupDirectory
+#                                , 'CtfGroupSubsetFileName':CtfGroupSubsetFileName
+#                                , 'DoCtfCorrection': DoCtfCorrection
+#                                , 'DocFileInputAngles':DocFileInputAngles[iterN-1][refN]
+#                                , 'DoParallel': DoParallel
+#                                , 'DoRestricSearchbyTiltAngle':DoRestricSearchbyTiltAngle
+#                                , 'MaxChangeInAngles':MaxChangeInAngles[iterN]
+#                                , 'maskedFileNamesIter':maskedFileNamesIter[iterN][refN]
+#                                , 'MpiJobSize':MpiJobSize
+#####                                 'NumberOfCtfGroups':NumberOfCtfGroups
+                                 'NumberOfMpiProcesses':NumberOfMpiProcesses
+#                                , 'NumberOfThreads':NumberOfThreads
+#                                , 'OnlyWinner':OnlyWinner[iterN]
+#                                , 'PerturbProjectionDirections':PerturbProjectionDirections
+#                                , 'ProjectLibraryRootName':ProjectLibraryRootNames[iterN][refN]
+#                                , 'reconstructedFileName':reconstructedFileNamesIter[iterN-1][refN]
+#                                , 'SystemFlavour':SystemFlavour
+#                                , 'SymmetryGroup':SymmetryGroup
+#                                , 'SymmetryGroupNeighbourhood':SymmetryGroupNeighbourhood
+#                                , 'Tilt0':Tilt0
+#                                , 'TiltF':TiltF
+                                }
+
+            command = "dict['NumberOfCtfGroups']=self.NumberOfCtfGroups;projection_matching"
+            _VerifyFiles = []
+#            _VerifyFiles.append(auxFn + "_sampling.txt")
+            #_VerifyFiles.append(auxFn + "ewetgerg")
+            _dataBase.insertCommand(command, _Parameters, iterN,_VerifyFiles)
+
             
 ######################
 ######################
