@@ -95,6 +95,7 @@ public:
         FileName fnImg;
         toClassify.reserve(SF.size());
         size_t objId;
+        FileName fnImageStack;
         FOR_ALL_OBJECTS_IN_METADATA(SF)
         {
             if (idx==0)
@@ -105,8 +106,7 @@ public:
                 centerImage(lastImage());
                 if (rank==0)
                     lastImage.write(fnStack,idx,true,WRITE_APPEND);
-                FileName fnImageStack;
-                fnImageStack.compose(idx,fnStack);
+                fnImageStack.compose(idx+1,fnStack);
                 if (rank==0)
                 {
                     objId = SFout.addObject();
@@ -140,6 +140,7 @@ public:
         double bestCorr=-1;
         int bestIdx=-1;
         int count=0;
+        FileName fnImageStack;
         FOR_ALL_ELEMENTS_IN_MATRIX1D(stillToDo)
         {
             if (!VEC_ELEM(stillToDo,i))
@@ -207,8 +208,7 @@ public:
         if (rank==0)
         {
             int idxStack=SFout.size();
-            FileName fnImageStack;
-            fnImageStack.compose(idxStack,fnStack);
+            fnImageStack.compose(idxStack+1,fnStack);
             bestImage.write(fnStack,idxStack,true,WRITE_APPEND);
             objId = SFout.addObject();
             SFout.setValue(MDL_IMAGE,fnImageStack,objId);
