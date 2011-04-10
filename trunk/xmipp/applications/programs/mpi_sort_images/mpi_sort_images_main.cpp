@@ -153,6 +153,7 @@ public:
             I.read(toClassify[i]);
             I().setXmippOrigin();
             double corr=alignImagesConsideringMirrors(lastImage(),I(),M,&mask);
+            centerImage(I());
             if (corr>bestCorr)
             {
                 bestCorr=corr;
@@ -201,6 +202,7 @@ public:
         I.read(toClassify[bestIdx]);
         I().setXmippOrigin();
         bestCorr=alignImagesConsideringMirrors(lastImage(),I(),M,&mask);
+        centerImage(I());
         bestImage()=I();
         lastImage()=bestImage();
         size_t objId;
