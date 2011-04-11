@@ -1,5 +1,7 @@
 package xmipp;
-
+/**
+ * Protocol for integrating native C++ code - @see ImageDouble.java
+ */
 public class MetaData {
 
     //hold pointer to Image class in C++ space

@@ -70,16 +70,32 @@ JNIEXPORT void JNICALL Java_xmipp_ImageDouble_read_1preview
  * Method:    setData
  * Signature: (III[D)V
  */
-JNIEXPORT void JNICALL Java_xmipp_ImageDouble_setData
+JNIEXPORT void JNICALL Java_xmipp_ImageDouble_setData__III_3D
   (JNIEnv *, jobject, jint, jint, jint, jdoubleArray);
+
+/*
+ * Class:     xmipp_ImageDouble
+ * Method:    setData
+ * Signature: (IIII[D)V
+ */
+JNIEXPORT void JNICALL Java_xmipp_ImageDouble_setData__IIII_3D
+  (JNIEnv *, jobject, jint, jint, jint, jint, jdoubleArray);
 
 /*
  * Class:     xmipp_ImageDouble
  * Method:    write
  * Signature: (Ljava/lang/String;)V
  */
-JNIEXPORT void JNICALL Java_xmipp_ImageDouble_write
+JNIEXPORT void JNICALL Java_xmipp_ImageDouble_write__Ljava_lang_String_2
   (JNIEnv *, jobject, jstring);
+
+/*
+ * Class:     xmipp_ImageDouble
+ * Method:    write
+ * Signature: (Ljava/lang/String;IZIZ)V
+ */
+JNIEXPORT void JNICALL Java_xmipp_ImageDouble_write__Ljava_lang_String_2IZIZ
+  (JNIEnv *, jobject, jstring, jint, jboolean, jint, jboolean);
 
 /*
  * Class:     xmipp_ImageDouble

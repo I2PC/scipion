@@ -108,7 +108,7 @@ JNIEXPORT void JNICALL Java_xmipp_ImageDouble_read_1preview
 	}
 }
 
-JNIEXPORT void JNICALL Java_xmipp_ImageDouble_setData
+JNIEXPORT void JNICALL Java_xmipp_ImageDouble_setData__III_3D
 (JNIEnv *env, jobject jobj, jint w, jint h, jint d, jdoubleArray data) {
 	std::string msg = "";
 	Image<double> *image = GET_INTERNAL_IMAGE(jobj);
@@ -134,7 +134,33 @@ JNIEXPORT void JNICALL Java_xmipp_ImageDouble_setData
 	}
 }
 
-JNIEXPORT void JNICALL Java_xmipp_ImageDouble_write
+JNIEXPORT void JNICALL Java_xmipp_ImageDouble_setData__IIII_3D
+(JNIEnv *env, jobject jobj, jint width, jint height, jint depth, jint numberOfSlices, jdoubleArray data) {
+	std::string msg = "";
+	Image<double> *image = GET_INTERNAL_IMAGE(jobj);
+
+	if (image != NULL) {
+		try {
+			image->data.resize(numberOfSlices,depth,height,width,false);
+			env->GetDoubleArrayRegion(data, 0, width * height * depth * numberOfSlices, MULTIDIM_ARRAY(image->data));
+		} catch (XmippError xe) {
+			msg = xe.getDefaultMessage();
+		} catch (std::exception& e) {
+			msg = e.what();
+		} catch (...) {
+			msg = "Unhandled exception";
+		}
+	} else {
+		msg = "Image is null";
+	}
+
+	// If there was an exception, sends it to java environment.
+	if(!msg.empty()) {
+		handleXmippException(env, msg);
+	}
+}
+
+JNIEXPORT void JNICALL Java_xmipp_ImageDouble_write__Ljava_lang_String_2
 (JNIEnv *env, jobject jobj, jstring filename) {
 	std::string msg = "";
 	Image<double> *image = GET_INTERNAL_IMAGE(jobj);
@@ -144,6 +170,33 @@ JNIEXPORT void JNICALL Java_xmipp_ImageDouble_write
 
 		try {
 			image->write(fnStr);
+		} catch (XmippError xe) {
+			msg = xe.getDefaultMessage();
+		} catch (std::exception& e) {
+			msg = e.what();
+		} catch (...) {
+			msg = "Unhandled exception";
+		}
+	} else {
+		msg = "Image is null";
+	}
+
+	// If there was an exception, sends it to java environment.
+	if(!msg.empty()) {
+		handleXmippException(env, msg);
+	}
+}
+
+JNIEXPORT void JNICALL Java_xmipp_ImageDouble_write__Ljava_lang_String_2IZIZ
+  (JNIEnv *env, jobject  jobj, jstring filename, jint select_img, jboolean istack, jint mode, jboolean adjust) {
+	std::string msg = "";
+	Image<double> *image = GET_INTERNAL_IMAGE(jobj);
+
+	if (image != NULL) {
+		const char * fnStr = env->GetStringUTFChars(filename, false);
+	    printf("Write replace: %d\n",WRITE_REPLACE);
+		try {
+			image->write(fnStr,select_img,istack,mode,adjust);
 		} catch (XmippError xe) {
 			msg = xe.getDefaultMessage();
 		} catch (std::exception& e) {
@@ -269,6 +322,8 @@ JNIEXPORT jlong JNICALL Java_xmipp_ImageDouble_getNsize(JNIEnv *env,
 
 	return 0;
 }
+
+
 
 JNIEXPORT void JNICALL Java_xmipp_ImageDouble_setXmippOrigin
 (JNIEnv *env, jobject jobj) {

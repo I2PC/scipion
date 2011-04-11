@@ -1,5 +1,26 @@
 package xmipp;
-
+/**
+ * Protocol for integrating native C++ code
+ * 
+ * 1) define the Java method prototype here. For example, public native void write(String filename,int select_img, boolean isStack,
+ *           int mode, boolean adjust) throws Exception;
+ *          
+ * 2) Call make to generate the C++ header (in this case, xmipp_ImageDouble.h)
+ * 
+ * 3) Search for the C++ method prototype in this C++ header (the signature probably will be rewritten to handle overloading and parameters) and
+ *    copy the method prototype as is to xmipp_ImageDouble.cpp . This is important because if the method prototype
+ *    differs, the JNI call will fail with a UnsatisfiedLinkError. Following the example, it would be 
+ *    JNIEXPORT void JNICALL Java_xmipp_ImageDouble_write__Ljava_lang_String_2IZIZ(JNIEnv *, jobject, jstring, jint, jboolean, jint, jboolean);
+ *    (quite a different name from the original "write")
+ *    
+ * 4) Add parameter names to this prototype in the cpp file (for clarity). Then code the method body
+ * (you can reuse other methods as template, since most of the code is the same)
+ * 
+ * 5) Build the code. The result splits between the dynamic library (libXmippJavaInterface.so) and the Java classes
+ * (XmippJavaInterface.jar) The library must be in your library path (LD_LIBRARY_PATH), The jar must be in
+ * ImageJ plugins subdirectory
+ *
+ */
 public class ImageDouble {
 
     public final static int FIRST_IMAGE = 1;
@@ -37,10 +58,16 @@ public class ImageDouble {
 
     // Set data.
     public native void setData(int w, int h, int d, double data[]) throws Exception;
-
+    /**
+     * Important: if you don't use some dimension (for example, depth) set it to 1
+     */
+    public native void setData(int width, int height, int depth, int numberOfSlices, double data[]) throws Exception;
+    
     // Writting.
     public native void write(String filename) throws Exception;
-
+    public native void write(String filename,int select_img, boolean isStack,
+            int mode, boolean adjust) throws Exception;
+    
     // Data.
     public native double[] getData();
 
