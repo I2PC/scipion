@@ -97,6 +97,7 @@ public class TiltSeriesIO {
 				} catch (IOException ex) {
 					// maybe the exception was due to the need of absolute paths
 					// give a second try with absolute path
+					// TODO: check if the path already is absolute. If it is, then skip this retry
 					buildPath = true;
 					fileName=buildAbsolutePath(absolutePath, fileName);
 					// another option would be to change the current working directory, but Java does not allow for it
@@ -117,7 +118,10 @@ public class TiltSeriesIO {
 		}
 	}
 
-		// TODO: bug - write fails (the written file cannot be read back again)
+	// TODO: if the file exists, remove it before calling native code - as an extra caution	(overwrite semantics vary
+	// across layers...)
+	// TODO: bug - write fails? (the written file cannot be read back again) In fact, ImageJ can read the written file
+	// maybe the problem is in load code?
 	// TODO: write details (below)
 	// First show dialog to choose file type to save (primarily sel vs stack)
 	// Sel: ideally ask for sel and stack file paths (defaults to same paths, obviously warning about overwriting in both cases)
@@ -145,7 +149,8 @@ public class TiltSeriesIO {
 	private static void writeStack(String absolutePath, TomoData model) throws Exception{	
 		ImageDouble img = convert(model.getImage());
 		img.setFilename(absolutePath);
-		img.write(absolutePath);
+		// mode = 0 -> WRITE_OVERWRITE - required for maxim to be updated (readSpider gets nDim from maxim)
+		img.write(absolutePath, 0, true, 0, false);
 	}
 
 	// TODO: - CURRENT - writeSel
@@ -273,6 +278,9 @@ private static String buildAbsolutePath(String selFilePath, String path){
 		int imageSize=width*height;
 		double data[]=new double[imageSize*numberOfProjections];
 		int i=0;
+		// ImagePlus does not return the whole stack as a 3D array. 
+		// Maybe this loop will be faster if block operations are used - like replacing the inner loop with a memcpy
+		// Or, storing the float pixels array directly into the ImageDouble, with a new method like setProjection(float [])
 		for(int p=1;p<=numberOfProjections;p++){
 			FloatProcessor projection=(FloatProcessor) img.getStack().getProcessor(p);
 			float [] pixels =(float[]) projection.getPixels();
@@ -281,7 +289,8 @@ private static String buildAbsolutePath(String selFilePath, String path){
 		}
 		
 		try{
-			imageDouble.setData(width, height, numberOfProjections, data);
+			// for tomograms we need N instead of Z, so Z = 1
+			imageDouble.setData(width, height, 1, numberOfProjections, data);
 		}catch (Exception ex){
 			Xmipp_Tomo.debug("convert ImagePlus->ImageDouble", ex);
 		}
