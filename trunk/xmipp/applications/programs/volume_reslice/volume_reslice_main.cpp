@@ -106,12 +106,12 @@ private:
         MultidimArrayGeneric imTemp;
         int index;
 
-        init_progress_bar(zDim);
+        init_progress_bar(zDimOut);
 
-        for (int k = 0; k < zDim; k++)
+        for (int k = 0; k < zDimOut; k++)
         {
             imTemp.aliasSlice(imgOut(), k);
-            index = k + (zDim - 1 - 2*k) * (int)reverse;
+            index = k + (zDimOut - 1 - 2*k) * (int)reverse;
             imgIn().getSlice(index, &imTemp, axis, !reverse);
 
             progress_bar(k+1);
