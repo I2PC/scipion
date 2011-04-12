@@ -1993,7 +1993,7 @@ public:
                              "Slice: Multidim subscript (j) out of range");
 
             k = k - STARTINGX(*this);
-            M.resizeNoCopy(ZSIZE(*this), YSIZE(*this));
+            M.resizeNoCopy(YSIZE(*this), ZSIZE(*this));
 
             if (reverse)
             {
