@@ -580,8 +580,13 @@ double log2(double value)
 /* Check if a file exists -------------------------------------------------- */
 bool exists(const FileName &fn)
 {
+    // Consider the filename can be an image inside a stack
+    size_t idx;
+    FileName basicName;
+    fn.decompose(idx, basicName);
+
     FILE *aux;
-    if ((aux = fopen(fn.c_str(), "r")) == NULL)
+    if ((aux = fopen(basicName.c_str(), "r")) == NULL)
         return 0;
     fclose(aux);
     return 1;
@@ -613,16 +618,16 @@ bool existsTrim(const FileName &fn)
 /* List of files within a directory ---------------------------------------- */
 void getdir(const std::string &dir, std::vector<FileName> &files)
 {
-	files.clear();
+    files.clear();
 
     DIR *dp;
     struct dirent *dirp;
     if ((dp  = opendir(dir.c_str())) == NULL)
-    	REPORT_ERROR(ERR_IO_NOTEXIST,dir);
+        REPORT_ERROR(ERR_IO_NOTEXIST,dir);
 
     while ((dirp = readdir(dp)) != NULL)
-    	if (strcmp(dirp->d_name,".")!=0 && strcmp(dirp->d_name,"..")!=0)
-           files.push_back(FileName(dirp->d_name));
+        if (strcmp(dirp->d_name,".")!=0 && strcmp(dirp->d_name,"..")!=0)
+            files.push_back(FileName(dirp->d_name));
     closedir(dp);
     std::sort(files.begin(),files.end());
 }
@@ -633,7 +638,7 @@ bool isDirectory (const FileName &fn)
     struct stat st_buf;
     int status = stat (fn.c_str(), &st_buf);
     if (status != 0)
-    	REPORT_ERROR(ERR_UNCLASSIFIED,(std::string)"Cannot determine status of "+fn);
+        REPORT_ERROR(ERR_UNCLASSIFIED,(std::string)"Cannot determine status of "+fn);
     return (S_ISDIR (st_buf.st_mode));
 }
 
@@ -801,7 +806,7 @@ double time_to_go(TimeStamp &time, double fraction_done)
     TimeStamp now;
     times(&now);
     double totalTime = (now.tms_utime - time.tms_utime +
-                       now.tms_stime - time.tms_stime) / XmippTICKS;
+                        now.tms_stime - time.tms_stime) / XmippTICKS;
     return totalTime*(1 - fraction_done) / fraction_done;
 }
 
@@ -1022,7 +1027,7 @@ void swapbytes(char* v, unsigned long n)
         v[1] = t;
         break;
     case 1:
-    	break;
+        break;
     case 8:
         t0 = v[0];
         t1 = v[1];
