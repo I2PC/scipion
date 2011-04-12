@@ -272,7 +272,7 @@ int  ImageBase::writeIMAGIC(size_t select_img, int mode, String bitDepth, bool a
 
     // Cast T to datatype without convert data
     DataType wDType, myTypeID = myT();
-    CastWriteMode castMode = CAST;
+    CastWriteMode castMode = CW_CAST;
 
     if (bitDepth == "")
     {
@@ -286,13 +286,13 @@ int  ImageBase::writeIMAGIC(size_t select_img, int mode, String bitDepth, bool a
             strcpy(header->type,"REAL");
             break;
         case UShort:
-            castMode = CONVERT;
+            castMode = CW_CONVERT;
         case Short:
             wDType = Short;
             strcpy(header->type,"INTG");
             break;
         case SChar:
-            castMode = CONVERT;
+            castMode = CW_CONVERT;
         case UChar:
             wDType = UChar;
             strcpy(header->type,"PACK");
@@ -316,11 +316,11 @@ int  ImageBase::writeIMAGIC(size_t select_img, int mode, String bitDepth, bool a
         {
         case UChar:
             strcpy(header->type,"PACK");
-            castMode = (adjust)? ADJUST : CONVERT;
+            castMode = (adjust)? CW_ADJUST : CW_CONVERT;
             break;
         case Short:
             strcpy(header->type,"INTG");
-            castMode = (adjust)? ADJUST : CONVERT;
+            castMode = (adjust)? CW_ADJUST : CW_CONVERT;
             break;
         case Float:
             strcpy(header->type,"REAL");
@@ -338,7 +338,7 @@ int  ImageBase::writeIMAGIC(size_t select_img, int mode, String bitDepth, bool a
         MDMainHeader.setValue(MDL_DATATYPE,(int) wDType);
         if (!checkMmapT(wDType))
         {
-            if (dataMode < DATA && castMode == CAST) // This means ImageGeneric wants to know which DataType must use in mapFile2Write
+            if (dataMode < DATA && castMode == CW_CAST) // This means ImageGeneric wants to know which DataType must use in mapFile2Write
                 return 0;
             else
                 REPORT_ERROR(ERR_MMAP, "File datatype and image declaration not compatible with mmap.");

@@ -565,7 +565,7 @@ public:
         and maximum of the output range.
         Ex: m.write(fn8bits+"%uint8");
     */
-    void write(const FileName &fileName,CastWriteMode castMode=CAST);
+    void write(const FileName &fileName,CastWriteMode castMode=CW_CAST);
 };
 
 /** Downsample.

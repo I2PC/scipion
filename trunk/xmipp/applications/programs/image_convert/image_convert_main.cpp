@@ -142,8 +142,8 @@ protected:
         XmippMetadataProgram::readParams();
 
         fn_out = (checkParam("-o"))? getParam("-o") : "";
-        castMode = (checkParam("--rangeAdjust"))? ADJUST: \
-                   (checkParam("--dont_convert"))? CAST: CONVERT;
+        castMode = (checkParam("--rangeAdjust"))? CW_ADJUST: \
+                   (checkParam("--dont_convert"))? CW_CAST: CW_CONVERT;
 
         type = getParam("--type");
         save_metadata_stack = checkParam("--selfile_stack");

@@ -187,16 +187,16 @@ JNIEXPORT void JNICALL Java_xmipp_ImageDouble_write__Ljava_lang_String_2
 	}
 }
 
-JNIEXPORT void JNICALL Java_xmipp_ImageDouble_write__Ljava_lang_String_2IZIZ
-  (JNIEnv *env, jobject  jobj, jstring filename, jint select_img, jboolean istack, jint mode, jboolean adjust) {
+JNIEXPORT void JNICALL Java_xmipp_ImageDouble_write__Ljava_lang_String_2IZII
+  (JNIEnv *env, jobject  jobj, jstring filename, jint select_img, jboolean istack, jint mode, jint castWriteMode) {
 	std::string msg = "";
 	Image<double> *image = GET_INTERNAL_IMAGE(jobj);
 
 	if (image != NULL) {
 		const char * fnStr = env->GetStringUTFChars(filename, false);
-	    printf("Write replace: %d\n",WRITE_REPLACE);
+	    // printf("Write replace: %d\n",WRITE_REPLACE);
 		try {
-			image->write(fnStr,select_img,istack,mode,adjust);
+			image->write(fnStr,select_img,istack,mode,(CastWriteMode)castWriteMode);
 		} catch (XmippError xe) {
 			msg = xe.getDefaultMessage();
 		} catch (std::exception& e) {

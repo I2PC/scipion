@@ -526,7 +526,7 @@ int  ImageBase::writeSPIDER(size_t select_img, bool isStack, int mode)
             fputc(0, fimg);
         }
         else
-            writeData(fimg, 0, wDType, datasize_n, CAST);
+            writeData(fimg, 0, wDType, datasize_n, CW_CAST);
     }
     else // Jump to the selected imgStart position
     {
@@ -577,7 +577,7 @@ int  ImageBase::writeSPIDER(size_t select_img, bool isStack, int mode)
                     fputc(0, fimg);
                 }
                 else
-                    writeData(fimg, i*datasize_n, wDType, datasize_n, CAST);
+                    writeData(fimg, i*datasize_n, wDType, datasize_n, CW_CAST);
             }
             else
                 fseek(fimg, datasize, SEEK_CUR);

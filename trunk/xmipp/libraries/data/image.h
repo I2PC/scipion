@@ -374,7 +374,7 @@ public:
         *
         */
     void castConvertPage2Datatype(T * srcPtr, char * page, DataType datatype, size_t pageSize,
-                                  double min0, double max0, CastWriteMode castMode=CONVERT)
+                                  double min0, double max0, CastWriteMode castMode=CW_CONVERT)
     {
 
         double minF, maxF;
@@ -386,7 +386,7 @@ public:
         {
         case UChar:
             {
-                if (castMode==CONVERT && myTypeId == SChar)
+                if (castMode==CW_CONVERT && myTypeId == SChar)
                 {
                     slope = 1;
                     min0 -= CHAR_MIN;
@@ -411,7 +411,7 @@ public:
             }
         case SChar:
                 {
-                    if (castMode==CONVERT &&  myTypeId == UChar)
+                    if (castMode==CW_CONVERT &&  myTypeId == UChar)
                 {
                     slope = 1;
                     min0 += CHAR_MIN;
@@ -436,12 +436,12 @@ public:
             }
         case UShort:
                 {
-                    if (castMode==CONVERT && (myTypeId == SChar|| myTypeId == Short))
+                    if (castMode==CW_CONVERT && (myTypeId == SChar|| myTypeId == Short))
                     {
                         slope = 1;
                         min0 -= SHRT_MIN;
                     }
-                    else if (castMode==CONVERT && (myTypeId == UChar))
+                    else if (castMode==CW_CONVERT && (myTypeId == UChar))
                     {
                         slope = 1;
                     }
@@ -465,12 +465,12 @@ public:
             }
         case Short:
                 {
-                    if (castMode==CONVERT && (myTypeId == UChar || myTypeId == UShort))
+                    if (castMode==CW_CONVERT && (myTypeId == UChar || myTypeId == UShort))
                     {
                         slope = 1;
                         min0 += SHRT_MIN;
                     }
-                    else if (castMode==CONVERT && (myTypeId == SChar))
+                    else if (castMode==CW_CONVERT && (myTypeId == SChar))
                     {
                         slope = 1;
                     }
@@ -494,14 +494,14 @@ public:
             }
         case UInt:
                 {
-                    if (castMode==CONVERT &&  (myTypeId == SChar
+                    if (castMode==CW_CONVERT &&  (myTypeId == SChar
                                                    || myTypeId == Short
                                                    || myTypeId == Int))
                     {
                         slope = 1;
                         min0 -= INT_MIN;
                     }
-                    else if (castMode==CONVERT &&  (myTypeId == UShort || myTypeId == UChar))
+                    else if (castMode==CW_CONVERT &&  (myTypeId == UShort || myTypeId == UChar))
                     {
                         slope = 1;
                     }
@@ -524,14 +524,14 @@ public:
             }
         case Int:
                 {
-                    if (castMode==CONVERT &&  (myTypeId == UChar
+                    if (castMode==CW_CONVERT &&  (myTypeId == UChar
                                                    || myTypeId == UShort
                                                    || myTypeId == UInt))
                     {
                         slope = 1;
                         min0 += INT_MIN;
                     }
-                    else if (castMode==CONVERT &&  (myTypeId == Short || myTypeId == SChar))
+                    else if (castMode==CW_CONVERT &&  (myTypeId == Short || myTypeId == SChar))
                     {
                         slope = 1;
                     }
@@ -971,14 +971,14 @@ private:
     /* Write the raw date after a data type casting.
      */
     void writeData(FILE* fimg, size_t offset, DataType wDType, size_t datasize_n,
-                   CastWriteMode castMode=CAST)
+                   CastWriteMode castMode=CW_CAST)
     {
         size_t datasize = datasize_n * gettypesize(wDType);
         char* fdata = (char *) askMemory(datasize);
 
         switch(castMode)
         {
-        case CAST:
+        case CW_CAST:
             {
                 castPage2Datatype(MULTIDIM_ARRAY(data)+offset, fdata, wDType, datasize_n);
                 break;

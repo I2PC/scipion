@@ -288,7 +288,7 @@ int ImageBase::writeMRC(size_t select_img, bool isStack, int mode, std::string b
 
     if (bitDepth == "")
     {
-        castMode = CAST;
+        castMode = CW_CAST;
         switch(myTypeID)
         {
         case Double:
@@ -302,7 +302,7 @@ int ImageBase::writeMRC(size_t select_img, bool isStack, int mode, std::string b
             break;
         case SChar:
         case UChar:
-            castMode = CONVERT;
+            castMode = CW_CONVERT;
             wDType = UChar;
             header->mode = 0;
             break;
@@ -338,7 +338,7 @@ int ImageBase::writeMRC(size_t select_img, bool isStack, int mode, std::string b
         default:
             REPORT_ERROR(ERR_TYPE_INCORRECT,"ERROR: incorrect MRC bits depth value.");
         }
-        castMode = (adjust)? ADJUST : CONVERT;
+        castMode = (adjust)? CW_ADJUST : CW_CONVERT;
     }
 
     if (mmapOnWrite)
@@ -346,7 +346,7 @@ int ImageBase::writeMRC(size_t select_img, bool isStack, int mode, std::string b
         MDMainHeader.setValue(MDL_DATATYPE,(int) wDType);
         if (!checkMmapT(wDType))
         {
-            if (dataMode < DATA && castMode == CAST) // This means ImageGeneric wants to know which DataType must use in mapFile2Write
+            if (dataMode < DATA && castMode == CW_CAST) // This means ImageGeneric wants to know which DataType must use in mapFile2Write
                 return 0;
             else
                 REPORT_ERROR(ERR_MMAP, "File datatype and image declaration not compatible with mmap.");

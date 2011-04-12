@@ -149,8 +149,9 @@ public class TiltSeriesIO {
 	private static void writeStack(String absolutePath, TomoData model) throws Exception{	
 		ImageDouble img = convert(model.getImage());
 		img.setFilename(absolutePath);
+		// TODO: use classes (ImageWriteMode & CastWriteMode) for enums
 		// mode = 0 -> WRITE_OVERWRITE - required for maxim to be updated (readSpider gets nDim from maxim)
-		img.write(absolutePath, 0, true, 0, false);
+		img.write(absolutePath, 0, true, 0, 0);
 	}
 
 	// TODO: - CURRENT - writeSel

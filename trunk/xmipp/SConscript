@@ -613,6 +613,7 @@ if int(env['java']):
 
     # Generates MDLabel.java, so MDLabels will be up to date.
     os.system("cd libraries/bindings/java/;./extract_labels.py")
+    os.system("cd libraries/bindings/java/;./extract_image_enums.py")
 
     JavaInterfaceSources = Glob('libraries/bindings/java', '*.cpp', [])
     AddLibrary('XmippJavaInterface', 'libraries/bindings/java', JavaInterfaceSources,

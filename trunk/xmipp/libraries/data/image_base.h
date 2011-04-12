@@ -82,7 +82,9 @@ typedef enum
     WRITE_OVERWRITE, //forget about the old file and overwrite it
     WRITE_APPEND,    //append and object at the end of a stack, so far can not append stacks
     WRITE_REPLACE,   //replace a particular object by another
-    WRITE_READONLY   //only can read the file
+    WRITE_READONLY,   //only can read the file
+    WRITE_LAST_LABEL                       // **** NOTE ****: Do keep this label always at the end
+        // it is here for looping purposes
 } WriteMode;
 
 /** Data mode
@@ -104,9 +106,12 @@ typedef enum
  */
 typedef enum
 {
-    CAST,       //Only cast the data type
-    CONVERT,    //Convert the data from one type to another
-    ADJUST      //Adjust the histogram to fill the gray level range
+	// prefix needed so extract_image_enums.py script can create the equivalent class for Java
+    CW_CAST,       //Only cast the data type
+    CW_CONVERT,    //Convert the data from one type to another
+    CW_ADJUST,     //Adjust the histogram to fill the gray level range
+    CW_LAST_LABEL                       // **** NOTE ****: Do keep this label always at the end
+        // it is here for looping purposes
 } CastWriteMode;
 
 /** Open File struct
@@ -356,7 +361,7 @@ public:
      * overwrite = 1 overwrite slice
      */
     void write(const FileName &name="", size_t select_img = ALL_IMAGES, bool isStack=false,
-               int mode=WRITE_OVERWRITE,CastWriteMode castMode = CAST);
+               int mode=WRITE_OVERWRITE,CastWriteMode castMode = CW_CAST);
 
     /** Check file Datatype is same as T type to use mmap.
      */
@@ -641,7 +646,7 @@ protected:
 
     /// To be deleted once rwTIFF ported to cpp file --------------
     virtual int readTIFF(size_t select_img, bool isStack=false) = 0;
-    virtual int writeTIFF(size_t select_img, bool isStack=false, int mode=WRITE_OVERWRITE, String bitDepth="", CastWriteMode castMode=CAST) = 0;
+    virtual int writeTIFF(size_t select_img, bool isStack=false, int mode=WRITE_OVERWRITE, String bitDepth="", CastWriteMode castMode=CW_CAST) = 0;
     /// ----------------------------------------------------------
 
     /** Open file function
@@ -665,7 +670,7 @@ protected:
     /* Internal write image file method.
      */
     void _write(const FileName &name, ImageFHandler* hFile, size_t select_img = ALL_IMAGES,
-                bool isStack=false, int mode=WRITE_OVERWRITE,CastWriteMode castMode = CAST);
+                bool isStack=false, int mode=WRITE_OVERWRITE,CastWriteMode castMode = CW_CAST);
 
     /** Read the raw data
       */
@@ -674,7 +679,7 @@ protected:
     /* Write the raw date after a data type casting.
      */
     virtual void writeData(FILE* fimg, size_t offset, DataType wDType, size_t datasize_n,
-                           CastWriteMode castMode=CAST) = 0;
+                           CastWriteMode castMode=CW_CAST) = 0;
 
     /* Mmap the Image class to an image file.
      */

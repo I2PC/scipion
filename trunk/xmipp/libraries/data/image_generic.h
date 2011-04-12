@@ -185,7 +185,7 @@ public:
     /** Write image to file.
     */
     inline void write(const FileName &name="", size_t select_img = ALL_IMAGES, bool isStack=false,
-                      int mode=WRITE_OVERWRITE, CastWriteMode castMode = CAST)
+                      int mode=WRITE_OVERWRITE, CastWriteMode castMode = CW_CAST)
     {
         image->write(name,select_img,isStack,mode,castMode);
     }

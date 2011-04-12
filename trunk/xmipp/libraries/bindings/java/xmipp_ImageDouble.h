@@ -92,10 +92,10 @@ JNIEXPORT void JNICALL Java_xmipp_ImageDouble_write__Ljava_lang_String_2
 /*
  * Class:     xmipp_ImageDouble
  * Method:    write
- * Signature: (Ljava/lang/String;IZIZ)V
+ * Signature: (Ljava/lang/String;IZII)V
  */
-JNIEXPORT void JNICALL Java_xmipp_ImageDouble_write__Ljava_lang_String_2IZIZ
-  (JNIEnv *, jobject, jstring, jint, jboolean, jint, jboolean);
+JNIEXPORT void JNICALL Java_xmipp_ImageDouble_write__Ljava_lang_String_2IZII
+  (JNIEnv *, jobject, jstring, jint, jboolean, jint, jint);
 
 /*
  * Class:     xmipp_ImageDouble

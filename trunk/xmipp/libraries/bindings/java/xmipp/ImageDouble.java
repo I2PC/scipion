@@ -66,7 +66,7 @@ public class ImageDouble {
     // Writting.
     public native void write(String filename) throws Exception;
     public native void write(String filename,int select_img, boolean isStack,
-            int mode, boolean adjust) throws Exception;
+            int mode, int castWriteMode) throws Exception;
     
     // Data.
     public native double[] getData();

@@ -348,7 +348,7 @@ int readTIFF(size_t select_img, bool isStack=false)
 /**
  * Write TIFF format files.
 */
-int writeTIFF(size_t select_img, bool isStack=false, int mode=WRITE_OVERWRITE, String bitDepth="", CastWriteMode castMode = CAST)
+int writeTIFF(size_t select_img, bool isStack=false, int mode=WRITE_OVERWRITE, String bitDepth="", CastWriteMode castMode = CW_CAST)
 {
 #undef DEBUG
 
@@ -379,7 +379,7 @@ int writeTIFF(size_t select_img, bool isStack=false, int mode=WRITE_OVERWRITE, S
 
     if (bitDepth == "")
     {
-        castMode = CAST;
+        castMode = CW_CAST;
         switch(myTypeID)
         {
         case Double:
@@ -388,19 +388,19 @@ int writeTIFF(size_t select_img, bool isStack=false, int mode=WRITE_OVERWRITE, S
             dhMain.imageSampleFormat = SAMPLEFORMAT_IEEEFP;
             break;
         case Int:
-            castMode = CONVERT;
+            castMode = CW_CONVERT;
         case UInt:
             wDType = UInt;
             dhMain.imageSampleFormat = SAMPLEFORMAT_UINT;
             break;
         case Short:
-            castMode = CONVERT;
+            castMode = CW_CONVERT;
         case UShort:
             wDType = UShort;
             dhMain.imageSampleFormat = SAMPLEFORMAT_UINT;
             break;
         case SChar:
-            castMode = CONVERT;
+            castMode = CW_CONVERT;
         case UChar:
             wDType = UChar;
             dhMain.imageSampleFormat = SAMPLEFORMAT_UINT;
@@ -530,7 +530,7 @@ int writeTIFF(size_t select_img, bool isStack=false, int mode=WRITE_OVERWRITE, S
 
         for (uint32 y = 0; y < Ydim; y++)
         {
-            if (castMode == CAST)
+            if (castMode == CW_CAST)
                 castPage2Datatype(MULTIDIM_ARRAY(data)+i*datasize_n + y*Xdim, (char *)tif_buf, wDType, (size_t) Xdim);
             else
                 castConvertPage2Datatype(MULTIDIM_ARRAY(data)+i*datasize_n + y*Xdim,
