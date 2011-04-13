@@ -65,6 +65,10 @@ class Tester:
 
     def addAllTests(self):
         # Add all desired tests -------------------------------------------
+        self.addProgram("xmipp_angular_class_average")
+        self.addTest("-i %o/proj_match.doc --lib %o/ref.doc -o %o/proj_match --split", True,
+                     "xmipp_angular_project_library -i input/phantomBacteriorhodopsin.vol --experimental_images input/aFewProjections.sel -o %o/ref.stk --sampling_rate 10 --compute_neighbors --angular_distance -1 ; xmipp_angular_projection_matching -i input/aFewProjections.sel -o %o/proj_match.doc --ref %o/ref.stk")
+
         self.addProgram("xmipp_angular_continuous_assign")
         self.addTest("-i input/aFewProjections.sel --ref input/phantomBacteriorhodopsin.vol -o %o/assigned_angles.txt", True)
 
