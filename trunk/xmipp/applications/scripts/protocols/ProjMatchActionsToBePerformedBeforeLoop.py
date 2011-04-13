@@ -7,7 +7,7 @@ def createDir(_log, dict):
     """ Create directory """
     from distutils.dir_util import mkpath
     from distutils.errors import DistutilsFileError
-    i = dict['iter']
+    i = dict['Iter']
     if i == 0:
         _Path = dict['ProjectDir'] + "/" + dict['WorkingDir'] + "/"
     elif i > 0:
@@ -115,8 +115,8 @@ def initOuterRadius(_log, dict):
 # wrapper for log.make_backup_of_script_file
 def pm_make_backup_of_script_file(_log, dict):
     import log
-    _log.info("make backup script file: " + dict['progName'])
-    log.make_backup_of_script_file(dict['progName'], dict['ProjectDir'] + "/" + dict['WorkingDir'])
+    _log.info("make backup script file: " + dict['ProgName'])
+    log.make_backup_of_script_file(dict['ProgName'], dict['ProjectDir'] + "/" + dict['WorkingDir'])
 
 #------------------------------------------------------------------------
 #make ctf groups
@@ -192,7 +192,7 @@ def execute_ctf_groups (_log, dict):
 
 def checkOptionsCompatibility(_log, dict):
     # Never allow DoAlign2D and DoCtfCorrection together
-    if (int(dict['DoAlign2D'][0]) and int (dict['DoCtfCorrection'])):
+    if (dict['DoAlign2D'] and int (dict['DoCtfCorrection'])):
         error_message = "You cannot realign classes AND perform CTF-correction. Switch either of them off!"
         _log.error(error_message)
         print error_message
