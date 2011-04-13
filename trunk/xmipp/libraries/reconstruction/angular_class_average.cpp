@@ -91,6 +91,9 @@ void ProgAngularClassAverage::readParams()
 void ProgAngularClassAverage::defineParams()
 {
     addUsageLine("Make class average images and corresponding selfiles from angular_projection_matching docfiles.");
+
+    addSeeAlsoLine("angular_project_library, angular_projection_matching");
+
     addParamsLine("    -i <doc_file>          : Docfile with assigned angles for all experimental particles");
     addParamsLine("    --lib <doc_file>       : Docfile with angles used to generate the projection matching library");
     addParamsLine("    -o <root_name>         : Output rootname for class averages and selfiles");
@@ -100,14 +103,14 @@ void ProgAngularClassAverage::defineParams()
     addParamsLine("   [--pad <factor=1.> ]     : Padding factor for Wiener correction");
     addParamsLine("   [--dont_write_selfiles]   : Do not write class selfiles to disc");
 
-    addUsageLine("   IMAGE SELECTION BASED ON INPUT DOCFILE ");
+    addParamsLine("==+ IMAGE SELECTION BASED ON INPUT DOCFILE ==");
     addParamsLine("   [--select <col=\"\">]     : Column to use for image selection (limit0, limitF or limitR)");
     addParamsLine("   [--limit0 <l0>]        : Discard images below <l0>");
     addParamsLine("   [--limitF <lF>]        : Discard images above <lF>");
     addParamsLine("   [--limitR <lR>]        : if (lR>0 && lR< 100): discard lowest  <lR> % in each class");
     addParamsLine("                          : if (lR<0 && lR>-100): discard highest <lR> % in each class");
 
-    addUsageLine("    REALIGNMENT OF CLASSES ");
+    addParamsLine("==+ REALIGNMENT OF CLASSES ==");
     addParamsLine("   [--iter <nr_iter=0>]      : Number of iterations for re-alignment");
     addParamsLine("   [--Ri <ri=1>]             : Inner radius to limit rotational search");
     addParamsLine("   [--Ro <r0=-1>]            : Outer radius to limit rotational search");
@@ -116,10 +119,10 @@ void ProgAngularClassAverage::defineParams()
     addParamsLine("   [--max_shift_change <msc=999.>] : Discard images that change shift more in the last iteration ");
     addParamsLine("   [--max_psi_change <mps=360.>]   : Discard images that change psi more in the last iteration ");
 
-    addKeywords("class average images");
     addExampleLine("Sample at default values and calculating output averages of random halves of the data",false);
     addExampleLine("xmipp_angular_class_average -i proj_match.doc --lib ref_angles.doc -o out_dir --split");
 
+    addKeywords("class average images");
 }
 
 // Run ====================================================================
