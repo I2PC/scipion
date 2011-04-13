@@ -126,7 +126,7 @@ SplitDefocusDocFile =''
 """ Application of CTFs to reference projections and of Wiener filter to class averages will be done using padded images.
     Use values larger than one to pad the images. Suggestion, use 1 for large image and 2 for small
 """
-PaddingFactor = 1.
+PaddingFactor =2.
 
 # {expert} Wiener constant
 """ Term that will be added to the denominator of the Wiener filter.
@@ -138,10 +138,22 @@ PaddingFactor = 1.
 WienerConstant = -1
 
 # Images have been phase flipped?
-DataArePhaseFlipped =False
+DataArePhaseFlipped =True
 
 # Is the initial reference map CTF (amplitude) corrected?
-ReferenceIsCtfCorrected =False
+"""
+    You may specify this option for each iteration. 
+    This can be done by a sequence of 0 or 1 numbers (for instance, "1 1 0 0" 
+    specifies 4 iterations, the first two applied alig2d while the last 2
+    dont. an alternative compact notation is 
+    is ("2x1 2x0", i.e.,
+    2 iterations with value 1, and 2 with value 0).
+    Note: if there are less values than iterations the last value is reused
+    Note: if there are more values than iterations the extra value are ignored
+    IMPORTANT: if you set this variable to 0 the output  of the projection
+    muching step will be copied as output of align2d
+"""
+ReferenceIsCtfCorrected ='0'
 
 #-----------------------------------------------------------------------------
 # {section} Mask
@@ -151,7 +163,7 @@ ReferenceIsCtfCorrected =False
     Do not provide a very tight mask.
     See http://xmipp.cnb.uam.es/twiki/bin/view/Xmipp/Mask for details
 """
-DoMask =True
+DoMask =False
 
 # Use a spherical mask?
 """ If set to true, provide the radius of the mask in the next input field
@@ -401,8 +413,17 @@ DoAlign2D ='0'
 
 # {expert} Number of align2d iterations:
 """ Use at least 3 iterations
+    The number of align iteration may change in each projection matching iteration
+    Ffor instance, "4 4 3 3 " 
+    specifies 4 alig2d iterations in the first projection matching iteration 
+    and  two 3 alig2d iteration in the last 2 projection matching iterations.
+     An alternative compact notation 
+    is ("2x4 2x3", i.e.,
+    2 iterations with value 4, and 2 with value 3).
+    Note: if there are less values than iterations the last value is reused
+    Note: if there are more values than iterations the extra value are ignored
 """
-Align2DIterNr = 4
+Align2DIterNr ='4'
 
 # {expert} Maximum change in origin offset (+/- pixels)
 """Maximum change in shift  (+/- pixels)
@@ -500,9 +521,17 @@ FourierReconstructionExtraCommand =''
 # {section} Compute Resolution
 #-----------------------------------------------------------------------------
 # Compute resolution?
-""" See http://xmipp.cnb.uam.es/twiki/bin/view/Xmipp/Resolution fo details
+""" See http://xmipp.cnb.uam.es/twiki/bin/view/Xmipp/Resolution for details
+    You may specify this option for each iteration. 
+    This can be done by a sequence of 0 or 1 numbers (for instance, "1 1 0 0" 
+    specifies 4 iterations, the first two applied alig2d while the last 2
+    dont. an alternative compact notation is 
+    is ("2x1 2x0", i.e.,
+    2 iterations with value 1, and 2 with value 0).
+    Note: if there are less values than iterations the last value is reused
+    Note: if there are more values than iterations the extra value are ignored
 """
-DoComputeResolution =False
+DoComputeResolution ='1'
 
 # {expert} Split references averages
 """In theory each reference average should be splited
@@ -632,7 +661,7 @@ LibraryDir = "ReferenceLibrary"
 ProjectLibraryRootName = LibraryDir + "/gallery"
 ProjMatchDir = "ProjMatchClasses"
 ProjMatchName = 'proj_match'
-ProjMatchRootName = ProjMatchDir + "/" + ProjMatchName
+#ProjMatchRootName = ProjMatchDir + "/" + ProjMatchName
 ForReconstructionSel = "reconstruction.sel"
 ForReconstructionDoc = "reconstruction.doc"
 MultiAlign2dSel = "multi_align2d.sel"
@@ -664,7 +693,7 @@ scriptdir = os.path.split(os.path.dirname(os.popen('which xmipp_protocols', 'r')
 sys.path.append(scriptdir)
 import log, logging
 from pysqlite2 import dbapi2 as sqlite
-from arg import getListFromVector
+from arg import getListFromVector, getBoolListFromVector
 import dataBase
 global _dataBase
 
@@ -691,9 +720,10 @@ def actionsToBePerformedBeforeLoopThatDoNotModifyTheFileSystem():
     global referenceNumber
     referenceNumber = len(ReferenceFileNames)
     #directory with ProjMatchClasses
-    global ProjMatchDirs,LibraryDirs
+    global ProjMatchDirs,LibraryDirs,ProjMatchRootName
     ProjMatchDirs=[" "]
     LibraryDirs=[" "]
+    #ProjMatchRootName=[" "]
     for iterN in range(NumberofIterations):
         ProjMatchDirs.append(WorkingDir + "/Iter_" + \
                                   str(iterN + 1).zfill(2) + \
@@ -703,7 +733,8 @@ def actionsToBePerformedBeforeLoopThatDoNotModifyTheFileSystem():
                                   str(iterN + 1).zfill(2) + \
                                   '/' + \
                                   LibraryDir)
-    print ProjMatchDirs,LibraryDirs
+        #ProjMatchRootName.append(ProjMatchDir[] + "/" + ProjMatchName)
+    #print ProjMatchDirs,LibraryDirs
     
     auxList = (referenceNumber + 1) * [None]
     global ProjectLibraryRootNames
@@ -718,6 +749,17 @@ def actionsToBePerformedBeforeLoopThatDoNotModifyTheFileSystem():
                                       "_ref_" + str(refN + 1).zfill(2)+\
                                       ".stk"
         ProjectLibraryRootNames.append(list(auxList))
+                
+    global ProjMatchRootName
+    ProjMatchRootName=[]
+    ProjMatchRootName.append([None])
+    for iterN in range(NumberofIterations):
+        for refN in range(referenceNumber):
+            auxList[refN + 1]=ProjMatchDirs[iterN + 1] + \
+                                      '/' + ProjMatchName +\
+                                      "_ref_" + str(refN + 1).zfill(2)
+        ProjMatchRootName.append(list(auxList))
+
 
     #name of masked volumes
     global maskedFileNamesIter
@@ -763,59 +805,67 @@ def actionsToBePerformedBeforeLoopThatDoNotModifyTheFileSystem():
         DocFileInputAngles.append(list(auxList))
 
     #parameter for projection matching
-    global AngSamplingRateDeg
-    AngSamplingRateDeg     = [-1]+getListFromVector(AngSamplingRateDeg,NumberofIterations)
-    global MaxChangeOffset
-    MaxChangeOffset        = [-1]+getListFromVector(MaxChangeOffset,NumberofIterations)
-    global MaxChangeInAngles
-    MaxChangeInAngles      = [-1]+getListFromVector(MaxChangeInAngles,NumberofIterations)
-    global PerturbProjectionDirections
-    PerturbProjectionDirections= [-1]+getListFromVector(PerturbProjectionDirections,NumberofIterations)
-    global Search5DShift
-    Search5DShift          = [-1]+getListFromVector(Search5DShift,NumberofIterations)
-    global Search5DStep
-    Search5DStep           = [-1]+getListFromVector(Search5DStep,NumberofIterations)
-    global MinimumCrossCorrelation
-    MinimumCrossCorrelation= [-1]+getListFromVector(MinimumCrossCorrelation,NumberofIterations)
-    global DiscardPercentage
-    DiscardPercentage      = [-1]+getListFromVector(DiscardPercentage,NumberofIterations)
-    global DoAlign2D
-    DoAlign2D              = [-1]+getListFromVector(DoAlign2D,NumberofIterations)
+    global Align2DIterNr
+    Align2DIterNr          = [-1]+getListFromVector(Align2DIterNr,NumberofIterations)
     global Align2dMaxChangeOffset
     Align2dMaxChangeOffset = [-1]+getListFromVector(Align2dMaxChangeOffset,NumberofIterations)
     global Align2dMaxChangeRot
     Align2dMaxChangeRot    = [-1]+getListFromVector(Align2dMaxChangeRot,NumberofIterations)
+    global AngSamplingRateDeg
+    AngSamplingRateDeg     = [-1]+getListFromVector(AngSamplingRateDeg,NumberofIterations)
+    global DiscardPercentage
+    DiscardPercentage      = [-1]+getListFromVector(DiscardPercentage,NumberofIterations)
+    global DoAlign2D
+    DoAlign2D              = [False]+getBoolListFromVector(DoAlign2D,NumberofIterations)
+    global DoComputeResolution
+    DoComputeResolution    = [False]+getBoolListFromVector(DoComputeResolution,NumberofIterations)
+    global MaxChangeInAngles
+    MaxChangeInAngles      = [-1]+getListFromVector(MaxChangeInAngles,NumberofIterations)
+    global MaxChangeOffset
+    MaxChangeOffset        = [-1]+getListFromVector(MaxChangeOffset,NumberofIterations)
+    global MinimumCrossCorrelation
+    MinimumCrossCorrelation= [-1]+getListFromVector(MinimumCrossCorrelation,NumberofIterations)
+    global OnlyWinner
+    OnlyWinner             = [False]+getBoolListFromVector(OnlyWinner,NumberofIterations)
+    global PerturbProjectionDirections
+    PerturbProjectionDirections= [False]+getBoolListFromVector(PerturbProjectionDirections,NumberofIterations)
     global ReferenceIsCtfCorrected#set to true after first iteration
     ReferenceIsCtfCorrected= [-1]+getListFromVector(str(ReferenceIsCtfCorrected) + " True", NumberofIterations)
-    global OnlyWinner
-    OnlyWinner             = [-1]+getListFromVector(OnlyWinner,NumberofIterations)
+    global ScaleNumberOfSteps
+    ScaleNumberOfSteps=[-1]+getListFromVector(ScaleNumberOfSteps,NumberofIterations)
+    global ScaleStep
+    ScaleStep=[-1]+getListFromVector(ScaleStep,NumberofIterations)
+    global Search5DShift
+    Search5DShift          = [-1]+getListFromVector(Search5DShift,NumberofIterations)
+    global Search5DStep
+    Search5DStep           = [-1]+getListFromVector(Search5DStep,NumberofIterations)
     
 def otherActionsToBePerformedBeforeLoop():
 
     global OuterRadius, NumberOfCtfGroups
     #1Delete working dir
     _Parameters = {
-          'ProjectDir':ProjectDir
+          'DoDeleteWorkingDir':DoDeleteWorkingDir
+        , 'ProjectDir':ProjectDir
         , 'WorkingDir':WorkingDir
-        , 'DoDeleteWorkingDir':DoDeleteWorkingDir
         }
     command = 'deleteWorkingDirectory'
     _dataBase.insertCommand(command, _Parameters, 1)
 
     #Create directory
     _Parameters = {
-          'ProjectDir':ProjectDir
+          'Iter':0
+        , 'ProjectDir':ProjectDir
         , 'WorkingDir':WorkingDir
-        , 'iter':0
         }
     command = 'createDir'
     _dataBase.insertCommand(command, _Parameters, 1)
 
     #Backup protocol file
     _Parameters = {
-          'ProjectDir':ProjectDir
+          'ProgName'  :sys.argv[0]
+        , 'ProjectDir':ProjectDir
         , 'WorkingDir':WorkingDir
-        , 'progName'  :sys.argv[0]
         }
     command = 'pm_make_backup_of_script_file'
     _dataBase.insertCommand(command, _Parameters, dataBase.dataBaseStruct.doAlways)#backup always
@@ -868,7 +918,6 @@ def otherActionsToBePerformedBeforeLoop():
     _VerifyFiles.append(CtfGroupDirectory+"/"+CtfGroupRootName+'_ctf.stk')
     _VerifyFiles.append(CtfGroupDirectory+"/"+CtfGroupRootName+'_wien.stk')
     _dataBase.insertCommand(command, _Parameters, 1,_VerifyFiles)
-
     #Create Initial angular file. Either fill it with zeros or copy input
     _Parameters = {
           'DocFileName':DocFileName
@@ -881,21 +930,18 @@ def otherActionsToBePerformedBeforeLoop():
     _dataBase.insertCommand(command, _Parameters, 1,_VerifyFiles)
 
     #Save global parameters for future runs
+        #create a dummy dictionary
+    _Parameters = {
+      'dummy':0
+    }
     if (ContinueAtIteration == 1):
-        #create a dummy dictionary
-        _Parameters = {
-          'dummy':0
-        }
         command = 'self.saveParameters'
-        _dataBase.insertCommand(command, _Parameters, 1)
     else:
-        #create a dummy dictionary
-        _Parameters = {
-          'dummy':0
-        }
         command = 'self.loadParameters'
-        _dataBase.insertCommand(command, _Parameters, 1)
+    _dataBase.insertCommand(command, _Parameters, dataBase.dataBaseStruct.doAlways)
 
+    #no entries will be save untill this commit
+    print "commit databse"
     _dataBase.commit()
 
 def actionsToBePerformedInsideLoop(_log):
@@ -903,7 +949,7 @@ def actionsToBePerformedInsideLoop(_log):
         #############conn.execute(sqlBegin + "MPI_ON" + sqlEnd)
         # create working dir
         _Parameters = {
-             'iter':iterN
+             'Iter':iterN
            , 'WorkingDir':WorkingDir
             }
         command = 'createDir'
@@ -912,7 +958,6 @@ def actionsToBePerformedInsideLoop(_log):
         #Create directory with classes
         _Parameters = {
               'path':ProjMatchDirs[iterN]
-            , 'iter':iterN
             }
         command = 'createDir2'
         _dataBase.insertCommand(command, _Parameters, 1)
@@ -920,7 +965,6 @@ def actionsToBePerformedInsideLoop(_log):
         #Create directory with image libraries
         _Parameters = {
               'path':LibraryDirs[iterN]
-            , 'iter':0
             }
         command = 'createDir2'
         _dataBase.insertCommand(command, _Parameters, 1)
@@ -956,7 +1000,7 @@ def actionsToBePerformedInsideLoop(_log):
                                 , 'NumberOfMpiProcesses':NumberOfMpiProcesses
                                 , 'NumberOfThreads':NumberOfThreads
                                 , 'OnlyWinner':OnlyWinner[iterN]
-                                , 'PerturbProjectionDirections':PerturbProjectionDirections
+                                , 'PerturbProjectionDirections':PerturbProjectionDirections[iterN]
                                 , 'ProjectLibraryRootName':ProjectLibraryRootNames[iterN][refN]
                                 , 'SystemFlavour':SystemFlavour
                                 , 'SymmetryGroup':SymmetryGroup
@@ -978,24 +1022,41 @@ def actionsToBePerformedInsideLoop(_log):
             # projectionMatching
             _Parameters = {
 #                                  'AngSamplingRateDeg':AngSamplingRateDeg[iterN]
-#                                , 'CtfGroupRootName': CtfGroupRootName
-#                                , 'CtfGroupDirectory': CtfGroupDirectory
+                                  'AvailableMemory':AvailableMemory
+                                , 'CtfGroupRootName': CtfGroupRootName
+                                , 'CtfGroupDirectory': CtfGroupDirectory
 #                                , 'CtfGroupSubsetFileName':CtfGroupSubsetFileName
-#                                , 'DoCtfCorrection': DoCtfCorrection
+                                , 'DoAlign2D' : DoAlign2D[iterN]
+                                , 'DiscardPercentage':DiscardPercentage[iterN]
+                                , 'DoComputeResolution':DoComputeResolution[iterN]
+                                , 'DoCtfCorrection': DoCtfCorrection
+                                , 'DoScale':DoScale
 #                                , 'DocFileInputAngles':DocFileInputAngles[iterN-1][refN]
-#                                , 'DoParallel': DoParallel
+                                , 'DoParallel': DoParallel
 #                                , 'DoRestricSearchbyTiltAngle':DoRestricSearchbyTiltAngle
+                                , 'InnerRadius':InnerRadius
 #                                , 'MaxChangeInAngles':MaxChangeInAngles[iterN]
+                                , 'MaxChangeOffset':MaxChangeOffset[iterN]
+                                , 'MinimumCrossCorrelation':MinimumCrossCorrelation[iterN]
 #                                , 'maskedFileNamesIter':maskedFileNamesIter[iterN][refN]
-#                                , 'MpiJobSize':MpiJobSize
+                                , 'MpiJobSize':MpiJobSize
 #####                                 'NumberOfCtfGroups':NumberOfCtfGroups
-                                 'NumberOfMpiProcesses':NumberOfMpiProcesses
+                                , 'NumberOfMpiProcesses':NumberOfMpiProcesses
+                                , 'NumberOfThreads':NumberOfThreads
 #                                , 'NumberOfThreads':NumberOfThreads
 #                                , 'OnlyWinner':OnlyWinner[iterN]
+                                , 'OuterRadius':OuterRadius
+                                , 'PaddingFactor':PaddingFactor
 #                                , 'PerturbProjectionDirections':PerturbProjectionDirections
-#                                , 'ProjectLibraryRootName':ProjectLibraryRootNames[iterN][refN]
+                                , 'ProjectLibraryRootName':ProjectLibraryRootNames[iterN][refN]
+                                , 'ProjMatchRootName':ProjMatchRootName[iterN][refN]
+                                , 'ReferenceIsCtfCorrected':ReferenceIsCtfCorrected[iterN]
 #                                , 'reconstructedFileName':reconstructedFileNamesIter[iterN-1][refN]
-#                                , 'SystemFlavour':SystemFlavour
+                                , 'ScaleStep':ScaleStep[iterN]
+                                , 'ScaleNumberOfSteps':ScaleNumberOfSteps[iterN]
+                                , 'Search5DShift':Search5DShift[iterN]
+                                , 'Search5DStep':Search5DStep[iterN]
+                                , 'SystemFlavour':SystemFlavour
 #                                , 'SymmetryGroup':SymmetryGroup
 #                                , 'SymmetryGroupNeighbourhood':SymmetryGroupNeighbourhood
 #                                , 'Tilt0':Tilt0
@@ -1004,8 +1065,7 @@ def actionsToBePerformedInsideLoop(_log):
 
             command = "dict['NumberOfCtfGroups']=self.NumberOfCtfGroups;projection_matching"
             _VerifyFiles = []
-#            _VerifyFiles.append(auxFn + "_sampling.txt")
-            #_VerifyFiles.append(auxFn + "ewetgerg")
+            _VerifyFiles.append(auxFn + "ssdfsfsdf")
             _dataBase.insertCommand(command, _Parameters, iterN,_VerifyFiles)
 
             
