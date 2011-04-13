@@ -1,6 +1,7 @@
 import os, shutil, string, glob, math
 import launch_job, utils_xmipp
 from distutils.dir_util import mkpath
+from xmipp import *
 
 def execute_mask(_log, dict):
     _mylog = _log
@@ -37,7 +38,7 @@ def angular_project_library(_log,dict):
     parameters=' -i '                   + dict['maskedFileNamesIter'] + \
               ' --experimental_images ' + dict['DocFileInputAngles'] + \
               ' -o '                    + dict['ProjectLibraryRootName'] + \
-              ' --sampling_rate '       + str(dict['AngSamplingRateDeg'])  + \
+              ' --sampling_rate '       + dict['AngSamplingRateDeg']  + \
               ' --sym '                 + dict['SymmetryGroup'] + 'h' + \
               ' --compute_neighbors'
 
@@ -67,7 +68,7 @@ def angular_project_library(_log,dict):
     if (len(dict['SymmetryGroupNeighbourhood'])>1):
         parameters+= \
           ' --sym_neigh ' + dict['SymmetryGroupNeighbourhood'] + 'h'
-    if (dict['OnlyWinner']!='0'):
+    if (dict['OnlyWinner']):
         parameters+= \
               ' --only_winner '
 
@@ -84,96 +85,98 @@ def projection_matching(_log,dict):
     # Loop over all CTF groups
     # Use reverse order to have same order in add_to docfiles from angular_class_average
     # get all ctf groups
-   
-    print dict['NumberOfCtfGroups']
+    _DoCtfCorrection    = dict['DoCtfCorrection']
+    _ProjMatchRootName  = dict['ProjMatchRootName']
+    refname = str(dict['ProjectLibraryRootName'])
     for ii in range(dict['NumberOfCtfGroups']):
-        ictf = dict['NumberOfCtfGroups'] - ii + 1
+        ictf    = dict['NumberOfCtfGroups'] - ii 
+        if (_DoCtfCorrection):
+            CtfGroupName = dict['CtfGroupRootName'] #,ictf+1,'')
+            outputname   = _ProjMatchRootName + '_' + CtfGroupName 
+            CtfGroupName = dict['CtfGroupDirectory'] + '/' + CtfGroupName
+            inputdocfile    = 'b'+str(ictf).zfill(utils_xmipp.FILENAMENUMBERLENTGH) + '@' + CtfGroupName + '_images.sel'
+            #inputdocfile = (os.path.basename(inselfile)).replace('.sel','.doc')
+            baseTxtFile  = refname[:-len('.stk')] 
+            txtfile      = baseTxtFile + '_sampling.txt'
+            if (os.path.exists(txtfile)):
+                os.remove(txtfile)
+            txtfileb     = utils_xmipp.composeFileName(baseTxtFile + '_group',ictf,'')
+            txtfileb     += '_sampling.txt'
+            shutil.copy(txtfileb, txtfile)
+        else:
+            outputname   = _ProjMatchRootName
+            inputdocfile = dict['InputDocFileName']
 
-#      refname          = ProjectLibraryRootName
-#      if (_DoCtfCorrection):
-#         CtfGroupName = utils_xmipp.composeFileName(CtfGroupRootName + '_group',ictf+1,'')
-#         outputname   = ProjMatchRootName + '_' + CtfGroupName 
-#         CtfGroupName = '../' + CtfGroupDirectory + '/' + CtfGroupName
-#         inselfile    = CtfGroupName + '.sel'
-#         inputdocfile = (os.path.basename(inselfile)).replace('.sel','.doc')
-#         txtfile      = ProjectLibraryRootName + '_sampling.txt'
-#         if (os.path.exists(txtfile)):
-#            os.remove(txtfile)
-#         txtfileb     = utils_xmipp.composeFileName(ProjectLibraryRootName + '_group',ictf+1,'')
-#         txtfileb     += '_sampling.txt'
-#         shutil.copy(txtfileb, txtfile)
-#      else:
-#         outputname   = ProjMatchRootName
-#         inputdocfile = _InputDocFileName
+        print '*********************************************************************'
+        print '* Perform projection matching'
+        parameters= ' -i '               + inputdocfile + \
+                    ' -o '               + outputname + \
+                    ' --ref '            + refname + \
+                    ' --Ri '             + str(dict['InnerRadius'])           + \
+                    ' --Ro '             + str(dict['OuterRadius'])           + \
+                    ' --max_shift '      + str(dict['MaxChangeOffset']) + \
+                    ' --search5d_shift ' + str(dict['Search5DShift']) + \
+                    ' --search5d_step  ' + str(dict['Search5DStep']) + \
+                    ' --mem '            + str(dict['AvailableMemory'] * dict['NumberOfThreads']) + \
+                    ' --thr '            + str(dict['NumberOfThreads'])
+        
+        if (dict['DoScale']):
+            parameters += \
+                    ' --scale '          + str(dict['ScaleStep']) + ' ' + str(dict['ScaleNumberOfSteps']) 
+        
+        if (_DoCtfCorrection and dict['ReferenceIsCtfCorrected']):
+            ctffile = str(ictf).zfill(utils_xmipp.FILENAMENUMBERLENTGH) + '@' + CtfGroupName + '_ctf.stk'
+            parameters += \
+                      ' --pad '            + str(dict['PaddingFactor']) + \
+                      ' --ctf '            + ctffile
+        
+        if (dict['DoParallel']):
+            parameters = parameters + ' --mpi_job_size ' + str(dict['MyMpiJobSize'])
+        
+        print 'xmipp_angular_projection_matching', parameters
+
+        launch_job.launch_job('xmipp_angular_projection_matching',
+                            parameters,
+                            _log,
+                            dict['DoParallel'],
+                            dict['NumberOfMpiProcesses'],
+                            dict['NumberOfThreads'],
+                            dict['SystemFlavour'])
 #
-#      print '*********************************************************************'
-#      print '* Perform projection matching'
-#      parameters= ' -i '              + inputdocfile + \
-#                  ' -o '              + outputname + \
-#                  ' --ref '            + refname + \
-#                  ' --Ri '             + str(_Ri)           + \
-#                  ' --Ro '             + str(_Ro)           + \
-#                  ' --max_shift '      + str(_MaxChangeOffset) + \
-#                  ' --search5d_shift ' + str(_Search5DShift) + \
-#                  ' --search5d_step  ' + str(_Search5DStep) + \
-#                  ' --mem '            + str(_AvailableMemory * _MyNumberOfThreads) + \
-#                  ' --thr '            + str(_MyNumberOfThreads)
-#      
-#      if (_DoScale):
-#         parameters += \
-#                  ' --scale '          + str(_ScaleStep) + ' ' + str(_ScaleNumberOfSteps) 
-#
-#      if (_DoCtfCorrection and _ReferenceIsCtfCorrected):
-#         ctffile = CtfGroupName + '.ctf'
-#         parameters += \
-#                  ' --pad '            + str(_PaddingFactor) + \
-#                  ' --ctf '            + ctffile
-#
-#      if (_DoParallel):
-#         parameters = parameters + ' --mpi_job_size ' + str(_MyMpiJobSize)
-#
-#      launch_job.launch_job('xmipp_angular_projection_matching',
-#                            parameters,
-#                            _mylog,
-#                            _DoParallel,
-#                            _MyNumberOfMpiProcesses,
-#                            _MyNumberOfThreads,
-#                            _MySystemFlavour)
-#
-#      # Now make the class averages
-#      parameters =  ' -i '      + outputname + '.doc'  + \
-#                    ' --lib '    + ProjectLibraryRootName + '.doc' + \
-#                    ' --dont_write_selfiles ' + \
-#                    ' --limit0 ' + str(_MinimumCrossCorrelation) + \
-#                    ' --limitR ' + str(_DiscardPercentage)
-#      if (_DoCtfCorrection):
-#         # On-the fly apply Wiener-filter correction and add all CTF groups together
-#         parameters += \
-#                    ' --wien '             + CtfGroupName + '.wien' + \
-#                    ' --pad '              + str(_PaddingFactor) + \
-#                    ' --add_to '           + ProjMatchRootName
-#      else:
-#         parameters += \
-#                    ' -o '                + ProjMatchRootName
-#      if (_DoAlign2D == '1'):
-#         parameters += \
-#                    ' --iter '             + str(_Align2DIterNr) + \
-#                    ' --Ri '               + str(_Ri)           + \
-#                    ' --Ro '               + str(_Ro)           + \
-#                    ' --max_shift '        + str(_MaxChangeOffset) + \
-#                    ' --max_shift_change ' + str(_Align2dMaxChangeOffset) + \
-#                    ' --max_psi_change '   + str(_Align2dMaxChangeRot) 
-#      if (_DoComputeResolution and _DoSplitReferenceImages):
-#         parameters += \
-#                    ' --split '
-#
-#      launch_job.launch_job('xmipp_angular_class_average',
-#                            parameters,
-#                            _mylog,
-#                            _DoParallel,
-#                            _MyNumberOfMpiProcesses*_MyNumberOfThreads,
-#                            1,
-#                            _MySystemFlavour)
+        # Now make the class averages
+        parameters =  ' -i '      + outputname + '.doc'  + \
+                    ' --lib '    + refname[:-len('.stk')] + '.doc' + \
+                    ' --dont_write_selfiles ' + \
+                    ' --limit0 ' + str(dict['MinimumCrossCorrelation']) + \
+                    ' --limitR ' + str(dict['DiscardPercentage'])
+        if (_DoCtfCorrection):
+            # On-the fly apply Wiener-filter correction and add all CTF groups together
+            parameters += \
+                       ' --wien '             + CtfGroupName + '.wien' + \
+                       ' --pad '              + str(dict['PaddingFactor']) + \
+                       ' --add_to '           + _ProjMatchRootName
+        else:
+            parameters += \
+                        ' -o '                + _ProjMatchRootName
+        if (dict['DoAlign2D']):
+            parameters += \
+                        ' --iter '             + str(_Align2DIterNr) + \
+                        ' --Ri '               + str(_Ri)           + \
+                        ' --Ro '               + str(_Ro)           + \
+                        ' --max_shift '        + str(_MaxChangeOffset) + \
+                        ' --max_shift_change ' + str(_Align2dMaxChangeOffset) + \
+                        ' --max_psi_change '   + str(_Align2dMaxChangeRot) 
+        if (dict['_DoComputeResolution'] and dict['_DoSplitReferenceImages']):
+            parameters += ' --split '
+
+        launch_job.launch_job('xmipp_angular_class_average',
+                            parameters,
+                            _log,
+                            dict['DoParallel'],
+                            dict['NumberOfMpiProcesses']*dict['NumberOfThreads'],
+                            1,
+                            dict['SystemFlavour'])
+
 #
 #      if (_DoAlign2D == '1'):
 #         outputdocfile =  ProjMatchRootName + '_realigned.doc'
