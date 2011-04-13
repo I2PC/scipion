@@ -35,3 +35,17 @@ def getListFromVector(_vector,numberIteration=None):
             listValues.append(listValues[-1])
         
     return listValues
+
+#---------------------------------------------------------------------------
+# getListFromVector
+#---------------------------------------------------------------------------
+def getBoolListFromVector(_vector,numberIteration=None):
+    
+    listValues = getListFromVector(_vector,numberIteration)
+    listValuesBool = []
+    for i in range(len(listValues)):
+        if listValues[i]=='0':
+            listValuesBool.append(False)
+        else:
+            listValuesBool.append(True)
+    return listValuesBool
