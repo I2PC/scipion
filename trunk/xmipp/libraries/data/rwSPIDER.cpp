@@ -200,7 +200,7 @@ int  ImageBase::readSPIDER(size_t select_img)
     setDimensions(_xDim, _yDim, _zDim, _nDimSet);
 
     //image is in stack? and set right initial and final image
-    size_t single_header = offset; //save offset before duplicating offset in stack case
+    size_t header_size = offset;
 
     if ( isStack)
     {
@@ -209,17 +209,15 @@ int  ImageBase::readSPIDER(size_t select_img)
         offset += offset;
     }
 
-    if (dataMode == HEADER || dataMode == _HEADER_ALL && _nDimSet > 1) // Stop reading if not necessary
+    if (dataMode == HEADER || (dataMode == _HEADER_ALL && _nDimSet > 1)) // Stop reading if not necessary
     {
         delete header;
         return 0;
     }
 
-    size_t header_size = offset;
-    size_t datasize_n = _xDim*_yDim*_zDim;
-    size_t image_size  = single_header + datasize_n*sizeof(float);
+    size_t datasize_n  = _xDim*_yDim*_zDim;
+    size_t image_size  = header_size + datasize_n*sizeof(float);
     size_t pad         = (size_t) header->labbyt;
-
     size_t   imgStart = IMG_INDEX(select_img);
     size_t   imgEnd = (select_img != ALL_IMAGES) ? imgStart + 1 : _nDim;
     size_t   img_seek = header_size + imgStart * image_size;
@@ -235,9 +233,9 @@ int  ImageBase::readSPIDER(size_t select_img)
     for (size_t n = 0, i = imgStart; i < imgEnd; ++i, ++n, img_seek += image_size )
     {
         if (fseek( fimg, img_seek, SEEK_SET ) != 0)//fseek return 0 on success
-          REPORT_ERROR(ERR_IO, formatString("rwSPIDER: error seeking %lu for read image %lu", img_seek, i));
+            REPORT_ERROR(ERR_IO, formatString("rwSPIDER: error seeking %lu for read image %lu", img_seek, i));
 
-       // std::cerr << formatString("DEBUG_JM: rwSPIDER: seeking %lu for read image %lu", img_seek, i) <<std::endl;
+        // std::cerr << formatString("DEBUG_JM: rwSPIDER: seeking %lu for read image %lu", img_seek, i) <<std::endl;
 
         if(isStack)
         {
@@ -478,10 +476,12 @@ int  ImageBase::writeSPIDER(size_t select_img, bool isStack, int mode)
         {
             writeMainHeaderReplace = true;
             header->maxim = newNsize;
-        /* jcuenca 2011/04/11 */
-        }else if(mode == WRITE_OVERWRITE){
-        	writeMainHeaderReplace = true;
-        	header->maxim = Ndim;
+            /* jcuenca 2011/04/11 */
+        }
+        else if(mode == WRITE_OVERWRITE)
+        {
+            writeMainHeaderReplace = true;
+            header->maxim = Ndim;
         }
     }
     else
