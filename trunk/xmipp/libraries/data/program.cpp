@@ -272,13 +272,13 @@ void XmippProgram::addExampleLine(const char * example, bool verbatim)
 }
 void XmippProgram::addSeeAlsoLine(const char * seeAlso)
 {
-	if (progDef->seeAlso=="")
-		progDef->seeAlso = seeAlso;
-	else
-	{
-		progDef->seeAlso +=", ";
-		progDef->seeAlso +=seeAlso;
-	}
+    if (progDef->seeAlso=="")
+        progDef->seeAlso = seeAlso;
+    else
+    {
+        progDef->seeAlso +=", ";
+        progDef->seeAlso +=seeAlso;
+    }
 }
 
 void XmippProgram::clearUsage()
@@ -576,84 +576,85 @@ size_t XmippMetadataProgram::getImageToProcess()
 
 void XmippMetadataProgram::run()
 {
-        FileName fnImg, fnImgOut, baseName, pathBaseName, fullBaseName, oextBaseName;
-        size_t objId;
-        //Perform particular preprocessing
-        preProcess();
+    FileName fnImg, fnImgOut, baseName, pathBaseName, fullBaseName, oextBaseName;
+    size_t objId;
+    //Perform particular preprocessing
+    preProcess();
 
-        startProcessing();
+    startProcessing();
 
-        size_t kk = 0;
+    size_t kk = 0;
 
-        if (!oroot.empty())
+    if (!oroot.empty())
+    {
+        if (oext.empty())
+            oext           = oroot.getFileFormat();
+        oextBaseName   = oext;
+        fullBaseName   = oroot.removeFileFormat();
+        baseName       = fullBaseName.getBaseName();
+        pathBaseName   = fullBaseName.getRoot();
+    }
+
+    //FOR_ALL_OBJECTS_IN_METADATA(mdIn)
+    while ((objId = getImageToProcess()) != BAD_OBJID)
+    {
+        mdIn.getValue(MDL_IMAGE, fnImg, objId);
+
+        if (fnImg.empty())
+            break;
+
+        fnImgOut = fnImg;
+
+        if (each_image_produces_an_output)
         {
-            if (oext.empty())
-                oext           = oroot.getFileFormat();
-            oextBaseName   = oext;
-            fullBaseName   = oroot.removeFileFormat();
-            baseName       = fullBaseName.getBaseName();
-            pathBaseName   = fullBaseName.getRoot();
-        }
-
-        //FOR_ALL_OBJECTS_IN_METADATA(mdIn)
-        while ((objId = getImageToProcess()) != BAD_OBJID)
-        {
-            mdIn.getValue(MDL_IMAGE, fnImg, objId);
-
-            if (fnImg.empty())
-                break;
-
-            fnImgOut = fnImg;
-
-            if (each_image_produces_an_output)
+            if (!oroot.empty()) // Compose out name to save as independent images
             {
-                if (!oroot.empty()) // Compose out name to save as independent images
-                {
-                    if (oext.empty())
-                        oextBaseName = fnImg.getFileFormat();
+                if (oext.empty())
+                    oextBaseName = fnImg.getFileFormat();
 
-                    if (!baseName.empty() )
-                        fnImgOut.compose(fullBaseName, ++kk, oextBaseName);
-                    else if (fnImg.isInStack())
-                        fnImgOut.compose(pathBaseName + (fnImg.withoutExtension()).getDecomposedFileName(), ++kk, oextBaseName);
-                    else
-                        fnImgOut = pathBaseName + fnImg.withoutExtension()+ "." + oextBaseName;
-                }
-                else if (!fn_out.empty() )
-                {
-                    if (single_image)
-                        fnImgOut = fn_out;
-                    else
-                        fnImgOut.compose(++kk, fn_out); // Compose out name to save as stacks
-                }
+                if (!baseName.empty() )
+                    fnImgOut.compose(fullBaseName, ++kk, oextBaseName);
+                else if (fnImg.isInStack())
+                    fnImgOut.compose(pathBaseName + (fnImg.withoutExtension()).getDecomposedFileName(), ++kk, oextBaseName);
                 else
-                    fnImgOut = fnImg;
-
-                newId = mdOut.addObject();
-                mdOut.setValue(MDL_IMAGE, fnImgOut, newId);
-                mdOut.setValue(MDL_ENABLED, 1, newId);
+                    fnImgOut = pathBaseName + fnImg.withoutExtension()+ "." + oextBaseName;
             }
-
-            processImage(fnImg, fnImgOut, objId);
-
-            showProgress();
-        }
-
-        //free iterator memory
-        delete iter;
-
-        // Generate name to save mdOut when output are independent images
-        if ( !oroot.empty() && fn_out.empty() )
-        {
-            if ( !baseName.empty() )
-                fn_out = baseName.addExtension("sel");
+            else if (!fn_out.empty() )
+            {
+                if (single_image)
+                    fnImgOut = fn_out;
+                else
+                    fnImgOut.compose(++kk, fn_out); // Compose out name to save as stacks
+            }
             else
-                fn_out = fn_in.withoutExtension() + "_" + oextBaseName + ".sel";
+                fnImgOut = fnImg;
+
+            newId = mdOut.addObject();
+            mdOut.setValue(MDL_IMAGE, fnImgOut, newId);
+            mdOut.setValue(MDL_ENABLED, 1, newId);
         }
 
-        finishProcessing();
+        processImage(fnImg, fnImgOut, objId);
 
-        postProcess();
+        showProgress();
+    }
+
+    //free iterator memory
+    delete iter;
+
+    /* Generate name to save mdOut when output are independent images. If baseName is set it is used,
+     * otherwise, input name is used. Then, the suffix _oext is added.*/
+    if ( fn_out.empty() && !oroot.empty() )
+    {
+        if ( !baseName.empty() )
+            fn_out = baseName + "_" + oextBaseName + ".sel";
+        else
+            fn_out = fn_in.withoutExtension() + "_" + oextBaseName + ".sel";
+    }
+
+    finishProcessing();
+
+    postProcess();
 }
 
 
