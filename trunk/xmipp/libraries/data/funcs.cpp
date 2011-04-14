@@ -659,17 +659,21 @@ void exit_if_not_exists(const FileName &fn)
 void wait_until_stable_size(const FileName &fn,
                             unsigned long time_step)
 {
+  size_t idx;
+  FileName basicName;
+  fn.decompose(idx, basicName);
+
     if (!exists(fn))
         return;
     struct stat info1, info2;
-    if (stat(fn.c_str(), &info1))
+    if (stat(basicName.c_str(), &info1))
         REPORT_ERROR(ERR_UNCLASSIFIED,
                      (std::string)"wait_until_stable_size: Cannot get size of file " + fn);
     off_t size1 = info1.st_size;
     do
     {
         usleep(time_step);
-        if (stat(fn.c_str(), &info2))
+        if (stat(basicName.c_str(), &info2))
             REPORT_ERROR(ERR_UNCLASSIFIED,
                          (std::string)"wait_until_stable_size: Cannot get size of file " + fn);
         off_t size2 = info2.st_size;
