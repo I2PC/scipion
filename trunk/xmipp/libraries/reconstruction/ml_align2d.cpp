@@ -74,7 +74,7 @@ void ProgML2D::readParams()
 {
     // Generate new command line for restart procedure
 
-  cline = "";
+    cline = "";
     int argc2 = 0;
     char ** argv2 = NULL;
 
@@ -184,6 +184,8 @@ void ProgML2D::readParams()
         factor_nref = 1;
     }
 
+    //std::cerr << "DEBUG_JM: exiting after readParams..." <<std::endl;
+    //exit(1);
 }
 
 // Show ====================================================================
@@ -191,141 +193,81 @@ void ProgML2D::show()
 {
     if (verbose)
     {
-
         // To screen
         if (!do_ML3D)
         {
             std::cout
-            << " -----------------------------------------------------------------"
-            << std::endl;
-            std::cout
-            << " | Read more about this program in the following publications:   |"
-            << std::endl;
-            std::cout
-            << " |  Scheres ea. (2005) J.Mol.Biol. 348(1), 139-49                |"
-            << std::endl;
-            std::cout
-            << " |  Scheres ea. (2005) Bioinform. 21(suppl.2), ii243-4   (-fast) |"
-            << std::endl;
-            std::cout
-            << " |                                                               |"
-            << std::endl;
-            std::cout
-            << " |  *** Please cite them if this program is of use to you! ***   |"
-            << std::endl;
-            std::cout
-            << " -----------------------------------------------------------------"
-            << std::endl;
+            << " -----------------------------------------------------------------" << std::endl
+            << " | Read more about this program in the following publications:   |" << std::endl
+            << " |  Scheres ea. (2005) J.Mol.Biol. 348(1), 139-49                |" << std::endl
+            << " |  Scheres ea. (2005) Bioinform. 21(suppl.2), ii243-4   (-fast) |" << std::endl
+            << " |                                                               |"<<  std::endl
+            << " |  *** Please cite them if this program is of use to you! ***   |"<<  std::endl
+            << " -----------------------------------------------------------------"<<  std::endl;
         }
 
-        std::cout << "--> Maximum-likelihood multi-reference refinement "
-        << std::endl;
-        std::cout << "  Input images            : " << fn_img << " ("
-        << nr_images_global << ")" << std::endl;
+        std::cout    << "--> Maximum-likelihood multi-reference refinement " << std::endl
+        << formatString("  Input images            : %s (%d)", fn_img.c_str(), nr_images_global) << std::endl;
 
         if (fn_ref != "")
             std::cout << "  Reference image(s)      : " << fn_ref << std::endl;
         else
             std::cout << "  Number of references:   : " << model.n_ref * factor_nref << std::endl;
 
-        std::cout << "  Output rootname         : " << fn_root << std::endl;
+        std::cout
+        << "  Output rootname         : " << fn_root << std::endl
+        << "  Stopping criterium      : " << eps << std::endl
+        << "  Initial sigma noise     : " << model.sigma_noise << std::endl
+        << "  Initial sigma offset    : " << model.sigma_offset << std::endl
+        << "  Psi sampling interval   : " << psi_step << std::endl
+        << "  Check mirrors           : " << (do_mirror ? "true" : "false") << std::endl;
 
-        std::cout << "  Stopping criterium      : " << eps << std::endl;
-
-        std::cout << "  initial sigma noise     : " << model.sigma_noise
-        << std::endl;
-
-        std::cout << "  initial sigma offset    : " << model.sigma_offset
-        << std::endl;
-
-        std::cout << "  Psi sampling interval   : " << psi_step << std::endl;
-
-        if (do_mirror)
-            std::cout << "  Check mirrors           : true" << std::endl;
-        else
-            std::cout << "  Check mirrors           : false" << std::endl;
-
-        if (fn_frac != "")
-            std::cout << "  Initial model fractions : "
-            << fn_frac << std::endl;
+        if (!fn_frac.empty())
+            std::cout << "  Initial model fractions : " << fn_frac << std::endl;
 
         if (fast_mode)
         {
-            std::cout
-            << "  -> Use fast, reduced search-space approach with C = "
-            << C_fast << std::endl;
-
+            std::cout << "  -> Use fast, reduced search-space approach with C = " << C_fast << std::endl;
             if (zero_offsets)
-                std::cout
-                << "    + Start from all-zero translations" << std::endl;
+                std::cout << "    + Start from all-zero translations" << std::endl;
         }
 
         if (search_rot < 180.)
-            std::cout
-            << "    + Limit orientational search to +/- " << search_rot
-            << " degrees" << std::endl;
+            std::cout << formatString("    + Limit orientational search to +/- %f degrees", search_rot) << std::endl;
 
         if (save_mem1)
-            std::cout
-            << "  -> Save_memory A: recalculate real-space rotations in -fast"
-            << std::endl;
+            std::cout << "  -> Save_memory A: recalculate real-space rotations in -fast" << std::endl;
 
         if (save_mem2)
-            std::cout
-            << "  -> Save_memory B: limit translations to 3 sigma_offset "
-            << std::endl;
+            std::cout << "  -> Save_memory B: limit translations to 3 sigma_offset " << std::endl;
 
         if (fix_fractions)
-        {
-            std::cout << "  -> Do not update estimates of model fractions."
-            << std::endl;
-        }
+            std::cout << "  -> Do not update estimates of model fractions." << std::endl;
 
         if (fix_sigma_offset)
-        {
-            std::cout << "  -> Do not update sigma-estimate of origin offsets."
-            << std::endl;
-        }
+            std::cout << "  -> Do not update sigma-estimate of origin offsets." << std::endl;
 
         if (fix_sigma_noise)
-        {
-            std::cout << "  -> Do not update sigma-estimate of noise."
-            << std::endl;
-        }
+            std::cout << "  -> Do not update sigma-estimate of noise." << std::endl;
 
         if (model.do_student)
         {
-            std::cout << "  -> Use t-student distribution with df = " << df
-            << std::endl;
+            std::cout << "  -> Use t-student distribution with df = " << df << std::endl;
 
             if (model.do_student_sigma_trick)
-            {
-                std::cout << "  -> Use sigma-trick for t-student distributions"
-                << std::endl;
-            }
+                std::cout << "  -> Use sigma-trick for t-student distributions" << std::endl;
         }
 
         if (model.do_norm)
-        {
-            std::cout
-            << "  -> Refine normalization for each experimental image"
-            << std::endl;
-        }
+            std::cout << "  -> Refine normalization for each experimental image" << std::endl;
 
         if (threads > 1)
-        {
-            std::cout << "  -> Using " << threads << " parallel threads"
-            << std::endl;
-        }
+            std::cout << "  -> Using " << threads << " parallel threads" << std::endl;
 
         if (blocks > 1)
-        {
             std::cout << "  -> Doing IEM with " << blocks << " blocks" <<std::endl;
-        }
 
-        std::cout
-        << " -----------------------------------------------------------------"
-        << std::endl;
+        std::cout << " -----------------------------------------------------------------" << std::endl;
 
     }
 
@@ -815,7 +757,7 @@ void ProgML2D::expectationSingleImage(Matrix1D<double> &opt_offsets)
             // On iteration 0 images that will go to references other than first
             // will store optimus references but not yet expanded number of references
             if (iter == 0)
-              opt_refno = (opt_refno % model.n_ref);
+                opt_refno = (opt_refno % model.n_ref);
 
             // Never re-do more than once!
             if (redo_counter > 1)
@@ -1170,7 +1112,6 @@ void ProgML2D::doThreadReverseRotateReferenceRefno()
     Maux2.setXmippOrigin();
     Maux3.setXmippOrigin();
 
-
     FOR_ALL_THREAD_REFNO()
     {
         Maux.initZeros();
@@ -1186,7 +1127,8 @@ void ProgML2D::doThreadReverseRotateReferenceRefno()
             Faux = wsumimgs[refnoipsi];
             local_transformer.inverseFourierTransform(Faux, Maux);
             Maux3 = Maux;
-            CenterFFT(Maux3, true);
+            //CenterFFT(Maux3, true);
+            centerFFT2(Maux3);
             computeStats_within_binary_mask(omask, Maux3, dum, dum, avg, dum);
             rotate(BSPLINE3, Maux2, Maux3, psi, 'Z', WRAP);
             apply_binary_mask(mask, Maux2, Maux2, avg);
@@ -1423,11 +1365,13 @@ void ProgML2D::doThreadExpectationSingleImageRefno()
                         }
                         // Takes the input from Faux, and leaves the output in Maux
                         local_transformer.inverseFourierTransform();
-                        CenterFFT(Maux, true);
+                        //CenterFFT(Maux, true);
+                        centerFFT2(Maux);
 
-#ifdef DEBUG_JM2
 
-                        if (iter == 2)
+#ifdef DEBUG_JM3
+
+                        if (iter == 3 && refno==0)
                             std::cerr
                             << "Maux: " <<  std::endl << Maux
                             << "Fimg_flip[iflip]" <<  std::endl<< Fimg_flip[iflip]
@@ -1441,15 +1385,19 @@ void ProgML2D::doThreadExpectationSingleImageRefno()
                         {
                             diff = A2_plus_Xi2 - ref_scale * A2D_ELEM(Maux, i, j) * ddim2;
                             pdf = fracpdf * A2D_ELEM(P_phi, i, j);
+//#define DEBUG_JM2
 #ifdef DEBUG_JM2
 
-                            if (iter == 2)
-                                std::cerr << "pdf " << pdf << std::endl
-                                << "diff -> A2_plus_Xi2 " << A2_plus_Xi2 << std::endl
-                                << "diff -> A2D_ELEM(Maux, i, j) " << A2D_ELEM(Maux, i, j) << std::endl
-                                << "diff -> ref_scale " << ref_scale << std::endl
-                                << "diff -> ddim2 " << ddim2 << std::endl
-                                << "==========> diff " << diff << std::endl;
+                            if (iter >= 2 && refno==5 && current_image == myFirstImg)
+                                std::cerr << "---------------------------------------" << std::endl
+                                << "   pdf " << pdf << std::endl
+                                << "   A2_plus_Xi2 " << A2_plus_Xi2 << std::endl
+                                << "   A2D_ELEM(Maux, i, j) " << A2D_ELEM(Maux, i, j) << std::endl
+                                << "   ref_scale " << ref_scale << std::endl
+                                << "   ddim2 " << ddim2 << std::endl
+                                << "diff " << diff << std::endl
+                                << "trymindiff " << trymindiff << std::endl
+                                << "sigma_noise2 " << sigma_noise2 << std::endl;
 #endif
 
                             if (!model.do_student)
@@ -1460,8 +1408,9 @@ void ProgML2D::doThreadExpectationSingleImageRefno()
                                 weight = (aux > 1000.) ? 0. : exp(-aux) * pdf;
 #ifdef DEBUG_JM2
 
-                                if (iter == 2)
-                                    std::cerr << "aux " << aux << std::endl << "weight " << weight << std::endl;
+                                if (iter >=2 && refno==5 && current_image == myFirstImg)
+                                    std::cerr << "aux = (diff - trymindiff) / sigma_noise2: " << aux << std::endl
+                                    << "weight: " << weight << std::endl;
 #endif
                                 // store weight
                                 A2D_ELEM(Mweight, i, j) = stored_weight = weight;
@@ -1531,8 +1480,9 @@ void ProgML2D::doThreadExpectationSingleImageRefno()
                             }
 
                         } // close for over all elements in Mweight
-#ifdef DEBUG_JM2
-                        if (iter == 2)
+
+#ifdef DEBUG_JM3
+                        if (iter == 3 && refno==0)
                         {
                             std::cerr << Mweight << std::endl;
                             std::cerr << "maxweight: " << my_maxweight << " " << my_sumstoredweight << " " << my_sumweight << std::endl;
@@ -1624,6 +1574,7 @@ void ProgML2D::doThreadExpectationSingleImageRefno()
 
 void ProgML2D::doThreadESIUpdateRefno()
 {
+
     double scale_dim2_sumw = (opt_scale * ddim2) / sum_refw;
     int num_refs = model.n_ref * factor_nref;
 
@@ -1686,10 +1637,8 @@ void ProgML2D::doThreadESIUpdateRefno()
             {
                 int refnoipsi = output_refno * nr_psi + ipsi;
                 // Correct weighted sum of images for new bgmean (only first element=origin in Fimg)
-
                 if (model.do_norm)
                     dAij(mysumimgs[refnoipsi],0,0) -= sumw_refpsi[refnoipsi] * (bgmean - old_bgmean) / ddim2;
-
                 // Sum mysumimgs to the global weighted sum
                 wsumimgs[refnoipsi] += (scale_dim2_sumw * mysumimgs[refnoipsi]);
             }
@@ -1752,11 +1701,13 @@ void ProgML2D::expectation()
 
     for (int i = 0; i < num_output_refs * nr_psi; i++)
     {
+        //todo: change this with vector.assign
         wsumimgs.push_back(Fdzero);
     }
 
     for (int refno = 0; refno < num_output_refs; refno++)
     {
+        //todo: change this with vector.assign
         sumw.push_back(0.);
         sumw2.push_back(0.);
         sumwsc.push_back(0.);
@@ -1806,12 +1757,13 @@ void ProgML2D::expectation()
             Xi2 = img().sum2();
             Mimg = img();
 
-#ifdef DEBUG_JM
-            ///FIXME: Remove this printing, only for debug
-            std::cerr << std::endl;
-            std::cerr << "   ====================>>> ITER_IMAGE: " << iter << "_" << imgno << std::endl;
-            std::cerr << "                          fn_img: " << fn_img << std::endl;
-            std::cerr << "                           mygroup: " <<                            mygroup << std::endl;
+//#define DEBUG_JM2
+#ifdef DEBUG_JM2
+            if (iter >= 2 && current_image == myFirstImg)
+                std::cerr << std::endl
+                << "   ====================>>> ITER_IMAGE: " << iter << "_" << imgno << std::endl
+                << "                          fn_img: " << fn_img << std::endl
+                << "                           mygroup: " <<                            mygroup << std::endl;
 #endif
 
             // These two parameters speed up expectationSingleImage
@@ -1914,26 +1866,16 @@ void ProgML2D::expectation()
 
         }//close if current_block, also close of for all images
 
-        //        // Initialize weighted sums
-        //        LL = 0.;
-        //        wsumimgs.clear();
-        //        sumw.clear();
-        //        sumw2.clear();
-        //        sumwsc.clear();
-        //        sumwsc2.clear();
-        //        sumw_mirror.clear();
-        //        wsum_sigma_noise = 0.;
-        //        wsum_sigma_offset = 0.;
-        //        sumfracweight = 0.;
-
         ///FIXME: Remove this printing, only for debug
-        // std::cerr << "                              LL: " << LL << std::endl;
-        //std::cerr << "                  opt_offsets(0): " << opt_offsets(0) << std::endl;
-        //std::cerr << "                  opt_offsets(1): " << opt_offsets(1) << std::endl;
-        //std::cerr << "                wsum_sigma_noise: " << wsum_sigma_noise << std::endl;
-        //std::cerr << "                sum_sigma_offset: " << wsum_sigma_offset << std::endl;
-        //std::cerr << "                   sumfracweight: " << wsum_sigma_offset << std::endl;
-        //
+        //if (iter > 8)
+        //        {
+        //        std::cerr << "                              LL: " << LL << std::endl;
+        //        std::cerr << "                  opt_offsets(0): " << opt_offsets(0) << std::endl;
+        //        std::cerr << "                  opt_offsets(1): " << opt_offsets(1) << std::endl;
+        //        std::cerr << "                wsum_sigma_noise: " << wsum_sigma_noise << std::endl;
+        //        std::cerr << "               wsum_sigma_offset: " << wsum_sigma_offset << std::endl;
+        //        std::cerr << "                   sumfracweight: " << sumfracweight << std::endl;
+        //        }
 
     }//close for all images
 
@@ -1987,9 +1929,6 @@ void ProgML2D::maximizeModel(ModelML2D &local_model)
     local_model.sumw_allrefs = 0.;
     local_model.dim = dim;
 
-    //if (iter == 0)
-    //    doReferencesRegularization();
-
     for (int refno = 0; refno < local_model.n_ref; refno++)
     {
         if (sumw[refno] > 0.)
@@ -2000,6 +1939,7 @@ void ProgML2D::maximizeModel(ModelML2D &local_model)
                 weight = sumw2[refno];
                 local_model.sumw_allrefs2 += sumw2[refno];
             }
+
             local_model.Iref[refno]() = wsum_Mref[refno];
             local_model.Iref[refno]() /= sumwsc2[refno];
             local_model.sumw_allrefs += sumw[refno];
