@@ -267,6 +267,14 @@ void InverseFourierTransformHalf(const MultidimArray< std::complex< double > > &
 /** @name Operations with the Fourier Transforms
  */
 //@{
+
+/** Faster version of CenterFFT (now just for even images)
+ */
+
+#define SWAP_ARRAY(a, b, n)  memcpy(buffer, a, n); memcpy(a, b, n); memcpy(b, buffer, n);
+
+void centerFFT2(MultidimArray<double> &v);
+
 /** CenterFFT
  */
 template <typename T>

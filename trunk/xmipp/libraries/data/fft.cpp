@@ -63,7 +63,7 @@ void Whole2Half(const MultidimArray<std::complex<double> > &in,
 
 /** Convert half -> whole of (centro-symmetric) Fourier transforms 2D. -- */
 void Half2Whole(const MultidimArray<std::complex<double> > &in,
-		MultidimArray<std::complex<double> > &out, int oridim)
+                MultidimArray<std::complex<double> > &out, int oridim)
 {
     if (in.getDim() == 1)
     {
@@ -72,7 +72,7 @@ void Half2Whole(const MultidimArray<std::complex<double> > &in,
         for (int j = 0; j < XSIZE(in); j++)
             DIRECT_A1D_ELEM(out,j) = DIRECT_A1D_ELEM(in,j);
         for (int j = XSIZE(in); j < oridim; j++)
-        	DIRECT_A1D_ELEM(out,j) = conj(DIRECT_A1D_ELEM(in,oridim - j));
+            DIRECT_A1D_ELEM(out,j) = conj(DIRECT_A1D_ELEM(in,oridim - j));
     }
     else if (in.getDim() == 2)
     {
@@ -106,7 +106,7 @@ void Complex2RealImag(const MultidimArray< std::complex< double > > & in,
     real.resizeNoCopy(in);
     imag.resizeNoCopy(in);
     Complex2RealImag(MULTIDIM_ARRAY(in), MULTIDIM_ARRAY(real),
-        MULTIDIM_ARRAY(imag), MULTIDIM_SIZE(in));
+                     MULTIDIM_ARRAY(imag), MULTIDIM_SIZE(in));
 }
 
 /** Convert real,imag -> complex Fourier transforms 3D. -- */
@@ -116,7 +116,7 @@ void RealImag2Complex(const MultidimArray< double > & real,
 {
     out.resizeNoCopy(real);
     RealImag2Complex(MULTIDIM_ARRAY(real), MULTIDIM_ARRAY(imag),
-        MULTIDIM_ARRAY(out), MULTIDIM_SIZE(real));
+                     MULTIDIM_ARRAY(out), MULTIDIM_SIZE(real));
 }
 
 /** Direct Fourier Transform nD ------------------------------------------- */
@@ -207,42 +207,42 @@ void InverseFourierTransformHalf(const MultidimArray< std::complex<double> > &in
 
 /** Complex Direct Fourier Transform 1D ------------------------------------------- */
 void FourierTransform(const MultidimArray<std::complex<double> > &in,
-		      MultidimArray< std::complex<double> > &out)
+                      MultidimArray< std::complex<double> > &out)
 {
     // Only implemented for 1D transforms
-	in.checkDimension(1);
+    in.checkDimension(1);
 
-	int N = XSIZE(in);
+    int N = XSIZE(in);
     MultidimArray<double> re(N), tmpre(N), tmpim(N), im(N), cas(N);
     out.resizeNoCopy(N);
 
     GetCaS(MULTIDIM_ARRAY(cas), N);
     Complex2RealImag(MULTIDIM_ARRAY(in), MULTIDIM_ARRAY(re),
-		     MULTIDIM_ARRAY(im), N);
+                     MULTIDIM_ARRAY(im), N);
     DftRealImaginaryToRealImaginary(MULTIDIM_ARRAY(re), MULTIDIM_ARRAY(im),
-				    MULTIDIM_ARRAY(tmpre), MULTIDIM_ARRAY(tmpim),
-				    MULTIDIM_ARRAY(cas), N);
+                                    MULTIDIM_ARRAY(tmpre), MULTIDIM_ARRAY(tmpim),
+                                    MULTIDIM_ARRAY(cas), N);
     RealImag2Complex(MULTIDIM_ARRAY(re), MULTIDIM_ARRAY(im),
                      MULTIDIM_ARRAY(out), N);
 }
 
 /** Complex Inverse Fourier Transform 1D. ----------------------------------------- */
 void InverseFourierTransform(const MultidimArray< std::complex<double> > &in,
-			     MultidimArray<std::complex<double> > &out)
+                             MultidimArray<std::complex<double> > &out)
 {
     // Only implemented for 1D transforms
-	in.checkDimension(1);
+    in.checkDimension(1);
 
-	int N = XSIZE(in);
+    int N = XSIZE(in);
     MultidimArray<double> tmpre(N), tmpim(N), re(N), im(N), cas(N);
     out.resizeNoCopy(N);
 
     GetCaS(MULTIDIM_ARRAY(cas), N);
     Complex2RealImag(MULTIDIM_ARRAY(in), MULTIDIM_ARRAY(re),
-		     MULTIDIM_ARRAY(im), N);
+                     MULTIDIM_ARRAY(im), N);
     InvDftRealImaginaryToRealImaginary(MULTIDIM_ARRAY(re), MULTIDIM_ARRAY(im),
-				       MULTIDIM_ARRAY(tmpre), MULTIDIM_ARRAY(tmpim),
-				       MULTIDIM_ARRAY(cas), N);
+                                       MULTIDIM_ARRAY(tmpre), MULTIDIM_ARRAY(tmpim),
+                                       MULTIDIM_ARRAY(cas), N);
     RealImag2Complex(MULTIDIM_ARRAY(re), MULTIDIM_ARRAY(im),
                      MULTIDIM_ARRAY(out), N);
 }
@@ -251,8 +251,8 @@ void InverseFourierTransform(const MultidimArray< std::complex<double> > &in,
 void FourierTransformHalf(const MultidimArray<std::complex<double> > &in,
                           MultidimArray< std::complex<double> > &out)
 {
-	// Only implemented for 1D transforms
-	in.checkDimension(1);
+    // Only implemented for 1D transforms
+    in.checkDimension(1);
 
     MultidimArray<std::complex <double> > aux;
     FourierTransform(in, aux);
@@ -263,8 +263,8 @@ void FourierTransformHalf(const MultidimArray<std::complex<double> > &in,
 void InverseFourierTransformHalf(const MultidimArray< std::complex<double> > &in,
                                  MultidimArray<std::complex<double> > &out, int orixdim)
 {
-	// Only implemented for 1D transforms
-	in.checkDimension(1);
+    // Only implemented for 1D transforms
+    in.checkDimension(1);
 
     MultidimArray< std::complex<double> > aux;
     Half2Whole(in, aux, orixdim);
@@ -272,11 +272,43 @@ void InverseFourierTransformHalf(const MultidimArray< std::complex<double> > &in
     out.setXmippOrigin();
 }
 
+void centerFFT2(MultidimArray<double> &v)
+{
+    if (v.getDim() == 2)
+    {
+        //Just separe the even and odd dimensions case
+        if (XSIZE(v) % 2 == 0 && YSIZE(v) % 2 == 0)
+        {
+            int xsize = XSIZE(v);
+            int xhalf = xsize / 2;
+            int yhalf = YSIZE(v) / 2;
+            double * posA = MULTIDIM_ARRAY(v);
+            double * posB = posA + xhalf;
+            double * posC = posA + xsize * yhalf;
+            double * posD = posC + xhalf;
+            double  buffer[xhalf];
+            size_t bytes = xhalf * sizeof(double);
+
+            for (int i = 0; i < yhalf; ++i,
+                 posA += xsize, posB += xsize, posC += xsize, posD += xsize)
+            {
+                SWAP_ARRAY(posA, posD, bytes);
+                SWAP_ARRAY(posB, posC, bytes);
+            }
+        }
+        else
+        {
+          //todo: implementation for the odd case needed
+        }
+    }
+    else
+        std::cerr <<"bad dim: " << v.getDim() << std::endl;
+}
 /* FFT shifts ------------------------------------------------------------ */
 void ShiftFFT(MultidimArray< std::complex< double > > & v,
               double xshift)
 {
-	v.checkDimension(1);
+    v.checkDimension(1);
     double dotp, a, b, c, d, ac, bd, ab_cd;
     double xxshift = xshift / (double)XSIZE(v);
     FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY1D(v)
@@ -296,7 +328,7 @@ void ShiftFFT(MultidimArray< std::complex< double > > & v,
 void ShiftFFT(MultidimArray< std::complex< double > > & v,
               double xshift, double yshift)
 {
-	v.checkDimension(2);
+    v.checkDimension(2);
     double dotp, a, b, c, d, ac, bd, ab_cd;
     double xxshift = xshift / (double)XSIZE(v);
     double yyshift = yshift / (double)YSIZE(v);
@@ -317,7 +349,7 @@ void ShiftFFT(MultidimArray< std::complex< double > > & v,
 void ShiftFFT(MultidimArray< std::complex< double > > & v,
               double xshift, double yshift, double zshift)
 {
-	v.checkDimension(3);
+    v.checkDimension(3);
     double dotp, a, b, c, d, ac, bd, ab_cd;
     double xxshift = xshift / (double)XSIZE(v);
     double yyshift = yshift / (double)YSIZE(v);
@@ -399,11 +431,14 @@ void xmipp2PSD(const MultidimArray<double> &input, MultidimArray<double> &output
     CenterFFT(output, true);
     double min_val = output.computeMax();
     FOR_ALL_ELEMENTS_IN_ARRAY2D(output)
-    if (output(i, j) > 0 && output(i, j) < min_val) min_val = output(i, j);
+    if (output(i, j) > 0 && output(i, j) < min_val)
+        min_val = output(i, j);
     min_val = 10 * log10(min_val);
     FOR_ALL_ELEMENTS_IN_ARRAY2D(output)
-    if (output(i, j) > 0) output(i, j) = 10 * log10(output(i, j));
-    else               output(i, j) = min_val;
+    if (output(i, j) > 0)
+        output(i, j) = 10 * log10(output(i, j));
+    else
+        output(i, j) = min_val;
     reject_outliers(output);
 }
 
@@ -424,7 +459,8 @@ void xmipp2CTF(const MultidimArray<double> &input, MultidimArray<double> &output
         if ((i < Ydim / 2 && j >= Xdim / 2) || (i >= Ydim / 2 && j < Xdim / 2))
         {
             if (output(i, j) > XMIPP_EQUAL_ACCURACY &&
-                (output(i, j) < min_val || first)) min_val = output(i, j);
+                (output(i, j) < min_val || first))
+                min_val = output(i, j);
             if (output(i, j) > XMIPP_EQUAL_ACCURACY &&
                 (output(i, j) > max_val || first))
             {
@@ -441,7 +477,8 @@ void xmipp2CTF(const MultidimArray<double> &input, MultidimArray<double> &output
         {
             if (output(i, j) > XMIPP_EQUAL_ACCURACY)
                 left(i, j) = 10 * log10(output(i, j));
-            else left(i, j) = min_val;
+            else
+                left(i, j) = min_val;
         }
     }
     reject_outliers(left);
@@ -450,5 +487,6 @@ void xmipp2CTF(const MultidimArray<double> &input, MultidimArray<double> &output
     FOR_ALL_ELEMENTS_IN_ARRAY2D(output)
     if ((i < Ydim / 2 && j >= Xdim / 2) || (i >= Ydim / 2 && j < Xdim / 2))
         output(i, j) = left(i, j);
-    else output(i, j) = ABS(output(i, j));
+    else
+        output(i, j) = ABS(output(i, j));
 }
