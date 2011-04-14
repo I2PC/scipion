@@ -205,7 +205,7 @@ int  ImageBase::readSPIDER(size_t select_img)
     if ( isStack)
     {
         if ( select_img > _nDim )
-            REPORT_ERROR(ERR_INDEX_OUTOFBOUNDS, formatString("readSpider (%s): Image number %lu exceeds stack size %lu" ,filename,select_img, _nDim));
+            REPORT_ERROR(ERR_INDEX_OUTOFBOUNDS, formatString("readSpider (%s): Image number %lu exceeds stack size %lu" ,filename.c_str(),select_img, _nDim));
         offset += offset;
     }
 
