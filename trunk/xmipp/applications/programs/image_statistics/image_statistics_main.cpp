@@ -61,7 +61,7 @@ protected:
         addParamsLine("[--short_format]   : Do not show labels for statistics.");
         addParamsLine("[--show_angles]    : Also show angles in the image header.");
         addParamsLine("[--save_mask]      : Save 2D and 3D masks (as \"mask2D\" or \"mask3D\").");
-        mask.defineParams(this,INT_MASK,NULL,"Statistics constrained to the mask area.");
+        mask.defineParams(this,INT_MASK,NULL,"Statistics restricted to the mask area.");
     }
 
     void readParams()
