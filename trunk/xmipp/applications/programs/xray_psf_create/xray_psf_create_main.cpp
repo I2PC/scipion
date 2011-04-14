@@ -63,11 +63,12 @@ protected:
 
     void readParams()
     {
+      psf.verbose = verbose;
+
         if (checkParam("-i"))
         {
             fnParam = getParam("-i");
             psf.read(fnParam);
-            psf.verbose = verbose;
         }
         else
             psf.readParams(this);
