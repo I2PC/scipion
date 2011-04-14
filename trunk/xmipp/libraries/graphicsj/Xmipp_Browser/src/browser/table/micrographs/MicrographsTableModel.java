@@ -68,32 +68,54 @@ public class MicrographsTableModel extends DefaultTableModel implements TableMod
         "Defocus U",
         "Defocus V"};
     public final static int INDEX_ID = 0;
-    public final static int INDEX_ENABLED = 1;
-    public final static int DEFOCUS_U_COL = 7;
-    public final static int DEFOCUS_V_COL = 8;
+    //public final static int INDEX_ENABLED = 1;
+    public final static int INDEX_IMAGE = 2;
+    public final static int INDEX_DEFOCUS_U_COL = 7;
+    public final static int INDEX_DEFOCUS_V_COL = 8;
+    public final static int INDEX_COMBINED_COLUMN = MD_LABELS.length - 1;
     // Data type contained by columns to set renderes properly.
-    public final static int filenameColumnIndex[] = new int[]{2};
-    public final static int imagesColumnIndex[] = new int[]{3, 4, 5, 6};
-    public final static int doubleColumnIndex[] = new int[]{7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19};
     protected static Cache cache = new Cache();
-    private String rootDir;
+    private String projectDir;
     private MetaData md;
 
     public MicrographsTableModel(String filename) {
         super();
 
-        md = new MetaData(filename);
+        try {
+            md = new MetaData(filename);
 
-        File f = new File(md.getFilename());
-        rootDir = f.getParent();
+            System.out.println(" !!!!!!!!!!! Replace projectDir !!!!!!");
+            File f = new File(md.getFilename());
+            projectDir = f.getParent();
+            //projectDir = System.getProperty("user.dir");
 
-        for (int i = 0; i < COLUMNS_NAMES.length; i++) {
-            addColumn(COLUMNS_NAMES[i]);
+            for (int i = 0; i < COLUMNS_NAMES.length; i++) {
+                addColumn(COLUMNS_NAMES[i]);
+            }
+
+            buildTable(md);
+
+            addTableModelListener(this);
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            throw new RuntimeException(ex.getMessage());
         }
+    }
+
+    public void reload() {
+        clear();
 
         buildTable(md);
 
-        addTableModelListener(this);
+//        fireTableDataChanged();
+    }
+
+    private void clear() {
+        removeTableModelListener(this);
+
+        while (getRowCount() > 0) {
+            removeRow(getRowCount() - 1);
+        }
     }
 
     private void buildTable(MetaData md) {
@@ -129,13 +151,16 @@ public class MicrographsTableModel extends DefaultTableModel implements TableMod
                                 row[col] = enabled > 0;
                                 break;
                             case MDLabel.MDL_IMAGE:
+                            /*                                String filename = md.getValueString(label, id);
+                            row[col] = new File(projectDir, filename);
+                            break;*/
                             case MDLabel.MDL_PSD:
                             case MDLabel.MDL_ASSOCIATED_IMAGE1:
                             case MDLabel.MDL_ASSOCIATED_IMAGE2:
                             case MDLabel.MDL_ASSOCIATED_IMAGE3:
-                                String field = md.getValueString(label, id);
-                                File f = new File(rootDir, field);
-                                row[col] = (Object) new TableImageItem(f, cache);
+                                String filename = md.getValueString(label, id);
+                                File f = new File(projectDir, filename);
+                                row[col] = new TableImageItem(f, cache);
                                 break;
                             case MDLabel.MDL_CTF_CRITERION_DAMPING:
                             case MDLabel.MDL_CTF_CRITERION_FIRSTZEROAVG:
@@ -173,24 +198,28 @@ public class MicrographsTableModel extends DefaultTableModel implements TableMod
 
         double defocusU, defocusV;
 
-        if (hasCtfData()) {
-            for (int i = 0; i < getRowCount(); i++) {
-                String ctf_file = getCTFfile(i);
+        try {
+            if (hasCtfData()) {
+                for (int i = 0; i < getRowCount(); i++) {
+                    String ctf_file = getCTFfile(i);
 
-                MetaData ctfMetaData = new MetaData(ctf_file);
+                    MetaData ctfMetaData = new MetaData(ctf_file);
 
-                long firstID = ctfMetaData.findObjects()[0];
+                    long firstID = ctfMetaData.findObjects()[0];
 
-                // DEFOCUS_U
-                defocusU = ctfMetaData.getValueDouble(EXTRA_COLUMNS_LABELS[0], firstID);
+                    // DEFOCUS_U
+                    defocusU = ctfMetaData.getValueDouble(EXTRA_COLUMNS_LABELS[0], firstID);
 
-                // DEFOCUS_V
-                defocusV = ctfMetaData.getValueDouble(EXTRA_COLUMNS_LABELS[1], firstID);
+                    // DEFOCUS_V
+                    defocusV = ctfMetaData.getValueDouble(EXTRA_COLUMNS_LABELS[1], firstID);
 
-                // Sets values.
-                setValueAt(defocusU, i, getColumnCount() - 2);
-                setValueAt(defocusV, i, getColumnCount() - 1);
+                    // Sets values.
+                    setValueAt(defocusU, i, getColumnCount() - 2);
+                    setValueAt(defocusV, i, getColumnCount() - 1);
+                }
             }
+        } catch (Exception ex) {
+            throw new RuntimeException(ex.getMessage());
         }
     }
 
@@ -204,7 +233,6 @@ public class MicrographsTableModel extends DefaultTableModel implements TableMod
         for (int i = 0; i < MD_LABELS.length; i++) {
             if (!md.containsLabel(MD_LABELS[i])) {
                 toHide.add(i + 1);
-                System.out.println("To hide: " + COLUMNS_NAMES[i]);
             }
         }
 
@@ -233,11 +261,15 @@ public class MicrographsTableModel extends DefaultTableModel implements TableMod
 
     @Override
     public boolean isCellEditable(int row, int column) {
-        return column == 0 ? false : true;
+        return column > 0;
     }
 
     public int getColumnSize() {
         return COLUMNS_NAMES.length;
+    }
+
+    public String getMicrographFilename() {
+        return md.getFilename();
     }
 
     public String getCTFfile(int row) {
@@ -248,7 +280,7 @@ public class MicrographsTableModel extends DefaultTableModel implements TableMod
             File f = new File(file);
 
             if (!f.isAbsolute()) {
-                file = rootDir + File.separator + file;
+                file = projectDir + File.separator + file;
             }
         }
 
@@ -276,15 +308,5 @@ public class MicrographsTableModel extends DefaultTableModel implements TableMod
         }
 
         return saved;
-    }
-
-    public void print() {
-        for (int i = 0; i < getRowCount(); i++) {
-            for (int j = 0; j < getColumnCount(); j++) {
-                System.out.print(getValueAt(i, j) + " / ");
-            }
-            System.out.println();
-        }
-        System.out.println("** ** ** ** ** ** ** ** [" + getColumnCount() + " items]");
     }
 }

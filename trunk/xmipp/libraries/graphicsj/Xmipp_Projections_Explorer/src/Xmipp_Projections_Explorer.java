@@ -102,6 +102,13 @@ public class Xmipp_Projections_Explorer implements PlugIn, UniverseListener, iAn
             runGui = true;
         }
 
+        System.out.println(" !!!!!!!!!!!!!!!!!!!!!!!!!!!!!! ");
+        System.out.println(" !!!  REMOVE STATIC VALUES  !!!");
+        fileVolume = "/home/juanjo/temp/inter.vol";
+        fileEulerAngles = "/home/juanjo/temp/angles.sel";
+        runGui = false;
+        System.out.println(" !!!!!!!!!!!!!!!!!!!!!!!!!!!!!! ");
+
         if (runGui) {
             JFrameLoad frameLoad = new JFrameLoad();
 

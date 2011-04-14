@@ -93,6 +93,7 @@ public class Sphere {
 
             for (long id : ids) {
                 String imageFileName = md.getValueString(MDLabel.MDL_IMAGE, id);
+
                 if (!imageFileName.startsWith("/")) {   // Builds absolute path (if it's not absolute already)
                     imageFileName = baseDir + imageFileName;
                 }
@@ -106,6 +107,7 @@ public class Sphere {
                 spreadHit(hit, imageFileName);
             }
         } catch (Exception ex) {
+            ex.printStackTrace();
             IJ.error("Error loading angles: " + ex.getMessage());
             throw new RuntimeException(ex);
         }
@@ -375,7 +377,11 @@ public class Sphere {
             md.setValueInt(MDLabel.MDL_ENABLED, 1, id);
         }
 
-        md.write(selFileName);
+        try {
+            md.write(selFileName);
+        } catch (Exception ex) {
+            IJ.error(ex.getMessage());
+        }
     }
 
     public ImagePlus getProjection(ImageDouble xmippVolume, double rot, double tilt) {

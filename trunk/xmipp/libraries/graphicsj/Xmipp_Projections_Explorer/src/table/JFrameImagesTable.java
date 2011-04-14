@@ -11,6 +11,7 @@
 package table;
 
 import constants.LABELS;
+import ij.IJ;
 import ij.ImagePlus;
 import java.awt.BorderLayout;
 import java.awt.Dimension;
@@ -124,15 +125,19 @@ public class JFrameImagesTable extends javax.swing.JFrame {
             return;
         }
 
-        // Parse md
-        MetaData md = new MetaData(filename);
+        try {
+            // Parse md
+            MetaData md = new MetaData(filename);
 
-        long ids[] = md.findObjects();
-        for (long id : ids) {
-            tablemodel.addItem(new ScoreItem(md, id));
+            long ids[] = md.findObjects();
+            for (long id : ids) {
+                tablemodel.addItem(new ScoreItem(md, id));
+            }
+
+            tablemodel.sortItems();
+        } catch (Exception ex) {
+            IJ.error(ex.getMessage());
         }
-
-        tablemodel.sortItems();
     }
 
     public void setWidth(int width) {

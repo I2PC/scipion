@@ -4,7 +4,6 @@
  */
 package browser.table.micrographs.renderers;
 
-import browser.table.micrographs.renderers.MicrographRowDisablerRenderer;
 import browser.imageitems.TableImageItem;
 import java.awt.Component;
 import java.awt.Font;
@@ -27,8 +26,8 @@ public class MicrographFileNameRenderer extends MicrographRowDisablerRenderer {
     public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
         TableImageItem item = (TableImageItem) value;
 
-        StringBuffer sb = new StringBuffer(item.getLabel());
-        String str = item.getLabel();
+        StringBuffer sb = new StringBuffer(item.getFileName());
+        String str = sb.toString();
 
         int columnWidth = table.getColumnModel().getColumn(column).getWidth();
 

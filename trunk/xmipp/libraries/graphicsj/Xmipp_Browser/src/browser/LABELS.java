@@ -152,6 +152,8 @@ public class LABELS {
     //public final static String OPERATION_OBJECTJ = "ObjectJ";
     public final static String LABEL_SHOW_CTF = "Show CTF";
     public final static String LABEL_EXTRACT_COLUMN = "Extract Column";
+    public final static String LABEL_RECALCULATE_CTF = "Recalculate CTF";
+
     /**
      * Labels for browser
      */

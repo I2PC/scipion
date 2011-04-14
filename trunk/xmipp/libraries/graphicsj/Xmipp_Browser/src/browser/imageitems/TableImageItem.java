@@ -18,10 +18,6 @@ public class TableImageItem extends XmippImageItem {
 
     protected boolean enabled = true;
     protected boolean selected = false;
-    //protected double zoom = 1.0;
-    //protected boolean normalized = false;
-    //protected ImagesTableModel imagesTableModel;
-    //protected double min, max;
     protected double scale = 1.0;
 
     public TableImageItem(File file, Cache cache) {
@@ -38,11 +34,11 @@ public class TableImageItem extends XmippImageItem {
         this.nslice = slice;
         this.nimage = nimage;
     }
-//
-//    @Override
-//    public String getKey() {
-//        return super.getKey() + "[" + scale + "]";
-//    }
+
+    @Override
+    public String getKey() {
+        return super.getKey() + "[" + scale + "]";
+    }
 
     @Override
     public String getFileName() {
@@ -56,17 +52,6 @@ public class TableImageItem extends XmippImageItem {
     public void setSelected(boolean selected) {
         this.selected = selected;
     }
-
-/*    public void setNormalized(double min, double max) {
-        this.normalized = true;
-
-        this.min = min;
-        this.max = max;
-    }
-
-    public void resetNormalized() {
-        this.normalized = false;
-    }*/
 
     public boolean isEnabled() {
         return enabled;
@@ -87,23 +72,9 @@ public class TableImageItem extends XmippImageItem {
     public int getThumbnailHeight() {
         return (int) ((double) super.getHeight() * scale);
     }
-    /*    public ImagePlus getPreview() {
-    return getPreview(getThumbnailWidth(), getThumbnailHeight());
-    }*/
 
-//    public ImagePlus getPreview() {
-//        return getPreview(getThumbnailWidth(), getThumbnailHeight());
-//    }
     public ImagePlus getPreview() {
-        ImagePlus preview = getPreview(getThumbnailWidth(), getThumbnailHeight());
-
-/*        if (normalized) {
-            preview.getProcessor().setMinAndMax(min, max);
-        } else {
-            preview.getProcessor().resetMinAndMax();
-        }*/
-
-        return preview;
+        return getPreview(getThumbnailWidth(), getThumbnailHeight());
     }
 
     @Override
@@ -117,16 +88,6 @@ public class TableImageItem extends XmippImageItem {
         return super.getLabel() + extra;
     }
 
-    /*    public int getThumbnailWidth() {
-    return (int) ((double) getWidth() * zoom);
-    }
-
-    public int getThumbnailHeight() {
-    return (int) ((double) getHeight() * zoom);
-    }*/
-    /*    public String getTooltipText() {
-    return getLabel();
-    }*/
     @Override
     public String toString() {
         return file.getName() + "@" + nimage + "#" + nslice;

@@ -10,6 +10,7 @@
  */
 package browser.table.micrographs;
 
+import browser.table.micrographs.ctf.JFrameCTF;
 import browser.LABELS;
 import browser.imageitems.TableImageItem;
 import browser.table.ImagesRowHeaderModel;
@@ -20,7 +21,6 @@ import browser.table.micrographs.renderers.MicrographImageRenderer;
 import browser.table.renderers.RowHeaderRenderer;
 import browser.windows.ImagesWindowFactory;
 import ij.IJ;
-import ij.gui.GenericDialog;
 import java.awt.Component;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -33,6 +33,7 @@ import javax.swing.JList;
 import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.JPopupMenu;
+import javax.swing.JSeparator;
 import javax.swing.JTable;
 import javax.swing.LookAndFeel;
 import javax.swing.SwingUtilities;
@@ -46,15 +47,14 @@ import javax.swing.table.TableRowSorter;
  *
  * @author Juanjo Vega
  */
-public class JFrameMicrographs extends JFrame {
+public class JFrameMicrographs extends JFrame implements iMicrographsGUI {
 
+    private final static int CTF_IMAGE_COLUMN = 3;
     private JTable table;
     private MicrographsTableModel tableModel;
     private ImagesRowHeaderModel rowHeaderModel;
     private XTableColumnModel columnModel = new XTableColumnModel();
-    private JPopupMenu jPopupMenu = new JPopupMenu();
-    private JMenuItem jmiShowCTF = new JMenuItem(LABELS.LABEL_SHOW_CTF);
-    private JMenuItem jmiExtractColumn = new JMenuItem(LABELS.LABEL_EXTRACT_COLUMN);
+    private JPopUpMenuMicrograph jPopupMenu = new JPopUpMenuMicrograph();
     private JFileChooser fc = new JFileChooser();
     private JList rowHeader;
     private MicrographFileNameRenderer fileNameRenderer = new MicrographFileNameRenderer();
@@ -117,33 +117,24 @@ public class JFrameMicrographs extends JFrame {
         setRenderers();
 
         // places Defocus columns next to images.
-        table.moveColumn(table.getColumnCount() - 2, MicrographsTableModel.DEFOCUS_U_COL);
-        table.moveColumn(table.getColumnCount() - 1, MicrographsTableModel.DEFOCUS_V_COL);
+        table.moveColumn(table.getColumnCount() - 2, MicrographsTableModel.INDEX_DEFOCUS_U_COL);
+        table.moveColumn(table.getColumnCount() - 1, MicrographsTableModel.INDEX_DEFOCUS_V_COL);
 
         hideColumns();
         setRowHeader();
 
-        jPopupMenu.add(jmiShowCTF);
-        jPopupMenu.add(jmiExtractColumn);
-        jmiShowCTF.setEnabled(tableModel.hasCtfData());
-
-        jmiShowCTF.addActionListener(new ActionListener() {
-
-            public void actionPerformed(ActionEvent e) {
-                showCTF(table.getSelectedRow());
-            }
-        });
-
-        jmiExtractColumn.addActionListener(new ActionListener() {
-
-            public void actionPerformed(ActionEvent e) {
-                extractColumn(table.getSelectedColumn());
-            }
-        });
-
         updateTable();
+        autoSortTable(MicrographsTableModel.INDEX_COMBINED_COLUMN);
 
         pack();
+    }
+
+    private void autoSortTable(int column) {
+        int view_column = table.convertColumnIndexToView(column);
+
+        if (column < table.getColumnCount()) {
+            table.getRowSorter().toggleSortOrder(view_column);
+        }
     }
 
     private String getTitle(String title) {
@@ -168,29 +159,6 @@ public class JFrameMicrographs extends JFrame {
         }
     }
 
-    private void showCTF(int row) {
-        String CTFfile = tableModel.getCTFfile(row);
-
-        frameCTF.loadFile(CTFfile);
-
-        frameCTF.setLocationRelativeTo(this);
-        frameCTF.setVisible(true);
-    }
-
-    private void extractColumn(int column) {
-        LinkedList<String> filenames = new LinkedList<String>();
-
-        for (int i = 0; i < table.getRowCount(); i++) {
-            TableImageItem item = (TableImageItem) table.getValueAt(i, column);
-
-            if (tableModel.isRowEnabled(i)) {
-                filenames.add(item.getFileName());
-            }
-        }
-
-        ImagesWindowFactory.openTable(filenames.toArray(new String[filenames.size()]));
-    }
-
     private void setRowHeader() {
         rowHeaderModel = new ImagesRowHeaderModel(table);
 
@@ -208,22 +176,12 @@ public class JFrameMicrographs extends JFrame {
     }
 
     private void setRenderers() {
-        // Images
-        setRenderer(table, MicrographsTableModel.imagesColumnIndex, imageRenderer);
+        table.setDefaultRenderer(TableImageItem.class, imageRenderer);
+        table.setDefaultRenderer(Double.class, doubleRenderer);
 
-        // Doubles
-        setRenderer(table, MicrographsTableModel.doubleColumnIndex, doubleRenderer);
-
-        // Filenames
-        setRenderer(table, MicrographsTableModel.filenameColumnIndex, fileNameRenderer);
-    }
-
-    private static void setRenderer(JTable table, int indexes[], TableCellRenderer renderer) {
-        for (int i = 0; i < indexes.length; i++) {
-            if (table.getColumnCount() > indexes[i]) {
-                table.getColumnModel().getColumn(indexes[i]).setCellRenderer(renderer);
-            }
-        }
+        // Image is quite big, so don't show it by default.
+        table.getColumnModel().getColumn(MicrographsTableModel.INDEX_IMAGE).
+                setCellRenderer(fileNameRenderer);
     }
 
     private void updateTable() {
@@ -282,15 +240,9 @@ public class JFrameMicrographs extends JFrame {
     }
 
     private void tableMouseClicked(java.awt.event.MouseEvent evt) {
-        //Equivalent!
-//        System.out.println("Vista: " + table.getValueAt(view_row, view_col));
-//        System.out.println("Model: " + table.getModel().getValueAt(row, col));
         int view_row = table.rowAtPoint(evt.getPoint());
         int view_col = table.columnAtPoint(evt.getPoint());
 
-        /*        int row = table.convertRowIndexToModel(view_row);
-        int col = table.convertColumnIndexToModel(view_col);
-         */
         if (SwingUtilities.isLeftMouseButton(evt)) {
             if (evt.getClickCount() > 1) {
                 Object item = table.getValueAt(view_row, view_col);//getModel().getValueAt(row, col);
@@ -322,11 +274,8 @@ public class JFrameMicrographs extends JFrame {
             table.setRowSelectionInterval(view_row, view_row);
             table.setColumnSelectionInterval(view_col, view_col);
 
-            int row = table.getSelectedRow();
-            int col = table.getSelectedColumn();
-
             // Column extraction only allowed for images
-            jmiExtractColumn.setEnabled(table.getValueAt(row, col) instanceof TableImageItem);
+            jPopupMenu.refreshItems(view_row, view_col);
             jPopupMenu.show(evt.getComponent(), evt.getX(), evt.getY());
         }
     }
@@ -357,32 +306,23 @@ public class JFrameMicrographs extends JFrame {
         updateTable();
     }
 
-    private void extractColumn() {
-        int index = -1;
-        final GenericDialog dialog = new GenericDialog("Select column to extract: ");
-        final String[] columns = new String[table.getColumnCount()];
+    private void showCTFImage(TableImageItem item, String CTFFilename) {
+        ImagesWindowFactory.openCTFImage(item.getImagePlus(), CTFFilename, this);
+    }
 
-        // Builds choice.
-        for (int i = 0; i < columns.length; i++) {
-            int column = table.convertColumnIndexToModel(i);
-            columns[i] = tableModel.getColumnName(column);
-        }
-        dialog.addChoice("column:", columns, columns[0]);
-        dialog.showDialog();
+    public void refresh() {
+        System.out.println("@TODO RELOAD TABLE!");
+/*        tableModel.reload();
 
-        if (!dialog.wasCanceled()) {
-            index = dialog.getNextChoiceIndex();
-        }
+        hideColumns();
+        setRowHeader();
 
-        // If not cancelled...
-        if (index >= 0) {
-            /*            JFrameExtractColumn frame = new JFrameExtractColumn(tableModel,
-            table.convertColumnIndexToModel(index));
-            frame.pack();
-            frame.setLocationRelativeTo(this);
-            frame.setVisible(true); // ...shows it.*/
-        }
-
+        updateTable();
+        autoSortTable(MicrographsTableModel.INDEX_COMBINED_COLUMN);
+*/
+        // = new MicrographsTableModel(tableModel.getMicrographFilename());
+//        table.setModel(tableModel);
+//        updateTable();
     }
 
     /** This method is called from within the constructor to
@@ -396,7 +336,6 @@ public class JFrameMicrographs extends JFrame {
 
         toolBar = new javax.swing.JToolBar();
         bSave = new javax.swing.JButton();
-        jbPrint = new javax.swing.JButton();
         jpCenter = new javax.swing.JPanel();
         jpCheckAll = new javax.swing.JPanel();
         jcbEnableAll = new javax.swing.JCheckBox();
@@ -417,17 +356,6 @@ public class JFrameMicrographs extends JFrame {
             }
         });
         toolBar.add(bSave);
-
-        jbPrint.setText("[[Print]]");
-        jbPrint.setFocusable(false);
-        jbPrint.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
-        jbPrint.setVerticalTextPosition(javax.swing.SwingConstants.BOTTOM);
-        jbPrint.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jbPrintActionPerformed(evt);
-            }
-        });
-        toolBar.add(jbPrint);
 
         getContentPane().add(toolBar, java.awt.BorderLayout.PAGE_START);
 
@@ -482,13 +410,8 @@ public class JFrameMicrographs extends JFrame {
     private void jcbFilterEnabledItemStateChanged(java.awt.event.ItemEvent evt) {//GEN-FIRST:event_jcbFilterEnabledItemStateChanged
         setFiltering(jcbFilterEnabled.isSelected());
 }//GEN-LAST:event_jcbFilterEnabledItemStateChanged
-
-    private void jbPrintActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jbPrintActionPerformed
-        tableModel.print();
-    }//GEN-LAST:event_jbPrintActionPerformed
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton bSave;
-    private javax.swing.JButton jbPrint;
     private javax.swing.JCheckBox jcbEnableAll;
     private javax.swing.JCheckBox jcbFilterEnabled;
     private javax.swing.JPanel jpCenter;
@@ -496,4 +419,77 @@ public class JFrameMicrographs extends JFrame {
     private javax.swing.JScrollPane jsPanel;
     private javax.swing.JToolBar toolBar;
     // End of variables declaration//GEN-END:variables
+
+    class JPopUpMenuMicrograph extends JPopupMenu {
+
+        private JMenuItem jmiShowCTF = new JMenuItem(LABELS.LABEL_SHOW_CTF);
+        private JMenuItem jmiExtractColumn = new JMenuItem(LABELS.LABEL_EXTRACT_COLUMN);
+        private JMenuItem jmiRecalculateCTF = new JMenuItem(LABELS.LABEL_RECALCULATE_CTF);
+
+        public JPopUpMenuMicrograph() {
+            super();
+
+            add(jmiShowCTF);
+            add(jmiExtractColumn);
+            add(new JSeparator());
+            add(jmiRecalculateCTF);
+
+            jmiShowCTF.addActionListener(new ActionListener() {
+
+                public void actionPerformed(ActionEvent e) {
+                    showCTFFile(table.getSelectedRow());
+                }
+            });
+
+            jmiExtractColumn.addActionListener(new ActionListener() {
+
+                public void actionPerformed(ActionEvent e) {
+                    extractColumn(table.getSelectedColumn());
+                }
+            });
+
+            jmiRecalculateCTF.addActionListener(new ActionListener() {
+
+                public void actionPerformed(ActionEvent e) {
+                    recalculateCTF(table.getSelectedRow());
+                }
+            });
+        }
+
+        private void refreshItems(int row, int col) {
+            jmiShowCTF.setEnabled(tableModel.hasCtfData());
+            jmiExtractColumn.setEnabled(table.getValueAt(row, col) instanceof TableImageItem);
+        }
+
+        private void showCTFFile(int row) {
+            String CTFfile = tableModel.getCTFfile(row);
+
+            frameCTF.loadFile(CTFfile);
+
+            frameCTF.setLocationRelativeTo(this);
+            frameCTF.setVisible(true);
+        }
+
+        private void extractColumn(int column) {
+            LinkedList<String> filenames = new LinkedList<String>();
+
+            for (int i = 0; i < table.getRowCount(); i++) {
+                TableImageItem item = (TableImageItem) table.getValueAt(i, column);
+
+                if (tableModel.isRowEnabled(i)) {
+                    filenames.add(item.getFileName());
+                }
+            }
+
+            ImagesWindowFactory.openTable(filenames.toArray(new String[filenames.size()]));
+        }
+
+        private void recalculateCTF(int row) {
+            Object item = table.getValueAt(row, CTF_IMAGE_COLUMN);
+
+            if (item instanceof TableImageItem) {
+                showCTFImage((TableImageItem) item, tableModel.getCTFfile(row));
+            }
+        }
+    }
 }

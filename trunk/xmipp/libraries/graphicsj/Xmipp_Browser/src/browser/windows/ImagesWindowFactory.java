@@ -11,9 +11,12 @@ import browser.imageitems.listitems.FileItem;
 import browser.imageitems.listitems.XmippImageItem;
 import browser.imageitems.listitems.SelFileItem;
 import browser.table.JFrameImagesTable;
+import browser.table.micrographs.ctf.CTFImageWindow;
+import browser.table.micrographs.iMicrographsGUI;
 import ij.IJ;
 import ij.ImagePlus;
 import ij.gui.ImageWindow;
+import ij.gui.Toolbar;
 import java.io.File;
 import java.util.Vector;
 import xmipp.ImageDouble;
@@ -149,5 +152,11 @@ public class ImagesWindowFactory {
     public static void openTable(String filenames[]) {
         JFrameImagesTable table = new JFrameImagesTable(filenames);
         table.setVisible(true);
+    }
+
+    public static ImageWindow openCTFImage(ImagePlus ip, String CTFfilename, iMicrographsGUI micrographsGUI) {
+        IJ.setTool(Toolbar.FREEROI);
+
+        return new CTFImageWindow(ip, CTFfilename, micrographsGUI);
     }
 }

@@ -8,7 +8,7 @@
  *
  * Created on 12-dic-2010, 0:46:53
  */
-package browser.table.micrographs;
+package browser.table.micrographs.ctf;
 
 import ij.IJ;
 import java.io.BufferedReader;
