@@ -125,7 +125,7 @@ public:
 
     /// Project the reference volumes in evenly sampled directions
     /// fill the metadata mdProj with the projections data
-    void projectVolumes(MetaData &mdProj) ;
+    virtual void projectVolumes(MetaData &mdProj) ;
 
     /// (For mpi-version only:) calculate noise averages and write to disc
     void makeNoiseImages(std::vector<Image<double>  > &Iref) ;
