@@ -85,6 +85,8 @@ public:
     void copyVolumes();
     /** Only master postprocess volumnes */
     void postProcessVolumes();
+    /** Project volumes, sync after projection */
+    void projectVolumes(MetaData &mdProj) ;
 
 }
 ;//end of class  MpiProgMLRefine3D

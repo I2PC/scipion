@@ -205,7 +205,7 @@ MpiProgMLRefine3D::MpiProgMLRefine3D(int argc, char ** argv, bool fourier)
 
 MpiProgMLRefine3D::~MpiProgMLRefine3D()
 {
-    delete ml2d;
+    delete node;
 }
 
 void MpiProgMLRefine3D::copyVolumes()
@@ -223,6 +223,14 @@ void MpiProgMLRefine3D::postProcessVolumes()
     if (node->isMaster())
         ProgMLRefine3D::postProcessVolumes();
     //all nodes waiting until volumes are copied
+    node->barrierWait();
+}
+
+void MpiProgMLRefine3D::projectVolumes(MetaData &mdProj)
+{
+    //only master post process
+     ProgMLRefine3D::projectVolumes(mdProj);
+    //all nodes waiting until volumes are projected
     node->barrierWait();
 }
 
