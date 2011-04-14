@@ -484,8 +484,7 @@ void ProgMLRefine3D::projectVolumes(MetaData &mdProj)
                 projectVolume(vol(), proj, vol().rowNumber(), vol().colNumber(), rot, tilt, psi);
                 //proj.setEulerAngles(rot, tilt, psi);
                 proj.write(fn_tmp);
-                //fixme: DEBUG_JM
-                proj.write(formatString("%s_iter%d.stk", fn_tmp.c_str(), iter));
+                //proj.write(formatString("%s_iter%d.stk", fn_tmp.c_str(), iter));
             }
 
             id = mdProj.addObject();
@@ -512,7 +511,6 @@ void ProgMLRefine3D::projectVolumes(MetaData &mdProj)
     if (rank == 0)
     {
         fn_tmp = FN_PROJECTIONS_MD;
-        std::cerr << "DEBUG_JM: fn_tmp: " << fn_tmp << std::endl;
         mdProj.write(fn_tmp);
     }
 
@@ -624,7 +622,7 @@ void ProgMLRefine3D::reconstructVolumes(const MetaData &mdProj, const FileName &
 
     for (int volno = 1; volno <= Nvols; ++volno)
     {
-      reconsProgram = createReconsProgram();
+        reconsProgram = createReconsProgram();
         //for now each node reconstruct one volume
         if ((volno - 1) % size == rank)
         {
@@ -634,7 +632,7 @@ void ProgMLRefine3D::reconstructVolumes(const MetaData &mdProj, const FileName &
             mdOne.importObjects(mdProj, MDValueEQ(MDL_REF3D, volno));
             mdOne.write(fn_one);
             // Set input/output for the reconstruction algorithm
-            std::cerr << "DEBUG_JM: reconstructing from " << fn_one << " volume " << fn_vol << std::endl;
+            //std::cerr << "DEBUG_JM: reconstructing from " << fn_one << " volume " << fn_vol << std::endl;
             reconsProgram->setIO(fn_one, fn_vol);
             reconsProgram->tryRun();
         }
