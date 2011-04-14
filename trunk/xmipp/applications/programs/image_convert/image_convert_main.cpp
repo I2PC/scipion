@@ -67,12 +67,12 @@ protected:
         defaultComments["-i"].addComment("++ where datatype can be: uint8,int8,uint16,int16,uint32,int32,long,float,double,cint16,cint32,cfloat,cdouble,bool");
         XmippMetadataProgram::defineParams();
 
-        addUsageLine("Convert among stacks, volumes and images, and change the file format. Conversion to a lower");
-        addUsageLine("bit_depth automatically adjusts the gray level range. If it is between same bit depths and ");
-        addUsageLine("different sign, then only a histogram shift is done. If parameter --depth is not passed, then ");
-        addUsageLine("bit_depth is automatically chosen equal to or higher than input bit_depth. For stack output format, ");
-        addUsageLine("a selection file with the images in the stack is optionally created, replicating the labels of the input sel file.");
-        addUsageLine("If output file extension is not set when --oroot is used (neither setting --oext nor :ext), then input format is chosen.");
+        addUsageLine("Convert among stacks, volumes and images, and change the file format.");
+        addUsageLine("+Conversion to a lower bit_depth automatically adjusts the gray level range. If it is between same bit ");
+        addUsageLine("+depths and different sign, then only a histogram shift is done. If parameter --depth is not passed, then ");
+        addUsageLine("+bit_depth is automatically chosen equal to or higher than input bit_depth. For stack output format, ");
+        addUsageLine("+a selection file with the images in the stack is optionally created, replicating the labels of the input sel file.");
+        addUsageLine("+If output file extension is not set when --oroot is used (neither setting --oext nor :ext), then input format is chosen.");
         addKeywords("conversion, convert, image, stack, volume, format, extension ");
         //Parameters
         addParamsLine("  [--oext <extension=\"\">] :  Output file format extension.");
@@ -125,6 +125,12 @@ protected:
         addExampleLine("xmipp_convert_image -i list.sel -o images.stk");
         addExampleLine("Convert a Spider volume to a MRC stack:",false);
         addExampleLine("xmipp_convert_image -i spider.vol -o stack.mrcs -t stk");
+        addExampleLine("Create a stack of volumes with a Spider volume :",false);
+        addExampleLine("xmipp_convert_image -i spider.vol -o vol_stack.stk -t vol");
+        addExampleLine("Append a volume to a volume stack:",false);
+        addExampleLine("xmipp_convert_image -i spider.vol -o vol_stack.stk -a");
+        addExampleLine("Substitute a volume in a volume stack:",false);
+        addExampleLine("xmipp_convert_image -i spider.vol -o 3@vol_stack.stk");
         addExampleLine("Save images in a stack as independent TIFF files in image directory with \"newimage\" basename in 8bit format:",false);
         addExampleLine("xmipp_convert_image -i stackFile.stk -o tiffImages.sel --oroot images/newimage:tif -d uint8");
         addExampleLine("Convert a selection file of 16bit TIFF images to 8bit and overwrites files and sel file:",false);
@@ -158,7 +164,8 @@ protected:
         if (!checkParam("--type"))
         {
             // if is stack
-            if (fn_out.getExtension() == "stk" || oext == "stk" || oext == "mrcs")
+            if (fn_out.getExtension() == "stk" || fn_out.getExtension() == "mrcs" ||
+                oext == "stk" || oext == "mrcs")
                 type = "stk";
             // if is volume, even if not is stack and --oroot is not set
             if (fn_out.getExtension() == "vol" || oext == "vol" ||
@@ -172,7 +179,7 @@ protected:
             type == "img";
             writeMode = WRITE_REPLACE;
         }
-        else if (type == "stk")
+        else if (type == "stk" || appendToStack)
             writeMode = WRITE_APPEND;
         else
             writeMode = WRITE_OVERWRITE;
@@ -183,9 +190,7 @@ protected:
     void preProcess()
     {
         FileName fn_stack_plain = fn_out.removeFileFormat();
-        if (exists(fn_stack_plain) &&
-            type == "stk" &&
-            !appendToStack) // Allow to append a single image to a stack
+        if (exists(fn_stack_plain) && !appendToStack) // Allow to append a single image to a stack
             unlink(fn_stack_plain.c_str());
 
         convMode = MD2MD;
@@ -212,8 +217,8 @@ protected:
             imTemp.read(fn_in, HEADER);
             imTemp.getDimensions(Xdim,Ydim,Zdim,Ndim);
 
-            //Fill mdIn to allow XmippMetaDataProgram create the fnImgOut
-            if (single_image && Zdim > 1 && type != "vol")
+            // If --append is set, or fn_out is in a stack, then it is supposed not to convert VOL2MD
+            if ( Zdim > 1 && !(type == "vol" || fn_out.isInStack() || appendToStack))
             {
                 convMode = VOL2MD;
                 single_image = false;
@@ -222,6 +227,7 @@ protected:
 
                 FileName fnTemp;
 
+                //Fill mdIn to allow XmippMetaDataProgram create the fnImgOut
                 for (k = 1;k <= Zdim; k++)
                 {
                     fnTemp.compose(k, fn_in);
