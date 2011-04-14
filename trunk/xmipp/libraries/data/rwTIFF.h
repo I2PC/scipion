@@ -177,7 +177,8 @@ int readTIFF(size_t select_img, bool isStack=false)
         if (TIFFGetField(tif, TIFFTAG_IMAGELENGTH,    &dhRef.imageLength) == 0)
             REPORT_ERROR(ERR_IO_NOREAD,"rwTIFF: Error reading TIFFTAG_IMAGELENGTH");
         if (TIFFGetField(tif, TIFFTAG_SUBFILETYPE,    &dhRef.subFileType) == 0)
-            REPORT_ERROR(ERR_IO_NOREAD,"rwTIFF: Error reading TIFFTAG_SUBFILETYPE");
+            dhRef.subFileType = 0; // Some scanners does not provide this label. So, we set this to zero
+        //            REPORT_ERROR(ERR_IO_NOREAD,"rwTIFF: Error reading TIFFTAG_SUBFILETYPE");
         TIFFGetField(tif, TIFFTAG_SAMPLEFORMAT,   &dhRef.imageSampleFormat);
         TIFFGetField(tif, TIFFTAG_RESOLUTIONUNIT, &dhRef.resUnit);
         TIFFGetField(tif, TIFFTAG_XRESOLUTION,    &dhRef.xTiffRes);
@@ -191,16 +192,17 @@ int readTIFF(size_t select_img, bool isStack=false)
 
     swap = TIFFIsByteSwapped(tif);
 
-    //Check select_img is in lower than stack size
+    //Check select_img is lower than stack size
     if (select_img > dirHead.size())
-        REPORT_ERROR(ERR_INDEX_OUTOFBOUNDS, formatString("readTIFF: Image number %lu exceeds stack size %lu", select_img, dirHead.size()));
+        REPORT_ERROR(ERR_INDEX_OUTOFBOUNDS, formatString("readTIFF (%s): Image number %lu exceeds stack size %lu", filename.c_str(), select_img, dirHead.size()));
     else if (select_img == ALL_IMAGES)// Check images dimensions. Need to be the same
     {
         for (size_t i = 1; i < dirHead.size(); i++)
         {
             if (dirHead[0].imageLength != dirHead[i].imageLength || \
                 dirHead[0].imageWidth != dirHead[i].imageWidth)
-                REPORT_ERROR(ERR_IMG_NOREAD, "readTIFF: images in TIFF file with different dimensions are not currently supported. Try to read them individually.");
+                REPORT_ERROR(ERR_IMG_NOREAD, formatString("readTIFF: %s file contains %lu images with, at least,"\
+                    " two of them with different dimensions. Try to read them individually.",filename.c_str(), dirHead.size()));
         }
     }
 
