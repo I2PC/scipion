@@ -26,269 +26,249 @@
 #include "micrograph_downsample.h"
 #include <data/args.h>
 #include <data/mask.h>
+#include <data/xvsmooth.h>
 
 // Read --------------------------------------------------------------------
-void Prog_downsample_prm::read(int argc, char **argv, bool do_not_read_files)
+void ProgTransformDownsample::readParams()
 {
-    if (!do_not_read_files)
-    {
-        fn_micrograph  = getParameter(argc, argv, "-i");
-        fn_downsampled = getParameter(argc, argv, "-o");
-    }
-    //bitsMp         = textToInteger(getParameter(argc, argv, "-output_bits", "32"));
-    datatype       = datatypeString2Int(getParameter(argc, argv, "-datatype", "Float"));
-    nThreads   = textToInteger(getParameter(argc, argv, "-thr", "1"));
 
-    if (checkParameter(argc, argv, "-fourier"))
+    XmippMetadataProgram::readParams();
+    step=getDoubleParam("--step");
+    String strMethod=getParam("--method");
+    if (strMethod=="fourier")
     {
-        do_fourier=true;
-        scale          = textToFloat(getParameter(argc, argv, "-fourier"));
+        nThreads=getIntParam("--method",1);
+        method=FOURIER;
     }
+    else if (strMethod=="smooth")
+        method=SMOOTH;
     else
-    {
-        do_fourier=false;
-        Xstep          = textToInteger(getParameter(argc, argv, "-Xstep"));
-        if (checkParameter(argc, argv, "-Ystep"))
-            Ystep     = textToInteger(getParameter(argc, argv, "-Ystep"));
-        else
-            Ystep     = Xstep;
-    }
-
-    stdFilter = textToFloat(getParameter(argc, argv, "-stdfilter","-1"));
-
-    if (checkParameter(argc, argv, "-kernel"))
-    {
-        std::string aux = getParameter(argc, argv, "-kernel");
-        int i = paremeterPosition(argc, argv, "-kernel");
-        if (aux == "rectangle")
-        {
-            kernel_mode = KER_RECTANGLE;
-            if (i + 2 >= argc)
-                REPORT_ERROR(ERR_ARG_MISSING, "Downsample: Not enough parameters after rectangle");
-            Yrect = textToInteger(argv[i+2]);
-            Xrect = textToInteger(argv[i+3]);
-        }
-        else if (aux == "circle")
-        {
-            kernel_mode = KER_CIRCLE;
-            if (i + 2 >= argc)
-                REPORT_ERROR(ERR_ARG_MISSING, "Downsample: Not enough parameters after circle");
-            r = textToFloat(argv[i+2]);
-        }
-        else if (aux == "gaussian")
-        {
-            kernel_mode = KER_GAUSSIAN;
-            if (i + 3 >= argc)
-                REPORT_ERROR(ERR_ARG_MISSING,
-                             "Downsample: Not enough parameters after gaussian");
-            if (Xstep != Ystep)
-                REPORT_ERROR(ERR_ARG_INCORRECT,
-                             "Downsample: You cannot apply different steps in this mode");
-            r = textToFloat(argv[i+2]);
-            sigma = textToFloat(argv[i+3]);
-        }
-        else if (aux == "pick")
-        {
-            kernel_mode = KER_PICK;
-        }
-        else if (aux == "sinc")
-        {
-            kernel_mode = KER_SINC;
-            if (i + 3 >= argc)
-                REPORT_ERROR(ERR_ARG_MISSING,
-                             "Downsample: Not enough parameters after sinc");
-            if (Xstep != Ystep)
-                REPORT_ERROR(ERR_ARG_INCORRECT,
-                             "Downsample: You cannot apply different steps in this mode");
-            delta = textToFloat(argv[i+2]);
-            Deltaw = textToFloat(argv[i+3]);
-        }
-        else
-            REPORT_ERROR(ERR_ARG_INCORRECT, "Downsample: Unknown kernel mode");
-    }
-    else
-    {
-        if(!do_fourier)
-        {
-            do_fourier=true;
-            scale          = (double)1./Xstep;
-        }
-        if(checkParameter(argc, argv, "-old"))//undocument option
-        {
-            kernel_mode = KER_SINC;
-            delta = 0.02;
-            Deltaw = 1.0 / 10.0;
-            do_fourier=false;
-        }
-    }
-    //reversed = checkParameter(argc, argv, "-reverse_endian");
+        method=KER_RECTANGLE;
 }
 
 // Usage -------------------------------------------------------------------
-void Prog_downsample_prm::usage() const
+void ProgTransformDownsample::defineParams()
 {
-    std::cerr << "  [-datatype <bits=float>]   : Must be uchar, short,int,...,float\n"
-    << "   -Xstep <xstep>            : Look at the documentation\n"
-    << "  [-Ystep <ystep=xstep>]\n"
-    << "  [-fourier <factor=0.3333>] : work in fourier space, factor < 1\n"
-    << "  [-thr <number_of_threads>]: Number of threads used in the Fourier transform\n"
-    << "  [-kernel rectangle <Ydim> <Xdim>]\n"
-    << "  [-kernel circle    <r>]\n"
-    << "  [-kernel gaussian  <r> <sigma>]\n"
-    << "  [-kernel pick]\n"
-    << "  [-kernel sinc <delta=0.02> <Deltaw=0.1>]\n"
-    << "  [-stdfilter <value>= -1]       : remove outlaters (pixels) with value outside 'value' standard deviations\n"
-    ;
-}
-#ifdef NEVERDEFINED
-
-// Produce command line ----------------------------------------------------
-std::string Prog_downsample_prm::command_linezz() const
-{
-    std::string retval;
-    retval += (std::string)"-i " + fn_micrograph + " ";
-    retval += (std::string)"-o " + fn_downsampled + " ";
-    retval += (std::string)"-output_bits " + integerToString(bitsMp) + " ";
-    retval += (std::string)"-Xstep " + integerToString(Xstep) + " ";
-    retval += (std::string)"-Ystep " + integerToString(Ystep) + " ";
-    retval += (std::string)"-kernel ";
-    switch (kernel_mode)
-    {
-    case KER_RECTANGLE:
-        retval += (std::string)"rectangle" + integerToString(Yrect) + " " + integerToString(Xrect) + " ";
-        break;
-    case KER_CIRCLE:
-        retval += (std::string)"circle" + floatToString(r) + " ";
-        break;
-    case KER_GAUSSIAN:
-        retval += (std::string)"gaussian" + floatToString(r) + " " + floatToString(sigma) + " ";
-        break;
-    case KER_PICK:
-        retval += (std::string)"pick";
-        break;
-    case KER_SINC:
-        retval += (std::string)"sinc" + floatToString(delta) + " " + floatToString(Deltaw) + " ";
-        break;
-    }
-    return retval;
-}
-#endif
-// Generate kernel ---------------------------------------------------------
-void Prog_downsample_prm::generate_kernel()
-{
-    // Integer Kernel
-    MultidimArray<int>    ikernel;
-
-    switch (kernel_mode)
-    {
-    case KER_RECTANGLE:
-        kernel.resize(Yrect, Xrect);
-        kernel.initConstant(1);
-        break;
-    case KER_CIRCLE:
-        ikernel.resize(CEIL(2*r) + 1, CEIL(2*r) + 1);
-        ikernel.setXmippOrigin();
-        BinaryCircularMask(ikernel, r);
-        typeCast(ikernel, kernel);
-        break;
-    case KER_GAUSSIAN:
-        kernel.resize(CEIL(2*r) + 1, CEIL(2*r) + 1);
-        kernel.setXmippOrigin();
-        GaussianMask(kernel, sigma);
-        break;
-    case KER_PICK:
-        kernel.resize(1, 1);
-        kernel.initConstant(1);
-        break;
-    case KER_SINC:
-        SeparableSincKaiserMask2D(kernel, (1.0 / Xstep), delta, Deltaw);
-        break;
-    }
-    kernel.setXmippOrigin();
-    // Keep energy constant
-    // kernel /=sqrt(kernel.sum2());
-    // Keep average value constant
-    kernel /= kernel.sum();
-    //Image<double> save;
-    //save() = kernel;
-    //save.write("PPPkernel.xmp");
-}
-
-// Create output inf file --------------------------------------------------
-void Prog_downsample_prm::create_empty_output_file()
-{
-    std::cerr << "Creating empty downsampled file ...\n";
-    if (do_fourier)
-    {
-        Ypdim = FLOOR((double)Ydim *scale);
-        Xpdim = FLOOR((double)Xdim *scale);
-    }
-    else
-    {
-        Ypdim = FLOOR(Ydim / Ystep);
-        Xpdim = FLOOR(Xdim / Xstep);
-    }
-    outM.setDataType((DataType)datatype);
-    outM.resize(Xpdim,Ypdim, fn_downsampled);
-
-#ifdef NEVER
-    //FIXME, here output downsampled image
-    //should be written in any format
-    //since I do not know how to do that
-    //without creating an image in memory. Only xmipp raw images are permited
-    if (!(fn_downsampled.getExtension() == "raw"))
-        REPORT_ERROR(ERR_IMG_NOREAD,"Output file name must be have 'raw' extension");
-    create_empty_file(fn_downsampled, ((unsigned long long)Ypdim)*
-                      Xpdim*bitsMp / 8);
-
-    std::ofstream fh_downsample_inf;
-    fh_downsample_inf.open((fn_downsampled + ".inf").c_str());
-    if (!fh_downsample_inf)
-        REPORT_ERROR(ERR_IO_NOWRITE, fn_downsampled +".inf");
-    fh_downsample_inf << "# Generated by Downsample\n";
-    fh_downsample_inf << "# Original file: " << fn_micrograph << std::endl;
-    if(!do_fourier)
-        fh_downsample_inf << "# Ystep x Xstep: " << Ystep << " x "
-        << Xstep << std::endl;
-    if(do_fourier)
-        fh_downsample_inf << "# scale : " << scale << std::endl;
-    fh_downsample_inf << "# Image width\n";
-    fh_downsample_inf << "Xdim= " << Xpdim << std::endl;
-    fh_downsample_inf << "# Image length\n";
-    fh_downsample_inf << "Ydim= " << Ypdim << std::endl;
-    fh_downsample_inf << "# Pixel depth\n";
-    fh_downsample_inf << "bitspersample= " << bitsMp << std::endl;
-    fh_downsample_inf.close();
-#endif
-}
-
-// Open input micrograph ---------------------------------------------------
-void Prog_downsample_prm::open_input_micrograph()
-{
-    M.setStdevFilter(stdFilter);
-    M.open_micrograph(fn_micrograph/*, reversed*/);
-    //FIXME this should be done general
-    bitsM = M.getDatatypeDetph();
-    M.size(Xdim, Ydim);
-}
-
-// Close input micrograph --------------------------------------------------
-void Prog_downsample_prm::close_input_micrograph()
-{
-    M.close_micrograph();
+    each_image_produces_an_output = true;
+    XmippMetadataProgram::defineParams();
+    addParamsLine("  --step <factor>    : Downsampling factor. factor=2 reduces the image size to one half.");
+    addParamsLine("                     :+Fourier supports non-integer downsampling factors.");
+    addParamsLine("                     :+The rest of methods must use integer factors.");
+    addParamsLine(" [--method <mth=fourier>]  : Method for making the downsampling");
+    addParamsLine("         where <mth>");
+    addParamsLine("               fourier <numThreads=1>: Fourier supports non-integer downsampling factors");
+    addParamsLine("                                     :+This is the best choice.");
+    addParamsLine("               rectangle: This is simple binning in a square of size factor x factor");
+    addParamsLine("                        :+This is not a good choice since it creates aliasing and ");
+    addParamsLine("                        :+unequal frequency damping.");
+    addParamsLine("               smooth: smooth and colordither");
+    addParamsLine("                     :+ Both input and output micrographs must be 8 bits, unsigned char");
 }
 
 // Downsample micrograph ---------------------------------------------------
-void Prog_downsample_prm::Downsample()
+void ProgTransformDownsample::processImage(const FileName &fnImg, const FileName &fnImgOut,
+        size_t objId)
 {
-    try
+    // Open input data
+    ImageGeneric M_in;
+    M_in.readMapped(fnImg);
+    int Zdim, Ydim, Xdim;
+    M_in.getDimensions(Xdim,Ydim,Zdim);
+    if (Zdim!=1)
+        REPORT_ERROR(ERR_MULTIDIM_DIM,"This program is not intended for volumes");
+
+    // Open output data, mapped file
+    int Xpdim = floor(Xdim/step);
+    int Ypdim = floor(Ydim/step);
+    ImageGeneric M_out;
+    if (method==SMOOTH)
     {
-        downsample(M, Xstep, Ystep, kernel, outM, do_fourier, nThreads);
+        M_out.setDatatype(UChar);
+        M_out().resize(1,1,Ypdim,Xpdim);
     }
-    catch (XmippError XE)
+    else
     {
-        if (exists(fn_downsampled))
-            unlink(fn_downsampled.c_str());
-        throw XE;
+        M_out.setDatatype(Float);
+        M_out.mapFile2Write(Xpdim, Ypdim, 1, fnImgOut);
     }
+
+    // Downsample
+    if (method==KER_RECTANGLE)
+        downsampleKernel(M_in,step,M_out);
+    else if (method==FOURIER)
+        downsampleFourier(M_in,step,M_out,nThreads);
+    else
+    {
+        downsampleSmooth(M_in,step,M_out);
+        M_out.write(fnImgOut);
+    }
+}
+
+/* Downsample -------------------------------------------------------------- */
+void downsampleKernel(const ImageGeneric &M, double step, ImageGeneric &Mp)
+{
+    int istep=(int)step;
+    MultidimArray<double> kernel;
+    kernel.resizeNoCopy(istep,istep);
+    kernel.initConstant(1.0/MULTIDIM_SIZE(kernel));
+
+    int Ydim, Xdim, Ypdim, Xpdim;
+    M().getDimensions(Xdim, Ydim);
+    Mp().getDimensions(Xpdim, Ypdim);
+
+    // Look for input/output ranges
+    double a = 1;
+    double b = 0;
+    double scale = 1;
+    int ii, jj, i2, j2, i, j, y, x;
+    if (Mp.getDatatype() != Float)
+    {
+        double imin, imax;
+        double omin, omax;
+        imin=imax=M.getPixel(0,0);
+        bool ofirst = true;
+
+        if (M.getDatatype() != Float)
+            scale = (pow(2.0, Mp.getDatatypeDepth()) - 1.0) /
+                    (pow(2.0, M.getDatatypeDepth()) - 1.0);
+        else if (M.getDatatype() == Float)
+            scale = 1;
+        for (ii = 0, y = 0; y < Ydim && ii < Ypdim; y += istep, ++ii)
+            for (jj = 0, x = 0; x < Xdim && jj < Xpdim; x += istep, ++jj)
+            {
+                double pixval = 0;
+                for (i=0, i2=y; i<YSIZE(kernel) && i2<Ydim; ++i, ++i2)
+                    for (j=0, j2=x; j<XSIZE(kernel) && j2<Xdim; ++j, ++j2)
+                    {
+                        double aux=M.getPixel(i2, j2);
+                        imin = XMIPP_MIN(imin, aux);
+                        imax = XMIPP_MAX(imax, aux);
+                        pixval += A2D_ELEM(kernel,i, j) * aux;
+                    }
+                pixval *= scale;
+                if (ofirst)
+                {
+                    omin = omax = pixval;
+                    ofirst = false;
+                }
+                else
+                {
+                    omin = XMIPP_MIN(omin, pixval);
+                    omax = XMIPP_MAX(omax, pixval);
+                }
+            }
+
+        // Compute range transformation
+        double irange = imax - imin;
+        double orange = omax - omin;
+
+        if (M.getDatatype() != Float)
+        {
+            a = scale * irange / orange;
+            b = -omin;
+        }
+        else if (Mp.getDatatype() != Float)
+        {
+            a = (pow(2.0, Mp.getDatatypeDepth()) - 1.0) / orange;
+            scale = 1;
+            b = -omin;
+        }
+    }
+
+    // Really downsample
+    for (ii = 0, y = 0; y < Ydim && ii < Ypdim; y += istep, ++ii)
+        for (jj = 0, x = 0; x < Xdim && jj < Xpdim; x += istep, ++jj)
+        {
+            double pixval = 0;
+            for (i=0, i2=y; i<YSIZE(kernel) && i2<Ydim; ++i, ++i2)
+                for (j=0, j2=x; j<XSIZE(kernel)&& j2<Xdim; ++j, ++j2)
+                    pixval += A2D_ELEM(kernel,i, j) * M.getPixel(i2, j2);
+            if (ii < Ypdim && jj < Xpdim)
+                if (Mp.datatype != Float)
+                    Mp.setPixel(ii, jj, floor(a*(pixval*scale + b)));
+                else
+                    Mp.setPixel(ii, jj, pixval);
+        }
+}
+
+void downsampleFourier(const ImageGeneric &M, double step, ImageGeneric &Mp, int nThreads)
+{
+    int Ydim, Xdim, Ypdim, Xpdim;
+    M().getDimensions(Xdim, Ydim);
+    Mp().getDimensions(Xpdim, Ypdim);
+
+    // Read the micrograph in memory as doubles
+    MultidimArray<double> Mmem;
+    Mmem.setMmap(true);
+    Mmem.resizeNoCopy(Ydim,Xdim);
+    MultidimArray<std::complex<double> > MmemFourier;
+    M().getImage(Mmem);
+
+    // Perform the Fourier transform
+    FourierTransformer transformerM;
+    transformerM.setThreadsNumber(nThreads);
+    transformerM.FourierTransform(Mmem, MmemFourier, false);
+
+    // Create space for the downsampled image and its Fourier transform
+    MultidimArray<double> Mpmem(Ypdim,Xpdim);
+    MultidimArray<std::complex<double> > MpmemFourier;
+    FourierTransformer transformerMp;
+    transformerMp.setThreadsNumber(nThreads);
+    transformerMp.setReal(Mpmem);
+    transformerMp.getFourierAlias(MpmemFourier);
+
+    int ihalf=YSIZE(MpmemFourier)/2+1;
+    for (int i=0; i<ihalf; i++)
+        for (int j=0; j<XSIZE(MpmemFourier); j++)
+            A2D_ELEM(MpmemFourier,i,j)=A2D_ELEM(MmemFourier,i,j);
+    for (int i=ihalf; i<YSIZE(MpmemFourier); i++)
+    {
+        int ip=YSIZE(MmemFourier)-YSIZE(MpmemFourier)+i;
+        for (int j=0; j<XSIZE(MpmemFourier); j++)
+            A2D_ELEM(MpmemFourier,i,j)=A2D_ELEM(MmemFourier,ip,j);
+    }
+
+    // Transform data
+    transformerMp.inverseFourierTransform();
+
+    // Find minimun and range in output data
+    double omin,omax;
+    Mpmem.computeDoubleMinMax(omin,omax);
+    double orange = omax - omin;
+    double a = (pow(2.0, Mp.getDatatypeDepth()) - 1.0) / orange;
+    double b = -omin;
+    double scale=1;
+    if (M.getDatatype() != Float)
+        scale = (pow(2.0, Mp.getDatatypeDepth()) - 1.0) /
+                (pow(2.0, M.getDatatypeDepth()) - 1.0);
+    else if (M.getDatatype() == Float)
+        scale = 1;
+
+    // Copy back data
+    if (Mp.datatype!=Float)
+        FOR_ALL_ELEMENTS_IN_ARRAY2D(Mpmem)
+        Mp.setPixel(i, j, a*(A2D_ELEM(Mpmem,i,j)*scale + b));
+    else
+        FOR_ALL_ELEMENTS_IN_ARRAY2D(Mpmem)
+        Mp.setPixel(i, j, A2D_ELEM(Mpmem,i,j));
+}
+
+void downsampleSmooth(const ImageGeneric &M, double step, ImageGeneric &Mp)
+{
+    if (M.datatype!=UChar || Mp.datatype!=UChar)
+        REPORT_ERROR(ERR_ARG_INCORRECT,"Smooth downsampling is only valid for 8 bit images");
+
+    int Ydim, Xdim, Ypdim, Xpdim;
+    M().getDimensions(Xdim, Ydim);
+    Mp().getDimensions(Xpdim, Ypdim);
+
+    byte rgb[256];
+    for (int i = 0; i < 256; i++)
+        rgb[i] = i;
+    byte *result = SmoothResize(MULTIDIM_ARRAY(*(((MultidimArray<unsigned char>*)M().im))),
+                                Xdim, Ydim, Xpdim, Ypdim,
+                                rgb, rgb, rgb, rgb, rgb, rgb, 256);
+    for (int i = 0; i < Ypdim; i++)
+        for (int j = 0; j < Xpdim; j++)
+            Mp.setPixel(i, j, result[i*Xpdim+j]);
 }

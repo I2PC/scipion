@@ -25,70 +25,10 @@
 
 #include <reconstruction/micrograph_downsample.h>
 #include <data/args.h>
-#include <data/xvsmooth.h>
-
-void Usage(const Prog_downsample_prm &prm);
 
 int main(int argc, char **argv)
 {
-    Prog_downsample_prm prm;
-    bool                smooth;
-    //bool                reversed;
-
-    // Get input parameters -------------------------------------------------
-    try
-    {
-        prm.read(argc, argv);
-        smooth         = checkParameter(argc, argv, "-smooth");
-        //reversed       = checkParameter(argc, argv, "-reverse_endian");
-    }
-    catch (XmippError XE)
-    {
-        std::cout << XE;
-        Usage(prm);
-        exit(1);
-    }
-
-    try
-    {
-
-        if(!prm.do_fourier)
-           prm.generate_kernel();
-        prm.open_input_micrograph();
-        prm.create_empty_output_file();
-        if (smooth)
-        {
-            Micrograph Mp;
-            Mp.open_micrograph(prm.fn_downsampled);
-            byte rgb[256];
-            for (int i = 0; i < 256; i++) rgb[i] = i;
-            byte *result = SmoothResize((byte *)(prm.M.arrayUChar()),
-                                        prm.Xdim, prm.Ydim, prm.Xpdim, prm.Ypdim,
-                                        rgb, rgb, rgb, rgb, rgb, rgb, 256);
-
-            for (int i = 0; i < prm.Ypdim; i++)
-                for (int j = 0; j < prm.Xpdim; j++)
-                   prm.outM.set_val(j, i, result[i*prm.Xpdim+j]);
-            prm.outM.close_micrograph();
-        }
-        else prm.Downsample();
-        prm.close_input_micrograph();
-    }
-    catch (XmippError XE)
-    {
-        std::cout << XE;
-    }
-}
-
-/* Usage =================================================================== */
-void Usage(const Prog_downsample_prm &prm)
-{
-    std::cerr << "Purpose: This file allows you to downsample raw images\n"
-    << "Usage: downsample [parameters]\n"
-    << "   -i <input_file>        : Raw input file, <input_file>.inf\n"
-    << "                            must exist\n"
-    << "   -o <output_file>       : Must be different from input one\n"
-    << "  [-smooth]               : Use Smoothing for downsampling\n"
-    ;
-    prm.usage();
+    ProgTransformDownsample prm;
+    prm.read(argc,argv);
+    return prm.tryRun();
 }

@@ -26,109 +26,54 @@
 #ifndef _DOWNSAMPLE
 #define _DOWNSAMPLE
 
-#include <data/funcs.h>
+#include <data/program.h>
 #include <data/micrograph.h>
 
 ///@defgroup MicrographDownsample Micrograph Downsample
 /// @ingroup ReconsLibrary
 //@{
 /** Downsample parameters. */
-class Prog_downsample_prm
+class ProgTransformDownsample: public XmippMetadataProgram
 {
 public:
-    /// Input micrograph
-    FileName fn_micrograph;
+    /// Downsampling factor
+    double step;
 
-    /// Output micrograph
-    FileName fn_downsampled;
+    typedef enum {KER_RECTANGLE, FOURIER, SMOOTH} TDownsamplingMethod;
 
-    /// Xstep
-    int      Xstep;
-    /// Ystep
-    int      Ystep;
-    /// Scale. Alternative way to give output dimensions.
-    double scale;
+    /** Downsampling method*/
+    TDownsamplingMethod method;
 
-#define KER_RECTANGLE  0
-#define KER_CIRCLE     1
-#define KER_GAUSSIAN   2
-#define KER_PICK       3
-#define KER_SINC       4
-
-    /** Kernel mode.
-        Valid modes are KER_RECTANGLE, KER_CIRCLE, KER_GAUSSIAN
-        KER_PICK and KER_SINC */
-    int      kernel_mode;
-
-    /// Circle radius
-    double   r;
-
-    /// Gaussian sigma
-    double   sigma;
-
-    /// delta
-    double   delta;
-
-    /// Deltaw
-    double   Deltaw;
-
-    /// fourier interpolation
-    bool do_fourier;
-    /// number of Threads used in the Fourier TRansform
+    /// Number of Threads used in the Fourier Transform
     int nThreads;
-    /// Rectangular X size
-    int      Xrect;
-    /// Rectangular Y size
-    int      Yrect;
-    /// Output bits
-    int      bitsMp;
-    /// Reverse endian
-    bool     reversed;
+
 public:
-    // Side information
     // Kernel
     MultidimArray<double> kernel;
-    // Input micrograph
-    Micrograph M;
-    // Output micrograph
-    Micrograph outM;
-    // Input micrograph depth
-    int bitsM;
-    // Input dimensions
-    int Xdim, Ydim;
-    // Output dimensions
-    int Xpdim, Ypdim;
-    // datatype
-    int datatype;
-    //
-    double stdFilter;
-
 public:
-    /** Read input parameters.
-        If do_not_read_files=TRUE then fn_micrograph and
-        fn_downsampled are not read. */
-    void read(int argc, char **argv, bool do_not_read_files = false);
+    /** Read input parameters.*/
+    void readParams();
 
-    /// Usage
-    void usage() const;
-#ifdef NEVERDEFINED
-    /// Produce command line parameters
-    std::string command_line() const;
-#endif
-    /// Generate kernel
-    void generate_kernel();
-
-    /// Open input micrograph
-    void open_input_micrograph();
-
-    /// Close input micrograph
-    void close_input_micrograph();
-
-    /** Create output information file */
-    void create_empty_output_file();
+    /// Define params
+    void defineParams();
 
     /** Really downsample.*/
-    void Downsample();
+    void processImage(const FileName &fnImg, const FileName &fnImgOut, size_t objId);
 };
+
+/** Downsample a micrograph using a rectangular kernel.
+ * The input and output micrographs must be already open.
+ */
+void downsampleKernel(const ImageGeneric &M, double step, ImageGeneric &Mp);
+
+/** Downsample a micrograph in Fourier space.
+ * The input and output micrographs must be already open.
+ */
+void downsampleFourier(const ImageGeneric &M, double step, ImageGeneric &Mp, int nThreads);
+
+/** Downsample a micrograph using smooth and color dithering.
+ * The input and output micrographs must be already open.
+ */
+void downsampleSmooth(const ImageGeneric &M, double step, ImageGeneric &Mp);
 //@}
 #endif
