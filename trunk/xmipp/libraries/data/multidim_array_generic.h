@@ -237,6 +237,12 @@ public:
         im->getDimensions(Xdim,Ydim,Zdim,Ndim);
     }
 
+    void getDimensions(int& Xdim, int& Ydim) const
+    {
+        size_t Ndim;
+        int Zdim;
+        im->getDimensions(Xdim,Ydim,Zdim,Ndim);
+    }
     /**
       * Get the dimensions of the linked array.
       */
