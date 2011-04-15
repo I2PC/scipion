@@ -541,7 +541,6 @@ ReconsSources = [
     'fourier_filter.cpp',
     'make_spectra.cpp',
     'micrograph_phase_flipping.cpp',
-    'micrograph_downsample.cpp',
     'ml_align2d.cpp',
 ###    'ml_align3d.cpp',
     'mean_shift.cpp',
@@ -575,6 +574,7 @@ ReconsSources = [
     'tomo_align_tilt_series.cpp',
     'tomo_align_refinement.cpp',
     'tomo_remove_fluctuations.cpp',
+    'transform_downsample.cpp',
     'volume_segment.cpp',
     'xray_import.cpp'
 ]
@@ -695,7 +695,6 @@ AddXmippProgram('metadata_histogram')
 AddXmippProgram('metadata_import')
 AddXmippProgram('metadata_split')
 AddXmippProgram('metadata_utilities')
-AddXmippProgram('micrograph_downsample', ['XmippRecons'])
 AddXmippProgram('micrograph_phase_flipping',['XmippRecons'])
 AddXmippProgram('micrograph_scissor'),
 AddXmippProgram('ml_align2d', ['XmippRecons'])
@@ -723,6 +722,7 @@ AddXmippProgram('resolution_ssnr', ['XmippRecons'])
 AddXmippProgram('transform_add_noise')
 AddXmippProgram('transform_adjust_volume_grey_levels', ['XmippRecons'])
 AddXmippProgram('transform_center_image')
+AddXmippProgram('transform_downsample', ['XmippRecons'])
 AddXmippProgram('transform_filter', ['XmippRecons'])
 AddXmippProgram('transform_geometry')
 AddXmippProgram('transform_mask')

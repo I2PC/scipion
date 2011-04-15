@@ -23,7 +23,7 @@
  *  e-mail address 'xmipp@cnb.csic.es'
  ***************************************************************************/
 
-#include "micrograph_downsample.h"
+#include "transform_downsample.h"
 #include <data/args.h>
 #include <data/mask.h>
 #include <data/xvsmooth.h>
@@ -50,10 +50,22 @@ void ProgTransformDownsample::readParams()
 void ProgTransformDownsample::defineParams()
 {
     each_image_produces_an_output = true;
+    addUsageLine("Downsample a micrograph. For volumes use xmipp_transform_geometry.");
+    addUsageLine("+There are several downsampling methods. The most general and recommended is Fourier.");
+    addUsageLine("+Fourier downsampling puts a window in Fourier space. This is the best downsampling that can be performed.");
+    addUsageLine("+Altermatively, smoothing makes color dithering which is pretty good for visualization, ");
+    addUsageLine("+but it modifies the particle spectrum. Binning with a rectangle kernel modifies the ");
+    addUsageLine("+spectrum of the micrographs and is not recommended. You may see the effects of the different ");
+    addUsageLine("+downsampling schemes at [[http://biocomp.cnb.csic.es/~coss/Articulos/Sorzano2009d.pdf][this article]].");
+    addUsageLine("+ ");
+    addUsageLine("+The downsampling factor (--step) is the factor by which the micrograph will be reduced.");
+    addUsageLine("+For instance, a downsampling by 2 will reduce the image size to one half. Using Fourier and smooth ");
+    addUsageLine("+you may use non-integer downsampling factors, and the image size will be reduced by 1/factor");
+    addSeeAlsoLine("transform_geometry");
     XmippMetadataProgram::defineParams();
     addParamsLine("  --step <factor>    : Downsampling factor. factor=2 reduces the image size to one half.");
-    addParamsLine("                     :+Fourier supports non-integer downsampling factors.");
-    addParamsLine("                     :+The rest of methods must use integer factors.");
+    addParamsLine("                     :+Fourier and smooth support non-integer downsampling factors.");
+    addParamsLine("                     :+Rectangular binning must use integer factors.");
     addParamsLine(" [--method <mth=fourier>]  : Method for making the downsampling");
     addParamsLine("         where <mth>");
     addParamsLine("               fourier <numThreads=1>: Fourier supports non-integer downsampling factors");
@@ -63,12 +75,18 @@ void ProgTransformDownsample::defineParams()
     addParamsLine("                        :+unequal frequency damping.");
     addParamsLine("               smooth: smooth and colordither");
     addParamsLine("                     :+ Both input and output micrographs must be 8 bits, unsigned char");
+    addExampleLine("xmipp_transform_downsample -i micrograph.tif -o downsampledMicrograph.tif --step 2");
 }
 
 // Downsample micrograph ---------------------------------------------------
 void ProgTransformDownsample::processImage(const FileName &fnImg, const FileName &fnImgOut,
         size_t objId)
 {
+    if (fnImg==fnImgOut)
+        REPORT_ERROR(ERR_ARG_MISSING,
+                     formatString("Input and output images must be different: %s",
+                                  fnImg.c_str()));
+
     // Open input data
     ImageGeneric M_in;
     M_in.readMapped(fnImg);

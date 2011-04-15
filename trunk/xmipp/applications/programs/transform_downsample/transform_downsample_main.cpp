@@ -23,7 +23,7 @@
  *  e-mail address 'xmipp@cnb.csic.es'
  ***************************************************************************/
 
-#include <reconstruction/micrograph_downsample.h>
+#include <reconstruction/transform_downsample.h>
 #include <data/args.h>
 
 int main(int argc, char **argv)
