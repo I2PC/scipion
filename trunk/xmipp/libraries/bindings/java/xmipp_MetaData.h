@@ -89,10 +89,10 @@ JNIEXPORT jdouble JNICALL Java_xmipp_MetaData_getValueDouble
 
 /*
  * Class:     xmipp_MetaData
- * Method:    getValueString
+ * Method:    getValueString_
  * Signature: (IJ)Ljava/lang/String;
  */
-JNIEXPORT jstring JNICALL Java_xmipp_MetaData_getValueString
+JNIEXPORT jstring JNICALL Java_xmipp_MetaData_getValueString_1
   (JNIEnv *, jobject, jint, jlong);
 
 /*
@@ -102,6 +102,14 @@ JNIEXPORT jstring JNICALL Java_xmipp_MetaData_getValueString
  */
 JNIEXPORT jboolean JNICALL Java_xmipp_MetaData_getValueBoolean
   (JNIEnv *, jobject, jint, jlong);
+
+/*
+ * Class:     xmipp_MetaData
+ * Method:    getFilename
+ * Signature: ()Ljava/lang/String;
+ */
+JNIEXPORT jstring JNICALL Java_xmipp_MetaData_getFilename
+  (JNIEnv *, jobject);
 
 /*
  * Class:     xmipp_MetaData
@@ -158,14 +166,6 @@ JNIEXPORT jlong JNICALL Java_xmipp_MetaData_addObject
  */
 JNIEXPORT void JNICALL Java_xmipp_MetaData_addLabel
   (JNIEnv *, jobject, jint);
-
-/*
- * Class:     xmipp_MetaData
- * Method:    getFilename
- * Signature: ()Ljava/lang/String;
- */
-JNIEXPORT jstring JNICALL Java_xmipp_MetaData_getFilename
-  (JNIEnv *, jobject);
 
 #ifdef __cplusplus
 }

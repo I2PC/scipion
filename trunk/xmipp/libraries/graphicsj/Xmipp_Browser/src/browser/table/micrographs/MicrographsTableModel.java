@@ -75,46 +75,44 @@ public class MicrographsTableModel extends DefaultTableModel implements TableMod
     public final static int INDEX_COMBINED_COLUMN = MD_LABELS.length - 1;
     // Data type contained by columns to set renderes properly.
     protected static Cache cache = new Cache();
-    private String projectDir;
     private MetaData md;
 
     public MicrographsTableModel(String filename) {
         super();
 
+        // Builds colunms structure.
+        for (int i = 0; i < COLUMNS_NAMES.length; i++) {
+            addColumn(COLUMNS_NAMES[i]);
+        }
+        addColumn(EXTRA_COLUMNS_NAMES[0]);  // DEFOCUS_U
+        addColumn(EXTRA_COLUMNS_NAMES[1]);  // DEFOCUS_V
+
+        load(filename);
+    }
+
+    public void reload() {
+        load(getMicrographFilename());
+    }
+
+    private void load(String filename) {
         try {
+            removeTableModelListener(this); // Deactivate events while updating.
+            clear();    // Clear the whole data.
+
             md = new MetaData(filename);
-
-            System.out.println(" !!!!!!!!!!! Replace projectDir !!!!!!");
-            File f = new File(md.getFilename());
-            projectDir = f.getParent();
-            //projectDir = System.getProperty("user.dir");
-
-            for (int i = 0; i < COLUMNS_NAMES.length; i++) {
-                addColumn(COLUMNS_NAMES[i]);
-            }
 
             buildTable(md);
 
-            addTableModelListener(this);
+            addTableModelListener(this);    // Restore events again.
         } catch (Exception ex) {
             ex.printStackTrace();
             throw new RuntimeException(ex.getMessage());
         }
     }
 
-    public void reload() {
-        clear();
-
-        buildTable(md);
-
-//        fireTableDataChanged();
-    }
-
     private void clear() {
-        removeTableModelListener(this);
-
         while (getRowCount() > 0) {
-            removeRow(getRowCount() - 1);
+            removeRow(0);
         }
     }
 
@@ -151,15 +149,12 @@ public class MicrographsTableModel extends DefaultTableModel implements TableMod
                                 row[col] = enabled > 0;
                                 break;
                             case MDLabel.MDL_IMAGE:
-                            /*                                String filename = md.getValueString(label, id);
-                            row[col] = new File(projectDir, filename);
-                            break;*/
                             case MDLabel.MDL_PSD:
                             case MDLabel.MDL_ASSOCIATED_IMAGE1:
                             case MDLabel.MDL_ASSOCIATED_IMAGE2:
                             case MDLabel.MDL_ASSOCIATED_IMAGE3:
                                 String filename = md.getValueString(label, id);
-                                File f = new File(projectDir, filename);
+                                File f = new File(filename);
                                 row[col] = new TableImageItem(f, cache);
                                 break;
                             case MDLabel.MDL_CTF_CRITERION_DAMPING:
@@ -193,9 +188,6 @@ public class MicrographsTableModel extends DefaultTableModel implements TableMod
     }
 
     private void addExtraColumns() {
-        addColumn(EXTRA_COLUMNS_NAMES[0]);  // DEFOCUS_U
-        addColumn(EXTRA_COLUMNS_NAMES[1]);  // DEFOCUS_V
-
         double defocusU, defocusV;
 
         try {
@@ -276,13 +268,12 @@ public class MicrographsTableModel extends DefaultTableModel implements TableMod
         long id = (Long) getValueAt(row, 0);
         String file = md.getValueString(MDLabel.MDL_CTFMODEL, id);
 
-        if (file != null) {
-            File f = new File(file);
+        return file;
+    }
 
-            if (!f.isAbsolute()) {
-                file = projectDir + File.separator + file;
-            }
-        }
+    public String getPSDfile(int row) {
+        long id = (Long) getValueAt(row, 0);
+        String file = md.getValueString(MDLabel.MDL_PSD, id);
 
         return file;
     }

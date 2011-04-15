@@ -154,9 +154,11 @@ public class ImagesWindowFactory {
         table.setVisible(true);
     }
 
-    public static ImageWindow openCTFImage(ImagePlus ip, String CTFfilename, iMicrographsGUI micrographsGUI) {
+    public static ImageWindow openCTFImage(ImagePlus ip, String CTFfilename,
+            String MicrographFilename, String PSDfilename, iMicrographsGUI micrographsGUI) {
         IJ.setTool(Toolbar.FREEROI);
 
-        return new CTFImageWindow(ip, CTFfilename, micrographsGUI);
+        return new CTFImageWindow(ip, CTFfilename, MicrographFilename,
+                PSDfilename, micrographsGUI);
     }
 }

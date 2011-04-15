@@ -1,5 +1,4 @@
 
-import browser.ICONS_MANAGER;
 import browser.JFrameBrowser;
 import browser.LABELS;
 import browser.windows.ImagesWindowFactory;
@@ -21,7 +20,6 @@ import org.apache.commons.cli.Options;
  */
 public class XmippBrowser implements PlugIn {
 
-    public final static boolean DEBUG = true;
     private final static String COMMAND_OPTION_DIR = "dir";
     private final static String COMMAND_OPTION_IMG = "img";
     private final static String COMMAND_OPTION_VOL = "vol";
@@ -44,15 +42,12 @@ public class XmippBrowser implements PlugIn {
     }
 
     public void run(String string) {
-        ICONS_MANAGER ICONS_MANAGER = new ICONS_MANAGER();  // Forces icons to be loaded
-
         if (IJ.isMacro() && Macro.getOptions() != null && !Macro.getOptions().trim().isEmpty()) { // From macro.
             // "string" is used when called from another plugin or installed command.
             // "Macro.getOptions()" used when called from a run("command", arg) macro function.
             processArgs(Macro.getOptions().trim());
         } else {    // From menu.
             DIR = System.getProperty("user.dir");
-            //processArgs("--img /home/juanjo/Desktop/imgs_Roberto/kk/img000007.xmp /home/juanjo/Desktop/imgs_Roberto/kk/img000005.xmp /home/juanjo/Desktop/imgs_Roberto/kk/img000001.xmp");
         }
 
         if (IMGS != null) {
@@ -74,10 +69,6 @@ public class XmippBrowser implements PlugIn {
             for (int i = 0; i < SELS.length; i++) {
                 ImagesWindowFactory.openTable(SELS[i]);//, h, w);
             }
-        }
-
-        if (DEBUG) {
-            DIR = "/home/juanjo/Desktop/imgs_Roberto/kk";
         }
 
         if (DIR != null) {

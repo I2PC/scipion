@@ -33,6 +33,10 @@ public class ICONS_MANAGER {
     public static ImageIcon FILE_TYPE_UNKNOWN;
     public static ImageIcon FILE_TYPES_ICONS[] = new ImageIcon[REGISTERED_FILE_ITEMS.length()];
 
+    static {
+        new ICONS_MANAGER();    // Auto-load.
+    }
+
     public ICONS_MANAGER() {
         FILTERING_ALERT = new ImageIcon(getClass().getResource(PATH_FILTERING_ALERT));
         PARENT_DIRECTORY = new ImageIcon(getClass().getResource(PATH_PARENT_DIRECTORY));

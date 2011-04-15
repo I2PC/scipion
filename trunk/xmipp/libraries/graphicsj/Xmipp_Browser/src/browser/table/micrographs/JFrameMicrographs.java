@@ -129,6 +129,12 @@ public class JFrameMicrographs extends JFrame implements iMicrographsGUI {
         pack();
     }
 
+    public void refresh() {
+        tableModel.reload();
+
+        updateTable();
+    }
+
     private void autoSortTable(int column) {
         int view_column = table.convertColumnIndexToView(column);
 
@@ -306,23 +312,10 @@ public class JFrameMicrographs extends JFrame implements iMicrographsGUI {
         updateTable();
     }
 
-    private void showCTFImage(TableImageItem item, String CTFFilename) {
-        ImagesWindowFactory.openCTFImage(item.getImagePlus(), CTFFilename, this);
-    }
-
-    public void refresh() {
-        System.out.println("@TODO RELOAD TABLE!");
-/*        tableModel.reload();
-
-        hideColumns();
-        setRowHeader();
-
-        updateTable();
-        autoSortTable(MicrographsTableModel.INDEX_COMBINED_COLUMN);
-*/
-        // = new MicrographsTableModel(tableModel.getMicrographFilename());
-//        table.setModel(tableModel);
-//        updateTable();
+    private void showCTFImage(TableImageItem item, String CTFFilename,
+            String MicrographFilename, String PSDfilename) {
+        ImagesWindowFactory.openCTFImage(item.getImagePlus(), CTFFilename,
+                MicrographFilename, PSDfilename, this);
     }
 
     /** This method is called from within the constructor to
@@ -488,7 +481,8 @@ public class JFrameMicrographs extends JFrame implements iMicrographsGUI {
             Object item = table.getValueAt(row, CTF_IMAGE_COLUMN);
 
             if (item instanceof TableImageItem) {
-                showCTFImage((TableImageItem) item, tableModel.getCTFfile(row));
+                showCTFImage((TableImageItem) item, tableModel.getCTFfile(row),
+                        tableModel.getMicrographFilename(), tableModel.getPSDfile(row));
             }
         }
     }

@@ -7,7 +7,7 @@ public class MetaDataTest {
 
     public static void main(String args[]) {
         if (args.length < 1) {
-            System.out.println("Usage: java ImageTest <xmipp_image_file>");
+            System.out.println("Usage: java MetaDataTest <xmipp_metadata_file>");
             System.exit(0);
         }
 

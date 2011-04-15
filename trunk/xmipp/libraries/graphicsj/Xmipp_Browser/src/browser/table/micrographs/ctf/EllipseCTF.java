@@ -54,8 +54,8 @@ public class EllipseCTF {
 
     // Calculates defocus U and V according to ellipse parameters.
     public void calculateDefocus(double minor, double major) {
-        defocusU = defocus(major, Q0, lambda, Cs, D, Ts);
-        defocusV = defocus(minor, Q0, lambda, Cs, D, Ts);
+        defocusU = defocus(minor, Q0, lambda, Cs, D, Ts);
+        defocusV = defocus(major, Q0, lambda, Cs, D, Ts);
 
         System.out.println(this);
     }
@@ -86,25 +86,6 @@ public class EllipseCTF {
     public double getSphericalAberration() {
         return Cs;
     }
-    /*
-    public static void main_(String args[]) {
-    new ImageJ();
-    System.setProperty("plugins.dir", "/home/juanjo/Desktop/ImageJ/plugins");
-
-    //String CTFFilename = "/home/juanjo/MicrographPreprocessing/Preprocessing/01nov26b.001.001.001.002/xmipp_ctf.ctfparam";
-    String CTFFilename = "/home/juanjo/Desktop/2cys2/down1_2cys2_Periodogramavg.ctfparam";
-    ImagePlus ip = IJ.openImage("/home/juanjo/Desktop/2cys2/down1_2cys2_Periodogramavg_ctfmodel_halfplane.xmp");
-    ImagesWindowFactory.openCTFImage(ip, CTFFilename, "");
-    }
-    /*
-    public static void main(String args[]) {
-    String CTFFilename = "/home/juanjo/Desktop/2cys2/down1_2cys2_Periodogramavg.ctfparam";
-
-    EllipseCTF e = new EllipseCTF(CTFFilename, 128);
-    double minor = 18;
-    double major = 18;
-    e.calculateDefocus(minor, major);
-    }*/
 
     @Override
     public String toString() {
