@@ -628,6 +628,7 @@ void ProgCtfGroup::writeOutputToDisc()
     bool savefile=false;
 
     olddefGroup=1;
+    //defGroup=-1;
     FileName outFileNameCTF,outFileNameWIEN,outFileName;
     outFileNameCTF = fn_root + "_ctf."+format;
     outFileNameWIEN = fn_root + "_wien."+format;
@@ -645,25 +646,26 @@ void ProgCtfGroup::writeOutputToDisc()
 
         if (defGroup != olddefGroup)
         {
-            if (sumimg==0)
-                continue;
-            ctf2D /= sumimg;
-            outFileName.compose(olddefGroup,outFileNameCTF);
-            //save CTF
-            Ictf2D.write(outFileName);
-            //save winer filter
-            if (do_wiener)
+            if (sumimg!=0)
             {
-                FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY2D(ctf2D)
-                {
-                    dAij(ctf2D,i,j) /= dAij(Mwien,i,j);
-                }
-                outFileName.compose(olddefGroup,outFileNameWIEN);
+                ctf2D /= sumimg;
+                outFileName.compose(olddefGroup,outFileNameCTF);
+                //save CTF
                 Ictf2D.write(outFileName);
+                //save winer filter
+                if (do_wiener)
+                {
+                    FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY2D(ctf2D)
+                    {
+                        dAij(ctf2D,i,j) /= dAij(Mwien,i,j);
+                    }
+                    outFileName.compose(olddefGroup,outFileNameWIEN);
+                    Ictf2D.write(outFileName);
+                }
+                ctf2D.initZeros();
+                olddefGroup=defGroup;
+                sumimg=0.;
             }
-            ctf2D.initZeros();
-            olddefGroup=defGroup;
-            sumimg=0.;
         }
         sumimg += dCount;
         FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY2D(ctf2D)
@@ -675,17 +677,15 @@ void ProgCtfGroup::writeOutputToDisc()
             result =     dAij(diff, i,j)      * DIRECT_N__X_ELEM(mics_ctf2d, order, 0, 0, dAij(dd,i,j)+1  ) +
                          (1.-dAij(diff, i,j)) * DIRECT_N__X_ELEM(mics_ctf2d, order, 0, 0, dAij(dd,i,j));
             dAij(ctf2D,i,j) += dCount * result ;
-
-
         }
     }
     //Save last CTF
-    if (defGroup != olddefGroup)
+    if (defGroup == olddefGroup)
     {
         if (sumimg!=0)
         {
             ctf2D /= sumimg;
-            outFileName.compose(olddefGroup,outFileNameCTF);
+            outFileName.compose(defGroup,outFileNameCTF);
             //save CTF
             Ictf2D.write(outFileName);
             //save winer filter
@@ -695,7 +695,7 @@ void ProgCtfGroup::writeOutputToDisc()
                 {
                     dAij(ctf2D,i,j) /= dAij(Mwien,i,j);
                 }
-                outFileName.compose(olddefGroup,outFileNameWIEN);
+                outFileName.compose(defGroup,outFileNameWIEN);
                 Ictf2D.write(outFileName);
             }
         }
