@@ -211,51 +211,59 @@ protected:
                 XX(scaleV) = (double)xdim / oxdim;
                 YY(scaleV) = (double)ydim / oydim;
 
+                //if scale factor is large splines s not the way to go, print a warning
+                if( fabs(1.0-XX(scaleV)) > 0.1 )
+                {
+                	std::cerr << "WARNING: Do not apply large scale factor using B-splines "
+                			  << " choose fourier option ()"
+                			  << std::endl;
+                }
                 if (isVol)
                 {
-                    zdim = STR_EQUAL(getParam("--scale", 3), "x") ? xdim : getIntParam("--scale", 3);
-                    ZZ(scaleV) = (double)zdim / ozdim;
+                    zdim = STR_EQUAL(getParam("--scale", 3), "x")
+                               ? xdim : getIntParam("--scale", 3);
+                        ZZ(scaleV) = (double)zdim / ozdim;
+                    }
                 }
-            }
-            else if (STR_EQUAL(getParam("--scale"), "fourier"))
-            {
-                if (isVol)
-                    REPORT_ERROR(ERR_PARAM_INCORRECT, "The 'fourier' scaling type is only valid for images");
-                int oxdim = xdim, oydim = ydim;
-                if (oxdim < xdim || oydim < ydim)
-                    REPORT_ERROR(ERR_PARAM_INCORRECT, "The 'fourier' scaling type can only be used for reducing size");
-                scale_type = SCALE_FOURIER;
-
-                xdim = getIntParam("--scale", 1);
-                ydim = STR_EQUAL(getParam("--scale", 2), "x") ? xdim : getIntParam("--scale", 2);
-                fourier_threads = getIntParam("--scale", 3);
-            }
-            else if (STR_EQUAL(getParam("--scale"), "pyramid"))
-            {
-                scale_type = SCALE_PYRAMID_EXPAND;
-                pyramid_level = getIntParam("--scale", 1);
-                double scale_factor = (double)(pow(2.0, pyramid_level));
-                xdim *= scale_factor;
-                ydim *= scale_factor;
-                if (isVol)
-                    zdim *= scale_factor;
-                if (pyramid_level < 0)
+                else if (STR_EQUAL(getParam("--scale"), "fourier"))
                 {
-                    pyramid_level *= -1; //change sign, negative means reduce operation
-                    scale_type = SCALE_PYRAMID_REDUCE;
-                }
-            }
-            else //scale factor case
-            {
-                double factor = getDoubleParam("--scale", 1);
-                //Some extra validations for factor
-                if (factor <= 0)
-                    REPORT_ERROR(ERR_VALUE_INCORRECT,"Factor must be a positive number");
-                scaleV.initConstant(factor);
-            }
+                    if (isVol)
+                        REPORT_ERROR(ERR_PARAM_INCORRECT, "The 'fourier' scaling type is only valid for images");
+                    int oxdim = xdim, oydim = ydim;
+                    if (oxdim < xdim || oydim < ydim)
+                        REPORT_ERROR(ERR_PARAM_INCORRECT, "The 'fourier' scaling type can only be used for reducing size");
+                    scale_type = SCALE_FOURIER;
 
-            if (scale_type != SCALE_FACTOR)
-                applyTransform = true;
+                    xdim = getIntParam("--scale", 1);
+                    ydim = STR_EQUAL(getParam("--scale", 2), "x") ? xdim : getIntParam("--scale", 2);
+                    fourier_threads = getIntParam("--scale", 3);
+                }
+                else if (STR_EQUAL(getParam("--scale"), "pyramid"))
+                {
+                    scale_type = SCALE_PYRAMID_EXPAND;
+                    pyramid_level = getIntParam("--scale", 1);
+                    double scale_factor = (double)(pow(2.0, pyramid_level));
+                    xdim *= scale_factor;
+                    ydim *= scale_factor;
+                    if (isVol)
+                        zdim *= scale_factor;
+                    if (pyramid_level < 0)
+                    {
+                        pyramid_level *= -1; //change sign, negative means reduce operation
+                        scale_type = SCALE_PYRAMID_REDUCE;
+                    }
+                }
+                else //scale factor case
+                {
+                    double factor = getDoubleParam("--scale", 1);
+                    //Some extra validations for factor
+                    if (factor <= 0)
+                        REPORT_ERROR(ERR_VALUE_INCORRECT,"Factor must be a positive number");
+                    scaleV.initConstant(factor);
+                }
+
+                if (scale_type != SCALE_FACTOR)
+                    applyTransform = true;
 
             if (isVol)
                 scale3DMatrix(scaleV, S);
@@ -299,7 +307,7 @@ protected:
         {
             imgOut.setDatatype(img.getDatatype());
 
-            /*FIXME: Little Cuban!! it is mandatory to assign the size to the image
+            /*FIXME: Little tiny gunny Cuban!! it is mandatory to assign the size to the image
              * in order to really be scaled when applyGeometry is runned. If not, then
              * the old size remains.
              *
