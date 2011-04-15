@@ -567,19 +567,6 @@ public:
     */
     void write(const FileName &fileName,CastWriteMode castMode=CW_CAST);
 };
-
-/** Downsample.
-    The mask must be normalized to have energy=1. Two runs are done,
-    in the first one the input and output ranges are studied. In the
-    second one, the input image is effectively downsampled and rescaled
-    such that input and output images have the same range. Output
-    grey values always start at 0. If the input and output images have
-    different bit size, then the range is scaled by the bit difference, ie,
-    if the input ranges 0-255, the output will range between 0 and 65535 */
-void downsample(const Micrograph &M, int Xstep, int Ystep,
-                const MultidimArray<double> &kernel, Micrograph &Mp,
-                bool do_fourier=false, int nThreads=1);
-
 //@}
 
 #endif
