@@ -193,6 +193,10 @@ class Tester:
         self.addProgram("xmipp_transform_center_image")
         self.addTest("-i input/smallStack.stk -o %o/smallStackCentered.stk")
 
+        self.addProgram("xmipp_transform_downsample")
+        self.addTest("-i input/micrograph8bits.tif -o %o/downsampledFourier.xmp --step 2")
+        self.addTest("-i input/micrograph8bits.tif -o %o/downsampledSmooth.xmp --step 2 --method smooth")
+
         self.addProgram("xmipp_transform_range_adjust")
         self.addTest("-i input/singleImage.spi -o %o/image.xmp --range -100 100 --noise 10 --mask circular -16")
 
