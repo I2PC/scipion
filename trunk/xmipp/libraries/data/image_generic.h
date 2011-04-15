@@ -148,6 +148,28 @@ public:
         return datatype;
     }
 
+    /** Get the data type
+     */
+    int getDatatypeDepth()const
+    {
+        switch (datatype)
+        {
+        case Float:
+        case UInt:
+            return 32;
+        case Int:
+            return 31;
+        case Short:
+            return 15;
+        case UShort:
+            return 16;
+        case SChar:
+            return 7;
+        case UChar:
+            return 8;
+        }
+    }
+
     /** Check if image is mapped on file
       */
     inline bool isMapped()
@@ -167,11 +189,11 @@ public:
     /** Read image from file.
      */
     int readApplyGeo(const FileName &name, const MetaData &md, size_t objId, bool only_apply_shifts = false,
-        DataMode datamode = DATA, size_t select_img = ALL_IMAGES);
+                     DataMode datamode = DATA, size_t select_img = ALL_IMAGES);
 
     /** Read an image from metadata, filename is taken from MDL_IMAGE */
     int readApplyGeo(const MetaData &md, size_t objId, bool only_apply_shifts = false,
-        DataMode datamode = DATA, size_t select_img = ALL_IMAGES );
+                     DataMode datamode = DATA, size_t select_img = ALL_IMAGES );
 
     /** Read image mapped from file.
      */
@@ -193,8 +215,8 @@ public:
     /* Create an empty image file of format given by filename and map it to memory.
      */
     void mapFile2Write(int Xdim, int Ydim, int Zdim, FileName _filename,
-                               bool createTempFile=false, size_t select_img = APPEND_IMAGE,
-                               bool isStack=false, int mode=WRITE_OVERWRITE);
+                       bool createTempFile=false, size_t select_img = APPEND_IMAGE,
+                       bool isStack=false, int mode=WRITE_OVERWRITE);
 
     /* MultidimArrayGeneric data access
      */
@@ -218,16 +240,35 @@ public:
 
     }
 
-    /** Set pixel value
+    /** Get pixel value
      */
-    inline void setPixel(unsigned long n, int k, int i, int j, double value) const
+    inline double getPixel(int i, int j) const
     {
-#define GETVALUE(type) NZYX_ELEM(*(MultidimArray<type>*)data->im,n,k,i,j) = value;
+#define GETVALUE(type) return A2D_ELEM(*(MultidimArray<type>*)data->im,i,j);
         SWITCHDATATYPE(datatype,GETVALUE)
 #undef GETVALUE
 
     }
 
+    /** Set pixel value
+     */
+    inline void setPixel(unsigned long n, int k, int i, int j, double value) const
+    {
+#define SETVALUE(type) NZYX_ELEM(*(MultidimArray<type>*)data->im,n,k,i,j) = (type) value;
+        SWITCHDATATYPE(datatype,SETVALUE)
+#undef SETVALUE
+
+    }
+
+    /** Set pixel value
+     */
+    inline void setPixel(int i, int j, double value) const
+    {
+#define SETVALUE(type) A2D_ELEM(*(MultidimArray<type>*)data->im,i,j) = (type) value;
+        SWITCHDATATYPE(datatype,SETVALUE)
+#undef SETVALUE
+
+    }
     void print() const;
 
 private:
@@ -248,7 +289,7 @@ private:
     * until ndim - 1 is reserved.
     */
 void createEmptyFile(const FileName &_filename, int Xdim, int Ydim, int Zdim = 1,
-    size_t select_img = APPEND_IMAGE, bool isStack = false,
-    int mode = WRITE_OVERWRITE);
+                     size_t select_img = APPEND_IMAGE, bool isStack = false,
+                     int mode = WRITE_OVERWRITE);
 
 #endif /* IMAGE_GENERIC_H_ */
