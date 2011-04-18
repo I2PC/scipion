@@ -44,8 +44,8 @@ sources = ["src/module.c", "src/connection.c", "src/cursor.c", "src/cache.c",
 if PYSQLITE_EXPERIMENTAL:
     sources.append("src/backup.c")
 
-include_dirs = ['/home/roberto/xmipp/external/sqlite-3.6.23/']
-library_dirs = ['/home/roberto/xmipp/lib']
+include_dirs = ['../sqlite-3.6.23/']
+library_dirs = ['../../lib']
 libraries = []
 runtime_library_dirs = []
 extra_objects = []
