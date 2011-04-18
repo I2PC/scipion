@@ -513,6 +513,11 @@ public:
             avg = sum / N;
             stddev=sqrt(sum2-average*average);
         }
+        else if (N != 0.)
+        {
+            avg = sum;
+            stddev=sqrt(sum2-average*average);
+        }
         else
         	stddev=avg=0;
     }
