@@ -82,11 +82,6 @@ void ProgTransformDownsample::defineParams()
 void ProgTransformDownsample::processImage(const FileName &fnImg, const FileName &fnImgOut,
         size_t objId)
 {
-    if (fnImg==fnImgOut)
-        REPORT_ERROR(ERR_ARG_MISSING,
-                     formatString("Input and output images must be different: %s",
-                                  fnImg.c_str()));
-
     // Open input data
     ImageGeneric M_in;
     M_in.readMapped(fnImg);
@@ -100,15 +95,10 @@ void ProgTransformDownsample::processImage(const FileName &fnImg, const FileName
     int Ypdim = floor(Ydim/step);
     ImageGeneric M_out;
     if (method==SMOOTH)
-    {
         M_out.setDatatype(UChar);
-        M_out().resize(1,1,Ypdim,Xpdim);
-    }
     else
-    {
         M_out.setDatatype(Float);
-        M_out.mapFile2Write(Xpdim, Ypdim, 1, fnImgOut);
-    }
+    M_out.mapFile2Write(Xpdim, Ypdim, 1, fnImgOut,fnImg==fnImgOut);
 
     // Downsample
     if (method==KER_RECTANGLE)
@@ -273,7 +263,7 @@ void downsampleFourier(const ImageGeneric &M, double step, ImageGeneric &Mp, int
 
 void downsampleSmooth(const ImageGeneric &M, double step, ImageGeneric &Mp)
 {
-    if (M.datatype!=UChar || Mp.datatype!=UChar)
+    if (Mp.datatype!=UChar)
         REPORT_ERROR(ERR_ARG_INCORRECT,"Smooth downsampling is only valid for 8 bit images");
 
     int Ydim, Xdim, Ypdim, Xpdim;
@@ -283,7 +273,17 @@ void downsampleSmooth(const ImageGeneric &M, double step, ImageGeneric &Mp)
     byte rgb[256];
     for (int i = 0; i < 256; i++)
         rgb[i] = i;
-    byte *result = SmoothResize(MULTIDIM_ARRAY(*(((MultidimArray<unsigned char>*)M().im))),
+    byte *inputImage=NULL;
+    MultidimArray<unsigned char> Maux;
+    if (M.datatype==UChar)
+    	inputImage=MULTIDIM_ARRAY(*(((MultidimArray<unsigned char>*)M().im)));
+    else
+    {
+    	Maux.setMmap(true);
+    	M().getImage(Maux);
+    	inputImage=MULTIDIM_ARRAY(Maux);
+    }
+    byte *result = SmoothResize(inputImage,
                                 Xdim, Ydim, Xpdim, Ypdim,
                                 rgb, rgb, rgb, rgb, rgb, rgb, 256);
     for (int i = 0; i < Ypdim; i++)
