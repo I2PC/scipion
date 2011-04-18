@@ -155,15 +155,11 @@ int readTIFF(size_t select_img, bool isStack=false)
     //    TIFFSetWarningHandler(NULL); // Switch off warning messages
 
     char*  tif_buf = NULL;
-    size_t    tileWidth;
-    size_t    tileLength;
     std::vector<TIFFDirHead> dirHead;
     TIFFDirHead dhRef;
 
     uint32 rowsperstrip;
     tsize_t scanline;
-
-    size_t x, y;
 
     /* Get TIFF image properties */
     do
@@ -280,6 +276,10 @@ int readTIFF(size_t select_img, bool isStack=false)
 
     MD.clear();
     MD.resize(_nDim,MDL::emptyHeader);
+
+    unsigned int x, y;
+    // Dimensions of tiles
+    unsigned int tileWidth, tileLength;
 
     for (size_t i = imgStart; i < imgEnd; ++i)
     {
