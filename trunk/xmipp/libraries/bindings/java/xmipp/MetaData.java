@@ -61,8 +61,8 @@ public class MetaData {
     public String getValueString(int label, long objId){
     	String value = getValueString_(label, objId);
 
-		// Try to fix paths.
-		if(Arrays.binarySearch(PATHS_FIELDS, label)>=0){
+	// Try to fix paths.
+	if(Arrays.binarySearch(PATHS_FIELDS, label)>=0){
     		if(!value.startsWith(File.separator)){
     			value = fixPath(getBaseDir(), value); 
     		}
@@ -132,6 +132,6 @@ public class MetaData {
             }
         } while (index >= 0);
 
-        return workdir + File.separator + filename;
+        return workdir + filename;
     }
 }

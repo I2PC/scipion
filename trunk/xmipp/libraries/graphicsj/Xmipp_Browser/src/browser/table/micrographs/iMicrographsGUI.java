@@ -4,11 +4,13 @@
  */
 package browser.table.micrographs;
 
+import browser.table.micrographs.ctf.EllipseCTF;
+
 /**
  *
  * @author Juanjo Vega
  */
 public interface iMicrographsGUI {
 
-    public void refresh();
+    public void recalculateCTF(EllipseCTF ellipseCTF, double angle, String PSDFilename);
 }

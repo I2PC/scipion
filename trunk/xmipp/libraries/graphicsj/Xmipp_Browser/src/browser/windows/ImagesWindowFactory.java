@@ -155,10 +155,9 @@ public class ImagesWindowFactory {
     }
 
     public static ImageWindow openCTFImage(ImagePlus ip, String CTFfilename,
-            String MicrographFilename, String PSDfilename, iMicrographsGUI micrographsGUI) {
+            String PSDfilename, String MicrographFilename, iMicrographsGUI micrographsGUI) {
         IJ.setTool(Toolbar.FREEROI);
 
-        return new CTFImageWindow(ip, CTFfilename, MicrographFilename,
-                PSDfilename, micrographsGUI);
+        return new CTFImageWindow(ip, CTFfilename, PSDfilename, micrographsGUI);
     }
 }

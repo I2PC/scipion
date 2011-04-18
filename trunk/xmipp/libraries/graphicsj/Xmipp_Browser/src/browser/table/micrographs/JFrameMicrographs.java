@@ -14,6 +14,11 @@ import browser.table.micrographs.ctf.JFrameCTF;
 import browser.LABELS;
 import browser.imageitems.TableImageItem;
 import browser.table.ImagesRowHeaderModel;
+import browser.table.micrographs.ctf.EllipseCTF;
+import browser.table.micrographs.ctf.tasks.EstimateFromCTFTask;
+import browser.table.micrographs.ctf.tasks.SortPSDSTask;
+import browser.table.micrographs.ctf.tasks.TasksEngine;
+import browser.table.micrographs.ctf.tasks.iCommandsListener;
 import browser.table.micrographs.filters.EnableFilter;
 import browser.table.micrographs.renderers.MicrographDoubleRenderer;
 import browser.table.micrographs.renderers.MicrographFileNameRenderer;
@@ -25,6 +30,7 @@ import java.awt.Component;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseEvent;
+import java.io.File;
 import java.util.LinkedList;
 import java.util.Vector;
 import javax.swing.JFileChooser;
@@ -47,7 +53,7 @@ import javax.swing.table.TableRowSorter;
  *
  * @author Juanjo Vega
  */
-public class JFrameMicrographs extends JFrame implements iMicrographsGUI {
+public class JFrameMicrographs extends JFrame implements iMicrographsGUI, iCommandsListener {
 
     private final static int CTF_IMAGE_COLUMN = 3;
     private JTable table;
@@ -63,6 +69,7 @@ public class JFrameMicrographs extends JFrame implements iMicrographsGUI {
     private JFrameCTF frameCTF = new JFrameCTF();
     private TableRowSorter sorter;
     private EnableFilter enableFilter;
+    private TasksEngine tasksEngine = new TasksEngine(this);
 
     /** Creates new form JFrameMicrographs */
     public JFrameMicrographs(String filename) {
@@ -127,12 +134,6 @@ public class JFrameMicrographs extends JFrame implements iMicrographsGUI {
         autoSortTable(MicrographsTableModel.INDEX_COMBINED_COLUMN);
 
         pack();
-    }
-
-    public void refresh() {
-        tableModel.reload();
-
-        updateTable();
     }
 
     private void autoSortTable(int column) {
@@ -313,9 +314,32 @@ public class JFrameMicrographs extends JFrame implements iMicrographsGUI {
     }
 
     private void showCTFImage(TableImageItem item, String CTFFilename,
-            String MicrographFilename, String PSDfilename) {
+            String PSDfilename, String MicrographFilename) {
         ImagesWindowFactory.openCTFImage(item.getImagePlus(), CTFFilename,
-                MicrographFilename, PSDfilename, this);
+                PSDfilename, MicrographFilename, this);
+    }
+
+    public void recalculateCTF(EllipseCTF ellipseCTF, double angle, String PSDFilename) {
+        // Add "estimate..." to tasks.
+        EstimateFromCTFTask estimateFromCTFTask = new EstimateFromCTFTask(
+                ellipseCTF, angle, PSDFilename, tasksEngine);
+        tasksEngine.add(estimateFromCTFTask);
+    }
+
+    public void done() {
+        // Updates table: This task won't be started in a different thread.
+        SortPSDSTask sortPSDS = new SortPSDSTask(tableModel.getFilename());
+        sortPSDS.run();
+
+        System.out.println("Done!");
+
+        refresh();
+    }
+
+    public void refresh() {
+        tableModel.reload();
+
+        updateTable();
     }
 
     /** This method is called from within the constructor to
@@ -381,6 +405,9 @@ public class JFrameMicrographs extends JFrame implements iMicrographsGUI {
     }// </editor-fold>//GEN-END:initComponents
 
     private void bSaveActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_bSaveActionPerformed
+        // Sets path and filename automatically.
+        fc.setSelectedFile(new File(tableModel.getFilename()));
+
         if (fc.showSaveDialog(this) != JFileChooser.CANCEL_OPTION) {
             boolean response = true;
             if (fc.getSelectedFile().exists()) {
@@ -444,7 +471,7 @@ public class JFrameMicrographs extends JFrame implements iMicrographsGUI {
             jmiRecalculateCTF.addActionListener(new ActionListener() {
 
                 public void actionPerformed(ActionEvent e) {
-                    recalculateCTF(table.getSelectedRow());
+                    showRecalculateCTFWindow(table.getSelectedRow());
                 }
             });
         }
@@ -477,12 +504,12 @@ public class JFrameMicrographs extends JFrame implements iMicrographsGUI {
             ImagesWindowFactory.openTable(filenames.toArray(new String[filenames.size()]));
         }
 
-        private void recalculateCTF(int row) {
+        private void showRecalculateCTFWindow(int row) {
             Object item = table.getValueAt(row, CTF_IMAGE_COLUMN);
 
             if (item instanceof TableImageItem) {
                 showCTFImage((TableImageItem) item, tableModel.getCTFfile(row),
-                        tableModel.getMicrographFilename(), tableModel.getPSDfile(row));
+                        tableModel.getPSDfile(row), tableModel.getFilename());
             }
         }
     }

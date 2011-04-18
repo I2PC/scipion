@@ -15,6 +15,12 @@ import javax.swing.event.ListDataListener;
 public class ImagesRowHeaderModel implements ListModel {
 
     private JTable table;
+    private int first_index = 0;
+
+    public ImagesRowHeaderModel(JTable table, int first_index) {
+        this(table);
+        this.first_index = first_index;
+    }
 
     public ImagesRowHeaderModel(JTable table) {
         super();
@@ -27,7 +33,7 @@ public class ImagesRowHeaderModel implements ListModel {
     }
 
     public Object getElementAt(int i) {
-        return new Integer(i);
+        return new Integer(first_index + i);
     }
 
     public void addListDataListener(ListDataListener ll) {

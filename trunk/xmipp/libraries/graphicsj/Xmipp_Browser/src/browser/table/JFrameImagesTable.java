@@ -105,7 +105,7 @@ public class JFrameImagesTable extends JFrame {//implements TableModelListener {
     }
 
     private void setRowHeader() {
-        rowHeaderModel = new ImagesRowHeaderModel(table);
+        rowHeaderModel = new ImagesRowHeaderModel(table, 1);
 
         rowHeader = new JList();
         rowHeader.setModel(rowHeaderModel);

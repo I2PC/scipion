@@ -111,7 +111,11 @@ public class ImagesTableModel extends AbstractTableModel {
             nimages = ids.length;
 
             for (long id : ids) {
-                boolean enabled = md.getValueInt(MDLabel.MDL_ENABLED, id) == 0 ? false : true;
+                boolean enabled = true; // If ENABLED field is not present it will be true.
+                if (md.containsLabel(MDLabel.MDL_ENABLED)) {
+                    enabled = md.getValueInt(MDLabel.MDL_ENABLED, id) == 0 ? false : true;
+                }
+
                 String imagefilename = md.getValueString(MDLabel.MDL_IMAGE, id);
 
                 if (!imagefilename.startsWith(File.separator)) {
@@ -130,8 +134,6 @@ public class ImagesTableModel extends AbstractTableModel {
     }
 
     protected void addItem(String filename, int slice, int image, boolean enabled) {
-        System.out.println(" *** Filename: " + filename);
-
         TableImageItem item = new TableImageItem(new File(filename), cache, slice, image);
         item.setEnabled(enabled);
 

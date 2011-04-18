@@ -91,7 +91,7 @@ public class MicrographsTableModel extends DefaultTableModel implements TableMod
     }
 
     public void reload() {
-        load(getMicrographFilename());
+        load(getFilename());
     }
 
     private void load(String filename) {
@@ -111,6 +111,8 @@ public class MicrographsTableModel extends DefaultTableModel implements TableMod
     }
 
     private void clear() {
+        cache.clear();
+
         while (getRowCount() > 0) {
             removeRow(0);
         }
@@ -260,7 +262,7 @@ public class MicrographsTableModel extends DefaultTableModel implements TableMod
         return COLUMNS_NAMES.length;
     }
 
-    public String getMicrographFilename() {
+    public String getFilename() {
         return md.getFilename();
     }
 

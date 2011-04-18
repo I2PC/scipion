@@ -22,10 +22,6 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStreamReader;
 
 /**
  *
@@ -33,19 +29,15 @@ import java.io.InputStreamReader;
  */
 public class CTFImageWindow extends ImageWindow {
 
-    private final static String XMIPP_CTF_ESTIMATE_FROM_PSD = "xmipp_ctf_estimate_from_psd";
-    private final static String XMIPP_CTF_SORT_PSDS = "xmipp_ctf_sort_psds";
     private Button button = new Button(LABELS.LABEL_RECALCULATE_CTF);
     protected EllipseFitter ellipseFitter = new EllipseFitter();
     private EllipseCTF ellipseCTF;
     private iMicrographsGUI micrographsGUI;
     private String PSDFilename;
-    private String MicrographFilename;
 
-    public CTFImageWindow(ImagePlus imp, String CTFFilename, String MicrographFilename, String PSDFilename, iMicrographsGUI micrographsGUI) {
+    public CTFImageWindow(ImagePlus imp, String CTFFilename, String PSDFilename, iMicrographsGUI micrographsGUI) {
         super(imp);
 
-        this.MicrographFilename = MicrographFilename;
         this.PSDFilename = PSDFilename;
         this.micrographsGUI = micrographsGUI;
         ellipseCTF = new EllipseCTF(CTFFilename, imp.getWidth());
@@ -138,60 +130,7 @@ public class CTFImageWindow extends ImageWindow {
     private void recalculateCTF() {
         ellipseCTF.calculateDefocus(ellipseFitter.minor / 2, ellipseFitter.major / 2);
 
-        // Invokes xmipp to recalculate image and update file.
-        IJ.showStatus("Estimating from psd...");
-        estimate_from_psd(ellipseCTF, 90 - ellipseFitter.angle, PSDFilename);
-
-        IJ.showStatus("Sorting psds...");
-        ctf_sort_psds(MicrographFilename);
-
-        IJ.showStatus("CTF Done!");
-
-        if (micrographsGUI != null) {
-            micrographsGUI.refresh();
-        }
-
-        // Reload from disk.
-        IJ.run("Revert");
-    }
-
-    private static void estimate_from_psd(EllipseCTF ellipseCTF,
-            double angle, String PSDFilename) {
-        String command = XMIPP_CTF_ESTIMATE_FROM_PSD
-                + " --sampling_rate " + ellipseCTF.getSamplingRate()
-                + " --kV " + ellipseCTF.getVoltage()
-                + " --Cs " + ellipseCTF.getSphericalAberration()
-                + " --defocusU " + ellipseCTF.getDefocusU()
-                + " --defocusV " + ellipseCTF.getDefocusV()
-                + " --azimuthal_angle " + angle
-                + " --psd " + PSDFilename;
-
-        runCommand(command);
-    }
-
-    private static void ctf_sort_psds(String MicrographFilename) {
-        String command = XMIPP_CTF_SORT_PSDS + " -i " + MicrographFilename;
-
-        runCommand(command);
-    }
-
-    private static void runCommand(String command) {
-        try {
-            //command = "`which " + XMIPP_CTF_ESTIMATE_FROM_PSD + "`";
-
-            System.out.println(">> " + command);
-            Process p = Runtime.getRuntime().exec(command);
-
-            BufferedReader stdInput = new BufferedReader(new InputStreamReader(p.getInputStream()));
-
-            // read the output from the command
-            String s;
-            while ((s = stdInput.readLine()) != null) {
-                System.out.println(s);
-            }
-        } catch (IOException ex) {
-            IJ.error("Error running command: " + ex.getMessage());
-            throw new RuntimeException(ex);
-        }
+        micrographsGUI.recalculateCTF(ellipseCTF, 90 - ellipseFitter.angle, PSDFilename);
+        dispose();
     }
 }
