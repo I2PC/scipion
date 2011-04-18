@@ -70,6 +70,19 @@
 /// @addtogroup MultidimensionalArrays
 
 //@{
+/** @name MultidimArrayGenericSpeedUp Speed up macros
+/** Array access.
+ *
+ * This macros gives you access to the array (T **)
+ */
+#ifndef MULTIDIM_ARRAY_BASE
+#define MULTIDIM_ARRAY_BASE(v) (*((v).data->im))
+#endif
+
+#ifndef MULTIDIM_ARRAY_GENERIC
+#define MULTIDIM_ARRAY_GENERIC(v) (*((v).data))
+#endif
+
 
 /**
  * MultidimArrayGeneric class to handle arrays with independence of the data type
