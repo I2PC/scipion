@@ -166,7 +166,7 @@ int ImageGeneric::readPreview(const FileName &name, int Xdim, int Ydim, int sele
     image->readPreview(name, Xdim, Ydim, select_slice, select_img);
 }
 
-void  ImageGeneric::mapFile2Write(int Xdim, int Ydim, int Zdim, FileName _filename,
+void  ImageGeneric::mapFile2Write(int Xdim, int Ydim, int Zdim, const FileName &_filename,
                                   bool createTempFile, size_t select_img, bool isStack,int mode)
 {
     image->setDataMode(HEADER); // Use this to ask rw* which datatype to use
