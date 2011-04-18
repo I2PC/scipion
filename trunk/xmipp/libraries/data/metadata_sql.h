@@ -50,13 +50,13 @@ enum AggregateOperation
 /** Posible Set Operations with MetaData */
 enum SetOperation
 {
-    UNION, UNION_DISTINCT, INTERSECTION, SUBSTRACTION, INNER_JOIN, LEFT_JOIN, OUTER_JOIN
+    UNION, UNION_DISTINCT, INTERSECTION, SUBSTRACTION, INNER_JOIN, LEFT_JOIN, OUTER_JOIN,NATURAL_JOIN
 };
 
 /** Enumeration of JOIN types for this operation */
 enum JoinType
 {
-    INNER=INNER_JOIN, LEFT=LEFT_JOIN, OUTER=OUTER_JOIN
+    INNER=INNER_JOIN, LEFT=LEFT_JOIN, OUTER=OUTER_JOIN,NATURAL=NATURAL_JOIN
 };
 
 #include "metadata.h"
