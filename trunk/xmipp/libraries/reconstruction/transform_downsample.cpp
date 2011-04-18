@@ -106,10 +106,9 @@ void ProgTransformDownsample::processImage(const FileName &fnImg, const FileName
     else if (method==FOURIER)
         downsampleFourier(M_in,step,M_out,nThreads);
     else
-    {
         downsampleSmooth(M_in,step,M_out);
-        M_out.write(fnImgOut);
-    }
+
+    M_out.write(fnImgOut);
 }
 
 /* Downsample -------------------------------------------------------------- */
@@ -276,12 +275,12 @@ void downsampleSmooth(const ImageGeneric &M, double step, ImageGeneric &Mp)
     byte *inputImage=NULL;
     MultidimArray<unsigned char> Maux;
     if (M.datatype==UChar)
-    	inputImage=MULTIDIM_ARRAY(*(((MultidimArray<unsigned char>*)M().im)));
+        inputImage=MULTIDIM_ARRAY(*(((MultidimArray<unsigned char>*)M().im)));
     else
     {
-    	Maux.setMmap(true);
-    	M().getImage(Maux);
-    	inputImage=MULTIDIM_ARRAY(Maux);
+        Maux.setMmap(true);
+        M().getImage(Maux);
+        inputImage=MULTIDIM_ARRAY(Maux);
     }
     byte *result = SmoothResize(inputImage,
                                 Xdim, Ydim, Xpdim, Ypdim,
