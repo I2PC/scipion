@@ -37,3 +37,12 @@ def getCommaSeparatedIntegerList(inputstring):
          output+=range(int(interval[0]),
                        int(interval[1])+1)
    return output
+
+import os
+def unique_filename(file_name):
+    counter = 1
+    file_name_parts = os.path.splitext(file_name) # returns ('/path/file', '.ext')
+    while os.path.isfile(file_name): 
+        file_name = file_name_parts[0] + '_' + str(counter) + file_name_parts[1]
+        counter += 1
+    return file_name
