@@ -835,6 +835,11 @@ void Euler_rotate(const MultidimArray< double >& V,
                   double psi,
                   MultidimArray< double >& result);
 
+void Euler_rotate(const MultidimArrayGeneric &V,
+                  double rot,
+                  double tilt,
+                  double psi,
+                  MultidimArray<double> &result);
 /** Compute circle around Euler matrix
  *
  * Given an input Euler matrix, this function returns a set of Euler

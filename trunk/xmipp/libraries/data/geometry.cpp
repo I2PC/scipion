@@ -910,6 +910,15 @@ void Euler_rotate(const MultidimArray<double> &V, double rot, double tilt, doubl
     Euler_angles2matrix(rot, tilt, psi, R, true);
     applyGeometry(1, result, V, R, IS_NOT_INV, DONT_WRAP);
 }
+void Euler_rotate(const MultidimArrayGeneric &V, double rot, double tilt, double psi,
+                  MultidimArray<double> &result)
+{
+  Matrix2D<double> R;
+  Euler_angles2matrix(rot, tilt, psi, R, true);
+#define APPLYGEO(type) applyGeometry(1, result, *((MultidimArray<type> *)V.im), R, IS_NOT_INV, DONT_WRAP);
+  SWITCHDATATYPE(V.datatype, APPLYGEO)
+#undef APPLYGEO
+}
 
 
 void computeCircleAroundE(const Matrix2D<double> &E,
