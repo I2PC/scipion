@@ -202,7 +202,7 @@ int readTIFF(size_t select_img, bool isStack=false)
             if (dirHead[0].imageLength != dirHead[i].imageLength || \
                 dirHead[0].imageWidth != dirHead[i].imageWidth)
                 REPORT_ERROR(ERR_IMG_NOREAD, formatString("readTIFF: %s file contains %lu images with, at least,"\
-                    " two of them with different dimensions. Try to read them individually.",filename.c_str(), dirHead.size()));
+                             " two of them with different dimensions. Try to read them individually.",filename.c_str(), dirHead.size()));
         }
     }
 
@@ -447,7 +447,18 @@ int writeTIFF(size_t select_img, bool isStack=false, int mode=WRITE_OVERWRITE, S
         else
             dataMode = DATA;
 
+        /* As we cannot mmap a TIFF File, when this option is passed we are going to mmap
+         * the multidimarray of Image
+         */
         mmapOnWrite = false;
+        if (data.nzyxdim*gettypesize(wDType) > tiff_map_min_size)
+            data.setMmap(true);
+
+        // Allocate memory for image data (Assume xdim, ydim, zdim and ndim are already set
+        //if memory already allocated use it (no resize allowed)
+
+        data.coreAllocateReuse();
+
         return 0;
     }
 
