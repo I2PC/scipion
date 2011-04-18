@@ -149,8 +149,18 @@ def execute_ctf_groups (_log, dict):
 
 #    print '*********************************************************************'
 #    print '* Make CTF groups'
+#    remove all entries not present in sel file by
+#    join between selfile and metadatafile
+    MDctfdata = MetaData();
+    MDctfdata.read(dict['CTFDatName' ])
+    MDsel = MetaData();
+    MDsel.read(dict['SelFileName' ])
+    MDctfdata.intersection(MDsel,MDL_IMAGE)
+    tmpCtfdat = utils_xmipp.unique_filename(dict['CTFDatName' ])
+    MDctfdata.write(tmpCtfdat)
+    print tmpCtfdat
     command = \
-              ' --ctfdat ' + dict['CTFDatName' ] + \
+              ' --ctfdat ' + tmpCtfdat + \
               ' -o ' + CtfGroupDirectory + '/' + CtfGroupRootName + \
               ' --wiener --wc ' + str(dict['WienerConstant']) + \
               ' --pad ' + str(dict['PaddingFactor'])
