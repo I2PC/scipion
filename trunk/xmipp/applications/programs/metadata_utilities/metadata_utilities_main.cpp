@@ -61,7 +61,8 @@ protected:
         addParamsLine("   union               : Union with metadata md2");
         addParamsLine("   intersection        : Intersection with metadata md2");
         addParamsLine("   subtraction         : Subtraction with metadata md2");
-        addParamsLine("   join                : Inner join with md2 using label l1");
+        addParamsLine("   inner_join          : Inner join with md2 using label l1");
+        addParamsLine("   natural_join        : Natural  join with md2 using all common labels");
         addParamsLine("   merge               : Merge columns with md2, label is ignored");
         addParamsLine("                       : Both metadatas should have same size, and elements should be in same order,");
         addParamsLine("                       : if not, you should use 'join' instead, but this constrain having a common label");
@@ -185,6 +186,12 @@ protected:
         {
             MetaData md;
             md.join(mdIn, md2, label);
+            mdIn = md;
+        }
+        else if (operation == "natural")
+        {
+            MetaData md;
+            md.join(mdIn, md2, label,NATURAL);
             mdIn = md;
         }
         else if (operation == "merge")
