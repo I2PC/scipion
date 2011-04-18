@@ -405,6 +405,8 @@ class preprocess_A_class:
         # Decide name after preprocessing
         micrographDir=self.WorkingDir+"/"+shortname
         finalname=micrographDir + '/micrograph'
+        (filepath, micrographName)=os.path.split(relpath(filename))
+        (shortname2, extension)=os.path.splitext(micrographName)        
         if not self.Stddev == -1 or not self.Crop == -1 or not self.Down == 1:
             if not self.Down == 1:
                 finalname += ".spi"
