@@ -15,7 +15,7 @@
 #from XmippData import SingleImgSize
 """ This selfile points to the spider single-file format images that make up your data set. The filenames can have relative or absolute paths, but it is strictly necessary that you put this selfile IN THE PROJECTDIR. 
 """
-SelFileName ='proj_ctf.ctfdat'
+SelFileName ='20.sel'
 
 # {file} {expert} Docfile with the input angles:
 """ Do not provide anything if there are no angles yet. 
@@ -34,7 +34,7 @@ ReferenceFileNames ='ico_ref1.vol ico_ref2.vol'
 # Working subdirectory: 
 """ This directory will be created if it doesn't exist, and will be used to store all output from this run. Don't use the same directory for multiple different runs, instead use a structure like run1, run2 etc. 
 """
-WorkingDir ='ProjMatch/run1'
+WorkingDir ='ProjMatch/20new'
 
 # Delete working subdirectory if it already exists?
 """ Just be careful with this option...
@@ -42,7 +42,7 @@ WorkingDir ='ProjMatch/run1'
 DoDeleteWorkingDir =False
 
 # Number of iterations to perform
-NumberofIterations = 1
+NumberofIterations = 2
 
 # {expert} Resume at Iter (vs Step)
 """This option control how to resume a previously performed run.
@@ -59,7 +59,7 @@ IsIter =False
     Note2: Set this option to -1 if you want to perform extra iterations after
            successfully finish an execution
 """
-ContinueAtIteration =1
+ContinueAtIteration =23
 
 # {expert} Save disc space by cleaning up intermediate files?
 """ Be careful, many options of the visualization protocol will not work anymore, 
@@ -163,7 +163,7 @@ ReferenceIsCtfCorrected ='0'
     Do not provide a very tight mask.
     See http://xmipp.cnb.uam.es/twiki/bin/view/Xmipp/Mask for details
 """
-DoMask =False
+DoMask =True
 
 # Use a spherical mask?
 """ If set to true, provide the radius of the mask in the next input field
@@ -174,7 +174,7 @@ DoSphericalMask =True
 # Radius of spherical mask
 """ This is the radius (in pixels) of the spherical mask 
 """
-MaskRadius = 16
+MaskRadius = 63
 
 # {file} Binary mask file
 """ This should be a binary (only 0/1-valued) Xmipp volume of equal dimension as your reference
@@ -787,8 +787,6 @@ def actionsToBePerformedBeforeLoopThatDoNotModifyTheFileSystem():
                                       ReconstructedVolume + \
                                       "_ref_" + str(refN + 1).zfill(2) + ".vol"
         reconstructedFileNamesIter.append(list(auxList))
-    #add initial reference, useful for mark
-    #reconstructedFileNamesIter.append(ReferenceFileNames)
 
     # Optimal angles from previous iteration or user-provided at the beginning
     global DocFileInputAngles
@@ -803,6 +801,15 @@ def actionsToBePerformedBeforeLoopThatDoNotModifyTheFileSystem():
                                       docfile_with_current_angles + \
                                       "_ref_" + str(refN + 1).zfill(2) + ".doc"
         DocFileInputAngles.append(list(auxList))
+
+    global docfile_with_current_anglesList
+    docfile_with_current_anglesList=[]
+    docfile_with_current_anglesList.append(None)
+    for iterN in range(NumberofIterations):
+        docfile_with_current_anglesList.append(WorkingDir + "/Iter_" + \
+                                      str(iterN + 1).zfill(2) + \
+                                      '/' + \
+                                      docfile_with_current_angles + ".doc")
 
     #parameter for projection matching
     global Align2DIterNr
@@ -934,10 +941,9 @@ def otherActionsToBePerformedBeforeLoop():
     _Parameters = {
       'dummy':0
     }
-    if (ContinueAtIteration == 1):
-        command = 'self.saveParameters'
-    else:
-        command = 'self.loadParameters'
+    command = 'self.saveParameters'
+    _dataBase.insertCommand(command, _Parameters, 1)
+    command = 'self.loadParameters'
     _dataBase.insertCommand(command, _Parameters, dataBase.dataBaseStruct.doAlways)
 
     #no entries will be save untill this commit
@@ -1014,60 +1020,68 @@ def actionsToBePerformedInsideLoop(_log):
             auxFn=ProjectLibraryRootNames[iterN][refN]
             _VerifyFiles.append(auxFn)
             auxFn=auxFn[:-4]
+            #file with angles asigned to each image 
             _VerifyFiles.append(auxFn + ".doc")
+            #file with sampling point neighbourhood 
             _VerifyFiles.append(auxFn + "_sampling.txt")
             #_VerifyFiles.append(auxFn + "ewetgerg")
             _dataBase.insertCommand(command, _Parameters, iterN,_VerifyFiles)
 
-            # projectionMatching
+            # projectionMatching    
             _Parameters = {
-#                                  'AngSamplingRateDeg':AngSamplingRateDeg[iterN]
                                   'AvailableMemory':AvailableMemory
                                 , 'CtfGroupRootName': CtfGroupRootName
                                 , 'CtfGroupDirectory': CtfGroupDirectory
-#                                , 'CtfGroupSubsetFileName':CtfGroupSubsetFileName
                                 , 'DoAlign2D' : DoAlign2D[iterN]
                                 , 'DiscardPercentage':DiscardPercentage[iterN]
                                 , 'DoComputeResolution':DoComputeResolution[iterN]
                                 , 'DoCtfCorrection': DoCtfCorrection
                                 , 'DoScale':DoScale
-#                                , 'DocFileInputAngles':DocFileInputAngles[iterN-1][refN]
                                 , 'DoParallel': DoParallel
-#                                , 'DoRestricSearchbyTiltAngle':DoRestricSearchbyTiltAngle
                                 , 'InnerRadius':InnerRadius
-#                                , 'MaxChangeInAngles':MaxChangeInAngles[iterN]
                                 , 'MaxChangeOffset':MaxChangeOffset[iterN]
                                 , 'MinimumCrossCorrelation':MinimumCrossCorrelation[iterN]
-#                                , 'maskedFileNamesIter':maskedFileNamesIter[iterN][refN]
                                 , 'MpiJobSize':MpiJobSize
-#####                                 'NumberOfCtfGroups':NumberOfCtfGroups
                                 , 'NumberOfMpiProcesses':NumberOfMpiProcesses
                                 , 'NumberOfThreads':NumberOfThreads
-#                                , 'NumberOfThreads':NumberOfThreads
-#                                , 'OnlyWinner':OnlyWinner[iterN]
                                 , 'OuterRadius':OuterRadius
                                 , 'PaddingFactor':PaddingFactor
-#                                , 'PerturbProjectionDirections':PerturbProjectionDirections
                                 , 'ProjectLibraryRootName':ProjectLibraryRootNames[iterN][refN]
                                 , 'ProjMatchRootName':ProjMatchRootName[iterN][refN]
                                 , 'ReferenceIsCtfCorrected':ReferenceIsCtfCorrected[iterN]
-#                                , 'reconstructedFileName':reconstructedFileNamesIter[iterN-1][refN]
                                 , 'ScaleStep':ScaleStep[iterN]
                                 , 'ScaleNumberOfSteps':ScaleNumberOfSteps[iterN]
                                 , 'Search5DShift':Search5DShift[iterN]
                                 , 'Search5DStep':Search5DStep[iterN]
                                 , 'SystemFlavour':SystemFlavour
-#                                , 'SymmetryGroup':SymmetryGroup
-#                                , 'SymmetryGroupNeighbourhood':SymmetryGroupNeighbourhood
-#                                , 'Tilt0':Tilt0
-#                                , 'TiltF':TiltF
                                 }
 
             command = "dict['NumberOfCtfGroups']=self.NumberOfCtfGroups;projection_matching"
             _VerifyFiles = []
-            _VerifyFiles.append(auxFn + "ssdfsfsdf")
+            #File with list of images and references
+            _VerifyFiles.append(ProjMatchRootName[iterN][refN] )
+            _dataBase.insertCommand(command, _Parameters, iterN,_VerifyFiles)
+        
+            #assign the images to the different references based on the crosscorrelation coheficient
+            #if only one reference it just copy the docfile generated in the previous step
+            _Parameters = {
+                           'DocFileInputAngles' : DocFileInputAngles[iterN][refN]
+                         , 'Iter':iterN
+                         , 'ProjMatchRootName':ProjMatchRootName[iterN]#LIST
+                          }
+            _VerifyFiles = []
+            #File with angles given to each image after being asigned to a group
+            _VerifyFiles.append(DocFileInputAngles[iterN][refN]+'kkkk')
+            command = 'assign_images_to_references'
             _dataBase.insertCommand(command, _Parameters, iterN,_VerifyFiles)
 
+#suffle
+#class average
+#alig2d
+
+#reconstruct
+#resolution
+#
             
 ######################
 ######################
@@ -1075,12 +1089,12 @@ def actionsToBePerformedInsideLoop(_log):
             #REMOVE
             #Create directory
             _Parameters = {
-                 'iter':iterN + 1
-           , 'WorkingDir':WorkingDir
+                 'Iter':iterN + 1
+               , 'WorkingDir':WorkingDir
                 }
             command = 'createDir'
             _dataBase.insertCommand(command, _Parameters, iterN)
-
+            
             _Parameters = {'dummy':''}
             command = "shutil.copy('%s','%s');dummy" % (ReferenceFileNames[0], reconstructedFileNamesIter[iterN][refN])
             _VerifyFiles = []
