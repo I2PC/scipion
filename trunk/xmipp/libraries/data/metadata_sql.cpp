@@ -478,11 +478,16 @@ void MDSql::setOperate(const MetaData *mdInLeft, const MetaData *mdInRight, MDLa
     case OUTER_JOIN:
         join_type = " OUTER ";
         break;
+    case NATURAL_JOIN:
+        join_type = " NATURAL ";
+        column = MDL_UNDEFINED;
+        break;
     }
     MDSql temp(NULL);
     temp.createTable(&(mdInRight->activeLabels), false);
     mdInRight->myMDSql->copyObjects(&temp);
     size = myMd->activeLabels.size();
+
     for (int i = 0; i < size; i++)
     {
         ss2 << sep << MDL::label2Str( myMd->activeLabels[i]);
@@ -492,13 +497,17 @@ void MDSql::setOperate(const MetaData *mdInLeft, const MetaData *mdInRight, MDLa
         ss3 << MDL::label2Str( myMd->activeLabels[i]);
         sep = ", ";
     }
+
     ss << "INSERT INTO " << tableName(tableId)
     << " (" << ss2.str() << ")"
     << " SELECT " << ss3.str()
     << " FROM " << tableName(mdInLeft->myMDSql->tableId)
-    << join_type << " JOIN " << tableName(temp.tableId)
-    << " ON " << tableName(mdInLeft->myMDSql->tableId) << "." << MDL::label2Str(column)
-    << "=" << tableName(temp.tableId) << "." << MDL::label2Str(column) << ";";
+    << join_type << " JOIN " << tableName(temp.tableId);
+
+    if (operation != NATURAL_JOIN)
+        ss << " ON " << tableName(mdInLeft->myMDSql->tableId) << "." << MDL::label2Str(column)
+        << "=" << tableName(temp.tableId) << "." << MDL::label2Str(column) ;
+    ss << ";";
 
     execSingleStmt(ss);
 }
@@ -615,13 +624,16 @@ void MDSql::prepareStmt(const std::stringstream &ss, sqlite3_stmt *stmt)
 
 bool MDSql::execSingleStmt(const std::stringstream &ss)
 {
-#ifdef DEBUG
-    //std::cerr << "execSingleStmt, stmt: '" << stmtStr << "'" <<std::endl;
-#endif
 
     sqlite3_stmt * stmt;
     rc = sqlite3_prepare_v2(db, ss.str().c_str(), -1, &stmt, &zLeftover);
-    //std::cerr << "ss " << ss.str() <<std::endl;
+//#define DEBUG
+#ifdef DEBUG
+
+    std::cerr << "execSingleStmt, stmt: '" << ss.str() << "'" <<std::endl;
+#endif
+#undef DEBUG
+
     bool r = execSingleStmt(stmt, &ss);
     rc = sqlite3_finalize(stmt);
     return r;
