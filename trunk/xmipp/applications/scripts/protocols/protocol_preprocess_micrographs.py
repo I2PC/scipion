@@ -46,15 +46,8 @@ Crop=-1
     substituted by the local median. Set this option to -1 for not applying it."""
 Stddev=-1
 # Downsampling factor 
-""" Set to 1 for no downsampling. Non-integer downsample factors are possible with
-    the Fourier kernel. """
+""" Set to 1 for no downsampling. Non-integer downsample factors are possible."""
 Down=1
-# {expert}{list}|Fourier|Rectangle|Sinc| Which method to use for downsampling?
-""" Fourier is theoretically the best option, but it may take more memory than your machine
-    can handle. Then, Rectangle is the fastest, but much less accurate. Sinc is reasonably
-    accurate, but painfully slow...
-"""
-DownKernel='Fourier'
 #------------------------------------------------------------------------------------------------
 # {section} CTF estimation
 #------------------------------------------------------------------------------------------------
@@ -196,7 +189,6 @@ class preprocess_A_class:
                  Crop,
                  Stddev,
                  Down,
-                 DownKernel,
                  DoCtfEstimate,
                  Voltage,
                  SphericalAberration,
@@ -229,7 +221,6 @@ class preprocess_A_class:
             self.Down=int(Down)
         else:
             self.Down=float(Down)
-        self.DownKernel=DownKernel
         self.DoCtfEstimate=DoCtfEstimate
         self.Voltage=Voltage
         self.SphericalAberration=SphericalAberration
@@ -270,7 +261,6 @@ class preprocess_A_class:
                  "Crop",
                  "Stddev",
                  "Down",
-                 "DownKernel",
                  "DoCtfEstimate",
                  "Voltage",
                  "SphericalAberration",
@@ -448,15 +438,8 @@ class preprocess_A_class:
         
         # Downsample
         if not self.Down == 1:
-            command += "xmipp_micrograph_downsample -i " + iname + " -o " + micrographDir + "/tmp.spi " + \
-                     "-datatype float "
-            if (self.DownKernel == 'Fourier'):
-                scale=1. / self.Down
-                command += ' -fourier ' + str(scale)
-            elif (self.DownKernel == 'Sinc'):
-                command += ' -Xstep ' + str(self.Down) + ' -kernel sinc 0.02 0.1'
-            elif (self.DownKernel == 'Rectangle'):
-                command += ' -Xstep ' + str(self.Down) + ' -kernel rectangle ' + str(self.Down) + ' ' + str(self.Down)
+            command += "xmipp_transform_downsample -i " + iname + " -o " + micrographDir + "/tmp.spi " + \
+                    "--step "+ str(self.Down)+' --method fourier ' 
             command += " ; rm -f " + finalname + " ; mv -i " + micrographDir + "/tmp.spi " + finalname + " ; "
         
         # Postprocessing
@@ -649,7 +632,6 @@ if __name__ == '__main__':
                  Crop,
                  Stddev,
                  Down,
-                 DownKernel,
                  DoCtfEstimate,
                  Voltage,
                  SphericalAberration,
