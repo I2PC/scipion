@@ -10,6 +10,7 @@ FFTWLibs=['fftw3','fftw3_threads']
 TIFFDir="external/tiff-3.9.4"
 TIFFLibs=['tiff']
 SQliteDir="external/sqlite-3.6.23"
+PYSQliteDir="external/pysqlite-2.6.3"
 SQLiteLibs=['sqlite3']
 
 def AddMatchingFiles((pattern, blacklist, sources), directory, files):
@@ -438,6 +439,18 @@ def AddFFTWLibrary():
     env.Alias(toCopy, install)
     env.Default(alias)
 
+def AddPYSQLITELibrary():
+
+    libprefix = os.path.join(env['prefix'], 'lib')
+    pysqlite2Target = libprefix+'/pysqlite2/'
+    pysqlite2Build = env.Command(pysqlite2Target, PYSQliteDir, \
+                          'cd  $SOURCE ; python ./setup.py build ' + \
+			  ' ; python ./setup.py install --install-lib '+ libprefix+\
+			  ' --install-data ' + libprefix + '/pysqlite2')
+    alias = env.Alias('pysqlite2',pysqlite2Target)
+    env.Default(alias)
+    
+
 def AddTIFFLibrary():
     libprefix = os.path.join(env['prefix'], 'lib')
     numJobs=env.GetOption('num_jobs')
@@ -474,6 +487,9 @@ def AddTIFFLibrary():
 
 # SQLite
 AddSQLiteLibrary()
+
+# PYSQLITE
+AddPYSQLITELibrary()
 
 # FFTW
 AddFFTWLibrary()
