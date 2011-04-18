@@ -381,19 +381,21 @@ MetaData_dealloc(MetaDataObject* self)
 
 /* Constructor */
 static PyObject *
-MetaData_new(PyTypeObject *type, PyObject *args, PyObject *kwargs);
+MetaData_aggregate(PyObject *obj, PyObject *args, PyObject *kwargs);
+static PyObject *
+MetaData_aggregateSingle(PyObject *obj, PyObject *args, PyObject *kwargs);
 static PyObject *
 MetaData_importObjects(PyObject *obj, PyObject *args, PyObject *kwargs);
 static PyObject *
-MetaData_unionAll(PyObject *obj, PyObject *args, PyObject *kwargs);
+MetaData_intersection(PyObject *obj, PyObject *args, PyObject *kwargs);
 static PyObject *
 MetaData_merge(PyObject *obj, PyObject *args, PyObject *kwargs);
 static PyObject *
+MetaData_new(PyTypeObject *type, PyObject *args, PyObject *kwargs);
+static PyObject *
 MetaData_readPlain(PyObject *obj, PyObject *args, PyObject *kwargs);
 static PyObject *
-MetaData_intersection(PyObject *obj, PyObject *args, PyObject *kwargs);
-static PyObject *
-MetaData_aggregateSingle(PyObject *obj, PyObject *args, PyObject *kwargs);
+MetaData_unionAll(PyObject *obj, PyObject *args, PyObject *kwargs);
 
 static int
 MetaData_print(PyObject *obj, FILE *fp, int flags)
@@ -1127,7 +1129,10 @@ static PyMethodDef MetaData_methods[] = {
                                              "Remove objects from metadata"
                                             },
                                             {"aggregateSingle", (PyCFunction)MetaData_aggregateSingle, METH_VARARGS,
-                                             "Aggregate objects to metadata"
+                                             "Aggregate operation in metadata (single value result)"
+                                            },
+                                            {"aggregate", (PyCFunction)MetaData_aggregate, METH_VARARGS,
+                                             "Aggregate operation in metadata. The results is stored in self."
                                             },
                                             {"unionAll", (PyCFunction)MetaData_unionAll, METH_VARARGS,
                                              "Union of two metadatas. The results is stored in self."
@@ -1288,6 +1293,41 @@ MetaData_aggregateSingle(PyObject *obj, PyObject *args, PyObject *kwargs)
     return NULL;
 }
 
+/*aggregate*/
+static PyObject *
+MetaData_aggregate(PyObject *obj, PyObject *args, PyObject *kwargs)
+{
+
+    AggregateOperation op;
+    MDLabel aggregateLabel;
+    MDLabel operateLabel;
+    MDLabel resultLabel;
+    PyObject *pyMd = NULL;
+
+    if (PyArg_ParseTuple(args, "Oiiii", &pyMd, &op, &aggregateLabel, &operateLabel, &resultLabel))
+    {
+        try
+        {
+            if (!MetaData_Check(pyMd))
+            {
+                PyErr_SetString(PyExc_TypeError, "MetaData::aggregate: Expecting MetaData as first argument");
+                return NULL;
+            }
+            MetaDataObject *self = (MetaDataObject*)obj;
+            self->metadata->aggregate(MetaData_Value(pyMd),
+            		                 (AggregateOperation) op,
+            		                 (MDLabel) aggregateLabel,
+            		                 (MDLabel) operateLabel,
+            		                 (MDLabel) resultLabel);
+            Py_RETURN_NONE;
+        }
+        catch (XmippError xe)
+        {
+            PyErr_SetString(PyXmippError, xe.msg.c_str());
+        }
+    }
+    return NULL;
+}
 
 /* UnionAll */
 static PyObject *
