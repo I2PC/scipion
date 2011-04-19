@@ -81,7 +81,7 @@ void ProgAngularProjectionMatching::defineParams()
     addExampleLine("Example of use: Sample at 2 pixel step size for 5D shift search",false);
     addExampleLine("xmipp_angular_projection_matching -i experimental.doc -o assigned_angles.doc --ref reference.stk --search5d_step 2");
     addParamsLine("   -i <doc_file>                : Docfile with input images");
-    addParamsLine("   -o <output_rootname>         : Output rootname");
+    addParamsLine("   -o <output_filename>         : Output filename");
     addParamsLine("   -r <stackFile>               : Reference projections");
     addParamsLine("     alias --ref;");
     addParamsLine("  [--search5d_shift <s5dshift=0>]: Search range (in +/- pix) for 5D shift search");
@@ -366,7 +366,7 @@ int ProgAngularProjectionMatching::getCurrentReference(int refno,
         }
         local_transformer.FourierTransform(img(),Faux);
         FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY2D(Faux)
-            dAij(Faux,i,j) *= dAij(Mctf,i,j);
+        dAij(Faux,i,j) *= dAij(Mctf,i,j);
         local_transformer.inverseFourierTransform(Faux,img());
         if (paddim > dim)
         {
@@ -458,7 +458,7 @@ void * threadRotationallyAlignOneImage( void * data )
         P.getPolarFromCartesianBSpline(Maux,prm->Ri,prm->Ro,3,
                                        (double)prm->search5d_xoff[itrans],
                                        (double)prm->search5d_yoff[itrans]);
-        P.computeAverageAndStddev(mean,stddev);
+        P.computeAverageAndStddev(mean,stddev,true);
         P -= mean; // for normalized cross-correlation coefficient
         if (itrans == myinit)
             P.calculateFftwPlans(local_plans);
@@ -537,14 +537,19 @@ void * threadRotationallyAlignOneImage( void * data )
 #endif
             //#define DEBUG
 #ifdef DEBUG
-
+            std::cerr << "imgno" << imgno <<std::endl;
             std::cerr<<"Got refno= "<<refno<<" pointer= "<<prm->mysampling.my_neighbors[imgno][i]<<std::endl;
 #endif
-#undef DEBUG
 
             // Loop over all 5D-search translations
             for (int itrans = 0; itrans < prm->nr_trans; itrans++)
             {
+#ifdef DEBUG
+
+            std::cerr<< "prm->stddev_ref[refno] * prm->stddev_img[itrans]: " <<
+            		     prm->stddev_ref[refno] << " " <<
+            		     prm->stddev_img[itrans];
+#endif
                 // A. Check straight image
                 rotationalCorrelation(prm->fP_img[itrans],prm->fP_ref[refno],ang,local_transformer);
                 corr /= prm->stddev_ref[refno] * prm->stddev_img[itrans]; // for normalized ccf
@@ -582,6 +587,7 @@ void * threadRotationallyAlignOneImage( void * data )
                     std::cerr<<"**";
                 std::cerr<<std::endl;
 #endif
+#undef DEBUG
 
             }
         }
@@ -734,8 +740,8 @@ void ProgAngularProjectionMatching::scaleAlignOneImage(MultidimArray<double> &im
 
     if (opt_flip)
     {
-    	MAT_ELEM(A,0, 0) *= -1.;
-    	MAT_ELEM(A,0, 1) *= -1.;
+        MAT_ELEM(A,0, 0) *= -1.;
+        MAT_ELEM(A,0, 1) *= -1.;
     }
 
     applyGeometry(LINEAR, Mtrans, img, A, IS_INV, DONT_WRAP);
@@ -822,6 +828,7 @@ void ProgAngularProjectionMatching::processSomeImages(const std::vector<size_t> 
     {
         imgid = imagesToProcess[imgno];
         getCurrentImage(imgid, img);
+
         //img.write("kk,spi");
         //exit(0);
         // Call threads to calculate the rotational alignment of each image in the selfile
@@ -855,6 +862,7 @@ void ProgAngularProjectionMatching::processSomeImages(const std::vector<size_t> 
             }
             pthread_join(*(th_ids+c),NULL);
         }
+        //exit(1);      // add one because first number is number of elements in the array
 
         // Flip order to loop through references
         loop_forward_refs = !loop_forward_refs;
@@ -930,5 +938,5 @@ void ProgAngularProjectionMatching::getCurrentImage(size_t imgid, Image<double> 
 
 void ProgAngularProjectionMatching::writeOutputFiles()
 {
-    DFo.write(fn_out);
+    DFo.write(fn_out,MD_APPEND);
 }
