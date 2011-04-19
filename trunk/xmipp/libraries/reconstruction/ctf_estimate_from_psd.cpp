@@ -564,6 +564,7 @@ void ProgCTFEstimateFromPSD::defineParams()
     defineBasicParams(this);
 }
 
+
 /* Produce side information ------------------------------------------------ */
 void ProgCTFEstimateFromPSD::produce_side_info()
 {
@@ -644,8 +645,6 @@ void ProgCTFEstimateFromPSD::produce_side_info()
 
     // Enhance PSD for ctfmodels
     ProgCTFEnhancePSD prm;
-    prm.center = true;
-    prm.take_log = true;
     prm.filter_w1 = 0.02;
     prm.filter_w2 = 0.2;
     prm.decay_width = 0.02;
@@ -1170,7 +1169,7 @@ double CTF_fitness(double *p, void *)
         double correlation_coeff = enhanced_model / Ncorr - model_avg * enhanced_avg;
         double sigma1 = sqrt(fabs(enhanced2 / Ncorr - enhanced_avg * enhanced_avg));
         double sigma2 = sqrt(fabs(model2 / Ncorr - model_avg * model_avg));
-        if (fabs(sigma2) < XMIPP_EQUAL_ACCURACY)
+        if (fabs(sigma1) < XMIPP_EQUAL_ACCURACY || fabs(sigma2) < XMIPP_EQUAL_ACCURACY)
             retval = global_heavy_penalization;
         else
         {
@@ -1189,9 +1188,9 @@ double CTF_fitness(double *p, void *)
         if (global_show == 3)
         {
             save_intermediate_results("PPP");
-            std::cout << "Press any key\n";
-            char c;
-            std::cin >> c;
+         //   std::cout << "Press any key\n";
+         //   char c;
+         //   std::cin >> c;
         }
     }
 
