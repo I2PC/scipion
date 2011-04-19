@@ -25,18 +25,18 @@ def composeWildcardFileName(rootname,extension):
     return output
 
 def getCommaSeparatedIntegerList(inputstring):
-   import string
-   lista=string.split(inputstring,",")
-   output=[]
-   for i in range(len(lista)):
-      interval=string.split(lista[i],'-')
-      if len(interval)==1:
-         if not interval[0]=='':
-            output+=[int(interval[0])]
-      else:
-         output+=range(int(interval[0]),
-                       int(interval[1])+1)
-   return output
+    import string
+    lista=string.split(inputstring,",")
+    output=[]
+    for i in range(len(lista)):
+        interval=string.split(lista[i],'-')
+        if len(interval)==1:
+            if not interval[0]=='':
+                output+=[int(interval[0])]
+        else:
+            output+=range(int(interval[0]),
+                        int(interval[1])+1)
+    return output
 
 import os
 def unique_filename(file_name):
@@ -46,3 +46,4 @@ def unique_filename(file_name):
         file_name = file_name_parts[0] + '_' + str(counter) + file_name_parts[1]
         counter += 1
     return file_name
+
