@@ -71,7 +71,7 @@ opts.Add(BoolVariable('verbose_tiff', 'Verbose configuring of TIFF libraries?', 
 opts.Add('TIFFFLAGS', 'Additional flags for TIFF configure', 'CPPFLAGS=-w')
 
 opts.Add(BoolVariable('verbose_sqlite', 'Verbose configuring of SQLite libraries?', 'no'))
-opts.Add('SQLITEFLAGS', 'Additional flags for SQLite configure', 'CPPFLAGS=-w')
+opts.Add('SQLITEFLAGS', 'Additional flags for SQLite configure', 'CPPFLAGS=-w CFLAGS=-DSQLITE_ENABLE_UPDATE_DELETE_LIMIT=1')
 
 opts.Add('JNI_CPPPATH', 'Directory of jni.h', '')
 opts.Add('JAVAC', 'Java compiler', 'javac')
@@ -251,86 +251,110 @@ if (ARGUMENTS['mode'] == 'configure'):
         else:
             print 'yes'
 
-    # SQLite
-    # It is ugly to call configure from scons, but I do not know how to do it otherwise
-    # create configuration file for sqlite
-    finalSQLiteFlags = env['SQLITEFLAGS']
+    def ConfigureExternalLibrary(libName, libFlags, libpath, verbose):
+            
+        libpath = os.path.join('external', libpath)
+        if not GetOption("help"):
+            if os.path.exists(os.path.join(libpath, 'Makefile')):
+                command = 'cd %s ; make distclean>/dev/null' % libpath
+                print command
+                os.system(command)
+    
+        if not int(env['static']):
+            libFlags += " --enable-shared"
+    
+        if env['PLATFORM'] == 'darwin':
+            libFlags += " CFLAGS='-m64'"
+        
+        msg = "* Configuring " + libName
+        cmd = "cd %s;./configure %s" % (libpath, libFlags)
+        
+        logFile = os.path.join("..", "..", "build", libName + "_configure.log")
+        if not verbose:
+            msg += "(see log file '%s' for details)" % logFile
+            cmd += " > " + logFile
+            
+        print msg, "..."
+        print cmd
+        os.system(cmd)        
+    
+    ConfigureExternalLibrary('sqlite', env['SQLITEFLAGS'], 
+                             'sqlite-3.6.23', int(env['verbose_sqlite']))
+                         
+    ConfigureExternalLibrary('fftw', env['FFTWFLAGS'], 
+                         'fftw-3.2.2', int(env['verbose_fftw']))
+    
+    ConfigureExternalLibrary('tiff', env['TIFFFLAGS'], 
+                     'tiff-3.9.4', int(env['verbose_tiff']))
 
-    if env['PLATFORM'] == 'darwin':
-        finalSQLiteFlags += " CFLAGS=-m64"
-    if not GetOption("help"):
-    	if os.path.exists('external/sqlite-3.6.23/Makefile'):
-	        command = 'cd external/sqlite-3.6.23;  make distclean>/dev/null'
-	        print command
-	        os.system(command)
-	if int(env['verbose_sqlite']):
-            print "* Configuring SQLITE ... "
-            os.system("export CFLAGS='-DSQLITE_ENABLE_UPDATE_DELETE_LIMIT=1' ;cd external/sqlite-3.6.23;./configure " + finalSQLiteFlags)
-	else:
-            print "* Configuring SQLite (see build/sqlite_configure.log for details) ... "
-            print "cd external/sqlite-3.6.23;./configure " + finalSQLiteFlags
-            os.system("cd external/sqlite-3.6.23;./configure " + finalSQLiteFlags + " > ../../build/sqlite_configure.log ")
+#    finalSQLiteFlags = env['SQLITEFLAGS']
+#
+#    if env['PLATFORM'] == 'darwin':
+#        finalSQLiteFlags += " CFLAGS=-m64"
+#    if not GetOption("help"):
+#    	if os.path.exists('external/sqlite-3.6.23/Makefile'):
+#	        command = 'cd external/sqlite-3.6.23;  make distclean>/dev/null'
+#	        print command
+#	        os.system(command)
+#	if int(env['verbose_sqlite']):
+#            print "* Configuring SQLITE ... "
+#            os.system("export CFLAGS='-DSQLITE_ENABLE_UPDATE_DELETE_LIMIT=1' ;cd external/sqlite-3.6.23;./configure " + finalSQLiteFlags)
+#	else:
+#            print "* Configuring SQLite (see build/sqlite_configure.log for details) ... "
+#            print "cd external/sqlite-3.6.23;./configure " + finalSQLiteFlags
+#            os.system("cd external/sqlite-3.6.23;./configure " + finalSQLiteFlags + " > ../../build/sqlite_configure.log ")
 
 
     # FFTW
     # It is ugly to call configure from scons, but I do not know how to do it otherwise
     # create configuration file for fftw
-    finalFFTWFlags = env['FFTWFLAGS']
-    if not GetOption("help"):
-    	if os.path.exists('external/fftw-3.2.2/Makefile'):
-	        command = 'cd external/fftw-3.2.2;  make distclean>/dev/null'
-	        print command
-	        os.system(command)
-
-    if not int(env['static']):
-        finalFFTWFlags += " --enable-shared"
-
-    if env['PLATFORM'] == 'darwin':
-        finalFFTWFlags += " CFLAGS='-m64'"
-
-    installdir = os.getcwd()
-    installdir += "/lib"
-
-    finalFFTWFlags += " --prefix="
-    finalFFTWFlags += installdir
-
-    if int(env['verbose_fftw']):
-        print "* Configuring FFTW ... "
-        os.system("cd external/fftw-3.2.2;./configure " + finalFFTWFlags)
-    else:
-        print "* Configuring FFTW (see build/fftw_configure.log for details) ... "
-        print "cd external/fftw-3.2.2;./configure " + finalFFTWFlags
-        os.system("cd external/fftw-3.2.2;./configure " + finalFFTWFlags + " > ../../build/fftw_configure.log ")
+#    finalFFTWFlags = env['FFTWFLAGS']
+#    if not GetOption("help"):
+#    	if os.path.exists('external/fftw-3.2.2/Makefile'):
+#	        command = 'cd external/fftw-3.2.2;  make distclean>/dev/null'
+#	        print command
+#	        os.system(command)
+#
+#    if not int(env['static']):
+#        finalFFTWFlags += " --enable-shared"
+#
+#    if env['PLATFORM'] == 'darwin':
+#        finalFFTWFlags += " CFLAGS='-m64'"
+#    
+#    msg = "* Configuring FFTW "
+#    cmd = "cd external/fftw-3.2.2;./configure %s" % finalFFTWFlags
+#    
+#    if not int(env['verbose_fftw']):
+#        msg += "(see build/fftw_configure.log for details)"
+#        cmd += " > ../../build/fftw_configure.log "
+#        
+#    print msg, "..."
+#    print cmd
+#    os.system(cmd)
 
     # TIFF
     # It is ugly to call configure from scons, but I do not know how to do it otherwise
     # create configuration file for fftw
-    finalTIFFFlags = env['TIFFFLAGS']
-    if not GetOption("help"):
-        if os.path.exists('external/tiff-3.9.4/Makefile'):
-            command = 'cd external/tiff-3.9.4;  make distclean>/dev/null'
-            print command
-            os.system(command)
-
-    if not int(env['static']):
-        finalTIFFFlags += " --enable-shared"
-
-    if env['PLATFORM'] == 'darwin':
-        finalTIFFFlags += " CFLAGS='-m64'"
-
-    installdir = os.getcwd()
-    installdir += "/lib"
-
-    finalTIFFFlags += " --prefix="
-    finalTIFFFlags += installdir
-
-    if int(env['verbose_tiff']):
-        print "* Configuring TIFF ... "
-        os.system("cd external/tiff-3.9.4;./configure " + finalTIFFFlags)
-    else:
-        print "* Configuring TIFF (see build/tiff_configure.log for details) ... "
-        print "cd external/tiff-3.9.4;./configure " + finalTIFFFlags
-        os.system("cd external/tiff-3.9.4;./configure " + finalTIFFFlags + " > ../../build/tiff_configure.log ")
+#    finalTIFFFlags = env['TIFFFLAGS']
+#    if not GetOption("help"):
+#        if os.path.exists('external/tiff-3.9.4/Makefile'):
+#            command = 'cd external/tiff-3.9.4;  make distclean>/dev/null'
+#            print command
+#            os.system(command)
+#
+#    if not int(env['static']):
+#        finalTIFFFlags += " --enable-shared"
+#
+#    if env['PLATFORM'] == 'darwin':
+#        finalTIFFFlags += " CFLAGS='-m64'"
+#
+#    if int(env['verbose_tiff']):
+#        print "* Configuring TIFF ... "
+#        os.system("cd external/tiff-3.9.4;./configure " + finalTIFFFlags)
+#    else:
+#        print "* Configuring TIFF (see build/tiff_configure.log for details) ... "
+#        print "cd external/tiff-3.9.4;./configure " + finalTIFFFlags
+#        os.system("cd external/tiff-3.9.4;./configure " + finalTIFFFlags + " > ../../build/tiff_configure.log ")
 
     # Finish configuration
     env = conf.Finish()

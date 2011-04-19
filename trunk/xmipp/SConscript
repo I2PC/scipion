@@ -10,8 +10,9 @@ FFTWLibs=['fftw3','fftw3_threads']
 TIFFDir="external/tiff-3.9.4"
 TIFFLibs=['tiff']
 SQliteDir="external/sqlite-3.6.23"
-PYSQliteDir="external/pysqlite-2.6.3"
 SQLiteLibs=['sqlite3']
+PYSQliteDir="external/pysqlite-2.6.3"
+
 
 def AddMatchingFiles((pattern, blacklist, sources), directory, files):
     ''' Callback, adds all matching files in dir '''
@@ -79,7 +80,6 @@ def AddProtocol(name, basedir):
         env.Alias(fullname, install)
         env.Default(alias)
 
-# FIXME default parameters' order, to save writing []
 def AddProgram(name, basedir, sources_pattern = '*.cpp', skip_list = [],
                includes = [], libpath = [], libs = [], cxxflags = [],
                linkflags = []):
@@ -107,10 +107,8 @@ def AddProgram(name, basedir, sources_pattern = '*.cpp', skip_list = [],
         LINK = env['LINKERFORPROGRAMS']
         )
 
-    # alias
-    alias = env.Alias(fullname, program)
     install = env.Install(binprefix, program)
-    env.Alias(fullname, install)
+    alias = env.Alias(name, install)
     env.Default(alias)
 
 def AddMPIProgram(name, basedir, sources_pattern = '*.cpp', skip_list = [],
@@ -252,10 +250,8 @@ def AddLibrary(name, basedir, sources, includes, libpath=[], libs=[],
             SHLIBPREFIX=shlibprefix
             )
 
-    # alias
-    alias = env.Alias(name, library)
     install = env.Install(libprefix, library)
-    env.Alias(name, install)
+    alias = env.Alias(name, install)
     env.Default(alias)
 
 def AddJavaLibrary(name, basedir, srcdir):#, sourceList, includes, libpath=[], libs=[]):
@@ -369,133 +365,72 @@ def AddImageJPlugin(name, pluginDir, outDir):
 def AddImageJExternalPlugins(pluginsDir, outDir):
     Execute("rsync -av " + os.path.join(pluginsDir, '* ') + outDir + ' --exclude=".*/"')
 
+def AddExternalLibrary(libname, libs, libpath, suffix):
+    libprefix = os.path.join(env['prefix'], 'lib')
+    numJobs=env.GetOption('num_jobs')
+    
+    target_libs = []
+    
+    if int(env['static']):
+        lib_ext = ".a"
+    else:
+        if env['PLATFORM'] == 'darwin':
+            lib_ext = ".dylib"
+        else:
+            lib_ext = ".so"
+    
+    for lib in libs:
+        lib_name = lib + lib_ext
+        target_libs.append(os.path.join(libpath, lib_name))
+        target_libs.append(os.path.join(libpath, lib + '.la'))
+        if not int(env['static']) and env['PLATFORM'] != 'darwin':
+            target_libs.append(os.path.join(libpath, lib_name + suffix))
+            
+    logFile = os.path.join("..", "..", "build", libname + "_make.log")
+    env.Command(target_libs, Glob(libpath, "*/*.c", []), 
+                         'cd %s; make clean > /dev/null; make > %s;' 
+                         % (libpath, logFile))
+    libInstall = env.Install(libprefix, target_libs)
+    libAlias = env.Alias(libname, libInstall)
+    env.Default(libAlias)
+    return target_libs
+    
 def AddSQLiteLibrary():
-    libprefix = os.path.join(env['prefix'], 'lib')
-    numJobs=env.GetOption('num_jobs')
+    libInstall = AddExternalLibrary('sqlite', ['.libs/libsqlite3'], SQliteDir, '.0')
+    progName = os.path.join(env['prefix'], 'bin', 'xmipp_sqlite3')
+    progInstall = env.InstallAs(progName, os.path.join(SQliteDir, 'sqlite3'))
+    Depends(progName, libInstall)
+    progAlias = env.Alias('sqlite', progInstall)
+    env.Default(progAlias)
 
-    name1='libsqlite3'
-    name1la='libsqlite3.la'
-    if int(env['static']):
-        name1+=".a"
-    else:
-        if env['PLATFORM'] == 'darwin':
-            name1+=".dylib"
-        else:
-            name1+=".so"
-
-    toBuild=[SQliteDir+'/.libs/'+name1, SQliteDir+'/.libs/'+name1la]
-    toCopy=[name1, name1la]
-    if not int(env['static']):
-        if not env['PLATFORM'] == 'darwin':
-            toBuild+=[SQliteDir+'/.libs/'+name1+".0"]
-            toCopy+=[name1+".0"]
-    lib1 = env.Command(toBuild, SQliteDir+"/sqlite3.c",
-        "cd "+SQliteDir+" ; make clean > /dev/null ; make " +\
-        " > ../../build/sqlite_make.log; "+\
-        "chmod 755 sqlite3; mkdir -p ../../bin/; rm -rf ../../bin/xmipp_sqlite3; "+ \
-	    "cp sqlite3 ../../bin/xmipp_sqlite3")
-    alias = env.Alias(toCopy, lib1)
-    install = env.Install(libprefix, source=toBuild)
-    env.Alias(toCopy, install)
-    env.Default(alias)
-
-def AddFFTWLibrary():
-    libprefix = os.path.join(env['prefix'], 'lib')
-    numJobs=env.GetOption('num_jobs')
-
-    name1='libfftw3'
-    name2='libfftw3_threads'
-    name1la='libfftw3.la'
-    name2la='libfftw3_threads.la'
-    if int(env['static']):
-        name1+=".a"
-        name2+=".a"
-    else:
-        if env['PLATFORM'] == 'darwin':
-            name1+=".dylib"
-            name2+=".dylib"
-        else:
-            name1+=".so"
-            name2+=".so"
-
-    toBuild=[FFTWDir+'/.libs/'+name1, FFTWDir+'/.libs/'+name1la,
-             FFTWDir+'/threads/.libs/'+name2, FFTWDir+'/threads/.libs/'+name2la]
-    toCopy=[name1, name2, name1la, name2la]
-
-    if not int(env['static']):
-        if not env['PLATFORM'] == 'darwin':
-            toBuild+=[FFTWDir+'/.libs/'+name1+".3",
-                      FFTWDir+'/threads/.libs/'+name2+".3"]
-            toCopy+=[name1+".3",name2+".3"]
-        else:
-            toBuild+=[FFTWDir+'/.libs/'+name1,
-                      FFTWDir+'/threads/.libs/'+name2]
-            toCopy+=[name1,name2]
-    lib1 = env.Command(toBuild, FFTWDir+"/kernel/assert.c",
-        "cd "+FFTWDir+" ; make clean > /dev/null ; make "+\
-        " > ../../build/fftw_make.log ; make install >> ../../build/fftw_make.log")
-    alias = env.Alias(toCopy, lib1)
-    install = env.Install(libprefix, source=toBuild)
-    env.Alias(toCopy, install)
-    env.Default(alias)
-
-def AddPYSQLITELibrary():
-
+def AddPySqliteLibrary():
     libprefix = os.path.join(env['prefix'], 'lib')
     pysqlite2Target = libprefix+'/pysqlite2/'
     pysqlite2Build = env.Command(pysqlite2Target, PYSQliteDir, \
                           'cd  $SOURCE ; python ./setup.py build ' + \
 			  ' ; python ./setup.py install --install-lib '+ libprefix+\
 			  ' --install-data ' + libprefix + '/pysqlite2')
+    Depends(pysqlite2Build, 'sqlite')
     alias = env.Alias('pysqlite2',pysqlite2Target)
     env.Default(alias)
-    
 
-def AddTIFFLibrary():
-    libprefix = os.path.join(env['prefix'], 'lib')
-    numJobs=env.GetOption('num_jobs')
-
-    name1='libtiff'
-    name1la='libtiff.la'
-    if int(env['static']):
-        name1+=".a"
-    else:
-        if env['PLATFORM'] == 'darwin':
-            name1+=".dylib"
-        else:
-            name1+=".so"
-
-    toBuild=[TIFFDir+'/libtiff/.libs/'+name1, TIFFDir+'/libtiff/.libs/'+name1la]
-    toCopy=[name1, name1la]
-
-    if not int(env['static']):
-        if not env['PLATFORM'] == 'darwin':
-            toBuild+=[TIFFDir+'/libtiff/.libs/'+name1+".3"]
-            toCopy+=[name1+".3"]
-        else:
-            toBuild+=[TIFFDir+'/libtiff/.libs/'+name1]
-            toCopy+=[name1]
-    lib1 = env.Command(toBuild, TIFFDir+"/libtiff/tif_flush.c",
-        "cd "+TIFFDir+" ; make clean > /dev/null ; make " +\
-        " > ../../build/tiff_make.log ; make install >> ../../build/tiff_make.log")
-    alias = env.Alias(toCopy, lib1)
-    install = env.Install(libprefix, source=toBuild)
-    env.Alias(toCopy, install)
-    env.Default(alias)
 
 # --- Libraries
+
+# PYSQLITE
+PYSQliteDir = "external/pysqlite-2.6.3"
+AddPySqliteLibrary()
 
 # SQLite
 AddSQLiteLibrary()
 
-# PYSQLITE
-AddPYSQLITELibrary()
-
 # FFTW
-AddFFTWLibrary()
+FFTWLibsPaths = ['.libs/libfftw3','threads/.libs/libfftw3_threads']
+AddExternalLibrary('fftw', FFTWLibsPaths, FFTWDir, '.3')
 
 # TIFF
-AddTIFFLibrary()
+TIFFLibsPaths = ['libtiff/.libs/libtiff']
+AddExternalLibrary('tiff', TIFFLibsPaths, TIFFDir, '.3')
 
 # Bilib
 BilibSources = Glob('external/bilib/sources', '*.cc', [])
@@ -513,7 +448,7 @@ AddLibrary('XmippExternal', 'external',
 # XmippData
 DataSources = Glob('libraries/data','*.cpp',[])
 AddLibrary('XmippData', 'libraries/data', DataSources, ['#'],
-           ['lib'],['XmippExternal']+FFTWLibs+TIFFLibs+SQLiteLibs)
+           ['lib'],['XmippExternal'] + FFTWLibs + TIFFLibs + SQLiteLibs)
 
 #Xmipp Python Extension
 PyExtSources = Glob('libraries/bindings/python', '*.cpp', [])
