@@ -35,12 +35,6 @@
 class ProgCTFEnhancePSD: public XmippMetadataProgram
 {
 public:
-    /// Center PSD before working
-    bool center;
-
-    /// Take log10 before working
-    bool take_log;
-
     /// Bandpass filter low frequency (in Fourier space, max 0.5)
     double filter_w1;
 

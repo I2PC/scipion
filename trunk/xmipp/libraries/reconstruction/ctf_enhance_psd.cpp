@@ -41,8 +41,6 @@
 void ProgCTFEnhancePSD::readParams()
 {
 	XmippMetadataProgram::readParams();
-    center = !checkParam("--dont_center");
-    take_log = !checkParam("--dont_log");
     filter_w1 = getDoubleParam("--f1");
     filter_w2 = getDoubleParam("--f2");
     decay_width = getDoubleParam("--decay");
@@ -77,8 +75,7 @@ void ProgCTFEnhancePSD::defineParams()
 void ProgCTFEnhancePSD::show()
 {
     XmippMetadataProgram::show();
-    std::cout << "Centering:    " << center      << std::endl
-    << "Log10:        " << take_log    << std::endl
+    std::cout
     << "Filter w1:    " << filter_w1   << std::endl
     << "Filter w2:    " << filter_w2   << std::endl
     << "Filter decay: " << decay_width << std::endl
@@ -104,13 +101,11 @@ void ProgCTFEnhancePSD::processImage(const FileName &fnImg, const FileName &fnIm
 void ProgCTFEnhancePSD::apply(MultidimArray<double> &PSD)
 {
     // Take the logarithm
-    if (take_log)
-        FOR_ALL_ELEMENTS_IN_ARRAY2D(PSD)
-        A2D_ELEM(PSD, i, j) = log10(1 + A2D_ELEM(PSD, i, j));
+    FOR_ALL_ELEMENTS_IN_ARRAY2D(PSD)
+    A2D_ELEM(PSD, i, j) = log10(1 + A2D_ELEM(PSD, i, j));
 
     // Remove single outliers
-    if (center)
-        CenterFFT(PSD, true);
+    CenterFFT(PSD, true);
     MultidimArray<double> aux;
     medianFilter3x3(PSD, aux);
     PSD = aux;
