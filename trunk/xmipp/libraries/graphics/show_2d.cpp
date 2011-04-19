@@ -1245,8 +1245,6 @@ void ImageViewer::check_file()
 void ImageViewer::runEnhancePSD(std::vector<float> &enhance_prms)
 {
     ProgCTFEnhancePSD prm;
-    prm.center = true;
-    prm.take_log = true;
     prm.filter_w1 = enhance_prms[0];
     prm.filter_w2 = enhance_prms[1];
     prm.decay_width = enhance_prms[2];
