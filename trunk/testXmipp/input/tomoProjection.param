@@ -1,17 +1,17 @@
-# XMIPP_STAR_1 * 
+# XMIPP_STAR_1 *
 # Projection Parameters
 data_
 # X and Y projection dimensions [Xdim Ydim]
 _projDimensions [64 64]
 # Angle Set Source -----------------------------------------------------------
-# tilt axis, direction defined by rot and tilt angles
+# tilt axis, direction defined by rot and tilt angles in degrees
 _angleRot 90
 _angleTilt 90
-# tilt axis offset
+# tilt axis offset in pixels
 _shiftX 0
 _shiftY 0
 _shiftZ 0
-# Tilting description [tilt0 tiltF tiltStep]
+# Tilting description [tilt0 tiltF tiltStep] in degrees
 _projTiltRange [-90 90 1]
 # Noise description ----------------------------------------------------------
 #     applied to angles [noise (bias)]
