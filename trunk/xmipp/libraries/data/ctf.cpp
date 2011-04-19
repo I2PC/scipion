@@ -660,9 +660,9 @@ bool CTFDescription::physical_meaning()
             << "DeltaR>=0  && DeltaR<=100   " << (DeltaR >= 0  && DeltaR <= 100)  << std::endl
             << "Q0>=-0.40  && Q0<=0       " << (Q0 >= -0.40  && Q0 <= 0)          << std::endl
             << "DeltafU<=0 && DeltafV<=0    " << (DeltafU <= 0 && DeltafV <= 0)   << std::endl
-            << "CTF_at(0,0)>=0       " << (CTF_at(0, 0) >= 0)         << std::endl
+            << "CTF_at(0,0)>=0       " << (CTF_at() >= 0)         << std::endl
             ;
-            std::cout << "CTF_at(0,0)=" << CTF_at(0, 0, true) << std::endl;
+            std::cout << "CTF_at(0,0)=" << CTF_at(true) << std::endl;
         }
 #endif
 
