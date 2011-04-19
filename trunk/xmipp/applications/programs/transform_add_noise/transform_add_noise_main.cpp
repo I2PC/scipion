@@ -141,6 +141,8 @@ int main(int argc, char *argv[])
 {
     ProgAddNoise program;
     program.read(argc, argv);
+    //init random seed
+    randomize_random_generator();
     program.tryRun();
     return 0;
 }
