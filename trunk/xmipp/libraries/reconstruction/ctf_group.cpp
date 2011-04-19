@@ -611,7 +611,7 @@ void ProgCtfGroup::writeOutputToDisc()
     for(int i=1;i<= ctfInfo.size(); i++)
     {
         auxMetaData.importObjects(ctfImagesGroup,MDValueEQ(MDL_DEFGROUP,i));
-        imagesInDefoculGroup.assign( formatString("b%06d@%s_images.sel", i, fn_root.c_str()) );
+        imagesInDefoculGroup.assign( formatString("ctfGroup%06d@%s_images.sel", i, fn_root.c_str()) );
         auxMetaData.write( imagesInDefoculGroup,MD_APPEND);
     }
 
