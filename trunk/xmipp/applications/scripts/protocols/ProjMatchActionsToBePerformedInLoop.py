@@ -98,7 +98,8 @@ def projection_matching(_log,dict):
             CtfGroupName = dict['CtfGroupRootName'] #,ictf+1,'')
             #outputname   = _ProjMatchRootName + '_' + CtfGroupName 
             CtfGroupName = dict['CtfGroupDirectory'] + '/' + CtfGroupName
-            inputdocfile    = 'b'+str(ictf).zfill(utils_xmipp.FILENAMENUMBERLENTGH) + '@' + CtfGroupName + '_images.sel'
+            inputdocfile    = 'ctfGroup'+str(ictf).zfill(utils_xmipp.FILENAMENUMBERLENTGH) + '@' + CtfGroupName + '_images.sel'
+            outputname   = 'ctfGroup'+str(ictf).zfill(utils_xmipp.FILENAMENUMBERLENTGH) + '@'+ _ProjMatchRootName
             #inputdocfile = (os.path.basename(inselfile)).replace('.sel','.doc')
             baseTxtFile  = refname[:-len('.stk')] 
             txtfile      = baseTxtFile + '_sampling.txt'
@@ -148,30 +149,45 @@ def assign_images_to_references(_log,dict):
     ''' assign the images to the different references based on the crosscorrelation coeficient
         #if only one reference it just copy the docfile generated in the previous step
         '''
-    DocFileInputAngles = dict['DocFileInputAngles']#number of references
+    DocFileInputAngles  = dict['DocFileInputAngles']#number of references
     ProjMatchRootName   = dict['ProjMatchRootName']#
+    NumberOfCtfGroups   = dict['NumberOfCtfGroups']
     #print "cp",ProjMatchRootName[1],DocFileInputAngles
     #if number of references is one just copy file
     if(len(ProjMatchRootName)==2):#single reference
-        shutil.copy(ProjMatchRootName[1], DocFileInputAngles)
+        shutil.copy(ProjMatchRootName[1], DocFileInputAngles[1])
     else:#multiple reference
         #add all ProjMatchRootName
         MDaux = MetaData()
-        MD = MetaData()
-        ProjMatchRootNameIter = iter(ProjMatchRootName)
-        ProjMatchRootNameIter.next()#skip first Null element
-        element = ProjMatchRootNameIter.next()#skip first Null element
-        while True:
-            print "iii ",element
-            MD.read(element)
-            MDaux.unionAll(MD)
-            try:
-                element = ProjMatchRootNameIter.next()
-            except StopIteration:
-                break
-        MD.aggregate(MDaux,AGGR_MAX,MDL_IMAGE,MDL_MAXCC,MDL_MAXCC) 
-        MD.writeBlock("md.xmd","b0001")
-        MDaux.writeBlock("mdaux.xmd","b0001")
+        MD    = MetaData()
+        MD1   = MetaData()
+        print ProjMatchRootName
+
+        for ii in range(1,NumberOfCtfGroups+1):
+            ProjMatchRootNameIter = iter(ProjMatchRootName)
+            ProjMatchRootNameIter.next()#skip first Null element
+            element = ProjMatchRootNameIter.next()#skip first Null element
+            MDaux.clear()
+            MD1.clear()
+            while True:
+                fileNameIn    = str(ii).zfill(utils_xmipp.FILENAMENUMBERLENTGH) + '@' + element
+                print ii, fileNameIn
+                inputdocfile  = 'ctfGroup'+fileNameIn
+                MD.read(inputdocfile)
+                MDaux.unionAll(MD)
+                try:
+                    element = ProjMatchRootNameIter.next()
+                except StopIteration:
+                    break
+            MD.aggregate(MDaux,AGGR_MAX,MDL_IMAGE,MDL_MAXCC,MDL_MAXCC)
+            MD1.join(MD,MDaux,MDL_UNDEFINED,NATURAL)
+        
+            fileNameOut   = str(ii).zfill(utils_xmipp.FILENAMENUMBERLENTGH) + '@' + DocFileInputAngles[ii]
+            outputdocfile = 'ref'+ fileNameOut
+            MD1.write(outputdocfile,MD_APPEND)
+            MDaux.write(outputdocfile+"aux",MD_APPEND)
+            MD.write(outputdocfile+"MD",MD_APPEND)
+        
         
 #            shutil.copy(ProjMatchRootName[1], DocFileInputAngles)
 

@@ -59,6 +59,17 @@ def deleteWorkingDirectory(_mylog, dict):
     if os.path.exists(dirName):
         remove_tree(dirName, True)
 
+def deleteFile(_mylog, dict):
+    filename = dict['FileName']
+    verbose = dict['Verbose']
+    if os.path.exists(filename):
+        os.remove(filename)
+        if verbose:
+            print 'Deleting file %s' % filename
+    else:
+        if verbose:
+            print 'Do not need to delete %s; already gone' % filename
+
 def checkVolumeProjSize(_log, dict):
     """ check references and projection size match"""
     #5a check volumes have same size

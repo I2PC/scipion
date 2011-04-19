@@ -11,6 +11,8 @@
 #-----------------------------------------------------------------------------
 # {section} Global parameters
 #-----------------------------------------------------------------------------
+#Comment
+Comment='Describe your project here...'
 # {file} Selfile with the input images:
 #from XmippData import SingleImgSize
 """ This selfile points to the spider single-file format images that make up your data set. The filenames can have relative or absolute paths, but it is strictly necessary that you put this selfile IN THE PROJECTDIR. 
@@ -29,7 +31,7 @@ DocFileName =' '
 """ Write down the reference/es name. For example "Reference1.vol Reference2.vol"
     specifies two references
 """
-ReferenceFileNames ='ico_ref1.vol ico_ref2.vol'
+ReferenceFileNames ='ico_ref1.vol ico_ref2.vol ico_ref3.vol'
 
 # Working subdirectory: 
 """ This directory will be created if it doesn't exist, and will be used to store all output from this run. Don't use the same directory for multiple different runs, instead use a structure like run1, run2 etc. 
@@ -59,7 +61,7 @@ IsIter =False
     Note2: Set this option to -1 if you want to perform extra iterations after
            successfully finish an execution
 """
-ContinueAtIteration =23
+ContinueAtIteration =1
 
 # {expert} Save disc space by cleaning up intermediate files?
 """ Be careful, many options of the visualization protocol will not work anymore, 
@@ -1026,7 +1028,6 @@ def actionsToBePerformedInsideLoop(_log):
             _VerifyFiles.append(auxFn + "_sampling.txt")
             #_VerifyFiles.append(auxFn + "ewetgerg")
             _dataBase.insertCommand(command, _Parameters, iterN,_VerifyFiles)
-
             # projectionMatching    
             _Parameters = {
                                   'AvailableMemory':AvailableMemory
@@ -1061,18 +1062,36 @@ def actionsToBePerformedInsideLoop(_log):
             #File with list of images and references
             _VerifyFiles.append(ProjMatchRootName[iterN][refN] )
             _dataBase.insertCommand(command, _Parameters, iterN,_VerifyFiles)
+            
+            #delete DocFileInputAngles so I can use append style for metadata in DocFileInputAngles
+            _Parameters = {
+                           'FileName': DocFileInputAngles[iterN][refN]
+                          ,'Verbose' : 1
+                           }
+            command = "deleteFile"
+            _dataBase.insertCommand(command, _Parameters, iterN)
+
         
+        for refN in range(1, referenceNumber + 1):
             #assign the images to the different references based on the crosscorrelation coheficient
             #if only one reference it just copy the docfile generated in the previous step
             _Parameters = {
-                           'DocFileInputAngles' : DocFileInputAngles[iterN][refN]
-                         , 'Iter':iterN
+                           'DocFileInputAngles' : DocFileInputAngles[iterN]
+                         #, 'Iter':iterN
                          , 'ProjMatchRootName':ProjMatchRootName[iterN]#LIST
                           }
             _VerifyFiles = []
-            #File with angles given to each image after being asigned to a group
-            _VerifyFiles.append(DocFileInputAngles[iterN][refN]+'kkkk')
-            command = 'assign_images_to_references'
+            DocFileInputAnglesIter = iter(DocFileInputAngles[iterN])
+            DocFileInputAnglesIter.next()#first entry is empty
+            element = DocFileInputAnglesIter.next()
+            while True:
+                _VerifyFiles.append(element)
+                try:
+                    element = DocFileInputAnglesIter.next()
+                except StopIteration:
+                    break
+            _VerifyFiles.append("lkhukygbibgi")
+            command = "dict['NumberOfCtfGroups']=self.NumberOfCtfGroups;assign_images_to_references"
             _dataBase.insertCommand(command, _Parameters, iterN,_VerifyFiles)
 
 #suffle
