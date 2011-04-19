@@ -288,6 +288,15 @@ public:
 
     }
 
+    /** Compute minimum and maximum as double values.
+         */
+    void computeDoubleMinMax(double& minval, double& maxval) const
+    {
+#define COMPUTESDOUBLEMINMAX(type) ((MultidimArray<type>*)(im))->computeDoubleMinMax(minval, maxval);
+        SWITCHDATATYPE(datatype,  COMPUTESDOUBLEMINMAX)
+#undef COMPUTESDOUBLEMINMAX
+
+    }
     /** Get constant access */
     double operator()(size_t n, int k, int i, int j) const
     {
