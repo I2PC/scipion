@@ -119,6 +119,7 @@ enum MDLabel
     MDL_CTF_CRITERION_PSDPCA1VARIANCE, ///< Variance in the first principal component of the PSDs
     MDL_CTF_CRITERION_PSDPCARUNSTEST, ///< Runs test on the projection of the PSD on the first principal component
     MDL_CTF_CRITERION_COMBINED, ///< Combined criterion formed by several other criteria
+    MDL_CTF_CRITERION_NORMALITY, ///< Normality test between histogram of micrography and gaussian distribution
     MDL_CTF_XRAY_DIMENSIONS, // Size in pixels of the 3D PSF to be created (Xdim, Ydim, Zdim)
     MDL_CTF_XRAY_LAMBDA, /// X-ray wavelength (nm)
     MDL_CTF_XRAY_LENS_TYPE, ///Algorithm used to generate Xray PSF
@@ -557,6 +558,7 @@ private:
         MDL::addLabel(MDL_CTF_CRITERION_PSDPCA1VARIANCE, LABEL_DOUBLE, "CTFCrit_PSDPCA1");
         MDL::addLabel(MDL_CTF_CRITERION_PSDPCARUNSTEST, LABEL_DOUBLE, "CTFCrit_PSDPCARuns");
         MDL::addLabel(MDL_CTF_CRITERION_COMBINED, LABEL_DOUBLE, "CTFCrit_Combined");
+        MDL::addLabel(MDL_CTF_CRITERION_NORMALITY, LABEL_DOUBLE, "CTFCrit_Normality");
 
         MDL::addLabel(MDL_CTF_XRAY_DIMENSIONS, LABEL_VECTOR, "CTF_Xray_dimensions");
         MDL::addLabel(MDL_CTF_XRAY_LAMBDA, LABEL_DOUBLE, "CTF_Xray_lambda");
