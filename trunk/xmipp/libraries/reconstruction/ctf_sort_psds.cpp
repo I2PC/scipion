@@ -29,6 +29,7 @@
 #include <data/args.h>
 #include <data/filters.h>
 #include <data/transformations.h>
+#include <data/histogram.h>
 
 /* Read parameters --------------------------------------------------------- */
 void ProgPSDSort::readParams()
@@ -138,8 +139,6 @@ double ProgPSDSort::evaluate(const FileName &fnMicrograph,
 
     // Enhance the PSD
     ProgCTFEnhancePSD enhancePSD;
-    enhancePSD.center = true;
-    enhancePSD.take_log = true;
     enhancePSD.filter_w1 = filter_w1;
     enhancePSD.filter_w2 = filter_w2;
     enhancePSD.decay_width = decay_width;
@@ -206,6 +205,26 @@ double ProgPSDSort::evaluate(const FileName &fnMicrograph,
     }
     evaluation.firstZeroAvg/=N;
     evaluation.firstZeroRatio=maxModule/minModule;
+
+    // Evaluate micrograph normality
+	ImageGeneric M;
+	M.readMapped(fnMicrograph);
+	double avg, stddev, minval, maxval;
+	M().computeStats(avg, stddev, minval, maxval);
+	Histogram1D hist;
+	compute_hist(M(), hist, minval, maxval, 400);
+	hist += 1;
+	hist /= hist.sum();
+
+	Histogram1D histGaussian;
+	histGaussian.initZeros(hist);
+	FOR_ALL_ELEMENTS_IN_ARRAY1D(histGaussian) {
+		double x;
+		hist.index2val(i, x);
+		A1D_ELEM(histGaussian,i) = gaussian1D(x, stddev, avg);
+	}
+	evaluation.histogramNormality=0.5*(KLDistance(hist,histGaussian)+
+			                           KLDistance(histGaussian,hist));
 }
 
 // Sort PsdCorr90 + Corr13 Criteria
@@ -263,6 +282,7 @@ void ProgPSDSort::run()
         SF.setValue(MDL_CTF_CRITERION_PSDVARIANCE,evaluation.PSDVariance,__iter.objId);
         SF.setValue(MDL_CTF_CRITERION_PSDPCA1VARIANCE,evaluation.PSDPC1Variance,__iter.objId);
         SF.setValue(MDL_CTF_CRITERION_PSDPCARUNSTEST,evaluation.PSDPCRunsTest,__iter.objId);
+        SF.setValue(MDL_CTF_CRITERION_NORMALITY, evaluation.histogramNormality,__iter.objId);
         progress_bar(++idx);
     }
     computeCombinedCriterion(SF);

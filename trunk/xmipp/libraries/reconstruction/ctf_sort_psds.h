@@ -49,6 +49,7 @@ public:
 	double PSDVariance;
 	double PSDPC1Variance;
 	double PSDPCRunsTest;
+	double histogramNormality;
 };
 
 /* Sort PSD Program Parameters ------------------------------------------ */
