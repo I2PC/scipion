@@ -399,13 +399,12 @@ void  randomize_random_generator()
 {
     static  unsigned int seed;
     int rand_return;
-
-    srand(seed);
+    srand(rand()+clock()+time(NULL));
     rand_return = rand();
 
     time_t t;
     time(&t);
-    rand_return = abs(rand_return);
+    //rand_return = abs(rand_return);
     idum = (-(int)(t % 10000)
             - (int)(rand_return % 10000));
     ran1(&idum);
