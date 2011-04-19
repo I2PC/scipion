@@ -28,6 +28,7 @@
 #define HISTOGRAM_H
 
 #include "multidim_array.h"
+#include "multidim_array_generic.h"
 
 /// @defgroup Histograms Histograms
 /// @ingroup DataLibrary
@@ -381,6 +382,10 @@ void compute_hist(const MultidimArray<T>& array, Histogram1D& hist,
     compute_hist(array, hist, min, max, no_steps);
 }
 
+/** Compute histogram of a MultidimArrayGeneric within its minimum and maximum value */
+void compute_hist(const MultidimArrayGeneric& array, Histogram1D& hist,
+                  int no_steps);
+
 /** Compute histogram of a vector
  */
 template<typename T>
@@ -431,6 +436,11 @@ void compute_hist(const MultidimArray<T>& v, Histogram1D& hist,
     FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY_ptr(v,n,ptr)
     hist.insert_value(*ptr);
 }
+
+/** Compute histogram of the MultidimArrayGeneric within two values
+ */
+void compute_hist(const MultidimArrayGeneric& v, Histogram1D& hist,
+                  double min, double max, int no_steps);
 
 /** Compute histogram within a region (2D or 3D)
  *
@@ -520,9 +530,16 @@ template<typename T>
 void reject_outliers(T& v, double percentil_out = 0.25)
 {
     Histogram1D hist;
-    compute_hist(v, hist, 200);
+    compute_hist(v, hist, 400);
     double eff0 = hist.percentil(percentil_out / 2);
     double effF = hist.percentil(100 - percentil_out / 2);
+	int i0, iF;
+	hist.val2index(eff0, i0);
+	hist.val2index(effF, iF);
+    if (iF == i0) {
+        hist.index2val(i0, eff0);
+        hist.index2val(i0 + 1, effF);
+    }
 
     FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(v)
     if (DIRECT_MULTIDIM_ELEM(v,n) < eff0)

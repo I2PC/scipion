@@ -294,8 +294,8 @@ double KLDistance(const Histogram1D& h1, const Histogram1D& h2)
 
     double retval=0;
     FOR_ALL_ELEMENTS_IN_ARRAY1D(h1)
-    if (h2(i)!=0.0 && h1(i)!=0.0)
-        retval += h1(i)*log10(h1(i)/h2(i));
+    if (A1D_ELEM(h2,i)!=0.0 && A1D_ELEM(h1,i)!=0.0)
+        retval += A1D_ELEM(h1,i)*log10(A1D_ELEM(h1,i)/A1D_ELEM(h2,i));
     return retval;
 }
 
@@ -477,4 +477,27 @@ void Histogram2D::write(const FileName &fn)
         REPORT_ERROR(ERR_IO_NOTOPEN, (std::string)"histogram2D::write: File " + fn + " cannot be openned for output");
     fh << *this;
     fh.close();
+}
+
+/* Compute histogram of multidim_array_generic ----------------------------- */
+void compute_hist(const MultidimArrayGeneric& array, Histogram1D& hist,
+                  int no_steps)
+{
+    double min, max;
+    array.computeDoubleMinMax(min, max);
+    compute_hist(array, hist, min, max, no_steps);
+}
+
+void compute_hist(const MultidimArrayGeneric& v, Histogram1D& hist,
+                  double min, double max, int no_steps)
+{
+    hist.init(min, max, no_steps);
+    int Xdim, Ydim, Zdim;
+    size_t Ndim;
+    v.getDimensions(Xdim, Ydim, Zdim, Ndim);
+    for (size_t n=0; n<Ndim; ++n)
+    	for (int k=0; k<Zdim; ++k)
+        	for (int i=0; i<Ydim; ++i)
+            	for (int j=0; j<Xdim; ++j)
+            		hist.insert_value(v(n,k,i,j));
 }
