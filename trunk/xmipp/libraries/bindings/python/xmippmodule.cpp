@@ -385,6 +385,8 @@ MetaData_aggregate(PyObject *obj, PyObject *args, PyObject *kwargs);
 static PyObject *
 MetaData_aggregateSingle(PyObject *obj, PyObject *args, PyObject *kwargs);
 static PyObject *
+MetaData_join(PyObject *obj, PyObject *args, PyObject *kwargs);
+static PyObject *
 MetaData_importObjects(PyObject *obj, PyObject *args, PyObject *kwargs);
 static PyObject *
 MetaData_intersection(PyObject *obj, PyObject *args, PyObject *kwargs);
@@ -535,20 +537,21 @@ static PyObject *
 MetaData_write(PyObject *obj, PyObject *args, PyObject *kwargs)
 {
     MetaDataObject *self = (MetaDataObject*)obj;
-
+    WriteModeMetaData wmd;
+    wmd = MD_OVERWRITE;
     if (self != NULL)
     {
         PyObject *input = NULL, *pyStr = NULL;
         char *str = NULL;
         int number = -1;
-        if (PyArg_ParseTuple(args, "O", &input))
+        if (PyArg_ParseTuple(args, "O|i", &input, &wmd))
         {
             try
             {
                 if (PyString_Check(input))
-                    self->metadata->write(PyString_AsString(input));
+                    self->metadata->write(PyString_AsString(input),(WriteModeMetaData) wmd);
                 else if (FileName_Check(input))
-                    self->metadata->write(FileName_Value(input));
+                    self->metadata->write(FileName_Value(input),(WriteModeMetaData) wmd);
                 else
                     return NULL;
                 Py_RETURN_NONE;
@@ -852,7 +855,7 @@ MetaData_getActiveLabels(PyObject *obj, PyObject *args, PyObject *kwargs)
 static PyObject *
 xmipp_getBlocksInMetaDataFile(PyObject *obj,PyObject *args)
 {
-	std::cerr << "xmipp_getBlocksInMetaDataFile" <<std::endl;
+    std::cerr << "xmipp_getBlocksInMetaDataFile" <<std::endl;
     int label;
     PyObject *input;
     FileName fn;
@@ -883,7 +886,7 @@ xmipp_getBlocksInMetaDataFile(PyObject *obj,PyObject *args)
     }
     catch (XmippError xe)
     {
-    	std::cerr << "exception" <<std::endl;
+        std::cerr << "exception" <<std::endl;
         PyErr_SetString(PyXmippError, xe.msg.c_str());
     }
     return NULL;
@@ -1002,6 +1005,24 @@ MetaData_makeAbsPath(PyObject *obj, PyObject *args, PyObject *kwargs)
     }
     return NULL;
 }
+
+/* clear */
+static PyObject *
+MetaData_clear(PyObject *obj, PyObject *args, PyObject *kwargs)
+{
+    try
+    {
+        MetaDataObject *self = (MetaDataObject*)obj;
+        self->metadata->clear();
+        Py_RETURN_NONE;
+    }
+    catch (XmippError xe)
+    {
+        PyErr_SetString(PyXmippError, xe.msg.c_str());
+        return NULL;
+    }
+}
+
 /** Iteration functions */
 static PyObject *
 MetaData_iter(PyObject *obj)
@@ -1092,6 +1113,9 @@ static PyMethodDef MetaData_methods[] = {
                                             {"isEmpty", (PyCFunction)MetaData_isEmpty, METH_NOARGS,
                                              "Check whether the MetaData is empty"
                                             },
+                                            {"clear", (PyCFunction)MetaData_clear, METH_NOARGS,
+                                             "Clear MetaData"
+                                            },
                                             {"getColumnFormat", (PyCFunction)MetaData_getColumnFormat, METH_NOARGS,
                                              "Get column format info"
                                             },
@@ -1139,6 +1163,9 @@ static PyMethodDef MetaData_methods[] = {
                                             },
                                             {"merge", (PyCFunction)MetaData_merge, METH_VARARGS,
                                              "Merge columns of two metadatas. The results is stored in self."
+                                            },
+                                            {"join", (PyCFunction)MetaData_join, METH_VARARGS,
+                                             "join between two metadatas, use MDL_UNDEFINED as label. The results is stored in self."
                                             },
                                             {"readPlain", (PyCFunction)MetaData_readPlain, METH_VARARGS,
                                              "Import metadata from a plain text file."
@@ -1315,10 +1342,10 @@ MetaData_aggregate(PyObject *obj, PyObject *args, PyObject *kwargs)
             }
             MetaDataObject *self = (MetaDataObject*)obj;
             self->metadata->aggregate(MetaData_Value(pyMd),
-            		                 (AggregateOperation) op,
-            		                 (MDLabel) aggregateLabel,
-            		                 (MDLabel) operateLabel,
-            		                 (MDLabel) resultLabel);
+                                      (AggregateOperation) op,
+                                      (MDLabel) aggregateLabel,
+                                      (MDLabel) operateLabel,
+                                      (MDLabel) resultLabel);
             Py_RETURN_NONE;
         }
         catch (XmippError xe)
@@ -1377,6 +1404,45 @@ MetaData_merge(PyObject *obj, PyObject *args, PyObject *kwargs)
             }
             MetaDataObject *self = (MetaDataObject*)obj;
             self->metadata->merge(MetaData_Value(pyMd));
+            Py_RETURN_NONE;
+        }
+        catch (XmippError xe)
+        {
+            PyErr_SetString(PyXmippError, xe.msg.c_str());
+        }
+    }
+    return NULL;
+}
+
+/* join */
+static PyObject *
+MetaData_join(PyObject *obj, PyObject *args, PyObject *kwargs)
+{
+    int label;
+    PyObject *pyMdLeft = NULL;
+    PyObject *pyMdright = NULL;
+    PyObject *pyQuery = NULL;
+    JoinType jt;
+
+    if (PyArg_ParseTuple(args, "OOii", &pyMdLeft,&pyMdright,&label,&jt))
+    {
+        try
+        {
+            if (!MetaData_Check(pyMdLeft))
+            {
+                PyErr_SetString(PyExc_TypeError, "MetaData::join: Expecting MetaData as first argument");
+                return NULL;
+            }
+            if (!MetaData_Check(pyMdright))
+            {
+                PyErr_SetString(PyExc_TypeError, "MetaData::join: Expecting MetaData as second argument");
+                return NULL;
+            }
+            MetaDataObject *self = (MetaDataObject*)obj;
+            self->metadata->join(MetaData_Value(pyMdLeft),
+                                 MetaData_Value(pyMdright),
+                                 (MDLabel)label,
+                                 (JoinType) jt);
             Py_RETURN_NONE;
         }
         catch (XmippError xe)
@@ -1861,16 +1927,20 @@ initxmipp(void)
     addIntConstant(dict,"SUBSTRACTION",(long)SUBSTRACTION);
     addIntConstant(dict,"INNER_JOIN",(long)INNER_JOIN);
     addIntConstant(dict,"LEFT_JOIN",(long)LEFT_JOIN);
+    addIntConstant(dict,"NATURAL_JOIN",(long)NATURAL_JOIN);
     addIntConstant(dict,"OUTER_JOIN",(long)OUTER_JOIN);
     addIntConstant(dict,"INNER",(long)INNER);
     addIntConstant(dict,"LEFT",(long)LEFT);
     addIntConstant(dict,"OUTER",(long)OUTER);
+    addIntConstant(dict,"NATURAL",(long)NATURAL);
     addIntConstant(dict,"EQ",(long)EQ);
     addIntConstant(dict,"NE",(long)NE);
     addIntConstant(dict,"GT",(long)GT);
     addIntConstant(dict,"LT",(long)LT);
     addIntConstant(dict,"GE",(long)GE);
     addIntConstant(dict,"LE",(long)LE);
+    addIntConstant(dict,"MD_OVERWRITE",(long)MD_OVERWRITE);
+    addIntConstant(dict,"MD_APPEND",(long)MD_APPEND);
     addIntConstant(dict,"MDL_UNDEFINED",(long)MDL_UNDEFINED);
     addIntConstant(dict,"MDL_FIRST_LABEL",(long)MDL_FIRST_LABEL);
     addIntConstant(dict,"MDL_OBJID",(size_t)MDL_OBJID);
