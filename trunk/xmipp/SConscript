@@ -418,12 +418,14 @@ def AddPySqliteLibrary():
 
 # --- Libraries
 
+# SQLite
+AddSQLiteLibrary()
+
 # PYSQLITE
 PYSQliteDir = "external/pysqlite-2.6.3"
 AddPySqliteLibrary()
 
-# SQLite
-AddSQLiteLibrary()
+
 
 # FFTW
 FFTWLibsPaths = ['.libs/libfftw3','threads/.libs/libfftw3_threads']
