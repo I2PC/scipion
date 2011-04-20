@@ -274,7 +274,7 @@ double KLDistance(const Histogram1D& h1, const Histogram1D& h2) {
 
 	double retval = 0;
 	FOR_ALL_ELEMENTS_IN_ARRAY1D(h1)
-		if (A1D_ELEM(h2,i) != 0.0 && A1D_ELEM(h1,i) != 0.0)
+		if (A1D_ELEM(h2,i) >1e-180 && A1D_ELEM(h1,i) >1e-180)
 			retval += A1D_ELEM(h1,i) * log10(A1D_ELEM(h1,i) / A1D_ELEM(h2,i));
 	return retval;
 }
