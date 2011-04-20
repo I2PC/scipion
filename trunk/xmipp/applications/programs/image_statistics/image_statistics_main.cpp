@@ -174,11 +174,12 @@ protected:
 
     void postProcess()
     {
-        // Show total statistics ------------------------------------------------
-        std::cout << "==================================================\n";
-        std::cout << "Total number of images/volumes: " << N << std::endl;
-        if (N != 0)
+
+        if (N > 1)
         {
+            // Show total statistics ------------------------------------------------
+            std::cout << "==================================================\n";
+            std::cout << "Total number of images/volumes: " << N << std::endl;
             mean_min_val /= N;
             mean_max_val /= N;
             mean_avg     /= N;
@@ -187,7 +188,7 @@ protected:
             std::cout << stringToString(" ", max_length + 13);
             if (!short_format)
                 std::cout << formatString("min=%10f max=%10f avg=%10f stddev=%10f",
-                                          min_val, max_val, avg, stddev);
+                    mean_min_val, mean_max_val, mean_avg, mean_stddev);
             else
                 std::cout << formatString("%10f %10f %10f %10f", mean_min_val, mean_max_val, mean_avg, mean_stddev);
             std::cout << std::endl;
