@@ -108,7 +108,7 @@ def AddProgram(name, basedir, sources_pattern = '*.cpp', skip_list = [],
         )
 
     install = env.Install(binprefix, program)
-    alias = env.Alias(name, install)
+    alias = env.Alias(fullname, install)
     env.Default(alias)
 
 def AddMPIProgram(name, basedir, sources_pattern = '*.cpp', skip_list = [],
