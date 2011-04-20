@@ -182,6 +182,23 @@ public:
      */
     void insert_value(double val);
 
+/** Insert value as a macro */
+#define INSERT_VALUE(histogram,value) \
+{\
+	if (value == histogram.hmax) { \
+		int iii = XSIZE(histogram) - 1; \
+		++DIRECT_A1D_ELEM(histogram, iii); \
+		++histogram.no_samples; \
+	} else { \
+		int iii = (int) ((value - histogram.hmin) * histogram.istep_size); \
+		if (iii >= 0 && iii < XSIZE(histogram)) \
+		{ \
+			++DIRECT_A1D_ELEM(histogram, iii); \
+			++histogram.no_samples; \
+		} \
+	} \
+}
+
     /** Returns the percentil value
      *
      * This function returns the value within the range for which a given
@@ -410,7 +427,10 @@ void compute_hist(const std::vector< T > &v,
     hist.init(min, max, no_steps);
 
     for (int i=1; i<imax; i++)
-        hist.insert_value(v[i]);
+    {
+    	double value=v[i];
+        INSERT_VALUE(hist,value);
+    }
 }
 
 /** Compute histogram of the array within two values
@@ -434,7 +454,10 @@ void compute_hist(const MultidimArray<T>& v, Histogram1D& hist,
     T* ptr=NULL;
     unsigned long int n;
     FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY_ptr(v,n,ptr)
-    hist.insert_value(*ptr);
+    {
+    	double value=*ptr;
+    	INSERT_VALUE(hist,value);
+    }
 }
 
 /** Compute histogram of the MultidimArrayGeneric within two values
@@ -459,7 +482,10 @@ void compute_hist(const MultidimArray< T >
 
     Matrix1D< int > r(2);
     FOR_ALL_ELEMENTS_IN_ARRAY2D_BETWEEN(corner1, corner2)
-    hist.insert_value(v(r));
+    {
+    	double value=v(r);
+    	INSERT_VALUE(hist,value);
+    }
 }
 
 /** Compute the detectability error between two pdf's

@@ -322,7 +322,7 @@ void ProgAngularDiscreteAssign::refine_candidate_list_with_correlation(
             double corr = sumxy[i] / sqrt(DIRECT_A2D_ELEM(library_power,i, m) *
             		                      VEC_ELEM(x_power,m));
             cumulative_corr[i] = corr;
-            hist.insert_value(corr);
+            INSERT_VALUE(hist,corr);
 
             if (tell & TELL_ROT_TILT)
             {

@@ -353,17 +353,26 @@ double compute_noise_power(MultidimArray<double> &I)
     SelectDWTBlock(0, I, "01",
                    XX(corner1), XX(corner2), YY(corner1), YY(corner2));
     FOR_ALL_ELEMENTS_IN_ARRAY2D_BETWEEN(corner1, corner2)
-    hist.insert_value(ABS(I(r)));
+    {
+    	double value=fabs(I(r));
+    	INSERT_VALUE(hist,value);
+    }
 
     SelectDWTBlock(0, I, "10",
                    XX(corner1), XX(corner2), YY(corner1), YY(corner2));
     FOR_ALL_ELEMENTS_IN_ARRAY2D_BETWEEN(corner1, corner2)
-    hist.insert_value(ABS(I(r)));
+    {
+    	double value=fabs(I(r));
+    	INSERT_VALUE(hist,value);
+    }
 
     SelectDWTBlock(0, I, "11",
                    XX(corner1), XX(corner2), YY(corner1), YY(corner2));
     FOR_ALL_ELEMENTS_IN_ARRAY2D_BETWEEN(corner1, corner2)
-    hist.insert_value(ABS(I(r)));
+    {
+    	double value=fabs(I(r));
+    	INSERT_VALUE(hist,value);
+    }
 
     return hist.percentil(50) / 0.6745;
 }

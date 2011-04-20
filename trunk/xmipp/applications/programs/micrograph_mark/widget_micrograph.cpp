@@ -2017,7 +2017,7 @@ bool AutoParticlePicking::build_vector(const MultidimArray<int> &piece,
         {
             int val = A2D_ELEM(piece, _y + i, _x + j);
             double orig_val = A2D_ELEM(original_piece, _y + i, _x + j);
-            histogramOriginal.insert_value(orig_val);
+            INSERT_VALUE(histogramOriginal,orig_val);
 
             MultidimArray<int> &auxi=radial_val[idx1];
             int aux=A1D_ELEM(radial_idx,idx1);
