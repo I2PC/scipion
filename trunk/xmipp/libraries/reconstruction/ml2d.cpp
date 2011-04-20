@@ -90,7 +90,7 @@ void ML2DBaseProgram::initSamplingStuff()
 void ML2DBaseProgram::randomizeImagesOrder()
 {
     //This static flag is for only randomize once
-    static bool randomized = true;
+    static bool randomized = false;
 
     if (!randomized)
     {

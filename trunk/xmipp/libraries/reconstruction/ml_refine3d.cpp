@@ -80,6 +80,7 @@ void ProgMLRefine3D::defineParams()
     ml2d->referenceExclusive = false;
     ml2d->allowFastOption = false;
     ml2d->allowRestart = false;
+    ml2d->allowIEM = true;
 
     //basic params
     ml2d->defineBasicParams(this);
