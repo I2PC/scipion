@@ -180,22 +180,20 @@ void FREADTagValueDM3(double *fieldValue,int numberType,int n,FILE* fimg, bool s
 double readTagDM3(FILE *fimg, DM3head *header, int parentId, int &nodeId, bool isLE, bool swap)
 {
     /* Header Tag ============================================================== */
-    int  idTag;
     unsigned char cdTag;
     unsigned short int ltName;
 
     xmippFREAD(&cdTag,sizeof (unsigned char),1,fimg,false); // Identification tag: 20 = tag dir,  21 = tag
     xmippFREAD(&ltName,sizeof(unsigned short int), 1,fimg,isLE); // Length of the tag name
-    idTag = int(cdTag);
+    int idTag = int(cdTag);
 
-    char * tagName;
     std::string stagName;
 
-    tagName =  new char[ltName+1];
+    char * tagName =  new char[ltName+1];
     xmippFREAD(tagName,ltName,1,fimg,false); // Tag name
     tagName[ltName] = '\0';
-
     stagName = tagName;
+    delete [] tagName;
 
     size_t id = header->tags.addObject();
 
@@ -208,7 +206,6 @@ double readTagDM3(FILE *fimg, DM3head *header, int parentId, int &nodeId, bool i
     /* Reading tags ===================================================================*/
     if (idTag == 20)  // Tag directory
     {
-        //  printf("- Dir: %s\n",tagName);
         unsigned char dummy;
         int nTags;
         xmippFREAD(&dummy,sizeof(unsigned char),1,fimg,false); // 1 = sorted (normally = 1)
@@ -253,7 +250,7 @@ double readTagDM3(FILE *fimg, DM3head *header, int parentId, int &nodeId, bool i
 
             header->tags.setValue(MDL_DM3_NUMBER_TYPE, info[0], id);
             header->tags.setValue(MDL_DM3_VALUE, vtagValue, id);
-
+            delete []info;
             return tagValue;
         }
         else if(nnum == 3 && info[0]==20)   // Tag array
@@ -284,7 +281,7 @@ double readTagDM3(FILE *fimg, DM3head *header, int parentId, int &nodeId, bool i
                 REPORT_ERROR(ERR_ARG_INCORRECT,"");
 
             fseek( fimg, ftell(fimg)+(info[nnum-1])*k , SEEK_SET );
-
+            delete []info;
             return 0;
         }
         else if (info[0]==20 && info[1] == 15)    // Tag Group array
@@ -317,6 +314,7 @@ double readTagDM3(FILE *fimg, DM3head *header, int parentId, int &nodeId, bool i
 
             // Jump the array values
             fseek( fimg, ftell(fimg)+(info[nnum-1]-1)*nBytes , SEEK_SET );
+            delete []info;
             return 0;
         }
         else if (info[0] == 15)    // Tag Group  (struct)
@@ -339,8 +337,10 @@ double readTagDM3(FILE *fimg, DM3head *header, int parentId, int &nodeId, bool i
                 vtagValue.assign(n,fieldValue);
             }
             header->tags.setValue(MDL_DM3_VALUE, vtagValue, id);
+            delete []info;
             return 0;
         }
+        delete []info;
     }
 }
 
@@ -362,7 +362,7 @@ int parentDM3(MetaData &MD, int nodeId, int depth = 1)
 /** DM3 Go to tag
   * @ingroup DM3
 */
-size_t gotoTagDM3(MetaData &MD, int &nodeId, std::string tagsList)
+size_t gotoTagDM3(MetaData &MD, int &nodeId, const std::string &tagsList)
 {
     std::string tag;
     std::vector<std::string> vTags;

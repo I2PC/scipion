@@ -263,16 +263,15 @@ int readTIFF(size_t select_img, bool isStack=false)
             data.setMmap(true);
     }
 
+    if (dataMode == HEADER) // Stop reading if not necessary
+        return 0;
+
     // Allocate memory for image data (Assume xdim, ydim, zdim and ndim are already set
     //if memory already allocated use it (no resize allowed)
-
     data.coreAllocateReuse();
 
     size_t pad = _xDim * _yDim;
     int imReaded = 0;
-
-    if (dataMode == HEADER) // Stop reading if not necessary
-        return 0;
 
     MD.clear();
     MD.resize(_nDim,MDL::emptyHeader);
@@ -342,8 +341,8 @@ int readTIFF(size_t select_img, bool isStack=false)
         }
 
         ++imReaded;
+        _TIFFfree(tif_buf);
     }
-    _TIFFfree(tif_buf);
     return 0;
 }
 
