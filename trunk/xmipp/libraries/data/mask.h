@@ -965,7 +965,10 @@ void compute_hist_within_binary_mask(const MultidimArray< int >& mask,
     hist.init(min, max, no_steps);
     FOR_ALL_ELEMENTS_IN_COMMON_IN_ARRAY3D(mask, v)
     if (A3D_ELEM(mask, k, i, j) != 0)
-        hist.insert_value(A3D_ELEM(v, k, i, j));
+    {
+    	double value=A3D_ELEM(v, k, i, j);
+    	INSERT_VALUE(hist,value);
+    }
 }
 
 #define COUNT_ABOVE 1
