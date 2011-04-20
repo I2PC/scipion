@@ -158,8 +158,8 @@ double ProgPSDSort::evaluate(const FileName &fnMicrograph,
     evaluation.PSDradialIntegral=radial_mean.sum();
 
     // Rotate 90 degrees and compute correlation
-    Image<double> PSDrotated(PSD);
-    selfRotate(BSPLINE3, PSDrotated(), 90);
+    Image<double> PSDrotated;
+    rotate(LINEAR,PSDrotated(),PSD(),90);
     evaluation.PSDcorrelation90=correlationIndex(PSD(), PSDrotated());
 
     // Get the fitting score
@@ -251,7 +251,7 @@ double ProgPSDSort::computeCombinedCriterion(MetaData &SF) const
 	rankCombined=0.5*(rankCorr13+rankPsd90);
 	size_t i=0;
 	FOR_ALL_OBJECTS_IN_METADATA(SF)
-	SF.setValue(MDL_CTF_CRITERION_COMBINED,rankCombined(i),__iter.objId);
+	SF.setValue(MDL_CTF_CRITERION_COMBINED,rankCombined(i++),__iter.objId);
 }
 
 /* Run --------------------------------------------------------------------- */
