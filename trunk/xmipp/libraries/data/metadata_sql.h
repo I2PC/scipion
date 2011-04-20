@@ -288,13 +288,6 @@ class MDValueRelational: public MDQuery
     RelationalOp op;
 public:
 
-
-    MDValueRelational()
-    {
-        op = EQ;
-        value = NULL;
-    }
-
     template <class T>
     MDValueRelational(MDLabel label, const T &value, RelationalOp op, int limit = -1, int offset = 0, MDLabel orderLabel = MDL_OBJID):MDQuery(limit, offset, orderLabel)
     {
@@ -340,9 +333,7 @@ public:
     template <class T>
     void setValue(T &value)
     {
-        if (this->value != NULL)
-            delete this->value;
-        this->value = new MDObject(this->value->label, value);
+        this->value->setValue(value);
     }
 }
 ;//end of class MDValueRelational
@@ -359,8 +350,6 @@ public:
 class MDValueEQ: public MDValueRelational
 {
 public:
-    MDValueEQ()
-    {}
     template <class T>
     MDValueEQ(MDLabel label, const T &value, int limit = -1, int offset = 0, MDLabel orderLabel = MDL_OBJID)
             :MDValueRelational(label, value, EQ, limit, offset, orderLabel)
@@ -374,8 +363,6 @@ public:
 class MDValueNE: public MDValueRelational
 {
 public:
-    MDValueNE()
-    {}
     template <class T>
     MDValueNE(MDLabel label, const T &value, int limit = -1, int offset = 0, MDLabel orderLabel = MDL_OBJID)
             :MDValueRelational(label, value, NE, limit, offset, orderLabel)
@@ -389,8 +376,6 @@ public:
 class MDValueGE: public MDValueRelational
 {
 public:
-    MDValueGE()
-    {}
     template <class T>
     MDValueGE(MDLabel label, const T &valueMin, int limit = -1,int offset = 0, MDLabel orderLabel = MDL_OBJID)
             :MDValueRelational(label, valueMin, GE, limit, offset, orderLabel)
@@ -404,8 +389,6 @@ public:
 class MDValueGT: public MDValueRelational
 {
 public:
-    MDValueGT()
-    {}
     template <class T>
     MDValueGT(MDLabel label, const T &valueMin, int limit = -1,int offset = 0, MDLabel orderLabel = MDL_OBJID)
             :MDValueRelational(label, valueMin, GT, limit, offset, orderLabel)
@@ -419,8 +402,6 @@ public:
 class MDValueLE: public MDValueRelational
 {
 public:
-    MDValueLE()
-    {}
     template <class T>
     MDValueLE(MDLabel label, const T &valueMax, int limit = -1,int offset = 0, MDLabel orderLabel = MDL_OBJID)
             :MDValueRelational(label, valueMax, LE, limit, offset, orderLabel)
@@ -434,8 +415,6 @@ public:
 class MDValueLT: public MDValueRelational
 {
 public:
-    MDValueLT()
-    {}
     template <class T>
     MDValueLT(MDLabel label, const T &valueMax, int limit = -1,int offset = 0, MDLabel orderLabel = MDL_OBJID)
             :MDValueRelational(label, valueMax, LT, limit, offset, orderLabel)
