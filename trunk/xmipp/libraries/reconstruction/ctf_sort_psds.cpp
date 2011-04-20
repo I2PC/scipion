@@ -218,6 +218,10 @@ double ProgPSDSort::evaluate(const FileName &fnMicrograph,
 
 	Histogram1D histGaussian;
 	histGaussian.initZeros(hist);
+	histGaussian.hmin=hist.hmin;
+	histGaussian.hmax=hist.hmax;
+	histGaussian.step_size=hist.step_size;
+	histGaussian.istep_size=hist.istep_size;
 	FOR_ALL_ELEMENTS_IN_ARRAY1D(histGaussian) {
 		double x;
 		hist.index2val(i, x);
