@@ -393,13 +393,14 @@ def AddExternalLibrary(libname, libs, libpath, suffix):
     libInstall = env.Install(libprefix, target_libs)
     libAlias = env.Alias(libname, libInstall)
     env.Default(libAlias)
-    return target_libs
+    return libInstall
     
 def AddSQLiteLibrary():
     libInstall = AddExternalLibrary('sqlite', ['.libs/libsqlite3'], SQliteDir, '.0')
-    progName = os.path.join(env['prefix'], 'bin', 'xmipp_sqlite3')
-    progInstall = env.InstallAs(progName, os.path.join(SQliteDir, 'sqlite3'))
+    progName = os.path.join(SQliteDir, 'sqlite3')
     Depends(progName, libInstall)
+    progXmippName = os.path.join(env['prefix'], 'bin', 'xmipp_sqlite3')
+    progInstall = env.InstallAs(progXmippName, progName)
     progAlias = env.Alias('sqlite', progInstall)
     env.Default(progAlias)
 
