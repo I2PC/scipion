@@ -387,53 +387,31 @@ int splitString(const String& input,
                 bool includeEmpties)
 {
     results.clear();
-    int iPos = 0;
-    int newPos = -1;
-    int sizeS2 = static_cast< int >(delimiter.size());
-    int isize = static_cast< int >(input.size());
-
-    if (isize == 0 || sizeS2 == 0)
+    size_t delimiterSize = delimiter.size();
+    if (input.size()== 0 || delimiterSize == 0)
         return 0;
 
-    std::vector< int > positions;
-    newPos = input.find(delimiter, 0);
-
-    if (newPos < 0)
+    size_t newPos, iPos = 0;
+    String emptyString;
+    while ((newPos = input.find(delimiter, iPos))!=String::npos)
     {
-    	results.push_back(input);
-        return 1;
-    }
-
-    int numFound = 0;
-    while (newPos >= iPos)
-    {
-        numFound++;
-        positions.push_back(newPos);
-        iPos = newPos;
-        newPos = input.find(delimiter, iPos + sizeS2);
-    }
-
-    if (numFound == 0)
-        return 0;
-
-    for (int i = 0; i <= static_cast< int >(positions.size()); i++)
-    {
-        String s("");
-        if (i == 0)
-            s = input.substr(i, positions[i]);
-        int offset = positions[i-1] + sizeS2;
-        if (offset < isize)
+        if (newPos==iPos)
         {
-            if (i == positions.size())
-                s = input.substr(offset);
-            else if (i > 0)
-                s = input.substr(positions[i-1] + sizeS2,
-                                 positions[i] - positions[i-1] - sizeS2);
+        	if (includeEmpties)
+        		results.push_back(emptyString);
         }
-        if (includeEmpties || s.size() > 0)
-            results.push_back(s);
+        else
+        	results.push_back(input.substr(iPos, newPos-iPos));
+        iPos = newPos+delimiterSize;
     }
-    return numFound;
+    if (iPos>=input.size())
+    {
+    	if (includeEmpties)
+    		results.push_back(emptyString);
+    }
+    else
+    	results.push_back(input.substr(iPos, String::npos));
+    return results.size();
 }
 
 // To lower ================================================================
