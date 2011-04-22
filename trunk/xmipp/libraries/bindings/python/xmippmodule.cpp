@@ -397,6 +397,8 @@ MetaData_new(PyTypeObject *type, PyObject *args, PyObject *kwargs);
 static PyObject *
 MetaData_readPlain(PyObject *obj, PyObject *args, PyObject *kwargs);
 static PyObject *
+MetaData_setComment(PyObject *obj, PyObject *args, PyObject *kwargs);
+static PyObject *
 MetaData_unionAll(PyObject *obj, PyObject *args, PyObject *kwargs);
 
 static int
@@ -1173,6 +1175,9 @@ static PyMethodDef MetaData_methods[] = {
                                             {"intersection", (PyCFunction)MetaData_intersection, METH_VARARGS,
                                              "Intersection of two metadatas using a common label. The results is stored in self."
                                             },
+                                            {"setComment", (PyCFunction)MetaData_setComment, METH_VARARGS,
+                                             "Set comment in Metadata."
+                                            },
                                             {"sort", (PyCFunction)MetaData_sort, METH_VARARGS,
                                              "Sort metadata according to a label"
                                             },
@@ -1404,6 +1409,27 @@ MetaData_merge(PyObject *obj, PyObject *args, PyObject *kwargs)
             }
             MetaDataObject *self = (MetaDataObject*)obj;
             self->metadata->merge(MetaData_Value(pyMd));
+            Py_RETURN_NONE;
+        }
+        catch (XmippError xe)
+        {
+            PyErr_SetString(PyXmippError, xe.msg.c_str());
+        }
+    }
+    return NULL;
+}
+
+/* setComment */
+static PyObject *
+MetaData_setComment(PyObject *obj, PyObject *args, PyObject *kwargs)
+{
+    char *str = "", *ext="";
+    if (PyArg_ParseTuple(args, "s", &str))
+    {
+        try
+        {
+            MetaDataObject *self = (MetaDataObject*)obj;
+            self->metadata->setComment(str);
             Py_RETURN_NONE;
         }
         catch (XmippError xe)
@@ -1974,6 +2000,7 @@ initxmipp(void)
     addIntConstant(dict,"MDL_CTF_DEFOCUS_ANGLE",(long)MDL_CTF_DEFOCUS_ANGLE);
     addIntConstant(dict,"MDL_CTF_CS",(long)MDL_CTF_CS);
     addIntConstant(dict,"MDL_CTF_CA",(long)MDL_CTF_CA);
+    addIntConstant(dict,"MDL_CTF_GROUP",(long)MDL_CTF_GROUP);
     addIntConstant(dict,"MDL_CTF_ENERGY_LOSS",(long)MDL_CTF_ENERGY_LOSS);
     addIntConstant(dict,"MDL_CTF_LENS_STABILITY",(long)MDL_CTF_LENS_STABILITY);
     addIntConstant(dict,"MDL_CTF_CONVERGENCE_CONE",(long)MDL_CTF_CONVERGENCE_CONE);
