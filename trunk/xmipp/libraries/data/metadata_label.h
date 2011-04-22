@@ -83,6 +83,7 @@ enum MDLabel
     MDL_CTF_DEFOCUS_ANGLE, ///< Defocus angle (degrees)
     MDL_CTF_CS, ///< Spherical aberration
     MDL_CTF_CA, ///< Chromatic aberration
+    MDL_CTF_GROUP, ///< group images by defocus
     MDL_CTF_ENERGY_LOSS, ///< Energy loss
     MDL_CTF_LENS_STABILITY, ///< Lens stability
     MDL_CTF_CONVERGENCE_CONE, ///< Convergence cone
@@ -522,6 +523,7 @@ private:
         MDL::addLabel(MDL_CTF_DEFOCUS_ANGLE, LABEL_DOUBLE, "CTF_Defocus_angle");
         MDL::addLabel(MDL_CTF_CS, LABEL_DOUBLE, "CTF_Spherical_aberration");
         MDL::addLabel(MDL_CTF_CA, LABEL_DOUBLE, "CTF_Chromatic_aberration");
+        MDL::addLabel(MDL_CTF_GROUP, LABEL_INT, "CTFGroup");
         MDL::addLabel(MDL_CTF_ENERGY_LOSS, LABEL_DOUBLE, "CTF_Energy_loss");
         MDL::addLabel(MDL_CTF_LENS_STABILITY, LABEL_DOUBLE, "CTF_Lens_stability");
         MDL::addLabel(MDL_CTF_CONVERGENCE_CONE, LABEL_DOUBLE, "CTF_Convergence_cone");
