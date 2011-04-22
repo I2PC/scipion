@@ -149,46 +149,100 @@ def assign_images_to_references(_log,dict):
     ''' assign the images to the different references based on the crosscorrelation coeficient
         #if only one reference it just copy the docfile generated in the previous step
         '''
-    DocFileInputAngles  = dict['DocFileInputAngles']#number of references
+    DocFileInputAngles  = dict['DocFileInputAngles']
     ProjMatchRootName   = dict['ProjMatchRootName']#
     NumberOfCtfGroups   = dict['NumberOfCtfGroups']
+    NumberOfReferences = len(ProjMatchRootName)
     #print "cp",ProjMatchRootName[1],DocFileInputAngles
     #if number of references is one just copy file
-    if(len(ProjMatchRootName)==2):#single reference
-        shutil.copy(ProjMatchRootName[1], DocFileInputAngles[1])
+    if(NumberOfReferences==2):#single reference THIS IS WRONG REWRITE It PROPERLLY
+        shutil.copy(ProjMatchRootName[1], DocFileInputAngles[1])#####################CHECK
     else:#multiple reference
         #add all ProjMatchRootName
         MDaux = MetaData()
         MD    = MetaData()
         MD1   = MetaData()
-        print ProjMatchRootName
 
-        for ii in range(1,NumberOfCtfGroups+1):
-            ProjMatchRootNameIter = iter(ProjMatchRootName)
-            ProjMatchRootNameIter.next()#skip first Null element
-            element = ProjMatchRootNameIter.next()#skip first Null element
-            MDaux.clear()
-            MD1.clear()
-            while True:
-                fileNameIn    = str(ii).zfill(utils_xmipp.FILENAMENUMBERLENTGH) + '@' + element
-                print ii, fileNameIn
-                inputdocfile  = 'ctfGroup'+fileNameIn
-                MD.read(inputdocfile)
-                MDaux.unionAll(MD)
-                try:
-                    element = ProjMatchRootNameIter.next()
-                except StopIteration:
-                    break
-            MD.aggregate(MDaux,AGGR_MAX,MDL_IMAGE,MDL_MAXCC,MDL_MAXCC)
-            MD1.join(MD,MDaux,MDL_UNDEFINED,NATURAL)
-        
-            fileNameOut   = str(ii).zfill(utils_xmipp.FILENAMENUMBERLENTGH) + '@' + DocFileInputAngles[ii]
-            outputdocfile = 'ref'+ fileNameOut
-            MD1.write(outputdocfile,MD_APPEND)
-            MDaux.write(outputdocfile+"aux",MD_APPEND)
-            MD.write(outputdocfile+"MD",MD_APPEND)
-        
-        
+        for iRef3D in range(1,NumberOfReferences):#already has plus 1
+            inputFileName = ProjMatchRootName[iRef3D]#skip first Null element
+            for iCTFGroup in range(1,NumberOfCtfGroups+1):
+###                MDaux.clear()
+###                MD1.clear()
+                    inputdocfile    = 'ctfGroup' + \
+                                      str(iCTFGroup).zfill(utils_xmipp.FILENAMENUMBERLENTGH) + \
+                                      '@' + inputFileName
+                    MD.read(inputdocfile)
+                    MD.setValueCol(MDL_CTF_GROUP,iCTFGroup)
+                    MD.setValueCol(MDL_REF3D,iRef3D)
+                    MDaux.unionAll(MD)
+        MD.aggregate(MDaux,AGGR_MAX,MDL_IMAGE,MDL_MAXCC,MDL_MAXCC)
+        MD1.join(MD,MDaux,MDL_UNDEFINED,NATURAL)
+            
+        outputdocfile =  DocFileInputAngles
+        MD1.setComment("metadata with  images, the winner reference as well as the ctf group")
+        MD1.write(outputdocfile)
+            
+def angular_class_average(_log,dict):
+    # Now make the class averages
+    DocFileInputAngles  = dict['DocFileInputAngles']#number of references
+    ProjMatchRootName   = dict['ProjMatchRootName']#
+    NumberOfCtfGroups   = dict['NumberOfCtfGroups']
+    NumberOfReferences = len(ProjMatchRootName)
+    Md=MetaData()
+    MdSelect=MetaData()
+    for iRef3D in range(1,NumberOfReferences):#already has plus 1
+        for iCTFGroup in range(1,NumberOfCtfGroups+1):
+            print "iRef3D,iCTFGroup",iRef3D,iCTFGroup,DocFileInputAngles
+            #extract from metadata relevant images
+            Md.read(DocFileInputAngles)
+            MdSelect.importObjects(Md, MDValueEQ(MDL_REF3D, iRef3D))
+            Md.clear()
+            Md.importObjects(MdSelect,MDValueEQ(MDL_CTF_GROUP, iCTFGroup))
+            Md.write("test.xmd")
+            exit(1)
+######        parameters =  ' -i '      + outputname + '.doc'  + \
+######                      ' --lib '    + ProjectLibraryRootName + '.doc' + \
+######                      ' --dont_write_selfiles ' + \
+######                      ' --limit0 ' + str(_MinimumCrossCorrelation) + \
+######                      ' --limitR ' + str(_DiscardPercentage)
+######    if (_DoCtfCorrection):
+######       # On-the fly apply Wiener-filter correction and add all CTF groups together
+######       parameters += \
+######                  ' --wien '             + CtfGroupName + '.wien' + \
+######                  ' --pad '              + str(_PaddingFactor) + \
+######                  ' --add_to '           + ProjMatchRootName
+######    else:
+######       parameters += \
+######                  ' -o '                + ProjMatchRootName
+######    if (_DoAlign2D == '1'):
+######       parameters += \
+######                  ' --iter '             + str(_Align2DIterNr) + \
+######                  ' --Ri '               + str(_Ri)           + \
+######                  ' --Ro '               + str(_Ro)           + \
+######                  ' --max_shift '        + str(_MaxChangeOffset) + \
+######                  ' --max_shift_change ' + str(_Align2dMaxChangeOffset) + \
+######                  ' --max_psi_change '   + str(_Align2dMaxChangeRot) 
+######    if (_DoComputeResolution and _DoSplitReferenceImages):
+######       parameters += \
+######                  ' --split '
+######    
+######    launch_job.launch_job('xmipp_angular_class_average',
+######                          parameters,
+######                          _mylog,
+######                          _DoParallel,
+######                          _MyNumberOfMpiProcesses*_MyNumberOfThreads,
+######                          1,
+######                          _MySystemFlavour)
+######    
+######    if (_DoAlign2D == '1'):
+######       outputdocfile =  ProjMatchRootName + '_realigned.doc'
+######    else:
+######       outputdocfile =  ProjMatchRootName + '.doc'
+######    
+######    if (_DoCtfCorrection):
+######       os.remove(outputname + '.doc')
+######       os.remove(inputdocfile)
+
 #            shutil.copy(ProjMatchRootName[1], DocFileInputAngles)
 
 #

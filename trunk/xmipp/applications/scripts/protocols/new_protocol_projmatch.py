@@ -61,7 +61,7 @@ IsIter =False
     Note2: Set this option to -1 if you want to perform extra iterations after
            successfully finish an execution
 """
-ContinueAtIteration =1
+ContinueAtIteration =23
 
 # {expert} Save disc space by cleaning up intermediate files?
 """ Be careful, many options of the visualization protocol will not work anymore, 
@@ -722,9 +722,12 @@ def actionsToBePerformedBeforeLoopThatDoNotModifyTheFileSystem():
     global referenceNumber
     referenceNumber = len(ReferenceFileNames)
     #directory with ProjMatchClasses
-    global ProjMatchDirs,LibraryDirs,ProjMatchRootName
+    global ProjMatchDirs
     ProjMatchDirs=[" "]
+    global LibraryDirs
     LibraryDirs=[" "]
+    global DocFileInputAngles
+    DocFileInputAngles=[DocFileWithOriginalAngles]
     #ProjMatchRootName=[" "]
     for iterN in range(NumberofIterations):
         ProjMatchDirs.append(WorkingDir + "/Iter_" + \
@@ -735,6 +738,10 @@ def actionsToBePerformedBeforeLoopThatDoNotModifyTheFileSystem():
                                   str(iterN + 1).zfill(2) + \
                                   '/' + \
                                   LibraryDir)
+        DocFileInputAngles.append(WorkingDir + "/Iter_" + \
+                                      str(iterN + 1).zfill(2) + \
+                                      '/' + \
+                                      docfile_with_current_angles + ".doc")
         #ProjMatchRootName.append(ProjMatchDir[] + "/" + ProjMatchName)
     #print ProjMatchDirs,LibraryDirs
     
@@ -791,18 +798,18 @@ def actionsToBePerformedBeforeLoopThatDoNotModifyTheFileSystem():
         reconstructedFileNamesIter.append(list(auxList))
 
     # Optimal angles from previous iteration or user-provided at the beginning
-    global DocFileInputAngles
-    DocFileInputAngles=[]
-    aux=[DocFileWithOriginalAngles]*(refN+1)#+1 fills the zero
-    DocFileInputAngles.append([None] + aux)
-    for iterN in range(NumberofIterations):
-        for refN in range(referenceNumber):
-            auxList[refN + 1] = WorkingDir + "/Iter_" + \
-                                      str(iterN + 1).zfill(2) + \
-                                      '/' + \
-                                      docfile_with_current_angles + \
-                                      "_ref_" + str(refN + 1).zfill(2) + ".doc"
-        DocFileInputAngles.append(list(auxList))
+#    global DocFileInputAngles
+#    DocFileInputAngles=[]
+#    aux=[DocFileWithOriginalAngles]*(referenceNumber+1)#+1 fills the zero
+#    DocFileInputAngles.append([None] + aux)
+#    for iterN in range(NumberofIterations):
+#        for refN in range(referenceNumber):
+#            auxList[refN + 1] = WorkingDir + "/Iter_" + \
+#                                      str(iterN + 1).zfill(2) + \
+#                                      '/' + \
+#                                      docfile_with_current_angles + \
+#                                      "_ref_" + str(refN + 1).zfill(2) + ".doc"
+#        DocFileInputAngles.append(list(auxList))
 
     global docfile_with_current_anglesList
     docfile_with_current_anglesList=[]
@@ -999,7 +1006,7 @@ def actionsToBePerformedInsideLoop(_log):
                                   'AngSamplingRateDeg':AngSamplingRateDeg[iterN]
                                 , 'CtfGroupSubsetFileName':CtfGroupSubsetFileName
                                 , 'DoCtfCorrection': DoCtfCorrection
-                                , 'DocFileInputAngles':DocFileInputAngles[iterN-1][refN]
+                                , 'DocFileInputAngles':DocFileInputAngles[iterN-1]
                                 , 'DoParallel': DoParallel
                                 , 'DoRestricSearchbyTiltAngle':DoRestricSearchbyTiltAngle
                                 , 'MaxChangeInAngles':MaxChangeInAngles[iterN]
@@ -1021,12 +1028,11 @@ def actionsToBePerformedInsideLoop(_log):
             _VerifyFiles = []
             auxFn=ProjectLibraryRootNames[iterN][refN]
             _VerifyFiles.append(auxFn)
-            auxFn=auxFn[:-4]
-            #file with angles asigned to each image 
+            auxFn=auxFn[:-4]#remove extension
+            #file with projection angles angles 
             _VerifyFiles.append(auxFn + ".doc")
             #file with sampling point neighbourhood 
             _VerifyFiles.append(auxFn + "_sampling.txt")
-            #_VerifyFiles.append(auxFn + "ewetgerg")
             _dataBase.insertCommand(command, _Parameters, iterN,_VerifyFiles)
             # projectionMatching    
             _Parameters = {
@@ -1063,38 +1069,52 @@ def actionsToBePerformedInsideLoop(_log):
             _VerifyFiles.append(ProjMatchRootName[iterN][refN] )
             _dataBase.insertCommand(command, _Parameters, iterN,_VerifyFiles)
             
-            #delete DocFileInputAngles so I can use append style for metadata in DocFileInputAngles
-            _Parameters = {
-                           'FileName': DocFileInputAngles[iterN][refN]
-                          ,'Verbose' : 1
-                           }
-            command = "deleteFile"
-            _dataBase.insertCommand(command, _Parameters, iterN)
 
         
+        #assign the images to the different references based on the crosscorrelation coheficient
+        #if only one reference it just copy the docfile generated in the previous step
+        _Parameters = {
+                       'DocFileInputAngles' : DocFileInputAngles[iterN]
+                     , 'refN':refN
+                     , 'ProjMatchRootName':ProjMatchRootName[iterN]#LIST
+                      }
+        _VerifyFiles = []
+        _VerifyFiles.append(DocFileInputAngles[iterN])
+        command = "dict['NumberOfCtfGroups']=self.NumberOfCtfGroups;assign_images_to_references"
+        _dataBase.insertCommand(command, _Parameters, iterN,_VerifyFiles)
+
+        #align images, not possible for ctf groups
         for refN in range(1, referenceNumber + 1):
-            #assign the images to the different references based on the crosscorrelation coheficient
-            #if only one reference it just copy the docfile generated in the previous step
             _Parameters = {
-                           'DocFileInputAngles' : DocFileInputAngles[iterN]
-                         #, 'Iter':iterN
-                         , 'ProjMatchRootName':ProjMatchRootName[iterN]#LIST
-                          }
+                       'DocFileInputAngles' : DocFileInputAngles[iterN]
+                     , 'ProjMatchRootName':ProjMatchRootName[iterN]#LIST
+
+                                }
+            command = "dict['NumberOfCtfGroups']=self.NumberOfCtfGroups;angular_class_average"
             _VerifyFiles = []
-            DocFileInputAnglesIter = iter(DocFileInputAngles[iterN])
-            DocFileInputAnglesIter.next()#first entry is empty
-            element = DocFileInputAnglesIter.next()
-            while True:
-                _VerifyFiles.append(element)
-                try:
-                    element = DocFileInputAnglesIter.next()
-                except StopIteration:
-                    break
-            _VerifyFiles.append("lkhukygbibgi")
-            command = "dict['NumberOfCtfGroups']=self.NumberOfCtfGroups;assign_images_to_references"
+            _VerifyFiles.append(maskedFileNamesIter[iterN][refN]+'ertertertert')
+            _dataBase.insertCommand(command, _Parameters, iterN,_VerifyFiles)
+            
+            ##############REMOVE SHUTIL.COPY
+            # Mask reference volume
+            _Parameters = {
+                                  'DoMask'             : DoMask
+                                , 'DoSphericalMask'    : DoSphericalMask
+                                , 'maskedFileName'     : maskedFileNamesIter[iterN][refN]
+                                , 'maskRadius'         : MaskRadius
+                                , 'reconstructedFileName' : reconstructedFileNamesIter[iterN - 1][refN]
+                                , 'userSuppliedMask'   : MaskFileName
+                                }
+            
+            command = "execute_mask"
+            _VerifyFiles = []
+            _VerifyFiles.append(maskedFileNamesIter[iterN][refN])
             _dataBase.insertCommand(command, _Parameters, iterN,_VerifyFiles)
 
-#suffle
+
+
+
+
 #class average
 #alig2d
 
@@ -1107,20 +1127,29 @@ def actionsToBePerformedInsideLoop(_log):
 ########################            
             #REMOVE
             #Create directory
-            _Parameters = {
-                 'Iter':iterN + 1
-               , 'WorkingDir':WorkingDir
-                }
-            command = 'createDir'
-            _dataBase.insertCommand(command, _Parameters, iterN)
-            
-            _Parameters = {'dummy':''}
-            command = "shutil.copy('%s','%s');dummy" % (ReferenceFileNames[0], reconstructedFileNamesIter[iterN][refN])
-            _VerifyFiles = []
-            _VerifyFiles.append(reconstructedFileNamesIter[iterN][refN])
-            _dataBase.insertCommand(command, _Parameters, iterN)
+        _Parameters = {
+             'Iter':iterN + 1
+           , 'WorkingDir':WorkingDir
+            }
+        command = 'createDir'
+        _dataBase.insertCommand(command, _Parameters, iterN)
+        
+        _Parameters = {'dummy':''}
+        command = "shutil.copy('%s','%s');dummy" % (ReferenceFileNames[0], reconstructedFileNamesIter[iterN][refN])
+        _VerifyFiles = []
+        _VerifyFiles.append(reconstructedFileNamesIter[iterN][refN])
+        _dataBase.insertCommand(command, _Parameters, iterN)
 
-            
+###            #delete DocFileInputAngles so I can use append style for metadata in DocFileInputAngles
+###            _Parameters = {
+###                           'FileName': DocFileInputAngles[iterN]
+###                          ,'Verbose' : 1
+###                           }
+###            command = "deleteFile"
+###            _dataBase.insertCommand(command, _Parameters, iterN)
+
+###        command = "exit(1)"
+###        _dataBase.insertCommand(command, _Parameters, iterN)
 
 
 ######################################
@@ -1174,6 +1203,15 @@ def preconditions(gui):
         else:
             print message
         retval=False
+
+    # Never allow DoAlign2D and DoCtfCorrection together
+    if (int(arg.getComponentFromVector(DoAlign2D,_iteration_number))==1 and
+        self._DoCtfCorrection):
+        error_message="You cannot realign classes AND perform CTF-correction. Switch either of them off!"
+        self._mylog.error(error_message)
+        print error_message
+        exit(1)
+
 
     return retval
 #######
