@@ -164,6 +164,7 @@ int readTIFF(size_t select_img, bool isStack=false)
     /* Get TIFF image properties */
     do
     {
+        dhRef.imageSampleFormat = SAMPLEFORMAT_VOID;
         if (TIFFGetField(tif, TIFFTAG_BITSPERSAMPLE,  &dhRef.bitsPerSample) == 0)
             REPORT_ERROR(ERR_IO_NOREAD,"rwTIFF: Error reading TIFFTAG_BITSPERSAMPLE");
         if (TIFFGetField(tif, TIFFTAG_SAMPLESPERPIXEL,&dhRef.samplesPerPixel) == 0)
