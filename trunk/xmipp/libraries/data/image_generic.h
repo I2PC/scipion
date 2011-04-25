@@ -272,10 +272,12 @@ public:
     void print() const;
 
 private:
-    /* Declare the internal image class with the stored data type
+    /* Return the datatype of the image file.
      */
     void getImageType(const FileName &imgName, DataType &datatype);
 
+    /* Return the datatype of the image file and if the bytes must be swapped when read.
+     */
     void getImageType(const FileName &imgName, DataType &datatype, bool &swap);
 }
 ;

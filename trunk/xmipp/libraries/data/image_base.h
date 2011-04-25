@@ -263,7 +263,7 @@ public:
     }
 
     /** Destructor.*/
-    ~ImageBase()
+    virtual ~ImageBase()
     {}
 
     /** Is this file an image

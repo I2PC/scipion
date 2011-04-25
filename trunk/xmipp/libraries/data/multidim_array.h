@@ -663,6 +663,8 @@ public:
     // Number of elements in NZYX in allocated memory
     size_t nzyxdimAlloc;
 public:
+    virtual ~MultidimArrayBase()
+    {}
     virtual void clear() = 0;
     virtual void getDimensions(int& Xdim, int& Ydim, int& Zdim, size_t &Ndim) const = 0;
     virtual void resize(size_t Ndim, int Zdim, int Ydim, int Xdim, bool copy=true) = 0;
