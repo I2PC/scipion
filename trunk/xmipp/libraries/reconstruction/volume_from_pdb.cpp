@@ -155,7 +155,7 @@ void ProgPdbConverter::defineParams()
     addUsageLine("Covert a PDB file to a volume.");
     addExampleLine("Sample at 1.6A and limit the frequency to 10A",false);
     addExampleLine("   xmipp_volume_from_pdb -i 1o7d.pdb --sampling 1.6");
-    addExampleLine("   xmipp_transform_filter -i volume.vol -o volumeFiltered.vol --fourier low_pass 10 raised_cosine 0.05 --sampling 1.6");
+    addExampleLine("   xmipp_transform_filter -i 1o7d.vol -o 1o7dFiltered.vol --fourier low_pass 10 raised_cosine 0.05 --sampling 1.6");
 
     addParamsLine("   -i <pdb_file>                     : File to process");
     addParamsLine("  [-o <fn_root>]                     : Root name for output");
