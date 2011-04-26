@@ -323,7 +323,7 @@ void  MDObject::getValue(std::vector<double> &vv) const
 }
 void MDObject::getValue(size_t &lv) const
 {
-    labelTypeCheck(LABEL_INT);
+    labelTypeCheck(LABEL_LONG);
     lv = this->data.longintValue;
 }
 void MDObject::getValue(float &floatvalue) const
