@@ -40,7 +40,7 @@
 /* Read parameters --------------------------------------------------------- */
 void ProgCTFEnhancePSD::readParams()
 {
-	XmippMetadataProgram::readParams();
+    XmippMetadataProgram::readParams();
     filter_w1 = getDoubleParam("--f1");
     filter_w2 = getDoubleParam("--f2");
     decay_width = getDoubleParam("--decay");
@@ -51,9 +51,9 @@ void ProgCTFEnhancePSD::readParams()
 /* Usage ------------------------------------------------------------------- */
 void ProgCTFEnhancePSD::defineParams()
 {
-	each_image_produces_an_output=true;
-	defaultComments["-i"].clear();
-	defaultComments["-i"].addComment("Metadata with PSDs or a single PSD");
+    each_image_produces_an_output=true;
+    defaultComments["-i"].clear();
+    defaultComments["-i"].addComment("Metadata with PSDs or a single PSD");
     XmippMetadataProgram::defineParams();
     addUsageLine("Enhances the visibility of the Thon rings in a Power Spectrum Density (PSD).");
     addUsageLine("+The algorithm is fully described at [[http://www.ncbi.nlm.nih.gov/pubmed/16987671][this article]]");
@@ -89,12 +89,12 @@ void ProgCTFEnhancePSD::show()
 void ProgCTFEnhancePSD::processImage(const FileName &fnImg, const FileName &fnImgOut,
                                      size_t objId)
 {
-	Image<double> PSD;
-	PSD.read(fnImg);
-	if (ZSIZE(PSD())!=1)
-		REPORT_ERROR(ERR_MATRIX_DIM,"This program is not intended for volumes");
-	apply(PSD());
-	PSD.write(fnImgOut);
+    Image<double> PSD;
+    PSD.read(fnImg);
+    if (ZSIZE(PSD())!=1)
+        REPORT_ERROR(ERR_MATRIX_DIM,"This program is not intended for volumes");
+    apply(PSD());
+    PSD.write(fnImgOut);
 }
 
 //#define DEBUG
@@ -131,7 +131,6 @@ void ProgCTFEnhancePSD::apply(MultidimArray<double> &PSD)
     // Mask the input PSD
     MultidimArray<int> mask;
     mask.resize(PSD);
-    Matrix1D<int>    idx(2);  // Indexes for Fourier plane
     Matrix1D<double> freq(2); // Frequencies for Fourier plane
     double limit0_2=mask_w1;
     limit0_2=limit0_2*limit0_2;
@@ -139,8 +138,6 @@ void ProgCTFEnhancePSD::apply(MultidimArray<double> &PSD)
     limitF_2=limitF_2*limitF_2;
     FOR_ALL_ELEMENTS_IN_ARRAY2D(PSD)
     {
-        XX(idx) = j;
-        YY(idx) = i;
         FFT_idx2digfreq(PSD, idx, freq);
         double freq2=XX(freq)*XX(freq)+YY(freq)*YY(freq);
         if (freq2 < limit0_2 || freq2 > limitF_2)
@@ -157,16 +154,16 @@ void ProgCTFEnhancePSD::apply(MultidimArray<double> &PSD)
     limit0_2=limit0_2*limit0_2;
     limitF_2=mask_w2;
     limitF_2=limitF_2*limitF_2;
-    FOR_ALL_ELEMENTS_IN_ARRAY2D(PSD)
+    for (int i=STARTINGY(PSD); i<=FINISHINGY(PSD); ++i)
     {
-        XX(idx) = j;
-        YY(idx) = i;
-        FFT_idx2digfreq(PSD, idx, freq);
-        double freq2=XX(freq)*XX(freq)+YY(freq)*YY(freq);
-        if (freq2 > limit0_2 && freq2 < limitF_2)
-            A2D_ELEM(tighterMask, i, j) = 1;
-        else
-            A2D_ELEM(tighterMask,i,j) = 0;
+        FFT_IDX2DIGFREQ(i, YSIZE(PSD), YY(freq));
+        double freqy2=YY(freq)*YY(freq);
+        for (int j=STARTINGX(PSD); j<=FINISHINGX(PSD); ++j)
+        {
+            FFT_IDX2DIGFREQ(j, XSIZE(PSD), XX(freq));
+            double freq2=XX(freq)*XX(freq)+freqy2;
+            A2D_ELEM(tighterMask, i, j) = freq2 > limit0_2 && freq2 < limitF_2;
+        }
     }
 
     double min_val, max_val, avg, stddev;
@@ -181,16 +178,18 @@ void ProgCTFEnhancePSD::apply(MultidimArray<double> &PSD)
     limit0_2=limit0_2*limit0_2;
     limitF_2=mask_w2*0.9;
     limitF_2=limitF_2*limitF_2;
-    FOR_ALL_ELEMENTS_IN_ARRAY2D(PSD)
+    for (int i=STARTINGY(PSD); i<=FINISHINGY(PSD); ++i)
     {
-        XX(idx) = j;
-        YY(idx) = i;
-        FFT_idx2digfreq(PSD, idx, freq);
-        double freq2=XX(freq)*XX(freq)+YY(freq)*YY(freq);
-        if (freq2 < limit0_2 || freq2 > limitF_2)
-            A2D_ELEM(PSD, i, j) = 0;
-    }
+        FFT_IDX2DIGFREQ(i, YSIZE(PSD), YY(freq));
+        double freqy2=YY(freq)*YY(freq);
+        for (int j=STARTINGX(PSD); j<=FINISHINGX(PSD); ++j)
+        {
+            FFT_IDX2DIGFREQ(j, XSIZE(PSD), XX(freq));
+            double freq2=XX(freq)*XX(freq)+freqy2;
+            if (freq2 < limit0_2 || freq2 > limitF_2)
+                A2D_ELEM(PSD, i, j) = 0;
+        }
 
-    CenterFFT(PSD, true);
-}
+        CenterFFT(PSD, true);
+    }
 #undef DEBUG
