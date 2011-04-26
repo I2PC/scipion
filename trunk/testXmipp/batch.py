@@ -134,6 +134,10 @@ class Tester:
         self.addProgram("xmipp_image_statistics")
         self.addTest("-i input/smallStack.stk --image_stats %o/stats")
 
+        self.addProgram("xmipp_image_vectorize")
+        self.addTest("-i input/aFewProjections.sel -o %o/vectors.xmd")
+        self.addTest("-i input/vectors.xmd -o %o/images.stk")
+
         self.addProgram("xmipp_metadata_convert_to_spider")
         self.addTest ("-i input/smallStack.sel -o %o/listNew.doc --action extract_selfile")
         self.addTest ("-i input/smallStack.sel -o %o/listOld.doc --action extract_selfile old")
