@@ -304,7 +304,7 @@ public:
     {
         coreInit();
         row = ! column;
-        resize(dim);
+        initZeros(dim);
     }
 
     /** Copy constructor
@@ -481,7 +481,7 @@ public:
 
     /** Resize a single 1D image with no copy
          */
-    void resizeNoCopy(int Xdim)
+    inline void resizeNoCopy(int Xdim)
     {
         resize(Xdim, false);
     }
@@ -623,7 +623,7 @@ public:
     void initZeros(int Xdim)
     {
         if (vdim!=Xdim)
-            resize(Xdim);
+            resizeNoCopy(Xdim);
         memset(vdata,0,vdim*sizeof(T));
     }
 

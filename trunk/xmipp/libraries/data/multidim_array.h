@@ -2615,6 +2615,7 @@ public:
             else if (l>=XSIZE(*this))
                 equivalent_l=2*XSIZE(*this)-l-1;
             double Coeff = (double) DIRECT_A1D_ELEM(*this, equivalent_l);
+            double aux;
             switch (SplineDegree)
             {
             case 2:
@@ -2622,7 +2623,8 @@ public:
                 break;
 
             case 3:
-                sum += Coeff * Bspline03(xminusl);
+                BSPLINE03(aux,xminusl);
+                sum += Coeff * aux;
                 break;
 
             case 4:
