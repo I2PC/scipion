@@ -194,7 +194,8 @@ void ProgCTFEnhancePSD::apply(MultidimArray<double> &PSD)
             if (freq2 < limit0_2 || freq2 > limitF_2)
                 A2D_ELEM(PSD, i, j) = 0;
         }
-
-        CenterFFT(PSD, true);
     }
+
+    CenterFFT(PSD, true);
+}
 #undef DEBUG
