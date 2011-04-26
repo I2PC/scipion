@@ -188,25 +188,25 @@ FileName ProgNmaAlignment::createDeformedPDB(int pyramidLevel) const
         runSystem(program, arguments);
     }
 
-    program = "xmipp_convert_pdb2vol";
-    arguments = formatString("-i deformedPDB_%s.pdb -size %i -sampling_rate %f -v 0",
+    program = "xmipp_volume_from_pdb";
+    arguments = formatString("-i deformedPDB_%s.pdb --size %i --sampling %f -v 0",
                              randStr, imgSize, sampling_rate);
 
     if (do_centerPDB)
-        arguments.append(" -centerPDB ");
+        arguments.append(" --centerPDB ");
 
     if (useFixedGaussian)
     {
-        arguments.append(" -fixed_Gaussian ");
+        arguments.append(" --fixed_Gaussian ");
         if (sigmaGaussian >= 0)
-            arguments += formatString("%f -intensityColumn Bfactor", sigmaGaussian);
+            arguments += formatString("%f --intensityColumn Bfactor", sigmaGaussian);
     }
     runSystem(program, arguments, false);
 
     if (do_FilterPDBVol)
     {
-        program = "xmipp_fourier_filter";
-        arguments = formatString("-i deformedPDB_%s.vol -sampling %f -low_pass %f -fourier_mask raised_cosine 0.1 -v 0",
+        program = "xmipp_transform_filter";
+        arguments = formatString("-i deformedPDB_%s.vol --sampling %f --fourier low_pass %f raised_cosine 0.1 -v 0",
                                  randStr, sampling_rate, cutoff_LPfilter);
         runSystem(program, arguments, false);
     }

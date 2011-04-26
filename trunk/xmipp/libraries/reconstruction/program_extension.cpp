@@ -29,7 +29,7 @@
 #include "data/filters.h"
 #include "angular_project_library.h"
 #include "angular_discrete_assign.h"
-#include "convert_pdb2vol.h"
+#include "volume_from_pdb.h"
 #include "angular_continuous_assign.h"
 #include "data/mask.h"
 
@@ -56,7 +56,7 @@ XmippProgram * getProgramByName(const String &programName)
 //  if (programName == "xmipp_tranform_filter")
 //    return new ProgFilter();
 
-  if (programName == "xmipp_convert_pdb2vol")
+  if (programName == "xmipp_volume_from_pdb")
     return new ProgPdbConverter();
 
   if (programName == "xmipp_angular_project_library")

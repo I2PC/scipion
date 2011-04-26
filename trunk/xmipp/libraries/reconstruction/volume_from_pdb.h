@@ -22,8 +22,8 @@
  *  All comments concerning this program package may be sent to the
  *  e-mail address 'xmipp@cnb.csic.es'
  ***************************************************************************/
-#ifndef _PROG_PDBPHANTOM_HH
-#  define _PROG_PDBPHANTOM_HH
+#ifndef _PROG_VOLUME_FROM_PDB_HH
+#  define _PROG_VOLUME_FROM_PDB_HH
 
 #include <data/blobs.h>
 #include <data/pdb.h>

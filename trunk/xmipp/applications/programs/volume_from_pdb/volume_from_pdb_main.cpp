@@ -23,7 +23,7 @@
  *  e-mail address 'xmipp@cnb.csic.es'
  ***************************************************************************/
 
-#include <reconstruction/convert_pdb2vol.h>
+#include <reconstruction/volume_from_pdb.h>
 
 /* ------------------------------------------------------------------------- */
 /* Program                                                                   */
@@ -32,7 +32,5 @@ int main(int argc, char *argv[])
 {
     ProgPdbConverter prm;
     prm.read(argc, argv);
-    prm.tryRun();
-
-    return 0;
+    return prm.tryRun();
 }

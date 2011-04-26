@@ -24,7 +24,7 @@
  *  e-mail address 'xmipp@cnb.csic.es'
  ***************************************************************************/
 
-#include "convert_pdb2vol.h"
+#include "volume_from_pdb.h"
 
 #include <data/args.h>
 
@@ -153,22 +153,22 @@ void ProgPdbConverter::atomBlobDescription(
 void ProgPdbConverter::defineParams()
 {
     addUsageLine("Covert a PDB file to a volume.");
-    addUsageLine("Example of use: Sample at 1.6A and limit the frequency to 10A");
-    addUsageLine("   xmipp_convert_pdb2vol -i 1o7d.pdb -sampling_rate 1.6");
-    addUsageLine("   xmipp_fourier_filter -i 1o7d.vol -o 1o7d_filtered.vol -low_pass 10 -sampling 1.6 -fourier_mask raised_cosine 0.1");
+    addExampleLine("Sample at 1.6A and limit the frequency to 10A",false);
+    addExampleLine("   xmipp_volume_from_pdb -i 1o7d.pdb --sampling 1.6");
+    addExampleLine("   xmipp_transform_filter -i volume.vol -o volumeFiltered.vol --fourier low_pass 10 raised_cosine 0.05 --sampling 1.6");
 
     addParamsLine("   -i <pdb_file>                     : File to process");
     addParamsLine("  [-o <fn_root>]                     : Root name for output");
-    addParamsLine("  [-sampling_rate <Ts=1>]            : Sampling rate (Angstroms/pixel)");
-    addParamsLine("  [-high_sampling_rate <highTs=0.08333333>]: Sampling rate before downsampling");
-    addParamsLine("  [-size <output_dim=-1>]               : Final size in pixels (must be a power of 2, if blobs are used)");
-    addParamsLine("  [-centerPDB]                       : Center PDB with the center of mass");
-    addParamsLine("  [-blobs]                           : Use blobs instead of scattering factors");
-    addParamsLine("  [-poor_Gaussian]                   : Use a simple Gaussian adapted to each atom");
-    addParamsLine("  [-fixed_Gaussian <std=-1>]         : Use a fixed Gausian for each atom with");
+    addParamsLine("  [--sampling <Ts=1>]                : Sampling rate (Angstroms/pixel)");
+    addParamsLine("  [--high_sampling_rate <highTs=0.08333333>]: Sampling rate before downsampling");
+    addParamsLine("  [--size <output_dim=-1>]               : Final size in pixels (must be a power of 2, if blobs are used)");
+    addParamsLine("  [--centerPDB]                       : Center PDB with the center of mass");
+    addParamsLine("  [--blobs]                           : Use blobs instead of scattering factors");
+    addParamsLine("  [--poor_Gaussian]                   : Use a simple Gaussian adapted to each atom");
+    addParamsLine("  [--fixed_Gaussian <std=-1>]         : Use a fixed Gausian for each atom with");
     addParamsLine("                                     :  this standard deviation");
     addParamsLine("                                     :  If not given, the standard deviation is taken from the PDB file");
-    addParamsLine("  [-intensityColumn <intensity_type=occupancy>]   : Where to write the intensity in the PDB file");
+    addParamsLine("  [--intensityColumn <intensity_type=occupancy>]   : Where to write the intensity in the PDB file");
     addParamsLine("     where <intensity_type> occupancy Bfactor     : Valid values: occupancy, Bfactor");
 }
 /* Read parameters --------------------------------------------------------- */
@@ -176,16 +176,16 @@ void ProgPdbConverter::readParams()
 {
     fn_pdb = getParam("-i");
     fn_out = checkParam("-o") ? getParam("-o") : fn_pdb.withoutExtension();
-    Ts = getDoubleParam("-sampling_rate");
-    highTs = getDoubleParam("-high_sampling_rate");
-    output_dim = getIntParam("-size");
-    useBlobs = checkParam("-blobs");
-    usePoorGaussian = checkParam("-poor_Gaussian");
-    useFixedGaussian = checkParam("-fixed_Gaussian");
+    Ts = getDoubleParam("--sampling");
+    highTs = getDoubleParam("--high_sampling_rate");
+    output_dim = getIntParam("--size");
+    useBlobs = checkParam("--blobs");
+    usePoorGaussian = checkParam("--poor_Gaussian");
+    useFixedGaussian = checkParam("--fixed_Gaussian");
     if (useFixedGaussian)
-        sigmaGaussian = getDoubleParam("-fixed_Gaussian");
-    doCenter = checkParam("-centerPDB");
-    intensityColumn = getParam("-intensityColumn");
+        sigmaGaussian = getDoubleParam("--fixed_Gaussian");
+    doCenter = checkParam("--centerPDB");
+    intensityColumn = getParam("--intensityColumn");
 }
 
 /* Show -------------------------------------------------------------------- */
