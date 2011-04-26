@@ -256,7 +256,7 @@ void ProgCtfGroup::produceSideInfo()
 
     //fill multiarray with ctfs
     int count;
-    int counter=0;
+    size_t counter=0;
     if (verbose!=0)
         std::cout << "\nFill multiarray with ctfs" <<std::endl;
     FOR_ALL_OBJECTS_IN_METADATA(ctfMD)
@@ -293,7 +293,7 @@ void ProgCtfGroup::produceSideInfo()
                 FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY2D(Mctf)
                 {
                     id=md1.addObject();
-                    md1.setValue(MDL_ORDER,(int)(id-1),id);
+                    md1.setValue(MDL_ORDER,(size_t)(id-1),id);
                     md1.setValue(MDL_RESOLUTION_FRC,dAij(Mctf, 0, j),id );
                 }
                 std::stringstream ss;
