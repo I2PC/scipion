@@ -396,55 +396,58 @@ void ProgPdbConverter::createProteinUsingScatteringProfiles()
         REPORT_ERROR(ERR_IO_NOTEXIST, fn_pdb);
 
     // Process all lines of the file
+    std::string line, kind, atom_type;
+    double iTs=1.0/Ts;
+    Matrix1D<double> r(3), rdiff(3);
     while (!fh_pdb.eof())
     {
         // Read an ATOM line
-        std::string line;
         getline(fh_pdb, line);
         if (line == "")
             continue;
-        std::string kind =line.substr(0,4);
+        kind =line.substr(0,4);
         if (kind != "ATOM")
             continue;
 
         // Extract atom type and position
         // Typical line:
         // ATOM    909  CA  ALA A 161      58.775  31.984 111.803  1.00 34.78
-        std::string atom_type = line.substr(13,2);
+        atom_type = line.substr(13,2);
+        char atom_type0=atom_type[0];
         double x = textToFloat(line.substr(30,8));
         double y = textToFloat(line.substr(38,8));
         double z = textToFloat(line.substr(46,8));
 
         // Correct position
-        Matrix1D<double> r(3);
         VECTOR_R3(r, x, y, z);
         r -= centerOfMass;
-        r /= Ts;
+        r *= iTs;
 
         // Characterize atom
         try
         {
             double radius=atomProfiles.atomRadius(atom_type[0]);
+            double radius2=radius*radius;
 
             // Find the part of the volume that must be updated
-            int k0 = XMIPP_MAX(FLOOR(ZZ(r) - radius), STARTINGZ(Vlow()));
-            int kF = XMIPP_MIN(CEIL(ZZ(r) + radius), FINISHINGZ(Vlow()));
-            int i0 = XMIPP_MAX(FLOOR(YY(r) - radius), STARTINGY(Vlow()));
-            int iF = XMIPP_MIN(CEIL(YY(r) + radius), FINISHINGY(Vlow()));
-            int j0 = XMIPP_MAX(FLOOR(XX(r) - radius), STARTINGX(Vlow()));
-            int jF = XMIPP_MIN(CEIL(XX(r) + radius), FINISHINGX(Vlow()));
+            const MultidimArray<double> &mVlow=Vlow();
+            int k0 = XMIPP_MAX(FLOOR(ZZ(r) - radius), STARTINGZ(mVlow));
+            int kF = XMIPP_MIN(CEIL(ZZ(r) + radius), FINISHINGZ(mVlow));
+            int i0 = XMIPP_MAX(FLOOR(YY(r) - radius), STARTINGY(mVlow));
+            int iF = XMIPP_MIN(CEIL(YY(r) + radius), FINISHINGY(mVlow));
+            int j0 = XMIPP_MAX(FLOOR(XX(r) - radius), STARTINGX(mVlow));
+            int jF = XMIPP_MIN(CEIL(XX(r) + radius), FINISHINGX(mVlow));
 
             // Fill the volume with this atom
             for (int k = k0; k <= kF; k++)
                 for (int i = i0; i <= iF; i++)
                     for (int j = j0; j <= jF; j++)
                     {
-                        Matrix1D<double> rdiff(3);
                         VECTOR_R3(rdiff, XX(r) - j, YY(r) - i, ZZ(r) - k);
                         double rdiffModule=rdiff.module();
                         if (rdiffModule<radius)
-                            Vlow(k, i, j) += atomProfiles.volumeAtDistance(
-                                                 atom_type[0],rdiffModule);
+                            A3D_ELEM(mVlow,k, i, j) += atomProfiles.volumeAtDistance(
+                                                 atom_type0,rdiffModule);
                     }
         }
         catch (XmippError XE)
