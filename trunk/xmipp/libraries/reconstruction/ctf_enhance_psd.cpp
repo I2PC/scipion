@@ -136,14 +136,19 @@ void ProgCTFEnhancePSD::apply(MultidimArray<double> &PSD)
     limit0_2=limit0_2*limit0_2;
     double limitF_2=mask_w2;
     limitF_2=limitF_2*limitF_2;
-    FOR_ALL_ELEMENTS_IN_ARRAY2D(PSD)
+    for (int i=STARTINGY(PSD); i<=FINISHINGY(PSD); ++i)
     {
-        FFT_idx2digfreq(PSD, idx, freq);
-        double freq2=XX(freq)*XX(freq)+YY(freq)*YY(freq);
-        if (freq2 < limit0_2 || freq2 > limitF_2)
-            A2D_ELEM(PSD, i, j) = 0;
-        else
-            A2D_ELEM(mask, i, j) = 1;
+        FFT_IDX2DIGFREQ(i, YSIZE(PSD), YY(freq));
+        double freqy2=YY(freq)*YY(freq);
+        for (int j=STARTINGX(PSD); j<=FINISHINGX(PSD); ++j)
+        {
+            FFT_IDX2DIGFREQ(j, XSIZE(PSD), XX(freq));
+            double freq2=XX(freq)*XX(freq)+freqy2;
+            if (freq2 < limit0_2 || freq2 > limitF_2)
+                A2D_ELEM(PSD, i, j) = 0;
+            else
+                A2D_ELEM(mask, i, j) = 1;
+        }
     }
 
     //Compute the mean and the standard deviation under a tighter mask
