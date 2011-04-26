@@ -41,11 +41,11 @@ public class MetaData {
     private synchronized native void destroy();
 
     //reading
-    public native void read(String filename);
+    public native void read(String filename) throws Exception;
 
     public native int size();
 
-    public native void write(String filename);
+    public native void write(String filename) throws Exception;
 
     public native void print();
 
@@ -103,7 +103,7 @@ public class MetaData {
         create();
     }
 
-    public MetaData(String filename) {
+    public MetaData(String filename) throws Exception {
         create();
         read(filename);
     }
@@ -111,12 +111,12 @@ public class MetaData {
     // Should be called by GarbageCollector before destroying
     @Override
     protected void finalize() throws Throwable {
-		super.finalize();
+	super.finalize();
         destroy();
     }
     
     // Auxiliary methods.
-    private static String fixPath(String workdir, String filename) {
+    public static String fixPath(String workdir, String filename) {
         int index;
         String aux = new String(filename.toCharArray());
 
@@ -131,6 +131,8 @@ public class MetaData {
                 }
             }
         } while (index >= 0);
+
+	workdir += workdir.endsWith(File.separator) ? "" : File.separator;
 
         return workdir + filename;
     }

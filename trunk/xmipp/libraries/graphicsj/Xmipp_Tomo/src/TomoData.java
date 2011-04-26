@@ -534,7 +534,11 @@ public class TomoData{
 	// TODO: -CURRENT- first tilt is not displayed automatically (requires scrolling). Only happens with selfiles
 	public void readMetadata(String path){
 		if(TiltSeriesIO.isSelFile(path) || TiltSeriesIO.isImage(path))
-			getMetadata().read(path);
+			try{
+				getMetadata().read(path);
+			} catch (Exception ex) {
+				ex.printStackTrace();
+			}
 		else if(TiltSeriesIO.isTltFile(path))
 			TiltSeriesIO.readTiltAngles(path, getMetadata());
 		else{

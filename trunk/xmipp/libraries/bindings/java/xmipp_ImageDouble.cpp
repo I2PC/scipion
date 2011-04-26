@@ -159,7 +159,7 @@ JNIEXPORT void JNICALL Java_xmipp_ImageDouble_setData__IIII_3D
 		handleXmippException(env, msg);
 	}
 }
-
+/*
 JNIEXPORT void JNICALL Java_xmipp_ImageDouble_write__Ljava_lang_String_2
 (JNIEnv *env, jobject jobj, jstring filename) {
 	std::string msg = "";
@@ -185,10 +185,10 @@ JNIEXPORT void JNICALL Java_xmipp_ImageDouble_write__Ljava_lang_String_2
 	if(!msg.empty()) {
 		handleXmippException(env, msg);
 	}
-}
+}*/
 
-JNIEXPORT void JNICALL Java_xmipp_ImageDouble_write__Ljava_lang_String_2IZII
-  (JNIEnv *env, jobject  jobj, jstring filename, jint select_img, jboolean istack, jint mode, jint castWriteMode) {
+JNIEXPORT void JNICALL Java_xmipp_ImageDouble_write
+  (JNIEnv *env, jobject jobj, jstring filename, jint select_img, jboolean istack, jint mode, jint castWriteMode) {
 	std::string msg = "";
 	Image<double> *image = GET_INTERNAL_IMAGE(jobj);
 

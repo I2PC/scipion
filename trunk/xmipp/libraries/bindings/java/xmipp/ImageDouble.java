@@ -63,12 +63,14 @@ public class ImageDouble {
      */
     public native void setData(int width, int height, int depth, int numberOfSlices, double data[]) throws Exception;
     
-    // Writting.
-    public native void write(String filename) throws Exception;
-    public native void write(String filename,int select_img, boolean isStack,
-            int mode, int castWriteMode) throws Exception;
+    // Writing.
+    public void write(String filename) throws Exception {
+	write(filename, ALL_IMAGES, false, 0, 0);
+    }
+
+    public native void write(String filename, int select_img, boolean isStack, int mode, int castWriteMode) throws Exception;
     
-    // Data.
+    // Acess to data.
     public native double[] getData();
 
     public native void convertPSD();

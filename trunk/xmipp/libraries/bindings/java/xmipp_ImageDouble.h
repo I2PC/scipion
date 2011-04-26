@@ -84,17 +84,9 @@ JNIEXPORT void JNICALL Java_xmipp_ImageDouble_setData__IIII_3D
 /*
  * Class:     xmipp_ImageDouble
  * Method:    write
- * Signature: (Ljava/lang/String;)V
- */
-JNIEXPORT void JNICALL Java_xmipp_ImageDouble_write__Ljava_lang_String_2
-  (JNIEnv *, jobject, jstring);
-
-/*
- * Class:     xmipp_ImageDouble
- * Method:    write
  * Signature: (Ljava/lang/String;IZII)V
  */
-JNIEXPORT void JNICALL Java_xmipp_ImageDouble_write__Ljava_lang_String_2IZII
+JNIEXPORT void JNICALL Java_xmipp_ImageDouble_write
   (JNIEnv *, jobject, jstring, jint, jboolean, jint, jint);
 
 /*
