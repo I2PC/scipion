@@ -580,13 +580,15 @@ double Hlpf_fitness(double *p, void *prm)
     double error=0;
     Matrix1D<double> descriptors;
     atomDescriptors(globalAtom, descriptors);
+    double iglobalT=1.0/globalT;
     FOR_ALL_ELEMENTS_IN_ARRAY1D(FfilterMag)
-    if (freq(i)>=0)
+    if (A1D_ELEM(freq,i)>=0)
     {
-        double f1=20*log10(FfilterMag(i)*XSIZE(FfilterMag)*amplitudeFactor);
-        double f2=20*log10(1/globalT*
-                           electronFormFactorFourier(freq(i),descriptors));
-        error+=(f1-f2)*(f1-f2);
+        double f1=log10(A1D_ELEM(FfilterMag,i)*XSIZE(FfilterMag)*amplitudeFactor);
+        double f2=log10(iglobalT*
+                           electronFormFactorFourier(A1D_ELEM(freq,i),descriptors));
+        double diff=20*(f1-f2);
+        error+=diff*diff;
     }
 
     return error/XSIZE(FfilterMag);
