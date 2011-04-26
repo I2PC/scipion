@@ -747,6 +747,19 @@ void applyGeometry(int SplineDegree,
     }
 }
 
+// Special case for input MultidimArrayGeneric
+template<typename T>
+void applyGeometry(int SplineDegree,
+                   MultidimArray<T>& V2,
+                   const MultidimArrayGeneric& V1,
+                   const Matrix2D< double > &A, bool inv,
+                   bool wrap, T outside = 0)
+{
+#define APPLYGEO(type)  applyGeometry(SplineDegree,V2, (*(MultidimArray<type>*)(V1.im)), A, inv, wrap, outside);
+    SWITCHDATATYPE(V1.datatype, APPLYGEO)
+#undef APPLYGEO
+}
+
 /** Applies a geometrical transformation and overwrites the input matrix.
  * @ingroup GeometricalTransformations
  *
@@ -778,6 +791,7 @@ void selfApplyGeometry(int SplineDegree,
                        const Matrix2D< double > &A, bool inv,
                        bool wrap, std::complex<double> outside);
 
+// Special cases for MultidimArrayGeneric
 void applyGeometry(int SplineDegree,
                    MultidimArrayGeneric &V2,
                    const MultidimArrayGeneric &V1,
