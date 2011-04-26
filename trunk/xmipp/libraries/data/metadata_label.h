@@ -68,6 +68,8 @@ enum MDLabel
     MDL_BLOCK, ///< Current block number (for incremental EM)
     MDL_CELLX, ///< Cell location for crystals
     MDL_CELLY, ///< Cell location for crystals
+    MDL_CLASSIFICATION_DATA, ///< Data vector for classification (vector double)
+    MDL_CLASSIFICATION_DATA_SIZE, ///< Size of data vectors for classification (int)
     MDL_COMMENT, ///< A comment for this object /*** NOTE THIS IS A SPECIAL CASE AND SO IS TREATED ***/
     MDL_COST, ///< Cost for the image (double)
     MDL_COUNT, ///< Number of elements of a type (int) [this is a genereic type do not use to transfer information to another program]
@@ -215,15 +217,18 @@ enum MDLabel
     MDL_VOLTAGE, ///< microscope voltage (double)
     MDL_WEIGHT, ///< Weight assigned to the image (double)
     MDL_WROBUST, ///< Weight of t-student distribution in robust Maximum likelihood
+    MDL_X, ///< X component (double)
     MDL_XINT, ///< X component (int)
     MDL_XINTTILT, ///< X component in tilted micrograph (int)
-    MDL_X, ///< X component (double)
+    MDL_XSIZE, ///< X size (int)
+    MDL_Y, ///< Y component (double)
     MDL_YINT, ///< Y component (int)
     MDL_YINTTILT, ///< Y component in tilted micrograph (int)
-    MDL_Y, ///< Y component (double)
-    MDL_ZINT, ///< Z component (int)
+    MDL_YSIZE, ///< Y size (int)
     MDL_Z, ///< Z component (double)
+    MDL_ZINT, ///< Z component (int)
     MDL_ZSCORE, ///< Z Score (double)
+    MDL_ZSIZE, ///< Z size (int)
 
 
     MDL_LAST_LABEL                       // **** NOTE ****: Do keep this label always at the end
@@ -508,9 +513,11 @@ private:
         MDL::addLabel(MDL_BLOCK, LABEL_INT, "blockNumber");
         MDL::addLabel(MDL_CELLX, LABEL_INT, "cellX");
         MDL::addLabel(MDL_CELLY, LABEL_INT, "cellY");
+        MDL::addLabel(MDL_CLASSIFICATION_DATA, LABEL_VECTOR, "ClassificationData");
+        MDL::addLabel(MDL_CLASSIFICATION_DATA_SIZE, LABEL_INT, "ClassificationDataSize");
         MDL::addLabel(MDL_COMMENT, LABEL_STRING, "comment");
         MDL::addLabel(MDL_COST, LABEL_DOUBLE, "cost");
-        MDL::addLabel(MDL_COUNT, LABEL_INT, "count");
+        MDL::addLabel(MDL_COUNT, LABEL_LONG, "count");
         MDL::addLabel(MDL_CTFINPUTPARAMS, LABEL_STRING, "CTFInputParams");
         MDL::addLabel(MDL_CTFMODEL, LABEL_STRING, "CTFModel");
         MDL::addLabel(MDL_CTFMODEL2, LABEL_STRING, "CTFModel2");
@@ -613,7 +620,7 @@ private:
         MDL::addLabel(MDL_NOISE_ANGLES, LABEL_VECTOR, "noiseAngles");
         MDL::addLabel(MDL_NOISE_PARTICLE_COORD, LABEL_VECTOR, "noiseParticleCoord");
         MDL::addLabel(MDL_NOISE_PIXEL_LEVEL, LABEL_VECTOR, "noisePixelLevel");
-        MDL::addLabel(MDL_ORDER, LABEL_INT, "order_");
+        MDL::addLabel(MDL_ORDER, LABEL_LONG, "order_");
         MDL::addLabel(MDL_ORIGINX, LABEL_DOUBLE, "originX");
         MDL::addLabel(MDL_ORIGINY, LABEL_DOUBLE, "originY");
         MDL::addLabel(MDL_ORIGINZ, LABEL_DOUBLE, "originZ");
@@ -654,15 +661,18 @@ private:
         MDL::addLabel(MDL_VOLTAGE, LABEL_DOUBLE, "voltage");
         MDL::addLabel(MDL_WEIGHT, LABEL_DOUBLE, "weight", "Weight");
         MDL::addLabel(MDL_WROBUST, LABEL_DOUBLE, "wRobust");
+        MDL::addLabel(MDL_X, LABEL_DOUBLE, "X");
         MDL::addLabel(MDL_XINT, LABEL_INT, "Xcoor", "<X position>");
         MDL::addLabel(MDL_XINTTILT, LABEL_INT, "XcoorTilt");
-        MDL::addLabel(MDL_X, LABEL_DOUBLE, "X");
+        MDL::addLabel(MDL_XSIZE, LABEL_INT, "Xsize");
+        MDL::addLabel(MDL_Y, LABEL_DOUBLE, "Y");
         MDL::addLabel(MDL_YINT, LABEL_INT, "Ycoor", "<Y position>");
         MDL::addLabel(MDL_YINTTILT, LABEL_INT, "YcoorTilt");
-        MDL::addLabel(MDL_Y, LABEL_DOUBLE, "Y");
-        MDL::addLabel(MDL_ZINT, LABEL_INT, "Zcoor");
+        MDL::addLabel(MDL_YSIZE, LABEL_INT, "Ysize");
         MDL::addLabel(MDL_Z, LABEL_DOUBLE, "Z");
+        MDL::addLabel(MDL_ZINT, LABEL_INT, "Zcoor");
         MDL::addLabel(MDL_ZSCORE, LABEL_DOUBLE, "Zscore");
+        MDL::addLabel(MDL_ZSIZE, LABEL_INT, "Zsize");
 
         //Create an static empty header for image initialization
         MDL::emptyHeader.setValue(MDL_ORIGINX,  0.);
