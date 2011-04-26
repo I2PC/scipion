@@ -38,7 +38,6 @@ protected:
     MetaData        DF_stats;
     ImageGeneric    image;
     Mask            mask;
-    MultidimArray<int>   maskArray;
     int             short_format;     // True if a short line is to be shown
     int             save_mask;        // True if the masks must be saved
     int             repair;           // True if headers are initialized
@@ -127,9 +126,7 @@ protected:
         if (apply_mask)
         {
             mask.generate_mask(zDim, yDim, xDim);
-            maskArray = mask.get_binary_mask();
-
-            computeStats_within_binary_mask(maskArray, image(), min_val, max_val,
+            computeStats_within_binary_mask(mask.get_binary_mask(), image(), min_val, max_val,
                                             avg, stddev);
         }
         else
