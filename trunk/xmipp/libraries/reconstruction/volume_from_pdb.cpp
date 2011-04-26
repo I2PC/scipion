@@ -440,15 +440,26 @@ void ProgPdbConverter::createProteinUsingScatteringProfiles()
 
             // Fill the volume with this atom
             for (int k = k0; k <= kF; k++)
+            {
+                double zdiff=ZZ(r) - k;
+                double zdiff2=zdiff*zdiff;
                 for (int i = i0; i <= iF; i++)
+                {
+                    double ydiff=YY(r) - i;
+                    double zydiff2=zdiff2+ydiff*ydiff;
                     for (int j = j0; j <= jF; j++)
                     {
-                        VECTOR_R3(rdiff, XX(r) - j, YY(r) - i, ZZ(r) - k);
-                        double rdiffModule=rdiff.module();
-                        if (rdiffModule<radius)
+                        double xdiff=XX(r) - j;
+                        double rdiffModule2=zydiff2+xdiff*xdiff;
+                        if (rdiffModule2<radius2)
+                        {
+                            double rdiffModule=sqrt(rdiffModule2);
                             A3D_ELEM(mVlow,k, i, j) += atomProfiles.volumeAtDistance(
                                                  atom_type0,rdiffModule);
+                        }
                     }
+                }
+            }
         }
         catch (XmippError XE)
         {
