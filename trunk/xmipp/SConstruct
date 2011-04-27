@@ -84,6 +84,7 @@ Help(opts.GenerateHelpText(env, sort=cmp))
 # FIXME Hack, for several flags in command-line
 env['CCFLAGS'] = Split(env['CCFLAGS'])
 env['CXXFLAGS'] = Split(env['CXXFLAGS'])
+env['JARFLAGS'] = '-Mcf'    # Default "cf". "M" = Do not add a manifest file.
 
 # These defaults are needed for both the custom tests and the compilation
 env.SetDefault(LIBS='')
@@ -229,17 +230,18 @@ if (ARGUMENTS['mode'] == 'configure'):
             env['mpi'] = 0
 
     # Java
-    if env['JNI_CPPPATH'] == '' and int(env['java']) == 1:
-        import sys
-        sys.path.append("scons/ToolsFromWiki")
-        import ConfigureJNI
-        if not ConfigureJNI.ConfigureJNI(env):
-            env['java'] = 0
-            print '* Did not find JNI header. Disabling ...'
-        else:
-            print '* JNI header found: '
-            env['JNI_CPPPATH'] = env['JNI_CPPPATH'][0]
-            print env['JNI_CPPPATH']
+    if int(env['JAVA']) == 1:        
+        if env['JNI_CPPPATH']:
+            import sys
+            sys.path.append("scons/ToolsFromWiki")
+            import ConfigureJNI
+            if not ConfigureJNI.ConfigureJNI(env):
+                env['java'] = 0
+                print '* Did not find JNI header. Disabling java support...'
+            else:
+                print '* JNI header found: '
+                #env['JNI_CPPPATH'] = env['JNI_CPPPATH'][0]
+                print env['JNI_CPPPATH']
 
     # MATLAB
     if int(env['matlab']):

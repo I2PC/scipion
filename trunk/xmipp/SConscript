@@ -5,13 +5,17 @@ Import('env')
 # Required for custom functions
 import os
 
-FFTWDir="external/fftw-3.2.2"
-FFTWLibs=['fftw3','fftw3_threads']
-TIFFDir="external/tiff-3.9.4"
-TIFFLibs=['tiff']
-SQliteDir="external/sqlite-3.6.23"
-SQLiteLibs=['sqlite3']
-PYSQliteDir="external/pysqlite-2.6.3"
+FFTWDir = "external/fftw-3.2.2"
+FFTWLibs = ['fftw3', 'fftw3_threads']
+TIFFDir = "external/tiff-3.9.4"
+TIFFLibs = ['tiff']
+SQliteDir = "external/sqlite-3.6.23"
+SQLiteLibs = ['sqlite3']
+PYSQliteDir = "external/pysqlite-2.6.3"
+
+PluginLibs = {}
+PluginResources = {}
+copyJar = None
 
 
 def AddMatchingFiles((pattern, blacklist, sources), directory, files):
@@ -38,7 +42,7 @@ def AddLastSlash(string):
         str = str + '/'
     return str
 
-def AddBatch(name, basedir, extension = ''):
+def AddBatch(name, basedir, extension=''):
     # setup
     basedir = AddLastSlash(basedir)
     fullname = env['prepend'] + name
@@ -80,9 +84,9 @@ def AddProtocol(name, basedir):
         env.Alias(fullname, install)
         env.Default(alias)
 
-def AddProgram(name, basedir, sources_pattern = '*.cpp', skip_list = [],
-               includes = [], libpath = [], libs = [], cxxflags = [],
-               linkflags = []):
+def AddProgram(name, basedir, sources_pattern='*.cpp', skip_list=[],
+               includes=[], libpath=[], libs=[], cxxflags=[],
+               linkflags=[]):
     ''' add a new program to the build list '''
     # setup
     basedir = AddLastSlash(basedir)
@@ -99,21 +103,21 @@ def AddProgram(name, basedir, sources_pattern = '*.cpp', skip_list = [],
     program = env.Program(
         os.path.join(basedir, fullname),
         sources,
-        CPPPATH = includes + [env['CPPPATH']],
-        LIBPATH = libpath + [env['LIBPATH']],
-        LIBS = libs + [env['LIBS']],
-        CXXFLAGS = cxxflags + [env['CXXFLAGS']],
-        LINKFLAGS = linkflags + [env['LINKFLAGS']],
-        LINK = env['LINKERFORPROGRAMS']
+        CPPPATH=includes + [env['CPPPATH']],
+        LIBPATH=libpath + [env['LIBPATH']],
+        LIBS=libs + [env['LIBS']],
+        CXXFLAGS=cxxflags + [env['CXXFLAGS']],
+        LINKFLAGS=linkflags + [env['LINKFLAGS']],
+        LINK=env['LINKERFORPROGRAMS']
         )
 
     install = env.Install(binprefix, program)
     alias = env.Alias(fullname, install)
     env.Default(alias)
 
-def AddMPIProgram(name, basedir, sources_pattern = '*.cpp', skip_list = [],
-                  includes = [], libpath = [], libs = [], cxxflags = [],
-                  linkflags = []):
+def AddMPIProgram(name, basedir, sources_pattern='*.cpp', skip_list=[],
+                  includes=[], libpath=[], libs=[], cxxflags=[],
+                  linkflags=[]):
 
     # setup
     basedir = AddLastSlash(basedir)
@@ -130,14 +134,14 @@ def AddMPIProgram(name, basedir, sources_pattern = '*.cpp', skip_list = [],
     program = env.Program(
         os.path.join(basedir, fullname),
         sources,
-        CC = env['MPI_CC'],
-        CXX = env['MPI_CXX'],
-        CPPPATH = includes + [env['CPPPATH']] + [env['MPI_INCLUDE']],
-        LIBPATH = libpath + [env['LIBPATH']] + [env['MPI_LIBDIR']],
-        LIBS = libs + [env['LIBS']] + [env['MPI_LIB']],
-        CXXFLAGS = cxxflags + [env['CXXFLAGS']],
-        LINKFLAGS = linkflags + [env['LINKFLAGS']],
-        LINK = env['MPI_LINKERFORPROGRAMS']
+        CC=env['MPI_CC'],
+        CXX=env['MPI_CXX'],
+        CPPPATH=includes + [env['CPPPATH']] + [env['MPI_INCLUDE']],
+        LIBPATH=libpath + [env['LIBPATH']] + [env['MPI_LIBDIR']],
+        LIBS=libs + [env['LIBS']] + [env['MPI_LIB']],
+        CXXFLAGS=cxxflags + [env['CXXFLAGS']],
+        LINKFLAGS=linkflags + [env['LINKFLAGS']],
+        LINK=env['MPI_LINKERFORPROGRAMS']
         )
 
     # alias
@@ -149,14 +153,14 @@ def AddMPIProgram(name, basedir, sources_pattern = '*.cpp', skip_list = [],
 # Add a program integrated in the Xmipp structure
 def AddXmippProgram(name, libs=[]):
     finalLibPath = ['lib']
-    finalIncludePath = ['libraries','#']
+    finalIncludePath = ['libraries', '#']
     finalLibs = libs + ['XmippData', 'XmippExternal'] + FFTWLibs + SQLiteLibs + TIFFLibs
     AddProgram(name, 'applications/programs/' + name, '*.cpp', [],
         finalIncludePath, finalLibPath, finalLibs, [], [])
 
 def AddXmippMPIProgram(name, libs=[]):
     finalLibPath = ['lib']
-    finalIncludePath = ['libraries','#']
+    finalIncludePath = ['libraries', '#']
     finalLibs = libs + ['XmippData', 'XmippExternal', 'XmippParallel'] + FFTWLibs + SQLiteLibs + TIFFLibs
     for i in range(len(libs)):
        if libs[i] == 'XmippRecons':
@@ -165,7 +169,7 @@ def AddXmippMPIProgram(name, libs=[]):
           finalLibPath += ['libraries/interface']
        elif libs[i] == 'XmippRecons_Interface':
           finalLibPath += ['libraries/interface']
-	  finalLibs.insert(i+1,'XmippInterface')
+	  finalLibs.insert(i + 1, 'XmippInterface')
        elif libs[i] == 'XmippReconsMPI':
           finalLibPath += ['libraries/reconstruction_mpi']
        elif libs[i] == 'XmippClassif':
@@ -192,21 +196,21 @@ def AddMPILibrary(name, basedir, sources, includes, libpath=[], libs=[]):
         library = env.StaticLibrary(
             basedir + name,
             sources,
-            CPPPATH = includes + [env['CPPPATH']] + [env['MPI_INCLUDE']],
-            CC = env['MPI_CC'],
-            CXX = env['MPI_CXX'],
-            LIBPATH = [env['MPI_LIBDIR']] + libpath,
-            LIBS = [env['MPI_LIB']] + libs
+            CPPPATH=includes + [env['CPPPATH']] + [env['MPI_INCLUDE']],
+            CC=env['MPI_CC'],
+            CXX=env['MPI_CXX'],
+            LIBPATH=[env['MPI_LIBDIR']] + libpath,
+            LIBS=[env['MPI_LIB']] + libs
             )
     else:
         library = env.SharedLibrary(
             basedir + name,
             sources,
-            CPPPATH = includes + [env['CPPPATH']] + [env['MPI_INCLUDE']],
-            CC = env['MPI_CC'],
-            CXX = env['MPI_CXX'],
-            LIBPATH = [env['MPI_LIBDIR']] + libpath,
-            LIBS = [env['MPI_LIB']] + libs
+            CPPPATH=includes + [env['CPPPATH']] + [env['MPI_INCLUDE']],
+            CC=env['MPI_CC'],
+            CXX=env['MPI_CXX'],
+            LIBPATH=[env['MPI_LIBDIR']] + libpath,
+            LIBS=[env['MPI_LIB']] + libs
             )
 
     # alias
@@ -221,12 +225,12 @@ def AddLibrary(name, basedir, sources, includes, libpath=[], libs=[],
     basedir = AddLastSlash(basedir)
     libprefix = os.path.join(env['prefix'], 'lib')
     for x in sources:
-        if x.find(basedir)==-1:
+        if x.find(basedir) == -1:
             sources[sources.index(x)] = basedir + x
 
     # separate local and global includes
     for x in includes:
-        if x[0] != '#' and x[0]!='/':
+        if x[0] != '#' and x[0] != '/':
             includes[includes.index(x)] = basedir + x
 
     # action
@@ -236,123 +240,74 @@ def AddLibrary(name, basedir, sources, includes, libpath=[], libs=[],
         library = env.StaticLibrary(
             basedir + name,
             sources,
-            CPPPATH = includes + [env['CPPPATH']],
-            LIBPATH = libpath,
-            LIBS = libs
+            CPPPATH=includes + [env['CPPPATH']],
+            LIBPATH=libpath,
+            LIBS=libs
             )
     else:
         library = env.SharedLibrary(
             basedir + name,
             sources,
-            CPPPATH = includes + [env['CPPPATH']],
-            LIBPATH = libpath,
-            LIBS = libs,
+            CPPPATH=includes + [env['CPPPATH']],
+            LIBPATH=libpath,
+            LIBS=libs,
             SHLIBPREFIX=shlibprefix
             )
 
     install = env.Install(libprefix, library)
     alias = env.Alias(name, install)
     env.Default(alias)
+    return alias
 
 def AddJavaLibrary(name, basedir, srcdir):#, sourceList, includes, libpath=[], libs=[]):
-    import shutil
-
-    jarname = name + '.jar'
-    jarfile = basedir + '/' + jarname
-
-    # Compiles
-    java_home = 'external/java/jvm/'
-    #java_headers = os.path.join(java_home, 'include')
-    #java_libs = os.path.join(java_home, 'lib')
-
-    # Adds javac and jar to PATH
-    env = Environment(tools = ['javac', 'jar'])
-    env.AppendENVPath('PATH', java_home + '/bin')
-
-    env['JAVA_HOME'] = java_home
-    #env['JNI_CPPPATH'] = java_headers
-    #env['JNI_LIBPATH'] = java_libs
-    #env['JAVACFLAGS'] = ''
-
-    env['JARFLAGS'] = '-Mcf'    # Default "cf". "M" = Do not add a manifest file.
-
-    path = os.path.join(basedir, srcdir)
-
-    buildJar = env.Jar(target = jarfile,
-        source = path,
-        JARCHDIR = basedir)
-
-    buildClasses = env.Java(basedir, path)
-
-    # Packs classes and plugin config file into jar.
-    env.Default(buildClasses)
-    env.Default(buildJar)
+    buildDir = os.path.join(basedir, 'classes')
+    if not os.path.exists(buildDir): # create classes dir if not exists
+        Execute(Mkdir(buildDir))    
+    buildClasses = env.Java(buildDir, basedir)
+    env.Depends(buildClasses, env.Alias('javaEnums'))
+    jarfile = os.path.join(basedir, name + '.jar')
+    buildJar = env.Jar(target=jarfile, source=buildClasses, JARCHDIR=buildDir)
+    alias = env.Alias(name, buildJar)
+    env.Default(alias)
+    return alias
 
 def removeAll(basedir, regexp):
 	import glob
 
-	files=glob.glob(basedir + regexp)
+	files = glob.glob(basedir + regexp)
 	for i in range(len(files)):
 		os.remove(files[i])
 
 def AddImageJPlugin(name, pluginDir, outDir):
     import shutil
-
-    sourceDir = pluginDir+"/src/"
-    resourcesDir = sourceDir+"/resources/"
-    libsDir = pluginDir+"/libs/"
-    macrosDir = pluginDir+"/macros/"
-    buildDir = pluginDir+"/build/"
-
-    # Builds jar files list...
-    libsStr='external/imagej/ij.jar:external/imagej/plugins/XmippJavaInterface.jar'
-    if os.path.exists(libsDir) and len(os.listdir(libsDir)) > 0:
-	# Copies libraries to ImageJ plugins dir.
-	for f in os.listdir(libsDir):
-		lib_item = os.path.join(libsDir, f)
-		if os.path.isfile(lib_item):
-        		shutil.copy(lib_item, outDir)
-			libsStr = libsStr + ':' + lib_item
-
+    sourceDir = os.path.join(pluginDir, 'src')
+    resourcesDir = os.path.join(sourceDir, 'resources')
+    libsDir = os.path.join(pluginDir ,'libs')
+    macrosDir = os.path.join(pluginDir ,'macros')
+    buildDir = os.path.join(pluginDir ,'build')
+    buildResourcesDir = os.path.join(buildDir, 'resources')
     # Clears "buildDir"
-    if os.path.exists(buildDir):
-	shutil.rmtree(buildDir)
-
-    # Copies 'plugins.config' to build dir...
-    os.mkdir(buildDir)
-    shutil.copy(sourceDir + 'plugins.config', buildDir)
-    # ...and resources (icons and stuff), if any
-    if os.path.exists(resourcesDir):
-	    shutil.copytree(resourcesDir, buildDir+'resources/')
-
-    # Compiles
-    java_home = 'external/java/jvm/'
-    java_headers = os.path.join(java_home, 'include')
-    java_libs = os.path.join(java_home, 'lib')
-
-    # Adds javac and jar to PATH
-    env = Environment(tools = ['javac', 'jar'])
-    env.AppendENVPath('PATH', java_home + '/bin')
-
-    env['JAVA_HOME'] = java_home
-    env['JNI_CPPPATH'] = java_headers
-    env['JNI_LIBPATH'] = java_libs
-    # Add -g to JAVACFLAGS if you need Java debugging
-    env['JAVACFLAGS'] = '-g -classpath ' + libsStr +\
-           os.pathsep.join(env['JAVACLASSPATH'])
-
-    env['JARFLAGS'] = '-Mcf'    # Default "cf". "M" = Do not add a manifest file.
-    buildJar=env.Jar(target=outDir + '/' + name + '.jar',
-        source = buildDir,
-        JARCHDIR = buildDir)
-
-    env['ENV']['LANG'] = 'en_GB.UTF-8'
-    buildClasses=env.Java(buildDir,sourceDir)
-
-    # Packs classes and plugin config file into jar.
-    env.Default(buildClasses)
-    env.Default(buildJar)
-
+    if not os.path.exists(buildDir):
+        os.mkdir(buildDir)
+        os.mkdir(buildResourcesDir)
+    # Copies 'plugins.config' to build dir...    
+    buildClasses = env.Java(buildDir, sourceDir)
+    copyPluginConfig = env.Install(buildDir, os.path.join(sourceDir, 'plugins.config'))    
+    buildJar = env.Jar(os.path.join(outDir, name + '.jar'), buildDir, JARCHDIR=buildDir)
+    
+    
+    def InstallDistinct(list, dict): # Install plugin dependencies without repetition
+        for l in list:
+            lname = os.path.basename(l)
+            if not dict.has_key(lname):
+                install = env.Install(outDir, l)
+                dict[lname] = install
+            env.Depends(buildClasses, dict[lname])
+        
+    InstallDistinct(Glob(libsDir, "*.jar", []), PluginLibs)
+    #InstallDistinct(Glob(resourcesDir, "*.*", ['*.svn*']), PluginResources, buildJar) 
+    copyPluginResources = env.Install(buildResourcesDir, Glob(resourcesDir, "*?.???", []))      
+    env.Depends(buildJar, [copyPluginConfig, copyPluginResources, buildClasses])  
     # Copies macros to ImageJ/macros folder (if any).
     outMacrosDir = outDir + '/../macros/'
     if os.path.exists(macrosDir) and len(os.listdir(macrosDir)) > 0:
@@ -360,6 +315,10 @@ def AddImageJPlugin(name, pluginDir, outDir):
 		macro_item = os.path.join(macrosDir, f)
 		if os.path.isfile(macro_item):
         		shutil.copy(macro_item, os.path.join(outDir, os.pardir) + "/macros")
+                
+    pluginAlias = env.Alias(name, buildJar)
+    env.Depends(buildClasses, copyJar)
+    return pluginAlias
 
 # Copies ImageJ external plugins (3rd party)
 def AddImageJExternalPlugins(pluginsDir, outDir):
@@ -367,7 +326,7 @@ def AddImageJExternalPlugins(pluginsDir, outDir):
 
 def AddExternalLibrary(libname, libs, libpath, suffix):
     libprefix = os.path.join(env['prefix'], 'lib')
-    numJobs=env.GetOption('num_jobs')
+    numJobs = env.GetOption('num_jobs')
     
     target_libs = []
     
@@ -387,7 +346,7 @@ def AddExternalLibrary(libname, libs, libpath, suffix):
             target_libs.append(os.path.join(libpath, lib_name + suffix))
             
     logFile = os.path.join("..", "..", "build", libname + "_make.log")
-    env.Command(target_libs, Glob(libpath, "*/*.c", []), 
+    env.Command(target_libs, Glob(libpath, "*/*.c", []),
                          'cd %s; make clean > /dev/null; make > %s;' 
                          % (libpath, logFile))
     libInstall = env.Install(libprefix, target_libs)
@@ -406,13 +365,13 @@ def AddSQLiteLibrary():
 
 def AddPySqliteLibrary():
     libprefix = os.path.join(env['prefix'], 'lib')
-    pysqlite2Target = libprefix+'/pysqlite2/'
+    pysqlite2Target = libprefix + '/pysqlite2/'
     pysqlite2Build = env.Command(pysqlite2Target, PYSQliteDir, \
                           'cd  $SOURCE ; python ./setup.py build ' + \
-			  ' ; python ./setup.py install --install-lib '+ libprefix+\
+			  ' ; python ./setup.py install --install-lib ' + libprefix + \
 			  ' --install-data ' + libprefix + '/pysqlite2')
-    Depends(pysqlite2Build, 'sqlite')
-    alias = env.Alias('pysqlite2',pysqlite2Target)
+    Depends(pysqlite2Build, env.Alias('sqlite'))
+    alias = env.Alias('pysqlite2', pysqlite2Target)
     env.Default(alias)
 
 
@@ -428,7 +387,7 @@ AddPySqliteLibrary()
 
 
 # FFTW
-FFTWLibsPaths = ['.libs/libfftw3','threads/.libs/libfftw3_threads']
+FFTWLibsPaths = ['.libs/libfftw3', 'threads/.libs/libfftw3_threads']
 AddExternalLibrary('fftw', FFTWLibsPaths, FFTWDir, '.3')
 
 # TIFF
@@ -449,16 +408,16 @@ AddLibrary('XmippExternal', 'external',
    ['bilib', 'bilib/headers', 'bilib/types'])
 
 # XmippData
-DataSources = Glob('libraries/data','*.cpp',[])
+DataSources = Glob('libraries/data', '*.cpp', [])
 AddLibrary('XmippData', 'libraries/data', DataSources, ['#'],
-           ['lib'],['XmippExternal'] + FFTWLibs + TIFFLibs + SQLiteLibs)
+           ['lib'], ['XmippExternal'] + FFTWLibs + TIFFLibs + SQLiteLibs)
 
 #Xmipp Python Extension
 PyExtSources = Glob('libraries/bindings/python', '*.cpp', [])
 import distutils.sysconfig
 AddLibrary('xmipp', 'libraries/bindings/python', PyExtSources,
-           ['#libraries',"#", distutils.sysconfig.get_python_inc()],
-           ['lib'],['XmippData'],'')
+           ['#libraries', "#", distutils.sysconfig.get_python_inc()],
+           ['lib'], ['XmippData'], '')
 
 # Reconstruction
 ReconsSources = [
@@ -529,66 +488,107 @@ ReconsSources = [
     'tomo_remove_fluctuations.cpp',
     'transform_downsample.cpp',
     'volume_segment.cpp',
-    'volume_from_pdb.cpp',
     'xray_import.cpp'
 ]
 
 AddLibrary('XmippRecons', 'libraries/reconstruction', ReconsSources,
-           ['#libraries', '#external', '#'],['lib'],['XmippExternal','XmippData','pthread'])
+           ['#libraries', '#external', '#'], ['lib'], ['XmippExternal', 'XmippData', 'pthread'])
 
 # Classification
 ClassificationSources = Glob('libraries/classification', '*.cpp', [])
 AddLibrary('XmippClassif', 'libraries/classification', ClassificationSources,
-    ['#libraries',  '#'],['lib'],['XmippExternal','XmippData'])
+    ['#libraries', '#'], ['lib'], ['XmippExternal', 'XmippData'])
 
 # XmippParallel
 if int(env['mpi']):
     ParallelSources = Glob('libraries/parallel', '*.cpp', []);
     AddMPILibrary("XmippParallel", 'libraries/parallel', ParallelSources, ["#", "#libraries", "#external"],
-              ['lib'],['XmippExternal','XmippData','XmippRecons','XmippClassif']+FFTWLibs+TIFFLibs+SQLiteLibs)
+              ['lib'], ['XmippExternal', 'XmippData', 'XmippRecons', 'XmippClassif'] + FFTWLibs + TIFFLibs + SQLiteLibs)
 
 # Interface
 InterfaceSources = Glob('libraries/interface', '*.cpp', [])
 AddLibrary('XmippInterface', 'libraries/interface', InterfaceSources,
-    ['#libraries', '#external', '#'],['lib'],['XmippExternal','XmippData','pthread'])
+    ['#libraries', '#external', '#'], ['lib'], ['XmippExternal', 'XmippData', 'pthread'])
 
 # Recons Interface
 #AddLibrary('XmippRecons_Interface', '#libraries/reconstruction',
 #           ReconsInterfaceSources, ['#libraries', '#external', '#'],['lib'],['XmippExternal','XmippData','XmippRecons','XmippInterface'])
 
+def WriteJavaEnum(class_name, header_file, pattern, log):
+    java_file = "libraries/bindings/java/xmipp/%s.java" % class_name
+    env.Depends(java_file, header_file)
+    f = open(header_file) 
+    fOut = open(java_file, 'w+')    
+    counter = 0;    
+    last_label_pattern = pattern + "LAST_LABEL"
+    fOut.write("package xmipp; \n")
+    fOut.write("public class " + class_name + " {\n")
+    
+    for line in f:
+        l = line.strip();
+        if l.startswith(pattern):
+            
+            if l.startswith(last_label_pattern):
+                l = l.replace(last_label_pattern, last_label_pattern + " = " + str(counter) + ";")   
+            if (l.find("=") == -1):
+                l = l.replace(",", " = " + str(counter) + "; ")   
+                counter = counter + 1;
+            else:
+                l = l.replace(",", ";")                                       
+                
+            fOut.write("   public static final int %s\n" % l)    
+
+    fOut.write("}\n")
+    fOut.close()
+    f.close()
+    # Write log file
+    from datetime import date
+    d = date.today();
+    log.write("Java file %s successful generated at %s\n" % (java_file, d.ctime()))
+    
+def ExtractEnumFromHeader(source, target, env):
+    # this is very ugly, we still need more scons knowledge
+    enumDict = {'ImageWriteMode': ['libraries/data/image_base.h', 'WRITE_'], 
+                'CastWriteMode': ['libraries/data/image_base.h', 'CW_'], 
+                'MDLabel': ['libraries/data/metadata_label.h', 'MDL_']}
+    log = open(str(target[0]), 'w+')
+    for (class_name, list) in enumDict.iteritems():
+        WriteJavaEnum(class_name, list[0], list[1], log)
+        
+    return None
+
 # ImageJ plugins.
 # Installs jvm
 if int(env['java']):
-    print 'Installing JVM...'
-    JAVA_HOME = 'external/java/jvm'
-    os.system("external/java/install_jvm.sh")
-    os.system("rm external/imagej/plugins/* -rf")
-    os.system("rm external/imagej/macros/* -rf")
-
-    # Generates MDLabel.java, so MDLabels will be up to date.
-    os.system("cd libraries/bindings/java/;./extract_labels.py")
-    os.system("cd libraries/bindings/java/;./extract_image_enums.py")
-
+    # Update enums from c++ headers    
+    env.Alias('javaEnums', env.Command("libraries/bindings/java/xmipp/enums.changelog", 
+                            ["libraries/data/image_base.h","libraries/data/metadata_label.h" ], ExtractEnumFromHeader))
     JavaInterfaceSources = Glob('libraries/bindings/java', '*.cpp', [])
-    AddLibrary('XmippJavaInterface', 'libraries/bindings/java', JavaInterfaceSources,
-    ['#libraries', '#external', '#', env['JNI_CPPPATH'],env['JNI_CPPPATH']+"/linux"],['lib'],
-    ['XmippData','pthread'])
+    javaJni = AddLibrary('XmippJavaInterface', 'libraries/bindings/java', JavaInterfaceSources,
+    ['#libraries', '#external', '#', env['JNI_CPPPATH'], env['JNI_CPPPATH'] + "/linux"], ['lib'],
+    ['XmippData', 'pthread'])
+
+    env.Append(JAVACLASSPATH='external/imagej/ij.jar:external/imagej/plugins/*:libraries/bindings/java')
+    env['ENV']['LANG'] = 'en_GB.UTF-8'
+    env['JARFLAGS'] = '-Mcf'    # Default "cf". "M" = Do not add a manifest file.
 
     # Xmipp interface is needed by plugins.
-    AddJavaLibrary('XmippJavaInterface', 'libraries/bindings/java', 'xmipp')#, ['#'],
+    javaLib = AddJavaLibrary('XmippJavaInterface', 'libraries/bindings/java', 'xmipp')#, ['#'],
     # Copies jar file to ImageJ plugins folder (plugins below will look for it there).
-    copyJar = env.InstallAs(target = 'external/imagej/plugins/XmippJavaInterface.jar',
-              source = 'libraries/bindings/java/XmippJavaInterface.jar')
-    env.Default(copyJar)
-
-    # ImageJ plugins.
-    AddImageJPlugin('Xmipp_IO', 'libraries/graphicsj/Xmipp_IO', 'external/imagej/plugins')
-    AddImageJPlugin('Xmipp_Projections_Explorer', 'libraries/graphicsj/Xmipp_Projections_Explorer', 'external/imagej/plugins')
-    AddImageJPlugin('Xmipp_Browser', 'libraries/graphicsj/Xmipp_Browser', 'external/imagej/plugins')
-    AddImageJPlugin('Xmipp_Tomo', 'libraries/graphicsj/Xmipp_Tomo', 'external/imagej/plugins')
+    copyJar = env.InstallAs(target='external/imagej/plugins/XmippJavaInterface.jar',
+              source='libraries/bindings/java/XmippJavaInterface.jar')
+    # ImageJ plugins. 
+    javaPlugins = []   
+    javaPlugins.append(AddImageJPlugin('Xmipp_IO', 'libraries/graphicsj/Xmipp_IO', 'external/imagej/plugins'))
+    javaPlugins.append(AddImageJPlugin('Xmipp_Projections_Explorer', 'libraries/graphicsj/Xmipp_Projections_Explorer', 'external/imagej/plugins'))
+    javaPlugins.append(AddImageJPlugin('Xmipp_Browser', 'libraries/graphicsj/Xmipp_Browser', 'external/imagej/plugins'))
+    javaPlugins.append(AddImageJPlugin('Xmipp_Tomo', 'libraries/graphicsj/Xmipp_Tomo', 'external/imagej/plugins'))
 
     # Other ImageJ plugins without sources.
-    AddImageJExternalPlugins('libraries/graphicsj/plugins', 'external/imagej/plugins')
+    javaExtPlugins = env.Install('libraries/graphicsj/plugins', 'external/imagej/plugins')
+    
+    javaAlias = env.Alias('java', [javaJni, javaLib, copyJar, javaExtPlugins] + javaPlugins) 
+    env.Default(javaAlias)
 
 # --- Programs
 
@@ -645,7 +645,7 @@ AddXmippProgram('metadata_histogram')
 AddXmippProgram('metadata_import')
 AddXmippProgram('metadata_split')
 AddXmippProgram('metadata_utilities')
-AddXmippProgram('micrograph_phase_flipping',['XmippRecons'])
+AddXmippProgram('micrograph_phase_flipping', ['XmippRecons'])
 AddXmippProgram('micrograph_scissor'),
 AddXmippProgram('ml_align2d', ['XmippRecons'])
 AddXmippProgram('mlf_align2d', ['XmippRecons'])
@@ -657,9 +657,9 @@ AddXmippProgram('nma_alignment', ['XmippRecons'])
 AddXmippProgram('phantom_create', ['XmippRecons'])
 #AddXmippProgram('phantom_create_micrograph', ['XmippRecons'])
 AddXmippProgram('phantom_create_random', ['XmippRecons'])
-AddXmippProgram('phantom_project', ['XmippRecons','XmippInterface'])
+AddXmippProgram('phantom_project', ['XmippRecons', 'XmippInterface'])
 AddXmippProgram('phantom_simulate_microscope', ['XmippRecons'])
-AddXmippProgram('phantom_transform', ['XmippRecons','XmippInterface'])
+AddXmippProgram('phantom_transform', ['XmippRecons', 'XmippInterface'])
 AddXmippProgram('projection_real_shears', ['XmippRecons'])
 #Sjors: note that crystal stuff in ART is not working yet....
 AddXmippProgram('reconstruct_art', ['XmippRecons'])
@@ -692,7 +692,6 @@ AddXmippProgram('tomo_align_tilt_series', ['XmippRecons'])
 AddXmippProgram('tomo_project', ['XmippRecons'])
 AddXmippProgram('tomo_remove_fluctuations', ['XmippRecons'])
 AddXmippProgram('volume_align')
-AddXmippProgram('volume_from_pdb', ['XmippRecons','XmippInterface'])
 AddXmippProgram('volume_reslice')
 AddXmippProgram('volume_segment', ['XmippRecons'])
 AddXmippProgram('xray_import', ['XmippRecons'])
@@ -703,24 +702,24 @@ AddXmippProgram('xray_project', ['XmippRecons'])
 
 # Batches (apps)
 #
-AddBatch('metadata_selfile_create', 'applications/scripts/metadata_selfile_create','.py')
-AddBatch('metadata_show', 'applications/scripts/metadata_show','.py')
+AddBatch('metadata_selfile_create', 'applications/scripts/metadata_selfile_create', '.py')
+AddBatch('metadata_show', 'applications/scripts/metadata_show', '.py')
 #AddBatch('metadata_operate', 'applications/scripts/metadata_operate','.py')
 AddBatch('classify_CL2D_core_analysis', 'applications/scripts/classify_CL2D_core_analysis')
-AddBatch('convert_img2jpg','applications/scripts/convert_img2jpg')
+AddBatch('convert_img2jpg', 'applications/scripts/convert_img2jpg')
 AddBatch('convert_lst2sel', 'applications/scripts/convert_lst2sel')
 AddBatch('convert_pdb2descr', 'applications/scripts/convert_pdb2descr')
 AddBatch('extract_sidechain_from_pdb', 'applications/scripts/extract_sidechain_from_pdb', '.pl')
-AddBatch('convert_vol2jpg','applications/scripts/convert_vol2jpg')
+AddBatch('convert_vol2jpg', 'applications/scripts/convert_vol2jpg')
 AddBatch('convert_pdb2surface', 'applications/scripts/convert_pdb2surface')
 AddBatch('protocols', 'applications/scripts/protocols')
 AddBatch('gui', 'applications/scripts/protocols')
-AddBatch('showj', 'applications/scripts/showj','.sh')
-AddBatch('projections_explorerj', 'applications/scripts/projections_explorerj','.sh')
-AddBatch('visualize_preprocessing_micrographj', 'applications/scripts/visualize_preprocessing_micrograph','.sh')
-AddBatch('browserj', 'applications/scripts/browserj','.sh')
+AddBatch('showj', 'applications/scripts/showj', '.sh')
+AddBatch('projections_explorerj', 'applications/scripts/projections_explorerj', '.sh')
+AddBatch('visualize_preprocessing_micrographj', 'applications/scripts/visualize_preprocessing_micrograph', '.sh')
+AddBatch('browserj', 'applications/scripts/browserj', '.sh')
 # AddBatch('convert_tia2raw', 'applications/programs/convert_tia2raw')
-AddBatch('move_along_NMAmode', 'applications/scripts/move_along_NMAmode','.pl')
+AddBatch('move_along_NMAmode', 'applications/scripts/move_along_NMAmode', '.pl')
 
 # Protocols
 AddProtocol('arg.py', 'applications/scripts/protocols')
@@ -794,8 +793,8 @@ if int(env['gui']):
 
     if int(env['QT4']):
         # FIXME see SConstruct
-        env['QTDIR']=''
-        env['QT_LIB']=''
+        env['QTDIR'] = ''
+        env['QT_LIB'] = ''
 
         envQT.Tool('qt4')
         envQT.EnableQt4Modules(['QtCore', 'QtGui', 'Qt3Support'], debug=False)
@@ -811,16 +810,16 @@ if int(env['gui']):
         # envQT.SetDefault(QT_AUTOSCAN = 1)
 
         # Once again, just in case, Copy() does not work too well
-        envQT.Replace(QT_LIB = env['QT_LIB'])
+        envQT.Replace(QT_LIB=env['QT_LIB'])
 
-    def AddQtProgram(name, basedir, sources_pattern = '*.cpp', skip_list = [],
-        mocs = [], includes = [], libpath =[], libs = [], cxxflags = [],
-        linkflags = []):
+    def AddQtProgram(name, basedir, sources_pattern='*.cpp', skip_list=[],
+        mocs=[], includes=[], libpath=[], libs=[], cxxflags=[],
+        linkflags=[]):
 
         # setup
         basedir = AddLastSlash(basedir)
         fullname = env['prepend'] + name
-        binprefix =  os.path.join(env['prefix'], 'bin')
+        binprefix = os.path.join(env['prefix'], 'bin')
 
         extra = []
 
@@ -836,12 +835,12 @@ if int(env['gui']):
         program = envQT.Program(
             basedir + env['prepend'] + name,
             sources + extra,
-            CPPPATH = envQT['CPPPATH'] + includes + [env['CPPPATH']],
-            LIBPATH = envQT['LIBPATH'] + libpath + [env['LIBPATH']],
-            LIBS = envQT['LIBS'] + libs + [env['LIBS']]+TIFFLibs,
-            CXXFLAGS = cxxflags + [env['CXXFLAGS']],
-            LINKFLAGS = linkflags + [env['LINKFLAGS']],
-            LINK = env['LINKERFORPROGRAMS']
+            CPPPATH=envQT['CPPPATH'] + includes + [env['CPPPATH']],
+            LIBPATH=envQT['LIBPATH'] + libpath + [env['LIBPATH']],
+            LIBS=envQT['LIBS'] + libs + [env['LIBS']] + TIFFLibs,
+            CXXFLAGS=cxxflags + [env['CXXFLAGS']],
+            LINKFLAGS=linkflags + [env['LINKFLAGS']],
+            LINK=env['LINKERFORPROGRAMS']
             )
 
         # alias
@@ -865,13 +864,13 @@ if int(env['gui']):
         graphics = envQT.StaticLibrary(
             graphics_basedir + graphics_name,
             graphics_objects,
-            CPPPATH = graphics_cpppath
+            CPPPATH=graphics_cpppath
             )
     else:
         graphics = envQT.SharedLibrary(
             graphics_basedir + graphics_name,
             graphics_objects,
-            CPPPATH = graphics_cpppath
+            CPPPATH=graphics_cpppath
             )
 
     graphics_alias = env.Alias(graphics_name, graphics)
@@ -883,9 +882,9 @@ if int(env['gui']):
     # Add a program integrated in the Xmipp structure
     def AddXmippQtProgram(name, mocs=[], libs=[]):
         finalLibPath = ['lib']
-        finalIncludePath = ['libraries','#']
-        finalLibs = ['XmippData', 'XmippExternal','XmippGraphics',
-            'XmippRecons', 'XmippClassif']+FFTWLibs+SQLiteLibs+libs
+        finalIncludePath = ['libraries', '#']
+        finalLibs = ['XmippData', 'XmippExternal', 'XmippGraphics',
+            'XmippRecons', 'XmippClassif'] + FFTWLibs + SQLiteLibs + libs
         for i in range(len(libs)):
            if libs[i] == 'XmippInterface':
     	      finalLibPath += ['libraries/interface']
@@ -909,9 +908,9 @@ if int(env['matlab']):
         if len(output) > 0:
             print output
 
-    bindings = ['adjust_ctf','align2d','ctf_correct_phase',
-        'mask','mirror','morphology','normalize','psd_enhance',
-        'resolution','rotate','scale','scale_pyramid','volume_segment']
+    bindings = ['adjust_ctf', 'align2d', 'ctf_correct_phase',
+        'mask', 'mirror', 'morphology', 'normalize', 'psd_enhance',
+        'resolution', 'rotate', 'scale', 'scale_pyramid', 'volume_segment']
 
     for i in range(len(bindings)):
        AddMatlabBinding(bindings[i])
