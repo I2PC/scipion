@@ -393,6 +393,9 @@ void tokenize(const String& str,
 
 char   *memtok(char **src,  char **_end, const char *sep);
 
+/** Memory string search, taken from GNU C Library */
+void * _memmem ( const void *haystack, size_t haystack_len, const void *needle, size_t needle_len);
+
 /** Obtain an string from a format in the way of printf works
  *
  */

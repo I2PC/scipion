@@ -264,11 +264,11 @@ public:
     /** Check if the file (not the object) is in column format
      *  returns pointer do first two data_entries and firts loop
      */
-    bool isColumnFormatFile(char * map,
+    bool isColumnFormatFile(char * map, size_t mapSize,
                             char ** firstData,
                             char ** secondData,
                             char ** firstloop,
-                            const char * blockName);
+                            const char * blockName, size_t blockNameSize);
     /** Export medatada to xml file.
      *
      */

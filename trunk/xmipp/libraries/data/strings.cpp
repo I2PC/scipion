@@ -149,17 +149,17 @@ int textToInteger(const char* str)
 
 size_t textToSizeT(const char * str)
 {
-  if (str == NULL)
-      REPORT_ERROR(ERR_MEM_NULLPOINTER, "Cannot be converted into int");
+    if (str == NULL)
+        REPORT_ERROR(ERR_MEM_NULLPOINTER, "Cannot be converted into int");
 
-  size_t retval;
-  int ok = sscanf(str, "%lu", &retval);
+    size_t retval;
+    int ok = sscanf(str, "%lu", &retval);
 
-  if (ok)
-      return retval;
-  REPORT_ERROR(ERR_VALUE_INCORRECT, "Conversion to size_t error");
+    if (ok)
+        return retval;
+    REPORT_ERROR(ERR_VALUE_INCORRECT, "Conversion to size_t error");
 
-  return 0;
+    return 0;
 }
 
 long long textToLongLong(const char* str)
@@ -397,20 +397,20 @@ int splitString(const String& input,
     {
         if (newPos==iPos)
         {
-        	if (includeEmpties)
-        		results.push_back(emptyString);
+            if (includeEmpties)
+                results.push_back(emptyString);
         }
         else
-        	results.push_back(input.substr(iPos, newPos-iPos));
+            results.push_back(input.substr(iPos, newPos-iPos));
         iPos = newPos+delimiterSize;
     }
     if (iPos>=input.size())
     {
-    	if (includeEmpties)
-    		results.push_back(emptyString);
+        if (includeEmpties)
+            results.push_back(emptyString);
     }
     else
-    	results.push_back(input.substr(iPos, String::npos));
+        results.push_back(input.substr(iPos, String::npos));
     return results.size();
 }
 
@@ -495,7 +495,7 @@ void tokenize(const String& str, StringVector& tokens,
 
 // Find and replace =======================================================
 String findAndReplace(const String& tInput, const String &tFind,
-                    const String &tReplace)
+                      const String &tReplace)
 {
     size_t uFindLen = tFind.length();
 
@@ -507,7 +507,7 @@ String findAndReplace(const String& tInput, const String &tFind,
     String tOut=tInput;
     for( ;(uPos = tOut.find(tFind, uPos)) != String::npos; )
     {
-    	tOut=tOut.replace( uPos, uFindLen, tReplace );
+        tOut=tOut.replace( uPos, uFindLen, tReplace );
         uPos += uReplaceLen;
     }
     return tOut;
@@ -536,9 +536,10 @@ char   *memtok(char **src,  char **_end, const char *sep)
      * Skip over leading delimiters.
      */
     start += strspn(start, sep);
-    if (*start == 0) {
-	*src = start;
-	return (0);
+    if (*start == 0)
+    {
+        *src = start;
+        return (0);
     }
 
     /*
@@ -550,20 +551,49 @@ char   *memtok(char **src,  char **_end, const char *sep)
     return (start);
 }
 
+
+#undef _memmem
+
+/* Return the first occurrence of NEEDLE in HAYSTACK. Taken from GNU C Library */
+void * _memmem ( const void *haystack, size_t haystack_len, const void *needle, size_t needle_len)
+{
+    const char *begin;
+    const char *const last_possible = (const char *) haystack + haystack_len - needle_len;
+
+    if (needle_len == 0)
+        /* The first occurrence of the empty string is deemed to occur at
+           the beginning of the string.  */
+        return (void *) haystack;
+
+    /* Sanity check, otherwise the loop might search through the whole
+       memory.  */
+    if (haystack_len < needle_len)
+        return NULL;
+
+    for (begin = (const char *) haystack; begin <= last_possible; ++begin)
+        if (begin[0] == ((const char *) needle)[0] &&
+            !memcmp ((const void *) &begin[1],
+                     (const void *) ((const char *) needle + 1),
+                     needle_len - 1))
+            return (void *) begin;
+
+    return NULL;
+}
+
 /** Obtain an string from a format in the way of printf works
  *
  */
 String formatString(const char * format, ...)
 {
-  char formatBuffer[1024];
+    char formatBuffer[1024];
 
-  va_list args;
-  va_start(args, format);
-  vsprintf (formatBuffer, format, args);
-  String result(formatBuffer);
-  va_end (args);
+    va_list args;
+    va_start(args, format);
+    vsprintf (formatBuffer, format, args);
+    String result(formatBuffer);
+    va_end (args);
 
-  return result;
+    return result;
 }
 
 /** Obtain an string from a format in the way of printf works
@@ -571,11 +601,11 @@ String formatString(const char * format, ...)
  */
 void formatStringFast(String &str, const char * format, ...)
 {
-  char formatBuffer[1024];
+    char formatBuffer[1024];
 
-  va_list args;
-  va_start(args, format);
-  vsprintf (formatBuffer, format, args);
-  str=formatBuffer;
-  va_end (args);
+    va_list args;
+    va_start(args, format);
+    vsprintf (formatBuffer, format, args);
+    str=formatBuffer;
+    va_end (args);
 }

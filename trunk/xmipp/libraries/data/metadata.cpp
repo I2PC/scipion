@@ -505,13 +505,14 @@ void MetaData::_write(const FileName &outFile,const std::string &blockName, Writ
             {
                 //block name
                 std::string _szBlockName = (std::string)("data_") + blockName;
+                size_t blockNameSize = _szBlockName.size();
 
                 //search for the string
                 char * target, * target2;
-                target = (char *) strstr(map,_szBlockName.data());
+                target = (char *) _memmem(map, size, _szBlockName.data(), blockNameSize);
                 if(target!=NULL)
                 {
-                    target2 = (char *) strstr(target+1,"data_");
+                    target2 = (char *) _memmem(target+1, size - (target - map), "data_", 5);
 
                     if (target2==NULL)//truncate file at target
                         ftruncate(fd, target - map);
@@ -970,11 +971,11 @@ void MetaData::_read(const FileName &filename,
             REPORT_ERROR(ERR_MEM_BADREQUEST,"Metadata:write can not map memory ");
 
         char * firstData, * secondData, * firstloop;
-        isColumnFormat=isColumnFormatFile(map,
+        isColumnFormat=isColumnFormatFile(map, size,
                                           &firstData,
                                           &secondData,
                                           &firstloop,
-                                          dataBlockName.data());
+                                          dataBlockName.data(), dataBlockName.size());
         if(secondData ==NULL)//this should not be necessary but you never know
             secondData = map + size;
 
@@ -1069,21 +1070,22 @@ void MetaData::aggregateSingle(MDObject &mdValueOut, AggregateOperation op,
     mdValueOut.setValue(myMDSql->aggregateSingleDouble(op,aggregateLabel));
 }
 
-bool MetaData::isColumnFormatFile(char * map,
+bool MetaData::isColumnFormatFile(char * map, size_t mapSize,
                                   char ** firstData,
                                   char ** secondData,
                                   char ** firstloop,
-                                  const char * szBlockName)
+                                  const char * szBlockName, size_t blockNameSize)
 {
     //search for the first data_XXX line
     //then for the next data_ line if any
     //rewind to the first hit and look for loop_
     //std::string _szBlockName = (std::string)("data_") + blockName;
-    *firstData  = (char *)  strstr(map, szBlockName);
+    *firstData  = (char *)  _memmem(map,  mapSize, szBlockName, blockNameSize);
     if(*firstData==NULL)
         REPORT_ERROR(ERR_MD_WRONGDATABLOCK,(std::string) "Block Named: " + szBlockName + " does not exist");
-    *secondData = (char *)  strstr((*firstData+1),"data_");
-    *firstloop  = (char *)  strstr((*firstData),"loop_");
+    size_t size = mapSize - (*firstData - map) - 1;
+    *secondData = (char *)  _memmem((*firstData+1), size,"data_", 5);
+    *firstloop  = (char *)  _memmem((*firstData), size, "loop_", 5);
     //#define DEBUG
 #ifdef DEBUG
 
