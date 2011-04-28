@@ -311,7 +311,7 @@ void generate_angles(int ExtProjs, const Angle_range &range,
     double ang;
     int   N1, N2;
     int   i, j, k;
-    int   iproj, idx;
+    size_t iproj, idx;
     int   limit;
     MetaData DFaux=DF;
 
@@ -426,8 +426,8 @@ void generate_angles(int ExtProjs, const Angle_range &range,
         }
         else
         {
-            int iproj=ExtProjs + i;
-            unsigned long int dfidx=DFaux.firstObject(MDValueEQ(MDL_ORDER,iproj));
+            size_t iproj=ExtProjs + i;
+            size_t dfidx=DFaux.firstObject(MDValueEQ(MDL_ORDER,iproj));
             if (dfidx==BAD_OBJID)
             {
                 dfidx=DFaux.addObject();
@@ -495,7 +495,7 @@ void generate_even_angles(int ExtProjs, int Nrottilt, MetaData &DF,
                 else
                     psi = rnd_unif(prm.psi_range.ang0, prm.psi_range.angF);
 
-                int iproj = ExtProjs + N + Nrottilt * k;
+                size_t iproj = ExtProjs + N + Nrottilt * k;
                 size_t idx_tmp=DFaux.firstObject(MDValueEQ(MDL_ORDER,iproj));
                 if (idx_tmp==BAD_OBJID)
                 {
