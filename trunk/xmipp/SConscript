@@ -169,7 +169,7 @@ def AddXmippMPIProgram(name, libs=[]):
           finalLibPath += ['libraries/interface']
        elif libs[i] == 'XmippRecons_Interface':
           finalLibPath += ['libraries/interface']
-	  finalLibs.insert(i + 1, 'XmippInterface')
+          finalLibs.insert(i + 1, 'XmippInterface')
        elif libs[i] == 'XmippReconsMPI':
           finalLibPath += ['libraries/reconstruction_mpi']
        elif libs[i] == 'XmippClassif':
@@ -487,6 +487,7 @@ ReconsSources = [
     'tomo_align_refinement.cpp',
     'tomo_remove_fluctuations.cpp',
     'transform_downsample.cpp',
+    'volume_from_pdb.cpp',
     'volume_segment.cpp',
     'xray_import.cpp'
 ]
