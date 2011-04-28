@@ -59,6 +59,16 @@ public class TiltSeriesIO {
 		return path.endsWith(".mrc") || path.endsWith(".mrcs") || path.endsWith(".stk") || path.endsWith(".vol") || path.endsWith(".spi");
 	}
 	
+	public static boolean isAbsolute(String path){
+		int indexAt = path.indexOf("@");
+		if(indexAt >= 0)
+			return path.charAt(indexAt+1) == '/';
+		else{
+			File test=new File(path);
+			return test.isAbsolute();
+		}
+	}
+	
 	public static boolean isSelFile(String path){
 		// right now, identify file type by its extension
 		// should check also uppercase like .SEL
@@ -71,6 +81,7 @@ public class TiltSeriesIO {
 		return path.endsWith(".tlt");
 	}
 	
+	// TODO: fails with mrcs due to memory leak (bad alloc)
 	public static void read(TomoData model) throws java.io.IOException,
 			InterruptedException {
 
@@ -97,12 +108,13 @@ public class TiltSeriesIO {
 				} catch (IOException ex) {
 					// maybe the exception was due to the need of absolute paths
 					// give a second try with absolute path
-					// TODO: check if the path already is absolute. If it is, then skip this retry
-					buildPath = true;
-					fileName=buildAbsolutePath(absolutePath, fileName);
-					// another option would be to change the current working directory, but Java does not allow for it
-					image = readSlice(fileName, null, false);
-					
+					Xmipp_Tomo.debug("TiltseriesIO.read", ex);
+					if(! isAbsolute(fileName)){
+						buildPath = true;
+						fileName=buildAbsolutePath(absolutePath, fileName);
+						// another option would be to change the current working directory, but Java does not allow for it
+						image = readSlice(fileName, null, false);
+					}
 				}
 				if(image != null)
 					postReadSlice(model, image);
@@ -120,8 +132,7 @@ public class TiltSeriesIO {
 
 	// TODO: if the file exists, remove it before calling native code - as an extra caution	(overwrite semantics vary
 	// across layers...)
-	// TODO: bug - write fails? (the written file cannot be read back again) In fact, ImageJ can read the written file
-	// maybe the problem is in load code?
+	// TODO: bug - write fails? spider and derivatives fixed, test with other formats (MRC / MRCS)
 	// TODO: write details (below)
 	// First show dialog to choose file type to save (primarily sel vs stack)
 	// Sel: ideally ask for sel and stack file paths (defaults to same paths, obviously warning about overwriting in both cases)
@@ -149,9 +160,8 @@ public class TiltSeriesIO {
 	private static void writeStack(String absolutePath, TomoData model) throws Exception{	
 		ImageDouble img = convert(model.getImage());
 		img.setFilename(absolutePath);
-		// TODO: use classes (ImageWriteMode & CastWriteMode) for enums
-		// mode = 0 -> WRITE_OVERWRITE - required for maxim to be updated (readSpider gets nDim from maxim)
-		img.write(absolutePath, 0, true, 0, 0);
+		// @see rwSpider.cpp -- WRITE_OVERWRITE required for maxim to be updated (readSpider gets nDim from maxim)
+		img.write(absolutePath, 0, true, ImageWriteMode.WRITE_OVERWRITE, CastWriteMode.CW_CAST);
 	}
 
 	// TODO: - CURRENT - writeSel
@@ -192,6 +202,8 @@ private static String buildAbsolutePath(String selFilePath, String path){
 	 * @return image as ImageDouble
 	 * @throws IOException
 	 */
+	
+	// TODO: file not found exception (after updating native code...)
 	private static ImageDouble readSlice(String path, String base, boolean headerOnly,
 			int slice) throws IOException {
 		String filepath = path;

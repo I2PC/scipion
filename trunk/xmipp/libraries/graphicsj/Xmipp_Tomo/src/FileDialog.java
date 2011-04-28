@@ -56,15 +56,11 @@ public class FileDialog {
 		if (fileName != null)
 			fileChooser.setSelectedFile(new File(fileName));
 	}
-	
-	private void setupDialog(String title, String path, final String fileName, int type, FileNameExtensionFilter filter){
-		setupDialog(title, path, fileName, type);
-		setFilter(filter);
-	}
 
 	public static String openDialog(String title, Component parent) {
 		FileDialog fd = new FileDialog();
-		fd.setupDialog(title, null, null,JFileChooser.OPEN_DIALOG,tomoImagesFileExtensionFilter());
+		fd.setupDialog(title, null, null,JFileChooser.OPEN_DIALOG);
+		fd.addTomoImagesFileExtensionFilters();
 		int status = fd.showOpenDialog(parent);
 		if (status != JFileChooser.APPROVE_OPTION)
 			return "";
@@ -73,16 +69,20 @@ public class FileDialog {
 	
 	public static String saveDialog(String title, Component parent) {
 		FileDialog fd = new FileDialog();
-		fd.setupDialog(title, null, null,JFileChooser.SAVE_DIALOG, tomoImagesFileExtensionFilter());
-		
+		fd.setupDialog(title, null, null,JFileChooser.SAVE_DIALOG);
+		fd.addTomoImagesFileExtensionFilters();
 		int status = fd.showSaveDialog(parent);
 		if (status != JFileChooser.APPROVE_OPTION)
 			return "";
 		return fd.getPath();
 	}
 	
-	public static FileNameExtensionFilter tomoImagesFileExtensionFilter(){
-		return new FileNameExtensionFilter("Tomo images", "sel", "mrcs", "vol", "stk", "spi");
+	public void addTomoImagesFileExtensionFilters(){
+		addFilter(new FileNameExtensionFilter("Spider", "spi"));
+		addFilter(new FileNameExtensionFilter("Sel file", "sel"));
+		addFilter(new FileNameExtensionFilter("MRC", "mrcs"));
+		addFilter(new FileNameExtensionFilter("VOL", "vol"));
+		addFilter(new FileNameExtensionFilter("Xmipp Stack", "stk"));
 	}
 
 	/**
@@ -124,8 +124,9 @@ public class FileDialog {
 		return returnPath;
 	}
 
-	public void setFilter(FileNameExtensionFilter filter) {
-		fileChooser.setFileFilter(filter);
+	public void addFilter(FileNameExtensionFilter filter) {
+		// fileChooser.setFileFilter(filter);
+		fileChooser.addChoosableFileFilter(filter);
 	}
 
 	/**

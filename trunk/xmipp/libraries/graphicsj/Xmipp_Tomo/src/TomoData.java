@@ -533,17 +533,17 @@ public class TomoData{
 	
 	// TODO: -CURRENT- first tilt is not displayed automatically (requires scrolling). Only happens with selfiles
 	public void readMetadata(String path){
+		try {
 		if(TiltSeriesIO.isSelFile(path) || TiltSeriesIO.isImage(path))
-			try{
-				getMetadata().read(path);
-			} catch (Exception ex) {
-				ex.printStackTrace();
-			}
+			getMetadata().read(path);
 		else if(TiltSeriesIO.isTltFile(path))
 			TiltSeriesIO.readTiltAngles(path, getMetadata());
 		else{
 			Xmipp_Tomo.debug("readMetadata - Unknown file type: " + path);
 			return;
+		}
+		}catch (Exception ex){
+			Xmipp_Tomo.debug("readMetadata", ex);
 		}
 		firePropertyChange(Properties.CURRENT_TILT_ANGLE.name(), null, 0.0);
 		firePropertyChange(Properties.CURRENT_PROJECTION_ENABLED.name(), null, false);
