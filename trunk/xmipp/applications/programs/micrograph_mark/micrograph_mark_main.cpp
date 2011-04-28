@@ -156,15 +156,10 @@ public:
 
 int main(int argc, char **argv)
 {
-    try
-    {
+
         ProgMicrographMark program;
         program.read(argc, argv);
-        program.run();
-    }
-    catch (XmippError e)
-    {
-        std::cerr << e.msg <<std::endl;
-    }
+        program.tryRun();
+
     return 0;
 }
