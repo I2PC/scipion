@@ -230,18 +230,17 @@ if (ARGUMENTS['mode'] == 'configure'):
             env['mpi'] = 0
 
     # Java
-    if int(env['JAVA']) == 1:        
-        if env['JNI_CPPPATH']:
-            import sys
-            sys.path.append("scons/ToolsFromWiki")
-            import ConfigureJNI
-            if not ConfigureJNI.ConfigureJNI(env):
-                env['java'] = 0
-                print '* Did not find JNI header. Disabling java support...'
-            else:
-                print '* JNI header found: '
-                #env['JNI_CPPPATH'] = env['JNI_CPPPATH'][0]
-                print env['JNI_CPPPATH']
+    if int(env['java']) == 1:        
+        import sys
+        sys.path.append("scons/ToolsFromWiki")
+        import ConfigureJNI
+        if not ConfigureJNI.ConfigureJNI(env):
+            env['java'] = 0
+            print '* Did not find JNI header. Disabling java support...'
+        else:
+            print '* JNI header found: '
+            #env['JNI_CPPPATH'] = env['JNI_CPPPATH'][0]
+            print env['JNI_CPPPATH']
 
     # MATLAB
     if int(env['matlab']):
@@ -277,7 +276,7 @@ if (ARGUMENTS['mode'] == 'configure'):
             cmd += " > " + logFile
             
         print msg, "..."
-        print cmd
+        print "   command:  ", cmd
         os.system(cmd)        
     
     ConfigureExternalLibrary('sqlite', env['SQLITEFLAGS'], 
@@ -288,75 +287,6 @@ if (ARGUMENTS['mode'] == 'configure'):
     
     ConfigureExternalLibrary('tiff', env['TIFFFLAGS'], 
                      'tiff-3.9.4', int(env['verbose_tiff']))
-
-#    finalSQLiteFlags = env['SQLITEFLAGS']
-#
-#    if env['PLATFORM'] == 'darwin':
-#        finalSQLiteFlags += " CFLAGS=-m64"
-#    if not GetOption("help"):
-#    	if os.path.exists('external/sqlite-3.6.23/Makefile'):
-#	        command = 'cd external/sqlite-3.6.23;  make distclean>/dev/null'
-#	        print command
-#	        os.system(command)
-#	if int(env['verbose_sqlite']):
-#            print "* Configuring SQLITE ... "
-#            os.system("export CFLAGS='-DSQLITE_ENABLE_UPDATE_DELETE_LIMIT=1' ;cd external/sqlite-3.6.23;./configure " + finalSQLiteFlags)
-#	else:
-#            print "* Configuring SQLite (see build/sqlite_configure.log for details) ... "
-#            print "cd external/sqlite-3.6.23;./configure " + finalSQLiteFlags
-#            os.system("cd external/sqlite-3.6.23;./configure " + finalSQLiteFlags + " > ../../build/sqlite_configure.log ")
-
-
-    # FFTW
-    # It is ugly to call configure from scons, but I do not know how to do it otherwise
-    # create configuration file for fftw
-#    finalFFTWFlags = env['FFTWFLAGS']
-#    if not GetOption("help"):
-#    	if os.path.exists('external/fftw-3.2.2/Makefile'):
-#	        command = 'cd external/fftw-3.2.2;  make distclean>/dev/null'
-#	        print command
-#	        os.system(command)
-#
-#    if not int(env['static']):
-#        finalFFTWFlags += " --enable-shared"
-#
-#    if env['PLATFORM'] == 'darwin':
-#        finalFFTWFlags += " CFLAGS='-m64'"
-#    
-#    msg = "* Configuring FFTW "
-#    cmd = "cd external/fftw-3.2.2;./configure %s" % finalFFTWFlags
-#    
-#    if not int(env['verbose_fftw']):
-#        msg += "(see build/fftw_configure.log for details)"
-#        cmd += " > ../../build/fftw_configure.log "
-#        
-#    print msg, "..."
-#    print cmd
-#    os.system(cmd)
-
-    # TIFF
-    # It is ugly to call configure from scons, but I do not know how to do it otherwise
-    # create configuration file for fftw
-#    finalTIFFFlags = env['TIFFFLAGS']
-#    if not GetOption("help"):
-#        if os.path.exists('external/tiff-3.9.4/Makefile'):
-#            command = 'cd external/tiff-3.9.4;  make distclean>/dev/null'
-#            print command
-#            os.system(command)
-#
-#    if not int(env['static']):
-#        finalTIFFFlags += " --enable-shared"
-#
-#    if env['PLATFORM'] == 'darwin':
-#        finalTIFFFlags += " CFLAGS='-m64'"
-#
-#    if int(env['verbose_tiff']):
-#        print "* Configuring TIFF ... "
-#        os.system("cd external/tiff-3.9.4;./configure " + finalTIFFFlags)
-#    else:
-#        print "* Configuring TIFF (see build/tiff_configure.log for details) ... "
-#        print "cd external/tiff-3.9.4;./configure " + finalTIFFFlags
-#        os.system("cd external/tiff-3.9.4;./configure " + finalTIFFFlags + " > ../../build/tiff_configure.log ")
 
     # Finish configuration
     env = conf.Finish()

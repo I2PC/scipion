@@ -263,7 +263,7 @@ def AddJavaLibrary(name, basedir, srcdir):#, sourceList, includes, libpath=[], l
     buildDir = os.path.join(basedir, 'classes')
     if not os.path.exists(buildDir): # create classes dir if not exists
         Execute(Mkdir(buildDir))    
-    buildClasses = env.Java(buildDir, basedir)
+    buildClasses = env.Java(buildDir, basedir, JAVAVERSION='1.6')
     env.Depends(buildClasses, env.Alias('javaEnums'))
     jarfile = os.path.join(basedir, name + '.jar')
     buildJar = env.Jar(target=jarfile, source=buildClasses, JARCHDIR=buildDir)
@@ -291,38 +291,26 @@ def AddImageJPlugin(name, pluginDir, outDir):
         os.mkdir(buildDir)
         os.mkdir(buildResourcesDir)
     # Copies 'plugins.config' to build dir...    
-    buildClasses = env.Java(buildDir, sourceDir)
+    buildClasses = env.Java(buildDir, sourceDir, JAVAVERSION='1.6')
     copyPluginConfig = env.Install(buildDir, os.path.join(sourceDir, 'plugins.config'))    
     buildJar = env.Jar(os.path.join(outDir, name + '.jar'), buildDir, JARCHDIR=buildDir)
     
-    
-    def InstallDistinct(list, dict): # Install plugin dependencies without repetition
-        for l in list:
-            lname = os.path.basename(l)
-            if not dict.has_key(lname):
-                install = env.Install(outDir, l)
-                dict[lname] = install
-            env.Depends(buildClasses, dict[lname])
+    jarList = Glob(libsDir, "*.jar", [])
+    for l in jarList:
+        lname = os.path.basename(l)
+        if not PluginLibs.has_key(lname):
+            install = env.Install(outDir, l)
+            PluginLibs[lname] = install
+        env.Depends(buildClasses, PluginLibs[lname])
         
-    InstallDistinct(Glob(libsDir, "*.jar", []), PluginLibs)
-    #InstallDistinct(Glob(resourcesDir, "*.*", ['*.svn*']), PluginResources, buildJar) 
-    copyPluginResources = env.Install(buildResourcesDir, Glob(resourcesDir, "*?.???", []))      
+    copyPluginResources = env.Install(buildResourcesDir, Glob(resourcesDir, "*?.???", []))          
     env.Depends(buildJar, [copyPluginConfig, copyPluginResources, buildClasses])  
-    # Copies macros to ImageJ/macros folder (if any).
-    outMacrosDir = outDir + '/../macros/'
-    if os.path.exists(macrosDir) and len(os.listdir(macrosDir)) > 0:
-	for f in os.listdir(macrosDir):
-		macro_item = os.path.join(macrosDir, f)
-		if os.path.isfile(macro_item):
-        		shutil.copy(macro_item, os.path.join(outDir, os.pardir) + "/macros")
-                
     pluginAlias = env.Alias(name, buildJar)
     env.Depends(buildClasses, copyJar)
+    
+    outMacrosDir = os.path.join(outDir, "..", "macros")
+    env.Alias('copyMacros', env.Install(outMacrosDir, Glob(macrosDir, "*?.???", [])))  
     return pluginAlias
-
-# Copies ImageJ external plugins (3rd party)
-def AddImageJExternalPlugins(pluginsDir, outDir):
-    Execute("rsync -av " + os.path.join(pluginsDir, '* ') + outDir + ' --exclude=".*/"')
 
 def AddExternalLibrary(libname, libs, libpath, suffix):
     libprefix = os.path.join(env['prefix'], 'lib')
@@ -566,7 +554,7 @@ if int(env['java']):
                             ["libraries/data/image_base.h","libraries/data/metadata_label.h" ], ExtractEnumFromHeader))
     JavaInterfaceSources = Glob('libraries/bindings/java', '*.cpp', [])
     javaJni = AddLibrary('XmippJavaInterface', 'libraries/bindings/java', JavaInterfaceSources,
-    ['#libraries', '#external', '#', env['JNI_CPPPATH'], env['JNI_CPPPATH'] + "/linux"], ['lib'],
+    ['#libraries', '#external', '#'] + env['JNI_CPPPATH'], ['lib'],
     ['XmippData', 'pthread'])
 
     env.Append(JAVACLASSPATH='external/imagej/ij.jar:external/imagej/plugins/*:libraries/bindings/java')
@@ -585,10 +573,12 @@ if int(env['java']):
     javaPlugins.append(AddImageJPlugin('Xmipp_Browser', 'libraries/graphicsj/Xmipp_Browser', 'external/imagej/plugins'))
     javaPlugins.append(AddImageJPlugin('Xmipp_Tomo', 'libraries/graphicsj/Xmipp_Tomo', 'external/imagej/plugins'))
 
-    # Other ImageJ plugins without sources.
-    javaExtPlugins = env.Install('libraries/graphicsj/plugins', 'external/imagej/plugins')
-    
-    javaAlias = env.Alias('java', [javaJni, javaLib, copyJar, javaExtPlugins] + javaPlugins) 
+    import sys
+    sys.path.append("scons/ToolsFromWiki")
+    import install
+    install.TOOL_INSTALL(env)
+    javaExtPlugins = env.InstallFiles('external/imagej/plugins', 'libraries/graphicsj/plugins', exclude='.svn')
+    javaAlias = env.Alias('java', [javaJni, javaLib, copyJar, javaExtPlugins, env.Alias('copyMacros')] + javaPlugins) 
     env.Default(javaAlias)
 
 # --- Programs
