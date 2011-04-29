@@ -31,12 +31,11 @@
 
 #include "training_vector.h"
 #include <data/args.h>
-
+#include <data/metadata.h>
 
 /**
  * TrainingSet for ClassicTrainingVectors
  */
-
 
 /**
  * Constructs a training set given a stream
@@ -176,6 +175,50 @@ void ClassicTrainingVectors::readSelf(std::istream& _is)
 #endif
 };
 
+void ClassicTrainingVectors::read(const FileName& fnIn)
+{
+    clear();
+
+    // Read header and content
+    MetaData vectorHeader(formatString("vectorHeader@%s",fnIn.c_str()));
+    MetaData vectorContent(formatString("vectorContent@%s",fnIn.c_str()));
+    size_t Nvectors;
+    int vectorSize;
+    size_t id=vectorHeader.firstObject();
+    vectorHeader.getValue(MDL_CLASSIFICATION_DATA_SIZE,vectorSize,id);
+    vectorHeader.getValue(MDL_COUNT,Nvectors,id);
+    theItems.reserve(Nvectors);
+    theTargets.reserve(Nvectors);
+
+    // Read the data
+    FileName fnInRaw=formatString("%s.raw",fnIn.c_str());
+    std::ifstream fhInRaw(fnInRaw.c_str(),std::ios::binary);
+    if (!fhInRaw)
+        REPORT_ERROR(ERR_IO_NOTEXIST,fnInRaw);
+    std::vector<Feature> v;
+    v.resize(vectorSize);
+    float *buffer=new float[vectorSize];
+    String fnImg;
+    size_t order;
+    FOR_ALL_OBJECTS_IN_METADATA(vectorContent)
+    {
+        vectorContent.getValue(MDL_IMAGE,fnImg,__iter.objId);
+        vectorContent.getValue(MDL_ORDER,order,__iter.objId);
+
+        // Read raw values
+        fhInRaw.seekg(order*vectorSize*sizeof(float));
+        fhInRaw.read((char*)buffer,vectorSize*sizeof(float));
+        if (!fhInRaw)
+            REPORT_ERROR(ERR_IO_NOREAD,
+                         formatString("Could not read image %lu from %s",
+                                      order,fnInRaw.c_str()));
+        for (int i=0; i<vectorSize; ++i)
+        	v[i]=buffer[i];
+        theTargets.push_back(fnImg);
+        theItems.push_back(v);
+    }
+    delete []buffer;
+}
 
 /**
  * Saves the class into a stream.

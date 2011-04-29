@@ -39,8 +39,6 @@ public:
     /* Input Parameters ======================================================== */
     FileName       fn_in;        // input file
     FileName       fn_out;       // output file
-    FileName       cb_in;        // Code vectors input file
-    FileName       fn_algo_in;   // input algorithm file
     FileName       tmpN;         // Temporary variable
     double         eps;          // Stopping criteria
     unsigned       iter;         // Iteration number
@@ -52,9 +50,6 @@ public:
     int            df;           // Degrees of freedom
     std::string    layout;       // layout (Topology)
     unsigned       annSteps;     // Deterministic Annealing steps
-    bool           useCBook;     // Use codebook
-    bool           saveClusters; // Save clusters in separate files
-    bool           saveCodebook; // Save codebook in a separate file
     bool           gaussian;     // Gaussian Kernel
     bool           tStudent;     // tStudent Kernel
 public:
@@ -64,10 +59,6 @@ public:
         addUsageLine("Purpose: Kernel Density Estimator Self-Organizing Map");
         addParamsLine("  -i <file_in>                : Input data file (plain data)");
         addParamsLine(" [-o <file_out>]              : Base name for output data files");
-        addParamsLine(" [--cvin <file_in>]           : Codevectors input file");
-        addParamsLine(" [--cbin <file_in>]           : Codebook input file");
-        addParamsLine(" [--saveclusters]             : Save clusters in separate files");
-        addParamsLine(" [--savecodebook]             : Save code book");
         addParamsLine(" [--xdim <Hdimension=10>]     : Horizontal size of the map");
         addParamsLine(" [--ydim <Vdimension=5>]      : Vertical size of the map");
         addParamsLine(" [--topology <topology=RECT>] : Lattice topology");
@@ -90,18 +81,6 @@ public:
         fn_in = getParam("-i");
         if (checkParam("-o"))
             fn_out=getParam("-o");
-        if (checkParam("--cvin") && checkParam("--cbin"))
-            REPORT_ERROR(ERR_ARG_INCORRECT,"Cannot provide --cvin and --cbin");
-        if (checkParam("--cvin"))
-        {
-            cb_in=getParam("--cvin");
-            useCBook = false;
-        }
-        else if (checkParam("--cbin"))
-        {
-            cb_in=getParam("--cbin");
-            useCBook = true;
-        }
         ydim = getIntParam("--ydim");
         xdim = getIntParam("--xdim");
         layout = getParam("--topology");
@@ -119,13 +98,9 @@ public:
         reg0 = getDoubleParam("--reg0");
         reg1 = getDoubleParam("--reg1");
         df = getIntParam("--df");
-        if (checkParam("--ain"))
-            fn_algo_in=getParam("--ain");
         eps = getDoubleParam("--eps");
         iter = getIntParam("--iter");
         norm = checkParam("--norm");
-        saveClusters = checkParam("--saveclusters");
-        saveCodebook = checkParam("--savecodebook");
         annSteps = getIntParam("--steps");
 
         // Some checks
@@ -152,10 +127,6 @@ public:
     {
         std::cout << "Input data file : " << fn_in << std::endl;
         std::cout << "Output file name : " << fn_out << std::endl;
-        if (cb_in != "")
-            std::cout << "Input code vectors file name : " << cb_in << std::endl;
-        if (saveClusters)
-            std::cout << "Save clusters in separate files: " << fn_out << ".(cluster number)" << std::endl;
         std::cout << "Horizontal dimension (Xdim) = " << xdim << std::endl;
         std::cout << "Vertical dimension (Ydim) = " << ydim << std::endl;
         if (layout == "HEXA")
@@ -184,16 +155,9 @@ public:
     void run()
     {
         /* Open training vector ================================================= */
-        std::ifstream inStream(fn_in.c_str());
-        if (!inStream)
-        {
-            std::cerr << argv[0] << ": can't open file " << fn_in << std::endl;
-            exit(EXIT_FAILURE);
-        }
-
         ClassicTrainingVectors ts(0, true);
         std::cout << std::endl << "Reading input data file " << fn_in << "....." << std::endl;
-        inStream >> ts;
+        ts.read(fn_in);
 
         /* Real stuff ============================================================== */
         if (norm)
@@ -202,72 +166,18 @@ public:
             ts.normalize();        // Normalize input data
         }
 
-        FuzzyMap *myMap;
-
-        if (cb_in != "")
-        {
-            if (useCBook)
-            {
-                std::cout << "Reading fuzzy codebook file " << cb_in << "....." << std::endl;
-                std::ifstream codeStream(cb_in.c_str());
-                if (!codeStream)
-                {
-                    std::cerr << argv[0] << ": can't open file " << cb_in << std::endl;
-                    exit(EXIT_FAILURE);
-                }
-                myMap = new FuzzyMap(codeStream, ts.size(), false);
-            }
-            else
-            {
-                std::cout << "Reading fuzzy codevectors file " << cb_in << "....." << std::endl;
-                std::ifstream codeStream(cb_in.c_str());
-                if (!codeStream)
-                {
-                    std::cerr << argv[0] << ": can't open file " << cb_in << std::endl;
-                    exit(EXIT_FAILURE);
-                }
-                myMap = new FuzzyMap(codeStream, ts.size(), true);
-            }
-        }
-        else
-            myMap = new FuzzyMap(layout, xdim, ydim, ts);
-
+        FuzzyMap *myMap = new FuzzyMap(layout, xdim, ydim, ts);
 
         KerDenSOM *thisSOM;
-        if (fn_algo_in == "")
-        {
-            if (gaussian)
-                thisSOM = new GaussianKerDenSOM(reg0, reg1, annSteps, eps, iter);        // Creates KerDenSOM Algorithm
-            else
-                thisSOM = new TStudentKerDenSOM(reg0, reg1, annSteps, eps, iter, df);    // Creates KerDenSOM Algorithm
-        }
+        if (gaussian)
+            thisSOM = new GaussianKerDenSOM(reg0, reg1, annSteps, eps, iter);        // Creates KerDenSOM Algorithm
         else
-        {
-            std::cout << "Reading algorithm file " << fn_algo_in << "....." << std::endl << std::endl;
-            std::ifstream algoStream(fn_algo_in.c_str());
-            if (!algoStream)
-            {
-                std::cerr << argv[0] << ": can't open file " << fn_algo_in << std::endl;
-                exit(EXIT_FAILURE);
-            }
-        }
+            thisSOM = new TStudentKerDenSOM(reg0, reg1, annSteps, eps, iter, df);    // Creates KerDenSOM Algorithm
 
         TextualListener myListener;       // Define the listener class
         myListener.setVerbosity() = verbose;       // Set verbosity level
         thisSOM->setListener(&myListener);         // Set Listener
-
-        if (cb_in != "")
-        {
-            if (ts.isNormalized())
-            {
-                std::cout << "Normalizing code vectors....." << std::endl;
-                myMap->Normalize(ts.getNormalizationInfo());       // normalize code vectors
-            }
-            thisSOM->train(*myMap, ts, fn_out, true);            // Train algorithm
-        }
-        else
-            thisSOM->train(*myMap, ts, fn_out);               // Train algorithm
-
+        thisSOM->train(*myMap, ts, fn_out);               // Train algorithm
 
         // Test algorithm
         double dist = thisSOM->test(*myMap, ts);
@@ -285,15 +195,6 @@ public:
             Saving all kind of Information
         *******************************************************/
 
-        if (saveCodebook)
-        {
-            std::cout << "Saving whole codebook as " << fn_out << ".cbk ....." << std::endl;
-            tmpN = fn_out.c_str() + (std::string) ".cbk";
-            std::ofstream cbkS(tmpN.c_str());
-            myMap->saveObject(cbkS);
-            cbkS.flush();
-        }
-
         std::cout << "Saving algorithm information as " << fn_out << ".inf ....." << std::endl;
         tmpN = fn_out.c_str() + (std::string) ".inf";
         std::ofstream infS(tmpN.c_str());
@@ -308,8 +209,6 @@ public:
             infS << "                     KerDenSOM" << std::endl << std::endl;
         }
         infS << "Input data file : " << fn_in << std::endl;
-        if (cb_in != "")
-            infS << "Input code vectors file : " << cb_in << std::endl;
         infS << "Code vectors output file : " << fn_out <<  ".cod" << std::endl;
         infS << "Whole codebook output file : " << fn_out <<  ".cbk" << std::endl;
         infS << "Algorithm information output file : " << fn_out <<  ".inf" << std::endl;
@@ -352,17 +251,14 @@ public:
         infS.flush();
 
         // assign data to clusters according to fuzzy threshold
-        if (saveClusters)
+        std::cout << "Saving neurons assigments ....." << std::endl;
+        for (unsigned i = 0; i < myMap->size(); i++)
         {
-            std::cout << "Saving neurons assigments ....." << std::endl;
-            for (unsigned i = 0; i < myMap->size(); i++)
-            {
-                tmpN = fn_out.c_str() + (std::string) "."  + integerToString(i);
-                std::ofstream cStream(tmpN.c_str());
-                for (int j = 0; j < myMap->classifAt(i).size(); j++)
-                    cStream << myMap->classifAt(i)[j] << std::endl;
-                cStream.flush();
-            }
+            tmpN = fn_out.c_str() + (std::string) "."  + integerToString(i);
+            std::ofstream cStream(tmpN.c_str());
+            for (int j = 0; j < myMap->classifAt(i).size(); j++)
+                cStream << myMap->classifAt(i)[j] << std::endl;
+            cStream.flush();
         }
 
         // save .vs file to be compatible with SOM_PAK
@@ -413,21 +309,7 @@ public:
 /* Main function -============================================================= */
 int main(int argc, char** argv)
 {
-    try
-    {
-        ProgKenderSOM prm;
-        prm.read(argc,argv);
-        prm.run();
-    }
-    catch (XmippError XE)
-    {
-        std::cout << XE << std::endl;
-        return 1;
-    }
-    catch (const std::exception& e)
-    {
-        std::cout << e.what() << std::endl;
-        return 1;
-    }
-    return 0;
+    ProgKenderSOM prm;
+    prm.read(argc,argv);
+    return prm.tryRun();
 }

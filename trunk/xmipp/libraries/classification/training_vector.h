@@ -114,6 +114,9 @@ public:
      */
     virtual void readSelf(std::istream& _is);
 
+    /** Read data from a metadata.
+     */
+    void read(const FileName& fnIn);
 
     /**
      * Saves the class into a stream.
