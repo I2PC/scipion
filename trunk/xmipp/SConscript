@@ -15,6 +15,12 @@ PYSQliteDir = "external/pysqlite-2.6.3"
 
 PluginLibs = {}
 PluginResources = {}
+javaEnumDict = {'ImageWriteMode': ['libraries/data/image_base.h', 'WRITE_'], 
+            'CastWriteMode': ['libraries/data/image_base.h', 'CW_'], 
+            'MDLabel': ['libraries/data/metadata_label.h', 'MDL_']}
+javaEnumFiles = []
+headerEnumFiles = []
+
 copyJar = None
 
 
@@ -531,25 +537,31 @@ def WriteJavaEnum(class_name, header_file, pattern, log):
     fOut.close()
     f.close()
     # Write log file
-    from datetime import date
-    d = date.today();
-    log.write("Java file %s successful generated at %s\n" % (java_file, d.ctime()))
+    if log:
+        from datetime import datetime 
+        d = str(datetime.now())
+        #d = date.today();
+        log.write("Java file '%s' successful generated at %s\n" % (java_file, d))
     
 def ExtractEnumFromHeader(source, target, env):
     # this is very ugly, we still need more scons knowledge
-    enumDict = {'ImageWriteMode': ['libraries/data/image_base.h', 'WRITE_'], 
-                'CastWriteMode': ['libraries/data/image_base.h', 'CW_'], 
-                'MDLabel': ['libraries/data/metadata_label.h', 'MDL_']}
+
     log = open(str(target[0]), 'w+')
-    for (class_name, list) in enumDict.iteritems():
+    for (class_name, list) in javaEnumDict.iteritems():
         WriteJavaEnum(class_name, list[0], list[1], log)
-        
+    
+    log.close()
     return None
 
 # ImageJ plugins.
 # Installs jvm
 if int(env['java']):
-    # Update enums from c++ headers    
+    # Update enums from c++ headers, if not exist, generate it 
+    for (class_name, list) in javaEnumDict.iteritems():
+       java_file = "libraries/bindings/java/xmipp/%s.java" % class_name
+       if not os.path.exists(java_file):
+          WriteJavaEnum(class_name, list[0], list[1], None) 
+    
     env.Alias('javaEnums', env.Command("libraries/bindings/java/xmipp/enums.changelog", 
                             ["libraries/data/image_base.h","libraries/data/metadata_label.h" ], ExtractEnumFromHeader))
     JavaInterfaceSources = Glob('libraries/bindings/java', '*.cpp', [])
