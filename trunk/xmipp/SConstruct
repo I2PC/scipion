@@ -230,7 +230,7 @@ if (ARGUMENTS['mode'] == 'configure'):
             env['mpi'] = 0
 
     # Java
-    if int(env['java']) == 1:        
+    if int(env['java']) == 1: 
         import sys
         sys.path.append("scons/ToolsFromWiki")
         import ConfigureJNI
@@ -238,9 +238,7 @@ if (ARGUMENTS['mode'] == 'configure'):
             env['java'] = 0
             print '* Did not find JNI header. Disabling java support...'
         else:
-            print '* JNI header found: '
-            #env['JNI_CPPPATH'] = env['JNI_CPPPATH'][0]
-            print env['JNI_CPPPATH']
+            print '* JNI header found: ', env['JNI_CPPPATH']
 
     # MATLAB
     if int(env['matlab']):

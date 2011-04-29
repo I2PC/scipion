@@ -554,7 +554,7 @@ if int(env['java']):
                             ["libraries/data/image_base.h","libraries/data/metadata_label.h" ], ExtractEnumFromHeader))
     JavaInterfaceSources = Glob('libraries/bindings/java', '*.cpp', [])
     javaJni = AddLibrary('XmippJavaInterface', 'libraries/bindings/java', JavaInterfaceSources,
-    ['#libraries', '#external', '#','JNI_CPPPATH'], ['lib'],
+    ['#libraries', '#external', '#']+env['JNI_CPPPATH'], ['lib'],
     ['XmippData', 'pthread'])
 
     env.Append(JAVACLASSPATH='external/imagej/ij.jar:external/imagej/plugins/*:libraries/bindings/java')
