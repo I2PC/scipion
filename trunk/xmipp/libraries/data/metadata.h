@@ -237,6 +237,7 @@ public:
      */
     MetaData& operator =(const MetaData &md);
 
+
     /** Destructor
      *
      * Frees all used memory and destroys object.
@@ -750,6 +751,9 @@ public:
 
 }
 ;//class MetaData
+
+/** 'is equal to' (equality).*/
+bool operator==(const MetaData& op1, const MetaData& op2);
 
 ////////////////////////////// MetaData Iterator ////////////////////////////
 /** Iterates over metadatas */
