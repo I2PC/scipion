@@ -1541,3 +1541,23 @@ bool MDExpandGenerator::fillValue(MetaData &md, size_t objId)
     else
         REPORT_ERROR(ERR_MD_BADLABEL, formatString("Can't expand missing label '%s'", MDL::label2Str(label).c_str()));
 }
+
+bool operator==(const MetaData& op1, const MetaData& op2)
+{
+//    	SELECT count(*) as result
+//    	FROM
+//    	(
+//    	  SELECT *
+//    	  FROM op1
+//    	  UNION ALL
+//    	  SELECT *
+//    	  FROM op2
+//    	) tmp
+//    	GROUP BY obj_id (ALL ATRIBUTES)
+//    	HAVING COUNT(*) = 1
+	MetaData aux;
+	aux=op1;
+	aux.subtraction(op2,MDL_OBJID);
+	std::cerr << "dummy implementation of operator ==" <<std::endl;
+	return ((aux.size())==0);
+}
