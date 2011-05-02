@@ -388,6 +388,12 @@ AddExternalLibrary('fftw', FFTWLibsPaths, FFTWDir, '.3')
 TIFFLibsPaths = ['libtiff/.libs/libtiff']
 AddExternalLibrary('tiff', TIFFLibsPaths, TIFFDir, '.3')
 
+# Gtest
+if int(env['gtest']):
+    DataSources = Glob('external/gtest-1.6.0/fused-src/gtest', 'gtest-all.cc', [])
+    AddLibrary('gtest', 'external/gtest-1.6.0/fused-src/gtest', DataSources, ['#'],
+               [], [])
+
 # Bilib
 BilibSources = Glob('external/bilib/sources', '*.cc', [])
 
@@ -631,6 +637,9 @@ AddXmippProgram('enhance_contrast', ['XmippRecons'])
 AddXmippProgram('filter_projections', ['XmippRecons'])
 AddXmippProgram('find_center2d')
 AddXmippProgram('find_center3d')
+if int(env['gtest']):
+     AddXmippProgram('gtest',['gtest'])
+
 AddXmippProgram('image_align', ['XmippRecons'])
 AddXmippProgram('image_align_tilt_pairs', ['XmippRecons'])
 AddXmippProgram('image_convert')
@@ -688,6 +697,7 @@ AddXmippProgram('transform_threshold', ['XmippRecons'])
 AddXmippProgram('transform_window')
 #AddXmippProgram('test_program')
 #AddXmippProgram('test_sql')
+
 AddXmippProgram('template_threads')
 AddXmippProgram('tomo_align_dual_tilt_series', ['XmippRecons'])
 AddXmippProgram('tomo_align_refinement', ['XmippRecons'])
