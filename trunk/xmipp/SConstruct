@@ -51,6 +51,8 @@ opts.Add(BoolVariable('quiet', 'Hide command line?', 'yes'))
 
 opts.Add(BoolVariable('java', 'Build the java programs?', 'no'))
 
+opts.Add(BoolVariable('gtest', 'Build tests?', 'no'))
+
 opts.Add(BoolVariable('mpi', 'Build the MPI programs?', 'yes'))
 opts.Add('MPI_CC', 'MPI C compiler', 'mpicc')
 opts.Add('MPI_CXX', 'MPI C++ compiler', 'mpiCC')
@@ -73,8 +75,12 @@ opts.Add('TIFFFLAGS', 'Additional flags for TIFF configure', 'CPPFLAGS=-w')
 opts.Add(BoolVariable('verbose_sqlite', 'Verbose configuring of SQLite libraries?', 'no'))
 opts.Add('SQLITEFLAGS', 'Additional flags for SQLite configure', 'CPPFLAGS=-w CFLAGS=-DSQLITE_ENABLE_UPDATE_DELETE_LIMIT=1')
 
+opts.Add(BoolVariable('verbose_gtest', 'Verbose configuring of GoogleTest libraries?', 'no'))
+opts.Add('GTESTAGS', 'Additional flags for GoogleTest configure', 'CPPFLAGS=-w')
+
 opts.Add('JNI_CPPPATH', 'Directory of jni.h', '')
 opts.Add('JAVAC', 'Java compiler', 'javac')
+
 
 opts.Update(env)
 
@@ -280,6 +286,9 @@ if (ARGUMENTS['mode'] == 'configure'):
     ConfigureExternalLibrary('sqlite', env['SQLITEFLAGS'], 
                              'sqlite-3.6.23', int(env['verbose_sqlite']))
                          
+    ConfigureExternalLibrary('gtest', env['GTESTFLAGS'], 
+                             'gtest-1.6.0', int(env['verbose_gtest']))
+
     ConfigureExternalLibrary('fftw', env['FFTWFLAGS'], 
                          'fftw-3.2.2', int(env['verbose_fftw']))
     
