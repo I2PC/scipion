@@ -53,6 +53,7 @@
     mDsource.setValue(MDL_X,1.,id2);
     mDsource.setValue(MDL_Y,2.,id2);
     mDtarget=mDsource;
+    mDsource.setValue(MDL_Y,22222.,id2);
     EXPECT_EQ(mDsource,mDtarget);
 }
 
