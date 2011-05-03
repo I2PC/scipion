@@ -157,12 +157,20 @@ def AddMPIProgram(name, basedir, sources_pattern='*.cpp', skip_list=[],
     env.Default(alias)
 
 # Add a program integrated in the Xmipp structure
-def AddXmippProgram(name, libs=[]):
+def AddXmippProgram(name, libs=[], folder='programs'):
     finalLibPath = ['lib']
     finalIncludePath = ['libraries', '#']
     finalLibs = libs + ['XmippData', 'XmippExternal'] + FFTWLibs + SQLiteLibs + TIFFLibs
-    AddProgram(name, 'applications/programs/' + name, '*.cpp', [],
+    AddProgram(name, 'applications/%s/%s' % (folder, name), '*.cpp', [],
         finalIncludePath, finalLibPath, finalLibs, [], [])
+# Add a program integrated in the Xmipp structure
+def AddXmippTest(name):
+    AddXmippProgram(name, ['gtest'], 'tests')
+    testname = 'xmipp_' + name
+    test = env.Alias('run_tests', env.Command('applications/tests/OUTPUT/' + testname + ".xml",testname,
+                                   "$SOURCE --gtest_output=xml:$TARGET"))
+    AlwaysBuild(test)
+    env.Default(test)
 
 def AddXmippMPIProgram(name, libs=[]):
     finalLibPath = ['lib']
@@ -637,9 +645,6 @@ AddXmippProgram('enhance_contrast', ['XmippRecons'])
 AddXmippProgram('filter_projections', ['XmippRecons'])
 AddXmippProgram('find_center2d')
 AddXmippProgram('find_center3d')
-if int(env['gtest']):
-     AddXmippProgram('gtest',['gtest'])
-
 AddXmippProgram('image_align', ['XmippRecons'])
 AddXmippProgram('image_align_tilt_pairs', ['XmippRecons'])
 AddXmippProgram('image_convert')
@@ -710,6 +715,12 @@ AddXmippProgram('volume_segment', ['XmippRecons'])
 AddXmippProgram('xray_import', ['XmippRecons'])
 AddXmippProgram('xray_psf_create')
 AddXmippProgram('xray_project', ['XmippRecons'])
+
+#---- Test
+if int(env['gtest']):
+     AddXmippTest('test_metadata')
+     AddXmippTest('test_multidim')
+     env.Default('run_tests')
 
 # --- Scripts
 
