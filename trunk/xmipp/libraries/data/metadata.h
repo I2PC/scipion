@@ -559,22 +559,23 @@ public:
      */
 
     /** Write rows data to disk. */
-    void _writeRows(std::ostream &os);
+    void _writeRows(std::ostream &os) const;
 
     /** Write metadata to disk.
      * This will write the metadata content to disk.
      */
-    void _write(const FileName &outFile,const String & blockName="", WriteModeMetaData mode=MD_OVERWRITE);
+    void _write(const FileName &outFile,const String & blockName="", WriteModeMetaData mode=MD_OVERWRITE) const;
     /** Write metadata to disk. Guess blockname from filename
      * @code
      * outFilename="first@md1.doc" -> filename = md1.doc, blockname = first
      * @endcode
      */
-    void write(const FileName &outFile, WriteModeMetaData mode=MD_OVERWRITE);
+    void write(const FileName &outFile, WriteModeMetaData mode=MD_OVERWRITE) const;
+
 
     /** Write metadata to out stream
      */
-    void write(std::ostream &os, const String & blockName="",WriteModeMetaData mode=MD_OVERWRITE);
+    void write(std::ostream &os, const String & blockName="",WriteModeMetaData mode=MD_OVERWRITE) const;
 
     /** Append data lines to file.
      * This function can be used to add new data to
@@ -748,12 +749,19 @@ public:
      * add the columns in mdxx to md1
      */
     void fillExpand(MDLabel label);
+    /** 'is equal to' (equality).*/
+   bool operator==(const MetaData& op) const;
+
+
 
 }
 ;//class MetaData
 
-/** 'is equal to' (equality).*/
-bool operator==(const MetaData& op1, const MetaData& op2);
+/** print metadata
+ *
+ */
+std::ostream& operator<<(std::ostream& o, const MetaData & mD);
+
 
 ////////////////////////////// MetaData Iterator ////////////////////////////
 /** Iterates over metadatas */

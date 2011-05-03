@@ -461,6 +461,36 @@ void MDSql::setOperate(MetaData *mdPtrOut, MDLabel column, SetOperation operatio
         execSingleStmt(ss);
 }
 
+bool MDSql::equals(const MDSql &op)
+{
+    if(myMd->activeLabels != op.myMd->activeLabels)
+        return (false);
+    int size  = myMd->activeLabels.size();
+    std::stringstream sqlQuery,ss2;
+
+    ss2 << MDL::label2Str(MDL_OBJID);
+
+    for (int i = 0; i < size; i++)
+    {
+        ss2 << ", " << MDL::label2Str( myMd->activeLabels[i]);
+    }
+    sqlQuery
+    << "SELECT count(*) FROM ("
+    << "SELECT count(*) as result\
+    FROM\
+    (\
+    SELECT *\
+    FROM " <<   tableName(tableId)
+    <<      " UNION ALL \
+    SELECT *\
+    FROM " << tableName(op.tableId)
+    <<     ") tmp"
+    << " GROUP BY " << ss2.str()
+    << " HAVING COUNT(*) <> 2"
+    << ") tmp1";
+    return (execSingleIntStmt(sqlQuery)==0);
+}
+
 void MDSql::setOperate(const MetaData *mdInLeft, const MetaData *mdInRight, MDLabel column, SetOperation operation)
 {
     std::stringstream ss, ss2, ss3;
@@ -627,7 +657,7 @@ bool MDSql::execSingleStmt(const std::stringstream &ss)
 
     sqlite3_stmt * stmt;
     rc = sqlite3_prepare_v2(db, ss.str().c_str(), -1, &stmt, &zLeftover);
-//#define DEBUG
+    //#define DEBUG
 #ifdef DEBUG
 
     std::cerr << "execSingleStmt, stmt: '" << ss.str() << "'" <<std::endl;

@@ -207,8 +207,12 @@ private:
     friend class MDSqlStaticInit;
     friend class MetaData;
     friend class MDIterator;
+    ///similar to "operator"
+    bool equals(const MDSql &op);
+
 }
 ;//close class MDSql
+
 
 /** This is the base class for queries on MetaData.
  * It is abstract, so it can not be instanciated. Queries will be very

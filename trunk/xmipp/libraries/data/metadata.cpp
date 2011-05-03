@@ -452,7 +452,7 @@ bool MetaData::containsObject(const MDQuery &query)
 #include <fcntl.h>
 #include <sys/mman.h>
 
-void MetaData::write(const FileName &_outFile, WriteModeMetaData mode)
+void MetaData::write(const FileName &_outFile, WriteModeMetaData mode) const
 {
     std::string blockName;
     FileName outFile;
@@ -463,7 +463,7 @@ void MetaData::write(const FileName &_outFile, WriteModeMetaData mode)
 
 }
 
-void MetaData::_write(const FileName &outFile,const std::string &blockName, WriteModeMetaData mode)
+void MetaData::_write(const FileName &outFile,const std::string &blockName, WriteModeMetaData mode) const
 {
     struct stat file_status;
     int fd;
@@ -558,7 +558,7 @@ void MetaData::append(const FileName &outFile)
         write(outFile);
 }
 
-void MetaData::_writeRows(std::ostream &os)
+void MetaData::_writeRows(std::ostream &os) const
 {
 
     FOR_ALL_OBJECTS_IN_METADATA(*this)
@@ -579,7 +579,7 @@ void MetaData::_writeRows(std::ostream &os)
     }
 }
 
-void MetaData::write(std::ostream &os,const std::string &blockName, WriteModeMetaData mode )
+void MetaData::write(std::ostream &os,const std::string &blockName, WriteModeMetaData mode ) const
 {
     if(mode==MD_OVERWRITE)
         os << "# XMIPP_STAR_1 * "// << (isColumnFormat ? "column" : "row")
@@ -1391,6 +1391,18 @@ void MetaData::convertXML(FileName fn)
     ofs <<  "</" << fn << ">"<< std::endl;
 }
 
+bool MetaData::operator==(const MetaData& op) const
+{
+	return myMDSql->equals(*(op.myMDSql));
+}
+
+std::ostream& operator<<(std::ostream& o, const MetaData & mD)
+{
+	mD.write(o);
+	return o;
+}
+
+
 void MDIterator::init(const MetaData &md, const MDQuery * pQuery)
 {
     objects = new std::vector<size_t>();
@@ -1542,22 +1554,3 @@ bool MDExpandGenerator::fillValue(MetaData &md, size_t objId)
         REPORT_ERROR(ERR_MD_BADLABEL, formatString("Can't expand missing label '%s'", MDL::label2Str(label).c_str()));
 }
 
-bool operator==(const MetaData& op1, const MetaData& op2)
-{
-//    	SELECT count(*) as result
-//    	FROM
-//    	(
-//    	  SELECT *
-//    	  FROM op1
-//    	  UNION ALL
-//    	  SELECT *
-//    	  FROM op2
-//    	) tmp
-//    	GROUP BY obj_id (ALL ATRIBUTES)
-//    	HAVING COUNT(*) = 1
-	MetaData aux;
-	aux=op1;
-	aux.subtraction(op2,MDL_OBJID);
-	std::cerr << "dummy implementation of operator ==" <<std::endl;
-	return ((aux.size())==0);
-}
