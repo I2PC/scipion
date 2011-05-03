@@ -126,9 +126,9 @@ CodeBook::CodeBook(unsigned _n, const ClassicTrainingVectors& _ts, const bool _u
     //if (_ts.calibrated())
     theTargets.resize(_n, "");
     // Assign random vectors
+    std::vector<Feature> v;
     for (unsigned i = 0 ; i < _n ; i++)
     {
-        std::vector<Feature> v;
         int index = (int) rnd_unif(0, _ts.size() - 1);
         v = _ts.theItems[index];
         if (_use_rand_cvs)

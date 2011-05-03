@@ -177,7 +177,7 @@ public:
         TextualListener myListener;       // Define the listener class
         myListener.setVerbosity() = verbose;       // Set verbosity level
         thisSOM->setListener(&myListener);         // Set Listener
-        thisSOM->train(*myMap, ts, fn_out);               // Train algorithm
+        thisSOM->train(*myMap, ts, fn_out);        // Train algorithm
 
         // Test algorithm
         double dist = thisSOM->test(*myMap, ts);
@@ -194,62 +194,6 @@ public:
         /*******************************************************
             Saving all kind of Information
         *******************************************************/
-
-        std::cout << "Saving algorithm information as " << fn_out << ".inf ....." << std::endl;
-        tmpN = fn_out.c_str() + (std::string) ".inf";
-        std::ofstream infS(tmpN.c_str());
-        if ((annSteps == 0) || (annSteps == 1))
-        {
-            infS << "Kernel Probability Density Estimator clustering algorithm" << std::endl;
-            infS << "                 Kernel c-Means" << std::endl << std::endl;
-        }
-        else
-        {
-            infS << "Kernel Probability Density Estimator SOM algorithm" << std::endl;
-            infS << "                     KerDenSOM" << std::endl << std::endl;
-        }
-        infS << "Input data file : " << fn_in << std::endl;
-        infS << "Code vectors output file : " << fn_out <<  ".cod" << std::endl;
-        infS << "Whole codebook output file : " << fn_out <<  ".cbk" << std::endl;
-        infS << "Algorithm information output file : " << fn_out <<  ".inf" << std::endl;
-        infS << "Number of feature vectors: " << ts.size() << std::endl;
-        infS << "Number of variables: " << ts.theItems[0].size() << std::endl;
-        infS << "Horizontal dimension (Xdim) = " << xdim << std::endl;
-        infS << "Vertical dimension (Ydim) = " << ydim << std::endl;
-        if (norm)
-            infS << "Input data normalized" << std::endl;
-        else
-            infS << "Input data not normalized" << std::endl;
-
-        if (annSteps > 1)
-        {
-            if (layout == "HEXA")
-                infS << "Hexagonal topology " << std::endl;
-            else
-                infS << "Rectangular topology " << std::endl;
-        }
-
-        if (gaussian)
-            infS << "Gaussian Kernel function " << std::endl;
-        else
-        {
-            infS << "t-Student Kernel function" << std::endl;
-            infS << "Degrees of freedom (df) = " << df << std::endl;
-        }
-
-        if (annSteps > 1)
-        {
-            infS << "Initial smoothness factor (reg0) = " << reg0 << std::endl;
-            infS << "Final smoothness factor (reg1) = " << reg1 << std::endl;
-            infS << "Deterministic annealing steps = " << annSteps << std::endl;
-        }
-
-        infS << "Total number of iterations = " << iter << std::endl;
-        infS << "Stopping criteria (eps) = " << eps << std::endl;
-        infS << "Final Sigma = " << thisSOM->getSigma() << std::endl;
-        infS << "Quantization error : " <<  dist << std::endl;
-        infS.flush();
-
         // assign data to clusters according to fuzzy threshold
         std::cout << "Saving neurons assigments ....." << std::endl;
         for (unsigned i = 0; i < myMap->size(); i++)
@@ -260,18 +204,6 @@ public:
                 cStream << myMap->classifAt(i)[j] << std::endl;
             cStream.flush();
         }
-
-        // save .vs file to be compatible with SOM_PAK
-        std::cout << "Saving visual file as " << fn_out << ".vs ....." << std::endl;
-        tmpN = fn_out.c_str() + (std::string) ".vs";
-        std::ofstream vsStream(tmpN.c_str());
-        vsStream << ts.theItems[0].size() << " " << myMap->layout() << " " << myMap->width() << " " << myMap->height() << " gaussian" << std::endl;
-        for (int i = 0; i < ts.size(); i++)
-        {
-            int j = myMap->fuzzyWinner(i);
-            vsStream << myMap->indexToPos(j).first << " " << myMap->indexToPos(j).second << " " << myMap->memb[i][j] << " " << ts.theTargets[i] << std::endl;
-        }
-        vsStream.flush();
 
         // save .his file (Histogram)
         std::cout << "Saving code vectors histogram file as " << fn_out << ".his ....." << std::endl;

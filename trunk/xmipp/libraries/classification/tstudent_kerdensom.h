@@ -78,7 +78,8 @@ public:
      * Parameter: _update True if uses _som as starting point for training.
      * Parameter: _sigma If update = true, uses this sigma for the training.
      */
-    virtual void train(FuzzyMap& _som, TS& _examples, FileName& _fn_vectors, bool _update = false, double _sigma = 0);
+    virtual void train(FuzzyMap& _som, TS& _examples, FileName& _fn_vectors,
+    		           bool _update = false, double _sigma = 0, bool _saveIntermediate=false);
 
 
     /**

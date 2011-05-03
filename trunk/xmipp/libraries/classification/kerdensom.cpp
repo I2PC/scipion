@@ -114,58 +114,55 @@ double KerDenSOM::test(const FuzzyMap& _som, const TS& _examples) const
  */
 void KerDenSOM::updateV(FuzzyMap* _som, const TS* _examples, const double& _reg)
 {
-    unsigned j, cc, vv;
     unsigned t2 = 0;  // Iteration index
 
     // Calculate Temporal scratch values
-    for (cc = 0; cc < numNeurons; cc++)
+    for (size_t cc = 0; cc < numNeurons; cc++)
     {
-        for (j = 0; j < dim; j++)
-            tmpMap[cc][j] = 0.;
+    	double *ptrTmpMap_cc=&(tmpMap[cc][0]);
+    	memset(ptrTmpMap_cc,0,dim*sizeof(double));
+    	double &tmpDens_cc=tmpDens[cc];
         if (_reg != 0)
-            tmpDens[cc] = _reg * _som->getLayout().numNeig(_som, (SomPos) _som->indexToPos(cc));
+        	tmpDens_cc = _reg * _som->getLayout().numNeig(_som, (SomPos) _som->indexToPos(cc));
         else
-            tmpDens[cc] = 0.;
-        for (vv = 0; vv < numVectors; vv++)
+        	tmpDens_cc = 0.;
+        for (size_t vv = 0; vv < numVectors; vv++)
         {
             double tmpU = (double) _som->memb[vv][cc];
-            tmpDens[cc] += tmpU;
-            for (j = 0; j < dim; j++)
-            {
-                tmpMap[cc][j] += (double)((double) tmpU * (double)(_examples->theItems[vv][j]));
-            }
+            tmpDens_cc += tmpU;
+            const Feature * ptrExample=&(_examples->theItems[vv][0]);
+            for (int j = 0; j < dim; j++)
+            	ptrTmpMap_cc[j] +=  tmpU * ptrExample[j];
         }
     }
 
-
     // Update Code vectors using a sort of Gauss-Seidel iterative algorithm.
     // Usually 100 iterations are enough.
-
-
     double convergence = 1, stopError2, stopError1;
+    double *ptrTmpV=&(tmpV[0]);
     while ((convergence > 1e-5) && (t2 < 100))
     {
         t2++;
         stopError2 = 0;
         stopError1 = 0;
-        for (cc = 0; cc < numNeurons; cc++)
+        for (size_t cc = 0; cc < numNeurons; cc++)
         {
             if (_reg != 0)
                 _som->localAve(_som->indexToPos(cc), tmpV);
-            for (j = 0; j < dim; j++)
+        	double *ptrTmpMap_cc=&(tmpMap[cc][0]);
+        	double iTmpDens_cc=1.0/tmpDens[cc];
+        	Feature *ptrCodeVector_cc=&(_som->theItems[cc][0]);
+            for (int j = 0; j < dim; j++)
             {
-                double tmpU = (tmpMap[cc][j] + tmpV[j] * _reg) / tmpDens[cc];
-                stopError1 += fabs((double)(_som->theItems[cc][j]) - tmpU);
+                double tmpU = (ptrTmpMap_cc[j] + ptrTmpV[j] * _reg) * iTmpDens_cc;
+                stopError1 += fabs(ptrCodeVector_cc[j] - tmpU);
                 stopError2 += fabs(tmpU);
-                _som->theItems[cc][j] = (Feature) tmpU;
+                ptrCodeVector_cc[j] = (Feature) tmpU;
             }
         } // for
         convergence = stopError1 / stopError2;
     } // while
-
-
 }
-
 
 //-----------------------------------------------------------------------------
 
@@ -197,6 +194,8 @@ double KerDenSOM::mainIterations(FuzzyMap* _som, const TS* _examples, double& _s
         }
     }
     while ((stopError > epsilon) && (iter < somNSteps));
+    std::cout << "Stoperror=" << stopError << " epsilon=" << epsilon << " iter=" << iter
+    		  << " somNSteps=" << somNSteps << std::endl;
     if (verbosity == 1 || verbosity == 3)
         listener->OnProgress(somNSteps);
     return stopError;
@@ -208,23 +207,28 @@ double KerDenSOM::mainIterations(FuzzyMap* _som, const TS* _examples, double& _s
 // Estimate Sigma Part I
 double KerDenSOM::updateSigmaI(FuzzyMap* _som, const TS* _examples)
 {
-    double r, t = 0;
-    int vv, cc, j;
+    double t = 0;
 
     // Computing Sigma (Part I)
-    for (vv = 0; vv < numVectors; vv++)
+    for (size_t vv = 0; vv < numVectors; vv++)
     {
-        for (cc = 0; cc < numNeurons; cc++)
+    	const FeatureVector &example=_examples->theItems[vv];
+    	const Feature *ptrExample0=&example[0];
+        for (size_t cc = 0; cc < numNeurons; cc++)
         {
-            r = 0.0;
-            for (j = 0; j < dim; j++)
-                r += ((double)(_examples->theItems[vv][j]) - (double)(_som->theItems[cc][j])) * ((double)(_examples->theItems[vv][j]) - (double)(_som->theItems[cc][j]));
+            double r = 0.0;
+        	const Feature *ptrExample=ptrExample0;
+        	const Feature *ptrCodeVector=&(_som->theItems[cc][0]);
+            for (int j = 0; j < dim; j++)
+            {
+            	double diff=(double)(*ptrExample++) - (double)(*ptrCodeVector++);
+                r += diff*diff;
+            }
             t += r * (double)(_som->memb[vv][cc]);
         }
     }
     return (double)(t / (double)(numVectors*dim));
 }
-
 
 //-----------------------------------------------------------------------------
 /**************** Necessary stuff ***************************************/
@@ -238,34 +242,39 @@ double KerDenSOM::updateSigmaI(FuzzyMap* _som, const TS* _examples)
  */
 void KerDenSOM::updateV1(FuzzyMap* _som, const TS* _examples)
 {
-    unsigned j, cc, vv;
-
-    for (cc = 0; cc < numNeurons; cc++)
+    for (size_t cc = 0; cc < numNeurons; cc++)
     {
-        for (j = 0; j < dim; j++)
-            tmpMap[cc][j] = 0.;
-        tmpDens[cc] = 0.0;
-        for (vv = 0; vv < numVectors; vv++)
+    	std::vector<double> &tmpMap_cc=tmpMap[cc];
+    	double *ptrTmpMap_cc0=&tmpMap_cc[0];
+    	memset(ptrTmpMap_cc0,0,dim*sizeof(double));
+        double &tmpDens_cc=tmpDens[cc];
+        tmpDens_cc = 0.0;
+        for (size_t vv = 0; vv < numVectors; vv++)
         {
-            double tmpU = (double)(_som->memb[vv][cc]);
-            tmpDens[cc] += tmpU;
-            for (j = 0; j < dim; j++)
+            double tmpU = _som->memb[vv][cc];
+            tmpDens_cc += tmpU;
+            const Feature *ptrExample=&(_examples->theItems[vv][0]);
+            double *ptrTmpMap_cc=ptrTmpMap_cc0;
+            for (int j = 0; j < dim; j++)
             {
-                tmpMap[cc][j] += (double)((double) tmpU * (double)(_examples->theItems[vv][j]));
+            	*ptrTmpMap_cc += tmpU * (*ptrExample);
+            	++ptrExample;
+            	++ptrTmpMap_cc;
             }
         }
     }
 
-    for (cc = 0; cc < numNeurons; cc++)
+    for (size_t cc = 0; cc < numNeurons; cc++)
     {
-        for (j = 0; j < dim; j++)
+    	const std::vector<double> &tmpMap_cc=tmpMap[cc];
+        double itmpDens_cc=1.0/tmpDens[cc];
+    	FeatureVector &codevector=_som->theItems[cc];
+        for (int j = 0; j < dim; j++)
         {
-            double tmpU = tmpMap[cc][j] / tmpDens[cc];
-            _som->theItems[cc][j] = (Feature) tmpU;
+            double tmpU =tmpMap_cc[j] * itmpDens_cc;
+            codevector[j] = (Feature) tmpU;
         }
     } // for
-
-
 }
 
 //-----------------------------------------------------------------------------

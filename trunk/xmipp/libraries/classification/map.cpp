@@ -542,43 +542,46 @@ void RECTLayout::localAve(const FuzzyMap* _som, const SomPos& _center, std::vect
 {
     int j;
     int dim = _som->itemAt(0).size();
-    for (j = 0; j < dim; j++)
-        _aveVector[j] = 0.0;
+    double *ptrAveVector=&(_aveVector[0]);
+    memset(ptrAveVector,0,dim*sizeof(double));
     int tmpi = _center.first;
     int tmpj = _center.second;
     int kk = 0;
     if ((tmpi - 1) >= 0)
     {
         kk++;
+        const Feature *codevector=&(_som->itemAt(_som->PosToIndex(SomPos(tmpi - 1, tmpj)))[0]);
         for (j = 0; j < dim; j++)
-            _aveVector[j] += (double)(_som->itemAt(_som->PosToIndex(SomPos(tmpi - 1, tmpj)))[j]);
+        	ptrAveVector[j] += codevector[j];
     }
     if ((tmpi + 1) < _som->width())
     {
         kk++;
+        const Feature *codevector=&(_som->itemAt(_som->PosToIndex(SomPos(tmpi + 1, tmpj)))[0]);
         for (j = 0; j < dim; j++)
-            _aveVector[j] += (double)(_som->itemAt(_som->PosToIndex(SomPos(tmpi + 1, tmpj)))[j]);
+        	ptrAveVector[j] += codevector[j];
     }
     if ((tmpj - 1) >= 0)
     {
         kk++;
+        const Feature *codevector=&(_som->itemAt(_som->PosToIndex(SomPos(tmpi, tmpj-1)))[0]);
         for (j = 0; j < dim; j++)
-            _aveVector[j] += (double)(_som->itemAt(_som->PosToIndex(SomPos(tmpi, tmpj - 1)))[j]);
+        	ptrAveVector[j] += codevector[j];
     }
     if ((tmpj + 1) < _som->height())
     {
         kk++;
+        const Feature *codevector=&(_som->itemAt(_som->PosToIndex(SomPos(tmpi, tmpj+1)))[0]);
         for (j = 0; j < dim; j++)
-            _aveVector[j] += (double)(_som->itemAt(_som->PosToIndex(SomPos(tmpi, tmpj + 1)))[j]);
+        	ptrAveVector[j] += codevector[j];
     }
     if (_som->height() == 1 || _som->width() == 1)
         for (j = 0; j < dim; j++)
-            _aveVector[j] /= 2.0;
+        	ptrAveVector[j] *= 1.0/2.0;
     else
         for (j = 0; j < dim; j++)
-            _aveVector[j] /= 4.0;
+        	ptrAveVector[j] *= 1.0/4.0;
 }
-
 
 /**
  * Returns the average number of intermediate neighbors.

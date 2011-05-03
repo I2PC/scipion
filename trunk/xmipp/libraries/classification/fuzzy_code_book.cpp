@@ -110,10 +110,10 @@ FuzzyCodeBook::FuzzyCodeBook(unsigned _n, const ClassicTrainingVectors& _ts,
     numClusters = _n;
     numVectors = _ts.size();
     memb.resize(numVectors);
+    std::vector <Feature> v;
+    v.resize(numClusters, 0);
     for (unsigned k = 0; k < numVectors; k++)
     {
-        std::vector <Feature> v;
-        v.resize(numClusters, 0);
         memb[k] = v;
     } // for k
 };

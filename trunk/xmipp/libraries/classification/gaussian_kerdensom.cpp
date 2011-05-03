@@ -44,7 +44,8 @@
  * Parameter: _update True if uses _som as starting point for training.
  * Parameter: _sigma If update = true, uses this sigma for the training.
  */
-void GaussianKerDenSOM::train(FuzzyMap& _som, TS& _examples, FileName& _fn, bool _update, double _sigma)
+void GaussianKerDenSOM::train(FuzzyMap& _som, TS& _examples, FileName& _fn,
+                              bool _update, double _sigma, bool _saveIntermediate)
 {
     // Saves algorithm information in fn file
     FileName tmpN1 = _fn.c_str() + (std::string) ".LCurveInfo";
@@ -94,7 +95,8 @@ void GaussianKerDenSOM::train(FuzzyMap& _som, TS& _examples, FileName& _fn, bool
     tmpregMax = log(reg0);
     tmpregMin = log(reg1);
 
-    if (annSteps == 0) annSteps = 1;
+    if (annSteps == 0)
+        annSteps = 1;
     for (int iter = 0; iter < annSteps; iter++)
     {
 
@@ -106,7 +108,8 @@ void GaussianKerDenSOM::train(FuzzyMap& _som, TS& _examples, FileName& _fn, bool
                 sprintf(s, "\nTraining Deterministic Annealing step %d of %d....\n", iter + 1, annSteps);
                 listener->OnReportOperation((std::string) s);
             }
-            else listener->OnReportOperation((std::string) "Training ....\n");
+            else
+                listener->OnReportOperation((std::string) "Training ....\n");
         }
 
         if (annSteps == 1)
@@ -147,70 +150,73 @@ void GaussianKerDenSOM::train(FuzzyMap& _som, TS& _examples, FileName& _fn, bool
                 _som.unNormalize(_examples.getNormalizationInfo()); // de-normalize codevectors
             }
 
-            // Saves each codebook (for all iterations)
-            tmpN = _fn.c_str() + (std::string) "_" + integerToString(iter) + (std::string) ".cod";
-            if (verbosity)
-                listener->OnReportOperation((std::string) "Saving code vectors....\n");
-            std::ofstream codS(tmpN.c_str());
-            codS << _som;
-            codS.flush();
-
-            // save .his file (Histogram)
-            if (verbosity)
-                listener->OnReportOperation((std::string) "Saving histogram file....\n");
-            tmpN = _fn.c_str() + (std::string) "_" + integerToString(iter) + (std::string) ".his";
-            std::ofstream hisStream(tmpN.c_str());
-            _som.printHistogram(hisStream);
-            hisStream.flush();
-
-            // save .err file (Average Quantization Error)
-            if (verbosity)
-                listener->OnReportOperation((std::string) "Saving Average Quantization Error file....\n");
-            tmpN = _fn.c_str() + (std::string) "_" + integerToString(iter) + (std::string) ".err";
-            std::ofstream errStream(tmpN.c_str());
-            _som.printQuantError(errStream);
-            errStream.flush();
-
-            // save .vs file to be compatible with SOM_PAK
-            if (verbosity)
-                listener->OnReportOperation((std::string) "Saving visual file....\n");
-            tmpN = _fn.c_str() + (std::string) "_" + integerToString(iter) + (std::string) ".vs";
-            std::ofstream vsStream(tmpN.c_str());
-            vsStream << _examples.theItems[0].size() << " " << _som.layout() << " " << _som.width() << " " << _som.height() << " gaussian" << std::endl;
-            for (int i = 0; i < _examples.size(); i++)
+            if (_saveIntermediate)
             {
-                int j = _som.fuzzyWinner(i);
-                vsStream << _som.indexToPos(j).first << " " << _som.indexToPos(j).second << " " << _som.memb[i][j] << " " << _examples.theTargets[i] << std::endl;
+                // Saves each codebook (for all iterations)
+                tmpN = _fn.c_str() + (std::string) "_" + integerToString(iter) + (std::string) ".cod";
+                if (verbosity)
+                    listener->OnReportOperation((std::string) "Saving code vectors....\n");
+                std::ofstream codS(tmpN.c_str());
+                codS << _som;
+                codS.flush();
+
+                // save .his file (Histogram)
+                if (verbosity)
+                    listener->OnReportOperation((std::string) "Saving histogram file....\n");
+                tmpN = _fn.c_str() + (std::string) "_" + integerToString(iter) + (std::string) ".his";
+                std::ofstream hisStream(tmpN.c_str());
+                _som.printHistogram(hisStream);
+                hisStream.flush();
+
+                // save .err file (Average Quantization Error)
+                if (verbosity)
+                    listener->OnReportOperation((std::string) "Saving Average Quantization Error file....\n");
+                tmpN = _fn.c_str() + (std::string) "_" + integerToString(iter) + (std::string) ".err";
+                std::ofstream errStream(tmpN.c_str());
+                _som.printQuantError(errStream);
+                errStream.flush();
+
+                // save .vs file to be compatible with SOM_PAK
+                if (verbosity)
+                    listener->OnReportOperation((std::string) "Saving visual file....\n");
+                tmpN = _fn.c_str() + (std::string) "_" + integerToString(iter) + (std::string) ".vs";
+                std::ofstream vsStream(tmpN.c_str());
+                vsStream << _examples.theItems[0].size() << " " << _som.layout() << " " << _som.width() << " " << _som.height() << " gaussian" << std::endl;
+                for (int i = 0; i < _examples.size(); i++)
+                {
+                    int j = _som.fuzzyWinner(i);
+                    vsStream << _som.indexToPos(j).first << " " << _som.indexToPos(j).second << " " << _som.memb[i][j] << " " << _examples.theTargets[i] << std::endl;
+                }
+                vsStream.flush();
+
+                // save .inf file
+                if (verbosity)
+                    listener->OnReportOperation((std::string) "Saving inf file....\n");
+                tmpN = _fn.c_str() + (std::string) "_" + integerToString(iter) + (std::string) ".inf";
+                std::ofstream infS(tmpN.c_str());
+                infS << "Kernel Probability Density Estimator SOM algorithm" << std::endl << std::endl;
+                infS << "Deterministic annealing step " << iter + 1 << " out of " << annSteps << std::endl;
+                infS << "Number of feature vectors: " << _examples.size() << std::endl;
+                infS << "Number of variables: " << _examples.theItems[0].size() << std::endl;
+                infS << "Horizontal dimension (Xdim) = " << _som.width() << std::endl;
+                infS << "Vertical dimension (Ydim) = " << _som.height() << std::endl;
+                if (_examples.isNormalized())
+                    infS << "Input data normalized" << std::endl;
+                else
+                    infS << "Input data not normalized" << std::endl;
+                if (_som.layout() == "rect")
+                    infS << "Rectangular topology " << std::endl;
+                else
+                    infS << "Hexagonal topology " << std::endl;
+                infS << "Gaussian Kernel function " << std::endl;
+                infS << "Total number of iterations = " << somNSteps << std::endl;
+                infS << "Stopping criteria (eps) = " << epsilon << std::endl << std::endl ;
+
+                infS << "Smoothness factor (regularization) = " << regtmp << std::endl;
+                infS << "Functional value = " << funct << std::endl;
+                infS << "Sigma (Kernel width) = " << sigma << std::endl;
+                infS.flush();
             }
-            vsStream.flush();
-
-            // save .inf file
-            if (verbosity)
-                listener->OnReportOperation((std::string) "Saving inf file....\n");
-            tmpN = _fn.c_str() + (std::string) "_" + integerToString(iter) + (std::string) ".inf";
-            std::ofstream infS(tmpN.c_str());
-            infS << "Kernel Probability Density Estimator SOM algorithm" << std::endl << std::endl;
-            infS << "Deterministic annealing step " << iter + 1 << " out of " << annSteps << std::endl;
-            infS << "Number of feature vectors: " << _examples.size() << std::endl;
-            infS << "Number of variables: " << _examples.theItems[0].size() << std::endl;
-            infS << "Horizontal dimension (Xdim) = " << _som.width() << std::endl;
-            infS << "Vertical dimension (Ydim) = " << _som.height() << std::endl;
-            if (_examples.isNormalized())
-                infS << "Input data normalized" << std::endl;
-            else
-                infS << "Input data not normalized" << std::endl;
-            if (_som.layout() == "rect")
-                infS << "Rectangular topology " << std::endl;
-            else
-                infS << "Hexagonal topology " << std::endl;
-            infS << "Gaussian Kernel function " << std::endl;
-            infS << "Total number of iterations = " << somNSteps << std::endl;
-            infS << "Stopping criteria (eps) = " << epsilon << std::endl << std::endl ;
-
-            infS << "Smoothness factor (regularization) = " << regtmp << std::endl;
-            infS << "Functional value = " << funct << std::endl;
-            infS << "Sigma (Kernel width) = " << sigma << std::endl;
-            infS.flush();
 
             if (_examples.isNormalized())
             {
@@ -232,64 +238,69 @@ void GaussianKerDenSOM::train(FuzzyMap& _som, TS& _examples, FileName& _fn, bool
 
 };
 
-
 //-----------------------------------------------------------------------------
-
-
 /**
  * Update the U (Membership)
  */
-double GaussianKerDenSOM::updateU(FuzzyMap* _som, const TS* _examples, const double& _sigma, double& _alpha)
+double GaussianKerDenSOM::updateU(FuzzyMap* _som, const TS* _examples,
+		                          const double& _sigma, double& _alpha)
 {
-
     // Create auxiliar stuff
-
-    unsigned i, j, k;
     double var = 0;
     double auxDist, auxProd;
-    double rr2, rr1, max1, d1, tmp, r1;
+    double rr2, max1, d1, tmp, r1;
 
-    rr1 = 2.0 * _sigma;
+    double irr1 =1.0/( 2.0 * _sigma);
     _alpha = 0;
 
     // Update Membership matrix
-    for (k = 0; k < numVectors; k++)
+    double *ptrTmpD=&tmpD[0];
+    double *ptrTmpD1=&tmpD1[0];
+    double idim=1.0/dim;
+    for (size_t k = 0; k < numVectors; k++)
     {
         auxProd = 0;
         max1 = -MAXFLOAT;
-        for (i = 0; i < numNeurons; i ++)
+        const Feature *ptrExample=&(_examples->theItems[k][0]);
+        for (size_t i = 0; i < numNeurons; i ++)
         {
             auxDist = 0;
-            for (j = 0; j < dim; j++)
+            const Feature *ptrCodeVector=&(_som->theItems[i][0]);
+            for (int j = 0; j < dim; j++)
             {
-                double tmp;
-                tmp = ((double) _examples->theItems[k][j] - (double)_som->theItems[i][j]);
+                double tmp=((double)ptrExample[j] - (double)ptrCodeVector[j]);
                 auxDist += tmp * tmp;
             }
-            tmpD[i] = auxDist;
-            rr2 = -auxDist / rr1;
-            tmpD1[i] = rr2;
-            if (max1 < rr2) max1 = rr2;
+            auxDist*=idim;
+            ptrTmpD[i] = auxDist;
+            rr2 = -auxDist * irr1;
+            ptrTmpD1[i] = rr2;
+            if (max1 < rr2)
+                max1 = rr2;
         }
         r1 = 0;
-        for (j = 0; j < numNeurons; j ++)
+        for (size_t j = 0; j < numNeurons; j ++)
         {
-            rr2 = tmpD1[j] - max1;
-            if (rr2 < MAXZ) d1 = 0;
-            else d1 = (double)exp(rr2);
+            rr2 = ptrTmpD1[j] - max1;
+            if (rr2 < MAXZ)
+                d1 = 0;
+            else
+                d1 = (double)exp(rr2);
             r1 += d1;
-            tmpD1[j] = d1;
+            ptrTmpD1[j] = d1;
         }
-        for (j = 0; j < numNeurons; j ++)
+        double ir1=1.0/r1;
+
+        Feature *ptrSomMembK=&(_som->memb[k][0]);
+        for (size_t j = 0; j < numNeurons; j ++)
         {
-            tmp = tmpD1[j] / r1;
-            _som->memb[k][j] = (Feature) tmp;
-            _alpha += tmp * tmpD[j];
+            tmp = ptrTmpD1[j] * ir1;
+            ptrSomMembK[j] = (Feature) tmp;
+            _alpha += tmp * ptrTmpD[j];
         }
     } // for k
     return 0.0;
 }
-
 
 //-----------------------------------------------------------------------------
 
@@ -298,7 +309,8 @@ double GaussianKerDenSOM::updateSigmaII(FuzzyMap* _som, const TS* _examples, con
 {
     int cc, j;
 
-    if (_reg == 0) return(_alpha / (double)(numVectors*dim));
+    if (_reg == 0)
+        return(_alpha / (double)(numVectors*dim));
 
     // Computing Sigma (Part II)
     double q = 0.;
@@ -320,22 +332,27 @@ double GaussianKerDenSOM::updateSigmaII(FuzzyMap* _som, const TS* _examples, con
  */
 double GaussianKerDenSOM::codeDens(const FuzzyMap* _som, const FeatureVector* _example, double _sigma) const
 {
-    unsigned j, cc;
-    double t, s = 0;
-    for (cc = 0; cc < numNeurons; cc++)
+    double s = 0;
+    double K=-1.0/(2*_sigma);
+    const Feature *ptrExample=&((*_example)[0]);
+    for (size_t cc = 0; cc < numNeurons; cc++)
     {
-        t = 0;
-        for (j = 0; j < dim; j++)
-            t += ((double)((*_example)[j]) - (double)(_som->theItems[cc][j])) * ((double)((*_example)[j]) - (double)(_som->theItems[cc][j]));
-        t = -t / (double)(2.0 * _sigma);
-        if (t < MAXZ) t = 0;
-        else t = exp(t);
+        double t = 0;
+        const Feature *ptrCodeVector=&(_som->theItems[cc][0]);
+        for (int j = 0; j < dim; j++)
+        {
+            double diff=(double)(ptrExample[j]) - (double)(ptrCodeVector[j]);
+            t += diff*diff;
+        }
+        t *= K;
+        if (t < MAXZ)
+            t = 0;
+        else
+            t = exp(t);
         s += t;
     }
-    double tmp = (double) dim / 2.0;
-    return (double)(pow((double)(2*PI*_sigma), -tmp)*s / (double)numNeurons);
+    return pow((double)(2*PI*_sigma), -dim *0.5)*s / numNeurons;
 }
-
 
 //-----------------------------------------------------------------------------
 
@@ -352,8 +369,10 @@ double GaussianKerDenSOM::dataDens(const TS* _examples, const FeatureVector* _ex
         for (j = 0; j < dim; j++)
             t += ((double)((*_example)[j]) - (double)(_examples->theItems[vv][j])) * ((double)((*_example)[j]) - (double)(_examples->theItems[vv][j]));
         t = -t / (2.0 * _sigma);
-        if (t < MAXZ) t = 0;
-        else t = exp(t);
+        if (t < MAXZ)
+            t = 0;
+        else
+            t = exp(t);
         s += t;
     }
     double tmp = (double) dim / 2.0;
@@ -367,7 +386,9 @@ double GaussianKerDenSOM::dataDens(const TS* _examples, const FeatureVector* _ex
  * Determines the functional value
  * Returns the likelihood and penalty parts of the functional
  */
-double GaussianKerDenSOM::functional(const TS* _examples, const FuzzyMap* _som, double _sigma, double _reg, double& _likelihood, double& _penalty)
+double GaussianKerDenSOM::functional(const TS* _examples, const FuzzyMap* _som,
+		                             double _sigma, double _reg, double& _likelihood,
+		                             double& _penalty)
 {
     unsigned j, vv, cc;
     double t;
@@ -392,7 +413,8 @@ double GaussianKerDenSOM::functional(const TS* _examples, const FuzzyMap* _som, 
             t = _som->getLayout().numNeig(_som, (SomPos) _som->indexToPos(cc));
             for (j = 0; j < dim; j++)
             {
-                _penalty += (t * (double)(_som->theItems[cc][j]) - (double)(tmpV[j])) * (double)(_som->theItems[cc][j]);
+                _penalty += (t * (double)(_som->theItems[cc][j]) -
+                		         (double)(tmpV[j])) * (double)(_som->theItems[cc][j]);
             }
         }
         _penalty = _reg * _penalty / (2.0 * _sigma);

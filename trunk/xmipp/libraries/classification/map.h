@@ -337,7 +337,6 @@ public:
                   const unsigned& _height, const ClassicTrainingVectors& _ts,
                   const bool _use_rand_cvs = false);
 
-
     /**
      * Construct a Fuzzy SOM from the code vectors in a stream
      * Parameter: _is   The stream
