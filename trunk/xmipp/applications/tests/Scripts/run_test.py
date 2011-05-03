@@ -1,13 +1,15 @@
 #!/usr/bin/env python
 #update subveresion
-XMIPP_HOME='/home/roberto/xmipp_svn'
-XMIPP_TEST=XMIPP_HOME + '/applications/tests'
-XMIPP_LOGS=XMIPP_TEST + '/Logs'
-import datetime, os
+from  config import XMIPP_BASE
+from  config import XMIPP_HOME
+from  config import XMIPP_TEST
+from  config import XMIPP_LOGS
+
+import datetime, os,shutil
 #create log file
 d= datetime.datetime.today()
 filename = XMIPP_LOGS + '/' + d.strftime("%Y_%m_%d_%H_%M_%S.log") 
-print filename
+print "Logging file:", filename
 #run svn
 
 def addCmd(title, cmd):
@@ -16,15 +18,22 @@ def addCmd(title, cmd):
   os.system('echo "output:" >> %s  2>&1' % filename)
   os.system('%s >> %s  2>&1' % (cmd, filename)) 
 
-if os.path.exists(filename):
-    os.remove(filename) 
-os.chdir(XMIPP_HOME)
+if not os.path.exists(XMIPP_LOGS):
+    os.mkdir(XMIPP_LOGS) 
+if  os.path.exists(XMIPP_HOME):
+    shutil.rmtree(XMIPP_HOME) 
+   
 #Svn update
-addCmd("Subversion UPDATE", "svn update")
+os.chdir(XMIPP_BASE)
+addCmd("Subversion CHECKOUT", "svn co http://newxmipp.svn.sourceforge.net/svnroot/newxmipp/trunk/xmipp")
 #configure with test on
-confCmd="./scons.configure  MPI_LIBDIR=/usr/lib64/mpi/gcc/openmpi/lib64/ MPI_INCLUDE=/usr/lib64/mpi/gcc/openmpi/include/  MPI_LIB='mpi' gtest=yes java=yes"
+os.chdir(XMIPP_HOME)
+confCmd="./scons.configure  QTDIR=/usr/share/qt3 MPI_LIBDIR=/usr/lib64/mpi/gcc/openmpi/lib64/ MPI_INCLUDE=/usr/lib64/mpi/gcc/openmpi/include/  MPI_LIB='mpi' gtest=yes java=yes"
 addCmd("Scons CONFIGURE", confCmd)
-#compile
-compCmd="./scons.compile -j 3"
+#compile and execute tests DOES NOT CREATE so.3
+#compCmd="./scons.compile -j 3"
+compCmd="./scons.compile -j 3 run_tests"
 addCmd("Scons COMPILE", compCmd)
-
+import parse_test
+#parse xml files
+parse_test.main(filename)
