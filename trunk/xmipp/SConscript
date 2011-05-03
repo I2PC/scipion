@@ -170,7 +170,7 @@ def AddXmippTest(name):
     test = env.Alias('run_tests', env.Command('applications/tests/OUTPUT/' + testname + ".xml",testname,
                                    "$SOURCE --gtest_output=xml:$TARGET"))
     AlwaysBuild(test)
-    env.Default(test)
+    #env.Default(test)
 
 def AddXmippMPIProgram(name, libs=[]):
     finalLibPath = ['lib']
