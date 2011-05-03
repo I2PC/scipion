@@ -286,8 +286,9 @@ if (ARGUMENTS['mode'] == 'configure'):
     ConfigureExternalLibrary('sqlite', env['SQLITEFLAGS'], 
                              'sqlite-3.6.23', int(env['verbose_sqlite']))
                          
-    ConfigureExternalLibrary('gtest', env['GTESTFLAGS'], 
-                             'gtest-1.6.0', int(env['verbose_gtest']))
+    if int(env['gtest']):
+        ConfigureExternalLibrary('gtest', env['GTESTFLAGS'], 
+                                 'gtest-1.6.0', int(env['verbose_gtest']))
 
     ConfigureExternalLibrary('fftw', env['FFTWFLAGS'], 
                          'fftw-3.2.2', int(env['verbose_fftw']))
