@@ -164,8 +164,8 @@ def AddXmippProgram(name, libs=[], folder='programs'):
     AddProgram(name, 'applications/%s/%s' % (folder, name), '*.cpp', [],
         finalIncludePath, finalLibPath, finalLibs, [], [])
 # Add a program integrated in the Xmipp structure
-def AddXmippTest(name):
-    AddXmippProgram(name, ['gtest'], 'tests')
+def AddXmippTest(name,extralibs=[]):
+    AddXmippProgram(name, ['gtest'] + extralibs, 'tests')
     testname = 'xmipp_' + name
     test = env.Alias('run_tests', env.Command('applications/tests/OUTPUT/' + testname + ".xml",testname,
                                    "$SOURCE --gtest_output=xml:$TARGET"))
@@ -718,9 +718,9 @@ AddXmippProgram('xray_project', ['XmippRecons'])
 
 #---- Test
 if int(env['gtest']):
-     AddXmippTest('test_metadata')
-     AddXmippTest('test_multidim')
-     env.Default('run_tests')
+     AddXmippTest('test_metadata', ['XmippRecons'])
+     AddXmippTest('test_multidim', ['XmippRecons'])
+     env.Default('run_tests', ['XmippRecons'])
 
 # --- Scripts
 
