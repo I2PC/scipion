@@ -194,8 +194,6 @@ double KerDenSOM::mainIterations(FuzzyMap* _som, const TS* _examples, double& _s
         }
     }
     while ((stopError > epsilon) && (iter < somNSteps));
-    std::cout << "Stoperror=" << stopError << " epsilon=" << epsilon << " iter=" << iter
-    		  << " somNSteps=" << somNSteps << std::endl;
     if (verbosity == 1 || verbosity == 3)
         listener->OnProgress(somNSteps);
     return stopError;
