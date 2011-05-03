@@ -46,7 +46,7 @@ def main(filename):
     import glob
     myList= glob.glob(XMIPP_OUTPUT+'/*xml')
     if len(myList)==0:
-	message ="No test data was generated. See " + filename + " for detais"
+	message ="No test data was generated. See xmipp@xmipp.cnb.csic.es:" + filename + " for detais"
 	mail.mail(config.toaddrs,config.fromaddr,"xmipp compilation failed ",message)
     else:
         for filename in myList: 
