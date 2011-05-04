@@ -100,6 +100,9 @@ class Tester:
         self.addProgram("xmipp_classify_analyze_cluster")
         self.addTest("-i input/smallStack.stk --ref 1@input/smallStack.stk -o %o/pca.xmd")
 
+        self.addProgram("xmipp_classify_kerdensom")
+        self.addTest("-i input/clusterVectors.xmd -o %o/kerdensom.xmd --deterministic_annealing 1")
+
         self.addProgram("xmipp_ctf_enhance_psd")
         self.addTest("-i input/down1_01nov26b.001.001.001.002_Periodogramavg.psd -o %o/enhanced_psd.xmp")
 
