@@ -120,6 +120,7 @@ def AddProgram(name, basedir, sources_pattern='*.cpp', skip_list=[],
     install = env.Install(binprefix, program)
     alias = env.Alias(fullname, install)
     env.Default(alias)
+    return alias
 
 def AddMPIProgram(name, basedir, sources_pattern='*.cpp', skip_list=[],
                   includes=[], libpath=[], libs=[], cxxflags=[],
@@ -161,14 +162,16 @@ def AddXmippProgram(name, libs=[], folder='programs'):
     finalLibPath = ['lib']
     finalIncludePath = ['libraries', '#']
     finalLibs = libs + ['XmippData', 'XmippExternal'] + FFTWLibs + SQLiteLibs + TIFFLibs
-    AddProgram(name, 'applications/%s/%s' % (folder, name), '*.cpp', [],
+    return AddProgram(name, 'applications/%s/%s' % (folder, name), '*.cpp', [],
         finalIncludePath, finalLibPath, finalLibs, [], [])
 # Add a program integrated in the Xmipp structure
 def AddXmippTest(name):
-    AddXmippProgram(name, ['gtest'], 'tests')
+    testprog = AddXmippProgram(name, ['gtest'], 'tests')
     testname = 'xmipp_' + name
-    test = env.Alias('run_tests', env.Command('applications/tests/OUTPUT/' + testname + ".xml",testname,
+    testcase = env.Alias('run_' + name , env.Command('applications/tests/OUTPUT/' + testname + ".xml",testname,
                                    "$SOURCE --gtest_output=xml:$TARGET"))
+    env.Depends(testcase, testprog)
+    test = env.Alias('run_tests',testcase)
     AlwaysBuild(test)
     #env.Default(test)
 
