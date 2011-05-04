@@ -32,8 +32,12 @@ def ConfigureJNI(env):
         else:
             # Search for the java compiler
             print "JAVA_HOME environment variable is not set. Searching for java... ",
-            jcdir = os.path.dirname(env.WhereIs('javac'))
-            if not jcdir:
+            tmpJavac=env.WhereIs('javac')
+	    if tmpJavac:
+	        jcdir = os.path.dirname(tmpJavac)
+            else:
+	        jcdir=None
+	    if not jcdir:
                 print "not found."
                 return 0
             # assuming the compiler found is in some directory like
