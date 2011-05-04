@@ -8,9 +8,13 @@ class TaskXMLHandler(ContentHandler):
     #TODO start elemennt  processing must be centralized
     nFailures= 0
     inFailures = False
-    
+    myMessage=""
+    mySuccess=True
     def startElement(self, name, attrs): 
-        if (name == "testcase") :
+        if (name == "testsuite") :
+            self.mySuccess=True
+            self.myMessage = ""
+        elif (name == "testcase") :
  	    self.inFailures = False   
             self.name      = attrs.get("name")
             self.classname = attrs.get("classname")
@@ -25,30 +29,37 @@ class TaskXMLHandler(ContentHandler):
 	    self.reportOk()
 
     def reportError(self):
-        #print 'testName',self.name
-	#print 'testGroup', self.classname
-	#print 'message', self.message
-	message =self.classname + "\n" +self.name + "\n" +  self.message
-	mail.mail(config.toaddrs,config.fromaddr,"xmipp tests failed",message)
+	self.myMessage += "Test %s in testgroup %s FAILED with error %s\n"%(self.name,self.classname,self.message)
+	self.mySuccess = False
 	
     def reportOk(self):
-	message ="xmipp compilation and test OK"
-	mail.mail(config.toaddrs,config.fromaddr,"xmipp compilation and test OK",message)
+	self.myMessage += "Test %s in testgroup %s SUCCESSED\n"%(self.name,self.classname)
 
 def main(filename):
     """ Parse xml test files """
     from  config import XMIPP_TEST
+    from  config import testNames
 
     XMIPP_OUTPUT=XMIPP_TEST + '/OUTPUT'
     task = TaskXMLHandler()
     saxparser = make_parser()
     saxparser.setContentHandler(task)
     import glob
-    myList= glob.glob(XMIPP_OUTPUT+'/*xml')
-    if len(myList)==0:
-	message ="No test data was generated. See xmipp@xmipp.cnb.csic.es:" + filename + " for details"
-	mail.mail(config.toaddrs,config.fromaddr,"xmipp compilation failed ",message)
-    else:
-        for filename in myList: 
+    globalMessage=""
+    success=True
+    for testName in testNames:
+        filename = XMIPP_OUTPUT+'/'+testName+'.xml'
+        if not os.path.exists(filename):
+	    globalMessage += "\n FAILED generation file %s by test %s"%(filename,testName)
+	    success = False
+	else:
 	    saxparser.parse(filename)
-
+	    globalMessage += task.myMessage
+	    if not task.mySuccess:
+	        success = False
+    if success:
+       summaryMessage='XMIPP compilation was OK'
+    else:
+       summaryMessage='XMIPP compilation FAILED'
+    mail.mail(config.toaddrs,config.fromaddr,summaryMessage,globalMessage)
+ 
