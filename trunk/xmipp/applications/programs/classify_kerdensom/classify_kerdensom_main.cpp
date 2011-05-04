@@ -202,7 +202,7 @@ public:
         	id=MDsummary.addObject();
         	MDsummary.setValue(MDL_REF,(int)i,id);
         	MDsummary.setValue(MDL_CLASSIFICATION_INTRACLASS_DISTANCE,myMap->aveDistances[i],id);
-        	MDsummary.setValue(MDL_COUNT,myMap->classifSizeAt(i),id);
+        	MDsummary.setValue(MDL_COUNT,(size_t)myMap->classifSizeAt(i),id);
         }
         MDsummary.write(formatString("KerDenSOM_Cluster_Summary@%s",fn_out.c_str()),MD_APPEND);
 
@@ -244,7 +244,7 @@ public:
         vectorHeaderOut.setValue(MDL_YSIZE,size,idOut);
         vectorHeaderIn.getValue(MDL_ZSIZE,size,idIn);
         vectorHeaderOut.setValue(MDL_ZSIZE,size,idOut);
-        vectorHeaderOut.setValue(MDL_COUNT,myMap->size(),idOut);
+        vectorHeaderOut.setValue(MDL_COUNT,(size_t)myMap->size(),idOut);
         vectorHeaderIn.getValue(MDL_CLASSIFICATION_DATA_SIZE,vectorSize,idIn);
         vectorHeaderOut.setValue(MDL_CLASSIFICATION_DATA_SIZE,vectorSize,idOut);
         vectorHeaderOut.write(formatString("vectorHeader@%s",fn_out.c_str()),MD_APPEND);
