@@ -172,7 +172,7 @@ def AddXmippTest(name):
     if  os.path.exists(xmlFileName):
        os.remove(xmlFileName)
     testcase = env.Alias('run_' + name , env.Command(xmlFileName,testname,
-                                   "$SOURCE --gtest_output=xml:$TARGET"))
+                                   "sleep 5;/home/xmipp/XMIPP/xmipp/bin/" + $SOURCE --gtest_output=xml:$TARGET"))
     env.Depends(testcase, testprog)
     test = env.Alias('run_tests',testcase)
     AlwaysBuild(testcase)
