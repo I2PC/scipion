@@ -164,8 +164,8 @@ def AddXmippProgram(name, libs=[], folder='programs'):
     AddProgram(name, 'applications/%s/%s' % (folder, name), '*.cpp', [],
         finalIncludePath, finalLibPath, finalLibs, [], [])
 # Add a program integrated in the Xmipp structure
-def AddXmippTest(name,extralibs=[]):
-    AddXmippProgram(name, ['gtest'] + extralibs, 'tests')
+def AddXmippTest(name):
+    AddXmippProgram(name, ['gtest'], 'tests')
     testname = 'xmipp_' + name
     test = env.Alias('run_tests', env.Command('applications/tests/OUTPUT/' + testname + ".xml",testname,
                                    "$SOURCE --gtest_output=xml:$TARGET"))
@@ -415,21 +415,19 @@ def AddPySqliteLibrary():
 # --- Libraries
 
 # SQLite
-AddSQLiteLibrary()
+sqlite = AddSQLiteLibrary()
 
 # PYSQLITE
 PYSQliteDir = "external/pysqlite-2.6.3"
 AddPySqliteLibrary()
 
-
-
 # FFTW
 FFTWLibsPaths = ['.libs/libfftw3', 'threads/.libs/libfftw3_threads']
-AddExternalLibrary('fftw', FFTWLibsPaths, FFTWDir, '.3')
+fftw = AddExternalLibrary('fftw', FFTWLibsPaths, FFTWDir, '.3')
 
 # TIFF
 TIFFLibsPaths = ['libtiff/.libs/libtiff']
-AddExternalLibrary('tiff', TIFFLibsPaths, TIFFDir, '.3')
+tiff = AddExternalLibrary('tiff', TIFFLibsPaths, TIFFDir, '.3')
 
 # Gtest
 if int(env['gtest']):
@@ -754,9 +752,10 @@ AddXmippProgram('xray_project', ['XmippRecons'])
 
 #---- Test
 if int(env['gtest']):
-     AddXmippTest('test_metadata', ['XmippRecons'])
-     AddXmippTest('test_multidim', ['XmippRecons'])
-     env.Default('run_tests', ['XmippRecons'])
+     AddXmippTest('test_metadata')
+     AddXmippTest('test_multidim')
+     env.Depends('run_tests', [fftw, tiff, sqlite])
+     env.Default('run_tests'     )
 
 # --- Scripts
 
