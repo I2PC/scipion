@@ -167,6 +167,22 @@ TEST_F( MetadataTest, sort)
     EXPECT_EQ(auxMetadata2,mDsource);
 }
 
+TEST_F( MetadataTest, randomize)
+{
+	int different,equal;
+	different=-1;
+	equal=-2;
+	MetaData auxMetadata;
+	for (int var = 0; var < 20; var++)
+	{
+	    auxMetadata.randomize(mDsource);
+	    if(mDsource==auxMetadata)
+	    	equal=1;
+	    else
+	    	different=1;
+	}
+    EXPECT_EQ(different,equal);
+}
 
 GTEST_API_ int main(int argc, char **argv)
 {
