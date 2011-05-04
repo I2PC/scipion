@@ -184,6 +184,28 @@ TEST_F( MetadataTest, randomize)
     EXPECT_EQ(different,equal);
 }
 
+TEST_F( MetadataTest, addlabel)
+{
+	MetaData auxMetadata = mDunion;
+    auxMetadata.addLabel(MDL_Z);
+    std::vector<MDLabel> v1,v2;
+    v1.push_back(MDL_X);
+    v1.push_back(MDL_Y);
+    v1.push_back(MDL_Z);
+    v2 = auxMetadata.getActiveLabels();
+    EXPECT_EQ(v2,v1);
+}
+
+TEST_F( MetadataTest, removelabel)
+{
+	MetaData auxMetadata = mDunion;
+    auxMetadata.removeLabel(MDL_X);
+    std::vector<MDLabel> v1,v2;
+    v1.push_back(MDL_Y);
+    v2 = auxMetadata.getActiveLabels();
+    EXPECT_EQ(v2,v1);
+}
+
 GTEST_API_ int main(int argc, char **argv)
 {
     std::cout << "Running main() from gtest_main.cc\n";
