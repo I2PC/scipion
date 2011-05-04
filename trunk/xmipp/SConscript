@@ -168,11 +168,14 @@ def AddXmippProgram(name, libs=[], folder='programs'):
 def AddXmippTest(name):
     testprog = AddXmippProgram(name, ['gtest'], 'tests')
     testname = 'xmipp_' + name
-    testcase = env.Alias('run_' + name , env.Command('applications/tests/OUTPUT/' + testname + ".xml",testname,
+    xmlFileName='applications/tests/OUTPUT/' + testname + ".xml"
+    if  os.path.exists(xmlFileName):
+       os.remove(xmlFileName)
+    testcase = env.Alias('run_' + name , env.Command(xmlFileName,testname,
                                    "$SOURCE --gtest_output=xml:$TARGET"))
     env.Depends(testcase, testprog)
     test = env.Alias('run_tests',testcase)
-    AlwaysBuild(test)
+    AlwaysBuild(testcase)
     #env.Default(test)
 
 def AddXmippMPIProgram(name, libs=[]):
