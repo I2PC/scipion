@@ -399,6 +399,7 @@ def AddSQLiteLibrary():
     progInstall = env.InstallAs(progXmippName, progName)
     progAlias = env.Alias('sqlite', progInstall)
     env.Default(progAlias)
+    return progAlias
 
 def AddPySqliteLibrary():
     libprefix = os.path.join(env['prefix'], 'lib')
