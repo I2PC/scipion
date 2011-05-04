@@ -113,17 +113,27 @@ TEST_F( MetadataTest, innerJoin)
 	auxMetadata.join(mDsource,mDjoin,MDL_X);
     EXPECT_EQ(auxMetadata,auxMetadata2)<< mDjoin;//print mDjoin if error
 }
-
-TEST_F( MetadataTest, DISABLED_naturalJoin)
+//DISABLED_
+TEST_F( MetadataTest, naturalJoin)
 {
 	MetaData auxMetadata;
-	MetaData auxMetadata2 = mDsource;
 	MetaData auxMetadata3;
-	id = auxMetadata3.addObject();
-    auxMetadata3.setValue(MDL_Z,222.,auxMetadata2.firstObject());
-    auxMetadata3.setValue(MDL_Z,444.,auxMetadata2.firstObject()+1);//A little bit irregular
-	auxMetadata.join(mDsource,mDjoin,MDL_X,NATURAL);
-    EXPECT_EQ(auxMetadata,auxMetadata2)<< mDjoin;//print mDjoin if error
+    id = auxMetadata3.addObject();
+    auxMetadata3.setValue(MDL_X,1.,id);
+    auxMetadata3.setValue(MDL_Y,2.,id);
+    auxMetadata3.setValue(MDL_Z,222.,id);
+    id = auxMetadata3.addObject();
+    auxMetadata3.setValue(MDL_X,3.,id);
+    auxMetadata3.setValue(MDL_Y,4.,id);
+    auxMetadata3.setValue(MDL_Z,333.,id);
+    id = auxMetadata3.addObject();
+    auxMetadata3.setValue(MDL_X,5.,id);
+    auxMetadata3.setValue(MDL_Y,6.,id);
+    auxMetadata3.setValue(MDL_Z,444.,id);
+
+	auxMetadata.join(mDsource,auxMetadata3,MDL_X,NATURAL);
+	auxMetadata3.removeObject(id);
+    EXPECT_EQ(auxMetadata,auxMetadata3)<< auxMetadata3;//print mDjoin if error
 }
 
 GTEST_API_ int main(int argc, char **argv)
