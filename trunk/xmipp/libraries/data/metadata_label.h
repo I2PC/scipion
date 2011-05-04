@@ -175,7 +175,7 @@ enum MDLabel
     MDL_NOISE_ANGLES, ///< Noise description for projected angles
     MDL_NOISE_PARTICLE_COORD, ///< Noise description for particle's center coordenates (when projecting)
     MDL_NOISE_PIXEL_LEVEL, ///< Noise description for pixels' gray level (when projecting)
-    MDL_ORDER, /// auxiliary label to be used as an index
+    MDL_ORDER, /// auxiliary label to be used as an index (long)
     MDL_ORIGINX, ///< Origin for the image in the X axis (double)
     MDL_ORIGINY, ///< Origin for the image in the Y axis (double)
     MDL_ORIGINZ, ///< Origin for the image in the Z axis (double)
