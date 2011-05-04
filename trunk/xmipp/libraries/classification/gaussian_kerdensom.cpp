@@ -33,6 +33,7 @@
 #include <ctime>
 
 #include "gaussian_kerdensom.h"
+#include <data/metadata.h>
 
 #define  MAXZ -11282
 
@@ -47,12 +48,8 @@
 void GaussianKerDenSOM::train(FuzzyMap& _som, TS& _examples, FileName& _fn,
                               bool _update, double _sigma, bool _saveIntermediate)
 {
-    // Saves algorithm information in fn file
-    FileName tmpN1 = _fn.c_str() + (std::string) ".LCurveInfo";
-    FileName tmpN;
-    std::ofstream algostream(tmpN1.c_str());
-    algostream << "File, Regularization, Functional, Sigma" << std::endl;
-
+	MetaData MDconvergence;
+	FileName tmpN;
     numNeurons = _som.size();
     numVectors = _examples.size();
     dim = _examples.theItems[0].size();
@@ -121,7 +118,10 @@ void GaussianKerDenSOM::train(FuzzyMap& _som, TS& _examples, FileName& _fn,
             listener->OnReportOperation((std::string) "Calculating cost function....\n");
         double funct = functional(&_examples, &_som, sigma, reg1, lkhood, pen);
 
-        algostream << iter << ",  "  << regtmp << ",  " << funct << ",  " << sigma << std::endl;
+        size_t id=MDconvergence.addObject();
+        MDconvergence.setValue(MDL_KERDENSOM_REGULARIZATION,regtmp,id);
+        MDconvergence.setValue(MDL_KERDENSOM_FUNCTIONAL,funct,id);
+        MDconvergence.setValue(MDL_KERDENSOM_SIGMA,sigma,id);
 
         if (verbosity)
         {
@@ -227,8 +227,7 @@ void GaussianKerDenSOM::train(FuzzyMap& _som, TS& _examples, FileName& _fn,
         } // if annSteps
 
     } // for
-
-    algostream.flush();
+    MDconvergence.write(formatString("KerDenSOM_Convergence@%s",_fn.c_str()));
 
     tmpV.clear();
     tmpDens.clear();
