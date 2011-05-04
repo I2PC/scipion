@@ -151,6 +151,23 @@ TEST_F( MetadataTest, merge)
     EXPECT_EQ(auxMetadata,auxMetadata2);
 }
 
+/**
+ * operate
+ */
+TEST_F( MetadataTest, sort)
+{
+	MetaData auxMetadata,auxMetadata2;
+    id = auxMetadata.addObject();
+    auxMetadata.setValue(MDL_X,3.,id);
+    auxMetadata.setValue(MDL_Y,4.,id);
+    id = auxMetadata.addObject();
+    auxMetadata.setValue(MDL_X,1.,id);
+    auxMetadata.setValue(MDL_Y,2.,id);
+    auxMetadata2.sort(auxMetadata,MDL_X);
+    EXPECT_EQ(auxMetadata2,mDsource);
+}
+
+
 GTEST_API_ int main(int argc, char **argv)
 {
     std::cout << "Running main() from gtest_main.cc\n";
