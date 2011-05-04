@@ -7,7 +7,9 @@ import java.util.Arrays;
  * Protocol for integrating native C++ code - @see ImageDouble.java
  */
 public class MetaData {
-	// Fields whose content is a path. They will be "fixed" conveniently.
+
+    public final static String SEPARATOR = "@";
+    // Fields whose content is a path. They will be "fixed" conveniently.
     private final static int PATHS_FIELDS[] = {
         MDLabel.MDL_ASSOCIATED_IMAGE1,
         MDLabel.MDL_ASSOCIATED_IMAGE2,
@@ -18,11 +20,10 @@ public class MetaData {
     };
 
     static {
-    	// Sorts it to use binary search later.
-    	// (It's executed just for the first time)
+        // Sorts it to use binary search later.
+        // (It's executed just for the first time)
         Arrays.sort(PATHS_FIELDS);
     }
-
     //hold pointer to Image class in C++ space
     private long peer;
 
@@ -58,28 +59,26 @@ public class MetaData {
 
     private native String getValueString_(int label, long objId);
 
-    public String getValueString(int label, long objId){
-    	String value = getValueString_(label, objId);
+    public String getValueString(int label, long objId) {
+        String value = getValueString_(label, objId);
 
-	// Try to fix paths.
-	if(Arrays.binarySearch(PATHS_FIELDS, label)>=0){
-    		if(!value.startsWith(File.separator)){
-    			value = fixPath(getBaseDir(), value); 
-    		}
-    	}
+        // Try to fix paths.
+        if (Arrays.binarySearch(PATHS_FIELDS, label) >= 0) {
+            value = fixPath(getBaseDir(), value);
+        }
 
-    	return value;
+        return value;
     }
 
     public native boolean getValueBoolean(int label, long objId);
 
     public native String getFilename();
-    
-    public String getBaseDir(){
-    	File f = new File(getFilename());
-    	f = new File(f.getAbsolutePath());
 
-    	return f.getParent();
+    public String getBaseDir() {
+        File f = new File(getFilename());
+        f = new File(f.getAbsolutePath());
+
+        return f.getParent();
     }
 
     //set values
@@ -111,29 +110,83 @@ public class MetaData {
     // Should be called by GarbageCollector before destroying
     @Override
     protected void finalize() throws Throwable {
-	super.finalize();
+        super.finalize();
         destroy();
     }
-    
+
     // Auxiliary methods.
     public static String fixPath(String workdir, String filename) {
-        int index;
-        String aux = new String(filename.toCharArray());
+        String fixed = filename;
 
-        do {
-            index = aux.lastIndexOf(File.separator);
-            if (index >= 0) {
-                aux = filename.substring(0, index);
+        if (!filename.startsWith(File.separator)) { // Absolute path?
+            String name = getFilename(filename);
+            String strimage = "";
 
-                if (workdir.endsWith(aux)) {
-                    filename = filename.substring(index);
-                    break;
-                }
+            if (filename.contains(SEPARATOR)) { // Has #image?
+                int image = getNimage(filename);
+                strimage = image + SEPARATOR;
             }
-        } while (index >= 0);
 
-	workdir += workdir.endsWith(File.separator) ? "" : File.separator;
+            if (!name.startsWith(File.separator)) { // In 'image@name', is name absolute?
+                String aux = getAbsPath(workdir, name);
+                fixed = strimage + aux;
+            }
+        }
 
-        return workdir + filename;
+        return fixed;
+    }
+
+    public static int getNimage(String filename) {
+        int nimage = ImageDouble.FIRST_IMAGE;
+
+        if (filename.contains(SEPARATOR)) {
+            String str = filename.split(SEPARATOR)[0];
+            if (!str.isEmpty()) {
+                nimage = Integer.valueOf(str);
+            }
+        }
+
+        return nimage;
+    }
+
+    public static String getFilename(String filename) {
+        if (filename.contains(SEPARATOR)) {
+            return filename.split(SEPARATOR)[1];
+        }
+
+        return filename;
+    }
+
+    private static String getAbsPath(String baseDir, String filename) {
+        String[] tokensDir = baseDir.split(File.separator);
+        String[] tokensFile = filename.split(File.separator);
+
+        int indexDir = tokensDir.length - 1;
+        int indexFile = 0;
+
+        while (indexFile < tokensFile.length && indexDir >= 0) {
+            String dirToken = tokensDir[indexDir];
+            String fileToken = tokensFile[indexFile];
+            if (!dirToken.equals(fileToken)) {
+                break;
+            }
+            indexDir--;
+            indexFile++;
+        }
+
+        // Builds result path.
+        String path = "";
+        // Dir
+        for (int i = 0; i < tokensDir.length; i++) {
+            path += tokensDir[i] + File.separator;
+        }
+
+        // File
+        for (int i = indexFile; i < tokensFile.length - 1; i++) {
+            path += tokensFile[i] + File.separator;
+        }
+        path += tokensFile[tokensFile.length - 1];  // Last item (to avoid "/" at the end)
+
+        return path;
     }
 }
