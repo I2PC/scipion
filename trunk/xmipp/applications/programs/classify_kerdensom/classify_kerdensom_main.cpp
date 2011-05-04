@@ -29,7 +29,6 @@
 #include <fstream>
 
 #include <data/program.h>
-#include <classification/tstudent_kerdensom.h>
 #include <classification/gaussian_kerdensom.h>
 
 /* Parameters class ======================================================= */
@@ -47,11 +46,8 @@ public:
     int            ydim;         // Y-dimension
     double         reg0;         // Initial reg
     double         reg1;         // Final reg
-    int            df;           // Degrees of freedom
     std::string    layout;       // layout (Topology)
     unsigned       annSteps;     // Deterministic Annealing steps
-    bool           gaussian;     // Gaussian Kernel
-    bool           tStudent;     // tStudent Kernel
 public:
     // Define parameters
     void defineParams()
@@ -92,10 +88,6 @@ public:
         addParamsLine(" [--deterministic_annealing <Initial_reg=1000> <Final_reg=100> <steps=10>] : Deterministic annealing");
         addParamsLine(" 							 : controls the smoothness regularization");
         addParamsLine("                              : Set it to 0 0 0 for Kernel C-means");
-        addParamsLine(" [--kernel <kernel=gaussian>] : Kernel function");
-        addParamsLine("    where <kernel> gaussian tstudent");
-        addParamsLine(" [--df <df=3>]                : t-Student degrees of freedom");
-        addParamsLine(" [--ain <algorithmFile>]      : algorithm input file");
         addParamsLine(" [--eps <epsilon=1e-7>]       : Stopping criteria");
         addParamsLine(" [--iter <N=200>]             : Number of iterations");
         addParamsLine(" [--norm]                     : Normalize input data");
@@ -110,20 +102,8 @@ public:
         ydim = getIntParam("--ydim");
         xdim = getIntParam("--xdim");
         layout = getParam("--topology");
-        std::string kernel=getParam("--kernel");
-        if (kernel=="gaussian")
-        {
-            gaussian = true;
-            tStudent = false;
-        }
-        else if (kernel=="tstudent")
-        {
-            gaussian = false;
-            tStudent = true;
-        }
         reg0 = getDoubleParam("--reg0");
         reg1 = getDoubleParam("--reg1");
-        df = getIntParam("--df");
         eps = getDoubleParam("--eps");
         iter = getIntParam("--iter");
         norm = checkParam("--norm");
@@ -145,8 +125,6 @@ public:
             REPORT_ERROR(ERR_ARG_INCORRECT,"xdim must be >= 1");
         if (ydim < 1)
             REPORT_ERROR(ERR_ARG_INCORRECT,"ydim must be >= 1");
-        if (df < 2)
-            REPORT_ERROR(ERR_ARG_INCORRECT,"df must be > 1");
     }
 
     void show()
@@ -161,13 +139,6 @@ public:
             std::cout << "Rectangular topology " << std::endl;
         std::cout << "Initial smoothness factor (reg0) = " << reg0 << std::endl;
         std::cout << "Final smoothness factor (reg1) = " << reg1 << std::endl;
-        if (gaussian)
-            std::cout << "Gaussian Kernel function " << std::endl;
-        else
-        {
-            std::cout << "t-Student Kernel function" << std::endl;
-            std::cout << "Degrees of freedom (df) = " << df << std::endl;
-        }
         std::cout << "Deterministic annealing steps = " << annSteps << std::endl;
         std::cout << "Total number of iterations = " << iter << std::endl;
         std::cout << "Stopping criteria (eps) = " << eps << std::endl;
@@ -194,11 +165,7 @@ public:
 
         FuzzyMap *myMap = new FuzzyMap(layout, xdim, ydim, ts);
 
-        KerDenSOM *thisSOM;
-        if (gaussian)
-            thisSOM = new GaussianKerDenSOM(reg0, reg1, annSteps, eps, iter);        // Creates KerDenSOM Algorithm
-        else
-            thisSOM = new TStudentKerDenSOM(reg0, reg1, annSteps, eps, iter, df);    // Creates KerDenSOM Algorithm
+        KerDenSOM *thisSOM= new GaussianKerDenSOM(reg0, reg1, annSteps, eps, iter);        // Creates KerDenSOM Algorithm
 
         TextualListener myListener;       // Define the listener class
         myListener.setVerbosity() = verbose;       // Set verbosity level
