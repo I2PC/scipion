@@ -33,48 +33,47 @@ class ProgCorrelation: public XmippMetadataProgram
 public:
     FileName    fn_ref, fn_msk;
     Image<double> ref, M;
-    MultidimArray<int> mask;
+    Mask mask;
     bool usemask, docc, doeu, domi, doco;
 
     void defineParams()
     {
-        addParamsLine("   -ref <input file>        : Filename for reference image/volume ");
+        addParamsLine("   --ref <input file>        : Filename for reference image/volume ");
         XmippMetadataProgram::defineParams();
-        addParamsLine("  [-mask <input mask=\"\">] : Restrict similarity calculation to region within the mask");
-        addParamsLine("  [-co ]                    : Calculate correlation (i.e. signal product).");
-        addParamsLine("  [-cc ]                    : Calculate cross-correlation coefficient ");
-        addParamsLine("  [-eu ]                    : Calculate euclidian distance ");
-        addParamsLine("  [-mi ]                    : Calculate mutual information");
+        addParamsLine("  [--mask <input mask=\"\">] : Restrict similarity calculation to region within the mask");
+        addParamsLine("  [--co ]                    : Calculate correlation (i.e. signal product).");
+        addParamsLine("  [--cc ]                    : Calculate cross-correlation coefficient ");
+        addParamsLine("  [--eu ]                    : Calculate euclidian distance ");
+        addParamsLine("  [--mi ]                    : Calculate mutual information");
+        mask.defineParams(this,INT_MASK,NULL,"Measure only within an area");
     }
 
     void readParams()
     {
         XmippMetadataProgram::readParams();
-        usemask = false;
-        fn_ref = getParam("-ref");
+        fn_ref = getParam("--ref");
         ref.read(fn_ref);
         ref().setXmippOrigin();
-        fn_msk = getParam("-mask");
-        if (fn_msk != "")
-        {
-            usemask = true;
-            M.read(fn_msk);
-            M().setXmippOrigin();
-            typeCast(M(),mask);
-        }
-        doco = checkParam("-co");
-        docc = checkParam("-cc");
-        doeu = checkParam("-eu");
-        domi = checkParam("-mi");
+        doco = checkParam("--co");
+        docc = checkParam("--cc");
+        doeu = checkParam("--eu");
+        domi = checkParam("--mi");
+        if (usemask = checkParam("--mask"))
+            mask.readParams(this);
     }
 
     void show()
     {
+    	if (verbose==0)
+    		return;
         std::cout << "Reference file: " << fn_ref << std::endl;
-        if (usemask)
-            std::cout << "mask file: " << fn_msk << std::endl;
         XmippMetadataProgram::show();
-        std::cout << std::endl;
+    }
+
+    void preProcess() {
+    	Image<double> Iref;
+    	Iref.read(fn_ref);
+    	mask.generate_mask(Iref());
     }
 
     void processImage(const FileName &fnImg, const FileName &fnImgOut, size_t objId)
@@ -97,13 +96,13 @@ public:
         else
         {
             if (doco)
-                co = correlation(ref(), img(), &mask);
+                co = correlation(ref(), img(), &mask.get_binary_mask());
             if (docc)
-                cc = correlationIndex(ref(), img(), &mask);
+                cc = correlationIndex(ref(), img(), &mask.get_binary_mask());
             if (doeu)
-                eu = euclidianDistance(ref(), img(), &mask);
+                eu = euclidianDistance(ref(), img(), &mask.get_binary_mask());
             if (domi)
-                mi = mutualInformation(ref(), img(), 0, 0, &mask);
+                mi = mutualInformation(ref(), img(), 0, 0, &mask.get_binary_mask());
         }
 
         std::cout << img.name() << ": ";
