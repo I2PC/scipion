@@ -206,6 +206,21 @@ TEST_F( MetadataTest, removelabel)
     EXPECT_EQ(v2,v1);
 }
 
+TEST_F( MetadataTest, operate)
+{
+	MetaData auxMetadata = mDunion;
+	MetaData auxMetadata2 = mDunion;
+    auxMetadata.operate((String)"X=2*X");
+    double x;
+    FOR_ALL_OBJECTS_IN_METADATA(auxMetadata2)
+    {
+    	auxMetadata2.getValue(MDL_X,x,__iter.objId);
+    	auxMetadata2.setValue(MDL_X,x*2,__iter.objId);
+    }
+
+    EXPECT_EQ(auxMetadata,auxMetadata2);
+}
+
 GTEST_API_ int main(int argc, char **argv)
 {
     std::cout << "Running main() from gtest_main.cc\n";
