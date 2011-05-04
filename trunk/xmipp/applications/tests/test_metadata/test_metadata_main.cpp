@@ -136,6 +136,21 @@ TEST_F( MetadataTest, naturalJoin)
     EXPECT_EQ(auxMetadata,auxMetadata3)<< auxMetadata3;//print mDjoin if error
 }
 
+TEST_F( MetadataTest, merge)
+{
+	//FIXME is columns not in the same order equal to operator does not return OK
+	//should not be like this
+	MetaData auxMetadata3, auxMetadata,auxMetadata2;
+    id = auxMetadata3.addObject();
+    auxMetadata3.setValue(MDL_Z,222.,id);
+    id = auxMetadata3.addObject();
+    auxMetadata3.setValue(MDL_Z,444.,id);
+	auxMetadata.join(mDsource,mDjoin,MDL_X);
+    auxMetadata2 = mDsource;
+	auxMetadata2.merge(auxMetadata3);
+    EXPECT_EQ(auxMetadata,auxMetadata2);
+}
+
 GTEST_API_ int main(int argc, char **argv)
 {
     std::cout << "Running main() from gtest_main.cc\n";
