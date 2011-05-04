@@ -43,8 +43,8 @@ public:
     double         eps;          // Stopping criteria
     unsigned       iter;         // Iteration number
     bool           norm;         // Normalize?
-    unsigned       xdim;         // X-dimension (-->)
-    unsigned       ydim;         // Y-dimension
+    int            xdim;         // X-dimension (-->)
+    int            ydim;         // Y-dimension
     double         reg0;         // Initial reg
     double         reg1;         // Final reg
     int            df;           // Degrees of freedom
@@ -194,42 +194,80 @@ public:
         /*******************************************************
             Saving all kind of Information
         *******************************************************/
-        // assign data to clusters according to fuzzy threshold
-        std::cout << "Saving neurons assigments ....." << std::endl;
+        // Save map size
+        MetaData MDkerdensom;
+        size_t id=MDkerdensom.addObject();
+        MDkerdensom.setValue(MDL_XSIZE,xdim,id);
+        MDkerdensom.setValue(MDL_YSIZE,ydim,id);
+        MDkerdensom.setValue(MDL_MAPTOPOLOGY,layout,id);
+        MDkerdensom.write(formatString("KerDenSOM_Layout@%s",fn_out.c_str()),MD_APPEND);
+
+        // save intracluster distance and number of vectors in each cluster
+        MetaData MDsummary;
         for (unsigned i = 0; i < myMap->size(); i++)
         {
-            tmpN = fn_out.c_str() + (std::string) "."  + integerToString(i);
-            std::ofstream cStream(tmpN.c_str());
+        	id=MDsummary.addObject();
+        	MDsummary.setValue(MDL_REF,(int)i,id);
+        	MDsummary.setValue(MDL_CLASSIFICATION_INTRACLASS_DISTANCE,myMap->aveDistances[i],id);
+        	MDsummary.setValue(MDL_COUNT,myMap->classifSizeAt(i),id);
+        }
+        MDsummary.write(formatString("KerDenSOM_Cluster_Summary@%s",fn_out.c_str()),MD_APPEND);
+
+        // assign data to clusters according to fuzzy threshold
+        std::cout << "Saving neurons assigments ....." << std::endl;
+        MetaData vectorContentIn;
+        vectorContentIn.read(formatString("vectorContent@%s",fn_in.c_str()));
+        FileName fn;
+        std::vector<size_t> objIds;
+        vectorContentIn.findObjects(objIds);
+        for (unsigned i = 0; i < myMap->size(); i++)
+        {
+        	MetaData MD;
             for (int j = 0; j < myMap->classifAt(i).size(); j++)
-                cStream << myMap->classifAt(i)[j] << std::endl;
-            cStream.flush();
+            {
+            	size_t order=myMap->classifAt(i)[j];
+            	vectorContentIn.getValue(MDL_IMAGE,fn,objIds[order]);
+            	MD.setValue(MDL_IMAGE,fn,MD.addObject());
+            }
+            if (MD.size()>0)
+            	MD.write(formatString("cluster%06d@%s",i,fn_out.c_str()),MD_APPEND);
         }
 
-        // save .his file (Histogram)
-        std::cout << "Saving code vectors histogram file as " << fn_out << ".his ....." << std::endl;
-        tmpN = fn_out.c_str() + (std::string) ".his";
-        std::ofstream hisStream(tmpN.c_str());
-        myMap->printHistogram(hisStream);
-        hisStream.flush();
-
-        // save .err file (Average Quantization Error)
-        std::cout << "Saving code vectors average quantization error file as " << fn_out << ".err ....." << std::endl;
-        tmpN = fn_out.c_str() + (std::string) ".err";
-        std::ofstream errStream(tmpN.c_str());
-        myMap->printQuantError(errStream);
-        errStream.flush();
-
+        // Save code vectors
         if (norm)
         {
             std::cout << "Denormalizing code vectors....." << std::endl;
             myMap->unNormalize(ts.getNormalizationInfo()); // de-normalize codevectors
         }
-
-        std::cout << "Saving code vectors as " << fn_out << ".cod ....." << std::endl;
-        tmpN = fn_out.c_str() + (std::string) ".cod";
-        std::ofstream codS(tmpN.c_str());
-        codS << *myMap;
-        codS.flush();
+        MetaData vectorHeaderIn, vectorHeaderOut, vectorContentOut;
+        vectorHeaderIn.read(formatString("vectorHeader@%s",fn_in.c_str()));
+        vectorHeaderOut.setColumnFormat(false);
+        int size, vectorSize;
+        size_t idIn=vectorHeaderIn.firstObject();
+        size_t idOut=vectorHeaderOut.addObject();
+        vectorHeaderIn.getValue(MDL_XSIZE,size,idIn);
+        vectorHeaderOut.setValue(MDL_XSIZE,size,idOut);
+        vectorHeaderIn.getValue(MDL_YSIZE,size,idIn);
+        vectorHeaderOut.setValue(MDL_YSIZE,size,idOut);
+        vectorHeaderIn.getValue(MDL_ZSIZE,size,idIn);
+        vectorHeaderOut.setValue(MDL_ZSIZE,size,idOut);
+        vectorHeaderOut.setValue(MDL_COUNT,myMap->size(),idOut);
+        vectorHeaderIn.getValue(MDL_CLASSIFICATION_DATA_SIZE,vectorSize,idIn);
+        vectorHeaderOut.setValue(MDL_CLASSIFICATION_DATA_SIZE,vectorSize,idOut);
+        vectorHeaderOut.write(formatString("vectorHeader@%s",fn_out.c_str()),MD_APPEND);
+        FileName fnOutRaw=fn_out+".raw";
+        std::ofstream fhOutRaw(fnOutRaw.c_str(),std::ios::binary);
+        if (!fhOutRaw)
+            REPORT_ERROR(ERR_IO_NOWRITE,fnOutRaw);
+        for (size_t i = 0; i < myMap->size(); i++)
+        {
+        	id=vectorContentOut.addObject();
+        	vectorContentOut.setValue(MDL_IMAGE,formatString("cluster%06lu",i),id);
+        	vectorContentOut.setValue(MDL_ORDER,i,id);
+        	fhOutRaw.write((char*)&(myMap->theItems[i][0]),vectorSize*sizeof(float));
+        }
+        fhOutRaw.close();
+        vectorContentOut.write(formatString("vectorContent@%s",fn_out.c_str()),MD_APPEND);
 
         std::cout << std::endl;
 
