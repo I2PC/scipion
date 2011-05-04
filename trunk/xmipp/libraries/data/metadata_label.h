@@ -70,6 +70,7 @@ enum MDLabel
     MDL_CELLY, ///< Cell location for crystals
     MDL_CLASSIFICATION_DATA, ///< Data vector for classification (vector double)
     MDL_CLASSIFICATION_DATA_SIZE, ///< Size of data vectors for classification (int)
+    MDL_CLASSIFICATION_INTRACLASS_DISTANCE, ///< Average intraclass distance (double)
     MDL_COMMENT, ///< A comment for this object /*** NOTE THIS IS A SPECIAL CASE AND SO IS TREATED ***/
     MDL_COST, ///< Cost for the image (double)
     MDL_COUNT, ///< Number of elements of a type (int) [this is a genereic type do not use to transfer information to another program]
@@ -155,6 +156,7 @@ enum MDLabel
     MDL_K, ///< //ctf definition K
     MDL_KSTEST, ///<KS-test statistics
     MDL_LL, ///< contribution of an image to log-likelihood value
+    MDL_MAPTOPOLOGY, ///< Map topology (KerDenSOM, ...)
     MDL_MASK, ///< Name of a mask associated to image
     MDL_MAXCC, ///< Cross-correlation for the image (double)
     MDL_MAX, ///<maximum value (double)
@@ -515,6 +517,7 @@ private:
         MDL::addLabel(MDL_CELLY, LABEL_INT, "cellY");
         MDL::addLabel(MDL_CLASSIFICATION_DATA, LABEL_VECTOR, "ClassificationData");
         MDL::addLabel(MDL_CLASSIFICATION_DATA_SIZE, LABEL_INT, "ClassificationDataSize");
+        MDL::addLabel(MDL_CLASSIFICATION_INTRACLASS_DISTANCE, LABEL_DOUBLE, "ClassificationIntraclassDistance");
         MDL::addLabel(MDL_COMMENT, LABEL_STRING, "comment");
         MDL::addLabel(MDL_COST, LABEL_DOUBLE, "cost");
         MDL::addLabel(MDL_COUNT, LABEL_LONG, "count");
@@ -602,6 +605,7 @@ private:
         MDL::addLabel(MDL_K, LABEL_DOUBLE, "K");
         MDL::addLabel(MDL_KSTEST, LABEL_DOUBLE, "KStest");
         MDL::addLabel(MDL_LL, LABEL_DOUBLE, "logLikelihood", "LL");
+        MDL::addLabel(MDL_MAPTOPOLOGY, LABEL_STRING, "mapTopology");
         MDL::addLabel(MDL_MASK, LABEL_STRING, "mask");
         MDL::addLabel(MDL_MAXCC, LABEL_DOUBLE, "maxCC");
         MDL::addLabel(MDL_MAX, LABEL_DOUBLE, "max");
