@@ -18,7 +18,14 @@ protected:
         id = mDsource.addObject();
         mDsource.setValue(MDL_X,3.,id);
         mDsource.setValue(MDL_Y,4.,id);
-        //Md2
+    	//Mdjoin
+        id = mDjoin.addObject();
+        mDjoin.setValue(MDL_X,1.,id);
+        mDjoin.setValue(MDL_Z,222.,id);
+        id = mDjoin.addObject();
+        mDjoin.setValue(MDL_X,3.,id);
+        mDjoin.setValue(MDL_Z,444.,id);
+        //mDanotherSource
         id = mDanotherSource.addObject();
         mDanotherSource.setValue(MDL_X,11.,id);
         mDanotherSource.setValue(MDL_Y,22.,id);
@@ -39,7 +46,7 @@ protected:
     // virtual void TearDown() {}//Destructor
 
     MetaData mDsource,mDtarget,mDanotherSource;
-    MetaData mDunion, auxMetadata;
+    MetaData mDunion, mDjoin;
     size_t id, id1,id2;
 };
 
@@ -57,7 +64,7 @@ TEST_F( MetadataTest, Size)
 
 TEST_F( MetadataTest, Clear)
 {
-    auxMetadata = mDsource;
+	MetaData auxMetadata = mDsource;
     EXPECT_EQ(2,auxMetadata.size());
     auxMetadata.clear();
     EXPECT_EQ(0,auxMetadata.size());
@@ -66,7 +73,7 @@ TEST_F( MetadataTest, Clear)
 TEST_F( MetadataTest, importObjects)
 {
 	//FIXME importObjects is overloaded, only one case is tested
-    auxMetadata = mDsource;
+	MetaData auxMetadata = mDsource;
     auxMetadata.importObject(mDunion,id1,false);
     auxMetadata.importObject(mDunion,id2,false);
     EXPECT_EQ(auxMetadata,mDunion);
@@ -78,23 +85,45 @@ TEST_F( MetadataTest, importObjects)
 TEST_F( MetadataTest, union)
 {
 	//FIXME union all is missing
-    auxMetadata = mDsource;
+	MetaData auxMetadata = mDsource;
     auxMetadata.unionAll(mDanotherSource);
     EXPECT_EQ(auxMetadata,mDunion);
 }
 
 TEST_F( MetadataTest, intersect)
 {
-    auxMetadata = mDunion;
+	MetaData auxMetadata = mDunion;
     auxMetadata.intersection(mDsource,MDL_X);
     EXPECT_EQ(auxMetadata,mDsource);
 }
 
 TEST_F( MetadataTest, substraction)
 {
-    auxMetadata = mDunion;
+	MetaData auxMetadata = mDunion;
     auxMetadata.subtraction(mDanotherSource,MDL_X);
     EXPECT_EQ(auxMetadata,mDsource);
+}
+
+TEST_F( MetadataTest, innerJoin)
+{
+	MetaData auxMetadata;
+	MetaData auxMetadata2 = mDsource;
+    auxMetadata2.setValue(MDL_Z,222.,auxMetadata2.firstObject());
+    auxMetadata2.setValue(MDL_Z,444.,auxMetadata2.firstObject()+1);//A little bit irregular
+	auxMetadata.join(mDsource,mDjoin,MDL_X);
+    EXPECT_EQ(auxMetadata,auxMetadata2)<< mDjoin;//print mDjoin if error
+}
+
+TEST_F( MetadataTest, DISABLED_naturalJoin)
+{
+	MetaData auxMetadata;
+	MetaData auxMetadata2 = mDsource;
+	MetaData auxMetadata3;
+	id = auxMetadata3.addObject();
+    auxMetadata3.setValue(MDL_Z,222.,auxMetadata2.firstObject());
+    auxMetadata3.setValue(MDL_Z,444.,auxMetadata2.firstObject()+1);//A little bit irregular
+	auxMetadata.join(mDsource,mDjoin,MDL_X,NATURAL);
+    EXPECT_EQ(auxMetadata,auxMetadata2)<< mDjoin;//print mDjoin if error
 }
 
 GTEST_API_ int main(int argc, char **argv)
