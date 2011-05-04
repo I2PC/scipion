@@ -85,7 +85,7 @@ public:
         addParamsLine("                              :+O O O O O O O O O");
         addParamsLine("                              :+</verbatim>");
         addParamsLine("    where <topology> RECT HEXA");
-        addParamsLine(" [--deterministic_annealing <Initial_reg=1000> <Final_reg=100> <steps=10>] : Deterministic annealing");
+        addParamsLine(" [--deterministic_annealing <steps=10> <Initial_reg=1000> <Final_reg=100>] : Deterministic annealing");
         addParamsLine(" 							 : controls the smoothness regularization");
         addParamsLine("                              : Set it to 0 0 0 for Kernel C-means");
         addParamsLine(" [--eps <epsilon=1e-7>]       : Stopping criteria");
@@ -102,12 +102,12 @@ public:
         ydim = getIntParam("--ydim");
         xdim = getIntParam("--xdim");
         layout = getParam("--topology");
-        reg0 = getDoubleParam("--reg0");
-        reg1 = getDoubleParam("--reg1");
+        annSteps = getIntParam("--deterministic_annealing",0);
+        reg0 = getDoubleParam("--deterministic_annealing",1);
+        reg1 = getDoubleParam("--deterministic_annealing",2);
         eps = getDoubleParam("--eps");
         iter = getIntParam("--iter");
         norm = checkParam("--norm");
-        annSteps = getIntParam("--steps");
 
         // Some checks
         if (iter < 1)
