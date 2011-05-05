@@ -55,16 +55,21 @@ TEST_F( MetadataTest, similarToOperator)
     EXPECT_TRUE(mDsource==mDsource);
     EXPECT_FALSE(mDsource==mDanotherSource);
 }
+/** SORT FOR ROUTINE ALPHABETIC ORDER
+ *
+ */
 
-TEST_F( MetadataTest, Copy)
-{
-	MetaData auxMetadata = mDsource;
-    EXPECT_EQ(mDsource,auxMetadata);
-}
 
-TEST_F( MetadataTest, Size)
+TEST_F( MetadataTest, addlabel)
 {
-    EXPECT_EQ(2, mDsource.size());
+	MetaData auxMetadata = mDunion;
+    auxMetadata.addLabel(MDL_Z);
+    std::vector<MDLabel> v1,v2;
+    v1.push_back(MDL_X);
+    v1.push_back(MDL_Y);
+    v1.push_back(MDL_Z);
+    v2 = auxMetadata.getActiveLabels();
+    EXPECT_EQ(v2,v1);
 }
 
 TEST_F( MetadataTest, Clear)
@@ -75,7 +80,14 @@ TEST_F( MetadataTest, Clear)
     EXPECT_EQ(0,auxMetadata.size());
 }
 
-TEST_F( MetadataTest, importObject)
+TEST_F( MetadataTest, Copy)
+{
+	MetaData auxMetadata = mDsource;
+    EXPECT_EQ(mDsource,auxMetadata);
+}
+
+
+TEST_F( MetadataTest, ImportObject)
 {
 	//FIXME importObjects test is in the test named select
 	MetaData auxMetadata = mDsource;
@@ -84,32 +96,7 @@ TEST_F( MetadataTest, importObject)
     EXPECT_EQ(auxMetadata,mDunion);
 }
 
-/*
- * Operations in sets
- */
-TEST_F( MetadataTest, union)
-{
-	//FIXME union all is missing
-	MetaData auxMetadata = mDsource;
-    auxMetadata.unionAll(mDanotherSource);
-    EXPECT_EQ(auxMetadata,mDunion);
-}
-
-TEST_F( MetadataTest, intersect)
-{
-	MetaData auxMetadata = mDunion;
-    auxMetadata.intersection(mDsource,MDL_X);
-    EXPECT_EQ(auxMetadata,mDsource);
-}
-
-TEST_F( MetadataTest, substraction)
-{
-	MetaData auxMetadata = mDunion;
-    auxMetadata.subtraction(mDanotherSource,MDL_X);
-    EXPECT_EQ(auxMetadata,mDsource);
-}
-
-TEST_F( MetadataTest, innerJoin)
+TEST_F( MetadataTest, InnerJoin)
 {
 	MetaData auxMetadata;
 	MetaData auxMetadata2 = mDsource;
@@ -118,8 +105,30 @@ TEST_F( MetadataTest, innerJoin)
 	auxMetadata.join(mDsource,mDjoin,MDL_X);
     EXPECT_EQ(auxMetadata,auxMetadata2)<< mDjoin;//print mDjoin if error
 }
-//DISABLED_
-TEST_F( MetadataTest, naturalJoin)
+
+TEST_F( MetadataTest, Intersect)
+{
+	MetaData auxMetadata = mDunion;
+    auxMetadata.intersection(mDsource,MDL_X);
+    EXPECT_EQ(auxMetadata,mDsource);
+}
+
+TEST_F( MetadataTest, Merge)
+{
+	//FIXME is columns not in the same order equal to operator does not return OK
+	//should not be like this
+	MetaData auxMetadata3, auxMetadata,auxMetadata2;
+    id = auxMetadata3.addObject();
+    auxMetadata3.setValue(MDL_Z,222.,id);
+    id = auxMetadata3.addObject();
+    auxMetadata3.setValue(MDL_Z,444.,id);
+	auxMetadata.join(mDsource,mDjoin,MDL_X);
+    auxMetadata2 = mDsource;
+	auxMetadata2.merge(auxMetadata3);
+    EXPECT_EQ(auxMetadata,auxMetadata2);
+}
+
+TEST_F( MetadataTest, NaturalJoin)
 {
 	MetaData auxMetadata;
 	MetaData auxMetadata3;
@@ -141,38 +150,22 @@ TEST_F( MetadataTest, naturalJoin)
     EXPECT_EQ(auxMetadata,auxMetadata3)<< auxMetadata3;//print mDjoin if error
 }
 
-TEST_F( MetadataTest, merge)
+TEST_F( MetadataTest, Operate)
 {
-	//FIXME is columns not in the same order equal to operator does not return OK
-	//should not be like this
-	MetaData auxMetadata3, auxMetadata,auxMetadata2;
-    id = auxMetadata3.addObject();
-    auxMetadata3.setValue(MDL_Z,222.,id);
-    id = auxMetadata3.addObject();
-    auxMetadata3.setValue(MDL_Z,444.,id);
-	auxMetadata.join(mDsource,mDjoin,MDL_X);
-    auxMetadata2 = mDsource;
-	auxMetadata2.merge(auxMetadata3);
+	MetaData auxMetadata = mDunion;
+	MetaData auxMetadata2 = mDunion;
+    auxMetadata.operate((String)"X=2*X");
+    double x;
+    FOR_ALL_OBJECTS_IN_METADATA(auxMetadata2)
+    {
+    	auxMetadata2.getValue(MDL_X,x,__iter.objId);
+    	auxMetadata2.setValue(MDL_X,x*2,__iter.objId);
+    }
+
     EXPECT_EQ(auxMetadata,auxMetadata2);
 }
 
-/**
- * operate
- */
-TEST_F( MetadataTest, sort)
-{
-	MetaData auxMetadata,auxMetadata2;
-    id = auxMetadata.addObject();
-    auxMetadata.setValue(MDL_X,3.,id);
-    auxMetadata.setValue(MDL_Y,4.,id);
-    id = auxMetadata.addObject();
-    auxMetadata.setValue(MDL_X,1.,id);
-    auxMetadata.setValue(MDL_Y,2.,id);
-    auxMetadata2.sort(auxMetadata,MDL_X);
-    EXPECT_EQ(auxMetadata2,mDsource);
-}
-
-TEST_F( MetadataTest, randomize)
+TEST_F( MetadataTest, Randomize)
 {
 	int different,equal;
 	different=-1;
@@ -189,19 +182,7 @@ TEST_F( MetadataTest, randomize)
     EXPECT_EQ(different,equal);
 }
 
-TEST_F( MetadataTest, addlabel)
-{
-	MetaData auxMetadata = mDunion;
-    auxMetadata.addLabel(MDL_Z);
-    std::vector<MDLabel> v1,v2;
-    v1.push_back(MDL_X);
-    v1.push_back(MDL_Y);
-    v1.push_back(MDL_Z);
-    v2 = auxMetadata.getActiveLabels();
-    EXPECT_EQ(v2,v1);
-}
-
-TEST_F( MetadataTest, removelabel)
+TEST_F( MetadataTest, Removelabel)
 {
 	MetaData auxMetadata = mDunion;
     auxMetadata.removeLabel(MDL_X);
@@ -211,20 +192,39 @@ TEST_F( MetadataTest, removelabel)
     EXPECT_EQ(v2,v1);
 }
 
-TEST_F( MetadataTest, operate)
+TEST_F( MetadataTest, Size)
+{
+    EXPECT_EQ(2, mDsource.size());
+}
+
+TEST_F( MetadataTest, Sort)
+{
+	MetaData auxMetadata,auxMetadata2;
+    id = auxMetadata.addObject();
+    auxMetadata.setValue(MDL_X,3.,id);
+    auxMetadata.setValue(MDL_Y,4.,id);
+    id = auxMetadata.addObject();
+    auxMetadata.setValue(MDL_X,1.,id);
+    auxMetadata.setValue(MDL_Y,2.,id);
+    auxMetadata2.sort(auxMetadata,MDL_X);
+    EXPECT_EQ(auxMetadata2,mDsource);
+}
+
+TEST_F( MetadataTest, Substraction)
 {
 	MetaData auxMetadata = mDunion;
-	MetaData auxMetadata2 = mDunion;
-    auxMetadata.operate((String)"X=2*X");
-    double x;
-    FOR_ALL_OBJECTS_IN_METADATA(auxMetadata2)
-    {
-    	auxMetadata2.getValue(MDL_X,x,__iter.objId);
-    	auxMetadata2.setValue(MDL_X,x*2,__iter.objId);
-    }
-
-    EXPECT_EQ(auxMetadata,auxMetadata2);
+    auxMetadata.subtraction(mDanotherSource,MDL_X);
+    EXPECT_EQ(auxMetadata,mDsource);
 }
+
+TEST_F( MetadataTest, Union)
+{
+	//FIXME union all is missing
+	MetaData auxMetadata = mDsource;
+    auxMetadata.unionAll(mDanotherSource);
+    EXPECT_EQ(auxMetadata,mDunion);
+}
+
 
 //TEST_F( MetadataTest, select)
 //{
