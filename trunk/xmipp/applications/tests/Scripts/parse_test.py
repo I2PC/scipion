@@ -33,7 +33,7 @@ class TaskXMLHandler(ContentHandler):
 	self.mySuccess = False
 	
     def reportOk(self):
-	self.myMessage += "Test %s in testgroup %s SUCCESSED\n"%(self.name,self.classname)
+	self.myMessage += "Test %s in testgroup %s was OK\n"%(self.name,self.classname)
 
 def main(filename):
     """ Parse xml test files """
@@ -48,6 +48,7 @@ def main(filename):
     globalMessage=""
     success=True
     for testName in testNames:
+        globalMessage += "\n"
         filename = XMIPP_OUTPUT+'/'+testName+'.xml'
         if not os.path.exists(filename):
 	    globalMessage += "\n FAILED generation file %s by test %s"%(filename,testName)
