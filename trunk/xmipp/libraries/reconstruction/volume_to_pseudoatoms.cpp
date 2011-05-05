@@ -554,7 +554,7 @@ void ProgVolumeToPseudoatoms::extractRegion(int idxGaussian,
     for (int k=k0; k<=kF; k++)
         for (int i=i0; i<=iF; i++)
             for (int j=j0; j<=jF; j++)
-                A3D_ELEM(region,k,i,j)=A3D_ELEM(Vcurrent,k,i,j);
+                A3D_ELEM(region,k,i,j)=A3D_ELEM(mVcurrent,k,i,j);
 }
 
 double ProgVolumeToPseudoatoms::evaluateRegion(const MultidimArray<double> &region)
