@@ -172,7 +172,7 @@ def AddXmippTest(name):
     if  os.path.exists(xmlFileName):
        os.remove(xmlFileName)
     testcase = env.Alias('run_' + name , env.Command(xmlFileName,testname,
-                                   "sleep 5;/home/xmipp/XMIPP/xmipp/bin/" + $SOURCE --gtest_output=xml:$TARGET"))
+                                   "sleep 5;/home/xmipp/XMIPP/xmipp/bin/$SOURCE --gtest_output=xml:$TARGET"))
     env.Depends(testcase, testprog)
     test = env.Alias('run_tests',testcase)
     AlwaysBuild(testcase)
@@ -666,8 +666,6 @@ AddXmippProgram('angular_rotate')
 AddXmippProgram('apropos', ['XmippInterface'])
 AddXmippProgram('classify_analyze_cluster', ['XmippClassif'])
 AddXmippProgram('classify_kerdensom', ['XmippClassif'])
-AddXmippProgram('classify_pca', ['XmippClassif'])
-AddXmippProgram('classify_project_pca', ['XmippClassif'])
 AddXmippProgram('convert_vol2pseudo', ['XmippRecons'])
 AddXmippProgram('convert_voxels22blobs', ['XmippRecons'])
 AddXmippProgram('correct_bfactor', ['XmippRecons'])
