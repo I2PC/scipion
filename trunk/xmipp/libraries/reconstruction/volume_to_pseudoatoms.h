@@ -57,18 +57,18 @@ public:
 bool operator <(const PseudoAtom &a, const PseudoAtom &b);
 
 // Forward declaration
-class ProgConvertVol2Pseudo;
+class ProgVolumeToPseudoatoms;
 
 // Thread parameters
 struct Prog_Convert_Vol2Pseudo_ThreadParams
 {
     int myThreadID;
-    ProgConvertVol2Pseudo *parent;
+    ProgVolumeToPseudoatoms *parent;
     int Nintensity;
     int Nmovement;
 };
 
-class ProgConvertVol2Pseudo: public XmippProgram
+class ProgVolumeToPseudoatoms: public XmippProgram
 {
 public:
     /// Volume to convert

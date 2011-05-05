@@ -23,11 +23,11 @@
  *  e-mail address 'xmipp@cnb.csic.es'
  ***************************************************************************/
 
-#include <reconstruction/convert_vol2pseudo.h>
+#include <reconstruction/volume_to_pseudoatoms.h>
 
 int main(int argc, char **argv)
 {
-	ProgConvertVol2Pseudo prm;
+	ProgVolumeToPseudoatoms prm;
     prm.read(argc,argv);
     return prm.tryRun();
 }

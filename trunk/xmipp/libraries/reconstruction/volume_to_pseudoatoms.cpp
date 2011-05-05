@@ -23,7 +23,7 @@
  *  e-mail address 'xmipp@cnb.csic.es'
  ***************************************************************************/
 
-#include "convert_vol2pseudo.h"
+#include "volume_to_pseudoatoms.h"
 #include "fourier_filter.h"
 #include <algorithm>
 #include <stdio.h>
@@ -47,7 +47,7 @@ std::ostream& operator << (std::ostream &o, const PseudoAtom &a)
 }
 
 /* I/O --------------------------------------------------------------------- */
-void ProgConvertVol2Pseudo::readParams()
+void ProgVolumeToPseudoatoms::readParams()
 {
     fnVol = getParam("-i");
     fnOut = getParam("-o");
@@ -76,7 +76,7 @@ void ProgConvertVol2Pseudo::readParams()
         threshold=0;
 }
 
-void ProgConvertVol2Pseudo::show() const
+void ProgVolumeToPseudoatoms::show() const
 {
     if (verbose==0)
         return;
@@ -106,7 +106,7 @@ void ProgConvertVol2Pseudo::show() const
         std::cout << "No mask\n";
 }
 
-void ProgConvertVol2Pseudo::defineParams()
+void ProgVolumeToPseudoatoms::defineParams()
 {
     addUsageLine("Creates a set of pseudoatoms representing the density of an EM volume. ");
     addUsageLine("+This is useful for the vector quantization process needed in problems ");
@@ -162,7 +162,7 @@ void ProgConvertVol2Pseudo::defineParams()
     mask_prm.defineParams(this,INT_MASK,NULL,"Statistics restricted to the mask area.");
 }
 
-void ProgConvertVol2Pseudo::produceSideInfo()
+void ProgVolumeToPseudoatoms::produceSideInfo()
 {
     sigma/=sampling;
 
@@ -228,7 +228,7 @@ void ProgConvertVol2Pseudo::produceSideInfo()
 }
 
 //#define DEBUG
-void ProgConvertVol2Pseudo::placeSeeds(int Nseeds)
+void ProgVolumeToPseudoatoms::placeSeeds(int Nseeds)
 {
     // Convolve the difference with the Gaussian to know
     // where it would be better to put a Gaussian
@@ -254,23 +254,24 @@ void ProgConvertVol2Pseudo::placeSeeds(int Nseeds)
         double maxVal;
         FOR_ALL_ELEMENTS_IN_ARRAY3D(Vdiff)
         {
-            if (useMask && iMask3D(k,i,j)==0)
+            if (useMask && A3D_ELEM(iMask3D,k,i,j)==0)
                 continue;
-            if (first || Vdiff(k,i,j)>maxVal)
+            double voxel=A3D_ELEM(Vdiff,k,i,j);
+            if (first || voxel>maxVal)
             {
                 kmax=k;
                 imax=i;
                 jmax=j;
-                maxVal=Vdiff(k,i,j);
+                maxVal=voxel;
                 first=false;
             }
         }
 
         // Keep this as an atom
         PseudoAtom a;
-        a.location(0)=kmax;
-        a.location(1)=imax;
-        a.location(2)=jmax;
+        VEC_ELEM(a.location,0)=kmax;
+        VEC_ELEM(a.location,1)=imax;
+        VEC_ELEM(a.location,2)=jmax;
         if (allowIntensity)
             a.intensity=maxVal;
         else
@@ -300,7 +301,7 @@ void ProgConvertVol2Pseudo::placeSeeds(int Nseeds)
 #undef DEBUG
 
 /* Remove seeds ------------------------------------------------------------ */
-void ProgConvertVol2Pseudo::removeSeeds(int Nseeds)
+void ProgVolumeToPseudoatoms::removeSeeds(int Nseeds)
 {
     int fromNegative=ROUND(Nseeds*0.5);
     int fromSmall=Nseeds-fromNegative;
@@ -386,7 +387,7 @@ void ProgConvertVol2Pseudo::removeSeeds(int Nseeds)
     removeTooCloseSeeds();
 }
 
-void ProgConvertVol2Pseudo::removeTooCloseSeeds()
+void ProgVolumeToPseudoatoms::removeTooCloseSeeds()
 {
     // Remove atoms that are too close to each other
     if (minDistance>0 && allowIntensity)
@@ -451,7 +452,7 @@ void ProgConvertVol2Pseudo::removeTooCloseSeeds()
 }
 
 /* Draw approximation ------------------------------------------------------ */
-void ProgConvertVol2Pseudo::drawApproximation()
+void ProgVolumeToPseudoatoms::drawApproximation()
 {
     Vcurrent().initZeros(Vin());
     int nmax=atoms.size();
@@ -481,7 +482,7 @@ void ProgConvertVol2Pseudo::drawApproximation()
 }
 
 /* Gaussian operations ----------------------------------------------------- */
-double ProgConvertVol2Pseudo::computeAverage(int k, int i, int j,
+double ProgVolumeToPseudoatoms::computeAverage(int k, int i, int j,
         MultidimArray<double> &V)
 {
     int k0=XMIPP_MAX(STARTINGZ(V),k-sigma3);
@@ -498,7 +499,7 @@ double ProgConvertVol2Pseudo::computeAverage(int k, int i, int j,
     return sum/((kF-k0+1)*(iF-i0+1)*(jF-j0+1));
 }
 
-void ProgConvertVol2Pseudo::drawGaussian(double k, double i, double j,
+void ProgVolumeToPseudoatoms::drawGaussian(double k, double i, double j,
         MultidimArray<double> &V, double intensity)
 {
     int k0=CEIL(XMIPP_MAX(STARTINGZ(V),k-sigma3));
@@ -509,21 +510,25 @@ void ProgConvertVol2Pseudo::drawGaussian(double k, double i, double j,
     int jF=FLOOR(XMIPP_MIN(FINISHINGX(V),j+sigma3));
     for (int kk=k0; kk<=kF; kk++)
     {
-        double diffkk2=(kk-k)*(kk-k);
+    	double aux=kk-k;
+        double diffkk2=aux*aux;
         for (int ii=i0; ii<=iF; ii++)
         {
-            double diffiikk2=(ii-i)*(ii-i)+diffkk2;
+        	aux=ii-i;
+            double diffiikk2=aux*aux+diffkk2;
             for (int jj=j0; jj<=jF; jj++)
             {
-                double r=sqrt(diffiikk2+(jj-j)*(jj-j));
-                V(kk,ii,jj)+=intensity*
-                             DIRECT_A1D_ELEM(gaussianTable,ROUND(r*1000));
+            	aux=jj-j;
+                double r=sqrt(diffiikk2+aux*aux);
+                aux=r*1000;
+                int iaux=ROUND(aux);
+                A3D_ELEM(V,kk,ii,jj)+=intensity*DIRECT_A1D_ELEM(gaussianTable,iaux);
             }
         }
     }
 }
 
-void ProgConvertVol2Pseudo::extractRegion(int idxGaussian,
+void ProgVolumeToPseudoatoms::extractRegion(int idxGaussian,
         MultidimArray<double> &region, bool extended) const
 {
     double k=atoms[idxGaussian].location(0);
@@ -541,52 +546,55 @@ void ProgConvertVol2Pseudo::extractRegion(int idxGaussian,
     int iF=FLOOR(XMIPP_MIN(FINISHINGY(Vcurrent()),i+sigma3ToUse));
     int jF=FLOOR(XMIPP_MIN(FINISHINGX(Vcurrent()),j+sigma3ToUse));
 
-    region.resize(kF-k0+1,iF-i0+1,jF-j0+1);
+    region.resizeNoCopy(kF-k0+1,iF-i0+1,jF-j0+1);
     STARTINGZ(region)=k0;
     STARTINGY(region)=i0;
     STARTINGX(region)=j0;
+    const MultidimArray<double> &mVcurrent=Vcurrent();
     for (int k=k0; k<=kF; k++)
         for (int i=i0; i<=iF; i++)
             for (int j=j0; j<=jF; j++)
-                region(k,i,j)=Vcurrent(k,i,j);
+                A3D_ELEM(region,k,i,j)=A3D_ELEM(Vcurrent,k,i,j);
 }
 
-double ProgConvertVol2Pseudo::evaluateRegion(const MultidimArray<double> &region)
+double ProgVolumeToPseudoatoms::evaluateRegion(const MultidimArray<double> &region)
 const
 {
     double avgDiff=0;
     double N=0;
     const MultidimArray<int> &iMask3D=mask_prm.get_binary_mask();
+    const MultidimArray<double> &mVin=Vin();
     FOR_ALL_ELEMENTS_IN_ARRAY3D(region)
     {
-        double Vinv=Vin(k,i,j);
+        double Vinv=A3D_ELEM(mVin,k,i,j);
         if (Vinv<=0)
             continue;
-        if (useMask && iMask3D(k,i,j)==0)
+        if (useMask && A3D_ELEM(iMask3D,k,i,j)==0)
             continue;
-        double vdiff=region(k,i,j)-Vinv;
+        double vdiff=A3D_ELEM(region,k,i,j)-Vinv;
         double vperc=(vdiff<0)?-vdiff:penalty*vdiff;
         avgDiff+=vperc;
-        N++;
+        ++N;
     }
     return avgDiff/(N*range);
 }
 
-void ProgConvertVol2Pseudo::insertRegion(const MultidimArray<double> &region)
+void ProgVolumeToPseudoatoms::insertRegion(const MultidimArray<double> &region)
 {
+	const MultidimArray<double> &mVcurrent=Vcurrent();
     FOR_ALL_ELEMENTS_IN_ARRAY3D(region)
-    Vcurrent(k,i,j)=A3D_ELEM(region,k,i,j);
+    A3D_ELEM(mVcurrent,k,i,j)=A3D_ELEM(region,k,i,j);
 }
 
 /* Optimize ---------------------------------------------------------------- */
 static pthread_mutex_t mutexUpdateVolume=PTHREAD_MUTEX_INITIALIZER;
 
-void* ProgConvertVol2Pseudo::optimizeCurrentAtomsThread(
+void* ProgVolumeToPseudoatoms::optimizeCurrentAtomsThread(
     void * threadArgs)
 {
     Prog_Convert_Vol2Pseudo_ThreadParams *myArgs=
         (Prog_Convert_Vol2Pseudo_ThreadParams *) threadArgs;
-    ProgConvertVol2Pseudo *parent=myArgs->parent;
+    ProgVolumeToPseudoatoms *parent=myArgs->parent;
     std::vector< PseudoAtom > &atoms=parent->atoms;
     bool allowIntensity=parent->allowIntensity;
     bool allowMovement=parent->allowMovement;
@@ -697,7 +705,7 @@ void* ProgConvertVol2Pseudo::optimizeCurrentAtomsThread(
     while (true);
 }
 
-void ProgConvertVol2Pseudo::optimizeCurrentAtoms()
+void ProgVolumeToPseudoatoms::optimizeCurrentAtoms()
 {
     if (!allowIntensity && !allowMovement)
         return;
@@ -744,7 +752,7 @@ void ProgConvertVol2Pseudo::optimizeCurrentAtoms()
 }
 
 /* Write ------------------------------------------------------------------- */
-void ProgConvertVol2Pseudo::writeResults()
+void ProgVolumeToPseudoatoms::writeResults()
 {
     // Compute the histogram of intensities
     MultidimArray<double> intensities;
@@ -855,7 +863,7 @@ void ProgConvertVol2Pseudo::writeResults()
 }
 
 /* Run --------------------------------------------------------------------- */
-void ProgConvertVol2Pseudo::run()
+void ProgVolumeToPseudoatoms::run()
 {
     produceSideInfo();
     int iter=0;
