@@ -160,6 +160,7 @@ void ProgVolumeToPseudoatoms::defineParams()
     addParamsLine("  [--binarize+ <threshold>]          : Binarize the volume for a more uniform distribution");
     addParamsLine("  [--thr <n=1>]                      : Number of threads");
     mask_prm.defineParams(this,INT_MASK,NULL,"Statistics restricted to the mask area.");
+    addExampleLine("xmipp_volume_to_pseudoatoms -i volume.vol -o pseudoatoms");
 }
 
 void ProgVolumeToPseudoatoms::produceSideInfo()
