@@ -25,12 +25,12 @@
 
 #include <data/progs.h>
 #include <data/args.h>
-#include <reconstruction/correct_bfactor.h>
+#include <reconstruction/volume_correct_bfactor.h>
 
 /* MAIN -------------------------------------------------------------------- */
 int main(int argc, char *argv[])
 {
-    ProgCorrectBfactor program;
+    ProgVolumeCorrectBfactor program;
     program.read(argc, argv);
     return program.tryRun();
 }

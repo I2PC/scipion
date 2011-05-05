@@ -23,9 +23,9 @@
  *  e-mail address 'xmipp@cnb.csic.es'
  ***************************************************************************/
 
-#include "correct_bfactor.h"
+#include "volume_correct_bfactor.h"
 
-void ProgCorrectBfactor::defineParams()
+void ProgVolumeCorrectBfactor::defineParams()
 {
     addUsageLine("Sharpen a volume by applying a negative B-factor");
     addUsageLine("+The high-resolution features are enhanced, thereby correcting ");
@@ -54,15 +54,15 @@ void ProgCorrectBfactor::defineParams()
     addParamsLine(" [--fit_minres+ <f=15>]      : Low-resolution  limit (in Ang.) for fit in --auto or --ref ");
     addParamsLine(" [--fit_maxres+ <f=-1>]      : High-resolution limit (in Ang.) for fit in --auto or --ref,");
     addParamsLine("                             : -1 means maximum resolution ");
-    addParamsLine(" [--fsc+ <fscFile>]          : FSC file produced by xmipp_resolution_fsc");
+    addParamsLine(" [--fsc+ <fscFile=\"\">]     : FSC file produced by xmipp_resolution_fsc");
     addExampleLine("xmipp_correct_bfactor -i volume.vol -o correctedVolume.vol --auto --sampling 1.4 --maxres 10");
     addExampleLine("To plot the Guinier file you may use:",false);
     addExampleLine("gnuplot");
     addExampleLine("set xlabel \"d^(-2)\"");
-    addExampleLine("plot \"corrected.vol.guinier\" using 1:2 title \"log F\" with line, \"corrected.vol.guinier\" using 1:4 title \"Corrected log F\"with line");
+    addExampleLine("plot \"correctedVolume.vol.guinier\" using 1:2 title \"log F\" with line, \"correctedVolume.vol.guinier\" using 1:4 title \"Corrected log F\"with line");
 }
 
-void ProgCorrectBfactor::readParams()
+void ProgVolumeCorrectBfactor::readParams()
 {
     produces_an_output = true;
 
@@ -92,7 +92,7 @@ void ProgCorrectBfactor::readParams()
         fit_maxres = apply_maxres;
 }
 
-void ProgCorrectBfactor::show()
+void ProgVolumeCorrectBfactor::show()
 {
     XmippMetadataProgram::show();
     std::cout << "Pixel size : " << sampling_rate << " Angstrom" << std::endl;
@@ -117,7 +117,7 @@ void ProgCorrectBfactor::show()
         std::cout << "Use signal-to-noise weight based on "<< fn_fsc <<std::endl;
 }
 
-void ProgCorrectBfactor::processImage(const FileName &fnImg, const FileName &fnImgOut, size_t objId)
+void ProgVolumeCorrectBfactor::processImage(const FileName &fnImg, const FileName &fnImgOut, size_t objId)
 {
     Image<double> vol;
     vol.read(fnImg);
@@ -127,7 +127,7 @@ void ProgCorrectBfactor::processImage(const FileName &fnImg, const FileName &fnI
     vol.write(fn_out);
 }
 
-ProgCorrectBfactor::ProgCorrectBfactor()
+ProgVolumeCorrectBfactor::ProgVolumeCorrectBfactor()
 {
     fit_minres    = -1.;
     fit_maxres    = -1.;
@@ -140,7 +140,7 @@ ProgCorrectBfactor::ProgCorrectBfactor()
     adhocB        = 0.;
 }
 
-void  ProgCorrectBfactor::make_guinier_plot(MultidimArray< std::complex< double > > &FT1,
+void  ProgVolumeCorrectBfactor::make_guinier_plot(MultidimArray< std::complex< double > > &FT1,
         std::vector<fit_point2D> &guinier)
 {
     MultidimArray< int >  radial_count(xsize);
@@ -200,7 +200,7 @@ void  ProgCorrectBfactor::make_guinier_plot(MultidimArray< std::complex< double 
     }
 }
 
-void ProgCorrectBfactor::get_snr_weights(std::vector<double> &snr)
+void ProgVolumeCorrectBfactor::get_snr_weights(std::vector<double> &snr)
 {
     std::ifstream  fh;
     std::string    line;
@@ -235,7 +235,7 @@ void ProgCorrectBfactor::get_snr_weights(std::vector<double> &snr)
     }
 }
 
-void  ProgCorrectBfactor::apply_snr_weights(MultidimArray< std::complex< double > > &FT1,
+void  ProgVolumeCorrectBfactor::apply_snr_weights(MultidimArray< std::complex< double > > &FT1,
         std::vector<double> &snr)
 {
 
@@ -254,7 +254,7 @@ void  ProgCorrectBfactor::apply_snr_weights(MultidimArray< std::complex< double 
     }
 }
 
-void  ProgCorrectBfactor::apply_bfactor(MultidimArray< std::complex< double > > &FT1,
+void  ProgVolumeCorrectBfactor::apply_bfactor(MultidimArray< std::complex< double > > &FT1,
                                         double bfactor)
 {
     Matrix1D<double> f(3);
@@ -272,7 +272,7 @@ void  ProgCorrectBfactor::apply_bfactor(MultidimArray< std::complex< double > > 
     }
 }
 
-void  ProgCorrectBfactor::apply_allpoints(MultidimArray< std::complex< double > > &FT1,
+void  ProgVolumeCorrectBfactor::apply_allpoints(MultidimArray< std::complex< double > > &FT1,
         std::vector<fit_point2D> &guinier_diff)
 {
     Matrix1D<double> f(3);
@@ -292,7 +292,7 @@ void  ProgCorrectBfactor::apply_allpoints(MultidimArray< std::complex< double > 
     }
 }
 
-void  ProgCorrectBfactor::write_guinierfile(const FileName &fn_guinier,
+void  ProgVolumeCorrectBfactor::write_guinierfile(const FileName &fn_guinier,
         std::vector<fit_point2D> &guinierin,
         std::vector<fit_point2D> &guinierweighted,
         std::vector<fit_point2D> &guiniernew,
@@ -319,7 +319,7 @@ void  ProgCorrectBfactor::write_guinierfile(const FileName &fn_guinier,
     fh.close();
 }
 
-void ProgCorrectBfactor::bfactor_correction(MultidimArray< double > &m1,
+void ProgVolumeCorrectBfactor::bfactor_correction(MultidimArray< double > &m1,
         const FileName &fn_guinier)
 {
     MultidimArray< std::complex< double > > FT1, FT2;

@@ -23,10 +23,9 @@
  *  e-mail address 'xmipp@cnb.csic.es'
  ***************************************************************************/
 
-#ifndef _correct_bfactor_H
-#define _correct_bfactor_H
+#ifndef VOLUME_CORRECT_BFACTOR_H
+#define VOLUME_CORRECT_BFACTOR_H
 
-#include "correct_bfactor.h"
 #include <data/geometry.h>
 #include <data/fft.h>
 #include <data/fftw.h>
@@ -38,7 +37,7 @@
   */
 
 /** correct_bfactor parameters. */
-class ProgCorrectBfactor: public XmippMetadataProgram
+class ProgVolumeCorrectBfactor: public XmippMetadataProgram
 {
 protected:
 
@@ -82,10 +81,10 @@ protected:
 public:
 
     /** Constructor */
-    ProgCorrectBfactor();
+    ProgVolumeCorrectBfactor();
 
     /** Destructor */
-    ~ProgCorrectBfactor()
+    ~ProgVolumeCorrectBfactor()
     { }
     ;
 

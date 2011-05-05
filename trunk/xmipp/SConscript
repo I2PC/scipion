@@ -482,7 +482,6 @@ ReconsSources = [
     'angular_project_library.cpp',
     'art_crystal.cpp',
     'basic_art.cpp',
-    'correct_bfactor.cpp',
     'ctf_correct_amplitude3d.cpp',
     'ctf_correct_idr.cpp',
     'ctf_enhance_psd.cpp',
@@ -534,6 +533,7 @@ ReconsSources = [
     'tomo_align_refinement.cpp',
     'tomo_remove_fluctuations.cpp',
     'transform_downsample.cpp',
+    'volume_correct_bfactor.cpp',
     'volume_from_pdb.cpp',
     'volume_segment.cpp',
     'volume_to_pseudoatoms.cpp',
@@ -666,7 +666,6 @@ AddXmippProgram('angular_rotate')
 AddXmippProgram('apropos', ['XmippInterface'])
 AddXmippProgram('classify_analyze_cluster', ['XmippClassif'])
 AddXmippProgram('classify_kerdensom', ['XmippClassif'])
-AddXmippProgram('correct_bfactor', ['XmippRecons'])
 AddXmippProgram('ctf_correct_amplitude3d', ['XmippRecons'])
 AddXmippProgram('ctf_correct_idr', ['XmippRecons'])
 AddXmippProgram('ctf_create_ctfdat', ['XmippRecons'])
@@ -747,6 +746,7 @@ AddXmippProgram('tomo_align_tilt_series', ['XmippRecons'])
 AddXmippProgram('tomo_project', ['XmippRecons'])
 AddXmippProgram('tomo_remove_fluctuations', ['XmippRecons'])
 AddXmippProgram('volume_align')
+AddXmippProgram('volume_correct_bfactor', ['XmippRecons'])
 AddXmippProgram('volume_reslice')
 AddXmippProgram('volume_segment', ['XmippRecons'])
 AddXmippProgram('volume_to_pseudoatoms', ['XmippRecons'])
