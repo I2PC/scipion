@@ -195,6 +195,7 @@ TEST_F( MetadataTest, ReadWrite)
     auxMetadata.read(sfn);
 
     EXPECT_EQ(mDsource,auxMetadata);
+    unlink(sfn);
 
 //    //read file as char string
 //    char * buffer;
@@ -268,8 +269,6 @@ TEST_F( MetadataTest, Union)
 
 GTEST_API_ int main(int argc, char **argv)
 {
-    std::cout << "Running main() from gtest_main.cc\n";
-
     testing::InitGoogleTest(&argc, argv);
     return RUN_ALL_TESTS();
 }
