@@ -756,6 +756,7 @@ AddXmippProgram('xray_project', ['XmippRecons'])
 
 #---- Test
 if int(env['gtest']):
+     AddXmippTest('test_image')
      AddXmippTest('test_metadata')
      AddXmippTest('test_multidim')
      env.Depends('run_tests', [fftw, tiff, sqlite])
