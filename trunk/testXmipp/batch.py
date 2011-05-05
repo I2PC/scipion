@@ -249,6 +249,9 @@ class Tester:
         self.addTest("-i input/phantomBacteriorhodopsin.vol -o %o/maskVoxelMass.vol --method voxel_mass 54000")
         self.addTest("-i input/phantomBacteriorhodopsin.vol -o %o/maskProb.vol --method prob 1")
 
+        self.addProgram("xmipp_volume_to_pseudoatoms")
+        self.addTest("-i input/phantomBacteriorhodopsin.vol -o %o/pseudo.pdb")
+
         self.addProgram("xmipp_xray_import")
         self.addTest("--data input/xray_import/Images --flat input/xray_import/Flatfields --oroot %o/stack --crop 30")
 
