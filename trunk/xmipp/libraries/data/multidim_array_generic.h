@@ -305,6 +305,10 @@ public:
 #undef GETVALUE
 
     }
+    /**
+     * equal operator
+     */
+    bool operator==(const MultidimArrayGeneric &mdA) const;
 
     /** Get constant access */
     double operator()(int i, int j) const
