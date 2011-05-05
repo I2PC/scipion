@@ -153,6 +153,7 @@ protected:
 
         size_t id;
         id = DF_stats.addObject();
+        DF_stats.setValue(MDL_IMAGE,fnImg,id);
         DF_stats.setValue(MDL_MIN,min_val,id);
         DF_stats.setValue(MDL_MAX,max_val,id);
         DF_stats.setValue(MDL_AVG,avg,id);
