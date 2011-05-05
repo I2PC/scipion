@@ -27,33 +27,51 @@
 
 void ProgCorrectBfactor::defineParams()
 {
+    addUsageLine("Sharpen a volume by applying a negative B-factor");
+    addUsageLine("+The high-resolution features are enhanced, thereby correcting ");
+    addUsageLine("+the envelope functions of the microscope, detector etc. Three ");
+    addUsageLine("+modes are available:");
+    addUsageLine("+");
+    addUsageLine("+1. An automated mode based on methodology developed by [[http://www.ncbi.nlm.nih.gov/pubmed/14568533][Rosenthal and Henderson]]");
+    addUsageLine("+");
+    addUsageLine("+2. Based on the fall-off in a reference map (possibly obtained using xmipp_volume_from_pdb)");
+    addUsageLine("+");
+    addUsageLine("+3. An user-provided (ad hoc) B-factor");
+    addSeeAlsoLine("volume_from_pdb, resolution_fsc");
     XmippMetadataProgram::defineParams();
-    addParamsLine(" --auto                   : Use automated B-factor fit in flat Wilson region");
-    addParamsLine("                        : Note: do not use the automated mode for maps with resolutions");
-    addParamsLine("                        : lower than 12-15 Angstroms!");
-    addParamsLine(" or --ref <fn_ref>        : Fit B-factor according to the reference ");
-    addParamsLine("           requires --allpoints;                                                         ");
-    addParamsLine(" or --adhoc <B>           : Use a user-provided (negative) B-factor");
+    addParamsLine(" --auto                              : Use automated B-factor fit in flat Wilson region");
+    addParamsLine("                                     : Note: do not use the automated mode for maps with resolutions");
+    addParamsLine("                                     : lower than 12-15 Angstroms!");
+    addParamsLine(" or --ref <fn_ref> <mode=bfactorref> : Fit B-factor according to the reference ");
+    addParamsLine("         where <mode>");
+    addParamsLine("                  bfactorref         : Fit B-factor");
+    addParamsLine("                  allpoints          : Adjust power spectrum to reference");
+    addParamsLine(" or --adhoc <B>              : Use a user-provided (negative) B-factor");
     addParamsLine("== Specific parameters == ");
-    addParamsLine("  --sampling <float>        : Pixel size (in Ang) ");
-    addParamsLine("  --maxres <float>          : High-resolution limit for B-factor correction ");
-    addParamsLine("  -o <filename>             : Output file Name with corrected volume ");
-    addParamsLine(" [--fit_minres <f=15>]      : Low-resolution  limit (in Ang) for fit in -auto or -ref ");
-    addParamsLine(" [--fit_maxres <f=-1>]      : High-resolution limit (in Ang) for fit in -auto or -ref,");
-    addParamsLine("                            : -1 means maximun resolution ");
-    addParamsLine(" [--allpoints]              : Do not fit B-factor, adjust power spectrum to reference ");
+    addParamsLine("  --sampling <float>         : Pixel size of the input volume (in Angstroms/pixel) ");
+    addParamsLine("  --maxres <float>           : High-resolution limit for B-factor correction (in Ang.) ");
+    addParamsLine("  -o <filename>              : Output file Name with corrected volume ");
+    addParamsLine(" [--fit_minres+ <f=15>]      : Low-resolution  limit (in Ang.) for fit in --auto or --ref ");
+    addParamsLine(" [--fit_maxres+ <f=-1>]      : High-resolution limit (in Ang.) for fit in --auto or --ref,");
+    addParamsLine("                             : -1 means maximum resolution ");
+    addParamsLine(" [--fsc+ <fscFile>]          : FSC file produced by xmipp_resolution_fsc");
+    addExampleLine("xmipp_correct_bfactor -i volume.vol -o correctedVolume.vol --auto --sampling 1.4 --maxres 10");
+    addExampleLine("To plot the Guinier file you may use:",false);
+    addExampleLine("gnuplot");
+    addExampleLine("set xlabel \"d^(-2)\"");
+    addExampleLine("plot \"corrected.vol.guinier\" using 1:2 title \"log F\" with line, \"corrected.vol.guinier\" using 1:4 title \"Corrected log F\"with line");
 }
 
 void ProgCorrectBfactor::readParams()
 {
+    produces_an_output = true;
 
-	produces_an_output = true;
-
-	XmippMetadataProgram::readParams();
+    XmippMetadataProgram::readParams();
     if (checkParam("--ref"))
     {
-        mode = checkParam("--allpoints") ? ALLPOINTS_REF : BFACTOR_REF;
         fn_ref= getParam("--ref");
+        String strMode=getParam("--ref",1);
+        mode =  strMode=="allpoints" ? ALLPOINTS_REF : BFACTOR_REF;
     }
     else if (checkParam("--adhoc"))
     {
@@ -61,23 +79,18 @@ void ProgCorrectBfactor::readParams()
         adhocB = getDoubleParam("--adhoc");
     }
     else if (checkParam("--auto"))
-    {
         mode = BFACTOR_AUTO;
-    }
     else
         REPORT_ERROR(ERR_DEBUG_IMPOSIBLE, "This should not happens, review program definition");
     sampling_rate = getDoubleParam("--sampling");
     apply_maxres = getDoubleParam("--maxres");
     fit_minres = getDoubleParam("--fit_minres");
     fit_maxres = getDoubleParam("--fit_maxres");
+    fn_fsc = getParam("--fsc");
 
     if (fit_maxres < 0.)
         fit_maxres = apply_maxres;
-    /////////////////////////////////
-    ///FIXME: This param is nver used
-    ////////7fn_fsc = getParam("-fsc");
 }
-
 
 void ProgCorrectBfactor::show()
 {
@@ -101,9 +114,8 @@ void ProgCorrectBfactor::show()
         std::cout << "Use automated B-factor fit (Rosenthal and Henderson, 2003) " << std::endl;
     }
     if (fn_fsc != "")
-        std::cout << "Use signal-to-noise weighted based on "<< fn_fsc <<std::endl;
+        std::cout << "Use signal-to-noise weight based on "<< fn_fsc <<std::endl;
 }
-
 
 void ProgCorrectBfactor::processImage(const FileName &fnImg, const FileName &fnImgOut, size_t objId)
 {
@@ -131,24 +143,32 @@ ProgCorrectBfactor::ProgCorrectBfactor()
 void  ProgCorrectBfactor::make_guinier_plot(MultidimArray< std::complex< double > > &FT1,
         std::vector<fit_point2D> &guinier)
 {
-
     MultidimArray< int >  radial_count(xsize);
     MultidimArray<double> lnF(xsize);
     Matrix1D<double>      f(3);
     fit_point2D      onepoint;
 
     lnF.initZeros();
-    FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY3D(FT1)
+    for (int k=0; k<ZSIZE(FT1); k++)
     {
-        FFT_IDX2DIGFREQ(j,xsize,XX(f));
-        FFT_IDX2DIGFREQ(i,YSIZE(FT1),YY(f));
         FFT_IDX2DIGFREQ(k,ZSIZE(FT1),ZZ(f));
-        double R=f.module();
-        if (R>0.5)
-            continue;
-        int idx=ROUND(R*xsize);
-        lnF(idx) += abs(dAkij(FT1, k, i, j));
-        radial_count(idx)++;
+        double z2=ZZ(f)*ZZ(f);
+        for (int i=0; i<YSIZE(FT1); i++)
+        {
+            FFT_IDX2DIGFREQ(i,YSIZE(FT1),YY(f));
+            double y2z2=z2+YY(f)*YY(f);
+            for (int j=0; j<XSIZE(FT1); j++)
+            {
+                FFT_IDX2DIGFREQ(j,xsize,XX(f));
+                double R2=y2z2+XX(f)*XX(f);
+                if (R2>0.25)
+                    continue;
+                double R=sqrt(R2);
+                int idx=ROUND(R*xsize);
+                A1D_ELEM(lnF,idx) += abs(dAkij(FT1, k, i, j));
+                ++A1D_ELEM(radial_count,idx);
+            }
+        }
     }
 
     guinier.clear();
@@ -237,17 +257,17 @@ void  ProgCorrectBfactor::apply_snr_weights(MultidimArray< std::complex< double 
 void  ProgCorrectBfactor::apply_bfactor(MultidimArray< std::complex< double > > &FT1,
                                         double bfactor)
 {
-
     Matrix1D<double> f(3);
+    double isampling_rate=1.0/sampling_rate;
     FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY3D(FT1)
     {
         FFT_IDX2DIGFREQ(j,xsize,XX(f));
         FFT_IDX2DIGFREQ(i,YSIZE(FT1),YY(f));
         FFT_IDX2DIGFREQ(k,ZSIZE(FT1),ZZ(f));
-        double R = f.module() / sampling_rate;
+        double R = f.module() * isampling_rate;
         if (1./R >= apply_maxres)
         {
-            dAkij(FT1, k, i, j) *= exp( -(bfactor / 4)  * R * R);
+            dAkij(FT1, k, i, j) *= exp( -0.25* bfactor  * R * R);
         }
     }
 }
@@ -264,7 +284,7 @@ void  ProgCorrectBfactor::apply_allpoints(MultidimArray< std::complex< double > 
         double R=f.module();
         if (R>0.5)
             continue;
-        int idx=ROUND(R*xsize);
+        long idx=lround(R*xsize);
         if (idx < guinier_diff.size() && guinier_diff[idx].w > 0.)
         {
             dAkij(FT1, k, i, j) *= exp( -guinier_diff[idx].y );
@@ -272,7 +292,7 @@ void  ProgCorrectBfactor::apply_allpoints(MultidimArray< std::complex< double > 
     }
 }
 
-void  ProgCorrectBfactor::write_guinierfile(FileName fn_guinier,
+void  ProgCorrectBfactor::write_guinierfile(const FileName &fn_guinier,
         std::vector<fit_point2D> &guinierin,
         std::vector<fit_point2D> &guinierweighted,
         std::vector<fit_point2D> &guiniernew,
@@ -294,10 +314,9 @@ void  ProgCorrectBfactor::write_guinierfile(FileName fn_guinier,
         {
             fh << " " << (guinierref[i]).y + intercept;
         }
-        fh << "\n"<<std::endl;
+        fh << std::endl;
     }
     fh.close();
-
 }
 
 void ProgCorrectBfactor::bfactor_correction(MultidimArray< double > &m1,

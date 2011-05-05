@@ -123,7 +123,7 @@ public:
     /** Write Guinier plot in a textfile
      * @ingroup Correct Bfactor
      */
-    void write_guinierfile(FileName fn_guinier,
+    void write_guinierfile(const FileName& fn_guinier,
                            std::vector<fit_point2D> &guinierin,
                            std::vector<fit_point2D> &guinierweighted,
                            std::vector<fit_point2D> &guiniernew,
@@ -134,8 +134,6 @@ public:
      * @ingroup FourierOperations
      */
     void bfactor_correction(MultidimArray< double > &m1, const FileName &fn_guinier);
-
-
 };
 //@}
 #endif
