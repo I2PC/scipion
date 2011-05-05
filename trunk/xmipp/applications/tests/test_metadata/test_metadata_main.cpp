@@ -45,16 +45,21 @@ protected:
 
     // virtual void TearDown() {}//Destructor
 
-    MetaData mDsource,mDtarget,mDanotherSource;
+    MetaData mDsource,mDanotherSource;
     MetaData mDunion, mDjoin;
     size_t id, id1,id2;
 };
 
+TEST_F( MetadataTest, similarToOperator)
+{
+    EXPECT_TRUE(mDsource==mDsource);
+    EXPECT_FALSE(mDsource==mDanotherSource);
+}
 
 TEST_F( MetadataTest, Copy)
 {
-    mDtarget=mDsource;
-    EXPECT_EQ(mDsource,mDtarget);
+	MetaData auxMetadata = mDsource;
+    EXPECT_EQ(mDsource,auxMetadata);
 }
 
 TEST_F( MetadataTest, Size)
@@ -70,9 +75,9 @@ TEST_F( MetadataTest, Clear)
     EXPECT_EQ(0,auxMetadata.size());
 }
 
-TEST_F( MetadataTest, importObjects)
+TEST_F( MetadataTest, importObject)
 {
-	//FIXME importObjects is overloaded, only one case is tested
+	//FIXME importObjects test is in the test named select
 	MetaData auxMetadata = mDsource;
     auxMetadata.importObject(mDunion,id1,false);
     auxMetadata.importObject(mDunion,id2,false);
@@ -220,6 +225,13 @@ TEST_F( MetadataTest, operate)
 
     EXPECT_EQ(auxMetadata,auxMetadata2);
 }
+
+//TEST_F( MetadataTest, select)
+//{
+//	MetaData auxMetadata;
+//    auxMetadata.importObjects(mDsource,MDExpression((String)"x>-2"));
+//    EXPECT_EQ(auxMetadata,mDsource);
+//}
 
 GTEST_API_ int main(int argc, char **argv)
 {
