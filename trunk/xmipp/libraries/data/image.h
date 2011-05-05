@@ -495,8 +495,8 @@ public:
         case UInt:
                 {
                     if (castMode==CW_CONVERT &&  (myTypeId == SChar
-                                                   || myTypeId == Short
-                                                   || myTypeId == Int))
+                                                      || myTypeId == Short
+                                                      || myTypeId == Int))
                     {
                         slope = 1;
                         min0 -= INT_MIN;
@@ -525,8 +525,8 @@ public:
         case Int:
                 {
                     if (castMode==CW_CONVERT &&  (myTypeId == UChar
-                                                   || myTypeId == UShort
-                                                   || myTypeId == UInt))
+                                                      || myTypeId == UShort
+                                                      || myTypeId == UInt))
                     {
                         slope = 1;
                         min0 += INT_MIN;
@@ -728,6 +728,13 @@ public:
     {
         return A2D_ELEM(data, i, j);
     }
+    /**
+     * equal operator
+     */
+    bool operator==(const Image<T> &i1) const
+    {
+        return(this->data == i1.data);
+    }
 
     void setDimensions(int Xdim, int Ydim, int Zdim, size_t Ndim)
     {
@@ -803,7 +810,7 @@ protected:
         if (data.ndim != 1)
             REPORT_ERROR(ERR_MULTIDIM_SIZE, "Header overwriting not available for stacks!!!");
         if (MD.size()==0)
-        	MD.push_back(MDL::emptyHeader);
+            MD.push_back(MDL::emptyHeader);
         MDRow &rowAux = MD[0];
 
         double aux;
