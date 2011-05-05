@@ -1783,6 +1783,34 @@ xmipp_ImgSize(PyObject *obj, PyObject *args, PyObject *kwargs)
         }
     }
     return NULL;
+}/* ImgSize (from metadata filename)*/
+static PyObject *
+xmipp_ImgCompare(PyObject *obj, PyObject *args, PyObject *kwargs)
+{
+    PyObject *filename1, *filename2;
+
+    if (PyArg_ParseTuple(args, "OO", &filename1,&filename2))
+    {
+        try
+        {
+            PyObject * pyStr1 = PyObject_Str(filename1);
+            PyObject * pyStr2 = PyObject_Str(filename2);
+            char * str1 = PyString_AsString(pyStr1);
+            char * str2 = PyString_AsString(pyStr2);
+            bool result = ImgCompare(str1, str2);
+            Py_DECREF(pyStr1);
+            Py_DECREF(pyStr2);
+            if (result)
+                Py_RETURN_TRUE;
+            else
+                Py_RETURN_FALSE;
+        }
+        catch (XmippError xe)
+        {
+            PyErr_SetString(PyXmippError, xe.msg.c_str());
+        }
+    }
+    return NULL;
 }
 /* readMetaDataWithTwoPossibleImages */
 static PyObject *
@@ -1892,7 +1920,9 @@ static PyMethodDef xmipp_methods[] =
         {"SingleImgSize", (PyCFunction)xmipp_SingleImgSize, METH_VARARGS,
          "Get image dimensions"},
         {"ImgSize", (PyCFunction)xmipp_ImgSize, METH_VARARGS,
-         "Get image dimensions of first metadata entry"},
+          "Get image dimensions of first metadata entry"},
+        {"ImgCompare", (PyCFunction)xmipp_ImgCompare, METH_VARARGS,
+           "return true if both files are identical"},
         {"readMetaDataWithTwoPossibleImages", (PyCFunction)xmipp_readMetaDataWithTwoPossibleImages, METH_VARARGS,
          "Read a 1 or two column list of micrographs"},
         {"substituteOriginalImages", (PyCFunction)xmipp_substituteOriginalImages, METH_VARARGS,
