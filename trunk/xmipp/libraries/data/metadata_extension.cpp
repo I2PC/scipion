@@ -36,13 +36,13 @@ void getStatistics(MetaData &MT_in, Image<double> & _ave, Image<double> & _sd, d
     FileName fnImg;
     FOR_ALL_OBJECTS_IN_METADATA(MT)
     {
-    	if (apply_geo)
-    		image.readApplyGeo(MT,__iter.objId, HEADER);
-    	else
-    	{
-    		MT.getValue(MDL_IMAGE,fnImg,__iter.objId);
-    		image.read(fnImg);
-    	}
+        if (apply_geo)
+            image.readApplyGeo(MT,__iter.objId, HEADER);
+        else
+        {
+            MT.getValue(MDL_IMAGE,fnImg,__iter.objId);
+            image.read(fnImg);
+        }
         image().computeStats(avg, stddev, min, max);
         if (min < _min)
             _min = min;
@@ -67,13 +67,13 @@ void getStatistics(MetaData &MT_in, Image<double> & _ave, Image<double> & _sd, d
     // Calculate SD
     FOR_ALL_OBJECTS_IN_METADATA(MT)
     {
-    	if (apply_geo)
-    		image.readApplyGeo(MT,__iter.objId, HEADER);
-    	else
-    	{
-    		MT.getValue(MDL_IMAGE,fnImg,__iter.objId);
-    		image.read(fnImg);
-    	}
+        if (apply_geo)
+            image.readApplyGeo(MT,__iter.objId, HEADER);
+        else
+        {
+            MT.getValue(MDL_IMAGE,fnImg,__iter.objId);
+            image.read(fnImg);
+        }
         tmpImg() = ((image() - _ave()));
         tmpImg() *= tmpImg();
         _sd() += tmpImg();
@@ -112,6 +112,16 @@ void ImgSize(const FileName &filename, int &Xdim, int &Ydim, int &Zdim, size_t &
 {
     ImgSize(MetaData(filename), Xdim, Ydim, Zdim, Ndim);
 }
+
+bool ImgCompare(const FileName &filename1, const FileName &filename2)
+{
+    ImageGeneric Im1,Im2;
+    Im1.read(filename1);
+    Im2.read(filename2);
+    bool result =  *(Im1.data)  == *(Im2.data);
+    return( result);
+}
+
 
 void getBlocksInMetaDataFile(const FileName &inFile, StringVector& blockList)
 {
