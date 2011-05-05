@@ -60,7 +60,7 @@ TEST_F( MetadataTest, similarToOperator)
  */
 
 
-TEST_F( MetadataTest, addlabel)
+TEST_F( MetadataTest, Addlabel)
 {
 	MetaData auxMetadata = mDunion;
     auxMetadata.addLabel(MDL_Z);
