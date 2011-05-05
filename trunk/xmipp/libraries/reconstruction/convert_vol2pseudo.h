@@ -30,9 +30,8 @@
 #include <data/image.h>
 #include <data/mask.h>
 #include <data/threads.h>
+#include <data/program.h>
 #include <vector>
-
-class ProgConvertVol2Pseudo;
 
 /**@defgroup ConvertVol2Pseudo ConvertVol2Pseudo
    @ingroup ReconsLibrary */
@@ -57,6 +56,9 @@ public:
 /// Comparison between pseudo atoms
 bool operator <(const PseudoAtom &a, const PseudoAtom &b);
 
+// Forward declaration
+class ProgConvertVol2Pseudo;
+
 // Thread parameters
 struct Prog_Convert_Vol2Pseudo_ThreadParams
 {
@@ -66,7 +68,7 @@ struct Prog_Convert_Vol2Pseudo_ThreadParams
     int Nmovement;
 };
 
-class ProgConvertVol2Pseudo
+class ProgConvertVol2Pseudo: public XmippProgram
 {
 public:
     /// Volume to convert
@@ -136,13 +138,13 @@ public:
     double threshold;
 public:
     /// Read parameters from command line
-    void read(int argc, char **argv);
+    void readParams();
     
     /// show parameters
     void show() const;
     
-    /// show usage
-    void usage() const;
+    /// define parameters
+    void defineParams();
     
     /// Prepare side info
     void produceSideInfo();
