@@ -427,6 +427,12 @@ public:
      */
     FileName removeExtension(const String& ext) const;
 
+    /**Extract the directory portion from a filename string
+     * (e.g. /foo/bar.txt -> /foo).
+     *
+     */
+    FileName removeFilename() const;
+
     /** Remove all extensions
      */
     FileName removeAllExtensions() const;
