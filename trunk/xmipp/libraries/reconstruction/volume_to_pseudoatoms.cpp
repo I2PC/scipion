@@ -521,7 +521,7 @@ void ProgVolumeToPseudoatoms::drawGaussian(double k, double i, double j,
             	aux=jj-j;
                 double r=sqrt(diffiikk2+aux*aux);
                 aux=r*1000;
-                int iaux=ROUND(aux);
+                long iaux=lround(aux);
                 A3D_ELEM(V,kk,ii,jj)+=intensity*DIRECT_A1D_ELEM(gaussianTable,iaux);
             }
         }
