@@ -346,6 +346,15 @@ FileName FileName::removeAllExtensions() const
         return substr(0, first);
 }
 
+FileName FileName::removeFilename() const
+{
+    int first = rfind("/");
+    if (first == -1)
+        return "";
+    else
+        return substr(0, first);
+}
+
 FileName FileName::getFileFormat() const
 {
     int first;
