@@ -115,6 +115,7 @@ SystemFlavour='HOME_MACHINEFILE'
 #------------------------------------------------------------------------------------------------
 #------------------------------------------------------------------------------------------------
 #
+run_file1='readDocfileAndPairExperimentalAndReferenceImages.sh'
 
 def maskInputVolume(_mylog,\
                     _szInputVolumeName,
@@ -277,7 +278,7 @@ def readDocfileAndPairExperimentalAndReferenceImages(_mylog,\
     
     #apply ctf to reference and substract pairs of projections 
     #substract pairs of projections
-    xmpi_run_file='readDocfileAndPairExperimentalAndReferenceImages.sh'
+    xmpi_run_file=run_file1
     fh = open(xmpi_run_file,'w')
     size = len(doc.lineLst[0])-1
     #apply ctf to a temporary file    
@@ -355,14 +356,14 @@ import visualization
 # get WorkingDir and go there
 pardir=os.path.abspath(os.getcwd())
 _ProtocolName=ProtocolName
-shutil.copy(_ProtocolName,'protocol.py')
-import protocol
-_WorkingDir=protocol.WorkingDir
-_LogDir=protocol.LogDir
-_ProjectDir=protocol.ProjectDir
+shutil.copy(_ProtocolName,'partial_protocol.py')
+import partial_protocol
+_WorkingDir=partial_protocol.WorkingDir
+_LogDir=partial_protocol.LogDir
+_ProjectDir=partial_protocol.ProjectDir
 _iteration_number=DisplayIterationNo
 _Iteration_Working_Directory='/Iter_'+  str(_iteration_number)
-_SymmetryGroup=protocol.SymmetryGroup
+_SymmetryGroup=partial_protocol.SymmetryGroup
 if(len(szInputVolumeName)<1):
  _szInputVolumeName = 'Iter_'+str(_iteration_number)+'_reconstruction.vol'
 else:
@@ -393,12 +394,12 @@ else:
    _szDocFileRef=szDocFileRef
 #compute sampling rate
 if(len(AngSamplingRateDeg)<1):
-    _AngSamplingRateDeg=arg.getComponentFromVector(protocol.AngSamplingRateDeg,\
+    _AngSamplingRateDeg=arg.getComponentFromVector(partial_protocol.AngSamplingRateDeg,\
                                                            _iteration_number-1)
 else:
     _AngSamplingRateDeg=int(AngSamplingRateDeg)
 if(len(MaxChangeInAngles)<1):
-    _MaxChangeInAngles=arg.getComponentFromVector(protocol.MaxChangeInAngles,\
+    _MaxChangeInAngles=arg.getComponentFromVector(partial_protocol.MaxChangeInAngles,\
                                                            _iteration_number-1)
 else:
     _MaxChangeInAngles=int(MaxChangeInAngles)
@@ -406,8 +407,8 @@ else:
 if(doRefDirName):
     _ProjOutRootName=projOutRootName
 else:
-    _ProjOutRootName=protocol.ProjectLibraryBasename
-_refDirName=protocol.LibraryDir
+    _ProjOutRootName=partial_protocol.ProjectLibraryBasename
+_refDirName=partial_protocol.LibraryDir
 
 if(doRefDirName):
     CreateProjections(_mylog,\
@@ -428,8 +429,8 @@ else:
 
 _CTFDatName=CTFDatName
 if(len(CTFDatName)<1 and doCTFCorrection):
-    if(len(protocol.CTFDatName)>1):
-        _CTFDatName= '../' + protocol.CTFDatName
+    if(len(partial_protocol.CTFDatName)>1):
+        _CTFDatName= '../' + partial_protocol.CTFDatName
 
 readDocfileAndPairExperimentalAndReferenceImages(_mylog,\
                                                  _szDocFileRef,\
