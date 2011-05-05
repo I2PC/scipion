@@ -131,6 +131,19 @@ void MultidimArrayGeneric::setDatatype(DataType imgType)
     }
 }
 
+bool MultidimArrayGeneric::operator==(const MultidimArrayGeneric &mdA) const
+{
+	if (datatype != mdA.datatype)
+	{
+		return false;
+
+	}
+
+#define COMPARE(type) return ( ((MultidimArray<type>*)im)->equal(*(MultidimArray<type>*)mdA.im) );
+    SWITCHDATATYPE(datatype,COMPARE)
+#undef COMPARE
+}
+
 void MultidimArrayGeneric::aliasSlice(MultidimArrayGeneric &mdim, int select_slice)
 {
     setDatatype(mdim.datatype);
