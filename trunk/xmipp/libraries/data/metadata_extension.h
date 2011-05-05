@@ -23,6 +23,9 @@ void ImgSize(const MetaData &MD, int &Xdim, int &Ydim, int &Zdim, size_t &Ndim, 
 
 void ImgSize(const FileName &filename, int &Xdim, int &Ydim, int &Zdim, size_t &Ndim);
 
+/// compare two image files
+bool ImgCompare(const FileName &filename1, const FileName &filename2);
+
 void getBlocksInMetaDataFile(const FileName &inFile, StringVector& blockList);
 
 int MaxFileNameLength(MetaData &MD);
