@@ -494,7 +494,6 @@ ReconsSources = [
     'detect_missing_wedge.cpp',
 ##    'detect_structures.cpp',
     'directions.cpp',
-    'enhance_contrast.cpp',
     'filter_projections.cpp',
     'fourier_filter.cpp',
     'make_spectra.cpp',
@@ -534,6 +533,7 @@ ReconsSources = [
     'tomo_remove_fluctuations.cpp',
     'transform_downsample.cpp',
     'volume_correct_bfactor.cpp',
+    'volume_enhance_contrast.cpp',
     'volume_from_pdb.cpp',
     'volume_segment.cpp',
     'volume_to_pseudoatoms.cpp',
@@ -677,7 +677,6 @@ AddXmippProgram('ctf_sort_psds', ['XmippRecons'])
 #AddXmippProgram('denoise', ['XmippRecons'])
 AddXmippProgram('detect_missing_wedge', ['XmippRecons'])
 #AddXmippProgram('detect_structures', ['XmippRecons'])
-AddXmippProgram('enhance_contrast', ['XmippRecons'])
 AddXmippProgram('filter_projections', ['XmippRecons'])
 AddXmippProgram('find_center2d')
 AddXmippProgram('find_center3d')
@@ -747,6 +746,7 @@ AddXmippProgram('tomo_project', ['XmippRecons'])
 AddXmippProgram('tomo_remove_fluctuations', ['XmippRecons'])
 AddXmippProgram('volume_align')
 AddXmippProgram('volume_correct_bfactor', ['XmippRecons'])
+AddXmippProgram('volume_enhance_contrast', ['XmippRecons'])
 AddXmippProgram('volume_reslice')
 AddXmippProgram('volume_segment', ['XmippRecons'])
 AddXmippProgram('volume_to_pseudoatoms', ['XmippRecons'])

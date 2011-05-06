@@ -24,19 +24,12 @@
  *  e-mail address 'xmipp@cnb.csic.es'
  ***************************************************************************/
 
-#include <reconstruction/enhance_contrast.h>
+#include <reconstruction/volume_enhance_contrast.h>
 
 /* MAIN -------------------------------------------------------------------- */
 int main(int argc, char *argv[])
 {
-    try
-    {
-        ProgEnhanceContrast program;
-        program.read(argc, argv);
-        program.run();
-    }
-    catch (XmippError xe)
-    {
-        std::cerr << xe;
-    }
+    ProgVolumeEnhanceContrast program;
+    program.read(argc, argv);
+    return program.tryRun();
 }
