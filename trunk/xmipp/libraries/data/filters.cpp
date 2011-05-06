@@ -132,7 +132,7 @@ void substractBackgroundRollingBall(MultidimArray<double> &I, int radius)
     // Now roll the ball
     radius=ballWidth/2;
     MultidimArray<double> Irolled;
-    Irolled.resize(shrinkI);
+    Irolled.resizeNoCopy(shrinkI);
     Irolled.initConstant(-500);
     for (int yb=-radius; yb<YSIZE(shrinkI)+radius; yb++)
     {
@@ -189,8 +189,8 @@ void detectBackground(const MultidimArray<double> &vol, MultidimArray<double> &m
 
     // 2.1.-Background detection------------------------------------------
     MultidimArray<double> bg; // We create the volumen with
-    bg.resize(vol);    // -1:not visited 0:mol 1:background
-    bg.initConstant(-1);  // -2:in the list
+    bg.resizeNoCopy(vol);     // -1:not visited 0:mol 1:background
+    bg.initConstant(-1);      // -2:in the list
 
     // Ponemos las seis caras de esta variable como visitadas e inicializamos
     // la cola de p�xeles por visitar
@@ -300,7 +300,7 @@ void detectBackground(const MultidimArray<double> &vol, MultidimArray<double> &m
     // End of 2.1-----------------------------------------------------------
     // 2.2.-Matematical Morphology
     MultidimArray<double> bg_mm; // We create the output volumen
-    bg_mm.resize(vol);
+    bg_mm.initZeros(vol);
     closing3D(bg,bg_mm,26,0,1);
     // Output
     //typeCast(bg_mm,mask);
