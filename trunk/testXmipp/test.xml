@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- <!DOCTYPE EXECUTE_ONE_STEP SYSTEM "task.dtd"> -->
+<!-- Example of XML file created by workservice 
+     to specify a job in the work node -->
+
+<!-- Only one job is encapsulated in one of this files -->
+<!-- Execute_one_step should match id  in database     -->
+<!-- Launcher scripts should verify that they are compatible with this 
+     scipion version                                   -->
+<XMIPP_TESTS>
+    <PROGRAM name="xmipp_transform_mirror">
+        <CASE argument="-i input/singleImage.spi -o %o/singleImage_X.xmp --flipX"/>
+    </PROGRAM>
+    <PROGRAM name="xmipp_angular_class_average" mpi="FALSE">
+        <CASE argument="-i %o/proj_match.doc --lib %o/ref.doc -o %o/proj_match --split" changeDir="FALSE">
+            <PRERUNS>
+                <PRERUN command="xmipp_angular_project_library -i input/phantomBacteriorhodopsin.vol --experimental_images input/aFewProjections.sel -o %o/ref.stk --sampling_rate 10 --compute_neighbors --angular_distance -1 "/>
+                <PRERUN command="xmipp_angular_projection_matching -i input/aFewProjections.sel -o %o/proj_match.doc --ref %o/ref.stk"/>
+            </PRERUNS>
+            <TESTFILES>
+                <TESTFILE filename="sdsfs"/>
+                <TESTFILE filename="sdsfs1"/>
+            </TESTFILES>
+        </CASE>
+    </PROGRAM>
+</XMIPP_TESTS>
