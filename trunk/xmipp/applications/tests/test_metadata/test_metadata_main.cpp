@@ -52,8 +52,18 @@ protected:
 
 TEST_F( MetadataTest, similarToOperator)
 {
-    ASSERT_TRUE(mDsource==mDsource);
+	ASSERT_EQ(mDsource,mDsource);
     ASSERT_FALSE(mDsource==mDanotherSource);
+    //attribute order should not be important
+    MetaData auxMetadata ;
+    id = auxMetadata.addObject();
+    auxMetadata.setValue(MDL_Y,2.,id);
+    auxMetadata.setValue(MDL_X,1.,id);
+    id = auxMetadata.addObject();
+    auxMetadata.setValue(MDL_Y,4.,id);
+    auxMetadata.setValue(MDL_X,3.,id);
+    ASSERT_EQ(auxMetadata,mDsource);
+
 }
 /** SORT FOR ROUTINE ALPHABETIC ORDER
  *

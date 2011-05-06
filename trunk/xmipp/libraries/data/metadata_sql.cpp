@@ -463,7 +463,11 @@ void MDSql::setOperate(MetaData *mdPtrOut, MDLabel column, SetOperation operatio
 
 bool MDSql::equals(const MDSql &op)
 {
-    if(myMd->activeLabels != op.myMd->activeLabels)
+	std::vector<MDLabel> v1(myMd->activeLabels),v2(op.myMd->activeLabels);
+	std::sort(v1.begin(),v1.end());
+	std::sort(v2.begin(),v2.end());
+
+    if(v1 != v2)
         return (false);
     int size  = myMd->activeLabels.size();
     std::stringstream sqlQuery,ss2;
@@ -479,10 +483,10 @@ bool MDSql::equals(const MDSql &op)
     << "SELECT count(*) as result\
     FROM\
     (\
-    SELECT *\
+    SELECT " << ss2.str() << "\
     FROM " <<   tableName(tableId)
     <<      " UNION ALL \
-    SELECT *\
+    SELECT " << ss2.str() << "\
     FROM " << tableName(op.tableId)
     <<     ") tmp"
     << " GROUP BY " << ss2.str()
