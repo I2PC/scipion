@@ -24,45 +24,49 @@
  *  e-mail address 'xmipp@cnb.csic.es'
  ***************************************************************************/
 
-#include "enhance_contrast.h"
+#include "volume_enhance_contrast.h"
 
-#define DEBUG
+//#define DEBUG
 
 // Define paramsUsage -------------------------------------------------------------------s
-void ProgEnhanceContrast::defineParams()
+void ProgVolumeEnhanceContrast::defineParams()
 {
-    XmippMetadataProgram::defineParams();
-    addParamsLine("  [-alpha <a=0.01>]         : Confidence interval for background identification");
-    addParamsLine("  [-lowerIntensity <intensity=0>]     : Only process if is hier");
-    addParamsLine("  [-removeBackground]       : Remove the noise of the background");
-    addParamsLine("  [-saveMask <filename=\"\">]  : Filename for the background mask");
+	addUsageLine("Enhance volume contrast by applying a non-linear transformation to gray levels");
+	addUsageLine("+The contrast enhancement is based on an evolution of an article of");
+	addUsageLine("+[[http://www.ncbi.nlm.nih.gov/pubmed/16579377][Sean Matz]] and is further ");
+	addUsageLine("+explained [[http://biocomp.cnb.csic.es/~coss/Articulos/Fuentes2010.pdf][here]]");
+	addUsageLine("+The algorithm detects the molecule borders and applies a nonlinear transformation ");
+	addUsageLine("+of the gray values");
+    addSeeAlsoLine("volume_correct_bfactor");
+	produces_an_output=true;
+	XmippMetadataProgram::defineParams();
+    addParamsLine("  [--removeBackground]        : Remove the noise of the background");
+    addParamsLine("  [--alpha+ <a=0.01>]         : Confidence interval for background identification");
+    addParamsLine("  [--lowerIntensity+ <intensity=0>]     : Only process if the gray value is higher than this value");
+    addParamsLine("  [--saveMask+ <filename=\"\">]  : Filename for the background mask");
+    addExampleLine("xmipp_volume_enhance_contrast -i volume.vol -o volumeEnhanced.vol");
 }
 
 // Read from command line --------------------------------------------------
-void ProgEnhanceContrast::readParams()
+void ProgVolumeEnhanceContrast::readParams()
 {
     XmippMetadataProgram::readParams();
-    alpha = getDoubleParam("-alpha");
-    lowerIntensity = getDoubleParam("-lowerIntensity");
-    removeBg = checkParam("-removeBackground");
-    fnMask = getParam("-saveMask");
-    produceSideInfo();
+    alpha = getDoubleParam("--alpha");
+    lowerIntensity = getDoubleParam("--lowerIntensity");
+    removeBg = checkParam("--removeBackground");
+    fnMask = getParam("--saveMask");
 }
 
-void ProgEnhanceContrast::processImage(const FileName &fnImg, const FileName &fnImgOut, size_t objId)
+void ProgVolumeEnhanceContrast::processImage(const FileName &fnImg, const FileName &fnImgOut, size_t objId)
 {
   Image<double> img;
   img.read(fnImg);
   enhance(img());
+  img.write(fnImgOut);
 }
 
-
-// Produce side info -------------------------------------------------------
-void ProgEnhanceContrast::produceSideInfo()
-{}
-
 // Show --------------------------------------------------------------------
-void ProgEnhanceContrast::show()
+void ProgVolumeEnhanceContrast::show()
 {
     XmippMetadataProgram::show();
     std::cout << "Alpha: " << alpha << std::endl
@@ -71,10 +75,8 @@ void ProgEnhanceContrast::show()
     << "saveMask: " << fnMask << std::endl;
 }
 
-
-
 // Enhance volume ----------------------------------------------------------
-void ProgEnhanceContrast::enhance(MultidimArray<double> &vol)
+void ProgVolumeEnhanceContrast::enhance(MultidimArray<double> &vol)
 {
     // 1.-Scale volume between 0 and 255----------------------------------
     double minVal, maxVal;
@@ -396,7 +398,5 @@ void ProgEnhanceContrast::enhance(MultidimArray<double> &vol)
     }
     // OUTPUT
     vol=vol_f;
-
-
 } // End of enhance
 

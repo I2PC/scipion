@@ -24,8 +24,8 @@
 *  e-mail address 'xmipp@cnb.csic.es'
 ***************************************************************************/
 
-#ifndef ENHANCE_CONTRAST_H
-#define ENHANCE_CONTRAST_H
+#ifndef VOLUME_ENHANCE_CONTRAST_H
+#define VOLUME_ENHANCE_CONTRAST_H
 
 #include <string>
 #include <data/progs.h>
@@ -45,7 +45,7 @@
 
 /// Parameters for enhance contrast program
 /// @ingroup Denoise
-class ProgEnhanceContrast: public XmippMetadataProgram
+class ProgVolumeEnhanceContrast: public XmippMetadataProgram
 {
 public:
 	// Confidence level for background identification
@@ -71,12 +71,6 @@ protected:
     void processImage(const FileName &fnImg, const FileName &fnImgOut, size_t objId);
 
 public:
-    /** Produce side info.
-     *
-     * The DWT type is translated and set
-     */
-    void produceSideInfo();
-
     /** Show parameters. This function calls show_specific.
      */
     void show();
@@ -84,7 +78,6 @@ public:
     /** Enhance contrast of a volume.
      */
     void enhance(MultidimArray< double >& vol);
-
 };
 
 #endif
