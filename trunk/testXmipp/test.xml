@@ -94,7 +94,7 @@
       <CASE arguments="-i input/mD1.doc --operate add_column &quot;shiftX shiftY&quot; -o %o/out.doc" changeDir="FALSE"/>
       <CASE arguments="-i input/mD1.doc --fill shiftX rand_uniform 0 10 -o %o/out.doc" changeDir="FALSE"/>
       <CASE arguments="-i input/mD1.doc -l &quot;shiftX shiftY&quot; constant 5 -o %o/out.doc" changeDir="FALSE"/>
-      <CASE arguments="-i input/mD1.doc --query select &quot;angleRot > 10 AND anglePsi < 0.5&quot; -o %o/out.doc" changeDir="FALSE"/>
+      <CASE arguments="-i input/mD1.doc --query select &quot;angleRot &gt; 10 AND anglePsi &lt; 0.5&quot; -o %o/out.doc" changeDir="FALSE"/>
       <CASE arguments="-i input/mD1.doc --operate modify_values &quot;angleRot=(angleRot*3.1416/180.)&quot; -o %o/out.doc" changeDir="FALSE"/>
       <CASE arguments="-i input/mD1.doc --operate modify_values &quot;image=replace(image, 'xmp','spi')&quot; -o %o/out.doc" changeDir="FALSE"/>
    </PROGRAM>
