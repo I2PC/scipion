@@ -2,8 +2,7 @@
 #include <iostream>
 #include "../../../external/gtest-1.6.0/fused-src/gtest/gtest.h"
 // MORE INFO HERE: http://code.google.com/p/googletest/wiki/AdvancedGuide
-// This test is named "Size", and belongs to the "MetadataTest"
-// test case.
+// Modify this test so it uses Fixures as test_image and test_metadata
 TEST( MultidimTest, Size)
 {
     MultidimArray<int> md;
@@ -28,7 +27,6 @@ TEST( MultidimTest, Copy)
 }
 
 GTEST_API_ int main(int argc, char **argv) {
-  std::cout << "Running main() from gtest_main.cc\n";
 
   testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();
