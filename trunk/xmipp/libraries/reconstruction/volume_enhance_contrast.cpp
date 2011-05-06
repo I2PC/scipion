@@ -38,8 +38,8 @@ void ProgVolumeEnhanceContrast::defineParams()
 	addUsageLine("+The algorithm detects the molecule borders and applies a nonlinear transformation ");
 	addUsageLine("+of the gray values");
     addSeeAlsoLine("volume_correct_bfactor");
-	produces_an_output=true;
-	XmippMetadataProgram::defineParams();
+    addParamsLine("   -i <file>                  : Input volume");
+    addParamsLine("  [-o <file=\"\">]                 : Output volume");
     addParamsLine("  [--removeBackground]        : Remove the noise of the background");
     addParamsLine("  [--alpha+ <a=0.01>]         : Confidence interval for background identification");
     addParamsLine("  [--lowerIntensity+ <intensity=0>]     : Only process if the gray value is higher than this value");
@@ -50,26 +50,33 @@ void ProgVolumeEnhanceContrast::defineParams()
 // Read from command line --------------------------------------------------
 void ProgVolumeEnhanceContrast::readParams()
 {
-    XmippMetadataProgram::readParams();
+	fnIn=getParam("-i");
+	fnOut=getParam("-o");
+	if (fnOut=="")
+		fnOut=fnIn;
     alpha = getDoubleParam("--alpha");
     lowerIntensity = getDoubleParam("--lowerIntensity");
     removeBg = checkParam("--removeBackground");
     fnMask = getParam("--saveMask");
 }
 
-void ProgVolumeEnhanceContrast::processImage(const FileName &fnImg, const FileName &fnImgOut, size_t objId)
+void ProgVolumeEnhanceContrast::run()
 {
   Image<double> img;
-  img.read(fnImg);
+  img.read(fnIn);
   enhance(img());
-  img.write(fnImgOut);
+  img.write(fnOut);
 }
 
 // Show --------------------------------------------------------------------
 void ProgVolumeEnhanceContrast::show()
 {
-    XmippMetadataProgram::show();
-    std::cout << "Alpha: " << alpha << std::endl
+	if (verbose==0)
+		return;
+    std::cout
+    << "Input: " << fnIn << std::endl
+    << "Output: " << fnOut << std::endl
+    << "Alpha: " << alpha << std::endl
     << "lowerIntensity: " << lowerIntensity << std::endl
     << "removeBackground: " << removeBg << std::endl
     << "saveMask: " << fnMask << std::endl;
@@ -185,7 +192,7 @@ void ProgVolumeEnhanceContrast::enhance(MultidimArray<double> &vol)
 
     // We use gaussian because we have a T-Student with more than 100
     float z=icdf_gauss(1-(0.01/2));  // degrees of freedom
-    // We create a volume with the neighboor sizes
+    // We create a volume with the neighbor sizes
     MultidimArray<double> vol_tam;
     vol_tam.resize(vol);
     vol_tam.initConstant(4);

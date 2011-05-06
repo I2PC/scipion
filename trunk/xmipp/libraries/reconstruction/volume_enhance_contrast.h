@@ -45,9 +45,12 @@
 
 /// Parameters for enhance contrast program
 /// @ingroup Denoise
-class ProgVolumeEnhanceContrast: public XmippMetadataProgram
+class ProgVolumeEnhanceContrast: public XmippProgram
 {
 public:
+	// Input/Output volumes
+	FileName fnIn, fnOut;
+
 	// Confidence level for background identification
 	double alpha;
 
@@ -68,7 +71,7 @@ protected:
      */
     void readParams();
 
-    void processImage(const FileName &fnImg, const FileName &fnImgOut, size_t objId);
+    void run();
 
 public:
     /** Show parameters. This function calls show_specific.
