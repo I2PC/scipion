@@ -63,7 +63,7 @@ public:
     /** Vary psi and translational sampling with resolution */
     bool do_variable_psi, do_variable_trans;
     /** Vector for images to hold references (new & old) */
-    std::vector< Image<double> > Iref, Ictf;
+    std::vector< Image<double> > Ictf;
     /** Limit translational searches */
     bool limit_trans;
     /** Number of limited translations */
@@ -72,8 +72,6 @@ public:
     int zero_trans;
     /** Limited search range for origin offsets */
     int search_shift;
-    /** Limit orientational searches */
-    bool limit_rot;
     /** Number of subdirectories to keep for unique offsets filenames */
     int offsets_keepdir;
 

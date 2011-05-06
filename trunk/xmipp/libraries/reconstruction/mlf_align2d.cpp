@@ -26,8 +26,11 @@
 
 //Macro to obtain the iteration image name and metadata
 #define FN_ITER_BASE(iter) formatString("%s_iter%06d", fn_root.c_str(), (iter))
-#define FN_REFMD(base) formatString("%s_refs.xmd", base.c_str())
-#define FN_REF(base, refno) formatString("%s_ref%6d.xmp", base.c_str(), (refno))
+#define FN_REFMD(base) ((base) + "_ref.xmd")
+#define FN_IMGMD(base) ((base) + "_img.xmd")
+#define FN_LOGMD(base) ((base) + "_log.xmd")
+#define FN_REF(base, refno) formatString("%s_ref%06d.xmp", (base).c_str(), (refno))
+#define FN_VSIG(base, ifocus, ext) ((nr_focus > 1) ? formatString("%s_ctf%06d%s", (base).c_str(), ((ifocus) + 1), (ext)) : ((base)+ (ext)))
 // Constructor ===============================================
 ProgMLF2D::ProgMLF2D(int nr_vols, int rank, int size)
 {
@@ -388,7 +391,7 @@ void ProgMLF2D::produceSideInfo()
 
         MetaData ctfMD;
         //number of different CTFs
-        ctfMD.aggregate(MDimg, AGGR_COUNT,MDL_CTFMODEL,MDL_CTFMODEL,MDL_COUNT);
+        ctfMD.aggregate(MDimg, AGGR_COUNT, MDL_CTFMODEL, MDL_CTFMODEL, MDL_COUNT);
         ctfMD.fillExpand(MDL_CTFMODEL);
         nr_focus = ctfMD.size();
 
@@ -490,15 +493,11 @@ void ProgMLF2D::produceSideInfo()
     {
         if (model.n_ref > 0)
         {
-            fn_ref = fn_root + "_it";
-            fn_ref.compose(fn_ref, 0, "");
-            fn_ref += "_ref.xmd";
-            do_generate_refs=true;
+            fn_ref = FN_REFMD(FN_ITER_BASE(0));
+            do_generate_refs = true;
 
             if (rank == 0)
-            {
                 generateInitialReferences();
-            }
         }
         else
             REPORT_ERROR(ERR_INDEX_OUTOFBOUNDS, "Please provide -ref or -nref larger than zero");
@@ -704,14 +703,11 @@ void ProgMLF2D::produceSideInfo2()
     }
 
     // Read in Vsig-vectors with fixed file names
+    FileName fn_base = FN_ITER_BASE(istart - 1);
+
     FOR_ALL_DEFOCUS_GROUPS()
     {
-        fn_tmp = fn_root + "_it";
-        fn_tmp.compose(fn_tmp, istart - 1, "");
-        fn_tmp += "_ctf";
-        if (nr_focus > 1)
-            fn_tmp.compose(fn_tmp, ifocus + 1, "");
-        fn_tmp += ".noise";
+        fn_tmp = FN_VSIG(fn_base, ifocus, ".noise");
         fh.open((fn_tmp).c_str(), std::ios::in);
         if (!fh)
             REPORT_ERROR(ERR_IO_NOTOPEN, (String)"Prog_MLFalign2D_prm: Cannot read file: " + fn_tmp);
@@ -811,6 +807,7 @@ void ProgMLF2D::estimateInitialNoiseSpectra()
         if (verbose > 0)
             progress_bar(nn);
 
+        FileName fn_base = FN_ITER_BASE(istart - 1);
         // Calculate Vsig vectors and write them to disc
         FOR_ALL_DEFOCUS_GROUPS()
         {
@@ -835,12 +832,7 @@ void ProgMLF2D::estimateInitialNoiseSpectra()
             }
 
             // write Vsig vector to disc
-            fn_tmp = fn_root + "_it";
-            fn_tmp.compose(fn_tmp, istart - 1, "");
-            fn_tmp += "_ctf";
-            if (nr_focus > 1)
-                fn_tmp.compose(fn_tmp, ifocus + 1, "");
-            fn_tmp += ".noise";
+            fn_tmp = FN_VSIG(fn_base, ifocus, ".noise");
             fh.open((fn_tmp).c_str(), std::ios::out);
             if (!fh)
                 REPORT_ERROR(ERR_IO_NOTOPEN, (String)"Prog_MLFalign2D_prm: Cannot write file: " + fn_tmp);
@@ -988,16 +980,11 @@ void ProgMLF2D::updateWienerFilters(MultidimArray<double> &spectral_signal,
     // Write Wiener filters and spectral SNR to text files
     if (verbose > 0)
     {
-        fn_base = fn_root;
-        fn_base += "_it";
-        fn_base.compose(fn_base, iter, "");
+        fn_base = FN_ITER_BASE(iter);
         // CTF group-specific Wiener filter files
         FOR_ALL_DEFOCUS_GROUPS()
         {
-            fn_tmp = fn_base + "_ctf";
-            if (nr_focus > 1)
-                fn_tmp.compose(fn_tmp, ifocus + 1, "");
-            fn_tmp += ".ssnr";
+            fn_tmp = FN_VSIG(fn_base, ifocus, ".ssnr");
             fh.open((fn_tmp).c_str(), std::ios::out);
             if (!fh)
                 REPORT_ERROR(ERR_IO_NOTOPEN, (String)"Prog_MLFalign2D_prm: Cannot write file: " + fn_tmp);
@@ -1085,7 +1072,7 @@ void ProgMLF2D::updateWienerFilters(MultidimArray<double> &spectral_signal,
             pointer_2d.push_back(i*XSIZE(Maux) + j);
             pointer_i.push_back(i);
             pointer_j.push_back(j);
-            nr_points_prob++;
+            ++nr_points_prob;
         }
     }
     // Second, get the rest of the currently relevant pixels:
@@ -1202,7 +1189,7 @@ void ProgMLF2D::generateInitialReferences()
     FileName fn_tmp;
     FileName fn_base = FN_ITER_BASE(0);
 
-    randomizeImagesOrder();
+    //randomizeImagesOrder();
 
     MDref.clear();
     size_t nsub, first, last;
@@ -2321,7 +2308,7 @@ void ProgMLF2D::expectation()
 
     Image<double> img;
     FileName fn_img, fn_trans;
-    std::vector<double> Fref, Fwsum_imgs, Fwsum_ctfimgs, dum;
+    std::vector<double> Fref, Fwsum_imgs, Fwsum_ctfimgs;
     std::vector<double> allref_offsets, pdf_directions(model.n_ref);
     MultidimArray<double> trans(2);
     MultidimArray<double> opt_offsets(2);
@@ -2344,12 +2331,14 @@ void ProgMLF2D::expectation()
     c = XMIPP_MAX(1, nr_images_local / 60);
 
     trans.initZeros();
+    int n = model.n_ref;
     // Set all weighted sums to zero
-    sumw.clear();
-    sumw2.clear();
-    sumwsc.clear();
-    sumwsc2.clear();
-    sumw_mirror.clear();
+    sumw.assign(n, 0.);
+    sumw2.assign(n, 0.);
+    sumwsc.assign(n, 0.);
+    sumwsc2.assign(n, 0.);
+    sumw_mirror.assign(n, 0.);
+
     sumw_defocus.clear();
     Mwsum_sigma2.clear();
     Fwsum_imgs.clear();
@@ -2357,40 +2346,42 @@ void ProgMLF2D::expectation()
     LL = 0.;
     wsum_sigma_offset = 0.;
     sumcorr = 0.;
-    FOR_ALL_DEFOCUS_GROUPS()
+    std::vector<double> dum;
+    dum.assign(nr_points_2d, 0.);
+    Mwsum_sigma2.assign(nr_focus, dum);
+    if (do_student && do_student_sigma_trick)
+        sumw_defocus.assign(nr_focus, 0.);
+    else
     {
-        if (do_student && do_student_sigma_trick)
-            sumw_defocus.push_back(0.);
-        else
-            sumw_defocus.push_back((double)count_defocus[ifocus]);
-
-        Mwsum_sigma2.push_back(dum);
-        Mwsum_sigma2[ifocus].assign(nr_points_2d, 0.);
-    }
-    FOR_ALL_MODELS()
-    {
-        sumw.push_back(0.);
-        sumw2.push_back(0.);
-        sumwsc.push_back(0.);
-        sumwsc2.push_back(0.);
-        sumw_mirror.push_back(0.);
-        FOR_ALL_ROTATIONS()
+        FOR_ALL_DEFOCUS_GROUPS()
         {
-            Fwsum_imgs.assign(dnr_points_2d, 0.);
-            if (do_ctf_correction)
-                Fwsum_ctfimgs.assign(dnr_points_2d, 0.);
+            sumw_defocus.push_back((double)count_defocus[ifocus]);
         }
     }
 
+    if (dnr_points_2d > 0)
+    {
+      int nn = n * nr_psi * dnr_points_2d;
+      Fwsum_imgs.assign(nn, 0.);
+      if  (do_ctf_correction)
+        Fwsum_ctfimgs.assign(nn, 0.);
+    }
+
+    std::stringstream ss;
+    String s;
     // Loop over all images
     FOR_ALL_LOCAL_IMAGES()
     {
+        size_t id = img_id[imgno];
 
         // Get defocus-group
         if (do_ctf_correction)
-            MDimg.getValue(MDL_DEFGROUP, focus, img_id[imgno]);
+            MDimg.getValue(MDL_DEFGROUP, focus, id);
 
-        MDimg.getValue(MDL_IMAGE, fn_img, img_id[imgno]);
+        std::cerr << formatString("processing img: %lu with id: %lu\n", imgno, id);
+
+        MDimg.getValue(MDL_IMAGE, fn_img, id);
+        std::cerr << formatString("   filename: %s\n", fn_img.c_str());
         //img.read(fn_img, false, false, false, false);
         img.read(fn_img);
         img().setXmippOrigin();
@@ -2694,61 +2685,58 @@ void ProgMLF2D::writeOutputFiles(const ModelML2D &model, OutputType outputType)
     }
 
     // Write out optimal image orientations
-    fn_tmp = fn_base + "_img.xmd";
+    fn_tmp = FN_IMGMD(fn_base);
     MDimg.write(fn_tmp);
     // Also write out metaData files of all experimental images,
     // classified according to optimal reference image
-    for (int refno = 0; refno < model.n_ref; refno++)
-    {
-        MDo.clear();
-        MDo.importObjects(MDimg, MDValueEQ(MDL_REF, refno + 1));
-        fn_tmp = FN_REFMD(fn_base);
-        fn_tmp = fn_root + "_ref";
-        fn_tmp.compose(fn_tmp, refno + 1, "");
-        fn_tmp += "_img.xmd";
-        MDo.write(fn_tmp);
-    }
+    //fixme: check if needed
+    //    for (int refno = 0; refno < model.n_ref; refno++)
+    //    {
+    //        MDo.clear();
+    //        MDo.importObjects(MDimg, MDValueEQ(MDL_REF, refno + 1));
+    //        fn_tmp = FN_REFMD(fn_base);
+    //        fn_tmp = fn_root + "_ref";
+    //        fn_tmp.compose(fn_tmp, refno + 1, "");
+    //        fn_tmp += "_img.xmd";
+    //        MDo.write(fn_tmp);
+    //    }
 
     // Write out current reference images and fill sel & log-file
     // First time for _ref, second time for _cref
-    for (int i = 0;  i < 2;  i++)
+    FileName fn_base_tmp = fn_base;
+    for (int i = 0;  i < 2;  i++, fn_base_tmp += "_C")
     {
         MDo.clear();
-        //for (int refno = 0; refno < model.n_ref; refno++)
         int refno = 0;
         int ref3d = -1;
         FOR_ALL_OBJECTS_IN_METADATA(MDref)
         {
-            fn_tmp = fn_base + (i==0 ? "_ref" : "_cref");
-            fn_tmp.compose(fn_tmp, refno + 1, "xmp");
+            //write reference
             Itmp = model.Iref[refno];
-            //std::cerr << "writing refno " << fn_tmp << std::endl;
+            fn_tmp = FN_REF(fn_base_tmp, refno + 1);
             Itmp.write(fn_tmp);
+            //write metadata entry
             id = MDo.addObject();
-            MDo.setValue(MDL_IMAGE, fn_tmp,id);
-            MDo.setValue(MDL_ENABLED, 1,id);
-            MDo.setValue(MDL_WEIGHT, (double)Itmp.weight(),id);
+            MDo.setValue(MDL_IMAGE, fn_tmp, id);
+            MDo.setValue(MDL_ENABLED, 1, id);
+            MDo.setValue(MDL_WEIGHT, Itmp.weight(), id);
+
             if (do_mirror)
-            {
-                MDo.setValue(MDL_MIRRORFRAC, mirror_fraction[refno],id);
-            }
-            MDo.setValue(MDL_SIGNALCHANGE, conv[refno]*1000,id);
+                MDo.setValue(MDL_MIRRORFRAC, mirror_fraction[refno], id);
+            MDo.setValue(MDL_SIGNALCHANGE, conv[refno]*1000, id);
             if (do_norm)
-            {
-                MDo.setValue(MDL_INTSCALE, refs_avgscale[refno],id);
-            }
+                MDo.setValue(MDL_INTSCALE, refs_avgscale[refno], id);
             if (do_ML3D)
             {
                 MDo.setValue(MDL_ANGLEROT, Itmp.rot(),id);
                 MDo.setValue(MDL_ANGLETILT, Itmp.tilt(),id);
                 MDref.getValue(MDL_REF3D, ref3d, __iter.objId);
-                MDo.setValue(MDL_REF3D, ref3d,id);
+                MDo.setValue(MDL_REF3D, ref3d, id);
             }
             ++refno;
         }
-
         // Write out reference md file
-        fn_tmp = fn_base + (i == 0 ? "_ref.xmd" : "_cref.xmd");
+        fn_tmp = FN_REFMD(fn_base_tmp);
         MDo.write(fn_tmp);
     }
 
@@ -2765,13 +2753,12 @@ void ProgMLF2D::writeOutputFiles(const ModelML2D &model, OutputType outputType)
     {
         MDo.setValue(MDL_INTSCALE, average_scale,id);
     }
-    MDo.setValue(MDL_ITER, iter,id);
-    fn_tmp = fn_base + "_img.xmd";
-    MDo.setValue(MDL_IMGMD, fn_tmp,id);
-    fn_tmp = fn_base + "_ref.xmd";
-    MDo.setValue(MDL_REFMD, fn_tmp,id);
-
-    fn_tmp = fn_base + "_log.xmd";
+    MDo.setValue(MDL_ITER, iter, id);
+    fn_tmp = FN_IMGMD(fn_base);
+    MDo.setValue(MDL_IMGMD, fn_tmp, id);
+    fn_tmp = FN_REFMD(fn_base);
+    MDo.setValue(MDL_REFMD, fn_tmp, id);
+    fn_tmp = FN_LOGMD(fn_base);
     MDo.write(fn_tmp);
 
 
@@ -2829,10 +2816,7 @@ void ProgMLF2D::writeOutputFiles(const ModelML2D &model, OutputType outputType)
     {
         FOR_ALL_DEFOCUS_GROUPS()
         {
-            fn_tmp = fn_base + "_ctf";
-            if (nr_focus > 1)
-                fn_tmp.compose(fn_tmp, ifocus + 1, "");
-            fn_tmp += ".noise";
+            fn_tmp = FN_VSIG(fn_base, ifocus, ".noise");
             fh.open((fn_tmp).c_str(), std::ios::out);
             if (!fh)
                 REPORT_ERROR(ERR_IO_NOTOPEN, (String)"Prog_MLFalign2D_prm: Cannot write file: " + fn_tmp);
