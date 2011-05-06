@@ -241,6 +241,9 @@ class Tester:
         self.addProgram("xmipp_volume_correct_bfactor")
         self.addTest("-i input/1FFKfull_reconstructed.vol -o %o/corrected.vol --auto --sampling 1 --maxres 10")
 
+        self.addProgram("xmipp_volume_enhance_contrast")
+        self.addTest("-i input/1FFKfull_reconstructed.vol -o %o/enhanced.vol")
+
         self.addProgram("xmipp_volume_from_pdb")
         self.addTest("-i input/1o7d.pdb -o %o/1o7d")
 
