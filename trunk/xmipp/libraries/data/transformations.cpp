@@ -462,6 +462,7 @@ double interpolatedElementBSplineDiffX(MultidimArray<double> &vol, double x, dou
                                        int SplineDegree)
 {
     int SplineDegree_1 = SplineDegree - 1;
+    double aux;
 
     // Logical to physical
     z -= STARTINGZ(vol);
@@ -514,7 +515,8 @@ double interpolatedElementBSplineDiffX(MultidimArray<double> &vol, double x, dou
                     xsum += Coeff * Bspline02(xminusl);
                     break;
                 case 3:
-                    xsum += Coeff * Bspline03Diff1(xminusl);
+                	BSPLINE03DIFF1(aux,xminusl);
+                    xsum += Coeff * aux;
                     break;
                 case 4:
                     xsum += Coeff * Bspline04(xminusl);
@@ -544,7 +546,8 @@ double interpolatedElementBSplineDiffX(MultidimArray<double> &vol, double x, dou
                 yxsum += xsum * Bspline02(yminusm);
                 break;
             case 3:
-                yxsum += xsum * Bspline03(yminusm);
+            	BSPLINE03(aux,yminusm);
+                yxsum += xsum * aux;
                 break;
             case 4:
                 yxsum += xsum * Bspline04(yminusm);
@@ -574,7 +577,8 @@ double interpolatedElementBSplineDiffX(MultidimArray<double> &vol, double x, dou
             zyxsum += yxsum * Bspline02(zminusn);
             break;
         case 3:
-            zyxsum += yxsum * Bspline03(zminusn);
+        	BSPLINE03(aux,zminusn);
+            zyxsum += yxsum * aux;
             break;
         case 4:
             zyxsum += yxsum * Bspline04(zminusn);
@@ -603,7 +607,7 @@ double interpolatedElementBSplineDiffX(MultidimArray<double> &vol, double x, dou
 /** Interpolates the value of the 3D matrix M at the point (x,y,z) knowing
  * that this image is a set of B-spline coefficients. And making the diff
  * of y, such->  V=sum(Coef Bx diff(By) Bz)
- * ��Only for BSplines of degree 3!!
+ * Only for BSplines of degree 3!!
  * @ingroup VolumesMemory
  *
  * (x,y,z) are in logical coordinates.
@@ -612,6 +616,7 @@ double interpolatedElementBSplineDiffY(MultidimArray<double> &vol, double x, dou
                                        int SplineDegree)
 {
     int SplineDegree_1 = SplineDegree - 1;
+    double aux;
 
     // Logical to physical
     z -= STARTINGZ(vol);
@@ -658,13 +663,15 @@ double interpolatedElementBSplineDiffY(MultidimArray<double> &vol, double x, dou
                     equivalent_l=2*XSIZE(vol)-l-1;
                 double Coeff = (double) DIRECT_A3D_ELEM(vol,
                                                         equivalent_n,equivalent_m,equivalent_l);
+                double aux;
                 switch (SplineDegree)
                 {
                 case 2:
                     xsum += Coeff * Bspline02(xminusl);
                     break;
                 case 3:
-                    xsum += Coeff * Bspline03(xminusl);
+                	BSPLINE03(aux,xminusl);
+                    xsum += Coeff * aux;
                     break;
                 case 4:
                     xsum += Coeff * Bspline04(xminusl);
@@ -694,7 +701,8 @@ double interpolatedElementBSplineDiffY(MultidimArray<double> &vol, double x, dou
                 yxsum += xsum * Bspline02(yminusm);
                 break;
             case 3:
-                yxsum += xsum * Bspline03Diff1(yminusm);
+            	BSPLINE03DIFF1(aux,yminusm);
+                yxsum += xsum * aux;
                 break;
             case 4:
                 yxsum += xsum * Bspline04(yminusm);
@@ -724,7 +732,8 @@ double interpolatedElementBSplineDiffY(MultidimArray<double> &vol, double x, dou
             zyxsum += yxsum * Bspline02(zminusn);
             break;
         case 3:
-            zyxsum += yxsum * Bspline03(zminusn);
+        	BSPLINE03(aux,zminusn);
+            zyxsum += yxsum * aux;
             break;
         case 4:
             zyxsum += yxsum * Bspline04(zminusn);
@@ -753,7 +762,7 @@ double interpolatedElementBSplineDiffY(MultidimArray<double> &vol, double x, dou
 /** Interpolates the value of the 3D matrix M at the point (x,y,z) knowing
  * that this image is a set of B-spline coefficients. And making the diff
  * of z, such->  V=sum(Coef Bx By diff(Bz))
- * ��Only for BSplines of degree 3!!
+ * Only for BSplines of degree 3!!
  * @ingroup VolumesMemory
  *
  * (x,y,z) are in logical coordinates.
@@ -762,6 +771,7 @@ double interpolatedElementBSplineDiffZ(MultidimArray<double> &vol, double x, dou
                                        int SplineDegree)
 {
     int SplineDegree_1 = SplineDegree - 1;
+    double aux;
 
     // Logical to physical
     z -= STARTINGZ(vol);
@@ -808,13 +818,15 @@ double interpolatedElementBSplineDiffZ(MultidimArray<double> &vol, double x, dou
                     equivalent_l=2*XSIZE(vol)-l-1;
                 double Coeff = (double) DIRECT_A3D_ELEM(vol,
                                                         equivalent_n,equivalent_m,equivalent_l);
+                double aux;
                 switch (SplineDegree)
                 {
                 case 2:
                     xsum += Coeff * Bspline02(xminusl);
                     break;
                 case 3:
-                    xsum += Coeff * Bspline03(xminusl);
+                	BSPLINE03(aux,xminusl);
+                    xsum += Coeff * aux;
                     break;
                 case 4:
                     xsum += Coeff * Bspline04(xminusl);
@@ -844,7 +856,8 @@ double interpolatedElementBSplineDiffZ(MultidimArray<double> &vol, double x, dou
                 yxsum += xsum * Bspline02(yminusm);
                 break;
             case 3:
-                yxsum += xsum * Bspline03(yminusm);
+            	BSPLINE03(aux,yminusm);
+                yxsum += xsum * aux;
                 break;
             case 4:
                 yxsum += xsum * Bspline04(yminusm);
@@ -874,7 +887,8 @@ double interpolatedElementBSplineDiffZ(MultidimArray<double> &vol, double x, dou
             zyxsum += yxsum * Bspline02(zminusn);
             break;
         case 3:
-            zyxsum += yxsum * Bspline03Diff1(zminusn);
+        	BSPLINE03DIFF1(aux,zminusn);
+            zyxsum += yxsum * aux;
             break;
         case 4:
             zyxsum += yxsum * Bspline04(zminusn);
