@@ -147,10 +147,13 @@ public:
      * rank and size are for MPI use
      */
     ProgMLF2D(int nr_vols = 0, int rank = 0, int size = 1);
-    /// Read arguments from command line
-    void readParams();
+
     /// Params definition
     void defineParams();
+
+    /// Read arguments from command line
+    void readParams();
+
 
 public:
     /// Show
@@ -249,7 +252,7 @@ public:
                          bool do_kstest, bool write_histograms,
                          FileName fn_img, double &KSprob);
 
-        /// Perform Kolmogorov-Smirnov test
+    /// Perform Kolmogorov-Smirnov test
     double performKSTest(MultidimArray<double> &Mimg,  const int focus, bool apply_ctf,
                          FileName &fn_img, bool write_histogram,
                          std::vector <std::vector< MultidimArray<std::complex<double> > > > &Fref,

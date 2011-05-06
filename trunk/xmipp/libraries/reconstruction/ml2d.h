@@ -49,10 +49,10 @@
 
 ///******** Some macro definitions ****************
 #define FOR_ALL_GLOBAL_IMAGES() \
-    for (int imgno = 0; imgno < nr_images_global; imgno++)
+    for (size_t imgno = 0; imgno < nr_images_global; imgno++)
 
 #define FOR_ALL_LOCAL_IMAGES() \
-    for (int imgno = myFirstImg; imgno <= myLastImg; imgno++)
+    for (size_t imgno = myFirstImg; imgno <= myLastImg; imgno++)
 
 #define IMG_LOCAL_INDEX (imgno - myFirstImg)
 #define IMG_REAL_INDEX(imgno) img_id[(imgno)]
@@ -165,11 +165,11 @@ public:
     /** Total number of no-mirror rotations in FOR_ALL_FLIPS */
     int nr_nomirror_flips;
     /** Total number of experimental images */
-    int nr_images_global;
+    size_t nr_images_global;
     /** Total number of local mpi images */
-    int nr_images_local;
+    size_t nr_images_local;
     /** First and last images, useful for mpi*/
-    int myFirstImg, myLastImg;
+    size_t myFirstImg, myLastImg;
     /** Stopping criterium */
     double eps;
     /** MetaData files for experimental and reference images */

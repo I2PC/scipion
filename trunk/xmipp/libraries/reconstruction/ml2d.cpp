@@ -204,8 +204,15 @@ void ML2DBaseProgram::run()
 void ML2DBaseProgram::defineBasicParams(XmippProgram * prog)
 {
     prog->addParamsLine("   -i <input_file>                : Metadata or stack with input images ");
-    String orStr = (referenceExclusive) ? "or" : "";
-    prog->addParamsLine("   --nref <int=1>               : Number of references to generate automatically (recommended)");
+
+    String orStr = "or", lb = "", rb = "";
+    if (!referenceExclusive)
+    {
+        orStr = "";
+        lb = "[";
+        rb = "]";
+    }
+    prog->addParamsLine( lb + "  --nref <int=1> " + rb + "     : Number of references to generate automatically (recommended)");
     prog->addParamsLine(orStr + " --ref <reference_file=\"\">  : Image, stack or metadata with initial(s) references(s)");
 
     prog->addParamsLine(formatString(" [ --oroot <rootname=%s> ]    : Output rootname", defaultRoot.c_str()));
@@ -260,14 +267,14 @@ void ML2DBaseProgram::defineAdditionalParams(XmippProgram * prog, const char * s
 
 void ML2DBaseProgram::defineHiddenParams(XmippProgram *prog)
 {
-    addParamsLine("==+++++ Hidden arguments ==");
-    addParamsLine(" [--scratch <scratch=\"\">]");
-    addParamsLine(" [--debug <int=0>]");
-    addParamsLine(" [--no_sigma_trick]");
-    addParamsLine(" [--trymindiff_factor <float=0.9>]");
-    addParamsLine(" [--random_seed <int=-1>]");
-    addParamsLine(" [--search_rot <float=999.>]");
-    addParamsLine(" [--load <N=1>]");
+    prog->addParamsLine("==+++++ Hidden arguments ==");
+    prog->addParamsLine(" [--scratch <scratch=\"\">]");
+    prog->addParamsLine(" [--debug <int=0>]");
+    prog->addParamsLine(" [--no_sigma_trick]");
+    prog->addParamsLine(" [--trymindiff_factor <float=0.9>]");
+    prog->addParamsLine(" [--random_seed <int=-1>]");
+    prog->addParamsLine(" [--search_rot <float=999.>]");
+    prog-> addParamsLine(" [--load <N=1>]");
 }
 
 
@@ -483,11 +490,9 @@ void ModelML2D::print() const
 
     for (int refno = 0; refno < n_ref; refno++)
     {
-        std::cerr << "refno:       " << refno << std::endl;
-        std::cerr << "sumw:        " << getSumw(refno) << std::endl;
-        std::cerr << "sumw_mirror: " << getSumwMirror(refno) << std::endl;
-        std::cerr << "alpha_k:        " << alpha_k[refno] << std::endl;
-        std::cerr << "mirror_fraction: " << mirror_fraction[refno] << std::endl;
+        std::cerr << "   refno " << refno << std::endl;
+        std::cerr << "    (sumw     sumw_mirror)      " << getSumw(refno) << " " << getSumwMirror(refno) << std::endl;
+        std::cerr << "    (alpha_k  mirror_fraction)  " << alpha_k[refno] << " " << mirror_fraction[refno] << std::endl;
 
     }
 

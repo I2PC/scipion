@@ -207,7 +207,7 @@ void ProgML2D::show()
         }
 
         std::cout    << "--> Maximum-likelihood multi-reference refinement " << std::endl
-        << formatString("  Input images            : %s (%d)", fn_img.c_str(), nr_images_global) << std::endl;
+        << formatString("  Input images            : %s (%lu)", fn_img.c_str(), nr_images_global) << std::endl;
 
         if (fn_ref != "")
             std::cout << "  Reference image(s)      : " << fn_ref << std::endl;
@@ -887,7 +887,7 @@ void ProgML2D::expectationSingleImage(Matrix1D<double> &opt_offsets)
               - ddim2 * log(sqrt(PI * df * sigma_noise2)) + gammln(-df2)
               - gammln(df / 2.);
 
-    //#define DEBUG_JM1
+//#define DEBUG_JM1
 #ifdef DEBUG_JM1
 
     std::cerr << "----------------------------->>>" << std::endl;
@@ -899,7 +899,10 @@ void ProgML2D::expectationSingleImage(Matrix1D<double> &opt_offsets)
     //std::cerr << "                        dfsigma2: " << dfsigma2 << std::endl;
     std::cerr << "                       wsum_corr: " << wsum_corr << std::endl;
     std::cerr << "                     wsum_offset: " << wsum_offset << std::endl;
+    for (int refno = 0; refno < model.n_ref; ++refno)
+      std::cerr << " sumw[" << refno << "] = " << sumw[refno] << std::endl;
 #endif
+#undef DEBUG_JM1
 
     LL += dLL;
 
@@ -1545,9 +1548,11 @@ void ProgML2D::doThreadExpectationSingleImageRefno()
         wsum_offset += local_wsum_offset;
         wsum_corr += local_wsum_corr;
 
+//#define DEBUG_JM
 #ifdef DEBUG_JM
 
         {
+          std::cerr << formatString("==== img: %lu  refno: %d ==\n", current_image, refno);
             std::cerr << "Xi2: " << Xi2 << std::endl;
             std::cerr << "A2[refno]: " << A2[refno] << std::endl;
             std::cerr << "refw[refno]: " << refw[output_refno] << std::endl;
@@ -1557,6 +1562,7 @@ void ProgML2D::doThreadExpectationSingleImageRefno()
             std::cerr << "wsum_corr: " << wsum_corr << std::endl;
         }
 #endif
+#undef DEBUG_JM
 
         mindiff = XMIPP_MIN(mindiff, local_mindiff);
 
@@ -1960,8 +1966,19 @@ void ProgML2D::maximizeModel(ModelML2D &local_model)
     // Update the model fractions
     if (!fix_fractions)
         for (int refno = 0; refno < local_model.n_ref; refno++)
+        {
+          try{
             local_model.updateFractions(refno, sumw[refno], sumw_mirror[refno],
                                         local_model.sumw_allrefs);
+          }
+          catch (XmippError xe)
+          {
+
+            std::cerr << ">>>>>>>>>>> ERROR ON MAXIMIZE_MODEL : "<< std::endl << xe << std::endl;
+            local_model.print();
+            throw xe;
+          }
+        }
 
     // Average height of the probability distribution at its maximum
     local_model.updateAvePmax(sumfracweight);
@@ -2035,10 +2052,14 @@ void ProgML2D::maximization()
             }
             // After iteration 0, factor_nref will ALWAYS be one
             factor_nref = 1;
+            //restore the value of current block
+            --current_block;
         }
     }
-    //std::cerr << "======After maximization MODEL: =========" <<std::endl;
+
+    //std::cerr << "======After maximization MODEL: ========= block: " << current_block << std::endl;
     //model.print();
+
     if (do_norm)
         correctScaleAverage();
 }//close function maximizationBlocks
@@ -2203,7 +2224,7 @@ void ProgML2D::writeOutputFiles(const ModelML2D &model, OutputType outputType)
             MDref.setValue(MDL_REF, select_img, objId); //Also write reference number
             MDref.setValue(MDL_IMAGE, formatString("%06d@%s", select_img, fn_tmp.c_str()), objId);
             MDref.setValue(MDL_ENABLED, 1, objId);
-            MDref.setValue(MDL_WEIGHT, (double)Itmp.weight(), objId);
+            MDref.setValue(MDL_WEIGHT, Itmp.weight(), objId);
             if (do_mirror)
                 MDref.setValue(MDL_MIRRORFRAC, model.mirror_fraction[refno], objId);
             if (write_conv)
@@ -2212,6 +2233,8 @@ void ProgML2D::writeOutputFiles(const ModelML2D &model, OutputType outputType)
                 MDref.setValue(MDL_INTSCALE, model.scale[refno], objId);
             refno++;
         }
+
+        fn_tmp.copyFile(formatString("%s_output_block%d.stk", fn_tmp.c_str(), current_block));
 
         fn_tmp = formatString("%s_%s", rootStr, prefixStr);
         if (fn_prefix.contains("block"))

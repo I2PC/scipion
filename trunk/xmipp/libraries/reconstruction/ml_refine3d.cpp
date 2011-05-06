@@ -99,7 +99,7 @@ void ProgMLRefine3D::defineParams()
     addParamsLine(" [ --tilt <min=-91.> <max=91.> ]    : Minimum and maximum values for restriction tilt angle search ");
     addParamsLine(" [ --perturb ]                      : Randomly perturb reference projection directions ");
     //hidden params
-    addParamsLine("==+++++ Hidden arguments ==");
+    ml2d->defineHiddenParams(this);
     addParamsLine(" [--solvent <filename=\"\">]");
     addParamsLine(" [--prob_solvent]");
     addParamsLine(" [--threshold_solvent <float=999.>]");
@@ -359,6 +359,8 @@ void ProgMLRefine3D::run()
 
     ml2d->createThreads();
 
+    //Local image to read data
+    Image<double> img;
     // Loop over all iterations
     for (ml2d->iter = ml2d->istart; !converged && ml2d->iter <= ml2d->Niter; ml2d->iter++)
     {
@@ -366,49 +368,48 @@ void ProgMLRefine3D::run()
 
         if (verbose)
             std::cout << formatString("--> 3D-EM volume refinement:  iteration %d of %d", iter, Niter) << std::endl;
-
+        // Project volumes, already done for first iteration, first block
+        if (ml2d->iter > ml2d->istart)// || ml2d->current_block > 0)
+        {
+            projectVolumes(ml2d->MDref);
+            size_t refno = 0;
+            FileName fn;
+            // Read new references from disc (I could just as well keep them in memory, maybe...)
+            FOR_ALL_OBJECTS_IN_METADATA(ml2d->MDref)
+            {
+                ml2d->MDref.getValue(MDL_IMAGE, fn, __iter.objId);
+                img.read(fn);
+                img().setXmippOrigin();
+                ml2d->model.Iref[refno]() = img();
+                ++refno;
+            }
+        }
         for (ml2d->current_block = 0; ml2d->current_block < ml2d->blocks; ml2d->current_block++)
         {
-            // Project volumes, already done for first iteration, first block
-            if (ml2d->iter > ml2d->istart || ml2d->current_block > 0)
-            {
-                projectVolumes(ml2d->MDref);
-                size_t refno = 0;
-                FileName fn;
-                // Read new references from disc (I could just as well keep them in memory, maybe...)
-                FOR_ALL_OBJECTS_IN_METADATA(ml2d->MDref)
-                {
-                    ml2d->MDref.getValue(MDL_IMAGE, fn, __iter.objId);
-                    ml2d->model.Iref[refno].read(fn);
-                    ml2d->model.Iref[refno]().setXmippOrigin();
-                    ++refno;
-                }
-            }
+
 
             // Integrate over all images
             ml2d->expectation();
 
             ml2d->maximization();
 
-            // Write out 2D reference images (to be used in reconstruction)
-            ml2d->writeOutputFiles(ml2d->model, OUT_REFS);
-
-            // Jump out before 3D reconstruction
-            // (Useful for some parallelization protocols)
-            if (skip_reconstruction)
-                exit(1);
-
-            // Reconstruct new volumes from the reference images
-            reconstructVolumes(ml2d->MDref, FN_ITER_BASE(iter));
-
-            // Update the reference volume selection file
-            //remakeSFvol(ml2d->iter, false, false);
-            updateVolumesMetadata();
-            // post-process the volumes
-            postProcessVolumes();
 
         } // end loop blocks
+        // Write out 2D reference images (to be used in reconstruction)
+                    ml2d->writeOutputFiles(ml2d->model, OUT_REFS);
 
+                    // Jump out before 3D reconstruction
+                    // (Useful for some parallelization protocols)
+                    if (skip_reconstruction)
+                        exit(1);
+
+                    // Reconstruct new volumes from the reference images
+                    reconstructVolumes(ml2d->MDref, FN_ITER_BASE(iter));
+        // Update the reference volume selection file
+        //remakeSFvol(ml2d->iter, false, false);
+        updateVolumesMetadata();
+        // post-process the volumes
+        postProcessVolumes();
         // Check convergence
         converged = checkConvergence();
 
@@ -499,6 +500,10 @@ void ProgMLRefine3D::projectVolumes(MetaData &mdProj)
             if (verbose && (nr_dir % bar_step == 0))
                 progress_bar(nr_dir);
         }
+
+        FileName fn_copy = formatString("%s_projection_iter%d_block%d.stk", fn_base.c_str(), iter, ml2d->current_block);
+        std::cerr << "copying " << fn_base << " to " << fn_copy << std::endl;
+        fn_base.copyFile(fn_copy);
 
     }
 
@@ -636,6 +641,8 @@ void ProgMLRefine3D::reconstructVolumes(const MetaData &mdProj, const FileName &
             //std::cerr << "DEBUG_JM: reconstructing from " << fn_one << " volume " << fn_vol << std::endl;
             reconsProgram->setIO(fn_one, fn_vol);
             reconsProgram->tryRun();
+            //FIXME: just for debug
+            fn_vol.copyFile(formatString("%s_block%d.vol", fn_vol.c_str(), ml2d->current_block));
         }
         // Free reconsProgram
         delete reconsProgram;

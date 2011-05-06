@@ -1070,10 +1070,10 @@ bool IsBigEndian(void)
 }
 
 /** Divides a number into most equally groups */
-int divide_equally(int N, int size, int rank, int &first, int &last)
+size_t divide_equally(size_t N, size_t size, size_t rank, size_t &first, size_t &last)
 {
-    int jobs_per_worker = N / size;
-    int jobs_resting = N % size;
+    size_t jobs_per_worker = N / size;
+    size_t jobs_resting = N % size;
 
     if (rank < jobs_resting)
     {
@@ -1088,11 +1088,11 @@ int divide_equally(int N, int size, int rank, int &first, int &last)
 
     return last - first + 1;
 }
-/** In which group from divide_eqaully is myself? */
-int divide_equally_group(int N, int size, int myself)
+/** In which group from divide_equally is myself? */
+size_t divide_equally_group(size_t N, size_t size, size_t myself)
 {
-    int first, last;
-    for (int rank = 0; rank < size; rank++)
+    size_t first, last;
+    for (size_t rank = 0; rank < size; rank++)
     {
         divide_equally(N, size, rank, first, last);
         if (myself >= first && myself <= last)

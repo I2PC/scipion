@@ -146,7 +146,8 @@ void MpiProgML2D::addPartialDocfileData(const MultidimArray<double> &data, int f
         // Master fills docfile
         // Master's own contribution
         ProgML2D::addPartialDocfileData(docfiledata, myFirstImg, myLastImg);
-        int s_size, first_img, last_img;
+        int s_size;
+        size_t first_img, last_img;
         MPI_Status status;
 
         for (int docCounter = 1; docCounter < node->size; ++docCounter)

@@ -24,6 +24,10 @@
  ***************************************************************************/
 #include "mlf_align2d.h"
 
+//Macro to obtain the iteration image name and metadata
+#define FN_ITER_BASE(iter) formatString("%s_iter%06d", fn_root.c_str(), (iter))
+#define FN_REFMD(base) formatString("%s_refs.xmd", base.c_str())
+#define FN_REF(base, refno) formatString("%s_ref%6d.xmp", base.c_str(), (refno))
 // Constructor ===============================================
 ProgMLF2D::ProgMLF2D(int nr_vols, int rank, int size)
 {
@@ -40,6 +44,40 @@ ProgMLF2D::ProgMLF2D(int nr_vols, int rank, int size)
     this->size = size;
 }
 
+
+// Fourier mode usage ==============================================================
+void ProgMLF2D::defineParams()
+{
+    //add usage
+
+    //params
+    defaultRoot = "mlf2d";
+    allowIEM = false;
+    defineBasicParams(this);
+    addParamsLine("  --ctfdat <ctfdatfile=\"\">   : Input CTFdat file for all data ");
+    addParamsLine(" or --no_ctf <pixel_size=1>    : do not use any CTF correction, pixel size should be provided");
+
+
+    defineAdditionalParams(this, "==+ Additional options ==");
+    //even more additional params
+    addParamsLine(" [ --search_shift <int=3>]      : Limited translational searches (in pixels) ");
+    addParamsLine(" [ --reduce_snr <factor=1> ]    : Use a value smaller than one to decrease the estimated SSNRs ");
+    addParamsLine(" [ --not_phase_flipped ]        : Use this if the experimental images have not been phase flipped ");
+    addParamsLine(" [ --ctf_affected_refs ]        : Use this if the references (-ref) are not CTF-deconvoluted ");
+    addParamsLine(" [ --exclude_freqs <first_higth=0> <high=0> <low=999>]: Exclude frequencies from P-calculations (in Ang)");
+    addParamsLine("                               : First value is highest frequency during first iteration.");
+    addParamsLine("                               : Second is the highest in following iterations and third is lowest");
+    addParamsLine(" [ --fix_high <float=-1>]       : ");
+    addParamsLine(" [ --include_allfreqs ] ");
+
+    //hidden params
+    defineHiddenParams(this);
+    addParamsLine(" [--var_psi]");
+    addParamsLine(" [--var_trans]");
+    addParamsLine(" [--kstest]");
+    addParamsLine(" [--iter_histogram <int=-1>]");
+}
+
 // Read arguments ==========================================================
 void ProgMLF2D::readParams()
 {
@@ -53,13 +91,13 @@ void ProgMLF2D::readParams()
     FileName restart_imgmd, restart_refmd;
     int restart_iter, restart_seed;
 
-    if (checkParam("-restart"))
+    if (checkParam("--restart"))
     {
         do_restart = true;
         MetaData MDrestart;
         char *copy  = NULL;
 
-        MDrestart.read(getParameter(argc, argv, "-restart"));
+        MDrestart.read(getParameter(argc, argv, "--restart"));
         cline = MDrestart.getComment();
         size_t id = MDrestart.firstObject();
         MDrestart.getValue(MDL_SIGMAOFFSET, restart_offset,id);
@@ -78,61 +116,61 @@ void ProgMLF2D::readParams()
         argv2 = argv;
         for (int i = 1; i < argc2; i++)
         {
-            cline = cline + (std::string)argv2[i] + " ";
+            cline = cline + (String)argv2[i] + " ";
         }
     }
 
     // Main parameters
-    model.n_ref = getIntParam("-nref");
-    fn_ref = getParam("-ref");
+    model.n_ref = getIntParam("--nref");
+    fn_ref = getParam("--ref");
     fn_img = getParam("-i");
-    do_ctf_correction = !checkParam("-no_ctf");
+    do_ctf_correction = !checkParam("--no_ctf");
     if (do_ctf_correction)
     {
-        fn_ctfdat = getParam("-ctfdat");
+        fn_ctfdat = getParam("--ctfdat");
     }
     else
     {
-        sampling = getDoubleParam("-pixel_size");
+        sampling = getDoubleParam("--no_ctf");
     }
-    fn_root = getParam("-o");
-    search_shift = getIntParam("-search_shift");
-    psi_step = getDoubleParam("-psi_step");
-    do_mirror = checkParam("-mirror");
-    lowres_limit = getIntParam("-low");
-    highres_limit = getIntParam("-high");
-    ini_highres_limit = getIntParam("-ini_high");
-    phase_flipped = !checkParam("-not_phase_flipped");
-    reduce_snr = getDoubleParam("-reduce_snr");
-    first_iter_noctf = checkParam("-ctf_affected_refs");
+    fn_root = getParam("--oroot");
+    search_shift = getIntParam("--search_shift");
+    psi_step = getDoubleParam("--psi_step");
+    do_mirror = checkParam("--mirror");
+    ini_highres_limit = getIntParam("--exclude_freqs", 0);
+    lowres_limit = getIntParam("--exclude_freqs", 1);
+    highres_limit = getIntParam("--exclude_freqs", 2);
+    phase_flipped = !checkParam("--not_phase_flipped");
+    reduce_snr = getDoubleParam("--reduce_snr");
+    first_iter_noctf = checkParam("--ctf_affected_refs");
 
     // Less common stuff
-    Niter = getIntParam("-iter");
-    istart = do_ML3D ? 1 : getIntParam("-istart");
-    sigma_offset = getDoubleParam("-offset");
-    eps = getDoubleParam("-eps");
-    fn_frac = getParam("-frac");
-    fix_fractions = checkParam("-fix_fractions");
-    fix_sigma_offset = checkParam("-fix_sigma_offset");
-    fix_sigma_noise = checkParam("-fix_sigma_noise");
+    Niter = getIntParam("--iter");
+    istart = do_ML3D ? 1 : getIntParam("--restart");
+    sigma_offset = getDoubleParam("--offset");
+    eps = getDoubleParam("--eps");
+    fn_frac = getParam("--frac");
+    fix_fractions = checkParam("--fix_fractions");
+    fix_sigma_offset = checkParam("--fix_sigma_offset");
+    fix_sigma_noise = checkParam("--fix_sigma_noise");
     C_fast = getDoubleParam("-C");
-    fn_doc = getParam("-doc");
-    do_include_allfreqs = checkParam("-include_allfreqs");
-    fix_high = getDoubleParam("-fix_high");
+    //fn_doc = getParam("--doc");
+    do_include_allfreqs = checkParam("--include_allfreqs");
+    fix_high = getDoubleParam("--fix_high");
 
-    search_rot = getDoubleParam("-search_rot");
+    search_rot = getDoubleParam("--search_rot");
 
     // Hidden arguments
-    debug = getIntParam("-debug");
-    do_variable_psi = checkParam("-var_psi");
-    do_variable_trans = checkParam("-var_trans");
-    do_norm = checkParam("-norm");
-    do_student = checkParam("-student");
-    df = getDoubleParam("-df");
-    do_student_sigma_trick = !checkParam("-no_sigma_trick");
-    do_kstest = checkParam("-kstest");
-    iter_write_histograms = getIntParam("-iter_histogram");
-    seed = getIntParam("-random_seed");
+    debug = getIntParam("--debug");
+    do_variable_psi = checkParam("--var_psi");
+    do_variable_trans = checkParam("--var_trans");
+    do_norm = checkParam("--norm");
+    do_student = checkParam("--student");
+    df = getDoubleParam("--student");
+    do_student_sigma_trick = !checkParam("--no_sigma_trick");
+    do_kstest = checkParam("--kstest");
+    iter_write_histograms = getIntParam("--iter_histogram");
+    seed = getIntParam("--random_seed");
 
     // Now reset some stuff for restart
     if (do_restart)
@@ -155,146 +193,102 @@ void ProgMLF2D::readParams()
 void ProgMLF2D::show(bool ML3D)
 {
 
-    if (verbose > 0)
+    if (verbose)
     {
         // To screen
-        if (!ML3D)
+        if (!do_ML3D)
         {
-            std::cerr << " -----------------------------------------------------------------" << std::endl;
-            std::cerr << " | Read more about this program in the following publication:    |" << std::endl;
-            std::cerr << " |  Scheres ea. (2007) Structure, 15, 1167-1177                  |" << std::endl;
-            std::cerr << " |                                                               |" << std::endl;
-            std::cerr << " |   *** Please cite it if this program is of use to you! ***    |" << std::endl;
-            std::cerr << " -----------------------------------------------------------------" << std::endl;
+            std::cout
+            << " -----------------------------------------------------------------" << std::endl
+            << " | Read more about this program in the following publication:    |" << std::endl
+            << " |  Scheres ea. (2007) Structure, 15, 1167-1177                  |" << std::endl
+            << " |                                                               |" << std::endl
+            << " |   *** Please cite it if this program is of use to you! ***    |" << std::endl
+            << " -----------------------------------------------------------------" << std::endl;
         }
-        std::cerr << "--> Multi-reference refinement " << std::endl;
-        std::cerr << "--> using a maximum-likelihood in Fourier-space (MLF) target " <<std::endl;
-        if (do_ctf_correction)
-        {
-            std::cerr << "--> with CTF correction "<<std::endl;
-        }
+        std::cout
+        << "--> Multi-reference refinement " << std::endl
+        << "--> using a maximum-likelihood in Fourier-space (MLF) target " <<std::endl
+        << (do_ctf_correction ? "--> with CTF correction " : "--> ignoring CTF effects ")<<std::endl
+        << "  Input images            : " << fn_img << " (" << nr_images_global << ")" << std::endl;
+
+        if (!fn_ref.empty())
+            std::cout << "  Reference image(s)      : " << fn_ref << std::endl;
         else
-        {
-            std::cerr << "--> ignoring CTF effects "<<std::endl;
-        }
-        std::cerr << "  Input images            : " << fn_img << " (" << nr_images_global << ")" << std::endl;
-        if (fn_ref != "")
-        {
-            std::cerr << "  Reference image(s)      : " << fn_ref << std::endl;
-        }
-        else
-        {
-            std::cerr << "  Number of references:   : " << model.n_ref << std::endl;
-        }
+            std::cout << "  Number of references:   : " << model.n_ref << std::endl;
+
         if (do_ctf_correction)
-        {
-            std::cerr << "  CTF-parameters file     : " << fn_ctfdat << std::endl;
-        }
-        std::cerr << "  Output rootname         : " << fn_root << std::endl;
-        std::cerr << "  Stopping criterium      : " << eps << std::endl;
-        std::cerr << "  initial sigma offset    : " << sigma_offset << std::endl;
-        std::cerr << "  Psi sampling interval   : " << psi_step << " degrees" << std::endl;
-        std::cerr << "  Translational searches  : " << search_shift << " pixels" << std::endl;
-        std::cerr << "  Low resolution limit    : " << lowres_limit << " Ang" << std::endl;
-        std::cerr << "  High resolution limit   : " << highres_limit << " Ang" << std::endl;
+            std::cout << "  CTF-parameters file     : " << fn_ctfdat << std::endl;
+
+        std::cout
+        << "  Output rootname         : " << fn_root << std::endl
+        << "  Stopping criterium      : " << eps << std::endl
+        << "  initial sigma offset    : " << sigma_offset << std::endl
+        << "  Psi sampling interval   : " << psi_step << " degrees" << std::endl
+        << "  Translational searches  : " << search_shift << " pixels" << std::endl
+        << "  Low resolution limit    : " << lowres_limit << " Ang" << std::endl
+        << "  High resolution limit   : " << highres_limit << " Ang" << std::endl;
+
         if (reduce_snr != 1.)
-            std::cerr << "  Multiply estimated SNR  : " << reduce_snr << std::endl;
+            std::cout << "  Multiply estimated SNR  : " << reduce_snr << std::endl;
         if (reduce_snr > 1.)
-        {
             std::cerr << "  --> WARNING!! With reduce_snr>1 you may likely overfit the noise!" << std::endl;
-        }
-        if (do_mirror)
-            std::cerr << "  Check mirrors           : true" << std::endl;
-        else
-            std::cerr << "  Check mirrors           : false" << std::endl;
-        if (fn_frac != "")
-            std::cerr << "  Initial model fractions : " << fn_frac << std::endl;
+        std::cout << "  Check mirrors           : " << (do_mirror ? "true" : "false") << std::endl;
+        if (!fn_frac.empty())
+            std::cout << "  Initial model fractions : " << fn_frac << std::endl;
         if (do_ctf_correction)
         {
-            if (phase_flipped)
-                std::cerr << "    + Assuming images have been phase flipped " << std::endl;
-            else
-                std::cerr << "    + Assuming images have not been phase flipped " << std::endl;
+            std::cout << "    + Assuming images have " << (phase_flipped ? "" : "not") << "been phase flipped " << std::endl;
+
             FOR_ALL_DEFOCUS_GROUPS()
             {
-                std::cerr << "    + CTF group "<<ifocus+1<<" contains "<<count_defocus[ifocus]<<" images"<<std::endl;
+                std::cout << formatString("    + CTF group %d contains %d images", ifocus + 1, count_defocus[ifocus]) << std::endl;
             }
         }
         if (ini_highres_limit > 0.)
-            std::cerr << "    + High resolution limit for 1st iteration set to " << ini_highres_limit << "Ang"<<std::endl;
+            std::cout << "    + High resolution limit for 1st iteration set to " << ini_highres_limit << "Ang"<<std::endl;
         if (search_rot < 180.)
-            std::cerr << "    + Limit orientational search to +/- " << search_rot << " degrees" << std::endl;
+            std::cout << "    + Limit orientational search to +/- " << search_rot << " degrees" << std::endl;
         if (do_variable_psi)
-            std::cerr << "    + Vary in-plane rotational sampling with resolution " << std::endl;
+            std::cout << "    + Vary in-plane rotational sampling with resolution " << std::endl;
         if (do_variable_trans)
-            std::cerr << "    + Vary in-plane translational sampling with resolution " << std::endl;
+            std::cout << "    + Vary in-plane translational sampling with resolution " << std::endl;
 
         // Hidden stuff
         if (fix_fractions)
         {
-            std::cerr << "    + Do not update estimates of model fractions." << std::endl;
+            std::cout << "    + Do not update estimates of model fractions." << std::endl;
         }
         if (fix_sigma_offset)
         {
-            std::cerr << "    + Do not update sigma-estimate of origin offsets." << std::endl;
+            std::cout << "    + Do not update sigma-estimate of origin offsets." << std::endl;
         }
         if (fix_sigma_noise)
         {
-            std::cerr << "    + Do not update estimated noise spectra." << std::endl;
+            std::cout << "    + Do not update estimated noise spectra." << std::endl;
         }
         if (do_student)
         {
-            std::cerr << "  -> Use t-student distribution with df = " <<df<< std::endl;
+            std::cout << "  -> Use t-student distribution with df = " <<df<< std::endl;
             if (do_student_sigma_trick)
             {
-                std::cerr << "  -> Use sigma-trick for t-student distributions" << std::endl;
+                std::cout << "  -> Use sigma-trick for t-student distributions" << std::endl;
             }
         }
         if (do_norm)
         {
-            std::cerr << "  -> Developmental: refine normalization internally "<<std::endl;
+            std::cout << "  -> Developmental: refine normalization internally "<<std::endl;
         }
         if (do_kstest)
         {
-            std::cerr << "  -> Developmental: perform KS-test on noise distributions "<<std::endl;
+            std::cout << "  -> Developmental: perform KS-test on noise distributions "<<std::endl;
             if (iter_write_histograms >0.)
-                std::cerr << "  -> Developmental: write noise histograms at iteration "<<iter_write_histograms<<std::endl;
+                std::cout << "  -> Developmental: write noise histograms at iteration "<<iter_write_histograms<<std::endl;
         }
-        std::cerr << " -----------------------------------------------------------------" << std::endl;
+        std::cout << " -----------------------------------------------------------------" << std::endl;
 
     }
 
-}
-
-// Fourier mode usage ==============================================================
-void ProgMLF2D::defineParams()
-{
-  //add usage
-
-  //params
-  defineBasicParams(this);
-    addParamsLine("  --ctfdat <ctfdatfile=\"\">   : Input CTFdat file for all data ");
-    addParamsLine(" or --no_ctf <pixel_size=1>    : do not use any CTF correction, pixel size should be provided");
-
-
-    defineAdditionalParams(this, "==+ Additional options ==");
-    //even more additional params
-    addParamsLine(" [ --search_shift <int=3>]      : Limited translational searches (in pixels) ");
-    addParamsLine(" [ --reduce_snr <factor=1> ]    : Use a value smaller than one to decrease the estimated SSNRs ");
-    addParamsLine(" [ --not_phase_flipped ]        : Use this if the experimental images have not been phase flipped ");
-    addParamsLine(" [ --ctf_affected_refs ]        : Use this if the references (-ref) are not CTF-deconvoluted ");
-    addParamsLine(" [ --exclude_freqs <first_higth=0> <high=0> <low=999>: Exclude frequencies from P-calculations (in Ang)");
-    addParamsLine("                               : First value is highest frequency during first iteration.");
-    addParamsLine("                               : Second is the highest in following iterations and third is lowest");
-    addParamsLine(" [ --fix_high <float=-1>]       : ");
-    addParamsLine(" [ --include_allfreqs ] ");
-
-    //hidden params
-    defineHiddenParams(this);
-    addParamsLine(" [--var_psi]");
-    addParamsLine(" [--var_trans]");
-    addParamsLine(" [--kstest]");
-    addParamsLine(" [--iter_histogram <int=-1>]");
 }
 
 // Set up a lot of general stuff
@@ -303,7 +297,7 @@ void ProgMLF2D::defineParams()
 void ProgMLF2D::produceSideInfo()
 {
 
-    FileName                    fn_img, fn_tmp, fn_base, fn_tmp2;
+    FileName                    fn_tmp, fn_base, fn_tmp2;
     Image<double>              img;
     CTFDescription                    ctf;
     MultidimArray<double>           dum, rmean_ctf;
@@ -318,7 +312,9 @@ void ProgMLF2D::produceSideInfo()
 
     // Read selfile with experimental images
     MDimg.read(fn_img);
-    MDimg.removeObjects(MDValueEQ(MDL_ENABLED, -1));
+    // Remove disabled images
+    if (MDimg.containsLabel(MDL_ENABLED))
+        MDimg.removeObjects(MDValueEQ(MDL_ENABLED, -1));
     nr_images_global = MDimg.size();
 
     // Create a vector of objectIDs, which may be randomized later on
@@ -489,8 +485,8 @@ void ProgMLF2D::produceSideInfo()
     }
 
     // Check whether to generate new references
-    do_generate_refs=false;
-    if (fn_ref == "")
+    do_generate_refs = false;
+    if (fn_ref.empty())
     {
         if (model.n_ref > 0)
         {
@@ -499,7 +495,7 @@ void ProgMLF2D::produceSideInfo()
             fn_ref += "_ref.xmd";
             do_generate_refs=true;
 
-            if (rank==0)
+            if (rank == 0)
             {
                 generateInitialReferences();
             }
@@ -557,10 +553,7 @@ void ProgMLF2D::produceSideInfo2()
         alpha_k.push_back((double)1. / model.n_ref);
         model.Iref[refno].setWeight(alpha_k[refno] * (double)nr_images_global);
         // Default start is half-half mirrored images
-        if (do_mirror)
-            mirror_fraction.push_back(0.5);
-        else
-            mirror_fraction.push_back(0.);
+        mirror_fraction.push_back((do_mirror ? 0.5 : 0.));
         refno++;
     }
 
@@ -721,7 +714,7 @@ void ProgMLF2D::produceSideInfo2()
         fn_tmp += ".noise";
         fh.open((fn_tmp).c_str(), std::ios::in);
         if (!fh)
-            REPORT_ERROR(ERR_IO_NOTOPEN, (std::string)"Prog_MLFalign2D_prm: Cannot read file: " + fn_tmp);
+            REPORT_ERROR(ERR_IO_NOTOPEN, (String)"Prog_MLFalign2D_prm: Cannot read file: " + fn_tmp);
         else
         {
             for (int irr = 0; irr < hdim; irr++)
@@ -730,7 +723,7 @@ void ProgMLF2D::produceSideInfo2()
                 if (ABS(aux - ((double)irr/(sampling*dim)) ) > 0.01 )
                 {
                     std::cerr<<"aux= "<<aux<<" resol= "<<(double)irr/(sampling*dim)<<std::endl;
-                    REPORT_ERROR(ERR_NUMERICAL, (std::string)"Prog_MLFalign2D_prm: Wrong format: " + fn_tmp);
+                    REPORT_ERROR(ERR_NUMERICAL, (String)"Prog_MLFalign2D_prm: Wrong format: " + fn_tmp);
                 }
                 fh >> aux;
                 dAi(Vsig[ifocus], irr) = aux;
@@ -850,7 +843,7 @@ void ProgMLF2D::estimateInitialNoiseSpectra()
             fn_tmp += ".noise";
             fh.open((fn_tmp).c_str(), std::ios::out);
             if (!fh)
-                REPORT_ERROR(ERR_IO_NOTOPEN, (std::string)"Prog_MLFalign2D_prm: Cannot write file: " + fn_tmp);
+                REPORT_ERROR(ERR_IO_NOTOPEN, (String)"Prog_MLFalign2D_prm: Cannot write file: " + fn_tmp);
             for (int irr = 0; irr < hdim; irr++)
             {
                 fh << (double)irr/(sampling*dim) << " " << dAi(Vsig[ifocus], irr) << "\n";
@@ -1007,7 +1000,7 @@ void ProgMLF2D::updateWienerFilters(MultidimArray<double> &spectral_signal,
             fn_tmp += ".ssnr";
             fh.open((fn_tmp).c_str(), std::ios::out);
             if (!fh)
-                REPORT_ERROR(ERR_IO_NOTOPEN, (std::string)"Prog_MLFalign2D_prm: Cannot write file: " + fn_tmp);
+                REPORT_ERROR(ERR_IO_NOTOPEN, (String)"Prog_MLFalign2D_prm: Cannot write file: " + fn_tmp);
             fh  << "#  Resol      SSNR       CTF    Wiener    signal     noise       Ang" << std::endl;
             for (int irr = 0; irr < hdim; irr++)
             {
@@ -1207,14 +1200,17 @@ void ProgMLF2D::generateInitialReferences()
 
     Image<double> IRef, ITemp;
     FileName fn_tmp;
+    FileName fn_base = FN_ITER_BASE(0);
+
     randomizeImagesOrder();
 
     MDref.clear();
-    int nsub, first, last;
+    size_t nsub, first, last;
     size_t id;
-    for (int refno = 0; refno < model.n_ref; refno++)
+
+    for (size_t refno = 0; refno < model.n_ref; refno++)
     {
-        nsub = divide_equally(nr_images_global,model.n_ref, refno, first, last);
+        nsub = divide_equally(nr_images_global, model.n_ref, refno, first, last);
         //Clear images
         IRef().initZeros(dim, dim);
         IRef().setXmippOrigin();
@@ -1227,11 +1223,7 @@ void ProgMLF2D::generateInitialReferences()
             IRef() += ITemp();
         }
 
-        fn_tmp = fn_root + "_it";
-        fn_tmp.compose(fn_tmp, 0, "");
-        fn_tmp = fn_tmp + "_ref";
-        fn_tmp.compose(fn_tmp, refno + 1, "");
-        fn_tmp = fn_tmp + ".xmp";
+        fn_tmp = FN_REF(fn_base, refno + 1);
 
         IRef() /= nsub;
         IRef.write(fn_tmp);
@@ -1246,9 +1238,7 @@ void ProgMLF2D::generateInitialReferences()
     if (verbose > 0)
         progress_bar(model.n_ref);
 
-    fn_ref = fn_root + "_it";
-    fn_ref.compose(fn_ref, 0, "");
-    fn_ref += "_ref.xmd";
+    fn_ref = FN_REFMD(fn_base);
     MDref.write(fn_ref);
 }
 
@@ -2135,7 +2125,7 @@ void ProgMLF2D::processOneImage(const MultidimArray<double> &Mimg,
             std::ofstream fh_hist;
             fh_hist.open((fn_hist).c_str(), std::ios::out);
             if (!fh_hist)
-                REPORT_ERROR(ERR_IO_NOTOPEN, (std::string)"Cannot write histogram file "+ fn_hist);
+                REPORT_ERROR(ERR_IO_NOTOPEN, (String)"Cannot write histogram file "+ fn_hist);
             FOR_ALL_ELEMENTS_IN_ARRAY1D(hist)
             {
                 hist.index2val(i, val);
@@ -2693,15 +2683,14 @@ void ProgMLF2D::writeOutputFiles(const ModelML2D &model, OutputType outputType)
     FileName          fn_tmp, fn_base;
     Image<double>        Itmp;
     MetaData          MDo;
-    std::string       comment;
+    String       comment;
     std::ofstream     fh;
     size_t id;
 
     fn_base = fn_root;
-    if (iter >= 0)
+    if (outputType == OUT_ITER)
     {
-        fn_base += "_it";
-        fn_base.compose(fn_base, iter, "");
+        fn_base = FN_ITER_BASE(iter);
     }
 
     // Write out optimal image orientations
@@ -2713,6 +2702,7 @@ void ProgMLF2D::writeOutputFiles(const ModelML2D &model, OutputType outputType)
     {
         MDo.clear();
         MDo.importObjects(MDimg, MDValueEQ(MDL_REF, refno + 1));
+        fn_tmp = FN_REFMD(fn_base);
         fn_tmp = fn_root + "_ref";
         fn_tmp.compose(fn_tmp, refno + 1, "");
         fn_tmp += "_img.xmd";
@@ -2794,7 +2784,7 @@ void ProgMLF2D::writeOutputFiles(const ModelML2D &model, OutputType outputType)
         fn_tmp = fn_base + "_avg.hist";
         fh_hist.open((fn_tmp).c_str(), std::ios::out);
         if (!fh_hist)
-            REPORT_ERROR(ERR_IO_NOTOPEN, (std::string)"Cannot write histogram file "+ fn_tmp);
+            REPORT_ERROR(ERR_IO_NOTOPEN, (String)"Cannot write histogram file "+ fn_tmp);
         sumhist /= (sumhist.sum()*sumhist.step_size);
         FOR_ALL_ELEMENTS_IN_ARRAY1D(sumhist)
         {
@@ -2811,7 +2801,7 @@ void ProgMLF2D::writeOutputFiles(const ModelML2D &model, OutputType outputType)
         fn_tmp = fn_base + "_resol.hist";
         fh_hist.open((fn_tmp).c_str(), std::ios::out);
         if (!fh_hist)
-            REPORT_ERROR(ERR_IO_NOTOPEN, (std::string)"Cannot write histogram file "+ fn_tmp);
+            REPORT_ERROR(ERR_IO_NOTOPEN, (String)"Cannot write histogram file "+ fn_tmp);
         FOR_ALL_ELEMENTS_IN_ARRAY1D(sumhist)
         {
             sumhist.index2val(i, val);
@@ -2845,7 +2835,7 @@ void ProgMLF2D::writeOutputFiles(const ModelML2D &model, OutputType outputType)
             fn_tmp += ".noise";
             fh.open((fn_tmp).c_str(), std::ios::out);
             if (!fh)
-                REPORT_ERROR(ERR_IO_NOTOPEN, (std::string)"Prog_MLFalign2D_prm: Cannot write file: " + fn_tmp);
+                REPORT_ERROR(ERR_IO_NOTOPEN, (String)"Prog_MLFalign2D_prm: Cannot write file: " + fn_tmp);
             for (int irr = 0; irr < hdim; irr++)
             {
                 fh << irr/(sampling*dim) << " " << dAi(Vsig[ifocus], irr) << "\n";
@@ -2860,32 +2850,33 @@ void ProgMLF2D::writeOutputFiles(const ModelML2D &model, OutputType outputType)
 void ProgMLF2D::addPartialDocfileData(const MultidimArray<double> &data,
                                       int first, int last)
 {
-    for (int imgno = first; imgno <= last; imgno++)
+    for (size_t imgno = first; imgno <= last; imgno++)
     {
-        int index = imgno - first;
+        size_t index = imgno - first;
+        size_t id = img_id[imgno];
         //FIXME now directly to MDimg
-        MDimg.setValue(MDL_ANGLEROT, dAij(data, index, 0), img_id[imgno]);
-        MDimg.setValue(MDL_ANGLETILT, dAij(data, index, 1), img_id[imgno]);
-        MDimg.setValue(MDL_ANGLEPSI, dAij(data, index, 2), img_id[imgno]);
-        MDimg.setValue(MDL_SHIFTX, dAij(data, index, 3), img_id[imgno]);
-        MDimg.setValue(MDL_SHIFTY, dAij(data, index, 4), img_id[imgno]);
-        MDimg.setValue(MDL_REF, ROUND(dAij(data, index, 5) + 1), img_id[imgno]);
+        MDimg.setValue(MDL_ANGLEROT, dAij(data, index, 0), id);
+        MDimg.setValue(MDL_ANGLETILT, dAij(data, index, 1), id);
+        MDimg.setValue(MDL_ANGLEPSI, dAij(data, index, 2), id);
+        MDimg.setValue(MDL_SHIFTX, dAij(data, index, 3), id);
+        MDimg.setValue(MDL_SHIFTY, dAij(data, index, 4), id);
+        MDimg.setValue(MDL_REF, ROUND(dAij(data, index, 5) + 1), id);
         if (do_mirror)
         {
-            MDimg.setValue(MDL_FLIP, dAij(data, index, 6) != 0., img_id[imgno]);
+            MDimg.setValue(MDL_FLIP, dAij(data, index, 6) != 0., id);
         }
-        MDimg.setValue(MDL_PMAX, dAij(data, index, 7), img_id[imgno]);
+        MDimg.setValue(MDL_PMAX, dAij(data, index, 7), id);
         if (do_student)
         {
-            MDimg.setValue(MDL_WROBUST, dAij(data, index, 8), img_id[imgno]);
+            MDimg.setValue(MDL_WROBUST, dAij(data, index, 8), id);
         }
         if (do_norm)
         {
-            MDimg.setValue(MDL_INTSCALE, dAij(data, index, 9), img_id[imgno]);
+            MDimg.setValue(MDL_INTSCALE, dAij(data, index, 9), id);
         }
         if (do_kstest)
         {
-            MDimg.setValue(MDL_KSTEST, dAij(data, index, 10), img_id[imgno]);
+            MDimg.setValue(MDL_KSTEST, dAij(data, index, 10), id);
         }
 
     }

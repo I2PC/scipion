@@ -1300,7 +1300,7 @@ void MetaData::_selectSplitPart(const MetaData &mdIn,
                                 int n, int part, size_t mdSize,
                                 const MDLabel sortLabel)
 {
-    int first, last, n_images;
+    size_t first, last, n_images;
     n_images = divide_equally(mdSize, n, part, first, last);
     init(&(mdIn.activeLabels));
     copyInfo(mdIn);

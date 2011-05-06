@@ -298,11 +298,11 @@ double gaussian2D(double x,
  * Return the number of jobs assigned, that could be N/M + 1 or N/M
  *
  */
-int divide_equally(int N, int size, int rank, int &first, int &last);
+size_t divide_equally(size_t N, size_t size, size_t rank, size_t &first, size_t &last);
 
 /** In which group (of divide_equally) is myself situated?
  */
-int divide_equally_group(int N, int size, int myself);
+size_t divide_equally_group(size_t N, size_t size, size_t myself);
 
 /** Compute statistics of a std::vector
  */
