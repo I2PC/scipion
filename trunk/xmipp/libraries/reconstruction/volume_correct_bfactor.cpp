@@ -37,7 +37,7 @@ void ProgVolumeCorrectBfactor::defineParams()
     addUsageLine("+2. Based on the fall-off in a reference map (possibly obtained using xmipp_volume_from_pdb)");
     addUsageLine("+");
     addUsageLine("+3. An user-provided (ad hoc) B-factor");
-    addSeeAlsoLine("volume_from_pdb, resolution_fsc");
+    addSeeAlsoLine("volume_enhance_contrast, volume_from_pdb, resolution_fsc");
     XmippMetadataProgram::defineParams();
     addParamsLine(" --auto                              : Use automated B-factor fit in flat Wilson region");
     addParamsLine("                                     : Note: do not use the automated mode for maps with resolutions");
