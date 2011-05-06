@@ -76,7 +76,8 @@ TEST_F( ImageTest, writeMRCimage)
     EXPECT_EQ(myImage,auxImage);
 }
 
-TEST_F( ImageTest, writeMRCstack)
+TEST_F( ImageTest, writeMRCstack)//show -i kk.mrcs for stacks fails for mrc
+//ml_tomo anotate bugs
 {
     FileName auxFilename(stackName);
     auxFilename=auxFilename.removeExtension((String)"stk");
@@ -85,6 +86,39 @@ TEST_F( ImageTest, writeMRCstack)
     Image<double> auxStack;
     auxStack.read(auxFilename);
     EXPECT_EQ(myStack,auxStack);
+}
+
+TEST_F( ImageTest, writeTIFimage)
+{
+    FileName auxFilename(imageName);
+    auxFilename=auxFilename.removeExtension((String)"spi");
+    auxFilename=auxFilename.addExtension("tif");
+    myImage.write(auxFilename);
+    Image<double> auxImage;
+    auxImage.read(auxFilename);
+    EXPECT_EQ(myImage,auxImage);
+}
+
+TEST_F( ImageTest, writeINFimage)
+{
+    FileName auxFilename(imageName);
+    auxFilename=auxFilename.removeExtension((String)"spi");
+    auxFilename=auxFilename.addExtension("inf");
+    myImage.write(auxFilename);
+    Image<double> auxImage;
+    auxImage.read(auxFilename);
+    EXPECT_EQ(myImage,auxImage);
+}
+
+TEST_F( ImageTest, writeRAWimage)
+{
+    FileName auxFilename(imageName);
+    auxFilename=auxFilename.removeExtension((String)"spi");
+    auxFilename=auxFilename.addExtension("raw#3,3");
+    myImage.write(auxFilename);
+    Image<double> auxImage;
+    auxImage.read(auxFilename);
+    EXPECT_EQ(myImage,auxImage);
 }
 
 GTEST_API_ int main(int argc, char **argv)
