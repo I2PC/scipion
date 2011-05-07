@@ -759,6 +759,8 @@ if int(env['gtest']):
      AddXmippTest('test_image')
      AddXmippTest('test_metadata')
      AddXmippTest('test_multidim')
+     AddXmippTest('test_funcs')
+     #AddXmippTest('test_applications')
      env.Depends('run_tests', [fftw, tiff, sqlite])
      #env.Default('run_tests'     )
 
