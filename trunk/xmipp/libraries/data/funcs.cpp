@@ -658,9 +658,9 @@ void exit_if_not_exists(const FileName &fn)
 void wait_until_stable_size(const FileName &fn,
                             unsigned long time_step)
 {
-  size_t idx;
-  FileName basicName;
-  fn.decompose(idx, basicName);
+    size_t idx;
+    FileName basicName;
+    fn.decompose(idx, basicName);
 
     if (!exists(fn))
         return;
@@ -1100,4 +1100,56 @@ size_t divide_equally_group(size_t N, size_t size, size_t myself)
     }
     return -1;
 
+}
+/**Compare two files **/
+#import <fcntl.h>
+#import <sys/mman.h>
+
+bool compareTwoFiles(const FileName &fn1, const FileName &fn2, size_t offset)
+{
+    //map files
+    char *map1,*map2;
+    size_t size;
+    struct stat file_status;
+
+    if(stat(fn1.c_str(), &file_status) != 0)
+        REPORT_ERROR(ERR_IO_NOPATH,"Metadata:write can not get filesize for file "+fn1);
+    size_t size1 = file_status.st_size;
+
+    if(stat(fn2.c_str(), &file_status) != 0)
+        REPORT_ERROR(ERR_IO_NOPATH,"Metadata:write can not get filesize for file "+fn2);
+    size_t size2 = file_status.st_size;
+
+    if(size1!=size2)
+    	return false;
+    size = size1;
+    int fd1 = open(fn1.c_str(),  O_RDWR, S_IREAD | S_IWRITE);
+    if (fd1 == -1)
+        REPORT_ERROR(ERR_IO_NOTEXIST,"Can not read file named "+fn1);
+
+    int fd2 = open(fn2.c_str(),  O_RDWR, S_IREAD | S_IWRITE);
+    if (fd2 == -1)
+        REPORT_ERROR(ERR_IO_NOTEXIST,"Can not read file named "+fn1);
+
+    map1 = (char *) mmap(0, size, PROT_READ | PROT_WRITE, MAP_SHARED, fd1, 0);
+    if (map1 == MAP_FAILED)
+        REPORT_ERROR(ERR_MEM_BADREQUEST,"Metadata:write can not map memory ");
+
+    map2 = (char *) mmap(0, size, PROT_READ | PROT_WRITE, MAP_SHARED, fd2, 0);
+    if (map2 == MAP_FAILED)
+        REPORT_ERROR(ERR_MEM_BADREQUEST,"Metadata:write can not map memory ");
+
+#include <string.h>
+    int result=memcmp(map1+offset,map2+offset,size-offset);
+    if (munmap(map1, size) == -1)
+    {
+        REPORT_ERROR(ERR_MEM_NOTDEALLOC,"metadata:write, Can not unmap memory");
+    }
+    close(fd1);
+    if (munmap(map2, size) == -1)
+    {
+        REPORT_ERROR(ERR_MEM_NOTDEALLOC,"metadata:write, Can not unmap memory");
+    }
+    close(fd2);
+    return (result==0);
 }
