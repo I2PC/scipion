@@ -129,7 +129,7 @@ void ProgAngularContinuousAssign::defineParams()
     addParamsLine("                               :+the initial solution is returned instead of the ");
     addParamsLine("                               :+optimized one since this latter looks suspicious.");
     addExampleLine("A typical use is:",false);
-    addExampleLine("xmipp_angular_continuous_assign -i anglesFromDiscreteAssignment.doc --ref reference.vol -o assigned_angles.txt");
+    addExampleLine("xmipp_angular_continuous_assign -i anglesFromDiscreteAssignment.doc --ref reference.vol -o assigned_angles");
 }
 
 // Produce side information ================================================
