@@ -1,0 +1,3 @@
+Input file     : input/phantomCandida.vol
+Output file    : tmpLink/xmipp_volume_reslice/resliced.vol
+New front face : top

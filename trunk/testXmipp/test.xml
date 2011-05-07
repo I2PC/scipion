@@ -5,12 +5,15 @@
         <CASE arguments="-i %o/proj_match.doc --lib %o/ref.doc -o %o/proj_match --split" changeDir="FALSE">
             <PRERUN command="xmipp_angular_project_library -i input/phantomBacteriorhodopsin.vol --experimental_images input/aFewProjections.sel -o %o/ref.stk --sampling_rate 10 --compute_neighbors --angular_distance -1 "/>
             <PRERUN command=" xmipp_angular_projection_matching -i input/aFewProjections.sel -o %o/proj_match.doc --ref %o/ref.stk"/>
-            <FILE filename="kk"/>
+            <FILE filename="proj_match_class.xmp"/>
+            <FILE filename="proj_match_classes.doc"/>
         </CASE>
     </PROGRAM>
     <PROGRAM name="xmipp_angular_continuous_assign" mpi="FALSE">
-        <CASE arguments="-i input/aFewProjections.sel --ref input/phantomBacteriorhodopsin.vol -o %o/assigned_angles.txt" changeDir="FALSE"/>
-    </PROGRAM>
+        <CASE arguments="-i input/aFewProjections.sel --ref input/phantomBacteriorhodopsin.vol -o %o/assigned_angles" changeDir="FALSE">
+              <FILE filename="assigned_angles.sel"/>
+        </CASE>
+     </PROGRAM>
     <PROGRAM name="xmipp_angular_discrete_assign" mpi="FALSE">
         <CASE arguments="-i input/aFewProjections.sel -o %o/assigned_angles.txt --ref %o/reference.doc" changeDir="FALSE">
             <PRERUN command="xmipp_angular_project_library -i input/phantomBacteriorhodopsin.vol -o %o/reference.stk --sampling_rate 10"/>
@@ -119,15 +122,8 @@
     <PROGRAM name="xmipp_resolution_fsc" mpi="FALSE">
         <CASE arguments="--ref input/phantomBacteriorhodopsin.vol -i input/phantomCandida.vol -s 5.6 --do_dpr --oroot %o/phantomBacteriorhodopsin " changeDir="FALSE"/>
     </PROGRAM>
-    <PROGRAM name="xmipp_tomo_align_dual_tilt_series" mpi="FALSE">
-        <CASE arguments="--ref input/tomo_dual_alignment/ref.sel --dual input/tomo_dual_alignment/dual.sel --scale 1" changeDir="FALSE"/>
-    </PROGRAM>
-    <PROGRAM name="xmipp_tomo_align_tilt_series" mpi="FALSE">
-        <CASE arguments="-i input/tomo_dual_alignment/ref.sel --oroot %o/ref_aligned" changeDir="FALSE"/>
-    </PROGRAM>
-    <PROGRAM name="xmipp_tomo_align_refinement" mpi="FALSE">
-        <CASE arguments="--ref input/tomo_align_refinement/volume.vol --sel input/tomo_align_refinement/tilt_series.sel --oroot %o/refined --max_tilt_change 1 --max_rot_change 1 --tilt_step 1 --rot_step 1 --adjustGray" changeDir="FALSE"/>
-    </PROGRAM>
+<!-- TOMO STUFF takes toooooo long
+    -->
     <PROGRAM name="xmipp_tomo_project" mpi="FALSE">
         <CASE arguments="-i input/phantomCandida.vol -o %o/image.xmp --angles 0 90 90" changeDir="FALSE"/>
         <CASE arguments="-i input/phantomCandida.vol --oroot %o/projections --params input/tomoProjection.param" changeDir="FALSE"/>

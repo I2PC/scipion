@@ -1,3 +1,4 @@
 Input File: input/singleImage.spi
-Output File: goldStandard//xmipp_transform_window_04/image.xmp
+Applying transformation stored in header of 2D-image
+Output File: tmpLink/xmipp_transform_window_04/image.xmp
 Crop: (XxYxZ)=-10x-10x-10

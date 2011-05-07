@@ -13,6 +13,8 @@ class Tester(ContentHandler):
         self.prerun = []
         self.testfile = []
         self.changeDirectory = False
+        self.error=""
+        self.errorFlag=False
         
     def startElement(self, name, attrs):
         if (name == "XMIPP_TESTS") :
@@ -65,6 +67,18 @@ class Tester(ContentHandler):
         for program in self.progDict.keys():
             self.runProgramTests(program)
         
+    def checkResult(self,testfiles,outDir):
+        import xmipp
+        for file in testfiles:
+            file = outDir + '/' + file
+            if not os.path.exists(file):
+                self.error += file, "was NOT produced"
+                self.errorFlag=True
+            result = xmipp.compareTwoFiles(file,file.replace(self.fnDir,'goldStandard'),0)
+            if not result:
+                self.error += file + " and " + file.replace(self.fnDir,'goldStandard') + " are NOT identical"
+                self.errorFlag=True
+           
     def runProgramTests(self, program):
         tests = self.progDict[program]
         n = len(tests)
@@ -73,7 +87,6 @@ class Tester(ContentHandler):
         testName = ""
 
         testNo = 1
-        print tests
         for test, mpi, preruns, changeDirectory,testfiles in tests:
             if n > 1:
                 outDir = outPath + "_%02d" % testNo
@@ -109,6 +122,7 @@ class Tester(ContentHandler):
             print "    Command: "
             print "       ", cmd
             result = os.system(cmd)
+            self.checkResult(testfiles,outDir)
             #print "Result:", result
             testNo += 1
         
@@ -121,8 +135,14 @@ if __name__ == '__main__':
         sys.exit()
 
     fnDir = sys.argv[1]
+    tmpLink = 'tmpLink'
+    if not os.path.exists(fnDir):
+        os.makedirs(fnDir)
+    if os.path.exists(tmpLink):
+        os.remove(tmpLink)
+    os.symlink(fnDir, tmpLink)
     # Create tester
-    tester = Tester(fnDir)
+    tester = Tester(tmpLink)
     saxparser = make_parser()
     saxparser.setContentHandler(tester)
     testXml = 'test.xml'
@@ -134,8 +154,8 @@ if __name__ == '__main__':
     if argc > 2:
         program = sys.argv[2]
         tester.runProgramTests(program)
-        if not os.path.exists(fnDir):
-            os.makedirs(fnDir)
+        #if not os.path.exists(fnDir):
+        #    os.makedirs(fnDir)
     else:
         # Remove the output directory if it is not goldStandard
         if fnDir != 'goldStandard' and fnDir != 'goldStandard/':
@@ -143,5 +163,7 @@ if __name__ == '__main__':
                 shutil.rmtree(fnDir)
             os.makedirs(fnDir)
         tester.runAllTests()
-
+    if (tester.errorFlag):
+        print "ERROR:"
+        print "\n\n",tester.error
  

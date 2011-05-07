@@ -4,7 +4,7 @@ data_
 loop_
  _image
  _enabled
- 000001@goldStandard/xmipp_transform_mask_03/outputStack_mask.stk          1 
- 000002@goldStandard/xmipp_transform_mask_03/outputStack_mask.stk          1 
- 000003@goldStandard/xmipp_transform_mask_03/outputStack_mask.stk          1 
- 000004@goldStandard/xmipp_transform_mask_03/outputStack_mask.stk          1 
+ 000001@tmpLink/xmipp_transform_mask_03/outputStack_mask.stk          1 
+ 000002@tmpLink/xmipp_transform_mask_03/outputStack_mask.stk          1 
+ 000003@tmpLink/xmipp_transform_mask_03/outputStack_mask.stk          1 
+ 000004@tmpLink/xmipp_transform_mask_03/outputStack_mask.stk          1 

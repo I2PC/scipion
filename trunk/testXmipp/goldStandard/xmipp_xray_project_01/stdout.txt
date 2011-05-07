@@ -12,13 +12,13 @@ z_sampling_rate =  10 nm
 z_axis_shift =     0 um
 
 focal_length =     1.4749 mm
-Lens Radius =      89.6 um
+Lens Radius =      44.8 um
 Zo =               1.47554 mm
 Zi =               3399.64 mm
 Depth_of_Focus =   2.63374 um
 
 dxi =              23.04 um
-dxiMax =           46.1 um
+dxiMax =           92.2 um
 
 
 ----------------------
@@ -26,7 +26,7 @@ XrayPSF::Param adjust:
 ----------------------
 (Nox,Noy,Nz) = (64,64,64)
 Larger volume Z plane to be calculated = 0.315 um
-Larger allowed discrete Z plane (x,y) = (5.28866, 5.28866) um
+Larger allowed discrete Z plane (x,y) = (10.6154, 10.6154) um
 (dxl, dyl) = (5.60243, 5.60243) um
-Pupile Diameter in pixels (NpX, NpY) = (32, 32)
+Pupile Diameter in pixels (NpX, NpY) = (16, 16)
 

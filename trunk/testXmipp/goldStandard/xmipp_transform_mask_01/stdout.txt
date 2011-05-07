@@ -1,2 +1,2 @@
 Input File: input/singleImage.spi
-Output File: goldStandard/xmipp_transform_mask_01/singleImage_mask.xmp
+Output File: tmpLink/xmipp_transform_mask_01/singleImage_mask.xmp

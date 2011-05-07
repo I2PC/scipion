@@ -1,3 +1,4 @@
 Input File: input/xray_import/Images/img48949.spe
-Output File: goldStandard//xmipp_transform_window_05/image.xmp
+Applying transformation stored in header of 2D-image
+Output File: tmpLink/xmipp_transform_window_05/image.xmp
 New size: (XxYxZ)=512x512x512
