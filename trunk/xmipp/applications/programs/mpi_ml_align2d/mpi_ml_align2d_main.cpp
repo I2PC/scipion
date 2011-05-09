@@ -32,6 +32,6 @@
 int main(int argc, char **argv)
 {
   MpiProgML2D mpiProgram;
-  mpiProgram.read(argc, argv);
+  mpiProgram.readMpi(argc, argv);
   return mpiProgram.tryRun();
  }

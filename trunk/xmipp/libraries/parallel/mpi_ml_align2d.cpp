@@ -30,43 +30,57 @@
 #define TAG_DOCFILESIZE 2
 #define TAG_DOCFILE 3
 
-MpiProgML2D::MpiProgML2D()
+MpiML2DBase::MpiML2DBase(XmippProgram * prm)
 {
     node = NULL;
+    program = prm;
 }
 
-MpiProgML2D::MpiProgML2D(MpiNode * node)
+MpiML2DBase::MpiML2DBase(XmippProgram * prm, MpiNode * mpinode)
 {
-    this->node = node;
+    node = mpinode;
     created_node = false;
+    program = prm;
 }
 
-MpiProgML2D::~MpiProgML2D()
+MpiML2DBase::~MpiML2DBase()
 {
     if (created_node)
         delete node;
 }
 
-void MpiProgML2D::read(int argc, char** argv, bool report)
+void MpiML2DBase::readMpi(int argc, char** argv)
 {
     if (node == NULL)
     {
         node = new MpiNode(argc, argv);
         created_node = true;
     }
+    //The following makes the asumption that 'this' also
+    //inherits from an XmippProgram
+
+    std::cerr << "DEBUG_JM: readMPI: reading....." << std::endl;
     // Read subsequently to avoid problems in restart procedure
     for (int proc = 0; proc < node->size; ++proc)
     {
         if (proc == node->rank)
-            ProgML2D::read(argc, argv, report);
+            program->read(argc, argv);
         node->barrierWait();
     }
-
+    std::cerr << "DEBUG_JM: readMPI: sending seed....." << std::endl;
     //Send "master" seed to slaves for same randomization
-    MPI_Bcast(&seed, 1, MPI_INT, 0, MPI_COMM_WORLD);
+    MPI_Bcast(&program->seed, 1, MPI_INT, 0, MPI_COMM_WORLD);
     if (!node->isMaster())
-        verbose = 0;
+        program->verbose = 0;
 }
+
+MpiProgML2D::MpiProgML2D():MpiML2DBase(this)
+{}
+
+MpiProgML2D::MpiProgML2D(MpiNode * node):MpiML2DBase(this, node)
+{}
+
+
 
 void MpiProgML2D::setNumberOfLocalImages()
 {
@@ -188,10 +202,11 @@ void MpiProgML2D::usage(int verb) const
         ProgML2D::usage();
 }
 
-MpiProgMLRefine3D::MpiProgMLRefine3D(int argc, char ** argv, bool fourier)
+MpiProgMLRefine3D::MpiProgMLRefine3D(int argc, char ** argv, bool fourier):MpiML2DBase(this)
 {
     //create mpi node, which will be passed to ml2d
     node = new MpiNode(argc, argv);
+    created_node = true;
 
     fourier_mode = fourier;
 
@@ -202,11 +217,6 @@ MpiProgMLRefine3D::MpiProgMLRefine3D(int argc, char ** argv, bool fourier)
 
     rank = node->rank;
     size = node->size;
-}
-
-MpiProgMLRefine3D::~MpiProgMLRefine3D()
-{
-    delete node;
 }
 
 void MpiProgMLRefine3D::copyVolumes()
@@ -230,21 +240,12 @@ void MpiProgMLRefine3D::postProcessVolumes()
 void MpiProgMLRefine3D::projectVolumes(MetaData &mdProj)
 {
     //only master post process
-     ProgMLRefine3D::projectVolumes(mdProj);
+    ProgMLRefine3D::projectVolumes(mdProj);
     //all nodes waiting until volumes are projected
     node->barrierWait();
 }
 
-void MpiProgMLRefine3D::read(int argc, char** argv, bool report)
-{
-    // Read subsequently to avoid problems in restart procedure
-    for (int proc = 0; proc < node->size; ++proc)
-    {
-        if (proc == node->rank)
-            ProgMLRefine3D::read(argc, argv, report);
-        node->barrierWait();
-    }
-    if (!node->isMaster())
-        verbose = 0;
-}
+MpiProgMLRefine3D::~MpiProgMLRefine3D()
+{}
+
 

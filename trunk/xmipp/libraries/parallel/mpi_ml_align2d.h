@@ -33,22 +33,39 @@
 /**@defgroup MPI_Programs Programs that parallelize using MPI library
    @ingroup ParallelLibrary */
 //@{
-/** Program to parallelize the ML 2D alignment program */
-class MpiProgML2D: public ProgML2D
+
+/** Class to organize some useful MPI-functions for ML programs
+ * It will also serve as base for those programs*/
+class MpiML2DBase
 {
-private:
+protected:
     MpiNode *node;
     bool created_node;
+    //Reference to the program to be parallelized
+    XmippProgram * program;
+
+
+public:
+    /** Read arguments sequentially to avoid concurrency problems */
+    void readMpi(int argc, char **argv);
+    /** Default constructor */
+    MpiML2DBase(XmippProgram * prm);
+    /** Constructor passing the MpiNode */
+    MpiML2DBase(XmippProgram * prm, MpiNode * node);
+    /** Destructor */
+    ~MpiML2DBase();
+}
+;//end of class MpiML
+
+/** Program to parallelize the ML 2D alignment program */
+class MpiProgML2D: public ProgML2D, public MpiML2DBase
+{
 
 public:
     /** Default constructor */
     MpiProgML2D();
     /** Constructor passing the MpiNode */
     MpiProgML2D(MpiNode * node);
-    /** Destructor */
-    ~MpiProgML2D();
-    /** Redefine XmippProgram read to perform some syncronization */
-    void read(int argc, char ** argv, bool reportErrors = true);
     /** Only take a part of images for process */
     void setNumberOfLocalImages();
     /** All mpi nodes should syncronize at this point
@@ -69,24 +86,20 @@ public:
 }
 ;//end of class MpiProgML2D
 
-class MpiProgMLRefine3D: public ProgMLRefine3D
+class MpiProgMLRefine3D: public ProgMLRefine3D, public MpiML2DBase
 {
-private:
-    MpiNode *node;
-
 public:
     /** Constructor */
     MpiProgMLRefine3D(int argc, char ** argv, bool fourier = false);
     /** Destructor */
     virtual ~MpiProgMLRefine3D();
-    /** Redefine XmippProgram read to perform some syncronization */
-    void read(int argc, char ** argv, bool reportErrors = true);
     /** Only master copy reference volumes before start processing */
     void copyVolumes();
     /** Only master postprocess volumnes */
     void postProcessVolumes();
     /** Project volumes, sync after projection */
-    void projectVolumes(MetaData &mdProj) ;
+    void projectVolumes(MetaData &mdProj);
+
 
 }
 ;//end of class  MpiProgMLRefine3D

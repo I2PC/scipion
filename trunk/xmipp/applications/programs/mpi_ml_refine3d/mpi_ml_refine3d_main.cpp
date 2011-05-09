@@ -28,6 +28,6 @@
 int main(int argc, char **argv)
 {
   MpiProgMLRefine3D program(argc, argv);
-  program.read(argc, argv);
+  program.readMpi(argc, argv);
   return program.tryRun();
 }
