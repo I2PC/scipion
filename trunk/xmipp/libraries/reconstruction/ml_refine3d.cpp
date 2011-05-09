@@ -396,15 +396,15 @@ void ProgMLRefine3D::run()
 
         } // end loop blocks
         // Write out 2D reference images (to be used in reconstruction)
-                    ml2d->writeOutputFiles(ml2d->model, OUT_REFS);
+        ml2d->writeOutputFiles(ml2d->model, OUT_REFS);
 
-                    // Jump out before 3D reconstruction
-                    // (Useful for some parallelization protocols)
-                    if (skip_reconstruction)
-                        exit(1);
+        // Jump out before 3D reconstruction
+        // (Useful for some parallelization protocols)
+        if (skip_reconstruction)
+            exit(1);
 
-                    // Reconstruct new volumes from the reference images
-                    reconstructVolumes(ml2d->MDref, FN_ITER_BASE(iter));
+        // Reconstruct new volumes from the reference images
+        reconstructVolumes(ml2d->MDref, FN_ITER_BASE(iter));
         // Update the reference volume selection file
         //remakeSFvol(ml2d->iter, false, false);
         updateVolumesMetadata();
@@ -413,12 +413,8 @@ void ProgMLRefine3D::run()
         // Check convergence
         converged = checkConvergence();
 
-        // Write output ML2D files
-        ml2d->addPartialDocfileData(ml2d->docfiledata, ml2d->myFirstImg, ml2d->myLastImg);
-        ml2d->writeOutputFiles(ml2d->model, OUT_IMGS);
-
-        //concatenateSelfiles(ml2d->iter);
-
+        // End 2D iteration
+        ml2d->endIteration();
     } // end loop iterations
 
     if (verbose)

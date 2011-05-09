@@ -44,7 +44,6 @@ protected:
     //Reference to the program to be parallelized
     XmippProgram * program;
 
-
 public:
     /** Read arguments sequentially to avoid concurrency problems */
     void readMpi(int argc, char **argv);
@@ -54,10 +53,12 @@ public:
     MpiML2DBase(XmippProgram * prm, MpiNode * node);
     /** Destructor */
     ~MpiML2DBase();
+    /** This function is only valid for 2D ML programs*/
+    void sendDocfile(const MultidimArray<double> &data);
 }
 ;//end of class MpiML
 
-/** Program to parallelize the ML 2D alignment program */
+/** Class to parallelize the ML 2D alignment program */
 class MpiProgML2D: public ProgML2D, public MpiML2DBase
 {
 
@@ -72,12 +73,12 @@ public:
      * that's why the need of override the implementation.
      */
     void produceSideInfo2();
-    /// Add docfiledata to docfile
-    void addPartialDocfileData(const MultidimArray<double> &data, int first, int last);
     /// Write model parameters
     void writeOutputFiles(const ModelML2D &model, OutputType outputType = OUT_FINAL);
     /// After normal ML2D expectation, data must be collected from nodes
     void expectation();
+    /// Redefine endIteration for some syncronization
+    void endIteration();
     //Just for debugging
     void printModel(const String &msg, const ModelML2D & model);
     //Redefine usage, only master should print
@@ -86,6 +87,7 @@ public:
 }
 ;//end of class MpiProgML2D
 
+/** Class to parallelize the ML 3D refinement program */
 class MpiProgMLRefine3D: public ProgMLRefine3D, public MpiML2DBase
 {
 public:
@@ -100,8 +102,30 @@ public:
     /** Project volumes, sync after projection */
     void projectVolumes(MetaData &mdProj);
 
-
 }
 ;//end of class  MpiProgMLRefine3D
+
+/** Class to paralleliza the MLF 2D alignment program */
+class MpiProgMLF2D: public ProgMLF2D, public MpiML2DBase
+{
+public:
+  /** Default constructor */
+  MpiProgMLF2D();
+  /** Constructor passing the MpiNode */
+  MpiProgMLF2D(MpiNode * node);
+  /** All mpi nodes should syncronize at this point
+   * that's why the need of override the implementation.
+   */
+  void produceSideInfo();
+  void produceSideInfo2();
+  /// Write model parameters
+  void writeOutputFiles(const ModelML2D &model, OutputType outputType = OUT_FINAL);
+  /// After normal ML2D expectation, data must be collected from nodes
+  void expectation();
+  /// Redefine endIteration for some syncronization
+  void endIteration();
+}
+;//end of class MpiProgMLF2D
+
 
 #endif /* MPI_ML_ALIGN2D_H_ */

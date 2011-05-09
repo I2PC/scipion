@@ -130,7 +130,6 @@ public:
 
     std::vector<double> refs_avgscale;
 
-    //FIXME try to remove this later
     int rank, size, nr_vols; //mpi rank, size and 3d number of vols
 
     /** Taken from expectation and/or maximization */
@@ -261,14 +260,15 @@ public:
     void iteration();
     /// Integrate over all experimental images
     void expectation();
-
     /// Update all model parameters (maximization step)
     void maximization();
+    /// Redefine endIteration to update Wiener filters
+    void endIteration();
 
     /// Write out reference images, selfile and logfile
     virtual void writeOutputFiles(const ModelML2D &model, OutputType outputType);
 
-    virtual void addPartialDocfileData(const MultidimArray<double> &data, int first, int last);
+    virtual void addPartialDocfileData(const MultidimArray<double> &data, size_t first, size_t last);
 
 };
 //@}

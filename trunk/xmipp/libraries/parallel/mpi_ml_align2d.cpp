@@ -59,7 +59,6 @@ void MpiML2DBase::readMpi(int argc, char** argv)
     //The following makes the asumption that 'this' also
     //inherits from an XmippProgram
 
-    std::cerr << "DEBUG_JM: readMPI: reading....." << std::endl;
     // Read subsequently to avoid problems in restart procedure
     for (int proc = 0; proc < node->size; ++proc)
     {
@@ -67,11 +66,47 @@ void MpiML2DBase::readMpi(int argc, char** argv)
             program->read(argc, argv);
         node->barrierWait();
     }
-    std::cerr << "DEBUG_JM: readMPI: sending seed....." << std::endl;
     //Send "master" seed to slaves for same randomization
     MPI_Bcast(&program->seed, 1, MPI_INT, 0, MPI_COMM_WORLD);
     if (!node->isMaster())
         program->verbose = 0;
+}
+
+void MpiML2DBase::sendDocfile(const MultidimArray<double> &docfiledata)
+{
+
+    // Write intermediate files
+    if (!node->isMaster())
+    {
+        // All slaves send docfile data to the master
+        int s_size = MULTIDIM_SIZE(docfiledata);
+        MPI_Send(&s_size, 1, MPI_INT, 0, TAG_DOCFILESIZE,
+                 MPI_COMM_WORLD);
+        MPI_Send(MULTIDIM_ARRAY(docfiledata), s_size, MPI_DOUBLE,
+                 0, TAG_DOCFILE, MPI_COMM_WORLD);
+    }
+    else
+    {
+        // Master fills docfile
+        // Master's own contribution
+        ML2DBaseProgram * ml2d = (ML2DBaseProgram*)program;
+        ml2d->addPartialDocfileData(docfiledata, ml2d->myFirstImg, ml2d->myLastImg);
+        int s_size;
+        size_t first_img, last_img;
+        MPI_Status status;
+
+        for (int docCounter = 1; docCounter < node->size; ++docCounter)
+        {
+            // receive in order
+            MPI_Recv(&s_size, 1, MPI_INT, docCounter, TAG_DOCFILESIZE,
+                     MPI_COMM_WORLD, &status);
+            MPI_Recv(MULTIDIM_ARRAY(docfiledata), s_size,
+                     MPI_DOUBLE, docCounter, TAG_DOCFILE,
+                     MPI_COMM_WORLD, &status);
+            divide_equally(ml2d->nr_images_global, node->size, docCounter, first_img, last_img);
+            ml2d->addPartialDocfileData(docfiledata, first_img, last_img);
+        }
+    }
 }
 
 MpiProgML2D::MpiProgML2D():MpiML2DBase(this)
@@ -143,39 +178,11 @@ void MpiProgML2D::expectation()
     }
 }//end of expectation
 
-void MpiProgML2D::addPartialDocfileData(const MultidimArray<double> &data, int first, int last)
+void MpiProgML2D::endIteration()
 {
-    // Write intermediate files
-    if (!node->isMaster())
-    {
-        // All slaves send docfile data to the master
-        int s_size = MULTIDIM_SIZE(docfiledata);
-        MPI_Send(&s_size, 1, MPI_INT, 0, TAG_DOCFILESIZE,
-                 MPI_COMM_WORLD);
-        MPI_Send(MULTIDIM_ARRAY(docfiledata), s_size, MPI_DOUBLE,
-                 0, TAG_DOCFILE, MPI_COMM_WORLD);
-    }
-    else
-    {
-        // Master fills docfile
-        // Master's own contribution
-        ProgML2D::addPartialDocfileData(docfiledata, myFirstImg, myLastImg);
-        int s_size;
-        size_t first_img, last_img;
-        MPI_Status status;
-
-        for (int docCounter = 1; docCounter < node->size; ++docCounter)
-        {
-            // receive in order
-            MPI_Recv(&s_size, 1, MPI_INT, docCounter, TAG_DOCFILESIZE,
-                     MPI_COMM_WORLD, &status);
-            MPI_Recv(MULTIDIM_ARRAY(docfiledata), s_size,
-                     MPI_DOUBLE, docCounter, TAG_DOCFILE,
-                     MPI_COMM_WORLD, &status);
-            divide_equally(nr_images_global, node->size, docCounter, first_img, last_img);
-            ProgML2D::addPartialDocfileData(docfiledata, first_img, last_img);
-        }
-    }
+    // Write output files
+    sendDocfile(docfiledata);
+    writeOutputFiles(model, OUT_ITER);
 }
 
 void MpiProgML2D::writeOutputFiles(const ModelML2D &model, OutputType outputType)
@@ -202,6 +209,7 @@ void MpiProgML2D::usage(int verb) const
         ProgML2D::usage();
 }
 
+#define SET_RANK_AND_SIZE() rank = node->rank; size = node->size; std::cerr << "rank: " << rank << " size: " << size << std::endl
 MpiProgMLRefine3D::MpiProgMLRefine3D(int argc, char ** argv, bool fourier):MpiML2DBase(this)
 {
     //create mpi node, which will be passed to ml2d
@@ -215,8 +223,7 @@ MpiProgMLRefine3D::MpiProgMLRefine3D(int argc, char ** argv, bool fourier):MpiML
     else
         ml2d = new MpiProgML2D(node);
 
-    rank = node->rank;
-    size = node->size;
+    SET_RANK_AND_SIZE();
 }
 
 void MpiProgMLRefine3D::copyVolumes()
@@ -247,5 +254,114 @@ void MpiProgMLRefine3D::projectVolumes(MetaData &mdProj)
 
 MpiProgMLRefine3D::~MpiProgMLRefine3D()
 {}
+
+MpiProgMLF2D::MpiProgMLF2D():MpiML2DBase(this)
+{}
+
+MpiProgMLF2D::MpiProgMLF2D(MpiNode * node):MpiML2DBase(this, node)
+{}
+
+void MpiProgMLF2D::expectation()
+{
+    MultidimArray<double> Maux, Vaux;
+    double aux;
+    Maux.resize(dim, dim);
+    Maux.setXmippOrigin();
+
+    ProgMLF2D::expectation();
+    MPI_Allreduce(&LL, &aux, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+    LL = aux;
+    MPI_Allreduce(&sumcorr, &aux, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+    sumcorr = aux;
+    MPI_Allreduce(&wsum_sigma_offset, &aux, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+    wsum_sigma_offset = aux;
+    if (do_kstest)
+    {
+        Vaux.resize(sumhist);
+        MPI_Allreduce(MULTIDIM_ARRAY(sumhist), MULTIDIM_ARRAY(Vaux),
+                      MULTIDIM_SIZE(sumhist), MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+        FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(Vaux)
+        DIRECT_MULTIDIM_ELEM(sumhist, n) = DIRECT_MULTIDIM_ELEM(Vaux, n);
+        for (int ires = 0; ires < hdim; ires++)
+        {
+            Vaux.resize(sumhist);
+            MPI_Allreduce(MULTIDIM_ARRAY(resolhist[ires]), MULTIDIM_ARRAY(Vaux),
+                          MULTIDIM_SIZE(resolhist[ires]), MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+            FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(Vaux)
+            DIRECT_MULTIDIM_ELEM(resolhist[ires], n) = DIRECT_MULTIDIM_ELEM(Vaux, n);
+        }
+    }
+    for (int refno = 0;refno < model.n_ref; refno++)
+    {
+        MPI_Allreduce(MULTIDIM_ARRAY(wsum_Mref[refno]), MULTIDIM_ARRAY(Maux),
+                      MULTIDIM_SIZE(wsum_Mref[refno]), MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+        wsum_Mref[refno] = Maux;
+        if (do_ctf_correction)
+        {
+            MPI_Allreduce(MULTIDIM_ARRAY(wsum_ctfMref[refno]), MULTIDIM_ARRAY(Maux),
+                          MULTIDIM_SIZE(wsum_ctfMref[refno]), MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+            wsum_ctfMref[refno] = Maux;
+        }
+        MPI_Allreduce(&sumw[refno], &aux, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+        sumw[refno] = aux;
+        MPI_Allreduce(&sumw2[refno], &aux, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+        sumw2[refno] = aux;
+        MPI_Allreduce(&sumwsc2[refno], &aux, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+        sumwsc2[refno] = aux;
+        MPI_Allreduce(&sumwsc[refno], &aux, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+        sumwsc[refno] = aux;
+        MPI_Allreduce(&sumw_mirror[refno], &aux, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+        sumw_mirror[refno] = aux;
+    }
+    for (int ifocus = 0;ifocus < nr_focus;ifocus++)
+    {
+        for (int ii = 0; ii <  Mwsum_sigma2[ifocus].size(); ii++)
+        {
+            MPI_Allreduce(&Mwsum_sigma2[ifocus][ii], &aux, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+            Mwsum_sigma2[ifocus][ii] = aux;
+        }
+        if (do_student)
+        {
+            MPI_Allreduce(&sumw_defocus[ifocus], &aux, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+            sumw_defocus[ifocus] = aux;
+        }
+    }
+}//end of expectation
+
+void MpiProgMLF2D::produceSideInfo2()
+{
+    node->barrierWait();
+    ProgMLF2D::produceSideInfo2();
+    //Also sync after finishing produceSideInfo2
+    node->barrierWait();
+}
+
+void MpiProgMLF2D::produceSideInfo()
+{
+    SET_RANK_AND_SIZE();
+    ProgMLF2D::produceSideInfo();
+}
+
+
+void MpiProgMLF2D::endIteration()
+{
+    // Write output files
+    sendDocfile(docfiledata);
+    writeOutputFiles(model, OUT_ITER);
+    updateWienerFilters(spectral_signal, sumw_defocus, iter);
+    node->barrierWait();
+}
+
+void MpiProgMLF2D::writeOutputFiles(const ModelML2D &model, OutputType outputType)
+{
+    //All nodes should arrive to writeOutput files at same time
+    node->barrierWait();
+    //Only master write files
+    if (node->isMaster())
+        ProgMLF2D::writeOutputFiles(model, outputType);
+    //All nodes wait until files are written
+    node->barrierWait();
+}
+
 
 

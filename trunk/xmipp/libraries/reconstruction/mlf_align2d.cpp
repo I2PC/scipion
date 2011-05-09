@@ -29,8 +29,8 @@
 #define FN_REFMD(base) ((base) + "_ref.xmd")
 #define FN_IMGMD(base) ((base) + "_img.xmd")
 #define FN_LOGMD(base) ((base) + "_log.xmd")
-#define FN_REF(base, refno) formatString("%s_ref%06d.xmp", (base).c_str(), (refno))
-#define FN_VSIG(base, ifocus, ext) ((nr_focus > 1) ? formatString("%s_ctf%06d%s", (base).c_str(), ((ifocus) + 1), (ext)) : ((base)+ (ext)))
+#define FN_REF(base, refno) formatString("%06d@%s_refs.stk", (refno), (base).c_str())
+#define FN_VSIG(base, ifocus, ext) ((nr_focus > 1) ? formatString("%s_ctf%06d%s", (base).c_str(), ((ifocus) + 1), (ext)) : ((base) + "_ctf" + (ext)))
 // Constructor ===============================================
 ProgMLF2D::ProgMLF2D(int nr_vols, int rank, int size)
 {
@@ -67,7 +67,7 @@ void ProgMLF2D::defineParams()
     addParamsLine(" [ --reduce_snr <factor=1> ]    : Use a value smaller than one to decrease the estimated SSNRs ");
     addParamsLine(" [ --not_phase_flipped ]        : Use this if the experimental images have not been phase flipped ");
     addParamsLine(" [ --ctf_affected_refs ]        : Use this if the references (-ref) are not CTF-deconvoluted ");
-    addParamsLine(" [ --exclude_freqs <first_higth=0> <high=0> <low=999>]: Exclude frequencies from P-calculations (in Ang)");
+    addParamsLine(" [ --limit_resolution <first_high=0> <high=0> <low=999>]: Exclude frequencies from P-calculations (in Ang)");
     addParamsLine("                               : First value is highest frequency during first iteration.");
     addParamsLine("                               : Second is the highest in following iterations and third is lowest");
     addParamsLine(" [ --fix_high <float=-1>]       : ");
@@ -140,9 +140,9 @@ void ProgMLF2D::readParams()
     search_shift = getIntParam("--search_shift");
     psi_step = getDoubleParam("--psi_step");
     do_mirror = checkParam("--mirror");
-    ini_highres_limit = getIntParam("--exclude_freqs", 0);
-    lowres_limit = getIntParam("--exclude_freqs", 1);
-    highres_limit = getIntParam("--exclude_freqs", 2);
+    ini_highres_limit = getIntParam("--limit_resolution", 0);
+    highres_limit = getIntParam("--limit_resolution", 1);
+    lowres_limit = getIntParam("--limit_resolution", 2);
     phase_flipped = !checkParam("--not_phase_flipped");
     reduce_snr = getDoubleParam("--reduce_snr");
     first_iter_noctf = checkParam("--ctf_affected_refs");
@@ -730,7 +730,7 @@ void ProgMLF2D::produceSideInfo2()
         sumw_defocus.push_back((double)count_defocus[ifocus]);
     }
 
-    // Calculate all Wiener filters
+    // Calculate all Wiener filters    
     updateWienerFilters(spectral_signal, sumw_defocus, istart - 1);
 
 }
@@ -856,6 +856,7 @@ void ProgMLF2D::updateWienerFilters(MultidimArray<double> &spectral_signal,
     // Use formula 2.32b on p60 from Frank's book 2nd ed.,
     // Assume that Vctf, Vdec and Vsig exist (with their right sizes)
     // and that Vctf, Vsig are already filled with the right values
+
     std::vector<MultidimArray<double> >  Vsnr;
     MultidimArray<double>           Vzero, Vdenom, Vavgctf2;
     MultidimArray<double>           Maux;
@@ -1024,26 +1025,37 @@ void ProgMLF2D::updateWienerFilters(MultidimArray<double> &spectral_signal,
     {
         current_probres_limit = hdim-1;
         current_highres_limit = hdim-1;
+        
     }
     else if (fix_high > 0.)
     {
         current_probres_limit = ROUND((sampling*dim)/fix_high);
         current_highres_limit = ROUND((sampling*dim)/fix_high);
+        
     }
     else
     {
         current_probres_limit = maxres;
         current_highres_limit = maxres + 5; // hard-code increase_highres_limit to 5
+        
     }
 
     // Set overall high resolution limit
     current_probres_limit = XMIPP_MIN(current_probres_limit, int_highres_limit);
     current_highres_limit = XMIPP_MIN(current_highres_limit, int_highres_limit);
+    
     current_probres_limit = XMIPP_MIN(current_probres_limit, hdim);
     current_highres_limit = XMIPP_MIN(current_highres_limit, hdim);
+    //std::cerr << "DEBUG_JM(6): current_probres_limit: " << current_probres_limit << std::endl;
 
     if (debug>0)
     {
+      std::cerr
+        << "current_probres_limit dependencies: " << std::endl
+        << " hdim: " << hdim << " dim: " << dim << std::endl
+        << " sampling: " << sampling << " fix_high: " << fix_high << std::endl
+        << " maxres: " << maxres << " int_highres_limit: " << int_highres_limit << std::endl;
+
         std::cerr<<" Current resolution limits: "<<std::endl;
         std::cerr<<" + low   res= "<<lowres_limit<<" Ang ("<<int_lowres_limit<<" shell)"<<std::endl;
         std::cerr<<" + prob. res= "<<sampling*dim/current_probres_limit<<" Ang ("<<current_probres_limit<<" shell)"<<std::endl;
@@ -1100,6 +1112,7 @@ void ProgMLF2D::updateWienerFilters(MultidimArray<double> &spectral_signal,
 
     // For variable in-plane sampling rates
     setCurrentSamplingRates(sampling*dim/current_probres_limit);
+
 }
 
 
@@ -2378,10 +2391,10 @@ void ProgMLF2D::expectation()
         if (do_ctf_correction)
             MDimg.getValue(MDL_DEFGROUP, focus, id);
 
-        std::cerr << formatString("processing img: %lu with id: %lu\n", imgno, id);
+        //std::cerr << formatString("processing img: %lu with id: %lu\n", imgno, id);
 
         MDimg.getValue(MDL_IMAGE, fn_img, id);
-        std::cerr << formatString("   filename: %s\n", fn_img.c_str());
+        //std::cerr << formatString("   filename: %s\n", fn_img.c_str());
         //img.read(fn_img, false, false, false, false);
         img.read(fn_img);
         img().setXmippOrigin();
@@ -2499,11 +2512,11 @@ void ProgMLF2D::maximization()
     MultidimArray<std::complex<double> > Faux, Faux2;
     MultidimArray<double> Maux;
     FileName fn_tmp;
-    double aux, sumw_allrefs2;
+    double aux;
     int c;
 
     // Pre-calculate sumw_allrefs & average Pmax/sumP or cross-correlation
-    sumw_allrefs = sumw_allrefs2 = 0.;
+    sumw_allrefs = 0.;
 
     // Update the reference images
     FOR_ALL_MODELS()
@@ -2531,7 +2544,7 @@ void ProgMLF2D::maximization()
             model.Iref[refno]() /= sumwsc2[refno];
             model.Iref[refno].setWeight(sumw2[refno]);
             sumw_allrefs += sumw[refno];
-            sumw_allrefs2 += sumw2[refno];
+            //sumw_allrefs2 += sumw2[refno];
             if (do_ctf_correction)
             {
                 Ictf[refno]() = wsum_ctfMref[refno];
@@ -2666,6 +2679,12 @@ void ProgMLF2D::maximization()
     }
     spectral_signal /= (double)model.n_ref;
 
+}
+
+void ProgMLF2D::endIteration()
+{
+    ML2DBaseProgram::endIteration();
+    updateWienerFilters(spectral_signal, sumw_defocus, iter);
 }
 
 void ProgMLF2D::writeOutputFiles(const ModelML2D &model, OutputType outputType)
@@ -2832,7 +2851,7 @@ void ProgMLF2D::writeOutputFiles(const ModelML2D &model, OutputType outputType)
 
 /// Add docfiledata to docfile
 void ProgMLF2D::addPartialDocfileData(const MultidimArray<double> &data,
-                                      int first, int last)
+                                      size_t first, size_t last)
 {
     for (size_t imgno = first; imgno <= last; imgno++)
     {
