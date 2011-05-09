@@ -22,6 +22,11 @@
         <CASE arguments="--ctfdat input/ctf_group/all_images_new.ctfdat -o %o/ctf --wiener --wc -1 --pad 2 --phase_flipped --error 0.5 --resol 5.6" changeDir="FALSE"/>
         <CASE arguments="--ctfdat input/ctf_group/all_images_new.ctfdat -o %o/ctf --wiener --wc -1 --pad 2 --phase_flipped --split input/ctf_group/ctf_split.doc" changeDir="FALSE"/>
     </PROGRAM>
+    <PROGRAM name="xmipp_phantom_project" mpi="FALSE">
+        <CASE arguments="-i input/phantomBacteriorhodopsin.vol -o %o/image.xmp --angles 0 0 0" changeDir="FALSE">
+            <FILE filename="image.xmp"/>
+        </CASE>
+    </PROGRAM>
 
 ##TAKE TOO LONG
 -    <PROGRAM name="xmipp_tomo_align_dual_tilt_series" mpi="FALSE">
@@ -40,6 +45,11 @@
             <PRERUN command="cp -r input/Protocol_Preprocess_Micrographs/Preprocessing/* %o"/>
         </CASE>
     </PROGRAM>
+
+    <PROGRAM name="xmipp_phantom_simulate_microscope" mpi="FALSE">
+        <CASE arguments="-i input/smallStack.stk -o %o/smallStackPlusCtf.stk --ctf input/input.ctfparam" changeDir="FALSE"/>
+    </PROGRAM>
+
 #Please add more tests...
     <PROGRAM name="xmipp_image_convert" mpi="FALSE">
         <CASE arguments="-i input/smallStack.stk -o %o/smallStack.mrcs -t stk" changeDir="FALSE"/>
