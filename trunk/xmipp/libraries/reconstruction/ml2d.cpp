@@ -157,6 +157,13 @@ bool ML2DBaseProgram::checkConvergence()
     return converged;
 }//close function checkConvergence
 
+void ML2DBaseProgram::endIteration()
+{
+    // Write output files
+    addPartialDocfileData(docfiledata, myFirstImg, myLastImg);
+    writeOutputFiles(model, OUT_ITER);
+}
+
 //Standard run function of ML2D family
 void ML2DBaseProgram::run()
 {
@@ -183,9 +190,8 @@ void ML2DBaseProgram::run()
         // Check convergence
         converged = checkConvergence();
 
-        // Write output files
-        addPartialDocfileData(docfiledata, myFirstImg, myLastImg);
-        writeOutputFiles(model, OUT_ITER);
+        // Do some task before ending iteration
+        endIteration();
 
     } // end loop iterations
 

@@ -266,6 +266,9 @@ public:
     /// Integrate over all experimental images
     virtual void expectation() = 0;
 
+    /// Do some task at the end of iteration
+    virtual void endIteration();
+
     /// Update all model parameters, adapted for IEM blocks use
     virtual void maximization() = 0;
 
@@ -288,8 +291,7 @@ public:
     virtual bool checkConvergence();
 
     /// Add docfiledata to docfile
-    virtual void addPartialDocfileData(const MultidimArray<double> &data, int first, int last) = 0;
-
+    virtual void addPartialDocfileData(const MultidimArray<double> &data, size_t first, size_t last) = 0;
     ///Main function of the program
     virtual void run();
 
