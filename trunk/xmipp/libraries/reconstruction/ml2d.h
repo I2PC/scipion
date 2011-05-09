@@ -230,8 +230,6 @@ public:
     //Current processing block
     int current_block;
 
-    /** debug flag and seed for randomization */
-    int debug, seed;
     //Vector of image IDs in the MetaData object (change order for randomize)
     std::vector<size_t> img_id;
     /** MultidimArray for mpi passing of docfiledata */
