@@ -2060,7 +2060,7 @@ void ProgML2D::maximization()
     //std::cerr << "======After maximization MODEL: ========= block: " << current_block << std::endl;
     //model.print();
 
-    if (do_norm)
+    if (model.do_norm)
         correctScaleAverage();
 }//close function maximizationBlocks
 
