@@ -27,6 +27,11 @@
             <FILE filename="image.xmp"/>
         </CASE>
     </PROGRAM>
+    <PROGRAM name="xmipp_transform_range_adjust" mpi="FALSE">
+        <CASE arguments="-i input/singleImage.spi -o %o/image.xmp --range -100 100 --noise 10 --mask circular -16" changeDir="FALSE">
+            <FILE filename="image.xmp"/>
+        </CASE>
+    </PROGRAM>
 
 ##TAKE TOO LONG
 -    <PROGRAM name="xmipp_tomo_align_dual_tilt_series" mpi="FALSE">

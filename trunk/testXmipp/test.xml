@@ -230,31 +230,59 @@
         </CASE>
     </PROGRAM>
     <PROGRAM name="xmipp_transform_adjust_volume_grey_levels" mpi="FALSE">
-        <CASE arguments="-i input/phantomCandida.vol -m goldStandard/xmipp_tomo_project_02/projections.sel -o %o/adjusted.vol" changeDir="FALSE"/>
+        <CASE arguments="-i input/phantomCandida.vol -m goldStandard/xmipp_tomo_project_02/projections.sel -o %o/adjusted.vol" changeDir="FALSE">
+            <FILE filename="adjusted.vol"/>
+        </CASE>
     </PROGRAM>
     <PROGRAM name="xmipp_transform_center_image" mpi="FALSE">
-        <CASE arguments="-i input/smallStack.stk -o %o/smallStackCentered.stk" changeDir="FALSE"/>
+        <CASE arguments="-i input/smallStack.stk -o %o/smallStackCentered.stk" changeDir="FALSE">
+            <FILE filename="smallStackCentered.stk"/>
+        </CASE>
     </PROGRAM>
     <PROGRAM name="xmipp_transform_downsample" mpi="FALSE">
-        <CASE arguments="-i input/micrograph8bits.tif -o %o/downsampledFourier.xmp --step 2" changeDir="FALSE"/>
-        <CASE arguments="-i input/micrograph8bits.tif -o %o/downsampledSmooth.xmp --step 2 --method smooth" changeDir="FALSE"/>
-    </PROGRAM>
-    <PROGRAM name="xmipp_transform_range_adjust" mpi="FALSE">
-        <CASE arguments="-i input/singleImage.spi -o %o/image.xmp --range -100 100 --noise 10 --mask circular -16" changeDir="FALSE"/>
+        <CASE arguments="-i input/micrograph8bits.tif -o %o/downsampledFourier.xmp --step 2" changeDir="FALSE">
+            <FILE filename="downsampledFourier.xmp"/>
+        </CASE>
+        <CASE arguments="-i input/micrograph8bits.tif -o %o/downsampledSmooth.xmp --step 2 --method smooth" changeDir="FALSE">
+            <FILE filename="downsampledSmooth.xmp"/>
+        </CASE>
     </PROGRAM>
     <PROGRAM name="xmipp_transform_geometry" mpi="FALSE">
-        <CASE arguments="-i input/header.doc --apply_transform -o %o/images.stk" changeDir="FALSE"/>
-        <CASE arguments="-i input/phantomBacteriorhodopsin.vol --shift 10 5 -10 -o %o/volume.vol --dont_wrap" changeDir="FALSE"/>
-        <CASE arguments="-i input/header.doc --scale factor 0.5 --oroot %o/halvedOriginal" changeDir="FALSE"/>
-        <CASE arguments="-i input/header.doc --scale fourier 32 --oroot %o/halvedFourierDim" changeDir="FALSE"/>
+        <CASE arguments="-i input/header.doc --apply_transform -o %o/images.stk" changeDir="FALSE">
+            <FILE filename="images.stk"/>
+            <FILE filename="images.sel"/>
+        </CASE>
+        <CASE arguments="-i input/phantomBacteriorhodopsin.vol --shift 10 5 -10 -o %o/volume.vol --dont_wrap" changeDir="FALSE">
+            <FILE filename="volume.vol"/>
+        </CASE>
+        <CASE arguments="-i input/header.doc --scale factor 0.5 --oroot %o/halvedOriginal" changeDir="FALSE">
+            <FILE filename="halvedOriginal000001.stk"/>
+            <FILE filename="halvedOriginal000002.stk"/>
+            <FILE filename="halvedOriginal000003.stk"/>
+            <FILE filename="halvedOriginal000004.stk"/>
+        </CASE>
+        <CASE arguments="-i input/header.doc --scale fourier 32 --oroot %o/halvedFourierDim" changeDir="FALSE">
+            <FILE filename="halvedFourierDim000001.stk"/>
+            <FILE filename="halvedFourierDim000002.stk"/>
+            <FILE filename="halvedFourierDim000003.stk"/>
+            <FILE filename="halvedFourierDim000004.stk"/>
+        </CASE>
     </PROGRAM>
     <PROGRAM name="xmipp_transform_mask" mpi="FALSE">
-        <CASE arguments="-i input/singleImage.spi -o %o/singleImage_mask.xmp --mask circular -15" changeDir="FALSE"/>
-        <CASE arguments="-i input/phantomBacteriorhodopsin.vol -o %o/outputVol_mask.vol --mask rectangular -20 -20 -20" changeDir="FALSE"/>
-        <CASE arguments="-i input/smallStack.stk -o %o/outputStack_mask.stk --mask circular -20" changeDir="FALSE"/>
+        <CASE arguments="-i input/singleImage.spi -o %o/singleImage_mask.xmp --mask circular -15" changeDir="FALSE">
+            <FILE filename="singleImage_mask.xmp"/>
+        </CASE>
+        <CASE arguments="-i input/phantomBacteriorhodopsin.vol -o %o/outputVol_mask.vol --mask rectangular -20 -20 -20" changeDir="FALSE">
+            <FILE filename="outputVol_mask.vol"/>
+        </CASE>
+        <CASE arguments="-i input/smallStack.stk -o %o/outputStack_mask.stk --mask circular -20" changeDir="FALSE">
+            <FILE filename="outputStack_mask.stk"/>
+        </CASE>
     </PROGRAM>
     <PROGRAM name="xmipp_transform_morphology" mpi="FALSE">
-        <CASE arguments="-i input/maskBacteriorhodopsin.vol -o %o/dilated.spi --binaryOperation dilation" changeDir="FALSE"/>
+        <CASE arguments="-i input/maskBacteriorhodopsin.vol -o %o/dilated.spi --binaryOperation dilation" changeDir="FALSE">
+            <FILE filename="dilated.spi"/>
+        </CASE>
     </PROGRAM>
     <PROGRAM name="xmipp_transform_normalize" mpi="FALSE">
         <CASE arguments="-i input/smallStack.stk -o %o/smallStackNormalized.stk --method NewXmipp --background circle 32" changeDir="FALSE"/>
