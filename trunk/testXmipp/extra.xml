@@ -5,6 +5,24 @@
         </CASE>
     </PROGRAM>
 
+    <PROGRAM name="xmipp_mpi_angular_class_average" mpi="TRUE">
+        <CASE arguments="-i %o/proj_match.doc --lib %o/ref.doc -o %o/proj_match --split" changeDir="FALSE">
+            <PRERUN command="xmipp_angular_project_library -i input/phantomBacteriorhodopsin.vol --experimental_images input/aFewProjections.sel -o %o/ref.stk --sampling_rate 10 --compute_neighbors --angular_distance -1 "/>
+            <PRERUN command=" xmipp_angular_projection_matching -i input/aFewProjections.sel -o %o/proj_match.doc --ref %o/ref.stk"/>
+            <FILE filename="proj_match_class.xmp"/>
+            <FILE filename="proj_match_classes.doc"/>
+        </CASE>
+    </PROGRAM>
+    <PROGRAM name="xmipp_mpi_angular_continuous_assign" mpi="TRUE">
+        <CASE arguments="-i input/aFewProjections.sel --ref input/phantomBacteriorhodopsin.vol -o %o/assigned_angles" changeDir="FALSE">
+              <FILE filename="assigned_angles.sel"/>
+        </CASE>
+     </PROGRAM>
+    <PROGRAM name="xmipp_ctf_group" mpi="FALSE">
+        <CASE arguments="--ctfdat input/ctf_group/all_images_new.ctfdat -o %o/ctf --wiener --wc -1 --pad 2 --phase_flipped --error 0.5 --resol 5.6" changeDir="FALSE"/>
+        <CASE arguments="--ctfdat input/ctf_group/all_images_new.ctfdat -o %o/ctf --wiener --wc -1 --pad 2 --phase_flipped --split input/ctf_group/ctf_split.doc" changeDir="FALSE"/>
+    </PROGRAM>
+
 ##TAKE TOO LONG
 -    <PROGRAM name="xmipp_tomo_align_dual_tilt_series" mpi="FALSE">
 -        <CASE arguments="--ref input/tomo_dual_alignment/ref.sel --dual input/tomo_dual_alignment/dual.sel --scale 1" changeDir="FALSE"/>
@@ -15,3 +33,14 @@
 -    <PROGRAM name="xmipp_tomo_align_refinement" mpi="FALSE">
 -        <CASE arguments="--ref input/tomo_align_refinement/volume.vol --sel input/tomo_align_refinement/tilt_series.sel --oroot %o/refined --max_tilt_change 1 --max_rot_change 1 --tilt_step 1 --rot_step 1 --adjustGray" changeDir="FALSE"/>
 -    </PROGRAM>
+
+#TEST NOT PROPERLY SETUP
+    <PROGRAM name="xmipp_ctf_sort_psds" mpi="FALSE">
+        <CASE arguments="-i all_micrographs.sel" changeDir="TRUE">
+            <PRERUN command="cp -r input/Protocol_Preprocess_Micrographs/Preprocessing/* %o"/>
+        </CASE>
+    </PROGRAM>
+#Please add more tests...
+    <PROGRAM name="xmipp_image_convert" mpi="FALSE">
+        <CASE arguments="-i input/smallStack.stk -o %o/smallStack.mrcs -t stk" changeDir="FALSE"/>
+    </PROGRAM>

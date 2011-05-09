@@ -23,8 +23,10 @@
 <!ELEMENT XMIPP_TESTS (PROGRAM)*>
 
 <!--- Put your DTDDoc comment here. -->
+<!--random true if output of two execution may be different-->
 <!ELEMENT PROGRAM (CASE)*>
 <!ATTLIST PROGRAM
+    random CDATA #IMPLIED
     mpi CDATA #IMPLIED
     name CDATA #IMPLIED
   >

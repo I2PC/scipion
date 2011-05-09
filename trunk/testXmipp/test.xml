@@ -14,65 +14,93 @@
               <FILE filename="assigned_angles.sel"/>
         </CASE>
      </PROGRAM>
-    <PROGRAM name="xmipp_angular_discrete_assign" mpi="FALSE">
-        <CASE arguments="-i input/aFewProjections.sel -o %o/assigned_angles.txt --ref %o/reference.doc" changeDir="FALSE">
-            <PRERUN command="xmipp_angular_project_library -i input/phantomBacteriorhodopsin.vol -o %o/reference.stk --sampling_rate 10"/>
+    <PROGRAM name="xmipp_angular_distance" mpi="FALSE">
+        <CASE arguments="--ang1 input/discreteAssignment.xmd --ang2 input/aFewProjections.sel --oroot %o/angleComparison --sym c3 -v 2" changeDir="FALSE">
+             <FILE filename="angleComparison.xmd"/>
         </CASE>
     </PROGRAM>
-    <PROGRAM name="xmipp_angular_distance" mpi="FALSE">
-        <CASE arguments="--ang1 input/discreteAssignment.xmd --ang2 input/aFewProjections.sel --oroot %o/angleComparison --sym c3 -v 2" changeDir="FALSE"/>
-    </PROGRAM>
     <PROGRAM name="xmipp_angular_distribution_show" mpi="FALSE">
-        <CASE arguments="-i input/randomAngularDistribution.sel -o %o/distribution.ps ps" changeDir="FALSE"/>
-        <CASE arguments="-i input/randomAngularDistribution.sel -o %o/distribution.hist histogram" changeDir="FALSE"/>
-        <CASE arguments="-i input/randomAngularDistribution.sel -o %o/distribution.bild chimera" changeDir="FALSE"/>
+        <CASE arguments="-i input/randomAngularDistribution.sel -o %o/distribution.ps ps" changeDir="FALSE">
+             <FILE filename="distribution.ps"/>
+        </CASE>
+        <CASE arguments="-i input/randomAngularDistribution.sel -o %o/distribution.hist histogram" changeDir="FALSE">
+             <FILE filename="distribution.hist"/>
+        </CASE>
+        <CASE arguments="-i input/randomAngularDistribution.sel -o %o/distribution.bild chimera" changeDir="FALSE">
+             <FILE filename="distribution.bild"/>
+        </CASE>
     </PROGRAM>
     <PROGRAM name="xmipp_angular_neighbourhood" mpi="FALSE">
-        <CASE arguments="-i1 input/randomAngularDistribution.sel -i2 input/aFewProjections.sel -o %o/neighborhood.sel" changeDir="FALSE"/>
+        <CASE arguments="-i1 input/randomAngularDistribution.sel -i2 input/aFewProjections.sel -o %o/neighborhood.sel" changeDir="FALSE">
+             <FILE filename="neighborhood.sel"/>
+        </CASE>
     </PROGRAM>
     <PROGRAM name="xmipp_angular_project_library" mpi="FALSE">
-        <CASE arguments="-i input/phantomBacteriorhodopsin.vol -o %o/output_projections.stk --sym c6 --sampling_rate 5" changeDir="FALSE"/>
+        <CASE arguments="-i input/phantomBacteriorhodopsin.vol -o %o/output_projections.stk --sym c6 --sampling_rate 5" changeDir="FALSE">
+             <FILE filename="output_projections.doc"/>
+             <FILE filename="output_projections.stk"/>
+        </CASE>
     </PROGRAM>
-    <PROGRAM name="xmipp_angular_projection_matching" mpi="FALSE">
+    <PROGRAM name="xmipp_angular_project_library" mpi="FALSE">
+        <CASE arguments="-i input/phantomBacteriorhodopsin.vol -o %o/output_projections.stk --sym c6 --sampling_rate 5" changeDir="FALSE">
+             <FILE filename="output_projections.doc"/>
+             <FILE filename="output_projections.stk"/>
+        </CASE>
+    </PROGRAM>
+    <PROGRAM name="xmipp_mpi_angular_projection_matching" mpi="TRUE">
         <CASE arguments="-i input/aFewProjections.sel -o %o/assigned_angles.txt --ref %o/reference.stk" changeDir="FALSE">
             <PRERUN command="xmipp_angular_project_library -i input/phantomBacteriorhodopsin.vol --experimental_images input/aFewProjections.sel -o %o/reference.stk --sampling_rate 10 --compute_neighbors --angular_distance -1"/>
+             <FILE filename="assigned_angles.txt"/>
         </CASE>
     </PROGRAM>
     <PROGRAM name="xmipp_angular_rotate" mpi="FALSE">
-        <CASE arguments="-i input/aFewProjections.sel --axis 10 1 2 3 -o %o/newAnglesFewProjections.sel" changeDir="FALSE"/>
+        <CASE arguments="-i input/aFewProjections.sel --axis 10 1 2 3 -o %o/newAnglesFewProjections.sel" changeDir="FALSE">
+             <FILE filename="newAnglesFewProjections.sel"/>
+        </CASE>
     </PROGRAM>
     <PROGRAM name="xmipp_classify_analyze_cluster" mpi="FALSE">
-        <CASE arguments="-i input/smallStack.stk --ref 1@input/smallStack.stk -o %o/pca.xmd" changeDir="FALSE"/>
+        <CASE arguments="-i input/smallStack.stk --ref 1@input/smallStack.stk -o %o/pca.xmd" changeDir="FALSE">
+             <FILE filename="pca.xmd"/>
+        </CASE>
     </PROGRAM>
-    <PROGRAM name="xmipp_classify_kerdensom" mpi="FALSE">
-        <CASE arguments="-i input/clusterVectors.xmd -o %o/kerdensom.xmd --deterministic_annealing 1" changeDir="FALSE"/>
+    <PROGRAM name="xmipp_classify_kerdensom" mpi="FALSE" random="TRUE">
+        <CASE arguments="-i input/clusterVectors.xmd -o %o/kerdensom.xmd --deterministic_annealing 1" changeDir="FALSE">
+             <!-- random check skip files -->
+             <FILE filename="kerdensom.xmd.raw"/>
+             <FILE filename="kerdensom.xmd"/>
+        </CASE>
     </PROGRAM>
     <PROGRAM name="xmipp_ctf_enhance_psd" mpi="FALSE">
-        <CASE arguments="-i input/down1_01nov26b.001.001.001.002_Periodogramavg.psd -o %o/enhanced_psd.xmp" changeDir="FALSE"/>
-    </PROGRAM>
+        <CASE arguments="-i input/down1_01nov26b.001.001.001.002_Periodogramavg.psd -o %o/enhanced_psd.xmp" changeDir="FALSE">
+            <FILE filename="enhanced_psd.xmp"/>
+        </CASE>
+     </PROGRAM>
     <PROGRAM name="xmipp_ctf_estimate_from_micrograph" mpi="FALSE">
-        <CASE arguments="--micrograph input/Protocol_Preprocess_Micrographs/Micrographs/01nov26b.001.001.001.002.mrc --oroot %o/micrograph --dont_estimate_ctf" changeDir="FALSE"/>
-        <CASE arguments="--micrograph input/Protocol_Preprocess_Micrographs/Micrographs/01nov26b.001.001.001.002.mrc --oroot %o/micrograph --sampling_rate 1.4 --voltage 200 --spherical_aberration 2.5" changeDir="FALSE"/>
+        <CASE arguments="--micrograph input/Protocol_Preprocess_Micrographs/Micrographs/01nov26b.001.001.001.002.mrc --oroot %o/micrograph --dont_estimate_ctf" changeDir="FALSE">
+            <FILE filename="micrograph.psd"/>
+        </CASE>
+        <CASE arguments="--micrograph input/Protocol_Preprocess_Micrographs/Micrographs/01nov26b.001.001.001.002.mrc --oroot %o/micrograph --sampling_rate 1.4 --voltage 200 --spherical_aberration 2.5" changeDir="FALSE">
+            <FILE filename="micrograph.psd"/>
+            <FILE filename="micrograph_ctfmodel_halfplane.xmp"/>
+            <FILE filename="micrograph_ctfmodel_quadrant.xmp"/>
+            <FILE filename="micrograph.ctfparam"/>
+        </CASE>
     </PROGRAM>
     <PROGRAM name="xmipp_ctf_estimate_from_psd" mpi="FALSE">
         <CASE arguments="--psd down1_01nov26b.001.001.001.002_Periodogramavg.psd --sampling_rate 1.4 --voltage 200 --spherical_aberration 2.5 --defocusU -15000" changeDir="TRUE">
             <PRERUN command="cp input/down1_01nov26b.001.001.001.002_Periodogramavg.psd %o"/>
-        </CASE>
-    </PROGRAM>
-    <PROGRAM name="xmipp_ctf_group" mpi="FALSE">
-        <CASE arguments="--ctfdat input/ctf_group/all_images_new.ctfdat -o %o/ctf --wiener --wc -1 --pad 2 --phase_flipped --error 0.5 --resol 5.6" changeDir="FALSE"/>
-        <CASE arguments="--ctfdat input/ctf_group/all_images_new.ctfdat -o %o/ctf --wiener --wc -1 --pad 2 --phase_flipped --split input/ctf_group/ctf_split.doc" changeDir="FALSE"/>
-    </PROGRAM>
-    <PROGRAM name="xmipp_ctf_sort_psds" mpi="FALSE">
-        <CASE arguments="-i all_micrographs.sel" changeDir="TRUE">
-            <PRERUN command="cp -r input/Protocol_Preprocess_Micrographs/Preprocessing/* %o"/>
+            <FILE filename="down1_01nov26b.001.001.001.002_Periodogramavg.psd"/>
         </CASE>
     </PROGRAM>
     <PROGRAM name="xmipp_image_align" mpi="FALSE">
-        <CASE arguments="-i input/smallStack.stk --oroot %o/aligned" changeDir="FALSE"/>
+        <CASE arguments="-i input/smallStack.stk --oroot %o/aligned" changeDir="FALSE">
+            <FILE filename="aligned_alignment.xmd"/>
+        </CASE>
     </PROGRAM>
     <PROGRAM name="xmipp_image_convert" mpi="FALSE">
-        <CASE arguments="-i input/smallStack.stk -o %o/smallStack.mrcs -t stk" changeDir="FALSE"/>
+        <CASE arguments="-i input/smallStack.stk -o %o/smallStack.mrcs -t stk" changeDir="FALSE">
+            <FILE filename="smallStack.mrcs"/>
+        </CASE>
     </PROGRAM>
     <PROGRAM name="xmipp_image_header" mpi="FALSE">
         <CASE arguments="-i input/smallStack.stk --extract -o %o/header.doc" changeDir="FALSE"/>

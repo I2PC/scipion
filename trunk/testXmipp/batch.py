@@ -10,11 +10,14 @@ class Tester(ContentHandler):
         self.lastProgram = ""
         self.progDict = {}
         self.mpi = False
+        self.random = False
         self.prerun = []
         self.testfile = []
         self.changeDirectory = False
         self.error=""
         self.errorFlag=False
+        self.warning=""
+        self.warningFlag=False
         
     def startElement(self, name, attrs):
         if (name == "XMIPP_TESTS") :
@@ -22,7 +25,14 @@ class Tester(ContentHandler):
             self.myMessage = ""
         elif (name == "PROGRAM") :
             self.programName = attrs.get("name")
-            self.mpi = (attrs.get("mpi") == "TRUE ")
+            if(attrs.has_key("random")):
+                self.random = (attrs.get("random") == "TRUE")
+            else:
+                self.random=False
+            if(attrs.has_key("mpi")):
+                self.mpi = (attrs.get("mpi") == "TRUE")
+            else:
+                self.mpi=False
             self.progDict[self.programName] = []
 
         elif (name == "CASE") :
@@ -48,14 +58,17 @@ class Tester(ContentHandler):
             self.addcase()
 
     def addcase(self):
+
+                           
         self.progDict[self.programName].append((self.arguments,
 	                                       self.mpi,
+                                           self.random,
 					       self.prerun,
 					       self.changeDirectory,
 					       self.testfile))
 
     def reportError(self):
-	    self.myMessage += "Program name missing \n"
+	    self.myMessage += "Program % missing \n"%(self.programName)
 	    self.mySuccess = False
 
     def funcionToDoTheJob(self):
@@ -64,19 +77,27 @@ class Tester(ContentHandler):
         pp.pprint(self.progDict)
 
     def runAllTests(self):
-        for program in self.progDict.keys():
+
+        for program in sorted(self.progDict):
             self.runProgramTests(program)
         
-    def checkResult(self,testfiles,outDir):
+    def checkResult(self,testfiles,outDir,random):
         import xmipp
         for file in testfiles:
             file = outDir + '/' + file
+            result = True
             if not os.path.exists(file):
-                self.error += file, "was NOT produced"
+                self.error += file +  "was NOT produced"
                 self.errorFlag=True
-            result = xmipp.compareTwoFiles(file,file.replace(self.fnDir,'goldStandard'),0)
+            else:
+                if (random):
+                    self.warning += file + " was created using a random seed, check skipped\n"
+                    self.warningFlag=True
+                else:
+                    print "\n\ncomparing", file,file.replace(self.fnDir,'goldStandard')+"\n\n"
+                    result = xmipp.compareTwoFiles(file,file.replace(self.fnDir,'goldStandard'),0)
             if not result:
-                self.error += file + " and " + file.replace(self.fnDir,'goldStandard') + " are NOT identical"
+                self.error += file + " and " + file.replace(self.fnDir,'goldStandard') + " are NOT identical\n"
                 self.errorFlag=True
            
     def runProgramTests(self, program):
@@ -85,9 +106,8 @@ class Tester(ContentHandler):
         outPath = os.path.join(self.fnDir, program)
         outDir = outPath
         testName = ""
-
         testNo = 1
-        for test, mpi, preruns, changeDirectory,testfiles in tests:
+        for test, mpi, random, preruns, changeDirectory,testfiles in tests:
             if n > 1:
                 outDir = outPath + "_%02d" % testNo
                 testName = "(%d of %d)" % (testNo, n)
@@ -112,7 +132,7 @@ class Tester(ContentHandler):
                     os.system(cmd)
                     pipe=">>"
             if mpi:
-                cmd = "mpirun -np 3 `which %s`" % program.replace("xmipp_", "xmipp_mpi_")
+                cmd = "mpirun -np 3 `which %s`" % program##DO NOT REPLACE SO WE CAN TEST MPI EASILY.replace("xmipp_", "xmipp_mpi_")
             else:
                 cmd = program
             if changeDirectory:
@@ -122,7 +142,7 @@ class Tester(ContentHandler):
             print "    Command: "
             print "       ", cmd
             result = os.system(cmd)
-            self.checkResult(testfiles,outDir)
+            self.checkResult(testfiles,outDir,random)
             #print "Result:", result
             testNo += 1
         
@@ -151,9 +171,11 @@ if __name__ == '__main__':
     else:
         saxparser.parse(testXml)
 
+    programs=""
     if argc > 2:
         program = sys.argv[2]
         tester.runProgramTests(program)
+        programs=program
         #if not os.path.exists(fnDir):
         #    os.makedirs(fnDir)
     else:
@@ -163,7 +185,14 @@ if __name__ == '__main__':
                 shutil.rmtree(fnDir)
             os.makedirs(fnDir)
         tester.runAllTests()
+        for program in tester.progDict.keys():
+            programs += program +"\n"
+
     if (tester.errorFlag):
         print "ERROR:"
         print "\n\n",tester.error
+    if (tester.warningFlag):
+        print "WARNING:"
+        print "\n\n",tester.warning
+    print programs
  
