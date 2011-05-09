@@ -1,9 +1,0 @@
-Input File: input/smallStack.stk
-Output File: tmpLink/xmipp_phantom_simulate_microscope/smallStackPlusCtf.stk
-CTF file: 
-Noise: 0
-Noise before: 6.94332e-310
-Noise after: 2.08783e-317
-Low pass freq: 0
-After CTF noise: 0
-Defocus change: 0

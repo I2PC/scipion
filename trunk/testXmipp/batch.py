@@ -25,10 +25,6 @@ class Tester(ContentHandler):
             self.myMessage = ""
         elif (name == "PROGRAM") :
             self.programName = attrs.get("name")
-            if(attrs.has_key("random")):
-                self.random = (attrs.get("random") == "TRUE")
-            else:
-                self.random=False
             if(attrs.has_key("mpi")):
                 self.mpi = (attrs.get("mpi") == "TRUE")
             else:
@@ -40,6 +36,10 @@ class Tester(ContentHandler):
             self.changeDirectory = (attrs.get("changeDir") == "TRUE ")
             self.prerun = []
             self.testfile = []
+            if(attrs.has_key("random")):
+                self.random = (attrs.get("random") == "TRUE")
+            else:
+                self.random=False
             
         elif (name == "PRERUN") :
             self.prerun.append(attrs.get("command"))

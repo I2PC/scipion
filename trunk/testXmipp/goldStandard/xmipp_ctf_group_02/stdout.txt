@@ -1,4 +1,0 @@
-
-Fill multiarray with ctfs
-
-Precalculate denominator term of the Wiener filter

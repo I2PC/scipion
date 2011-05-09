@@ -1,2 +1,0 @@
-Input File: input/phantomBacteriorhodopsin.vol
-Output File: tmpLink/xmipp_transform_mask_02/outputVol_mask.vol

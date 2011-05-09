@@ -36,6 +36,7 @@
 <!ATTLIST CASE
     arguments CDATA #IMPLIED
     changeDir CDATA #IMPLIED
+    random    CDATA #IMPLIED
   >
 
 <!--- Put your DTDDoc comment here. -->

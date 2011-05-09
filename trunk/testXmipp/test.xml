@@ -285,50 +285,74 @@
         </CASE>
     </PROGRAM>
     <PROGRAM name="xmipp_transform_normalize" mpi="FALSE">
-        <CASE arguments="-i input/smallStack.stk -o %o/smallStackNormalized.stk --method NewXmipp --background circle 32" changeDir="FALSE"/>
+        <CASE arguments="-i input/smallStack.stk -o %o/smallStackNormalized.stk --method NewXmipp --background circle 32" changeDir="FALSE">
+            <FILE filename="smallStackNormalized.stk"/>
+        </CASE>
     </PROGRAM>
     <PROGRAM name="xmipp_transform_symmetrize" mpi="FALSE">
-        <CASE arguments="-i input/smallStack.stk -o %o/smallStackSymmetrized.stk --sym 5" changeDir="FALSE"/>
-        <CASE arguments="-i input/phantomBacteriorhodopsin.vol -o %o/symmetrizedVolume.vol --sym C5" changeDir="FALSE"/>
+        <CASE arguments="-i input/smallStack.stk -o %o/smallStackSymmetrized.stk --sym 5" changeDir="FALSE">
+            <FILE filename="smallStackSymmetrized.stk"/>
+        </CASE>
+        <CASE arguments="-i input/phantomBacteriorhodopsin.vol -o %o/symmetrizedVolume.vol --sym C5" changeDir="FALSE">
+            <FILE filename="symmetrizedVolume.vol"/>
+        </CASE>
     </PROGRAM>
     <PROGRAM name="xmipp_transform_threshold" mpi="FALSE">
-        <CASE arguments="-i input/phantomBacteriorhodopsin.vol -o %o/mask.vol --select below 0.01 --substitute binarize" changeDir="FALSE"/>
+        <CASE arguments="-i input/phantomBacteriorhodopsin.vol -o %o/mask.vol --select below 0.01 --substitute binarize" changeDir="FALSE">
+            <FILE filename="mask.vol"/>
+        </CASE>
     </PROGRAM>
     <PROGRAM name="xmipp_transform_window" mpi="FALSE">
-        <CASE arguments="-i input/singleImage.spi -o %o/image.xmp --size 32" changeDir="FALSE"/>
-        <CASE arguments="-i input/singleImage.spi -o %o/image.xmp --corners -16 -16 15 15" changeDir="FALSE"/>
-        <CASE arguments="-i input/singleImage.spi -o %o/image.xmp --corners 0 0 31 31 --physical" changeDir="FALSE"/>
-        <CASE arguments="-i input/singleImage.spi -o %o/image.xmp --crop -10" changeDir="FALSE"/>
-        <CASE arguments="-i input/xray_import/Images/img48949.spe -o %o/image.xmp --size 512" changeDir="FALSE"/>
+        <CASE arguments="-i input/singleImage.spi -o %o/image.xmp --size 32" changeDir="FALSE">
+            <FILE filename="image.xmp"/>
+        </CASE>
+        <CASE arguments="-i input/singleImage.spi -o %o/image.xmp --corners -16 -16 15 15" changeDir="FALSE">
+            <FILE filename="image.xmp"/>
+        </CASE>
+        <CASE arguments="-i input/singleImage.spi -o %o/image.xmp --corners 0 0 31 31 --physical" changeDir="FALSE">
+            <FILE filename="image.xmp"/>
+        </CASE>
+        <CASE arguments="-i input/singleImage.spi -o %o/image.xmp --crop -10" changeDir="FALSE">
+            <FILE filename="image.xmp"/>
+        </CASE>
+        <CASE arguments="-i input/xray_import/Images/img48949.spe -o %o/image.xmp --size 512" changeDir="FALSE">
+            <FILE filename="image.xmp"/>
+        </CASE>
     </PROGRAM>
     <PROGRAM name="xmipp_volume_correct_bfactor" mpi="FALSE">
-        <CASE arguments="-i input/1FFKfull_reconstructed.vol -o %o/corrected.vol --auto --sampling 1 --maxres 10" changeDir="FALSE"/>
+        <CASE arguments="-i input/1FFKfull_reconstructed.vol -o %o/corrected.vol --auto --sampling 1 --maxres 10" changeDir="FALSE">
+            <FILE filename="corrected.vol"/>
+        </CASE>
     </PROGRAM>
     <PROGRAM name="xmipp_volume_enhance_contrast" mpi="FALSE">
-        <CASE arguments="-i input/1FFKfull_reconstructed.vol -o %o/enhanced.vol" changeDir="FALSE"/>
-    </PROGRAM>
-    <PROGRAM name="xmipp_volume_from_pdb" mpi="FALSE">
-        <CASE arguments="-i input/1o7d.pdb -o %o/1o7d" changeDir="FALSE"/>
+        <CASE arguments="-i input/1FFKfull_reconstructed.vol -o %o/enhanced.vol" changeDir="FALSE">
+            <FILE filename="enhanced.vol"/>
+        </CASE>
     </PROGRAM>
     <PROGRAM name="xmipp_volume_reslice" mpi="FALSE">
-        <CASE arguments="-i input/phantomCandida.vol -o %o/resliced.vol --face top" changeDir="FALSE"/>
-    </PROGRAM>
-    <PROGRAM name="xmipp_volume_segment" mpi="FALSE">
-        <CASE arguments="-i input/phantomBacteriorhodopsin.vol -o %o/maskOtsu.vol --method otsu" changeDir="FALSE"/>
-        <CASE arguments="-i input/phantomBacteriorhodopsin.vol -o %o/maskVoxelMass.vol --method voxel_mass 54000" changeDir="FALSE"/>
-        <CASE arguments="-i input/phantomBacteriorhodopsin.vol -o %o/maskProb.vol --method prob 1" changeDir="FALSE"/>
+        <CASE arguments="-i input/phantomCandida.vol -o %o/resliced.vol --face top" changeDir="FALSE">
+            <FILE filename="resliced.vol"/>
+        </CASE>
     </PROGRAM>
     <PROGRAM name="xmipp_volume_to_pseudoatoms" mpi="FALSE">
-        <CASE arguments="-i input/phantomBacteriorhodopsin.vol -o %o/pseudo.pdb" changeDir="FALSE"/>
+        <CASE arguments="-i input/phantomBacteriorhodopsin.vol -o %o/pseudo" changeDir="FALSE">
+            <FILE filename="pseudo.pdb"/>
+        </CASE>
     </PROGRAM>
     <PROGRAM name="xmipp_xray_import" mpi="FALSE">
-        <CASE arguments="--data input/xray_import/Images --flat input/xray_import/Flatfields --oroot %o/stack --crop 30" changeDir="FALSE"/>
+        <CASE arguments="--data input/xray_import/Images --flat input/xray_import/Flatfields --oroot %o/stack --crop 30" changeDir="FALSE">
+            <FILE filename="stack_darkfield.xmp"/>
+            <FILE filename="stack_Flatfields_avg.xmp"/>
+            <FILE filename="stack_Flatfields_darkfield.xmp"/>
+        </CASE>
     </PROGRAM>
     <PROGRAM name="xmipp_xray_project" mpi="FALSE">
-        <CASE arguments="-i input/phantomCandida.vol -o %o/image.xmp --angles 0 90 90 -s 10 --psf input/xray_psf.xmd" changeDir="FALSE"/>
-        <CASE arguments="-i input/phantomCandida.vol --oroot %o/projections --params input/tomoProjection.param -s 10 --psf input/xray_psf.xmd" changeDir="FALSE"/>
-    </PROGRAM>
-    <PROGRAM name="xmipp_xray_psf_create" mpi="FALSE">
-        <CASE arguments="-i input/xray_psf.xmd -o %o/psf.vol" changeDir="FALSE"/>
+        <CASE arguments="-i input/phantomCandida.vol -o %o/image.xmp --angles 0 90 90 -s 10 --psf input/xray_psf.xmd" changeDir="FALSE">
+            <FILE filename="image.xmp"/>
+        </CASE>
+        <CASE arguments="-i input/phantomCandida.vol --oroot %o/projections --params input/tomoProjection.param -s 10 --psf input/xray_psf.xmd" changeDir="FALSE">
+            <FILE filename="projections.sel"/>
+            <FILE filename="projections.stk"/>
+        </CASE>
     </PROGRAM>
 </XMIPP_TESTS>

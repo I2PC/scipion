@@ -1,6 +1,0 @@
-1:Errors on command line parameters
-Unrecognized parameter: --oroot
-You should provide parameter -o
-
-File: libraries/data/argsparser.cpp line: 1003
-For more info use --help

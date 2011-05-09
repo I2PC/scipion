@@ -32,6 +32,27 @@
             <FILE filename="image.xmp"/>
         </CASE>
     </PROGRAM>
+    <PROGRAM name="xmipp_volume_from_pdb" mpi="FALSE">
+        <CASE arguments="-i input/1o7d.pdb -o %o/1o7d" changeDir="FALSE">
+            <FILE filename="1o7d.vol"/>
+        </CASE>
+    </PROGRAM>
+    <PROGRAM name="xmipp_volume_segment" mpi="FALSE">
+        <CASE arguments="-i input/phantomBacteriorhodopsin.vol -o %o/maskOtsu.vol --method otsu" changeDir="FALSE">
+            <FILE filename="maskOtsu.vol"/>
+        </CASE>
+        <CASE arguments="-i input/phantomBacteriorhodopsin.vol -o %o/maskVoxelMass.vol --method voxel_mass 54000" changeDir="FALSE">
+            <FILE filename="maskVoxelMass.vol"/>
+        </CASE>
+        <CASE arguments="-i input/phantomBacteriorhodopsin.vol -o %o/maskProb.vol --method prob 1" changeDir="FALSE">
+            <FILE filename="maskProb.vol"/>
+        </CASE>
+    </PROGRAM>
+    <PROGRAM name="xmipp_xray_psf_create" mpi="FALSE">
+        <CASE arguments="-i input/xray_psf.xmd -o %o/psf.vol" changeDir="FALSE">
+            <FILE filename="psf.vol"/>
+        </CASE>
+    </PROGRAM>
 
 ##TAKE TOO LONG
 -    <PROGRAM name="xmipp_tomo_align_dual_tilt_series" mpi="FALSE">
