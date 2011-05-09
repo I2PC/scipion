@@ -151,6 +151,8 @@ public:
 
     /// Verbosity level
     int verbose;
+    /** debug flag and seed for randomization */
+    int debug, seed;
 
     /** @name Public common functions
      * The functions in this section are available for all programs
@@ -215,7 +217,8 @@ public:
     virtual ~XmippProgram();
     /** @} */
 
-};//end of class XmippProgram
+}
+;//end of class XmippProgram
 
 /** Special class of XmippProgram that performs some operation related with processing images.
  * It can receive a file with images(MetaData) or a single image.
