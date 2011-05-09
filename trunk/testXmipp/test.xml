@@ -4,7 +4,7 @@
     <PROGRAM name="xmipp_angular_class_average" mpi="FALSE">
         <CASE arguments="-i %o/proj_match.doc --lib %o/ref.doc -o %o/proj_match --split" changeDir="FALSE">
             <PRERUN command="xmipp_angular_project_library -i input/phantomBacteriorhodopsin.vol --experimental_images input/aFewProjections.sel -o %o/ref.stk --sampling_rate 10 --compute_neighbors --angular_distance -1 "/>
-            <PRERUN command=" xmipp_angular_projection_matching -i input/aFewProjections.sel -o %o/proj_match.doc --ref %o/ref.stk"/>
+            <PRERUN command="xmipp_angular_projection_matching -i input/aFewProjections.sel -o %o/proj_match.doc --ref %o/ref.stk"/>
             <FILE filename="proj_match_class.xmp"/>
             <FILE filename="proj_match_classes.doc"/>
         </CASE>
@@ -99,12 +99,21 @@
     </PROGRAM>
     <PROGRAM name="xmipp_image_convert" mpi="FALSE">
         <CASE arguments="-i input/smallStack.stk -o %o/smallStack.mrcs -t stk" changeDir="FALSE">
-            <FILE filename="smallStack.mrcs"/>
-        </CASE>
-    </PROGRAM>
+            <FILE filename="smallStack.mrcs"/></CASE>
+        <CASE arguments="-i input/singleImage.spi -o %o/singleImage.mrc" changeDir="FALSE">
+            <FILE filename="singleImage.mrc"/></CASE>
+        <CASE arguments="-i input/singleImage.spi -o %o/singleImage.raw" changeDir="FALSE">
+            <FILE filename="singleImage.raw"/></CASE>
+        <CASE arguments="-i input/singleImage.spi -o %o/singleImage.img" changeDir="FALSE">
+            <FILE filename="singleImage.img"/></CASE>
+    </PROGRAM>XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
     <PROGRAM name="xmipp_image_header" mpi="FALSE">
         <CASE arguments="-i input/smallStack.stk --extract -o %o/header.doc" changeDir="FALSE"/>
-        <CASE arguments="-i input/header.doc --assign -o %o/smallStack2.stk" changeDir="FALSE"/>
+        <CASE arguments="-i %o/smallStack.doc --assign" changeDir="FALSE">
+            <PRERUN command="cp input/smallStack.stk %o"/>
+            <PRERUN command=" xmipp_metadata_selfile_create -p %o/smallStack.stk -o %o/smallStack.doc -s"/>
+            <PRERUN command=" xmipp_metadata_utilities -i %o/smallStack.doc -o %o/smallStack.doc --fill Y constant 2"/>
+        </CASE>
     </PROGRAM>
     <PROGRAM name="xmipp_image_separate_objects" mpi="FALSE">
         <CASE arguments="-i input/maskBacteriorhodopsin.vol --oroot %o/mask" changeDir="FALSE"/>
