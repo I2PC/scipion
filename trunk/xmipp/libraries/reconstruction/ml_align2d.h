@@ -187,7 +187,7 @@ public:
     void correctScaleAverage();
 
     /// Add docfiledata to docfile
-    virtual void addPartialDocfileData(const MultidimArray<double> &data, int first, int last);
+    virtual void addPartialDocfileData(const MultidimArray<double> &data, size_t first, size_t last);
 
     /// Write model parameters
     virtual void writeOutputFiles(const ModelML2D &model, OutputType outputType = OUT_FINAL);

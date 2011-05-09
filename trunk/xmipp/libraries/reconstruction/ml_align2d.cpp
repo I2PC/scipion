@@ -2099,17 +2099,15 @@ void ProgML2D::correctScaleAverage()
 
 /// Add docfiledata to docfile
 void ProgML2D::addPartialDocfileData(const MultidimArray<double> &data,
-                                     int first, int last)
+                                     size_t first, size_t last)
 {
 #ifdef DEBUG
     std::cerr << "Entering addPartialDocfileData" <<std::endl;
 #endif
 
-    int index;
-
-    for (int imgno = first; imgno <= last; imgno++)
+    for (size_t imgno = first; imgno <= last; imgno++)
     {
-        index = imgno - first;
+        size_t index = imgno - first;
         size_t id = img_id[imgno];
         MDimg.setValue(MDL_ANGLEROT, dAij(data, index, 0), id);
         MDimg.setValue(MDL_ANGLETILT, dAij(data, index, 1), id);
