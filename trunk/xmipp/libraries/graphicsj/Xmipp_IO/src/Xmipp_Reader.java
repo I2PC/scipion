@@ -49,6 +49,9 @@ public class Xmipp_Reader extends ImagePlus implements PlugIn {
             // Copy the scale info over
             copyScale(imp);
 
+            // Resets min and max display values.
+            getProcessor().resetMinAndMax();
+
             // Show the image if it was selected by the file
             // chooser, don't if an argument was passed ie
             // some other ImageJ process called the plugin.

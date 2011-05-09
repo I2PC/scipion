@@ -6,7 +6,7 @@ SHAREDLIB = XmippJavaInterface.so
 MAIN_OPTS = -s -pthread -shared
 LIBS = -L$(XMIPP_DIR)/lib -lXmippData
 
-SRC = xmipp_ImageDouble.cpp xmipp_MetaData.cpp xmipp_Projection.cpp xmipp_ExceptionsHandler.cpp
+SRC = xmipp_ImageDouble.cpp xmipp_MetaData.cpp xmipp_Projection.cpp xmipp_ExceptionsHandler.cpp xmipp_Aux.cpp
 OBJS = $(SRC:.cpp=.os)
 OPTS = -c -O2 -pthread -w -fPIC
 INCLUDES = -I. -I/usr/lib/jvm/java-6-sun/include -I/usr/lib/jvm/java-6-sun/include/linux -I$(XMIPP_DIR) -I$(XMIPP_DIR)/libraries
@@ -14,7 +14,7 @@ INCLUDES = -I. -I/usr/lib/jvm/java-6-sun/include -I/usr/lib/jvm/java-6-sun/inclu
 JARFILE = XmippJavaInterface.jar
 JAROPTS = -Mcf
 PACKAGE = xmipp
-JAVA_SRC = $(PACKAGE)/ImageDouble.java $(PACKAGE)/MDLabel.java $(PACKAGE)/MetaData.java $(PACKAGE)/Projection.java
+JAVA_SRC = $(PACKAGE)/ImageDouble.java $(PACKAGE)/MDLabel.java $(PACKAGE)/MetaData.java $(PACKAGE)/Projection.java $(PACKAGE)/CTFDescription.java
 JAVA_CLASSES = $(JAVA_SRC:.java=.class)
 JAVAH_CLASSES = $(subst /,.,$(JAVA_SRC:.java=))
 
@@ -28,7 +28,7 @@ library_wrapper: java jar headers $(OBJS) javatests
 
 java:
 	@echo " *** Compiling java sources..."
-	./extract_labels.py
+#	./extract_labels.py
 	javac $(JAVA_SRC)
 
 jar:

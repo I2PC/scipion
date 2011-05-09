@@ -48,7 +48,7 @@ public class Projection {
     // Should be called by GarbageCollector before destroying
     @Override
     protected void finalize() throws Throwable {
-	super.finalize();
+		super.finalize();
         destroy();
     }
 }

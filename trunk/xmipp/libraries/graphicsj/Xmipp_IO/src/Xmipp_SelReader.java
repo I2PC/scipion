@@ -1,10 +1,10 @@
 
 import ij.IJ;
+import ij.ImageJ;
 import ij.ImagePlus;
 import ij.ImageStack;
 import ij.io.OpenDialog;
 import ij.plugin.PlugIn;
-import java.io.File;
 import xmipp.MDLabel;
 import xmipp.MetaData;
 
@@ -45,24 +45,17 @@ public class Xmipp_SelReader extends ImagePlus implements PlugIn {
             MetaData md = new MetaData();
             md.read(filename);
 
-            String rootdir = (new File(filename)).getParent() + File.separator;
-
             if (md.containsLabel(MDLabel.MDL_IMAGE)) {
                 long ids[] = md.findObjects();
 
                 ImageStack is = null;
 
                 for (long id : ids) {
-                    String imagefile = md.getValueString(MDLabel.MDL_IMAGE, id);
+                    String imagefilename = md.getValueString(MDLabel.MDL_IMAGE, id);
 
-                    // Checks if is necessary to concatenate root dir.
-                    File f = new File(imagefile);
-                    if (!f.isAbsolute()) {
-                        imagefile = rootdir + imagefile;
-                    }
-
-                    // Opens through ImageJ. It will use Xmipp_Reader :)
-                    ImagePlus imp = IJ.openImage(imagefile);
+                    // Reads xmipp image.
+                    Xmipp_Reader imp = new Xmipp_Reader();
+                    imp.run(imagefilename);
 
                     if (is == null) {
                         is = new ImageStack(imp.getWidth(), imp.getHeight());
@@ -82,6 +75,9 @@ public class Xmipp_SelReader extends ImagePlus implements PlugIn {
 
                 // Copy the scale info over
                 copyScale(imp);
+
+                // Resets min and max display values.
+                getProcessor().resetMinAndMax();
 
                 // Show the image if it was selected by the file
                 // chooser, don't if an argument was passed ie

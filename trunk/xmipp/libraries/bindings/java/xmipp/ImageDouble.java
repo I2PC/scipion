@@ -65,7 +65,7 @@ public class ImageDouble {
     
     // Writing.
     public void write(String filename) throws Exception {
-	write(filename, ALL_IMAGES, false, 0, 0);
+		write(filename, ALL_IMAGES, false, 0, 0);
     }
 
     public native void write(String filename, int select_img, boolean isStack, int mode, int castWriteMode) throws Exception;
@@ -96,6 +96,11 @@ public class ImageDouble {
     public ImageDouble(String filename) throws Exception {
         this();
         read(filename);
+    }
+
+    public ImageDouble(String filename, long nimage) throws Exception {
+        this();
+        read(filename, nimage);
     }
 
     public ImageDouble(MetaData metadata, long id) throws Exception {

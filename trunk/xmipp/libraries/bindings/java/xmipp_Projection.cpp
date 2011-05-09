@@ -88,9 +88,9 @@ JNIEXPORT void JNICALL Java_xmipp_Projection_write
 	Projection *projection = GET_INTERNAL_PROJECTION(jobj);
 
 	if (projection != NULL) {
-		const char * fnStr = env->GetStringUTFChars(filename, false);
-
 		try {
+			const char * fnStr = env->GetStringUTFChars(filename, false);
+
 			projection->write(fnStr);
 		} catch (XmippError xe) {
 			msg = xe.getDefaultMessage();

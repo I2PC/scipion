@@ -31,9 +31,9 @@ JNIEXPORT void JNICALL Java_xmipp_MetaData_read
 	MetaData * md = GET_INTERNAL_METADATA(jobj);
 
 	if (md != NULL) {
-		const char * fnStr = env->GetStringUTFChars(filename, false);
-
 		try {
+			const char * fnStr = env->GetStringUTFChars(filename, false);
+
 			md->read(fnStr);
 		} catch (XmippError xe) {
 			msg = xe.getDefaultMessage();
