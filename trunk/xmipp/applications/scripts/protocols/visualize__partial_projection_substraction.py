@@ -44,15 +44,17 @@ class visualize_partial_projection_subtraction:
 
         #import v_partial_protocol
 	xmpi_run_file      = 'readDocfileAndPairExperimentalAndReferenceImages.sh'
-	WorkingDir='ProjMatch/empties_sym_408_03'
-        _Iteration_Working_Directory='/Iter_'+  str(12)
+	WorkingDir='ProjMatch/xmipp_2.4_subtraction_crunchy'
+        _Iteration_Working_Directory='/Iter_'+  str(6)
 	os.chdir(WorkingDir+'/'+_Iteration_Working_Directory)
 
         #command = "cat " + xmpi_run_file + " | awk '{print $3 \" 1\\n\" $5 \" 1\\n\" $7 \" 1\"}'"
         fn=open('kk.sel','w')
 	for y in open(xmpi_run_file).readlines():
             x =y.split(' ')
-	    s=  "%s 1\n%s 1\n%s 1\n"%(x[4],x[6],x[8].strip('\n'))
+	    #s=  "%s 1\n%s 1\n%s 1\n"%(x[4],x[6],x[8].strip('\n'))
+            s=  "%s 1\n%s 1\n%s 1\n"%(x[12],x[14],x[16].strip('\n'))
+	    s = s.replace(';','')
             fn.write(s)
 	fn.close()
 

@@ -14,7 +14,7 @@
 #Show results for iteration
 """ Use data coming from iteration
 """
-DisplayIterationNo=12
+DisplayIterationNo=6
 
 #{expert} Out files Root name
 projOutRootName='out'
@@ -34,14 +34,14 @@ szDocFileRef=''
 doMask =True
 
 #Crown Mask radius (inner)
-dRradiusMin=105
+dRradiusMin=39
 
 #{expert}  iCrown mask radius center (outter)
-dRradiusMax=175
+dRradiusMax=64
 
 
 # {expert} Create Reference Library
-doRefDirName =False
+doRefDirName =True
 
 # {expert} Backup Experimental Proj. angles
 doBackupProjectionAngles =True
@@ -67,7 +67,7 @@ MaxChangeInAngles =''
 SymmetryGroup=''
 
 # {file} Protocol Name
-ProtocolName='ProjMatch/empties_sym_408_03/xmipp_protocol_projmatch_backup.py'
+ProtocolName='ProjMatch/xmipp_2.4_subtraction_crunchy/xmipp_protocol_projmatch_backup.py'
 
 # {expert}{file} CTFDat file with CTF data:
 """ The input selfile may be a subset of the images in the CTFDat file, but all 
@@ -81,7 +81,7 @@ CTFDatName=''
 # {expert} Correct by CTF:
 """ Set to True if you want to correct by CTF
 """
-doCTFCorrection=False
+doCTFCorrection=True
 
 #------------------------------------------------------------------------------------------------
 # {section} Parallelization issues
@@ -97,10 +97,10 @@ DoParallel=False
 """ This option provides shared-memory parallelization on multi-core machines. 
     It does not require any additional software, other than xmipp
 """
-NumberOfThreads=8
+NumberOfThreads=12
 
 # Number of MPI processes to use:
-NumberOfMpiProcesses=5
+NumberOfMpiProcesses=1
 
 # MPI system Flavour 
 """ Depending on your queuing system and your mpi implementation, different mpirun-like commands have to be given.
@@ -115,7 +115,7 @@ SystemFlavour='HOME_MACHINEFILE'
 #------------------------------------------------------------------------------------------------
 #------------------------------------------------------------------------------------------------
 #
-run_file1='readDocfileAndPairExperimentalAndReferenceImages.sh'
+run_file1='./readDocfileAndPairExperimentalAndReferenceImages.sh'
 
 def maskInputVolume(_mylog,\
                     _szInputVolumeName,
@@ -130,6 +130,7 @@ def maskInputVolume(_mylog,\
     params = ' -i ' +  _szInputVolumeName
     params += ' -o ' +  szMask_InputVolumeName
     params += ' -mask raised_crown -%d -%d 2' %(_dRradiusMin,_dRradiusMax)
+    print "xmipp_mask",params
     launch_job.launch_job("xmipp_mask",
                          params,
                          _mylog,
@@ -232,7 +233,7 @@ def readDocfileAndPairExperimentalAndReferenceImages(_mylog,\
     
     #call to xmipp_header_apply
     #create image with same name but different directory 
-    xmpi_run_file='applyGeo.sh'
+    xmpi_run_file='./applyGeo.sh'
     fh = open(xmpi_run_file,'w')
 
     for i in range(len(doc.lineLst)):
@@ -240,10 +241,12 @@ def readDocfileAndPairExperimentalAndReferenceImages(_mylog,\
         outFile = dirname + '/' +os.path.basename(doc.lineLst[i][size])
         newline  = 'xmipp_header_apply '
         newline += ' -i ' + inFile 
-        newline += ' -o ' + outFile + '\n' 
+        newline += ' -o ' + outFile 
+        newline += ' -dont_wrap ' + '\n' 
         fh.write(newline)
 
     fh.close()
+    os.chmod(xmpi_run_file,0755)
 
     if(DoParallel):
          command =' -i '+ xmpi_run_file
@@ -311,7 +314,7 @@ def readDocfileAndPairExperimentalAndReferenceImages(_mylog,\
 	   command +=  ' -minus ' +  outTmpRefImg
 	   command += ' -o ' + outImg 
 
-	   command += '; rm ' + outTmpRefImg
+	   #command += '; rm ' + outTmpRefImg
 	   fh.write(command + '\n')
     else:
 	for i in range(len(doc.lineLst)):
@@ -327,6 +330,7 @@ def readDocfileAndPairExperimentalAndReferenceImages(_mylog,\
            fh.write(command + '\n')
         	   
     fh.close()
+    os.chmod(xmpi_run_file,0755)
 
     if(DoParallel):
          command =' -i '+ xmpi_run_file 
@@ -407,7 +411,8 @@ else:
 if(doRefDirName):
     _ProjOutRootName=projOutRootName
 else:
-    _ProjOutRootName=partial_protocol.ProjectLibraryBasename
+    #_ProjOutRootName=partial_protocol.ProjectLibraryBasename
+    _ProjOutRootName='ref'
 _refDirName=partial_protocol.LibraryDir
 
 if(doRefDirName):
@@ -438,3 +443,9 @@ readDocfileAndPairExperimentalAndReferenceImages(_mylog,\
 						 doBackupProjectionAngles,\
 						 _CTFDatName,\
                                                  _refDirName)
+
+print '*************************************************'
+print '* Done! ' 
+print '*************************************************'
+    
+
