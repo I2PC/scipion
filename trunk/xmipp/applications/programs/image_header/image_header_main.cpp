@@ -72,7 +72,7 @@ protected:
         if (checkParam("--extract"))
         {
             operation = EXTRACT;
-            save_metadata_stack = true;
+            save_metadata_stack_only = true;
         }
         else if (checkParam("--assign"))
             operation = ASSIGN;
