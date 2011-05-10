@@ -190,7 +190,7 @@ if __name__ == '__main__':
 
     if (tester.errorFlag):
         print "ERROR:"
-        print "\n\n",tester.error
+        print "",tester.error
     if (tester.warningFlag):
         print "WARNING:"
         print "\n\n",tester.warning
@@ -202,15 +202,15 @@ if __name__ == '__main__':
 
     globalMessage=""
     if tester.errorFlag:
-       summaryMessage='XMIPP goldstandard is OK'
-    else:
        summaryMessage='XMIPP goldstandard FAILED'
+    else:
+       summaryMessage='XMIPP goldstandard is OK'
        
-    if tester.errorFlag:
+    if  tester.errorFlag:
        globalMessage="ERROR:\n" + tester.error
-    if tester.warningFlag:
+    if  tester.warningFlag:
        globalMessage="WARNINGS:\n" + tester.warning
-    globalMessage= "Program tested:\n" + programs
+    globalMessage += "\nProgram tested:\n" + programs
     mail.mail(config.toaddrs,config.fromaddr,summaryMessage,globalMessage)
 
  
