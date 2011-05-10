@@ -194,5 +194,23 @@ if __name__ == '__main__':
     if (tester.warningFlag):
         print "WARNING:"
         print "\n\n",tester.warning
-    print programs
+    import os, sys
+    lib_path = os.path.abspath('./Script')
+    sys.path.append(lib_path)
+    import config
+    import mail
+
+    globalMessage=""
+    if tester.errorFlag:
+       summaryMessage='XMIPP goldstandard is OK'
+    else:
+       summaryMessage='XMIPP goldstandard FAILED'
+       
+    if tester.errorFlag:
+       globalMessage="ERROR:\n" + tester.error
+    if tester.warningFlag:
+       globalMessage="WARNINGS:\n" + twarning.error
+    globalMessage= "Program tested:\n" + programs
+    mail.mail(config.toaddrs,config.fromaddr,summaryMessage,globalMessage)
+
  
