@@ -209,7 +209,7 @@ if __name__ == '__main__':
     if tester.errorFlag:
        globalMessage="ERROR:\n" + tester.error
     if tester.warningFlag:
-       globalMessage="WARNINGS:\n" + twarning.error
+       globalMessage="WARNINGS:\n" + tester.warning
     globalMessage= "Program tested:\n" + programs
     mail.mail(config.toaddrs,config.fromaddr,summaryMessage,globalMessage)
 
