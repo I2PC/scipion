@@ -276,6 +276,19 @@ TEST_F( MetadataTest, Union)
     EXPECT_EQ(auxMetadata,mDunion);
 }
 
+//check if mdl label match its type and
+//check if int is different from size_t
+TEST_F( MetadataTest, labelType)
+{
+	int i;
+	size_t t;
+	EXPECT_EQ(MDL::labelType(MDL_OBJID),LABEL_LONG);
+    MetaData auxMetadata;
+    auxMetadata.addObject();
+    auxMetadata.getValue(MDL_OBJID,i,FIRST_IMAGE);
+    auxMetadata.getValue(MDL_OBJID,t,FIRST_IMAGE);
+	//EXPECT_EQ(i,t);
+}
 
 GTEST_API_ int main(int argc, char **argv)
 {
