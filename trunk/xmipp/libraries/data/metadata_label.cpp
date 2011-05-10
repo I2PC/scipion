@@ -267,7 +267,7 @@ MDObject::MDObject(MDLabel label, const std::vector<double> &vectorValue)
     labelTypeCheck(LABEL_VECTOR);
     this->data.vectorValue = new std::vector<double>(vectorValue);
 }
-MDObject::MDObject(MDLabel label, const size_t longintValue)
+MDObject::MDObject(MDLabel label, const size_t &longintValue)
 {
     this->label = label;
     this->type = MDL::labelType(label);
