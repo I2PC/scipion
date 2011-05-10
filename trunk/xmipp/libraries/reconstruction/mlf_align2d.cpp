@@ -57,8 +57,8 @@ void ProgMLF2D::defineParams()
     defaultRoot = "mlf2d";
     allowIEM = false;
     defineBasicParams(this);
-    addParamsLine("  --ctfdat <ctfdatfile=\"\">   : Input CTFdat file for all data ");
-    addParamsLine(" or --no_ctf <pixel_size=1>    : do not use any CTF correction, pixel size should be provided");
+    addParamsLine("[--no_ctf <pixel_size=1>]    : do not use any CTF correction, pixel size should be provided");
+    addParamsLine("                             : by defaut the CTF info is read from input images metadata");
 
 
     defineAdditionalParams(this, "==+ Additional options ==");
@@ -128,14 +128,8 @@ void ProgMLF2D::readParams()
     fn_ref = getParam("--ref");
     fn_img = getParam("-i");
     do_ctf_correction = !checkParam("--no_ctf");
-    if (do_ctf_correction)
-    {
-        fn_ctfdat = getParam("--ctfdat");
-    }
-    else
-    {
+    if (!do_ctf_correction)
         sampling = getDoubleParam("--no_ctf");
-    }
     fn_root = getParam("--oroot");
     search_shift = getIntParam("--search_shift");
     psi_step = getDoubleParam("--psi_step");
@@ -219,9 +213,6 @@ void ProgMLF2D::show(bool ML3D)
             std::cout << "  Reference image(s)      : " << fn_ref << std::endl;
         else
             std::cout << "  Number of references:   : " << model.n_ref << std::endl;
-
-        if (do_ctf_correction)
-            std::cout << "  CTF-parameters file     : " << fn_ctfdat << std::endl;
 
         std::cout
         << "  Output rootname         : " << fn_root << std::endl
@@ -389,47 +380,39 @@ void ProgMLF2D::produceSideInfo()
         FileName fn_ctf;
         bool is_unique;
 
-        MetaData ctfMD;
+        //CTF info now comes on input metadatas
+        MetaData mdCTF(MDimg);
         //number of different CTFs
-        ctfMD.aggregate(MDimg, AGGR_COUNT, MDL_CTFMODEL, MDL_CTFMODEL, MDL_COUNT);
-        ctfMD.fillExpand(MDL_CTFMODEL);
-        nr_focus = ctfMD.size();
+        mdCTF.aggregate(MDimg, AGGR_COUNT, MDL_CTFMODEL, MDL_CTFMODEL, MDL_COUNT);
+        nr_focus = mdCTF.size();
 
-        FOR_ALL_OBJECTS_IN_METADATA(MDimg)
-        {
-            MDimg.getValue(MDL_CTFMODEL, fn_ctf, __iter.objId);
-            is_unique=true;
-            for (iifocus = 0; iifocus < all_fn_ctfs.size(); iifocus++)
-                if (fn_ctf == all_fn_ctfs[iifocus])
-                {
-                    count_defocus[iifocus]++;
-                    MDimg.setValue(MDL_DEFGROUP,iifocus, __iter.objId);
-                    is_unique = false;
-                    break;
-                }
-            if (is_unique)
-            {
-                all_fn_ctfs.push_back(fn_ctf);
-                count_defocus.push_back(0);
-                MDimg.setValue(MDL_DEFGROUP, nr_focus);
-                nr_focus++;
-            }
-        }
+        //todo: set defocus group for each image
 
         // Check the number of images in each CTF group
         // and read CTF-parameters from disc
-        FOR_ALL_DEFOCUS_GROUPS()
+        //FOR_ALL_DEFOCUS_GROUPS()
+        int ifocus = 0;
+        count_defocus.resize(nr_focus);
+        size_t id;
+        MultidimArray<double> dum(hdim);
+        FileName ctfname;
+
+        FOR_ALL_OBJECTS_IN_METADATA(mdCTF)
         {
-            if (count_defocus[ifocus] < 50 && verbose > 0)
-                std::cerr << "WARNING%% CTF group " << ifocus + 1 << " contains less than 50 images!" << std::endl;
+            id = __iter.objId;
+            //Set defocus group
+            mdCTF.setValue(MDL_DEFGROUP, ifocus, id);
+            //Read number of images in group
+            size_t c;
+            mdCTF.getValue(MDL_COUNT, c, id);
+            count_defocus[ifocus] = (int)c;
+            if (count_defocus[ifocus] < 50 && verbose)
+                std::cerr << "WARNING%% CTF group " << (ifocus + 1) << " contains less than 50 images!" << std::endl;
 
-            Vctf.push_back(dum);
-            Vdec.push_back(dum);
-            Vsig.push_back(dum);
-            FileName ctfname = all_fn_ctfs[ifocus];
-            ctf.read(all_fn_ctfs[ifocus]);
+            //Read ctf from disk
+            mdCTF.getValue(MDL_CTFMODEL, ctfname, id);
+            ctf.read(ctfname);
 
-            // FIXME: make astigmatic CTFs non-astigmatic here!!
             if (ABS(ctf.DeltafV - ctf.DeltafU) >1.)
             {
                 REPORT_ERROR(ERR_NUMERICAL, "Prog_MLFalign2D-ERROR%% Only non-astigmatic CTFs are allowed!");
@@ -463,14 +446,21 @@ void ProgMLF2D::produceSideInfo()
             rmean_ctf.initZeros();
             Maux.setXmippOrigin();
             radialAverage(Maux, center, rmean_ctf, radial_count, true);
+            Vctf.push_back(dum);
+            Vdec.push_back(dum);
+            Vsig.push_back(dum);
             Vctf[ifocus].resize(hdim);
             for (int irr = 0; irr < hdim; irr++)
             {
-                dAi(Vctf[ifocus], irr) = A1D_ELEM(rmean_ctf, irr);
+                dAi(Vctf[ifocus], irr) = dAi(rmean_ctf, irr);
             }
             Vdec[ifocus].resize(Vctf[ifocus]);
             Vsig[ifocus].resize(Vctf[ifocus]);
+            ++ifocus;
         }
+
+        MetaData md(MDimg);
+        MDimg.join(md, mdCTF, MDL_CTFMODEL);
     }
 
     // Get a resolution pointer in Fourier-space
@@ -536,21 +526,20 @@ void ProgMLF2D::produceSideInfo2()
 
     model.n_ref = MDref.size();
     refno = 0;
+    double ref_fraction = (double)1. / model.n_ref;
+    double ref_weight = (double)nr_images_global / model.n_ref;
+
     FOR_ALL_OBJECTS_IN_METADATA(MDref)
     {
         MDref.getValue(MDL_IMAGE, fn_tmp, __iter.objId);
-
-        //img.read(fn_tmp, false, false, true, false);
-        //TODO: Check this???
         img.read(fn_tmp);
-
         img().setXmippOrigin();
         model.Iref.push_back(img);
         Iold.push_back(img);
         Ictf.push_back(img);
         // Default start is all equal model fractions
-        alpha_k.push_back((double)1. / model.n_ref);
-        model.Iref[refno].setWeight(alpha_k[refno] * (double)nr_images_global);
+        alpha_k.push_back(ref_fraction);
+        model.Iref[refno].setWeight(ref_weight);
         // Default start is half-half mirrored images
         mirror_fraction.push_back((do_mirror ? 0.5 : 0.));
         refno++;
@@ -573,17 +562,8 @@ void ProgMLF2D::produceSideInfo2()
     if (do_norm)
     {
         average_scale = 1.;
-        refs_avgscale.clear();
-        imgs_scale.clear();
-        FOR_ALL_MODELS()
-        {
-            refs_avgscale.push_back(1.);
-        }
-        FOR_ALL_LOCAL_IMAGES()
-        {
-            // Initialize optimal scales to one.
-            imgs_scale.push_back(1.);
-        }
+        refs_avgscale.assign(model.n_ref, 1.);
+        imgs_scale.assign(nr_images_local, 1.);
     }
 
     // Fill imgs_offsets vectors with zeros
@@ -602,13 +582,8 @@ void ProgMLF2D::produceSideInfo2()
     // (either read from fn_doc or initialize to -999.)
     if (limit_rot)
     {
-        imgs_oldphi.clear();
-        imgs_oldtheta.clear();
-        FOR_ALL_LOCAL_IMAGES()
-        {
-            imgs_oldphi.push_back(-999.);
-            imgs_oldtheta.push_back(-999.);
-        }
+        imgs_oldphi.assign(nr_images_local, -999.);
+        imgs_oldtheta.assign(nr_images_local, -999.);
     }
 
     if (do_restart)
@@ -730,7 +705,7 @@ void ProgMLF2D::produceSideInfo2()
         sumw_defocus.push_back((double)count_defocus[ifocus]);
     }
 
-    // Calculate all Wiener filters    
+    // Calculate all Wiener filters
     updateWienerFilters(spectral_signal, sumw_defocus, istart - 1);
 
 }
@@ -759,7 +734,7 @@ void ProgMLF2D::estimateInitialNoiseSpectra()
         int nn, c, focus = 0;
 
         if (verbose > 0)
-            std::cerr << "--> Estimating initial noise models from average power spectra ..." << std::endl;
+            std::cout << "--> Estimating initial noise models from average power spectra ..." << std::endl;
 
         if (verbose > 0)
         {
@@ -784,10 +759,9 @@ void ProgMLF2D::estimateInitialNoiseSpectra()
 
         FOR_ALL_OBJECTS_IN_METADATA(MDimg)
         {
+            focus = 0;
             if (do_ctf_correction)
                 MDimg.getValue(MDL_DEFGROUP, focus, __iter.objId);
-            else
-                focus = 0;
             MDimg.getValue(MDL_IMAGE, fn_tmp, __iter.objId);
             //img.read(fn_tmp, false, false, false, false);
             //TODO: Check this????
@@ -1025,32 +999,32 @@ void ProgMLF2D::updateWienerFilters(MultidimArray<double> &spectral_signal,
     {
         current_probres_limit = hdim-1;
         current_highres_limit = hdim-1;
-        
+
     }
     else if (fix_high > 0.)
     {
         current_probres_limit = ROUND((sampling*dim)/fix_high);
         current_highres_limit = ROUND((sampling*dim)/fix_high);
-        
+
     }
     else
     {
         current_probres_limit = maxres;
         current_highres_limit = maxres + 5; // hard-code increase_highres_limit to 5
-        
+
     }
 
     // Set overall high resolution limit
     current_probres_limit = XMIPP_MIN(current_probres_limit, int_highres_limit);
     current_highres_limit = XMIPP_MIN(current_highres_limit, int_highres_limit);
-    
+
     current_probres_limit = XMIPP_MIN(current_probres_limit, hdim);
     current_highres_limit = XMIPP_MIN(current_highres_limit, hdim);
     //std::cerr << "DEBUG_JM(6): current_probres_limit: " << current_probres_limit << std::endl;
 
     if (debug>0)
     {
-      std::cerr
+        std::cerr
         << "current_probres_limit dependencies: " << std::endl
         << " hdim: " << hdim << " dim: " << dim << std::endl
         << " sampling: " << sampling << " fix_high: " << fix_high << std::endl
@@ -1183,7 +1157,7 @@ void ProgMLF2D::setCurrentSamplingRates(double current_probres_limit)
     }
     if (verbose > 0 && (do_variable_psi || do_variable_trans))
     {
-        std::cerr<<" Current resolution= "<<current_probres_limit<<" Ang; current psi_step = "<<psi_step<<" current trans_step = "<<trans_step<<std::endl;
+        std::cout<<" Current resolution= "<<current_probres_limit<<" Ang; current psi_step = "<<psi_step<<" current trans_step = "<<trans_step<<std::endl;
 
     }
 }
@@ -1194,7 +1168,7 @@ void ProgMLF2D::generateInitialReferences()
 
     if (verbose > 0)
     {
-        std::cerr << "  Generating initial references by averaging over random subsets" << std::endl;
+        std::cout << "  Generating initial references by averaging over random subsets" << std::endl;
         init_progress_bar(model.n_ref);
     }
 
@@ -1342,7 +1316,7 @@ void ProgMLF2D::rotateReference(std::vector<double> &out)
             // Add arbitrary number (small_angle) to avoid 0-degree rotation (lacking interpolation)
             psi = (double)(ipsi * psi_max / nr_psi) + SMALLANGLE;
             //model.Iref[refno]().rotateBSpline(3, psi, Maux, WRAP);
-            rotate(BSPLINE3, Maux, model.Iref[refno](), psi, 'Z', WRAP);
+            rotate(BSPLINE3, Maux, model.Iref[refno](), -psi, 'Z', WRAP);
             FourierTransformHalf(Maux, Faux);
 
             // Normalize the magnitude of the rotated references to 1st rot of that ref
@@ -1362,7 +1336,6 @@ void ProgMLF2D::rotateReference(std::vector<double> &out)
             // Add all points as doubles to the vector
             appendFTtoVector(Faux, out);
         }
-
         // Free memory
         model.Iref[refno]().resize(0,0);
     }
@@ -1394,7 +1367,7 @@ void ProgMLF2D::reverseRotateReference(const std::vector<double> &in,
             getFTfromVector(in, refno*nr_psi*dnr_points_2d + ipsi*dnr_points_2d, Faux);
             InverseFourierTransformHalf(Faux, Maux, dim);
             //Maux.rotateBSpline(3, -psi, Maux2, WRAP);
-            rotate(BSPLINE3, Maux2, Maux, -psi, 'Z', WRAP);
+            rotate(BSPLINE3, Maux2, Maux, psi, 'Z', WRAP);
             out[refno] += Maux2;
         }
     }
@@ -1658,6 +1631,7 @@ void ProgMLF2D::processOneImage(const MultidimArray<double> &Mimg,
             logsigma2 += 2 * log( sqrt(PI * sigma2[ipoint]));
     }
 
+
     // Precalculate Fimg_trans, on pruned and expanded offset list
     calculateFourierOffsets(Mimg, opt_offsets_ref, Fimg_trans, Moffsets, Moffsets_mirror);
 
@@ -1714,20 +1688,44 @@ void ProgMLF2D::processOneImage(const MultidimArray<double> &Mimg,
                     {
                         for (int ii = 0; ii < nr_points_prob; ii++)
                         {
+//                            std::cerr << "DEBUG_JM: img_start: " << img_start << std::endl;
+//                            std::cerr << "DEBUG_JM: ref_start: " << ref_start << std::endl;
+//                            std::cerr << "DEBUG_JM: ref_scale: " << ref_scale << std::endl;
+//                            std::cerr << "DEBUG_JM: Fimg_trans[img_start + 2*ii]: " << Fimg_trans[img_start + 2*ii] << std::endl;
+//                            std::cerr << "DEBUG_JM: Fimg_trans[img_start + 2*ii + 1]: " << Fimg_trans[img_start + 2*ii] << std::endl;
+//                            std::cerr << "DEBUG_JM: Fref[ref_start + 2*ii]: " << Fref[ref_start + 2*ii] << std::endl;
+//                            std::cerr << "DEBUG_JM: Fref[ref_start + 2*ii + 1]: " << Fref[ref_start + 2*ii] << std::endl;
+
                             tmpr = Fimg_trans[img_start + 2*ii] - ctf[ii] * ref_scale * Fref[ref_start + 2*ii];
                             tmpi = Fimg_trans[img_start + 2*ii+1] - ctf[ii] * ref_scale * Fref[ref_start + 2*ii+1];
                             tmpr = (tmpr * tmpr + tmpi * tmpi) / sigma2[ii];
                             diff += tmpr;
+
+                           // std::cerr << "DEBUG_JM: ii = "<< ii <<" --> diff(" << diff << ") = tmpr2("<< tmpr * tmpr
+                           // << ") + tmpi2(" << tmpi * tmpi << " / sigma2[ii](" << sigma2[ii] << ")\n";
+                           // exit(1);
+
                         }
                     }
                     else
                     {
                         for (int ii = 0; ii < nr_points_prob; ii++)
                         {
+//                            std::cerr << "DEBUG_JM: img_start: " << img_start << std::endl;
+//                            std::cerr << "DEBUG_JM: ref_start: " << ref_start << std::endl;
+//                            std::cerr << "DEBUG_JM: ref_scale: " << ref_scale << std::endl;
+//                            std::cerr << "DEBUG_JM: Fimg_trans[img_start + 2*ii]: " << Fimg_trans[img_start + 2*ii] << std::endl;
+//                            std::cerr << "DEBUG_JM: Fimg_trans[img_start + 2*ii + 1]: " << Fimg_trans[img_start + 2*ii] << std::endl;
+//                            std::cerr << "DEBUG_JM: Fref[ref_start + 2*ii]: " << Fref[ref_start + 2*ii] << std::endl;
+//                            std::cerr << "DEBUG_JM: Fref[ref_start + 2*ii + 1]: " << Fref[ref_start + 2*ii] << std::endl;
                             tmpr = Fimg_trans[img_start + 2*ii] - ref_scale * Fref[ref_start + 2*ii];
                             tmpi = Fimg_trans[img_start + 2*ii+1] - ref_scale * Fref[ref_start + 2*ii+1];
                             diff += (tmpr * tmpr + tmpi * tmpi) / sigma2[ii];
+//                            std::cerr << "ii = "<< ii <<" --> diff(" << diff << ") = tmpr2("<< tmpr * tmpr
+//                            << ") + tmpi2(" << tmpi * tmpi << " / sigma2[ii](" << sigma2[ii] << ")\n";
+
                         }
+
                     }
                     // Multiply by two for t-student, because we divided by 2*sigma2 instead of sigma2!
                     if (do_student)
@@ -1749,6 +1747,12 @@ void ProgMLF2D::processOneImage(const MultidimArray<double> &Mimg,
                 }
             }
         }
+        if (debug == 9)
+        {
+            std::cerr<<">>>>> mindiff2= "<<mindiff2<<std::endl;
+            exit(1);
+        }
+
     }
 
     // Now that we have mindiff2 calculate all weights and maxweight
@@ -2374,10 +2378,10 @@ void ProgMLF2D::expectation()
 
     if (dnr_points_2d > 0)
     {
-      int nn = n * nr_psi * dnr_points_2d;
-      Fwsum_imgs.assign(nn, 0.);
-      if  (do_ctf_correction)
-        Fwsum_ctfimgs.assign(nn, 0.);
+        int nn = n * nr_psi * dnr_points_2d;
+        Fwsum_imgs.assign(nn, 0.);
+        if  (do_ctf_correction)
+            Fwsum_ctfimgs.assign(nn, 0.);
     }
 
     std::stringstream ss;
@@ -2386,7 +2390,7 @@ void ProgMLF2D::expectation()
     FOR_ALL_LOCAL_IMAGES()
     {
         size_t id = img_id[imgno];
-
+        focus = 0;
         // Get defocus-group
         if (do_ctf_correction)
             MDimg.getValue(MDL_DEFGROUP, focus, id);
@@ -2396,6 +2400,7 @@ void ProgMLF2D::expectation()
         MDimg.getValue(MDL_IMAGE, fn_img, id);
         //std::cerr << formatString("   filename: %s\n", fn_img.c_str());
         //img.read(fn_img, false, false, false, false);
+
         img.read(fn_img);
         img().setXmippOrigin();
 

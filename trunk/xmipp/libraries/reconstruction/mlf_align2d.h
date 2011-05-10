@@ -51,7 +51,8 @@ class ProgMLF2D: public ML2DBaseProgram
 {
 public:
 
-    FileName fn_ctfdat;
+    //FileName fn_ctfdat;
+  String xxxxxxx;//FIXME if remove this variable produce a segmentation fault
     /** sigma-value for origin offsets */
     double sigma_offset;
     /** Vector containing estimated fraction for each model */
