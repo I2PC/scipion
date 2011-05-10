@@ -149,9 +149,9 @@ void MetaData::setRow(const MDRow &row, size_t id)
     //todo: could be improve in a query for update the entire row
     FOR_ALL_LABELS()
     {
-      MDLabel label = (MDLabel)_label;
-      if (row.containsLabel(label))
-        setValue(*(row.getObject(label)), id);
+        MDLabel label = (MDLabel)_label;
+        if (row.containsLabel(label))
+            setValue(*(row.getObject(label)), id);
     }
 }
 
@@ -1040,7 +1040,7 @@ void MetaData::_read(const FileName &filename,
     //free memory of column values
     int nCols = columnValues.size();
     for (int i = 0; i < nCols; ++i)
-      delete columnValues[i];
+        delete columnValues[i];
 }
 
 void MetaData::merge(const MetaData &md2)
@@ -1187,6 +1187,7 @@ void MetaData::subtraction(const MetaData &mdIn, const MDLabel label)
 
 void MetaData::join(const MetaData &mdInLeft, const MetaData &mdInRight, const MDLabel label, JoinType type)
 {
+    clear();
     _setOperates(mdInLeft, mdInRight, label, (SetOperation)type);
 }
 
@@ -1393,13 +1394,13 @@ void MetaData::convertXML(FileName fn)
 
 bool MetaData::operator==(const MetaData& op) const
 {
-	return myMDSql->equals(*(op.myMDSql));
+    return myMDSql->equals(*(op.myMDSql));
 }
 
 std::ostream& operator<<(std::ostream& o, const MetaData & mD)
 {
-	mD.write(o);
-	return o;
+    mD.write(o);
+    return o;
 }
 
 
