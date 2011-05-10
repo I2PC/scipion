@@ -312,7 +312,7 @@ public:
     MDObject(MDLabel label, const bool &boolValue);
     MDObject(MDLabel label, const String &stringValue);
     MDObject(MDLabel label, const std::vector<double> &vectorValue);
-    MDObject(MDLabel label, const size_t longintValue);
+    MDObject(MDLabel label, const size_t &longintValue);
     MDObject(MDLabel label, const float &floatValue);
     MDObject(MDLabel label, const char * &charValue);
 
