@@ -616,7 +616,8 @@ void ProgCtfGroup::writeOutputToDisc()
     }
 
     //(4)create average ctf
-    int olddefGroup,defGroup,order,count;
+    int olddefGroup,defGroup;
+    size_t order, count;
     double sumimg=0.;
     bool changeDefocusGroup;
 
@@ -636,7 +637,6 @@ void ProgCtfGroup::writeOutputToDisc()
     {
         std::cerr << "Saving CTF Images" <<std::endl;
     }
-
     FOR_ALL_OBJECTS_IN_METADATA(sortedCtfMD)
     {
         sortedCtfMD.getValue(MDL_DEFGROUP,defGroup,__iter.objId);
