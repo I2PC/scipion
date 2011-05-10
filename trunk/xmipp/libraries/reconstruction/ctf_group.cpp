@@ -255,7 +255,7 @@ void ProgCtfGroup::produceSideInfo()
     }
 
     //fill multiarray with ctfs
-    int count;
+    size_t count;
     size_t counter=0;
     if (verbose!=0)
         std::cout << "\nFill multiarray with ctfs" <<std::endl;
@@ -439,7 +439,8 @@ void ProgCtfGroup::autoRun()
     bool newgroup;
 
     //size_t id;
-    int orderOut, orderIn,defocusGroup;
+    size_t orderOut, orderIn;
+    int defocusGroup;
     int groupNumber = 1;
     std::vector<size_t> vectorID;
     sortedCtfMD.findObjects(vectorID);
