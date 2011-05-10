@@ -409,6 +409,7 @@ XmippMetadataProgram::XmippMetadataProgram()
     allow_apply_geo = false;
     decompose_stacks = true;
     save_metadata_stack = false;
+    save_metadata_stack_only = false;
     delete_output_stack = true;
     remove_disabled = true;
     single_image = input_is_stack = false;
@@ -552,8 +553,15 @@ void XmippMetadataProgram::finishProcessing()
     {
         if (!oroot.empty()) // Out as independent images
             mdOut.write(fn_out);
-        else if (save_metadata_stack && !fn_out.empty()) // Out as stack
-            mdOut.write(fn_out.withoutExtension().addExtension("sel"));
+        else if ((save_metadata_stack ||save_metadata_stack_only)&& !fn_out.empty()) // Out as stack
+        {
+            FileName outFileName;
+            if (save_metadata_stack_only)
+                outFileName = fn_out;
+            else
+                outFileName = fn_out.withoutExtension().addExtension("sel");
+            mdOut.write(outFileName);
+        }
     }
 }
 
