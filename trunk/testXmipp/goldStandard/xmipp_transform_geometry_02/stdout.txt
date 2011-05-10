@@ -1,0 +1,2 @@
+Input File: input/phantomBacteriorhodopsin.vol
+Output File: tmpLink/xmipp_transform_geometry_02/volume.vol

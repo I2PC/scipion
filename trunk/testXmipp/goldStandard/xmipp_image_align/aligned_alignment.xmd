@@ -1,0 +1,15 @@
+# XMIPP_STAR_1 * 
+# 
+data_
+loop_
+ _image
+ _enabled
+ _shiftX
+ _shiftY
+ _anglePsi
+ _flip
+ _maxCC
+ 000001@input/smallStack.stk          1     0.978630    -0.002071     0.000000 0     0.489446 
+ 000002@input/smallStack.stk          1     2.096413     0.963110     0.000000 1     0.456791 
+ 000003@input/smallStack.stk          1     1.110685     0.027320     0.000000 0     0.492905 
+ 000004@input/smallStack.stk          1     1.823901     2.040971     0.000000 0     0.385591 

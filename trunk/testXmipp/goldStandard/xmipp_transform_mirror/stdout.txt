@@ -1,0 +1,2 @@
+Input File: input/singleImage.spi
+Output File: tmpLink/xmipp_transform_mirror/singleImage_X.xmp

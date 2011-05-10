@@ -1,0 +1,2 @@
+Input File: input/header.doc
+Output File: tmpLink/xmipp_transform_geometry_01/images.stk
