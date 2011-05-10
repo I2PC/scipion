@@ -206,18 +206,6 @@ TEST_F( MetadataTest, ReadWrite)
 
     EXPECT_EQ(mDsource,auxMetadata);
     unlink(sfn);
-
-//    //read file as char string
-//    char * buffer;
-//    size_t size;
-//    std::ifstream file (sfn, std::ios::in|std::ios::binary|std::ios::ate);
-//    size = file.tellg();
-//    file.seekg (0, std::ios::beg);
-//    buffer = new char [size+1];
-//    file.read (buffer, size);
-//    file.close();
-//    buffer[size]=0;
-//
 }
 
 TEST_F( MetadataTest, Removelabel)
@@ -278,16 +266,15 @@ TEST_F( MetadataTest, Union)
 
 //check if mdl label match its type and
 //check if int is different from size_t
-TEST_F( MetadataTest, labelType)
+TEST_F( MetadataTest, setGetValue)
 {
-	int i;
 	size_t t;
-	EXPECT_EQ(MDL::labelType(MDL_OBJID),LABEL_LONG);
+	EXPECT_EQ(MDL::labelType(MDL_ORDER),LABEL_LONG);
     MetaData auxMetadata;
     auxMetadata.addObject();
-    auxMetadata.getValue(MDL_OBJID,i,FIRST_IMAGE);
-    auxMetadata.getValue(MDL_OBJID,t,FIRST_IMAGE);
-	//EXPECT_EQ(i,t);
+    auxMetadata.setValue(MDL_ORDER,(size_t)1,FIRST_IMAGE);
+    auxMetadata.getValue(MDL_ORDER,t,FIRST_IMAGE);
+	EXPECT_EQ((size_t)1,t);
 }
 
 GTEST_API_ int main(int argc, char **argv)
