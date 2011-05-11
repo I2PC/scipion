@@ -298,7 +298,7 @@ void centerFFT2(MultidimArray<double> &v)
         }
         else
         {
-          //todo: implementation for the odd case needed
+            //todo: implementation for the odd case needed
         }
     }
     else
@@ -425,20 +425,30 @@ void CenterOriginFFT(MultidimArray< std::complex< double > > & v, bool forward)
 }
 
 /* Xmipp image -> Xmipp PSD ------------------------------------------------ */
-void xmipp2PSD(const MultidimArray<double> &input, MultidimArray<double> &output)
+void xmipp2PSD(const MultidimArray<double> &input, MultidimArray<double> &output,
+               bool takeLog)
 {
     output = input;
     CenterFFT(output, true);
     double min_val = output.computeMax();
     FOR_ALL_ELEMENTS_IN_ARRAY2D(output)
-    if (output(i, j) > 0 && output(i, j) < min_val)
-        min_val = output(i, j);
-    min_val = 10 * log10(min_val);
-    FOR_ALL_ELEMENTS_IN_ARRAY2D(output)
-    if (output(i, j) > 0)
-        output(i, j) = 10 * log10(output(i, j));
-    else
-        output(i, j) = min_val;
+    {
+        double pixval=A2D_ELEM(output,i,j);
+        if (pixval > 0 && pixval < min_val)
+            min_val = pixval;
+    }
+    if (takeLog)
+    {
+        min_val = 10 * log10(min_val);
+        FOR_ALL_ELEMENTS_IN_ARRAY2D(output)
+        {
+            double pixval=A2D_ELEM(output,i,j);
+            if (pixval > 0)
+                A2D_ELEM(output,i,j) = 10 * log10(pixval);
+            else
+                A2D_ELEM(output,i,j) = min_val;
+        }
+    }
     reject_outliers(output);
 }
 

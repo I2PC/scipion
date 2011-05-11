@@ -83,11 +83,11 @@ void FFT_idx2digfreq(T& v, const Matrix1D< int >& idx, Matrix1D< double >& freq)
     switch (VEC_XSIZE(idx))
     {
     case 3:
-    	FFT_IDX2DIGFREQ(VEC_ELEM(idx,2), ZSIZE(v), VEC_ELEM(freq,2));
+        FFT_IDX2DIGFREQ(VEC_ELEM(idx,2), ZSIZE(v), VEC_ELEM(freq,2));
     case 2:
-    	FFT_IDX2DIGFREQ(VEC_ELEM(idx,1), YSIZE(v), VEC_ELEM(freq,1));
+        FFT_IDX2DIGFREQ(VEC_ELEM(idx,1), YSIZE(v), VEC_ELEM(freq,1));
     case 1:
-    	FFT_IDX2DIGFREQ(VEC_ELEM(idx,0), XSIZE(v), VEC_ELEM(freq,0));
+        FFT_IDX2DIGFREQ(VEC_ELEM(idx,0), XSIZE(v), VEC_ELEM(freq,0));
     }
 }
 
@@ -344,7 +344,7 @@ void CenterFFT(MultidimArray< T >& v, bool forward)
 
                     // Copy the vector
                     for (int i = 0; i < l; i++)
-                      dAkij(v, k, i, j) = dAi(aux, i);
+                        dAkij(v, k, i, j) = dAi(aux, i);
                 }
         }
 
@@ -374,7 +374,7 @@ void CenterFFT(MultidimArray< T >& v, bool forward)
 
                     // Copy the vector
                     for (int k = 0; k < l; k++)
-                      dAkij(v, k, i, j) = dAi(aux, k);
+                        dAkij(v, k, i, j) = dAi(aux, k);
                 }
         }
     }
@@ -415,7 +415,8 @@ void CenterOriginFFT(MultidimArray< std::complex< double > > & v, bool forward);
 
 /** Xmipp image -> Xmipp PSD.
     The log10 is taken, outliers rejected and the image is reorganized. */
-void xmipp2PSD(const MultidimArray<double> &input, MultidimArray<double> &output);
+void xmipp2PSD(const MultidimArray<double> &input, MultidimArray<double> &output,
+               bool takeLog=true);
 
 /** Xmipp image -> Xmipp CTF.
     The log10 is taken, outliers rejected and the image is reorganized. */
