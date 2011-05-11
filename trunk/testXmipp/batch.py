@@ -14,7 +14,7 @@ class Tester(ContentHandler):
         self.prerun = []
         self.testfile = []
         self.changeDirectory = False
-        self.error=""
+        self.error="init erro"
         self.errorFlag=False
         self.warning=""
         self.warningFlag=False
@@ -207,9 +207,9 @@ if __name__ == '__main__':
        summaryMessage='XMIPP goldstandard is OK'
        
     if  tester.errorFlag:
-       globalMessage="ERROR:\n" + tester.error
+       globalMessage +="ERROR:\n" + tester.error
     if  tester.warningFlag:
-       globalMessage="WARNINGS:\n" + tester.warning
+       globalMessage +="WARNINGS:\n" + tester.warning
     globalMessage += "\nProgram tested:\n" + programs
     #mail.mail(config.toaddrs,config.fromaddr,summaryMessage,globalMessage)
 
