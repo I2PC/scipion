@@ -1149,6 +1149,14 @@ public:
         // In that case, initialize data to zeros.
         if (NZYXSIZE(*this) > 0 && data == NULL)
         {
+            ndim = Ndim;
+            xdim = Xdim;
+            ydim = Ydim;
+            zdim = Zdim;
+            yxdim = Ydim * Xdim;
+            zyxdim = Zdim * yxdim;
+            nzyxdim = Ndim * zyxdim;
+
             coreAllocate();
             return;
         }
