@@ -210,6 +210,10 @@
             <FILE filename="phantomBacteriorhodopsin.frc"/>
         </CASE>
     </PROGRAM>
+    <PROGRAM name="xmipp_tomo_detect_missing_wedge" mpi="FALSE">
+        <CASE arguments="-i input/smallTomogram.vol" changeDir="FALSE">
+        </CASE>
+    </PROGRAM>
     <PROGRAM name="xmipp_tomo_project" mpi="FALSE">
         <CASE arguments="-i input/phantomCandida.vol -o %o/image.xmp --angles 0 90 90" changeDir="FALSE">
             <FILE filename="image.xmp"/>
