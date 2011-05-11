@@ -491,7 +491,6 @@ ReconsSources = [
     'ctf_group.cpp',
     'ctf_sort_psds.cpp',
     'denoise.cpp',
-    'detect_missing_wedge.cpp',
 ##    'detect_structures.cpp',
     'directions.cpp',
     'filter_projections.cpp',
@@ -530,6 +529,7 @@ ReconsSources = [
     'tomo_align_dual_tilt_series.cpp',
     'tomo_align_tilt_series.cpp',
     'tomo_align_refinement.cpp',
+    'tomo_detect_missing_wedge.cpp',
     'tomo_remove_fluctuations.cpp',
     'transform_downsample.cpp',
     'volume_correct_bfactor.cpp',
@@ -675,7 +675,6 @@ AddXmippProgram('ctf_estimate_from_psd', ['XmippRecons'])
 AddXmippProgram('ctf_group', ['XmippRecons'])
 AddXmippProgram('ctf_sort_psds', ['XmippRecons'])
 #AddXmippProgram('denoise', ['XmippRecons'])
-AddXmippProgram('detect_missing_wedge', ['XmippRecons'])
 #AddXmippProgram('detect_structures', ['XmippRecons'])
 AddXmippProgram('filter_projections', ['XmippRecons'])
 AddXmippProgram('find_center2d')
@@ -742,6 +741,7 @@ AddXmippProgram('template_threads')
 AddXmippProgram('tomo_align_dual_tilt_series', ['XmippRecons'])
 AddXmippProgram('tomo_align_refinement', ['XmippRecons'])
 AddXmippProgram('tomo_align_tilt_series', ['XmippRecons'])
+AddXmippProgram('tomo_detect_missing_wedge', ['XmippRecons'])
 AddXmippProgram('tomo_project', ['XmippRecons'])
 AddXmippProgram('tomo_remove_fluctuations', ['XmippRecons'])
 AddXmippProgram('volume_align')

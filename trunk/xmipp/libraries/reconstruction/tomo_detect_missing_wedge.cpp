@@ -23,7 +23,7 @@
  *  e-mail address 'xmipp@cnb.csic.es'
  ***************************************************************************/
 
-#include "detect_missing_wedge.h"
+#include "tomo_detect_missing_wedge.h"
 #include <data/args.h>
 #include <data/fftw.h>
 #include <data/numerical_tools.h>
@@ -252,7 +252,7 @@ void drawWedge(double rotPos, double tiltPos, double rotNeg, double tiltNeg,
 }
 
 // Read from command line --------------------------------------------------
-void DetectMissingWedge_parameters::read(int argc, char **argv)
+void ProgDetectMissingWedge::readParams()
 {
     fn_vol  = getParameter(argc, argv, "-i");
     maxFreq = textToFloat(getParameter(argc, argv, "-maxFreq", "2"));
@@ -262,7 +262,7 @@ void DetectMissingWedge_parameters::read(int argc, char **argv)
 }
 
 // Produce side info -------------------------------------------------------
-void DetectMissingWedge_parameters::produceSideInfo()
+void ProgDetectMissingWedge::produceSideInfo()
 {
     V = new Image<double>();
     V->read(fn_vol);
@@ -276,7 +276,7 @@ void DetectMissingWedge_parameters::produceSideInfo()
 }
 
 // Show --------------------------------------------------------------------
-void DetectMissingWedge_parameters::show() const
+void ProgDetectMissingWedge::show() const
 {
     std::cout << "Detecting a missing wedge\n";
     std::cout << "Input volume:   " << fn_vol     << std::endl
@@ -288,22 +288,30 @@ void DetectMissingWedge_parameters::show() const
 }
 
 // Usage -------------------------------------------------------------------
-void DetectMissingWedge_parameters::usage() const
+void ProgDetectMissingWedge::defineParams()
 {
-    std::cerr << "detect_missing_wedge\n"
-    << "  -i <volume>        : Input tomogram\n"
-    << " [-maxFreq <f=0.25>] : Normalized to 0.5\n"
-    << " [-width <w=2>]      : Width of the probe plane\n"
-    << " [-saveMarks]        : Save the magnitude of the FFT with\n"
-    << "                       marks showing the two planes\n"
-    << " [-saveMask]         : Save a mask for the FFT of this tomogram\n"
-    << "                       1=Missing wedge, 0=non missing wedge\n"
-    ;
+	addUsageLine("Detect the orientation of the missing wedge in a tomogram. ");
+	addUsageLine("+For doing so it fits a couple of planes along which there is a maximum ");
+	addUsageLine("+variation between the energy of the Fourier transform on its left and ");
+	addUsageLine("+on its right. The missing wedge is coded with four angles (two for each ");
+	addUsageLine("+plane). You may also produce a mask with 1 where the missing wedge is, ");
+	addUsageLine("+and 0 where the data has been actually measured. Finally, you can also ");
+	addUsageLine("+produce a marked magnitude volume (i.e., the magnitude of the Fourier ");
+	addUsageLine("+transform where the position of the two planes have been marked). ");
+	addParamsLine("  -i <file>           : Input tomogram");
+    addParamsLine(" [--maxFreq <f=0.25>] : Maximum frequency to fit the plane (normalized to 0.5)");
+    addParamsLine(" [--width <w=2>]      : Width of the probe plane");
+    addParamsLine(" [--saveMarks]        : Save the magnitude of the FFT with");
+    addParamsLine("                      : marks showing the two planes");
+    addParamsLine(" [--saveMask]         : Save a mask for the FFT of this tomogram");
+    addParamsLine("                      : 1=Missing wedge, 0=non missing wedge");
+    addExampleLine("xmipp_tomo_detect_missing_wedge -i tomogram.vol");
 }
 
 // Run ---------------------------------------------------------------------
-void DetectMissingWedge_parameters::run()
+void ProgDetectMissingWedge::run()
 {
+    produceSideInfo();
     FileName fn_root=V->name().withoutExtension();
 
     // Detect one of the planes

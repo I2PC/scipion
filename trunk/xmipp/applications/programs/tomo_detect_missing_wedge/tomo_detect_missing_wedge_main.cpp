@@ -23,31 +23,11 @@
  *  e-mail address 'xmipp@cnb.csic.es'
  ***************************************************************************/
 
-#include <reconstruction/detect_missing_wedge.h>
+#include <reconstruction/tomo_detect_missing_wedge.h>
 
 int main(int argc, char **argv)
 {
-    DetectMissingWedge_parameters prm;
-    try
-    {
-        prm.read(argc,argv);
-    }
-    catch (XmippError XE)
-    {
-        std::cerr << XE << std::endl;
-        prm.usage();
-        exit(1);
-    }
-    try
-    {
-        prm.show();
-        prm.produceSideInfo();
-        prm.run();
-    }
-    catch (XmippError XE)
-    {
-        std::cerr << XE << std::endl;
-        exit(2);
-    }
-    exit(0);
+    ProgDetectMissingWedge prm;
+    prm.read(argc,argv);
+    return prm.tryRun();
 }

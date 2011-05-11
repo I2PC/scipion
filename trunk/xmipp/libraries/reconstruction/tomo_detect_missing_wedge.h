@@ -27,13 +27,14 @@
 #define DETECT_MISSING_WEDGE_H
 
 #include <data/image.h>
+#include <data/program.h>
 
 /// @defgroup DetectMissingWedge Detect missing wedge
 /// @ingroup ReconsLibrary
 
 /// Parameters for the program detecting the missing wedge
 /// @ingroup DetectMissingWedge
-class DetectMissingWedge_parameters
+class ProgDetectMissingWedge: public XmippProgram
 {
 public:
     /// Input volume
@@ -65,7 +66,7 @@ public:
 
 public:
     /// Read parameters from command line
-    void read(int argc, char** argv);
+    void readParams();
 
     /// Produce side info.
     void produceSideInfo();
@@ -74,7 +75,7 @@ public:
     void show() const;
 
     /// Usage
-    void usage() const;
+    void defineParams();
 
     /// Run
     void run();
