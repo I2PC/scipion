@@ -34,12 +34,19 @@
 //@{
 
 /* Resolution IBW Program Parameters ------------------------------------------ */
-/** Parameter class for the resolution IBW program */
+/** Parameter class for the resolution IBW program.
+ *  The program is based on P. Marziliano, F. Dufaux, S. Winkler, T. Ebrahimi.
+ *  Perceptual blur and ringing metrics: application to JPEG2000. Signal Processing:
+ *  Image Communication, 19: 163-172 (2004)
+ */
 class ProgResolutionIBW: public XmippProgram
 {
 public:
     /// Input volume
     FileName fnVol;
+
+    /// Output volume with local widths
+    FileName fnOut;
 
 public:
     /// Volume to evaluate
@@ -57,6 +64,19 @@ public:
 
     /** Compute the correlation for all micrographs */
     void run();
+
+    /** Compute the edge width at the edge pixels in a given direction.
+     * step controls how fine is the search of the border width.
+     */
+    void edgeWidth(const MultidimArray<double> &volCoeffs, const MultidimArray<double> &edges,
+    				MultidimArray <double>& widths, const Matrix1D<double> &dir,
+    				double step=0.25) const;
+
+    /** Calculate the inverse border width.
+     * The calculation is only performed at the border pixels.
+     */
+    double calculateIBW(MultidimArray <double>& widths) const;
 };
 //@}
+
 #endif

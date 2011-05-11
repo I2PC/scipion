@@ -1,7 +1,7 @@
 /***************************************************************************
  *
  * Authors:     Carlos Oscar S. Sorzano (coss@cnb.csic.es)
- *              Alvaro Capell (acapell2gmil.com)
+ *              Alvaro Capell (acapell@gmail.com)
  *
  * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
  *
