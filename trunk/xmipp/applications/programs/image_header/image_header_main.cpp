@@ -70,10 +70,7 @@ protected:
     void readParams()
     {
         if (checkParam("--extract"))
-        {
             operation = EXTRACT;
-            save_metadata_stack_only = true;
-        }
         else if (checkParam("--assign"))
             operation = ASSIGN;
         else if (checkParam("--reset"))

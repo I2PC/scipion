@@ -409,7 +409,6 @@ XmippMetadataProgram::XmippMetadataProgram()
     allow_apply_geo = false;
     decompose_stacks = true;
     save_metadata_stack = false;
-    save_metadata_stack_only = false;
     delete_output_stack = true;
     remove_disabled = true;
     single_image = input_is_stack = false;
@@ -549,17 +548,15 @@ void XmippMetadataProgram::finishProcessing()
     if (allow_time_bar && verbose && !single_image)
         progress_bar(time_bar_size);
 
-    if (!single_image && !mdOut.isEmpty())
+    if (!single_image && !mdOut.isEmpty()&& !fn_out.empty())
     {
-        if (!oroot.empty()) // Out as independent images
+        if (produces_an_output || !oroot.empty()) // Out as independent images
             mdOut.write(fn_out);
-        else if ((save_metadata_stack ||save_metadata_stack_only)&& !fn_out.empty()) // Out as stack
+        else if (save_metadata_stack) // Out as stack
         {
             FileName outFileName;
-            if (save_metadata_stack_only)
-                outFileName = fn_out;
-            else
-                outFileName = fn_out.withoutExtension().addExtension("sel");
+
+            outFileName = fn_out.withoutExtension().addExtension("xmd");
             mdOut.write(outFileName);
         }
     }
@@ -655,9 +652,9 @@ void XmippMetadataProgram::run()
     if ( fn_out.empty() && !oroot.empty() )
     {
         if ( !baseName.empty() )
-            fn_out = baseName + "_" + oextBaseName + ".sel";
+            fn_out = baseName + "_" + oextBaseName + ".xmd";
         else
-            fn_out = fn_in.withoutExtension() + "_" + oextBaseName + ".sel";
+            fn_out = fn_in.withoutExtension() + "_" + oextBaseName + ".xmd";
     }
 
     finishProcessing();
