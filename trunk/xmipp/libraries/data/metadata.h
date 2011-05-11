@@ -396,18 +396,11 @@ public:
     template<class T>
     bool getValue(const MDLabel label, T &valueOut, size_t id) const
     {
-        try
-        {
-            MDObject mdValueOut(label);
-            if (!getValue(mdValueOut, id))
-                return false;
-            mdValueOut.getValue(valueOut);
-            return true;
-        }
-        catch (XmippError xe)
-        {
+        MDObject mdValueOut(label);
+        if (!getValue(mdValueOut, id))
             return false;
-        }
+        mdValueOut.getValue(valueOut);
+        return true;
     }
 
     /** Get all values of a column as a vector.
@@ -636,7 +629,7 @@ public:
     void aggregate(const MetaData &mdIn, AggregateOperation op,
                    MDLabel aggregateLabel, MDLabel operateLabel, MDLabel resultLabel);
     void aggregate(const MetaData &mdIn, const std::vector<AggregateOperation> &ops,
-    		      const std::vector<MDLabel> &operateLabels, const std::vector<MDLabel> &resultLabels);
+                   const std::vector<MDLabel> &operateLabels, const std::vector<MDLabel> &resultLabels);
     void aggregateSingle(MDObject &mdValueOut, AggregateOperation op,
                          MDLabel aggregateLabel);
     /** Union of elements in two Metadatas, without duplicating.
@@ -750,7 +743,7 @@ public:
      */
     void fillExpand(MDLabel label);
     /** 'is equal to' (equality).*/
-   bool operator==(const MetaData& op) const;
+    bool operator==(const MetaData& op) const;
 
 
 

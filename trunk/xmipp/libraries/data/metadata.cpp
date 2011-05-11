@@ -123,11 +123,8 @@ bool MetaData::getValue(MDObject &mdValueOut, size_t id) const
         return false;
 
     if (id == BAD_OBJID)
-    {
         REPORT_ERROR(ERR_MD_NOACTIVE, "getValue: please provide objId other than -1");
-        exit(1);
-    }
-    //MDValue mdValue;
+
     return myMDSql->getObjectValue(id, mdValueOut);
 }
 

@@ -203,13 +203,9 @@ inline void MDObject::labelTypeCheck(MDLabelType checkingType) const
             ss << "double";
             break;
         default:
-            ss << "weird: " << checkingType;
+            ss << "unknown type: " << checkingType;
         }
         ss << ")";
-        /* I do not understand why I cannot catch this exception,
-         * until a fix it I will leave this with an exit, ROB*/
-        std::cerr << ss.str() <<std::endl;
-        exit(1);
         REPORT_ERROR(ERR_MD_BADLABEL, ss.str());
     }
 }

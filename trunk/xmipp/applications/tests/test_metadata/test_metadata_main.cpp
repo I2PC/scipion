@@ -269,12 +269,17 @@ TEST_F( MetadataTest, Union)
 TEST_F( MetadataTest, setGetValue)
 {
 	size_t t;
+	int i;
 	EXPECT_EQ(MDL::labelType(MDL_ORDER),LABEL_LONG);
     MetaData auxMetadata;
-    auxMetadata.addObject();
-    auxMetadata.setValue(MDL_ORDER,(size_t)1,FIRST_IMAGE);
-    auxMetadata.getValue(MDL_ORDER,t,FIRST_IMAGE);
+    id = auxMetadata.addObject();
+    auxMetadata.setValue(MDL_ORDER,(size_t)1, id);
+    auxMetadata.getValue(MDL_ORDER,t, id);
 	EXPECT_EQ((size_t)1,t);
+	//We expect that MetaData will throw an exception
+	//if you use getValue with a variable of type that
+	// doesn't match the label type
+	EXPECT_THROW(auxMetadata.getValue(MDL_ORDER, i, id), XmippError);
 }
 
 GTEST_API_ int main(int argc, char **argv)
