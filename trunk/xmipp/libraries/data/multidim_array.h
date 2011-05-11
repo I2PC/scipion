@@ -2314,7 +2314,7 @@ public:
      * (x,y,z) are in logical coordinates.
      */
     T interpolatedElementBSpline3D(double x, double y, double z,
-                                   int SplineDegree = 3)
+                                   int SplineDegree = 3) const
     {
         int SplineDegree_1 = SplineDegree - 1;
 
