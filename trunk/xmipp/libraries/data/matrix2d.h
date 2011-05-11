@@ -700,10 +700,9 @@ public:
             REPORT_ERROR(ERR_MATRIX, "Vector is not a column");
 
         result.initZeros(mdimy);
-
         for (int i = 0; i < mdimy; i++)
-            for (int j = 0; j < op1.size(); j++)
-                result(i) += (*this)(i, j) * op1(j);
+            for (int j = 0; j < mdimx; j++)
+                VEC_ELEM(result,i) += MAT_ELEM(*this,i, j) * VEC_ELEM(op1,j);
 
         result.setCol();
         return result;
