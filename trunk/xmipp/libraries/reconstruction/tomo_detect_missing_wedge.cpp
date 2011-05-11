@@ -55,15 +55,20 @@ double evaluatePlane(double rot, double tilt,
     int N=XMIPP_MAX(XSIZE(*Vmag),YSIZE(*Vmag)/2);
     N=XMIPP_MAX(N,ZSIZE(*Vmag)/2);
     double df=0.5/N;
-    Matrix1D<double> freq(3);
+    Matrix1D<double> freq(3), freqp(3);
     Matrix1D<int> idx(3);
     double sumNeg=0, sumPos=0;
     int Nneg=0, Npos=0;
+    double maxFreq2=maxFreq*maxFreq;
     for (double ix=0; ix<=N; ix++)
+    {
+    	XX(freq)=ix*df;
+    	double fx2=XX(freq)*XX(freq);
         for (double iy=-N; iy<=N; iy++)
         {
-            VECTOR_R3(freq,ix*df,iy*df,0);
-            if (freq.module()>maxFreq)
+        	YY(freq)=iy*df;
+        	double fx2fy2=fx2+YY(freq)*YY(freq);
+            if (fx2fy2>maxFreq2)
                 continue;
             for (int iz=-planeWidth; iz<=planeWidth; iz++)
             {
@@ -71,21 +76,24 @@ double evaluatePlane(double rot, double tilt,
                     continue;
 
                 // Frequency in the coordinate system of the plane
-                VECTOR_R3(freq,ix*df,iy*df,iz*df);
+            	ZZ(freq)=iz*df;
 
                 // Frequency in the coordinate system of the volume
-                freq=Einv*freq;
+            	SPEED_UP_temps;
+            	M3x3_BY_V3x1(freqp,Einv,freq);
                 bool inverted=false;
-                if (XX(freq)<0)
+                if (XX(freqp)<0)
                 {
-                    XX(freq)=-XX(freq);
-                    YY(freq)=-YY(freq);
-                    ZZ(freq)=-ZZ(freq);
+                    XX(freqp)=-XX(freqp);
+                    YY(freqp)=-YY(freqp);
+                    ZZ(freqp)=-ZZ(freqp);
                     inverted=true;
                 }
 
                 // Get the corresponding index
-                digfreq2FFT_idx(*V,freq,idx);
+                DIGFREQ2FFT_IDX(ZZ(freqp), ZSIZE(*V), ZZ(idx));
+                DIGFREQ2FFT_IDX(YY(freqp), YSIZE(*V), YY(idx));
+                DIGFREQ2FFT_IDX(XX(freqp), XSIZE(*V), XX(idx));
                 if (Vmag->outside(ZZ(idx),YY(idx),XX(idx)))
                     continue;
 
@@ -95,23 +103,25 @@ double evaluatePlane(double rot, double tilt,
                     negativeSum=iz<0;
                 else
                     negativeSum=iz>0;
+            	double val=A3D_ELEM(*Vmag,ZZ(idx),YY(idx),XX(idx));
                 if (negativeSum ^ inverted) // XOR
                 {
-                    sumNeg+=(*Vmag)(idx);
+                    sumNeg+=val;
                     Nneg++;
                     if (Vdraw!=NULL)
-                        (*Vdraw)(idx)=2*direction*(*Vmag)(idx);
+                    	(*Vdraw)(idx)=2*direction*val;
                 }
                 else
                 {
-                    sumPos+=(*Vmag)(idx);
+                    sumPos+=val;
                     Npos++;
                     if (Vdraw!=NULL)
-                        (*Vdraw)(idx)=1.0/2.0*direction*(*Vmag)(idx);
+                    	(*Vdraw)(idx)=1.0/2.0*direction*val;
                 }
             }
         }
-    if (ABS(Nneg-Npos)/(0.5*(Nneg+Npos))>0.5)
+    }
+    if (fabs(Nneg-Npos)/(0.5*(Nneg+Npos))>0.5)
         // If there is a difference of more than 50%
         return 1e38;
     if (Nneg!=0)
