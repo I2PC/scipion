@@ -146,9 +146,6 @@ void ProgCtfGroup::defineParams()
 /* Produce Side information ------------------------------------------------ */
 void ProgCtfGroup::produceSideInfo()
 {
-    ;
-    //#ifdef GGGG
-
     FileName  fnt_ctf,aux;
     CTFDescription ctf;
     //MetaData ctfdat,
