@@ -319,7 +319,7 @@ void ParametersProjectionTomography::read(const FileName &fn_proj_param)
 }
 
 void ParametersProjectionTomography::calculateProjectionAngles(Projection &P, double angle, double inplaneRot,
-        const Matrix1D<double> &rinplane)
+        const Matrix1D<double> &sinplane)
 {
     // Find Euler rotation matrix
     Matrix1D<double> axis;
@@ -332,7 +332,7 @@ void ParametersProjectionTomography::calculateProjectionAngles(Projection &P, do
     P.set_angles(rot, tilt, psi);
 
     // Find displacement because of axis offset and inplane shift
-    Matrix1D<double> roffset = Rinplane*(raxis-Raxis*raxis) + rinplane;
+    Matrix1D<double> roffset = Rinplane*(raxis-Raxis*raxis) + sinplane;
 
     P.setShifts(XX(roffset), YY(roffset), ZZ(roffset));
 

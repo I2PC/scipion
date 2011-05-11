@@ -191,7 +191,7 @@ public:
      * Calculate the Euler angles and X-Y shifts from the tilt axis direction and tilt angle.
      */
     void calculateProjectionAngles(Projection &P, double angle, double inplaneRot,
-                                   const Matrix1D<double> &rinplane);
+                                   const Matrix1D<double> &sinplane);
 };
 
 /** Structure for threaded projections.
