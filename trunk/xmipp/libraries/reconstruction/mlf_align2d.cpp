@@ -1418,21 +1418,28 @@ void ProgMLF2D::fourierTranslate2D(const std::vector<double> &in,
     double a, b, c, d, ac, bd, ab_cd;
     xxshift = -trans(0) / (double)dim;
     yyshift = -trans(1) / (double)dim;
+    //Not very clean, but very fast
+    const double * ptrIn = &(in[point_start]);
+    double * ptrOut = &(out[0]);
+    int * ptrJ = &(pointer_j[0]);
+    int * ptrI = &(pointer_i[0]);
 
     for (int i = 0; i < nr_points_2d; i++)
     {
-        xx = (double)pointer_j[i];
-        yy = (double)pointer_i[i];
+        xx = (double)ptrJ[i];
+        yy = (double)ptrI[i];
         dotp = 2 * PI * (xx * xxshift + yyshift * yy);
         a = cos(dotp);
         b = sin(dotp);
-        c = in[point_start + 2*i];
-        d = in[point_start + 2*i+1];
+        c = *ptrIn++;//in[point_start + 2*i];
+        d = *ptrIn++;//in[point_start + 2*i+1];
         ac = a * c;
         bd = b * d;
         ab_cd = (a + b) * (c + d);
         out.push_back(ac - bd); // real
         out.push_back(ab_cd - ac - bd); // imag
+        //*ptrOut = ac - bd; ++ptrOut;// real
+        //*ptrOut = ab_cd - ac - bd; ++ptrOut;// imag
     }
 
 }
@@ -1497,8 +1504,9 @@ void ProgMLF2D::calculateFourierOffsets(const MultidimArray<double> &Mimg,
                 {
                     for (int iflip = iflip_start; iflip < iflip_stop; iflip++)
                     {
-                        trans(0) = dxx * MAT_ELEM(F[iflip], 0, 0) + dyy * MAT_ELEM(F[iflip], 0, 1);
-                        trans(1) = dxx * MAT_ELEM(F[iflip], 1, 0) + dyy * MAT_ELEM(F[iflip], 1, 1);
+                        Matrix2D<double> & refF_iflip = F[iflip];
+                        dAi(trans, 0) = dxx * MAT_ELEM(refF_iflip, 0, 0) + dyy * MAT_ELEM(refF_iflip, 0, 1);
+                        dAi(trans, 1) = dxx * MAT_ELEM(refF_iflip, 1, 0) + dyy * MAT_ELEM(refF_iflip, 1, 1);
                         fourierTranslate2D(Fimg_flip,trans,out,iflip*dnr_points_2d);
                     }
                     A2D_ELEM(Moffsets, ROUND(dyy), ROUND(dxx)) = count;
@@ -1509,8 +1517,9 @@ void ProgMLF2D::calculateFourierOffsets(const MultidimArray<double> &Mimg,
                 {
                     for (int iflip = iflip_start; iflip < iflip_stop; iflip++)
                     {
-                        trans(0) = dxx * MAT_ELEM(F[iflip], 0, 0) + dyy * MAT_ELEM(F[iflip], 0, 1);
-                        trans(1) = dxx * MAT_ELEM(F[iflip], 1, 0) + dyy * MAT_ELEM(F[iflip], 1, 1);
+                        Matrix2D<double> & refF_iflip = F[iflip];
+                        dAi(trans, 0) = dxx * MAT_ELEM(refF_iflip, 0, 0) + dyy * MAT_ELEM(refF_iflip, 0, 1);
+                        dAi(trans, 1) = dxx * MAT_ELEM(refF_iflip, 1, 0) + dyy * MAT_ELEM(refF_iflip, 1, 1);
                         fourierTranslate2D(Fimg_flip,trans,out,iflip*dnr_points_2d);
                     }
                     A2D_ELEM(Moffsets_mirror, ROUND(dyy), ROUND(dxx)) = count;
@@ -1688,22 +1697,22 @@ void ProgMLF2D::processOneImage(const MultidimArray<double> &Mimg,
                     {
                         for (int ii = 0; ii < nr_points_prob; ii++)
                         {
-//                            std::cerr << "DEBUG_JM: img_start: " << img_start << std::endl;
-//                            std::cerr << "DEBUG_JM: ref_start: " << ref_start << std::endl;
-//                            std::cerr << "DEBUG_JM: ref_scale: " << ref_scale << std::endl;
-//                            std::cerr << "DEBUG_JM: Fimg_trans[img_start + 2*ii]: " << Fimg_trans[img_start + 2*ii] << std::endl;
-//                            std::cerr << "DEBUG_JM: Fimg_trans[img_start + 2*ii + 1]: " << Fimg_trans[img_start + 2*ii] << std::endl;
-//                            std::cerr << "DEBUG_JM: Fref[ref_start + 2*ii]: " << Fref[ref_start + 2*ii] << std::endl;
-//                            std::cerr << "DEBUG_JM: Fref[ref_start + 2*ii + 1]: " << Fref[ref_start + 2*ii] << std::endl;
+                            //                            std::cerr << "DEBUG_JM: img_start: " << img_start << std::endl;
+                            //                            std::cerr << "DEBUG_JM: ref_start: " << ref_start << std::endl;
+                            //                            std::cerr << "DEBUG_JM: ref_scale: " << ref_scale << std::endl;
+                            //                            std::cerr << "DEBUG_JM: Fimg_trans[img_start + 2*ii]: " << Fimg_trans[img_start + 2*ii] << std::endl;
+                            //                            std::cerr << "DEBUG_JM: Fimg_trans[img_start + 2*ii + 1]: " << Fimg_trans[img_start + 2*ii] << std::endl;
+                            //                            std::cerr << "DEBUG_JM: Fref[ref_start + 2*ii]: " << Fref[ref_start + 2*ii] << std::endl;
+                            //                            std::cerr << "DEBUG_JM: Fref[ref_start + 2*ii + 1]: " << Fref[ref_start + 2*ii] << std::endl;
 
                             tmpr = Fimg_trans[img_start + 2*ii] - ctf[ii] * ref_scale * Fref[ref_start + 2*ii];
                             tmpi = Fimg_trans[img_start + 2*ii+1] - ctf[ii] * ref_scale * Fref[ref_start + 2*ii+1];
                             tmpr = (tmpr * tmpr + tmpi * tmpi) / sigma2[ii];
                             diff += tmpr;
 
-                           // std::cerr << "DEBUG_JM: ii = "<< ii <<" --> diff(" << diff << ") = tmpr2("<< tmpr * tmpr
-                           // << ") + tmpi2(" << tmpi * tmpi << " / sigma2[ii](" << sigma2[ii] << ")\n";
-                           // exit(1);
+                            // std::cerr << "DEBUG_JM: ii = "<< ii <<" --> diff(" << diff << ") = tmpr2("<< tmpr * tmpr
+                            // << ") + tmpi2(" << tmpi * tmpi << " / sigma2[ii](" << sigma2[ii] << ")\n";
+                            // exit(1);
 
                         }
                     }
@@ -1711,18 +1720,18 @@ void ProgMLF2D::processOneImage(const MultidimArray<double> &Mimg,
                     {
                         for (int ii = 0; ii < nr_points_prob; ii++)
                         {
-//                            std::cerr << "DEBUG_JM: img_start: " << img_start << std::endl;
-//                            std::cerr << "DEBUG_JM: ref_start: " << ref_start << std::endl;
-//                            std::cerr << "DEBUG_JM: ref_scale: " << ref_scale << std::endl;
-//                            std::cerr << "DEBUG_JM: Fimg_trans[img_start + 2*ii]: " << Fimg_trans[img_start + 2*ii] << std::endl;
-//                            std::cerr << "DEBUG_JM: Fimg_trans[img_start + 2*ii + 1]: " << Fimg_trans[img_start + 2*ii] << std::endl;
-//                            std::cerr << "DEBUG_JM: Fref[ref_start + 2*ii]: " << Fref[ref_start + 2*ii] << std::endl;
-//                            std::cerr << "DEBUG_JM: Fref[ref_start + 2*ii + 1]: " << Fref[ref_start + 2*ii] << std::endl;
+                            //                            std::cerr << "DEBUG_JM: img_start: " << img_start << std::endl;
+                            //                            std::cerr << "DEBUG_JM: ref_start: " << ref_start << std::endl;
+                            //                            std::cerr << "DEBUG_JM: ref_scale: " << ref_scale << std::endl;
+                            //                            std::cerr << "DEBUG_JM: Fimg_trans[img_start + 2*ii]: " << Fimg_trans[img_start + 2*ii] << std::endl;
+                            //                            std::cerr << "DEBUG_JM: Fimg_trans[img_start + 2*ii + 1]: " << Fimg_trans[img_start + 2*ii] << std::endl;
+                            //                            std::cerr << "DEBUG_JM: Fref[ref_start + 2*ii]: " << Fref[ref_start + 2*ii] << std::endl;
+                            //                            std::cerr << "DEBUG_JM: Fref[ref_start + 2*ii + 1]: " << Fref[ref_start + 2*ii] << std::endl;
                             tmpr = Fimg_trans[img_start + 2*ii] - ref_scale * Fref[ref_start + 2*ii];
                             tmpi = Fimg_trans[img_start + 2*ii+1] - ref_scale * Fref[ref_start + 2*ii+1];
                             diff += (tmpr * tmpr + tmpi * tmpi) / sigma2[ii];
-//                            std::cerr << "ii = "<< ii <<" --> diff(" << diff << ") = tmpr2("<< tmpr * tmpr
-//                            << ") + tmpi2(" << tmpi * tmpi << " / sigma2[ii](" << sigma2[ii] << ")\n";
+                            //                            std::cerr << "ii = "<< ii <<" --> diff(" << diff << ") = tmpr2("<< tmpr * tmpr
+                            //                            << ") + tmpi2(" << tmpi * tmpi << " / sigma2[ii](" << sigma2[ii] << ")\n";
 
                         }
 
