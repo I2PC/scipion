@@ -208,6 +208,10 @@ int ImageGeneric::readApplyGeo(const MetaData &md, size_t objId, bool only_apply
     image->readApplyGeo(name, md, objId, only_apply_shifts, datamode, select_img);
 }
 
+bool ImageGeneric::operator==(const ImageGeneric &i1) const
+    {
+        return(*(this->data) == *(i1.data));
+    }
 
 void ImageGeneric::print() const
 {

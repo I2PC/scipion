@@ -229,6 +229,10 @@ public:
     {
         return *data;
     }
+    /**
+     * equal operator
+     */
+    bool operator==(const ImageGeneric &i1) const;
 
     /** Get pixel value
      */
@@ -270,6 +274,12 @@ public:
 
     }
     void print() const;
+
+    friend std::ostream& operator<<(std::ostream& o, const ImageGeneric& I)
+    {
+        o << I.image;
+    }
+
 
 private:
     /* Return the datatype of the image file.
