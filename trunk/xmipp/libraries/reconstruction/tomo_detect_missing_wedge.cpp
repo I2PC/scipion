@@ -62,12 +62,12 @@ double evaluatePlane(double rot, double tilt,
     double maxFreq2=maxFreq*maxFreq;
     for (double ix=0; ix<=N; ix++)
     {
-    	XX(freq)=ix*df;
-    	double fx2=XX(freq)*XX(freq);
+        XX(freq)=ix*df;
+        double fx2=XX(freq)*XX(freq);
         for (double iy=-N; iy<=N; iy++)
         {
-        	YY(freq)=iy*df;
-        	double fx2fy2=fx2+YY(freq)*YY(freq);
+            YY(freq)=iy*df;
+            double fx2fy2=fx2+YY(freq)*YY(freq);
             if (fx2fy2>maxFreq2)
                 continue;
             for (int iz=-planeWidth; iz<=planeWidth; iz++)
@@ -76,11 +76,11 @@ double evaluatePlane(double rot, double tilt,
                     continue;
 
                 // Frequency in the coordinate system of the plane
-            	ZZ(freq)=iz*df;
+                ZZ(freq)=iz*df;
 
                 // Frequency in the coordinate system of the volume
-            	SPEED_UP_temps;
-            	M3x3_BY_V3x1(freqp,Einv,freq);
+                SPEED_UP_temps;
+                M3x3_BY_V3x1(freqp,Einv,freq);
                 bool inverted=false;
                 if (XX(freqp)<0)
                 {
@@ -94,7 +94,9 @@ double evaluatePlane(double rot, double tilt,
                 DIGFREQ2FFT_IDX(ZZ(freqp), ZSIZE(*V), ZZ(idx));
                 DIGFREQ2FFT_IDX(YY(freqp), YSIZE(*V), YY(idx));
                 DIGFREQ2FFT_IDX(XX(freqp), XSIZE(*V), XX(idx));
-                if (Vmag->outside(ZZ(idx),YY(idx),XX(idx)))
+                if (XX(idx) < STARTINGX(*Vmag) || XX(idx) > FINISHINGX(*Vmag) ||
+                    YY(idx) < STARTINGY(*Vmag) || YY(idx) > FINISHINGY(*Vmag) ||
+                    ZZ(idx) < STARTINGZ(*Vmag) || ZZ(idx) > FINISHINGZ(*Vmag))
                     continue;
 
                 // Make the corresponding sums
@@ -103,20 +105,20 @@ double evaluatePlane(double rot, double tilt,
                     negativeSum=iz<0;
                 else
                     negativeSum=iz>0;
-            	double val=A3D_ELEM(*Vmag,ZZ(idx),YY(idx),XX(idx));
+                double val=A3D_ELEM(*Vmag,ZZ(idx),YY(idx),XX(idx));
                 if (negativeSum ^ inverted) // XOR
                 {
                     sumNeg+=val;
                     Nneg++;
                     if (Vdraw!=NULL)
-                    	(*Vdraw)(idx)=2*direction*val;
+                        (*Vdraw)(idx)=2*direction*val;
                 }
                 else
                 {
                     sumPos+=val;
                     Npos++;
                     if (Vdraw!=NULL)
-                    	(*Vdraw)(idx)=1.0/2.0*direction*val;
+                        (*Vdraw)(idx)=1.0/2.0*direction*val;
                 }
             }
         }
@@ -300,15 +302,15 @@ void ProgDetectMissingWedge::show() const
 // Usage -------------------------------------------------------------------
 void ProgDetectMissingWedge::defineParams()
 {
-	addUsageLine("Detect the orientation of the missing wedge in a tomogram. ");
-	addUsageLine("+For doing so it fits a couple of planes along which there is a maximum ");
-	addUsageLine("+variation between the energy of the Fourier transform on its left and ");
-	addUsageLine("+on its right. The missing wedge is coded with four angles (two for each ");
-	addUsageLine("+plane). You may also produce a mask with 1 where the missing wedge is, ");
-	addUsageLine("+and 0 where the data has been actually measured. Finally, you can also ");
-	addUsageLine("+produce a marked magnitude volume (i.e., the magnitude of the Fourier ");
-	addUsageLine("+transform where the position of the two planes have been marked). ");
-	addParamsLine("  -i <file>           : Input tomogram");
+    addUsageLine("Detect the orientation of the missing wedge in a tomogram. ");
+    addUsageLine("+For doing so it fits a couple of planes along which there is a maximum ");
+    addUsageLine("+variation between the energy of the Fourier transform on its left and ");
+    addUsageLine("+on its right. The missing wedge is coded with four angles (two for each ");
+    addUsageLine("+plane). You may also produce a mask with 1 where the missing wedge is, ");
+    addUsageLine("+and 0 where the data has been actually measured. Finally, you can also ");
+    addUsageLine("+produce a marked magnitude volume (i.e., the magnitude of the Fourier ");
+    addUsageLine("+transform where the position of the two planes have been marked). ");
+    addParamsLine("  -i <file>           : Input tomogram");
     addParamsLine(" [--maxFreq <f=0.25>] : Maximum frequency to fit the plane (normalized to 0.5)");
     addParamsLine(" [--width <w=2>]      : Width of the probe plane");
     addParamsLine(" [--saveMarks]        : Save the magnitude of the FFT with");
