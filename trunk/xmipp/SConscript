@@ -492,7 +492,6 @@ ReconsSources = [
     'ctf_sort_psds.cpp',
     'denoise.cpp',
     'directions.cpp',
-    'filter_projections.cpp',
     'fourier_filter.cpp',
     'make_spectra.cpp',
     'micrograph_phase_flipping.cpp',
@@ -674,8 +673,6 @@ AddXmippProgram('ctf_estimate_from_psd', ['XmippRecons'])
 AddXmippProgram('ctf_group', ['XmippRecons'])
 AddXmippProgram('ctf_sort_psds', ['XmippRecons'])
 #AddXmippProgram('denoise', ['XmippRecons'])
-#AddXmippProgram('detect_structures', ['XmippRecons'])
-AddXmippProgram('filter_projections', ['XmippRecons'])
 AddXmippProgram('find_center2d')
 AddXmippProgram('find_center3d')
 AddXmippProgram('image_align', ['XmippRecons'])
