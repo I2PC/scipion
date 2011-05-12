@@ -4890,5 +4890,9 @@ template<>
 void MultidimArray< std::complex< double > >::rangeAdjust(std::complex< double > minF, std::complex< double > maxF);
 template<>
 double MultidimArray< std::complex< double > >::computeAvg() const;
+template<>
+bool operator==(const MultidimArray< std::complex< double > >& op1,
+		        const MultidimArray< std::complex< double > >& op2);
+
 //@}
 #endif

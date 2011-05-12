@@ -77,4 +77,20 @@ double MultidimArray< std::complex< double > >::computeAvg() const
 {
     REPORT_ERROR(ERR_NOT_IMPLEMENTED,"MultidimArray::computeAvg not implemented for complex.");
 }
+template<>
+bool operator==(const MultidimArray< std::complex< double > >& op1, const MultidimArray< std::complex< double > >& op2)
+{
+	double accuracy = XMIPP_EQUAL_ACCURACY;
+    if (! op1.sameShape(op2) || op1.data==NULL || op2.data == NULL)
+        return false;
+    FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(op1)
+    if (   fabs(DIRECT_MULTIDIM_ELEM(op1,n).real() -
+            DIRECT_MULTIDIM_ELEM(op2,n).real() > accuracy)
+            ||
+           fabs(DIRECT_MULTIDIM_ELEM(op1,n).imag() -
+            DIRECT_MULTIDIM_ELEM(op2,n).imag() > accuracy)
+       )
+        return false;
+    return true;
+}
 
