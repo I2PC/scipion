@@ -611,16 +611,23 @@ public:
     void defineParams()
     {
         addUsageLine("Find the best symmetry of rotation of an image or collection of images");
-        addParamsLine(" -i <infile>        : Image, image stack or image selfile");
+        addUsageLine("+It is very useful when you want to calculate the rotational symmetry of ");
+        addUsageLine("+a set of images (in fact it computes the center of the average image). ");
+        addUsageLine("+Image dimensions must be less than 512x512.");
+        addSeeAlsoLine("xmipp_image_rotational_spectrum");
+        addParamsLine(" -i <file>          : Image, image stack or image selfile");
         addParamsLine(" --oroot <rootname> : Rootname for output files");
-        addParamsLine("[--r1 <radius=15>]  : Lowest integration radius (% of the image radius)");
-        addParamsLine("[--r2 <radius=80>]  : Highest integration radius (% of the image radius)");
-        addParamsLine("[--r3 <radius=90>]  : Lowest smoothing radius (% of the image radius)");
-        addParamsLine("[--r4 <radius=100>] : Highest smoothing radius (% of the image radius)");
+        addParamsLine("                    :+ <rootname>_center.xmd contains the image center");
+        addParamsLine("                    :+ <rootname>_analyzed_image.xmp (if verbose>=2) contains the image that was actually analyzed");
+        addParamsLine("[--r1+ <radius=15>]  : Lowest integration radius (% of the image radius)");
+        addParamsLine("[--r2+ <radius=80>]  : Highest integration radius (% of the image radius)");
+        addParamsLine("[--r3+ <radius=90>]  : Lowest smoothing radius (% of the image radius)");
+        addParamsLine("[--r4+ <radius=100>] : Highest smoothing radius (% of the image radius)");
         addParamsLine("[--x0 <x>]          : Initial center of rotation");
         addParamsLine("[--y0 <y>]          : Initial center of rotation");
-        addParamsLine("[--harm <n=1>]      : Harmonic to optimize");
-        addParamsLine("[--opt <opt=-1>]    : Type of optimization (-1=minimize, +1=maximize)");
+        addParamsLine("[--harm+ <n=1>]      : Harmonic to optimize");
+        addParamsLine("[--opt+ <opt=-1>]    : Type of optimization (-1=minimize, +1=maximize)");
+        addExampleLine("xmipp_image_find_center -i image.xmp");
     }
 
     void readParams()
@@ -703,7 +710,8 @@ public:
     			I.read(fnIn);
     	}
     	I().rangeAdjust(0,255);
-    	I.write(fnOroot+"_analyzed_image.xmp");
+    	if (verbose==2)
+    		I.write(fnOroot+"_analyzed_image.xmp");
 
     	// Adapt to old code
         if ((imagen = (unsigned char **)imalloc(YSIZE(I()) + 1, XSIZE(I()) + 1, NATURAL)) == NULL)
