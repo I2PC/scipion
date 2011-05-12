@@ -371,8 +371,8 @@ public:
     double CTFpure_without_damping_at(bool show = false) const
     {
         double argument = K1 * precomputed.deltaf * precomputed.u2 + K2 * precomputed.u4;
-        double sine_part = sin(argument); // OK
-        double cosine_part = cos(argument);
+        double sine_part, cosine_part;
+        sincos(argument,&sine_part,&cosine_part);
         if (show)
         {
             std::cout << "   Deltaf=" << precomputed.deltaf << std::endl;
@@ -417,8 +417,8 @@ public:
     inline double CTFpure_at(bool show = false) const
     {
         double argument = K1 * precomputed.deltaf * precomputed.u2 + K2 *precomputed.u4;
-        double sine_part = sin(argument); // OK
-        double cosine_part = cos(argument);
+        double sine_part, cosine_part;
+        sincos(argument,&sine_part, &cosine_part); // OK
         double Eespr = exp(-K3 * precomputed.u4); // OK
         //CO: double Eispr=exp(-K4*u4); // OK
         double EdeltaF = bessj0(K5 * precomputed.u2); // OK
@@ -457,8 +457,8 @@ public:
         // if (u2>=ua2) return 0;
         double deltaf = DeltafNoPrecomputed(X, Y);
         double argument = K1 * deltaf * u2 + K2 * u4;
-        double sine_part = sin(argument); // OK
-        double cosine_part = cos(argument);
+        double sine_part, cosine_part;
+        sincos(argument,&sine_part, &cosine_part); // OK
         double Eespr = exp(-K3 * u4); // OK
         //CO: double Eispr=exp(-K4*u4); // OK
         double EdeltaF = bessj0(K5 * u2); // OK
