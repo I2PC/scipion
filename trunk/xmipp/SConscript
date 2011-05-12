@@ -752,6 +752,8 @@ AddXmippProgram('xray_project', ['XmippRecons'])
 
 #---- Test
 if int(env['gtest']):
+     AddXmippTest('test_fftw')
+     #AddXmippTest('test_filters')
      AddXmippTest('test_funcs')
      AddXmippTest('test_image')
      AddXmippTest('test_image_generic')
