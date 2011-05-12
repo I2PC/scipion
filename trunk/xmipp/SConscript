@@ -491,7 +491,6 @@ ReconsSources = [
     'ctf_group.cpp',
     'ctf_sort_psds.cpp',
     'denoise.cpp',
-##    'detect_structures.cpp',
     'directions.cpp',
     'filter_projections.cpp',
     'fourier_filter.cpp',
