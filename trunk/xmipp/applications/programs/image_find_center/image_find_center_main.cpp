@@ -250,8 +250,8 @@ float conv1x(double y, double x)
 
 void ergrot(double xc0, double yc0, float* zzz)
 {
-//double xc0, yc0;
-//float *zzz; /* It hides global variable, handle with care */
+    //double xc0, yc0;
+    //float *zzz; /* It hides global variable, handle with care */
 
     static float a[266], b[257];
     double za, zb;
@@ -320,19 +320,23 @@ void ergrot(double xc0, double yc0, float* zzz)
             xm2 += (bi * bi);
             xm3 += (ai * bi * coseno[mu4+ncic]);
             i1 = i + 1;
+            ai = a[i];
+            bi = b[i];
             for (j = i1; j <= mu; j++) /* do 15 */
             { l1 += ncic2;
                 l2 += ncic2;
-                ai = a[i];
                 aj = a[j];
-                bi = b[i];
                 bj = b[j];
-                xp1 += (2. * aj * ai * coseno[l1]);
-                xm1 += (2. * aj * ai * coseno[l2]);
-                xp2 += (2. * bj * bi * coseno[l1-ncic2]);
-                xm2 += (2. * bj * bi * coseno[l2]);
-                xp3 += ((ai * bj + aj * bi) * coseno[l1-ncic]);
-                xm3 += (ai * bj * coseno[l2-ncic] + aj * bi * coseno[l2+ncic]);
+                double ajai2=2.0*aj*ai;
+                double bjbi2=2.0*bj*bi;
+                double aibj=ai*bj;
+                double ajbi=aj*bi;
+                xp1 += (ajai2 * coseno[l1]);
+                xm1 += (ajai2 * coseno[l2]);
+                xp2 += (bjbi2 * coseno[l1-ncic2]);
+                xm2 += (bjbi2 * coseno[l2]);
+                xp3 += ((aibj + ajbi) * coseno[l1-ncic]);
+                xm3 += (aibj * coseno[l2-ncic] + ajbi * coseno[l2+ncic]);
             }
         }
         axp1 += xp1 * r;
@@ -490,7 +494,8 @@ e9:
     }
     // Introduced by Sjors dd 28.9.2004 to avoid infinite loops
     count++;
-    if (count > 1000) goto s1;
+    if (count > 1000)
+        goto s1;
 e23:
     ext = -1000000.;
     for (i = 1; i <= ind; i++) /* do 7 */
@@ -580,7 +585,7 @@ e17:
     }
     goto e23;
 e10:
-	std::cout << "\nOptimal center coordinates: x= " << yc0-1 << " ,y= " << xc0-1 << " " << std::endl;
+    std::cout << "\nOptimal center coordinates: x= " << yc0-1 << " ,y= " << xc0-1 << " " << std::endl;
     return;
 s1:
     yc0=xc0=-1;
@@ -592,22 +597,22 @@ s1:
 class ProgFindCenter2D: public XmippProgram
 {
 public:
-	/// Filenames
-	FileName fnIn, fnOroot;
+    /// Filenames
+    FileName fnIn, fnOroot;
 
-	/// Radii
-	double _r1, _r2, _r3, _r4;
+    /// Radii
+    double _r1, _r2, _r3, _r4;
 
-	/// Starting center
-	double x0, y0;
+    /// Starting center
+    double x0, y0;
 
-	/// Harmonic
-	int _ncic;
+    /// Harmonic
+    int _ncic;
 
-	/// Optimization type
+    /// Optimization type
     int _indmul;
 
-	/// Define parameters
+    /// Define parameters
     void defineParams()
     {
         addUsageLine("Find the best symmetry of rotation of an image or collection of images");
@@ -632,100 +637,100 @@ public:
 
     void readParams()
     {
-    	fnIn=getParam("-i");
-    	fnOroot=getParam("--oroot");
-    	_r1=getDoubleParam("--r1");
-    	_r2=getDoubleParam("--r2");
-    	_r3=getDoubleParam("--r3");
-    	_r4=getDoubleParam("--r4");
-    	if (checkParam("--x0"))
-    		x0=getDoubleParam("--x0");
-    	else
-    		x0=-1;
-    	if (checkParam("--y0"))
-    		y0=getDoubleParam("--y0");
-    	else
-    		y0=-1;
-    	_ncic=getIntParam("--harm");
-    	_indmul=getIntParam("--opt");
+        fnIn=getParam("-i");
+        fnOroot=getParam("--oroot");
+        _r1=getDoubleParam("--r1");
+        _r2=getDoubleParam("--r2");
+        _r3=getDoubleParam("--r3");
+        _r4=getDoubleParam("--r4");
+        if (checkParam("--x0"))
+            x0=getDoubleParam("--x0");
+        else
+            x0=-1;
+        if (checkParam("--y0"))
+            y0=getDoubleParam("--y0");
+        else
+            y0=-1;
+        _ncic=getIntParam("--harm");
+        _indmul=getIntParam("--opt");
     }
 
     void show()
     {
-    	if (verbose==0)
-    		return;
-    	std::cout << "Input:          " << fnIn    << std::endl
-    			  << "Output root:    " << fnOroot << std::endl
-    			  << "R1:             " << _r1     << std::endl
-    			  << "R2:             " << _r2     << std::endl
-    			  << "R3:             " << _r3     << std::endl
-    			  << "R4:             " << _r4     << std::endl
-    			  << "Harmonic:       " << _ncic   << std::endl
-    			  << "Opt:            " << _indmul << std::endl
-    			  << "Initial center: (" << x0 << "," << y0 << ")\n"
-    	;
+        if (verbose==0)
+            return;
+        std::cout << "Input:          " << fnIn    << std::endl
+        << "Output root:    " << fnOroot << std::endl
+        << "R1:             " << _r1     << std::endl
+        << "R2:             " << _r2     << std::endl
+        << "R3:             " << _r3     << std::endl
+        << "R4:             " << _r4     << std::endl
+        << "Harmonic:       " << _ncic   << std::endl
+        << "Opt:            " << _indmul << std::endl
+        << "Initial center: (" << x0 << "," << y0 << ")\n"
+        ;
     }
 
     void run()
     {
-    	show();
-    	size_t id;
-    	// Get the input image or the average of the input images
-    	Image<double> I, Iaux;
-    	if (fnIn.isMetaData())
-    	{
-    		MetaData MD(fnIn);
-    		int N=0;
-    		FOR_ALL_OBJECTS_IN_METADATA(MD)
-    		{
-    			Iaux.readApplyGeo(MD,__iter.objId);
-    			if (N==0)
-    				I()=Iaux();
-    			else
-    				I()+=Iaux();
-    			++N;
-    		}
-    		I()/=N;
-    	}
-    	else
-    	{
-    		I.read(fnIn, HEADER);
-    		int Xdim, Ydim, Zdim;
-    		size_t Ndim;
-    		I.getDimensions(Xdim, Ydim, Zdim, Ndim);
-    		I.clear();
-    		if (Ndim>1)
-    		{
-    			for (unsigned long n=0; n<Ndim; n++)
-    			{
-        			Iaux.read(fnIn,DATA,n);
-        			if (n==0)
-        				I=Iaux;
-        			else
-        				I()+=Iaux();
-    			}
-    			I()/=Ndim;
-    		}
-    		else
-    			I.read(fnIn);
-    	}
-    	I().rangeAdjust(0,255);
-    	if (verbose==2)
-    		I.write(fnOroot+"_analyzed_image.xmp");
+        show();
+        size_t id;
+        // Get the input image or the average of the input images
+        Image<double> I, Iaux;
+        if (fnIn.isMetaData())
+        {
+            MetaData MD(fnIn);
+            int N=0;
+            FOR_ALL_OBJECTS_IN_METADATA(MD)
+            {
+                Iaux.readApplyGeo(MD,__iter.objId);
+                if (N==0)
+                    I()=Iaux();
+                else
+                    I()+=Iaux();
+                ++N;
+            }
+            I()/=N;
+        }
+        else
+        {
+            I.read(fnIn, HEADER);
+            int Xdim, Ydim, Zdim;
+            size_t Ndim;
+            I.getDimensions(Xdim, Ydim, Zdim, Ndim);
+            I.clear();
+            if (Ndim>1)
+            {
+                for (unsigned long n=0; n<Ndim; n++)
+                {
+                    Iaux.read(fnIn,DATA,n);
+                    if (n==0)
+                        I=Iaux;
+                    else
+                        I()+=Iaux();
+                }
+                I()/=Ndim;
+            }
+            else
+                I.read(fnIn);
+        }
+        I().rangeAdjust(0,255);
+        if (verbose==2)
+            I.write(fnOroot+"_analyzed_image.xmp");
 
-    	// Adapt to old code
+        // Adapt to old code
         if ((imagen = (unsigned char **)imalloc(YSIZE(I()) + 1, XSIZE(I()) + 1, NATURAL)) == NULL)
-        	REPORT_ERROR(ERR_MEM_NOTENOUGH,"");
+            REPORT_ERROR(ERR_MEM_NOTENOUGH,"");
         FOR_ALL_ELEMENTS_IN_ARRAY2D(I())
-        	imagen[i+1][j+1]=IMGPIXEL(I,i,j);
+        imagen[i+1][j+1]=IMGPIXEL(I,i,j);
         if (x0>=0)
-        	xc0=(float)x0+1; //+1 because of Fortran indexing
+            xc0=(float)x0+1; //+1 because of Fortran indexing
         else
-        	xc0=XSIZE(I())/2+1;
+            xc0=XSIZE(I())/2+1;
         if (y0>=0)
-        	yc0=(float)y0+1;
+            yc0=(float)y0+1;
         else
-        	yc0=YSIZE(I())/2+1;
+            yc0=YSIZE(I())/2+1;
         r1=(float)(_r1/100.0*XSIZE(I())/2.0);
         r2=(float)(_r2/100.0*XSIZE(I())/2.0);
         r3=1;
@@ -738,23 +743,23 @@ public:
         ni = DEF_IT;
         mu = (int)(PI / 2 * r2 / ncic);
         if (mu < 3)
-        	REPORT_ERROR(ERR_ARG_INCORRECT,"A higher integration radius is needed (r2>6*harm/pi)");
+            REPORT_ERROR(ERR_ARG_INCORRECT,"A higher integration radius is needed (r2>6*harm/pi)");
         largo=YSIZE(I());
         lancho=XSIZE(I());
         busca();
-    	MetaData MD;
-    	id=MD.addObject();
-    	if (yc0>0)
-    	{
-    		MD.setValue(MDL_X,(double)(yc0-1),id);
-    		MD.setValue(MDL_Y,(double)(xc0-1),id);
-    	}
-    	else
-    	{
-    		MD.setValue(MDL_X,(double)(XSIZE(I())/2),id);
-    		MD.setValue(MDL_Y,(double)(YSIZE(I())/2),id);
-    	}
-    	MD.write(fnOroot+"_center.xmd");
+        MetaData MD;
+        id=MD.addObject();
+        if (yc0>0)
+        {
+            MD.setValue(MDL_X,(double)(yc0-1),id);
+            MD.setValue(MDL_Y,(double)(xc0-1),id);
+        }
+        else
+        {
+            MD.setValue(MDL_X,(double)(XSIZE(I())/2),id);
+            MD.setValue(MDL_Y,(double)(YSIZE(I())/2),id);
+        }
+        MD.write(fnOroot+"_center.xmd");
         imfree((char**)imagen, YSIZE(I()) + 1, XSIZE(I()) + 1, NATURAL);
     }
 };
@@ -762,7 +767,7 @@ public:
 /* MAIN -------------------------------------------------------------------- */
 int main(int argc, char *argv[])
 {
-	ProgFindCenter2D program;
+    ProgFindCenter2D program;
     program.read(argc, argv);
     program.tryRun();
     return 0;
