@@ -28,7 +28,19 @@
 // Usage -------------------------------------------------------------------
 void ProgMakeSpectra::defineParams()
 {
-	addUsageLine("Computes the rotational spectrum of a set of images");
+	addUsageLine("Computes the rotational spectrum of a set of images.");
+	addUsageLine("+This program generates a Fourier-Bessel decomposition of each image listed ");
+	addUsageLine("+in an image collection. For each one, it creates a vector with the armonic ");
+	addUsageLine("+energy percentage as a function of the radius. ");
+	addUsageLine("+ ");
+	addUsageLine("+The rotational spectrum is computed around the point (x0,y0), by default the center of the image.");
+	addUsageLine("+The length of the rotational spectrum is defined by the lowest and highest harmonic.");
+	addUsageLine("+Each harmonic is calculated by the integration of the image over a ring defined by r1 and r2.");
+	addUsageLine("+ ");
+	addUsageLine("+The rotational spectrum was defined in Crowther, R.A., and Amos, L.A. ");
+	addUsageLine("+Harmonic analysis of electron microscopy images with rotational symmetry.");
+	addUsageLine("+J. Mol. Biol.: 60, 123-130 (1971).");
+	addSeeAlsoLine("classify_kerdensom, image_vectorize");
 	addParamsLine("   -i <file>                   : Input image, selfile or stack");
 	addParamsLine("   -o <metadata>               : Output vector metadata");
 	addParamsLine("   --r1 <lowRadius>            : Lowest Integration radius");
@@ -37,6 +49,7 @@ void ProgMakeSpectra::defineParams()
     addParamsLine("  [--y0 <ycenter=-1>]          : By default, the Xmipp origin");
     addParamsLine("  [--low  <lowerHarmonic=  1>] : Lower harmonic to compute");
     addParamsLine("  [--high <higherHarmonic=15>] : Higher harmonic to compute");
+    addExampleLine("xmipp_image_rotational_spectra -i images.stk -o spectra.xmd");
 }
 
 // Read from command line --------------------------------------------------
