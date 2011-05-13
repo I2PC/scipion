@@ -69,6 +69,7 @@ protected:
         N = getIntParam("-n");
         fn_root = getParam("--oroot");
         extension = fn_root.getFileFormat();
+	fn_root = fn_root.removeFileFormat();
         if (fn_root.empty())
             fn_root = fn_in.withoutExtension();
         if (extension.empty())
