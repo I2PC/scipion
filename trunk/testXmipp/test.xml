@@ -119,6 +119,12 @@
             <FILE filename="smallStack.stk"/>
         </CASE>
     </PROGRAM>
+    <PROGRAM name="xmipp_image_rotational_spectra" mpi="FALSE">
+        <CASE arguments="-i input/images_some.stk -o %o/spectra.xmd --r1 10 --r2 40" changeDir="FALSE">
+            <FILE filename="spectra.xmd"/>
+            <FILE filename="spectra.xmd.raw"/>
+        </CASE>
+    </PROGRAM>
     <PROGRAM name="xmipp_image_separate_objects" mpi="FALSE">
         <CASE arguments="-i input/maskBacteriorhodopsin.vol --oroot %o/mask" changeDir="FALSE">
             <FILE filename="mask000001.vol"/>
