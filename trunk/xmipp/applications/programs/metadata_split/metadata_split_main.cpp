@@ -48,25 +48,31 @@ protected:
         addParamsLine("    -i <inputSelfile>    : Input MetaData File");
         addParamsLine("  [ -n <parts=2> ] : Number of output MetaDatas");
         addParamsLine("  [ --oroot <rootname=\"\"> ] : Rootname for output MetaDatas");
-        addParamsLine("                          : output will be rootname_<n>.xpd");
+        addParamsLine("                          : output will be rootname_<n>.xmd");
         addParamsLine("  [--dont_randomize ]     : Do not generate random groups");
         addParamsLine("  [--dont_sort ]          : Do not sort the outputs MetaData");
         addParamsLine("  [--dont_remove_disabled]: Do not remove disabled images from MetaData");
         addParamsLine("  [-l <label=\"image\">] : sort using a label, default image");
 
-        addExampleLine("Splits input.sel in two parts", false);
+        addExampleLine("Splits input.sel in two parts:", false);
         addExampleLine("  xmipp_metadata_split -i input.sel --oroot output_part");
-        addExampleLine("Splits input.sel in 4 output files without randomizing input metdata", false);
+        addExampleLine("Splits input.sel in 4 output files without randomizing input metdata:", false);
         addExampleLine("  xmipp_metadata_split -i input.sel -n 4 --dont_randomize");
+        addExampleLine("Splits input.sel in two parts with sel extension:", false);
+        addExampleLine("  xmipp_metadata_split -i input.sel --oroot output_part:sel");
     }
 
     void readParams()
     {
 
         fn_in = getParam("-i");
-        extension = fn_in.getExtension();
         N = getIntParam("-n");
         fn_root = getParam("--oroot");
+        extension = fn_root.getFileFormat();
+        if (fn_root.empty())
+            fn_root = fn_in.withoutExtension();
+        if (extension.empty())
+            extension = "xmd";
         dont_randomize = checkParam("--dont_randomize");
         dont_sort      = checkParam("--dont_sort");
         dont_remove_disabled = checkParam("--dont_remove_disabled");
@@ -78,9 +84,6 @@ protected:
         sortLabel = MDL::str2Label(sortLabelStr);
         if (sortLabel == MDL_UNDEFINED)
             REPORT_ERROR(ERR_MD_UNDEFINED, (String)"Unrecognized label '" + sortLabelStr + "'");
-
-        if (fn_root.empty())
-            fn_root = fn_in.withoutExtension();
     }
 
 public:
@@ -90,7 +93,7 @@ public:
         mdIn.read(fn_in);
 
         if (dont_randomize)
-          mdPtr = &mdIn;
+            mdPtr = &mdIn;
         else
         {
             mdPtr = new MetaData();
@@ -98,7 +101,7 @@ public:
         }
 
         if (!dont_remove_disabled && mdPtr->containsLabel(MDL_ENABLED)) //remove disabled entries by default
-          mdPtr->removeObjects(MDValueEQ(MDL_ENABLED, -1));
+            mdPtr->removeObjects(MDValueEQ(MDL_ENABLED, -1));
 
         size_t Num_images = mdPtr->size();
         int Num_groups = XMIPP_MIN(N, Num_images);
