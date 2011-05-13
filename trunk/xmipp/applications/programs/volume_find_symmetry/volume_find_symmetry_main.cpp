@@ -29,10 +29,12 @@
 #include <data/filters.h>
 #include <data/geometry.h>
 #include <data/program.h>
+#include <data/threads.h>
 
 #include <cstdio>
 
-// Prototype
+// Prototypes
+void globalThreadEvaluateSymmetry(ThreadArgument &thArg);
 double evaluateSymmetryWrapper(double *p, void *prm);
 
 class ProgVolumeFindSymmetry: public XmippProgram
@@ -45,6 +47,7 @@ public:
     double   tilt0, tiltF, step_tilt;
     bool     local;
     Mask mask_prm;
+    int numberOfThreads;
 
     // Define parameters
     void defineParams()
@@ -58,7 +61,8 @@ public:
         addParamsLine("[--rot  <rot0=0>  <rotF=355> <step=5>]: Limits for rotational angle search");
         addParamsLine("[--tilt <tilt0=0> <tiltF=90> <step=5>]: Limits for tilt angle search");
         addParamsLine("[--local <rot0> <tilt0>]       : Perform a local search around this angle");
-        addParamsLine("[--useSplines+]                 : Use cubic B-Splines for the interpolations");
+        addParamsLine("[--useSplines+]                : Use cubic B-Splines for the interpolations");
+        addParamsLine("[--thr <N=1>]                  : Number of threads");
         mask_prm.defineParams(this,INT_MASK,NULL,"Restrict the comparison to the mask area.");
     }
 
@@ -87,6 +91,37 @@ public:
         mask_prm.allowed_data_types = INT_MASK;
         if (checkParam("--mask"))
             mask_prm.readParams(this);
+        numberOfThreads=getIntParam("--thr");
+    }
+
+    void threadEvaluateSymmetry(int thrId)
+    {
+        Matrix1D<double> p(2);
+        DIRECT_A1D_ELEM(vbest_corr,thrId) = 0;
+        DIRECT_A1D_ELEM(vbest_rot,thrId)  = 0;
+        DIRECT_A1D_ELEM(vbest_tilt,thrId) = 0;
+        size_t first, last;
+        if (thrId==0)
+            init_progress_bar(rotVector.size());
+        while (td->getTasks(first, last))
+        {
+            for (size_t i=first; i<=last; i++)
+            {
+                XX(p)=rotVector[i];
+                YY(p)=tiltVector[i];
+                double corr=-evaluateSymmetry(MATRIX1D_ARRAY(p)-1);
+                if (corr > DIRECT_A1D_ELEM(vbest_corr,thrId))
+                {
+                    DIRECT_A1D_ELEM(vbest_corr,thrId) = corr;
+                    DIRECT_A1D_ELEM(vbest_rot,thrId) = XX(p);
+                    DIRECT_A1D_ELEM(vbest_tilt,thrId) = YY(p);
+                }
+            }
+            if (thrId==0)
+                progress_bar(last);
+        }
+        if (thrId==0)
+            progress_bar(rotVector.size());
     }
 
     void run()
@@ -95,42 +130,35 @@ public:
         volume.read(fn_input);
         volume().setXmippOrigin();
         mask_prm.generate_mask(volume());
+        double best_corr, best_rot, best_tilt;
 
         // Look for the rotational symmetry axis
-        double best_corr = 0, best_rot = rot0 - step_rot, best_tilt = tilt0 - step_tilt;
         if (!local)
         {
-            int maxsteps = FLOOR((rotF - rot0) / step_rot+1) *
-                           FLOOR((tiltF - tilt0) / step_tilt +1);
             if (verbose>0)
-            {
                 std::cerr << "Searching symmetry axis ...\n";
-                init_progress_bar(maxsteps);
-            }
             int i = 0;
-            Matrix1D<double> p(2);
             for (double rot = rot0; rot <= rotF; rot += step_rot)
                 for (double tilt = tilt0; tilt <= tiltF; tilt += step_tilt)
                 {
-                    p(0)=rot;
-                    p(1)=tilt;
-                    double corr=-evaluateSymmetry(MATRIX1D_ARRAY(p)-1);
-                    if (corr > best_corr)
-                    {
-                        best_corr = corr;
-                        best_rot = rot;
-                        best_tilt = tilt;
-                        if (verbose!=0)
-                            std::cout << "rot=" << rot << " tilt=" << tilt
-                            << " corr=" << corr << std::endl;
-                    }
-
-                    // progress bar
-                    if ((i++) % XMIPP_MAX(maxsteps / 60, 1) == 0 && verbose!=0)
-                        progress_bar(i);
+                    rotVector.push_back(rot);
+                    tiltVector.push_back(tilt);
                 }
-            if (verbose!=0)
-                progress_bar(maxsteps);
+            vbest_corr.resizeNoCopy(numberOfThreads);
+            vbest_corr.initConstant(-1e38);
+            vbest_rot.initZeros(numberOfThreads);
+            vbest_tilt.initZeros(numberOfThreads);
+            td = new ThreadTaskDistributor(rotVector.size(), 5);
+            ThreadManager * thMgr =  new ThreadManager(numberOfThreads,this);
+            thMgr->run(globalThreadEvaluateSymmetry);
+            best_corr=-1e38;
+            FOR_ALL_ELEMENTS_IN_ARRAY1D(vbest_corr)
+            if (vbest_corr(i)>best_corr)
+            {
+                best_corr=vbest_corr(i);
+                best_rot=vbest_rot(i);
+                best_tilt=vbest_tilt(i);
+            }
         }
         else
         {
@@ -145,35 +173,42 @@ public:
             best_rot=p(0);
             best_tilt=p(1);
         }
+        Matrix2D<double> Euler;
+        Matrix1D<double> sym_axis;
         Euler_angles2matrix(best_rot, best_tilt, 0, Euler);
         Euler.getRow(2, sym_axis);
         if (verbose!=0)
-        	std::cout << "Symmetry axis (rot,tilt)= " << best_rot << " "
-        	<< best_tilt << " --> " << sym_axis << std::endl;
+            std::cout << "Symmetry axis (rot,tilt)= " << best_rot << " "
+            << best_tilt << " --> " << sym_axis << std::endl;
         if (fn_output!="")
         {
-        	std::vector<double> direction;
-        	direction.push_back(XX(sym_axis));
-        	direction.push_back(YY(sym_axis));
-        	direction.push_back(ZZ(sym_axis));
+            std::vector<double> direction;
+            direction.push_back(XX(sym_axis));
+            direction.push_back(YY(sym_axis));
+            direction.push_back(ZZ(sym_axis));
 
-        	MetaData MD;
-        	size_t id=MD.addObject();
-        	MD.setValue(MDL_ANGLEROT,best_rot,id);
-        	MD.setValue(MDL_ANGLETILT,best_tilt,id);
-        	MD.setValue(MDL_DIRECTION,direction,id);
-        	MD.write(fn_output);
+            MetaData MD;
+            size_t id=MD.addObject();
+            MD.setValue(MDL_ANGLEROT,best_rot,id);
+            MD.setValue(MDL_ANGLETILT,best_tilt,id);
+            MD.setValue(MDL_DIRECTION,direction,id);
+            MD.write(fn_output);
         }
     }
 
     Image<double> volume;
-    MultidimArray<double> volume_sym, volume_aux;
-    Matrix2D<double> Euler, sym_matrix;
-    Matrix1D<double> sym_axis;
+    std::vector<double> rotVector;
+    std::vector<double> tiltVector;
+    ThreadTaskDistributor * td;
+    MultidimArray<double> vbest_corr, vbest_rot, vbest_tilt;
 
     /* Evaluate symmetry ------------------------------------------------------- */
     double evaluateSymmetry(double *p)
     {
+        MultidimArray<double> volume_sym, volume_aux;
+        Matrix2D<double> Euler, sym_matrix;
+        Matrix1D<double> sym_axis;
+
         double rot=p[1];
         double tilt=p[2];
 
@@ -201,9 +236,14 @@ public:
     }
 };
 
+void globalThreadEvaluateSymmetry(ThreadArgument &thArg)
+{
+    ((ProgVolumeFindSymmetry*)thArg.workClass)->threadEvaluateSymmetry(thArg.thread_id);
+}
+
 double evaluateSymmetryWrapper(double *p, void *prm)
 {
-	return ((ProgVolumeFindSymmetry*)prm)->evaluateSymmetry(p);
+    return ((ProgVolumeFindSymmetry*)prm)->evaluateSymmetry(p);
 }
 
 int main(int argc, char **argv)
