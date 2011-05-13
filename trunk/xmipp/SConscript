@@ -493,7 +493,7 @@ ReconsSources = [
     'denoise.cpp',
     'directions.cpp',
     'fourier_filter.cpp',
-    'make_spectra.cpp',
+    'image_rotational_spectra.cpp',
     'micrograph_phase_flipping.cpp',
     'ml_align2d.cpp',
 ###    'ml_align3d.cpp',
@@ -680,11 +680,11 @@ AddXmippProgram('image_find_center')
 AddXmippProgram('image_header')
 AddXmippProgram('image_histogram')
 AddXmippProgram('image_operate')
+AddXmippProgram('image_rotational_spectra', ['XmippRecons'])
 AddXmippProgram('image_sort', ['XmippClassif'])
 AddXmippProgram('image_separate_objects')
 AddXmippProgram('image_statistics')
 AddXmippProgram('image_vectorize')
-AddXmippProgram('make_spectra', ['XmippRecons'])
 #AddXmippProgram('mean_shift')
 AddXmippProgram('metadata_convert_to_spider', ['XmippInterface'])
 AddXmippProgram('metadata_histogram')

@@ -23,21 +23,14 @@
  *  e-mail address 'xmipp@cnb.csic.es'
  ***************************************************************************/
 
-#include "make_spectra.h"
-#include <data/args.h>
-
-// Empty constructor -------------------------------------------------------
-ProgMakeSpectra::ProgMakeSpectra()
-{
-	produces_an_output=true;
-	each_image_produces_an_output=false;
-}
+#include "image_rotational_spectra.h"
 
 // Usage -------------------------------------------------------------------
 void ProgMakeSpectra::defineParams()
 {
 	addUsageLine("Computes the rotational spectrum of a set of images");
-    XmippMetadataProgram::defineParams();
+	addParamsLine("   -i <file>                   : Input image, selfile or stack");
+	addParamsLine("   -o <metadata>               : Output vector metadata");
 	addParamsLine("   --r1 <lowRadius>            : Lowest Integration radius");
     addParamsLine("   --r2 <highRadius>           : Highest Integration radius");
     addParamsLine("  [--x0 <xcenter=-1>]          : In physical units.");
@@ -49,7 +42,7 @@ void ProgMakeSpectra::defineParams()
 // Read from command line --------------------------------------------------
 void ProgMakeSpectra::readParams()
 {
-	XmippMetadataProgram::readParams();
+	fn_in = getParam("-i");
     fn_out = getParam("-o");
     rot_spt.rl = getIntParam("--r1");
     rot_spt.rh = getIntParam("--r2");
@@ -63,41 +56,59 @@ void ProgMakeSpectra::readParams()
 // Show --------------------------------------------------------------------
 void ProgMakeSpectra::show()
 {
-	XmippMetadataProgram::show();
+	if (verbose==0)
+		return;
+	std::cout
+	<< "Input file: " << fn_in << std::endl
+	<< "Output file: " << fn_out << std::endl
+	;
     std::cout << rot_spt << std::endl;
 }
 
-// Process an image --------------------------------------------------------
-void ProgMakeSpectra::processImage(const FileName &fnImg, const FileName &fnImgOut,
-	size_t objId)
+// Run -----------------------------------------------------------------
+void ProgMakeSpectra::run()
 {
-	Image<double> I;
-	I.readApplyGeo(fnImg,mdIn,objId);
-    rot_spt.compute_rotational_spectrum(I(), rot_spt.rl, rot_spt.rh,
-                                        rot_spt.dr, rot_spt.rh - rot_spt.rl);
-    Harmonics.push_back(rot_spt.rot_spectrum);
-    Img_name.push_back(fnImg);
-}
-
-// Finish processing -------------------------------------------------------
-void ProgMakeSpectra::postProcess()
-{
-    std::ofstream fh_out;
-    fh_out.open(fn_out.c_str());
-
-    if (!fh_out)
-        REPORT_ERROR(ERR_IO_NOTOPEN, fn_out);
-    if (Harmonics.size() != 0)
+    MetaData vectorContent, vectorHeader;
+    vectorHeader.setColumnFormat(false);
+    bool first=true;
+    size_t order=0;
+    FileName fnImg;
+    Image<double> I;
+    MetaData MD;
+    MD.read(fn_in);
+    FOR_ALL_OBJECTS_IN_METADATA(MD)
     {
-        fh_out << XSIZE(Harmonics[0]) << " " << Harmonics.size() << std::endl;
-        int imax = Harmonics.size();
-        for (int i = 0; i < imax; i++)
+        MD.getValue(MDL_IMAGE,fnImg,__iter.objId);
+    	I.readApplyGeo(fnImg,MD,__iter.objId);
+        rot_spt.compute_rotational_spectrum(I(), rot_spt.rl, rot_spt.rh,
+                                            rot_spt.dr, rot_spt.rh - rot_spt.rl);
+        std::ofstream fhOutRaw;
+        fhOutRaw.open((fn_out+".raw").c_str(),std::ios::app | std::ios::binary);
+        if (!fhOutRaw)
+        	REPORT_ERROR(ERR_IO_NOWRITE,fn_out+".raw");
+        MultidimArray<float> spectrum;
+        typeCast(rot_spt.rot_spectrum,spectrum);
+        fhOutRaw.write((char*)MULTIDIM_ARRAY(spectrum),XSIZE(spectrum)*sizeof(float));
+        fhOutRaw.close();
+
+        // Create header
+        if (first)
         {
-            double norm = Harmonics[i].sum() / 100.0;
-            for (int j = 0; j < XSIZE(Harmonics[i]); j++)
-                fh_out << floatToString(Harmonics[i](j) / norm, 6, 4) << " ";
-            fh_out << Img_name[i] << std::endl;
+            int vectorSize=MULTIDIM_SIZE(rot_spt.rot_spectrum);
+            size_t outId=vectorHeader.addObject();
+            vectorHeader.setValue(MDL_XSIZE,XSIZE(I()),outId);
+            vectorHeader.setValue(MDL_YSIZE,YSIZE(I()),outId);
+            vectorHeader.setValue(MDL_ZSIZE,ZSIZE(I()),outId);
+            vectorHeader.setValue(MDL_COUNT,MD.size(),outId);
+            vectorHeader.setValue(MDL_CLASSIFICATION_DATA_SIZE,vectorSize,outId);
+            vectorHeader.write(formatString("vectorHeader@%s",fn_out.c_str()));
+            first=false;
         }
+
+        // Save this image in the output metadata
+        size_t outId=vectorContent.addObject();
+        vectorContent.setValue(MDL_IMAGE,fnImg,outId);
+        vectorContent.setValue(MDL_ORDER,order++,outId);
     }
-    fh_out.close();
+    vectorContent.write(formatString("vectorContent@%s",fn_out.c_str()),MD_APPEND);
 }

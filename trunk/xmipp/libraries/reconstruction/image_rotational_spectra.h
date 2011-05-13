@@ -38,25 +38,20 @@
 /** Make spectra parameters.
  * @ingroup MakeSpectra
  */
-class ProgMakeSpectra: public XmippMetadataProgram
+class ProgMakeSpectra: public XmippProgram
 {
 public:
+	/** Input file */
+	FileName fn_in;
+
+	/** Output file */
+	FileName fn_out;
+
     /** Rotational spectrum.
      */
     Rotational_Spectrum rot_spt;
 
 public:
-    /** Set of harmonics.
-     */
-    std::vector< MultidimArray< double > > Harmonics;
-
-    /** Set of images.
-     */
-    std::vector< FileName > Img_name;
-
-    /** Empty constructor */
-    ProgMakeSpectra();
-
     /** Define parameters */
     void defineParams();
 
@@ -66,13 +61,9 @@ public:
     /** Show parameters. */
     void show();
 
-    /** Process image.
+    /** Run.
      */
-    void processImage(const FileName &fnImg, const FileName &fnImgOut, size_t objId);
-
-    /** Finish processing.
-     */
-    void postProcess();
+    void run();
 };
 
 #endif

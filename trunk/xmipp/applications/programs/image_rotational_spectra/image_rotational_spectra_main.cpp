@@ -23,18 +23,11 @@
  *  e-mail address 'xmipp@cnb.csic.es'
  ***************************************************************************/
 
-#include <reconstruction/make_spectra.h>
+#include <reconstruction/image_rotational_spectra.h>
 
 int main(int argc, char **argv)
 {
-    try
-    {
-    	ProgMakeSpectra program;
-        program.read(argc, argv);
-        program.run();
-    }
-    catch (XmippError xe)
-    {
-        std::cerr << xe;
-    }
+    ProgMakeSpectra program;
+    program.read(argc, argv);
+    return program.tryRun();
 }
