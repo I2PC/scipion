@@ -960,7 +960,6 @@ if int(env['gui']):
 
     AddXmippQtProgram('micrograph_mark', ['popup_menu_mark.h'])
     AddXmippQtProgram('show', [], ['XmippClassif', 'XmippRecons'])
-    AddXmippQtProgram('mask_design', [], ['XmippClassif'])
 
 if int(env['matlab']):
     import os
