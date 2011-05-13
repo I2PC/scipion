@@ -338,6 +338,11 @@
             <FILE filename="enhanced.vol"/>
         </CASE>
     </PROGRAM>
+    <PROGRAM name="xmipp_volume_find_symmetry" mpi="FALSE">
+        <CASE arguments="-i input/phantomBacteriorhodopsin.vol --rot_sym 3 -o %o/symmetry.xmd" changeDir="FALSE">
+            <FILE filename="symmetry.xmd"/>
+        </CASE>
+    </PROGRAM>
     <PROGRAM name="xmipp_volume_reslice" mpi="FALSE">
         <CASE arguments="-i input/phantomCandida.vol -o %o/resliced.vol --face top" changeDir="FALSE">
             <FILE filename="resliced.vol"/>
