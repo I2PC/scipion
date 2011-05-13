@@ -3340,23 +3340,64 @@ public:
         T* ptrOp1=NULL;
         T* ptrOp2=NULL;
         size_t n;
-        for (n=0, ptrResult=result.data, ptrOp1=op1.data,ptrOp2=op2.data;
-             n<op1.zyxdim; ++n, ++ptrResult, ++ptrOp1, ++ptrOp2)
-            switch (operation)
+        // Loop unrolling
+        const size_t unroll=4;
+        size_t nmax=unroll*(op1.zyxdim/unroll);
+        switch (operation)
+        {
+        case '+':
+            for (n=0, ptrResult=result.data, ptrOp1=op1.data,ptrOp2=op2.data;
+                 n<nmax; n+=unroll, ptrResult+=unroll, ptrOp1+=unroll, ptrOp2+=unroll)
             {
-            case '+':
                 *ptrResult = *ptrOp1 + *ptrOp2;
-                break;
-            case '-':
-                *ptrResult = *ptrOp1 - *ptrOp2;
-                break;
-            case '*':
-                *ptrResult = *ptrOp1 * *ptrOp2;
-                break;
-            case '/':
-                *ptrResult = *ptrOp1 / *ptrOp2;
-                break;
+                *(ptrResult+1) = *(ptrOp1+1) + *(ptrOp2+1);
+                *(ptrResult+2) = *(ptrOp1+2) + *(ptrOp2+2);
+                *(ptrResult+3) = *(ptrOp1+3) + *(ptrOp2+3);
             }
+            for (n=nmax, ptrResult=result.data+nmax, ptrOp1=op1.data+nmax, ptrOp2=op2.data+nmax;
+                 n<op1.zyxdim; ++n, ++ptrResult, ++ptrOp1, ++ptrOp2)
+                *ptrResult = *ptrOp1 + *ptrOp2;
+            break;
+        case '-':
+            for (n=0, ptrResult=result.data, ptrOp1=op1.data,ptrOp2=op2.data;
+                 n<nmax; n+=unroll, ptrResult+=unroll, ptrOp1+=unroll, ptrOp2+=unroll)
+            {
+                *ptrResult = *ptrOp1 - *ptrOp2;
+                *(ptrResult+1) = *(ptrOp1+1) - *(ptrOp2+1);
+                *(ptrResult+2) = *(ptrOp1+2) - *(ptrOp2+2);
+                *(ptrResult+3) = *(ptrOp1+3) - *(ptrOp2+3);
+            }
+            for (n=nmax, ptrResult=result.data+nmax, ptrOp1=op1.data+nmax, ptrOp2=op2.data+nmax;
+                 n<op1.zyxdim; ++n, ++ptrResult, ++ptrOp1, ++ptrOp2)
+                *ptrResult = *ptrOp1 - *ptrOp2;
+            break;
+        case '*':
+            for (n=0, ptrResult=result.data, ptrOp1=op1.data,ptrOp2=op2.data;
+                 n<nmax; n+=unroll, ptrResult+=unroll, ptrOp1+=unroll, ptrOp2+=unroll)
+            {
+                *ptrResult = *ptrOp1 * *ptrOp2;
+                *(ptrResult+1) = *(ptrOp1+1) * *(ptrOp2+1);
+                *(ptrResult+2) = *(ptrOp1+2) * *(ptrOp2+2);
+                *(ptrResult+3) = *(ptrOp1+3) * *(ptrOp2+3);
+            }
+            for (n=nmax, ptrResult=result.data+nmax, ptrOp1=op1.data+nmax, ptrOp2=op2.data+nmax;
+                 n<op1.zyxdim; ++n, ++ptrResult, ++ptrOp1, ++ptrOp2)
+                *ptrResult = *ptrOp1 * *ptrOp2;
+            break;
+        case '/':
+            for (n=0, ptrResult=result.data, ptrOp1=op1.data,ptrOp2=op2.data;
+                 n<nmax; n+=unroll, ptrResult+=unroll, ptrOp1+=unroll, ptrOp2+=unroll)
+            {
+                *ptrResult = *ptrOp1 / *ptrOp2;
+                *(ptrResult+1) = *(ptrOp1+1) / *(ptrOp2+1);
+                *(ptrResult+2) = *(ptrOp1+2) / *(ptrOp2+2);
+                *(ptrResult+3) = *(ptrOp1+3) / *(ptrOp2+3);
+            }
+            for (n=nmax, ptrResult=result.data+nmax, ptrOp1=op1.data+nmax, ptrOp2=op2.data+nmax;
+                 n<op1.zyxdim; ++n, ++ptrResult, ++ptrOp1, ++ptrOp2)
+                *ptrResult = *ptrOp1 / *ptrOp2;
+            break;
+        }
     }
 
     /** Array by array
@@ -4892,7 +4933,7 @@ template<>
 double MultidimArray< std::complex< double > >::computeAvg() const;
 template<>
 bool operator==(const MultidimArray< std::complex< double > >& op1,
-		        const MultidimArray< std::complex< double > >& op2);
+                const MultidimArray< std::complex< double > >& op2);
 
 //@}
 #endif
