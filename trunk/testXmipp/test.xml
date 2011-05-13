@@ -323,6 +323,11 @@
             <FILE filename="image.xmp"/>
         </CASE>
     </PROGRAM>
+    <PROGRAM name="xmipp_volume_center" mpi="FALSE">
+        <CASE arguments="-i input/1FFKfull_reconstructed.vol -o %o/centered.vol" changeDir="FALSE">
+            <FILE filename="centered.vol"/>
+        </CASE>
+    </PROGRAM>
     <PROGRAM name="xmipp_volume_correct_bfactor" mpi="FALSE">
         <CASE arguments="-i input/1FFKfull_reconstructed.vol -o %o/corrected.vol --auto --sampling 1 --maxres 10" changeDir="FALSE">
             <FILE filename="corrected.vol"/>
