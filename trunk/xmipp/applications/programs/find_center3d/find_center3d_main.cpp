@@ -28,234 +28,187 @@
 #include <data/mask.h>
 #include <data/filters.h>
 #include <data/geometry.h>
+#include <data/program.h>
 
 #include <cstdio>
 
-void Usage();
-double evaluateSymmetry(double *p, void *prm);
-Image<double> volume, volume_sym, volume_aux;
-Mask mask_prm(INT_MASK);
-int rot_sym;
-bool useSplines;
+// Prototype
+double evaluateSymmetryWrapper(double *p, void *prm);
 
-int main(int argc, char **argv)
+class ProgVolumeFindSymmetry: public XmippProgram
 {
+public:
+    int rot_sym;
+    bool useSplines;
     FileName fn_input, fn_output;
     double   rot0,  rotF,  step_rot;
     double   tilt0, tiltF, step_tilt;
-    bool     centerVolume;
     bool     local;
-    bool     show;
+    Mask mask_prm;
 
-    // Read arguments --------------------------------------------------------
-    try
+    // Define parameters
+    void defineParams()
     {
-        fn_input = getParameter(argc, argv, "-i");
-        fn_output = getParameter(argc, argv, "-o","");
-        rot_sym = textToInteger(getParameter(argc, argv, "-rot_sym", "0"));
-        centerVolume = checkParameter(argc, argv, "-center_volume");
-        useSplines = checkParameter(argc, argv, "-useSplines");
-        local = checkParameter(argc, argv, "-local");
-        show = checkParameter(argc, argv, "-show");
-        int i;
-        if ((i = paremeterPosition(argc, argv, "-rot")) != -1)
+        addUsageLine("Finds a symmetry rotational axis.");
+        addUsageLine("+It is important that the volume is correctly centered");
+        addSeeAlsoLine("volume_center");
+        addParamsLine(" -i <volumeFile>               : Volume to process");
+        addParamsLine("[-o+ <file=\"\">]              : Metadata with the orientation of the symmetry axis");
+        addParamsLine("--rot_sym <n>                  : Order of the rotational axis");
+        addParamsLine("[--rot  <rot0=0>  <rotF=355> <step=5>]: Limits for rotational angle search");
+        addParamsLine("[--tilt <tilt0=0> <tiltF=90> <step=5>]: Limits for tilt angle search");
+        addParamsLine("[--local <rot0> <tilt0>]       : Perform a local search around this angle");
+        addParamsLine("[--useSplines+]                 : Use cubic B-Splines for the interpolations");
+        mask_prm.defineParams(this,INT_MASK,NULL,"Restrict the comparison to the mask area.");
+    }
+
+    // Read parameters
+    void readParams()
+    {
+        fn_input = getParam("-i");
+        fn_output = getParam("-o");
+        rot_sym = getIntParam("--rot_sym");
+        useSplines = checkParam("--useSplines");
+        local = checkParam("--local");
+        if (local)
         {
-            if (!local)
-            {
-                if (i + 3 >= argc)
-                    REPORT_ERROR(ERR_ARG_MISSING, "Not enough parameters behind -rot");
-                rot0    = textToFloat(argv[i+1]);
-                rotF    = textToFloat(argv[i+2]);
-                step_rot = textToFloat(argv[i+3]);
-            }
-            else
-                rot0=textToFloat(getParameter(argc, argv, "-rot"));
+            rot0=getDoubleParam("--local",0);
+            tilt0=getDoubleParam("--local",1);
         }
         else
         {
-            rot0 = 0;
-            rotF = 355;
-            step_rot = 5;
+            rot0=getDoubleParam("--rot",0);
+            rotF=getDoubleParam("--rot",1);
+            step_rot=getDoubleParam("--rot",2);
+            tilt0=getDoubleParam("--tilt",0);
+            tiltF=getDoubleParam("--tilt",1);
+            step_tilt=getDoubleParam("--tilt",2);
         }
-        if ((i = paremeterPosition(argc, argv, "-tilt")) != -1)
-        {
-            if (!local)
-            {
-                if (i + 3 >= argc)
-                    REPORT_ERROR(ERR_ARG_MISSING, "Not enough parameters behind -tilt");
-                tilt0    = textToFloat(argv[i+1]);
-                tiltF    = textToFloat(argv[i+2]);
-                step_tilt = textToFloat(argv[i+3]);
-            }
-            else
-                tilt0=textToFloat(getParameter(argc, argv, "-tilt"));
-        }
-        else
-        {
-            tilt0 = 0;
-            tiltF = 90;
-            step_tilt = 5;
-        }
-        mask_prm.read(argc, argv);
-    }
-    catch (XmippError XE)
-    {
-        std::cout << XE;
-        Usage();
-        mask_prm.usage();
-        exit(1);
+        mask_prm.allowed_data_types = INT_MASK;
+        if (checkParam("--mask"))
+            mask_prm.readParams(this);
     }
 
-    // Find Center and symmetry elements ------------------------------------
-    try
+    void run()
     {
-        // Read input volumes
+        // Read input volume
         volume.read(fn_input);
         volume().setXmippOrigin();
         mask_prm.generate_mask(volume());
 
-        // Compute center of mass
-        Matrix1D<double> centerOfMass;
-        volume().centerOfMass(centerOfMass, &mask_prm.get_binary_mask());
-        std::cout << "Center of mass (X,Y,Z)= " << centerOfMass.transpose() << std::endl;
-
-        // Move origin to that center of mass
-        if (useSplines)
-            selfTranslate(BSPLINE3,volume(),-centerOfMass, DONT_WRAP);
-        else
-            selfTranslate(LINEAR,volume(),-centerOfMass, DONT_WRAP);
-        if (centerVolume)
-            volume.write();
-
         // Look for the rotational symmetry axis
-        if (rot_sym > 1)
+        double best_corr = 0, best_rot = rot0 - step_rot, best_tilt = tilt0 - step_tilt;
+        if (!local)
         {
-            double best_corr = 0, best_rot = rot0 - step_rot, best_tilt = tilt0 - step_tilt;
-            if (!local)
+            int maxsteps = FLOOR((rotF - rot0) / step_rot+1) *
+                           FLOOR((tiltF - tilt0) / step_tilt +1);
+            if (verbose>0)
             {
-                int maxsteps = FLOOR((rotF - rot0) / step_rot+1) *
-                               FLOOR((tiltF - tilt0) / step_tilt +1);
                 std::cerr << "Searching symmetry axis ...\n";
-                if (!show)
-                    init_progress_bar(maxsteps);
-                int i = 0;
-                for (double rot = rot0; rot <= rotF; rot += step_rot)
-                    for (double tilt = tilt0; tilt <= tiltF; tilt += step_tilt)
+                init_progress_bar(maxsteps);
+            }
+            int i = 0;
+            Matrix1D<double> p(2);
+            for (double rot = rot0; rot <= rotF; rot += step_rot)
+                for (double tilt = tilt0; tilt <= tiltF; tilt += step_tilt)
+                {
+                    p(0)=rot;
+                    p(1)=tilt;
+                    double corr=-evaluateSymmetry(MATRIX1D_ARRAY(p)-1);
+                    if (corr > best_corr)
                     {
-                        Matrix1D<double> p(2);
-                        p(0)=rot;
-                        p(1)=tilt;
-                        double corr=-evaluateSymmetry(MATRIX1D_ARRAY(p)-1,NULL);
-                        if (corr > best_corr)
-                        {
-                            best_corr = corr;
-                            best_rot = rot;
-                            best_tilt = tilt;
-                        }
-
-                        // progress bar
-                        if ((i++) % XMIPP_MAX(maxsteps / 60, 1) == 0 && !show)
-                            progress_bar(i);
-                        if (show)
+                        best_corr = corr;
+                        best_rot = rot;
+                        best_tilt = tilt;
+                        if (verbose!=0)
                             std::cout << "rot=" << rot << " tilt=" << tilt
                             << " corr=" << corr << std::endl;
                     }
-                if (!show)
-                    progress_bar(maxsteps);
-            }
-            else
-            {
-                Matrix1D<double> p(2), steps(2);
-                p(0)=rot0;
-                p(1)=tilt0;
-                double fitness;
-                int iter;
-                steps.initConstant(1);
-                powellOptimizer(p,1,2,&evaluateSymmetry,NULL,0.01,
-                                fitness,iter,steps,true);
-                best_rot=p(0);
-                best_tilt=p(1);
-            }
-            std::ofstream fh_out;
-            if (fn_output!="")
-            {
-                fh_out.open(fn_output.c_str());
-                if (!fh_out)
-                    REPORT_ERROR(ERR_IO_NOWRITE,fn_output);
-            }
-            std::cout << "Symmetry axis (rot,tilt)= " << best_rot << " "
-            << best_tilt << " --> ";
-            if (fn_output!="")
-                fh_out << "Symmetry axis (rot,tilt)= " << best_rot << " "
-                << best_tilt << " --> ";
-            Matrix2D<double> Euler;
-            Matrix1D<double> sym_axis(3);
-            Euler_angles2matrix(best_rot, best_tilt, 0, Euler);
-            Euler.getRow(2, sym_axis);
-            std::cout << sym_axis << std::endl;
-            if (fn_output!="")
-            {
-                fh_out << sym_axis << std::endl;
-                fh_out.close();
-            }
+
+                    // progress bar
+                    if ((i++) % XMIPP_MAX(maxsteps / 60, 1) == 0 && verbose!=0)
+                        progress_bar(i);
+                }
+            if (verbose!=0)
+                progress_bar(maxsteps);
+        }
+        else
+        {
+            Matrix1D<double> p(2), steps(2);
+            p(0)=rot0;
+            p(1)=tilt0;
+            double fitness;
+            int iter;
+            steps.initConstant(1);
+            powellOptimizer(p,1,2,&evaluateSymmetryWrapper,this,0.01,
+                            fitness,iter,steps,true);
+            best_rot=p(0);
+            best_tilt=p(1);
+        }
+        Euler_angles2matrix(best_rot, best_tilt, 0, Euler);
+        Euler.getRow(2, sym_axis);
+        if (verbose!=0)
+        	std::cout << "Symmetry axis (rot,tilt)= " << best_rot << " "
+        	<< best_tilt << " --> " << sym_axis << std::endl;
+        if (fn_output!="")
+        {
+        	std::vector<double> direction;
+        	direction.push_back(XX(sym_axis));
+        	direction.push_back(YY(sym_axis));
+        	direction.push_back(ZZ(sym_axis));
+
+        	MetaData MD;
+        	size_t id=MD.addObject();
+        	MD.setValue(MDL_ANGLEROT,best_rot,id);
+        	MD.setValue(MDL_ANGLETILT,best_tilt,id);
+        	MD.setValue(MDL_DIRECTION,direction,id);
+        	MD.write(fn_output);
         }
     }
-    catch (XmippError XE)
+
+    Image<double> volume;
+    MultidimArray<double> volume_sym, volume_aux;
+    Matrix2D<double> Euler, sym_matrix;
+    Matrix1D<double> sym_axis;
+
+    /* Evaluate symmetry ------------------------------------------------------- */
+    double evaluateSymmetry(double *p)
     {
-        std::cout << XE;
+        double rot=p[1];
+        double tilt=p[2];
+
+        // Compute symmetry axis
+        Euler_angles2matrix(rot, tilt, 0, Euler);
+        Euler.getRow(2, sym_axis);
+        sym_axis.selfTranspose();
+
+        // Symmetrize along this axis
+        volume_sym = volume();
+        for (int n = 1; n < rot_sym; n++)
+        {
+            rotation3DMatrix(360.0 / rot_sym * n, sym_axis, sym_matrix);
+            if (useSplines)
+                applyGeometry(BSPLINE3, volume_aux, volume(), sym_matrix,
+                              IS_NOT_INV, DONT_WRAP);
+            else
+                applyGeometry(LINEAR, volume_aux, volume(), sym_matrix,
+                              IS_NOT_INV, DONT_WRAP);
+            volume_sym += volume_aux;
+        }
+
+        // Measure correlation
+        return -correlationIndex(volume(), volume_sym, &mask_prm.get_binary_mask());
     }
-    exit(0);
-} //main
+};
 
-/* Usage ------------------------------------------------------------------- */
-void Usage()
+double evaluateSymmetryWrapper(double *p, void *prm)
 {
-    std::cerr << "Purpose:\n";
-    std::cerr << "    Finds the 3D center of mass within a mask\n"
-    << "    and a symmetry rotational axis passing through that center\n";
-
-    std::cerr << "Usage: findcenter3D [options]" << std::endl
-    << "    -i <volume>                         : volume to process\n"
-    << "   [-center_volume]                     : save the centered volume\n"
-    << "   [-useSplines]                        : use BSplines(3) for the interpolations\n"
-    << "   [-rot_sym <n=0>]                     : order of the rotational axis\n"
-    << "   [-rot  <rot0=0>  <rotF=355> <step=5>]: limits for rotational axis\n"
-    << "   [-tilt <tilt0=0> <tiltF=90> <step=5>]: limits for rotational axis\n"
-    << "   [-local]                             : perform a local search\n"
-    << "                                          in this case use -rot rot0 -tilt tilt0\n"
-    << "   [-show]                              : show correlation for all trials\n"
-    ;
+	return ((ProgVolumeFindSymmetry*)prm)->evaluateSymmetry(p);
 }
 
-/* Evaluate symmetry ------------------------------------------------------- */
-double evaluateSymmetry(double *p, void *prm)
+int main(int argc, char **argv)
 {
-    double rot=p[1];
-    double tilt=p[2];
-
-    // Compute symmetry axis
-    Matrix2D<double> Euler;
-    Euler_angles2matrix(rot, tilt, 0, Euler);
-    Matrix1D<double> sym_axis(3);
-    Euler.getRow(2, sym_axis);
-    sym_axis.selfTranspose();
-
-    // Symmetrize along this axis
-    volume_sym() = volume();
-    for (int n = 1; n < rot_sym; n++)
-    {
-        Matrix2D<double> sym_matrix;
-        rotation3DMatrix(360.0 / rot_sym * n, sym_axis, sym_matrix);
-        if (useSplines)
-            applyGeometry(BSPLINE3, volume_aux(), volume(), sym_matrix,
-                                 IS_NOT_INV, DONT_WRAP);
-        else
-            applyGeometry(LINEAR, volume_aux(), volume(), sym_matrix,
-                                 IS_NOT_INV, DONT_WRAP);
-        volume_sym() += volume_aux();
-    }
-
-    // Measure correlation
-    return -correlationIndex(volume(), volume_sym(),
-                              &mask_prm.get_binary_mask());
+    ProgVolumeFindSymmetry prm;
+    prm.read(argc,argv);
+    return prm.tryRun();
 }
