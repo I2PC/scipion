@@ -53,8 +53,15 @@ public:
     void defineParams()
     {
         addUsageLine("Finds a symmetry rotational axis.");
-        addUsageLine("+It is important that the volume is correctly centered");
-        addSeeAlsoLine("volume_center");
+        addUsageLine("+The output is of the form");
+        addUsageLine("+Symmetry axis (rot,tilt)= 10 20 -->    0.33682   0.059391    0.93969",true);
+        addUsageLine("+The angles represent the rot and tilt angles of the symmetry axis ");
+        addUsageLine("+see [[http://xmipp.cnb.csic.es/twiki/bin/view/Xmipp/Conventions#Euler_Angles][the note on Euler angles]] ");
+        addUsageLine("+convention in Xmipp). The rest of the numbers is the axis itself in X, Y, Z ");
+        addUsageLine("+coordinates. In this way, the symmetry axis is a line that passes through the ");
+        addUsageLine("+center of the volume and whose direction is this vector.");
+        addUsageLine("+It is important that the volume is correctly centered.");
+        addSeeAlsoLine("volume_center, transform_geometry");
         addParamsLine(" -i <volumeFile>               : Volume to process");
         addParamsLine("[-o+ <file=\"\">]              : Metadata with the orientation of the symmetry axis");
         addParamsLine("--rot_sym <n>                  : Order of the rotational axis");
@@ -64,6 +71,11 @@ public:
         addParamsLine("[--useSplines+]                : Use cubic B-Splines for the interpolations");
         addParamsLine("[--thr <N=1>]                  : Number of threads");
         mask_prm.defineParams(this,INT_MASK,NULL,"Restrict the comparison to the mask area.");
+        addExampleLine("A typical application is ",false);
+        addExampleLine("xmipp_volume_center -i volume.vol");
+        addExampleLine("xmipp_volume_find_symmetry -i volume.vol --rot_sym 3");
+        addExampleLine("Presume the symmetry axis is in rot=20, tilt=10. To align vertically the axis use",false);
+        addExampleLine("xmipp_transform_geometry -i volume.vol --rotate euler 20 10 0");
     }
 
     // Read parameters
