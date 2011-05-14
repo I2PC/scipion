@@ -41,6 +41,8 @@ def changeDir(_log, dict):
         print "could not change to directory '%s'" % _Path
         print "Error(%d): %s" % (errno, errstr)
         exit(1)
+        
+
 def deleteWorkingDirectory(_mylog, dict):
 
     if (not dict['DoDeleteWorkingDir']):
@@ -79,9 +81,9 @@ def checkVolumeProjSize(_log, dict):
         (xdim, ydim, zdim, ndim) = SingleImgSize(dict['ReferenceFileNames'][0])
         for reference in dict['ReferenceFileNames']:
             (xdim2, ydim2, zdim2, ndim2) = SingleImgSize(reference)
-    except XmippError as e:
-        print __name__, 'checkVolumeProjSize:', e
-        exit(False,message)
+    except XmippError, e:
+        print "\nEROR:",__name__, 'checkVolumeProjSize:', e
+        exit(1)
     if (xdim2, ydim2, zdim2, ndim2) != (xdim, ydim, zdim, ndim):
         message = "Reference %s and %s have not the same size" % \
               (dict['ReferenceFileNames'][0], reference) 
@@ -114,7 +116,7 @@ def initOuterRadius(_log, dict):
     if (OuterRadius < 0):
         try:
             (xdim, ydim, zdim, ndim) = ImgSize(dict['SelFileName'])
-        except XmippError as e:
+        except XmippError, e:
             print __name__, 'initOuterRadius:', e
             exit(1)
         OuterRadius = (xdim / 2) - 1
@@ -207,7 +209,7 @@ def execute_ctf_groups (_log, dict):
 #    exit(1)
 #    return len(ctflist)
     MD = MetaData(fn)
-    return MD.size()
+    #return MD.size()
 
     
 

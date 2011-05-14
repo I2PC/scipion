@@ -153,6 +153,7 @@ def assign_images_to_references(_log,dict):
     ProjMatchRootName   = dict['ProjMatchRootName']#
     NumberOfCtfGroups   = dict['NumberOfCtfGroups']
     NumberOfReferences = len(ProjMatchRootName)
+
     #print "cp",ProjMatchRootName[1],DocFileInputAngles
     #if number of references is one just copy file
     if(NumberOfReferences==2):#single reference THIS IS WRONG REWRITE It PROPERLLY
@@ -185,54 +186,59 @@ def assign_images_to_references(_log,dict):
 def angular_class_average(_log,dict):
     # Now make the class averages
     DocFileInputAngles  = dict['DocFileInputAngles']#number of references
-    ProjMatchRootName   = dict['ProjMatchRootName']#
     NumberOfCtfGroups   = dict['NumberOfCtfGroups']
-    NumberOfReferences = len(ProjMatchRootName)
+    CtfGroupName        = dict['CtfGroupDirectory'] + '/' + dict['CtfGroupRootName']
+    ProjMatchRootName   = dict['ProjMatchRootName']
+    NumberOfReferences  = len(ProjMatchRootName)
+    refname = str(dict['ProjectLibraryRootName'])
+
+    
     Md=MetaData()
     MdSelect=MetaData()
     for iRef3D in range(1,NumberOfReferences):#already has plus 1
+        ProjMatchRootName = dict['ProjMatchRootName'][iRef3D]
         for iCTFGroup in range(1,NumberOfCtfGroups+1):
-            print "iRef3D,iCTFGroup",iRef3D,iCTFGroup,DocFileInputAngles
             #extract from metadata relevant images
             Md.read(DocFileInputAngles)
             MdSelect.importObjects(Md, MDValueEQ(MDL_REF3D, iRef3D))
             Md.clear()
             Md.importObjects(MdSelect,MDValueEQ(MDL_CTF_GROUP, iCTFGroup))
-            Md.write("test.xmd")
-            exit(1)
-######        parameters =  ' -i '      + outputname + '.doc'  + \
-######                      ' --lib '    + ProjectLibraryRootName + '.doc' + \
-######                      ' --dont_write_selfiles ' + \
-######                      ' --limit0 ' + str(_MinimumCrossCorrelation) + \
-######                      ' --limitR ' + str(_DiscardPercentage)
-######    if (_DoCtfCorrection):
-######       # On-the fly apply Wiener-filter correction and add all CTF groups together
-######       parameters += \
-######                  ' --wien '             + CtfGroupName + '.wien' + \
-######                  ' --pad '              + str(_PaddingFactor) + \
-######                  ' --add_to '           + ProjMatchRootName
-######    else:
-######       parameters += \
-######                  ' -o '                + ProjMatchRootName
-######    if (_DoAlign2D == '1'):
-######       parameters += \
-######                  ' --iter '             + str(_Align2DIterNr) + \
-######                  ' --Ri '               + str(_Ri)           + \
-######                  ' --Ro '               + str(_Ro)           + \
-######                  ' --max_shift '        + str(_MaxChangeOffset) + \
-######                  ' --max_shift_change ' + str(_Align2dMaxChangeOffset) + \
-######                  ' --max_psi_change '   + str(_Align2dMaxChangeRot) 
-######    if (_DoComputeResolution and _DoSplitReferenceImages):
-######       parameters += \
-######                  ' --split '
-######    
-######    launch_job.launch_job('xmipp_angular_class_average',
-######                          parameters,
-######                          _mylog,
-######                          _DoParallel,
-######                          _MyNumberOfMpiProcesses*_MyNumberOfThreads,
-######                          1,
-######                          _MySystemFlavour)
+            tmpFileName=DocFileInputAngles+"_tmp"
+            Md.write(tmpFileName)
+            #Md.write("test.xmd" + str(iCTFGroup).zfill(2) +'_'+str(iRef3D).zfill(2))
+            parameters =  ' -i '      + tmpFileName  + \
+                          ' --lib '    + refname + '.doc' + \
+                          ' --dont_write_selfiles ' + \
+                          ' --limit0 ' + dict['MinimumCrossCorrelation'] + \
+                          ' --limitR ' + dict['DiscardPercentage']
+            if (dict['DoCtfCorrection']):
+                # On-the fly apply Wiener-filter correction and add all CTF groups together
+                parameters += \
+                           ' --wien '   + CtfGroupName + '.wien' + \
+                           ' --pad '    + str(dict['PaddingFactor']) + \
+                           ' --add_to ' + ProjMatchRootName
+            else:
+                parameters += \
+                          ' -o '                + ProjMatchRootName
+            if (dict['Align2DIterNr'] == '1'):
+                parameters += \
+                          ' --iter '             + dict['Align2DIterNr']  + \
+                          ' --Ri '               + str(dict['InnerRadius'])           + \
+                          ' --Ro '               + str(dict['OuterRadius'])           + \
+                          ' --max_shift '        + dict['MaxChangeOffset'] + \
+                          ' --max_shift_change ' + dict['Align2dMaxChangeOffset'] + \
+                          ' --max_psi_change '   + dict['Align2dMaxChangeRot'] 
+    if (dict['DoComputeResolution'] and dict['DoSplitReferenceImages']):
+        parameters += \
+                  ' --split '
+    
+    launch_job.launch_job('xmipp_angular_class_average',
+                          parameters,
+                          _log,
+                          dict['DoParallel'],
+                          dict['NumberOfMpiProcesses'] * dict['NumberOfThreads'],
+                          1,
+                          dict['SystemFlavour'])
 ######    
 ######    if (_DoAlign2D == '1'):
 ######       outputdocfile =  ProjMatchRootName + '_realigned.doc'
