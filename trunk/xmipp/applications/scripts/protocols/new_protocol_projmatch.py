@@ -17,7 +17,7 @@ Comment='Describe your project here...'
 #from XmippData import SingleImgSize
 """ This selfile points to the spider single-file format images that make up your data set. The filenames can have relative or absolute paths, but it is strictly necessary that you put this selfile IN THE PROJECTDIR. 
 """
-SelFileName ='20.sel'
+SelFileName ='new.sel'
 
 # {file} {expert} Docfile with the input angles:
 """ Do not provide anything if there are no angles yet. 
@@ -31,12 +31,12 @@ DocFileName =' '
 """ Write down the reference/es name. For example "Reference1.vol Reference2.vol"
     specifies two references
 """
-ReferenceFileNames ='ico_ref1.vol ico_ref2.vol ico_ref3.vol'
+ReferenceFileNames ='ico.vol'
 
 # Working subdirectory: 
 """ This directory will be created if it doesn't exist, and will be used to store all output from this run. Don't use the same directory for multiple different runs, instead use a structure like run1, run2 etc. 
 """
-WorkingDir ='ProjMatch/20new'
+WorkingDir ='ProjMatch/new20'
 
 # Delete working subdirectory if it already exists?
 """ Just be careful with this option...
@@ -61,7 +61,7 @@ IsIter =False
     Note2: Set this option to -1 if you want to perform extra iterations after
            successfully finish an execution
 """
-ContinueAtIteration =23
+ContinueAtIteration =1
 
 # {expert} Save disc space by cleaning up intermediate files?
 """ Be careful, many options of the visualization protocol will not work anymore, 
@@ -95,7 +95,7 @@ DoCtfCorrection =True
     Note that this file should be positioned in the project directory, and that the
     image names and ctf parameter filenames should be in absolute paths.
 """
-CTFDatName ='proj_ctf.ctfdat'
+CTFDatName ='new_ctf.ctfdat'
 
 # Make CTF groups automatically?
 """ Make CTF groups based on a maximum differences at a given resolution limit.
@@ -128,7 +128,7 @@ SplitDefocusDocFile =''
 """ Application of CTFs to reference projections and of Wiener filter to class averages will be done using padded images.
     Use values larger than one to pad the images. Suggestion, use 1 for large image and 2 for small
 """
-PaddingFactor =2.
+PaddingFactor =2
 
 # {expert} Wiener constant
 """ Term that will be added to the denominator of the Wiener filter.
@@ -155,7 +155,7 @@ DataArePhaseFlipped =True
     IMPORTANT: if you set this variable to 0 the output  of the projection
     muching step will be copied as output of align2d
 """
-ReferenceIsCtfCorrected ='0'
+ReferenceIsCtfCorrected ='1'
 
 #-----------------------------------------------------------------------------
 # {section} Mask
@@ -176,7 +176,7 @@ DoSphericalMask =True
 # Radius of spherical mask
 """ This is the radius (in pixels) of the spherical mask 
 """
-MaskRadius = 63
+MaskRadius = 72
 
 # {file} Binary mask file
 """ This should be a binary (only 0/1-valued) Xmipp volume of equal dimension as your reference
@@ -188,17 +188,6 @@ MaskFileName ='mask.vol'
 #-----------------------------------------------------------------------------
 # {section} Projection Matching
 #-----------------------------------------------------------------------------
-# Perform projection Matching?
-""" See http://xmipp.cnb.uam.es/twiki/bin/view/Xmipp/Projection_matching and
-        http://xmipp.cnb.uam.es/twiki/bin/view/Xmipp/Mpi_projection_matching for details
-"""
-DoProjectionMatching =False
-
-# {expert} Show projection maching library and classes
-""" Show average of projections. Do not set this option to true for non-interactive processing (jobs sent to queues)
-"""
-DisplayProjectionMatching =False
-
 # Inner radius for rotational correlation:
 """ In pixels from the image center
 """
@@ -230,7 +219,7 @@ AvailableMemory = 1
     Note: if there are less values than iterations the last value is reused
     Note: if there are more values than iterations the extra value are ignored
 """
-AngSamplingRateDeg ='6 4 2 1'
+AngSamplingRateDeg ='1'
 
 # Angular search range 
 """Maximum change in rot & tilt  (in +/- degrees)
@@ -241,10 +230,9 @@ AngSamplingRateDeg ='6 4 2 1'
     is ("2x1000 2x10", i.e.,
     2 iterations with value 1000, and 2 with value 10).
     Note: if there are less values than iterations the last value is reused
-MaskRadius = 16
     Note: if there are more values than iterations the extra value are ignored
 """
-MaxChangeInAngles ='1000 16 12 8 4 2'
+MaxChangeInAngles ='1000 8 4 2'
 
 # {expert} Perturb projection directions?
 """ If set to 1, this option will result to a Gaussian perturbation to the 
@@ -456,15 +444,6 @@ Align2dMaxChangeRot ='2x1000 2x20'
 #-----------------------------------------------------------------------------
 # {section} 3D Reconstruction
 #-----------------------------------------------------------------------------
-# Perform 3D Reconstruction?
-""" See http://xmipp.cnb.uam.es/twiki/bin/view/Xmipp/Wbp and
-        http://xmipp.cnb.uam.es/twiki/bin/view/Xmipp/Mpi_wbp and
-        http://xmipp.cnb.uam.es/twiki/bin/view/Xmipp/Art
-        http://xmipp.cnb.uam.es/twiki/bin/view/Xmipp/Fourier
-        http://xmipp.cnb.uam.es/twiki/bin/view/Xmipp/Mpi_fourier
-        for details
-"""
-DoReconstruction =False
 
 # {expert} Display reconstructed volume?
 DisplayReconstruction =False
@@ -502,7 +481,7 @@ ARTReconstructionExtraCommand ='-k 0.5 -n 10 '
 """ This number os only used in the first iteration. 
     From then on, it will be set to resolution computed in the resolution section
 """
-FourierMaxFrequencyOfInterest ='0.25'
+FourierMaxFrequencyOfInterest =0.25
 
 # {expert} Additional reconstruction parameters for WBP
 """ See http://xmipp.cnb.uam.es/twiki/bin/view/Xmipp/Wbp and
@@ -549,22 +528,19 @@ DoComputeResolution ='1'
    reconstruction method. Other reconstruction methods require this
    flag to be set to True
 """
-DoSplitReferenceImages =False
+DoSplitReferenceImages =True
 
 
 # Pixel size (in Ang.)
 """ This will make that the X-axis in the resolution plots has units 1/Angstrom
 """
-ResolSam = 5.6
-
-# {expert} Display resolution?
-DisplayResolution =False
+ResolSam=5.6
 
 #-----------------------------------------------------------------------------
 # {section} Postprocessing
 #-----------------------------------------------------------------------------
 # Low-pass filter the reference?
-DoLowPassFilter =False
+DoLowPassFilter =True
 
 # Use estimated resolution for low-pass filtering?
 """If set to true, the volume will be filtered at a frecuency equal to
@@ -575,7 +551,7 @@ DoLowPassFilter =False
    value provided by the user in the next box (in digital frequency, 
    i.e. pixel-1: minimum 0, maximum 0.5) 
 """
-UseFscForFilter =False
+UseFscForFilter =True
 
 # Constant to by add to the estimated resolution
 """ The meaning of this field depends on the previous flag.
@@ -617,7 +593,7 @@ NumberOfThreads = 1
 DoParallel =False
 
 # Number of MPI processes to use:
-NumberOfMpiProcesses = 3
+NumberOfMpiProcesses =3
 
 # minumum size of jobs in mpi processe. Set to 1 for large images (e.g. 500x500) and to 10 for small images (e.g. 100x100)
 MpiJobSize ='10'
@@ -627,7 +603,7 @@ MpiJobSize ='10'
     Ask the person who installed your xmipp version, which option to use. 
     Or read: http://xmipp.cnb.csic.es/twiki/bin/view/Xmipp/ParallelPage. The following values are available: 
 """
-SystemFlavour =''
+SystemFlavour ='TORQUE-OPENMPI'
 
 #------------------------------------------------------------------------------------------------
 # {expert} Analysis of results
@@ -766,7 +742,7 @@ def actionsToBePerformedBeforeLoopThatDoNotModifyTheFileSystem():
         for refN in range(referenceNumber):
             auxList[refN + 1]=ProjMatchDirs[iterN + 1] + \
                                       '/' + ProjMatchName +\
-                                      "_ref_" + str(refN + 1).zfill(2)
+                                      "_ref_" + str(refN + 1).zfill(2) + ".doc"
         ProjMatchRootName.append(list(auxList))
 
 
@@ -859,7 +835,12 @@ def actionsToBePerformedBeforeLoopThatDoNotModifyTheFileSystem():
 def otherActionsToBePerformedBeforeLoop():
 
     global OuterRadius, NumberOfCtfGroups
-    #1Delete working dir
+    
+    auxMD1 = MetaData(CTFDatName)
+    auxMD2 = MetaData()
+    auxMD2.aggregate(auxMD1, AGGR_COUNT,MDL_CTFMODEL,MDL_CTFMODEL,MDL_COUNT)
+    NumberOfCtfGroups = auxMD2.size()
+    
     _Parameters = {
           'DoDeleteWorkingDir':DoDeleteWorkingDir
         , 'ProjectDir':ProjectDir
@@ -928,11 +909,14 @@ def otherActionsToBePerformedBeforeLoop():
                 , 'SplitDefocusDocFile': SplitDefocusDocFile
                 , 'WienerConstant': WienerConstant
                }
-    command = 'self.NumberOfCtfGroups = execute_ctf_groups'
+    command = 'execute_ctf_groups'
     _VerifyFiles = []
     _VerifyFiles.append(CtfGroupDirectory+"/"+CtfGroupRootName+'Info.xmd')
     _VerifyFiles.append(CtfGroupDirectory+"/"+CtfGroupRootName+'_ctf.stk')
     _VerifyFiles.append(CtfGroupDirectory+"/"+CtfGroupRootName+'_wien.stk')
+    _VerifyFiles.append(CtfGroupDirectory+"/"+CtfGroupRootName+'_images.sel')
+    _VerifyFiles.append(CtfGroupDirectory+"/"+CtfGroupRootName+'_split.doc')
+    
     _dataBase.insertCommand(command, _Parameters, 1,_VerifyFiles)
     #Create Initial angular file. Either fill it with zeros or copy input
     _Parameters = {
@@ -1026,6 +1010,7 @@ def actionsToBePerformedInsideLoop(_log):
 
             command = "angular_project_library"
             _VerifyFiles = []
+            #file with projections
             auxFn=ProjectLibraryRootNames[iterN][refN]
             _VerifyFiles.append(auxFn)
             auxFn=auxFn[:-4]#remove extension
@@ -1033,6 +1018,10 @@ def actionsToBePerformedInsideLoop(_log):
             _VerifyFiles.append(auxFn + ".doc")
             #file with sampling point neighbourhood 
             _VerifyFiles.append(auxFn + "_sampling.txt")
+            #file with sampling point neighbourhood for each ctf group, this is reduntant but useful
+            for i in range (1,NumberOfCtfGroups+1):
+                _VerifyFiles.append(auxFn + "_group" + str(i).zfill(6) +"_sampling.txt")
+                        
             _dataBase.insertCommand(command, _Parameters, iterN,_VerifyFiles)
             # projectionMatching    
             _Parameters = {
@@ -1040,15 +1029,14 @@ def actionsToBePerformedInsideLoop(_log):
                                 , 'CtfGroupRootName': CtfGroupRootName
                                 , 'CtfGroupDirectory': CtfGroupDirectory
                                 , 'DoAlign2D' : DoAlign2D[iterN]
-                                , 'DiscardPercentage':DiscardPercentage[iterN]
                                 , 'DoComputeResolution':DoComputeResolution[iterN]
                                 , 'DoCtfCorrection': DoCtfCorrection
                                 , 'DoScale':DoScale
                                 , 'DoParallel': DoParallel
                                 , 'InnerRadius':InnerRadius
                                 , 'MaxChangeOffset':MaxChangeOffset[iterN]
-                                , 'MinimumCrossCorrelation':MinimumCrossCorrelation[iterN]
                                 , 'MpiJobSize':MpiJobSize
+                                , 'NumberOfCtfGroups':NumberOfCtfGroups
                                 , 'NumberOfMpiProcesses':NumberOfMpiProcesses
                                 , 'NumberOfThreads':NumberOfThreads
                                 , 'OuterRadius':OuterRadius
@@ -1063,10 +1051,11 @@ def actionsToBePerformedInsideLoop(_log):
                                 , 'SystemFlavour':SystemFlavour
                                 }
 
-            command = "dict['NumberOfCtfGroups']=self.NumberOfCtfGroups;projection_matching"
+            command = "projection_matching"
             _VerifyFiles = []
             #File with list of images and references
             _VerifyFiles.append(ProjMatchRootName[iterN][refN] )
+            _VerifyFiles.append('ppppp')
             _dataBase.insertCommand(command, _Parameters, iterN,_VerifyFiles)
             
 
@@ -1075,30 +1064,52 @@ def actionsToBePerformedInsideLoop(_log):
         #if only one reference it just copy the docfile generated in the previous step
         _Parameters = {
                        'DocFileInputAngles' : DocFileInputAngles[iterN]
+                     , 'NumberOfCtfGroups' : NumberOfCtfGroups
                      , 'refN':refN
                      , 'ProjMatchRootName':ProjMatchRootName[iterN]#LIST
                       }
         _VerifyFiles = []
         _VerifyFiles.append(DocFileInputAngles[iterN])
-        command = "dict['NumberOfCtfGroups']=self.NumberOfCtfGroups;assign_images_to_references"
-        _dataBase.insertCommand(command, _Parameters, iterN,_VerifyFiles)
+        command = "assign_images_to_references"
+        #############################_dataBase.insertCommand(command, _Parameters, iterN,_VerifyFiles)
 
         #align images, not possible for ctf groups
         for refN in range(1, referenceNumber + 1):
             _Parameters = {
-                       'DocFileInputAngles' : DocFileInputAngles[iterN]
-                     , 'ProjMatchRootName':ProjMatchRootName[iterN]#LIST
-
-                                }
-            command = "dict['NumberOfCtfGroups']=self.NumberOfCtfGroups;angular_class_average"
+                       'Align2DIterNr':Align2DIterNr
+                     , 'CtfGroupDirectory': CtfGroupDirectory
+                     , 'CtfGroupRootName': CtfGroupRootName
+                     , 'DiscardPercentage':DiscardPercentage[iterN]
+                     , 'DoAlign2D' : DoAlign2D[iterN]
+                     , 'DoComputeResolution' : DoComputeResolution
+                     , 'DoCtfCorrection': DoCtfCorrection
+                     , 'DocFileInputAngles' : DocFileInputAngles[iterN]
+                     , 'DoParallel': DoParallel
+                     , 'DoSplitReferenceImages':DoSplitReferenceImages
+                     , 'InnerRadius':InnerRadius
+                     , 'MaxChangeOffset':MaxChangeOffset[iterN]
+                     , 'MinimumCrossCorrelation':MinimumCrossCorrelation[iterN]
+                     , 'MpiJobSize':MpiJobSize
+                     , 'NumberOfCtfGroups' : NumberOfCtfGroups
+                     , 'NumberOfMpiProcesses':NumberOfMpiProcesses
+                     , 'NumberOfThreads':NumberOfThreads
+                     , 'OuterRadius':OuterRadius
+                     , 'PaddingFactor':PaddingFactor
+                     , 'ProjectLibraryRootName':ProjectLibraryRootNames[iterN][refN]
+                     , 'ProjMatchRootName':ProjMatchRootName[iterN]
+                     , 'SystemFlavour':SystemFlavour
+                    }
+            command = "angular_class_average"
             _VerifyFiles = []
             _VerifyFiles.append(maskedFileNamesIter[iterN][refN]+'ertertertert')
-            _dataBase.insertCommand(command, _Parameters, iterN,_VerifyFiles)
+            #########################################33_dataBase.insertCommand(command, _Parameters, iterN,_VerifyFiles)
             
             ##############REMOVE SHUTIL.COPY
             # Mask reference volume
             _Parameters = {
-                                  'DoMask'             : DoMask
+                                  'Align2dMaxChangeOffset':Align2dMaxChangeOffset[iterN]
+                                , 'Align2dMaxChangeRot':Align2dMaxChangeRot[iterN]
+                                , 'DoMask'             : DoMask
                                 , 'DoSphericalMask'    : DoSphericalMask
                                 , 'maskedFileName'     : maskedFileNamesIter[iterN][refN]
                                 , 'maskRadius'         : MaskRadius
