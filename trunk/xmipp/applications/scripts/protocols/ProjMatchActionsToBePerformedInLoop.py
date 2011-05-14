@@ -135,7 +135,7 @@ def projection_matching(_log,dict):
                       ' --ctf '            + ctffile
         
         if (dict['DoParallel']):
-            parameters = parameters + ' --mpi_job_size ' + str(dict['MyMpiJobSize'])
+            parameters = parameters + ' --mpi_job_size ' + str(dict['MpiJobSize'])
         
         launch_job.launch_job('xmipp_angular_projection_matching',
                             parameters,
