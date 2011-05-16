@@ -184,6 +184,11 @@
             <FILE filename="out8.doc"/>
         </CASE>
     </PROGRAM>
+    <PROGRAM name="xmipp_micrograph_phase_flipping" mpi="FALSE">
+        <CASE arguments="-i input/Protocol_Preprocess_Micrographs/Micrographs/01nov26b.001.001.001.002.mrc -o %o/micrographFlipped.mrc --ctf input/Protocol_Preprocess_Micrographs/Micrographs/01nov26b.001.001.001.002.mrc.ctfparam" changeDir="FALSE">
+            <FILE filename="micrographFlipped.mrc"/>
+        </CASE>
+    </PROGRAM>
     <PROGRAM name="xmipp_ml_align2d" mpi="FALSE">
         <CASE arguments="-i input/images_some.stk --ref input/seeds2.stk --oroot %o/ml2d --fast --mirror" changeDir="FALSE" random="TRUE">
             <FILE filename="ml2d_final_images.xmd"/>
