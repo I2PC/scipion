@@ -26,21 +26,42 @@
 
 #include "micrograph_phase_flipping.h"
 
-void Prog_micrograph_phase_flipping::show(void)
+void ProgMicrographPhaseFlipping::defineParams()
 {
+    addUsageLine("Correct the phase of micrographs");
+    addUsageLine("+This program flips the phase of those frequencies that were already ");
+    addUsageLine("+flipped by the CTF. Flipping the phase at the level of the micrograph is ");
+    addParamsLine(" -i <file>               : Input micrograph");
+    addParamsLine(" -o <file>               : Output micrograph");
+    addParamsLine(" --ctf <ctfparam_file>   : CTF description");
+}
+
+void ProgMicrographPhaseFlipping::readParams()
+{
+    fn_in   = getParam("-i");
+    fn_out  = getParam("-o");
+    fnt_ctf = getParam("--ctf");
+}
+
+void ProgMicrographPhaseFlipping::show()
+{
+    if (verbose==0)
+        return;
     std::cout
-        << "input_micrograph:      " << fn_in    << std::endl
-        << "output_micrograph:     " << fn_out << std::endl
-        << "ctf_param_file:        " << fnt_ctf << std::endl
+    << "input_micrograph:      " << fn_in    << std::endl
+    << "output_micrograph:     " << fn_out << std::endl
+    << "ctf_param_file:        " << fnt_ctf << std::endl
     ;
 }
 
-void Prog_micrograph_phase_flipping::run(void)
+void ProgMicrographPhaseFlipping::run()
 {
+    show();
+
     // Read the micrograph in an array of doubles
     Image<double> M_in;
     M_in.read(fn_in);
-    
+
     // Perform the Fourier transform
     FourierTransformer transformer;
     MultidimArray< std::complex<double> > M_inFourier;
@@ -52,20 +73,24 @@ void Prog_micrograph_phase_flipping::run(void)
     ctf.read(fnt_ctf);
     ctf.Produce_Side_Info();
 
-    Matrix1D<int>    idx(2);  // Indexes for Fourier plane
     Matrix1D<double> freq(2); // Frequencies for Fourier plane
-    FOR_ALL_ELEMENTS_IN_ARRAY2D(M_inFourier)
+    int yDim=YSIZE(M_in());
+    int xDim=XSIZE(M_in());
+    double iTm=1.0/ctf.Tm;
+    for (int i=0; i<YSIZE(M_inFourier); ++i)
     {
-        VECTOR_R2(idx,j,i);
-        FFT_idx2digfreq(M_in(),idx,freq);
-        digfreq2contfreq(freq, freq, ctf.Tm);
-        ctf.precomputeValues(XX(freq),YY(freq));
-        if (ctf.CTFpure_without_damping_at()<0)
+    	FFT_IDX2DIGFREQ(i, yDim, YY(freq));
+    	YY(freq) *= iTm;
+        for (int j=0; j<XSIZE(M_inFourier); ++j)
         {
-            M_inFourier(i,j)*=-1;
+        	FFT_IDX2DIGFREQ(j, xDim, XX(freq));
+        	XX(freq) *= iTm;
+            ctf.precomputeValues(XX(freq),YY(freq));
+            if (ctf.CTFpure_without_damping_at()<0)
+                DIRECT_A2D_ELEM(M_inFourier,i,j)*=-1;
         }
     }
-    
+
     // Perform inverse Fourier transform and finish
     transformer.inverseFourierTransform();
     M_in.write(fn_out);

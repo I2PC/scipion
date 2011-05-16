@@ -25,47 +25,9 @@
 
 #include <reconstruction/micrograph_phase_flipping.h>
 
-void Usage(char *argv[]);
-
 int main(int argc, char **argv)
- {
-
-    Prog_micrograph_phase_flipping prm;
-
-    // Get command line parameters ------------------------------------------
-    try
-    {
-        prm.fn_in   = getParameter(argc, argv, "-i");
-        prm.fn_out  = getParameter(argc, argv, "-o");
-        prm.fnt_ctf = getParameter(argc, argv, "-ctf");
-    }
-    catch (XmippError XE)
-    {
-        Usage(argv);
-        exit(1);
-    }
-    // Main program ---------------------------------------------------------
-    try
-    {
-        prm.show();
-        prm.run();
-    }
-    catch (XmippError XE)
-    {
-        std::cout << XE;
-    }
-    exit(0);
-
-}
-
-void Usage(char *argv[])
 {
-    std::cout << "Purpose:\n"
-    << "    flip micrograph fase\n"
-    << "Usage: "<< argv[0] 
-    << "\n"
-    << " -i <input_micrograph>            : Input micrograph\n"
-    << " -o <output_micrograph>           : Output micrograph\n"
-    << " -ctf <ctf_param_file>            : CTF param file\n"
-    << std::endl;
+    ProgMicrographPhaseFlipping prm;
+    prm.read(argc,argv);
+    return prm.tryRun();
 }

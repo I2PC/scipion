@@ -36,7 +36,7 @@
 */
 //@{
 
-class Prog_micrograph_phase_flipping
+class ProgMicrographPhaseFlipping: public XmippProgram
 {
 public:
     /** Input micrograph */
@@ -48,14 +48,14 @@ public:
     /** CTf param file name*/
     FileName fnt_ctf;
 
+    /** Define parameters */
+    void defineParams();
+    /** Read parameters */
+    void readParams();
     /** Do_all. */
-    void run(void);
+    void run();
     /** Show parameters. */
-    void show(void);
-    /** plan for forward fft */
-    fftw_plan plan_backward;
-    /** plan for backwarda fft */
-    fftw_plan plan_forward;
+    void show();
 };
 
 //@}
