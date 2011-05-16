@@ -92,6 +92,11 @@
             <FILE filename="down1_01nov26b.001.001.001.002_Periodogramavg.psd"/>
         </CASE>
     </PROGRAM>
+    <PROGRAM name="xmipp_ctf_phase_flip" mpi="FALSE">
+        <CASE arguments="-i input/Protocol_Preprocess_Micrographs/Micrographs/01nov26b.001.001.001.002.mrc -o %o/micrographFlipped.mrc --ctf input/Protocol_Preprocess_Micrographs/Micrographs/01nov26b.001.001.001.002.mrc.ctfparam" changeDir="FALSE">
+            <FILE filename="micrographFlipped.mrc"/>
+        </CASE>
+    </PROGRAM>
     <PROGRAM name="xmipp_image_align" mpi="FALSE">
         <CASE arguments="-i input/smallStack.stk --oroot %o/aligned" changeDir="FALSE">
             <FILE filename="aligned_alignment.xmd"/>
@@ -182,11 +187,6 @@
         </CASE>
         <CASE arguments="-i input/mD1.doc --operate modify_values &quot;image=replace(image, 'xmp','spi')&quot; -o %o/out8.doc" changeDir="FALSE">
             <FILE filename="out8.doc"/>
-        </CASE>
-    </PROGRAM>
-    <PROGRAM name="xmipp_micrograph_phase_flipping" mpi="FALSE">
-        <CASE arguments="-i input/Protocol_Preprocess_Micrographs/Micrographs/01nov26b.001.001.001.002.mrc -o %o/micrographFlipped.mrc --ctf input/Protocol_Preprocess_Micrographs/Micrographs/01nov26b.001.001.001.002.mrc.ctfparam" changeDir="FALSE">
-            <FILE filename="micrographFlipped.mrc"/>
         </CASE>
     </PROGRAM>
     <PROGRAM name="xmipp_ml_align2d" mpi="FALSE">
