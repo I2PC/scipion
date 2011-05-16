@@ -23,8 +23,8 @@
  *  e-mail address 'xmipp@cnb.csic.es'
  ***************************************************************************/
 
-#ifndef MICROGRAPH_PHASE_FLIPPING_H
-#define MICROGRAPH_PHASE_FLIPPING_H
+#ifndef CTF_PHASE_FLIPPING_H
+#define CTF_PHASE_FLIPPING_H
 #include <data/args.h>
 #include <data/micrograph.h>
 #include <data/fftw.h>
@@ -36,7 +36,7 @@
 */
 //@{
 
-class ProgMicrographPhaseFlipping: public XmippProgram
+class ProgCTFPhaseFlipping: public XmippProgram
 {
 public:
     /** Input micrograph */

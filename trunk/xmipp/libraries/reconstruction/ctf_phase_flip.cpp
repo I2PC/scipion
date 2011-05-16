@@ -24,9 +24,9 @@
  *  e-mail address 'xmipp@cnb.csic.es'
  ***************************************************************************/
 
-#include "micrograph_phase_flipping.h"
+#include "ctf_phase_flip.h"
 
-void ProgMicrographPhaseFlipping::defineParams()
+void ProgCTFPhaseFlipping::defineParams()
 {
     addUsageLine("Correct the phase of micrographs");
     addUsageLine("+This program flips the phase of those frequencies that were already ");
@@ -36,14 +36,14 @@ void ProgMicrographPhaseFlipping::defineParams()
     addParamsLine(" --ctf <ctfparam_file>   : CTF description");
 }
 
-void ProgMicrographPhaseFlipping::readParams()
+void ProgCTFPhaseFlipping::readParams()
 {
     fn_in   = getParam("-i");
     fn_out  = getParam("-o");
     fnt_ctf = getParam("--ctf");
 }
 
-void ProgMicrographPhaseFlipping::show()
+void ProgCTFPhaseFlipping::show()
 {
     if (verbose==0)
         return;
@@ -54,7 +54,7 @@ void ProgMicrographPhaseFlipping::show()
     ;
 }
 
-void ProgMicrographPhaseFlipping::run()
+void ProgCTFPhaseFlipping::run()
 {
     show();
 
