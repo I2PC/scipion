@@ -61,7 +61,7 @@ public:
     /** Real array, in fact a pointer to the user array is stored. */
     MultidimArray<double> *fReal;
 
-     /** Complex array, in fact a pointer to the user array is stored. */
+    /** Complex array, in fact a pointer to the user array is stored. */
     MultidimArray<std::complex<double> > *fComplex;
 
     /** Fourier array  */
@@ -82,7 +82,7 @@ public:
     /* Sign where the normalization is applied */
     int normSign;
 
-// Public methods
+    // Public methods
 public:
     /** Default constructor */
     FourierTransformer();
@@ -154,13 +154,15 @@ public:
         change the data.
         */
     template <typename T, typename T1>
-        void FourierTransform(T& v, T1& V, bool getCopy=true)
-        {
-            setReal(v);
-            Transform(FFTW_FORWARD);
-            if (getCopy) getFourierCopy(V);
-            else         getFourierAlias(V);
-        }
+    void FourierTransform(T& v, T1& V, bool getCopy=true)
+    {
+        setReal(v);
+        Transform(FFTW_FORWARD);
+        if (getCopy)
+            getFourierCopy(V);
+        else
+            getFourierAlias(V);
+    }
 
     /** Compute the Fourier transform.
         The data is taken from the matrix with which the object was
@@ -184,79 +186,98 @@ public:
         matrix is already resized to the right size before entering
         in this function. */
     template <typename T, typename T1>
-        void inverseFourierTransform(T& V, T1& v)
-        {
-            setReal(v);
-            setFourier(V);
-            Transform(FFTW_BACKWARD);
-        }
+    void inverseFourierTransform(T& V, T1& v)
+    {
+        setReal(v);
+        setFourier(V);
+        Transform(FFTW_BACKWARD);
+    }
 
     /** Get Fourier coefficients. */
     template <typename T>
-        void getFourierAlias(T& V) {V.alias(fFourier); return;}
+    void getFourierAlias(T& V)
+    {
+        V.alias(fFourier);
+        return;
+    }
 
     /** Get Fourier coefficients. */
     template <typename T>
-        void getFourierCopy(T& V) {
-            V.resizeNoCopy(fFourier);
-            memcpy(MULTIDIM_ARRAY(V),MULTIDIM_ARRAY(fFourier),
-                MULTIDIM_SIZE(fFourier)*2*sizeof(double));
-        }
+    void getFourierCopy(T& V)
+    {
+        V.resizeNoCopy(fFourier);
+        memcpy(MULTIDIM_ARRAY(V),MULTIDIM_ARRAY(fFourier),
+               MULTIDIM_SIZE(fFourier)*2*sizeof(double));
+    }
 
     /** Return a complete Fourier transform (two halves).
     */
     template <typename T>
-        void getCompleteFourier(T& V) {
-            V.resizeNoCopy(*fReal);
-            int ndim=3;
-            if (ZSIZE(*fReal)==1)
-            {
-                ndim=2;
-                if (YSIZE(*fReal)==1)
-                    ndim=1;
-            }
-            switch (ndim)
-            {
-                case 1:
-                    FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY1D(V)
-                        if (i<XSIZE(fFourier))
-                            DIRECT_A1D_ELEM(V,i)=DIRECT_A1D_ELEM(fFourier,i);
-                        else
-                            DIRECT_A1D_ELEM(V,i)=
-                                conj(DIRECT_A1D_ELEM(fFourier,
-                                    XSIZE(*fReal)-i));
-                    break;
-                case 2:
-                    FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY2D(V)
-                        if (j<XSIZE(fFourier))
-                            DIRECT_A2D_ELEM(V,i,j)=
-                                DIRECT_A2D_ELEM(fFourier,i,j);
-                        else
-                            DIRECT_A2D_ELEM(V,i,j)=
-                                conj(DIRECT_A2D_ELEM(fFourier,
-                                    (YSIZE(*fReal)-i)%YSIZE(*fReal),
-                                     XSIZE(*fReal)-j));
-                    break;
-                case 3:
-                    FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY3D(V)
-                        if (j<XSIZE(fFourier))
-                            DIRECT_A3D_ELEM(V,k,i,j)=
-                                DIRECT_A3D_ELEM(fFourier,k,i,j);
-                        else
-                            DIRECT_A3D_ELEM(V,k,i,j)=
-                                conj(DIRECT_A3D_ELEM(fFourier,
-                                    (ZSIZE(*fReal)-k)%ZSIZE(*fReal),
-                                    (YSIZE(*fReal)-i)%YSIZE(*fReal),
-                                     XSIZE(*fReal)-j));
-                    break;
-            }
+    void getCompleteFourier(T& V)
+    {
+        V.resizeNoCopy(*fReal);
+        int ndim=3;
+        if (ZSIZE(*fReal)==1)
+        {
+            ndim=2;
+            if (YSIZE(*fReal)==1)
+                ndim=1;
         }
+        switch (ndim)
+        {
+        case 1:
+            FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY1D(V)
+            if (i<XSIZE(fFourier))
+                DIRECT_A1D_ELEM(V,i)=DIRECT_A1D_ELEM(fFourier,i);
+            else
+                DIRECT_A1D_ELEM(V,i)=
+                    conj(DIRECT_A1D_ELEM(fFourier,
+                                         XSIZE(*fReal)-i));
+            break;
+        case 2:
+            FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY2D(V)
+            if (j<XSIZE(fFourier))
+                DIRECT_A2D_ELEM(V,i,j)=
+                    DIRECT_A2D_ELEM(fFourier,i,j);
+            else
+                DIRECT_A2D_ELEM(V,i,j)=
+                    conj(DIRECT_A2D_ELEM(fFourier,
+                                         (YSIZE(*fReal)-i)%YSIZE(*fReal),
+                                         XSIZE(*fReal)-j));
+            break;
+        case 3:
+            FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY3D(V)
+            if (j<XSIZE(fFourier))
+                DIRECT_A3D_ELEM(V,k,i,j)=
+                    DIRECT_A3D_ELEM(fFourier,k,i,j);
+            else
+                DIRECT_A3D_ELEM(V,k,i,j)=
+                    conj(DIRECT_A3D_ELEM(fFourier,
+                                         (ZSIZE(*fReal)-k)%ZSIZE(*fReal),
+                                         (YSIZE(*fReal)-i)%YSIZE(*fReal),
+                                         XSIZE(*fReal)-j));
+            break;
+        }
+    }
+
+
+    /** Compute the Fourier transform of a MultidimArray, 2D and 3D and
+     * returns a complete copy.
+        */
+    template <typename T, typename T1>
+    void completeFourierTransform(T& v, T1& V)
+    {
+        setReal(v);
+        Transform(FFTW_FORWARD);
+        getCompleteFourier(V);
+    }
 
     /** Set one half of the FT in fFourier from the input complete Fourier transform (two halves).
         The fReal and fFourier already should have the right sizes
     */
     template <typename T>
-        void setFromCompleteFourier(T& V) {
+    void setFromCompleteFourier(T& V)
+    {
         int ndim=3;
         if (ZSIZE(*fReal)==1)
         {
@@ -268,20 +289,20 @@ public:
         {
         case 1:
             FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY1D(fFourier)
-                DIRECT_A1D_ELEM(fFourier,i)=DIRECT_A1D_ELEM(V,i);
+            DIRECT_A1D_ELEM(fFourier,i)=DIRECT_A1D_ELEM(V,i);
             break;
         case 2:
             FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY2D(fFourier)
-                DIRECT_A2D_ELEM(fFourier,i,j) = DIRECT_A2D_ELEM(V,i,j);
+            DIRECT_A2D_ELEM(fFourier,i,j) = DIRECT_A2D_ELEM(V,i,j);
             break;
         case 3:
             FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY3D(fFourier)
-                DIRECT_A3D_ELEM(fFourier,k,i,j) = DIRECT_A3D_ELEM(V,k,i,j);
+            DIRECT_A3D_ELEM(fFourier,k,i,j) = DIRECT_A3D_ELEM(V,k,i,j);
             break;
         }
     }
 
-// Internal methods
+    // Internal methods
 public:
     /* Pointer to the array of doubles with which the plan was computed */
     double * dataPtr;
@@ -332,7 +353,7 @@ public:
      * FFTW_FORWARD OR FFTW_BACKWARD. By default, FFTW_FORWARD.*/
     void setNormalizationSign(int _normSign)
     {
-      normSign = _normSign;
+        normSign = _normSign;
     }
 
 };
@@ -370,11 +391,11 @@ void auto_correlation_vector(const MultidimArray< T > & Img, MultidimArray< doub
     double dSize=XSIZE(Img);
     FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(FFT1)
     {
-    	double *ptr=(double*)&DIRECT_MULTIDIM_ELEM(FFT1,n);
-    	double &realPart=*ptr;
-    	double &imagPart=*(ptr+1);
-    	realPart=dSize*(realPart*realPart+imagPart*imagPart);
-    	imagPart=0;
+        double *ptr=(double*)&DIRECT_MULTIDIM_ELEM(FFT1,n);
+        double &realPart=*ptr;
+        double &imagPart=*(ptr+1);
+        realPart=dSize*(realPart*realPart+imagPart*imagPart);
+        imagPart=0;
     }
 
     // Invert the product, in order to obtain the correlation image
@@ -409,7 +430,7 @@ void correlation_vector(const MultidimArray< T > & m1,
     // Multiply FFT1 * FFT2'
     double dSize=XSIZE(m1);
     FOR_ALL_ELEMENTS_IN_ARRAY1D(FFT1)
-        FFT1(i) *= dSize * conj(FFT2(i));
+    FFT1(i) *= dSize * conj(FFT2(i));
 
     // Invert the product, in order to obtain the correlation image
     transformer1.inverseFourierTransform();
@@ -427,7 +448,7 @@ void correlation_vector(const MultidimArray< T > & m1,
  *  It is assumed that the two vectors v1, and v2 are of the same size. */
 template <class T>
 void correlation_vector_no_Fourier(const MultidimArray<T> &v1, const MultidimArray<T> &v2,
-    MultidimArray<T> &result)
+                                   MultidimArray<T> &result)
 {
     v1.checkDimension(1);
     v2.checkDimension(1);
@@ -436,9 +457,9 @@ void correlation_vector_no_Fourier(const MultidimArray<T> &v1, const MultidimArr
     result.setXmippOrigin();
     int N=XSIZE(v1)-1;
     FOR_ALL_ELEMENTS_IN_ARRAY1D(result)
-        for (int k=0; k<XSIZE(v1); ++k)
-            A1D_ELEM(result,i)+=DIRECT_A1D_ELEM(v1,intWRAP(k+i,0,N))*
-                       DIRECT_A1D_ELEM(v2,k);
+    for (int k=0; k<XSIZE(v1); ++k)
+        A1D_ELEM(result,i)+=DIRECT_A1D_ELEM(v1,intWRAP(k+i,0,N))*
+                            DIRECT_A1D_ELEM(v2,k);
     STARTINGX(result)=0;
 }
 
@@ -468,9 +489,9 @@ void correlation_matrix(const MultidimArray< T > & m1,
     std::complex<double> aux;
     FOR_ALL_ELEMENTS_IN_ARRAY3D(FFT1)
     {
-    	aux=A3D_ELEM(FFT2,k, i, j);
-    	aux.imag()*=mdSize;
-    	aux.real()*=dSize;
+        aux=A3D_ELEM(FFT2,k, i, j);
+        aux.imag()*=mdSize;
+        aux.real()*=dSize;
         A3D_ELEM(FFT1,k, i, j) *= aux;
     }
 
@@ -500,11 +521,11 @@ void auto_correlation_matrix(const MultidimArray< T > & Img, MultidimArray< doub
     double dSize=MULTIDIM_SIZE(Img);
     FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(FFT1)
     {
-    	double *ptr=(double*)&DIRECT_MULTIDIM_ELEM(FFT1,n);
-    	double &realPart=*ptr;
-    	double &imagPart=*(ptr+1);
-    	realPart=dSize*(realPart*realPart+imagPart*imagPart);
-    	imagPart=0;
+        double *ptr=(double*)&DIRECT_MULTIDIM_ELEM(FFT1,n);
+        double &realPart=*ptr;
+        double &imagPart=*(ptr+1);
+        realPart=dSize*(realPart*realPart+imagPart*imagPart);
+        imagPart=0;
     }
 
     // Invert the product, in order to obtain the correlation image

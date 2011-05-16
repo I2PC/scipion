@@ -27,7 +27,7 @@
 #define _PROG_SSNR
 
 #include <iostream>
-
+#include <data/program.h>
 #include <data/image.h>
 #include <data/metadata.h>
 #include <data/fft.h>
@@ -36,74 +36,58 @@
    @ingroup ReconsLibrary */
 //@{
 /** SSNR parameters. */
-class Prog_SSNR_prm
+
+class ProgSSNR : public XmippProgram
 {
 public:
     /// Signal reconstructed volume
     FileName fn_S;
-
     /// Noise reconstructed volume
     FileName fn_N;
-
     /// Selfile with all the experimental and noise images
     FileName fn_SNsel;
-
+    FileName fn_S_sel, fn_N_sel;
     /// Filename of the Volumetric SSNR, used only for radial averaging
     FileName fn_VSSNR;
-
     /// Ringwidth
     double ring_width;
-
     /// Sampling rate
     double Tm;
-
     /** Output filename.
         If empty, SSNR is inserted before the extension in fn_S */
     FileName fn_out;
-
     /** Output rootname for the individual estimations.
         If empty, SSNR is inserted before the extension in fn_S */
     FileName fn_out_images;
-
     /** Generate VSSNR.*/
     bool generate_VSSNR;
-
     /** Generate radial average.*/
     bool radial_avg;
-
     /** Min_power: Threshold for not dividing */
     double min_power;
 public:
     /* Side info -------------------------------------------------------- */
     // Signal volume
     Image<double> S;
-
     // Noise volume
     Image<double> N;
-
     // Selfile with all experimental images
-    MetaData SF_SN;
-
+    MetaData SF_SN, SF_S, SF_N;
     // SSNR3D for the radial_avg
     Image<double> VSSNR;
 
 public:
-    /// Read parameters from command line
-    void read(int argc, char **argv);
 
-    /// Show parameters
-    friend std::ostream & operator << (std::ostream &out, const Prog_SSNR_prm &prm);
-
-    /// Usage
-    void usage() const;
-
-    /// Produce side Info
-    void produce_side_info();
+    void defineParams();
+    void readParams();
+    void show();
+    void produceSideInfo();
+    void run();
 
     /** Estimate SSNR 2D.
         Generate images with the particular SSNR. The output filename
         is used as a rootname */
-    void Estimate_SSNR(int dim, Matrix2D<double> &output);
+    void estimateSSNR(int dim, Matrix2D<double> &output);
 
     /** Radial average of a Volumetric SSNR.
         The Volumetric SSNR is stored as 10*log10(VSSNR+1). To perform
@@ -115,12 +99,7 @@ public:
         Column 1: corresponding frequency in continuous freq (1/A),
         Column 2: corrected radial_avg
     */
-    void Radial_average(Matrix2D<double> &output);
+    void radialAverage(Matrix2D<double> &output);
 };
-
-/** Perform all the work.
-    For the meaning of the output matrix look at the documentation
-    of the function Estimate_SSNR_1D of the class Prog_SSNR_prm. */
-void ROUT_SSNR(Prog_SSNR_prm &prm, Matrix2D<double> &output);
 //@}
 #endif

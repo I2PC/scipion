@@ -30,81 +30,123 @@
 #include <data/fftw.h>
 #include <data/metadata_extension.h>
 
-// Read parameters from command line ---------------------------------------
-void Prog_SSNR_prm::read(int argc, char **argv)
+
+void ProgSSNR::defineParams()
 {
-    radial_avg = checkParameter(argc, argv, "-radial_avg");
+    addUsageLine("Evaluate the reconstruction quality using SSNR or its volumetric distribution VSSNR.");
+    addUsageLine("+You must produce a reconstruction with gaussian white noise with exactly the same angles and");
+    addUsageLine("+reconstruction parameters as the signal reconstruction. Our ART program can produce this noisy");
+    addUsageLine("+reconstruction. If you don't use ART as reconstruction algorithm, you will have to produce the");
+    addUsageLine("+noisy reconstruction by yourself (see our demo in order to learn how to do this). Finally, the");
+    addUsageLine("+VSSNR can be visualized using any volume viewer.");
+    addUsageLine("+++ %BR% %BR%");
+    addUsageLine("+++* Do not use any mask during the reconstruction since the resolution estimate is biased");
+    addUsageLine("+++* Before applying this measure make sure that the noise images and the background in the experimental" \
+                 " images have zero average. It is also assumed that the projection of the reconstructed volumes matches the" \
+                 " experimental or the noisy projections (i.e., check that both projections are within the same range");
+    addUsageLine("+++* The VSSNR is stored in the file as 10*log10(1+VSSNR). Thus, if you want a threshold of VSSNR=1, the" \
+                 " threshold in the visualizer must be set to =10*log10(1+1)=3=");
+    addUsageLine("+++* If the reconstruction algorithm linearly scales the reconstructed volume so that the reprojected" \
+                 " images do not match the gray values of the experimental images, use adjust_volume to correct for the linear" \
+                 " transformation before computing the SSNR images");
+
+    addSeeAlsoLine("resolution_fsc");
+
+    addParamsLine("== SSNR or VSSNR Estimation ==");
+    addParamsLine("   [--signal <signal_file>]  : Signal volume");
+    addParamsLine("  alias -S;");
+    addParamsLine("   requires --noise;");
+    addParamsLine("   [--noise <noise_file>]    : Noise volume");
+    addParamsLine("  alias -N;");
+    addParamsLine("   [--sel_signal <signal_mdfile>] : Metadata file with the images used for the signal reconstruction");
+    addParamsLine("  alias -selS;");
+    addParamsLine("   [--sel_noise  <noise_mdfile>]  : Metadata file with the images used for the noise reconstruction");
+    addParamsLine("  alias -selN;");
+    addParamsLine("   [-o <SSNR_file=\"\">]     : Output metadata with the SSNR estimation");
+    addParamsLine("                             :+++If the output filename is not given, then the output filename is taken");
+    addParamsLine("                             :+++from the -S parameter by inserting _SSNR before the extension.");
+    addParamsLine("                             :+++The columns of the output file are as follows: %BR%");
+    addParamsLine("                             :+++  =Column 1: Fourier pixel number= %BR%");
+    addParamsLine("                             :+++  =Column 2: Corresponding frequency (1/Angstroms)= %BR%");
+    addParamsLine("                             :+++  =Column 3: 10*log10(SSNR-1)  (SSNR=ISSNR/alpha)= %BR%");
+    addParamsLine("                             :+++  =Column 4: ISSNR    (Input SSNR=Sexp/Nexp)= %BR%");
+    addParamsLine("                             :+++  =Column 5: 10*log10(Sexp)= %BR%");
+    addParamsLine("                             :+++  =Column 6: 10*log10(Nexp)= %BR%");
+    addParamsLine("                             :+++  =Column 7: alpha       (alpha=Snoise/Nnoise)= %BR%");
+    addParamsLine("                             :+++  =Column 8: 10*log10(Snoise)= %BR%");
+    addParamsLine("                             :+++  =Column 9: 10*log10(Nnoise)= ");
+
+    addParamsLine("   [--ring <w=4>]            : Ring width for the SSNR averaging computation (Measured in Fourier pixels)");
+    addParamsLine("   [--sampling_rate <Ts=1>]  : Pixel size (Angstrom)");
+    addParamsLine("  alias -s;");
+    addParamsLine("   [--min_power <th=1e-10>]  : Minimum power in Fourier space. If at any moment, the SSNR must divide by something");
+    addParamsLine("                             : smaller than this value, then the SSNR at that frequency is assumed to be 0. High ");
+    addParamsLine("                             : values of this threshold result on speckled images. If this is thee case, lower ");
+    addParamsLine("                             : this threshold (it must always be positive) ");
+    addParamsLine("   [--gen_VSSNR]             : (Allowed global options: --ring, --sampling_rate, --min_power)");
+    addParamsLine("                             :+++ %BR%");
+    addParamsLine("                             : Generate the individual estimations of the SSNR for each particle and builds an ");
+    addParamsLine("                             : interpolation volume (VSSNR) that is compatible with the individual SSNRs.");
+    addParamsLine("                             :+ In fact, the VSSNR is stored as 10*log10(1+SSNR). Thus, after interpolating the threshold");
+    addParamsLine("                             :+ at SSNR = 1 must be shown as the threshold of the output interpolated volume at 3.01 ");
+    addParamsLine("                             :+ (10*log10(1+1)). The threshold at SSNR = 4 must be shown as the threshold of the output");
+    addParamsLine("                             :+ interpolated volume at 6.99 (10*log10(1+4)). The 1D SSNR is also generated as a side-product");
+    addParamsLine("   requires --signal,--noise,--VSSNR;");
+    addParamsLine("   [--VSSNR <fn_vol>]        : Volume with the Volumetric SSNR");
+    addParamsLine("   [--oroot <root=\"\">]     : Root name for individual SSNR estimations");
+    addParamsLine("== Estimation by radial averaging of the VSSNR ==");
+    addParamsLine("   [--radial_avg]             : Do radial averaging estimation");
+    addParamsLine("   : (Allowed global options: --ring, --sampling_rate, --min_power, -o)");
+    addParamsLine("   requires --VSSNR;");
+
+    addExampleLine("Resolution of subset2.vol volume with respect to subset1.vol reference volume using 5.6 pixel size (in Angstrom):", false);
+    addExampleLine("xmipp_resolution_ssnr -S recFourierSignal.vol -N recFourierNoise.vol -selS projections.xmd  -selN noiseProjections.xmd --VSSNR volumeout.vol --gen_VSSNR");
+}
+
+
+void ProgSSNR::readParams()
+{
+    radial_avg = checkParam("--radial_avg");
     if (!radial_avg)
     {
-        fn_S = getParameter(argc, argv, "-S");
-        fn_N = getParameter(argc, argv, "-N");
-        fn_SNsel = getParameter(argc, argv, "-selSN");
-        generate_VSSNR = checkParameter(argc, argv, "-generate_VSSNR");
+        fn_S = getParam("-S");
+        fn_N = getParam("-N");
+        fn_S_sel = getParam("--sel_signal");
+        fn_N_sel = getParam("--sel_noise");
+        generate_VSSNR = checkParam("--gen_VSSNR");
         if (generate_VSSNR)
         {
-            fn_VSSNR = getParameter(argc, argv, "-VSSNR");
-            fn_out_images = getParameter(argc, argv, "-oimages", "");
+            fn_VSSNR = getParam("--VSSNR");
+            fn_out_images = getParam("--oroot");
         }
     }
     else
-        fn_VSSNR = getParameter(argc, argv, "-VSSNR");
-    ring_width = textToFloat(getParameter(argc, argv, "-ring", "4"));
-    Tm = textToFloat(getParameter(argc, argv, "-sampling_rate", "1"));
-    min_power = textToFloat(getParameter(argc, argv, "-min_power", "1e-10"));
-    fn_out = getParameter(argc, argv, "-o", "");
+        fn_VSSNR = getParam("-VSSNR");
+
+    ring_width = getDoubleParam("--ring");
+    Tm = getDoubleParam("--sampling_rate");
+    min_power = getDoubleParam("--min_power");
+    fn_out = getParam("-o");
 }
 
-// Show parameters ---------------------------------------------------------
-std::ostream & operator << (std::ostream &out, const Prog_SSNR_prm &prm)
+void ProgSSNR::show()
 {
-    out
-    << "Signal Volume:        " << prm.fn_S       << std::endl
-    << "Noise  Volume:        " << prm.fn_N       << std::endl
-    << "Signal-Noise selfile: " << prm.fn_SNsel   << std::endl
-    << "Volumetric SSNR:      " << prm.fn_VSSNR   << std::endl
-    << "Output images:        " << prm.fn_out     << std::endl
-    << "Ring width:           " << prm.ring_width << std::endl
-    << "Sampling rate:        " << prm.Tm         << std::endl
-    << "Generate VSSNR:       " << prm.generate_VSSNR << std::endl
-    << "Radial average:       " << prm.radial_avg << std::endl
+    std::cout
+    << "Signal Volume:     " << fn_S       << std::endl
+    << "Noise  Volume:     " << fn_N       << std::endl
+    << "Signal selfile:    " << fn_S_sel   << std::endl
+    << "Noise  selfile:    " << fn_N_sel   << std::endl
+    << "Volumetric SSNR:   " << fn_VSSNR   << std::endl
+    << "Output images:     " << fn_out     << std::endl
+    << "Ring width:        " << ring_width << std::endl
+    << "Sampling rate:     " << Tm         << std::endl
+    << "Generate VSSNR:    " << generate_VSSNR << std::endl
+    << "Radial average:    " << radial_avg << std::endl
     ;
-    return out;
+
 }
 
-// Usage -------------------------------------------------------------------
-void Prog_SSNR_prm::usage() const
-{
-    std::cerr << " SSNR Estimation ------------------------------------------------\n"
-    << "SSNR\n"
-    << "   -S <Volume>           : Signal volume\n"
-    << "   -N <Volume>           : Noise volume\n"
-    << "   -selSN <Selfile>      : Selfile with experimental and noise images\n"
-    << "  [-ring <w=4>]          : Ring width for the SSNR computation\n"
-    << "  [-sampling_rate <Tm=1>]: Sampling rate A/pixel\n"
-    << "  [-o <SSNR file=\"\">]    : Output file\n"
-    << " VSSNR Estimation -----------------------------------------------\n"
-    << "SSNR\n"
-    << "   -generate_VSSNR       : generate VSSNR\n"
-    << "   -S <Volume>           : Signal volume\n"
-    << "   -N <Volume>           : Noise volume\n"
-    << "   -selSN <Selfile>      : Selfile with experimental and noise images\n"
-    << "   -VSSNR <fn_vol>       : Volume with the Volumetric SSNR\n"
-    << "  [-oimages <fn_root>]   : Root name for individual SSNR estimations\n"
-    << "  [-ring <w=4>]          : Ring width for the SSNR computation\n"
-    << "  [-min_power <th=1e-10>]: Minimum power\n"
-    << "  [-sampling_rate <Tm=1>]: Sampling rate A/pixel\n"
-    << " Estimation by radial averaging ---------------------------------\n"
-    << " SSNR -radial_avg\n"
-    << "   -VSSNR <fn_vol>       : Volume with the Volumetric SSNR\n"
-    << "  [-ring <w=4>]          : Ring width for the SSNR computation\n"
-    << "  [-sampling_rate <Tm=1>]: Sampling rate A/pixel\n"
-    << "  [-min_power <th=1e-10>]: Minimum power\n"
-    << "  [-o <SSNR file=\"\">]    : Output file\n"
-    ;
-}
-
-// Produce side Info -------------------------------------------------------
-void Prog_SSNR_prm::produce_side_info()
+void ProgSSNR::produceSideInfo()
 {
     if (!radial_avg)
     {
@@ -116,10 +158,12 @@ void Prog_SSNR_prm::produce_side_info()
             REPORT_ERROR(ERR_MULTIDIM_SIZE,
                          "SSNR: Signal and Noise volumes are not of the same size");
 
-        SF_SN.read(fn_SNsel);
-        int sZdim, sYdim, sXdim;
-        size_t sNdim;
-        ImgSize(SF_SN, sXdim, sYdim, sZdim, sNdim);
+        SF_S.read(fn_S_sel);
+        SF_N.read(fn_N_sel);
+
+        //        int sZdim, sYdim, sXdim;
+        //        size_t sNdim;
+        //        ImgSize(SF_SN, sXdim, sYdim, sZdim, sNdim);
 
         if (fn_out_images == "")
             fn_out_images = "individualSSNR";
@@ -131,9 +175,39 @@ void Prog_SSNR_prm::produce_side_info()
     }
 }
 
-// Estimate SSNR ----------------------------------------------------------
-//#define DEBUG
-void Prog_SSNR_prm::Estimate_SSNR(int dim, Matrix2D<double> &output)
+void ProgSSNR::run()
+{
+    show();
+    produceSideInfo();
+
+    Matrix2D<double> output;
+
+    if (!radial_avg)
+    {
+        if (!generate_VSSNR)
+            estimateSSNR(1, output);
+        else
+            estimateSSNR(2, output);
+        if (fn_out != "")
+            output.write(fn_out);
+        else
+        {
+            FileName fn_out = fn_S.insertBeforeExtension("_SSNR");
+            output.write(fn_out.substituteExtension("vol", "txt"));
+        }
+    }
+    else
+    {
+        radialAverage(output);
+        if (fn_out != "")
+            output.write(fn_out);
+        else
+            output.write(fn_VSSNR.insertBeforeExtension("_radial_avg"));
+    }
+}
+
+
+void ProgSSNR::estimateSSNR(int dim, Matrix2D<double> &output)
 {
     // These vectors are for 1D
     Matrix1D<double> S_S21D((int)(XSIZE(S()) / 2 - ring_width)),
@@ -148,27 +222,29 @@ void Prog_SSNR_prm::Estimate_SSNR(int dim, Matrix2D<double> &output)
     MetaData SF_individual;
 
     std::cerr << "Computing the SSNR ...\n";
-    init_progress_bar(SF_SN.size());
-    int imgno = 0;
-    Image<double> Is, In, Inp;
+    init_progress_bar(SF_S.size());
+    int imgno = 1;
+    Image<double> Is, In;
     Projection Iths, Ithn;
     MultidimArray< std::complex<double> > FFT_Is, FFT_Iths,  FFT_In, FFT_Ithn;
     MultidimArray<double> S2s, N2s, S2n, N2n;
     FileName fn_img;
-    FOR_ALL_OBJECTS_IN_METADATA(SF_SN)
+    FOR_ALL_OBJECTS_IN_METADATA2(SF_S, SF_N)
     {
-        SF_SN.getValue(MDL_IMAGE,fn_img,__iter.objId);
-        Is.readApplyGeo(fn_img,SF_SN,__iter.objId);
+        Is.readApplyGeo(SF_S,__iter.objId);
         Is().setXmippOrigin();
-        SF_SN.getValue(MDL_ASSOCIATED_IMAGE1,fn_img,__iter.objId);
-        In.readApplyGeo(fn_img,SF_SN,__iter.objId);
+        In.readApplyGeo(SF_N,__iter2.objId);
         In().setXmippOrigin();
-        Inp() = In();
+
+        if (!XMIPP_EQUAL_REAL(Is.rot(), In.rot()) ||
+            !XMIPP_EQUAL_REAL(Is.tilt(), In.tilt()) ||
+            !XMIPP_EQUAL_REAL(Is.psi(), In.psi()))
+            REPORT_ERROR(ERR_VALUE_INCORRECT, "Noise projection angles are different from signal projections angles.");
 
         projectVolume(S(), Iths, YSIZE(Is()), XSIZE(Is()),
-                       Is.rot(), Is.tilt(), Is.psi());
+                      Is.rot(), Is.tilt(), Is.psi());
         projectVolume(N(), Ithn, YSIZE(Is()), XSIZE(Is()),
-                       Is.rot(), Is.tilt(), Is.psi());
+                      Is.rot(), Is.tilt(), Is.psi());
 
 #ifdef DEBUG
 
@@ -186,10 +262,22 @@ void Prog_SSNR_prm::Estimate_SSNR(int dim, Matrix2D<double> &output)
         Is() -= Iths();
         In() -= Ithn();
 
-        FourierTransform(Is(), FFT_Is);
-        FourierTransform(Iths(), FFT_Iths);
-        FourierTransform(In(), FFT_In);
-        FourierTransform(Ithn(), FFT_Ithn);
+        FourierTransformer FT(FFTW_BACKWARD);
+
+        if (dim == 2)
+        {
+            FT.completeFourierTransform(Is(), FFT_Is);
+            FT.completeFourierTransform(Iths(), FFT_Iths);
+            FT.completeFourierTransform(In(), FFT_In);
+            FT.completeFourierTransform(Ithn(), FFT_Ithn);
+        }
+        else
+        {
+            FT.FourierTransform(Is(), FFT_Is);
+            FT.FourierTransform(Iths(), FFT_Iths);
+            FT.FourierTransform(In(), FFT_In);
+            FT.FourierTransform(Ithn(), FFT_Ithn);
+        }
 
 #ifdef DEBUG
 
@@ -250,11 +338,11 @@ void Prog_SSNR_prm::Estimate_SSNR(int dim, Matrix2D<double> &output)
                     alpha = DIRECT_MULTIDIM_ELEM(S2n,n) / aux;
                 if (alpha   > min_power)
                 {
-                	aux=ISSNR / alpha - 1.0;
+                    aux=ISSNR / alpha - 1.0;
                     SSNR = XMIPP_MAX(aux, 0.0);
                 }
                 if (SSNR    > min_power)
-                	DIRECT_MULTIDIM_ELEM(SSNR2Dmatrix,n) = 10.0 * log10(SSNR + 1.0);
+                    DIRECT_MULTIDIM_ELEM(SSNR2Dmatrix,n) = 10.0 * log10(SSNR + 1.0);
             }
             CenterFFT(SSNR2D(), true);
 #ifdef DEBUG
@@ -264,7 +352,9 @@ void Prog_SSNR_prm::Estimate_SSNR(int dim, Matrix2D<double> &output)
 #endif
 
             // Save image
-            FileName fn_img_out = fn_out_images + integerToString(Is.name().getNumber(), 5) + ".xmp";
+            FileName fn_img_out;
+            fn_img_out.compose(imgno, fn_out_images, "stk");
+//            FileName fn_img_out = fn_out_images + integerToString(Is.name().getNumber(), 5) + ".xmp";
             SSNR2D.setEulerAngles(Is.rot(),Is.tilt(),Is.psi());
             SSNR2D.write(fn_img_out);
             size_t objId=SF_individual.addObject();
@@ -316,7 +406,7 @@ void Prog_SSNR_prm::Estimate_SSNR(int dim, Matrix2D<double> &output)
         if (++imgno % 50 == 0)
             progress_bar(imgno);
     }
-    progress_bar(SF_SN.size());
+    progress_bar(SF_S.size());
 
     // Compute the SSNR
     S_SSNR1D = S_S21D / S_N21D;
@@ -358,16 +448,19 @@ void Prog_SSNR_prm::Estimate_SSNR(int dim, Matrix2D<double> &output)
     if (dim == 2)
     {
         std::cerr << "Interpolating the VSSNR ...\n";
-        SF_individual.write(fn_out_images + ".sel");
-        system(((std::string)"xmipp_art -i " + fn_out_images + ".sel -o " + fn_VSSNR +
-                " -l 0.1 -R " + integerToString(ROUND(XSIZE(S()) / 3)) + " -ray_length 1 -n 5").c_str());
-        system(((std::string)"xmipp_rmsel " + fn_out_images + ".sel ").c_str());
+        SF_individual.write(fn_out_images + ".xmd");
+
+
+        std::cout << "it should be reconstructing with ART, when implemented." <<std::endl;
+
+//        system(((std::string)"xmipp_art -i " + fn_out_images + ".xmd -o " + fn_VSSNR +
+//                " -l 0.1 -R " + integerToString(ROUND(XSIZE(S()) / 3)) + " -ray_length 1 -n 5").c_str());
+//        system(((std::string)"xmipp_rmsel " + fn_out_images + ".xmd ").c_str());
     }
 }
-#undef DEBUG
 
 // Estimate radial average ---------------------------------------------------
-void Prog_SSNR_prm::Radial_average(Matrix2D<double> &output)
+void ProgSSNR::radialAverage(Matrix2D<double> &output)
 {
     // Compute the radial average ...........................................
     Matrix1D<double> VSSNR_avg((int)(XSIZE(VSSNR()) / 2 - ring_width));
@@ -415,35 +508,5 @@ void Prog_SSNR_prm::Radial_average(Matrix2D<double> &output)
             output(i, 2) = 10 * log10(SSNR - 1); // Corrected SSNR
         else
             output(i, 2) = -1000;         // In fact it should be -inf
-    }
-}
-
-// Main --------------------------------------------------------------------
-void ROUT_SSNR(Prog_SSNR_prm &prm, Matrix2D<double> &output)
-{
-    std::cout << prm;
-    prm.produce_side_info();
-    if (!prm.radial_avg)
-    {
-        if (!prm.generate_VSSNR)
-            prm.Estimate_SSNR(1, output);
-        else
-            prm.Estimate_SSNR(2, output);
-        if (prm.fn_out != "")
-            output.write(prm.fn_out);
-        else
-        {
-            FileName fn_out = prm.fn_S.insertBeforeExtension("_SSNR");
-            fn_out.substituteExtension("vol", "txt");
-            output.write(fn_out);
-        }
-    }
-    else
-    {
-        prm.Radial_average(output);
-        if (prm.fn_out != "")
-            output.write(prm.fn_out);
-        else
-            output.write(prm.fn_VSSNR.insertBeforeExtension("_radial_avg"));
     }
 }

@@ -27,26 +27,7 @@
 
 int main(int argc, char **argv)
 {
-    Prog_SSNR_prm prm;
-    try
-    {
-        prm.read(argc, argv);
-    }
-    catch (XmippError XE)
-    {
-        std::cout << XE;
-        prm.usage();
-        return 1;
-    }
-
-    try
-    {
-    	Matrix2D<double> output;
-        ROUT_SSNR(prm, output);
-    }
-    catch (XmippError XE)
-    {
-        std::cout << XE;
-    }
-    return 0;
+    ProgSSNR program;
+    program.read(argc, argv);
+    return program.tryRun();
 }
