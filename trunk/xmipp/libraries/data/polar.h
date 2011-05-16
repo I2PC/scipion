@@ -511,7 +511,7 @@ public:
         {
             sum2 = sum2 / N;
             avg = sum / N;
-            stddev=sqrt(sum2-average*average);
+            stddev=sqrt(sum2-avg*avg);
         }
         else if (N != 0.)
         {
