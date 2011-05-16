@@ -58,7 +58,8 @@ protected:
 
         addParamsLine("  [--set <set_operation> <md2_file> <label=image>]   : Set operations");
         addParamsLine("         where <set_operation>");
-        addParamsLine("   union               : Union with metadata md2");
+        addParamsLine("   union               : Union with metadata md2, duplicated values only will appear once");
+        addParamsLine("   union_all           : Union with metadata md2, will repeat duplicated values");
         addParamsLine("   intersection        : Intersection with metadata md2");
         addParamsLine("   subtraction         : Subtraction with metadata md2");
         addParamsLine("   join                : Inner join with md2 using label l1");
@@ -178,6 +179,8 @@ protected:
 
         if (operation == "union")
             mdIn.unionDistinct(md2, label);
+        else if (operation == "union_all")
+          mdIn.unionAll(md2);
         else if (operation == "intersection")
             mdIn.intersection(md2, label);
         else if (operation == "subtraction")
