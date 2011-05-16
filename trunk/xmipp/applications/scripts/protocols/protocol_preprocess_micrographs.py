@@ -16,7 +16,7 @@
 # {section} Global parameters
 #------------------------------------------------------------------------------------------------
 # Working subdirectory:
-WorkingDir='Preprocessing'
+WorkingDir='Preprocessing2'
 # {dir} Directory name from where to process all scanned micrographs
 DirMicrographs='Micrographs'
 # Which files in this directory to process
@@ -24,18 +24,18 @@ DirMicrographs='Micrographs'
     (see the expert options)
     Note that any wildcard is possible, e.g. *3[1,2].tif
 """
-ExtMicrographs='*.mrc'
+ExtMicrographs='*.ser'
 # Rootname for these micrographs
 # {expert} Root directory name for this project:
 """ Absolute path to the root directory for this project
 """
-ProjectDir ='/media/usbdisk/Experiments/TestProtocols/Protocol_Small'
+ProjectDir ='/gpfs/fs1/home/bioinfo/coss/Polimerasa_CCD'
 #------------------------------------------------------------------------------------------------
 # {section} Preprocess
 #------------------------------------------------------------------------------------------------
 # Do proceprocess
 # Perform preprocessing? 
-DoPreprocess=False
+DoPreprocess=True
 # Crop borders
 """ Crop a given amount of pixels from each border.
     Set this option to -1 for not applying it."""
@@ -47,7 +47,7 @@ Crop=-1
 Stddev=-1
 # Downsampling factor 
 """ Set to 1 for no downsampling. Non-integer downsample factors are possible."""
-Down=1
+Down=2
 #------------------------------------------------------------------------------------------------
 # {section} CTF estimation
 #------------------------------------------------------------------------------------------------
@@ -58,12 +58,12 @@ Voltage=200
 # Spherical aberration
 SphericalAberration=2.26
 # Magnification rate
-Magnification=50000
+Magnification=70754
 # Scanned pixel size (in um)
-ScannedPixelSize=7
+ScannedPixelSize=15
 # Amplitude Contrast
 """ It should be a negative number"""
-AmplitudeContrast=-0.07
+AmplitudeContrast=-0.1
 # {expert} Only perform power spectral density estimation?
 """ Skip the CTF estimation part, and only estimate the PSD
 """
@@ -88,8 +88,10 @@ MinFocus=5000
 """ Maximum defocus value (in Angstrom) to include in defocus search
 """
 MaxFocus=100000
+# {expert} Window size for Xmipp
+WinSizeXmipp=256
 # {expert} Window size for CTFFIND
-WinSize=256
+WinSizeCTFFind=256
 # {expert} Defocus step for CTFFIND (in Ang.)
 """ Step size for defocus search (in Angstrom)
 """
@@ -105,14 +107,14 @@ StepFocus=500
 DoParallel=True
 
 # Number of MPI processes to use:
-NumberOfMpiProcesses=3
+NumberOfMpiProcesses=36
 
 # MPI system Flavour 
 """ Depending on your queuing system and your mpi implementation, different mpirun-like commands have to be given.
     Ask the person who installed your xmipp version, which option to use. 
     Or read: http://xmipp.cnb.csic.es/twiki/bin/view/Xmipp/ParallelPage. The following values are available: 
 """
-SystemFlavour=''
+SystemFlavour='TORQUE-OPENMPI'
 
 #------------------------------------------------------------------------------------------------
 # {hidden} Analysis of results
@@ -200,7 +202,8 @@ class preprocess_A_class:
                  HighResolCutoff,
                  MinFocus,
                  MaxFocus,
-                 WinSize,
+                 WinSizeXmipp,
+                 WinSizeCTFFind,
                  StepFocus,
                  DoParallel,
                  NumberOfMpiProcesses,
@@ -232,7 +235,8 @@ class preprocess_A_class:
         self.HighResolCutoff=HighResolCutoff
         self.MinFocus=MinFocus
         self.MaxFocus=MaxFocus
-        self.WinSize=WinSize
+        self.WinSizeCTFFind=WinSizeCTFFind
+        self.WinSizeXmipp=WinSizeXmipp
         self.StepFocus=StepFocus
         self._MySystemFlavour=SystemFlavour
         self._DoParallel=DoParallel
@@ -272,7 +276,8 @@ class preprocess_A_class:
                  "HighResolCutoff",
                  "MinFocus",
                  "MaxFocus",
-                 "WinSize",
+                 "WinSizeXmipp",
+                 "WinSizeCTFFind",
                  "StepFocus"]);
         
         # Backup script
@@ -466,7 +471,8 @@ class preprocess_A_class:
                     " --ctfmodelSize 256"+\
                     " --Q0 "+str(self.AmplitudeContrast)+\
                     " --min_freq "+str(self.LowResolCutoff)+\
-                    " --max_freq "+str(self.HighResolCutoff)
+                    " --max_freq "+str(self.HighResolCutoff)+\
+                    " --pieceDim "+str(self.WinSizeXmipp)
         else:
             params+=" --dont_estimate_ctf"
 
@@ -513,7 +519,7 @@ class preprocess_A_class:
                   str(self.AmplitudeContrast) + ',' + \
                   str(self.Magnification) + ',' + \
                   str(self.ScannedPixelSize * self.Down) + theNewLine
-        command += str(self.WinSize) + ',' + \
+        command += str(self.WinSizeCTFFind) + ',' + \
                   str(AngPix / self.LowResolCutoff) + ',' + \
                   str(AngPix / self.HighResolCutoff) + ',' + \
                   str(self.MinFocus) + ',' + \
@@ -643,7 +649,8 @@ if __name__ == '__main__':
                  HighResolCutoff,
                  MinFocus,
                  MaxFocus,
-                 WinSize,
+                 WinSizeXmipp,
+                 WinSizeCTFFind,
                  StepFocus,
                  DoParallel,
                  NumberOfMpiProcesses,
