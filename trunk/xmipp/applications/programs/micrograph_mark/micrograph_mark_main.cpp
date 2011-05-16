@@ -38,7 +38,6 @@ private:
 protected:
     void defineParams()
     {
-
         addUsageLine("Mark particles in a micrograph");
         addUsageLine("+This utility allows you to mark and cut micrographs ");
         addUsageLine("+as well as to generate a list of coordinates with the positions to cut.");
