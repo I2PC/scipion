@@ -489,12 +489,12 @@ ReconsSources = [
     'ctf_estimate_from_psd.cpp',
     'ctf_estimate_psd_with_arma.cpp',
     'ctf_group.cpp',
+    'ctf_phase_flip.cpp',
     'ctf_sort_psds.cpp',
     'denoise.cpp',
     'directions.cpp',
     'fourier_filter.cpp',
     'image_rotational_spectra.cpp',
-    'micrograph_phase_flipping.cpp',
     'ml_align2d.cpp',
 ###    'ml_align3d.cpp',
     'mean_shift.cpp',
@@ -671,6 +671,7 @@ AddXmippProgram('ctf_enhance_psd', ['XmippRecons'])
 AddXmippProgram('ctf_estimate_from_micrograph', ['XmippRecons'])
 AddXmippProgram('ctf_estimate_from_psd', ['XmippRecons'])
 AddXmippProgram('ctf_group', ['XmippRecons'])
+AddXmippProgram('ctf_phase_flip', ['XmippRecons'])
 AddXmippProgram('ctf_sort_psds', ['XmippRecons'])
 #AddXmippProgram('denoise', ['XmippRecons'])
 AddXmippProgram('image_align', ['XmippRecons'])
@@ -691,7 +692,6 @@ AddXmippProgram('metadata_histogram')
 AddXmippProgram('metadata_import')
 AddXmippProgram('metadata_split')
 AddXmippProgram('metadata_utilities')
-AddXmippProgram('micrograph_phase_flipping', ['XmippRecons'])
 AddXmippProgram('micrograph_scissor'),
 AddXmippProgram('ml_align2d', ['XmippRecons'])
 AddXmippProgram('mlf_align2d', ['XmippRecons'])

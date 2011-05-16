@@ -23,11 +23,11 @@
  *  e-mail address 'xmipp@cnb.csic.es'
  ***************************************************************************/
 
-#include <reconstruction/micrograph_phase_flipping.h>
+#include <reconstruction/ctf_phase_flip.h>
 
 int main(int argc, char **argv)
 {
-    ProgMicrographPhaseFlipping prm;
+    ProgCTFPhaseFlipping prm;
     prm.read(argc,argv);
     return prm.tryRun();
 }

@@ -30,7 +30,7 @@ void ProgCTFPhaseFlipping::defineParams()
 {
     addUsageLine("Correct the phase of micrographs");
     addUsageLine("+This program flips the phase of those frequencies that were already ");
-    addUsageLine("+flipped by the CTF. Flipping the phase at the level of the micrograph is ");
+    addUsageLine("+flipped by the CTF. Flipping the phase at the level of the micrograph is recommended.");
     addParamsLine(" -i <file>               : Input micrograph");
     addParamsLine(" -o <file>               : Output micrograph");
     addParamsLine(" --ctf <ctfparam_file>   : CTF description");
