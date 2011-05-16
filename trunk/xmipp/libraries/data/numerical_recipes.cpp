@@ -9522,8 +9522,7 @@ void pwt(double a[], unsigned long n, int isign)
             }
         }
     }
-    for (j = 1;j <= n;j++)
-        a[j] = wksp[j];
+    memcpy(&a[1],&wksp[1],n*sizeof(double));
     free_Tvector(wksp, 1, n);
 }
 
