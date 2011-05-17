@@ -36,7 +36,7 @@ public class LABELS {
     /**
      * Buttons labels
      */
-    public final static String BUTTON_AVERAGE = "Average";
+    public final static String BUTTON_MEAN = "Mean";
     public final static String BUTTON_CANCEL = "Cancel";
     public final static String BUTTON_CAPTURE_WINDOW = "Capture";
     public final static String BUTTON_INVERT_SELECTION = "Invert Selection";
@@ -103,6 +103,7 @@ public class LABELS {
     public final static String OPERATION_TJWEBSITE = "TJ Website";
     public final static String OPERATION_SURFACEJ = "SurfaceJ";
     public final static String OPERATION_OPEN_AS_3D = "3D Viewer";
+    public final static String OPERATION_POLL = "Poll";
     public final static String OPERATION_DUPLICATE = "Duplicate";
     public final static String OPERATION_GO_TO_SLICE = "Go to slice";
     public final static String OPERATION_SUBSTACK_MAKER = "Substack Maker";
@@ -151,9 +152,10 @@ public class LABELS {
     //public final static String OPERATION_FLOW3J = "Flow3J";
     //public final static String OPERATION_OBJECTJ = "ObjectJ";
     public final static String LABEL_SHOW_CTF = "Show CTF";
-    public final static String LABEL_EXTRACT_COLUMN = "Extract Column";
+    public final static String LABEL_EXTRACT_COLUMN_ENABLED = "Extract Column (enabled)";
+    public final static String LABEL_EXTRACT_COLUMN_ALL = "Extract Column (all)";
     public final static String LABEL_RECALCULATE_CTF = "Recalculate CTF";
-
+    public final static String LABEL_VIEW_CTF_PROFILE = "View CTF Profile";
     /**
      * Labels for browser
      */
@@ -170,6 +172,7 @@ public class LABELS {
     public final static String LABEL_TABLE_ENABLE_ALL = "Enable All";
     public final static String LABEL_TABLE_HIDE_DISABLED = "Hide disabled";
     public final static String LABEL_TABLE_DISABLE_ALL = "Disable All";
+    public final static String LABEL_TABLE_SAVE = "Save";
     public final static String LABEL_TABLE_SAVE_AS_IMAGES = "Save as images";
     public final static String LABEL_TABLE_SAVE_AS_STACK = "Save as stack";
     public final static String LABEL_TABLE_SAVE_AS_SELFILE = "Save as selfile";

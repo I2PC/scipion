@@ -10,15 +10,13 @@
  */
 package browser.table.micrographs;
 
+import browser.ICONS_MANAGER;
 import browser.table.micrographs.ctf.JFrameCTF;
 import browser.LABELS;
 import browser.imageitems.TableImageItem;
 import browser.table.ImagesRowHeaderModel;
-import browser.table.micrographs.ctf.EllipseCTF;
-import browser.table.micrographs.ctf.tasks.EstimateFromCTFTask;
-import browser.table.micrographs.ctf.tasks.SortPSDSTask;
 import browser.table.micrographs.ctf.tasks.TasksEngine;
-import browser.table.micrographs.ctf.tasks.iCommandsListener;
+import browser.table.micrographs.ctf.tasks.iCTFGUI;
 import browser.table.micrographs.filters.EnableFilter;
 import browser.table.micrographs.renderers.MicrographDoubleRenderer;
 import browser.table.micrographs.renderers.MicrographFileNameRenderer;
@@ -26,12 +24,12 @@ import browser.table.micrographs.renderers.MicrographImageRenderer;
 import browser.table.renderers.RowHeaderRenderer;
 import browser.windows.ImagesWindowFactory;
 import ij.IJ;
+import ij.ImagePlus;
 import java.awt.Component;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseEvent;
 import java.io.File;
-import java.util.LinkedList;
 import java.util.Vector;
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
@@ -53,7 +51,7 @@ import javax.swing.table.TableRowSorter;
  *
  * @author Juanjo Vega
  */
-public class JFrameMicrographs extends JFrame implements iMicrographsGUI, iCommandsListener {
+public class JFrameMicrographs extends JFrame implements iCTFGUI {
 
     private final static int CTF_IMAGE_COLUMN = 3;
     private JTable table;
@@ -130,7 +128,7 @@ public class JFrameMicrographs extends JFrame implements iMicrographsGUI, iComma
         hideColumns();
         setRowHeader();
 
-        updateTable();
+        updateTableStructure();
         autoSortTable(MicrographsTableModel.INDEX_COMBINED_COLUMN);
 
         pack();
@@ -155,6 +153,21 @@ public class JFrameMicrographs extends JFrame implements iMicrographsGUI, iComma
         String prefix = toremove > 0 ? "..." : "";
 
         return prefix + newtitle;
+    }
+
+    public String getFilename() {
+        return tableModel.getFilename();
+    }
+
+    public void setRowBusy(int row) {
+        setRunning(true);
+        tableModel.setRowBusy(row);
+    }
+
+    public void setRowIdle(int row) {
+        tableModel.setRowIdle(row);
+
+        jPopupMenu.refresh();   // If menu is showing it will be refreshed.
     }
 
     private void hideColumns() {
@@ -191,9 +204,11 @@ public class JFrameMicrographs extends JFrame implements iMicrographsGUI, iComma
                 setCellRenderer(fileNameRenderer);
     }
 
-    private void updateTable() {
+    private synchronized void updateTableStructure() {
+        System.out.println(" *** Updating table... " + System.currentTimeMillis());
         packColumns();
         packRows();
+
         rowHeader.repaint();
     }
 
@@ -232,16 +247,10 @@ public class JFrameMicrographs extends JFrame implements iMicrographsGUI, iComma
 
     // The height of each row is set to the preferred height of the tallest cell in that row.
     private void packRows() {
-        for (int r = 0; r < table.getRowCount(); r++) {
-            packRows(table, r);
-        }
-    }
+        //  Row header.
+        rowHeader.setFixedCellHeight(MicrographImageRenderer.CELL_HEIGHT);
 
-    // For each row >= start and < end, the height of a row is set to
-    // the preferred height of the tallest cell in that row.
-    private void packRows(JTable table, int row) {
-        // Now set the row height using the preferred height
-        if (table.getRowHeight(row) != MicrographImageRenderer.CELL_HEIGHT) {
+        for (int row = 0; row < table.getRowCount(); row++) {
             table.setRowHeight(row, MicrographImageRenderer.CELL_HEIGHT);
         }
     }
@@ -252,37 +261,40 @@ public class JFrameMicrographs extends JFrame implements iMicrographsGUI, iComma
 
         if (SwingUtilities.isLeftMouseButton(evt)) {
             if (evt.getClickCount() > 1) {
-                Object item = table.getValueAt(view_row, view_col);//getModel().getValueAt(row, col);
+                Object item = table.getValueAt(view_row, view_col);
 
                 if (item instanceof TableImageItem) {
                     ImagesWindowFactory.openImage(((TableImageItem) item).getImagePlus());
                 }
             } else {    // Single click
-                int min = table.getSelectionModel().getMinSelectionIndex();
-                int max = table.getSelectionModel().getMaxSelectionIndex();
+                int real_row = table.convertRowIndexToModel(view_row);
+                int real_column = table.convertColumnIndexToModel(view_col);
 
-                if (evt.isShiftDown()) {
-                    // Last selection value will be the value for all the selected items.
-                    Boolean value = (Boolean) table.getValueAt(view_row, 0);//getModel().getValueAt(row, 0);
+                if (real_column == MicrographsTableModel.INDEX_ENABLED) {
+                    int min = table.getSelectionModel().getMinSelectionIndex();
+                    int max = table.getSelectionModel().getMaxSelectionIndex();
 
-                    for (int i = min; i <= max; i++) {
-                        table.setValueAt(value, i, 0);
+                    // Multiple rows selection.
+                    if (evt.isShiftDown()) {
+                        // Last selection value will be the value for all the selected items.
+                        Boolean value = (Boolean) tableModel.getValueAt(real_row, real_column);//getModel().getValueAt(row, 0);
+
+                        for (int i = min; i <= max; i++) {
+                            tableModel.setValueAt(value, table.convertRowIndexToModel(i),
+                                    real_column);
+                        }
                     }
-                }
 
-                if (enableFilter.isFiltering()) {
-                    tableModel.fireTableDataChanged();
-                } else {
-                    tableModel.fireTableRowsUpdated(min, max);
+                    updateTableStructure();
                 }
-                updateTable();
             }
         } else if (SwingUtilities.isRightMouseButton(evt)) {
             table.setRowSelectionInterval(view_row, view_row);
             table.setColumnSelectionInterval(view_col, view_col);
 
             // Column extraction only allowed for images
-            jPopupMenu.refreshItems(view_row, view_col);
+            jPopupMenu.setCell(view_row, view_col);
+            jPopupMenu.refresh();
             jPopupMenu.show(evt.getComponent(), evt.getX(), evt.getY());
         }
     }
@@ -298,48 +310,44 @@ public class JFrameMicrographs extends JFrame implements iMicrographsGUI, iComma
             tableModel.setValueAt(enable, i, MicrographsTableModel.ENABLED_COLUMN_INDEX);
         }
 
-        if (enableFilter.isFiltering()) {
-            tableModel.fireTableDataChanged();
-        } else {
-            tableModel.fireTableRowsUpdated(0, tableModel.getRowCount() - 1);
-        }
-        updateTable();
+        tableModel.fireTableRowsUpdated(0, tableModel.getRowCount() - 1);
+
+        updateTableStructure();
     }
 
     private void setFiltering(boolean filtering) {
         enableFilter.setFiltering(filtering);
 
-        tableModel.fireTableDataChanged();
-        updateTable();
+        tableModel.fireTableStructureChanged();
+
+        updateTableStructure();
     }
 
     private void showCTFImage(TableImageItem item, String CTFFilename,
-            String PSDfilename, String MicrographFilename) {
+            String PSDfilename, String MicrographFilename, int row) {
         ImagesWindowFactory.openCTFImage(item.getImagePlus(), CTFFilename,
-                PSDfilename, MicrographFilename, this);
+                PSDfilename, tasksEngine, MicrographFilename, row);
     }
 
-    public void recalculateCTF(EllipseCTF ellipseCTF, double angle, String PSDFilename) {
-        // Add "estimate..." to tasks.
-        EstimateFromCTFTask estimateFromCTFTask = new EstimateFromCTFTask(
-                ellipseCTF, angle, PSDFilename, tasksEngine);
-        tasksEngine.add(estimateFromCTFTask);
+    public void setRunning(boolean running) {
+        jlStatus.setIcon(running ? ICONS_MANAGER.WAIT_ICON : null);
     }
 
     public void done() {
-        // Updates table: This task won't be started in a different thread.
-        SortPSDSTask sortPSDS = new SortPSDSTask(tableModel.getFilename());
-        sortPSDS.run();
+        System.out.println("Done!!");
+        setRunning(false);
 
-        System.out.println("Done!");
-
-        refresh();
+        refreshTable();
     }
 
-    public void refresh() {
-        tableModel.reload();
+    public void refreshTable() {
+        SwingUtilities.invokeLater(new Runnable() {
 
-        updateTable();
+            public void run() {
+                tableModel.reload();
+//@HERE                updateTable();
+            }
+        });
     }
 
     /** This method is called from within the constructor to
@@ -353,10 +361,12 @@ public class JFrameMicrographs extends JFrame implements iMicrographsGUI, iComma
 
         toolBar = new javax.swing.JToolBar();
         bSave = new javax.swing.JButton();
+        jButton1 = new javax.swing.JButton();
         jpCenter = new javax.swing.JPanel();
         jpCheckAll = new javax.swing.JPanel();
         jcbEnableAll = new javax.swing.JCheckBox();
         jcbFilterEnabled = new javax.swing.JCheckBox();
+        jlStatus = new javax.swing.JLabel();
         jsPanel = new javax.swing.JScrollPane();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
@@ -373,6 +383,17 @@ public class JFrameMicrographs extends JFrame implements iMicrographsGUI, iComma
             }
         });
         toolBar.add(bSave);
+
+        jButton1.setText("Reload");
+        jButton1.setFocusable(false);
+        jButton1.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
+        jButton1.setVerticalTextPosition(javax.swing.SwingConstants.BOTTOM);
+        jButton1.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jButton1ActionPerformed(evt);
+            }
+        });
+        toolBar.add(jButton1);
 
         getContentPane().add(toolBar, java.awt.BorderLayout.PAGE_START);
 
@@ -395,6 +416,7 @@ public class JFrameMicrographs extends JFrame implements iMicrographsGUI, iComma
             }
         });
         jpCheckAll.add(jcbFilterEnabled);
+        jpCheckAll.add(jlStatus);
 
         jpCenter.add(jpCheckAll, java.awt.BorderLayout.PAGE_START);
         jpCenter.add(jsPanel, java.awt.BorderLayout.CENTER);
@@ -430,10 +452,17 @@ public class JFrameMicrographs extends JFrame implements iMicrographsGUI, iComma
     private void jcbFilterEnabledItemStateChanged(java.awt.event.ItemEvent evt) {//GEN-FIRST:event_jcbFilterEnabledItemStateChanged
         setFiltering(jcbFilterEnabled.isSelected());
 }//GEN-LAST:event_jcbFilterEnabledItemStateChanged
+
+    private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton1ActionPerformed
+        tableModel.reload();
+        updateTableStructure();
+}//GEN-LAST:event_jButton1ActionPerformed
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton bSave;
+    private javax.swing.JButton jButton1;
     private javax.swing.JCheckBox jcbEnableAll;
     private javax.swing.JCheckBox jcbFilterEnabled;
+    private javax.swing.JLabel jlStatus;
     private javax.swing.JPanel jpCenter;
     private javax.swing.JPanel jpCheckAll;
     private javax.swing.JScrollPane jsPanel;
@@ -442,16 +471,22 @@ public class JFrameMicrographs extends JFrame implements iMicrographsGUI, iComma
 
     class JPopUpMenuMicrograph extends JPopupMenu {
 
+        private int row, col;   // Current cell where menu is displayed.
         private JMenuItem jmiShowCTF = new JMenuItem(LABELS.LABEL_SHOW_CTF);
-        private JMenuItem jmiExtractColumn = new JMenuItem(LABELS.LABEL_EXTRACT_COLUMN);
+        private JMenuItem jmiExtractColumnEnabled = new JMenuItem(LABELS.LABEL_EXTRACT_COLUMN_ENABLED);
+        private JMenuItem jmiExtractColumnAll = new JMenuItem(LABELS.LABEL_EXTRACT_COLUMN_ALL);
         private JMenuItem jmiRecalculateCTF = new JMenuItem(LABELS.LABEL_RECALCULATE_CTF);
+        private JMenuItem jmiViewCTFProfile = new JMenuItem(LABELS.LABEL_VIEW_CTF_PROFILE);
 
         public JPopUpMenuMicrograph() {
             super();
 
             add(jmiShowCTF);
-            add(jmiExtractColumn);
             add(new JSeparator());
+            add(jmiExtractColumnEnabled);
+            add(jmiExtractColumnAll);
+            add(new JSeparator());
+            add(jmiViewCTFProfile);
             add(jmiRecalculateCTF);
 
             jmiShowCTF.addActionListener(new ActionListener() {
@@ -461,24 +496,52 @@ public class JFrameMicrographs extends JFrame implements iMicrographsGUI, iComma
                 }
             });
 
-            jmiExtractColumn.addActionListener(new ActionListener() {
+            jmiExtractColumnEnabled.addActionListener(new ActionListener() {
 
                 public void actionPerformed(ActionEvent e) {
-                    extractColumn(table.getSelectedColumn());
+                    extractColumn(table.getSelectedColumn(), true);
+                }
+            });
+
+            jmiExtractColumnAll.addActionListener(new ActionListener() {
+
+                public void actionPerformed(ActionEvent e) {
+                    extractColumn(table.getSelectedColumn(), false);
+                }
+            });
+
+            jmiViewCTFProfile.addActionListener(new ActionListener() {
+
+                public void actionPerformed(ActionEvent e) {
+                    showCTFProfile();
                 }
             });
 
             jmiRecalculateCTF.addActionListener(new ActionListener() {
 
                 public void actionPerformed(ActionEvent e) {
-                    showRecalculateCTFWindow(table.getSelectedRow());
+                    showRecalculateCTFWindow();
                 }
             });
         }
 
-        private void refreshItems(int row, int col) {
+        private void setCell(int row, int col) {
+            this.row = row;
+            this.col = col;
+        }
+
+        private void refresh() {
             jmiShowCTF.setEnabled(tableModel.hasCtfData());
-            jmiExtractColumn.setEnabled(table.getValueAt(row, col) instanceof TableImageItem);
+            jmiExtractColumnEnabled.setEnabled(table.getValueAt(row, col) instanceof TableImageItem);
+            jmiExtractColumnAll.setEnabled(table.getValueAt(row, col) instanceof TableImageItem);
+
+            boolean busy = tableModel.isRowBusy(row);
+            jmiRecalculateCTF.setIcon(busy ? ICONS_MANAGER.WAIT_MENU_ICON : null);
+            jmiRecalculateCTF.setEnabled(!busy);
+
+//            repaint();
+            updateUI();
+            pack();
         }
 
         private void showCTFFile(int row) {
@@ -490,26 +553,35 @@ public class JFrameMicrographs extends JFrame implements iMicrographsGUI, iComma
             frameCTF.setVisible(true);
         }
 
-        private void extractColumn(int column) {
-            LinkedList<String> filenames = new LinkedList<String>();
-
-            for (int i = 0; i < table.getRowCount(); i++) {
-                TableImageItem item = (TableImageItem) table.getValueAt(i, column);
-
-                if (tableModel.isRowEnabled(i)) {
-                    filenames.add(item.getFileName());
-                }
+        private void extractColumn(int column, boolean onlyenabled) {
+            if (onlyenabled) {
+                ImagesWindowFactory.openTable(tableModel.extractColumn(column, onlyenabled));
+            } else {
+                ImagesWindowFactory.openTable(
+                        tableModel.extractColumn(column, onlyenabled),
+                        tableModel.getEnabledRows());
             }
-
-            ImagesWindowFactory.openTable(filenames.toArray(new String[filenames.size()]));
         }
 
-        private void showRecalculateCTFWindow(int row) {
+        private void showCTFProfile() {
+            String CTFFile = tableModel.getCTFfile(row);
+            String DisplayFile = tableModel.getCTFDisplayfile(row);
+            String PSDFile = tableModel.getPSDfile(row);
+
+            // Strings or ImagePlus?
+
+            IJ.error(" *** Link with CTF Profile GUI:\n"
+                    + "\n\tCTFFile: " + CTFFile
+                    + "\n\tDisplayFile: " + DisplayFile
+                    + "\n\tPSDFile: " + PSDFile);
+        }
+
+        private void showRecalculateCTFWindow() {
             Object item = table.getValueAt(row, CTF_IMAGE_COLUMN);
 
             if (item instanceof TableImageItem) {
                 showCTFImage((TableImageItem) item, tableModel.getCTFfile(row),
-                        tableModel.getPSDfile(row), tableModel.getFilename());
+                        tableModel.getPSDfile(row), tableModel.getFilename(), row);
             }
         }
     }

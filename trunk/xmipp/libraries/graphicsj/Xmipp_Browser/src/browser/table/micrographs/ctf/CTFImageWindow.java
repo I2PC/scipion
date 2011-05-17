@@ -5,7 +5,8 @@
 package browser.table.micrographs.ctf;
 
 import browser.LABELS;
-import browser.table.micrographs.iMicrographsGUI;
+import browser.table.micrographs.ctf.tasks.EstimateFromCTFTask;
+import browser.table.micrographs.ctf.tasks.TasksEngine;
 import ij.IJ;
 import ij.ImagePlus;
 import ij.gui.ImageLayout;
@@ -32,14 +33,18 @@ public class CTFImageWindow extends ImageWindow {
     private Button button = new Button(LABELS.LABEL_RECALCULATE_CTF);
     protected EllipseFitter ellipseFitter = new EllipseFitter();
     private EllipseCTF ellipseCTF;
-    private iMicrographsGUI micrographsGUI;
+    private TasksEngine tasksEngine;
     private String PSDFilename;
+    private int row;
 
-    public CTFImageWindow(ImagePlus imp, String CTFFilename, String PSDFilename, iMicrographsGUI micrographsGUI) {
+    public CTFImageWindow(ImagePlus imp, String CTFFilename, String PSDFilename,
+            TasksEngine tasksEngine, int row) {
         super(imp);
 
         this.PSDFilename = PSDFilename;
-        this.micrographsGUI = micrographsGUI;
+        this.tasksEngine = tasksEngine;
+        this.row = row;
+
         ellipseCTF = new EllipseCTF(CTFFilename, imp.getWidth());
 
         button.setEnabled(false);
@@ -130,7 +135,13 @@ public class CTFImageWindow extends ImageWindow {
     private void recalculateCTF() {
         ellipseCTF.calculateDefocus(ellipseFitter.minor / 2, ellipseFitter.major / 2);
 
-        micrographsGUI.recalculateCTF(ellipseCTF, 90 - ellipseFitter.angle, PSDFilename);
+        // Add "estimate..." to tasks.
+        EstimateFromCTFTask estimateFromCTFTask = new EstimateFromCTFTask(
+                ellipseCTF,
+                90 - ellipseFitter.angle, PSDFilename, tasksEngine, row);
+
+        tasksEngine.add(estimateFromCTFTask);
+
         dispose();
     }
 }

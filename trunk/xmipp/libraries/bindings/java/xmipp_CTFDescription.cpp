@@ -32,6 +32,7 @@ JNIEXPORT void JNICALL Java_xmipp_CTFDescription_read_1
 		try {
 			const char *fnStr = env->GetStringUTFChars(filename, false);
 
+			ctfDescription->enable_CTF = ctfDescription->enable_CTFnoise = true;
 			ctfDescription->read(fnStr);
 			ctfDescription->Produce_Side_Info();
 		} catch (XmippError xe) {
@@ -105,7 +106,60 @@ JNIEXPORT jobjectArray JNICALL Java_xmipp_CTFDescription_CTFProfile(
 
 				// Sets intermediate data.
 				row = env->NewDoubleArray(samples);
-				env->SetDoubleArrayRegion((jdoubleArray)row, 0, samples, (jdouble *)aux);
+				env->SetDoubleArrayRegion((jdoubleArray) row, 0, samples,
+						(jdouble *) aux);
+
+				// Assings the row to the result array object.
+				env->SetObjectArrayElement(profilesArray, i, row);
+			}
+
+			return profilesArray;
+		} catch (XmippError xe) {
+			msg = xe.getDefaultMessage();
+		} catch (std::exception& e) {
+			msg = e.what();
+		} catch (...) {
+			msg = "Unhandled exception";
+		}
+	} else {
+		msg = "CTFDescription is null";
+	}
+
+	// If there was an exception, sends it to java environment.
+	if (!msg.empty()) {
+		handleXmippException(env, msg);
+	}
+
+	return (jobjectArray) NULL;
+}
+
+JNIEXPORT jobjectArray JNICALL Java_xmipp_CTFDescription_CTFAverageProfile(
+		JNIEnv *env, jobject jobj, jdouble FMAX, jint samples) {
+	std::string msg = "";
+	CTFDescription *ctfDescription = GET_INTERNAL_CTFDESCRIPTION(jobj);
+
+	MultidimArray<double> profiles;
+
+	if (ctfDescription != NULL) {
+		try {
+			CTFAverageProfile(*ctfDescription, FMAX, samples, profiles);
+
+			// Stores result to return data.
+			jdoubleArray row = env->NewDoubleArray(1);
+			size_t nprofiles = XSIZE(profiles);
+			jobjectArray profilesArray = env->NewObjectArray(nprofiles,
+					env->GetObjectClass(row), 0);
+
+			for (int i = 0; i < nprofiles; i++) {
+				double aux[samples];
+				for (int j = 0; j < samples; j++) {
+					aux[j] = A2D_ELEM(profiles, j, i);
+				}
+
+				// Sets intermediate data.
+				row = env->NewDoubleArray(samples);
+				env->SetDoubleArrayRegion((jdoubleArray) row, 0, samples,
+						(jdouble *) aux);
 
 				// Assings the row to the result array object.
 				env->SetObjectArrayElement(profilesArray, i, row);

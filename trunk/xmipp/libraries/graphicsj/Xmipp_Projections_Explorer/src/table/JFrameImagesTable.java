@@ -17,6 +17,7 @@ import java.awt.BorderLayout;
 import java.awt.Dimension;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.io.File;
 import java.util.ArrayList;
 import java.util.Vector;
 import javax.swing.ImageIcon;
@@ -121,10 +122,6 @@ public class JFrameImagesTable extends javax.swing.JFrame {
     }
 
     private static void buildImagesTableModel(String filename, ImagesTableModel tablemodel) {
-        if ((filename == null) || (filename.isEmpty())) {
-            return;
-        }
-
         try {
             // Parse md
             MetaData md = new MetaData(filename);

@@ -3,12 +3,12 @@ import browser.JFrameBrowser;
 import browser.LABELS;
 import browser.windows.ImagesWindowFactory;
 import ij.IJ;
-import ij.ImageJ;
 import ij.Macro;
 import ij.plugin.PlugIn;
 import org.apache.commons.cli.BasicParser;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
+import xmipp.MetaData;
 
 /*
  * To change this template, choose Tools | Templates
@@ -25,21 +25,12 @@ public class XmippBrowser implements PlugIn {
     private final static String COMMAND_OPTION_VOL = "vol";
     private final static String COMMAND_OPTION_SEL = "sel";
     private final static String COMMAND_OPTION_POLL = "poll";
-    private final static String COMMAND_OPTION_W = "w";
-    private final static String COMMAND_OPTION_H = "h";
     private String DIR;
     private String IMGS[];
     private String VOLS[];
     private String SELS[];
     private boolean POLL = false;
-    private int w = -1, h = -1;   // Initial width and height for table.
     protected JFrameBrowser frameBrowser;
-
-    public static void main(String args[]) {
-        new ImageJ();
-
-        (new XmippBrowser()).run("");
-    }
 
     public void run(String string) {
         if (IJ.isMacro() && Macro.getOptions() != null && !Macro.getOptions().trim().isEmpty()) { // From macro.
@@ -51,12 +42,7 @@ public class XmippBrowser implements PlugIn {
         }
 
         if (IMGS != null) {
-            for (int i = 0; i < IMGS.length; i++) {
-                ImagesWindowFactory.openImageFiles(IMGS);
-                if (POLL) {
-                    System.err.println(" *** POLL is being ignored!");
-                }
-            }
+            ImagesWindowFactory.openImageFiles(IMGS, POLL);
         }
 
         if (VOLS != null) {
@@ -86,8 +72,6 @@ public class XmippBrowser implements PlugIn {
         options.addOption(COMMAND_OPTION_VOL, true, "vol(s)");
         options.addOption(COMMAND_OPTION_SEL, true, "sel(s)");
         options.addOption(COMMAND_OPTION_POLL, false, "poll");
-        options.addOption(COMMAND_OPTION_W, true, "w");
-        options.addOption(COMMAND_OPTION_H, true, "h");
 
         // It should be able to handle multiple files.
         options.getOption(COMMAND_OPTION_IMG).setOptionalArg(true);
@@ -98,9 +82,6 @@ public class XmippBrowser implements PlugIn {
 
         options.getOption(COMMAND_OPTION_SEL).setOptionalArg(true);
         options.getOption(COMMAND_OPTION_SEL).setArgs(Integer.MAX_VALUE);
-
-        options.getOption(COMMAND_OPTION_W).setOptionalArg(false);
-        options.getOption(COMMAND_OPTION_H).setOptionalArg(false);
 
         try {
             BasicParser parser = new BasicParser();
@@ -114,6 +95,11 @@ public class XmippBrowser implements PlugIn {
             // Img(s).
             if (cmdLine.hasOption(COMMAND_OPTION_IMG)) {
                 IMGS = cmdLine.getOptionValues(COMMAND_OPTION_IMG);
+
+                String workdir = System.getProperty("user.dir");
+                for (int i = 0; i < IMGS.length; i++) {
+                    IMGS[i] = MetaData.fixPath(workdir, IMGS[i]);
+                }
             }
 
             // Img(s).
@@ -130,17 +116,6 @@ public class XmippBrowser implements PlugIn {
             if (cmdLine.hasOption(COMMAND_OPTION_POLL)) {
                 POLL = true;
             }
-
-            // W
-            if (cmdLine.hasOption(COMMAND_OPTION_W)) {
-                w = Integer.parseInt(cmdLine.getOptionValue(COMMAND_OPTION_W));
-            }
-
-            // H
-            if (cmdLine.hasOption(COMMAND_OPTION_H)) {
-                h = Integer.parseInt(cmdLine.getOptionValue(COMMAND_OPTION_H));
-            }
-
         } catch (Exception ex) {
             throw new RuntimeException(ex);
         }

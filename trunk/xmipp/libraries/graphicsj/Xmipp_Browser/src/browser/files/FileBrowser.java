@@ -138,14 +138,8 @@ public class FileBrowser {
         return (number - (int) number) != 0;
     }
 
-    public static boolean canOpenFile(File file) {
-        boolean isAble2open = file.length() < IJ.maxMemory();
-
-        if (!isAble2open) {
-            IJ.error("Not enough memory", "There is not enough memory to open file: " + file.getName());
-        }
-
-        return isAble2open;
+    public static boolean hasEnoughMemory(File file) {
+        return file.length() < IJ.maxMemory();
     }
 
     public static boolean isFileSupported(File file) {

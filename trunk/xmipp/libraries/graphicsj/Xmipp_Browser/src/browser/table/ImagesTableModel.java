@@ -33,6 +33,7 @@ public class ImagesTableModel extends AbstractTableModel {
     private LinkedList<TableImageItem> selectedItems = new LinkedList<TableImageItem>();
     private int rows, cols;
     private Cache cache = new Cache();
+    private boolean isMetadata;
     private boolean normalize = false;
     private double min = Double.MIN_VALUE, max = Double.MAX_VALUE;
 
@@ -56,9 +57,14 @@ public class ImagesTableModel extends AbstractTableModel {
         } else {
             IJ.error("File not found: " + filename);
         }
+    }
 
-        //@TODO Auto normalize
-        //volumeTable.setNormalizedAuto();    // Volumes are normalized at startup.
+    public ImagesTableModel(String filenames[], boolean enabled[]) {
+        this(filenames);
+
+        if (enabled != null) {
+            enableItems(data, enabled);
+        }
     }
 
     public ImagesTableModel(String filenames[]) {
@@ -102,9 +108,8 @@ public class ImagesTableModel extends AbstractTableModel {
 
     private String loadMetaData(String filename) {
         try {
-            String rootDir = (new File(filename)).getParent();
-
             md = new MetaData(filename);
+            isMetadata = true;
 
             long ids[] = md.findObjects();
 
@@ -118,13 +123,12 @@ public class ImagesTableModel extends AbstractTableModel {
 
                 String imagefilename = md.getValueString(MDLabel.MDL_IMAGE, id);
 
-                if (!imagefilename.startsWith(File.separator)) {
-                    imagefilename = rootDir + File.separator + imagefilename;
-                }
+                System.out.println(imagefilename + " ? " + enabled);
 
-                //System.out.println(imagefilename + " ? " + enabled);
+                int image = MetaData.getNimage(imagefilename);
+                String name = MetaData.getFilename(imagefilename);
 
-                addItem(imagefilename, ImageDouble.FIRST_SLICE, ImageDouble.FIRST_IMAGE, enabled);
+                addItem(name, ImageDouble.FIRST_SLICE, image, enabled);
             }
         } catch (Exception ex) {
             return ex.getMessage();
@@ -134,7 +138,7 @@ public class ImagesTableModel extends AbstractTableModel {
     }
 
     protected void addItem(String filename, int slice, int image, boolean enabled) {
-        TableImageItem item = new TableImageItem(new File(filename), cache, slice, image);
+        TableImageItem item = new TableImageItem(new File(filename), slice, image, cache);
         item.setEnabled(enabled);
 
         data.add(item);
@@ -272,7 +276,16 @@ public class ImagesTableModel extends AbstractTableModel {
         }
     }
 
-    private void enableItems(boolean enable, List<TableImageItem> items) {
+    private void enableItems(List<TableImageItem> items, boolean enable[]) {
+        if (items != null) {
+            for (int i = 0; i < items.size(); i++) {
+                items.get(i).setEnabled(enable[i]);
+            }
+            fireTableDataChanged();
+        }
+    }
+
+    private void enableItems(List<TableImageItem> items, boolean enable) {
         if (items != null) {
             for (int i = 0; i < items.size(); i++) {
                 items.get(i).setEnabled(enable);
@@ -283,33 +296,26 @@ public class ImagesTableModel extends AbstractTableModel {
     }
 
     public void enableAllItems() {
-        enableItems(true, data);
+        enableItems(data, true);
     }
 
     public void disableAllItems() {
-        enableItems(false, data);
+        enableItems(data, false);
     }
 
     public void enableSelectedItems() {
-        enableItems(true, selectedItems);
+        enableItems(selectedItems, true);
     }
 
     public void disableSelectedItems() {
-        enableItems(false, selectedItems);
+        enableItems(selectedItems, false);
     }
 
     public void setZoomScale(double zoomScale) {
-        /*        this.zoomScale = zoomScale;
-
-        fireTableDataChanged();*/
         for (int i = 0; i < getSize(); i++) {
             data.elementAt(i).setZoomScale(zoomScale);
         }
     }
-    /*
-    public double getZoomScale() {
-    return zoomScale;
-    }*/
 
     public void setRows(int rows) {
         if (rows > getSize()) {
@@ -373,43 +379,15 @@ public class ImagesTableModel extends AbstractTableModel {
         return cols_;
     }
 
-    /*    public void setNormalized() {
-    if (min == Double.MIN_VALUE && max == Double.MAX_VALUE) {
-    getMinAndMax();
-    }
-
-    setNormalized(true);
-    }*/
-    private void getMinAndMax() {
-        double min_max[] = ImageOperations.getMinAndMax(data);
-
-        min = min_max[0];
-        max = min_max[1];
-    }
-    /*
-    public void disableNormalization() {
-    setNormalized(false);
-    }
-     */
-
     public void setNormalized(boolean normalize) {
         this.normalize = normalize;
 
         if (normalize) {
-//            if (min == Double.MIN_VALUE && max == Double.MAX_VALUE) {
-            getMinAndMax();
-//            }
-        }
-        /*
-        for (int i = 0; i < data.size(); i++) {
-        TableImageItem item = data.get(i);
+            double min_max[] = ImageOperations.getMinAndMax(data);
 
-        if (normalize) {
-        item.setNormalized(min, max);
-        } else {
-        item.resetNormalized();
+            min = min_max[0];
+            max = min_max[1];
         }
-        }*/
     }
 
     public boolean isNormalizing() {
@@ -423,17 +401,13 @@ public class ImagesTableModel extends AbstractTableModel {
     public double getNormalizeMax() {
         return max;
     }
-//
-//    public boolean isSingleImage() {
-//        return !isStack() && !isVolume();
-//    }
 
     public boolean isStack() {
-        return ((TableImageItem) getValueAt(0, 0)).isStack();
+        return !isMetadata && ((TableImageItem) getValueAt(0, 0)).isStack();
     }
 
     public boolean isVolume() {
-        return ((TableImageItem) getValueAt(0, 0)).isVolume();
+        return !isMetadata && ((TableImageItem) getValueAt(0, 0)).isVolume();
     }
 
     public void printNormalizationInfo() {

@@ -15,8 +15,12 @@ import xmipp.ImageDouble;
 public class ImageConverter {
 
     public static ImagePlus convertToImagej(ImageDouble image, String path) {
+        return convertToImagej(image, path, true);
+    }
+
+    public static ImagePlus convertToImagej(ImageDouble image, String path, boolean useLogarithm) {
         if (image.isPSD()) {
-            image.convertPSD();
+            image.convertPSD(useLogarithm);
         }
 
         int w = image.getXsize();

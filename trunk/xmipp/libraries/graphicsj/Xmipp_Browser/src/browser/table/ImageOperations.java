@@ -7,7 +7,6 @@ package browser.table;
 import browser.imageitems.TableImageItem;
 import ij.ImagePlus;
 import ij.process.FloatProcessor;
-import ij.process.ImageProcessor;
 import java.util.Vector;
 
 /**
@@ -16,9 +15,10 @@ import java.util.Vector;
  */
 public class ImageOperations {
 
-    public static ImagePlus average(Vector<TableImageItem> items) {
-        double average[] = null;
-        int w = 0, h = 0;
+    public static ImagePlus mean(Vector<TableImageItem> items) {
+        int w = items.get(0).getWidth();
+        int h = items.get(0).getHeight();
+        double mean[] = new double[w * h];
 
         // For all images...
         for (int k = 0; k < items.size(); k++) {
@@ -26,43 +26,30 @@ public class ImageOperations {
 
             if (current.isEnabled()) {
                 ImagePlus ip = current.getImagePlus();
-
-                if (average == null) {
-                    w = current.getWidth();
-                    h = current.getHeight();
-                    average = new double[w * h];
-                }
+                float pixels[] = (float[]) ip.getProcessor().getPixels();
+                ip.close();
 
                 // Adds current image to sum.
-                for (int j = 0; j < h; j++) {
-                    for (int i = 0; i < w; i++) {
-                        average[j * w + i] += ip.getProcessor().getPixelValue(i, j);
-                    }
+                for (int i = 0; i < pixels.length; i++) {
+                    mean[i] += pixels[i];
                 }
-
-                ip.close();
             }
         }
 
-        // Calculates average...
-        for (int j = 0; j < h; j++) {
-            for (int i = 0; i < w; i++) {
-                average[j * w + i] /= items.size(); // ...by dividing with the #images
-            }
+        // Calculates mean...
+        for (int i = 0; i < mean.length; i++) {
+            mean[i] /= items.size(); // ...by dividing with the #images
         }
 
-        FloatProcessor processor = new FloatProcessor(w, h, average);
-        ImagePlus averageIp = new ImagePlus();
-        averageIp.setProcessor("Average", processor);
-
-        return averageIp;
+        return new ImagePlus("Mean", new FloatProcessor(w, h, mean));
     }
 
     public static ImagePlus std_deviation(Vector<TableImageItem> items) {
-        double stdDev[] = null;
-        int w = 0, h = 0;
+        int w = items.get(0).getWidth();
+        int h = items.get(0).getHeight();
 
-        ImagePlus average = average(items);
+        float mean[] = (float[]) mean(items).getProcessor().getPixels();
+        double stdDev[] = new double[mean.length];
 
         // Traverses images.
         for (int k = 0; k < items.size(); k++) {
@@ -70,34 +57,22 @@ public class ImageOperations {
 
             if (current.isEnabled()) {
                 ImagePlus ip = current.getImagePlus();
-
-                if (stdDev == null) {
-                    w = current.getWidth();
-                    h = current.getHeight();
-                    stdDev = new double[w * h];
-                }
-
-                for (int j = 0; j < h; j++) {
-                    for (int i = 0; i < w; i++) {
-                        float pixel = ip.getProcessor().getPixelValue(i, j);
-                        float avg = average.getProcessor().getPixelValue(i, j);
-
-                        stdDev[j * w + i] += (pixel - avg) * (pixel - avg);
-                    }
-                }
+                float pixels[] = (float[]) ip.getProcessor().getPixels();
                 ip.close();
+
+                for (int i = 0; i < pixels.length; i++) {
+                    stdDev[i] += (pixels[i] - mean[i]) * (pixels[i] - mean[i]);
+                }
             }
         }
 
-        for (int i = 0; i < h; i++) {
-            for (int j = 0; j < h; j++) {
-                stdDev[j * w + i] = Math.sqrt(stdDev[j * w + i] / items.size());
-            }
+        for (int i = 0; i < stdDev.length; i++) {
+            stdDev[i] = Math.sqrt(stdDev[i] / items.size());
         }
 
         FloatProcessor processor = new FloatProcessor(w, h, stdDev);
         ImagePlus std_ip = new ImagePlus();
-        std_ip.setProcessor("Std. Dev.", processor);
+        std_ip.setProcessor("Standard Deviation", processor);
 
         return std_ip;
     }
@@ -121,41 +96,5 @@ public class ImageOperations {
         }
 
         return new double[]{min, max};
-    }
-
-    public static double averagePixelValue(ImagePlus imp) {
-        double mean = 0.0;
-
-        FloatProcessor fp = new FloatProcessor(imp.getWidth(), imp.getHeight());
-        ImageProcessor ip = imp.getProcessor();
-        ip.toFloat(0, fp);
-
-        float pixels[] = (float[]) fp.getPixels();
-        for (int i = 0; i < pixels.length; i++) {
-            mean += pixels[i];
-        }
-
-        mean /= pixels.length;
-
-        return mean;
-    }
-
-    public static double stdDevPixelValue(ImagePlus imp) {
-        double mean = averagePixelValue(imp);
-        double std_dev = 0.0;
-
-        FloatProcessor fp = new FloatProcessor(imp.getWidth(), imp.getHeight());
-        ImageProcessor ip = imp.getProcessor();
-        ip.toFloat(0, fp);
-
-        float pixels[] = (float[]) fp.getPixels();
-        for (int i = 0; i < pixels.length; i++) {
-            double item = pixels[i] - mean;
-            std_dev += item * item;
-        }
-
-        std_dev = Math.sqrt(std_dev / pixels.length);
-
-        return std_dev;
     }
 }

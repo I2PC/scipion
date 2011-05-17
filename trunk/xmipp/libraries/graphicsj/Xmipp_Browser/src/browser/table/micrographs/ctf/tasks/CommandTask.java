@@ -6,7 +6,6 @@ package browser.table.micrographs.ctf.tasks;
 
 import ij.IJ;
 import java.io.BufferedReader;
-import java.io.IOException;
 import java.io.InputStreamReader;
 
 /**
@@ -16,9 +15,15 @@ import java.io.InputStreamReader;
 public class CommandTask implements Runnable {
 
     protected String command;
-    protected iCommandsListener commandsListener;
+    protected int row = -1;
+    protected iTaskCompletionListener commandsListener;
 
-    public CommandTask(String command, iCommandsListener commandsListener) {
+    public CommandTask(String command, int row, iTaskCompletionListener commandsListener) {
+        this(command, commandsListener);
+        this.row = row;
+    }
+
+    public CommandTask(String command, iTaskCompletionListener commandsListener) {
         this(command);
         this.commandsListener = commandsListener;
     }
@@ -34,23 +39,34 @@ public class CommandTask implements Runnable {
 
     public void run() {
         try {
-            System.out.println(">> " + command);
-            Process p = Runtime.getRuntime().exec(command);
-
-            BufferedReader stdInput = new BufferedReader(new InputStreamReader(p.getInputStream()));
-
-            // read the output from the command
-            String s;
-            while ((s = stdInput.readLine()) != null) {
-                System.out.println(s);
+            int total = 5000;
+            int delay = 1000;
+            while (total > 0) {
+                System.out.println(total + " seconds to finish: "
+                        + command.substring(0, 20) + (row >= 0 ? "/ row=" + row : ""));
+                Thread.sleep(delay);
+                total -= delay;
             }
-        } catch (IOException ex) {
+            //runTask();
+        } catch (Exception ex) {
             IJ.error("Error running command: " + ex.getMessage());
-            throw new RuntimeException(ex);
         } finally {
             if (commandsListener != null) {
-                commandsListener.done();
+                commandsListener.done(this);
             }
+        }
+    }
+
+    private void runTask() throws Exception {
+        System.out.println(">> " + command);
+        Process p = Runtime.getRuntime().exec(command);
+
+        BufferedReader stdInput = new BufferedReader(new InputStreamReader(p.getInputStream()));
+
+        // read the output from the command
+        String s;
+        while ((s = stdInput.readLine()) != null) {
+            System.out.println(s);
         }
     }
 }

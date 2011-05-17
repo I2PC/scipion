@@ -5,6 +5,7 @@ import ij.ImageStack;
 import ij.io.FileInfo;
 import ij.process.FloatProcessor;
 import ij.util.Tools;
+import java.io.File;
 import java.util.Vector;
 import xmipp.ImageDouble;
 import xmipp.Projection;
@@ -20,8 +21,12 @@ import xmipp.Projection;
 public class ImageConverter {
 
     public static ImagePlus convertToImagej(ImageDouble image, String path) {
+        return convertToImagej(image, path, true);
+    }
+
+    public static ImagePlus convertToImagej(ImageDouble image, String path, boolean useLogarithm) {
         if (image.isPSD()) {
-            image.convertPSD();
+            image.convertPSD(useLogarithm);
         }
 
         int w = image.getXsize();
@@ -30,7 +35,13 @@ public class ImageConverter {
         long n = image.getNsize();
 
         ImagePlus ip = convertToImagej(image.getData(), w, h, d, n, path);
-        ip.setFileInfo(new FileInfo());
+
+        // Assign associated file.
+        File f = new File(path);
+        FileInfo fi = new FileInfo();
+        fi.directory = f.getParent();
+        fi.fileName = f.getName();
+        ip.setFileInfo(fi);
 
         return ip;
     }

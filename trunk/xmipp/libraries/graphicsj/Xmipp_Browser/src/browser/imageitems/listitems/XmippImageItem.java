@@ -22,8 +22,6 @@ public class XmippImageItem extends AbstractImageItem {
 
     public XmippImageItem(File file, Cache cache) {
         super(file, cache);
-
-        loadImageData();    // Loads size at start up.
     }
 
     @Override
@@ -65,6 +63,10 @@ public class XmippImageItem extends AbstractImageItem {
         return file.getName();
     }
 
+    public String getAbsoluteFileName() {
+        return file.getAbsolutePath();
+    }
+
     private static double getFactor(int W, int H, int w, int h) {
         double factor;
 
@@ -93,12 +95,15 @@ public class XmippImageItem extends AbstractImageItem {
         ImagePlus ip = null;
 
         try {
-            String path = file.getAbsolutePath();
             System.out.println(" *** Reading ImagePlus [from disk]: " + getKey());
+            String path = getAbsoluteFileName();
             ImageDouble image = new ImageDouble();
 
             image.readPreview(path, getWidth(), getHeight(), nslice, nimage);
             ip = ImageConverter.convertToImagej(image, path);
+
+            ip.setTitle(getLabel());
+            //getPreview(getWidth(), getHeight());
         } catch (Exception ex) {
             IJ.error(ex.getMessage());
             throw new RuntimeException(ex);

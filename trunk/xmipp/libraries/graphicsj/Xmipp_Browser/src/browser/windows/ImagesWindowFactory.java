@@ -4,7 +4,7 @@
  */
 package browser.windows;
 
-import browser.files.FilterFilesModel;
+import browser.Cache;
 import browser.imageitems.ImageConverter;
 import browser.imageitems.TableImageItem;
 import browser.imageitems.listitems.FileItem;
@@ -12,7 +12,7 @@ import browser.imageitems.listitems.XmippImageItem;
 import browser.imageitems.listitems.SelFileItem;
 import browser.table.JFrameImagesTable;
 import browser.table.micrographs.ctf.CTFImageWindow;
-import browser.table.micrographs.iMicrographsGUI;
+import browser.table.micrographs.ctf.tasks.TasksEngine;
 import ij.IJ;
 import ij.ImagePlus;
 import ij.gui.ImageWindow;
@@ -20,6 +20,7 @@ import ij.gui.Toolbar;
 import java.io.File;
 import java.util.Vector;
 import xmipp.ImageDouble;
+import xmipp.MetaData;
 
 /**
  *
@@ -29,30 +30,23 @@ public class ImagesWindowFactory {
 
     private final static String TEMPDIR_PATH = System.getProperty("java.io.tmpdir");
 
-    public static void openImageFiles(String files[]) {
-        Vector<XmippImageItem> xmippItems = new Vector<XmippImageItem>();
+    public static void openImageFiles(String files[], boolean poll) {
+        Vector<TableImageItem> xmippItems = new Vector<TableImageItem>();
 
         for (int i = 0; i < files.length; i++) {
-            FileItem item = FilterFilesModel.createSuitableFileItem(new File(files[i]));
-            if (item instanceof XmippImageItem) {
-                xmippItems.add((XmippImageItem) item);
-            }
+            String filename = MetaData.getFilename(files[i]);
+            long nimage = MetaData.getNimage(files[i]);
+
+            System.out.println(" *** Loading: " + filename + " / nimage: " + nimage);
+
+            TableImageItem item = new TableImageItem(new File(filename), nimage, new Cache());
+            xmippItems.add(item);
         }
 
         for (int i = 0; i < xmippItems.size(); i++) {
-            openImage(xmippItems.elementAt(i));
+            openImage(xmippItems.elementAt(i).getImagePlus(), poll);
         }
     }
-//
-//    public static void openVolumeFile(String filename) {
-//        /*FileItem item = FilterFilesModel.createSuitableFileItem(new File(filename));
-//        if (item instanceof SelFileItem) {
-//        openTable((SelFileItem) item);
-//        } else if (item instanceof XmippImageItem) {
-//        openTable((XmippImageItem) item);
-//        }*/
-//        openTable(filename);
-//    }
 
     public static void openImage(TableImageItem item) {
         ImageWindow iw = openImage(item.getImagePlus());
@@ -65,7 +59,7 @@ public class ImagesWindowFactory {
     }
 
     public static void openImage(XmippImageItem item) {
-        openImage(item, 0);
+        openImage(item, ImageDouble.ALL_IMAGES);
     }
 
     public static void openImage(XmippImageItem item, long nimage) {
@@ -154,10 +148,17 @@ public class ImagesWindowFactory {
         table.setVisible(true);
     }
 
+    public static void openTable(String filenames[], boolean enabled[]) {
+        JFrameImagesTable table = new JFrameImagesTable(filenames, enabled);
+        table.setVisible(true);
+    }
+
     public static ImageWindow openCTFImage(ImagePlus ip, String CTFfilename,
-            String PSDfilename, String MicrographFilename, iMicrographsGUI micrographsGUI) {
+            String PSDfilename, TasksEngine tasksEngine,
+            String MicrographFilename, int row) {
         IJ.setTool(Toolbar.FREEROI);
 
-        return new CTFImageWindow(ip, CTFfilename, PSDfilename, micrographsGUI);
+        return new CTFImageWindow(ip, CTFfilename, PSDfilename,
+                tasksEngine, row);
     }
 }

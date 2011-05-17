@@ -21,14 +21,18 @@ public class TableImageItem extends XmippImageItem {
     protected double scale = 1.0;
 
     public TableImageItem(File file, Cache cache) {
-        this(file, cache, ImageDouble.FIRST_SLICE);
+        this(file, ImageDouble.FIRST_SLICE, cache);
     }
 
-    public TableImageItem(File file, Cache cache, int slice) {
-        this(file, cache, slice, ImageDouble.FIRST_IMAGE);
+    public TableImageItem(File file, int slice, Cache cache) {
+        this(file, slice, ImageDouble.FIRST_IMAGE, cache);
     }
 
-    public TableImageItem(File file, Cache cache, int slice, int nimage) {
+    public TableImageItem(File file, long nimage, Cache cache) {
+        this(file, ImageDouble.FIRST_SLICE, nimage, cache);
+    }
+
+    public TableImageItem(File file, int slice, long nimage, Cache cache) {
         super(file, cache);
 
         this.nslice = slice;
@@ -37,14 +41,15 @@ public class TableImageItem extends XmippImageItem {
 
     @Override
     public String getKey() {
-        return super.getKey() + "[" + scale + "]";
+        // TODO: (Maybe not) Fix by overriding: return super.getKey() + "[" + scale + "]";
+        return file.getAbsolutePath() + "_" + getThumbnailHeight() + "_" + getThumbnailWidth() + "_" + nslice + "_" + nimage;
     }
 
-    @Override
+    /*    @Override
     public String getFileName() {
-        return file.getAbsolutePath();
+    return file.getAbsolutePath();
     }
-
+     */
     public void setEnabled(boolean enabled) {
         this.enabled = enabled;
     }
@@ -75,6 +80,18 @@ public class TableImageItem extends XmippImageItem {
 
     public ImagePlus getPreview() {
         return getPreview(getThumbnailWidth(), getThumbnailHeight());
+    }
+
+    public String getTooltipText() {
+        // @TODO: Fix duplicated code.. (see below: getLabel())
+        // @TODO: Maybe it's better "n@filename"
+        String sliceStr = isVolume() ? String.valueOf(nslice) : "";
+        String nimageStr = isStack() ? String.valueOf(nimage) : "";
+        String delim = isVolume() && isStack() ? "/" : "";
+
+        String extra = isVolume() || isStack() ? "[" + sliceStr + delim + nimageStr + "]" : "";
+
+        return getAbsoluteFileName() + extra;
     }
 
     @Override

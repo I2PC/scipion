@@ -33,6 +33,7 @@ public class ImageWindowOperations extends ImageWindow implements iPollImageWind
     private String path;// = imp.getOriginalFileInfo().directory + imp.getOriginalFileInfo().fileName;
     private File f;// = new File(path);
     private long last;// = f.lastModified();
+    private XmippMenuBar menuBar;
 
     public ImageWindowOperations(ImagePlus imp) {
         this(imp, false);
@@ -53,7 +54,9 @@ public class ImageWindowOperations extends ImageWindow implements iPollImageWind
         setLayout(new BorderLayout());
 
         add(previousContent, BorderLayout.CENTER);
-        setMenuBar(new XmippMenuBar(this, imp));
+
+        menuBar = new XmippMenuBar(this, imp);
+        setMenuBar(menuBar);
 
         setMaximumSize(getPreferredSize());
 
@@ -76,11 +79,12 @@ public class ImageWindowOperations extends ImageWindow implements iPollImageWind
         FileInfo ofi = imp.getOriginalFileInfo();
 
         if (ofi != null) {
-            path = ofi.directory + ofi.fileName;
+            path = ofi.directory + File.separator + ofi.fileName;
             f = new File(path);
             last = f.lastModified();
 
             setPoll(poll);  // If isPoll, starts timer to reload image form disk every period.
+            menuBar.setPollStatus(poll);
         }
     }
 
@@ -99,7 +103,20 @@ public class ImageWindowOperations extends ImageWindow implements iPollImageWind
         }
     }
 
-    // @TODO Check poll. "Revert" might work just for standard images file types.
+    protected void revert() {
+        // Reverts only when image has changed since last time.
+        if (last < f.lastModified()) {
+            // @TODO Check poll. "Revert" doesn't work. I guess it's because fileinfo is almost empty.
+            System.out.println(" *** Reverting from disk...");
+            IJ.showStatus("Reloading " + imp.getTitle());
+
+            IJ.run(imp, "Revert", "");
+            last = f.lastModified();
+
+            IJ.showStatus("");
+        }
+    }
+
     private void startTimer() {
         // Avoid multiple timers running simultaneously.
         if (timer == null) {
@@ -108,15 +125,7 @@ public class ImageWindowOperations extends ImageWindow implements iPollImageWind
             timer.scheduleAtFixedRate(new TimerTask() {
 
                 public void run() {
-                    // Reverts only when image has changed since last time.
-                    if (last < f.lastModified()) {
-                        IJ.showStatus("Reloading " + imp.getTitle());
-
-                        IJ.run(imp, "Revert", "");
-                        last = f.lastModified();
-
-                        IJ.showStatus("");
-                    }
+                    revert();
                 }
             }, 0, PERIOD);
         }

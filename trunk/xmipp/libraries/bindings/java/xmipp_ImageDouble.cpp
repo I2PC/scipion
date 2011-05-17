@@ -227,7 +227,7 @@ JNIEXPORT jdouble JNICALL Java_xmipp_ImageDouble_getVoxel(JNIEnv *env,
 	Image<double> *image = GET_INTERNAL_IMAGE(jobj);
 
 	if (image != NULL) {
-	  A3D_ELEM(image->data,  (int) x, (int) y, (int) z);
+	  value = A3D_ELEM(image->data,  (int) x, (int) y, (int) z);
 	}
 
 	return value;
@@ -242,13 +242,30 @@ JNIEXPORT void JNICALL Java_xmipp_ImageDouble_setVoxel
 	}
 }
 
-JNIEXPORT void JNICALL Java_xmipp_ImageDouble_convertPSD(JNIEnv *env, jobject jobj) {
+JNIEXPORT void JNICALL Java_xmipp_ImageDouble_convertPSD(JNIEnv *env, jobject jobj, jboolean useLogarithm) {
+	std::string msg = "";
 	Image<double> *image = GET_INTERNAL_IMAGE(jobj);
-	if (image != NULL) {
-		MultidimArray<double> out(image->getSize());
-		xmipp2PSD(image->data, out);
-		image->data.clear(); // Frees memory.
-		image->data = out;
+
+	if(image != NULL) {
+		try {
+			MultidimArray<double> out(image->getSize());
+			xmipp2PSD(image->data, out, useLogarithm);
+			image->data.clear(); // Frees memory.
+			image->data = out;
+		} catch (XmippError xe) {
+			msg = xe.getDefaultMessage();
+		} catch (std::exception& e) {
+			msg = e.what();
+		} catch (...) {
+			msg = "Unhandled exception";
+		}
+	} else {
+		msg = "Image is NULL";
+	}
+
+	// If there was an exception, sends it to java environment.
+	if(!msg.empty()) {
+		handleXmippException(env, msg);
 	}
 }
 

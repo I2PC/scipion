@@ -73,7 +73,7 @@ public class ImageDouble {
     // Acess to data.
     public native double[] getData();
 
-    public native void convertPSD();
+    public native void convertPSD(boolean useLogarithm);
 
     public native int getXsize();
 

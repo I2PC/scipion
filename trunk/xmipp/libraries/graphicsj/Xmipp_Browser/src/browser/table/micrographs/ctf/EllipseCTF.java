@@ -56,8 +56,6 @@ public class EllipseCTF {
     public void calculateDefocus(double minor, double major) {
         defocusU = defocus(minor, Q0, lambda, Cs, D, Ts);
         defocusV = defocus(major, Q0, lambda, Cs, D, Ts);
-
-        System.out.println(this);
     }
 
     private double lambda(double Kv) {
@@ -86,19 +84,19 @@ public class EllipseCTF {
     public double getSphericalAberration() {
         return Cs;
     }
-
+    /*
     @Override
     public String toString() {
-        return "---------------------------------------------------\n"
-                + "Q0: " + Q0 + "\n"
-                + "Cs: " + Cs + "\n"
-                + "D: " + D + "\n"
-                + "Ts: " + Ts + "\n"
-                + "Kv: " + kV + "\n"
-                + "lambda: " + lambda + "\n"
-                + "---------------------------------------------------\n"
-                + "defocusU: " + defocusU + " > (file: " + defU + ")\n"
-                + "defocusV: " + defocusV + " > (file: " + defV + ")\n"
-                + "---------------------------------------------------\n";
-    }
+    return "---------------------------------------------------\n"
+    + "Q0: " + Q0 + "\n"
+    + "Cs: " + Cs + "\n"
+    + "D: " + D + "\n"
+    + "Ts: " + Ts + "\n"
+    + "Kv: " + kV + "\n"
+    + "lambda: " + lambda + "\n"
+    + "---------------------------------------------------\n"
+    + "defocusU: " + defocusU + " > (file: " + defU + ")\n"
+    + "defocusV: " + defocusV + " > (file: " + defV + ")\n"
+    + "---------------------------------------------------\n";
+    }*/
 }

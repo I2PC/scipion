@@ -8,9 +8,9 @@ import browser.Cache;
 import browser.ICONS_MANAGER;
 import browser.LABELS;
 import browser.imageitems.ImageDimension;
-import browser.table.ImageOperations;
 import ij.IJ;
 import ij.ImagePlus;
+import ij.process.ImageStatistics;
 import java.io.File;
 import java.text.DecimalFormat;
 import xmipp.ImageDouble;
@@ -24,7 +24,8 @@ public abstract class AbstractImageItem extends FileItem {
     //public int width, height;
     protected ImageDimension dimension;
     protected Cache cache;
-    protected double min, max, mean, stdDev;
+    protected ImageStatistics statistics;
+    //protected double min, max, mean, stdDev;
 
     public AbstractImageItem(File file, Cache cache) {
         super(file);
@@ -51,15 +52,11 @@ public abstract class AbstractImageItem extends FileItem {
                 if (preview != null) {
                     cache.put(getKey(), preview);
 
-                    // Stores image info.
-                    min = preview.getProcessor().getMin();
-                    max = preview.getProcessor().getMax();
-                    mean = ImageOperations.averagePixelValue(preview);
-                    stdDev = ImageOperations.stdDevPixelValue(preview);
+                    statistics = preview.getStatistics();
                 }
             }
         } else {    // Null preview.
-            preview = new ImagePlus("", ICONS_MANAGER.MISSING_ITEM.getImage());
+            preview = ICONS_MANAGER.MISSING_ITEM;
         }
 
         return preview;
@@ -97,7 +94,10 @@ public abstract class AbstractImageItem extends FileItem {
         return dimension.getDepth() > 1;
     }
 
-    //protected abstract void loadImageData();
+    public ImageStatistics getStatistics() {
+        return statistics;
+    }
+
     protected void loadImageData() {
         try {
             ImageDouble image = new ImageDouble();
@@ -112,13 +112,11 @@ public abstract class AbstractImageItem extends FileItem {
 
     //public abstract String getImageInfo();
     public String getImageInfo() {
-        loadImageData();
-
         DecimalFormat myFormatter = new DecimalFormat("#.###");
-        String strMin = myFormatter.format(min);
-        String strMax = myFormatter.format(max);
-        String strMean = myFormatter.format(mean);
-        String strStdDev = myFormatter.format(stdDev);
+        String strMin = myFormatter.format(statistics.min);
+        String strMax = myFormatter.format(statistics.max);
+        String strMean = myFormatter.format(statistics.mean);
+        String strStdDev = myFormatter.format(statistics.stdDev);
 
         return "<html>"
                 + LABELS.LABEL_WIDTH + dimension.getWidth() + "<br>"

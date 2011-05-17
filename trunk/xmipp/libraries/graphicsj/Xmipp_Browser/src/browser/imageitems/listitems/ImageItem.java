@@ -90,6 +90,7 @@ public class ImageItem extends AbstractImageItem {
                 imageInputStream.close();
             }
         } catch (Exception ex) {
+            ex.printStackTrace();
         }
 
         return preview != null ? new ImagePlus("", preview) : null;

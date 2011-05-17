@@ -80,7 +80,7 @@ public class XmippMenuBar extends DynamicMenuBar implements ActionListener {
     private MenuItem itemVolumeJ = new MenuItem(LABELS.OPERATION_VOLUMEJ);
     // *** Info ***
     private Menu menuInfo = new Menu(LABELS.OPERATION_MENU_INFO);
-    private CheckboxMenuItem itemPoll = new CheckboxMenuItem("POLL");
+    private CheckboxMenuItem itemPoll = new CheckboxMenuItem(LABELS.OPERATION_POLL);
     private MenuItem itemDuplicate = new MenuItem(LABELS.OPERATION_DUPLICATE);
     private MenuItem itemGoToSlice = new MenuItem(LABELS.OPERATION_GO_TO_SLICE);
     private MenuItem itemSubstackMaker = new MenuItem(LABELS.OPERATION_SUBSTACK_MAKER);
@@ -158,7 +158,7 @@ public class XmippMenuBar extends DynamicMenuBar implements ActionListener {
         itemPCA.setEnabled(nslices > 1);
         itemSurfaceJ.setEnabled(nslices > 1);
 
-        itemPoll.setEnabled(canPoll);   // Some images can't poll as they are not loaded from disk (average, std_avg, ...).
+        itemPoll.setEnabled(canPoll);   // Some images can't poll as they are not loaded from disk (mean, std_avg, ...).
     }
 
     private void createMenuBar() {
@@ -727,7 +727,7 @@ public class XmippMenuBar extends DynamicMenuBar implements ActionListener {
         return false;
     }
 
-    private void run3DViewer(ImagePlus ip) {
+    public static void run3DViewer(ImagePlus ip) {
         Image3DUniverse universe = new Image3DUniverse(UNIVERSE_W, UNIVERSE_H);
 
         // Adds the sphere image plus to universe.
@@ -736,5 +736,9 @@ public class XmippMenuBar extends DynamicMenuBar implements ActionListener {
         c.displayAs(Content.VOLUME);
 
         universe.show();    // Shows...
+    }
+
+    public void setPollStatus(boolean poll) {
+        itemPoll.setState(poll);
     }
 }

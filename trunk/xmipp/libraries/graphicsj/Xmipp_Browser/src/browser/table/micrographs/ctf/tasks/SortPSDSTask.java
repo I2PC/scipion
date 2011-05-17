@@ -16,7 +16,7 @@ public class SortPSDSTask extends CommandTask {
         super(XMIPP_CTF_SORT_PSDS + " -i " + filename);
     }
 
-    public SortPSDSTask(String filename, iCommandsListener commandsListener) {
+    public SortPSDSTask(String filename, iTaskCompletionListener commandsListener) {
         super(XMIPP_CTF_SORT_PSDS + " -i " + filename, commandsListener);
     }
 }

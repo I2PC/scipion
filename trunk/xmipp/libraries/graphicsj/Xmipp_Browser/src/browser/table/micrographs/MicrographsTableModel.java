@@ -8,6 +8,7 @@ import browser.Cache;
 import browser.imageitems.TableImageItem;
 import ij.IJ;
 import java.io.File;
+import java.util.LinkedList;
 import java.util.Vector;
 import javax.swing.event.TableModelEvent;
 import javax.swing.event.TableModelListener;
@@ -40,7 +41,6 @@ public class MicrographsTableModel extends DefaultTableModel implements TableMod
         MDLabel.MDL_CTF_CRITERION_PSDRADIALINTEGRAL,
         MDLabel.MDL_CTF_CRITERION_PSDVARIANCE,
         MDLabel.MDL_CTF_CRITERION_PSDPCARUNSTEST,
-        MDLabel.MDL_CTF_CRITERION_NORMALITY,
         MDLabel.MDL_CTF_CRITERION_COMBINED
     };
     private static final String COLUMNS_NAMES[] = new String[]{
@@ -61,9 +61,7 @@ public class MicrographsTableModel extends DefaultTableModel implements TableMod
         "PSD Radial Integral",
         "PSD Variance",
         "PSD PCA Runs Test",
-        "Micrograph normality",
-        "Combined criterion"
-        };
+        "Criterion Combined"};
     private static final int EXTRA_COLUMNS_LABELS[] = {
         MDLabel.MDL_CTF_DEFOCUSU,
         MDLabel.MDL_CTF_DEFOCUSV};
@@ -71,11 +69,12 @@ public class MicrographsTableModel extends DefaultTableModel implements TableMod
         "Defocus U",
         "Defocus V"};
     public final static int INDEX_ID = 0;
-    //public final static int INDEX_ENABLED = 1;
+    public final static int INDEX_ENABLED = 1;
     public final static int INDEX_IMAGE = 2;
     public final static int INDEX_DEFOCUS_U_COL = 7;
     public final static int INDEX_DEFOCUS_V_COL = 8;
     public final static int INDEX_COMBINED_COLUMN = MD_LABELS.length - 1;
+    protected Vector<Integer> busyRows = new Vector<Integer>();
     // Data type contained by columns to set renderes properly.
     protected static Cache cache = new Cache();
     private MetaData md;
@@ -91,22 +90,23 @@ public class MicrographsTableModel extends DefaultTableModel implements TableMod
         addColumn(EXTRA_COLUMNS_NAMES[1]);  // DEFOCUS_V
 
         load(filename);
+
+        addTableModelListener(this);
     }
 
     public void reload() {
-        load(getFilename());
+        boolean enabled[] = getEnabledRows();   // Gets currently enabled rows...
+        load(getFilename());    // ...restore data...
+        setEnabledRows(enabled);    // ...sets previously enabled.
     }
 
     private void load(String filename) {
         try {
-            removeTableModelListener(this); // Deactivate events while updating.
             clear();    // Clear the whole data.
 
             md = new MetaData(filename);
 
             buildTable(md);
-
-            addTableModelListener(this);    // Restore events again.
         } catch (Exception ex) {
             ex.printStackTrace();
             throw new RuntimeException(ex.getMessage());
@@ -172,7 +172,6 @@ public class MicrographsTableModel extends DefaultTableModel implements TableMod
                             case MDLabel.MDL_CTF_CRITERION_PSDRADIALINTEGRAL:
                             case MDLabel.MDL_CTF_CRITERION_PSDVARIANCE:
                             case MDLabel.MDL_CTF_CRITERION_PSDPCARUNSTEST:
-                            case MDLabel.MDL_CTF_CRITERION_NORMALITY:
                             case MDLabel.MDL_CTF_CRITERION_COMBINED:
                                 row[col] = md.getValueDouble(label, id);
                                 break;
@@ -217,6 +216,7 @@ public class MicrographsTableModel extends DefaultTableModel implements TableMod
                 }
             }
         } catch (Exception ex) {
+            ex.printStackTrace();
             throw new RuntimeException(ex.getMessage());
         }
     }
@@ -253,6 +253,7 @@ public class MicrographsTableModel extends DefaultTableModel implements TableMod
 
     @Override
     public Class getColumnClass(int column) {
+//        System.out.println(" >>> C_count: " + getColumnCount() + " / R_count: " + getRowCount());
         Object item = getValueAt(0, column);
         return item != null ? item.getClass() : Object.class;
     }
@@ -270,6 +271,52 @@ public class MicrographsTableModel extends DefaultTableModel implements TableMod
         return md.getFilename();
     }
 
+    public void setRowEnabled(int row, boolean enabled) {
+        setValueAt(enabled, row, ENABLED_COLUMN_INDEX);
+    }
+
+    public String[] extractColumn(int column, boolean onlyenabled) {
+        LinkedList<String> filenames = new LinkedList<String>();
+
+        for (int i = 0; i < getRowCount(); i++) {
+            TableImageItem item = (TableImageItem) getValueAt(i, column);
+
+            if (!onlyenabled || isRowEnabled(i)) {
+                filenames.add(item.getAbsoluteFileName());
+            }
+        }
+
+        return filenames.toArray(new String[filenames.size()]);
+    }
+
+    public boolean[] getEnabledRows() {
+        boolean enabled[] = new boolean[getRowCount()];
+
+        for (int i = 0; i < enabled.length; i++) {
+            enabled[i] = (Boolean) getValueAt(i, ENABLED_COLUMN_INDEX);
+        }
+
+        return enabled;
+    }
+
+    public void setEnabledRows(boolean enabled[]) {
+        for (int i = 0; i < enabled.length; i++) {
+            setValueAt(enabled[i], i, ENABLED_COLUMN_INDEX);
+        }
+    }
+
+    public void setRowBusy(int row) {
+        busyRows.add((Integer) row);
+    }
+
+    public void setRowIdle(int row) {
+        busyRows.remove((Integer) row);
+    }
+
+    public boolean isRowBusy(int row) {
+        return busyRows.contains((Integer) row);
+    }
+
     public String getCTFfile(int row) {
         long id = (Long) getValueAt(row, 0);
         String file = md.getValueString(MDLabel.MDL_CTFMODEL, id);
@@ -284,14 +331,26 @@ public class MicrographsTableModel extends DefaultTableModel implements TableMod
         return file;
     }
 
-    // This method is invoked TWICE for each event (I don't know how fix it for now)
+    public String getCTFDisplayfile(int row) {
+        long id = (Long) getValueAt(row, 0);
+        String file = md.getValueString(MDLabel.MDL_ASSOCIATED_IMAGE2, id);
+
+        return file;
+    }
+
     public void tableChanged(TableModelEvent e) {
         int row = e.getFirstRow();
+        int column = e.getColumn();
 
-        long id = (Long) getValueAt(row, ID_COLUMN_INDEX);
-        boolean enabled = (Boolean) getValueAt(row, ENABLED_COLUMN_INDEX);
+        System.out.println(" *** Table changed @ " + row);
 
-        md.setValueInt(MDLabel.MDL_ENABLED, enabled ? 1 : 0, id);
+        // Updates metadata.
+        if (column == ENABLED_COLUMN_INDEX) {
+            long id = (Long) getValueAt(row, ID_COLUMN_INDEX);
+            boolean enabled = (Boolean) getValueAt(row, ENABLED_COLUMN_INDEX);
+
+            md.setValueInt(MDLabel.MDL_ENABLED, enabled ? 1 : 0, id);
+        }
     }
 
     public boolean save(String fileName) {

@@ -4,6 +4,8 @@
  */
 package browser;
 
+import ij.IJ;
+import ij.ImagePlus;
 import javax.swing.ImageIcon;
 
 /**
@@ -24,14 +26,18 @@ public class ICONS_MANAGER {
     public final static String PATH_CAPTURE_WINDOW = PATH_ICONS + "capture.png";
     public final static String PATH_FILE_TYPE_DIRECTORY = PATH_ICONS + "type_folder.png";
     public final static String PATH_FILE_TYPE_UNKNOWN = PATH_ICONS + "type_unknown.png";
+    public final static String PATH_WAIT = PATH_ICONS + "wait.gif";
+    public final static String PATH_WAIT_MENU = PATH_ICONS + "wait_menu.gif";
     public static ImageIcon FILTERING_ALERT;
     public static ImageIcon PARENT_DIRECTORY;
     public static ImageIcon REFRESH_DIRECTORY;
-    public static ImageIcon MISSING_ITEM;
     public static ImageIcon CAPTURE_WINDOW;
     public static ImageIcon FILE_TYPE_DIRECTORY;
     public static ImageIcon FILE_TYPE_UNKNOWN;
     public static ImageIcon FILE_TYPES_ICONS[] = new ImageIcon[REGISTERED_FILE_ITEMS.length()];
+    public static ImageIcon WAIT_ICON;
+    public static ImageIcon WAIT_MENU_ICON;
+    public static ImagePlus MISSING_ITEM;
 
     static {
         new ICONS_MANAGER();    // Auto-load.
@@ -41,7 +47,6 @@ public class ICONS_MANAGER {
         FILTERING_ALERT = new ImageIcon(getClass().getResource(PATH_FILTERING_ALERT));
         PARENT_DIRECTORY = new ImageIcon(getClass().getResource(PATH_PARENT_DIRECTORY));
         REFRESH_DIRECTORY = new ImageIcon(getClass().getResource(PATH_REFRESH_DIRECTORY));
-        MISSING_ITEM = new ImageIcon(getClass().getResource(PATH_MISSING_ITEM));
         CAPTURE_WINDOW = new ImageIcon(getClass().getResource(PATH_CAPTURE_WINDOW));
 
         FILE_TYPE_DIRECTORY = new ImageIcon(getClass().getResource(PATH_FILE_TYPE_DIRECTORY));
@@ -51,5 +56,11 @@ public class ICONS_MANAGER {
         for (int i = 0; i < FILE_TYPES_ICONS.length; i++) {
             FILE_TYPES_ICONS[i] = new ImageIcon(getClass().getResource(REGISTERED_FILE_ITEMS.getIcon(i)));
         }
+
+        WAIT_ICON = new ImageIcon(getClass().getResource(PATH_WAIT));
+        WAIT_MENU_ICON = new ImageIcon(getClass().getResource(PATH_WAIT_MENU));
+
+        // For missing items.
+        MISSING_ITEM = IJ.openImage(PATH_MISSING_ITEM);
     }
 }

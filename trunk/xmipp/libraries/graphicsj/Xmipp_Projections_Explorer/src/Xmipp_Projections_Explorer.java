@@ -292,24 +292,34 @@ public class Xmipp_Projections_Explorer implements PlugIn, UniverseListener, iAn
     }
 
     private void showScoreFiles(String scoreFile) {
-        IJ.showStatus(LABELS.MESSAGE_LOADING_SCORE_FILE);
+        if (fileExists(scoreFile)) {
+            IJ.error(scoreFile + ": Not found!!");
+        } else {
+            IJ.showStatus(LABELS.MESSAGE_LOADING_SCORE_FILE);
 
-        if (frameImagesTable == null) {
-            frameImagesTable = new JFrameImagesTable();
+            if (frameImagesTable == null) {
+                frameImagesTable = new JFrameImagesTable();
+            }
+
+            frameImagesTable.loadScoreFile(scoreFile);
+
+            ImageWindow3D window = universeVolume.getWindow();
+            Point location = window.getLocation();
+            location.translate(0, window.getHeight());
+
+            frameImagesTable.setLocation(location);
+
+            frameImagesTable.setWidth(
+                    universeVolume.getWindow().getWidth() + universeSphere.getWindow().getWidth());
+
+            frameImagesTable.setVisible(true);
         }
+    }
 
-        frameImagesTable.loadScoreFile(scoreFile);
+    private boolean fileExists(String filename) {
+        File f = new File(filename);
 
-        ImageWindow3D window = universeVolume.getWindow();
-        Point location = window.getLocation();
-        location.translate(0, window.getHeight());
-
-        frameImagesTable.setLocation(location);
-
-        frameImagesTable.setWidth(
-                universeVolume.getWindow().getWidth() + universeSphere.getWindow().getWidth());
-
-        frameImagesTable.setVisible(true);
+        return filename == null || filename.trim().isEmpty() || !f.exists();
     }
 
     /**

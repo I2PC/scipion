@@ -137,7 +137,7 @@ public class MetaData {
     }
 
     public static int getNimage(String filename) {
-        int nimage = ImageDouble.FIRST_IMAGE;
+        int nimage = ImageDouble.ALL_IMAGES;
 
         if (filename.contains(SEPARATOR)) {
             String str = filename.split(SEPARATOR)[0];

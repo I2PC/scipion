@@ -15,6 +15,8 @@ import browser.imageitems.TableImageItem;
 import browser.table.renderers.ImageRenderer;
 import browser.table.renderers.RowHeaderRenderer;
 import browser.windows.ImagesWindowFactory;
+import browser.windows.menubar.XmippMenuBar;
+import ij.ImagePlus;
 import java.awt.Dimension;
 import java.awt.Insets;
 import java.awt.Point;
@@ -29,6 +31,8 @@ import java.util.Timer;
 import java.util.TimerTask;
 import javax.swing.JFrame;
 import javax.swing.JList;
+import javax.swing.JMenu;
+import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
 import javax.swing.JPopupMenu;
 import javax.swing.JSeparator;
@@ -54,6 +58,7 @@ public class JFrameImagesTable extends JFrame {//implements TableModelListener {
     private boolean isUpdating;
     private boolean autoAdjustColumns = false;
     private JPopUpMenuTable jpopUpMenuTable;
+    private JMenuBarTable jMenuBarTable;
 
     /** Creates new form JFrameImagesTable */
     public JFrameImagesTable(String filename) {
@@ -64,6 +69,7 @@ public class JFrameImagesTable extends JFrame {//implements TableModelListener {
         this(filenames, 0, 0);
     }
 
+    // @TODO Clean initialRows and cols: It might not be used anymore.
     public JFrameImagesTable(String filename, int initialRows, int initialColumns) {
         super();
 
@@ -72,13 +78,24 @@ public class JFrameImagesTable extends JFrame {//implements TableModelListener {
     }
 
     public JFrameImagesTable(String filenames[], int initialRows, int initialColumns) {
+        this(filenames, null, initialRows, initialColumns);
+    }
+
+    public JFrameImagesTable(String filenames[], boolean enabled[]) {
+        this(filenames, enabled, 0, 0);
+    }
+
+    public JFrameImagesTable(String filenames[], boolean enabled[], int initialRows, int initialColumns) {
         super();
 
-        tableModel = new ImagesTableModel(filenames);
+        tableModel = new ImagesTableModel(filenames, enabled);
         postInit();
     }
 
     private void postInit() {
+        jMenuBarTable = new JMenuBarTable();
+        setJMenuBar(jMenuBarTable);
+
         columnModel = new ImagesTableColumnModel();
 
         initComponents();
@@ -100,7 +117,6 @@ public class JFrameImagesTable extends JFrame {//implements TableModelListener {
         // Volumes and stacks will be "auto-normalized".
         if (tableModel.isVolume() || tableModel.isStack()) {
             setNormalized(true);
-//            jtbNormalize.setEnabled(false);
         }
     }
 
@@ -279,11 +295,11 @@ public class JFrameImagesTable extends JFrame {//implements TableModelListener {
     }
 
     private void avgImage() {
-        ImageOperations.average(tableModel.getAllItems()).show();
+        ImagesWindowFactory.openImage(ImageOperations.mean(tableModel.getAllItems()));
     }
 
     private void stdDevImage() {
-        ImageOperations.std_deviation(tableModel.getAllItems()).show();
+        ImagesWindowFactory.openImage(ImageOperations.std_deviation(tableModel.getAllItems()));
     }
 
     private void setNormalized(boolean normalize) {
@@ -294,6 +310,15 @@ public class JFrameImagesTable extends JFrame {//implements TableModelListener {
         tableModel.printNormalizationInfo();
 
         startUpdater();
+    }
+
+    private void send2stack() {
+        ImagesWindowFactory.openImage(tableModel.getAllItems(), getTitle());
+    }
+
+    private void openAs3D() {
+        ImagePlus ip = new ImagePlus("/home/juanjo/Desktop/ImageJCTFViewTest/circles.gif");
+        XmippMenuBar.run3DViewer(ip);
     }
 
     /** This method is called from within the constructor to
@@ -308,8 +333,10 @@ public class JFrameImagesTable extends JFrame {//implements TableModelListener {
 
         toolBar = new javax.swing.JToolBar();
         jtbNormalize = new javax.swing.JToggleButton();
-        jbAverage = new javax.swing.JButton();
+        jbMean = new javax.swing.JButton();
         jbStdDev = new javax.swing.JButton();
+        jbToStack = new javax.swing.JButton();
+        jbTo3D = new javax.swing.JButton();
         jpCenter = new javax.swing.JPanel();
         jpZoom = new javax.swing.JPanel();
         jsZoom = new javax.swing.JSpinner();
@@ -346,16 +373,16 @@ public class JFrameImagesTable extends JFrame {//implements TableModelListener {
         });
         toolBar.add(jtbNormalize);
 
-        jbAverage.setText(LABELS.BUTTON_AVERAGE);
-        jbAverage.setFocusable(false);
-        jbAverage.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
-        jbAverage.setVerticalTextPosition(javax.swing.SwingConstants.BOTTOM);
-        jbAverage.addActionListener(new java.awt.event.ActionListener() {
+        jbMean.setText(LABELS.BUTTON_MEAN);
+        jbMean.setFocusable(false);
+        jbMean.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
+        jbMean.setVerticalTextPosition(javax.swing.SwingConstants.BOTTOM);
+        jbMean.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jbAverageActionPerformed(evt);
+                jbMeanActionPerformed(evt);
             }
         });
-        toolBar.add(jbAverage);
+        toolBar.add(jbMean);
 
         jbStdDev.setText(LABELS.BUTTON_STD_DEVIATION);
         jbStdDev.setFocusable(false);
@@ -368,12 +395,35 @@ public class JFrameImagesTable extends JFrame {//implements TableModelListener {
         });
         toolBar.add(jbStdDev);
 
+        jbToStack.setText(LABELS.BUTTON_TO_STACK);
+        jbToStack.setFocusable(false);
+        jbToStack.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
+        jbToStack.setVerticalTextPosition(javax.swing.SwingConstants.BOTTOM);
+        jbToStack.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jbToStackActionPerformed(evt);
+            }
+        });
+        toolBar.add(jbToStack);
+
+        jbTo3D.setText(LABELS.OPERATION_OPEN_AS_3D);
+        jbTo3D.setFocusable(false);
+        jbTo3D.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
+        jbTo3D.setVerticalTextPosition(javax.swing.SwingConstants.BOTTOM);
+        jbTo3D.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jbTo3DActionPerformed(evt);
+            }
+        });
+        toolBar.add(jbTo3D);
+
         getContentPane().add(toolBar, java.awt.BorderLayout.NORTH);
 
         jpCenter.setLayout(new java.awt.BorderLayout());
 
         jpZoom.setLayout(new java.awt.GridBagLayout());
 
+        jsZoom.setModel(new javax.swing.SpinnerNumberModel(Integer.valueOf(1), Integer.valueOf(1), null, Integer.valueOf(1)));
         jsZoom.setBorder(javax.swing.BorderFactory.createTitledBorder(LABELS.LABEL_ZOOM));
         jsZoom.addChangeListener(new javax.swing.event.ChangeListener() {
             public void stateChanged(javax.swing.event.ChangeEvent evt) {
@@ -382,6 +432,7 @@ public class JFrameImagesTable extends JFrame {//implements TableModelListener {
         });
         gridBagConstraints = new java.awt.GridBagConstraints();
         gridBagConstraints.ipadx = 100;
+        gridBagConstraints.anchor = java.awt.GridBagConstraints.NORTHWEST;
         jpZoom.add(jsZoom, gridBagConstraints);
 
         jcbAutoAdjustColumns.setText(LABELS.LABEL_AUTO_AJUST_COLUMNS);
@@ -390,7 +441,9 @@ public class JFrameImagesTable extends JFrame {//implements TableModelListener {
                 jcbAutoAdjustColumnsActionPerformed(evt);
             }
         });
-        jpZoom.add(jcbAutoAdjustColumns, new java.awt.GridBagConstraints());
+        gridBagConstraints = new java.awt.GridBagConstraints();
+        gridBagConstraints.anchor = java.awt.GridBagConstraints.WEST;
+        jpZoom.add(jcbAutoAdjustColumns, gridBagConstraints);
 
         jcbShowLabels.setText(LABELS.LABEL_SHOW_LABELS);
         jcbShowLabels.addActionListener(new java.awt.event.ActionListener() {
@@ -398,7 +451,9 @@ public class JFrameImagesTable extends JFrame {//implements TableModelListener {
                 jcbShowLabelsActionPerformed(evt);
             }
         });
-        jpZoom.add(jcbShowLabels, new java.awt.GridBagConstraints());
+        gridBagConstraints = new java.awt.GridBagConstraints();
+        gridBagConstraints.anchor = java.awt.GridBagConstraints.WEST;
+        jpZoom.add(jcbShowLabels, gridBagConstraints);
 
         jpCenter.add(jpZoom, java.awt.BorderLayout.NORTH);
 
@@ -413,7 +468,7 @@ public class JFrameImagesTable extends JFrame {//implements TableModelListener {
 
         jpCenter.add(jsPanel, java.awt.BorderLayout.CENTER);
 
-        jpControls.setLayout(new java.awt.GridLayout());
+        jpControls.setLayout(new java.awt.GridLayout(1, 0));
 
         jsRows.setBorder(javax.swing.BorderFactory.createTitledBorder(LABELS.LABEL_ROWS));
         jsRows.addChangeListener(new javax.swing.event.ChangeListener() {
@@ -511,9 +566,9 @@ public class JFrameImagesTable extends JFrame {//implements TableModelListener {
         }
     }//GEN-LAST:event_tableMouseClicked
 
-    private void jbAverageActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jbAverageActionPerformed
+    private void jbMeanActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jbMeanActionPerformed
         avgImage();
-    }//GEN-LAST:event_jbAverageActionPerformed
+    }//GEN-LAST:event_jbMeanActionPerformed
 
     private void jbStdDevActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jbStdDevActionPerformed
         stdDevImage();
@@ -522,9 +577,19 @@ public class JFrameImagesTable extends JFrame {//implements TableModelListener {
     private void jtbNormalizeActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jtbNormalizeActionPerformed
         setNormalized(jtbNormalize.isSelected());
     }//GEN-LAST:event_jtbNormalizeActionPerformed
+
+    private void jbTo3DActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jbTo3DActionPerformed
+        openAs3D();
+    }//GEN-LAST:event_jbTo3DActionPerformed
+
+    private void jbToStackActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jbToStackActionPerformed
+        send2stack();
+    }//GEN-LAST:event_jbToStackActionPerformed
     // Variables declaration - do not modify//GEN-BEGIN:variables
-    private javax.swing.JButton jbAverage;
+    private javax.swing.JButton jbMean;
     private javax.swing.JButton jbStdDev;
+    private javax.swing.JButton jbTo3D;
+    private javax.swing.JButton jbToStack;
     private javax.swing.JCheckBox jcbAutoAdjustColumns;
     private javax.swing.JCheckBox jcbShowLabels;
     private javax.swing.JPanel jpCenter;
@@ -548,15 +613,61 @@ public class JFrameImagesTable extends JFrame {//implements TableModelListener {
         }
     }
 
+    class JMenuBarTable extends JMenuBar {
+
+        protected JMenu jmiSave = new JMenu(LABELS.LABEL_TABLE_SAVE);
+        protected JMenuItem jmiSaveAsImages = new JMenuItem(LABELS.LABEL_TABLE_SAVE_AS_IMAGES);
+        protected JMenuItem jmiSaveAsStack = new JMenuItem(LABELS.LABEL_TABLE_SAVE_AS_STACK);
+        protected JMenuItem jmiSaveAsSelfile = new JMenuItem(LABELS.LABEL_TABLE_SAVE_AS_SELFILE);
+
+        public JMenuBarTable() {
+            super();
+
+            add(jmiSave);
+            jmiSave.add(jmiSaveAsImages);
+            jmiSave.add(jmiSaveAsStack);
+            jmiSave.add(jmiSaveAsSelfile);
+
+            jmiSaveAsImages.addActionListener(new ActionListener() {
+
+                public void actionPerformed(ActionEvent e) {
+                    /*                    if (!saveAsImages()) {
+                    IJ.error(LABELS.MESSAGE_NO_ITEMS_SELECTED);
+                    //                    JOptionPane.showMessageDialog(getParent(), LABELS.MESSAGE_NO_ITEMS_SELECTED);
+                    }*/
+                    System.out.println("@TODO Save as IMAGES file");
+                }
+            });
+
+            jmiSaveAsStack.addActionListener(
+                    new ActionListener() {
+
+                        public void actionPerformed(ActionEvent e) {
+                            /*                    if (!saveAsStack()) {
+                            JOptionPane.showMessageDialog(getParent(), LABELS.MESSAGE_NO_ITEMS_SELECTED);
+                            }*/
+                            System.out.println("@TODO Save as STACK file");
+                        }
+                    });
+
+            jmiSaveAsSelfile.addActionListener(new ActionListener() {
+
+                public void actionPerformed(ActionEvent e) {
+                    /*                    if (!saveAsSelFile()) {
+                    JOptionPane.showMessageDialog(getParent(), LABELS.MESSAGE_NO_ITEMS_SELECTED);
+                    }*/
+                    System.out.println("@TODO Save as SEL file");
+                }
+            });
+        }
+    }
+
     class JPopUpMenuTable extends JPopupMenu {
 
         protected JMenuItem jmiEnable = new JMenuItem(LABELS.LABEL_TABLE_ENABLE);
         protected JMenuItem jmiDisable = new JMenuItem(LABELS.LABEL_TABLE_DISABLE);
         protected JMenuItem jmiEnableAll = new JMenuItem(LABELS.LABEL_TABLE_ENABLE_ALL);
         protected JMenuItem jmiDisableAll = new JMenuItem(LABELS.LABEL_TABLE_DISABLE_ALL);
-        protected JMenuItem jmiSaveAsImages = new JMenuItem(LABELS.LABEL_TABLE_SAVE_AS_IMAGES);
-        protected JMenuItem jmiSaveAsStack = new JMenuItem(LABELS.LABEL_TABLE_SAVE_AS_STACK);
-        protected JMenuItem jmiSaveAsSelfile = new JMenuItem(LABELS.LABEL_TABLE_SAVE_AS_SELFILE);
 
         public JPopUpMenuTable() {
             add(jmiEnable);
@@ -565,9 +676,6 @@ public class JFrameImagesTable extends JFrame {//implements TableModelListener {
             add(jmiEnableAll);
             add(jmiDisableAll);
             add(new JSeparator());
-            add(jmiSaveAsImages);
-            add(jmiSaveAsStack);
-            add(jmiSaveAsSelfile);
 
             jmiEnable.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_E, InputEvent.CTRL_DOWN_MASK));
             jmiDisable.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_D, InputEvent.CTRL_DOWN_MASK));
@@ -628,37 +736,6 @@ public class JFrameImagesTable extends JFrame {//implements TableModelListener {
                 }
             });
 
-            jmiSaveAsImages.addActionListener(new ActionListener() {
-
-                public void actionPerformed(ActionEvent e) {
-                    /*                    if (!saveAsImages()) {
-                    IJ.error(LABELS.MESSAGE_NO_ITEMS_SELECTED);
-                    //                    JOptionPane.showMessageDialog(getParent(), LABELS.MESSAGE_NO_ITEMS_SELECTED);
-                    }*/
-                    System.out.println("@TODO Save as SEL file");
-                }
-            });
-
-            jmiSaveAsStack.addActionListener(
-                    new ActionListener() {
-
-                        public void actionPerformed(ActionEvent e) {
-                            /*                    if (!saveAsStack()) {
-                            JOptionPane.showMessageDialog(getParent(), LABELS.MESSAGE_NO_ITEMS_SELECTED);
-                            }*/
-                            System.out.println("@TODO Save as SEL file");
-                        }
-                    });
-
-            jmiSaveAsSelfile.addActionListener(new ActionListener() {
-
-                public void actionPerformed(ActionEvent e) {
-                    /*                    if (!saveAsSelFile()) {
-                    JOptionPane.showMessageDialog(getParent(), LABELS.MESSAGE_NO_ITEMS_SELECTED);
-                    }*/
-                    System.out.println("@TODO Save as SEL file");
-                }
-            });
         }
     }
 }

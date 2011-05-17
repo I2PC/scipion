@@ -4,7 +4,6 @@
  */
 package browser.table.renderers;
 
-import browser.ICONS_MANAGER;
 import browser.imageitems.TableImageItem;
 import ij.ImagePlus;
 import java.awt.Component;
@@ -52,16 +51,12 @@ public class ImageRenderer extends DefaultTableCellRenderer {
             ImagePlus img = item.getPreview();//tableModel.getZoomScale());
 
             // ... and sets it.
-            if (img != null) {
-                setEnabled(item.isEnabled());
+            setEnabled(item.isEnabled());
 
-                // Normalizes image (if sets in tablemodel)
-                normalize(img, tableModel);
+            // Normalizes image (if sets in tablemodel)
+            normalize(img, tableModel);
 
-                setIcon(new ImageIcon(img.getImage()));
-            } else {
-                setIcon(ICONS_MANAGER.MISSING_ITEM);
-            }
+            setIcon(new ImageIcon(img.getImage()));
 
             setOpaque(true);
             setHorizontalAlignment(JLabel.CENTER);
@@ -69,7 +64,7 @@ public class ImageRenderer extends DefaultTableCellRenderer {
             setVerticalTextPosition(JLabel.BOTTOM);
 
             // Tooltip.
-            setToolTipText(item.getLabel());//TooltipText());
+            setToolTipText(item.getTooltipText());
 
             // (Shows label only when required).
             if (isShowingLabels()) {

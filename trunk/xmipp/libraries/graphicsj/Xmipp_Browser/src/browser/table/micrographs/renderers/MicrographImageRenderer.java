@@ -33,7 +33,7 @@ public class MicrographImageRenderer extends MicrographRowDisablerRenderer {
 
         setEnabled(isRowEnabled(table, row));
 
-        setToolTipText(item.getFileName());
+        setToolTipText(item.getTooltipText());
 
         return this;
     }

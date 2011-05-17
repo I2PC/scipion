@@ -112,7 +112,7 @@ public class JPanelBrowser extends JPanel {
         File file = item.getFile();
 
         if (!item.isDirectory()) {
-            if (FileBrowser.canOpenFile(file)) {
+            if (FileBrowser.hasEnoughMemory(file)) {
                 if (item instanceof SelFileItem) {
                     ImagesWindowFactory.openImage((SelFileItem) item);
                 } else if (item instanceof XmippImageItem) {
@@ -133,9 +133,6 @@ public class JPanelBrowser extends JPanel {
             } else {
                 IJ.showMessage(LABELS.TITLE_ERROR,
                         LABELS.MESSAGE_MEMORY_ERROR(file.length(), IJ.maxMemory()));
-                /*JOptionPane.showMessageDialog(this,
-                LABELS.MESSAGE_MEMORY_ERROR(file.length(), IJ.maxMemory()),
-                LABELS.TITLE_ERROR, JOptionPane.ERROR_MESSAGE);*/
             }
         }
     }

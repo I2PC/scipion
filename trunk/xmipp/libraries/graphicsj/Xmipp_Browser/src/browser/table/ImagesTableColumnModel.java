@@ -21,6 +21,7 @@ public class ImagesTableColumnModel extends DefaultTableColumnModel {
         super.addColumn(tc);
     }
 
+    // @TODO this method causes problems. It's overrided to check it out.
     @Override
     public TableColumn getColumn(int columnIndex) {
         try {

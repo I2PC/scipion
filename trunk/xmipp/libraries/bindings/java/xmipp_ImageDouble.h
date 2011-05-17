@@ -100,10 +100,10 @@ JNIEXPORT jdoubleArray JNICALL Java_xmipp_ImageDouble_getData
 /*
  * Class:     xmipp_ImageDouble
  * Method:    convertPSD
- * Signature: ()V
+ * Signature: (Z)V
  */
 JNIEXPORT void JNICALL Java_xmipp_ImageDouble_convertPSD
-  (JNIEnv *, jobject);
+  (JNIEnv *, jobject, jboolean);
 
 /*
  * Class:     xmipp_ImageDouble

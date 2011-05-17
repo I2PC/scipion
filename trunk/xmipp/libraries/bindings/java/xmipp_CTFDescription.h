@@ -7,14 +7,14 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
-#undef xmipp_CTFDescription_NOISE
-#define xmipp_CTFDescription_NOISE 0L
-#undef xmipp_CTFDescription_NOISE_ERROR2
-#define xmipp_CTFDescription_NOISE_ERROR2 1L
-#undef xmipp_CTFDescription_NOISE_CTF2
-#define xmipp_CTFDescription_NOISE_CTF2 2L
-#undef xmipp_CTFDescription_NOISE_PURE
-#define xmipp_CTFDescription_NOISE_PURE 3L
+#undef xmipp_CTFDescription_BACKGROUND_NOISE
+#define xmipp_CTFDescription_BACKGROUND_NOISE 0L
+#undef xmipp_CTFDescription_ENVELOPE
+#define xmipp_CTFDescription_ENVELOPE 1L
+#undef xmipp_CTFDescription_PSD
+#define xmipp_CTFDescription_PSD 2L
+#undef xmipp_CTFDescription_CTF
+#define xmipp_CTFDescription_CTF 3L
 /*
  * Class:     xmipp_CTFDescription
  * Method:    storeIds
@@ -62,6 +62,14 @@ JNIEXPORT jdouble JNICALL Java_xmipp_CTFDescription_getFMAX
  */
 JNIEXPORT jobjectArray JNICALL Java_xmipp_CTFDescription_CTFProfile
   (JNIEnv *, jobject, jdouble, jdouble, jint);
+
+/*
+ * Class:     xmipp_CTFDescription
+ * Method:    CTFAverageProfile
+ * Signature: (DI)[[D
+ */
+JNIEXPORT jobjectArray JNICALL Java_xmipp_CTFDescription_CTFAverageProfile
+  (JNIEnv *, jobject, jdouble, jint);
 
 #ifdef __cplusplus
 }

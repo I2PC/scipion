@@ -25,9 +25,9 @@ public class SelFileItem extends XmippImageItem {
 
     public SelFileItem(File file, Cache cache) {
         super(file, cache);
-
-        loadImageData();
     }
+    /*        loadImageData();
+    }*/
 
     @Override
     protected void loadImageData() {
@@ -43,6 +43,7 @@ public class SelFileItem extends XmippImageItem {
 
             dimension.setNimages(md.size());
         } catch (Exception ex) {
+            ex.printStackTrace();
             IJ.error(ex.getMessage());
             throw new RuntimeException(ex);
         }
@@ -52,17 +53,15 @@ public class SelFileItem extends XmippImageItem {
     protected String getPreviewFile(MetaData md) {
         if (md.containsLabel(MDLabel.MDL_IMAGE)) {
             File f;
-            String parent = file.getParent() + File.separator;
 
             long objs[] = md.findObjects();
 
             for (long id : objs) {
                 String field = md.getValueString(MDLabel.MDL_IMAGE, id);
+                field = MetaData.getFilename(field);      // Avoids image@filename format ;)
+                nimage = MetaData.getNimage(field);
 
                 f = new File(field);
-                if (!f.isAbsolute()) {
-                    f = new File(parent + field);
-                }
 
                 if (f.exists()) {
                     return f.getAbsolutePath();
@@ -76,6 +75,7 @@ public class SelFileItem extends XmippImageItem {
     protected void loadPreviewFileData() {
         // Tricky way to get preview file's data.
         File originalFile = file;
+
         file = new File(previewFile);
 
         super.loadImageData();
@@ -87,7 +87,7 @@ public class SelFileItem extends XmippImageItem {
     public ImagePlus getPreview(int w, int h) {
         // Tricky way to get preview.
         File originalFile = file;
-        file = new File(previewFile);
+        file = new File(MetaData.getFilename(previewFile)); // skips image@filename format
 
         ImagePlus ip = super.getPreview(w, h);
 

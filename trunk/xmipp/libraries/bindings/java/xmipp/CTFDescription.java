@@ -2,11 +2,11 @@ package xmipp;
 
 public class CTFDescription {
 
-    public static final int NOISE = 0;
-    public static final int NOISE_ERROR2 = 1;
-    public static final int NOISE_CTF2 = 2;
-    public static final int NOISE_PURE = 3;
-    public double[][] profiles;
+    public static final int BACKGROUND_NOISE = 0;
+    public static final int ENVELOPE = 1;
+    public static final int PSD = 2;
+    public static final int CTF = 3;
+    public double[][] profiles, avgprofiles;
     public double FMAX; // Calculated when a file is loaded.
     // pointer to Image class in C++ space. Needed by native library.
     private long peer;
@@ -35,12 +35,18 @@ public class CTFDescription {
     }
 
     // Data.
-    public native double getFMAX();
+    private native double getFMAX();
 
     private native double[][] CTFProfile(double angle, double FMAX, int samples);
 
     public void getCTFProfile(double angle, int samples) {
         profiles = CTFProfile(angle, FMAX, samples);
+    }
+
+    private native double[][] CTFAverageProfile(double FMAX, int samples);
+
+    public void getCTFAverageProfiles(int samples) {
+        avgprofiles = CTFAverageProfile(FMAX, samples);
     }
 
     //non-native functions
