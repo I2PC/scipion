@@ -17,7 +17,7 @@ Comment='Describe your project here...'
 #from XmippData import SingleImgSize
 """ This selfile points to the spider single-file format images that make up your data set. The filenames can have relative or absolute paths, but it is strictly necessary that you put this selfile IN THE PROJECTDIR. 
 """
-SelFileName ='new.sel'
+SelFileName ='Images/proj.sel'
 
 # {file} {expert} Docfile with the input angles:
 """ Do not provide anything if there are no angles yet. 
@@ -31,20 +31,20 @@ DocFileName =' '
 """ Write down the reference/es name. For example "Reference1.vol Reference2.vol"
     specifies two references
 """
-ReferenceFileNames ='ico.vol'
+ReferenceFileNames ='asy.vol'
 
 # Working subdirectory: 
 """ This directory will be created if it doesn't exist, and will be used to store all output from this run. Don't use the same directory for multiple different runs, instead use a structure like run1, run2 etc. 
 """
-WorkingDir ='ProjMatch/new20'
+WorkingDir ='ProjMatch/new'
 
 # Delete working subdirectory if it already exists?
 """ Just be careful with this option...
 """
-DoDeleteWorkingDir =False
+DoDeleteWorkingDir =True
 
 # Number of iterations to perform
-NumberofIterations = 2
+NumberofIterations = 4
 
 # {expert} Resume at Iter (vs Step)
 """This option control how to resume a previously performed run.
@@ -72,7 +72,7 @@ CleanUpFiles =False
 # {expert} Root directory name for this project:
 """ Absolute path to the root directory for this project. Often, each data set of a given sample has its own ProjectDir.
 """
-ProjectDir ='/home/roberto/PhantomIco'
+ProjectDir='/gpfs/fs1/home/bioinfo/roberto/AsymmetricPhantom'
 
 # {expert} Directory name for logfiles:
 LogDir ='Logs'
@@ -86,7 +86,7 @@ LogDir ='Logs'
     and the data will be processed in CTF groups.
     Note that you cannot combine CTF-correction with re-alignment of the classes.
 """
-DoCtfCorrection =True
+DoCtfCorrection =False
 
 # {file} CTFDat file with CTF data:
 """ The input selfile may be a subset of the images in the CTFDat file, but all 
@@ -176,7 +176,7 @@ DoSphericalMask =True
 # Radius of spherical mask
 """ This is the radius (in pixels) of the spherical mask 
 """
-MaskRadius = 72
+MaskRadius = 32
 
 # {file} Binary mask file
 """ This should be a binary (only 0/1-valued) Xmipp volume of equal dimension as your reference
@@ -197,7 +197,7 @@ InnerRadius = 0
 """ In pixels from the image center. Use a negative number to use the entire image.
     WARNING: this radius will be use for masking before computing resoution
 """
-OuterRadius = 72
+OuterRadius = 32
 
 # {expert} Available memory to store all references (Gb)
 """ This is only for the storage of the references. If your projections do not fit in memory, 
@@ -206,7 +206,7 @@ OuterRadius = 72
     Note that the memory per computing node needs to be given. That is, when using threads, 
     this value will be multiplied automatically by the number of (shared-memory) threads.
 """
-AvailableMemory = 1
+AvailableMemory = 2
 
 # Angular sampling rate
 """Angular distance (in degrees) between neighboring projection  points
@@ -219,7 +219,7 @@ AvailableMemory = 1
     Note: if there are less values than iterations the last value is reused
     Note: if there are more values than iterations the extra value are ignored
 """
-AngSamplingRateDeg ='1'
+AngSamplingRateDeg='10 5 2 1'
 
 # Angular search range 
 """Maximum change in rot & tilt  (in +/- degrees)
@@ -232,7 +232,7 @@ AngSamplingRateDeg ='1'
     Note: if there are less values than iterations the last value is reused
     Note: if there are more values than iterations the extra value are ignored
 """
-MaxChangeInAngles ='1000 8 4 2'
+MaxChangeInAngles='1000 10 4 2'
 
 # {expert} Perturb projection directions?
 """ If set to 1, this option will result to a Gaussian perturbation to the 
@@ -261,7 +261,7 @@ PerturbProjectionDirections ='0'
     Note: if there are less values than iterations the last value is reused
     Note: if there are more values than iterations the extra value are ignored
 """
-MaxChangeOffset ='1000 10 5'
+MaxChangeOffset ='1000 '
 
 # Search range for 5D translational search 
 """ Give search range from the image center for 5D searches (in +/- pixels).
@@ -304,7 +304,7 @@ TiltF = 90
     for a description of the symmetry groups format
     If no symmetry is present, give c1
 """
-SymmetryGroup ='i3'
+SymmetryGroup ='c1'
 
 # {expert} Symmetry group for Neighbourhood computations
 """ If you do not know what this is leave it blank.
@@ -444,9 +444,6 @@ Align2dMaxChangeRot ='2x1000 2x20'
 #-----------------------------------------------------------------------------
 # {section} 3D Reconstruction
 #-----------------------------------------------------------------------------
-
-# {expert} Display reconstructed volume?
-DisplayReconstruction =False
 
 # {list}|fourier|art|wbp| Reconstruction method
 """ Choose between wbp, art or fourier
@@ -590,13 +587,13 @@ NumberOfThreads = 1
 """ This option provides distributed-memory parallelization on multi-node machines. 
     It requires the installation of some MPI flavour, possibly together with a queueing system
 """
-DoParallel =False
+DoParallel =True
 
 # Number of MPI processes to use:
-NumberOfMpiProcesses =3
+NumberOfMpiProcesses =8
 
 # minumum size of jobs in mpi processe. Set to 1 for large images (e.g. 500x500) and to 10 for small images (e.g. 100x100)
-MpiJobSize ='10'
+MpiJobSize ='5'
 
 # MPI system Flavour 
 """ Depending on your queuing system and your mpi implementation, different mpirun-like commands have to be given.
@@ -836,11 +833,14 @@ def otherActionsToBePerformedBeforeLoop():
 
     global OuterRadius, NumberOfCtfGroups
     
-    auxMD1 = MetaData(CTFDatName)
-    auxMD2 = MetaData()
-    auxMD2.aggregate(auxMD1, AGGR_COUNT,MDL_CTFMODEL,MDL_CTFMODEL,MDL_COUNT)
-    NumberOfCtfGroups = auxMD2.size()
-    
+    if DoCtfCorrection:
+        auxMD1 = MetaData(CTFDatName)
+        auxMD2 = MetaData()
+        auxMD2.aggregate(auxMD1, AGGR_COUNT,MDL_CTFMODEL,MDL_CTFMODEL,MDL_COUNT)
+        NumberOfCtfGroups = auxMD2.size()
+    else:
+        NumberOfCtfGroups = 1
+	
     _Parameters = {
           'DoDeleteWorkingDir':DoDeleteWorkingDir
         , 'ProjectDir':ProjectDir
@@ -911,12 +911,13 @@ def otherActionsToBePerformedBeforeLoop():
                }
     command = 'execute_ctf_groups'
     _VerifyFiles = []
-    _VerifyFiles.append(CtfGroupDirectory+"/"+CtfGroupRootName+'Info.xmd')
-    _VerifyFiles.append(CtfGroupDirectory+"/"+CtfGroupRootName+'_ctf.stk')
-    _VerifyFiles.append(CtfGroupDirectory+"/"+CtfGroupRootName+'_wien.stk')
+    if DoCtfCorrection:
+        _VerifyFiles.append(CtfGroupDirectory+"/"+CtfGroupRootName+'Info.xmd')
+        _VerifyFiles.append(CtfGroupDirectory+"/"+CtfGroupRootName+'_ctf.stk')
+        _VerifyFiles.append(CtfGroupDirectory+"/"+CtfGroupRootName+'_wien.stk')
+        _VerifyFiles.append(CtfGroupDirectory+"/"+CtfGroupRootName+'_split.doc')
     _VerifyFiles.append(CtfGroupDirectory+"/"+CtfGroupRootName+'_images.sel')
-    _VerifyFiles.append(CtfGroupDirectory+"/"+CtfGroupRootName+'_split.doc')
-    
+        
     _dataBase.insertCommand(command, _Parameters, 1,_VerifyFiles)
     #Create Initial angular file. Either fill it with zeros or copy input
     _Parameters = {
@@ -1019,6 +1020,7 @@ def actionsToBePerformedInsideLoop(_log):
             #file with sampling point neighbourhood 
             _VerifyFiles.append(auxFn + "_sampling.txt")
             #file with sampling point neighbourhood for each ctf group, this is reduntant but useful
+            
             for i in range (1,NumberOfCtfGroups+1):
                 _VerifyFiles.append(auxFn + "_group" + str(i).zfill(6) +"_sampling.txt")
                         

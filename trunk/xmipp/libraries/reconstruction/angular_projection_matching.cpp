@@ -467,7 +467,7 @@ void * threadRotationallyAlignOneImage( void * data )
         prm->stddev_img[itrans] = stddev;
         done_once=true;
     }
-    // If thread did not have to do any itrans, initialize fftw plans
+   // If thread did not have to do any itrans, initialize fftw plans
     if (!done_once)
     {
         P.getPolarFromCartesianBSpline(Maux,prm->Ri,prm->Ro);
@@ -566,7 +566,6 @@ void * threadRotationallyAlignOneImage( void * data )
 #ifdef DEBUG
                 std::cerr<<"straight: corr "<<*maxcorr<<std::endl;
 #endif
-
                 // B. Check mirrored image
                 rotationalCorrelation(prm->fPm_img[itrans],prm->fP_ref[refno],ang,local_transformer);
                 corr /= prm->stddev_ref[refno] * prm->stddev_img[itrans]; // for normalized ccf
@@ -643,7 +642,7 @@ void ProgAngularProjectionMatching::translationallyAlignOneImage(MultidimArray<d
     }
 
     // Rotate stored reference projection by phi degrees
-    rotate(BSPLINE3,Mref,proj_ref[refno],-opt_psi,DONT_WRAP);
+    rotate(BSPLINE3,Mref,proj_ref[refno],opt_psi,DONT_WRAP);
 
 #ifdef DEBUG
 
