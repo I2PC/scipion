@@ -190,7 +190,7 @@
         </CASE>
     </PROGRAM>
     <PROGRAM name="xmipp_micrograph_scissor" mpi="FALSE">
-        <CASE arguments="-i input/micrograph8bits.tif --pos input/micrograph8bits.tif.Common.pos -o %o/images --Xdim 256" changeDir="FALSE" random="TRUE">
+        <CASE arguments="-i input/micrograph8bits.tif --pos input/micrograph8bits.tif.Common.pos --oroot %o/images --Xdim 256" changeDir="FALSE" random="TRUE">
             <FILE filename="images.stk"/>
             <FILE filename="images.sel"/>
         </CASE>
