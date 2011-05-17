@@ -485,7 +485,7 @@ public:
         Images are rotated by -ang.
         If this angle is 0 no rotation is applied.*/
     void produce_all_images(int label, double minCost, const FileName &fn_root,
-                            int starting_index = 1, const FileName &fn_image = "", double ang = 0,
+                            const FileName &fn_image = "", double ang = 0,
                             double gamma = 0., double psi = 0., bool rmStack=false);
 
     /** Search coordinate near a position.

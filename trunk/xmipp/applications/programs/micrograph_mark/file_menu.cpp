@@ -255,9 +255,6 @@ void QtFileMenu::slotGenerateImages()
         windowSizeYLineEdit.setText("100");
         QLabel    rootNameLabel("Root name: ", &qgrid);
         QLineEdit rootNameLineEdit(&qgrid);
-        QLabel    startingIndex("Starting index: ", &qgrid);
-        QLineEdit startingIndexLineEdit(&qgrid);
-        startingIndexLineEdit.setText("1");
         QLabel    originalM("Original micrograph: ", &qgrid);
         QLineEdit originalMLineEdit(&qgrid);
         // Sjors & Roberto: 25jan08
@@ -310,7 +307,6 @@ void QtFileMenu::slotGenerateImages()
                 }
                 m->produce_all_images(activeFamily,-1,
                                       (char*)rootNameLineEdit.text().ascii(),
-                                      startingIndexLineEdit.text().toInt(),
                                       (char*)originalMLineEdit.text().ascii(),
                                       alpha, gamma, psi/*rot,tilt,psi*/);
                 MAIN_WIDGET->generated(this_is_tilted,

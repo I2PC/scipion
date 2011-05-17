@@ -328,7 +328,7 @@ int Micrograph::scissor(const Particle_coords &P, MultidimArray<double> &result,
 
 /* Produce all images ------------------------------------------------------ */
 void Micrograph::produce_all_images(int label, double minCost, const FileName &fn_root,
-                                    int starting_index, const FileName &fn_image,
+                                    const FileName &fn_image,
                                     double ang, double tilt, double psi,
                                     bool rmStack)
 {
@@ -374,7 +374,6 @@ void Micrograph::produce_all_images(int label, double minCost, const FileName &f
     if (ang != 0)
         std::cout << "Angle from Y axis to tilt axis " << ang << std::endl
         << "   applying appropriate rotation\n";
-    int i = starting_index;
     int nmax = ParticleNo();
     FileName fn_aux;
     FileName fn_out = fn_root+".stk";
