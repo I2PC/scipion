@@ -148,17 +148,23 @@ def pm_make_backup_of_script_file(_log, dict):
 #  , 'SplitDefocusDocFile' : SplitDefocusDocFile
 #  , 'WienerConstant'      : WienerConstant
 def execute_ctf_groups (_log, dict):
-    if (not dict['DoCtfCorrection']):
-        return 1
     CtfGroupDirectory  = dict['CtfGroupDirectory']
     CtfGroupRootName   = dict['CtfGroupRootName']
     #Verify
 
-    import glob, sys
+
+    import glob, sys,shutil
     import utils_xmipp
     import launch_job
     if not os.path.exists(CtfGroupDirectory):
         os.makedirs(CtfGroupDirectory)
+
+    if(not dict['DoCtfCorrection']):
+        MD=MetaData(dict['SelFileName' ])
+        block_name= 'ctfGroup'+str(1).zfill(utils_xmipp.FILENAMENUMBERLENTGH) +\
+                    '@' + CtfGroupDirectory+"/"+ CtfGroupRootName +'_images.sel'
+        MD.write(block_name)
+        return 1
 
 #    print '*********************************************************************'
 #    print '* Make CTF groups'
