@@ -271,7 +271,6 @@ class dataBase:
             if(self.verify and row["fileNameList"]):
                 _list =pickle.loads(str(row["fileNameList"]))
                 for i in _list:
-                    print "i",i
                     if not os.path.exists(i):
                         print "ERROR at  step: ", id, ", file", i, " has not been created."
                         exit(1)
