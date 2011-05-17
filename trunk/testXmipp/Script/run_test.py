@@ -30,10 +30,11 @@ addCmd("Subversion CHECKOUT", "svn co http://newxmipp.svn.sourceforge.net/svnroo
 os.chdir(XMIPP_HOME)
 confCmd="./scons.configure  QTDIR=/usr/share/qt3 MPI_LIBDIR=/usr/lib64/mpi/gcc/openmpi/lib64/ MPI_INCLUDE=/usr/lib64/mpi/gcc/openmpi/include/  MPI_LIB='mpi' gtest=yes java=yes"
 addCmd("Scons CONFIGURE", confCmd)
-#compile and execute tests DOES NOT CREATE so.3
-#compCmd="./scons.compile -j 3"
-compCmd="./scons.compile -j 3 run_tests"
+#In Theory I do not need to compile twice but I keep gettiong text file fusy messages ROB
+compCmd="./scons.compile -j 3"
 addCmd("Scons COMPILE", compCmd)
+compCmd="./scons.compile -j 3 run_tests"
+addCmd("Scons Run Test", compCmd)
 import parse_test
 #parse xml files
 parse_test.main(filename)
