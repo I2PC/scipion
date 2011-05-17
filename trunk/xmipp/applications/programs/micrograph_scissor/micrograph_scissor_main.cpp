@@ -42,7 +42,8 @@ protected:
         addParamsLine("  -i <input_untilted_micrograph>     : From which the untilted images will be cutted");
         addParamsLine("     alias --untilted;");
         addParamsLine("  [--orig <original_micrograph>]      : unless this parameter is specified");
-        addParamsLine("  -o <output_stack>                   : Name for cut images (stack fileName)");
+        addParamsLine("  --oroot <oroot>                    : Name for the particle images");
+        addParamsLine("                                      :+ Two files will be created: oroot.stk with the particles in a Spider stack an oroot.sel with the list of image names, the micrograph they were taken from, and their coordinates");
         addParamsLine("     alias --untiltfn;");
         addParamsLine("  [--pos <position_file>]             : file with particle coordinates");
         addParamsLine("     alias --untiltPos;");
@@ -67,8 +68,8 @@ protected:
         addParamsLine("  [--tiltPos <position_file>]         : file with particle coordinates");
         addParamsLine("     requires --tiltfn;                                                         ");
 
-        addExampleLine ("   xmipp_micrograph_scissor -i g7107.raw --pos g7107.raw.Common.pos -o kk.mrcs --Xdim 64");
-        addExampleLine ("   xmipp_micrograph_scissor --untilted Preprocessing/untilt/down1_untilt.raw --tilted Preprocessing/tilt/down1_tilt.raw --untiltfn untilt.stk --tiltfn tilt.stk --Xdim 60 --tiltAngles ParticlePicking/down1_untilt.raw.angles.txt --pos ParticlePicking/down1_untilt.raw.Common.pos --tiltPos ParticlePicking/down1_untilt.raw.tilted.Common.pos");
+        addExampleLine ("   xmipp_micrograph_scissor -i g7107.raw --pos g7107.raw.Common.pos --oroot images --Xdim 64");
+        addExampleLine ("   xmipp_micrograph_scissor --untilted Preprocessing/untilt/down1_untilt.raw --tilted Preprocessing/tilt/down1_tilt.raw --untiltfn untilt --tiltfn tilt --Xdim 60 --tiltAngles ParticlePicking/down1_untilt.raw.angles.txt --pos ParticlePicking/down1_untilt.raw.Common.pos --tiltPos ParticlePicking/down1_untilt.raw.tilted.Common.pos");
     }
     FileName fn_micrograph,fn_root;
     FileName fn_tilted, fn_root_tilted, fn_angles, fn_tilt_pos;
