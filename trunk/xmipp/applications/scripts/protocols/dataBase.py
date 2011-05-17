@@ -1,5 +1,5 @@
 from pysqlite2 import dbapi2 as sqlite
-import os
+import os,sys
 import pickle
 #
 #
@@ -69,6 +69,15 @@ class dataBase:
                      fileNameList text,
                      iter int)
                      ;delete from '''  + self.tableInsert
+        try:
+            self.cur.executescript(_sqlCommand)
+        except sqlite.Error, e:
+            print "kk",e
+            if(e.args[0].find('database is locked')!= -1):
+                print 'consider deleting the database (placed at Log directory and having extension sqlite'
+            sys.exit(1)
+
+
         self.cur.executescript(_sqlCommand)
         self.sqlInsertcommand = " insert into " + self.tableInsert + " (command,parameters,iter)             VALUES (?,?,?)"
         self.sqlInsertVerify = "update " + self.tableInsert + " set fileNameList= ? where id=?"
@@ -262,6 +271,7 @@ class dataBase:
             if(self.verify and row["fileNameList"]):
                 _list =pickle.loads(str(row["fileNameList"]))
                 for i in _list:
+                    print "i",i
                     if not os.path.exists(i):
                         print "ERROR at  step: ", id, ", file", i, " has not been created."
                         exit(1)
