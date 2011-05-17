@@ -79,6 +79,13 @@ def angular_project_library(_log,dict):
                          dict['NumberOfMpiProcesses']*dict['NumberOfThreads'],
                          1,
                          dict['SystemFlavour'])
+    if (not dict['DoCtfCorrection']):
+        src=dict['ProjectLibraryRootName'].replace(".stk",'_sampling.txt')
+        dst = src.replace('sampling.txt','group'+
+                              str(1).zfill(utils_xmipp.FILENAMENUMBERLENTGH)+
+                              '_sampling.txt')
+        print "aaa", src,dst
+        shutil.copy(src, dst)
 
 
 def projection_matching(_log,dict):
@@ -93,25 +100,23 @@ def projection_matching(_log,dict):
         if NumberOfCtfGroups>1 :
             print 'Focus Group: ', ii+1,'/',NumberOfCtfGroups
         ictf    = NumberOfCtfGroups - ii 
-        outputname   = _ProjMatchRootName
-        if (_DoCtfCorrection):
-            CtfGroupName = dict['CtfGroupRootName'] #,ictf+1,'')
-            #outputname   = _ProjMatchRootName + '_' + CtfGroupName 
-            CtfGroupName = dict['CtfGroupDirectory'] + '/' + CtfGroupName
-            inputdocfile    = 'ctfGroup'+str(ictf).zfill(utils_xmipp.FILENAMENUMBERLENTGH) + '@' + CtfGroupName + '_images.sel'
-            outputname   = 'ctfGroup'+str(ictf).zfill(utils_xmipp.FILENAMENUMBERLENTGH) + '@'+ _ProjMatchRootName
-            #inputdocfile = (os.path.basename(inselfile)).replace('.sel','.doc')
-            baseTxtFile  = refname[:-len('.stk')] 
-            txtfile      = baseTxtFile + '_sampling.txt'
-            if (os.path.exists(txtfile)):
-                os.remove(txtfile)
-            txtfileb     = utils_xmipp.composeFileName(baseTxtFile + '_group',ictf,'')
-            txtfileb     += '_sampling.txt'
-            shutil.copy(txtfileb, txtfile)
-        else:
-            print "CORRECT THIS"
-            exit(1)
-            inputdocfile = dict['InputDocFileName']
+#        if (_DoCtfCorrection):
+        CtfGroupName = dict['CtfGroupRootName'] #,ictf+1,'')
+        #outputname   = _ProjMatchRootName + '_' + CtfGroupName 
+        CtfGroupName = dict['CtfGroupDirectory'] + '/' + CtfGroupName
+        inputdocfile    = 'ctfGroup'+str(ictf).zfill(utils_xmipp.FILENAMENUMBERLENTGH) + '@' + CtfGroupName + '_images.sel'
+        outputname   = 'ctfGroup'+str(ictf).zfill(utils_xmipp.FILENAMENUMBERLENTGH) + '@'+ _ProjMatchRootName
+        #inputdocfile = (os.path.basename(inselfile)).replace('.sel','.doc')
+        baseTxtFile  = refname[:-len('.stk')] 
+        txtfile      = baseTxtFile + '_sampling.txt'
+        if (os.path.exists(txtfile)):
+            os.remove(txtfile)
+        txtfileb     = utils_xmipp.composeFileName(baseTxtFile + '_group',ictf,'')
+        txtfileb     += '_sampling.txt'
+        shutil.copy(txtfileb, txtfile)
+#        else:
+#            inputdocfile    = 'ctfGroup'+str(1).zfill(utils_xmipp.FILENAMENUMBERLENTGH) + '@' + CtfGroupName + '_images.sel'
+#            outputname   = 'ctfGroup'+str(1).zfill(utils_xmipp.FILENAMENUMBERLENTGH) + '@'+ _ProjMatchRootName
 
         parameters= ' -i '               + inputdocfile + \
                     ' -o '               + outputname + \
