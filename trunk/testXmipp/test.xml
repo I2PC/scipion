@@ -189,6 +189,12 @@
             <FILE filename="out8.doc"/>
         </CASE>
     </PROGRAM>
+    <PROGRAM name="xmipp_micrograph_scissor" mpi="FALSE">
+        <CASE arguments="-i input/micrograph8bits.tif --pos input/micrograph8bits.tif.Common.pos -o %o/images --Xdim 256" changeDir="FALSE" random="TRUE">
+            <FILE filename="images.stk"/>
+            <FILE filename="images.sel"/>
+        </CASE>
+    </PROGRAM>
     <PROGRAM name="xmipp_ml_align2d" mpi="FALSE">
         <CASE arguments="-i input/images_some.stk --ref input/seeds2.stk --oroot %o/ml2d --fast --mirror" changeDir="FALSE" random="TRUE">
             <FILE filename="ml2d_final_images.xmd"/>
