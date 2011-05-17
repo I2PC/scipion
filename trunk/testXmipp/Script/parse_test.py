@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 import datetime, os,shutil,config
-import mail
+import mail,glob
 #create log file
 from xml.sax.handler import ContentHandler
 from xml.sax import make_parser
@@ -38,15 +38,16 @@ class TaskXMLHandler(ContentHandler):
 def main(filename):
     """ Parse xml test files """
     from  config import XMIPP_TEST
-    from  config import testNames
 
     XMIPP_OUTPUT=XMIPP_TEST + '/OUTPUT'
     task = TaskXMLHandler()
     saxparser = make_parser()
     saxparser.setContentHandler(task)
-    import glob
+    os.chdir(XMIPP_HOME+'/bin')
+    testNames = glob.glob('xmipp_test_*')
     globalMessage=""
     success=True
+    print testNames
     for testName in testNames:
         globalMessage += "\n"
         filename = XMIPP_OUTPUT+'/'+testName+'.xml'
