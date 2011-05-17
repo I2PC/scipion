@@ -145,7 +145,7 @@ int  ImageBase::readSPIDER(size_t select_img)
 
     SPIDERhead* header = new SPIDERhead;
     if ( fread( header, SPIDERSIZE, 1, fimg ) != 1 )
-        REPORT_ERROR(ERR_IO_NOREAD,"rwSPIDER: cannot read Spider main header");
+        REPORT_ERROR(ERR_IO_NOREAD,"rwSPIDER: cannot read Spider main header from file "+ filename);
 
     swap = 0;
 
