@@ -35,7 +35,8 @@ private:
 protected:
     void defineParams()
     {
-        addUsageLine ("Cut the images marked with xmipp_mark.");
+        addUsageLine ("Extract particles from a micrograph");
+        addSeeAlsoLine("micrograph_mark");
 
         addParamsLine(" == General Options == ");
         addParamsLine("  -i <input_untilted_micrograph>     : From which the untilted images will be cutted");
@@ -48,12 +49,12 @@ protected:
 
         addParamsLine(" == Processing Options == ");
         addParamsLine("  --Xdim <window_X_dim>               : In pixels");
-        addParamsLine("  [--down_transform <float=1.>]       : The transformation matrix was determined with this downsampling rate");
+        addParamsLine("  [--downsampling <float=1.>]         : The positions were determined with this downsampling rate");
         addParamsLine("  [--Ydim <window_Y_dim>]             : If not given Ydim=Xdim");
-        addParamsLine("  [--start <N=1>]                     : Number of the first image");
         addParamsLine("  [--invert]                          : Invert contrast");
         addParamsLine("  [--log]                             : Take logarithm (compute transmitance)");
-        addParamsLine("  [--rmStack]                         : By default files are added to stack");
+        addParamsLine("  [--appendToStack]                   : The output stack is deleted.");
+        addParamsLine("                                      : Use this option to add the new images to the stack");
 
         addParamsLine(" == Options for tilt pairs == ");
         addParamsLine("  [-t <input_tilted_micrograph>]      : From which the   tilted images will be cutted");
@@ -61,18 +62,17 @@ protected:
         addParamsLine("  [--tiltfn <output_stack>]           : Name for tilted images (Stack FileName)");
         addParamsLine("     requires --untiltfn;                                                         ");
         addParamsLine("  [--tiltAngles <angles_file>]        : Name of the estimated tilt angles");
+        addParamsLine("                                      :  Angle from the Y axis to the tilt axis. Both (tilted and untilted) must be cut with its corresponding angle. Cut images are rotated so that the tilt axis is parallel to Y axis.");
         addParamsLine("     requires --tiltfn;                                                         ");
         addParamsLine("  [--tiltPos <position_file>]         : file with particle coordinates");
         addParamsLine("     requires --tiltfn;                                                         ");
 
-        addUsageLine ("Examples:");
-        addUsageLine ("   xmipp_micrograph_scissor -i g7107.raw --pos g7107.raw.Common.pos -o kk.mrcs --Xdim 64");
-        addUsageLine ("   xmipp_micrograph_scissor --untilted Preprocessing/untilt/down1_untilt.raw --tilted Preprocessing/tilt/down1_tilt.raw --untiltfn untilt.stk --tiltfn tilt.stk --Xdim 60 --tiltAngles ParticlePicking/down1_untilt.raw.angles.txt --pos ParticlePicking/down1_untilt.raw.Common.pos --tiltPos ParticlePicking/down1_untilt.raw.tilted.Common.pos");
+        addExampleLine ("   xmipp_micrograph_scissor -i g7107.raw --pos g7107.raw.Common.pos -o kk.mrcs --Xdim 64");
+        addExampleLine ("   xmipp_micrograph_scissor --untilted Preprocessing/untilt/down1_untilt.raw --tilted Preprocessing/tilt/down1_tilt.raw --untiltfn untilt.stk --tiltfn tilt.stk --Xdim 60 --tiltAngles ParticlePicking/down1_untilt.raw.angles.txt --pos ParticlePicking/down1_untilt.raw.Common.pos --tiltPos ParticlePicking/down1_untilt.raw.tilted.Common.pos");
     }
     FileName fn_micrograph,fn_root;
     FileName fn_tilted, fn_root_tilted, fn_angles, fn_tilt_pos;
     FileName fn_orig, fn_pos;
-    int      startN;
     bool     pair_mode;
     int      Ydim, Xdim;
     bool     reverse_endian;
@@ -93,15 +93,14 @@ protected:
         else
             Ydim = Xdim;
 
-        startN               = getIntParam("--start");
         compute_inverse      = checkParam("--invert");
         compute_transmitance = checkParam("--log");
-        rmStack              = checkParam("--rmStack");
+        rmStack              = !checkParam("--appendToStack");
 
         if (!pair_mode)
         {
             if (checkParam("--orig"))
-            	fn_orig       = getParam("--orig");
+                fn_orig       = getParam("--orig");
         }
         else
         {
@@ -110,7 +109,7 @@ protected:
             fn_angles      = getParam("--tiltAngles");
             fn_tilt_pos    = getParam("--tiltPos");
         }
-        down_transform = getDoubleParam("--down_transform");
+        down_transform = getDoubleParam("--downsampling");
     }
 public:
     void run()
@@ -127,7 +126,7 @@ public:
             m.add_label("");
             m.set_transmitance_flag(compute_transmitance);
             m.set_inverse_flag(compute_inverse);
-            m.produce_all_images(0, -1, fn_root, startN, fn_orig, 0.,0.,0., rmStack);
+            m.produce_all_images(0, -1, fn_root, fn_orig, 0.,0.,0., rmStack);
         }
         else
         {
@@ -148,7 +147,7 @@ public:
             m.add_label("");
             m.set_transmitance_flag(compute_transmitance);
             m.set_inverse_flag(compute_inverse);
-            m.produce_all_images(0, -1, fn_root, startN, "", alpha_u,0.,0.,rmStack);
+            m.produce_all_images(0, -1, fn_root, "", alpha_u,0.,0.,rmStack);
             m.close_micrograph();
 
             // Generate the images for the tilted image
@@ -159,7 +158,7 @@ public:
             mt.add_label("");
             mt.set_transmitance_flag(compute_transmitance);
             mt.set_inverse_flag(compute_inverse);
-            mt.produce_all_images(0, -1, fn_root_tilted, startN, "", 0., tilt_angle, alpha_t, rmStack);
+            mt.produce_all_images(0, -1, fn_root_tilted, "", 0., tilt_angle, alpha_t, rmStack);
             mt.close_micrograph();
         }
     }
@@ -167,14 +166,7 @@ public:
 
 int main(int argc, char **argv)
 {
-    try
-    {
-        ProgMicrographScissor program;
-        program.read(argc, argv);
-        program.run();
-    }
-    catch (XmippError e)
-    {
-        std::cerr << e.msg <<std::endl;
-    }
+    ProgMicrographScissor program;
+    program.read(argc, argv);
+    return program.tryRun();
 }
