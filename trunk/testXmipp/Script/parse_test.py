@@ -47,7 +47,6 @@ def main(filename):
     testNames = glob.glob('xmipp_test_*')
     globalMessage=""
     success=True
-    print testNames
     for testName in testNames:
         globalMessage += "\n"
         filename = XMIPP_OUTPUT+'/'+testName+'.xml'
