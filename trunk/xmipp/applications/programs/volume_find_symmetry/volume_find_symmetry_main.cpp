@@ -66,6 +66,7 @@ public:
         addSeeAlsoLine("volume_center, transform_geometry");
         addParamsLine(" -i <volumeFile>                : Volume to process");
         addParamsLine("[-o+ <file=\"\">]               : Metadata with the orientation of the symmetry axis");
+        addParamsLine("                                : In helical mode, there is a file called output.xmp with the correlation map (vertical axis is the rotation, horizontal axis is the translation)");
         addParamsLine("[--thr <N=1>]                   : Number of threads");
         addParamsLine("--sym <mode>                    : Symmetry mode");
         addParamsLine("    where <mode>");
@@ -83,9 +84,11 @@ public:
         mask_prm.defineParams(this,INT_MASK,NULL,"Restrict the comparison to the mask area.");
         addExampleLine("A typical application for a rotational symmetry axis is ",false);
         addExampleLine("xmipp_volume_center -i volume.vol");
-        addExampleLine("xmipp_volume_find_symmetry -i volume.vol --rot_sym 3");
+        addExampleLine("xmipp_volume_find_symmetry -i volume.vol --sym rot 3");
         addExampleLine("Presume the symmetry axis is in rot=20, tilt=10. To align vertically the axis use",false);
         addExampleLine("xmipp_transform_geometry -i volume.vol --rotate euler 20 10 0");
+        addExampleLine("For locating the helical parameters use",false);
+        addExampleLine("xmipp_volume_find_symmetry -i volume --sym helical -z -6 6 1 --mask circular -32 --thr 2 -o parameters.xmd");
     }
 
     // Read parameters
@@ -354,11 +357,12 @@ public:
             double rot=p[1];
             double z=p[2];
             rotation3DMatrix(rot,'Z',sym_matrix);
-            MAT_ELEM(sym_matrix,2,2)=z;
-            applyGeometry(LINEAR,volume_sym,mVolume,sym_matrix,IS_NOT_INV, DONT_WRAP);
+            MAT_ELEM(sym_matrix,2,3)=z;
+            if (useSplines)
+            	applyGeometry(BSPLINE3,volume_sym,mVolume,sym_matrix,IS_NOT_INV, DONT_WRAP);
+            else
+            	applyGeometry(LINEAR,volume_sym,mVolume,sym_matrix,IS_NOT_INV, DONT_WRAP);
         }
-
-        // Measure correlation
         return -correlationIndex(mVolume, volume_sym, &mask_prm.get_binary_mask());
     }
 };
