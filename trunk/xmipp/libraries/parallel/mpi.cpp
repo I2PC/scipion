@@ -253,7 +253,7 @@ void MpiNode::gatherMetadatas(MetaData &MD, const FileName &rootname,
 
     if (!isMaster())//workers just write down partial results
     {
-        fn = formatString("%s_node%d.doc", rootname.c_str(), rank);
+        fn = formatString("%s_node%d.xmd", rootname.c_str(), rank);
         MD.write(fn);
     }
     ///Wait for all workers write results
@@ -261,11 +261,14 @@ void MpiNode::gatherMetadatas(MetaData &MD, const FileName &rootname,
     if (isMaster()) //master should collect and join workers results
     {
         MetaData mdAll(MD), mdSlave;
+
         for (int nodeRank = 1; nodeRank < size; nodeRank++)
         {
-            fn = formatString("%s_node%d.doc", rootname.c_str(), nodeRank);
+            fn = formatString("%s_node%d.xmd", rootname.c_str(), nodeRank);
             mdSlave.read(fn);
             mdAll.unionAll(mdSlave);
+            //Remove blockname
+            fn=fn.removeBlockName();
             remove(fn.c_str());
         }
         MD.sort(mdAll, MDL_IMAGE);
