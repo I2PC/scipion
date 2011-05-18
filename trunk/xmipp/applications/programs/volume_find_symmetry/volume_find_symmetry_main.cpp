@@ -99,10 +99,10 @@ public:
         String mode;
         mode=getParam("--sym");
         if (mode=="helical")
-        	helical=true;
+            helical=true;
         else
         {
-        	helical=false;
+            helical=false;
             rot_sym = getIntParam("--sym",1);
         }
         useSplines = checkParam("--useSplines");
@@ -154,9 +154,9 @@ public:
         DIRECT_A1D_ELEM(vbest_corr,thrId) = 0;
         DIRECT_A1D_ELEM(vbest_rot,thrId)  = 0;
         if (helical)
-        	DIRECT_A1D_ELEM(vbest_z,thrId) = 0;
+            DIRECT_A1D_ELEM(vbest_z,thrId) = 0;
         else
-        	DIRECT_A1D_ELEM(vbest_tilt,thrId) = 0;
+            DIRECT_A1D_ELEM(vbest_tilt,thrId) = 0;
         size_t first, last;
         if (thrId==0)
             init_progress_bar(rotVector.size());
@@ -172,7 +172,7 @@ public:
                 double corr=-evaluateSymmetry(MATRIX1D_ARRAY(p)-1);
                 if (helical)
                 {
-                	int xDim=XSIZE(helicalCorrelation());
+                    int xDim=XSIZE(helicalCorrelation());
                     int jj=i%xDim;
                     int ii=i/xDim;
                     helicalCorrelation(ii,jj)=corr;
@@ -270,33 +270,50 @@ public:
         else
         {
             // If helical
-            int ydim=0, xdim=0;
-            for (double rot = rot0; rot <= rotF; rot += step_rot)
+            if (!local)
             {
-                ydim++;
-                for (double z = z0; z <= zF; z += step_z)
+                int ydim=0, xdim=0;
+                for (double rot = rot0; rot <= rotF; rot += step_rot)
                 {
-                    if (ydim==1)
-                        xdim++;
-                    rotVector.push_back(rot);
-                    zVector.push_back(z);
+                    ydim++;
+                    for (double z = z0; z <= zF; z += step_z)
+                    {
+                        if (ydim==1)
+                            xdim++;
+                        rotVector.push_back(rot);
+                        zVector.push_back(z);
+                    }
+                }
+                vbest_corr.resizeNoCopy(numberOfThreads);
+                vbest_corr.initConstant(-1e38);
+                vbest_rot.initZeros(numberOfThreads);
+                vbest_z.initZeros(numberOfThreads);
+                helicalCorrelation().initZeros(ydim,xdim);
+                td = new ThreadTaskDistributor(rotVector.size(), 5);
+                ThreadManager * thMgr =  new ThreadManager(numberOfThreads,this);
+                thMgr->run(globalThreadEvaluateSymmetry);
+                best_corr=-1e38;
+                FOR_ALL_ELEMENTS_IN_ARRAY1D(vbest_corr)
+                if (vbest_corr(i)>best_corr)
+                {
+                    best_corr=vbest_corr(i);
+                    best_rot=vbest_rot(i);
+                    best_z=vbest_z(i);
                 }
             }
-            vbest_corr.resizeNoCopy(numberOfThreads);
-            vbest_corr.initConstant(-1e38);
-            vbest_rot.initZeros(numberOfThreads);
-            vbest_z.initZeros(numberOfThreads);
-            helicalCorrelation().initZeros(ydim,xdim);
-            td = new ThreadTaskDistributor(rotVector.size(), 5);
-            ThreadManager * thMgr =  new ThreadManager(numberOfThreads,this);
-            thMgr->run(globalThreadEvaluateSymmetry);
-            best_corr=-1e38;
-            FOR_ALL_ELEMENTS_IN_ARRAY1D(vbest_corr)
-            if (vbest_corr(i)>best_corr)
+            else
             {
-                best_corr=vbest_corr(i);
-                best_rot=vbest_rot(i);
-                best_z=vbest_z(i);
+                Matrix1D<double> p(2), steps(2);
+                p(0)=rot0;
+                p(1)=z0;
+                double fitness;
+                int iter;
+                steps.initConstant(1);
+                powellOptimizer(p,1,2,&evaluateSymmetryWrapper,this,0.01,
+                                fitness,iter,steps,true);
+                best_rot=p(0);
+                best_z=p(1);
+
             }
             if (verbose!=0)
                 std::cout << "Symmetry parameters (rot,z)= " << best_rot << " "
@@ -308,7 +325,8 @@ public:
                 MD.setValue(MDL_ANGLEROT,best_rot,id);
                 MD.setValue(MDL_SHIFTZ,best_z,id);
                 MD.write(fn_output);
-                helicalCorrelation.write(fn_output+".xmp");
+                if (!local)
+                	helicalCorrelation.write(fn_output+".xmp");
             }
         }
     }
@@ -351,6 +369,7 @@ public:
                                   IS_NOT_INV, DONT_WRAP);
                 volume_sym += volume_aux;
             }
+            return -correlationIndex(mVolume, volume_sym, &mask_prm.get_binary_mask());
         }
         else
         {
@@ -359,11 +378,41 @@ public:
             rotation3DMatrix(rot,'Z',sym_matrix);
             MAT_ELEM(sym_matrix,2,3)=z;
             if (useSplines)
-            	applyGeometry(BSPLINE3,volume_sym,mVolume,sym_matrix,IS_NOT_INV, DONT_WRAP);
+                applyGeometry(BSPLINE3,volume_sym,mVolume,sym_matrix,IS_NOT_INV, DONT_WRAP);
             else
-            	applyGeometry(LINEAR,volume_sym,mVolume,sym_matrix,IS_NOT_INV, DONT_WRAP);
+                applyGeometry(LINEAR,volume_sym,mVolume,sym_matrix,IS_NOT_INV, DONT_WRAP);
+            if (&mask_prm.get_binary_mask()!=NULL)
+            {
+                MultidimArray<int> mask_aux;
+                MultidimArray<double> mask_auxd;
+                applyGeometry(LINEAR,mask_auxd,mask_prm.get_binary_mask(),
+                              sym_matrix,IS_NOT_INV, DONT_WRAP);
+                mask_auxd.binarize(0.5);
+                typeCast(mask_auxd,mask_aux);
+                MultidimArray<int> &originalMask=mask_prm.get_binary_mask();
+                FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(originalMask)
+                if (DIRECT_MULTIDIM_ELEM(originalMask,n)==0)
+                    DIRECT_MULTIDIM_ELEM(mask_aux,n)=0;
+                double corr=correlationIndex(mVolume, volume_sym, &mask_aux);
+#ifdef DEBUG
+
+                Image<double> save;
+                save()=mVolume;
+                save.write("PPPvol.vol");
+                save()=volume_sym;
+                save.write("PPPvolsym.vol");
+                typeCast(mask_aux,save());
+                save.write("PPPmask.vol");
+                std::cout << p[1] << " " << p[2] << " -> " << corr << std::endl;
+                char c;
+                std::cin >> c;
+#endif
+
+                return -corr;
+            }
+            else
+                return -correlationIndex(mVolume, volume_sym);
         }
-        return -correlationIndex(mVolume, volume_sym, &mask_prm.get_binary_mask());
     }
 };
 
