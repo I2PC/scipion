@@ -35,8 +35,8 @@ TEST_F( PolarTest, computeAverageAndStddev)
 	double mean, stddev;
 	P.getPolarFromCartesianBSpline(mulDouble,0,1);
     P.computeAverageAndStddev(mean,stddev,true);
-    EXPECT_DOUBLE_EQ(mean,1.886528450043468);
-    EXPECT_DOUBLE_EQ(stddev,0.49643800057938808);
+    EXPECT_NEAR(mean,1.886528450043468,XMIPP_EQUAL_ACCURACY);
+    EXPECT_NEAR(stddev,0.49643800057938808,XMIPP_EQUAL_ACCURACY);
 }
 
 GTEST_API_ int main(int argc, char **argv)
