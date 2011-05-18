@@ -9,8 +9,20 @@ class MetadataTest : public ::testing::Test
 {
 protected:
     //init metadatas
+#define len 128
     virtual void SetUp()
     {
+        //find binaries directory
+        char szTmp[len];
+        char pBuf[len];
+        sprintf(szTmp, "/proc/%d/exe", getpid());
+        int bytes = std::min(readlink(szTmp, pBuf, len), (ssize_t)len - 1);
+        if(bytes >= 0)
+            pBuf[bytes] = '\0';
+        //remove last token
+        FileName filename(pBuf);
+        localDir = filename.removeFilename();
+
         //Md1
         id = mDsource.addObject();
         mDsource.setValue(MDL_X,1.,id);
@@ -48,11 +60,12 @@ protected:
     MetaData mDsource,mDanotherSource;
     MetaData mDunion, mDjoin;
     size_t id, id1,id2;
+    FileName localDir;
 };
 
 TEST_F( MetadataTest, similarToOperator)
 {
-	ASSERT_EQ(mDsource,mDsource);
+    ASSERT_EQ(mDsource,mDsource);
     ASSERT_FALSE(mDsource==mDanotherSource);
     //attribute order should not be important
     MetaData auxMetadata ;
@@ -208,6 +221,22 @@ TEST_F( MetadataTest, ReadWrite)
     unlink(sfn);
 }
 
+TEST_F( MetadataTest, ReadWriteAppendBlock)
+{
+    //temp file name
+    char sfn[32] = "";
+    strncpy(sfn, "/tmp/testWrite_XXXXXX", sizeof sfn);
+    mkstemp(sfn);
+    mDsource.write((String)"one@"+sfn);
+    mDsource.write((String)"two@"+sfn,MD_APPEND);
+    mDsource.write((String)"three@"+sfn,MD_APPEND);
+    MetaData auxMetadata;
+    FileName sfn2(localDir+ "/../applications/tests/test_metadata/ReadWriteAppendBlock.xmd");
+    auxMetadata.read(sfn);
+    EXPECT_TRUE(compareTwoFiles(sfn,sfn2,0));
+    unlink(sfn);
+}
+
 TEST_F( MetadataTest, Removelabel)
 {
     MetaData auxMetadata = mDunion;
@@ -268,18 +297,18 @@ TEST_F( MetadataTest, Union)
 //check if int is different from size_t
 TEST_F( MetadataTest, setGetValue)
 {
-	size_t t;
-	int i;
-	EXPECT_EQ(MDL::labelType(MDL_ORDER),LABEL_LONG);
+    size_t t;
+    int i;
+    EXPECT_EQ(MDL::labelType(MDL_ORDER),LABEL_LONG);
     MetaData auxMetadata;
     id = auxMetadata.addObject();
     auxMetadata.setValue(MDL_ORDER,(size_t)1, id);
     auxMetadata.getValue(MDL_ORDER,t, id);
-	EXPECT_EQ((size_t)1,t);
-	//We expect that MetaData will throw an exception
-	//if you use getValue with a variable of type that
-	// doesn't match the label type
-	EXPECT_THROW(auxMetadata.getValue(MDL_ORDER, i, id), XmippError);
+    EXPECT_EQ((size_t)1,t);
+    //We expect that MetaData will throw an exception
+    //if you use getValue with a variable of type that
+    // doesn't match the label type
+    EXPECT_THROW(auxMetadata.getValue(MDL_ORDER, i, id), XmippError);
 }
 
 GTEST_API_ int main(int argc, char **argv)
