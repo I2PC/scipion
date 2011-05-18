@@ -260,7 +260,10 @@ void MpiNode::gatherMetadatas(MetaData &MD, const FileName &rootname,
     barrierWait();
     if (isMaster()) //master should collect and join workers results
     {
-        MetaData mdAll(MD.getActiveLabels()), mdSlave;
+    	std::vector<MDLabel> v1;
+    	v1 = MD.getActiveLabels();
+        MetaData mdAll(v1);
+        MetaData mdSlave;
 
         for (int nodeRank = 1; nodeRank < size; nodeRank++)
         {
