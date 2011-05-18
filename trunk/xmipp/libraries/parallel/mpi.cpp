@@ -261,6 +261,7 @@ void MpiNode::gatherMetadatas(MetaData &MD, const FileName &rootname,
     if (isMaster()) //master should collect and join workers results
     {
         MetaData mdAll(MD), mdSlave;
+        mdAll._clear(true);
 
         for (int nodeRank = 1; nodeRank < size; nodeRank++)
         {
