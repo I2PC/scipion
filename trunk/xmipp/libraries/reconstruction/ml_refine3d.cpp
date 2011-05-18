@@ -496,11 +496,6 @@ void ProgMLRefine3D::projectVolumes(MetaData &mdProj)
             if (verbose && (nr_dir % bar_step == 0))
                 progress_bar(nr_dir);
         }
-
-        FileName fn_copy = formatString("%s_projection_iter%d_block%d.stk", fn_base.c_str(), iter, ml2d->current_block);
-        std::cerr << "copying " << fn_base << " to " << fn_copy << std::endl;
-        fn_base.copyFile(fn_copy);
-
     }
 
     if (verbose)
@@ -634,11 +629,9 @@ void ProgMLRefine3D::reconstructVolumes(const MetaData &mdProj, const FileName &
             mdOne.importObjects(mdProj, MDValueEQ(MDL_REF3D, volno));
             mdOne.write(fn_one);
             // Set input/output for the reconstruction algorithm
-            //std::cerr << "DEBUG_JM: reconstructing from " << fn_one << " volume " << fn_vol << std::endl;
             reconsProgram->setIO(fn_one, fn_vol);
+            //std::cerr << "DEBUG_JM: Reconstructing volume " << fn_vol << " from " << fn_one <<std::endl;
             reconsProgram->tryRun();
-            //FIXME: just for debug
-            fn_vol.copyFile(formatString("%s_block%d.vol", fn_vol.c_str(), ml2d->current_block));
         }
         // Free reconsProgram
         delete reconsProgram;
@@ -813,7 +806,8 @@ void ProgMLRefine3D::calculate3DSSNR(MultidimArray<double> &spectral_signal)
 
 void ProgMLRefine3D::copyVolumes()
 {
-    ImageGeneric img;
+    //ImageGeneric img;
+    Image<double> img;
     FileName fn_vol, fn_base = FN_INITIAL_BASE;
     size_t volno = 0;
 

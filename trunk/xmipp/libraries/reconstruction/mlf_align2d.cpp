@@ -38,7 +38,7 @@ ProgMLF2D::ProgMLF2D(int nr_vols, int rank, int size)
     {
         do_ML3D = false;
         this->nr_vols = 1;
-        refs_per_class = 1;//FIXME: fix for 3d case
+        refs_per_class = 1;
     }
     else
         do_ML3D = true;
@@ -47,6 +47,27 @@ ProgMLF2D::ProgMLF2D(int nr_vols, int rank, int size)
     this->size = size;
 }
 
+void  ProgMLF2D::defineBasicParams(XmippProgram * prog)
+{
+    ML2DBaseProgram::defineBasicParams(prog);
+    prog->addParamsLine("[--no_ctf <pixel_size=1>]    : do not use any CTF correction, pixel size should be provided");
+    prog->addParamsLine("                             : by defaut the CTF info is read from input images metadata");
+}
+
+void ProgMLF2D::defineAdditionalParams(XmippProgram * prog, const char * sectionLine)
+{
+    ML2DBaseProgram::defineAdditionalParams(prog, sectionLine);
+    //even more additional params
+    prog->addParamsLine(" [ --search_shift <int=3>]      : Limited translational searches (in pixels) ");
+    prog->addParamsLine(" [ --reduce_snr <factor=1> ]    : Use a value smaller than one to decrease the estimated SSNRs ");
+    prog->addParamsLine(" [ --not_phase_flipped ]        : Use this if the experimental images have not been phase flipped ");
+    prog->addParamsLine(" [ --ctf_affected_refs ]        : Use this if the references (-ref) are not CTF-deconvoluted ");
+    prog->addParamsLine(" [ --limit_resolution <first_high=0> <high=0> <low=999>]: Exclude frequencies from P-calculations (in Ang)");
+    prog->addParamsLine("                               : First value is highest frequency during first iteration.");
+    prog->addParamsLine("                               : Second is the highest in following iterations and third is lowest");
+    prog->addParamsLine(" [ --fix_high <float=-1>]       : ");
+    prog->addParamsLine(" [ --include_allfreqs ] ");
+}
 
 // Fourier mode usage ==============================================================
 void ProgMLF2D::defineParams()
@@ -55,24 +76,10 @@ void ProgMLF2D::defineParams()
 
     //params
     defaultRoot = "mlf2d";
+    allowRestart = true;
     allowIEM = false;
     defineBasicParams(this);
-    addParamsLine("[--no_ctf <pixel_size=1>]    : do not use any CTF correction, pixel size should be provided");
-    addParamsLine("                             : by defaut the CTF info is read from input images metadata");
-
-
     defineAdditionalParams(this, "==+ Additional options ==");
-    //even more additional params
-    addParamsLine(" [ --search_shift <int=3>]      : Limited translational searches (in pixels) ");
-    addParamsLine(" [ --reduce_snr <factor=1> ]    : Use a value smaller than one to decrease the estimated SSNRs ");
-    addParamsLine(" [ --not_phase_flipped ]        : Use this if the experimental images have not been phase flipped ");
-    addParamsLine(" [ --ctf_affected_refs ]        : Use this if the references (-ref) are not CTF-deconvoluted ");
-    addParamsLine(" [ --limit_resolution <first_high=0> <high=0> <low=999>]: Exclude frequencies from P-calculations (in Ang)");
-    addParamsLine("                               : First value is highest frequency during first iteration.");
-    addParamsLine("                               : Second is the highest in following iterations and third is lowest");
-    addParamsLine(" [ --fix_high <float=-1>]       : ");
-    addParamsLine(" [ --include_allfreqs ] ");
-
     //hidden params
     defineHiddenParams(this);
     addParamsLine(" [--var_psi]");
@@ -122,12 +129,15 @@ void ProgMLF2D::readParams()
             cline = cline + (String)argv2[i] + " ";
         }
     }
+    // Number of threads
+    threads = getIntParam("--thr");
 
     // Main parameters
     model.n_ref = getIntParam("--nref");
     fn_ref = getParam("--ref");
     fn_img = getParam("-i");
-    do_ctf_correction = !checkParam("--no_ctf");
+    bool a = checkParam("--no_ctf");
+    do_ctf_correction = !a;//checkParam("--no_ctf");
     if (!do_ctf_correction)
         sampling = getDoubleParam("--no_ctf");
     fn_root = getParam("--oroot");
@@ -383,6 +393,8 @@ void ProgMLF2D::produceSideInfo()
         //CTF info now comes on input metadatas
         MetaData mdCTF(MDimg);
         //number of different CTFs
+        if (!mdCTF.containsLabel(MDL_CTFMODEL))
+          REPORT_ERROR(ERR_ARG_MISSING, "Missing MDL_CTFMODEL in input images metadata");
         mdCTF.aggregate(MDimg, AGGR_COUNT, MDL_CTFMODEL, MDL_CTFMODEL, MDL_COUNT);
         nr_focus = mdCTF.size();
 
@@ -2710,9 +2722,13 @@ void ProgMLF2D::writeOutputFiles(const ModelML2D &model, OutputType outputType)
     String       comment;
     std::ofstream     fh;
     size_t id;
+    bool write_conv = !do_ML3D;
+
+    if (iter == 0)
+        write_conv = false;
 
     fn_base = fn_root;
-    if (outputType == OUT_ITER)
+    if (outputType == OUT_ITER || outputType == OUT_REFS)
     {
         fn_base = FN_ITER_BASE(iter);
     }
@@ -2756,9 +2772,13 @@ void ProgMLF2D::writeOutputFiles(const ModelML2D &model, OutputType outputType)
 
             if (do_mirror)
                 MDo.setValue(MDL_MIRRORFRAC, mirror_fraction[refno], id);
-            MDo.setValue(MDL_SIGNALCHANGE, conv[refno]*1000, id);
+
+            if (write_conv)
+                MDo.setValue(MDL_SIGNALCHANGE, conv[refno]*1000, id);
+
             if (do_norm)
                 MDo.setValue(MDL_INTSCALE, refs_avgscale[refno], id);
+
             if (do_ML3D)
             {
                 MDo.setValue(MDL_ANGLEROT, Itmp.rot(),id);
@@ -2771,6 +2791,8 @@ void ProgMLF2D::writeOutputFiles(const ModelML2D &model, OutputType outputType)
         // Write out reference md file
         fn_tmp = FN_REFMD(fn_base_tmp);
         MDo.write(fn_tmp);
+        if (i == 0)
+            MDref = MDo;//update MDref metadata
     }
 
     // Write out log-file

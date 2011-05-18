@@ -184,6 +184,8 @@ void ProgML2D::readParams()
         factor_nref = 1;
     }
 
+    no_iem = checkParam("--no_iem");
+
     //std::cerr << "DEBUG_JM: exiting after readParams..." <<std::endl;
     //exit(1);
 }
@@ -334,7 +336,7 @@ void ProgML2D::produceSideInfo()
             avg() += img();
         }
 
-        avg() /= MDimg.size();
+        avg() /= nr_images_global;
         model.setNRef(1);
         model.Iref[0] = avg;
         fn_ref = fn_root + "_images_average.xmp";
@@ -356,19 +358,22 @@ void ProgML2D::produceSideInfo2()
 
     model.setNRef(MDref.size());
     int refno = 0;
+    double fraction = (double) 1./ model.n_ref;
+    double weight = fraction * (double) nr_images_global;
+
     FOR_ALL_OBJECTS_IN_METADATA(MDref)
     {
         MDref.getValue(MDL_IMAGE, fn_tmp, __iter.objId);
         img.read(fn_tmp);
         img().setXmippOrigin();
+        img.setWeight(weight);
         model.Iref[refno] = img;
+        //model.WsumMref[refno] = img;
         // Default start is all equal model fractions
-        model.alpha_k[refno] = (double) 1 / model.n_ref;
-        double w = model.alpha_k[refno] * (double) nr_images_global;
-        model.Iref[refno].setWeight(w);
+        model.alpha_k[refno] = fraction;
+        //model.WsumMref[refno]() *= weight;
         // Default start is half-half mirrored images
         model.mirror_fraction[refno] = (do_mirror ? 0.5 : 0.);
-        // Already initialize the other groups Irefs with correct headers
         ++refno;
     }
 
@@ -545,6 +550,8 @@ void ProgML2D::calculatePdfInplane()
     Mr2.setXmippOrigin();
 
     sum = 0.;
+    double _2sigma_offset2 = 2 * model.sigma_offset * model.sigma_offset;
+    double _sigma_offset_denominator =  2 * PI * model.sigma_offset * model.sigma_offset * nr_psi * nr_nomirror_flips;
 
     FOR_ALL_ELEMENTS_IN_ARRAY2D(P_phi)
     {
@@ -554,10 +561,8 @@ void ProgML2D::calculatePdfInplane()
 
         if (model.sigma_offset > 0.)
         {
-            pdfpix = exp(-r2
-                         / (2 * model.sigma_offset * model.sigma_offset));
-            pdfpix /= 2 * PI * model.sigma_offset * model.sigma_offset
-                      * nr_psi * nr_nomirror_flips;
+            pdfpix = exp(-r2 / _2sigma_offset2);
+            pdfpix /= _sigma_offset_denominator;
         }
         else
         {
@@ -761,10 +766,7 @@ void ProgML2D::expectationSingleImage(Matrix1D<double> &opt_offsets)
 
             // Never re-do more than once!
             if (redo_counter > 1)
-            {
-                std::cerr << "ml_align2d BUG% redo_counter > 1" << std::endl;
-                exit(1);
-            }
+                REPORT_ERROR(ERR_VALUE_INCORRECT, "ml_align2d BUG% redo_counter > 1");
         }
         else
         {
@@ -773,18 +775,7 @@ void ProgML2D::expectationSingleImage(Matrix1D<double> &opt_offsets)
             trymindiff = mindiff;
         }
 
-#ifdef TIMING
-        timer.toc(ESI_E3);
-
-#endif
-
     }//close while
-
-#ifdef TIMING
-    //timer.toc();
-    timer.tic(ESI_E4);
-
-#endif
 
     fracweight = maxweight / sum_refw;
 
@@ -801,15 +792,7 @@ void ProgML2D::expectationSingleImage(Matrix1D<double> &opt_offsets)
     opt_offsets(1) = -(double) ioptx * MAT_ELEM(F[iopt_flip], 1, 0)
                      - (double) iopty * MAT_ELEM(F[iopt_flip], 1, 1);
 
-#ifdef TIMING
-
-    timer.toc(ESI_E4);
-
-    timer.tic(ESI_E5);
-
-#endif
     // Update normalization parameters
-
     if (model.do_norm)
     {
         // 1. Calculate optimal setting of Mimg
@@ -887,20 +870,25 @@ void ProgML2D::expectationSingleImage(Matrix1D<double> &opt_offsets)
               - ddim2 * log(sqrt(PI * df * sigma_noise2)) + gammln(-df2)
               - gammln(df / 2.);
 
-//#define DEBUG_JM1
+    //#define DEBUG_JM1
 #ifdef DEBUG_JM1
 
-    std::cerr << "----------------------------->>>" << std::endl;
-    std::cerr << "                             dLL: " << dLL << std::endl;
-    std::cerr << "                        sum_refw: " << sum_refw << std::endl;
-    std::cerr << "                      my_mindiff: " << my_mindiff << std::endl;
-    std::cerr << "                    sigma_noise2: " << sigma_noise2 << std::endl;
-    std::cerr << "                           ddim2: " << ddim2 << std::endl;
-    //std::cerr << "                        dfsigma2: " << dfsigma2 << std::endl;
-    std::cerr << "                       wsum_corr: " << wsum_corr << std::endl;
-    std::cerr << "                     wsum_offset: " << wsum_offset << std::endl;
-    for (int refno = 0; refno < model.n_ref; ++refno)
-      std::cerr << " sumw[" << refno << "] = " << sumw[refno] << std::endl;
+    if (iter>1)
+    {
+        std::cerr << "    IMAGE " << current_image << "----------------------------->>>" << std::endl;
+        std::cerr << "                             dLL: " << dLL << std::endl;
+        std::cerr << "                        sum_refw: " << sum_refw << std::endl;
+        std::cerr << "                      my_mindiff: " << my_mindiff << std::endl;
+        std::cerr << "                    sigma_noise2: " << sigma_noise2 << std::endl;
+        std::cerr << "                           ddim2: " << ddim2 << std::endl;
+        //std::cerr << "                        dfsigma2: " << dfsigma2 << std::endl;
+        std::cerr << "                       wsum_corr: " << wsum_corr << std::endl;
+        std::cerr << "                     wsum_offset: " << wsum_offset << std::endl;
+        std::cerr << "                            sumw: ";
+        for (int refno = 0; refno < model.n_ref; ++refno)
+            std::cerr << std::setw(15) << sumw[refno];
+        std::cerr<< std::endl;
+    }
 #endif
 #undef DEBUG_JM1
 
@@ -1338,16 +1326,15 @@ void ProgML2D::doThreadExpectationSingleImageRefno()
                     output_irefmir  = FLOOR(iflip / nr_nomirror_flips)
                                       * factor_nref * model.n_ref + refno;
 
-#ifdef DEBUG_JM
+                    //#define DEBUG_JM2
+#ifdef DEBUG_JM2
 
-                    if (current_image == 0)
+                    if (iter > 1)
                     {
                         std::cerr << iter << " iflip, ipsi, refno, irot: " << iflip << " " << ipsi << " " << refno << " " << irot << std::endl;
                         std::cerr << iter << " A2_plus_Xi2: " << A2_plus_Xi2 << std::endl;
                         std::cerr << "dAij(Msignificant): " << dAij(Msignificant, refno, irot) << std::endl;
                     }
-                    else
-                        exit(1);
 #endif
                     // This if is the speed-up caused by the -fast options
                     if (dAij(Msignificant, refno, irot))
@@ -1372,9 +1359,9 @@ void ProgML2D::doThreadExpectationSingleImageRefno()
                         centerFFT2(Maux);
 
 
-#ifdef DEBUG_JM3
+#ifdef DEBUG_JM2
 
-                        if (iter == 3 && refno==0)
+                        if (iter > 1)
                             std::cerr
                             << "Maux: " <<  std::endl << Maux
                             << "Fimg_flip[iflip]" <<  std::endl<< Fimg_flip[iflip]
@@ -1388,10 +1375,10 @@ void ProgML2D::doThreadExpectationSingleImageRefno()
                         {
                             diff = A2_plus_Xi2 - ref_scale * A2D_ELEM(Maux, i, j) * ddim2;
                             pdf = fracpdf * A2D_ELEM(P_phi, i, j);
-//#define DEBUG_JM2
+
 #ifdef DEBUG_JM2
 
-                            if (iter >= 2 && refno==5 && current_image == myFirstImg)
+                            if (iter >= 2 && current_image == myFirstImg)
                                 std::cerr << "---------------------------------------" << std::endl
                                 << "   pdf " << pdf << std::endl
                                 << "   A2_plus_Xi2 " << A2_plus_Xi2 << std::endl
@@ -1409,12 +1396,14 @@ void ProgML2D::doThreadExpectationSingleImageRefno()
                                 aux = (diff - trymindiff) / sigma_noise2;
                                 // next line because of numerical precision of exp-function
                                 weight = (aux > 1000.) ? 0. : exp(-aux) * pdf;
+                                //#define DEBUG_JM2
 #ifdef DEBUG_JM2
 
-                                if (iter >=2 && refno==5 && current_image == myFirstImg)
+                                if (iter >=2 && current_image == myFirstImg && pdf > 0)
                                     std::cerr << "aux = (diff - trymindiff) / sigma_noise2: " << aux << std::endl
                                     << "weight: " << weight << std::endl;
 #endif
+#undef DEBUG_JM2
                                 // store weight
                                 A2D_ELEM(Mweight, i, j) = stored_weight = weight;
                                 // calculate weighted sum of (X-A)^2 for sigma_noise update
@@ -1548,21 +1537,7 @@ void ProgML2D::doThreadExpectationSingleImageRefno()
         wsum_offset += local_wsum_offset;
         wsum_corr += local_wsum_corr;
 
-//#define DEBUG_JM
-#ifdef DEBUG_JM
 
-        {
-          std::cerr << formatString("==== img: %lu  refno: %d ==\n", current_image, refno);
-            std::cerr << "Xi2: " << Xi2 << std::endl;
-            std::cerr << "A2[refno]: " << A2[refno] << std::endl;
-            std::cerr << "refw[refno]: " << refw[output_refno] << std::endl;
-            std::cerr << "refw_mirror[refno]: " << refw[output_refno] << std::endl;
-            std::cerr << "sum_refw: " << sum_refw << std::endl;
-            std::cerr << "local_wsum_corr: " << local_wsum_corr << std::endl;
-            std::cerr << "wsum_corr: " << wsum_corr << std::endl;
-        }
-#endif
-#undef DEBUG_JM
 
         mindiff = XMIPP_MIN(mindiff, local_mindiff);
 
@@ -1575,6 +1550,34 @@ void ProgML2D::doThreadExpectationSingleImageRefno()
 
         //Ask for next job
     } // close while refno
+
+#define DP(x) << std::setw(15) << x
+    //#define DEBUG_JM
+#ifdef DEBUG_JM
+    if (iter > 1)
+    {
+        std::cerr << "DEBUG_JM: ====== iter: " << iter << "======= block: " << current_block << std::endl;
+
+        std::cerr << formatString("====> img: %lu\n", current_image);
+        std::cerr << "Xi2: " << Xi2 << std::endl;
+        std::cerr << "sum_refw: " << sum_refw << std::endl;
+
+        std::cerr DP("A2") DP("refw") DP("refw_mirror") << std::endl;
+        for (int refno = 0; refno < model.n_ref; ++refno)
+            std::cerr DP(A2[refno]) DP(refw[refno]) DP(refw_mirror[refno]) << std::endl;
+        //                        std::cerr << "local_wsum_corr: " << local_wsum_corr << std::endl;
+        //                        std::cerr << "wsum_corr: " << wsum_corr << std::endl;
+        if (iter > 2)
+        {
+            std::cerr << "DEBUG_JM: ..............EXITING....................: "  << std::endl;
+
+            exit(1);
+        }
+    }
+#endif
+#undef DEBUG_JM
+
+
 
 }//close function doThreadExpectationSingleImage
 
@@ -1660,7 +1663,6 @@ void ProgML2D::iteration()
     {
         // Integrate over all images
         expectation();
-
         //Maximize the model
         maximization();
     }//close for blocks
@@ -1694,11 +1696,13 @@ void ProgML2D::expectation()
     // Initialize weighted sums
     LL = 0.;
     wsumimgs.clear();
-    sumw.clear();
-    sumw2.clear();
-    sumwsc.clear();
-    sumwsc2.clear();
-    sumw_mirror.clear();
+
+    sumw.assign(num_output_refs, 0.);
+    sumw2.assign(num_output_refs, 0.);
+    sumwsc.assign(num_output_refs, 0.);
+    sumwsc2.assign(num_output_refs, 0.);
+    sumw_mirror.assign(num_output_refs, 0.);
+
     wsum_sigma_noise = 0.;
     wsum_sigma_offset = 0.;
     sumfracweight = 0.;
@@ -1711,15 +1715,6 @@ void ProgML2D::expectation()
         wsumimgs.push_back(Fdzero);
     }
 
-    for (int refno = 0; refno < num_output_refs; refno++)
-    {
-        //todo: change this with vector.assign
-        sumw.push_back(0.);
-        sumw2.push_back(0.);
-        sumwsc.push_back(0.);
-        sumw_mirror.push_back(0.);
-        sumwsc2.push_back(0.);
-    }
 
     // Local variables of old threadExpectationSingleImage
     Image<double> img;
@@ -1765,6 +1760,7 @@ void ProgML2D::expectation()
 
 //#define DEBUG_JM2
 #ifdef DEBUG_JM2
+
             if (iter >= 2 && current_image == myFirstImg)
                 std::cerr << std::endl
                 << "   ====================>>> ITER_IMAGE: " << iter << "_" << imgno << std::endl
@@ -1926,6 +1922,7 @@ void ProgML2D::maximizeModel(ModelML2D &local_model)
         {
             for (int refno = 0; refno < old_refno; refno++)
             {
+
                 local_model.Iref[group * old_refno + refno] = local_model.Iref[refno];
             }
         }
@@ -1946,16 +1943,16 @@ void ProgML2D::maximizeModel(ModelML2D &local_model)
                 local_model.sumw_allrefs2 += sumw2[refno];
             }
 
-            local_model.Iref[refno]() = wsum_Mref[refno];
-            local_model.Iref[refno]() /= sumwsc2[refno];
+            local_model.WsumMref[refno]() = wsum_Mref[refno];
+            //local_model.Iref[refno]() *= 1/weight;//fixme: sumwsc2[refno];
             local_model.sumw_allrefs += sumw[refno];
-            local_model.Iref[refno].setWeight(weight);
+            local_model.WsumMref[refno].setWeight(weight);
         }
         else
         {
-            local_model.Iref[refno].setWeight(0.);
-            local_model.Iref[refno]().initZeros(dim, dim);
-            local_model.Iref[refno]().setXmippOrigin();
+            local_model.WsumMref[refno].setWeight(0.);
+            local_model.WsumMref[refno]().initZeros(dim, dim);
+            local_model.WsumMref[refno]().setXmippOrigin();
         }
 
         // Adjust average scale (nr_classes will be smaller than model.n_ref for the 3D case!)
@@ -1967,17 +1964,18 @@ void ProgML2D::maximizeModel(ModelML2D &local_model)
     if (!fix_fractions)
         for (int refno = 0; refno < local_model.n_ref; refno++)
         {
-          try{
-            local_model.updateFractions(refno, sumw[refno], sumw_mirror[refno],
-                                        local_model.sumw_allrefs);
-          }
-          catch (XmippError xe)
-          {
+            try
+            {
+                local_model.updateFractions(refno, sumw[refno], sumw_mirror[refno],
+                                            local_model.sumw_allrefs);
+            }
+            catch (XmippError xe)
+            {
 
-            std::cerr << ">>>>>>>>>>> ERROR ON MAXIMIZE_MODEL : "<< std::endl << xe << std::endl;
-            local_model.print();
-            throw xe;
-          }
+                std::cerr << "DEBUG_JM: >>>>>>>>>>> ERROR ON MAXIMIZE_MODEL : "<< std::endl << xe << std::endl;
+                local_model.print();
+                throw xe;
+            }
         }
 
     // Average height of the probability distribution at its maximum
@@ -2010,45 +2008,59 @@ void ProgML2D::maximizeModel(ModelML2D &local_model)
 
 void ProgML2D::maximization()
 {
-    bool special_first = (!do_restart && iter == istart);
-    ModelML2D block_model(model.n_ref);
 
     if (blocks == 1) //ie not IEM, normal maximization
     {
         maximizeModel(model);
+        model.update();
         // After iteration 0, factor_nref will ALWAYS be one
         factor_nref = 1;
     }
     else //do IEM
     {
+        bool special_first = (!do_restart && iter == istart);
+        ModelML2D block_model(model.n_ref);
+        //fixme: this is for testing only, not updating with blocks
+        if (no_iem)
+            special_first = true;
 
         if (!special_first)
         {
             readModel(block_model, current_block);
+            //std::cerr << "====== Readed block model: " << current_block <<" =========" <<std::endl;
+            //block_model.print();
             model.substractModel(block_model);
-            // std::cerr << "====== After read, block " << current_block <<": =========" <<std::endl;
-            // block_model.print();
+            //std::cerr << "====== GLOBAL model: after subtraction: " << " =========" <<std::endl;
+            //model.print();
         }
 
         maximizeModel(block_model);
-        //std::cerr << "====== After maximization model " << current_block <<std::endl;
+        //std::cerr << "====== Maximazed block model: " << current_block <<" =========" <<std::endl;
         //block_model.print();
-
+        //std::cerr << "====== GLOBAL model: after subtraction: " << " =========" <<std::endl;
+        //model.print();
         writeOutputFiles(block_model, OUT_BLOCK);
 
         if (!special_first)
         {
             model.addModel(block_model);
+            //std::cerr << "====== GLOBAL model: after addition: " << " =========" <<std::endl;
+            //model.print();
         }
         else if (current_block == blocks - 1) //last block
         {
             for (current_block = 0; current_block < blocks; current_block++)
             {
                 readModel(block_model, current_block);
+                //std::cerr << "====== Readed block model: " << current_block <<" =========" <<std::endl;
+                //block_model.print();
+
                 if (current_block == 0)
                     model = block_model;
                 else
                     model.addModel(block_model);
+                //std::cerr << "====== GLOBAL model: after addition: " << " =========" <<std::endl;
+                //model.print();
             }
             // After iteration 0, factor_nref will ALWAYS be one
             factor_nref = 1;
@@ -2087,7 +2099,7 @@ void ProgML2D::correctScaleAverage()
         if (sumw_scale[iclass] > 0.)
         {
             model.scale[refno] = wsum_scale[iclass] / sumw_scale[iclass];
-            model.Iref[refno]() *= model.scale[refno];
+            model.WsumMref[refno]() *= model.scale[refno];
         }
         else
         {
@@ -2216,13 +2228,14 @@ void ProgML2D::writeOutputFiles(const ModelML2D &model, OutputType outputType)
         {
             objId = __iter.objId;
             select_img = refno + 1;
-            Itmp = model.Iref[refno];
+            Itmp = (outputType == OUT_BLOCK) ? model.WsumMref[refno] : model.Iref[refno];
+            //Itmp = model.Iref[refno];
             Itmp.write(fn_tmp, select_img, true, WRITE_REPLACE);
             MDref.setValue(MDL_ITER, iter, objId);//write out iteration number
             MDref.setValue(MDL_REF, select_img, objId); //Also write reference number
             MDref.setValue(MDL_IMAGE, formatString("%06d@%s", select_img, fn_tmp.c_str()), objId);
             MDref.setValue(MDL_ENABLED, 1, objId);
-            MDref.setValue(MDL_WEIGHT, Itmp.weight(), objId);
+            MDref.setValue(MDL_WEIGHT, model.WsumMref[refno].weight(), objId);
             if (do_mirror)
                 MDref.setValue(MDL_MIRRORFRAC, model.mirror_fraction[refno], objId);
             if (write_conv)
@@ -2232,7 +2245,7 @@ void ProgML2D::writeOutputFiles(const ModelML2D &model, OutputType outputType)
             refno++;
         }
 
-        fn_tmp.copyFile(formatString("%s_output_block%d.stk", fn_tmp.c_str(), current_block));
+        //fn_tmp.copyFile(formatString("%s_output_block%d.stk", fn_tmp.c_str(), current_block));
 
         fn_tmp = formatString("%s_%s", rootStr, prefixStr);
         if (fn_prefix.contains("block"))
@@ -2278,6 +2291,7 @@ void ProgML2D::readModel(ModelML2D &model, int block)
     MDi.clear();
     MDi.read(fn_base + "_refs.xmd");
     int refno = 0;
+    double weight = 0;
 
     model.sumw_allrefs = 0.;
     FOR_ALL_OBJECTS_IN_METADATA(MDi)
@@ -2286,22 +2300,19 @@ void ProgML2D::readModel(ModelML2D &model, int block)
         MDi.getValue(MDL_IMAGE, fn_img, id);
         img.read(fn_img);
         img().setXmippOrigin();
-        model.Iref[refno] = img;
-        MDi.getValue(MDL_WEIGHT, model.alpha_k[refno], id);
-        //Just initialize mirror fraction to 0.
+        model.WsumMref[refno] = img;
+        MDi.getValue(MDL_WEIGHT, weight, id);
+        model.WsumMref[refno].setWeight(weight);
+        model.sumw_allrefs += weight;
         model.mirror_fraction[refno] = 0.;
         if (do_mirror)
             MDi.getValue(MDL_MIRRORFRAC, model.mirror_fraction[refno], id);
-        model.sumw_allrefs += model.alpha_k[refno];
         refno++;
     }
 
-    // Divide all alpha_k by sumw_allrefs and set images weight
+    // Setup all alpha_k dividing weights by sumw_allrefs
     for (refno = 0; refno < model.n_ref; refno++)
-    {
-        model.Iref[refno].setWeight(model.alpha_k[refno]);
-        model.alpha_k[refno] /= model.sumw_allrefs;
-    }
+        model.alpha_k[refno] =  model.WsumMref[refno].weight() / model.sumw_allrefs;
 }//close function readModel
 
 FileName ProgML2D::getBaseName(String suffix, int number)

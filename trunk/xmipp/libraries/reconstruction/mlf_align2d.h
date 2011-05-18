@@ -51,8 +51,6 @@ class ProgMLF2D: public ML2DBaseProgram
 {
 public:
 
-    //FileName fn_ctfdat;
-  String xxxxxxx;//FIXME if remove this variable produce a segmentation fault
     /** sigma-value for origin offsets */
     double sigma_offset;
     /** Vector containing estimated fraction for each model */
@@ -163,6 +161,10 @@ public:
     /// Read reference images in memory & set offset vectors
     /// (This produce_side_info is Selfile-dependent!)
     virtual void produceSideInfo2();
+
+    /// Some redefinitions of the basic and additional params
+    virtual void defineBasicParams(XmippProgram * prog);
+    virtual void defineAdditionalParams(XmippProgram * prog, const char * sectionLine);
 
     /// Calculate initial sigma2 from average power spectrum of the
     /// experimental images

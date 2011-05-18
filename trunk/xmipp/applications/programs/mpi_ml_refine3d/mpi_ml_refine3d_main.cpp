@@ -1,6 +1,7 @@
 /***************************************************************************
  *
- * Authors: Sjors Scheres (scheres@cnb.csic.es)
+ * Authors: Sjors Scheres          (scheres@cnb.csic.es)
+ *          J.M. de la Rosa Trevin (jmdelarosa@cnb.csic.es)
  *
  * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
  *

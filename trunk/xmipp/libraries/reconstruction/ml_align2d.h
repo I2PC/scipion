@@ -28,7 +28,6 @@
 
 #include "ml2d.h"
 
-
 ///******** Some macro definitions ****************
 ///Useful macro for thread iteration and work over all refno
 #define FOR_ALL_THREAD_REFNO() \
@@ -57,7 +56,10 @@ void * doThreadsTasks(void * data);
 /** MLalign2D parameters. */
 class ProgML2D: public ML2DBaseProgram
 {
+
 public:
+  bool no_iem;
+
     MultidimArray<int> mask, omask;
     /** Thread stuff */
     int threadTask;

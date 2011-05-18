@@ -215,11 +215,10 @@ MpiProgMLRefine3D::MpiProgMLRefine3D(int argc, char ** argv, bool fourier):MpiML
     //create mpi node, which will be passed to ml2d
     node = new MpiNode(argc, argv);
     created_node = true;
-
     fourier_mode = fourier;
 
     if (fourier)
-        ml2d = NULL; //fixme new ProgMLF2D(true);
+        ml2d = new MpiProgMLF2D(node);
     else
         ml2d = new MpiProgML2D(node);
 

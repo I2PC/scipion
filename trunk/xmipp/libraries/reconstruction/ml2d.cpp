@@ -33,6 +33,8 @@ ML2DBaseProgram::ML2DBaseProgram()
     referenceExclusive = allowFastOption = true;
     allowThreads = allowRestart = allowIEM = true;
     defaultNiter = 100;
+    blocks = 1;
+    factor_nref = 1;
 }
 
 void ML2DBaseProgram::initSamplingStuff()
@@ -112,8 +114,8 @@ void ML2DBaseProgram::setNumberOfLocalImages()
 // Check convergence
 bool ML2DBaseProgram::checkConvergence()
 {
-
-#ifdef DEBUG
+//#define DEBUG_JM
+#ifdef DEBUG_JM
     std::cerr<<"entering checkConvergence"<<std::endl;
 #endif
 
@@ -149,10 +151,11 @@ bool ML2DBaseProgram::checkConvergence()
         }
     }
 
-#ifdef DEBUG
+#ifdef DEBUG_JM
     std::cerr<<"leaving checkConvergence"<<std::endl;
 
 #endif
+#undef DEBUG_JM
 
     return converged;
 }//close function checkConvergence
@@ -281,6 +284,9 @@ void ML2DBaseProgram::defineHiddenParams(XmippProgram *prog)
     prog->addParamsLine(" [--random_seed <int=-1>]");
     prog->addParamsLine(" [--search_rot <float=999.>]");
     prog-> addParamsLine(" [--load <N=1>]");
+
+    //fixme: only for debug
+    prog->addParamsLine("[--no_iem] : bla bla bla");
 }
 
 
@@ -289,25 +295,24 @@ void ML2DBaseProgram::defineHiddenParams(XmippProgram *prog)
 ///////////// ModelML2D Implementation ////////////
 ModelML2D::ModelML2D()
 {
-    n_ref = -1;
-    sumw_allrefs2 = 0;
     initData();
-
 }//close default constructor
 
 ModelML2D::ModelML2D(int n_ref)
 {
-    sumw_allrefs2 = 0;
     initData();
     setNRef(n_ref);
 }//close constructor
 
 void ModelML2D::initData()
 {
+    n_ref = -1;
+    sumw_allrefs2 = sumw_allrefs = 0;
     do_student = do_norm = false;
     do_student_sigma_trick = true;
-    sumw_allrefs = sigma_noise = sigma_offset = LL = avePmax = 0;
+    sigma_noise = sigma_offset = LL = avePmax = 0;
     dim = 0;
+    previous_subtraction = false;
 }//close function initData
 
 /** Before call this function model.n_ref should
@@ -319,13 +324,14 @@ void ModelML2D::setNRef(int n_ref)
     Iempty().setXmippOrigin();
     this->n_ref = n_ref;
     Iref.resize(n_ref, Iempty);
+    WsumMref.resize(n_ref, Iempty);
     alpha_k.resize(n_ref, 0.);
     mirror_fraction.resize(n_ref, 0.);
     scale.resize(n_ref, 1.);
 
 }//close function setNRef
 
-void ModelML2D::combineModel(ModelML2D model, int sign)
+void ModelML2D::combineModel(const ModelML2D &model, int sign)
 {
     if (n_ref != model.n_ref)
         REPORT_ERROR(ERR_VALUE_INCORRECT, "Can not add models with different 'n_ref'");
@@ -339,19 +345,27 @@ void ModelML2D::combineModel(ModelML2D model, int sign)
     double sumfracweight = getSumfracweight() + sign
                            * model.getSumfracweight();
 
+    MultidimArray<double> tmp;
+    double allowed_min = 0;//(sign == 1) ? SIGNIFICANT_WEIGHT_LOW : -99e99;
+
     for (int refno = 0; refno < n_ref; refno++)
     {
-        sumweight = Iref[refno].weight() + sign * model.Iref[refno].weight();
-        if (sumweight > 0)
+        double w1 = Iref[refno].weight();
+        double w2 = sign * model.Iref[refno].weight();
+        tmp = model.WsumMref[refno]();
+        tmp *= sign;
+        WsumMref[refno]() += tmp;
+        sumweight = w1 + w2;
+
+        if (sumweight > allowed_min)
         {
-            Iref[refno]() = (getWsumMref(refno) + sign * model.getWsumMref(
-                                 refno)) / sumweight;
             Iref[refno].setWeight(sumweight);
         }
         else
         {
             //std::cerr << "sumweight: " << sumweight << std::endl;
             Iref[refno]().initZeros();
+            WsumMref[refno]().initZeros();
             Iref[refno].setWeight(0);
         }
 
@@ -380,14 +394,16 @@ void ModelML2D::combineModel(ModelML2D model, int sign)
 
 }//close function combineModel
 
-void ModelML2D::addModel(ModelML2D model)
+void ModelML2D::addModel(const ModelML2D &model)
 {
     combineModel(model, 1);
+    previous_subtraction = false;
 }//close function addModel
 
-void ModelML2D::substractModel(ModelML2D model)
+void ModelML2D::substractModel(const ModelML2D &model)
 {
     combineModel(model, -1);
+    previous_subtraction = true;
 }//close function substractModel
 
 double ModelML2D::getSumw(int refno) const
@@ -429,13 +445,11 @@ double ModelML2D::getSumfracweight() const
 
 void ModelML2D::updateSigmaOffset(double wsum_sigma_offset)
 {
-    if (sumw_allrefs == 0)
-        REPORT_ERROR(ERR_VALUE_INCORRECT, "'sumw_allrefs' couldn't be zero");
-    sigma_offset = sqrt(wsum_sigma_offset / (2. * sumw_allrefs));
+    if (sumw_allrefs <= 0)
+        REPORT_ERROR(ERR_VALUE_INCORRECT, "'sumw_allrefs' should greater than zero");
     if (wsum_sigma_offset < 0.)
         REPORT_ERROR(ERR_VALUE_INCORRECT, "sqrt of negative 'wsum_sigma_offset'");
-    if (sumw_allrefs < 0.)
-        REPORT_ERROR(ERR_VALUE_INCORRECT, "sqrt of negative 'wsum_sigma_offset'");
+    sigma_offset = sqrt(wsum_sigma_offset / (2. * sumw_allrefs));
 }//close function updateSigmaOffset
 
 void ModelML2D::updateSigmaNoise(double wsum_sigma_noise)
@@ -448,6 +462,7 @@ void ModelML2D::updateSigmaNoise(double wsum_sigma_noise)
         REPORT_ERROR(ERR_VALUE_INCORRECT, "'sumw_allrefs' couldn't be zero");
 
     double sigma_noise2 = wsum_sigma_noise / (sum * dim * dim);
+
     if (sigma_noise2 < 0.)
         REPORT_ERROR(ERR_VALUE_INCORRECT, "sqrt of negative 'sigma_noise2'");
     sigma_noise = sqrt(sigma_noise2);
@@ -485,8 +500,27 @@ void ModelML2D::updateScale(int refno, double sumwsc, double sumw)
 
 }//close function updateScale
 
-void ModelML2D::print() const
+void ModelML2D::update()
 {
+  double w;
+  for (int refno = 0; refno < n_ref; ++refno)
+    if ((w = WsumMref[refno].weight()) > 0.)
+    {
+      Iref[refno].setWeight(w);
+      w = 1 / w; //just to speed-up
+      Iref[refno]() = WsumMref[refno]();
+      Iref[refno]() *= w;
+    }
+}
+
+#define pp(s, x) s << std::setw(10) << x
+
+void ModelML2D::print(int tabs) const
+{
+    String stabs = "";
+    for (int t = 0; t < tabs; ++t)
+        stabs += " ";
+
     std::cerr << "sumw_allrefs: " << sumw_allrefs << std::endl;
     std::cerr << "wsum_sigma_offset: " << getWsumSigmaOffset() << std::endl;
     std::cerr << "wsum_sigma_noise: " << getWsumSigmaNoise() << std::endl;
@@ -494,13 +528,23 @@ void ModelML2D::print() const
     std::cerr << "sigma_noise: " << sigma_noise << std::endl;
     std::cerr << "LL: " << LL << std::endl;
 
+    std::stringstream ss1, ss2, ss3, ss4, ss5;
+    pp(ss1, "refno:");
+    pp(ss2, "sumw:");
+    pp(ss3, "sumw_mirror:");
+    pp(ss4, "alpha_k:");
+    pp(ss5, "mirror_fraction");
+
     for (int refno = 0; refno < n_ref; refno++)
     {
-        std::cerr << "   refno " << refno << std::endl;
-        std::cerr << "    (sumw     sumw_mirror)      " << getSumw(refno) << " " << getSumwMirror(refno) << std::endl;
-        std::cerr << "    (alpha_k  mirror_fraction)  " << alpha_k[refno] << " " << mirror_fraction[refno] << std::endl;
-
+        pp(ss1, refno);
+        pp(ss2, getSumw(refno));
+        pp(ss3, getSumwMirror(refno));
+        pp(ss4, alpha_k[refno]);
+        pp(ss5, mirror_fraction[refno]);
     }
+    std::cerr << ss1.str() << std::endl<< ss2.str() << std::endl<< ss3.str() << std::endl
+    << ss4.str() << std::endl<< ss5.str() << std::endl;
 
 }//close function print
 

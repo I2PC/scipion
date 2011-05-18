@@ -72,7 +72,7 @@ public:
     /** Number of reference images */
     int n_ref;
     /** References images */
-    std::vector < Image<double> > Iref;
+    std::vector < Image<double> > Iref, WsumMref;
     /** Sigma value for expected pixel noise */
     double sigma_noise;
     /** sigma-value for origin offsets */
@@ -94,15 +94,19 @@ public:
     int dim;
     /** Algorithmic variants */
     bool do_student, do_student_sigma_trick, do_norm;
+    /** This is to avoid dividing by weight when subtracting,
+     * that's why we expect an addition after subtraction
+     */
+    bool previous_subtraction;
 
     ModelML2D();
     ModelML2D(int n_ref);
 
     void initData();
     void setNRef(int n_ref);
-    void combineModel(ModelML2D model, int sign);
-    void addModel(ModelML2D model);
-    void substractModel(ModelML2D model);
+    void combineModel(const ModelML2D &model, int sign);
+    void addModel(const ModelML2D &model);
+    void substractModel(const ModelML2D &model);
 
     double getSumw(int refno) const;
     double getSumwMirror(int refno) const;
@@ -117,8 +121,10 @@ public:
     void updateAvePmax(double sumfracweight);
     void updateFractions(int refno, double sumw, double sumw_mirror, double sumw_allrefs);
     void updateScale(int refno, double sumwsc, double sumw);
+    /// Update references and other parameters
+    void update();
     ///Just for debugging now
-    void print() const;
+    void print(int tabs = 0) const;
 }
 ;//close class ModelML2D
 
@@ -298,9 +304,9 @@ public:
     /// Divide the definition of params in several
     ///functions, also allowing other programs
     ///to include the ML2D params definition
-    void defineBasicParams(XmippProgram * prog);
-    void defineAdditionalParams(XmippProgram * prog, const char * sectionLine);
-    void defineHiddenParams(XmippProgram *prog);
+    virtual void defineBasicParams(XmippProgram * prog);
+    virtual void defineAdditionalParams(XmippProgram * prog, const char * sectionLine);
+    virtual void defineHiddenParams(XmippProgram *prog);
 
 };//end of class ML2DBaseProgram
 
