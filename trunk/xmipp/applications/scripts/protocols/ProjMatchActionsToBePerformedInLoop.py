@@ -96,14 +96,19 @@ def projection_matching(_log,dict):
     _ProjMatchRootName  = dict['ProjMatchRootName']
     refname = str(dict['ProjectLibraryRootName'])
     NumberOfCtfGroups=dict['NumberOfCtfGroups']
+    
+    CtfGroupName = dict['CtfGroupRootName'] #,ictf+1,'')
+    CtfGroupName = dict['CtfGroupDirectory'] + '/' + CtfGroupName
+    #remove output metadata
+    if os.path.exists(_ProjMatchRootName):
+        os.remove(_ProjMatchRootName)
+    
     for ii in range(NumberOfCtfGroups):
         if NumberOfCtfGroups>1 :
             print 'Focus Group: ', ii+1,'/',NumberOfCtfGroups
         ictf    = NumberOfCtfGroups - ii 
 #        if (_DoCtfCorrection):
-        CtfGroupName = dict['CtfGroupRootName'] #,ictf+1,'')
         #outputname   = _ProjMatchRootName + '_' + CtfGroupName 
-        CtfGroupName = dict['CtfGroupDirectory'] + '/' + CtfGroupName
         inputdocfile    = 'ctfGroup'+str(ictf).zfill(utils_xmipp.FILENAMENUMBERLENTGH) + '@' + CtfGroupName + '_images.sel'
         outputname   = 'ctfGroup'+str(ictf).zfill(utils_xmipp.FILENAMENUMBERLENTGH) + '@'+ _ProjMatchRootName
         #inputdocfile = (os.path.basename(inselfile)).replace('.sel','.doc')
@@ -157,36 +162,33 @@ def assign_images_to_references(_log,dict):
     DocFileInputAngles  = dict['DocFileInputAngles']
     ProjMatchRootName   = dict['ProjMatchRootName']#
     NumberOfCtfGroups   = dict['NumberOfCtfGroups']
-    NumberOfReferences = len(ProjMatchRootName)
+    NumberOfReferences  = dict['NumberOfReferences']
 
-    #print "cp",ProjMatchRootName[1],DocFileInputAngles
-    #if number of references is one just copy file
-    if(NumberOfReferences==2):#single reference THIS IS WRONG REWRITE It PROPERLLY
-        shutil.copy(ProjMatchRootName[1], DocFileInputAngles[1])#####################CHECK
-    else:#multiple reference
-        #add all ProjMatchRootName
-        MDaux = MetaData()
-        MD    = MetaData()
-        MD1   = MetaData()
+    #print "bbb",ProjMatchRootName[1], DocFileInputAngles
+    MDaux = MetaData()
+    MD    = MetaData()
+    MD1   = MetaData()
 
-        for iRef3D in range(1,NumberOfReferences):#already has plus 1
-            inputFileName = ProjMatchRootName[iRef3D]#skip first Null element
-            for iCTFGroup in range(1,NumberOfCtfGroups+1):
+    for iRef3D in range(1,NumberOfReferences+1):
+        inputFileName = ProjMatchRootName[iRef3D]#skip first Null element
+        for iCTFGroup in range(1,NumberOfCtfGroups+1):
 ###                MDaux.clear()
 ###                MD1.clear()
-                    inputdocfile    = 'ctfGroup' + \
-                                      str(iCTFGroup).zfill(utils_xmipp.FILENAMENUMBERLENTGH) + \
-                                      '@' + inputFileName
-                    MD.read(inputdocfile)
-                    MD.setValueCol(MDL_CTF_GROUP,iCTFGroup)
-                    MD.setValueCol(MDL_REF3D,iRef3D)
-                    MDaux.unionAll(MD)
-        MD.aggregate(MDaux,AGGR_MAX,MDL_IMAGE,MDL_MAXCC,MDL_MAXCC)
-        MD1.join(MD,MDaux,MDL_UNDEFINED,NATURAL)
-            
-        outputdocfile =  DocFileInputAngles
-        MD1.setComment("metadata with  images, the winner reference as well as the ctf group")
-        MD1.write(outputdocfile)
+                inputdocfile    = 'ctfGroup' + \
+                                  str(iCTFGroup).zfill(utils_xmipp.FILENAMENUMBERLENTGH) + \
+                                  '@' + inputFileName
+                MD.clear()
+                MD.read(inputdocfile)
+                MD.setValueCol(MDL_CTF_GROUP,iCTFGroup)
+                MD.setValueCol(MDL_REF3D,iRef3D)
+                MDaux.unionAll(MD)
+    MD.aggregate(MDaux,AGGR_MAX,MDL_IMAGE,MDL_MAXCC,MDL_MAXCC)
+    MD1.join(MD,MDaux,MDL_UNDEFINED,NATURAL)
+        
+    outputdocfile =  DocFileInputAngles
+    MD1.setComment("metadata with  images, the winner reference as well as the ctf group")
+    MD1.write(outputdocfile)
+    print "www",outputdocfile
             
 def angular_class_average(_log,dict):
     # Now make the class averages
