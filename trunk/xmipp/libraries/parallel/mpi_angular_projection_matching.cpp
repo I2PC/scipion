@@ -204,7 +204,7 @@ bool MpiProgAngularProjectionMatching::requestJobs(std::vector<size_t> &imagesTo
 void MpiProgAngularProjectionMatching::writeOutputFiles()
 {
     node->gatherMetadatas(DFo,fn_out);
-    DFo.write(fn_out);
+    DFo.write(fn_out,MD_APPEND);
 }
 
 void MpiProgAngularProjectionMatching::produceSideInfo()
