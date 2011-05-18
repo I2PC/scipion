@@ -17,7 +17,7 @@ Comment='Describe your project here...'
 #from XmippData import SingleImgSize
 """ This selfile points to the spider single-file format images that make up your data set. The filenames can have relative or absolute paths, but it is strictly necessary that you put this selfile IN THE PROJECTDIR. 
 """
-SelFileName ='Images/proj.sel'
+SelFileName ='new20.sel'
 
 # {file} {expert} Docfile with the input angles:
 """ Do not provide anything if there are no angles yet. 
@@ -31,12 +31,12 @@ DocFileName =' '
 """ Write down the reference/es name. For example "Reference1.vol Reference2.vol"
     specifies two references
 """
-ReferenceFileNames ='asy.vol'
+ReferenceFileNames ='ico.vol ico2.vol ico3.vol'
 
 # Working subdirectory: 
 """ This directory will be created if it doesn't exist, and will be used to store all output from this run. Don't use the same directory for multiple different runs, instead use a structure like run1, run2 etc. 
 """
-WorkingDir ='ProjMatch/new'
+WorkingDir ='ProjMatch/new20'
 
 # Delete working subdirectory if it already exists?
 """ Just be careful with this option...
@@ -72,7 +72,7 @@ CleanUpFiles =False
 # {expert} Root directory name for this project:
 """ Absolute path to the root directory for this project. Often, each data set of a given sample has its own ProjectDir.
 """
-ProjectDir='/gpfs/fs1/home/bioinfo/roberto/AsymmetricPhantom'
+ProjectDir='/home/roberto/PhantomIco'
 
 # {expert} Directory name for logfiles:
 LogDir ='Logs'
@@ -86,7 +86,7 @@ LogDir ='Logs'
     and the data will be processed in CTF groups.
     Note that you cannot combine CTF-correction with re-alignment of the classes.
 """
-DoCtfCorrection =False
+DoCtfCorrection =True
 
 # {file} CTFDat file with CTF data:
 """ The input selfile may be a subset of the images in the CTFDat file, but all 
@@ -176,7 +176,7 @@ DoSphericalMask =True
 # Radius of spherical mask
 """ This is the radius (in pixels) of the spherical mask 
 """
-MaskRadius = 32
+MaskRadius = 60
 
 # {file} Binary mask file
 """ This should be a binary (only 0/1-valued) Xmipp volume of equal dimension as your reference
@@ -590,7 +590,7 @@ NumberOfThreads = 1
 DoParallel =True
 
 # Number of MPI processes to use:
-NumberOfMpiProcesses =8
+NumberOfMpiProcesses =3
 
 # minumum size of jobs in mpi processe. Set to 1 for large images (e.g. 500x500) and to 10 for small images (e.g. 100x100)
 MpiJobSize ='5'
@@ -654,7 +654,7 @@ CtfGroupSubsetFileName = CtfGroupRootName + "_images.sel"
 
 reconstructedFileNamesIter = []# names for reconstructed volumes
 maskedFileNamesIter = []# names masked volumes used as reference
-referenceNumber = 1#number of references
+numberOfReferences = 1#number of references
 createAuxTable = False
 NumberOfCtfGroups = 1
 
@@ -692,8 +692,8 @@ def actionsToBePerformedBeforeLoopThatDoNotModifyTheFileSystem():
     # Convert vectors to list
     global ReferenceFileNames
     ReferenceFileNames = getListFromVector(ReferenceFileNames)
-    global referenceNumber
-    referenceNumber = len(ReferenceFileNames)
+    global numberOfReferences
+    numberOfReferences = len(ReferenceFileNames)
     #directory with ProjMatchClasses
     global ProjMatchDirs
     ProjMatchDirs=[" "]
@@ -718,12 +718,12 @@ def actionsToBePerformedBeforeLoopThatDoNotModifyTheFileSystem():
         #ProjMatchRootName.append(ProjMatchDir[] + "/" + ProjMatchName)
     #print ProjMatchDirs,LibraryDirs
     
-    auxList = (referenceNumber + 1) * [None]
+    auxList = (numberOfReferences + 1) * [None]
     global ProjectLibraryRootNames
     ProjectLibraryRootNames=[]
     ProjectLibraryRootNames.append([None])
     for iterN in range(NumberofIterations):
-        for refN in range(referenceNumber):
+        for refN in range(numberOfReferences):
             auxList[refN + 1]=WorkingDir + "/Iter_" + \
                                       str(iterN + 1).zfill(2) + \
                                       '/' + \
@@ -736,7 +736,7 @@ def actionsToBePerformedBeforeLoopThatDoNotModifyTheFileSystem():
     ProjMatchRootName=[]
     ProjMatchRootName.append([None])
     for iterN in range(NumberofIterations):
-        for refN in range(referenceNumber):
+        for refN in range(numberOfReferences):
             auxList[refN + 1]=ProjMatchDirs[iterN + 1] + \
                                       '/' + ProjMatchName +\
                                       "_ref_" + str(refN + 1).zfill(2) + ".doc"
@@ -748,7 +748,7 @@ def actionsToBePerformedBeforeLoopThatDoNotModifyTheFileSystem():
     #add dummy name so indexes start a 1
     maskedFileNamesIter.append([None])
     for iterN in range(NumberofIterations):
-        for refN in range(referenceNumber):
+        for refN in range(numberOfReferences):
             auxList[refN + 1] = WorkingDir + "/Iter_" + \
                                       str(iterN + 1).zfill(2) + \
                                       '/' + \
@@ -762,7 +762,7 @@ def actionsToBePerformedBeforeLoopThatDoNotModifyTheFileSystem():
     #NOTE THAT INDEXES START AT 1
     reconstructedFileNamesIter.append([None] + ReferenceFileNames)
     for iterN in range(NumberofIterations):
-        for refN in range(referenceNumber):
+        for refN in range(numberOfReferences):
             auxList[refN + 1] = WorkingDir + "/Iter_" + \
                                       str(iterN + 1).zfill(2) + \
                                       '/' + \
@@ -773,10 +773,10 @@ def actionsToBePerformedBeforeLoopThatDoNotModifyTheFileSystem():
     # Optimal angles from previous iteration or user-provided at the beginning
 #    global DocFileInputAngles
 #    DocFileInputAngles=[]
-#    aux=[DocFileWithOriginalAngles]*(referenceNumber+1)#+1 fills the zero
+#    aux=[DocFileWithOriginalAngles]*(numberOfReferences+1)#+1 fills the zero
 #    DocFileInputAngles.append([None] + aux)
 #    for iterN in range(NumberofIterations):
-#        for refN in range(referenceNumber):
+#        for refN in range(numberOfReferences):
 #            auxList[refN + 1] = WorkingDir + "/Iter_" + \
 #                                      str(iterN + 1).zfill(2) + \
 #                                      '/' + \
@@ -840,7 +840,7 @@ def otherActionsToBePerformedBeforeLoop():
         NumberOfCtfGroups = auxMD2.size()
     else:
         NumberOfCtfGroups = 1
-	
+
     _Parameters = {
           'DoDeleteWorkingDir':DoDeleteWorkingDir
         , 'ProjectDir':ProjectDir
@@ -968,8 +968,7 @@ def actionsToBePerformedInsideLoop(_log):
             }
         command = 'createDir2'
         _dataBase.insertCommand(command, _Parameters, 1)
-
-        for refN in range(1, referenceNumber + 1):
+        for refN in range(1, numberOfReferences + 1):
             ##############REMOVE SHUTIL.COPY
             # Mask reference volume
             _Parameters = {
@@ -1057,7 +1056,8 @@ def actionsToBePerformedInsideLoop(_log):
             _VerifyFiles = []
             #File with list of images and references
             _VerifyFiles.append(ProjMatchRootName[iterN][refN] )
-            _VerifyFiles.append('ppppp')
+#            for i in range (1,NumberOfCtfGroups+1):
+#                _VerifyFiles.append(auxFn + "_group" + str(i).zfill(6) +"_sampling.txt")
             _dataBase.insertCommand(command, _Parameters, iterN,_VerifyFiles)
             
 
@@ -1067,16 +1067,17 @@ def actionsToBePerformedInsideLoop(_log):
         _Parameters = {
                        'DocFileInputAngles' : DocFileInputAngles[iterN]
                      , 'NumberOfCtfGroups' : NumberOfCtfGroups
-                     , 'refN':refN
                      , 'ProjMatchRootName':ProjMatchRootName[iterN]#LIST
+                     , 'NumberOfReferences':numberOfReferences
                       }
         _VerifyFiles = []
         _VerifyFiles.append(DocFileInputAngles[iterN])
+        _VerifyFiles.append('ppppp')
         command = "assign_images_to_references"
-        #############################_dataBase.insertCommand(command, _Parameters, iterN,_VerifyFiles)
+        _dataBase.insertCommand(command, _Parameters, iterN,_VerifyFiles)
 
         #align images, not possible for ctf groups
-        for refN in range(1, referenceNumber + 1):
+        for refN in range(1, numberOfReferences + 1):
             _Parameters = {
                        'Align2DIterNr':Align2DIterNr
                      , 'CtfGroupDirectory': CtfGroupDirectory

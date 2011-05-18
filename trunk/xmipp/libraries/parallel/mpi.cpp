@@ -43,18 +43,18 @@ void __threadMpiMasterDistributor(ThreadArgument &arg)
         MPI_Recv(0, 0, MPI_INT, MPI_ANY_SOURCE, 0, MPI_COMM_WORLD, &status);
 
         workBuffer[0] = distributor->ThreadTaskDistributor::distribute(
-                workBuffer[1], workBuffer[2]) ? 1 : 0;
+                            workBuffer[1], workBuffer[2]) ? 1 : 0;
         if (workBuffer[0] == 0) //no more jobs
             finalizedWorkers++;
         //send work
         MPI_Send(workBuffer, 3, MPI_LONG_LONG_INT, status.MPI_SOURCE, TAG_WORK,
-                MPI_COMM_WORLD);
+                 MPI_COMM_WORLD);
     }
 }
 
 MpiTaskDistributor::MpiTaskDistributor(size_t nTasks, size_t bSize,
-        MpiNode *node) :
-    ThreadTaskDistributor(nTasks, bSize)
+                                       MpiNode *node) :
+        ThreadTaskDistributor(nTasks, bSize)
 {
     this->node = node;
     //if master create distribution thread
@@ -89,7 +89,7 @@ bool MpiTaskDistributor::distribute(size_t &first, size_t &last)
     //any message from the master, is tag is TAG_STOP then stop
     MPI_Send(0, 0, MPI_INT, 0, 0, MPI_COMM_WORLD);
     MPI_Recv(workBuffer, 3, MPI_LONG_LONG_INT, 0, TAG_WORK, MPI_COMM_WORLD,
-            &status);
+             &status);
 
     first = workBuffer[1];
     last = workBuffer[2];
@@ -150,9 +150,9 @@ MpiFileMutex::~MpiFileMutex()
 
 FileTaskDistributor::FileTaskDistributor(size_t nTasks, size_t bSize,
         MpiNode * node):
-    ThreadTaskDistributor(nTasks, bSize)
+        ThreadTaskDistributor(nTasks, bSize)
 {
-	fileMutex=new MpiFileMutex(node);
+    fileMutex=new MpiFileMutex(node);
     if (node == NULL || node->isMaster())
         createLockFile();
     loadLockFile();
@@ -160,7 +160,7 @@ FileTaskDistributor::FileTaskDistributor(size_t nTasks, size_t bSize,
 
 FileTaskDistributor::~FileTaskDistributor()
 {
-	delete fileMutex;
+    delete fileMutex;
 }
 
 void FileTaskDistributor::createLockFile()
@@ -168,7 +168,7 @@ void FileTaskDistributor::createLockFile()
     int buffer[] = { numberOfTasks, assignedTasks, blockSize };
 
     if ((lockFile = open(fileMutex->lockFilename, O_CREAT | O_RDWR | O_TRUNC, S_IRUSR
-            | S_IWUSR | S_IRGRP | S_IROTH)) == -1)
+                         | S_IWUSR | S_IRGRP | S_IROTH)) == -1)
     {
         perror("FileTaskDistributor::createLockFile: Error opening lock file");
         exit(1);
@@ -243,13 +243,13 @@ bool MpiNode::isMaster() const
 
 void MpiNode::barrierWait()
 {
-  MPI_Barrier(MPI_COMM_WORLD);
+    MPI_Barrier(MPI_COMM_WORLD);
 }
 
 void MpiNode::gatherMetadatas(MetaData &MD, const FileName &rootname,
-		MDLabel sortLabel)
+                              MDLabel sortLabel)
 {
-	FileName fn;
+    FileName fn;
 
     if (!isMaster())//workers just write down partial results
     {
@@ -266,7 +266,9 @@ void MpiNode::gatherMetadatas(MetaData &MD, const FileName &rootname,
         {
             fn = formatString("%s_node%d.xmd", rootname.c_str(), nodeRank);
             mdSlave.read(fn);
-            mdAll.unionAll(mdSlave);
+            //make sure file is not empty
+            if (!mdSlave.isEmpty())
+                mdAll.unionAll(mdSlave);
             //Remove blockname
             fn=fn.removeBlockName();
             remove(fn.c_str());
@@ -295,7 +297,7 @@ void MpiMetadataProgram::createTaskDistributor(const MetaData &mdIn)
 {
     int blockSize=mdIn.size()/(node->size*5);
     if (blockSize<1)
-    	blockSize=1;
+        blockSize=1;
     mdIn.findObjects(imgsId);
     distributor = new FileTaskDistributor(mdIn.size(), blockSize, node);
 }
