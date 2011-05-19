@@ -678,6 +678,11 @@ public:
     */
     void randomize(MetaData &MDin);
 
+    /**Remove duplicate entries for attribute in label
+     *
+     */
+    void removeDuplicates(MetaData &MDin);
+
     /*
     * Sort a Metadata by a label.
     * Sort the content of MDin comparing
