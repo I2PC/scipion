@@ -1175,6 +1175,14 @@ void MetaData::intersection(const MetaData &mdIn, const MDLabel label)
     else
         _setOperates(mdIn, label, INTERSECTION);
 }
+
+void MetaData::removeDuplicates(MetaData &MDin)
+{
+    if(MDin.isEmpty())
+        return;
+    _setOperates(MDin, MDL_UNDEFINED, REMOVE_DUPLICATE);
+}
+
 void MetaData::subtraction(const MetaData &mdIn, const MDLabel label)
 {
     if(mdIn.isEmpty())
