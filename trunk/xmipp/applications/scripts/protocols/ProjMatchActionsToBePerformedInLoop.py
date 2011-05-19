@@ -184,7 +184,8 @@ def assign_images_to_references(_log,dict):
             inputdocfile    = auxInputdocfile+ inputFileName
             MD.clear()
             MD.read(inputdocfile)
-            #MD.setValueCol(MDL_CTF_GROUP,iCTFGroup)
+            #In practice you should not get duplicates
+            MD.removeDuplicates()
             MD.setValueCol(MDL_REF3D,iRef3D)
             MDaux.unionAll(MD)
         MDaux.sort()
