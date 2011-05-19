@@ -25,19 +25,9 @@
 
 #include <reconstruction/reconstruct_art_pseudo.h>
 
-int main(int argc, char *argv[])
+int main(int argc, char **argv)
 {
-    try
-    {
-        ProgARTPseudo program;
-        program.read(argc, argv);
-        program.show();
-        program.run();
-    }
-    catch (XmippError xe)
-    {
-        std::cerr << xe;
-        return 1;
-    }
-    return 0;
+    ProgARTPseudo program;
+    program.read(argc, argv);
+    return program.tryRun();
 }

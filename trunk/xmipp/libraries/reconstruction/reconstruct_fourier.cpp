@@ -34,7 +34,7 @@ void ProgRecFourier::defineParams()
     addUsageLine("Generate 3D reconstructions from projections using direct Fourier interpolation with arbitrary geometry.");
     addUsageLine("Kaisser-windows are used for interpolation in Fourier space.");
     //params
-    addParamsLine("   -i <sel_file>                : Selection file with input images");
+    addParamsLine("   -i <md_file>                : Metadata file with input projections");
     addParamsLine("  [-o <volume_file=\"rec_fourier.vol\">]  : Filename for output volume");
     addParamsLine("  [--sym <symfile=c1>]              : Enforce symmetry in projections");
     addParamsLine("  [--padding <proj=2.0> <vol=2.0>]  : Padding used for projections and volume");
