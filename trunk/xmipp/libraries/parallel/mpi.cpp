@@ -274,12 +274,7 @@ void MpiNode::gatherMetadatas(MetaData &MD, const FileName &rootname,
             fn=fn.removeBlockName();
             remove(fn.c_str());
         }
-        MD.clear();
         MD.sort(mdAll, MDL_IMAGE);
-        std::cerr << "MD" << MD <<std::endl;
-        String input = "";
-        std::cout << "Please enter any character and press enter:\n>";
-        getline(std::cin, input);
 
     }
 }
