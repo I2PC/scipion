@@ -92,6 +92,7 @@ bool XmippProgram::checkBuiltIns()
                     usage(cmdHelp);
                 else
                 {
+                  if (verbose)
                     std::cerr << "Unrecognized param " << helpParam << " neither - or --" << std::endl;
                     usage();
                 }
@@ -150,6 +151,9 @@ void XmippProgram::createWiki()
 
 XmippProgram::XmippProgram()
 {
+    //by defaul all programs have verbose = 1
+    // this can be changed on mpi slaves node for no output at all
+    verbose = 1;
     progDef = NULL;
     notRun = true;
     errorCode = 0;
@@ -216,6 +220,7 @@ void XmippProgram::read(int argc, char ** argv, bool reportErrors)
             progDef->read(argc, argv, reportErrors);
             if (!checkBuiltIns())
             {
+              if (verbose) //if 0, ignore the parameter, useful for mpi programs
                 verbose = getIntParam("--verbose");
                 this->readParams();
                 notRun = false;
@@ -224,8 +229,11 @@ void XmippProgram::read(int argc, char ** argv, bool reportErrors)
         catch (XmippError xe)
         {
             ///If an input error, shows error message
+          if (verbose)
+          {
             std::cerr << xe;
             std::cerr << "For more info use --help" << std::endl;
+          }
             errorCode = xe.__errno;
         }
     }
@@ -376,17 +384,23 @@ const char * XmippProgram::name() const
 
 void XmippProgram::usage(int verb) const
 {
+  if (verbose)
+  {
     ConsolePrinter cp;
     cp.printProgram(*progDef, verb);
+  }
 }
 
 void XmippProgram::usage(const std::string & param, int verb)
 {
+  if (verbose)
+  {
     ConsolePrinter cp;
     ParamDef * paramDef = progDef->findParam(param);
     if (paramDef == NULL)
         REPORT_ERROR(ERR_ARG_INCORRECT, ((std::string)"Doesn't exists param: " + param));
     cp.printParam(*paramDef, verb);
+  }
     quit(0);
 }
 
