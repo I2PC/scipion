@@ -55,6 +55,10 @@ void ProgAngularProjectionMatching::readParams()
     threads = getIntParam("--thr");
 
     do_scale = checkParam("--scale");
+    if (checkParam("--append"))
+    	do_overwrite = MD_APPEND;
+    else
+    	do_overwrite = MD_OVERWRITE;
 
     if(do_scale)
     {
@@ -100,6 +104,7 @@ void ProgAngularProjectionMatching::defineParams()
     addParamsLine("  [--pad <pad=1>]             : Padding factor (for CTF correction only)");
     addParamsLine("  [--phase_flipped]            : Use this if the experimental images have been phase flipped");
     addParamsLine("  [--thr <threads=1>]           : Number of concurrent threads");
+    addParamsLine("  [--append]                : Append (versus overwrite) data to the output file");
 }
 
 /* Show -------------------------------------------------------------------- */
@@ -937,5 +942,5 @@ void ProgAngularProjectionMatching::getCurrentImage(size_t imgid, Image<double> 
 
 void ProgAngularProjectionMatching::writeOutputFiles()
 {
-    DFo.write(fn_out,MD_APPEND);
+    DFo.write(fn_out,do_overwrite);
 }

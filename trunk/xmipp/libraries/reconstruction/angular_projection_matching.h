@@ -137,6 +137,7 @@ public:
 
     /** scale params */
     bool do_scale;
+    WriteModeMetaData do_overwrite;
     double scale_step;
     double scale_nsteps;
 

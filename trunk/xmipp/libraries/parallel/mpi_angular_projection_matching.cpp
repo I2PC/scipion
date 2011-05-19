@@ -214,7 +214,7 @@ void MpiProgAngularProjectionMatching::writeOutputFiles()
 {
     node->gatherMetadatas(DFo,fn_out);
     if (node->isMaster())
-        DFo.write(fn_out,MD_APPEND);
+        DFo.write(fn_out,do_overwrite);
 }
 
 void MpiProgAngularProjectionMatching::produceSideInfo()
