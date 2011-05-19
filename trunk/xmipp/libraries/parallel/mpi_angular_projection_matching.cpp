@@ -29,26 +29,37 @@
 #define TAG_JOB_REQUEST 1
 #define TAG_JOB_REPLY 2
 
+/** Constructor */
+MpiProgAngularProjectionMatching::MpiProgAngularProjectionMatching()
+{
+  imagesBuffer = NULL;
+  last_chunk = NULL;
+}
 /** Destructor */
 MpiProgAngularProjectionMatching::~MpiProgAngularProjectionMatching()
 {
     if (node->isMaster())
     {
-        delete [] imagesBuffer;
-        delete [] last_chunk;
+       delete [] imagesBuffer;
+       delete [] last_chunk;
     }
     delete node;//this calls MPI_Finalize
 }
 
 void MpiProgAngularProjectionMatching::read(int argc, char** argv)
 {
+
     node = new MpiNode(argc, argv);
     // Master should read first
     if (node->isMaster())
         ProgAngularProjectionMatching::read(argc, argv);
     node->barrierWait();
     if (!node->isMaster())
+    {
+
+        verbose = 0;//disable verbose for slaves
         ProgAngularProjectionMatching::read(argc, argv);
+    }
 }
 
 /* Define accepted params ------------------------------------------------------------------- */
@@ -76,8 +87,6 @@ void MpiProgAngularProjectionMatching::readParams()
     imagesBuffer = new size_t[mpi_job_size + 1];
     chunk_angular_distance = getDoubleParam("--chunk_angular_distance");
     fn_sym = getParam("--sym");
-    //Only master could be verbose
-    verbose = (verbose && node->isMaster());
 }
 
 void MpiProgAngularProjectionMatching::processAllImages()
@@ -105,7 +114,7 @@ void MpiProgAngularProjectionMatching::processAllImages()
             if (!distributeJobs(imagesBuffer, status.MPI_SOURCE))
             {
                 ++finishingWorkers;
-//                std::cerr << formatString("master: node %d finished, remaining %d", status.MPI_SOURCE, finishingWorkers) << std::endl;
+                //                std::cerr << formatString("master: node %d finished, remaining %d", status.MPI_SOURCE, finishingWorkers) << std::endl;
             }
             MPI_Send(imagesBuffer, imagesBuffer[0] + 1, MPI_UNSIGNED_LONG, status.MPI_SOURCE, TAG_JOB_REPLY, MPI_COMM_WORLD);
 
@@ -119,10 +128,10 @@ void MpiProgAngularProjectionMatching::processAllImages()
         std::vector<size_t> imagesToProcess;
         while (requestJobs(imagesToProcess))
         {
-//            std::cerr << std::endl << "DEBUG: node " << node->rank << " processing " << imagesToProcess.size() << " images: ";
-//            for (size_t i = 0; i < imagesToProcess.size(); ++i)
-//                std::cerr << " " << imagesToProcess[i];
-//            std::cerr << std::endl;
+            //            std::cerr << std::endl << "DEBUG: node " << node->rank << " processing " << imagesToProcess.size() << " images: ";
+            //            for (size_t i = 0; i < imagesToProcess.size(); ++i)
+            //                std::cerr << " " << imagesToProcess[i];
+            //            std::cerr << std::endl;
 
             processSomeImages(imagesToProcess);
             //sleep(1);
@@ -152,7 +161,7 @@ bool MpiProgAngularProjectionMatching::distributeJobs(size_t * imagesToSent, int
                  ++i, chunk_index = (chunk_index + 1) % chunk_number)
                 ;
 
-//            std::cerr << formatString("DEBUG: master: assigned %d chuck to node %d, i = %d", chunk_index, node, i);
+            //            std::cerr << formatString("DEBUG: master: assigned %d chuck to node %d, i = %d", chunk_index, node, i);
             if (i == chunk_number)
             {
                 imagesToSent[0] = 0;
@@ -166,16 +175,16 @@ bool MpiProgAngularProjectionMatching::distributeJobs(size_t * imagesToSent, int
     size_t assigned_images = XMIPP_MIN(mpi_job_size, chunk_mysampling.my_exp_img_per_sampling_point[node_index].size());
     imagesToSent[0] = assigned_images;
 
-//    std::cerr << formatString("DEBUG: master: assigned %lu images to node %d", assigned_images, node);
+    //    std::cerr << formatString("DEBUG: master: assigned %lu images to node %d", assigned_images, node);
 
     for (int i = 1; i <= assigned_images; ++i)
     {
         imagesToSent[i] = chunk_mysampling.my_exp_img_per_sampling_point[node_index].back() + FIRST_IMAGE;
-//        std::cerr << " " << imagesToSent[i];
+        //        std::cerr << " " << imagesToSent[i];
         chunk_mysampling.my_exp_img_per_sampling_point[node_index].pop_back();
     }
 
-//    std::cerr << std::endl;
+    //    std::cerr << std::endl;
 
     return true;
 }

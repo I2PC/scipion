@@ -69,7 +69,8 @@ private:
 public:
     /** Redefine read */
     void read(int argc, char** argv);
-
+    /** Constructor */
+    MpiProgAngularProjectionMatching();
     /** Destructor */
     ~MpiProgAngularProjectionMatching();
 
