@@ -163,7 +163,7 @@ void ProgML2D::readParams()
 
     if (seed == -1)
         seed = time(NULL);
-    else if (!do_restart)
+    else if (!do_restart && verbose)
         std::cerr << "WARNING: *** Using a non random seed and not in restarting ***" <<std::endl;
 
     // Only for interaction with refine3d:
@@ -277,6 +277,7 @@ void ProgML2D::show()
 
 void ProgML2D::printModel(const String &msg, const ModelML2D & model)
 {
+  return;
     std::cerr << "================> " << msg << std::endl;
     model.print();
 }
@@ -1676,7 +1677,6 @@ void ProgML2D::iteration()
         //Maximize the model
         maximization();
     }//close for blocks
-    model.print();
 }
 
 
@@ -1941,7 +1941,7 @@ void ProgML2D::maximizeModel(ModelML2D &local_model)
     local_model.sumw_allrefs2 = 0.;
 
 
-#define ASSIGN(var) local_model.var = var
+#define ASSIGN(var) if (var > SIGNIFICANT_WEIGHT_LOW) local_model.var = var
 
     ASSIGN(dim);
     ASSIGN(sumfracweight);
@@ -2013,26 +2013,23 @@ void ProgML2D::maximization()
         if (!special_first)
         {
             readModel(block_model, current_block);
-            //std::cerr << "====== Readed block model: " << current_block <<" =========" <<std::endl;
-            //block_model.print();
+
+            //fixme: remove printings
+            printModel(formatString("Readed block model: %d", current_block), block_model);
             model.substractModel(block_model);
-            //std::cerr << "====== GLOBAL model: after subtraction: " << " =========" <<std::endl;
-            //model.print();
+            printModel("GLOBAL model: after subtraction: ", model);
         }
 
         maximizeModel(block_model);
-        //std::cerr << "====== Maximazed block model: " << current_block <<" =========" <<std::endl;
-        //block_model.print();
-        //std::cerr << "====== GLOBAL model: after subtraction: " << " =========" <<std::endl;
-        //model.print();
+        printModel(formatString("Maximazed block model: %d", current_block), block_model);
+
         writeOutputFiles(block_model, OUT_BLOCK);
 
         if (!special_first)
         {
             model.addModel(block_model);
             model.update();
-            //std::cerr << "====== GLOBAL model: after addition: " << " =========" <<std::endl;
-            //model.print();
+            printModel("GLOBAL model: after addition and update: ", model);
         }
         else if (current_block == blocks - 1) //last block
         {
@@ -2050,6 +2047,7 @@ void ProgML2D::maximization()
                 //model.print();
             }
             model.update();
+            printModel("GLOBAL model: after addition and update: ", model);
             // After iteration 0, factor_nref will ALWAYS be one
             factor_nref = 1;
             //restore the value of current block
@@ -2068,34 +2066,34 @@ void ProgML2D::correctScaleAverage()
 {
     //FIXME: This function needs re-implementation for the do_norm parameter
     //now the ref3d comes in metadata, refs_per_class can be avoided
-//    int iclass, nr_classes = ROUND(model.n_ref / refs_per_class);
-//    std::vector<double> wsum_scale(nr_classes), sumw_scale(nr_classes);
-//    ldiv_t temp;
-//    average_scale = 0.;
-//
-//    for (int refno = 0; refno < model.n_ref; refno++)
-//    {
-//        average_scale += model.getSumwsc(refno);
-//        temp = ldiv(refno, refs_per_class);
-//        iclass = ROUND(temp.quot);
-//        wsum_scale[iclass] += model.getSumwsc(refno);
-//        sumw_scale[iclass] += model.getSumw(refno);
-//    }
-//    for (int refno = 0; refno < model.n_ref; refno++)
-//    {
-//        temp = ldiv(refno, refs_per_class);
-//        iclass = ROUND(temp.quot);
-//        if (sumw_scale[iclass] > 0.)
-//        {
-//            model.scale[refno] = wsum_scale[iclass] / sumw_scale[iclass];
-//            model.WsumMref[refno]() *= model.scale[refno];
-//        }
-//        else
-//        {
-//            model.scale[refno] = 1.;
-//        }
-//    }
-//    average_scale /= model.sumw_allrefs;
+    //    int iclass, nr_classes = ROUND(model.n_ref / refs_per_class);
+    //    std::vector<double> wsum_scale(nr_classes), sumw_scale(nr_classes);
+    //    ldiv_t temp;
+    //    average_scale = 0.;
+    //
+    //    for (int refno = 0; refno < model.n_ref; refno++)
+    //    {
+    //        average_scale += model.getSumwsc(refno);
+    //        temp = ldiv(refno, refs_per_class);
+    //        iclass = ROUND(temp.quot);
+    //        wsum_scale[iclass] += model.getSumwsc(refno);
+    //        sumw_scale[iclass] += model.getSumw(refno);
+    //    }
+    //    for (int refno = 0; refno < model.n_ref; refno++)
+    //    {
+    //        temp = ldiv(refno, refs_per_class);
+    //        iclass = ROUND(temp.quot);
+    //        if (sumw_scale[iclass] > 0.)
+    //        {
+    //            model.scale[refno] = wsum_scale[iclass] / sumw_scale[iclass];
+    //            model.WsumMref[refno]() *= model.scale[refno];
+    //        }
+    //        else
+    //        {
+    //            model.scale[refno] = 1.;
+    //        }
+    //    }
+    //    average_scale /= model.sumw_allrefs;
 }//close function correctScaleAverage
 
 /// Add docfiledata to docfile
@@ -2153,6 +2151,13 @@ void ProgML2D::writeOutputFiles(const ModelML2D &model, OutputType outputType)
     if (iter == 0)
         write_conv = false;
 
+    //By default write down the parameters
+    std::vector<Image<double> > const * ptrImages = &(model.Iref);
+    std::vector<double> const * ptrMirror = &(model.mirror_fraction);
+    double avePmax = model.avePmax;
+    double sigma_noise = model.sigma_noise;
+    double sigma_offset = model.sigma_offset;
+
     switch (outputType)
     {
     case OUT_BLOCK:
@@ -2160,8 +2165,13 @@ void ProgML2D::writeOutputFiles(const ModelML2D &model, OutputType outputType)
         write_conv = false;
         // Sjors 18may2010: why not write scales in blocks? We need this now, don't we?
         //write_norm = false;
-        //fn_base = getBaseName("_block", current_block + 1);
         fn_prefix = formatString("block%03d", current_block + 1);
+        // For blocks we will write out the summations instead of parameters
+        ptrImages = &(model.WsumMref);
+        ptrMirror = &(model.sumw_mirror);
+        avePmax = model.sumfracweight;
+        sigma_noise = model.wsum_sigma_noise;
+        sigma_offset = model.wsum_sigma_offset;
         break;
     case OUT_ITER:
         //fn_base = getBaseName("_it", iter);
@@ -2217,7 +2227,7 @@ void ProgML2D::writeOutputFiles(const ModelML2D &model, OutputType outputType)
         {
             objId = __iter.objId;
             select_img = refno + 1;
-            Itmp = (outputType == OUT_BLOCK) ? model.WsumMref[refno] : model.Iref[refno];
+            Itmp = (*ptrImages)[refno];
             //Itmp = model.Iref[refno];
             Itmp.write(fn_tmp, select_img, true, WRITE_REPLACE);
             MDref.setValue(MDL_ITER, iter, objId);//write out iteration number
@@ -2226,7 +2236,7 @@ void ProgML2D::writeOutputFiles(const ModelML2D &model, OutputType outputType)
             MDref.setValue(MDL_ENABLED, 1, objId);
             MDref.setValue(MDL_WEIGHT, model.WsumMref[refno].weight(), objId);
             if (do_mirror)
-                MDref.setValue(MDL_MIRRORFRAC, model.mirror_fraction[refno], objId);
+                MDref.setValue(MDL_MIRRORFRAC, (*ptrMirror)[refno], objId);
             if (write_conv)
                 MDref.setValue(MDL_SIGNALCHANGE, conv[refno]*1000, objId);
             if (write_norm)
@@ -2246,9 +2256,9 @@ void ProgML2D::writeOutputFiles(const ModelML2D &model, OutputType outputType)
         objId = mdLog.addObject();
         mdLog.setValue(MDL_ITER, iter, objId);
         mdLog.setValue(MDL_LL, model.LL, objId);
-        mdLog.setValue(MDL_PMAX, model.avePmax, objId);
-        mdLog.setValue(MDL_SIGMANOISE, model.sigma_noise, objId);
-        mdLog.setValue(MDL_SIGMAOFFSET, model.sigma_offset, objId);
+        mdLog.setValue(MDL_PMAX, avePmax, objId);
+        mdLog.setValue(MDL_SIGMANOISE, sigma_noise, objId);
+        mdLog.setValue(MDL_SIGMAOFFSET, sigma_offset, objId);
         mdLog.setValue(MDL_RANDOMSEED, seed, objId);
         if (write_norm)
             mdLog.setValue(MDL_INTSCALE, average_scale, objId);
@@ -2270,9 +2280,9 @@ void ProgML2D::readModel(ModelML2D &model, int block)
     model.dim = dim;
     size_t id = MDi.firstObject();
     MDi.getValue(MDL_LL, model.LL, id);
-    MDi.getValue(MDL_PMAX, model.avePmax, id);
-    MDi.getValue(MDL_SIGMANOISE, model.sigma_noise, id);
-    MDi.getValue(MDL_SIGMAOFFSET, model.sigma_offset, id);
+    MDi.getValue(MDL_PMAX, model.sumfracweight, id);
+    MDi.getValue(MDL_SIGMANOISE, model.wsum_sigma_noise, id);
+    MDi.getValue(MDL_SIGMAOFFSET, model.wsum_sigma_offset, id);
 
     //Then read reference model parameters from _ref.xmd
     FileName fn_img;
@@ -2293,15 +2303,11 @@ void ProgML2D::readModel(ModelML2D &model, int block)
         MDi.getValue(MDL_WEIGHT, weight, id);
         model.WsumMref[refno].setWeight(weight);
         model.sumw_allrefs += weight;
-        model.mirror_fraction[refno] = 0.;
+        model.sumw_mirror[refno] = 0.;
         if (do_mirror)
-            MDi.getValue(MDL_MIRRORFRAC, model.mirror_fraction[refno], id);
+            MDi.getValue(MDL_MIRRORFRAC, model.sumw_mirror[refno], id);
         refno++;
     }
-
-    // Setup all alpha_k dividing weights by sumw_allrefs
-    for (refno = 0; refno < model.n_ref; refno++)
-        model.alpha_k[refno] =  model.WsumMref[refno].weight() / model.sumw_allrefs;
 }//close function readModel
 
 FileName ProgML2D::getBaseName(String suffix, int number)

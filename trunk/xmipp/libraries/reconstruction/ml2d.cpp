@@ -114,7 +114,7 @@ void ML2DBaseProgram::setNumberOfLocalImages()
 // Check convergence
 bool ML2DBaseProgram::checkConvergence()
 {
-#define DEBUG_JM
+//#define DEBUG_JM
 #ifdef DEBUG_JM
     std::cerr<<">>>>>>>> entering checkConvergence"<<std::endl;
 #endif
@@ -412,8 +412,6 @@ void ModelML2D::update()
     //update avePmax
     avePmax = sumfracweight / sumw_allrefs;
 
-    std::cerr << "DEBUG_JM: model BEFORE updating--------->" <<std::endl;
-    print();
     double weight, inv_weight;
 
     for (int refno = 0; refno < n_ref; ++refno)
@@ -442,9 +440,6 @@ void ModelML2D::update()
             scale[refno] = 0.;
         }
     }
-
-    std::cerr << "DEBUG_JM: model AFTER updating--------->" <<std::endl;
-    print();
 }
 
 #define pp(s, x) s << std::setw(10) << x
