@@ -60,7 +60,7 @@ JNIEXPORT void JNICALL Java_xmipp_ImageDouble_readApplyGeo(
 	if (image != NULL) {
 		if (metadata != NULL) {
 			try {
-				image->readApplyGeo(*metadata, (long) id);
+				image->readApplyGeo(*metadata, (size_t) id);
 			} catch (XmippError xe) {
 				msg = xe.getDefaultMessage();
 			} catch (std::exception& e) {
