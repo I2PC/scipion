@@ -274,6 +274,10 @@ void MpiNode::gatherMetadatas(MetaData &MD, const FileName &rootname,
             fn=fn.removeBlockName();
             remove(fn.c_str());
         }
+        //remove first metadata
+        fn = formatString("%s_node%d.xmd", rootname.c_str(), 1);
+        fn=fn.removeBlockName();
+        remove(fn.c_str());
         MD.sort(mdAll, MDL_IMAGE);
 
     }
