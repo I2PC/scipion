@@ -2,7 +2,6 @@
 #include "xmipp_CTFDescription.h"
 #include "xmipp_ExceptionsHandler.h"
 #include "xmipp_InternalData.h"
-#include "xmipp_Aux.h"
 
 JNIEXPORT void JNICALL Java_xmipp_CTFDescription_storeIds
 (JNIEnv *env, jclass cls) {
@@ -90,7 +89,7 @@ JNIEXPORT jobjectArray JNICALL Java_xmipp_CTFDescription_CTFProfile(
 
 	if (ctfDescription != NULL) {
 		try {
-			CTFProfile(*ctfDescription, angle, FMAX, samples, profiles);
+			ctfDescription->getProfile(angle, FMAX, samples, profiles);
 
 			// Stores result to return data.
 			jdoubleArray row = env->NewDoubleArray(1);
@@ -142,7 +141,7 @@ JNIEXPORT jobjectArray JNICALL Java_xmipp_CTFDescription_CTFAverageProfile(
 
 	if (ctfDescription != NULL) {
 		try {
-			CTFAverageProfile(*ctfDescription, FMAX, samples, profiles);
+			ctfDescription->getAverageProfile(FMAX, samples, profiles);
 
 			// Stores result to return data.
 			jdoubleArray row = env->NewDoubleArray(1);
