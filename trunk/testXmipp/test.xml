@@ -222,6 +222,16 @@
             <FILE filename="MRCproj.sel"/>
         </CASE>
     </PROGRAM>
+    <PROGRAM name="xmipp_reconstruct_art_pseudo" mpi="FALSE">
+        <CASE arguments="-i input/projectionsBacteriorhodopsin.xmd --pseudo input/pseudoBacteriorhodopsin.pdb  -l 1 -n 5 -o  %o/rec_art_pseudo" changeDir="FALSE">
+            <FILE filename="rec_art_pseudo.vol"/>
+        </CASE>
+    </PROGRAM>
+    <PROGRAM name="xmipp_reconstruct_fourier" mpi="FALSE">
+        <CASE arguments="-i input/aFewProjections.sel -o  %o/recon.vol " changeDir="FALSE">
+            <FILE filename="recon.vol"/>
+        </CASE>
+    </PROGRAM>
     <PROGRAM name="xmipp_resolution_fsc" mpi="FALSE">
         <CASE arguments="--ref input/phantomBacteriorhodopsin.vol -i input/phantomCandida.vol -s 5.6 --do_dpr --oroot %o/phantomBacteriorhodopsin " changeDir="FALSE">
             <FILE filename="phantomBacteriorhodopsin.frc"/>
@@ -232,10 +242,10 @@
         </CASE>
     </PROGRAM>
     <PROGRAM name="xmipp_tomo_project" mpi="FALSE">
-        <CASE arguments="-i input/phantomCandida.vol -o %o/image.xmp --angles 0 90 90" changeDir="FALSE">
+        <CASE arguments="-i input/phantomBacteriorhodopsin.vol -o %o/image.xmp --angles 0 90 90" changeDir="FALSE">
             <FILE filename="image.xmp"/>
         </CASE>
-        <CASE arguments="-i input/phantomCandida.vol --oroot %o/projections --params input/tomoProjection.param" changeDir="FALSE">
+        <CASE arguments="-i input/phantomBacteriorhodopsin.vol --oroot %o/projections --params input/tomoProjection.param" changeDir="FALSE">
             <FILE filename="projections.stk"/>
             <FILE filename="projections.sel"/>
         </CASE>
