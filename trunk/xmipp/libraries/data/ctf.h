@@ -521,7 +521,7 @@ public:
         double cos_ang2 = cos(ellipsoid_ang2);
         double cos_ang2_2 = cos_ang2*cos_ang2;
         double sin_ang2_2 = 1.0-cos_ang2_2;
-        double c2 = sqrt(cU2 * cU2 * cos_ang2 + cV2 * cV2 * sin_ang2_2);
+        double c2 = sqrt(cU2 * cU2 * cos_ang2_2 + cV2 * cV2 * sin_ang2_2);
         double sigma2 = sqrt(sigmaU2 * sigmaU2 * cos_ang2_2 + sigmaV2 * sigmaV2 * sin_ang2_2);
 
         if (show)
@@ -532,7 +532,9 @@ public:
             << "   c=" << c << "\n"
             << "   sigma=" << sigma << "\n"
             << "   ellipsoid_ang2=" << RAD2DEG(ellipsoid_ang2) << std::endl
-            << "   cU2=" << c2 << "\n"
+            << "   cU2=" << cU2 << " cV2=" << cV2 << "\n"
+            << "   cos_ang2=" << cos_ang2 << " sin_ang2_2=" << sin_ang2_2 << "\n"
+            << "   c2=" << c2 << "\n"
             << "   sigmaU2=" << sigma2 << "\n";
             std::cout << "   u=" << precomputed.u << ") CTFnoise="
             << base_line +
