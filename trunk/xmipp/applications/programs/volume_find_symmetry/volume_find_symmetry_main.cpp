@@ -111,8 +111,8 @@ public:
             local=checkParam("--localHelical");
             if (local)
             {
-                z0=getDoubleParam("--localHelical",0);
-                rot0=getDoubleParam("--localHelical",1);
+                rot0=getDoubleParam("--localHelical",0);
+                z0=getDoubleParam("--localHelical",1);
             }
             else
             {
@@ -394,6 +394,7 @@ public:
                 if (DIRECT_MULTIDIM_ELEM(originalMask,n)==0)
                     DIRECT_MULTIDIM_ELEM(mask_aux,n)=0;
                 double corr=correlationIndex(mVolume, volume_sym, &mask_aux);
+//#define DEBUG
 #ifdef DEBUG
 
                 Image<double> save;
