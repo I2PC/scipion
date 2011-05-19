@@ -58,7 +58,8 @@ void MpiML2DBase::readMpi(int argc, char** argv)
     }
     //The following makes the asumption that 'this' also
     //inherits from an XmippProgram
-
+    if (!node->isMaster())
+            program->verbose = 0;
     // Read subsequently to avoid problems in restart procedure
     for (int proc = 0; proc < node->size; ++proc)
     {
@@ -68,8 +69,6 @@ void MpiML2DBase::readMpi(int argc, char** argv)
     }
     //Send "master" seed to slaves for same randomization
     MPI_Bcast(&program->seed, 1, MPI_INT, 0, MPI_COMM_WORLD);
-    if (!node->isMaster())
-        program->verbose = 0;
 }
 
 void MpiML2DBase::sendDocfile(const MultidimArray<double> &docfiledata)
