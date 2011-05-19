@@ -132,7 +132,9 @@ def projection_matching(_log,dict):
                     ' --search5d_shift ' + str(dict['Search5DShift']) + \
                     ' --search5d_step  ' + str(dict['Search5DStep']) + \
                     ' --mem '            + str(dict['AvailableMemory'] * dict['NumberOfThreads']) + \
-                    ' --thr '            + str(dict['NumberOfThreads'])
+                    ' --thr '            + str(dict['NumberOfThreads']) +\
+                    ' --append '
+
         
         if (dict['DoScale']):
             parameters += \
@@ -159,6 +161,7 @@ def assign_images_to_references(_log,dict):
     ''' assign the images to the different references based on the crosscorrelation coeficient
         #if only one reference it just copy the docfile generated in the previous step
         '''
+    print "INSIDE assign_images_to_references"
     DocFileInputAngles  = dict['DocFileInputAngles']
     ProjMatchRootName   = dict['ProjMatchRootName']#
     NumberOfCtfGroups   = dict['NumberOfCtfGroups']
@@ -168,27 +171,28 @@ def assign_images_to_references(_log,dict):
     MDaux = MetaData()
     MD    = MetaData()
     MD1   = MetaData()
-
-    for iRef3D in range(1,NumberOfReferences+1):
-        inputFileName = ProjMatchRootName[iRef3D]#skip first Null element
-        for iCTFGroup in range(1,NumberOfCtfGroups+1):
-###                MDaux.clear()
-###                MD1.clear()
-                inputdocfile    = 'ctfGroup' + \
-                                  str(iCTFGroup).zfill(utils_xmipp.FILENAMENUMBERLENTGH) + \
-                                  '@' + inputFileName
-                MD.clear()
-                MD.read(inputdocfile)
-                MD.setValueCol(MDL_CTF_GROUP,iCTFGroup)
-                MD.setValueCol(MDL_REF3D,iRef3D)
-                MDaux.unionAll(MD)
-    MD.aggregate(MDaux,AGGR_MAX,MDL_IMAGE,MDL_MAXCC,MDL_MAXCC)
-    MD1.join(MD,MDaux,MDL_UNDEFINED,NATURAL)
-        
-    outputdocfile =  DocFileInputAngles
     MD1.setComment("metadata with  images, the winner reference as well as the ctf group")
-    MD1.write(outputdocfile)
-    print "www",outputdocfile
+
+    outputdocfile =  DocFileInputAngles
+    if os.path.exists(outputdocfile):
+        os.remove(outputdocfile)
+    for iCTFGroup in range(1,NumberOfCtfGroups+1):
+        MDaux.clear()
+        auxInputdocfile = 'ctfGroup' + str(iCTFGroup).zfill(utils_xmipp.FILENAMENUMBERLENTGH)+'@'
+        for iRef3D in range(1,NumberOfReferences+1):
+            inputFileName = ProjMatchRootName[iRef3D]
+            inputdocfile    = auxInputdocfile+ inputFileName
+            MD.clear()
+            MD.read(inputdocfile)
+            #MD.setValueCol(MDL_CTF_GROUP,iCTFGroup)
+            MD.setValueCol(MDL_REF3D,iRef3D)
+            MDaux.unionAll(MD)
+        MDaux.sort()
+        MD.aggregate(MDaux,AGGR_MAX,MDL_IMAGE,MDL_MAXCC,MDL_MAXCC)
+        #if a single image is assigned to two references with the same 
+        #CC use it in both reconstruction
+        MD1.join(MD,MDaux,MDL_UNDEFINED,NATURAL)        
+        MD1.write(auxInputdocfile+outputdocfile,MD_APPEND)
             
 def angular_class_average(_log,dict):
     # Now make the class averages
