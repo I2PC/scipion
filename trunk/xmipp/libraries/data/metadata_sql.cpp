@@ -446,6 +446,21 @@ void MDSql::setOperate(MetaData *mdPtrOut, MDLabel column, SetOperation operatio
         << " NOT IN (SELECT " << MDL::label2Str(column)
         << " FROM " << tableName(mdPtrOut->myMDSql->tableId) << ");";
         break;
+    case REMOVE_DUPLICATE:
+        //Create string with columns list
+        size = mdPtrOut->activeLabels.size();
+        sep = ' ';
+        for (int i = 0; i < size; i++)
+        {
+            ss2 << sep << MDL::label2Str( myMd->activeLabels[i]);
+            sep = ", ";
+        }
+        ss << "INSERT INTO " << tableName(mdPtrOut->myMDSql->tableId)
+        << " (" << ss2.str() << ")"
+        << " SELECT DISTINCT " << ss2.str()
+        << " FROM " << tableName(tableId)
+        << ";";
+        break;
     case INTERSECTION:
     case SUBSTRACTION:
         ss << "DELETE FROM " << tableName(mdPtrOut->myMDSql->tableId)

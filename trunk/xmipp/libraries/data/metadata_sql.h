@@ -50,7 +50,7 @@ enum AggregateOperation
 /** Posible Set Operations with MetaData */
 enum SetOperation
 {
-    UNION, UNION_DISTINCT, INTERSECTION, SUBSTRACTION, INNER_JOIN, LEFT_JOIN, OUTER_JOIN,NATURAL_JOIN
+    UNION, UNION_DISTINCT, INTERSECTION, SUBSTRACTION, INNER_JOIN, LEFT_JOIN, OUTER_JOIN,NATURAL_JOIN,REMOVE_DUPLICATE
 };
 
 /** Enumeration of JOIN types for this operation */
