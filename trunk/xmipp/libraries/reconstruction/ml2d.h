@@ -74,19 +74,17 @@ public:
     /** References images */
     std::vector < Image<double> > Iref, WsumMref;
     /** Sigma value for expected pixel noise */
-    double sigma_noise;
-    /** sigma-value for origin offsets */
-    double sigma_offset;
-    /** Vector containing estimated fraction for each model */
-    std::vector<double> alpha_k;
-    /** Vector containing estimated fraction for mirror of each model */
-    std::vector<double> mirror_fraction;
-    /** Average scales for each refno from do_norm */
-    std::vector<double> scale;
+    double sigma_noise, wsum_sigma_noise;
+    /** sigma-value for origin offsets and its sum*/
+    double sigma_offset, wsum_sigma_offset;
+    /** Vector containing sum of the weights of each reference and the mirrored ones*/
+    std::vector<double> sumwsc, sumw_mirror;
+    /** this is redundant information, since it can be obtained from the sums */
+    std::vector<double> alpha_k, mirror_fraction, scale;
     /** Sums of weights */
     double sumw_allrefs, sumw_allrefs2;
     /** Average height of the probability distribution at its maximum */
-    double avePmax;
+    double avePmax, sumfracweight;
     /** the Log Likelihood */
     double LL;
 
@@ -94,10 +92,6 @@ public:
     int dim;
     /** Algorithmic variants */
     bool do_student, do_student_sigma_trick, do_norm;
-    /** This is to avoid dividing by weight when subtracting,
-     * that's why we expect an addition after subtraction
-     */
-    bool previous_subtraction;
 
     ModelML2D();
     ModelML2D(int n_ref);
@@ -108,20 +102,6 @@ public:
     void addModel(const ModelML2D &model);
     void substractModel(const ModelML2D &model);
 
-    double getSumw(int refno) const;
-    double getSumwMirror(int refno) const;
-    double getSumwsc(int refno) const;
-    MultidimArray<double> getWsumMref(int refno) const;
-    double getSumwAllrefs() const;
-    double getWsumSigmaOffset() const;
-    double getWsumSigmaNoise() const;
-    double getSumfracweight() const;
-    void updateSigmaOffset(double wsum_sigma_offset);
-    void updateSigmaNoise(double wsum_sigma_noise);
-    void updateAvePmax(double sumfracweight);
-    void updateFractions(int refno, double sumw, double sumw_mirror, double sumw_allrefs);
-    void updateScale(int refno, double sumwsc, double sumw);
-    /// Update references and other parameters
     void update();
     ///Just for debugging now
     void print(int tabs = 0) const;
@@ -285,10 +265,14 @@ public:
     virtual void randomizeImagesOrder();
 
     /// Create working threads
-    virtual void createThreads(){};//by default do nothing
+    virtual void createThreads()
+    {}
+    ;//by default do nothing
 
     /// Exit threads and free memory
-    virtual void destroyThreads(){};//by default do nothing
+    virtual void destroyThreads()
+    {}
+    ;//by default do nothing
 
     ///Write output files
     virtual void writeOutputFiles(const ModelML2D &model, OutputType outputType = OUT_FINAL) = 0;
@@ -308,7 +292,8 @@ public:
     virtual void defineAdditionalParams(XmippProgram * prog, const char * sectionLine);
     virtual void defineHiddenParams(XmippProgram *prog);
 
-};//end of class ML2DBaseProgram
+}
+;//end of class ML2DBaseProgram
 
 
 

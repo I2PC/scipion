@@ -870,24 +870,34 @@ void ProgML2D::expectationSingleImage(Matrix1D<double> &opt_offsets)
               - ddim2 * log(sqrt(PI * df * sigma_noise2)) + gammln(-df2)
               - gammln(df / 2.);
 
-    //#define DEBUG_JM1
+#define DEBUG_JM1
 #ifdef DEBUG_JM1
 
-    if (iter>1)
+    //if (iter>1)
     {
-        std::cerr << "    IMAGE " << current_image << "----------------------------->>>" << std::endl;
-        std::cerr << "                             dLL: " << dLL << std::endl;
-        std::cerr << "                        sum_refw: " << sum_refw << std::endl;
-        std::cerr << "                      my_mindiff: " << my_mindiff << std::endl;
-        std::cerr << "                    sigma_noise2: " << sigma_noise2 << std::endl;
-        std::cerr << "                           ddim2: " << ddim2 << std::endl;
-        //std::cerr << "                        dfsigma2: " << dfsigma2 << std::endl;
-        std::cerr << "                       wsum_corr: " << wsum_corr << std::endl;
-        std::cerr << "                     wsum_offset: " << wsum_offset << std::endl;
-        std::cerr << "                            sumw: ";
+        static std::ios::openmode mode = std::ios::out|std::ios::trunc;
+        std::ofstream log;
+        FileName fn = fn_root + (current_image % 2 == 0 ? "_images.even" : "_images.odd");
+        log.open(fn.c_str(), mode);
+        log << "    IMAGE " << current_image << "----------------------------->>>" << std::endl;
+        log << "                             dLL: " << dLL << std::endl;
+        log << "                        sum_refw: " << sum_refw << std::endl;
+        log << "                      my_mindiff: " << my_mindiff << std::endl;
+        log << "                    sigma_noise2: " << sigma_noise2 << std::endl;
+        log << "                           ddim2: " << ddim2 << std::endl;
+        //log << "                        dfsigma2: " << dfsigma2 << std::endl;
+        log << "                       wsum_corr: " << wsum_corr << std::endl;
+        log << "                     wsum_offset: " << wsum_offset << std::endl;
+        log << "                            refw: ";
         for (int refno = 0; refno < model.n_ref; ++refno)
-            std::cerr << std::setw(15) << sumw[refno];
-        std::cerr<< std::endl;
+            log << std::setw(15) << refw[refno];
+        log<< std::endl;
+        log << "                     refw_mirror: ";
+        for (int refno = 0; refno < model.n_ref; ++refno)
+            log << std::setw(15) << refw_mirror[refno];
+        log<< std::endl;
+        log.close();
+        mode = std::ios::out|std::ios::app;
     }
 #endif
 #undef DEBUG_JM1
@@ -1666,6 +1676,7 @@ void ProgML2D::iteration()
         //Maximize the model
         maximization();
     }//close for blocks
+    model.print();
 }
 
 
@@ -1758,7 +1769,7 @@ void ProgML2D::expectation()
             Xi2 = img().sum2();
             Mimg = img();
 
-//#define DEBUG_JM2
+            //#define DEBUG_JM2
 #ifdef DEBUG_JM2
 
             if (iter >= 2 && current_image == myFirstImg)
@@ -1865,21 +1876,18 @@ void ProgML2D::expectation()
                 progress_bar(img_done);
             img_done++;
 
+            //            {
+            //              //std::cerr << "---------------------- DEBUG_JM: current_image: " << current_image << std::endl;
+            //                std::cerr << "                              LL: " << LL << std::endl;
+            //                std::cerr << "                wsum_sigma_noise: " << wsum_sigma_noise << std::endl;
+            //                std::cerr << "               wsum_sigma_offset: " << wsum_sigma_offset << std::endl;
+            //                std::cerr << "                   sumfracweight: " << sumfracweight << std::endl;
+            //            }
 
         }//close if current_block, also close of for all images
-
-        ///FIXME: Remove this printing, only for debug
-        //if (iter > 8)
-        //        {
-        //        std::cerr << "                              LL: " << LL << std::endl;
-        //        std::cerr << "                  opt_offsets(0): " << opt_offsets(0) << std::endl;
-        //        std::cerr << "                  opt_offsets(1): " << opt_offsets(1) << std::endl;
-        //        std::cerr << "                wsum_sigma_noise: " << wsum_sigma_noise << std::endl;
-        //        std::cerr << "               wsum_sigma_offset: " << wsum_sigma_offset << std::endl;
-        //        std::cerr << "                   sumfracweight: " << sumfracweight << std::endl;
-        //        }
-
     }//close for all images
+
+    ///FIXME: Remove this printing, only for debug
 
 
     if (verbose > 0 && current_block == (blocks - 1))
@@ -1930,13 +1938,27 @@ void ProgML2D::maximizeModel(ModelML2D &local_model)
 
     // Update the reference images
     local_model.sumw_allrefs = 0.;
-    local_model.dim = dim;
+    local_model.sumw_allrefs2 = 0.;
+
+
+#define ASSIGN(var) local_model.var = var
+
+    ASSIGN(dim);
+    ASSIGN(sumfracweight);
+    ASSIGN(LL);
+    // Update sigma of the origin offsets
+    if (!fix_sigma_offset)
+        ASSIGN(wsum_sigma_offset);
+    // Update the noise parameters
+    if (!fix_sigma_noise)
+        ASSIGN(wsum_sigma_noise);
+
 
     for (int refno = 0; refno < local_model.n_ref; refno++)
     {
-        if (sumw[refno] > 0.)
+        double weight = sumw[refno];
+        if (weight > 0.)
         {
-            double weight = sumw[refno];
             if (local_model.do_student)
             {
                 weight = sumw2[refno];
@@ -1956,48 +1978,12 @@ void ProgML2D::maximizeModel(ModelML2D &local_model)
         }
 
         // Adjust average scale (nr_classes will be smaller than model.n_ref for the 3D case!)
-        local_model.updateScale(refno, sumwsc[refno], sumw[refno]);
+        if (local_model.do_norm)
+            ASSIGN(sumwsc[refno]);
 
+        if (!fix_fractions)
+            ASSIGN(sumw_mirror[refno]);
     }
-
-    // Update the model fractions
-    if (!fix_fractions)
-        for (int refno = 0; refno < local_model.n_ref; refno++)
-        {
-            try
-            {
-                local_model.updateFractions(refno, sumw[refno], sumw_mirror[refno],
-                                            local_model.sumw_allrefs);
-            }
-            catch (XmippError xe)
-            {
-
-                std::cerr << "DEBUG_JM: >>>>>>>>>>> ERROR ON MAXIMIZE_MODEL : "<< std::endl << xe << std::endl;
-                local_model.print();
-                throw xe;
-            }
-        }
-
-    // Average height of the probability distribution at its maximum
-    local_model.updateAvePmax(sumfracweight);
-
-    // Update sigma of the origin offsets
-    if (!fix_sigma_offset)
-    {
-        //std::cerr << std::endl << "-------------------- wsum_sigma_offset: " << wsum_sigma_offset << std::endl;
-        local_model.updateSigmaOffset(wsum_sigma_offset);
-    }
-
-    // Update the noise parameters
-    if (!fix_sigma_noise)
-    {
-        //std::cerr << "-------------------- wsum_sigma_noise: " << wsum_sigma_noise << std::endl << std::endl;
-        local_model.updateSigmaNoise(wsum_sigma_noise);
-        //sigma_noise2 = local_model.sigma_noise * local_model.sigma_noise;
-    }
-
-    local_model.LL = LL;
-    //model.print();
 
 #ifdef DEBUG
 
@@ -2044,6 +2030,7 @@ void ProgML2D::maximization()
         if (!special_first)
         {
             model.addModel(block_model);
+            model.update();
             //std::cerr << "====== GLOBAL model: after addition: " << " =========" <<std::endl;
             //model.print();
         }
@@ -2052,7 +2039,7 @@ void ProgML2D::maximization()
             for (current_block = 0; current_block < blocks; current_block++)
             {
                 readModel(block_model, current_block);
-                //std::cerr << "====== Readed block model: " << current_block <<" =========" <<std::endl;
+                // std::cerr << "====== Readed block model: " << current_block <<" =========" <<std::endl;
                 //block_model.print();
 
                 if (current_block == 0)
@@ -2062,6 +2049,7 @@ void ProgML2D::maximization()
                 //std::cerr << "====== GLOBAL model: after addition: " << " =========" <<std::endl;
                 //model.print();
             }
+            model.update();
             // After iteration 0, factor_nref will ALWAYS be one
             factor_nref = 1;
             //restore the value of current block
@@ -2078,35 +2066,36 @@ void ProgML2D::maximization()
 
 void ProgML2D::correctScaleAverage()
 {
-
-    int iclass, nr_classes = ROUND(model.n_ref / refs_per_class);
-    std::vector<double> wsum_scale(nr_classes), sumw_scale(nr_classes);
-    ldiv_t temp;
-    average_scale = 0.;
-
-    for (int refno = 0; refno < model.n_ref; refno++)
-    {
-        average_scale += model.getSumwsc(refno);
-        temp = ldiv(refno, refs_per_class);
-        iclass = ROUND(temp.quot);
-        wsum_scale[iclass] += model.getSumwsc(refno);
-        sumw_scale[iclass] += model.getSumw(refno);
-    }
-    for (int refno = 0; refno < model.n_ref; refno++)
-    {
-        temp = ldiv(refno, refs_per_class);
-        iclass = ROUND(temp.quot);
-        if (sumw_scale[iclass] > 0.)
-        {
-            model.scale[refno] = wsum_scale[iclass] / sumw_scale[iclass];
-            model.WsumMref[refno]() *= model.scale[refno];
-        }
-        else
-        {
-            model.scale[refno] = 1.;
-        }
-    }
-    average_scale /= model.sumw_allrefs;
+    //FIXME: This function needs re-implementation for the do_norm parameter
+    //now the ref3d comes in metadata, refs_per_class can be avoided
+//    int iclass, nr_classes = ROUND(model.n_ref / refs_per_class);
+//    std::vector<double> wsum_scale(nr_classes), sumw_scale(nr_classes);
+//    ldiv_t temp;
+//    average_scale = 0.;
+//
+//    for (int refno = 0; refno < model.n_ref; refno++)
+//    {
+//        average_scale += model.getSumwsc(refno);
+//        temp = ldiv(refno, refs_per_class);
+//        iclass = ROUND(temp.quot);
+//        wsum_scale[iclass] += model.getSumwsc(refno);
+//        sumw_scale[iclass] += model.getSumw(refno);
+//    }
+//    for (int refno = 0; refno < model.n_ref; refno++)
+//    {
+//        temp = ldiv(refno, refs_per_class);
+//        iclass = ROUND(temp.quot);
+//        if (sumw_scale[iclass] > 0.)
+//        {
+//            model.scale[refno] = wsum_scale[iclass] / sumw_scale[iclass];
+//            model.WsumMref[refno]() *= model.scale[refno];
+//        }
+//        else
+//        {
+//            model.scale[refno] = 1.;
+//        }
+//    }
+//    average_scale /= model.sumw_allrefs;
 }//close function correctScaleAverage
 
 /// Add docfiledata to docfile

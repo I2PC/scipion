@@ -114,9 +114,9 @@ void ML2DBaseProgram::setNumberOfLocalImages()
 // Check convergence
 bool ML2DBaseProgram::checkConvergence()
 {
-//#define DEBUG_JM
+#define DEBUG_JM
 #ifdef DEBUG_JM
-    std::cerr<<"entering checkConvergence"<<std::endl;
+    std::cerr<<">>>>>>>> entering checkConvergence"<<std::endl;
 #endif
 
     if (iter == 0)
@@ -152,7 +152,7 @@ bool ML2DBaseProgram::checkConvergence()
     }
 
 #ifdef DEBUG_JM
-    std::cerr<<"leaving checkConvergence"<<std::endl;
+    std::cerr<<"<<<<<< leaving checkConvergence"<<std::endl;
 
 #endif
 #undef DEBUG_JM
@@ -307,12 +307,13 @@ ModelML2D::ModelML2D(int n_ref)
 void ModelML2D::initData()
 {
     n_ref = -1;
-    sumw_allrefs2 = sumw_allrefs = 0;
+    sumw_allrefs2 = sumw_allrefs = 0.;
     do_student = do_norm = false;
     do_student_sigma_trick = true;
-    sigma_noise = sigma_offset = LL = avePmax = 0;
+    sigma_noise = sigma_offset = LL = avePmax = 0.;
+    wsum_sigma_noise = wsum_sigma_offset = 0.;
+    sumfracweight = 0.;
     dim = 0;
-    previous_subtraction = false;
 }//close function initData
 
 /** Before call this function model.n_ref should
@@ -328,189 +329,122 @@ void ModelML2D::setNRef(int n_ref)
     alpha_k.resize(n_ref, 0.);
     mirror_fraction.resize(n_ref, 0.);
     scale.resize(n_ref, 1.);
+    sumw_mirror.resize(n_ref, 0.);
+    sumwsc.resize(n_ref, 0.);
 
 }//close function setNRef
+
+
 
 void ModelML2D::combineModel(const ModelML2D &model, int sign)
 {
     if (n_ref != model.n_ref)
         REPORT_ERROR(ERR_VALUE_INCORRECT, "Can not add models with different 'n_ref'");
 
-    double sumw, sumw_mirror, sumwsc, sumweight;
-    double wsum_sigma_offset = getWsumSigmaOffset() + sign
-                               * model.getWsumSigmaOffset();
-    double wsum_sigma_noise = getWsumSigmaNoise() + sign
-                              * model.getWsumSigmaNoise();
-    double local_sumw_allrefs = sumw_allrefs + sign * model.sumw_allrefs;
-    double sumfracweight = getSumfracweight() + sign
-                           * model.getSumfracweight();
+#define COMBINE(var) var += sign * model.var
+    COMBINE(wsum_sigma_offset);
+    COMBINE(wsum_sigma_noise);
+    COMBINE(sumw_allrefs);
+    COMBINE(sumw_allrefs2);
+    COMBINE(sumfracweight);
+    COMBINE(LL);
 
     MultidimArray<double> tmp;
-    double allowed_min = 0;//(sign == 1) ? SIGNIFICANT_WEIGHT_LOW : -99e99;
+    double sumweight = 0., w1 = 0., w2 = 0.;
 
     for (int refno = 0; refno < n_ref; refno++)
     {
-        double w1 = Iref[refno].weight();
-        double w2 = sign * model.Iref[refno].weight();
+        w1 = WsumMref[refno].weight();
+        w2 = sign * model.WsumMref[refno].weight();
         tmp = model.WsumMref[refno]();
         tmp *= sign;
         WsumMref[refno]() += tmp;
         sumweight = w1 + w2;
 
-        if (sumweight > allowed_min)
+        if (sumweight > 0.)
         {
             Iref[refno].setWeight(sumweight);
+            WsumMref[refno].setWeight(sumweight);
+            COMBINE(sumw_mirror[refno]);
+            COMBINE(sumwsc[refno]);
         }
         else
         {
-            //std::cerr << "sumweight: " << sumweight << std::endl;
             Iref[refno]().initZeros();
             WsumMref[refno]().initZeros();
             Iref[refno].setWeight(0);
+            WsumMref[refno].setWeight(0.);
+            sumw_mirror[refno] = 0.;
+            sumwsc[refno] = 0.;
         }
-
-        //Get all sums first, because function call will change
-        //after updating model parameters.
-        sumw = getSumw(refno) + sign * model.getSumw(refno);
-        sumw_mirror = getSumwMirror(refno) + sign * model.getSumwMirror(
-                          refno);
-        sumwsc = getSumwsc(refno) + sign * model.getSumwsc(refno);
-
-        //Update parameters
-        //alpha_k[refno] = sumw / local_sumw_allrefs;
-        //mirror_fraction[refno] = sumw_mirror / sumw;
-        updateFractions(refno, sumw, sumw_mirror, local_sumw_allrefs);
-        //scale[refno] = sumwsc / sumw;
-        updateScale(refno, sumwsc, sumw);
     }
-
-    sumw_allrefs = local_sumw_allrefs;
-    sumw_allrefs2 += sign * model.sumw_allrefs2;
-
-    updateSigmaNoise(wsum_sigma_noise);
-    (wsum_sigma_offset);
-    updateAvePmax(sumfracweight);
-    LL += sign * model.LL;
-
 }//close function combineModel
 
 void ModelML2D::addModel(const ModelML2D &model)
 {
     combineModel(model, 1);
-    previous_subtraction = false;
 }//close function addModel
 
 void ModelML2D::substractModel(const ModelML2D &model)
 {
     combineModel(model, -1);
-    previous_subtraction = true;
 }//close function substractModel
 
-double ModelML2D::getSumw(int refno) const
+void ModelML2D::update()
 {
-    return alpha_k[refno] * sumw_allrefs;
-}//close function sumw
+    if (sumw_allrefs < 0)
+        REPORT_ERROR(ERR_VALUE_INCORRECT, "updateFractions: sumw_allrefs should be greater than 0 ");
 
-double ModelML2D::getSumwMirror(int refno) const
-{
-    return getSumw(refno) * mirror_fraction[refno];
-}//close function sumw_mirror
-
-double ModelML2D::getSumwsc(int refno) const
-{
-    return scale[refno] * getSumw(refno);
-}//close function get_sumwsc
-
-MultidimArray<double> ModelML2D::getWsumMref(int refno) const
-{
-    return Iref[refno]() * Iref[refno].weight();
-}//close function get_wsum_Mref
-
-double ModelML2D::getWsumSigmaOffset() const
-{
-    return sigma_offset * sigma_offset * 2 * sumw_allrefs;
-}//close function get_wsum_sigma_offset
-
-double ModelML2D::getWsumSigmaNoise() const
-{
+    //update sigma_noise
     double sum = (do_student && do_student_sigma_trick) ? sumw_allrefs2
                  : sumw_allrefs;
-    return sigma_noise * sigma_noise * dim * dim * sum;
-}//close function get_wsum_sigma_noise
-
-double ModelML2D::getSumfracweight() const
-{
-    return avePmax * sumw_allrefs;
-}//close function get_sumfracweight
-
-void ModelML2D::updateSigmaOffset(double wsum_sigma_offset)
-{
-    if (sumw_allrefs <= 0)
-        REPORT_ERROR(ERR_VALUE_INCORRECT, "'sumw_allrefs' should greater than zero");
-    if (wsum_sigma_offset < 0.)
-        REPORT_ERROR(ERR_VALUE_INCORRECT, "sqrt of negative 'wsum_sigma_offset'");
-    sigma_offset = sqrt(wsum_sigma_offset / (2. * sumw_allrefs));
-}//close function updateSigmaOffset
-
-void ModelML2D::updateSigmaNoise(double wsum_sigma_noise)
-{
-    // The following converges faster according to McLachlan&Peel (2000)
-    // Finite Mixture Models, Wiley p. 228!
-    double sum = (do_student && do_student_sigma_trick) ? sumw_allrefs2
-                 : sumw_allrefs;
-    if (sum == 0)
-        REPORT_ERROR(ERR_VALUE_INCORRECT, "'sumw_allrefs' couldn't be zero");
-
     double sigma_noise2 = wsum_sigma_noise / (sum * dim * dim);
 
     if (sigma_noise2 < 0.)
         REPORT_ERROR(ERR_VALUE_INCORRECT, "sqrt of negative 'sigma_noise2'");
     sigma_noise = sqrt(sigma_noise2);
-}//close function updateSigmaNoise
 
-void ModelML2D::updateAvePmax(double sumfracweight)
-{
+    //update sigma_offset
+    if (wsum_sigma_offset < 0.)
+        REPORT_ERROR(ERR_VALUE_INCORRECT, "sqrt of negative 'wsum_sigma_offset'");
+    sigma_offset = sqrt(wsum_sigma_offset / (2. * sumw_allrefs));
+
+    //update avePmax
     avePmax = sumfracweight / sumw_allrefs;
-}//close function updateAvePmax
 
-void ModelML2D::updateFractions(int refno, double sumw,
-                                double sumw_mirror, double sumw_allrefs)
-{
-    if (sumw_allrefs == 0)
+    std::cerr << "DEBUG_JM: model BEFORE updating--------->" <<std::endl;
+    print();
+    double weight, inv_weight;
+
+    for (int refno = 0; refno < n_ref; ++refno)
     {
-        REPORT_ERROR(ERR_VALUE_INCORRECT, "updateFractions: sumw_allrefs == 0 ");
+        weight = WsumMref[refno].weight();
+
+        if (weight > 0.)
+        {
+            //update weights
+            Iref[refno].setWeight(weight);
+            inv_weight = 1 / weight; //just to speed-up
+            Iref[refno]() = WsumMref[refno]();
+            Iref[refno]() *= inv_weight;
+            //update fractions
+            alpha_k[refno] = weight / sumw_allrefs;
+            mirror_fraction[refno] = sumw_mirror[refno] * inv_weight;
+            scale[refno] = sumwsc[refno] * inv_weight;
+        }
+        else
+        {
+            //zero weights
+            Iref[refno].setWeight(0.);
+            Iref[refno]().initZeros(WsumMref[refno]());
+            alpha_k[refno] = 0.;
+            mirror_fraction[refno] = 0.;
+            scale[refno] = 0.;
+        }
     }
 
-    if (sumw > 0.)
-    {
-        alpha_k[refno] = sumw / sumw_allrefs;
-        mirror_fraction[refno] = sumw_mirror / sumw;
-    }
-    else
-    {
-        alpha_k[refno] = 0.;
-        mirror_fraction[refno] = 0.;
-    }
-}//close updateFractions
-
-void ModelML2D::updateScale(int refno, double sumwsc, double sumw)
-{
-    if (do_norm)
-        scale[refno] = (sumw > 0) ? sumwsc / sumw : 1;
-
-}//close function updateScale
-
-void ModelML2D::update()
-{
-  double w;
-  for (int refno = 0; refno < n_ref; ++refno)
-    if ((w = WsumMref[refno].weight()) > 0.)
-    {
-      Iref[refno].setWeight(w);
-      w = 1 / w; //just to speed-up
-      Iref[refno]() = WsumMref[refno]();
-      Iref[refno]() *= w;
-    }
+    std::cerr << "DEBUG_JM: model AFTER updating--------->" <<std::endl;
+    print();
 }
 
 #define pp(s, x) s << std::setw(10) << x
@@ -521,30 +455,34 @@ void ModelML2D::print(int tabs) const
     for (int t = 0; t < tabs; ++t)
         stabs += " ";
 
+    std::cerr << "======================= Block ==================== " << std::endl;
+
     std::cerr << "sumw_allrefs: " << sumw_allrefs << std::endl;
-    std::cerr << "wsum_sigma_offset: " << getWsumSigmaOffset() << std::endl;
-    std::cerr << "wsum_sigma_noise: " << getWsumSigmaNoise() << std::endl;
+    std::cerr << "wsum_sigma_offset: " << wsum_sigma_offset << std::endl;
+    std::cerr << "wsum_sigma_noise: " << wsum_sigma_noise << std::endl;
     std::cerr << "sigma_offset: " << sigma_offset << std::endl;
     std::cerr << "sigma_noise: " << sigma_noise << std::endl;
     std::cerr << "LL: " << LL << std::endl;
 
-    std::stringstream ss1, ss2, ss3, ss4, ss5;
+    std::stringstream ss1, ss2, ss3, ss4, ss5, ss6, ss7;
     pp(ss1, "refno:");
-    pp(ss2, "sumw:");
     pp(ss3, "sumw_mirror:");
     pp(ss4, "alpha_k:");
     pp(ss5, "mirror_fraction");
+    pp(ss6, "WsumMref.weight");
+    pp(ss7, "Iref.weight");
 
     for (int refno = 0; refno < n_ref; refno++)
     {
         pp(ss1, refno);
-        pp(ss2, getSumw(refno));
-        pp(ss3, getSumwMirror(refno));
+        pp(ss3, sumw_mirror[refno]);
         pp(ss4, alpha_k[refno]);
         pp(ss5, mirror_fraction[refno]);
+        pp(ss6, WsumMref[refno].weight());
+        pp(ss7, Iref[refno].weight());
     }
-    std::cerr << ss1.str() << std::endl<< ss2.str() << std::endl<< ss3.str() << std::endl
-    << ss4.str() << std::endl<< ss5.str() << std::endl;
+    std::cerr << ss1.str() << std::endl<< ss3.str() << std::endl
+    << ss4.str() << std::endl<< ss5.str() << std::endl << ss6.str() << std::endl << ss7.str()<< std::endl;
 
 }//close function print
 
