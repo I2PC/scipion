@@ -2,6 +2,7 @@
 #include "xmipp_CTFDescription.h"
 #include "xmipp_ExceptionsHandler.h"
 #include "xmipp_InternalData.h"
+#include <data/ctf.h>
 
 JNIEXPORT void JNICALL Java_xmipp_CTFDescription_storeIds
 (JNIEnv *env, jclass cls) {
