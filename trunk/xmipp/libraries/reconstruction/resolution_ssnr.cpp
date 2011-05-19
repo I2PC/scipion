@@ -81,7 +81,7 @@ void ProgSSNR::defineParams()
     addParamsLine("  alias -s;");
     addParamsLine("   [--min_power <th=1e-10>]  : Minimum power in Fourier space. If at any moment, the SSNR must divide by something");
     addParamsLine("                             : smaller than this value, then the SSNR at that frequency is assumed to be 0. High ");
-    addParamsLine("                             : values of this threshold result on speckled images. If this is thee case, lower ");
+    addParamsLine("                             : values of this threshold result on speckled images. If this is the case, lower ");
     addParamsLine("                             : this threshold (it must always be positive) ");
     addParamsLine("   [--gen_VSSNR]             : (Allowed global options: --ring, --sampling_rate, --min_power)");
     addParamsLine("                             :+++ %BR%");
@@ -99,8 +99,10 @@ void ProgSSNR::defineParams()
     addParamsLine("   : (Allowed global options: --ring, --sampling_rate, --min_power, -o)");
     addParamsLine("   requires --VSSNR;");
 
-    addExampleLine("Resolution of subset2.vol volume with respect to subset1.vol reference volume using 5.6 pixel size (in Angstrom):", false);
-    addExampleLine("xmipp_resolution_ssnr -S recFourierSignal.vol -N recFourierNoise.vol -selS projections.xmd  -selN noiseProjections.xmd --VSSNR volumeout.vol --gen_VSSNR");
+    addExampleLine("SSNR Resolution of a reconstructed volume:", false);
+    addExampleLine("xmipp_resolution_ssnr -S recFourierSignal.vol -N recFourierNoise.vol -selS projections.xmd  -selN noiseProjections.xmd");
+    addExampleLine("VSSNR Resolution of a reconstructed volume:", false);
+    addExampleLine("xmipp_resolution_ssnr -S recFourierSignal.vol -N recFourierNoise.vol -selS projections.xmd  -selN noiseProjections.xmd --gen_VSSNR --VSSNR volumeout.vol");
 }
 
 
