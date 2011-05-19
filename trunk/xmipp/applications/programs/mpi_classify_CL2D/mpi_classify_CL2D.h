@@ -25,7 +25,7 @@
 #ifndef _PROG_VQ_PROJECTIONS
 #define _PROG_VQ_PROJECTIONS
 
-#include <mpi.h>
+#include <parallel/mpi.h>
 #include <data/metadata.h>
 #include <data/metadata_extension.h>
 #include <data/polar.h>
@@ -38,8 +38,8 @@
 /**@defgroup VQforProjections Vector Quantization for Projections
    @ingroup ClassificationLibrary */
 //@{
-/** VQProjection class */
-class VQProjection {
+/** CL2DClass class */
+class CL2DClass {
 public:
     // Use correlation instead of correntropy
     bool useCorrelation;
@@ -126,7 +126,7 @@ public:
         double sigma, bool noMirror, double &corrCode, double &likelihood);
 
     /// Look for K-nearest neighbours
-    void lookForNeighbours(const std::vector<VQProjection *> listP,
+    void lookForNeighbours(const std::vector<CL2DClass *> listP,
         double sigma, bool noMirror, int K);
     
     /// Show
@@ -135,20 +135,20 @@ public:
 
 struct SDescendingClusterSort
 {
-     bool operator()(VQProjection* const& rpStart, VQProjection* const& rpEnd)
+     bool operator()(CL2DClass* const& rpStart, CL2DClass* const& rpEnd)
      {
           return rpStart->currentListImg.size() > rpEnd->currentListImg.size();
      }
 };
 
-/** Class for a VQ */
-class VQ {
+/** Class for a CL2D */
+class CL2D {
 public:
     /// Mask for the background
 	MultidimArray<int> mask;
 
     /// List of nodes
-    std::vector<VQProjection *> P;
+    std::vector<CL2DClass *> P;
     
     /// Number of neighbours
     int Nneighbours;
@@ -224,16 +224,16 @@ public:
     int cleanEmptyNodes();
 
     /** Split node */
-    void splitNode(VQProjection *node,
-        VQProjection *&node1, VQProjection *&node2, int rank,
+    void splitNode(CL2DClass *node,
+        CL2DClass *&node1, CL2DClass *&node2, int rank,
 	std::vector<int> &finalAssignment) const;
 
     /** Split the widest node */
     void splitFirstNode(int rank);
 };
 
-/** VQ parameters. */
-class Prog_VQ_prm: public XmippProgram {
+/** CL2D parameters. */
+class ProgClassifyCL2D: public XmippProgram {
 public:
     /// Input selfile with the images to quantify
     FileName fnSel;
@@ -277,8 +277,11 @@ public:
     /// No mirror
     bool noMirror;
 
-    /// Verbose
-    bool verbose;
+    /// MPI constructor
+    ProgClassifyCL2D(int argc, char** argv);
+
+    /// Destructor
+    ~ProgClassifyCL2D();
 
     /// Read
     void readParams();
@@ -290,10 +293,13 @@ public:
     void defineParams();
     
     /// Produce side info
-    void produce_side_info(int rank);
+    void produceSideInfo(int rank);
     
     /// Run
-    void run(int rank);
+    void runWorker(int rank);
+
+    /// Run
+    void run();
 
     /// Align the input images with respect to their respective class
     void alignInputImages(const FileName &fnSF, int rank, int Nprocessors);
@@ -302,7 +308,10 @@ public:
     MetaData SF;
     
     // Structure for the classes
-    VQ vq;
+    CL2D vq;
+
+    // Mpi node
+    MpiNode *node;
 };
 //@}
 #endif

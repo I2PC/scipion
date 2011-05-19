@@ -23,14 +23,14 @@
  *  e-mail address 'xmipp@cnb.csic.es'
  ***************************************************************************/
 
-#include "class_averages.h"
+#include "mpi_classify_CL2D.h"
 #include <data/filters.h>
 #include <data/mask.h>
 #include <data/polar.h>
 #include <data/image_generic.h>
 
-/* VQProjection basics ---------------------------------------------------- */
-void VQProjection::updateProjection(const MultidimArray<double> &I,
+/* CL2DClass basics ---------------------------------------------------- */
+void CL2DClass::updateProjection(const MultidimArray<double> &I,
                                     double corrCode, int idx)
 {
     Pupdate+=I;
@@ -39,10 +39,8 @@ void VQProjection::updateProjection(const MultidimArray<double> &I,
         nextClassCorr.push_back(corrCode);
 }
 
-int VQProjection::sendMPI(int d_rank)
+int CL2DClass::sendMPI(int d_rank)
 {
-    int size;
-
     // Projection
     // MultidimArray<double> P;
     MPI_Send( &(P.xdim), 1, MPI_INT, d_rank, 0, MPI_COMM_WORLD );
@@ -58,7 +56,7 @@ int VQProjection::sendMPI(int d_rank)
     MPI_Send( &(rotationalCorr.xdim), 1, MPI_INT, d_rank, 0, MPI_COMM_WORLD );
     MPI_Send( &rotationalCorr.data,rotationalCorr.xdim , MPI_DOUBLE, d_rank, 0, MPI_COMM_WORLD );
 
-    size = currentListImg.size();
+    int size = currentListImg.size();
     MPI_Send( &size, 1, MPI_INT, d_rank, 0, MPI_COMM_WORLD );
     MPI_Send( &currentListImg[0], size, MPI_INT, d_rank, 0, MPI_COMM_WORLD );
 
@@ -101,7 +99,7 @@ int VQProjection::sendMPI(int d_rank)
     MPI_Send( &neighboursIdx[0], neighboursIdx.size(), MPI_INT, d_rank, 0, MPI_COMM_WORLD );
 }
 
-int VQProjection::receiveMPI(int s_rank)
+int CL2DClass::receiveMPI(int s_rank)
 {
     // Projection
     // Matrix2D<double> P;
@@ -192,7 +190,7 @@ int VQProjection::receiveMPI(int s_rank)
 }
 
 //#define DEBUG
-void VQProjection::transferUpdate()
+void CL2DClass::transferUpdate()
 {
     if (nextListImg.size()>0)
     {
@@ -251,7 +249,7 @@ void VQProjection::transferUpdate()
 }
 #undef DEBUG
 
-void VQProjection::computeTransforms()
+void CL2DClass::computeTransforms()
 {
     // Make sure the image is centered
     centerImage(P);
@@ -266,7 +264,7 @@ void VQProjection::computeTransforms()
 }
 
 /* Show -------------------------------------------------------------------- */
-void VQProjection::show() const
+void CL2DClass::show() const
 {
     Image<double> save;
     save()=P;
@@ -297,7 +295,7 @@ double fastCorrentropy(const MultidimArray<double> &x, const MultidimArray<doubl
 }
 
 //#define DEBUG
-void VQProjection::fitBasic(MultidimArray<double> &I,
+void CL2DClass::fitBasic(MultidimArray<double> &I,
                             double sigma, double &corrCode)
 {
     Matrix2D<double> ARS, ASR, R(3,3);
@@ -411,7 +409,7 @@ void VQProjection::fitBasic(MultidimArray<double> &I,
 }
 #undef DEBUG
 
-void VQProjection::fit(MultidimArray<double> &I,
+void CL2DClass::fit(MultidimArray<double> &I,
                        double sigma, bool noMirror, double &corrCode, double &likelihood)
 {
     // Try this image
@@ -463,7 +461,7 @@ void VQProjection::fit(MultidimArray<double> &I,
 
 /* Look for K neighbours in a list ----------------------------------------- */
 //#define DEBUG
-void VQProjection::lookForNeighbours(const std::vector<VQProjection *> listP,
+void CL2DClass::lookForNeighbours(const std::vector<CL2DClass *> listP,
                                      double sigma, bool noMirror, int K)
 {
     int Q=listP.size();
@@ -510,9 +508,9 @@ void VQProjection::lookForNeighbours(const std::vector<VQProjection *> listP,
 }
 #undef DEBUG
 
-/* VQ initialization ------------------------------------------------ */
+/* CL2D initialization ------------------------------------------------ */
 //#define DEBUG
-void VQ::initialize(MetaData &_SF, int _Niter, int _Nneighbours,
+void CL2D::initialize(MetaData &_SF, int _Niter, int _Nneighbours,
                     double _PminSize, std::vector< MultidimArray<double> > _codes0, int _Ncodes0,
                     bool _noMirror, bool _verbose, bool _corrSplit, bool _useCorrelation,
                     bool _useFixedCorrentropy, bool _classicalMultiref,
@@ -549,7 +547,7 @@ void VQ::initialize(MetaData &_SF, int _Niter, int _Nneighbours,
     // Start with _Ncodes0 codevectors
     for (int q=0; q<_Ncodes0; q++)
     {
-        P.push_back(new VQProjection());
+        P.push_back(new CL2DClass());
         P[q]->gaussianInterpolator=&gaussianInterpolator;
         P[q]->plans=NULL;
         P[q]->mask=&mask;
@@ -841,8 +839,8 @@ void VQ::initialize(MetaData &_SF, int _Niter, int _Nneighbours,
 }
 #undef DEBUG
 
-/* VQ write --------------------------------------------------------- */
-void VQ::write(const FileName &fnRoot, bool final) const
+/* CL2D write --------------------------------------------------------- */
+void CL2D::write(const FileName &fnRoot, bool final) const
 {
     int Q=P.size();
     int Nimg=SFv.size();
@@ -910,7 +908,7 @@ void VQ::write(const FileName &fnRoot, bool final) const
     }
 }
 
-void VQ::lookNode(MultidimArray<double> &I, int idx, int oldnode,
+void CL2D::lookNode(MultidimArray<double> &I, int idx, int oldnode,
                   int &newnode, double &corrCode, double &likelihood)
 {
     MultidimArray<double> Ibackup;
@@ -993,14 +991,14 @@ void VQ::lookNode(MultidimArray<double> &I, int idx, int oldnode,
                 P[q]->updateNonProjection(corrCodeList(q));
 }
 
-void VQ::transferUpdates()
+void CL2D::transferUpdates()
 {
     int Q=P.size();
     for (int q=0; q<Q; q++)
         P[q]->transferUpdate();
 }
 
-void VQ::updateNonCode(MultidimArray<double> &I, int newnode)
+void CL2D::updateNonCode(MultidimArray<double> &I, int newnode)
 {
     int Q=P.size();
 
@@ -1017,9 +1015,9 @@ void VQ::updateNonCode(MultidimArray<double> &I, int newnode)
     }
 }
 
-/* Run VQ ------------------------------------------------------------------ */
+/* Run CL2D ------------------------------------------------------------------ */
 //#define DEBUG
-void VQ::run(const FileName &fnOut, int level, int rank)
+void CL2D::run(const FileName &fnOut, int level, int rank)
 {
     int N=SF->size();
     int Q=P.size();
@@ -1254,8 +1252,8 @@ void VQ::run(const FileName &fnOut, int level, int rank)
                     std::cout << "Small node address: " << P[smallNode] << std::endl;
                 }
 #endif
-                VQProjection *node1=new VQProjection;
-                VQProjection *node2=new VQProjection;
+                CL2DClass *node1=new CL2DClass;
+                CL2DClass *node2=new CL2DClass;
                 node1->useCorrelation=useCorrelation;
                 node2->useCorrelation=useCorrelation;
                 node1->useFixedCorrentropy=useFixedCorrentropy;
@@ -1361,10 +1359,10 @@ void VQ::run(const FileName &fnOut, int level, int rank)
 }
 
 /* Clean ------------------------------------------------------------------- */
-int VQ::cleanEmptyNodes()
+int CL2D::cleanEmptyNodes()
 {
     int retval=0;
-    std::vector<VQProjection *>::iterator ptr=P.begin();
+    std::vector<CL2DClass *>::iterator ptr=P.begin();
     while (ptr!=P.end())
         if ((*ptr)->currentListImg.size()==0)
         {
@@ -1378,12 +1376,12 @@ int VQ::cleanEmptyNodes()
 
 /* Split ------------------------------------------------------------------- */
 //#define DEBUG
-void VQ::splitNode(VQProjection *node,
-                   VQProjection *&node1, VQProjection *&node2, int rank,
+void CL2D::splitNode(CL2DClass *node,
+                   CL2DClass *&node1, CL2DClass *&node2, int rank,
                    std::vector<int> &finalAssignment) const
 {
     bool finish=true;
-    std::vector<VQProjection *> toDelete;
+    std::vector<CL2DClass *> toDelete;
     Matrix1D<int> newAssignment;
 
     int mpi_size;
@@ -1732,13 +1730,13 @@ void VQ::splitNode(VQProjection *node,
                 << PminSize*0.01*imax/2 << "...\n";
             if (node1!=node)
                 delete node1;
-            node1=new VQProjection();
+            node1=new CL2DClass();
             node1->useCorrelation=useCorrelation;
             node1->useFixedCorrentropy=useFixedCorrentropy;
             node1->classicalMultiref=false;
             toDelete.push_back(node2);
             node=node2;
-            node2=new VQProjection();
+            node2=new CL2DClass();
             node2->useCorrelation=useCorrelation;
             node2->useFixedCorrentropy=useFixedCorrentropy;
             node2->classicalMultiref=false;
@@ -1752,13 +1750,13 @@ void VQ::splitNode(VQProjection *node,
                 << PminSize*0.01*imax/2 << "...\n";
             if (node2!=node)
                 delete node2;
-            node2=new VQProjection();
+            node2=new CL2DClass();
             node2->useCorrelation=useCorrelation;
             node2->useFixedCorrentropy=useFixedCorrentropy;
             node2->classicalMultiref=false;
             toDelete.push_back(node1);
             node=node1;
-            node1=new VQProjection();
+            node1=new CL2DClass();
             node1->useCorrelation=useCorrelation;
             node1->useFixedCorrentropy=useFixedCorrentropy;
             node1->classicalMultiref=false;
@@ -1780,12 +1778,12 @@ void VQ::splitNode(VQProjection *node,
 }
 #undef DEBUG
 
-void VQ::splitFirstNode(int rank)
+void CL2D::splitFirstNode(int rank)
 {
     std::sort(P.begin(),P.end(),SDescendingClusterSort());
     int Q=P.size();
-    P.push_back(new VQProjection());
-    P.push_back(new VQProjection());
+    P.push_back(new CL2DClass());
+    P.push_back(new CL2DClass());
     P[Q]->useCorrelation=useCorrelation;
     P[Q]->useFixedCorrentropy=useFixedCorrentropy;
     P[Q]->classicalMultiref=classicalMultiref;
@@ -1799,28 +1797,43 @@ void VQ::splitFirstNode(int rank)
     P.erase(P.begin());
 }
 
+/* MPI constructor --------------------------------------------------------- */
+ProgClassifyCL2D::ProgClassifyCL2D(int argc, char** argv)
+{
+	node=new MpiNode(argc,argv);
+}
+
+/* Destructor -------------------------------------------------------------- */
+ProgClassifyCL2D::~ProgClassifyCL2D()
+{
+	delete node;
+}
+
 /* VQPrm I/O --------------------------------------------------------------- */
-void Prog_VQ_prm::readParams()
+void ProgClassifyCL2D::readParams()
 {
     fnSel=getParam("-i");
     fnOut=getParam("-o");
-    fnCodes0=getParam("-codesSel0");
-    Niter=textToInteger(getParam("-iter"));
-    Nneighbours=textToInteger(getParam("-neigh"));
-    Ncodes0=textToInteger(getParam("-codes0"));
-    Ncodes=textToInteger(getParam("-codes"));
-    PminSize=textToFloat(getParam("-minsize"));
-    noMirror=checkParam("-noMirror");
-    verbose=checkParam("-verbose");
-    corrSplit=checkParam("-corrSplit");
-    fast=!checkParam("-dontDoFast");
-    useCorrelation=checkParam("-useCorrelation");
-    useFixedCorrentropy=checkParam("-useFixedCorrentropy");
-    classicalMultiref=checkParam("-classicalMultiref");
+    fnCodes0=getParam("--codesSel0");
+    Niter=getIntParam("--iter");
+    Nneighbours=getIntParam("--neigh");
+    Ncodes0=getIntParam("--codes0");
+    Ncodes=getIntParam("--codes");
+    PminSize=getDoubleParam("--minsize");
+    noMirror=checkParam("--noMirror");
+    corrSplit=checkParam("--corrSplit");
+    fast=!checkParam("--dontDoFast");
+    useCorrelation=checkParam("--useCorrelation");
+    useFixedCorrentropy=checkParam("--useFixedCorrentropy");
+    classicalMultiref=checkParam("--classicalMultiref");
+    if (!node->isMaster())
+    	verbose=0;
 }
 
-void Prog_VQ_prm::show() const
+void ProgClassifyCL2D::show() const
 {
+	if (!verbose)
+		return;
     std::cout
     << "Input images:            " << fnSel               << std::endl
     << "Output images:           " << fnOut               << std::endl
@@ -1831,7 +1844,6 @@ void Prog_VQ_prm::show() const
     << "Neighbours:              " << Nneighbours         << std::endl
     << "Minimum node size:       " << PminSize            << std::endl
     << "No mirror:               " << noMirror            << std::endl
-    << "Verbose:                 " << verbose             << std::endl
     << "Corr Split:              " << corrSplit           << std::endl
     << "Fast:                    " << fast                << std::endl
     << "Use Correlation:         " << useCorrelation      << std::endl
@@ -1840,27 +1852,30 @@ void Prog_VQ_prm::show() const
     ;
 }
 
-void Prog_VQ_prm::defineParams()
+void ProgClassifyCL2D::defineParams()
 {
+	addUsageLine("Divide a selfile into the desired number of classes. ");
+	addUsageLine("+Vector quantization with correntropy and a probabilistic criterion is used for creating the subdivisions.");
+	addUsageLine("+Vector quantization with correntropy and a probabilistic criterion is used for creating the subdivisions.");
+	addSeeAlsoLine("sort_images");
     addParamsLine("    -i <selfile>           : Selfile with the input images");
     addParamsLine("   [-o <root=class>]       : Output rootname, by default, class");
-    addParamsLine("   [-iter <N=20>]          : Number of iterations");
-    addParamsLine("   [-codes0 <N=2>]         : Initial number of code vectors");
-    addParamsLine("   [-codesSel0 <selfile=\"\">]: Selfile with initial code vectors");
-    addParamsLine("   [-codes <N=16>]         : Final number of code vectors");
-    addParamsLine("   [-neigh <N=4>]          : Number of neighbour code vectors");
+    addParamsLine("   [--iter <N=20>]          : Number of iterations");
+    addParamsLine("   [--codes0 <N=2>]         : Initial number of code vectors");
+    addParamsLine("   [--codesSel0 <selfile=\"\">]: Selfile with initial code vectors");
+    addParamsLine("   [--codes <N=16>]         : Final number of code vectors");
+    addParamsLine("   [--neigh <N=4>]          : Number of neighbour code vectors");
     addParamsLine("                           : Set -1 for all");
-    addParamsLine("   [-minsize <N=20>]       : Percentage minimum node size");
-    addParamsLine("   [-noMirror]             : Do not check mirrors");
-    addParamsLine("   [-verbose]              : Verbose");
-    addParamsLine("   [-corrSplit]            : Correlation split");
-    addParamsLine("   [-dontDoFast]           : Don't do suboptimal, fast calculations");
-    addParamsLine("   [-useCorrelation]       : Instead of correntropy");
-    addParamsLine("   [-useFixedCorrentropy]  : Instead of correntropy");
-    addParamsLine("   [-classicalMultiref]    : Instead of enhanced clustering");
+    addParamsLine("   [--minsize <N=20>]       : Percentage minimum node size");
+    addParamsLine("   [--noMirror]             : Do not check mirrors");
+    addParamsLine("   [--corrSplit]            : Correlation split");
+    addParamsLine("   [--dontDoFast]           : Don't do suboptimal, fast calculations");
+    addParamsLine("   [--useCorrelation]       : Instead of correntropy");
+    addParamsLine("   [--useFixedCorrentropy]  : Instead of correntropy");
+    addParamsLine("   [--classicalMultiref]    : Instead of enhanced clustering");
 }
 
-void Prog_VQ_prm::produce_side_info(int rank)
+void ProgClassifyCL2D::produceSideInfo(int rank)
 {
     SF.read(fnSel);
     std::vector< MultidimArray<double> > codes0;
@@ -1886,7 +1901,16 @@ void Prog_VQ_prm::produce_side_info(int rank)
                   useFixedCorrentropy,classicalMultiref,fast,rank);
 }
 
-void Prog_VQ_prm::run(int rank)
+void ProgClassifyCL2D::run()
+{
+    show();
+    produceSideInfo(node->rank);
+    runWorker(node->rank);
+    node->barrierWait();
+    alignInputImages(fnOut+".sel",node->rank,node->size);
+}
+
+void ProgClassifyCL2D::runWorker(int rank)
 {
     int level=0;
     vq.run(fnOut,level,rank);
@@ -1915,7 +1939,7 @@ void Prog_VQ_prm::run(int rank)
     }
 }
 
-void Prog_VQ_prm::alignInputImages(const FileName &fnSF, int rank, int Nprocessors)
+void ProgClassifyCL2D::alignInputImages(const FileName &fnSF, int rank, int Nprocessors)
 {
     MetaData SFBlock;
     StringVector blockList;
@@ -1962,42 +1986,7 @@ void Prog_VQ_prm::alignInputImages(const FileName &fnSF, int rank, int Nprocesso
 /* Main -------------------------------------------------------------------- */
 int main(int argc, char** argv)
 {
-    Prog_VQ_prm prm;
-    MPI_Init(&argc, &argv);
-    int rank, Nprocessors;
-    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-    MPI_Comm_size(MPI_COMM_WORLD, &Nprocessors);
-    try
-    {
-        prm.read(argc,argv);
-    }
-    catch (XmippError XE)
-    {
-        if (rank==0)
-        {
-            std::cout << XE << std::endl;
-            prm.usage();
-        }
-
-        MPI_Finalize();
-        return 1;
-    }
-
-    try
-    {
-        if (rank==0)
-            prm.show();
-        prm.produce_side_info(rank);
-        prm.run(rank);
-        MPI_Barrier(MPI_COMM_WORLD);
-        prm.alignInputImages(prm.fnOut+".sel",rank,Nprocessors);
-    }
-    catch (XmippError XE)
-    {
-        std::cout << XE << std::endl;
-        MPI_Finalize();
-        return 1;
-    }
-    MPI_Finalize();
-    return 0;
+    ProgClassifyCL2D prm(argc,argv);
+    prm.read(argc,argv);
+    return prm.tryRun();
 }
