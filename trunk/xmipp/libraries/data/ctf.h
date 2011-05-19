@@ -570,6 +570,19 @@ public:
         STARTINGY(CTF) = STARTINGY(sample_image);
     }
 
+    /** Get profiles along a given direction.
+     * It returns the CTF profiles (BGNOISE, ENVELOPE, PSD, CTF) along the
+     * direction defined by angle. Profiles
+     * have nsamples from 0 to fmax (1/A).
+     */
+    void getProfile(double angle, double fmax, int nsamples, MultidimArray<double> &profiles);
+
+    /** Get radial average profiles.
+     * It returns the radially average CTF profiles (BGNOISE, ENVELOPE, PSD, CTF). Profiles
+     * have nsamples from 0 to fmax (1/A).
+     */
+    void getAverageProfile(double fmax, int nsamples, MultidimArray<double> &profiles);
+
     /// Generate CTF image.
     void Generate_CTF(int Ydim, int Xdim,
                       MultidimArray < std::complex<double> > &CTF);

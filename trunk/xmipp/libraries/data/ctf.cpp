@@ -369,11 +369,11 @@ void CTFDescription::readParams(XmippProgram * program)
     if (Cs==0)
         REPORT_ERROR(ERR_ARG_MISSING,"--spherical_aberration");
     if (program->checkParam("--defocusU"))
-    	DeltafU=program->getDoubleParam("--defocusU");
+        DeltafU=program->getDoubleParam("--defocusU");
     if (program->checkParam("--defocusV"))
-    	DeltafV=program->getDoubleParam("--defocusV");
+        DeltafV=program->getDoubleParam("--defocusV");
     else
-    	DeltafV=DeltafU;
+        DeltafV=DeltafU;
     azimuthal_angle=program->getDoubleParam("--azimuthal_angle");
     Ca=program->getDoubleParam("--chromatic_aberration");
     espr=program->getDoubleParam("--energy_loss");
@@ -589,6 +589,70 @@ void CTFDescription::Apply_CTF(MultidimArray < std::complex<double> > &FFTI)
         double ctf = CTF_at();
         FFTI(i, j) *= ctf;
     }
+}
+
+/* Get profiles ------------------------------------------------------------ */
+void CTFDescription::getProfile(double angle, double fmax, int nsamples,
+                                MultidimArray<double> &profiles)
+{
+	double step = fmax / nsamples;
+
+	profiles.resizeNoCopy(nsamples, 4);
+	double sinus = sin(angle);
+	double cosinus = cos(angle);
+	double f;
+	int i;
+
+	for (i = 0, f = 0; i < YSIZE(profiles); i++, f += step) {
+		double fx = f * cosinus;
+		double fy = f * sinus;
+
+		// Compute current frequencies.
+		precomputeValues(fx, fy);
+
+		// Store values.
+		double bgNoise = CTFnoise_at();
+		double ctf = CTFpure_at();
+		double E = CTFdamping_at();
+
+		A2D_ELEM(profiles, i, 0) = bgNoise;
+		A2D_ELEM(profiles, i, 1) = bgNoise + E * E;
+		A2D_ELEM(profiles, i, 2) = bgNoise + ctf * ctf;
+		A2D_ELEM(profiles, i, 3) = ctf;
+	}
+}
+
+/* Get average profiles ----------------------------------------------------- */
+void CTFDescription::getAverageProfile(double fmax, int nsamples,
+                                MultidimArray<double> &profiles)
+{
+	double step = fmax / nsamples;
+	profiles.initZeros(nsamples, 4);
+
+	for (double angle = 0.0; angle < 360; angle++) {
+		double sinus = sin(angle);
+		double cosinus = cos(angle);
+		double f;
+		int i;
+		for (i = 0, f = 0; i < YSIZE(profiles); i++, f += step) {
+			double fx = f * cosinus;
+			double fy = f * sinus;
+
+			// Compute current frequencies.
+			precomputeValues(fx, fy);
+
+			// Store values.
+			double bgNoise = CTFnoise_at();
+			double ctf = CTFpure_at();
+			double E = CTFdamping_at();
+
+			A2D_ELEM(profiles, i, 0) += bgNoise;
+			A2D_ELEM(profiles, i, 1) += bgNoise + E * E;
+			A2D_ELEM(profiles, i, 2) += bgNoise + ctf * ctf;
+			A2D_ELEM(profiles, i, 3) += ctf;
+		}
+	}
+	profiles*=1.0/360;
 }
 
 /* Generate CTF Image ------------------------------------------------------ */
