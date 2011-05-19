@@ -170,7 +170,7 @@ TEST_F( MetadataTest, NaturalJoin)
 
     auxMetadata.join(mDsource,auxMetadata3,MDL_X,NATURAL);
     auxMetadata3.removeObject(id);
-    EXPECT_EQ(auxMetadata,auxMetadata3)<< auxMetadata3;//print mDjoin if error
+    EXPECT_EQ(auxMetadata,auxMetadata3);
 }
 
 TEST_F( MetadataTest, Operate)
@@ -235,6 +235,22 @@ TEST_F( MetadataTest, ReadWriteAppendBlock)
     auxMetadata.read(sfn);
     EXPECT_TRUE(compareTwoFiles(sfn,sfn2,0));
     unlink(sfn);
+}
+
+TEST_F( MetadataTest, RemoveDuplicates)
+{
+    MetaData auxMetadata1,auxMetadata3;
+    id = auxMetadata3.addObject();
+    auxMetadata3.setValue(MDL_X,1.,id);
+    auxMetadata3.setValue(MDL_Y,2.,id);
+    id = auxMetadata3.addObject();
+    auxMetadata3.setValue(MDL_X,3.,id);
+    auxMetadata3.setValue(MDL_Y,4.,id);
+    id = auxMetadata3.addObject();
+    auxMetadata3.setValue(MDL_X,1.,id);
+    auxMetadata3.setValue(MDL_Y,2.,id);
+    auxMetadata1.removeDuplicates(auxMetadata3);
+    EXPECT_EQ(auxMetadata1,mDsource);//print mDjoin if error
 }
 
 TEST_F( MetadataTest, Removelabel)
