@@ -80,7 +80,7 @@ void Prog_Phantom_Create_Micrograph_Parameters::produce_side_info()
     V().setXmippOrigin();
     microscope.Xdim=Xdim;
     microscope.Ydim=Xdim;
-    microscope.produce_side_info();
+    microscope.produceSideInfo();
     Nproj=FLOOR(density/100.0*(double)(Xdim*Xdim)/(XSIZE(V())*XSIZE(V())));
 }
 

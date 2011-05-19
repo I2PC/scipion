@@ -159,7 +159,7 @@ public:
     virtual void produceSideInfo();
 
     /// Read reference images in memory & set offset vectors
-    /// (This produce_side_info is Selfile-dependent!)
+    /// (This produceSideInfo is Selfile-dependent!)
     virtual void produceSideInfo2();
 
     /// Some redefinitions of the basic and additional params

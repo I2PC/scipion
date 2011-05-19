@@ -598,7 +598,7 @@ void single_recons_test(const Recons_test_Parameters &prm,
         img.read(fn_img);
         prm_micro.Ydim = YSIZE(img());
 		prm_micro.Xdim = XSIZE(img());
-        prm_micro.produce_side_info();
+        prm_micro.produceSideInfo();
 
         std::cerr << "Applying microscope simulation ...\n";
         init_progress_bar(SF.size());
@@ -665,7 +665,7 @@ void single_recons_test(const Recons_test_Parameters &prm,
         norm_prm.method = prm.normalizing_method;
         norm_prm.background_mode = CIRCLE;
         norm_prm.r = prm.bg_radius;
-        norm_prm.produce_side_info();
+        norm_prm.produceSideInfo();
         std::cerr << "Applying linear transformation and normalizing ...\n";
         init_progress_bar(SF.size());
         int n = 0;

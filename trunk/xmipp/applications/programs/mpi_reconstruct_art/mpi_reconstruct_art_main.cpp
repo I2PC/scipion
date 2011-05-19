@@ -221,7 +221,7 @@ int main(int argc, char *argv[])
         /*
         EXTRA CALCULATIONS FOR CAV WEIGHTS: Each node computes its own part related to its images
         and after that they send each other their results and sum up them. This part of code has been taken and
-        modified from Basic_art.cc produce_side_info().
+        modified from Basic_art.cc produceSideInfo().
         */
 
         cav_t = MPI_Wtime();
@@ -329,7 +329,7 @@ int main(int argc, char *argv[])
                 /*
                 EXTRA CALCULATIONS FOR BICAV WEIGHTS: Each node computes its own part related to its images
                 and after that send each others their results and sum up them. This part of code has been taken and
-                modified from Basic_art.cc produce_side_info().
+                modified from Basic_art.cc produceSideInfo().
                 */
 
                 cav_t = MPI_Wtime();

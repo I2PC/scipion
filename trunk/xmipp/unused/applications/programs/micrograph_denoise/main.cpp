@@ -44,7 +44,7 @@ int main(int argc, char **argv)
         window_size = textToInteger(getParameter(argc, argv, "-window_size", "128"));
         prm.read(argc, argv);
         prm.adjust_range = false;
-        prm.produce_side_info();
+        prm.produceSideInfo();
     }
     catch (XmippError XE)
     {
