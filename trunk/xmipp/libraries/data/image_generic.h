@@ -274,6 +274,7 @@ public:
 
     }
     void print() const;
+    void toString(String &s) const;
 
     friend std::ostream& operator<<(std::ostream& o, const ImageGeneric& I)
     {

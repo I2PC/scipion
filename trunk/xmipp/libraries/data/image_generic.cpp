@@ -218,6 +218,13 @@ void ImageGeneric::print() const
     std::cout << *image;
 }
 
+void ImageGeneric::toString(String &s) const
+{
+  std::stringstream ss;
+  ss << *image;
+  s = ss.str();
+}
+
 
 void createEmptyFile(const FileName &filename, int Xdim, int Ydim, int Zdim,
                      size_t select_img, bool isStack, int mode)
