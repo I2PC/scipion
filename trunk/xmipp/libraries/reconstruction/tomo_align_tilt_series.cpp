@@ -758,7 +758,8 @@ void ProgTomographAlignment::produceSideInfo()
     bestPreviousAlignment=new Alignment(this);
     // Read input data
     SF.read(fnSel,NULL);
-    SF.removeObjects(MDValueEQ(MDL_ENABLED, -1));
+    if (SF.containsLabel(MDL_ENABLED))
+    	SF.removeObjects(MDValueEQ(MDL_ENABLED, -1));
     Nimg=SF.size();
     if (Nimg!=0)
     {
