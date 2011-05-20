@@ -604,8 +604,10 @@ public:
             radius = ring_radius[i];
             for (int j = 0; j < nsam; j++)
             {
-                x.push_back(radius*sin(j*dphi));
-                y.push_back(radius*cos(j*dphi));
+            	double sine, cosine
+            	sincos(j*dphi,&sine,&cosine);
+                x.push_back(radius*sine);
+                y.push_back(radius*cosine);
                 data.push_back(rings[i](j));
             }
         }
@@ -627,8 +629,10 @@ public:
                 dphi = twopi / (double)nsam;
                 for (int j = 0; j < nsam; j++)
                 {
-                    x.push_back(radius*sin(j*dphi));
-                    y.push_back(radius*cos(j*dphi));
+                	double sine, cosine
+                	sincos(j*dphi,&sine,&cosine);
+                    x.push_back(radius*sine);
+                    y.push_back(radius*cosine);
                     data.push_back(0.);
                 }
             }
@@ -691,8 +695,10 @@ public:
             {
                 // from polar to original cartesian coordinates
                 phi = iphi * dphi;
-                xp = sin(phi) * radius;
-                yp = cos(phi) * radius;
+                double sine, cosine;
+                sincos(phi,&sine,&cosine);
+                xp = sine * radius;
+                yp = cosine * radius;
 
                 // Origin offsets
                 xp += xoff;
