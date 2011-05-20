@@ -253,7 +253,7 @@ void FourierTransformer::Transform(int sign)
             {
                 size = MULTIDIM_SIZE(*fComplex);
                 double isize=1.0/size;
-                double *ptr=(double*)MULTIDIM_ARRAY(fComplex);
+                double *ptr=(double*)MULTIDIM_ARRAY(*fComplex);
                 FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(*fComplex)
                 {
                 	*ptr++ *= isize;
