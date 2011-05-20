@@ -15,9 +15,6 @@
 #include	"debug.h"
 #include	"error.h"
 
-/* COSS */
-#define FABS(x) (((x)<0)?(-x):(x))
-
 /*****************************************************************************
  *	Toolbox includes
  ****************************************************************************/
@@ -60,10 +57,8 @@ static double	Pythag
 /**/DEBUG_WRITE_ENTERING(Pythag,
 /**/	"About to apply the Pythagorean theorem")
 
-	//absa = fabs(a);
-	//absb = fabs(b);
-	absa = FABS(a);
-	absb = FABS(b);
+	absa = fabs(a);
+	absb = fabs(b);
 	if (absb < absa) {
 /**/	DEBUG_WRITE_LEAVING(Pythag, "Done")
 		return(absa * sqrt(1.0 + absb * absb / (absa * absa)));
@@ -1333,8 +1328,7 @@ extern int		SingularValueDecomposition
 		g = s = Scale = 0.0;
 		if (i < Lines) {
 			for (k = i; (k < Lines); k++) {
-				/*Scale += fabs(U[k * Columns + i]);*/
-				Scale += FABS(U[k * Columns + i]);
+				Scale += fabs(U[k * Columns + i]);
 			}
 			if (Scale != 0.0) {
 			        double iScale=1.0/Scale;
@@ -1366,8 +1360,7 @@ extern int		SingularValueDecomposition
 		g = s = Scale = 0.0;
 		if ((i < Lines) && (i != (Columns - 1L))) {
 			for (k = l; (k < Columns); k++) {
-				/*Scale += fabs(U[i * Columns + k]);*/
-				Scale += FABS(U[i * Columns + k]);
+				Scale += fabs(U[i * Columns + k]);
 			}
 			if (Scale != 0.0) {
 			        double iScale=1.0/Scale;
@@ -1398,8 +1391,7 @@ extern int		SingularValueDecomposition
 				}
 			}
 		}
-		//Norm = ((fabs(W[i]) + fabs(rv1[i])) < Norm) ? (Norm) : (fabs(W[i]) + fabs(rv1[i]));
-		Norm = ((FABS(W[i]) + FABS(rv1[i])) < Norm) ? (Norm) : (FABS(W[i]) + FABS(rv1[i]));
+		Norm = ((fabs(W[i]) + fabs(rv1[i])) < Norm) ? (Norm) : (fabs(W[i]) + fabs(rv1[i]));
 	}
 	for (i = Columns - 1L; (0L <= i); i--) {
 		if (i < (Columns - 1L)) {
@@ -1461,13 +1453,11 @@ extern int		SingularValueDecomposition
 			Flag = TRUE;
 			for (l = k; (0L <= l); l--) {
 				nm = l - 1L;
-				//if ((fabs(rv1[l]) + Norm) == Norm) {
-				if ((FABS(rv1[l]) + Norm) == Norm) {
+				if ((fabs(rv1[l]) + Norm) == Norm) {
 					Flag = FALSE;
 					break;
 				}
-				//if ((fabs(W[nm]) + Norm) == Norm) {
-				if ((FABS(W[nm]) + Norm) == Norm) {
+				if ((fabs(W[nm]) + Norm) == Norm) {
 					break;
 				}
 			}
@@ -1477,8 +1467,7 @@ extern int		SingularValueDecomposition
 				for (i = l; (i <= k); i++) {
 					f = s * rv1[i];
 					rv1[i] *= c;
-					//if ((fabs(f) + Norm) == Norm) {
-					if ((FABS(f) + Norm) == Norm) {
+					if ((fabs(f) + Norm) == Norm) {
 						break;
 					}
 					g = W[i];
@@ -1522,10 +1511,8 @@ extern int		SingularValueDecomposition
 			h = rv1[k];
 			f = ((y - z) * (y + z) + (g - h) * (g + h)) / (2.0 * h * y);
 			g = Pythag(f, 1.0);
-			//f = ((x - z) * (x + z) + h * ((y / (f + ((0.0 <= f) ? (fabs(g))
-			//	: (-fabs(g))))) - h)) / x;
-			f = ((x - z) * (x + z) + h * ((y / (f + ((0.0 <= f) ? (FABS(g))
-				: (-FABS(g))))) - h)) / x;
+			f = ((x - z) * (x + z) + h * ((y / (f + ((0.0 <= f) ? (fabs(g))
+				: (-fabs(g))))) - h)) / x;
 			c = s = 1.0;
 			for (j = l; (j <= nm); j++) {
 				i = j + 1L;
