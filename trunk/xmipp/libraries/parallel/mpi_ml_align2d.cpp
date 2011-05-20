@@ -208,7 +208,7 @@ void MpiProgML2D::usage(int verb) const
         ProgML2D::usage();
 }
 
-#define SET_RANK_AND_SIZE() rank = node->rank; size = node->size; std::cerr << "rank: " << rank << " size: " << size << std::endl
+#define SET_RANK_AND_SIZE() rank = node->rank; size = node->size;
 MpiProgMLRefine3D::MpiProgMLRefine3D(int argc, char ** argv, bool fourier):MpiML2DBase(this)
 {
     //create mpi node, which will be passed to ml2d

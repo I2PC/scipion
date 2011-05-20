@@ -387,7 +387,6 @@ void ProgMLRefine3D::run()
         for (ml2d->current_block = 0; ml2d->current_block < ml2d->blocks; ml2d->current_block++)
         {
 
-
             // Integrate over all images
             ml2d->expectation();
 
@@ -806,8 +805,7 @@ void ProgMLRefine3D::calculate3DSSNR(MultidimArray<double> &spectral_signal)
 
 void ProgMLRefine3D::copyVolumes()
 {
-    //ImageGeneric img;
-    Image<double> img;
+    ImageGeneric img;
     FileName fn_vol, fn_base = FN_INITIAL_BASE;
     size_t volno = 0;
 
@@ -835,139 +833,6 @@ void ProgMLRefine3D::updateVolumesMetadata()
         mdVol.setValue(MDL_ENABLED, 1);
     }
 }
-
-//
-//void ProgRefine3D::remakeSFvol(int iter, bool rewrite, bool include_noise)
-//{
-//
-//    FileName               fn_tmp, fn_tmp2, fn_vol;
-//    int                    volno = 0;
-//    Image<double>         ref_vol;
-//
-//    fn_tmp = fn_root + "_it";
-//    fn_tmp.compose(fn_tmp, iter, "");
-//
-//    // Initial iteration: copy volumes to correct name for iteration
-//    // loop, and rewrite with this name to disc
-//    if (rewrite)
-//    {
-//        FOR_ALL_OBJECTS_IN_METADATA(SFvol)
-//        {
-//            SFvol.getValue(MDL_IMAGE, fn_vol, __iter.objId);
-//            ref_vol.read(fn_vol);
-//            ref_vol().setXmippOrigin();
-//            if (Nvols > 1)
-//            {
-//                fn_tmp2 = fn_tmp + "_vol";
-//                fn_tmp2.compose(fn_tmp2, volno + 1, "vol");
-//            }
-//            else
-//                fn_tmp2 = fn_tmp + ".vol";
-//            ref_vol.write(fn_tmp2);
-//            volno++;
-//        }
-//    }
-//
-//    // Update selection file for reference volumes
-//    SFvol.clear();
-//    size_t id;
-//    if (Nvols > 1)
-//    {
-//        fn_tmp += "_vol";
-//        volno = 0;
-//        while (volno < Nvols)
-//        {
-//            fn_tmp2.compose(fn_tmp, volno + 1, "vol");
-//            id = SFvol.addObject();
-//            SFvol.setValue(MDL_IMAGE, fn_tmp2, id);
-//            SFvol.setValue(MDL_ENABLED, 1, id);
-//            volno++;
-//        }
-//    }
-//    else
-//    {
-//        id = SFvol.addObject();
-//        SFvol.setValue(MDL_IMAGE, fn_tmp + ".vol", id);
-//        SFvol.setValue(MDL_ENABLED, 1, id);
-//    }
-//    if (include_noise)
-//    {
-//        fn_tmp = fn_root + "_noise";
-//        if (Nvols > 1)
-//        {
-//            fn_tmp += "_vol";
-//            volno = 0;
-//            while (volno < Nvols)
-//            {
-//                fn_tmp2.compose(fn_tmp, volno + 1, "vol");
-//                id = SFvol.addObject();
-//                SFvol.setValue(MDL_IMAGE, fn_tmp2, id);
-//                SFvol.setValue(MDL_ENABLED, 1, id);
-//                volno++;
-//            }
-//        }
-//        else
-//        {
-//            id = SFvol.addObject();
-//            SFvol.setValue(MDL_IMAGE, fn_tmp + ".vol", id);
-//            SFvol.setValue(MDL_ENABLED, 1, id);
-//        }
-//        // Besides noise volumes, also include cref volumes
-//        fn_tmp = fn_root + "_cref";
-//        if (Nvols > 1)
-//        {
-//            fn_tmp += "_vol";
-//            volno = 0;
-//            while (volno < Nvols)
-//            {
-//                fn_tmp2.compose(fn_tmp, volno + 1, "vol");
-//                id = SFvol.addObject();
-//                SFvol.setValue(MDL_IMAGE, fn_tmp2, id);
-//                SFvol.setValue(MDL_ENABLED, 1, id);
-//                volno++;
-//            }
-//        }
-//        else
-//        {
-//            id = SFvol.addObject();
-//            SFvol.setValue(MDL_IMAGE, fn_tmp + ".vol", id);
-//            SFvol.setValue(MDL_ENABLED, 1, id);
-//        }
-//    }
-//
-//}
-//
-//// Concatenate MLalign2D selfiles ==============================================
-//void ProgRefine3D::concatenateSelfiles(int iter)
-//{
-//#ifdef DEBUG
-//    std::cerr << "Entering concatenate_selfiles" <<std::endl;
-//#endif
-//
-//    FileName fn_tmp, fn_class;
-//    MetaData MDin, MDout;
-//    fn_tmp = fn_root + "_it";
-//    fn_tmp.compose(fn_tmp, iter, "");
-//    MDin.read(fn_tmp + "_img.xmd");
-//
-//    int minval, maxval;
-//    // Concatenate all hard-classification selfiles
-//    for (int volno = 0; volno < Nvols; volno++)
-//    {
-//        minval = volno * nr_projections + 1;
-//        maxval = (volno + 1) * nr_projections;
-//        MDout.clear();
-//        MDout.importObjects(MDin, MDValueRange(MDL_REF, minval, maxval));
-//        fn_class = fn_tmp + "_class_vol";
-//        fn_class.compose(fn_class, volno + 1, "");
-//        fn_class += "_img.xmd";
-//        MDout.write(fn_class);
-//    }
-//#ifdef DEBUG
-//    std::cerr << "Leaving concatenate_selfiles" <<std::endl;
-//#endif
-//
-//}
 
 // Modify reference volume ======================================================
 void ProgMLRefine3D::postProcessVolumes()

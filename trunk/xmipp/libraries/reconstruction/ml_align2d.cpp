@@ -277,7 +277,6 @@ void ProgML2D::show()
 
 void ProgML2D::printModel(const String &msg, const ModelML2D & model)
 {
-  return;
     std::cerr << "================> " << msg << std::endl;
     model.print();
 }
