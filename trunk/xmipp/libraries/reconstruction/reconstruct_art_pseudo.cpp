@@ -50,6 +50,7 @@ void project_Pseudo(const std::vector< Matrix1D<double> > &atomPosition,
     for (int n=0; n<nmax; n++)
     {
         actualAtomPosition=atomPosition[n];
+        double weight=atomWeight[n];
         for (int mode=0; mode<lambdaSize; mode++)
         {
             const Matrix2D<double> &NMAmode=NMA[mode];
@@ -105,7 +106,7 @@ void project_Pseudo(const std::vector< Matrix1D<double> > &atomPosition,
                     double x_diff2=x-XX(actprj);
                     x_diff2=x_diff2*x_diff2;
                     double r=sqrt(x_diff2+y_diff2);
-                    int idx=ROUND(r*1000);
+                    int idx=round(r*1000);
                     double a  = VEC_ELEM(gaussianProjectionTable,idx);
                     double a2 = VEC_ELEM(gaussianProjectionTable2,idx);
 #ifdef DEBUG
@@ -116,7 +117,7 @@ void project_Pseudo(const std::vector< Matrix1D<double> > &atomPosition,
 
                     if (direction==FORWARD)
                     {
-                        A2D_ELEM(proj, y, x) += atomWeight[n] * a;
+                        A2D_ELEM(proj, y, x) += weight * a;
                         A2D_ELEM(norm_proj, y, x) += a2;
 #ifdef DEBUG
 
