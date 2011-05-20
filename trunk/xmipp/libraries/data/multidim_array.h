@@ -1181,7 +1181,11 @@ public:
         }
         catch (std::bad_alloc &)
         {
-            REPORT_ERROR(ERR_MEM_NOTENOUGH, "Allocate: No space left");
+        	std::ostringstream sstream;
+        	sstream << "Allocate: No space left to alloc ";
+        	sstream << (NZYXdim * sizeof(T)/1024/1024/1024) ;
+        	sstream << "Gb." ;
+            REPORT_ERROR(ERR_MEM_NOTENOUGH, sstream.str());
         }
 
         // Copy needed elements, fill with 0 if necessary
