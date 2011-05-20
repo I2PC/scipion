@@ -1801,6 +1801,8 @@ void CL2D::splitFirstNode(int rank)
 ProgClassifyCL2D::ProgClassifyCL2D(int argc, char** argv)
 {
 	node=new MpiNode(argc,argv);
+    if (!node->isMaster())
+    	verbose=0;
 }
 
 /* Destructor -------------------------------------------------------------- */
@@ -1826,8 +1828,6 @@ void ProgClassifyCL2D::readParams()
     useCorrelation=checkParam("--useCorrelation");
     useFixedCorrentropy=checkParam("--useFixedCorrentropy");
     classicalMultiref=checkParam("--classicalMultiref");
-    if (!node->isMaster())
-    	verbose=0;
 }
 
 void ProgClassifyCL2D::show() const
@@ -1856,22 +1856,28 @@ void ProgClassifyCL2D::defineParams()
 {
 	addUsageLine("Divide a selfile into the desired number of classes. ");
 	addUsageLine("+Vector quantization with correntropy and a probabilistic criterion is used for creating the subdivisions.");
-	addUsageLine("+Vector quantization with correntropy and a probabilistic criterion is used for creating the subdivisions.");
-	addSeeAlsoLine("sort_images");
+	addUsageLine("+Correlation and the standard maximum correlation criterion can also be used and normally produce good results.");
+	addUsageLine("+Correntropy and the probabilistic clustering criterion are recommended for images with very low SNR or cases in which the correlation have clear difficulties to converge.");
+	addUsageLine("+");
+	addUsageLine("+The algorithm is fully described in [[http://www.ncbi.nlm.nih.gov/pubmed/20362059][this article]].");
+	addUsageLine("+");
+	addUsageLine("+An interesting convergence criterion is the number of images changing classes between iterations. If a low percentage of the image change class, then the clustering is rather stable and clear.");
+	addUsageLine("+If many images change class, it is likely that there is not enough SNR to determine so many classes. It is recommended to reduce the number of classes");
+	addSeeAlsoLine("mpi_image_sort");
     addParamsLine("    -i <selfile>           : Selfile with the input images");
     addParamsLine("   [-o <root=class>]       : Output rootname, by default, class");
     addParamsLine("   [--iter <N=20>]          : Number of iterations");
     addParamsLine("   [--codes0 <N=2>]         : Initial number of code vectors");
     addParamsLine("   [--codesSel0 <selfile=\"\">]: Selfile with initial code vectors");
     addParamsLine("   [--codes <N=16>]         : Final number of code vectors");
-    addParamsLine("   [--neigh <N=4>]          : Number of neighbour code vectors");
+    addParamsLine("   [--neigh+ <N=4>]          : Number of neighbour code vectors");
     addParamsLine("                           : Set -1 for all");
-    addParamsLine("   [--minsize <N=20>]       : Percentage minimum node size");
-    addParamsLine("   [--noMirror]             : Do not check mirrors");
-    addParamsLine("   [--corrSplit]            : Correlation split");
-    addParamsLine("   [--dontDoFast]           : Don't do suboptimal, fast calculations");
+    addParamsLine("   [--minsize+ <N=20>]       : Percentage minimum node size");
+    addParamsLine("   [--noMirror+]             : Do not check mirrors");
+    addParamsLine("   [--corrSplit+]            : Split by correlation instead of randomly");
+    addParamsLine("   [--dontDoFast+]           : Don't do suboptimal, fast calculations");
     addParamsLine("   [--useCorrelation]       : Instead of correntropy");
-    addParamsLine("   [--useFixedCorrentropy]  : Instead of correntropy");
+    addParamsLine("   [--useFixedCorrentropy]  : Instead of correntropy. Fixed correntropy corrects the variance of the noise by the number of images assigned to the class.");
     addParamsLine("   [--classicalMultiref]    : Instead of enhanced clustering");
 }
 
@@ -1897,7 +1903,7 @@ void ProgClassifyCL2D::produceSideInfo(int rank)
         Ncodes0=codes0.size();
     }
     vq.initialize(SF,Niter,Nneighbours,PminSize,
-                  codes0,Ncodes0,noMirror,verbose,corrSplit,useCorrelation,
+                  codes0,Ncodes0,noMirror,verbose>=1,corrSplit,useCorrelation,
                   useFixedCorrentropy,classicalMultiref,fast,rank);
 }
 
@@ -1966,17 +1972,8 @@ void ProgClassifyCL2D::alignInputImages(const FileName &fnSF, int rank, int Npro
 
                 I.read(fnImgIn);
                 I().setXmippOrigin();
-                Image<double> save1, save2;
-                save1()=I();
                 alignImagesConsideringMirrors(Iclass(), I(), M);
-                I.write(fnImgOut,-1,true,WRITE_REPLACE);
-                applyGeometry(BSPLINE3,save2(),save1(),M,IS_NOT_INV,WRAP);
-                std::cout << M << std::endl;
-                save1.write("PPPsave1.xmp");
-                save2.write("PPPsave2.xmp");
-                save2()=I();
-                save2.write("PPPsave2Bis.xmp");
-                exit(0);
+                I.write(fnImgOut);
             }
             ++currentIdx;
         }
