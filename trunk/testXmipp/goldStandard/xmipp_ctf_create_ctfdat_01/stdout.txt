@@ -1,0 +1,2 @@
+ Saved CTFdat file as tmpLink/xmipp_ctf_create_ctfdat_01/output.ctfdat
+ Done! 

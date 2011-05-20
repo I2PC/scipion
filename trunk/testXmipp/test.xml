@@ -70,6 +70,18 @@
              <FILE filename="kerdensom.xmd"/>
         </CASE>
     </PROGRAM>
+    
+     <PROGRAM name="xmipp_ctf_create_ctfdat" mpi="FALSE">
+        <CASE arguments="-i input/micrographs.xmd --ctfs input/ctfs.xmd --oroot %o/output" changeDir="FALSE">
+            <FILE filename="output.ctfdat"/>
+        </CASE>
+        <CASE arguments="-i input/micrographs.xmd --defocus input/defocus.xmd input/input.ctfparam --oroot %o/output" changeDir="FALSE">
+            <FILE filename="output.ctfdat"/>
+	    <FILE filename="output000001.ctfparam"/>
+	    <FILE filename="output000002.ctfparam"/>
+        </CASE>
+     </PROGRAM>
+     
     <PROGRAM name="xmipp_ctf_enhance_psd" mpi="FALSE">
         <CASE arguments="-i input/down1_01nov26b.001.001.001.002_Periodogramavg.psd -o %o/enhanced_psd.xmp" changeDir="FALSE">
             <FILE filename="enhanced_psd.xmp"/>

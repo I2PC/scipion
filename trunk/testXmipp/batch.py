@@ -14,7 +14,7 @@ class Tester(ContentHandler):
         self.prerun = []
         self.testfile = []
         self.changeDirectory = False
-        self.error="init erro"
+        self.error="init error\n"
         self.errorFlag=False
         self.warning=""
         self.warningFlag=False
@@ -82,23 +82,24 @@ class Tester(ContentHandler):
             self.runProgramTests(program)
         
     def checkResult(self,testfiles,outDir,random):
-        import xmipp
+        import xmipp	
         for file in testfiles:
-            file = outDir + '/' + file
+            file = os.path.join(outDir, file)
+	    fileGoldStd = file.replace(self.fnDir, 'goldStandard')
             result = True
             if not os.path.exists(file):
-                self.error += file +  "was NOT produced"
-                self.errorFlag=True
+                self.error += file +  " was NOT produced\n"
+                self.errorFlag = True
             else:
                 if (random):
                     self.warning += file + " was created using a random seed, check skipped\n"
-                    self.warningFlag=True
+                    self.warningFlag = True
                 else:
-                    print "\n\ncomparing", file,file.replace(self.fnDir,'goldStandard')+"\n\n"
-                    result = xmipp.compareTwoFiles(file,file.replace(self.fnDir,'goldStandard'),0)
+                    print "comparing '%s' and '%s'" % (file, fileGoldStd)
+                    result = xmipp.compareTwoFiles(file, fileGoldStd, 0)
             if not result:
-                self.error += file + " and " + file.replace(self.fnDir,'goldStandard') + " are NOT identical\n"
-                self.errorFlag=True
+                self.error += " file '%s' and '%s' are NOT identical\n" % (file, fileGoldStd)
+                self.errorFlag = True
            
     def runProgramTests(self, program):
         tests = self.progDict[program]
