@@ -371,8 +371,11 @@ int ProgAngularProjectionMatching::getCurrentReference(int refno,
         }
         local_transformer.FourierTransform(img(),Faux);
         FOR_ALL_DIRECT_ELEMENTS_IN_ARRAY2D(Faux)
-        dAij(Faux,i,j) *= dAij(Mctf,i,j);
+        {
+            dAij(Faux,i,j) *= dAij(Mctf,i,j);
+        }
         local_transformer.inverseFourierTransform(Faux,img());
+
         if (paddim > dim)
         {
             // de-pad real-space image
@@ -472,7 +475,7 @@ void * threadRotationallyAlignOneImage( void * data )
         prm->stddev_img[itrans] = stddev;
         done_once=true;
     }
-   // If thread did not have to do any itrans, initialize fftw plans
+    // If thread did not have to do any itrans, initialize fftw plans
     if (!done_once)
     {
         P.getPolarFromCartesianBSpline(Maux,prm->Ri,prm->Ro);
@@ -542,6 +545,7 @@ void * threadRotationallyAlignOneImage( void * data )
 #endif
             //#define DEBUG
 #ifdef DEBUG
+
             std::cerr << "imgno" << imgno <<std::endl;
             std::cerr<<"Got refno= "<<refno<<" pointer= "<<prm->mysampling.my_neighbors[imgno][i]<<std::endl;
 #endif
@@ -551,9 +555,9 @@ void * threadRotationallyAlignOneImage( void * data )
             {
 #ifdef DEBUG
 
-            std::cerr<< "prm->stddev_ref[refno] * prm->stddev_img[itrans]: " <<
-            		     prm->stddev_ref[refno] << " " <<
-            		     prm->stddev_img[itrans];
+                std::cerr<< "prm->stddev_ref[refno] * prm->stddev_img[itrans]: " <<
+                prm->stddev_ref[refno] << " " <<
+                prm->stddev_img[itrans];
 #endif
                 // A. Check straight image
                 rotationalCorrelation(prm->fP_img[itrans],prm->fP_ref[refno],ang,local_transformer);
