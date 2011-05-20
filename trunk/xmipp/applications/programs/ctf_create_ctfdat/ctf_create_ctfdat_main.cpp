@@ -35,7 +35,7 @@ class ProgCtfCreateCtfdat : public XmippProgram
 
 public:
 
-    FileName fn_sel, fn_doc, fn_ctf, fn_param, fn_out;
+    FileName fn_sel, fn_doc, fn_ctf, fn_param, oroot;
     bool do_mode2;
 
 public:
@@ -43,36 +43,40 @@ public:
     void readParams()
     {
         fn_sel = getParam("-i");
-        fn_out = getParam("-o");
-        do_mode2 = checkParam("--ctfs");
-        if (do_mode2)
+        oroot = getParam("--oroot");
+
+        if ((do_mode2 = checkParam("--ctfs")))
         {
             fn_ctf = getParam("--ctfs");
         }
         else
         {
-            fn_doc = getParam("--doc");
-            fn_param = getParam("--param");
+            fn_doc = getParam("--defocus", 0);
+            fn_param = getParam("--defocus", 1);
         }
     }
 
     void defineParams()
     {
         addUsageLine("Create CTFdat files from a selfile that contains image selfiles for each micrograph.");
-        addUsageLine("Example of use: Sample at MODE 1");
-        addUsageLine("   ctf_create_ctfdat -i input.sel --param input.ctfparam --doc defocus.doc");
-        addUsageLine("Example of use: Sample at MODE 2");
-        addUsageLine("   ctf_create_ctfdat -i imput.sel --ctfs ctfparams.sel");
+        addUsageLine("+This program is useful when interacting with other packages outputs. There are two ");
+        addUsageLine("+main usage modes. In the first mode you should provide a ctfparam file with common");
+        addUsageLine("+options of each micrograph and a metadata with defocus values for each one. ");
+        addUsageLine("+In the second mode you should provide a metadata with filenames of the ctfparams for");
+        addUsageLine("+each  micrograph.");
 
         addParamsLine("  -i <selfile>           : Input selfile of selfiles for each micrograph");
-        addParamsLine("  -o <rootname=\"out\">  : Root name for output files ");
-        addParamsLine(" == MODE 1: == ");
-        addParamsLine("  [--param <param_file>] : CTFparam file with common parameters ");
-        addParamsLine("  [--doc <docfile>]      : Docfile with defocus values for each micrograph ");
+        addParamsLine("  --oroot <rootname=out>  : Root name for output files ");
+        addParamsLine("  --defocus <metadata> <common_ctf> : CTFparam file with common parameters ");
+        addParamsLine("                         : Metadata with defocus values for each micrograph ");
         addParamsLine("                         : this file may have either a single column (defocus)");
         addParamsLine("                         : or three columns (defocusU, defocusV, azimuth_angle)");
-        addParamsLine(" == MODE 2: == ");
-        addParamsLine("  [--ctfs <selfile>]     : Selfile of CTF param files for each micrograph ");
+        addParamsLine("  or --ctfs <selfile>    : Selfile of CTF param files for each micrograph ");
+
+        addExampleLine("Example of use: Sample at MODE 1", false);
+        addExampleLine("   ctf_create_ctfdat -i input.sel --defocus defocus.doc input.ctfparam");
+        addExampleLine("Example of use: Sample at MODE 2", false);
+        addExampleLine("   ctf_create_ctfdat -i input.sel --ctfs ctfparams.sel");
     }
 
 
@@ -100,8 +104,7 @@ public:
             ctf.enable_CTFnoise = false;
 
             if (mdIn.size() != DFdef.size())
-                REPORT_ERROR(ERR_MD_OBJECTNUMBER,
-                             "Selfile -1 and docfile -doc have unequal number of entries! ");
+                REPORT_ERROR(ERR_IO_SIZE, "Sizes between input images (-i) and docfile(-doc) should be the same!!! ");
 
             FOR_ALL_OBJECTS_IN_METADATA(DFdef)
             {
@@ -112,13 +115,14 @@ public:
                 if (!DFdef.getValue(MDL_CTF_DEFOCUS_ANGLE,azi,__iter.objId))
                     azi=0;
 
-                ctf.DeltafU=defU;
-                ctf.DeltafV=defV;
-                ctf.azimuthal_angle=azi;
-                fnctf.compose(fn_out,ii,"ctfparam");
+                ctf.DeltafU = defU;
+                ctf.DeltafV = defV;
+                ctf.azimuthal_angle = azi;
+                fnctf.compose(oroot, ii, "ctfparam");
                 ctf.write(fnctf);
-                mdCtf.setValue(MDL_CTFMODEL,fnctf, mdCtf.addObject());
-                std::cerr<<" Saved CTF parameter file "<<fnctf<<" for micrograph number "<<ii<<std::endl;
+                mdCtf.setValue(MDL_CTFMODEL, fnctf, mdCtf.addObject());
+                if (verbose)
+                  std::cout << formatString(" Saved CTF parameter file %s for micrograph number %d", fnctf.c_str(), ii) << std::endl;
             }
         }
 
@@ -131,7 +135,7 @@ public:
         FOR_ALL_OBJECTS_IN_METADATA2(mdIn, mdCtf)
         {
             mdIn.getValue(MDL_SELFILE,fnsel,__iter.objId);
-            mdCtf.getValue(MDL_IMAGE,fnctf,__iter2.objId);
+            mdCtf.getValue(MDL_CTFMODEL,fnctf,__iter2.objId);
             SFind.read(fnsel);
             FOR_ALL_OBJECTS_IN_METADATA(SFind)
             {
@@ -142,19 +146,18 @@ public:
             }
         }
 
-        ctfdat.write(fn_out+".ctfdat");
-        std::cerr<<" Saved CTFdat file as "<<fn_out+".ctfdat"<<std::endl;
-        std::cerr<< " Done! "<<std::endl;
+        FileName fn = oroot + ".ctfdat";
+        ctfdat.write(fn);
+        if (verbose)
+          std::cout << " Saved CTFdat file as " << fn << std::endl << " Done! "<< std::endl;
     }
 };
 
 
 int main(int argc, char **argv)
 {
-
     ProgCtfCreateCtfdat program;
     program.read(argc, argv);
-    program.tryRun();
-    return 0;
+    return program.tryRun();
 }
 
