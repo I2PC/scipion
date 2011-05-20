@@ -43,6 +43,17 @@ TEST_F( ImageTest, similarTo)
     ASSERT_FALSE(myImage==myStack);
 }
 
+TEST_F( ImageTest, getEulerAngles)
+{
+    Image<double> auxImage;
+    auxImage.setEulerAngles(10., 20., 30.);
+    double rot, psi, tilt;
+    auxImage.getEulerAngles(rot, tilt, psi);
+    EXPECT_DOUBLE_EQ(rot, 10.);
+    EXPECT_DOUBLE_EQ(tilt, 20.);
+    EXPECT_DOUBLE_EQ(psi, 30.);
+}
+
 TEST_F( ImageTest, writeIMAGICimage)
 {
     FileName auxFilename(imageName);
