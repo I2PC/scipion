@@ -487,12 +487,14 @@ void correlation_matrix(const MultidimArray< T > & m1,
     double dSize=MULTIDIM_SIZE(R);
     double mdSize=-dSize;
     std::complex<double> aux;
-    FOR_ALL_ELEMENTS_IN_ARRAY3D(FFT1)
+    double *ptrAux=&aux.real();
+    double *ptrAux_1=ptr+1;
+    double *ptrFFT2=MULTIDIM_ARRAY(FFT2);
+    FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(FFT1)
     {
-        aux=A3D_ELEM(FFT2,k, i, j);
-        aux.imag()*=mdSize;
-        aux.real()*=dSize;
-        A3D_ELEM(FFT1,k, i, j) *= aux;
+    	*ptrAux=(*ptrFFT2++)*dSize;
+    	*ptrAux_1=(*ptrFFT2++)*mdSize;
+        DIRECT_MULTIDIM_ELEM(FFT1,n) *= aux;
     }
 
     // Invert the product, in order to obtain the correlation image

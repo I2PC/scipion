@@ -502,8 +502,9 @@ public:
             for (int j = 0; j < XSIZE(rings_i); j++)
             {
                 aux = DIRECT_A1D_ELEM(rings_i,j);
-                sum += w * aux;
-                sum2 += w * aux * aux;
+                double waux=w*aux;
+                sum += waux;
+                sum2 += waux * aux;
                 N += w;
             }
         }
