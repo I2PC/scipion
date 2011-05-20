@@ -203,6 +203,15 @@
             <FILE filename="ml2d_final_refs.xmd"/>
         </CASE>
     </PROGRAM>
+    <PROGRAM name="xmipp_mpi_classify_CL2D" mpi="TRUE">
+        <CASE arguments="-i input/projectionsBacteriorhodopsin.stk --codes 4 -o %o/class --iter 5" changeDir="FALSE" random="TRUE">
+            <FILE filename="class_aligned.stk"/>
+            <FILE filename="class_level_00.sel"/>
+            <FILE filename="class_level_00.stk"/>
+            <FILE filename="class.stk"/>
+            <FILE filename="class.sel"/>
+        </CASE>
+    </PROGRAM>
     <PROGRAM name="xmipp_transform_mirror" mpi="FALSE">
         <CASE arguments="-i input/singleImage.spi -o %o/singleImage_X.xmp --flipX" changeDir="FALSE">
             <FILE filename="singleImage_X.xmp"/>
@@ -366,7 +375,7 @@
         </CASE>
     </PROGRAM>
     <PROGRAM name="xmipp_volume_find_symmetry" mpi="FALSE">
-        <CASE arguments="-i input/phantomBacteriorhodopsin.vol --rot_sym 3 -o %o/symmetry.xmd" changeDir="FALSE">
+        <CASE arguments="-i input/phantomBacteriorhodopsin.vol --sym rot 3 -o %o/symmetry.xmd" changeDir="FALSE">
             <FILE filename="symmetry.xmd"/>
         </CASE>
     </PROGRAM>
