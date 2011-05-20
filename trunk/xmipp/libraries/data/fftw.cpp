@@ -227,7 +227,7 @@ void FourierTransformer::Transform(int sign)
                 REPORT_ERROR(ERR_UNCLASSIFIED,"No complex nor real data defined");
 
             double isize=1.0/size;
-            double *ptr=MULTIDIM_ARRAY(fFourier);
+            double *ptr=(double*)MULTIDIM_ARRAY(fFourier);
             FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(fFourier)
             {
             	*ptr++ *= isize;
