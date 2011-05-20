@@ -342,6 +342,56 @@ Image_read(PyObject *obj, PyObject *args, PyObject *kwargs)
     return NULL;
 }
 
+/* getPixel */
+static PyObject *
+Image_getPixel(PyObject *obj, PyObject *args, PyObject *kwargs)
+{
+    ImageObject *self = (ImageObject*) obj;
+    int i, j;
+
+    if (self != NULL && PyArg_ParseTuple(args, "ii", &i, &j))
+    {
+        try
+        {
+          double value = self->image->getPixel(i, j);
+          return PyFloat_FromDouble(value);
+        }
+        catch (XmippError xe)
+        {
+          PyErr_SetString(PyXmippError, xe.msg.c_str());
+        }
+    }
+
+    return NULL;
+}
+
+/* getPixel */
+static PyObject *
+Image_setPixel(PyObject *obj, PyObject *args, PyObject *kwargs)
+{
+    ImageObject *self = (ImageObject*) obj;
+    int i, j;
+    double value = -1;
+
+    if (self != NULL && PyArg_ParseTuple(args, "iid", &i, &j, &value))
+    {
+        try
+        {
+          std::cerr << "DEBUG_JM: i: " << i << std::endl;
+          std::cerr << "DEBUG_JM: j: " << j << std::endl;
+          std::cerr << "DEBUG_JM: value: " << value << std::endl;
+          self->image->setPixel(i, j, value);
+          Py_RETURN_NONE;
+        }
+        catch (XmippError xe)
+        {
+          PyErr_SetString(PyXmippError, xe.msg.c_str());
+        }
+    }
+
+    return NULL;
+}
+
 /* Return image dimensions as a tuple */
 static PyObject *
 Image_getDimensions(PyObject *obj, PyObject *args, PyObject *kwargs)
@@ -386,6 +436,8 @@ Image_getEulerAngles(PyObject *obj, PyObject *args, PyObject *kwargs)
 }//Image_getDimensions
 
 
+
+
 /* Image methods */
 static PyMethodDef Image_methods[] =
 {
@@ -393,6 +445,10 @@ static PyMethodDef Image_methods[] =
                   "Read image from disk" },
                 { "write", (PyCFunction) Image_write, METH_VARARGS,
                   "Write image to disk" },
+                { "getPixel", (PyCFunction) Image_getPixel, METH_VARARGS,
+                  "Return a pixel value" },
+                { "setPixel", (PyCFunction) Image_setPixel, METH_VARARGS,
+                  "Set the value of some pixel" },
                 { "getDimensions", (PyCFunction) Image_getDimensions, METH_VARARGS,
                   "Return image dimensions as a tuple" },
                 { "getEulerAngles", (PyCFunction) Image_getEulerAngles, METH_VARARGS,
