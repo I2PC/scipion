@@ -605,7 +605,7 @@ public:
             radius = ring_radius[i];
             for (int j = 0; j < nsam; j++)
             {
-            	double sine, cosine
+            	double sine, cosine;
             	sincos(j*dphi,&sine,&cosine);
                 x.push_back(radius*sine);
                 y.push_back(radius*cosine);
@@ -630,7 +630,7 @@ public:
                 dphi = twopi / (double)nsam;
                 for (int j = 0; j < nsam; j++)
                 {
-                	double sine, cosine
+                	double sine, cosine;
                 	sincos(j*dphi,&sine,&cosine);
                     x.push_back(radius*sine);
                     y.push_back(radius*cosine);

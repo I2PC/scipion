@@ -488,8 +488,8 @@ void correlation_matrix(const MultidimArray< T > & m1,
     double mdSize=-dSize;
     std::complex<double> aux;
     double *ptrAux=&aux.real();
-    double *ptrAux_1=ptr+1;
-    double *ptrFFT2=MULTIDIM_ARRAY(FFT2);
+    double *ptrAux_1=ptrAux+1;
+    double *ptrFFT2=(double*)MULTIDIM_ARRAY(FFT2);
     FOR_ALL_DIRECT_ELEMENTS_IN_MULTIDIMARRAY(FFT1)
     {
     	*ptrAux=(*ptrFFT2++)*dSize;
