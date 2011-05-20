@@ -1879,6 +1879,7 @@ void ProgClassifyCL2D::defineParams()
     addParamsLine("   [--useCorrelation]       : Instead of correntropy");
     addParamsLine("   [--useFixedCorrentropy]  : Instead of correntropy. Fixed correntropy corrects the variance of the noise by the number of images assigned to the class.");
     addParamsLine("   [--classicalMultiref]    : Instead of enhanced clustering");
+    addExampleLine("mpirun -np 3 `which xmipp_mpi_classify_CL2D` -i images.stk --codes 256 -o class --iter 10");
 }
 
 void ProgClassifyCL2D::produceSideInfo(int rank)
