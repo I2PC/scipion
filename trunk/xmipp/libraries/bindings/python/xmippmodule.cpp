@@ -26,6 +26,7 @@
 #include <Python.h>
 
 #include <data/metadata_extension.h>
+#include <data/image_generic.h>
 
 static PyObject * PyXmippError;
 
@@ -34,8 +35,12 @@ static PyObject * PyXmippError;
 
 #define MetaData_Check(v)  (((v)->ob_type == &MetaDataType))
 #define MetaData_Value(v)  ((*((MetaDataObject*)(v))->metadata))
+
 #define MDQuery_Check(v) (((v)->ob_type == &MDQueryType))
 #define MDQuery_Value(v)  ((*((MDQueryObject*)(v))->query))
+
+#define Image_Check(v) (((v)->ob_type == &ImageType))
+#define Image_Value(v) ((*((ImageObject*)(v))->image))
 
 #define RETURN_MDOBJECT(value) return new MDObject((MDLabel)label, value)
 /*Helper function to create an MDObject from a PyObject */
@@ -242,6 +247,200 @@ static PyTypeObject FileNameType = {
 	0, /* tp_init */
 	0, /* tp_alloc */
 	FileName_new, /* tp_new */
+};
+
+/***************************************************************/
+/*                            Image                         */
+/**************************************************************/
+
+/*Image Object*/
+typedef struct {
+    PyObject_HEAD
+    ImageGeneric * image;
+} ImageObject;
+
+/* Destructor */
+static void Image_dealloc(ImageObject* self) {
+    delete self->image;
+    self->ob_type->tp_free((PyObject*) self);
+}
+
+/* Constructor */
+static PyObject *
+Image_new(PyTypeObject *type, PyObject *args, PyObject *kwargs)
+{
+    ImageObject *self = (ImageObject*) type->tp_alloc(type, 0);
+    if (self != NULL)
+      self->image = new ImageGeneric();
+    return (PyObject *) self;
+}
+
+/* String representation */
+static PyObject *
+Image_repr(PyObject * obj) {
+    ImageObject *self = (ImageObject*) obj;
+    String s;
+    self->image->toString(s);
+    return PyString_FromString(s.c_str());
+}
+
+/* write */
+static PyObject *
+Image_write(PyObject *obj, PyObject *args, PyObject *kwargs)
+{
+    ImageObject *self = (ImageObject*) obj;
+    if (self != NULL)
+    {
+        PyObject *input = NULL, *pyStr = NULL;
+        if (PyArg_ParseTuple(args, "O", &input)) {
+            try
+            {
+                if (PyString_Check(input))
+                    self->image->write(PyString_AsString(input));
+                else if (FileName_Check(input))
+                    self->image->write(FileName_Value(input));
+                else
+                    return NULL;
+                Py_RETURN_NONE;
+            }
+            catch (XmippError xe)
+            {
+                PyErr_SetString(PyXmippError, xe.msg.c_str());
+            }
+        }
+    }
+    return NULL;
+}
+
+/* read */
+static PyObject *
+Image_read(PyObject *obj, PyObject *args, PyObject *kwargs)
+{
+    ImageObject *self = (ImageObject*) obj;
+
+    if (self != NULL)
+    {
+        PyObject *input = NULL;
+        if (PyArg_ParseTuple(args, "O", &input))
+        {
+            try
+            {
+              if (PyString_Check(input))
+                  self->image->read(PyString_AsString(input));
+              else if (FileName_Check(input))
+                  self->image->read(FileName_Value(input));
+              else
+                  return NULL;
+              Py_RETURN_NONE;
+            }
+            catch (XmippError xe)
+            {
+                PyErr_SetString(PyXmippError, xe.msg.c_str());
+            }
+        }
+    }
+    return NULL;
+}
+
+/* Return image dimensions as a tuple */
+static PyObject *
+Image_getDimensions(PyObject *obj, PyObject *args, PyObject *kwargs)
+{
+  ImageObject *self = (ImageObject*) obj;
+  if (self != NULL)
+  {
+      try
+      {
+          int xdim, ydim, zdim;
+          size_t ndim;
+          self->image->image->getDimensions(xdim, ydim, zdim, ndim);
+          return Py_BuildValue("iiik", xdim, ydim, zdim, ndim);
+      }
+      catch (XmippError xe)
+      {
+          PyErr_SetString(PyXmippError, xe.msg.c_str());
+      }
+  }
+  return NULL;
+}//Image_getDimensions
+
+/* Return image dimensions as a tuple */
+static PyObject *
+Image_getEulerAngles(PyObject *obj, PyObject *args, PyObject *kwargs)
+{
+  ImageObject *self = (ImageObject*) obj;
+  if (self != NULL)
+  {
+      try
+      {
+          double rot, tilt, psi;
+          self->image->getEulerAngles(rot, tilt, psi);
+          return Py_BuildValue("fff", rot, tilt, psi);
+      }
+      catch (XmippError xe)
+      {
+          PyErr_SetString(PyXmippError, xe.msg.c_str());
+      }
+  }
+  return NULL;
+}//Image_getDimensions
+
+
+/* Image methods */
+static PyMethodDef Image_methods[] =
+{
+                { "read", (PyCFunction) Image_read, METH_VARARGS,
+                  "Read image from disk" },
+                { "write", (PyCFunction) Image_write, METH_VARARGS,
+                  "Write image to disk" },
+                { "getDimensions", (PyCFunction) Image_getDimensions, METH_VARARGS,
+                  "Return image dimensions as a tuple" },
+                { "getEulerAngles", (PyCFunction) Image_getEulerAngles, METH_VARARGS,
+                  "Return euler angles as a tuple" },
+                  { NULL } /* Sentinel */
+};
+
+/*Image Type */
+static PyTypeObject ImageType = {
+    PyObject_HEAD_INIT(NULL)
+    0, /*ob_size*/
+    "xmipp.Image", /*tp_name*/
+    sizeof(ImageObject), /*tp_basicsize*/
+    0, /*tp_itemsize*/
+    (destructor)Image_dealloc, /*tp_dealloc*/
+    0, /*tp_print*/
+    0, /*tp_getattr*/
+    0, /*tp_setattr*/
+    0, /*tp_compare*/
+    Image_repr, /*tp_repr*/
+    0, /*tp_as_number*/
+    0, /*tp_as_sequence*/
+    0, /*tp_as_mapping*/
+    0, /*tp_hash */
+    0, /*tp_call*/
+    0, /*tp_str*/
+    0, /*tp_getattro*/
+    0, /*tp_setattro*/
+    0, /*tp_as_buffer*/
+    Py_TPFLAGS_DEFAULT, /*tp_flags*/
+    "Python wrapper to Xmipp Image class",/* tp_doc */
+    0, /* tp_traverse */
+    0, /* tp_clear */
+    0, /* tp_richcompare */
+    0, /* tp_weaklistoffset */
+    0, /* tp_iter */
+    0, /* tp_iternext */
+    Image_methods, /* tp_methods */
+    0, /* tp_members */
+    0, /* tp_getset */
+    0, /* tp_base */
+    0, /* tp_dict */
+    0, /* tp_descr_get */
+    0, /* tp_descr_set */
+    0, /* tp_dictoffset */
+    0, /* tp_init */
+    0, /* tp_alloc */
+    Image_new, /* tp_new */
 };
 
 /***************************************************************/
@@ -1735,6 +1934,13 @@ PyMODINIT_FUNC initxmipp(void) {
 		return;
 	Py_INCREF(&FileNameType);
 	PyModule_AddObject(module, "FileName", (PyObject *) &FileNameType);
+
+	// Add Image type
+    if (PyType_Ready(&ImageType) < 0)
+        return;
+    Py_INCREF(&ImageType);
+    PyModule_AddObject(module, "Image", (PyObject *) &ImageType);
+
 
 	// Add MDQuery type, as no specific new is create, use the generic one
 	MDQueryType.tp_new = PyType_GenericNew;
