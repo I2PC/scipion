@@ -1130,7 +1130,7 @@ def actionsToBePerformedInsideLoop(_log):
                      , 'NumberOfThreads':NumberOfThreads#
                      , 'PaddingFactor':PaddingFactor#
                      , 'ProjectLibraryRootName':ProjectLibraryRootNames[iterN][refN]#
-                     , 'ProjMatchRootName':ProjMatchRootName[iterN]#
+                     , 'ProjMatchRootName':ProjMatchRootName[iterN][refN]#
                      , 'SystemFlavour':SystemFlavour#
                     }
                      #, 'MpiJobSize':MpiJobSize#
