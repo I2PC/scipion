@@ -61,7 +61,7 @@ IsIter =False
     Note2: Set this option to -1 if you want to perform extra iterations after
            successfully finish an execution
 """
-ContinueAtIteration =23
+ContinueAtIteration =1
 
 # {expert} Save disc space by cleaning up intermediate files?
 """ Be careful, many options of the visualization protocol will not work anymore, 
@@ -176,7 +176,7 @@ DoSphericalMask =True
 # Radius of spherical mask
 """ This is the radius (in pixels) of the spherical mask 
 """
-MaskRadius = 60
+MaskRadius = 64
 
 # {file} Binary mask file
 """ This should be a binary (only 0/1-valued) Xmipp volume of equal dimension as your reference
@@ -197,7 +197,7 @@ InnerRadius = 0
 """ In pixels from the image center. Use a negative number to use the entire image.
     WARNING: this radius will be use for masking before computing resoution
 """
-OuterRadius = 32
+OuterRadius = 64
 
 # {expert} Available memory to store all references (Gb)
 """ This is only for the storage of the references. If your projections do not fit in memory, 
@@ -219,7 +219,7 @@ AvailableMemory = 2
     Note: if there are less values than iterations the last value is reused
     Note: if there are more values than iterations the extra value are ignored
 """
-AngSamplingRateDeg='10 5 2 1'
+AngSamplingRateDeg='1 3 2 1'
 
 # Angular search range 
 """Maximum change in rot & tilt  (in +/- degrees)
@@ -261,7 +261,7 @@ PerturbProjectionDirections ='0'
     Note: if there are less values than iterations the last value is reused
     Note: if there are more values than iterations the extra value are ignored
 """
-MaxChangeOffset ='1000 '
+MaxChangeOffset='1000 10 5'
 
 # Search range for 5D translational search 
 """ Give search range from the image center for 5D searches (in +/- pixels).
@@ -304,7 +304,7 @@ TiltF = 90
     for a description of the symmetry groups format
     If no symmetry is present, give c1
 """
-SymmetryGroup ='c1'
+SymmetryGroup ='i3'
 
 # {expert} Symmetry group for Neighbourhood computations
 """ If you do not know what this is leave it blank.
@@ -593,7 +593,7 @@ DoParallel =True
 NumberOfMpiProcesses =10
 
 # minumum size of jobs in mpi processe. Set to 1 for large images (e.g. 500x500) and to 10 for small images (e.g. 100x100)
-MpiJobSize ='5'
+MpiJobSize ='1'
 
 # MPI system Flavour 
 """ Depending on your queuing system and your mpi implementation, different mpirun-like commands have to be given.
@@ -828,6 +828,8 @@ def actionsToBePerformedBeforeLoopThatDoNotModifyTheFileSystem():
     Search5DShift          = [-1]+getListFromVector(Search5DShift,NumberofIterations)
     global Search5DStep
     Search5DStep           = [-1]+getListFromVector(Search5DStep,NumberofIterations)
+    global SymmetryGroup   
+    SymmetryGroup          = [-1]+getListFromVector(SymmetryGroup,NumberofIterations)
     
 def otherActionsToBePerformedBeforeLoop():
 
@@ -1002,7 +1004,7 @@ def actionsToBePerformedInsideLoop(_log):
                                 , 'PerturbProjectionDirections':PerturbProjectionDirections[iterN]
                                 , 'ProjectLibraryRootName':ProjectLibraryRootNames[iterN][refN]
                                 , 'SystemFlavour':SystemFlavour
-                                , 'SymmetryGroup':SymmetryGroup
+                                , 'SymmetryGroup':SymmetryGroup[iterN]
                                 , 'SymmetryGroupNeighbourhood':SymmetryGroupNeighbourhood
                                 , 'Tilt0':Tilt0
                                 , 'TiltF':TiltF
@@ -1029,7 +1031,6 @@ def actionsToBePerformedInsideLoop(_log):
                                   'AvailableMemory':AvailableMemory
                                 , 'CtfGroupRootName': CtfGroupRootName
                                 , 'CtfGroupDirectory': CtfGroupDirectory
-                                , 'DoAlign2D' : DoAlign2D[iterN]
                                 , 'DoComputeResolution':DoComputeResolution[iterN]
                                 , 'DoCtfCorrection': DoCtfCorrection
                                 , 'DoScale':DoScale
@@ -1072,39 +1073,40 @@ def actionsToBePerformedInsideLoop(_log):
                       }
         _VerifyFiles = []
         _VerifyFiles.append(DocFileInputAngles[iterN])
-        _VerifyFiles.append('ppppp')
         command = "assign_images_to_references"
         _dataBase.insertCommand(command, _Parameters, iterN,_VerifyFiles)
 
         #align images, not possible for ctf groups
         for refN in range(1, numberOfReferences + 1):
             _Parameters = {
-                       'Align2DIterNr':Align2DIterNr
-                     , 'CtfGroupDirectory': CtfGroupDirectory
-                     , 'CtfGroupRootName': CtfGroupRootName
-                     , 'DiscardPercentage':DiscardPercentage[iterN]
+                       'Align2DIterNr':Align2DIterNr[iterN]#
+                     , 'CtfGroupDirectory': CtfGroupDirectory#
+                     , 'CtfGroupRootName': CtfGroupRootName#
+                     , 'DiscardPercentage':DiscardPercentage[iterN]#
                      , 'DoAlign2D' : DoAlign2D[iterN]
-                     , 'DoComputeResolution' : DoComputeResolution
-                     , 'DoCtfCorrection': DoCtfCorrection
-                     , 'DocFileInputAngles' : DocFileInputAngles[iterN]
+                     , 'DoCtfCorrection': DoCtfCorrection#
+                     , 'DocFileInputAngles' : DocFileInputAngles[iterN]#
                      , 'DoParallel': DoParallel
                      , 'DoSplitReferenceImages':DoSplitReferenceImages
-                     , 'InnerRadius':InnerRadius
+                     , 'InnerRadius':InnerRadius#
                      , 'MaxChangeOffset':MaxChangeOffset[iterN]
-                     , 'MinimumCrossCorrelation':MinimumCrossCorrelation[iterN]
+                     , 'MinimumCrossCorrelation':MinimumCrossCorrelation[iterN]#
                      , 'MpiJobSize':MpiJobSize
-                     , 'NumberOfCtfGroups' : NumberOfCtfGroups
+                     , 'NumberOfReferences':numberOfReferences#
+                     , 'NumberOfCtfGroups' : NumberOfCtfGroups#
                      , 'NumberOfMpiProcesses':NumberOfMpiProcesses
                      , 'NumberOfThreads':NumberOfThreads
                      , 'OuterRadius':OuterRadius
-                     , 'PaddingFactor':PaddingFactor
-                     , 'ProjectLibraryRootName':ProjectLibraryRootNames[iterN][refN]
-                     , 'ProjMatchRootName':ProjMatchRootName[iterN]
+                     , 'PaddingFactor':PaddingFactor#
+                     , 'ProjectLibraryRootName':ProjectLibraryRootNames[iterN][refN]#
+                     , 'ProjMatchRootName':ProjMatchRootName[iterN]#
                      , 'SystemFlavour':SystemFlavour
                     }
             command = "angular_class_average"
-            _VerifyFiles = []
+            _VerifyFiles = []angular_class_average
             _VerifyFiles.append(maskedFileNamesIter[iterN][refN]+'ertertertert')
+        #create classes for each reference
+    
             #########################################33_dataBase.insertCommand(command, _Parameters, iterN,_VerifyFiles)
             
             ##############REMOVE SHUTIL.COPY
