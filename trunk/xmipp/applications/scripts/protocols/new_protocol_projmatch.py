@@ -61,7 +61,7 @@ IsIter =False
     Note2: Set this option to -1 if you want to perform extra iterations after
            successfully finish an execution
 """
-ContinueAtIteration =1
+ContinueAtIteration =23
 
 # {expert} Save disc space by cleaning up intermediate files?
 """ Be careful, many options of the visualization protocol will not work anymore, 
@@ -547,7 +547,7 @@ DoComputeResolution ='1'
     is ("2x1 2x0", i.e.,
     2 iterations with value 1, and 2 with value 0).
     Note: if there are less values than iterations the last value is reused
-    Note: if there are more values than iterations the extra value are ignored
+    Note: if there are more vapplications/scripts/protocols/new_protocol_projmatch.pyalues than iterations the extra value are ignored
 """
 DoSplitReferenceImages ="1"
 
