@@ -1133,11 +1133,11 @@ def actionsToBePerformedInsideLoop(_log):
                      , 'ProjMatchRootName':ProjMatchRootName[iterN][refN]#
                      , 'SystemFlavour':SystemFlavour#
                     }
-                     #, 'MpiJobSize':MpiJobSize#
-                     #, 'OuterRadius':OuterRadius[iterN]
+#, 'MpiJobSize':MpiJobSize#
+#, 'OuterRadius':OuterRadius[iterN]
             command = "angular_class_average"
             _VerifyFiles = []
-            _VerifyFiles.append(maskedFileNamesIter[iterN][refN]+'ertertertert')
+            _VerifyFiles.append('ertertertert')
             _dataBase.insertCommand(command, _Parameters, iterN,_VerifyFiles)
             
             ##############REMOVE SHUTIL.COPY
