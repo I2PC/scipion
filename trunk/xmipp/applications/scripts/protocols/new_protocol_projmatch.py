@@ -72,7 +72,7 @@ CleanUpFiles =False
 # {expert} Root directory name for this project:
 """ Absolute path to the root directory for this project. Often, each data set of a given sample has its own ProjectDir.
 """
-ProjectDir='/home/roberto/PhantomIco'
+ProjectDir='/gpfs/fs1/home/bioinfo/roberto/PhantomIco'
 
 # {expert} Directory name for logfiles:
 LogDir ='Logs'
