@@ -236,7 +236,7 @@ def angular_class_average(_log,dict):
                       ' --max_shift '        + dict['MaxChangeOffset'] + \
                       ' --max_shift_change ' + dict['Align2dMaxChangeOffset'] + \
                       ' --max_psi_change '   + dict['Align2dMaxChangeRot'] 
-    if (dict['DoComputeResolution'] and dict['#']):
+    if (dict['DoComputeResolution'] and dict['DoSplitReferenceImages']):
         parameters += \
                   ' --split '
     
