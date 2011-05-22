@@ -1138,7 +1138,7 @@ def actionsToBePerformedInsideLoop(_log):
             command = "angular_class_average"
             _VerifyFiles = []
             _VerifyFiles.append(maskedFileNamesIter[iterN][refN]+'ertertertert')
-            dataBase.insertCommand(command, _Parameters, iterN,_VerifyFiles)
+            _dataBase.insertCommand(command, _Parameters, iterN,_VerifyFiles)
             
             ##############REMOVE SHUTIL.COPY
             # Mask reference volume
