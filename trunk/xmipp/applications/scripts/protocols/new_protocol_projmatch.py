@@ -614,7 +614,7 @@ NumberOfThreads = 1
 DoParallel =True
 
 # Number of MPI processes to use:
-NumberOfMpiProcesses =3
+NumberOfMpiProcesses =10
 
 # minumum size of jobs in mpi processe. Set to 1 for large images (e.g. 500x500) and to 10 for small images (e.g. 100x100)
 MpiJobSize ='1'
