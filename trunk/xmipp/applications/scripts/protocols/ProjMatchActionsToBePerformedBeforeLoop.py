@@ -105,25 +105,25 @@ def checkVolumeProjSize(_log, dict):
     return (result,message)
 
 
-def initOuterRadius(_log, dict):
-    """ init mask radius for volumes. If suggested value is negative set to half dim"""
-    OuterRadius = dict['OuterRadius']
-
-#    print "REMOVE -34"
-#    OuterRadius = -34
-
-    xdim = 0
-    if (OuterRadius < 0):
-        try:
-            (xdim, ydim, zdim, ndim) = ImgSize(dict['SelFileName'])
-        except XmippError, e:
-            print __name__, 'initOuterRadius:', e
-            exit(1)
-        OuterRadius = (xdim / 2) - 1
-        comment = "InitOuterRadius: Outer radius set to: " + str(OuterRadius)
-        print '* ' + comment
-        _log.info(comment)
-    return OuterRadius
+#def initOuterRadius(_log, dict):
+#    """ init mask radius for volumes. If suggested value is negative set to half dim"""
+#    OuterRadius = dict['OuterRadius']
+#
+##    print "REMOVE -34"
+##    OuterRadius = -34
+#
+#    xdim = 0
+#    if (OuterRadius < 0):
+#        try:
+#            (xdim, ydim, zdim, ndim) = ImgSize(dict['SelFileName'])
+#        except XmippError, e:
+#            print __name__, 'initOuterRadius:', e
+#            exit(1)
+#        OuterRadius = (xdim / 2) - 1
+#        comment = "InitOuterRadius: Outer radius set to: " + str(OuterRadius)
+#        print '* ' + comment
+#        _log.info(comment)
+#    return OuterRadius
 
 # wrapper for log.make_backup_of_script_file
 def pm_make_backup_of_script_file(_log, dict):

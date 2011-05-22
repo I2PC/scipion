@@ -198,15 +198,16 @@ def assign_images_to_references(_log,dict):
 def angular_class_average(_log,dict):
     # Now make the class averages
     CtfGroupName        = dict['CtfGroupDirectory'] + '/' + dict['CtfGroupRootName']
-    DocFileInputAngles  = dict['DocFileInputAngles']#
+    #DocFileInputAngles  = dict['DocFileInputAngles']#
+    DoCtfCorrection     = dict['DoCtfCorrection']
     NumberOfCtfGroups   = dict['NumberOfCtfGroups']
-    ProjMatchRootName   = dict['ProjMatchRootName']
-    NumberOfReferences  = dict['NumberOfReferences']
+    #NumberOfReferences  = dict['NumberOfReferences']
+    #ProjMatchRootName   = dict['ProjMatchRootName']
     refname = str(dict['ProjectLibraryRootName'])
 
     
-    Md=MetaData()
-    MdSelect=MetaData()
+    #Md=MetaData()
+    #MdSelect=MetaData()
     ProjMatchRootName = dict['ProjMatchRootName']
     for iCTFGroup in range(1,NumberOfCtfGroups+1):
         tmpFileName = 'ctfGroup' + str(iCTFGroup).zfill(utils_xmipp.FILENAMENUMBERLENTGH)+'@'
@@ -218,7 +219,7 @@ def angular_class_average(_log,dict):
                       ' --dont_write_selfiles ' + \
                       ' --limit0 ' + dict['MinimumCrossCorrelation'] + \
                       ' --limitR ' + dict['DiscardPercentage']
-        if (dict['DoCtfCorrection']):
+        if (DoCtfCorrection):
             # On-the fly apply Wiener-filter correction and add all CTF groups together
             parameters += \
                        ' --wien '   + CtfGroupName + '.wien' + \
@@ -227,7 +228,7 @@ def angular_class_average(_log,dict):
         else:
             parameters += \
                       ' -o '                + ProjMatchRootName
-        if (dict['Align2DIterNr'] == '1'):
+        if (dict['DoAlign2D'] == '1'):
             parameters += \
                       ' --iter '             + dict['Align2DIterNr']  + \
                       ' --Ri '               + str(dict['InnerRadius'])           + \
@@ -235,7 +236,7 @@ def angular_class_average(_log,dict):
                       ' --max_shift '        + dict['MaxChangeOffset'] + \
                       ' --max_shift_change ' + dict['Align2dMaxChangeOffset'] + \
                       ' --max_psi_change '   + dict['Align2dMaxChangeRot'] 
-    if (dict['DoComputeResolution'] and dict['DoSplitReferenceImages']):
+    if (dict['DoComputeResolution'] and dict['#']):
         parameters += \
                   ' --split '
     
@@ -246,58 +247,3 @@ def angular_class_average(_log,dict):
                           dict['NumberOfMpiProcesses'] * dict['NumberOfThreads'],
                           1,
                           dict['SystemFlavour'])
-######    
-######    if (_DoAlign2D == '1'):
-######       outputdocfile =  ProjMatchRootName + '_realigned.doc'
-######    else:
-######       outputdocfile =  ProjMatchRootName + '.doc'
-######    
-######    if (_DoCtfCorrection):
-######       os.remove(outputname + '.doc')
-######       os.remove(inputdocfile)
-
-#            shutil.copy(ProjMatchRootName[1], DocFileInputAngles)
-
-#
-#        # Now make the class averages
-#        parameters =  ' -i '      + outputname + '.doc'  + \
-#                    ' --lib '    + refname[:-len('.stk')] + '.doc' + \
-#                    ' --dont_write_selfiles ' + \
-#                    ' --limit0 ' + str(dict['MinimumCrossCorrelation']) + \
-#                    ' --limitR ' + str(dict['DiscardPercentage'])
-#        if (_DoCtfCorrection):
-#            # On-the fly apply Wiener-filter correction and add all CTF groups together
-#            parameters += \
-#                       ' --wien '             + CtfGroupName + '.wien' + \
-#                       ' --pad '              + str(dict['PaddingFactor']) + \
-#                       ' --add_to '           + _ProjMatchRootName
-#        else:
-#            parameters += \
-#                        ' -o '                + _ProjMatchRootName
-#        if (dict['DoAlign2D']):
-#            parameters += \
-#                        ' --iter '             + str(_Align2DIterNr) + \
-#                        ' --Ri '               + str(_Ri)           + \
-#                        ' --Ro '               + str(_Ro)           + \
-#                        ' --max_shift '        + str(_MaxChangeOffset) + \
-#                        ' --max_shift_change ' + str(_Align2dMaxChangeOffset) + \
-#                        ' --max_psi_change '   + str(_Align2dMaxChangeRot) 
-#        if (dict['DoComputeResolution'] and dict['DoSplitReferenceImages']):
-#            parameters += ' --split '
-#
-#        launch_job.launch_job('xmipp_angular_class_average',
-#                            parameters,
-#                            _log,
-#                            dict['DoParallel'],
-#                            dict['NumberOfMpiProcesses']*dict['NumberOfThreads'],
-#                            1,
-#                            dict['SystemFlavour'])
-#
-#      if (_DoAlign2D == '1'):
-#         outputdocfile =  ProjMatchRootName + '_realigned.doc'
-#      else:
-#         outputdocfile =  ProjMatchRootName + '.doc'
-#
-#      if (_DoCtfCorrection):
-#         os.remove(outputname + '.doc')
-#         os.remove(inputdocfile)

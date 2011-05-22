@@ -72,7 +72,7 @@ CleanUpFiles =False
 # {expert} Root directory name for this project:
 """ Absolute path to the root directory for this project. Often, each data set of a given sample has its own ProjectDir.
 """
-ProjectDir='/gpfs/fs1/home/bioinfo/roberto/PhantomIco'
+ProjectDir='/home/roberto/PhantomIco'
 
 # {expert} Directory name for logfiles:
 LogDir ='Logs'
@@ -190,14 +190,30 @@ MaskFileName ='mask.vol'
 #-----------------------------------------------------------------------------
 # Inner radius for rotational correlation:
 """ In pixels from the image center
+    You may specify this option for each iteration. 
+    This can be done by a sequence of numbers (for instance, "8 8 2 2 " 
+    specifies 4 iterations, the first two set the value to 8 
+    and the last two to 2. An alternative compact notation 
+    is ("2x8 2x0", i.e.,
+    2 iterations with value 8, and 2 with value 2).
+    Note: if there are less values than iterations the last value is reused
+    Note: if there are more values than iterations the extra value are ignored
 """
-InnerRadius = 0
+InnerRadius = '0'
 
 # Outer radius for rotational correlation
 """ In pixels from the image center. Use a negative number to use the entire image.
-    WARNING: this radius will be use for masking before computing resoution
+    WARNING: this radius will be use for masking before computing resolution
+    You may specify this option for each iteration. 
+    This can be done by a sequence of numbers (for instance, "8 8 2 2 " 
+    specifies 4 iterations, the first two set the value to 8 
+    and the last two to 2. An alternative compact notation 
+    is ("2x8 2x0", i.e.,
+    2 iterations with value 8, and 2 with value 2).
+    Note: if there are less values than iterations the last value is reused
+    Note: if there are more values than iterations the extra value are ignored
 """
-OuterRadius = 64
+OuterRadius = '64'
 
 # {expert} Available memory to store all references (Gb)
 """ This is only for the storage of the references. If your projections do not fit in memory, 
@@ -524,6 +540,14 @@ DoComputeResolution ='1'
    IMPORTANT: the second option has ONLY been implemented for FOURIER
    reconstruction method. Other reconstruction methods require this
    flag to be set to True
+    You may specify this option for each iteration. 
+    This can be done by a sequence of 0 or 1 numbers (for instance, "1 1 0 0" 
+    specifies 4 iterations, the first two applied alig2d while the last 2
+    dont. an alternative compact notation is 
+    is ("2x1 2x0", i.e.,
+    2 iterations with value 1, and 2 with value 0).
+    Note: if there are less values than iterations the last value is reused
+    Note: if there are more values than iterations the extra value are ignored
 """
 DoSplitReferenceImages =True
 
@@ -590,7 +614,7 @@ NumberOfThreads = 1
 DoParallel =True
 
 # Number of MPI processes to use:
-NumberOfMpiProcesses =10
+NumberOfMpiProcesses =3
 
 # minumum size of jobs in mpi processe. Set to 1 for large images (e.g. 500x500) and to 10 for small images (e.g. 100x100)
 MpiJobSize ='1'
@@ -672,7 +696,7 @@ from arg import getListFromVector, getBoolListFromVector
 import dataBase
 global _dataBase
 
-from xmipp import *
+#from xmipp import *
 #import pickle
 
 def actionsToBePerformedBeforeLoopThatDoNotModifyTheFileSystem():
@@ -808,6 +832,10 @@ def actionsToBePerformedBeforeLoopThatDoNotModifyTheFileSystem():
     DoAlign2D              = [False]+getBoolListFromVector(DoAlign2D,NumberofIterations)
     global DoComputeResolution
     DoComputeResolution    = [False]+getBoolListFromVector(DoComputeResolution,NumberofIterations)
+    global DoSplitReferenceImages
+    DoSplitReferenceImages    = [False]+getBoolListFromVector(DoSplitReferenceImages,NumberofIterations)
+    global InnerRadius
+    InnerRadius    = [False]+getListFromVector(InnerRadius,NumberofIterations)
     global MaxChangeInAngles
     MaxChangeInAngles      = [-1]+getListFromVector(MaxChangeInAngles,NumberofIterations)
     global MaxChangeOffset
@@ -816,6 +844,8 @@ def actionsToBePerformedBeforeLoopThatDoNotModifyTheFileSystem():
     MinimumCrossCorrelation= [-1]+getListFromVector(MinimumCrossCorrelation,NumberofIterations)
     global OnlyWinner
     OnlyWinner             = [False]+getBoolListFromVector(OnlyWinner,NumberofIterations)
+    global OuterRadius
+    OuterRadius             = [False]+getListFromVector(OuterRadius,NumberofIterations)
     global PerturbProjectionDirections
     PerturbProjectionDirections= [False]+getBoolListFromVector(PerturbProjectionDirections,NumberofIterations)
     global ReferenceIsCtfCorrected#set to true after first iteration
@@ -831,6 +861,7 @@ def actionsToBePerformedBeforeLoopThatDoNotModifyTheFileSystem():
     global SymmetryGroup   
     SymmetryGroup          = [-1]+getListFromVector(SymmetryGroup,NumberofIterations)
     
+from xmipp import *
 def otherActionsToBePerformedBeforeLoop():
 
     global OuterRadius, NumberOfCtfGroups
@@ -887,14 +918,13 @@ def otherActionsToBePerformedBeforeLoop():
     command = 'checkOptionsCompatibility'
     _dataBase.insertCommand(command, _Parameters, 1)
 
-    #Init Mask references radius
-    _Parameters = {
-          'OuterRadius':OuterRadius
-        , 'ReferenceFileNames_0':ReferenceFileNames[0]
-        , 'SelFileName':SelFileName
-        }
-    command = 'self.OuterRadius = initOuterRadius'
-    _dataBase.insertCommand(command, _Parameters, 1)
+#    #Init Mask references radius
+#    _Parameters = {
+#          'OuterRadius':OuterRadius[1]
+#        , 'SelFileName':SelFileName
+#        }
+#    command = 'self.OuterRadius = initOuterRadius'
+#    _dataBase.insertCommand(command, _Parameters, 1)
 
     #7 make CTF groups
     _Parameters = {
@@ -932,8 +962,8 @@ def otherActionsToBePerformedBeforeLoop():
     _VerifyFiles.append(DocFileWithOriginalAngles)
     _dataBase.insertCommand(command, _Parameters, 1,_VerifyFiles)
 
-    #Save global parameters for future runs
-        #create a dummy dictionary
+    #Save all parameters in dict for future runs (this is done by database)
+    #so far no parameter is being saved, but dummy=0
     _Parameters = {
       'dummy':0
     }
@@ -1035,13 +1065,13 @@ def actionsToBePerformedInsideLoop(_log):
                                 , 'DoCtfCorrection': DoCtfCorrection
                                 , 'DoScale':DoScale
                                 , 'DoParallel': DoParallel
-                                , 'InnerRadius':InnerRadius
+                                , 'InnerRadius':InnerRadius[iterN]
                                 , 'MaxChangeOffset':MaxChangeOffset[iterN]
                                 , 'MpiJobSize':MpiJobSize
                                 , 'NumberOfCtfGroups':NumberOfCtfGroups
                                 , 'NumberOfMpiProcesses':NumberOfMpiProcesses
                                 , 'NumberOfThreads':NumberOfThreads
-                                , 'OuterRadius':OuterRadius
+                                , 'OuterRadius':OuterRadius[iterN]
                                 , 'PaddingFactor':PaddingFactor
                                 , 'ProjectLibraryRootName':ProjectLibraryRootNames[iterN][refN]
                                 , 'ProjMatchRootName':ProjMatchRootName[iterN][refN]
@@ -1080,30 +1110,33 @@ def actionsToBePerformedInsideLoop(_log):
         for refN in range(1, numberOfReferences + 1):
             _Parameters = {
                        'Align2DIterNr':Align2DIterNr[iterN]#
+                     , 'Align2dMaxChangeRot':Align2dMaxChangeRot[iterN]#
+                     , 'Align2dMaxChangeOffset':Align2dMaxChangeOffset[iterN]#
                      , 'CtfGroupDirectory': CtfGroupDirectory#
                      , 'CtfGroupRootName': CtfGroupRootName#
                      , 'DiscardPercentage':DiscardPercentage[iterN]#
-                     , 'DoAlign2D' : DoAlign2D[iterN]
+                     , 'DoAlign2D' : DoAlign2D[iterN]#
+                     , 'DoComputeResolution':DoComputeResolution[iterN]
                      , 'DoCtfCorrection': DoCtfCorrection#
                      , 'DocFileInputAngles' : DocFileInputAngles[iterN]#
-                     , 'DoParallel': DoParallel
-                     , 'DoSplitReferenceImages':DoSplitReferenceImages
-                     , 'InnerRadius':InnerRadius#
-                     , 'MaxChangeOffset':MaxChangeOffset[iterN]
+                     , 'DoParallel': DoParallel#
+                     , 'DoSplitReferenceImages':DoSplitReferenceImages[iterN]#
+                     , 'InnerRadius':InnerRadius[iterN]#
+                     , 'MaxChangeOffset':MaxChangeOffset[iterN]#
                      , 'MinimumCrossCorrelation':MinimumCrossCorrelation[iterN]#
-                     , 'MpiJobSize':MpiJobSize
                      , 'NumberOfReferences':numberOfReferences#
                      , 'NumberOfCtfGroups' : NumberOfCtfGroups#
-                     , 'NumberOfMpiProcesses':NumberOfMpiProcesses
-                     , 'NumberOfThreads':NumberOfThreads
-                     , 'OuterRadius':OuterRadius
+                     , 'NumberOfMpiProcesses':NumberOfMpiProcesses#
+                     , 'NumberOfThreads':NumberOfThreads#
                      , 'PaddingFactor':PaddingFactor#
                      , 'ProjectLibraryRootName':ProjectLibraryRootNames[iterN][refN]#
                      , 'ProjMatchRootName':ProjMatchRootName[iterN]#
-                     , 'SystemFlavour':SystemFlavour
+                     , 'SystemFlavour':SystemFlavour#
                     }
+                     #, 'MpiJobSize':MpiJobSize#
+                     #, 'OuterRadius':OuterRadius[iterN]
             command = "angular_class_average"
-            _VerifyFiles = []angular_class_average
+            _VerifyFiles = []
             _VerifyFiles.append(maskedFileNamesIter[iterN][refN]+'ertertertert')
         #create classes for each reference
     
@@ -1193,42 +1226,47 @@ def preconditions(gui):
     
     # Check if there is workingdir 
     # move this to gui
+    import tkMessageBox
     if WorkingDir == "":
-        message="No working directory given"
-        if gui:
-            import tkMessageBox
-            tkMessageBox.showerror("Error", message)
-        else:
-            print message
+        error_message="No working directory given"
         retval=False
     
-    #Check references and projections size match
-    global ReferenceFileNames
+    #Check reference and projection size match
+    ###########################global ReferenceFileNames
     ReferenceFileNames = getListFromVector(ReferenceFileNames)
     _Parameters = {
           'ReferenceFileNames':ReferenceFileNames
         , 'SelFileName':SelFileName
         }
     from ProjMatchActionsToBePerformedBeforeLoop import checkVolumeProjSize
-    retval,message=checkVolumeProjSize(None,_Parameters)
+    _retval,_error_message=checkVolumeProjSize(None,_Parameters)
+    if(not _retval):
+        retval=False
+        error_message=_error_message
 
-    if not retval:
-        if gui:
-            import tkMessageBox
-            tkMessageBox.showerror("Error", message)
-        else:
-            print message
+
+    import arg
+    # Never allow DoAlign2D and DoCtfCorrection together
+    if (int(arg.getComponentFromVector(DoAlign2D,1))==1 and DoCtfCorrection):
+        error_message="You cannot realign classes AND perform CTF-correction. Switch either of them off!"
+        print error_message
         retval=False
 
-    # Never allow DoAlign2D and DoCtfCorrection together
-    if (int(arg.getComponentFromVector(DoAlign2D,_iteration_number))==1 and
-        self._DoCtfCorrection):
-        error_message="You cannot realign classes AND perform CTF-correction. Switch either of them off!"
-        self._mylog.error(error_message)
+    #Now outter radius is compulsory
+    OuterRadius = arg.getComponentFromVector(OuterRadius,1)
+    InnerRadius = arg.getComponentFromVector(InnerRadius,1)
+    if OuterRadius[1] <= InnerRadius[1]:
+        error_message="OuterRadius must be larger than InnerRadius"
         print error_message
-        exit(1)
-
-
+        retval=False
+        
+    if not retval:
+        if gui:
+            tkMessageBox.showerror("Error", error_message)
+        else:
+            print error_message
+        retval=False
+        
     return retval
 #######
 # PROTOCOL STARTS HERE
