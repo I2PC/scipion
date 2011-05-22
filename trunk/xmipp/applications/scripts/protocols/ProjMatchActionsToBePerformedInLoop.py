@@ -197,49 +197,44 @@ def assign_images_to_references(_log,dict):
             
 def angular_class_average(_log,dict):
     # Now make the class averages
-    DocFileInputAngles  = dict['DocFileInputAngles']#number of references
-    NumberOfCtfGroups   = dict['NumberOfCtfGroups']
     CtfGroupName        = dict['CtfGroupDirectory'] + '/' + dict['CtfGroupRootName']
+    DocFileInputAngles  = dict['DocFileInputAngles']#
+    NumberOfCtfGroups   = dict['NumberOfCtfGroups']
     ProjMatchRootName   = dict['ProjMatchRootName']
-    NumberOfReferences  = len(ProjMatchRootName)
+    NumberOfReferences  = dict['NumberOfReferences']
     refname = str(dict['ProjectLibraryRootName'])
 
     
     Md=MetaData()
     MdSelect=MetaData()
-    for iRef3D in range(1,NumberOfReferences):#already has plus 1
-        ProjMatchRootName = dict['ProjMatchRootName'][iRef3D]
-        for iCTFGroup in range(1,NumberOfCtfGroups+1):
-            #extract from metadata relevant images
-            Md.read(DocFileInputAngles)
-            MdSelect.importObjects(Md, MDValueEQ(MDL_REF3D, iRef3D))
-            Md.clear()
-            Md.importObjects(MdSelect,MDValueEQ(MDL_CTF_GROUP, iCTFGroup))
-            tmpFileName=DocFileInputAngles+"_tmp"
-            Md.write(tmpFileName)
-            #Md.write("test.xmd" + str(iCTFGroup).zfill(2) +'_'+str(iRef3D).zfill(2))
-            parameters =  ' -i '      + tmpFileName  + \
-                          ' --lib '    + refname + '.doc' + \
-                          ' --dont_write_selfiles ' + \
-                          ' --limit0 ' + dict['MinimumCrossCorrelation'] + \
-                          ' --limitR ' + dict['DiscardPercentage']
-            if (dict['DoCtfCorrection']):
-                # On-the fly apply Wiener-filter correction and add all CTF groups together
-                parameters += \
-                           ' --wien '   + CtfGroupName + '.wien' + \
-                           ' --pad '    + str(dict['PaddingFactor']) + \
-                           ' --add_to ' + ProjMatchRootName
-            else:
-                parameters += \
-                          ' -o '                + ProjMatchRootName
-            if (dict['Align2DIterNr'] == '1'):
-                parameters += \
-                          ' --iter '             + dict['Align2DIterNr']  + \
-                          ' --Ri '               + str(dict['InnerRadius'])           + \
-                          ' --Ro '               + str(dict['OuterRadius'])           + \
-                          ' --max_shift '        + dict['MaxChangeOffset'] + \
-                          ' --max_shift_change ' + dict['Align2dMaxChangeOffset'] + \
-                          ' --max_psi_change '   + dict['Align2dMaxChangeRot'] 
+    ProjMatchRootName = dict['ProjMatchRootName']
+    for iCTFGroup in range(1,NumberOfCtfGroups+1):
+        tmpFileName = 'ctfGroup' + str(iCTFGroup).zfill(utils_xmipp.FILENAMENUMBERLENTGH)+'@'
+        #extract from metadata relevant images
+        tmpFileName += ProjMatchRootName
+        #Md.write("test.xmd" + str(iCTFGroup).zfill(2) +'_'+str(iRef3D).zfill(2))
+        parameters =  ' -i '      + tmpFileName  + \
+                      ' --lib '    + refname + '.doc' + \
+                      ' --dont_write_selfiles ' + \
+                      ' --limit0 ' + dict['MinimumCrossCorrelation'] + \
+                      ' --limitR ' + dict['DiscardPercentage']
+        if (dict['DoCtfCorrection']):
+            # On-the fly apply Wiener-filter correction and add all CTF groups together
+            parameters += \
+                       ' --wien '   + CtfGroupName + '.wien' + \
+                       ' --pad '    + str(dict['PaddingFactor']) + \
+                       ' --add_to ' + ProjMatchRootName
+        else:
+            parameters += \
+                      ' -o '                + ProjMatchRootName
+        if (dict['Align2DIterNr'] == '1'):
+            parameters += \
+                      ' --iter '             + dict['Align2DIterNr']  + \
+                      ' --Ri '               + str(dict['InnerRadius'])           + \
+                      ' --Ro '               + str(dict['OuterRadius'])           + \
+                      ' --max_shift '        + dict['MaxChangeOffset'] + \
+                      ' --max_shift_change ' + dict['Align2dMaxChangeOffset'] + \
+                      ' --max_psi_change '   + dict['Align2dMaxChangeRot'] 
     if (dict['DoComputeResolution'] and dict['DoSplitReferenceImages']):
         parameters += \
                   ' --split '
