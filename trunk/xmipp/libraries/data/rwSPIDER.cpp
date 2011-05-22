@@ -133,6 +133,7 @@ struct SPIDERhead
   * @ingroup Spider
 */
 #include "metadata_label.h"
+#include <errno.h>
 
 int  ImageBase::readSPIDER(size_t select_img)
 {
@@ -145,7 +146,8 @@ int  ImageBase::readSPIDER(size_t select_img)
 
     SPIDERhead* header = new SPIDERhead;
     if ( fread( header, SPIDERSIZE, 1, fimg ) != 1 )
-        REPORT_ERROR(ERR_IO_NOREAD,"rwSPIDER: cannot read Spider main header from file "+ filename);
+        REPORT_ERROR(ERR_IO_NOREAD,"rwSPIDER: cannot read Spider main header from file "+\
+        		     filename + ". Error message: " + strerror(errno));
 
     swap = 0;
 
