@@ -267,8 +267,8 @@ class dataBase:
 
             sqlCommand = "update " + self.tableInsertOriginal + " set init   = CURRENT_TIMESTAMP where id=%d" % id
             self.connection.execute(sqlCommand)
-            print 'row["command"]
-            exec (row["command"] command','+ '(_log, dict)')
+            print 'command',row["command"]
+            exec (row["command"] + '(_log, dict)')
             if(self.verify and row["fileNameList"]):
                 _list =pickle.loads(str(row["fileNameList"]))
                 for i in _list:
