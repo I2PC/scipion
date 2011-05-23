@@ -51,7 +51,7 @@ class XmippPythonTestResult(TestResult):
          if (self.testFailed):
              sys.stderr.write("%s[  FAILED  ] %s %d tests\n" % (bcolors.FAIL, bcolors.ENDC, self.testFailed))
          else:
-             sys.stderr.write("%s[  PASSED  ] %s %d tests\n" % (bcolors.OKGREEN, bcolors.ENDC, self.numberTests-self.testFail))
+             sys.stderr.write("%s[  PASSED  ] %s %d tests\n" % (bcolors.OKGREEN, bcolors.ENDC, self.numberTests-self.testFailed))
              
     
     def getTestNames(self, test):
