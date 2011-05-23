@@ -80,15 +80,18 @@ void ProgAngularDistance::defineParams()
 // Produce side information ================================================
 void ProgAngularDistance::produce_side_info()
 {
-    DF1.read(fn_ang1);
-    DF2.read(fn_ang2);
     if (fn_sym != "")
         SL.read_sym_file(fn_sym);
 
     // Check that both docfiles are of the same length
-    if (DF1.size() != DF2.size())
-        REPORT_ERROR(ERR_MD_OBJECTNUMBER,
-                     "Angular_distance: Input Docfiles with different number of entries");
+    if (fn_ang1!="" && fn_ang2!="")
+    {
+        DF1.read(fn_ang1);
+        DF2.read(fn_ang2);
+        if (DF1.size() != DF2.size())
+            REPORT_ERROR(ERR_MD_OBJECTNUMBER,
+                         "Angular_distance: Input Docfiles with different number of entries");
+    }
 }
 
 //#define DEBUG
