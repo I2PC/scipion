@@ -129,7 +129,8 @@ void ProgAngularClassAverage::defineParams()
 void ProgAngularClassAverage::run()
 {
     int              i, nmax, nr_ref, nr_images, reserve;
-    double           ref_number, rot, tilt, psi, xshift, yshift, mirror;
+    double           ref_number, rot, tilt, psi, xshift, yshift;
+    bool             mirror;
     double           w, w1, w2;
     Matrix1D<double> dataline(8);
 
@@ -179,6 +180,7 @@ void ProgAngularClassAverage::run()
 
         // Fill new docfile (with params after realignment)
         size_t id;
+        bool auxBool;
         if (nr_iter > 0)
         {
             nr_images = ROUND(output_values[4] / AVG_OUPUT_SIZE);
@@ -200,7 +202,11 @@ void ProgAngularClassAverage::run()
                     DF.setValue(MDL_SHIFTX,output_values[i*AVG_OUPUT_SIZE+9],id);
                     DF.setValue(MDL_SHIFTY,output_values[i*AVG_OUPUT_SIZE+10],id);
                     DF.setValue(MDL_REF,output_values[i*AVG_OUPUT_SIZE+11],id);
-                    DF.setValue(MDL_FLIP,output_values[i*AVG_OUPUT_SIZE+12],id);
+                    if(output_values[i*AVG_OUPUT_SIZE+12] == 0)
+                        auxBool = False;
+                    else
+                        auxBool =  True;
+                    DF.setValue(MDL_FLIP,auxBool,id);
                     DF.setValue(MDL_MAXCC,output_values[i*AVG_OUPUT_SIZE+13],id);
                 }
             }
