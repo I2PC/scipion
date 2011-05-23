@@ -579,7 +579,8 @@ void ProgAngularClassAverage::processOneClass(int &dirno,
     Image<double> img, avg, avg1, avg2;
     FileName   fn_img, fn_tmp;
     MetaData   SFclass, SFclass1, SFclass2;
-    double     rot, tilt, psi, xshift, yshift, mirror, val, w, w1, w2, my_limitR, scale;
+    double     rot, tilt, psi, xshift, yshift, val, w, w1, w2, my_limitR, scale;
+    bool mirror;
     int        ref_number, this_image;
     int        isplit;
     Matrix2D<double> A(3,3);
