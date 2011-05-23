@@ -215,7 +215,7 @@ def angular_class_average(_log,dict):
         tmpFileName += ProjMatchRootName
         #Md.write("test.xmd" + str(iCTFGroup).zfill(2) +'_'+str(iRef3D).zfill(2))
         parameters =  ' -i '      + tmpFileName  + \
-                      ' --lib '    + refname + '.doc' + \
+                      ' --lib '    + refname + \
                       ' --dont_write_selfiles ' + \
                       ' --limit0 ' + dict['MinimumCrossCorrelation'] + \
                       ' --limitR ' + dict['DiscardPercentage']
