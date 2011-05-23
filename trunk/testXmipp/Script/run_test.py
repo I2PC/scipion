@@ -29,7 +29,7 @@ addCmd("Subversion CHECKOUT", "svn co http://newxmipp.svn.sourceforge.net/svnroo
 #configure with test on
 os.chdir(XMIPP_HOME)
 confCmd="./scons.configure  QTDIR=/usr/share/qt3 MPI_LIBDIR=/usr/lib64/mpi/gcc/openmpi/lib64/ MPI_INCLUDE=/usr/lib64/mpi/gcc/openmpi/include/  MPI_LIB='mpi' gtest=yes java=yes"
-addCmd("Scons CONFIGURE", confCmd)
+#addCmd("Scons CONFIGURE", confCmd)
 #In Theory I do not need to compile twice but I keep getting text file busy messages ROB
 compCmd="./scons.compile -j 3"
 addCmd("Scons COMPILE", compCmd)
@@ -55,11 +55,13 @@ if failed:
 else:
     subject += "OK"
     
-print subject
-print message
+#print subject
+#print message
 #Send notification mail
 import mail
-mail.mail(config.toaddrs, config.fromaddr, subject, message)
+from config import toaddrs
+from config import fromaddr 
+mail.mail(toaddrs, fromaddr, subject, message)
     
 
 
