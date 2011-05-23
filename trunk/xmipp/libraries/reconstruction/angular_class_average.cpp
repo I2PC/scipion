@@ -177,7 +177,7 @@ void ProgAngularClassAverage::run()
         w1 = output_values[2];
         w2 = output_values[3];
         addClassAverage(dirno,w,w1,w2);
-std::cerr << "one" <<std::endl;
+
         // Fill new docfile (with params after realignment)
         size_t id;
         bool auxBool;
@@ -211,7 +211,6 @@ std::cerr << "one" <<std::endl;
                 }
             }
         }
-        std::cerr << "two" <<std::endl;
 
         progress_bar(dirno);
 
