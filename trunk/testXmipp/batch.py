@@ -212,6 +212,6 @@ if __name__ == '__main__':
     if  tester.warningFlag:
        globalMessage +="WARNINGS:\n" + tester.warning
     globalMessage += "\nProgram tested:\n" + programs
-    #mail.mail(config.toaddrs,config.fromaddr,summaryMessage,globalMessage)
+    mail.mail(config.toaddrs,config.fromaddr,summaryMessage,globalMessage)
 
  
