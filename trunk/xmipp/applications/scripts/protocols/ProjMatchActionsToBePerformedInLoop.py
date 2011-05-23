@@ -222,7 +222,7 @@ def angular_class_average(_log,dict):
         if (DoCtfCorrection):
             # On-the fly apply Wiener-filter correction and add all CTF groups together
             parameters += \
-                       ' --wien '   + str(iCTFGroup).zfill(utils_xmipp.FILENAMENUMBERLENTGH)+'@' + CtfGroupName + '_wien' + \
+                       ' --wien '   + str(iCTFGroup).zfill(utils_xmipp.FILENAMENUMBERLENTGH)+'@' + CtfGroupName + '_wien.stk' + \
                        ' --pad '    + str(dict['PaddingFactor']) + \
                        ' --add_to ' + ProjMatchRootName
         else:
