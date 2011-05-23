@@ -275,13 +275,35 @@ Image_new(PyTypeObject *type, PyObject *args, PyObject *kwargs)
     return (PyObject *) self;
 }
 
-/* String representation */
+/* Image string representation */
 static PyObject *
 Image_repr(PyObject * obj) {
     ImageObject *self = (ImageObject*) obj;
     String s;
     self->image->toString(s);
     return PyString_FromString(s.c_str());
+}
+/* Image compare function */
+static int
+Image_compare(PyObject * obj, PyObject * obj2)
+{
+    ImageObject *self = (ImageObject*) obj;
+    ImageObject *img2 = (ImageObject*) obj2;
+    int result = -1;
+
+    if (self != NULL and img2 != NULL)
+    {
+      try
+      {
+        if (*(self->image) == *(img2->image))
+                result = 0;
+      }
+      catch (XmippError xe)
+      {
+        PyErr_SetString(PyXmippError, xe.msg.c_str());
+      }
+    }
+    return result;
 }
 
 /* write */
@@ -467,7 +489,7 @@ static PyTypeObject ImageType = {
     0, /*tp_print*/
     0, /*tp_getattr*/
     0, /*tp_setattr*/
-    0, /*tp_compare*/
+    Image_compare, /*tp_compare*/
     Image_repr, /*tp_repr*/
     0, /*tp_as_number*/
     0, /*tp_as_sequence*/
