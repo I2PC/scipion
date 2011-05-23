@@ -64,6 +64,7 @@ def AddBatch(name, basedir, extension=''):
     install = env.Install(binprefix, command)
     env.Alias(fullname, install)
     env.Default(alias)
+    return install
 
 def AddProtocol(name, basedir):
     # setup
@@ -165,17 +166,30 @@ def AddXmippProgram(name, libs=[], folder='programs'):
     return AddProgram(name, 'applications/%s/%s' % (folder, name), '*.cpp', [],
         finalIncludePath, finalLibPath, finalLibs, [], [])
 # Add a program integrated in the Xmipp structure
-def AddXmippTest(name):
-    testprog = AddXmippProgram(name, ['gtest'], 'tests')
+def AddXmippTest(name, testprog, command):
+    #testprog = AddXmippProgram(name, ['gtest'], 'tests')
     testname = 'xmipp_' + name
     xmlFileName='applications/tests/OUTPUT/' + testname + ".xml"
     if  os.path.exists(xmlFileName):
        os.remove(xmlFileName)
-    testcase = env.Alias('run_' + name , env.Command(xmlFileName,testname,
-                                   "$SOURCE --gtest_output=xml:$TARGET"))
+    testcase = env.Alias('run_' + name , env.Command(xmlFileName,testname, command))
     env.Depends(testcase, testprog)
-    test = env.Alias('run_tests',testcase)
+    test = env.Alias('run_tests', testcase)
     AlwaysBuild(testcase)
+    
+
+def AddXmippCTest(name):
+    testprog = AddXmippProgram(name, ['gtest'], 'tests')
+    AddXmippTest(name, testprog, "$SOURCE --gtest_output=xml:$TARGET")
+    
+def AddXmippPythonTest(name):
+    print "Adding python test: ", name
+    testprog = AddBatch(name, 'applications/tests/test_pythoninterface', '.py')
+    AddXmippTest(name, testprog, "$SOURCE $TARGET")
+    
+def AddXmippJavaTest(name):
+    pass
+    
     #env.Default(test)
 
 def AddXmippMPIProgram(name, libs=[]):
@@ -752,16 +766,18 @@ AddXmippProgram('xray_project', ['XmippRecons'])
 
 #---- Test
 if int(env['gtest']):
-     AddXmippTest('test_fftw')
-     AddXmippTest('test_filters')
-     AddXmippTest('test_funcs')
-     AddXmippTest('test_image')
-     AddXmippTest('test_image_generic')
-     AddXmippTest('test_metadata')
-     AddXmippTest('test_multidim')
-     AddXmippTest('test_polar')
-     AddXmippTest('test_transformation')
+     AddXmippCTest('test_fftw')
+     AddXmippCTest('test_filters')
+     AddXmippCTest('test_funcs')
+     AddXmippCTest('test_image')
+     AddXmippCTest('test_image_generic')
+     AddXmippCTest('test_metadata')
+     AddXmippCTest('test_multidim')
+     AddXmippCTest('test_polar')
+     AddXmippCTest('test_transformation')
      env.Depends('run_tests', [fftw, tiff, sqlite])
+     #python interface tests
+     AddXmippPythonTest('test_pythoninterface')
      #env.Default('run_tests'     )
 
 # --- Scripts
