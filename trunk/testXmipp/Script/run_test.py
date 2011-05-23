@@ -21,7 +21,7 @@ def addCmd(title, cmd):
 if not os.path.exists(XMIPP_LOGS):
     os.mkdir(XMIPP_LOGS) 
 if  os.path.exists(XMIPP_HOME):
-    shutil.rmtree(XMIPP_HOME) 
+    pass #shutil.rmtree(XMIPP_HOME) 
    
 #Svn update
 os.chdir(XMIPP_BASE)
@@ -57,8 +57,9 @@ else:
     
 print subject
 print message
+#Send notification mail
+import mail
 mail.mail(config.toaddrs, config.fromaddr, subject, message)
     
 
-#Send notification mail
 
