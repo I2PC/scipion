@@ -30,6 +30,7 @@
 #include <data/mask.h>
 #include <data/metadata.h>
 #include <data/program.h>
+#include <parallel/mpi.h>
 
 class ProgSortImages: public XmippProgram
 {
@@ -40,6 +41,8 @@ public:
     /**  Filename output rootname */
     FileName fnRoot;
 public:
+    MpiNode *node;
+
     /** Filename of the output stack */
     FileName fnStack;
 
@@ -58,6 +61,20 @@ public:
     // Mask of the background
     MultidimArray<int> mask;
 public:
+    /// MPI constructor
+    ProgSortImages(int argc, char **argv)
+    {
+    	node=new MpiNode(argc,argv);
+        if (!node->isMaster())
+        	verbose=0;
+    }
+
+    /// MPI destructor
+    ~ProgSortImages()
+    {
+    	delete node;
+    }
+
     /// Read argument from command line
     void readParams()
     {
@@ -68,6 +85,8 @@ public:
     /// Show
     void show()
     {
+    	if (!verbose)
+    		return;
         std::cerr << "Input selfile:    " << fnSel           << std::endl
         << "Output rootname:  " << fnRoot          << std::endl
         ;
@@ -77,8 +96,18 @@ public:
     void defineParams()
     {
         addUsageLine("Sort a set of images by local similarity");
+        addUsageLine("+The program takes the first image of the input selfile as reference.");
+        addUsageLine("+Then, it looks for the image among the remaining ones that is most similar to it once they have been aligned.");
+        addUsageLine("+Now, the most similar image is aligned to the reference image (the first one) and is added to the list of sorted images.");
+        addUsageLine("+The second image acts now as the reference, and the most similar image among the remaining images is added to the list of sorted images.");
+        addUsageLine("+This process is repeated until no image is left.");
         addParamsLine("   -i <selfile>        : selfile of images");
         addParamsLine("   --oroot <rootname>  : output rootname");
+        addParamsLine("                       : rootname.stk contains the list of aligned images.");
+        addParamsLine("                       : rootname.sel contains the correspondence between aligned images ");
+        addParamsLine("                       : and the original images as well as the correlation coefficient ");
+        addParamsLine("                       : between the aligned image and its predecessor in the list of ");
+        addParamsLine("                       : aligned images.");
     }
 
     /// Produce side info
@@ -221,11 +250,13 @@ public:
     }
 
     /// Main routine
-    void run(int rank, int Nproc)
+    void run()
     {
+        show();
+        produceSideInfo(node->rank);
         while (stillToDo.sum()>0)
-            chooseNextImage(rank,Nproc);
-        if (rank==0)
+            chooseNextImage(node->rank,node->size);
+        if (node->rank==0)
             SFout.write(fnRoot+".sel");
     }
 };
@@ -233,25 +264,7 @@ public:
 int main(int argc, char **argv)
 {
     // Read input parameters
-    ProgSortImages program;
+    ProgSortImages program(argc, argv);
     program.read(argc, argv);
-
-    // Start MPI communications
-    MPI_Init(&argc, &argv);
-    int rank, Nprocessors;
-    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-    MPI_Comm_size(MPI_COMM_WORLD, &Nprocessors);
-
-    try
-    {
-        if (rank==0)
-            program.show();
-        program.produceSideInfo(rank);
-        program.run(rank,Nprocessors);
-    }
-    catch (XmippError XE)
-    {
-        std::cerr << XE << std::endl;
-    }
-    return 0;
+    return program.tryRun();
 }
