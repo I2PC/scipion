@@ -5,8 +5,8 @@ import unittest, os, sys
 """
 from xmipp import *
 from unittest import TestResult, _TextTestResult, _WritelnDecorator
-from test.test_array import NumberTest
-from json.tests.test_fail import TestFail
+#from test.test_array import NumberTest
+#from json.tests.test_fail import TestFail
 
 class TestXmippPythonInterface(unittest.TestCase):
     testsPath = os.path.split(os.path.dirname(os.popen('which xmipp_protocols', 'r').read()))[0] + '/applications/tests'
@@ -28,19 +28,6 @@ class TestXmippPythonInterface(unittest.TestCase):
         img2.read(imgPath)
         self.assertNotEqual(img1, img2)
         
-    def test_compareImage2(self):
-        imgPath = os.path.join(self.testsPath, "test_image", "singleImage.spi")
-        img1 = Image()
-        img1.read(imgPath)
-        img2 = Image()
-        img2.read(imgPath)
-        # Test that image is equal to itself
-        self.assertEqual(img1, img2)
-        # Test different images
-        imgPath = os.path.join(self.testsPath, "test_image", "singleImage.spi")
-        img2.read(imgPath)
-        self.assertNotEqual(img1, img2)
-
 class bcolors:
     HEADER = '\033[95m'
     OKBLUE = '\033[94m'
