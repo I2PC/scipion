@@ -4,7 +4,7 @@
 #include <iostream>
 #include "../../../external/gtest-1.6.0/fused-src/gtest/gtest.h"
 // MORE INFO HERE: http://code.google.com/p/googletest/wiki/AdvancedGuide
-class PolarTest : public ::testing::Test
+class TransformationTest : public ::testing::Test
 {
 protected:
     //init metadatas
@@ -39,7 +39,7 @@ protected:
 
 };
 
-TEST_F(PolarTest, rotate)
+TEST_F(TransformationTest, rotate)
 {
     MultidimArray<  double  > auxMul;
     MultidimArray<  double  > aux2Mul;
