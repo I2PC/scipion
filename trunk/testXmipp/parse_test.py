@@ -73,7 +73,7 @@ class Tester(ContentHandler):
         testName = ""
 
         testNo = 1
-        print tests
+        #print tests
         for test, mpi, preruns, changeDirectory,testfiles in tests:
             if n > 1:
                 outDir = outPath + "_%02d" % testNo
