@@ -224,6 +224,12 @@
             <FILE filename="class.sel"/>
         </CASE>
     </PROGRAM>
+    <PROGRAM name="xmipp_mpi_image_sort" mpi="TRUE">
+        <CASE arguments="-i input/aFewProjections.sel --oroot %o/sorted" changeDir="FALSE">
+             <FILE filename="sorted.stk"/>
+             <FILE filename="sorted.sel"/>
+        </CASE>
+    </PROGRAM>
     <PROGRAM name="xmipp_transform_mirror" mpi="FALSE">
         <CASE arguments="-i input/singleImage.spi -o %o/singleImage_X.xmp --flipX" changeDir="FALSE">
             <FILE filename="singleImage_X.xmp"/>
