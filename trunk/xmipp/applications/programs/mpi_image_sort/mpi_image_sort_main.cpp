@@ -101,6 +101,8 @@ public:
         addUsageLine("+Now, the most similar image is aligned to the reference image (the first one) and is added to the list of sorted images.");
         addUsageLine("+The second image acts now as the reference, and the most similar image among the remaining images is added to the list of sorted images.");
         addUsageLine("+This process is repeated until no image is left.");
+        addUsageLine("+");
+        addUsageLine("+Note that only the MPI version of this program exists");
         addParamsLine("   -i <selfile>        : selfile of images");
         addParamsLine("   --oroot <rootname>  : output rootname");
         addParamsLine("                       : rootname.stk contains the list of aligned images.");
@@ -108,6 +110,7 @@ public:
         addParamsLine("                       : and the original images as well as the correlation coefficient ");
         addParamsLine("                       : between the aligned image and its predecessor in the list of ");
         addParamsLine("                       : aligned images.");
+        addExampleLine("mpirun -np 8 `which xmipp_mpi_image_sort` -i images.sel --oroot sorted");
     }
 
     /// Produce side info
