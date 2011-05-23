@@ -13,10 +13,10 @@ print "Logging file:", filename
 #run svn
 
 def addCmd(title, cmd):
-  os.system('echo "%s" >> %s  2>&1' % (title, filename))
-  os.system('echo "command: %s" >> %s  2>&1' % (cmd, filename))
-  os.system('echo "output:" >> %s  2>&1' % filename)
-  os.system('%s >> %s  2>&1' % (cmd, filename)) 
+    os.system('echo "%s" >> %s  2>&1' % (title, filename))
+    os.system('echo "command: %s" >> %s  2>&1' % (cmd, filename))
+    os.system('echo "output:" >> %s  2>&1' % filename)
+    os.system('%s >> %s  2>&1' % (cmd, filename)) 
 
 if not os.path.exists(XMIPP_LOGS):
     os.mkdir(XMIPP_LOGS) 
@@ -30,11 +30,35 @@ addCmd("Subversion CHECKOUT", "svn co http://newxmipp.svn.sourceforge.net/svnroo
 os.chdir(XMIPP_HOME)
 confCmd="./scons.configure  QTDIR=/usr/share/qt3 MPI_LIBDIR=/usr/lib64/mpi/gcc/openmpi/lib64/ MPI_INCLUDE=/usr/lib64/mpi/gcc/openmpi/include/  MPI_LIB='mpi' gtest=yes java=yes"
 addCmd("Scons CONFIGURE", confCmd)
-#In Theory I do not need to compile twice but I keep gettiong text file fusy messages ROB
+#In Theory I do not need to compile twice but I keep getting text file busy messages ROB
 compCmd="./scons.compile -j 3"
 addCmd("Scons COMPILE", compCmd)
 compCmd="./scons.compile -j 3 run_tests"
 addCmd("Scons Run Test", compCmd)
-import parse_test
+
+import parse_tests_results
 #parse xml files
-parse_test.main(filename)
+failed = False
+message = ""
+subject = "XMIPP compilation "
+results = parse_tests_results.parseResults()
+for group in results:
+    n = len(group.tests)
+    if group.failed > 0:
+        message += "   [  FAILED  ] Group: %s, failed %d of %d tests.\n" % (group.name, group.failed, n)
+        failed = True
+    else:
+        message += "   [  OK      ] Group: %s, succeed %d tests.\n" % (group.name, n) 
+        
+if failed:
+    subject += "FAILED"
+else:
+    subject += "OK"
+    
+print subject
+print message
+mail.mail(config.toaddrs, config.fromaddr, subject, message)
+    
+
+#Send notification mail
+
