@@ -203,9 +203,9 @@ void ProgAngularClassAverage::run()
                     DF.setValue(MDL_SHIFTY,output_values[i*AVG_OUPUT_SIZE+10],id);
                     DF.setValue(MDL_REF,output_values[i*AVG_OUPUT_SIZE+11],id);
                     if(output_values[i*AVG_OUPUT_SIZE+12] == 0)
-                        auxBool = False;
+                        auxBool = false;
                     else
-                        auxBool =  True;
+                        auxBool =  true;
                     DF.setValue(MDL_FLIP,auxBool,id);
                     DF.setValue(MDL_MAXCC,output_values[i*AVG_OUPUT_SIZE+13],id);
                 }
