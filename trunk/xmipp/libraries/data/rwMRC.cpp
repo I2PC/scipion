@@ -159,9 +159,9 @@ int ImageBase::readMRC(size_t select_img, bool isStack)
     if(isStack)
     {
         if ( select_img > _zDim ) // When isStack slices in Z are supposed to be a stack of images
-            REPORT_ERROR(ERR_INDEX_OUTOFBOUNDS, formatString("readMRC: Image number %lu exceeds stack size %lu", select_img, _nDim));
+            REPORT_ERROR(ERR_INDEX_OUTOFBOUNDS, formatString("readMRC: Image number %lu exceeds stack size %lu", select_img, _zDim));
 
-        _nDim = (size_t) _zDim;
+        _nDim = (select_img == ALL_IMAGES) ? (size_t) _zDim : 1;
         _zDim = 1;
     }
     else
