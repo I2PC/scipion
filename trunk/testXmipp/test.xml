@@ -240,6 +240,11 @@
             <FILE filename="singleImage_X.xmp"/>
         </CASE>
     </PROGRAM>
+    <PROGRAM name="xmipp_pdb_nma_deform" mpi="FALSE">
+        <CASE arguments="--pdb input/2tbv.pdb -o %o/deformed.pdb --nma input/modelist.xmd --deformations 1000" changeDir="FALSE">
+            <FILE filename="deformed.pdb"/>
+        </CASE>
+    </PROGRAM>
     <PROGRAM name="xmipp_phantom_project" mpi="FALSE"><!-- one case in extra -->
         <CASE arguments="-i input/phantomBacteriorhodopsin.vol     -o %o/projections --params input/clusterProjection.param" changeDir="FALSE">
             <FILE filename="projections.stk"/>
