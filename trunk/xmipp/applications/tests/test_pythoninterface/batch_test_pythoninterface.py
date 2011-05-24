@@ -28,6 +28,21 @@ class TestXmippPythonInterface(unittest.TestCase):
         img2.read(imgPath)
         self.assertNotEqual(img1, img2)
         
+    def test_compose(self):
+         fn1 = FileName("kk000001.xmp")
+         fn2 = FileName("")
+         fn2.compose("kk",1,"xmp")
+         self.assertEqual(str(fn1),str(fn2))
+         self.assertNotEqual(str(fn1)+'kk',str(fn2))
+    def test_isInStack(self):
+         fn1 = FileName("1@.xmp")
+         fn2 = FileName("1.xmp")
+         self.assertTrue (fn1.isInStack())
+         self.assertFalse(fn2.isInStack())
+         
+         
+         
+         
 class bcolors:
     HEADER = '\033[95m'
     OKBLUE = '\033[94m'
@@ -91,6 +106,6 @@ if __name__ == '__main__':
     suite(result)
     result.closeXmlReport()
     
-    #suite = unittest.TestLoader().loadTestsFromTestCase(TestXmippPythonInterface)    
-    #result = unittest.TextTestRunner(verbosity=2).run(suite)    
-    
+    if result.testFailed != 0:
+       result = unittest.TextTestRunner(verbosity=2).run(suite)    
+
