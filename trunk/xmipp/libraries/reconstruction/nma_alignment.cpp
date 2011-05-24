@@ -36,16 +36,21 @@
 ProgNmaAlignment::ProgNmaAlignment()
 {
     rangen = 0;
+    resume=false;
     currentImgName="";
-    each_image_produces_an_output = true;
+    each_image_produces_an_output = false;
+    produces_an_output = true;
 }
 
 // Params definition ============================================================
 void ProgNmaAlignment::defineParams()
 {
+	addUsageLine("Compute deformation parameters according to a set of NMA modes");
+	defaultComments["-o"].clear();
+	defaultComments["-o"].addComment("Metadata with output alignment and deformations");
     XmippMetadataProgram::defineParams();
     addParamsLine("   --pdb <PDB_filename>                : PDB Model to compute NMA");
-    addParamsLine("   --oang <output_filename>            : File for the assignment");
+    addParamsLine("  [--resume]                           : Resume processing");
     addParamsLine("==Generation of the deformed volumes==");
     addParamsLine("   --modes <filename>                  : File with a list of mode filenames");
     addParamsLine("  [--deformation_scale <s=1>]          : Scaling factor to scale NMA deformation amplitudes");
@@ -59,6 +64,7 @@ void ProgNmaAlignment::defineParams()
     addParamsLine("  [--gaussian_Fourier <s=0.5>]         : Weighting sigma in Fourier space");
     addParamsLine("  [--gaussian_Real    <s=0.5>]         : Weighting sigma in Real space");
     addParamsLine("  [--zerofreq_weight  <s=0.>]          : Zero-frequency weight");
+    addExampleLine("xmipp_nma_alignment -i images.sel --pdb 2tbv.pdb --modes modelist.txt --deformation_scale 1000 --sampling_rate 6.4 -o output.txt --resume");
 }
 
 // Read arguments ==========================================================
@@ -66,8 +72,8 @@ void ProgNmaAlignment::readParams()
 {
     XmippMetadataProgram::readParams();
     fnPDB = getParam("--pdb");
-    fnOut = getParam("--oang");
     fnModeList = getParam("--modes");
+    resume = checkParam("--resume");
     scale_defamp = getDoubleParam("--deformation_scale");
     sampling_rate = getDoubleParam("--sampling_rate");
     fnmask = getParam("--mask");
@@ -90,7 +96,7 @@ void ProgNmaAlignment::show()
     XmippMetadataProgram::show();
     std::cout
     << "PDB:                 " << fnPDB               << std::endl
-    << "Output:              " << fnOut               << std::endl
+    << "Resume:              " << resume              << std::endl
     << "Mode list:           " << fnModeList          << std::endl
     << "Amplitude scale:     " << scale_defamp        << std::endl
     << "Sampling rate:       " << sampling_rate       << std::endl
@@ -114,7 +120,7 @@ void ProgNmaAlignment::createWorkFiles()
 {
     MetaData mdTodo, mdDone;
     mdTodo = mdIn;
-    if (exists("nmaDone.xmd"))
+    if (exists("nmaDone.xmd") && resume)
     {
         mdDone.read("nmaDone.xmd");
         mdTodo.subtraction(mdDone, MDL_IMAGE);

@@ -42,12 +42,12 @@ public:
     /** MPI version */
     bool MPIversion;
     
+    /** Resume computations */
+    bool resume;
+
     /// PDB file
     FileName fnPDB;
 
-    /// Output file
-    FileName fnOut; 
-    
     /// File zith a list of modes
     FileName fnModeList;
 
