@@ -756,7 +756,8 @@ void ProgAngularClassAverage::writeToDisc(Image<double> avg,
     {
         avg()/=w;
         // Write class average to disc
-        fn_tmp.compose(dirno,fn,oext);
+        //fn_tmp.compose(dirno,fn,oext);
+        fn_tmp = fn + "." + oext;
         if (do_add && exists(fn_tmp) )
         {
             old.read(fn_tmp);
@@ -766,13 +767,15 @@ void ProgAngularClassAverage::writeToDisc(Image<double> avg,
                 dAij(old(),i,j) = ( w_old * dAij(old(),i,j) + w * dAij(avg(),i,j) ) / (w_old + w);
             }
             old.setWeight(w_old + w);
-            std::cerr << "before fn_tmp" << fn_tmp << std::endl;
-            old.write(fn_tmp);
+            std::cerr << "before fn_tmp dirno " << fn_tmp << " " << dirno << std::endl;
+            old.write(fn_tmp,dirno,true,WRITE_REPLACE);
             std::cerr << "after fn_tmp" << fn_tmp << std::endl;
         }
         else
         {
-            avg.write(fn_tmp);
+            std::cerr << "avg before fn_tmp" << fn_tmp << std::endl;
+            old.write(fn_tmp,dirno,true,WRITE_REPLACE);
+            std::cerr << "avg after fn_tmp" << fn_tmp << std::endl;
         }
         // Write class selfile to disc
         if (write_selfile)
