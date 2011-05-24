@@ -23,14 +23,12 @@ class dataBase:
     #show file veification
     viewVerifyedFiles=False
     #constant
-    notInitRadius = -1000
+    SystemFlavour = "None"
     def __init__(self, projectdir, logdir, scriptname, workDirectory, _tableName, _ContinueAtIteration):
         self.tableInsertOriginal = _tableName
         self.tableInsertRestart = _tableName + "Restart"
         self.ContinueAtIteration = _ContinueAtIteration
         self.tableVerify = _tableName + "Verify"
-        self.OuterRadius = self.notInitRadius
-        self.NumberOfCtfGroups =  1
 
         if logdir[0] == '/':
             LogName = logdir
@@ -146,23 +144,23 @@ class dataBase:
     
     def saveParameters(self, _log,dict):
         '''save a dictionary to an auxiliary table'''
-        if self.notInitRadius == self.OuterRadius:
+        if self.SystemFlavour == dict['SystemFlavour']:
             return
         cur_aux = self.connection.cursor()
         sqlCommand = '''CREATE TABLE if not exists parameters (parameters text);
                         DELETE FROM parameters;'''
         cur_aux.executescript(sqlCommand,)
         sqlCommand = '''INSERT into parameters(parameters) VALUES(?)'''
+        self.SystemFlavour=dict['SystemFlavour']
         dict = {
-          'OuterRadius':self.OuterRadius
-        , 'NumberOfCtfGroups':self.NumberOfCtfGroups
+          'SystemFlavour':self.SystemFlavour
         }
         cur_aux.execute(sqlCommand, [pickle.dumps(dict, 0)])
         self.commit()
         
     def loadParameters(self,_log,dict):
         '''load a dictionary from an auxiliary table'''
-        if self.notInitRadius != self.OuterRadius:
+        if self.notInitSystemFlavour != self.SystemFlavour:
             return
         sqlCommand = '''SELECT parameters FROM parameters'''
         try:
@@ -173,8 +171,7 @@ class dataBase:
             exit(1)
         dict = pickle.loads(str(self.cur_aux.fetchone()[0]))
         print dict
-        self.OuterRadius=dict['OuterRadius']
-        self.NumberOfCtfGroups=dict['NumberOfCtfGroups']
+        self.SystemFlavour=dict['SystemFlavour']
 
     def compareParameters (self):
         '''return 0 if new execution of script (tableName2) is a subset of and old execution(tableName1)
