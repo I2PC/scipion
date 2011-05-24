@@ -586,7 +586,7 @@ void ProgAngularClassAverage::processOneClass(int &dirno,
     Matrix2D<double> A(3,3);
     std::vector<int> exp_number, exp_split;
     std::vector< Image<double> > exp_imgs;
-
+//CHECK ANGLE REFS
     // Get reference angles and preset to averages
     DFlib.getValue(MDL_ANGLEROT,rot,dirno);
     DFlib.getValue(MDL_ANGLETILT,tilt,dirno);
@@ -725,6 +725,7 @@ void ProgAngularClassAverage::processOneClass(int &dirno,
     avg.setWeight(w);
     avg1.setWeight(w1);
     avg2.setWeight(w2);
+    //ROB WRITE DISK
     writeToDisc(avg,dirno,SFclass,fn_out+"_class",!dont_write_selfiles);
     if (do_split)
     {
@@ -765,7 +766,9 @@ void ProgAngularClassAverage::writeToDisc(Image<double> avg,
                 dAij(old(),i,j) = ( w_old * dAij(old(),i,j) + w * dAij(avg(),i,j) ) / (w_old + w);
             }
             old.setWeight(w_old + w);
+            std::cerr << "before fn_tmp" << fn_tmp << std::endl;
             old.write(fn_tmp);
+            std::cerr << "after fn_tmp" << fn_tmp << std::endl;
         }
         else
         {
