@@ -104,7 +104,7 @@ public:
     }
 
     /// Get number of atoms
-    int getNumberOfAtoms() const
+    size_t getNumberOfAtoms() const
     {
         return atomList.size();
     }
@@ -120,6 +120,74 @@ public:
     and its projections.
     */
     void produceSideInfo();
+};
+
+/** Atom class. */
+class RichAtom
+{
+public:
+    /// Type
+    char atomType;
+
+    /// Position X
+    double x;
+
+    /// Position Y
+    double y;
+
+    /// Position Z
+    double z;
+
+    /// Name
+    String name;
+
+    /// Alternate location
+    char altloc;
+
+    /// Residue name
+    String resname;
+
+    /// ChainId
+    char chainid;
+
+    /// Residue sequence
+    int resseq;
+
+    /// Icode
+    char icode;
+
+    /// Occupancy
+    double occupancy;
+
+    /// Bfactor
+    double bfactor;
+};
+
+/** Phantom description using atoms. */
+class PDBRichPhantom
+{
+public:
+    /// List of atoms
+    std::vector<RichAtom> atomList;
+
+    /// Add Atom
+    void addAtom(const RichAtom &atom)
+    {
+        atomList.push_back(atom);
+    }
+
+    /// Get number of atoms
+    size_t getNumberOfAtoms() const
+    {
+        return atomList.size();
+    }
+
+    /// Read from PDB file
+    void read(const FileName &fnPDB);
+
+    /// Write to PDB file
+    void write(const FileName &fnPDB);
+
 };
 
 /** Description of the electron scattering factors.
