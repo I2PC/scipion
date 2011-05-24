@@ -660,6 +660,7 @@ LibraryDir = "ReferenceLibrary"
 ProjectLibraryRootName = LibraryDir + "/gallery"
 ProjMatchDir = "ProjMatchClasses"
 ProjMatchName = 'proj_match'
+ClassAverageName = 'class_average'
 #ProjMatchRootName = ProjMatchDir + "/" + ProjMatchName
 ForReconstructionSel = "reconstruction.sel"
 ForReconstructionDoc = "reconstruction.doc"
@@ -967,7 +968,7 @@ def otherActionsToBePerformedBeforeLoop():
     _Parameters = {
       'dummy':0
     }
-    command = 'self.saveParameters'
+    command = 'self.SystemFlavour="'+SystemFlavour+'";self.saveParameters'
     _dataBase.insertCommand(command, _Parameters, 1)
     command = 'self.loadParameters'
     _dataBase.insertCommand(command, _Parameters, dataBase.dataBaseStruct.doAlways)
@@ -1096,7 +1097,7 @@ def actionsToBePerformedInsideLoop(_log):
         #assign the images to the different references based on the crosscorrelation coheficient
         #if only one reference it just copy the docfile generated in the previous step
         _Parameters = {
-                       'DocFileInputAngles' : DocFileInputAngles[iterN]
+                       'DocFileInputAngles' : DocFileInputAngles[iterN]#Output file with angles
                      , 'NumberOfCtfGroups' : NumberOfCtfGroups
                      , 'ProjMatchRootName':ProjMatchRootName[iterN]#LIST
                      , 'NumberOfReferences':numberOfReferences
@@ -1137,7 +1138,7 @@ def actionsToBePerformedInsideLoop(_log):
 #, 'OuterRadius':OuterRadius[iterN]
             command = "angular_class_average"
             _VerifyFiles = []
-            _VerifyFiles.append('ertertertert')
+            _VerifyFiles.append('ertertertert')angular_class_average
             _dataBase.insertCommand(command, _Parameters, iterN,_VerifyFiles)
             
             ##############REMOVE SHUTIL.COPY
