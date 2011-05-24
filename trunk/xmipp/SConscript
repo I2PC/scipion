@@ -517,6 +517,7 @@ ReconsSources = [
     'ml_tomo.cpp',
     'ml2d.cpp',
     'nma_alignment.cpp',
+    'pdb_nma_deform.cpp',
 #    'phantom_create_micrograph.cpp',
     'phantom_create_random.cpp',
     'phantom_simulate_microscope.cpp',
@@ -696,7 +697,7 @@ AddXmippProgram('image_header')
 AddXmippProgram('image_histogram')
 AddXmippProgram('image_operate')
 AddXmippProgram('image_rotational_spectra', ['XmippRecons'])
-AddXmippProgram('image_sort', ['XmippClassif'])
+AddXmippProgram('image_sort_by_statistics', ['XmippClassif'])
 AddXmippProgram('image_separate_objects')
 AddXmippProgram('image_statistics')
 AddXmippProgram('image_vectorize')
@@ -714,6 +715,7 @@ AddXmippProgram('mlf_refine3d', ['XmippRecons'])
 AddXmippProgram('ml_tomo', ['XmippRecons'])
 AddXmippProgram('mrc_create_metadata')
 AddXmippProgram('nma_alignment', ['XmippRecons'])
+AddXmippProgram('pdb_nma_deform', ['XmippRecons'])
 AddXmippProgram('phantom_create', ['XmippRecons'])
 #AddXmippProgram('phantom_create_micrograph', ['XmippRecons'])
 AddXmippProgram('phantom_create_random', ['XmippRecons'])
