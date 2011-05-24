@@ -160,8 +160,6 @@ class dataBase:
         
     def loadParameters(self,_log,dict):
         '''load a dictionary from an auxiliary table'''
-        if self.notInitSystemFlavour != self.SystemFlavour:
-            return
         sqlCommand = '''SELECT parameters FROM parameters'''
         try:
             self.cur_aux.execute(sqlCommand)
