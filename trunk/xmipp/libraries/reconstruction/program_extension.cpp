@@ -25,11 +25,12 @@
 
 #include "program_extension.h"
 
-//Needed includes for instanciate programs
+//Needed includes for instantiate programs
 #include "data/filters.h"
 #include "angular_project_library.h"
 #include "angular_discrete_assign.h"
 #include "volume_from_pdb.h"
+#include "pdb_nma_deform.h"
 #include "angular_continuous_assign.h"
 #include "data/mask.h"
 
@@ -71,6 +72,8 @@ XmippProgram * getProgramByName(const String &programName)
   if (programName == "xmipp_angular_continuous_assign")
     return new ProgAngularContinuousAssign();
 
+  if (programName == "xmipp_pdb_nma_deform")
+    return new ProgPdbNmaDeform();
 
 
     return NULL;
