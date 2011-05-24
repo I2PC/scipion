@@ -1138,7 +1138,7 @@ def actionsToBePerformedInsideLoop(_log):
 #, 'OuterRadius':OuterRadius[iterN]
             command = "angular_class_average"
             _VerifyFiles = []
-            _VerifyFiles.append('ertertertert')angular_class_average
+            _VerifyFiles.append('ertertertert')
             _dataBase.insertCommand(command, _Parameters, iterN,_VerifyFiles)
             
             ##############REMOVE SHUTIL.COPY
