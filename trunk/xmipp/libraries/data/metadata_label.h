@@ -176,6 +176,7 @@ enum MDLabel
     MDL_MISSINGREGION_THXF, ///< Final tilt angle in X for missing region in subtomogram
     MDL_MODELFRAC, ///< Model fraction (alpha_k) for a Maximum Likelihood model
     MDL_NMA, ///< Normal mode displacements (vector double)
+    MDL_NMA_MODEFILE, ///< File with an NMA mode
     MDL_NOISE_ANGLES, ///< Noise description for projected angles
     MDL_NOISE_PARTICLE_COORD, ///< Noise description for particle's center coordenates (when projecting)
     MDL_NOISE_PIXEL_LEVEL, ///< Noise description for pixels' gray level (when projecting)
@@ -629,6 +630,7 @@ private:
         MDL::addLabel(MDL_MISSINGREGION_THYF, LABEL_DOUBLE, "missingRegionThetaYF");
         MDL::addLabel(MDL_MODELFRAC, LABEL_DOUBLE, "modelFraction");
         MDL::addLabel(MDL_NMA, LABEL_VECTOR, "NMADisplacements");
+        MDL::addLabel(MDL_NMA_MODEFILE, LABEL_STRING, "NMAModefile");
         MDL::addLabel(MDL_NOISE_ANGLES, LABEL_VECTOR, "noiseAngles");
         MDL::addLabel(MDL_NOISE_PARTICLE_COORD, LABEL_VECTOR, "noiseParticleCoord");
         MDL::addLabel(MDL_NOISE_PIXEL_LEVEL, LABEL_VECTOR, "noisePixelLevel");
