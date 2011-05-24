@@ -966,9 +966,9 @@ def otherActionsToBePerformedBeforeLoop():
     #Save all parameters in dict for future runs (this is done by database)
     #so far no parameter is being saved, but dummy=0
     _Parameters = {
-      'dummy':0
+      'SystemFlavour':SystemFlavour
     }
-    command = 'self.SystemFlavour="'+SystemFlavour+'";self.saveParameters'
+    command = 'self.saveParameters'
     _dataBase.insertCommand(command, _Parameters, 1)
     command = 'self.loadParameters'
     _dataBase.insertCommand(command, _Parameters, dataBase.dataBaseStruct.doAlways)
