@@ -238,11 +238,6 @@ void ProgAngularClassAverage::produceSideInfo()
     // get column numbers from NewXmipp-type docfile header
     bool auxflip;
     size_t id = DF.firstObject();
-    //FIXME: CHECK THIS????
-    //    if (DF.getValue(MDL_FLIP, auxflip, id))
-    //        do_mirrors = false;
-    //    else
-    //        do_mirrors = true;
     do_mirrors = DF.getValue(MDL_FLIP, auxflip, id);
 
     // Read empty image with the correct dimensions
