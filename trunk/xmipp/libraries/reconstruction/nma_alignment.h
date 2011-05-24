@@ -89,9 +89,6 @@ public:
     // Random generator seed
     int rangen;
     
-    // List of modes
-    std::vector<std::string> modeList;
-    
     // All estimated parameters (with the cost)
     Matrix1D<double> parameters;
 
@@ -104,6 +101,9 @@ public:
     // Best fitness
     Matrix1D<double> fitness_min;
     
+    // Number of modes
+    int numberOfModes;
+
     // Size of the images in the selfile
     int imgSize;
     
@@ -167,6 +167,11 @@ public:
     virtual void preProcess();
     /** Assign NMA and Alignment parameters to an image */
     virtual void processImage(const FileName &fnImg, const FileName &fnImgOut, size_t objId);
+
+    /** Write the final parameters. */
+    virtual void finishProcessing();
+
+    /** Write the parameters found for one image */
     virtual void writeImageParameters(const FileName &fnImg);
 };
 

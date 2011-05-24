@@ -27,7 +27,7 @@
 
 int main(int argc, char **argv)
 {
-  ProgNmaAlignment program;
-  program.read(argc, argv);
-  program.tryRun();
+    ProgNmaAlignment program;
+    program.read(argc, argv);
+    return program.tryRun();
 }

@@ -55,66 +55,66 @@ public:
     /** main body */
     void createWorkFiles()
     {
-      //Master node should prepare some stuff before start working
-      if (node->isMaster())
-      {
-        ProgNmaAlignment::createWorkFiles();
-        mdIn.write("nmaTodo.xmd");
-      }
-      node->barrierWait();//Sync all before start working
-      mdIn.read("nmaTodo.xmd");
-      mdIn.findObjects(imgsId);//get objects ids
-      rangen = node->rank;
-      distributor = new FileTaskDistributor(mdIn.size(), 1, node);
+        //Master node should prepare some stuff before start working
+        if (node->isMaster())
+        {
+            ProgNmaAlignment::createWorkFiles();
+            mdIn.write("nmaTodo.xmd");
+        }
+        node->barrierWait();//Sync all before start working
+        mdIn.read("nmaTodo.xmd");
+        mdIn.findObjects(imgsId);//get objects ids
+        rangen = node->rank;
+        distributor = new FileTaskDistributor(mdIn.size(), 1, node);
     }
     //Only master do starting progress bar stuff
     void startProcessing()
     {
-      if (node->isMaster())
-        ProgNmaAlignment::startProcessing();
+        if (node->isMaster())
+            ProgNmaAlignment::startProcessing();
     }
     //Only master show progress
     void showProgress()
     {
-      if (node->isMaster())
-        ProgNmaAlignment::showProgress();
+        if (node->isMaster())
+            ProgNmaAlignment::showProgress();
     }
     //Now use the distributor to grasp images
     size_t getImageToProcess()
     {
-      size_t first, last;
-      bool moreTasks = distributor->getTasks(first, last);
-      if (moreTasks)
-      {
-        time_bar_done = first + 1;
-        return imgsId[first];
-      }
-      time_bar_done = mdIn.size();
-      return BAD_OBJID;
+        size_t first, last;
+        bool moreTasks = distributor->getTasks(first, last);
+        if (moreTasks)
+        {
+            time_bar_done = first + 1;
+            return imgsId[first];
+        }
+        time_bar_done = mdIn.size();
+        return BAD_OBJID;
     }
 
     void finishProcessing()
     {
-      //All nodes wait for each other
-      std::cerr << std::endl << "DEBUG: ===== Node: " << node->rank
-          <<" not more images to process, waiting..." << std::endl;
-      node->barrierWait();
-      if (node->isMaster())
-        ProgNmaAlignment::finishProcessing();
+        //All nodes wait for each other
+        std::cerr << std::endl << "DEBUG: ===== Node: " << node->rank
+        <<" not more images to process, waiting..." << std::endl;
+        node->barrierWait();
+        if (node->isMaster())
+            ProgNmaAlignment::finishProcessing();
     }
 
     void writeImageParameters(const FileName &fnImg)
     {
-    	fileMutex->lock();
-    	ProgNmaAlignment::writeImageParameters(fnImg);
-    	fileMutex->unlock();
+        fileMutex->lock();
+        ProgNmaAlignment::writeImageParameters(fnImg);
+        fileMutex->unlock();
     }
 }
 ;//end of class MpiProgNMA
 
 int main(int argc, char **argv)
 {
-  MpiProgNMA program;
-  program.read(argc, argv);
-  program.tryRun();
+    MpiProgNMA program;
+    program.read(argc, argv);
+    return program.tryRun();
 }

@@ -32,8 +32,6 @@
 #include "../../external/condor/Solver.h"
 #include "../../external/condor/tools.h"
 
-
-
 // Empty constructor =======================================================
 ProgNmaAlignment::ProgNmaAlignment()
 {
@@ -46,41 +44,43 @@ ProgNmaAlignment::ProgNmaAlignment()
 void ProgNmaAlignment::defineParams()
 {
     XmippMetadataProgram::defineParams();
-    addParamsLine("   -pdb <PDB_filename>                : PDB Model to compute NMA");
-    addParamsLine("   -oang <output_filename>            : File for the assignment");
-    addParamsLine("   -modes <filename>                  : File with a list of mode filenames");
-    addParamsLine("  [-deformation_scale <s=1>]          : Scaling factor to scale deformation amplitude");
-    addParamsLine("  [-sampling_rate <Ts=1>]             : in Angstroms/pixel");
-    addParamsLine("  [-mask <m=\"\">]                    : Mask");
-    addParamsLine("  [-gaussian_Fourier <s=0.5>]         : Weighting sigma in Fourier space");
-    addParamsLine("  [-gaussian_Real    <s=0.5>]         : Weighting sigma in Real space");
-    addParamsLine("  [-zerofreq_weight  <s=0.>]          : Zero-frequency weight");
-    addParamsLine("  [-centerPDB]                        : Center the PDB structure");
-    addParamsLine("  [-filterVol <cutoff=15.>]           : Filter the volume from the PDB structure. Default cut-off is 15 A.");
-    addParamsLine("  [-fixed_Gaussian <std=-1>]          : For pseudo atoms fixed_Gaussian must be used.");
-    addParamsLine("                                      : Default standard deviation <std> is read from PDB file.");
+    addParamsLine("   --pdb <PDB_filename>                : PDB Model to compute NMA");
+    addParamsLine("   --oang <output_filename>            : File for the assignment");
+    addParamsLine("==Generation of the deformed volumes==");
+    addParamsLine("   --modes <filename>                  : File with a list of mode filenames");
+    addParamsLine("  [--deformation_scale <s=1>]          : Scaling factor to scale NMA deformation amplitudes");
+    addParamsLine("  [--sampling_rate <Ts=1>]             : in Angstroms/pixel");
+    addParamsLine("  [--filterVol <cutoff=15.>]           : Filter the volume after deforming. Default cut-off is 15 A.");
+    addParamsLine("  [--centerPDB]                        : Center the PDB structure");
+    addParamsLine("  [--fixed_Gaussian <std=-1>]          : For pseudo atoms fixed_Gaussian must be used.");
+    addParamsLine("                                       : Default standard deviation <std> is read from PDB file.");
+    addParamsLine("==Angular assignment and mode detection==");
+    addParamsLine("  [--mask <m=\"\">]                    : 2D Mask applied to the reference images of the deformed volume");
+    addParamsLine("  [--gaussian_Fourier <s=0.5>]         : Weighting sigma in Fourier space");
+    addParamsLine("  [--gaussian_Real    <s=0.5>]         : Weighting sigma in Real space");
+    addParamsLine("  [--zerofreq_weight  <s=0.>]          : Zero-frequency weight");
 }
 
 // Read arguments ==========================================================
 void ProgNmaAlignment::readParams()
 {
     XmippMetadataProgram::readParams();
-    fnPDB = getParam("-pdb");
-    fnOut = getParam("-oang");
-    fnModeList = getParam("-modes");
-    scale_defamp = getDoubleParam("-deformation_scale");
-    sampling_rate = getDoubleParam("-sampling_rate");
-    fnmask = getParam("-mask");
-    gaussian_DFT_sigma = getDoubleParam( "-gaussian_Fourier");
-    gaussian_Real_sigma = getDoubleParam( "-gaussian_Real");
-    weight_zero_freq = getDoubleParam( "-zerofreq_weight");
-    do_centerPDB = checkParam("-centerPDB");
-    do_FilterPDBVol = checkParam("-filterVol");
+    fnPDB = getParam("--pdb");
+    fnOut = getParam("--oang");
+    fnModeList = getParam("--modes");
+    scale_defamp = getDoubleParam("--deformation_scale");
+    sampling_rate = getDoubleParam("--sampling_rate");
+    fnmask = getParam("--mask");
+    gaussian_DFT_sigma = getDoubleParam( "--gaussian_Fourier");
+    gaussian_Real_sigma = getDoubleParam( "--gaussian_Real");
+    weight_zero_freq = getDoubleParam( "--zerofreq_weight");
+    do_centerPDB = checkParam("--centerPDB");
+    do_FilterPDBVol = checkParam("--filterVol");
     if (do_FilterPDBVol)
-        cutoff_LPfilter = getDoubleParam("-filterVol");
-    useFixedGaussian = checkParam("-fixed_Gaussian");
+        cutoff_LPfilter = getDoubleParam("--filterVol");
+    useFixedGaussian = checkParam("--fixed_Gaussian");
     if (useFixedGaussian)
-        sigmaGaussian = getDoubleParam("-fixed_Gaussian");
+        sigmaGaussian = getDoubleParam("--fixed_Gaussian");
 
 }
 
@@ -88,7 +88,8 @@ void ProgNmaAlignment::readParams()
 void ProgNmaAlignment::show()
 {
     XmippMetadataProgram::show();
-    std::cout << "PDB:                 " << fnPDB               << std::endl
+    std::cout
+    << "PDB:                 " << fnPDB               << std::endl
     << "Output:              " << fnOut               << std::endl
     << "Mode list:           " << fnModeList          << std::endl
     << "Amplitude scale:     " << scale_defamp        << std::endl
@@ -136,14 +137,8 @@ void ProgNmaAlignment::createWorkFiles()
 
 void ProgNmaAlignment::preProcess()
 {
-    // Read list of modes
-    MetaData SFmodelist(fnModeList);
-    FileName tempname;
-    FOR_ALL_OBJECTS_IN_METADATA(SFmodelist)
-    {
-        SFmodelist.getValue(MDL_IMAGE,tempname,__iter.objId);
-        modeList.push_back(tempname);
-    }
+	MetaData SF(fnModeList);
+	numberOfModes=SF.size();
     // Get the size of the images in the selfile
     int ydim, zdim;
     size_t ndim;
@@ -154,17 +149,29 @@ void ProgNmaAlignment::preProcess()
     createWorkFiles();
 }
 
+void ProgNmaAlignment::finishProcessing()
+{
+	XmippMetadataProgram::finishProcessing();
+	rename("nmaDone.xmd",fn_out.c_str());
+}
+
 void runSystem(const String &program, const String &arguments, bool useSystem = true)
 {
-    if (useSystem || true)
+    if (useSystem)
     {
         String cmd = formatString("%s %s", program.c_str(), arguments.c_str());
-        std::cerr << std::endl << ">>> RUNNING: " << cmd << std::endl;
+#ifdef DEBUG
+        std::cerr << std::endl << ">>> RUNNING EXTERNALLY: " << cmd << std::endl;
+#endif
         system(cmd.c_str());
     }
     else
-      runProgram(program, arguments);
-
+    {
+#ifdef DEBUG
+    	std::cerr << std::endl << ">>> RUNNING INTERNALLY: " << program << std::endl;
+#endif
+        runProgram(program, arguments);
+    }
 }
 
 // Create deformed PDB =====================================================
@@ -176,17 +183,12 @@ FileName ProgNmaAlignment::createDeformedPDB(int pyramidLevel) const
     fnRandom.initUniqueName(nameTemplate);
     const char * randStr = fnRandom.c_str();
 
-    program = "xmipp_move_along_NMAmode";
-    arguments = formatString("%s %s %f > inter%s; mv -f inter%s deformedPDB_%s.pdb",
-                             fnPDB.c_str(), modeList[0].c_str(), trial(0)*scale_defamp, randStr, randStr, randStr);
-    runSystem(program, arguments);
-
-    for (int i=1; i<VEC_XSIZE(trial)-5; ++i)
-    {
-        arguments = formatString("deformedPDB_%s.pdb %s %f > inter%s; mv -f inter%s deformedPDB_%s.pdb", program.c_str(),
-                                 randStr, modeList[i].c_str(), trial(i)*scale_defamp, randStr, randStr, randStr);
-        runSystem(program, arguments);
-    }
+    program = "xmipp_pdb_nma_deform";
+    arguments = formatString("--pdb %s -o deformedPDB_%s.pdb --nma %s --deformations ",
+                             fnPDB.c_str(), randStr, fnModeList.c_str());
+    for (int i=0; i<VEC_XSIZE(trial)-5; ++i)
+        arguments += floatToString(trial(i)*scale_defamp)+" ";
+    runSystem(program, arguments, false);
 
     program = "xmipp_volume_from_pdb";
     arguments = formatString("-i deformedPDB_%s.pdb --size %i --sampling %f -v 0",
@@ -254,8 +256,8 @@ void ProgNmaAlignment::performCompleteSearch(
 
     if (fnmask != "")
     {
-        program = "xmipp_mask";
-        arguments = formatString("-i %s -mask %s", refSelStr, fnmask.c_str());
+        program = "xmipp_transform_mask";
+        arguments = formatString("-i %s --mask binary_file %s", refSelStr, fnmask.c_str());
         runSystem(program, arguments, false);
     }
 
@@ -263,7 +265,7 @@ void ProgNmaAlignment::performCompleteSearch(
     program = "xmipp_angular_discrete_assign";
     arguments = formatString("-i downimg_%s.xmp --ref %s -o angledisc_%s.txt --psi_step 5 --max_shift_change %i --search5D -v 0",
         randStr, refSelStr, randStr, ROUND((double)imgSize/(10.0*pow(2.0,(double)pyramidLevel))));
-    runSystem(program, arguments);
+    runSystem(program, arguments,false);
 }
 
 // Continuous assignment ===================================================
@@ -273,7 +275,7 @@ double ProgNmaAlignment::performContinuousAssignment(
     // Perform alignment
     const char * randStr = fnRandom.c_str();
     String program = "xmipp_angular_continuous_assign";
-    String arguments = formatString("-i angledisc_%s.txt -ref deformedPDB_%s.vol -o anglecont_%s.txt -gaussian_Fourier %f -gaussian_Real %f -zerofreq_weight %f -v 0",
+    String arguments = formatString("-i angledisc_%s.txt --ref deformedPDB_%s.vol -o anglecont_%s.txt --gaussian_Fourier %f --gaussian_Real %f --zerofreq_weight %f -v 0",
                                     randStr, randStr, randStr, gaussian_DFT_sigma, gaussian_Real_sigma, weight_zero_freq);
     runSystem(program, arguments, false);
 
@@ -305,7 +307,7 @@ void ProgNmaAlignment::updateBestFit(double fitness,int dim)
 // Compute fitness =========================================================
 double ObjFunc_nma_alignment::eval(Vector X, int *nerror)
 {
-    int dim = global_NMA_prog->modeList.size();
+    int dim = global_NMA_prog->numberOfModes;
 
     for (int i=0; i<dim; i++)
     {
@@ -366,7 +368,7 @@ void ProgNmaAlignment::processImage(const FileName &fnImg, const FileName &fnImg
 
     ObjectiveFunction *of;
 
-    int dim=modeList.size();
+    int dim=numberOfModes;
 
     parameters.initZeros(dim+5);
     currentImgName = fnImg;
@@ -379,40 +381,43 @@ void ProgNmaAlignment::processImage(const FileName &fnImg, const FileName &fnImg
     fitness_min(0) = 1000000.0;
 
     currentStage=1;
+#ifdef DEBUG
     std::cerr << std::endl << "DEBUG: ===== Node: " << rangen
     <<" processing image " << fnImg <<"(" << objId << ")"
     << " at stage: " << currentStage << std::endl;
+#endif
     of=new ObjFunc_nma_alignment(1,dim);
 
     of->xStart.setSize(dim);
     for (int i=0; i<dim; i++)
         of->xStart[i]=0.;
 
+#ifdef DEBUG
     strcpy(of->name,("OF1_"+integerToString(rangen)).c_str());
     of->setSaveFile();
+#endif
 
     CONDOR(rhoStart, rhoEnd, niter, of);
+#ifdef DEBUG
     of->printStats();
     FILE *ff = fopen(("res1_"+integerToString(rangen)+".txt").c_str(),"w");
     fprintf(ff,"%s & %i & %i & (%i) & %e \\\\\n", of->name, of->dim(), of->getNFE(), of->getNFE2(), of->valueBest);
     fclose(ff);
+#endif
 
     double fitness=of->valueBest;
-    //std::cout << "Best fitness = " << fitness << std::endl;
     double *dd=of->xBest;
-    /*for (int i=0; i<dim; i++)
-{
-        std::cout << "Best deformations = " << dd[i] << std::endl;
-}*/
 
     bestStage1 = trial = parameters = trial_best;
 
     delete of;
 
     currentStage = 2;
+#ifdef DEBUG
     std::cerr << std::endl << "DEBUG: ===== Node: " << rangen
     <<" processing image " << fnImg <<"(" << objId << ")"
     << " at stage: " << currentStage << std::endl;
+#endif
 
     fitness_min(0) = 1000000.0;
 
@@ -421,24 +426,29 @@ void ProgNmaAlignment::processImage(const FileName &fnImg, const FileName &fnImg
     of->xStart.setSize(dim);
     for (int i=0; i<dim; i++)
         of->xStart[i]=parameters(i);
+#ifdef DEBUG
     strcpy(of->name,("OF2_"+integerToString(rangen)).c_str());
     of->setSaveFile();
+#endif
 
     rhoStart=1e-3, rhoEnd=1e-4;
-
     CONDOR(rhoStart, rhoEnd, niter, of);
+#ifdef DEBUG
     of->printStats();
     ff=fopen(("res2_"+integerToString(rangen)+".txt").c_str(),"w");
     fprintf(ff,"%s & %i & %i & (%i) & %e \\\\\n", of->name, of->dim(), of->getNFE(), of->getNFE2(), of->valueBest);
     fclose(ff);
+#endif
 
     fitness=of->valueBest;
-    std::cout << "Best fitness = " << fitness << std::endl;
     dd=of->xBest;
+#ifdef DEBUG
+    std::cout << "Best fitness = " << fitness << std::endl;
     for (int i=0; i<dim; i++)
     {
         std::cout << "Best deformations = " << dd[i] << std::endl;
     }
+#endif
 
     trial = trial_best;
 
@@ -471,7 +481,7 @@ void ProgNmaAlignment::writeImageParameters(const FileName &fnImg)
     md.setValue(MDL_SHIFTX,parameters(3),objId);
     md.setValue(MDL_SHIFTY,parameters(4),objId);
 
-    int dim = modeList.size();
+    int dim = numberOfModes;
     std::vector<double> vectortemp;
 
     for (int j = 5; j < 5+dim; j++)
