@@ -220,6 +220,7 @@ class dataBase:
     def insertCommand(self, command, _Parameters,iter,verifyfiles=None):
         parameters = pickle.dumps(_Parameters, 0)#Dict
         self.cur_aux = self.connection.cursor()
+        #print self.sqlInsertcommand, [command, parameters, iter]
         self.cur_aux.execute(self.sqlInsertcommand, [command, parameters, iter])
         lastid = self.cur_aux.lastrowid
         if (verifyfiles):
