@@ -161,7 +161,6 @@ def assign_images_to_references(_log,dict):
     ''' assign the images to the different references based on the crosscorrelation coeficient
         #if only one reference it just copy the docfile generated in the previous step
         '''
-    print "INSIDE assign_images_to_references"
     DocFileInputAngles  = dict['DocFileInputAngles']
     ProjMatchRootName   = dict['ProjMatchRootName']#
     NumberOfCtfGroups   = dict['NumberOfCtfGroups']
@@ -175,6 +174,7 @@ def assign_images_to_references(_log,dict):
     MDout  = MetaData()
     MDout.setComment("metadata with  images, the winner reference as well as the ctf group")
 
+    print "INSIDE11 assign_images_to_references"
     mycounter=0
     for iCTFGroup in range(1,NumberOfCtfGroups+1):
         auxInputdocfile = 'ctfGroup' + str(iCTFGroup).zfill(utils_xmipp.FILENAMENUMBERLENTGH)+'@'
@@ -190,7 +190,7 @@ def assign_images_to_references(_log,dict):
         MDSort.setValue(MDL_ORDER,mycounter,id)
         mycounter += 1
     #print "bbb",ProjMatchRootName[1], DocFileInputAngles
-
+    print "INSIDE22 assign_images_to_references"
     outputdocfile =  DocFileInputAngles
     if os.path.exists(outputdocfile):
         os.remove(outputdocfile)
