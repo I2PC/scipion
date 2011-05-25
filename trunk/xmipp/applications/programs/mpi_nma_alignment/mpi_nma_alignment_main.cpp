@@ -49,6 +49,8 @@ public:
     void read(int argc, char **argv)
     {
         node = new MpiNode(argc, argv);
+        if (!node->isMaster())
+        	verbose=0;
         fileMutex = new MpiFileMutex(node);
         ProgNmaAlignment::read(argc, argv);
     }
@@ -84,6 +86,7 @@ public:
     {
         size_t first, last;
         bool moreTasks = distributor->getTasks(first, last);
+
         if (moreTasks)
         {
             time_bar_done = first + 1;
@@ -101,6 +104,7 @@ public:
         node->barrierWait();
         if (node->isMaster())
             ProgNmaAlignment::finishProcessing();
+        node->barrierWait();
     }
 
     void writeImageParameters(const FileName &fnImg)
