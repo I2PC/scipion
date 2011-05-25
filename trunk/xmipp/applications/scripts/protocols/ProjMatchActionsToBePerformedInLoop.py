@@ -211,8 +211,10 @@ def assign_images_to_references(_log,dict):
         #if a single image is assigned to two references with the same 
         #CC use it in both reconstruction
         #recover atributes after aggregate function
+        print "INSIDE33 assign_images_to_references"
         MD1.join(MD,MDaux,MDL_UNDEFINED,NATURAL)        
         #add a sorting number to make easier to create an stack of averaged classes
+        print "INSIDE44 assign_images_to_references"
         MDout.join(MD1,MDSort,MDL_UNDEFINED,NATURAL)        
         MDout.write(auxInputdocfile+outputdocfile,MD_APPEND)
             
