@@ -1179,7 +1179,8 @@ MetaData_iternext(PyObject *obj) {
 		self->iter->moveNext();
 		if (objId == BAD_OBJID)
 			return NULL;
-		return Py_BuildValue("n", objId);
+#type format should be "n" instead of "i" but I put i since python 2.4 does not support n
+		return Py_BuildValue("i", objId);
 	} catch (XmippError xe) {
 		PyErr_SetString(PyXmippError, xe.msg.c_str());
 	}
