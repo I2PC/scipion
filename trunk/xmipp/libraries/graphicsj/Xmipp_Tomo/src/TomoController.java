@@ -24,14 +24,25 @@
  ***************************************************************************/
 
 import ij.IJ;
+import ij.ImagePlus;
 import ij.WindowManager;
 import ij.gui.GenericDialog;
+import ij.process.ImageProcessor;
+
+import java.awt.Dimension;
 import java.awt.event.AdjustmentEvent;
 import java.awt.event.AdjustmentListener;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.lang.reflect.Method;
+import java.util.Enumeration;
+
 import javax.swing.SwingWorker;
+import javax.swing.tree.DefaultMutableTreeNode;
+
+import xmipp.CastWriteMode;
+import xmipp.ImageDouble;
+import xmipp.ImageWriteMode;
 
 // TODO: make TomoController extend AbstractController?
 
@@ -54,6 +65,11 @@ public class TomoController implements AdjustmentListener{
 	// play direction: forward (+1) or backward (-1)
 	private int playDirection = 1;
 
+	
+	// if an image is bigger than this threshold, resize it to this size
+	// This optimization makes sense since for interactive use no more detail is needed
+	public static Dimension resizeThreshold = new Dimension(400,400);
+	
 	TomoController(TomoWindow window) {
 		this.window = window;
 	}
@@ -182,27 +198,66 @@ public class TomoController implements AdjustmentListener{
 			String path = FileDialog.openDialog("Load EM", window);
 			if (path == null)
 				return;
-			loadImage(path);
+			// free previous model (if any) ??
+			// setModel(null);
+			setModelToLoad(new TomoData(path));
+			try {
+				new BackgroundMethod(this, getClass().getMethod("loadEMBackground"), getClass().getMethod("loadedEM")).execute();
+				getModelToLoad().waitForFirstImage();
+			} catch (Exception ex) {
+				Xmipp_Tomo.debug("TomoController.loadEM() ", ex);
+			}
+			
+			setModel(getModelToLoad());
+			
+			if (getModel().getNumberOfProjections() > 0) {
+				window.setImagePlusWindow();
+
+				window.setTitle(window.getTitle());
+				window.addView();
+				window.addControls();
+				window.addUserAction(new UserAction(window.getWindowId(),
+						"Load", getModel().getFileName()));
+				window.enableButtonsAfterLoad();
+			}
 
 		}
 	}
 	
 	/**
+	 * @deprecated
 	 * Remember to set modelToLoad before calling this method
 	 */
+	// TODO: cUrReNt - refactor so every controller method reads/writes slice by slice (and then make postactions like resizing
+	// if needed for that specific method)
 	public void readImage() {
 		String errorMessage = "";
 		try {
-			TiltSeriesIO.read(modelToLoad);
+			// TiltSeriesIO.read(modelToLoad);
+			String absolutePath = modelToLoad.getFilePath();
+
+			if ((absolutePath == null) || (absolutePath.equals("")))
+				throw new IOException("Empty path");
+			
+			modelToLoad.readMetadata(absolutePath);
+			
+			long ids[]=modelToLoad.getStackIds();
+			for(long id:ids) {
+				String fileName=modelToLoad.getFilePath(id);
+				ImageDouble image = null;
+				if(fileName != null)
+					image= TiltSeriesIO.readSlice(fileName, null, false);
+				if(image != null)
+					TiltSeriesIO.postReadSlice(modelToLoad, image);
+				}
+			TiltSeriesIO.postReadStack(modelToLoad);
+			
 		} catch (FileNotFoundException ex) {
 			Xmipp_Tomo.debug("ImportDataThread.run - ", ex);
 		} catch (IOException ex) {
 			Xmipp_Tomo.debug("ImportDataThread.run - Error opening file ",
 					ex);
 			errorMessage = "Error opening file";
-		} catch (InterruptedException ex) {
-			Xmipp_Tomo.debug(
-					"ImportDataThread.run - Interrupted exception", ex);
 		} catch (OutOfMemoryError err) {
 			Xmipp_Tomo.debug("ImportDataThread.run - Out of memory"
 					+ err.toString());
@@ -218,33 +273,70 @@ public class TomoController implements AdjustmentListener{
 		}
 	}
 	
-	private void loadImage(String path){
-		// free previous model (if any) ??
-		setModel(null);
-		modelToLoad=new TomoData(path);
-		setModel(modelToLoad);
+	public void loadEMBackground(){
+		// setModel(getModelToLoad());
 		window.getButton(Command.LOAD.getId()).setText("Cancel " + Command.LOAD.getLabel());
 		window.setLastCommandState(Command.State.LOADING);
 
+		String errorMessage = "";
 		try {
-			new BackgroundMethod(this, getClass().getMethod("readImage"), getClass().getMethod("loadedEM")).execute();
-			getModel().waitForFirstImage();
+			String absolutePath = getModelToLoad().getFilePath();
+
+			if ((absolutePath == null) || (absolutePath.equals("")))
+				throw new IOException("Empty path");
+			
+			getModelToLoad().readMetadata(absolutePath);
+			
+			long ids[]=getModelToLoad().getStackIds();
+			for(long projectionId:ids) {
+				String filePath=getModelToLoad().getFilePath(projectionId);
+				if(filePath != null){
+					ImageDouble image = new ImageDouble();
+					image.readSlice(filePath);
+					ImagePlus imagePlus = Converter.convertToImagePlus(image);
+					getModelToLoad().setOriginalHeight(image.getYsize());
+					getModelToLoad().setOriginalWidth(image.getXsize());
+
+					if (shouldResize(image.getXsize(),image.getYsize())) {
+						// resize/scale - use an aux image processor for all projections
+						ImageProcessor ip = imagePlus.getProcessor();
+						ImageProcessor ipResized = ip.resize(resizeThreshold.width,resizeThreshold.height);
+						imagePlus=new ImagePlus(filePath, ipResized);
+						getModelToLoad().addProjection(imagePlus);
+						getModelToLoad().setResized(true);
+					} else
+						getModelToLoad().addProjection(imagePlus);
+				}
+			}
+			getModelToLoad().lastImageLoaded();
+			
+		} catch (FileNotFoundException ex) {
+			Xmipp_Tomo.debug("loadEMBackground - ", ex);
+		} catch (IOException ex) {
+			Xmipp_Tomo.debug("loadEMBackground - Error opening file ",
+					ex);
+			errorMessage = "Error opening file";
+		} catch (OutOfMemoryError err) {
+			Xmipp_Tomo.debug("loadEMBackground - Out of memory"
+					+ err.toString());
+			errorMessage = "Out of memory";
 		} catch (Exception ex) {
-			Xmipp_Tomo.debug("TomoController.loadImage() ", ex);
-		}
-
-		if (getModel().getNumberOfProjections() > 0) {
-			window.setImagePlusWindow();
-
-			window.setTitle(window.getTitle());
-			window.addView();
-			window.addControls();
-			window.addUserAction(new UserAction(window.getWindowId(),
-					"Load", getModel().getFileName()));
-			window.enableButtonsAfterLoad();
+			Xmipp_Tomo.debug("loadEMBackground - unexpected exception",
+					ex);
+		} finally {
+			if (getModelToLoad().getNumberOfProjections() < 1) {
+				getModelToLoad().loadCanceled();
+				TomoWindow.alert(errorMessage);
+			}
 		}
 	}
 
+	
+	public static boolean shouldResize(int width, int height){
+		// TODO: shouldResize - when applying changes to the original image, don't resize
+		return (width > resizeThreshold.width ) || (height > resizeThreshold.height);
+	}
+	
 	/**
 	 * Post-actions (after all the projections are loaded)
 	 */
@@ -270,18 +362,65 @@ public class TomoController implements AdjustmentListener{
 
 	/**
 	 * Apply this window's workflow 
+	 * TODO: apply the selected "workflow path" in the workflow view
 	 */
 	public void apply() {
 
-		String path = FileDialog.saveDialog("Save...", window);
-		if (path == null) {
+		String destinationPath = FileDialog.saveDialog("Save...", window);
+		if (destinationPath == null) {
 			return;
 		}
 		
 		// TODO: bug - modelToSave has wrong properties: path(not updated), width&height =  0, always resized
-		TomoData originalModel = getModel(),modelToSave=originalModel;
-		
-		// Reopen the file only if the data was resized
+		String sourcePath = getModel().getFilePath();
+		try{
+			if ((sourcePath == null) || (sourcePath.equals("")))
+				throw new IOException("Empty path");
+			
+			TomoData modelToSave=getModel();
+			modelToSave.readMetadata(sourcePath);
+			
+			long ids[]=modelToSave.getStackIds();
+			for(long projectionId:ids) {
+				String sourceProjectionPath=modelToSave.getFilePath(projectionId);
+				if(sourceProjectionPath != null){
+					ImageDouble image = new ImageDouble();
+					image.readSlice(sourceProjectionPath);
+					ImagePlus ip=Converter.convertToImagePlus(image);
+					ip=applyWorkflowTo(ip);
+					image=Converter.convertToImageDouble(ip);
+					// the recommended way is using the @ notation,
+					// TODO: get the @ path with the help of the Filename xmipp class
+					String sliceDestPath = String.valueOf(projectionId) +"@"+ destinationPath;
+					Xmipp_Tomo.debug(sliceDestPath);
+					image.write(sliceDestPath);
+					// image.write(destinationPath, (int)projectionId, false, ImageWriteMode.WRITE_APPEND, CastWriteMode.CW_CAST);
+				}
+			}
+		}catch (IOException ex) {
+			Xmipp_Tomo.debug("apply - Error opening file ",	ex);
+		}catch (Exception ex) {
+			Xmipp_Tomo.debug("apply ",	ex);
+		} 
+	}
+	
+	// TODO: (cuRRenT) - the workflow is not applied to the image...
+	private ImagePlus applyWorkflowTo(ImagePlus image){
+		// iterate through the user actions that make sense
+		Enumeration e = Xmipp_Tomo.getWorkflow().breadthFirstEnumeration();
+		while(e.hasMoreElements()){
+			UserAction currentAction=(UserAction) (((DefaultMutableTreeNode)e.nextElement()).getUserObject());
+			if (currentAction.isNeededForFile()) {
+				Xmipp_Tomo.debug("Applying " + currentAction.toString());
+				window.setStatus("Applying " + currentAction.getCommand());
+				currentAction.getPlugin().run(image);
+			}
+		}	
+		return image;
+	}
+	
+	private TomoData reOpenIfResized(TomoData originalModel){
+		TomoData modelToSave=originalModel;
 		if (originalModel.isResized()) {
 			modelToLoad = new TomoData(getModel().getFilePath());
 			modelToSave=modelToLoad;
@@ -296,18 +435,7 @@ public class TomoController implements AdjustmentListener{
 
 			window.setLastCommandState(Command.State.LOADED);
 		}
-		
-		// iterate through the user actions that make sense
-		for (UserAction currentAction : Xmipp_Tomo.getWorkflow(window.getLastAction())) {
-			if (currentAction.isNeededForFile()) {
-				// Xmipp_Tomo.debug("Applying " + currentAction.toString());
-				window.setStatus("Applying " + currentAction.getCommand());
-				currentAction.getPlugin().run(modelToSave.getImage());
-			}
-		}
-
-		// write
-		saveFile(window, modelToSave, path);
+		return modelToSave;
 	}
 
 	public void gaussian() {
@@ -432,14 +560,53 @@ public class TomoController implements AdjustmentListener{
 		window.setPlugin(null);
 	}
 
-	// Allow user to just make a copy of a file
-	public void save() {
-		String path = FileDialog.saveDialog("Save...", window);
-		if (path == null) {
+	public void convert() {
+		String destinationPath = FileDialog.saveDialog("Convert...", window);
+		if (destinationPath == null) {
 			return;
 		}
-		// TODO: should include resize code (see apply() )
-		saveFile(window, getModel(), path);
+		
+		/* TomoData originalModel = getModel();
+		TomoData modelToSave=reOpenIfResized(originalModel);
+		// write
+		saveFile(window, modelToSave, path); */
+		
+		TomoData modelToSave=getModel();
+		
+		try{
+			if(getModel().isResized()){
+				String sourcePath = getModel().getFilePath();
+	
+				if ((sourcePath == null) || (sourcePath.equals("")))
+					throw new IOException("Empty path");
+				
+				modelToSave.readMetadata(sourcePath);
+				
+				long ids[]=modelToSave.getStackIds();
+				for(long projectionId:ids) {
+					String sourceProjectionPath=modelToSave.getFilePath(projectionId);
+					if(sourceProjectionPath != null){
+						ImageDouble image = new ImageDouble();
+						image.readSlice(sourceProjectionPath);
+						// the recommended way is using the @ notation,
+						// TODO: get the @ path with the help of the Filename xmipp class
+						String sliceDestPath = String.valueOf(projectionId) +"@"+ destinationPath;
+						Xmipp_Tomo.debug(sliceDestPath);
+						image.write(sliceDestPath);
+						// image.write(destinationPath, (int)projectionId, false, ImageWriteMode.WRITE_APPEND, CastWriteMode.CW_CAST);
+					}
+				}
+			}else{
+				ImageDouble img = Converter.convertToImageDouble(getModel().getImage());
+				img.setFilename(destinationPath);
+				// @see rwSpider.cpp -- WRITE_OVERWRITE required for maxim to be updated (readSpider gets nDim from maxim)
+				img.write(destinationPath, 0, true, ImageWriteMode.WRITE_OVERWRITE, CastWriteMode.CW_CAST);
+			}
+		}catch (IOException ex) {
+			Xmipp_Tomo.debug("convert - Error opening file ",	ex);
+		}catch (Exception ex) {
+			Xmipp_Tomo.debug("convert ",	ex);
+		}  
 	}
 
 	public void setTilt() {
@@ -474,7 +641,14 @@ public class TomoController implements AdjustmentListener{
 			Xmipp_Tomo.ExitValues error = Xmipp_Tomo.exec(command,false);
 			if (error == Xmipp_Tomo.ExitValues.OK){
 				String imagePath= d.getImagePath();
-				loadImage(imagePath);
+				// loadImage(imagePath);
+				setModelToLoad(new TomoData(imagePath));
+				try {
+					new BackgroundMethod(this, getClass().getMethod("loadEMBackground"), getClass().getMethod("loadedEM")).execute();
+					getModel().waitForFirstImage();
+				} catch (Exception ex) {
+					Xmipp_Tomo.debug("TomoController.loadEM() ", ex);
+				}
 			}else
 				Xmipp_Tomo.debug("Error (" + error + ") executing " + command);
 		}
@@ -558,6 +732,14 @@ public class TomoController implements AdjustmentListener{
 		TiltSeriesIO.write(model);
 		tomoWindow.setStatus("Done");
 		tomoWindow.setChangeSaved(true);
+	}
+
+	public TomoData getModelToLoad() {
+		return modelToLoad;
+	}
+
+	public void setModelToLoad(TomoData modelToLoad) {
+		this.modelToLoad = modelToLoad;
 	}
 	
 	// TODO: xmipp_tomo_remove_fluctuations (preprocessing)

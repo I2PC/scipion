@@ -49,8 +49,10 @@ import xmipp.*;
 
 public class TiltSeriesIO {
 	// this class uses JNI mechanisms to call C++ code through the xmipp package
-	// if an image is bigger than this threshold, resize it to this size
-	// This optimization makes sense since for interactive use no more detail is needed
+
+	/**
+	 * @deprecated
+	 */
 	public static Dimension resizeThreshold = new Dimension(400,400);
 
 	public static boolean isImage(String path){
@@ -81,7 +83,8 @@ public class TiltSeriesIO {
 		return path.endsWith(".tlt");
 	}
 	
-	// TODO: fails with mrcs due to memory leak (bad alloc)
+	// TODO: fails with mrcs due to memory leak (bad alloc: coreAllocateReuse tries to alloc X*Y*Z*N bytes,
+	// with N being the number of slices, even though we are requesting to read only 1)
 	public static void read(TomoData model) throws java.io.IOException,
 			InterruptedException {
 
@@ -93,12 +96,12 @@ public class TiltSeriesIO {
 		// initial assumption: the paths inside the selfile  need no traslation / rebuild
 		boolean buildPath=false;
 		
+		// Xmipp_Tomo.debug("Path: "+ absolutePath + ". Build: " + buildPath);
 		model.readMetadata(absolutePath);
-		// Xmipp_Tomo.debug(fn.getBaseName());
 		
-		long ids[]=model.getImageIds();
+		long ids[]=model.getStackIds();
 		for(long id:ids) {
-			String fileName=model.getFilename(id);
+			String fileName=model.getFilePath(id);
 			if(buildPath)
 				fileName=buildAbsolutePath(absolutePath, fileName);
 			ImageDouble image = null;
@@ -123,11 +126,6 @@ public class TiltSeriesIO {
 
 		postReadStack(model);
 		
-		if(! isSelFile(absolutePath)){
-			// read tilt angles
-			String tltFilePath = getTiltFilePath(absolutePath);
-			model.readMetadata(tltFilePath);
-		}
 	}
 
 	// TODO: if the file exists, remove it before calling native code - as an extra caution	(overwrite semantics vary
@@ -135,10 +133,10 @@ public class TiltSeriesIO {
 	// TODO: bug - write fails? spider and derivatives fixed, test with other formats (MRC / MRCS)
 	// TODO: write details (below)
 	// First show dialog to choose file type to save (primarily sel vs stack)
-	// Sel: ideally ask for sel and stack file paths (defaults to same paths, obviously warning about overwriting in both cases)
-	//      right now use same base and change extension only - for instance, pp.sel & pp.stk
-	//      adjust stack filenames in metadata if necessary
-	// Stack: ask only for stack file path (same overwrite warning), then save both stack and tlt
+	// Sel: check with users. One option would be to ask for sel and stack file paths (defaults to same paths, 
+	//      ask if user wants to reuse the image file, or overwrite it, or use a different name...)
+	//      right now we reuse the image file
+	// Stack: ask only for stack file path (same overwrite warning), then save both stack and tlt [OK]
 	public static void write(TomoData model) {
 		String path = model.getFilePath();
 		Xmipp_Tomo.debug("writing " + path);
@@ -157,6 +155,8 @@ public class TiltSeriesIO {
 		}
 	}
 	
+	// TODO: for memory performance (and because in memory we only keep a scaled version of the original file),
+	// projections should be (re)read/written one by one
 	private static void writeStack(String absolutePath, TomoData model) throws Exception{	
 		ImageDouble img = convert(model.getImage());
 		img.setFilename(absolutePath);
@@ -182,7 +182,7 @@ private static String buildAbsolutePath(String selFilePath, String path){
 	return slice + baseDir + "/" + fileName;
 }
 
-	private static ImageDouble readSlice(String path, String base, boolean headerOnly)
+	public static ImageDouble readSlice(String path, String base, boolean headerOnly)
 			throws IOException {
 		// watch out: slice = -1 has special meaning for image_base.read
 		return readSlice(path, base, headerOnly, -10);
@@ -202,8 +202,6 @@ private static String buildAbsolutePath(String selFilePath, String path){
 	 * @return image as ImageDouble
 	 * @throws IOException
 	 */
-	
-	// TODO: file not found exception (after updating native code...)
 	private static ImageDouble readSlice(String path, String base, boolean headerOnly,
 			int slice) throws IOException {
 		String filepath = path;
@@ -226,12 +224,12 @@ private static String buildAbsolutePath(String selFilePath, String path){
 
 	/**
 	 * Actions required after reading 1 image
-	 * 
+	 * @deprecated
 	 * @param model where the postprocessed data is saved
 	 * @param img
 	 * @depends readImage
 	 */
-	private static void postReadSlice(TomoData model, ImageDouble img) {
+	public static void postReadSlice(TomoData model, ImageDouble img) {
 		ImagePlus image = convert(img);
 
 		model.setOriginalHeight(img.getYsize());
@@ -241,8 +239,9 @@ private static String buildAbsolutePath(String selFilePath, String path){
 		// resize/scale - use an aux image processor for all projections
 		ImageProcessor ipresized = null, ip = image.getProcessor();
 
+		// TODO: move resizing to the controller (its a "GUI operation" after all)
 		if (shouldResize(img.getXsize(),img.getYsize())) {
-			ipresized = ip.resize(resizeThreshold.width,resizeThreshold.height);
+			// ipresized = ip.resize(resizeThreshold.width,resizeThreshold.height);
 			model.addProjection(ipresized);
 			model.setResized(true);
 		} else
@@ -251,10 +250,10 @@ private static String buildAbsolutePath(String selFilePath, String path){
 	
 	/**
 	 * Actions required after reading all the images of a stack
-	 * 
+	 * @deprecated
 	 * @param model
 	 */
-	private static void postReadStack(TomoData model) {
+	public static void postReadStack(TomoData model) {
 		model.lastImageLoaded();
 	}
 
@@ -284,7 +283,7 @@ private static String buildAbsolutePath(String selFilePath, String path){
 			Xmipp_Tomo.debug("Null image");
 			return null;
 		}
-		// Creates image
+		// Creates image 
 		int width=img.getWidth(), height=img.getHeight(), numberOfProjections=img.getStackSize();
 		ImageDouble imageDouble=new ImageDouble();
 
@@ -378,7 +377,12 @@ private static String buildAbsolutePath(String selFilePath, String path){
 		}
 	}
 
-
+/**
+ * @deprecated
+ * @param width
+ * @param height
+ * @return
+ */
 	public static boolean shouldResize(int width, int height){
 		// TODO: shouldResize - when applying changes to the original image, don't resize
 		return (width > resizeThreshold.width ) || (height > resizeThreshold.height);

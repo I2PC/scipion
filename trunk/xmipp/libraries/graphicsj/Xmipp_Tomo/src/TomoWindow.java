@@ -122,7 +122,7 @@ public class TomoWindow extends ImageWindow implements WindowListener,
 		{
 			add(Command.LOAD);
 			add(Command.XRAY);
-			add(Command.SAVE);
+			add(Command.CONVERT);
 			add(Command.DEFINE_TILT);
 			add(Command.DISCARD_PROJECTION);
 		}
@@ -178,7 +178,7 @@ public class TomoWindow extends ImageWindow implements WindowListener,
 			add(Command.HOTSPOT_REMOVAL);
 			// disabled until native writing (using Xmipp library) is implemented
 			add(Command.APPLY);
-			add(Command.SAVE);
+			add(Command.CONVERT);
 			add(Command.PRINT_WORKFLOW);
 			add(Command.CURRENT_PROJECTION_INFO);
 			add(Command.MEASURE);

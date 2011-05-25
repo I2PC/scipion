@@ -123,7 +123,7 @@ public class TomoData{
 	}
 	
 	private long getCurrentProjectionId(){
-		return getImageIds() [getCurrentProjectionNumber()-1];
+		return getStackIds() [getCurrentProjectionNumber()-1];
 	}
 
 	
@@ -152,7 +152,7 @@ public class TomoData{
 		return imp;
 	}
 	
-	public long[] getImageIds(){
+	public long[] getStackIds(){
 		long [] result=new long[getNumberOfProjections()];
 		if(getMetadata() != null)
 			result= getMetadata().findObjects();
@@ -195,10 +195,10 @@ public class TomoData{
 	}
 	
 	public Enumeration<Double> getTiltAngles(){
-		int size=getImageIds().length;
+		int size=getStackIds().length;
 		Vector<Double> tiltAngles=new Vector<Double>(size);
 		for(int i=0; i< size; i++)
-			tiltAngles.add(getTiltAngle(getImageIds()[i]));
+			tiltAngles.add(getTiltAngle(getStackIds()[i]));
 		return tiltAngles.elements();
 	}
 	
@@ -352,8 +352,22 @@ public class TomoData{
 		return file.getName();
 	}
 	
-	public String getFilename(long id) {
-		return getMetadata().getValueString(MDLabel.MDL_IMAGE,id);
+	public String getFilePath(long projectionId) {
+		String filename= getMetadata().getValueString(MDLabel.MDL_IMAGE,projectionId);
+		// Verify filename seems correct - done in fixPath
+		/* int indexAt = filename.indexOf("@");
+		if(indexAt >= 0){
+			// slice syntax -> should be slice_number@file_name. Remove everything before slice_number
+			int i=indexAt-1;
+			while(i>=0){
+				if(Character.isDigit(filename.charAt(i)) == false)
+					break;
+				i--;
+			}
+			filename= filename.substring(i+1, filename.length());
+		} */
+		
+		return filename;
 	}
 	
 	public String getDirectory(){
@@ -409,6 +423,10 @@ public class TomoData{
 		lastLoaded.release();
 	}
 	
+	/**
+	 * @deprecated
+	 * @param imageProcessor
+	 */
 	public void addProjection(ImageProcessor imageProcessor){
 		if(getImage() == null){
 			ImageStack stack=new ImageStack(imageProcessor.getWidth(), imageProcessor.getHeight());
@@ -419,6 +437,23 @@ public class TomoData{
 			getImage().getStack().addSlice(null, imageProcessor);
 		
 		setNumberOfProjections(getNumberOfProjections()+1);
+		if(getNumberOfProjections() == 1)
+			firstImageLoaded();
+	}
+	
+	public void addProjection(ImagePlus imagePlus){
+		ImageProcessor imageProcessor=imagePlus.getProcessor();
+		if(getImage() == null){
+			ImageStack stack=new ImageStack(imageProcessor.getWidth(), imageProcessor.getHeight());
+			// ImagePlus does not allow to add an empty stack, hence the need to add one slice here		
+			stack.addSlice(null, imageProcessor);
+			setImage(new ImagePlus(getFileName(), stack));
+		}else
+			getImage().getStack().addSlice(null, imageProcessor);
+		
+		setNumberOfProjections(getNumberOfProjections()+1);
+		updateMinMax(imagePlus);
+		
 		if(getNumberOfProjections() == 1)
 			firstImageLoaded();
 	}
@@ -532,18 +567,24 @@ public class TomoData{
 	}
 	
 	// TODO: -CURRENT- first tilt is not displayed automatically (requires scrolling). Only happens with selfiles
+	/**
+	 * Warning: metadata.read raises an exception when reading .sel files for which you don't have write permission
+	 */
 	public void readMetadata(String path){
 		try {
-		if(TiltSeriesIO.isSelFile(path) || TiltSeriesIO.isImage(path))
+		if(TiltSeriesIO.isSelFile(path))
 			getMetadata().read(path);
-		else if(TiltSeriesIO.isTltFile(path))
-			TiltSeriesIO.readTiltAngles(path, getMetadata());
-		else{
-			Xmipp_Tomo.debug("readMetadata - Unknown file type: " + path);
-			return;
+		if(TiltSeriesIO.isImage(path)){
+			getMetadata().read(path);
+			String tltFilePath = TiltSeriesIO.getTiltFilePath(path);
+			readMetadata(tltFilePath);
 		}
+		
+		if(TiltSeriesIO.isTltFile(path))
+			TiltSeriesIO.readTiltAngles(path, getMetadata());
+	
 		}catch (Exception ex){
-			Xmipp_Tomo.debug("readMetadata", ex);
+			Xmipp_Tomo.debug("readMetadata - problem with "+path+". Please check that the file exists and its permissions", ex);
 		}
 		firePropertyChange(Properties.CURRENT_TILT_ANGLE.name(), null, 0.0);
 		firePropertyChange(Properties.CURRENT_PROJECTION_ENABLED.name(), null, false);

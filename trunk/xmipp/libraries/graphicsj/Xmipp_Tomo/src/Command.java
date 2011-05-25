@@ -39,7 +39,7 @@ public class Command {
 	PLAY_LOOP= new Command("controls.play_loop","Loop", "changePlayMode", true, null),
 	LOAD=new Command("file.emload","Load","loadEM",true,null),
 	XRAY=new Command("file.xrayload","Import X-Ray","loadXray",true,null),
-	SAVE=new Command("file.save","Save","save",false,null),
+	CONVERT=new Command("file.convert","Convert","convert",false,null),
 	ADJUSTBC=new Command("controls.adjustbc","Adjust Brightness/Contrast","adjustbc",false,null),
 	NORMALIZE_SERIES=new Command("preproc.normalize","Normalize series","normalize",false,null),
 	DEFINE_TILT = new Command("file.tilt","Set tilt angles","setTilt",false,null),
