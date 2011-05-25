@@ -166,12 +166,22 @@ def assign_images_to_references(_log,dict):
     ProjMatchRootName   = dict['ProjMatchRootName']#
     NumberOfCtfGroups   = dict['NumberOfCtfGroups']
     NumberOfReferences  = dict['NumberOfReferences']
-
-    #print "bbb",ProjMatchRootName[1], DocFileInputAngles
+    #first we need a list with the references used. That is,
+    #read all docfiles and map referecendes to a mdl_order
     MDaux = MetaData()
     MD    = MetaData()
     MD1   = MetaData()
     MD1.setComment("metadata with  images, the winner reference as well as the ctf group")
+
+    for iCTFGroup in range(1,NumberOfCtfGroups+1):
+        MDaux.clear()
+        auxInputdocfile = 'ctfGroup' + str(iCTFGroup).zfill(utils_xmipp.FILENAMENUMBERLENTGH)+'@'
+        for iRef3D in range(1,NumberOfReferences+1):
+            inputFileName = ProjMatchRootName[iRef3D]
+            inputdocfile    = auxInputdocfile+ inputFileName
+            MD.read(inputdocfile)
+            for...
+    #print "bbb",ProjMatchRootName[1], DocFileInputAngles
 
     outputdocfile =  DocFileInputAngles
     if os.path.exists(outputdocfile):
