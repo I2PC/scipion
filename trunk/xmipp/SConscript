@@ -297,6 +297,8 @@ def AddJavaLibrary(name, basedir, srcdir):#, sourceList, includes, libpath=[], l
     buildDir = os.path.join(basedir, 'classes')
     if not os.path.exists(buildDir): # create classes dir if not exists
         Execute(Mkdir(buildDir))    
+    if env['debug'] == True:
+    	env['JAVAC'] = 'javac -g'
     buildClasses = env.Java(buildDir, basedir, JAVAVERSION='1.6')
     env.Depends(buildClasses, env.Alias('javaEnums'))
     jarfile = os.path.join(basedir, name + '.jar')
@@ -678,7 +680,7 @@ AddXmippProgram('angular_project_library', ['XmippRecons'])
 AddXmippProgram('angular_rotate')
 AddXmippProgram('apropos', ['XmippInterface'])
 AddXmippProgram('classify_analyze_cluster', ['XmippClassif'])
-AddXmippProgram('classify_kerdensom', ['XmippClassif'])
+# AddXmippProgram('classify_kerdensom', ['XmippClassif'])
 AddXmippProgram('ctf_correct_amplitude3d', ['XmippRecons'])
 AddXmippProgram('ctf_correct_idr', ['XmippRecons'])
 AddXmippProgram('ctf_create_ctfdat', ['XmippRecons'])
