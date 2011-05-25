@@ -173,14 +173,18 @@ def assign_images_to_references(_log,dict):
     MD1   = MetaData()
     MD1.setComment("metadata with  images, the winner reference as well as the ctf group")
 
+    
     for iCTFGroup in range(1,NumberOfCtfGroups+1):
-        MDaux.clear()
         auxInputdocfile = 'ctfGroup' + str(iCTFGroup).zfill(utils_xmipp.FILENAMENUMBERLENTGH)+'@'
         for iRef3D in range(1,NumberOfReferences+1):
             inputFileName = ProjMatchRootName[iRef3D]
             inputdocfile    = auxInputdocfile+ inputFileName
             MD.read(inputdocfile)
-            for...
+            for id in MD:
+                MD.getValue(MDL_REF3D,t,id)
+                MDaux.setValue(MDL_REF3D,t,id)
+                MDaux.setValue(MDL_ORDER,mycounter++,id)
+                
     #print "bbb",ProjMatchRootName[1], DocFileInputAngles
 
     outputdocfile =  DocFileInputAngles
