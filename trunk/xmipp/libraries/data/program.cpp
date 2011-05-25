@@ -426,6 +426,7 @@ XmippMetadataProgram::XmippMetadataProgram()
     delete_output_stack = true;
     remove_disabled = true;
     single_image = input_is_stack = false;
+    iter = NULL;
 }
 
 void XmippMetadataProgram::initComments()
@@ -675,5 +676,3 @@ void XmippMetadataProgram::run()
 
     postProcess();
 }
-
-
