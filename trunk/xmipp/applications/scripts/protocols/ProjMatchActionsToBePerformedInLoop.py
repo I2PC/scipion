@@ -168,12 +168,13 @@ def assign_images_to_references(_log,dict):
     NumberOfReferences  = dict['NumberOfReferences']
     #first we need a list with the references used. That is,
     #read all docfiles and map referecendes to a mdl_order
-    MDaux = MetaData()
-    MD    = MetaData()
-    MD1   = MetaData()
+    MDaux  = MetaData()
+    MDSort = MetaData()
+    MD     = MetaData()
+    MD1    = MetaData()
     MD1.setComment("metadata with  images, the winner reference as well as the ctf group")
 
-    
+    mycounter=0
     for iCTFGroup in range(1,NumberOfCtfGroups+1):
         auxInputdocfile = 'ctfGroup' + str(iCTFGroup).zfill(utils_xmipp.FILENAMENUMBERLENTGH)+'@'
         for iRef3D in range(1,NumberOfReferences+1):
@@ -181,10 +182,12 @@ def assign_images_to_references(_log,dict):
             inputdocfile    = auxInputdocfile+ inputFileName
             MD.read(inputdocfile)
             for id in MD:
-                MD.getValue(MDL_REF3D,t,id)
-                MDaux.setValue(MDL_REF3D,t,id)
-                MDaux.setValue(MDL_ORDER,mycounter++,id)
-                
+                t=MD.getValue(MDL_REF,id)
+                MDSort.setValue(MDL_REF,t,id)
+    MDSort.removeDuplicates()
+    for id in MDSort:
+        MDSort.setValue(MDL_ORDER,mycounter,id)
+        mycounter += 1
     #print "bbb",ProjMatchRootName[1], DocFileInputAngles
 
     outputdocfile =  DocFileInputAngles
@@ -206,7 +209,10 @@ def assign_images_to_references(_log,dict):
         MD.aggregate(MDaux,AGGR_MAX,MDL_IMAGE,MDL_MAXCC,MDL_MAXCC)
         #if a single image is assigned to two references with the same 
         #CC use it in both reconstruction
+        #recover atributes after aggregate function
         MD1.join(MD,MDaux,MDL_UNDEFINED,NATURAL)        
+        #add a sorting number to make easier to create an stack of averaged classes
+        MD1.join(MD1,MDSort,MDL_UNDEFINED,NATURAL)        
         MD1.write(auxInputdocfile+outputdocfile,MD_APPEND)
             
 def angular_class_average(_log,dict):
