@@ -791,6 +791,8 @@ void AtomInterpolator::setup(int m, double hights, bool computeProjection)
 {
     M=m;
     highTs=hights;
+    if (volumeProfileCoefficients.size()==7)
+    	return;
     addAtom("H",computeProjection);
     addAtom("C",computeProjection);
     addAtom("N",computeProjection);
