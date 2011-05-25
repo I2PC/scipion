@@ -26,6 +26,7 @@
 #include "argsparser.h"
 #include "filename.h"
 #include "program.h"
+#include "color.h"
 
 //-------------------   LEXER IMPLEMENTATIONS --------------------------------
 
@@ -1056,18 +1057,21 @@ const char * ProgramDef::getParam(const char * paramName, const char * subParam,
 
 //-------------------   PRINTER IMPLEMENTATIONS   --------------------------------
 //--------- CONSOLE PRINTER -----------------------
-ConsolePrinter::ConsolePrinter(std::ostream & out)
+#define COLOR(x, c) (color ? colorString(x, c) : String(x))
+
+ConsolePrinter::ConsolePrinter(std::ostream & out, bool color)
 {
     this->pOut = &out;
+    this->color = color;
 }
 
 void ConsolePrinter::printProgram(const ProgramDef &program, int v)
 {
     //print program name and usage
-    *pOut << "PROGRAM" << std::endl << "   " << program.name << std::endl;
+    *pOut << COLOR("PROGRAM", RED) << std::endl << "   " << program.name << std::endl;
     if (program.usageComments.size() > 0)
     {
-        *pOut << "USAGE" << std::endl;
+        *pOut << COLOR("USAGE", RED) << std::endl;
         for (size_t i = 0; i < program.usageComments.size(); ++i)
             if (program.usageComments.visibility[i] <= v)
                 *pOut << "   " << program.usageComments.comments[i] << std::endl;
@@ -1075,21 +1079,21 @@ void ConsolePrinter::printProgram(const ProgramDef &program, int v)
     //print see also
     if (!program.seeAlso.empty())
     {
-        *pOut << "SEE ALSO" << std::endl;
+        *pOut << COLOR("SEE ALSO", RED) << std::endl;
         *pOut << "   " << program.seeAlso << std::endl;
     }
 
     //print sections and params
     if (program.sections.size() > 0)
     {
-        *pOut << "OPTIONS" << std::endl;
+        *pOut << COLOR("OPTIONS", RED) << std::endl;
         for (size_t i = 0; i < program.sections.size(); ++i)
             printSection(*program.sections[i], v);
     }
     //print examples
     if (program.examples.size() > 0)
     {
-        *pOut << "EXAMPLES" << std::endl;
+        *pOut << COLOR("EXAMPLES", RED) << std::endl;
         for (size_t i = 0; i < program.examples.size(); ++i)
             if (program.examples.visibility[i] <= v)
             {
@@ -1132,9 +1136,13 @@ void ConsolePrinter::printParam(const ParamDef &param, int v)
             *pOut << "   OR" << std::endl;
 
         *pOut << "   ";
+        int pColor = CYAN;
         if (!param.notOptional)
+        {
             *pOut << "[";
-        *pOut << param.name;
+            pColor = GREEN;
+        }
+        *pOut << COLOR(param.name.c_str(), pColor);
         //print alias
         for (size_t i = 0; i < param.aliases.size(); ++i)
             *pOut << ", " << param.aliases[i];

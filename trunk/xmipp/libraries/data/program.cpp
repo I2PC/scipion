@@ -387,6 +387,9 @@ void XmippProgram::usage(int verb) const
   if (verbose)
   {
     ConsolePrinter cp;
+    char * var = getenv("XMIPP_COLOR_OFF");
+    if (var != NULL)
+      cp.color = false;
     cp.printProgram(*progDef, verb);
   }
 }

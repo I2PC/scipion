@@ -306,8 +306,9 @@ protected:
   std::ostream * pOut;
   void printRequiresList(StringVector requires);
 public:
+  bool color;
   /**Constructor */
-  ConsolePrinter(std::ostream &out=std::cout);
+  ConsolePrinter(std::ostream &out=std::cout, bool color = true);
     virtual void printProgram(const ProgramDef &program, int v = 0);
     virtual void printSection(const SectionDef &section, int v = 0);
     virtual void printParam(const ParamDef &param, int v = 0);
