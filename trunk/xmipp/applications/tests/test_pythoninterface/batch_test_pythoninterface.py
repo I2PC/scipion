@@ -40,7 +40,17 @@ class TestXmippPythonInterface(unittest.TestCase):
          self.assertTrue (fn1.isInStack())
          self.assertFalse(fn2.isInStack())
          
-         
+    def test_metadataIter(self):
+         mdPath = os.path.join(self.testsPath, "test_pythoninterface", "test.xmd")
+         mD = MetaData(mdPath)
+         for id in mD:
+             img = mD.getValue(MDL_IMAGE,id)
+             if (id==1):
+                 self.assertEqual (img,'000001@Images/proj_ctf_1.stk')
+             elif (id==2):
+                 self.assertEqual (img,'000002@Images/proj_ctf_1.stk')
+             elif (id==3):
+                 self.assertEqual (img,'000003@Images/proj_ctf_1.stk')
          
          
 class bcolors:
