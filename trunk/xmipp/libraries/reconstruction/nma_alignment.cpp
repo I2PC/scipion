@@ -91,7 +91,7 @@ void ProgNmaAlignment::readParams()
     if (do_FilterPDBVol)
         cutoff_LPfilter = getDoubleParam("--filterVol");
     useFixedGaussian = checkParam("--fixed_Gaussian");
-    if (useFixedGaussian)
+    //if (useFixedGaussian)
         sigmaGaussian = getDoubleParam("--fixed_Gaussian");
 
 }
@@ -116,6 +116,8 @@ void ProgNmaAlignment::show()
     << "Sigma of Gaussian:   " << sigmaGaussian       << std::endl
     ;
 }
+
+
 
 // Produce side information ================================================
 ProgNmaAlignment *global_NMA_prog;
@@ -274,7 +276,7 @@ void ProgNmaAlignment::performCompleteSearch(
 
     // Perform alignment
     program = "xmipp_angular_discrete_assign";
-    arguments = formatString("-i downimg_%s.xmp --ref %s -o angledisc_%s.txt --psi_step 5 --max_shift_change %i --search5D -v 0",
+    arguments = formatString("-i downimg_%s.xmp --ref %s -o angledisc_%s.txt --psi_step 5 --max_shift_change %f --search5D -v 0",
         randStr, refSelStr, randStr, ROUND((double)imgSize/(10.0*pow(2.0,(double)pyramidLevel))));
     runSystem(program, arguments,false);
 }
