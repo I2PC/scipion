@@ -40,6 +40,12 @@ ProgNmaAlignment::ProgNmaAlignment()
     currentImgName="";
     each_image_produces_an_output = false;
     produces_an_output = true;
+    progVolumeFromPDB = new ProgPdbConverter();
+}
+
+ProgNmaAlignment::~ProgNmaAlignment()
+{
+	delete progVolumeFromPDB;
 }
 
 // Params definition ============================================================
@@ -110,8 +116,6 @@ void ProgNmaAlignment::show()
     << "Sigma of Gaussian:   " << sigmaGaussian       << std::endl
     ;
 }
-
-
 
 // Produce side information ================================================
 ProgNmaAlignment *global_NMA_prog;
@@ -209,7 +213,8 @@ FileName ProgNmaAlignment::createDeformedPDB(int pyramidLevel) const
         if (sigmaGaussian >= 0)
             arguments += formatString("%f --intensityColumn Bfactor", sigmaGaussian);
     }
-    runSystem(program, arguments, false);
+    progVolumeFromPDB->read(arguments);
+    progVolumeFromPDB->tryRun();
 
     if (do_FilterPDBVol)
     {

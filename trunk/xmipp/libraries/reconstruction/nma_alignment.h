@@ -29,6 +29,7 @@
 #include <data/program.h>
 #include <data/metadata.h>
 #include <data/image.h>
+#include "volume_from_pdb.h"
 #include "../../external/condor/ObjectiveFunction.h"
 #include "../../external/condor/Vector.h"
 
@@ -119,12 +120,18 @@ public:
     // Temporary document file
     MetaData DF_out;
 
-    ///Template for temporal filename generation
+    // Template for temporal filename generation
     char nameTemplate[256];
-      
+
+    // Volume from PDB
+    ProgPdbConverter* progVolumeFromPDB;
+
 public:
     /// Empty constructor
     ProgNmaAlignment();
+
+    /// Destructor
+    ~ProgNmaAlignment();
 
     /// Define params
     void defineParams();
