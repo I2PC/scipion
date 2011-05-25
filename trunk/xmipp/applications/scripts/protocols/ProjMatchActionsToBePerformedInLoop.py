@@ -172,7 +172,8 @@ def assign_images_to_references(_log,dict):
     MDSort = MetaData()
     MD     = MetaData()
     MD1    = MetaData()
-    MD1.setComment("metadata with  images, the winner reference as well as the ctf group")
+    MDout  = MetaData()
+    MDout.setComment("metadata with  images, the winner reference as well as the ctf group")
 
     mycounter=0
     for iCTFGroup in range(1,NumberOfCtfGroups+1):
@@ -212,8 +213,8 @@ def assign_images_to_references(_log,dict):
         #recover atributes after aggregate function
         MD1.join(MD,MDaux,MDL_UNDEFINED,NATURAL)        
         #add a sorting number to make easier to create an stack of averaged classes
-        MD1.join(MD1,MDSort,MDL_UNDEFINED,NATURAL)        
-        MD1.write(auxInputdocfile+outputdocfile,MD_APPEND)
+        MDout.join(MD1,MDSort,MDL_UNDEFINED,NATURAL)        
+        MDout.write(auxInputdocfile+outputdocfile,MD_APPEND)
             
 def angular_class_average(_log,dict):
     # Now make the class averages
