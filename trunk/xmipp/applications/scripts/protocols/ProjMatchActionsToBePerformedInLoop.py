@@ -188,7 +188,7 @@ def assign_images_to_references(_log,dict):
                 MDSort.setValue(MDL_REF,t,i)
     MDSort.removeDuplicates()
     for id in MDSort:
-        MDSort.setValue(MDL_ORDER,mycounter,id)
+        MDSort.setValue(MDL_ORIGINX,mycounter,id)
         mycounter += 1
     #print "bbb",ProjMatchRootName[1], DocFileInputAngles
     print "INSIDE22 assign_images_to_references"
