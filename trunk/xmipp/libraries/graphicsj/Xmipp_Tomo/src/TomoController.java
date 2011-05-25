@@ -224,55 +224,6 @@ public class TomoController implements AdjustmentListener{
 		}
 	}
 	
-	/**
-	 * @deprecated
-	 * Remember to set modelToLoad before calling this method
-	 */
-	// TODO: cUrReNt - refactor so every controller method reads/writes slice by slice (and then make postactions like resizing
-	// if needed for that specific method)
-	public void readImage() {
-		String errorMessage = "";
-		try {
-			// TiltSeriesIO.read(modelToLoad);
-			String absolutePath = modelToLoad.getFilePath();
-
-			if ((absolutePath == null) || (absolutePath.equals("")))
-				throw new IOException("Empty path");
-			
-			modelToLoad.readMetadata(absolutePath);
-			
-			long ids[]=modelToLoad.getStackIds();
-			for(long id:ids) {
-				String fileName=modelToLoad.getFilePath(id);
-				ImageDouble image = null;
-				if(fileName != null)
-					image= TiltSeriesIO.readSlice(fileName, null, false);
-				if(image != null)
-					TiltSeriesIO.postReadSlice(modelToLoad, image);
-				}
-			TiltSeriesIO.postReadStack(modelToLoad);
-			
-		} catch (FileNotFoundException ex) {
-			Xmipp_Tomo.debug("ImportDataThread.run - ", ex);
-		} catch (IOException ex) {
-			Xmipp_Tomo.debug("ImportDataThread.run - Error opening file ",
-					ex);
-			errorMessage = "Error opening file";
-		} catch (OutOfMemoryError err) {
-			Xmipp_Tomo.debug("ImportDataThread.run - Out of memory"
-					+ err.toString());
-			errorMessage = "Out of memory";
-		} catch (Exception ex) {
-			Xmipp_Tomo.debug("ImportDataThread.run - unexpected exception",
-					ex);
-		} finally {
-			if (modelToLoad.getNumberOfProjections() < 1) {
-				modelToLoad.loadCanceled();
-				TomoWindow.alert(errorMessage);
-			}
-		}
-	}
-	
 	public void loadEMBackground(){
 		// setModel(getModelToLoad());
 		window.getButton(Command.LOAD.getId()).setText("Cancel " + Command.LOAD.getLabel());
@@ -364,6 +315,7 @@ public class TomoController implements AdjustmentListener{
 	 * Apply this window's workflow 
 	 * TODO: apply the selected "workflow path" in the workflow view
 	 */
+	// TODO: - CURRENT - in write actions, handle writeSel
 	public void apply() {
 
 		String destinationPath = FileDialog.saveDialog("Save...", window);
@@ -404,7 +356,6 @@ public class TomoController implements AdjustmentListener{
 		} 
 	}
 	
-	// TODO: (cuRRenT) - the workflow is not applied to the image...
 	private ImagePlus applyWorkflowTo(ImagePlus image){
 		// iterate through the user actions that make sense
 		Enumeration e = Xmipp_Tomo.getWorkflow().breadthFirstEnumeration();

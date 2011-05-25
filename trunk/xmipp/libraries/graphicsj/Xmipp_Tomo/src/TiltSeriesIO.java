@@ -24,6 +24,7 @@
  ***************************************************************************/
 
 /**
+ * @deprecated - use ImageDouble and Metadata directly
  *   - Why?
  * Centralize data file operations (read, write...) in a single module (class)
  * One couple of methods per file type
@@ -164,7 +165,7 @@ public class TiltSeriesIO {
 		img.write(absolutePath, 0, true, ImageWriteMode.WRITE_OVERWRITE, CastWriteMode.CW_CAST);
 	}
 
-	// TODO: - CURRENT - writeSel
+	
 	private static void writeSel(String selAbsolutePath, String stackAbsolutePath, TomoData model) throws Exception{
 
 		model.getMetadata().write(selAbsolutePath);
@@ -239,7 +240,6 @@ private static String buildAbsolutePath(String selFilePath, String path){
 		// resize/scale - use an aux image processor for all projections
 		ImageProcessor ipresized = null, ip = image.getProcessor();
 
-		// TODO: move resizing to the controller (its a "GUI operation" after all)
 		if (shouldResize(img.getXsize(),img.getYsize())) {
 			// ipresized = ip.resize(resizeThreshold.width,resizeThreshold.height);
 			model.addProjection(ipresized);

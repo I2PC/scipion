@@ -566,7 +566,7 @@ public class TomoData{
 		return imageMetadata;
 	}
 	
-	// TODO: -CURRENT- first tilt is not displayed automatically (requires scrolling). Only happens with selfiles
+	// TODO: first tilt is not displayed automatically (requires scrolling). Only happens with selfiles
 	/**
 	 * Warning: metadata.read raises an exception when reading .sel files for which you don't have write permission
 	 */
