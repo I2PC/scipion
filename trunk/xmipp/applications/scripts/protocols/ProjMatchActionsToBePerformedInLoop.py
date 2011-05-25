@@ -184,7 +184,8 @@ def assign_images_to_references(_log,dict):
             MD.read(inputdocfile)
             for id in MD:
                 t=MD.getValue(MDL_REF,id)
-                MDSort.setValue(MDL_REF,t,id)
+                i=MDSort.addObject()
+                MDSort.setValue(MDL_REF,t,i)
     MDSort.removeDuplicates()
     for id in MDSort:
         MDSort.setValue(MDL_ORDER,mycounter,id)
