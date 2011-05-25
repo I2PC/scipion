@@ -2222,6 +2222,7 @@ PyMODINIT_FUNC initxmipp(void) {
 			(long) MDL_MISSINGREGION_THXF);
 	addIntConstant(dict, "MDL_MODELFRAC", (long) MDL_MODELFRAC);
 	addIntConstant(dict, "MDL_NMA", (long) MDL_NMA);
+	addIntConstant(dict, "MDL_ORDER", (long) MDL_ORDER);
 	addIntConstant(dict, "MDL_ORIGINX", (long) MDL_ORIGINX);
 	addIntConstant(dict, "MDL_ORIGINY", (long) MDL_ORIGINY);
 	addIntConstant(dict, "MDL_ORIGINZ", (long) MDL_ORIGINZ);
