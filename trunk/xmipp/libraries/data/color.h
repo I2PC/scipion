@@ -50,7 +50,7 @@
 
 void textcolor(int attr, int fg, int bg);
 
-String colorString(const char * msg, int color, int attribute = 1, int bgcolor=BLACK);
+String colorString(const char * msg, int color, int attribute = 2, int bgcolor=BLACK);
 
 
 #endif /* COLOR_H_ */

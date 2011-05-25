@@ -23,6 +23,7 @@
  *  e-mail address 'xmipp@cnb.csic.es'
  ***************************************************************************/
 #include "error.h"
+#include "color.h"
 
 /* Exception handling ------------------------------------------------------ */
 void _Xmipp_error(const ErrorType nerr, const std::string &what,
@@ -40,16 +41,17 @@ XmippError::XmippError(const ErrorType nerr, const std::string &what,
                        const std::string &fileArg, const long lineArg)
 {
     __errno = nerr;
-    msg = what;
+    msg = colorString(what.c_str(), RED);
     file= fileArg;
     line=lineArg;
 
     //Store information about the stack calls
     void *array[10];
-    #ifdef LINUX
+#ifdef LINUX
+
     size = backtrace(array, 10);
     strings = backtrace_symbols(array, size);
-    #endif
+#endif
 }
 
 //Object Destructor
@@ -59,11 +61,13 @@ XmippError::~XmippError()
 }
 
 // Show message
-std::ostream& operator << (std::ostream& o, XmippError& XE)
+std::ostream& operator << (std::ostream& o, XmippError& xe)
 {
-    o << XE.__errno << ":" << XE.getDefaultMessage() << std::endl
-    << XE.msg << std::endl
-    << "File: " << XE.file << " line: " << XE.line << std::endl;
+    String error = formatString("XMIPP_ERROR %d: %s", xe.__errno, xe.getDefaultMessage());
+    o << colorString(error.c_str(), RED) << std::endl;
+    o << colorString(xe.msg.c_str(), RED) << std::endl;
+    error = formatString("File: %s line: %ld", xe.file.c_str(), xe.line);
+    o << colorString(error.c_str(), RED) << std::endl;
     return o;
 }
 
@@ -75,7 +79,7 @@ char * XmippError::getDefaultMessage(ErrorType e)
 {
     switch (e)
     {
-      case ERR_ARG_BADCMDLINE:
+    case ERR_ARG_BADCMDLINE:
         return "Errors on command line parameters";
     case ERR_ARG_INCORRECT:
         return " Incorrect argument received";
@@ -85,7 +89,7 @@ char * XmippError::getDefaultMessage(ErrorType e)
         return "Error with some arguments dependecies";
 
     case ERR_PROG_NOTDEF:
-      return "Requiered function not implemented in derived class";
+        return "Requiered function not implemented in derived class";
     case ERR_DEBUG_TEST:
         return " Just an error for debugging purpose";
     case ERR_DEBUG_IMPOSIBLE:
@@ -154,7 +158,7 @@ char * XmippError::getDefaultMessage(ErrorType e)
     case ERR_MD_SQL:
         return " Error in SQL of MetaData operations";
     case ERR_MD_OBJECTNUMBER:
-    	return " Bad number of objects in MetaData";
+        return " Bad number of objects in MetaData";
     case ERR_MD_UNDEFINED:
         return " Undefined label.";
 
@@ -165,7 +169,7 @@ char * XmippError::getDefaultMessage(ErrorType e)
     case ERR_MEM_NOTDEALLOC:
         return " Memory has not been deallocated.";
     case ERR_MEM_NULLPOINTER:
-         return " Null pointer passed as parameter";
+        return " Null pointer passed as parameter";
 
     case ERR_MMAP:
         return " Global mmap error.";

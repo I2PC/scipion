@@ -1111,7 +1111,7 @@ void ConsolePrinter::printSection(const SectionDef &section, int v)
     {
         *pOut << std::endl;
         if (section.name.length() > 0)
-            *pOut << section.name << std::endl;
+            *pOut << COLOR(section.name.c_str(), RED) << std::endl;
         for (size_t i = 0; i < section.params.size(); ++i)
             printParam(*section.params[i], v);
     }
