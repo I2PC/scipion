@@ -34,12 +34,21 @@ class TestXmippPythonInterface(unittest.TestCase):
          fn2.compose("kk",1,"xmp")
          self.assertEqual(str(fn1),str(fn2))
          self.assertNotEqual(str(fn1)+'kk',str(fn2))
+
     def test_isInStack(self):
          fn1 = FileName("1@.xmp")
          fn2 = FileName("1.xmp")
          self.assertTrue (fn1.isInStack())
          self.assertFalse(fn2.isInStack())
          
+    def test_isMetaData(self):
+         imgPath = os.path.join(self.testsPath, "test_image", "smallStack.stk")
+         fn1 = FileName(imgPath)
+         self.assertFalse(fn1.isMetaData())
+         imgPath = os.path.join(self.testsPath, "test_pythoninterface", "test.xmd")
+         fn2 = FileName(imgPath)
+         self.assertTrue (fn2.isMetaData())
+
     def test_metadataIter(self):
          mdPath = os.path.join(self.testsPath, "test_pythoninterface", "test.xmd")
          mD = MetaData(mdPath)
