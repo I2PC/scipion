@@ -214,10 +214,10 @@ def assign_images_to_references(_log,dict):
         print "INSIDE33 assign_images_to_references"
         MD1.join(MD,MDaux,MDL_UNDEFINED,NATURAL)
         MD1.write('MD1.xmd')
+        MDSort.write('MDSort.xmd')
         #add a sorting number to make easier to create an stack of averaged classes
         print "INSIDE44 assign_images_to_references"
         MDout.join(MD1,MDSort,MDL_UNDEFINED,NATURAL)        
-        MD1.write('MDSort.xmd')
         print "INSIDE55 assign_images_to_references"
         MDout.write(auxInputdocfile+outputdocfile,MD_APPEND)
         print "INSIDE66 assign_images_to_references"            
