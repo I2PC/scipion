@@ -508,7 +508,9 @@ int  ImageBase::writeSPIDER(size_t select_img, bool isStack, int mode)
      * BLOCK HEADER IF NEEDED
      */
     fl.l_type   = F_WRLCK;
-    fcntl(fileno(fimg), F_SETLKW, &fl); /* locked */
+    fcntl(fileno(fimg), F_SETLKW, &fl); /* locked if a shared or exclusive lock is
+                                           blocked by other locks, the thread shall
+                                           wait until the request can be satisfied*/
 
     // Write main header
     if( mode == WRITE_OVERWRITE ||
