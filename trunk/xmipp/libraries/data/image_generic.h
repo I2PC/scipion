@@ -64,6 +64,12 @@ public:
      */
     ImageGeneric(DataType _datatype);
 
+    /** Constructor for reading the image
+     *
+     * This constructor will be useful for perfom construction and read in a single step.
+     */
+    ImageGeneric(const FileName &filename);
+
     /** Destructor.
      */
     ~ImageGeneric();

@@ -34,6 +34,12 @@ ImageGeneric::ImageGeneric(DataType _datatype)
     setDatatype(_datatype);
 }
 
+ImageGeneric::ImageGeneric(const FileName &filename)
+{
+    init();
+    read(filename);
+}
+
 ImageGeneric::~ImageGeneric()
 {
     delete image;
