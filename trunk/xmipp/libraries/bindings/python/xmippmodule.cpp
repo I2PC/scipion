@@ -271,7 +271,29 @@ Image_new(PyTypeObject *type, PyObject *args, PyObject *kwargs)
 {
     ImageObject *self = (ImageObject*) type->tp_alloc(type, 0);
     if (self != NULL)
-      self->image = new ImageGeneric();
+    {
+        PyObject *input = NULL;
+
+        if (PyArg_ParseTuple(args, "|O", &input) && input != NULL)
+        {
+            try
+            {
+              if (PyString_Check(input))
+                  self->image = new ImageGeneric(PyString_AsString(input));
+              else if (FileName_Check(input))
+                  self->image = new ImageGeneric(FileName_Value(input));
+              else
+                  return NULL;
+            }
+            catch (XmippError xe)
+            {
+                PyErr_SetString(PyXmippError, xe.msg.c_str());
+                return NULL;
+            }
+        }
+        else
+          self->image = new ImageGeneric();
+    }
     return (PyObject *) self;
 }
 
@@ -399,9 +421,6 @@ Image_setPixel(PyObject *obj, PyObject *args, PyObject *kwargs)
     {
         try
         {
-          std::cerr << "DEBUG_JM: i: " << i << std::endl;
-          std::cerr << "DEBUG_JM: j: " << j << std::endl;
-          std::cerr << "DEBUG_JM: value: " << value << std::endl;
           self->image->setPixel(i, j, value);
           Py_RETURN_NONE;
         }
