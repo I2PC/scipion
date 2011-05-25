@@ -18,16 +18,15 @@ else
 	while [ $# -gt 0 ]
 	do
 		case "$1" in
-			--mem)MEM=$2;READIMG=0;READSEL=0;READVOL=0;shift;;
-			--img)READIMG=1;READSEL=0;READVOL=0;;	# Activates IMG input mode
-			--sel)READIMG=0;READSEL=1;READVOL=0;;	# Activates SEL input mode
-			--vol)READIMG=0;READSEL=0;READVOL=1;;	# Activates VOL input mode
-			--poll)POLL=-poll;READIMG=0;READSEL=0;READVOL=0;;	# Sets polling
+			--mem)MEM=$2;INPUT=0;shift;;
+			-i)INPUT=1;;	# Activates INPUT mode
+			--poll)POLL=-poll;INPUT=0;;	# Sets polling
+			--mode)MODE=$2;INPUT=0;shift;;	# Sets opening mode
 			---)shift; break;;
-			-*)READIMG=0;READSEL=0;READVOL=0;echo >&2 \
+			-*)INPUT=0;echo >&2 \
 				"Unknown parameter: $1"
 				exit 1;;
-			*)test "$READIMG" = "1" && IMG="$IMG $1";test "$READSEL" = "1" && SEL="$SEL $1";test "$READVOL" = "1" && VOL="$VOL $1";;
+			*)test "$INPUT" = "1" && FILES="$FILES $1";;
 		esac
 		shift
 	done
@@ -43,27 +42,25 @@ else
 		echo "No memory size provided. Using default: $MEM"
 	fi
 
-	if [ -n "$IMG" ]
+	if [ -n "$FILES" ]
 	then
-		IMG="-img$IMG"
+		FILES="-i$FILES"
 	fi
 
-	if [ -n "$SEL" ]
+	if [ -n "$MODE" ]
 	then
-		SEL="-sel$SEL"
-	fi
-
-	if [ -n "$VOL" ]
-	then
-		VOL="-vol$VOL"
+		MODE="--mode $MODE"
 	fi
 
 	if [ "$SHOW_HELP" = "1" ]
 	then
-		echo "Usage: xmipp_showj [--mem <memory_ammount>] [--img|vol|sel <file1 [file2 [..]]>] [--poll]"
+		echo "Usage: xmipp_showj [--mem <memory_ammount>] [-i <file1 [file2 [..]]>] [--poll] [--mode image|table]"
 	fi
 
-	export LD_LIBRARY_PATH=$XMIPP_BASE/lib
-	IMAGEJ_HOME=$XMIPP_BASE/external/imagej
-	$JVM/bin/java -Xmx$MEM -Dplugins.dir=$IMAGEJ_HOME/plugins/ -jar $IMAGEJ_HOME/ij.jar -macro $IMAGEJ_HOME/macros/xmippBrowser.txt "$IMG $SEL $VOL $POLL"
+	if [ -n "$FILES" ]
+	then
+		export LD_LIBRARY_PATH=$XMIPP_BASE/lib
+		IMAGEJ_HOME=$XMIPP_BASE/external/imagej
+		$JVM/bin/java -Xmx$MEM -Dplugins.dir=$IMAGEJ_HOME/plugins/ -jar $IMAGEJ_HOME/ij.jar -macro $IMAGEJ_HOME/macros/xmippBrowser.txt "$FILES $MODE $POLL"
+	fi
 fi

@@ -1,8 +1,12 @@
 
+import ij.IJ;
 import ij.ImagePlus;
 import ij.ImageStack;
 import ij.process.FloatProcessor;
+import ij.process.StackStatistics;
 import xmipp.ImageDouble;
+import xmipp.MDLabel;
+import xmipp.MetaData;
 
 /*
  * To change this template, choose Tools | Templates
@@ -47,6 +51,49 @@ public class ImageConverter {
             }
         }
 
-        return new ImagePlus(title, is);
+        ImagePlus ip = new ImagePlus(title, is);
+
+        // Normalize by default
+        StackStatistics ss = new StackStatistics(ip);
+        ip.getProcessor().setMinAndMax(ss.min, ss.max);
+
+        return ip;
+    }
+
+    public static ImagePlus convertToImagej(MetaData md) {
+        ImagePlus ip = null;
+
+        if (md.containsLabel(MDLabel.MDL_IMAGE)) {
+
+            try {
+                ImageStack is = null;
+
+                long ids[] = md.findObjects();
+
+                for (int i = 0; i < ids.length; i++) {
+                    String filename = md.getValueString(MDLabel.MDL_IMAGE, ids[i]);
+
+                    ImageDouble img = new ImageDouble(filename);
+                    ImagePlus slice = ImageConverter.convertToImagej(img, filename);
+
+                    if (is == null) {
+                        is = new ImageStack(slice.getWidth(), slice.getHeight());
+                    }
+
+                    is.addSlice(filename, slice.getProcessor());
+                }
+
+                ip = new ImagePlus(md.getFilename(), is);
+
+                // Normalize by default
+                StackStatistics ss = new StackStatistics(ip);
+                ip.getProcessor().setMinAndMax(ss.min, ss.max);
+            } catch (Exception ex) {
+                IJ.error(ex.getMessage());
+                throw new RuntimeException(ex);
+            }
+        }
+
+        return ip;
     }
 }

@@ -90,21 +90,66 @@ JNIEXPORT void JNICALL Java_xmipp_MetaData_write
 
 JNIEXPORT void JNICALL Java_xmipp_MetaData_print
 (JNIEnv *env, jobject jobj) {
+	std::string msg = "";
 	MetaData * md = GET_INTERNAL_METADATA(jobj);
 
 	if (md != NULL) {
 		md->write(std::cout);
+	} else {
+		msg = "Image is null";
+	}
+
+	// If there was an exception, sends it to java environment.
+	if (!msg.empty()) {
+		handleXmippException(env, msg);
 	}
 }
 
 JNIEXPORT jboolean JNICALL Java_xmipp_MetaData_containsLabel(JNIEnv *env,
 		jobject jobj, jint label) {
+	std::string msg = "";
 	MetaData * md = GET_INTERNAL_METADATA(jobj);
 
 	if (md != NULL) {
 		return md->containsLabel((MDLabel) label);
+	} else {
+		msg = "Image is null";
 	}
+
+	// If there was an exception, sends it to java environment.
+	if (!msg.empty()) {
+		handleXmippException(env, msg);
+	}
+
 	return false;
+}
+
+JNIEXPORT jstring JNICALL Java_xmipp_MetaData_label2Str(JNIEnv *env,
+		jobject jobj, jint label) {
+	std::string msg = "";
+	MetaData * md = GET_INTERNAL_METADATA(jobj);
+
+	if (md != NULL) {
+		try {
+			String str = MDL::label2Str((MDLabel) label);
+			return env->NewStringUTF(str.data());
+		} catch (XmippError xe) {
+			msg = xe.getDefaultMessage();
+		} catch (std::exception& e) {
+			msg = e.what();
+		} catch (...) {
+			msg = "Unhandled exception";
+		}
+	} else {
+		msg = "Image is null";
+	}
+
+	// If there was an exception, sends it to java environment.
+	if (!msg.empty()) {
+		handleXmippException(env, msg);
+	}
+
+	return NULL;
 }
 
 JNIEXPORT jint JNICALL Java_xmipp_MetaData_getValueInt(JNIEnv *env,

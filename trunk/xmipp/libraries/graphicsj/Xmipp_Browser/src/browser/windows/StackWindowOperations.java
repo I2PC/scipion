@@ -1,5 +1,6 @@
 package browser.windows;
 
+import browser.imageitems.ImageConverter;
 import browser.windows.menubar.XmippMenuBar;
 import ij.IJ;
 import ij.ImagePlus;
@@ -93,6 +94,24 @@ public class StackWindowOperations extends StackWindow implements iPollImageWind
         }
     }
 
+    protected void revert() {
+        // Reverts only when image has changed since last time.
+        if (last < f.lastModified()) {
+            System.out.println(" *** Reverting from disk...");
+            IJ.showStatus("Reloading " + imp.getTitle());
+
+            try {
+                ImageConverter.revert(imp, path);
+            } catch (Exception ex) {
+                ex.printStackTrace();
+            }
+
+            last = f.lastModified();
+
+            IJ.showStatus("");
+        }
+    }
+
     private void startTimer() {
         // Avoid multiple timers running simultaneously.
         if (timer == null) {
@@ -101,18 +120,7 @@ public class StackWindowOperations extends StackWindow implements iPollImageWind
             timer.scheduleAtFixedRate(new TimerTask() {
 
                 public void run() {
-                    // Reverts only when image has changed since last time.
-                    if (last < f.lastModified()) {
-                        IJ.showStatus("Reloading " + imp.getTitle());
-
-                        ImagePlus imp2 = IJ.openImage(path);
-                        imp.setStack(imp2.getStack(), imp.getNChannels(), imp.getNSlices(), imp.getNFrames());
-                        imp.updateAndDraw();
-
-                        last = f.lastModified();
-
-                        IJ.showStatus("");
-                    }
+                    revert();
                 }
             }, 0, PERIOD);
         }

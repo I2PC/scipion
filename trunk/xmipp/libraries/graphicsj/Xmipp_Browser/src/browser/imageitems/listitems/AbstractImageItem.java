@@ -11,6 +11,7 @@ import browser.imageitems.ImageDimension;
 import ij.IJ;
 import ij.ImagePlus;
 import ij.process.ImageStatistics;
+import ij.process.StackStatistics;
 import java.io.File;
 import java.text.DecimalFormat;
 import xmipp.ImageDouble;
@@ -21,18 +22,30 @@ import xmipp.ImageDouble;
  */
 public abstract class AbstractImageItem extends FileItem {
 
-    //public int width, height;
     protected ImageDimension dimension;
     protected Cache cache;
-    protected ImageStatistics statistics;
-    //protected double min, max, mean, stdDev;
+    protected StackStatistics statistics;
 
     public AbstractImageItem(File file, Cache cache) {
         super(file);
 
         this.cache = cache;
 
-        loadImageData();
+        if (exists()) {
+            loadImageData();
+        }
+    }
+
+    protected void loadImageData() {
+        try {
+            ImageDouble image = new ImageDouble();
+            image.readHeader(file.getAbsolutePath());
+
+            dimension = new ImageDimension(image);
+        } catch (Exception ex) {
+            //throw new RuntimeException(ex);
+            System.out.println(ex.getMessage() + ": " + file.getAbsolutePath());
+        }
     }
 
     public abstract ImagePlus getImagePlus();
@@ -40,7 +53,7 @@ public abstract class AbstractImageItem extends FileItem {
     public ImagePlus getPreview(int w, int h) {
         ImagePlus preview;
 
-        if (dimension.getWidth() > 0 && dimension.getHeight() > 0) {
+        if (getWidth() > 0 && getHeight() > 0) {
             // Tries to load from cache.
             preview = (ImagePlus) cache.get(getKey());
 
@@ -52,7 +65,7 @@ public abstract class AbstractImageItem extends FileItem {
                 if (preview != null) {
                     cache.put(getKey(), preview);
 
-                    statistics = preview.getStatistics();
+                    statistics = new StackStatistics(preview);
                 }
             }
         } else {    // Null preview.
@@ -67,19 +80,19 @@ public abstract class AbstractImageItem extends FileItem {
     }
 
     public int getWidth() {
-        return dimension.getWidth();
+        return dimension != null ? dimension.getWidth() : 0;
     }
 
     public int getHeight() {
-        return dimension.getHeight();
+        return dimension != null ? dimension.getHeight() : 0;
     }
 
     public int getDepth() {
-        return dimension.getDepth();
+        return dimension != null ? dimension.getDepth() : 0;
     }
 
     public long getNImages() {
-        return dimension.getNimages();
+        return dimension != null ? dimension.getNimages() : 0;
     }
 
     public boolean isSingleImage() {
@@ -87,27 +100,15 @@ public abstract class AbstractImageItem extends FileItem {
     }
 
     public boolean isStack() {
-        return dimension.getNimages() > 1;
+        return getNImages() > 1;
     }
 
     public boolean isVolume() {
-        return dimension.getDepth() > 1;
+        return getDepth() > 1;
     }
 
     public ImageStatistics getStatistics() {
         return statistics;
-    }
-
-    protected void loadImageData() {
-        try {
-            ImageDouble image = new ImageDouble();
-            image.readHeader(file.getAbsolutePath());
-
-            dimension = new ImageDimension(image);
-        } catch (Exception ex) {
-            //throw new RuntimeException(ex);
-            IJ.error(ex.getMessage() + ": " + file.getAbsolutePath());
-        }
     }
 
     //public abstract String getImageInfo();

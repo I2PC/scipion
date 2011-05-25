@@ -4,18 +4,12 @@
  */
 package browser.windows.menubar;
 
-import java.awt.BorderLayout;
 import java.awt.Container;
-import java.awt.Label;
 import java.awt.Menu;
 import java.awt.MenuBar;
-import java.awt.MenuItem;
 import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
-import java.awt.event.WindowAdapter;
-import java.awt.event.WindowEvent;
 import java.util.Vector;
-import javax.swing.JFrame;
 
 /**
  *

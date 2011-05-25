@@ -19,7 +19,7 @@ else
 	do
 		case "$1" in
 			--mem)MEM=$2; shift;;
-			--vol)VOLFILE="$2"; shift;;
+			-i)INPUT="$2"; shift;;
 			--angles)ANGLESFILE="-angles $2"; shift;;
 			---)shift; break;;
 			-*)
@@ -42,21 +42,21 @@ else
 		echo "No memory size provided. Using default: $MEM"
 	fi
 
-	if [ -z "$VOLFILE" ]
+	if [ -z "$INPUT" ]
 	then
 		echo "Not enough arguments."
 	fi
 
 	if [ "$SHOW_HELP" = "1" ]
 	then
-		echo "Usage: xmipp_projections_explorerj [--mem memory_ammount] <--vol volume_file> [--angles angles_file]"
+		echo "Usage: xmipp_projections_explorerj [--mem memory_ammount] <-i volume_file> [--angles angles_file]"
 	fi
 
-	if [ ! -z "$VOLFILE" ]
+	if [ ! -z "$INPUT" ]
 	then
 		export LD_LIBRARY_PATH=$XMIPP_BASE/lib
 		IMAGEJ_HOME=$XMIPP_BASE/external/imagej
-		$JVM/bin/java -Xmx$MEM -Dplugins.dir=$IMAGEJ_HOME/plugins/ -jar $IMAGEJ_HOME/ij.jar -macro $IMAGEJ_HOME/macros/xmippExplorer.txt "-vol $VOLFILE $ANGLESFILE"
+		$JVM/bin/java -Xmx$MEM -Dplugins.dir=$IMAGEJ_HOME/plugins/ -jar $IMAGEJ_HOME/ij.jar -macro $IMAGEJ_HOME/macros/xmippExplorer.txt "-i $INPUT $ANGLESFILE"
 	fi
 fi
 

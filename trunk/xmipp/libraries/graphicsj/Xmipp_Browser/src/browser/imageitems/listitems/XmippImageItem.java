@@ -59,14 +59,6 @@ public class XmippImageItem extends AbstractImageItem {
         return ip;
     }
 
-    public String getFileName() {
-        return file.getName();
-    }
-
-    public String getAbsoluteFileName() {
-        return file.getAbsolutePath();
-    }
-
     private static double getFactor(int W, int H, int w, int h) {
         double factor;
 
@@ -94,19 +86,22 @@ public class XmippImageItem extends AbstractImageItem {
     public ImagePlus getImagePlus(long nimage, int nslice) {
         ImagePlus ip = null;
 
-        try {
-            System.out.println(" *** Reading ImagePlus [from disk]: " + getKey());
-            String path = getAbsoluteFileName();
-            ImageDouble image = new ImageDouble();
+        if (exists()) {
+            try {
+                System.out.println(" *** Reading ImagePlus [from disk]: " + getKey());
+                String path = getAbsoluteFileName();
+                ImageDouble image = new ImageDouble();
 
-            image.readPreview(path, getWidth(), getHeight(), nslice, nimage);
-            ip = ImageConverter.convertToImagej(image, path);
+                //image.readPreview(path, getWidth(), getHeight(), nslice, nimage);
+                image.read(path, nimage);
+                ip = ImageConverter.convertToImagej(image, path);
 
-            ip.setTitle(getLabel());
-            //getPreview(getWidth(), getHeight());
-        } catch (Exception ex) {
-            IJ.error(ex.getMessage());
-            throw new RuntimeException(ex);
+                ip.setTitle(getLabel());
+                //getPreview(getWidth(), getHeight());
+            } catch (Exception ex) {
+                IJ.error(ex.getMessage());
+                ex.printStackTrace();
+            }
         }
 
         return ip;

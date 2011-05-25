@@ -25,6 +25,10 @@ public class FileItem {
         this.file = file;
     }
 
+    public boolean exists() {
+        return file.exists();
+    }
+
     @Override
     public String toString() {
         return file.toString();
@@ -36,6 +40,14 @@ public class FileItem {
 
     public File getFile() {
         return file;
+    }
+
+    public String getFileName() {
+        return file.getName();
+    }
+
+    public String getAbsoluteFileName() {
+        return file.getAbsolutePath();
     }
 
     public boolean isDirectory() {

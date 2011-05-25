@@ -8,7 +8,6 @@ import java.util.Arrays;
  */
 public class MetaData {
 
-    public final static String SEPARATOR = "@";
     // Fields whose content is a path. They will be "fixed" conveniently.
     private final static int PATHS_FIELDS[] = {
         MDLabel.MDL_ASSOCIATED_IMAGE1,
@@ -52,6 +51,8 @@ public class MetaData {
 
     public native boolean containsLabel(int label);
 
+    public native String label2Str(int label);
+
     //get values from metadata
     public native int getValueInt(int label, long objId);
 
@@ -64,7 +65,7 @@ public class MetaData {
 
         // Try to fix paths.
         if (Arrays.binarySearch(PATHS_FIELDS, label) >= 0) {
-            value = fixPath(getBaseDir(), value);
+            value = Filename.fixPath(getBaseDir(), value);
         }
 
         return value;
@@ -112,81 +113,5 @@ public class MetaData {
     protected void finalize() throws Throwable {
         super.finalize();
         destroy();
-    }
-
-    // Auxiliary methods.
-    public static String fixPath(String workdir, String filename) {
-        String fixed = filename;
-
-        if (!filename.startsWith(File.separator)) { // Absolute path?
-            String name = getFilename(filename);
-            String strimage = "";
-
-            if (filename.contains(SEPARATOR)) { // Has #image?
-                int image = getNimage(filename);
-                strimage = image + SEPARATOR;
-            }
-
-            if (!name.startsWith(File.separator)) { // In 'image@name', is name absolute?
-                String aux = getAbsPath(workdir, name);
-                fixed = strimage + aux;
-            }
-        }
-
-        return fixed;
-    }
-
-    public static int getNimage(String filename) {
-        int nimage = ImageDouble.ALL_IMAGES;
-
-        if (filename.contains(SEPARATOR)) {
-            String str = filename.split(SEPARATOR)[0];
-            if (!str.isEmpty()) {
-                nimage = Integer.valueOf(str);
-            }
-        }
-
-        return nimage;
-    }
-
-    public static String getFilename(String filename) {
-        if (filename.contains(SEPARATOR)) {
-            return filename.split(SEPARATOR)[1];
-        }
-
-        return filename;
-    }
-
-    private static String getAbsPath(String baseDir, String filename) {
-        String[] tokensDir = baseDir.split(File.separator);
-        String[] tokensFile = filename.split(File.separator);
-
-        int indexDir = tokensDir.length - 1;
-        int indexFile = 0;
-
-        while (indexFile < tokensFile.length && indexDir >= 0) {
-            String dirToken = tokensDir[indexDir];
-            String fileToken = tokensFile[indexFile];
-            if (!dirToken.equals(fileToken)) {
-                break;
-            }
-            indexDir--;
-            indexFile++;
-        }
-
-        // Builds result path.
-        String path = "";
-        // Dir
-        for (int i = 0; i < tokensDir.length; i++) {
-            path += tokensDir[i] + File.separator;
-        }
-
-        // File
-        for (int i = indexFile; i < tokensFile.length - 1; i++) {
-            path += tokensFile[i] + File.separator;
-        }
-        path += tokensFile[tokensFile.length - 1];  // Last item (to avoid "/" at the end)
-
-        return path;
     }
 }

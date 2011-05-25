@@ -7,7 +7,7 @@ import browser.LABELS;
 import browser.imageitems.listitems.FileItem;
 import browser.imageitems.listitems.FolderFileItem;
 import browser.imageitems.listitems.ImageItem;
-import browser.imageitems.listitems.SelFileItem;
+import browser.imageitems.listitems.MetadataFileItem;
 import browser.imageitems.listitems.XmippImageItem;
 import java.io.File;
 import java.util.ArrayList;
@@ -179,7 +179,7 @@ public class FilterFilesModel extends AbstractListModel implements DocumentListe
 
             if (i >= 0) {
                 if (FileBrowser.isFileType(file, EXT_SEL)) {
-                    return new SelFileItem(file, cache);
+                    return new MetadataFileItem(file, cache);
                 } else {
                     return new XmippImageItem(file, cache);
                 }

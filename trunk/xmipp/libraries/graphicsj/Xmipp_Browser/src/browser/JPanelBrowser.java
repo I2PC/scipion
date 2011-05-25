@@ -10,28 +10,26 @@
  */
 package browser;
 
-import browser.windows.ImagesWindowFactory;
-import browser.files.FileBrowser;
-import browser.files.FileListRenderer;
-import browser.imageitems.listitems.FileItem;
-import browser.files.FilterFilesModel;
-import browser.imageitems.listitems.AbstractImageItem;
-import browser.imageitems.listitems.SelFileItem;
-import browser.imageitems.listitems.XmippImageItem;
-import browser.windows.ImageWindowOperations;
-import browser.windows.StackWindowOperations;
 import ij.IJ;
+import ij.ImagePlus;
+import ij.WindowManager;
+import ij.gui.GenericDialog;
+import ij.gui.ImageWindow;
 import java.awt.BorderLayout;
 import java.awt.event.KeyEvent;
 import java.io.File;
 import javax.swing.JPanel;
 import javax.swing.border.TitledBorder;
-import ij.ImagePlus;
-import ij.WindowManager;
-import ij.gui.GenericDialog;
-import ij.gui.ImageWindow;
 import java.util.Vector;
-import xmipp.ImageDouble;
+import browser.files.FileBrowser;
+import browser.windows.ImagesWindowFactory;
+import browser.files.FileListRenderer;
+import browser.imageitems.listitems.FileItem;
+import browser.files.FilterFilesModel;
+import browser.imageitems.listitems.AbstractImageItem;
+import browser.windows.ImageWindowOperations;
+import browser.windows.StackWindowOperations;
+import java.util.LinkedList;
 
 /**
  *
@@ -101,90 +99,142 @@ public class JPanelBrowser extends JPanel {
         jpImageInfo.setVisible(SHOW_PREVIEWS);
     }
 
-    // When files are opened usgin the "open" button.
-    protected void openFiles(Object items[]) {
+    // Opens files that are opened usign the "open" button.
+    private void openFilesAsImage(Object items[]) {
         for (int i = 0; i < items.length; i++) {
-            openFile((FileItem) items[i]);
+            openFileAsImage((FileItem) items[i]);
         }
     }
 
-    protected void openFile(FileItem item) {
+    private void openFileAsImage(FileItem item) {
         File file = item.getFile();
 
         if (!item.isDirectory()) {
             if (FileBrowser.hasEnoughMemory(file)) {
-                if (item instanceof SelFileItem) {
-                    ImagesWindowFactory.openImage((SelFileItem) item);
-                } else if (item instanceof XmippImageItem) {
-                    XmippImageItem xmippItem = (XmippImageItem) item;
-                    int n = 0;
-
-                    if (xmippItem.isStack()) {
-                        n = getImageIndexFromUser(xmippItem);
-                    }
-
-                    if (n >= 0) {
-                        ImagesWindowFactory.openImage((XmippImageItem) item, n);
-                    }
-                } else {
-                    System.out.println(" >>> Opening file [" + item.getFile() + "] with IJ.");
-                    IJ.open(item.getFile().getAbsolutePath());
-                }
+                ImagesWindowFactory.openFileAsImage(item.getAbsoluteFileName());
             } else {
                 IJ.showMessage(LABELS.TITLE_ERROR,
                         LABELS.MESSAGE_MEMORY_ERROR(file.length(), IJ.maxMemory()));
             }
+            /*
+            if (FileBrowser.hasEnoughMemory(file)) {
+            if (item instanceof SelFileItem) {
+            ImagesWindowFactory.openImage((SelFileItem) item);
+            } else if (item instanceof XmippImageItem) {
+            XmippImageItem xmippItem = (XmippImageItem) item;
+            int n = 0;
+
+            if (xmippItem.isStack()) {
+            n = getImageIndexFromUser(xmippItem);
+            }
+
+            if (n >= 0) {
+            ImagesWindowFactory.openImage((XmippImageItem) item, n);
+            }
+            } else {
+            System.out.println(" >>> Opening file [" + item.getFile() + "] with IJ.");
+            IJ.open(item.getFile().getAbsolutePath());
+            }
+            } else {
+            IJ.showMessage(LABELS.TITLE_ERROR,
+            LABELS.MESSAGE_MEMORY_ERROR(file.length(), IJ.maxMemory()));
+            }*/
         }
     }
-
+    /*
     // If there are more than une image, asks user for the one to open.
     private static int getImageIndexFromUser(XmippImageItem item) {
-        int image = -1;
+    int image = -1;
 
-        if (item.isStack()) {
-            final GenericDialog dialog = new GenericDialog("Select image from: " + item.getFileName());
-            final String[] indexes = new String[(int) item.getNImages() + 1];
+    if (item.isStack()) {
+    final GenericDialog dialog = new GenericDialog("Select image from: " + item.getFileName());
+    final String[] indexes = new String[(int) item.getNImages() + 1];
 
-            indexes[0] = "All";
-            for (int i = ImageDouble.FIRST_IMAGE; i <= item.getNImages(); i++) {
-                indexes[i] = String.valueOf(i);
+    indexes[0] = "All";
+    for (int i = ImageDouble.FIRST_IMAGE; i <= item.getNImages(); i++) {
+    indexes[i] = String.valueOf(i);
+    }
+
+    dialog.addChoice("image:", indexes, indexes[0]);
+    dialog.showDialog();
+    if (!dialog.wasCanceled()) {
+    image = dialog.getNextChoiceIndex();
+    }
+    } else {
+    image = 0;
+    }
+
+    return image;
+    }
+     */
+
+    /*
+     * Separates single images from the rest of files.
+     * Single images are opened in the same table together.
+     * Stacks, volumes and metadata files are opened in indepedent tables.
+     */
+    private void openFilesAsTable(Object items[]) {
+        LinkedList<String> images = new LinkedList<String>();
+
+        for (int i = 0; i < items.length; i++) {
+            Object object = items[i];
+            if (object instanceof AbstractImageItem) {
+                AbstractImageItem abstractItem = (AbstractImageItem) object;
+
+                if (abstractItem.isSingleImage()) {
+                    images.add(abstractItem.getAbsoluteFileName());
+                } else {
+                    ImagesWindowFactory.openFileAsTable(abstractItem.getAbsoluteFileName());
+                }
             }
-
-            dialog.addChoice("image:", indexes, indexes[0]);
-            dialog.showDialog();
-            if (!dialog.wasCanceled()) {
-                image = dialog.getNextChoiceIndex();
-            }
-        } else {
-            image = 0;
         }
 
-        return image;
+        if (!images.isEmpty()) {
+            String imagesArray[] = images.toArray(new String[images.size()]);
+            ImagesWindowFactory.openFilesAsTable(imagesArray, true);
+        }
+    }
+    /*
+    private void send2Table(Object items[]) {
+    LinkedList<String> filenames = new LinkedList<String>();
+
+    for (int i = 0; i < items.length; i++) {
+    Object object = items[i];
+    if (object instanceof AbstractImageItem) {
+    filenames.add(((AbstractImageItem) object).getFile().getAbsolutePath());
+    }
     }
 
-    private void send2Table(Object items[]) {
-        ImagesWindowFactory.openTable(items);
-    }
+    ImagesWindowFactory.openTable(filenames.toArray(new String[filenames.size()]), true);
+    }*/
 
     // When a file is open by clicking it or pressing the "enter" key.
-    protected void openClickedFile(FileItem item) {
+    protected void openFileAsDefault(FileItem item) {
         if (item.isDirectory()) {
             filteringFilesModel.changeDirectory(item.getFile());
             updateListStatus();
-        } else if (item instanceof SelFileItem) {
+        } else {
+            if (FileBrowser.hasEnoughMemory(item.getFile())) {
+                ImagesWindowFactory.openDefault(item.getAbsoluteFileName());
+            } else {
+                IJ.showMessage(LABELS.TITLE_ERROR,
+                        LABELS.MESSAGE_MEMORY_ERROR(item.getFile().length(), IJ.maxMemory()));
+            }
+
+            /*if (item instanceof SelFileItem) {
             //ImagesWindowFactory.openTable((SelFileItem) item);
             ImagesWindowFactory.openTable(item.getFile().getAbsolutePath());
-        } else if (item instanceof XmippImageItem) {
+            } else if (item instanceof XmippImageItem) {
             XmippImageItem xmippItem = (XmippImageItem) item;
             if (xmippItem.isSingleImage()) { // Single images.
-                ImagesWindowFactory.openImage(xmippItem);
+            ImagesWindowFactory.openImage(xmippItem);
             } else {
-                //ImagesWindowFactory.openTable(xmippItem);
-                ImagesWindowFactory.openTable(xmippItem.getFileName());
+            //ImagesWindowFactory.openTable(xmippItem);
+            ImagesWindowFactory.openTable(xmippItem.getFileName());
             }
-        } else {
-            ImagePlus ip = IJ.openImage(item.getFile().getAbsolutePath());
-            ImagesWindowFactory.openImage(ip);
+            } else {
+            ImagesWindowFactory.openImage(item.getFile().getAbsolutePath());
+            }*/
         }
     }
 
@@ -209,9 +259,8 @@ public class JPanelBrowser extends JPanel {
         gd.showDialog();
         if (windows.size() > 0 && !gd.wasCanceled()) {
             String selected = gd.getNextChoice();
-            ImagesWindowFactory.openImage(WindowManager.getImage(selected), false);
+            ImagesWindowFactory.captureFrame(WindowManager.getImage(selected));
         }
-
     }
 
     /** This method is called from within the constructor to
@@ -233,7 +282,7 @@ public class JPanelBrowser extends JPanel {
         jcbPreview = new javax.swing.JCheckBox();
         jpButtons = new javax.swing.JPanel();
         jbOpen = new javax.swing.JButton();
-        jbSend2Table = new javax.swing.JButton();
+        jbOpenAsTable = new javax.swing.JButton();
         jToolBar = new javax.swing.JToolBar();
         jbParent = new javax.swing.JButton();
         jbRefresh = new javax.swing.JButton();
@@ -280,7 +329,7 @@ public class JPanelBrowser extends JPanel {
 
         add(jpPreview, java.awt.BorderLayout.EAST);
 
-        jbOpen.setText(LABELS.BUTTON_OPEN);
+        jbOpen.setText(LABELS.BUTTON_OPEN_AS_IMAGE);
         jbOpen.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 jbOpenActionPerformed(evt);
@@ -288,13 +337,13 @@ public class JPanelBrowser extends JPanel {
         });
         jpButtons.add(jbOpen);
 
-        jbSend2Table.setText(LABELS.BUTTON_SEND2TABLE);
-        jbSend2Table.addActionListener(new java.awt.event.ActionListener() {
+        jbOpenAsTable.setText(LABELS.BUTTON_OPEN_AS_TABLE);
+        jbOpenAsTable.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jbSend2TableActionPerformed(evt);
+                jbOpenAsTableActionPerformed(evt);
             }
         });
-        jpButtons.add(jbSend2Table);
+        jpButtons.add(jbOpenAsTable);
 
         add(jpButtons, java.awt.BorderLayout.SOUTH);
 
@@ -351,12 +400,12 @@ public class JPanelBrowser extends JPanel {
     }//GEN-LAST:event_jbParentActionPerformed
 
     private void jbOpenActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jbOpenActionPerformed
-        openFiles(jlFilterFiles.getSelectedValues());
+        openFilesAsImage(jlFilterFiles.getSelectedValues());
     }//GEN-LAST:event_jbOpenActionPerformed
 
     private void jlFilterFilesKeyReleased(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_jlFilterFilesKeyReleased
         if (evt.getKeyCode() == KeyEvent.VK_ENTER) {
-            openClickedFile((FileItem) jlFilterFiles.getSelectedValue());
+            openFileAsDefault((FileItem) jlFilterFiles.getSelectedValue());
         }
 
         updatePreview();
@@ -366,7 +415,7 @@ public class JPanelBrowser extends JPanel {
         if (evt.getClickCount() == 2) {
             int index = jlFilterFiles.locationToIndex(evt.getPoint());
             jlFilterFiles.ensureIndexIsVisible(index);
-            openClickedFile((FileItem) jlFilterFiles.getSelectedValue());
+            openFileAsDefault((FileItem) jlFilterFiles.getSelectedValue());
         }
 
         updatePreview();
@@ -377,9 +426,9 @@ public class JPanelBrowser extends JPanel {
         updatePreview();
     }//GEN-LAST:event_jcbPreviewActionPerformed
 
-    private void jbSend2TableActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jbSend2TableActionPerformed
-        send2Table(jlFilterFiles.getSelectedValues());
-    }//GEN-LAST:event_jbSend2TableActionPerformed
+    private void jbOpenAsTableActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jbOpenAsTableActionPerformed
+        openFilesAsTable(jlFilterFiles.getSelectedValues());
+    }//GEN-LAST:event_jbOpenAsTableActionPerformed
 
     private void jbCaptureWindowActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jbCaptureWindowActionPerformed
         captureFrames();
@@ -389,9 +438,9 @@ public class JPanelBrowser extends JPanel {
     private javax.swing.JToolBar jToolBar;
     private javax.swing.JButton jbCaptureWindow;
     private javax.swing.JButton jbOpen;
+    private javax.swing.JButton jbOpenAsTable;
     private javax.swing.JButton jbParent;
     private javax.swing.JButton jbRefresh;
-    private javax.swing.JButton jbSend2Table;
     private javax.swing.JCheckBox jcbPreview;
     private browser.files.JListFilterFiles jlFilterFiles;
     private javax.swing.JLabel jlFiltering;

@@ -4,6 +4,7 @@
  * To change this template, choose Tools | Templates
  * and open the template in the editor.
  */
+import browser.COMMAND_PARAMETERS;
 import browser.table.micrographs.JFrameMicrographs;
 import ij.IJ;
 import ij.Macro;
@@ -18,8 +19,6 @@ import org.apache.commons.cli.Options;
  * @author Juanjo Vega
  */
 public class MicrographsBrowser implements PlugIn {
-
-    private final static String COMMAND_OPTION_FILE = "i";
 
     public void run(String args) {
         if (IJ.isMacro() && Macro.getOptions() != null && !Macro.getOptions().trim().isEmpty()) { // From macro.
@@ -65,18 +64,18 @@ public class MicrographsBrowser implements PlugIn {
         String argsList[] = args.split(" ");
         Options options = new Options();
 
-        options.addOption(COMMAND_OPTION_FILE, true, "file(s)");
+        options.addOption(COMMAND_PARAMETERS.OPTION_INPUT_FILE, true, COMMAND_PARAMETERS.OPTION_INPUT_FILE_DESCRIPTION);
 
         // It should be able to handle multiple files.
-        options.getOption(COMMAND_OPTION_FILE).setOptionalArg(true);
-        options.getOption(COMMAND_OPTION_FILE).setArgs(Integer.MAX_VALUE);
+        options.getOption(COMMAND_PARAMETERS.OPTION_INPUT_FILE).setOptionalArg(true);
+        options.getOption(COMMAND_PARAMETERS.OPTION_INPUT_FILE).setArgs(Integer.MAX_VALUE);
 
         try {
             BasicParser parser = new BasicParser();
             CommandLine cmdLine = parser.parse(options, argsList);
 
-            if (cmdLine.hasOption(COMMAND_OPTION_FILE)) {
-                return cmdLine.getOptionValues(COMMAND_OPTION_FILE);
+            if (cmdLine.hasOption(COMMAND_PARAMETERS.OPTION_INPUT_FILE)) {
+                return cmdLine.getOptionValues(COMMAND_PARAMETERS.OPTION_INPUT_FILE);
             }
         } catch (Exception ex) {
             throw new RuntimeException(ex);

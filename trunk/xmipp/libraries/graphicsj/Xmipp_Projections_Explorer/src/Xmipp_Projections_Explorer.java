@@ -53,7 +53,7 @@ public class Xmipp_Projections_Explorer implements PlugIn, UniverseListener, iAn
     private ProjectionTimer timer = new ProjectionTimer(500);
     private static ProjectionWindow projectionWindow;
     private static JFrameImagesTable frameImagesTable;
-    private final static String COMMAND_OPTION_VOLUME = "vol";
+    private final static String COMMAND_OPTION_INPUT = "i";
     private final static String COMMAND_OPTION_EULER_ANGLES = "angles";
     private final static int INDEX_VOLUME = 0;
     private final static int INDEX_EULER_ANGLES = 1;
@@ -102,13 +102,6 @@ public class Xmipp_Projections_Explorer implements PlugIn, UniverseListener, iAn
             runGui = true;
         }
 
-        System.out.println(" !!!!!!!!!!!!!!!!!!!!!!!!!!!!!! ");
-        System.out.println(" !!!  REMOVE STATIC VALUES  !!!");
-        fileVolume = "/home/juanjo/temp/inter.vol";
-        fileEulerAngles = "/home/juanjo/temp/angles.sel";
-        runGui = false;
-        System.out.println(" !!!!!!!!!!!!!!!!!!!!!!!!!!!!!! ");
-
         if (runGui) {
             JFrameLoad frameLoad = new JFrameLoad();
 
@@ -136,7 +129,7 @@ public class Xmipp_Projections_Explorer implements PlugIn, UniverseListener, iAn
         String parameters[] = {null, null};
 
         Options options = new Options();
-        options.addOption(COMMAND_OPTION_VOLUME, true, "Volume file");
+        options.addOption(COMMAND_OPTION_INPUT, true, "Volume file");
         options.addOption(COMMAND_OPTION_EULER_ANGLES, true, "Euler angles file");
 
         try {
@@ -144,8 +137,8 @@ public class Xmipp_Projections_Explorer implements PlugIn, UniverseListener, iAn
             CommandLine cmdLine = parser.parse(options, argsList);
 
             // Volume file.
-            if (cmdLine.hasOption(COMMAND_OPTION_VOLUME)) {
-                parameters[INDEX_VOLUME] = cmdLine.getOptionValue(COMMAND_OPTION_VOLUME);
+            if (cmdLine.hasOption(COMMAND_OPTION_INPUT)) {
+                parameters[INDEX_VOLUME] = cmdLine.getOptionValue(COMMAND_OPTION_INPUT);
             }
 
             // Angles file.

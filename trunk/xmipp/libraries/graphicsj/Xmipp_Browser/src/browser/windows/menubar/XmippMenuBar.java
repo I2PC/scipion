@@ -400,7 +400,8 @@ public class XmippMenuBar extends DynamicMenuBar implements ActionListener {
 
         try {
             if (e.getSource() == itemToTable) {
-                ImagesWindowFactory.openTable(imp);
+                System.out.println(" @TODO >>> item 2 table: " + imp.getTitle());
+                //ImagesWindowFactory.openTable(imp);
             } else if (e.getSource() == itemFlipV) {
                 imp.getProcessor().flipVertical();
             } else if (e.getSource() == itemFlipH) {
@@ -705,7 +706,7 @@ public class XmippMenuBar extends DynamicMenuBar implements ActionListener {
         // To avoid windows without our cool menu :)
         ImageWindow iw = IJ.getImage().getWindow();
         if (!(iw instanceof StackWindowOperations || iw instanceof ImageWindowOperations)) {
-            ImagesWindowFactory.openImage(iw.getImagePlus(), false);
+            ImagesWindowFactory.captureFrame(iw.getImagePlus());
         }
 
         // Tells user about possible internal conversions.

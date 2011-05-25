@@ -73,6 +73,14 @@ JNIEXPORT jboolean JNICALL Java_xmipp_MetaData_containsLabel
 
 /*
  * Class:     xmipp_MetaData
+ * Method:    label2Str
+ * Signature: (I)Ljava/lang/String;
+ */
+JNIEXPORT jstring JNICALL Java_xmipp_MetaData_label2Str
+  (JNIEnv *, jobject, jint);
+
+/*
+ * Class:     xmipp_MetaData
  * Method:    getValueInt
  * Signature: (IJ)I
  */

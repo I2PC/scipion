@@ -3,8 +3,8 @@ import ij.IJ;
 import ij.ImagePlus;
 import ij.io.OpenDialog;
 import ij.plugin.PlugIn;
-import xmipp.Filename;
-import xmipp.ImageDouble;
+import ij.process.StackStatistics;
+import xmipp.MetaData;
 
 /*
  * To change this template, choose Tools | Templates
@@ -14,17 +14,17 @@ import xmipp.ImageDouble;
  *
  * @author Juanjo Vega
  */
-public class Xmipp_Reader extends ImagePlus implements PlugIn {
+public class Xmipp_MetaDataReader extends ImagePlus implements PlugIn {
 
     public void run(String filename) {
         boolean show = false;
 
         // If launched from menu...
         if (filename == null || filename.isEmpty()) {
-            OpenDialog od = new OpenDialog("Load xmipp file...", System.getProperty("user.dir"), "");
+            OpenDialog od = new OpenDialog("Load xmipp SEL file...", System.getProperty("user.dir"), "");
             String rootDir = od.getDirectory();
             filename = od.getFileName();
-System.out.println(rootDir+" / "+filename);
+
             if (filename == null) {
                 return;
             }
@@ -33,19 +33,23 @@ System.out.println(rootDir+" / "+filename);
             show = true;
         }
 
+        if (filename == null) {
+            return;
+        }
+
         IJ.showStatus("Reading: " + filename);
 
         try {
-            String name = Filename.getFilename(filename);
-            ImageDouble image = new ImageDouble(filename);
+            MetaData md = new MetaData();
+            md.read(filename);
 
-            ImagePlus imp = ImageConverter.convertToImagej(image, filename);
+            ImagePlus imp = ImageConverter.convertToImagej(md);
 
             // Attach the Image Processor
             if (imp.getNSlices() > 1) {
-                setStack(name, imp.getStack());
+                setStack(filename, imp.getStack());
             } else {
-                setProcessor(name, imp.getProcessor());
+                setProcessor(filename, imp.getProcessor());
             }
 
             // Copy the scale info over

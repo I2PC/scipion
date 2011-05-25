@@ -197,7 +197,8 @@ public class JFrameImagesTable extends JFrame {//implements TableModelListener {
 
     private void autoAdjustColumns() {
         if (autoAdjustColumns) {
-            tableModel.autoAdjustColumns(jsPanel.getVisibleRect().width);
+            tableModel.autoAdjustColumns(jsPanel.getViewportBorderBounds().width - jsPanel.getVerticalScrollBar().getWidth(),
+                    table.getIntercellSpacing().width);
 
             jsRows.setValue(tableModel.getRowCount());
             jsColumns.setValue(tableModel.getColumnCount());
@@ -295,11 +296,11 @@ public class JFrameImagesTable extends JFrame {//implements TableModelListener {
     }
 
     private void avgImage() {
-        ImagesWindowFactory.openImage(ImageOperations.mean(tableModel.getAllItems()));
+        ImagesWindowFactory.captureFrame(ImageOperations.mean(tableModel.getAllItems()));
     }
 
     private void stdDevImage() {
-        ImagesWindowFactory.openImage(ImageOperations.std_deviation(tableModel.getAllItems()));
+        ImagesWindowFactory.captureFrame(ImageOperations.std_deviation(tableModel.getAllItems()));
     }
 
     private void setNormalized(boolean normalize) {
@@ -313,7 +314,8 @@ public class JFrameImagesTable extends JFrame {//implements TableModelListener {
     }
 
     private void send2stack() {
-        ImagesWindowFactory.openImage(tableModel.getAllItems(), getTitle());
+        System.out.println(" @TODO >>> sendToStack: " + tableModel.getAllItems());
+        //ImagesWindowFactory.captureFrame(tableModel.getAllItems(), getTitle());
     }
 
     private void openAs3D() {
@@ -539,7 +541,7 @@ public class JFrameImagesTable extends JFrame {//implements TableModelListener {
                 Object item = table.getValueAt(view_row, view_col);
 
                 if (item instanceof TableImageItem) {
-                    ImagesWindowFactory.openImage((TableImageItem) item);//.getImagePlus());
+                    ImagesWindowFactory.captureFrame(((TableImageItem) item).getImagePlus());
                 }
             } else {
                 // Ctrl adds items to selection, otherwise previous ones are removed.

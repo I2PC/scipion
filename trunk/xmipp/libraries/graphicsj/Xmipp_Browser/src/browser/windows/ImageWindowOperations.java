@@ -4,6 +4,7 @@
  */
 package browser.windows;
 
+import browser.imageitems.ImageConverter;
 import ij.IJ;
 import ij.ImagePlus;
 import ij.gui.ImageLayout;
@@ -20,6 +21,9 @@ import java.util.Timer;
 import java.util.TimerTask;
 import javax.swing.JPanel;
 import browser.windows.menubar.XmippMenuBar;
+import ij.ImageStack;
+import ij.process.FloatProcessor;
+import xmipp.ImageDouble;
 
 /**
  *
@@ -106,11 +110,15 @@ public class ImageWindowOperations extends ImageWindow implements iPollImageWind
     protected void revert() {
         // Reverts only when image has changed since last time.
         if (last < f.lastModified()) {
-            // @TODO Check poll. "Revert" doesn't work. I guess it's because fileinfo is almost empty.
             System.out.println(" *** Reverting from disk...");
             IJ.showStatus("Reloading " + imp.getTitle());
 
-            IJ.run(imp, "Revert", "");
+            try {
+                ImageConverter.revert(imp, path);
+            } catch (Exception ex) {
+                ex.printStackTrace();
+            }
+
             last = f.lastModified();
 
             IJ.showStatus("");

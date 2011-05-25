@@ -1,9 +1,9 @@
 #include <jni.h>
 #include "xmipp_ImageDouble.h"
+#include "xmipp_InternalData.h"
 #include "xmipp_ExceptionsHandler.h"
 #include <data/image.h>
 #include <data/fft.h>
-#include "xmipp_InternalData.h"
 
 JNIEXPORT void JNICALL Java_xmipp_ImageDouble_storeIds
 (JNIEnv *env, jclass cls) {
@@ -269,7 +269,7 @@ JNIEXPORT void JNICALL Java_xmipp_ImageDouble_convertPSD(JNIEnv *env, jobject jo
 	}
 }
 
-JNIEXPORT jint JNICALL Java_xmipp_ImageDouble_getXsize(JNIEnv * env,
+JNIEXPORT jint JNICALL Java_xmipp_ImageDouble_getXsize(JNIEnv *env,
 		jobject jobj) {
 	Image<double> *image = GET_INTERNAL_IMAGE(jobj);
 
@@ -280,7 +280,7 @@ JNIEXPORT jint JNICALL Java_xmipp_ImageDouble_getXsize(JNIEnv * env,
 	return 0;
 }
 
-JNIEXPORT jint JNICALL Java_xmipp_ImageDouble_getYsize(JNIEnv * env,
+JNIEXPORT jint JNICALL Java_xmipp_ImageDouble_getYsize(JNIEnv *env,
 		jobject jobj) {
 	Image<double> *image = GET_INTERNAL_IMAGE(jobj);
 
@@ -291,7 +291,7 @@ JNIEXPORT jint JNICALL Java_xmipp_ImageDouble_getYsize(JNIEnv * env,
 	return 0;
 }
 
-JNIEXPORT jint JNICALL Java_xmipp_ImageDouble_getZsize(JNIEnv * env,
+JNIEXPORT jint JNICALL Java_xmipp_ImageDouble_getZsize(JNIEnv *env,
 		jobject jobj) {
 	Image<double> *image = GET_INTERNAL_IMAGE(jobj);
 

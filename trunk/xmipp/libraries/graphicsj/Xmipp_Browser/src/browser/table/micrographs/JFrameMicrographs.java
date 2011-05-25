@@ -15,6 +15,7 @@ import browser.table.micrographs.ctf.JFrameCTF;
 import browser.LABELS;
 import browser.imageitems.TableImageItem;
 import browser.table.ImagesRowHeaderModel;
+import browser.table.micrographs.ctf.profile.CTFViewImageWindow;
 import browser.table.micrographs.ctf.tasks.TasksEngine;
 import browser.table.micrographs.ctf.tasks.iCTFGUI;
 import browser.table.micrographs.filters.EnableFilter;
@@ -264,7 +265,7 @@ public class JFrameMicrographs extends JFrame implements iCTFGUI {
                 Object item = table.getValueAt(view_row, view_col);
 
                 if (item instanceof TableImageItem) {
-                    ImagesWindowFactory.openImage(((TableImageItem) item).getImagePlus());
+                    ImagesWindowFactory.captureFrame(((TableImageItem) item).getImagePlus());
                 }
             } else {    // Single click
                 int real_row = table.convertRowIndexToModel(view_row);
@@ -555,7 +556,7 @@ public class JFrameMicrographs extends JFrame implements iCTFGUI {
 
         private void extractColumn(int column, boolean onlyenabled) {
             if (onlyenabled) {
-                ImagesWindowFactory.openTable(tableModel.extractColumn(column, onlyenabled));
+                ImagesWindowFactory.openFilesAsTable(tableModel.extractColumn(column, onlyenabled));
             } else {
                 ImagesWindowFactory.openTable(
                         tableModel.extractColumn(column, onlyenabled),
@@ -564,16 +565,14 @@ public class JFrameMicrographs extends JFrame implements iCTFGUI {
         }
 
         private void showCTFProfile() {
-            String CTFFile = tableModel.getCTFfile(row);
-            String DisplayFile = tableModel.getCTFDisplayfile(row);
-            String PSDFile = tableModel.getPSDfile(row);
+            String CTFFilename = tableModel.getCTFfile(row);
+            String DisplayFilename = tableModel.getCTFDisplayfile(row);
+            String PSDFilename = tableModel.getPSDfile(row);
 
-            // Strings or ImagePlus?
+            ImagePlus ip = IJ.openImage(DisplayFilename);
 
-            IJ.error(" *** Link with CTF Profile GUI:\n"
-                    + "\n\tCTFFile: " + CTFFile
-                    + "\n\tDisplayFile: " + DisplayFile
-                    + "\n\tPSDFile: " + PSDFile);
+            CTFViewImageWindow frame = new CTFViewImageWindow(ip, CTFFilename, PSDFilename);
+            frame.setVisible(true);
         }
 
         private void showRecalculateCTFWindow() {

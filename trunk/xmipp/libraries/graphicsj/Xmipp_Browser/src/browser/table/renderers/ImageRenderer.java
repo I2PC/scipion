@@ -48,7 +48,7 @@ public class ImageRenderer extends DefaultTableCellRenderer {
             ImagesTableModel tableModel = (ImagesTableModel) table.getModel();
 
             // Loads image...
-            ImagePlus img = item.getPreview();//tableModel.getZoomScale());
+            ImagePlus img = item.getPreview();
 
             // ... and sets it.
             setEnabled(item.isEnabled());

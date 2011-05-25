@@ -1,4 +1,5 @@
 package xmipp;
+
 /**
  * Protocol for integrating native C++ code
  * 
@@ -28,7 +29,6 @@ public class ImageDouble {
     public final static int ALL_IMAGES = 0;
     public final static int ALL_SLICES = 0;
     public final static int MID_SLICE = -1;
-    private final static String PSD_EXTENSION = ".psd";
     // pointer to Image class in C++ space. Needed by native library.
     private long peer;
     private String filename;
@@ -58,18 +58,19 @@ public class ImageDouble {
 
     // Set data.
     public native void setData(int w, int h, int d, double data[]) throws Exception;
+
     /**
      * Important: if you don't use some dimension (for example, depth) set it to 1
      */
     public native void setData(int width, int height, int depth, int numberOfSlices, double data[]) throws Exception;
-    
+
     // Writing.
     public void write(String filename) throws Exception {
-		write(filename, ALL_IMAGES, false, 0, 0);
+        write(filename, ALL_IMAGES, false, 0, 0);
     }
 
     public native void write(String filename, int select_img, boolean isStack, int mode, int castWriteMode) throws Exception;
-    
+
     // Acess to data.
     public native double[] getData();
 
@@ -95,7 +96,11 @@ public class ImageDouble {
 
     public ImageDouble(String filename) throws Exception {
         this();
-        read(filename);
+
+        String name = Filename.getFilename(filename);
+        long nimage = Filename.getNimage(filename);
+
+        read(name, nimage);
     }
 
     public ImageDouble(String filename, long nimage) throws Exception {
@@ -166,6 +171,6 @@ public class ImageDouble {
     }
 
     public boolean isPSD() {
-        return filename.endsWith(PSD_EXTENSION);
+        return Filename.isPSD(filename);
     }
 }

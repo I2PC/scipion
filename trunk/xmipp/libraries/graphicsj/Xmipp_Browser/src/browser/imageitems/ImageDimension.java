@@ -62,7 +62,7 @@ public class ImageDimension {
         this.depth = depth;
     }
 
-    public void setNimages(long nimages) {
+    public void setNImages(long nimages) {
         this.nimages = nimages;
     }
 }

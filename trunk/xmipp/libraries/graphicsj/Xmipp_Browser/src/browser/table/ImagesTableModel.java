@@ -5,7 +5,6 @@
 package browser.table;
 
 import browser.Cache;
-import browser.files.FileBrowser;
 import browser.imageitems.TableImageItem;
 import ij.IJ;
 import java.io.File;
@@ -13,6 +12,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Vector;
 import javax.swing.table.AbstractTableModel;
+import xmipp.Filename;
 import xmipp.ImageDouble;
 import xmipp.MDLabel;
 import xmipp.MetaData;
@@ -45,9 +45,11 @@ public class ImagesTableModel extends AbstractTableModel {
 
         File f = new File(filename);
         if (f.exists()) {
-            if (FileBrowser.isFileType(new File(filename), ".sel")) {
+            if (Filename.isMetadata(filename)) {
                 message = loadMetaData(filename);
-            } else {
+            } else if (Filename.isSingleImage(filename)) {
+                loadImages(new String[]{filename});
+            } else if (Filename.isStackOrVolume(filename)) {
                 message = loadStackOrVolume(filename);
             }
 
@@ -79,12 +81,8 @@ public class ImagesTableModel extends AbstractTableModel {
 
             image.readHeader(filename);
 
-            image.printShape();
-
             nslices = image.getZsize();
             nimages = image.getNsize();
-
-            System.out.println(" -> " + filename + " n:" + nimages + " d:" + nslices);
 
             for (int i = ImageDouble.FIRST_IMAGE; i <= nimages; i++) {
                 for (int j = ImageDouble.FIRST_SLICE; j <= nslices; j++) {
@@ -102,7 +100,10 @@ public class ImagesTableModel extends AbstractTableModel {
         nimages = filenames.length;
 
         for (int i = 0; i < nimages; i++) {
-            addItem(filenames[i], ImageDouble.FIRST_SLICE, ImageDouble.FIRST_IMAGE, true);
+            String file = Filename.getFilename(filenames[i]);
+            long nimage = Filename.getNimage(filenames[i]);
+
+            addItem(file, ImageDouble.FIRST_SLICE, nimage, true);
         }
     }
 
@@ -125,10 +126,10 @@ public class ImagesTableModel extends AbstractTableModel {
 
                 System.out.println(imagefilename + " ? " + enabled);
 
-                int image = MetaData.getNimage(imagefilename);
-                String name = MetaData.getFilename(imagefilename);
+                long nimage = Filename.getNimage(imagefilename);
+                String name = Filename.getFilename(imagefilename);
 
-                addItem(name, ImageDouble.FIRST_SLICE, image, enabled);
+                addItem(name, ImageDouble.FIRST_SLICE, nimage, enabled);
             }
         } catch (Exception ex) {
             return ex.getMessage();
@@ -137,7 +138,7 @@ public class ImagesTableModel extends AbstractTableModel {
         return null;
     }
 
-    protected void addItem(String filename, int slice, int image, boolean enabled) {
+    protected void addItem(String filename, int slice, long image, boolean enabled) {
         TableImageItem item = new TableImageItem(new File(filename), slice, image, cache);
         item.setEnabled(enabled);
 
@@ -345,8 +346,8 @@ public class ImagesTableModel extends AbstractTableModel {
         }
     }
 
-    public void autoAdjustColumns(int width) {
-        int displayableColumns = width / getCellWidth();
+    public void autoAdjustColumns(int width, int interCellWidth) {
+        int displayableColumns = width / (getCellWidth() + 2 * interCellWidth);
 
         if (getColumnCount() != displayableColumns) {
             setColumns(displayableColumns);

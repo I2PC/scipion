@@ -4,7 +4,6 @@
  */
 package browser;
 
-import ij.IJ;
 import ij.ImagePlus;
 import javax.swing.ImageIcon;
 
@@ -61,6 +60,7 @@ public class ICONS_MANAGER {
         WAIT_MENU_ICON = new ImageIcon(getClass().getResource(PATH_WAIT_MENU));
 
         // For missing items.
-        MISSING_ITEM = IJ.openImage(PATH_MISSING_ITEM);
+        ImageIcon missingIcon = new ImageIcon(getClass().getResource(PATH_MISSING_ITEM));
+        MISSING_ITEM = new ImagePlus("X", missingIcon.getImage());
     }
 }

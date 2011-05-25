@@ -24,7 +24,7 @@ public class ImageOperations {
         for (int k = 0; k < items.size(); k++) {
             TableImageItem current = items.elementAt(k);
 
-            if (current.isEnabled()) {
+            if (current.isEnabled() && current.exists()) {
                 ImagePlus ip = current.getImagePlus();
                 float pixels[] = (float[]) ip.getProcessor().getPixels();
                 ip.close();
@@ -55,7 +55,7 @@ public class ImageOperations {
         for (int k = 0; k < items.size(); k++) {
             TableImageItem current = items.elementAt(k);
 
-            if (current.isEnabled()) {
+            if (current.isEnabled() && current.exists()) {
                 ImagePlus ip = current.getImagePlus();
                 float pixels[] = (float[]) ip.getProcessor().getPixels();
                 ip.close();

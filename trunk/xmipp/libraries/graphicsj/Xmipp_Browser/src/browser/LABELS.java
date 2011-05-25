@@ -41,18 +41,24 @@ public class LABELS {
     public final static String BUTTON_CAPTURE_WINDOW = "Capture";
     public final static String BUTTON_INVERT_SELECTION = "Invert Selection";
     public final static String BUTTON_NORMALIZE = "Normalize";
-    public final static String BUTTON_OPEN = "Open Selected";
+    public final static String BUTTON_OPEN_AS_IMAGE = "Open as Image";
+    public final static String BUTTON_OPEN_AS_TABLE = "Open as table";
     public final static String BUTTON_OK = "Ok";
     public final static String BUTTON_PARENT_DIRECTORY = "Parent";
     public final static String BUTTON_REFRESH = "Refresh";
     public final static String BUTTON_REFRESH_DIRECTORY = "Refresh";
     public final static String BUTTON_SAVE = "Save";
     public final static String BUTTON_SELECT_ALL = "Select All";
-    public final static String BUTTON_SEND2TABLE = "Send to table";
     public final static String BUTTON_STD_DEVIATION = "Std. Deviation";
     public final static String BUTTON_TO_STACK = "To Stack";
+    public final static String BUTTON_EXTRACT_PROFILE = "Extract Profiles";
+    public final static String BUTTON_EXTRACT_RADIAL_AVERAGE = "Extract Radial AVG.";
+    public final static String CB_PLOT_BGNOISE = "BGNoise";
+    public final static String CB_PLOT_ENVELOPE = "Envelope";
+    public final static String CB_PLOT_PSD = "PSD";
+    public final static String CB_PLOT_CTF = "CTF";
     /**
-     * Labels for operations
+     * Operations
      */
     public final static String OPERATION_MENU_TRANSFORM = "Transform";
     public final static String OPERATION_TO_TABLE = "To Table";
@@ -157,7 +163,7 @@ public class LABELS {
     public final static String LABEL_RECALCULATE_CTF = "Recalculate CTF";
     public final static String LABEL_VIEW_CTF_PROFILE = "View CTF Profile";
     /**
-     * Labels for browser
+     * Labels
      */
     public final static String LABEL_AUTO_AJUST_COLUMNS = "Auto adjust columns";
     public final static String LABEL_SHOW_LABELS = "Show labels";
@@ -176,9 +182,14 @@ public class LABELS {
     public final static String LABEL_TABLE_SAVE_AS_IMAGES = "Save as images";
     public final static String LABEL_TABLE_SAVE_AS_STACK = "Save as stack";
     public final static String LABEL_TABLE_SAVE_AS_SELFILE = "Save as selfile";
-    /**
-     * Labels for images panel
-     */
+    public final static String LABEL_CTF = "CTF";
+    public final static String LABEL_PSD = "PSD";
+    public final static String LABEL_PROFILES = "Profiles";
+    public final static String LABEL_RADIAL_AVERAGE = "Radial Average";
+    public final static String LABEL_RADIAL_XLEGEND = "freq. (1/A)";
+    public final static String LABEL_RADIAL_AVG = "Radial Average";
+    public final static String LABEL_TAB_PROFILE = "Profiles";
+    public final static String LABEL_TAB_RADIAL_AVERAGE = "Radial Average";
     public final static String LABEL_ZOOM = "Zoom (%): ";
     public final static String LABEL_ROWS = "Rows: ";
     public final static String LABEL_COLUMNS = "Columns: ";

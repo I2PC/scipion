@@ -39,13 +39,13 @@ public class CTFDescription {
 
     private native double[][] CTFProfile(double angle, double FMAX, int samples);
 
-    public void getCTFProfile(double angle, int samples) {
+    public void CTFProfile(double angle, int samples) {
         profiles = CTFProfile(angle, FMAX, samples);
     }
 
     private native double[][] CTFAverageProfile(double FMAX, int samples);
 
-    public void getCTFAverageProfiles(int samples) {
+    public void CTFAverageProfiles(int samples) {
         avgprofiles = CTFAverageProfile(FMAX, samples);
     }
 

@@ -118,21 +118,21 @@
         <Component class="javax.swing.JButton" name="jbOpen">
           <Properties>
             <Property name="text" type="java.lang.String" editor="org.netbeans.modules.form.RADConnectionPropertyEditor">
-              <Connection code="LABELS.BUTTON_OPEN" type="code"/>
+              <Connection code="LABELS.BUTTON_OPEN_AS_IMAGE" type="code"/>
             </Property>
           </Properties>
           <Events>
             <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="jbOpenActionPerformed"/>
           </Events>
         </Component>
-        <Component class="javax.swing.JButton" name="jbSend2Table">
+        <Component class="javax.swing.JButton" name="jbOpenAsTable">
           <Properties>
             <Property name="text" type="java.lang.String" editor="org.netbeans.modules.form.RADConnectionPropertyEditor">
-              <Connection code="LABELS.BUTTON_SEND2TABLE" type="code"/>
+              <Connection code="LABELS.BUTTON_OPEN_AS_TABLE" type="code"/>
             </Property>
           </Properties>
           <Events>
-            <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="jbSend2TableActionPerformed"/>
+            <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="jbOpenAsTableActionPerformed"/>
           </Events>
         </Component>
       </SubComponents>

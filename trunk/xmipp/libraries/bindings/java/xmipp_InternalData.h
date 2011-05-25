@@ -3,6 +3,7 @@
 #include <jni.h>
 #include <data/image.h>
 #include <data/projection.h>
+#include <data/ctf.h>
 
 static jfieldID ImageDouble_peerId;
 static jfieldID Projection_peerId;

@@ -4,21 +4,16 @@
  */
 package browser.windows;
 
-import browser.Cache;
 import browser.imageitems.ImageConverter;
-import browser.imageitems.TableImageItem;
-import browser.imageitems.listitems.FileItem;
-import browser.imageitems.listitems.XmippImageItem;
-import browser.imageitems.listitems.SelFileItem;
+import ij.IJ;
+import ij.ImagePlus;
 import browser.table.JFrameImagesTable;
 import browser.table.micrographs.ctf.CTFImageWindow;
 import browser.table.micrographs.ctf.tasks.TasksEngine;
-import ij.IJ;
-import ij.ImagePlus;
 import ij.gui.ImageWindow;
 import ij.gui.Toolbar;
 import java.io.File;
-import java.util.Vector;
+import xmipp.Filename;
 import xmipp.ImageDouble;
 import xmipp.MetaData;
 
@@ -30,48 +25,90 @@ public class ImagesWindowFactory {
 
     private final static String TEMPDIR_PATH = System.getProperty("java.io.tmpdir");
 
-    public static void openImageFiles(String files[], boolean poll) {
-        Vector<TableImageItem> xmippItems = new Vector<TableImageItem>();
-
+    public static void openFilesDefault(String files[], boolean poll) {
         for (int i = 0; i < files.length; i++) {
-            String filename = MetaData.getFilename(files[i]);
-            long nimage = MetaData.getNimage(files[i]);
-
-            System.out.println(" *** Loading: " + filename + " / nimage: " + nimage);
-
-            TableImageItem item = new TableImageItem(new File(filename), nimage, new Cache());
-            xmippItems.add(item);
-        }
-
-        for (int i = 0; i < xmippItems.size(); i++) {
-            openImage(xmippItems.elementAt(i).getImagePlus(), poll);
+            openDefault(files[i], poll);
         }
     }
 
-    public static void openImage(TableImageItem item) {
-        ImageWindow iw = openImage(item.getImagePlus());
-        iw.setTitle(item.getLabel());
+    public static void openDefault(String filename) {
+        openDefault(filename, false);
     }
 
-    public static void openImage(SelFileItem item) {
-        ImageWindow iw = openImage(item.getImagePlus());
-        iw.setTitle(item.getLabel());
+    public static void openDefault(String filename, boolean poll) {
+        if (Filename.isSingleImage(filename)) {
+            openFileAsImage(filename, poll);
+        } else if (Filename.isStackOrVolume(filename)) {
+            openFileAsTable(filename);
+        } else if (Filename.isMetadata(filename)) {
+            openFileAsTable(filename);
+        } else {
+            openFileAsImage(filename, poll);
+        }
     }
 
-    public static void openImage(XmippImageItem item) {
-        openImage(item, ImageDouble.ALL_IMAGES);
+    public static void openFilesAsImages(String filenames[], boolean poll) {
+        for (int i = 0; i < filenames.length; i++) {
+            String filename = Filename.getFilename(filenames[i]);
+            long nimage = Filename.getNimage(filenames[i]);
+
+            System.out.println(" *** Opening: " + filename + " / nimage: " + nimage);
+
+            openFileAsImage(filename, poll);
+        }
     }
 
-    public static void openImage(XmippImageItem item, long nimage) {
-        ImageWindow iw = openImage(item.getImagePlus(nimage));
-        iw.setTitle(item.getLabel());
+    public static void openFileAsImage(String path) {
+        openFileAsImage(path, false);
     }
 
-    public static ImageWindow openImage(ImagePlus ip) {
-        return openImage(ip, false);
+    public static void openFileAsImage(String path, boolean poll) {
+        File f = new File(path);
+
+        if (f.exists()) {
+            ImagePlus ip = null;
+
+            if (Filename.isMetadata(path)) {
+                ip = openMetaDataAsImage_(path);
+            } else if (Filename.isXmippType(path)) {
+                ip = openFileAsImage_(path);
+            } else {
+                ip = IJ.openImage(path);
+            }
+
+            openXmippImageWindow(ip, poll);
+        } else {
+            IJ.error("File not found: " + path);
+        }
     }
 
-    public static ImageWindow openImage(ImagePlus imp, boolean poll) {
+    private static ImagePlus openFileAsImage_(String path) {
+        ImagePlus ip = null;
+
+        try {
+            ImageDouble image = new ImageDouble(path);
+            ip = ImageConverter.convertToImagej(image, path);
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
+
+        return ip;
+    }
+
+    private static ImagePlus openMetaDataAsImage_(String path) {
+        ImagePlus ip = null;
+
+        try {
+            MetaData md = new MetaData(path);
+            ip = ImageConverter.convertToImagej(md);
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
+
+        return ip;
+    }
+
+    private static ImageWindow openXmippImageWindow(ImagePlus imp, boolean poll) {
         ImageWindow iw = null;
 
         if (imp != null) {
@@ -80,77 +117,47 @@ public class ImagesWindowFactory {
             } else {
                 iw = new ImageWindowOperations(imp, poll);
             }
-        } else {
-            IJ.error("Trying to open a null image.");
         }
 
         return iw;
     }
 
-    public static void openImage(Vector<TableImageItem> items, String title) {
-        openImage(ImageConverter.toImagePlus(items, title));
-    }
+    public static void openFileAsTable(String filename) {
+        File f = new File(filename);
 
-    public static void openTable(ImagePlus item) {
-        try {
-            // Saves a temporary file...
-            String filename = TEMPDIR_PATH + File.separator + item.getFileInfo().fileName + System.currentTimeMillis() + ".xmp";
-
-            System.err.println(" >>> Saving temporary file to open it as table: " + filename);
-            ImageDouble img = ImageConverter.convertToXmipp(item);
-            img.write(filename);
-
-            openTable(filename);
-        } catch (Exception ex) {
-            ex.printStackTrace();
+        if (f.exists()) {
+            JFrameImagesTable table = new JFrameImagesTable(filename);
+            table.setVisible(true);
+        } else {
+            IJ.error("File not found: " + filename);
         }
     }
 
-    public static void openTable(Object items[]) {
-        Vector<String> images = new Vector<String>();
+    public static void openFilesAsTable(String filenames[]) {
+        openFilesAsTable(filenames, false);
+    }
 
-        for (int i = 0; i < items.length; i++) {
-            Object item = items[i];
-
-            if (item instanceof XmippImageItem) {
-                XmippImageItem imageItem = (XmippImageItem) item;
-
-                // Volumes are opened in a independent table for each one
-                if (!imageItem.isSingleImage()) {
-                    if (item instanceof SelFileItem) {
-                        //openTable((SelFileItem) imageItem);
-                        openTable(imageItem.getFile().getAbsolutePath());
-                    } else {
-                        //openTable(imageItem);
-                        openTable(imageItem.getFile().getAbsolutePath());
-                    }
-                } else {    // Images will be at the same table.
-                    images.add(imageItem.getFile().getAbsolutePath());
-                }
-            } else {
-                IJ.error(((FileItem) item).getFile().getName() + " is not an xmipp file.");
+    public static void openFilesAsTable(String filenames[], boolean useSameTable) {
+        if (useSameTable) {
+            JFrameImagesTable table = new JFrameImagesTable(filenames);
+            table.setVisible(true);
+        } else {
+            for (int i = 0; i < filenames.length; i++) {
+                //JFrameImagesTable table = new JFrameImagesTable(filenames[i]);
+                //table.setVisible(true);
+                openFileAsTable(filenames[i]);
             }
         }
-
-        // If there was any image file.
-        if (images.size() > 0) {
-            openTable(images.toArray(new String[images.size()]));
-        }
     }
 
-    public static void openTable(String filename) {
-        JFrameImagesTable table = new JFrameImagesTable(filename);
-        table.setVisible(true);
-    }
-
-    public static void openTable(String filenames[]) {
-        JFrameImagesTable table = new JFrameImagesTable(filenames);
-        table.setVisible(true);
-    }
-
+    // Used by micrographs table, to load items marked as selected/unselected.
     public static void openTable(String filenames[], boolean enabled[]) {
         JFrameImagesTable table = new JFrameImagesTable(filenames, enabled);
         table.setVisible(true);
+    }
+
+    public static void captureFrame(ImagePlus ip) {
+        openXmippImageWindow(ip, false);
     }
 
     public static ImageWindow openCTFImage(ImagePlus ip, String CTFfilename,
