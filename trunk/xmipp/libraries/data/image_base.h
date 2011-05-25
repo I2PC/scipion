@@ -34,6 +34,7 @@
 #include <sys/stat.h>
 #include "funcs.h"
 #include "memory.h"
+#include "image_macros.h"
 #include "multidim_array.h"
 #include "transformations.h"
 #include "metadata.h"
@@ -43,15 +44,6 @@
 #include <cstring>
 #include "../../external/tiff-3.9.4/libtiff/tiffio.h"
 
-// Macros used to select slice in readPreview
-#define CENTRAL_SLICE -1
-#define ALL_SLICES 0
-/** Macro for represent ALL IMAGES on stack index */
-#define ALL_IMAGES 0
-#define FIRST_IMAGE 1
-#define IMG_INDEX(select_img) ((select_img == ALL_IMAGES) ? 0 : select_img - 1)
-/** Macro for appending an image when doing mapFile2Write */
-#define APPEND_IMAGE 0
 
 /* Minimum size of a TIFF file to be mapped to a tempfile in case of mapping from
  * image file is required

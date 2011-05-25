@@ -25,7 +25,7 @@
 
 #include "filename.h"
 #include "funcs.h"
-
+#include "image_macros.h"
 
 // Constructor with root, number and extension .............................
 void FileName::compose(const String &str, size_t no, const String &ext)
@@ -89,6 +89,9 @@ void FileName::decompose(size_t &no, String &str) const
         str = *this;
         return;
     }
+    else if (no == 0)
+      REPORT_ERROR(ERR_INDEX_OUTOFBOUNDS, formatString("FileName::decompose: Incorrect index number at filename %s; It must start at %lu",c_str(),FIRST_IMAGE));
+
     str = buffer;
 }
 

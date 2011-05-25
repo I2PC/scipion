@@ -50,7 +50,6 @@
 #include "error.h"
 #include "strings.h"
 #define FILENAMENUMBERLENGTH 6
-#define ALL_IMAGES 0
 
 //@{
 /** Filenames.
