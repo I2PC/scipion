@@ -212,13 +212,15 @@ def assign_images_to_references(_log,dict):
         #CC use it in both reconstruction
         #recover atributes after aggregate function
         print "INSIDE33 assign_images_to_references"
-        MD1.join(MD,MDaux,MDL_UNDEFINED,NATURAL)        
+        MD1.join(MD,MDaux,MDL_UNDEFINED,NATURAL)
+        MD1.write('MD1.xmd')
         #add a sorting number to make easier to create an stack of averaged classes
         print "INSIDE44 assign_images_to_references"
         MDout.join(MD1,MDSort,MDL_UNDEFINED,NATURAL)        
-        MDout.write(auxInputdocfile+outputdocfile,MD_APPEND)
+        MD1.write('MDSort.xmd')
         print "INSIDE55 assign_images_to_references"
-            
+        MDout.write(auxInputdocfile+outputdocfile,MD_APPEND)
+        print "INSIDE66 assign_images_to_references"            
 def angular_class_average(_log,dict):
     # Now make the class averages
     CtfGroupName        = dict['CtfGroupDirectory'] + '/' + dict['CtfGroupRootName']
