@@ -43,7 +43,7 @@ JNIEXPORT void JNICALL Java_xmipp_MetaData_read
 			msg = "Unhandled exception";
 		}
 	} else {
-		msg = "Image is null";
+		msg = "Metadata is null";
 	}
 
 	// If there was an exception, sends it to java environment.

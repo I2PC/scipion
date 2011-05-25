@@ -15,7 +15,7 @@ public class ImageTest {
 
             // Reads image.
             ImageDouble image = new ImageDouble();
-            image.read(file);
+            image.readStack(file);
             System.out.println(" *** Full image: " + file);
             image.printShape();
 

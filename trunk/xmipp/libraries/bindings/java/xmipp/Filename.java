@@ -115,7 +115,17 @@ public class Filename {
         if (filename.contains(SEPARATOR)) {
             String str = filename.split(SEPARATOR)[0];
             if (!str.isEmpty()) {
-                nimage = Long.valueOf(str);
+                // str may have a string prefix before the number, so
+                // grab the rightmost part
+                int i=str.length()-1;
+                while(i>=0){
+                        if(Character.isDigit(str.charAt(i)) == false)
+                                break;
+                        i--;
+                }
+                String rightPart=str.substring(i+1,str.length());
+
+                nimage = Long.valueOf(rightPart);
             }
         }
 

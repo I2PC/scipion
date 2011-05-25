@@ -66,7 +66,7 @@ public class ImageDouble {
 
     // Writing.
     public void write(String filename) throws Exception {
-        write(filename, ALL_IMAGES, false, 0, 0);
+        write(filename, ALL_IMAGES, false, ImageWriteMode.WRITE_OVERWRITE, CastWriteMode.CW_CAST);
     }
 
     public native void write(String filename, int select_img, boolean isStack, int mode, int castWriteMode) throws Exception;
@@ -131,6 +131,17 @@ public class ImageDouble {
     public void read(String filename) throws Exception {
         read(filename, ALL_IMAGES);
     }
+    
+    public void readStack(String filename) throws Exception {
+        read(filename, ALL_IMAGES);
+    }
+    
+    public void readSlice(String filename) throws Exception {
+        // select_img/nimage is only used for reading all the images, otherwise
+        // the slice is encoded in the filename
+        read(filename, -10);
+    }
+
 
     public void read(String filename, long nimage) throws Exception {
         read(filename, true, nimage);
