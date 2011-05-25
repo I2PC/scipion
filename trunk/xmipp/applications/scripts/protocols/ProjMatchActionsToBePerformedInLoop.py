@@ -217,6 +217,7 @@ def assign_images_to_references(_log,dict):
         print "INSIDE44 assign_images_to_references"
         MDout.join(MD1,MDSort,MDL_UNDEFINED,NATURAL)        
         MDout.write(auxInputdocfile+outputdocfile,MD_APPEND)
+        print "INSIDE55 assign_images_to_references"
             
 def angular_class_average(_log,dict):
     # Now make the class averages
