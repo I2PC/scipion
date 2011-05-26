@@ -131,13 +131,16 @@ public:
     bool only_winner;
 
     /* Volume for shear projection */
-    VolumeStruct VShears;
+    VolumeStruct* VShears;
 
     /** fil vector with symmetry axis */
     // std::vector <Matrix1D<double> > symmetry_vectors;
 public:
     /** Empty constructor */
     ProgAngularProjectLibrary();
+
+    /** Destructor */
+    ~ProgAngularProjectLibrary();
 
     /** Read from a command line.
         An exception might be thrown by any of the internal conversions,

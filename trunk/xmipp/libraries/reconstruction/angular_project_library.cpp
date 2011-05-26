@@ -31,6 +31,12 @@ ProgAngularProjectLibrary::ProgAngularProjectLibrary()
 {
     /** sampling object 1 by default*/
     mysampling.SetSampling(1);
+    VShears=NULL;
+}
+
+ProgAngularProjectLibrary::~ProgAngularProjectLibrary()
+{
+    delete VShears;
 }
 
 /* Read parameters --------------------------------------------------------- */
@@ -158,11 +164,8 @@ void ProgAngularProjectLibrary::project_angle_vector (int my_init, int my_end, b
         for (int i=0;i<my_init;i++)
             myCounter++;
 
-    if (shears && XSIZE(inputVol())!=0)
-    {
-        prepareStructVolume(inputVol(),VShears);
-        inputVol.clear();
-    }
+    if (shears && XSIZE(inputVol())!=0 && VShears==NULL)
+    	VShears=new VolumeStruct(inputVol());
 
     for (int mypsi=0;mypsi<360;mypsi += psi_sampling)
     {
@@ -175,9 +178,9 @@ void ProgAngularProjectLibrary::project_angle_vector (int my_init, int my_end, b
             rot=       XX(mysampling.no_redundant_sampling_points_angles[i]);
 
             if (shears)
-                project_Volume(VShears, P, Ydim, Xdim,rot,tilt,psi);
+                project_Volume(*VShears, P, Ydim, Xdim, rot,tilt,psi);
             else
-                projectVolume(inputVol(), P, Ydim, Xdim,rot,tilt,psi);
+                projectVolume(inputVol(), P, Ydim, Xdim, rot,tilt,psi);
 
             P.write(output_file,(size_t) (numberStepsPsi * i + mypsi +1),true,WRITE_REPLACE);
         }
