@@ -761,7 +761,7 @@ void single_recons_test(const Recons_test_Parameters &prm,
     FourierMask Filter;
     if (prm.recons_method == use_ART || prm.recons_method == use_SIRT)
     {
-        GlobalARTParameters art_prm;
+        BasicARTParameters art_prm;
         Plain_ART_Parameters plain_art_prm;
         GridVolume           vol_basis;
 
@@ -815,7 +815,7 @@ void single_recons_test(const Recons_test_Parameters &prm,
         art_prm.random_sort = prm.random_sort;
         art_prm.sort_last_N = prm.sort_last_N;
         if (prm.recons_method == use_SIRT)
-            art_prm.parallel_mode = GlobalARTParameters::SIRT;
+            art_prm.parallel_mode = BasicARTParameters::SIRT;
         if (prm.POCS_positivity) art_prm.positivity = true;
         if (prm.unmatched)
         {

@@ -33,7 +33,7 @@
 #include "recons_misc.h"
 
 /* Default values ========================================================== */
-void GlobalARTParameters::default_values()
+void BasicARTParameters::default_values()
 {
     fh_hist            = NULL;
     fn_start           = "";
@@ -98,7 +98,7 @@ void GlobalARTParameters::default_values()
     threads            = 1;
 }
 
-void GlobalARTParameters::defineParams(XmippProgram * program, const char* prefix, const char* comment)
+void BasicARTParameters::defineParams(XmippProgram * program, const char* prefix, const char* comment)
 {
     //  char tempLine[256];
     //
@@ -258,7 +258,7 @@ void GlobalARTParameters::defineParams(XmippProgram * program, const char* prefi
 
 }
 
-void GlobalARTParameters::readParams(XmippProgram * program)
+void BasicARTParameters::readParams(XmippProgram * program)
 {
     default_values();
 
@@ -440,7 +440,7 @@ void GlobalARTParameters::readParams(XmippProgram * program)
     if (program->checkParam("--noisy_reconstruction"))
     {
         if (parallel_mode != ART)
-            REPORT_ERROR(ERR_ARG_INCORRECT,"GlobalARTParameters::read: Noisy reconstructions" \
+            REPORT_ERROR(ERR_ARG_INCORRECT,"BasicARTParameters::read: Noisy reconstructions" \
                          " can only be done for ART");
         else
             noisy_reconstruction = true;
@@ -571,12 +571,12 @@ no_it=1; \
 refine         = CHECK_PARAM("refine"); \
 if (CHECK_PARAM("noisy_reconstruction")) { \
 if (parallel_mode!=ART) \
-            REPORT_ERROR(ERR_ARG_INCORRECT,"GlobalARTParameters::read: Noisy reconstructions" \
+            REPORT_ERROR(ERR_ARG_INCORRECT,"BasicARTParameters::read: Noisy reconstructions" \
                          " can only be done for ART"); \
         else noisy_reconstruction=true; \
     }
 
-void GlobalARTParameters::read(int argc, char **argv)
+void BasicARTParameters::read(int argc, char **argv)
 {
     //    GET_ART_PARAMS;
     basis.read(argc, argv);
@@ -613,7 +613,7 @@ void GlobalARTParameters::read(int argc, char **argv)
 #define GET_VECTOR_PARAM(flag,length) \
     getVectorParameter(fh,flag,length)
 // Read from file
-void GlobalARTParameters::read(const FileName &fn)
+void BasicARTParameters::read(const FileName &fn)
 {
     FILE *fh;
     if ((fh = fopen(fn.c_str(), "r")) == NULL)
@@ -637,7 +637,7 @@ void GlobalARTParameters::read(const FileName &fn)
 }
 
 /* Usage =================================================================== */
-void GlobalARTParameters::usage()
+void BasicARTParameters::usage()
 {
     std::cerr
     << "Usage: art [Options and Parameters]"
@@ -653,7 +653,7 @@ void GlobalARTParameters::usage()
     ;
 }
 
-void GlobalARTParameters::usage_more()
+void BasicARTParameters::usage_more()
 {
     std::cerr
     << "Usage: art [Options and Parameters]"
@@ -891,7 +891,7 @@ void sort_randomly(int numIMG, MultidimArray<int> &ordered_list)
 /* Produce Side Information                                                  */
 /* ------------------------------------------------------------------------- */
 //#define DEBUG
-void GlobalARTParameters::produce_Side_Info(GridVolume &vol_basis0, int level,
+void BasicARTParameters::produce_Side_Info(GridVolume &vol_basis0, int level,
         int rank)
 {
     MetaData     selfile;
@@ -1100,7 +1100,7 @@ void GlobalARTParameters::produce_Side_Info(GridVolume &vol_basis0, int level,
 #undef DEBUG
 
 /* Count number of equations for CAV --------------------------------------- */
-void GlobalARTParameters::compute_CAV_weights(GridVolume &vol_basis0,
+void BasicARTParameters::compute_CAV_weights(GridVolume &vol_basis0,
         int numProjs_node, int debug_level)
 {
     if (GVNeq == NULL)
@@ -1148,12 +1148,12 @@ void GlobalARTParameters::compute_CAV_weights(GridVolume &vol_basis0,
     }
 }
 
-int GlobalARTParameters::ProjXdim()
+int BasicARTParameters::ProjXdim()
 {
     return projXdim;
 }
 
-int GlobalARTParameters::ProjYdim()
+int BasicARTParameters::ProjYdim()
 {
     return projYdim;
 }

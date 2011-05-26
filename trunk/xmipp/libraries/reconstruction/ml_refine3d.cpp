@@ -567,7 +567,7 @@ ProgReconsBase * ProgMLRefine3D::createReconsProgram()
     else if (recons_type == RECONS_ART)//use of wlsArt
     {
         REPORT_ERROR(ERR_NOT_IMPLEMENTED,"not implemented reconstruction throught wlsArt");
-        //        GlobalARTParameters   art_prm;
+        //        BasicARTParameters   art_prm;
         //        Plain_ART_Parameters   dummy;
         //        GridVolume             new_blobs;
         //        GridVolume             start_blobs;

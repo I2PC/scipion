@@ -32,7 +32,7 @@
 /* ------------------------------------------------------------------------- */
 /* Read ART parameters ===================================================== */
 void Crystal_ART_Parameters::read(int argc, char **argv,
-                                  GlobalARTParameters &prm)
+                                  BasicARTParameters &prm)
 {
     try
     {
@@ -203,7 +203,7 @@ void compute_integer_lattice(const Matrix1D<double> &a,
 //#define DEBUG
 //#define DEBUG_A_LOT
 void Crystal_ART_Parameters::produce_Side_Info(
-    GlobalARTParameters &prm, GridVolume &vol_basis0)
+    BasicARTParameters &prm, GridVolume &vol_basis0)
 {
 
     // Lattice vectors in BCC units
@@ -357,7 +357,7 @@ void Crystal_ART_Parameters::produce_Side_Info(
 void ART_single_step(
     GridVolume              &vol_in,          // Input Reconstructed volume
     GridVolume              *vol_out,         // Output Reconstructed volume
-    GlobalARTParameters    &prm,             // blob, lambda
+    BasicARTParameters    &prm,             // blob, lambda
     Crystal_ART_Parameters  &eprm,            // lattice vectors, ...
     Projection              &theo_proj,       // Projection of the reconstruction
     // It is outside to make it visible
@@ -479,7 +479,7 @@ void apply_symmetry(GridVolume &vol_in, GridVolume *vol_out,
 }
 
 /* Finish iterations ------------------------------------------------------- */
-void finish_ART_iterations(const GlobalARTParameters &prm,
+void finish_ART_iterations(const BasicARTParameters &prm,
                            const Crystal_ART_Parameters &eprm, GridVolume &vol_basis)
 {
     if (eprm.fill_space)
@@ -489,7 +489,7 @@ void finish_ART_iterations(const GlobalARTParameters &prm,
 /* Expansion to fill space ------------------------------------------------- */
 //#define DEBUG
 //#define DEBUG2
-void expand_to_fill_space(const GlobalARTParameters &prm,
+void expand_to_fill_space(const BasicARTParameters &prm,
                           const Crystal_ART_Parameters &eprm, GridVolume &vol)
 {
     std::cerr << "Replicating unit cell ...\n";

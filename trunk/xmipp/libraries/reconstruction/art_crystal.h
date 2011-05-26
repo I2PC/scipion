@@ -38,7 +38,7 @@
 /** ART+crystal parameters.
     Here only those specific parameters for crystals are found, the rest of
     parameters common with normal ART should be looked up in
-    \ref GlobalARTParameters */
+    \ref BasicARTParameters */
 class Crystal_ART_Parameters
 {
 public:
@@ -92,7 +92,7 @@ public:
         defined by argc and argv. An exception might be thrown by any
         of the internal conversions, this would mean that there is
         an error in the command line and you might show a usage message. */
-    void read(int argc, char **argv, GlobalARTParameters &prm);
+    void read(int argc, char **argv, BasicARTParameters &prm);
 
     /** Usage message.
         This function shows the way of introdustd::cing these parameters. */
@@ -104,7 +104,7 @@ public:
         The reconstructed volume size can be modified such that the unit cell
         mask fits.
     */
-    void produce_Side_Info(GlobalARTParameters &prm,
+    void produce_Side_Info(BasicARTParameters &prm,
                            GridVolume &vol_basis0);
 };
 
@@ -138,7 +138,7 @@ void compute_integer_lattice(const Matrix1D<double> &a,
     The symmetry matrix from which the view is derived must be given in
     sym_no. */
 void ART_single_step(GridVolume &vol_in, GridVolume *vol_out,
-                     GlobalARTParameters &prm, Crystal_ART_Parameters &eprm,
+                     BasicARTParameters &prm, Crystal_ART_Parameters &eprm,
                      Projection &theo_proj, Projection &read_proj,
                      int sym_no,
                      Projection &diff_proj, Projection &corr_proj, Projection &align_proj,
@@ -147,13 +147,13 @@ void ART_single_step(GridVolume &vol_in, GridVolume *vol_out,
 
 /* Finish ART iterations.
    Expand output volume to fill space if necessary. */
-void finish_ART_iterations(const GlobalARTParameters &prm,
+void finish_ART_iterations(const BasicARTParameters &prm,
                            const Crystal_ART_Parameters &eprm, GridVolume &vol_basis);
 
 /** Expand basis values to fill space.
     Copy basis values as a crystal in order to fill the whole space determined
     by the output volume. */
-void expand_to_fill_space(const GlobalARTParameters &prm,
+void expand_to_fill_space(const BasicARTParameters &prm,
                           const Crystal_ART_Parameters &eprm, GridVolume &vol);
 
 /** Force the trial volume to be symmetric. */

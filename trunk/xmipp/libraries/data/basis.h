@@ -61,7 +61,7 @@ public:
     double grid_relative_size;
 
     /** Volume deformation matrix.
-        See the documentation of GlobalARTParameters for further explanation. */
+        See the documentation of BasicARTParameters for further explanation. */
     Matrix2D<double> *D;
 public:
     /// Empty constructor. By default, blobs

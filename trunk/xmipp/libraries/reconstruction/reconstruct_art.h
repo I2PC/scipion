@@ -41,7 +41,7 @@
 
 class ProgReconsART: public ProgReconsBase
 {
-    GlobalARTParameters artPrm;
+    BasicARTParameters artPrm;
 
 public:
 
@@ -70,7 +70,7 @@ public:
                                        const Plain_ART_Parameters &eprm);
 
     /// Produce Plain side information from the Extra parameters
-    void produce_Side_Info(const GlobalARTParameters &prm,
+    void produce_Side_Info(const BasicARTParameters &prm,
                            GridVolume &vol_basis0);
 };
 
@@ -88,7 +88,7 @@ public:
     sym_no. In fact, it is not used in this version of ART, but it is
     needed for the crystal counterpart. */
 void ART_single_step(GridVolume &vol_in, GridVolume *vol_out,
-                     GlobalARTParameters &prm, Plain_ART_Parameters &eprm,
+                     BasicARTParameters &prm, Plain_ART_Parameters &eprm,
                      Projection &theo_proj, Projection &read_proj,
                      int sym_no,
                      Projection &diff_proj, Projection &corr_proj, Projection &alig_proj,
@@ -97,13 +97,13 @@ void ART_single_step(GridVolume &vol_in, GridVolume *vol_out,
                      bool refine);
 
 /** Update residual vector for WLS ART */
-void update_residual_vector(GlobalARTParameters &prm, GridVolume &vol_basis,
+void update_residual_vector(BasicARTParameters &prm, GridVolume &vol_basis,
                             double &kappa, double &pow_residual_vol, double &pow_residual_imgs);
 
 /** Finish iterations.
     For WLS: delete residual images
     Else: do nothing. */
-void finish_ART_iterations(const GlobalARTParameters &prm,
+void finish_ART_iterations(const BasicARTParameters &prm,
                            const Plain_ART_Parameters &eprm, GridVolume &vol_basis);
 
 /** Force the trial volume to be symmetric. So far only implemented

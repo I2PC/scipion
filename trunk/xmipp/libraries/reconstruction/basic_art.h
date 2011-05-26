@@ -57,7 +57,7 @@ struct Recons_info;
 /** ART basic parameters.
     This class contains all information needed about the ART process.
     See the user guide for more information about the ART parameters. */
-class GlobalARTParameters
+class BasicARTParameters
 {
 public:
     // Type of the parallel processing
@@ -79,7 +79,7 @@ public:
         divided into blocks for parallel processing. If sequential
         processing is wanted, set it to ART or SIRT. This is the default.
 
-        \\Ex: parallel_mode=GlobalARTParameters::ART*/
+        \\Ex: parallel_mode=BasicARTParameters::ART*/
     t_parallel_mode parallel_mode;
 
     /// Number of projections for each parallel block
@@ -477,10 +477,10 @@ void sort_randomly(int numIMG, MultidimArray<int> &ordered_list);
     operator << of the Extra_ART_Parameters to show the specific part
     of the History.
 
-    GlobalARTParameters is not constant since things are written in
-    \ref GlobalARTParameters::fh_hist.*/
+    BasicARTParameters is not constant since things are written in
+    \ref BasicARTParameters::fh_hist.*/
 template <class Extra_ART_Parameters>
-void Basic_ART_Init_history(GlobalARTParameters &prm,
+void Basic_ART_Init_history(BasicARTParameters &prm,
                             const Extra_ART_Parameters &eprm, const GridVolume &vol_basis0);
 
 /** Perform all ART iterations.
@@ -497,13 +497,13 @@ void Basic_ART_Init_history(GlobalARTParameters &prm,
     If it is -1, the function is run in seuqential mode. If it is 0, then
     it is the root process.
 
-    See the \ref GlobalARTParameters for more information
+    See the \ref BasicARTParameters for more information
     about how to generate the iterations.
 */
 
 
 template <class Extra_ART_Parameters>
-void Basic_ART_iterations(GlobalARTParameters &prm,
+void Basic_ART_iterations(BasicARTParameters &prm,
                           Extra_ART_Parameters &eprm, GridVolume &vol_basis, int rank = -1);
 
 /** Main Routine for ART.
@@ -513,7 +513,7 @@ void Basic_ART_iterations(GlobalARTParameters &prm,
     to have the same size as the input projections. All output files
     are generated as if the ART program had been called. */
 template <class Extra_ART_Parameters>
-void Basic_ROUT_Art(GlobalARTParameters &prm,
+void Basic_ROUT_Art(BasicARTParameters &prm,
                     Extra_ART_Parameters &eprm, Image<double> &vol_voxels,
                     GridVolume &vol_basis);
 
@@ -571,7 +571,7 @@ public:
     int Zoutput_volume_size;
     int Youtput_volume_size;
     int Xoutput_volume_size;
-    GlobalARTParameters *prm;
+    BasicARTParameters *prm;
 
     /// Vector of training vectors
     std::vector < MultidimArray<double> > VA;
@@ -580,7 +580,7 @@ public:
     int N;
 
     /// Constructor
-    VariabilityClass(GlobalARTParameters *_prm,
+    VariabilityClass(BasicARTParameters *_prm,
                      int _Zoutput_volume_size, int _Youtput_volume_size,
                      int _Xoutput_volume_size);
 
@@ -620,10 +620,10 @@ public:
     int Xoutput_volume_size;
     bool apply_POCS;
     MultidimArray<double> POCS_errors;
-    GlobalARTParameters *prm;
+    BasicARTParameters *prm;
 
     /// Constructor
-    POCSClass(GlobalARTParameters *_prm,
+    POCSClass(BasicARTParameters *_prm,
               int _Zoutput_volume_size, int _Youtput_volume_size,
               int _Xoutput_volume_size);
 

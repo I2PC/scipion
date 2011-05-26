@@ -36,7 +36,7 @@ int main(int argc, char **argv)
 //int main(int argc, char *argv[])
 //{
 //// Variables
-//    GlobalARTParameters   art_prm;
+//    BasicARTParameters   art_prm;
 //    Plain_ART_Parameters   dummy;
 ////    Crystal_ART_Parameters crystal_art_prm;
 //    Image<double>        vol_voxels;

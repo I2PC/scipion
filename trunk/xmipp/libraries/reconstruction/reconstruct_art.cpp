@@ -121,7 +121,7 @@ void ProgReconsART::ProgReconsART::run()
 /* Plain ART Parameters                                                      */
 /* ------------------------------------------------------------------------- */
 /* Produce Side information ------------------------------------------------ */
-void Plain_ART_Parameters::produce_Side_Info(const GlobalARTParameters &prm,
+void Plain_ART_Parameters::produce_Side_Info(const BasicARTParameters &prm,
         GridVolume &vol_basis0)
 {}
 
@@ -134,7 +134,7 @@ std::ostream & operator << (std::ostream &o, const Plain_ART_Parameters &eprm)
 /* ------------------------------------------------------------------------- */
 /* Update residual vector for WLS                                            */
 /* ------------------------------------------------------------------------- */
-void update_residual_vector(GlobalARTParameters &prm, GridVolume &vol_basis,
+void update_residual_vector(BasicARTParameters &prm, GridVolume &vol_basis,
                             double &kappa, double &pow_residual_vol, double &pow_residual_imgs)
 {
     GridVolume       residual_vol;
@@ -262,7 +262,7 @@ void update_residual_vector(GlobalARTParameters &prm, GridVolume &vol_basis,
 void ART_single_step(
     GridVolume              &vol_in,         // Input Reconstructed volume
     GridVolume              *vol_out,        // Output Reconstructed volume
-    GlobalARTParameters    &prm,            // blob, lambda
+    BasicARTParameters    &prm,            // blob, lambda
     Plain_ART_Parameters    &eprm,           // In this case, nothing
     Projection              &theo_proj,      // Projection of the reconstruction
     // It is outside to make it visible
@@ -473,7 +473,7 @@ void ART_single_step(
 #undef blob
 
 /* Finish iterations ------------------------------------------------------- */
-void finish_ART_iterations(const GlobalARTParameters &prm,
+void finish_ART_iterations(const BasicARTParameters &prm,
                            const Plain_ART_Parameters &eprm, GridVolume &vol_blobs)
 { }
 
