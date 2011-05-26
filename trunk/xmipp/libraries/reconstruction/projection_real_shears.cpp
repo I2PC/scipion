@@ -186,7 +186,6 @@ int Compute_projection(double *Parameters,
                        long Ny,
                        long Nz,
                        short *Proj_dims,
-                       double *Identity_orientN,
                        double *RightOperHlp,
                        double *Ac,
                        double *Projection,
@@ -334,9 +333,9 @@ int Compute_projection(double *Parameters,
                      "ERROR - Not enough memory for C1");
 
     hlp = C1;
-    *hlp++ = (double) Identity_orientN[0];
-    *hlp++ = (double) Identity_orientN[1];
-    *hlp++ = (double) Identity_orientN[2];
+    *hlp++ = 0.0;
+    *hlp++ = 0.0;
+    *hlp++ = 1.0;
     *hlp = 0.0;
 
     BinvC = (double *)malloc((size_t) 4L * sizeof(double));
@@ -677,7 +676,6 @@ int do_one_projection(VolumeStruct &Data2)
                      "ERROR - Not enough memory for B");
 
     Compute_projection(Parameters, Coef_x, Coef_y, Coef_z, Nx, Ny, Nz, Data2.Proj_dims,
-                       Data2.Identity_orientN,
                        RightOperHlp, Ac, Data2.Projection, B);
 
     free(Parameters);
@@ -795,7 +793,6 @@ void del_VolumeStruct(VolumeStruct &Data2)
     free(Data2.Volume);
     free(Data2.Projection);
     free(Data2.Proj_dims);
-    free(Data2.Identity_orientN);
     free(Data2.Gama123);
     free(Data2.InitDelta123);
     free(Data2.InitPsiThetaPhi);
@@ -888,11 +885,6 @@ void allocAndInit_VolumeStruct(VolumeStruct &Data2)
     Data2.Proj_dims[0] = Data2.nx_Volume;
     Data2.Proj_dims[1] = Data2.ny_Volume;
 
-    Data2.Identity_orientN = (double*) malloc((size_t)3L * sizeof(double));
-    Data2.Identity_orientN[0] = 0.;
-    Data2.Identity_orientN[1] = 0.;
-    Data2.Identity_orientN[2] = 1.;
-
     Data2.Gama123 = (double*) malloc((size_t)3L * sizeof(double));
     Data2.Gama123[0] = Data2.nx_Volume/2.;
     Data2.Gama123[1] = Data2.Gama123[0];
@@ -947,8 +939,6 @@ void Projection_real_shears::start_to_process()
         std::cout<<"\n\tWarning : the dimension specified in the input file is different to the volume dimension.";
         std::cout<<"\n\tThe program will only keep the volume dimensions.\n"<<std::endl;
     }
-
-    num_file = starting;
 }
 
 ///Does finish instructions. Returns possibles errors.
@@ -982,13 +972,12 @@ void Projection_real_shears::finish_to_process()
 void Projection_real_shears::ROUT_project_real_shears()
 {
     start_to_process();
-
+    int num_file = starting;
     FOR_ALL_OBJECTS_IN_METADATA(DF)
     {
         read_a_DocLine(__iter.objId);
         do_one_projection(Data);
-        write_projection_file(num_file);
-        num_file++;
+        write_projection_file(num_file++);
     }
     finish_to_process();
 }

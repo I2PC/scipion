@@ -77,7 +77,6 @@ typedef struct
     double *Volume;
     long   nx_Volume, ny_Volume, nz_Volume;
     short  *Proj_dims;
-    double *Identity_orientN;
     double *Gama123;
     double *InitPsiThetaPhi; // Angles
     double *InitDelta123; //Shifts
@@ -131,8 +130,6 @@ class Projection_real_shears
 
         ///Starting number for the projections files
         int starting;
-        ///Current number of the projection file to save
-        int num_file;
         ///Extension name of the projections files
         std::string fn_projection_extension;
         ///Angular file
