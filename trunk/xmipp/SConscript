@@ -868,7 +868,6 @@ if int(env['mpi']):
     AddXmippMPIProgram('mpi_ml_refine3d', ['XmippRecons'])
     AddXmippMPIProgram('mpi_mlf_refine3d', ['XmippRecons'])
     AddXmippMPIProgram('mpi_nma_alignment', ['XmippRecons'])
-    AddXmippMPIProgram('mpi_projection_real_shears', ['XmippRecons'])
     AddXmippMPIProgram('mpi_xray_project', ['XmippRecons'])
 #    AddXmippMPIProgram('mpi_reconstruct_art', ['XmippRecons'])
     AddXmippMPIProgram('mpi_reconstruct_wbp', ['XmippRecons'])
